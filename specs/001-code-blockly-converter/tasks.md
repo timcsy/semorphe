@@ -33,13 +33,13 @@
 
 > **NOTE: 先寫測試，確保失敗後再實作**
 
-- [ ] T004 [P] 撰寫 BlockSpec 型別驗證測試 in tests/unit/types.test.ts
+- [x] T004 [P] 撰寫 BlockSpec 型別驗證測試 in tests/unit/types.test.ts
 
 ### Implementation for Foundational
 
-- [ ] T005 定義核心型別（BlockSpec, CodeTemplate, AstPattern, ParserModule, GeneratorModule, Converter, WorkspaceState）in src/core/types.ts
-- [ ] T006 建立測試用 fixture：範例積木定義 JSON in tests/fixtures/block-specs/sample-for-loop.json
-- [ ] T007 [P] 建立測試用 fixture：範例 C 程式碼 in tests/fixtures/code-samples/hello-world.c
+- [x] T005 定義核心型別（BlockSpec, CodeTemplate, AstPattern, ParserModule, GeneratorModule, Converter, WorkspaceState）in src/core/types.ts
+- [x] T006 建立測試用 fixture：範例積木定義 JSON in tests/fixtures/block-specs/sample-for-loop.json
+- [x] T007 [P] 建立測試用 fixture：範例 C 程式碼 in tests/fixtures/code-samples/hello-world.c
 
 **Checkpoint**: 核心型別已定義，所有 Story 可以開始
 
