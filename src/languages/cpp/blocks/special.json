@@ -1,0 +1,237 @@
+[
+  {
+    "id": "c_raw_code",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_raw_code",
+      "message0": "code: %1",
+      "args0": [
+        { "type": "field_multilinetext", "name": "CODE", "text": "// raw code" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "原始碼積木（未知語法降級用）"
+    },
+    "codeTemplate": {
+      "pattern": "${CODE}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "_raw_code",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_raw_expression",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_raw_expression",
+      "message0": "expr: %1",
+      "args0": [
+        { "type": "field_input", "name": "CODE", "text": "0" }
+      ],
+      "output": "Expression",
+      "colour": 0,
+      "tooltip": "原始碼運算式積木"
+    },
+    "codeTemplate": {
+      "pattern": "${CODE}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "_raw_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_include",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_include",
+      "message0": "#include < %1 >",
+      "args0": [
+        { "type": "field_dropdown", "name": "HEADER", "options": [["stdio.h","stdio.h"],["stdlib.h","stdlib.h"],["string.h","string.h"],["math.h","math.h"],["stdbool.h","stdbool.h"],["iostream","iostream"],["vector","vector"],["string","string"],["algorithm","algorithm"],["map","map"],["set","set"],["stack","stack"],["queue","queue"],["cmath","cmath"],["cstring","cstring"],["climits","climits"]] }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "#include 標頭檔"
+    },
+    "codeTemplate": {
+      "pattern": "#include <${HEADER}>",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_include",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_include_local",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_include_local",
+      "message0": "#include \" %1 \"",
+      "args0": [
+        { "type": "field_input", "name": "HEADER", "text": "myheader.h" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "#include 本地標頭檔"
+    },
+    "codeTemplate": {
+      "pattern": "#include \"${HEADER}\"",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_include",
+      "constraints": [{ "field": "path", "nodeType": "string_literal" }]
+    }
+  },
+  {
+    "id": "c_define",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_define",
+      "message0": "#define %1 %2",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "MAX" },
+        { "type": "field_input", "name": "VALUE", "text": "100" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "#define 巨集定義"
+    },
+    "codeTemplate": {
+      "pattern": "#define ${NAME} ${VALUE}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_def",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_ifdef",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_ifdef",
+      "message0": "#ifdef %1",
+      "args0": [
+        { "type": "field_input", "name": "CONDITION", "text": "DEBUG" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "message2": "#endif",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "#ifdef 條件編譯"
+    },
+    "codeTemplate": {
+      "pattern": "#ifdef ${CONDITION}\n${BODY}\n#endif",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_ifdef",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_ifndef",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_ifndef",
+      "message0": "#ifndef %1",
+      "args0": [
+        { "type": "field_input", "name": "CONDITION", "text": "HEADER_H" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "message2": "#endif",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "#ifndef 條件編譯"
+    },
+    "codeTemplate": {
+      "pattern": "#ifndef ${CONDITION}\n${BODY}\n#endif",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_ifndef",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_comment_line",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_comment_line",
+      "message0": "// %1",
+      "args0": [
+        { "type": "field_input", "name": "TEXT", "text": "comment" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "單行註解"
+    },
+    "codeTemplate": {
+      "pattern": "// ${TEXT}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "comment",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_using_namespace",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_using_namespace",
+      "message0": "using namespace %1 ;",
+      "args0": [
+        { "type": "field_input", "name": "NS", "text": "std" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 0,
+      "tooltip": "using namespace 宣告"
+    },
+    "codeTemplate": {
+      "pattern": "using namespace ${NS};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "using_declaration",
+      "constraints": []
+    }
+  }
+]

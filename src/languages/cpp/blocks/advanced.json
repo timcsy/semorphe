@@ -1,0 +1,784 @@
+[
+  {
+    "id": "c_pointer_declare",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_pointer_declare",
+      "message0": "%1 * %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["void","void"]] },
+        { "type": "field_input", "name": "NAME", "text": "ptr" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 280,
+      "tooltip": "指標宣告"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE}* ${NAME};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "declarator", "nodeType": "pointer_declarator" }]
+    }
+  },
+  {
+    "id": "c_pointer_deref",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_pointer_deref",
+      "message0": "* %1",
+      "args0": [
+        { "type": "input_value", "name": "PTR", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 280,
+      "tooltip": "指標解參考"
+    },
+    "codeTemplate": {
+      "pattern": "*${PTR}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "pointer_expression",
+      "constraints": [{ "field": "operator", "text": "*" }]
+    }
+  },
+  {
+    "id": "c_address_of",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_address_of",
+      "message0": "& %1",
+      "args0": [
+        { "type": "input_value", "name": "VAR", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 280,
+      "tooltip": "取址運算"
+    },
+    "codeTemplate": {
+      "pattern": "&${VAR}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "pointer_expression",
+      "constraints": [{ "field": "operator", "text": "&" }]
+    }
+  },
+  {
+    "id": "c_malloc",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_malloc",
+      "message0": "(%1 *) malloc ( %2 * sizeof(%3) )",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"]] },
+        { "type": "input_value", "name": "SIZE", "check": "Expression" },
+        { "type": "field_dropdown", "name": "SIZEOF_TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"]] }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 280,
+      "tooltip": "malloc 動態配置"
+    },
+    "codeTemplate": {
+      "pattern": "(${TYPE}*)malloc(${SIZE} * sizeof(${SIZEOF_TYPE}))",
+      "imports": ["stdlib.h"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "cast_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_free",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_free",
+      "message0": "free ( %1 ) ;",
+      "args0": [
+        { "type": "input_value", "name": "PTR", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 280,
+      "tooltip": "free 釋放記憶體"
+    },
+    "codeTemplate": {
+      "pattern": "free(${PTR});",
+      "imports": ["stdlib.h"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "free" }]
+    }
+  },
+  {
+    "id": "c_struct_declare",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_declare",
+      "message0": "struct %1",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "MyStruct" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "MEMBERS" }
+      ],
+      "colour": 20,
+      "tooltip": "結構體宣告"
+    },
+    "codeTemplate": {
+      "pattern": "struct ${NAME} {\n${MEMBERS}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "struct_specifier",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_struct_member_access",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_member_access",
+      "message0": "%1 . %2",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "field_input", "name": "MEMBER", "text": "field" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 20,
+      "tooltip": "結構體成員存取"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${MEMBER}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "field_expression",
+      "constraints": [{ "field": "operator", "text": "." }]
+    }
+  },
+  {
+    "id": "c_struct_pointer_access",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_pointer_access",
+      "message0": "%1 -> %2",
+      "args0": [
+        { "type": "field_input", "name": "PTR", "text": "ptr" },
+        { "type": "field_input", "name": "MEMBER", "text": "field" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 20,
+      "tooltip": "指標結構體成員存取"
+    },
+    "codeTemplate": {
+      "pattern": "${PTR}->${MEMBER}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "field_expression",
+      "constraints": [{ "field": "operator", "text": "->" }]
+    }
+  },
+  {
+    "id": "c_string_literal",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_string_literal",
+      "message0": "\" %1 \"",
+      "args0": [
+        { "type": "field_input", "name": "TEXT", "text": "hello" }
+      ],
+      "output": "Expression",
+      "colour": 160,
+      "tooltip": "字串字面值"
+    },
+    "codeTemplate": {
+      "pattern": "\"${TEXT}\"",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "string_literal",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_strlen",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strlen",
+      "message0": "strlen ( %1 )",
+      "args0": [
+        { "type": "input_value", "name": "STR", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 160,
+      "tooltip": "字串長度"
+    },
+    "codeTemplate": {
+      "pattern": "strlen(${STR})",
+      "imports": ["string.h"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "strlen" }]
+    }
+  },
+  {
+    "id": "c_strcmp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcmp",
+      "message0": "strcmp ( %1 , %2 )",
+      "args0": [
+        { "type": "input_value", "name": "S1", "check": "Expression" },
+        { "type": "input_value", "name": "S2", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 160,
+      "tooltip": "字串比較"
+    },
+    "codeTemplate": {
+      "pattern": "strcmp(${S1}, ${S2})",
+      "imports": ["string.h"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "strcmp" }]
+    }
+  },
+  {
+    "id": "c_strcpy",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcpy",
+      "message0": "strcpy ( %1 , %2 ) ;",
+      "args0": [
+        { "type": "input_value", "name": "DEST", "check": "Expression" },
+        { "type": "input_value", "name": "SRC", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 160,
+      "tooltip": "字串複製"
+    },
+    "codeTemplate": {
+      "pattern": "strcpy(${DEST}, ${SRC});",
+      "imports": ["string.h"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "strcpy" }]
+    }
+  },
+  {
+    "id": "cpp_cout",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cout",
+      "message0": "cout << %1 ;",
+      "args0": [
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "cout 輸出"
+    },
+    "codeTemplate": {
+      "pattern": "std::cout << ${VALUE};",
+      "imports": ["iostream"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "binary_expression" }]
+    }
+  },
+  {
+    "id": "cpp_cin",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cin",
+      "message0": "cin >> %1 ;",
+      "args0": [
+        { "type": "field_input", "name": "VAR", "text": "x" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "cin 輸入"
+    },
+    "codeTemplate": {
+      "pattern": "std::cin >> ${VAR};",
+      "imports": ["iostream"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "binary_expression" }]
+    }
+  },
+  {
+    "id": "cpp_endl",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_endl",
+      "message0": "endl",
+      "output": "Expression",
+      "colour": 180,
+      "tooltip": "換行符"
+    },
+    "codeTemplate": {
+      "pattern": "std::endl",
+      "imports": ["iostream"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "qualified_identifier",
+      "constraints": [{ "field": "name", "text": "endl" }]
+    }
+  },
+  {
+    "id": "cpp_vector_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_declare",
+      "message0": "vector < %1 > %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["string","std::string"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "vec" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "vector 容器宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::vector<${TYPE}> ${NAME};",
+      "imports": ["vector"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "nodeType": "template_type" }]
+    }
+  },
+  {
+    "id": "cpp_vector_push_back",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_push_back",
+      "message0": "%1 .push_back ( %2 ) ;",
+      "args0": [
+        { "type": "field_input", "name": "VECTOR", "text": "vec" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "vector 加入元素"
+    },
+    "codeTemplate": {
+      "pattern": "${VECTOR}.push_back(${VALUE});",
+      "imports": ["vector"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "call_expression" }]
+    }
+  },
+  {
+    "id": "cpp_vector_size",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_size",
+      "message0": "%1 .size()",
+      "args0": [
+        { "type": "field_input", "name": "VECTOR", "text": "vec" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 200,
+      "tooltip": "vector 取得大小"
+    },
+    "codeTemplate": {
+      "pattern": "${VECTOR}.size()",
+      "imports": ["vector"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "nodeType": "field_expression" }]
+    }
+  },
+  {
+    "id": "cpp_map_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_declare",
+      "message0": "map < %1 , %2 > %3 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "KEY_TYPE", "options": [["int","int"],["string","std::string"],["char","char"]] },
+        { "type": "field_dropdown", "name": "VALUE_TYPE", "options": [["int","int"],["float","float"],["double","double"],["string","std::string"]] },
+        { "type": "field_input", "name": "NAME", "text": "mp" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "map 容器宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::map<${KEY_TYPE}, ${VALUE_TYPE}> ${NAME};",
+      "imports": ["map"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "nodeType": "template_type" }]
+    }
+  },
+  {
+    "id": "cpp_string_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_declare",
+      "message0": "string %1 ;",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "str" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "C++ string 宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::string ${NAME};",
+      "imports": ["string"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "text": "string" }]
+    }
+  },
+  {
+    "id": "cpp_sort",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_sort",
+      "message0": "sort ( %1 , %2 ) ;",
+      "args0": [
+        { "type": "input_value", "name": "BEGIN", "check": "Expression" },
+        { "type": "input_value", "name": "END", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "排序"
+    },
+    "codeTemplate": {
+      "pattern": "std::sort(${BEGIN}, ${END});",
+      "imports": ["algorithm"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "sort" }]
+    }
+  },
+  {
+    "id": "cpp_class_def",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_class_def",
+      "message0": "class %1",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "MyClass" }
+      ],
+      "message1": "public: %1",
+      "args1": [
+        { "type": "input_statement", "name": "PUBLIC" }
+      ],
+      "message2": "private: %1",
+      "args2": [
+        { "type": "input_statement", "name": "PRIVATE" }
+      ],
+      "colour": 140,
+      "tooltip": "類別定義"
+    },
+    "codeTemplate": {
+      "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "class_specifier",
+      "constraints": []
+    }
+  },
+  {
+    "id": "cpp_new",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_new",
+      "message0": "new %1 ( %2 )",
+      "args0": [
+        { "type": "field_input", "name": "TYPE", "text": "MyClass" },
+        { "type": "field_input", "name": "ARGS", "text": "" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 140,
+      "tooltip": "new 運算子"
+    },
+    "codeTemplate": {
+      "pattern": "new ${TYPE}(${ARGS})",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "new_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "cpp_delete",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_delete",
+      "message0": "delete %1 ;",
+      "args0": [
+        { "type": "input_value", "name": "PTR", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 140,
+      "tooltip": "delete 運算子"
+    },
+    "codeTemplate": {
+      "pattern": "delete ${PTR};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "delete_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "cpp_template_function",
+    "category": "templates",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_template_function",
+      "message0": "template < typename %1 >",
+      "args0": [
+        { "type": "field_input", "name": "T", "text": "T" }
+      ],
+      "message1": "%1 %2 ( %3 %4 )",
+      "args1": [
+        { "type": "field_input", "name": "RETURN_TYPE", "text": "T" },
+        { "type": "field_input", "name": "FUNC_NAME", "text": "myFunc" },
+        { "type": "field_input", "name": "PARAM_TYPE", "text": "T" },
+        { "type": "field_input", "name": "PARAM_NAME", "text": "a" }
+      ],
+      "message2": "%1",
+      "args2": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "colour": 140,
+      "tooltip": "樣板函式"
+    },
+    "codeTemplate": {
+      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAM_TYPE} ${PARAM_NAME}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "template_declaration",
+      "constraints": []
+    }
+  },
+  {
+    "id": "cpp_stack_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_declare",
+      "message0": "stack < %1 > %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
+        { "type": "field_input", "name": "NAME", "text": "stk" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "stack 容器宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::stack<${TYPE}> ${NAME};",
+      "imports": ["stack"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "nodeType": "template_type" }]
+    }
+  },
+  {
+    "id": "cpp_queue_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_queue_declare",
+      "message0": "queue < %1 > %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
+        { "type": "field_input", "name": "NAME", "text": "que" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "queue 容器宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::queue<${TYPE}> ${NAME};",
+      "imports": ["queue"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "nodeType": "template_type" }]
+    }
+  },
+  {
+    "id": "cpp_set_declare",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_set_declare",
+      "message0": "set < %1 > %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
+        { "type": "field_input", "name": "NAME", "text": "s" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "set 容器宣告"
+    },
+    "codeTemplate": {
+      "pattern": "std::set<${TYPE}> ${NAME};",
+      "imports": ["set"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "type", "nodeType": "template_type" }]
+    }
+  },
+  {
+    "id": "cpp_method_call",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call",
+      "message0": "%1 . %2 ( %3 ) ;",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "field_input", "name": "METHOD", "text": "push_back" },
+        { "type": "field_input", "name": "ARGS", "text": "" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 200,
+      "tooltip": "方法呼叫"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "call_expression" }]
+    }
+  },
+  {
+    "id": "cpp_method_call_expr",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call_expr",
+      "message0": "%1 . %2 ( %3 )",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "field_input", "name": "METHOD", "text": "size" },
+        { "type": "field_input", "name": "ARGS", "text": "" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 200,
+      "tooltip": "方法呼叫（回傳值）"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS})",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "nodeType": "field_expression" }]
+    }
+  }
+]

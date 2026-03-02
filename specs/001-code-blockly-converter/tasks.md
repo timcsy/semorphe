@@ -55,15 +55,15 @@
 
 > **NOTE: 先寫測試，確保失敗後再實作**
 
-- [ ] T008 [P] [US1] 撰寫 BlockRegistry 單元測試（register、get、validate、getByNodeType、toToolboxDef）in tests/unit/block-registry.test.ts
-- [ ] T009 [P] [US1] 撰寫 BlockRegistry 整合測試（載入多份定義檔、ID 衝突偵測、格式錯誤處理）in tests/integration/block-registry-integration.test.ts
+- [x] T008 [P] [US1] 撰寫 BlockRegistry 單元測試（register、get、validate、getByNodeType、toToolboxDef）in tests/unit/block-registry.test.ts
+- [x] T009 [P] [US1] 撰寫 BlockRegistry 整合測試（載入多份定義檔、ID 衝突偵測、格式錯誤處理）in tests/integration/block-registry-integration.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] 實作 BlockRegistry（register, unregister, get, getByNodeType, getByCategory, validate, toToolboxDef）in src/core/block-registry.ts
-- [ ] T011 [US1] 撰寫預設 C/C++ 基礎積木定義 JSON（變數、運算、條件、迴圈、陣列、函式、scanf/printf）in src/languages/cpp/blocks/basic.json
-- [ ] T012 [US1] 撰寫預設 C/C++ 進階積木定義 JSON（指標、結構體、字串、cin/cout、STL、class、template）in src/languages/cpp/blocks/advanced.json
-- [ ] T013 [US1] 撰寫原始碼積木和預處理指令積木定義 JSON in src/languages/cpp/blocks/special.json
+- [x] T010 [US1] 實作 BlockRegistry（register, unregister, get, getByNodeType, getByCategory, validate, toToolboxDef）in src/core/block-registry.ts
+- [x] T011 [US1] 撰寫預設 C/C++ 基礎積木定義 JSON（變數、運算、條件、迴圈、陣列、函式、scanf/printf）in src/languages/cpp/blocks/basic.json
+- [x] T012 [US1] 撰寫預設 C/C++ 進階積木定義 JSON（指標、結構體、字串、cin/cout、STL、class、template）in src/languages/cpp/blocks/advanced.json
+- [x] T013 [US1] 撰寫原始碼積木和預處理指令積木定義 JSON in src/languages/cpp/blocks/special.json
 
 **Checkpoint**: BlockRegistry 可載入積木定義、驗證格式、產生工具箱定義
 

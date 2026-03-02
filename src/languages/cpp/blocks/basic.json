@@ -1,0 +1,773 @@
+[
+  {
+    "id": "c_var_declare",
+    "category": "variables",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_var_declare",
+      "message0": "%1 %2 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["long","long"],["short","short"],["unsigned int","unsigned int"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "x" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 330,
+      "tooltip": "變數宣告"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE} ${NAME};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_var_assign",
+    "category": "variables",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_var_assign",
+      "message0": "%1 = %2 ;",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 330,
+      "tooltip": "變數賦值"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "assignment_expression" }]
+    }
+  },
+  {
+    "id": "c_var_declare_init",
+    "category": "variables",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_var_declare_init",
+      "message0": "%1 %2 = %3 ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["long","long"],["short","short"],["unsigned int","unsigned int"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "x" },
+        { "type": "input_value", "name": "INIT", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 330,
+      "tooltip": "宣告並初始化變數"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE} ${NAME} = ${INIT};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "declarator", "nodeType": "init_declarator" }]
+    }
+  },
+  {
+    "id": "c_number",
+    "category": "values",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_number",
+      "message0": "%1",
+      "args0": [
+        { "type": "field_number", "name": "NUM", "value": 0 }
+      ],
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "數字"
+    },
+    "codeTemplate": {
+      "pattern": "${NUM}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "number_literal",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_char_literal",
+    "category": "values",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_char_literal",
+      "message0": "' %1 '",
+      "args0": [
+        { "type": "field_input", "name": "CHAR", "text": "a" }
+      ],
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "字元字面值"
+    },
+    "codeTemplate": {
+      "pattern": "'${CHAR}'",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "char_literal",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_variable_ref",
+    "category": "variables",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_variable_ref",
+      "message0": "%1",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "變數參考"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "identifier",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_binary_op",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_binary_op",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["+","+"],["-","-"],["*","*"],["/","/"],["%%","%"]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "算術運算"
+    },
+    "codeTemplate": {
+      "pattern": "${A} ${OP} ${B}",
+      "imports": [],
+      "order": 6
+    },
+    "astPattern": {
+      "nodeType": "binary_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_compare_op",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_compare_op",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["==","=="],["!=","!="],["<","<"],[">",">"],["<=","<="],[">=",">="]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "比較運算"
+    },
+    "codeTemplate": {
+      "pattern": "${A} ${OP} ${B}",
+      "imports": [],
+      "order": 3
+    },
+    "astPattern": {
+      "nodeType": "binary_expression",
+      "constraints": [{ "field": "operator", "text": "==" }]
+    }
+  },
+  {
+    "id": "c_logical_op",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_logical_op",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["&&","&&"],["||","||"]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "邏輯運算"
+    },
+    "codeTemplate": {
+      "pattern": "${A} ${OP} ${B}",
+      "imports": [],
+      "order": 1
+    },
+    "astPattern": {
+      "nodeType": "binary_expression",
+      "constraints": [{ "field": "operator", "text": "&&" }]
+    }
+  },
+  {
+    "id": "c_logical_not",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_logical_not",
+      "message0": "! %1",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "邏輯 NOT"
+    },
+    "codeTemplate": {
+      "pattern": "!${A}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "unary_expression",
+      "constraints": [{ "field": "operator", "text": "!" }]
+    }
+  },
+  {
+    "id": "c_increment",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_increment",
+      "message0": "%1 %2",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "i" },
+        { "type": "field_dropdown", "name": "OP", "options": [["++","++"],["--","--"]] }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "遞增/遞減"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}${OP}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "update_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_compound_assign",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_compound_assign",
+      "message0": "%1 %2 %3 ;",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" },
+        { "type": "field_dropdown", "name": "OP", "options": [["+=","+="],["−=","-="],["*=","*="],["÷=","/="],["%%=","%="]] },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 210,
+      "tooltip": "複合賦值運算"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME} ${OP} ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "expression_statement",
+      "constraints": [{ "field": "child", "nodeType": "assignment_expression" }]
+    }
+  },
+  {
+    "id": "c_if",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_if",
+      "message0": "if ( %1 )",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "do %1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "if 條件陳述句"
+    },
+    "codeTemplate": {
+      "pattern": "if (${COND}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "if_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_if_else",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_if_else",
+      "message0": "if ( %1 )",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "then %1",
+      "args1": [
+        { "type": "input_statement", "name": "THEN" }
+      ],
+      "message2": "else %1",
+      "args2": [
+        { "type": "input_statement", "name": "ELSE" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "if-else 條件陳述句"
+    },
+    "codeTemplate": {
+      "pattern": "if (${COND}) {\n${THEN}\n} else {\n${ELSE}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "if_statement",
+      "constraints": [{ "field": "alternative", "nodeType": "else_clause" }]
+    }
+  },
+  {
+    "id": "c_switch",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_switch",
+      "message0": "switch ( %1 )",
+      "args0": [
+        { "type": "input_value", "name": "EXPR", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "CASES" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "switch 陳述句"
+    },
+    "codeTemplate": {
+      "pattern": "switch (${EXPR}) {\n${CASES}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "switch_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_case",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_case",
+      "message0": "case %1 :",
+      "args0": [
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "case 標籤"
+    },
+    "codeTemplate": {
+      "pattern": "case ${VALUE}:\n${BODY}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "case_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_for_loop",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_for_loop",
+      "message0": "for ( %1 ; %2 ; %3 )",
+      "args0": [
+        { "type": "input_value", "name": "INIT", "check": "Expression" },
+        { "type": "input_value", "name": "COND", "check": "Expression" },
+        { "type": "input_value", "name": "UPDATE", "check": "Expression" }
+      ],
+      "message1": "do %1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "for 迴圈"
+    },
+    "codeTemplate": {
+      "pattern": "for (${INIT}; ${COND}; ${UPDATE}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "for_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_while_loop",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_while_loop",
+      "message0": "while ( %1 )",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "do %1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "while 迴圈"
+    },
+    "codeTemplate": {
+      "pattern": "while (${COND}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "while_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_do_while",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_do_while",
+      "message0": "do %1",
+      "args0": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "message1": "while ( %1 ) ;",
+      "args1": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "do-while 迴圈"
+    },
+    "codeTemplate": {
+      "pattern": "do {\n${BODY}\n} while (${COND});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "do_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_break",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_break",
+      "message0": "break ;",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "break 跳出迴圈"
+    },
+    "codeTemplate": {
+      "pattern": "break;",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "break_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_continue",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_continue",
+      "message0": "continue ;",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "continue 跳至下一次迴圈"
+    },
+    "codeTemplate": {
+      "pattern": "continue;",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "continue_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_array_declare",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_array_declare",
+      "message0": "%1 %2 [ %3 ] ;",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "arr" },
+        { "type": "input_value", "name": "SIZE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 260,
+      "tooltip": "陣列宣告"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE} ${NAME}[${SIZE}];",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [{ "field": "declarator", "nodeType": "array_declarator" }]
+    }
+  },
+  {
+    "id": "c_array_access",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_array_access",
+      "message0": "%1 [ %2 ]",
+      "args0": [
+        { "type": "field_input", "name": "ARRAY", "text": "arr" },
+        { "type": "input_value", "name": "INDEX", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 260,
+      "tooltip": "陣列存取"
+    },
+    "codeTemplate": {
+      "pattern": "${ARRAY}[${INDEX}]",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "subscript_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_function_def",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_function_def",
+      "message0": "%1 %2 ( %3 )",
+      "args0": [
+        { "type": "field_dropdown", "name": "RETURN_TYPE", "options": [["void","void"],["int","int"],["float","float"],["double","double"],["char","char"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "myFunc" },
+        { "type": "field_input", "name": "PARAMS", "text": "" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "colour": 60,
+      "tooltip": "函式定義"
+    },
+    "codeTemplate": {
+      "pattern": "${RETURN_TYPE} ${NAME}(${PARAMS}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "function_definition",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_function_call",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_function_call",
+      "message0": "%1 ( %2 )",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "func" },
+        { "type": "field_input", "name": "ARGS", "text": "" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 60,
+      "tooltip": "函式呼叫"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}(${ARGS})",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_return",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_return",
+      "message0": "return %1 ;",
+      "args0": [
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 60,
+      "tooltip": "return 陳述句"
+    },
+    "codeTemplate": {
+      "pattern": "return ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "return_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_return_void",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_return_void",
+      "message0": "return ;",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 60,
+      "tooltip": "return（無回傳值）"
+    },
+    "codeTemplate": {
+      "pattern": "return;",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "return_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_printf",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_printf",
+      "message0": "printf ( \"%1\" %2 ) ;",
+      "args0": [
+        { "type": "field_input", "name": "FORMAT", "text": "%d\\n" },
+        { "type": "field_input", "name": "ARGS", "text": ", x" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "printf 格式化輸出"
+    },
+    "codeTemplate": {
+      "pattern": "printf(\"${FORMAT}\"${ARGS});",
+      "imports": ["stdio.h"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "printf" }]
+    }
+  },
+  {
+    "id": "c_scanf",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_scanf",
+      "message0": "scanf ( \"%1\" %2 ) ;",
+      "args0": [
+        { "type": "field_input", "name": "FORMAT", "text": "%d" },
+        { "type": "field_input", "name": "ARGS", "text": ", &x" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "scanf 格式化輸入"
+    },
+    "codeTemplate": {
+      "pattern": "scanf(\"${FORMAT}\"${ARGS});",
+      "imports": ["stdio.h"],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "text": "scanf" }]
+    }
+  }
+]
