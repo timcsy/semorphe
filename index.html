@@ -3,10 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Code Blockly</title>
+    <title>Code Blockly - 程式碼與積木雙向轉換</title>
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <header id="toolbar">
+        <h1>Code Blockly</h1>
+        <div class="toolbar-actions">
+          <button id="upload-blocks-btn" title="上傳自訂積木定義">上傳積木</button>
+          <input type="file" id="blocks-file-input" accept=".json" hidden />
+          <button id="export-btn" title="匯出工作內容">匯出</button>
+          <button id="import-btn" title="匯入工作內容">匯入</button>
+          <input type="file" id="import-file-input" accept=".json" hidden />
+        </div>
+      </header>
+      <main id="editors">
+        <div id="blockly-panel">
+          <div id="blockly-editor"></div>
+        </div>
+        <div id="divider"></div>
+        <div id="code-panel">
+          <div id="code-editor"></div>
+        </div>
+      </main>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -125,19 +125,19 @@
 
 > **NOTE: 先寫測試，確保失敗後再實作**
 
-- [ ] T024 [P] [US4] 撰寫 SyncController 單元測試（Block→Code 觸發、Code→Block 觸發、防抖邏輯、防止無限迴圈）in tests/unit/sync-controller.test.ts
-- [ ] T025 [P] [US4] 撰寫 Storage 單元測試（localStorage 存取、匯出 JSON 檔案、匯入 JSON 檔案）in tests/unit/storage.test.ts
-- [ ] T026 [P] [US4] 撰寫整合測試（雙向同步端到端流程、自訂積木上傳、工作內容恢復）in tests/integration/sync.test.ts
+- [x] T024 [P] [US4] 撰寫 SyncController 單元測試（Block→Code 觸發、Code→Block 觸發、防抖邏輯、防止無限迴圈）in tests/unit/sync-controller.test.ts
+- [x] T025 [P] [US4] 撰寫 Storage 單元測試（localStorage 存取、匯出 JSON 檔案、匯入 JSON 檔案）in tests/unit/storage.test.ts
+- [x] T026 [P] [US4] 撰寫整合測試（雙向同步端到端流程、自訂積木上傳、工作內容恢復）in tests/integration/sync.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T027 [US4] 實作 Blockly 編輯器封裝（初始化 workspace、事件監聽、動態工具箱更新）in src/ui/blockly-editor.ts
-- [ ] T028 [US4] 實作 CodeMirror 編輯器封裝（初始化、C/C++ 語法高亮、變更事件監聽）in src/ui/code-editor.ts
-- [ ] T029 [US4] 實作 SyncController（雙向同步協調、防抖延遲、防止無限迴圈、來源鎖定）in src/ui/sync-controller.ts
-- [ ] T030 [US4] 實作 Storage 模組（localStorage 自動儲存/恢復、匯出下載 JSON、匯入上傳 JSON、自訂積木持久化）in src/ui/storage.ts
-- [ ] T031 [US4] 實作主應用程式（左右分割佈局、初始化所有模組、自訂積木上傳 UI）in src/ui/App.ts
-- [ ] T032 [US4] 建立 HTML 入口頁面和 CSS 佈局 in src/index.html 和 src/style.css
-- [ ] T033 [US4] 實作 main.ts 進入點（初始化 tree-sitter WASM、載入預設積木、啟動應用）in src/main.ts
+- [x] T027 [US4] 實作 Blockly 編輯器封裝（初始化 workspace、事件監聽、動態工具箱更新）in src/ui/blockly-editor.ts
+- [x] T028 [US4] 實作 CodeMirror 編輯器封裝（初始化、C/C++ 語法高亮、變更事件監聯）in src/ui/code-editor.ts
+- [x] T029 [US4] 實作 SyncController（雙向同步協調、防抖延遲、防止無限迴圈、來源鎖定）in src/ui/sync-controller.ts
+- [x] T030 [US4] 實作 Storage 模組（localStorage 自動儲存/恢復、匯出下載 JSON、匯入上傳 JSON、自訂積木持久化）in src/ui/storage.ts
+- [x] T031 [US4] 實作主應用程式（左右分割佈局、初始化所有模組、自訂積木上傳 UI）in src/ui/App.ts
+- [x] T032 [US4] 建立 HTML 入口頁面和 CSS 佈局 in index.html 和 src/style.css
+- [x] T033 [US4] 實作 main.ts 進入點（初始化 tree-sitter WASM、載入預設積木、啟動應用）in src/main.ts
 
 **Checkpoint**: 完整的 Web 應用，雙向同步正常，含持久化和匯出匯入
 
