@@ -101,15 +101,15 @@
 
 > **NOTE: 先寫測試，確保失敗後再實作**
 
-- [ ] T018 [P] [US3] 撰寫 C/C++ Parser 單元測試（解析簡單程式碼回傳 CST、tree-sitter 初始化）in tests/unit/cpp-parser.test.ts
-- [ ] T019 [P] [US3] 撰寫 Code → Block 整合測試（CST 映射為 Blockly workspace JSON、未知語法降級為原始碼積木、深入解析策略）in tests/integration/code-to-blocks.test.ts
-- [ ] T020 [P] [US3] 撰寫 Roundtrip 測試（Code → Block → Code 語意等價性驗證）in tests/integration/roundtrip.test.ts
+- [x] T018 [P] [US3] 撰寫 C/C++ Parser 單元測試（解析簡單程式碼回傳 CST、tree-sitter 初始化）in tests/unit/cpp-parser.test.ts
+- [x] T019 [P] [US3] 撰寫 Code → Block 整合測試（CST 映射為 Blockly workspace JSON、未知語法降級為原始碼積木、深入解析策略）in tests/integration/code-to-blocks.test.ts
+- [x] T020 [P] [US3] 撰寫 Roundtrip 測試（Code → Block → Code 語意等價性驗證）in tests/integration/roundtrip.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] 實作 C/C++ Parser Module（初始化 web-tree-sitter WASM、載入 C/C++ grammar、parse 方法）in src/languages/cpp/parser.ts
-- [ ] T022 [US3] 實作 Converter 的 codeToBlocks 方法（AST 走訪、依 astPattern 匹配積木、未知節點降級為原始碼積木）in src/core/converter.ts
-- [ ] T023 [US3] 實作 AST 節點到 Blockly workspace JSON 的映射邏輯（處理巢狀結構、expression vs statement）in src/core/converter.ts
+- [x] T021 [US3] 實作 C/C++ Parser Module（初始化 web-tree-sitter WASM、載入 C/C++ grammar、parse 方法）in src/languages/cpp/parser.ts
+- [x] T022 [US3] 實作 Converter 的 codeToBlocks 方法（AST 走訪、依 astPattern 匹配積木、未知節點降級為原始碼積木）in src/core/converter.ts
+- [x] T023 [US3] 實作 AST 節點到 Blockly workspace JSON 的映射邏輯（處理巢狀結構、expression vs statement）in src/core/converter.ts
 
 **Checkpoint**: Code → Block 方向可正常運作，包含原始碼積木降級機制
 
