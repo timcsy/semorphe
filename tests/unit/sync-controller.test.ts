@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SyncController } from '../../src/ui/sync-controller'
 
 describe('SyncController', () => {
@@ -9,7 +9,6 @@ describe('SyncController', () => {
   let mockSetBlocks: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    vi.useFakeTimers()
     mockBlocksToCode = vi.fn().mockReturnValue('int x = 10;')
     mockCodeToBlocks = vi.fn().mockResolvedValue({
       blocks: { languageVersion: 0, blocks: [] },
@@ -22,85 +21,56 @@ describe('SyncController', () => {
       codeToBlocks: mockCodeToBlocks,
       setCode: mockSetCode,
       setBlocks: mockSetBlocks,
-      debounceMs: 300,
     })
   })
 
-  afterEach(() => {
-    vi.useRealTimers()
-    syncController.destroy()
-  })
-
-  describe('Block → Code 觸發', () => {
-    it('should call blocksToCode when blocks change', async () => {
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      await vi.advanceTimersByTimeAsync(300)
+  describe('Block → Code 手動觸發', () => {
+    it('should call blocksToCode and setCode when syncBlocksToCode is called', () => {
+      syncController.syncBlocksToCode({ blocks: { languageVersion: 0, blocks: [] } })
       expect(mockBlocksToCode).toHaveBeenCalled()
-    })
-
-    it('should call setCode with generated code', async () => {
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      await vi.advanceTimersByTimeAsync(300)
       expect(mockSetCode).toHaveBeenCalledWith('int x = 10;')
     })
+
+    it('should be synchronous', () => {
+      syncController.syncBlocksToCode({ blocks: { languageVersion: 0, blocks: [] } })
+      expect(mockBlocksToCode).toHaveBeenCalledTimes(1)
+      expect(mockSetCode).toHaveBeenCalledTimes(1)
+    })
   })
 
-  describe('Code → Block 觸發', () => {
-    it('should call codeToBlocks when code changes', async () => {
-      syncController.onCodeChanged('int x = 10;')
-      await vi.advanceTimersByTimeAsync(300)
+  describe('Code → Block 手動觸發', () => {
+    it('should call codeToBlocks and setBlocks when syncCodeToBlocks is called', async () => {
+      await syncController.syncCodeToBlocks('int x = 10;')
       expect(mockCodeToBlocks).toHaveBeenCalledWith('int x = 10;')
-    })
-
-    it('should call setBlocks with workspace state', async () => {
-      syncController.onCodeChanged('int x = 10;')
-      await vi.advanceTimersByTimeAsync(300)
       expect(mockSetBlocks).toHaveBeenCalled()
     })
   })
 
-  describe('防抖邏輯', () => {
-    it('should debounce rapid block changes', async () => {
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      await vi.advanceTimersByTimeAsync(300)
-      expect(mockBlocksToCode).toHaveBeenCalledTimes(1)
-    })
+  describe('防止重複觸發', () => {
+    it('should not allow syncCodeToBlocks while syncing', async () => {
+      // Make codeToBlocks hang
+      let resolve: () => void
+      mockCodeToBlocks.mockReturnValue(new Promise<unknown>(r => { resolve = () => r({ blocks: {} }) }))
 
-    it('should debounce rapid code changes', async () => {
-      syncController.onCodeChanged('a')
-      syncController.onCodeChanged('ab')
-      syncController.onCodeChanged('abc')
-      await vi.advanceTimersByTimeAsync(300)
-      expect(mockCodeToBlocks).toHaveBeenCalledTimes(1)
-      expect(mockCodeToBlocks).toHaveBeenCalledWith('abc')
-    })
+      const promise = syncController.syncCodeToBlocks('int x;')
+      expect(syncController.isSyncing()).toBe(true)
 
-    it('should not trigger before debounce period', async () => {
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      await vi.advanceTimersByTimeAsync(100)
+      // Try to trigger again while syncing
+      syncController.syncBlocksToCode({ blocks: {} })
       expect(mockBlocksToCode).not.toHaveBeenCalled()
+
+      resolve!()
+      await promise
     })
-  })
 
-  describe('防止無限迴圈', () => {
-    it('should not trigger code→blocks while blocks→code is running', async () => {
-      // Trigger blocks→code
-      syncController.onBlocksChanged({ blocks: { languageVersion: 0, blocks: [] } })
-      await vi.advanceTimersByTimeAsync(300)
-
-      // The setCode call should be flagged as source-locked
-      // So if code editor reacts, it should be suppressed
+    it('should not allow syncBlocksToCode while syncing blocks→code', () => {
+      // blocksToCode is synchronous, so syncing flag is only true during execution
+      // After completion, syncing is false and another call should work
+      syncController.syncBlocksToCode({ blocks: {} })
       expect(mockBlocksToCode).toHaveBeenCalledTimes(1)
-    })
 
-    it('should not trigger blocks→code while code→blocks is running', async () => {
-      // Trigger code→blocks
-      syncController.onCodeChanged('int x;')
-      await vi.advanceTimersByTimeAsync(300)
-
-      expect(mockCodeToBlocks).toHaveBeenCalledTimes(1)
+      syncController.syncBlocksToCode({ blocks: {} })
+      expect(mockBlocksToCode).toHaveBeenCalledTimes(2)
     })
   })
 })

@@ -57,7 +57,7 @@ export class BlockRegistry {
   getByNodeType(nodeType: string): BlockSpec[] {
     const results: BlockSpec[] = []
     for (const spec of this.blocks.values()) {
-      if (spec.astPattern.nodeType === nodeType) {
+      if (spec.astPattern?.nodeType === nodeType) {
         results.push(spec)
       }
     }
@@ -66,6 +66,22 @@ export class BlockRegistry {
 
   getByCategory(category: string): string[] {
     return this.categories.get(category) ?? []
+  }
+
+  /** 取得指定語言可用的所有積木（universal + 該語言的特殊積木） */
+  getByLanguage(languageId: string): BlockSpec[] {
+    const results: BlockSpec[] = []
+    for (const spec of this.blocks.values()) {
+      if (spec.language === 'universal' || spec.language === languageId) {
+        results.push(spec)
+      }
+    }
+    return results
+  }
+
+  /** 取得所有已註冊的積木 */
+  getAll(): BlockSpec[] {
+    return Array.from(this.blocks.values())
   }
 
   validate(spec: unknown): ValidationError[] {
@@ -79,6 +95,10 @@ export class BlockRegistry {
 
     if (!s.id || typeof s.id !== 'string') {
       errors.push({ field: 'id', message: 'id is required and must be a non-empty string' })
+    }
+
+    if (!s.language || typeof s.language !== 'string') {
+      errors.push({ field: 'language', message: 'language is required and must be a non-empty string' })
     }
 
     if (!s.category || typeof s.category !== 'string') {
@@ -98,31 +118,50 @@ export class BlockRegistry {
       }
     }
 
-    if (!s.codeTemplate || typeof s.codeTemplate !== 'object') {
-      errors.push({ field: 'codeTemplate', message: 'codeTemplate is required and must be an object' })
-    } else {
-      const ct = s.codeTemplate as Record<string, unknown>
-      if (!ct.pattern || typeof ct.pattern !== 'string') {
-        errors.push({ field: 'codeTemplate.pattern', message: 'codeTemplate.pattern is required and must be a non-empty string' })
-      }
-    }
+    const isUniversal = s.language === 'universal'
 
-    if (!s.astPattern || typeof s.astPattern !== 'object') {
-      errors.push({ field: 'astPattern', message: 'astPattern is required and must be an object' })
-    } else {
-      const ap = s.astPattern as Record<string, unknown>
-      if (!ap.nodeType || typeof ap.nodeType !== 'string') {
-        errors.push({ field: 'astPattern.nodeType', message: 'astPattern.nodeType is required and must be a non-empty string' })
+    if (!isUniversal) {
+      // 語言特殊積木必須有 codeTemplate 和 astPattern
+      if (s.codeTemplate !== undefined && typeof s.codeTemplate === 'object' && s.codeTemplate !== null) {
+        const ct = s.codeTemplate as Record<string, unknown>
+        if (!ct.pattern || typeof ct.pattern !== 'string') {
+          errors.push({ field: 'codeTemplate.pattern', message: 'codeTemplate.pattern is required and must be a non-empty string' })
+        }
+      } else if (s.codeTemplate === undefined) {
+        errors.push({ field: 'codeTemplate', message: 'codeTemplate is required for language-specific blocks' })
+      } else {
+        errors.push({ field: 'codeTemplate', message: 'codeTemplate must be an object' })
+      }
+
+      if (s.astPattern !== undefined && typeof s.astPattern === 'object' && s.astPattern !== null) {
+        const ap = s.astPattern as Record<string, unknown>
+        if (!ap.nodeType || typeof ap.nodeType !== 'string') {
+          errors.push({ field: 'astPattern.nodeType', message: 'astPattern.nodeType is required and must be a non-empty string' })
+        }
+      } else if (s.astPattern === undefined) {
+        errors.push({ field: 'astPattern', message: 'astPattern is required for language-specific blocks' })
+      } else {
+        errors.push({ field: 'astPattern', message: 'astPattern must be an object' })
       }
     }
 
     return errors
   }
 
-  toToolboxDef(): ToolboxDefinition {
+  toToolboxDef(languageId?: string): ToolboxDefinition {
     const contents: ToolboxCategory[] = []
+    const filteredCategories = new Map<string, string[]>()
 
-    for (const [categoryName, blockIds] of this.categories) {
+    for (const [id, spec] of this.blocks) {
+      if (languageId && spec.language !== 'universal' && spec.language !== languageId) {
+        continue
+      }
+      const catList = filteredCategories.get(spec.category) ?? []
+      catList.push(id)
+      filteredCategories.set(spec.category, catList)
+    }
+
+    for (const [categoryName, blockIds] of filteredCategories) {
       contents.push({
         kind: 'category',
         name: categoryName,

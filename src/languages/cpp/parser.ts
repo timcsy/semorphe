@@ -27,7 +27,7 @@ export class CppParser {
 
     this.parser = new Parser()
 
-    const langPath = this.joinPath(resolvedWasmDir, 'tree-sitter-c.wasm')
+    const langPath = this.joinPath(resolvedWasmDir, 'tree-sitter-cpp.wasm')
     const language = await Language.load(langPath)
     this.parser.setLanguage(language)
     this.initialized = true

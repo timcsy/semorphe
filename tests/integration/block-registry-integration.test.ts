@@ -2,10 +2,15 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { BlockRegistry } from '../../src/core/block-registry'
 import type { BlockSpec } from '../../src/core/types'
 import sampleForLoop from '../fixtures/block-specs/sample-for-loop.json'
+import universalBlocks from '../../src/blocks/universal.json'
+import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/blocks/special.json'
 
 function createSpec(id: string, category: string, nodeType: string): BlockSpec {
   return {
     id,
+    language: 'cpp',
     category,
     version: '1.0.0',
     blockDef: { type: id, message0: `${id} block`, colour: 120 },
@@ -27,7 +32,7 @@ describe('BlockRegistry 整合測試', () => {
       const spec = registry.get('c_for_loop')
       expect(spec).toBeDefined()
       expect(spec!.category).toBe('loops')
-      expect(spec!.astPattern.nodeType).toBe('for_statement')
+      expect(spec!.astPattern!.nodeType).toBe('for_statement')
     })
 
     it('should register multiple specs from different categories', () => {
@@ -132,6 +137,27 @@ describe('BlockRegistry 整合測試', () => {
     it('should validate fixture file structure', () => {
       const errors = registry.validate(sampleForLoop)
       expect(errors).toEqual([])
+    })
+  })
+
+  describe('US1: 刪除 8 個重複積木後工具箱數量減少', () => {
+    it('should have reduced block count after removing 8 duplicates (67 = 75 - 8)', () => {
+      const fullRegistry = new BlockRegistry()
+      const allBlocks = [...universalBlocks, ...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
+      allBlocks.forEach(spec => fullRegistry.register(spec))
+
+      const toolbox = fullRegistry.toToolboxDef('cpp')
+      let totalBlocks = 0
+      for (const category of toolbox.contents) {
+        if (category.contents) {
+          totalBlocks += category.contents.length
+        }
+      }
+
+      // After US1: removed c_number, c_variable_ref, c_string_literal, c_binary_op,
+      // cpp_cout, cpp_cin, cpp_endl, c_var_declare_init_expr (8 blocks)
+      // Remaining: 23 universal + 9 basic + 26 advanced + 9 special = 67
+      expect(totalBlocks).toBe(67)
     })
   })
 })

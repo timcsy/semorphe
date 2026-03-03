@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { BlockRegistry } from '../../src/core/block-registry'
 import type { BlockSpec, ValidationError } from '../../src/core/types'
+import universalBlocks from '../../src/blocks/universal.json'
+import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/blocks/special.json'
 
 function createValidSpec(overrides: Partial<BlockSpec> = {}): BlockSpec {
   return {
     id: 'c_for_loop',
+    language: 'cpp',
     category: 'loops',
     version: '1.0.0',
     blockDef: {
@@ -177,6 +182,140 @@ describe('BlockRegistry', () => {
     })
   })
 
+  describe('getByLanguage', () => {
+    it('should return only universal blocks when no language-specific blocks exist', () => {
+      const universalSpec = createValidSpec({
+        id: 'u_var_declare',
+        language: 'universal',
+        blockDef: { type: 'u_var_declare' },
+        codeTemplate: undefined,
+        astPattern: undefined,
+      })
+      registry.register(universalSpec)
+
+      const results = registry.getByLanguage('cpp')
+      expect(results).toHaveLength(1)
+      expect(results[0].id).toBe('u_var_declare')
+    })
+
+    it('should return universal + matching language blocks', () => {
+      const universalSpec = createValidSpec({
+        id: 'u_var_declare',
+        language: 'universal',
+        blockDef: { type: 'u_var_declare' },
+        codeTemplate: undefined,
+        astPattern: undefined,
+      })
+      const cppSpec = createValidSpec({
+        id: 'c_for_loop',
+        language: 'cpp',
+        blockDef: { type: 'c_for_loop' },
+      })
+      registry.register(universalSpec)
+      registry.register(cppSpec)
+
+      const results = registry.getByLanguage('cpp')
+      expect(results).toHaveLength(2)
+      const ids = results.map(s => s.id)
+      expect(ids).toContain('u_var_declare')
+      expect(ids).toContain('c_for_loop')
+    })
+
+    it('should not return blocks from other languages', () => {
+      const cppSpec = createValidSpec({
+        id: 'c_for_loop',
+        language: 'cpp',
+        blockDef: { type: 'c_for_loop' },
+      })
+      registry.register(cppSpec)
+
+      const results = registry.getByLanguage('python')
+      expect(results).toHaveLength(0)
+    })
+
+    it('should return universal blocks for unknown language', () => {
+      const universalSpec = createValidSpec({
+        id: 'u_if',
+        language: 'universal',
+        blockDef: { type: 'u_if' },
+        codeTemplate: undefined,
+        astPattern: undefined,
+      })
+      registry.register(universalSpec)
+
+      const results = registry.getByLanguage('unknown_lang')
+      expect(results).toHaveLength(1)
+      expect(results[0].language).toBe('universal')
+    })
+  })
+
+  describe('getAll', () => {
+    it('should return all registered blocks', () => {
+      registry.register(createValidSpec({ id: 'c_for_loop', blockDef: { type: 'c_for_loop' } }))
+      registry.register(createValidSpec({
+        id: 'u_if',
+        language: 'universal',
+        blockDef: { type: 'u_if' },
+        codeTemplate: undefined,
+        astPattern: undefined,
+      }))
+
+      const all = registry.getAll()
+      expect(all).toHaveLength(2)
+    })
+
+    it('should return empty array when no blocks registered', () => {
+      expect(registry.getAll()).toHaveLength(0)
+    })
+  })
+
+  describe('validate language field', () => {
+    it('should return error for missing language', () => {
+      const spec = { id: 'test', category: 'test', version: '1.0.0', blockDef: { type: 'test' } } as unknown
+      const errors = registry.validate(spec)
+      expect(errors.some((e: ValidationError) => e.field === 'language')).toBe(true)
+    })
+
+    it('should not require codeTemplate/astPattern for universal blocks', () => {
+      const spec = {
+        id: 'u_test',
+        language: 'universal',
+        category: 'test',
+        version: '1.0.0',
+        blockDef: { type: 'u_test' },
+      }
+      const errors = registry.validate(spec)
+      expect(errors.some((e: ValidationError) => e.field === 'codeTemplate')).toBe(false)
+      expect(errors.some((e: ValidationError) => e.field === 'astPattern')).toBe(false)
+    })
+
+    it('should require codeTemplate for language-specific blocks', () => {
+      const spec = {
+        id: 'c_test',
+        language: 'cpp',
+        category: 'test',
+        version: '1.0.0',
+        blockDef: { type: 'c_test' },
+        astPattern: { nodeType: 'test', constraints: [] },
+      }
+      const errors = registry.validate(spec)
+      expect(errors.some((e: ValidationError) => e.field === 'codeTemplate')).toBe(true)
+    })
+
+    it('should require astPattern for language-specific blocks', () => {
+      const spec = {
+        id: 'c_test',
+        language: 'cpp',
+        category: 'test',
+        version: '1.0.0',
+        blockDef: { type: 'c_test' },
+        codeTemplate: { pattern: 'test;', imports: [], order: 0 },
+      }
+      const errors = registry.validate(spec)
+      expect(errors.some((e: ValidationError) => e.field === 'astPattern')).toBe(true)
+    })
+  })
+
   describe('toToolboxDef', () => {
     it('should return empty toolbox when no blocks registered', () => {
       const toolbox = registry.toToolboxDef()
@@ -211,6 +350,81 @@ describe('BlockRegistry', () => {
       const toolbox = registry.toToolboxDef()
       const category = toolbox.contents[0]
       expect(category.contents[0]).toEqual({ kind: 'block', type: 'c_for_loop' })
+    })
+
+    it('should filter by languageId when provided', () => {
+      registry.register(createValidSpec({ id: 'c_for_loop', language: 'cpp', blockDef: { type: 'c_for_loop' }, category: 'loops' }))
+      registry.register(createValidSpec({
+        id: 'u_if',
+        language: 'universal',
+        blockDef: { type: 'u_if' },
+        category: 'control',
+        codeTemplate: undefined,
+        astPattern: undefined,
+      }))
+
+      const cppToolbox = registry.toToolboxDef('cpp')
+      expect(cppToolbox.contents).toHaveLength(2) // loops + control
+
+      const pyToolbox = registry.toToolboxDef('python')
+      expect(pyToolbox.contents).toHaveLength(1) // only control (universal)
+      expect(pyToolbox.contents[0].contents[0].type).toBe('u_if')
+    })
+  })
+
+  describe('US2: 自然語言標籤與符號調整', () => {
+    let fullRegistry: BlockRegistry
+
+    beforeEach(() => {
+      fullRegistry = new BlockRegistry()
+      const allBlocks = [...universalBlocks, ...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
+      allBlocks.forEach(spec => fullRegistry.register(spec))
+    })
+
+    it('u_compare dropdown should use natural language labels', () => {
+      const spec = fullRegistry.get('u_compare')!
+      const dropdown = spec.blockDef.args0?.find((a: { name?: string }) => a.name === 'OP')
+      expect(dropdown).toBeDefined()
+      const labels = (dropdown as { options: string[][] }).options.map((o: string[]) => o[0])
+      expect(labels).toContain('大於')
+      expect(labels).toContain('小於')
+      expect(labels).toContain('大於等於')
+      expect(labels).toContain('小於等於')
+      expect(labels).toContain('等於')
+      expect(labels).toContain('不等於')
+    })
+
+    it('u_arithmetic dropdown should use × ÷ 餘數', () => {
+      const spec = fullRegistry.get('u_arithmetic')!
+      const dropdown = spec.blockDef.args0?.find((a: { name?: string }) => a.name === 'OP')
+      expect(dropdown).toBeDefined()
+      const labels = (dropdown as { options: string[][] }).options.map((o: string[]) => o[0])
+      expect(labels).toContain('×')
+      expect(labels).toContain('÷')
+      expect(labels).toContain('餘數')
+    })
+
+    it('u_array_access message0 should use bracket notation', () => {
+      const spec = fullRegistry.get('u_array_access')!
+      expect(spec.blockDef.message0).toContain('[ %2 ]')
+      expect(spec.blockDef.message0).not.toContain('的第')
+    })
+  })
+
+  describe('US1: 已刪除的 C++ 積木不應存在於 registry', () => {
+    const deletedBlockIds = [
+      'c_number', 'c_variable_ref', 'c_string_literal', 'c_binary_op',
+      'cpp_cout', 'cpp_cin', 'cpp_endl', 'c_var_declare_init_expr',
+    ]
+
+    it('should not contain any of the 8 deleted C++ blocks after loading all definitions', () => {
+      const fullRegistry = new BlockRegistry()
+      const allBlocks = [...universalBlocks, ...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
+      allBlocks.forEach(spec => fullRegistry.register(spec))
+
+      for (const id of deletedBlockIds) {
+        expect(fullRegistry.get(id), `${id} should not exist in registry`).toBeUndefined()
+      }
     })
   })
 })

@@ -1,5 +1,6 @@
 {
   "id": "c_for_loop",
+  "language": "cpp",
   "category": "loops",
   "version": "1.0.0",
   "blockDef": {

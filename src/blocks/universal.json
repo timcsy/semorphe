@@ -1,0 +1,427 @@
+[
+  {
+    "id": "u_var_declare",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_declare",
+      "message0": "建立 %1 變數 %2 = %3",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["long long","long long"],["string","string"],["bool","bool"]] },
+        { "type": "field_input", "name": "NAME", "text": "x" },
+        { "type": "input_value", "name": "INIT", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 330,
+      "tooltip": "建立一個新變數並設定初始值"
+    }
+  },
+  {
+    "id": "u_var_assign",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_assign",
+      "message0": "把 %1 設成 %2",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 330,
+      "tooltip": "將變數設定為新的值"
+    }
+  },
+  {
+    "id": "u_var_ref",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_ref",
+      "message0": "%1",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "取得變數的值"
+    }
+  },
+  {
+    "id": "u_number",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_number",
+      "message0": "%1",
+      "args0": [
+        { "type": "field_number", "name": "NUM", "value": 0 }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "數字常數"
+    }
+  },
+  {
+    "id": "u_string",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_string",
+      "message0": "\" %1 \"",
+      "args0": [
+        { "type": "field_input", "name": "TEXT", "text": "hello" }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "字串常數"
+    }
+  },
+  {
+    "id": "u_arithmetic",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_arithmetic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["+","+"],["-","-"],["×","*"],["÷","/"],["餘數","%"]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "算術運算"
+    }
+  },
+  {
+    "id": "u_compare",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_compare",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["大於",">"],["小於","<"],["大於等於",">="],["小於等於","<="],["等於","=="],["不等於","!="]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "比較運算"
+    }
+  },
+  {
+    "id": "u_logic",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_logic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" },
+        { "type": "field_dropdown", "name": "OP", "options": [["而且","&&"],["或者","||"]] },
+        { "type": "input_value", "name": "B", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "邏輯運算（而且 / 或者）"
+    }
+  },
+  {
+    "id": "u_logic_not",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_logic_not",
+      "message0": "不是 %1",
+      "args0": [
+        { "type": "input_value", "name": "A", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "邏輯否定"
+    }
+  },
+  {
+    "id": "u_if",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_if",
+      "message0": "如果 %1 就",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "如果條件成立，就執行裡面的積木"
+    }
+  },
+  {
+    "id": "u_if_else",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_if_else",
+      "message0": "如果 %1 就",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "THEN" }
+      ],
+      "message2": "否則",
+      "message3": "%1",
+      "args3": [
+        { "type": "input_statement", "name": "ELSE" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 40,
+      "tooltip": "如果條件成立就執行「就」的部分，否則執行「否則」的部分"
+    }
+  },
+  {
+    "id": "u_count_loop",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_count_loop",
+      "message0": "重複：%1 從 %2 到 %3",
+      "args0": [
+        { "type": "field_input", "name": "VAR", "text": "i" },
+        { "type": "input_value", "name": "FROM", "check": "Expression" },
+        { "type": "input_value", "name": "TO", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "計數式重複迴圈"
+    }
+  },
+  {
+    "id": "u_while_loop",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_while_loop",
+      "message0": "當 %1 持續執行",
+      "args0": [
+        { "type": "input_value", "name": "COND", "check": "Expression" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "當條件成立時持續執行"
+    }
+  },
+  {
+    "id": "u_break",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_break",
+      "message0": "跳出迴圈",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "跳出目前的迴圈"
+    }
+  },
+  {
+    "id": "u_continue",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_continue",
+      "message0": "跳至下一次",
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 120,
+      "tooltip": "跳過本次迴圈，直接執行下一次"
+    }
+  },
+  {
+    "id": "u_func_def",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_func_def",
+      "message0": "定義函式 %1（%2）回傳 %3",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "myFunc" },
+        { "type": "field_input", "name": "PARAMS", "text": "" },
+        { "type": "field_dropdown", "name": "RETURN_TYPE", "options": [["void","void"],["int","int"],["float","float"],["double","double"],["char","char"],["long long","long long"],["string","string"],["bool","bool"]] }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 60,
+      "tooltip": "定義一個函式"
+    }
+  },
+  {
+    "id": "u_func_call",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_func_call",
+      "message0": "呼叫 %1（%2）",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "func" },
+        { "type": "field_input", "name": "ARGS", "text": "" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 60,
+      "tooltip": "呼叫一個函式"
+    }
+  },
+  {
+    "id": "u_return",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_return",
+      "message0": "回傳 %1",
+      "args0": [
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 60,
+      "tooltip": "從函式回傳一個值"
+    }
+  },
+  {
+    "id": "u_print",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_print",
+      "message0": "輸出 %1",
+      "args0": [
+        { "type": "input_value", "name": "EXPR", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "輸出一個或多個值到螢幕上"
+    }
+  },
+  {
+    "id": "u_endl",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_endl",
+      "message0": "換行",
+      "output": "Expression",
+      "colour": 180,
+      "tooltip": "輸出換行符號"
+    }
+  },
+  {
+    "id": "u_input",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_input",
+      "message0": "讀取輸入 → %1",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "x" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 180,
+      "tooltip": "從鍵盤讀取一個值到變數中"
+    }
+  },
+  {
+    "id": "u_array_declare",
+    "language": "universal",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_array_declare",
+      "message0": "建立 %1 陣列 %2 大小 %3",
+      "args0": [
+        { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["long long","long long"]] },
+        { "type": "field_input", "name": "NAME", "text": "arr" },
+        { "type": "input_value", "name": "SIZE", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 260,
+      "tooltip": "建立一個固定大小的陣列"
+    }
+  },
+  {
+    "id": "u_array_access",
+    "language": "universal",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_array_access",
+      "message0": "%1 [ %2 ]",
+      "args0": [
+        { "type": "field_input", "name": "ARRAY", "text": "arr" },
+        { "type": "input_value", "name": "INDEX", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 260,
+      "tooltip": "存取陣列中的某個元素"
+    }
+  }
+]

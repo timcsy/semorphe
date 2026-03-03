@@ -5,7 +5,7 @@ import type { BlockSpec } from '../../src/core/types'
 
 function makeSpec(id: string, category: string, nodeType: string, pattern: string, imports: string[] = [], order = 0): BlockSpec {
   return {
-    id, category, version: '1.0.0',
+    id, language: 'cpp', category, version: '1.0.0',
     blockDef: { type: id },
     codeTemplate: { pattern, imports, order },
     astPattern: { nodeType, constraints: [] },

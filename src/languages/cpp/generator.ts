@@ -1,5 +1,6 @@
 import type { BlockRegistry } from '../../core/block-registry'
 import type { BlockSpec } from '../../core/types'
+import type { CppLanguageAdapter } from './adapter'
 
 interface BlockJSON {
   type: string
@@ -24,9 +25,31 @@ interface GenerateResult {
 export class CppGenerator {
   private registry: BlockRegistry
   private collectedImports: Set<string> = new Set()
+  private adapter: CppLanguageAdapter | null = null
 
-  constructor(registry: BlockRegistry) {
+  constructor(registry: BlockRegistry, adapter?: CppLanguageAdapter) {
     this.registry = registry
+    this.adapter = adapter ?? null
+
+    // Wire fallback so adapter can delegate non-u_* blocks back to generator
+    if (this.adapter) {
+      this.adapter.setFallbackCodeGen({
+        statement: (block, indent) => {
+          const result = this.generateBlock(block, indent)
+          let code = result.code
+          const trimmed = code.trimEnd()
+          if (trimmed && !trimmed.endsWith(';') && !trimmed.endsWith('}') &&
+              !trimmed.startsWith('#') && !trimmed.startsWith('//')) {
+            code = trimmed + ';'
+          }
+          return code
+        },
+        expression: (block) => {
+          const result = this.generateExpression(block, 0)
+          return result.code
+        },
+      })
+    }
   }
 
   getLanguageId(): string {
@@ -77,7 +100,17 @@ export class CppGenerator {
 
     while (current) {
       const code = this.generateBlock(current, indent)
-      if (code.code) parts.push(code.code)
+      if (code.code) {
+        let line = code.code
+        const trimmed = line.trimEnd()
+        // Auto-add semicolon for expression blocks used as statements
+        if (trimmed && !trimmed.endsWith(';') && !trimmed.endsWith('}') &&
+            !trimmed.startsWith('#') && !trimmed.startsWith('//')) {
+          line = trimmed + ';'
+          if (indent > 0) line = this.indent(line, 0) // preserve original indent
+        }
+        parts.push(line)
+      }
       current = current.next?.block
     }
 
@@ -88,6 +121,20 @@ export class CppGenerator {
     const spec = this.registry.get(block.type)
     if (!spec) {
       return { code: this.indent(`/* unknown block: ${block.type} */`, indent), order: 0 }
+    }
+
+    // Universal blocks: delegate to adapter
+    if (!spec.codeTemplate && this.adapter) {
+      const code = this.adapter.generateCode(block.type, block as import('../../core/types').BlockJSON, indent)
+      // Collect imports from adapter
+      for (const imp of this.adapter.getAndClearImports()) {
+        this.collectedImports.add(imp)
+      }
+      return { code, order: 0 }
+    }
+
+    if (!spec.codeTemplate) {
+      return { code: this.indent(`/* universal block: ${block.type} */`, indent), order: 0 }
     }
 
     // Collect imports
@@ -107,6 +154,19 @@ export class CppGenerator {
       return { code: `/* unknown: ${block.type} */`, order: 0 }
     }
 
+    // Universal blocks: delegate to adapter
+    if (!spec.codeTemplate && this.adapter) {
+      const code = this.adapter.generateCode(block.type, block as import('../../core/types').BlockJSON, 0).trim()
+      for (const imp of this.adapter.getAndClearImports()) {
+        this.collectedImports.add(imp)
+      }
+      return { code, order: 20 } // atoms — no parens needed
+    }
+
+    if (!spec.codeTemplate) {
+      return { code: `/* universal: ${block.type} */`, order: 0 }
+    }
+
     // Collect imports
     for (const imp of spec.codeTemplate.imports) {
       this.collectedImports.add(imp)
@@ -116,10 +176,6 @@ export class CppGenerator {
     const code = this.substituteTemplate(pattern, block, spec, 0)
     const order = spec.codeTemplate.order
 
-    // Add parentheses if child has lower or equal precedence than parent
-    // (lower order number = lower precedence in C)
-    // Atoms (order >= 20) never need parentheses
-    // Equal order also needs parens (e.g. a+b inside a*b, both order 6)
     if (order <= parentOrder && order > 0 && order < 20) {
       return { code: `(${code})`, order }
     }
@@ -140,11 +196,14 @@ export class CppGenerator {
         if (inputBlock) {
           // Determine if this is a statement input (contains \n in the pattern after ${NAME})
           if (this.isStatementInput(pattern, name)) {
-            return this.generateStatementChain(inputBlock, indent + 1)
+            return this.generateStatementChain(inputBlock, 1)
           } else {
             // Value input - generate as expression
-            const result = this.generateExpression(inputBlock, spec.codeTemplate.order)
-            return result.code
+            const result = this.generateExpression(inputBlock, spec.codeTemplate?.order ?? 0)
+            // Strip trailing semicolon when a statement block is used as a value input
+            let code = result.code
+            if (code.endsWith(';')) code = code.slice(0, -1)
+            return code
           }
         }
       }

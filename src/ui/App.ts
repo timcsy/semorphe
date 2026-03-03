@@ -5,8 +5,10 @@ import { Storage } from './storage'
 import { BlockRegistry } from '../core/block-registry'
 import { CppGenerator } from '../languages/cpp/generator'
 import { CppParser } from '../languages/cpp/parser'
+import { CppLanguageAdapter } from '../languages/cpp/adapter'
 import { CodeToBlocksConverter } from '../core/code-to-blocks'
 import type { BlockSpec, WorkspaceState } from '../core/types'
+import universalBlocks from '../blocks/universal.json'
 import basicBlocks from '../languages/cpp/blocks/basic.json'
 import advancedBlocks from '../languages/cpp/blocks/advanced.json'
 import specialBlocks from '../languages/cpp/blocks/special.json'
@@ -19,22 +21,25 @@ export class App {
   private registry: BlockRegistry
   private generator: CppGenerator
   private parser: CppParser
+  private adapter: CppLanguageAdapter
   private codeToBlocks: CodeToBlocksConverter | null = null
+  private languageId = 'cpp'
 
   constructor() {
     this.storage = new Storage()
     this.registry = new BlockRegistry()
-    this.generator = new CppGenerator(this.registry)
+    this.adapter = new CppLanguageAdapter()
+    this.generator = new CppGenerator(this.registry, this.adapter)
     this.parser = new CppParser()
   }
 
   async init(): Promise<void> {
-    // Load default block definitions
+    // Load universal + language-specific block definitions
     this.loadDefaultBlocks()
 
     // Initialize parser
     await this.parser.init()
-    this.codeToBlocks = new CodeToBlocksConverter(this.registry, this.parser)
+    this.codeToBlocks = new CodeToBlocksConverter(this.registry, this.parser, this.adapter)
 
     // Initialize editors
     const blocklyContainer = document.getElementById('blockly-editor')
@@ -45,30 +50,51 @@ export class App {
     }
 
     this.blocklyEditor = new BlocklyEditor(blocklyContainer)
-    this.blocklyEditor.init(this.registry)
+    this.blocklyEditor.init(this.registry, this.languageId)
 
     this.codeEditor = new CodeEditor(codeContainer)
     this.codeEditor.init()
 
-    // Initialize sync controller
+    // Initialize sync controller with SourceMapping support
     this.syncController = new SyncController({
       blocksToCode: (workspace) => this.generator.generate(workspace as Parameters<CppGenerator['generate']>[0]),
       codeToBlocks: (code) => this.codeToBlocks!.convert(code),
+      codeToBlocksWithMappings: async (code) => {
+        const result = await this.codeToBlocks!.convertWithMappings(code)
+        return { workspace: result.workspace, mappings: result.mappings }
+      },
       setCode: (code) => this.codeEditor!.setCode(code),
       setBlocks: (workspace) => this.blocklyEditor!.setState(workspace),
-      debounceMs: 500,
+      highlightCodeLines: (startLine, endLine) => this.codeEditor!.addHighlight(startLine, endLine),
+      clearCodeHighlight: () => this.codeEditor!.clearHighlight(),
+      highlightBlock: (blockId) => this.blocklyEditor!.highlightBlock(blockId),
+      clearBlockHighlight: () => this.blocklyEditor!.highlightBlock(null),
     })
 
-    // Wire up events
-    this.blocklyEditor.onChange((workspace) => {
-      this.syncController!.onBlocksChanged(workspace)
+    // Wire up auto-save (no auto-sync)
+    this.blocklyEditor.onChange(() => {
       this.autoSave()
     })
 
-    this.codeEditor.onChange((code) => {
-      this.syncController!.onCodeChanged(code)
+    // Wire up bidirectional highlight
+    this.blocklyEditor.onBlockSelect((blockId) => {
+      if (blockId) {
+        this.syncController!.onBlockSelected(blockId)
+      } else {
+        this.syncController!.onBlockDeselected()
+      }
+    })
+
+    this.codeEditor.onChange(() => {
       this.autoSave()
     })
+
+    this.codeEditor.onCursorChange((line) => {
+      this.syncController!.onCodeCursorChange(line)
+    })
+
+    // Setup manual sync buttons
+    this.setupSyncUI()
 
     // Restore saved state
     this.restoreState()
@@ -79,7 +105,7 @@ export class App {
   }
 
   private loadDefaultBlocks(): void {
-    const allBlocks = [...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
+    const allBlocks = [...universalBlocks, ...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
     allBlocks.forEach(spec => this.registry.register(spec))
   }
 
@@ -101,7 +127,19 @@ export class App {
         this.codeEditor?.setCode(state.code)
       }
       if (state.blocklyState && Object.keys(state.blocklyState).length > 0) {
-        this.blocklyEditor?.setState(state.blocklyState)
+        this.migrateWorkspaceState(state.blocklyState)
+        try {
+          this.blocklyEditor?.setState(state.blocklyState)
+        } catch (err) {
+          console.warn('Failed to restore blockly state, clearing saved state:', err)
+          this.storage.save({
+            blocklyState: {},
+            code: state.code ?? '',
+            languageId: state.languageId ?? 'cpp',
+            customBlockSpecs: [],
+            lastModified: new Date().toISOString(),
+          })
+        }
       }
       // Restore custom block specs
       if (state.customBlockSpecs?.length > 0) {
@@ -112,8 +150,74 @@ export class App {
             // Skip duplicate registrations
           }
         }
-        this.blocklyEditor?.updateToolbox(this.registry)
+        this.blocklyEditor?.updateToolbox(this.registry, this.languageId)
       }
+    }
+  }
+
+  /** Migrate old workspace format to current format */
+  private migrateWorkspaceState(ws: Record<string, unknown>): void {
+    const blocks = ws.blocks as { blocks?: Record<string, unknown>[] } | undefined
+    if (!blocks?.blocks) return
+    for (const block of blocks.blocks) {
+      this.migrateBlock(block)
+    }
+  }
+
+  private migrateBlock(block: Record<string, unknown>): void {
+    if (!block) return
+    // Migrate u_print: EXPR → EXPR0 + extraState, remove old ENDL field
+    if (block.type === 'u_print') {
+      const inputs = block.inputs as Record<string, unknown> | undefined
+      if (inputs && 'EXPR' in inputs && !('EXPR0' in inputs)) {
+        inputs['EXPR0'] = inputs['EXPR']
+        delete inputs['EXPR']
+      }
+      // Remove old ENDL dropdown field (now uses u_endl block instead)
+      const fields = block.fields as Record<string, unknown> | undefined
+      if (fields) {
+        delete fields['ENDL']
+      }
+      // Recalculate extraState itemCount
+      if (inputs) {
+        const exprCount = Object.keys(inputs).filter(k => /^EXPR\d+$/.test(k)).length
+        if (exprCount > 0) {
+          block.extraState = { itemCount: exprCount }
+        }
+      }
+    }
+    // Recurse into inputs
+    const inputs = block.inputs as Record<string, { block?: Record<string, unknown> }> | undefined
+    if (inputs) {
+      for (const inp of Object.values(inputs)) {
+        if (inp?.block) this.migrateBlock(inp.block)
+      }
+    }
+    // Recurse into next
+    const next = block.next as { block?: Record<string, unknown> } | undefined
+    if (next?.block) this.migrateBlock(next.block)
+  }
+
+  private setupSyncUI(): void {
+    const blocksToCodeBtn = document.getElementById('blocks-to-code-btn')
+    const codeToBlocksBtn = document.getElementById('code-to-blocks-btn')
+
+    if (blocksToCodeBtn) {
+      blocksToCodeBtn.addEventListener('click', () => {
+        const workspace = this.blocklyEditor?.getState()
+        if (workspace) {
+          this.syncController!.syncBlocksToCode(workspace)
+        }
+      })
+    }
+
+    if (codeToBlocksBtn) {
+      codeToBlocksBtn.addEventListener('click', async () => {
+        const code = this.codeEditor?.getCode()
+        if (code !== undefined) {
+          await this.syncController!.syncCodeToBlocks(code)
+        }
+      })
     }
   }
 
@@ -134,7 +238,7 @@ export class App {
             for (const spec of arr) {
               this.registry.register(spec)
             }
-            this.blocklyEditor?.updateToolbox(this.registry)
+            this.blocklyEditor?.updateToolbox(this.registry, this.languageId)
           } catch (err) {
             console.error('Failed to load block definitions:', err)
           }

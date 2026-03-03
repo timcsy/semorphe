@@ -1,13 +1,14 @@
 [
   {
     "id": "c_raw_code",
+    "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
       "type": "c_raw_code",
       "message0": "code: %1",
       "args0": [
-        { "type": "field_multilinetext", "name": "CODE", "text": "// raw code" }
+        { "type": "field_input", "name": "CODE", "text": "// raw code" }
       ],
       "previousStatement": null,
       "nextStatement": null,
@@ -26,6 +27,7 @@
   },
   {
     "id": "c_raw_expression",
+    "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
@@ -50,6 +52,7 @@
   },
   {
     "id": "c_include",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
@@ -75,6 +78,7 @@
   },
   {
     "id": "c_include_local",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
@@ -100,6 +104,7 @@
   },
   {
     "id": "c_define",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
@@ -126,6 +131,7 @@
   },
   {
     "id": "c_ifdef",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
@@ -156,6 +162,7 @@
   },
   {
     "id": "c_ifndef",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
@@ -186,6 +193,7 @@
   },
   {
     "id": "c_comment_line",
+    "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
@@ -211,6 +219,7 @@
   },
   {
     "id": "c_using_namespace",
+    "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {

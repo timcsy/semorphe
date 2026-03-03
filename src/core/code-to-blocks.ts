@@ -1,14 +1,17 @@
 import type { BlockRegistry } from './block-registry'
 import type { CppParser } from '../languages/cpp/parser'
-import type { BlockSpec } from './types'
+import type { BlockSpec, LanguageAdapter, SourceMapping } from './types'
 import type { Node } from 'web-tree-sitter'
 
 interface BlockJSON {
   type: string
   id: string
+  x?: number
+  y?: number
   fields?: Record<string, unknown>
   inputs?: Record<string, { block: BlockJSON }>
   next?: { block: BlockJSON }
+  extraState?: unknown
 }
 
 interface WorkspaceJSON {
@@ -16,6 +19,11 @@ interface WorkspaceJSON {
     languageVersion: number
     blocks: BlockJSON[]
   }
+}
+
+interface ConvertResult {
+  workspace: WorkspaceJSON
+  mappings: SourceMapping[]
 }
 
 let blockIdCounter = 0
@@ -27,20 +35,32 @@ function nextBlockId(): string {
 export class CodeToBlocksConverter {
   private registry: BlockRegistry
   private parser: CppParser
+  private adapter: LanguageAdapter | null
+  private sourceMappings: SourceMapping[] = []
 
-  constructor(registry: BlockRegistry, parser: CppParser) {
+  constructor(registry: BlockRegistry, parser: CppParser, adapter?: LanguageAdapter) {
     this.registry = registry
     this.parser = parser
+    this.adapter = adapter ?? null
   }
 
   async convert(code: string): Promise<WorkspaceJSON> {
     blockIdCounter = 0
+    this.sourceMappings = []
     const tree = await this.parser.parse(code)
     const rootNode = tree.rootNode
     const topBlocks = this.convertChildren(rootNode)
 
     // Chain top-level blocks via next
     const chainedBlocks = this.chainStatements(topBlocks)
+
+    // Add positions to top-level blocks to prevent overlapping
+    let y = 30
+    for (const block of chainedBlocks) {
+      block.x = 30
+      block.y = y
+      y += this.estimateBlockHeight(block)
+    }
 
     return {
       blocks: {
@@ -50,19 +70,26 @@ export class CodeToBlocksConverter {
     }
   }
 
+  /** Convert with SourceMapping (T014) */
+  async convertWithMappings(code: string): Promise<ConvertResult> {
+    const workspace = await this.convert(code)
+    return { workspace, mappings: this.sourceMappings }
+  }
+
+  getSourceMappings(): SourceMapping[] {
+    return this.sourceMappings
+  }
+
   private convertNode(node: Node): BlockJSON | null {
     // Skip unnamed nodes (punctuation, etc.)
     if (!node.isNamed) return null
 
-    // Try to find a matching block spec by node type
-    const specs = this.registry.getByNodeType(node.type)
-
-    if (specs.length > 0) {
-      // Find the best matching spec (check constraints)
-      const spec = this.findBestMatch(specs, node)
-      if (spec) {
-        return this.buildBlock(spec, node)
+    // expression_statement is transparent - process inner expression directly
+    if (node.type === 'expression_statement') {
+      if (node.namedChildren.length > 0) {
+        return this.convertNode(node.namedChildren[0])
       }
+      return null
     }
 
     // Special handling for known compound nodes
@@ -74,14 +101,147 @@ export class CodeToBlocksConverter {
       return null // handled by parent
     }
 
+    // Try adapter first (concept-based mapping)
+    if (this.adapter) {
+      const blockId = this.adapter.matchNodeToBlock(node)
+      if (blockId) {
+        return this.buildBlockFromAdapter(blockId, node)
+      }
+    }
+
+    // Fallback: try registry (language-specific blocks by AST pattern)
+    const specs = this.registry.getByNodeType(node.type)
+    if (specs.length > 0) {
+      const spec = this.findBestMatch(specs, node)
+      if (spec) {
+        return this.buildBlock(spec, node)
+      }
+    }
+
     // Fallback: raw code block
     return this.buildRawCodeBlock(node)
   }
 
+  private buildBlockFromAdapter(blockId: string, node: Node): BlockJSON {
+    const { fields, inputs } = this.adapter!.extractFields(node, blockId)
+    const id = nextBlockId()
+
+    const block: BlockJSON = { type: blockId, id }
+
+    if (Object.keys(fields).length > 0) {
+      block.fields = fields
+    }
+
+    // Fix input block IDs: adapter generates temp IDs, re-assign proper sequential IDs
+    const fixedInputs: Record<string, { block: BlockJSON }> = {}
+    for (const [key, val] of Object.entries(inputs)) {
+      fixedInputs[key] = { block: this.reassignBlockIds(val.block) }
+    }
+    if (Object.keys(fixedInputs).length > 0) {
+      block.inputs = fixedInputs
+    }
+
+    // Extract statement inputs (BODY, THEN, ELSE) from the node
+    this.extractAdapterStatementInputs(blockId, node, block)
+
+    // Add extraState for dynamic-input blocks (u_print with EXPR0, EXPR1, ...)
+    if (block.inputs) {
+      const exprCount = Object.keys(block.inputs).filter(k => /^EXPR\d+$/.test(k)).length
+      if (exprCount > 0) {
+        block.extraState = { itemCount: exprCount }
+      }
+    }
+
+    // Record source mapping (T014)
+    this.sourceMappings.push({
+      blockId: id,
+      startLine: node.startPosition.row,
+      endLine: node.endPosition.row,
+    })
+
+    return block
+  }
+
+  private reassignBlockIds(block: BlockJSON): BlockJSON {
+    const newBlock: BlockJSON = { ...block, id: nextBlockId() }
+    if (block.inputs) {
+      const newInputs: Record<string, { block: BlockJSON }> = {}
+      for (const [key, val] of Object.entries(block.inputs)) {
+        newInputs[key] = { block: this.reassignBlockIds(val.block) }
+      }
+      newBlock.inputs = newInputs
+    }
+    if (block.next) {
+      newBlock.next = { block: this.reassignBlockIds(block.next.block) }
+    }
+
+    // Record source mapping for child blocks too
+    // (adapter blocks don't have node refs, skip for now)
+
+    return newBlock
+  }
+
+  private extractAdapterStatementInputs(blockId: string, node: Node, block: BlockJSON): void {
+    if (!block.inputs) block.inputs = {}
+
+    // Determine which statement inputs this block type has
+    const stmtInputs = this.getStatementInputNames(blockId)
+
+    for (const inputName of stmtInputs) {
+      const bodyNode = this.getStatementBodyNode(inputName, node)
+      if (bodyNode) {
+        const stmts = this.convertChildren(bodyNode)
+        const chained = this.chainStatements(stmts)
+        if (chained.length > 0) {
+          block.inputs![inputName] = { block: chained[0] }
+        }
+      }
+    }
+
+    // Clean up empty inputs
+    if (Object.keys(block.inputs!).length === 0) {
+      delete block.inputs
+    }
+  }
+
+  private getStatementInputNames(blockId: string): string[] {
+    switch (blockId) {
+      case 'u_if':
+        return ['BODY']
+      case 'u_if_else':
+        return ['THEN', 'ELSE']
+      case 'u_count_loop':
+      case 'u_while_loop':
+      case 'u_func_def':
+        return ['BODY']
+      default:
+        return []
+    }
+  }
+
+  private getStatementBodyNode(inputName: string, node: Node): Node | null {
+    switch (inputName) {
+      case 'BODY':
+        return node.childForFieldName('body') ?? node.childForFieldName('consequence')
+      case 'THEN':
+        return node.childForFieldName('consequence')
+      case 'ELSE': {
+        const alt = node.childForFieldName('alternative')
+        if (alt?.type === 'else_clause') return alt.namedChildren[0] ?? alt
+        return alt
+      }
+      default:
+        return null
+    }
+  }
+
   private findBestMatch(specs: BlockSpec[], node: Node): BlockSpec | null {
+    // Filter to specs that have astPattern
+    const specsWithPattern = specs.filter(s => s.astPattern)
+
     // First try specs with constraints
-    for (const spec of specs) {
-      if (spec.astPattern.constraints.length > 0) {
+    for (const spec of specsWithPattern) {
+      if (spec.astPattern!.constraints.length > 0) {
         if (this.matchConstraints(spec, node)) {
           return spec
         }
@@ -89,8 +249,8 @@ export class CodeToBlocksConverter {
     }
 
     // Then try specs without constraints (generic match)
-    for (const spec of specs) {
-      if (spec.astPattern.constraints.length === 0) {
+    for (const spec of specsWithPattern) {
+      if (spec.astPattern!.constraints.length === 0) {
         return spec
       }
     }
@@ -99,6 +259,7 @@ export class CodeToBlocksConverter {
   }
 
   private matchConstraints(spec: BlockSpec, node: Node): boolean {
+    if (!spec.astPattern) return false
     for (const constraint of spec.astPattern.constraints) {
       if (constraint.field === 'function' && constraint.text) {
         // Check if call_expression's function name matches
@@ -138,6 +299,28 @@ export class CodeToBlocksConverter {
         // Check include path type
         const pathNode = node.childForFieldName('path')
         if (!pathNode || pathNode.type !== constraint.nodeType) return false
+      } else if (constraint.field === 'unnamed_token' && constraint.text) {
+        // Check for an unnamed child token with specific text
+        let found = false
+        for (const child of node.children) {
+          if (!child.isNamed && child.text === constraint.text) {
+            found = true
+            break
+          }
+        }
+        if (!found) return false
+      } else if (constraint.field === 'leftmost_identifier' && constraint.text) {
+        // Check if the leftmost identifier in a nested binary expression chain matches
+        const leftmostId = this.findLeftmostIdentifier(node)
+        if (leftmostId !== constraint.text) return false
+      } else if (constraint.field && constraint.nodeType) {
+        // Generic field + nodeType check (e.g., type: template_type)
+        const fieldNode = node.childForFieldName(constraint.field)
+        if (!fieldNode || fieldNode.type !== constraint.nodeType) return false
+      } else if (constraint.field && constraint.text) {
+        // Generic field + text check (e.g., type: "string")
+        const fieldNode = node.childForFieldName(constraint.field)
+        if (!fieldNode || fieldNode.text !== constraint.text) return false
       }
     }
     return true
@@ -171,7 +354,7 @@ export class CodeToBlocksConverter {
     const inputs: Record<string, { block: BlockJSON }> = {}
 
     // Parse template placeholders
-    const placeholders = this.getTemplatePlaceholders(spec.codeTemplate.pattern)
+    const placeholders = spec.codeTemplate ? this.getTemplatePlaceholders(spec.codeTemplate.pattern) : []
 
     for (const name of placeholders) {
       const value = this.extractValue(spec, node, name)
@@ -192,7 +375,7 @@ export class CodeToBlocksConverter {
 
   private extractValue(spec: BlockSpec, node: Node, name: string): unknown {
     // Map placeholder names to tree-sitter node fields
-    switch (spec.astPattern.nodeType) {
+    switch (spec.astPattern?.nodeType) {
       case 'for_statement':
         return this.extractForValue(node, name)
       case 'if_statement':
@@ -201,11 +384,18 @@ export class CodeToBlocksConverter {
         return this.extractFunctionDefValue(node, name)
       case 'return_statement':
         return this.extractReturnValue(node, name)
+      case 'while_statement':
+      case 'do_statement':
+        return this.extractWhileValue(node, name)
       case 'declaration':
         return this.extractDeclarationValue(node, name)
+      case 'assignment_expression':
+        return this.extractAssignmentValue(node, name)
       case 'call_expression':
         return this.extractCallExprValue(spec, node, name)
       case 'binary_expression':
+        if (spec.id === 'cpp_cout') return this.extractCoutCinValue(node, name, 'cout', '<<')
+        if (spec.id === 'cpp_cin') return this.extractCoutCinValue(node, name, 'cin', '>>')
         return this.extractBinaryExprValue(node, name)
       case 'unary_expression':
       case 'pointer_expression':
@@ -232,8 +422,8 @@ export class CodeToBlocksConverter {
         return this.extractSubscriptValue(node, name)
       case 'field_expression':
         return this.extractFieldExprValue(node, name)
-      case 'expression_statement':
-        return this.extractExprStmtValue(node, name)
+      case 'using_declaration':
+        return this.extractUsingDeclValue(node, name)
     }
 
     return null
@@ -262,6 +452,19 @@ export class CodeToBlocksConverter {
       const cond = node.childForFieldName('condition')
       if (cond) {
         // condition is wrapped in parenthesized_expression
+        if (cond.type === 'parenthesized_expression' && cond.namedChildren.length > 0) {
+          return this.convertToExpression(cond.namedChildren[0])
+        }
+        return this.convertToExpression(cond)
+      }
+    }
+    return null
+  }
+
+  private extractWhileValue(node: Node, name: string): unknown {
+    if (name === 'COND') {
+      const cond = node.childForFieldName('condition')
+      if (cond) {
         if (cond.type === 'parenthesized_expression' && cond.namedChildren.length > 0) {
           return this.convertToExpression(cond.namedChildren[0])
         }
@@ -322,6 +525,10 @@ export class CodeToBlocksConverter {
       case 'NAME': {
         const declarator = node.childForFieldName('declarator')
         if (declarator?.type === 'init_declarator') {
+          const nameNode = declarator.childForFieldName('declarator')
+          return nameNode?.text ?? ''
+        }
+        if (declarator?.type === 'array_declarator') {
           const nameNode = declarator.childForFieldName('declarator')
           return nameNode?.text ?? ''
         }
@@ -488,17 +695,77 @@ export class CodeToBlocksConverter {
     return null
   }
 
-  private extractExprStmtValue(node: Node, name: string): unknown {
-    if (node.namedChildren.length > 0) {
-      const child = node.namedChildren[0]
-      return this.convertToExpression(child)
+  private extractUsingDeclValue(node: Node, name: string): unknown {
+    if (name === 'NS') {
+      // using namespace std; → the identifier child is the namespace name
+      for (const child of node.namedChildren) {
+        if (child.type === 'identifier') return child.text
+      }
+    }
+    return null
+  }
+
+  private extractCoutCinValue(node: Node, name: string, streamName: string, op: string): unknown {
+    if (name === 'EXPR') {
+      // Collect all values in the << or >> chain, excluding the stream name (cout/cin)
+      const values = this.collectStreamValues(node, op)
+      // Remove the first element (stream name like 'cout' or 'cin')
+      return values.slice(1).join(` ${op} `)
+    }
+    return null
+  }
+
+  private collectStreamValues(node: Node, op: string): string[] {
+    if (node.type !== 'binary_expression') return [node.text]
+    const opNode = node.childForFieldName('operator')
+    if (!opNode || opNode.text !== op) return [node.text]
+
+    const left = node.childForFieldName('left')
+    const right = node.childForFieldName('right')
+
+    const leftValues = left ? this.collectStreamValues(left, op) : []
+    const rightValues = right ? [right.text] : []
+
+    return [...leftValues, ...rightValues]
+  }
+
+  private findLeftmostIdentifier(node: Node): string | null {
+    if (node.type === 'identifier') return node.text
+    if (node.type === 'qualified_identifier') {
+      const name = node.childForFieldName('name')
+      return name?.text ?? node.text
+    }
+    const left = node.childForFieldName('left')
+    if (left) return this.findLeftmostIdentifier(left)
+    return null
+  }
+
+  private extractAssignmentValue(node: Node, name: string): unknown {
+    switch (name) {
+      case 'NAME': {
+        const left = node.childForFieldName('left')
+        return left?.text ?? ''
+      }
+      case 'VALUE': {
+        const right = node.childForFieldName('right')
+        return right ? this.convertToExpression(right) : null
+      }
+      case 'OP': {
+        // Find the operator token (unnamed child: =, +=, -=, etc.)
+        for (const child of node.children) {
+          if (!child.isNamed && /^([+\-*/%&|^]|<<|>>)?=$/.test(child.text)) {
+            return child.text
+          }
+        }
+        return '='
+      }
     }
     return null
   }
 
   private extractStatementInputs(spec: BlockSpec, node: Node, inputs: Record<string, { block: BlockJSON }>): void {
     // Extract body/then/else statement inputs
-    const pattern = spec.codeTemplate.pattern
+    const pattern = spec.codeTemplate?.pattern ?? ''
 
     if (pattern.includes('${BODY}')) {
       const body = this.getBodyNode(spec, node)
@@ -539,7 +806,7 @@ export class CodeToBlocksConverter {
   }
 
   private getBodyNode(spec: BlockSpec, node: Node): Node | null {
-    switch (spec.astPattern.nodeType) {
+    switch (spec.astPattern?.nodeType) {
       case 'for_statement':
       case 'while_statement':
       case 'do_statement': {
@@ -573,12 +840,31 @@ export class CodeToBlocksConverter {
   }
 
   private convertToExpression(node: Node): BlockJSON | string {
-    // Try to convert to a typed block
+    // Try adapter first for expression blocks
+    if (this.adapter) {
+      const blockId = this.adapter.matchNodeToBlock(node)
+      if (blockId) {
+        // Check if the universal block has output connection
+        const spec = this.registry.get(blockId)
+        const blockDef = spec?.blockDef as Record<string, unknown> | undefined
+        if (blockDef && 'output' in blockDef) {
+          return this.buildBlockFromAdapter(blockId, node)
+        }
+        // If universal block is a statement, check if there's a language-specific expr block
+      }
+    }
+
+    // Fallback: try registry (language-specific blocks)
     const specs = this.registry.getByNodeType(node.type)
     if (specs.length > 0) {
-      const spec = this.findBestMatch(specs, node)
+      const outputSpecs = specs.filter(s => 'output' in (s.blockDef as Record<string, unknown>))
+      const spec = this.findBestMatch(outputSpecs, node) ?? this.findBestMatch(specs, node)
       if (spec) {
-        return this.buildBlock(spec, node)
+        const blockDef = spec.blockDef as Record<string, unknown>
+        if ('output' in blockDef) {
+          return this.buildBlock(spec, node)
+        }
+        return this.buildRawExpressionBlock(node)
       }
     }
 
@@ -591,15 +877,46 @@ export class CodeToBlocksConverter {
     return node.text
   }
 
+  private buildRawExpressionBlock(node: Node): BlockJSON {
+    let text = node.text
+    // Strip trailing semicolon for expression context
+    text = text.replace(/;\s*$/, '')
+    return {
+      type: 'c_raw_expression',
+      id: nextBlockId(),
+      fields: { CODE: text },
+    }
+  }
+
   private chainStatements(blocks: BlockJSON[]): BlockJSON[] {
     if (blocks.length <= 1) return blocks
 
-    // Chain blocks via next pointers
-    for (let i = 0; i < blocks.length - 1; i++) {
-      blocks[i].next = { block: blocks[i + 1] }
+    const topLevel: BlockJSON[] = []
+    let chainTail: BlockJSON | null = null
+
+    for (const block of blocks) {
+      const hasPrev = this.blockHasConnection(block.type, 'previousStatement')
+      const hasNext = this.blockHasConnection(block.type, 'nextStatement')
+
+      if (hasPrev && chainTail) {
+        // Append to current chain
+        chainTail.next = { block }
+        chainTail = hasNext ? block : null
+      } else {
+        // Standalone or start of new chain
+        topLevel.push(block)
+        chainTail = hasNext ? block : null
+      }
     }
 
-    return [blocks[0]]
+    return topLevel
+  }
+
+  private blockHasConnection(blockType: string, connectionName: string): boolean {
+    const spec = this.registry.get(blockType)
+    if (!spec) return false
+    const def = spec.blockDef as Record<string, unknown>
+    return connectionName in def
   }
 
   private buildRawCodeBlock(node: Node): BlockJSON {
@@ -613,5 +930,28 @@ export class CodeToBlocksConverter {
   private getTemplatePlaceholders(pattern: string): string[] {
     const matches = pattern.match(/\$\{(\w+)\}/g) ?? []
     return matches.map(m => m.slice(2, -1))
+  }
+
+  private estimateBlockHeight(block: BlockJSON): number {
+    // Estimate height for spacing top-level blocks
+    let height = 50 // base height for a simple block
+
+    // Count chained blocks (next chain)
+    let current = block.next?.block
+    while (current) {
+      height += 40
+      current = current.next?.block
+    }
+
+    // Add height for statement inputs (BODY, THEN, ELSE, etc.)
+    if (block.inputs) {
+      for (const input of Object.values(block.inputs)) {
+        if (input.block) {
+          height += this.estimateBlockHeight(input.block)
+        }
+      }
+    }
+
+    return height + 30 // padding between groups
   }
 }

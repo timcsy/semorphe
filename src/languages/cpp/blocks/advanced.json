@@ -1,6 +1,7 @@
 [
   {
     "id": "c_pointer_declare",
+    "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
@@ -27,6 +28,7 @@
   },
   {
     "id": "c_pointer_deref",
+    "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
@@ -52,6 +54,7 @@
   },
   {
     "id": "c_address_of",
+    "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
@@ -77,6 +80,7 @@
   },
   {
     "id": "c_malloc",
+    "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
@@ -104,6 +108,7 @@
   },
   {
     "id": "c_free",
+    "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
@@ -129,6 +134,7 @@
   },
   {
     "id": "c_struct_declare",
+    "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
@@ -156,6 +162,7 @@
   },
   {
     "id": "c_struct_member_access",
+    "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
@@ -182,6 +189,7 @@
   },
   {
     "id": "c_struct_pointer_access",
+    "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
@@ -207,31 +215,8 @@
     }
   },
   {
-    "id": "c_string_literal",
-    "category": "strings",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "c_string_literal",
-      "message0": "\" %1 \"",
-      "args0": [
-        { "type": "field_input", "name": "TEXT", "text": "hello" }
-      ],
-      "output": "Expression",
-      "colour": 160,
-      "tooltip": "字串字面值"
-    },
-    "codeTemplate": {
-      "pattern": "\"${TEXT}\"",
-      "imports": [],
-      "order": 20
-    },
-    "astPattern": {
-      "nodeType": "string_literal",
-      "constraints": []
-    }
-  },
-  {
     "id": "c_strlen",
+    "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
@@ -257,6 +242,7 @@
   },
   {
     "id": "c_strcmp",
+    "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
@@ -283,6 +269,7 @@
   },
   {
     "id": "c_strcpy",
+    "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
@@ -308,78 +295,8 @@
     }
   },
   {
-    "id": "cpp_cout",
-    "category": "io",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_cout",
-      "message0": "cout << %1 ;",
-      "args0": [
-        { "type": "input_value", "name": "VALUE", "check": "Expression" }
-      ],
-      "previousStatement": null,
-      "nextStatement": null,
-      "colour": 180,
-      "tooltip": "cout 輸出"
-    },
-    "codeTemplate": {
-      "pattern": "std::cout << ${VALUE};",
-      "imports": ["iostream"],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "expression_statement",
-      "constraints": [{ "field": "child", "nodeType": "binary_expression" }]
-    }
-  },
-  {
-    "id": "cpp_cin",
-    "category": "io",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_cin",
-      "message0": "cin >> %1 ;",
-      "args0": [
-        { "type": "field_input", "name": "VAR", "text": "x" }
-      ],
-      "previousStatement": null,
-      "nextStatement": null,
-      "colour": 180,
-      "tooltip": "cin 輸入"
-    },
-    "codeTemplate": {
-      "pattern": "std::cin >> ${VAR};",
-      "imports": ["iostream"],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "expression_statement",
-      "constraints": [{ "field": "child", "nodeType": "binary_expression" }]
-    }
-  },
-  {
-    "id": "cpp_endl",
-    "category": "io",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_endl",
-      "message0": "endl",
-      "output": "Expression",
-      "colour": 180,
-      "tooltip": "換行符"
-    },
-    "codeTemplate": {
-      "pattern": "std::endl",
-      "imports": ["iostream"],
-      "order": 20
-    },
-    "astPattern": {
-      "nodeType": "qualified_identifier",
-      "constraints": [{ "field": "name", "text": "endl" }]
-    }
-  },
-  {
     "id": "cpp_vector_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -406,6 +323,7 @@
   },
   {
     "id": "cpp_vector_push_back",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -426,12 +344,13 @@
       "order": 0
     },
     "astPattern": {
-      "nodeType": "expression_statement",
-      "constraints": [{ "field": "child", "nodeType": "call_expression" }]
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "nodeType": "field_expression" }]
     }
   },
   {
     "id": "cpp_vector_size",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -457,6 +376,7 @@
   },
   {
     "id": "cpp_map_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -484,6 +404,7 @@
   },
   {
     "id": "cpp_string_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -509,6 +430,7 @@
   },
   {
     "id": "cpp_sort",
+    "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
@@ -535,6 +457,7 @@
   },
   {
     "id": "cpp_class_def",
+    "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
@@ -566,6 +489,7 @@
   },
   {
     "id": "cpp_new",
+    "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
@@ -592,6 +516,7 @@
   },
   {
     "id": "cpp_delete",
+    "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
@@ -617,6 +542,7 @@
   },
   {
     "id": "cpp_template_function",
+    "language": "cpp",
     "category": "templates",
     "version": "1.0.0",
     "blockDef": {
@@ -651,6 +577,7 @@
   },
   {
     "id": "cpp_stack_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -677,6 +604,7 @@
   },
   {
     "id": "cpp_queue_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -703,6 +631,7 @@
   },
   {
     "id": "cpp_set_declare",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -729,6 +658,7 @@
   },
   {
     "id": "cpp_method_call",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
@@ -750,12 +680,13 @@
       "order": 0
     },
     "astPattern": {
-      "nodeType": "expression_statement",
-      "constraints": [{ "field": "child", "nodeType": "call_expression" }]
+      "nodeType": "call_expression",
+      "constraints": [{ "field": "function", "nodeType": "field_expression" }]
     }
   },
   {
     "id": "cpp_method_call_expr",
+    "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
