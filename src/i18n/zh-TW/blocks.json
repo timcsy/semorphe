@@ -288,5 +288,32 @@
 
   "ERROR_SYNC_FAILED": "轉換失敗，程式碼可能有語法錯誤",
   "ERROR_PARSE_FAILED": "無法解析程式碼",
-  "TOAST_SYNC_SUCCESS": "同步完成"
+  "TOAST_SYNC_SUCCESS": "同步完成",
+
+  "RUNTIME_ERR_UNDECLARED_VAR": "變數 '%1' 尚未宣告",
+  "RUNTIME_ERR_DIVISION_BY_ZERO": "除以零",
+  "RUNTIME_ERR_MAX_STEPS": "已超過最大執行步數（可能是無窮迴圈或過深的遞迴）",
+  "RUNTIME_ERR_TYPE_MISMATCH": "型別不符：預期 %1，但得到 %2",
+  "RUNTIME_ERR_INDEX_OUT_OF_RANGE": "陣列索引超出範圍",
+  "RUNTIME_ERR_UNDEFINED_FUNC": "函式 '%1' 尚未定義",
+  "RUNTIME_ERR_BREAK_OUTSIDE_LOOP": "break 只能在迴圈內使用",
+  "RUNTIME_ERR_CONTINUE_OUTSIDE_LOOP": "continue 只能在迴圈內使用",
+  "RUNTIME_ERR_DUPLICATE_DECLARATION": "變數 '%1' 已在此作用域中宣告",
+
+  "EXEC_RUN": "執行",
+  "EXEC_STEP": "逐步",
+  "EXEC_STOP": "停止",
+  "EXEC_PAUSE": "暫停",
+  "EXEC_CONTINUE": "繼續",
+  "EXEC_SPEED_SLOW": "慢",
+  "EXEC_SPEED_MEDIUM": "中",
+  "EXEC_SPEED_FAST": "快",
+  "EXEC_STATUS_RUNNING": "執行中",
+  "EXEC_STATUS_PAUSED": "已暫停",
+  "EXEC_STATUS_COMPLETED": "程式執行完畢",
+  "EXEC_STATUS_ERROR": "錯誤",
+  "EXEC_STATUS_IDLE": "就緒",
+  "EXEC_INPUT_PROMPT": "請輸入 %1 的值：",
+  "EXEC_STDIN_LABEL": "預填輸入",
+  "EXEC_PROGRAM_MODIFIED": "程式已修改，請重新執行"
 }

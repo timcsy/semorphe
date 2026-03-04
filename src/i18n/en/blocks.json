@@ -288,5 +288,32 @@
 
   "ERROR_SYNC_FAILED": "Conversion failed, code may have syntax errors",
   "ERROR_PARSE_FAILED": "Could not parse code",
-  "TOAST_SYNC_SUCCESS": "Sync complete"
+  "TOAST_SYNC_SUCCESS": "Sync complete",
+
+  "RUNTIME_ERR_UNDECLARED_VAR": "Variable '%1' is not declared",
+  "RUNTIME_ERR_DIVISION_BY_ZERO": "Division by zero",
+  "RUNTIME_ERR_MAX_STEPS": "Maximum execution steps exceeded (possible infinite loop or deep recursion)",
+  "RUNTIME_ERR_TYPE_MISMATCH": "Type mismatch: expected %1, got %2",
+  "RUNTIME_ERR_INDEX_OUT_OF_RANGE": "Array index out of range",
+  "RUNTIME_ERR_UNDEFINED_FUNC": "Function '%1' is not defined",
+  "RUNTIME_ERR_BREAK_OUTSIDE_LOOP": "'break' can only be used inside a loop",
+  "RUNTIME_ERR_CONTINUE_OUTSIDE_LOOP": "'continue' can only be used inside a loop",
+  "RUNTIME_ERR_DUPLICATE_DECLARATION": "Variable '%1' is already declared in this scope",
+
+  "EXEC_RUN": "Run",
+  "EXEC_STEP": "Step",
+  "EXEC_STOP": "Stop",
+  "EXEC_PAUSE": "Pause",
+  "EXEC_CONTINUE": "Continue",
+  "EXEC_SPEED_SLOW": "Slow",
+  "EXEC_SPEED_MEDIUM": "Medium",
+  "EXEC_SPEED_FAST": "Fast",
+  "EXEC_STATUS_RUNNING": "Running",
+  "EXEC_STATUS_PAUSED": "Paused",
+  "EXEC_STATUS_COMPLETED": "Program completed",
+  "EXEC_STATUS_ERROR": "Error",
+  "EXEC_STATUS_IDLE": "Ready",
+  "EXEC_INPUT_PROMPT": "Enter value for %1:",
+  "EXEC_STDIN_LABEL": "Pre-fill input",
+  "EXEC_PROGRAM_MODIFIED": "Program modified. Please run again."
 }
