@@ -4,6 +4,7 @@ export class ConsolePanel {
   private element: HTMLElement
   private outputEl: HTMLElement
   private statusEl: HTMLElement
+  private clearBtn: HTMLElement
   private inputEl: HTMLInputElement
   private inputContainer: HTMLElement
   private onInputResolve: ((value: string) => void) | null = null
@@ -11,16 +12,28 @@ export class ConsolePanel {
   constructor(container: HTMLElement) {
     this.element = container
 
-    // Header with status
+    // Header with title, status, and clear button
     const header = document.createElement('div')
     header.className = 'console-header'
-    this.statusEl = document.createElement('span')
-    this.statusEl.className = 'console-status'
+
+    const leftGroup = document.createElement('div')
+    leftGroup.className = 'console-header-left'
     const title = document.createElement('span')
     title.className = 'console-title'
-    title.textContent = 'Console'
-    header.appendChild(title)
-    header.appendChild(this.statusEl)
+    title.textContent = '終端機'
+    leftGroup.appendChild(title)
+    this.statusEl = document.createElement('span')
+    this.statusEl.className = 'console-status'
+    leftGroup.appendChild(this.statusEl)
+
+    this.clearBtn = document.createElement('button')
+    this.clearBtn.className = 'console-clear-btn'
+    this.clearBtn.textContent = '清除'
+    this.clearBtn.title = '清除輸出'
+    this.clearBtn.addEventListener('click', () => this.clear())
+
+    header.appendChild(leftGroup)
+    header.appendChild(this.clearBtn)
     this.element.appendChild(header)
 
     // Output area
@@ -34,7 +47,7 @@ export class ConsolePanel {
     this.inputContainer.style.display = 'none'
     const inputLabel = document.createElement('span')
     inputLabel.className = 'console-input-label'
-    inputLabel.textContent = '> '
+    inputLabel.textContent = '❯ '
     this.inputEl = document.createElement('input')
     this.inputEl.className = 'console-input'
     this.inputEl.type = 'text'
@@ -69,19 +82,19 @@ export class ConsolePanel {
     this.statusEl.className = 'console-status'
     switch (status) {
       case 'running':
-        this.statusEl.textContent = '⏵ 執行中'
+        this.statusEl.textContent = '執行中'
         this.statusEl.classList.add('status-running')
         break
       case 'paused':
-        this.statusEl.textContent = '⏸ 等待輸入'
+        this.statusEl.textContent = '等待輸入'
         this.statusEl.classList.add('status-paused')
         break
       case 'completed':
-        this.statusEl.textContent = '✓ 已完成'
+        this.statusEl.textContent = '已完成'
         this.statusEl.classList.add('status-completed')
         break
       case 'error':
-        this.statusEl.textContent = '✗ ' + (errorMsg || '錯誤')
+        this.statusEl.textContent = errorMsg || '錯誤'
         this.statusEl.classList.add('status-error')
         break
       default:
