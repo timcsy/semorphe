@@ -34,13 +34,13 @@
 
 ### 測試先行
 
-- [ ] T005 [P] 撰寫 Scope 單元測試在 tests/unit/scope.test.ts（declare、get、set、parent chain、重複宣告錯誤、未宣告變數錯誤）
-- [ ] T006 [P] 撰寫 IOSystem 單元測試在 tests/unit/io.test.ts（stdout 寫入、stdin 佇列讀取、佇列耗盡狀態、reset）
+- [X] T005 [P] 撰寫 Scope 單元測試在 tests/unit/scope.test.ts（declare、get、set、parent chain、重複宣告錯誤、未宣告變數錯誤）
+- [X] T006 [P] 撰寫 IOSystem 單元測試在 tests/unit/io.test.ts（stdout 寫入、stdin 佇列讀取、佇列耗盡狀態、reset）
 
 ### 實作
 
-- [ ] T007 實作 Scope 類別在 src/interpreter/scope.ts（get、set、declare、createChild、getAll）
-- [ ] T008 實作 IOSystem 類別在 src/interpreter/io.ts（write、read、hasInput、reset、getOutput）
+- [X] T007 實作 Scope 類別在 src/interpreter/scope.ts（get、set、declare、createChild、getAll）
+- [X] T008 實作 IOSystem 類別在 src/interpreter/io.ts（write、read、hasInput、reset、getOutput）
 
 **檢查點**: Scope 和 IOSystem 測試全部通過
 
