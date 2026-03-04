@@ -64,7 +64,7 @@ export class BlocklyEditor {
     // Create workspace with toolbox (filtered by language and level)
     const toolboxDef = registry.toToolboxDef(languageId, level)
     this.workspace = Blockly.inject(this.container, {
-      toolbox: this.convertToolbox(toolboxDef),
+      toolbox: this.convertToolbox(toolboxDef) as Blockly.utils.toolbox.ToolboxDefinition,
       grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
       zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
       trashcan: true,
@@ -128,7 +128,7 @@ export class BlocklyEditor {
     const x = (metrics.left + metrics.width / 2) / scale + this.blockCreateOffset
     const y = (metrics.top + metrics.height / 2) / scale + this.blockCreateOffset
     Blockly.serialization.blocks.append(
-      { type: blockType, x, y } as object,
+      { type: blockType, x, y } as Blockly.serialization.blocks.State,
       this.workspace,
     )
     this.blockCreateOffset = (this.blockCreateOffset + 30) % 150

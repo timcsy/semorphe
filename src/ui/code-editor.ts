@@ -1,7 +1,7 @@
-import { EditorView, basicSetup, type ViewUpdate } from 'codemirror'
+import { EditorView, basicSetup } from 'codemirror'
 import { cpp } from '@codemirror/lang-cpp'
-import { EditorState, type Extension, StateEffect, StateField } from '@codemirror/state'
-import { Decoration, type DecorationSet } from '@codemirror/view'
+import { EditorState, type Extension, StateEffect, StateField, type Range } from '@codemirror/state'
+import { Decoration, type DecorationSet, type ViewUpdate } from '@codemirror/view'
 
 // Effect to set or clear highlight
 const setHighlight = StateEffect.define<{ from: number; to: number } | null>()
@@ -20,7 +20,7 @@ const highlightField = StateField.define<DecorationSet>({
         if (e.value === null) return Decoration.none
         const { from, to } = e.value
         const doc = tr.state.doc
-        const decorations: ReturnType<typeof Decoration.line>[] = []
+        const decorations: Range<Decoration>[] = []
         for (let pos = from; pos <= to && pos <= doc.lines; pos++) {
           const line = doc.line(pos)
           decorations.push(highlightMark.range(line.from))

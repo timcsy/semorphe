@@ -737,7 +737,7 @@ export class CodeToBlocksConverter {
     return null
   }
 
-  private extractCoutCinValue(node: Node, name: string, streamName: string, op: string): unknown {
+  private extractCoutCinValue(node: Node, name: string, _streamName: string, op: string): unknown {
     if (name === 'EXPR') {
       // Collect all values in the << or >> chain, excluding the stream name (cout/cin)
       const values = this.collectStreamValues(node, op)

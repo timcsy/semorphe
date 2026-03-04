@@ -40,7 +40,7 @@ export class CppParser {
     if (!this.parser) {
       throw new Error('Parser not initialized. Call init() first.')
     }
-    return this.parser.parse(code)
+    return this.parser.parse(code) as Tree
   }
 
   /** Parse code into SemanticModel via adapter (T013) */
@@ -76,11 +76,13 @@ export class CppParser {
 
   private getDefaultWasmDir(): string {
     // Browser environment: WASM files served from root
-    if (typeof process === 'undefined' || !process.cwd) {
+    const g = globalThis as Record<string, unknown>
+    const proc = g['process'] as { cwd?: () => string } | undefined
+    if (!proc?.cwd) {
       return ''
     }
     // Node.js / test environment: resolve from project root
-    return process.cwd() + '/public'
+    return proc.cwd() + '/public'
   }
 
   private joinPath(dir: string, file: string): string {

@@ -75,7 +75,6 @@ export class CppGenerator {
 
     // Build imports section (auto-collected from codeTemplate.imports)
     const autoImports = Array.from(this.collectedImports).sort()
-    const importLines = autoImports.map(h => `#include <${h}>`).join('\n')
 
     // Check if the body already has explicit #include directives
     // If so, don't duplicate them
@@ -395,7 +394,7 @@ export class CppGenerator {
     return { code, order }
   }
 
-  private substituteTemplate(pattern: string, block: BlockJSON, spec: BlockSpec, indent: number): string {
+  private substituteTemplate(pattern: string, block: BlockJSON, spec: BlockSpec, _indent: number): string {
     return pattern.replace(/\$\{(\w+)\}/g, (_match, name: string) => {
       // Check fields first
       if (block.fields && name in block.fields) {
