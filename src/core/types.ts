@@ -143,3 +143,91 @@ export interface WorkspaceState {
   customBlockSpecs: BlockSpec[]
   lastModified: string
 }
+
+/** 工具箱顯示層級 */
+export type ToolboxLevel = 'beginner' | 'advanced'
+
+/** 快捷列項目定義 */
+export interface QuickAccessItem {
+  blockType: string
+  label: string
+  icon: string
+}
+
+/** 即時錯誤診斷結果 */
+export interface WorkspaceDiagnostic {
+  blockId: string
+  type: 'missing_return' | 'undeclared_variable'
+  message: string
+}
+
+/** 初級模式顯示的積木 ID 清單 */
+export const BEGINNER_BLOCKS: readonly string[] = [
+  // 資料
+  'u_var_declare', 'u_var_assign', 'u_var_ref', 'u_number', 'u_string',
+  // 運算
+  'u_arithmetic', 'u_compare', 'u_logic',
+  // 流程控制
+  'u_if', 'u_if_else', 'u_count_loop', 'u_while_loop',
+  // 函式
+  'u_func_def', 'u_func_call', 'u_return',
+  // 輸入輸出
+  'u_print', 'u_input', 'u_endl',
+]
+
+/** 快捷列預設項目 */
+export const QUICK_ACCESS_ITEMS: readonly QuickAccessItem[] = [
+  { blockType: 'u_var_declare', label: '變數', icon: '📦' },
+  { blockType: 'u_print', label: '輸出', icon: '📤' },
+  { blockType: 'u_input', label: '輸入', icon: '📥' },
+  { blockType: 'u_if', label: '如果', icon: '🔀' },
+  { blockType: 'u_count_loop', label: '迴圈', icon: '🔁' },
+  { blockType: 'u_func_def', label: '函式', icon: '⚙️' },
+]
+
+/** 預設 C++ iostream 程式骨架模板 */
+export const DEFAULT_TEMPLATE_STATE: WorkspaceJSON = {
+  blocks: {
+    languageVersion: 0,
+    blocks: [
+      {
+        type: 'c_include',
+        id: 'template_include',
+        x: 20,
+        y: 20,
+        fields: { HEADER: 'iostream' },
+        next: {
+          block: {
+            type: 'c_using_namespace',
+            id: 'template_using',
+            fields: { NAMESPACE: 'std' },
+            next: {
+              block: {
+                type: 'u_func_def',
+                id: 'template_main',
+                fields: { NAME: 'main', RETURN_TYPE: 'int' },
+                inputs: {
+                  BODY: {
+                    block: {
+                      type: 'u_return',
+                      id: 'template_return',
+                      inputs: {
+                        VALUE: {
+                          block: {
+                            type: 'u_number',
+                            id: 'template_zero',
+                            fields: { NUM: '0' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+}

@@ -1,5 +1,7 @@
 import * as Blockly from 'blockly'
 import type { BlockRegistry, ToolboxDefinition } from '../core/block-registry'
+import type { ToolboxLevel, WorkspaceDiagnostic } from '../core/types'
+import { runDiagnosticsOnState } from '../core/diagnostics'
 
 export class BlocklyEditor {
   private workspace: Blockly.WorkspaceSvg | null = null
@@ -11,15 +13,15 @@ export class BlocklyEditor {
     this.container = container
   }
 
-  init(registry: BlockRegistry, languageId?: string): void {
+  init(registry: BlockRegistry, languageId?: string, level?: ToolboxLevel): void {
     // Register custom dynamic blocks first (before JSON blocks)
     this.registerCustomBlocks()
 
     // Register all blocks with Blockly
     this.registerBlocks(registry)
 
-    // Create workspace with toolbox (filtered by language)
-    const toolboxDef = registry.toToolboxDef(languageId)
+    // Create workspace with toolbox (filtered by language and level)
+    const toolboxDef = registry.toToolboxDef(languageId, level)
     this.workspace = Blockly.inject(this.container, {
       toolbox: this.convertToolbox(toolboxDef),
       grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
@@ -65,13 +67,58 @@ export class BlocklyEditor {
   setState(state: unknown): void {
     if (!this.workspace) return
     Blockly.serialization.workspaces.load(state as object, this.workspace)
+    // Force re-render all blocks to fix child blocks in dynamic block inputs
+    for (const block of this.workspace.getAllBlocks(false)) {
+      (block as any).rendered && block.render()
+    }
   }
 
-  updateToolbox(registry: BlockRegistry, languageId?: string): void {
+  clear(): void {
+    if (!this.workspace) return
+    this.workspace.clear()
+  }
+
+  private blockCreateOffset = 0
+
+  createBlockAtCenter(blockType: string): void {
+    if (!this.workspace) return
+    const metrics = this.workspace.getMetricsManager().getViewMetrics()
+    const scale = this.workspace.scale
+    const x = (metrics.left + metrics.width / 2) / scale + this.blockCreateOffset
+    const y = (metrics.top + metrics.height / 2) / scale + this.blockCreateOffset
+    Blockly.serialization.blocks.append(
+      { type: blockType, x, y } as object,
+      this.workspace,
+    )
+    this.blockCreateOffset = (this.blockCreateOffset + 30) % 150
+  }
+
+  updateToolbox(registry: BlockRegistry, languageId?: string, level?: ToolboxLevel): void {
     if (!this.workspace) return
     this.registerBlocks(registry)
-    const toolboxDef = registry.toToolboxDef(languageId)
+    const toolboxDef = registry.toToolboxDef(languageId, level)
     this.workspace.updateToolbox(this.convertToolbox(toolboxDef) as Blockly.utils.toolbox.ToolboxDefinition)
+  }
+
+  runDiagnostics(): WorkspaceDiagnostic[] {
+    if (!this.workspace) return []
+    const state = Blockly.serialization.workspaces.save(this.workspace)
+    return runDiagnosticsOnState(state)
+  }
+
+  applyDiagnostics(diagnostics: WorkspaceDiagnostic[]): void {
+    if (!this.workspace) return
+    // Clear all warnings first
+    for (const block of this.workspace.getAllBlocks(false)) {
+      block.setWarningText(null)
+    }
+    // Apply new warnings
+    for (const diag of diagnostics) {
+      const block = this.workspace.getBlockById(diag.blockId)
+      if (block) {
+        block.setWarningText(diag.message)
+      }
+    }
   }
 
   dispose(): void {
@@ -115,8 +162,8 @@ export class BlocklyEditor {
       init: function (this: any) {
         this.itemCount_ = 1
         this.setColour(180)
-        this.setPreviousStatement(true, null)
-        this.setNextStatement(true, null)
+        this.setPreviousStatement(true, 'Statement')
+        this.setNextStatement(true, 'Statement')
         this.setTooltip('輸出一個或多個值到螢幕上')
         this.setInputsInline(true)
 
@@ -180,8 +227,8 @@ export class BlocklyEditor {
         init: function (this: any) {
           this.paramCount_ = 0
           this.setColour(60)
-          this.setPreviousStatement(true, null)
-          this.setNextStatement(true, null)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
           this.setTooltip('定義一個函式')
 
           this.appendDummyInput('HEADER')
@@ -193,7 +240,7 @@ export class BlocklyEditor {
             .appendField('參數')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.appendStatementInput('BODY')
+          this.appendStatementInput('BODY').setCheck('Statement')
         },
 
         plus_: function (this: any) {
@@ -314,8 +361,8 @@ export class BlocklyEditor {
         init: function (this: any) {
           this.varCount_ = 1
           this.setColour(180)
-          this.setPreviousStatement(true, null)
-          this.setNextStatement(true, null)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
           this.setTooltip('從鍵盤讀取一個或多個變數')
           this.setInputsInline(true)
 
@@ -370,6 +417,90 @@ export class BlocklyEditor {
       /* eslint-enable @typescript-eslint/no-explicit-any */
     }
 
+    // u_var_ref: dynamic dropdown listing declared variables
+    if (!Blockly.Blocks['u_var_ref']) {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      Blockly.Blocks['u_var_ref'] = {
+        customName_: '',
+
+        init: function (this: any) {
+          this.customName_ = ''
+          this.setColour(330)
+          this.setOutput(true, 'Expression')
+          this.setTooltip('取得變數的值')
+
+          this.appendDummyInput('MAIN')
+            .appendField(new Blockly.FieldDropdown(
+              this.generateOptions_.bind(this),
+              this.onDropdownChange_.bind(this),
+            ), 'NAME')
+          // Hidden custom input, shown only when __CUSTOM__ is selected
+          this.appendDummyInput('CUSTOM_INPUT')
+            .appendField(new Blockly.FieldTextInput('x'), 'CUSTOM_NAME')
+          this.getInput('CUSTOM_INPUT')!.setVisible(false)
+        },
+
+        generateOptions_: function (this: any): Array<[string, string]> {
+          const ws = this.workspace
+          if (!ws) return [['(自訂)', '__CUSTOM__']]
+
+          const options: Array<[string, string]> = []
+          const seen = new Set<string>()
+
+          // Collect from u_var_declare
+          const declareBlocks = ws.getBlocksByType('u_var_declare', false)
+          for (const b of declareBlocks) {
+            const name = b.getFieldValue('NAME')
+            if (name && !seen.has(name)) {
+              seen.add(name)
+              options.push([name, name])
+            }
+          }
+
+          // Collect from u_count_loop VAR
+          const loopBlocks = ws.getBlocksByType('u_count_loop', false)
+          for (const b of loopBlocks) {
+            const name = b.getFieldValue('VAR')
+            if (name && !seen.has(name)) {
+              seen.add(name)
+              options.push([name, name])
+            }
+          }
+
+          // Always add custom option at the end
+          options.push(['(自訂)', '__CUSTOM__'])
+          return options
+        },
+
+        onDropdownChange_: function (this: any, newValue: string) {
+          const block = this.getSourceBlock ? this.getSourceBlock() : this
+          if (!block) return newValue
+          const customInput = block.getInput('CUSTOM_INPUT')
+          if (customInput) {
+            customInput.setVisible(newValue === '__CUSTOM__')
+            block.customName_ = newValue === '__CUSTOM__' ? (block.getFieldValue('CUSTOM_NAME') || 'x') : ''
+          }
+          block.render()
+          return newValue
+        },
+
+        saveExtraState: function (this: any) {
+          return { customName: this.customName_ }
+        },
+
+        loadExtraState: function (this: any, state: any) {
+          this.customName_ = state?.customName ?? ''
+          if (this.customName_) {
+            this.setFieldValue('__CUSTOM__', 'NAME')
+            this.setFieldValue(this.customName_, 'CUSTOM_NAME')
+            const customInput = this.getInput('CUSTOM_INPUT')
+            if (customInput) customInput.setVisible(true)
+          }
+        },
+      }
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+    }
+
     // u_var_declare: dropdown to switch between init/no-init modes
     if (!Blockly.Blocks['u_var_declare']) {
       /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -379,8 +510,8 @@ export class BlocklyEditor {
         init: function (this: any) {
           this.initMode_ = 'with_init'
           this.setColour(330)
-          this.setPreviousStatement(true, null)
-          this.setNextStatement(true, null)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
           this.setTooltip('宣告一個變數')
 
           this.appendDummyInput('DECL')
@@ -400,6 +531,7 @@ export class BlocklyEditor {
           this.appendValueInput('INIT')
             .setCheck('Expression')
             .appendField('=')
+          this.setInputsInline(true)
         },
 
         updateShape_: function (this: any, mode: string) {

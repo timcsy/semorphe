@@ -13,6 +13,8 @@
         <div class="toolbar-actions">
           <button id="blocks-to-code-btn" title="積木 → 程式碼">積木→程式碼</button>
           <button id="code-to-blocks-btn" title="程式碼 → 積木">程式碼→積木</button>
+          <button id="clear-workspace-btn" title="清空所有積木">清空</button>
+          <button id="toolbox-toggle-btn" title="切換工具箱模式" data-level="beginner">初級模式</button>
           <button id="upload-blocks-btn" title="上傳自訂積木定義">上傳積木</button>
           <input type="file" id="blocks-file-input" accept=".json" hidden />
           <button id="export-btn" title="匯出工作內容">匯出</button>
@@ -22,6 +24,7 @@
       </header>
       <main id="editors">
         <div id="blockly-panel">
+          <div id="quick-access-bar"></div>
           <div id="blockly-editor"></div>
         </div>
         <div id="divider"></div>

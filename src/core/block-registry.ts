@@ -1,4 +1,5 @@
-import type { BlockSpec, ValidationError } from './types'
+import { BEGINNER_BLOCKS } from './types'
+import type { BlockSpec, ValidationError, ToolboxLevel } from './types'
 
 interface ToolboxBlockEntry {
   kind: 'block'
@@ -148,12 +149,15 @@ export class BlockRegistry {
     return errors
   }
 
-  toToolboxDef(languageId?: string): ToolboxDefinition {
+  toToolboxDef(languageId?: string, level?: ToolboxLevel): ToolboxDefinition {
     const contents: ToolboxCategory[] = []
     const filteredCategories = new Map<string, string[]>()
 
     for (const [id, spec] of this.blocks) {
       if (languageId && spec.language !== 'universal' && spec.language !== languageId) {
+        continue
+      }
+      if (level === 'beginner' && !BEGINNER_BLOCKS.includes(id)) {
         continue
       }
       const catList = filteredCategories.get(spec.category) ?? []

@@ -1,6 +1,7 @@
-import type { WorkspaceState } from '../core/types'
+import type { WorkspaceState, ToolboxLevel } from '../core/types'
 
 const STORAGE_KEY = 'code-blockly-state'
+const TOOLBOX_LEVEL_KEY = 'code-blockly-toolbox-level'
 
 export class Storage {
   save(state: WorkspaceState): void {
@@ -32,6 +33,24 @@ export class Storage {
       const parsed = JSON.parse(json)
       if (!this.isValidState(parsed)) return null
       return parsed as WorkspaceState
+    } catch {
+      return null
+    }
+  }
+
+  saveToolboxLevel(level: ToolboxLevel): void {
+    try {
+      localStorage.setItem(TOOLBOX_LEVEL_KEY, level)
+    } catch {
+      // Storage full or unavailable
+    }
+  }
+
+  loadToolboxLevel(): ToolboxLevel | null {
+    try {
+      const raw = localStorage.getItem(TOOLBOX_LEVEL_KEY)
+      if (raw === 'beginner' || raw === 'advanced') return raw
+      return null
     } catch {
       return null
     }

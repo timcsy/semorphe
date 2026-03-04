@@ -11,8 +11,8 @@
         { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["void","void"]] },
         { "type": "field_input", "name": "NAME", "text": "ptr" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 280,
       "tooltip": "指標宣告"
     },
@@ -117,8 +117,8 @@
       "args0": [
         { "type": "input_value", "name": "PTR", "check": "Expression" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 280,
       "tooltip": "free 釋放記憶體"
     },
@@ -145,7 +145,7 @@
       ],
       "message1": "%1",
       "args1": [
-        { "type": "input_statement", "name": "MEMBERS" }
+        { "type": "input_statement", "name": "MEMBERS", "check": "Statement" }
       ],
       "colour": 20,
       "tooltip": "結構體宣告"
@@ -279,8 +279,8 @@
         { "type": "input_value", "name": "DEST", "check": "Expression" },
         { "type": "input_value", "name": "SRC", "check": "Expression" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 160,
       "tooltip": "字串複製"
     },
@@ -306,8 +306,8 @@
         { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["double","double"],["char","char"],["string","std::string"],["long long","long long"]] },
         { "type": "field_input", "name": "NAME", "text": "vec" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "vector 容器宣告"
     },
@@ -333,8 +333,8 @@
         { "type": "field_input", "name": "VECTOR", "text": "vec" },
         { "type": "input_value", "name": "VALUE", "check": "Expression" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "vector 加入元素"
     },
@@ -387,8 +387,8 @@
         { "type": "field_dropdown", "name": "VALUE_TYPE", "options": [["int","int"],["float","float"],["double","double"],["string","std::string"]] },
         { "type": "field_input", "name": "NAME", "text": "mp" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "map 容器宣告"
     },
@@ -413,8 +413,8 @@
       "args0": [
         { "type": "field_input", "name": "NAME", "text": "str" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "C++ string 宣告"
     },
@@ -440,8 +440,8 @@
         { "type": "input_value", "name": "BEGIN", "check": "Expression" },
         { "type": "input_value", "name": "END", "check": "Expression" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "排序"
     },
@@ -468,11 +468,11 @@
       ],
       "message1": "public: %1",
       "args1": [
-        { "type": "input_statement", "name": "PUBLIC" }
+        { "type": "input_statement", "name": "PUBLIC", "check": "Statement" }
       ],
       "message2": "private: %1",
       "args2": [
-        { "type": "input_statement", "name": "PRIVATE" }
+        { "type": "input_statement", "name": "PRIVATE", "check": "Statement" }
       ],
       "colour": 140,
       "tooltip": "類別定義"
@@ -525,8 +525,8 @@
       "args0": [
         { "type": "input_value", "name": "PTR", "check": "Expression" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 140,
       "tooltip": "delete 運算子"
     },
@@ -560,7 +560,7 @@
       ],
       "message2": "%1",
       "args2": [
-        { "type": "input_statement", "name": "BODY" }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "colour": 140,
       "tooltip": "樣板函式"
@@ -587,8 +587,8 @@
         { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
         { "type": "field_input", "name": "NAME", "text": "stk" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "stack 容器宣告"
     },
@@ -614,8 +614,8 @@
         { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
         { "type": "field_input", "name": "NAME", "text": "que" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "queue 容器宣告"
     },
@@ -641,8 +641,8 @@
         { "type": "field_dropdown", "name": "TYPE", "options": [["int","int"],["float","float"],["string","std::string"],["char","char"]] },
         { "type": "field_input", "name": "NAME", "text": "s" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "set 容器宣告"
     },
@@ -669,8 +669,8 @@
         { "type": "field_input", "name": "METHOD", "text": "push_back" },
         { "type": "field_input", "name": "ARGS", "text": "" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 200,
       "tooltip": "方法呼叫"
     },

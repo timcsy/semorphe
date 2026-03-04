@@ -7,7 +7,8 @@ import { CppGenerator } from '../languages/cpp/generator'
 import { CppParser } from '../languages/cpp/parser'
 import { CppLanguageAdapter } from '../languages/cpp/adapter'
 import { CodeToBlocksConverter } from '../core/code-to-blocks'
-import type { BlockSpec, WorkspaceState } from '../core/types'
+import { DEFAULT_TEMPLATE_STATE, QUICK_ACCESS_ITEMS } from '../core/types'
+import type { BlockSpec, WorkspaceState, ToolboxLevel } from '../core/types'
 import universalBlocks from '../blocks/universal.json'
 import basicBlocks from '../languages/cpp/blocks/basic.json'
 import advancedBlocks from '../languages/cpp/blocks/advanced.json'
@@ -24,6 +25,8 @@ export class App {
   private adapter: CppLanguageAdapter
   private codeToBlocks: CodeToBlocksConverter | null = null
   private languageId = 'cpp'
+  private toolboxLevel: ToolboxLevel = 'beginner'
+  private diagnosticsTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     this.storage = new Storage()
@@ -71,9 +74,10 @@ export class App {
       clearBlockHighlight: () => this.blocklyEditor!.highlightBlock(null),
     })
 
-    // Wire up auto-save (no auto-sync)
+    // Wire up auto-save (no auto-sync) and diagnostics
     this.blocklyEditor.onChange(() => {
       this.autoSave()
+      this.scheduleDiagnostics()
     })
 
     // Wire up bidirectional highlight
@@ -96,10 +100,13 @@ export class App {
     // Setup manual sync buttons
     this.setupSyncUI()
 
-    // Restore saved state
+    // Restore saved state (or load default template)
     this.restoreState()
 
-    // Setup upload UI
+    // Setup UI controls
+    this.setupClearButton()
+    this.setupToolboxToggle()
+    this.setupQuickAccess()
     this.setupUploadUI()
     this.setupExportImportUI()
   }
@@ -152,6 +159,47 @@ export class App {
         }
         this.blocklyEditor?.updateToolbox(this.registry, this.languageId)
       }
+    } else {
+      // No saved state: load default template
+      this.blocklyEditor?.setState(DEFAULT_TEMPLATE_STATE)
+    }
+  }
+
+  private setupClearButton(): void {
+    const clearBtn = document.getElementById('clear-workspace-btn')
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.blocklyEditor?.clear()
+      })
+    }
+  }
+
+  private setupToolboxToggle(): void {
+    // Restore saved level
+    this.toolboxLevel = this.storage.loadToolboxLevel() ?? 'beginner'
+
+    // Apply initial toolbox level
+    this.blocklyEditor?.updateToolbox(this.registry, this.languageId, this.toolboxLevel)
+
+    const toggleBtn = document.getElementById('toolbox-toggle-btn')
+    if (toggleBtn) {
+      this.updateToggleButton(toggleBtn)
+      toggleBtn.addEventListener('click', () => {
+        this.toolboxLevel = this.toolboxLevel === 'beginner' ? 'advanced' : 'beginner'
+        this.storage.saveToolboxLevel(this.toolboxLevel)
+        this.blocklyEditor?.updateToolbox(this.registry, this.languageId, this.toolboxLevel)
+        this.updateToggleButton(toggleBtn)
+      })
+    }
+  }
+
+  private updateToggleButton(btn: HTMLElement): void {
+    if (this.toolboxLevel === 'beginner') {
+      btn.textContent = '初級模式'
+      btn.dataset.level = 'beginner'
+    } else {
+      btn.textContent = '進階模式'
+      btn.dataset.level = 'advanced'
     }
   }
 
@@ -218,6 +266,21 @@ export class App {
           await this.syncController!.syncCodeToBlocks(code)
         }
       })
+    }
+  }
+
+  private setupQuickAccess(): void {
+    const bar = document.getElementById('quick-access-bar')
+    if (!bar || !this.blocklyEditor) return
+    for (const item of QUICK_ACCESS_ITEMS) {
+      const btn = document.createElement('button')
+      btn.className = 'quick-access-btn'
+      btn.title = item.label
+      btn.textContent = `${item.icon} ${item.label}`
+      btn.addEventListener('click', () => {
+        this.blocklyEditor!.createBlockAtCenter(item.blockType)
+      })
+      bar.appendChild(btn)
     }
   }
 
@@ -290,6 +353,15 @@ export class App {
         reader.readAsText(file)
       })
     }
+  }
+
+  private scheduleDiagnostics(): void {
+    if (this.diagnosticsTimer) clearTimeout(this.diagnosticsTimer)
+    this.diagnosticsTimer = setTimeout(() => {
+      if (!this.blocklyEditor) return
+      const diagnostics = this.blocklyEditor.runDiagnostics()
+      this.blocklyEditor.applyDiagnostics(diagnostics)
+    }, 300)
   }
 
   dispose(): void {

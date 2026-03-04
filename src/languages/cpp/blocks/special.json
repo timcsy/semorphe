@@ -10,8 +10,8 @@
       "args0": [
         { "type": "field_input", "name": "CODE", "text": "// raw code" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "原始碼積木（未知語法降級用）"
     },
@@ -61,8 +61,8 @@
       "args0": [
         { "type": "field_dropdown", "name": "HEADER", "options": [["stdio.h","stdio.h"],["stdlib.h","stdlib.h"],["string.h","string.h"],["math.h","math.h"],["stdbool.h","stdbool.h"],["iostream","iostream"],["vector","vector"],["string","string"],["algorithm","algorithm"],["map","map"],["set","set"],["stack","stack"],["queue","queue"],["cmath","cmath"],["cstring","cstring"],["climits","climits"]] }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "#include 標頭檔"
     },
@@ -87,8 +87,8 @@
       "args0": [
         { "type": "field_input", "name": "HEADER", "text": "myheader.h" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "#include 本地標頭檔"
     },
@@ -114,8 +114,8 @@
         { "type": "field_input", "name": "NAME", "text": "MAX" },
         { "type": "field_input", "name": "VALUE", "text": "100" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "#define 巨集定義"
     },
@@ -142,11 +142,11 @@
       ],
       "message1": "%1",
       "args1": [
-        { "type": "input_statement", "name": "BODY" }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "message2": "#endif",
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "#ifdef 條件編譯"
     },
@@ -173,11 +173,11 @@
       ],
       "message1": "%1",
       "args1": [
-        { "type": "input_statement", "name": "BODY" }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "message2": "#endif",
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "#ifndef 條件編譯"
     },
@@ -202,8 +202,8 @@
       "args0": [
         { "type": "field_input", "name": "TEXT", "text": "comment" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "單行註解"
     },
@@ -228,8 +228,8 @@
       "args0": [
         { "type": "field_input", "name": "NS", "text": "std" }
       ],
-      "previousStatement": null,
-      "nextStatement": null,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": 0,
       "tooltip": "using namespace 宣告"
     },

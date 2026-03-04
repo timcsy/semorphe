@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { BlockRegistry } from '../../src/core/block-registry'
+import { BEGINNER_BLOCKS } from '../../src/core/types'
 import type { BlockSpec, ValidationError } from '../../src/core/types'
 import universalBlocks from '../../src/blocks/universal.json'
 import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
@@ -408,6 +409,50 @@ describe('BlockRegistry', () => {
       const spec = fullRegistry.get('u_array_access')!
       expect(spec.blockDef.message0).toContain('[ %2 ]')
       expect(spec.blockDef.message0).not.toContain('的第')
+    })
+  })
+
+  describe('toToolboxDef 工具箱分級過濾', () => {
+    let fullRegistry: BlockRegistry
+
+    beforeEach(() => {
+      fullRegistry = new BlockRegistry()
+      const allBlocks = [...universalBlocks, ...basicBlocks, ...advancedBlocks, ...specialBlocks] as BlockSpec[]
+      allBlocks.forEach(spec => fullRegistry.register(spec))
+    })
+
+    it('beginner 模式只回傳 BEGINNER_BLOCKS 中的積木', () => {
+      const toolbox = fullRegistry.toToolboxDef('cpp', 'beginner')
+      const allBlockTypes = toolbox.contents.flatMap(cat => cat.contents.map(b => b.type))
+      for (const blockType of allBlockTypes) {
+        expect(BEGINNER_BLOCKS).toContain(blockType)
+      }
+      expect(allBlockTypes.length).toBe(BEGINNER_BLOCKS.length)
+    })
+
+    it('advanced 模式回傳全部積木', () => {
+      const toolbox = fullRegistry.toToolboxDef('cpp', 'advanced')
+      const allBlockTypes = toolbox.contents.flatMap(cat => cat.contents.map(b => b.type))
+      expect(allBlockTypes.length).toBe(67)
+    })
+
+    it('不傳 level 時回傳全部積木（向後相容）', () => {
+      const toolbox = fullRegistry.toToolboxDef('cpp')
+      const allBlockTypes = toolbox.contents.flatMap(cat => cat.contents.map(b => b.type))
+      expect(allBlockTypes.length).toBe(67)
+    })
+
+    it('beginner 模式分類數 ≤ 6', () => {
+      const toolbox = fullRegistry.toToolboxDef('cpp', 'beginner')
+      expect(toolbox.contents.length).toBeLessThanOrEqual(6)
+    })
+
+    it('beginner 模式隱藏 c_printf 但顯示 u_print', () => {
+      const toolbox = fullRegistry.toToolboxDef('cpp', 'beginner')
+      const allBlockTypes = toolbox.contents.flatMap(cat => cat.contents.map(b => b.type))
+      expect(allBlockTypes).toContain('u_print')
+      expect(allBlockTypes).not.toContain('c_printf')
+      expect(allBlockTypes).not.toContain('c_scanf')
     })
   })
 
