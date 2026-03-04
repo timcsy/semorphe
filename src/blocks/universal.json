@@ -1,0 +1,737 @@
+[
+  {
+    "id": "u_var_declare",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_declare",
+      "message0": "%{BKY_U_VAR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_LONG_LONG}",
+              "long long"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_STRING}",
+              "string"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_BOOL}",
+              "bool"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 330,
+      "tooltip": "%{BKY_U_VAR_DECLARE_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_var_assign",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_assign",
+      "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 330,
+      "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_var_ref",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_var_ref",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "%{BKY_U_VAR_REF_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_number",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_number",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_number",
+          "name": "NUM",
+          "value": 0
+        }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "%{BKY_U_NUMBER_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_string",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_string",
+      "message0": "\" %1 \"",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TEXT",
+          "text": "hello"
+        }
+      ],
+      "output": "Expression",
+      "colour": 330,
+      "tooltip": "%{BKY_U_STRING_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_arithmetic",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_arithmetic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "+",
+              "+"
+            ],
+            [
+              "-",
+              "-"
+            ],
+            [
+              "×",
+              "*"
+            ],
+            [
+              "÷",
+              "/"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_REMAINDER}",
+              "%"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_U_ARITHMETIC_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_compare",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_compare",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_U_COMPARE_OP_GT}",
+              ">"
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_LT}",
+              "<"
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_GE}",
+              ">="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_LE}",
+              "<="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_EQ}",
+              "=="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_NE}",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_U_COMPARE_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_logic",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_logic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_U_LOGIC_OP_AND}",
+              "&&"
+            ],
+            [
+              "%{BKY_U_LOGIC_OP_OR}",
+              "||"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_U_LOGIC_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_logic_not",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_logic_not",
+      "message0": "%{BKY_U_LOGIC_NOT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_U_LOGIC_NOT_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_if",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_if",
+      "message0": "%{BKY_U_IF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 40,
+      "tooltip": "%{BKY_U_IF_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_if_else",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_if_else",
+      "message0": "%{BKY_U_IF_ELSE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "THEN",
+          "check": "Statement"
+        }
+      ],
+      "message2": "%{BKY_U_IF_ELSE_MSG2}",
+      "message3": "%1",
+      "args3": [
+        {
+          "type": "input_statement",
+          "name": "ELSE",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 40,
+      "tooltip": "%{BKY_U_IF_ELSE_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_count_loop",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_count_loop",
+      "message0": "%{BKY_U_COUNT_LOOP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "VAR",
+          "text": "i"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TO",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_U_COUNT_LOOP_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_while_loop",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_while_loop",
+      "message0": "%{BKY_U_WHILE_LOOP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_U_WHILE_LOOP_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_break",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_break",
+      "message0": "%{BKY_U_BREAK_MSG0}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_U_BREAK_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_continue",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_continue",
+      "message0": "%{BKY_U_CONTINUE_MSG0}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_U_CONTINUE_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_func_def",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_func_def",
+      "message0": "%{BKY_U_FUNC_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "myFunc"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "RETURN_TYPE",
+          "options": [
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_VOID}",
+              "void"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_LONG_LONG}",
+              "long long"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_STRING}",
+              "string"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_BOOL}",
+              "bool"
+            ]
+          ]
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 60,
+      "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_func_call",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_func_call",
+      "message0": "%{BKY_U_FUNC_CALL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "func"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 60,
+      "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_return",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_return",
+      "message0": "%{BKY_U_RETURN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 60,
+      "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_print",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_print",
+      "message0": "%{BKY_U_PRINT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "EXPR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 180,
+      "tooltip": "%{BKY_U_PRINT_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_endl",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_endl",
+      "message0": "%{BKY_U_ENDL_MSG0}",
+      "output": "Expression",
+      "colour": 180,
+      "tooltip": "%{BKY_U_ENDL_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_input",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_input",
+      "message0": "%{BKY_U_INPUT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 180,
+      "tooltip": "%{BKY_U_INPUT_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_array_declare",
+    "language": "universal",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_array_declare",
+      "message0": "%{BKY_U_ARRAY_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_U_ARRAY_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_U_ARRAY_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_U_ARRAY_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_U_ARRAY_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_U_ARRAY_DECLARE_TYPE_LONG_LONG}",
+              "long long"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 260,
+      "tooltip": "%{BKY_U_ARRAY_DECLARE_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_array_access",
+    "language": "universal",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_array_access",
+      "message0": "%{BKY_U_ARRAY_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "ARRAY",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "INDEX",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": 260,
+      "tooltip": "%{BKY_U_ARRAY_ACCESS_TOOLTIP}"
+    }
+  }
+]

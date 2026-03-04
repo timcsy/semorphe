@@ -1,0 +1,29 @@
+{
+  "TYPE_INT": "int（整數）",
+  "TYPE_FLOAT": "float（小數）",
+  "TYPE_DOUBLE": "double（精確小數）",
+  "TYPE_CHAR": "char（字元）",
+  "TYPE_BOOL": "bool（是/否）",
+  "TYPE_STRING": "string（文字）",
+  "TYPE_VOID": "void（無回傳）",
+  "TYPE_LONG_LONG": "long long（大整數）",
+  "TYPE_SHORT": "short（短整數）",
+  "TYPE_UNSIGNED_INT": "unsigned int（正整數）",
+  "TYPE_UNSIGNED_CHAR": "unsigned char（正字元）",
+  "TYPE_LONG": "long（長整數）",
+  "TYPE_SIZE_T": "size_t（大小型別）",
+  "TYPE_AUTO": "auto（自動推斷）",
+
+  "TYPE_PY_INT": "int（整數）",
+  "TYPE_PY_FLOAT": "float（小數）",
+  "TYPE_PY_STR": "str（字串）",
+  "TYPE_PY_BOOL": "bool（是/否）",
+  "TYPE_PY_LIST": "list（清單）",
+  "TYPE_PY_DICT": "dict（字典）",
+  "TYPE_PY_TUPLE": "tuple（元組）",
+  "TYPE_PY_SET": "set（集合）",
+  "TYPE_PY_NONE": "None（空值）",
+
+  "LANG_PYTHON": "Python",
+  "LANG_CPP": "C++"
+}

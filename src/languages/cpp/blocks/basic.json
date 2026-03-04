@@ -1,0 +1,381 @@
+[
+  {
+    "id": "c_char_literal",
+    "language": "cpp",
+    "category": "values",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_char_literal",
+      "message0": "%{BKY_C_CHAR_LITERAL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CHAR",
+          "text": "a"
+        }
+      ],
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_C_CHAR_LITERAL_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "'${CHAR}'",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "char_literal",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_increment",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_increment",
+      "message0": "%{BKY_C_INCREMENT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "i"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_C_INCREMENT_OP_INCREMENT}",
+              "++"
+            ],
+            [
+              "%{BKY_C_INCREMENT_OP_DECREMENT}",
+              "--"
+            ]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": 210,
+      "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}${OP}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "update_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_compound_assign",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_compound_assign",
+      "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
+              "+="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
+              "-="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
+              "*="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
+              "/="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
+              "%="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 210,
+      "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME} ${OP} ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "assignment_expression",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_switch",
+    "language": "cpp",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_switch",
+      "message0": "%{BKY_C_SWITCH_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "EXPR",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "CASES",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 40,
+      "tooltip": "%{BKY_C_SWITCH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "switch (${EXPR}) {\n${CASES}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "switch_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_case",
+    "language": "cpp",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_case",
+      "message0": "%{BKY_C_CASE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 40,
+      "tooltip": "%{BKY_C_CASE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "case ${VALUE}:\n${BODY}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "case_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_for_loop",
+    "language": "cpp",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_for_loop",
+      "message0": "%{BKY_C_FOR_LOOP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "UPDATE",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%{BKY_C_FOR_LOOP_MSG1}",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_C_FOR_LOOP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "for (${INIT}; ${COND}; ${UPDATE}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "for_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_do_while",
+    "language": "cpp",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_do_while",
+      "message0": "%{BKY_C_DO_WHILE_MSG0}",
+      "args0": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "message1": "%{BKY_C_DO_WHILE_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 120,
+      "tooltip": "%{BKY_C_DO_WHILE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "do {\n${BODY}\n} while (${COND});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "do_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_printf",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_printf",
+      "message0": "%{BKY_C_PRINTF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "FORMAT",
+          "text": "%d\\n"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ", x"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 180,
+      "tooltip": "%{BKY_C_PRINTF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "printf(\"${FORMAT}\"${ARGS});",
+      "imports": [
+        "stdio.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "printf"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_scanf",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_scanf",
+      "message0": "%{BKY_C_SCANF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "FORMAT",
+          "text": "%d"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ", &x"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": 180,
+      "tooltip": "%{BKY_C_SCANF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "scanf(\"${FORMAT}\"${ARGS});",
+      "imports": [
+        "stdio.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "scanf"
+        }
+      ]
+    }
+  }
+]

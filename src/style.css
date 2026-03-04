@@ -1,0 +1,194 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #2c3e50;
+  color: white;
+  flex-shrink: 0;
+}
+
+#toolbar h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-actions button {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.toolbar-actions button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-actions select {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.toolbar-actions select option {
+  background: #2c3e50;
+  color: white;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  align-self: center;
+}
+
+/* Sync button hint: pulsing glow when the corresponding side has changes */
+.toolbar-actions button.sync-hint {
+  border-color: #f39c12;
+  box-shadow: 0 0 6px rgba(243, 156, 18, 0.6);
+  animation: sync-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sync-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(243, 156, 18, 0.4); }
+  50% { box-shadow: 0 0 10px rgba(243, 156, 18, 0.8); }
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+  background: rgba(39, 174, 96, 0.9);
+}
+
+.toast-error {
+  background: rgba(231, 76, 60, 0.9);
+}
+
+#editors {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#blockly-panel {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+#quick-access-bar {
+  display: flex;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+#quick-access-bar:empty {
+  display: none;
+}
+
+.quick-access-btn {
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.quick-access-btn:hover {
+  background: #e3f2fd;
+  border-color: #90caf9;
+}
+
+#blockly-editor {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+#divider {
+  width: 4px;
+  background: #ddd;
+  cursor: col-resize;
+  flex-shrink: 0;
+}
+
+#divider:hover {
+  background: #3498db;
+}
+
+#code-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#code-editor {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+#code-editor .cm-editor {
+  height: 100%;
+}
+
+#code-editor .cm-scroller {
+  overflow: auto;
+}

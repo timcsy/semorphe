@@ -1,0 +1,29 @@
+{
+  "TYPE_INT": "int (integer)",
+  "TYPE_FLOAT": "float (decimal)",
+  "TYPE_DOUBLE": "double (precise decimal)",
+  "TYPE_CHAR": "char (character)",
+  "TYPE_BOOL": "bool (true/false)",
+  "TYPE_STRING": "string (text)",
+  "TYPE_VOID": "void (no return)",
+  "TYPE_LONG_LONG": "long long (big integer)",
+  "TYPE_SHORT": "short (short integer)",
+  "TYPE_UNSIGNED_INT": "unsigned int (positive integer)",
+  "TYPE_UNSIGNED_CHAR": "unsigned char (positive character)",
+  "TYPE_LONG": "long (long integer)",
+  "TYPE_SIZE_T": "size_t (size type)",
+  "TYPE_AUTO": "auto (auto-detect)",
+
+  "TYPE_PY_INT": "int (integer)",
+  "TYPE_PY_FLOAT": "float (decimal)",
+  "TYPE_PY_STR": "str (string)",
+  "TYPE_PY_BOOL": "bool (true/false)",
+  "TYPE_PY_LIST": "list (list)",
+  "TYPE_PY_DICT": "dict (dictionary)",
+  "TYPE_PY_TUPLE": "tuple (tuple)",
+  "TYPE_PY_SET": "set (set)",
+  "TYPE_PY_NONE": "None (none)",
+
+  "LANG_PYTHON": "Python",
+  "LANG_CPP": "C++"
+}
