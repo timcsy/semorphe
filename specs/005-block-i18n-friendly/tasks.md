@@ -98,7 +98,7 @@
 **Purpose**: 最終驗證與清理
 
 - [X] T027 執行 quickstart.md 中 5 個驗證場景的檢查
-- [ ] T028 Git commit 所有改動
+- [X] T028 Git commit 所有改動
 
 ---
 
