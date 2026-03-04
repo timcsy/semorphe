@@ -145,8 +145,8 @@ export class SemanticInterpreter {
 
   private executeBody(nodes: SemanticNode[]): void {
     for (const child of nodes) {
-      this.recordStepInfo(child)
       this.executeNode(child)
+      this.recordStepInfo(child)
     }
   }
 
@@ -160,10 +160,19 @@ export class SemanticInterpreter {
       'while_loop', 'func_def', 'func_call', 'return', 'break', 'continue',
     ])
     if (!statementConcepts.has(concept)) return
+
+    // Snapshot scope variables
+    const scopeSnapshot: { name: string; type: string; value: string }[] = []
+    for (const [name, val] of this.scope.getAll()) {
+      scopeSnapshot.push({ name, type: val.type, value: valueToString(val) })
+    }
+
     this.stepRecords.push({
       node,
       blockId: node.metadata?.blockId ?? null,
       sourceRange: node.metadata?.sourceRange ?? null,
+      outputLength: this.io.getOutput().length,
+      scopeSnapshot,
     })
   }
 

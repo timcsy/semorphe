@@ -854,7 +854,12 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
         break
     }
 
-    return createNode(concept, props, children)
+    // 從 tree-sitter 節點提取 sourceRange（行號從 1 開始）
+    const metadata: Record<string, unknown> = {}
+    if (node.startPosition && node.endPosition) {
+      metadata.sourceRange = { start: node.startPosition.row + 1, end: node.endPosition.row + 1 }
+    }
+    return createNode(concept, props, children, Object.keys(metadata).length > 0 ? metadata as any : undefined)
   }
 
   private buildSemVarDeclare(node: Node, props: Record<string, string | number | boolean>, children: Record<string, SemanticNode | SemanticNode[]>): void {

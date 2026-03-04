@@ -68,6 +68,38 @@ export class VariablePanel {
     }
   }
 
+  updateFromSnapshot(snapshot: { name: string; type: string; value: string }[]): void {
+    this.tableBody.innerHTML = ''
+
+    for (const { name, type, value } of snapshot) {
+      const prevValue = this.previousValues.get(name)
+      const changed = prevValue !== undefined && prevValue !== value
+
+      const row = document.createElement('div')
+      row.className = 'variable-row'
+      if (changed) row.classList.add('value-changed')
+
+      const nameCell = document.createElement('span')
+      nameCell.className = 'variable-cell'
+      nameCell.textContent = name
+
+      const typeCell = document.createElement('span')
+      typeCell.className = 'variable-cell'
+      typeCell.textContent = type
+
+      const valueCell = document.createElement('span')
+      valueCell.className = 'variable-cell variable-value'
+      valueCell.textContent = value
+
+      row.appendChild(nameCell)
+      row.appendChild(typeCell)
+      row.appendChild(valueCell)
+      this.tableBody.appendChild(row)
+
+      this.previousValues.set(name, value)
+    }
+  }
+
   clear(): void {
     this.tableBody.innerHTML = ''
     this.previousValues.clear()

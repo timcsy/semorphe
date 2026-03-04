@@ -50,6 +50,7 @@ export class App {
   private variablePanel: VariablePanel | null = null
   private stepRecords: StepInfo[] = []
   private currentStepIndex = 0
+  private fullOutput: string[] = []
 
   constructor() {
     this.storage = new Storage()
@@ -629,10 +630,9 @@ export class App {
 
       try {
         this.stepRecords = this.interpreter.executeWithSteps(model.program)
-        this.currentStepIndex = 0
-        const output = this.interpreter.getOutput()
+        this.currentStepIndex = -1
+        this.fullOutput = this.interpreter.getOutput()
         this.consolePanel.clear()
-        this.consolePanel.appendOutput(output.join(''))
       } catch (e) {
         if (e instanceof RuntimeError) {
           const output = this.interpreter.getOutput()
@@ -648,7 +648,7 @@ export class App {
       // Configure step function for StepController
       this.stepController.setStepFn(() => {
         this.currentStepIndex++
-        return this.currentStepIndex < this.stepRecords.length
+        return this.currentStepIndex < this.stepRecords.length - 1
       })
 
       this.updateExecButtons(true)
@@ -658,7 +658,7 @@ export class App {
   }
 
   private onStepExecuted(): void {
-    if (this.currentStepIndex >= this.stepRecords.length) return
+    if (this.currentStepIndex < 0 || this.currentStepIndex >= this.stepRecords.length) return
     const step = this.stepRecords[this.currentStepIndex]
 
     // Highlight block
@@ -670,8 +670,18 @@ export class App {
       this.codeEditor.addHighlight(step.sourceRange.start, step.sourceRange.end)
     }
 
-    // Update variable panel
-    this.variablePanel?.update(this.interpreter.getScope())
+    // Incremental output: show output up to this step
+    if (this.consolePanel) {
+      this.consolePanel.clear()
+      if (step.outputLength > 0) {
+        this.consolePanel.appendOutput(this.fullOutput.slice(0, step.outputLength).join(''))
+      }
+    }
+
+    // Update variable panel from scope snapshot
+    if (this.variablePanel) {
+      this.variablePanel.updateFromSnapshot(step.scopeSnapshot)
+    }
 
     this.consolePanel?.setStatus(
       this.stepController.getStatus() === 'completed' ? 'completed' : 'running'
@@ -689,6 +699,7 @@ export class App {
     this.variablePanel?.clear()
     this.stepRecords = []
     this.currentStepIndex = 0
+    this.fullOutput = []
     this.consolePanel?.setStatus('idle')
     this.updateExecButtons(false)
   }

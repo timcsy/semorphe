@@ -34,6 +34,8 @@ export interface StepInfo {
   node: SemanticNode
   blockId: string | null
   sourceRange: { start: number; end: number } | null
+  outputLength: number
+  scopeSnapshot: { name: string; type: string; value: string }[]
 }
 
 /** 建立預設 RuntimeValue */
