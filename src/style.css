@@ -365,53 +365,16 @@ html, body {
   color: #666;
 }
 
-/* Stdin textarea */
-.stdin-section {
-  border-top: 1px solid #3c3c3c;
-  flex-shrink: 0;
+/* Hidden utility */
+.hidden {
+  display: none !important;
 }
 
-.stdin-header {
-  display: flex;
+/* Execution controls group */
+.exec-controls {
+  display: inline-flex;
+  gap: 8px;
   align-items: center;
-  justify-content: space-between;
-  padding: 3px 10px;
-  background: #252526;
-  cursor: pointer;
-  user-select: none;
-}
-
-.stdin-header:hover {
-  background: #2a2d2e;
-}
-
-.stdin-label {
-  font-size: 11px;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stdin-toggle {
-  font-size: 10px;
-  color: #888;
-}
-
-.stdin-textarea {
-  width: 100%;
-  height: 60px;
-  background: #1e1e1e;
-  border: none;
-  outline: none;
-  color: #d4d4d4;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 12px;
-  padding: 4px 10px;
-  resize: none;
-}
-
-.stdin-textarea::placeholder {
-  color: #555;
 }
 
 /* Run/Stop buttons in toolbar */

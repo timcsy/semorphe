@@ -1,6 +1,5 @@
 import type { Scope } from '../interpreter/scope'
 import { valueToString } from '../interpreter/types'
-import type { RuntimeValue } from '../interpreter/types'
 
 export class VariablePanel {
   private element: HTMLElement

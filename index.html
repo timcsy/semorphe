@@ -22,14 +22,16 @@
           <select id="style-selector" title="編碼風格"></select>
           <span class="toolbar-separator"></span>
           <button id="run-btn" class="run-btn" title="執行程式">▶ 執行</button>
-          <button id="step-btn" class="step-btn" title="逐步執行">⏭ 逐步</button>
-          <button id="pause-btn" class="pause-btn" title="暫停/繼續" disabled>⏸ 暫停</button>
-          <button id="stop-btn" class="stop-btn" title="停止執行" disabled>■ 停止</button>
-          <select id="speed-selector" title="執行速度">
-            <option value="slow">慢速</option>
-            <option value="medium" selected>中速</option>
-            <option value="fast">快速</option>
-          </select>
+          <span id="exec-controls" class="exec-controls hidden">
+            <button id="step-btn" class="step-btn" title="逐步執行">⏭ 逐步</button>
+            <button id="pause-btn" class="pause-btn" title="暫停/繼續" disabled>⏸ 暫停</button>
+            <button id="stop-btn" class="stop-btn" title="停止執行">■ 停止</button>
+            <select id="speed-selector" title="執行速度">
+              <option value="slow">慢速</option>
+              <option value="medium" selected>中速</option>
+              <option value="fast">快速</option>
+            </select>
+          </span>
           <span class="toolbar-separator"></span>
           <button id="upload-blocks-btn" title="上傳自訂積木定義">上傳積木</button>
           <input type="file" id="blocks-file-input" accept=".json" hidden />

@@ -6,8 +6,6 @@ export class ConsolePanel {
   private statusEl: HTMLElement
   private inputEl: HTMLInputElement
   private inputContainer: HTMLElement
-  private stdinTextarea: HTMLTextAreaElement
-  private stdinSection: HTMLElement
   private onInputResolve: ((value: string) => void) | null = null
 
   constructor(container: HTMLElement) {
@@ -30,7 +28,7 @@ export class ConsolePanel {
     this.outputEl.className = 'console-output'
     this.element.appendChild(this.outputEl)
 
-    // Inline input
+    // Inline input (appears at bottom of console when input is needed)
     this.inputContainer = document.createElement('div')
     this.inputContainer.className = 'console-input-container'
     this.inputContainer.style.display = 'none'
@@ -55,31 +53,6 @@ export class ConsolePanel {
     this.inputContainer.appendChild(inputLabel)
     this.inputContainer.appendChild(this.inputEl)
     this.element.appendChild(this.inputContainer)
-
-    // Stdin pre-fill section (collapsible)
-    this.stdinSection = document.createElement('div')
-    this.stdinSection.className = 'stdin-section'
-    const stdinHeader = document.createElement('div')
-    stdinHeader.className = 'stdin-header'
-    const stdinLabel = document.createElement('span')
-    stdinLabel.className = 'stdin-label'
-    stdinLabel.textContent = 'Stdin 預填輸入'
-    const stdinToggle = document.createElement('span')
-    stdinToggle.className = 'stdin-toggle'
-    stdinToggle.textContent = '▼'
-    stdinHeader.appendChild(stdinLabel)
-    stdinHeader.appendChild(stdinToggle)
-    this.stdinTextarea = document.createElement('textarea')
-    this.stdinTextarea.className = 'stdin-textarea'
-    this.stdinTextarea.placeholder = '每行一個輸入值（執行前填入）'
-    stdinHeader.addEventListener('click', () => {
-      const isHidden = this.stdinTextarea.style.display === 'none'
-      this.stdinTextarea.style.display = isHidden ? 'block' : 'none'
-      stdinToggle.textContent = isHidden ? '▲' : '▼'
-    })
-    this.stdinSection.appendChild(stdinHeader)
-    this.stdinSection.appendChild(this.stdinTextarea)
-    this.element.appendChild(this.stdinSection)
   }
 
   appendOutput(text: string): void {
@@ -117,7 +90,6 @@ export class ConsolePanel {
     }
   }
 
-  /** Show inline input and return a promise that resolves when user submits */
   promptInput(): Promise<string> {
     return new Promise((resolve) => {
       this.onInputResolve = resolve
@@ -134,9 +106,5 @@ export class ConsolePanel {
 
   getElement(): HTMLElement {
     return this.element
-  }
-
-  getStdinTextarea(): HTMLTextAreaElement {
-    return this.stdinTextarea
   }
 }

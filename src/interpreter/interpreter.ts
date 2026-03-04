@@ -1,5 +1,6 @@
 import type { SemanticNode } from '../core/semantic-model'
-import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
+import { createNode } from '../core/semantic-model'
+import type { RuntimeValue, RuntimeType, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString, parseInputValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
@@ -9,7 +10,8 @@ import { IOSystem } from './io'
 class BreakSignal { readonly _brand = 'break' }
 class ContinueSignal { readonly _brand = 'continue' }
 class ReturnSignal {
-  constructor(readonly value: RuntimeValue) {}
+  value: RuntimeValue
+  constructor(value: RuntimeValue) { this.value = value }
 }
 
 interface InterpreterOptions {
@@ -134,6 +136,10 @@ export class SemanticInterpreter {
     const body = node.children.body
     if (Array.isArray(body)) {
       this.executeBody(body)
+    }
+    // C/C++ 慣例：若定義了 main 函式，自動呼叫
+    if (this.functions.has('main')) {
+      this.execFuncCall(createNode('func_call', { name: 'main' }, { args: [] }))
     }
   }
 

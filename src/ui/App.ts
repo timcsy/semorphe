@@ -46,7 +46,6 @@ export class App {
   private lastChangedSide: 'blocks' | 'code' | null = null
   private interpreter: SemanticInterpreter
   private consolePanel: ConsolePanel | null = null
-  private stdinTextarea: HTMLTextAreaElement | null = null
   private stepController: StepController
   private variablePanel: VariablePanel | null = null
   private stepRecords: StepInfo[] = []
@@ -519,7 +518,6 @@ export class App {
     const consoleContainer = document.getElementById('console-panel')
     if (consoleContainer) {
       this.consolePanel = new ConsolePanel(consoleContainer)
-      this.stdinTextarea = this.consolePanel.getStdinTextarea()
     }
 
     const variableContainer = document.getElementById('variable-panel')
@@ -590,14 +588,8 @@ export class App {
     this.consolePanel.setStatus('running')
     this.updateExecButtons(true)
 
-    // Collect pre-filled stdin from textarea
-    const stdinLines: string[] = []
-    if (this.stdinTextarea && this.stdinTextarea.value.trim()) {
-      stdinLines.push(...this.stdinTextarea.value.split('\n'))
-    }
-
     try {
-      this.interpreter.execute(model.program, stdinLines)
+      this.interpreter.execute(model.program)
       const output = this.interpreter.getOutput()
       this.consolePanel.appendOutput(output.join(''))
       this.consolePanel.setStatus('completed')
@@ -635,13 +627,8 @@ export class App {
       }
       if (!model) return
 
-      const stdinLines: string[] = []
-      if (this.stdinTextarea && this.stdinTextarea.value.trim()) {
-        stdinLines.push(...this.stdinTextarea.value.split('\n'))
-      }
-
       try {
-        this.stepRecords = this.interpreter.executeWithSteps(model.program, stdinLines)
+        this.stepRecords = this.interpreter.executeWithSteps(model.program)
         this.currentStepIndex = 0
         const output = this.interpreter.getOutput()
         this.consolePanel.clear()
@@ -707,14 +694,11 @@ export class App {
   }
 
   private updateExecButtons(running: boolean): void {
-    const runBtn = document.getElementById('run-btn') as HTMLButtonElement | null
-    const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null
-    const stepBtn = document.getElementById('step-btn') as HTMLButtonElement | null
+    const execControls = document.getElementById('exec-controls')
     const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement | null
-    if (runBtn) runBtn.disabled = running
-    if (stopBtn) stopBtn.disabled = !running
-    if (stepBtn) stepBtn.disabled = false
-    if (pauseBtn) pauseBtn.disabled = !running
+    if (execControls) {
+      execControls.classList.toggle('hidden', !running)
+    }
     if (pauseBtn) pauseBtn.textContent = '⏸ 暫停'
   }
 
