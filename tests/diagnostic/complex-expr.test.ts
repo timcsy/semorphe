@@ -217,7 +217,7 @@ describe('Complex expression conversion with adapter', () => {
     })
 
     it('quadratic: (-b + sqrt(...)) / (2 * a) generates correct parens', () => {
-      // (-b + sqrt(x)) / (2 * a) → (0 - b + sqrt(x)) / (2 * a)
+      // (-b + sqrt(x)) / (2 * a) → (-b + sqrt(x)) / (2 * a)
       const sqrtBlock: BlockJSON = {
         type: 'u_func_call', id: 't', fields: { NAME: 'sqrt' },
         inputs: { ARG0: { block: varBlock('x') } },
@@ -228,7 +228,26 @@ describe('Complex expression conversion with adapter', () => {
       const denominator = arithBlock('*', numBlock(2), varBlock('a'))
       const block = arithBlock('/', numerator, denominator)
       const code = adapter.generateCode('u_arithmetic', block, 0)
-      expect(code).toBe('(0 - b + sqrt(x)) / (2 * a)')
+      expect(code).toBe('(-b + sqrt(x)) / (2 * a)')
+    })
+
+    it('unary minus: -b → generates -b (not 0 - b)', () => {
+      const block = arithBlock('-', numBlock(0), varBlock('b'))
+      const code = adapter.generateCode('u_arithmetic', block, 0)
+      expect(code).toBe('-b')
+    })
+
+    it('unary minus with complex operand: -(a + b) → adds parens', () => {
+      const block = arithBlock('-', numBlock(0), arithBlock('+', varBlock('a'), varBlock('b')))
+      const code = adapter.generateCode('u_arithmetic', block, 0)
+      expect(code).toBe('-(a + b)')
+    })
+
+    it('unary minus in multiplication: -a * b → no parens (higher precedence)', () => {
+      const negA = arithBlock('-', numBlock(0), varBlock('a'))
+      const block = arithBlock('*', negA, varBlock('b'))
+      const code = adapter.generateCode('u_arithmetic', block, 0)
+      expect(code).toBe('-a * b')
     })
   })
 

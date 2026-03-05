@@ -187,7 +187,17 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
       case 'u_arithmetic':
       case 'u_compare':
       case 'u_logic':
-        this.extractBinaryOp(node, fields, inputs)
+        if (node.type === 'unary_expression') {
+          // Unary minus: synthesize 0 - operand
+          fields.OP = '-'
+          inputs.A = { block: { type: 'u_number', id: `unary_zero_${node.startPosition.row}_${node.startPosition.column}`, fields: { NUM: '0' } } }
+          const operand = node.childForFieldName('argument')
+          if (operand) {
+            inputs.B = { block: this.nodeToExprBlock(operand) }
+          }
+        } else {
+          this.extractBinaryOp(node, fields, inputs)
+        }
         break
       case 'u_logic_not':
         this.extractUnaryOp(node, inputs)
@@ -244,6 +254,7 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
   /** Get the operator precedence order for a block (used by generator for parenthesization) */
   getBlockOrder(block: BlockJSON): number {
     if (block.type === 'u_arithmetic' || block.type === 'u_compare' || block.type === 'u_logic') {
+      if (block.type === 'u_arithmetic' && this.isUnaryMinusPattern(block)) return UNARY_PREFIX_ORDER
       const f = block.fields ?? {}
       return OP_ORDER[f.OP as string] ?? 12
     }
@@ -274,6 +285,12 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
       case 'u_arithmetic':
       case 'u_compare':
       case 'u_logic': {
+        // Detect unary minus pattern: 0 - x → -x
+        if (blockId === 'u_arithmetic' && this.isUnaryMinusPattern(block)) {
+          const right = this.genExprWithOrder(i.B?.block)
+          const rightCode = right.order > 0 && right.order < UNARY_PREFIX_ORDER ? `(${right.code})` : right.code
+          return `-${rightCode}`
+        }
         const myOrder = OP_ORDER[f.OP as string] ?? 12
         const left = this.genExprWithOrder(i.A?.block)
         const right = this.genExprWithOrder(i.B?.block)
@@ -380,6 +397,11 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
 
     // Binary operators: return their actual precedence
     if (block.type === 'u_arithmetic' || block.type === 'u_compare' || block.type === 'u_logic') {
+      // Unary minus pattern: 0 - x → order is UNARY_PREFIX_ORDER
+      if (block.type === 'u_arithmetic' && this.isUnaryMinusPattern(block)) {
+        const code = this.generateCode(block.type, block, 0).trim()
+        return { code, order: UNARY_PREFIX_ORDER }
+      }
       const f = block.fields ?? {}
       const order = OP_ORDER[f.OP as string] ?? 12
       const code = this.generateCode(block.type, block, 0).trim()
@@ -428,6 +450,17 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
       current = current.next?.block
     }
     return parts.join('\n')
+  }
+
+  /** Detect unary minus pattern: u_arithmetic { OP: '-', A: u_number(0), B: ... } */
+  private isUnaryMinusPattern(block: BlockJSON): boolean {
+    const f = block.fields ?? {}
+    const i = block.inputs ?? {}
+    if (f.OP !== '-') return false
+    const a = i.A?.block
+    if (!a || a.type !== 'u_number') return false
+    const num = a.fields?.NUM
+    return num === 0 || num === '0'
   }
 
   // --- matchNodeToBlock helpers ---
@@ -494,6 +527,7 @@ export class CppLanguageAdapter implements LanguageAdapter, NewLanguageAdapter {
   private matchUnaryExpression(node: Node): string | null {
     const op = node.childForFieldName('operator')
     if (op?.text === '!') return 'u_logic_not'
+    if (op?.text === '-') return 'u_arithmetic'
     return null
   }
 
