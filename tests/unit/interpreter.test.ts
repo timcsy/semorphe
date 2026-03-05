@@ -8,22 +8,22 @@ function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })
 }
 
-function run(body: SemanticNode[], stdin: string[] = []) {
+async function run(body: SemanticNode[], stdin: string[] = []) {
   const interp = new SemanticInterpreter()
-  interp.execute(makeProgram(body), stdin)
+  await interp.execute(makeProgram(body), stdin)
   return interp
 }
 
 // T009: 基礎概念
 describe('Interpreter - basics', () => {
-  it('should execute empty program', () => {
-    const interp = run([])
+  it('should execute empty program', async () => {
+    const interp = await run([])
     expect(interp.getState().status).toBe('completed')
     expect(interp.getOutput()).toEqual([])
   })
 
-  it('should handle number_literal via print', () => {
-    const interp = run([
+  it('should handle number_literal via print', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('number_literal', { value: '42' }, {})]
       })
@@ -31,8 +31,8 @@ describe('Interpreter - basics', () => {
     expect(interp.getOutput().join('')).toBe('42')
   })
 
-  it('should handle string_literal via print', () => {
-    const interp = run([
+  it('should handle string_literal via print', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('string_literal', { value: 'hello' }, {})]
       })
@@ -40,8 +40,8 @@ describe('Interpreter - basics', () => {
     expect(interp.getOutput().join('')).toBe('hello')
   })
 
-  it('should declare and reference variable', () => {
-    const interp = run([
+  it('should declare and reference variable', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('number_literal', { value: '5' }, {})
       }),
@@ -52,8 +52,8 @@ describe('Interpreter - basics', () => {
     expect(interp.getOutput().join('')).toBe('5')
   })
 
-  it('should assign variable', () => {
-    const interp = run([
+  it('should assign variable', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('number_literal', { value: '1' }, {})
       }),
@@ -67,8 +67,8 @@ describe('Interpreter - basics', () => {
     expect(interp.getOutput().join('')).toBe('10')
   })
 
-  it('should handle endl', () => {
-    const interp = run([
+  it('should handle endl', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [
           createNode('string_literal', { value: 'a' }, {}),
@@ -82,8 +82,8 @@ describe('Interpreter - basics', () => {
 
 // T010: 運算概念
 describe('Interpreter - arithmetic', () => {
-  function evalArith(op: string, left: string, right: string) {
-    const interp = run([
+  async function evalArith(op: string, left: string, right: string) {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('arithmetic', { operator: op }, {
           left: createNode('number_literal', { value: left }, {}),
@@ -94,14 +94,14 @@ describe('Interpreter - arithmetic', () => {
     return interp.getOutput().join('')
   }
 
-  it('should add', () => expect(evalArith('+', '3', '4')).toBe('7'))
-  it('should subtract', () => expect(evalArith('-', '10', '3')).toBe('7'))
-  it('should multiply', () => expect(evalArith('*', '3', '4')).toBe('12'))
-  it('should divide (integer truncation)', () => expect(evalArith('/', '7', '2')).toBe('3'))
-  it('should modulo', () => expect(evalArith('%', '7', '3')).toBe('1'))
+  it('should add', async () => expect(await evalArith('+', '3', '4')).toBe('7'))
+  it('should subtract', async () => expect(await evalArith('-', '10', '3')).toBe('7'))
+  it('should multiply', async () => expect(await evalArith('*', '3', '4')).toBe('12'))
+  it('should divide (integer truncation)', async () => expect(await evalArith('/', '7', '2')).toBe('3'))
+  it('should modulo', async () => expect(await evalArith('%', '7', '3')).toBe('1'))
 
-  it('should respect operator precedence (3 + 4 * 2 = 11)', () => {
-    const interp = run([
+  it('should respect operator precedence (3 + 4 * 2 = 11)', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('arithmetic', { operator: '+' }, {
           left: createNode('number_literal', { value: '3' }, {}),
@@ -117,8 +117,8 @@ describe('Interpreter - arithmetic', () => {
 })
 
 describe('Interpreter - compare', () => {
-  function evalCompare(op: string, left: string, right: string) {
-    const interp = run([
+  async function evalCompare(op: string, left: string, right: string) {
+    const interp = await run([
       createNode('var_declare', { name: 'r', type: 'bool' }, {
         initializer: createNode('compare', { operator: op }, {
           left: createNode('number_literal', { value: left }, {}),
@@ -132,17 +132,17 @@ describe('Interpreter - compare', () => {
     return interp.getOutput().join('')
   }
 
-  it('should compare <', () => expect(evalCompare('<', '1', '2')).toBe('true'))
-  it('should compare >', () => expect(evalCompare('>', '2', '1')).toBe('true'))
-  it('should compare <=', () => expect(evalCompare('<=', '2', '2')).toBe('true'))
-  it('should compare >=', () => expect(evalCompare('>=', '1', '2')).toBe('false'))
-  it('should compare ==', () => expect(evalCompare('==', '3', '3')).toBe('true'))
-  it('should compare !=', () => expect(evalCompare('!=', '3', '4')).toBe('true'))
+  it('should compare <', async () => expect(await evalCompare('<', '1', '2')).toBe('true'))
+  it('should compare >', async () => expect(await evalCompare('>', '2', '1')).toBe('true'))
+  it('should compare <=', async () => expect(await evalCompare('<=', '2', '2')).toBe('true'))
+  it('should compare >=', async () => expect(await evalCompare('>=', '1', '2')).toBe('false'))
+  it('should compare ==', async () => expect(await evalCompare('==', '3', '3')).toBe('true'))
+  it('should compare !=', async () => expect(await evalCompare('!=', '3', '4')).toBe('true'))
 })
 
 describe('Interpreter - logic', () => {
-  it('should evaluate && (true && false = false)', () => {
-    const interp = run([
+  it('should evaluate && (true && false = false)', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('logic', { operator: '&&' }, {
           left: createNode('compare', { operator: '>' }, {
@@ -159,8 +159,8 @@ describe('Interpreter - logic', () => {
     expect(interp.getOutput().join('')).toBe('false')
   })
 
-  it('should evaluate logic_not', () => {
-    const interp = run([
+  it('should evaluate logic_not', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('logic_not', {}, {
           operand: createNode('compare', { operator: '>' }, {
@@ -176,8 +176,8 @@ describe('Interpreter - logic', () => {
 
 // T011: 流程控制
 describe('Interpreter - control flow', () => {
-  it('should execute if (true branch)', () => {
-    const interp = run([
+  it('should execute if (true branch)', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('number_literal', { value: '5' }, {})
       }),
@@ -196,8 +196,8 @@ describe('Interpreter - control flow', () => {
     expect(interp.getOutput().join('')).toBe('positive')
   })
 
-  it('should execute if with else_body', () => {
-    const interp = run([
+  it('should execute if with else_body', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('number_literal', { value: '-1' }, {})
       }),
@@ -221,8 +221,8 @@ describe('Interpreter - control flow', () => {
     expect(interp.getOutput().join('')).toBe('non-positive')
   })
 
-  it('should execute count_loop', () => {
-    const interp = run([
+  it('should execute count_loop', async () => {
+    const interp = await run([
       createNode('count_loop', { var_name: 'i' }, {
         from: createNode('number_literal', { value: '1' }, {}),
         to: createNode('number_literal', { value: '3' }, {}),
@@ -236,8 +236,8 @@ describe('Interpreter - control flow', () => {
     expect(interp.getOutput().join('')).toBe('123')
   })
 
-  it('should execute while_loop', () => {
-    const interp = run([
+  it('should execute while_loop', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'n', type: 'int' }, {
         initializer: createNode('number_literal', { value: '3' }, {})
       }),
@@ -262,8 +262,8 @@ describe('Interpreter - control flow', () => {
     expect(interp.getOutput().join('')).toBe('321')
   })
 
-  it('should handle break in loop', () => {
-    const interp = run([
+  it('should handle break in loop', async () => {
+    const interp = await run([
       createNode('count_loop', { var_name: 'i' }, {
         from: createNode('number_literal', { value: '1' }, {}),
         to: createNode('number_literal', { value: '10' }, {}),
@@ -284,8 +284,8 @@ describe('Interpreter - control flow', () => {
     expect(interp.getOutput().join('')).toBe('123')
   })
 
-  it('should handle continue in loop', () => {
-    const interp = run([
+  it('should handle continue in loop', async () => {
+    const interp = await run([
       createNode('count_loop', { var_name: 'i' }, {
         from: createNode('number_literal', { value: '1' }, {}),
         to: createNode('number_literal', { value: '5' }, {}),
@@ -309,8 +309,8 @@ describe('Interpreter - control flow', () => {
 
 // T012: 函式
 describe('Interpreter - functions', () => {
-  it('should define and call a simple function', () => {
-    const interp = run([
+  it('should define and call a simple function', async () => {
+    const interp = await run([
       createNode('func_def', { name: 'greet', return_type: 'void', params: '[]' }, {
         body: [
           createNode('print', {}, {
@@ -323,8 +323,8 @@ describe('Interpreter - functions', () => {
     expect(interp.getOutput().join('')).toBe('hi')
   })
 
-  it('should pass arguments and return value', () => {
-    const interp = run([
+  it('should pass arguments and return value', async () => {
+    const interp = await run([
       createNode('func_def', {
         name: 'double',
         return_type: 'int',
@@ -348,8 +348,8 @@ describe('Interpreter - functions', () => {
     expect(interp.getOutput().join('')).toBe('14')
   })
 
-  it('should handle recursion (factorial)', () => {
-    const interp = run([
+  it('should handle recursion (factorial)', async () => {
+    const interp = await run([
       createNode('func_def', {
         name: 'fact',
         return_type: 'int',
@@ -392,8 +392,8 @@ describe('Interpreter - functions', () => {
 
 // T013: 陣列
 describe('Interpreter - arrays', () => {
-  it('should declare and access array', () => {
-    const interp = run([
+  it('should declare and access array', async () => {
+    const interp = await run([
       createNode('array_declare', { name: 'arr', type: 'int', size: '3' }, {}),
       createNode('print', {}, {
         values: [createNode('array_access', { name: 'arr' }, {
@@ -407,28 +407,28 @@ describe('Interpreter - arrays', () => {
 
 // T014: 邊界情況
 describe('Interpreter - edge cases', () => {
-  it('should throw on undeclared variable', () => {
-    expect(() => run([
+  it('should throw on undeclared variable', async () => {
+    await expect(run([
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'nope' }, {})]
       })
-    ])).toThrow(RuntimeError)
+    ])).rejects.toThrow(RuntimeError)
   })
 
-  it('should throw on division by zero', () => {
-    expect(() => run([
+  it('should throw on division by zero', async () => {
+    await expect(run([
       createNode('print', {}, {
         values: [createNode('arithmetic', { operator: '/' }, {
           left: createNode('number_literal', { value: '5' }, {}),
           right: createNode('number_literal', { value: '0' }, {}),
         })]
       })
-    ])).toThrow(RuntimeError)
+    ])).rejects.toThrow(RuntimeError)
   })
 
-  it('should throw on max steps exceeded', () => {
+  it('should throw on max steps exceeded', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 10 })
-    expect(() => {
+    await expect(
       interp.execute(makeProgram([
         createNode('while_loop', {}, {
           condition: createNode('compare', { operator: '>' }, {
@@ -442,11 +442,11 @@ describe('Interpreter - edge cases', () => {
           ],
         })
       ]))
-    }).toThrow(RuntimeError)
+    ).rejects.toThrow(RuntimeError)
   })
 
-  it('should skip language-specific concepts', () => {
-    const interp = run([
+  it('should skip language-specific concepts', async () => {
+    const interp = await run([
       createNode('cpp:include' as any, { header: 'iostream' }, {}),
       createNode('cpp:using_namespace' as any, { namespace: 'std' }, {}),
       createNode('print', {}, {
@@ -459,8 +459,8 @@ describe('Interpreter - edge cases', () => {
 
 // T026: 輸入概念
 describe('Interpreter - input', () => {
-  it('should read input from stdin queue', () => {
-    const interp = run([
+  it('should read input from stdin queue', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('input', { type: 'int' }, {})
       }),
@@ -471,8 +471,8 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('42')
   })
 
-  it('should convert input string to int', () => {
-    const interp = run([
+  it('should convert input string to int', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'n', type: 'int' }, {
         initializer: createNode('input', { type: 'int' }, {})
       }),
@@ -486,8 +486,8 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('11')
   })
 
-  it('should read string input', () => {
-    const interp = run([
+  it('should read string input', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 's', type: 'string' }, {
         initializer: createNode('input', { type: 'string' }, {})
       }),
@@ -498,8 +498,8 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('hello')
   })
 
-  it('should read multiple inputs sequentially', () => {
-    const interp = run([
+  it('should read multiple inputs sequentially', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'a', type: 'int' }, {
         initializer: createNode('input', { type: 'int' }, {})
       }),
@@ -516,11 +516,28 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('10')
   })
 
-  it('should throw when input queue is exhausted', () => {
-    expect(() => run([
+  it('should throw when input queue is exhausted', async () => {
+    await expect(run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('input', { type: 'int' }, {})
       })
-    ], [])).toThrow(RuntimeError)
+    ], [])).rejects.toThrow(RuntimeError)
+  })
+
+  it('should use inputProvider when stdin is exhausted', async () => {
+    const interp = new SemanticInterpreter()
+    interp.setInputProvider(async () => 'world')
+    await interp.execute(makeProgram([
+      createNode('var_declare', { name: 's', type: 'string' }, {
+        initializer: createNode('input', { type: 'string' }, {})
+      }),
+      createNode('print', {}, {
+        values: [
+          createNode('string_literal', { value: 'hello, ' }, {}),
+          createNode('var_ref', { name: 's' }, {}),
+        ]
+      })
+    ]))
+    expect(interp.getOutput().join('')).toBe('hello, world')
   })
 })

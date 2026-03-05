@@ -557,6 +557,12 @@ export class App {
       })
     }
 
+    // Wire up interactive input provider
+    this.interpreter.setInputProvider(async () => {
+      if (!this.consolePanel) return ''
+      return this.consolePanel.promptInput()
+    })
+
     // Configure step controller callbacks
     this.stepController.onStep(() => this.onStepExecuted())
     this.stepController.onStop(() => this.onStepStopped())
@@ -602,7 +608,7 @@ export class App {
     if (this.getRunMode() === 'immediate') {
       this.consolePanel.setStatus('running')
       try {
-        this.interpreter.execute(model.program)
+        await this.interpreter.execute(model.program)
         const output = this.interpreter.getOutput()
         if (output.length > 0) this.consolePanel.appendOutput(output.join(''))
         this.consolePanel.setStatus('completed')
@@ -625,7 +631,7 @@ export class App {
     this.consolePanel.setStatus('running')
 
     try {
-      this.stepRecords = this.interpreter.executeWithSteps(model.program)
+      this.stepRecords = await this.interpreter.executeWithSteps(model.program)
       this.currentStepIndex = -1
       this.fullOutput = this.interpreter.getOutput()
     } catch (e) {
@@ -686,7 +692,7 @@ export class App {
       if (!model) return
 
       try {
-        this.stepRecords = this.interpreter.executeWithSteps(model.program)
+        this.stepRecords = await this.interpreter.executeWithSteps(model.program)
         this.currentStepIndex = -1
         this.fullOutput = this.interpreter.getOutput()
         this.consolePanel.clear()

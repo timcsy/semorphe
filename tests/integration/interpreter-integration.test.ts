@@ -8,16 +8,16 @@ function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })
 }
 
-function run(body: SemanticNode[], stdin: string[] = []) {
+async function run(body: SemanticNode[], stdin: string[] = []) {
   const interp = new SemanticInterpreter()
-  interp.execute(makeProgram(body), stdin)
+  await interp.execute(makeProgram(body), stdin)
   return interp
 }
 
 // Quickstart 場景 1: Hello World
 describe('Integration - Scenario 1: Hello World', () => {
-  it('should print Hello World', () => {
-    const interp = run([
+  it('should print Hello World', async () => {
+    const interp = await run([
       createNode('print', {}, {
         values: [createNode('string_literal', { value: 'Hello World' }, {})]
       })
@@ -29,8 +29,8 @@ describe('Integration - Scenario 1: Hello World', () => {
 
 // Quickstart 場景 2: 變數 + 算術 + 輸出
 describe('Integration - Scenario 2: Variable + Arithmetic', () => {
-  it('should compute x + y = 7', () => {
-    const interp = run([
+  it('should compute x + y = 7', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: createNode('number_literal', { value: '3' }, {})
       }),
@@ -50,8 +50,8 @@ describe('Integration - Scenario 2: Variable + Arithmetic', () => {
 
 // Quickstart 場景 3: Input 讀取
 describe('Integration - Scenario 3: Input Read', () => {
-  it('should read input and compute n * 2 = 10', () => {
-    const interp = run([
+  it('should read input and compute n * 2 = 10', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'n', type: 'int' }, {
         initializer: createNode('input', { type: 'int' }, {})
       }),
@@ -68,8 +68,8 @@ describe('Integration - Scenario 3: Input Read', () => {
 
 // Quickstart 場景 4: 迴圈
 describe('Integration - Scenario 4: Loop', () => {
-  it('should print 1 to 5 with newlines', () => {
-    const interp = run([
+  it('should print 1 to 5 with newlines', async () => {
+    const interp = await run([
       createNode('count_loop', { var_name: 'i' }, {
         from: createNode('number_literal', { value: '1' }, {}),
         to: createNode('number_literal', { value: '5' }, {}),
@@ -89,8 +89,8 @@ describe('Integration - Scenario 4: Loop', () => {
 
 // Quickstart 場景 5: 遞迴函式
 describe('Integration - Scenario 5: Recursive Function', () => {
-  it('should compute factorial(5) = 120', () => {
-    const interp = run([
+  it('should compute factorial(5) = 120', async () => {
+    const interp = await run([
       createNode('func_def', {
         name: 'factorial',
         return_type: 'int',
@@ -133,7 +133,7 @@ describe('Integration - Scenario 5: Recursive Function', () => {
 
 // Quickstart 場景 6: 逐步執行 (record steps)
 describe('Integration - Scenario 6: Step Execution', () => {
-  it('should record 4 steps for a simple program', () => {
+  it('should record 4 steps for a simple program', async () => {
     const interp = new SemanticInterpreter()
     const program = makeProgram([
       createNode('var_declare', { name: 'a', type: 'int' }, {
@@ -152,7 +152,7 @@ describe('Integration - Scenario 6: Step Execution', () => {
         values: [createNode('var_ref', { name: 'c' }, {})]
       })
     ])
-    const steps = interp.executeWithSteps(program)
+    const steps = await interp.executeWithSteps(program)
     expect(steps.length).toBe(4)
     expect(interp.getOutput().join('')).toBe('3')
   })
@@ -160,9 +160,9 @@ describe('Integration - Scenario 6: Step Execution', () => {
 
 // Quickstart 場景 7: 無窮迴圈保護
 describe('Integration - Scenario 7: Infinite Loop Protection', () => {
-  it('should throw after max steps', () => {
+  it('should throw after max steps', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
-    expect(() => {
+    await expect(
       interp.execute(makeProgram([
         createNode('while_loop', {}, {
           condition: createNode('compare', { operator: '>' }, {
@@ -176,17 +176,17 @@ describe('Integration - Scenario 7: Infinite Loop Protection', () => {
           ],
         })
       ]))
-    }).toThrow(RuntimeError)
+    ).rejects.toThrow(RuntimeError)
   })
 })
 
 // Quickstart 場景 8: 執行期錯誤
 describe('Integration - Scenario 8: Runtime Error', () => {
-  it('should throw on undeclared variable', () => {
-    expect(() => run([
+  it('should throw on undeclared variable', async () => {
+    await expect(run([
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'x' }, {})]
       })
-    ])).toThrow(RuntimeError)
+    ])).rejects.toThrow(RuntimeError)
   })
 })
