@@ -300,6 +300,16 @@ export class App {
         }
       }
     }
+    // Migrate u_input: ensure extraState.varCount matches NAME_* fields
+    if (block.type === 'u_input') {
+      const fields = block.fields as Record<string, unknown> | undefined
+      if (fields) {
+        const varCount = Object.keys(fields).filter(k => /^NAME_\d+$/.test(k)).length
+        if (varCount > 0) {
+          block.extraState = { ...(block.extraState as object ?? {}), varCount }
+        }
+      }
+    }
     // Recurse into inputs
     const inputs = block.inputs as Record<string, { block?: Record<string, unknown> }> | undefined
     if (inputs) {

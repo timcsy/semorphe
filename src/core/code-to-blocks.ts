@@ -184,6 +184,14 @@ export class CodeToBlocksConverter {
       }
     }
 
+    // Add varCount for u_input blocks with multiple variables (NAME_0, NAME_1, ...)
+    if (blockId === 'u_input' && block.fields) {
+      const varCount = Object.keys(block.fields).filter(k => /^NAME_\d+$/.test(k)).length
+      if (varCount > 0) {
+        block.extraState = { ...(block.extraState ?? {}), varCount }
+      }
+    }
+
     // Record source mapping (T014)
     this.sourceMappings.push({
       blockId: id,
