@@ -512,7 +512,7 @@ html, body {
   background: rgba(243, 156, 18, 0.5);
 }
 
-#speed-selector {
+#run-mode-selector {
   padding: 4px 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
@@ -522,7 +522,7 @@ html, body {
   font-size: 12px;
 }
 
-#speed-selector option {
+#run-mode-selector option {
   background: #2c3e50;
   color: white;
 }

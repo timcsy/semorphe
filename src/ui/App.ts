@@ -530,7 +530,7 @@ export class App {
     const stopBtn = document.getElementById('stop-btn')
     const stepBtn = document.getElementById('step-btn')
     const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement | null
-    const speedSelector = document.getElementById('speed-selector') as HTMLSelectElement | null
+    const runModeSelector = document.getElementById('run-mode-selector') as HTMLSelectElement | null
 
     if (runBtn) runBtn.addEventListener('click', () => this.runProgram())
     if (stopBtn) stopBtn.addEventListener('click', () => this.stopProgram())
@@ -548,15 +548,23 @@ export class App {
         }
       })
     }
-    if (speedSelector) {
-      speedSelector.addEventListener('change', () => {
-        this.stepController.setSpeed(speedSelector.value as 'slow' | 'medium' | 'fast')
+    if (runModeSelector) {
+      runModeSelector.addEventListener('change', () => {
+        const mode = runModeSelector.value
+        if (mode !== 'immediate') {
+          this.stepController.setSpeed(mode as 'slow' | 'medium' | 'fast')
+        }
       })
     }
 
     // Configure step controller callbacks
     this.stepController.onStep(() => this.onStepExecuted())
     this.stepController.onStop(() => this.onStepStopped())
+  }
+
+  private getRunMode(): string {
+    const selector = document.getElementById('run-mode-selector') as HTMLSelectElement | null
+    return selector?.value ?? 'immediate'
   }
 
   private async runProgram(): Promise<void> {
@@ -588,11 +596,32 @@ export class App {
       return
     }
 
-    // Ensure sourceMappings exist for block highlighting
-    await this.ensureSourceMappings()
-
-    // Use step-based execution for highlighting + breakpoints
     this.consolePanel.clear()
+
+    // Immediate mode: execute directly, show final output
+    if (this.getRunMode() === 'immediate') {
+      this.consolePanel.setStatus('running')
+      try {
+        this.interpreter.execute(model.program)
+        const output = this.interpreter.getOutput()
+        if (output.length > 0) this.consolePanel.appendOutput(output.join(''))
+        this.consolePanel.setStatus('completed')
+      } catch (e) {
+        const output = this.interpreter.getOutput()
+        if (output.length > 0) this.consolePanel.appendOutput(output.join(''))
+        if (e instanceof RuntimeError) {
+          this.consolePanel.appendOutput('\n' + e.message)
+          this.consolePanel.setStatus('error', e.message)
+        } else {
+          this.consolePanel.setStatus('error', '未預期的錯誤')
+        }
+      }
+      return
+    }
+
+    // Animated mode: step-based execution with highlighting
+    await this.ensureSourceMappings()
+    this.stepController.setSpeed(this.getRunMode() as 'slow' | 'medium' | 'fast')
     this.consolePanel.setStatus('running')
 
     try {
