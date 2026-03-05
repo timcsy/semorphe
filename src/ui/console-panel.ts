@@ -50,26 +50,23 @@ export class ConsolePanel {
     header.appendChild(this.clearBtn)
     this.element.appendChild(header)
 
-    // Collapsible content wrapper
+    // Scrollable content area (output + inline input together)
     this.contentEl = document.createElement('div')
     this.contentEl.className = 'console-content'
 
-    // Output area
+    // Output area (no scroll of its own — parent scrolls)
     this.outputEl = document.createElement('pre')
     this.outputEl.className = 'console-output'
     this.contentEl.appendChild(this.outputEl)
 
-    // Inline input (appears at bottom of console when input is needed)
+    // Inline input (appears right after the output text, inside the scroll area)
     this.inputContainer = document.createElement('div')
-    this.inputContainer.className = 'console-input-container'
+    this.inputContainer.className = 'console-input-inline'
     this.inputContainer.style.display = 'none'
-    const inputLabel = document.createElement('span')
-    inputLabel.className = 'console-input-label'
-    inputLabel.textContent = '❯ '
     this.inputEl = document.createElement('input')
     this.inputEl.className = 'console-input'
     this.inputEl.type = 'text'
-    this.inputEl.placeholder = '輸入值後按 Enter...'
+    this.inputEl.placeholder = '等待輸入...'
     this.inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && this.onInputResolve) {
         const val = this.inputEl.value
@@ -81,7 +78,6 @@ export class ConsolePanel {
         resolve(val)
       }
     })
-    this.inputContainer.appendChild(inputLabel)
     this.inputContainer.appendChild(this.inputEl)
     this.contentEl.appendChild(this.inputContainer)
 
@@ -106,7 +102,11 @@ export class ConsolePanel {
   appendOutput(text: string): void {
     this.expand()
     this.outputEl.textContent += text
-    this.outputEl.scrollTop = this.outputEl.scrollHeight
+    this.scrollToBottom()
+  }
+
+  private scrollToBottom(): void {
+    this.contentEl.scrollTop = this.contentEl.scrollHeight
   }
 
   clear(): void {
@@ -145,6 +145,7 @@ export class ConsolePanel {
       this.expand()
       this.inputContainer.style.display = 'flex'
       this.inputEl.focus()
+      this.scrollToBottom()
     })
   }
 
