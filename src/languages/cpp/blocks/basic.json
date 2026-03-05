@@ -15,7 +15,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 210,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_C_CHAR_LITERAL_TOOLTIP}"
     },
     "codeTemplate": {
@@ -58,7 +58,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
     },
     "codeTemplate": {
@@ -119,7 +119,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}"
     },
     "codeTemplate": {
@@ -157,7 +157,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 40,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_C_SWITCH_TOOLTIP}"
     },
     "codeTemplate": {
@@ -195,7 +195,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 40,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_C_CASE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -243,7 +243,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_C_FOR_LOOP_TOOLTIP}"
     },
     "codeTemplate": {
@@ -281,7 +281,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_C_DO_WHILE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -316,7 +316,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 180,
+      "colour": "#5CB1D6",
       "tooltip": "%{BKY_C_PRINTF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -358,7 +358,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 180,
+      "colour": "#5CB1D6",
       "tooltip": "%{BKY_C_SCANF_TOOLTIP}"
     },
     "codeTemplate": {

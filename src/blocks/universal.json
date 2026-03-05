@@ -8,7 +8,7 @@
       "type": "u_var_declare",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 330,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_DECLARE_TOOLTIP}"
     }
   },
@@ -35,7 +35,7 @@
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 330,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
     }
   },
@@ -55,7 +55,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 330,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_REF_TOOLTIP}"
     }
   },
@@ -75,7 +75,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 330,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_NUMBER_TOOLTIP}"
     }
   },
@@ -95,7 +95,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 330,
+      "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_STRING_TOOLTIP}"
     }
   },
@@ -147,7 +147,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_U_ARITHMETIC_TOOLTIP}"
     }
   },
@@ -203,7 +203,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_U_COMPARE_TOOLTIP}"
     }
   },
@@ -243,7 +243,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_U_LOGIC_TOOLTIP}"
     }
   },
@@ -264,7 +264,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_U_LOGIC_NOT_TOOLTIP}"
     }
   },
@@ -285,7 +285,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 210,
+      "colour": "#59C059",
       "tooltip": "%{BKY_U_NEGATE_TOOLTIP}"
     }
   },
@@ -314,7 +314,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 40,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_IF_TOOLTIP}"
     }
   },
@@ -352,7 +352,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 40,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_IF_ELSE_TOOLTIP}"
     }
   },
@@ -392,7 +392,7 @@
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_COUNT_LOOP_TOOLTIP}"
     }
   },
@@ -421,7 +421,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_WHILE_LOOP_TOOLTIP}"
     }
   },
@@ -435,7 +435,7 @@
       "message0": "%{BKY_U_BREAK_MSG0}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_BREAK_TOOLTIP}"
     }
   },
@@ -449,7 +449,7 @@
       "message0": "%{BKY_U_CONTINUE_MSG0}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 120,
+      "colour": "#FFAB19",
       "tooltip": "%{BKY_U_CONTINUE_TOOLTIP}"
     }
   },
@@ -521,7 +521,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 60,
+      "colour": "#FF6680",
       "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
     }
   },
@@ -547,7 +547,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 60,
+      "colour": "#FF6680",
       "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
     }
   },
@@ -568,7 +568,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 60,
+      "colour": "#FF6680",
       "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
     }
   },
@@ -590,7 +590,7 @@
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 180,
+      "colour": "#5CB1D6",
       "tooltip": "%{BKY_U_PRINT_TOOLTIP}"
     }
   },
@@ -603,7 +603,7 @@
       "type": "u_endl",
       "message0": "%{BKY_U_ENDL_MSG0}",
       "output": "Expression",
-      "colour": 180,
+      "colour": "#5CB1D6",
       "tooltip": "%{BKY_U_ENDL_TOOLTIP}"
     }
   },
@@ -624,7 +624,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 180,
+      "colour": "#5CB1D6",
       "tooltip": "%{BKY_U_INPUT_TOOLTIP}"
     }
   },
@@ -677,7 +677,7 @@
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 260,
+      "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_DECLARE_TOOLTIP}"
     }
   },
@@ -703,7 +703,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 260,
+      "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_ACCESS_TOOLTIP}"
     }
   }

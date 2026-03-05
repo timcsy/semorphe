@@ -42,7 +42,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 280,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_C_POINTER_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -77,7 +77,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 280,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_C_POINTER_DEREF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -112,7 +112,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 280,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_C_ADDRESS_OF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -191,7 +191,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 280,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_C_MALLOC_TOOLTIP}"
     },
     "codeTemplate": {
@@ -223,7 +223,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 280,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_C_FREE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -266,7 +266,7 @@
           "check": "Statement"
         }
       ],
-      "colour": 20,
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -301,7 +301,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 20,
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
     },
     "codeTemplate": {
@@ -341,7 +341,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 20,
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_C_STRUCT_POINTER_ACCESS_TOOLTIP}"
     },
     "codeTemplate": {
@@ -376,7 +376,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 160,
+      "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRLEN_TOOLTIP}"
     },
     "codeTemplate": {
@@ -418,7 +418,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 160,
+      "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRCMP_TOOLTIP}"
     },
     "codeTemplate": {
@@ -460,7 +460,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 160,
+      "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRCPY_TOOLTIP}"
     },
     "codeTemplate": {
@@ -527,7 +527,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -569,7 +569,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_VECTOR_PUSH_BACK_TOOLTIP}"
     },
     "codeTemplate": {
@@ -606,7 +606,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_VECTOR_SIZE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -683,7 +683,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_MAP_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -720,7 +720,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -762,7 +762,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
     },
     "codeTemplate": {
@@ -813,7 +813,7 @@
           "check": "Statement"
         }
       ],
-      "colour": 140,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -848,7 +848,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 140,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_CPP_NEW_TOOLTIP}"
     },
     "codeTemplate": {
@@ -878,7 +878,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 140,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_CPP_DELETE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -937,7 +937,7 @@
           "check": "Statement"
         }
       ],
-      "colour": 140,
+      "colour": "#9966FF",
       "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}"
     },
     "codeTemplate": {
@@ -989,7 +989,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STACK_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -1048,7 +1048,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_QUEUE_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -1107,7 +1107,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_SET_DECLARE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -1154,7 +1154,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}"
     },
     "codeTemplate": {
@@ -1199,7 +1199,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": 200,
+      "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_METHOD_CALL_EXPR_TOOLTIP}"
     },
     "codeTemplate": {

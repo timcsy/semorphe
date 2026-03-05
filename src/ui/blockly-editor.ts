@@ -65,6 +65,7 @@ export class BlocklyEditor {
     const toolboxDef = registry.toToolboxDef(languageId, level)
     this.workspace = Blockly.inject(this.container, {
       toolbox: this.convertToolbox(toolboxDef) as Blockly.utils.toolbox.ToolboxDefinition,
+      renderer: 'zelos',
       grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
       zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
       trashcan: true,
@@ -216,16 +217,15 @@ export class BlocklyEditor {
 
       init: function (this: any) {
         this.itemCount_ = 1
-        this.setColour(180)
+        this.setColour('#5CB1D6')
         this.setPreviousStatement(true, 'Statement')
         this.setNextStatement(true, 'Statement')
         this.setTooltip(Blockly.Msg['U_PRINT_TOOLTIP'] || '輸出一個或多個值到螢幕上')
         this.setInputsInline(true)
 
-        this.appendDummyInput('LABEL')
-          .appendField(Blockly.Msg['U_PRINT_LABEL'] || '輸出')
         this.appendValueInput('EXPR0')
           .setCheck('Expression')
+          .appendField(Blockly.Msg['U_PRINT_LABEL'] || '輸出')
         this.appendDummyInput('TAIL')
           .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
           .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -281,7 +281,7 @@ export class BlocklyEditor {
 
         init: function (this: any) {
           this.paramCount_ = 0
-          this.setColour(60)
+          this.setColour('#FF6680')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setTooltip(Blockly.Msg['U_FUNC_DEF_TOOLTIP'] || '定義一個函式（可重複使用的程式片段）。選擇 void（無回傳）表示不需要回傳結果')
@@ -350,34 +350,86 @@ export class BlocklyEditor {
 
         init: function (this: any) {
           this.argCount_ = 0
-          this.setColour(60)
+          this.setColour('#FF6680')
           this.setOutput(true, 'Expression')
           this.setTooltip(Blockly.Msg['U_FUNC_CALL_TOOLTIP'] || '執行指定的函式，可以傳入參數')
           this.setInputsInline(true)
 
+          // 0 args: all DummyInput (no alignment issue)
           this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
             .appendField(new Blockly.FieldTextInput('func'), 'NAME')
-            .appendField('(')
+            .appendField('()')
           this.appendDummyInput('TAIL')
-            .appendField(')')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
         },
 
         plus_: function (this: any) {
-          this.appendValueInput('ARG' + this.argCount_)
-            .setCheck('Expression')
-          this.moveInputBefore('ARG' + this.argCount_, 'TAIL')
           this.argCount_++
-          setMinusState(this, false)
+          this.updateShape_()
         },
 
         minus_: function (this: any) {
           if (this.argCount_ <= 0) return
           this.argCount_--
-          this.removeInput('ARG' + this.argCount_)
+          this.updateShape_()
+        },
+
+        /** Rebuild inputs: label on first ValueInput when args > 0 for alignment */
+        updateShape_: function (this: any) {
+          // Save connections and name
+          const savedConns: any[] = []
+          for (let i = 0; ; i++) {
+            const inp = this.getInput('ARG' + i)
+            if (!inp) break
+            savedConns.push(inp.connection?.targetConnection || null)
+          }
+          const savedName = this.getFieldValue('NAME')
+
+          // Remove all dynamic inputs
+          if (this.getInput('LABEL')) this.removeInput('LABEL')
+          for (let i = 0; ; i++) {
+            if (!this.getInput('ARG' + i)) break
+            this.removeInput('ARG' + i)
+          }
+          if (this.getInput('TAIL')) this.removeInput('TAIL')
+
+          const label = Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式'
+          const name = savedName || 'func'
+
+          if (this.argCount_ === 0) {
+            this.appendDummyInput('LABEL')
+              .appendField(label)
+              .appendField(new Blockly.FieldTextInput(name), 'NAME')
+              .appendField('()')
+          } else {
+            // Label on first ValueInput for horizontal alignment
+            this.appendValueInput('ARG0')
+              .setCheck('Expression')
+              .appendField(label)
+              .appendField(new Blockly.FieldTextInput(name), 'NAME')
+              .appendField('(')
+            for (let i = 1; i < this.argCount_; i++) {
+              this.appendValueInput('ARG' + i)
+                .setCheck('Expression')
+                .appendField(',')
+            }
+          }
+
+          this.appendDummyInput('TAIL')
+            .appendField(this.argCount_ > 0 ? ')' : '')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+
           setMinusState(this, this.argCount_ <= 0)
+
+          // Reconnect saved connections
+          for (let i = 0; i < savedConns.length && i < this.argCount_; i++) {
+            if (savedConns[i]) {
+              savedConns[i].reconnect(this, 'ARG' + i)
+            }
+          }
         },
 
         saveExtraState: function (this: any) {
@@ -385,10 +437,8 @@ export class BlocklyEditor {
         },
 
         loadExtraState: function (this: any, state: any) {
-          const count = state?.argCount ?? 0
-          while (this.argCount_ < count) {
-            this.plus_()
-          }
+          this.argCount_ = state?.argCount ?? 0
+          this.updateShape_()
         },
 
         mutationToDom: function (this: any) {
@@ -398,10 +448,8 @@ export class BlocklyEditor {
         },
 
         domToMutation: function (this: any, xml: Element) {
-          const count = parseInt(xml.getAttribute('args') || '0', 10)
-          while (this.argCount_ < count) {
-            this.plus_()
-          }
+          this.argCount_ = parseInt(xml.getAttribute('args') || '0', 10)
+          this.updateShape_()
         },
       }
       /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -415,7 +463,7 @@ export class BlocklyEditor {
 
         init: function (this: any) {
           this.varCount_ = 1
-          this.setColour(180)
+          this.setColour('#5CB1D6')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setTooltip(Blockly.Msg['U_INPUT_TOOLTIP'] || '從鍵盤讀取一個或多個值到變數中')
@@ -476,7 +524,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_if_else_if_container']) {
       Blockly.Blocks['u_if_else_if_container'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(40)
+          this.setColour('#FFAB19')
           this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_IF_LABEL'] || '如果')
           this.setNextStatement(true)
           this.contextMenu = false
@@ -486,7 +534,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_if_else_elseif_input']) {
       Blockly.Blocks['u_if_else_elseif_input'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(40)
+          this.setColour('#FFAB19')
           this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || '否則，如果')
           this.setPreviousStatement(true)
           this.setNextStatement(true)
@@ -497,7 +545,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_if_else_else_input']) {
       Blockly.Blocks['u_if_else_else_input'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(40)
+          this.setColour('#FFAB19')
           this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_MSG2'] || '否則')
           this.setPreviousStatement(true)
           this.contextMenu = false
@@ -515,7 +563,7 @@ export class BlocklyEditor {
         init: function (this: any) {
           this.elseIfCount_ = 0
           this.hasElse_ = false
-          this.setColour(40)
+          this.setColour('#FFAB19')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setTooltip(Blockly.Msg['U_IF_ELSE_TOOLTIP'] || '如果條件成立就執行「就」的部分，否則執行「否則」的部分')
@@ -722,7 +770,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_var_declare_container']) {
       Blockly.Blocks['u_var_declare_container'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(330)
+          this.setColour('#FF8C1A')
           this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
           this.setNextStatement(true)
           this.contextMenu = false
@@ -732,7 +780,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_var_declare_var_input']) {
       Blockly.Blocks['u_var_declare_var_input'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(330)
+          this.setColour('#FF8C1A')
           this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_VAR_LABEL'] || '變數')
           this.setPreviousStatement(true)
           this.setNextStatement(true)
@@ -743,7 +791,7 @@ export class BlocklyEditor {
     if (!Blockly.Blocks['u_var_declare_var_init_input']) {
       Blockly.Blocks['u_var_declare_var_init_input'] = {
         init: function (this: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          this.setColour(330)
+          this.setColour('#FF8C1A')
           this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_VAR_INIT_LABEL'] || '變數 = 值')
           this.setPreviousStatement(true)
           this.setNextStatement(true)
@@ -760,7 +808,7 @@ export class BlocklyEditor {
 
         init: function (this: any) {
           this.customName_ = ''
-          this.setColour(330)
+          this.setColour('#FF8C1A')
           this.setOutput(true, 'Expression')
           this.setTooltip(Blockly.Msg['U_VAR_REF_TOOLTIP'] || '使用這個變數目前存放的值')
 
@@ -769,10 +817,9 @@ export class BlocklyEditor {
               this.generateOptions_.bind(this),
               this.onDropdownChange_.bind(this),
             ), 'NAME')
-          // Hidden custom input, shown only when __CUSTOM__ is selected
-          this.appendDummyInput('CUSTOM_INPUT')
             .appendField(new Blockly.FieldTextInput('x'), 'CUSTOM_NAME')
-          this.getInput('CUSTOM_INPUT')!.setVisible(false)
+          // Hide custom field at field level (not input level) for Zelos compatibility
+          this.getField('CUSTOM_NAME')!.setVisible(false)
         },
 
         generateOptions_: function (this: any): Array<[string, string]> {
@@ -813,9 +860,9 @@ export class BlocklyEditor {
         onDropdownChange_: function (this: any, newValue: string) {
           const block = this.getSourceBlock ? this.getSourceBlock() : this
           if (!block) return newValue
-          const customInput = block.getInput('CUSTOM_INPUT')
-          if (customInput) {
-            customInput.setVisible(newValue === '__CUSTOM__')
+          const customField = block.getField('CUSTOM_NAME')
+          if (customField) {
+            customField.setVisible(newValue === '__CUSTOM__')
             block.customName_ = newValue === '__CUSTOM__' ? (block.getFieldValue('CUSTOM_NAME') || 'x') : ''
           }
           block.render()
@@ -831,8 +878,8 @@ export class BlocklyEditor {
           if (this.customName_) {
             this.setFieldValue('__CUSTOM__', 'NAME')
             this.setFieldValue(this.customName_, 'CUSTOM_NAME')
-            const customInput = this.getInput('CUSTOM_INPUT')
-            if (customInput) customInput.setVisible(true)
+            const customField = this.getField('CUSTOM_NAME')
+            if (customField) customField.setVisible(true)
           }
         },
       }
@@ -847,21 +894,18 @@ export class BlocklyEditor {
 
         init: function (this: any) {
           this.items_ = ['var_init']
-          this.setColour(330)
+          this.setColour('#FF8C1A')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setTooltip(Blockly.Msg['U_VAR_DECLARE_TOOLTIP'] || '建立一個新的變數，可以選擇型別和初始值。變數就像一個有名字的盒子，用來存放資料')
 
-          // HEADER row: TYPE dropdown
-          this.appendDummyInput('HEADER')
+          // First var_init row with HEADER fields for alignment
+          this.appendValueInput('INIT_0')
+            .setCheck('Expression')
             .appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
             .appendField(new Blockly.FieldDropdown(function() {
               return getLanguageTypeOptions().filter(([, v]) => v !== 'void')
             }), 'TYPE')
-
-          // First var_init row (index 0)
-          this.appendValueInput('INIT_0')
-            .setCheck('Expression')
             .appendField(new Blockly.FieldTextInput('x'), 'NAME_0')
             .appendField('=')
 
@@ -908,6 +952,12 @@ export class BlocklyEditor {
 
         /** Rebuild all variable rows from items_ */
         updateShape_: function (this: any) {
+          // Save TYPE dropdown value
+          const savedType = this.getFieldValue('TYPE')
+
+          // Remove HEADER if it exists (legacy backwards compat)
+          if (this.getInput('HEADER')) this.removeInput('HEADER')
+
           // Remove all existing var rows
           for (let n = 0; ; n++) {
             if (this.getInput('INIT_' + n)) {
@@ -918,24 +968,43 @@ export class BlocklyEditor {
               break
             }
           }
-          // Re-add rows per items_
+          // Re-add rows per items_, with HEADER fields on first row
           const defaultNames = ['x', 'y', 'z', 'a', 'b', 'c', 'd', 'e', 'f']
           for (let n = 0; n < this.items_.length; n++) {
             const defName = defaultNames[n] || ('v' + n)
-            const comma = n > 0 ? ', ' : ''
             if (this.items_[n] === 'var_init') {
               const inp = this.appendValueInput('INIT_' + n)
                 .setCheck('Expression')
-              if (comma) inp.appendField(comma)
+              if (n === 0) {
+                inp.appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
+                  .appendField(new Blockly.FieldDropdown(function() {
+                    return getLanguageTypeOptions().filter(([, v]) => v !== 'void')
+                  }), 'TYPE')
+              } else {
+                inp.appendField(', ')
+              }
               inp.appendField(new Blockly.FieldTextInput(defName), 'NAME_' + n)
                 .appendField('=')
             } else {
               const inp = this.appendDummyInput('VAR_' + n)
-              if (comma) inp.appendField(comma)
+              if (n === 0) {
+                inp.appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
+                  .appendField(new Blockly.FieldDropdown(function() {
+                    return getLanguageTypeOptions().filter(([, v]) => v !== 'void')
+                  }), 'TYPE')
+              } else {
+                inp.appendField(', ')
+              }
               inp.appendField(new Blockly.FieldTextInput(defName), 'NAME_' + n)
             }
             this.moveInputBefore(this.items_[n] === 'var_init' ? 'INIT_' + n : 'VAR_' + n, 'TAIL')
           }
+
+          // Restore TYPE
+          if (savedType) {
+            this.setFieldValue(savedType, 'TYPE')
+          }
+
           setMinusState(this, this.items_.length <= 1)
         },
 

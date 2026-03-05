@@ -16,7 +16,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_RAW_CODE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -45,7 +45,7 @@
         }
       ],
       "output": "Expression",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_RAW_EXPRESSION_TOOLTIP}"
     },
     "codeTemplate": {
@@ -156,7 +156,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_INCLUDE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -186,7 +186,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_INCLUDE_LOCAL_TOOLTIP}"
     },
     "codeTemplate": {
@@ -226,7 +226,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_DEFINE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -265,7 +265,7 @@
       "message2": "%{BKY_C_IFDEF_MSG2}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_IFDEF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -304,7 +304,7 @@
       "message2": "%{BKY_C_IFNDEF_MSG2}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_IFNDEF_TOOLTIP}"
     },
     "codeTemplate": {
@@ -334,7 +334,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_COMMENT_LINE_TOOLTIP}"
     },
     "codeTemplate": {
@@ -364,7 +364,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": 0,
+      "colour": "#888888",
       "tooltip": "%{BKY_C_USING_NAMESPACE_TOOLTIP}"
     },
     "codeTemplate": {
