@@ -18,7 +18,9 @@ export function registerStatementLifters(lifter: Lifter): void {
   lifter.register('if_statement', (node, ctx) => {
     const condNode = node.childForFieldName('condition')
     const thenNode = node.childForFieldName('consequence')
-    const elseNode = node.childForFieldName('alternative')
+    const elseClause = node.childForFieldName('alternative')
+    // else_clause wraps the actual body (compound_statement or if_statement)
+    const elseNode = elseClause?.namedChildren[0] ?? null
 
     // Unwrap parenthesized condition
     let cond = condNode ? ctx.lift(condNode) : null

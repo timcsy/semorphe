@@ -22,7 +22,7 @@ export function registerIOLifters(lifter: Lifter): void {
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
       : []
-    return createNode('func_call', { name: funcName }, { args })
+    return createNode('func_call_expr', { name: funcName }, { args })
   })
 
   // cout << x << endl  →  this appears as a nested binary_expression with <<

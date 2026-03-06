@@ -385,7 +385,7 @@ describe('C++ I/O Lifters', () => {
     expect(result!.properties.variable).toBe('x')
   })
 
-  it('should lift generic function call to func_call', () => {
+  it('should lift generic function call to func_call_expr', () => {
     const arg = mockNode('number_literal', '5')
     const argsNode = mockNode('argument_list', '(5)', [arg])
     const funcNode = mockNode('identifier', 'myFunc')
@@ -395,7 +395,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('func_call')
+    expect(result!.concept).toBe('func_call_expr')
     expect(result!.properties.name).toBe('myFunc')
     expect(result!.children.args).toHaveLength(1)
   })

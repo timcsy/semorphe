@@ -2,8 +2,20 @@ import * as Blockly from 'blockly'
 import { BlocklyPanel } from './panels/blockly-panel'
 import { MonacoPanel } from './panels/monaco-panel'
 import { SplitPane } from './layout/split-pane'
+import { BottomPanel } from './layout/bottom-panel'
+import { ConsolePanel } from './panels/console-panel'
+import { VariablePanel } from './panels/variable-panel'
 import { SyncController } from './sync-controller'
 import type { SyncError } from './sync-controller'
+import { SemanticInterpreter } from '../interpreter/interpreter'
+import { StepController } from './step-controller'
+import type { StepInfo, ExecutionSpeed } from '../interpreter/types'
+import type { SemanticNode as InterpreterNode } from '../core/semantic-model'
+import { RuntimeError } from '../interpreter/errors'
+import { showToast } from './toolbar/toast'
+import { QuickAccessBar } from './toolbar/quick-access-bar'
+import { runDiagnostics } from '../core/diagnostics'
+import type { DiagnosticBlock } from '../core/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
 import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
@@ -18,6 +30,11 @@ import { LocaleSelector } from './toolbar/locale-selector'
 import { isBlockAvailable } from '../core/cognitive-levels'
 import type { StylePreset, BlockSpec, CognitiveLevel } from '../core/types'
 import universalBlocks from '../blocks/universal.json'
+import cppBasicBlocks from '../languages/cpp/blocks/basic.json'
+import cppSpecialBlocks from '../languages/cpp/blocks/special.json'
+import cppAdvancedBlocks from '../languages/cpp/blocks/advanced.json'
+import cppStdlibContainers from '../languages/cpp/blocks/stdlib/containers.json'
+import cppStdlibAlgorithms from '../languages/cpp/blocks/stdlib/algorithms.json'
 import apcsPreset from '../languages/cpp/styles/apcs.json'
 import competitivePreset from '../languages/cpp/styles/competitive.json'
 import googlePreset from '../languages/cpp/styles/google.json'
@@ -38,6 +55,15 @@ export class App {
   private localeLoader: LocaleLoader
   private storageService: StorageService
   private levelSelector: LevelSelector | null = null
+  private consolePanel: ConsolePanel | null = null
+  private variablePanel: VariablePanel | null = null
+  private bottomPanel: BottomPanel | null = null
+  private interpreter: SemanticInterpreter | null = null
+  private stepController: StepController | null = null
+  private stepRecords: StepInfo[] = []
+  private currentStepIndex = -1
+  private blocksDirty = false
+  private quickAccessBar: QuickAccessBar | null = null
   private currentLevel: CognitiveLevel = 1
   private _codeToBlocksInProgress = false
 
@@ -57,6 +83,12 @@ export class App {
 
     // 3. Load block specs
     this.blockSpecRegistry.loadFromJSON(universalBlocks as unknown as BlockSpec[])
+    this.blockSpecRegistry.loadFromJSON(cppBasicBlocks as unknown as BlockSpec[])
+    this.blockSpecRegistry.loadFromJSON(cppSpecialBlocks as unknown as BlockSpec[])
+    // Load stdlib first so advanced.json (with i18n BKY_ messages) takes precedence for duplicates
+    this.blockSpecRegistry.loadFromJSON(cppStdlibContainers as unknown as BlockSpec[])
+    this.blockSpecRegistry.loadFromJSON(cppStdlibAlgorithms as unknown as BlockSpec[])
+    this.blockSpecRegistry.loadFromJSON(cppAdvancedBlocks as unknown as BlockSpec[])
 
     // 4. Register all blocks with Blockly from JSON definitions
     this.registerBlocksFromSpecs()
@@ -87,6 +119,17 @@ export class App {
         <span class="toolbar-separator"></span>
         <button id="export-btn" title="匯出">匯出</button>
         <button id="import-btn" title="匯入">匯入</button>
+        <button id="upload-blocks-btn" title="上傳自訂積木">上傳積木</button>
+        <span class="toolbar-separator"></span>
+        <button id="run-btn" class="exec-btn run" title="執行">▶ 執行</button>
+        <button id="step-btn" class="exec-btn" title="逐步">⏭ 逐步</button>
+        <button id="pause-btn" class="exec-btn pause" title="暫停" style="display:none">⏸ 暫停</button>
+        <button id="stop-btn" class="exec-btn stop" title="停止" style="display:none">⏹ 停止</button>
+        <select id="speed-select" class="speed-select">
+          <option value="slow">慢</option>
+          <option value="medium" selected>中</option>
+          <option value="fast">快</option>
+        </select>
       </div>
     `
     appEl.appendChild(toolbar)
@@ -104,17 +147,57 @@ export class App {
     statusBar.innerHTML = '<span>C++ | APCS Style | zh-TW</span>'
     appEl.appendChild(statusBar)
 
-    // 6. Initialize Blockly panel
-    const blocklyContainer = splitPane.getLeftPanel()
+    // 6. Initialize Blockly panel with QuickAccessBar above
+    const leftPanel = splitPane.getLeftPanel()
+    leftPanel.style.display = 'flex'
+    leftPanel.style.flexDirection = 'column'
+
+    this.quickAccessBar = new QuickAccessBar(leftPanel)
+    this.quickAccessBar.onBlockCreate((blockType) => {
+      const workspace = this.blocklyPanel?.getWorkspace()
+      if (!workspace) return
+      const block = workspace.newBlock(blockType)
+      block.initSvg()
+      block.render()
+      const metrics = workspace.getMetrics()
+      if (metrics) {
+        block.moveBy(metrics.viewWidth / 2 - 50, metrics.viewHeight / 2 - 30)
+      }
+    })
+
+    const blocklyContainer = document.createElement('div')
     blocklyContainer.id = 'blockly-panel'
-    this.blocklyPanel = new BlocklyPanel({ container: blocklyContainer })
+    blocklyContainer.style.flex = '1'
+    blocklyContainer.style.overflow = 'hidden'
+    leftPanel.appendChild(blocklyContainer)
+
+    this.blocklyPanel = new BlocklyPanel({ container: blocklyContainer, blockSpecRegistry: this.blockSpecRegistry })
     this.blocklyPanel.init(this.buildToolbox())
 
-    // 7. Initialize Monaco panel
-    const monacoContainer = splitPane.getRightPanel()
-    monacoContainer.id = 'monaco-panel'
-    this.monacoPanel = new MonacoPanel(monacoContainer)
+    // 7. Initialize right side: Monaco on top, BottomPanel below
+    const rightColumn = splitPane.getRightPanel()
+    rightColumn.classList.add('right-column')
+
+    const monacoWrapper = document.createElement('div')
+    monacoWrapper.className = 'monaco-wrapper'
+    monacoWrapper.id = 'monaco-panel'
+    rightColumn.appendChild(monacoWrapper)
+
+    this.monacoPanel = new MonacoPanel(monacoWrapper)
     this.monacoPanel.init(false) // editable for US2
+
+    // 7b. BottomPanel with Console + Variable tabs
+    const bottomContainer = document.createElement('div')
+    rightColumn.appendChild(bottomContainer)
+    this.bottomPanel = new BottomPanel(bottomContainer)
+
+    const consoleEl = document.createElement('div')
+    this.consolePanel = new ConsolePanel(consoleEl)
+    this.bottomPanel.addTab({ id: 'console', label: Blockly.Msg['PANEL_CONSOLE'] || 'Console', panel: consoleEl })
+
+    const variableEl = document.createElement('div')
+    this.variablePanel = new VariablePanel(variableEl)
+    this.bottomPanel.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
 
     // 8. Create sync controller
     this.syncController = new SyncController(
@@ -130,12 +213,24 @@ export class App {
     // 9. Wire events
     this.blocklyPanel.onChange(() => {
       if (this._codeToBlocksInProgress) return
+      this.blocksDirty = true
+      this.updateSyncHints()
       this.syncController!.syncBlocksToCode()
+      this.blocksDirty = false
+      this.updateSyncHints()
+      this.runBlockDiagnostics()
       this.autoSave()
     })
 
-    // 10. Setup toolbar buttons + selectors
+    // Code change detection for sync hint
+    this.monacoPanel.onChange(() => {
+      this.updateSyncHints()
+    })
+
+    // 10. Setup toolbar buttons + selectors + execution + highlighting
     this.setupToolbar()
+    this.setupExecution()
+    this.setupBidirectionalHighlight()
     this.setupLevelSelector()
     this.setupStyleSelector()
     this.setupLocaleSelector()
@@ -175,6 +270,7 @@ export class App {
           [Blockly.Msg['TYPE_CHAR'] || 'char', 'char'],
           [Blockly.Msg['TYPE_BOOL'] || 'bool', 'bool'],
           [Blockly.Msg['TYPE_STRING'] || 'string', 'string'],
+          [Blockly.Msg['TYPE_LONG_LONG'] || 'long long', 'long long'],
         ] as Array<[string, string]>
       }
 
@@ -191,7 +287,7 @@ export class App {
           this.setInputsInline(false)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#FF8C1A')
+          this.setColour('#FF8C1A')  // Data: orange
           this.setTooltip(Blockly.Msg['U_VAR_DECLARE_TOOLTIP'] || '宣告變數')
         },
         saveExtraState: function (this: Blockly.Block & { items_: string[] }) {
@@ -253,7 +349,7 @@ export class App {
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5CA65C')
+          this.setColour('#5CB1D6')
           this.setTooltip(Blockly.Msg['U_PRINT_TOOLTIP'] || '輸出值')
         },
         saveExtraState: function (this: Blockly.Block & { itemCount_: number }) {
@@ -280,17 +376,44 @@ export class App {
       }
     }
 
-    // u_input
+    // u_input with dynamic +/- for multiple variables
     {
+      type InputBlock = Blockly.Block & { varCount_: number; updateShape_: () => void }
+
       Blockly.Blocks['u_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
+        varCount_: 1,
+        init: function (this: InputBlock) {
+          this.appendDummyInput('HEADER')
             .appendField(Blockly.Msg['U_INPUT_MSG'] || '輸入')
             .appendField(new Blockly.FieldTextInput('x') as Blockly.Field, 'NAME_0')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5CA65C')
+          this.setColour('#5CB1D6')
           this.setTooltip(Blockly.Msg['U_INPUT_TOOLTIP'] || '讀取輸入')
+        },
+        saveExtraState: function (this: InputBlock) {
+          if (this.varCount_ <= 1) return null
+          return { varCount: this.varCount_ }
+        },
+        loadExtraState: function (this: InputBlock, state: { varCount?: number }) {
+          this.varCount_ = state?.varCount ?? 1
+          this.updateShape_()
+        },
+        updateShape_: function (this: InputBlock) {
+          // Remove old extra inputs
+          let i = 1
+          while (this.getInput(`VAR_${i}`)) {
+            this.removeInput(`VAR_${i}`)
+            i++
+          }
+          // Add extra variable inputs
+          for (let j = 1; j < this.varCount_; j++) {
+            if (!this.getInput(`VAR_${j}`)) {
+              this.appendDummyInput(`VAR_${j}`)
+                .appendField('>>')
+                .appendField(new Blockly.FieldTextInput(`v${j}`) as Blockly.Field, `NAME_${j}`)
+            }
+          }
         },
       }
     }
@@ -302,13 +425,13 @@ export class App {
           this.appendDummyInput()
             .appendField('endl')
           this.setOutput(true, 'Expression')
-          this.setColour('#5CA65C')
+          this.setColour('#5CB1D6')
           this.setTooltip(Blockly.Msg['U_ENDL_TOOLTIP'] || '換行')
         },
       }
     }
 
-    // u_if with condition/then/else
+    // u_if — simple if (no mutator)
     {
       Blockly.Blocks['u_if'] = {
         init: function (this: Blockly.Block) {
@@ -318,15 +441,51 @@ export class App {
             .appendField(Blockly.Msg['U_IF_THEN'] || '則')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip(Blockly.Msg['U_IF_TOOLTIP'] || '條件判斷')
         },
       }
     }
 
+    // u_if_else — with mutator gear + +/- buttons for else-if / else
     {
-      Blockly.Blocks['u_if_else'] = {
+      // Mutator helper blocks
+      Blockly.Blocks['u_if_else_container'] = {
         init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_IF_LABEL'] || 'if')
+          this.appendStatementInput('STACK')
+          this.setColour('#FFAB19')
+          this.contextMenu = false
+        },
+      }
+      Blockly.Blocks['u_if_else_elseif_input'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || 'else if')
+          this.setPreviousStatement(true)
+          this.setNextStatement(true)
+          this.setColour('#FFAB19')
+          this.contextMenu = false
+        },
+      }
+      Blockly.Blocks['u_if_else_else_input'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE'] || 'else')
+          this.setPreviousStatement(true)
+          this.setColour('#FFAB19')
+          this.contextMenu = false
+        },
+      }
+
+      type IfElseBlock = Blockly.Block & {
+        elseifCount_: number
+        hasElse_: boolean
+        updateShape_: () => void
+      }
+
+      Blockly.Blocks['u_if_else'] = {
+        elseifCount_: 0,
+        hasElse_: true,
+        init: function (this: IfElseBlock) {
           this.appendValueInput('CONDITION')
             .appendField(Blockly.Msg['U_IF_MSG'] || '如果')
           this.appendStatementInput('THEN')
@@ -335,8 +494,83 @@ export class App {
             .appendField(Blockly.Msg['U_IF_ELSE'] || '否則')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip(Blockly.Msg['U_IF_ELSE_TOOLTIP'] || '條件判斷（含否則）')
+
+          this.setMutator(new Blockly.icons.MutatorIcon(
+            ['u_if_else_elseif_input', 'u_if_else_else_input'],
+            this as unknown as Blockly.BlockSvg,
+          ))
+        },
+        saveExtraState: function (this: IfElseBlock) {
+          if (this.elseifCount_ === 0 && this.hasElse_) return null
+          const state: Record<string, unknown> = {}
+          if (this.elseifCount_ > 0) state.elseifCount = this.elseifCount_
+          if (!this.hasElse_) state.hasElse = false
+          return state
+        },
+        loadExtraState: function (this: IfElseBlock, state: Record<string, unknown>) {
+          this.elseifCount_ = (state?.elseifCount as number) ?? 0
+          this.hasElse_ = state?.hasElse !== false
+          this.updateShape_()
+        },
+        decompose: function (this: IfElseBlock, workspace: Blockly.WorkspaceSvg) {
+          const containerBlock = workspace.newBlock('u_if_else_container')
+          containerBlock.initSvg()
+          let connection = containerBlock.getInput('STACK')!.connection!
+          for (let i = 0; i < this.elseifCount_; i++) {
+            const elseifBlock = workspace.newBlock('u_if_else_elseif_input')
+            elseifBlock.initSvg()
+            connection.connect(elseifBlock.previousConnection!)
+            connection = elseifBlock.nextConnection!
+          }
+          if (this.hasElse_) {
+            const elseBlock = workspace.newBlock('u_if_else_else_input')
+            elseBlock.initSvg()
+            connection.connect(elseBlock.previousConnection!)
+          }
+          return containerBlock
+        },
+        compose: function (this: IfElseBlock, containerBlock: Blockly.Block) {
+          let elseifCount = 0
+          let hasElse = false
+          let clauseBlock = containerBlock.getInputTargetBlock('STACK')
+          while (clauseBlock) {
+            if (clauseBlock.type === 'u_if_else_elseif_input') {
+              elseifCount++
+            } else if (clauseBlock.type === 'u_if_else_else_input') {
+              hasElse = true
+            }
+            clauseBlock = clauseBlock.getNextBlock()
+          }
+          this.elseifCount_ = elseifCount
+          this.hasElse_ = hasElse
+          this.updateShape_()
+        },
+        updateShape_: function (this: IfElseBlock) {
+          // Remove old else-if inputs
+          let i = 0
+          while (this.getInput(`ELSEIF_CONDITION_${i}`)) {
+            this.removeInput(`ELSEIF_CONDITION_${i}`)
+            this.removeInput(`ELSEIF_THEN_${i}`)
+            i++
+          }
+          // Remove old ELSE
+          if (this.getInput('ELSE')) {
+            this.removeInput('ELSE')
+          }
+          // Add else-if inputs
+          for (let j = 0; j < this.elseifCount_; j++) {
+            this.appendValueInput(`ELSEIF_CONDITION_${j}`)
+              .appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || '否則，如果')
+            this.appendStatementInput(`ELSEIF_THEN_${j}`)
+              .appendField(Blockly.Msg['U_IF_THEN'] || '則')
+          }
+          // Add else
+          if (this.hasElse_) {
+            this.appendStatementInput('ELSE')
+              .appendField(Blockly.Msg['U_IF_ELSE'] || '否則')
+          }
         },
       }
     }
@@ -351,7 +585,7 @@ export class App {
             .appendField(Blockly.Msg['U_WHILE_DO'] || '重複')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip(Blockly.Msg['U_WHILE_TOOLTIP'] || 'while 迴圈')
         },
       }
@@ -372,7 +606,7 @@ export class App {
             .appendField(Blockly.Msg['U_COUNT_LOOP_DO'] || '重複')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip(Blockly.Msg['U_COUNT_LOOP_TOOLTIP'] || 'for 迴圈')
         },
       }
@@ -384,7 +618,7 @@ export class App {
         init: function (this: Blockly.Block) {
           this.appendDummyInput().appendField(Blockly.Msg['U_BREAK_MSG'] || '跳出')
           this.setPreviousStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip('break')
         },
       }
@@ -395,7 +629,7 @@ export class App {
           this.appendDummyInput().appendField(Blockly.Msg['U_CONTINUE_MSG'] || '繼續')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#5B80A5')
+          this.setColour('#FFAB19')
           this.setTooltip('continue')
         },
       }
@@ -410,7 +644,8 @@ export class App {
             .appendField(Blockly.Msg['U_FUNC_DEF_MSG'] || '定義函式')
             .appendField(new Blockly.FieldDropdown([
               ['void', 'void'], ['int', 'int'], ['float', 'float'],
-              ['double', 'double'], ['bool', 'bool'], ['string', 'string'],
+              ['double', 'double'], ['char', 'char'], ['bool', 'bool'],
+              ['long long', 'long long'], ['string', 'string'],
             ]) as Blockly.Field, 'RETURN_TYPE')
             .appendField(new Blockly.FieldTextInput('main') as Blockly.Field, 'NAME')
           this.appendDummyInput('PARAMS_LABEL')
@@ -421,7 +656,7 @@ export class App {
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#995BA5')
+          this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_FUNC_DEF_TOOLTIP'] || '定義函式')
         },
         saveExtraState: function (this: Blockly.Block & { paramCount_: number }) {
@@ -468,7 +703,7 @@ export class App {
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#995BA5')
+          this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_FUNC_CALL_TOOLTIP'] || '呼叫函式')
         },
         saveExtraState: function (this: Blockly.Block & { argCount_: number }) {
@@ -504,6 +739,42 @@ export class App {
       }
     }
 
+    // u_func_call_expr — expression version (can plug into value sockets)
+    {
+      Blockly.Blocks['u_func_call_expr'] = {
+        argCount_: 0,
+        init: function (this: Blockly.Block & { argCount_: number }) {
+          this.appendDummyInput()
+            .appendField(Blockly.Msg['U_FUNC_CALL_MSG'] || '呼叫')
+            .appendField(new Blockly.FieldTextInput('myFunction') as Blockly.Field, 'NAME')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour('#FF6680')
+          this.setTooltip(Blockly.Msg['U_FUNC_CALL_EXPR_TOOLTIP'] || '呼叫函式（回傳值）')
+        },
+        saveExtraState: function (this: Blockly.Block & { argCount_: number }) {
+          if (this.argCount_ > 0) return { argCount: this.argCount_ }
+          return null
+        },
+        loadExtraState: function (this: Blockly.Block & { argCount_: number; updateShape_: () => void }, state: { argCount: number }) {
+          this.argCount_ = state?.argCount ?? 0
+          this.updateShape_()
+        },
+        updateShape_: function (this: Blockly.Block & { argCount_: number }) {
+          let i = 0
+          while (this.getInput(`ARG_${i}`)) { this.removeInput(`ARG_${i}`); i++ }
+          for (let j = 0; j < this.argCount_; j++) {
+            this.appendValueInput(`ARG_${j}`).appendField(j === 0 ? '(' : ',')
+          }
+          if (this.argCount_ > 0) {
+            if (!this.getInput('ARGS_END')) this.appendDummyInput('ARGS_END').appendField(')')
+          } else {
+            if (this.getInput('ARGS_END')) this.removeInput('ARGS_END')
+          }
+        },
+      }
+    }
+
     // u_return
     {
       Blockly.Blocks['u_return'] = {
@@ -511,13 +782,36 @@ export class App {
           this.appendValueInput('VALUE')
             .appendField(Blockly.Msg['U_RETURN_MSG'] || '回傳')
           this.setPreviousStatement(true, 'Statement')
-          this.setColour('#995BA5')
+          this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_RETURN_TOOLTIP'] || '回傳值')
         },
       }
     }
 
-    // u_array_declare
+    // u_var_ref with dynamic dropdown from workspace declarations
+    {
+      const self = this
+      Blockly.Blocks['u_var_ref'] = {
+        init: function (this: Blockly.Block) {
+          const block = this
+          this.appendDummyInput()
+            .appendField(new Blockly.FieldDropdown(function () {
+              const opts = self.getWorkspaceVarOptions()
+              // Ensure current value is in the options (for function params, etc.)
+              const currentVal = block.getFieldValue('NAME')
+              if (currentVal && !opts.some(o => o[1] === currentVal)) {
+                opts.unshift([currentVal, currentVal])
+              }
+              return opts
+            }) as Blockly.Field, 'NAME')
+          this.setOutput(true, 'Expression')
+          this.setColour('#FF8C1A')
+          this.setTooltip(Blockly.Msg['U_VAR_REF_TOOLTIP'] || '使用變數的值')
+        },
+      }
+    }
+
+    // u_array_declare — SIZE as input_value (allows expressions)
     {
       Blockly.Blocks['u_array_declare'] = {
         init: function (this: Blockly.Block) {
@@ -525,15 +819,18 @@ export class App {
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_MSG'] || '陣列')
             .appendField(new Blockly.FieldDropdown([
               ['int', 'int'], ['float', 'float'], ['double', 'double'],
-              ['char', 'char'], ['bool', 'bool'],
+              ['char', 'char'], ['bool', 'bool'], ['long long', 'long long'],
             ]) as Blockly.Field, 'TYPE')
             .appendField(new Blockly.FieldTextInput('arr') as Blockly.Field, 'NAME')
+          this.appendValueInput('SIZE')
             .appendField('[')
-            .appendField(new Blockly.FieldNumber(10, 1) as Blockly.Field, 'SIZE')
+            .setCheck('Expression')
+          this.appendDummyInput()
             .appendField(']')
+          this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour('#FF8C1A')
+          this.setColour('#FF661A')
           this.setTooltip(Blockly.Msg['U_ARRAY_DECLARE_TOOLTIP'] || '宣告陣列')
         },
       }
@@ -580,7 +877,7 @@ export class App {
             .appendField(']')
           this.setInputsInline(true)
           this.setOutput(true, 'Expression')
-          this.setColour('#FF8C1A')
+          this.setColour('#FF661A')
           this.setTooltip(Blockly.Msg['U_ARRAY_ACCESS_TOOLTIP'] || '陣列存取')
         },
       }
@@ -615,7 +912,6 @@ export class App {
         colour: '#FF8C1A',
         contents: filterBlocks([
           'u_var_declare', 'u_var_assign', 'u_var_ref', 'u_number', 'u_string',
-          'u_array_declare', 'u_array_access',
         ]),
       },
       {
@@ -629,7 +925,7 @@ export class App {
       {
         kind: 'category',
         name: Blockly.Msg['CATEGORY_CONTROL'] || '控制',
-        colour: '#5B80A5',
+        colour: '#FFAB19',
         contents: filterBlocks([
           'u_if', 'u_if_else', 'u_while_loop', 'u_count_loop', 'u_break', 'u_continue',
         ]),
@@ -637,17 +933,98 @@ export class App {
       {
         kind: 'category',
         name: Blockly.Msg['CATEGORY_FUNCTIONS'] || '函式',
-        colour: '#995BA5',
+        colour: '#FF6680',
         contents: filterBlocks([
-          'u_func_def', 'u_func_call', 'u_return',
+          'u_func_def', 'u_func_call', 'u_func_call_expr', 'u_return',
         ]),
       },
       {
         kind: 'category',
         name: Blockly.Msg['CATEGORY_IO'] || '輸入/輸出',
-        colour: '#5CA65C',
+        colour: '#5CB1D6',
         contents: filterBlocks([
           'u_print', 'u_input', 'u_endl',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: Blockly.Msg['CATEGORY_ARRAYS'] || '陣列',
+        colour: '#FF661A',
+        contents: filterBlocks([
+          'u_array_declare', 'u_array_access',
+        ]),
+      },
+      // ─── C++ Lang-Core (L1) ───
+      {
+        kind: 'category',
+        name: 'C++ 基礎',
+        colour: '#59C059',
+        contents: filterBlocks([
+          'c_char_literal', 'c_increment', 'c_compound_assign',
+          'c_for_loop', 'c_do_while', 'c_switch', 'c_case',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 輸入/輸出',
+        colour: '#5CB1D6',
+        contents: filterBlocks([
+          'c_printf', 'c_scanf',
+        ]),
+      },
+      // ─── C++ Advanced (L2) ───
+      {
+        kind: 'category',
+        name: 'C++ 指標',
+        colour: '#9966FF',
+        contents: filterBlocks([
+          'c_pointer_declare', 'c_pointer_deref', 'c_address_of',
+          'c_malloc', 'c_free',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 結構/類別',
+        colour: '#CF63CF',
+        contents: filterBlocks([
+          'c_struct_declare', 'c_struct_member_access', 'c_struct_pointer_access',
+          'cpp_class_def', 'cpp_new', 'cpp_delete', 'cpp_template_function',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 字串',
+        colour: '#0FBD8C',
+        contents: filterBlocks([
+          'c_strlen', 'c_strcmp', 'c_strcpy', 'cpp_string_declare',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 容器',
+        colour: '#4C97FF',
+        contents: filterBlocks([
+          'cpp_vector_declare', 'cpp_vector_push_back', 'cpp_vector_size',
+          'cpp_map_declare', 'cpp_stack_declare', 'cpp_queue_declare', 'cpp_set_declare',
+          'cpp_method_call', 'cpp_method_call_expr',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 演算法',
+        colour: '#4C97FF',
+        contents: filterBlocks([
+          'cpp_sort',
+        ]),
+      },
+      {
+        kind: 'category',
+        name: 'C++ 特殊',
+        colour: '#888888',
+        contents: filterBlocks([
+          'c_raw_code', 'c_raw_expression', 'c_comment_line',
+          'c_include', 'c_include_local', 'c_define',
+          'c_ifdef', 'c_ifndef', 'c_using_namespace',
         ]),
       },
     ]
@@ -700,7 +1077,7 @@ export class App {
     this.syncController!.onError((errors: SyncError[]) => {
       const messages = errors.map(e => e.message).join('\n')
       console.warn('Sync errors:', messages)
-      this.showStatusMessage(`⚠ ${errors.length} 個語法錯誤`, 3000)
+      showToast(Blockly.Msg['TOAST_ERROR'] || `⚠ ${errors.length} 個語法錯誤`, 'error')
     })
   }
 
@@ -712,6 +1089,7 @@ export class App {
     this.levelSelector.onChange((level) => {
       this.currentLevel = level
       this.updateToolboxForLevel(level)
+      this.quickAccessBar?.setLevel(level)
     })
   }
 
@@ -753,14 +1131,6 @@ export class App {
     workspace.updateToolbox(toolbox as Blockly.utils.toolbox.ToolboxDefinition)
   }
 
-  private showStatusMessage(msg: string, duration = 3000): void {
-    const statusBar = document.getElementById('status-bar')
-    if (!statusBar) return
-    const original = statusBar.innerHTML
-    statusBar.innerHTML = `<span>${msg}</span>`
-    setTimeout(() => { statusBar.innerHTML = original }, duration)
-  }
-
   private setupToolbar(): void {
     // Replace elements to remove old event listeners (prevent HMR duplication)
     const replaceBtn = (id: string) => {
@@ -794,6 +1164,9 @@ export class App {
     replaceBtn('import-btn')?.addEventListener('click', () => {
       this.importWorkspace()
     })
+    replaceBtn('upload-blocks-btn')?.addEventListener('click', () => {
+      this.uploadCustomBlocks()
+    })
   }
 
   private exportWorkspace(): void {
@@ -809,7 +1182,7 @@ export class App {
     }
     const blob = this.storageService.exportToBlob(state)
     this.storageService.downloadBlob(blob, `code-blockly-${Date.now()}.json`)
-    this.showStatusMessage('已匯出', 2000)
+    showToast(Blockly.Msg['TOAST_EXPORT_SUCCESS'] || '已匯出', 'success')
   }
 
   private importWorkspace(): void {
@@ -823,7 +1196,7 @@ export class App {
       reader.onload = () => {
         const state = this.storageService.importFromJSON(reader.result as string)
         if (!state) {
-          this.showStatusMessage('匯入失敗：無效的 JSON', 3000)
+          showToast(Blockly.Msg['TOAST_IMPORT_ERROR'] || '匯入失敗：無效的 JSON', 'error')
           return
         }
         if (state.blocklyState && Object.keys(state.blocklyState).length > 0) {
@@ -832,7 +1205,43 @@ export class App {
         if (state.code) {
           this.monacoPanel?.setCode(state.code)
         }
-        this.showStatusMessage('已匯入', 2000)
+        showToast(Blockly.Msg['TOAST_IMPORT_SUCCESS'] || '已匯入', 'success')
+      }
+      reader.readAsText(file)
+    })
+    input.click()
+  }
+
+  private uploadCustomBlocks(): void {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.addEventListener('change', () => {
+      const file = input.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = () => {
+        try {
+          const blocks = JSON.parse(reader.result as string)
+          if (!Array.isArray(blocks)) {
+            showToast(Blockly.Msg['TOAST_UPLOAD_ERROR'] || 'Invalid format: expected an array of block definitions', 'error')
+            return
+          }
+          for (const blockDef of blocks) {
+            if (!blockDef.type) {
+              showToast(Blockly.Msg['TOAST_UPLOAD_ERROR'] || 'Invalid block: missing type', 'error')
+              return
+            }
+            if (!Blockly.Blocks[blockDef.type]) {
+              Blockly.common.defineBlocksWithJsonArray([blockDef])
+            }
+          }
+          // Refresh toolbox to include new blocks
+          this.updateToolboxForLevel(this.currentLevel)
+          showToast(Blockly.Msg['TOAST_UPLOAD_SUCCESS'] || `Uploaded ${blocks.length} custom blocks`, 'success')
+        } catch {
+          showToast(Blockly.Msg['TOAST_UPLOAD_ERROR'] || 'Failed to parse JSON file', 'error')
+        }
       }
       reader.readAsText(file)
     })
@@ -862,6 +1271,359 @@ export class App {
       console.warn('Failed to restore saved state, clearing:', err)
       this.storageService.clear()
     }
+  }
+
+  private setupExecution(): void {
+    const replaceBtn = (id: string) => {
+      const el = document.getElementById(id)
+      if (el) {
+        const clone = el.cloneNode(true) as HTMLElement
+        el.parentNode?.replaceChild(clone, el)
+        return clone
+      }
+      return null
+    }
+
+    replaceBtn('run-btn')?.addEventListener('click', () => this.handleRun())
+    replaceBtn('step-btn')?.addEventListener('click', () => this.handleStep())
+    replaceBtn('pause-btn')?.addEventListener('click', () => this.handlePause())
+    replaceBtn('stop-btn')?.addEventListener('click', () => this.handleStop())
+
+    const speedSelect = document.getElementById('speed-select') as HTMLSelectElement | null
+    speedSelect?.addEventListener('change', () => {
+      this.stepController?.setSpeed(speedSelect.value as ExecutionSpeed)
+    })
+  }
+
+  private async handleRun(): Promise<void> {
+    // Check unsync
+    if (this.blocksDirty) {
+      const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
+      if (sync) {
+        this.syncController?.syncBlocksToCode()
+      }
+    }
+
+    const tree = this.blocklyPanel?.extractSemanticTree()
+    if (!tree) return
+
+    this.resetExecution()
+    this.interpreter = new SemanticInterpreter({ maxSteps: 100000 })
+    this.interpreter.setInputProvider(() => this.consolePanel!.promptInput())
+    // Real-time output: stream to console as interpreter writes
+    this.interpreter.setOutputCallback((text: string) => {
+      this.consolePanel?.log(text)
+    })
+
+    this.showExecButtons(true)
+    this.consolePanel?.clear()
+    this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+    this.bottomPanel?.activateTab('console')
+
+    try {
+      await this.interpreter.execute(tree as unknown as InterpreterNode)
+      this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_COMPLETED'] || 'Completed', 'completed')
+      showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
+    } catch (e) {
+      if (e instanceof RuntimeError) {
+        this.consolePanel?.error(e.message)
+        this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+        showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
+      } else {
+        this.consolePanel?.error(String(e))
+        this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+      }
+    } finally {
+      this.showExecButtons(false)
+    }
+  }
+
+  private async handleStep(): Promise<void> {
+    if (this.stepController?.getStatus() === 'stepping' || this.stepController?.getStatus() === 'paused') {
+      // Continue stepping
+      this.stepController.step()
+      return
+    }
+
+    // Start new step session
+    if (this.blocksDirty) {
+      const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
+      if (sync) {
+        this.syncController?.syncBlocksToCode()
+      }
+    }
+
+    const tree = this.blocklyPanel?.extractSemanticTree()
+    if (!tree) return
+
+    this.resetExecution()
+    this.interpreter = new SemanticInterpreter({ maxSteps: 100000 })
+    // Real-time output: stream to console as interpreter writes during step collection
+    this.interpreter.setOutputCallback((text: string) => {
+      this.consolePanel?.log(text)
+    })
+    this.consolePanel?.clear()
+    this.bottomPanel?.activateTab('variables')
+    this.showExecButtons(true)
+
+    try {
+      this.stepRecords = await this.interpreter.executeWithSteps(tree as unknown as InterpreterNode)
+    } catch (e) {
+      if (e instanceof RuntimeError) {
+        this.consolePanel?.error(e.message)
+        this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+        this.showExecButtons(false)
+        return
+      }
+    }
+
+    this.currentStepIndex = -1
+    this.stepController = new StepController()
+
+    const speedSelect = document.getElementById('speed-select') as HTMLSelectElement | null
+    if (speedSelect) {
+      this.stepController.setSpeed(speedSelect.value as ExecutionSpeed)
+    }
+
+    this.stepController.setStepFn(() => {
+      this.currentStepIndex++
+      return this.currentStepIndex < this.stepRecords.length - 1
+    })
+
+    this.stepController.onStep(() => {
+      this.displayStep(this.currentStepIndex)
+
+      // Check breakpoints
+      const step = this.stepRecords[this.currentStepIndex]
+      if (step?.blockId) {
+        const mapping = this.syncController?.getMappingForBlock(step.blockId)
+        if (mapping) {
+          const breakpoints = this.monacoPanel?.getBreakpoints() ?? []
+          // Monaco 1-based, mapping 0-based
+          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine + 1 && bp <= mapping.endLine + 1)
+          if (hitBreakpoint && this.stepController?.getStatus() === 'running') {
+            this.stepController.pause()
+            this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
+          }
+        }
+      }
+    })
+
+    this.stepController.onStop(() => {
+      this.clearHighlights()
+      this.variablePanel?.clear()
+      this.showExecButtons(false)
+    })
+
+    this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+
+    // Execute first step
+    this.stepController.step()
+  }
+
+  private handlePause(): void {
+    if (this.stepController?.getStatus() === 'running') {
+      this.stepController.pause()
+      this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused', 'running')
+    }
+  }
+
+  private handleStop(): void {
+    this.stepController?.stop()
+    this.clearHighlights()
+    this.variablePanel?.clear()
+    this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_IDLE'] || 'Ready', '')
+    this.showExecButtons(false)
+  }
+
+  private displayStep(index: number): void {
+    if (index < 0 || index >= this.stepRecords.length) return
+    const step = this.stepRecords[index]
+
+    // Update variable panel
+    this.variablePanel?.updateFromSnapshot(step.scopeSnapshot)
+    this.bottomPanel?.activateTab('variables')
+
+    // Highlight block
+    this.clearHighlights()
+    if (step.blockId && this.blocklyPanel?.getWorkspace()) {
+      const block = this.blocklyPanel.getWorkspace()!.getBlockById(step.blockId)
+      if (block) {
+        block.addSelect()
+      }
+    }
+
+    // Highlight code line via source mapping
+    if (step.blockId) {
+      const mapping = this.syncController?.getMappingForBlock(step.blockId)
+      if (mapping && this.monacoPanel) {
+        // Monaco uses 1-based lines
+        this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
+      }
+    }
+
+    // Update console output up to this step
+    // (show only output lines up to step.outputLength)
+
+    if (this.stepController?.getStatus() === 'completed') {
+      this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_COMPLETED'] || 'Completed', 'completed')
+      this.showExecButtons(false)
+    }
+  }
+
+  private setupBidirectionalHighlight(): void {
+    // Block → Code highlighting
+    this.blocklyPanel?.onBlockSelect((blockId) => {
+      this.monacoPanel?.clearHighlight()
+      if (!blockId) return
+      const mapping = this.syncController?.getMappingForBlock(blockId)
+      if (mapping) {
+        this.monacoPanel?.addHighlight(mapping.startLine + 1, mapping.endLine + 1)
+      }
+    })
+
+    // Code → Block highlighting
+    this.monacoPanel?.onCursorChange((line) => {
+      this.blocklyPanel?.clearHighlight()
+      // Monaco lines are 1-based, SourceMapping is 0-based
+      const mapping = this.syncController?.getMappingForLine(line - 1)
+      if (mapping) {
+        this.blocklyPanel?.highlightBlock(mapping.blockId)
+      }
+    })
+  }
+
+  private highlightMonacoLines(startLine: number, endLine: number): void {
+    this.monacoPanel?.addHighlight(startLine, endLine)
+  }
+
+  private clearHighlights(): void {
+    // Clear blockly selection
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (workspace) {
+      const blocks = workspace.getAllBlocks(false)
+      for (const block of blocks) {
+        block.removeSelect()
+      }
+    }
+  }
+
+  private getWorkspaceVarOptions(): Array<[string, string]> {
+    const options: Array<[string, string]> = []
+    const seen = new Set<string>()
+    const addOption = (name: string) => {
+      if (name && !seen.has(name)) {
+        seen.add(name)
+        options.push([name, name])
+      }
+    }
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (workspace) {
+      const blocks = workspace.getAllBlocks(false)
+      for (const block of blocks) {
+        if (block.type === 'u_var_declare') {
+          // Scan indexed NAME fields
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`NAME_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        } else if (block.type === 'u_func_def') {
+          // Scan function parameters
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`PARAM_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        } else if (block.type === 'u_count_loop') {
+          addOption(block.getFieldValue('VAR'))
+        } else if (block.type === 'u_input') {
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`NAME_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        }
+      }
+    }
+    if (options.length === 0) {
+      options.push([Blockly.Msg['U_VAR_REF_CUSTOM'] || '(自訂)', 'x'])
+    }
+    return options
+  }
+
+  private updateSyncHints(): void {
+    const syncBlocksBtn = document.getElementById('sync-blocks-btn')
+    const syncCodeBtn = document.getElementById('sync-code-btn')
+    if (syncBlocksBtn) {
+      syncBlocksBtn.classList.toggle('sync-hint', this.blocksDirty)
+    }
+    if (syncCodeBtn) {
+      // Code-side dirty detection: simple approach — mark dirty when user types
+      // Cleared when syncCodeToBlocks is called
+    }
+  }
+
+  private resetExecution(): void {
+    this.interpreter = null
+    this.stepController?.stop()
+    this.stepController = null
+    this.stepRecords = []
+    this.currentStepIndex = -1
+    this.clearHighlights()
+  }
+
+  private runBlockDiagnostics(): void {
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (!workspace) return
+
+    const allBlocks = workspace.getAllBlocks(false)
+
+    // Clear previous warnings
+    for (const block of allBlocks) {
+      block.setWarningText(null)
+    }
+
+    // Adapt Blockly blocks to DiagnosticBlock interface
+    const diagnosticBlocks: DiagnosticBlock[] = allBlocks.map(block => ({
+      id: block.id,
+      type: block.type,
+      getFieldValue: (name: string) => block.getFieldValue(name),
+      getInputTargetBlock: (name: string) => {
+        const target = block.getInputTargetBlock(name)
+        if (!target) return null
+        return {
+          id: target.id,
+          type: target.type,
+          getFieldValue: (n: string) => target.getFieldValue(n),
+          getInputTargetBlock: () => null,
+          getInput: (n: string) => target.getInput(n),
+        }
+      },
+      getInput: (name: string) => block.getInput(name),
+    }))
+
+    const diagnostics = runDiagnostics(diagnosticBlocks)
+
+    // Apply warnings to blocks
+    for (const diag of diagnostics) {
+      const block = workspace.getBlockById(diag.blockId)
+      if (block) {
+        const msg = Blockly.Msg[diag.message] || diag.message
+        block.setWarningText(msg)
+      }
+    }
+  }
+
+  private showExecButtons(running: boolean): void {
+    const pause = document.getElementById('pause-btn')
+    const stop = document.getElementById('stop-btn')
+    const run = document.getElementById('run-btn')
+    const step = document.getElementById('step-btn')
+    if (pause) pause.style.display = running ? '' : 'none'
+    if (stop) stop.style.display = running ? '' : 'none'
+    if (run) run.style.display = running ? 'none' : ''
+    if (step) step.style.display = running ? 'none' : ''
   }
 
   dispose(): void {

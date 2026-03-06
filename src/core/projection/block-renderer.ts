@@ -36,6 +36,7 @@ const CONCEPT_TO_BLOCK: Record<string, string> = {
   continue: 'u_continue',
   func_def: 'u_func_def',
   func_call: 'u_func_call',
+  func_call_expr: 'u_func_call_expr',
   return: 'u_return',
   print: 'u_print',
   input: 'u_input',
@@ -43,6 +44,11 @@ const CONCEPT_TO_BLOCK: Record<string, string> = {
   array_declare: 'u_array_declare',
   array_access: 'u_array_access',
   comment: 'c_comment_line',
+  // C++ specific
+  cpp_include: 'c_include',
+  cpp_include_local: 'c_include_local',
+  cpp_using_namespace: 'c_using_namespace',
+  cpp_define: 'c_define',
 }
 
 let blockIdCounter = 0
@@ -152,7 +158,7 @@ function renderBlock(node: SemanticNode): BlockState | null {
       renderBinaryOp(node, block)
       break
     case 'logic_not':
-      renderChild(node, 'operand', block, 'VALUE')
+      renderChild(node, 'operand', block, 'A')
       break
     case 'negate':
       renderChild(node, 'value', block, 'VALUE')
@@ -170,6 +176,7 @@ function renderBlock(node: SemanticNode): BlockState | null {
       renderFuncDef(node, block)
       break
     case 'func_call':
+    case 'func_call_expr':
       renderFuncCall(node, block)
       break
     case 'return':
@@ -181,11 +188,20 @@ function renderBlock(node: SemanticNode): BlockState | null {
     case 'input':
       block.fields.NAME_0 = node.properties.variable ?? 'x'
       break
-    case 'array_declare':
+    case 'array_declare': {
       block.fields.TYPE = node.properties.type ?? 'int'
       block.fields.NAME = node.properties.name ?? 'arr'
-      block.fields.SIZE = Number(node.properties.size ?? 10)
+      // SIZE is now a value input, render as expression child
+      const sizeNodes = node.children.size ?? []
+      if (sizeNodes.length > 0) {
+        renderChild(node, 'size', block, 'SIZE')
+      } else {
+        // Fallback: create a number literal block for the size
+        const sizeVal = node.properties.size ?? '10'
+        block.inputs.SIZE = { block: { type: 'u_number', id: nextBlockId(), fields: { NUM: Number(sizeVal) }, inputs: {} } }
+      }
       break
+    }
     case 'array_access':
       block.fields.NAME = node.properties.name ?? 'arr'
       renderChild(node, 'index', block, 'INDEX')
@@ -197,6 +213,20 @@ function renderBlock(node: SemanticNode): BlockState | null {
     case 'continue':
     case 'endl':
       // No fields or inputs
+      break
+    // C++ specific blocks
+    case 'cpp_include':
+      block.fields.HEADER = node.properties.header ?? 'iostream'
+      break
+    case 'cpp_include_local':
+      block.fields.HEADER = node.properties.header ?? 'myheader.h'
+      break
+    case 'cpp_using_namespace':
+      block.fields.NS = node.properties.namespace ?? 'std'
+      break
+    case 'cpp_define':
+      block.fields.NAME = node.properties.name ?? 'MACRO'
+      block.fields.VALUE = node.properties.value ?? ''
       break
   }
 
