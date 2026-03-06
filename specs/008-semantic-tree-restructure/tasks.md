@@ -61,24 +61,24 @@
 
 ### 測試
 
-- [ ] T017 [P] [US1] 撰寫 code-generator 單元測試（語義樹 → C++ 程式碼）in tests/unit/core/code-generator.test.ts
-- [ ] T018 [P] [US1] 撰寫 C++ generator 單元測試（各概念的程式碼生成）in tests/unit/languages/cpp/generators.test.ts
+- [x] T017 [P] [US1] 撰寫 code-generator 單元測試（語義樹 → C++ 程式碼）in tests/unit/core/code-generator.test.ts
+- [x] T018 [P] [US1] 撰寫 C++ generator 單元測試（各概念的程式碼生成）in tests/unit/languages/cpp/generators.test.ts
 
 ### 實作
 
-- [ ] T019 [US1] 實作 code-generator 框架（遍歷語義樹 + 委派給語言模組）in src/core/projection/code-generator.ts
-- [ ] T020 [US1] 實作 C++ declarations generator（var_declare, var_assign, array_declare）in src/languages/cpp/generators/declarations.ts
-- [ ] T021 [P] [US1] 實作 C++ expressions generator（arithmetic, compare, logic, var_ref, literals）in src/languages/cpp/generators/expressions.ts
-- [ ] T022 [P] [US1] 實作 C++ statements generator（if, count_loop, while_loop, break, continue, func_def, func_call, return）in src/languages/cpp/generators/statements.ts
-- [ ] T023 [P] [US1] 實作 C++ I/O generator（print, input, endl）in src/languages/cpp/generators/io.ts
-- [ ] T024 [US1] 實作 C++ language module 進入點（整合所有 generator）in src/languages/cpp/module.ts
-- [ ] T025 [US1] 建立 VSCode 風格佈局骨架（split-pane、sidebar 佔位）in src/ui/layout/split-pane.ts 和 src/ui/layout/sidebar.ts
-- [ ] T026 [US1] 實作 Blockly 面板（Blockly workspace + Zelos renderer + Scratch 配色 + 工具箱建構）in src/ui/panels/blockly-panel.ts
-- [ ] T027 [US1] 實作 Monaco Editor 面板（C++ 語法高亮 + 唯讀模式用於此 Story）in src/ui/panels/monaco-panel.ts
-- [ ] T028 [US1] 實作同步控制器的積木→程式碼方向（Blockly change event → 讀取積木 → 建構語義樹 → project → 寫入 Monaco）in src/ui/sync-controller.ts
-- [ ] T029 [US1] 實作主控制器 App（初始化各面板 + 連接同步控制器）in src/ui/app.ts
-- [ ] T030 [US1] 實作全域 CSS 樣式（VSCode 風格深色主題 + 面板佈局）in src/ui/style.css
-- [ ] T031 [US1] 更新 index.html 和 main.ts 進入點 in index.html 和 src/main.ts
+- [x] T019 [US1] 實作 code-generator 框架（遍歷語義樹 + 委派給語言模組）in src/core/projection/code-generator.ts
+- [x] T020 [US1] 實作 C++ declarations generator（var_declare, var_assign, array_declare）in src/languages/cpp/generators/declarations.ts
+- [x] T021 [P] [US1] 實作 C++ expressions generator（arithmetic, compare, logic, var_ref, literals）in src/languages/cpp/generators/expressions.ts
+- [x] T022 [P] [US1] 實作 C++ statements generator（if, count_loop, while_loop, break, continue, func_def, func_call, return）in src/languages/cpp/generators/statements.ts
+- [x] T023 [P] [US1] 實作 C++ I/O generator（print, input, endl）in src/languages/cpp/generators/io.ts
+- [x] T024 [US1] 實作 C++ language module 進入點（整合所有 generator）in src/languages/cpp/generators/index.ts
+- [x] T025 [US1] 建立 VSCode 風格佈局骨架（split-pane、sidebar 佔位）in src/ui/layout/split-pane.ts 和 src/ui/layout/sidebar.ts
+- [x] T026 [US1] 實作 Blockly 面板（Blockly workspace + Zelos renderer + Scratch 配色 + 工具箱建構）in src/ui/panels/blockly-panel.ts
+- [x] T027 [US1] 實作 Monaco Editor 面板（C++ 語法高亮 + 唯讀模式用於此 Story）in src/ui/panels/monaco-panel.ts
+- [x] T028 [US1] 實作同步控制器的積木→程式碼方向（Blockly change event → 讀取積木 → 建構語義樹 → project → 寫入 Monaco）in src/ui/sync-controller.ts
+- [x] T029 [US1] 實作主控制器 App（初始化各面板 + 連接同步控制器）in src/ui/app.new.ts
+- [x] T030 [US1] 實作全域 CSS 樣式（VSCode 風格深色主題 + 面板佈局）in src/ui/style.css
+- [x] T031 [US1] 更新 index.html 和 main.ts 進入點 in index.html 和 src/main.ts
 
 **Checkpoint**: 拖拉積木後程式碼即時更新。US1 可獨立演示。
 
