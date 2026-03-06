@@ -28,6 +28,7 @@ export class SemanticInterpreter {
   private stepRecords: StepInfo[] = []
   private recordSteps = false
   private inputProvider: (() => Promise<string>) | null = null
+  private outputCallback: ((text: string) => void) | null = null
 
   constructor(options: InterpreterOptions = {}) {
     this.maxSteps = options.maxSteps ?? 100000
@@ -37,9 +38,16 @@ export class SemanticInterpreter {
     this.inputProvider = provider
   }
 
+  /** Register a callback for real-time output (called on each write/newline) */
+  setOutputCallback(callback: ((text: string) => void) | null): void {
+    this.outputCallback = callback
+    this.io.onOutput(callback)
+  }
+
   async execute(program: SemanticNode, stdin: string[] = []): Promise<void> {
     this.scope = new Scope()
     this.io = new IOSystem(stdin)
+    if (this.outputCallback) this.io.onOutput(this.outputCallback)
     this.functions = new Map()
     this.steps = 0
     this.status = 'running'
