@@ -766,11 +766,18 @@ export class App {
       }
     }
 
-    // u_func_def with dynamic parameter support
+    // u_func_def with +/- for parameters
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     {
+      const PARAM_TYPE_OPTIONS = [
+        ['int', 'int'], ['float', 'float'], ['double', 'double'],
+        ['char', 'char'], ['bool', 'bool'], ['string', 'string'],
+      ] as Array<[string, string]>
+
       Blockly.Blocks['u_func_def'] = {
         paramCount_: 0,
-        init: function (this: Blockly.Block & { paramCount_: number; updateShape_: () => void }) {
+        init: function (this: any) {
+          this.paramCount_ = 0
           this.appendDummyInput('HEADER')
             .appendField(Blockly.Msg['U_FUNC_DEF_MSG'] || '定義函式')
             .appendField(new Blockly.FieldDropdown([
@@ -783,6 +790,8 @@ export class App {
             .appendField('(')
           this.appendDummyInput('PARAMS_END')
             .appendField(')')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
           this.appendStatementInput('BODY')
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
@@ -790,121 +799,130 @@ export class App {
           this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_FUNC_DEF_TOOLTIP'] || '定義函式')
         },
-        saveExtraState: function (this: Blockly.Block & { paramCount_: number }) {
+        plusParam_: function (this: any) {
+          const idx = this.paramCount_
+          const input = this.appendDummyInput(`PARAM_${idx}`)
+          if (idx > 0) input.appendField(',')
+          input.appendField(new Blockly.FieldDropdown(PARAM_TYPE_OPTIONS) as Blockly.Field, `TYPE_${idx}`)
+          input.appendField(new Blockly.FieldTextInput(`p${idx}`) as Blockly.Field, `PARAM_${idx}`)
+          this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
+          this.paramCount_++
+          setMinusState(this, false)
+        },
+        minusParam_: function (this: any) {
+          if (this.paramCount_ <= 0) return
+          this.paramCount_--
+          this.removeInput(`PARAM_${this.paramCount_}`)
+          setMinusState(this, this.paramCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
           if (this.paramCount_ > 0) {
             return { paramCount: this.paramCount_ }
           }
           return null
         },
-        loadExtraState: function (this: Blockly.Block & { paramCount_: number; updateShape_: () => void }, state: { paramCount: number }) {
-          this.paramCount_ = state?.paramCount ?? 0
-          this.updateShape_()
-        },
-        updateShape_: function (this: Blockly.Block & { paramCount_: number }) {
-          // Remove old param inputs
-          let i = 0
-          while (this.getInput(`PARAM_${i}`)) {
-            this.removeInput(`PARAM_${i}`)
-            i++
-          }
-          // Add param inputs before PARAMS_END
-          for (let j = 0; j < this.paramCount_; j++) {
-            const input = this.appendDummyInput(`PARAM_${j}`)
-            if (j > 0) input.appendField(',')
-            input.appendField(new Blockly.FieldDropdown([
-              ['int', 'int'], ['float', 'float'], ['double', 'double'],
-              ['char', 'char'], ['bool', 'bool'], ['string', 'string'],
-            ]) as Blockly.Field, `TYPE_${j}`)
-            input.appendField(new Blockly.FieldTextInput(`p${j}`) as Blockly.Field, `PARAM_${j}`)
-            // Move before PARAMS_END
-            this.moveInputBefore(`PARAM_${j}`, 'PARAMS_END')
+        loadExtraState: function (this: any, state: { paramCount?: number }) {
+          const count = state?.paramCount ?? 0
+          while (this.paramCount_ < count) {
+            this.plusParam_()
           }
         },
       }
     }
 
-    // u_func_call with dynamic argument support
+    // u_func_call with +/- for arguments
     {
       Blockly.Blocks['u_func_call'] = {
         argCount_: 0,
-        init: function (this: Blockly.Block & { argCount_: number }) {
-          this.appendDummyInput()
+        init: function (this: any) {
+          this.argCount_ = 0
+          this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_MSG'] || '呼叫')
             .appendField(new Blockly.FieldTextInput('myFunction') as Blockly.Field, 'NAME')
+            .appendField('(')
+          this.appendDummyInput('TAIL')
+            .appendField(')')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_FUNC_CALL_TOOLTIP'] || '呼叫函式')
         },
-        saveExtraState: function (this: Blockly.Block & { argCount_: number }) {
-          if (this.argCount_ > 0) {
-            return { argCount: this.argCount_ }
-          }
+        plusArg_: function (this: any) {
+          const idx = this.argCount_
+          this.appendValueInput(`ARG_${idx}`)
+            .appendField(idx > 0 ? ',' : '')
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minusArg_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          this.removeInput(`ARG_${this.argCount_}`)
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          if (this.argCount_ > 0) return { argCount: this.argCount_ }
           return null
         },
-        loadExtraState: function (this: Blockly.Block & { argCount_: number; updateShape_: () => void }, state: { argCount: number }) {
-          this.argCount_ = state?.argCount ?? 0
-          this.updateShape_()
-        },
-        updateShape_: function (this: Blockly.Block & { argCount_: number }) {
-          let i = 0
-          while (this.getInput(`ARG_${i}`)) {
-            this.removeInput(`ARG_${i}`)
-            i++
-          }
-          for (let j = 0; j < this.argCount_; j++) {
-            this.appendValueInput(`ARG_${j}`)
-              .appendField(j === 0 ? '(' : ',')
-          }
-          if (this.argCount_ > 0) {
-            if (!this.getInput('ARGS_END')) {
-              this.appendDummyInput('ARGS_END').appendField(')')
-            }
-          } else {
-            if (this.getInput('ARGS_END')) {
-              this.removeInput('ARGS_END')
-            }
+        loadExtraState: function (this: any, state: { argCount?: number }) {
+          const count = state?.argCount ?? 0
+          while (this.argCount_ < count) {
+            this.plusArg_()
           }
         },
       }
     }
 
-    // u_func_call_expr — expression version (can plug into value sockets)
+    // u_func_call_expr — expression version with +/- for arguments
     {
       Blockly.Blocks['u_func_call_expr'] = {
         argCount_: 0,
-        init: function (this: Blockly.Block & { argCount_: number }) {
-          this.appendDummyInput()
+        init: function (this: any) {
+          this.argCount_ = 0
+          this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_MSG'] || '呼叫')
             .appendField(new Blockly.FieldTextInput('myFunction') as Blockly.Field, 'NAME')
+            .appendField('(')
+          this.appendDummyInput('TAIL')
+            .appendField(')')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
           this.setInputsInline(true)
           this.setOutput(true, 'Expression')
           this.setColour('#FF6680')
           this.setTooltip(Blockly.Msg['U_FUNC_CALL_EXPR_TOOLTIP'] || '呼叫函式（回傳值）')
         },
-        saveExtraState: function (this: Blockly.Block & { argCount_: number }) {
+        plusArg_: function (this: any) {
+          const idx = this.argCount_
+          this.appendValueInput(`ARG_${idx}`)
+            .appendField(idx > 0 ? ',' : '')
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minusArg_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          this.removeInput(`ARG_${this.argCount_}`)
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
           if (this.argCount_ > 0) return { argCount: this.argCount_ }
           return null
         },
-        loadExtraState: function (this: Blockly.Block & { argCount_: number; updateShape_: () => void }, state: { argCount: number }) {
-          this.argCount_ = state?.argCount ?? 0
-          this.updateShape_()
-        },
-        updateShape_: function (this: Blockly.Block & { argCount_: number }) {
-          let i = 0
-          while (this.getInput(`ARG_${i}`)) { this.removeInput(`ARG_${i}`); i++ }
-          for (let j = 0; j < this.argCount_; j++) {
-            this.appendValueInput(`ARG_${j}`).appendField(j === 0 ? '(' : ',')
-          }
-          if (this.argCount_ > 0) {
-            if (!this.getInput('ARGS_END')) this.appendDummyInput('ARGS_END').appendField(')')
-          } else {
-            if (this.getInput('ARGS_END')) this.removeInput('ARGS_END')
+        loadExtraState: function (this: any, state: { argCount?: number }) {
+          const count = state?.argCount ?? 0
+          while (this.argCount_ < count) {
+            this.plusArg_()
           }
         },
       }
     }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // u_return
     {
