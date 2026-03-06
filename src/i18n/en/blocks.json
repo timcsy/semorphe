@@ -323,5 +323,25 @@
   "EXEC_STATUS_IDLE": "Ready",
   "EXEC_INPUT_PROMPT": "Enter value for %1:",
   "EXEC_STDIN_LABEL": "Pre-fill input",
-  "EXEC_PROGRAM_MODIFIED": "Program modified. Please run again."
+  "EXEC_PROGRAM_MODIFIED": "Program modified. Please run again.",
+  "EXEC_TIMEOUT_WARNING": "Execution stopped: maximum step limit reached (possible infinite loop)",
+  "EXEC_UNSYNC_PROMPT": "Blocks have changed. Sync before running?",
+  "EXEC_UNSYNC_YES": "Sync & Run",
+  "EXEC_UNSYNC_NO": "Run Current",
+
+  "PANEL_CONSOLE": "Console",
+  "PANEL_VARIABLES": "Variables",
+  "PANEL_SCOPE_GLOBAL": "Global",
+
+  "DIAG_MISSING_CONDITION": "Missing condition",
+  "DIAG_MISSING_VALUE": "Missing value",
+  "DIAG_EMPTY_BODY": "Empty block body",
+
+  "TOAST_EXPORT_SUCCESS": "Exported successfully",
+  "TOAST_IMPORT_SUCCESS": "Imported successfully",
+  "TOAST_IMPORT_FAIL": "Import failed: invalid JSON",
+  "TOAST_UPLOAD_SUCCESS": "Custom blocks uploaded",
+  "TOAST_UPLOAD_FAIL": "Upload failed: invalid format",
+  "TOAST_EXEC_COMPLETE": "Program completed",
+  "TOAST_EXEC_ERROR": "Execution error"
 }

@@ -323,5 +323,25 @@
   "EXEC_STATUS_IDLE": "就緒",
   "EXEC_INPUT_PROMPT": "請輸入 %1 的值：",
   "EXEC_STDIN_LABEL": "預填輸入",
-  "EXEC_PROGRAM_MODIFIED": "程式已修改，請重新執行"
+  "EXEC_PROGRAM_MODIFIED": "程式已修改，請重新執行",
+  "EXEC_TIMEOUT_WARNING": "執行已中止：超過最大步數限制（可能是無窮迴圈）",
+  "EXEC_UNSYNC_PROMPT": "積木已變更，是否先同步再執行？",
+  "EXEC_UNSYNC_YES": "同步後執行",
+  "EXEC_UNSYNC_NO": "直接執行",
+
+  "PANEL_CONSOLE": "主控台",
+  "PANEL_VARIABLES": "變數",
+  "PANEL_SCOPE_GLOBAL": "全域",
+
+  "DIAG_MISSING_CONDITION": "缺少條件",
+  "DIAG_MISSING_VALUE": "缺少數值",
+  "DIAG_EMPTY_BODY": "空的區塊主體",
+
+  "TOAST_EXPORT_SUCCESS": "匯出成功",
+  "TOAST_IMPORT_SUCCESS": "匯入成功",
+  "TOAST_IMPORT_FAIL": "匯入失敗：無效的 JSON",
+  "TOAST_UPLOAD_SUCCESS": "自訂積木已上傳",
+  "TOAST_UPLOAD_FAIL": "上傳失敗：格式不正確",
+  "TOAST_EXEC_COMPLETE": "程式執行完畢",
+  "TOAST_EXEC_ERROR": "執行錯誤"
 }
