@@ -22,6 +22,7 @@ import { Lifter } from '../core/lift/lifter'
 import { PatternLifter } from '../core/lift/pattern-lifter'
 import { PatternRenderer } from '../core/projection/pattern-renderer'
 import { setPatternRenderer } from '../core/projection/block-renderer'
+import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { CppParser } from '../languages/cpp/parser'
 import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
@@ -1192,20 +1193,29 @@ export class App {
   private async setupCodeToBlocksPipeline(): Promise<void> {
     const lifter = new Lifter()
 
+    // Initialize registries (three-layer architecture)
+    const transformRegistry = new TransformRegistry()
+    registerCoreTransforms(transformRegistry)
+    const liftStrategyRegistry = new LiftStrategyRegistry()
+    const renderStrategyRegistry = new RenderStrategyRegistry()
+
     // Wire up JSON-driven PatternLifter
     const allSpecs = this.blockSpecRegistry.getAll()
     const pl = new PatternLifter()
+    pl.setTransformRegistry(transformRegistry)
+    pl.setLiftStrategyRegistry(liftStrategyRegistry)
     pl.loadBlockSpecs(allSpecs)
     pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(pl)
 
     // Wire up JSON-driven PatternRenderer
     const pr = new PatternRenderer()
+    pr.setRenderStrategyRegistry(renderStrategyRegistry)
     pr.loadBlockSpecs(allSpecs)
     setPatternRenderer(pr)
 
     // Register hand-written lifters as fallback
-    registerCppLifters(lifter)
+    registerCppLifters(lifter, { transformRegistry, liftStrategyRegistry, renderStrategyRegistry })
 
     const parser = new CppParser()
     await parser.init()

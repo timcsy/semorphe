@@ -1,13 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { renderToBlocklyState } from '../../../src/core/projection/block-renderer'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { SemanticNode } from '../../../src/core/types'
+import { setupTestRenderer } from '../../helpers/setup-renderer'
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
   return { id: 'root', concept: 'program', properties: {}, children: { body } }
 }
 
 describe('block-renderer', () => {
+  beforeAll(() => {
+    setupTestRenderer()
+  })
   it('should render empty program', () => {
     const tree = makeProgram()
     const state = renderToBlocklyState(tree)

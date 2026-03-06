@@ -1,4 +1,5 @@
 import type { SemanticNode, BlockSpec, RenderMapping } from '../types'
+import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
 
 interface BlockState {
   type: string
@@ -26,6 +27,11 @@ function nextBlockId(): string {
  */
 export class PatternRenderer {
   private renderSpecs = new Map<string, RenderSpec>()
+  private renderStrategyRegistry: RenderStrategyRegistry | null = null
+
+  setRenderStrategyRegistry(registry: RenderStrategyRegistry): void {
+    this.renderStrategyRegistry = registry
+  }
 
   /** Reset block ID counter (for testing) */
   resetIds(): void {
@@ -47,9 +53,24 @@ export class PatternRenderer {
   }
 
   /** Render a SemanticNode to a BlockState. Returns null if no render spec found. */
-  render(node: SemanticNode): BlockState | null {
+  render(node: SemanticNode, renderCtx?: RenderContext): BlockState | null {
     const spec = this.renderSpecs.get(node.concept)
     if (!spec) return null
+
+    // Layer 3: renderStrategy takes priority over auto-derive mapping
+    if (spec.mapping.strategy && this.renderStrategyRegistry && renderCtx) {
+      const strategyFn = this.renderStrategyRegistry.get(spec.mapping.strategy)
+      if (strategyFn) {
+        try {
+          const result = strategyFn(node, renderCtx)
+          if (result) return result
+        } catch {
+          // Strategy threw — fall through to auto-derive
+        }
+      } else {
+        console.warn(`[PatternRenderer] renderStrategy "${spec.mapping.strategy}" not found in registry`)
+      }
+    }
 
     const block: BlockState = {
       type: spec.blockType,

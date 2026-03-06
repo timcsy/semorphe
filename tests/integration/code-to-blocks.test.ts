@@ -7,22 +7,23 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
-import { Lifter } from '../../src/core/lift/lifter'
+import { createTestLifter } from '../helpers/setup-lifter'
+import type { Lifter } from '../../src/core/lift/lifter'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
-import { registerCppLifters } from '../../src/languages/cpp/lifters'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
-import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset } from '../../src/core/types'
+import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../../src/core/registry'
+import { registerCppTransforms } from '../../src/languages/cpp/lifters/transforms'
+import { registerCppLiftStrategies } from '../../src/languages/cpp/lifters/strategies'
+import type { BlockSpec, LiftPattern, StylePreset } from '../../src/core/types'
 
 import universalBlocks from '../../src/blocks/universal.json'
 import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
 import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
 import specialBlocks from '../../src/languages/cpp/blocks/special.json'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
-import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 
 const style: StylePreset = {
   id: 'apcs',
@@ -47,9 +48,9 @@ beforeAll(async () => {
   const lang = await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`)
   tsParser.setLanguage(lang)
 
-  lifter = new Lifter()
+  lifter = createTestLifter()
 
-  // Wire up JSON-driven PatternLifter
+  // Wire up JSON-driven PatternLifter with block specs (overrides the one from createTestLifter)
   const allSpecs = [
     ...universalBlocks as unknown as BlockSpec[],
     ...basicBlocks as unknown as BlockSpec[],
@@ -57,13 +58,19 @@ beforeAll(async () => {
     ...specialBlocks as unknown as BlockSpec[],
   ]
 
+  const transformRegistry = new TransformRegistry()
+  registerCoreTransforms(transformRegistry)
+  registerCppTransforms(transformRegistry)
+  const liftStrategyRegistry = new LiftStrategyRegistry()
+  registerCppLiftStrategies(liftStrategyRegistry)
+
   const pl = new PatternLifter()
+  pl.setTransformRegistry(transformRegistry)
+  pl.setLiftStrategyRegistry(liftStrategyRegistry)
   pl.loadBlockSpecs(allSpecs)
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)
 
-  // Also register hand-written lifters as fallback
-  registerCppLifters(lifter)
   registerCppLanguage()
 
   // Wire up renderer (both local reference and global for renderToBlocklyState)

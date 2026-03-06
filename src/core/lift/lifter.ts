@@ -7,15 +7,9 @@ import { PatternLifter } from './pattern-lifter'
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
   private patternLifter: PatternLifter | null = null
-  private handWrittenPriority = new Set<string>()
 
   register(nodeType: string, lifter: NodeLifter): void {
     this.lifters.set(nodeType, lifter)
-  }
-
-  /** Mark node types where hand-written lifters should run before PatternLifter */
-  preferHandWritten(nodeTypes: string[]): void {
-    for (const t of nodeTypes) this.handWrittenPriority.add(t)
   }
 
   /** Set the JSON-driven pattern lifter engine */
@@ -35,51 +29,35 @@ export class Lifter {
       data: contextData,
     }
 
-    const useHandWrittenFirst = this.handWrittenPriority.has(node.type)
-
-    // Level 1a / 1b ordering depends on whether hand-written has priority
-    const tryPattern = (): SemanticNode | null => {
-      if (!this.patternLifter) return null
-      const r = this.patternLifter.tryLift(node, ctx)
-      if (r) {
-        if (!r.metadata) r.metadata = {}
-        if (!r.metadata.sourceRange) {
-          r.metadata.sourceRange = {
-            startLine: node.startPosition.row,
-            startColumn: node.startPosition.column,
-            endLine: node.endPosition.row,
-            endColumn: node.endPosition.column,
-          }
+    const addSourceRange = (r: SemanticNode): void => {
+      if (!r.metadata) r.metadata = {}
+      if (!r.metadata.sourceRange) {
+        r.metadata.sourceRange = {
+          startLine: node.startPosition.row,
+          startColumn: node.startPosition.column,
+          endLine: node.endPosition.row,
+          endColumn: node.endPosition.column,
         }
       }
-      return r
     }
 
-    const tryHandWritten = (): SemanticNode | null => {
-      const lifter = this.lifters.get(node.type)
-      if (!lifter) return null
-      const r = lifter(node, ctx)
-      if (r) {
-        if (!r.metadata) r.metadata = {}
-        if (!r.metadata.sourceRange) {
-          r.metadata.sourceRange = {
-            startLine: node.startPosition.row,
-            startColumn: node.startPosition.column,
-            endLine: node.endPosition.row,
-            endColumn: node.endPosition.column,
-          }
-        }
+    // Single pipeline: PatternLifter first, hand-written fallback
+    if (this.patternLifter) {
+      const patternResult = this.patternLifter.tryLift(node, ctx)
+      if (patternResult) {
+        addSourceRange(patternResult)
+        return patternResult
       }
-      return r
     }
 
-    const first = useHandWrittenFirst ? tryHandWritten : tryPattern
-    const second = useHandWrittenFirst ? tryPattern : tryHandWritten
-
-    const result1 = first()
-    if (result1) return result1
-    const result2 = second()
-    if (result2) return result2
+    const lifter = this.lifters.get(node.type)
+    if (lifter) {
+      const handWrittenResult = lifter(node, ctx)
+      if (handWrittenResult) {
+        addSourceRange(handWrittenResult)
+        return handWrittenResult
+      }
+    }
 
     // Level 3: check for partially-liftable structures
     if (node.namedChildren.length > 0) {

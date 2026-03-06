@@ -84,7 +84,7 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>): void
   })
 
   g.set('cpp_using_namespace', (node, ctx) => {
-    const ns = node.properties.namespace ?? 'std'
+    const ns = node.properties.ns ?? 'std'
     return `${indent(ctx)}using namespace ${ns};\n`
   })
 

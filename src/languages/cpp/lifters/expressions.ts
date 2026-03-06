@@ -16,16 +16,6 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return createNode('var_ref', { name: node.text })
   })
 
-  lifter.register('string_literal', (node) => {
-    const value = node.text.replace(/^"|"$/g, '')
-    return createNode('string_literal', { value })
-  })
-
-  lifter.register('char_literal', (node) => {
-    const value = node.text.replace(/^'|'$/g, '')
-    return createNode('string_literal', { value })
-  })
-
   lifter.register('true', () => createNode('var_ref', { name: 'true' }))
   lifter.register('false', () => createNode('var_ref', { name: 'false' }))
 

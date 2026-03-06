@@ -76,44 +76,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     return raw
   })
 
-  lifter.register('function_definition', (node, ctx) => {
-    const typeNode = node.childForFieldName('type')
-    const declaratorNode = node.childForFieldName('declarator')
-    const bodyNode = node.childForFieldName('body')
-
-    const returnType = typeNode?.text ?? 'void'
-    let name = 'f'
-    const params: string[] = []
-
-    if (declaratorNode) {
-      // function_declarator has name and parameters
-      const nameNode = declaratorNode.childForFieldName('declarator')
-      name = nameNode?.text ?? declaratorNode.namedChildren[0]?.text ?? 'f'
-
-      const paramList = declaratorNode.childForFieldName('parameters')
-      if (paramList) {
-        for (const param of paramList.namedChildren) {
-          if (param.type === 'parameter_declaration') {
-            params.push(param.text)
-          }
-        }
-      }
-    }
-
-    const body = extractBody(bodyNode, ctx)
-    return createNode('func_def', { name, return_type: returnType, params }, { body })
-  })
-
-  lifter.register('return_statement', (node, ctx) => {
-    const valueNodes = node.namedChildren
-    let value = null
-    if (valueNodes.length > 0) {
-      value = ctx.lift(valueNodes[0])
-    }
-    return createNode('return', {}, {
-      value: value ? [value] : [],
-    })
-  })
+  // function_definition now handled by liftStrategy "cpp:liftFunctionDef"
 
   lifter.register('break_statement', () => createNode('break', {}))
   lifter.register('continue_statement', () => createNode('continue', {}))

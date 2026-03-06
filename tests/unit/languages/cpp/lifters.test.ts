@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Lifter } from '../../../../src/core/lift/lifter'
-import { registerCppLifters } from '../../../../src/languages/cpp/lifters'
 import type { AstNode } from '../../../../src/core/lift/types'
+import { createTestLifter } from '../../../helpers/setup-lifter'
 
 function mockNode(type: string, text: string, children: AstNode[] = [], fields: Record<string, AstNode | null> = {}): AstNode {
   const namedChildren = children.filter(c => c.isNamed)
@@ -24,8 +24,7 @@ function unnamed(type: string, text: string): AstNode {
 let lifter: Lifter
 
 beforeAll(() => {
-  lifter = new Lifter()
-  registerCppLifters(lifter)
+  lifter = createTestLifter()
 })
 
 describe('C++ Declaration Lifters', () => {

@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { Lifter } from '../../src/core/lift/lifter'
-import { registerCppLifters } from '../../src/languages/cpp/lifters'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { createTestLifter } from '../helpers/setup-lifter'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
+import { setupTestRenderer } from '../helpers/setup-renderer'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -29,9 +30,9 @@ beforeAll(async () => {
   const lang = await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`)
   tsParser.setLanguage(lang)
 
-  lifter = new Lifter()
-  registerCppLifters(lifter)
+  lifter = createTestLifter()
   registerCppLanguage()
+  setupTestRenderer()
 })
 
 function liftCode(code: string) {

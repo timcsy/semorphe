@@ -20,23 +20,31 @@
     "astNodeType": "string_literal",
     "concept": { "conceptId": "string_literal" },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      { "semantic": "value", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
+    ]
+  },
+  {
+    "id": "cpp_char_literal",
+    "astNodeType": "char_literal",
+    "concept": { "conceptId": "string_literal" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
     ]
   },
   {
     "id": "cpp_true",
     "astNodeType": "true",
-    "concept": { "conceptId": "number_literal" },
+    "concept": { "conceptId": "var_ref" },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      { "semantic": "name", "ast": "$text", "extract": "text" }
     ]
   },
   {
     "id": "cpp_false",
     "astNodeType": "false",
-    "concept": { "conceptId": "number_literal" },
+    "concept": { "conceptId": "var_ref" },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      { "semantic": "name", "ast": "$text", "extract": "text" }
     ]
   },
   {
@@ -143,11 +151,25 @@
     "operatorDispatch": {
       "operatorField": "$operator",
       "routes": {
-        "!": "logic_not",
-        "-": "negate"
+        "!": "logic_not"
       },
       "fieldMappings": [
         { "semantic": "operand", "ast": "argument", "extract": "lift" }
+      ]
+    },
+    "priority": 5
+  },
+  {
+    "id": "cpp_unary_negate",
+    "astNodeType": "unary_expression",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "$operator",
+      "routes": {
+        "-": "negate"
+      },
+      "fieldMappings": [
+        { "semantic": "value", "ast": "argument", "extract": "lift" }
       ]
     },
     "priority": 5
@@ -176,7 +198,7 @@
     "astNodeType": "return_statement",
     "concept": { "conceptId": "return" },
     "fieldMappings": [
-      { "semantic": "value", "ast": "value", "extract": "lift" }
+      { "semantic": "value", "ast": "$namedChildren[0]", "extract": "lift" }
     ]
   },
   {
@@ -225,6 +247,7 @@
     "id": "cpp_function_definition",
     "astNodeType": "function_definition",
     "concept": { "conceptId": "func_def" },
+    "liftStrategy": "cpp:liftFunctionDef",
     "fieldMappings": [
       { "semantic": "body", "ast": "body", "extract": "liftBody" }
     ]
@@ -234,16 +257,24 @@
     "astNodeType": "comment",
     "concept": { "conceptId": "comment" },
     "fieldMappings": [
-      { "semantic": "text", "ast": "$text", "extract": "text" }
+      { "semantic": "text", "ast": "$text", "extract": "text", "transform": "cpp:stripComment" }
     ]
   },
   {
     "id": "cpp_preproc_include",
     "astNodeType": "preproc_include",
     "concept": { "conceptId": "cpp_include" },
+    "liftStrategy": "cpp:liftPreprocInclude",
     "fieldMappings": [
       { "semantic": "header", "ast": "path", "extract": "text" }
     ]
+  },
+  {
+    "id": "cpp_declaration",
+    "astNodeType": "declaration",
+    "concept": { "conceptId": "var_declare" },
+    "liftStrategy": "cpp:liftDeclaration",
+    "priority": 10
   },
   {
     "id": "cpp_preproc_def",

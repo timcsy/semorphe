@@ -17,6 +17,12 @@
       "nextStatement": "Statement",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderVarDeclare"
     }
   },
   {
@@ -348,6 +354,12 @@
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_U_IF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderIf"
     }
   },
   {
@@ -567,6 +579,12 @@
       "nextStatement": "Statement",
       "colour": "#FF6680",
       "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderFuncDef"
     }
   },
   {
@@ -599,6 +617,33 @@
       "output": "Expression",
       "colour": "#FF6680",
       "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderFuncCall"
+    }
+  },
+  {
+    "id": "u_func_call_expr",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "func_call_expr",
+      "abstractConcept": "func_call_expr",
+      "properties": ["name", "args"],
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "u_func_call_expr"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderFuncCall"
     }
   },
   {
@@ -654,6 +699,12 @@
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
       "tooltip": "%{BKY_U_PRINT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderPrint"
     }
   },
   {
@@ -699,6 +750,12 @@
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
       "tooltip": "%{BKY_U_INPUT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderInput"
     }
   },
   {

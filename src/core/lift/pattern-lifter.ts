@@ -1,6 +1,8 @@
 import type { SemanticNode, BlockSpec, LiftPattern, FieldMapping, AstPattern } from '../types'
 import type { AstNode, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
+import type { TransformRegistry } from '../registry/transform-registry'
+import type { LiftStrategyRegistry } from '../registry/lift-strategy-registry'
 
 interface PatternEntry {
   conceptId: string
@@ -15,6 +17,7 @@ interface PatternEntry {
   contextTransform?: AstPattern['contextTransform']
   multiResult?: AstPattern['multiResult']
   extract?: LiftPattern['extract']
+  liftStrategy?: string
 }
 
 /**
@@ -23,6 +26,16 @@ interface PatternEntry {
  */
 export class PatternLifter {
   private patterns = new Map<string, PatternEntry[]>()
+  private transformRegistry: TransformRegistry | null = null
+  private liftStrategyRegistry: LiftStrategyRegistry | null = null
+
+  setTransformRegistry(registry: TransformRegistry): void {
+    this.transformRegistry = registry
+  }
+
+  setLiftStrategyRegistry(registry: LiftStrategyRegistry): void {
+    this.liftStrategyRegistry = registry
+  }
 
   /** Load patterns from BlockSpec JSON definitions (simple/constrained patterns) */
   loadBlockSpecs(specs: BlockSpec[]): void {
@@ -64,6 +77,7 @@ export class PatternLifter {
         contextTransform: lp.contextTransform,
         multiResult: lp.multiResult,
         extract: lp.extract,
+        liftStrategy: lp.liftStrategy,
       }
 
       this.addPattern(lp.astNodeType, entry)
@@ -107,6 +121,21 @@ export class PatternLifter {
   }
 
   private tryMatch(node: AstNode, entry: PatternEntry, ctx: LiftContext): SemanticNode | null {
+    // Layer 3: liftStrategy takes priority over pattern matching
+    if (entry.liftStrategy && this.liftStrategyRegistry) {
+      const strategyFn = this.liftStrategyRegistry.get(entry.liftStrategy)
+      if (strategyFn) {
+        try {
+          const result = strategyFn(node, ctx)
+          if (result) return result
+        } catch {
+          // Strategy threw — treat as null, fall through to pattern matching
+        }
+      } else {
+        console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
+      }
+    }
+
     switch (entry.patternType) {
       case 'simple':
       case 'constrained':
@@ -381,13 +410,20 @@ export class PatternLifter {
     return true
   }
 
-  /** Resolve a field reference: 'fieldName' → childForFieldName, '$text' → node.text, '$operator' → first unnamed child */
+  /** Resolve a field reference: 'fieldName' → childForFieldName, '$text' → node.text, '$operator' → first unnamed child, '$namedChildren[N]' → positional access */
   private resolveAstField(node: AstNode, ast: string): string | null {
     if (ast === '$text') return node.text
     if (ast === '$operator') {
       // Find first unnamed child (operator token)
       const op = node.children.find(c => !c.isNamed)
       return op?.text ?? null
+    }
+    // $namedChildren[N] — positional access to named children
+    const namedChildMatch = ast.match(/^\$namedChildren\[(\d+)\]$/)
+    if (namedChildMatch) {
+      const idx = parseInt(namedChildMatch[1], 10)
+      const child = node.namedChildren[idx]
+      return child?.text ?? null
     }
     if (ast.startsWith('$')) {
       // Other special fields
@@ -420,15 +456,35 @@ export class PatternLifter {
   ): void {
     switch (fm.extract) {
       case 'text': {
-        const val = this.resolveAstField(node, fm.ast)
+        let val = this.resolveAstField(node, fm.ast)
+        // Layer 2: apply transform if specified
+        if (val !== null && fm.transform && this.transformRegistry) {
+          const transformFn = this.transformRegistry.get(fm.transform)
+          if (transformFn) {
+            try { val = transformFn(val) } catch { /* use original value */ }
+          } else {
+            console.warn(`[PatternLifter] transform "${fm.transform}" not found in registry`)
+          }
+        }
         if (val !== null) props[fm.semantic] = val
         break
       }
       case 'lift': {
-        const child = fm.ast.startsWith('$') ? null : node.childForFieldName(fm.ast)
+        // Support $namedChildren[N] for lift mode
+        const namedChildMatch = fm.ast.match(/^\$namedChildren\[(\d+)\]$/)
+        let child: AstNode | null = null
+        if (namedChildMatch) {
+          const idx = parseInt(namedChildMatch[1], 10)
+          child = node.namedChildren[idx] ?? null
+        } else if (!fm.ast.startsWith('$')) {
+          child = node.childForFieldName(fm.ast)
+        }
         if (child) {
           const lifted = ctx.lift(child)
           if (lifted) children[fm.semantic] = [lifted]
+          else children[fm.semantic] = []
+        } else {
+          children[fm.semantic] = []
         }
         break
       }
@@ -436,6 +492,8 @@ export class PatternLifter {
         const child = node.childForFieldName(fm.ast)
         if (child) {
           children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+        } else {
+          children[fm.semantic] = []
         }
         break
       }
@@ -447,6 +505,8 @@ export class PatternLifter {
           const child = node.childForFieldName(fm.ast)
           if (child) {
             children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+          } else {
+            children[fm.semantic] = []
           }
         }
         break

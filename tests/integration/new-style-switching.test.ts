@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { Lifter } from '../../src/core/lift/lifter'
-import { registerCppLifters } from '../../src/languages/cpp/lifters'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { createTestLifter } from '../helpers/setup-lifter'
 import { generateCode } from '../../src/core/projection/code-generator'
 import type { StylePreset } from '../../src/core/types'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
@@ -24,8 +24,7 @@ beforeAll(async () => {
   const lang = await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`)
   tsParser.setLanguage(lang)
 
-  lifter = new Lifter()
-  registerCppLifters(lifter)
+  lifter = createTestLifter()
   registerCppLanguage()
 })
 

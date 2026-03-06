@@ -107,6 +107,7 @@ export interface FieldMapping {
   semantic: string
   ast: string
   extract: 'text' | 'lift' | 'liftBody' | 'liftChildren'
+  transform?: string
 }
 
 export interface OperatorDispatchDef {
@@ -159,6 +160,7 @@ export interface RenderMapping {
   inputs: Record<string, string>
   statementInputs: Record<string, string>
   dynamicInputs?: DynamicInputDef
+  strategy?: string
 }
 
 export interface DynamicInputDef {
@@ -195,6 +197,7 @@ export interface LiftPattern {
   multiResult?: MultiResultDef
   extract?: Record<string, ExtractRule>
   priority?: number
+  liftStrategy?: string
 }
 
 // ─── Style ───
