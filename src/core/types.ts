@@ -24,6 +24,7 @@ export interface NodeMetadata {
   confidence?: 'high' | 'inferred'
   rawCode?: string
   sourceRange?: SourceRange
+  blockId?: string
 }
 
 export interface SourceRange {

@@ -86,7 +86,13 @@ export class Lifter {
     for (const node of nodes) {
       if (!node.isNamed) continue
       const lifted = this.liftWithContext(node, contextData)
-      if (lifted) results.push(lifted)
+      if (!lifted) continue
+      // Flatten _compound nodes (one AST node → multiple semantic nodes)
+      if (lifted.concept === '_compound') {
+        results.push(...(lifted.children.body ?? []))
+      } else {
+        results.push(lifted)
+      }
     }
     return results
   }

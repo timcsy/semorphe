@@ -1,5 +1,6 @@
 import type { SemanticNode, StylePreset } from '../core/types'
-import { generateCode } from '../core/projection/code-generator'
+import { generateCodeWithMapping } from '../core/projection/code-generator'
+import type { SourceMapping } from '../core/projection/code-generator'
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
 import type { BlocklyPanel } from './panels/blockly-panel'
@@ -18,6 +19,7 @@ export class SyncController {
   private lifter: Lifter | null = null
   private parser: CodeParser | null = null
   private syncing = false
+  private sourceMappings: SourceMapping[] = []
   private onErrorCallback: ((errors: SyncError[]) => void) | null = null
 
   constructor(
@@ -49,7 +51,8 @@ export class SyncController {
     try {
       const tree = this.blocklyPanel.extractSemanticTree()
       this.currentTree = tree
-      const code = generateCode(tree, this.language, this.style)
+      const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
+      this.sourceMappings = mappings
       this.monacoPanel.setCode(code)
     } finally {
       this.syncing = false
@@ -98,6 +101,18 @@ export class SyncController {
 
   isSyncing(): boolean {
     return this.syncing
+  }
+
+  getSourceMappings(): SourceMapping[] {
+    return [...this.sourceMappings]
+  }
+
+  getMappingForBlock(blockId: string): SourceMapping | null {
+    return this.sourceMappings.find(m => m.blockId === blockId) ?? null
+  }
+
+  getMappingForLine(line: number): SourceMapping | null {
+    return this.sourceMappings.find(m => line >= m.startLine && line <= m.endLine) ?? null
   }
 
   private findErrors(node: import('../core/lift/types').AstNode): SyncError[] {
