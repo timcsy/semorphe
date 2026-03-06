@@ -266,15 +266,16 @@
     "concept": { "conceptId": "cpp_include" },
     "liftStrategy": "cpp:liftPreprocInclude",
     "fieldMappings": [
-      { "semantic": "header", "ast": "path", "extract": "text" }
-    ]
+      { "semantic": "header", "ast": "path", "extract": "text", "transform": "stripAngleBrackets" }
+    ],
+    "priority": 15
   },
   {
     "id": "cpp_declaration",
     "astNodeType": "declaration",
     "concept": { "conceptId": "var_declare" },
     "liftStrategy": "cpp:liftDeclaration",
-    "priority": 10
+    "priority": 15
   },
   {
     "id": "cpp_preproc_def",
