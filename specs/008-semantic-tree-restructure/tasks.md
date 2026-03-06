@@ -18,10 +18,10 @@
 
 **Purpose**: 更新依賴、建立新的目錄結構
 
-- [ ] T001 更新 package.json：移除 codemirror 相關依賴，新增 monaco-editor
-- [ ] T002 建立新的目錄結構：src/core/、src/core/projection/、src/core/lift/、src/ui/layout/、src/ui/panels/、src/ui/toolbar/、src/languages/cpp/lifters/、src/languages/cpp/generators/、src/languages/cpp/styles/
-- [ ] T003 [P] 設定 Vite 支援 Monaco Editor（vite-plugin-monaco-editor 或 worker 設定）in vite.config.ts
-- [ ] T004 [P] 建立新的測試目錄結構：tests/unit/core/、tests/unit/languages/cpp/、tests/unit/ui/、tests/integration/、tests/fixtures/code-samples/、tests/fixtures/semantic-trees/
+- [x] T001 更新 package.json：移除 codemirror 相關依賴，新增 monaco-editor
+- [x] T002 建立新的目錄結構：src/core/、src/core/projection/、src/core/lift/、src/ui/layout/、src/ui/panels/、src/ui/toolbar/、src/languages/cpp/lifters/、src/languages/cpp/generators/、src/languages/cpp/styles/
+- [x] T003 [P] 設定 Vite 支援 Monaco Editor（vite-plugin-monaco-editor 或 worker 設定）in vite.config.ts
+- [x] T004 [P] 建立新的測試目錄結構：tests/unit/core/、tests/unit/languages/cpp/、tests/unit/ui/、tests/integration/、tests/fixtures/code-samples/、tests/fixtures/semantic-trees/
 
 ---
 

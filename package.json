@@ -20,9 +20,8 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@codemirror/lang-cpp": "^6.0.3",
     "blockly": "^12.4.1",
-    "codemirror": "^6.0.2",
+    "monaco-editor": "^0.52.2",
     "web-tree-sitter": "^0.26.6"
   }
 }
