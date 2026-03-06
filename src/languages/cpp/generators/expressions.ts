@@ -44,4 +44,10 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `-${val}`
   })
+
+  g.set('func_call_expr', (node, ctx) => {
+    const name = node.properties.name ?? 'f'
+    const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
+    return `${name}(${args.join(', ')})`
+  })
 }

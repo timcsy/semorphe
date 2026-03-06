@@ -26,7 +26,8 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   g.set('array_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'arr'
-    const size = node.properties.size ?? '10'
+    const sizeNodes = node.children.size ?? []
+    const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : (node.properties.size ?? '10')
     return `${indent(ctx)}${type} ${name}[${size}];\n`
   })
 

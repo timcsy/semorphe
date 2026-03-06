@@ -71,4 +71,26 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>): void
     }
     return `${indent(ctx)}return;\n`
   })
+
+  // C++ specific statements
+  g.set('cpp_include', (node, _ctx) => {
+    const header = node.properties.header ?? 'iostream'
+    return `#include <${header}>\n`
+  })
+
+  g.set('cpp_include_local', (node, _ctx) => {
+    const header = node.properties.header ?? 'myheader.h'
+    return `#include "${header}"\n`
+  })
+
+  g.set('cpp_using_namespace', (node, ctx) => {
+    const ns = node.properties.namespace ?? 'std'
+    return `${indent(ctx)}using namespace ${ns};\n`
+  })
+
+  g.set('cpp_define', (node, _ctx) => {
+    const name = node.properties.name ?? 'MACRO'
+    const value = node.properties.value ?? ''
+    return `#define ${name} ${value}\n`
+  })
 }
