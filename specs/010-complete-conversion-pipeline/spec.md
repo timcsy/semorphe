@@ -5,7 +5,30 @@
 **狀態**: 草稿
 **輸入**: 使用者描述：「補齊所有轉換管線的缺口：Code→Semantic lifter、Semantic→Blocks renderer、雙向轉換完整性」
 
+## 澄清
+
+### Session 2026-03-06
+
+- Q: P3 要求新積木只加 JSON。程式碼→積木方向目前無通用 astPattern lift 機制。應建立通用引擎還是手寫每個 lifter？ → A: 建立通用 astPattern lift 引擎，大部分積木透過 JSON pattern 覆蓋，僅對複雜構造（cout chain、for loop 型別推導）保留手寫 lifter。
+
 ## 使用者情境與測試
+
+### 使用者故事 0 — 通用 astPattern Lift 引擎 (優先級: P0)
+
+系統「必須」建立一個通用的 astPattern 驅動 lift 機制，使得積木 JSON 中定義了 `astPattern` 的積木能自動從 C++ 程式碼辨識並還原，而無需手寫 TypeScript lifter。這是 P3（開放擴充）的核心基礎設施。
+
+**為何此優先級**: 這是所有後續使用者故事的基礎。沒有此引擎，42 個缺失積木都需要手寫 lifter，違反 P3 且工作量巨大。建好此引擎後，大部分 L2 積木只需 JSON 即可完成雙向轉換。
+
+**獨立測試**: 選取一個已有 `astPattern` 的積木 JSON（如 `c_increment`），在不寫任何 TypeScript lifter 的情況下，驗證其程式碼能被 astPattern 引擎自動 lift 為正確的語義概念，再由 renderer 還原為正確的積木。
+
+**驗收情境**:
+
+1. **給定** 積木 JSON 中定義了 `astPattern: { nodeType: "update_expression", constraints: [...] }`，**當** 解析到匹配的 AST 節點，**則** 自動產生對應的語義概念節點，欄位從 AST 子節點提取。
+2. **給定** 積木 JSON 中定義了 `codeTemplate` 和 `astPattern`，**當** 從積木產生程式碼再解析回來，**則** astPattern 引擎能辨識並還原為同一積木類型。
+3. **給定** 一個 AST 節點同時匹配手寫 lifter 和 astPattern，**當** lift 時，**則** 手寫 lifter 優先（允許對複雜構造做精確控制）。
+4. **給定** 一個 AST 節點不匹配任何 astPattern 也無手寫 lifter，**當** lift 時，**則** 退化為 `c_raw_code`（P1 有損保留）。
+
+---
 
 ### 使用者故事 1 — L1 積木雙向轉換 (優先級: P1)
 
@@ -24,6 +47,8 @@
 5. **給定** `c_switch` 積木含巢狀 `c_case` 積木，**當** 來回轉換，**則** switch/case 結構保留。
 6. **給定** `c_char_literal` 積木（`'A'`），**當** 來回轉換，**則** 重建為 `c_char_literal`。
 7. **給定** `c_printf` 和 `c_scanf` 積木，**當** 來回轉換，**則** 兩者皆以正確的格式字串與參數重建。
+
+**實作策略（P3 對齊）**: L1 積木中，`c_for_loop`、`c_switch`/`c_case` 因有複雜的巢狀結構需要手寫 lifter；其餘（`c_increment`、`c_compound_assign`、`c_do_while`、`c_char_literal`、`c_printf`、`c_scanf`）優先透過 astPattern 引擎覆蓋。
 
 ---
 
@@ -44,6 +69,8 @@
 5. **給定** 容器操作積木（`cpp_vector_push_back`、`cpp_vector_size`、`cpp_method_call`、`cpp_method_call_expr`、`cpp_sort`），**當** 來回轉換，**則** 各自正確重建。
 6. **給定** 物件導向積木（`cpp_class_def`、`cpp_new`、`cpp_delete`、`cpp_template_function`），**當** 來回轉換，**則** 各自正確重建。
 7. **給定** 前處理器積木（`c_ifdef`、`c_ifndef`），**當** 來回轉換，**則** 各自正確重建。
+
+**實作策略（P3 對齊）**: L2 積木全部透過 astPattern 引擎覆蓋（它們的 AST 結構相對規律，適合 pattern matching）。不寫任何手寫 TypeScript lifter。
 
 ---
 
@@ -72,7 +99,7 @@
 
 ### 邊界情況
 
-- 無法辨識的 for 迴圈模式（如 `for(;;)`）應優雅退化為 `c_raw_code`。
+- 無法辨識的 for 迴圈模式（如 `for(;;)`）應優雅退化為 `c_raw_code`（P1 有損保留：結構化語義降低但原始文字不丟失）。
 - 巢狀結構（如 switch 嵌在 for 迴圈內）每一層都應正確轉換。
 - 不支援的構造（如模板特化）應退化為 raw code 而不當機。
 - 多重指標解參考（如 `**pp`）應被處理或優雅退化。
@@ -80,25 +107,29 @@
 - 空的 switch/case 主體應產生合法積木。
 - 所有複合賦值運算子（+=、-=、*=、/=、%=、&=、|=、^=、<<=、>>=）都應被處理。
 - 前置遞增（`++i`）和後置遞增（`i++`）都應被辨識。
+- 當 AST 節點同時匹配手寫 lifter 和 astPattern 時，手寫 lifter 優先。
+- 積木 JSON 中缺少 `astPattern` 的積木仍可透過手寫 lifter 或 `generateFromTemplate` 回退支援。
 
 ## 需求
 
 ### 功能需求
 
 - **FR-001**: 系統中定義的每個積木類型（universal.json、basic.json、advanced.json、special.json）都「必須」有完整的「積木→程式碼→積木」來回轉換路徑，產生的程式碼能解析回相同的積木類型。
-- **FR-002**: 「程式碼→語義」的 lifter「必須」處理以下目前缺失的 C++ AST 節點類型：`update_expression`（遞增/遞減）、`assignment_expression` 中的複合賦值運算子、`do_statement`、`switch_statement` 搭配 `case_statement`、一般形式的 `for_statement`、標準函式庫函式的 `call_expression`（printf、scanf、strlen、strcmp、strcpy、sort）、指標相關運算式、結構體/類別定義、new/delete 運算式。
-- **FR-003**: 「語義→積木」的 renderer「必須」為 lifter 能產生的每個語義概念提供映射條目，使 lift 後的程式碼對應到特定積木類型而非 raw code。
-- **FR-004**: 「積木→語義」的 extractor「必須」透過明確的 case handler 或模板式回退，正確提取所有積木類型的語義節點。
-- **FR-005**: 「語義→程式碼」的 generator「必須」為系統中的每個語義概念產生合法且可解析的 C++ 程式碼。
-- **FR-006**: 當 C++ 構造無法對應到特定積木類型時，系統「必須」優雅退化為 `c_raw_code` 或 `c_raw_expression`，保留原始程式碼文字。
-- **FR-007**: 系統「必須」維持向後相容。在此變更之前儲存的積木「必須」仍能載入並正常運作。
+- **FR-002**: 系統「必須」建立通用的 astPattern 驅動 lift 引擎，讀取積木 JSON 中的 `astPattern` 定義，自動將匹配的 AST 節點轉換為對應的語義概念。此引擎遵循 P3（開放擴充），使未來新增積木只需 JSON 定義即可支援雙向轉換。
+- **FR-003**: 對於 astPattern 無法表達的複雜構造（如 cout/cin chain、for loop 計數模式偵測、switch/case 巢狀結構），系統「必須」保留手寫 lifter 機制，且手寫 lifter 的優先級高於 astPattern 匹配。
+- **FR-004**: 「語義→積木」的 renderer「必須」為 lifter 能產生的每個語義概念提供映射條目（CONCEPT_TO_BLOCK），使 lift 後的程式碼對應到特定積木類型而非 raw code。
+- **FR-005**: 「積木→語義」的 extractor「必須」透過明確的 case handler 或 `generateFromTemplate` 模板式回退，正確提取所有積木類型的語義節點。
+- **FR-006**: 「語義→程式碼」的 generator「必須」為系統中的每個語義概念產生合法且可解析的 C++ 程式碼。對於透過 astPattern 引擎處理的概念，可由 codeTemplate 驅動生成。
+- **FR-007**: 當 C++ 構造無法對應到特定積木類型時，系統「必須」優雅退化為 `c_raw_code` 或 `c_raw_expression`，保留原始程式碼文字（P1 有損保留保證）。
+- **FR-008**: 系統「必須」維持向後相容。在此變更之前儲存的積木「必須」仍能載入並正常運作。
 
 ### 關鍵實體
 
-- **語義概念 (Semantic Concept)**: 程式設計構造的語言無關表示（如 `cpp_increment`、`cpp_compound_assign`）。每個概念有屬性、子節點，並對應到一個積木類型。
-- **Lifter 註冊**: tree-sitter AST 節點類型到產生語義節點的函式之間的映射。每個在學生程式碼中可能出現的 C++ AST 節點類型都需要一個註冊。
-- **積木渲染器條目**: 語義概念到積木類型及渲染邏輯之間的映射。每個新概念需要一個條目。
-- **程式碼產生器條目**: 語義概念到產生合法 C++ 原始碼的函式之間的映射。每個新概念需要一個 generator。
+- **語義概念 (Semantic Concept)**: 程式設計構造的語言無關表示（P2 概念代數）。分為三層：Layer 0 Universal（變數、迴圈、if、函式）、Layer 1 Lang-Core（指標、struct、switch、for）、Layer 2 Lang-Library（vector、printf、sort）。每個概念有屬性、子節點，並對應到一個積木類型。
+- **astPattern 引擎**: 通用的 AST→語義 lift 機制（P3 開放擴充的核心）。讀取積木 JSON 中的 `astPattern` 定義，自動匹配 tree-sitter AST 節點並產生語義概念。
+- **手寫 Lifter**: 針對複雜構造的 TypeScript lifter 註冊。優先級高於 astPattern。用於 cout/cin chain、for loop 計數偵測、switch/case 等無法用簡單 pattern 表達的構造。
+- **積木渲染器 (Block Renderer)**: 語義概念到積木類型及渲染邏輯之間的映射（CONCEPT_TO_BLOCK + renderBlock switch）。每個新概念需要一個條目。
+- **程式碼產生器 (Code Generator)**: 語義概念到 C++ 原始碼的映射。手寫 generator 或 codeTemplate 驅動。
 
 ## 成功標準
 
@@ -108,10 +139,11 @@
 - **SC-002**: 至少 90% 入門程式設計課程常用的 C++ 構造（變數、賦值、算術、比較、if/else、迴圈、函式、陣列、I/O、遞增、複合賦值、switch、for 迴圈、do-while）能從手寫程式碼轉換為特定積木類型。
 - **SC-003**: 所有既有測試在變更後繼續通過（零回歸）。
 - **SC-004**: 每個新增的語義概念至少有一個單元測試驗證其來回轉換。
+- **SC-005**: 新增一個「測試用積木」僅透過 JSON 定義（含 astPattern + codeTemplate），無需任何 TypeScript 程式碼，即可完成雙向轉換——驗證 P3 開放擴充目標達成。
 
 ## 假設
 
 - tree-sitter C++ 文法能正確將所有目標構造解析為可辨識的 AST 節點類型。
-- JSON 檔案中現有的積木定義具有正確的 `codeTemplate` 模式，能產生可解析的 C++ 程式碼。
-- 新增語義概念遵循 `cpp_*` 命名慣例（如 `cpp_increment`、`cpp_compound_assign`、`cpp_do_while`、`cpp_switch`、`cpp_case`）。
-- 對於精確語義建模不切實際的進階 L2 積木，可接受使用「半結構化」方法（從 codeTemplate 提取欄位），只要來回轉換能正常運作。
+- JSON 檔案中現有的積木定義具有正確的 `codeTemplate` 模式，能產生可解析的 C++ 程式碼。若部分積木的 `astPattern` 缺失或不正確，需在此功能中補齊。
+- 新增語義概念遵循 P2 概念代數的分層命名：Layer 1 用 `cpp_*`（如 `cpp_increment`、`cpp_do_while`），Layer 2 用 `cpp_*` 加模組前綴（如 `cpp_vector_declare`、`cpp_sort`）。
+- astPattern 引擎的匹配能力足以覆蓋大部分 L2 積木（結構相對規律的 call_expression、declaration 等），複雜結構由手寫 lifter 處理。

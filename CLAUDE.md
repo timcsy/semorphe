@@ -31,7 +31,6 @@ TypeScript 5.x: Follow standard conventions
 ## Recent Changes
 - 009-restore-legacy-features: Added TypeScript 5.x + Blockly 12.4.1, Monaco Editor, web-tree-sitter 0.26.6, Vite
 - 008-semantic-tree-restructure: Added TypeScript 5.x + Blockly 12.x, Monaco Editor (最新穩定版), web-tree-sitter 0.26.x, Vite 7.x
-- 006-arch-four-dimensions: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, CodeMirror 6.0.2, Vite
 
 
 <!-- MANUAL ADDITIONS START -->
