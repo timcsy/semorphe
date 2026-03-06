@@ -4,6 +4,12 @@
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_raw_code",
+      "abstractConcept": "raw_code",
+      "properties": ["code"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_raw_code",
       "message0": "%{BKY_C_RAW_CODE_MSG0}",
@@ -34,6 +40,12 @@
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_raw_expression",
+      "abstractConcept": "raw_expression",
+      "properties": ["code"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "c_raw_expression",
       "message0": "%{BKY_C_RAW_EXPRESSION_MSG0}",
@@ -63,6 +75,12 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_include",
+      "abstractConcept": "include",
+      "properties": ["header"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_include",
       "message0": "%{BKY_C_INCLUDE_MSG0}",
@@ -174,6 +192,12 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_include_local",
+      "abstractConcept": "include_local",
+      "properties": ["header"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_include_local",
       "message0": "%{BKY_C_INCLUDE_LOCAL_MSG0}",
@@ -209,6 +233,12 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_define",
+      "abstractConcept": "define",
+      "properties": ["name", "value"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_define",
       "message0": "%{BKY_C_DEFINE_MSG0}",
@@ -244,6 +274,13 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_ifdef",
+      "abstractConcept": "ifdef",
+      "properties": ["condition"],
+      "children": [{ "body": "statements" }],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_ifdef",
       "message0": "%{BKY_C_IFDEF_MSG0}",
@@ -283,6 +320,13 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_ifndef",
+      "abstractConcept": "ifndef",
+      "properties": ["condition"],
+      "children": [{ "body": "statements" }],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_ifndef",
       "message0": "%{BKY_C_IFNDEF_MSG0}",
@@ -322,6 +366,12 @@
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "comment",
+      "abstractConcept": "comment",
+      "properties": ["text"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_comment_line",
       "message0": "%{BKY_C_COMMENT_LINE_MSG0}",
@@ -352,6 +402,12 @@
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_using_namespace",
+      "abstractConcept": "using_namespace",
+      "properties": ["ns"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_using_namespace",
       "message0": "%{BKY_C_USING_NAMESPACE_MSG0}",

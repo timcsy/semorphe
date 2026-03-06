@@ -1,4 +1,5 @@
 import type { SemanticNode, StylePreset } from '../types'
+import { TemplateGenerator } from './template-generator'
 
 export type NodeGenerator = (node: SemanticNode, ctx: GeneratorContext) => string
 
@@ -15,6 +16,7 @@ export interface GeneratorContext {
   style: StylePreset
   language: string
   generators: Map<string, NodeGenerator>
+  templateGenerator?: TemplateGenerator
   _mappings?: SourceMapping[]
   _lineCount?: number
 }
@@ -22,6 +24,12 @@ export interface GeneratorContext {
 // ─── Language module registry ───
 
 const languageFactories = new Map<string, LanguageGeneratorFactory>()
+let globalTemplateGenerator: TemplateGenerator | null = null
+
+/** Set the JSON-driven template generator engine */
+export function setTemplateGenerator(tg: TemplateGenerator): void {
+  globalTemplateGenerator = tg
+}
 
 export function registerLanguage(language: string, factory: LanguageGeneratorFactory): void {
   languageFactories.set(language, factory)
@@ -59,20 +67,30 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
   }
 
   let result: string
-  const generator = ctx.generators.get(node.concept)
-  if (generator) {
-    result = generator(node, ctx)
-  } else if (node.concept === 'raw_code') {
-    const raw = node.metadata?.rawCode ?? node.properties.code ?? ''
-    const indented = raw.startsWith('#') ? raw : indent(ctx) + raw  // Don't indent preprocessor directives
-    result = indented.endsWith('\n') ? indented : indented + '\n'
-  } else if (node.concept === 'unresolved') {
-    const raw = node.metadata?.rawCode ?? ''
-    result = raw.endsWith('\n') ? raw : raw + '\n'
-  } else if (node.concept === 'comment') {
-    result = `${indent(ctx)}// ${node.properties.text}\n`
+
+  // Try JSON-driven template generator first
+  const tg = ctx.templateGenerator ?? globalTemplateGenerator
+  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null
+
+  if (templateResult !== null) {
+    result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
   } else {
-    result = `/* unknown concept: ${node.concept} */\n`
+    // Fall back to hand-written generators
+    const generator = ctx.generators.get(node.concept)
+    if (generator) {
+      result = generator(node, ctx)
+    } else if (node.concept === 'raw_code') {
+      const raw = node.metadata?.rawCode ?? node.properties.code ?? ''
+      const indented = raw.startsWith('#') ? raw : indent(ctx) + raw  // Don't indent preprocessor directives
+      result = indented.endsWith('\n') ? indented : indented + '\n'
+    } else if (node.concept === 'unresolved') {
+      const raw = node.metadata?.rawCode ?? ''
+      result = raw.endsWith('\n') ? raw : raw + '\n'
+    } else if (node.concept === 'comment') {
+      result = `${indent(ctx)}// ${node.properties.text}\n`
+    } else {
+      result = `/* unknown concept: ${node.concept} */\n`
+    }
   }
 
   // Update line count
@@ -101,6 +119,11 @@ function countNewlines(s: string): number {
 }
 
 export function generateExpression(node: SemanticNode, ctx: GeneratorContext): string {
+  // Try JSON-driven template generator first
+  const tg = ctx.templateGenerator ?? globalTemplateGenerator
+  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null
+  if (templateResult !== null) return templateResult
+
   const generator = ctx.generators.get(node.concept)
   if (generator) return generator(node, ctx)
   if (node.concept === 'raw_code') return node.metadata?.rawCode ?? ''

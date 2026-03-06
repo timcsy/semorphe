@@ -1,0 +1,257 @@
+[
+  {
+    "id": "cpp_number_literal",
+    "astNodeType": "number_literal",
+    "concept": { "conceptId": "number_literal" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_identifier",
+    "astNodeType": "identifier",
+    "concept": { "conceptId": "var_ref" },
+    "fieldMappings": [
+      { "semantic": "name", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_string_literal",
+    "astNodeType": "string_literal",
+    "concept": { "conceptId": "string_literal" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_true",
+    "astNodeType": "true",
+    "concept": { "conceptId": "number_literal" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_false",
+    "astNodeType": "false",
+    "concept": { "conceptId": "number_literal" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_break",
+    "astNodeType": "break_statement",
+    "concept": { "conceptId": "break" }
+  },
+  {
+    "id": "cpp_continue",
+    "astNodeType": "continue_statement",
+    "concept": { "conceptId": "continue" }
+  },
+  {
+    "id": "cpp_unwrap_parens",
+    "astNodeType": "parenthesized_expression",
+    "patternType": "unwrap",
+    "unwrapChild": 0
+  },
+  {
+    "id": "cpp_unwrap_condition_clause",
+    "astNodeType": "condition_clause",
+    "patternType": "unwrap",
+    "unwrapChild": 0
+  },
+  {
+    "id": "cpp_binary_dispatch",
+    "astNodeType": "binary_expression",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "$operator",
+      "routes": {
+        "+": "arithmetic",
+        "-": "arithmetic",
+        "*": "arithmetic",
+        "/": "arithmetic",
+        "%": "arithmetic",
+        ">": "compare",
+        "<": "compare",
+        ">=": "compare",
+        "<=": "compare",
+        "==": "compare",
+        "!=": "compare",
+        "&&": "logic",
+        "||": "logic"
+      },
+      "fieldMappings": [
+        { "semantic": "operator", "ast": "$operator", "extract": "text" },
+        { "semantic": "left", "ast": "left", "extract": "lift" },
+        { "semantic": "right", "ast": "right", "extract": "lift" }
+      ]
+    },
+    "priority": 5
+  },
+  {
+    "id": "cpp_cout_chain",
+    "astNodeType": "binary_expression",
+    "patternType": "chain",
+    "concept": { "conceptId": "print" },
+    "chain": {
+      "operator": "<<",
+      "direction": "left",
+      "rootMatch": { "text": "cout" },
+      "collectField": "right"
+    },
+    "priority": 15
+  },
+  {
+    "id": "cpp_cin_chain",
+    "astNodeType": "binary_expression",
+    "patternType": "chain",
+    "concept": { "conceptId": "input" },
+    "chain": {
+      "operator": ">>",
+      "direction": "left",
+      "rootMatch": { "text": "cin" },
+      "collectField": "right"
+    },
+    "priority": 15
+  },
+  {
+    "id": "cpp_count_for",
+    "astNodeType": "for_statement",
+    "patternType": "composite",
+    "concept": { "conceptId": "count_loop" },
+    "composite": {
+      "checks": [
+        { "field": "initializer", "typeIs": "declaration" },
+        { "field": "condition", "typeIs": "binary_expression" },
+        { "field": "update", "typeIs": "update_expression" }
+      ],
+      "extract": {
+        "var_name": { "source": "path", "path": "initializer.init_declarator.declarator" },
+        "from": { "source": "lift", "path": "initializer.init_declarator.value" },
+        "to": { "source": "lift", "path": "condition.right" },
+        "body": { "source": "liftBody", "path": "body" }
+      }
+    },
+    "priority": 10
+  },
+  {
+    "id": "cpp_unary_not",
+    "astNodeType": "unary_expression",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "$operator",
+      "routes": {
+        "!": "logic_not",
+        "-": "negate"
+      },
+      "fieldMappings": [
+        { "semantic": "operand", "ast": "argument", "extract": "lift" }
+      ]
+    },
+    "priority": 5
+  },
+  {
+    "id": "cpp_if_statement",
+    "astNodeType": "if_statement",
+    "concept": { "conceptId": "if" },
+    "fieldMappings": [
+      { "semantic": "condition", "ast": "condition", "extract": "lift" },
+      { "semantic": "then_body", "ast": "consequence", "extract": "liftBody" },
+      { "semantic": "else_body", "ast": "alternative", "extract": "liftBody" }
+    ]
+  },
+  {
+    "id": "cpp_while_statement",
+    "astNodeType": "while_statement",
+    "concept": { "conceptId": "while_loop" },
+    "fieldMappings": [
+      { "semantic": "condition", "ast": "condition", "extract": "lift" },
+      { "semantic": "body", "ast": "body", "extract": "liftBody" }
+    ]
+  },
+  {
+    "id": "cpp_return_statement",
+    "astNodeType": "return_statement",
+    "concept": { "conceptId": "return" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "value", "extract": "lift" }
+    ]
+  },
+  {
+    "id": "cpp_expression_statement",
+    "astNodeType": "expression_statement",
+    "patternType": "unwrap",
+    "unwrapChild": 0,
+    "priority": 1
+  },
+  {
+    "id": "cpp_parameter_pack_expansion",
+    "astNodeType": "parameter_pack_expansion",
+    "patternType": "unwrap",
+    "unwrapChild": 0,
+    "priority": 1
+  },
+  {
+    "id": "cpp_subscript_expression",
+    "astNodeType": "subscript_expression",
+    "concept": { "conceptId": "array_access" },
+    "fieldMappings": [
+      { "semantic": "name", "ast": "argument", "extract": "text" },
+      { "semantic": "index", "ast": "index", "extract": "lift" }
+    ]
+  },
+  {
+    "id": "cpp_assignment_expression",
+    "astNodeType": "assignment_expression",
+    "concept": { "conceptId": "var_assign" },
+    "constraints": [{ "field": "operator", "text": "=" }],
+    "fieldMappings": [
+      { "semantic": "name", "ast": "left", "extract": "text" },
+      { "semantic": "value", "ast": "right", "extract": "lift" }
+    ],
+    "priority": 3
+  },
+  {
+    "id": "cpp_translation_unit",
+    "astNodeType": "translation_unit",
+    "concept": { "conceptId": "program" },
+    "fieldMappings": [
+      { "semantic": "body", "ast": "$text", "extract": "liftChildren" }
+    ]
+  },
+  {
+    "id": "cpp_function_definition",
+    "astNodeType": "function_definition",
+    "concept": { "conceptId": "func_def" },
+    "fieldMappings": [
+      { "semantic": "body", "ast": "body", "extract": "liftBody" }
+    ]
+  },
+  {
+    "id": "cpp_comment",
+    "astNodeType": "comment",
+    "concept": { "conceptId": "comment" },
+    "fieldMappings": [
+      { "semantic": "text", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_preproc_include",
+    "astNodeType": "preproc_include",
+    "concept": { "conceptId": "cpp_include" },
+    "fieldMappings": [
+      { "semantic": "header", "ast": "path", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_preproc_def",
+    "astNodeType": "preproc_def",
+    "concept": { "conceptId": "cpp_define" },
+    "fieldMappings": [
+      { "semantic": "name", "ast": "name", "extract": "text" },
+      { "semantic": "value", "ast": "value", "extract": "text" }
+    ]
+  }
+]

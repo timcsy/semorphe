@@ -14,7 +14,14 @@ export function registerIOGenerators(g: Map<string, NodeGenerator>, style: Style
   })
 
   g.set('input', (node, ctx) => {
-    const vars = (node.properties.variables as string[] | undefined) ?? [node.properties.variable ?? 'x']
+    // Support both: children.values (var_ref nodes) and properties.variable (legacy)
+    const valueNodes = node.children.values ?? []
+    let vars: string[]
+    if (valueNodes.length > 0) {
+      vars = valueNodes.map(v => generateExpression(v, ctx))
+    } else {
+      vars = (node.properties.variables as string[] | undefined) ?? [node.properties.variable ?? 'x']
+    }
     if (style.io_style === 'cout') {
       return `${indent(ctx)}cin >> ${vars.join(' >> ')};\n`
     }

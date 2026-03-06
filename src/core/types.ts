@@ -67,11 +67,15 @@ export interface BlockSpec {
   blockDef: Record<string, unknown>
   codeTemplate: CodeTemplate
   astPattern: AstPattern
+  renderMapping?: RenderMapping
 }
 
 export interface ConceptMapping {
   conceptId: string
   abstractConcept?: string
+  properties?: string[]
+  children?: Record<string, string>
+  role?: 'statement' | 'expression' | 'both'
 }
 
 export interface CodeTemplate {
@@ -83,12 +87,114 @@ export interface CodeTemplate {
 export interface AstPattern {
   nodeType: string
   constraints: AstConstraint[]
+  patternType?: 'simple' | 'operatorDispatch' | 'chain' | 'composite' | 'unwrap' | 'contextTransform' | 'multiResult'
+  fieldMappings?: FieldMapping[]
+  operatorDispatch?: OperatorDispatchDef
+  chain?: ChainDef
+  composite?: CompositeDef
+  unwrapChild?: number | string
+  contextTransform?: ContextTransformDef
+  multiResult?: MultiResultDef
 }
 
 export interface AstConstraint {
   field: string
   text?: string
   nodeType?: string
+}
+
+export interface FieldMapping {
+  semantic: string
+  ast: string
+  extract: 'text' | 'lift' | 'liftBody' | 'liftChildren'
+}
+
+export interface OperatorDispatchDef {
+  operatorField: string
+  routes: Record<string, string>
+  fieldMappings?: FieldMapping[]
+}
+
+export interface ChainDef {
+  operator: string
+  direction: 'left' | 'right'
+  rootMatch: { text: string }
+  collectField: string
+  specialNodes?: Record<string, string>
+}
+
+export interface CompositeDef {
+  checks: Array<{
+    field: string
+    typeIs?: string
+    operatorIn?: string[]
+  }>
+  extract: Record<string, ExtractRule>
+}
+
+export interface ContextTransformDef {
+  liftChild: number | string
+  transformRules: Array<{
+    fromConcept: string
+    toConcept: string
+  }>
+}
+
+export interface MultiResultDef {
+  iterateOver: string
+  perItemPatterns?: Record<string, ExtractRule>
+  wrapInCompound: boolean
+}
+
+export interface ExtractRule {
+  source: 'text' | 'lift' | 'liftBody' | 'path' | 'nodeText' | 'operator'
+  path?: string
+  field?: string
+}
+
+// ─── Render Mapping (JSON-driven) ───
+
+export interface RenderMapping {
+  fields: Record<string, string>
+  inputs: Record<string, string>
+  statementInputs: Record<string, string>
+  dynamicInputs?: DynamicInputDef
+}
+
+export interface DynamicInputDef {
+  semanticChild: string
+  inputPrefix: string
+  countProperty?: string
+}
+
+// ─── Universal Template (Language-specific code templates for universal concepts) ───
+
+export interface UniversalTemplate {
+  conceptId: string
+  pattern?: string
+  styleVariants?: Record<string, CodeTemplate>
+  styleKey?: string
+  order: number
+  imports?: string[]
+}
+
+// ─── Lift Pattern (JSON-driven AST→Semantic patterns) ───
+
+export interface LiftPattern {
+  id: string
+  astNodeType: string
+  concept?: { conceptId: string }
+  patternType?: AstPattern['patternType']
+  constraints?: AstConstraint[]
+  fieldMappings?: FieldMapping[]
+  operatorDispatch?: OperatorDispatchDef
+  chain?: ChainDef
+  composite?: CompositeDef
+  unwrapChild?: number | string
+  contextTransform?: ContextTransformDef
+  multiResult?: MultiResultDef
+  extract?: Record<string, ExtractRule>
+  priority?: number
 }
 
 // ─── Style ───

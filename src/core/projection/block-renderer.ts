@@ -1,4 +1,5 @@
 import type { SemanticNode } from '../types'
+import { PatternRenderer } from './pattern-renderer'
 
 interface BlockState {
   type: string
@@ -16,6 +17,13 @@ interface WorkspaceBlockState {
     languageVersion: number
     blocks: BlockState[]
   }
+}
+
+let globalPatternRenderer: PatternRenderer | null = null
+
+/** Set the JSON-driven pattern renderer engine */
+export function setPatternRenderer(pr: PatternRenderer): void {
+  globalPatternRenderer = pr
 }
 
 const CONCEPT_TO_BLOCK: Record<string, string> = {
@@ -103,7 +111,19 @@ function renderStatementChain(nodes: SemanticNode[]): BlockState | null {
   return first
 }
 
+// Concepts that need special handling in the switch-case below
+// (e.g., dynamic fields like NAME_0, NAME_1 or extraState)
+const SWITCH_CASE_CONCEPTS = new Set([
+  'input', 'var_declare', 'print', 'func_def', 'func_call', 'func_call_expr', 'if',
+])
+
 function renderBlock(node: SemanticNode): BlockState | null {
+  // Try JSON-driven pattern renderer first (skip concepts with special switch-case logic)
+  if (globalPatternRenderer && !SWITCH_CASE_CONCEPTS.has(node.concept)) {
+    const patternResult = globalPatternRenderer.render(node)
+    if (patternResult) return patternResult
+  }
+
   const blockType = CONCEPT_TO_BLOCK[node.concept]
 
   if (!blockType) {
@@ -185,9 +205,33 @@ function renderBlock(node: SemanticNode): BlockState | null {
     case 'print':
       renderPrint(node, block)
       break
-    case 'input':
-      block.fields.NAME_0 = node.properties.variable ?? 'x'
+    case 'input': {
+      // Handle chain-lifted cin (children.values contains var_ref nodes)
+      const inputValues = node.children.values ?? []
+      if (inputValues.length > 0) {
+        for (let vi = 0; vi < inputValues.length; vi++) {
+          block.fields[`NAME_${vi}`] = inputValues[vi].properties.name ?? 'x'
+        }
+        if (inputValues.length > 1) {
+          block.extraState = { varCount: inputValues.length }
+        }
+      } else {
+        // Single variable from properties
+        block.fields.NAME_0 = node.properties.variable ?? 'x'
+        // Handle multiple variables stored as comma-separated or array
+        const vars = node.properties.variables
+        if (vars) {
+          const varList = typeof vars === 'string' ? vars.split(',') : (Array.isArray(vars) ? vars : [])
+          for (let vi = 0; vi < varList.length; vi++) {
+            block.fields[`NAME_${vi}`] = varList[vi]
+          }
+          if (varList.length > 1) {
+            block.extraState = { varCount: varList.length }
+          }
+        }
+      }
       break
+    }
     case 'array_declare': {
       block.fields.TYPE = node.properties.type ?? 'int'
       block.fields.NAME = node.properties.name ?? 'arr'
@@ -369,5 +413,10 @@ function renderStatementChild(node: SemanticNode, childName: string, block: Bloc
 }
 
 function renderExpression(node: SemanticNode): BlockState | null {
-  return renderBlock(node)
+  const block = renderBlock(node)
+  // If it's a raw_code (statement) block in expression context, use c_raw_expression instead
+  if (block && block.type === 'c_raw_code') {
+    return { ...block, type: 'c_raw_expression' }
+  }
+  return block
 }

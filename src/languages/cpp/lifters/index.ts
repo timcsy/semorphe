@@ -6,6 +6,18 @@ import { registerStatementLifters } from './statements'
 import { registerIOLifters } from './io'
 
 export function registerCppLifters(lifter: Lifter): void {
+  // These node types have hand-written lifters that handle complex logic
+  // (conditional concepts, deep path extraction) better than JSON patterns
+  lifter.preferHandWritten([
+    'preproc_include',     // system vs local include distinction
+    'function_definition', // name/return_type/params extraction from nested declarator
+    'comment',             // strips // prefix
+    'declaration',         // multi-variable + array declarations
+    'return_statement',    // tree-sitter has no 'value' field, needs namedChildren[0]
+    'string_literal',      // strips surrounding quotes
+    'char_literal',        // strips surrounding quotes
+  ])
+
   registerStatementLifters(lifter)
   registerDeclarationLifters(lifter)
   registerExpressionLifters(lifter)

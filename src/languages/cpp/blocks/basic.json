@@ -4,6 +4,12 @@
     "language": "cpp",
     "category": "values",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_char_literal",
+      "abstractConcept": "char_literal",
+      "properties": ["char"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "c_char_literal",
       "message0": "%{BKY_C_CHAR_LITERAL_MSG0}",
@@ -25,7 +31,10 @@
     },
     "astPattern": {
       "nodeType": "char_literal",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "char", "ast": "$text", "extract": "text" }
+      ]
     }
   },
   {
@@ -33,6 +42,12 @@
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_increment",
+      "abstractConcept": "increment",
+      "properties": ["name", "operator"],
+      "role": "both"
+    },
     "blockDef": {
       "type": "c_increment",
       "message0": "%{BKY_C_INCREMENT_MSG0}",
@@ -46,14 +61,8 @@
           "type": "field_dropdown",
           "name": "OP",
           "options": [
-            [
-              "%{BKY_C_INCREMENT_OP_INCREMENT}",
-              "++"
-            ],
-            [
-              "%{BKY_C_INCREMENT_OP_DECREMENT}",
-              "--"
-            ]
+            ["%{BKY_C_INCREMENT_OP_INCREMENT}", "++"],
+            ["%{BKY_C_INCREMENT_OP_DECREMENT}", "--"]
           ]
         }
       ],
@@ -68,7 +77,11 @@
     },
     "astPattern": {
       "nodeType": "update_expression",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "name", "ast": "argument", "extract": "text" },
+        { "semantic": "operator", "ast": "$operator", "extract": "text" }
+      ]
     }
   },
   {
@@ -76,46 +89,30 @@
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_compound_assign",
+      "abstractConcept": "compound_assign",
+      "properties": ["name", "operator"],
+      "children": { "value": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_compound_assign",
       "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
       "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        },
+        { "type": "field_input", "name": "NAME", "text": "x" },
         {
           "type": "field_dropdown",
           "name": "OP",
           "options": [
-            [
-              "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
-              "+="
-            ],
-            [
-              "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
-              "-="
-            ],
-            [
-              "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
-              "*="
-            ],
-            [
-              "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
-              "/="
-            ],
-            [
-              "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
-              "%="
-            ]
+            ["%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}", "+="],
+            ["%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}", "-="],
+            ["%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}", "*="],
+            ["%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}", "/="],
+            ["%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}", "%="]
           ]
         },
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -129,7 +126,12 @@
     },
     "astPattern": {
       "nodeType": "assignment_expression",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "name", "ast": "left", "extract": "text" },
+        { "semantic": "operator", "ast": "$operator", "extract": "text" },
+        { "semantic": "value", "ast": "right", "extract": "lift" }
+      ]
     }
   },
   {
@@ -137,23 +139,21 @@
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_switch",
+      "abstractConcept": "switch",
+      "children": { "expr": "expression", "cases": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_switch",
       "message0": "%{BKY_C_SWITCH_MSG0}",
       "args0": [
-        {
-          "type": "input_value",
-          "name": "EXPR",
-          "check": "Expression"
-        }
+        { "type": "input_value", "name": "EXPR", "check": "Expression" }
       ],
       "message1": "%1",
       "args1": [
-        {
-          "type": "input_statement",
-          "name": "CASES",
-          "check": "Statement"
-        }
+        { "type": "input_statement", "name": "CASES", "check": "Statement" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -167,7 +167,11 @@
     },
     "astPattern": {
       "nodeType": "switch_statement",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "expr", "ast": "condition", "extract": "lift" },
+        { "semantic": "cases", "ast": "body", "extract": "liftChildren" }
+      ]
     }
   },
   {
@@ -175,23 +179,21 @@
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_case",
+      "abstractConcept": "case",
+      "children": { "value": "expression", "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_case",
       "message0": "%{BKY_C_CASE_MSG0}",
       "args0": [
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
       ],
       "message1": "%1",
       "args1": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -213,33 +215,23 @@
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_for_loop",
+      "abstractConcept": "for_loop",
+      "children": { "init": "expression", "cond": "expression", "update": "expression", "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_for_loop",
       "message0": "%{BKY_C_FOR_LOOP_MSG0}",
       "args0": [
-        {
-          "type": "input_value",
-          "name": "INIT",
-          "check": "Expression"
-        },
-        {
-          "type": "input_value",
-          "name": "COND",
-          "check": "Expression"
-        },
-        {
-          "type": "input_value",
-          "name": "UPDATE",
-          "check": "Expression"
-        }
+        { "type": "input_value", "name": "INIT", "check": "Expression" },
+        { "type": "input_value", "name": "COND", "check": "Expression" },
+        { "type": "input_value", "name": "UPDATE", "check": "Expression" }
       ],
       "message1": "%{BKY_C_FOR_LOOP_MSG1}",
       "args1": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -253,7 +245,13 @@
     },
     "astPattern": {
       "nodeType": "for_statement",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "init", "ast": "initializer", "extract": "lift" },
+        { "semantic": "cond", "ast": "condition", "extract": "lift" },
+        { "semantic": "update", "ast": "update", "extract": "lift" },
+        { "semantic": "body", "ast": "body", "extract": "liftBody" }
+      ]
     }
   },
   {
@@ -261,23 +259,21 @@
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_do_while",
+      "abstractConcept": "do_while",
+      "children": { "body": "statements", "cond": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_do_while",
       "message0": "%{BKY_C_DO_WHILE_MSG0}",
       "args0": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
       ],
       "message1": "%{BKY_C_DO_WHILE_MSG1}",
       "args1": [
-        {
-          "type": "input_value",
-          "name": "COND",
-          "check": "Expression"
-        }
+        { "type": "input_value", "name": "COND", "check": "Expression" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -291,7 +287,11 @@
     },
     "astPattern": {
       "nodeType": "do_statement",
-      "constraints": []
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "body", "ast": "body", "extract": "liftBody" },
+        { "semantic": "cond", "ast": "condition", "extract": "lift" }
+      ]
     }
   },
   {
@@ -299,20 +299,18 @@
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_printf",
+      "abstractConcept": "printf",
+      "properties": ["format", "args"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_printf",
       "message0": "%{BKY_C_PRINTF_MSG0}",
       "args0": [
-        {
-          "type": "field_input",
-          "name": "FORMAT",
-          "text": "%d\\n"
-        },
-        {
-          "type": "field_input",
-          "name": "ARGS",
-          "text": ", x"
-        }
+        { "type": "field_input", "name": "FORMAT", "text": "%d\\n" },
+        { "type": "field_input", "name": "ARGS", "text": ", x" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -321,19 +319,12 @@
     },
     "codeTemplate": {
       "pattern": "printf(\"${FORMAT}\"${ARGS});",
-      "imports": [
-        "stdio.h"
-      ],
+      "imports": ["stdio.h"],
       "order": 0
     },
     "astPattern": {
       "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "printf"
-        }
-      ]
+      "constraints": [{ "field": "function", "text": "printf" }]
     }
   },
   {
@@ -341,20 +332,18 @@
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_scanf",
+      "abstractConcept": "scanf",
+      "properties": ["format", "args"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "c_scanf",
       "message0": "%{BKY_C_SCANF_MSG0}",
       "args0": [
-        {
-          "type": "field_input",
-          "name": "FORMAT",
-          "text": "%d"
-        },
-        {
-          "type": "field_input",
-          "name": "ARGS",
-          "text": ", &x"
-        }
+        { "type": "field_input", "name": "FORMAT", "text": "%d" },
+        { "type": "field_input", "name": "ARGS", "text": ", &x" }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -363,19 +352,12 @@
     },
     "codeTemplate": {
       "pattern": "scanf(\"${FORMAT}\"${ARGS});",
-      "imports": [
-        "stdio.h"
-      ],
+      "imports": ["stdio.h"],
       "order": 0
     },
     "astPattern": {
       "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "scanf"
-        }
-      ]
+      "constraints": [{ "field": "function", "text": "scanf" }]
     }
   }
 ]

@@ -59,8 +59,9 @@ export function registerDeclarationLifters(lifter: Lifter): void {
     // Single declarator → return directly
     if (liftedNodes.length === 1) return liftedNodes[0]
 
-    // Multiple declarators → wrap in _compound so parent unwraps them
-    return createNode('_compound', {}, { body: liftedNodes })
+    // Multiple declarators → single var_declare with declarators children
+    // Each liftedNode has properties.name and children.initializer
+    return createNode('var_declare', { type }, { declarators: liftedNodes })
   })
 
   lifter.register('expression_statement', (node, ctx) => {

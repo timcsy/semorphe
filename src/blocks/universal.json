@@ -4,6 +4,13 @@
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "var_declare",
+      "abstractConcept": "var_declare",
+      "properties": ["type", "name"],
+      "children": { "init": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_var_declare",
       "previousStatement": "Statement",
@@ -17,6 +24,13 @@
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "var_assign",
+      "abstractConcept": "var_assign",
+      "properties": ["name"],
+      "children": { "value": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_var_assign",
       "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
@@ -44,6 +58,12 @@
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "var_ref",
+      "abstractConcept": "var_ref",
+      "properties": ["name"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_var_ref",
       "message0": "%1",
@@ -64,6 +84,12 @@
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "number_literal",
+      "abstractConcept": "number_literal",
+      "properties": ["value"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_number",
       "message0": "%1",
@@ -84,6 +110,12 @@
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "string_literal",
+      "abstractConcept": "string_literal",
+      "properties": ["value"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_string",
       "message0": "\" %1 \"",
@@ -104,6 +136,13 @@
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "arithmetic",
+      "abstractConcept": "arithmetic",
+      "properties": ["operator"],
+      "children": { "left": "expression", "right": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_arithmetic",
       "message0": "%1 %2 %3",
@@ -117,26 +156,11 @@
           "type": "field_dropdown",
           "name": "OP",
           "options": [
-            [
-              "+",
-              "+"
-            ],
-            [
-              "-",
-              "-"
-            ],
-            [
-              "×",
-              "*"
-            ],
-            [
-              "÷",
-              "/"
-            ],
-            [
-              "%{BKY_U_ARITHMETIC_OP_REMAINDER}",
-              "%"
-            ]
+            ["+", "+"],
+            ["-", "-"],
+            ["×", "*"],
+            ["÷", "/"],
+            ["%{BKY_U_ARITHMETIC_OP_REMAINDER}", "%"]
           ]
         },
         {
@@ -156,6 +180,13 @@
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "compare",
+      "abstractConcept": "compare",
+      "properties": ["operator"],
+      "children": { "left": "expression", "right": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_compare",
       "message0": "%1 %2 %3",
@@ -169,30 +200,12 @@
           "type": "field_dropdown",
           "name": "OP",
           "options": [
-            [
-              "%{BKY_U_COMPARE_OP_GT}",
-              ">"
-            ],
-            [
-              "%{BKY_U_COMPARE_OP_LT}",
-              "<"
-            ],
-            [
-              "%{BKY_U_COMPARE_OP_GE}",
-              ">="
-            ],
-            [
-              "%{BKY_U_COMPARE_OP_LE}",
-              "<="
-            ],
-            [
-              "%{BKY_U_COMPARE_OP_EQ}",
-              "=="
-            ],
-            [
-              "%{BKY_U_COMPARE_OP_NE}",
-              "!="
-            ]
+            ["%{BKY_U_COMPARE_OP_GT}", ">"],
+            ["%{BKY_U_COMPARE_OP_LT}", "<"],
+            ["%{BKY_U_COMPARE_OP_GE}", ">="],
+            ["%{BKY_U_COMPARE_OP_LE}", "<="],
+            ["%{BKY_U_COMPARE_OP_EQ}", "=="],
+            ["%{BKY_U_COMPARE_OP_NE}", "!="]
           ]
         },
         {
@@ -212,6 +225,13 @@
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "logic",
+      "abstractConcept": "logic",
+      "properties": ["operator"],
+      "children": { "left": "expression", "right": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_logic",
       "message0": "%1 %2 %3",
@@ -225,14 +245,8 @@
           "type": "field_dropdown",
           "name": "OP",
           "options": [
-            [
-              "%{BKY_U_LOGIC_OP_AND}",
-              "&&"
-            ],
-            [
-              "%{BKY_U_LOGIC_OP_OR}",
-              "||"
-            ]
+            ["%{BKY_U_LOGIC_OP_AND}", "&&"],
+            ["%{BKY_U_LOGIC_OP_OR}", "||"]
           ]
         },
         {
@@ -252,6 +266,12 @@
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "logic_not",
+      "abstractConcept": "logic_not",
+      "children": { "operand": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_logic_not",
       "message0": "%{BKY_U_LOGIC_NOT_MSG0}",
@@ -273,6 +293,12 @@
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "negate",
+      "abstractConcept": "negate",
+      "children": { "operand": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_negate",
       "message0": "- %1",
@@ -294,6 +320,12 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "if",
+      "abstractConcept": "if",
+      "children": { "condition": "expression", "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_if",
       "message0": "%{BKY_U_IF_MSG0}",
@@ -323,6 +355,12 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "if_else",
+      "abstractConcept": "if_else",
+      "children": { "condition": "expression", "then": "statements", "else": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_if_else",
       "message0": "%{BKY_U_IF_ELSE_MSG0}",
@@ -361,6 +399,13 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "count_loop",
+      "abstractConcept": "count_loop",
+      "properties": ["variable"],
+      "children": { "from": "expression", "to": "expression", "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_count_loop",
       "message0": "%{BKY_U_COUNT_LOOP_MSG0}",
@@ -401,6 +446,12 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "while_loop",
+      "abstractConcept": "while_loop",
+      "children": { "condition": "expression", "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_while_loop",
       "message0": "%{BKY_U_WHILE_LOOP_MSG0}",
@@ -430,6 +481,11 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "break",
+      "abstractConcept": "break",
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_break",
       "message0": "%{BKY_U_BREAK_MSG0}",
@@ -444,6 +500,11 @@
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "continue",
+      "abstractConcept": "continue",
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_continue",
       "message0": "%{BKY_U_CONTINUE_MSG0}",
@@ -458,6 +519,13 @@
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "func_def",
+      "abstractConcept": "func_def",
+      "properties": ["name", "params", "return_type"],
+      "children": { "body": "statements" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_func_def",
       "message0": "%{BKY_U_FUNC_DEF_MSG0}",
@@ -476,38 +544,14 @@
           "type": "field_dropdown",
           "name": "RETURN_TYPE",
           "options": [
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_VOID}",
-              "void"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_INT}",
-              "int"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_FLOAT}",
-              "float"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_DOUBLE}",
-              "double"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_CHAR}",
-              "char"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_LONG_LONG}",
-              "long long"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_STRING}",
-              "string"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_BOOL}",
-              "bool"
-            ]
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_VOID}", "void"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_INT}", "int"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_CHAR}", "char"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_LONG_LONG}", "long long"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_STRING}", "string"],
+            ["%{BKY_U_FUNC_DEF_RETURN_TYPE_BOOL}", "bool"]
           ]
         }
       ],
@@ -530,6 +574,12 @@
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "func_call",
+      "abstractConcept": "func_call",
+      "properties": ["name", "args"],
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_func_call",
       "message0": "%{BKY_U_FUNC_CALL_MSG0}",
@@ -556,6 +606,12 @@
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "return",
+      "abstractConcept": "return",
+      "children": { "value": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_return",
       "message0": "%{BKY_U_RETURN_MSG0}",
@@ -577,6 +633,12 @@
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "print",
+      "abstractConcept": "print",
+      "children": { "values": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_print",
       "message0": "%{BKY_U_PRINT_MSG0}",
@@ -599,6 +661,11 @@
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "endl",
+      "abstractConcept": "endl",
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_endl",
       "message0": "%{BKY_U_ENDL_MSG0}",
@@ -612,6 +679,12 @@
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "input",
+      "abstractConcept": "input",
+      "properties": ["name"],
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_input",
       "message0": "%{BKY_U_INPUT_MSG0}",
@@ -633,6 +706,13 @@
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "array_declare",
+      "abstractConcept": "array_declare",
+      "properties": ["type", "name"],
+      "children": { "size": "expression" },
+      "role": "statement"
+    },
     "blockDef": {
       "type": "u_array_declare",
       "message0": "%{BKY_U_ARRAY_DECLARE_MSG0}",
@@ -641,26 +721,11 @@
           "type": "field_dropdown",
           "name": "TYPE",
           "options": [
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_INT}",
-              "int"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_FLOAT}",
-              "float"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_DOUBLE}",
-              "double"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_CHAR}",
-              "char"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_LONG_LONG}",
-              "long long"
-            ]
+            ["%{BKY_U_ARRAY_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_ARRAY_DECLARE_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_ARRAY_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_ARRAY_DECLARE_TYPE_CHAR}", "char"],
+            ["%{BKY_U_ARRAY_DECLARE_TYPE_LONG_LONG}", "long long"]
           ]
         },
         {
@@ -686,6 +751,13 @@
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
+    "concept": {
+      "conceptId": "array_access",
+      "abstractConcept": "array_access",
+      "properties": ["name"],
+      "children": { "index": "expression" },
+      "role": "expression"
+    },
     "blockDef": {
       "type": "u_array_access",
       "message0": "%{BKY_U_ARRAY_ACCESS_MSG0}",

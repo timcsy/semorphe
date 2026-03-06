@@ -19,7 +19,12 @@ import type { DiagnosticBlock } from '../core/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
 import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
+import { PatternLifter } from '../core/lift/pattern-lifter'
+import { PatternRenderer } from '../core/projection/pattern-renderer'
+import { setPatternRenderer } from '../core/projection/block-renderer'
 import { CppParser } from '../languages/cpp/parser'
+import liftPatternsJson from '../languages/cpp/lift-patterns.json'
+import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
 import { StorageService } from '../core/storage'
 import type { SavedState } from '../core/storage'
@@ -1186,6 +1191,20 @@ export class App {
 
   private async setupCodeToBlocksPipeline(): Promise<void> {
     const lifter = new Lifter()
+
+    // Wire up JSON-driven PatternLifter
+    const allSpecs = this.blockSpecRegistry.getAll()
+    const pl = new PatternLifter()
+    pl.loadBlockSpecs(allSpecs)
+    pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
+    lifter.setPatternLifter(pl)
+
+    // Wire up JSON-driven PatternRenderer
+    const pr = new PatternRenderer()
+    pr.loadBlockSpecs(allSpecs)
+    setPatternRenderer(pr)
+
+    // Register hand-written lifters as fallback
     registerCppLifters(lifter)
 
     const parser = new CppParser()

@@ -52,12 +52,9 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (op === '>>') {
       const cinVars = extractCinChain(node)
       if (cinVars) {
-        if (cinVars.length === 1) {
-          return createNode('input', { variable: cinVars[0] })
-        }
-        // Multiple vars: wrap in _compound for parent to flatten
-        const inputs = cinVars.map(v => createNode('input', { variable: v }))
-        return createNode('_compound', {}, { body: inputs })
+        // Single input node with values children (var_ref for each variable)
+        const values = cinVars.map(v => createNode('var_ref', { name: v }))
+        return createNode('input', {}, { values })
       }
     }
 
