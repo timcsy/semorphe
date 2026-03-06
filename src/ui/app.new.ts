@@ -352,6 +352,7 @@ export class App {
           const idx = this.items_.length
           this.items_.push('var_init')
           this.appendValueInput(`INIT_${idx}`)
+            .appendField(',')
             .appendField(new Blockly.FieldTextInput(`v${idx}`) as Blockly.Field, `NAME_${idx}`)
             .appendField('=')
           this.moveInputBefore(`INIT_${idx}`, 'TAIL')
@@ -399,15 +400,17 @@ export class App {
           for (let j = 0; j < this.items_.length; j++) {
             const name = savedNames[j] ?? `v${j}`
             if (this.items_[j] === 'var_init') {
-              this.appendValueInput(`INIT_${j}`)
-                .appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
+              const input = this.appendValueInput(`INIT_${j}`)
+              if (j > 0) input.appendField(',')
+              input.appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
                 .appendField('=')
               if (savedBlocks[j] && this.getInput(`INIT_${j}`)?.connection) {
                 this.getInput(`INIT_${j}`)!.connection!.connect(savedBlocks[j]!.outputConnection!)
               }
             } else {
-              this.appendDummyInput(`VAR_${j}`)
-                .appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
+              const input = this.appendDummyInput(`VAR_${j}`)
+              if (j > 0) input.appendField(',')
+              input.appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
             }
           }
           // Re-add TAIL
