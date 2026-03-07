@@ -484,6 +484,17 @@ Language-Specific Block Style Options（可由語言模組覆蓋）:
 
 **warning 的典型案例**：語用分析判定為 `count_loop`，但 body 內修改了迴圈變數——結構上匹配但語義上可疑。此時應標記 `confidence: 'warning'` 並附帶 `warning_reason: 'loop variable modified in body'`，讓使用者自行判斷。如果語用分析不做此檢查，學習者會得到錯誤的心智模型（以為這是普通的計數迴圈）。
 
+**強制性規則（從 S4 最小驚訝推導）**：任何 `patternType: 'composite'` 的 pattern，如果結構匹配成功但未通過所有語義驗證（如副作用分析、變數修改檢查），**必須**強制設定 `confidence: 'warning'`。實作者不得將可疑匹配靜默地標記為 `confidence: 'high'`。這不是建議，是架構層面的硬性約束——靜默地把可疑匹配當作精確匹配直接違反 S4。
+
+```
+composite pattern 匹配流程（強制）：
+  ① 結構匹配（AST 欄位類型檢查）      → 不通過 → 不匹配，嘗試下一個 pattern
+  ② 語義驗證（副作用、變數修改等）      → 不通過 → 匹配但 confidence: 'warning'
+  ③ 所有檢查通過                        →          confidence: 'high'
+
+跳過步驟 ② 直接設為 'high' = 架構違規
+```
+
 **降級不是錯誤，是設計好的安全網**。系統的進化方向是逐漸減少 raw_code 節點（透過新增概念和 pattern），但永遠不追求消除它——因為使用者永遠可能寫出系統尚未建模的程式碼。
 
 #### lift() 的完備性邊界
