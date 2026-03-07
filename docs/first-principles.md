@@ -1362,6 +1362,12 @@ Scratch 風格:  zelos renderer, compact density, scratch 配色, 預設 inline
 
 6. **語義阻抗的深層特性**：記憶體管理（new/delete vs ownership vs GC）、並行模型（goroutine vs async/await vs pthread）等深層語言特性，無法用 abstract concept 跨語言映射。應走 P2 降級路徑，並在轉換時標記「需人工調整」而非靜默降級。
 
+7. **Scope 3-5 的狀態空間爆炸**：語義圖在大型專案中節點和邊的數量會急劇膨脹，「重建相關圖邊」的增量更新演算法將成為效能瓶頸。實作優先序應為：Phase 1 Scope 0-2 單檔案（已實現）→ Phase 2 Scope 3 少量檔案（邊數可控）→ Phase 3 Scope 4-5 大型專案（可借鏡 LSP/LSIF 的增量索引策略）。不需要一開始就解決萬行級問題。
+
+8. **語義契約的驗證成本**：為每個 AbstractConcept 定義完備的 semanticContract + constraints 是百科全書式的工程。初期應只覆蓋 L0-L1 概念（控制流、基本 I/O、變數操作，semanticContract 簡單、constraints 幾乎不需要），L2 概念按需補充常見陷阱，跨語言 constraints 在使用者實際做跨語言轉換時才需要（可由 LLM 輔助生成初稿）。追求「完美映射」會導致系統難以啟動。
+
+9. **WASM 的冷啟動與橋接開銷**：WASM 和 JS 之間每次跨邊界呼叫都有序列化/反序列化成本。如果語義直譯器逐節點切換 interpret ↔ wasm，在大量小操作的場景會效能崩潰。正確的粒度是「子樹」而非「節點」——一整個函式或迴圈丟給 WASM 執行，減少跨邊界次數。
+
 ---
 
 ## 願景：語義網路與 WASM 執行
