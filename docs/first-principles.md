@@ -473,13 +473,16 @@ Language-Specific Block Style Options（可由語言模組覆蓋）:
 
 **降級是逐節點的，不是全有全無的**。一段 100 行的程式碼，可能 95 行精確 lift、3 行推斷、2 行降級為 raw_code。每個節點獨立決定自己的結構化程度。
 
-**降級必須可見**：使用者需要能區分三種積木狀態：
+**降級必須可見**：使用者需要能區分四種積木狀態：
 
 | 狀態 | 含義 | 視覺提示 |
 |------|------|---------|
-| 精確（confidence: high） | 系統完全理解此概念 | 正常顯示 |
+| 精確（confidence: high） | 系統完全理解此概念，所有條件都滿足 | 正常顯示 |
+| 警告（confidence: warning） | 結構匹配但有可疑點（附帶 warning_reason） | 黃色邊框 + tooltip 顯示原因 |
 | 推斷（confidence: inferred） | 系統推測但不確定 | 微小提示（如淡色邊框） |
 | 降級（raw_code） | 系統無法結構化理解 | 明顯標記（如灰色底、程式碼文字） |
+
+**warning 的典型案例**：語用分析判定為 `count_loop`，但 body 內修改了迴圈變數——結構上匹配但語義上可疑。此時應標記 `confidence: 'warning'` 並附帶 `warning_reason: 'loop variable modified in body'`，讓使用者自行判斷。如果語用分析不做此檢查，學習者會得到錯誤的心智模型（以為這是普通的計數迴圈）。
 
 **降級不是錯誤，是設計好的安全網**。系統的進化方向是逐漸減少 raw_code 節點（透過新增概念和 pattern），但永遠不追求消除它——因為使用者永遠可能寫出系統尚未建模的程式碼。
 
@@ -708,9 +711,53 @@ interface AbstractConceptDef {
     returnSemantics: 'void' | 'self' | 'new_value'   // 回傳語義
     chainable: boolean                                 // 是否可鏈式呼叫
   }
+  // 語言相關的語義約束（跨語言映射時用於偵測阻抗）
+  constraints?: Record<string, LanguageConstraints>
 }
 
-// 偵測阻抗：
+interface LanguageConstraints {
+  may_reallocate?: boolean        // 可能觸發記憶體重分配
+  invalidates_iterators?: boolean // 使迭代器/指標失效
+  worst_case?: string             // 最壞時間複雜度
+  thread_safe?: boolean           // 是否執行緒安全
+  throws?: boolean                // 是否可能拋出例外
+  notes?: string                  // 人類可讀的補充說明
+}
+```
+
+```
+// 範例：container_add 的語言約束
+container_add:
+  semanticContract: { effect: 'mutate_self', return: 'void' }
+  constraints:
+    cpp:
+      may_reallocate: true
+      invalidates_iterators: true
+      worst_case: 'O(n) amortized'
+      notes: 'vector::push_back 在容量不足時重分配'
+    js:
+      may_reallocate: false
+      worst_case: 'O(1) amortized'
+    python:
+      may_reallocate: false
+      worst_case: 'O(1) amortized'
+```
+
+```
+// 跨語言映射時的阻抗偵測（含 constraints）：
+cpp:push_back → js:array_push
+  semanticContract: ✅ 兩者都是 mutate_self + void
+  constraints:
+    cpp 有 invalidates_iterators: true → js 沒有
+    → ⚠️ semantic_gap: 「C++ 的 push_back 會使迭代器失效，JS 的 push 不會。
+                         如果原始程式碼依賴此行為，轉換後語義不同。」
+    → 投影時在積木上顯示警告，代碼中生成 TODO 註解
+```
+
+**為什麼 constraints 對 L2 至關重要**：概念代數（concept, properties, children）只編碼「做什麼」，不編碼「代價是什麼」。對 L0-L1 的教學場景，這足夠了——初學者不需要知道迭代器失效。但 L2 高階使用者和跨語言映射**必須**能看到 constraints 差異，否則會得到「兩者等價」的錯誤結論。
+
+```
+// 偵測阻抗（原有的 semanticContract 層）：
 // cpp:push_back   (return: 'void', chainable: false)
 //   → python:list_append (return: 'void', chainable: false)  ✅ 安全
 //   → js:array_push      (return: 'new_value')               ⚠️ 阻抗警告
@@ -1286,13 +1333,23 @@ Scratch 風格:  zelos renderer, compact density, scratch 配色, 預設 inline
 
 ## 已知的實作挑戰
 
-本框架在原則層面完備，但以下三點在實作時需要額外設計：
+本框架在原則層面完備，但以下各點在實作時需要額外設計。前三點是已識別的邊界條件，後三點是工程層面的待解問題。
 
-1. **語義阻抗（Semantic Impedance）**：記憶體管理（new/delete vs ownership vs GC）、並行模型（goroutine vs async/await vs pthread）等深層語言特性，無法用 abstract concept 跨語言映射。應走 P2 降級路徑，並在轉換時標記「需人工調整」而非靜默降級。
+### 邏輯邊界（硬限制）
 
-2. **註解歸屬歧義**：語義樹中註解是獨立平級節點，但 UI 層面拖拽積木時，視覺上相鄰的註解是否應自動跟隨？這需要 Block Style 層的「吸附」邏輯，不改變語義模型。
+1. **語用分析的精確度邊界**：lift() 的語用分析是基於 pattern 的推斷，存在誤判風險。例如 `for(int i=0; i<n; i++)` 的 body 內修改了 `i`——語法上符合 `count_loop` pattern，但語義上不是計數迴圈。如果系統把它投影為「計數從 0 到 n」的積木，學習者會得到**錯誤的心智模型**。對策：composite pattern 必須包含副作用檢查（如 body 內不可修改 loop 變數），並使用 `confidence: 'warning'` + `warning_reason` 機制標記可疑匹配。語用分析的精確度上限由 pattern 的嚴格程度決定，而非架構缺陷。
 
-3. **lift() 性能**：目前轉換是使用者主動觸發（非即時同步），全量 lift 在教學場景的程式碼規模下不構成瓶頸。若未來需要支援即時同步或處理大型檔案，可考慮增量 parse（tree-sitter 原生支援）搭配延遲 lift。
+2. **C/C++ 巨集的不可解析硬邊界**：tree-sitter 不展開巨集。值替換巨集（`#define PI 3.14`）和函式巨集（`#define MAX(a,b)`）可正常處理，但**語法改變巨集**（`#define BEGIN {`）會產生 ERROR 節點，導致子樹不完整、無法 lift。這是原理上的硬邊界——在不展開巨集的前提下，語法改變巨集不可解析。降級為 `raw_code` 是正確行為，不是降級策略的失敗。若要處理此類巨集，唯一方法是在 tree-sitter 之前加預處理器，代價是巨大的工程複雜度。
+
+3. **跨語言語義約束的隱藏風險**：概念代數只編碼「做什麼」（semantic contract），不編碼「代價是什麼」（constraints）。`push_back` 映射到 `Array.push` 在 semantic contract 層面是安全的（都是 mutate_self + void），但 C++ 的 `push_back` 有迭代器失效和 O(n) 重分配成本，JS 的 `push` 沒有。如果隱藏這些差異，L2 高階使用者在跨語言場景中會得到「兩者等價」的錯誤結論。對策：概念定義擴展 `constraints` 欄位（見 P2 2b 語義阻抗段落），跨語言映射時自動偵測 constraints 差異並標記 `semantic_gap`。
+
+### 工程待解問題
+
+4. **註解歸屬歧義**：語義樹中註解是獨立平級節點，但 UI 層面拖拽積木時，視覺上相鄰的註解是否應自動跟隨？這需要 Block Style 層的「吸附」邏輯，不改變語義模型。
+
+5. **lift() 性能**：目前轉換是使用者主動觸發（非即時同步），全量 lift 在教學場景的程式碼規模下不構成瓶頸。若未來需要支援即時同步或處理大型檔案，可考慮增量 parse（tree-sitter 原生支援）搭配延遲 lift。
+
+6. **語義阻抗的深層特性**：記憶體管理（new/delete vs ownership vs GC）、並行模型（goroutine vs async/await vs pthread）等深層語言特性，無法用 abstract concept 跨語言映射。應走 P2 降級路徑，並在轉換時標記「需人工調整」而非靜默降級。
 
 ---
 
