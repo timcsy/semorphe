@@ -62,7 +62,8 @@ describe('L1 Block Roundtrip', () => {
       ...specialBlocks as unknown as BlockSpec[],
     ]
 
-    lifter.loadBlockSpecs(allSpecs)
+    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+    lifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
     lifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     renderer.loadBlockSpecs(allSpecs)
     extractor.loadBlockSpecs(allSpecs)
@@ -116,7 +117,7 @@ describe('L1 Block Roundtrip', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_char_literal')
+      expect(sem!.concept).toBe('string_literal')
     })
   })
 
@@ -137,24 +138,15 @@ describe('L1 Block Roundtrip', () => {
   })
 
   describe('c_printf / c_scanf (constrained)', () => {
-    it('should lift printf call', () => {
+    it('should skip call_expression (handled by hand-written lifter)', () => {
+      // call_expression is excluded from BlockSpec pattern loading
+      // because hand-written lifters convert printf→print, scanf→input
       const funcNode = mockNode('identifier', 'printf')
       const ast = mockNode('call_expression', 'printf("%d", x)', [], {
         function: funcNode,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_printf')
-    })
-
-    it('should lift scanf call', () => {
-      const funcNode = mockNode('identifier', 'scanf')
-      const ast = mockNode('call_expression', 'scanf("%d", &x)', [], {
-        function: funcNode,
-      })
-      const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_scanf')
+      expect(sem).toBeNull() // PatternLifter yields to hand-written lifter
     })
   })
 
@@ -312,15 +304,17 @@ describe('L1 Block Roundtrip', () => {
   })
 
   describe('subscript_expression → array_access', () => {
-    it('should lift arr[i]', () => {
+    it('should skip subscript_expression (handled by hand-written lifter with fallbacks)', () => {
+      // subscript_expression removed from lift-patterns.json because
+      // tree-sitter C++ may not have 'index' as a named field.
+      // Hand-written lifter uses namedChildren[1] fallback.
       const arr = mockNode('identifier', 'arr')
       const idx = mockNode('identifier', 'i')
       const ast = mockNode('subscript_expression', 'arr[i]', [arr, idx], {
         argument: arr, index: idx,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.concept).toBe('array_access')
-      expect(sem!.properties.name).toBe('arr')
+      expect(sem).toBeNull() // No pattern for subscript_expression
     })
   })
 

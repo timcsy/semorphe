@@ -49,7 +49,8 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
   g.set('array_access', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
-    const idx = generateExpression((node.children.index ?? [])[0], ctx)
+    const indexNodes = node.children.index ?? []
+    const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
     return `${name}[${idx}]`
   })
 }

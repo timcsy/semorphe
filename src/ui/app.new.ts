@@ -1204,7 +1204,8 @@ export class App {
     const pl = new PatternLifter()
     pl.setTransformRegistry(transformRegistry)
     pl.setLiftStrategyRegistry(liftStrategyRegistry)
-    pl.loadBlockSpecs(allSpecs)
+    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+    pl.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
     pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(pl)
 

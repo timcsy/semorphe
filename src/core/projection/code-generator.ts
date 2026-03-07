@@ -119,6 +119,8 @@ function countNewlines(s: string): number {
 }
 
 export function generateExpression(node: SemanticNode, ctx: GeneratorContext): string {
+  if (!node) return ''
+
   // Try JSON-driven template generator first
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
   const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null

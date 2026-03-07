@@ -95,8 +95,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
 
   lifter.register('subscript_expression', (node, ctx) => {
     const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]
-    const indexNode = node.childForFieldName('index') ?? node.namedChildren[1]
     const name = arrayNode?.text ?? 'arr'
+    // tree-sitter C++ wraps index in subscript_argument_list: arr[i] → (subscript_argument_list (identifier))
+    const indicesNode = node.namedChildren.find(c => c.type === 'subscript_argument_list')
+    const indexNode = indicesNode?.namedChildren[0] ?? node.childForFieldName('index') ?? node.namedChildren[1]
     const index = indexNode ? ctx.lift(indexNode) : null
     return createNode('array_access', { name }, {
       index: index ? [index] : [],

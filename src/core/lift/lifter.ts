@@ -45,6 +45,12 @@ export class Lifter {
     if (this.patternLifter) {
       const patternResult = this.patternLifter.tryLift(node, ctx)
       if (patternResult) {
+        // Post-process: func_call_expr in statement context → func_call
+        if (patternResult.concept === 'func_call_expr' && node.type === 'expression_statement') {
+          const converted = createNode('func_call', patternResult.properties, patternResult.children)
+          addSourceRange(converted)
+          return converted
+        }
         addSourceRange(patternResult)
         return patternResult
       }

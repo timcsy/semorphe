@@ -49,7 +49,9 @@ export function initCppModule(): CppModuleEngines {
   registry.loadFromJSON(allSpecs)
 
   // 2. Load block specs into engines
-  patternLifter.loadBlockSpecs(allSpecs)
+  // Skip call_expression and using_declaration — hand-written lifters handle these better
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+  patternLifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
   patternRenderer.loadBlockSpecs(allSpecs)
   patternExtractor.loadBlockSpecs(allSpecs)
 

@@ -37,16 +37,18 @@ export class PatternLifter {
     this.liftStrategyRegistry = registry
   }
 
-  /** Load patterns from BlockSpec JSON definitions (simple/constrained patterns) */
-  loadBlockSpecs(specs: BlockSpec[]): void {
+  /** Load patterns from BlockSpec JSON definitions (simple/constrained patterns).
+   *  skipNodeTypes: set of AST node types to skip (handled by hand-written lifters or lift-patterns.json) */
+  loadBlockSpecs(specs: BlockSpec[], skipNodeTypes?: Set<string>): void {
     for (const spec of specs) {
       const ap = spec.astPattern
       if (!ap || ap.nodeType.startsWith('_')) continue
+      if (skipNodeTypes?.has(ap.nodeType)) continue
 
       const entry: PatternEntry = {
         conceptId: spec.concept?.conceptId ?? spec.id,
         patternType: ap.patternType ?? (ap.constraints.length > 0 ? 'constrained' : 'simple'),
-        priority: this.calcPriority(ap.patternType ?? 'simple', ap.constraints?.length ?? 0, 0),
+        priority: this.calcPriority(ap.patternType ?? 'simple', ap.constraints?.length ?? 0, 0) - 5,
         constraints: ap.constraints,
         fieldMappings: ap.fieldMappings,
         operatorDispatch: ap.operatorDispatch,
@@ -404,6 +406,11 @@ export class PatternLifter {
     for (const c of constraints) {
       if (c.field === '$text') {
         if (c.text && node.text !== c.text) return false
+        continue
+      }
+      if (c.field === '$operator') {
+        const op = node.children.find((ch: AstNode) => !ch.isNamed)
+        if (c.text && (!op || op.text !== c.text)) return false
         continue
       }
       const child = node.childForFieldName(c.field)

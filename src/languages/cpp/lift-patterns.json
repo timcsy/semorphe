@@ -223,19 +223,10 @@
     "priority": 1
   },
   {
-    "id": "cpp_subscript_expression",
-    "astNodeType": "subscript_expression",
-    "concept": { "conceptId": "array_access" },
-    "fieldMappings": [
-      { "semantic": "name", "ast": "argument", "extract": "text" },
-      { "semantic": "index", "ast": "index", "extract": "lift" }
-    ]
-  },
-  {
     "id": "cpp_assignment_expression",
     "astNodeType": "assignment_expression",
     "concept": { "conceptId": "var_assign" },
-    "constraints": [{ "field": "operator", "text": "=" }],
+    "constraints": [{ "field": "$operator", "text": "=" }],
     "fieldMappings": [
       { "semantic": "name", "ast": "left", "extract": "text" },
       { "semantic": "value", "ast": "right", "extract": "lift" }

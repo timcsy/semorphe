@@ -93,4 +93,21 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>): void
     const value = node.properties.value ?? ''
     return `#define ${name} ${value}\n`
   })
+
+  g.set('cpp_compound_assign', (node, ctx) => {
+    const name = node.properties.name ?? 'x'
+    const op = node.properties.operator ?? '+='
+    const vals = node.children.value ?? []
+    if (vals.length > 0) {
+      const val = generateExpression(vals[0], ctx)
+      return `${indent(ctx)}${name} ${op} ${val};\n`
+    }
+    return `${indent(ctx)}${name} ${op} 0;\n`
+  })
+
+  g.set('cpp_increment', (node, ctx) => {
+    const name = node.properties.name ?? 'i'
+    const op = node.properties.operator ?? '++'
+    return `${indent(ctx)}${name}${op};\n`
+  })
 }

@@ -63,7 +63,8 @@ describe('L2 Block Roundtrip', () => {
       ...specialBlocks as unknown as BlockSpec[],
     ]
 
-    lifter.loadBlockSpecs(allSpecs)
+    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+    lifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
     lifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     renderer.loadBlockSpecs(allSpecs)
     extractor.loadBlockSpecs(allSpecs)
@@ -193,14 +194,13 @@ describe('L2 Block Roundtrip', () => {
       expect(code).toBe('free(ptr);')
     })
 
-    it('should lift call_expression free(ptr)', () => {
+    it('should skip call_expression lift (handled by hand-written lifter)', () => {
       const funcNode = mockNode('identifier', 'free')
       const ast = mockNode('call_expression', 'free(ptr)', [], {
         function: funcNode,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_free')
+      expect(sem).toBeNull() // call_expression excluded from BlockSpec patterns
     })
   })
 
@@ -282,14 +282,13 @@ describe('L2 Block Roundtrip', () => {
       expect(code).toBe('strlen(s)')
     })
 
-    it('should lift call_expression strlen(s)', () => {
+    it('should skip call_expression lift (handled by hand-written lifter)', () => {
       const funcNode = mockNode('identifier', 'strlen')
       const ast = mockNode('call_expression', 'strlen(s)', [], {
         function: funcNode,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_strlen')
+      expect(sem).toBeNull() // call_expression excluded from BlockSpec patterns
     })
   })
 

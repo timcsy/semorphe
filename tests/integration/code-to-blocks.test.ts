@@ -67,7 +67,8 @@ beforeAll(async () => {
   const pl = new PatternLifter()
   pl.setTransformRegistry(transformRegistry)
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
-  pl.loadBlockSpecs(allSpecs)
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+  pl.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)
 
@@ -241,16 +242,18 @@ describe('Code-to-Blocks Pipeline', () => {
   })
 
   describe('Function calls', () => {
-    it('should lift strlen(s) to cpp_strlen', () => {
+    it('should lift strlen(s) to func_call_expr (hand-written lifter)', () => {
       const sem = liftCode('int n = strlen(s);')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_strlen')
+      // call_expression handled by hand-written lifter → func_call_expr
+      expect(concepts).toContain('func_call_expr')
     })
 
-    it('should lift free(ptr) to cpp_free', () => {
+    it('should lift free(ptr) to func_call (hand-written lifter)', () => {
       const sem = liftCode('free(ptr);')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_free')
+      // call_expression in statement context → func_call
+      expect(concepts).toContain('func_call')
     })
   })
 
