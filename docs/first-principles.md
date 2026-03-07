@@ -6,7 +6,9 @@
 
 ---
 
-## 根公理：程式是語義結構
+# 第一層：理論基礎
+
+## 1. 根公理：程式是語義結構
 
 一個程式有三種存在形態：
 
@@ -35,43 +37,23 @@
 
 ```
 Scope 0 語句（Statement）  → 節點
-  單一語句是一個語義節點
-
 Scope 1 函式（Function）   → 子樹
-  語句組成函式體，函式有簽名和作用域
-
 Scope 2 檔案（File）       → 語義樹
-  函式 + 全域變數 + 型別定義 + import 組成一棵完整的樹
-
-Scope 3 模組（Module）     → 語義子圖
-  多個相關檔案組成模組，檔案間有引用關係（呼叫、型別引用、匯入）
-
-Scope 4 專案（Project）    → 語義圖
-  模組之間的依賴、呼叫、資料流形成完整的圖結構
-
-Scope 5 系統（System）     → 語義超圖
-  多個專案/服務之間的互動（API、訊息佇列、共享資料庫）
-  包含外部語義套件（Semantic Packages）——透過語義契約引用、透過可插拔後端執行
+Scope 3 模組（Module）     → 語義子圖（檔案間有引用關係）
+Scope 4 專案（Project）    → 語義圖（模組間的依賴、呼叫、資料流）
+Scope 5 系統（System）     → 語義超圖（跨專案互動 + 語義套件）
 ```
 
-**Scope 0-2 是樹**：檔案內的語法天然就是樹結構，這是已經實現的部分。
-**Scope 3-5 是圖**：跨檔案的引用關係天然形成圖結構，這是未來的擴展方向。
-
-每一層都是前一層的**組合**，不是替換。樹是圖的特例。系統架構師看到的是 Scope 5，但可以 zoom in 到任何一層，直到看到單一語句——語義結構從頭到尾是連貫的。
+**Scope 0-2 是樹**（已實現），**Scope 3-5 是圖**（未來擴展）。每一層是前一層的**組合**，不是替換。
 
 ```
 節點間的關係分兩類：
 
 結構關係（樹邊，Scope 0-2）：
   parent-child — 語法巢狀（if 包含 then_body）
-  這些關係已經由 SemanticNode.children 表達
 
 引用關係（圖邊，Scope 3+）：
-  calls        — 函式呼叫（caller → callee）
-  imports      — 檔案匯入（file → imported file）
-  uses_type    — 型別引用（usage → definition）
-  extends      — 繼承（子類 → 父類）
-  depends_on   — 模組依賴（module → dependency）
+  calls / imports / uses_type / extends / depends_on
 ```
 
 **架構原則**：Scope 0-2 的語義樹不需要改變。Scope 3+ 的圖邊是從多棵語義樹**衍生**的索引結構——任何一棵樹改了，重建相關的圖邊即可。
@@ -87,193 +69,131 @@ cout << "hello";     // AST: shift_expression(operator="<<")
 
 AST 是語法層的產物，語義樹是意圖層的產物。從 AST 到語義樹的過程稱為 `lift()`（語義提升）。
 
-### 語法→語義的鴻溝是語用學的
+---
+
+## 2. 語用學基礎
 
 語言學將語言分析分為三層：
 
 ```
-語法（Syntax）     → 形式規則：句子怎麼組合
-語義（Semantics）  → 字面意義：句子是什麼意思
-語用（Pragmatics） → 語境意義：說這句話的人在這個情境下想做什麼
+語法（Syntax）     → 形式規則：句子怎麼組合        → AST
+語義（Semantics）  → 字面意義：句子是什麼意思       → 語義結構
+語用（Pragmatics） → 語境意義：在這個情境下想做什麼  → lift() 的推斷
 ```
 
-程式語言中的對應：
-
-```
-語法  → AST（tree-sitter 解析的純形式結構）
-語義  → 語義結構（概念節點 + 關係）
-語用  → 從語法結構 + 上下文推斷出的意圖
-```
-
-**lift() 的本質是語用分析**——它不只是語法結構的一對一映射，而是根據上下文推斷程式碼的意圖：
+**lift() 的本質是語用分析**——根據上下文推斷程式碼的意圖：
 
 | 語法結構 | 語用推斷 | 推斷依據 |
 |---------|---------|---------|
-| `for(int i=0;i<n;i++)` | `count_loop`（計數迴圈） | **慣用語辨識**：init + cond + update 的模式 |
-| `cout << x << endl` | `print`（輸出） | **身份辨識**：`cout` 是什麼東西 |
-| `printf("%d", x)` | `print`（輸出） | **名稱辨識**：`printf` 的已知語義 |
+| `for(int i=0;i<n;i++)` | `count_loop` | **慣用語辨識**：init + cond + update 的模式 |
+| `cout << x << endl` | `print` | **身份辨識**：`cout` 是什麼東西 |
+| `printf("%d", x)` | `print` | **名稱辨識**：`printf` 的已知語義 |
 | `i++`（在迴圈末尾） | 迴圈步進 | **位置上下文**：出現在 for 的 update 位置 |
 | `i++`（獨立語句） | `cpp_increment` | **位置上下文**：出現在 statement 位置 |
 
-這解釋了幾件關鍵設計決策：
+語用分析解釋了四件設計決策：
 
 1. **為什麼 lift() 需要符號表和作用域棧**——語用分析需要上下文
 2. **為什麼 Pattern Engine 有三層**——Layer 1（JSON）處理純語義映射，Layer 2-3 處理需要語用推斷的情況
-3. **為什麼降級存在**——語用分析是推斷，推斷可能失敗，`confidence: 'inferred'` 標記不確定的語用判斷
-4. **為什麼高 Scope 比低 Scope 難**——Scope 0-2 的語用推斷相對局部（慣用語、函式名），Scope 3+ 需要跨檔案甚至跨專案的語境
+3. **為什麼降級存在**——語用分析是推斷，推斷可能失敗
+4. **為什麼高 Scope 比低 Scope 難**——Scope 0-2 的語用推斷相對局部，Scope 3+ 需要跨檔案語境
 
 ```
 語用分析的複雜度隨 Scope 急劇上升：
 
-Scope 0-2（檔案內）：
-  慣用語辨識（for→count_loop）、名稱推斷（printf→print）
-  → 目前的 lift() + Pattern Engine 已能處理
-
-Scope 3（模組）：
-  這組檔案的職責是什麼？這個 class 是 service 還是 model？
-  → 需要跨檔案的命名慣例和使用模式分析
-
-Scope 4（專案）：
-  這是什麼架構？MVC？microservice？event-driven？
-  → 需要依賴方向和模組角色的推斷
-
-Scope 5（系統）：
-  這個服務扮演什麼角色？gateway？worker？aggregator？
-  → 需要跨專案的互動模式分析
+Scope 0-2（檔案內）：慣用語辨識、名稱推斷 → 目前的 lift() 已能處理
+Scope 3（模組）：  跨檔案命名慣例和使用模式 → 需要模組級分析
+Scope 4（專案）：  依賴方向和模組角色推斷   → 需要專案級分析
+Scope 5（系統）：  服務角色和互動模式       → 需要系統級分析
 ```
 
-**語用分析的結果融入語義結構，不另存一層**：`count_loop` 而非 `for_statement` 的概念選擇本身就包含了語用判斷。`metadata.confidence` 標記語用推斷的確定程度。語用不是新的資料維度，而是 lift() 過程的理論基礎。
+**語用分析的結果融入語義結構，不另存一層**：`count_loop` 而非 `for_statement` 的概念選擇本身就包含了語用判斷。`metadata.confidence` 標記語用推斷的確定程度。
 
-### 資訊的三個類別
+---
 
-程式中的資訊不只有「語義」和「呈現」兩類，還有第三類——**元資訊**：
+## 3. 資訊分類學
 
-| | 語義資訊 | 呈現資訊 | 元資訊 |
-|---|---|---|---|
-| **定義** | 改了程式做不同的事 | 改了程式看起來不同但做一樣的事 | 不影響行為但有資訊價值 |
-| **程式碼側** | 變數名、型別、邏輯 | 縮排、空行、命名風格、大括號位置 | 註解、pragma、lint directive |
-| **積木側** | 連接關係、field 值 | 積木位置 (x,y)、顏色、tooltip 文字 | block comment |
-| **儲存** | 語義樹節點 | 各自的 metadata | 語義樹的 annotation |
-| **round-trip** | 必須保留 | 可以丟失 | 應該保留（best-effort） |
+程式中的資訊分為四類：
 
-**註解的處理**：註解不改變程式行為，但丟了會導致系統無法用於現有專案維護。註解分為兩種，處理方式不同：
+| | 語義 | 呈現 | 元資訊 | 語法偏好 |
+|---|---|---|---|---|
+| **定義** | 改行為 | 改外觀 | 不改行為有資訊價值 | 不改行為但使用者有意識的選擇 |
+| **程式碼側** | 變數名、型別、邏輯 | 縮排、空行、命名風格 | 註解、pragma | `+=` vs `= x+1` |
+| **積木側** | 連接關係、field 值 | 位置、顏色、tooltip | block comment | — |
+| **儲存** | 語義樹節點 | metadata | annotation | metadata.syntaxPreference |
+| **round-trip** | 必須保留 | 可丟失 | best-effort | best-effort |
+
+### 註解模型
+
+註解不改變程式行為，但丟了會導致系統無法用於現有專案維護。
 
 **行尾註解（inline comment）** — 附著標註，跟著宿主節點走：
 
 ```
 x = 1; // set x
   → annotation on node(x=1), position: 'inline'
-  → Blockly block comment on that block
 ```
 
-**獨立註解（standalone comment）** — 無操作的平級節點，獨立存在：
+**獨立註解（standalone comment）** — 無操作的平級節點：
 
 ```
 // section header    ← 不屬於上一行，也不屬於下一行
 x = 1;
-  → children: [
-      node(concept: 'comment', properties: {text: 'section header'}),
-      node(concept: 'var_assign', ...)
-    ]
-  → 積木端：獨立的「註解積木」，可自由拖動
+  → children: [node('comment', {text: 'section header'}), node('var_assign', ...)]
 ```
 
 **表達式內部的註解** — 附著在子節點上，跟著子節點走：
 
 ```
 foo(a, /* 重要參數 */ b);
-  → call_expression(foo)
-    ├── arg[0]: identifier(a)
-    └── arg[1]: identifier(b)
-                  └── annotations: [{type: 'comment', position: 'before', text: '重要參數'}]
+  → arg[1]: identifier(b) + annotations: [{position: 'before', text: '重要參數'}]
 ```
 
-annotation 可以附著在語義樹**任何層級**的節點上，不只是 statement level。當使用者在積木端互換 a 和 b 的順序時，註解跟著 b 走——因為它描述的是 b，不是「第二個位置」。
-
-**為什麼不能用「最近節點」啟發式**：如果兩行語句之間有一行註解，它到底屬於上一行的 `after` 還是下一行的 `before`？當使用者在積木端拖曳互換兩個語句時，啟發式會導致不可預期的「註解漂移」。將獨立註解作為平級節點可以徹底避免這個問題。
+annotation 可以附著在語義樹**任何層級**的節點上。獨立註解作為平級節點可以避免「最近節點」啟發式導致的註解漂移。
 
 ```typescript
 interface SemanticNode {
   concept: ConceptType
   properties: Record<string, PropertyValue>
   children: Record<string, SemanticNode[]>
-  annotations?: Annotation[]   // 附著型元資訊（任何層級節點皆可）
+  annotations?: Annotation[]
 }
 
 interface Annotation {
   type: 'comment' | 'pragma' | 'lint_directive'
   text: string
   position: 'before' | 'after' | 'inline'
-  // before: 節點前的註解（子節點層級，跟著節點走）
-  // after:  節點後的註解
-  // inline: 行尾註解（同一行）
 }
-
-// 獨立的 statement-level 註解是一種特殊的語義節點（no-op），不是 annotation：
-// { concept: 'comment', properties: { text: '...' }, children: {} }
 ```
 
-**語法偏好（Syntax Preference）** — 第四類資訊：
+### 語法偏好
 
-某些語法結構在語義上等價，但使用者有意識地選擇了特定寫法（如 `x += 1` vs `x = x + 1`，`i++` vs `i += 1`）。這不是語義（不改變行為），也不是純粹的呈現（使用者有意識的選擇），而是第四類資訊：
-
-| | 語義 | 呈現 | 元資訊 | 語法偏好 |
-|---|---|---|---|---|
-| **定義** | 改行為 | 改外觀 | 不改行為有資訊價值 | 不改行為但使用者有意識的選擇 |
-| **例子** | 型別、邏輯 | 縮排 | 註解 | `+=` vs `= x+1`、`i++` vs `i+=1` |
-| **儲存** | 語義樹節點 | metadata | annotation | metadata.syntaxPreference |
-| **round-trip** | 必須保留 | 可丟失 | best-effort | best-effort |
+某些語法結構語義等價但使用者有意識地選擇了特定寫法（如 `x += 1` vs `x = x + 1`）。記錄在 metadata 中，project() 時優先使用原始寫法：
 
 ```typescript
-// 語法偏好記錄在 metadata 中，project() 時優先使用原始寫法：
 {
   concept: 'var_assign',
   properties: { name: 'x', operator: '+=' },
-  children: { value: number(1) },
-  metadata: {
-    syntaxPreference: 'compound_assign'
-    // project() 時優先使用 +=
-    // 如果目標語言不支援則退回 x = x + 1
-  }
+  metadata: { syntaxPreference: 'compound_assign' }
 }
 ```
 
-**特殊案例——變數命名**：變數名是語義資訊（`myVar` 和 `my_var` 是不同變數）。因此 **Style 不能自動轉換既有變數名稱**——這會將語義操作偽裝成呈現操作，破壞根公理的分界。
+### 變數命名的邊界
 
-```
-Style 的職責邊界：
-  ✅ 控制新建變數時的命名建議格式（如預設用 camelCase）
-  ✅ 控制程式碼的縮排、大括號位置等純呈現格式
-  ❌ 轉換既有變數的命名風格（這是 rename refactoring）
+變數名是語義資訊（`myVar` 和 `my_var` 是不同變數）。**Style 不能自動轉換既有變數名稱**——這是 rename refactoring，不是 style switch。Style 只控制新建變數的命名建議格式和程式碼的純呈現格式。
 
-變數重新命名的正確處理：
-  → 這是 refactoring 操作（rename symbol），不是 style switch
-  → 需要 symbol table + scope analysis
-  → 必須由使用者明確觸發，不能在切換 Style 時自動發生
-  → 必須在所有引用點一致轉換，需要理解作用域和引用關係
-```
+### lift() 的狀態模型
 
-**lift() 的狀態模型**：lift() 在**單次調用內**需要維護帶有作用域層級的符號表（scoped symbol table），以正確處理變數遮蔽（variable shadowing）和型別推導。但它在**跨次調用之間**不共享狀態，且 Style 切換不影響其符號表——這確保了 lift() 與 Style 不耦合。
-
-```
-lift() 的狀態邊界：
-  ✅ 單次 lift(AST) 調用中：維護作用域棧 + 局部符號表（必要）
-  ❌ 不同次 lift() 調用之間：不共享持久化狀態（純函數語義）
-  ❌ Style 參數不影響 lift() 的符號表（不耦合）
-```
+lift() 在**單次調用內**維護作用域棧 + 局部符號表。**跨次調用之間**不共享狀態。Style 切換不影響 lift() 的符號表——確保 lift() 與 Style 不耦合。
 
 ---
 
-## 教育學定位
+## 4. 教育學定位
 
 > **積木是認知鷹架（cognitive scaffolding），不是替代品。**
 > 其設計目標是降低外在認知負荷，讓學習者在近側發展區內建立程式設計的心智模型，並最終過渡到文字程式碼。
 
-這段話建立在三個教育學理論之上：
-
 ### 認知負荷理論（Cognitive Load Theory, Sweller 1988）
-
-學習時的認知負荷分三類：
 
 | 類型 | 定義 | 積木系統的角色 |
 |------|------|--------------|
@@ -281,10 +201,7 @@ lift() 的狀態邊界：
 | **外在負荷**（Extraneous） | 不良教學設計帶來的額外負擔 | **積木的首要任務是消除這類負荷** |
 | **增生負荷**（Germane） | 建立心智模型的有益負荷 | 積木應引導學習者投入這類負荷 |
 
-積木消除外在負荷的方式：
-- **語法記憶 → 拖拽選擇**：不需要記住分號、括號、關鍵字拼寫
-- **型別錯誤 → 形狀約束**：積木的接口形狀就是型別系統
-- **結構錯誤 → 巢狀限制**：不可能把 expression 放在 statement 的位置
+積木消除外在負荷的方式：語法記憶→拖拽選擇、型別錯誤→形狀約束、結構錯誤→巢狀限制。
 
 ### 近側發展區（Zone of Proximal Development, Vygotsky 1978）
 
@@ -300,48 +217,31 @@ lift() 的狀態邊界：
 └─────────────────────────────────────┘
 ```
 
-積木系統是 ZPD 中的**鷹架**：讓學習者做到他們「差一點就能做到」的事。鷹架必須：
-1. **可調整**：隨著能力成長，鷹架應減少（P4 的層級切換）
-2. **可拆除**：最終目標是過渡到文字程式碼，積木不應成為依賴
-3. **透明**：鷹架不應遮蔽被輔助的概念（積木應映射到真實程式結構）
-
 ### 鷹架設計的四個推導原則
-
-從上述理論推導出積木設計的約束：
 
 ```
 CLT + ZPD
-  │
-  ├─ S1 鷹架可調性：同一概念在不同層級有不同的鷹架強度
-  │   （對應 P4 漸進揭露——L0 鷹架最強，L2 鷹架最弱）
-  │
-  ├─ S2 鷹架可退場：積木設計不可引入文字程式碼中不存在的概念
-  │   （確保學習者過渡到文字時不需要「忘掉」積木特有的抽象）
-  │
-  ├─ S3 認知一致性：積木結構應映射到真實的程式結構
-  │   （一個積木 = 一個語法結構，不多不少）
-  │
-  └─ S4 最小驚訝：積木的行為應符合學習者對程式碼的預期
-      （積木生成的程式碼和學習者預期的程式碼一致）
+  ├─ S1 鷹架可調性：同一概念在不同層級有不同的鷹架強度（對應 P4）
+  ├─ S2 鷹架可退場：積木不可引入文字程式碼中不存在的概念
+  ├─ S3 認知一致性：一個積木 = 一個語法結構，不多不少
+  └─ S4 最小驚訝：積木行為和生成的程式碼一致
 ```
 
-S2 與根公理呼應：如果「程式是語義樹」，那積木就是語義樹節點的視覺化，不應該發明語義樹中不存在的概念。
+S2 與根公理呼應：積木是語義樹節點的視覺化，不應發明語義樹中不存在的概念。
 
 ---
 
-## 四個原則
+# 第二層：設計原則
+
+## 5. 四個原則
 
 從根公理推導出四個正交原則：
 
 ```
 根公理：程式是語義樹
-  │
   ├─ P1 投影定理：樹有多種等價表示，且可互轉
-  │
   ├─ P2 概念代數：概念有結構，可分層、可組合、可映射
-  │
   ├─ P3 開放擴充：新概念可加入而不破壞既有結構
-  │
   └─ P4 漸進揭露：同一棵樹在不同認知層級有不同的可見範圍
 ```
 
@@ -362,73 +262,36 @@ view = project(structure, scope, viewType, viewParams)
 目前已實現的兩種投影：
 
 ```
-code   = project(tree, file, code, { language, codeStyle })         // Generator
-blocks = project(tree, file, blocks, { language, locale, blockStyle }) // Renderer
-AST    = parse(code, language)                                       // Parser
-tree   = lift(AST, language)                                         // Lifter
+code   = project(tree, file, code, { language, codeStyle })
+blocks = project(tree, file, blocks, { language, locale, blockStyle })
+AST    = parse(code, language)
+tree   = lift(AST, language)
 ```
 
-未來可擴展的投影：
-
-```
-flowchart     = project(tree, function, flowchart, { flowStyle })
-architecture  = project(graph, project, architecture, { archStyle })
-call_graph    = project(graph, module, call_graph, { graphStyle })
-narrative     = project(tree, function, narrative, { locale, detail })
-```
-
-- 使用者在積木編輯器拖積木 → 修改語義結構 → 重新投影成程式碼
-- 使用者在程式碼編輯器打字 → parse 成 AST → lift 成語義樹 → 重新投影成積木
-- 所有視圖永遠從同一個語義結構衍生，不可能不一致
-- 多個視圖可以同時顯示，每個視圖用不同的 scope + viewType 觀察同一個結構
+未來可擴展：flowchart、architecture、call_graph、narrative、execution（見願景章節）。
 
 #### 四個正交參數
 
 | 參數 | 影響什麼 | 不影響什麼 |
 |------|---------|-----------|
-| **Language**（程式語言） | 兩邊都影響：能用的概念、型別、語法 | — |
-| **Code Style**（編碼風格） | 只影響程式碼：格式、命名、慣例 | 不影響積木 |
-| **Locale**（介面語言） | 只影響積木文字：message、tooltip、dropdown label | 不影響程式碼、不影響積木排版 |
-| **Block Style**（積木排版） | 只影響積木外觀：方向、密度、配色、渲染器 | 不影響程式碼、不影響積木文字 |
+| **Language** | 兩邊都影響：能用的概念、型別、語法 | — |
+| **Code Style** | 只影響程式碼：格式、命名、慣例 | 不影響積木 |
+| **Locale** | 只影響積木文字：message、tooltip、dropdown label | 不影響程式碼 |
+| **Block Style** | 只影響積木外觀：方向、密度、配色、渲染器 | 不影響程式碼 |
 
-**正交性的精確定義**：Language 是基底參數，它決定其他三者的**可用空間**，但不決定在空間內的選擇。Code Style、Locale、Block Style 在各自空間內完全獨立。
-
-```
-Code Style 空間 = Universal Code Style Options × Language-Specific Code Style Options
-
-Universal Code Style Options（所有語言共有）:
-  indent_size: 2 | 4
-  brace_style: 'K&R' | 'Allman'
-  naming: 'camelCase' | 'snake_case'
-
-Language-Specific Code Style Options（僅特定語言有意義）:
-  C++: io_style: 'cout' | 'printf'
-  C++: namespace_style: 'using' | 'explicit'
-  C++: header_style: 'bits' | 'individual'
-```
+**正交性的精確定義**：Language 是基底參數，決定其他三者的**可用空間**，但不決定空間內的選擇。Code Style、Locale、Block Style 在各自空間內完全獨立。
 
 ```
-Block Style 空間 = Universal Block Style Options × Language-Specific Block Style Options
+Code Style 空間 = Universal Options × Language-Specific Options
+  Universal:    indent_size, brace_style, naming
+  C++ Specific: io_style ('cout'|'printf'), namespace_style, header_style
 
-Universal Block Style Options（所有語言共有）:
-  renderer: 'zelos' | 'geras'               // 渲染器（圓角 vs 方角）
-  density: 'compact' | 'normal' | 'spacious' // 積木密度
-  colour_scheme: 'scratch' | 'classic' | ... // 配色方案
-
-Language-Specific Block Style Options（可由語言模組覆蓋）:
-  inputsInline: true | false                 // 預設水平或垂直排列
-  orientation: 'horizontal' | 'vertical'     // 多值積木的延伸方向
+Block Style 空間 = Universal Options × Language-Specific Options
+  Universal:    renderer ('zelos'|'geras'), density, colour_scheme
+  L-Specific:   inputsInline, orientation
 ```
-
-**Code Style vs Block Style 的對稱性**：兩者都是純呈現參數，改了不動語義樹。Code Style 控制程式碼的排版（縮排、換行、命名），Block Style 控制積木的排版（方向、密度、形狀）。
-
-類比：Language 決定棋盤大小，Code Style 決定棋子記號，Block Style 決定棋盤材質。三者互不影響，但都受限於棋盤——這不違反正交性。
 
 #### 可逆性保證（分級）
-
-定義兩種資訊度量：
-- `structured_info(tree)` — 語義樹中結構化的語義資訊（概念類型、屬性、子節點關聯）
-- `total_info(tree)` — 結構化語義 + 原始文字資訊（包含 raw_code 中保留的文字）
 
 設 `T` 為原始語義樹，`R = lift(parse(project(T)))` 為 round-trip 後的語義樹：
 
@@ -438,101 +301,57 @@ Language-Specific Block Style Options（可由語言模組覆蓋）:
 
 有損保留：structured_info(R) ⊆ structured_info(T)
           且 total_info(R) ⊇ total_info(T)
-          // 降級後結構化程度降低（⊆），但原始文字不丟失（⊇）
-          // 總資訊量不減少，只是從結構化轉為非結構化
+          // 降級後結構化程度降低，但原始文字不丟失
 ```
 
-**為什麼 `total_info` 用 `⊇` 是正確的**：降級為 `raw_code` 時，結構化語義資訊減少（`structured_info(R) ⊂ structured_info(T)`），但原始程式碼文字被完整保留在 `raw_code` 節點中，補償了結構損失。總資訊量不減少，只是**結構化程度降低**。
-
-不管怎麼投影再逆投影，語義不能丟失。但呈現資訊和語法偏好可以丟失（可接受）：
-- 程式碼的縮排、空行 → 投影到積木再投影回來，格式可能不同（語義相同）
-- 積木的位置、排列 → 投影到程式碼再投影回來，位置可能重排（語義相同）
-- 語法糖的選擇 → best-effort 保留在 `metadata.syntaxPreference`，不保證
+不管怎麼投影再逆投影，語義不能丟失。呈現資訊和語法偏好可以丟失（可接受）。
 
 **實用判定法**：寫完一個新積木後，跑 `code → blocks → code`，語義不能變。
 
 #### 不存在「不可轉換」——只存在「降級程度」
 
-從 P1 的可逆性保證和 P2 的降級層次（見 2b）共同推導：
-
 > **系統的職責不是消除降級，而是讓降級透明可見、且不丟失資訊。**
-
-任何程式碼片段都至少能降級為 `raw_code`（Level 4），因此**不存在「轉換失敗」這個狀態**。只存在「結構化程度」的差異：
 
 ```
 結構化程度（高→低）：
-
-  精確積木          structured_info 完整保留
-    ↓
-  通用積木（推斷）   structured_info 部分保留，metadata.confidence = 'inferred'
-    ↓
-  unresolved 節點    結構保留（子樹各自嘗試），metadata.confidence = 'inferred'
-    ↓
-  raw_code 積木      structured_info = ∅，但 total_info 完整保留
+  精確積木 (confidence: high)       → structured_info 完整
+  警告積木 (confidence: warning)    → 結構匹配但語義可疑
+  推斷積木 (confidence: inferred)   → 部分保留
+  降級積木 (raw_code)               → structured_info = ∅，原始文字保留
 ```
 
-**降級是逐節點的，不是全有全無的**。一段 100 行的程式碼，可能 95 行精確 lift、3 行推斷、2 行降級為 raw_code。每個節點獨立決定自己的結構化程度。
-
-**降級必須可見**：使用者需要能區分四種積木狀態：
+降級是逐節點的，不是全有全無的。降級必須可見：
 
 | 狀態 | 含義 | 視覺提示 |
 |------|------|---------|
-| 精確（confidence: high） | 系統完全理解此概念，所有條件都滿足 | 正常顯示 |
-| 警告（confidence: warning） | 結構匹配但有可疑點（附帶 warning_reason） | 黃色邊框 + tooltip 顯示原因 |
-| 推斷（confidence: inferred） | 系統推測但不確定 | 微小提示（如淡色邊框） |
-| 降級（raw_code） | 系統無法結構化理解 | 明顯標記（如灰色底、程式碼文字） |
+| 精確（high） | 系統完全理解，所有條件滿足 | 正常顯示 |
+| 警告（warning） | 結構匹配但有可疑點 | 黃色邊框 + tooltip |
+| 推斷（inferred） | 系統推測但不確定 | 淡色邊框 |
+| 降級（raw_code） | 系統無法結構化理解 | 灰色底、程式碼文字 |
 
-**warning 的典型案例**：語用分析判定為 `count_loop`，但 body 內修改了迴圈變數——結構上匹配但語義上可疑。此時應標記 `confidence: 'warning'` 並附帶 `warning_reason: 'loop variable modified in body'`，讓使用者自行判斷。如果語用分析不做此檢查，學習者會得到錯誤的心智模型（以為這是普通的計數迴圈）。
-
-**強制性規則（從 S4 最小驚訝推導）**：任何 `patternType: 'composite'` 的 pattern，如果結構匹配成功但未通過所有語義驗證（如副作用分析、變數修改檢查），**必須**強制設定 `confidence: 'warning'`。實作者不得將可疑匹配靜默地標記為 `confidence: 'high'`。這不是建議，是架構層面的硬性約束——靜默地把可疑匹配當作精確匹配直接違反 S4。
+**強制性規則**（從 S4 推導）：任何 `patternType: 'composite'` 的 pattern，如果結構匹配成功但未通過所有語義驗證，**必須**設定 `confidence: 'warning'`。跳過語義驗證直接設為 `high` = 架構違規。
 
 ```
 composite pattern 匹配流程（強制）：
-  ① 結構匹配（AST 欄位類型檢查）      → 不通過 → 不匹配，嘗試下一個 pattern
-  ② 語義驗證（副作用、變數修改等）      → 不通過 → 匹配但 confidence: 'warning'
-  ③ 所有檢查通過                        →          confidence: 'high'
-
-跳過步驟 ② 直接設為 'high' = 架構違規
+  ① 結構匹配（AST 欄位類型檢查）  → 不通過 → 不匹配
+  ② 語義驗證（副作用、變數修改等） → 不通過 → confidence: 'warning'
+  ③ 所有檢查通過                   →          confidence: 'high'
 ```
-
-**降級不是錯誤，是設計好的安全網**。系統的進化方向是逐漸減少 raw_code 節點（透過新增概念和 pattern），但永遠不追求消除它——因為使用者永遠可能寫出系統尚未建模的程式碼。
 
 #### lift() 的完備性邊界
-
-從 AST 提升到語義樹（`lift()`）不是 trivial 的操作。AST 是語法結構，語義樹是意圖結構，兩者之間的鴻溝因語言而異：
-
-```
-// Python 中的 a + b，不知道型別就無法判斷語義：
-a + b   // math_add? string_concat? list_concat?
-
-// C++ 中的 a + b，從宣告可以推導型別：
-int a;  // → 語義確定為 math_add
-```
-
-**lift() 的四級策略**：
 
 ```
 Level 1: 結構匹配   — AST pattern 唯一對應，語義明確
 Level 2: 上下文推導  — 查找 declaration/context 消除歧義
-Level 3: 未決保留   — 建立 unresolved 節點，保留原始 AST 結構
+Level 3: 未決保留   — 建立 unresolved 節點，保留 AST 結構
 Level 4: 降級       — 真正無法處理 → raw_code
 ```
 
-**Level 3 與 Level 4 的關鍵差異**：Level 3 保留了結構資訊（知道是 binary expression、知道運算子是 `+`），Level 4 只保留原始文字（完全放棄結構解析）。
+Level 3 與 Level 4 的差異：Level 3 保留結構（知道是 binary expression、知道運算子），Level 4 只保留文字。
 
-**完備性因語言而異**：
-
-| 語言類型 | lift() 難度 | 原因 |
-|---------|------------|------|
-| 靜態型別（C/C++/Java） | 中等 | Level 1 + Level 2 可覆蓋絕大多數情況 |
-| 動態型別（Python/JS） | 困難 | 多型運算子頻繁觸發 Level 3 |
-
-**系統策略**：不追求完備，追求「能 lift 的精確 lift，不能的優雅降級」。對於教學場景，Level 1 + Level 2 已經足夠。
-
-**動態語言的歧義處理（Level 3 詳述）**：當結構匹配產生多個候選語義時（如 Python 的 `a + b` 可能是 `math_add` 或 `string_concat`），**不能採用機率猜測**——猜錯會污染語義樹，破壞 P1 的可逆性保證。正確做法是建立「未決節點」：
+**動態語言的歧義處理**：多個候選語義時，不猜測，建立 unresolved 節點：
 
 ```typescript
-// 不猜測，而是保留歧義：
 {
   concept: 'unresolved_binary_op',
   properties: { operator: '+', candidates: ['math_add', 'string_concat'] },
@@ -540,21 +359,9 @@ Level 4: 降級       — 真正無法處理 → raw_code
 }
 ```
 
-未決節點在積木端顯示為通用的運算積木（如 `[a + b]`），保留完整的 AST 結構資訊。當使用者在積木端提供型別標註、或系統從其他上下文取得足夠資訊後，才特化為具體概念。這確保了 `lift(parse(project(tree))) ⊇ tree` 的保證不被破壞。
+跨語言轉換的**前置條件**：語義樹中不可有 unresolved 節點。使用者不想手動消歧時，該節點降級為 raw_code。
 
-**未決節點與跨語言轉換**：未決節點在同語言 round-trip 中是安全的（原始文字原樣保留），但在跨語言轉換時會產生死鎖——目標語言的 Generator 無法決定如何生成程式碼。因此跨語言轉換有一個**前置條件**：
-
-```
-跨語言轉換流程：
-  source code → lift() → 語義樹
-  → [前置檢查門] 語義樹中有 unresolved 節點？
-    → 有：UI 標記這些節點，要求使用者消歧後才能繼續
-    → 無：進入跨語言映射 → project(tree, target_lang)
-```
-
-如果使用者不想手動消歧，該節點降級為 `raw_code`（帶 warning 標籤），而非讓 Generator 猜測。
-
-**lift() 的上下文**：lift() 需要的上下文不只包含型別宣告，也包含 namespace 指令、include、巨集定義等「環境修飾」。這些不是語義節點，但影響其他節點的語義辨識：
+**lift() 的上下文**：
 
 ```
 lift() context = {
@@ -565,36 +372,26 @@ lift() context = {
 }
 ```
 
-例如 `using namespace std;` 不進入語義樹，但 Parser 遇到它時會更新上下文，使後續的 `cout` 能正確 lift 為 `io_output` 概念。在 project() 時，由 Style preset 決定是否產生 `using namespace`——兩者不耦合。
-
-**C/C++ 巨集的處理**：tree-sitter 不展開巨集，`FOR(i, 0, 10)` 會被解析為 `call_expression` 而非 `for_statement`。如果 lift() 用 Level 1 結構匹配將其硬解為函式呼叫，迴圈的語義就會丟失。
+**巨集處理**：tree-sitter 不展開巨集。巨集的影響分兩種情況：
 
 ```
-巨集處理策略：
-  1. parse() 階段遇到 #define → 將巨集名稱加入 context.macro_definitions
-  2. lift() 遇到 call_expression → 檢查函式名是否在 macro_definitions 中
-     → 是未知巨集：巨集調用節點本身降級為 unresolved_macro（Level 3），
-       但其引數子樹各自獨立嘗試 lift()（不一刀切）
-     → 不是巨集：正常 Level 1-4 策略
+情況 1 — 獨立巨集調用（如 FOR(i,0,n)、DECLARE_PTR(Foo)）：
+  巨集調用本身降級為 unresolved_macro（Level 3），
+  但引數子樹各自獨立嘗試 lift()——不一刀切。
+  已知巨集可由語言模組 opt-in 擴充。
+
+情況 2 — 成對巨集（如 BEGIN_MAP/END_MAP、Qt 的 signals/slots）：
+  tree-sitter 在成對巨集之間無法產生有效 AST——
+  整個區塊變成 ERROR 節點，「子樹各自嘗試」的前提不成立。
+  → 整片降級為 raw_code，這是物理限制，不是架構缺陷。
+
+情況 3 — 巨集定義型別（如 DECLARE_SMART_PTR(Foo) → 生成 FooPtr）：
+  符號表中缺少巨集生成的型別 → 所有使用該型別的節點連鎖降級。
+  lift() 的符號表應標記這些節點為「型別來源受汙染」（tainted_type），
+  使降級更精細——不是「不認識就全降」，而是「知道為什麼不認識」。
 ```
 
-**精細降級的原因**：如果一個未知巨集包裹了龐大的程式碼區塊（例如 `TEST_CASE("name") { ... }`），整個降級為 `raw_code` 會導致內部所有合法的、可解析的語義樹全部丟失。正確做法是只降級巨集調用本身，保留子樹的結構：
-
-```
-TEST_CASE("name") { x = 1; y = 2; }
-  → unresolved_macro(name="TEST_CASE")          ← 巨集節點降級
-    ├── arg[0]: string_literal("name")           ← 正常 lift
-    └── arg[1]: compound_statement               ← 正常 lift 內部語句
-        ├── var_assign(x, 1)                     ← 正常 lift
-        └── var_assign(y, 2)                     ← 正常 lift
-```
-
-```
-  已知巨集的 opt-in 擴充：
-  → 語言模組（如競賽風格）可預定義常見巨集的語義映射
-  → 例如 #define FOR(i,a,b) for(...) → 映射為 count_loop 概念
-  → 這是 Style preset 的擴充，不是 lift() 的核心職責
-```
+**誠實的邊界**：對於重度使用框架巨集的 C++ 專案（Qt、MFC、gtest），巨集密集區域會整片降級。緩解方向（工程代價大）：在 tree-sitter 之前跑 C preprocessor，或為特定框架預定義巨集展開規則。
 
 ---
 
@@ -610,28 +407,11 @@ Layer 1: Lang-Core      — 語言核心語法（pointer, template, decorator）
 Layer 2: Lang-Library   — 標準/外部函式庫（vector, printf, numpy）
 ```
 
-每一層嚴格依賴上一層，不能反向依賴：
+每一層嚴格依賴上一層，不能反向依賴。型別系統是 language-specific 的。
 
-```
-Layer 2 用 Layer 0 的結構表達自己：
-  cpp:vector_push_back = func_call(object="vec", method="push_back", args=[value])
+#### 2a'. 概念註冊完備性（Concept Registry Completeness）
 
-Layer 1 擴充 Layer 0 的語法能力：
-  cpp:pointer_deref = unary_expression(operator="*", operand=ptr)
-```
-
-**推論**：
-- Universal 積木定義「概念的結構」，但不定義「型別清單」。型別清單由語言模組注入。
-- Universal 積木的 tooltip 可以有預設文字（概念說明），但語言模組可以覆蓋（加入語言特定的細節）。
-- 型別系統是 language-specific 的（C++ 有 `double`/`char`/`long long`，Python 沒有）。
-
-#### 2a′. 概念註冊完備性（Concept Registry Completeness）
-
-從根公理（概念可枚舉）和 P1（每個概念必須可逆投影）推導：
-
-> 系統中每一個概念必須在**概念註冊表（Concept Registry）**中有唯一條目。概念註冊表是四條管線的共同 source of truth。
-
-**四條管線的完備性約束**：
+> 系統中每一個概念必須在**概念註冊表（Concept Registry）**中有唯一條目。
 
 ```
 ∀ concept ∈ ConceptRegistry:
@@ -642,11 +422,7 @@ Layer 1 擴充 Layer 0 的語法能力：
   ⑤ roundtrip(concept) ≡ identity           — 可逆（P1 保證）
 ```
 
-**coverage gap 的定義**：如果一個概念存在於 ConceptRegistry 中，但缺少上述 ①-④ 任何一條路徑，即為 coverage gap。coverage gap 是架構缺陷，不是測試遺漏。
-
-**測試完整性的保證**：如果 ConceptRegistry 是完整的（包含系統中所有概念），且 ①-⑤ 對每個條目都通過，則**測試完整性由 P1 + P2 的數學性質保證**——不依賴經驗性的覆蓋率指標。
-
-**概念的來源**：概念散布在多個位置——BlockSpec JSON（`blocks/*.json`）、lift-patterns.json、hand-written lifters、hand-written generators。ConceptRegistry 必須彙整所有來源，任何只存在於某一處但未註冊的概念是違規。
+缺少任何一條路徑 = coverage gap = 架構缺陷（0 容忍）。
 
 ```
 ConceptRegistry 的彙整來源：
@@ -654,35 +430,13 @@ ConceptRegistry 的彙整來源：
   ├─ lift-patterns.json  → concept.conceptId
   ├─ hand-written lifter → createNode('概念ID', ...)
   └─ hand-written generator → g.set('概念ID', ...)
-
-靜態檢查規則：
-  - BlockSpec 中定義的概念 → 必須有 lift + render + extract + generate
-  - lift-patterns.json 的概念 → 必須有對應的 render + generate
-  - hand-written lifter 產生的概念 → 必須有對應的 render + generate
-  - generator 接受的概念 → 必須有對應的 lift + render 能產生它
 ```
 
-**判定法**：跑一個靜態分析腳本，收集所有概念 ID，對每個 ID 檢查四條路徑是否存在。任何缺口 = 0 容忍的架構缺陷。
+**判定法**：靜態分析腳本收集所有概念 ID，對每個 ID 檢查四條路徑是否存在。
 
-#### 2b. 概念映射（Mapping）
+#### 2b. 概念映射與降級（Mapping & Degradation）
 
-每個具體概念**必須**聲明它映射到哪個抽象概念：
-
-```
-抽象概念                具體概念
-────────────────────────────────────
-container_add      ←── cpp:vector_push_back
-                   ←── cpp:set_insert
-                   ←── python:list_append
-
-io_output          ←── cpp:cout_print
-                   ←── c:printf
-                   ←── python:print
-
-generic_call       ←── 任何未特化的 call_expression
-```
-
-**這就是降級策略的來源**（不需要獨立的「優雅降級」原則）：
+每個具體概念**必須**聲明映射到哪個抽象概念：
 
 ```
 Level 1: 有具體積木       → 用具體積木（如 cpp:vector_push_back）
@@ -691,146 +445,74 @@ Level 3: 連抽象概念都沒有 → raw_code 降級
 Level 4: 標記為不支援     → 保留在模型中不丟失
 ```
 
-**最重要的是 Level 4**：即使無法顯示，也**絕不丟失語義資訊**。
-
-**跨語言轉換**也從映射自然推導，但存在**語義阻抗（Semantic Impedance）**，需要分級處理：
+**跨語言轉換**從映射自然推導，但存在**語義阻抗（Semantic Impedance）**：
 
 ```
-跨語言轉換的三個層次：
-
-Layer 1 — 結構等價（可自動映射）：
-  控制流（if/for/while）、基本運算、函式定義
-  → 所有語言語義幾乎相同，自動映射安全
-
-Layer 2 — 語義近似（需要適配）：
-  容器操作、I/O、字串處理
-  → 存在語義阻抗（回傳值、副作用、例外處理差異）
-  → 映射是「最佳近似」，不是「精確等價」
-
-Layer 3 — 無法映射（降級）：
-  語言特有概念（C++ template、Python decorator）
-  → 沒有對等物，必須降級為 raw_code 或拒絕轉換
+Layer 1 — 結構等價（可自動映射）：控制流、基本運算、函式定義
+Layer 2 — 語義近似（需要適配）：容器操作、I/O、字串處理
+Layer 3 — 無法映射（降級）：語言特有概念（C++ template、Python decorator）
 ```
 
-**語義阻抗的偵測**：抽象概念應該攜帶語義契約（Semantic Contract），用於在映射時偵測阻抗：
+**語義阻抗的偵測**：抽象概念攜帶語義契約和語言約束：
 
 ```typescript
 interface AbstractConceptDef {
   id: string
   semanticContract: {
-    effect: 'pure' | 'mutate_self' | 'mutate_arg'  // 副作用類型
-    returnSemantics: 'void' | 'self' | 'new_value'   // 回傳語義
-    chainable: boolean                                 // 是否可鏈式呼叫
+    effect: 'pure' | 'mutate_self' | 'mutate_arg'
+    returnSemantics: 'void' | 'self' | 'new_value'
+    chainable: boolean
   }
-  // 語言相關的語義約束（跨語言映射時用於偵測阻抗）
   constraints?: Record<string, LanguageConstraints>
 }
 
 interface LanguageConstraints {
-  may_reallocate?: boolean        // 可能觸發記憶體重分配
-  invalidates_iterators?: boolean // 使迭代器/指標失效
-  worst_case?: string             // 最壞時間複雜度
-  thread_safe?: boolean           // 是否執行緒安全
-  throws?: boolean                // 是否可能拋出例外
-  notes?: string                  // 人類可讀的補充說明
+  may_reallocate?: boolean
+  invalidates_iterators?: boolean
+  worst_case?: string
+  thread_safe?: boolean
+  throws?: boolean
+  notes?: string
 }
 ```
 
-```
-// 範例：container_add 的語言約束
-container_add:
-  semanticContract: { effect: 'mutate_self', return: 'void' }
-  constraints:
-    cpp:
-      may_reallocate: true
-      invalidates_iterators: true
-      worst_case: 'O(n) amortized'
-      notes: 'vector::push_back 在容量不足時重分配'
-    js:
-      may_reallocate: false
-      worst_case: 'O(1) amortized'
-    python:
-      may_reallocate: false
-      worst_case: 'O(1) amortized'
-```
+語義阻抗分三個層次：
 
 ```
-// 跨語言映射時的阻抗偵測（含 constraints）：
-cpp:push_back → js:array_push
-  semanticContract: ✅ 兩者都是 mutate_self + void
-  constraints:
-    cpp 有 invalidates_iterators: true → js 沒有
-    → ⚠️ semantic_gap: 「C++ 的 push_back 會使迭代器失效，JS 的 push 不會。
-                         如果原始程式碼依賴此行為，轉換後語義不同。」
-    → 投影時在積木上顯示警告，代碼中生成 TODO 註解
+節點級阻抗（可標記、可近似）：
+  push_back vs push — 回傳值、副作用差異
+  → semanticContract 可偵測，標記 semantic_gap + 生成 TODO 註解
+
+拓撲級阻抗（無法節點級映射，需要重構子圖）：
+  C++ RAII (scope_guard → resource_acquire → scope_exit)
+    → Python 中沒有「所有權」這個結構維度，整個子圖需要重新設計
+  Go goroutine + channel
+    → C++ 中沒有對等的結構模式，不是翻譯節點而是重寫架構
+
+  拓撲級阻抗不是 semantic_gap 標記能解決的——
+  目標語言的語義結構中根本不存在對應的維度。
+  正確行為：生成差異報告（「這裡的結構在目標語言中不存在，需要重新設計」），
+  而非靜默生成破碎的程式碼。
+
+語言模型級阻抗（超出形式化範圍）：
+  記憶體模型（手動管理 vs GC）、併發模型（goroutine vs pthread）
+  → constraints 欄位記錄，但無法自動處理，走降級路徑 + 「需人工調整」
 ```
 
-**為什麼 constraints 對 L2 至關重要**：概念代數（concept, properties, children）只編碼「做什麼」，不編碼「代價是什麼」。對 L0-L1 的教學場景，這足夠了——初學者不需要知道迭代器失效。但 L2 高階使用者和跨語言映射**必須**能看到 constraints 差異，否則會得到「兩者等價」的錯誤結論。
+跨語言映射時自動偵測 constraints 差異並標記 `semantic_gap`。對 L0-L1 教學場景不需要知道 constraints 差異，但 L2 高階使用者**必須**能看到。
 
-```
-// 偵測阻抗（原有的 semanticContract 層）：
-// cpp:push_back   (return: 'void', chainable: false)
-//   → python:list_append (return: 'void', chainable: false)  ✅ 安全
-//   → js:array_push      (return: 'new_value')               ⚠️ 阻抗警告
-```
+**對 Scope 3 的影響**：跨語言轉換在 Layer 1（控制流）依然實用。但涉及語言特有結構模式（RAII、ownership、goroutine）時，Scope 3 退化為「顯示差異報告」而非「自動轉換」——這是正確的退化。
 
-跨語言轉換的基本流程：
-
-```
-C++ code → lift → 語義樹 → 找到 cpp:vector_push_back
-  → 查映射：abstractConcept = container_add
-  → 比對語義契約：是否有阻抗？
-    → 無阻抗：在目標語言中找具體概念 → project
-    → 有阻抗：標記警告，生成近似程式碼 + TODO 註解
-    → 無映射：降級為 raw_code
-```
-
-#### 2c. 概念命名空間與衝突解決（Namespace）
-
-當多個套件定義了映射到同一個 `abstractConcept` 的具體概念時，需要命名空間機制來避免衝突：
+#### 2c. 概念命名空間（Namespace）
 
 ```
 概念的完整 ID = language:package:concept
 
-cpp:stdlib:sort       → abstractConcept: collection_sort
-cpp:boost:sort        → abstractConcept: collection_sort
-python:builtin:sorted → abstractConcept: collection_sort
+衝突解決：
+  階段 1 — Pattern Match（必要條件）：function name + arg count → 候選清單
+  階段 2 — Context Disambiguation：#include / prefix → 精確匹配
+  無法精確匹配 → confidence: 'inferred'（不降級為 generic_call）
 ```
-
-**衝突解決規則**：
-
-```
-1. 命名空間隔離：不同 package 的概念 ID 不同，不會衝突
-2. AST 辨識（兩階段）：
-   階段 1 — Pattern Match（必要條件）：
-     function name = "sort", argument count = 2 or 3
-     → 候選: [cpp:stdlib:sort, cpp:boost:sort]
-   階段 2 — Context Disambiguation（充分條件）：
-     有 #include <algorithm> → 確認 cpp:stdlib:sort (confidence: high)
-     有 std:: prefix        → 確認 cpp:stdlib:sort (confidence: high)
-     都沒有                  → 選擇 cpp:stdlib:sort (confidence: low, tag: inferred)
-3. Style 選擇：同一個 abstractConcept 有多個具體實現時，
-   由 Style preset 決定「生成」時用哪個
-   （如 APCS style 用 stdlib，不用 boost）
-4. 辨識不衝突：「認回來」時根據 AST constraints 精確匹配，
-   不依賴 Style 選擇
-```
-
-**confidence 標籤**：C++ 允許隱式引入（header 包含在其他 header 中）或依賴 PCH，僅依賴 header constraint 做辨識太脆弱。當 AST pattern 符合但找不到明確的 include 時，不應直接降級為 `generic_call`，而是標記為 `inferred`：
-
-```typescript
-{
-  concept: 'cpp:stdlib:sort',
-  properties: { ... },
-  metadata: { confidence: 'inferred', reason: 'no explicit #include <algorithm> found' }
-}
-```
-
-- `confidence: 'high'` — 有明確的 AST constraints 匹配，round-trip 正常
-- `confidence: 'inferred'` — pattern 符合但缺少充分條件，round-trip 正常但 UI 可顯示微小提示
-- 如果推論錯誤，使用者可以手動修正
-
-這與 `io_style`（cout vs printf）是同一個模式——同一個抽象概念的多個具體實現，由 Style 參數選擇生成方式，由 AST constraints + confidence 選擇辨識方式。
 
 #### 2d. 概念組合（Composition）
 
@@ -838,8 +520,6 @@ python:builtin:sorted → abstractConcept: collection_sort
 複雜概念 = 簡單概念的組合
 組合保持語義：meaning(A + B) = meaning(A) + meaning(B)
 ```
-
-實用意義：每個積木只負責一個概念，複雜行為靠**積木嵌套**實現，不靠做一個「超級積木」。
 
 **判定法**：如果一個積木拿掉某個欄位後仍然有意義，那它應該拆成兩個積木。
 
@@ -849,187 +529,69 @@ python:builtin:sorted → abstractConcept: collection_sort
 
 > 系統可以在**不修改既有程式碼**的前提下，加入新概念、新語言、新套件。
 
-#### 擴充點與擴充方式
+#### 擴充點
 
-| 擴充什麼 | 加什麼檔案 | 改什麼既有檔案 |
-|---------|-----------|--------------|
+| 擴充什麼 | 加什麼 | 改什麼既有檔案 |
+|---------|-------|--------------|
 | 新翻譯 | + locale JSON | 無 |
 | 新風格 | + style preset | 無 |
-| 新套件積木（簡單） | + block JSON（Layer 1：定義+模板+AST pattern） | 無 |
+| 新套件積木（簡單） | + block JSON（Layer 1） | 無 |
 | 新套件積木（需轉換） | + block JSON + transform 註冊（Layer 2） | 無 |
 | 新語言概念（複雜） | + block JSON + strategy 註冊（Layer 3） | 無 |
 | 新通用概念 | + UniversalConcept type | concept-registry（加一行） |
-| 新語言 | + language module（含 transform/strategy 註冊） | 無（plugin 式載入） |
-
-**判定法**：如果加一個外部套件的積木需要改 `blockly-editor.ts`，代表架構有耦合。目標是只加 JSON + 可選的註冊函數。
+| 新語言 | + language module | 無（plugin 式載入） |
 
 #### Pattern Engine 的三層表達能力
 
-P3 的「開放擴充」不等於「所有邏輯都必須是 JSON」。把所有邏輯塞進 JSON 會導致在 JSON 裡建一個圖靈不完備的 DSL，每加一個語言就需要加新的內建操作——這不是真正的開放擴充，而是核心引擎不斷膨脹。
-
 真正的開放擴充是：**語言模組能用自己的程式碼擴充引擎的行為，而不修改引擎本身。**
-
-Pattern Engine（包括 PatternLifter 和 PatternRenderer）提供三層漸進的表達能力：
 
 ```
 Layer 1: 純 JSON 聲明        — 覆蓋 ~80% 場景
-Layer 2: JSON + 具名 transform — 覆蓋 ~15% 場景
-Layer 3: JSON + 具名 strategy  — 覆蓋 ~5% 場景
+Layer 2: JSON + 具名 transform — 覆蓋 ~15% 場景（純文字轉換 string → string）
+Layer 3: JSON + 具名 strategy  — 覆蓋 ~5% 場景（完全控制 lift/render 邏輯）
 ```
-
-**Layer 1 — 純 JSON 聲明**：fieldMappings、constraints、chain、composite、operatorDispatch 等。不需要任何程式碼，絕大多數概念用這層就夠。
-
-```jsonc
-// 80% 的概念長這樣——純 JSON，零程式碼
-{
-  "astNodeType": "break_statement",
-  "concept": { "conceptId": "break" }
-}
-```
-
-**Layer 2 — JSON + 具名 transform**：當 JSON 的 fieldMapping 需要文字轉換（去引號、去前綴等）時，在 `extract` 中引用一個具名的 transform 函數。Transform 函數是純函數（`string → string`），由語言模組註冊，不寫在核心引擎裡。
-
-```jsonc
-// 15% 的概念需要文字轉換
-{
-  "astNodeType": "string_literal",
-  "concept": { "conceptId": "string_literal" },
-  "fieldMappings": [
-    { "semantic": "value", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
-  ]
-}
-```
-
-```typescript
-// 核心提供少量通用 transform
-coreTransforms.register('stripQuotes', (t) => t.replace(/^["']|["']$/g, ''))
-
-// C++ 語言模組註冊自己的
-cppTransforms.register('stripComment', (t) => {
-  if (t.startsWith('//')) return t.slice(2).trim()
-  if (t.startsWith('/*')) return t.slice(2, -2).trim()
-  return t
-})
-
-// 未來 Python 模組可以註冊自己的，不需要改核心
-pythonTransforms.register('stripFString', (t) => t.replace(/^f["']|["']$/g, ''))
-```
-
-**Layer 3 — JSON + 具名 strategy**：對於真正複雜的邏輯（條件概念路由、深層巢狀提取、動態欄位生成），JSON 中引用一個完整的 strategy 函數。Strategy 函數由語言模組註冊，擁有完全的 lift/render 控制權。
-
-```jsonc
-// 5% 的概念需要完全自訂邏輯
-{
-  "astNodeType": "function_definition",
-  "concept": { "conceptId": "func_def" },
-  "liftStrategy": "cpp:liftFunctionDef"
-}
-```
-
-```jsonc
-// Renderer 側同理
-{
-  "conceptId": "var_declare",
-  "renderStrategy": "cpp:renderVarDeclare"
-}
-```
-
-**三個 Registry 介面**：
 
 ```typescript
 // Transform: 純文字轉換（Layer 2）
 interface TransformRegistry {
   register(name: string, fn: (text: string) => string): void
-  get(name: string): ((text: string) => string) | null
 }
 
-// Lift Strategy: AST → SemanticNode（Layer 3，完全控制 lift 邏輯）
+// Lift Strategy: AST → SemanticNode（Layer 3）
 interface LiftStrategyRegistry {
   register(name: string, fn: (node: AstNode, ctx: LiftContext) => SemanticNode | null): void
-  get(name: string): LiftStrategyFn | null
 }
 
-// Render Strategy: SemanticNode → BlockState（Layer 3，完全控制 render 邏輯）
+// Render Strategy: SemanticNode → BlockState（Layer 3）
 interface RenderStrategyRegistry {
   register(name: string, fn: (node: SemanticNode) => BlockState | null): void
-  get(name: string): RenderStrategyFn | null
 }
 ```
 
-**核心引擎只有一條管線**：PatternLifter / PatternRenderer 是唯一路徑。遇到 `transform` 欄位就查 TransformRegistry，遇到 `liftStrategy` / `renderStrategy` 就查 StrategyRegistry。不存在「兩條管線競爭 + 黑名單切換」的問題。
+**核心引擎只有一條管線**：PatternLifter / PatternRenderer 是唯一路徑。遇到 `transform` 欄位就查 TransformRegistry，遇到 `liftStrategy` / `renderStrategy` 就查 StrategyRegistry。不存在雙管線競爭或黑名單切換。
 
-**判定法**：讀一個概念的 JSON 定義，就能知道它的完整行為——純宣告（Layer 1）、引用哪個 transform（Layer 2）、或引用哪個 strategy（Layer 3）。不需要搜尋散落在核心引擎中的 switch-case。
-
-**各層的職責邊界**：
-
-| 層 | JSON 負責 | 程式碼負責 | 範例 |
-|---|---|---|---|
-| Layer 1 | 完整定義 | 無 | `break`, `number_literal`, `arithmetic` |
-| Layer 2 | 結構 + 引用 transform 名 | transform 函數實現 | `string_literal`, `comment` |
-| Layer 3 | 概念聲明 + 引用 strategy 名 | strategy 函數實現 | `function_definition`, `var_declare` |
-
-**擴充性保證**：加新語言時——
-- Layer 1 概念：只加 JSON
-- Layer 2 概念：加 JSON + 在語言模組中註冊 transform 函數
-- Layer 3 概念：加 JSON + 在語言模組中註冊 strategy 函數
-- **以上三者都不需要修改核心引擎程式碼**
-
-#### Language Layer 的子模組結構
+#### Language Layer 子模組結構
 
 ```
 Language Layer (e.g., C++)
 ├── Core     — 語言核心語法（pointer, struct, template）
-├── Stdlib   — 標準函式庫
-│   ├── containers (vector, map, set, stack, queue...)
-│   ├── algorithms (sort, find, binary_search...)
-│   ├── io (cout, printf, scanf...)
-│   └── strings (strlen, strcmp, string methods...)
+├── Stdlib   — 標準函式庫（containers, algorithms, io, strings）
 └── External — 第三方函式庫（未來擴充點）
-    ├── opencv
-    └── ...
 ```
 
 #### 套件積木的標準定義格式
 
-一個 JSON 物件包含四個維度的完整定義：
-
 ```jsonc
 {
-  // 身份
-  "id": "cpp_find",
-  "language": "cpp",
-  "category": "algorithms",
-
-  // 語義層：這個概念是什麼
-  "concept": {
-    "abstractConcept": "collection_search",   // 映射到哪個抽象概念
-    "role": "container",                       // 語義角色
-    "signature": {                             // 型別簽名
-      "params": ["iterator", "iterator", "value"],
-      "returns": "iterator"
-    }
-  },
-
-  // 積木層：使用者看到什麼
+  "id": "cpp_find", "language": "cpp", "category": "algorithms",
+  "concept": { "abstractConcept": "collection_search", ... },
   "blockDef": { "type": "cpp_find", "message0": "...", "colour": "#4C97FF" },
-
-  // 程式碼層：產生什麼 code
-  "codeTemplate": {
-    "pattern": "std::find(${BEGIN}, ${END}, ${VALUE})",
-    "imports": ["algorithm"]
-  },
-
-  // AST 層：怎麼從 code 認回來
-  "astPattern": {
-    "nodeType": "call_expression",
-    "constraints": [{ "field": "function", "text": "find" }]
-  }
+  "codeTemplate": { "pattern": "std::find(${BEGIN}, ${END}, ${VALUE})", "imports": ["algorithm"] },
+  "astPattern": { "nodeType": "call_expression", "constraints": [...] }
 }
 ```
 
 #### 概念的生命週期
-
-描述一個概念從「不存在」到「完全支援」的漸進過程：
 
 ```
 階段 0: 不認識         → raw_code 降級
@@ -1038,93 +600,60 @@ Language Layer (e.g., C++)
 階段 3: 有 abstract 映射 → 可跨語言轉換
 ```
 
-這直接定義了「為外部套件寫積木」的路線圖。
-
 ---
 
 ### P4：漸進揭露（Progressive Disclosure）
 
 > 同一個語義結構，在不同認知維度顯示不同的概念子集和結構範圍。
 
-P4 有兩個正交的維度：**概念層級**（Concept Level，看到哪些概念）和**結構範圍**（Structure Scope，看到多大的結構）。
+P4 有兩個正交的維度：
 
 #### 概念層級（Concept Level）
 
 ```
-L0 初學：只看到 Universal 概念
-         (變數、if、迴圈、函式、輸入輸出)
-
-L1 進階：看到 Universal + Lang-Core
-         (+ 指標、struct、switch、for)
-
-L2 高階：看到全部
-         (+ template、STL 容器、algorithm)
+L0 初學：只看到 Universal 概念（變數、if、迴圈、函式、I/O）
+L1 進階：看到 Universal + Lang-Core（+ 指標、struct、switch）
+L2 高階：看到全部（+ template、STL 容器、algorithm）
 ```
 
 #### 結構範圍（Structure Scope）
 
 ```
-S0 語句：只看到單一語句                    → 初學者從這裡開始
-S1 函式：看到函式內的完整邏輯              → 學會「把步驟包成函式」
-S2 檔案：看到一個檔案的完整結構            → 學會「一個檔案是一個翻譯單元」
-S3 模組：看到多個檔案組成的模組            → 學會「封裝和介面」
-S4 專案：看到模組之間的依賴和呼叫          → 學會「系統架構」
-S5 系統：看到多個專案/服務之間的互動        → 學會「分散式系統」
+S0 語句 → S1 函式 → S2 檔案 → S3 模組 → S4 專案 → S5 系統
 ```
 
-兩個維度的組合形成完整的學習路徑：
+組合形成學習路徑：初學者 L0×S0-S1 → 進階者 L1×S1-S2 → 高階者 L2×S2-S3 → 架構師 L2×S3-S5。
 
-```
-初學者:     L0 × S0-S1  （簡單概念 + 語句/函式範圍）
-進階學習者: L1 × S1-S2  （語言概念 + 函式/檔案範圍）
-高階學習者: L2 × S2-S3  （全部概念 + 檔案/模組範圍）
-系統架構師: L2 × S3-S5  （全部概念 + 模組/專案/系統範圍）
-```
-
-**重要**：這不是簡化，是**過濾**。語義結構始終是完整的，只是投影時隱藏了超出層級的節點和超出範圍的結構。
-
-```
-L0 使用者看到：  [呼叫函式 sort (...)]       // 通用 func_call 積木
-L2 使用者看到：  [排序 v.begin() 到 v.end()]  // 專屬 sort 積木
-```
-
-兩者的語義結構完全相同，只是投影的「解析度」不同。這與 P2 的降級策略自然銜接——低層級使用者看到的就是「降級後」的投影。
+**重要**：這不是簡化，是**過濾**。語義結構始終完整，只是投影時隱藏超出層級的節點。
 
 #### P4 與投影種類的關係
 
-不同 scope 層級自然對應不同的最佳投影種類（viewType）：
-
-| Scope | 最有價值的投影 | 教學目的 |
-|-------|-------------|---------|
-| S0-S1 語句/函式 | 積木、程式碼、流程圖、執行動畫 | 理解結構、語法、行為、狀態 |
-| S2 檔案 | 程式碼、積木、檔案大綱 | 理解翻譯單元的組成 |
-| S3 模組 | 程式碼、模組介面圖、類別階層圖 | 理解封裝和抽象 |
-| S4 專案 | 架構圖、依賴圖、呼叫圖 | 理解系統架構 |
-| S5 系統 | 系統拓撲圖、資料流圖 | 理解分散式系統 |
-
-多個視圖可以**同時顯示**——積木看結構、程式碼看語法、流程圖看行為、執行動畫看狀態。所有視圖從同一個語義結構衍生，一致性由根公理保證。
+| Scope | 最有價值的投影 |
+|-------|-------------|
+| S0-S1 | 積木、程式碼、流程圖、執行動畫 |
+| S2 | 程式碼、積木、檔案大綱 |
+| S3-S4 | 架構圖、依賴圖、呼叫圖 |
+| S5 | 系統拓撲圖、資料流圖 |
 
 #### P4 與認知負荷的關係
 
-P4 的分層機制直接服務於認知負荷理論：
+- **L0**：鷹架最強——外在負荷被積木形狀消除，概念集最小
+- **L1**：鷹架適度——引入語言專屬概念
+- **L2**：鷹架最弱——接近文字程式碼，準備過渡
 
-- **L0 初學者**：鷹架最強——大量外在負荷被積木形狀消除，概念集最小以降低內在負荷
-- **L1 進階者**：鷹架適度——引入語言專屬概念，學習者開始承擔更多內在負荷
-- **L2 高階者**：鷹架最弱——接近文字程式碼的表達力，準備過渡到純文字
+層級切換是**控制在 ZPD 內可見的概念數量**。
 
-層級切換不是「降低難度」，而是**控制在 ZPD 內可見的概念數量**。
-
-#### 認知分層對積木文字的影響
-
-| 層級 | 積木類型 | Message 策略 | Tooltip 策略 |
-|------|---------|-------------|-------------|
-| L0 初學 | Universal | 完全口語 | 生活比喻 |
-| L1 進階 | Basic | 保留關鍵術語 | 技術說明 + 場景 |
-| L2 高階 | Advanced | 可用更多術語 | 重點放在「什麼時候用」 |
+| 層級 | Message 策略 | Tooltip 策略 |
+|------|-------------|-------------|
+| L0 | 完全口語 | 生活比喻 |
+| L1 | 保留關鍵術語 | 技術說明 + 場景 |
+| L2 | 可用更多術語 | 重點放在「什麼時候用」 |
 
 ---
 
-## 六維架構
+# 第三層：架構與實踐
+
+## 6. 六維架構
 
 ```
 ┌─ Scope ─────────────────── 觀察範圍（語句→系統）──┐
@@ -1137,851 +666,366 @@ P4 的分層機制直接服務於認知負荷理論：
 └──────────────────────────────────────────────────┘
 ```
 
-每一層獨立可配置、獨立可擴充：
-- 換觀察範圍 = 切 Scope（zoom in/out）
-- 加新視圖種類 = 加 View Type（新增 renderer）
-- 加新 locale = 加翻譯檔
-- 換積木外觀 = 切 Block Style preset
-- 改積木結構 = 只動 Concept Layer
-- 加新語言 = 加 Language Layer
-- 加新套件 = 在 Language Layer 加子模組
-- 加新程式碼風格 = 加 Code Style preset
+每一層獨立可配置、獨立可擴充。
 
 ---
 
-## 各子系統的應用指引
+## 7. 配置結構
 
-### 做 i18n（積木文字國際化）時
-
-```
-P1 → Locale 是投影參數，不是寫死的字串
-根公理 → message/tooltip 是呈現資訊，不屬於積木結構定義
-       → 分離到 locale 檔案
-```
-
-### 做 coding style（程式碼編碼風格切換）時
+### Code Style
 
 ```
-P1 → Code Style 是投影參數，generator 接受 style config
-根公理 → 縮排、命名、大括號位置是呈現資訊
-P1 → Parser 必須能辨識不同風格（可逆性）
-     切換風格 = 用不同參數重新投影，語義樹不動
+Preset 範例：
+  APCS 考試:    cout/cin, camelCase*, K&R, 4-space, using namespace std
+  競賽:         printf/scanf, snake_case*, K&R, 4-space, bits/stdc++.h
+  Google Style: cout/cin, snake_case*, K&R, 2-space, 不用 using namespace
+
+* naming convention 僅影響新建變數的預設名稱格式（參見「變數命名的邊界」）
 ```
 
-### 做 block style（積木排版風格切換）時
+三大功能：(1) 使用者選擇 preset → 積木不動，重新生成程式碼 (2) 自動偵測：貼入程式碼 → 匹配最接近的 preset (3) 風格互轉：Code(A) → Parser → 積木 → Generator(B) → Code(B)。
+
+Code Style 影響工具箱：APCS 顯示 cout 積木、競賽顯示 printf 積木。
+
+### Block Style
 
 ```
-P1 → Block Style 是投影參數，renderer 接受 blockStyle config
-根公理 → inputsInline、延伸方向、配色、密度是呈現資訊，不屬於語義
-P1 → 切換 Block Style = 用不同參數重新渲染積木，語義樹不動
-     同一積木可以水平排列也可以垂直排列，語義完全相同
-S4 → Block Style 的預設值應符合學習者的閱讀習慣
-     簡單積木（少欄位）預設水平，複雜積木（多欄位）預設垂直
+Preset 範例：
+  Scratch 風格: zelos, compact, scratch 配色, 預設 inline
+  經典風格:     geras, normal, classic 配色, 預設 external
+  教學風格:     zelos, spacious, 高對比配色, 複雜積木垂直展開
 ```
-
-### 做多語言支援時
-
-```
-P2 → 區分 universal / lang-core / lang-library 三層概念
-P1 → Language 是投影參數，型別清單由語言模組注入
-P2 → 跨語言轉換走 abstract concept 映射，無法對應的概念走降級策略
-```
-
-### 做雙向轉換時
-
-```
-根公理 → 建立顯式的語義樹，不要讓 Blockly workspace 直接當 model
-P1 → lift(parse(project(S))) ≡ S 是正確性的判定標準
-根公理 → Parser 需要額外輸出 style metadata（偵測到的風格）
-P2 → 無法解析的程式碼不是 error，是降級成 raw_code
-P2a′ → 每個概念的四條路徑（lift/render/extract/generate）缺一不可
-       新增概念後跑靜態覆蓋檢查，確認無 coverage gap
-P3 → Pattern Engine 是唯一管線；簡單概念用 JSON（Layer 1），
-     需要文字轉換用 transform（Layer 2），複雜概念用 strategy（Layer 3）
-     不允許核心引擎出現雙管線競爭或黑名單切換
-```
-
-### 做積木設計時
-
-```
-S3 認知一致性 → 一個積木映射到一個語法結構，不多不少
-   違反案例：u_var_declare 用 mutator 把多個宣告塞進一個積木
-             → 學習者以為「宣告」是一次性動作，實際上每個變數獨立存在
-   正確做法：一個積木 = 一行宣告（int x = 5;），多個變數用多個積木
-
-S2 鷹架可退場 → 積木概念必須在文字程式碼中有直接對應
-   違反案例：積木引入「計數迴圈」概念但文字程式碼只有 for(;;)
-             → 只要生成的程式碼結構可辨識，這個鷹架就是合法的
-   檢驗方法：學習者切到文字模式後，能否不靠積木理解生成的程式碼？
-
-S4 最小驚訝 → 積木行為和生成的程式碼一致
-   違反案例：積木 message 寫「設定值」但生成 x = x + 1
-             → 積木文字和程式碼語義不對應
-   檢驗方法：讀積木文字 → 預測程式碼 → 和實際生成的比較
-
-S1 鷹架可調 → 同一概念在不同層級提供不同程度的輔助
-   L0：完全口語化 message + 強型別約束（拖不進去就是型別錯）
-   L1：引入術語 + 放寬約束（允許更多表達式組合）
-   L2：接近文字語法 + 最少約束
-
-CLT → 每個積木應最小化外在認知負荷
-   message 回答「做什麼」而非「怎麼做」
-   tooltip 一句定義 + 一句場景 + 注意事項
-   dropdown 選項按認知層級過濾
-```
-
-### 為外部套件寫積木時
-
-```
-P2 → 辨識語義角色，找到或建立 abstract concept
-P3 → 只加 JSON（blockDef + codeTemplate + astPattern + concept）
-P4 → 決定積木出現在哪個認知層級
-P1 → 確認 code → blocks → code 來回無損
-```
-
----
-
-## 積木文字設計準則（從 P1 + P4 推導）
-
-### Message 設計
-
-- **動詞 + 身份 + 名稱**：每個 message 回答「對誰做什麼」
-- 身份標示系統：變數、函式、陣列、列表、指標、結構
-- 用概念詞不用語言術語（型別名稱只出現在 dropdown 裡）
-- 積木串起來讀起來要像一段中文敘述
-
-### Tooltip 設計
-
-- 統一公式：**一句定義 + 一句場景 + （注意事項）**
-- Universal 積木用生活比喻，Advanced 積木重點放在「什麼時候用」
-- 語言模組可覆蓋 tooltip（加入語言特定細節）
-
-### Dropdown 設計
-
-- 型別格式統一：`英文術語（中文）`，如 `int（整數）`
-- 型別清單由語言模組提供，不寫死在 universal 積木裡
-- 運算子格式：`中文（符號）`，如 `加上（+=）`
-
----
-
-## Code Style 配置結構
-
-### Code Style Preset 範例
-
-```
-APCS 考試:    cout/cin, camelCase*, K&R, 4-space, using namespace std
-競賽:         printf/scanf, snake_case*, K&R, 4-space, bits/stdc++.h
-Google Style: cout/cin, snake_case*, K&R, 2-space, 不用 using namespace
-
-* naming convention 僅影響新建變數的預設名稱格式，不轉換既有變數名稱（參見根公理「變數命名」段落）
-```
-
-### Code Style 三大功能
-
-1. **使用者選擇**：切換 preset → 積木不動，重新生成程式碼
-2. **自動偵測**：貼入程式碼 → 分析 I/O 方式、命名、縮排、namespace → 匹配最接近的 preset
-3. **風格互轉**：Code(Style A) → Parser → 積木(無風格) → Generator(Style B) → Code(Style B)
-
-### Code Style 對工具箱的影響
-
-- APCS 風格 → 顯示 u_print (cout)，隱藏 c_printf
-- 競賽風格 → 顯示 c_printf，隱藏 u_print
-- 混合 → 兩者都顯示
-
-## Block Style 配置結構
-
-### Block Style Preset 範例
-
-```
-Scratch 風格:  zelos renderer, compact density, scratch 配色, 預設 inline
-經典風格:      geras renderer, normal density, classic 配色, 預設 external
-教學風格:      zelos renderer, spacious density, 高對比配色, 複雜積木垂直展開
-```
-
-### Block Style 控制的面向
 
 | 面向 | 選項 | 影響 |
 |------|------|------|
-| **Renderer** | zelos / geras | 積木的基本形狀（圓角 vs 方角） |
-| **Density** | compact / normal / spacious | 積木間距、欄位間距 |
-| **Colour scheme** | scratch / classic / custom | 各概念類別的顏色 |
-| **Inputs inline** | true / false / auto | 欄位水平或垂直排列 |
-| **Orientation** | horizontal / vertical | 多值積木（如 print 多個值）的延伸方向 |
+| Renderer | zelos / geras | 圓角 vs 方角 |
+| Density | compact / normal / spacious | 間距 |
+| Colour scheme | scratch / classic / custom | 配色 |
+| Inputs inline | true / false / auto | 水平或垂直 |
+| Orientation | horizontal / vertical | 多值積木延伸方向 |
 
-### Block Style 不影響的東西
-
-- 語義樹結構（改排版不改語義）
-- 積木文字內容（由 Locale 控制）
-- 程式碼生成結果（由 Code Style 控制）
-- 可用積木集合（由 Language + P4 Level 控制）
+Block Style 不影響：語義樹結構、積木文字（Locale 控制）、程式碼生成（Code Style 控制）、可用積木集合（Language + P4 控制）。
 
 ---
 
-## 最終檢驗
+## 8. 應用指引
 
-任何未來的設計決策，都應該能回到這些原則之一：
+### 各子系統 checklist
+
+| 子系統 | 關鍵原則 |
+|--------|---------|
+| **i18n** | P1：Locale 是投影參數。根公理：message/tooltip 是呈現資訊，分離到 locale 檔案 |
+| **coding style** | P1：Code Style 是投影參數，切換 = 重新投影。Parser 必須能辨識不同風格 |
+| **block style** | P1：Block Style 是投影參數。S4：預設值符合學習者閱讀習慣 |
+| **多語言支援** | P2：區分三層概念。跨語言走 abstract concept 映射 |
+| **雙向轉換** | 根公理：建立顯式語義樹。P1：roundtrip 是判定標準。P3：Pattern Engine 是唯一管線 |
+| **外部套件** | P2：辨識語義角色。P3：只加 JSON + 可選註冊。P4：決定認知層級 |
+
+### 積木設計準則
+
+```
+S3 認知一致性 → 一個積木 = 一個語法結構，不多不少
+S2 鷹架可退場 → 積木概念必須在文字程式碼中有直接對應
+S4 最小驚訝   → 積木行為和生成的程式碼一致
+S1 鷹架可調   → 同一概念在不同層級提供不同程度的輔助
+CLT           → 每個積木最小化外在認知負荷
+```
+
+### 積木文字設計準則
+
+- **Message**：動詞 + 身份 + 名稱，回答「對誰做什麼」。串起來讀起來像一段中文敘述。
+- **Tooltip**：一句定義 + 一句場景 + 注意事項。Universal 用生活比喻，Advanced 重點放在「什麼時候用」。
+- **Dropdown**：型別 `英文術語（中文）`，運算子 `中文（符號）`。型別清單由語言模組提供。
+
+### 最終檢驗表
 
 | 問題 | 回到哪條 |
 |------|---------|
-| 積木和程式碼不一致了 | **根公理**：它們應該是同一棵樹的投影 |
+| 積木和程式碼不一致了 | **根公理**：它們是同一棵樹的投影 |
 | 要不要支援某個功能 | **P1**：它能無損來回嗎？ |
-| 這段程式碼轉不了怎麼辦 | **P1**：不存在轉不了——只有降級程度，且降級必須可見 |
-| 這個積木該歸哪類 | **P2**：它映射到哪個抽象概念？ |
-| 怎麼知道測試夠不夠完整 | **P2a′**：ConceptRegistry 每個條目的四條路徑都通過嗎？ |
+| 轉不了怎麼辦 | **P1**：不存在轉不了——只有降級程度 |
+| 積木該歸哪類 | **P2**：它映射到哪個抽象概念？ |
+| 測試夠不夠完整 | **P2a'**：ConceptRegistry 每個條目的四條路徑都通過嗎？ |
 | 加新套件要改哪些檔案 | **P3**：只加 JSON，不改既有程式碼 |
 | 初學者看到太多積木 | **P4**：過濾層級，不是刪除概念 |
-| 這個積木設計對學習者有幫助嗎 | **S3**：它映射到真實的程式結構嗎？ |
+| 積木設計對學習者有幫助嗎 | **S3**：映射到真實的程式結構嗎？ |
 | 積木應該多複雜 | **CLT**：最小化外在負荷，一個積木做一件事 |
-| 積木會不會變成依賴 | **S2**：學習者切到文字後能不靠積木理解程式碼嗎？ |
-| 積木排版要水平還是垂直 | **Block Style**：這是投影參數，不是結構決策 |
-| 要不要支援多檔案 | **根公理**：語義結構在檔案內是樹、檔案間是圖，Scope 3+ 加圖邊即可 |
-| 該用什麼方式呈現 | **P1**：scope + viewType 決定投影，所有視圖從同一結構衍生 |
-| 外部套件不理解怎麼辦 | **P2 降級 + 可插拔執行**：黑箱函式透過語義契約引用、透過最適後端執行 |
-| 怎麼讓程式可以共享 | **語義套件**：共享語義結構 + 投影定義 + 多後端執行體 |
-| LLM 該放在哪裡 | **Guardrails 之上**：LLM 是語用分析師，語義結構是 source of truth |
+| 積木會不會變成依賴 | **S2**：切到文字後能理解嗎？ |
+| 積木排版要水平還是垂直 | **Block Style**：投影參數，不是結構決策 |
+| 要不要支援多檔案 | **根公理**：Scope 3+ 加圖邊即可 |
+| 外部套件不理解怎麼辦 | **P2 降級 + 可插拔執行**：語義契約引用 + 最適後端執行 |
+| 怎麼讓程式可以共享 | **語義套件**：語義結構 + 投影定義 + 多後端執行體 |
+| LLM 該放在哪裡 | **Guardrails 之上**：LLM 是語用分析師 |
 
 ---
 
-## 已知的實作挑戰
+# 第四層：願景
 
-本框架在原則層面完備，但以下各點在實作時需要額外設計。前三點是已識別的邊界條件，後三點是工程層面的待解問題。
+## 9. 執行模型
 
-### 邏輯邊界（硬限制）
+### 執行即投影
 
-1. **語用分析的精確度邊界**：lift() 的語用分析是基於 pattern 的推斷，存在誤判風險。例如 `for(int i=0; i<n; i++)` 的 body 內修改了 `i`——語法上符合 `count_loop` pattern，但語義上不是計數迴圈。如果系統把它投影為「計數從 0 到 n」的積木，學習者會得到**錯誤的心智模型**。對策：composite pattern 必須包含副作用檢查（如 body 內不可修改 loop 變數），並使用 `confidence: 'warning'` + `warning_reason` 機制標記可疑匹配。語用分析的精確度上限由 pattern 的嚴格程度決定，而非架構缺陷。
+「執行」是語義結構的一種投影——不是生成文字或圖形，而是生成**行為**。每個語義節點有對應的 execute() 語義。語義直譯器直接走訪語義結構來執行程式。
 
-2. **C/C++ 巨集的不可解析硬邊界**：tree-sitter 不展開巨集。值替換巨集（`#define PI 3.14`）和函式巨集（`#define MAX(a,b)`）可正常處理，但**語法改變巨集**（`#define BEGIN {`）會產生 ERROR 節點，導致子樹不完整、無法 lift。這是原理上的硬邊界——在不展開巨集的前提下，語法改變巨集不可解析。降級為 `raw_code` 是正確行為，不是降級策略的失敗。若要處理此類巨集，唯一方法是在 tree-sitter 之前加預處理器，代價是巨大的工程複雜度。
+### 執行策略與後端選擇
 
-3. **跨語言語義約束的隱藏風險**：概念代數只編碼「做什麼」（semantic contract），不編碼「代價是什麼」（constraints）。`push_back` 映射到 `Array.push` 在 semantic contract 層面是安全的（都是 mutate_self + void），但 C++ 的 `push_back` 有迭代器失效和 O(n) 重分配成本，JS 的 `push` 沒有。如果隱藏這些差異，L2 高階使用者在跨語言場景中會得到「兩者等價」的錯誤結論。對策：概念定義擴展 `constraints` 欄位（見 P2 2b 語義阻抗段落），跨語言映射時自動偵測 constraints 差異並標記 `semantic_gap`。
-
-### 工程待解問題
-
-4. **註解歸屬歧義**：語義樹中註解是獨立平級節點，但 UI 層面拖拽積木時，視覺上相鄰的註解是否應自動跟隨？這需要 Block Style 層的「吸附」邏輯，不改變語義模型。
-
-5. **lift() 性能**：目前轉換是使用者主動觸發（非即時同步），全量 lift 在教學場景的程式碼規模下不構成瓶頸。若未來需要支援即時同步或處理大型檔案，可考慮增量 parse（tree-sitter 原生支援）搭配延遲 lift。
-
-6. **語義阻抗的深層特性**：記憶體管理（new/delete vs ownership vs GC）、並行模型（goroutine vs async/await vs pthread）等深層語言特性，無法用 abstract concept 跨語言映射。應走 P2 降級路徑，並在轉換時標記「需人工調整」而非靜默降級。
-
-7. **Scope 3-5 的狀態空間爆炸**：語義圖在大型專案中節點和邊的數量會急劇膨脹，「重建相關圖邊」的增量更新演算法將成為效能瓶頸。實作優先序應為：Phase 1 Scope 0-2 單檔案（已實現）→ Phase 2 Scope 3 少量檔案（邊數可控）→ Phase 3 Scope 4-5 大型專案（可借鏡 LSP/LSIF 的增量索引策略）。不需要一開始就解決萬行級問題。
-
-8. **語義契約的驗證成本**：為每個 AbstractConcept 定義完備的 semanticContract + constraints 是百科全書式的工程。初期應只覆蓋 L0-L1 概念（控制流、基本 I/O、變數操作，semanticContract 簡單、constraints 幾乎不需要），L2 概念按需補充常見陷阱，跨語言 constraints 在使用者實際做跨語言轉換時才需要（可由 LLM 輔助生成初稿）。追求「完美映射」會導致系統難以啟動。
-
-9. **執行後端的橋接開銷**：不同後端和 JS 主線程之間的跨邊界呼叫都有成本——WASM 有序列化/反序列化開銷，Remote 有網路延遲，WebGPU 有 GPU 同步代價。如果語義直譯器逐節點切換後端，在大量小操作的場景會效能崩潰。正確的粒度是「子樹」而非「節點」——一整個函式或迴圈丟給同一後端執行，減少跨邊界次數。JS native 後端因為零 bridge 開銷，特別適合大量小型運算。
-
----
-
-## 願景：語義網路與可插拔執行
-
-從根公理和 Scope 分層自然延伸出的長期方向。
-
-### 執行也是投影
-
-「執行」是語義結構的一種投影——不是生成文字或圖形，而是生成**行為**：
-
-```
-view = project(structure, scope, execution, { runtime })
-
-每個語義節點有對應的 execute() 語義：
-  execute(count_loop) = 初始化 i → 檢查條件 → 執行 body → 步進 → 重複
-  execute(print)      = 把值輸出到虛擬 console
-  execute(func_call)  = 查找函式定義 → 執行函式體 → 回傳結果
-```
-
-這使得語義直譯器（Semantic Interpreter）成為可能——直接走訪語義結構來執行程式，而不需要先生成程式碼再編譯。
-
-### WASM 作為黑箱的執行橋
-
-對於系統無法完全理解的外部套件（黑箱函式），WASM 提供了執行能力：
-
-```
-已知概念（count_loop, print, var_assign, ...）
-  → 語義直譯器直接解釋執行（逐步、可視覺化）
-
-黑箱函式（sort, regex, opencv, ...）
-  → 編譯成 WASM → 在瀏覽器中呼叫 → 拿回結果繼續走
-```
-
-這與 P2 的概念成熟度自然銜接：
-
-```
-階段 0: 不認識        → raw_code  → 整段丟給編譯執行（如果有執行體的話）
-階段 1: 認識但無積木   → func_call → 編譯執行，只看輸入輸出
-階段 2: 有專屬積木     → 完全理解  → 語義直譯器逐步執行、可視覺化
-```
-
-對學習者來說，黑箱是合理的——你不需要理解 `sort` 的內部實作，你只需要知道「丟進去一個陣列，出來一個排好的陣列」。執行體（不論後端）讓黑箱真的能跑。
-
-### Raw code 的不可執行擴散與執行體解毒
-
-語義直譯器逐節點執行時，遇到 `raw_code` 就卡住。更嚴重的是，不可執行像**汙染（taint）**一樣往下游擴散：
-
-```
-func main() {
-    x = 5                         // ✅ 可執行
-    y = raw_code("complex_algo")  // ❌ 不可執行
-    z = x + y                     // ❌ 被汙染——依賴 y
-    print(z)                      // ❌ 被汙染——依賴 z
-}
-一個 raw_code 節點就能讓整個後續執行鏈斷裂。
-```
-
-如果能為 `raw_code` 提供一個**外延等價（extensionally equivalent）**的執行體（任何後端皆可），汙染就被阻斷：
-
-```
-func main() {
-    x = 5                                // ✅ 語義直譯器
-    y = compiled_call("complex_algo")    // ✅ 編譯執行（JS/WASM/...），回傳具體值
-    z = x + y                            // ✅ 語義直譯器（y 已經是具體值）
-    print(z)                             // ✅ 語義直譯器
-}
-```
-
-**外延等價的定義**：兩個實作 A 和 B 是外延等價的，若且唯若對所有合法輸入，A(input) ≡ B(input)。不要求內部結構相同（內涵等價），只要求輸入輸出行為相同。
-
-**外延等價驗證**：系統可以用測試輸入，自動驗證執行體是否和語義直譯器的結果一致。如果不一致，標記為 `contract_violation`。
-
-### 執行策略分層
-
-同一個語義節點可以有多種執行方式，由使用者根據需求選擇：
-
-```
-策略 1：語義直譯（Semantic Interpretation）
-  速度：慢
-  透明度：完全透明——可逐步、可視覺化、可看變數變化
-  適用：教學、debug、理解程式行為
-
-策略 2：編譯執行（Compiled Execution）
-  速度：快
-  透明度：黑箱——只看輸入輸出
-  後端：WASM、JS native、WebGPU、Remote 等（可插拔）
-  適用：效能需求、raw_code 解毒、大量資料處理
-
-策略 3：混合執行（Hybrid）
-  部分節點用語義直譯（需要看清楚的地方）
-  部分節點用編譯執行（不需要看或需要效能的地方）
-  使用者可以選擇哪些節點「展開」、哪些「折疊」
-```
-
-混合執行和 P4 漸進揭露完全一致——你想看多深就看多深：
-
-```
-學習者視角：
-  main()          → 語義直譯，逐步看
-    my_sort()     → 語義直譯，展開看自己寫的排序
-    std::sort()   → 編譯執行（WASM），只看結果
-    print()       → 語義直譯，看輸出過程
-
-效能視角：
-  main()          → 編譯執行，全速
-  （需要 debug 時切回語義直譯）
-```
-
-**執行投影的完整模型**：
+同一個語義節點可以有多種執行方式。策略（何時用）和後端（用什麼）是兩個獨立維度：
 
 ```
 view = project(structure, scope, execution, {
-  runtime,
   executionStrategy: 'interpret' | 'compiled' | 'hybrid',
-  backend: 'wasm' | 'js' | 'remote' | 'webgpu' | ...,
+  backend: 'js' | 'wasm' | 'remote' | 'webgpu' | ...,
   provider: '@stdlib' | '@optimized' | ...,
 })
-
-混合執行時，每個節點獨立選擇策略：
-  node.executionStrategy = 'interpret'  → 逐步執行，可視覺化
-  node.executionStrategy = 'compiled'   → 編譯執行，只看結果
-  node.backend = 'wasm' | 'js' | ...   → 選擇執行後端
-
-  預設策略：
-    已知概念且有語義直譯器  → interpret（可以逐步看）
-    raw_code 且有執行體     → compiled（解毒，自動選最適後端）
-    raw_code 且無執行體     → 不可執行（汙染下游）
-    使用者手動切換          → 任何節點都可在 interpret ↔ compiled 間切換
 ```
 
-### 可插拔執行後端（Pluggable Execution Backends）
+|              | interpret    | js native     | wasm          | remote       | webgpu       |
+|--------------|-------------|---------------|---------------|--------------|--------------|
+| **速度**     | 最慢         | 快（零 bridge）| 快（大量運算最佳）| 視網路延遲  | 快（GPU 平行）|
+| **透明度**   | 全透明       | 半透明         | 黑箱           | 黑箱         | 黑箱         |
+| **時空旅行** | 無限回溯     | 關鍵點回溯     | pure 可重新執行 | 不可         | 不可         |
+| **適用場景** | 教學/debug   | 輕量運算       | 計算密集       | OS API      | 矩陣/ML     |
+| **貢獻門檻** | 內建         | 寫 JS 函數     | 編譯 C++/Rust  | 架設 server | WebGPU API  |
 
-執行是語義結構的**行為投影**。根據外延等價原則——相同輸入產生相同輸出，內部實作方式不影響語義正確性——執行後端天然應該是可插拔的：
+每個執行體只需滿足語義契約（相同輸入→相同輸出）。後端選擇是效能/透明度的取捨，不影響語義正確性（**外延等價**）。
 
-```
-執行後端（Execution Backend）：
-
-  interpret — 語義直譯器
-    逐節點解釋執行，全透明
-    零編譯成本，最慢但最適合教學
-    所有已知概念都支援
-
-  js — JavaScript Native
-    瀏覽器原生執行，零 bridge 開銷
-    小型運算（arithmetic、string ops）比 WASM 更快
-    撰寫成本最低——任何人都能寫一個符合契約的 JS 函數
-    適合：輕量概念、快速原型、社群貢獻入門
-
-  wasm — WebAssembly
-    跨語言編譯產物，沙箱隔離
-    大量運算場景效能最佳
-    適合：計算密集、從 C++/Rust 編譯的現有庫
-
-  remote — 遠端執行
-    Server-side 執行，適合需要 OS API 或大量資源的情況
-    網路延遲是代價，但突破了瀏覽器沙箱限制
-    適合：檔案系統操作、資料庫查詢、GPU 運算
-
-  webgpu — WebGPU 平行運算
-    瀏覽器端 GPU 加速
-    適合：矩陣運算、大規模資料處理、機器學習推論
-
-每個執行體只需滿足語義契約（相同輸入 → 相同輸出），
-後端選擇是效能/透明度的取捨，不影響語義正確性。
-```
-
-**自動後端選擇**：系統可根據輸入規模和可用後端自動選擇——小陣列排序用 JS（避免 WASM bridge 開銷）、大陣列用 WASM、超大陣列用 WebGPU。使用者也可手動覆蓋。
-
-**降低貢獻門檻**：不是所有語義套件的作者都會編譯 WASM，但寫一個符合契約的 JS 函數幾乎零成本。JS 後端讓社群貢獻的門檻從「會編譯 WASM」降到「會寫 JavaScript」。
-
-### 效能市場（Performance Marketplace）
-
-同一個語義概念可以有多個執行體實作，由不同來源、不同後端提供，效能和適用場景各異：
+**混合執行**和 P4 漸進揭露一致——你想看多深就看多深：
 
 ```
-Semantic Package: sort
-  語義契約：input: array<T> → output: array<T>（已排序）
+學習者視角：
+  main()       → interpret，逐步看
+  my_sort()    → interpret，展開看自己寫的排序
+  std::sort()  → compiled（wasm），只看結果
+  print()      → interpret，看輸出過程
 
-  實作 A：@stdlib/sort.wasm       [backend: wasm]
-    來源：std::sort 編譯
-    benchmark：1M items → 120ms
-    適用：通用場景
-
-  實作 B：@optimized/sort.wasm    [backend: wasm]
-    來源：hand-tuned radix sort
-    benchmark：1M items → 45ms
-    constraints：只適用於整數陣列
-
-  實作 C：@community/sort.js      [backend: js]
-    來源：社群貢獻的 JS 實作
-    benchmark：1M items → 280ms，1K items → 0.3ms
-    適用：小陣列最快（無 WASM bridge 開銷）
-
-  實作 D：@student/sort.js        [backend: js]
-    來源：學生的 bubble sort
-    benchmark：1M items → 8500ms
-    教學價值：可展開看實作，理解 O(n²)
+預設策略：
+  已知概念且有語義直譯器  → interpret
+  raw_code 且有執行體     → compiled（自動選最適後端）
+  raw_code 且無執行體     → 不可執行（汙染下游）
+  使用者手動切換          → 任何節點都可在 interpret ↔ compiled 間切換
 ```
 
-**使用者根據需求選擇**：
-- **學習者**：選 D——可以展開看實作、理解演算法、對比效能差異
-- **效能導向**：選 B——大資料最快，但有 constraints 限制
-- **通用場景**：選 A——最穩定、無限制
-- **輕量場景**：選 C——小資料零開銷，JS 原生
+### Raw code 解毒與外延等價
 
-**自動化基準測試**：同一語義契約的所有執行體（不論後端），用相同的測試輸入跑 benchmark，自動排名。使用者可以看到「WASM 版在大陣列快 3 倍，但 JS 版在小陣列反而更快」的量化比較。系統可根據輸入規模自動選擇最適執行體。
+語義直譯器遇到 `raw_code` 就卡住，不可執行像汙染一樣往下游擴散。如果能提供一個**外延等價**的執行體，汙染就被阻斷：
 
-**教學價值**：效能市場讓學習者**直觀感受演算法複雜度**——不是課本上的 O(n²) 符號，而是「bubble sort 跑了 8.5 秒，std::sort 跑了 0.12 秒」的真實數字。這是 CLT 增生負荷（germane load）的絕佳來源。
+```
+x = 5                             // ✅ interpret
+y = compiled_call("complex_algo") // ✅ 編譯執行，回傳具體值
+z = x + y                         // ✅ interpret（y 已經是具體值）
+```
+
+**外延等價的定義**：∀ 合法輸入，A(input) ≡ B(input)。不要求內部結構相同。系統可用測試輸入自動驗證。
+
+### 時空旅行除錯（Time-travel Debugging）
+
+語義直譯器每步生成**語義狀態快照**。回溯 = 用歷史快照重新投影視圖（viewParams 多一個 `timeStep`）。
+
+**因果追溯**：點擊輸出值，系統反向追蹤哪些節點「貢獻」了這個值。
+
+**副作用隔離層**：教學模式下，所有 I/O 經由 Virtual I/O Layer 代理。回溯時 Virtual Console 只顯示對應時間步的輸出。效能模式可 bypass（但失去時空旅行能力）。
+
+**編譯執行的狀態盲區**：直譯器看不到編譯執行節點的內部狀態。解法——節點宣告透明度等級：
+
+```
+pure: true                              → 重新呼叫即重現
+stateful: { getState(), setState() }    → 快照介面
+opaque: true                            → 不透明屏障，只能從前面重新執行
+```
+
+**三層執行透明度**（與 P4 對齊）：
+
+| 模式 | 策略 | 時空旅行 | 副作用 | P4 對應 |
+|------|------|---------|-------|---------|
+| 全透明（教學） | interpret + 每步快照 | 無限回溯 | Virtual I/O | L0 最大鷹架 |
+| 混合（進階） | hybrid + 關鍵點快照 | 回溯到關鍵點 | Virtual I/O 可選 | L1 鷹架退場中 |
+| 效能（專家） | compiled + 無快照 | 不可用 | 直接作用 | L2 鷹架已退場 |
+
+**執行透明度本身就是一種認知鷹架。**
+
+---
+
+## 10. 語義套件與效能市場
 
 ### 語義套件（Semantic Packages）
-
-如果程式是語義結構而不是文字檔，共享的單位也應該是語義結構：
 
 ```
 Semantic Package = 語義契約 + 投影定義 + 執行體
 
-語義契約（Semantic Contract）：
-  concept: sort
-  input:   array<T> where T: comparable
-  output:  array<T>（已排序）
-
-投影定義（Projections）：
-  L0 積木:  [排序 ▼陣列]
-  L2 積木:  [sort( v.begin(), v.end() )]
-  C++ code: std::sort(v.begin(), v.end())
-  Python:   sorted(arr)
-
-執行體（Implementations）：
-  cpp.wasm        [backend: wasm]   — 從 std::sort 編譯
-  rust.wasm       [backend: wasm]   — 從 slice::sort 編譯
-  sort.js         [backend: js]     — Array.prototype.sort 封裝
-  sort-gpu.js     [backend: webgpu] — GPU 平行排序
+語義契約：  concept: sort, input: array<T>, output: array<T>（已排序）
+投影定義：  L0 積木 / L2 積木 / C++ code / Python code
+執行體：    cpp.wasm [wasm] / sort.js [js] / sort-gpu.js [webgpu]
 ```
 
-消費者不需要懂原始語言——他們引用的是**語義概念**，系統自動選擇最適的執行後端，看到的是自己層級的投影。
+消費者引用的是**語義概念**，系統自動選擇最適的執行後端。
 
-### 互聯網式的語義網路
+### 效能市場（Performance Marketplace）
 
-語義套件可以發佈到共享的 **Semantic Package Registry**，形成互聯網式的語義結構：
+同一語義概念可有多個執行體，由不同來源、不同後端提供：
+
+```
+sort:
+  @stdlib/sort.wasm       [wasm]   1M→120ms  通用
+  @optimized/sort.wasm    [wasm]   1M→45ms   只限整數
+  @community/sort.js      [js]     1K→0.3ms  小陣列最快
+  @student/sort.js        [js]     1M→8500ms 教學：理解 O(n²)
+```
+
+自動化基準測試 + 自動後端選擇。教學價值：讓學習者**直觀感受演算法複雜度**（CLT 增生負荷）。
+
+### 語義網路
+
+語義套件發佈到 **Semantic Package Registry**：
 
 ```
 我的程式（語義樹）
-  ├── 引用 @stdlib/sort      （標準庫，wasm 後端）
-  ├── 引用 @stdlib/io        （I/O，js 後端 + 瀏覽器 API 橋接）
-  ├── 引用 @community/matrix （社群分享，webgpu 後端）
-  └── 引用 @school/grading   （老師分享，js 後端）
+  ├── 引用 @stdlib/sort      [wasm]
+  ├── 引用 @stdlib/io        [js + 瀏覽器 API]
+  ├── 引用 @community/matrix [webgpu]
+  └── 引用 @school/grading   [js]
 ```
-
-每個引用節點在語義結構中是一個 `semantic_package_ref`，帶有語義契約。執行時系統根據可用後端和輸入特性選擇最適的執行體。投影時根據使用者的 Concept Level 和 Locale 顯示對應的積木或程式碼。
 
 ### 教學場景
 
 ```
-老師：
-  寫一個「計算 BMI」語義套件 → 發佈到 classroom registry
-
-學生 A（L0 初學者）：
-  在工具箱看到 [計算 BMI 體重 身高] 積木
-  → 拖拽使用 → 點執行 → WASM 真的算出結果
-
-學生 B（L1 進階）：
-  點「展開」→ 看到老師的實作（積木 + 程式碼並排）
-  → 理解內部邏輯 → 嘗試修改
-
-學生 C（L2 高階）：
-  fork 老師的套件 → 改寫實作 → 發佈自己的版本
-  → 其他同學可以引用
-
-老師（Scope 4 視角）：
-  看到全班的語義圖 → 誰引用了誰 → 誰修改了什麼
-  → 理解每個學生的學習軌跡
+老師：寫「計算 BMI」語義套件 → 發佈到 classroom registry
+學生 A（L0）：在工具箱看到積木 → 拖拽 → 執行 → 算出結果
+學生 B（L1）：點「展開」→ 看到老師的實作 → 理解 → 修改
+學生 C（L2）：fork → 改寫 → 發佈自己的版本
+老師（S4）：看到全班的語義圖 → 誰引用誰 → 學習軌跡
 ```
 
-這是 P4 漸進揭露的終極形態——同一個語義套件，初學者看到積木、進階者看到實作、老師看到全局。
+P4 漸進揭露的終極形態——同一語義套件，初學者看到積木、進階者看到實作、老師看到全局。
 
-### 需要注意的工程約束
+---
 
-- **WASM 不是萬能的**：依賴 OS API 的函式（檔案系統、網路）需要瀏覽器端的 polyfill 或明確限制
-- **安全性**：執行他人的 WASM 需要沙箱隔離，語義契約需要驗證機制
-- **版本相容性**：語義結構的版本管理比文字原始碼更複雜（語義契約的演進）
-- **語義契約的正確性**：如何驗證一個 WASM 模組真的符合它宣稱的語義契約？可能需要屬性測試（property-based testing）
+## 11. AI 輔助：LLM 作為語用分析師
 
-這些是工程問題，不是原則問題。從第一性原理來看，這個方向完全一致——程式是語義結構，WASM 是執行投影，共享是語義網路的自然延伸。
+### 為什麼 LLM 不能是核心
 
-### 時空旅行除錯（Time-travel Debugging）
+語義結構是確定性的，LLM 是機率性的。如果讓 LLM 當核心引擎，語義結構從 source of truth 變成「LLM 覺得大概是這樣」。正確定位：**語義結構提供 guardrails，LLM 在 guardrails 內活動**。
 
-語義直譯器逐節點執行語義結構，每一步都能生成**語義狀態快照（Semantic State Snapshot）**——包含當前變數存儲、呼叫棧、執行指標。這天然支援時空旅行除錯：
+### LLM 參與的五個位置
 
-```
-執行過程（語義狀態序列）：
+1. **強化 lift() 的語用分析**（最高價值）：處理 Pattern Engine 沒覆蓋的慣用語。結果標記 `confidence: 'llm_suggested'`，需使用者確認。
+2. **語義阻抗顧問**：提供人類可讀的跨語言遷移建議，不做自動翻譯。
+3. **敘事投影（Narrative Projection）**：語義樹→自然語言解說。LLM 可完全主導——自然語言本身是機率性的。
+4. **自動化系統擴充（P3）**：LLM 生成 JSON 定義，確定性系統驗證（四路徑 + roundtrip test）。
+5. **語義搜尋與自然語言建構（Scope 4-5）**：LLM 生成語義結構（不是程式碼），語義結構自動投影為積木+程式碼。
 
-  Step 0: { i: 0, sum: 0 }         ← 初始化
-  Step 1: { i: 0, sum: 0 }         ← 進入迴圈
-  Step 2: { i: 0, sum: 0 }         ← sum += i
-  Step 3: { i: 1, sum: 0 }         ← i++
-  Step 4: { i: 1, sum: 1 }         ← sum += i
-  Step 5: { i: 2, sum: 1 }         ← i++
-  ...
-
-回溯 = 重新投影歷史狀態：
-  使用者點「Step 2」→ 用 Step 2 的狀態重新投影積木/程式碼
-  → 變數面板顯示 { i: 0, sum: 0 }
-  → 對應的語義節點高亮
-```
-
-**回溯即重新投影（Rollback as Re-projection）**：時空旅行不需要「撤銷執行」——只需要保留每步的狀態快照，然後用歷史快照重新投影視圖。這完全符合投影定理：`view = project(structure, scope, viewType, viewParams)`，其中 viewParams 多了一個 `timeStep` 參數。
-
-**因果追溯（Causal Tracing）**：使用者點擊某個輸出值（例如 `sum = 15`），系統反向追蹤語義結構中哪些節點「貢獻」了這個值——高亮所有影響它的賦值和運算節點。這是語義結構的優勢——在 AST 或原始碼層做因果追溯需要資料流分析，但在語義結構中，每個節點的輸入輸出關係是明確的。
-
-#### 副作用隔離層（Side-effect Isolation）
-
-時空旅行除錯遇到的第一個嚴謹性挑戰：**副作用不可逆**。
-
-```
-問題：
-  Step 5: cout << "hello"   ← 已經輸出到 console
-  使用者回溯到 Step 3       ← 「hello」已經被看到了，無法收回
-
-解法：Virtual I/O 隔離層
-  教學模式下，所有 I/O 操作不直接作用於真實環境，
-  而是寫入 Virtual Console / Virtual Port：
-
-  Virtual Console = [
-    { step: 5, output: "hello" },
-    { step: 8, output: "world" },
-  ]
-
-  回溯到 Step 3 → Virtual Console 只顯示 step ≤ 3 的輸出 → 空
-  前進到 Step 6 → 顯示 "hello"
-  → 時空旅行的一致性得以保持
-```
-
-**架構要求**：語義直譯器的所有副作用（console output、檔案寫入、網路請求）必須經由 **Virtual I/O Layer** 代理。這個隔離層在教學模式下是強制的，在效能模式下可以 bypass（但失去時空旅行能力）。
-
-#### WASM 狀態盲區
-
-時空旅行除錯遇到的第二個嚴謹性挑戰：**WASM 是黑箱，直譯器看不到內部狀態**。
-
-```
-語義直譯器執行 interpret 模式的節點：
-  → 完全透明，每步狀態可快照 ✅
-
-語義直譯器呼叫 WASM 模組：
-  → 輸入輸出可觀察，但內部狀態不可見 ❌
-  → 無法回溯 WASM 內部的中間步驟
-```
-
-**解法：WASM 節點必須宣告透明度等級**：
-
-```
-透明度宣告（Transparency Declaration）：
-
-  pure: true
-    → 無副作用、無內部狀態，給相同輸入永遠返回相同輸出
-    → 時空旅行：重新呼叫即可重現，不需要內部快照
-    → 例：數學運算、排序、字串處理
-
-  stateful: { getState(), setState(snapshot) }
-    → 有內部狀態，但提供快照介面
-    → 時空旅行：呼叫 getState() 保存、setState() 回溯
-    → 例：狀態機、計數器、RNG（需保存 seed）
-
-  opaque: true
-    → 黑箱，無法觀察或回溯
-    → 時空旅行：此節點是「不透明屏障」，只能從它之前重新執行
-    → 例：外部 API 呼叫、硬體互動
-```
-
-#### 三層執行透明度
-
-結合執行策略分層和時空旅行需求，形成三層透明度模型：
-
-```
-全透明（教學模式）：
-  策略：interpret + 每步快照
-  時空旅行：無限回溯，完整因果追溯
-  副作用：全部經由 Virtual I/O
-  適合：初學者逐步理解程式行為
-  對應 P4：L0 初學者——最大鷹架
-
-混合（進階模式）：
-  策略：hybrid + 關鍵點快照（函式入口/出口、迴圈邊界）
-  時空旅行：可回溯到關鍵點，關鍵點之間不可逐步
-  副作用：Virtual I/O 可選
-  適合：已理解基礎、需要更快執行速度
-  對應 P4：L1 進階——鷹架開始退場
-
-效能（專家模式）：
-  策略：compiled（wasm/js/webgpu/remote）+ 無快照
-  時空旅行：不可用（或僅在 pure 節點可重新執行）
-  副作用：直接作用於真實環境
-  適合：關注結果正確性而非過程理解
-  對應 P4：L2 專家——鷹架已退場
-```
-
-這與 P4 漸進揭露完全一致——初學者需要全透明的逐步理解，隨著能力成長，鷹架（快照、Virtual I/O）逐步退場，直到專家模式下獲得最大效能。**執行透明度本身就是一種認知鷹架**。
-
-### 相關工作與差異
-
-業界已有多個專案在不同維度上探索類似的理念，但尚無系統能完整整合語義結構投影、雙向轉換、全球語義網和可插拔執行。
-
-| 專案 | 做了什麼 | 對應本框架的哪個原則 | 本質差異 |
-|------|---------|-------------------|---------|
-| **Unison** | 用 AST hash 內容定址函式，全球唯一識別 | 根公理（語義結構）、Scope 4-5 | Unison hash 的是 AST（語法層），我們 lift 後是語義層——`printf` 和 `cout` 語法不同但語義相同。語義 hash 比語法 hash 更能表達「真正相同的函式」 |
-| **Hedy** | 漸進式教學語言，Level 1-18 語法逐步嚴謹化 | P4 漸進揭露 | Hedy 的每個 Level 是不同的語法（學習者必須「忘掉」舊語法學新語法）。我們的 Level 切換是投影解析度變更——語義結構不變，學習者一直接觸同一語言的真實結構（S2 鷹架可退場） |
-| **Blockly / Scratch** | 積木式視覺編程，積木→程式碼單向生成 | P1 投影定理 | 大多是「積木生成程式碼」的單向流，缺乏深度語義 lift 的回轉能力。積木和程式碼沒有共同的語義模型 |
-| **LSP / LSIF** | 跨檔案符號索引，提供 references/definitions | Scope 3-5 的語義圖 | LSP 是位置導向的索引（「第 42 行第 5 列有一個 symbol」），我們是語義導向的圖（「這個 func_call 節點引用那個 func_def 節點」）。LSP 可作為建構語義圖邊的輸入源 |
-| **WebContainers (StackBlitz)** | 瀏覽器中用 WASM 跑完整 Node.js | 可插拔執行後端 | WebContainers 提供通用執行環境，但沒有與語義辨識結合。我們的定位是語義直譯器優先、編譯執行（WASM/JS/WebGPU/Remote）用於黑箱函式，後端可插拔 |
-| **IPFS** | 內容定址的分散式儲存 | 語義套件的分發基礎設施 | IPFS 是儲存層協議，不理解內容的語義。語義套件需要在 IPFS 之上加語義契約和投影定義 |
-
-**本框架的獨特定位**：
-
-```
-既有技術的共同模式：每個工具在自己的抽象層運作
-  Blockly    → 「積木」抽象層
-  Unison     → 「AST hash」抽象層
-  LSP        → 「位置索引」抽象層
-  Wasm       → 「二進位執行」抽象層
-
-本框架的做法：所有東西在「語義」這一個抽象層匯合
-  積木   = 語義結構的視覺投影
-  程式碼 = 語義結構的文字投影
-  執行   = 語義結構的行為投影
-  共享   = 語義結構的網路投影
-  索引   = 語義結構的圖投影
-```
-
-不是「在語義層之上疊加積木、程式碼、執行」，而是「只有語義層，其他都是投影」。這是根公理帶來的架構簡潔性——一個統一的語義模型，取代多個孤立的抽象層。
-
-### AI 輔助的定位：LLM 作為語用分析師
-
-語言模型（LLM）在本框架中的角色是**語用分析師（Pragmatic Analyst）與轉換輔助者**，不是核心邏輯引擎。
-
-#### 為什麼 LLM 不能是核心
-
-```
-語義結構 = 確定性的（deterministic）
-  一個 if 就是一個 if，不需要「猜」
-
-LLM = 機率性的（probabilistic）
-  它「猜」得很好，但永遠有幻覺風險
-```
-
-如果讓 LLM 當核心引擎，語義結構就不再是 source of truth——它變成「LLM 覺得大概是這樣」的結構，直接違反根公理。正確的定位是：**語義結構提供 guardrails，LLM 在 guardrails 內活動**。
-
-#### LLM 參與的五個位置
-
-**1. 強化 lift() 的語用分析**（最高價值）
-
-Pattern Engine 的語用分析是基於規則的，受限於預定義的 pattern。LLM 可以處理 pattern 沒覆蓋的情況：
-
-```
-Pattern Engine（確定性）：
-  for(int i=0; i<n; i++) → count_loop  ✅ 已知 pattern
-
-LLM（機率性，有 guardrail）：
-  for(auto it=v.begin(); it!=v.end(); ++it)
-    if(*it == target) return it;
-  → 「這看起來是 linear_search 慣用語」
-  → confidence: 'llm_suggested'
-  → 使用者可確認或否決
-```
-
-LLM 的推斷結果標記 `confidence: 'llm_suggested'`，不能靜默地改變語義結構——必須讓使用者看到並確認（見下方仲裁規則）。
-
-**2. 處理語義阻抗與跨語言映射**
-
-LLM 不做自動翻譯，而是提供**人類可讀的遷移建議**：
-
-```
-C++ 的 unique_ptr<T> → 轉到 Python
-
-Pattern Engine：不認識 → raw_code 降級
-LLM：「Python 沒有手動記憶體管理。unique_ptr 的語義是『獨佔所有權』，
-      在 Python 中最接近的做法是用普通變數 + GC 回收。
-      建議轉為普通變數賦值，並加上 TODO 註解。」
-```
-
-**3. 生成敘事投影（Narrative Projection）**
-
-LLM 幾乎可以完全主導的位置——自然語言本身就是機率性的，不需要嚴格的確定性 guardrail：
-
-```
-語義樹 → LLM → 「這段程式先讀入一個數字 n，
-                  然後用迴圈從 1 加到 n，最後輸出總和。
-                  這其實就是高斯求和公式的暴力版本。」
-```
-
-最後一句「高斯求和公式的暴力版本」是純語用判斷——Pattern Engine 永遠做不到，但對學習者極有價值（CLT 增生負荷）。
-
-**4. 自動化系統擴充（P3）**
-
-開發者提供範例程式碼，LLM 生成符合 P3 標準的 JSON 定義：
-
-```
-LLM 生成：blockDef + codeTemplate + astPattern + liftPattern
-  ↓
-ConceptRegistry 靜態檢查：四條路徑完備嗎？
-  ↓
-Roundtrip 測試：code → blocks → code 語義不變嗎？
-  ↓
-合格 → 自動接受
-```
-
-LLM 生成，確定性系統驗證。開發者只需確認語義正確性。
-
-**5. 語義搜尋與自然語言建構（Scope 4-5）**
-
-LLM 作為語義結構的自然語言介面——不只搜尋，還能建構：
-
-```
-搜尋：「有沒有能排序的套件？」→ 查詢 Semantic Package Registry
-建構：「讀入成績單，計算平均，輸出不及格的人」
-      → LLM 生成語義結構（不是程式碼！）
-      → 語義結構自動投影為積木 + 程式碼
-      → 使用者在任何投影上微調
-```
-
-這比 Copilot 強大——Copilot 生成文字程式碼（只能在文字層修改），我們生成語義結構（可以在任何投影上修改）。
-
-#### 架構分層：Symbolic AI + Connectionist AI
+### 架構分層
 
 ```
 ┌───────────────────────────────────────────────┐
 │  使用者                                         │
 ├───────────────────────────────────────────────┤
 │  LLM 層（Connectionist，機率性）                 │
-│  ├─ 語用推斷（lift 輔助）                        │
-│  ├─ 敘事生成（narrative 投影）                    │
-│  ├─ 擴充自動化（P3 JSON 生成）                    │
-│  ├─ 語義搜尋（自然語言 → 概念查詢）               │
-│  └─ 跨語言建議（語義阻抗顧問）                    │
+│  ├─ 語用推斷 / 敘事生成 / 擴充自動化              │
+│  └─ 語義搜尋 / 跨語言建議                        │
 ├───────────────────────────────────────────────┤
 │  Guardrails（確定性驗證）                        │
-│  ├─ AST constraints（語法正確性）                 │
-│  ├─ ConceptRegistry（四路徑完備性，P2a′）         │
-│  ├─ Roundtrip test（P1 可逆性）                  │
-│  └─ Type check（形狀約束）                        │
+│  ├─ AST constraints / ConceptRegistry（P2a'）   │
+│  ├─ Roundtrip test（P1）/ Type check            │
 ├───────────────────────────────────────────────┤
 │  語義結構（Symbolic，Source of Truth）            │
 │  ├─ 語義樹 / 語義圖 / 語義超圖                    │
-│  ├─ Pattern Engine（確定性 lift / render）        │
-│  └─ WASM Runtime（確定性執行）                    │
+│  └─ Pattern Engine + 可插拔執行後端               │
 └───────────────────────────────────────────────┘
-
-原則：LLM 永遠在 guardrails 之上，語義結構永遠在最底層。
-      LLM 可以建議、推斷、生成，但最終決定權在確定性系統和使用者手上。
 ```
 
-#### 仲裁規則：Symbolic vs Connectionist 衝突時誰說了算
-
-當 Pattern Engine（確定性）和 LLM（機率性）對同一段程式碼給出不同結論時，需要明確的仲裁邏輯。從根公理（語義結構是 source of truth）推導：
-
-**核心原則：確定性系統是自動機，機率性系統是顧問**
+### 仲裁規則
 
 ```
-確定性系統（Pattern Engine）= 自動機
-  → 可以自動寫入語義結構
-  → 因為它的結論可以被形式化驗證（roundtrip test、AST constraints）
+確定性系統 = 自動機（可自動寫入語義結構）
+機率性系統 = 顧問（需要人類或確定性系統批准）
 
-機率性系統（LLM）= 顧問
-  → 不可以自動寫入語義結構
-  → 它的結論需要人類或確定性系統的批准
+優先序：Pattern Engine > 使用者確認 > LLM 建議 > 降級
 ```
-
-**仲裁優先序**：
-
-```
-Pattern Engine（確定性驗證）> 使用者確認（人在迴路）> LLM 建議（機率推斷）> 降級（安全網）
-```
-
-**四種衝突場景及仲裁結果**：
 
 | 場景 | Pattern Engine | LLM | 仲裁結果 | confidence |
 |------|---------------|-----|---------|------------|
-| 共識 | 匹配成功 | 同意 | 採用 Pattern Engine 結論 | `high` |
-| PE 優先 | 匹配成功 | 不同意 | 採用 Pattern Engine 結論，可附帶 LLM 替代建議供參考 | `high` |
-| 人在迴路 | 無法匹配 | 有建議 | **不自動採用**，呈現為使用者可接受/否決的建議 | 接受前：`llm_suggested`，接受後：`user_confirmed` |
-| 安全網 | 無法匹配 | 也沒建議 | 降級為 raw_code | `degraded` |
+| 共識 | 匹配成功 | 同意 | 採用 PE | `high` |
+| PE 優先 | 匹配成功 | 不同意 | 採用 PE | `high` |
+| 人在迴路 | 無法匹配 | 有建議 | 呈現為建議，使用者決定（需通過驗證閘口） | `llm_suggested` → 驗證 → `user_confirmed` |
+| 安全網 | 無法匹配 | 也沒建議 | 降級 | `degraded` |
 
-**confidence 的完整層級**（從高到低）：
-
-```
-confidence: 'high'            ← 確定性系統完全驗證，所有檢查通過
-confidence: 'warning'         ← 確定性系統結構匹配但語義可疑（附帶 warning_reason）
-confidence: 'inferred'        ← 確定性系統的啟發式推斷
-confidence: 'user_confirmed'  ← LLM 建議 + 使用者明確接受（人在迴路）
-confidence: 'llm_suggested'   ← LLM 建議，未經驗證，等待使用者確認（暫存狀態）
-confidence: 'degraded'        ← 降級為 raw_code
-```
-
-**`llm_suggested` 和 `user_confirmed` 的關鍵差異**：
-
-- `llm_suggested`：語義結構中的**暫存狀態**——不參與 roundtrip 驗證，視覺上明顯標記為「AI 建議」，投影為程式碼時仍使用原始文字（不按建議的概念生成）
-- `user_confirmed`：使用者明確接受後，成為語義結構的**正式部分**——參與 roundtrip，但保留 `source: 'llm'` 標記，使用者可隨時撤回
-
-**為什麼 LLM 不能自動寫入語義結構**（即使它「很有信心」）：
+**confidence 完整層級**（高到低）：
 
 ```
-LLM：「我 95% 確定這是 linear_search」
-系統：但 Pattern Engine 無法驗證這個判斷
-
-如果自動寫入：
-  → 語義結構從「確定性 source of truth」變成「機率性推測」
-  → roundtrip test 可能在未來因為 LLM 版本更新而結果不同
-  → 違反根公理：語義結構必須是確定性的、可重現的
-
-如果等待使用者確認：
-  → 語義結構仍然是確定性的（由人類決策 + 確定性系統共同維護）
-  → LLM 提供了價值（建議），但沒有汙染 source of truth
-  → 使用者的決策是確定性的——同一個人對同一段程式碼會做相同的判斷
+high            ← 確定性系統完全驗證
+warning         ← 結構匹配但語義可疑（附帶 warning_reason）
+inferred        ← 確定性系統的啟發式推斷
+user_confirmed  ← LLM 建議 + 使用者接受 + roundtrip test 通過
+llm_suggested   ← LLM 建議，未經驗證（暫存狀態，不參與 roundtrip）
+degraded        ← 降級為 raw_code
 ```
 
-類比：LLM 像是 code review 中的 AI reviewer——它可以留言建議，但不能自己 merge PR。只有人類 reviewer（使用者）或 CI（Pattern Engine）可以批准合併。
+**結構化驗證閘口**（防止 L0 使用者誤認 LLM 錯誤建議）：
+
+```
+LLM 建議 → 使用者確認 → 強制 roundtrip test
+  → 通過（code→blocks→code 語義不變）
+       → user_confirmed（結構化寫入，參與 roundtrip）
+  → 不通過
+       → user_confirmed_unverified（保留但標記，不參與跨語言映射）
+       → UI 顯示「此概念未通過自動驗證」警告
+```
+
+使用者確認不等於語義正確——roundtrip test 是不可跳過的客觀閘口。L0 使用者可能不懂 LLM 建議的正確性，但 roundtrip test 不依賴使用者的認知能力。
+
+**LLM 不能自動寫入語義結構**——即使「很有信心」。類比：AI reviewer 可以留言建議，但不能自己 merge PR。
+
+---
+
+## 12. 相關工作與差異
+
+| 專案 | 做了什麼 | 對應原則 | 本質差異 |
+|------|---------|---------|---------|
+| **Unison** | AST hash 內容定址 | 根公理、Scope 4-5 | Hash 語法層 vs 我們 hash 語義層 |
+| **Hedy** | 漸進式教學語言 | P4 漸進揭露 | 每個 Level 是不同語法 vs 我們只改投影解析度 |
+| **Blockly/Scratch** | 積木→程式碼單向生成 | P1 投影定理 | 單向流 vs 雙向 roundtrip |
+| **LSP/LSIF** | 跨檔案符號索引 | Scope 3-5 語義圖 | 位置導向 vs 語義導向 |
+| **WebContainers** | 瀏覽器 WASM 執行 | 可插拔執行 | 通用環境 vs 語義直譯器 + 可插拔後端 |
+| **IPFS** | 內容定址分散式儲存 | 語義套件分發 | 儲存層 vs 語義層 |
+
+**獨特定位**：不是在語義層之上疊加積木、程式碼、執行，而是**只有語義層，其他都是投影**。
+
+```
+積木 = 語義結構的視覺投影    程式碼 = 文字投影
+執行 = 行為投影              共享 = 網路投影    索引 = 圖投影
+```
+
+---
+
+# 附錄
+
+## 已知的實作挑戰
+
+### 邏輯邊界（硬限制）
+
+1. **語用分析的精確度邊界**：lift() 基於 pattern 推斷，存在誤判風險（如 body 內修改迴圈變數的 for）。對策：composite pattern 必須包含副作用檢查，可疑匹配強制 `confidence: 'warning'`。
+
+2. **C/C++ 巨集的不可解析硬邊界**：tree-sitter 不展開巨集。獨立巨集調用可局部降級，但成對巨集（BEGIN_MAP/END_MAP、Qt signals/slots）會導致整個區塊的 AST 崩潰為 ERROR 節點——子樹無法獨立 lift。更嚴重的是，巨集定義的型別不在符號表中，導致連鎖降級。對重度框架巨集的專案，巨集密集區域會整片降級。
+
+3. **語義阻抗的三層問題**：節點級阻抗（回傳值、副作用差異）可由 semanticContract 偵測標記。拓撲級阻抗（RAII、ownership、goroutine）改變語義結構的拓撲，目標語言中不存在對應的結構維度，無法節點級映射——正確行為是生成差異報告而非靜默生成破碎程式碼。語言模型級阻抗（記憶體模型、併發模型）超出形式化範圍，走降級路徑。
+
+### 工程待解問題
+
+4. **註解歸屬歧義**：拖拽積木時相鄰註解是否自動跟隨——需要 Block Style 層的吸附邏輯。
+
+5. **符號表的汙染追蹤（Taint Tracking）**：lift() 的符號表應標記哪些型別和符號來自 raw_code 或未展開的巨集區域（`tainted_type`）。使用受汙染符號的節點應自動繼承較低的 confidence，使降級更精細——不是「不認識就全降」，而是「知道為什麼不認識」。同理，執行時 raw_code 的汙染擴散也應在語義結構中顯式標記傳播路徑。
+
+6. **lift() 性能**：目前轉換是使用者主動觸發，全量 lift 在教學場景不構成瓶頸。未來可考慮增量 parse + 延遲 lift。
+
+7. **Scope 3-5 的狀態空間爆炸**：增量更新演算法是效能瓶頸。實作優先序：Phase 1 Scope 0-2（已實現）→ Phase 2 Scope 3 → Phase 3 Scope 4-5。
+
+8. **語義契約的驗證成本**：初期只覆蓋 L0-L1 概念，L2 按需補充，跨語言 constraints 可由 LLM 輔助生成初稿。
+
+9. **執行後端的橋接開銷**：WASM 有序列化開銷，Remote 有網路延遲，WebGPU 有 GPU 同步代價。正確的粒度是「子樹」而非「節點」。JS native 因零 bridge 開銷特別適合大量小型運算。
+
+10. **語義套件的工程約束**：執行他人的程式需要沙箱隔離、語義契約需要驗證機制（屬性測試）、語義結構的版本管理比文字原始碼更複雜。語義套件的執行體應受**語義沙箱**約束——副作用必須符合語義契約的宣告，否則拒絕執行，以保護時空旅行除錯的完整性（與 Virtual I/O Layer 統一為執行驗證層）。
+
+11. **語義套件的版本一致性**：當多個使用者引用同一語義套件的不同版本時（老師更新 v1→v2，學生仍引用 v1），需要語義契約的相容性檢查——比文字原始碼的版本管理更難，因為要比較的是契約而非 diff。
 
 ---
 
