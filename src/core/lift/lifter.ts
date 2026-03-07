@@ -133,8 +133,29 @@ export class Lifter {
     const results: SemanticNode[] = []
     for (const node of nodes) {
       if (!node.isNamed) continue
+
+      // Handle comment nodes: attach as annotation or standalone
+      if (node.type === 'comment') {
+        const prev = results.length > 0 ? results[results.length - 1] : null
+        // Same row as previous → inline annotation
+        if (prev && node.startPosition.row === (prev.metadata?.sourceRange?.endLine ?? -1)) {
+          if (!prev.annotations) prev.annotations = []
+          prev.annotations.push({
+            type: 'comment',
+            text: node.text,
+            position: 'inline',
+          })
+          continue
+        }
+        // Otherwise → standalone comment node (handled by pattern lifter or fallback)
+      }
+
       const lifted = this.liftWithContext(node, contextData)
       if (!lifted) continue
+
+      // Check if next node is a same-row comment (look-ahead for inline annotation)
+      // This is handled in the comment branch above when we process the comment node
+
       // Flatten _compound nodes (one AST node → multiple semantic nodes)
       if (lifted.concept === '_compound') {
         results.push(...(lifted.children.body ?? []))
