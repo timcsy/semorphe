@@ -114,6 +114,11 @@ export class StyleManagerImpl implements StyleManager {
     return { detected, closestPreset, confidence: closestPreset ? 0.8 : 0.3 }
   }
 
+  /** Shallow merge: start from preset, override with custom params */
+  mergeWithPreset(presetId: StylePresetId, overrides: Partial<CodingStyle>): CodingStyle {
+    return { ...STYLE_PRESETS[presetId], ...overrides }
+  }
+
   private findClosestPreset(detected: Partial<CodingStyle>): StylePresetId | undefined {
     let bestId: StylePresetId | undefined
     let bestScore = 0

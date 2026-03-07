@@ -8,7 +8,7 @@ import { registerIOGenerators } from './io'
 
 function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
   const g = new Map<string, NodeGenerator>()
-  registerStatementGenerators(g)
+  registerStatementGenerators(g, style)
   registerDeclarationGenerators(g)
   registerExpressionGenerators(g)
   registerIOGenerators(g, style)

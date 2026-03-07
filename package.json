@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify-concepts": "tsx src/scripts/verify-concept-paths.ts"
+    "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts"
   },
   "devDependencies": {
     "happy-dom": "^20.7.0",
