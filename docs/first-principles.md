@@ -1405,6 +1405,123 @@ view = project(structure, scope, execution, { runtime })
 
 對學習者來說，黑箱是合理的——你不需要理解 `sort` 的內部實作，你只需要知道「丟進去一個陣列，出來一個排好的陣列」。WASM 讓黑箱真的能跑。
 
+### Raw code 的不可執行擴散與 WASM 解毒
+
+語義直譯器逐節點執行時，遇到 `raw_code` 就卡住。更嚴重的是，不可執行像**汙染（taint）**一樣往下游擴散：
+
+```
+func main() {
+    x = 5                         // ✅ 可執行
+    y = raw_code("complex_algo")  // ❌ 不可執行
+    z = x + y                     // ❌ 被汙染——依賴 y
+    print(z)                      // ❌ 被汙染——依賴 z
+}
+一個 raw_code 節點就能讓整個後續執行鏈斷裂。
+```
+
+如果能為 `raw_code` 提供一個**外延等價（extensionally equivalent）**的 WASM 實作，汙染就被阻斷：
+
+```
+func main() {
+    x = 5                          // ✅ 語義直譯器
+    y = wasm_call("complex_algo")  // ✅ WASM 執行，回傳具體值
+    z = x + y                      // ✅ 語義直譯器（y 已經是具體值）
+    print(z)                       // ✅ 語義直譯器
+}
+```
+
+**外延等價的定義**：兩個實作 A 和 B 是外延等價的，若且唯若對所有合法輸入，A(input) ≡ B(input)。不要求內部結構相同（內涵等價），只要求輸入輸出行為相同。
+
+**外延等價驗證**：系統可以用測試輸入，自動驗證 WASM 實作是否和語義直譯器的結果一致。如果不一致，標記為 `contract_violation`。
+
+### 執行策略分層
+
+同一個語義節點可以有多種執行方式，由使用者根據需求選擇：
+
+```
+策略 1：語義直譯（Semantic Interpretation）
+  速度：慢
+  透明度：完全透明——可逐步、可視覺化、可看變數變化
+  適用：教學、debug、理解程式行為
+
+策略 2：WASM 執行（Compiled Execution）
+  速度：快
+  透明度：黑箱——只看輸入輸出
+  適用：效能需求、raw_code 解毒、大量資料處理
+
+策略 3：混合執行（Hybrid）
+  部分節點用語義直譯（需要看清楚的地方）
+  部分節點用 WASM（不需要看或需要效能的地方）
+  使用者可以選擇哪些節點「展開」、哪些「折疊」
+```
+
+混合執行和 P4 漸進揭露完全一致——你想看多深就看多深：
+
+```
+學習者視角：
+  main()          → 語義直譯，逐步看
+    my_sort()     → 語義直譯，展開看自己寫的排序
+    std::sort()   → WASM 折疊，只看結果
+    print()       → 語義直譯，看輸出過程
+
+效能視角：
+  main()          → WASM，全速執行
+  （需要 debug 時切回語義直譯）
+```
+
+**執行投影的完整模型**：
+
+```
+view = project(structure, scope, execution, {
+  runtime,
+  executionStrategy: 'interpret' | 'wasm' | 'hybrid',
+  wasmProvider: '@stdlib' | '@optimized' | ...,
+})
+
+混合執行時，每個節點獨立選擇策略：
+  node.executionStrategy = 'interpret'  → 逐步執行，可視覺化
+  node.executionStrategy = 'wasm'       → WASM 執行，只看結果
+
+  預設策略：
+    已知概念且有語義直譯器  → interpret（可以逐步看）
+    raw_code 且有 WASM     → wasm（解毒）
+    raw_code 且無 WASM     → 不可執行（汙染下游）
+    使用者手動切換          → 任何節點都可在 interpret ↔ wasm 間切換
+```
+
+### WASM 效能市場
+
+同一個語義概念可以有多個 WASM 實作，由不同來源提供，效能和適用場景各異：
+
+```
+Semantic Package: sort
+  語義契約：input: array<T> → output: array<T>（已排序）
+
+  實作 A：@stdlib/sort.wasm
+    來源：std::sort 編譯
+    benchmark：1M items → 120ms
+    適用：通用場景
+
+  實作 B：@optimized/sort.wasm
+    來源：hand-tuned radix sort
+    benchmark：1M items → 45ms
+    constraints：只適用於整數陣列
+
+  實作 C：@student/sort.wasm
+    來源：學生的 bubble sort
+    benchmark：1M items → 8500ms
+    教學價值：可展開看實作，理解 O(n²)
+```
+
+**使用者根據需求選擇**：
+- **學習者**：選 C——可以展開看實作、理解演算法、對比效能差異
+- **效能導向**：選 B——最快，但有 constraints 限制
+- **通用場景**：選 A——最穩定、無限制
+
+**自動化基準測試**：同一語義契約的所有 WASM 實作，用相同的測試輸入跑 benchmark，自動排名。使用者可以看到「這個排序實作比那個快 3 倍，但只能用在整數」的量化比較。
+
+**教學價值**：效能市場讓學習者**直觀感受演算法複雜度**——不是課本上的 O(n²) 符號，而是「bubble sort 跑了 8.5 秒，std::sort 跑了 0.12 秒」的真實數字。這是 CLT 增生負荷（germane load）的絕佳來源。
+
 ### 語義套件（Semantic Packages）
 
 如果程式是語義結構而不是文字檔，共享的單位也應該是語義結構：
