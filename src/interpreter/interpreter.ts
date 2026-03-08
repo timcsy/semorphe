@@ -132,6 +132,9 @@ export class SemanticInterpreter {
       case 'endl': return { type: 'string', value: '\n' }
       case 'array_declare': return this.execArrayDeclare(node)
       case 'array_access': return this.execArrayAccess(node)
+      case 'cpp_increment': return this.execIncrement(node)
+      case 'negate': return this.execNegate(node)
+      case 'compound_assign': return this.execCompoundAssign(node)
       default: return // 未知概念靜默略過
     }
   }
@@ -310,6 +313,55 @@ export class SemanticInterpreter {
     return { type: 'bool', value: !this.toBool(operand) }
   }
 
+  // --- 遞增遞減 / 負數 / 複合賦值 ---
+
+  private execIncrement(node: SemanticNode): void {
+    const name = String(node.properties.name)
+    const op = String(node.properties.operator)
+    const current = this.scope.get(name)
+    const val = this.toNumber(current)
+    const newVal = op === '++' ? val + 1 : val - 1
+    const result: RuntimeValue = current.type === 'int'
+      ? { type: 'int', value: Math.trunc(newVal) }
+      : { type: 'double', value: newVal }
+    this.scope.set(name, result)
+  }
+
+  private async execNegate(node: SemanticNode): Promise<RuntimeValue> {
+    const operand = await this.evaluate(node.children.value as SemanticNode)
+    const val = this.toNumber(operand)
+    return operand.type === 'int'
+      ? { type: 'int', value: -Math.trunc(val) }
+      : { type: 'double', value: -val }
+  }
+
+  private async execCompoundAssign(node: SemanticNode): Promise<void> {
+    const name = String(node.properties.name)
+    const op = String(node.properties.operator)
+    const current = this.scope.get(name)
+    const rhs = await this.evaluate(node.children.value as SemanticNode)
+    const lv = this.toNumber(current)
+    const rv = this.toNumber(rhs)
+    let result: number
+    switch (op) {
+      case '+=': result = lv + rv; break
+      case '-=': result = lv - rv; break
+      case '*=': result = lv * rv; break
+      case '/=':
+        if (rv === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+        result = lv / rv; break
+      case '%=':
+        if (rv === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+        result = lv % rv; break
+      default: result = lv
+    }
+    if (current.type === 'int' && rhs.type === 'int') {
+      this.scope.set(name, { type: 'int', value: Math.trunc(result) })
+    } else {
+      this.scope.set(name, { type: 'double', value: result })
+    }
+  }
+
   // --- 流程控制 (T018) ---
 
   private async execIf(node: SemanticNode): Promise<void> {
@@ -384,8 +436,20 @@ export class SemanticInterpreter {
   private execFuncDef(node: SemanticNode): void {
     const name = String(node.properties.name)
     const returnType = String(node.properties.return_type || 'void')
-    const paramsStr = String(node.properties.params || '[]')
-    const params: { type: string; name: string }[] = JSON.parse(paramsStr)
+    const rawParams = node.properties.params
+    let params: { type: string; name: string }[] = []
+    if (Array.isArray(rawParams)) {
+      // params from blockly-panel: ["int x", "float y", ...]
+      params = rawParams.map((p: unknown) => {
+        const s = String(p)
+        const spaceIdx = s.indexOf(' ')
+        return spaceIdx >= 0
+          ? { type: s.slice(0, spaceIdx), name: s.slice(spaceIdx + 1) }
+          : { type: 'int', name: s }
+      })
+    } else if (typeof rawParams === 'string' && rawParams.startsWith('[')) {
+      try { params = JSON.parse(rawParams) } catch { params = [] }
+    }
     const body = node.children.body
 
     this.functions.set(name, {

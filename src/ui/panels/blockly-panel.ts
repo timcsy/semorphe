@@ -110,6 +110,18 @@ export class BlocklyPanel {
       case 'u_endl': return createNode('endl', {})
       case 'u_array_declare': return this.extractArrayDeclare(block)
       case 'u_array_access': return this.extractArrayAccess(block)
+      case 'c_increment': return createNode('cpp_increment', {
+          name: block.getFieldValue('NAME') ?? 'i',
+          operator: block.getFieldValue('OP') ?? '++',
+        })
+      case 'c_compound_assign': {
+          const valueBlock = block.getInputTargetBlock('VALUE')
+          const valueNode = valueBlock ? this.extractBlock(valueBlock) : createNode('number_literal', { value: '1' })
+          return createNode('compound_assign', {
+            name: block.getFieldValue('NAME') ?? 'x',
+            operator: block.getFieldValue('OP') ?? '+=',
+          }, { value: valueNode ? [valueNode] : [] })
+        }
       case 'c_raw_code': return this.extractRawCode(block)
       case 'c_raw_expression': return this.extractRawExpression(block)
       case 'c_comment_line': return this.extractComment(block)

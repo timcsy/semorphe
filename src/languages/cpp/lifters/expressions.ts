@@ -85,6 +85,14 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return raw
   })
 
+  lifter.register('update_expression', (node, _ctx) => {
+    // i++ / ++i / i-- / --i
+    const op = node.children.find(c => !c.isNamed)?.text ?? '++'
+    const nameNode = node.namedChildren[0]
+    const name = nameNode?.text ?? 'i'
+    return createNode('cpp_increment', { name, operator: op })
+  })
+
   lifter.register('parenthesized_expression', (node, ctx) => {
     // Unwrap parenthesized expressions
     if (node.namedChildren.length === 1) {

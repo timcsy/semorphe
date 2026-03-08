@@ -48,7 +48,7 @@
       "conceptId": "cpp_increment",
       "abstractConcept": "increment",
       "properties": ["name", "operator"],
-      "role": "both"
+      "role": "statement"
     },
     "blockDef": {
       "type": "c_increment",
@@ -68,7 +68,8 @@
           ]
         }
       ],
-      "output": "Expression",
+      "previousStatement": null,
+      "nextStatement": null,
       "colour": "#59C059",
       "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
     },
