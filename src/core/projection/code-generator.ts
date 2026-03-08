@@ -61,9 +61,10 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
   const blockId = (node.metadata as Record<string, unknown> | undefined)?.blockId as string | undefined
   const tracking = ctx._mappings && blockId
 
+  const lineCountBefore = ctx._lineCount ?? 0
   let startLine = 0
   if (tracking) {
-    startLine = ctx._lineCount ?? 0
+    startLine = lineCountBefore
   }
 
   let result: string
@@ -93,10 +94,11 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     }
   }
 
-  // Update line count
+  // Update line count — use lineCountBefore + totalNewlines to avoid double-counting
+  // when child generateNode calls already incremented _lineCount during the generator
   if (ctx._mappings !== undefined) {
     const newlines = countNewlines(result)
-    ctx._lineCount = (ctx._lineCount ?? 0) + newlines
+    ctx._lineCount = lineCountBefore + newlines
 
     if (tracking) {
       ctx._mappings.push({
@@ -108,6 +110,17 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
   }
 
   return result
+}
+
+/**
+ * Call from compound generators (func_def, if, while, etc.) to update _lineCount
+ * for header text BEFORE generating child nodes via generateBody/generateNode.
+ * This ensures children see the correct starting line number.
+ */
+export function trackOwnText(ctx: GeneratorContext, text: string): void {
+  if (ctx._lineCount !== undefined) {
+    ctx._lineCount += countNewlines(text)
+  }
 }
 
 function countNewlines(s: string): number {

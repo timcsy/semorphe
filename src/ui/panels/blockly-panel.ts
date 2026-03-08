@@ -83,6 +83,14 @@ export class BlocklyPanel {
   }
 
   private extractBlock(block: Blockly.Block): SemanticNode | null {
+    const node = this.extractBlockInner(block)
+    if (node) {
+      node.metadata = { ...node.metadata, blockId: block.id }
+    }
+    return node
+  }
+
+  private extractBlockInner(block: Blockly.Block): SemanticNode | null {
     const type = block.type
     switch (type) {
       case 'u_var_declare': return this.extractVarDeclare(block)
@@ -243,9 +251,7 @@ export class BlocklyPanel {
 
     if (declarators.length > 1) {
       // Multi-variable: single var_declare with declarators children
-      const node = createNode('var_declare', { type }, { declarators })
-      node.metadata = { blockId: block.id }
-      return node
+      return createNode('var_declare', { type }, { declarators })
     }
 
     // Single variable (or fallback)
@@ -259,11 +265,9 @@ export class BlocklyPanel {
           const initNode = initBlock ? this.extractBlock(initBlock) : null
           return initNode ? [initNode] : []
         })()
-    const node = createNode('var_declare', { name, type }, {
+    return createNode('var_declare', { name, type }, {
       initializer: initChildren,
     })
-    node.metadata = { blockId: block.id }
-    return node
   }
 
   private extractVarAssign(block: Blockly.Block): SemanticNode {

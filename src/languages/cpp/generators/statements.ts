@@ -1,6 +1,6 @@
 import type { StylePreset } from '../../../core/types'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { indent, indented, generateExpression, generateBody } from '../../../core/projection/code-generator'
+import { indent, indented, generateExpression, generateBody, trackOwnText } from '../../../core/projection/code-generator'
 
 export function registerStatementGenerators(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = style.brace_style === 'Allman'
@@ -14,11 +14,15 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const cond = generateExpression((node.children.condition ?? [])[0], ctx)
     const thenBody = node.children.then_body ?? []
     const elseBody = node.children.else_body ?? []
-    let code = `${indent(ctx)}if (${cond})${openBrace(ctx)}\n`
+    const header = `${indent(ctx)}if (${cond})${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
     code += generateBody(thenBody, indented(ctx))
     code += `${indent(ctx)}}`
     if (elseBody.length > 0) {
-      code += `${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}else${openBrace(ctx)}\n`
+      const elseHeader = `${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}else${openBrace(ctx)}\n`
+      trackOwnText(ctx, `${indent(ctx)}}` + elseHeader)
+      code += elseHeader
       code += generateBody(elseBody, indented(ctx))
       code += `${indent(ctx)}}`
     }
@@ -31,7 +35,9 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
   g.set('while_loop', (node, ctx) => {
     const cond = generateExpression((node.children.condition ?? [])[0], ctx)
     const body = node.children.body ?? []
-    let code = `${indent(ctx)}while (${cond})${openBrace(ctx)}\n`
+    const header = `${indent(ctx)}while (${cond})${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
     code += generateBody(body, indented(ctx))
     code += `${indent(ctx)}}\n`
     return code
@@ -42,7 +48,9 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const from = generateExpression((node.children.from ?? [])[0], ctx)
     const to = generateExpression((node.children.to ?? [])[0], ctx)
     const body = node.children.body ?? []
-    let code = `${indent(ctx)}for (int ${varName} = ${from}; ${varName} < ${to}; ${varName}++)${openBrace(ctx)}\n`
+    const header = `${indent(ctx)}for (int ${varName} = ${from}; ${varName} < ${to}; ${varName}++)${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
     code += generateBody(body, indented(ctx))
     code += `${indent(ctx)}}\n`
     return code
@@ -57,7 +65,9 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const params = node.properties.params
     const paramStr = Array.isArray(params) ? params.join(', ') : ''
     const body = node.children.body ?? []
-    let code = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
+    const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
     code += generateBody(body, indented(ctx))
     code += `${indent(ctx)}}\n`
     return code

@@ -1226,6 +1226,8 @@ export class App {
       parser.parse(code).then(tree => {
         codeParser._lastTree = tree.rootNode
         originalSync()
+        // Rebuild source mappings for bidirectional highlight
+        this.syncController?.syncBlocksToCode()
         // Clear flag after event loop settles (deferred Blockly events)
         setTimeout(() => { this._codeToBlocksInProgress = false }, 0)
       }).catch(err => {
