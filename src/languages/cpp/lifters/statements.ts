@@ -61,19 +61,32 @@ export function registerStatementLifters(lifter: Lifter): void {
       const varName = extractForVarName(initNode)
       const fromNode = extractForFrom(initNode, ctx)
       const toNode = extractForTo(condNode, ctx)
+      const inclusive = extractForInclusive(condNode)
       const body = extractBody(bodyNode, ctx)
 
-      return createNode('count_loop', { var_name: varName }, {
+      return createNode('count_loop', { var_name: varName, inclusive }, {
         from: fromNode ? [fromNode] : [],
         to: toNode ? [toNode] : [],
         body,
       })
     }
 
-    // Not a counting loop — degrade to raw_code
-    const raw = createNode('raw_code', {})
-    raw.metadata = { rawCode: node.text }
-    return raw
+    // General three-part for loop
+    const body = extractBody(bodyNode, ctx)
+
+    // c_for_loop's INIT/COND/UPDATE are expression inputs, but for-loop parts
+    // may lift to statement concepts (var_declare, cpp_compound_assign, etc.)
+    // Wrap non-expression concepts as cpp_raw_expression with the source text
+    const initSem = wrapForExpr(initNode, ctx)
+    const condSem = wrapForExpr(condNode, ctx)
+    const updateSem = wrapForExpr(updateNode, ctx)
+
+    return createNode('cpp_for_loop', {}, {
+      init: initSem ? [initSem] : [],
+      cond: condSem ? [condSem] : [],
+      update: updateSem ? [updateSem] : [],
+      body,
+    })
   })
 
   // function_definition now handled by liftStrategy "cpp:liftFunctionDef"
@@ -114,8 +127,13 @@ function isCountingFor(
   if (cond.type !== 'binary_expression') return false
   const condOp = cond.children.find(c => !c.isNamed)?.text
   if (condOp !== '<' && condOp !== '<=') return false
-  // update should be "i++" or "++i" or "i += 1"
-  if (update.type !== 'update_expression') return false
+  // update should be "i++", "++i", or "i += 1"
+  if (!isCountingUpdate(update)) return false
+  // Verify all three parts use the same variable
+  const varName = extractForVarName(init)
+  const condLeft = cond.childForFieldName('left')?.text
+  const updateVar = extractUpdateVar(update)
+  if (condLeft !== varName || updateVar !== varName) return false
   return true
 }
 
@@ -144,4 +162,56 @@ function extractForTo(cond: import('../../../core/lift/types').AstNode | null, c
   const rightNode = cond.childForFieldName('right')
   if (rightNode) return ctx.lift(rightNode)
   return null
+}
+
+function extractForInclusive(cond: import('../../../core/lift/types').AstNode | null): string {
+  if (!cond) return 'FALSE'
+  const op = cond.children.find(c => !c.isNamed)?.text
+  return op === '<=' ? 'TRUE' : 'FALSE'
+}
+
+/** Check if update is a counting increment: i++, ++i, or i += 1 */
+function isCountingUpdate(update: import('../../../core/lift/types').AstNode | null): boolean {
+  if (!update) return false
+  if (update.type === 'update_expression') return true
+  // i += 1 — tree-sitter C++ uses assignment_expression for compound assignments
+  if (update.type === 'assignment_expression' || update.type === 'augmented_assignment_expression') {
+    const op = update.children.find(c => !c.isNamed)?.text
+    const right = update.childForFieldName('right')
+    return op === '+=' && right?.text === '1'
+  }
+  return false
+}
+
+/** Extract variable name from an update expression (i++, ++i, i += 1) */
+function extractUpdateVar(update: import('../../../core/lift/types').AstNode | null): string | undefined {
+  if (!update) return undefined
+  if (update.type === 'update_expression') {
+    return update.namedChildren[0]?.text
+  }
+  if (update.type === 'assignment_expression' || update.type === 'augmented_assignment_expression') {
+    return update.childForFieldName('left')?.text
+  }
+  return undefined
+}
+
+// Expression concepts that can safely be placed in c_for_loop's value inputs
+const EXPRESSION_CONCEPTS = new Set([
+  'number', 'string', 'boolean', 'var_ref', 'cpp_raw_expression',
+  'binary_op', 'comparison', 'logical_op', 'negate', 'not',
+  'func_call_expr', 'array_access', 'cpp_ternary',
+])
+
+/** Lift a for-loop part (init/cond/update) and wrap non-expression concepts as cpp_raw_expression */
+function wrapForExpr(
+  node: import('../../../core/lift/types').AstNode | null,
+  ctx: import('../../../core/lift/types').LiftContext,
+): import('../../../core/types').SemanticNode | null {
+  if (!node) return null
+  const lifted = ctx.lift(node)
+  if (!lifted) return null
+  // If the lifted concept is a known expression, keep it
+  if (EXPRESSION_CONCEPTS.has(lifted.concept)) return lifted
+  // Otherwise wrap as raw expression text (statements, unresolved, etc.)
+  return createNode('cpp_raw_expression', { code: node.text })
 }

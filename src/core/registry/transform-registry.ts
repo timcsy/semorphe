@@ -16,8 +16,30 @@ export class TransformRegistry {
   }
 }
 
+/** Unescape C/C++ string escape sequences */
+export function unescapeC(s: string): string {
+  return s.replace(/\\(.)/g, (_match, ch) => {
+    switch (ch) {
+      case 'n': return '\n'
+      case 't': return '\t'
+      case 'r': return '\r'
+      case '\\': return '\\'
+      case '\'': return "'"
+      case '"': return '"'
+      case '0': return '\0'
+      case 'a': return '\x07'
+      case 'b': return '\b'
+      case 'f': return '\f'
+      case 'v': return '\v'
+      default: return '\\' + ch
+    }
+  })
+}
+
 /** Register core transforms that ship with the engine */
 export function registerCoreTransforms(registry: TransformRegistry): void {
+  // stripQuotes keeps escape sequences as-is (e.g. \t stays as \t)
+  // Unescaping happens only at interpreter execution time
   registry.register('stripQuotes', (text) => {
     if ((text.startsWith('"') && text.endsWith('"')) ||
         (text.startsWith("'") && text.endsWith("'"))) {

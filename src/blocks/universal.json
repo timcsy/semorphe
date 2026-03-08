@@ -435,7 +435,7 @@
     "concept": {
       "conceptId": "count_loop",
       "abstractConcept": "count_loop",
-      "properties": ["variable"],
+      "properties": ["var_name", "inclusive"],
       "children": { "from": "expression", "to": "expression", "body": "statements" },
       "role": "statement"
     },
@@ -452,6 +452,11 @@
           "type": "input_value",
           "name": "FROM",
           "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "BOUND",
+          "options": [["to (exclusive)", "FALSE"], ["to (inclusive)", "TRUE"]]
         },
         {
           "type": "input_value",

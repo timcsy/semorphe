@@ -157,6 +157,48 @@ describe('Code-to-Blocks Pipeline', () => {
     })
   })
 
+  describe('Counting for loop with inclusive (<=)', () => {
+    it('should lift i <= n counting for loop with inclusive TRUE', () => {
+      const sem = liftCode('for (int i = 1; i <= n; i++) { x = 1; }')
+      const concepts = findConcepts(sem)
+      expect(concepts).toContain('count_loop')
+      // Walk to find the count_loop and check inclusive
+      function findNode(node: any, concept: string): any {
+        if (!node) return null
+        if (node.concept === concept) return node
+        if (node.children) {
+          for (const ch of Object.values(node.children) as any[]) {
+            if (Array.isArray(ch)) {
+              for (const c of ch) {
+                const found = findNode(c, concept)
+                if (found) return found
+              }
+            }
+          }
+        }
+        return null
+      }
+      const countLoop = findNode(sem, 'count_loop')
+      expect(countLoop).not.toBeNull()
+      expect(countLoop.properties.inclusive).toBe('TRUE')
+    })
+  })
+
+  describe('Three-part for loop (non-counting)', () => {
+    it('should lift non-counting for loop to cpp_for_loop concept', () => {
+      const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
+      const concepts = findConcepts(sem)
+      expect(concepts).toContain('cpp_for_loop')
+    })
+
+    it('should render non-counting for to c_for_loop block', () => {
+      const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
+      const state = renderToBlocklyState(sem!)
+      const types = findBlockTypes(state)
+      expect(types).toContain('c_for_loop')
+    })
+  })
+
   describe('cout / cin I/O', () => {
     it('should lift cout << x to print concept', () => {
       const sem = liftCode('cout << x;')

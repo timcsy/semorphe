@@ -280,7 +280,112 @@ describe('C++ Statement Lifters', () => {
     expect(result!.children.to).toHaveLength(1)
   })
 
-  it('should degrade non-counting for to raw_code', () => {
+  it('should detect inclusive count_loop (<=)', () => {
+    const init = mockNode('declaration', 'int i = 1', [
+      mockNode('primitive_type', 'int'),
+      mockNode('init_declarator', 'i = 1', [
+        mockNode('identifier', 'i'),
+        unnamed('=', '='),
+        mockNode('number_literal', '1'),
+      ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '1') }),
+    ])
+    const cond = mockNode('binary_expression', 'i <= 10', [
+      mockNode('identifier', 'i'),
+      unnamed('<=', '<='),
+      mockNode('number_literal', '10'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '10') })
+    const update = mockNode('update_expression', 'i++', [mockNode('identifier', 'i')])
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 1; i <= 10; i++) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('count_loop')
+    expect(result!.properties.inclusive).toBe('TRUE')
+  })
+
+  it('should detect exclusive count_loop (<)', () => {
+    const init = mockNode('declaration', 'int i = 0', [
+      mockNode('primitive_type', 'int'),
+      mockNode('init_declarator', 'i = 0', [
+        mockNode('identifier', 'i'),
+        unnamed('=', '='),
+        mockNode('number_literal', '0'),
+      ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '0') }),
+    ])
+    const cond = mockNode('binary_expression', 'i < 10', [
+      mockNode('identifier', 'i'),
+      unnamed('<', '<'),
+      mockNode('number_literal', '10'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '10') })
+    const update = mockNode('update_expression', 'i++', [mockNode('identifier', 'i')])
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 0; i < 10; i++) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('count_loop')
+    expect(result!.properties.inclusive).toBe('FALSE')
+  })
+
+  it('should detect count_loop with i += 1 update', () => {
+    const init = mockNode('declaration', 'int i', [
+      mockNode('primitive_type', 'int'),
+      mockNode('identifier', 'i'),
+    ])
+    const cond = mockNode('binary_expression', 'i < 10', [
+      mockNode('identifier', 'i'),
+      unnamed('<', '<'),
+      mockNode('number_literal', '10'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '10') })
+    const update = mockNode('assignment_expression', 'i += 1', [
+      mockNode('identifier', 'i'),
+      unnamed('+=', '+='),
+      mockNode('number_literal', '1'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '1') })
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i; i < 10; i += 1) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('count_loop')
+    expect(result!.properties.var_name).toBe('i')
+    expect(result!.properties.inclusive).toBe('FALSE')
+    // No initializer value → empty from
+    expect(result!.children.from).toHaveLength(0)
+  })
+
+  it('should NOT treat i += 2 as counting for', () => {
+    const init = mockNode('declaration', 'int i = 0', [
+      mockNode('primitive_type', 'int'),
+      mockNode('init_declarator', 'i = 0', [
+        mockNode('identifier', 'i'),
+        mockNode('number_literal', '0'),
+      ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '0') }),
+    ])
+    const cond = mockNode('binary_expression', 'i < 10', [
+      mockNode('identifier', 'i'),
+      unnamed('<', '<'),
+      mockNode('number_literal', '10'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '10') })
+    const update = mockNode('assignment_expression', 'i += 2', [
+      mockNode('identifier', 'i'),
+      unnamed('+=', '+='),
+      mockNode('number_literal', '2'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '2') })
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 0; i < 10; i += 2) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_for_loop')
+  })
+
+  it('should lift non-counting for to cpp_for_loop', () => {
     const init = mockNode('expression_statement', 'x = 0;', [mockNode('assignment_expression', 'x = 0')])
     const cond = mockNode('binary_expression', 'x < 10', [], {
       left: mockNode('identifier', 'x'),
@@ -296,7 +401,123 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(['raw_code', 'cpp_for_loop']).toContain(result!.concept)
+    expect(result!.concept).toBe('cpp_for_loop')
+    expect(result!.children.init).toBeDefined()
+    expect(result!.children.cond).toBeDefined()
+    expect(result!.children.update).toBeDefined()
+  })
+
+  it('should reject mismatched variable in counting for (cond uses different var)', () => {
+    // for (int j = 1; i <= 9; j++) — condition uses i, not j
+    const init = mockNode('declaration', 'int j = 1', [
+      mockNode('primitive_type', 'int'),
+      mockNode('init_declarator', 'j = 1', [
+        mockNode('identifier', 'j'),
+        unnamed('=', '='),
+        mockNode('number_literal', '1'),
+      ], { declarator: mockNode('identifier', 'j'), value: mockNode('number_literal', '1') }),
+    ])
+    const cond = mockNode('binary_expression', 'i <= 9', [
+      mockNode('identifier', 'i'),
+      unnamed('<=', '<='),
+      mockNode('number_literal', '9'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '9') })
+    const update = mockNode('update_expression', 'j++', [mockNode('identifier', 'j')])
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int j = 1; i <= 9; j++) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    // Should NOT be count_loop — variable mismatch
+    expect(result!.concept).toBe('cpp_for_loop')
+  })
+
+  it('should reject mismatched variable in counting for (update uses different var)', () => {
+    // for (int i = 1; i <= 9; j++) — update uses j, not i
+    const init = mockNode('declaration', 'int i = 1', [
+      mockNode('primitive_type', 'int'),
+      mockNode('init_declarator', 'i = 1', [
+        mockNode('identifier', 'i'),
+        unnamed('=', '='),
+        mockNode('number_literal', '1'),
+      ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '1') }),
+    ])
+    const cond = mockNode('binary_expression', 'i <= 9', [
+      mockNode('identifier', 'i'),
+      unnamed('<=', '<='),
+      mockNode('number_literal', '9'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '9') })
+    const update = mockNode('update_expression', 'j++', [mockNode('identifier', 'j')])
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 1; i <= 9; j++) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_for_loop')
+  })
+
+  it('should lift for(int i = 1;;) with no condition/update to cpp_for_loop', () => {
+    const initDecl = mockNode('init_declarator', 'i = 1', [
+      mockNode('identifier', 'i'),
+      mockNode('number_literal', '1'),
+    ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '1') })
+    const init = mockNode('declaration', 'int i = 1', [
+      mockNode('primitive_type', 'int'),
+      initDecl,
+    ])
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 1;;) {}', [init, body], {
+      initializer: init, condition: null, update: null, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_for_loop')
+    // init should be wrapped as cpp_raw_expression since declaration is a statement
+    expect(result!.children.init).toHaveLength(1)
+    expect(result!.children.init[0].concept).toBe('cpp_raw_expression')
+    expect(result!.children.init[0].properties.code).toBe('int i = 1')
+    // No condition or update
+    expect(result!.children.cond).toHaveLength(0)
+    expect(result!.children.update).toHaveLength(0)
+  })
+
+  it('should wrap statement-concept update (i += 2) as cpp_raw_expression in cpp_for_loop', () => {
+    const initDecl = mockNode('init_declarator', 'i = 0', [
+      mockNode('identifier', 'i'),
+      mockNode('number_literal', '0'),
+    ], { declarator: mockNode('identifier', 'i'), value: mockNode('number_literal', '0') })
+    const init = mockNode('declaration', 'int i = 0', [
+      mockNode('primitive_type', 'int'),
+      initDecl,
+    ])
+    const cond = mockNode('binary_expression', 'i < 10', [
+      mockNode('identifier', 'i'),
+      unnamed('<', '<'),
+      mockNode('number_literal', '10'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '10') })
+    // i += 2 is assignment_expression, lifts to cpp_compound_assign (statement)
+    const update = mockNode('assignment_expression', 'i += 2', [
+      mockNode('identifier', 'i'),
+      unnamed('+=', '+='),
+      mockNode('number_literal', '2'),
+    ], { left: mockNode('identifier', 'i'), right: mockNode('number_literal', '2') })
+    const body = mockNode('compound_statement', '{}', [])
+    const node = mockNode('for_statement', 'for (int i = 0; i < 10; i += 2) {}', [init, cond, update, body], {
+      initializer: init, condition: cond, update: update, body: body,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_for_loop')
+    // init (declaration) → cpp_raw_expression
+    expect(result!.children.init[0].concept).toBe('cpp_raw_expression')
+    expect(result!.children.init[0].properties.code).toBe('int i = 0')
+    // cond present
+    expect(result!.children.cond).toHaveLength(1)
+    // update (assignment_expression → unresolved) → cpp_raw_expression
+    expect(result!.children.update[0].concept).toBe('cpp_raw_expression')
+    expect(result!.children.update[0].properties.code).toBe('i += 2')
   })
 
   it('should lift function_definition', () => {
@@ -381,7 +602,11 @@ describe('C++ I/O Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(['input', 'cpp_scanf']).toContain(result!.concept)
-    expect(result!.properties.variable).toBe('x')
+    // Modern format uses values children with var_ref nodes
+    const values = result!.children.values ?? []
+    expect(values.length).toBe(1)
+    expect(values[0].concept).toBe('var_ref')
+    expect(values[0].properties.name).toBe('x')
   })
 
   it('should lift generic function call to func_call_expr', () => {

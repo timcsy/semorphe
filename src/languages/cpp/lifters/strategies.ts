@@ -113,6 +113,64 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     return createNode('var_declare', { type }, { declarators: liftedNodes })
   })
+
+  // count_loop: add inclusive property based on operator (< vs <=)
+  registry.register('cpp:liftCountFor', (node, ctx) => {
+    const initNode = node.childForFieldName('initializer')
+    const condNode = node.childForFieldName('condition')
+    const updateNode = node.childForFieldName('update')
+    const bodyNode = node.childForFieldName('body')
+
+    if (!initNode || initNode.type !== 'declaration') return null
+    if (!condNode || condNode.type !== 'binary_expression') return null
+    if (!updateNode) return null
+    // Accept i++, ++i, or i += 1
+    if (updateNode.type !== 'update_expression' && !isCountingUpdate(updateNode)) return null
+
+    const decl = initNode.namedChildren.find(c => c.type === 'init_declarator')
+    const varName = decl
+      ? (decl.childForFieldName('declarator') ?? decl.namedChildren[0])?.text ?? 'i'
+      : extractDeclVarName(initNode)
+
+    // Verify condition and update use the same variable
+    const condLeft = condNode.childForFieldName('left')?.text
+    const updateVar = updateNode.type === 'update_expression'
+      ? updateNode.namedChildren[0]?.text
+      : updateNode.childForFieldName('left')?.text
+    if (condLeft !== varName || updateVar !== varName) return null
+
+    const fromNode = decl
+      ? (decl.childForFieldName('value') ?? decl.namedChildren[1])
+      : null
+    const toNode = condNode.childForFieldName('right')
+    const op = condNode.children.find(c => !c.isNamed)?.text
+    const inclusive = op === '<=' ? 'TRUE' : 'FALSE'
+
+    const from = fromNode ? ctx.lift(fromNode) : null
+    const to = toNode ? ctx.lift(toNode) : null
+    const body = extractBody(bodyNode, ctx)
+
+    return createNode('count_loop', { var_name: varName, inclusive }, {
+      from: from ? [from] : [],
+      to: to ? [to] : [],
+      body,
+    })
+  })
+}
+
+/** Check if node is i += 1 (assignment_expression/augmented_assignment_expression with += and right == '1') */
+function isCountingUpdate(node: AstNode): boolean {
+  // tree-sitter C++ uses assignment_expression for compound assignments like +=
+  if (node.type !== 'assignment_expression' && node.type !== 'augmented_assignment_expression') return false
+  const op = node.children.find(c => !c.isNamed)?.text
+  const right = node.childForFieldName('right')
+  return op === '+=' && right?.text === '1'
+}
+
+/** Extract variable name from a declaration without init_declarator (e.g., `int i`) */
+function extractDeclVarName(init: AstNode): string {
+  const ident = init.namedChildren.find(c => c.type === 'identifier')
+  return ident?.text ?? 'i'
 }
 
 function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {

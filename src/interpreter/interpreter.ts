@@ -5,6 +5,7 @@ import { defaultValue, valueToString, parseInputValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
 import { IOSystem } from './io'
+import { unescapeC } from '../core/registry/transform-registry'
 
 /** Break/Continue 訊號（非錯誤，用於流程控制） */
 class BreakSignal { readonly _brand = 'break' }
@@ -121,6 +122,7 @@ export class SemanticInterpreter {
       case 'logic_not': return this.execLogicNot(node)
       case 'if': return this.execIf(node)
       case 'count_loop': return this.execCountLoop(node)
+      case 'cpp_for_loop': return this.execForLoop(node)
       case 'while_loop': return this.execWhileLoop(node)
       case 'break': throw new BreakSignal()
       case 'continue': throw new ContinueSignal()
@@ -170,7 +172,7 @@ export class SemanticInterpreter {
     const concept = node.concept
     if (concept.includes(':')) return
     const statementConcepts = new Set([
-      'var_declare', 'var_assign', 'print', 'if', 'count_loop',
+      'var_declare', 'var_assign', 'print', 'if', 'count_loop', 'cpp_for_loop',
       'while_loop', 'func_def', 'func_call', 'return', 'break', 'continue',
     ])
     if (!statementConcepts.has(concept)) return
@@ -200,7 +202,7 @@ export class SemanticInterpreter {
   }
 
   private execStringLiteral(node: SemanticNode): RuntimeValue {
-    return { type: 'string', value: String(node.properties.value) }
+    return { type: 'string', value: unescapeC(String(node.properties.value)) }
   }
 
   private async execVarDeclare(node: SemanticNode): Promise<void> {
@@ -383,7 +385,8 @@ export class SemanticInterpreter {
     this.scope = parentScope.createChild()
     this.scope.declare(varName, { type: 'int', value: from })
 
-    for (let i = from; i <= to; i++) {
+    const inclusive = node.properties.inclusive === 'TRUE'
+    for (let i = from; inclusive ? i <= to : i < to; i++) {
       this.scope.set(varName, { type: 'int', value: i })
       try {
         await this.executeBody(body)
@@ -392,6 +395,43 @@ export class SemanticInterpreter {
         if (signal instanceof ContinueSignal) continue
         this.scope = parentScope
         throw signal
+      }
+    }
+    this.scope = parentScope
+  }
+
+  private async execForLoop(node: SemanticNode): Promise<void> {
+    const body = node.children.body ?? []
+    const parentScope = this.scope
+    this.scope = parentScope.createChild()
+
+    // Execute init
+    if (node.children.init && node.children.init.length > 0) {
+      await this.execute(node.children.init[0])
+    }
+
+    while (true) {
+      // Check condition
+      if (node.children.cond && node.children.cond.length > 0) {
+        const condition = await this.evaluate(node.children.cond[0])
+        if (!this.toBool(condition)) break
+      }
+
+      try {
+        await this.executeBody(body)
+      } catch (signal) {
+        if (signal instanceof BreakSignal) break
+        if (signal instanceof ContinueSignal) {
+          // fall through to update
+        } else {
+          this.scope = parentScope
+          throw signal
+        }
+      }
+
+      // Execute update
+      if (node.children.update && node.children.update.length > 0) {
+        await this.evaluate(node.children.update[0])
       }
     }
     this.scope = parentScope
@@ -512,10 +552,35 @@ export class SemanticInterpreter {
   }
 
   private async execInput(node: SemanticNode): Promise<RuntimeValue> {
+    // Modern format: children.values contains var_ref nodes
+    const valueNodes = node.children.values ?? []
+    if (valueNodes.length > 0) {
+      let lastVal: RuntimeValue = { type: 'int', value: 0 }
+      for (const varRefNode of valueNodes) {
+        const varName = String(varRefNode.properties.name ?? 'x')
+        let targetType = 'string'
+        try {
+          const existing = this.scope.get(varName)
+          targetType = existing.type
+        } catch { /* variable might not exist yet */ }
+
+        let raw = this.io.read()
+        if (raw === null && this.inputProvider) {
+          raw = await this.inputProvider()
+        }
+        if (raw === null) {
+          throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'input exhausted' })
+        }
+        lastVal = parseInputValue(raw, targetType) ?? defaultValue(targetType)
+        this.scope.set(varName, lastVal)
+      }
+      return lastVal
+    }
+
+    // Legacy fallback: properties.variable (single variable)
     const targetVar = node.properties.variable ? String(node.properties.variable) : null
     let targetType = String(node.properties.type || 'string')
 
-    // If variable is specified, infer type from existing variable
     if (targetVar) {
       try {
         const existing = this.scope.get(targetVar)
@@ -532,7 +597,6 @@ export class SemanticInterpreter {
     }
     const val = parseInputValue(raw, targetType) ?? defaultValue(targetType)
 
-    // cin >> var: assign value to the target variable
     if (targetVar) {
       this.scope.set(targetVar, val)
     }

@@ -601,6 +601,7 @@
           "check": "Expression"
         }
       ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#0FBD8C",

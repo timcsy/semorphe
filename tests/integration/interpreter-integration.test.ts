@@ -70,7 +70,7 @@ describe('Integration - Scenario 3: Input Read', () => {
 describe('Integration - Scenario 4: Loop', () => {
   it('should print 1 to 5 with newlines', async () => {
     const interp = await run([
-      createNode('count_loop', { var_name: 'i' }, {
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
         from: [createNode('number_literal', { value: '1' }, {})],
         to: [createNode('number_literal', { value: '5' }, {})],
         body: [

@@ -317,6 +317,28 @@ export class App {
       if (f) f.setValue(isAtMin ? MINUS_DISABLED_IMG : MINUS_IMG)
     }
 
+    // u_string — override to preserve whitespace display in SVG
+    {
+      Blockly.Blocks['u_string'] = {
+        init: function (this: any) {
+          const field = new Blockly.FieldTextInput('hello')
+          // Override display to use NBSP so SVG doesn't collapse spaces
+          field.getDisplayText_ = function (this: any) {
+            const val = this.getValue() ?? ''
+            // Replace regular spaces with non-breaking spaces for SVG rendering
+            return val.replace(/ /g, '\u00A0') || '\u00A0'
+          }
+          this.appendDummyInput()
+            .appendField('"')
+            .appendField(field as Blockly.Field, 'TEXT')
+            .appendField('"')
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.data)
+          this.setTooltip(Blockly.Msg['U_STRING_TOOLTIP'] || '文字')
+        },
+      }
+    }
+
     // u_var_declare with +/- buttons + inline layout
     {
       const getTypeOptions = (): Array<[string, string]> => [
@@ -1095,9 +1117,13 @@ export class App {
           this.appendValueInput(COUNT_LOOP_INPUTS.value[0])
             .appendField(Blockly.Msg['U_COUNT_LOOP_FROM'] || '從')
           this.appendValueInput(COUNT_LOOP_INPUTS.value[1])
-            .appendField(Blockly.Msg['U_COUNT_LOOP_TO'] || '到')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['U_COUNT_LOOP_TO_EXCL'] || '到（不含）', 'FALSE'],
+              [Blockly.Msg['U_COUNT_LOOP_TO_INCL'] || '到（含）', 'TRUE'],
+            ]) as Blockly.Field, 'BOUND')
           this.appendStatementInput(COUNT_LOOP_INPUTS.statement[0])
             .appendField(Blockly.Msg['U_COUNT_LOOP_DO'] || '重複')
+          this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setColour(CATEGORY_COLORS.control)
@@ -1644,7 +1670,7 @@ export class App {
     const CATEGORY_DEFS: Array<{ key: string; nameKey: string; fallback: string; colorKey: string; registryCategories: string[]; extraTypes?: string[] }> = [
       { key: 'data', nameKey: 'CATEGORY_DATA', fallback: '資料', colorKey: 'data', registryCategories: ['data'], extraTypes: ['u_var_declare', 'u_var_assign', 'u_var_ref', 'u_number', 'u_string'] },
       { key: 'operators', nameKey: 'CATEGORY_OPERATORS', fallback: '運算', colorKey: 'operators', registryCategories: ['operators'], extraTypes: ['u_arithmetic', 'u_compare', 'u_logic', 'u_logic_not', 'u_negate'] },
-      { key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control', registryCategories: ['control'], extraTypes: ['u_if', 'u_while_loop', 'u_count_loop', 'u_break', 'u_continue'] },
+      { key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control', registryCategories: ['control', 'loops'], extraTypes: ['u_if', 'u_while_loop', 'u_count_loop', 'u_break', 'u_continue'] },
       { key: 'functions', nameKey: 'CATEGORY_FUNCTIONS', fallback: '函式', colorKey: 'functions', registryCategories: ['functions'], extraTypes: ['u_func_def', 'u_func_call', 'u_func_call_expr', 'u_return'] },
       { key: 'arrays', nameKey: 'CATEGORY_ARRAYS', fallback: '陣列', colorKey: 'arrays', registryCategories: ['arrays'], extraTypes: ['u_array_declare', 'u_array_access'] },
       { key: 'cpp_basic', nameKey: 'CATEGORY_CPP_BASIC', fallback: 'C++ 基礎', colorKey: 'cpp_basic', registryCategories: ['cpp_basic', 'conditions'] },
@@ -1709,7 +1735,7 @@ export class App {
     const pl = new PatternLifter()
     pl.setTransformRegistry(transformRegistry)
     pl.setLiftStrategyRegistry(liftStrategyRegistry)
-    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement'])
     pl.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
     pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(pl)
@@ -2054,7 +2080,7 @@ export class App {
     this.interpreter.setInputProvider(() => this.consolePanel!.promptInput())
     // Real-time output: stream to console as interpreter writes
     this.interpreter.setOutputCallback((text: string) => {
-      this.consolePanel?.log(text)
+      this.consolePanel?.write(text)
     })
 
     this.showExecButtons(true)
@@ -2102,7 +2128,7 @@ export class App {
     this.interpreter = new SemanticInterpreter({ maxSteps: 100000 })
     // Real-time output: stream to console as interpreter writes during step collection
     this.interpreter.setOutputCallback((text: string) => {
-      this.consolePanel?.log(text)
+      this.consolePanel?.write(text)
     })
     this.consolePanel?.clear()
     this.bottomPanel?.showTab('variables')

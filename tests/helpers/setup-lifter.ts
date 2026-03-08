@@ -2,6 +2,7 @@ import { Lifter } from '../../src/core/lift/lifter'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppLifters } from '../../src/languages/cpp/lifters'
+import { registerCppLiftStrategies } from '../../src/languages/cpp/lifters/strategies'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalBlocks from '../../src/blocks/universal.json'
@@ -17,6 +18,7 @@ export function createTestLifter(): Lifter {
   const transformRegistry = new TransformRegistry()
   registerCoreTransforms(transformRegistry)
   const liftStrategyRegistry = new LiftStrategyRegistry()
+  registerCppLiftStrategies(liftStrategyRegistry)
   const renderStrategyRegistry = new RenderStrategyRegistry()
 
   // Load BlockSpec patterns (for c_increment, c_compound_assign, etc.)
@@ -29,7 +31,7 @@ export function createTestLifter(): Lifter {
   const pl = new PatternLifter()
   pl.setTransformRegistry(transformRegistry)
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
-  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement'])
   pl.loadBlockSpecs(blockSpecRegistry.getAll(), liftSkipNodeTypes)
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)

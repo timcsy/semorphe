@@ -48,16 +48,18 @@ function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
 }
 
 function extractScanf(argsNode: AstNode | null) {
-  if (!argsNode) return createNode('input', { variable: 'x' })
+  if (!argsNode) return createNode('input', {}, { values: [createNode('var_ref', { name: 'x' })] })
   const args = argsNode.namedChildren
-  // Extract variable names from &var args (skip format string)
+  // Extract ALL variable names from &var args (skip format string at index 0)
   if (args.length >= 2) {
-    const varArg = args[1]
-    // &x → unary_expression with & operator, child is identifier
-    const varName = varArg.type === 'unary_expression'
-      ? (varArg.namedChildren[0]?.text ?? 'x')
-      : varArg.text
-    return createNode('input', { variable: varName })
+    const values = args.slice(1).map(varArg => {
+      // &x → unary_expression with & operator, child is identifier
+      const varName = varArg.type === 'unary_expression'
+        ? (varArg.namedChildren[0]?.text ?? 'x')
+        : varArg.text
+      return createNode('var_ref', { name: varName })
+    })
+    return createNode('input', {}, { values })
   }
-  return createNode('input', { variable: 'x' })
+  return createNode('input', {}, { values: [createNode('var_ref', { name: 'x' })] })
 }

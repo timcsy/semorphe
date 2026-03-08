@@ -136,6 +136,7 @@
     "astNodeType": "for_statement",
     "patternType": "composite",
     "concept": { "conceptId": "count_loop" },
+    "liftStrategy": "cpp:liftCountFor",
     "composite": {
       "checks": [
         { "field": "initializer", "typeIs": "declaration" },

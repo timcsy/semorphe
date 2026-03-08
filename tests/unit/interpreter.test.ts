@@ -223,7 +223,7 @@ describe('Interpreter - control flow', () => {
 
   it('should execute count_loop', async () => {
     const interp = await run([
-      createNode('count_loop', { var_name: 'i' }, {
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
         from: [createNode('number_literal', { value: '1' }, {})],
         to: [createNode('number_literal', { value: '3' }, {})],
         body: [
@@ -264,7 +264,7 @@ describe('Interpreter - control flow', () => {
 
   it('should handle break in loop', async () => {
     const interp = await run([
-      createNode('count_loop', { var_name: 'i' }, {
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
         from: [createNode('number_literal', { value: '1' }, {})],
         to: [createNode('number_literal', { value: '10' }, {})],
         body: [
@@ -286,7 +286,7 @@ describe('Interpreter - control flow', () => {
 
   it('should handle continue in loop', async () => {
     const interp = await run([
-      createNode('count_loop', { var_name: 'i' }, {
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
         from: [createNode('number_literal', { value: '1' }, {})],
         to: [createNode('number_literal', { value: '5' }, {})],
         body: [
@@ -539,5 +539,457 @@ describe('Interpreter - input', () => {
       })
     ]))
     expect(interp.getOutput().join('')).toBe('hello, world')
+  })
+})
+
+// cpp_for_loop (三段式 for 迴圈)
+describe('Interpreter - cpp_for_loop', () => {
+  it('should execute basic three-part for loop', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' }, {})]
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_assign', { name: 'i' }, {
+          value: [createNode('number_literal', { value: '0' }, {})]
+        })],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' }, {})],
+          right: [createNode('number_literal', { value: '3' }, {})],
+        })],
+        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        body: [
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('012')
+  })
+
+  it('should handle break in three-part for loop', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' }, {})]
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_assign', { name: 'i' }, {
+          value: [createNode('number_literal', { value: '0' }, {})]
+        })],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' }, {})],
+          right: [createNode('number_literal', { value: '10' }, {})],
+        })],
+        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        body: [
+          createNode('if', {}, {
+            condition: [createNode('compare', { operator: '==' }, {
+              left: [createNode('var_ref', { name: 'i' }, {})],
+              right: [createNode('number_literal', { value: '3' }, {})],
+            })],
+            then_body: [createNode('break', {}, {})],
+          }),
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('012')
+  })
+
+  it('should handle continue in three-part for loop', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' }, {})]
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_assign', { name: 'i' }, {
+          value: [createNode('number_literal', { value: '0' }, {})]
+        })],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' }, {})],
+          right: [createNode('number_literal', { value: '5' }, {})],
+        })],
+        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        body: [
+          createNode('if', {}, {
+            condition: [createNode('compare', { operator: '==' }, {
+              left: [createNode('var_ref', { name: 'i' }, {})],
+              right: [createNode('number_literal', { value: '2' }, {})],
+            })],
+            then_body: [createNode('continue', {}, {})],
+          }),
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('0134')
+  })
+
+  it('should handle empty body for loop', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' }, {})]
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_assign', { name: 'i' }, {
+          value: [createNode('number_literal', { value: '0' }, {})]
+        })],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' }, {})],
+          right: [createNode('number_literal', { value: '3' }, {})],
+        })],
+        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        body: [],
+      })
+    ])
+    expect(interp.getOutput()).toEqual([])
+    expect(interp.getState().status).toBe('completed')
+  })
+})
+
+// count_loop inclusive vs exclusive
+describe('Interpreter - count_loop inclusive/exclusive', () => {
+  it('should execute exclusive count_loop (default)', async () => {
+    const interp = await run([
+      createNode('count_loop', { var_name: 'i' }, {
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '3' }, {})],
+        body: [
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('12')
+  })
+
+  it('should execute exclusive count_loop (explicit FALSE)', async () => {
+    const interp = await run([
+      createNode('count_loop', { var_name: 'i', inclusive: 'FALSE' }, {
+        from: [createNode('number_literal', { value: '0' }, {})],
+        to: [createNode('number_literal', { value: '5' }, {})],
+        body: [
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('01234')
+  })
+})
+
+// 巢狀迴圈 + break/continue
+describe('Interpreter - nested loops', () => {
+  it('should break only inner loop', async () => {
+    const interp = await run([
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '3' }, {})],
+        body: [
+          createNode('count_loop', { var_name: 'j', inclusive: 'TRUE' }, {
+            from: [createNode('number_literal', { value: '1' }, {})],
+            to: [createNode('number_literal', { value: '3' }, {})],
+            body: [
+              createNode('if', {}, {
+                condition: [createNode('compare', { operator: '==' }, {
+                  left: [createNode('var_ref', { name: 'j' }, {})],
+                  right: [createNode('number_literal', { value: '2' }, {})],
+                })],
+                then_body: [createNode('break', {}, {})],
+              }),
+              createNode('print', {}, {
+                values: [createNode('var_ref', { name: 'j' }, {})]
+              })
+            ],
+          })
+        ],
+      })
+    ])
+    // Each outer iteration: inner prints only j=1 then breaks
+    expect(interp.getOutput().join('')).toBe('111')
+  })
+
+  it('should continue only inner loop', async () => {
+    const interp = await run([
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '2' }, {})],
+        body: [
+          createNode('count_loop', { var_name: 'j', inclusive: 'TRUE' }, {
+            from: [createNode('number_literal', { value: '1' }, {})],
+            to: [createNode('number_literal', { value: '3' }, {})],
+            body: [
+              createNode('if', {}, {
+                condition: [createNode('compare', { operator: '==' }, {
+                  left: [createNode('var_ref', { name: 'j' }, {})],
+                  right: [createNode('number_literal', { value: '2' }, {})],
+                })],
+                then_body: [createNode('continue', {}, {})],
+              }),
+              createNode('print', {}, {
+                values: [createNode('var_ref', { name: 'j' }, {})]
+              })
+            ],
+          })
+        ],
+      })
+    ])
+    // Each outer iteration: inner prints j=1, skip j=2, print j=3
+    expect(interp.getOutput().join('')).toBe('1313')
+  })
+})
+
+// 字串跳脫序列 (unescapeC)
+describe('Interpreter - string escape sequences', () => {
+  it('should unescape \\n in string literal', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('string_literal', { value: 'a\\nb' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('a\nb')
+  })
+
+  it('should unescape \\t in string literal', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('string_literal', { value: 'a\\tb' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('a\tb')
+  })
+
+  it('should unescape \\\\ in string literal', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('string_literal', { value: 'a\\\\b' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('a\\b')
+  })
+
+  it('should unescape \\0 in string literal', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('string_literal', { value: 'a\\0b' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('a\0b')
+  })
+})
+
+// 變數範圍與遮蔽
+describe('Interpreter - scope and shadowing', () => {
+  it('should isolate loop variable from outer scope', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '99' }, {})]
+      }),
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '2' }, {})],
+        body: [],
+      }),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 'i' }, {})]
+      })
+    ])
+    // After loop, outer i should still be 99
+    expect(interp.getOutput().join('')).toBe('99')
+  })
+
+  it('should allow reusing loop variable in sequential loops', async () => {
+    const interp = await run([
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '2' }, {})],
+        body: [
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      }),
+      createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('number_literal', { value: '3' }, {})],
+        to: [createNode('number_literal', { value: '4' }, {})],
+        body: [
+          createNode('print', {}, {
+            values: [createNode('var_ref', { name: 'i' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('1234')
+  })
+})
+
+// 更多邊界情況
+describe('Interpreter - more edge cases', () => {
+  it('should throw on modulo by zero', async () => {
+    await expect(run([
+      createNode('print', {}, {
+        values: [createNode('arithmetic', { operator: '%' }, {
+          left: [createNode('number_literal', { value: '5' }, {})],
+          right: [createNode('number_literal', { value: '0' }, {})],
+        })]
+      })
+    ])).rejects.toThrow(RuntimeError)
+  })
+
+  it('should handle if without else (false condition)', async () => {
+    const interp = await run([
+      createNode('if', {}, {
+        condition: [createNode('compare', { operator: '>' }, {
+          left: [createNode('number_literal', { value: '1' }, {})],
+          right: [createNode('number_literal', { value: '5' }, {})],
+        })],
+        then_body: [
+          createNode('print', {}, {
+            values: [createNode('string_literal', { value: 'nope' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput()).toEqual([])
+  })
+
+  it('should handle empty while loop body', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'x', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' }, {})]
+      }),
+      createNode('while_loop', {}, {
+        condition: [createNode('compare', { operator: '>' }, {
+          left: [createNode('var_ref', { name: 'x' }, {})],
+          right: [createNode('number_literal', { value: '0' }, {})],
+        })],
+        body: [],
+      }),
+      createNode('print', {}, {
+        values: [createNode('string_literal', { value: 'done' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('done')
+  })
+
+  it('should handle return inside if inside function', async () => {
+    const interp = await run([
+      createNode('func_def', {
+        name: 'abs_val',
+        return_type: 'int',
+        params: JSON.stringify([{ type: 'int', name: 'x' }])
+      }, {
+        body: [
+          createNode('if', {}, {
+            condition: [createNode('compare', { operator: '<' }, {
+              left: [createNode('var_ref', { name: 'x' }, {})],
+              right: [createNode('number_literal', { value: '0' }, {})],
+            })],
+            then_body: [
+              createNode('return', {}, {
+                value: [createNode('negate', {}, {
+                  value: [createNode('var_ref', { name: 'x' }, {})]
+                })]
+              })
+            ],
+          }),
+          createNode('return', {}, {
+            value: [createNode('var_ref', { name: 'x' }, {})]
+          })
+        ]
+      }),
+      createNode('print', {}, {
+        values: [createNode('func_call', { name: 'abs_val' }, {
+          args: [createNode('negate', {}, { value: [createNode('number_literal', { value: '7' }, {})] })]
+        })]
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('7')
+  })
+
+  it('should handle multi-variable input with children.values', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'a', type: 'int' }, {}),
+      createNode('var_declare', { name: 'b', type: 'int' }, {}),
+      createNode('input', {}, {
+        values: [
+          createNode('var_ref', { name: 'a' }, {}),
+          createNode('var_ref', { name: 'b' }, {}),
+        ]
+      }),
+      createNode('print', {}, {
+        values: [
+          createNode('var_ref', { name: 'a' }, {}),
+          createNode('string_literal', { value: ' ' }, {}),
+          createNode('var_ref', { name: 'b' }, {}),
+        ]
+      })
+    ], ['10', '20'])
+    expect(interp.getOutput().join('')).toBe('10 20')
+  })
+
+  it('should handle boolean-like logic with numbers', async () => {
+    const interp = await run([
+      createNode('if', {}, {
+        condition: [createNode('number_literal', { value: '0' }, {})],
+        then_body: [
+          createNode('print', {}, {
+            values: [createNode('string_literal', { value: 'yes' }, {})]
+          })
+        ],
+        else_body: [
+          createNode('print', {}, {
+            values: [createNode('string_literal', { value: 'no' }, {})]
+          })
+        ],
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('no')
+  })
+
+  it('should handle compound assignment operators', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'x', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '10' }, {})]
+      }),
+      createNode('compound_assign', { name: 'x', operator: '+=' }, {
+        value: [createNode('number_literal', { value: '5' }, {})]
+      }),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 'x' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('15')
+  })
+
+  it('should handle cpp_increment', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'n', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '5' }, {})]
+      }),
+      createNode('cpp_increment', { name: 'n', operator: '++', position: 'postfix' }, {}),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 'n' }, {})]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('6')
+  })
+
+  it('should handle negate expression', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('negate', {}, {
+          value: [createNode('number_literal', { value: '42' }, {})]
+        })]
+      })
+    ])
+    expect(interp.getOutput().join('')).toBe('-42')
   })
 })

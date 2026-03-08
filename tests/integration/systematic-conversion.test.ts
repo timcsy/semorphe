@@ -513,14 +513,19 @@ describe('I/O', () => {
       expect(code).toContain('cin >> x >> y;')
     })
 
-    it('renders input block with varCount for multiple vars', () => {
+    it('renders input block with args extraState for multiple vars', () => {
       const state = blocks('int main() { cin >> a >> b; }')
       const topBlocks = state.blocks?.blocks ?? []
       const mainBlock = topBlocks[0]
       const bodyChain = mainBlock?.inputs?.BODY?.block
       expect(bodyChain).toBeDefined()
       expect(bodyChain!.type).toBe('u_input')
-      expect(bodyChain!.extraState?.varCount).toBe(2)
+      // extraState.args matches u_input's loadExtraState format
+      const args = bodyChain!.extraState?.args as Array<{ mode: string; text: string }>
+      expect(args).toBeDefined()
+      expect(args.length).toBe(2)
+      expect(args[0]).toEqual({ mode: 'select', text: 'a' })
+      expect(args[1]).toEqual({ mode: 'select', text: 'b' })
     })
   })
 

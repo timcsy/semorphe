@@ -66,7 +66,7 @@ describe('ConsolePanel', () => {
 
   it('should prompt input and resolve on submit', async () => {
     const promise = panel.promptInput('Enter value:')
-    const input = container.querySelector('.console-input') as HTMLInputElement
+    const input = container.querySelector('.console-inline-input') as HTMLInputElement
     expect(input).toBeTruthy()
 
     input.value = '42'
@@ -74,6 +74,7 @@ describe('ConsolePanel', () => {
 
     const result = await promise
     expect(result).toBe('42')
-    expect(container.querySelector('.console-input-row')).toBeNull()
+    // Inline input line should be replaced with echo text
+    expect(container.querySelector('.console-inline-input')).toBeNull()
   })
 })

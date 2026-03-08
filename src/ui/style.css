@@ -478,7 +478,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ─── Console input ─── */
+/* ─── Console input (legacy bottom row) ─── */
 
 .console-input-row {
   display: flex;
@@ -512,6 +512,36 @@ html, body {
   color: white;
   cursor: pointer;
   font-size: 11px;
+}
+
+/* ─── Console inline input (terminal-style) ─── */
+
+.console-inline-input-line {
+  display: flex;
+  align-items: center;
+  padding: 1px 0;
+}
+
+.console-inline-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #cccccc;
+  caret-color: #cccccc;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.console-inline-input::placeholder {
+  color: rgba(204, 204, 204, 0.3);
+}
+
+.console-input-echo {
+  color: #cccccc;
+  padding: 1px 0;
 }
 
 .console-status {

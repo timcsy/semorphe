@@ -118,6 +118,47 @@ describe('C++ statements generator', () => {
     expect(code).toContain('break;')
   })
 
+  it('should generate count_loop with inclusive', () => {
+    const loop = createNode('count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+      from: [createNode('number_literal', { value: '1' })],
+      to: [createNode('number_literal', { value: '10' })],
+      body: [createNode('break', {})],
+    })
+    const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
+    expect(code).toContain('for (int i = 1; i <= 10; i++) {')
+  })
+
+  it('should generate cpp_for_loop (three-part)', () => {
+    const loop = createNode('cpp_for_loop', {}, {
+      init: [createNode('var_assign', { name: 'i' }, {
+        value: [createNode('number_literal', { value: '0' })],
+      })],
+      cond: [createNode('compare', { operator: '<' }, {
+        left: [createNode('var_ref', { name: 'i' })],
+        right: [createNode('number_literal', { value: '10' })],
+      })],
+      update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+      body: [createNode('break', {})],
+    })
+    const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
+    expect(code).toContain('for (i = 0; i < 10; i++)')
+    expect(code).toContain('break;')
+  })
+
+  it('should generate compound assignment', () => {
+    const stmt = createNode('cpp_compound_assign', { name: 'x', operator: '+=' }, {
+      value: [createNode('number_literal', { value: '5' })],
+    })
+    const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
+    expect(code).toBe('x += 5;')
+  })
+
+  it('should generate cpp_increment', () => {
+    const stmt = createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })
+    const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
+    expect(code).toBe('i++;')
+  })
+
   it('should generate break and continue', () => {
     const code = generateCode(makeProgram(
       createNode('break', {}),

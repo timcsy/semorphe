@@ -50,7 +50,7 @@ export function initCppModule(): CppModuleEngines {
 
   // 2. Load block specs into engines
   // Skip call_expression and using_declaration — hand-written lifters handle these better
-  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement'])
   patternLifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
   patternRenderer.loadBlockSpecs(allSpecs)
   patternExtractor.loadBlockSpecs(allSpecs)

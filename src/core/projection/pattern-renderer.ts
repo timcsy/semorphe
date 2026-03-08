@@ -27,6 +27,7 @@ function nextBlockId(): string {
  */
 export class PatternRenderer {
   private renderSpecs = new Map<string, RenderSpec>()
+  private expressionOnlyBlockTypes = new Set<string>()
   private renderStrategyRegistry: RenderStrategyRegistry | null = null
   private activeRenderCtx: RenderContext | undefined = undefined
 
@@ -45,11 +46,15 @@ export class PatternRenderer {
       const conceptId = spec.concept?.conceptId
       if (!conceptId) continue
 
+      const blockDef = spec.blockDef as Record<string, unknown>
+      const blockType = blockDef.type as string
       const mapping = spec.renderMapping ?? this.deriveRenderMapping(spec)
-      this.renderSpecs.set(conceptId, {
-        blockType: (spec.blockDef as Record<string, unknown>).type as string,
-        mapping,
-      })
+      this.renderSpecs.set(conceptId, { blockType, mapping })
+
+      // Track expression-only block types (have output but no previousStatement)
+      if (blockDef.output !== undefined && blockDef.previousStatement === undefined) {
+        this.expressionOnlyBlockTypes.add(blockType)
+      }
     }
   }
 
@@ -120,15 +125,21 @@ export class PatternRenderer {
   private renderStatementChain(nodes: SemanticNode[]): BlockState | null {
     if (nodes.length === 0) return null
 
-    const first = this.render(nodes[0])
-    if (!first) return null
-
-    let current = first
-    for (let i = 1; i < nodes.length; i++) {
-      const next = this.render(nodes[i])
-      if (next) {
-        current.next = { block: next }
-        current = next
+    // Filter: only render blocks that have previousStatement (statement blocks)
+    // Expression-only blocks (e.g. u_var_ref with only output) cannot be chained
+    let first: BlockState | null = null
+    let current: BlockState | null = null
+    for (const node of nodes) {
+      const block = this.render(node)
+      if (!block) continue
+      // Skip expression-only blocks that can't be statement-chained
+      if (this.expressionOnlyBlockTypes.has(block.type)) continue
+      if (!first) {
+        first = block
+        current = block
+      } else {
+        current!.next = { block: block }
+        current = block
       }
     }
 
@@ -199,13 +210,14 @@ export class PatternRenderer {
       'OP': ['operator'],
       'NUM': ['value'],
       'TEXT': ['value'],
-      'VAR': ['variable'],
+      'VAR': ['variable', 'var_name'],
       'ARRAY': ['name'],
       'NS': ['namespace'],
       'HEADER': ['header'],
       'RETURN_TYPE': ['return_type'],
       'PARAMS': ['params'],
       'ARGS': ['args'],
+      'BOUND': ['inclusive'],
       'FORMAT': ['format'],
     }
     const mapped = commonMappings[fieldName]

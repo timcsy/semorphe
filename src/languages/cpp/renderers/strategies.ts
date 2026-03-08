@@ -1,7 +1,7 @@
 import type { RenderStrategyRegistry, BlockState } from '../../../core/registry/render-strategy-registry'
 
 export function registerCppRenderStrategies(registry: RenderStrategyRegistry): void {
-  // input: cin >> x >> y — dynamic NAME_0, NAME_1, ... fields
+  // input: cin >> x >> y — three-mode arg slots with extraState.args
   registry.register('cpp:renderInput', (node, ctx) => {
     const block: BlockState = {
       type: 'u_input',
@@ -10,26 +10,26 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       inputs: {},
     }
 
+    // Collect variable names from modern or legacy format
+    const varNames: string[] = []
     const inputValues = node.children.values ?? []
     if (inputValues.length > 0) {
-      for (let vi = 0; vi < inputValues.length; vi++) {
-        block.fields[`NAME_${vi}`] = inputValues[vi].properties.name ?? 'x'
-      }
-      if (inputValues.length > 1) {
-        block.extraState = { varCount: inputValues.length }
+      for (const v of inputValues) {
+        varNames.push((v.properties.name as string) ?? 'x')
       }
     } else {
-      block.fields.NAME_0 = node.properties.variable ?? 'x'
+      const singleVar = (node.properties.variable as string) ?? 'x'
       const vars = node.properties.variables
       if (vars) {
         const varList = typeof vars === 'string' ? vars.split(',') : (Array.isArray(vars) ? vars : [])
-        for (let vi = 0; vi < varList.length; vi++) {
-          block.fields[`NAME_${vi}`] = varList[vi]
-        }
-        if (varList.length > 1) {
-          block.extraState = { varCount: varList.length }
-        }
+        for (const v of varList) varNames.push(v)
       }
+      if (varNames.length === 0) varNames.push(singleVar)
+    }
+
+    // Produce extraState.args matching u_input's loadExtraState format
+    block.extraState = {
+      args: varNames.map(name => ({ mode: 'select', text: name })),
     }
 
     return block

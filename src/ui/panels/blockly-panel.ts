@@ -111,6 +111,7 @@ export class BlocklyPanel {
       case 'u_if_else': return this.extractIf(block)
       case 'u_while_loop': return this.extractWhileLoop(block)
       case 'u_count_loop': return this.extractCountLoop(block)
+      case 'c_for_loop': return this.extractForLoop(block)
       case 'u_break': return createNode('break', {})
       case 'u_continue': return createNode('continue', {})
       case 'u_func_def': return this.extractFuncDef(block)
@@ -399,14 +400,31 @@ export class BlocklyPanel {
 
   private extractCountLoop(block: Blockly.Block): SemanticNode {
     const varName = block.getFieldValue('VAR') ?? 'i'
+    const inclusive = block.getFieldValue('BOUND') ?? 'FALSE'
     const fromBlock = block.getInputTargetBlock('FROM')
     const toBlock = block.getInputTargetBlock('TO')
     const from = fromBlock ? this.extractBlock(fromBlock) : createNode('number_literal', { value: '0' })
     const to = toBlock ? this.extractBlock(toBlock) : createNode('number_literal', { value: '10' })
     const body = this.extractStatementInput(block, 'BODY')
-    return createNode('count_loop', { var_name: varName }, {
+    return createNode('count_loop', { var_name: varName, inclusive }, {
       from: from ? [from] : [],
       to: to ? [to] : [],
+      body,
+    })
+  }
+
+  private extractForLoop(block: Blockly.Block): SemanticNode {
+    const initBlock = block.getInputTargetBlock('INIT')
+    const condBlock = block.getInputTargetBlock('COND')
+    const updateBlock = block.getInputTargetBlock('UPDATE')
+    const init = initBlock ? this.extractBlock(initBlock) : null
+    const cond = condBlock ? this.extractBlock(condBlock) : null
+    const update = updateBlock ? this.extractBlock(updateBlock) : null
+    const body = this.extractStatementInput(block, 'BODY')
+    return createNode('cpp_for_loop', {}, {
+      init: init ? [init] : [],
+      cond: cond ? [cond] : [],
+      update: update ? [update] : [],
       body,
     })
   }
@@ -490,7 +508,7 @@ export class BlocklyPanel {
     if (values.length > 0) {
       return createNode('input', {}, { values })
     }
-    // Legacy fallback: NAME_0, NAME_1, ...
+    // Legacy fallback: NAME_0, NAME_1, ... → convert to modern values format
     const variables: string[] = []
     let i = 0
     while (true) {
@@ -502,10 +520,8 @@ export class BlocklyPanel {
     if (variables.length === 0) {
       variables.push(block.getFieldValue('NAME') ?? 'x')
     }
-    return createNode('input', {
-      variable: variables[0],
-      variables: variables.length > 1 ? variables : undefined,
-    })
+    const varRefNodes = variables.map(v => createNode('var_ref', { name: v }))
+    return createNode('input', {}, { values: varRefNodes })
   }
 
   private extractPrintf(block: Blockly.Block): SemanticNode {

@@ -48,7 +48,23 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const from = generateExpression((node.children.from ?? [])[0], ctx)
     const to = generateExpression((node.children.to ?? [])[0], ctx)
     const body = node.children.body ?? []
-    const header = `${indent(ctx)}for (int ${varName} = ${from}; ${varName} < ${to}; ${varName}++)${openBrace(ctx)}\n`
+    const inclusive = node.properties.inclusive === 'TRUE'
+    const op = inclusive ? '<=' : '<'
+    const header = `${indent(ctx)}for (int ${varName} = ${from}; ${varName} ${op} ${to}; ${varName}++)${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
+    code += generateBody(body, indented(ctx))
+    code += `${indent(ctx)}}\n`
+    return code
+  })
+
+  g.set('cpp_for_loop', (node, ctx) => {
+    const strip = (s: string) => s.replace(/;\s*$/, '').trim()
+    const initExpr = strip(generateExpression((node.children.init ?? [])[0], ctx))
+    const condExpr = strip(generateExpression((node.children.cond ?? [])[0], ctx))
+    const updateExpr = strip(generateExpression((node.children.update ?? [])[0], ctx))
+    const body = node.children.body ?? []
+    const header = `${indent(ctx)}for (${initExpr}; ${condExpr}; ${updateExpr})${openBrace(ctx)}\n`
     trackOwnText(ctx, header)
     let code = header
     code += generateBody(body, indented(ctx))

@@ -134,9 +134,12 @@ export class PatternLifter {
       if (strategyFn) {
         try {
           const result = strategyFn(node, ctx)
-          if (result) return result
+          // Strategy is authoritative: if it returns null, skip this pattern entirely
+          // (don't fall through to auto-derive matching)
+          return result
         } catch {
-          // Strategy threw — treat as null, fall through to pattern matching
+          // Strategy threw — skip this pattern
+          return null
         }
       } else {
         console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
