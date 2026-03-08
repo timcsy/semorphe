@@ -78,6 +78,16 @@ export function registerExpressionLifters(lifter: Lifter): void {
         value: operand ? [operand] : [],
       })
     }
+    if (op === '&') {
+      return createNode('cpp_address_of', {}, {
+        var: operand ? [operand] : [],
+      })
+    }
+    if (op === '*') {
+      return createNode('cpp_pointer_deref', {}, {
+        ptr: operand ? [operand] : [],
+      })
+    }
 
     // Fallback for other unary ops (++, --, etc.)
     const raw = createNode('raw_code', {})

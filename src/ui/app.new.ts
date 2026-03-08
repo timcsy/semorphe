@@ -311,6 +311,7 @@ export class App {
       '<path d="M6 10h8" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/></svg>'
     )
     /* eslint-disable @typescript-eslint/no-explicit-any */
+    const self = this
     const setMinusState = (block: any, isAtMin: boolean) => {
       const f = block.getField('MINUS_BTN')
       if (f) f.setValue(isAtMin ? MINUS_DISABLED_IMG : MINUS_IMG)
@@ -526,15 +527,122 @@ export class App {
       }
     }
 
-    // u_input with +/- buttons + inline layout
+    // ─── Three-mode argument helpers (select / compose / custom) ───
+    // Shared by u_input, c_printf, c_scanf
+    const BACK_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
+      '<circle cx="8" cy="8" r="7" fill="#90CAF9"/>' +
+      '<path d="M10 5L6 8l4 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    )
+    const COMPOSE_VAL = '__COMPOSE__'
+    const CUSTOM_VAL = '__CUSTOM__'
+
+    type ArgMode = 'select' | 'compose' | 'custom'
+    interface ArgSlotState { mode: ArgMode; text?: string }
+
+    // Build a three-mode arg slot at index i on the given block.
+    // `inputName` is the base name (e.g. 'ARG_0'), `prefix` is the label before the first slot.
+    const buildArgSlot = (block: any, idx: number, mode: ArgMode, opts: {
+      getVarOptions: () => Array<[string, string]>,
+      inputPrefix?: string,
+      separator?: string,
+      defaultVar?: string,
+      customDefault?: string,
+    }) => {
+      const inputName = `ARG_${idx}`
+      // Remove old input for this slot if it exists
+      if (block.getInput(inputName)) block.removeInput(inputName)
+
+      if (mode === 'select') {
+        const currentVal = block.argSlots_?.[idx]?.selectedVar
+        const dd = new Blockly.FieldDropdown(function () {
+          const vopts = opts.getVarOptions()
+          if (currentVal && !vopts.some((o: [string, string]) => o[1] === currentVal)) {
+            vopts.unshift([currentVal, currentVal])
+          }
+          vopts.push([Blockly.Msg['U_ARG_MODE_COMPOSE'] || '(用積木組合)', COMPOSE_VAL])
+          vopts.push([Blockly.Msg['U_ARG_MODE_CUSTOM'] || '(自訂文字)', CUSTOM_VAL])
+          return vopts
+        }) as Blockly.Field
+        const inp = block.appendDummyInput(inputName)
+        if (idx === 0 && opts.inputPrefix) inp.appendField(opts.inputPrefix)
+        else if (idx > 0) inp.appendField(opts.separator ?? '>>')
+        inp.appendField(dd, `SEL_${idx}`)
+        // Validator: switch mode on special selection
+        ;(dd as any).setValidator(function (this: any, newVal: string) {
+          if (newVal === COMPOSE_VAL) {
+            setTimeout(() => {
+              block.argSlots_[idx] = { mode: 'compose' }
+              rebuildArgSlot(block, idx, 'compose', opts)
+            }, 0)
+            return null  // reject, rebuild will happen
+          }
+          if (newVal === CUSTOM_VAL) {
+            setTimeout(() => {
+              block.argSlots_[idx] = { mode: 'custom', text: opts.customDefault ?? '' }
+              rebuildArgSlot(block, idx, 'custom', opts)
+            }, 0)
+            return null
+          }
+          if (block.argSlots_) block.argSlots_[idx] = { mode: 'select', selectedVar: newVal }
+          return newVal
+        })
+      } else if (mode === 'compose') {
+        const inp = block.appendValueInput(inputName).setCheck('Expression')
+        if (idx === 0 && opts.inputPrefix) inp.appendField(opts.inputPrefix)
+        else if (idx > 0) inp.appendField(opts.separator ?? '>>')
+        inp.appendField(new Blockly.FieldImage(BACK_IMG, 16, 16,
+          Blockly.Msg['U_ARG_MODE_BACK'] || '↩', () => {
+            block.argSlots_[idx] = { mode: 'select' }
+            rebuildArgSlot(block, idx, 'select', opts)
+          }))
+      } else {
+        // custom text
+        const inp = block.appendDummyInput(inputName)
+        if (idx === 0 && opts.inputPrefix) inp.appendField(opts.inputPrefix)
+        else if (idx > 0) inp.appendField(opts.separator ?? '>>')
+        inp.appendField(new Blockly.FieldImage(BACK_IMG, 16, 16,
+          Blockly.Msg['U_ARG_MODE_BACK'] || '↩', () => {
+            block.argSlots_[idx] = { mode: 'select' }
+            rebuildArgSlot(block, idx, 'select', opts)
+          }))
+        inp.appendField(new Blockly.FieldTextInput(
+          block.argSlots_?.[idx]?.text ?? opts.customDefault ?? ''
+        ) as Blockly.Field, `TEXT_${idx}`)
+      }
+    }
+
+    const rebuildArgSlot = (block: any, idx: number, mode: ArgMode, opts: Parameters<typeof buildArgSlot>[3]) => {
+      // Save connected block if switching from compose
+      const savedBlock = (mode !== 'compose' && block.getInput(`ARG_${idx}`)?.connection)
+        ? block.getInputTargetBlock(`ARG_${idx}`)
+        : null
+      if (block.getInput(`ARG_${idx}`)) block.removeInput(`ARG_${idx}`)
+      buildArgSlot(block, idx, mode, opts)
+      // Reorder: move ARG_idx before the next slot or TAIL
+      const nextInput = block.getInput(`ARG_${idx + 1}`) ? `ARG_${idx + 1}` : 'TAIL'
+      block.moveInputBefore(`ARG_${idx}`, nextInput)
+      // Reconnect if switching back from compose to select/custom, disconnect child
+      if (savedBlock) {
+        try { savedBlock.unplug() } catch (_e) { /* ignore */ }
+      }
+    }
+
+    // u_input with three-mode + multi-arg
     {
       Blockly.Blocks['u_input'] = {
-        varCount_: 1,
+        argCount_: 1,
+        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
-          this.varCount_ = 1
-          this.appendDummyInput('VAR_0')
-            .appendField(Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 → 變數')
-            .appendField(new Blockly.FieldTextInput('x') as Blockly.Field, 'NAME_0')
+          this.argCount_ = 1
+          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
+          buildArgSlot(this, 0, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
+            defaultVar: 'x',
+          })
+          // Set default selection
+          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -545,27 +653,251 @@ export class App {
           this.setTooltip(Blockly.Msg['U_INPUT_TOOLTIP'] || '讀取輸入')
         },
         plus_: function (this: any) {
-          this.appendDummyInput('VAR_' + this.varCount_)
-            .appendField(new Blockly.FieldTextInput('v' + this.varCount_) as Blockly.Field, 'NAME_' + this.varCount_)
-          this.moveInputBefore('VAR_' + this.varCount_, 'TAIL')
-          this.varCount_++
+          const idx = this.argCount_
+          this.argSlots_[idx] = { mode: 'select', selectedVar: 'v' + idx }
+          buildArgSlot(this, idx, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            defaultVar: 'v' + idx,
+          })
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          try { this.setFieldValue('v' + idx, `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          this.argCount_++
           setMinusState(this, false)
         },
         minus_: function (this: any) {
-          if (this.varCount_ <= 1) return
-          this.varCount_--
-          this.removeInput('VAR_' + this.varCount_)
-          setMinusState(this, this.varCount_ <= 1)
+          if (this.argCount_ <= 1) return
+          this.argCount_--
+          const idx = this.argCount_
+          if (this.getInput(`ARG_${idx}`)) this.removeInput(`ARG_${idx}`)
+          this.argSlots_.length = this.argCount_
+          setMinusState(this, this.argCount_ <= 1)
         },
         saveExtraState: function (this: any) {
-          if (this.varCount_ <= 1) return null
-          return { varCount: this.varCount_ }
-        },
-        loadExtraState: function (this: any, state: { varCount?: number }) {
-          const count = state?.varCount ?? 1
-          while (this.varCount_ < count) {
-            this.plus_()
+          const args: ArgSlotState[] = []
+          for (let i = 0; i < this.argCount_; i++) {
+            const slot = this.argSlots_[i]
+            if (slot.mode === 'select') {
+              const val = this.getFieldValue(`SEL_${i}`)
+              args.push({ mode: 'select', text: val })
+            } else if (slot.mode === 'custom') {
+              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
+            } else {
+              args.push({ mode: 'compose' })
+            }
           }
+          return { args }
+        },
+        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
+          const args = state?.args ?? [{ mode: 'select', text: 'x' }]
+          // Remove all existing slots
+          for (let i = this.argCount_ - 1; i >= 0; i--) {
+            if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
+          }
+          this.argCount_ = args.length
+          this.argSlots_ = [...args]
+          for (let i = 0; i < args.length; i++) {
+            const a = args[i]
+            buildArgSlot(this, i, a.mode, {
+              getVarOptions: () => self.getWorkspaceVarOptions(),
+              inputPrefix: i === 0 ? (Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →') : undefined,
+              defaultVar: a.text ?? 'x',
+              customDefault: a.text ?? '',
+            })
+            this.moveInputBefore(`ARG_${i}`, 'TAIL')
+            if (a.mode === 'select' && a.text) {
+              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+            }
+          }
+          setMinusState(this, this.argCount_ <= 1)
+        },
+      }
+    }
+
+    // c_printf with FORMAT + three-mode multi-arg (args can be 0)
+    {
+      Blockly.Blocks['c_printf'] = {
+        argCount_: 1,
+        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
+        init: function (this: any) {
+          this.argCount_ = 1
+          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
+          this.appendDummyInput('FORMAT_ROW')
+            .appendField(Blockly.Msg['C_PRINTF_FORMAT_LABEL'] || 'printf 格式')
+            .appendField(new Blockly.FieldTextInput('%d\\n') as Blockly.Field, 'FORMAT')
+          buildArgSlot(this, 0, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.io)
+          this.setTooltip(Blockly.Msg['C_PRINTF_TOOLTIP'] || 'printf')
+        },
+        plus_: function (this: any) {
+          const idx = this.argCount_
+          this.argSlots_[idx] = { mode: 'select', selectedVar: 'x' }
+          buildArgSlot(this, idx, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          if (this.getInput(`ARG_${this.argCount_}`)) this.removeInput(`ARG_${this.argCount_}`)
+          this.argSlots_.length = this.argCount_
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          const args: ArgSlotState[] = []
+          for (let i = 0; i < this.argCount_; i++) {
+            const slot = this.argSlots_[i]
+            if (slot.mode === 'select') {
+              args.push({ mode: 'select', text: this.getFieldValue(`SEL_${i}`) })
+            } else if (slot.mode === 'custom') {
+              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
+            } else {
+              args.push({ mode: 'compose' })
+            }
+          }
+          return { args }
+        },
+        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
+          const args = state?.args ?? []
+          for (let i = this.argCount_ - 1; i >= 0; i--) {
+            if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
+          }
+          this.argCount_ = args.length
+          this.argSlots_ = [...args]
+          for (let i = 0; i < args.length; i++) {
+            const a = args[i]
+            buildArgSlot(this, i, a.mode, {
+              getVarOptions: () => self.getWorkspaceVarOptions(),
+              inputPrefix: ',',
+              separator: ',',
+              defaultVar: a.text ?? 'x',
+              customDefault: a.text ?? '',
+            })
+            this.moveInputBefore(`ARG_${i}`, 'TAIL')
+            if (a.mode === 'select' && a.text) {
+              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+            }
+          }
+          setMinusState(this, this.argCount_ <= 0)
+        },
+      }
+    }
+
+    // c_scanf with FORMAT + three-mode multi-arg + auto & for select mode
+    {
+      // Helper: check if a variable is an array (doesn't need &)
+      const isArrayVar = (varName: string): boolean => {
+        const workspace = self.blocklyPanel?.getWorkspace()
+        if (!workspace) return false
+        for (const block of workspace.getAllBlocks(false)) {
+          if (block.type === 'u_array_declare') {
+            if (block.getFieldValue('NAME') === varName) return true
+          }
+        }
+        return false
+      }
+
+      Blockly.Blocks['c_scanf'] = {
+        argCount_: 1,
+        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
+        init: function (this: any) {
+          this.argCount_ = 1
+          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
+          this.appendDummyInput('FORMAT_ROW')
+            .appendField(Blockly.Msg['C_SCANF_FORMAT_LABEL'] || 'scanf 格式')
+            .appendField(new Blockly.FieldTextInput('%d') as Blockly.Field, 'FORMAT')
+          buildArgSlot(this, 0, 'select', {
+            getVarOptions: () => self.getScanfVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.io)
+          this.setTooltip(Blockly.Msg['C_SCANF_TOOLTIP'] || 'scanf')
+          this.isArrayVar_ = isArrayVar
+        },
+        plus_: function (this: any) {
+          const idx = this.argCount_
+          this.argSlots_[idx] = { mode: 'select', selectedVar: 'x' }
+          buildArgSlot(this, idx, 'select', {
+            getVarOptions: () => self.getScanfVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          if (this.getInput(`ARG_${this.argCount_}`)) this.removeInput(`ARG_${this.argCount_}`)
+          this.argSlots_.length = this.argCount_
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          const args: ArgSlotState[] = []
+          for (let i = 0; i < this.argCount_; i++) {
+            const slot = this.argSlots_[i]
+            if (slot.mode === 'select') {
+              args.push({ mode: 'select', text: this.getFieldValue(`SEL_${i}`) })
+            } else if (slot.mode === 'custom') {
+              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
+            } else {
+              args.push({ mode: 'compose' })
+            }
+          }
+          return { args }
+        },
+        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
+          const args = state?.args ?? []
+          for (let i = this.argCount_ - 1; i >= 0; i--) {
+            if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
+          }
+          this.argCount_ = args.length
+          this.argSlots_ = [...args]
+          for (let i = 0; i < args.length; i++) {
+            const a = args[i]
+            buildArgSlot(this, i, a.mode, {
+              getVarOptions: () => self.getScanfVarOptions(),
+              inputPrefix: ',',
+              separator: ',',
+              defaultVar: a.text ?? 'x',
+              customDefault: a.text ?? '',
+            })
+            this.moveInputBefore(`ARG_${i}`, 'TAIL')
+            if (a.mode === 'select' && a.text) {
+              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+            }
+          }
+          setMinusState(this, this.argCount_ <= 0)
         },
       }
     }
@@ -917,7 +1249,7 @@ export class App {
           this.argCount_ = 0
           this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(new Blockly.FieldTextInput('myFunction') as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -933,7 +1265,7 @@ export class App {
           if (this.argCount_ > 0) {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldTextInput(this.getFieldValue?.('NAME') || 'myFunction') as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
               .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
             this.appendDummyInput('TAIL')
               .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
@@ -942,7 +1274,7 @@ export class App {
           } else {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldTextInput(this.getFieldValue?.('NAME') || 'myFunction') as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
             this.appendDummyInput('TAIL')
               .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
               .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -994,7 +1326,7 @@ export class App {
           this.argCount_ = 0
           this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(new Blockly.FieldTextInput('myFunction') as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1009,7 +1341,7 @@ export class App {
           if (this.argCount_ > 0) {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldTextInput(this.getFieldValue?.('NAME') || 'myFunction') as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
               .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
             this.appendDummyInput('TAIL')
               .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
@@ -1018,7 +1350,7 @@ export class App {
           } else {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldTextInput(this.getFieldValue?.('NAME') || 'myFunction') as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
             this.appendDummyInput('TAIL')
               .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
               .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1078,7 +1410,6 @@ export class App {
 
     // u_var_ref with dynamic dropdown from workspace declarations
     {
-      const self = this
       Blockly.Blocks['u_var_ref'] = {
         init: function (this: Blockly.Block) {
           const block = this
@@ -1175,7 +1506,7 @@ export class App {
         init: function (this: Blockly.Block) {
           this.appendValueInput('INDEX')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_ARRAY_LABEL'] || '陣列')
-            .appendField(new Blockly.FieldTextInput('arr') as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
@@ -1183,6 +1514,70 @@ export class App {
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.arrays)
           this.setTooltip(Blockly.Msg['U_ARRAY_ACCESS_TOOLTIP'] || '陣列存取')
+        },
+      }
+    }
+
+    // u_var_assign — override JSON to use variable dropdown
+    {
+      Blockly.Blocks['u_var_assign'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('VALUE')
+            .appendField(Blockly.Msg['U_VAR_ASSIGN_LABEL'] || '把變數')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(Blockly.Msg['U_VAR_ASSIGN_SET_LABEL'] || '設成')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.data)
+          this.setTooltip(Blockly.Msg['U_VAR_ASSIGN_TOOLTIP'] || '變數賦值')
+        },
+      }
+    }
+
+    // c_increment — override JSON to use variable dropdown
+    {
+      Blockly.Blocks['c_increment'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput()
+            .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
+              [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
+            ]) as Blockly.Field, 'OP')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+              [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+            ]) as Blockly.Field, 'POSITION')
+          this.setPreviousStatement(true, null)
+          this.setNextStatement(true, null)
+          this.setColour(CATEGORY_COLORS.operators)
+          this.setTooltip(Blockly.Msg['C_INCREMENT_TOOLTIP'] || '讓變數的值加 1 或減 1')
+        },
+      }
+    }
+
+    // c_compound_assign — override JSON to use variable dropdown
+    {
+      Blockly.Blocks['c_compound_assign'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('VALUE')
+            .setCheck('Expression')
+            .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
+              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
+              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
+              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
+              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
+            ]) as Blockly.Field, 'OP')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.operators)
+          this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '把變數的值加上、減去、乘以、除以或取餘數後存回去')
         },
       }
     }
@@ -1908,16 +2303,130 @@ export class App {
         } else if (block.type === 'u_count_loop') {
           addOption(block.getFieldValue('VAR'))
         } else if (block.type === 'u_input') {
+          // Three-mode: scan SEL_i (select dropdown values)
           for (let i = 0; ; i++) {
+            const sel = block.getFieldValue(`SEL_${i}`)
+            if (sel !== null && sel !== undefined && sel !== '__COMPOSE__' && sel !== '__CUSTOM__') {
+              addOption(sel)
+              continue
+            }
+            // Legacy: NAME_i
             const name = block.getFieldValue(`NAME_${i}`)
-            if (name === null || name === undefined) break
-            addOption(name)
+            if (name !== null && name !== undefined) {
+              addOption(name)
+              continue
+            }
+            break
           }
         }
       }
     }
     if (options.length === 0) {
       options.push([Blockly.Msg['U_VAR_REF_CUSTOM'] || '(自訂)', 'x'])
+    }
+    return options
+  }
+
+  /** Like getWorkspaceVarOptions but display text shows & prefix for scanf */
+  private getScanfVarOptions(): Array<[string, string]> {
+    const options: Array<[string, string]> = []
+    const seen = new Set<string>()
+    const noAddrTypes = new Set(['string', 'char*', 'int*', 'float*', 'double*', 'void*'])
+
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (workspace) {
+      const blocks = workspace.getAllBlocks(false)
+      // First pass: collect variable types
+      const varTypes = new Map<string, string>()
+      const arrayVars = new Set<string>()
+      for (const block of blocks) {
+        if (block.type === 'u_var_declare') {
+          const type = block.getFieldValue('TYPE') ?? 'int'
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`NAME_${i}`)
+            if (name === null || name === undefined) break
+            varTypes.set(name, type)
+          }
+        } else if (block.type === 'u_array_declare') {
+          const name = block.getFieldValue('NAME')
+          if (name) arrayVars.add(name)
+        }
+      }
+      // Second pass: build options with & prefix
+      const addOption = (name: string) => {
+        if (!name || seen.has(name)) return
+        seen.add(name)
+        const type = varTypes.get(name)
+        const needsAddr = !arrayVars.has(name) && (!type || !noAddrTypes.has(type))
+        const display = needsAddr ? `&${name}` : name
+        options.push([display, name])
+      }
+      for (const block of blocks) {
+        if (block.type === 'u_var_declare') {
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`NAME_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        } else if (block.type === 'u_array_declare') {
+          addOption(block.getFieldValue('NAME'))
+        } else if (block.type === 'u_func_def') {
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`PARAM_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        } else if (block.type === 'u_count_loop') {
+          addOption(block.getFieldValue('VAR'))
+        }
+      }
+    }
+    if (options.length === 0) {
+      options.push(['&x', 'x'])
+    }
+    return options
+  }
+
+  /** Get array variable names from workspace */
+  private getWorkspaceArrayOptions(): Array<[string, string]> {
+    const options: Array<[string, string]> = []
+    const seen = new Set<string>()
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (workspace) {
+      for (const block of workspace.getAllBlocks(false)) {
+        if (block.type === 'u_array_declare') {
+          const name = block.getFieldValue('NAME')
+          if (name && !seen.has(name)) {
+            seen.add(name)
+            options.push([name, name])
+          }
+        }
+      }
+    }
+    if (options.length === 0) {
+      options.push(['arr', 'arr'])
+    }
+    return options
+  }
+
+  /** Get function names from workspace */
+  private getWorkspaceFuncOptions(): Array<[string, string]> {
+    const options: Array<[string, string]> = []
+    const seen = new Set<string>()
+    const workspace = this.blocklyPanel?.getWorkspace()
+    if (workspace) {
+      for (const block of workspace.getAllBlocks(false)) {
+        if (block.type === 'u_func_def') {
+          const name = block.getFieldValue('NAME')
+          if (name && !seen.has(name)) {
+            seen.add(name)
+            options.push([name, name])
+          }
+        }
+      }
+    }
+    if (options.length === 0) {
+      options.push(['myFunction', 'myFunction'])
     }
     return options
   }

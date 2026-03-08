@@ -121,6 +121,8 @@ export class BlocklyPanel {
       case 'u_return': return this.extractReturn(block)
       case 'u_print': return this.extractPrint(block)
       case 'u_input': return this.extractInput(block)
+      case 'c_printf': return this.extractPrintf(block)
+      case 'c_scanf': return this.extractScanf(block)
       case 'u_endl': return createNode('endl', {})
       case 'u_array_declare': return this.extractArrayDeclare(block)
       case 'u_array_access': return this.extractArrayAccess(block)
@@ -486,7 +488,11 @@ export class BlocklyPanel {
   }
 
   private extractInput(block: Blockly.Block): SemanticNode {
-    // Collect all NAME_0, NAME_1, ... variables
+    const values = this.extractThreeModeArgs(block)
+    if (values.length > 0) {
+      return createNode('input', {}, { values })
+    }
+    // Legacy fallback: NAME_0, NAME_1, ...
     const variables: string[] = []
     let i = 0
     while (true) {
@@ -502,6 +508,95 @@ export class BlocklyPanel {
       variable: variables[0],
       variables: variables.length > 1 ? variables : undefined,
     })
+  }
+
+  private extractPrintf(block: Blockly.Block): SemanticNode {
+    const format = block.getFieldValue('FORMAT') ?? '%d\\n'
+    const args = this.extractThreeModeArgs(block)
+    if (args.length > 0) {
+      return createNode('cpp_printf', { format }, { args })
+    }
+    // Legacy fallback
+    const argsText = block.getFieldValue('ARGS') ?? ''
+    return createNode('cpp_printf', { format, args: argsText })
+  }
+
+  private extractScanf(block: Blockly.Block): SemanticNode {
+    const format = block.getFieldValue('FORMAT') ?? '%d'
+    const args = this.extractThreeModeArgs(block)
+    if (args.length > 0) {
+      // Mark var_ref args that don't need & (arrays, strings, pointers)
+      for (const arg of args) {
+        if (arg.concept === 'var_ref') {
+          const varName = arg.properties.name as string
+          if (!this.varNeedsAddressOf(varName)) {
+            arg.properties.noAddr = true
+          }
+        }
+      }
+      return createNode('cpp_scanf', { format }, { args })
+    }
+    // Legacy fallback
+    const argsText = block.getFieldValue('ARGS') ?? ''
+    return createNode('cpp_scanf', { format, args: argsText })
+  }
+
+  /** Check if a variable needs & for scanf (basic types need it, arrays/strings/pointers don't) */
+  private varNeedsAddressOf(name: string): boolean {
+    const workspace = this.getWorkspace()
+    if (!workspace) return true  // default: assume needs &
+    const noAddrTypes = new Set(['string', 'char*', 'int*', 'float*', 'double*', 'void*'])
+    for (const block of workspace.getAllBlocks(false)) {
+      if (block.type === 'u_array_declare' && block.getFieldValue('NAME') === name) {
+        return false  // arrays don't need &
+      }
+      if (block.type === 'u_var_declare') {
+        // Scan indexed NAME fields
+        for (let i = 0; ; i++) {
+          const n = block.getFieldValue(`NAME_${i}`)
+          if (n === null || n === undefined) break
+          if (n === name) {
+            const type = block.getFieldValue('TYPE') ?? 'int'
+            if (noAddrTypes.has(type)) return false
+            return true
+          }
+        }
+      }
+    }
+    return true
+  }
+
+  /** Extract three-mode arg slots (SEL_i / VALUE input ARG_i / TEXT_i) */
+  private extractThreeModeArgs(block: Blockly.Block): SemanticNode[] {
+    const values: SemanticNode[] = []
+    for (let i = 0; ; i++) {
+      // Mode 1: select — dropdown value in SEL_i
+      const selVal = block.getFieldValue(`SEL_${i}`)
+      if (selVal !== null && selVal !== undefined) {
+        values.push(createNode('var_ref', { name: selVal }))
+        continue
+      }
+      // Mode 2: compose — connected block in ARG_i value input
+      const argBlock = block.getInputTargetBlock(`ARG_${i}`)
+      if (argBlock) {
+        const node = this.extractBlock(argBlock)
+        if (node) values.push(node)
+        continue
+      }
+      // Mode 3: custom text in TEXT_i
+      const textVal = block.getFieldValue(`TEXT_${i}`)
+      if (textVal !== null && textVal !== undefined) {
+        values.push(createNode('raw_code', { code: textVal }, {}, { rawCode: textVal }))
+        continue
+      }
+      // Check if there's an ARG_i input at all (compose mode, empty socket)
+      if (block.getInput(`ARG_${i}`)) {
+        values.push(createNode('var_ref', { name: 'x' }))
+        continue
+      }
+      break
+    }
+    return values
   }
 
   private extractArrayDeclare(block: Blockly.Block): SemanticNode {
