@@ -2,6 +2,41 @@
 
 export type PropertyValue = string | number | boolean | string[]
 
+// ─── Concept IDs ───
+
+/** Universal 概念（所有程式語言共通） */
+export type UniversalConcept =
+  | 'program'
+  | 'var_declare'
+  | 'var_assign'
+  | 'var_ref'
+  | 'number_literal'
+  | 'string_literal'
+  | 'arithmetic'
+  | 'compare'
+  | 'logic'
+  | 'logic_not'
+  | 'negate'
+  | 'if'
+  | 'count_loop'
+  | 'while_loop'
+  | 'break'
+  | 'continue'
+  | 'func_def'
+  | 'func_call'
+  | 'return'
+  | 'print'
+  | 'input'
+  | 'endl'
+  | 'array_declare'
+  | 'array_access'
+
+/** 語言特有概念使用 `lang:concept` 格式 */
+export type LanguageSpecificConcept = `${string}:${string}`
+
+/** ConceptId 是 universal 或 language-specific 概念的聯集 */
+export type ConceptId = UniversalConcept | LanguageSpecificConcept
+
 // ─── Semantic Tree ───
 
 export interface SemanticNode {
@@ -36,6 +71,18 @@ export interface SourceRange {
   startColumn: number
   endLine: number
   endColumn: number
+}
+
+/** 程式級呈現資訊 */
+export interface ProgramMetadata {
+  detectedStyle?: Record<string, unknown>
+  lineCount?: number
+}
+
+/** SemanticModel — 程式的完整語義表示 */
+export interface SemanticModel {
+  readonly program: SemanticNode
+  metadata: ProgramMetadata
 }
 
 // ─── Concept System ───

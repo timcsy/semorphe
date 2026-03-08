@@ -1,4 +1,4 @@
-import type { ConceptId } from '../../core/semantic-model'
+import type { ConceptId } from '../../core/types'
 import type { NewLanguageModule, TypeEntry, ConceptDefinition, Generator, Parser, NewLanguageAdapter } from '../types'
 import { PYTHON_ALL_TYPES } from './types'
 

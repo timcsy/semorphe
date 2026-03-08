@@ -8,7 +8,7 @@
  * @see ../data-model.md LanguageModule, TypeEntry
  */
 
-import type { ConceptId, SemanticModel, SemanticNode } from './semantic-model'
+import type { ConceptId, SemanticModel, SemanticNode } from '../../../src/core/types'
 import type { CodingStyle } from './coding-style'
 
 // ============================================================

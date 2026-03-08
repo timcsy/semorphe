@@ -1,6 +1,5 @@
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
-import type { ConceptRegistry } from '../concept-registry'
 import { createNode } from '../semantic-tree'
 import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
@@ -8,7 +7,6 @@ import { PatternLifter } from './pattern-lifter'
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
   private patternLifter: PatternLifter | null = null
-  private conceptRegistry: ConceptRegistry | null = null
   private astNodeConceptMap: Map<string, string> | null = null
 
   register(nodeType: string, lifter: NodeLifter): void {
@@ -18,11 +16,6 @@ export class Lifter {
   /** Set the JSON-driven pattern lifter engine */
   setPatternLifter(pl: PatternLifter): void {
     this.patternLifter = pl
-  }
-
-  /** Set ConceptRegistry for degradationCause lookup */
-  setConceptRegistry(registry: ConceptRegistry): void {
-    this.conceptRegistry = registry
   }
 
   /** Set AST nodeType → conceptId mapping for unsupported detection */

@@ -1,4 +1,4 @@
-import { App } from './ui/app.new'
+import { App } from './ui/app'
 
 const app = new App()
 ;(window as any).__app = app

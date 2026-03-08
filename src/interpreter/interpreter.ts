@@ -1,5 +1,5 @@
-import type { SemanticNode } from '../core/semantic-model'
-import { createNode } from '../core/semantic-model'
+import type { SemanticNode } from '../core/types'
+import { createNode } from '../core/semantic-tree'
 import type { RuntimeValue, RuntimeType, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString, parseInputValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
@@ -149,10 +149,8 @@ export class SemanticInterpreter {
   // --- 基礎概念 (T016) ---
 
   private async execProgram(node: SemanticNode): Promise<void> {
-    const body = node.children.body
-    if (Array.isArray(body)) {
-      await this.executeBody(body)
-    }
+    const body = node.children.body ?? []
+    await this.executeBody(body)
     // C/C++ 慣例：若定義了 main 函式，自動呼叫
     if (this.functions.has('main')) {
       await this.execFuncCall(createNode('func_call', { name: 'main' }, { args: [] }))
@@ -211,8 +209,8 @@ export class SemanticInterpreter {
     let val: RuntimeValue
 
     const init = node.children.initializer
-    if (init && !Array.isArray(init)) {
-      val = await this.evaluate(init)
+    if (init && init.length > 0) {
+      val = await this.evaluate(init[0])
       // 型別轉換
       val = this.coerceType(val, type)
     } else {
@@ -224,9 +222,9 @@ export class SemanticInterpreter {
 
   private async execVarAssign(node: SemanticNode): Promise<void> {
     const name = String(node.properties.name)
-    const valueNode = node.children.value
-    if (!valueNode || Array.isArray(valueNode)) return
-    const val = await this.evaluate(valueNode)
+    const valueNodes = node.children.value
+    if (!valueNodes || valueNodes.length === 0) return
+    const val = await this.evaluate(valueNodes[0])
     this.scope.set(name, val)
   }
 
@@ -239,8 +237,8 @@ export class SemanticInterpreter {
 
   private async execArithmetic(node: SemanticNode): Promise<RuntimeValue> {
     const op = String(node.properties.operator)
-    const left = await this.evaluate(node.children.left as SemanticNode)
-    const right = await this.evaluate(node.children.right as SemanticNode)
+    const left = await this.evaluate(node.children.left[0])
+    const right = await this.evaluate(node.children.right[0])
 
     const lv = this.toNumber(left)
     const rv = this.toNumber(right)
@@ -270,8 +268,8 @@ export class SemanticInterpreter {
 
   private async execCompare(node: SemanticNode): Promise<RuntimeValue> {
     const op = String(node.properties.operator)
-    const left = await this.evaluate(node.children.left as SemanticNode)
-    const right = await this.evaluate(node.children.right as SemanticNode)
+    const left = await this.evaluate(node.children.left[0])
+    const right = await this.evaluate(node.children.right[0])
 
     const lv = this.toNumber(left)
     const rv = this.toNumber(right)
@@ -292,16 +290,16 @@ export class SemanticInterpreter {
 
   private async execLogic(node: SemanticNode): Promise<RuntimeValue> {
     const op = String(node.properties.operator)
-    const left = await this.evaluate(node.children.left as SemanticNode)
+    const left = await this.evaluate(node.children.left[0])
 
     if (op === '&&') {
       if (!this.toBool(left)) return { type: 'bool', value: false }
-      const right = await this.evaluate(node.children.right as SemanticNode)
+      const right = await this.evaluate(node.children.right[0])
       return { type: 'bool', value: this.toBool(right) }
     }
     if (op === '||') {
       if (this.toBool(left)) return { type: 'bool', value: true }
-      const right = await this.evaluate(node.children.right as SemanticNode)
+      const right = await this.evaluate(node.children.right[0])
       return { type: 'bool', value: this.toBool(right) }
     }
 
@@ -309,7 +307,7 @@ export class SemanticInterpreter {
   }
 
   private async execLogicNot(node: SemanticNode): Promise<RuntimeValue> {
-    const operand = await this.evaluate(node.children.operand as SemanticNode)
+    const operand = await this.evaluate(node.children.operand[0])
     return { type: 'bool', value: !this.toBool(operand) }
   }
 
@@ -328,7 +326,7 @@ export class SemanticInterpreter {
   }
 
   private async execNegate(node: SemanticNode): Promise<RuntimeValue> {
-    const operand = await this.evaluate(node.children.value as SemanticNode)
+    const operand = await this.evaluate(node.children.value[0])
     const val = this.toNumber(operand)
     return operand.type === 'int'
       ? { type: 'int', value: -Math.trunc(val) }
@@ -339,7 +337,7 @@ export class SemanticInterpreter {
     const name = String(node.properties.name)
     const op = String(node.properties.operator)
     const current = this.scope.get(name)
-    const rhs = await this.evaluate(node.children.value as SemanticNode)
+    const rhs = await this.evaluate(node.children.value[0])
     const lv = this.toNumber(current)
     const rv = this.toNumber(rhs)
     let result: number
@@ -365,28 +363,20 @@ export class SemanticInterpreter {
   // --- 流程控制 (T018) ---
 
   private async execIf(node: SemanticNode): Promise<void> {
-    const condition = await this.evaluate(node.children.condition as SemanticNode)
+    const condition = await this.evaluate(node.children.condition[0])
 
     if (this.toBool(condition)) {
-      const thenBody = node.children.then_body
-      if (Array.isArray(thenBody)) {
-        await this.executeBody(thenBody)
-      }
+      await this.executeBody(node.children.then_body ?? [])
     } else {
-      const elseBody = node.children.else_body
-      if (Array.isArray(elseBody)) {
-        await this.executeBody(elseBody)
-      }
+      await this.executeBody(node.children.else_body ?? [])
     }
   }
 
   private async execCountLoop(node: SemanticNode): Promise<void> {
     const varName = String(node.properties.var_name)
-    const from = this.toNumber(await this.evaluate(node.children.from as SemanticNode))
-    const to = this.toNumber(await this.evaluate(node.children.to as SemanticNode))
-    const body = node.children.body
-
-    if (!Array.isArray(body)) return
+    const from = this.toNumber(await this.evaluate(node.children.from[0]))
+    const to = this.toNumber(await this.evaluate(node.children.to[0]))
+    const body = node.children.body ?? []
 
     // 建立子 scope，迴圈變數在子 scope 中宣告（避免巢狀迴圈重複宣告）
     const parentScope = this.scope
@@ -408,15 +398,13 @@ export class SemanticInterpreter {
   }
 
   private async execWhileLoop(node: SemanticNode): Promise<void> {
-    const body = node.children.body
-
-    if (!Array.isArray(body)) return
+    const body = node.children.body ?? []
 
     // 建立子 scope，每次迭代內的宣告不會外洩
     const parentScope = this.scope
     while (true) {
       this.scope = parentScope.createChild()
-      const condition = await this.evaluate(node.children.condition as SemanticNode)
+      const condition = await this.evaluate(node.children.condition[0])
       if (!this.toBool(condition)) break
 
       try {
@@ -450,13 +438,11 @@ export class SemanticInterpreter {
     } else if (typeof rawParams === 'string' && rawParams.startsWith('[')) {
       try { params = JSON.parse(rawParams) } catch { params = [] }
     }
-    const body = node.children.body
-
     this.functions.set(name, {
       name,
       params,
       returnType,
-      body: Array.isArray(body) ? body : [],
+      body: node.children.body ?? [],
     })
   }
 
@@ -467,12 +453,10 @@ export class SemanticInterpreter {
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': name })
     }
 
-    const args = node.children.args
+    const args = node.children.args ?? []
     const argValues: RuntimeValue[] = []
-    if (Array.isArray(args)) {
-      for (const argNode of args) {
-        argValues.push(await this.evaluate(argNode))
-      }
+    for (const argNode of args) {
+      argValues.push(await this.evaluate(argNode))
     }
 
     // 建立函式作用域
@@ -504,9 +488,9 @@ export class SemanticInterpreter {
   }
 
   private async execReturn(node: SemanticNode): Promise<void> {
-    const valueNode = node.children.value
-    if (valueNode && !Array.isArray(valueNode)) {
-      const val = await this.evaluate(valueNode)
+    const valueNodes = node.children.value
+    if (valueNodes && valueNodes.length > 0) {
+      const val = await this.evaluate(valueNodes[0])
       throw new ReturnSignal(val)
     }
     throw new ReturnSignal(defaultValue('void'))
@@ -515,8 +499,7 @@ export class SemanticInterpreter {
   // --- I/O 和陣列 (T020) ---
 
   private async execPrint(node: SemanticNode): Promise<void> {
-    const values = node.children.values
-    if (!Array.isArray(values)) return
+    const values = node.children.values ?? []
 
     for (const valNode of values) {
       const val = await this.evaluate(valNode)
@@ -572,12 +555,12 @@ export class SemanticInterpreter {
 
   private async execArrayAccess(node: SemanticNode): Promise<RuntimeValue> {
     const name = String(node.properties.name)
-    const indexNode = node.children.index
-    if (!indexNode || Array.isArray(indexNode)) {
+    const indexNodes = node.children.index
+    if (!indexNodes || indexNodes.length === 0) {
       return defaultValue('int')
     }
 
-    const indexVal = await this.evaluate(indexNode)
+    const indexVal = await this.evaluate(indexNodes[0])
     const index = this.toNumber(indexVal)
     const arr = this.scope.get(name)
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { createNode } from '../../src/core/semantic-model'
-import type { SemanticNode } from '../../src/core/semantic-model'
+import { createNode } from '../../src/core/semantic-tree'
+import type { SemanticNode } from '../../src/core/types'
 import { RuntimeError } from '../../src/interpreter/errors'
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
@@ -23,7 +23,7 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
       createNode('var_declare', { name: 'x', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '42' }, {})
+        initializer: [createNode('number_literal', { value: '42' }, {})]
       }),
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'x' }, {})]
@@ -36,10 +36,10 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     const steps = await interp.executeWithSteps(makeProgram([
       createNode('var_declare', { name: 'x', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '10' }, {})
+        initializer: [createNode('number_literal', { value: '10' }, {})]
       }),
       createNode('var_assign', { name: 'x' }, {
-        value: createNode('number_literal', { value: '20' }, {})
+        value: [createNode('number_literal', { value: '20' }, {})]
       }),
     ]))
     expect(steps.length).toBeGreaterThan(0)
@@ -50,13 +50,13 @@ describe('Execution flow integration', () => {
     await expect(
       interp.execute(makeProgram([
         createNode('while_loop', {}, {
-          condition: createNode('compare', { operator: '>' }, {
-            left: createNode('number_literal', { value: '1' }, {}),
-            right: createNode('number_literal', { value: '0' }, {}),
-          }),
+          condition: [createNode('compare', { operator: '>' }, {
+            left: [createNode('number_literal', { value: '1' }, {})],
+            right: [createNode('number_literal', { value: '0' }, {})],
+          })],
           body: [
             createNode('var_declare', { name: 'x', type: 'int' }, {
-              initializer: createNode('number_literal', { value: '0' }, {})
+              initializer: [createNode('number_literal', { value: '0' }, {})]
             }),
           ],
         })
@@ -68,7 +68,7 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
       createNode('var_declare', { name: 'n', type: 'int' }, {
-        initializer: createNode('input', { type: 'int' }, {})
+        initializer: [createNode('input', { type: 'int' }, {})]
       }),
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'n' }, {})]

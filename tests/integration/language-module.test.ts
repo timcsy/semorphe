@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import type { NewLanguageModule, TypeEntry } from '../../src/languages/types'
-import type { ConceptId } from '../../src/core/semantic-model'
+import type { ConceptId } from '../../src/core/types'
 
 /**
  * T033: LanguageModule integration tests

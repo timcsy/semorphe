@@ -1,4 +1,4 @@
-import type { SemanticNode } from '../core/semantic-model'
+import type { SemanticNode } from '../core/types'
 
 /** 執行期型別 */
 export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array'

@@ -1,4 +1,4 @@
-import type { ConceptId, SemanticModel, SemanticNode } from '../core/semantic-model'
+import type { ConceptId, SemanticModel, SemanticNode } from '../core/types'
 import type { CodingStyle } from './style'
 
 /** 語言模組提供的型別定義項目 */

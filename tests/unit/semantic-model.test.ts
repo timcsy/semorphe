@@ -6,9 +6,8 @@ import {
   walkNodes,
   serializeModel,
   deserializeModel,
-  type SemanticNode,
-  type SemanticModel,
-} from '../../src/core/semantic-model'
+} from '../../src/core/semantic-tree'
+import type { SemanticNode, SemanticModel } from '../../src/core/types'
 
 describe('createNode', () => {
   it('should create a node with minimal arguments', () => {
@@ -16,7 +15,7 @@ describe('createNode', () => {
     expect(node.concept).toBe('var_declare')
     expect(node.properties).toEqual({})
     expect(node.children).toEqual({})
-    expect(node.metadata).toBeUndefined()
+    expect(node.id).toBeDefined()
   })
 
   it('should create a node with all arguments', () => {
@@ -24,19 +23,23 @@ describe('createNode', () => {
     const node = createNode(
       'var_declare',
       { name: 'x', type: 'int' },
-      { initializer: child },
-      { blockId: 'block_1' },
+      { initializer: [child] },
     )
     expect(node.concept).toBe('var_declare')
     expect(node.properties).toEqual({ name: 'x', type: 'int' })
-    expect(node.children.initializer).toBe(child)
-    expect(node.metadata?.blockId).toBe('block_1')
+    expect(node.children.initializer[0]).toBe(child)
   })
 
   it('should create language-specific concept nodes', () => {
     const node = createNode('cpp:include', { header: 'iostream' })
     expect(node.concept).toBe('cpp:include')
     expect(node.properties.header).toBe('iostream')
+  })
+
+  it('should generate unique ids', () => {
+    const a = createNode('var_declare')
+    const b = createNode('var_declare')
+    expect(a.id).not.toBe(b.id)
   })
 })
 
@@ -59,25 +62,27 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(false)
   })
 
-  it('should ignore metadata in comparison', () => {
-    const a = createNode('number_literal', { value: '5' }, {}, { blockId: 'a' })
-    const b = createNode('number_literal', { value: '5' }, {}, { blockId: 'b' })
+  it('should ignore metadata and id in comparison', () => {
+    const a = createNode('number_literal', { value: '5' })
+    const b = createNode('number_literal', { value: '5' })
+    a.metadata = { blockId: 'a' }
+    b.metadata = { blockId: 'b' }
     expect(nodeEquals(a, b)).toBe(true)
   })
 
   it('should compare nested children recursively', () => {
     const childA = createNode('number_literal', { value: '5' })
     const childB = createNode('number_literal', { value: '5' })
-    const a = createNode('var_declare', { name: 'x' }, { initializer: childA })
-    const b = createNode('var_declare', { name: 'x' }, { initializer: childB })
+    const a = createNode('var_declare', { name: 'x' }, { initializer: [childA] })
+    const b = createNode('var_declare', { name: 'x' }, { initializer: [childB] })
     expect(nodeEquals(a, b)).toBe(true)
   })
 
   it('should return false for different nested children', () => {
     const childA = createNode('number_literal', { value: '5' })
     const childB = createNode('number_literal', { value: '10' })
-    const a = createNode('var_declare', { name: 'x' }, { initializer: childA })
-    const b = createNode('var_declare', { name: 'x' }, { initializer: childB })
+    const a = createNode('var_declare', { name: 'x' }, { initializer: [childA] })
+    const b = createNode('var_declare', { name: 'x' }, { initializer: [childB] })
     expect(nodeEquals(a, b)).toBe(false)
   })
 
@@ -96,17 +101,10 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(false)
   })
 
-  it('should return false when one child is array and other is not', () => {
-    const stmt = createNode('var_declare', { name: 'x' })
-    const a = createNode('program', {}, { body: [stmt] })
-    const b = createNode('program', {}, { body: stmt })
-    expect(nodeEquals(a, b)).toBe(false)
-  })
-
   it('should return false for different number of children keys', () => {
     const child = createNode('number_literal', { value: '1' })
-    const a = createNode('if', {}, { condition: child })
-    const b = createNode('if', {}, { condition: child, then_body: child })
+    const a = createNode('if', {}, { condition: [child] })
+    const b = createNode('if', {}, { condition: [child], then_body: [child] })
     expect(nodeEquals(a, b)).toBe(false)
   })
 })
@@ -159,7 +157,7 @@ describe('walkNodes', () => {
 
   it('should walk deeply nested trees', () => {
     const value = createNode('number_literal', { value: '10' })
-    const decl = createNode('var_declare', { name: 'x' }, { initializer: value })
+    const decl = createNode('var_declare', { name: 'x' }, { initializer: [value] })
     const func = createNode('func_def', { name: 'main' }, { body: [decl] })
     const root = createNode('program', {}, { body: [func] })
 
@@ -183,7 +181,7 @@ describe('serializeModel / deserializeModel', () => {
       program: createNode('program', {}, {
         body: [
           createNode('var_declare', { name: 'x', type: 'int' }, {
-            initializer: createNode('number_literal', { value: '42' }),
+            initializer: [createNode('number_literal', { value: '42' })],
           }),
         ],
       }),

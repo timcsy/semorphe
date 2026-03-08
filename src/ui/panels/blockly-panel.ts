@@ -16,8 +16,6 @@ export class BlocklyPanel {
   private container: HTMLElement
   private onChangeCallback: (() => void) | null = null
   private onBlockSelectCallback: ((blockId: string | null) => void) | null = null
-  private highlightedBlockId: string | null = null
-  private highlightVariant: string | null = null
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
 
@@ -660,8 +658,6 @@ export class BlocklyPanel {
         const cls = variant === 'code-to-block' ? 'blockly-highlight-reverse' : 'blockly-highlight-forward'
         svgPath.classList.add(cls)
       }
-      this.highlightedBlockId = blockId
-      this.highlightVariant = variant
     }
   }
 
@@ -674,8 +670,6 @@ export class BlocklyPanel {
         el.classList.remove('blockly-highlight-forward', 'blockly-highlight-reverse')
       })
     }
-    this.highlightedBlockId = null
-    this.highlightVariant = null
   }
 
   undo(): void { this.workspace?.undo(false) }

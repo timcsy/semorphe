@@ -75,8 +75,6 @@ describe('Confidence & DegradationCause', () => {
       }
     }
 
-    lifter.setConceptRegistry(registry)
-
     // Register hand-written lifters for expressions
     registerExpressionLifters(lifter)
   }

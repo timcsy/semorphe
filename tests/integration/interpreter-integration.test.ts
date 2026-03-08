@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { createNode } from '../../src/core/semantic-model'
-import type { SemanticNode } from '../../src/core/semantic-model'
+import { createNode } from '../../src/core/semantic-tree'
+import type { SemanticNode } from '../../src/core/types'
 import { RuntimeError } from '../../src/interpreter/errors'
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
@@ -32,15 +32,15 @@ describe('Integration - Scenario 2: Variable + Arithmetic', () => {
   it('should compute x + y = 7', async () => {
     const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '3' }, {})
+        initializer: [createNode('number_literal', { value: '3' }, {})]
       }),
       createNode('var_declare', { name: 'y', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '4' }, {})
+        initializer: [createNode('number_literal', { value: '4' }, {})]
       }),
       createNode('print', {}, {
         values: [createNode('arithmetic', { operator: '+' }, {
-          left: createNode('var_ref', { name: 'x' }, {}),
-          right: createNode('var_ref', { name: 'y' }, {}),
+          left: [createNode('var_ref', { name: 'x' }, {})],
+          right: [createNode('var_ref', { name: 'y' }, {})],
         })]
       })
     ])
@@ -53,12 +53,12 @@ describe('Integration - Scenario 3: Input Read', () => {
   it('should read input and compute n * 2 = 10', async () => {
     const interp = await run([
       createNode('var_declare', { name: 'n', type: 'int' }, {
-        initializer: createNode('input', { type: 'int' }, {})
+        initializer: [createNode('input', { type: 'int' }, {})]
       }),
       createNode('print', {}, {
         values: [createNode('arithmetic', { operator: '*' }, {
-          left: createNode('var_ref', { name: 'n' }, {}),
-          right: createNode('number_literal', { value: '2' }, {}),
+          left: [createNode('var_ref', { name: 'n' }, {})],
+          right: [createNode('number_literal', { value: '2' }, {})],
         })]
       })
     ], ['5'])
@@ -71,8 +71,8 @@ describe('Integration - Scenario 4: Loop', () => {
   it('should print 1 to 5 with newlines', async () => {
     const interp = await run([
       createNode('count_loop', { var_name: 'i' }, {
-        from: createNode('number_literal', { value: '1' }, {}),
-        to: createNode('number_literal', { value: '5' }, {}),
+        from: [createNode('number_literal', { value: '1' }, {})],
+        to: [createNode('number_literal', { value: '5' }, {})],
         body: [
           createNode('print', {}, {
             values: [
@@ -98,26 +98,26 @@ describe('Integration - Scenario 5: Recursive Function', () => {
       }, {
         body: [
           createNode('if', {}, {
-            condition: createNode('compare', { operator: '<=' }, {
-              left: createNode('var_ref', { name: 'n' }, {}),
-              right: createNode('number_literal', { value: '1' }, {}),
-            }),
+            condition: [createNode('compare', { operator: '<=' }, {
+              left: [createNode('var_ref', { name: 'n' }, {})],
+              right: [createNode('number_literal', { value: '1' }, {})],
+            })],
             then_body: [
               createNode('return', {}, {
-                value: createNode('number_literal', { value: '1' }, {})
+                value: [createNode('number_literal', { value: '1' }, {})]
               })
             ],
           }),
           createNode('return', {}, {
-            value: createNode('arithmetic', { operator: '*' }, {
-              left: createNode('var_ref', { name: 'n' }, {}),
-              right: createNode('func_call', { name: 'factorial' }, {
+            value: [createNode('arithmetic', { operator: '*' }, {
+              left: [createNode('var_ref', { name: 'n' }, {})],
+              right: [createNode('func_call', { name: 'factorial' }, {
                 args: [createNode('arithmetic', { operator: '-' }, {
-                  left: createNode('var_ref', { name: 'n' }, {}),
-                  right: createNode('number_literal', { value: '1' }, {}),
+                  left: [createNode('var_ref', { name: 'n' }, {})],
+                  right: [createNode('number_literal', { value: '1' }, {})],
                 })]
-              }),
-            })
+              })],
+            })]
           }),
         ]
       }),
@@ -137,16 +137,16 @@ describe('Integration - Scenario 6: Step Execution', () => {
     const interp = new SemanticInterpreter()
     const program = makeProgram([
       createNode('var_declare', { name: 'a', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '1' }, {})
+        initializer: [createNode('number_literal', { value: '1' }, {})]
       }),
       createNode('var_declare', { name: 'b', type: 'int' }, {
-        initializer: createNode('number_literal', { value: '2' }, {})
+        initializer: [createNode('number_literal', { value: '2' }, {})]
       }),
       createNode('var_declare', { name: 'c', type: 'int' }, {
-        initializer: createNode('arithmetic', { operator: '+' }, {
-          left: createNode('var_ref', { name: 'a' }, {}),
-          right: createNode('var_ref', { name: 'b' }, {}),
-        })
+        initializer: [createNode('arithmetic', { operator: '+' }, {
+          left: [createNode('var_ref', { name: 'a' }, {})],
+          right: [createNode('var_ref', { name: 'b' }, {})],
+        })]
       }),
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'c' }, {})]
@@ -165,13 +165,13 @@ describe('Integration - Scenario 7: Infinite Loop Protection', () => {
     await expect(
       interp.execute(makeProgram([
         createNode('while_loop', {}, {
-          condition: createNode('compare', { operator: '>' }, {
-            left: createNode('number_literal', { value: '1' }, {}),
-            right: createNode('number_literal', { value: '0' }, {}),
-          }),
+          condition: [createNode('compare', { operator: '>' }, {
+            left: [createNode('number_literal', { value: '1' }, {})],
+            right: [createNode('number_literal', { value: '0' }, {})],
+          })],
           body: [
             createNode('var_declare', { name: 'x', type: 'int' }, {
-              initializer: createNode('number_literal', { value: '0' }, {})
+              initializer: [createNode('number_literal', { value: '0' }, {})]
             }),
           ],
         })
