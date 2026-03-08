@@ -45,10 +45,16 @@ export class Lifter {
     const addSourceRange = (r: SemanticNode): void => {
       if (!r.metadata) r.metadata = {}
       if (!r.metadata.sourceRange) {
+        // Tree-sitter endPosition points AFTER the last character.
+        // If a node ends with a newline, endPosition = {row: nextLine, column: 0}.
+        // Adjust endLine to the actual last content line.
+        const endLine = node.endPosition.column === 0 && node.endPosition.row > node.startPosition.row
+          ? node.endPosition.row - 1
+          : node.endPosition.row
         r.metadata.sourceRange = {
           startLine: node.startPosition.row,
           startColumn: node.startPosition.column,
-          endLine: node.endPosition.row,
+          endLine,
           endColumn: node.endPosition.column,
         }
       }
@@ -94,13 +100,15 @@ export class Lifter {
         const unresolved = createNode('unresolved', { node_type: node.type }, {
           children: liftedChildren,
         })
+        const endLine = node.endPosition.column === 0 && node.endPosition.row > node.startPosition.row
+          ? node.endPosition.row - 1 : node.endPosition.row
         unresolved.metadata = {
           rawCode: node.text,
           confidence: 'inferred',
           sourceRange: {
             startLine: node.startPosition.row,
             startColumn: node.startPosition.column,
-            endLine: node.endPosition.row,
+            endLine,
             endColumn: node.endPosition.column,
           },
         }
@@ -110,6 +118,8 @@ export class Lifter {
 
     // Level 4: degrade to raw_code
     const raw = createNode('raw_code', {})
+    const endLineRaw = node.endPosition.column === 0 && node.endPosition.row > node.startPosition.row
+      ? node.endPosition.row - 1 : node.endPosition.row
     raw.metadata = {
       rawCode: node.text,
       confidence: 'raw_code',
@@ -117,7 +127,7 @@ export class Lifter {
       sourceRange: {
         startLine: node.startPosition.row,
         startColumn: node.startPosition.column,
-        endLine: node.endPosition.row,
+        endLine: endLineRaw,
         endColumn: node.endPosition.column,
       },
     }
