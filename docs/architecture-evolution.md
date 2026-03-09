@@ -669,23 +669,23 @@ arduino-neopixel（depends: arduino-core）
 
 前置條件：無
 
-- [ ] **0.1 ViewHost 介面**
-  - [ ] 定義 `ViewHost` + `ViewCapabilities` 介面（`src/core/view-host.ts`）
-  - [ ] 定義 `ViewConfig` + 生命週期方法簽名
-  - [ ] 介面零 DOM 依賴（純 TypeScript 型別）
-  - [ ] 單元測試：型別檢查通過，mock 實作可編譯
-- [ ] **0.2 SemanticBus**
-  - [ ] 定義事件型別（`SemanticEvents` + `ViewRequests`）
-  - [ ] EventEmitter 實作（`src/core/semantic-bus.ts`）
-  - [ ] 單元測試：publish/subscribe、事件過濾、多訂閱者
-- [ ] **0.3 Annotations 機制**
-  - [ ] 擴充 concepts JSON schema，加入 `annotations` 欄位
-  - [ ] `ConceptRegistry` 新增 `getAnnotation(conceptId, key)` 查詢 API
-  - [ ] 為 C++ 的 `for_loop`、`if`、`func_def` 加上示範 annotations
-  - [ ] 單元測試：annotations 可被查詢、未標註的概念回傳 `undefined`
-- [ ] **Phase 0 驗證**
-  - [ ] 所有現有 `npm test` 通過（零 regression）
-  - [ ] `src/core/` 無新增 DOM import
+- [x] **0.1 ViewHost 介面** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 定義 `ViewHost` + `ViewCapabilities` 介面（`src/core/view-host.ts`）
+  - [x] 定義 `ViewConfig` + 生命週期方法簽名
+  - [x] 介面零 DOM 依賴（純 TypeScript 型別）
+  - [x] 單元測試：型別檢查通過，mock 實作可編譯
+- [x] **0.2 SemanticBus** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 定義事件型別（`SemanticEvents` + `ViewRequests`）
+  - [x] EventEmitter 實作（`src/core/semantic-bus.ts`）
+  - [x] 單元測試：publish/subscribe、事件過濾、多訂閱者
+- [x] **0.3 Annotations 機制** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 擴充 concepts JSON schema，加入 `annotations` 欄位
+  - [x] `ConceptRegistry` 新增 `getAnnotation(conceptId, key)` 查詢 API
+  - [x] 為 `count_loop`、`if`、`func_def` 加上示範 annotations
+  - [x] 單元測試：annotations 可被查詢、未標註的概念回傳 `undefined`
+- [x] **Phase 0 驗證** *(2026-03-09)*
+  - [x] 所有現有 `npm test` 通過（1461 tests，零 regression）
+  - [x] `src/core/` 無新增 DOM import
 
 ### Phase 1：SyncController 解耦
 

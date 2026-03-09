@@ -31,4 +31,15 @@ export class ConceptRegistry {
   listAll(): ConceptDef[] {
     return [...this.concepts.values()]
   }
+
+  /** Register or update a concept (overwrites if already exists) */
+  registerOrUpdate(def: ConceptDef): void {
+    this.concepts.set(def.id, def)
+  }
+
+  /** Query an annotation value for a concept */
+  getAnnotation(conceptId: string, key: string): unknown {
+    const def = this.concepts.get(conceptId)
+    return def?.annotations?.[key]
+  }
 }
