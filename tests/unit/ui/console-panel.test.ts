@@ -77,4 +77,40 @@ describe('ConsolePanel', () => {
     // Inline input line should be replaced with echo text
     expect(container.querySelector('.console-inline-input')).toBeNull()
   })
+
+  it('should fire signal on Ctrl+C', () => {
+    let signal = ''
+    panel.onSignal((s) => { signal = s })
+    // Ctrl+C on the output area (when no input is active)
+    const outputEl = container.querySelector('.console-output') as HTMLElement
+    outputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }))
+    expect(signal).toBe('SIGINT')
+  })
+
+  it('should fire SIGINT on Ctrl+C during input prompt', async () => {
+    let signal = ''
+    panel.onSignal((s) => { signal = s })
+    panel.promptInput()
+    const input = container.querySelector('.console-inline-input') as HTMLInputElement
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true }))
+    expect(signal).toBe('SIGINT')
+  })
+
+  it('should submit EOF on Ctrl+D during input prompt', async () => {
+    panel.onSignal(() => {})
+    const promise = panel.promptInput()
+    const input = container.querySelector('.console-inline-input') as HTMLInputElement
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
+    const result = await promise
+    expect(result).toBe('\x04')
+  })
+
+  it('should display ^C in console on Ctrl+C', () => {
+    panel.onSignal(() => {})
+    const outputEl = container.querySelector('.console-output') as HTMLElement
+    outputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }))
+    const lines = container.querySelectorAll('.console-line')
+    const lastLine = lines[lines.length - 1]
+    expect(lastLine?.textContent).toBe('^C')
+  })
 })

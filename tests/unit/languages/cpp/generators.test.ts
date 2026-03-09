@@ -531,4 +531,38 @@ describe('C++ expression generators (for expression blocks)', () => {
     expect(code).toContain('for (int j = i * i; j <= max; j += i)')
     expect(code).toContain('sieve[j] = 1;')
   })
+
+  it('should generate builtin_constant values directly', () => {
+    const code = generateCode(makeProgram(
+      createNode('print', {}, {
+        values: [
+          createNode('builtin_constant', { value: 'true' }),
+          createNode('builtin_constant', { value: 'false' }),
+          createNode('builtin_constant', { value: 'EOF' }),
+          createNode('builtin_constant', { value: 'NULL' }),
+          createNode('builtin_constant', { value: 'nullptr' }),
+        ],
+      })
+    ), 'cpp', apcsStyle)
+    expect(code).toContain('true')
+    expect(code).toContain('false')
+    expect(code).toContain('EOF')
+    expect(code).toContain('NULL')
+    expect(code).toContain('nullptr')
+  })
+
+  it('should use builtin_constant in while condition with EOF', () => {
+    const whileLoop = createNode('while_loop', {}, {
+      condition: [createNode('compare', { operator: '!=' }, {
+        left: [createNode('cpp_scanf_expr', { format: '%d' }, {
+          args: [createNode('var_ref', { name: 'n' })],
+        })],
+        right: [createNode('builtin_constant', { value: 'EOF' })],
+      })],
+      body: [createNode('break', {})],
+    })
+    const code = generateCode(makeProgram(whileLoop), 'cpp', apcsStyle)
+    expect(code).toContain('!= EOF')
+    expect(code).not.toContain('/* builtin_constant */')
+  })
 })

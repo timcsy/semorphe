@@ -39,19 +39,55 @@
     "priority": 5
   },
   {
+    "id": "cpp_eof",
+    "astNodeType": "identifier",
+    "concept": { "conceptId": "builtin_constant" },
+    "constraints": [{ "field": "$text", "text": "EOF" }],
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ],
+    "priority": 5
+  },
+  {
+    "id": "cpp_null_id",
+    "astNodeType": "identifier",
+    "concept": { "conceptId": "builtin_constant" },
+    "constraints": [{ "field": "$text", "text": "NULL" }],
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ],
+    "priority": 5
+  },
+  {
     "id": "cpp_true",
     "astNodeType": "true",
-    "concept": { "conceptId": "var_ref" },
+    "concept": { "conceptId": "builtin_constant" },
     "fieldMappings": [
-      { "semantic": "name", "ast": "$text", "extract": "text" }
+      { "semantic": "value", "ast": "$text", "extract": "text" }
     ]
   },
   {
     "id": "cpp_false",
     "astNodeType": "false",
-    "concept": { "conceptId": "var_ref" },
+    "concept": { "conceptId": "builtin_constant" },
     "fieldMappings": [
-      { "semantic": "name", "ast": "$text", "extract": "text" }
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_nullptr",
+    "astNodeType": "nullptr",
+    "concept": { "conceptId": "builtin_constant" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
+    ]
+  },
+  {
+    "id": "cpp_null",
+    "astNodeType": "null",
+    "concept": { "conceptId": "builtin_constant" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$text", "extract": "text" }
     ]
   },
   {

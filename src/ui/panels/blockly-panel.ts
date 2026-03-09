@@ -210,6 +210,8 @@ export class BlocklyPanel {
             operand: bnotNode ? [bnotNode] : [],
           })
         }
+      case 'c_builtin_constant':
+        return createNode('builtin_constant', { value: block.getFieldValue('VALUE') ?? 'true' })
       case 'c_forward_decl': {
           const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
           const fwdName = block.getFieldValue('NAME') ?? 'f'
@@ -351,6 +353,7 @@ export class BlocklyPanel {
         return `(${castType})${castVal ? this.simpleExpressionToCode(castVal) : '0'}`
       }
       case 'char_literal': return `'${node.properties.value ?? 'a'}'`
+      case 'builtin_constant': return String(node.properties.value ?? 'NULL')
       default: return node.metadata?.rawCode ?? `/* ${node.concept} */`
     }
   }

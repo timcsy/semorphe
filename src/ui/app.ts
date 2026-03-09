@@ -2396,6 +2396,18 @@ export class App {
     speedSelect?.addEventListener('change', () => {
       this.stepController?.setSpeed(speedSelect.value as ExecutionSpeed)
     })
+
+    // Console Ctrl signals
+    this.consolePanel?.onSignal((signal) => {
+      if (signal === 'SIGINT') {
+        // Abort interpreter — handleRun's catch/finally will clean up UI
+        this.interpreter?.abort()
+        // If in stepping mode, also stop the step controller
+        if (this.stepController?.getStatus() === 'stepping' || this.stepController?.getStatus() === 'paused') {
+          this.handleStop()
+        }
+      }
+    })
   }
 
   private async handleRun(): Promise<void> {
@@ -2429,9 +2441,14 @@ export class App {
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {
       if (e instanceof RuntimeError) {
-        this.consolePanel?.error(e.message)
-        this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
-        showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
+        if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
+          // User-initiated abort (Ctrl+C) — not an error
+          this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ABORTED'] || 'Interrupted', '')
+        } else {
+          this.consolePanel?.error(e.message)
+          this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+          showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
+        }
       } else {
         this.consolePanel?.error(String(e))
         this.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')

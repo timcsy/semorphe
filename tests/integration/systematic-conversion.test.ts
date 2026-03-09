@@ -401,18 +401,18 @@ describe('Expressions', () => {
       expect(n!.properties.name).toBe('myVar')
     })
 
-    it('lifts true as var_ref', () => {
+    it('lifts true as builtin_constant', () => {
       const n = liftExpr('true')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('var_ref')
-      expect(n!.properties.name).toBe('true')
+      expect(n!.concept).toBe('builtin_constant')
+      expect(n!.properties.value).toBe('true')
     })
 
-    it('lifts false as var_ref', () => {
+    it('lifts false as builtin_constant', () => {
       const n = liftExpr('false')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('var_ref')
-      expect(n!.properties.name).toBe('false')
+      expect(n!.concept).toBe('builtin_constant')
+      expect(n!.properties.value).toBe('false')
     })
   })
 })

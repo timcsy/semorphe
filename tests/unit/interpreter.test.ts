@@ -516,14 +516,14 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('10')
   })
 
-  it('should return EOF (-1) when input queue is exhausted', async () => {
+  it('should return EOF (0) when input queue is exhausted', async () => {
     const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('input', { type: 'int' }, {})]
       })
     ], [])
-    // EOF returns -1 (like C scanf behavior)
-    expect(interp.getScope().get('x')).toEqual({ type: 'int', value: -1 })
+    // EOF returns 0 (falsy, like C++ cin >> x in bool context)
+    expect(interp.getScope().get('x')).toEqual({ type: 'int', value: 0 })
   })
 
   it('should use inputProvider when stdin is exhausted', async () => {
@@ -1083,5 +1083,172 @@ describe('Interpreter - expression concepts in for-loop', () => {
       }),
     ], ['5', '10'])
     expect(interp.getOutput().join('')).toBe('510')
+  })
+})
+
+describe('Interpreter - builtin_constant', () => {
+  it('should evaluate true as 1', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('builtin_constant', { value: 'true' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('1')
+  })
+
+  it('should evaluate false as 0', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('builtin_constant', { value: 'false' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('0')
+  })
+
+  it('should evaluate EOF as -1', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('builtin_constant', { value: 'EOF' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('-1')
+  })
+
+  it('should evaluate NULL as 0', async () => {
+    const interp = await run([
+      createNode('print', {}, {
+        values: [createNode('builtin_constant', { value: 'NULL' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('0')
+  })
+
+  it('should use builtin_constant in condition (while != EOF)', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'n', type: 'int' }),
+      createNode('while_loop', {}, {
+        condition: [createNode('compare', { operator: '!=' }, {
+          left: [createNode('cpp_scanf_expr', { format: '%d' }, {
+            args: [createNode('var_ref', { name: 'n' })],
+          })],
+          right: [createNode('builtin_constant', { value: 'EOF' })],
+        })],
+        body: [createNode('print', {}, {
+          values: [createNode('var_ref', { name: 'n' })],
+        })],
+      }),
+    ], ['7', '3'])
+    expect(interp.getOutput().join('')).toBe('73')
+  })
+
+  it('should use true in array assignment', async () => {
+    const interp = await run([
+      createNode('array_declare', { name: 'flags', type: 'bool', size: '3' }),
+      createNode('array_assign', { name: 'flags' }, {
+        index: [createNode('number_literal', { value: '0' })],
+        value: [createNode('builtin_constant', { value: 'true' })],
+      }),
+      createNode('print', {}, {
+        values: [createNode('array_access', { name: 'flags' }, {
+          index: [createNode('number_literal', { value: '0' })],
+        })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('1')
+  })
+})
+
+describe('Interpreter - abort', () => {
+  it('should abort a running infinite loop', async () => {
+    const interp = new SemanticInterpreter({ maxSteps: 10_000_000 })
+    const program = makeProgram([
+      createNode('while_loop', {}, {
+        condition: [createNode('builtin_constant', { value: 'true' })],
+        body: [createNode('print', {}, {
+          values: [createNode('string_literal', { value: 'x' })],
+        })],
+      }),
+    ])
+
+    // Start execution but abort after a short delay
+    const execPromise = interp.execute(program)
+    // Allow a few iterations
+    await new Promise(r => setTimeout(r, 10))
+    interp.abort()
+
+    await expect(execPromise).rejects.toThrow('RUNTIME_ERR_ABORTED')
+    expect(interp.getState().status).toBe('error')
+  })
+
+  it('should abort while waiting for input', async () => {
+    const interp = new SemanticInterpreter()
+    // Input provider that never resolves (simulates waiting)
+    interp.setInputProvider(() => new Promise(() => { /* never resolves */ }))
+    const program = makeProgram([
+      createNode('var_declare', { name: 'x', type: 'int' }),
+      createNode('input', {}, {
+        values: [createNode('var_ref', { name: 'x' })],
+      }),
+    ])
+
+    const execPromise = interp.execute(program)
+    await new Promise(r => setTimeout(r, 10))
+    interp.abort()
+
+    await expect(execPromise).rejects.toThrow('RUNTIME_ERR_ABORTED')
+  })
+
+  it('should treat \\x04 (Ctrl+D) as EOF in cin input loop', async () => {
+    const interp = new SemanticInterpreter()
+    const inputs = ['10', '20', '\x04']
+    let idx = 0
+    interp.setInputProvider(() => Promise.resolve(inputs[idx++]))
+    const program = makeProgram([
+      createNode('var_declare', { name: 'x', type: 'int' }),
+      createNode('var_declare', { name: 'sum', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' })],
+      }),
+      // while (cin >> x) { sum = sum + x; }
+      createNode('while_loop', {}, {
+        condition: [createNode('input', {}, {
+          values: [createNode('var_ref', { name: 'x' })],
+        })],
+        body: [createNode('var_assign', { name: 'sum' }, {
+          value: [createNode('arithmetic', { operator: '+' }, {
+            left: [createNode('var_ref', { name: 'sum' })],
+            right: [createNode('var_ref', { name: 'x' })],
+          })],
+        })],
+      }),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 'sum' })],
+      }),
+    ])
+    await interp.execute(program)
+    expect(interp.getOutput().join('')).toBe('30')
+  })
+
+  it('should treat \\x04 as EOF in scanf', async () => {
+    const interp = new SemanticInterpreter()
+    const inputs = ['5', '\x04']
+    let idx = 0
+    interp.setInputProvider(() => Promise.resolve(inputs[idx++]))
+    const program = makeProgram([
+      createNode('var_declare', { name: 'n', type: 'int' }),
+      // while (scanf("%d", &n) != EOF) { print n; }
+      createNode('while_loop', {}, {
+        condition: [createNode('compare', { operator: '!=' }, {
+          left: [createNode('cpp_scanf_expr', { format: '%d' }, {
+            args: [createNode('var_ref', { name: 'n' })],
+          })],
+          right: [createNode('builtin_constant', { value: 'EOF' })],
+        })],
+        body: [createNode('print', {}, {
+          values: [createNode('var_ref', { name: 'n' })],
+        })],
+      }),
+    ])
+    await interp.execute(program)
+    expect(interp.getOutput().join('')).toBe('5')
   })
 })

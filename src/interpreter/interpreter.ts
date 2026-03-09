@@ -32,9 +32,35 @@ export class SemanticInterpreter {
   private outputCallback: ((text: string) => void) | null = null
   private pointerTargets = new Map<string, import('./scope').Scope>()
   private scanfTokenBuffer: string[] = []  // buffered tokens for scanf whitespace splitting
+  private aborted = false
+  private abortReject: ((reason: RuntimeError) => void) | null = null
 
   constructor(options: InterpreterOptions = {}) {
     this.maxSteps = options.maxSteps ?? 100000
+  }
+
+  /** Abort execution from outside (e.g., Ctrl+C) */
+  abort(): void {
+    this.aborted = true
+    this.status = 'error'
+    if (this.abortReject) {
+      this.abortReject(new RuntimeError(RUNTIME_ERRORS.ABORTED))
+      this.abortReject = null
+    }
+  }
+
+  /** Await input provider with abort support. Returns null on EOF (\x04). */
+  private awaitInput(): Promise<string | null> {
+    if (this.aborted) return Promise.reject(new RuntimeError(RUNTIME_ERRORS.ABORTED))
+    return new Promise<string | null>((resolve, reject) => {
+      this.abortReject = reject
+      this.inputProvider!().then(val => {
+        this.abortReject = null
+        // Ctrl+D sends \x04 — treat as EOF
+        if (val === '\x04') resolve(null)
+        else resolve(val)
+      }, reject)
+    })
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
@@ -54,6 +80,8 @@ export class SemanticInterpreter {
     this.functions = new Map()
     this.steps = 0
     this.status = 'running'
+    this.aborted = false
+    this.abortReject = null
 
     this.scanfTokenBuffer = []
 
@@ -113,7 +141,7 @@ export class SemanticInterpreter {
   // --- 核心分派 ---
 
   private async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
-    this.countStep()
+    await this.countStep()
     const concept = node.concept
 
     // 語言特有概念：靜默略過
@@ -126,6 +154,7 @@ export class SemanticInterpreter {
       case 'var_declare': return this.execVarDeclare(node)
       case 'var_assign': return this.execVarAssign(node)
       case 'var_ref': return this.execVarRef(node)
+      case 'builtin_constant': return this.execBuiltinConstant(node)
       case 'arithmetic': return this.execArithmetic(node)
       case 'compare': return this.execCompare(node)
       case 'logic': return this.execLogic(node)
@@ -170,10 +199,17 @@ export class SemanticInterpreter {
     }
   }
 
-  private countStep(): void {
+  private async countStep(): Promise<void> {
+    if (this.aborted) {
+      throw new RuntimeError(RUNTIME_ERRORS.ABORTED)
+    }
     this.steps++
     if (this.steps > this.maxSteps) {
       throw new RuntimeError(RUNTIME_ERRORS.MAX_STEPS_EXCEEDED)
+    }
+    // Yield to event loop periodically to allow abort signals (Ctrl+C)
+    if (this.steps % 10000 === 0) {
+      await new Promise<void>(r => setTimeout(r, 0))
     }
   }
 
@@ -271,6 +307,21 @@ export class SemanticInterpreter {
   private execVarRef(node: SemanticNode): RuntimeValue {
     const name = String(node.properties.name)
     return this.scope.get(name)
+  }
+
+  private execBuiltinConstant(node: SemanticNode): RuntimeValue {
+    const value = String(node.properties.value)
+    switch (value) {
+      case 'true': return { type: 'int', value: 1 }
+      case 'false': return { type: 'int', value: 0 }
+      case 'EOF': return { type: 'int', value: -1 }
+      case 'NULL': case 'nullptr': return { type: 'int', value: 0 }
+      case 'INT_MAX': return { type: 'int', value: 2147483647 }
+      case 'INT_MIN': return { type: 'int', value: -2147483648 }
+      case 'LLONG_MAX': return { type: 'int', value: Number.MAX_SAFE_INTEGER }
+      case 'LLONG_MIN': return { type: 'int', value: Number.MIN_SAFE_INTEGER }
+      default: return { type: 'int', value: 0 }
+    }
   }
 
   // --- 運算概念 (T017) ---
@@ -833,9 +884,10 @@ export class SemanticInterpreter {
           // Determine element type from existing array elements
           const elemType = arr.value.length > 0 ? arr.value[0].type : 'int'
           let raw = this.io.read()
-          if (raw === null && this.inputProvider) { raw = await this.inputProvider() }
+          if (raw === null && this.inputProvider) { raw = await this.awaitInput() }
           if (raw === null) {
-            return { type: 'int', value: itemsRead === 0 ? -1 : itemsRead }
+            // EOF: cin >> x returns falsy (0) on EOF
+            return { type: 'int', value: 0 }
           }
           lastVal = parseInputValue(raw, elemType) ?? defaultValue(elemType)
           itemsRead++
@@ -854,11 +906,11 @@ export class SemanticInterpreter {
 
         let raw = this.io.read()
         if (raw === null && this.inputProvider) {
-          raw = await this.inputProvider()
+          raw = await this.awaitInput()
         }
         if (raw === null) {
-          // EOF: return -1 (like scanf)
-          return { type: 'int', value: itemsRead === 0 ? -1 : itemsRead }
+          // EOF: cin >> x returns falsy (0) on EOF
+          return { type: 'int', value: 0 }
         }
         lastVal = parseInputValue(raw, targetType) ?? defaultValue(targetType)
         itemsRead++
@@ -880,10 +932,10 @@ export class SemanticInterpreter {
 
     let raw = this.io.read()
     if (raw === null && this.inputProvider) {
-      raw = await this.inputProvider()
+      raw = await this.awaitInput()
     }
     if (raw === null) {
-      return { type: 'int', value: -1 }  // EOF
+      return { type: 'int', value: 0 }  // EOF: falsy
     }
     const val = parseInputValue(raw, targetType) ?? defaultValue(targetType)
 
@@ -931,7 +983,7 @@ export class SemanticInterpreter {
       // Read next token (scanf splits by whitespace)
       let raw = this.readScanfToken()
       if (raw === null && this.inputProvider) {
-        const line = await this.inputProvider()
+        const line = await this.awaitInput()
         if (line !== null) {
           const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
           this.scanfTokenBuffer.push(...tokens)

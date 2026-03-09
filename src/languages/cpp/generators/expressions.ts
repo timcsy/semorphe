@@ -14,6 +14,10 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `"${node.properties.value ?? ''}"`
   })
 
+  g.set('builtin_constant', (node, _ctx) => {
+    return String(node.properties.value ?? 'NULL')
+  })
+
   g.set('arithmetic', (node, ctx) => {
     const left = generateExpression((node.children.left ?? [])[0], ctx)
     const right = generateExpression((node.children.right ?? [])[0], ctx)

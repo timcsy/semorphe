@@ -1,3 +1,5 @@
+export type ConsoleSignal = 'SIGINT' | 'EOF'
+
 export class ConsolePanel {
   private container: HTMLElement
   private outputEl: HTMLElement
@@ -10,6 +12,7 @@ export class ConsolePanel {
   /** Inline input element (terminal-style cursor in the output area) */
   private inlineInput: HTMLInputElement | null = null
   private inlineInputLine: HTMLElement | null = null
+  private signalHandler: ((signal: ConsoleSignal) => void) | null = null
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -27,6 +30,34 @@ export class ConsolePanel {
     this.outputEl.addEventListener('click', () => {
       this.inlineInput?.focus()
     })
+
+    // Make output area focusable for keyboard events
+    this.outputEl.tabIndex = -1
+    this.outputEl.addEventListener('keydown', (e) => this.handleCtrlKey(e))
+  }
+
+  /** Register a handler for terminal signals (Ctrl+C → SIGINT, Ctrl+D → EOF) */
+  onSignal(handler: ((signal: ConsoleSignal) => void) | null): void {
+    this.signalHandler = handler
+  }
+
+  private handleCtrlKey(e: KeyboardEvent): void {
+    if (!e.ctrlKey) return
+    if (e.key === 'c') {
+      e.preventDefault()
+      // Remove inline input immediately so user sees the program stopped
+      this.removeInlineInput()
+      this.inputResolve = null
+      this.write('^C\n')
+      this.signalHandler?.('SIGINT')
+    } else if (e.key === 'd') {
+      e.preventDefault()
+      if (this.inlineInput && this.inputResolve) {
+        // EOF: submit special value
+        this.submitInlineInput('\x04')
+      }
+      this.signalHandler?.('EOF')
+    }
   }
 
   /**
@@ -119,6 +150,11 @@ export class ConsolePanel {
       input.autocomplete = 'off'
 
       input.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'd')) {
+          e.stopPropagation()
+          this.handleCtrlKey(e)
+          return
+        }
         if (e.key === 'Enter') {
           const val = input.value
           this.submitInlineInput(val)

@@ -95,6 +95,44 @@
     }
   },
   {
+    "id": "c_builtin_constant",
+    "language": "cpp",
+    "category": "data",
+    "level": 0,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "builtin_constant",
+      "abstractConcept": "builtin_constant",
+      "properties": ["value"],
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_builtin_constant",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VALUE",
+          "options": [
+            ["true", "true"],
+            ["false", "false"],
+            ["EOF", "EOF"],
+            ["NULL", "NULL"],
+            ["nullptr", "nullptr"]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": "#8B5CF6",
+      "tooltip": "C/C++ 內建常量"
+    },
+    "renderMapping": {
+      "fields": { "VALUE": "value" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
     "id": "c_include",
     "language": "cpp",
     "category": "preprocessor",

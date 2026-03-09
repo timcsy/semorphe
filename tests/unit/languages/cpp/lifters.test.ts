@@ -155,12 +155,37 @@ describe('C++ Expression Lifters', () => {
     expect(result!.properties.value).toBe('a')
   })
 
-  it('should lift true/false to var_ref', () => {
+  it('should lift true/false to builtin_constant', () => {
     const trueNode = mockNode('true', 'true')
     const falseNode = mockNode('false', 'false')
-    expect(lifter.lift(trueNode)!.concept).toBe('var_ref')
-    expect(lifter.lift(trueNode)!.properties.name).toBe('true')
-    expect(lifter.lift(falseNode)!.properties.name).toBe('false')
+    expect(lifter.lift(trueNode)!.concept).toBe('builtin_constant')
+    expect(lifter.lift(trueNode)!.properties.value).toBe('true')
+    expect(lifter.lift(falseNode)!.concept).toBe('builtin_constant')
+    expect(lifter.lift(falseNode)!.properties.value).toBe('false')
+  })
+
+  it('should lift null_literal to builtin_constant', () => {
+    const node = mockNode('null', 'NULL')
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('builtin_constant')
+    expect(result!.properties.value).toBe('NULL')
+  })
+
+  it('should lift EOF identifier to builtin_constant', () => {
+    const node = mockNode('identifier', 'EOF')
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('builtin_constant')
+    expect(result!.properties.value).toBe('EOF')
+  })
+
+  it('should lift nullptr to builtin_constant', () => {
+    const node = mockNode('nullptr', 'nullptr')
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('builtin_constant')
+    expect(result!.properties.value).toBe('nullptr')
   })
 
   it('should lift unary ! to logic_not', () => {

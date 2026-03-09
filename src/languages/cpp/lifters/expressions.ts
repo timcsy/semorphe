@@ -12,12 +12,21 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return createNode('number_literal', { value: node.text })
   })
 
+  // Built-in constants: identifiers that are language keywords/constants
+  const BUILTIN_CONSTANTS = new Set(['EOF', 'NULL', 'nullptr', 'true', 'false', 'INT_MAX', 'INT_MIN', 'LLONG_MAX', 'LLONG_MIN', 'SIZE_MAX'])
+
   lifter.register('identifier', (node) => {
-    return createNode('var_ref', { name: node.text })
+    const name = node.text
+    if (BUILTIN_CONSTANTS.has(name)) {
+      return createNode('builtin_constant', { value: name })
+    }
+    return createNode('var_ref', { name })
   })
 
-  lifter.register('true', () => createNode('var_ref', { name: 'true' }))
-  lifter.register('false', () => createNode('var_ref', { name: 'false' }))
+  lifter.register('true', () => createNode('builtin_constant', { value: 'true' }))
+  lifter.register('false', () => createNode('builtin_constant', { value: 'false' }))
+  lifter.register('null', () => createNode('builtin_constant', { value: 'NULL' }))
+  lifter.register('nullptr', () => createNode('builtin_constant', { value: 'nullptr' }))
 
   lifter.register('binary_expression', (node, ctx) => {
     const leftNode = node.childForFieldName('left')
