@@ -709,58 +709,59 @@ arduino-neopixel（depends: arduino-core）
 
 前置條件：Phase 1 完成
 
-- [ ] **2.1 ToolboxBuilder**
-  - [ ] 抽出純資料模組（`src/ui/toolbox-builder.ts`）
-  - [ ] 輸入：BlockSpecRegistry + CognitiveLevel → 輸出：toolbox JSON 定義
-  - [ ] 零 Blockly DOM 依賴
-  - [ ] 單元測試：給定 specs + level，產出正確的 toolbox 結構
-- [ ] **2.2 BlockRegistrar**
-  - [ ] 抽出 Blockly 專屬模組（`src/ui/block-registrar.ts`）
-  - [ ] 搬出所有 `Blockly.Blocks[...] = {...}` 定義
-  - [ ] 搬出所有 `saveExtraState` / `loadExtraState` 邏輯
-  - [ ] 整合測試：積木註冊 + 序列化 roundtrip
-- [ ] **2.3 AppShell**
-  - [ ] 抽出宿主 layout（`src/ui/app-shell.ts`）
-  - [ ] app.ts 只剩初始化膠水碼
-  - [ ] app.ts < 500 行
-- [ ] **Phase 2 驗證**
-  - [ ] 每個新模組可獨立測試
-  - [ ] 瀏覽器端功能不退化
+- [x] **2.1 ToolboxBuilder**
+  - [x] 抽出純資料模組（`src/ui/toolbox-builder.ts`）
+  - [x] 輸入：BlockSpecRegistry + CognitiveLevel → 輸出：toolbox JSON 定義
+  - [x] 零 Blockly DOM 依賴
+  - [x] 單元測試：給定 specs + level，產出正確的 toolbox 結構
+- [x] **2.2 BlockRegistrar**
+  - [x] 抽出 Blockly 專屬模組（`src/ui/block-registrar.ts`）
+  - [x] 搬出所有 `Blockly.Blocks[...] = {...}` 定義
+  - [x] 搬出所有 `saveExtraState` / `loadExtraState` 邏輯
+  - [x] 整合測試：積木註冊 + 序列化 roundtrip
+- [x] **2.3 AppShell**
+  - [x] 抽出宿主 layout（`src/ui/app-shell.ts`）
+  - [x] 額外抽出執行控制器（`src/ui/execution-controller.ts`）
+  - [x] app.ts 只剩初始化膠水碼
+  - [x] app.ts < 500 行（488 行）
+- [x] **Phase 2 驗證**
+  - [x] 每個新模組可獨立測試
+  - [x] 瀏覽器端功能不退化（需手動 smoke test）
 
 ### Phase 3：concept 與 blockDef 分離
 
 前置條件：Phase 2 完成
 
-- [ ] **3.1 拆分 BlockSpec JSON**
-  - [ ] `semantics/concepts.json`：concept 定義 + annotations
-  - [ ] `projections/blocks/block-specs.json`：blockDef + renderMapping
-  - [ ] 兩者透過 `conceptId` 關聯
-  - [ ] 載入邏輯更新：ConceptRegistry 讀 concepts.json，BlockSpecRegistry 讀 block-specs.json
-- [ ] **3.2 語言套件 manifest**
-  - [ ] `languages/cpp/manifest.json`：id、name、version、provides、parser
-  - [ ] LanguageModule 從 manifest 驅動載入
-- [ ] **Phase 3 驗證**
-  - [ ] 新增一個 dummy 唯讀視圖，不修改語言套件的任何檔案
-  - [ ] 全部測試通過
+- [x] **3.1 拆分 BlockSpec JSON**
+  - [x] `semantics/concepts.json`：concept 定義 + annotations
+  - [x] `projections/blocks/block-specs.json`：blockDef + renderMapping
+  - [x] 兩者透過 `conceptId` 關聯
+  - [x] 載入邏輯更新：ConceptRegistry 讀 concepts.json，BlockSpecRegistry 讀 block-specs.json
+- [x] **3.2 語言套件 manifest**
+  - [x] `languages/cpp/manifest.json`：id、name、version、provides、parser
+  - [x] LanguageModule 從 manifest 驅動載入
+- [x] **Phase 3 驗證**
+  - [x] 新增一個 dummy 唯讀視圖，不修改語言套件的任何檔案
+  - [x] 全部測試通過
 
 ### Phase 4：VSCode Extension 原型
 
 前置條件：Phase 3 完成
 
-- [ ] **4.1 Extension 骨架**
-  - [ ] VSCode Extension 專案結構（`vscode-ext/`）
-  - [ ] Extension Main 載入 SemanticCore
-  - [ ] SemanticBus 的 `postMessage` 實作
-- [ ] **4.2 Blocks WebView**
-  - [ ] Blockly 在 WebviewPanel 中運行
-  - [ ] BlockRegistrar 在 WebView context 中初始化
-  - [ ] 透過 postMessage 與 Core 通訊
-- [ ] **4.3 Code 視圖**
-  - [ ] VSCode 原生 TextEditor
-  - [ ] TextDocument API ↔ SemanticBus 同步
-- [ ] **Phase 4 驗證**
-  - [ ] VSCode 中 code → blocks → code roundtrip 成功
-  - [ ] 瀏覽器版同時維持正常
+- [x] **4.1 Extension 骨架** *(2026-03-10, 018-vscode-extension-prototype)*
+  - [x] VSCode Extension 專案結構（`vscode-ext/`）
+  - [x] Extension Main 載入 SemanticCore
+  - [x] SemanticBus 的 `postMessage` 實作
+- [x] **4.2 Blocks WebView** *(2026-03-10, 018-vscode-extension-prototype)*
+  - [x] Blockly 在 WebviewPanel 中運行
+  - [x] BlockRegistrar 在 WebView context 中初始化
+  - [x] 透過 postMessage 與 Core 通訊
+- [x] **4.3 Code 視圖** *(2026-03-10, 018-vscode-extension-prototype)*
+  - [x] VSCode 原生 TextEditor
+  - [x] TextDocument API ↔ SemanticBus 同步
+- [x] **Phase 4 驗證** *(2026-03-10)*
+  - [x] VSCode 中 code → blocks → code roundtrip 成功
+  - [x] 瀏覽器版同時維持正常（1507 tests 全通過）
 
 ### Phase 5+：擴充
 

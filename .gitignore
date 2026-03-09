@@ -5,3 +5,6 @@ dist/
 Thumbs.db
 *.tmp
 *.swp
+*.vsix
+vscode-ext/dist/
+vscode-ext/node_modules/

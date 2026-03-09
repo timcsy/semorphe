@@ -1,20 +1,24 @@
 [
   {
     "id": "cpp_vector_push_back",
+    "conceptId": "cpp:vector_push_back",
     "language": "cpp",
     "category": "stdlib",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp:vector_push_back",
-      "abstractConcept": "container_add"
-    },
     "blockDef": {
       "type": "cpp_vector_push_back",
       "message0": "%1 .push_back( %2 )",
       "args0": [
-        { "type": "field_input", "name": "NAME", "text": "vec" },
-        { "type": "input_value", "name": "VALUE" }
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "vec"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE"
+        }
       ],
       "inputsInline": true,
       "previousStatement": "Statement",
@@ -24,31 +28,37 @@
     },
     "codeTemplate": {
       "pattern": "${NAME}.push_back(${VALUE});",
-      "imports": ["vector"],
+      "imports": [
+        "vector"
+      ],
       "order": 0
     },
     "astPattern": {
       "nodeType": "call_expression",
       "constraints": [
-        { "field": "function", "nodeType": "field_expression" }
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
       ]
     }
   },
   {
     "id": "cpp_vector_size",
+    "conceptId": "cpp:vector_size",
     "language": "cpp",
     "category": "stdlib",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp:vector_size",
-      "abstractConcept": "container_size"
-    },
     "blockDef": {
       "type": "cpp_vector_size",
       "message0": "%1 .size()",
       "args0": [
-        { "type": "field_input", "name": "NAME", "text": "vec" }
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "vec"
+        }
       ],
       "inputsInline": true,
       "output": "Expression",
@@ -57,13 +67,18 @@
     },
     "codeTemplate": {
       "pattern": "${NAME}.size()",
-      "imports": ["vector"],
+      "imports": [
+        "vector"
+      ],
       "order": 20
     },
     "astPattern": {
       "nodeType": "call_expression",
       "constraints": [
-        { "field": "function", "nodeType": "field_expression" }
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
       ]
     }
   }

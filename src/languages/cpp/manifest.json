@@ -1,0 +1,27 @@
+{
+  "id": "cpp",
+  "name": "C++",
+  "version": "1.0.0",
+  "parser": {
+    "type": "tree-sitter",
+    "language": "cpp"
+  },
+  "provides": {
+    "concepts": [
+      "./semantics/concepts.json"
+    ],
+    "blocks": [
+      "./projections/blocks/basic.json",
+      "./projections/blocks/advanced.json",
+      "./projections/blocks/special.json",
+      "./projections/blocks/stdlib-containers.json",
+      "./projections/blocks/stdlib-algorithms.json"
+    ],
+    "templates": [
+      "./templates/universal-templates.json"
+    ],
+    "liftPatterns": [
+      "./lift-patterns.json"
+    ]
+  }
+}

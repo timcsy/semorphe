@@ -1,17 +1,11 @@
 [
   {
     "id": "c_pointer_declare",
+    "conceptId": "cpp_pointer_declare",
     "language": "cpp",
     "category": "pointers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_pointer_declare",
-      "abstractConcept": "pointer_declare",
-      "properties": ["type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_pointer_declare",
       "message0": "%{BKY_C_POINTER_DECLARE_MSG0}",
@@ -67,26 +61,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "c_pointer_deref",
+    "conceptId": "cpp_pointer_deref",
     "language": "cpp",
     "category": "pointers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_pointer_deref",
-      "abstractConcept": "pointer_deref",
-      "properties": [],
-      "children": {
-        "ptr": "expression"
-      },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_pointer_deref",
       "message0": "%{BKY_C_POINTER_DEREF_MSG0}",
@@ -116,25 +110,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "ptr", "ast": "argument", "extract": "lift" }
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_address_of",
+    "conceptId": "cpp_address_of",
     "language": "cpp",
     "category": "pointers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_address_of",
-      "abstractConcept": "address_of",
-      "properties": [],
-      "children": {
-        "var": "expression"
-      },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_address_of",
       "message0": "%{BKY_C_ADDRESS_OF_MSG0}",
@@ -164,25 +154,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "var", "ast": "argument", "extract": "lift" }
+        {
+          "semantic": "var",
+          "ast": "argument",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_malloc",
+    "conceptId": "cpp_malloc",
     "language": "cpp",
     "category": "pointers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_malloc",
-      "abstractConcept": "malloc",
-      "properties": ["type", "sizeof_type"],
-      "children": {
-        "size": "expression"
-      },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_malloc",
       "message0": "%{BKY_C_MALLOC_MSG0}",
@@ -253,27 +239,31 @@
       "nodeType": "cast_expression",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "sizeof_type", "ast": "$text", "extract": "text" },
-        { "semantic": "size", "ast": "value", "extract": "lift" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "sizeof_type",
+          "ast": "$text",
+          "extract": "text"
+        },
+        {
+          "semantic": "size",
+          "ast": "value",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_free",
+    "conceptId": "cpp_free",
     "language": "cpp",
     "category": "pointers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_free",
-      "abstractConcept": "free",
-      "properties": [],
-      "children": {
-        "ptr": "expression"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_free",
       "message0": "%{BKY_C_FREE_MSG0}",
@@ -305,25 +295,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "ptr", "ast": "arguments", "extract": "lift" }
+        {
+          "semantic": "ptr",
+          "ast": "arguments",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_struct_declare",
+    "conceptId": "cpp_struct_declare",
     "language": "cpp",
     "category": "structures",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_struct_declare",
-      "abstractConcept": "struct_declare",
-      "properties": ["name"],
-      "children": {
-        "members": "statements"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_struct_declare",
       "message0": "%{BKY_C_STRUCT_DECLARE_MSG0}",
@@ -354,24 +340,26 @@
       "nodeType": "struct_specifier",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "name", "ast": "name", "extract": "text" },
-        { "semantic": "members", "ast": "body", "extract": "liftBody" }
+        {
+          "semantic": "name",
+          "ast": "name",
+          "extract": "text"
+        },
+        {
+          "semantic": "members",
+          "ast": "body",
+          "extract": "liftBody"
+        }
       ]
     }
   },
   {
     "id": "c_struct_member_access",
+    "conceptId": "cpp_struct_member_access",
     "language": "cpp",
     "category": "structures",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_struct_member_access",
-      "abstractConcept": "struct_member_access",
-      "properties": ["obj", "member"],
-      "children": {},
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_struct_member_access",
       "message0": "%{BKY_C_STRUCT_MEMBER_ACCESS_MSG0}",
@@ -406,24 +394,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "obj", "ast": "argument", "extract": "text" },
-        { "semantic": "member", "ast": "field", "extract": "text" }
+        {
+          "semantic": "obj",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "member",
+          "ast": "field",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "c_struct_pointer_access",
+    "conceptId": "cpp_struct_pointer_access",
     "language": "cpp",
     "category": "structures",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_struct_pointer_access",
-      "abstractConcept": "struct_pointer_access",
-      "properties": ["ptr", "member"],
-      "children": {},
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_struct_pointer_access",
       "message0": "%{BKY_C_STRUCT_POINTER_ACCESS_MSG0}",
@@ -458,26 +448,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "ptr", "ast": "argument", "extract": "text" },
-        { "semantic": "member", "ast": "field", "extract": "text" }
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "member",
+          "ast": "field",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "c_strlen",
+    "conceptId": "cpp_strlen",
     "language": "cpp",
     "category": "strings",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_strlen",
-      "abstractConcept": "strlen",
-      "properties": [],
-      "children": {
-        "str": "expression"
-      },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_strlen",
       "message0": "%{BKY_C_STRLEN_MSG0}",
@@ -509,26 +499,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "str", "ast": "arguments", "extract": "lift" }
+        {
+          "semantic": "str",
+          "ast": "arguments",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_strcmp",
+    "conceptId": "cpp_strcmp",
     "language": "cpp",
     "category": "strings",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_strcmp",
-      "abstractConcept": "strcmp",
-      "properties": [],
-      "children": {
-        "s1": "expression",
-        "s2": "expression"
-      },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_strcmp",
       "message0": "%{BKY_C_STRCMP_MSG0}",
@@ -565,27 +550,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "s1", "ast": "arguments[0]", "extract": "lift" },
-        { "semantic": "s2", "ast": "arguments[1]", "extract": "lift" }
+        {
+          "semantic": "s1",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "s2",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "c_strcpy",
+    "conceptId": "cpp_strcpy",
     "language": "cpp",
     "category": "strings",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_strcpy",
-      "abstractConcept": "strcpy",
-      "properties": [],
-      "children": {
-        "dest": "expression",
-        "src": "expression"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_strcpy",
       "message0": "%{BKY_C_STRCPY_MSG0}",
@@ -623,24 +607,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "dest", "ast": "arguments[0]", "extract": "lift" },
-        { "semantic": "src", "ast": "arguments[1]", "extract": "lift" }
+        {
+          "semantic": "dest",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "src",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "cpp_vector_declare",
+    "conceptId": "cpp_vector_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_vector_declare",
-      "abstractConcept": "vector_declare",
-      "properties": ["type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_vector_declare",
       "message0": "%{BKY_CPP_VECTOR_DECLARE_MSG0}",
@@ -702,26 +688,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_vector_push_back",
+    "conceptId": "cpp_vector_push_back",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_vector_push_back",
-      "abstractConcept": "vector_push_back",
-      "properties": ["vector"],
-      "children": {
-        "value": "expression"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_vector_push_back",
       "message0": "%{BKY_CPP_VECTOR_PUSH_BACK_MSG0}",
@@ -758,24 +744,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "vector", "ast": "function.argument", "extract": "text" },
-        { "semantic": "value", "ast": "arguments", "extract": "lift" }
+        {
+          "semantic": "vector",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "arguments",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "cpp_vector_size",
+    "conceptId": "cpp_vector_size",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_vector_size",
-      "abstractConcept": "vector_size",
-      "properties": ["vector"],
-      "children": {},
-      "role": "expression"
-    },
     "blockDef": {
       "type": "cpp_vector_size",
       "message0": "%{BKY_CPP_VECTOR_SIZE_MSG0}",
@@ -807,23 +795,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "vector", "ast": "function.argument", "extract": "text" }
+        {
+          "semantic": "vector",
+          "ast": "function.argument",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_map_declare",
+    "conceptId": "cpp_map_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_map_declare",
-      "abstractConcept": "map_declare",
-      "properties": ["key_type", "value_type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_map_declare",
       "message0": "%{BKY_CPP_MAP_DECLARE_MSG0}",
@@ -895,25 +881,31 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "key_type", "ast": "type.arguments[0]", "extract": "text" },
-        { "semantic": "value_type", "ast": "type.arguments[1]", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "key_type",
+          "ast": "type.arguments[0]",
+          "extract": "text"
+        },
+        {
+          "semantic": "value_type",
+          "ast": "type.arguments[1]",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_string_declare",
+    "conceptId": "cpp_string_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_string_declare",
-      "abstractConcept": "string_declare",
-      "properties": ["name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_string_declare",
       "message0": "%{BKY_CPP_STRING_DECLARE_MSG0}",
@@ -945,26 +937,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_sort",
+    "conceptId": "cpp_sort",
     "language": "cpp",
     "category": "algorithms",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_sort",
-      "abstractConcept": "sort",
-      "properties": [],
-      "children": {
-        "begin": "expression",
-        "end": "expression"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_sort",
       "message0": "%{BKY_CPP_SORT_MSG0}",
@@ -1001,27 +988,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "begin", "ast": "arguments[0]", "extract": "lift" },
-        { "semantic": "end", "ast": "arguments[1]", "extract": "lift" }
+        {
+          "semantic": "begin",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "end",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "cpp_class_def",
+    "conceptId": "cpp_class_def",
     "language": "cpp",
     "category": "oop",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_class_def",
-      "abstractConcept": "class_def",
-      "properties": ["name"],
-      "children": {
-        "public": "statements",
-        "private": "statements"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_class_def",
       "message0": "%{BKY_CPP_CLASS_DEF_MSG0}",
@@ -1060,25 +1046,31 @@
       "nodeType": "class_specifier",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "name", "ast": "name", "extract": "text" },
-        { "semantic": "public", "ast": "body.public", "extract": "liftBody" },
-        { "semantic": "private", "ast": "body.private", "extract": "liftBody" }
+        {
+          "semantic": "name",
+          "ast": "name",
+          "extract": "text"
+        },
+        {
+          "semantic": "public",
+          "ast": "body.public",
+          "extract": "liftBody"
+        },
+        {
+          "semantic": "private",
+          "ast": "body.private",
+          "extract": "liftBody"
+        }
       ]
     }
   },
   {
     "id": "cpp_new",
+    "conceptId": "cpp_new",
     "language": "cpp",
     "category": "oop",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_new",
-      "abstractConcept": "new",
-      "properties": ["type", "args"],
-      "children": {},
-      "role": "expression"
-    },
     "blockDef": {
       "type": "cpp_new",
       "message0": "%{BKY_CPP_NEW_MSG0}",
@@ -1108,26 +1100,26 @@
       "nodeType": "new_expression",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "args", "ast": "arguments", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_delete",
+    "conceptId": "cpp_delete",
     "language": "cpp",
     "category": "oop",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_delete",
-      "abstractConcept": "delete",
-      "properties": [],
-      "children": {
-        "ptr": "expression"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_delete",
       "message0": "%{BKY_CPP_DELETE_MSG0}",
@@ -1152,25 +1144,21 @@
       "nodeType": "delete_expression",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "ptr", "ast": "argument", "extract": "lift" }
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "lift"
+        }
       ]
     }
   },
   {
     "id": "cpp_template_function",
+    "conceptId": "cpp_template_function",
     "language": "cpp",
     "category": "templates",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_template_function",
-      "abstractConcept": "template_function",
-      "properties": ["t", "return_type", "func_name", "param_type", "param_name"],
-      "children": {
-        "body": "statements"
-      },
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_template_function",
       "message0": "%{BKY_CPP_TEMPLATE_FUNCTION_MSG0}",
@@ -1224,28 +1212,46 @@
       "nodeType": "template_declaration",
       "constraints": [],
       "fieldMappings": [
-        { "semantic": "t", "ast": "parameters", "extract": "text" },
-        { "semantic": "return_type", "ast": "declarator.type", "extract": "text" },
-        { "semantic": "func_name", "ast": "declarator.declarator", "extract": "text" },
-        { "semantic": "param_type", "ast": "declarator.parameters[0].type", "extract": "text" },
-        { "semantic": "param_name", "ast": "declarator.parameters[0].declarator", "extract": "text" },
-        { "semantic": "body", "ast": "declarator.body", "extract": "liftBody" }
+        {
+          "semantic": "t",
+          "ast": "parameters",
+          "extract": "text"
+        },
+        {
+          "semantic": "return_type",
+          "ast": "declarator.type",
+          "extract": "text"
+        },
+        {
+          "semantic": "func_name",
+          "ast": "declarator.declarator",
+          "extract": "text"
+        },
+        {
+          "semantic": "param_type",
+          "ast": "declarator.parameters[0].type",
+          "extract": "text"
+        },
+        {
+          "semantic": "param_name",
+          "ast": "declarator.parameters[0].declarator",
+          "extract": "text"
+        },
+        {
+          "semantic": "body",
+          "ast": "declarator.body",
+          "extract": "liftBody"
+        }
       ]
     }
   },
   {
     "id": "cpp_stack_declare",
+    "conceptId": "cpp_stack_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_stack_declare",
-      "abstractConcept": "stack_declare",
-      "properties": ["type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_stack_declare",
       "message0": "%{BKY_CPP_STACK_DECLARE_MSG0}",
@@ -1299,24 +1305,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_queue_declare",
+    "conceptId": "cpp_queue_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_queue_declare",
-      "abstractConcept": "queue_declare",
-      "properties": ["type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_queue_declare",
       "message0": "%{BKY_CPP_QUEUE_DECLARE_MSG0}",
@@ -1370,24 +1378,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_set_declare",
+    "conceptId": "cpp_set_declare",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_set_declare",
-      "abstractConcept": "set_declare",
-      "properties": ["type", "name"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_set_declare",
       "message0": "%{BKY_CPP_SET_DECLARE_MSG0}",
@@ -1441,24 +1451,26 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "type", "ast": "type", "extract": "text" },
-        { "semantic": "name", "ast": "declarator", "extract": "text" }
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_method_call",
+    "conceptId": "cpp_method_call",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_method_call",
-      "abstractConcept": "method_call",
-      "properties": ["obj", "method", "args"],
-      "children": {},
-      "role": "statement"
-    },
     "blockDef": {
       "type": "cpp_method_call",
       "message0": "%{BKY_CPP_METHOD_CALL_MSG0}",
@@ -1498,25 +1510,31 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "obj", "ast": "function.argument", "extract": "text" },
-        { "semantic": "method", "ast": "function.field", "extract": "text" },
-        { "semantic": "args", "ast": "arguments", "extract": "text" }
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
       ]
     }
   },
   {
     "id": "cpp_method_call_expr",
+    "conceptId": "cpp_method_call_expr",
     "language": "cpp",
     "category": "containers",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_method_call_expr",
-      "abstractConcept": "method_call_expr",
-      "properties": ["obj", "method", "args"],
-      "children": {},
-      "role": "expression"
-    },
     "blockDef": {
       "type": "cpp_method_call_expr",
       "message0": "%{BKY_CPP_METHOD_CALL_EXPR_MSG0}",
@@ -1556,9 +1574,21 @@
         }
       ],
       "fieldMappings": [
-        { "semantic": "obj", "ast": "function.argument", "extract": "text" },
-        { "semantic": "method", "ast": "function.field", "extract": "text" },
-        { "semantic": "args", "ast": "arguments", "extract": "text" }
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
       ]
     }
   }

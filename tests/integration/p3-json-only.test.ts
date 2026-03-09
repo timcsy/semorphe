@@ -14,12 +14,14 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
 import { registerStatementGenerators } from '../../src/languages/cpp/generators/statements'
-import type { BlockSpec, LiftPattern, StylePreset } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
-// Import actual JSON block specs
-import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
+// Import split concept/projection JSON files
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
 
 // Mock AST node helper
 function mockNode(
@@ -59,14 +61,15 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const specs = basicBlocks as unknown as BlockSpec[]
-    registry.loadFromJSON(specs)
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    registry.loadFromSplit(allConcepts, basicBlocks as unknown as BlockProjectionJSON[])
+    const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)
     renderer.loadBlockSpecs(specs)
     extractor.loadBlockSpecs(specs)
 
     for (const spec of specs) {
-      if (spec.codeTemplate && spec.concept?.conceptId) {
+      if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
         generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
       }
     }

@@ -941,19 +941,20 @@ html, body {
   width: 3px !important;
 }
 
-/* ─── Quick access bar ─── */
+/* ─── Block toolbar (above Blockly panel) ─── */
 
 .quick-access-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   padding: 2px 8px;
   background: #2d2d2d;
   border-bottom: 1px solid #3c3c3c;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
-.qa-btn {
+.quick-access-bar button {
   padding: 2px 8px;
   border: none;
   border-radius: 3px;
@@ -961,10 +962,48 @@ html, body {
   color: #bbb;
   cursor: pointer;
   font-size: 11px;
+  line-height: 18px;
 }
 
-.qa-btn:hover {
+.quick-access-bar button:hover {
   background: #505050;
+  color: #fff;
+}
+
+.quick-access-bar button:active {
+  background: #404040;
+}
+
+/* File dropdown menu in block toolbar */
+.file-menu-group {
+  position: relative;
+}
+
+.file-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 2px;
+  background: #2d2d2d;
+  border: 1px solid #555;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  min-width: 140px;
+  z-index: 10000;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.file-menu-option {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #ccc;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.file-menu-option:hover {
+  background: #094771;
   color: #fff;
 }
 

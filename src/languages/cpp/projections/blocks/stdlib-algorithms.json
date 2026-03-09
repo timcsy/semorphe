@@ -1,21 +1,28 @@
 [
   {
     "id": "cpp_sort",
+    "conceptId": "cpp:sort",
     "language": "cpp",
     "category": "stdlib",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp:sort",
-      "abstractConcept": "container_sort"
-    },
     "blockDef": {
       "type": "cpp_sort",
       "message0": "sort %1 from %2 to %3",
       "args0": [
-        { "type": "field_input", "name": "ARRAY", "text": "arr" },
-        { "type": "input_value", "name": "FROM" },
-        { "type": "input_value", "name": "TO" }
+        {
+          "type": "field_input",
+          "name": "ARRAY",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM"
+        },
+        {
+          "type": "input_value",
+          "name": "TO"
+        }
       ],
       "inputsInline": true,
       "previousStatement": "Statement",
@@ -25,34 +32,49 @@
     },
     "codeTemplate": {
       "pattern": "sort(${ARRAY} + ${FROM}, ${ARRAY} + ${TO});",
-      "imports": ["algorithm"],
+      "imports": [
+        "algorithm"
+      ],
       "order": 0
     },
     "astPattern": {
       "nodeType": "call_expression",
       "constraints": [
-        { "field": "function", "text": "sort" }
+        {
+          "field": "function",
+          "text": "sort"
+        }
       ]
     }
   },
   {
     "id": "cpp_find",
+    "conceptId": "cpp:find",
     "language": "cpp",
     "category": "stdlib",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp:find",
-      "abstractConcept": "container_find"
-    },
     "blockDef": {
       "type": "cpp_find",
       "message0": "find %1 in %2 from %3 to %4",
       "args0": [
-        { "type": "input_value", "name": "VALUE" },
-        { "type": "field_input", "name": "ARRAY", "text": "arr" },
-        { "type": "input_value", "name": "FROM" },
-        { "type": "input_value", "name": "TO" }
+        {
+          "type": "input_value",
+          "name": "VALUE"
+        },
+        {
+          "type": "field_input",
+          "name": "ARRAY",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM"
+        },
+        {
+          "type": "input_value",
+          "name": "TO"
+        }
       ],
       "inputsInline": true,
       "output": "Expression",
@@ -61,13 +83,18 @@
     },
     "codeTemplate": {
       "pattern": "find(${ARRAY} + ${FROM}, ${ARRAY} + ${TO}, ${VALUE})",
-      "imports": ["algorithm"],
+      "imports": [
+        "algorithm"
+      ],
       "order": 20
     },
     "astPattern": {
       "nodeType": "call_expression",
       "constraints": [
-        { "field": "function", "text": "find" }
+        {
+          "field": "function",
+          "text": "find"
+        }
       ]
     }
   }

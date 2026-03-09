@@ -1,16 +1,11 @@
 [
   {
     "id": "c_raw_code",
+    "conceptId": "cpp_raw_code",
     "language": "cpp",
     "category": "special",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_raw_code",
-      "abstractConcept": "raw_code",
-      "properties": ["code"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_raw_code",
       "message0": "%{BKY_C_RAW_CODE_MSG0}",
@@ -38,16 +33,11 @@
   },
   {
     "id": "c_raw_expression",
+    "conceptId": "cpp_raw_expression",
     "language": "cpp",
     "category": "special",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_raw_expression",
-      "abstractConcept": "raw_expression",
-      "properties": ["code"],
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_raw_expression",
       "message0": "%{BKY_C_RAW_EXPRESSION_MSG0}",
@@ -74,16 +64,11 @@
   },
   {
     "id": "c_forward_decl",
+    "conceptId": "forward_decl",
     "language": "cpp",
     "category": "functions",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "forward_decl",
-      "abstractConcept": "forward_decl",
-      "properties": ["return_type", "name", "params"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_forward_decl"
     },
@@ -96,16 +81,11 @@
   },
   {
     "id": "c_builtin_constant",
+    "conceptId": "builtin_constant",
     "language": "cpp",
     "category": "data",
     "level": 0,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "builtin_constant",
-      "abstractConcept": "builtin_constant",
-      "properties": ["value"],
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_builtin_constant",
       "message0": "%1",
@@ -114,11 +94,26 @@
           "type": "field_dropdown",
           "name": "VALUE",
           "options": [
-            ["true", "true"],
-            ["false", "false"],
-            ["EOF", "EOF"],
-            ["NULL", "NULL"],
-            ["nullptr", "nullptr"]
+            [
+              "true",
+              "true"
+            ],
+            [
+              "false",
+              "false"
+            ],
+            [
+              "EOF",
+              "EOF"
+            ],
+            [
+              "NULL",
+              "NULL"
+            ],
+            [
+              "nullptr",
+              "nullptr"
+            ]
           ]
         }
       ],
@@ -127,23 +122,20 @@
       "tooltip": "C/C++ 內建常量"
     },
     "renderMapping": {
-      "fields": { "VALUE": "value" },
+      "fields": {
+        "VALUE": "value"
+      },
       "inputs": {},
       "statementInputs": {}
     }
   },
   {
     "id": "c_include",
+    "conceptId": "cpp_include",
     "language": "cpp",
     "category": "preprocessor",
     "level": 0,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_include",
-      "abstractConcept": "include",
-      "properties": ["header"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_include",
       "message0": "%{BKY_C_INCLUDE_MSG0}",
@@ -252,16 +244,11 @@
   },
   {
     "id": "c_include_local",
+    "conceptId": "cpp_include_local",
     "language": "cpp",
     "category": "preprocessor",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_include_local",
-      "abstractConcept": "include_local",
-      "properties": ["header"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_include_local",
       "message0": "%{BKY_C_INCLUDE_LOCAL_MSG0}",
@@ -294,16 +281,11 @@
   },
   {
     "id": "c_define",
+    "conceptId": "cpp_define",
     "language": "cpp",
     "category": "preprocessor",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_define",
-      "abstractConcept": "define",
-      "properties": ["name", "value"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_define",
       "message0": "%{BKY_C_DEFINE_MSG0}",
@@ -336,17 +318,11 @@
   },
   {
     "id": "c_ifdef",
+    "conceptId": "cpp_ifdef",
     "language": "cpp",
     "category": "preprocessor",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_ifdef",
-      "abstractConcept": "ifdef",
-      "properties": ["condition"],
-      "children": [{ "body": "statements" }],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_ifdef",
       "message0": "%{BKY_C_IFDEF_MSG0}",
@@ -383,17 +359,11 @@
   },
   {
     "id": "c_ifndef",
+    "conceptId": "cpp_ifndef",
     "language": "cpp",
     "category": "preprocessor",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_ifndef",
-      "abstractConcept": "ifndef",
-      "properties": ["condition"],
-      "children": [{ "body": "statements" }],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_ifndef",
       "message0": "%{BKY_C_IFNDEF_MSG0}",
@@ -430,16 +400,11 @@
   },
   {
     "id": "c_comment_line",
+    "conceptId": "comment",
     "language": "cpp",
     "category": "special",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "comment",
-      "abstractConcept": "comment",
-      "properties": ["text"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_comment_line",
       "message0": "%{BKY_C_COMMENT_LINE_MSG0}",
@@ -467,16 +432,11 @@
   },
   {
     "id": "c_comment_doc",
+    "conceptId": "doc_comment",
     "language": "cpp",
     "category": "special",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "doc_comment",
-      "abstractConcept": "doc_comment",
-      "properties": ["brief"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_comment_doc",
       "message0": "%{BKY_C_COMMENT_DOC_MSG0}",
@@ -493,7 +453,9 @@
       "tooltip": "%{BKY_C_COMMENT_DOC_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "BRIEF": "brief" },
+      "fields": {
+        "BRIEF": "brief"
+      },
       "inputs": {},
       "statementInputs": {},
       "strategy": "cpp:renderDocComment"
@@ -501,16 +463,11 @@
   },
   {
     "id": "c_comment_block",
+    "conceptId": "block_comment",
     "language": "cpp",
     "category": "special",
     "level": 2,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "block_comment",
-      "abstractConcept": "block_comment",
-      "properties": ["text"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_comment_block",
       "message0": "%{BKY_C_COMMENT_BLOCK_MSG0}",
@@ -534,16 +491,11 @@
   },
   {
     "id": "c_using_namespace",
+    "conceptId": "cpp_using_namespace",
     "language": "cpp",
     "category": "preprocessor",
     "level": 0,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_using_namespace",
-      "abstractConcept": "using_namespace",
-      "properties": ["ns"],
-      "role": "statement"
-    },
     "blockDef": {
       "type": "c_using_namespace",
       "message0": "%{BKY_C_USING_NAMESPACE_MSG0}",
@@ -571,49 +523,33 @@
   },
   {
     "id": "c_increment_expr",
+    "conceptId": "cpp_increment_expr",
     "language": "cpp",
     "category": "operators",
     "level": 1,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_increment_expr",
-      "abstractConcept": "increment_expr",
-      "properties": ["name", "operator", "position"],
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_increment_expr"
     }
   },
   {
     "id": "c_compound_assign_expr",
+    "conceptId": "cpp_compound_assign_expr",
     "language": "cpp",
     "category": "operators",
     "level": 1,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_compound_assign_expr",
-      "abstractConcept": "compound_assign_expr",
-      "properties": ["name", "operator"],
-      "children": { "value": "expression" },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_compound_assign_expr"
     }
   },
   {
     "id": "c_scanf_expr",
+    "conceptId": "cpp_scanf_expr",
     "language": "cpp",
     "category": "io",
     "level": 1,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "cpp_scanf_expr",
-      "abstractConcept": "scanf_expr",
-      "properties": ["format", "args"],
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_scanf_expr"
     },
@@ -626,17 +562,11 @@
   },
   {
     "id": "c_var_declare_expr",
+    "conceptId": "var_declare_expr",
     "language": "cpp",
     "category": "variables",
     "level": 1,
     "version": "1.0.0",
-    "concept": {
-      "conceptId": "var_declare_expr",
-      "abstractConcept": "var_declare_expr",
-      "properties": ["name", "type"],
-      "children": { "initializer": "expression" },
-      "role": "expression"
-    },
     "blockDef": {
       "type": "c_var_declare_expr"
     }

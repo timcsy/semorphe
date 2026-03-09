@@ -9,11 +9,14 @@ import { createNode } from '../../../src/core/semantic-tree'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
 import { registerExpressionLifters } from '../../../src/languages/cpp/lifters/expressions'
-import type { BlockSpec, LiftPattern } from '../../../src/core/types'
+import type { BlockSpec, LiftPattern, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
+import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
-import basicBlocks from '../../../src/languages/cpp/blocks/basic.json'
-import specialBlocks from '../../../src/languages/cpp/blocks/special.json'
-import universalBlocks from '../../../src/blocks/universal.json'
+import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../../src/languages/cpp/semantics/concepts.json'
+import basicBlocks from '../../../src/languages/cpp/projections/blocks/basic.json'
+import specialBlocks from '../../../src/languages/cpp/projections/blocks/special.json'
+import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
 
 function mockNode(
@@ -50,11 +53,15 @@ describe('Confidence & DegradationCause', () => {
     patternLifter = new PatternLifter()
     registry = new ConceptRegistry()
 
-    const allSpecs = [
-      ...universalBlocks as unknown as BlockSpec[],
-      ...basicBlocks as unknown as BlockSpec[],
-      ...specialBlocks as unknown as BlockSpec[],
+    const specRegistry = new BlockSpecRegistry()
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    const allProjections = [
+      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...basicBlocks as unknown as BlockProjectionJSON[],
+      ...specialBlocks as unknown as BlockProjectionJSON[],
     ]
+    specRegistry.loadFromSplit(allConcepts, allProjections)
+    const allSpecs = specRegistry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
     patternLifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)

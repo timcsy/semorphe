@@ -12,14 +12,17 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
-import type { BlockSpec } from '../../src/core/types'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
-import universalBlocks from '../../src/blocks/universal.json'
-import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/blocks/special.json'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
 
 let tsParser: Parser
 let lifter: Lifter
@@ -35,12 +38,16 @@ beforeAll(async () => {
   lifter = createTestLifter()
 
   // Set up PatternRenderer for render pipeline tests
-  const allSpecs = [
-    ...universalBlocks as unknown as BlockSpec[],
-    ...basicBlocks as unknown as BlockSpec[],
-    ...advancedBlocks as unknown as BlockSpec[],
-    ...specialBlocks as unknown as BlockSpec[],
+  const tempRegistry = new BlockSpecRegistry()
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allProjections = [
+    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...basicBlocks as unknown as BlockProjectionJSON[],
+    ...advancedBlocks as unknown as BlockProjectionJSON[],
+    ...specialBlocks as unknown as BlockProjectionJSON[],
   ]
+  tempRegistry.loadFromSplit(allConcepts, allProjections)
+  const allSpecs = tempRegistry.getAll()
   patternRenderer = new PatternRenderer()
   const renderStrategyRegistry = new RenderStrategyRegistry()
   registerCppRenderStrategies(renderStrategyRegistry)

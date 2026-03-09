@@ -17,12 +17,15 @@ import { renderToBlocklyState, setPatternRenderer } from '../../src/core/project
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../../src/core/registry'
 import { registerCppTransforms } from '../../src/languages/cpp/lifters/transforms'
 import { registerCppLiftStrategies } from '../../src/languages/cpp/lifters/strategies'
-import type { BlockSpec, LiftPattern, StylePreset } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
-import universalBlocks from '../../src/blocks/universal.json'
-import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/blocks/special.json'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 
 const style: StylePreset = {
@@ -51,12 +54,16 @@ beforeAll(async () => {
   lifter = createTestLifter()
 
   // Wire up JSON-driven PatternLifter with block specs (overrides the one from createTestLifter)
-  const allSpecs = [
-    ...universalBlocks as unknown as BlockSpec[],
-    ...basicBlocks as unknown as BlockSpec[],
-    ...advancedBlocks as unknown as BlockSpec[],
-    ...specialBlocks as unknown as BlockSpec[],
+  const specRegistry = new BlockSpecRegistry()
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allProjections = [
+    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...basicBlocks as unknown as BlockProjectionJSON[],
+    ...advancedBlocks as unknown as BlockProjectionJSON[],
+    ...specialBlocks as unknown as BlockProjectionJSON[],
   ]
+  specRegistry.loadFromSplit(allConcepts, allProjections)
+  const allSpecs = specRegistry.getAll()
 
   const transformRegistry = new TransformRegistry()
   registerCoreTransforms(transformRegistry)

@@ -175,12 +175,12 @@ const INTERNAL_CONCEPTS = new Set([
 
 export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCode: number } {
   const blockSpecPaths = [
-    path.join(rootDir, 'src/blocks/universal.json'),
-    path.join(rootDir, 'src/languages/cpp/blocks/basic.json'),
-    path.join(rootDir, 'src/languages/cpp/blocks/advanced.json'),
-    path.join(rootDir, 'src/languages/cpp/blocks/special.json'),
-    path.join(rootDir, 'src/languages/cpp/blocks/stdlib/algorithms.json'),
-    path.join(rootDir, 'src/languages/cpp/blocks/stdlib/containers.json'),
+    path.join(rootDir, 'src/blocks/projections/blocks/universal-blocks.json'),
+    path.join(rootDir, 'src/languages/cpp/projections/blocks/basic.json'),
+    path.join(rootDir, 'src/languages/cpp/projections/blocks/advanced.json'),
+    path.join(rootDir, 'src/languages/cpp/projections/blocks/special.json'),
+    path.join(rootDir, 'src/languages/cpp/projections/blocks/stdlib-algorithms.json'),
+    path.join(rootDir, 'src/languages/cpp/projections/blocks/stdlib-containers.json'),
   ]
 
   const liftPatternsPath = path.join(rootDir, 'src/languages/cpp/lift-patterns.json')

@@ -1,0 +1,7 @@
+src/
+node_modules/
+*.ts
+!dist/**
+tsconfig.json
+esbuild.mjs
+.vscode/

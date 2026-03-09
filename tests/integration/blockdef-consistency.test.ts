@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { extractInputNames, getInputs } from '../../src/blocks/block-input-names'
-import type { BlockSpec } from '../../src/core/types'
-import universalBlocks from '../../src/blocks/universal.json'
+import type { BlockSpec, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
 
 /**
  * Guard test: verify that JSON blockDef input names are consistent and
@@ -40,7 +43,10 @@ describe('block-input-names utility', () => {
 })
 
 describe('blockDef input name sanity checks', () => {
-  const specs = universalBlocks as unknown as BlockSpec[]
+  const _reg = new BlockSpecRegistry()
+  const _allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  _reg.loadFromSplit(_allConcepts, universalBlocks as unknown as BlockProjectionJSON[])
+  const specs = _reg.getAll()
 
   // Blocks where COND was historically used but should be CONDITION
   const mustNotUseCOND = ['u_if', 'u_if_else', 'u_while_loop']

@@ -1,10 +1,39 @@
-import type { BlockSpec, AstConstraint, CognitiveLevel } from './types'
+import type { BlockSpec, AstConstraint, CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from './types'
 
 export class BlockSpecRegistry {
   private specs = new Map<string, BlockSpec>()
   private byConceptId = new Map<string, BlockSpec>()
   private byBlockType = new Map<string, BlockSpec>()
   private conceptToBlockType = new Map<string, string>()
+
+  /** Load from split concept + projection JSON (Phase 3 architecture) */
+  loadFromSplit(concepts: ConceptDefJSON[], projections: BlockProjectionJSON[]): void {
+    const conceptMap = new Map<string, ConceptDefJSON>()
+    for (const c of concepts) conceptMap.set(c.conceptId, c)
+    const specs: BlockSpec[] = projections.map(proj => {
+      const concept = conceptMap.get(proj.conceptId)
+      return {
+        id: proj.id,
+        language: proj.language,
+        category: proj.category,
+        level: proj.level,
+        version: proj.version,
+        concept: {
+          conceptId: proj.conceptId,
+          abstractConcept: concept?.abstractConcept ?? undefined,
+          properties: concept?.properties,
+          children: concept?.children,
+          role: concept?.role,
+          annotations: concept?.annotations,
+        },
+        blockDef: proj.blockDef,
+        codeTemplate: proj.codeTemplate ?? { pattern: '', imports: [], order: 0 },
+        astPattern: proj.astPattern ?? { nodeType: '_none', constraints: [] },
+        renderMapping: proj.renderMapping,
+      }
+    })
+    this.loadFromJSON(specs)
+  }
 
   loadFromJSON(specs: BlockSpec[]): void {
     for (const spec of specs) {

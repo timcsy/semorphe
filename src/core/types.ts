@@ -223,6 +223,51 @@ export interface DynamicInputDef {
   countProperty?: string
 }
 
+// ─── Split JSON Formats (Phase 3: concept/blockDef separation) ───
+
+/** Concept definition in concepts.json (semantic layer) */
+export interface ConceptDefJSON {
+  conceptId: string
+  layer: ConceptLayer
+  level: CognitiveLevel
+  abstractConcept?: string | null
+  properties: string[]
+  children: Record<string, string>
+  role: 'statement' | 'expression' | 'both'
+  annotations?: Record<string, unknown>
+}
+
+/** Block projection in block-specs.json (projection layer) */
+export interface BlockProjectionJSON {
+  id: string
+  conceptId: string
+  language: string
+  category: string
+  level: CognitiveLevel
+  version: string
+  blockDef: Record<string, unknown>
+  codeTemplate?: CodeTemplate
+  astPattern?: AstPattern
+  renderMapping?: RenderMapping
+}
+
+/** Language manifest for manifest-driven loading */
+export interface LanguageManifest {
+  id: string
+  name: string
+  version: string
+  parser: {
+    type: 'tree-sitter'
+    language: string
+  }
+  provides: {
+    concepts: string[]
+    blocks: string[]
+    templates: string[]
+    liftPatterns: string[]
+  }
+}
+
 // ─── Universal Template (Language-specific code templates for universal concepts) ───
 
 export interface UniversalTemplate {

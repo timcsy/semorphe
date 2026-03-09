@@ -10,14 +10,17 @@ import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, LiftPattern, UniversalTemplate } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
-import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/blocks/special.json'
-import universalBlocks from '../../src/blocks/universal.json'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 
@@ -56,12 +59,16 @@ describe('L2 Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const allSpecs = [
-      ...universalBlocks as unknown as BlockSpec[],
-      ...basicBlocks as unknown as BlockSpec[],
-      ...advancedBlocks as unknown as BlockSpec[],
-      ...specialBlocks as unknown as BlockSpec[],
+    const registry = new BlockSpecRegistry()
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    const allProjections = [
+      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...basicBlocks as unknown as BlockProjectionJSON[],
+      ...advancedBlocks as unknown as BlockProjectionJSON[],
+      ...specialBlocks as unknown as BlockProjectionJSON[],
     ]
+    registry.loadFromSplit(allConcepts, allProjections)
+    const allSpecs = registry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
     lifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
@@ -70,7 +77,7 @@ describe('L2 Block Roundtrip', () => {
     extractor.loadBlockSpecs(allSpecs)
 
     for (const spec of allSpecs) {
-      if (spec.codeTemplate && spec.concept?.conceptId) {
+      if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
         generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
       }
     }

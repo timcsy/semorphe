@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@core/*": ["../src/core/*"],
+      "@languages/*": ["../src/languages/*"],
+      "@blocks/*": ["../src/blocks/*"],
+      "@ui/*": ["../src/ui/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "../src/core/**/*.ts", "../src/languages/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

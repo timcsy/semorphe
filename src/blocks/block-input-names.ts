@@ -9,10 +9,17 @@
  * If a blockDef input name changes in JSON, the dynamic registration
  * automatically picks up the change — no dual maintenance.
  */
-import type { BlockSpec } from '../core/types'
-import universalBlocks from './universal.json'
+import type { BlockSpec, ConceptDefJSON, BlockProjectionJSON } from '../core/types'
+import { BlockSpecRegistry } from '../core/block-spec-registry'
+import universalConcepts from './semantics/universal-concepts.json'
+import universalBlocks from './projections/blocks/universal-blocks.json'
 
-const specs = universalBlocks as unknown as BlockSpec[]
+const _registry = new BlockSpecRegistry()
+_registry.loadFromSplit(
+  universalConcepts as unknown as ConceptDefJSON[],
+  universalBlocks as unknown as BlockProjectionJSON[],
+)
+const specs = _registry.getAll()
 
 interface InputNames {
   value: string[]
@@ -41,7 +48,7 @@ function extractInputNames(blockDef: Record<string, unknown>): InputNames {
 
 function getSpec(blockType: string): BlockSpec {
   const spec = specs.find(s => (s.blockDef as Record<string, unknown>)?.type === blockType)
-  if (!spec) throw new Error(`BlockSpec not found for ${blockType} in universal.json`)
+  if (!spec) throw new Error(`BlockSpec not found for ${blockType} in universal-blocks.json`)
   return spec
 }
 

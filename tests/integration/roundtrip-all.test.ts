@@ -13,36 +13,43 @@ import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, UniversalTemplate } from '../../src/core/types'
+import type { BlockSpec, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
-import universalBlocks from '../../src/blocks/universal.json'
-import basicBlocks from '../../src/languages/cpp/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/blocks/special.json'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
+import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
+import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+
+// Build allSpecs eagerly at module level (needed for describe-time iteration)
+const _registry = new BlockSpecRegistry()
+const _allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+const _allProjections = [
+  ...universalBlocks as unknown as BlockProjectionJSON[],
+  ...basicBlocks as unknown as BlockProjectionJSON[],
+  ...advancedBlocks as unknown as BlockProjectionJSON[],
+  ...specialBlocks as unknown as BlockProjectionJSON[],
+]
+_registry.loadFromSplit(_allConcepts, _allProjections)
+const allSpecs: BlockSpec[] = _registry.getAll()
 
 let renderer: PatternRenderer
 let extractor: PatternExtractor
 let generator: TemplateGenerator
-let allSpecs: BlockSpec[]
 
 beforeAll(() => {
   renderer = new PatternRenderer()
   extractor = new PatternExtractor()
   generator = new TemplateGenerator()
 
-  allSpecs = [
-    ...universalBlocks as unknown as BlockSpec[],
-    ...basicBlocks as unknown as BlockSpec[],
-    ...advancedBlocks as unknown as BlockSpec[],
-    ...specialBlocks as unknown as BlockSpec[],
-  ]
-
   renderer.loadBlockSpecs(allSpecs)
   extractor.loadBlockSpecs(allSpecs)
 
   for (const spec of allSpecs) {
-    if (spec.codeTemplate && spec.concept?.conceptId) {
+    if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
       generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
     }
   }
@@ -92,12 +99,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
   const skipConcepts = new Set(['cpp_raw_code', 'cpp_raw_expression'])
 
   describe('Render coverage: every concept renders to correct block type', () => {
-    for (const spec of [
-      ...universalBlocks as unknown as BlockSpec[],
-      ...basicBlocks as unknown as BlockSpec[],
-      ...advancedBlocks as unknown as BlockSpec[],
-      ...specialBlocks as unknown as BlockSpec[],
-    ]) {
+    for (const spec of allSpecs) {
       const conceptId = spec.concept?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
 
@@ -113,12 +115,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
   })
 
   describe('Extract coverage: every block extracts to correct concept', () => {
-    for (const spec of [
-      ...universalBlocks as unknown as BlockSpec[],
-      ...basicBlocks as unknown as BlockSpec[],
-      ...advancedBlocks as unknown as BlockSpec[],
-      ...specialBlocks as unknown as BlockSpec[],
-    ]) {
+    for (const spec of allSpecs) {
       const conceptId = spec.concept?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
 
@@ -137,15 +134,10 @@ describe('Full Roundtrip — All 68 Blocks', () => {
   })
 
   describe('Code generation coverage: every concept generates code', () => {
-    for (const spec of [
-      ...universalBlocks as unknown as BlockSpec[],
-      ...basicBlocks as unknown as BlockSpec[],
-      ...advancedBlocks as unknown as BlockSpec[],
-      ...specialBlocks as unknown as BlockSpec[],
-    ]) {
+    for (const spec of allSpecs) {
       const conceptId = spec.concept?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
-      if (!spec.codeTemplate) continue // skip blocks without templates
+      if (!spec.codeTemplate?.pattern) continue // skip blocks without templates
 
       it(`${conceptId} generates code`, () => {
         const sem = buildDummyNode(spec)

@@ -1,0 +1,334 @@
+[
+  {
+    "conceptId": "var_declare",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "var_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "init": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "var_assign",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "var_assign",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "var_ref",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "var_ref",
+    "properties": [
+      "name"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "number_literal",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "number_literal",
+    "properties": [
+      "value"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "string_literal",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "string_literal",
+    "properties": [
+      "value"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "arithmetic",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "arithmetic",
+    "properties": [
+      "operator"
+    ],
+    "children": {
+      "left": "expression",
+      "right": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "compare",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "compare",
+    "properties": [
+      "operator"
+    ],
+    "children": {
+      "left": "expression",
+      "right": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "logic",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "logic",
+    "properties": [
+      "operator"
+    ],
+    "children": {
+      "left": "expression",
+      "right": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "logic_not",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "logic_not",
+    "properties": [],
+    "children": {
+      "operand": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "negate",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "negate",
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "if",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "if",
+    "properties": [],
+    "children": {
+      "condition": "expression",
+      "then_body": "statements"
+    },
+    "role": "statement",
+    "annotations": {
+      "control_flow": "branch",
+      "introduces_scope": true,
+      "cognitive_level": 0
+    }
+  },
+  {
+    "conceptId": "if_else",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "if_else",
+    "properties": [],
+    "children": {
+      "condition": "expression",
+      "then": "statements",
+      "else": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "count_loop",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "count_loop",
+    "properties": [
+      "var_name",
+      "inclusive"
+    ],
+    "children": {
+      "from": "expression",
+      "to": "expression",
+      "body": "statements"
+    },
+    "role": "statement",
+    "annotations": {
+      "control_flow": "loop",
+      "introduces_scope": true,
+      "cognitive_level": 1
+    }
+  },
+  {
+    "conceptId": "while_loop",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "while_loop",
+    "properties": [],
+    "children": {
+      "condition": "expression",
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "break",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "break",
+    "properties": [],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "continue",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "continue",
+    "properties": [],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "func_def",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "func_def",
+    "properties": [
+      "name",
+      "params",
+      "return_type"
+    ],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement",
+    "annotations": {
+      "control_flow": "sequence",
+      "introduces_scope": true,
+      "cognitive_level": 2
+    }
+  },
+  {
+    "conceptId": "func_call",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "func_call",
+    "properties": [
+      "name",
+      "args"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "func_call_expr",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "func_call_expr",
+    "properties": [
+      "name",
+      "args"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "return",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "return",
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "print",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "print",
+    "properties": [],
+    "children": {
+      "values": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "endl",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "endl",
+    "properties": [],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "input",
+    "layer": "universal",
+    "level": 0,
+    "abstractConcept": "input",
+    "properties": [
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "array_declare",
+    "layer": "universal",
+    "level": 2,
+    "abstractConcept": "array_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "size": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "array_access",
+    "layer": "universal",
+    "level": 2,
+    "abstractConcept": "array_access",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "index": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "array_assign",
+    "layer": "universal",
+    "level": 1,
+    "abstractConcept": "array_assign",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "index": "expression",
+      "value": "expression"
+    },
+    "role": "statement"
+  }
+]

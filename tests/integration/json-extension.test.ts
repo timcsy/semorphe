@@ -1,13 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import type { BlockSpec } from '../../src/core/types'
-import algorithmBlocks from '../../src/languages/cpp/blocks/stdlib/algorithms.json'
-import containerBlocks from '../../src/languages/cpp/blocks/stdlib/containers.json'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import algorithmBlocks from '../../src/languages/cpp/projections/blocks/stdlib-algorithms.json'
+import containerBlocks from '../../src/languages/cpp/projections/blocks/stdlib-containers.json'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+
+const allConcepts = [
+  ...universalConcepts as unknown as ConceptDefJSON[],
+  ...cppConcepts as unknown as ConceptDefJSON[],
+]
 
 describe('JSON-only extension (US6)', () => {
   it('should load algorithm block specs from JSON', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromJSON(algorithmBlocks as unknown as BlockSpec[])
+    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(2)
     expect(all.map(s => s.id)).toContain('cpp_sort')
@@ -16,7 +24,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should load container block specs from JSON', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromJSON(containerBlocks as unknown as BlockSpec[])
+    registry.loadFromSplit(allConcepts, containerBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(2)
     expect(all.map(s => s.id)).toContain('cpp_vector_push_back')
@@ -24,54 +32,60 @@ describe('JSON-only extension (US6)', () => {
   })
 
   it('should have valid blockDef with type field', () => {
-    for (const spec of algorithmBlocks as unknown as BlockSpec[]) {
+    const registry = new BlockSpecRegistry()
+    registry.loadFromSplit(allConcepts, [
+      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...containerBlocks as unknown as BlockProjectionJSON[],
+    ])
+    for (const spec of registry.getAll()) {
       const blockDef = spec.blockDef as Record<string, unknown>
       expect(blockDef.type).toBeTruthy()
       expect(typeof blockDef.type).toBe('string')
     }
-    for (const spec of containerBlocks as unknown as BlockSpec[]) {
-      const blockDef = spec.blockDef as Record<string, unknown>
-      expect(blockDef.type).toBeTruthy()
-    }
   })
 
   it('should have codeTemplate with pattern', () => {
-    for (const spec of algorithmBlocks as unknown as BlockSpec[]) {
+    const registry = new BlockSpecRegistry()
+    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
+    for (const spec of registry.getAll()) {
       expect(spec.codeTemplate.pattern).toBeTruthy()
       expect(spec.codeTemplate.imports).toBeDefined()
     }
   })
 
   it('should have astPattern for lifting', () => {
-    for (const spec of algorithmBlocks as unknown as BlockSpec[]) {
+    const registry = new BlockSpecRegistry()
+    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
+    for (const spec of registry.getAll()) {
       expect(spec.astPattern.nodeType).toBeTruthy()
     }
   })
 
   it('should coexist with universal blocks without conflicts', () => {
     const registry = new BlockSpecRegistry()
-    const universalBlocks = require('../../src/blocks/universal.json') as BlockSpec[]
-    registry.loadFromJSON(universalBlocks)
-    registry.loadFromJSON(algorithmBlocks as unknown as BlockSpec[])
-    registry.loadFromJSON(containerBlocks as unknown as BlockSpec[])
-
-    // All should be loaded
+    registry.loadFromSplit(allConcepts, [
+      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...containerBlocks as unknown as BlockProjectionJSON[],
+    ])
     const all = registry.getAll()
     expect(all.length).toBeGreaterThan(4)
-
-    // No ID conflicts
     const ids = all.map(s => s.id)
-    const uniqueIds = new Set(ids)
-    expect(uniqueIds.size).toBe(ids.length)
+    expect(new Set(ids).size).toBe(ids.length)
   })
 
   it('should have concept mapping with abstractConcept', () => {
-    const sortSpec = (algorithmBlocks as unknown as BlockSpec[]).find(s => s.id === 'cpp_sort')
+    const registry = new BlockSpecRegistry()
+    registry.loadFromSplit(allConcepts, [
+      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...containerBlocks as unknown as BlockProjectionJSON[],
+    ])
+    const sortSpec = registry.getAll().find(s => s.id === 'cpp_sort')
     expect(sortSpec).toBeDefined()
     expect(sortSpec!.concept.conceptId).toBe('cpp:sort')
     expect(sortSpec!.concept.abstractConcept).toBe('container_sort')
 
-    const pushBackSpec = (containerBlocks as unknown as BlockSpec[]).find(s => s.id === 'cpp_vector_push_back')
+    const pushBackSpec = registry.getAll().find(s => s.id === 'cpp_vector_push_back')
     expect(pushBackSpec!.concept.abstractConcept).toBe('container_add')
   })
 })

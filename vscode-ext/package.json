@@ -1,0 +1,84 @@
+{
+  "name": "code-blockly-vscode",
+  "displayName": "Code Blockly",
+  "description": "在 VSCode 中使用積木編輯 C++ 程式碼",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Education"
+  ],
+  "activationEvents": [
+    "onLanguage:cpp",
+    "onLanguage:c"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codeBlockly.toggleBlocksPanel",
+        "title": "Code Blockly: Toggle Blocks Panel"
+      }
+    ],
+    "configuration": {
+      "title": "Code Blockly",
+      "properties": {
+        "codeBlockly.cognitiveLevel": {
+          "type": "number",
+          "default": 1,
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "enumDescriptions": [
+            "初學（基本 I/O、變數、簡單控制流）",
+            "進階（邏輯運算、函式、迴圈）",
+            "完整（陣列、指標、語言特定）"
+          ],
+          "description": "控制積木工具箱顯示的認知層級",
+          "scope": "window"
+        },
+        "codeBlockly.codingStyle": {
+          "type": "string",
+          "default": "apcs",
+          "enum": [
+            "apcs",
+            "competitive",
+            "google"
+          ],
+          "enumDescriptions": [
+            "APCS 風格（cout/cin）",
+            "競賽風格（printf/scanf）",
+            "Google 風格（cout/cin + 進階規範）"
+          ],
+          "description": "程式碼風格預設",
+          "scope": "window"
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "codeBlockly.toggleBlocksPanel",
+          "when": "resourceLangId =~ /^(cpp|c)$/",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "web-tree-sitter": "^0.26.6"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.109.0",
+    "esbuild": "^0.25.12"
+  }
+}
