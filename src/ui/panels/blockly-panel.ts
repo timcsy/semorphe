@@ -12,6 +12,7 @@ export interface BlocklyPanelOptions {
   toolboxXml?: string
   blockSpecRegistry?: BlockSpecRegistry
   bus?: SemanticBus
+  media?: string
 }
 
 export class BlocklyPanel implements ViewHost {
@@ -31,11 +32,13 @@ export class BlocklyPanel implements ViewHost {
   private currentRenderer: string = 'zelos'
   private bus: SemanticBus | null = null
   private busUpdateInProgress = false
+  private media: string | undefined
 
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
     this.bus = options.bus ?? null
+    this.media = options.media
   }
 
   async initialize(_config: ViewConfig): Promise<void> {
@@ -66,14 +69,18 @@ export class BlocklyPanel implements ViewHost {
     const renderer = blockStylePreset?.renderer ?? 'zelos'
     this.currentRenderer = renderer
 
-    this.workspace = Blockly.inject(this.container, {
+    const injectOptions: Record<string, unknown> = {
       toolbox: toolboxDef as Blockly.utils.toolbox.ToolboxDefinition,
       renderer,
       grid: { spacing: 20, length: 3, colour: '#555', snap: true },
       zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
       trashcan: true,
       theme: this.createDarkTheme(),
-    })
+    }
+    if (this.media) {
+      injectOptions.media = this.media
+    }
+    this.workspace = Blockly.inject(this.container, injectOptions as Blockly.BlocklyOptions)
 
     this.workspace.addChangeListener((event: Blockly.Events.Abstract) => {
       if (event.isUiEvent) {

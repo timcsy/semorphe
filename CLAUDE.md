@@ -42,7 +42,6 @@ TypeScript 5.x: Follow standard conventions
 ## Recent Changes
 - 017-concept-blockdef-split: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite 7.x
 - 016-app-split: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite
-- 015-sync-decouple: Added TypeScript 5.x + 無新增（使用 Phase 0 建立的 SemanticBus + ViewHost）
 
 
 <!-- MANUAL ADDITIONS START -->
