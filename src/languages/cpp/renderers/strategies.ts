@@ -118,9 +118,9 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     if (Array.isArray(params)) {
       const paramCount = params.length
       for (let i = 0; i < paramCount; i++) {
-        const parts = (params[i] as string).split(/\s+/)
-        block.fields[`TYPE_${i}`] = parts[0] ?? 'int'
-        block.fields[`PARAM_${i}`] = parts.slice(1).join(' ') || `p${i}`
+        const { type, name } = parseParamTypeAndName(params[i] as string, i)
+        block.fields[`TYPE_${i}`] = type
+        block.fields[`PARAM_${i}`] = name
       }
       if (paramCount > 0) {
         block.extraState = { paramCount }
@@ -325,6 +325,37 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
 
     return block
   })
+}
+
+/** Known compound type prefixes (longest first for greedy match) */
+const COMPOUND_TYPES = [
+  'unsigned long long',
+  'long long',
+  'unsigned long',
+  'unsigned int',
+  'unsigned short',
+  'unsigned char',
+  'long double',
+  'signed char',
+]
+
+/** Parse a parameter declaration string like "long long x" into { type, name } */
+function parseParamTypeAndName(param: string, index: number): { type: string; name: string } {
+  const trimmed = param.trim()
+  // Try compound types first
+  for (const ct of COMPOUND_TYPES) {
+    if (trimmed.startsWith(ct + ' ')) {
+      const rest = trimmed.slice(ct.length).trim()
+      // Handle pointer/reference: "long long *p" or "long long &r"
+      if (rest.startsWith('*') || rest.startsWith('&')) {
+        return { type: ct + rest[0], name: rest.slice(1).trim() || `p${index}` }
+      }
+      return { type: ct, name: rest || `p${index}` }
+    }
+  }
+  // Simple split: first token is type, rest is name (handles "int* p", "char x", etc.)
+  const parts = trimmed.split(/\s+/)
+  return { type: parts[0] ?? 'int', name: parts.slice(1).join(' ') || `p${index}` }
 }
 
 /** Map semantic arg nodes to three-mode arg slots, using compose mode for non-var_ref */

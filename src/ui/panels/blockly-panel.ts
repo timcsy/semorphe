@@ -120,6 +120,7 @@ export class BlocklyPanel {
       case 'u_return': return this.extractReturn(block)
       case 'u_print': return this.extractPrint(block)
       case 'u_input': return this.extractInput(block)
+      case 'u_input_expr': return this.extractInput(block)
       case 'c_printf': return this.extractPrintf(block)
       case 'c_scanf': return this.extractScanf(block)
       case 'u_endl': return createNode('endl', {})
@@ -230,6 +231,8 @@ export class BlocklyPanel {
       case 'c_raw_code': return this.extractRawCode(block)
       case 'c_raw_expression': return this.extractRawExpression(block)
       case 'c_comment_line': return this.extractComment(block)
+      case 'c_comment_block': return createNode('block_comment', { text: block.getFieldValue('TEXT') ?? '' })
+      case 'c_comment_doc': return this.extractDocComment(block)
       case 'c_include': return createNode('cpp_include', { header: block.getFieldValue('HEADER') ?? 'iostream', local: false })
       case 'c_include_local': return createNode('cpp_include_local', { header: block.getFieldValue('HEADER') ?? 'myheader.h' })
       case 'c_using_namespace': return createNode('cpp_using_namespace', { namespace: block.getFieldValue('NS') ?? 'std' })
@@ -785,6 +788,23 @@ export class BlocklyPanel {
   private extractComment(block: Blockly.Block): SemanticNode {
     const text = block.getFieldValue('TEXT') ?? ''
     return createNode('comment', { text })
+  }
+
+  private extractDocComment(block: Blockly.Block): SemanticNode {
+    const props: Record<string, string> = {}
+    props.brief = block.getFieldValue('BRIEF') ?? ''
+    const extraState = (block as any).paramCount_ !== undefined
+      ? { paramCount: (block as any).paramCount_, hasReturn: (block as any).hasReturn_ }
+      : (block as any).saveExtraState?.() ?? {}
+    const paramCount = extraState?.paramCount ?? 0
+    for (let i = 0; i < paramCount; i++) {
+      props[`param_${i}_name`] = block.getFieldValue(`PARAM_NAME_${i}`) ?? ''
+      props[`param_${i}_desc`] = block.getFieldValue(`PARAM_DESC_${i}`) ?? ''
+    }
+    if (extraState?.hasReturn) {
+      props.return_desc = block.getFieldValue('RETURN') ?? ''
+    }
+    return createNode('doc_comment', props)
   }
 
   private extractStatementInput(block: Blockly.Block, inputName: string): SemanticNode[] {

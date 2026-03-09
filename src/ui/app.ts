@@ -1985,10 +1985,10 @@ export class App {
             buildArgSlot(this, j, slot.mode, {
               getVarOptions: () => self.getWorkspaceVarOptions(),
               inputPrefix: j === 0 ? (Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →') : undefined,
-              defaultVar: slot.selectedVar ?? ('v' + j),
+              defaultVar: slot.text ?? slot.selectedVar ?? ('v' + j),
             })
-            if (slot.mode === 'select' && slot.selectedVar) {
-              try { this.setFieldValue(slot.selectedVar, `SEL_${j}`) } catch (_e) { /* ignore */ }
+            if (slot.mode === 'select' && (slot.text || slot.selectedVar)) {
+              try { this.setFieldValue(slot.text ?? slot.selectedVar, `SEL_${j}`) } catch (_e) { /* ignore */ }
             }
           }
           this.appendDummyInput('TAIL')

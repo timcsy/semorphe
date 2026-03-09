@@ -529,6 +529,13 @@ describe('I/O', () => {
       expect(values[2].properties.name).toBe('m')
     })
 
+    it('roundtrips if (cin >> a >> n >> m) without semicolons in condition', () => {
+      const code = gen('int main() { if (cin >> a >> n >> m) {} }')
+      expect(code).toContain('if (cin >> a >> n >> m)')
+      // Must NOT have semicolons inside the condition
+      expect(code).not.toMatch(/if\s*\(.*;\s*\)/)
+    })
+
     it('renders input block with args extraState for multiple vars', () => {
       const state = blocks('int main() { cin >> a >> b; }')
       const topBlocks = state.blocks?.blocks ?? []
@@ -721,6 +728,33 @@ describe('Functions', () => {
       expect(funcBlock.fields?.NAME).toBe('add')
       expect(funcBlock.fields?.RETURN_TYPE).toBe('int')
       expect(funcBlock.extraState?.paramCount).toBe(2)
+    })
+
+    it('renders compound param types (long long) correctly', () => {
+      const state = blocks('long long fast_pow(long long base, long long exp, long long mod) { return 1; }')
+      const topBlocks = state.blocks?.blocks ?? []
+      const funcBlock = topBlocks[0]
+      expect(funcBlock.type).toBe('u_func_def')
+      expect(funcBlock.fields?.RETURN_TYPE).toBe('long long')
+      expect(funcBlock.fields?.TYPE_0).toBe('long long')
+      expect(funcBlock.fields?.PARAM_0).toBe('base')
+      expect(funcBlock.fields?.TYPE_1).toBe('long long')
+      expect(funcBlock.fields?.PARAM_1).toBe('exp')
+      expect(funcBlock.fields?.TYPE_2).toBe('long long')
+      expect(funcBlock.fields?.PARAM_2).toBe('mod')
+    })
+
+    it('roundtrips long long params without data loss', () => {
+      const code = gen('long long fast_pow(long long base, long long exp, long long mod) { return 1; }')
+      expect(code).toContain('long long fast_pow(long long base, long long exp, long long mod)')
+    })
+
+    it('renders unsigned int params correctly', () => {
+      const state = blocks('void f(unsigned int x) { }')
+      const topBlocks = state.blocks?.blocks ?? []
+      const funcBlock = topBlocks[0]
+      expect(funcBlock.fields?.TYPE_0).toBe('unsigned int')
+      expect(funcBlock.fields?.PARAM_0).toBe('x')
     })
   })
 

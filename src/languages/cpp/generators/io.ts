@@ -42,7 +42,13 @@ export function registerIOGenerators(g: Map<string, NodeGenerator>, style: Style
       vars = (node.properties.variables as string[] | undefined) ?? [node.properties.variable ?? 'x']
     }
     if (style.io_style === 'cout') {
-      return `${indent(ctx)}cin >> ${vars.join(' >> ')};\n`
+      const expr = `cin >> ${vars.join(' >> ')}`
+      if (ctx.isExpression) return expr
+      return `${indent(ctx)}${expr};\n`
+    }
+    if (ctx.isExpression) {
+      // scanf in expression context (rare but handle gracefully)
+      return vars.length === 1 ? `scanf("%d", &${vars[0]})` : `scanf("%d", &${vars.join(', &')})`
     }
     return vars.map(v => `${indent(ctx)}scanf("%d", &${v});\n`).join('')
   })

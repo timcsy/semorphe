@@ -17,6 +17,7 @@ export interface GeneratorContext {
   language: string
   generators: Map<string, NodeGenerator>
   templateGenerator?: TemplateGenerator
+  isExpression?: boolean
   _mappings?: SourceMapping[]
   _lineCount?: number
 }
@@ -205,8 +206,9 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null
   if (templateResult !== null) return templateResult
 
-  const generator = ctx.generators.get(node.concept)
-  if (generator) return generator(node, ctx)
+  const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
+  const generator = exprCtx.generators.get(node.concept)
+  if (generator) return generator(node, exprCtx)
   if (node.concept === 'raw_code') return node.metadata?.rawCode ?? ''
   if (node.concept === 'unresolved') return node.metadata?.rawCode ?? ''
   return `/* ${node.concept} */`
