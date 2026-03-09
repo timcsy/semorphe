@@ -1,0 +1,1595 @@
+[
+  {
+    "id": "c_pointer_declare",
+    "conceptId": "cpp_pointer_declare",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_pointer_declare",
+      "message0": "%{BKY_C_POINTER_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_VOID}",
+              "void"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "ptr"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_POINTER_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE}* ${NAME};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "declarator",
+          "nodeType": "pointer_declarator"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_pointer_deref",
+    "conceptId": "cpp_pointer_deref",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_pointer_deref",
+      "message0": "%{BKY_C_POINTER_DEREF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_POINTER_DEREF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "*${PTR}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "pointer_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "*"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_address_of",
+    "conceptId": "cpp_address_of",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_address_of",
+      "message0": "%{BKY_C_ADDRESS_OF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VAR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_ADDRESS_OF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "&${VAR}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "pointer_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "&"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "var",
+          "ast": "argument",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_malloc",
+    "conceptId": "cpp_malloc",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_malloc",
+      "message0": "%{BKY_C_MALLOC_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_C_MALLOC_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "SIZEOF_TYPE",
+          "options": [
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_MALLOC_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "(${TYPE}*)malloc(${SIZE} * sizeof(${SIZEOF_TYPE}))",
+      "imports": [
+        "stdlib.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "cast_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "sizeof_type",
+          "ast": "$text",
+          "extract": "text"
+        },
+        {
+          "semantic": "size",
+          "ast": "value",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_free",
+    "conceptId": "cpp_free",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_free",
+      "message0": "%{BKY_C_FREE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_FREE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "free(${PTR});",
+      "imports": [
+        "stdlib.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "free"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "ptr",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_struct_declare",
+    "conceptId": "cpp_struct_declare",
+    "language": "cpp",
+    "category": "structures",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_declare",
+      "message0": "%{BKY_C_STRUCT_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MyStruct"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "MEMBERS",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "struct ${NAME} {\n${MEMBERS}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "struct_specifier",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "name",
+          "extract": "text"
+        },
+        {
+          "semantic": "members",
+          "ast": "body",
+          "extract": "liftBody"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_struct_member_access",
+    "conceptId": "cpp_struct_member_access",
+    "language": "cpp",
+    "category": "structures",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_member_access",
+      "message0": "%{BKY_C_STRUCT_MEMBER_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "MEMBER",
+          "text": "field"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${MEMBER}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "field_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "."
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "member",
+          "ast": "field",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_struct_pointer_access",
+    "conceptId": "cpp_struct_pointer_access",
+    "language": "cpp",
+    "category": "structures",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_struct_pointer_access",
+      "message0": "%{BKY_C_STRUCT_POINTER_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "PTR",
+          "text": "ptr"
+        },
+        {
+          "type": "field_input",
+          "name": "MEMBER",
+          "text": "field"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_STRUCT_POINTER_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${PTR}->${MEMBER}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "field_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "->"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "member",
+          "ast": "field",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_strlen",
+    "conceptId": "cpp_strlen",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strlen",
+      "message0": "%{BKY_C_STRLEN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRLEN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strlen(${STR})",
+      "imports": [
+        "string.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strlen"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "str",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_strcmp",
+    "conceptId": "cpp_strcmp",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcmp",
+      "message0": "%{BKY_C_STRCMP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "S1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "S2",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCMP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strcmp(${S1}, ${S2})",
+      "imports": [
+        "string.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strcmp"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "s1",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "s2",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_strcpy",
+    "conceptId": "cpp_strcpy",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcpy",
+      "message0": "%{BKY_C_STRCPY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCPY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strcpy(${DEST}, ${SRC});",
+      "imports": [
+        "string.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strcpy"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "dest",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "src",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_vector_declare",
+    "conceptId": "cpp_vector_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_declare",
+      "message0": "%{BKY_CPP_VECTOR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_LONG_LONG}",
+              "long long"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "vec"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::vector<${TYPE}> ${NAME};",
+      "imports": [
+        "vector"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_vector_push_back",
+    "conceptId": "cpp_vector_push_back",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_push_back",
+      "message0": "%{BKY_CPP_VECTOR_PUSH_BACK_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "VECTOR",
+          "text": "vec"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_VECTOR_PUSH_BACK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${VECTOR}.push_back(${VALUE});",
+      "imports": [
+        "vector"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "vector",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_vector_size",
+    "conceptId": "cpp_vector_size",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_size",
+      "message0": "%{BKY_CPP_VECTOR_SIZE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "VECTOR",
+          "text": "vec"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_VECTOR_SIZE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${VECTOR}.size()",
+      "imports": [
+        "vector"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "vector",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_map_declare",
+    "conceptId": "cpp_map_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_declare",
+      "message0": "%{BKY_CPP_MAP_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "KEY_TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "VALUE_TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_STRING}",
+              "std::string"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "mp"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::map<${KEY_TYPE}, ${VALUE_TYPE}> ${NAME};",
+      "imports": [
+        "map"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "key_type",
+          "ast": "type.arguments[0]",
+          "extract": "text"
+        },
+        {
+          "semantic": "value_type",
+          "ast": "type.arguments[1]",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_string_declare",
+    "conceptId": "cpp_string_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_declare",
+      "message0": "%{BKY_CPP_STRING_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::string ${NAME};",
+      "imports": [
+        "string"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "text": "string"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_sort",
+    "conceptId": "cpp_sort",
+    "language": "cpp",
+    "category": "algorithms",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_sort",
+      "message0": "%{BKY_CPP_SORT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BEGIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "END",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::sort(${BEGIN}, ${END});",
+      "imports": [
+        "algorithm"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "sort"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "begin",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "end",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_class_def",
+    "conceptId": "cpp_class_def",
+    "language": "cpp",
+    "category": "oop",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_class_def",
+      "message0": "%{BKY_CPP_CLASS_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MyClass"
+        }
+      ],
+      "message1": "%{BKY_CPP_CLASS_DEF_MSG1}",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "PUBLIC",
+          "check": "Statement"
+        }
+      ],
+      "message2": "%{BKY_CPP_CLASS_DEF_MSG2}",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "PRIVATE",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "class_specifier",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "name",
+          "extract": "text"
+        },
+        {
+          "semantic": "public",
+          "ast": "body.public",
+          "extract": "liftBody"
+        },
+        {
+          "semantic": "private",
+          "ast": "body.private",
+          "extract": "liftBody"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_new",
+    "conceptId": "cpp_new",
+    "language": "cpp",
+    "category": "oop",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_new",
+      "message0": "%{BKY_CPP_NEW_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TYPE",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_NEW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "new ${TYPE}(${ARGS})",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "new_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_delete",
+    "conceptId": "cpp_delete",
+    "language": "cpp",
+    "category": "oop",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_delete",
+      "message0": "%{BKY_CPP_DELETE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_DELETE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "delete ${PTR};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "delete_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "ptr",
+          "ast": "argument",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_template_function",
+    "conceptId": "cpp_template_function",
+    "language": "cpp",
+    "category": "templates",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_template_function",
+      "message0": "%{BKY_CPP_TEMPLATE_FUNCTION_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "T",
+          "text": "T"
+        }
+      ],
+      "message1": "%1 %2 ( %3 %4 )",
+      "args1": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "T"
+        },
+        {
+          "type": "field_input",
+          "name": "FUNC_NAME",
+          "text": "myFunc"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAM_TYPE",
+          "text": "T"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAM_NAME",
+          "text": "a"
+        }
+      ],
+      "message2": "%1",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAM_TYPE} ${PARAM_NAME}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "template_declaration",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "t",
+          "ast": "parameters",
+          "extract": "text"
+        },
+        {
+          "semantic": "return_type",
+          "ast": "declarator.type",
+          "extract": "text"
+        },
+        {
+          "semantic": "func_name",
+          "ast": "declarator.declarator",
+          "extract": "text"
+        },
+        {
+          "semantic": "param_type",
+          "ast": "declarator.parameters[0].type",
+          "extract": "text"
+        },
+        {
+          "semantic": "param_name",
+          "ast": "declarator.parameters[0].declarator",
+          "extract": "text"
+        },
+        {
+          "semantic": "body",
+          "ast": "declarator.body",
+          "extract": "liftBody"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_stack_declare",
+    "conceptId": "cpp_stack_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_declare",
+      "message0": "%{BKY_CPP_STACK_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_STACK_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_STACK_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_STACK_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_STACK_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "stk"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::stack<${TYPE}> ${NAME};",
+      "imports": [
+        "stack"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_queue_declare",
+    "conceptId": "cpp_queue_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_queue_declare",
+      "message0": "%{BKY_CPP_QUEUE_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_QUEUE_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_QUEUE_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_QUEUE_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_QUEUE_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "que"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::queue<${TYPE}> ${NAME};",
+      "imports": [
+        "queue"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_set_declare",
+    "conceptId": "cpp_set_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_set_declare",
+      "message0": "%{BKY_CPP_SET_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "s"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SET_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::set<${TYPE}> ${NAME};",
+      "imports": [
+        "set"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_method_call",
+    "conceptId": "cpp_method_call",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call",
+      "message0": "%{BKY_CPP_METHOD_CALL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": "push_back"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_method_call_expr",
+    "conceptId": "cpp_method_call_expr",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call_expr",
+      "message0": "%{BKY_CPP_METHOD_CALL_EXPR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": "size"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_METHOD_CALL_EXPR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS})",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
+      ]
+    }
+  }
+]

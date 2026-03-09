@@ -1,4 +1,4 @@
-import type { ConceptDef, CognitiveLevel } from './types'
+import type { ConceptDef, ConceptDefJSON, CognitiveLevel } from './types'
 
 export class ConceptRegistry {
   private concepts = new Map<string, ConceptDef>()
@@ -35,6 +35,21 @@ export class ConceptRegistry {
   /** Register or update a concept (overwrites if already exists) */
   registerOrUpdate(def: ConceptDef): void {
     this.concepts.set(def.id, def)
+  }
+
+  /** Batch load from concepts.json format */
+  loadFromJSON(concepts: ConceptDefJSON[]): void {
+    for (const c of concepts) {
+      this.registerOrUpdate({
+        id: c.conceptId,
+        layer: c.layer,
+        level: c.level,
+        abstractConcept: c.abstractConcept ?? undefined,
+        propertyNames: c.properties,
+        childNames: Object.keys(c.children),
+        annotations: c.annotations,
+      })
+    }
   }
 
   /** Query an annotation value for a concept */

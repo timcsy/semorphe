@@ -732,17 +732,17 @@ arduino-neopixel（depends: arduino-core）
 
 前置條件：Phase 2 完成
 
-- [ ] **3.1 拆分 BlockSpec JSON**
-  - [ ] `semantics/concepts.json`：concept 定義 + annotations
-  - [ ] `projections/blocks/block-specs.json`：blockDef + renderMapping
-  - [ ] 兩者透過 `conceptId` 關聯
-  - [ ] 載入邏輯更新：ConceptRegistry 讀 concepts.json，BlockSpecRegistry 讀 block-specs.json
-- [ ] **3.2 語言套件 manifest**
-  - [ ] `languages/cpp/manifest.json`：id、name、version、provides、parser
-  - [ ] LanguageModule 從 manifest 驅動載入
-- [ ] **Phase 3 驗證**
-  - [ ] 新增一個 dummy 唯讀視圖，不修改語言套件的任何檔案
-  - [ ] 全部測試通過
+- [x] **3.1 拆分 BlockSpec JSON**
+  - [x] `semantics/concepts.json`：concept 定義 + annotations
+  - [x] `projections/blocks/block-specs.json`：blockDef + renderMapping
+  - [x] 兩者透過 `conceptId` 關聯
+  - [x] 載入邏輯更新：ConceptRegistry 讀 concepts.json，BlockSpecRegistry 讀 block-specs.json
+- [x] **3.2 語言套件 manifest**
+  - [x] `languages/cpp/manifest.json`：id、name、version、provides、parser
+  - [x] LanguageModule 從 manifest 驅動載入
+- [x] **Phase 3 驗證**
+  - [x] 新增一個 dummy 唯讀視圖，不修改語言套件的任何檔案
+  - [x] 全部測試通過
 
 ### Phase 4：VSCode Extension 原型
 

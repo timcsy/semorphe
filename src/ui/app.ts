@@ -24,17 +24,23 @@ import type { SavedState } from '../core/storage'
 import { LocaleLoader } from '../i18n/loader'
 import type { LevelSelector } from './toolbar/level-selector'
 import type { StyleSelector } from './toolbar/style-selector'
-import type { StylePreset, BlockSpec, CognitiveLevel } from '../core/types'
+import type { StylePreset, BlockSpec, CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
 import { buildToolbox } from './toolbox-builder'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements } from './app-shell'
 import { ExecutionController } from './execution-controller'
-import universalBlocks from '../blocks/universal.json'
-import cppBasicBlocks from '../languages/cpp/blocks/basic.json'
-import cppSpecialBlocks from '../languages/cpp/blocks/special.json'
-import cppAdvancedBlocks from '../languages/cpp/blocks/advanced.json'
+import { mergeToBlockSpecs } from '../core/block-spec-adapter'
+// Semantic layer: concept definitions
+import universalConcepts from '../blocks/semantics/universal-concepts.json'
+import cppConcepts from '../languages/cpp/semantics/concepts.json'
+// Projection layer: block definitions
+import universalBlockProjections from '../blocks/projections/blocks/universal-blocks.json'
+import cppBasicProjections from '../languages/cpp/projections/blocks/basic.json'
+import cppSpecialProjections from '../languages/cpp/projections/blocks/special.json'
+import cppAdvancedProjections from '../languages/cpp/projections/blocks/advanced.json'
+// Stdlib (still in old format for now)
 import cppStdlibContainers from '../languages/cpp/blocks/stdlib/containers.json'
 import cppStdlibAlgorithms from '../languages/cpp/blocks/stdlib/algorithms.json'
 import apcsPreset from '../languages/cpp/styles/apcs.json'
@@ -88,13 +94,15 @@ export class App {
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
 
-    // 3. Load block specs
-    this.blockSpecRegistry.loadFromJSON(universalBlocks as unknown as BlockSpec[])
-    this.blockSpecRegistry.loadFromJSON(cppBasicBlocks as unknown as BlockSpec[])
-    this.blockSpecRegistry.loadFromJSON(cppSpecialBlocks as unknown as BlockSpec[])
+    // 3. Load block specs (split concept/projection architecture)
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    const allProjections = [
+      ...universalBlockProjections as unknown as BlockProjectionJSON[], ...cppBasicProjections as unknown as BlockProjectionJSON[],
+      ...cppSpecialProjections as unknown as BlockProjectionJSON[], ...cppAdvancedProjections as unknown as BlockProjectionJSON[],
+    ]
+    this.blockSpecRegistry.loadFromJSON(mergeToBlockSpecs(allConcepts, allProjections))
     this.blockSpecRegistry.loadFromJSON(cppStdlibContainers as unknown as BlockSpec[])
     this.blockSpecRegistry.loadFromJSON(cppStdlibAlgorithms as unknown as BlockSpec[])
-    this.blockSpecRegistry.loadFromJSON(cppAdvancedBlocks as unknown as BlockSpec[])
 
     // 4. Register all blocks with Blockly
     this.blockRegistrar.registerAll({
