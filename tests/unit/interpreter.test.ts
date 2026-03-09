@@ -937,6 +937,31 @@ describe('Interpreter - more edge cases', () => {
     expect(interp.getOutput().join('')).toBe('10 20')
   })
 
+  it('should split space-separated input for cin >> a >> b >> c', async () => {
+    const interp = await run([
+      createNode('var_declare', { name: 'a', type: 'double' }, {}),
+      createNode('var_declare', { name: 'b', type: 'double' }, {}),
+      createNode('var_declare', { name: 'c', type: 'double' }, {}),
+      createNode('input', {}, {
+        values: [
+          createNode('var_ref', { name: 'a' }, {}),
+          createNode('var_ref', { name: 'b' }, {}),
+          createNode('var_ref', { name: 'c' }, {}),
+        ]
+      }),
+      createNode('print', {}, {
+        values: [
+          createNode('var_ref', { name: 'a' }, {}),
+          createNode('string_literal', { value: ' ' }, {}),
+          createNode('var_ref', { name: 'b' }, {}),
+          createNode('string_literal', { value: ' ' }, {}),
+          createNode('var_ref', { name: 'c' }, {}),
+        ]
+      })
+    ], ['1 2 3'])  // Single line with spaces
+    expect(interp.getOutput().join('')).toBe('1 2 3')
+  })
+
   it('should handle boolean-like logic with numbers', async () => {
     const interp = await run([
       createNode('if', {}, {

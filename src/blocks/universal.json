@@ -312,7 +312,7 @@
     "concept": {
       "conceptId": "negate",
       "abstractConcept": "negate",
-      "children": { "operand": "expression" },
+      "children": { "value": "expression" },
       "role": "expression"
     },
     "blockDef": {

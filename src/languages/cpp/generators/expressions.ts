@@ -1,5 +1,49 @@
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
+import type { SemanticNode } from '../../../core/types'
+
+/** C++ operator precedence (higher = binds tighter) */
+function precedence(node: SemanticNode | undefined): number {
+  if (!node) return 100
+  switch (node.concept) {
+    case 'cpp_comma_expr': return 1
+    case 'var_assign': return 2
+    case 'cpp_compound_assign_expr': return 2
+    case 'cpp_ternary': return 3
+    case 'logic': {
+      const op = node.properties.operator
+      return op === '||' ? 4 : 5 // || = 4, && = 5
+    }
+    case 'compare': {
+      const op = node.properties.operator
+      return (op === '==' || op === '!=') ? 8 : 9 // == != = 8, < > <= >= = 9
+    }
+    case 'arithmetic': {
+      const op = node.properties.operator
+      return (op === '+' || op === '-') ? 11 : 12 // + - = 11, * / % = 12
+    }
+    case 'negate':
+    case 'logic_not':
+    case 'bitwise_not':
+    case 'cpp_address_of':
+    case 'cpp_pointer_deref':
+    case 'cpp_cast':
+      return 14 // unary prefix
+    case 'cpp_increment_expr': return 15
+    case 'func_call_expr':
+    case 'array_access':
+      return 16
+    default: return 100 // literals, var_ref, etc. — never need parens
+  }
+}
+
+/** Wrap child expression in parentheses if its precedence is lower than parent's */
+function genChild(child: SemanticNode | undefined, parentPrec: number, ctx: Parameters<NodeGenerator>[1]): string {
+  const expr = generateExpression(child, ctx)
+  if (!child) return expr
+  const childPrec = precedence(child)
+  return childPrec < parentPrec ? `(${expr})` : expr
+}
 
 export function registerExpressionGenerators(g: Map<string, NodeGenerator>): void {
   g.set('var_ref', (node, _ctx) => {
@@ -19,34 +63,41 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
   })
 
   g.set('arithmetic', (node, ctx) => {
-    const left = generateExpression((node.children.left ?? [])[0], ctx)
-    const right = generateExpression((node.children.right ?? [])[0], ctx)
     const op = node.properties.operator ?? '+'
+    const prec = precedence(node)
+    const leftNode = (node.children.left ?? [])[0]
+    const rightNode = (node.children.right ?? [])[0]
+    const left = genChild(leftNode, prec, ctx)
+    // Right child: use prec+1 to force parens for same-precedence on right side
+    // e.g. a - (b - c) needs parens, but a - b + c doesn't (left-to-right)
+    const right = genChild(rightNode, prec + 1, ctx)
     return `${left} ${op} ${right}`
   })
 
   g.set('compare', (node, ctx) => {
-    const left = generateExpression((node.children.left ?? [])[0], ctx)
-    const right = generateExpression((node.children.right ?? [])[0], ctx)
+    const prec = precedence(node)
+    const left = genChild((node.children.left ?? [])[0], prec, ctx)
+    const right = genChild((node.children.right ?? [])[0], prec, ctx)
     const op = node.properties.operator ?? '=='
     return `${left} ${op} ${right}`
   })
 
   g.set('logic', (node, ctx) => {
-    const left = generateExpression((node.children.left ?? [])[0], ctx)
-    const right = generateExpression((node.children.right ?? [])[0], ctx)
+    const prec = precedence(node)
+    const left = genChild((node.children.left ?? [])[0], prec, ctx)
+    const right = genChild((node.children.right ?? [])[0], prec + 1, ctx)
     const op = node.properties.operator ?? '&&'
     return `${left} ${op} ${right}`
   })
 
   g.set('logic_not', (node, ctx) => {
-    const operand = generateExpression((node.children.operand ?? [])[0], ctx)
+    const operand = genChild((node.children.operand ?? [])[0], precedence(node), ctx)
     return `!${operand}`
   })
 
   g.set('negate', (node, ctx) => {
     const op = (node.properties.operator as string) ?? '-'
-    const val = generateExpression((node.children.value ?? node.children.operand ?? [])[0], ctx)
+    const val = genChild((node.children.value ?? node.children.operand ?? [])[0], precedence(node), ctx)
     return `${op}${val}`
   })
 

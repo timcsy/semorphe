@@ -37,7 +37,7 @@ import { StyleSelector } from './toolbar/style-selector'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { LocaleSelector } from './toolbar/locale-selector'
 import type { BlockStylePreset } from '../languages/style'
-import { isBlockAvailable } from '../core/cognitive-levels'
+import { isBlockAvailable, getBlockLevel } from '../core/cognitive-levels'
 import type { StylePreset, BlockSpec, CognitiveLevel } from '../core/types'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import universalBlocks from '../blocks/universal.json'
@@ -1945,10 +1945,16 @@ export class App {
     }
 
     // 類別定義（順序固定，內容由 registry 動態生成）
-    const CATEGORY_DEFS: Array<{ key: string; nameKey: string; fallback: string; colorKey: string; registryCategories: string[]; extraTypes?: string[] }> = [
+    type ExtraBlockDef = string | { type: string; extraState?: Record<string, unknown>; level?: CognitiveLevel }
+    const CATEGORY_DEFS: Array<{ key: string; nameKey: string; fallback: string; colorKey: string; registryCategories: string[]; extraTypes?: ExtraBlockDef[]; excludeTypes?: string[] }> = [
       { key: 'data', nameKey: 'CATEGORY_DATA', fallback: '資料', colorKey: 'data', registryCategories: ['data'], extraTypes: ['u_var_declare', 'u_var_assign', 'u_var_ref', 'u_number', 'u_string'] },
       { key: 'operators', nameKey: 'CATEGORY_OPERATORS', fallback: '運算', colorKey: 'operators', registryCategories: ['operators'], extraTypes: ['u_arithmetic', 'u_compare', 'u_logic', 'u_logic_not', 'u_negate'] },
-      { key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control', registryCategories: ['control', 'loops'], extraTypes: ['u_if', 'u_while_loop', 'u_count_loop', 'u_break', 'u_continue'] },
+      { key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control', registryCategories: ['control', 'loops'], excludeTypes: ['u_if_else'], extraTypes: [
+        { type: 'u_if' },
+        { type: 'u_if', extraState: { hasElse: true } },
+        { type: 'u_if', extraState: { elseifCount: 1, hasElse: true }, level: 1 },
+        'u_while_loop', 'u_count_loop', 'u_break', 'u_continue',
+      ] },
       { key: 'functions', nameKey: 'CATEGORY_FUNCTIONS', fallback: '函式', colorKey: 'functions', registryCategories: ['functions'], extraTypes: ['u_func_def', 'u_func_call', 'u_func_call_expr', 'u_return'] },
       { key: 'arrays', nameKey: 'CATEGORY_ARRAYS', fallback: '陣列', colorKey: 'arrays', registryCategories: ['arrays'], extraTypes: ['u_array_declare', 'u_array_access', 'u_array_assign'] },
       { key: 'cpp_basic', nameKey: 'CATEGORY_CPP_BASIC', fallback: 'C++ 基礎', colorKey: 'cpp_basic', registryCategories: ['cpp_basic', 'conditions', 'preprocessor'] },
@@ -1962,23 +1968,48 @@ export class App {
 
     const categories = CATEGORY_DEFS.map(def => {
       // Merge blocks from all registry categories
+      const excludeSet = new Set(def.excludeTypes ?? [])
       const blockSet = new Set<string>()
       for (const cat of def.registryCategories) {
         for (const b of registryBlocks(cat)) {
-          blockSet.add(b.type)
+          if (!excludeSet.has(b.type)) blockSet.add(b.type)
         }
       }
       // Ensure dynamic blocks (registered in code, not in JSON) are included
+      // extraTypes can be strings or objects with extraState for preconfigured variants
+      // Object-form entries replace their type in-place; string entries append if missing
+      type ToolboxEntry = { kind: string; type: string; extraState?: Record<string, unknown> }
+      const extraReplacements = new Map<string, ToolboxEntry[]>() // type → replacement entries
+      const extraAppend: ToolboxEntry[] = []
       if (def.extraTypes) {
         for (const t of def.extraTypes) {
-          if (isBlockAvailable(t, lv)) blockSet.add(t)
+          if (typeof t === 'string') {
+            if (!isBlockAvailable(t, lv)) continue
+            if (!blockSet.has(t)) extraAppend.push({ kind: 'block', type: t })
+            blockSet.add(t)
+          } else {
+            const effectiveLevel = t.level ?? getBlockLevel(t.type)
+            if (effectiveLevel > lv) continue
+            if (!extraReplacements.has(t.type)) extraReplacements.set(t.type, [])
+            extraReplacements.get(t.type)!.push({ kind: 'block', type: t.type, ...(t.extraState ? { extraState: t.extraState } : {}) })
+          }
         }
       }
+      // Build contents: replace registry blocks with their variants in-place
+      const contents: ToolboxEntry[] = []
+      for (const t of blockSet) {
+        if (extraReplacements.has(t)) {
+          contents.push(...extraReplacements.get(t)!)
+        } else {
+          contents.push({ kind: 'block', type: t })
+        }
+      }
+      contents.push(...extraAppend)
       return {
         kind: 'category',
         name: (Blockly.Msg as Record<string, string>)[def.nameKey] || def.fallback,
         colour: CATEGORY_COLORS[def.colorKey] || CATEGORY_COLORS.data,
-        contents: [...blockSet].map(t => ({ kind: 'block', type: t })),
+        contents,
       }
     })
 

@@ -31,7 +31,7 @@ export class SemanticInterpreter {
   private inputProvider: (() => Promise<string>) | null = null
   private outputCallback: ((text: string) => void) | null = null
   private pointerTargets = new Map<string, import('./scope').Scope>()
-  private scanfTokenBuffer: string[] = []  // buffered tokens for scanf whitespace splitting
+  private scanfTokenBuffer: string[] = []  // buffered tokens for scanf/cin whitespace splitting
   private aborted = false
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((blockId: string | null) => void) | null = null
@@ -916,8 +916,15 @@ export class SemanticInterpreter {
           const index = this.toNumber(indexVal)
           // Determine element type from existing array elements
           const elemType = arr.value.length > 0 ? arr.value[0].type : 'int'
-          let raw = this.io.read()
-          if (raw === null && this.inputProvider) { raw = await this.awaitInput() }
+          let raw = this.readCinToken()
+          if (raw === null && this.inputProvider) {
+            const line = await this.awaitInput()
+            if (line !== null) {
+              const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
+              this.scanfTokenBuffer.push(...tokens)
+              raw = this.readCinToken()
+            }
+          }
           if (raw === null) {
             // EOF: cin >> x returns falsy (0) on EOF
             return { type: 'int', value: 0 }
@@ -937,9 +944,14 @@ export class SemanticInterpreter {
           targetType = existing.type
         } catch { /* variable might not exist yet */ }
 
-        let raw = this.io.read()
+        let raw = this.readCinToken()
         if (raw === null && this.inputProvider) {
-          raw = await this.awaitInput()
+          const line = await this.awaitInput()
+          if (line !== null) {
+            const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
+            this.scanfTokenBuffer.push(...tokens)
+            raw = this.readCinToken()
+          }
         }
         if (raw === null) {
           // EOF: cin >> x returns falsy (0) on EOF
@@ -1056,6 +1068,23 @@ export class SemanticInterpreter {
 
     // Return number of items successfully read (like real scanf)
     return { type: 'int', value: itemsRead }
+  }
+
+  /** Read a single whitespace-delimited token for cin >>. Shares buffer with scanf. */
+  private readCinToken(): string | null {
+    // Return buffered token if available
+    if (this.scanfTokenBuffer.length > 0) {
+      return this.scanfTokenBuffer.shift()!
+    }
+    // Read next line from IO and split into tokens
+    const line = this.io.read()
+    if (line === null) return null
+    const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
+    if (tokens.length === 0) return null
+    if (tokens.length > 1) {
+      this.scanfTokenBuffer.push(...tokens.slice(1))
+    }
+    return tokens[0]
   }
 
   /** Read a single whitespace-delimited token for scanf. Splits lines into tokens. */

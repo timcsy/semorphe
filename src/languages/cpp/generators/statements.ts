@@ -30,6 +30,15 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     let code = header
     code += generateBody(thenBody, indented(ctx))
     code += `${indent(ctx)}}`
+    if (elseBody.length === 1 && elseBody[0].concept === 'if' && elseBody[0].properties.isElseIf === 'true') {
+      // else-if chain: produce "} else if (...) {" instead of nested "} else { if ... }"
+      const elseIfSep = style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '
+      trackOwnText(ctx, `${indent(ctx)}}` + elseIfSep + 'else ')
+      code += elseIfSep + 'else '
+      // Recursively generate the if node at same indentation (no extra indent)
+      code += ifGenerator(elseBody[0], ctx).replace(new RegExp('^' + indent(ctx)), '')
+      return code
+    }
     if (elseBody.length > 0) {
       const elseHeader = `${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}else${openBrace(ctx)}\n`
       trackOwnText(ctx, `${indent(ctx)}}` + elseHeader)

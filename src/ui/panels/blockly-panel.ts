@@ -499,7 +499,7 @@ export class BlocklyPanel {
     const thenBody = this.extractStatementInput(block, `ELSEIF_THEN_${index}`)
     const elseBody = this.buildElseIfChain(block, index + 1)
 
-    return [createNode('if', {}, {
+    return [createNode('if', { isElseIf: 'true' }, {
       condition: cond ? [cond] : [],
       then_body: thenBody,
       else_body: elseBody,

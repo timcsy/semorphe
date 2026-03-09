@@ -529,7 +529,17 @@ export class PatternLifter {
             children[fm.semantic] = [lifted]
           } else {
             // Fallback: lift named children (handles else_clause, etc.)
-            children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+            const liftedChildren = ctx.liftChildren(child.namedChildren)
+            // Mark direct "else if" chains: when an else_clause contains
+            // a direct if_statement (not wrapped in compound_statement),
+            // mark the resulting if node with isElseIf so renderer/generator
+            // can distinguish from "else { if (...) {} }"
+            if (child.type === 'else_clause' && child.namedChildren.length === 1
+                && child.namedChildren[0].type === 'if_statement'
+                && liftedChildren.length === 1 && liftedChildren[0].concept === 'if') {
+              liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
+            }
+            children[fm.semantic] = liftedChildren
           }
         } else {
           children[fm.semantic] = []

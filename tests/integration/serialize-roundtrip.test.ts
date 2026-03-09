@@ -114,4 +114,100 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     expect(ifBlock.inputs[IF_INPUTS.statement[0]]).toBeDefined()
     expect(ifBlock.inputs['COND']).toBeUndefined()
   })
+
+  it('if-else-if-else chain flattened into single u_if with ELSEIF inputs', () => {
+    // Semantic tree: nested if chain (as produced by lifter)
+    // if (a > 0) { x = 1 } else if (b > 0) { x = 2 } else if (c > 0) { x = 3 } else { x = 4 }
+    const ifChain = createNode('if', {}, {
+      condition: [createNode('compare', { operator: '>' }, {
+        left: [createNode('var_ref', { name: 'a' })],
+        right: [createNode('number_literal', { value: '0' })],
+      })],
+      then_body: [createNode('var_assign', { name: 'x' }, {
+        value: [createNode('number_literal', { value: '1' })],
+      })],
+      else_body: [createNode('if', { isElseIf: 'true' }, {
+        condition: [createNode('compare', { operator: '>' }, {
+          left: [createNode('var_ref', { name: 'b' })],
+          right: [createNode('number_literal', { value: '0' })],
+        })],
+        then_body: [createNode('var_assign', { name: 'x' }, {
+          value: [createNode('number_literal', { value: '2' })],
+        })],
+        else_body: [createNode('if', { isElseIf: 'true' }, {
+          condition: [createNode('compare', { operator: '>' }, {
+            left: [createNode('var_ref', { name: 'c' })],
+            right: [createNode('number_literal', { value: '0' })],
+          })],
+          then_body: [createNode('var_assign', { name: 'x' }, {
+            value: [createNode('number_literal', { value: '3' })],
+          })],
+          else_body: [createNode('var_assign', { name: 'x' }, {
+            value: [createNode('number_literal', { value: '4' })],
+          })],
+        })],
+      })],
+    })
+
+    const state = renderToBlocklyState(makeProgram(ifChain))
+    const block = state.blocks.blocks[0]
+
+    expect(block.type).toBe('u_if')
+    // Primary condition and body
+    expect(block.inputs['CONDITION']).toBeDefined()
+    expect(block.inputs['THEN']).toBeDefined()
+    // Flattened else-if inputs (not nested u_if blocks)
+    expect(block.inputs['ELSEIF_CONDITION_0']).toBeDefined()
+    expect(block.inputs['ELSEIF_THEN_0']).toBeDefined()
+    expect(block.inputs['ELSEIF_CONDITION_1']).toBeDefined()
+    expect(block.inputs['ELSEIF_THEN_1']).toBeDefined()
+    // Final else
+    expect(block.inputs['ELSE']).toBeDefined()
+    // extraState should reflect the structure
+    expect(block.extraState).toEqual({ elseifCount: 2, hasElse: true })
+    // Should NOT have nested u_if in ELSE
+    expect(block.inputs['ELSE'].block.type).not.toBe('u_if')
+  })
+
+  it('if-else-if without final else', () => {
+    const ifChain = createNode('if', {}, {
+      condition: [createNode('var_ref', { name: 'a' })],
+      then_body: [createNode('break', {})],
+      else_body: [createNode('if', { isElseIf: 'true' }, {
+        condition: [createNode('var_ref', { name: 'b' })],
+        then_body: [createNode('continue', {})],
+      })],
+    })
+
+    const state = renderToBlocklyState(makeProgram(ifChain))
+    const block = state.blocks.blocks[0]
+
+    expect(block.type).toBe('u_if')
+    expect(block.inputs['ELSEIF_CONDITION_0']).toBeDefined()
+    expect(block.inputs['ELSEIF_THEN_0']).toBeDefined()
+    expect(block.inputs['ELSE']).toBeUndefined()
+    expect(block.extraState).toEqual({ elseifCount: 1, hasElse: false })
+  })
+
+  it('u_negate rendered state has VALUE input with child expression', () => {
+    const negateExpr = createNode('negate', {}, {
+      value: [createNode('var_ref', { name: 'b' })],
+    })
+    const assign = createNode('var_assign', { name: 'result' }, {
+      value: [negateExpr],
+    })
+    const state = renderToBlocklyState(makeProgram(assign))
+    const assignBlock = state.blocks.blocks[0]
+
+    expect(assignBlock.type).toBe('u_var_assign')
+    // The negate block should be in the VALUE input of the assignment
+    const valueInput = assignBlock.inputs['VALUE']
+    expect(valueInput).toBeDefined()
+    const negateBlock = valueInput.block
+    expect(negateBlock.type).toBe('u_negate')
+    // The negate block must have a VALUE input containing var_ref(b)
+    expect(negateBlock.inputs['VALUE']).toBeDefined()
+    expect(negateBlock.inputs['VALUE'].block).toBeDefined()
+    expect(negateBlock.inputs['VALUE'].block.type).toBe('u_var_ref')
+  })
 })

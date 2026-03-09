@@ -27,7 +27,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     if (cond?.concept === '_compound') cond = null
 
     const thenBody = extractBody(thenNode, ctx)
-    const elseBody = elseNode ? extractBody(elseNode, ctx) : []
+    let elseBody = elseNode ? extractBody(elseNode, ctx) : []
 
     return createNode('if', {}, {
       condition: cond ? [cond] : [],
