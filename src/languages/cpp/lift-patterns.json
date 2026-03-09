@@ -224,17 +224,6 @@
     "priority": 1
   },
   {
-    "id": "cpp_assignment_expression",
-    "astNodeType": "assignment_expression",
-    "concept": { "conceptId": "var_assign" },
-    "constraints": [{ "field": "$operator", "text": "=" }],
-    "fieldMappings": [
-      { "semantic": "name", "ast": "left", "extract": "text" },
-      { "semantic": "value", "ast": "right", "extract": "lift" }
-    ],
-    "priority": 3
-  },
-  {
     "id": "cpp_translation_unit",
     "astNodeType": "translation_unit",
     "concept": { "conceptId": "program" },

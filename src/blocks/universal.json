@@ -858,9 +858,9 @@
       "message0": "%{BKY_U_ARRAY_ACCESS_MSG0}",
       "args0": [
         {
-          "type": "field_input",
-          "name": "ARRAY",
-          "text": "arr"
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [["arr", "arr"]]
         },
         {
           "type": "input_value",
@@ -872,6 +872,46 @@
       "output": "Expression",
       "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_ACCESS_TOOLTIP}"
+    }
+  },
+  {
+    "id": "u_array_assign",
+    "language": "universal",
+    "category": "arrays",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "array_assign",
+      "abstractConcept": "array_assign",
+      "properties": ["name"],
+      "children": { "index": "expression", "value": "expression" },
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "u_array_assign",
+      "message0": "%{BKY_U_ARRAY_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [["arr", "arr"]]
+        },
+        {
+          "type": "input_value",
+          "name": "INDEX",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_U_ARRAY_ASSIGN_TOOLTIP}"
     }
   }
 ]

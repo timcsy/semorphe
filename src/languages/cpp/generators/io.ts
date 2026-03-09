@@ -9,15 +9,27 @@ export function registerIOGenerators(g: Map<string, NodeGenerator>, style: Style
       const parts = values.map(v => generateExpression(v, ctx))
       return `${indent(ctx)}cout << ${parts.join(' << ')};\n`
     }
-    // printf mode: separate endl nodes from value expressions
-    const exprValues = values.filter(v => v.concept !== 'endl')
+    // printf mode: embed string_literal values into format, use %d for expressions
     const hasEndl = values.some(v => v.concept === 'endl')
-    const parts = exprValues.map(v => generateExpression(v, ctx))
-    if (parts.length === 0 && hasEndl) {
+    const fmtParts: string[] = []
+    const argParts: string[] = []
+    for (const v of values) {
+      if (v.concept === 'endl') continue
+      if (v.concept === 'string_literal') {
+        fmtParts.push((v.properties.value as string) ?? '')
+      } else {
+        fmtParts.push('%d')
+        argParts.push(generateExpression(v, ctx))
+      }
+    }
+    if (fmtParts.length === 0 && hasEndl) {
       return `${indent(ctx)}printf("\\n");\n`
     }
-    const fmt = parts.map(() => '%d').join(' ') + (hasEndl ? '\\n' : '')
-    return `${indent(ctx)}printf("${fmt}", ${parts.join(', ')});\n`
+    const fmt = fmtParts.join('') + (hasEndl ? '\\n' : '')
+    if (argParts.length > 0) {
+      return `${indent(ctx)}printf("${fmt}", ${argParts.join(', ')});\n`
+    }
+    return `${indent(ctx)}printf("${fmt}");\n`
   })
 
   g.set('input', (node, ctx) => {

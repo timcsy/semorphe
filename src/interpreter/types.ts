@@ -1,7 +1,7 @@
 import type { SemanticNode } from '../core/types'
 
 /** 執行期型別 */
-export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array'
+export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer'
 
 /** 執行期值 */
 export interface RuntimeValue {

@@ -179,4 +179,202 @@ describe('SyncController', () => {
       // No error thrown
     })
   })
+
+  describe('style exception detection', () => {
+    it('should call onStyleExceptions when non-conforming nodes found', () => {
+      // Set APCS style (io_style: cout → ioPreference: iostream)
+      const apcsStyle: StylePreset = {
+        ...mockStyle,
+        id: 'apcs',
+        io_style: 'cout',
+        header_style: 'individual',
+      }
+      controller.setCodingStyle(apcsStyle)
+
+      const exceptionsCallback = vi.fn()
+      controller.onStyleExceptions(exceptionsCallback)
+
+      // Create a tree with cpp_printf (non-conforming in APCS/iostream mode)
+      const tree = createNode('program', {}, {
+        body: [createNode('cpp_printf', { format: '%d\\n' })],
+      })
+
+      const rootNode = {
+        type: 'translation_unit',
+        text: '',
+        isNamed: true,
+        children: [],
+        namedChildren: [],
+        childForFieldName: () => null,
+        startPosition: { row: 0, column: 0 },
+        endPosition: { row: 0, column: 0 },
+      }
+      const mockParser: CodeParser = {
+        parse: vi.fn(() => ({ rootNode })),
+      }
+
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => tree)
+
+      controller.setCodeToBlocksPipeline(lifter, mockParser)
+      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
+
+      controller.syncCodeToBlocks()
+
+      expect(exceptionsCallback).toHaveBeenCalled()
+      const [exceptions] = exceptionsCallback.mock.calls[0]
+      expect(exceptions).toHaveLength(1)
+      expect(exceptions[0].label).toContain('printf')
+    })
+
+    it('should NOT call onStyleExceptions when all nodes conform', () => {
+      controller.setCodingStyle(mockStyle)
+
+      const exceptionsCallback = vi.fn()
+      controller.onStyleExceptions(exceptionsCallback)
+
+      // Create a conforming tree (print is fine in iostream mode)
+      const tree = createNode('program', {}, {
+        body: [createNode('print', {}, { values: [createNode('string', { value: 'hello' })] })],
+      })
+
+      const rootNode = {
+        type: 'translation_unit',
+        text: '',
+        isNamed: true,
+        children: [],
+        namedChildren: [],
+        childForFieldName: () => null,
+        startPosition: { row: 0, column: 0 },
+        endPosition: { row: 0, column: 0 },
+      }
+      const mockParser: CodeParser = {
+        parse: vi.fn(() => ({ rootNode })),
+      }
+
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => tree)
+
+      controller.setCodeToBlocksPipeline(lifter, mockParser)
+      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
+
+      controller.syncCodeToBlocks()
+
+      expect(exceptionsCallback).not.toHaveBeenCalled()
+    })
+
+    it('should convert StylePreset io_style=printf to CodingStyle ioPreference=cstdio', () => {
+      const compStyle: StylePreset = {
+        ...mockStyle,
+        id: 'competitive',
+        io_style: 'printf',
+        header_style: 'bits',
+      }
+      controller.setCodingStyle(compStyle)
+
+      const exceptionsCallback = vi.fn()
+      controller.onStyleExceptions(exceptionsCallback)
+
+      // iostream is non-conforming in competitive/cstdio mode
+      const tree = createNode('program', {}, {
+        body: [createNode('cpp_include', { header: 'iostream', local: false })],
+      })
+
+      const rootNode = {
+        type: 'translation_unit',
+        text: '',
+        isNamed: true,
+        children: [],
+        namedChildren: [],
+        childForFieldName: () => null,
+        startPosition: { row: 0, column: 0 },
+        endPosition: { row: 0, column: 0 },
+      }
+      const mockParser: CodeParser = {
+        parse: vi.fn(() => ({ rootNode })),
+      }
+
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => tree)
+
+      controller.setCodeToBlocksPipeline(lifter, mockParser)
+      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
+
+      controller.syncCodeToBlocks()
+
+      expect(exceptionsCallback).toHaveBeenCalled()
+      const [exceptions] = exceptionsCallback.mock.calls[0]
+      expect(exceptions).toHaveLength(1)
+      expect(exceptions[0].label).toContain('iostream')
+      expect(exceptions[0].suggestion).toContain('cstdio')
+    })
+  })
+
+  describe('I/O conformance analysis (借音/轉調)', () => {
+    function setupWithCode(code: string) {
+      const rootNode = {
+        type: 'translation_unit',
+        text: '',
+        isNamed: true,
+        children: [],
+        namedChildren: [],
+        childForFieldName: () => null,
+        startPosition: { row: 0, column: 0 },
+        endPosition: { row: 0, column: 0 },
+      }
+      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => createNode('program', {}, { body: [] }))
+      controller.setCodeToBlocksPipeline(lifter, mockParser)
+      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue(code)
+    }
+
+    it('should fire bulk_deviation when code mostly uses cstdio in iostream preset', () => {
+      controller.setCodingStyle(mockStyle) // io_style: 'cout' → iostream
+      const ioCallback = vi.fn()
+      controller.onIoConformance(ioCallback)
+
+      setupWithCode('printf("a"); scanf("%d", &x); printf("b"); cout << z;')
+      // cstdio=3 (printf, scanf, printf), iostream=1 (cout) → bulk deviation
+      controller.syncCodeToBlocks()
+
+      expect(ioCallback).toHaveBeenCalledTimes(1)
+      expect(ioCallback.mock.calls[0][0].verdict).toBe('bulk_deviation')
+    })
+
+    it('should fire minor_exception when code has one cstdio in iostream preset', () => {
+      controller.setCodingStyle(mockStyle)
+      const ioCallback = vi.fn()
+      controller.onIoConformance(ioCallback)
+
+      setupWithCode('cout << x << endl; cin >> y; cout << z; scanf("%d", &w);')
+      // iostream=4 (cout, endl, cin, cout), cstdio=1 (scanf) → minor exception
+      controller.syncCodeToBlocks()
+
+      expect(ioCallback).toHaveBeenCalledTimes(1)
+      expect(ioCallback.mock.calls[0][0].verdict).toBe('minor_exception')
+    })
+
+    it('should NOT fire when code fully conforms to preset', () => {
+      controller.setCodingStyle(mockStyle)
+      const ioCallback = vi.fn()
+      controller.onIoConformance(ioCallback)
+
+      setupWithCode('cout << "hello" << endl; cin >> x;')
+      controller.syncCodeToBlocks()
+
+      expect(ioCallback).not.toHaveBeenCalled()
+    })
+
+    it('should NOT fire when code has no I/O at all', () => {
+      controller.setCodingStyle(mockStyle)
+      const ioCallback = vi.fn()
+      controller.onIoConformance(ioCallback)
+
+      setupWithCode('int x = 5; return 0;')
+      controller.syncCodeToBlocks()
+
+      expect(ioCallback).not.toHaveBeenCalled()
+    })
+  })
 })

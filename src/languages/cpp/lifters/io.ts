@@ -15,7 +15,7 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // scanf("...", &args)
     if (funcName === 'scanf') {
-      return extractScanf(argsNode)
+      return extractScanf(argsNode, ctx)
     }
 
     // General function call
@@ -40,26 +40,32 @@ export function registerIOLifters(lifter: Lifter): void {
 }
 
 function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('print', {}, { values: [] })
+  if (!argsNode) return createNode('cpp_printf', { format: '' }, { args: [] })
   const args = argsNode.namedChildren
-  // Skip format string, lift remaining args
+  const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d\\n'
   const values = args.slice(1).map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-  return createNode('print', {}, { values })
+  return createNode('cpp_printf', { format: formatStr }, { args: values })
 }
 
-function extractScanf(argsNode: AstNode | null) {
-  if (!argsNode) return createNode('input', {}, { values: [createNode('var_ref', { name: 'x' })] })
+function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
+  if (!argsNode) return createNode('cpp_scanf', { format: '%d' }, { args: [createNode('var_ref', { name: 'x' })] })
   const args = argsNode.namedChildren
-  // Extract ALL variable names from &var args (skip format string at index 0)
-  if (args.length >= 2) {
-    const values = args.slice(1).map(varArg => {
-      // &x → unary_expression with & operator, child is identifier
-      const varName = varArg.type === 'unary_expression'
-        ? (varArg.namedChildren[0]?.text ?? 'x')
-        : varArg.text
+  const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d'
+  const values = args.slice(1).map(varArg => {
+    // &x → unary_expression or pointer_expression with & operator
+    // &arr[i] → unary_expression with subscript_expression child
+    if (varArg.type === 'unary_expression' || varArg.type === 'pointer_expression') {
+      const inner = varArg.namedChildren[0]
+      if (inner?.type === 'subscript_expression') {
+        // &arr[i] → lift as array_access
+        const lifted = ctx.lift(inner)
+        if (lifted) return lifted
+      }
+      const varName = inner?.text ?? 'x'
       return createNode('var_ref', { name: varName })
-    })
-    return createNode('input', {}, { values })
-  }
-  return createNode('input', {}, { values: [createNode('var_ref', { name: 'x' })] })
+    }
+    const varName = varArg.text.replace(/^&/, '')
+    return createNode('var_ref', { name: varName })
+  })
+  return createNode('cpp_scanf', { format: formatStr }, { args: values })
 }

@@ -317,8 +317,14 @@ export class PatternLifter {
           case 'liftBody': {
             const target = this.resolvePathNode(node, rule.path ?? '')
             if (target) {
-              const bodyChildren = target.namedChildren
-              children[semName] = ctx.liftChildren(bodyChildren)
+              const lifted = ctx.lift(target)
+              if (!lifted) {
+                // skip
+              } else if (lifted.concept === '_compound') {
+                children[semName] = lifted.children.body ?? []
+              } else {
+                children[semName] = [lifted]
+              }
             }
             break
           }
@@ -510,7 +516,21 @@ export class PatternLifter {
       case 'liftBody': {
         const child = node.childForFieldName(fm.ast)
         if (child) {
-          children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+          // Try lifting the node itself first. This correctly handles:
+          // - compound_statement → _compound → unwrap to body
+          // - return_statement → return node
+          // - expression_statement → unwrapped expression
+          // For wrapper nodes (else_clause) that have no lift handler,
+          // fall back to lifting their children.
+          const lifted = ctx.lift(child)
+          if (lifted && lifted.concept === '_compound') {
+            children[fm.semantic] = lifted.children.body ?? []
+          } else if (lifted && lifted.concept !== 'raw_code' && lifted.concept !== 'unresolved') {
+            children[fm.semantic] = [lifted]
+          } else {
+            // Fallback: lift named children (handles else_clause, etc.)
+            children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+          }
         } else {
           children[fm.semantic] = []
         }

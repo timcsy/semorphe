@@ -94,6 +94,38 @@ export function registerStatementLifters(lifter: Lifter): void {
   lifter.register('break_statement', () => createNode('break', {}))
   lifter.register('continue_statement', () => createNode('continue', {}))
 
+  // switch statement
+  lifter.register('switch_statement', (node, ctx) => {
+    const condNode = node.childForFieldName('condition')
+    const bodyNode = node.childForFieldName('body')
+
+    const cond = condNode ? ctx.lift(condNode) : null
+    // Body is a compound_statement containing case_statements
+    const caseNodes = bodyNode?.namedChildren.filter(
+      c => c.type === 'case_statement'
+    ) ?? []
+    const cases = caseNodes.map(c => liftCaseStatement(c, ctx)).filter(Boolean) as import('../../../core/types').SemanticNode[]
+
+    return createNode('cpp_switch', {}, {
+      expr: cond ? [cond] : [],
+      cases,
+    })
+  })
+
+  // do-while statement
+  lifter.register('do_statement', (node, ctx) => {
+    const bodyNode = node.childForFieldName('body')
+    const condNode = node.childForFieldName('condition')
+
+    const body = extractBody(bodyNode, ctx)
+    const cond = condNode ? ctx.lift(condNode) : null
+
+    return createNode('cpp_do_while', {}, {
+      body,
+      cond: cond ? [cond] : [],
+    })
+  })
+
   // condition_clause wraps conditions in if/while/for — unwrap it
   lifter.register('condition_clause', (node, ctx) => {
     // The condition clause contains a parenthesized expression
@@ -113,6 +145,33 @@ function extractBody(node: import('../../../core/lift/types').AstNode | null, ct
     return lifted.children.body ?? []
   }
   return [lifted]
+}
+
+/**
+ * Lift a case_statement into cpp_case or cpp_default.
+ * tree-sitter: case_statement has a `value` field for regular cases, none for default.
+ * Body statements are the remaining named children after the value.
+ */
+function liftCaseStatement(
+  node: import('../../../core/lift/types').AstNode,
+  ctx: import('../../../core/lift/types').LiftContext,
+): import('../../../core/types').SemanticNode | null {
+  const valueNode = node.childForFieldName('value')
+  const isDefault = !valueNode
+
+  // Body = all named children except the value
+  const bodyChildren = node.namedChildren.filter(c => c !== valueNode)
+  const body = ctx.liftChildren(bodyChildren)
+
+  if (isDefault) {
+    return createNode('cpp_default', {}, { body })
+  }
+
+  const value = ctx.lift(valueNode!)
+  return createNode('cpp_case', {}, {
+    value: value ? [value] : [],
+    body,
+  })
 }
 
 function isCountingFor(
@@ -195,11 +254,15 @@ function extractUpdateVar(update: import('../../../core/lift/types').AstNode | n
   return undefined
 }
 
-// Expression concepts that can safely be placed in c_for_loop's value inputs
-const EXPRESSION_CONCEPTS = new Set([
-  'number', 'string', 'boolean', 'var_ref', 'cpp_raw_expression',
-  'binary_op', 'comparison', 'logical_op', 'negate', 'not',
+// Concepts that can be used in for-loop init/cond/update positions
+const FOR_LOOP_CONCEPTS = new Set([
+  // expressions
+  'number', 'number_literal', 'string', 'string_literal', 'boolean', 'var_ref', 'cpp_raw_expression',
+  'arithmetic', 'compare', 'logic', 'logic_not', 'negate',
   'func_call_expr', 'array_access', 'cpp_ternary',
+  // statements valid in for-loop parts
+  'var_declare', 'var_assign', 'cpp_compound_assign', 'cpp_increment', 'array_assign',
+  'cpp_comma_expr', 'cpp_cast',
 ])
 
 /** Lift a for-loop part (init/cond/update) and wrap non-expression concepts as cpp_raw_expression */
@@ -211,7 +274,8 @@ function wrapForExpr(
   const lifted = ctx.lift(node)
   if (!lifted) return null
   // If the lifted concept is a known expression, keep it
-  if (EXPRESSION_CONCEPTS.has(lifted.concept)) return lifted
+  if (FOR_LOOP_CONCEPTS.has(lifted.concept)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
-  return createNode('cpp_raw_expression', { code: node.text })
+  // Strip trailing semicolons — for-loop parts don't need them
+  return createNode('cpp_raw_expression', { code: node.text.replace(/;\s*$/, '').trim() })
 }

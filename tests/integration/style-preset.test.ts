@@ -42,8 +42,25 @@ function liftCode(code: string) {
 }
 
 describe('Style Preset — IO Preference', () => {
-  it('apcs should generate cout for print', () => {
+  it('printf lifts to cpp_printf and round-trips losslessly', () => {
     const tree = liftCode('printf("%d", x);')
+    expect(tree).not.toBeNull()
+    // Lossless lift: printf → cpp_printf (preserves format)
+    const code = generateCode(tree!, 'cpp', COMPETITIVE)
+    expect(code).toContain('printf')
+    expect(code).toContain('%d')
+  })
+
+  it('printf lifts to cpp_printf, generates printf in APCS too (needs style exception to convert)', () => {
+    const tree = liftCode('printf("%d", x);')
+    expect(tree).not.toBeNull()
+    // Without style exception conversion, cpp_printf generates printf even in APCS
+    const code = generateCode(tree!, 'cpp', APCS)
+    expect(code).toContain('printf')
+  })
+
+  it('cout lifts to print and generates cout in APCS', () => {
+    const tree = liftCode('cout << x;')
     expect(tree).not.toBeNull()
     const code = generateCode(tree!, 'cpp', APCS)
     expect(code).toContain('cout')

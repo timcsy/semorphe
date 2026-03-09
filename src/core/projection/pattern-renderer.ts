@@ -28,6 +28,7 @@ function nextBlockId(): string {
 export class PatternRenderer {
   private renderSpecs = new Map<string, RenderSpec>()
   private expressionOnlyBlockTypes = new Set<string>()
+  private statementOnlyBlockTypes = new Set<string>()
   private renderStrategyRegistry: RenderStrategyRegistry | null = null
   private activeRenderCtx: RenderContext | undefined = undefined
 
@@ -54,6 +55,10 @@ export class PatternRenderer {
       // Track expression-only block types (have output but no previousStatement)
       if (blockDef.output !== undefined && blockDef.previousStatement === undefined) {
         this.expressionOnlyBlockTypes.add(blockType)
+      }
+      // Track statement-only block types (have previousStatement but no output)
+      if (blockDef.previousStatement !== undefined && blockDef.output === undefined) {
+        this.statementOnlyBlockTypes.add(blockType)
       }
     }
   }
@@ -98,10 +103,13 @@ export class PatternRenderer {
     }
 
     // Map inputs: blockInput → semanticChild (expression)
+    // Use ctx.renderExpression() for expression slots to handle statement-only blocks safely
     for (const [blockInput, semChild] of Object.entries(spec.mapping.inputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
-        const childBlock = this.render(children[0])
+        const childBlock = ctx?.renderExpression
+          ? ctx.renderExpression(children[0])
+          : this.render(children[0])
         if (childBlock) {
           block.inputs[blockInput] = { block: childBlock }
         }
@@ -112,7 +120,9 @@ export class PatternRenderer {
     for (const [blockInput, semChild] of Object.entries(spec.mapping.statementInputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
-        const chain = this.renderStatementChain(children)
+        const chain = ctx?.renderStatementChain
+          ? ctx.renderStatementChain(children)
+          : this.renderStatementChain(children)
         if (chain) {
           block.inputs[blockInput] = { block: chain }
         }
@@ -144,6 +154,11 @@ export class PatternRenderer {
     }
 
     return first
+  }
+
+  /** Check if a block type is statement-only (cannot be used in expression context) */
+  isStatementOnly(blockType: string): boolean {
+    return this.statementOnlyBlockTypes.has(blockType)
   }
 
   /** Auto-derive renderMapping from blockDef and concept */

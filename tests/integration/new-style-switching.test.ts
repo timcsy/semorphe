@@ -68,16 +68,28 @@ describe('Style Switching — same semantic tree, different code output', () => 
     expect(googleCode).toMatch(/^ {2}return/m)
   })
 
-  it('should generate cout vs printf for print', () => {
+  it('should preserve cpp_printf across styles (lossless lift)', () => {
     const tree = liftCode('printf("%d", x);')
     expect(tree).not.toBeNull()
 
     const apcsCode = generateCode(tree!, 'cpp', APCS)
     const compCode = generateCode(tree!, 'cpp', COMPETITIVE)
 
-    // APCS uses cout
+    // Lossless lift: cpp_printf generates printf in both styles
+    // Style exception system handles conversion proposals, not auto-convert
+    expect(apcsCode).toContain('printf')
+    expect(compCode).toContain('printf')
+  })
+
+  it('should generate cout vs printf for universal print concept', () => {
+    const tree = liftCode('cout << x;')
+    expect(tree).not.toBeNull()
+
+    const apcsCode = generateCode(tree!, 'cpp', APCS)
+    const compCode = generateCode(tree!, 'cpp', COMPETITIVE)
+
+    // Universal print adapts to style
     expect(apcsCode).toContain('cout')
-    // Competitive uses printf
     expect(compCode).toContain('printf')
   })
 

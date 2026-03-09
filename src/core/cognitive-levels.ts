@@ -49,16 +49,18 @@ const BLOCK_LEVELS: Record<string, CognitiveLevel> = {
   c_printf: 1,
   c_scanf: 1,
 
+  // C++ Essential (L0 - every program needs these)
+  c_include: 0,
+  c_using_namespace: 0,
+
   // C++ Special (L2 - Advanced)
   c_raw_code: 2,
   c_raw_expression: 2,
-  c_include: 2,
   c_include_local: 2,
   c_define: 2,
   c_ifdef: 2,
   c_ifndef: 2,
   c_comment_line: 2,
-  c_using_namespace: 2,
 
   // C++ Advanced — Pointers (L2)
   c_pointer_declare: 2,

@@ -51,6 +51,10 @@ export class Lifter {
           endColumn: node.endPosition.column,
         }
       }
+      // Preserve raw source text for expression fallback rendering
+      if (!r.metadata.rawCode && node.text) {
+        r.metadata.rawCode = node.text
+      }
     }
 
     const setConfidenceHigh = (r: SemanticNode): void => {

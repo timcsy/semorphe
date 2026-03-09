@@ -40,11 +40,9 @@ export function registerExpressionLifters(lifter: Lifter): void {
       }
     }
     if (op === '>>') {
-      const cinVars = extractCinChain(node)
-      if (cinVars) {
-        // Single input node with values children (var_ref for each variable)
-        const values = cinVars.map(v => createNode('var_ref', { name: v }))
-        return createNode('input', {}, { values })
+      const cinValues = extractCinChain(node, ctx)
+      if (cinValues) {
+        return createNode('input', {}, { values: cinValues })
       }
     }
 
@@ -78,6 +76,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
         value: operand ? [operand] : [],
       })
     }
+    if (op === '~') {
+      return createNode('bitwise_not', {}, {
+        operand: operand ? [operand] : [],
+      })
+    }
     if (op === '&') {
       return createNode('cpp_address_of', {}, {
         var: operand ? [operand] : [],
@@ -95,12 +98,28 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return raw
   })
 
-  lifter.register('update_expression', (node, _ctx) => {
+  lifter.register('update_expression', (node, ctx) => {
     // i++ / ++i / i-- / --i
     const op = node.children.find(c => !c.isNamed)?.text ?? '++'
     const nameNode = node.namedChildren[0]
+    // Prefix if operator comes before the operand
+    const firstChild = node.children[0]
+    const position = (!firstChild?.isNamed && (firstChild?.text === '++' || firstChild?.text === '--')) ? 'prefix' : 'postfix'
+
+    // Array element increment: arr[i]++ / --arr[i]
+    if (nameNode?.type === 'subscript_expression') {
+      const arrayNode = nameNode.childForFieldName('argument') ?? nameNode.namedChildren[0]
+      const arrName = arrayNode?.text ?? 'arr'
+      const indicesNode = nameNode.namedChildren.find(c => c.type === 'subscript_argument_list')
+      const indexNode = indicesNode?.namedChildren[0] ?? nameNode.childForFieldName('index') ?? nameNode.namedChildren[1]
+      const index = indexNode ? ctx.lift(indexNode) : null
+      return createNode('cpp_increment', { name: arrName, operator: op, position }, {
+        index: index ? [index] : [],
+      })
+    }
+
     const name = nameNode?.text ?? 'i'
-    return createNode('cpp_increment', { name, operator: op })
+    return createNode('cpp_increment', { name, operator: op, position })
   })
 
   lifter.register('parenthesized_expression', (node, ctx) => {
@@ -109,6 +128,56 @@ export function registerExpressionLifters(lifter: Lifter): void {
       return ctx.lift(node.namedChildren[0])
     }
     return null
+  })
+
+  // Pointer expression: *ptr (deref) or &x (address-of)
+  lifter.register('pointer_expression', (node, ctx) => {
+    const op = node.children.find(c => !c.isNamed)?.text ?? ''
+    const operandNode = node.namedChildren[0]
+    const operand = operandNode ? ctx.lift(operandNode) : null
+    if (op === '&') {
+      return createNode('cpp_address_of', {}, {
+        var: operand ? [operand] : [],
+      })
+    }
+    if (op === '*') {
+      return createNode('cpp_pointer_deref', {}, {
+        ptr: operand ? [operand] : [],
+      })
+    }
+    return operand
+  })
+
+  // Comma expression: i++, j-- (used in for-loop updates)
+  lifter.register('comma_expression', (node, ctx) => {
+    const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
+    return createNode('cpp_comma_expr', {}, { exprs: children })
+  })
+
+  // C-style cast: (double)x, (int)y
+  lifter.register('cast_expression', (node, ctx) => {
+    const typeNode = node.childForFieldName('type')
+    const valueNode = node.childForFieldName('value')
+    const targetType = typeNode?.text ?? 'int'
+    const value = valueNode ? ctx.lift(valueNode) : null
+    return createNode('cpp_cast', { target_type: targetType }, {
+      value: value ? [value] : [],
+    })
+  })
+
+  // Ternary / conditional expression: cond ? true_expr : false_expr
+  lifter.register('conditional_expression', (node, ctx) => {
+    const condNode = node.childForFieldName('condition')
+    const trueNode = node.childForFieldName('consequence')
+    const falseNode = node.childForFieldName('alternative')
+    const cond = condNode ? ctx.lift(condNode) : null
+    const trueExpr = trueNode ? ctx.lift(trueNode) : null
+    const falseExpr = falseNode ? ctx.lift(falseNode) : null
+    return createNode('cpp_ternary', {}, {
+      condition: cond ? [cond] : [],
+      true_expr: trueExpr ? [trueExpr] : [],
+      false_expr: falseExpr ? [falseExpr] : [],
+    })
   })
 
   lifter.register('subscript_expression', (node, ctx) => {
@@ -158,20 +227,28 @@ function extractCoutChain(node: AstNode, ctx: LiftContext): SemanticNode[] | nul
 }
 
 /**
- * Extract cin >> x >> y chain. Returns array of variable names or null.
+ * Extract cin >> x >> y chain. Returns array of semantic nodes (var_ref or array_access) or null.
  */
-function extractCinChain(node: AstNode): string[] | null {
-  const vars: string[] = []
+function extractCinChain(node: AstNode, ctx: LiftContext): SemanticNode[] | null {
+  const values: SemanticNode[] = []
   let current: AstNode | null = node
 
   while (current && current.type === 'binary_expression') {
     const op = current.children.find(c => !c.isNamed && c.text === '>>')
     if (!op) break
     const rightNode = current.childForFieldName('right')
-    if (rightNode) vars.unshift(rightNode.text)
+    if (rightNode) {
+      if (rightNode.type === 'subscript_expression') {
+        // cin >> arr[i] — lift as array_access
+        const lifted = ctx.lift(rightNode)
+        if (lifted) values.unshift(lifted)
+      } else {
+        values.unshift(createNode('var_ref', { name: rightNode.text }))
+      }
+    }
     current = current.childForFieldName('left')
   }
 
   if (!current || current.text !== 'cin') return null
-  return vars.length > 0 ? vars : null
+  return values.length > 0 ? values : null
 }

@@ -1,5 +1,25 @@
 import type { SemanticNode, StylePreset } from '../core/types'
+import type { CodingStyle } from '../languages/style'
+import {
+  detectStyleExceptions, applyStyleConversions,
+  analyzeIoConformance,
+  type StyleException, type IoConformanceResult,
+} from '../languages/cpp/style-exceptions'
 import { generateCodeWithMapping } from '../core/projection/code-generator'
+
+/** Convert StylePreset (core/types) → CodingStyle (languages/style) for style exception detection */
+function toCodingStyle(preset: StylePreset): CodingStyle {
+  return {
+    id: preset.id,
+    nameKey: preset.id,
+    ioPreference: preset.io_style === 'printf' ? 'cstdio' : 'iostream',
+    namingConvention: preset.naming_convention,
+    braceStyle: preset.brace_style,
+    indent: preset.indent_size,
+    useNamespaceStd: preset.namespace_style === 'using',
+    headerStyle: preset.header_style === 'bits' ? 'bits' : 'iostream',
+  }
+}
 import type { SourceMapping } from '../core/projection/code-generator'
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
@@ -21,6 +41,9 @@ export class SyncController {
   private syncing = false
   private sourceMappings: SourceMapping[] = []
   private onErrorCallback: ((errors: SyncError[]) => void) | null = null
+  private onStyleExceptionsCallback: ((exceptions: StyleException[], apply: () => void) => void) | null = null
+  private onIoConformanceCallback: ((result: IoConformanceResult) => void) | null = null
+  private codingStyle: CodingStyle | null = null
 
   constructor(
     blocklyPanel: BlocklyPanel,
@@ -42,6 +65,19 @@ export class SyncController {
 
   onError(callback: (errors: SyncError[]) => void): void {
     this.onErrorCallback = callback
+  }
+
+  onStyleExceptions(callback: (exceptions: StyleException[], apply: () => void) => void): void {
+    this.onStyleExceptionsCallback = callback
+  }
+
+  /** Called when code→blocks detects I/O style non-conformance (借音 or 轉調) */
+  onIoConformance(callback: (result: IoConformanceResult) => void): void {
+    this.onIoConformanceCallback = callback
+  }
+
+  setCodingStyle(preset: StylePreset): void {
+    this.codingStyle = toCodingStyle(preset)
   }
 
   /** Sync blocks → semantic tree → code (US1 direction) */
@@ -75,8 +111,47 @@ export class SyncController {
         // Continue with partial sync — lift what we can
       }
 
-      const tree = this.lifter.lift(rootNode)
+      // Code-level I/O conformance check (before lift — 借音/轉調 detection)
+      let ioResult: IoConformanceResult | null = null
+      if (this.codingStyle) {
+        const result = analyzeIoConformance(code, this.codingStyle.ioPreference)
+        if (result.verdict !== 'conforming') {
+          ioResult = result
+        }
+      }
+
+      let tree = this.lifter.lift(rootNode)
       if (!tree) return false
+
+      // Semantic-level style exception check (after lift — toolbox block mismatches)
+      let semanticExceptions: StyleException[] = []
+      let applySemanticConversions: (() => void) | null = null
+      if (this.codingStyle) {
+        const exceptions = detectStyleExceptions(tree, this.codingStyle)
+        if (exceptions.length > 0) {
+          semanticExceptions = exceptions
+          const currentTree = tree
+          applySemanticConversions = () => {
+            const converted = applyStyleConversions(currentTree, exceptions)
+            this.currentTree = converted
+            const blockState = renderToBlocklyState(converted)
+            this.blocklyPanel.setState(blockState)
+            this.sourceMappings = this.buildMappingsFromTree(converted, blockState)
+          }
+        }
+      }
+
+      // Fire callbacks — prioritize bulk deviation (轉調) over semantic exceptions over minor exception (借音)
+      if (ioResult?.verdict === 'bulk_deviation' && this.onIoConformanceCallback) {
+        // 轉調 takes priority — suggest switching preset entirely
+        this.onIoConformanceCallback(ioResult)
+      } else if (semanticExceptions.length > 0 && this.onStyleExceptionsCallback && applySemanticConversions) {
+        // Semantic exceptions (header/block mismatches)
+        this.onStyleExceptionsCallback(semanticExceptions, applySemanticConversions)
+      } else if (ioResult?.verdict === 'minor_exception' && this.onIoConformanceCallback) {
+        // 借音 — only if no semantic exceptions already cover it
+        this.onIoConformanceCallback(ioResult)
+      }
 
       this.currentTree = tree
       const blockState = renderToBlocklyState(tree)

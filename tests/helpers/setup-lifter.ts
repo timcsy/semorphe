@@ -31,7 +31,7 @@ export function createTestLifter(): Lifter {
   const pl = new PatternLifter()
   pl.setTransformRegistry(transformRegistry)
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
-  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement'])
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression'])
   pl.loadBlockSpecs(blockSpecRegistry.getAll(), liftSkipNodeTypes)
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)

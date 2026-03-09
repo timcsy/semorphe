@@ -24,7 +24,7 @@ describe('Cognitive Level Switching', () => {
       expect(getBlockLevel('u_array_declare')).toBe(2)
       expect(getBlockLevel('u_array_access')).toBe(2)
       expect(getBlockLevel('c_raw_code')).toBe(2)
-      expect(getBlockLevel('c_include')).toBe(2)
+      expect(getBlockLevel('c_include')).toBe(0)
     })
 
     it('should default unknown blocks to L2', () => {

@@ -33,4 +33,8 @@ export class StyleSelector {
   getCurrentStyle(): StylePreset {
     return this.styles.find(s => s.id === this.select.value) ?? this.styles[0]
   }
+
+  setValue(styleId: string): void {
+    this.select.value = styleId
+  }
 }

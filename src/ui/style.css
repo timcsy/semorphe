@@ -378,6 +378,69 @@ html, body {
 .toast-success { background: rgba(39, 174, 96, 0.95); }
 .toast-error { background: rgba(231, 76, 60, 0.95); }
 
+/* ─── Style Action Bar (non-blocking prompt) ─── */
+
+.style-action-bar {
+  position: fixed;
+  top: 36px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(30, 30, 30, 0.97);
+  border-bottom: 2px solid #007acc;
+  color: #ccc;
+  font-size: 13px;
+  z-index: 10001;
+  transform: translateY(-100%);
+  transition: transform 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.style-action-bar.show {
+  transform: translateY(0);
+}
+
+.style-action-bar-msg {
+  flex: 0 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.style-action-bar-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.style-action-btn {
+  padding: 3px 12px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #333;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.style-action-btn:hover {
+  background: #444;
+}
+
+.style-action-btn.primary {
+  background: #007acc;
+  border-color: #007acc;
+  color: white;
+}
+
+.style-action-btn.primary:hover {
+  background: #0098ff;
+}
+
 /* ─── Bottom panel ─── */
 
 .bottom-panel {

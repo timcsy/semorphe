@@ -3,6 +3,7 @@ import { RuntimeError, RUNTIME_ERRORS } from './errors'
 
 export class Scope {
   private variables = new Map<string, RuntimeValue>()
+  private refs = new Map<string, { scope: Scope, name: string }>()
   readonly parent: Scope | null
 
   constructor(parent: Scope | null = null) {
@@ -16,7 +17,14 @@ export class Scope {
     this.variables.set(name, value)
   }
 
+  /** Declare a reference alias: reads/writes to `name` delegate to `target` in `targetScope` */
+  declareRef(name: string, targetScope: Scope, targetName: string): void {
+    this.refs.set(name, { scope: targetScope, name: targetName })
+  }
+
   get(name: string): RuntimeValue {
+    const ref = this.refs.get(name)
+    if (ref) return ref.scope.get(ref.name)
     if (this.variables.has(name)) {
       return this.variables.get(name)!
     }
@@ -27,6 +35,8 @@ export class Scope {
   }
 
   set(name: string, value: RuntimeValue): void {
+    const ref = this.refs.get(name)
+    if (ref) { ref.scope.set(ref.name, value); return }
     if (this.variables.has(name)) {
       this.variables.set(name, value)
       return
@@ -41,6 +51,13 @@ export class Scope {
       }
     }
     this.variables.set(name, value)
+  }
+
+  /** Find the scope that owns a variable (for reference binding) */
+  findOwner(name: string): Scope | null {
+    if (this.variables.has(name)) return this
+    if (this.parent) return this.parent.findOwner(name)
+    return null
   }
 
   createChild(): Scope {

@@ -373,7 +373,7 @@ describe('Expressions', () => {
       const initInput = declBlock?.inputs?.INIT_0?.block
       expect(initInput).toBeDefined()
       expect(initInput?.type).toBe('u_array_access')
-      expect(initInput?.fields?.ARRAY).toBe('arr')
+      expect(initInput?.fields?.NAME).toBe('arr')
     })
   })
 

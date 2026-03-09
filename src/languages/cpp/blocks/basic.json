@@ -220,6 +220,201 @@
     }
   },
   {
+    "id": "c_default",
+    "language": "cpp",
+    "category": "conditions",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_default",
+      "abstractConcept": "default",
+      "children": { "body": "statements" },
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "c_default",
+      "message0": "%{BKY_C_DEFAULT_MSG0}",
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "BODY", "check": "Statement" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_DEFAULT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "default:\n${BODY}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "case_statement",
+      "constraints": []
+    }
+  },
+  {
+    "id": "c_ternary",
+    "language": "cpp",
+    "category": "operators",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_ternary",
+      "abstractConcept": "ternary",
+      "children": { "condition": "expression", "true_expr": "expression", "false_expr": "expression" },
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_ternary",
+      "message0": "%{BKY_C_TERNARY_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "CONDITION", "check": "Expression" },
+        { "type": "input_value", "name": "TRUE_EXPR", "check": "Expression" },
+        { "type": "input_value", "name": "FALSE_EXPR", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_TERNARY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${CONDITION} ? ${TRUE_EXPR} : ${FALSE_EXPR}",
+      "imports": [],
+      "order": 3
+    },
+    "astPattern": {
+      "nodeType": "conditional_expression",
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "condition", "ast": "condition", "extract": "lift" },
+        { "semantic": "true_expr", "ast": "consequence", "extract": "lift" },
+        { "semantic": "false_expr", "ast": "alternative", "extract": "lift" }
+      ]
+    }
+  },
+  {
+    "id": "c_cast",
+    "language": "cpp",
+    "category": "operators",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_cast",
+      "abstractConcept": "cast",
+      "properties": ["target_type"],
+      "children": { "value": "expression" },
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_cast",
+      "message0": "%{BKY_C_CAST_MSG0}",
+      "args0": [
+        { "type": "field_dropdown", "name": "TARGET_TYPE", "options": [
+          ["%{BKY_C_CAST_TYPE_INT}", "int"],
+          ["%{BKY_C_CAST_TYPE_FLOAT}", "float"],
+          ["%{BKY_C_CAST_TYPE_DOUBLE}", "double"],
+          ["%{BKY_C_CAST_TYPE_CHAR}", "char"],
+          ["%{BKY_C_CAST_TYPE_LONG_LONG}", "long long"]
+        ]},
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "(${TARGET_TYPE})${VALUE}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "cast_expression",
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "target_type", "ast": "type", "extract": "text" },
+        { "semantic": "value", "ast": "value", "extract": "lift" }
+      ]
+    }
+  },
+  {
+    "id": "c_bitwise_not",
+    "language": "cpp",
+    "category": "operators",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "bitwise_not",
+      "abstractConcept": "bitwise_not",
+      "children": { "operand": "expression" },
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_bitwise_not",
+      "message0": "%{BKY_C_BITWISE_NOT_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "OPERAND", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_BITWISE_NOT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "~${OPERAND}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "unary_expression",
+      "constraints": [{ "field": "operator", "text": "~" }],
+      "fieldMappings": [
+        { "semantic": "operand", "ast": "argument", "extract": "lift" }
+      ]
+    }
+  },
+  {
+    "id": "c_pointer_assign",
+    "language": "cpp",
+    "category": "pointers",
+    "level": 2,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_pointer_assign",
+      "abstractConcept": "pointer_assign",
+      "properties": ["ptr_name"],
+      "children": { "value": "expression" },
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "c_pointer_assign",
+      "message0": "%{BKY_C_POINTER_ASSIGN_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "PTR_NAME", "text": "ptr" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_POINTER_ASSIGN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "*${PTR_NAME} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "assignment_expression",
+      "constraints": [],
+      "fieldMappings": [
+        { "semantic": "ptr_name", "ast": "left", "extract": "text" },
+        { "semantic": "value", "ast": "right", "extract": "lift" }
+      ]
+    }
+  },
+  {
     "id": "c_for_loop",
     "language": "cpp",
     "category": "loops",
@@ -334,6 +529,12 @@
       "imports": ["stdio.h"],
       "order": 0
     },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderPrintf"
+    },
     "astPattern": {
       "nodeType": "call_expression",
       "constraints": [{ "field": "function", "text": "printf" }]
@@ -367,6 +568,12 @@
       "pattern": "scanf(\"${FORMAT}\"${ARGS});",
       "imports": ["stdio.h"],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderScanf"
     },
     "astPattern": {
       "nodeType": "call_expression",
