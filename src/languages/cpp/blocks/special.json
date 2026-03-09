@@ -73,10 +73,32 @@
     }
   },
   {
+    "id": "c_forward_decl",
+    "language": "cpp",
+    "category": "functions",
+    "level": 2,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "forward_decl",
+      "abstractConcept": "forward_decl",
+      "properties": ["return_type", "name", "params"],
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "c_forward_decl"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderForwardDecl"
+    }
+  },
+  {
     "id": "c_include",
     "language": "cpp",
     "category": "preprocessor",
-    "level": 2,
+    "level": 0,
     "version": "1.0.0",
     "concept": {
       "conceptId": "cpp_include",
@@ -409,7 +431,7 @@
     "id": "c_using_namespace",
     "language": "cpp",
     "category": "preprocessor",
-    "level": 2,
+    "level": 0,
     "version": "1.0.0",
     "concept": {
       "conceptId": "cpp_using_namespace",
@@ -440,6 +462,78 @@
     "astPattern": {
       "nodeType": "using_declaration",
       "constraints": []
+    }
+  },
+  {
+    "id": "c_increment_expr",
+    "language": "cpp",
+    "category": "operators",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_increment_expr",
+      "abstractConcept": "increment_expr",
+      "properties": ["name", "operator", "position"],
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_increment_expr"
+    }
+  },
+  {
+    "id": "c_compound_assign_expr",
+    "language": "cpp",
+    "category": "operators",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_compound_assign_expr",
+      "abstractConcept": "compound_assign_expr",
+      "properties": ["name", "operator"],
+      "children": { "value": "expression" },
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_compound_assign_expr"
+    }
+  },
+  {
+    "id": "c_scanf_expr",
+    "language": "cpp",
+    "category": "io",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "cpp_scanf_expr",
+      "abstractConcept": "scanf_expr",
+      "properties": ["format", "args"],
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_scanf_expr"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderScanf"
+    }
+  },
+  {
+    "id": "c_var_declare_expr",
+    "language": "cpp",
+    "category": "variables",
+    "level": 1,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "var_declare_expr",
+      "abstractConcept": "var_declare_expr",
+      "properties": ["name", "type"],
+      "children": { "initializer": "expression" },
+      "role": "expression"
+    },
+    "blockDef": {
+      "type": "c_var_declare_expr"
     }
   }
 ]

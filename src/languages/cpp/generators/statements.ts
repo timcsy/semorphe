@@ -7,7 +7,18 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     ? (ctx: Parameters<NodeGenerator>[1]) => `\n${indent(ctx)}{`
     : () => ' {'
   g.set('program', (node, ctx) => {
-    return generateBody(node.children.body ?? [], ctx)
+    // Deduplicate consecutive #include directives with identical header
+    const body = node.children.body ?? []
+    const seen = new Set<string>()
+    const deduped = body.filter(n => {
+      if (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') {
+        const key = `${n.concept}:${n.properties.header}`
+        if (seen.has(key)) return false
+        seen.add(key)
+      }
+      return true
+    })
+    return generateBody(deduped, ctx)
   })
 
   const ifGenerator: NodeGenerator = (node, ctx) => {
@@ -141,9 +152,65 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const name = (node.properties.name ?? node.properties.NAME ?? 'i') as string
     const op = (node.properties.operator ?? node.properties.OP ?? '++') as string
     const pos = (node.properties.position ?? node.properties.POSITION ?? 'postfix') as string
+    // Array element increment: arr[i]++
+    const indexNodes = node.children.index ?? []
+    if (indexNodes.length > 0) {
+      const idx = generateExpression(indexNodes[0], ctx)
+      if (pos === 'prefix') {
+        return `${indent(ctx)}${op}${name}[${idx}];\n`
+      }
+      return `${indent(ctx)}${name}[${idx}]${op};\n`
+    }
     if (pos === 'prefix') {
       return `${indent(ctx)}${op}${name};\n`
     }
     return `${indent(ctx)}${name}${op};\n`
+  })
+
+  g.set('cpp_do_while', (node, ctx) => {
+    const body = node.children.body ?? []
+    const cond = generateExpression((node.children.cond ?? [])[0], ctx)
+    const header = `${indent(ctx)}do${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
+    code += generateBody(body, indented(ctx))
+    code += `${indent(ctx)}} while (${cond});\n`
+    return code
+  })
+
+  g.set('cpp_switch', (node, ctx) => {
+    const expr = generateExpression((node.children.expr ?? [])[0], ctx)
+    const cases = node.children.cases ?? []
+    const header = `${indent(ctx)}switch (${expr})${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
+    code += generateBody(cases, indented(ctx))
+    code += `${indent(ctx)}}\n`
+    return code
+  })
+
+  g.set('cpp_case', (node, ctx) => {
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    const body = node.children.body ?? []
+    let code = `${indent(ctx)}case ${val}:\n`
+    code += generateBody(body, indented(ctx))
+    return code
+  })
+
+  g.set('cpp_default', (node, ctx) => {
+    const body = node.children.body ?? []
+    let code = `${indent(ctx)}default:\n`
+    code += generateBody(body, indented(ctx))
+    return code
+  })
+
+  g.set('cpp_pointer_assign', (node, ctx) => {
+    const ptrName = node.properties.ptr_name ?? 'ptr'
+    const vals = node.children.value ?? []
+    if (vals.length > 0) {
+      const val = generateExpression(vals[0], ctx)
+      return `${indent(ctx)}*${ptrName} = ${val};\n`
+    }
+    return `${indent(ctx)}*${ptrName} = 0;\n`
   })
 }

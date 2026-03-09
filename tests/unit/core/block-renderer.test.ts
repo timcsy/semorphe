@@ -117,6 +117,65 @@ describe('block-renderer', () => {
     expect(block.inputs.EXPR1).toBeDefined()
   })
 
+  it('should render cpp_printf with format and args', () => {
+    const printf = createNode('cpp_printf', { format: '%.2f\\n' }, {
+      args: [createNode('var_ref', { name: 'x' })],
+    })
+    const state = renderToBlocklyState(makeProgram(printf))
+    const block = state.blocks.blocks[0]
+    expect(block.type).toBe('c_printf')
+    expect(block.fields.FORMAT).toBe('%.2f\\n')
+    expect(block.extraState).toBeDefined()
+    expect(block.extraState.args).toHaveLength(1)
+    expect(block.extraState.args[0].mode).toBe('select')
+    expect(block.extraState.args[0].text).toBe('x')
+  })
+
+  it('should render cpp_printf with no args', () => {
+    const printf = createNode('cpp_printf', { format: 'hello\\n' }, { args: [] })
+    const state = renderToBlocklyState(makeProgram(printf))
+    const block = state.blocks.blocks[0]
+    expect(block.type).toBe('c_printf')
+    expect(block.fields.FORMAT).toBe('hello\\n')
+    expect(block.extraState).toBeDefined()
+    expect(block.extraState.args).toHaveLength(0)
+  })
+
+  it('should render cpp_scanf with format and args', () => {
+    const scanf = createNode('cpp_scanf', { format: '%d %d' }, {
+      args: [
+        createNode('var_ref', { name: 'a' }),
+        createNode('var_ref', { name: 'b' }),
+      ],
+    })
+    const state = renderToBlocklyState(makeProgram(scanf))
+    const block = state.blocks.blocks[0]
+    expect(block.type).toBe('c_scanf')
+    expect(block.fields.FORMAT).toBe('%d %d')
+    expect(block.extraState).toBeDefined()
+    expect(block.extraState.args).toHaveLength(2)
+    expect(block.extraState.args[0]).toEqual({ mode: 'select', text: 'a' })
+    expect(block.extraState.args[1]).toEqual({ mode: 'select', text: 'b' })
+  })
+
+  it('should render cpp_printf with non-var_ref args in compose mode', () => {
+    const printf = createNode('cpp_printf', { format: 'sum=%d\\n' }, {
+      args: [createNode('arithmetic', { operator: '+' }, {
+        left: [createNode('var_ref', { name: 'x' })],
+        right: [createNode('var_ref', { name: 'y' })],
+      })],
+    })
+    const state = renderToBlocklyState(makeProgram(printf))
+    const block = state.blocks.blocks[0]
+    expect(block.type).toBe('c_printf')
+    expect(block.fields.FORMAT).toBe('sum=%d\\n')
+    expect(block.extraState.args).toHaveLength(1)
+    expect(block.extraState.args[0].mode).toBe('compose')
+    // The expression block should be in inputs.ARG_0
+    expect(block.inputs.ARG_0).toBeDefined()
+    expect(block.inputs.ARG_0.block.type).toBe('u_arithmetic')
+  })
+
   it('should render raw_code as c_raw_code', () => {
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: 'auto x = 5;' }
@@ -124,5 +183,65 @@ describe('block-renderer', () => {
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('c_raw_code')
     expect(block.fields.CODE).toBe('auto x = 5;')
+  })
+
+  it('should render cpp_increment in expression context as c_increment_expr', () => {
+    const forLoop = createNode('cpp_for_loop', {}, {
+      init: [createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' })],
+      })],
+      cond: [createNode('compare', { operator: '<' }, {
+        left: [createNode('var_ref', { name: 'i' })],
+        right: [createNode('number_literal', { value: '10' })],
+      })],
+      update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+      body: [createNode('break', {})],
+    })
+    const state = renderToBlocklyState(makeProgram(forLoop))
+    const block = state.blocks.blocks[0]
+    expect(block.type).toBe('c_for_loop')
+    // UPDATE input should use expression block, not raw expression
+    const updateBlock = block.inputs.UPDATE?.block
+    expect(updateBlock).toBeDefined()
+    expect(updateBlock.type).toBe('c_increment_expr')
+    expect(updateBlock.fields.NAME).toBe('i')
+    expect(updateBlock.fields.OP).toBe('++')
+  })
+
+  it('should render cpp_compound_assign in expression context as c_compound_assign_expr', () => {
+    const forLoop = createNode('cpp_for_loop', {}, {
+      init: [createNode('var_ref', { name: 'i' })],
+      cond: [createNode('var_ref', { name: 'x' })],
+      update: [createNode('cpp_compound_assign', { name: 'j', operator: '+=' }, {
+        value: [createNode('var_ref', { name: 'i' })],
+      })],
+      body: [createNode('break', {})],
+    })
+    const state = renderToBlocklyState(makeProgram(forLoop))
+    const block = state.blocks.blocks[0]
+    const updateBlock = block.inputs.UPDATE?.block
+    expect(updateBlock).toBeDefined()
+    expect(updateBlock.type).toBe('c_compound_assign_expr')
+    expect(updateBlock.fields.NAME).toBe('j')
+    expect(updateBlock.fields.OP).toBe('+=')
+  })
+
+  it('should render var_declare in expression context as c_var_declare_expr', () => {
+    const forLoop = createNode('cpp_for_loop', {}, {
+      init: [createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '2' })],
+      })],
+      cond: [createNode('var_ref', { name: 'x' })],
+      update: [createNode('var_ref', { name: 'i' })],
+      body: [createNode('break', {})],
+    })
+    const state = renderToBlocklyState(makeProgram(forLoop))
+    const block = state.blocks.blocks[0]
+    const initBlock = block.inputs.INIT?.block
+    expect(initBlock).toBeDefined()
+    expect(initBlock.type).toBe('c_var_declare_expr')
+    expect(initBlock.fields.TYPE).toBe('int')
+    expect(initBlock.fields.NAME_0).toBe('i')
+    expect(initBlock.inputs.INIT_0).toBeDefined()
   })
 })

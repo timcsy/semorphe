@@ -39,6 +39,23 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name};\n`
   })
 
+  g.set('forward_decl', (node, ctx) => {
+    const returnType = node.properties.return_type as string | undefined
+    const name = node.properties.name ?? ''
+    const params = node.properties.params
+
+    // Structured form: return_type + name + params[]
+    if (returnType !== undefined) {
+      const paramStr = Array.isArray(params) ? params.join(', ') : ''
+      return `${indent(ctx)}${returnType} ${name}(${paramStr});\n`
+    }
+
+    // Legacy form: name contains the full declaration text
+    const nameStr = String(name)
+    const trimmed = nameStr.endsWith(';') ? nameStr : nameStr + ';'
+    return `${indent(ctx)}${trimmed}\n`
+  })
+
   g.set('array_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'arr'
@@ -52,5 +69,14 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
     return `${name}[${idx}]`
+  })
+
+  g.set('array_assign', (node, ctx) => {
+    const name = node.properties.name ?? 'arr'
+    const indexNodes = node.children.index ?? []
+    const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
+    const vals = node.children.value ?? []
+    const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
+    return `${indent(ctx)}${name}[${idx}] = ${val};\n`
   })
 }

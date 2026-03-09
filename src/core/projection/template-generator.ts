@@ -9,10 +9,25 @@ interface GenerateContext {
  * JSON-driven template generator engine.
  * Generates code from SemanticNodes using codeTemplate patterns.
  */
+export type ExpressionFallback = (node: SemanticNode, ctx: { indent: number; style: StylePreset }) => string | null
+export type BodyFallback = (node: SemanticNode, ctx: { indent: number; style: StylePreset }) => string | null
+
 export class TemplateGenerator {
   private templates = new Map<string, CodeTemplate>()
   private universalTemplates: UniversalTemplate[] = []
   private collectedImports = new Set<string>()
+  private expressionFallback: ExpressionFallback | null = null
+  private bodyFallback: BodyFallback | null = null
+
+  /** Set fallback for expression generation when no template is found */
+  setExpressionFallback(fn: ExpressionFallback): void {
+    this.expressionFallback = fn
+  }
+
+  /** Set fallback for body/statement generation when no template is found */
+  setBodyFallback(fn: BodyFallback): void {
+    this.bodyFallback = fn
+  }
 
   /** Register a code template for a specific conceptId */
   registerTemplate(conceptId: string, template: CodeTemplate): void {
@@ -132,6 +147,11 @@ export class TemplateGenerator {
   private generateExpression(node: SemanticNode, ctx: GenerateContext): string {
     const result = this.generate(node, ctx)
     if (result !== null) return result
+    // Try hand-written generator fallback
+    if (this.expressionFallback) {
+      const fb = this.expressionFallback(node, ctx)
+      if (fb !== null) return fb
+    }
     return node.metadata?.rawCode as string ?? `/* ${node.concept} */`
   }
 
@@ -139,9 +159,13 @@ export class TemplateGenerator {
     const indentStr = ' '.repeat(ctx.indent * ctx.style.indent_size)
     return nodes.map(n => {
       const code = this.generate(n, ctx)
-      if (code === null) return `${indentStr}/* unknown: ${n.concept} */`
-      // Add indent and newline for statement-level nodes
-      return `${indentStr}${code}`
+      if (code !== null) return `${indentStr}${code}`
+      // Try hand-written generator fallback
+      if (this.bodyFallback) {
+        const fb = this.bodyFallback(n, ctx)
+        if (fb !== null) return fb
+      }
+      return `${indentStr}/* unknown: ${n.concept} */`
     }).join('\n')
   }
 

@@ -13,6 +13,7 @@ import type { StepInfo, ExecutionSpeed } from '../interpreter/types'
 import type { SemanticNode as InterpreterNode } from '../core/types'
 import { RuntimeError } from '../interpreter/errors'
 import { showToast } from './toolbar/toast'
+import { showStyleActionBar } from './toolbar/style-action-bar'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { runDiagnostics } from '../core/diagnostics'
 import type { DiagnosticBlock } from '../core/diagnostics'
@@ -292,6 +293,27 @@ export class App {
     this.registerDynamicBlocks()
   }
 
+  /**
+   * Create a FieldDropdown that accepts any value during deserialization.
+   * Blockly's default doClassValidation_ rejects values not in the options list,
+   * but dynamic dropdowns (workspace vars, funcs, arrays) often receive values
+   * that aren't yet in the list when blocks are first loaded.
+   */
+  private createOpenDropdown(optionsGenerator: () => Array<[string, string]>): Blockly.FieldDropdown {
+    const field = new Blockly.FieldDropdown(optionsGenerator)
+    // Override validation to always accept any non-null value
+    ;(field as any).doClassValidation_ = function (newValue: string) {
+      if (newValue === null || newValue === undefined) return null
+      // Ensure the value is in the options for display
+      const options = this.getOptions(false)
+      if (!options.some((o: string[]) => o[1] === newValue)) {
+        options.push([newValue, newValue])
+      }
+      return newValue
+    }
+    return field
+  }
+
   private registerDynamicBlocks(): void {
     // +/- button SVG icons (shared across all dynamic blocks)
     // Plus: mint green, Minus: pink, Disabled: light gray
@@ -339,17 +361,23 @@ export class App {
       }
     }
 
-    // u_var_declare with +/- buttons + inline layout
-    {
-      const getTypeOptions = (): Array<[string, string]> => [
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_INT'] || 'int', 'int'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_CHAR'] || 'char', 'char'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_BOOL'] || 'bool', 'bool'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_STRING'] || 'string', 'string'],
-        [Blockly.Msg['U_VAR_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long'],
-      ]
+    // Type options for variable declarations (shared by u_var_declare, c_var_declare_expr, etc.)
+    const getTypeOptions = (currentVal?: string): Array<[string, string]> => {
+        const opts: Array<[string, string]> = [
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_INT'] || 'int', 'int'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_CHAR'] || 'char', 'char'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_BOOL'] || 'bool', 'bool'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_STRING'] || 'string', 'string'],
+          [Blockly.Msg['U_VAR_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long'],
+        ]
+        // Fallback: if current value isn't in options (e.g., void*, int*), add it
+        if (currentVal && !opts.some(o => o[1] === currentVal)) {
+          opts.unshift([currentVal, currentVal])
+        }
+        return opts
+      }
 
       // Mutator helper blocks for u_var_declare
       Blockly.Blocks['u_var_declare_container'] = {
@@ -385,7 +413,7 @@ export class App {
           this.items_ = ['var_init']
           this.appendDummyInput('HEADER')
             .appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
-            .appendField(new Blockly.FieldDropdown(getTypeOptions) as Blockly.Field, 'TYPE')
+            .appendField(self.createOpenDropdown(() => getTypeOptions()) as Blockly.Field, 'TYPE')
             .appendField(Blockly.Msg['U_VAR_DECLARE_VAR_WORD'] || '變數')
           this.appendValueInput('INIT_0')
             .appendField(new Blockly.FieldTextInput('x') as Blockly.Field, 'NAME_0')
@@ -506,7 +534,6 @@ export class App {
           this.rebuildInputs_()
         },
       }
-    }
 
     // u_print with +/- buttons + inline layout
     {
@@ -823,20 +850,20 @@ export class App {
       }
     }
 
+    // Helper: check if a variable is an array (doesn't need &)
+    const isArrayVar = (varName: string): boolean => {
+      const workspace = self.blocklyPanel?.getWorkspace()
+      if (!workspace) return false
+      for (const block of workspace.getAllBlocks(false)) {
+        if (block.type === 'u_array_declare') {
+          if (block.getFieldValue('NAME') === varName) return true
+        }
+      }
+      return false
+    }
+
     // c_scanf with FORMAT + three-mode multi-arg + auto & for select mode
     {
-      // Helper: check if a variable is an array (doesn't need &)
-      const isArrayVar = (varName: string): boolean => {
-        const workspace = self.blocklyPanel?.getWorkspace()
-        if (!workspace) return false
-        for (const block of workspace.getAllBlocks(false)) {
-          if (block.type === 'u_array_declare') {
-            if (block.getFieldValue('NAME') === varName) return true
-          }
-        }
-        return false
-      }
-
       Blockly.Blocks['c_scanf'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
@@ -1155,29 +1182,40 @@ export class App {
       }
     }
 
-    // u_func_def with +/- for parameters
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    {
-      const getParamTypeOptions = (): Array<[string, string]> => [
+    // Shared type options for func_def and forward_decl
+    const getParamTypeOptions = (currentVal?: string): Array<[string, string]> => {
+      const opts: Array<[string, string]> = [
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_INT'] || 'int', 'int'],
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_FLOAT'] || 'float', 'float'],
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_DOUBLE'] || 'double', 'double'],
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_CHAR'] || 'char', 'char'],
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_BOOL'] || 'bool', 'bool'],
         [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_STRING'] || 'string', 'string'],
+        ['int*', 'int*'],
+        ['char*', 'char*'],
+        ['double*', 'double*'],
+        ['void*', 'void*'],
       ]
+      if (currentVal && !opts.some(o => o[1] === currentVal)) {
+        opts.unshift([currentVal, currentVal])
+      }
+      return opts
+    }
 
-      const getReturnTypeOptions = (): Array<[string, string]> => [
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_VOID'] || 'void', 'void'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_INT'] || 'int', 'int'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_FLOAT'] || 'float', 'float'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_DOUBLE'] || 'double', 'double'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_CHAR'] || 'char', 'char'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_BOOL'] || 'bool', 'bool'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_LONG_LONG'] || 'long long', 'long long'],
-        [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_STRING'] || 'string', 'string'],
-      ]
+    const getReturnTypeOptions = (): Array<[string, string]> => [
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_VOID'] || 'void', 'void'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_INT'] || 'int', 'int'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_FLOAT'] || 'float', 'float'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_DOUBLE'] || 'double', 'double'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_CHAR'] || 'char', 'char'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_BOOL'] || 'bool', 'bool'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_LONG_LONG'] || 'long long', 'long long'],
+      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_STRING'] || 'string', 'string'],
+    ]
 
+    // u_func_def with +/- for parameters
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    {
       Blockly.Blocks['u_func_def'] = {
         paramCount_: 0,
         init: function (this: any) {
@@ -1185,7 +1223,7 @@ export class App {
           this.appendDummyInput('HEADER')
             .appendField(Blockly.Msg['U_FUNC_DEF_LABEL'] || '定義函式')
             .appendField(Blockly.Msg['U_FUNC_DEF_RETURN_LABEL'] || '回傳型別')
-            .appendField(new Blockly.FieldDropdown(getReturnTypeOptions) as Blockly.Field, 'RETURN_TYPE')
+            .appendField(self.createOpenDropdown(getReturnTypeOptions) as Blockly.Field, 'RETURN_TYPE')
             .appendField(new Blockly.FieldTextInput('main') as Blockly.Field, 'NAME')
           // Start with no parens (0 params) — just +/- buttons
           this.appendDummyInput('PARAMS_LABEL')
@@ -1232,7 +1270,7 @@ export class App {
           const idx = this.paramCount_
           const input = this.appendDummyInput(`PARAM_${idx}`)
           if (idx > 0) input.appendField(',')
-          input.appendField(new Blockly.FieldDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
+          input.appendField(self.createOpenDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
           input.appendField(new Blockly.FieldTextInput(`p${idx}`) as Blockly.Field, `PARAM_${idx}`)
           this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
           this.paramCount_++
@@ -1272,10 +1310,11 @@ export class App {
       Blockly.Blocks['u_func_call'] = {
         argCount_: 0,
         init: function (this: any) {
+          const block = this
           this.argCount_ = 0
           this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1291,7 +1330,7 @@ export class App {
           if (this.argCount_ > 0) {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
               .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
             this.appendDummyInput('TAIL')
               .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
@@ -1300,7 +1339,7 @@ export class App {
           } else {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
             this.appendDummyInput('TAIL')
               .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
               .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1352,7 +1391,7 @@ export class App {
           this.argCount_ = 0
           this.appendDummyInput('LABEL')
             .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1367,7 +1406,7 @@ export class App {
           if (this.argCount_ > 0) {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
               .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
             this.appendDummyInput('TAIL')
               .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
@@ -1376,7 +1415,7 @@ export class App {
           } else {
             this.appendDummyInput('LABEL')
               .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
+              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
             this.appendDummyInput('TAIL')
               .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
               .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
@@ -1438,18 +1477,9 @@ export class App {
     {
       Blockly.Blocks['u_var_ref'] = {
         init: function (this: Blockly.Block) {
-          const block = this
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_VAR_REF_LABEL'] || '變數')
-            .appendField(new Blockly.FieldDropdown(function () {
-              const opts = self.getWorkspaceVarOptions()
-              // Ensure current value is in the options (for function params, etc.)
-              const currentVal = block.getFieldValue('NAME')
-              if (currentVal && !opts.some(o => o[1] === currentVal)) {
-                opts.unshift([currentVal, currentVal])
-              }
-              return opts
-            }) as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.data)
           this.setTooltip(Blockly.Msg['U_VAR_REF_TOOLTIP'] || '使用變數的值')
@@ -1471,11 +1501,11 @@ export class App {
           ]
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_CREATE_LABEL'] || '建立')
-            .appendField(new Blockly.FieldDropdown(getArrayTypeOptions) as Blockly.Field, 'TYPE')
+            .appendField(self.createOpenDropdown(getArrayTypeOptions) as Blockly.Field, 'TYPE')
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_ARRAY_LABEL'] || '陣列')
-            .appendField(new Blockly.FieldTextInput('arr') as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
           this.appendValueInput('SIZE')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE_LABEL'] || '大小')
+            .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE_LABEL'] || '長度')
             .setCheck('Expression')
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
@@ -1532,7 +1562,7 @@ export class App {
         init: function (this: Blockly.Block) {
           this.appendValueInput('INDEX')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_ARRAY_LABEL'] || '陣列')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
@@ -1544,13 +1574,33 @@ export class App {
       }
     }
 
+    // u_array_assign
+    {
+      Blockly.Blocks['u_array_assign'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('INDEX')
+            .appendField(Blockly.Msg['U_ARRAY_ASSIGN_SET_LABEL'] || '設定 陣列')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
+            .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
+          this.appendValueInput('VALUE')
+            .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
+            .appendField('←')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.arrays)
+          this.setTooltip(Blockly.Msg['U_ARRAY_ASSIGN_TOOLTIP'] || '陣列元素賦值')
+        },
+      }
+    }
+
     // u_var_assign — override JSON to use variable dropdown
     {
       Blockly.Blocks['u_var_assign'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput('VALUE')
             .appendField(Blockly.Msg['U_VAR_ASSIGN_LABEL'] || '把變數')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_VAR_ASSIGN_SET_LABEL'] || '設成')
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
@@ -1608,6 +1658,74 @@ export class App {
       }
     }
 
+    // c_forward_decl — structured forward declaration with return type, name, +/- typed params
+    {
+      Blockly.Blocks['c_forward_decl'] = {
+        paramCount_: 0,
+        init: function (this: any) {
+          this.paramCount_ = 0
+          this.appendDummyInput('HEADER')
+            .appendField(Blockly.Msg['C_FORWARD_DECL_LABEL'] || '函式宣告')
+            .appendField(self.createOpenDropdown(getReturnTypeOptions) as Blockly.Field, 'RETURN_TYPE')
+            .appendField(new Blockly.FieldTextInput('f') as Blockly.Field, 'NAME')
+          this.appendDummyInput('PARAMS_LABEL')
+          this.appendDummyInput('PARAMS_END')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.functions)
+          this.setTooltip(Blockly.Msg['C_FORWARD_DECL_TOOLTIP'] || '函式前向宣告')
+        },
+        rebuildParamLabels_: function (this: any) {
+          if (this.getInput('PARAMS_LABEL')) this.removeInput('PARAMS_LABEL')
+          if (this.getInput('PARAMS_END')) this.removeInput('PARAMS_END')
+          if (this.paramCount_ > 0) {
+            this.appendDummyInput('PARAMS_LABEL')
+              .appendField('(')
+            this.moveInputBefore('PARAMS_LABEL', 'PARAM_0')
+            this.appendDummyInput('PARAMS_END')
+              .appendField(')')
+              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
+              .appendField(new Blockly.FieldImage(this.paramCount_ <= 0 ? MINUS_DISABLED_IMG : MINUS_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
+          } else {
+            this.appendDummyInput('PARAMS_LABEL')
+            this.appendDummyInput('PARAMS_END')
+              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
+              .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
+          }
+        },
+        plusParam_: function (this: any) {
+          const idx = this.paramCount_
+          const input = this.appendDummyInput(`PARAM_${idx}`)
+          if (idx > 0) input.appendField(',')
+          input.appendField(self.createOpenDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
+          this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
+          this.paramCount_++
+          if (this.paramCount_ === 1) this.rebuildParamLabels_()
+          setMinusState(this, false)
+        },
+        minusParam_: function (this: any) {
+          if (this.paramCount_ <= 0) return
+          this.paramCount_--
+          this.removeInput(`PARAM_${this.paramCount_}`)
+          if (this.paramCount_ === 0) this.rebuildParamLabels_()
+          setMinusState(this, this.paramCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          if (this.paramCount_ > 0) return { paramCount: this.paramCount_ }
+          return null
+        },
+        loadExtraState: function (this: any, state: { paramCount?: number }) {
+          const count = state?.paramCount ?? 0
+          while (this.paramCount_ < count) {
+            this.plusParam_()
+          }
+        },
+      }
+    }
+
     // c_comment_line
     {
       Blockly.Blocks['c_comment_line'] = {
@@ -1619,6 +1737,158 @@ export class App {
           this.setNextStatement(true, 'Statement')
           this.setColour(CATEGORY_COLORS.cpp_special)
           this.setTooltip(Blockly.Msg['C_COMMENT_LINE_TOOLTIP'] || '備註說明')
+        },
+      }
+    }
+
+    // ── Expression versions of statement-only blocks ──
+    // These have output: "Expression" instead of previousStatement/nextStatement
+    // Used in for-loop init/cond/update, while conditions, array indices, etc.
+
+    // c_increment_expr — expression version of c_increment
+    {
+      Blockly.Blocks['c_increment_expr'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput()
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '++', '++'],
+              [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '--', '--'],
+            ]) as Blockly.Field, 'OP')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+              [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+            ]) as Blockly.Field, 'POSITION')
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.operators)
+          this.setTooltip(Blockly.Msg['C_INCREMENT_TOOLTIP'] || '遞增/遞減（運算式）')
+        },
+      }
+    }
+
+    // c_compound_assign_expr — expression version of c_compound_assign
+    {
+      Blockly.Blocks['c_compound_assign_expr'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('VALUE')
+            .setCheck('Expression')
+            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            .appendField(new Blockly.FieldDropdown([
+              ['+=', '+='],
+              ['-=', '-='],
+              ['*=', '*='],
+              ['/=', '/='],
+              ['%=', '%='],
+            ]) as Blockly.Field, 'OP')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.operators)
+          this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '複合賦值（運算式）')
+        },
+      }
+    }
+
+    // c_scanf_expr — expression version of c_scanf (for use in while conditions, etc.)
+    {
+      Blockly.Blocks['c_scanf_expr'] = {
+        argCount_: 1,
+        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
+        init: function (this: any) {
+          this.argCount_ = 1
+          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
+          this.appendDummyInput('FORMAT_ROW')
+            .appendField('scanf')
+            .appendField(new Blockly.FieldTextInput('%d') as Blockly.Field, 'FORMAT')
+          buildArgSlot(this, 0, 'select', {
+            getVarOptions: () => self.getScanfVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.io)
+          this.setTooltip('scanf（運算式）')
+          this.isArrayVar_ = isArrayVar
+        },
+        plus_: function (this: any) {
+          const idx = this.argCount_
+          this.argSlots_[idx] = { mode: 'select', selectedVar: 'x' }
+          buildArgSlot(this, idx, 'select', {
+            getVarOptions: () => self.getScanfVarOptions(),
+            inputPrefix: ',',
+            separator: ',',
+            defaultVar: 'x',
+          })
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          if (this.getInput(`ARG_${this.argCount_}`)) this.removeInput(`ARG_${this.argCount_}`)
+          this.argSlots_.length = this.argCount_
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          const args: ArgSlotState[] = []
+          for (let i = 0; i < this.argCount_; i++) {
+            const slot = this.argSlots_[i]
+            if (slot.mode === 'select') {
+              args.push({ mode: 'select', text: this.getFieldValue(`SEL_${i}`) })
+            } else if (slot.mode === 'custom') {
+              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
+            } else {
+              args.push({ mode: 'compose' })
+            }
+          }
+          return { args }
+        },
+        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
+          const args = state?.args ?? []
+          for (let i = this.argCount_ - 1; i >= 0; i--) {
+            if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
+          }
+          this.argCount_ = args.length
+          this.argSlots_ = [...args]
+          for (let i = 0; i < args.length; i++) {
+            const a = args[i]
+            buildArgSlot(this, i, a.mode, {
+              getVarOptions: () => self.getScanfVarOptions(),
+              inputPrefix: ',',
+              separator: ',',
+              defaultVar: a.text ?? 'x',
+              customDefault: a.text ?? '',
+            })
+            this.moveInputBefore(`ARG_${i}`, 'TAIL')
+            if (a.mode === 'select' && a.text) {
+              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+            }
+          }
+          setMinusState(this, this.argCount_ <= 0)
+        },
+      }
+    }
+
+    // c_var_declare_expr — expression version for for-loop init (int i = 2)
+    {
+      Blockly.Blocks['c_var_declare_expr'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('INIT_0')
+            .setCheck('Expression')
+            .appendField(self.createOpenDropdown(() => getTypeOptions()) as Blockly.Field, 'TYPE')
+            .appendField(new Blockly.FieldTextInput('i') as Blockly.Field, 'NAME_0')
+            .appendField('=')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.data)
+          this.setTooltip('變數宣告（運算式）')
         },
       }
     }
@@ -1672,8 +1942,8 @@ export class App {
       { key: 'operators', nameKey: 'CATEGORY_OPERATORS', fallback: '運算', colorKey: 'operators', registryCategories: ['operators'], extraTypes: ['u_arithmetic', 'u_compare', 'u_logic', 'u_logic_not', 'u_negate'] },
       { key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control', registryCategories: ['control', 'loops'], extraTypes: ['u_if', 'u_while_loop', 'u_count_loop', 'u_break', 'u_continue'] },
       { key: 'functions', nameKey: 'CATEGORY_FUNCTIONS', fallback: '函式', colorKey: 'functions', registryCategories: ['functions'], extraTypes: ['u_func_def', 'u_func_call', 'u_func_call_expr', 'u_return'] },
-      { key: 'arrays', nameKey: 'CATEGORY_ARRAYS', fallback: '陣列', colorKey: 'arrays', registryCategories: ['arrays'], extraTypes: ['u_array_declare', 'u_array_access'] },
-      { key: 'cpp_basic', nameKey: 'CATEGORY_CPP_BASIC', fallback: 'C++ 基礎', colorKey: 'cpp_basic', registryCategories: ['cpp_basic', 'conditions'] },
+      { key: 'arrays', nameKey: 'CATEGORY_ARRAYS', fallback: '陣列', colorKey: 'arrays', registryCategories: ['arrays'], extraTypes: ['u_array_declare', 'u_array_access', 'u_array_assign'] },
+      { key: 'cpp_basic', nameKey: 'CATEGORY_CPP_BASIC', fallback: 'C++ 基礎', colorKey: 'cpp_basic', registryCategories: ['cpp_basic', 'conditions', 'preprocessor'] },
       { key: 'cpp_pointers', nameKey: 'CATEGORY_CPP_POINTERS', fallback: 'C++ 指標', colorKey: 'cpp_pointers', registryCategories: ['pointers'] },
       { key: 'cpp_structs', nameKey: 'CATEGORY_CPP_STRUCTS', fallback: 'C++ 結構/類別', colorKey: 'cpp_structs', registryCategories: ['structures', 'oop'] },
       { key: 'cpp_strings', nameKey: 'CATEGORY_CPP_STRINGS', fallback: 'C++ 字串', colorKey: 'cpp_strings', registryCategories: ['strings'] },
@@ -1735,7 +2005,7 @@ export class App {
     const pl = new PatternLifter()
     pl.setTransformRegistry(transformRegistry)
     pl.setLiftStrategyRegistry(liftStrategyRegistry)
-    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement'])
+    const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression'])
     pl.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
     pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(pl)
@@ -1791,6 +2061,69 @@ export class App {
       console.warn('Sync errors:', messages)
       showToast(Blockly.Msg['TOAST_ERROR'] || `⚠ ${errors.length} 個語法錯誤`, 'error')
     })
+
+    // Style conformance — 借音 (minor exception) vs 轉調 (bulk deviation)
+    this.syncController!.setCodingStyle(this.currentStylePreset)
+
+    // Code-level I/O conformance (before lift)
+    this.syncController!.onIoConformance((result) => {
+      const currentIo = this.currentStylePreset.io_style === 'printf' ? 'printf/scanf' : 'cout/cin'
+      const otherIo = this.currentStylePreset.io_style === 'printf' ? 'cout/cin' : 'printf/scanf'
+
+      if (result.verdict === 'bulk_deviation') {
+        // 轉調 — majority doesn't match preset → suggest switching preset
+        const otherPreset = STYLE_PRESETS.find(p =>
+          p.io_style !== this.currentStylePreset.io_style,
+        )
+        if (!otherPreset) return
+        const otherName = otherPreset.name['zh-TW'] || otherPreset.id
+        showStyleActionBar(
+          `程式碼大量使用 ${otherIo}，但目前風格為 ${currentIo}`,
+          [
+            { label: `切換到「${otherName}」`, primary: true, action: () => {
+              this.currentStylePreset = otherPreset
+              this.syncController?.setStyle(otherPreset)
+              this.syncController?.setCodingStyle(otherPreset)
+              this.styleSelector?.setValue(otherPreset.id)
+              this.updateStatusBar()
+              const ioPref = otherPreset.io_style === 'printf' ? 'cstdio' : 'iostream'
+              if (ioPref !== this.currentIoPreference) {
+                this.currentIoPreference = ioPref
+                this.updateToolboxForLevel(this.currentLevel)
+              }
+              this.syncController?.syncBlocksToCode()
+            }},
+            { label: '保持目前風格', action: () => { /* no-op */ } },
+          ],
+        )
+      } else if (result.verdict === 'minor_exception') {
+        // 借音 — a few off-key notes → ask if intentional
+        showStyleActionBar(
+          `偵測到少數 ${otherIo} 用法（目前風格為 ${currentIo}）`,
+          [
+            { label: '保留（刻意使用）', action: () => { /* intentional — keep */ } },
+            { label: `統一為 ${currentIo}`, primary: true, action: () => {
+              this.syncController?.syncBlocksToCode()
+            }},
+          ],
+        )
+      }
+    })
+
+    // Semantic-level style exceptions (after lift — toolbox block mismatches)
+    this.syncController!.onStyleExceptions((exceptions, apply) => {
+      const items = exceptions.map(e => `${e.label} → ${e.suggestion}`).join('、')
+      showStyleActionBar(
+        `積木風格不符：${items}`,
+        [
+          { label: '自動轉換', primary: true, action: () => {
+            apply()
+            this.syncController?.syncBlocksToCode()
+          }},
+          { label: '保留', action: () => { /* no-op */ } },
+        ],
+      )
+    })
   }
 
   private setupLevelSelector(): void {
@@ -1809,9 +2142,10 @@ export class App {
   private setupStyleSelector(): void {
     const mount = document.getElementById('style-selector-mount')
     if (!mount) return
-    const selector = new StyleSelector(mount, STYLE_PRESETS)
-    selector.onChange((style) => {
+    this.styleSelector = new StyleSelector(mount, STYLE_PRESETS)
+    this.styleSelector.onChange((style) => {
       this.syncController?.setStyle(style)
+      this.syncController?.setCodingStyle(style)
       this.syncController?.syncBlocksToCode()
       this.currentStylePreset = style
       this.updateStatusBar()
@@ -1870,6 +2204,7 @@ export class App {
   }
 
   private currentStylePreset: StylePreset = DEFAULT_STYLE
+  private styleSelector: StyleSelector | null = null
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
 
@@ -2076,7 +2411,7 @@ export class App {
     if (!tree) return
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 100000 })
+    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
     this.interpreter.setInputProvider(() => this.consolePanel!.promptInput())
     // Real-time output: stream to console as interpreter writes
     this.interpreter.setOutputCallback((text: string) => {
@@ -2125,7 +2460,7 @@ export class App {
     if (!tree) return
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 100000 })
+    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
     // Real-time output: stream to console as interpreter writes during step collection
     this.interpreter.setOutputCallback((text: string) => {
       this.consolePanel?.write(text)
@@ -2344,6 +2679,23 @@ export class App {
             }
             break
           }
+        } else if (block.type === 'c_var_declare_expr') {
+          // Expression-mode variable declaration (e.g. for-loop init: int j = ...)
+          for (let i = 0; ; i++) {
+            const name = block.getFieldValue(`NAME_${i}`)
+            if (name === null || name === undefined) break
+            addOption(name)
+          }
+        } else if (block.type === 'c_for_loop') {
+          // Scan INIT input for inline var declarations
+          const initBlock = block.getInputTargetBlock?.('INIT')
+          if (initBlock && initBlock.type === 'c_var_declare_expr') {
+            for (let i = 0; ; i++) {
+              const name = initBlock.getFieldValue(`NAME_${i}`)
+              if (name === null || name === undefined) break
+              addOption(name)
+            }
+          }
         }
       }
     }
@@ -2413,8 +2765,8 @@ export class App {
     return options
   }
 
-  /** Get array variable names from workspace */
-  private getWorkspaceArrayOptions(): Array<[string, string]> {
+  /** Get array variable names from workspace, with optional currentVal fallback */
+  private getWorkspaceArrayOptions(currentVal?: string): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
     const workspace = this.blocklyPanel?.getWorkspace()
@@ -2429,14 +2781,18 @@ export class App {
         }
       }
     }
+    // Ensure current value is always available as an option
+    if (currentVal && !seen.has(currentVal)) {
+      options.push([currentVal, currentVal])
+    }
     if (options.length === 0) {
       options.push(['arr', 'arr'])
     }
     return options
   }
 
-  /** Get function names from workspace */
-  private getWorkspaceFuncOptions(): Array<[string, string]> {
+  /** Get function names from workspace, with optional currentVal fallback */
+  private getWorkspaceFuncOptions(currentVal?: string): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
     const workspace = this.blocklyPanel?.getWorkspace()
@@ -2450,6 +2806,10 @@ export class App {
           }
         }
       }
+    }
+    // Ensure currentVal is always available (for code→blocks sync of external functions)
+    if (currentVal && !seen.has(currentVal)) {
+      options.unshift([currentVal, currentVal])
     }
     if (options.length === 0) {
       options.push(['myFunction', 'myFunction'])

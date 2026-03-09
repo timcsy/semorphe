@@ -133,10 +133,97 @@ export class BlocklyPanel {
       case 'c_compound_assign': {
           const valueBlock = block.getInputTargetBlock('VALUE')
           const valueNode = valueBlock ? this.extractBlock(valueBlock) : createNode('number_literal', { value: '1' })
-          return createNode('compound_assign', {
+          return createNode('cpp_compound_assign', {
             name: block.getFieldValue('NAME') ?? 'x',
             operator: block.getFieldValue('OP') ?? '+=',
           }, { value: valueNode ? [valueNode] : [] })
+        }
+      case 'u_array_assign': {
+          const arrName = block.getFieldValue('NAME') ?? 'arr'
+          const idxBlock = block.getInputTargetBlock('INDEX')
+          const valBlock = block.getInputTargetBlock('VALUE')
+          const idxNode = idxBlock ? this.extractBlock(idxBlock) : createNode('number_literal', { value: '0' })
+          const valNode = valBlock ? this.extractBlock(valBlock) : createNode('number_literal', { value: '0' })
+          return createNode('array_assign', { name: arrName }, {
+            index: idxNode ? [idxNode] : [],
+            value: valNode ? [valNode] : [],
+          })
+        }
+      // Expression versions of statement-only blocks
+      case 'c_increment_expr': return createNode('cpp_increment_expr', {
+          name: block.getFieldValue('NAME') ?? 'i',
+          operator: block.getFieldValue('OP') ?? '++',
+          position: block.getFieldValue('POSITION') ?? 'postfix',
+        })
+      case 'c_compound_assign_expr': {
+          const valueBlock = block.getInputTargetBlock('VALUE')
+          const valueNode = valueBlock ? this.extractBlock(valueBlock) : createNode('number_literal', { value: '1' })
+          return createNode('cpp_compound_assign_expr', {
+            name: block.getFieldValue('NAME') ?? 'x',
+            operator: block.getFieldValue('OP') ?? '+=',
+          }, { value: valueNode ? [valueNode] : [] })
+        }
+      case 'c_scanf_expr': return this.extractScanfExpr(block)
+      case 'c_var_declare_expr': {
+          const type = block.getFieldValue('TYPE') ?? 'int'
+          const name = block.getFieldValue('NAME_0') ?? 'i'
+          const initBlock = block.getInputTargetBlock('INIT_0')
+          const initNode = initBlock ? this.extractBlock(initBlock) : null
+          return createNode('var_declare_expr', { name, type }, {
+            initializer: initNode ? [initNode] : [],
+          })
+        }
+      case 'c_do_while': {
+          const body = this.extractStatementInput(block, 'BODY')
+          const condBlock = block.getInputTargetBlock('COND')
+          const condNode = condBlock ? this.extractBlock(condBlock) : createNode('var_ref', { name: 'true' })
+          return createNode('cpp_do_while', {}, {
+            body,
+            cond: condNode ? [condNode] : [],
+          })
+        }
+      case 'c_ternary': {
+          const condBlock = block.getInputTargetBlock('CONDITION')
+          const trueBlock = block.getInputTargetBlock('TRUE_EXPR')
+          const falseBlock = block.getInputTargetBlock('FALSE_EXPR')
+          const condNode = condBlock ? this.extractBlock(condBlock) : createNode('var_ref', { name: 'true' })
+          const trueNode = trueBlock ? this.extractBlock(trueBlock) : createNode('number_literal', { value: '0' })
+          const falseNode = falseBlock ? this.extractBlock(falseBlock) : createNode('number_literal', { value: '0' })
+          return createNode('cpp_ternary', {}, {
+            condition: condNode ? [condNode] : [],
+            true_expr: trueNode ? [trueNode] : [],
+            false_expr: falseNode ? [falseNode] : [],
+          })
+        }
+      case 'c_char_literal': return createNode('char_literal', { value: block.getFieldValue('VALUE') ?? 'a' })
+      case 'c_cast': {
+          const castValBlock = block.getInputTargetBlock('VALUE')
+          const castValNode = castValBlock ? this.extractBlock(castValBlock) : createNode('number_literal', { value: '0' })
+          return createNode('cpp_cast', { target_type: block.getFieldValue('TYPE') ?? 'int' }, {
+            value: castValNode ? [castValNode] : [],
+          })
+        }
+      case 'c_bitwise_not': {
+          const bnotBlock = block.getInputTargetBlock('VALUE')
+          const bnotNode = bnotBlock ? this.extractBlock(bnotBlock) : createNode('number_literal', { value: '0' })
+          return createNode('bitwise_not', {}, {
+            operand: bnotNode ? [bnotNode] : [],
+          })
+        }
+      case 'c_forward_decl': {
+          const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
+          const fwdName = block.getFieldValue('NAME') ?? 'f'
+          const fwdParams: string[] = []
+          for (let i = 0; ; i++) {
+            const paramType = block.getFieldValue(`TYPE_${i}`)
+            if (paramType === null || paramType === undefined) break
+            fwdParams.push(paramType)
+          }
+          return createNode('forward_decl', {
+            return_type: returnType,
+            name: fwdName,
+            params: fwdParams,
+          })
         }
       case 'c_raw_code': return this.extractRawCode(block)
       case 'c_raw_expression': return this.extractRawExpression(block)
@@ -195,6 +282,9 @@ export class BlocklyPanel {
         return stmtBody.map(n => {
           const raw = n.metadata?.rawCode
           if (raw) return '    ' + raw
+          // Try simpleExpressionToCode for known concepts as statement
+          const expr = this.simpleExpressionToCode(n)
+          if (!expr.startsWith('/*')) return '    ' + expr + ';'
           return `    /* ${n.concept} */`
         }).join('\n')
       }
@@ -231,11 +321,36 @@ export class BlocklyPanel {
         return `${negOp}${inner ? this.simpleExpressionToCode(inner) : '0'}`
       }
       case 'raw_code': return node.metadata?.rawCode ?? ''
-      case 'func_call': {
+      case 'func_call':
+      case 'func_call_expr': {
         const name = node.properties.name ?? 'f'
         const args = (node.children.args ?? []).map(a => this.simpleExpressionToCode(a))
         return `${name}(${args.join(', ')})`
       }
+      case 'array_access': {
+        const arrName = node.properties.name ?? 'arr'
+        const idx = (node.children.index ?? [])[0]
+        return `${arrName}[${idx ? this.simpleExpressionToCode(idx) : '0'}]`
+      }
+      case 'cpp_increment':
+      case 'cpp_increment_expr': {
+        const incName = (node.properties.name ?? 'i') as string
+        const incOp = (node.properties.operator ?? '++') as string
+        const incPos = (node.properties.position ?? 'postfix') as string
+        return incPos === 'prefix' ? `${incOp}${incName}` : `${incName}${incOp}`
+      }
+      case 'cpp_ternary': {
+        const cond = (node.children.condition ?? [])[0]
+        const trueE = (node.children.true_expr ?? [])[0]
+        const falseE = (node.children.false_expr ?? [])[0]
+        return `${cond ? this.simpleExpressionToCode(cond) : '0'} ? ${trueE ? this.simpleExpressionToCode(trueE) : '0'} : ${falseE ? this.simpleExpressionToCode(falseE) : '0'}`
+      }
+      case 'cpp_cast': {
+        const castType = node.properties.target_type ?? 'int'
+        const castVal = (node.children.value ?? [])[0]
+        return `(${castType})${castVal ? this.simpleExpressionToCode(castVal) : '0'}`
+      }
+      case 'char_literal': return `'${node.properties.value ?? 'a'}'`
       default: return node.metadata?.rawCode ?? `/* ${node.concept} */`
     }
   }
@@ -553,6 +668,24 @@ export class BlocklyPanel {
     // Legacy fallback
     const argsText = block.getFieldValue('ARGS') ?? ''
     return createNode('cpp_scanf', { format, args: argsText })
+  }
+
+  private extractScanfExpr(block: Blockly.Block): SemanticNode {
+    const format = block.getFieldValue('FORMAT') ?? '%d'
+    const args = this.extractThreeModeArgs(block)
+    if (args.length > 0) {
+      for (const arg of args) {
+        if (arg.concept === 'var_ref') {
+          const varName = arg.properties.name as string
+          if (!this.varNeedsAddressOf(varName)) {
+            arg.properties.noAddr = true
+          }
+        }
+      }
+      return createNode('cpp_scanf_expr', { format }, { args })
+    }
+    const argsText = block.getFieldValue('ARGS') ?? ''
+    return createNode('cpp_scanf_expr', { format, args: argsText })
   }
 
   /** Check if a variable needs & for scanf (basic types need it, arrays/strings/pointers don't) */

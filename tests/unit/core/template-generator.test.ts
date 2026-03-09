@@ -150,4 +150,103 @@ describe('TemplateGenerator', () => {
       expect(gen.getCollectedImports()).toContain('stdio.h')
     })
   })
+
+  describe('expression fallback to hand-written generators', () => {
+    it('should use expressionFallback when child has no template', () => {
+      gen.registerTemplate('cpp_for_loop', {
+        pattern: 'for (${INIT}; ${COND}; ${UPDATE}) {}',
+        imports: [],
+        order: 0,
+      })
+      // Register template for COND but NOT for INIT or UPDATE
+      gen.registerTemplate('var_ref', { pattern: '${name}', imports: [], order: 20 })
+
+      // Set fallback for concepts without templates
+      gen.setExpressionFallback((node) => {
+        if (node.concept === 'cpp_increment_expr') {
+          return `${node.properties.name}${node.properties.operator}`
+        }
+        if (node.concept === 'var_declare_expr') {
+          return `${node.properties.type} ${node.properties.name} = 0`
+        }
+        return null
+      })
+
+      const forNode = createNode('cpp_for_loop', {}, {
+        init: [createNode('var_declare_expr', { type: 'int', name: 'i' })],
+        cond: [createNode('var_ref', { name: 'x' })],
+        update: [createNode('cpp_increment_expr', { name: 'i', operator: '++' })],
+      })
+
+      const result = gen.generate(forNode, { indent: 0, style: defaultStyle })
+      expect(result).toBe('for (int i = 0; x; i++) {}')
+    })
+
+    it('should fall back to rawCode metadata when no fallback matches', () => {
+      gen.registerTemplate('parent', {
+        pattern: 'f(${CHILD})',
+        imports: [],
+        order: 0,
+      })
+      gen.setExpressionFallback(() => null) // fallback returns null
+
+      const child = createNode('mystery', {})
+      child.metadata = { rawCode: 'raw_text_here' }
+      const parent = createNode('parent', {}, { child: [child] })
+
+      const result = gen.generate(parent, { indent: 0, style: defaultStyle })
+      expect(result).toBe('f(raw_text_here)')
+    })
+
+    it('should show /* concept */ when no fallback and no rawCode', () => {
+      gen.registerTemplate('parent', {
+        pattern: 'f(${CHILD})',
+        imports: [],
+        order: 0,
+      })
+
+      const child = createNode('mystery', {})
+      const parent = createNode('parent', {}, { child: [child] })
+
+      const result = gen.generate(parent, { indent: 0, style: defaultStyle })
+      expect(result).toBe('f(/* mystery */)')
+    })
+  })
+
+  describe('body fallback to hand-written generators', () => {
+    it('should use bodyFallback when body child has no template', () => {
+      gen.registerTemplate('while_loop', {
+        pattern: 'while (true) {\n${BODY}\n}',
+        imports: [],
+        order: 0,
+      })
+
+      gen.setBodyFallback((node) => {
+        if (node.concept === 'array_assign') {
+          return `    ${node.properties.name}[0] = 1;`
+        }
+        return null
+      })
+
+      const bodyChild = createNode('array_assign', { name: 'arr' })
+      const whileNode = createNode('while_loop', {}, { body: [bodyChild] })
+
+      const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })
+      expect(result).toContain('arr[0] = 1;')
+    })
+
+    it('should show /* unknown: concept */ when body fallback fails', () => {
+      gen.registerTemplate('while_loop', {
+        pattern: 'while (true) {\n${BODY}\n}',
+        imports: [],
+        order: 0,
+      })
+
+      const bodyChild = createNode('mystery_stmt', {})
+      const whileNode = createNode('while_loop', {}, { body: [bodyChild] })
+
+      const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })
+      expect(result).toContain('/* unknown: mystery_stmt */')
+    })
+  })
 })

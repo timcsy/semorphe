@@ -1,4 +1,5 @@
-import type { RenderStrategyRegistry, BlockState } from '../../../core/registry/render-strategy-registry'
+import type { RenderStrategyRegistry, BlockState, RenderContext } from '../../../core/registry/render-strategy-registry'
+import type { SemanticNode } from '../../../core/types'
 
 export function registerCppRenderStrategies(registry: RenderStrategyRegistry): void {
   // input: cin >> x >> y — three-mode arg slots with extraState.args
@@ -137,6 +138,42 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     return block
   })
 
+  // cpp_printf: printf with FORMAT field + three-mode dynamic args
+  registry.register('cpp:renderPrintf', (node, ctx) => {
+    const block: BlockState = {
+      type: 'c_printf',
+      id: ctx.nextBlockId(),
+      fields: {
+        FORMAT: (node.properties.format as string) ?? '%d\\n',
+      },
+      inputs: {},
+    }
+
+    const argNodes = node.children.args ?? []
+    const args = renderThreeModeArgs(argNodes, block, ctx)
+    block.extraState = { args }
+
+    return block
+  })
+
+  // cpp_scanf: scanf with FORMAT field + three-mode dynamic args
+  registry.register('cpp:renderScanf', (node, ctx) => {
+    const block: BlockState = {
+      type: 'c_scanf',
+      id: ctx.nextBlockId(),
+      fields: {
+        FORMAT: (node.properties.format as string) ?? '%d',
+      },
+      inputs: {},
+    }
+
+    const argNodes = node.children.args ?? []
+    const args = renderThreeModeArgs(argNodes, block, ctx)
+    block.extraState = { args }
+
+    return block
+  })
+
   // func_call / func_call_expr: function call with dynamic args
   registry.register('cpp:renderFuncCall', (node, ctx) => {
     const blockType = node.concept === 'func_call_expr' ? 'u_func_call_expr' : 'u_func_call'
@@ -156,6 +193,29 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     }
     if (args.length > 0) {
       block.extraState = { ...block.extraState, argCount: args.length }
+    }
+
+    return block
+  })
+
+  // forward_decl: structured forward declaration with return type, name, params
+  registry.register('cpp:renderForwardDecl', (node, ctx) => {
+    const block: BlockState = {
+      type: 'c_forward_decl',
+      id: ctx.nextBlockId(),
+      fields: {
+        RETURN_TYPE: node.properties.return_type ?? 'void',
+        NAME: node.properties.name ?? 'f',
+      },
+      inputs: {},
+    }
+
+    const params = node.properties.params
+    if (Array.isArray(params) && params.length > 0) {
+      for (let i = 0; i < params.length; i++) {
+        block.fields[`TYPE_${i}`] = params[i] as string
+      }
+      block.extraState = { paramCount: params.length }
     }
 
     return block
@@ -199,5 +259,24 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     }
 
     return block
+  })
+}
+
+/** Map semantic arg nodes to three-mode arg slots, using compose mode for non-var_ref */
+function renderThreeModeArgs(
+  argNodes: SemanticNode[],
+  block: BlockState,
+  ctx: RenderContext,
+): Array<{ mode: 'select' | 'compose'; text?: string }> {
+  return argNodes.map((a, i) => {
+    if (a.concept === 'var_ref') {
+      return { mode: 'select' as const, text: (a.properties.name as string) ?? 'x' }
+    }
+    // Non-var_ref: use compose mode and render expression block into inputs
+    const exprBlock = ctx.renderExpression(a)
+    if (exprBlock) {
+      block.inputs[`ARG_${i}`] = { block: exprBlock }
+    }
+    return { mode: 'compose' as const }
   })
 }

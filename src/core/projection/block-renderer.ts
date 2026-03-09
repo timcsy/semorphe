@@ -143,11 +143,38 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
   block.extraState = extra
 }
 
+/** Mapping from statement-only block types to their expression counterparts */
+const STATEMENT_TO_EXPRESSION: Record<string, string> = {
+  'c_increment': 'c_increment_expr',
+  'c_compound_assign': 'c_compound_assign_expr',
+  'c_scanf': 'c_scanf_expr',
+  'u_var_declare': 'c_var_declare_expr',
+}
+
 function renderExpression(node: SemanticNode): BlockState | null {
   const block = renderBlock(node)
+  if (!block) return null
   // If it's a raw_code (statement) block in expression context, use c_raw_expression instead
-  if (block && block.type === 'c_raw_code') {
+  if (block.type === 'c_raw_code') {
     return { ...block, type: 'c_raw_expression' }
+  }
+  // Check if a statement-only block has an expression counterpart
+  if (globalPatternRenderer?.isStatementOnly(block.type)) {
+    const exprType = STATEMENT_TO_EXPRESSION[block.type]
+    if (exprType) {
+      return { ...block, type: exprType }
+    }
+    // No expression counterpart — fall back to c_raw_expression
+    const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.concept
+    // Strip trailing semicolons/newlines — expression context doesn't need them
+    const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw
+    return {
+      type: 'c_raw_expression',
+      id: block.id,
+      fields: { CODE: rawCode },
+      inputs: {},
+      extraState: { ...block.extraState, degradationCause: 'statement_in_expression' },
+    }
   }
   return block
 }

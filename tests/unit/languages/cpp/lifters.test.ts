@@ -61,6 +61,50 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.properties.type).toBe('int')
   })
 
+  it('should lift forward function declaration with structured params', () => {
+    // void listp(int *, int);
+    const param0 = mockNode('parameter_declaration', 'int *', [
+      mockNode('primitive_type', 'int'),
+      mockNode('pointer_declarator', '*', []),
+    ])
+    const param1 = mockNode('parameter_declaration', 'int', [
+      mockNode('primitive_type', 'int'),
+    ])
+    const paramList = mockNode('parameter_list', '(int *, int)', [param0, param1])
+    const funcDecl = mockNode('function_declarator', 'listp(int *, int)', [
+      mockNode('identifier', 'listp'),
+      paramList,
+    ], { declarator: mockNode('identifier', 'listp'), parameters: paramList })
+    const node = mockNode('declaration', 'void listp(int *, int);', [
+      mockNode('primitive_type', 'void'),
+      funcDecl,
+    ])
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('forward_decl')
+    expect(result!.properties.return_type).toBe('void')
+    expect(result!.properties.name).toBe('listp')
+    expect(result!.properties.params).toEqual(['int *', 'int'])
+  })
+
+  it('should lift forward declaration with no params', () => {
+    const paramList = mockNode('parameter_list', '()', [])
+    const funcDecl = mockNode('function_declarator', 'getVal()', [
+      mockNode('identifier', 'getVal'),
+      paramList,
+    ], { declarator: mockNode('identifier', 'getVal'), parameters: paramList })
+    const node = mockNode('declaration', 'int getVal();', [
+      mockNode('primitive_type', 'int'),
+      funcDecl,
+    ])
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('forward_decl')
+    expect(result!.properties.return_type).toBe('int')
+    expect(result!.properties.name).toBe('getVal')
+    expect(result!.properties.params).toEqual([])
+  })
+
   it('should lift array declaration', () => {
     const arrDecl = mockNode('array_declarator', 'arr[10]', [
       mockNode('identifier', 'arr'),
@@ -74,7 +118,9 @@ describe('C++ Declaration Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.concept).toBe('array_declare')
     expect(result!.properties.name).toBe('arr')
-    expect(result!.properties.size).toBe('10')
+    // Size is now a child expression node
+    const sizeChildren = result!.children.size ?? []
+    expect(sizeChildren.length).toBe(1)
   })
 
   it('should lift expression_statement by unwrapping', () => {
@@ -474,10 +520,9 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.concept).toBe('cpp_for_loop')
-    // init should be wrapped as cpp_raw_expression since declaration is a statement
+    // init should be var_declare (passed through as-is)
     expect(result!.children.init).toHaveLength(1)
-    expect(result!.children.init[0].concept).toBe('cpp_raw_expression')
-    expect(result!.children.init[0].properties.code).toBe('int i = 1')
+    expect(result!.children.init[0].concept).toBe('var_declare')
     // No condition or update
     expect(result!.children.cond).toHaveLength(0)
     expect(result!.children.update).toHaveLength(0)
@@ -510,14 +555,12 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.concept).toBe('cpp_for_loop')
-    // init (declaration) → cpp_raw_expression
-    expect(result!.children.init[0].concept).toBe('cpp_raw_expression')
-    expect(result!.children.init[0].properties.code).toBe('int i = 0')
+    // init (declaration) → var_declare (passed through)
+    expect(result!.children.init[0].concept).toBe('var_declare')
     // cond present
     expect(result!.children.cond).toHaveLength(1)
-    // update (assignment_expression → unresolved) → cpp_raw_expression
-    expect(result!.children.update[0].concept).toBe('cpp_raw_expression')
-    expect(result!.children.update[0].properties.code).toBe('i += 2')
+    // update (assignment_expression with +=) → cpp_compound_assign (passed through)
+    expect(result!.children.update[0].concept).toBe('cpp_compound_assign')
   })
 
   it('should lift function_definition', () => {
@@ -571,7 +614,7 @@ describe('C++ Statement Lifters', () => {
 })
 
 describe('C++ I/O Lifters', () => {
-  it('should lift printf call to print', () => {
+  it('should lift printf to cpp_printf with format preserved', () => {
     const fmt = mockNode('string_literal', '"%d"')
     const arg = mockNode('identifier', 'x')
     const argsNode = mockNode('argument_list', '("%d", x)', [fmt, arg])
@@ -582,12 +625,44 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(['print', 'cpp_printf']).toContain(result!.concept)
-    expect(result!.children.values).toHaveLength(1)
-    expect(result!.children.values[0].concept).toBe('var_ref')
+    expect(result!.concept).toBe('cpp_printf')
+    expect(result!.properties.format).toBe('%d')
+    expect(result!.children.args).toHaveLength(1)
+    expect(result!.children.args[0].concept).toBe('var_ref')
   })
 
-  it('should lift scanf call to input', () => {
+  it('should lift printf("%.2f\\n", x) preserving float format', () => {
+    const fmt = mockNode('string_literal', '"%.2f\\n"')
+    const arg = mockNode('identifier', 'x')
+    const argsNode = mockNode('argument_list', '("%.2f\\n", x)', [fmt, arg])
+    const funcNode = mockNode('identifier', 'printf')
+    const node = mockNode('call_expression', 'printf("%.2f\\n", x)', [funcNode, argsNode], {
+      function: funcNode,
+      arguments: argsNode,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_printf')
+    expect(result!.properties.format).toBe('%.2f\\n')
+    expect(result!.children.args).toHaveLength(1)
+  })
+
+  it('should lift printf with no args (format only)', () => {
+    const fmt = mockNode('string_literal', '"hello\\n"')
+    const argsNode = mockNode('argument_list', '("hello\\n")', [fmt])
+    const funcNode = mockNode('identifier', 'printf')
+    const node = mockNode('call_expression', 'printf("hello\\n")', [funcNode, argsNode], {
+      function: funcNode,
+      arguments: argsNode,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_printf')
+    expect(result!.properties.format).toBe('hello\\n')
+    expect(result!.children.args).toHaveLength(0)
+  })
+
+  it('should lift scanf to cpp_scanf with format preserved', () => {
     const fmt = mockNode('string_literal', '"%d"')
     const varArg = mockNode('unary_expression', '&x', [
       unnamed('&', '&'),
@@ -601,12 +676,58 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(['input', 'cpp_scanf']).toContain(result!.concept)
-    // Modern format uses values children with var_ref nodes
-    const values = result!.children.values ?? []
-    expect(values.length).toBe(1)
-    expect(values[0].concept).toBe('var_ref')
-    expect(values[0].properties.name).toBe('x')
+    expect(result!.concept).toBe('cpp_scanf')
+    expect(result!.properties.format).toBe('%d')
+    expect(result!.children.args).toHaveLength(1)
+    expect(result!.children.args[0].concept).toBe('var_ref')
+    expect(result!.children.args[0].properties.name).toBe('x')
+  })
+
+  it('should lift scanf("%d %s", &x, buf) preserving multi-format', () => {
+    const fmt = mockNode('string_literal', '"%d %s"')
+    const varArg1 = mockNode('unary_expression', '&x', [
+      unnamed('&', '&'),
+      mockNode('identifier', 'x'),
+    ], { argument: mockNode('identifier', 'x') })
+    const varArg2 = mockNode('identifier', 'buf')
+    const argsNode = mockNode('argument_list', '("%d %s", &x, buf)', [fmt, varArg1, varArg2])
+    const funcNode = mockNode('identifier', 'scanf')
+    const node = mockNode('call_expression', 'scanf("%d %s", &x, buf)', [funcNode, argsNode], {
+      function: funcNode,
+      arguments: argsNode,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_scanf')
+    expect(result!.properties.format).toBe('%d %s')
+    expect(result!.children.args).toHaveLength(2)
+    expect(result!.children.args[0].properties.name).toBe('x')
+    expect(result!.children.args[1].properties.name).toBe('buf')
+  })
+
+  it('should lift scanf with pointer_expression (&x) args', () => {
+    const fmt = mockNode('string_literal', '"%d %d"')
+    const varArg1 = mockNode('pointer_expression', '&a', [
+      unnamed('&', '&'),
+      mockNode('identifier', 'a'),
+    ])
+    const varArg2 = mockNode('pointer_expression', '&b', [
+      unnamed('&', '&'),
+      mockNode('identifier', 'b'),
+    ])
+    const argsNode = mockNode('argument_list', '("%d %d", &a, &b)', [fmt, varArg1, varArg2])
+    const funcNode = mockNode('identifier', 'scanf')
+    const node = mockNode('call_expression', 'scanf("%d %d", &a, &b)', [funcNode, argsNode], {
+      function: funcNode,
+      arguments: argsNode,
+    })
+    const result = lifter.lift(node)
+    expect(result).not.toBeNull()
+    expect(result!.concept).toBe('cpp_scanf')
+    expect(result!.properties.format).toBe('%d %d')
+    expect(result!.children.args).toHaveLength(2)
+    expect(result!.children.args[0].properties.name).toBe('a')
+    expect(result!.children.args[1].properties.name).toBe('b')
   })
 
   it('should lift generic function call to func_call_expr', () => {

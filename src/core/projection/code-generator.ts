@@ -41,6 +41,7 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
   const ctx: GeneratorContext = { indent: 0, style, language, generators }
+  wireTemplateFallbacks(ctx)
   return generateNode(tree, ctx).trim()
 }
 
@@ -53,8 +54,27 @@ export function generateCodeWithMapping(
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
   const mappings: SourceMapping[] = []
   const ctx: GeneratorContext = { indent: 0, style, language, generators, _mappings: mappings, _lineCount: 0 }
+  wireTemplateFallbacks(ctx)
   const code = generateNode(tree, ctx).trim()
   return { code, mappings }
+}
+
+/** Wire hand-written generators as fallback for template generator's expression/body generation */
+function wireTemplateFallbacks(ctx: GeneratorContext): void {
+  const tg = ctx.templateGenerator ?? globalTemplateGenerator
+  if (!tg) return
+  tg.setExpressionFallback((node, _tgCtx) => {
+    const generator = ctx.generators.get(node.concept)
+    if (!generator) return null
+    // Hand-written expression generators return just the expression text
+    return generator(node, ctx)
+  })
+  tg.setBodyFallback((node, tgCtx) => {
+    const generator = ctx.generators.get(node.concept)
+    if (!generator) return null
+    const bodyCtx = { ...ctx, indent: tgCtx.indent }
+    return generator(node, bodyCtx)
+  })
 }
 
 export function generateNode(node: SemanticNode, ctx: GeneratorContext): string {

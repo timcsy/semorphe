@@ -516,12 +516,14 @@ describe('Interpreter - input', () => {
     expect(interp.getOutput().join('')).toBe('10')
   })
 
-  it('should throw when input queue is exhausted', async () => {
-    await expect(run([
+  it('should return EOF (-1) when input queue is exhausted', async () => {
+    const interp = await run([
       createNode('var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('input', { type: 'int' }, {})]
       })
-    ], [])).rejects.toThrow(RuntimeError)
+    ], [])
+    // EOF returns -1 (like C scanf behavior)
+    expect(interp.getScope().get('x')).toEqual({ type: 'int', value: -1 })
   })
 
   it('should use inputProvider when stdin is exhausted', async () => {
@@ -991,5 +993,95 @@ describe('Interpreter - more edge cases', () => {
       })
     ])
     expect(interp.getOutput().join('')).toBe('-42')
+  })
+})
+
+describe('Interpreter - expression concepts in for-loop', () => {
+  it('should handle var_declare_expr in for-loop init', async () => {
+    // for (int i = 0; i < 3; i++) { print i }
+    const interp = await run([
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_declare_expr', { type: 'int', name: 'i' }, {
+          initializer: [createNode('number_literal', { value: '0' })],
+        })],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' })],
+          right: [createNode('number_literal', { value: '3' })],
+        })],
+        update: [createNode('cpp_increment_expr', { name: 'i', operator: '++', position: 'postfix' })],
+        body: [createNode('print', {}, {
+          values: [createNode('var_ref', { name: 'i' })],
+        })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('012')
+  })
+
+  it('should handle cpp_increment_expr in for-loop update', async () => {
+    // var i = 0; for(;;i++) { if i>=3 break; } print i → 3
+    const interp = await run([
+      createNode('var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' })],
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [],
+        cond: [createNode('compare', { operator: '<' }, {
+          left: [createNode('var_ref', { name: 'i' })],
+          right: [createNode('number_literal', { value: '3' })],
+        })],
+        update: [createNode('cpp_increment_expr', { name: 'i', operator: '++', position: 'postfix' })],
+        body: [],
+      }),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 'i' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('3')
+  })
+
+  it('should handle cpp_compound_assign_expr in for-loop update', async () => {
+    // for (int j = 0; j < 10; j += 3) { } print j → not accessible (scope)
+    // Simpler: var s = 0; for(int i=1; i<=3; i++) { s += i } print s → 6
+    const interp = await run([
+      createNode('var_declare', { name: 's', type: 'int' }, {
+        initializer: [createNode('number_literal', { value: '0' })],
+      }),
+      createNode('cpp_for_loop', {}, {
+        init: [createNode('var_declare_expr', { type: 'int', name: 'i' }, {
+          initializer: [createNode('number_literal', { value: '1' })],
+        })],
+        cond: [createNode('compare', { operator: '<=' }, {
+          left: [createNode('var_ref', { name: 'i' })],
+          right: [createNode('number_literal', { value: '3' })],
+        })],
+        update: [createNode('cpp_increment_expr', { name: 'i', operator: '++', position: 'postfix' })],
+        body: [createNode('cpp_compound_assign_expr', { name: 's', operator: '+=' }, {
+          value: [createNode('var_ref', { name: 'i' })],
+        })],
+      }),
+      createNode('print', {}, {
+        values: [createNode('var_ref', { name: 's' })],
+      }),
+    ])
+    expect(interp.getOutput().join('')).toBe('6')
+  })
+
+  it('should handle cpp_scanf_expr in while condition', async () => {
+    // while (scanf("%d", &n) != EOF) { print n }
+    const interp = await run([
+      createNode('var_declare', { name: 'n', type: 'int' }),
+      createNode('while_loop', {}, {
+        condition: [createNode('compare', { operator: '!=' }, {
+          left: [createNode('cpp_scanf_expr', { format: '%d' }, {
+            args: [createNode('var_ref', { name: 'n' })],
+          })],
+          right: [createNode('var_ref', { name: 'EOF' })],
+        })],
+        body: [createNode('print', {}, {
+          values: [createNode('var_ref', { name: 'n' })],
+        })],
+      }),
+    ], ['5', '10'])
+    expect(interp.getOutput().join('')).toBe('510')
   })
 })

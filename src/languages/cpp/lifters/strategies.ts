@@ -8,8 +8,11 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   if (decl.type === 'array_declarator') {
     const name = decl.namedChildren[0]?.text ?? 'arr'
     const sizeNode = decl.namedChildren[1]
-    const size = sizeNode?.text ?? '10'
-    return createNode('array_declare', { type, name, size })
+    // Lift size as a child expression node for proper rendering
+    const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
+    return createNode('array_declare', { type, name }, {
+      size: sizeChild ? [sizeChild] : [],
+    })
   }
 
   // Plain identifier: int x
@@ -19,14 +22,31 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // init_declarator: name = value
   const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
-  const name = nameNode?.text ?? 'x'
+  let name = nameNode?.text ?? 'x'
+
+  // Pointer declarator: int* ptr = &x
+  if (nameNode?.type === 'pointer_declarator') {
+    // Extract the actual identifier from pointer_declarator
+    const ptrIdent = nameNode.namedChildren[0]
+    name = ptrIdent?.text ?? 'ptr'
+    const valueNode = decl.childForFieldName('value')
+    if (valueNode) {
+      const value = ctx.lift(valueNode)
+      return createNode('var_declare', { name, type: type + '*' }, {
+        initializer: value ? [value] : [],
+      })
+    }
+    return createNode('var_declare', { name, type: type + '*' })
+  }
 
   // Array init_declarator: int arr[10] = {...}
   if (nameNode?.type === 'array_declarator') {
     const arrName = nameNode.namedChildren[0]?.text ?? 'arr'
     const sizeNode = nameNode.namedChildren[1]
-    const size = sizeNode?.text ?? '10'
-    return createNode('array_declare', { type, name: arrName, size })
+    const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
+    return createNode('array_declare', { type, name: arrName }, {
+      size: sizeChild ? [sizeChild] : [],
+    })
   }
 
   const valueNode = decl.childForFieldName('value')
@@ -99,6 +119,27 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
     const type = typeNode?.text ?? 'int'
 
+    // Forward function declarations: void listp(int *, int); → structured forward_decl
+    const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')
+    if (funcDeclarator) {
+      const nameNode = funcDeclarator.namedChildren.find(c => c.type === 'identifier')
+      const paramList = funcDeclarator.childForFieldName('parameters')
+        ?? funcDeclarator.namedChildren.find(c => c.type === 'parameter_list')
+      const params: string[] = []
+      if (paramList) {
+        for (const p of paramList.namedChildren) {
+          if (p.type === 'parameter_declaration') {
+            params.push(p.text.trim())
+          }
+        }
+      }
+      return createNode('forward_decl', {
+        return_type: type,
+        name: nameNode?.text ?? 'f',
+        params,
+      })
+    }
+
     const declarators = node.namedChildren.filter(c =>
       c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'array_declarator'
     )
@@ -124,6 +165,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     if (!initNode || initNode.type !== 'declaration') return null
     if (!condNode || condNode.type !== 'binary_expression') return null
     if (!updateNode) return null
+
+    // Only match ascending count loops: condition must be < or <=
+    const condOp = condNode.children.find(c => !c.isNamed)?.text
+    if (condOp !== '<' && condOp !== '<=') return null
+
     // Accept i++, ++i, or i += 1
     if (updateNode.type !== 'update_expression' && !isCountingUpdate(updateNode)) return null
 
