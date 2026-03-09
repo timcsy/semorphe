@@ -1,6 +1,17 @@
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { SemanticBus } from '../../core/semantic-bus'
+
 export type ConsoleSignal = 'SIGINT' | 'EOF'
 
-export class ConsolePanel {
+export class ConsolePanel implements ViewHost {
+  readonly viewId = 'console-panel'
+  readonly viewType = 'console'
+  readonly capabilities: ViewCapabilities = {
+    editable: false,
+    needsLanguageProjection: false,
+    consumedAnnotations: [],
+  }
+
   private container: HTMLElement
   private outputEl: HTMLElement
   private statusEl: HTMLElement
@@ -34,6 +45,28 @@ export class ConsolePanel {
     // Make output area focusable for keyboard events
     this.outputEl.tabIndex = -1
     this.outputEl.addEventListener('keydown', (e) => this.handleCtrlKey(e))
+  }
+
+  async initialize(_config: ViewConfig): Promise<void> {
+    // ViewHost lifecycle — ConsolePanel initializes in constructor
+  }
+
+  dispose(): void {
+    this.clear()
+  }
+
+  onSemanticUpdate(_event: SemanticUpdateEvent): void {
+    // ConsolePanel doesn't handle semantic updates
+  }
+
+  onExecutionState(_event: ExecutionStateEvent): void {
+    // Handled via execution:state bus event if needed
+  }
+
+  connectBus(bus: SemanticBus): void {
+    bus.on('execution:output', (data) => {
+      this.write(data.text)
+    })
   }
 
   /** Register a handler for terminal signals (Ctrl+C → SIGINT, Ctrl+D → EOF) */

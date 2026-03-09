@@ -349,7 +349,8 @@
       "conceptId": "if",
       "abstractConcept": "if",
       "children": { "condition": "expression", "then_body": "statements" },
-      "role": "statement"
+      "role": "statement",
+      "annotations": { "control_flow": "branch", "introduces_scope": true, "cognitive_level": 0 }
     },
     "blockDef": {
       "type": "u_if",
@@ -437,7 +438,8 @@
       "abstractConcept": "count_loop",
       "properties": ["var_name", "inclusive"],
       "children": { "from": "expression", "to": "expression", "body": "statements" },
-      "role": "statement"
+      "role": "statement",
+      "annotations": { "control_flow": "loop", "introduces_scope": true, "cognitive_level": 1 }
     },
     "blockDef": {
       "type": "u_count_loop",
@@ -566,7 +568,8 @@
       "abstractConcept": "func_def",
       "properties": ["name", "params", "return_type"],
       "children": { "body": "statements" },
-      "role": "statement"
+      "role": "statement",
+      "annotations": { "control_flow": "sequence", "introduces_scope": true, "cognitive_level": 2 }
     },
     "blockDef": {
       "type": "u_func_def",

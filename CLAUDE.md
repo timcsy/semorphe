@@ -15,6 +15,9 @@ Auto-generated from all feature plans. Last updated: 2026-03-02
 - TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor 0.52.2, Vite 7.3.1 (012-first-principles-compliance)
 - localStorage（瀏覽器自動儲存） (012-first-principles-compliance)
 - localStorage (browser) (013-ux-first-principles)
+- TypeScript 5.x + 無新增外部依賴（純 TypeScript 型別 + EventEmitter 實作） (014-decoupling-infra)
+- N/A（記憶體中） (014-decoupling-infra)
+- TypeScript 5.x + 無新增（使用 Phase 0 建立的 SemanticBus + ViewHost） (015-sync-decouple)
 
 - TypeScript 5.x + Blockly 12.x, web-tree-sitter 0.26.x, CodeMirror 6.x (001-code-blockly-converter)
 
@@ -34,9 +37,9 @@ npm test && npm run lint
 TypeScript 5.x: Follow standard conventions
 
 ## Recent Changes
+- 015-sync-decouple: Added TypeScript 5.x + 無新增（使用 Phase 0 建立的 SemanticBus + ViewHost）
+- 014-decoupling-infra: Added TypeScript 5.x + 無新增外部依賴（純 TypeScript 型別 + EventEmitter 實作）
 - 013-ux-first-principles: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Vite
-- 012-first-principles-compliance: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor 0.52.2, Vite 7.3.1
-- 011-unified-pattern-engine: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Vite
 
 
 <!-- MANUAL ADDITIONS START -->

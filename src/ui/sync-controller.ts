@@ -23,16 +23,14 @@ function toCodingStyle(preset: StylePreset): CodingStyle {
 import type { SourceMapping } from '../core/projection/code-generator'
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
-import type { BlocklyPanel } from './panels/blockly-panel'
-import type { MonacoPanel } from './panels/monaco-panel'
+import { SemanticBus } from '../core/semantic-bus'
 
 export interface CodeParser {
   parse(code: string): { rootNode: unknown }
 }
 
 export class SyncController {
-  private blocklyPanel: BlocklyPanel
-  private monacoPanel: MonacoPanel
+  private bus: SemanticBus
   private language: string
   private style: StylePreset
   private currentTree: SemanticNode | null = null
@@ -46,15 +44,17 @@ export class SyncController {
   private codingStyle: CodingStyle | null = null
 
   constructor(
-    blocklyPanel: BlocklyPanel,
-    monacoPanel: MonacoPanel,
+    bus: SemanticBus,
     language: string,
     style: StylePreset,
   ) {
-    this.blocklyPanel = blocklyPanel
-    this.monacoPanel = monacoPanel
+    this.bus = bus
     this.language = language
     this.style = style
+
+    // Subscribe to view requests
+    bus.on('edit:blocks', (data) => this.handleEditBlocks(data))
+    bus.on('edit:code', (data) => this.handleEditCode(data))
   }
 
   /** Set lifter and parser for code→blocks direction (US2) */
@@ -80,27 +80,28 @@ export class SyncController {
     this.codingStyle = toCodingStyle(preset)
   }
 
-  /** Sync blocks → semantic tree → code (US1 direction) */
-  syncBlocksToCode(): void {
+  /** Handle edit:blocks event — sync blocks → semantic tree → code */
+  private handleEditBlocks(data: { blocklyState: unknown }): void {
     if (this.syncing) return
     this.syncing = true
     try {
-      const tree = this.blocklyPanel.extractSemanticTree()
+      const blocklyState = data.blocklyState as { tree: SemanticNode }
+      const tree = blocklyState.tree
       this.currentTree = tree
       const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
       this.sourceMappings = mappings
-      this.monacoPanel.setCode(code)
+      this.bus.emit('semantic:update', { tree, code, source: 'blocks', mappings })
     } finally {
       this.syncing = false
     }
   }
 
-  /** Sync code → semantic tree → blocks (US2 direction) */
-  syncCodeToBlocks(): boolean {
-    if (this.syncing || !this.lifter || !this.parser) return false
+  /** Handle edit:code event — sync code → semantic tree → blocks */
+  private handleEditCode(data: { code: string }): void {
+    if (this.syncing || !this.lifter || !this.parser) return
     this.syncing = true
     try {
-      const code = this.monacoPanel.getCode()
+      const code = data.code
       const parseResult = this.parser.parse(code)
       const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
 
@@ -108,7 +109,6 @@ export class SyncController {
       const errors = this.findErrors(rootNode)
       if (errors.length > 0) {
         this.onErrorCallback?.(errors)
-        // Continue with partial sync — lift what we can
       }
 
       // Code-level I/O conformance check (before lift — 借音/轉調 detection)
@@ -121,7 +121,7 @@ export class SyncController {
       }
 
       let tree = this.lifter.lift(rootNode)
-      if (!tree) return false
+      if (!tree) return
 
       // Semantic-level style exception check (after lift — toolbox block mismatches)
       let semanticExceptions: StyleException[] = []
@@ -135,7 +135,7 @@ export class SyncController {
             const converted = applyStyleConversions(currentTree, exceptions)
             this.currentTree = converted
             const blockState = renderToBlocklyState(converted)
-            this.blocklyPanel.setState(blockState)
+            this.bus.emit('semantic:update', { tree: converted, blockState, source: 'code' })
             this.sourceMappings = this.buildMappingsFromTree(converted, blockState)
           }
         }
@@ -143,30 +143,47 @@ export class SyncController {
 
       // Fire callbacks — prioritize bulk deviation (轉調) over semantic exceptions over minor exception (借音)
       if (ioResult?.verdict === 'bulk_deviation' && this.onIoConformanceCallback) {
-        // 轉調 takes priority — suggest switching preset entirely
         this.onIoConformanceCallback(ioResult)
       } else if (semanticExceptions.length > 0 && this.onStyleExceptionsCallback && applySemanticConversions) {
-        // Semantic exceptions (header/block mismatches)
         this.onStyleExceptionsCallback(semanticExceptions, applySemanticConversions)
       } else if (ioResult?.verdict === 'minor_exception' && this.onIoConformanceCallback) {
-        // 借音 — only if no semantic exceptions already cover it
         this.onIoConformanceCallback(ioResult)
       }
 
       this.currentTree = tree
       const blockState = renderToBlocklyState(tree)
-      this.blocklyPanel.setState(blockState)
+      this.bus.emit('semantic:update', { tree, blockState, source: 'code' })
 
       // Build source mappings from semantic tree sourceRange + rendered block IDs
       this.sourceMappings = this.buildMappingsFromTree(tree, blockState)
-      return true
     } finally {
       this.syncing = false
     }
   }
 
+  /** Convenience: trigger blocks→code sync from external code (e.g., app.ts) */
+  syncBlocksToCode(tree?: SemanticNode): void {
+    const t = tree ?? this.currentTree
+    if (!t) return
+    this.handleEditBlocks({ blocklyState: { tree: t } })
+  }
+
+  /** Convenience: trigger code→blocks sync from external code (e.g., app.ts) */
+  syncCodeToBlocks(code?: string): boolean {
+    if (!this.lifter || !this.parser) return false
+    if (code !== undefined) {
+      this.handleEditCode({ code })
+      return true
+    }
+    return false
+  }
+
   getCurrentTree(): SemanticNode | null {
     return this.currentTree
+  }
+
+  getBus(): SemanticBus {
+    return this.bus
   }
 
   setStyle(style: StylePreset): void {
@@ -181,12 +198,12 @@ export class SyncController {
     return this.syncing
   }
 
-  /** Rebuild source mappings from generated code (for blocks→code direction) */
-  rebuildSourceMappings(): void {
+  /** Rebuild source mappings — requires bus to request current blocks state */
+  rebuildSourceMappings(tree?: SemanticNode): void {
     try {
-      const tree = this.blocklyPanel.extractSemanticTree()
-      this.currentTree = tree
-      const { mappings } = generateCodeWithMapping(tree, this.language, this.style)
+      const t = tree ?? this.currentTree
+      if (!t) return
+      const { mappings } = generateCodeWithMapping(t, this.language, this.style)
       this.sourceMappings = mappings
     } catch {
       // silently ignore — mappings may be stale but that's acceptable

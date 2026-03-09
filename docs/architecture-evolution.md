@@ -669,41 +669,41 @@ arduino-neopixel（depends: arduino-core）
 
 前置條件：無
 
-- [ ] **0.1 ViewHost 介面**
-  - [ ] 定義 `ViewHost` + `ViewCapabilities` 介面（`src/core/view-host.ts`）
-  - [ ] 定義 `ViewConfig` + 生命週期方法簽名
-  - [ ] 介面零 DOM 依賴（純 TypeScript 型別）
-  - [ ] 單元測試：型別檢查通過，mock 實作可編譯
-- [ ] **0.2 SemanticBus**
-  - [ ] 定義事件型別（`SemanticEvents` + `ViewRequests`）
-  - [ ] EventEmitter 實作（`src/core/semantic-bus.ts`）
-  - [ ] 單元測試：publish/subscribe、事件過濾、多訂閱者
-- [ ] **0.3 Annotations 機制**
-  - [ ] 擴充 concepts JSON schema，加入 `annotations` 欄位
-  - [ ] `ConceptRegistry` 新增 `getAnnotation(conceptId, key)` 查詢 API
-  - [ ] 為 C++ 的 `for_loop`、`if`、`func_def` 加上示範 annotations
-  - [ ] 單元測試：annotations 可被查詢、未標註的概念回傳 `undefined`
-- [ ] **Phase 0 驗證**
-  - [ ] 所有現有 `npm test` 通過（零 regression）
-  - [ ] `src/core/` 無新增 DOM import
+- [x] **0.1 ViewHost 介面** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 定義 `ViewHost` + `ViewCapabilities` 介面（`src/core/view-host.ts`）
+  - [x] 定義 `ViewConfig` + 生命週期方法簽名
+  - [x] 介面零 DOM 依賴（純 TypeScript 型別）
+  - [x] 單元測試：型別檢查通過，mock 實作可編譯
+- [x] **0.2 SemanticBus** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 定義事件型別（`SemanticEvents` + `ViewRequests`）
+  - [x] EventEmitter 實作（`src/core/semantic-bus.ts`）
+  - [x] 單元測試：publish/subscribe、事件過濾、多訂閱者
+- [x] **0.3 Annotations 機制** *(2026-03-09, 014-decoupling-infra)*
+  - [x] 擴充 concepts JSON schema，加入 `annotations` 欄位
+  - [x] `ConceptRegistry` 新增 `getAnnotation(conceptId, key)` 查詢 API
+  - [x] 為 `count_loop`、`if`、`func_def` 加上示範 annotations
+  - [x] 單元測試：annotations 可被查詢、未標註的概念回傳 `undefined`
+- [x] **Phase 0 驗證** *(2026-03-09)*
+  - [x] 所有現有 `npm test` 通過（1461 tests，零 regression）
+  - [x] `src/core/` 無新增 DOM import
 
 ### Phase 1：SyncController 解耦
 
 前置條件：Phase 0 完成
 
-- [ ] **1.1 SyncController → SemanticBus**
-  - [ ] 移除 `sync-controller.ts` 對 `BlocklyPanel` / `MonacoPanel` 的 type import
-  - [ ] SyncController 改為只依賴 SemanticBus（發送 `semantic:update`，接收 `edit:*`）
-  - [ ] 整合測試：SyncController + mock bus，無真實面板
-- [ ] **1.2 面板實作 ViewHost**
-  - [ ] `BlocklyPanel` implements `ViewHost`
-  - [ ] `MonacoPanel` implements `ViewHost`
-  - [ ] `ConsolePanel` implements `ViewHost`
-  - [ ] `VariablePanel` implements `ViewHost`
-  - [ ] 面板之間零 import（grep 驗證）
-- [ ] **Phase 1 驗證**
-  - [ ] 面板獨立性測試：拔掉任一面板 import，其他面板編譯通過
-  - [ ] 瀏覽器端功能不退化（手動 smoke test）
+- [x] **1.1 SyncController → SemanticBus**
+  - [x] 移除 `sync-controller.ts` 對 `BlocklyPanel` / `MonacoPanel` 的 type import
+  - [x] SyncController 改為只依賴 SemanticBus（發送 `semantic:update`，接收 `edit:*`）
+  - [x] 整合測試：SyncController + mock bus，無真實面板
+- [x] **1.2 面板實作 ViewHost**
+  - [x] `BlocklyPanel` implements `ViewHost`
+  - [x] `MonacoPanel` implements `ViewHost`
+  - [x] `ConsolePanel` implements `ViewHost`
+  - [x] `VariablePanel` implements `ViewHost`
+  - [x] 面板之間零 import（grep 驗證）
+- [x] **Phase 1 驗證**
+  - [x] 面板獨立性測試：拔掉任一面板 import，其他面板編譯通過
+  - [x] 瀏覽器端功能不退化（手動 smoke test）
 
 ### Phase 2：app.ts 拆分
 

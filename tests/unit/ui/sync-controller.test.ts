@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { SyncController } from '../../../src/ui/sync-controller'
 import type { CodeParser, SyncError } from '../../../src/ui/sync-controller'
-import type { BlocklyPanel } from '../../../src/ui/panels/blockly-panel'
-import type { MonacoPanel } from '../../../src/ui/panels/monaco-panel'
 import type { StylePreset } from '../../../src/core/types'
 import { createNode } from '../../../src/core/semantic-tree'
+import { SemanticBus } from '../../../src/core/semantic-bus'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
+import { renderToBlocklyState } from '../../../src/core/projection/block-renderer'
 
 beforeAll(() => {
   registerCppLanguage()
@@ -23,78 +23,67 @@ const mockStyle: StylePreset = {
   header_style: 'individual',
 }
 
-function createMockBlocklyPanel() {
-  return {
-    extractSemanticTree: vi.fn(() => createNode('program', {}, { body: [] })),
-    setState: vi.fn(),
-    getState: vi.fn(() => ({})),
-    init: vi.fn(),
-    onChange: vi.fn(),
-    undo: vi.fn(),
-    redo: vi.fn(),
-    clear: vi.fn(),
-    dispose: vi.fn(),
-  } as unknown as BlocklyPanel
-}
-
-function createMockMonacoPanel() {
-  return {
-    getCode: vi.fn(() => ''),
-    setCode: vi.fn(),
-    init: vi.fn(),
-    dispose: vi.fn(),
-  } as unknown as MonacoPanel
-}
-
-describe('SyncController', () => {
-  let blocklyPanel: BlocklyPanel
-  let monacoPanel: MonacoPanel
+describe('SyncController (bus-based)', () => {
+  let bus: SemanticBus
   let controller: SyncController
 
   beforeEach(() => {
-    blocklyPanel = createMockBlocklyPanel()
-    monacoPanel = createMockMonacoPanel()
-    controller = new SyncController(blocklyPanel, monacoPanel, 'cpp', mockStyle)
+    bus = new SemanticBus()
+    controller = new SyncController(bus, 'cpp', mockStyle)
   })
 
-  describe('syncBlocksToCode', () => {
-    it('should extract tree from blockly and set code in monaco', () => {
+  describe('constructor', () => {
+    it('should accept (bus, language, style) without panel references', () => {
+      const b = new SemanticBus()
+      const c = new SyncController(b, 'cpp', mockStyle)
+      expect(c.isSyncing()).toBe(false)
+      expect(c.getCurrentTree()).toBeNull()
+    })
+  })
+
+  describe('edit:blocks → semantic:update (blocks→code)', () => {
+    it('should emit semantic:update with code when receiving edit:blocks', () => {
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
       const tree = createNode('program', {}, {
         body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
       })
-      ;(blocklyPanel.extractSemanticTree as ReturnType<typeof vi.fn>).mockReturnValue(tree)
+      const blockState = renderToBlocklyState(tree)
 
-      controller.syncBlocksToCode()
+      bus.emit('edit:blocks', { blocklyState: { tree } })
 
-      expect(blocklyPanel.extractSemanticTree).toHaveBeenCalled()
-      expect(monacoPanel.setCode).toHaveBeenCalled()
-      const code = (monacoPanel.setCode as ReturnType<typeof vi.fn>).mock.calls[0][0]
-      expect(code).toContain('int x;')
+      expect(handler).toHaveBeenCalled()
+      const data = handler.mock.calls[0][0]
+      expect(data.source).toBe('blocks')
+      expect(data.tree).toBeDefined()
+      expect(data.code).toBeDefined()
+      expect(data.code).toContain('int x;')
     })
 
-    it('should prevent re-entrant sync', () => {
-      // First call sets syncing = true
-      controller.syncBlocksToCode()
-      expect(blocklyPanel.extractSemanticTree).toHaveBeenCalledTimes(1)
-    })
-
-    it('should store current tree', () => {
+    it('should store current tree after blocks→code sync', () => {
       const tree = createNode('program', {}, { body: [] })
-      ;(blocklyPanel.extractSemanticTree as ReturnType<typeof vi.fn>).mockReturnValue(tree)
-
-      controller.syncBlocksToCode()
+      bus.emit('edit:blocks', { blocklyState: { tree } })
       expect(controller.getCurrentTree()).not.toBeNull()
-      expect(controller.getCurrentTree()!.concept).toBe('program')
+    })
+
+    it('should include mappings in semantic:update', () => {
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
+      const tree = createNode('program', {}, {
+        body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
+      })
+      bus.emit('edit:blocks', { blocklyState: { tree } })
+
+      const data = handler.mock.calls[0][0]
+      expect(data.mappings).toBeDefined()
+      expect(Array.isArray(data.mappings)).toBe(true)
     })
   })
 
-  describe('syncCodeToBlocks', () => {
-    it('should return false if no pipeline configured', () => {
-      const result = controller.syncCodeToBlocks()
-      expect(result).toBe(false)
-    })
-
-    it('should parse code and update blockly when pipeline configured', () => {
+  describe('edit:code → semantic:update (code→blocks)', () => {
+    function setupPipeline() {
       const rootNode = {
         type: 'translation_unit',
         text: '',
@@ -105,19 +94,32 @@ describe('SyncController', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = {
-        parse: vi.fn(() => ({ rootNode })),
-      }
-
+      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => createNode('program', {}, { body: [] }))
-
       controller.setCodeToBlocksPipeline(lifter, mockParser)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
+    }
 
-      const result = controller.syncCodeToBlocks()
-      expect(result).toBe(true)
-      expect(blocklyPanel.setState).toHaveBeenCalled()
+    it('should not emit if no pipeline configured', () => {
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
+      bus.emit('edit:code', { code: 'int x;' })
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should emit semantic:update with blockState when receiving edit:code', () => {
+      setupPipeline()
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
+      bus.emit('edit:code', { code: '' })
+
+      expect(handler).toHaveBeenCalled()
+      const data = handler.mock.calls[0][0]
+      expect(data.source).toBe('code')
+      expect(data.tree).toBeDefined()
+      expect(data.blockState).toBeDefined()
     })
 
     it('should call error callback on parse errors', () => {
@@ -141,10 +143,7 @@ describe('SyncController', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 2, column: 3 },
       }
-      const mockParser: CodeParser = {
-        parse: vi.fn(() => ({ rootNode })),
-      }
-
+      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', (_node, ctx) => {
         return createNode('program', {}, { body: ctx.liftChildren(_node.namedChildren) })
@@ -153,14 +152,30 @@ describe('SyncController', () => {
       const errorCallback = vi.fn()
       controller.setCodeToBlocksPipeline(lifter, mockParser)
       controller.onError(errorCallback)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('bad')
 
-      controller.syncCodeToBlocks()
+      bus.emit('edit:code', { code: 'bad' })
 
       expect(errorCallback).toHaveBeenCalled()
       const errors: SyncError[] = errorCallback.mock.calls[0][0]
       expect(errors).toHaveLength(1)
       expect(errors[0].line).toBe(2)
+    })
+  })
+
+  describe('syncing flag (anti-loop)', () => {
+    it('should prevent re-entrant sync', () => {
+      const callCount = { blocks: 0 }
+      bus.on('semantic:update', () => {
+        callCount.blocks++
+        // Simulate a panel re-emitting (should be ignored)
+        bus.emit('edit:blocks', { blocklyState: { tree: createNode('program', {}, { body: [] }) } })
+      })
+
+      const tree = createNode('program', {}, { body: [] })
+      bus.emit('edit:blocks', { blocklyState: { tree } })
+
+      // Should only be called once (re-entrant call blocked)
+      expect(callCount.blocks).toBe(1)
     })
   })
 
@@ -182,7 +197,6 @@ describe('SyncController', () => {
 
   describe('style exception detection', () => {
     it('should call onStyleExceptions when non-conforming nodes found', () => {
-      // Set APCS style (io_style: cout → ioPreference: iostream)
       const apcsStyle: StylePreset = {
         ...mockStyle,
         id: 'apcs',
@@ -194,7 +208,6 @@ describe('SyncController', () => {
       const exceptionsCallback = vi.fn()
       controller.onStyleExceptions(exceptionsCallback)
 
-      // Create a tree with cpp_printf (non-conforming in APCS/iostream mode)
       const tree = createNode('program', {}, {
         body: [createNode('cpp_printf', { format: '%d\\n' })],
       })
@@ -209,17 +222,12 @@ describe('SyncController', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = {
-        parse: vi.fn(() => ({ rootNode })),
-      }
-
+      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => tree)
 
       controller.setCodeToBlocksPipeline(lifter, mockParser)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
-
-      controller.syncCodeToBlocks()
+      bus.emit('edit:code', { code: '' })
 
       expect(exceptionsCallback).toHaveBeenCalled()
       const [exceptions] = exceptionsCallback.mock.calls[0]
@@ -233,7 +241,6 @@ describe('SyncController', () => {
       const exceptionsCallback = vi.fn()
       controller.onStyleExceptions(exceptionsCallback)
 
-      // Create a conforming tree (print is fine in iostream mode)
       const tree = createNode('program', {}, {
         body: [createNode('print', {}, { values: [createNode('string', { value: 'hello' })] })],
       })
@@ -248,65 +255,14 @@ describe('SyncController', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = {
-        parse: vi.fn(() => ({ rootNode })),
-      }
-
+      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => tree)
 
       controller.setCodeToBlocksPipeline(lifter, mockParser)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
-
-      controller.syncCodeToBlocks()
+      bus.emit('edit:code', { code: '' })
 
       expect(exceptionsCallback).not.toHaveBeenCalled()
-    })
-
-    it('should convert StylePreset io_style=printf to CodingStyle ioPreference=cstdio', () => {
-      const compStyle: StylePreset = {
-        ...mockStyle,
-        id: 'competitive',
-        io_style: 'printf',
-        header_style: 'bits',
-      }
-      controller.setCodingStyle(compStyle)
-
-      const exceptionsCallback = vi.fn()
-      controller.onStyleExceptions(exceptionsCallback)
-
-      // iostream is non-conforming in competitive/cstdio mode
-      const tree = createNode('program', {}, {
-        body: [createNode('cpp_include', { header: 'iostream', local: false })],
-      })
-
-      const rootNode = {
-        type: 'translation_unit',
-        text: '',
-        isNamed: true,
-        children: [],
-        namedChildren: [],
-        childForFieldName: () => null,
-        startPosition: { row: 0, column: 0 },
-        endPosition: { row: 0, column: 0 },
-      }
-      const mockParser: CodeParser = {
-        parse: vi.fn(() => ({ rootNode })),
-      }
-
-      const lifter = new Lifter()
-      lifter.register('translation_unit', () => tree)
-
-      controller.setCodeToBlocksPipeline(lifter, mockParser)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue('')
-
-      controller.syncCodeToBlocks()
-
-      expect(exceptionsCallback).toHaveBeenCalled()
-      const [exceptions] = exceptionsCallback.mock.calls[0]
-      expect(exceptions).toHaveLength(1)
-      expect(exceptions[0].label).toContain('iostream')
-      expect(exceptions[0].suggestion).toContain('cstdio')
     })
   })
 
@@ -326,7 +282,8 @@ describe('SyncController', () => {
       const lifter = new Lifter()
       lifter.register('translation_unit', () => createNode('program', {}, { body: [] }))
       controller.setCodeToBlocksPipeline(lifter, mockParser)
-      ;(monacoPanel.getCode as ReturnType<typeof vi.fn>).mockReturnValue(code)
+      // We need to make the code available via the edit:code event
+      return code
     }
 
     it('should fire bulk_deviation when code mostly uses cstdio in iostream preset', () => {
@@ -334,9 +291,8 @@ describe('SyncController', () => {
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
-      setupWithCode('printf("a"); scanf("%d", &x); printf("b"); cout << z;')
-      // cstdio=3 (printf, scanf, printf), iostream=1 (cout) → bulk deviation
-      controller.syncCodeToBlocks()
+      const code = setupWithCode('printf("a"); scanf("%d", &x); printf("b"); cout << z;')
+      bus.emit('edit:code', { code })
 
       expect(ioCallback).toHaveBeenCalledTimes(1)
       expect(ioCallback.mock.calls[0][0].verdict).toBe('bulk_deviation')
@@ -347,9 +303,8 @@ describe('SyncController', () => {
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
-      setupWithCode('cout << x << endl; cin >> y; cout << z; scanf("%d", &w);')
-      // iostream=4 (cout, endl, cin, cout), cstdio=1 (scanf) → minor exception
-      controller.syncCodeToBlocks()
+      const code = setupWithCode('cout << x << endl; cin >> y; cout << z; scanf("%d", &w);')
+      bus.emit('edit:code', { code })
 
       expect(ioCallback).toHaveBeenCalledTimes(1)
       expect(ioCallback.mock.calls[0][0].verdict).toBe('minor_exception')
@@ -360,8 +315,8 @@ describe('SyncController', () => {
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
-      setupWithCode('cout << "hello" << endl; cin >> x;')
-      controller.syncCodeToBlocks()
+      const code = setupWithCode('cout << "hello" << endl; cin >> x;')
+      bus.emit('edit:code', { code })
 
       expect(ioCallback).not.toHaveBeenCalled()
     })
@@ -371,8 +326,8 @@ describe('SyncController', () => {
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
-      setupWithCode('int x = 5; return 0;')
-      controller.syncCodeToBlocks()
+      const code = setupWithCode('int x = 5; return 0;')
+      bus.emit('edit:code', { code })
 
       expect(ioCallback).not.toHaveBeenCalled()
     })

@@ -98,6 +98,7 @@ export interface ConceptDef {
   propertyNames: string[]
   childNames: string[]
   semanticContract?: SemanticContract
+  annotations?: Record<string, unknown>
 }
 
 export interface SemanticContract {
@@ -127,6 +128,7 @@ export interface ConceptMapping {
   properties?: string[]
   children?: Record<string, string>
   role?: 'statement' | 'expression' | 'both'
+  annotations?: Record<string, unknown>
 }
 
 export interface CodeTemplate {

@@ -113,4 +113,57 @@ describe('ConceptRegistry', () => {
       expect(registry.findAbstract('var_declare')).toBeUndefined()
     })
   })
+
+  describe('annotations', () => {
+    it('should return annotation value for registered concept', () => {
+      registry.register({
+        id: 'for_loop', layer: 'universal', level: 1,
+        propertyNames: [], childNames: ['body'],
+        annotations: { control_flow: 'loop', introduces_scope: true, cognitive_level: 1 },
+      })
+      expect(registry.getAnnotation('for_loop', 'control_flow')).toBe('loop')
+      expect(registry.getAnnotation('for_loop', 'introduces_scope')).toBe(true)
+      expect(registry.getAnnotation('for_loop', 'cognitive_level')).toBe(1)
+    })
+
+    it('should return undefined for missing annotation key', () => {
+      registry.register({
+        id: 'if', layer: 'universal', level: 0,
+        propertyNames: [], childNames: [],
+        annotations: { control_flow: 'branch' },
+      })
+      expect(registry.getAnnotation('if', 'hardware_binding')).toBeUndefined()
+    })
+
+    it('should return undefined for unregistered concept', () => {
+      expect(registry.getAnnotation('nonexistent', 'control_flow')).toBeUndefined()
+    })
+
+    it('should return undefined when concept has no annotations', () => {
+      registry.register({
+        id: 'var_ref', layer: 'universal', level: 0,
+        propertyNames: ['name'], childNames: [],
+      })
+      expect(registry.getAnnotation('var_ref', 'control_flow')).toBeUndefined()
+    })
+
+    it('should use latest annotations when concept is re-registered', () => {
+      // First registration
+      registry.register({
+        id: 'test_concept', layer: 'universal', level: 0,
+        propertyNames: [], childNames: [],
+        annotations: { old_key: 'old_value' },
+      })
+      expect(registry.getAnnotation('test_concept', 'old_key')).toBe('old_value')
+
+      // Re-register with different annotations (using registerOrUpdate)
+      registry.registerOrUpdate({
+        id: 'test_concept', layer: 'universal', level: 0,
+        propertyNames: [], childNames: [],
+        annotations: { new_key: 'new_value' },
+      })
+      expect(registry.getAnnotation('test_concept', 'new_key')).toBe('new_value')
+      expect(registry.getAnnotation('test_concept', 'old_key')).toBeUndefined()
+    })
+  })
 })

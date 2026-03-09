@@ -1,18 +1,49 @@
 import * as monaco from 'monaco-editor'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { SemanticBus } from '../../core/semantic-bus'
 
-export class MonacoPanel {
+export class MonacoPanel implements ViewHost {
+  readonly viewId = 'monaco-panel'
+  readonly viewType = 'monaco'
+  readonly capabilities: ViewCapabilities = {
+    editable: true,
+    needsLanguageProjection: true,
+    consumedAnnotations: [],
+  }
+
   private editor: monaco.editor.IStandaloneCodeEditor | null = null
   private container: HTMLElement
   private onChangeCallback: ((code: string) => void) | null = null
   private onCursorChangeCallback: ((line: number) => void) | null = null
   private suppressChange = false
+  private bus: SemanticBus | null = null
   private highlightDecorations: string[] = []
   private breakpoints: Set<number> = new Set()
   private breakpointDecorations: string[] = []
   private onBreakpointChangeCallback: ((breakpoints: number[]) => void) | null = null
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, bus?: SemanticBus) {
     this.container = container
+    this.bus = bus ?? null
+  }
+
+  async initialize(_config: ViewConfig): Promise<void> {
+    // ViewHost lifecycle — actual init handled by init() method
+  }
+
+  onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; code?: string }): void {
+    if (event.source === 'blocks' && event.code !== undefined) {
+      this.setCode(event.code)
+    }
+  }
+
+  onExecutionState(_event: ExecutionStateEvent): void {
+    // MonacoPanel doesn't handle execution state directly
+  }
+
+  connectBus(bus: SemanticBus): void {
+    this.bus = bus
+    bus.on('semantic:update', (data) => this.onSemanticUpdate(data))
   }
 
   init(readOnly = true): void {
@@ -36,8 +67,12 @@ export class MonacoPanel {
     })
 
     this.editor.onDidChangeModelContent(() => {
-      if (!this.suppressChange && this.onChangeCallback) {
-        this.onChangeCallback(this.getCode())
+      if (!this.suppressChange) {
+        this.onChangeCallback?.(this.getCode())
+        // Emit to bus if connected
+        if (this.bus) {
+          this.bus.emit('edit:code', { code: this.getCode() })
+        }
       }
     })
 

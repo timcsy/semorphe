@@ -4,24 +4,62 @@ import { createNode } from '../../core/semantic-tree'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
 import type { BlockStylePreset } from '../../languages/style'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { SemanticBus } from '../../core/semantic-bus'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
   toolboxXml?: string
   blockSpecRegistry?: BlockSpecRegistry
+  bus?: SemanticBus
 }
 
-export class BlocklyPanel {
+export class BlocklyPanel implements ViewHost {
+  readonly viewId = 'blockly-panel'
+  readonly viewType = 'blockly'
+  readonly capabilities: ViewCapabilities = {
+    editable: true,
+    needsLanguageProjection: true,
+    consumedAnnotations: ['control_flow', 'introduces_scope'],
+  }
+
   private workspace: Blockly.WorkspaceSvg | null = null
   private container: HTMLElement
   private onChangeCallback: (() => void) | null = null
   private onBlockSelectCallback: ((blockId: string | null) => void) | null = null
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
+  private bus: SemanticBus | null = null
+  private busUpdateInProgress = false
 
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
+    this.bus = options.bus ?? null
+  }
+
+  async initialize(_config: ViewConfig): Promise<void> {
+    // ViewHost lifecycle — actual init handled by init() method
+  }
+
+  onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; blockState?: unknown }): void {
+    if (event.source === 'code' && event.blockState) {
+      this.busUpdateInProgress = true
+      try {
+        this.setState(event.blockState as object)
+      } finally {
+        this.busUpdateInProgress = false
+      }
+    }
+  }
+
+  onExecutionState(_event: ExecutionStateEvent): void {
+    // BlocklyPanel doesn't handle execution state
+  }
+
+  connectBus(bus: SemanticBus): void {
+    this.bus = bus
+    bus.on('semantic:update', (data) => this.onSemanticUpdate(data))
   }
 
   init(toolboxDef: object, blockStylePreset?: BlockStylePreset): void {
@@ -46,7 +84,14 @@ export class BlocklyPanel {
         }
         return
       }
-      this.onChangeCallback?.()
+      if (!this.busUpdateInProgress) {
+        this.onChangeCallback?.()
+        // Emit to bus if connected
+        if (this.bus) {
+          const tree = this.extractSemanticTree()
+          this.bus.emit('edit:blocks', { blocklyState: { tree } })
+        }
+      }
     })
   }
 

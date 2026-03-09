@@ -8,6 +8,7 @@ import { ConsolePanel } from './panels/console-panel'
 import { VariablePanel } from './panels/variable-panel'
 import { SyncController } from './sync-controller'
 import type { SyncError } from './sync-controller'
+import { SemanticBus } from '../core/semantic-bus'
 import { SemanticInterpreter } from '../interpreter/interpreter'
 import { StepController } from './step-controller'
 import { DebugToolbar } from './debug-toolbar'
@@ -61,6 +62,7 @@ const STYLE_PRESETS: StylePreset[] = [
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 
 export class App {
+  private bus: SemanticBus
   private blocklyPanel: BlocklyPanel | null = null
   private monacoPanel: MonacoPanel | null = null
   private syncController: SyncController | null = null
@@ -87,6 +89,7 @@ export class App {
   private _codeToBlocksInProgress = false
 
   constructor() {
+    this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
     this.localeLoader = new LocaleLoader()
     this.storageService = new StorageService()
@@ -230,13 +233,22 @@ export class App {
     this.variablePanel = new VariablePanel(variableEl)
     this.bottomPanel.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
 
-    // 8. Create sync controller
+    // 8. Create sync controller (bus-based — no direct panel references)
     this.syncController = new SyncController(
-      this.blocklyPanel,
-      this.monacoPanel,
+      this.bus,
       'cpp',
       DEFAULT_STYLE,
     )
+
+    // 8c. Connect panels to bus for receiving semantic:update events
+    this.bus.on('semantic:update', (data) => {
+      if (data.source === 'blocks' && data.code !== undefined) {
+        this.monacoPanel?.setCode(data.code)
+      }
+      if (data.source === 'code' && data.blockState) {
+        this.blocklyPanel?.setState(data.blockState as object)
+      }
+    })
 
     // 8b. Setup code→blocks pipeline (US2)
     await this.setupCodeToBlocksPipeline()
@@ -247,7 +259,7 @@ export class App {
       this.blocksDirty = true
       this.updateSyncHints()
       if (this.autoSync) {
-        this.syncController!.syncBlocksToCode()
+        this.syncController!.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree())
         this.blocksDirty = false
         this.updateSyncHints()
       }
@@ -2280,12 +2292,12 @@ export class App {
     const originalSync = this.syncController!.syncCodeToBlocks.bind(this.syncController!)
     const monacoPanel = this.monacoPanel!
 
-    this.syncController!.syncCodeToBlocks = () => {
-      const code = monacoPanel.getCode()
+    this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
+      const code = codeArg ?? monacoPanel.getCode()
       this._codeToBlocksInProgress = true
       parser.parse(code).then(tree => {
         codeParser._lastTree = tree.rootNode
-        originalSync()
+        originalSync(code)
         this.codeDirty = false
         this.blocksDirty = false
         this.updateSyncHints()
@@ -2333,7 +2345,7 @@ export class App {
                 this.currentIoPreference = ioPref
                 this.updateToolboxForLevel(this.currentLevel)
               }
-              this.syncController?.syncBlocksToCode()
+              this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
             }},
             { label: '保持目前風格', action: () => { /* no-op */ } },
           ],
@@ -2345,7 +2357,7 @@ export class App {
           [
             { label: '保留（刻意使用）', action: () => { /* intentional — keep */ } },
             { label: `統一為 ${currentIo}`, primary: true, action: () => {
-              this.syncController?.syncBlocksToCode()
+              this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
             }},
           ],
         )
@@ -2360,7 +2372,7 @@ export class App {
         [
           { label: '自動轉換', primary: true, action: () => {
             apply()
-            this.syncController?.syncBlocksToCode()
+            this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
           }},
           { label: '保留', action: () => { /* no-op */ } },
         ],
@@ -2388,7 +2400,7 @@ export class App {
     this.styleSelector.onChange((style) => {
       this.syncController?.setStyle(style)
       this.syncController?.setCodingStyle(style)
-      this.syncController?.syncBlocksToCode()
+      this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       this.currentStylePreset = style
       this.updateStatusBar()
       // 更新 toolbox I/O 排序
@@ -2417,7 +2429,7 @@ export class App {
           this.blocksDirty = true
           this.updateSyncHints()
           if (this.autoSync) {
-            this.syncController!.syncBlocksToCode()
+            this.syncController!.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree())
             this.blocksDirty = false
             this.updateSyncHints()
           }
@@ -2440,7 +2452,7 @@ export class App {
       // Rebuild toolbox to update category names
       this.updateToolboxForLevel(this.currentLevel)
       // Re-render blocks to update messages
-      this.syncController?.syncBlocksToCode()
+      this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       this.updateStatusBar()
     })
   }
@@ -2485,12 +2497,12 @@ export class App {
       this.toggleAutoSync()
     })
     replaceBtn('sync-blocks-btn')?.addEventListener('click', () => {
-      this.syncController?.syncBlocksToCode()
+      this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       this.blocksDirty = false
       this.updateSyncHints()
     })
     replaceBtn('sync-code-btn')?.addEventListener('click', () => {
-      this.syncController?.syncCodeToBlocks()
+      this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
     })
     replaceBtn('undo-btn')?.addEventListener('click', () => {
       this.blocklyPanel?.undo()
@@ -2735,7 +2747,7 @@ export class App {
     if (this.blocksDirty) {
       const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
       if (sync) {
-        this.syncController?.syncBlocksToCode()
+        this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       }
     }
 
@@ -2803,7 +2815,7 @@ export class App {
     if (this.blocksDirty) {
       const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
       if (sync) {
-        this.syncController?.syncBlocksToCode()
+        this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       }
     }
 
@@ -3305,7 +3317,7 @@ export class App {
     if (this.codeToBlocksTimer) clearTimeout(this.codeToBlocksTimer)
     this.codeToBlocksTimer = setTimeout(() => {
       this.codeToBlocksTimer = null
-      this.syncController?.syncCodeToBlocks()
+      this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
     }, 800)
   }
 
@@ -3320,12 +3332,12 @@ export class App {
     // If turning on, sync immediately if dirty
     if (this.autoSync) {
       if (this.blocksDirty) {
-        this.syncController?.syncBlocksToCode()
+        this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
         this.blocksDirty = false
         this.updateSyncHints()
       }
       if (this.codeDirty) {
-        this.syncController?.syncCodeToBlocks()
+        this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
       }
     }
   }
@@ -3440,7 +3452,7 @@ export class App {
     if (this.blocksDirty) {
       const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
       if (sync) {
-        this.syncController?.syncBlocksToCode()
+        this.syncController?.syncBlocksToCode(this.blocklyPanel?.extractSemanticTree() ?? undefined)
       }
     }
 

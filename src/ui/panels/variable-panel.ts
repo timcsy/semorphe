@@ -1,3 +1,6 @@
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { SemanticBus } from '../../core/semantic-bus'
+
 export interface VariableEntry {
   name: string
   type: string
@@ -10,7 +13,15 @@ export interface ScopeGroup {
   variables: VariableEntry[]
 }
 
-export class VariablePanel {
+export class VariablePanel implements ViewHost {
+  readonly viewId = 'variable-panel'
+  readonly viewType = 'variable'
+  readonly capabilities: ViewCapabilities = {
+    editable: false,
+    needsLanguageProjection: false,
+    consumedAnnotations: [],
+  }
+
   private container: HTMLElement
   private contentEl: HTMLElement
   private previousValues = new Map<string, string>()
@@ -22,6 +33,31 @@ export class VariablePanel {
     this.contentEl = document.createElement('div')
     this.contentEl.className = 'variable-content'
     this.container.appendChild(this.contentEl)
+  }
+
+  async initialize(_config: ViewConfig): Promise<void> {
+    // ViewHost lifecycle — VariablePanel initializes in constructor
+  }
+
+  dispose(): void {
+    this.clear()
+  }
+
+  onSemanticUpdate(_event: SemanticUpdateEvent): void {
+    // VariablePanel doesn't handle semantic updates
+  }
+
+  onExecutionState(_event: ExecutionStateEvent): void {
+    // Handled via execution:state bus event
+  }
+
+  connectBus(bus: SemanticBus): void {
+    bus.on('execution:state', (data) => {
+      const step = data.step
+      if (step?.scopeSnapshot) {
+        this.updateFromSnapshot(step.scopeSnapshot as VariableEntry[])
+      }
+    })
   }
 
   update(variables: VariableEntry[]): void {
