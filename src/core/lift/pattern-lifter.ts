@@ -128,6 +128,11 @@ export class PatternLifter {
   }
 
   private tryMatch(node: AstNode, entry: PatternEntry, ctx: LiftContext): SemanticNode | null {
+    // Check constraints before anything else (gates liftStrategy too)
+    if (entry.constraints && entry.constraints.length > 0) {
+      if (!this.checkConstraints(node, entry.constraints)) return null
+    }
+
     // Layer 3: liftStrategy takes priority over pattern matching
     if (entry.liftStrategy && this.liftStrategyRegistry) {
       const strategyFn = this.liftStrategyRegistry.get(entry.liftStrategy)
@@ -418,19 +423,25 @@ export class PatternLifter {
   private checkConstraints(node: AstNode, constraints: AstPattern['constraints']): boolean {
     if (!constraints) return true
     for (const c of constraints) {
+      let value: string | null = null
       if (c.field === '$text') {
-        if (c.text && node.text !== c.text) return false
-        continue
-      }
-      if (c.field === '$operator') {
+        value = node.text
+      } else if (c.field === '$operator') {
         const op = node.children.find((ch: AstNode) => !ch.isNamed)
-        if (c.text && (!op || op.text !== c.text)) return false
-        continue
+        value = op?.text ?? null
+      } else {
+        const child = node.childForFieldName(c.field)
+        if (!child) return false
+        if (c.nodeType && child.type !== c.nodeType) return false
+        value = child.text
       }
-      const child = node.childForFieldName(c.field)
-      if (!child) return false
-      if (c.text && child.text !== c.text) return false
-      if (c.nodeType && child.type !== c.nodeType) return false
+      if (c.text) {
+        if (c.match === 'startsWith') {
+          if (!value?.startsWith(c.text)) return false
+        } else {
+          if (value !== c.text) return false
+        }
+      }
     }
     return true
   }

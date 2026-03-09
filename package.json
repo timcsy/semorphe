@@ -21,6 +21,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@blockly/field-multilineinput": "^6.0.8",
     "blockly": "^12.4.1",
     "monaco-editor": "^0.52.2",
     "web-tree-sitter": "^0.26.6"

@@ -152,6 +152,7 @@ export interface AstConstraint {
   field: string
   text?: string
   nodeType?: string
+  match?: 'exact' | 'startsWith'
 }
 
 export interface FieldMapping {

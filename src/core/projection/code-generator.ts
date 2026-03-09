@@ -109,6 +109,52 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
       result = raw.endsWith('\n') ? raw : raw + '\n'
     } else if (node.concept === 'comment') {
       result = `${indent(ctx)}// ${node.properties.text}\n`
+    } else if (node.concept === 'doc_comment') {
+      const ind = indent(ctx)
+      result = `${ind}/**\n`
+      if (node.properties.brief) {
+        const briefText = node.properties.brief
+        const hasTags = node.properties.param_0_name !== undefined || node.properties.return_desc !== undefined
+        if (briefText.includes('\n') && !hasTags) {
+          // Multi-line description without tags: output as plain lines
+          for (const line of briefText.split('\n')) {
+            result += `${ind} * ${line}\n`
+          }
+        } else if (briefText.includes('\n')) {
+          // Multi-line with tags: first line as @brief, rest as continuation
+          const lines = briefText.split('\n')
+          result += `${ind} * @brief ${lines[0]}\n`
+          for (let j = 1; j < lines.length; j++) {
+            result += `${ind} * ${lines[j]}\n`
+          }
+        } else {
+          result += `${ind} * @brief ${briefText}\n`
+        }
+      }
+      // Collect params: param_0_name, param_0_desc, param_1_name, ...
+      let i = 0
+      while (node.properties[`param_${i}_name`] !== undefined) {
+        const name = node.properties[`param_${i}_name`]
+        const desc = node.properties[`param_${i}_desc`] ?? ''
+        result += `${ind} * @param ${name}${desc ? ' ' + desc : ''}\n`
+        i++
+      }
+      if (node.properties.return_desc) {
+        result += `${ind} * @return ${node.properties.return_desc}\n`
+      }
+      result += `${ind} */\n`
+    } else if (node.concept === 'block_comment') {
+      const text = node.properties.text ?? ''
+      if (text.includes('\n')) {
+        const lines = text.split('\n')
+        result = `${indent(ctx)}/*\n`
+        for (const line of lines) {
+          result += `${indent(ctx)} * ${line.trim()}\n`
+        }
+        result += `${indent(ctx)} */\n`
+      } else {
+        result = `${indent(ctx)}/* ${text} */\n`
+      }
     } else {
       result = `/* unknown concept: ${node.concept} */\n`
     }

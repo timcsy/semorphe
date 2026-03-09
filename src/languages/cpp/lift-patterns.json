@@ -277,6 +277,23 @@
     ]
   },
   {
+    "id": "cpp_doc_comment",
+    "astNodeType": "comment",
+    "concept": { "conceptId": "doc_comment" },
+    "constraints": [{ "field": "$text", "match": "startsWith", "text": "/**" }],
+    "liftStrategy": "cpp:liftDocComment",
+    "fieldMappings": []
+  },
+  {
+    "id": "cpp_block_comment",
+    "astNodeType": "comment",
+    "concept": { "conceptId": "block_comment" },
+    "constraints": [{ "field": "$text", "match": "startsWith", "text": "/*" }],
+    "fieldMappings": [
+      { "semantic": "text", "ast": "$text", "extract": "text", "transform": "cpp:stripBlockComment" }
+    ]
+  },
+  {
     "id": "cpp_comment",
     "astNodeType": "comment",
     "concept": { "conceptId": "comment" },

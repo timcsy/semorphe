@@ -189,7 +189,7 @@ export class PatternRenderer {
       const argName = arg.name as string
       if (!argName) continue
 
-      if (argType === 'field_input' || argType === 'field_dropdown' || argType === 'field_number') {
+      if (argType === 'field_input' || argType === 'field_dropdown' || argType === 'field_number' || argType === 'field_multilinetext') {
         // Map to a semantic property
         const semProp = this.findMatchingProperty(argName, properties)
         if (semProp) {

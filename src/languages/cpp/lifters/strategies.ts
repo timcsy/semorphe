@@ -61,6 +61,12 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 }
 
 export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void {
+  // doc comment: /** ... */ → doc_comment with structured properties
+  registry.register('cpp:liftDocComment', (node) => {
+    const props = parseDocComment(node.text)
+    return createNode('doc_comment', props)
+  })
+
   // preproc_include: system vs local include distinction
   registry.register('cpp:liftPreprocInclude', (node) => {
     const pathNode = node.namedChildren.find(c => c.type === 'system_lib_string' || c.type === 'string_literal')
@@ -227,4 +233,43 @@ function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {
     return lifted.children.body ?? []
   }
   return [lifted]
+}
+
+/** Parse a /** ... *​/ doc comment into structured properties */
+function parseDocComment(text: string): Record<string, string> {
+  // Strip /** and */
+  let body = text
+  if (body.startsWith('/**')) body = body.slice(3)
+  if (body.endsWith('*/')) body = body.slice(0, -2)
+  // Clean up lines: remove leading whitespace and *
+  const lines = body.split('\n').map(l => l.replace(/^\s*\*?\s?/, '').trim()).filter(l => l.length > 0)
+
+  const props: Record<string, string> = {}
+  const briefLines: string[] = []
+  let paramIdx = 0
+
+  for (const line of lines) {
+    if (line.startsWith('@brief ')) {
+      briefLines.push(line.slice(7).trim())
+    } else if (line.startsWith('@param ')) {
+      const rest = line.slice(7).trim()
+      const spaceIdx = rest.indexOf(' ')
+      if (spaceIdx > 0) {
+        props[`param_${paramIdx}_name`] = rest.slice(0, spaceIdx)
+        props[`param_${paramIdx}_desc`] = rest.slice(spaceIdx + 1).trim()
+      } else {
+        props[`param_${paramIdx}_name`] = rest
+        props[`param_${paramIdx}_desc`] = ''
+      }
+      paramIdx++
+    } else if (line.startsWith('@return ') || line.startsWith('@returns ')) {
+      const tag = line.startsWith('@returns ') ? '@returns ' : '@return '
+      props.return_desc = line.slice(tag.length).trim()
+    } else if (!line.startsWith('@')) {
+      briefLines.push(line)
+    }
+  }
+
+  props.brief = briefLines.join('\n')
+  return props
 }

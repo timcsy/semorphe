@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly'
+import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import { BlocklyPanel } from './panels/blockly-panel'
 import { MonacoPanel } from './panels/monaco-panel'
 import { SplitPane } from './layout/split-pane'
@@ -1739,12 +1740,141 @@ export class App {
       Blockly.Blocks['c_comment_line'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
-            .appendField(Blockly.Msg['C_COMMENT_LINE_LABEL'] || '備註：')
+            .appendField(Blockly.Msg['C_COMMENT_LINE_LABEL'] || '註解：')
             .appendField(new Blockly.FieldTextInput('comment') as Blockly.Field, 'TEXT')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setColour(CATEGORY_COLORS.cpp_special)
-          this.setTooltip(Blockly.Msg['C_COMMENT_LINE_TOOLTIP'] || '備註說明')
+          this.setTooltip(Blockly.Msg['C_COMMENT_LINE_TOOLTIP'] || '註解說明')
+        },
+      }
+    }
+
+    // c_comment_block (multi-line comment)
+    {
+      Blockly.Blocks['c_comment_block'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput()
+            .appendField(Blockly.Msg['C_COMMENT_BLOCK_LABEL'] || '多行註解：')
+            .appendField(new FieldMultilineInput('comment') as Blockly.Field, 'TEXT')
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.cpp_special)
+          this.setTooltip(Blockly.Msg['C_COMMENT_BLOCK_TOOLTIP'] || '多行註解說明')
+        },
+      }
+    }
+
+    // c_comment_doc (Doxygen/JSDoc comment with mutator for @param / @return)
+    {
+      // Mutator sub-blocks
+      Blockly.Blocks['c_doc_container'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField('文件註解')
+          this.appendStatementInput('STACK')
+          this.setColour('#888888')
+          this.contextMenu = false
+        },
+      }
+      Blockly.Blocks['c_doc_param_input'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField('參數')
+          this.setPreviousStatement(true)
+          this.setNextStatement(true)
+          this.setColour('#888888')
+          this.contextMenu = false
+        },
+      }
+      Blockly.Blocks['c_doc_return_input'] = {
+        init: function (this: Blockly.Block) {
+          this.appendDummyInput().appendField('回傳')
+          this.setPreviousStatement(true)
+          this.setColour('#888888')
+          this.contextMenu = false
+        },
+      }
+
+      Blockly.Blocks['c_comment_doc'] = {
+        paramCount_: 0,
+        hasReturn_: false,
+        init: function (this: any) {
+          this.paramCount_ = 0
+          this.hasReturn_ = false
+          this.appendDummyInput()
+            .appendField(Blockly.Msg['C_COMMENT_DOC_LABEL'] || '文件註解')
+          this.appendDummyInput('BRIEF_ROW')
+            .appendField(Blockly.Msg['C_COMMENT_DOC_BRIEF'] || '說明')
+            .appendField(new FieldMultilineInput('') as Blockly.Field, 'BRIEF')
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour('#888888')
+          this.setTooltip(Blockly.Msg['C_COMMENT_DOC_TOOLTIP'] || '為函式加上文件註解，說明用途、參數和回傳值')
+          this.setMutator(new Blockly.icons.MutatorIcon(
+            ['c_doc_param_input', 'c_doc_return_input'],
+            this as unknown as Blockly.BlockSvg,
+          ))
+        },
+        updateShape_: function (this: any) {
+          // Remove old param rows and return row
+          let i = 0
+          while (this.getInput(`PARAM_${i}`)) {
+            this.removeInput(`PARAM_${i}`)
+            i++
+          }
+          if (this.getInput('RETURN_ROW')) this.removeInput('RETURN_ROW')
+          // Re-add param rows
+          for (let j = 0; j < this.paramCount_; j++) {
+            this.appendDummyInput(`PARAM_${j}`)
+              .appendField(Blockly.Msg['C_COMMENT_DOC_PARAM'] || '參數')
+              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_NAME_${j}`)
+              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_DESC_${j}`)
+          }
+          // Re-add return row
+          if (this.hasReturn_) {
+            this.appendDummyInput('RETURN_ROW')
+              .appendField(Blockly.Msg['C_COMMENT_DOC_RETURN'] || '回傳')
+              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, 'RETURN')
+          }
+          // No tail — the block visually represents the doc comment without syntax noise
+        },
+        saveExtraState: function (this: any) {
+          if (this.paramCount_ === 0 && !this.hasReturn_) return null
+          return { paramCount: this.paramCount_, hasReturn: this.hasReturn_ }
+        },
+        loadExtraState: function (this: any, state: Record<string, unknown>) {
+          this.paramCount_ = (state?.paramCount as number) ?? 0
+          this.hasReturn_ = state?.hasReturn === true
+          this.updateShape_()
+        },
+        decompose: function (this: any, workspace: Blockly.WorkspaceSvg) {
+          const container = workspace.newBlock('c_doc_container')
+          container.initSvg()
+          let connection = container.getInput('STACK')!.connection!
+          for (let i = 0; i < this.paramCount_; i++) {
+            const paramBlock = workspace.newBlock('c_doc_param_input')
+            paramBlock.initSvg()
+            connection.connect(paramBlock.previousConnection!)
+            connection = paramBlock.nextConnection!
+          }
+          if (this.hasReturn_) {
+            const returnBlock = workspace.newBlock('c_doc_return_input')
+            returnBlock.initSvg()
+            connection.connect(returnBlock.previousConnection!)
+          }
+          return container
+        },
+        compose: function (this: any, containerBlock: Blockly.Block) {
+          let paramCount = 0
+          let hasReturn = false
+          let clauseBlock = containerBlock.getInputTargetBlock('STACK')
+          while (clauseBlock) {
+            if (clauseBlock.type === 'c_doc_param_input') paramCount++
+            else if (clauseBlock.type === 'c_doc_return_input') hasReturn = true
+            clauseBlock = clauseBlock.getNextBlock()
+          }
+          this.paramCount_ = paramCount
+          this.hasReturn_ = hasReturn
+          this.updateShape_()
         },
       }
     }
@@ -1792,6 +1922,80 @@ export class App {
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.operators)
           this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '複合賦值（運算式）')
+        },
+      }
+    }
+
+    // u_input_expr — expression version of u_input (for use in if/while conditions, e.g. if(cin >> a))
+    {
+      Blockly.Blocks['u_input_expr'] = {
+        argCount_: 1,
+        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
+        init: function (this: any) {
+          this.argCount_ = 1
+          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
+          buildArgSlot(this, 0, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
+            defaultVar: 'x',
+          })
+          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.io)
+          this.setTooltip(Blockly.Msg['U_INPUT_EXPR_TOOLTIP'] || '讀取輸入（運算式，可作為條件）')
+        },
+        plus_: function (this: any) {
+          const idx = this.argCount_
+          this.argSlots_[idx] = { mode: 'select', selectedVar: 'v' + idx }
+          buildArgSlot(this, idx, 'select', {
+            getVarOptions: () => self.getWorkspaceVarOptions(),
+            defaultVar: 'v' + idx,
+          })
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          try { this.setFieldValue('v' + idx, `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          this.argCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.argCount_ <= 1) return
+          this.argCount_--
+          const idx = this.argCount_
+          this.argSlots_.splice(idx, 1)
+          this.removeInput(`ARG_${idx}`)
+          setMinusState(this, this.argCount_ <= 1)
+        },
+        saveExtraState: function (this: any) {
+          return { args: this.argSlots_.map((s: ArgSlotState) => ({ ...s })) }
+        },
+        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
+          const args = state.args ?? [{ mode: 'select' }]
+          this.argSlots_ = args.map(s => ({ ...s }))
+          this.argCount_ = args.length
+          // Remove existing ARG inputs and TAIL
+          let i = 0
+          while (this.getInput(`ARG_${i}`)) { this.removeInput(`ARG_${i}`); i++ }
+          if (this.getInput('TAIL')) this.removeInput('TAIL')
+          // Rebuild
+          for (let j = 0; j < this.argCount_; j++) {
+            const slot = this.argSlots_[j]
+            buildArgSlot(this, j, slot.mode, {
+              getVarOptions: () => self.getWorkspaceVarOptions(),
+              inputPrefix: j === 0 ? (Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →') : undefined,
+              defaultVar: slot.selectedVar ?? ('v' + j),
+            })
+            if (slot.mode === 'select' && slot.selectedVar) {
+              try { this.setFieldValue(slot.selectedVar, `SEL_${j}`) } catch (_e) { /* ignore */ }
+            }
+          }
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(
+              this.argCount_ <= 1 ? MINUS_DISABLED_IMG : MINUS_IMG,
+              20, 20, '-', () => this.minus_()), 'MINUS_BTN')
         },
       }
     }

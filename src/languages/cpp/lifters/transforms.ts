@@ -6,4 +6,9 @@ export function registerCppTransforms(registry: TransformRegistry): void {
     if (text.startsWith('/*') && text.endsWith('*/')) return text.slice(2, -2).trim()
     return text
   })
+
+  registry.register('cpp:stripBlockComment', (text) => {
+    if (text.startsWith('/*') && text.endsWith('*/')) return text.slice(2, -2).trim()
+    return text
+  })
 }

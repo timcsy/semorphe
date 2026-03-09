@@ -513,6 +513,22 @@ describe('I/O', () => {
       expect(code).toContain('cin >> x >> y;')
     })
 
+    it('lifts if (cin >> a >> n >> m) as if with input condition', () => {
+      const body = liftBody('int main() { if (cin >> a >> n >> m) {} }')
+      const mainBody = body[0]?.children.body ?? []
+      const ifNode = mainBody[0]
+      expect(ifNode).toBeDefined()
+      expect(ifNode!.concept).toBe('if')
+      const cond = (ifNode!.children.condition ?? [])[0]
+      expect(cond).toBeDefined()
+      expect(cond!.concept).toBe('input')
+      const values = cond!.children.values ?? []
+      expect(values.length).toBe(3)
+      expect(values[0].properties.name).toBe('a')
+      expect(values[1].properties.name).toBe('n')
+      expect(values[2].properties.name).toBe('m')
+    })
+
     it('renders input block with args extraState for multiple vars', () => {
       const state = blocks('int main() { cin >> a >> b; }')
       const topBlocks = state.blocks?.blocks ?? []
@@ -794,7 +810,7 @@ describe('Comments', () => {
   it('lifts /* block comment */ (strips delimiters)', () => {
     const node = liftFirst('/* block comment */')
     expect(node).not.toBeNull()
-    expect(node!.concept).toBe('comment')
+    expect(node!.concept).toBe('block_comment')
     expect(node!.properties.text).toBe('block comment')
   })
 })

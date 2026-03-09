@@ -149,6 +149,7 @@ const STATEMENT_TO_EXPRESSION: Record<string, string> = {
   'c_compound_assign': 'c_compound_assign_expr',
   'c_scanf': 'c_scanf_expr',
   'u_var_declare': 'c_var_declare_expr',
+  'u_input': 'u_input_expr',
 }
 
 function renderExpression(node: SemanticNode): BlockState | null {

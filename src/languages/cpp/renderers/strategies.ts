@@ -296,6 +296,35 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
 
     return block
   })
+
+  // doc_comment: /** ... */ with @brief, @param, @return
+  registry.register('cpp:renderDocComment', (node, ctx) => {
+    const block: BlockState = {
+      type: 'c_comment_doc',
+      id: ctx.nextBlockId(),
+      fields: { BRIEF: node.properties.brief ?? '' },
+      inputs: {},
+    }
+
+    // Collect params
+    let paramCount = 0
+    while (node.properties[`param_${paramCount}_name`] !== undefined) {
+      block.fields[`PARAM_NAME_${paramCount}`] = node.properties[`param_${paramCount}_name`]
+      block.fields[`PARAM_DESC_${paramCount}`] = node.properties[`param_${paramCount}_desc`] ?? ''
+      paramCount++
+    }
+
+    const hasReturn = !!node.properties.return_desc
+    if (hasReturn) {
+      block.fields.RETURN = node.properties.return_desc
+    }
+
+    if (paramCount > 0 || hasReturn) {
+      block.extraState = { paramCount, hasReturn }
+    }
+
+    return block
+  })
 }
 
 /** Map semantic arg nodes to three-mode arg slots, using compose mode for non-var_ref */

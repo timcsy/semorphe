@@ -466,6 +466,73 @@
     }
   },
   {
+    "id": "c_comment_doc",
+    "language": "cpp",
+    "category": "special",
+    "level": 2,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "doc_comment",
+      "abstractConcept": "doc_comment",
+      "properties": ["brief"],
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "c_comment_doc",
+      "message0": "%{BKY_C_COMMENT_DOC_MSG0}",
+      "args0": [
+        {
+          "type": "field_multilinetext",
+          "name": "BRIEF",
+          "text": "description"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_COMMENT_DOC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "BRIEF": "brief" },
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderDocComment"
+    }
+  },
+  {
+    "id": "c_comment_block",
+    "language": "cpp",
+    "category": "special",
+    "level": 2,
+    "version": "1.0.0",
+    "concept": {
+      "conceptId": "block_comment",
+      "abstractConcept": "block_comment",
+      "properties": ["text"],
+      "role": "statement"
+    },
+    "blockDef": {
+      "type": "c_comment_block",
+      "message0": "%{BKY_C_COMMENT_BLOCK_MSG0}",
+      "args0": [
+        {
+          "type": "field_multilinetext",
+          "name": "TEXT",
+          "text": "comment"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_COMMENT_BLOCK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "/* ${TEXT} */",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
     "id": "c_using_namespace",
     "language": "cpp",
     "category": "preprocessor",

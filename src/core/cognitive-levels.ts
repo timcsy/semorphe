@@ -20,6 +20,7 @@ const BLOCK_LEVELS: Record<string, CognitiveLevel> = {
   u_while_loop: 0,
   u_print: 0,
   u_input: 0,
+  u_input_expr: 1,
   u_endl: 0,
 
   // L1 - Intermediate
@@ -61,6 +62,8 @@ const BLOCK_LEVELS: Record<string, CognitiveLevel> = {
   c_ifdef: 2,
   c_ifndef: 2,
   c_comment_line: 2,
+  c_comment_block: 2,
+  c_comment_doc: 2,
 
   // C++ Advanced — Pointers (L2)
   c_pointer_declare: 2,
