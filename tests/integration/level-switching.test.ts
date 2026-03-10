@@ -1,8 +1,25 @@
-import { describe, it, expect } from 'vitest'
-import { getBlockLevel, isBlockAvailable, filterBlocksByLevel } from '../../src/core/cognitive-levels'
-import type { CognitiveLevel } from '../../src/core/types'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { getBlockLevel, isBlockAvailable, filterBlocksByLevel, setBlockSpecRegistry } from '../../src/core/cognitive-levels'
+import type { CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 
 describe('Cognitive Level Switching', () => {
+  beforeAll(() => {
+    const reg = new BlockSpecRegistry()
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    const allProjections = [
+      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...coreBlocks,
+      ...allStdModules.flatMap(m => m.blocks),
+    ]
+    reg.loadFromSplit(allConcepts, allProjections)
+    setBlockSpecRegistry(reg)
+  })
+
   describe('getBlockLevel', () => {
     it('should assign L0 to basic blocks', () => {
       expect(getBlockLevel('u_var_declare')).toBe(0)
@@ -24,6 +41,7 @@ describe('Cognitive Level Switching', () => {
       expect(getBlockLevel('u_array_declare')).toBe(2)
       expect(getBlockLevel('u_array_access')).toBe(2)
       expect(getBlockLevel('c_raw_code')).toBe(2)
+      // c_include is L0 in JSON (scaffold manages visibility, not cognitive level)
       expect(getBlockLevel('c_include')).toBe(0)
     })
 
@@ -75,6 +93,43 @@ describe('Cognitive Level Switching', () => {
     it('should show all blocks at level 2', () => {
       const filtered = filterBlocksByLevel(allBlocks, 2 as CognitiveLevel)
       expect(filtered).toEqual(allBlocks)
+    })
+  })
+
+  describe('c_include/c_using_namespace visibility', () => {
+    // JSON defines them as L0 — scaffold manages visibility at runtime
+    it('should assign L0 to c_include and c_using_namespace (JSON truth)', () => {
+      expect(getBlockLevel('c_include')).toBe(0)
+      expect(getBlockLevel('c_using_namespace')).toBe(0)
+    })
+
+    it('c_include should be available at L0 (scaffold hides it at runtime)', () => {
+      expect(isBlockAvailable('c_include', 0)).toBe(true)
+      expect(isBlockAvailable('c_using_namespace', 0)).toBe(true)
+    })
+  })
+
+  describe('BLOCK_LEVELS completeness', () => {
+    it('c_default should be L1', () => expect(getBlockLevel('c_default')).toBe(1))
+    it('c_ternary should be L1', () => expect(getBlockLevel('c_ternary')).toBe(1))
+    it('c_cast should be L1', () => expect(getBlockLevel('c_cast')).toBe(1))
+    it('c_bitwise_not should be L1', () => expect(getBlockLevel('c_bitwise_not')).toBe(1))
+    it('c_increment_expr should be L1', () => expect(getBlockLevel('c_increment_expr')).toBe(1))
+    it('c_compound_assign_expr should be L1', () => expect(getBlockLevel('c_compound_assign_expr')).toBe(1))
+    it('c_var_declare_expr should be L1', () => expect(getBlockLevel('c_var_declare_expr')).toBe(1))
+    it('c_forward_decl should be L2', () => expect(getBlockLevel('c_forward_decl')).toBe(2))
+    it('c_builtin_constant should be L0', () => expect(getBlockLevel('c_builtin_constant')).toBe(0))
+  })
+
+  describe('Statement↔Expression extraState contract', () => {
+    it('u_input/u_input_expr use { args: ArgSlotState[] } shape', () => {
+      const state = { args: [{ mode: 'select', selectedVar: 'x' }] }
+      expect(state.args).toBeInstanceOf(Array)
+      expect(state.args[0]).toHaveProperty('mode')
+    })
+    it('u_func_call/u_func_call_expr use { argCount: number } shape', () => {
+      const state = { argCount: 3 }
+      expect(typeof state.argCount).toBe('number')
     })
   })
 

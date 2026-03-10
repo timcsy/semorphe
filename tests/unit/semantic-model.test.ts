@@ -65,8 +65,8 @@ describe('nodeEquals', () => {
   it('should ignore metadata and id in comparison', () => {
     const a = createNode('number_literal', { value: '5' })
     const b = createNode('number_literal', { value: '5' })
-    a.metadata = { blockId: 'a' }
-    b.metadata = { blockId: 'b' }
+    a.metadata = { rawCode: 'a' }
+    b.metadata = { rawCode: 'b' }
     expect(nodeEquals(a, b)).toBe(true)
   })
 

@@ -94,8 +94,8 @@ describe('Integration - Scenario 5: Recursive Function', () => {
       createNode('func_def', {
         name: 'factorial',
         return_type: 'int',
-        params: JSON.stringify([{ type: 'int', name: 'n' }])
       }, {
+        params: [createNode('param_decl', { type: 'int', name: 'n' })],
         body: [
           createNode('if', {}, {
             condition: [createNode('compare', { operator: '<=' }, {

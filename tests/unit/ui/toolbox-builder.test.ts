@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
@@ -6,22 +6,22 @@ import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
 import type { CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
-import cppBasicBlocks from '../../../src/languages/cpp/projections/blocks/basic.json'
-import cppSpecialBlocks from '../../../src/languages/cpp/projections/blocks/special.json'
-import cppAdvancedBlocks from '../../../src/languages/cpp/projections/blocks/advanced.json'
+import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
+import { setBlockSpecRegistry } from '../../../src/core/cognitive-levels'
+import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
     ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...cppBasicBlocks as unknown as BlockProjectionJSON[],
-    ...cppSpecialBlocks as unknown as BlockProjectionJSON[],
-    ...cppAdvancedBlocks as unknown as BlockProjectionJSON[],
+    ...coreBlocks,
+    ...allStdModules.flatMap(m => m.blocks),
   ]
   reg.loadFromSplit(allConcepts, allProjections)
+  setBlockSpecRegistry(reg)
   return reg
 }
 
@@ -36,6 +36,7 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { kind: string; contents: Array<{ contents: Array<{ type: string }> }> }
     expect(toolbox.kind).toBe('categoryToolbox')
@@ -70,6 +71,7 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'cstdio',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { contents: Array<{ name: string; contents: Array<{ type: string }> }> }
     const ioCat = toolbox.contents.find(c => c.name.includes('輸入') || c.name.includes('I/O') || c.name.includes('輸出'))
@@ -88,11 +90,48 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { kind: string; contents: unknown[] }
     expect(toolbox.kind).toBe('categoryToolbox')
     // May have categories with dynamic blocks but no crash
     expect(Array.isArray(toolbox.contents)).toBe(true)
+  })
+
+  it('should include u_input_expr in I/O category at L2', () => {
+    const reg = createRegistry()
+    // u_input_expr has no JSON BlockSpec — defaults to L2
+    const result = buildToolbox({
+      blockSpecRegistry: reg,
+      level: 2 as CognitiveLevel,
+      ioPreference: 'iostream',
+      msgs: emptyMsgs,
+      categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
+    })
+    const toolbox = result as { contents: Array<{ contents: Array<{ type: string }> }> }
+    const allTypes = toolbox.contents.flatMap((c: { contents: Array<{ type: string }> }) => c.contents.map((b: { type: string }) => b.type))
+    expect(allTypes).toContain('u_input_expr')
+  })
+
+  it('toolbox should be monotonically inclusive: L0 ⊆ L1 ⊆ L2', () => {
+    const reg = createRegistry()
+    const getTypes = (lv: CognitiveLevel) => {
+      const r = buildToolbox({
+        blockSpecRegistry: reg,
+        level: lv,
+        ioPreference: 'iostream',
+        msgs: emptyMsgs,
+        categoryColors: CATEGORY_COLORS,
+      })
+      const toolbox = r as { contents: Array<{ contents: Array<{ type: string }> }> }
+      return new Set(toolbox.contents.flatMap((c: { contents: Array<{ type: string }> }) => c.contents.map((b: { type: string }) => b.type)))
+    }
+    const l0 = getTypes(0 as CognitiveLevel)
+    const l1 = getTypes(1 as CognitiveLevel)
+    const l2 = getTypes(2 as CognitiveLevel)
+    for (const t of l0) expect(l1.has(t), `L0 type "${t}" missing from L1`).toBe(true)
+    for (const t of l1) expect(l2.has(t), `L1 type "${t}" missing from L2`).toBe(true)
   })
 
   it('should NOT import blockly (zero UI framework dependency)', () => {

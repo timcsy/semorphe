@@ -1,53 +1,55 @@
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-
-const semanticsDir = path.resolve(__dirname, '../../../src/blocks/semantics')
-const cppSemanticsDir = path.resolve(__dirname, '../../../src/languages/cpp/semantics')
-const universalProjectionsDir = path.resolve(__dirname, '../../../src/blocks/projections/blocks')
-const cppProjectionsDir = path.resolve(__dirname, '../../../src/languages/cpp/projections/blocks')
-
-function loadJSON(filePath: string): unknown[] {
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-}
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
+import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
+import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
+import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
 
 describe('Concept/BlockDef split integrity', () => {
-  it('should have correct total concept count (≥ 83)', () => {
-    const universalConcepts = loadJSON(path.join(semanticsDir, 'universal-concepts.json')) as Array<{ conceptId: string }>
-    const cppConcepts = loadJSON(path.join(cppSemanticsDir, 'concepts.json')) as Array<{ conceptId: string }>
-    expect(universalConcepts.length + cppConcepts.length).toBeGreaterThanOrEqual(83)
+  it('should have correct universal concept and block counts', () => {
+    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(26)
+    expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(26)
   })
 
-  it('should have correct cpp projection count matching original', () => {
-    const basic = loadJSON(path.join(cppProjectionsDir, 'basic.json'))
-    const advanced = loadJSON(path.join(cppProjectionsDir, 'advanced.json'))
-    const special = loadJSON(path.join(cppProjectionsDir, 'special.json'))
-    const stdlibContainers = loadJSON(path.join(cppProjectionsDir, 'stdlib-containers.json'))
-    const stdlibAlgorithms = loadJSON(path.join(cppProjectionsDir, 'stdlib-algorithms.json'))
-    // basic=14, advanced=26, special=17, stdlib-containers=2, stdlib-algorithms=2 = 61
-    expect(basic.length + advanced.length + special.length + stdlibContainers.length + stdlibAlgorithms.length).toBe(61)
+  it('should have correct core concept and block counts (42 each)', () => {
+    expect(coreConcepts.length).toBe(42)
+    expect(coreBlocks.length).toBe(42)
   })
 
-  it('should have correct universal projection count', () => {
-    const universal = loadJSON(path.join(universalProjectionsDir, 'universal-blocks.json'))
-    expect(universal.length).toBe(26)
+  it('should have valid concepts and blocks arrays for each std module', () => {
+    for (const mod of allStdModules) {
+      expect(Array.isArray(mod.concepts), `${mod.header} concepts should be array`).toBe(true)
+      expect(Array.isArray(mod.blocks), `${mod.header} blocks should be array`).toBe(true)
+      // Some modules (iostream, cmath) use universal concepts so their concepts.json is empty
+      // But modules with concepts should have matching blocks
+      if (mod.concepts.length > 0) {
+        expect(mod.blocks.length, `${mod.header} should have blocks if it has concepts`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('should have all concept IDs unique across core + std', () => {
+    const allConceptIds: string[] = []
+    for (const c of coreConcepts) allConceptIds.push(c.conceptId)
+    for (const mod of allStdModules) {
+      for (const c of mod.concepts) allConceptIds.push(c.conceptId)
+    }
+    expect(new Set(allConceptIds).size).toBe(allConceptIds.length)
   })
 
   it('should have every projection conceptId present in concepts', () => {
-    const universalConcepts = loadJSON(path.join(semanticsDir, 'universal-concepts.json')) as Array<{ conceptId: string }>
-    const cppConcepts = loadJSON(path.join(cppSemanticsDir, 'concepts.json')) as Array<{ conceptId: string }>
     const allConceptIds = new Set([
-      ...universalConcepts.map(c => c.conceptId),
-      ...cppConcepts.map(c => c.conceptId),
+      ...(universalConcepts as unknown as ConceptDefJSON[]).map(c => c.conceptId),
+      ...coreConcepts.map(c => c.conceptId),
+      ...allStdModules.flatMap(m => m.concepts).map(c => c.conceptId),
     ])
 
     const allProjections = [
-      ...loadJSON(path.join(universalProjectionsDir, 'universal-blocks.json')) as Array<{ conceptId: string }>,
-      ...loadJSON(path.join(cppProjectionsDir, 'basic.json')) as Array<{ conceptId: string }>,
-      ...loadJSON(path.join(cppProjectionsDir, 'advanced.json')) as Array<{ conceptId: string }>,
-      ...loadJSON(path.join(cppProjectionsDir, 'stdlib-containers.json')) as Array<{ conceptId: string }>,
-      ...loadJSON(path.join(cppProjectionsDir, 'stdlib-algorithms.json')) as Array<{ conceptId: string }>,
-      ...loadJSON(path.join(cppProjectionsDir, 'special.json')) as Array<{ conceptId: string }>,
+      ...(universalBlocks as unknown as BlockProjectionJSON[]) as Array<{ conceptId: string }>,
+      ...coreBlocks as Array<{ conceptId: string }>,
+      ...allStdModules.flatMap(m => m.blocks) as Array<{ conceptId: string }>,
     ]
 
     for (const proj of allProjections) {
@@ -55,11 +57,14 @@ describe('Concept/BlockDef split integrity', () => {
     }
   })
 
-  it('concepts.json should not contain blockDef field', () => {
-    const universalConcepts = loadJSON(path.join(semanticsDir, 'universal-concepts.json')) as Array<Record<string, unknown>>
-    const cppConcepts = loadJSON(path.join(cppSemanticsDir, 'concepts.json')) as Array<Record<string, unknown>>
+  it('concepts should not contain blockDef field', () => {
+    const allConcepts = [
+      ...(universalConcepts as unknown as Array<Record<string, unknown>>),
+      ...(coreConcepts as unknown as Array<Record<string, unknown>>),
+      ...allStdModules.flatMap(m => m.concepts as unknown as Array<Record<string, unknown>>),
+    ]
 
-    for (const c of [...universalConcepts, ...cppConcepts]) {
+    for (const c of allConcepts) {
       expect(c).not.toHaveProperty('blockDef')
       expect(c).not.toHaveProperty('codeTemplate')
       expect(c).not.toHaveProperty('astPattern')
@@ -67,14 +72,11 @@ describe('Concept/BlockDef split integrity', () => {
     }
   })
 
-  it('block-specs.json should not contain concept semantic fields', () => {
+  it('block projections should not contain concept semantic fields', () => {
     const allProjections = [
-      ...loadJSON(path.join(universalProjectionsDir, 'universal-blocks.json')) as Array<Record<string, unknown>>,
-      ...loadJSON(path.join(cppProjectionsDir, 'basic.json')) as Array<Record<string, unknown>>,
-      ...loadJSON(path.join(cppProjectionsDir, 'advanced.json')) as Array<Record<string, unknown>>,
-      ...loadJSON(path.join(cppProjectionsDir, 'special.json')) as Array<Record<string, unknown>>,
-      ...loadJSON(path.join(cppProjectionsDir, 'stdlib-containers.json')) as Array<Record<string, unknown>>,
-      ...loadJSON(path.join(cppProjectionsDir, 'stdlib-algorithms.json')) as Array<Record<string, unknown>>,
+      ...(universalBlocks as unknown as Array<Record<string, unknown>>),
+      ...(coreBlocks as unknown as Array<Record<string, unknown>>),
+      ...allStdModules.flatMap(m => m.blocks as unknown as Array<Record<string, unknown>>),
     ]
 
     for (const p of allProjections) {

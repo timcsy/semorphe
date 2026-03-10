@@ -7,17 +7,16 @@ import { describe, it, expect } from 'vitest'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
-import { registerExpressionLifters } from '../../../src/languages/cpp/lifters/expressions'
+import { registerExpressionLifters } from '../../../src/languages/cpp/core/lifters/expressions'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
 import type { BlockSpec, LiftPattern, SemanticNode, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
 import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
-import basicBlocks from '../../../src/languages/cpp/projections/blocks/basic.json'
-import specialBlocks from '../../../src/languages/cpp/projections/blocks/special.json'
+import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
 
 function mockNode(
@@ -72,11 +71,11 @@ describe('Annotation Roundtrip', () => {
     const patternLifter = new PatternLifter()
 
     const specRegistry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
     const allProjections = [
       ...universalBlocks as unknown as BlockProjectionJSON[],
-      ...basicBlocks as unknown as BlockProjectionJSON[],
-      ...specialBlocks as unknown as BlockProjectionJSON[],
+      ...coreBlocks,
+      ...allStdModules.flatMap(m => m.blocks),
     ]
     specRegistry.loadFromSplit(allConcepts, allProjections)
     const allSpecs = specRegistry.getAll()
@@ -128,7 +127,7 @@ describe('Annotation Roundtrip', () => {
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations!.length).toBe(1)
       expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('// set x')
+      expect(results[0].annotations![0].text).toBe('set x')
     })
   })
 
@@ -144,7 +143,7 @@ describe('Annotation Roundtrip', () => {
       expect(results[0].concept).toBe('raw_code')
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('// lambda')
+      expect(results[0].annotations![0].text).toBe('lambda')
     })
   })
 })

@@ -1,0 +1,109 @@
+[
+  {
+    "id": "cpp_sort",
+    "conceptId": "cpp_sort",
+    "language": "cpp",
+    "category": "algorithms",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_sort",
+      "message0": "%{BKY_CPP_SORT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BEGIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "END",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::sort(${BEGIN}, ${END});",
+      "imports": [
+        "algorithm"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "sort"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "begin",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "end",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_find",
+    "conceptId": "cpp:find",
+    "language": "cpp",
+    "category": "stdlib",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_find",
+      "message0": "find %1 in %2 from %3 to %4",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE"
+        },
+        {
+          "type": "field_input",
+          "name": "ARRAY",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM"
+        },
+        {
+          "type": "input_value",
+          "name": "TO"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97AF",
+      "tooltip": "Find element in array"
+    },
+    "codeTemplate": {
+      "pattern": "find(${ARRAY} + ${FROM}, ${ARRAY} + ${TO}, ${VALUE})",
+      "imports": [
+        "algorithm"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "find"
+        }
+      ]
+    }
+  }
+]

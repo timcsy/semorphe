@@ -1,0 +1,14 @@
+[
+  {
+    "conceptId": "cpp_stack_declare",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "stack_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  }
+]

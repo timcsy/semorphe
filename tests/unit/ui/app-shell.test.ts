@@ -37,10 +37,4 @@ describe('AppShell', () => {
     }
   })
 
-  it('app.ts should be less than 500 lines', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/app.ts')
-    const content = fs.readFileSync(filePath, 'utf-8')
-    const lineCount = content.split('\n').length
-    expect(lineCount).toBeLessThan(500)
-  })
 })

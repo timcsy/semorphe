@@ -2,15 +2,15 @@
 export class RuntimeError extends Error {
   readonly i18nKey: string
   readonly params: Record<string, string>
-  readonly blockId: string | null
+  readonly nodeId: string | null
 
-  constructor(i18nKey: string, params: Record<string, string> = {}, blockId: string | null = null) {
+  constructor(i18nKey: string, params: Record<string, string> = {}, nodeId: string | null = null) {
     const fallback = i18nKey + (Object.keys(params).length > 0 ? ': ' + JSON.stringify(params) : '')
     super(fallback)
     this.name = 'RuntimeError'
     this.i18nKey = i18nKey
     this.params = params
-    this.blockId = blockId
+    this.nodeId = nodeId
   }
 }
 

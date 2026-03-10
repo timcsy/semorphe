@@ -49,7 +49,19 @@ export class PatternRenderer {
 
       const blockDef = spec.blockDef as Record<string, unknown>
       const blockType = blockDef.type as string
-      const mapping = spec.renderMapping ?? this.deriveRenderMapping(spec)
+      // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
+      const derived = this.deriveRenderMapping(spec)
+      const explicit = spec.renderMapping
+      const mapping = explicit
+        ? {
+            fields: (explicit.fields && Object.keys(explicit.fields).length > 0) ? explicit.fields : derived.fields,
+            inputs: (explicit.inputs && Object.keys(explicit.inputs).length > 0) ? explicit.inputs : derived.inputs,
+            statementInputs: (explicit.statementInputs && Object.keys(explicit.statementInputs).length > 0) ? explicit.statementInputs : derived.statementInputs,
+            dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
+            strategy: explicit.strategy ?? derived.strategy,
+            expressionCounterpart: explicit.expressionCounterpart,
+          }
+        : derived
       this.renderSpecs.set(conceptId, { blockType, mapping })
 
       // Track expression-only block types (have output but no previousStatement)
@@ -159,6 +171,21 @@ export class PatternRenderer {
   /** Check if a block type is statement-only (cannot be used in expression context) */
   isStatementOnly(blockType: string): boolean {
     return this.statementOnlyBlockTypes.has(blockType)
+  }
+
+  /** Check if a block type is expression-only (has output, no previous/next connection) */
+  isExpressionOnly(blockType: string): boolean {
+    return this.expressionOnlyBlockTypes.has(blockType)
+  }
+
+  /** Get the expression counterpart block type for a statement block type */
+  getExpressionCounterpart(blockType: string): string | undefined {
+    for (const spec of this.renderSpecs.values()) {
+      if (spec.blockType === blockType && spec.mapping.expressionCounterpart) {
+        return spec.mapping.expressionCounterpart
+      }
+    }
+    return undefined
   }
 
   /** Auto-derive renderMapping from blockDef and concept */

@@ -1,0 +1,521 @@
+[
+  {
+    "conceptId": "cpp_char_literal",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "char_literal",
+    "properties": [
+      "char"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_increment",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "increment",
+    "properties": [
+      "name",
+      "operator"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_compound_assign",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "compound_assign",
+    "properties": [
+      "name",
+      "operator"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_switch",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "switch",
+    "properties": [],
+    "children": {
+      "expr": "expression",
+      "cases": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_case",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "case",
+    "properties": [],
+    "children": {
+      "value": "expression",
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_default",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "default",
+    "properties": [],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_ternary",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "ternary",
+    "properties": [],
+    "children": {
+      "condition": "expression",
+      "true_expr": "expression",
+      "false_expr": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_cast",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "cast",
+    "properties": [
+      "target_type"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "bitwise_not",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "bitwise_not",
+    "properties": [],
+    "children": {
+      "operand": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_pointer_assign",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "pointer_assign",
+    "properties": [
+      "ptr_name"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_for_loop",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "for_loop",
+    "properties": [],
+    "children": {
+      "init": "expression",
+      "cond": "expression",
+      "update": "expression",
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_do_while",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "do_while",
+    "properties": [],
+    "children": {
+      "body": "statements",
+      "cond": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_pointer_declare",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "pointer_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_pointer_deref",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "pointer_deref",
+    "properties": [],
+    "children": {
+      "ptr": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_address_of",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "address_of",
+    "properties": [],
+    "children": {
+      "var": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_malloc",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "malloc",
+    "properties": [
+      "type",
+      "sizeof_type"
+    ],
+    "children": {
+      "size": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_free",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "free",
+    "properties": [],
+    "children": {
+      "ptr": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_struct_declare",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "struct_declare",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "members": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_struct_member_access",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "struct_member_access",
+    "properties": [
+      "obj",
+      "member"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_struct_pointer_access",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "struct_pointer_access",
+    "properties": [
+      "ptr",
+      "member"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_class_def",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "class_def",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "public": "statements",
+      "private": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_new",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "new",
+    "properties": [
+      "type",
+      "args"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_delete",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "delete",
+    "properties": [],
+    "children": {
+      "ptr": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_template_function",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "template_function",
+    "properties": [
+      "t",
+      "return_type",
+      "func_name",
+      "param_type",
+      "param_name"
+    ],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_method_call",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "method_call",
+    "properties": [
+      "obj",
+      "method",
+      "args"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_method_call_expr",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "method_call_expr",
+    "properties": [
+      "obj",
+      "method",
+      "args"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_raw_code",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "raw_code",
+    "properties": [
+      "code"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_raw_expression",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "raw_expression",
+    "properties": [
+      "code"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "forward_decl",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "forward_decl",
+    "properties": [
+      "return_type",
+      "name",
+      "params"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "builtin_constant",
+    "layer": "lang-core",
+    "level": 0,
+    "abstractConcept": "builtin_constant",
+    "properties": [
+      "value"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_include",
+    "layer": "lang-core",
+    "level": 0,
+    "abstractConcept": "include",
+    "properties": [
+      "header"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_include_local",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "include_local",
+    "properties": [
+      "header"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_define",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "define",
+    "properties": [
+      "name",
+      "value"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_ifdef",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "ifdef",
+    "properties": [
+      "condition"
+    ],
+    "children": [
+      {
+        "body": "statements"
+      }
+    ],
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_ifndef",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "ifndef",
+    "properties": [
+      "condition"
+    ],
+    "children": [
+      {
+        "body": "statements"
+      }
+    ],
+    "role": "statement"
+  },
+  {
+    "conceptId": "comment",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "comment",
+    "properties": [
+      "text"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "doc_comment",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "doc_comment",
+    "properties": [
+      "brief"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "block_comment",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "block_comment",
+    "properties": [
+      "text"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_using_namespace",
+    "layer": "lang-core",
+    "level": 0,
+    "abstractConcept": "using_namespace",
+    "properties": [
+      "ns"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_increment_expr",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "increment_expr",
+    "properties": [
+      "name",
+      "operator",
+      "position"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_compound_assign_expr",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "compound_assign_expr",
+    "properties": [
+      "name",
+      "operator"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "var_declare_expr",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "var_declare_expr",
+    "properties": [
+      "name",
+      "type"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "expression"
+  }
+]

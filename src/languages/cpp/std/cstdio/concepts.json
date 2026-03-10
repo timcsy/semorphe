@@ -1,0 +1,38 @@
+[
+  {
+    "conceptId": "cpp_printf",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "printf",
+    "properties": [
+      "format",
+      "args"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_scanf",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "scanf",
+    "properties": [
+      "format",
+      "args"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_scanf_expr",
+    "layer": "lang-core",
+    "level": 1,
+    "abstractConcept": "scanf_expr",
+    "properties": [
+      "format",
+      "args"
+    ],
+    "children": {},
+    "role": "expression"
+  }
+]

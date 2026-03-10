@@ -1,0 +1,98 @@
+[
+  {
+    "id": "cpp_map_declare",
+    "conceptId": "cpp_map_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_declare",
+      "message0": "%{BKY_CPP_MAP_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "KEY_TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_KEY_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "VALUE_TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_CPP_MAP_DECLARE_VALUE_TYPE_STRING}",
+              "std::string"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "mp"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::map<${KEY_TYPE}, ${VALUE_TYPE}> ${NAME};",
+      "imports": [
+        "map"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "nodeType": "template_type"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "key_type",
+          "ast": "type.arguments[0]",
+          "extract": "text"
+        },
+        {
+          "semantic": "value_type",
+          "ast": "type.arguments[1]",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  }
+]

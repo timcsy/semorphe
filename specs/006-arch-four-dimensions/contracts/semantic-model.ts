@@ -60,8 +60,6 @@ export interface NodeMetadata {
   sourceRange?: { start: number; end: number }
   /** 積木在 workspace 中的位置 */
   blockPosition?: { x: number; y: number }
-  /** 對應的 Blockly block ID */
-  blockId?: string
 }
 
 /**

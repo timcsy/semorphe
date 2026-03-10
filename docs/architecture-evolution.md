@@ -28,6 +28,7 @@
   - [3.1 套件目錄結構](#31-套件目錄結構)
   - [3.2 語義標註（Annotations）](#32-語義標註annotations)
   - [3.3 三層契約](#33-三層契約)
+  - [3.4 依賴解析與 Program Scaffold](#34-依賴解析與-program-scaffold)
 - [4. 視圖套件規格](#4-視圖套件規格)
   - [4.1 視圖分類學](#41-視圖分類學)
   - [4.2 視圖套件結構](#42-視圖套件結構)
@@ -159,30 +160,44 @@ interface ViewCapabilities {
 
 ```
 languages/{lang}/
-  ├─ manifest.json              ← 套件中繼資料 + 依賴宣告
+  ├─ manifest.json              ← 套件中繼資料（id, provides, parser）
   │
-  ├─ semantics/                 ← Layer 1：純語義，零視圖依賴
-  │   ├─ concepts.json          ← 概念定義 + 語義標註
-  │   ├─ lift-patterns.json     ← AST → 語義的 pattern 規則
-  │   └─ lifters/               ← Layer 3 hand-written lift 策略
-  │       ├─ statements.ts
-  │       ├─ expressions.ts
-  │       └─ strategies.ts
+  ├─ core/                      ← 語言核心（不需要 #include 的概念）
+  │   ├─ concepts.json          ← 核心概念定義（if, for, var_declare, func_def...）
+  │   ├─ blocks.json            ← 核心積木定義
+  │   ├─ generators/            ← 核心 code generators
+  │   └─ lifters/               ← 核心 lifters + strategies + transforms
   │
-  ├─ projections/               ← Layer 2：視圖專屬投影提示
-  │   ├─ blocks/                ← 積木視圖專屬
-  │   │   ├─ block-specs.json   ← blockDef + renderMapping
-  │   │   └─ renderers/         ← hand-written render 策略
-  │   ├─ code/                  ← 程式碼視圖專屬
-  │   │   ├─ templates.json     ← codeTemplate 宣告式
-  │   │   └─ generators/        ← hand-written generator
-  │   └─ execution/             ← 執行視圖專屬（可選覆寫）
-  │       └─ overrides.ts
+  ├─ std/                       ← 標準函式庫（每個 header 一個子目錄）
+  │   ├─ index.ts               ← allStdModules 聚合 + createPopulatedRegistry()
+  │   ├─ module-registry.ts     ← concept→header 映射（DependencyResolver 雛形）
+  │   ├─ iostream/              ← <iostream>: cout/cin generators
+  │   │   ├─ concepts.json
+  │   │   ├─ blocks.json
+  │   │   ├─ generators.ts
+  │   │   └─ lifters.ts
+  │   ├─ cstdio/                ← <cstdio>: printf/scanf
+  │   ├─ vector/                ← <vector>: vector operations
+  │   ├─ algorithm/             ← <algorithm>: sort/find
+  │   ├─ string/                ← <string>: string operations
+  │   ├─ cmath/                 ← <cmath>: math functions
+  │   ├─ map/                   ← <map>
+  │   ├─ set/                   ← <set>
+  │   ├─ stack/                 ← <stack>
+  │   ├─ queue/                 ← <queue>
+  │   └─ cstring/               ← <cstring>
+  │
+  ├─ lift-patterns.json         ← AST → 語義的 pattern 規則
+  ├─ auto-include.ts            ← 語義樹掃描→所需 #include 推導
+  ├─ style-exceptions.ts        ← 借音偵測（模組化）
+  ├─ renderers/                 ← hand-written render 策略
   │
   └─ styles/                    ← Code Style 預設
       ├─ apcs.json
       └─ competitive.json
 ```
+
+> **目錄名即 header 名**：`std/iostream/` 對應 `<iostream>`，`std/vector/` 對應 `<vector>`。新增 std 模組只需加目錄 + 在 `std/index.ts` 註冊，不改核心引擎。
 
 **manifest.json**:
 
@@ -274,6 +289,122 @@ Layer 3: 視圖策略（視圖自己定義，消費 Layer 1 的標註）
 ```
 
 **重要原則**：唯讀視圖（dataflow、variables、模擬）只需要 Layer 1。只有可編輯視圖（blocks、code）需要 Layer 2。這意味著**新增唯讀視圖永遠不需要改語言套件**。
+
+### 3.4 依賴解析與 Program Scaffold
+
+#### 問題定位
+
+`#include <iostream>` 不屬於第一性原理 §1.3 的四類資訊（語義、呈現、元資訊、語法偏好）。它是 **Scope 3 圖邊（depends_on）在 Scope 2 程式碼中的投影**——可從語義樹的概念使用確定性推導出來的衍生資訊（見 first-principles §1.3 結構性依賴宣告）。
+
+同樣性質的還有：`using namespace std;`、`int main() { ... }`、`return 0;`——這些都是程式的**基礎設施 boilerplate**，語義上是衍生的，不應該是語義樹的一部分。
+
+#### DependencyResolver 介面
+
+核心引擎只定義介面，每個語言模組提供自己的實作：
+
+```typescript
+/** 核心引擎定義（語言無關） */
+interface DependencyResolver {
+  resolve(conceptIds: string[]): DependencyEdge[]
+}
+
+interface DependencyEdge {
+  sourceType: 'builtin' | 'stdlib' | 'external'
+  directive: string        // 語言專用的 import 語句
+  packageSpec?: {          // 外部套件才需要
+    name: string
+    version?: string
+    registry?: string      // 'npm' | 'pypi' | 'vcpkg' | 'crates'
+  }
+}
+```
+
+各語言的實作：
+
+| 語言 | concept 範例 | directive 範例 | sourceType |
+|------|-------------|---------------|------------|
+| C++ | `cpp_vector_declare` | `#include <vector>` | stdlib |
+| C++ | `print` (cout) | `#include <iostream>` | stdlib |
+| Python | `numpy_array` | `import numpy as np` | external |
+| Java | `arraylist_add` | `import java.util.ArrayList;` | stdlib |
+| Rust | `hashmap_insert` | `use std::collections::HashMap;` | stdlib |
+
+**現狀**：C++ 的 `ModuleRegistry` + `computeAutoIncludes()` 是 DependencyResolver 的語言專用雛形。泛化時只需抽出介面，C++ 實作保持不變。
+
+#### Program Scaffold
+
+Program Scaffold 統一管理所有基礎設施 boilerplate，取代目前散落在 program generator 中的硬編碼：
+
+```typescript
+interface ProgramScaffold {
+  /** 從語義樹推導所有需要的基礎設施 */
+  resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult
+}
+
+interface ScaffoldConfig {
+  cognitiveLevel: number     // P4 漸進揭露
+  style: StylePreset
+}
+
+interface ScaffoldResult {
+  imports: ScaffoldItem[]    // #include / import
+  preamble: ScaffoldItem[]   // using namespace / from ... import
+  entryPoint: ScaffoldItem   // int main() / if __name__ == "__main__"
+  epilogue: ScaffoldItem[]   // return 0;
+}
+
+interface ScaffoldItem {
+  code: string
+  visibility: 'hidden' | 'ghost' | 'editable'  // 由 cognitiveLevel 決定
+  reason?: string            // hover 說明（如「因為你用了 cout」）
+}
+```
+
+#### 漸進揭露策略（P4）
+
+| Level | imports | preamble | entryPoint | epilogue |
+|-------|---------|----------|------------|----------|
+| L0 | hidden | hidden | hidden | hidden |
+| L1 | ghost（hover 顯示原因） | ghost | ghost | ghost |
+| L2+ | editable（缺少時警告） | editable | editable | editable |
+
+**Ghost line**：在程式碼面板中以淡灰色顯示，不可直接編輯，但可「固定」（pin）為手動管理。使用者新增的手動 import 不受 scaffold 影響。
+
+#### 外部套件的額外考量
+
+| | stdlib | external |
+|---|--------|----------|
+| 可用性 | 永遠可用 | 需要安裝 |
+| import | 自動加 | 自動加 + 檢查是否安裝 |
+| 版本 | 跟語言走 | 需要指定 |
+| UX | ghost / auto | ghost + 安裝狀態指示（✓ / ✗） |
+
+外部套件的概念走 P3 概念生命週期：`raw_code` → `func_call` 降級 → 安裝語義套件後完全支援。
+
+#### 管線定位
+
+```
+語義樹（Scope 2，唯一真實）
+     │
+     ├─ 概念遍歷 → conceptIds
+     │      │
+     │      ▼
+     │  DependencyResolver（語言模組提供）  ← Scope 3 索引構建
+     │      │
+     │      ▼
+     │  DependencyEdge[]
+     │      │
+     │      ▼
+     │  ProgramScaffold（P4 過濾）         ← 決定 hidden/ghost/editable
+     │      │
+     │      ▼
+     └─ CodeGenerator（消費 scaffold 結果）← Scope 2 投影
+            │
+            ▼
+        最終程式碼
+```
+
+**關鍵**：DependencyResolver 不是 CodeGenerator 的一部分。它是獨立的 Scope 3 索引構建器，結果被 ProgramScaffold 消費後才進入投影管線。
 
 ---
 
@@ -507,14 +638,18 @@ arduino-neopixel（depends: arduino-core）
 
 | 元件 | 檔案 | 狀態 |
 |------|------|------|
-| Block specs (JSON) | `src/languages/cpp/blocks/*.json` | ✅ basic + advanced + special |
+| Core concepts (JSON) | `src/languages/cpp/core/concepts.json` | ✅ 語言核心概念（if, for, var_declare 等） |
+| Core blocks (JSON) | `src/languages/cpp/core/blocks.json` | ✅ 語言核心積木 |
+| Core generators | `src/languages/cpp/core/generators/*.ts` | ✅ statements/declarations/expressions |
+| Core lifters | `src/languages/cpp/core/lifters/*.ts` | ✅ statements/declarations/expressions/strategies/transforms |
+| Std modules | `src/languages/cpp/std/*/` | ✅ iostream/cstdio/vector/algorithm/string/map/stack/queue/set/cstring/cmath |
+| ModuleRegistry | `src/languages/cpp/std/module-registry.ts` | ✅ concept→header 映射 |
+| Auto-include | `src/languages/cpp/auto-include.ts` | ✅ 語義樹→所需 #include 推導 |
 | Lift patterns (JSON) | `src/languages/cpp/lift-patterns.json` | ✅ 完成 |
-| Hand-written lifters | `src/languages/cpp/lifters/*.ts` | ✅ statements/expressions/io/strategies |
-| Hand-written generators | `src/languages/cpp/generators/*.ts` | ✅ statements/expressions/io/declarations |
 | Render strategies | `src/languages/cpp/renderers/strategies.ts` | ✅ 完成 |
 | Style presets | `src/languages/cpp/styles/*.json` | ✅ apcs/competitive/google |
-| Style exceptions | `src/languages/cpp/style-exceptions.ts` | ✅ 完成 |
-| Language module | `src/languages/cpp/module.ts` | ✅ 統一初始化入口 |
+| Style exceptions | `src/languages/cpp/style-exceptions.ts` | ✅ 含模組化借音偵測 |
+| Manifest | `src/languages/cpp/manifest.json` | ✅ 套件中繼資料 + 路徑宣告 |
 
 ### 已完成（UI）
 
@@ -525,20 +660,20 @@ arduino-neopixel（depends: arduino-core）
 | 主控台面板 | `src/ui/panels/console-panel.ts` | ✅ 完成 | |
 | 變數面板 | `src/ui/panels/variable-panel.ts` | ✅ 完成 | |
 | Debug 工具列 | `src/ui/debug-toolbar.ts` | ✅ 完成 | |
-| 同步控制器 | `src/ui/sync-controller.ts` | ⚠️ 需重構 | 直接 import BlocklyPanel/MonacoPanel |
-| 動態積木 + 工具箱 | `src/ui/app.ts` | ⚠️ 需拆分 | 3575 行的 god object |
+| 同步控制器 | `src/ui/sync-controller.ts` | ✅ 完成 | 透過 SemanticBus 通訊，不直接 import 面板 |
+| App（初始化膠水碼） | `src/ui/app.ts` | ✅ 完成 | 已拆分為 ToolboxBuilder + BlockRegistrar + AppShell |
+| 工具箱建構器 | `src/ui/toolbox-builder.ts` | ✅ 完成 | 純資料模組，零 Blockly DOM 依賴 |
+| 積木註冊器 | `src/ui/block-registrar.ts` | ✅ 完成 | Blockly 專屬動態積木 |
+| 執行控制器 | `src/ui/execution-controller.ts` | ✅ 完成 | |
 
 ### 差距分析
 
 | 缺失項目 | 對應章節 | 優先級 | 說明 |
 |----------|---------|--------|------|
-| **語義標註機制** | §3.2 | P0 | concepts.json 的 annotations 不存在，新視圖無法不依賴語言套件 |
-| **ViewHost 介面** | §2.3 | P0 | 視圖沒有統一介面，每個面板 API 不同 |
-| **SemanticBus** | §2.2 | P0 | 視圖間透過 SyncController 直接耦合 |
-| **app.ts 拆分** | §6 | P1 | 積木註冊、toolbox、layout、sync 混在一起 |
-| **concept 和 blockDef 分離** | §3.1 | P1 | 目前在同一個 JSON 的同一個物件裡 |
-| **套件 manifest** | §3.1 | P2 | 語言套件沒有宣告式中繼資料 |
-| **SemanticDiff 增量更新** | §2.2 | P2 | 目前是全量替換，效能隨視圖數量線性增長 |
+| **DependencyResolver 抽象** | §3.4 | P1 | ModuleRegistry 是 C++ 專用，需泛化為語言無關介面 |
+| **Program Scaffold 層** | §3.4 | P1 | include/namespace/main/return 的漸進揭露（L0 隱藏→L1 ghost→L2 手動） |
+| **Semantic Node Identity** | §2.2 | P1 | 跨投影對應用 blockId（投影層 ID），應改用 node.id（語義層 ID） |
+| **SemanticDiff 增量更新** | §2.2 | P2 | 目前是全量替換，效能隨視圖數量線性增長（前置：Semantic Node Identity） |
 | **硬體描述層** | §5.2 | P3 | 等 Arduino 需求時再實作 |
 | **DataFlow 視圖** | §4.2 | P3 | 需要 annotations 機制先到位 |
 
@@ -548,113 +683,201 @@ arduino-neopixel（depends: arduino-core）
 
 每個 Phase 都可以用 SpecKit 執行（specify → clarify → plan → tasks → implement）。
 
-### Phase 0：打地基（解耦基礎設施）
+### Phase 0-4：已完成 ✅
 
-**目標**：建立三層解耦的基礎設施，不改變現有功能。
+- **Phase 0**：打地基 — ViewHost 介面、SemanticBus、Annotations 機制 *(014-decoupling-infra)*
+- **Phase 1**：SyncController 解耦 — 面板透過 SemanticBus 通訊，面板間零 import *(015-sync-decouple)*
+- **Phase 2**：app.ts 拆分 — ToolboxBuilder + BlockRegistrar + AppShell + ExecutionController *(016-app-split)*
+- **Phase 3**：concept/blockDef 分離 — concepts.json + blocks.json 物理分離，manifest.json 驅動載入 *(019-cpp-std-modules)*
+- **Phase 4**：VSCode Extension 原型 — Blockly WebView + 原生 TextEditor + postMessage 通訊 *(018-vscode-extension-prototype)*
 
-```
-0.1 定義 ViewHost 介面
-    → src/core/view-host.ts（純介面，不依賴任何 UI 框架）
-    → 現有面板暫不實作，只定義介面
+### Phase 5：DependencyResolver 抽象 + Program Scaffold
 
-0.2 建立 SemanticBus
-    → src/core/semantic-bus.ts（EventEmitter 實作）
-    → 定義所有事件型別（SemanticEvents + ViewRequests）
+**目標**：將 C++ 專用的 auto-include 泛化為語言無關的依賴解析框架，並統一 boilerplate 管理。
 
-0.3 annotations 機制
-    → 擴充 concepts.json 結構，加入 annotations 欄位
-    → ConceptRegistry 可查詢 annotations
-    → 不改變現有功能，只是加了新的查詢能力
-
-驗證：所有現有測試通過，annotations 可被查詢
-```
-
-### Phase 1：SyncController 解耦
-
-**目標**：SyncController 不再直接 import 面板，改為透過 SemanticBus 通訊。
+**理論基礎**：first-principles §1.3（結構性依賴宣告）、§2.3（DependencyResolver）、§2.4（基礎設施漸進揭露）
 
 ```
-1.1 SyncController → SemanticBus
-    → 移除 import BlocklyPanel / MonacoPanel
-    → 改為發送 SemanticEvents，接收 ViewRequests
-    → 面板訂閱事件，自行更新
+5.1 DependencyResolver 核心介面
+    → src/core/dependency-resolver.ts（純介面 + 型別定義）
+    → DependencyResolver { resolve(conceptIds) → DependencyEdge[] }
+    → DependencyEdge { sourceType, directive, packageSpec? }
+    → 核心引擎零語言依賴
 
-1.2 面板實作 ViewHost
-    → BlocklyPanel、MonacoPanel 實作 ViewHost 介面
-    → ConsolePanel、VariablePanel 實作 ViewHost 介面
-    → 面板之間零 import
+5.2 C++ DependencyResolver 實作
+    → 從 ModuleRegistry + computeAutoIncludes 重構
+    → ModuleRegistry implements DependencyResolver
+    → 移除 code-generator.ts 的全域 setModuleRegistry()
+    → 改為 ProgramScaffold 消費 DependencyResolver
+    → 所有現有測試通過（行為不變，只是管線重組）
 
-驗證：面板獨立性測試（拔掉任一面板，其他面板不報錯）
+5.3 ProgramScaffold 層
+    → src/core/program-scaffold.ts（語言無關框架）
+    → 統一管理 imports + preamble + entryPoint + epilogue
+    → 接收 cognitiveLevel → 決定 hidden/ghost/editable
+    → C++ 實作：#include + using namespace std + int main() + return 0
+    → 從 program generator 中抽離 boilerplate 邏輯
+
+5.4 Ghost Line 視覺呈現
+    → Monaco 面板：ghost line 以淡灰色顯示（decorations API）
+    → hover 顯示原因（如「因為你用了 cout」）
+    → 「固定」操作：ghost → editable（寫入語義樹）
+    → Blockly 面板：不影響（blocks 不顯示 include）
+
+驗證：
+  → C++ auto-include 行為不變（regression test）
+  → L0 程式碼不顯示 include/main（ghost 或 hidden）
+  → L2 缺少 include 時顯示警告
+  → DependencyResolver 介面不含任何 C++ 專用型別
 ```
 
-### Phase 2：app.ts 拆分
+### Phase 5b：Semantic Node Identity（語義節點身份）
 
-**目標**：把 3575 行的 god object 拆為獨立模組。
+**目標**：將跨投影對應（source mapping）從 Blockly 投影層 ID（blockId）遷移到語義層 ID（node.id），消除投影間的直接耦合。
 
-```
-2.1 ToolboxBuilder
-    → 純資料模組，從 BlockSpecRegistry + CognitiveLevel 產出 toolbox 定義
-    → 不依賴 Blockly DOM
+**理論基礎**：first-principles §1.1（語義結構是唯一真實——節點身份屬於語義層，不屬於任何投影層）、§2.1（投影定理——跨投影對應應經由語義結構間接建立，不應讓兩個投影直接互相推算）
 
-2.2 BlockRegistrar
-    → Blockly 專屬，只在 blocks WebView 中使用
-    → 管理動態積木註冊（saveExtraState/loadExtraState）
-    → 從 app.ts 搬出所有 Blockly.Blocks[...] = {...} 定義
-
-2.3 AppShell
-    → 宿主專屬的 layout 管理
-    → 瀏覽器版 = DOM layout
-    → VSCode 版 = WebviewPanel 管理
-
-驗證：app.ts < 500 行，每個模組可獨立測試
-```
-
-### Phase 3：concept 與 blockDef 分離
-
-**目標**：語義宣告和積木定義物理分離，為多視圖做準備。
+**動機**：
 
 ```
-3.1 拆分 BlockSpec JSON
-    → semantics/concepts.json：concept + annotations
-    → projections/blocks/block-specs.json：blockDef + renderMapping
-    → 兩者透過 conceptId 關聯
+現狀問題：
+  SourceMapping { blockId, startLine, endLine }
+                  ^^^^^^
+                  這是 Blockly 投影層的 ID，不是語義層的身份
 
-3.2 語言套件 manifest
-    → languages/cpp/manifest.json
-    → 宣告提供的概念、風格、依賴
+後果：
+  1. code→blocks 方向必須等 Blockly 渲染完才能建立 mapping（時序耦合）
+  2. lifter 產出的語義樹沒有 blockId → mapping 為空 → 需要額外的 rebuild 步驟
+  3. 未來新增投影（flowchart、dataflow）需要各自建立與 blockId 的對應（N×N 耦合）
+  4. SemanticDiff（§2.2）需要穩定的節點身份來偵測 add/remove/move/modify
 
-驗證：新增唯讀視圖不需要改語言套件的任何檔案
+現有基礎：
+  SemanticNode.id 欄位 — 已存在（types.ts），createNode() 已自動分配
+  → 不需要改型別，只需要讓 mapping 系統使用 node.id 而非 metadata.blockId
 ```
 
-### Phase 4：VSCode Extension 原型
-
-**目標**：在 VSCode 中跑起最小可用版本。
+**目標架構**：
 
 ```
-4.1 Extension 骨架
-    → Extension Main 載入 SemanticCore
-    → SemanticBus 的 postMessage 實作
+                    語義層（node.id 是唯一身份）
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+    CodeMapping     BlockMapping    未來投影 Mapping
+  { nodeId,       { nodeId,       { nodeId,
+    startLine,      blockId }       svgElementId }
+    endLine }
 
-4.2 Blocks WebView
-    → Blockly 在 WebviewPanel 中運行
-    → 透過 postMessage 與 Core 通訊
-
-4.3 Code 視圖
-    → 用 VSCode 原生 TextEditor
-    → 透過 TextDocument API 與 Core 同步
-
-驗證：在 VSCode 中能做到 code → blocks → code roundtrip
+跨投影查詢（經由 nodeId join）：
+  點擊 block → blockId → BlockMapping → nodeId → CodeMapping → 高亮行
+  點擊 code  → line    → CodeMapping  → nodeId → BlockMapping → 選取積木
 ```
 
-### Phase 5+：擴充（按需求排序）
+```
+5b.1 SourceMapping 遷移：blockId → nodeId
+    → SourceMapping { nodeId, startLine, endLine }（取代 blockId）
+    → code-generator.ts generateNode() 改用 node.id 而非 metadata.blockId
+    → 所有 mapping 消費者（getMappingForBlock, getMappingForLine）更新
+
+5b.2 BlockMapping 對應表
+    → 新增 BlockMapping { nodeId, blockId } 對應表
+    → Blockly extractSemanticTree() 已產出帶 node.id 的語義節點
+    → block-renderer.ts renderToBlocklyState() 記錄 nodeId → blockId 映射
+    → SyncController 維護 blockMappings: BlockMapping[]
+
+5b.3 跨投影查詢重構
+    → getMappingForBlock(blockId): 查 BlockMapping → nodeId → 查 CodeMapping
+    → getMappingForLine(line): 查 CodeMapping → nodeId → 查 BlockMapping
+    → code→blocks 不再需要等 Blockly 渲染後才能建立 CodeMapping
+    → handleEditCode 可直接從 generateCodeWithMapping 取得正確的 CodeMapping
+
+5b.4 nodeId 穩定性保證
+    → createNode() 自動分配（已實作）
+    → Lifter lift() 產出的節點帶 id（已實作）
+    → Blockly extractSemanticTree() 保留 node.id（需驗證）
+    → round-trip（blocks→code→blocks）中同一邏輯節點的 id 應保持穩定
+    → 為 SemanticDiff（Phase 8.2）的 id-based 節點匹配鋪路
+
+驗證：
+  → 所有現有測試通過
+  → SourceMapping 不含 blockId（純語義層）
+  → code→blocks mapping 不依賴 Blockly 渲染時序
+  → 點擊積木正確高亮程式碼行（L0 / L1 / L2）
+  → 點擊程式碼行正確選取積木
+  → 新增投影只需建立自己的 { nodeId, X } 映射，不需要知道其他投影的存在
+```
+
+### Phase 6：Python 語言套件
+
+**目標**：用第二個語言驗證架構的語言無關性。
+
+**前置條件**：Phase 5（DependencyResolver 框架）
 
 ```
-5.1 DataFlow 視圖（消費 control_flow annotations）
-5.2 SemanticDiff 增量更新
-5.3 Arduino 語言套件 + 硬體描述層
-5.4 接線視圖 + 模擬視圖
-5.5 Python 語言套件完整實作
-5.6 跨語言映射視圖
+6.1 Python 語言骨架
+    → languages/python/manifest.json
+    → languages/python/core/（if, for, def, class, print, input）
+    → languages/python/stdlib/（os, collections, json）
+    → tree-sitter-python 解析器整合
+
+6.2 Python DependencyResolver
+    → concept → import 語句映射
+    → stdlib: import os / from collections import defaultdict
+    → external: import numpy as np（含 packageSpec）
+
+6.3 Python ProgramScaffold
+    → imports + if __name__ == "__main__" 入口
+    → 無 using namespace 等效物
+    → L0: 隱藏 import，L2: 手動管理
+
+6.4 Python 積木投射
+    → core blocks（if, for, def, variable, print, input）
+    → generator + lifter
+    → 最少達到 C++ L0 的等效功能
+
+驗證：
+  → Python code → blocks → code roundtrip
+  → DependencyResolver 自動產出 import 語句
+  → C++ 所有測試不受影響
+  → 語言切換後 toolbox 自動更新
+```
+
+### Phase 7：外部套件生態
+
+**目標**：支援第三方函式庫的語義套件（如 Arduino、NumPy）。
+
+**前置條件**：Phase 6（多語言驗證）
+
+```
+7.1 外部套件載入機制
+    → packages/{name}/manifest.json 宣告 dependencies + provides
+    → LanguageManager 解析依賴鏈
+    → 概念生命週期：raw_code → func_call 降級 → 安裝後完全支援
+
+7.2 套件安裝狀態 UI
+    → DependencyEdge.sourceType === 'external' 時
+    → Ghost line 額外顯示安裝狀態（✓ 已安裝 / ✗ 需安裝）
+    → 「一鍵安裝」按鈕（呼叫 pip/npm/vcpkg）
+
+7.3 Arduino 語言套件（第一個外部套件實例）
+    → 基於 C++ 語言套件擴充
+    → 硬體描述層（§5.2）
+    → Servo / NeoPixel 積木
+
+驗證：
+  → 安裝套件後新概念自動出現在 toolbox
+  → 移除套件後使用其概念的積木降級為 raw_code
+  → 套件依賴鏈正確解析
+```
+
+### Phase 8+：進階擴充
+
+```
+8.1 DataFlow 視圖（消費 control_flow annotations）
+8.2 SemanticDiff 增量更新（效能優化，前置：Phase 5b nodeId 穩定性）
+8.3 接線視圖 + 模擬視圖（硬體教育）
+8.4 跨語言映射視圖（concept.abstractConcept 驅動）
+8.5 語義套件市場（§4.2 效能市場的工程實作）
 ```
 
 ---
@@ -665,114 +888,116 @@ arduino-neopixel（depends: arduino-core）
 > 開始新 Phase 前，先在此 checklist 標記前一個 Phase 的完成狀態。
 > 每個子項完成時打勾，並附上完成日期或 commit hash。
 
-### Phase 0：打地基（解耦基礎設施）
+### Phase 0-4：已完成 ✅
 
-前置條件：無
+- [x] **Phase 0：打地基** *(2026-03-09, 014-decoupling-infra)* — ViewHost 介面 + SemanticBus + Annotations 機制
+- [x] **Phase 1：SyncController 解耦** *(015-sync-decouple)* — 面板透過 SemanticBus 通訊，面板間零 import
+- [x] **Phase 2：app.ts 拆分** *(016-app-split)* — ToolboxBuilder + BlockRegistrar + AppShell（app.ts 488 行）
+- [x] **Phase 3：concept/blockDef 分離** *(019-cpp-std-modules)* — concepts.json + blocks.json 分離，manifest.json，std 模組按 header 重組
+- [x] **Phase 4：VSCode Extension 原型** *(2026-03-10, 018-vscode-extension-prototype)* — Blockly WebView + 原生 TextEditor + postMessage
 
-- [x] **0.1 ViewHost 介面** *(2026-03-09, 014-decoupling-infra)*
-  - [x] 定義 `ViewHost` + `ViewCapabilities` 介面（`src/core/view-host.ts`）
-  - [x] 定義 `ViewConfig` + 生命週期方法簽名
-  - [x] 介面零 DOM 依賴（純 TypeScript 型別）
-  - [x] 單元測試：型別檢查通過，mock 實作可編譯
-- [x] **0.2 SemanticBus** *(2026-03-09, 014-decoupling-infra)*
-  - [x] 定義事件型別（`SemanticEvents` + `ViewRequests`）
-  - [x] EventEmitter 實作（`src/core/semantic-bus.ts`）
-  - [x] 單元測試：publish/subscribe、事件過濾、多訂閱者
-- [x] **0.3 Annotations 機制** *(2026-03-09, 014-decoupling-infra)*
-  - [x] 擴充 concepts JSON schema，加入 `annotations` 欄位
-  - [x] `ConceptRegistry` 新增 `getAnnotation(conceptId, key)` 查詢 API
-  - [x] 為 `count_loop`、`if`、`func_def` 加上示範 annotations
-  - [x] 單元測試：annotations 可被查詢、未標註的概念回傳 `undefined`
-- [x] **Phase 0 驗證** *(2026-03-09)*
-  - [x] 所有現有 `npm test` 通過（1461 tests，零 regression）
-  - [x] `src/core/` 無新增 DOM import
+### Phase 5：DependencyResolver 抽象 + Program Scaffold
 
-### Phase 1：SyncController 解耦
+前置條件：Phase 4 完成
 
-前置條件：Phase 0 完成
+- [x] **5.1 DependencyResolver 核心介面**
+  - [x] 定義 `DependencyResolver` + `DependencyEdge` 介面（`src/core/dependency-resolver.ts`）
+  - [x] 介面零語言依賴（不含 `#include`、`import` 等語言專用概念）
+  - [x] 單元測試：mock resolver 可編譯、型別正確
+- [x] **5.2 C++ DependencyResolver 實作**
+  - [x] `ModuleRegistry` implements `DependencyResolver`
+  - [x] 移除 `code-generator.ts` 的全域 `setModuleRegistry()`
+  - [x] auto-include 邏輯從 program generator 遷移到 ProgramScaffold
+  - [x] 所有現有 1555 tests 通過（行為不變）
+- [x] **5.3 ProgramScaffold 層**
+  - [x] 定義 `ProgramScaffold` + `ScaffoldConfig` + `ScaffoldResult` 介面（`src/core/program-scaffold.ts`）
+  - [x] C++ 實作：imports（auto-include）+ preamble（using namespace）+ entryPoint（main）+ epilogue（return 0）
+  - [x] 接收 `cognitiveLevel` → 決定 `hidden` / `ghost` / `editable`
+  - [x] 從 program generator 抽離所有 boilerplate 邏輯
+  - [x] 整合測試：scaffold 結果與現有 code generation 一致
+- [x] **5.4 Ghost Line 視覺呈現**
+  - [x] Monaco decorations API 實作淡灰色 ghost line
+  - [x] Hover provider 顯示依賴原因
+  - [x] 「固定」操作（ghost → editable）
+  - [x] L0 / L1 / L2 三種模式的端到端測試
+- [x] **Phase 5 驗證**
+  - [x] C++ auto-include 行為不變（regression）
+  - [x] `DependencyResolver` 介面不 import `languages/cpp/`
+  - [x] Ghost line 在瀏覽器和 VSCode 都正常顯示
 
-- [x] **1.1 SyncController → SemanticBus**
-  - [x] 移除 `sync-controller.ts` 對 `BlocklyPanel` / `MonacoPanel` 的 type import
-  - [x] SyncController 改為只依賴 SemanticBus（發送 `semantic:update`，接收 `edit:*`）
-  - [x] 整合測試：SyncController + mock bus，無真實面板
-- [x] **1.2 面板實作 ViewHost**
-  - [x] `BlocklyPanel` implements `ViewHost`
-  - [x] `MonacoPanel` implements `ViewHost`
-  - [x] `ConsolePanel` implements `ViewHost`
-  - [x] `VariablePanel` implements `ViewHost`
-  - [x] 面板之間零 import（grep 驗證）
-- [x] **Phase 1 驗證**
-  - [x] 面板獨立性測試：拔掉任一面板 import，其他面板編譯通過
-  - [x] 瀏覽器端功能不退化（手動 smoke test）
+### Phase 5b：Semantic Node Identity
 
-### Phase 2：app.ts 拆分
+前置條件：Phase 5 完成（或可與 Phase 5 平行，因為不依賴 DependencyResolver）
 
-前置條件：Phase 1 完成
+- [x] **5b.1 SourceMapping 遷移：blockId → nodeId**（2026-03-10 完成）
+  - [x] `SourceMapping` 介面改為 `CodeMapping { nodeId, startLine, endLine }`（已移除 SourceMapping，無向後相容）
+  - [x] `code-generator.ts` `generateNode()` 改用 `node.id` 而非 `metadata.blockId`
+  - [x] 所有 mapping 消費者更新（`getMappingForBlock`、`getMappingForLine`）
+- [x] **5b.2 BlockMapping 對應表**（2026-03-10 完成）
+  - [x] 新增 `BlockMapping { nodeId, blockId }` 介面
+  - [x] `block-renderer.ts` 記錄 `nodeId → blockId` 映射
+  - [x] `SyncController` 維護 `blockMappings`（blocks→code 用 `extractBlockMappingsFromTree`；code→blocks 用 `renderToBlocklyState().blockMappings`）
+  - [x] `extractSemanticTree()` 保留 `node.id`（驗證）
+- [x] **5b.3 跨投影查詢重構**（2026-03-10 完成）
+  - [x] `getMappingForBlock(blockId)` → 查 BlockMapping → nodeId → 查 CodeMapping
+  - [x] `getMappingForLine(line)` → 查 CodeMapping → nodeId → 查 BlockMapping
+  - [x] `handleEditCode` 直接從 `generateCodeWithMapping` 取得 CodeMapping（不需等 Blockly）
+  - [x] 移除 `rebuildSourceMappings` 的 workaround（不再需要）
+- [ ] **5b.4 nodeId 穩定性與 SemanticDiff 基礎**（部分完成）
+  - [x] round-trip 中同一節點 id 保持穩定（2026-03-10 驗證）
+  - [ ] Diff 算法原型：依 id 匹配節點，偵測 add/remove/modify
+  - [ ] 為 Phase 8.2 SemanticDiff 增量更新鋪路
+- [x] **Phase 5b 驗證**（2026-03-10 完成，1608 測試全通過）
+  - [x] 所有現有測試通過
+  - [x] `CodeMapping` 不含 `blockId`（純語義層）
+  - [x] code→blocks mapping 不依賴 Blockly 渲染時序
+  - [x] 跨投影高亮正確（L0 / L1 / L2）
 
-- [x] **2.1 ToolboxBuilder**
-  - [x] 抽出純資料模組（`src/ui/toolbox-builder.ts`）
-  - [x] 輸入：BlockSpecRegistry + CognitiveLevel → 輸出：toolbox JSON 定義
-  - [x] 零 Blockly DOM 依賴
-  - [x] 單元測試：給定 specs + level，產出正確的 toolbox 結構
-- [x] **2.2 BlockRegistrar**
-  - [x] 抽出 Blockly 專屬模組（`src/ui/block-registrar.ts`）
-  - [x] 搬出所有 `Blockly.Blocks[...] = {...}` 定義
-  - [x] 搬出所有 `saveExtraState` / `loadExtraState` 邏輯
-  - [x] 整合測試：積木註冊 + 序列化 roundtrip
-- [x] **2.3 AppShell**
-  - [x] 抽出宿主 layout（`src/ui/app-shell.ts`）
-  - [x] 額外抽出執行控制器（`src/ui/execution-controller.ts`）
-  - [x] app.ts 只剩初始化膠水碼
-  - [x] app.ts < 500 行（488 行）
-- [x] **Phase 2 驗證**
-  - [x] 每個新模組可獨立測試
-  - [x] 瀏覽器端功能不退化（需手動 smoke test）
+### Phase 6：Python 語言套件
 
-### Phase 3：concept 與 blockDef 分離
+前置條件：Phase 5 完成
 
-前置條件：Phase 2 完成
+- [ ] **6.1 Python 語言骨架**
+  - [ ] `languages/python/manifest.json`
+  - [ ] `languages/python/core/`（if, for, def, class, print, input 概念 + 積木 + generator + lifter）
+  - [ ] tree-sitter-python 解析器整合
+- [ ] **6.2 Python DependencyResolver**
+  - [ ] concept→import 映射（stdlib: `import os`；external: `import numpy as np`）
+  - [ ] `PythonDependencyResolver` implements `DependencyResolver`
+- [ ] **6.3 Python ProgramScaffold**
+  - [ ] imports + `if __name__ == "__main__"` 入口
+  - [ ] L0/L1/L2 漸進揭露
+- [ ] **6.4 Python 積木投射**
+  - [ ] 核心積木達到 C++ L0 等效功能
+  - [ ] code → blocks → code roundtrip
+- [ ] **Phase 6 驗證**
+  - [ ] Python roundtrip 成功
+  - [ ] C++ 全部測試不受影響
+  - [ ] 語言切換後 toolbox 自動更新
 
-- [x] **3.1 拆分 BlockSpec JSON**
-  - [x] `semantics/concepts.json`：concept 定義 + annotations
-  - [x] `projections/blocks/block-specs.json`：blockDef + renderMapping
-  - [x] 兩者透過 `conceptId` 關聯
-  - [x] 載入邏輯更新：ConceptRegistry 讀 concepts.json，BlockSpecRegistry 讀 block-specs.json
-- [x] **3.2 語言套件 manifest**
-  - [x] `languages/cpp/manifest.json`：id、name、version、provides、parser
-  - [x] LanguageModule 從 manifest 驅動載入
-- [x] **Phase 3 驗證**
-  - [x] 新增一個 dummy 唯讀視圖，不修改語言套件的任何檔案
-  - [x] 全部測試通過
+### Phase 7：外部套件生態
 
-### Phase 4：VSCode Extension 原型
+前置條件：Phase 6 完成
 
-前置條件：Phase 3 完成
+- [ ] **7.1 外部套件載入**
+  - [ ] `packages/{name}/manifest.json` 宣告格式
+  - [ ] LanguageManager 依賴鏈解析
+  - [ ] 概念生命週期降級（raw_code → func_call → 完全支援）
+- [ ] **7.2 套件安裝狀態 UI**
+  - [ ] Ghost line 安裝狀態指示（✓ / ✗）
+  - [ ] 一鍵安裝按鈕
+- [ ] **7.3 Arduino 語言套件**
+  - [ ] 基於 C++ 擴充
+  - [ ] 硬體描述層
+  - [ ] Servo / NeoPixel 積木
 
-- [x] **4.1 Extension 骨架** *(2026-03-10, 018-vscode-extension-prototype)*
-  - [x] VSCode Extension 專案結構（`vscode-ext/`）
-  - [x] Extension Main 載入 SemanticCore
-  - [x] SemanticBus 的 `postMessage` 實作
-- [x] **4.2 Blocks WebView** *(2026-03-10, 018-vscode-extension-prototype)*
-  - [x] Blockly 在 WebviewPanel 中運行
-  - [x] BlockRegistrar 在 WebView context 中初始化
-  - [x] 透過 postMessage 與 Core 通訊
-- [x] **4.3 Code 視圖** *(2026-03-10, 018-vscode-extension-prototype)*
-  - [x] VSCode 原生 TextEditor
-  - [x] TextDocument API ↔ SemanticBus 同步
-- [x] **Phase 4 驗證** *(2026-03-10)*
-  - [x] VSCode 中 code → blocks → code roundtrip 成功
-  - [x] 瀏覽器版同時維持正常（1507 tests 全通過）
+### Phase 8+：進階擴充
 
-### Phase 5+：擴充
-
-前置條件：Phase 4 完成（各子項可獨立進行）
-
-- [ ] 5.1 DataFlow 視圖（消費 `control_flow` annotations）
-- [ ] 5.2 SemanticDiff 增量更新
-- [ ] 5.3 Arduino 語言套件 + 硬體描述層
-- [ ] 5.4 接線視圖 + 模擬視圖
-- [ ] 5.5 Python 語言套件完整實作
-- [ ] 5.6 跨語言映射視圖
+- [ ] 8.1 DataFlow 視圖
+- [ ] 8.2 SemanticDiff 增量更新
+- [ ] 8.3 接線視圖 + 模擬視圖
+- [ ] 8.4 跨語言映射視圖
+- [ ] 8.5 語義套件市場
 
 ---
 

@@ -62,7 +62,7 @@ describe('Panel independence', () => {
   it('concepts.json should not contain blockDef fields', () => {
     const conceptFiles = [
       path.resolve(__dirname, '../../../src/blocks/semantics/universal-concepts.json'),
-      path.resolve(__dirname, '../../../src/languages/cpp/semantics/concepts.json'),
+      path.resolve(__dirname, '../../../src/languages/cpp/core/concepts.json'),
     ]
     for (const filePath of conceptFiles) {
       const content = fs.readFileSync(filePath, 'utf-8')

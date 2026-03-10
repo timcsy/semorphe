@@ -1,0 +1,120 @@
+[
+  {
+    "id": "c_printf",
+    "conceptId": "cpp_printf",
+    "language": "cpp",
+    "category": "io",
+    "level": 1,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_printf",
+      "message0": "%{BKY_C_PRINTF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "FORMAT",
+          "text": "%d\\n"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ", x"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_C_PRINTF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "printf(\"${FORMAT}\"${ARGS});",
+      "imports": [
+        "stdio.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "printf"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderPrintf"
+    }
+  },
+  {
+    "id": "c_scanf",
+    "conceptId": "cpp_scanf",
+    "language": "cpp",
+    "category": "io",
+    "level": 1,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_scanf",
+      "message0": "%{BKY_C_SCANF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "FORMAT",
+          "text": "%d"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ", &x"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_C_SCANF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "scanf(\"${FORMAT}\"${ARGS});",
+      "imports": [
+        "stdio.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "scanf"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderScanf",
+      "expressionCounterpart": "c_scanf_expr"
+    }
+  },
+  {
+    "id": "c_scanf_expr",
+    "conceptId": "cpp_scanf_expr",
+    "language": "cpp",
+    "category": "io",
+    "level": 1,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_scanf_expr"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderScanf"
+    }
+  }
+]

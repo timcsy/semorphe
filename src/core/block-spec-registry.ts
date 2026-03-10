@@ -100,6 +100,12 @@ export class BlockSpecRegistry {
     return [...this.specs.values()]
   }
 
+  /** Get the cognitive level for a block type. Unknown blocks default to L2. */
+  getLevel(blockType: string): CognitiveLevel {
+    const spec = this.byBlockType.get(blockType)
+    return spec?.level ?? 2
+  }
+
   /** 取得所有不重複的類別名稱 */
   getCategories(): string[] {
     const cats = new Set<string>()

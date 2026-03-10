@@ -1,0 +1,32 @@
+[
+  {
+    "conceptId": "cpp_sort",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "sort",
+    "properties": [],
+    "children": {
+      "begin": "expression",
+      "end": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp:sort",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "container_sort",
+    "properties": [],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp:find",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "container_find",
+    "properties": [],
+    "children": {},
+    "role": "expression"
+  }
+]

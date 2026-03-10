@@ -1,0 +1,15 @@
+[
+  {
+    "conceptId": "cpp_map_declare",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "map_declare",
+    "properties": [
+      "key_type",
+      "value_type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  }
+]

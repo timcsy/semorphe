@@ -15,17 +15,15 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../../src/core/registry'
-import { registerCppTransforms } from '../../src/languages/cpp/lifters/transforms'
-import { registerCppLiftStrategies } from '../../src/languages/cpp/lifters/strategies'
+import { registerCppTransforms } from '../../src/languages/cpp/core/lifters/transforms'
+import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/strategies'
 import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
-import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 
 const style: StylePreset = {
@@ -55,12 +53,11 @@ beforeAll(async () => {
 
   // Wire up JSON-driven PatternLifter with block specs (overrides the one from createTestLifter)
   const specRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
     ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...basicBlocks as unknown as BlockProjectionJSON[],
-    ...advancedBlocks as unknown as BlockProjectionJSON[],
-    ...specialBlocks as unknown as BlockProjectionJSON[],
+    ...coreBlocks,
+    ...allStdModules.flatMap(m => m.blocks),
   ]
   specRegistry.loadFromSplit(allConcepts, allProjections)
   const allSpecs = specRegistry.getAll()

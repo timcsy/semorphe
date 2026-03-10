@@ -8,6 +8,7 @@
 import type { SemanticNode } from '../../core/types'
 import type { CodingStyle } from '../style'
 import { createNode } from '../../core/semantic-tree'
+import type { ModuleRegistry } from './std/module-registry'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -205,18 +206,31 @@ export function analyzeIoConformance(code: string, presetStyle: IoPreferenceKey)
   return { iostreamCount, cstdioCount, presetStyle, verdict }
 }
 
+// ─── Module-based I/O preference mapping ───
+
+/** Map ioPreference to the preferred std module header */
+const IO_PREF_TO_HEADER: Record<string, string> = {
+  iostream: '<iostream>',
+  cstdio: '<cstdio>',
+}
+
+/** The two I/O module headers that are "parallel" alternatives */
+const IO_MODULE_HEADERS = new Set(['<iostream>', '<cstdio>'])
+
 // ─── Public API ───
 
 /**
  * Scan a semantic tree for style exceptions.
- * Returns a list of exceptions found, each with a convert function.
+ * When a ModuleRegistry is provided, uses module-based borrowing detection:
+ * if a concept belongs to a non-preferred I/O module, it's flagged as a borrowing.
  */
 export function detectStyleExceptions(
   root: SemanticNode,
   style: CodingStyle,
+  registry?: ModuleRegistry,
 ): StyleException[] {
   const exceptions: StyleException[] = []
-  walkTree(root, style, exceptions)
+  walkTree(root, style, exceptions, registry)
   return exceptions
 }
 
@@ -243,7 +257,11 @@ function walkTree(
   node: SemanticNode,
   style: CodingStyle,
   exceptions: StyleException[],
+  registry?: ModuleRegistry,
 ): void {
+  let matched = false
+
+  // First try hardcoded rules (header rules, known conversions)
   for (const rule of RULES) {
     if (rule.match(node, style)) {
       exceptions.push({
@@ -252,14 +270,34 @@ function walkTree(
         suggestion: rule.suggestion(node, style),
         convert: () => rule.convert(node, style),
       })
+      matched = true
       break // One exception per node
+    }
+  }
+
+  // If no hardcoded rule matched and we have a registry, try module-based detection
+  if (!matched && registry) {
+    const header = registry.getHeaderForConcept(node.concept)
+    if (header && IO_MODULE_HEADERS.has(header)) {
+      const preferredHeader = IO_PREF_TO_HEADER[style.ioPreference]
+      if (preferredHeader && header !== preferredHeader) {
+        // Concept belongs to non-preferred I/O module — borrowing detected
+        // Find matching hardcoded rule for conversion (should already exist above,
+        // but this catches any new concepts added to modules without explicit rules)
+        exceptions.push({
+          node,
+          label: `${node.concept} (${header})`,
+          suggestion: `use ${preferredHeader} equivalent`,
+          convert: () => [node], // No auto-conversion for unknown concepts
+        })
+      }
     }
   }
 
   // Recurse into children
   for (const children of Object.values(node.children)) {
     for (const child of children) {
-      walkTree(child, style, exceptions)
+      walkTree(child, style, exceptions, registry)
     }
   }
 }

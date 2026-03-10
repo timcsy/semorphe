@@ -28,14 +28,11 @@ import zhTWTypes from '../../../src/i18n/zh-TW/types.json'
 
 // Concept JSONs
 import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../../src/languages/cpp/semantics/concepts.json'
+import { coreConcepts } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
 // Projection JSONs
 import universalBlockProjections from '../../../src/blocks/projections/blocks/universal-blocks.json'
-import cppBasicProjections from '../../../src/languages/cpp/projections/blocks/basic.json'
-import cppSpecialProjections from '../../../src/languages/cpp/projections/blocks/special.json'
-import cppAdvancedProjections from '../../../src/languages/cpp/projections/blocks/advanced.json'
-import cppStdlibContainers from '../../../src/languages/cpp/projections/blocks/stdlib-containers.json'
-import cppStdlibAlgorithms from '../../../src/languages/cpp/projections/blocks/stdlib-algorithms.json'
+import { coreBlocks } from '../../../src/languages/cpp/core'
 
 // Style presets
 import apcsPreset from '../../../src/languages/cpp/styles/apcs.json'
@@ -99,15 +96,13 @@ function init(): void {
     blockSpecRegistry = new BlockSpecRegistry()
     const allConcepts = [
       ...universalConcepts as unknown as ConceptDefJSON[],
-      ...cppConcepts as unknown as ConceptDefJSON[],
+      ...coreConcepts,
+      ...allStdModules.flatMap(m => m.concepts),
     ]
     const allProjections = [
       ...universalBlockProjections as unknown as BlockProjectionJSON[],
-      ...cppBasicProjections as unknown as BlockProjectionJSON[],
-      ...cppSpecialProjections as unknown as BlockProjectionJSON[],
-      ...cppAdvancedProjections as unknown as BlockProjectionJSON[],
-      ...cppStdlibContainers as unknown as BlockProjectionJSON[],
-      ...cppStdlibAlgorithms as unknown as BlockProjectionJSON[],
+      ...coreBlocks,
+      ...allStdModules.flatMap(m => m.blocks),
     ]
     blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
 

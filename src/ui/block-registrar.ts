@@ -632,7 +632,10 @@ export class BlockRegistrar {
             if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
           }
           this.argCount_ = args.length
-          this.argSlots_ = [...args]
+          // Normalize: ensure selectedVar is set for select mode (buildArgSlot reads it)
+          this.argSlots_ = args.map(a =>
+            a.mode === 'select' ? { ...a, selectedVar: a.text ?? a.selectedVar } : { ...a }
+          )
           for (let i = 0; i < args.length; i++) {
             const a = args[i]
             buildArgSlot(this, i, a.mode, {
@@ -719,7 +722,10 @@ export class BlockRegistrar {
             if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
           }
           this.argCount_ = args.length
-          this.argSlots_ = [...args]
+          // Normalize: ensure selectedVar is set for select mode (buildArgSlot reads it)
+          this.argSlots_ = args.map((a: ArgSlotState) =>
+            a.mode === 'select' ? { ...a, selectedVar: a.text ?? a.selectedVar } : { ...a }
+          )
           for (let i = 0; i < args.length; i++) {
             const a = args[i]
             buildArgSlot(this, i, a.mode, {
@@ -819,7 +825,10 @@ export class BlockRegistrar {
             if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
           }
           this.argCount_ = args.length
-          this.argSlots_ = [...args]
+          // Normalize: ensure selectedVar is set for select mode (buildArgSlot reads it)
+          this.argSlots_ = args.map((a: ArgSlotState) =>
+            a.mode === 'select' ? { ...a, selectedVar: a.text ?? a.selectedVar } : { ...a }
+          )
           for (let i = 0; i < args.length; i++) {
             const a = args[i]
             buildArgSlot(this, i, a.mode, {
@@ -1916,7 +1925,10 @@ export class BlockRegistrar {
             if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
           }
           this.argCount_ = args.length
-          this.argSlots_ = [...args]
+          // Normalize: ensure selectedVar is set for select mode (buildArgSlot reads it)
+          this.argSlots_ = args.map((a: ArgSlotState) =>
+            a.mode === 'select' ? { ...a, selectedVar: a.text ?? a.selectedVar } : { ...a }
+          )
           for (let i = 0; i < args.length; i++) {
             const a = args[i]
             buildArgSlot(this, i, a.mode, {

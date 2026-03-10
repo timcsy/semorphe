@@ -1,4 +1,5 @@
 import type { SemanticNode } from '../types'
+import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
 import type { RenderContext } from '../registry/render-strategy-registry'
 
@@ -33,31 +34,40 @@ function nextBlockId(): string {
   return `block_${++blockIdCounter}`
 }
 
-export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState {
+/** Module-level collection for block mappings during a render pass */
+let currentBlockMappings: BlockMapping[] = []
+
+export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & { blockMappings: BlockMapping[] } {
   blockIdCounter = 0
+  currentBlockMappings = []
+
   if (tree.concept !== 'program') {
-    return { blocks: { languageVersion: 0, blocks: [] } }
+    return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
   const body = tree.children.body ?? []
   if (body.length === 0) {
-    return { blocks: { languageVersion: 0, blocks: [] } }
+    return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
   // Chain top-level statements into a single block chain
   const firstBlock = renderStatementChain(body)
   if (!firstBlock) {
-    return { blocks: { languageVersion: 0, blocks: [] } }
+    return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
   firstBlock.x = 30
   firstBlock.y = 30
+
+  const blockMappings = currentBlockMappings
+  currentBlockMappings = []
 
   return {
     blocks: {
       languageVersion: 0,
       blocks: [firstBlock],
     },
+    blockMappings,
   }
 }
 
@@ -87,46 +97,52 @@ const renderCtx: RenderContext = {
 }
 
 function renderBlock(node: SemanticNode): BlockState | null {
+  let block: BlockState | null = null
+
   // Single pipeline: delegate all rendering to PatternRenderer
   if (globalPatternRenderer) {
     const patternResult = globalPatternRenderer.render(node, renderCtx)
     if (patternResult) {
       propagateMetadata(patternResult, node)
-      return patternResult
+      block = patternResult
     }
   }
 
-  // Special cases not handled by PatternRenderer (no BlockSpec)
-  if (node.concept === 'raw_code') {
-    const block: BlockState = {
-      type: 'c_raw_code',
-      id: nextBlockId(),
-      fields: { CODE: node.metadata?.rawCode ?? node.properties.code ?? '' },
-      inputs: {},
+  if (!block) {
+    // Special cases not handled by PatternRenderer (no BlockSpec)
+    if (node.concept === 'raw_code') {
+      block = {
+        type: 'c_raw_code',
+        id: nextBlockId(),
+        fields: { CODE: node.metadata?.rawCode ?? node.properties.code ?? '' },
+        inputs: {},
+      }
+      propagateMetadata(block, node)
+      // 預設降級原因為 unsupported（若無明確標記）
+      if (!block.extraState?.degradationCause) {
+        block.extraState = { ...block.extraState, degradationCause: node.metadata?.degradationCause ?? 'unsupported' }
+      }
+    } else if (node.concept === 'unresolved') {
+      block = {
+        type: 'c_raw_code',
+        id: nextBlockId(),
+        fields: { CODE: node.metadata?.rawCode ?? '' },
+        inputs: {},
+        extraState: { unresolved: true, nodeType: node.properties.node_type },
+      }
+      propagateMetadata(block, node)
+      if (!block.extraState?.degradationCause) {
+        block.extraState = { ...block.extraState, degradationCause: node.metadata?.degradationCause ?? 'unsupported' }
+      }
     }
-    propagateMetadata(block, node)
-    // 預設降級原因為 unsupported（若無明確標記）
-    if (!block.extraState?.degradationCause) {
-      block.extraState = { ...block.extraState, degradationCause: node.metadata?.degradationCause ?? 'unsupported' }
-    }
-    return block
-  }
-  if (node.concept === 'unresolved') {
-    const block: BlockState = {
-      type: 'c_raw_code',
-      id: nextBlockId(),
-      fields: { CODE: node.metadata?.rawCode ?? '' },
-      inputs: {},
-      extraState: { unresolved: true, nodeType: node.properties.node_type },
-    }
-    propagateMetadata(block, node)
-    if (!block.extraState?.degradationCause) {
-      block.extraState = { ...block.extraState, degradationCause: node.metadata?.degradationCause ?? 'unsupported' }
-    }
-    return block
   }
 
-  return null
+  // Record nodeId→blockId mapping
+  if (block && node.id) {
+    currentBlockMappings.push({ nodeId: node.id, blockId: block.id })
+  }
+
+  return block
 }
 
 /** 將 SemanticNode 的 metadata 和 annotations 傳遞到 BlockState.extraState */
@@ -143,15 +159,6 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
   block.extraState = extra
 }
 
-/** Mapping from statement-only block types to their expression counterparts */
-const STATEMENT_TO_EXPRESSION: Record<string, string> = {
-  'c_increment': 'c_increment_expr',
-  'c_compound_assign': 'c_compound_assign_expr',
-  'c_scanf': 'c_scanf_expr',
-  'u_var_declare': 'c_var_declare_expr',
-  'u_input': 'u_input_expr',
-}
-
 function renderExpression(node: SemanticNode): BlockState | null {
   const block = renderBlock(node)
   if (!block) return null
@@ -161,7 +168,7 @@ function renderExpression(node: SemanticNode): BlockState | null {
   }
   // Check if a statement-only block has an expression counterpart
   if (globalPatternRenderer?.isStatementOnly(block.type)) {
-    const exprType = STATEMENT_TO_EXPRESSION[block.type]
+    const exprType = globalPatternRenderer.getExpressionCounterpart(block.type)
     if (exprType) {
       return { ...block, type: exprType }
     }

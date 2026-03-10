@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cpp_string_declare",
+    "conceptId": "cpp_string_declare",
+    "language": "cpp",
+    "category": "containers",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_declare",
+      "message0": "%{BKY_CPP_STRING_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::string ${NAME};",
+      "imports": [
+        "string"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "type",
+          "text": "string"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  }
+]

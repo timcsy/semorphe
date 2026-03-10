@@ -1,0 +1,14 @@
+[
+  {
+    "conceptId": "cpp_set_declare",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "set_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  }
+]

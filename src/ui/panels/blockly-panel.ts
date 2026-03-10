@@ -6,6 +6,10 @@ import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-color
 import type { BlockStylePreset } from '../../languages/style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
+import { BlockExtractorRegistry } from '../../core/registry/block-extractor-registry'
+import type { BlockExtractContext } from '../../core/registry/block-extractor-registry'
+import { createCppExtractorRegistry } from '../../languages/cpp/extractors/register'
+import type { BlockMapping } from '../../core/projection/code-generator'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -32,12 +36,16 @@ export class BlocklyPanel implements ViewHost {
   private currentRenderer: string = 'zelos'
   private bus: SemanticBus | null = null
   private busUpdateInProgress = false
+  private _blockMappings: BlockMapping[] = []
+  private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
+  private extractorRegistry: BlockExtractorRegistry
 
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
     this.bus = options.bus ?? null
+    this.extractorRegistry = createCppExtractorRegistry()
     this.media = options.media
   }
 
@@ -46,10 +54,12 @@ export class BlocklyPanel implements ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; blockState?: unknown }): void {
-    if (event.source === 'code' && event.blockState) {
+    if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
       this.busUpdateInProgress = true
       try {
         this.setState(event.blockState as object)
+      } catch {
+        // Block state may have invalid connections when code has syntax errors — safe to ignore
       } finally {
         this.busUpdateInProgress = false
       }
@@ -93,11 +103,6 @@ export class BlocklyPanel implements ViewHost {
       }
       if (!this.busUpdateInProgress) {
         this.onChangeCallback?.()
-        // Emit to bus if connected
-        if (this.bus) {
-          const tree = this.extractSemanticTree()
-          this.bus.emit('edit:blocks', { blocklyState: { tree } })
-        }
       }
     })
   }
@@ -110,9 +115,19 @@ export class BlocklyPanel implements ViewHost {
     return this.workspace
   }
 
-  /** Extract semantic tree from workspace blocks */
+  /**
+   * Set a blockId→nodeId reverse map so extraction reuses original nodeIds.
+   * This ensures the extracted tree's nodeIds match codeMappings/blockMappings
+   * from the renderer, eliminating the need for cross-ID bridging.
+   */
+  setNodeIdLookup(blockIdToNodeId: Map<string, string>): void {
+    this._blockIdToNodeId = blockIdToNodeId
+  }
+
+  /** Extract semantic tree from workspace blocks, plus blockMappings for nodeId↔blockId */
   extractSemanticTree(): SemanticNode {
     if (!this.workspace) return createNode('program', {}, { body: [] })
+    this._blockMappings = []
     const topBlocks = this.workspace.getTopBlocks(true)
     const body: SemanticNode[] = []
     for (const block of topBlocks) {
@@ -120,6 +135,11 @@ export class BlocklyPanel implements ViewHost {
       body.push(...nodes)
     }
     return createNode('program', {}, { body })
+  }
+
+  /** Get block mappings from the last extraction */
+  getBlockMappings(): BlockMapping[] {
+    return this._blockMappings
   }
 
   private extractBlockChain(block: Blockly.Block): SemanticNode[] {
@@ -136,172 +156,39 @@ export class BlocklyPanel implements ViewHost {
   private extractBlock(block: Blockly.Block): SemanticNode | null {
     const node = this.extractBlockInner(block)
     if (node) {
-      node.metadata = { ...node.metadata, blockId: block.id }
+      // Reuse original nodeId if available (preserves identity across roundtrip)
+      const originalNodeId = this._blockIdToNodeId?.get(block.id)
+      if (originalNodeId) {
+        node.id = originalNodeId
+      }
+      this._blockMappings.push({ nodeId: node.id, blockId: block.id })
     }
     return node
   }
 
   private extractBlockInner(block: Blockly.Block): SemanticNode | null {
     const type = block.type
-    switch (type) {
-      case 'u_var_declare': return this.extractVarDeclare(block)
-      case 'u_var_assign': return this.extractVarAssign(block)
-      case 'u_var_ref': return this.extractVarRef(block)
-      case 'u_number': return this.extractNumber(block)
-      case 'u_string': return this.extractString(block)
-      case 'u_arithmetic': return this.extractBinaryExpr(block, 'arithmetic', 'OP', 'A', 'B')
-      case 'u_compare': return this.extractBinaryExpr(block, 'compare', 'OP', 'A', 'B')
-      case 'u_logic': return this.extractBinaryExpr(block, 'logic', 'OP', 'A', 'B')
-      case 'u_logic_not': return this.extractUnaryExpr(block, 'logic_not', 'A', 'operand')
-      case 'u_negate': {
-          const negOp = block.getFieldValue('OP') ?? '-'
-          const negInner = block.getInputTargetBlock('VALUE')
-          const negChild = negInner ? this.extractBlock(negInner) : createNode('number_literal', { value: '0' })
-          return createNode('negate', { operator: negOp }, { value: negChild ? [negChild] : [] })
-        }
-      case 'u_if':
-      case 'u_if_else': return this.extractIf(block)
-      case 'u_while_loop': return this.extractWhileLoop(block)
-      case 'u_count_loop': return this.extractCountLoop(block)
-      case 'c_for_loop': return this.extractForLoop(block)
-      case 'u_break': return createNode('break', {})
-      case 'u_continue': return createNode('continue', {})
-      case 'u_func_def': return this.extractFuncDef(block)
-      case 'u_func_call': return this.extractFuncCall(block)
-      case 'u_func_call_expr': return this.extractFuncCallExpr(block)
-      case 'u_return': return this.extractReturn(block)
-      case 'u_print': return this.extractPrint(block)
-      case 'u_input': return this.extractInput(block)
-      case 'u_input_expr': return this.extractInput(block)
-      case 'c_printf': return this.extractPrintf(block)
-      case 'c_scanf': return this.extractScanf(block)
-      case 'u_endl': return createNode('endl', {})
-      case 'u_array_declare': return this.extractArrayDeclare(block)
-      case 'u_array_access': return this.extractArrayAccess(block)
-      case 'c_increment': return createNode('cpp_increment', {
-          name: block.getFieldValue('NAME') ?? 'i',
-          operator: block.getFieldValue('OP') ?? '++',
-          position: block.getFieldValue('POSITION') ?? 'postfix',
-        })
-      case 'c_compound_assign': {
-          const valueBlock = block.getInputTargetBlock('VALUE')
-          const valueNode = valueBlock ? this.extractBlock(valueBlock) : createNode('number_literal', { value: '1' })
-          return createNode('cpp_compound_assign', {
-            name: block.getFieldValue('NAME') ?? 'x',
-            operator: block.getFieldValue('OP') ?? '+=',
-          }, { value: valueNode ? [valueNode] : [] })
-        }
-      case 'u_array_assign': {
-          const arrName = block.getFieldValue('NAME') ?? 'arr'
-          const idxBlock = block.getInputTargetBlock('INDEX')
-          const valBlock = block.getInputTargetBlock('VALUE')
-          const idxNode = idxBlock ? this.extractBlock(idxBlock) : createNode('number_literal', { value: '0' })
-          const valNode = valBlock ? this.extractBlock(valBlock) : createNode('number_literal', { value: '0' })
-          return createNode('array_assign', { name: arrName }, {
-            index: idxNode ? [idxNode] : [],
-            value: valNode ? [valNode] : [],
-          })
-        }
-      // Expression versions of statement-only blocks
-      case 'c_increment_expr': return createNode('cpp_increment_expr', {
-          name: block.getFieldValue('NAME') ?? 'i',
-          operator: block.getFieldValue('OP') ?? '++',
-          position: block.getFieldValue('POSITION') ?? 'postfix',
-        })
-      case 'c_compound_assign_expr': {
-          const valueBlock = block.getInputTargetBlock('VALUE')
-          const valueNode = valueBlock ? this.extractBlock(valueBlock) : createNode('number_literal', { value: '1' })
-          return createNode('cpp_compound_assign_expr', {
-            name: block.getFieldValue('NAME') ?? 'x',
-            operator: block.getFieldValue('OP') ?? '+=',
-          }, { value: valueNode ? [valueNode] : [] })
-        }
-      case 'c_scanf_expr': return this.extractScanfExpr(block)
-      case 'c_var_declare_expr': {
-          const type = block.getFieldValue('TYPE') ?? 'int'
-          const name = block.getFieldValue('NAME_0') ?? 'i'
-          const initBlock = block.getInputTargetBlock('INIT_0')
-          const initNode = initBlock ? this.extractBlock(initBlock) : null
-          return createNode('var_declare_expr', { name, type }, {
-            initializer: initNode ? [initNode] : [],
-          })
-        }
-      case 'c_do_while': {
-          const body = this.extractStatementInput(block, 'BODY')
-          const condBlock = block.getInputTargetBlock('COND')
-          const condNode = condBlock ? this.extractBlock(condBlock) : createNode('var_ref', { name: 'true' })
-          return createNode('cpp_do_while', {}, {
-            body,
-            cond: condNode ? [condNode] : [],
-          })
-        }
-      case 'c_ternary': {
-          const condBlock = block.getInputTargetBlock('CONDITION')
-          const trueBlock = block.getInputTargetBlock('TRUE_EXPR')
-          const falseBlock = block.getInputTargetBlock('FALSE_EXPR')
-          const condNode = condBlock ? this.extractBlock(condBlock) : createNode('var_ref', { name: 'true' })
-          const trueNode = trueBlock ? this.extractBlock(trueBlock) : createNode('number_literal', { value: '0' })
-          const falseNode = falseBlock ? this.extractBlock(falseBlock) : createNode('number_literal', { value: '0' })
-          return createNode('cpp_ternary', {}, {
-            condition: condNode ? [condNode] : [],
-            true_expr: trueNode ? [trueNode] : [],
-            false_expr: falseNode ? [falseNode] : [],
-          })
-        }
-      case 'c_char_literal': return createNode('char_literal', { value: block.getFieldValue('VALUE') ?? 'a' })
-      case 'c_cast': {
-          const castValBlock = block.getInputTargetBlock('VALUE')
-          const castValNode = castValBlock ? this.extractBlock(castValBlock) : createNode('number_literal', { value: '0' })
-          return createNode('cpp_cast', { target_type: block.getFieldValue('TYPE') ?? 'int' }, {
-            value: castValNode ? [castValNode] : [],
-          })
-        }
-      case 'c_bitwise_not': {
-          const bnotBlock = block.getInputTargetBlock('VALUE')
-          const bnotNode = bnotBlock ? this.extractBlock(bnotBlock) : createNode('number_literal', { value: '0' })
-          return createNode('bitwise_not', {}, {
-            operand: bnotNode ? [bnotNode] : [],
-          })
-        }
-      case 'c_builtin_constant':
-        return createNode('builtin_constant', { value: block.getFieldValue('VALUE') ?? 'true' })
-      case 'c_forward_decl': {
-          const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
-          const fwdName = block.getFieldValue('NAME') ?? 'f'
-          const fwdParams: string[] = []
-          for (let i = 0; ; i++) {
-            const paramType = block.getFieldValue(`TYPE_${i}`)
-            if (paramType === null || paramType === undefined) break
-            fwdParams.push(paramType)
-          }
-          return createNode('forward_decl', {
-            return_type: returnType,
-            name: fwdName,
-            params: fwdParams,
-          })
-        }
-      case 'c_raw_code': return this.extractRawCode(block)
-      case 'c_raw_expression': return this.extractRawExpression(block)
-      case 'c_comment_line': return this.extractComment(block)
-      case 'c_comment_block': return createNode('block_comment', { text: block.getFieldValue('TEXT') ?? '' })
-      case 'c_comment_doc': return this.extractDocComment(block)
-      case 'c_include': return createNode('cpp_include', { header: block.getFieldValue('HEADER') ?? 'iostream', local: false })
-      case 'c_include_local': return createNode('cpp_include_local', { header: block.getFieldValue('HEADER') ?? 'myheader.h' })
-      case 'c_using_namespace': return createNode('cpp_using_namespace', { namespace: block.getFieldValue('NS') ?? 'std' })
-      case 'c_define': return createNode('cpp_define', { name: block.getFieldValue('NAME') ?? 'MACRO', value: block.getFieldValue('VALUE') ?? '' })
-      default: {
-          // P3: Open extension — use codeTemplate from JSON spec as fallback
-          const generated = this.generateFromTemplate(block)
-          if (generated !== null) {
-            const node = createNode('raw_code', { code: generated })
-            node.metadata = { rawCode: generated }
-            return node
-          }
-          const node = createNode('raw_code', {})
-          node.metadata = { rawCode: `/* unknown: ${type} */` }
-          return node
-        }
+
+    const extractor = this.extractorRegistry.get(type)
+    if (extractor) {
+      const ctx: BlockExtractContext = {
+        extractBlock: (b) => this.extractBlock(b as Blockly.Block),
+        extractStatementInput: (b, name) => this.extractStatementInput(b as Blockly.Block, name),
+        extractFuncArgs: (b) => this.extractFuncArgs(b as Blockly.Block),
+      }
+      return extractor(block, ctx)
     }
+
+    // P3: Open extension — use codeTemplate from JSON spec as fallback
+    const generated = this.generateFromTemplate(block)
+    if (generated !== null) {
+      const node = createNode('raw_code', { code: generated })
+      node.metadata = { rawCode: generated }
+      return node
+    }
+    const node = createNode('raw_code', {})
+    node.metadata = { rawCode: `/* unknown: ${type} */` }
+    return node
   }
 
   /**
@@ -606,19 +493,19 @@ export class BlocklyPanel implements ViewHost {
     const name = block.getFieldValue('NAME') ?? 'f'
     const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
 
-    // Extract params (TYPE_0/PARAM_0, TYPE_1/PARAM_1, ...)
-    const params: string[] = []
+    // Extract params as structured param_decl children (TYPE_0/PARAM_0, TYPE_1/PARAM_1, ...)
+    const paramNodes: SemanticNode[] = []
     let i = 0
     while (true) {
       const paramType = block.getFieldValue(`TYPE_${i}`)
       const paramName = block.getFieldValue(`PARAM_${i}`)
       if (paramType === null && paramName === null) break
-      params.push(`${paramType ?? 'int'} ${paramName ?? `p${i}`}`)
+      paramNodes.push(createNode('param_decl', { type: paramType ?? 'int', name: paramName ?? `p${i}` }))
       i++
     }
 
     const body = this.extractStatementInput(block, 'BODY')
-    return createNode('func_def', { name, return_type: returnType, params }, { body })
+    return createNode('func_def', { name, return_type: returnType }, { params: paramNodes, body })
   }
 
   private extractFuncCall(block: Blockly.Block): SemanticNode {

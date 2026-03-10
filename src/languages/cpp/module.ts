@@ -15,15 +15,12 @@ import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
 // Semantic layer: concept definitions
 import universalConcepts from '../../blocks/semantics/universal-concepts.json'
-import cppConcepts from './semantics/concepts.json'
+import { coreConcepts } from './core'
+import { allStdModules } from './std'
 
 // Projection layer: block definitions
 import universalBlocks from '../../blocks/projections/blocks/universal-blocks.json'
-import basicBlocks from './projections/blocks/basic.json'
-import advancedBlocks from './projections/blocks/advanced.json'
-import specialBlocks from './projections/blocks/special.json'
-import stdlibContainers from './projections/blocks/stdlib-containers.json'
-import stdlibAlgorithms from './projections/blocks/stdlib-algorithms.json'
+import { coreBlocks } from './core'
 
 // Other resources
 import liftPatternsJson from './lift-patterns.json'
@@ -51,20 +48,18 @@ export function initCppModule(): CppModuleEngines {
   const patternExtractor = new PatternExtractor()
 
   // 1. Load concepts into ConceptRegistry (semantic layer, independent of Blockly)
-  const allConcepts = [
+  const allConcepts: ConceptDefJSON[] = [
     ...universalConcepts as unknown as ConceptDefJSON[],
-    ...cppConcepts as unknown as ConceptDefJSON[],
+    ...coreConcepts,
+    ...allStdModules.flatMap(m => m.concepts),
   ]
   conceptRegistry.loadFromJSON(allConcepts)
 
   // 2. Load split JSON directly into registry
-  const allProjections = [
+  const allProjections: BlockProjectionJSON[] = [
     ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...basicBlocks as unknown as BlockProjectionJSON[],
-    ...advancedBlocks as unknown as BlockProjectionJSON[],
-    ...specialBlocks as unknown as BlockProjectionJSON[],
-    ...stdlibContainers as unknown as BlockProjectionJSON[],
-    ...stdlibAlgorithms as unknown as BlockProjectionJSON[],
+    ...coreBlocks,
+    ...allStdModules.flatMap(m => m.blocks),
   ]
   registry.loadFromSplit(allConcepts, allProjections)
   const allSpecs = registry.getAll()

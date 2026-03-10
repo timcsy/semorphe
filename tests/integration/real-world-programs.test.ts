@@ -18,11 +18,9 @@ import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/s
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
-import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 
 let tsParser: Parser
 let lifter: Lifter
@@ -39,12 +37,11 @@ beforeAll(async () => {
 
   // Set up PatternRenderer for render pipeline tests
   const tempRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
     ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...basicBlocks as unknown as BlockProjectionJSON[],
-    ...advancedBlocks as unknown as BlockProjectionJSON[],
-    ...specialBlocks as unknown as BlockProjectionJSON[],
+    ...coreBlocks,
+    ...allStdModules.flatMap(m => m.blocks),
   ]
   tempRegistry.loadFromSplit(allConcepts, allProjections)
   const allSpecs = tempRegistry.getAll()

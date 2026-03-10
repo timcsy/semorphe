@@ -1,0 +1,13 @@
+[
+  {
+    "conceptId": "cpp_string_declare",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "string_declare",
+    "properties": [
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  }
+]

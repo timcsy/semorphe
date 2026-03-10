@@ -941,6 +941,18 @@ html, body {
   width: 3px !important;
 }
 
+/* ─── Monaco ghost line: scaffold boilerplate (L1 mode) ─── */
+
+.ghost-line {
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+.ghost-line-gutter {
+  background: rgba(128, 128, 128, 0.3);
+  width: 3px !important;
+}
+
 /* ─── Block toolbar (above Blockly panel) ─── */
 
 .quick-access-bar {

@@ -1,7 +1,7 @@
 import type { SemanticNode } from './types'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
 import type { Diagnostic } from './diagnostics'
-import type { SourceMapping } from './projection/code-generator'
+import type { CodeMapping } from './projection/code-generator'
 
 // ─── Event Type Maps ───
 
@@ -12,7 +12,7 @@ export interface SemanticEvents {
     code?: string
     blockState?: unknown
     source: 'blocks' | 'code'
-    mappings?: SourceMapping[]
+    mappings?: CodeMapping[]
   }
   'semantic:full-sync': { tree: SemanticNode; language: string; style: Record<string, unknown> }
   'execution:state': { status: ExecutionStatus; step?: StepInfo }

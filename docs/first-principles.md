@@ -1,10 +1,11 @@
 # 語義結構投射理論：程式教育的第一性原理
 
 **建立日期**: 2026-03-04
-**最後更新**: 2026-03-07
+**最後更新**: 2026-03-10
 **適用範圍**: 所有投影（程式碼、積木、流程圖、執行、分析、教育、分發等）、多語言支援、套件擴充——所有子系統共用
 
 **版本歷程**:
+- 2026-03-10: §1.3 新增結構性依賴宣告（跨 Scope 衍生投影，#include 等不屬於原有四類資訊）；§2.3 新增 DependencyResolver 介面定義（語言模組職責，核心只定義介面）；§2.4 新增基礎設施的漸進揭露（Program Scaffold：L0 隱藏→L1 ghost→L2+ 手動）
 - 2026-03-09: P2 新增概念角色語境依賴、屬性結構化邊界；P3 歧義偵測改為偏序仲裁（最特化匹配 + 交叉歧義報錯）；P4 新增概念表面形態、層級轉換穩定性；§4.3 區分 soundness vs correctness；巨集硬邊界新增多 parser 融合路線；積木文字準則新增語法隔離與 Mutator 一致性
 - 2026-03-08: lift() 定位精確化（慣用語辨識器）、降級單調性、語義 Diff 推論、Pattern 歧義偵測、Toolbox 多維度說明、User Context（慣性快取 + 角色意圖）、命名語義約束（namingSemantics）、TaintInfo 結構化、群體設定覆蓋權限（mandatory/recommended）
 - 2026-03-07: 投影全景分類（R0-R4）、硬問題修正、編號重構、開放序數化、一致性修正
@@ -253,6 +254,14 @@ partial     — 命名部分影響語言行為（Rust）
 ```
 
 語言模組通過 `namingSemantics` 宣告自己的命名約束等級。style 切換邏輯在遇到 `namingSemantics !== 'none'` 時，必須跳過命名轉換或提示使用者「此語言的命名具有語義約束，自動轉換可能改變程式行為」。
+
+### 結構性依賴宣告（Structural Dependency Declarations）
+
+`#include <iostream>` 不屬於上述四類資訊的任何一類：它不改變當前語義樹的行為（非語義）、不是呈現格式（非呈現）、不是附加描述（非元資訊）、也不是等價寫法的偏好（非語法偏好）。它是 **Scope 3 的圖邊（depends_on 關係）投影到 Scope 2 程式碼中的產物**——一種**跨 Scope 的衍生投影（cross-scope derived projection）**。
+
+同類範例：`using namespace std;`、`import numpy as np`、`use std::collections::HashMap;`。
+
+這類資訊的共同特徵：**可從 Scope 2 語義樹的概念使用集合中確定性地推導**。例如，語義樹中存在 `cout` 概念 → 必須有 `#include <iostream>`。因此其 round-trip 規則為 **best-effort**：lift() 時可忽略（因為可重新推導），project() 時由 DependencyResolver（§2.3）從概念使用自動生成。使用者手動添加的依賴宣告記錄在 metadata 中，避免 round-trip 丟失。
 
 ### lift() 的狀態模型
 
@@ -878,6 +887,26 @@ Language Layer (e.g., C++)
 └── External — 第三方函式庫（未來擴充點）
 ```
 
+### DependencyResolver：語言模組的依賴推導職責
+
+每個語言模組負責提供自己的 `DependencyResolver` 實作。核心引擎只定義介面：
+
+```typescript
+interface DependencyResolver {
+  resolve(conceptIds: string[]): DependencyEdge[]
+}
+
+interface DependencyEdge {
+  sourceType: 'builtin' | 'stdlib' | 'external'
+  directive: string        // 語言特定的 import 指令，如 '#include <iostream>'
+  packageSpec?: string     // external 時的套件規格，如 'boost::filesystem'
+}
+```
+
+DependencyResolver 是 **Scope 3 的索引建構器**，不屬於 generator pipeline——它在 project() 之前獨立運行，將概念使用集合映射為依賴邊集合（見 §1.3 結構性依賴宣告）。新語言只需註冊自己的 resolver，無需修改核心引擎，符合 P3 的開放擴充原則。
+
+C++ 範例：概念集合 `{cout, endl, vector}` → resolver 輸出 `[{directive: '#include <iostream>'}, {directive: '#include <vector>'}]`。
+
 ### 套件積木的標準定義格式
 
 ```jsonc
@@ -990,6 +1019,18 @@ S0 語句 → S1 函式 → S2 檔案 → S3 模組 → S4 專案 → S5 系統 
 | L1 | 保留關鍵術語 | 技術說明 + 場景 |
 | L2 | 可用更多術語 | 重點放在「什麼時候用」 |
 | LN+ | 由該層級定義者決定 | 由該層級定義者決定 |
+
+### 基礎設施的漸進揭露（Progressive Disclosure of Infrastructure）
+
+程式的 boilerplate（includes、namespace 宣告、main 包裝、return 0）構成一個 **Program Scaffold**。這些全部是 Scope 3 的衍生投影（§1.3 結構性依賴宣告），P4 應統一控制其可見性：
+
+```
+L0：完全隱藏 — 零認知負荷，學習者只看到自己寫的邏輯
+L1：幽靈行（ghost lines） — 可見但自動管理，hover 顯示原因（如「因為你用了 cout」）
+L2+：使用者自行管理 — 缺失依賴觸發警告，不自動補全
+```
+
+這是**過濾（filtering），不是簡化（simplification）**——依賴圖始終完整存在於語義樹中，P4 只控制哪些投影到使用者可見的 view 上。統一的 scaffold 策略確保每個 boilerplate 項目不會各自成為獨立的 ad-hoc 特殊處理，而是由同一個 scaffold visibility 機制管理。
 
 ---
 

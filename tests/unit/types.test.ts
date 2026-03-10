@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { BlockSpec, CodeTemplate, AstPattern, ValidationError, WorkspaceState, SourceMapping, BlockJSON, WorkspaceJSON } from '../../src/core/types'
+import type { BlockSpec, CodeTemplate, AstPattern, ValidationError, WorkspaceState, BlockJSON, WorkspaceJSON } from '../../src/core/types'
+import type { CodeMapping } from '../../src/core/projection/code-generator'
 
 describe('BlockSpec 型別驗證', () => {
   it('should accept a valid BlockSpec object', () => {
@@ -108,14 +109,14 @@ describe('BlockSpec 型別驗證', () => {
     expect(spec.language).toBe('cpp')
   })
 
-  it('should accept SourceMapping structure', () => {
-    const mapping: SourceMapping = {
-      blockId: 'block_1',
+  it('should accept CodeMapping structure', () => {
+    const mapping: CodeMapping = {
+      nodeId: 'node_1',
       startLine: 0,
       endLine: 2,
     }
 
-    expect(mapping.blockId).toBe('block_1')
+    expect(mapping.nodeId).toBe('node_1')
     expect(mapping.startLine).toBe(0)
     expect(mapping.endLine).toBe(2)
   })

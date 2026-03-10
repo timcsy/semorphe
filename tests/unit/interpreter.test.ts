@@ -328,8 +328,8 @@ describe('Interpreter - functions', () => {
       createNode('func_def', {
         name: 'double',
         return_type: 'int',
-        params: JSON.stringify([{ type: 'int', name: 'n' }])
       }, {
+        params: [createNode('param_decl', { type: 'int', name: 'n' })],
         body: [
           createNode('return', {}, {
             value: [createNode('arithmetic', { operator: '*' }, {
@@ -353,8 +353,8 @@ describe('Interpreter - functions', () => {
       createNode('func_def', {
         name: 'fact',
         return_type: 'int',
-        params: JSON.stringify([{ type: 'int', name: 'n' }])
       }, {
+        params: [createNode('param_decl', { type: 'int', name: 'n' })],
         body: [
           createNode('if', {}, {
             condition: [createNode('compare', { operator: '<=' }, {
@@ -886,8 +886,8 @@ describe('Interpreter - more edge cases', () => {
       createNode('func_def', {
         name: 'abs_val',
         return_type: 'int',
-        params: JSON.stringify([{ type: 'int', name: 'x' }])
       }, {
+        params: [createNode('param_decl', { type: 'int', name: 'x' })],
         body: [
           createNode('if', {}, {
             condition: [createNode('compare', { operator: '<' }, {

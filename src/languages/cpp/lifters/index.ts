@@ -1,12 +1,13 @@
 import type { Lifter } from '../../../core/lift/lifter'
 import { createNode } from '../../../core/semantic-tree'
-import { registerDeclarationLifters } from './declarations'
-import { registerExpressionLifters } from './expressions'
-import { registerStatementLifters } from './statements'
-import { registerIOLifters } from './io'
-import { registerCppTransforms } from './transforms'
-import { registerCppLiftStrategies } from './strategies'
+import { registerStatementLifters } from '../core/lifters/statements'
+import { registerDeclarationLifters } from '../core/lifters/declarations'
+import { registerExpressionLifters } from '../core/lifters/expressions'
+import { registerCppTransforms } from '../core/lifters/transforms'
+import { registerCppLiftStrategies } from '../core/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
+import { registerIOLifters } from './io'
+import { allStdModules } from '../std'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
@@ -33,10 +34,18 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     registerCppRenderStrategies(registries.renderStrategyRegistry)
   }
 
+  // Core lifters
   registerStatementLifters(lifter)
   registerDeclarationLifters(lifter)
   registerExpressionLifters(lifter)
+
+  // IO lifters (dispatcher for call_expression: printf/scanf/general func_call)
   registerIOLifters(lifter)
+
+  // Std module lifters
+  for (const mod of allStdModules) {
+    mod.registerLifters(lifter)
+  }
 
   // preproc_include now handled by liftStrategy "cpp:liftPreprocInclude"
 

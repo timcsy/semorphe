@@ -1,0 +1,14 @@
+[
+  {
+    "conceptId": "cpp_queue_declare",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "queue_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  }
+]

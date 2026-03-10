@@ -32,7 +32,7 @@ export type ExecutionSpeed = 'slow' | 'medium' | 'fast'
 /** 步進回呼資訊 */
 export interface StepInfo {
   node: SemanticNode
-  blockId: string | null
+  nodeId: string
   sourceRange: { start: number; end: number } | null
   outputLength: number
   scopeSnapshot: { name: string; type: string; value: string }[]

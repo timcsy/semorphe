@@ -1,0 +1,56 @@
+[
+  {
+    "conceptId": "cpp_vector_declare",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "vector_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_vector_push_back",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "vector_push_back",
+    "properties": [
+      "vector"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_vector_size",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "vector_size",
+    "properties": [
+      "vector"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp:vector_push_back",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "container_add",
+    "properties": [],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp:vector_size",
+    "layer": "lang-library",
+    "level": 2,
+    "abstractConcept": "container_size",
+    "properties": [],
+    "children": {},
+    "role": "expression"
+  }
+]

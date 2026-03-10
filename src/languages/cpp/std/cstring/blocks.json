@@ -1,0 +1,161 @@
+[
+  {
+    "id": "c_strlen",
+    "conceptId": "cpp_strlen",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strlen",
+      "message0": "%{BKY_C_STRLEN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRLEN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strlen(${STR})",
+      "imports": [
+        "string.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strlen"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "str",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_strcmp",
+    "conceptId": "cpp_strcmp",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcmp",
+      "message0": "%{BKY_C_STRCMP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "S1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "S2",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCMP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strcmp(${S1}, ${S2})",
+      "imports": [
+        "string.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strcmp"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "s1",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "s2",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "c_strcpy",
+    "conceptId": "cpp_strcpy",
+    "language": "cpp",
+    "category": "strings",
+    "level": 2,
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcpy",
+      "message0": "%{BKY_C_STRCPY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCPY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "strcpy(${DEST}, ${SRC});",
+      "imports": [
+        "string.h"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "strcpy"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "dest",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "src",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    }
+  }
+]

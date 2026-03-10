@@ -63,7 +63,6 @@ export interface NodeMetadata {
   degradationCause?: DegradationCause
   rawCode?: string
   sourceRange?: SourceRange
-  blockId?: string
 }
 
 export interface SourceRange {
@@ -215,6 +214,8 @@ export interface RenderMapping {
   statementInputs: Record<string, string>
   dynamicInputs?: DynamicInputDef
   strategy?: string
+  /** Block type to use when this statement block appears in expression context */
+  expressionCounterpart?: string
 }
 
 export interface DynamicInputDef {

@@ -1,0 +1,37 @@
+[
+  {
+    "conceptId": "cpp_strlen",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "strlen",
+    "properties": [],
+    "children": {
+      "str": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_strcmp",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "strcmp",
+    "properties": [],
+    "children": {
+      "s1": "expression",
+      "s2": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_strcpy",
+    "layer": "lang-core",
+    "level": 2,
+    "abstractConcept": "strcpy",
+    "properties": [],
+    "children": {
+      "dest": "expression",
+      "src": "expression"
+    },
+    "role": "statement"
+  }
+]

@@ -698,9 +698,13 @@ describe('Functions', () => {
       expect(node).not.toBeNull()
       expect(node!.concept).toBe('func_def')
       expect(node!.properties.name).toBe('add')
-      const params = node!.properties.params as string[]
-      expect(params).toContain('int a')
-      expect(params).toContain('int b')
+      const paramChildren = node!.children.params ?? []
+      expect(paramChildren).toHaveLength(2)
+      expect(paramChildren[0].concept).toBe('param_decl')
+      expect(paramChildren[0].properties.type).toBe('int')
+      expect(paramChildren[0].properties.name).toBe('a')
+      expect(paramChildren[1].properties.type).toBe('int')
+      expect(paramChildren[1].properties.name).toBe('b')
     })
 
     it('lifts void function', () => {

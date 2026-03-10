@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
-import { SyncController } from '../../../src/ui/sync-controller'
+import { SyncController, stripScaffoldNodes } from '../../../src/ui/sync-controller'
 import type { CodeParser, SyncError } from '../../../src/ui/sync-controller'
 import type { StylePreset } from '../../../src/core/types'
+import type { CodeMapping, BlockMapping } from '../../../src/core/projection/code-generator'
 import { createNode } from '../../../src/core/semantic-tree'
 import { SemanticBus } from '../../../src/core/semantic-bus'
 import { Lifter } from '../../../src/core/lift/lifter'
@@ -195,6 +196,123 @@ describe('SyncController (bus-based)', () => {
     })
   })
 
+  describe('stripScaffoldNodes (unit)', () => {
+    it('should strip include, using_namespace, and unwrap func_def(main)', () => {
+      const fullTree = createNode('program', {}, {
+        body: [
+          createNode('cpp_include', { header: 'iostream' }),
+          createNode('cpp_using_namespace', { ns: 'std' }),
+          createNode('func_def', { name: 'main', return_type: 'int' }, {
+            body: [
+              createNode('print', {}, { values: [createNode('string', { value: 'hello' })] }),
+              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+            ],
+          }),
+        ],
+      })
+
+      const stripped = stripScaffoldNodes(fullTree)
+      const body = stripped.children.body ?? []
+
+      // Only user's body (print) should remain — include, namespace, func_def wrapper, return stripped
+      expect(body).toHaveLength(1)
+      expect(body[0].concept).toBe('print')
+    })
+
+    it('should keep non-scaffold nodes (user-defined functions)', () => {
+      const tree = createNode('program', {}, {
+        body: [
+          createNode('cpp_include', { header: 'iostream' }),
+          createNode('func_def', { name: 'helper', return_type: 'void' }, {
+            body: [createNode('print', {}, { values: [] })],
+          }),
+          createNode('func_def', { name: 'main', return_type: 'int' }, {
+            body: [
+              createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+            ],
+          }),
+        ],
+      })
+
+      const stripped = stripScaffoldNodes(tree)
+      const body = stripped.children.body ?? []
+
+      // helper (user-defined) + var_declare (from main body) should remain
+      expect(body).toHaveLength(2)
+      expect(body[0].concept).toBe('func_def')
+      expect(body[0].properties.name).toBe('helper')
+      expect(body[1].concept).toBe('var_declare')
+    })
+
+    it('should handle body-only tree (already stripped)', () => {
+      const tree = createNode('program', {}, {
+        body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
+      })
+
+      const stripped = stripScaffoldNodes(tree)
+      const body = stripped.children.body ?? []
+
+      expect(body).toHaveLength(1)
+      expect(body[0].concept).toBe('var_declare')
+    })
+
+    it('should handle empty program', () => {
+      const tree = createNode('program', {}, { body: [] })
+      const stripped = stripScaffoldNodes(tree)
+      expect(stripped.children.body ?? []).toHaveLength(0)
+    })
+  })
+
+  describe('resyncForLevel (level change)', () => {
+    it('should emit resync event with both code and blockState', () => {
+      controller.setCognitiveLevel(0 as import('../../../src/core/types').CognitiveLevel)
+
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
+      const fullTree = createNode('program', {}, {
+        body: [
+          createNode('cpp_include', { header: 'iostream' }),
+          createNode('func_def', { name: 'main', return_type: 'int' }, {
+            body: [
+              createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+            ],
+          }),
+        ],
+      })
+
+      controller.resyncForLevel(fullTree, '')
+
+      expect(handler).toHaveBeenCalled()
+      const data = handler.mock.calls[0][0]
+      expect(data.source).toBe('resync')
+      expect(data.code).toBeDefined()
+      expect(data.blockState).toBeDefined()
+    })
+
+    it('should produce complete code even with body-only tree (L0)', () => {
+      controller.setCognitiveLevel(0 as import('../../../src/core/types').CognitiveLevel)
+
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+
+      // Body-only tree (no scaffold nodes) — as extracted from L0 blocks
+      const bodyTree = createNode('program', {}, {
+        body: [
+          createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+        ],
+      })
+
+      controller.resyncForLevel(bodyTree, '')
+
+      const data = handler.mock.calls[0][0]
+      // Code should be complete (scaffold wraps the body)
+      expect(data.code).toContain('int x;')
+    })
+  })
+
   describe('style exception detection', () => {
     it('should call onStyleExceptions when non-conforming nodes found', () => {
       const apcsStyle: StylePreset = {
@@ -330,6 +448,71 @@ describe('SyncController (bus-based)', () => {
       bus.emit('edit:code', { code })
 
       expect(ioCallback).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('nodeId-based cross-projection queries (US2)', () => {
+    it('getMappingForBlock should resolve via blockId→nodeId→codeMappings join', () => {
+      // Simulate a tree with externally-provided blockMappings (no metadata.blockId)
+      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('program', {}, { body: [decl] })
+      const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
+
+      // Trigger blocks→code sync with blockMappings
+      bus.emit('edit:blocks', { blocklyState: { tree, blockMappings } })
+
+      // codeMappings should use nodeId
+      const codeMappings = controller.getCodeMappings()
+      expect(codeMappings.length).toBeGreaterThanOrEqual(1)
+      const declCodeMapping = codeMappings.find(m => m.nodeId === decl.id)
+      expect(declCodeMapping).toBeDefined()
+
+      // blockMappings should have nodeId→blockId from external source
+      const retrievedMappings = controller.getBlockMappings()
+      expect(retrievedMappings.length).toBeGreaterThanOrEqual(1)
+      expect(retrievedMappings.find(m => m.blockId === 'blk_1')).toBeDefined()
+
+      // getMappingForBlock resolves via nodeId join
+      const result = controller.getMappingForBlock('blk_1')
+      expect(result).not.toBeNull()
+      expect(result!.startLine).toBe(declCodeMapping!.startLine)
+      expect(result!.endLine).toBe(declCodeMapping!.endLine)
+    })
+
+    it('getMappingForLine should resolve via line→codeMappings→nodeId→blockMappings join', () => {
+      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('program', {}, { body: [decl] })
+      const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
+
+      bus.emit('edit:blocks', { blocklyState: { tree, blockMappings } })
+
+      // getMappingForLine should find a mapping for line 0 via nodeId join
+      const mapping = controller.getMappingForLine(0)
+      expect(mapping).not.toBeNull()
+      if (mapping) {
+        expect(mapping.blockId).toBe('blk_1')
+        expect(typeof mapping.blockId).toBe('string')
+      }
+    })
+
+    it('getMappingForBlock should return null for unknown blockId', () => {
+      const tree = createNode('program', {}, { body: [] })
+      bus.emit('edit:blocks', { blocklyState: { tree } })
+
+      const result = controller.getMappingForBlock('nonexistent')
+      expect(result).toBeNull()
+    })
+
+    it('codeMappings should not contain blockId field (FR-001)', () => {
+      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('program', {}, { body: [decl] })
+      bus.emit('edit:blocks', { blocklyState: { tree } })
+
+      const codeMappings = controller.getCodeMappings()
+      for (const cm of codeMappings) {
+        expect('blockId' in cm).toBe(false)
+        expect(cm.nodeId).toBeDefined()
+      }
     })
   })
 })
