@@ -23,39 +23,23 @@ function toCodingStyle(preset: StylePreset): CodingStyle {
 }
 import type { CodeMapping, BlockMapping } from '../core/projection/code-generator'
 import { renderToBlocklyState } from '../core/projection/block-renderer'
-import { createNode } from '../core/semantic-tree'
+// createNode no longer needed here — stripScaffoldNodes moved to cpp-scaffold-filter.ts
 import { Lifter } from '../core/lift/lifter'
 import { SemanticBus } from '../core/semantic-bus'
 
-/**
- * Strip scaffold nodes (include, using_namespace, func_def main wrapper, return)
- * from a semantic tree, leaving only the user's body statements.
- * Used for L0 block rendering — blocks only show the user's logic.
- */
-export function stripScaffoldNodes(tree: SemanticNode): SemanticNode {
-  const body = tree.children.body ?? []
-  const userBody: SemanticNode[] = []
+/** Scaffold node filter type — strips scaffold nodes for L0 display */
+export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
 
-  for (const node of body) {
-    // Skip include directives
-    if (node.concept === 'cpp_include' || node.concept === 'cpp_include_local') continue
-    // Skip using namespace
-    if (node.concept === 'cpp_using_namespace') continue
-    // Unwrap func_def(main) — extract its body, skip trailing return
-    if (node.concept === 'func_def' && node.properties.name === 'main') {
-      const funcBody = node.children.body ?? []
-      for (const stmt of funcBody) {
-        if (stmt.concept === 'return') continue
-        userBody.push(stmt)
-      }
-      continue
-    }
-    // Keep everything else (user-defined functions, etc.)
-    userBody.push(node)
-  }
-
-  return createNode('program', {}, { body: userBody })
+/** Default no-op filter (returns tree as-is) */
+function identityFilter(tree: SemanticNode): SemanticNode {
+  return tree
 }
+
+/**
+ * @deprecated Use cppStripScaffoldNodes from languages/cpp/cpp-scaffold-filter.ts via setScaffoldNodeFilter.
+ * Delegates to the injected scaffold node filter (for backward compatibility).
+ */
+export { cppStripScaffoldNodes as stripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
 
 
 export interface CodeParser {
@@ -79,6 +63,7 @@ export class SyncController {
   private programScaffold: ProgramScaffold | null = null
   private cognitiveLevel: CognitiveLevel = 1
   private codePatcherFn: ((code: string, tree: SemanticNode) => string | null) | null = null
+  private scaffoldNodeFilter: ScaffoldNodeFilter = identityFilter
 
   constructor(
     bus: SemanticBus,
@@ -123,6 +108,11 @@ export class SyncController {
 
   setCognitiveLevel(level: CognitiveLevel): void {
     this.cognitiveLevel = level
+  }
+
+  /** Set the scaffold node filter for L0 display (strip scaffold from blocks) */
+  setScaffoldNodeFilter(fn: ScaffoldNodeFilter): void {
+    this.scaffoldNodeFilter = fn
   }
 
   /** Set a language-specific code patcher for auto-fixing missing dependencies after code→blocks */
@@ -213,7 +203,7 @@ export class SyncController {
             this.currentTree = converted
             const { mappings: convMappings } = generateCodeWithMapping(converted, this.language, this.style)
             this.codeMappings = convMappings
-            const convDisplay = this.cognitiveLevel === 0 ? stripScaffoldNodes(converted) : converted
+            const convDisplay = this.cognitiveLevel === 0 ? this.scaffoldNodeFilter(converted) : converted
             const convRender = renderToBlocklyState(convDisplay)
             this.blockMappings = convRender.blockMappings
       
@@ -238,7 +228,7 @@ export class SyncController {
       this.codeMappings = codeMappings
 
       // For L0: strip scaffold nodes so blocks only show user's logic
-      const displayTree = this.cognitiveLevel === 0 ? stripScaffoldNodes(tree) : tree
+      const displayTree = this.cognitiveLevel === 0 ? this.scaffoldNodeFilter(tree) : tree
       const renderResult = renderToBlocklyState(displayTree)
       this.blockMappings = renderResult.blockMappings
 
@@ -297,7 +287,7 @@ export class SyncController {
       }
 
       // For blocks: strip scaffold if L0
-      const displayTree = this.cognitiveLevel === 0 ? stripScaffoldNodes(fullTree) : fullTree
+      const displayTree = this.cognitiveLevel === 0 ? this.scaffoldNodeFilter(fullTree) : fullTree
       const renderResult = renderToBlocklyState(displayTree)
       this.blockMappings = renderResult.blockMappings
 

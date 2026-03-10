@@ -102,6 +102,9 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "c_increment_expr"
     }
   },
   {
@@ -182,6 +185,9 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "c_compound_assign_expr"
     }
   },
   {

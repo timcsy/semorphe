@@ -159,15 +159,6 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
   block.extraState = extra
 }
 
-/** Mapping from statement-only block types to their expression counterparts */
-const STATEMENT_TO_EXPRESSION: Record<string, string> = {
-  'c_increment': 'c_increment_expr',
-  'c_compound_assign': 'c_compound_assign_expr',
-  'c_scanf': 'c_scanf_expr',
-  'u_var_declare': 'c_var_declare_expr',
-  'u_input': 'u_input_expr',
-}
-
 function renderExpression(node: SemanticNode): BlockState | null {
   const block = renderBlock(node)
   if (!block) return null
@@ -177,7 +168,7 @@ function renderExpression(node: SemanticNode): BlockState | null {
   }
   // Check if a statement-only block has an expression counterpart
   if (globalPatternRenderer?.isStatementOnly(block.type)) {
-    const exprType = STATEMENT_TO_EXPRESSION[block.type]
+    const exprType = globalPatternRenderer.getExpressionCounterpart(block.type)
     if (exprType) {
       return { ...block, type: exprType }
     }

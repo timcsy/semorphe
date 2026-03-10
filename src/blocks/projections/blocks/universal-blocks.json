@@ -17,7 +17,8 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderVarDeclare"
+      "strategy": "cpp:renderVarDeclare",
+      "expressionCounterpart": "c_var_declare_expr"
     }
   },
   {
@@ -750,7 +751,8 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderInput"
+      "strategy": "cpp:renderInput",
+      "expressionCounterpart": "u_input_expr"
     }
   },
   {

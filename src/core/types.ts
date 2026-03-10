@@ -214,6 +214,8 @@ export interface RenderMapping {
   statementInputs: Record<string, string>
   dynamicInputs?: DynamicInputDef
   strategy?: string
+  /** Block type to use when this statement block appears in expression context */
+  expressionCounterpart?: string
 }
 
 export interface DynamicInputDef {

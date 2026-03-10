@@ -1,8 +1,25 @@
-import { describe, it, expect } from 'vitest'
-import { getBlockLevel, isBlockAvailable, filterBlocksByLevel } from '../../src/core/cognitive-levels'
-import type { CognitiveLevel } from '../../src/core/types'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { getBlockLevel, isBlockAvailable, filterBlocksByLevel, setBlockSpecRegistry } from '../../src/core/cognitive-levels'
+import type { CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 
 describe('Cognitive Level Switching', () => {
+  beforeAll(() => {
+    const reg = new BlockSpecRegistry()
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    const allProjections = [
+      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...coreBlocks,
+      ...allStdModules.flatMap(m => m.blocks),
+    ]
+    reg.loadFromSplit(allConcepts, allProjections)
+    setBlockSpecRegistry(reg)
+  })
+
   describe('getBlockLevel', () => {
     it('should assign L0 to basic blocks', () => {
       expect(getBlockLevel('u_var_declare')).toBe(0)
@@ -24,7 +41,8 @@ describe('Cognitive Level Switching', () => {
       expect(getBlockLevel('u_array_declare')).toBe(2)
       expect(getBlockLevel('u_array_access')).toBe(2)
       expect(getBlockLevel('c_raw_code')).toBe(2)
-      expect(getBlockLevel('c_include')).toBe(1)
+      // c_include is L0 in JSON (scaffold manages visibility, not cognitive level)
+      expect(getBlockLevel('c_include')).toBe(0)
     })
 
     it('should default unknown blocks to L2', () => {
@@ -78,15 +96,16 @@ describe('Cognitive Level Switching', () => {
     })
   })
 
-  describe('c_include/c_using_namespace should be L1', () => {
-    it('should assign L1 to c_include and c_using_namespace (scaffold, not beginner)', () => {
-      expect(getBlockLevel('c_include')).toBe(1)
-      expect(getBlockLevel('c_using_namespace')).toBe(1)
+  describe('c_include/c_using_namespace visibility', () => {
+    // JSON defines them as L0 — scaffold manages visibility at runtime
+    it('should assign L0 to c_include and c_using_namespace (JSON truth)', () => {
+      expect(getBlockLevel('c_include')).toBe(0)
+      expect(getBlockLevel('c_using_namespace')).toBe(0)
     })
 
-    it('should NOT make c_include available at L0', () => {
-      expect(isBlockAvailable('c_include', 0)).toBe(false)
-      expect(isBlockAvailable('c_using_namespace', 0)).toBe(false)
+    it('c_include should be available at L0 (scaffold hides it at runtime)', () => {
+      expect(isBlockAvailable('c_include', 0)).toBe(true)
+      expect(isBlockAvailable('c_using_namespace', 0)).toBe(true)
     })
   })
 

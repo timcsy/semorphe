@@ -96,7 +96,8 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderScanf"
+      "strategy": "cpp:renderScanf",
+      "expressionCounterpart": "c_scanf_expr"
     }
   },
   {

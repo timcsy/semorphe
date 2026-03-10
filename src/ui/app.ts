@@ -10,8 +10,10 @@ import { runDiagnostics } from '../core/diagnostics'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig } from '../core/projection/code-generator'
+import { setBlockSpecRegistry } from '../core/cognitive-levels'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
+import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
 import { createCppCodePatcher } from '../languages/cpp/auto-include'
 import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
@@ -31,6 +33,7 @@ import type { StyleSelector } from './toolbar/style-selector'
 import type { StylePreset, CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
 import { buildToolbox } from './toolbox-builder'
+import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements } from './app-shell'
@@ -110,6 +113,9 @@ export class App {
     ]
     this.blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
 
+    // 4a. Set global BlockSpecRegistry for cognitive level lookups
+    setBlockSpecRegistry(this.blockSpecRegistry)
+
     // 4. Register all blocks with Blockly
     this.blockRegistrar.registerAll({
       getWorkspace: () => this.blocklyPanel?.getWorkspace() ?? null,
@@ -126,6 +132,7 @@ export class App {
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, 'cpp', DEFAULT_STYLE)
     this.syncController.setProgramScaffold(new CppScaffold(registry))
+    this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
     this.syncController.setCodePatcher((code, tree) => cppPatcher(code, tree, this.currentStylePreset.namespace_style, this.currentLevel))
     this.syncController.setCognitiveLevel(this.currentLevel)
@@ -351,6 +358,7 @@ export class App {
       ioPreference: ioPreference ?? this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
   }
 

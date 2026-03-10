@@ -31,7 +31,19 @@ export class PatternExtractor {
       const blockType = (spec.blockDef as Record<string, unknown>).type as string
       if (!blockType) continue
 
-      const mapping = spec.renderMapping ?? this.deriveRenderMapping(spec)
+      // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
+      const derived = this.deriveRenderMapping(spec)
+      const explicit = spec.renderMapping
+      const mapping = explicit
+        ? {
+            fields: (explicit.fields && Object.keys(explicit.fields).length > 0) ? explicit.fields : derived.fields,
+            inputs: (explicit.inputs && Object.keys(explicit.inputs).length > 0) ? explicit.inputs : derived.inputs,
+            statementInputs: (explicit.statementInputs && Object.keys(explicit.statementInputs).length > 0) ? explicit.statementInputs : derived.statementInputs,
+            dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
+            strategy: explicit.strategy ?? derived.strategy,
+            expressionCounterpart: explicit.expressionCounterpart,
+          }
+        : derived
       this.extractSpecs.set(blockType, { conceptId, mapping })
     }
   }

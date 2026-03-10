@@ -67,11 +67,80 @@ export function registerLanguage(language: string, factory: LanguageGeneratorFac
   languageFactories.set(language, factory)
 }
 
+// ─── Meta-concept generators ───
+
+/** Register generators for meta-concepts (raw_code, unresolved, comment, doc_comment, block_comment) */
+export function registerMetaConceptGenerators(generators: Map<string, NodeGenerator>): void {
+  generators.set('raw_code', (node, ctx) => {
+    const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
+    const indented = raw.startsWith('#') ? raw : indent(ctx) + raw
+    return indented.endsWith('\n') ? indented : indented + '\n'
+  })
+
+  generators.set('unresolved', (node, _ctx) => {
+    const raw = String(node.metadata?.rawCode ?? '')
+    return raw.endsWith('\n') ? raw : raw + '\n'
+  })
+
+  generators.set('comment', (node, ctx) => {
+    return `${indent(ctx)}// ${node.properties.text}\n`
+  })
+
+  generators.set('doc_comment', (node, ctx) => {
+    const ind = indent(ctx)
+    let result = `${ind}/**\n`
+    if (node.properties.brief) {
+      const briefText = String(node.properties.brief)
+      const hasTags = node.properties.param_0_name !== undefined || node.properties.return_desc !== undefined
+      if (briefText.includes('\n') && !hasTags) {
+        for (const line of briefText.split('\n')) {
+          result += `${ind} * ${line}\n`
+        }
+      } else if (briefText.includes('\n')) {
+        const lines = briefText.split('\n')
+        result += `${ind} * @brief ${lines[0]}\n`
+        for (let j = 1; j < lines.length; j++) {
+          result += `${ind} * ${lines[j]}\n`
+        }
+      } else {
+        result += `${ind} * @brief ${briefText}\n`
+      }
+    }
+    let i = 0
+    while (node.properties[`param_${i}_name`] !== undefined) {
+      const name = node.properties[`param_${i}_name`]
+      const desc = node.properties[`param_${i}_desc`] ?? ''
+      result += `${ind} * @param ${name}${desc ? ' ' + desc : ''}\n`
+      i++
+    }
+    if (node.properties.return_desc) {
+      result += `${ind} * @return ${node.properties.return_desc}\n`
+    }
+    result += `${ind} */\n`
+    return result
+  })
+
+  generators.set('block_comment', (node, ctx) => {
+    const text = String(node.properties.text ?? '')
+    if (text.includes('\n')) {
+      const lines = text.split('\n')
+      let result = `${indent(ctx)}/*\n`
+      for (const line of lines) {
+        result += `${indent(ctx)} * ${line.trim()}\n`
+      }
+      result += `${indent(ctx)} */\n`
+      return result
+    }
+    return `${indent(ctx)}/* ${text} */\n`
+  })
+}
+
 // ─── Public API ───
 
 export function generateCode(tree: SemanticNode, language: string, style: StylePreset): string {
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  registerMetaConceptGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
@@ -87,6 +156,7 @@ export function generateCodeWithMapping(
 ): { code: string; mappings: CodeMapping[] } {
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  registerMetaConceptGenerators(generators)
   const mappings: CodeMapping[] = []
   const ctx: GeneratorContext = { indent: 0, style, language, generators, _mappings: mappings, _lineCount: 0 }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
@@ -134,65 +204,10 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
   if (templateResult !== null) {
     result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
   } else {
-    // Fall back to hand-written generators
+    // Fall back to hand-written generators (including meta-concept generators)
     const generator = ctx.generators.get(node.concept)
     if (generator) {
       result = generator(node, ctx)
-    } else if (node.concept === 'raw_code') {
-      const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
-      const indented = raw.startsWith('#') ? raw : indent(ctx) + raw  // Don't indent preprocessor directives
-      result = indented.endsWith('\n') ? indented : indented + '\n'
-    } else if (node.concept === 'unresolved') {
-      const raw = String(node.metadata?.rawCode ?? '')
-      result = raw.endsWith('\n') ? raw : raw + '\n'
-    } else if (node.concept === 'comment') {
-      result = `${indent(ctx)}// ${node.properties.text}\n`
-    } else if (node.concept === 'doc_comment') {
-      const ind = indent(ctx)
-      result = `${ind}/**\n`
-      if (node.properties.brief) {
-        const briefText = String(node.properties.brief)
-        const hasTags = node.properties.param_0_name !== undefined || node.properties.return_desc !== undefined
-        if (briefText.includes('\n') && !hasTags) {
-          // Multi-line description without tags: output as plain lines
-          for (const line of briefText.split('\n')) {
-            result += `${ind} * ${line}\n`
-          }
-        } else if (briefText.includes('\n')) {
-          // Multi-line with tags: first line as @brief, rest as continuation
-          const lines = briefText.split('\n')
-          result += `${ind} * @brief ${lines[0]}\n`
-          for (let j = 1; j < lines.length; j++) {
-            result += `${ind} * ${lines[j]}\n`
-          }
-        } else {
-          result += `${ind} * @brief ${briefText}\n`
-        }
-      }
-      // Collect params: param_0_name, param_0_desc, param_1_name, ...
-      let i = 0
-      while (node.properties[`param_${i}_name`] !== undefined) {
-        const name = node.properties[`param_${i}_name`]
-        const desc = node.properties[`param_${i}_desc`] ?? ''
-        result += `${ind} * @param ${name}${desc ? ' ' + desc : ''}\n`
-        i++
-      }
-      if (node.properties.return_desc) {
-        result += `${ind} * @return ${node.properties.return_desc}\n`
-      }
-      result += `${ind} */\n`
-    } else if (node.concept === 'block_comment') {
-      const text = String(node.properties.text ?? '')
-      if (text.includes('\n')) {
-        const lines = text.split('\n')
-        result = `${indent(ctx)}/*\n`
-        for (const line of lines) {
-          result += `${indent(ctx)} * ${line.trim()}\n`
-        }
-        result += `${indent(ctx)} */\n`
-      } else {
-        result = `${indent(ctx)}/* ${text} */\n`
-      }
     } else {
       result = `/* unknown concept: ${node.concept} */\n`
     }

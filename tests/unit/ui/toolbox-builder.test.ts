@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
@@ -9,6 +9,8 @@ import universalConcepts from '../../../src/blocks/semantics/universal-concepts.
 import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
+import { setBlockSpecRegistry } from '../../../src/core/cognitive-levels'
+import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
@@ -19,6 +21,7 @@ function createRegistry(): BlockSpecRegistry {
     ...allStdModules.flatMap(m => m.blocks),
   ]
   reg.loadFromSplit(allConcepts, allProjections)
+  setBlockSpecRegistry(reg)
   return reg
 }
 
@@ -33,6 +36,7 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { kind: string; contents: Array<{ contents: Array<{ type: string }> }> }
     expect(toolbox.kind).toBe('categoryToolbox')
@@ -67,6 +71,7 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'cstdio',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { contents: Array<{ name: string; contents: Array<{ type: string }> }> }
     const ioCat = toolbox.contents.find(c => c.name.includes('輸入') || c.name.includes('I/O') || c.name.includes('輸出'))
@@ -85,6 +90,7 @@ describe('ToolboxBuilder', () => {
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { kind: string; contents: unknown[] }
     expect(toolbox.kind).toBe('categoryToolbox')
@@ -92,14 +98,16 @@ describe('ToolboxBuilder', () => {
     expect(Array.isArray(toolbox.contents)).toBe(true)
   })
 
-  it('should include u_input_expr in I/O category at L1', () => {
+  it('should include u_input_expr in I/O category at L2', () => {
     const reg = createRegistry()
+    // u_input_expr has no JSON BlockSpec — defaults to L2
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      level: 1 as CognitiveLevel,
+      level: 2 as CognitiveLevel,
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
     })
     const toolbox = result as { contents: Array<{ contents: Array<{ type: string }> }> }
     const allTypes = toolbox.contents.flatMap((c: { contents: Array<{ type: string }> }) => c.contents.map((b: { type: string }) => b.type))
