@@ -6,3 +6,6 @@ export type { LiftStrategyFn } from './lift-strategy-registry'
 
 export { RenderStrategyRegistry } from './render-strategy-registry'
 export type { RenderStrategyFn, RenderContext, BlockState as RenderBlockState } from './render-strategy-registry'
+
+export { BlockExtractorRegistry } from './block-extractor-registry'
+export type { BlockExtractorFn, BlockExtractContext } from './block-extractor-registry'

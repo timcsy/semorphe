@@ -182,8 +182,24 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
   g.set('func_def', (node, ctx) => {
     const name = node.properties.name ?? 'f'
     const returnType = node.properties.return_type ?? 'void'
-    const params = node.properties.params
-    const paramStr = Array.isArray(params) ? params.join(', ') : ''
+    // Prefer structured param_decl children, fallback to legacy string[] properties
+    const paramChildren = node.children.params ?? []
+    let paramStr: string
+    if (paramChildren.length > 0) {
+      paramStr = paramChildren.map(p => {
+        const t = String(p.properties.type ?? 'int')
+        const n = String(p.properties.name ?? '')
+        // Array param: "int[]" + "arr" → "int arr[]"
+        if (t.endsWith('[]')) {
+          const baseType = t.slice(0, -2)
+          return n ? `${baseType} ${n}[]` : `${baseType}[]`
+        }
+        return n ? `${t} ${n}` : t
+      }).join(', ')
+    } else {
+      const params = node.properties.params
+      paramStr = Array.isArray(params) ? params.join(', ') : ''
+    }
     const body = node.children.body ?? []
     const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
     trackOwnText(ctx, header)

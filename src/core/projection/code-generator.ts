@@ -198,6 +198,20 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     }
   }
 
+  // Append inline annotations as trailing comments
+  if (node.annotations?.length) {
+    const inlineComments = node.annotations.filter(a => a.position === 'inline')
+    if (inlineComments.length > 0) {
+      const commentText = inlineComments.map(a => a.text).join('; ')
+      // Insert trailing comment before the final newline
+      if (result.endsWith('\n')) {
+        result = result.slice(0, -1).trimEnd() + ' // ' + commentText + '\n'
+      } else {
+        result = result.trimEnd() + ' // ' + commentText
+      }
+    }
+  }
+
   // Update line count — use lineCountBefore + totalNewlines to avoid double-counting
   // when child generateNode calls already incremented _lineCount during the generator
   if (ctx._mappings !== undefined) {

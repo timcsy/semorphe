@@ -127,7 +127,7 @@ describe('Annotation Roundtrip', () => {
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations!.length).toBe(1)
       expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('// set x')
+      expect(results[0].annotations![0].text).toBe('set x')
     })
   })
 
@@ -143,7 +143,7 @@ describe('Annotation Roundtrip', () => {
       expect(results[0].concept).toBe('raw_code')
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('// lambda')
+      expect(results[0].annotations![0].text).toBe('lambda')
     })
   })
 })

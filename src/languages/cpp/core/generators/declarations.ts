@@ -42,11 +42,25 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   g.set('forward_decl', (node, ctx) => {
     const returnType = node.properties.return_type as string | undefined
     const name = node.properties.name ?? ''
-    const params = node.properties.params
 
-    // Structured form: return_type + name + params[]
+    // Structured form: prefer param_decl children, fallback to legacy string[] properties
     if (returnType !== undefined) {
-      const paramStr = Array.isArray(params) ? params.join(', ') : ''
+      const paramChildren = node.children.params ?? []
+      let paramStr: string
+      if (paramChildren.length > 0) {
+        paramStr = paramChildren.map(p => {
+          const t = String(p.properties.type ?? 'int')
+          const n = String(p.properties.name ?? '')
+          if (t.endsWith('[]')) {
+            const baseType = t.slice(0, -2)
+            return n ? `${baseType} ${n}[]` : `${baseType}[]`
+          }
+          return n ? `${t} ${n}` : t
+        }).join(', ')
+      } else {
+        const params = node.properties.params
+        paramStr = Array.isArray(params) ? params.join(', ') : ''
+      }
       return `${indent(ctx)}${returnType} ${name}(${paramStr});\n`
     }
 

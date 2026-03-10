@@ -790,27 +790,33 @@ export class SemanticInterpreter {
   private execFuncDef(node: SemanticNode): void {
     const name = String(node.properties.name)
     const returnType = String(node.properties.return_type || 'void')
-    const rawParams = node.properties.params
+    // Prefer structured param_decl children, fallback to legacy string[] properties
+    const paramChildren = node.children.params ?? []
     let params: { type: string; name: string }[] = []
-    if (Array.isArray(rawParams)) {
-      // params from blockly-panel: ["int x", "float y", "int arr[]", "int& ref", ...]
-      params = rawParams.map((p: unknown) => {
-        const s = String(p)
-        const spaceIdx = s.indexOf(' ')
-        if (spaceIdx < 0) return { type: 'int', name: s }
-        let type = s.slice(0, spaceIdx)
-        // Strip [] from array parameter names (e.g. "arr[]" → "arr")
-        // Detect reference parameters: "int&" → type includes "&"
-        let name = s.slice(spaceIdx + 1).replace(/\[\]$/, '')
-        // Handle "int &x" form (& prefixed to name)
-        if (name.startsWith('&')) {
-          type = type + '&'
-          name = name.slice(1)
-        }
-        return { type, name }
-      })
-    } else if (typeof rawParams === 'string' && rawParams.startsWith('[')) {
-      try { params = JSON.parse(rawParams) } catch { params = [] }
+    if (paramChildren.length > 0) {
+      params = paramChildren.map(p => ({
+        type: String(p.properties.type ?? 'int'),
+        name: String(p.properties.name ?? ''),
+      }))
+    } else {
+      const rawParams = node.properties.params
+      if (Array.isArray(rawParams)) {
+        // Legacy params from blockly-panel: ["int x", "float y", "int arr[]", "int& ref", ...]
+        params = rawParams.map((p: unknown) => {
+          const s = String(p)
+          const spaceIdx = s.indexOf(' ')
+          if (spaceIdx < 0) return { type: 'int', name: s }
+          let type = s.slice(0, spaceIdx)
+          let name = s.slice(spaceIdx + 1).replace(/\[\]$/, '')
+          if (name.startsWith('&')) {
+            type = type + '&'
+            name = name.slice(1)
+          }
+          return { type, name }
+        })
+      } else if (typeof rawParams === 'string' && rawParams.startsWith('[')) {
+        try { params = JSON.parse(rawParams) } catch { params = [] }
+      }
     }
     this.functions.set(name, {
       name,
@@ -855,7 +861,7 @@ export class SemanticInterpreter {
         }
       }
 
-      const val = i < argValues.length ? argValues[i] : defaultValue(param.type.replace('&', ''))
+      const val = i < argValues.length ? argValues[i] : defaultValue(param.type.replace('&', '').replace('[]', ''))
       this.scope.declare(param.name, val)
     }
 

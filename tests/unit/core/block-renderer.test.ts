@@ -92,8 +92,12 @@ describe('block-renderer', () => {
 
   it('should render func_def', () => {
     const func = createNode('func_def', {
-      name: 'main', return_type: 'int', params: ['int a', 'int b'],
+      name: 'main', return_type: 'int',
     }, {
+      params: [
+        createNode('param_decl', { type: 'int', name: 'a' }),
+        createNode('param_decl', { type: 'int', name: 'b' }),
+      ],
       body: [createNode('return', {}, { value: [createNode('number_literal', { value: '0' })] })],
     })
     const state = renderToBlocklyState(makeProgram(func))

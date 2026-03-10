@@ -58,7 +58,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
       .map(s => (s.blockDef as Record<string, unknown>)?.type as string)
       .filter(t => t && isBlockAvailable(t, lv))
 
-    const ensureTypes = ['u_print', 'u_input', 'u_endl', 'c_printf', 'c_scanf']
+    const ensureTypes = ['u_print', 'u_input', 'u_input_expr', 'u_endl', 'c_printf', 'c_scanf']
     for (const t of ensureTypes) {
       if (!ioTypes.includes(t) && isBlockAvailable(t, lv)) {
         ioTypes.push(t)

@@ -295,7 +295,7 @@ describe('C++ header deduplication', () => {
   it('should deduplicate identical #include directives', () => {
     const inc1 = createNode('cpp_include', { header: 'cstdio', local: false })
     const inc2 = createNode('cpp_include', { header: 'cstdio', local: false })
-    const main = createNode('func_def', { name: 'main', return_type: 'int', params: [] }, { body: [] })
+    const main = createNode('func_def', { name: 'main', return_type: 'int' }, { params: [], body: [] })
     const code = generateCode(makeProgram(inc1, inc2, main), 'cpp', printfStyle)
     const matches = code.match(/#include <cstdio>/g)
     expect(matches).toHaveLength(1)
@@ -474,12 +474,20 @@ describe('C++ expression generators (for expression blocks)', () => {
     const fwd1 = createNode('forward_decl', {
       return_type: 'void',
       name: 'listp',
-      params: ['int *', 'int'],
+    }, {
+      params: [
+        createNode('param_decl', { type: 'int *' }),
+        createNode('param_decl', { type: 'int' }),
+      ],
     })
     const fwd2 = createNode('forward_decl', {
       return_type: 'int',
       name: 'checkp',
-      params: ['int', 'int *'],
+    }, {
+      params: [
+        createNode('param_decl', { type: 'int' }),
+        createNode('param_decl', { type: 'int *' }),
+      ],
     })
     const code = generateCode(makeProgram(fwd1, fwd2), 'cpp', apcsStyle)
     expect(code).toContain('void listp(int *, int);')
@@ -491,8 +499,7 @@ describe('C++ expression generators (for expression blocks)', () => {
     const fwd = createNode('forward_decl', {
       return_type: 'int',
       name: 'getVal',
-      params: [],
-    })
+    }, { params: [] })
     const code = generateCode(makeProgram(fwd), 'cpp', apcsStyle)
     expect(code).toContain('int getVal();')
   })

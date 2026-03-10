@@ -84,7 +84,13 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.concept).toBe('forward_decl')
     expect(result!.properties.return_type).toBe('void')
     expect(result!.properties.name).toBe('listp')
-    expect(result!.properties.params).toEqual(['int *', 'int'])
+    expect(result!.children.params).toHaveLength(2)
+    expect(result!.children.params[0].concept).toBe('param_decl')
+    expect(result!.children.params[0].properties.type).toBe('int*')
+    expect(result!.children.params[0].properties.name).toBe('')
+    expect(result!.children.params[1].concept).toBe('param_decl')
+    expect(result!.children.params[1].properties.type).toBe('int')
+    expect(result!.children.params[1].properties.name).toBe('')
   })
 
   it('should lift forward declaration with no params', () => {
@@ -102,7 +108,7 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.concept).toBe('forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('getVal')
-    expect(result!.properties.params).toEqual([])
+    expect(result!.children.params).toHaveLength(0)
   })
 
   it('should lift array declaration', () => {
@@ -614,7 +620,10 @@ describe('C++ Statement Lifters', () => {
     expect(result!.concept).toBe('func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
-    expect(result!.properties.params).toContain('int a')
+    expect(result!.children.params).toHaveLength(1)
+    expect(result!.children.params[0].concept).toBe('param_decl')
+    expect(result!.children.params[0].properties.type).toBe('int')
+    expect(result!.children.params[0].properties.name).toBe('a')
     expect(result!.children.body).toHaveLength(1)
   })
 

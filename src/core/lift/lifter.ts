@@ -149,7 +149,7 @@ export class Lifter {
           if (!prev.annotations) prev.annotations = []
           prev.annotations.push({
             type: 'comment',
-            text: node.text,
+            text: node.text.replace(/^\/\/\s?/, '').replace(/^\/\*\s?|\s?\*\/$/g, ''),
             position: 'inline',
           })
           continue

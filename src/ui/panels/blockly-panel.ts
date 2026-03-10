@@ -6,6 +6,9 @@ import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-color
 import type { BlockStylePreset } from '../../languages/style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
+import { BlockExtractorRegistry } from '../../core/registry/block-extractor-registry'
+import type { BlockExtractContext } from '../../core/registry/block-extractor-registry'
+import { createCppExtractorRegistry } from '../../languages/cpp/extractors/register'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -33,11 +36,13 @@ export class BlocklyPanel implements ViewHost {
   private bus: SemanticBus | null = null
   private busUpdateInProgress = false
   private media: string | undefined
+  private extractorRegistry: BlockExtractorRegistry
 
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
     this.bus = options.bus ?? null
+    this.extractorRegistry = createCppExtractorRegistry()
     this.media = options.media
   }
 
@@ -138,6 +143,19 @@ export class BlocklyPanel implements ViewHost {
 
   private extractBlockInner(block: Blockly.Block): SemanticNode | null {
     const type = block.type
+
+    // Use registry-based extraction first
+    const extractor = this.extractorRegistry.get(type)
+    if (extractor) {
+      const ctx: BlockExtractContext = {
+        extractBlock: (b) => this.extractBlock(b as Blockly.Block),
+        extractStatementInput: (b, name) => this.extractStatementInput(b as Blockly.Block, name),
+        extractFuncArgs: (b) => this.extractFuncArgs(b as Blockly.Block),
+      }
+      return extractor(block, ctx)
+    }
+
+    // Legacy switch for template fallback (no registered block types should reach here)
     switch (type) {
       case 'u_var_declare': return this.extractVarDeclare(block)
       case 'u_var_assign': return this.extractVarAssign(block)
@@ -263,17 +281,16 @@ export class BlocklyPanel implements ViewHost {
       case 'c_forward_decl': {
           const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
           const fwdName = block.getFieldValue('NAME') ?? 'f'
-          const fwdParams: string[] = []
+          const fwdParamNodes: SemanticNode[] = []
           for (let i = 0; ; i++) {
             const paramType = block.getFieldValue(`TYPE_${i}`)
             if (paramType === null || paramType === undefined) break
-            fwdParams.push(paramType)
+            fwdParamNodes.push(createNode('param_decl', { type: paramType }))
           }
           return createNode('forward_decl', {
             return_type: returnType,
             name: fwdName,
-            params: fwdParams,
-          })
+          }, { params: fwdParamNodes })
         }
       case 'c_raw_code': return this.extractRawCode(block)
       case 'c_raw_expression': return this.extractRawExpression(block)
@@ -601,19 +618,19 @@ export class BlocklyPanel implements ViewHost {
     const name = block.getFieldValue('NAME') ?? 'f'
     const returnType = block.getFieldValue('RETURN_TYPE') ?? 'void'
 
-    // Extract params (TYPE_0/PARAM_0, TYPE_1/PARAM_1, ...)
-    const params: string[] = []
+    // Extract params as structured param_decl children (TYPE_0/PARAM_0, TYPE_1/PARAM_1, ...)
+    const paramNodes: SemanticNode[] = []
     let i = 0
     while (true) {
       const paramType = block.getFieldValue(`TYPE_${i}`)
       const paramName = block.getFieldValue(`PARAM_${i}`)
       if (paramType === null && paramName === null) break
-      params.push(`${paramType ?? 'int'} ${paramName ?? `p${i}`}`)
+      paramNodes.push(createNode('param_decl', { type: paramType ?? 'int', name: paramName ?? `p${i}` }))
       i++
     }
 
     const body = this.extractStatementInput(block, 'BODY')
-    return createNode('func_def', { name, return_type: returnType, params }, { body })
+    return createNode('func_def', { name, return_type: returnType }, { params: paramNodes, body })
   }
 
   private extractFuncCall(block: Blockly.Block): SemanticNode {

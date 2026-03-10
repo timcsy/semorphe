@@ -101,7 +101,7 @@ describe('generateCode', () => {
 
   it('should generate function definition', () => {
     const ret = createNode('return', {}, { value: [createNode('number_literal', { value: '0' })] })
-    const func = createNode('func_def', { name: 'main', return_type: 'int', params: [] }, { body: [ret] })
+    const func = createNode('func_def', { name: 'main', return_type: 'int' }, { params: [], body: [ret] })
     const tree = makeProgram(func)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('int main()')
@@ -114,6 +114,15 @@ describe('generateCode', () => {
     const tree = makeProgram(print)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('cout << x')
+  })
+
+  it('should output inline annotations as trailing comments', () => {
+    const node = createNode('var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('number_literal', { value: '1' })],
+    })
+    node.annotations = [{ type: 'comment', text: 'set x', position: 'inline' }]
+    const code = generateCode(makeProgram(node), 'cpp', defaultStyle)
+    expect(code).toContain('int x = 1; // set x')
   })
 
   it('should generate raw_code node', () => {

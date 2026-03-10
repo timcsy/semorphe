@@ -97,7 +97,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     const returnType = typeNode?.text ?? 'void'
     let name = 'f'
-    const params: string[] = []
+    const paramChildren: SemanticNode[] = []
 
     if (declaratorNode) {
       const nameNode = declaratorNode.childForFieldName('declarator')
@@ -107,14 +107,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       if (paramList) {
         for (const param of paramList.namedChildren) {
           if (param.type === 'parameter_declaration') {
-            params.push(param.text)
+            const { type: pType, name: pName } = parseParamDeclaration(param)
+            paramChildren.push(createNode('param_decl', { type: pType, name: pName }))
           }
         }
       }
     }
 
     const body = extractBody(bodyNode, ctx)
-    return createNode('func_def', { name, return_type: returnType, params }, { body })
+    return createNode('func_def', { name, return_type: returnType }, { params: paramChildren, body })
   })
 
   // declaration: multi-variable + array declarations
@@ -131,19 +132,19 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const nameNode = funcDeclarator.namedChildren.find(c => c.type === 'identifier')
       const paramList = funcDeclarator.childForFieldName('parameters')
         ?? funcDeclarator.namedChildren.find(c => c.type === 'parameter_list')
-      const params: string[] = []
+      const paramChildren: SemanticNode[] = []
       if (paramList) {
         for (const p of paramList.namedChildren) {
           if (p.type === 'parameter_declaration') {
-            params.push(p.text.trim())
+            const { type: pType, name: pName } = parseParamDeclaration(p)
+            paramChildren.push(createNode('param_decl', { type: pType, name: pName }))
           }
         }
       }
       return createNode('forward_decl', {
         return_type: type,
         name: nameNode?.text ?? 'f',
-        params,
-      })
+      }, { params: paramChildren })
     }
 
     const declarators = node.namedChildren.filter(c =>
@@ -208,6 +209,73 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       body,
     })
   })
+}
+
+/** Known compound type prefixes for text-based fallback parsing */
+const COMPOUND_TYPE_PREFIXES = [
+  'unsigned long long', 'long long', 'unsigned long', 'unsigned int',
+  'unsigned short', 'unsigned char', 'long double', 'signed char',
+]
+
+/** Parse a parameter_declaration AST node into { type, name } */
+function parseParamDeclaration(param: AstNode): { type: string; name: string } {
+  const typeNode = param.namedChildren.find(c =>
+    c.type === 'primitive_type' || c.type === 'type_identifier' ||
+    c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
+  )
+  const declNode = param.namedChildren.find(c =>
+    c.type === 'identifier' || c.type === 'pointer_declarator' ||
+    c.type === 'reference_declarator' || c.type === 'array_declarator'
+  )
+
+  // If we have structured children, use them
+  if (typeNode || declNode) {
+    let type = typeNode?.text ?? 'int'
+    let name = ''
+
+    if (declNode) {
+      if (declNode.type === 'pointer_declarator') {
+        type += '*'
+        const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
+        name = innerIdent?.text ?? ''
+      } else if (declNode.type === 'reference_declarator') {
+        type += '&'
+        const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
+        name = innerIdent?.text ?? ''
+      } else if (declNode.type === 'array_declarator') {
+        // int arr[] → type stays, name is the identifier inside
+        const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
+        name = innerIdent?.text ?? declNode.namedChildren[0]?.text ?? ''
+        type += '[]'
+      } else {
+        name = declNode.text
+      }
+    }
+
+    return { type, name }
+  }
+
+  // Fallback: parse from text (handles mock nodes and edge cases)
+  return parseParamText(param.text.trim())
+}
+
+/** Parse a parameter text like "long long x" or "int *" into { type, name } */
+function parseParamText(text: string): { type: string; name: string } {
+  // Try compound type prefixes first
+  for (const ct of COMPOUND_TYPE_PREFIXES) {
+    if (text.startsWith(ct + ' ')) {
+      const rest = text.slice(ct.length).trim()
+      if (rest.startsWith('*') || rest.startsWith('&')) {
+        return { type: ct + rest[0], name: rest.slice(1).trim() }
+      }
+      return { type: ct, name: rest }
+    }
+    if (text === ct) return { type: ct, name: '' }
+  }
+  // Simple: first token is type, rest is name
+  const parts = text.split(/\s+/)
+  if (parts.length === 1) return { type: parts[0], name: '' }
+  return { type: parts[0], name: parts.slice(1).join(' ') }
 }
 
 /** Check if node is i += 1 (assignment_expression/augmented_assignment_expression with += and right == '1') */

@@ -92,6 +92,40 @@ describe('ToolboxBuilder', () => {
     expect(Array.isArray(toolbox.contents)).toBe(true)
   })
 
+  it('should include u_input_expr in I/O category at L1', () => {
+    const reg = createRegistry()
+    const result = buildToolbox({
+      blockSpecRegistry: reg,
+      level: 1 as CognitiveLevel,
+      ioPreference: 'iostream',
+      msgs: emptyMsgs,
+      categoryColors: CATEGORY_COLORS,
+    })
+    const toolbox = result as { contents: Array<{ contents: Array<{ type: string }> }> }
+    const allTypes = toolbox.contents.flatMap((c: { contents: Array<{ type: string }> }) => c.contents.map((b: { type: string }) => b.type))
+    expect(allTypes).toContain('u_input_expr')
+  })
+
+  it('toolbox should be monotonically inclusive: L0 ⊆ L1 ⊆ L2', () => {
+    const reg = createRegistry()
+    const getTypes = (lv: CognitiveLevel) => {
+      const r = buildToolbox({
+        blockSpecRegistry: reg,
+        level: lv,
+        ioPreference: 'iostream',
+        msgs: emptyMsgs,
+        categoryColors: CATEGORY_COLORS,
+      })
+      const toolbox = r as { contents: Array<{ contents: Array<{ type: string }> }> }
+      return new Set(toolbox.contents.flatMap((c: { contents: Array<{ type: string }> }) => c.contents.map((b: { type: string }) => b.type)))
+    }
+    const l0 = getTypes(0 as CognitiveLevel)
+    const l1 = getTypes(1 as CognitiveLevel)
+    const l2 = getTypes(2 as CognitiveLevel)
+    for (const t of l0) expect(l1.has(t), `L0 type "${t}" missing from L1`).toBe(true)
+    for (const t of l1) expect(l2.has(t), `L1 type "${t}" missing from L2`).toBe(true)
+  })
+
   it('should NOT import blockly (zero UI framework dependency)', () => {
     const filePath = path.resolve(__dirname, '../../../src/ui/toolbox-builder.ts')
     const content = fs.readFileSync(filePath, 'utf-8')

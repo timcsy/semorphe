@@ -49,10 +49,20 @@ const BLOCK_LEVELS: Record<string, CognitiveLevel> = {
   c_case: 1,
   c_printf: 1,
   c_scanf: 1,
+  c_default: 1,
+  c_ternary: 1,
+  c_cast: 1,
+  c_bitwise_not: 1,
+  c_increment_expr: 1,
+  c_compound_assign_expr: 1,
+  c_var_declare_expr: 1,
+  c_builtin_constant: 0,
 
-  // C++ Essential (L0 - every program needs these)
-  c_include: 0,
-  c_using_namespace: 0,
+  // C++ Essential (L1 - scaffold manages visibility at L0)
+  c_include: 1,
+  c_using_namespace: 1,
+
+  c_forward_decl: 2,
 
   // C++ Special (L2 - Advanced)
   c_raw_code: 2,

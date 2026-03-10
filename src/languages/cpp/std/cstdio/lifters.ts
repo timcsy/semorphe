@@ -31,7 +31,8 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
       const varName = inner?.text ?? 'x'
       return createNode('var_ref', { name: varName })
     }
-    const varName = varArg.text.replace(/^&/, '')
+    const rawText = varArg.text
+    const varName = rawText.startsWith('&') ? rawText.slice(1) : rawText
     return createNode('var_ref', { name: varName })
   })
   return createNode('cpp_scanf', { format: formatStr }, { args: values })

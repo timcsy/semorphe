@@ -114,16 +114,26 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       inputs: {},
     }
 
-    const params = node.properties.params
-    if (Array.isArray(params)) {
-      const paramCount = params.length
-      for (let i = 0; i < paramCount; i++) {
-        const { type, name } = parseParamTypeAndName(params[i] as string, i)
-        block.fields[`TYPE_${i}`] = type
-        block.fields[`PARAM_${i}`] = name
+    // Prefer structured param_decl children, fallback to legacy string[] properties
+    const paramChildren = node.children.params ?? []
+    if (paramChildren.length > 0) {
+      for (let i = 0; i < paramChildren.length; i++) {
+        block.fields[`TYPE_${i}`] = paramChildren[i].properties.type ?? 'int'
+        block.fields[`PARAM_${i}`] = paramChildren[i].properties.name ?? `p${i}`
       }
-      if (paramCount > 0) {
-        block.extraState = { paramCount }
+      block.extraState = { paramCount: paramChildren.length }
+    } else {
+      const params = node.properties.params
+      if (Array.isArray(params)) {
+        const paramCount = params.length
+        for (let i = 0; i < paramCount; i++) {
+          const { type, name } = parseParamTypeAndName(params[i] as string, i)
+          block.fields[`TYPE_${i}`] = type
+          block.fields[`PARAM_${i}`] = name
+        }
+        if (paramCount > 0) {
+          block.extraState = { paramCount }
+        }
       }
     }
 
@@ -210,12 +220,21 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       inputs: {},
     }
 
-    const params = node.properties.params
-    if (Array.isArray(params) && params.length > 0) {
-      for (let i = 0; i < params.length; i++) {
-        block.fields[`TYPE_${i}`] = params[i] as string
+    // Prefer structured param_decl children, fallback to legacy string[] properties
+    const paramChildren = node.children.params ?? []
+    if (paramChildren.length > 0) {
+      for (let i = 0; i < paramChildren.length; i++) {
+        block.fields[`TYPE_${i}`] = paramChildren[i].properties.type ?? 'int'
       }
-      block.extraState = { paramCount: params.length }
+      block.extraState = { paramCount: paramChildren.length }
+    } else {
+      const params = node.properties.params
+      if (Array.isArray(params) && params.length > 0) {
+        for (let i = 0; i < params.length; i++) {
+          block.fields[`TYPE_${i}`] = params[i] as string
+        }
+        block.extraState = { paramCount: params.length }
+      }
     }
 
     return block

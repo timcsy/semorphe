@@ -24,7 +24,7 @@ describe('Cognitive Level Switching', () => {
       expect(getBlockLevel('u_array_declare')).toBe(2)
       expect(getBlockLevel('u_array_access')).toBe(2)
       expect(getBlockLevel('c_raw_code')).toBe(2)
-      expect(getBlockLevel('c_include')).toBe(0)
+      expect(getBlockLevel('c_include')).toBe(1)
     })
 
     it('should default unknown blocks to L2', () => {
@@ -75,6 +75,42 @@ describe('Cognitive Level Switching', () => {
     it('should show all blocks at level 2', () => {
       const filtered = filterBlocksByLevel(allBlocks, 2 as CognitiveLevel)
       expect(filtered).toEqual(allBlocks)
+    })
+  })
+
+  describe('c_include/c_using_namespace should be L1', () => {
+    it('should assign L1 to c_include and c_using_namespace (scaffold, not beginner)', () => {
+      expect(getBlockLevel('c_include')).toBe(1)
+      expect(getBlockLevel('c_using_namespace')).toBe(1)
+    })
+
+    it('should NOT make c_include available at L0', () => {
+      expect(isBlockAvailable('c_include', 0)).toBe(false)
+      expect(isBlockAvailable('c_using_namespace', 0)).toBe(false)
+    })
+  })
+
+  describe('BLOCK_LEVELS completeness', () => {
+    it('c_default should be L1', () => expect(getBlockLevel('c_default')).toBe(1))
+    it('c_ternary should be L1', () => expect(getBlockLevel('c_ternary')).toBe(1))
+    it('c_cast should be L1', () => expect(getBlockLevel('c_cast')).toBe(1))
+    it('c_bitwise_not should be L1', () => expect(getBlockLevel('c_bitwise_not')).toBe(1))
+    it('c_increment_expr should be L1', () => expect(getBlockLevel('c_increment_expr')).toBe(1))
+    it('c_compound_assign_expr should be L1', () => expect(getBlockLevel('c_compound_assign_expr')).toBe(1))
+    it('c_var_declare_expr should be L1', () => expect(getBlockLevel('c_var_declare_expr')).toBe(1))
+    it('c_forward_decl should be L2', () => expect(getBlockLevel('c_forward_decl')).toBe(2))
+    it('c_builtin_constant should be L0', () => expect(getBlockLevel('c_builtin_constant')).toBe(0))
+  })
+
+  describe('Statement↔Expression extraState contract', () => {
+    it('u_input/u_input_expr use { args: ArgSlotState[] } shape', () => {
+      const state = { args: [{ mode: 'select', selectedVar: 'x' }] }
+      expect(state.args).toBeInstanceOf(Array)
+      expect(state.args[0]).toHaveProperty('mode')
+    })
+    it('u_func_call/u_func_call_expr use { argCount: number } shape', () => {
+      const state = { argCount: 3 }
+      expect(typeof state.argCount).toBe('number')
     })
   })
 
