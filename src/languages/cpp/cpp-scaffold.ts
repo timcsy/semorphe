@@ -3,13 +3,14 @@ import type { DependencyResolver } from '../../core/dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig, ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 import { resolveVisibility } from '../../core/program-scaffold'
 import { collectConcepts } from './auto-include'
+import { expandHeaderAliases } from './header-aliases'
 
 export class CppScaffold implements ProgramScaffold {
   constructor(private resolver: DependencyResolver) {}
 
   resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult {
     const { cognitiveLevel, manualImports = [], pinnedItems = [] } = config
-    const manualSet = new Set(manualImports)
+    const manualSet = expandHeaderAliases(new Set(manualImports))
 
     // Collect concepts from semantic tree
     const concepts = new Set<string>()

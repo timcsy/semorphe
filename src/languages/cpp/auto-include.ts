@@ -7,6 +7,7 @@
  */
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
+import { expandHeaderAliases, normalizeHeader } from './header-aliases'
 
 /**
  * Collect all concept IDs from a semantic tree (recursive).
@@ -30,7 +31,7 @@ function collectManualIncludes(body: SemanticNode[]): Set<string> {
       manual.add(`<${node.properties.header}>`)
     }
   }
-  return manual
+  return expandHeaderAliases(manual)
 }
 
 /**
@@ -70,8 +71,14 @@ export function createCppCodePatcher(
     let changed = false
     let patched = code
 
-    // 1. Patch missing #include directives
-    const missingIncludes = edges.filter(e => !code.includes(e.directive))
+    // 1. Patch missing #include directives (also check C/C++ header equivalents)
+    const existingHeaders = new Set<string>()
+    const includeRe = /#include\s*[<"]([^>"]+)[>"]/g
+    let m: RegExpExecArray | null
+    while ((m = includeRe.exec(code)) !== null) {
+      existingHeaders.add(normalizeHeader(m[1]))
+    }
+    const missingIncludes = edges.filter(e => !existingHeaders.has(normalizeHeader(e.header)))
     if (missingIncludes.length > 0) {
       const patch = missingIncludes.map(e => e.directive).join('\n') + '\n'
       const idx = patched.indexOf('#include')

@@ -103,6 +103,18 @@ describe('CppScaffold', () => {
       const importCodes = result.imports.map(i => i.code)
       expect(importCodes).not.toContain('#include <iostream>')
     })
+
+    it('should exclude C-style equivalent headers (stdio.h ≡ cstdio)', () => {
+      const tree = makeProgram([
+        createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+      ])
+      const result = scaffold.resolve(tree, {
+        cognitiveLevel: 1,
+        manualImports: ['<stdio.h>'],
+      })
+      const importCodes = result.imports.map(i => i.code)
+      expect(importCodes).not.toContain('#include <cstdio>')
+    })
   })
 
   describe('pinned items', () => {

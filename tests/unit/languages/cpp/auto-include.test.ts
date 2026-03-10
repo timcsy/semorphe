@@ -101,6 +101,33 @@ describe('Auto-include engine', () => {
       expect(edges).toHaveLength(0)
     })
 
+    it('should exclude C-style equivalent of auto-included headers (stdio.h ≡ cstdio)', () => {
+      const tree = makeProgram([
+        createNode('cpp_include', { header: 'stdio.h', local: false }),
+        createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+      ])
+      const edges = computeAutoIncludes(tree, registry)
+      expect(headers(edges)).not.toContain('<cstdio>')
+    })
+
+    it('should exclude C-style equivalent of auto-included headers (string.h ≡ cstring)', () => {
+      const tree = makeProgram([
+        createNode('cpp_include', { header: 'string.h', local: false }),
+        createNode('cpp_strlen', { name: 's' }),
+      ])
+      const edges = computeAutoIncludes(tree, registry)
+      expect(headers(edges)).not.toContain('<cstring>')
+    })
+
+    it('should exclude C-style equivalent of auto-included headers (math.h ≡ cmath)', () => {
+      const tree = makeProgram([
+        createNode('cpp_include', { header: 'math.h', local: false }),
+        createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('number_literal', { value: '4' })] }),
+      ])
+      const edges = computeAutoIncludes(tree, registry)
+      expect(headers(edges)).not.toContain('<cmath>')
+    })
+
     it('should return sorted headers', () => {
       const tree = makeProgram([
         createNode('cpp_vector_declare', { type: 'int', name: 'v' }),

@@ -2,6 +2,7 @@ import type { SemanticNode, StylePreset } from '../../../../core/types'
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, indented, generateExpression, generateBody, trackOwnText } from '../../../../core/projection/code-generator'
 import { computeAutoIncludes } from '../../auto-include'
+import { normalizeHeader } from '../../header-aliases'
 import type { DependencyResolver } from '../../../../core/dependency-resolver'
 import { createNode } from '../../../../core/semantic-tree'
 
@@ -92,11 +93,11 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
       }
     }
 
-    // Deduplicate consecutive #include directives with identical header
+    // Deduplicate #include directives with identical or equivalent headers
     const seen = new Set<string>()
     const deduped = effectiveBody.filter(n => {
       if (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') {
-        const key = `${n.concept}:${n.properties.header}`
+        const key = `${n.concept}:${normalizeHeader(String(n.properties.header))}`
         if (seen.has(key)) return false
         seen.add(key)
       }
