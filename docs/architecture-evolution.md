@@ -47,7 +47,7 @@
 
 ## 1. 目標願景
 
-將 code-blockly 從「一個 Blockly + Monaco 的網頁應用」演化為「一個可插拔的語義投影平台」：
+將 semorphe 從「一個 Blockly + Monaco 的網頁應用」演化為「一個可插拔的語義投影平台」：
 
 ```
 核心不變量：語義樹是唯一真實（first-principles §1.1）

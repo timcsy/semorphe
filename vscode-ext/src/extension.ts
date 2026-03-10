@@ -29,7 +29,7 @@ let extensionContext: vscode.ExtensionContext | null = null
 let trackedDocument: vscode.TextDocument | null = null
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  console.log('Code Blockly extension activating...')
+  console.log('Semorphe extension activating...')
   extensionContext = context
 
   semanticCore = new SemanticCore()
@@ -39,22 +39,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const wasmDir = path.join(context.extensionPath, 'dist')
   try {
     await semanticCore.init(wasmDir)
-    console.log('Code Blockly: SemanticCore initialized')
+    console.log('Semorphe: SemanticCore initialized')
   } catch (err) {
-    console.error('Code Blockly: Failed to init SemanticCore:', err)
-    vscode.window.showErrorMessage('Code Blockly: 初始化失敗')
+    console.error('Semorphe: Failed to init SemanticCore:', err)
+    vscode.window.showErrorMessage('Semorphe: 初始化失敗')
     return
   }
 
   // Register WebviewPanelSerializer for panel state restoration
-  vscode.window.registerWebviewPanelSerializer('codeBlocklyBlocks', {
+  vscode.window.registerWebviewPanelSerializer('semorpheBlocks', {
     async deserializeWebviewPanel(panel: vscode.WebviewPanel, _state: unknown) {
       setupPanelBridge(panel, context)
     },
   })
 
   // Register toggle command
-  const toggleCmd = vscode.commands.registerCommand('codeBlockly.toggleBlocksPanel', () => {
+  const toggleCmd = vscode.commands.registerCommand('semorphe.toggleBlocksPanel', () => {
     // Capture the active editor BEFORE creating the panel (panel steals focus)
     const editor = vscode.window.activeTextEditor
     if (editor && isCppDocument(editor.document)) {
@@ -76,13 +76,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Watch configuration changes for cognitive level and coding style
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('codeBlockly.cognitiveLevel')) {
+      if (event.affectsConfiguration('semorphe.cognitiveLevel')) {
         const level = getCognitiveLevel()
         if (bridge && webviewReady) {
           bridge.send('config:level', { level })
         }
       }
-      if (event.affectsConfiguration('codeBlockly.codingStyle')) {
+      if (event.affectsConfiguration('semorphe.codingStyle')) {
         const style = getCodingStyle()
         semanticCore?.setStyle(style)
         if (bridge && webviewReady) {
@@ -105,15 +105,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     setupPanelBridge(panel, context)
   }
 
-  console.log('Code Blockly extension activated')
+  console.log('Semorphe extension activated')
 }
 
 function getCognitiveLevel(): number {
-  return vscode.workspace.getConfiguration('codeBlockly').get<number>('cognitiveLevel', 1)
+  return vscode.workspace.getConfiguration('semorphe').get<number>('cognitiveLevel', 1)
 }
 
 function getCodingStyle(): StylePreset {
-  const styleId = vscode.workspace.getConfiguration('codeBlockly').get<string>('codingStyle', 'apcs')
+  const styleId = vscode.workspace.getConfiguration('semorphe').get<string>('codingStyle', 'apcs')
   return STYLE_PRESETS[styleId] ?? STYLE_PRESETS.apcs
 }
 
@@ -137,13 +137,13 @@ function setupPanelBridge(panel: vscode.WebviewPanel, context: vscode.ExtensionC
 
       case 'config:level:change': {
         const levelData = message.data as { level: number }
-        await vscode.workspace.getConfiguration('codeBlockly').update('cognitiveLevel', levelData.level, vscode.ConfigurationTarget.Global)
+        await vscode.workspace.getConfiguration('semorphe').update('cognitiveLevel', levelData.level, vscode.ConfigurationTarget.Global)
         break
       }
 
       case 'config:style:change': {
         const styleData = message.data as { styleId: string }
-        await vscode.workspace.getConfiguration('codeBlockly').update('codingStyle', styleData.styleId, vscode.ConfigurationTarget.Global)
+        await vscode.workspace.getConfiguration('semorphe').update('codingStyle', styleData.styleId, vscode.ConfigurationTarget.Global)
         const style = STYLE_PRESETS[styleData.styleId]
         if (style) semanticCore?.setStyle(style)
         break
@@ -196,7 +196,7 @@ async function liftCode(code: string, uri: string): Promise<SemanticNode | null>
     }
     return tree
   } catch (err) {
-    console.error('Code Blockly: lift failed:', err)
+    console.error('Semorphe: lift failed:', err)
     return null
   }
 }

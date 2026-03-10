@@ -52,7 +52,7 @@ export function createAppLayout(
   toolbar.id = 'toolbar'
   toolbar.innerHTML = `
     <div class="toolbar-left">
-      <span class="toolbar-title">Code Blockly</span>
+      <span class="toolbar-title">Semorphe</span>
     </div>
     <div class="toolbar-actions">
       <span id="style-selector-mount"></span>
@@ -219,7 +219,7 @@ export function setupFileButtons(
     closeMenu()
     const state = callbacks.getExportState()
     const blob = storageService.exportToBlob(state)
-    storageService.downloadBlob(blob, `code-blockly-${Date.now()}.json`)
+    storageService.downloadBlob(blob, `semorphe-${Date.now()}.json`)
     showToast(Blockly.Msg['TOAST_EXPORT_SUCCESS'] || '已匯出', 'success')
   })
 

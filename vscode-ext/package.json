@@ -1,8 +1,9 @@
 {
-  "name": "code-blockly-vscode",
-  "displayName": "Code Blockly",
-  "description": "在 VSCode 中使用積木編輯 C++ 程式碼",
+  "name": "semorphe-vscode",
+  "displayName": "Semorphe",
+  "description": "在 VSCode 中使用積木編輯 C++ 程式碼 — 唯一真實，各式投影",
   "version": "0.1.0",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -18,14 +19,14 @@
   "contributes": {
     "commands": [
       {
-        "command": "codeBlockly.toggleBlocksPanel",
-        "title": "Code Blockly: Toggle Blocks Panel"
+        "command": "semorphe.toggleBlocksPanel",
+        "title": "Semorphe: Toggle Blocks Panel"
       }
     ],
     "configuration": {
-      "title": "Code Blockly",
+      "title": "Semorphe",
       "properties": {
-        "codeBlockly.cognitiveLevel": {
+        "semorphe.cognitiveLevel": {
           "type": "number",
           "default": 1,
           "enum": [
@@ -41,7 +42,7 @@
           "description": "控制積木工具箱顯示的認知層級",
           "scope": "window"
         },
-        "codeBlockly.codingStyle": {
+        "semorphe.codingStyle": {
           "type": "string",
           "default": "apcs",
           "enum": [
@@ -62,7 +63,7 @@
     "menus": {
       "editor/title": [
         {
-          "command": "codeBlockly.toggleBlocksPanel",
+          "command": "semorphe.toggleBlocksPanel",
           "when": "resourceLangId =~ /^(cpp|c)$/",
           "group": "navigation"
         }

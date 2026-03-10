@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semorphe <Σ> Logo Asset Kit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .asset-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .asset-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        canvas { display: none; }
+        .checkerboard {
+            background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px 5px, 5px 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen pb-20">
+
+    <div class="max-w-6xl mx-auto py-12 px-6">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Semorphe <Σ> Logo Asset Kit</h1>
+            <p class="text-slate-500 text-lg">唯一真實，各式投影。</p>
+        </header>
+
+        <!-- Theme Variants -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+            <!-- Sakura Sky -->
+            <div class="asset-card bg-white p-6 rounded-3xl border border-pink-100 ring-2 ring-pink-50">
+                <h2 class="text-sm font-bold text-pink-500 mb-4 uppercase tracking-widest">Theme: Sakura Sky</h2>
+                <div id="svg-sakura" class="flex justify-center p-8 bg-sky-50 rounded-2xl mb-6" style="background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);">
+                    <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="5" width="90" height="90" rx="18" fill="none" stroke="#bae6fd" stroke-width="1.5"/>
+                        <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M63 32 H37 L50 50 L37 68 H63" stroke="#f472b6" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadSVG('svg-sakura', 'semorphe-sakura.svg')" class="flex-1 bg-slate-800 text-white py-2 rounded-xl text-xs font-bold hover:bg-slate-700">SVG</button>
+                    <button onclick="exportPNG('svg-sakura', 1024, 'semorphe-sakura.png')" class="flex-1 bg-pink-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-pink-400">PNG</button>
+                </div>
+            </div>
+
+            <!-- Tech Dark -->
+            <div class="asset-card bg-white p-6 rounded-3xl border border-slate-200">
+                <h2 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Theme: Tech Dark</h2>
+                <div id="svg-dark" class="flex justify-center p-8 bg-slate-900 rounded-2xl mb-6">
+                    <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="5" width="90" height="90" rx="18" fill="#1e293b"/>
+                        <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M63 32 H37 L50 50 L37 68 H63" stroke="white" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadSVG('svg-dark', 'semorphe-dark.svg')" class="flex-1 bg-slate-800 text-white py-2 rounded-xl text-xs font-bold hover:bg-slate-700">SVG</button>
+                    <button onclick="exportPNG('svg-dark', 1024, 'semorphe-dark.png')" class="flex-1 bg-blue-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-500">PNG</button>
+                </div>
+            </div>
+
+            <!-- Monochrome -->
+            <div class="asset-card bg-white p-6 rounded-3xl border border-slate-200">
+                <h2 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Theme: Monochrome</h2>
+                <div id="svg-mono" class="flex justify-center p-8 bg-white checkerboard rounded-2xl mb-6">
+                    <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="color: #334155;">
+                        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M29 32 L16 50 L29 68" stroke-width="7.5"/>
+                            <path d="M63 32 H37 L50 50 L37 68 H63" stroke-width="10"/>
+                            <path d="M71 32 L84 50 L71 68" stroke-width="7.5"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadSVG('svg-mono', 'semorphe-mono.svg', true)" class="flex-1 bg-slate-800 text-white py-2 rounded-xl text-xs font-bold hover:bg-slate-700">SVG</button>
+                    <button onclick="exportPNG('svg-mono', 1024, 'semorphe-mono.png', true)" class="flex-1 bg-slate-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-slate-500">PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Size Spec -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-10 mb-12">
+            <h2 class="text-2xl font-bold mb-10 flex items-center">
+                <span class="w-1.5 h-6 bg-blue-500 mr-3 rounded-full"></span>
+                尺寸規格規範
+            </h2>
+            <div class="flex flex-wrap items-end gap-12">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 flex items-center justify-center border border-dashed border-slate-200 rounded mb-4">
+                        <div class="scale-[0.16] origin-center">
+                            <svg width="100" height="100" viewBox="0 0 100 100">
+                                <rect x="5" y="5" width="90" height="90" rx="18" fill="#1e293b"/>
+                                <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M63 32 H37 L50 50 L37 68 H63" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-400">16px</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 flex items-center justify-center border border-dashed border-slate-200 rounded mb-4">
+                        <div class="scale-[0.32] origin-center">
+                            <svg width="100" height="100" viewBox="0 0 100 100">
+                                <rect x="5" y="5" width="90" height="90" rx="18" fill="#1e293b"/>
+                                <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M63 32 H37 L50 50 L37 68 H63" stroke="white" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-400">32px</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-20 h-20 flex items-center justify-center border border-dashed border-slate-200 rounded mb-4">
+                        <div class="scale-[0.64] origin-center">
+                            <svg width="100" height="100" viewBox="0 0 100 100">
+                                <rect x="5" y="5" width="90" height="90" rx="18" fill="#1e293b"/>
+                                <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M63 32 H37 L50 50 L37 68 H63" stroke="white" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-400">64px</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-32 h-32 flex items-center justify-center border border-dashed border-slate-200 rounded mb-4">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <rect x="5" y="5" width="90" height="90" rx="18" fill="#1e293b"/>
+                            <path d="M29 32 L16 50 L29 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M63 32 H37 L50 50 L37 68 H63" stroke="white" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M71 32 L84 50 L71 68" stroke="#38bdf8" stroke-width="7.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-400">128px</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="export-canvas"></canvas>
+    <script>
+        function downloadSVG(containerId, filename, isMono = false) {
+            let svgContent = document.getElementById(containerId).innerHTML;
+            if (isMono) svgContent = svgContent.replace(/currentColor/g, "#333333");
+            const blob = new Blob([svgContent], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportPNG(containerId, size, filename, isMono = false) {
+            const canvas = document.getElementById('export-canvas');
+            const ctx = canvas.getContext('2d');
+            let svgElement = document.getElementById(containerId).querySelector('svg');
+            let svgData = new XMLSerializer().serializeToString(svgElement);
+            if (isMono) svgData = svgData.replace(/currentColor/g, "#333333");
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = size;
+                canvas.height = size;
+                ctx.clearRect(0, 0, size, size);
+                ctx.drawImage(img, 0, 0, size, size);
+                const pngUrl = canvas.toDataURL("image/png");
+                const link = document.createElement('a');
+                link.href = pngUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+    </script>
+</body>
+</html>

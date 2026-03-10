@@ -11,8 +11,8 @@ export function createOrShow(extensionUri: vscode.Uri): vscode.WebviewPanel {
   }
 
   const panel = vscode.window.createWebviewPanel(
-    'codeBlocklyBlocks',
-    'Code Blockly: Blocks',
+    'semorpheBlocks',
+    'Semorphe: Blocks',
     column,
     {
       enableScripts: true,
@@ -55,7 +55,7 @@ function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource} data:; font-src ${cspSource}; connect-src ${cspSource}; media-src ${cspSource};">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Blockly</title>
+  <title>Semorphe</title>
   <style>
     html, body {
       margin: 0;

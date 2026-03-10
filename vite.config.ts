@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/code-blockly/',
+  base: '/semorphe/',
   build: {
     rollupOptions: {
       output: {

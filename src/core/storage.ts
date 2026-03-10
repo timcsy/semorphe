@@ -1,6 +1,6 @@
 import type { SemanticNode, CognitiveLevel } from './types'
 
-const STORAGE_KEY = 'code-blockly-state'
+const STORAGE_KEY = 'semorphe-state'
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB limit
 
 export interface SavedState {
