@@ -6,20 +6,17 @@ import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
 import type { CognitiveLevel, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
-import cppBasicBlocks from '../../../src/languages/cpp/projections/blocks/basic.json'
-import cppSpecialBlocks from '../../../src/languages/cpp/projections/blocks/special.json'
-import cppAdvancedBlocks from '../../../src/languages/cpp/projections/blocks/advanced.json'
+import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
     ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...cppBasicBlocks as unknown as BlockProjectionJSON[],
-    ...cppSpecialBlocks as unknown as BlockProjectionJSON[],
-    ...cppAdvancedBlocks as unknown as BlockProjectionJSON[],
+    ...coreBlocks,
+    ...allStdModules.flatMap(m => m.blocks),
   ]
   reg.loadFromSplit(allConcepts, allProjections)
   return reg

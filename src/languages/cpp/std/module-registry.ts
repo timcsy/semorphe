@@ -7,7 +7,7 @@ export class ModuleRegistry {
   register(mod: StdModule): void {
     this.modules.set(mod.header, mod)
     for (const concept of mod.concepts) {
-      this.conceptToHeader.set(concept.id, mod.header)
+      this.conceptToHeader.set(concept.conceptId, mod.header)
     }
   }
 

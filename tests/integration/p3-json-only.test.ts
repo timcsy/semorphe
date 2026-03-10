@@ -20,8 +20,8 @@ import { LiftContextData } from '../../src/core/lift/lift-context'
 
 // Import split concept/projection JSON files
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
-import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 
 // Mock AST node helper
 function mockNode(
@@ -61,8 +61,8 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
-    registry.loadFromSplit(allConcepts, basicBlocks as unknown as BlockProjectionJSON[])
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    registry.loadFromSplit(allConcepts, [...coreBlocks, ...allStdModules.flatMap(m => m.blocks)])
     const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)
     renderer.loadBlockSpecs(specs)

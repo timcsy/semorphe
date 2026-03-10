@@ -1,15 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import algorithmBlocks from '../../src/languages/cpp/projections/blocks/stdlib-algorithms.json'
-import containerBlocks from '../../src/languages/cpp/projections/blocks/stdlib-containers.json'
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
+import algorithmBlocks from '../../src/languages/cpp/std/algorithm/blocks.json'
+import containerBlocks from '../../src/languages/cpp/std/vector/blocks.json'
 
 const allConcepts = [
   ...universalConcepts as unknown as ConceptDefJSON[],
-  ...cppConcepts as unknown as ConceptDefJSON[],
+  ...coreConcepts,
+  ...allStdModules.flatMap(m => m.concepts),
 ]
 
 describe('JSON-only extension (US6)', () => {
@@ -26,7 +28,8 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, containerBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    expect(all.length).toBe(2)
+    expect(all.length).toBe(3)
+    expect(all.map(s => s.id)).toContain('cpp_vector_declare')
     expect(all.map(s => s.id)).toContain('cpp_vector_push_back')
     expect(all.map(s => s.id)).toContain('cpp_vector_size')
   })
@@ -82,10 +85,10 @@ describe('JSON-only extension (US6)', () => {
     ])
     const sortSpec = registry.getAll().find(s => s.id === 'cpp_sort')
     expect(sortSpec).toBeDefined()
-    expect(sortSpec!.concept.conceptId).toBe('cpp:sort')
-    expect(sortSpec!.concept.abstractConcept).toBe('container_sort')
+    expect(sortSpec!.concept.conceptId).toBe('cpp_sort')
+    expect(sortSpec!.concept.abstractConcept).toBe('sort')
 
     const pushBackSpec = registry.getAll().find(s => s.id === 'cpp_vector_push_back')
-    expect(pushBackSpec!.concept.abstractConcept).toBe('container_add')
+    expect(pushBackSpec!.concept.abstractConcept).toBe('vector_push_back')
   })
 })

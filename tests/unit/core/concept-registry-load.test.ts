@@ -3,14 +3,16 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { ConceptRegistry } from '../../../src/core/concept-registry'
 import type { ConceptDefJSON } from '../../../src/core/types'
-
-const semanticsDir = path.resolve(__dirname, '../../../src/blocks/semantics')
-const cppSemanticsDir = path.resolve(__dirname, '../../../src/languages/cpp/semantics')
+import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
+import { coreConcepts } from '../../../src/languages/cpp/core'
+import { allStdModules } from '../../../src/languages/cpp/std'
 
 function loadConcepts(): ConceptDefJSON[] {
-  const universal = JSON.parse(fs.readFileSync(path.join(semanticsDir, 'universal-concepts.json'), 'utf-8'))
-  const cpp = JSON.parse(fs.readFileSync(path.join(cppSemanticsDir, 'concepts.json'), 'utf-8'))
-  return [...universal, ...cpp]
+  return [
+    ...universalConcepts as unknown as ConceptDefJSON[],
+    ...coreConcepts,
+    ...allStdModules.flatMap(m => m.concepts),
+  ]
 }
 
 describe('ConceptRegistry.loadFromJSON', () => {

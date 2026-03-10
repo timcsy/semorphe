@@ -17,21 +17,18 @@ import type { BlockSpec, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON 
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
-import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
-import advancedBlocks from '../../src/languages/cpp/projections/blocks/advanced.json'
-import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 
 // Build allSpecs eagerly at module level (needed for describe-time iteration)
 const _registry = new BlockSpecRegistry()
-const _allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+const _allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
 const _allProjections = [
   ...universalBlocks as unknown as BlockProjectionJSON[],
-  ...basicBlocks as unknown as BlockProjectionJSON[],
-  ...advancedBlocks as unknown as BlockProjectionJSON[],
-  ...specialBlocks as unknown as BlockProjectionJSON[],
+  ...coreBlocks,
+  ...allStdModules.flatMap(m => m.blocks),
 ]
 _registry.loadFromSplit(_allConcepts, _allProjections)
 const allSpecs: BlockSpec[] = _registry.getAll()

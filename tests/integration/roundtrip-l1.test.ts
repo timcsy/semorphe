@@ -16,13 +16,11 @@ import { registerStatementGenerators } from '../../src/languages/cpp/generators/
 import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import cppConcepts from '../../src/languages/cpp/semantics/concepts.json'
-import basicBlocks from '../../src/languages/cpp/projections/blocks/basic.json'
-import specialBlocks from '../../src/languages/cpp/projections/blocks/special.json'
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 
@@ -62,11 +60,11 @@ describe('L1 Block Roundtrip', () => {
     extractor = new PatternExtractor()
 
     const registry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...cppConcepts as unknown as ConceptDefJSON[]]
+    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
     const allProjections = [
       ...universalBlocks as unknown as BlockProjectionJSON[],
-      ...basicBlocks as unknown as BlockProjectionJSON[],
-      ...specialBlocks as unknown as BlockProjectionJSON[],
+      ...coreBlocks,
+      ...allStdModules.flatMap(m => m.blocks),
     ]
     registry.loadFromSplit(allConcepts, allProjections)
     const allSpecs = registry.getAll()

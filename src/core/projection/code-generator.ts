@@ -20,6 +20,8 @@ export interface GeneratorContext {
   isExpression?: boolean
   _mappings?: SourceMapping[]
   _lineCount?: number
+  /** Optional module registry for auto-include resolution */
+  moduleRegistry?: { getRequiredHeaders(conceptIds: string[]): string[] }
 }
 
 // ─── Language module registry ───

@@ -5,7 +5,7 @@ import type { StdModule } from '../../../../../src/languages/cpp/std/types'
 function createMockModule(header: string, conceptIds: string[]): StdModule {
   return {
     header,
-    concepts: conceptIds.map(id => ({ id, properties: {}, children: {} })) as any[],
+    concepts: conceptIds.map(id => ({ conceptId: id, properties: {}, children: {} })) as any[],
     blocks: [],
     registerGenerators: () => {},
     registerLifters: () => {},

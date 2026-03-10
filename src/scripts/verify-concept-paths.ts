@@ -174,13 +174,22 @@ const INTERNAL_CONCEPTS = new Set([
 // ─── Main Verification ───
 
 export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCode: number } {
+  // Discover std module block files dynamically
+  const stdDir = path.join(rootDir, 'src/languages/cpp/std')
+  const stdBlockPaths: string[] = []
+  if (fs.existsSync(stdDir)) {
+    for (const entry of fs.readdirSync(stdDir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        const blocksPath = path.join(stdDir, entry.name, 'blocks.json')
+        if (fs.existsSync(blocksPath)) stdBlockPaths.push(blocksPath)
+      }
+    }
+  }
+
   const blockSpecPaths = [
     path.join(rootDir, 'src/blocks/projections/blocks/universal-blocks.json'),
-    path.join(rootDir, 'src/languages/cpp/projections/blocks/basic.json'),
-    path.join(rootDir, 'src/languages/cpp/projections/blocks/advanced.json'),
-    path.join(rootDir, 'src/languages/cpp/projections/blocks/special.json'),
-    path.join(rootDir, 'src/languages/cpp/projections/blocks/stdlib-algorithms.json'),
-    path.join(rootDir, 'src/languages/cpp/projections/blocks/stdlib-containers.json'),
+    path.join(rootDir, 'src/languages/cpp/core/blocks.json'),
+    ...stdBlockPaths,
   ]
 
   const liftPatternsPath = path.join(rootDir, 'src/languages/cpp/lift-patterns.json')
