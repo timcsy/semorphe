@@ -17,7 +17,6 @@ export class MonacoPanel implements ViewHost {
   private onChangeCallback: ((code: string) => void) | null = null
   private onCursorChangeCallback: ((line: number) => void) | null = null
   private suppressChange = false
-  private bus: SemanticBus | null = null
   private highlightDecorations: string[] = []
   private breakpoints: Set<number> = new Set()
   private breakpointDecorations: string[] = []
@@ -25,14 +24,13 @@ export class MonacoPanel implements ViewHost {
 
   // Ghost line state
   private ghostDecorations: string[] = []
-  private currentScaffoldResult: ScaffoldResult | null = null
   private ghostLineMap: Map<number, ScaffoldItem> = new Map()
   private hoverProvider: monaco.IDisposable | null = null
   private onPinCallback: ((code: string) => void) | null = null
 
   constructor(container: HTMLElement, bus?: SemanticBus) {
     this.container = container
-    this.bus = bus ?? null
+    void bus
   }
 
   async initialize(_config: ViewConfig): Promise<void> {
@@ -53,7 +51,6 @@ export class MonacoPanel implements ViewHost {
   }
 
   connectBus(bus: SemanticBus): void {
-    this.bus = bus
     bus.on('semantic:update', (data) => this.onSemanticUpdate(data))
   }
 
@@ -208,7 +205,7 @@ export class MonacoPanel implements ViewHost {
    */
   applyScaffoldDecorations(code: string, scaffoldResult: ScaffoldResult): void {
     if (!this.editor) return
-    this.currentScaffoldResult = scaffoldResult
+
     this.ghostLineMap.clear()
 
     const lines = code.split('\n')
@@ -243,17 +240,16 @@ export class MonacoPanel implements ViewHost {
     }
 
     // Apply ghost decorations (L1 mode shows scaffold lines faded)
-    this.ghostDecorations = this.editor.deltaDecorations(this.ghostDecorations, ghostDecorationData)
+    this.ghostDecorations = (this.editor as any).deltaDecorations(this.ghostDecorations, ghostDecorationData)
     // Never hide lines — code panel always shows complete compilable code
-    this.editor.setHiddenAreas([])
+    (this.editor as any).setHiddenAreas?.([])
   }
 
   clearScaffoldDecorations(): void {
     if (!this.editor) return
-    this.ghostDecorations = this.editor.deltaDecorations(this.ghostDecorations, [])
-    this.editor.setHiddenAreas([])
+    this.ghostDecorations = (this.editor as any).deltaDecorations(this.ghostDecorations, [])
+    (this.editor as any).setHiddenAreas?.([])
     this.ghostLineMap.clear()
-    this.currentScaffoldResult = null
   }
 
   private registerGhostHoverProvider(): void {

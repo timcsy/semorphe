@@ -1,6 +1,4 @@
 import type { ConceptExecutor } from '../executor-registry'
-import type { RuntimeValue } from '../types'
-import { Scope } from '../scope'
 
 /** Break/Continue signals (non-error, used for flow control) */
 export class BreakSignal { readonly _brand = 'break' }

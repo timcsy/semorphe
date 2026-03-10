@@ -343,7 +343,7 @@ export class ExecutionController {
         const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
         if (mapping && mapping.startLine !== null && mapping.endLine !== null) {
           const breakpoints = this.panels.monacoPanel?.getBreakpoints() ?? []
-          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine + 1 && bp <= mapping.endLine + 1)
+          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
           if (hitBreakpoint && this.stepController?.getStatus() === 'running') {
             this.stepController.pause()
             this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
@@ -644,7 +644,7 @@ export class ExecutionController {
         const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
         if (mapping && mapping.startLine !== null && mapping.endLine !== null) {
           const breakpoints = this.panels.monacoPanel?.getBreakpoints() ?? []
-          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine + 1 && bp <= mapping.endLine + 1)
+          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
           if (hitBreakpoint) {
             shouldPause = true
             this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
@@ -717,21 +717,6 @@ export class ExecutionController {
 
   private highlightMonacoLines(startLine: number, endLine: number): void {
     this.panels.monacoPanel?.addHighlight(startLine, endLine)
-  }
-
-  /** Highlight both block and code panels for a given nodeId */
-  private highlightNodeId(nodeId: string | undefined): void {
-    if (!nodeId) return
-    this.panels.blocklyPanel?.clearHighlight()
-    const mapping = this.panels.syncController?.getMappingForNode(nodeId)
-    if (!mapping) return
-    if (mapping.blockId && this.panels.blocklyPanel?.getWorkspace()) {
-      this.panels.blocklyPanel.highlightBlock(mapping.blockId, 'execution')
-    }
-    if (mapping.startLine !== null && mapping.endLine !== null && this.panels.monacoPanel) {
-      this.panels.monacoPanel.revealLine(mapping.startLine + 1)
-      this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
-    }
   }
 
   private clearHighlights(): void {

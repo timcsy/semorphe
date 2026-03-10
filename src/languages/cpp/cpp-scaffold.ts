@@ -6,7 +6,10 @@ import { collectConcepts } from './auto-include'
 import { expandHeaderAliases } from './header-aliases'
 
 export class CppScaffold implements ProgramScaffold {
-  constructor(private resolver: DependencyResolver) {}
+  private resolver: DependencyResolver
+  constructor(resolver: DependencyResolver) {
+    this.resolver = resolver
+  }
 
   resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult {
     const { cognitiveLevel, manualImports = [], pinnedItems = [] } = config

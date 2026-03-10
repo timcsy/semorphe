@@ -2,6 +2,7 @@ import type { SemanticNode } from './types'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
 import type { Diagnostic } from './diagnostics'
 import type { CodeMapping } from './projection/code-generator'
+import type { ScaffoldResult } from './program-scaffold'
 
 // ─── Event Type Maps ───
 
@@ -11,8 +12,9 @@ export interface SemanticEvents {
     tree: SemanticNode
     code?: string
     blockState?: unknown
-    source: 'blocks' | 'code'
+    source: 'blocks' | 'code' | 'resync'
     mappings?: CodeMapping[]
+    scaffoldResult?: ScaffoldResult
   }
   'semantic:full-sync': { tree: SemanticNode; language: string; style: Record<string, unknown> }
   'execution:state': { status: ExecutionStatus; step?: StepInfo }
