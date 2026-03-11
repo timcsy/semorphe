@@ -8,7 +8,16 @@ const DURATION: Record<ToastType, number> = {
 
 let currentToast: HTMLElement | null = null
 
-export function showToast(message: string, type: ToastType = 'success'): void {
+/**
+ * Show a toast notification.
+ * @param anchor - If provided, toast is positioned at the bottom of this
+ *   container (position: absolute) instead of the viewport (position: fixed).
+ */
+export function showToast(
+  message: string,
+  type: ToastType = 'success',
+  anchor?: HTMLElement,
+): void {
   if (currentToast) {
     currentToast.remove()
   }
@@ -16,7 +25,16 @@ export function showToast(message: string, type: ToastType = 'success'): void {
   const el = document.createElement('div')
   el.className = `toast toast-${type}`
   el.textContent = message
-  document.body.appendChild(el)
+
+  if (anchor) {
+    // Ensure anchor is a positioning context
+    const pos = getComputedStyle(anchor).position
+    if (pos === 'static') anchor.style.position = 'relative'
+    el.style.position = 'absolute'
+    anchor.appendChild(el)
+  } else {
+    document.body.appendChild(el)
+  }
   currentToast = el
 
   requestAnimationFrame(() => {

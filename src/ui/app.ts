@@ -367,7 +367,12 @@ export class App {
 
     this.syncController!.onError((errors: SyncError[]) => {
       console.warn('Sync errors:', errors.map(e => e.message).join('\n'))
-      showToast(Blockly.Msg['TOAST_ERROR'] || `⚠ ${errors.length} 個語法錯誤`, 'error')
+      const monacoEl = document.getElementById('monaco-panel')
+      showToast(
+        Blockly.Msg['TOAST_ERROR'] || `⚠ ${errors.length} 個語法錯誤`,
+        'error',
+        monacoEl ?? undefined,
+      )
     })
     this.syncController!.setCodingStyle(this.currentStylePreset)
     this.syncController!.onIoConformance((result) => {
