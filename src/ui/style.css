@@ -18,6 +18,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* dynamic viewport height — accounts for mobile address bar */
 }
 
 /* ─── Toolbar ─── */
@@ -1151,6 +1152,7 @@ html, body {
 
 #mobile-tab-bar-container {
   flex-shrink: 0;
+  height: 48px;
 }
 
 .mobile-tab-bar {
