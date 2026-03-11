@@ -1,136 +1,153 @@
 ---
 name: concept-discover
 description: >
-  Research a C++ library, standard header, or language feature from documentation and web resources.
-  Discover function signatures, common usage patterns, classify by cognitive level (L0/L1/L2),
-  and propose concept names following Semorphe conventions.
-  Use when adding support for a new C++ library, header, or language feature set.
+  研究程式語言的函式庫、標準標頭檔或語言特性。從文件和網路資源中探索函式簽名、
+  常見用法模式，按認知層級（L0/L1/L2）分類，並依 Semorphe 慣例提出概念命名。
+  用於新增任何語言的函式庫、標頭檔或語言特性支援時。
 user-invocable: true
 ---
 
-# Concept Discovery
+# 概念探索
 
-## User Input
+## 使用者輸入
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding. The argument is the target library, header, or language feature to research (e.g., `<algorithm>`, `<string>`, `pointer arithmetic`, `STL containers`).
+你**必須**先考慮使用者輸入再繼續。參數格式為 `[語言] <目標>`，例如：
+- `cpp <algorithm>` — 研究 C++ 的 `<algorithm>` 標頭檔
+- `python list comprehension` — 研究 Python 的 list comprehension
+- `java Stream API` — 研究 Java 的 Stream API
+- `<string>` — 未指定語言時，根據語法推斷（此例為 C++）
 
-## Context
+## 背景
 
-You are researching a C++ library or language feature to prepare it for integration into **Semorphe** — a semantic-tree-driven programming education tool. Your job is to discover what concepts exist, how they're commonly used, and how to classify them for learners.
+你正在研究某個程式語言的函式庫或語言特性，準備將其整合進 **Semorphe** — 一個以語義樹驅動的程式教育工具。你的任務是探索有哪些概念存在、它們通常如何被使用，以及如何為學習者分類。
 
-**CRITICAL**: Read the project's first principles before starting:
-- `docs/first-principles.md` — especially P2 (Concept Algebra) and P4 (Progressive Disclosure)
-- `src/core/types.ts` — existing UniversalConcept and LanguageSpecificConcept types
+**關鍵**：開始前請先閱讀專案的第一性原理：
+- `docs/first-principles.md` — 特別是 P2（概念代數）和 P4（漸進式揭露）
+- `src/core/types.ts` — 現有的 UniversalConcept 和 LanguageSpecificConcept 型別
 
-## Workflow
+然後確認目標語言的現有支援：
+- `src/languages/` — 查看已有哪些語言模組
+- `src/languages/{lang}/` — 該語言的現有概念、積木、提升器、產生器
 
-### Phase 1: Research
+## 工作流程
 
-1. **Web Search** the target library/feature:
-   - Search for official cppreference documentation
-   - Search for common usage patterns and tutorials
-   - Search for "most commonly used functions in [library]"
-   - Search for "beginner vs advanced [library] features"
+### 階段一：研究
 
-2. **Fetch Documentation**:
-   - Fetch the cppreference page for each relevant header/feature
-   - Extract function signatures, parameter types, return types
-   - Note which functions are most commonly used in education
+1. **網路搜尋** 目標函式庫/特性：
+   - 搜尋官方文件（如 cppreference、Python docs、MDN、Java docs）
+   - 搜尋常見用法模式和教學
+   - 搜尋「most commonly used functions in [library]」
+   - 搜尋「beginner vs advanced [library] features」
 
-### Phase 2: Concept Extraction
+2. **取得文件**：
+   - 取得每個相關函式/特性的官方文件頁面
+   - 提取函式簽名、參數型別、回傳型別
+   - 記錄在教育中最常使用的函式
 
-For each discovered function/feature, extract:
+### 階段二：概念萃取
 
-| Field | Description |
-|-------|-------------|
-| **C++ Syntax** | The actual C++ syntax (e.g., `sort(v.begin(), v.end())`) |
-| **Semantic Meaning** | What it does conceptually (e.g., "sort a range") |
-| **Parameters** | What the learner needs to provide |
-| **Common Patterns** | How it's typically used in real code |
-| **Prerequisites** | What concepts the learner must already know |
-| **Error Patterns** | Common mistakes beginners make |
+對每個發現的函式/特性，萃取以下資訊：
 
-### Phase 3: Cognitive Level Classification
+| 欄位 | 說明 |
+|------|------|
+| **語法** | 實際的語法（例如 C++ `sort(v.begin(), v.end())`、Python `sorted(lst)`） |
+| **語義意義** | 它在概念上做了什麼（例如「排序一個範圍」） |
+| **參數** | 學習者需要提供什麼 |
+| **常見模式** | 在真實程式碼中通常如何使用 |
+| **先備知識** | 學習者必須已經知道的概念 |
+| **錯誤模式** | 初學者常犯的錯誤 |
 
-Classify each concept into cognitive levels using these criteria:
+### 階段三：認知層級分類
 
-**L0 (Beginner)** — Minimal prerequisite knowledge:
-- Can be explained without understanding types, memory, or advanced control flow
-- Used in first-week programming exercises
-- Cognitive load: 1-2 inputs on the block
+使用以下標準將每個概念分類到認知層級：
 
-**L1 (Intermediate)** — Requires basic programming understanding:
-- Needs understanding of functions, return values, or basic data structures
-- Used in typical homework assignments
-- Cognitive load: 2-4 inputs on the block
+**L0（初學者）** — 最少的先備知識：
+- 不需理解型別、記憶體或進階控制流程即可解釋
+- 用於第一週的程式練習
+- 認知負載：積木上 1-2 個輸入
 
-**L2 (Advanced)** — Requires deeper understanding:
-- Involves templates, iterators, pointers, or complex type systems
-- Used in competitions or advanced coursework
-- Cognitive load: 4+ inputs or requires understanding hidden concepts
+**L1（中級）** — 需要基本程式理解：
+- 需要理解函式、回傳值或基本資料結構
+- 用於典型的作業
+- 認知負載：積木上 2-4 個輸入
 
-### Phase 4: Naming
+**L2（進階）** — 需要更深入的理解：
+- 涉及泛型、迭代器、指標、閉包或複雜型別系統
+- 用於競賽或進階課程
+- 認知負載：4+ 個輸入或需要理解隱藏概念
 
-Propose concept names following Semorphe conventions:
+### 階段四：命名
 
-- **Universal concepts** (language-agnostic): `snake_case` (e.g., `sort_range`, `find_element`)
-- **Language-specific concepts**: `cpp_snake_case` (e.g., `cpp_vector_push`, `cpp_iterator_advance`)
-- Names should describe the **semantic action**, not the C++ syntax
-- Prefer short, descriptive names (2-3 words max)
+按照 Semorphe 慣例提出概念名稱：
 
-Check `src/core/types.ts` for existing names to avoid conflicts.
+- **通用概念**（跨語言共通）：`snake_case`（例如 `sort_range`、`find_element`）
+  - 如果多個語言都有等價的概念，應為通用概念
+- **語言特定概念**：`{lang}:snake_case`（例如 `cpp:vector_push`、`py:list_append`、`java:stream_map`）
+  - 語言前綴使用 ConceptId 的 `lang:concept` 格式
+- 名稱應描述**語義動作**，而非語法
+- 偏好簡短、描述性名稱（最多 2-3 個詞）
 
-### Phase 5: Output
+檢查 `src/core/types.ts` 中現有名稱以避免衝突。
 
-Generate a structured report at `specs/concept-discovery-{topic}.md`:
+### 階段五：輸出
+
+在 `specs/concepts/{lang}-{topic}.md` 產生結構化報告：
 
 ```markdown
-# Concept Discovery: {Topic}
+# 概念探索：{Language} — {Topic}
 
-## Summary
-- Target: {library/feature}
-- Total concepts found: N
-- L0: N, L1: N, L2: N
+## 摘要
+- 語言：{language}
+- 目標：{library/feature}
+- 發現概念總數：N
+- 通用概念：N、語言特定概念：N
+- L0：N、L1：N、L2：N
 
-## Concept Catalog
+## 概念目錄
 
-### L0 — Beginner
+### L0 — 初學者
 
-| Concept Name | C++ Syntax | Semantic Meaning | Block Inputs | Notes |
-|---|---|---|---|---|
+| 概念名稱 | 語法 | 語義意義 | 積木輸入 | Layer | 通用/特定 | 備註 |
+|---|---|---|---|---|---|---|
 
-### L1 — Intermediate
+### L1 — 中級
 
-| Concept Name | C++ Syntax | Semantic Meaning | Block Inputs | Notes |
-|---|---|---|---|---|
+| 概念名稱 | 語法 | 語義意義 | 積木輸入 | Layer | 通用/特定 | 備註 |
+|---|---|---|---|---|---|---|
 
-### L2 — Advanced
+### L2 — 進階
 
-| Concept Name | C++ Syntax | Semantic Meaning | Block Inputs | Notes |
-|---|---|---|---|---|
+| 概念名稱 | 語法 | 語義意義 | 積木輸入 | Layer | 通用/特定 | 備註 |
+|---|---|---|---|---|---|---|
 
-## Dependency Graph
-{which concepts depend on which}
+## 依賴關係圖
+{哪些概念依賴哪些}
 
-## Recommended Implementation Order
-{ordered by dependency + cognitive level}
+## 建議實作順序
+{按依賴關係 + 認知層級排序}
 
-## Edge Cases to Watch
-{tricky syntax, ambiguous semantics, common pitfalls}
+## 跨語言對應
+{與已支援語言中現有概念的對應關係}
+
+## 需注意的邊界案例
+{棘手語法、模糊語義、常見陷阱}
 ```
 
-Also check existing concepts to identify:
-- Overlap with already-supported concepts
-- Concepts that could be generalized (universal vs language-specific)
-- Gaps in the current concept coverage
+同時檢查現有概念以識別：
+- 與已支援概念的重疊（特別是通用概念）
+- 可以泛化的概念（將語言特定升級為通用）
+- 目前概念覆蓋的缺口
 
-## Guidelines
+## 準則
 
-- **Prioritize by educational value** — not all C++ features need blocks
-- **Minimize cognitive load** — if a concept needs 6 inputs, consider splitting it
-- **Think in semantic actions** — `sort(v.begin(), v.end())` is semantically "sort this container", not "call sort with two iterator arguments"
-- **Consider block UX** — would a learner understand this block without reading documentation?
+- **以教育價值為優先** — 不是所有語言特性都需要積木
+- **最小化認知負載** — 如果一個概念需要 6 個輸入，考慮拆分
+- **以語義動作思考** — 語義上是「排序這個容器」，而非「用兩個迭代器參數呼叫 sort」
+- **考慮積木 UX** — 學習者不讀文件就能理解這個積木嗎？
+- **優先考慮通用概念** — 如果概念在多個語言中存在（如 for 迴圈、排序），盡量定義為通用概念
+- **一個積木 = 一個語義概念**（Sc3 認知一致性）— 不要把兩個不同的語法結構合成一個積木，也不要把一個語法結構拆成兩個積木
+- **區分 concept layer** — 每個概念必須標明層級：universal（跨語言共通）、lang-core（語言核心語法）、lang-library（語言標準庫）

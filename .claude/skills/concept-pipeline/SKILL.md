@@ -1,203 +1,176 @@
 ---
 name: concept-pipeline
 description: >
-  End-to-end pipeline for adding new C++ concepts to Semorphe.
-  Chains all 5 concept skills: discover → generate → roundtrip → fuzz → integrate.
-  Use when you want to go from "I want to support <feature>" to fully integrated concept
-  in a single command.
+  為 Semorphe 新增概念的端到端管線。
+  串接全部 5 個概念 skill：discover → generate → roundtrip → fuzz → integrate。
+  當你想從「我要支援 <特性>」到完全整合的概念，用一個指令完成時使用。
+  支援任何語言。
 user-invocable: true
 ---
 
-# Concept Pipeline — End-to-End
+# 概念管線 — 端到端
 
-## User Input
+## 使用者輸入
 
 ```text
 $ARGUMENTS
 ```
 
-The argument is the target C++ library, header, or language feature to add support for (e.g., `<algorithm>`, `do-while`, `switch/case`, `pointer arithmetic`, `STL containers`).
+參數格式為 `[語言] <目標>`，例如：
+- `cpp <algorithm>` — 新增 C++ `<algorithm>` 支援
+- `python list comprehension` — 新增 Python list comprehension 支援
+- `java Stream API` — 新增 Java Stream API 支援
+- `do-while` — 未指定語言時使用預設語言
 
-Optional flags (append after the target):
-- `--dry-run` — Run discover + generate only, skip testing and integration
-- `--skip-fuzz` — Skip the fuzz testing phase (faster, less thorough)
-- `--concepts=X,Y,Z` — Only process specific concepts from the discovery report (skip the rest)
-- `--fuzz-count=N` — Number of fuzz programs to generate (default: 10)
+可選旗標（附加在目標之後）：
+- `--dry-run` — 只執行 discover + generate，跳過測試和整合
+- `--skip-fuzz` — 跳過模糊測試階段（更快，但較不徹底）
+- `--concepts=X,Y,Z` — 只處理探索報告中的特定概念（跳過其餘）
+- `--fuzz-count=N` — 要產生的模糊測試程式數量（預設：10）
 
-## Overview
+## 總覽
 
-This skill orchestrates the full concept addition pipeline:
+此 skill 編排完整的概念新增管線：
 
 ```
 ┌─────────────┐    ┌──────────────┐    ┌───────────────┐    ┌──────────────┐    ┌───────────────┐
-│  1. Discover │───▶│  2. Generate  │───▶│  3. Roundtrip  │───▶│   4. Fuzz     │───▶│  5. Integrate  │
+│  1. 探索     │───▶│  2. 產生      │───▶│  3. Round-trip │───▶│  4. 模糊測試  │───▶│  5. 整合       │
 │              │    │              │    │               │    │              │    │               │
-│ Research &   │    │ BlockSpec,   │    │ Targeted      │    │ Info-isolated│    │ Final gate,   │
-│ classify     │    │ generator,   │    │ round-trip    │    │ blind testing│    │ registration  │
-│ concepts     │    │ lifter, tests│    │ verification  │    │              │    │ & commit      │
+│ 研究 &      │    │ BlockSpec,   │    │ 目標性        │    │ 資訊隔離     │    │ 最終關卡，    │
+│ 分類概念    │    │ generator,   │    │ round-trip    │    │ 盲測         │    │ 註冊         │
+│              │    │ lifter, 測試 │    │ 驗證          │    │              │    │ & commit      │
 └─────────────┘    └──────────────┘    └───────────────┘    └──────────────┘    └───────────────┘
-     WebSearch          Code gen            Compile &            Agent A+B           tsc + test
-     + fetch            + tests             compare stdout       dual-agent          + verify
+     WebSearch          程式碼產生          編譯/執行 &         Agent A+B          tsc + test
+     + fetch            + 測試             比較 stdout          雙代理              + 驗證
 ```
 
-Each phase has a **go/no-go gate**. If a phase fails, the pipeline stops and reports what went wrong so you can fix it before continuing.
+每個階段有一個**通過/不通過關卡**。如果某個階段失敗，管線會停下來報告哪裡出了問題，讓你修復後再繼續。
 
-## Workflow
+## 工作流程
 
-### Phase 1: Discover
+### 階段一：探索
 
-**Invoke**: `/concept.discover $ARGUMENTS`
+**調用**：`/concept.discover {lang} $ARGUMENTS`
 
-**Gate**: Discovery report generated at `specs/concept-discovery-{topic}.md`
+**關卡**：探索報告已在 `specs/concepts/{lang}-{topic}.md` 產生
 
-**Decision point**: After discovery, present the concept catalog to the user:
-
-```
-Found {N} concepts in {topic}:
-  L0: {list}
-  L1: {list}
-  L2: {list}
-
-Recommended implementation order: {ordered list}
-
-Proceed with all {N} concepts? Or specify which ones with --concepts=X,Y,Z
-```
-
-If `--concepts` flag was provided, filter to only those concepts. Otherwise, proceed with the recommended implementation order.
-
-### Phase 2: Generate (per concept)
-
-**For each concept** in the implementation order:
-
-1. **Invoke**: `/concept.generate {concept_name}` (using the discovery report as context)
-2. **Gate**: All 5 artifacts exist:
-   - [ ] Block spec JSON entry
-   - [ ] Code generator function
-   - [ ] Lifter registration
-   - [ ] Render mapping
-   - [ ] Unit test file
-3. **Quick check**: `npx tsc --noEmit` — types must compile
-
-If TypeScript fails, fix the errors before moving to the next concept.
-
-### Phase 3: Round-Trip Verification (per concept)
-
-**For each generated concept**:
-
-1. **Invoke**: `/concept.roundtrip {concept_name}`
-2. **Gate**: All targeted tests must PASS or be DEGRADED (expected limitation)
-
-Results table:
+**決策點**：探索後，向使用者呈現概念目錄：
 
 ```
-Concept: {name}
-  Programs tested: {N}
-  ✅ PASS: {N}
-  🟡 DEGRADED: {N} (expected)
-  ❌ FAIL: {N}
+在 {language} 的 {topic} 中找到 {N} 個概念：
+  通用概念：{list}
+  語言特定概念：{list}
+  L0：{list}
+  L1：{list}
+  L2：{list}
+
+建議實作順序：{ordered list}
+
+要處理全部 {N} 個概念嗎？或用 --concepts=X,Y,Z 指定特定的
 ```
 
-If any ❌ FAIL:
-- Attempt auto-fix (common issues: missing semicolons, wrong indentation, operator precedence)
-- Re-run round-trip after fix
-- If still failing after 2 attempts, mark the concept as **blocked** and continue to the next one
+### 階段二：產生（逐個概念）
 
-### Phase 4: Fuzz Testing (batch)
+**對每個概念**，按實作順序：
 
-**Skip if**: `--dry-run` or `--skip-fuzz` flag is set.
+1. **調用**：`/concept.generate {lang} {concept_name}`
+2. **關卡**：5 個產出物都存在
+3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
 
-1. **Invoke**: `/concept.fuzz {difficulty} {count}` where:
-   - Difficulty = highest cognitive level among the new concepts
-   - Count = `--fuzz-count` value or default 10
-2. **Gate**: No SEMANTIC_DIFF or COMPILE_FAIL bugs in the new concepts
+如果 TypeScript 失敗，在處理下一個概念之前先修復錯誤。
 
-Fuzz results feed back into round-trip as regression tests.
+### 階段三：Round-Trip 驗證（逐個概念）
 
-If fuzz reveals bugs:
-- For SEMANTIC_DIFF: investigate and fix the generator/lifter
-- For COMPILE_FAIL: fix the generator
-- For LIFT_FAIL: document as known limitation
-- Re-run fuzz on fixed concepts
+**對每個產生的概念**：
 
-### Phase 5: Integration (per concept)
+1. **調用**：`/concept.roundtrip {lang} {concept_name}`
+2. **關卡**：所有目標測試必須 PASS 或 DEGRADED
 
-**Skip if**: `--dry-run` flag is set.
+如果有 ❌ FAIL：
+- 嘗試自動修復
+- 修復後重新執行 round-trip
+- 如果嘗試 2 次後仍失敗，標記為**已阻擋**並繼續下一個
 
-**For each concept** that passed phases 2-4:
+### 階段四：模糊測試（批次）
 
-1. **Invoke**: `/concept.integrate {concept_name}`
-2. **Gate**: All checks pass (TypeScript, tests, registration)
+**跳過條件**：設定了 `--dry-run` 或 `--skip-fuzz` 旗標。
 
-### Final: Summary Report
+根據新增概念的認知層級自動決定難度和範疇（scope）：
+- 難度：取新概念中最高的認知層級（L0→easy、L1→medium、L2→hard）
+- 範疇：從新概念的分類中推導（例如新增了迴圈相關概念則範疇為 `loops`）
 
-After all phases complete, present a final summary:
+1. **調用**：`/concept.fuzz {lang} {difficulty} {scope} {count}`
+2. **關卡**：新概念中沒有 SEMANTIC_DIFF、COMPILE_FAIL、SCAFFOLD_LEAK 或 ROUNDTRIP_DRIFT bug
+
+如果模糊測試發現 bug：修復後重新執行。
+
+### 階段五：整合（逐個概念）
+
+**跳過條件**：設定了 `--dry-run` 旗標。
+
+**對每個**通過階段 2-4 的概念：
+
+1. **調用**：`/concept.integrate {lang} {concept_name}`
+2. **關卡**：所有檢查通過
+
+### 最終：總結報告
 
 ```markdown
-## Concept Pipeline Complete: {topic}
+## 概念管線完成：{language} — {topic}
 
-### Results
+### 結果
 
-| Concept | Discover | Generate | Roundtrip | Fuzz | Integrate | Status |
-|---------|----------|----------|-----------|------|-----------|--------|
-| {name}  | ✅       | ✅       | ✅ 5/5    | ✅   | ✅        | SHIPPED |
-| {name}  | ✅       | ✅       | ⚠️ 4/5   | N/A  | ❌        | BLOCKED |
+| 概念 | 通用/特定 | 探索 | 產生 | Roundtrip | 模糊 | 整合 | 狀態 |
+|------|----------|------|------|-----------|------|------|------|
+| {name} | 通用 | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ | 已交付 |
+| {name} | {lang} | ✅ | ✅ | ⚠️ 4/5 | N/A | ❌ | 已阻擋 |
 
-### Shipped: {N} concepts
-{list with cognitive levels}
+### 已交付：{N} 個概念
+### 已阻擋：{N} 個概念
 
-### Blocked: {N} concepts
-{list with failure reasons}
+### 覆蓋影響
+- {language} 之前：{N} 個概念 → 之後：{N+M} 個概念
+- 新的認知層級覆蓋：L0 +{n}、L1 +{n}、L2 +{n}
 
-### Coverage Impact
-- Before: {N} concepts supported
-- After: {N+M} concepts supported
-- New cognitive level coverage:
-  - L0: +{n} concepts
-  - L1: +{n} concepts
-  - L2: +{n} concepts
-
-### Suggested Next Steps
-1. Fix blocked concepts: {list}
-2. Related features to explore: {list}
-3. Run `/concept.fuzz all 20` for broader regression testing
+### 建議後續步驟
+1. 修復已阻擋的概念
+2. 值得探索的相關特性
+3. 執行 `/concept.fuzz {lang} all 20` 進行更廣泛的回歸測試
 ```
 
 ### Git Commit
 
-If any concepts were successfully integrated, offer to commit:
+如果有概念成功整合，提議 commit：
 
 ```
-{N} concepts integrated. Create commit?
+{N} 個 {language} 概念已整合。要建立 commit 嗎？
 
-Suggested message:
-  feat: add {topic} concepts ({concept_list})
+建議的訊息：
+  feat({lang}): add {topic} concepts ({concept_list})
 ```
 
-## Error Recovery
+## 錯誤恢復
 
-If the pipeline is interrupted or a phase fails:
+管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
+- `/concept.generate specs/concepts/{lang}-{topic}.md`
+- `/concept.roundtrip {lang} {concept_name}`
+- `/concept.integrate {lang} {concept_name}`
 
-- All intermediate artifacts are preserved (discovery reports, generated files, test results)
-- You can resume from any phase by running the individual skill:
-  - Resume from generate: `/concept.generate specs/concept-discovery-{topic}.md`
-  - Resume from roundtrip: `/concept.roundtrip {concept_name}`
-  - Resume from integrate: `/concept.integrate {concept_name}`
-
-## Examples
+## 範例
 
 ```bash
-# Full pipeline for a library
-/concept.pipeline <algorithm>
+# C++ 完整管線
+/concept.pipeline cpp <algorithm>
 
-# Quick pipeline without fuzz
-/concept.pipeline switch/case --skip-fuzz
+# Python 快速管線
+/concept.pipeline python list comprehension --skip-fuzz
 
-# Only specific concepts from a library
-/concept.pipeline <string> --concepts=string_length,string_append,string_find
+# Java 只處理特定概念
+/concept.pipeline java Stream API --concepts=stream_map,stream_filter
 
-# Dry run to see what would be generated
-/concept.pipeline pointer arithmetic --dry-run
+# 乾跑看看會產生什麼
+/concept.pipeline cpp pointer arithmetic --dry-run
 
-# Full pipeline with extra fuzz coverage
-/concept.pipeline do-while --fuzz-count=30
+# 帶更多模糊測試覆蓋
+/concept.pipeline python decorators --fuzz-count=30
 ```

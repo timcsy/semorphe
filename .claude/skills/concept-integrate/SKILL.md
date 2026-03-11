@@ -1,211 +1,193 @@
 ---
 name: concept-integrate
 description: >
-  Final integration gate for new Semorphe concepts. Runs all verification steps
-  (TypeScript compilation, unit tests, round-trip tests, fuzz tests), then
-  integrates passing concepts into the codebase with proper registration.
-  Use as the last step after /concept.generate to validate and ship new concepts.
+  新 Semorphe 概念的最終整合關卡。執行所有驗證步驟
+  （TypeScript 編譯、單元測試、round-trip 測試、模糊測試），
+  然後將通過的概念整合到程式碼庫中並完成正確的註冊。
+  在 /concept.generate 之後作為最終步驟使用。支援任何語言。
 user-invocable: true
 ---
 
-# Concept Integration
+# 概念整合
 
-## User Input
+## 使用者輸入
 
 ```text
 $ARGUMENTS
 ```
 
-The argument should be one of:
-- A concept name (e.g., `do_while`, `switch_case`) to integrate
-- A path to a concept discovery report to integrate all concepts from it
-- `check` — run verification only, don't integrate
-- `status` — show current integration status of all pending concepts
+參數應為以下其一：
+- `{lang} {concept_name}`（例如 `cpp do_while`、`python list_comprehension`）
+- 概念探索報告的路徑，以整合其中所有概念
+- `{lang} check` — 只執行驗證，不整合
+- `{lang} status` — 顯示該語言所有待整合概念的目前狀態
+- `status` — 顯示所有語言的概念整合狀態
 
-## Context
+## 背景
 
-This is the **final gate** before a new concept becomes part of Semorphe. It verifies that all artifacts (BlockSpec, generator, lifter, render mapping, tests) work correctly together, then wires everything into the system.
+這是新概念正式成為 Semorphe 一部分之前的**最終關卡**。它驗證所有產出物（BlockSpec、generator、lifter、渲染映射、測試）能正確協同運作，然後將一切接入系統。
 
-## Pre-flight Checklist
+## 前置檢查清單
 
-Before running integration, verify these files exist for the target concept:
+在執行整合之前，驗證目標概念的這些檔案是否存在：
 
-- [ ] Block spec JSON entry in `src/languages/cpp/blocks/*.json`
-- [ ] Code generator in `src/languages/cpp/core/generators/*.ts`
-- [ ] Lifter in `src/languages/cpp/core/lifters/*.ts`
-- [ ] Render mapping in the block spec JSON (or explicit renderStrategy)
-- [ ] Unit tests in `tests/`
-- [ ] Concept registered in `src/languages/cpp/concepts.json`
+- [ ] Block spec JSON 條目在 `src/languages/{lang}/blocks/*.json`
+- [ ] 程式碼產生器在 `src/languages/{lang}/core/generators/*.ts`
+- [ ] 提升器在 `src/languages/{lang}/core/lifters/*.ts`
+- [ ] 渲染映射在 block spec JSON 中（或顯式 renderStrategy）
+- [ ] 單元測試在 `tests/`
+- [ ] 概念在 `src/languages/{lang}/concepts.json` 中註冊
 
-If any artifact is missing, report which ones and suggest running `/concept.generate` first.
+如果是通用概念，額外檢查：
+- [ ] `src/core/types.ts` 中的 `UniversalConcept` 型別已更新
+- [ ] 所有已支援語言都有對應的 generator 和 lifter
 
-## Workflow
+如果缺少任何產出物，報告缺少哪些，並建議先執行 `/concept.generate`。
 
-### Step 1: TypeScript Compilation Check
+## 工作流程
+
+### 步驟一：TypeScript 編譯檢查
 
 ```bash
 npx tsc --noEmit
 ```
 
-This catches:
-- Missing imports
-- Type mismatches between generator/lifter and SemanticNode
-- Incorrect BlockSpec field types
+這會捕捉：缺少的 import、型別不匹配、不正確的欄位型別。
 
-If this fails, report the errors and stop. Do not proceed with broken types.
+如果失敗，報告錯誤並停止。
 
-### Step 2: Run Full Test Suite
+### 步驟二：執行完整測試套件
 
 ```bash
 npm test
 ```
 
-All existing tests must pass. A new concept must not break anything.
+所有現有測試必須通過。新概念不能破壞任何東西。
 
-If tests fail:
-- If failures are in the new concept's tests → report and suggest fixes
-- If failures are in existing tests → **STOP** — the new concept broke something. Investigate and report.
+如果測試失敗：
+- 如果失敗在新概念的測試中 → 報告並建議修復
+- 如果失敗在現有測試中 → **停止** — 新概念破壞了某些東西
 
-### Step 3: Run Targeted Round-Trip Tests
+### 步驟三：執行目標性 Round-Trip 測試
 
-For the concept being integrated, generate 5-10 representative C++ programs and run round-trip verification (same process as `/concept.roundtrip`):
+對正在整合的概念，產生 5-10 個代表性程式並執行 round-trip 驗證（同 `/concept.roundtrip` 流程）。
 
-1. Write C++ programs that use the concept in isolation and in combination with other concepts
-2. Compile originals → record expected stdout
-3. Lift → generate → compile generated → record actual stdout
-4. Compare outputs
+所有程式必須 PASS 或 DEGRADED。
 
-All programs must either PASS or be DEGRADED (if they use features beyond the concept being tested).
+### 步驟四：跨概念相容性
 
-### Step 4: Cross-Concept Compatibility
+測試新概念與現有概念正確組合：
 
-Test that the new concept works correctly when combined with existing concepts:
+1. **巢狀測試**：將新概念放入現有結構中（if 主體、迴圈主體、函式主體）
+2. **並列測試**：將新概念放在現有語句旁邊
+3. **表達式上下文測試**：如果概念產生表達式，在算術、比較、函式引數中使用
+4. **風格變體測試**：執行不同風格的產生（如 C++ 的 cout/printf、Python 的 f-string/format）
 
-1. **Nesting test**: Put the new concept inside existing constructs (if body, loop body, function body)
-2. **Sibling test**: Place the new concept next to existing statements
-3. **Expression context test**: If the concept produces expressions, use them in arithmetic, comparisons, function arguments
-4. **Style variant test**: Run generation with both `cout` and `printf` I/O styles (if relevant)
+產生 3-5 個組合程式。
 
-Generate 3-5 combination programs for this.
+### 步驟五：積木渲染驗證
 
-### Step 5: Block Rendering Verification
+驗證積木在 Blockly 中正確渲染：
 
-Verify that the block renders correctly in Blockly:
+1. 以程式化方式為概念建立 SemanticNode
+2. 執行 `renderToBlocklyState()`
+3. 驗證 Blockly 狀態 JSON 有正確的積木類型、欄位、輸入和連接
+4. 如果概念有 `expressionCounterpart`，驗證兩種形式都能渲染
 
-1. Create a SemanticNode for the concept programmatically
-2. Run `renderToBlocklyState()` on it
-3. Verify the Blockly state JSON has correct block type, fields, inputs, and connections
-4. If the concept has `expressionCounterpart`, verify both statement and expression forms render
+### 步驟六：Pattern Priority 衝突偵測（P3 開放擴展）
 
-```typescript
-// Verification script pattern
-import { renderToBlocklyState } from '../src/core/projection/block-renderer'
-// ... create semantic tree with the new concept
-// ... render and inspect the output JSON
-```
+檢查新概念的 lifter 註冊是否與現有 pattern 發生優先權衝突：
 
-### Step 6: Registration Verification
+1. 列出新概念註冊的所有 tree-sitter 節點類型
+2. 檢查這些節點類型是否已被其他 lifter 處理
+3. 如果有重疊，驗證 priority 排序是否正確（更具體的 pattern 應有更高 priority）
+4. 確認不會出現「新概念搶走已有概念的 AST 節點」的情況
 
-Check that the concept is properly registered in all required locations:
+如果偵測到衝突，報告哪些 pattern 重疊並建議調整 priority。
 
-1. **Concept registry** (`src/languages/cpp/concepts.json`):
-   - conceptId matches
-   - Layer is correct (universal / lang-core / lang-library)
-   - Level is correct (0/1/2)
-   - Properties and children match generator/lifter expectations
+### 步驟七：註冊驗證
 
-2. **Block spec registry** (block JSON files):
-   - Block type follows naming convention (`u_` for universal, `c_` for C++ specific)
-   - Category is set for toolbox placement
-   - Level matches concept level
+檢查概念在所有必要位置都有正確註冊：
 
-3. **Toolbox category** (`src/languages/cpp/toolbox-categories.ts`):
-   - The block's category is included in a toolbox category's `registryCategories`
-   - Or the block type is in `extraTypes` of some category
+1. **概念註冊表**（`src/languages/{lang}/concepts.json`）
+2. **Block spec 註冊表**（block JSON 檔案）
+3. **工具箱分類**（`src/languages/{lang}/toolbox-categories.ts`）
+4. **Lift patterns**（lifter 註冊或 lift-patterns.json）
+5. **如果是通用概念**：所有已支援語言都有實作
 
-4. **Lift patterns** (`src/languages/cpp/lift-patterns.json` or lifter registration):
-   - AST node type mapping exists
-   - Constraints are correct
-   - Priority doesn't conflict with existing patterns
+### 步驟八：整合決策
 
-### Step 7: Integration Decision
+| 狀態 | 行動 |
+|------|------|
+| 所有檢查通過 | ✅ 繼續整合 |
+| 僅有風格/格式問題 | ✅ 自動修復並整合 |
+| 邊界案例的 round-trip 失敗 | ⚠️ 整合並記錄已知限制 |
+| 型別錯誤或測試失敗 | ❌ 不整合 — 報告問題 |
+| 破壞現有概念 | ❌ 不整合 — 這是阻擋問題 |
 
-Based on all checks, make a decision:
+### 步驟九：最終整合（如果核准）
 
-| Status | Action |
-|--------|--------|
-| All checks pass | ✅ Proceed to integrate |
-| Only style/formatting issues | ✅ Auto-fix and integrate |
-| Round-trip failures on edge cases | ⚠️ Integrate with known limitations documented |
-| Type errors or test failures | ❌ Do not integrate — report issues |
-| Breaks existing concepts | ❌ Do not integrate — this is a blocker |
+如果所有檢查通過：
 
-### Step 8: Final Integration (if approved)
+1. **驗證 git 狀態是乾淨的**
+2. **再執行一次完整測試套件**
+3. **建立摘要**
 
-If all checks pass:
-
-1. **Verify git status is clean** (or only contains the new concept's files)
-2. **Run final full test suite** one more time
-3. **Create a summary** of what was integrated
-
-Output:
+輸出：
 
 ```markdown
-## Integration Complete: {concept_name}
+## 整合完成：{concept_name}（{language}）
 
-### Artifacts Integrated
-- Block spec: `src/languages/cpp/blocks/{file}.json` — {block_type}
-- Generator: `src/languages/cpp/core/generators/{file}.ts`
-- Lifter: `src/languages/cpp/core/lifters/{file}.ts`
-- Concept def: `src/languages/cpp/concepts.json`
-- Tests: `tests/unit/languages/cpp/{concept}.test.ts`
+### 整合的產出物
+- Block spec：`src/languages/{lang}/blocks/{file}.json` — {block_type}
+- Generator：`src/languages/{lang}/core/generators/{file}.ts`
+- Lifter：`src/languages/{lang}/core/lifters/{file}.ts`
+- Concept def：`src/languages/{lang}/concepts.json`
+- 測試：`tests/unit/languages/{lang}/{concept}.test.ts`
 
-### Test Results
-- TypeScript: ✅ No errors
-- Unit tests: ✅ {N} passed
-- Round-trip: ✅ {N}/{M} programs passed
-- Cross-concept: ✅ {N} combinations tested
+### 測試結果
+- TypeScript：✅ 無錯誤
+- 單元測試：✅ {N} 個通過
+- Round-trip：✅ {N}/{M} 個程式通過
+- 跨概念：✅ {N} 個組合已測試
 
-### Cognitive Level
-- Level {0|1|2} — available when user selects L{level} or higher
+### 認知層級
+- Level {0|1|2} — 使用者選擇 L{level} 或更高時可用
 
-### Known Limitations
-- {any edge cases that degrade to raw_code}
-- {any style variants not yet supported}
+### 已知限制
+- {任何降級為 raw_code 的邊界案例}
 
-### Suggested Follow-up
-- {related concepts that could be added next}
-- {edge cases to add to fuzz testing}
+### 建議後續
+- {可接著新增的相關概念}
 ```
 
-## Status Mode
+## 狀態模式
 
-When called with `status`, scan the codebase and report:
+以 `status` 或 `{lang} status` 呼叫時，掃描程式碼庫並報告：
 
 ```markdown
-## Concept Integration Status
+## 概念整合狀態
 
-### Fully Integrated (in concepts.json + block specs + generators + lifters)
-| Concept | Level | Layer | Block Type |
-|---------|-------|-------|------------|
-| var_declare | L0 | universal | u_var_declare |
-| ... | ... | ... | ... |
+### 語言：{language}
 
-### Partially Implemented (missing some artifacts)
-| Concept | Has Generator | Has Lifter | Has Block | Has Tests |
-|---------|--------------|------------|-----------|-----------|
-| {name} | ✅ | ❌ | ✅ | ❌ |
+#### 完全整合
+| 概念 | 層級 | Layer | 積木類型 |
+|------|------|-------|----------|
 
-### In concepts.json But No Implementation
-| Concept | Level | Notes |
-|---------|-------|-------|
-| {name} | L2 | No generator or lifter found |
+#### 部分實作（缺少某些產出物）
+| 概念 | Generator | Lifter | Block | 測試 |
+|------|-----------|--------|-------|------|
+
+#### 在 concepts.json 中但無實作
+| 概念 | 層級 | 備註 |
+|------|------|------|
 ```
 
-## Guidelines
+## 準則
 
-- **Never skip TypeScript compilation** — type safety is the first line of defense
-- **Never skip existing tests** — a new concept must not break what already works
-- **Prefer conservative integration** — it's better to integrate with documented limitations than to force-push broken code
-- **One concept at a time** — integrate and verify each concept independently before doing batch integration
-- **Clean git state** — always start from a clean working tree
+- **絕不跳過 TypeScript 編譯** — 型別安全是第一道防線
+- **絕不跳過現有測試** — 新概念不能破壞已經運作的東西
+- **偏好保守整合** — 帶著記錄的已知限制整合，好過強推有問題的程式碼
+- **一次一個概念** — 獨立整合並驗證每個概念
+- **乾淨的 git 狀態** — 永遠從乾淨的 working tree 開始
+- **通用概念需全語言驗證** — 通用概念必須在所有已支援語言中通過測試

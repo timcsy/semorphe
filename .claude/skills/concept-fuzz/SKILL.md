@@ -1,83 +1,101 @@
 ---
 name: concept-fuzz
 description: >
-  Generate information-isolated fuzz tests for Semorphe's code↔blocks pipeline.
-  Uses a dual-agent architecture: Agent A (blind to implementation) writes real C++ programs,
-  Agent B verifies round-trip correctness and compiler output equivalence.
-  Use to find edge cases and bugs that implementation-aware testing would miss.
+  為 Semorphe 的程式碼↔積木管線產生資訊隔離的模糊測試。
+  使用雙代理架構：Agent A（不知道實作）寫真實程式，
+  Agent B 驗證 round-trip 正確性和編譯器/直譯器輸出等價性。
+  用於找出實作感知測試會遺漏的邊界案例和 bug。支援任何語言。
 user-invocable: true
 ---
 
-# Concept Fuzz Testing
+# 概念模糊測試
 
-## User Input
+## 使用者輸入
 
 ```text
 $ARGUMENTS
 ```
 
-The argument specifies the scope: a difficulty level (`easy`, `medium`, `hard`, `all`), a specific topic (`loops`, `functions`, `arrays`, `pointers`), a number of programs to generate (default: 10), or a combination (e.g., `hard loops 20`).
+參數格式為 `[語言] [難度] [範疇] [數量]`，例如：
+- `cpp hard loops 20` — C++ 困難的迴圈範疇 20 題
+- `python medium` — Python 中級 10 題（預設）
+- `easy 5` — 未指定語言時使用預設語言，簡單 5 題
+- `java functions 15` — Java 函式範疇 15 題
 
-## Architecture: Dual-Agent Information Isolation
+難度等級：`easy`、`medium`、`hard`、`all`
+範疇（scope）範例：`loops`、`functions`、`arrays`、`pointers`、`strings`、`classes`
 
-This skill uses **two agents with strict information boundaries** to produce high-quality tests:
+## 架構：雙代理資訊隔離
+
+此 skill 使用**兩個有嚴格資訊邊界的代理**來產生高品質測試：
 
 ```
-Agent A (Problem Author)         Agent B (Verifier)
-━━━━━━━━━━━━━━━━━━━━━━━         ━━━━━━━━━━━━━━━━━━━
-KNOWS:                           KNOWS:
-  ✓ C++ language specification     ✓ Full Semorphe source code
-  ✓ Cognitive level definitions    ✓ How to run lift/render/generate
-  ✓ "Write real C++ programs"      ✓ How to call g++/clang++
-                                   ✓ How to compare outputs
-DOES NOT KNOW:
-  ✗ Semorphe source code         DOES NOT KNOW:
-  ✗ Which concepts are supported   ✗ Why these programs were chosen
-  ✗ How lifter/generator works     ✗ Agent A's intent
-  ✗ Known bugs or limitations
+Agent A（出題者）                Agent B（驗證者）
+━━━━━━━━━━━━━━━━               ━━━━━━━━━━━━━━━━
+知道：                           知道：
+  ✓ 目標語言的語言規範            ✓ 完整的 Semorphe 原始碼
+  ✓ 認知層級定義                  ✓ 如何執行 lift/render/generate
+  ✓「寫真實的程式」               ✓ 如何編譯/執行目標語言程式
+                                  ✓ 如何比較輸出
+不知道：
+  ✗ Semorphe 原始碼             不知道：
+  ✗ 支援哪些概念                  ✗ 為什麼選擇這些程式
+  ✗ lifter/generator 如何運作     ✗ Agent A 的意圖
+  ✗ 已知 bug 或限制
 ```
 
-**Why this matters**: If the test author knows the implementation, they unconsciously avoid patterns the code doesn't handle. An ignorant author writes code the way a real student would — exposing real gaps.
+**為什麼這很重要**：如果測試作者知道實作，他們會下意識避開程式碼無法處理的模式。一個「無知」的作者會像真實學生一樣寫程式碼 — 暴露真正的缺口。
 
-## Workflow
+## 語言特定設定
 
-### Step 1: Launch Agent A (Isolated Problem Author)
+| 語言 | 編譯/執行指令 | 標準 | 副檔名 |
+|------|-------------|------|--------|
+| C++ | `g++ -std=c++17 -o prog prog.cpp && ./prog` | C++17 | `.cpp` |
+| Python | `python3 prog.py` | 3.10+ | `.py` |
+| Java | `javac Prog.java && java Prog` | 17+ | `.java` |
+| JavaScript | `node prog.js` | ES2022 | `.js` |
 
-Launch Agent A using the Agent tool with `isolation: "worktree"` to prevent access to source code.
+根據目標語言調整 Agent A 的 prompt 和驗證流程。
 
-**Agent A's prompt** (adapt based on user's `$ARGUMENTS`):
+## 工作流程
+
+### 步驟一：啟動 Agent A（隔離的出題者）
+
+使用 Agent 工具啟動 Agent A，設定 `isolation: "worktree"` 以防止存取原始碼。
+
+**Agent A 的 prompt**（根據使用者的 `$ARGUMENTS` 和目標語言調整）：
 
 ---
 
-You are a C++ programming instructor creating practice programs for students. You have NO knowledge of any specific tool or system — you are simply writing real, compilable C++ programs.
+You are a {LANGUAGE} programming instructor creating practice programs for students. You have NO knowledge of any specific tool or system — you are simply writing real, runnable {LANGUAGE} programs.
 
 **Requirements for each program:**
-1. Must compile with `g++ -std=c++17 -o prog prog.cpp` without errors
+1. Must compile/run without errors using standard toolchain
 2. Must produce deterministic stdout output (no random, no user input, no time-dependent)
-3. Must be self-contained (single file, standard headers only)
-4. Must include a `main()` function
+3. Must be self-contained (single file, standard libraries only)
+4. Must have a clear entry point (main function or top-level code as appropriate)
 5. Should represent realistic student code at the specified difficulty level
 
 **Difficulty calibration:**
 
 EASY (L0 equivalent):
 - Variables, basic arithmetic, simple if/else, while loops
-- cout/cin (with hardcoded values instead of cin), endl
-- No functions other than main, no arrays, no pointers
-- Tricky patterns: operator precedence, dangling else, integer overflow edge
+- Basic output (print/cout/System.out)
+- No functions (other than main if required), no arrays/lists, no pointers/references
+- Tricky patterns: operator precedence, integer division, type coercion edge cases
 
 MEDIUM (L1 equivalent):
 - Functions with parameters and return values, for loops, nested control flow
-- Logical operators (&&, ||, !), compound assignment (+=, -=)
-- switch/case, do-while, break/continue in loops
+- Logical operators, compound assignment
+- Switch/match, do-while (if language supports), break/continue
 - Tricky patterns: function calling function, shadowed variables, short-circuit evaluation
 
 HARD (L2 equivalent):
-- Arrays (declaration, access, iteration), string operations
-- Pointers and references, pass-by-reference
+- Arrays/lists, string operations
+- Pointers/references (if applicable), pass-by-reference
 - Recursion, multiple functions interacting
-- Preprocessor (#include with different headers)
-- Tricky patterns: pointer arithmetic, array decay, off-by-one, dangling references
+- Language-specific advanced features (templates, closures, generics, etc.)
+- Tricky patterns: off-by-one, scope issues, type conversion edge cases
 
 **For each program, output a JSON object:**
 
@@ -85,168 +103,129 @@ HARD (L2 equivalent):
 {
   "id": "fuzz_{N}",
   "difficulty": "easy|medium|hard",
-  "topic": "brief topic description",
+  "scope": "brief scope description (e.g. loops, functions, arrays)",
   "description": "what this program tests (1 sentence)",
-  "code": "the full C++ source code",
-  "expected_concepts": ["var_declare", "arithmetic", "if", ...],
+  "code": "the full source code",
   "tricky_aspect": "what makes this program non-trivial (1 sentence)"
 }
 ```
 
-Generate {N} programs covering diverse patterns. Focus on EDGE CASES and TRICKY COMBINATIONS — not textbook hello-world programs. Think about what real students write that breaks tools.
+**IMPORTANT**: Do NOT include any field describing expected concepts, AST structure, or internal tool behavior. You are writing programs as a teacher, not analyzing tool internals.
 
-Examples of good tricky programs:
-- Nested ternary inside cout
-- for loop with comma operator: `for(int i=0,j=10; i<j; i++,j--)`
-- Multiple variable declaration: `int a=1, b=2, c=a+b;`
-- String with escape sequences in cout
-- Chained comparison that doesn't do what students think: `if (1 < x < 10)`
-- Empty loop body: `while(arr[i++]);`
-- Macro-like patterns that are valid C++
+Generate {N} programs covering diverse patterns. Focus on EDGE CASES and TRICKY COMBINATIONS — not textbook hello-world programs. Think about what real students write that breaks tools.
 
 Output ALL programs as a single JSON array.
 
 ---
 
-### Step 2: Compile Agent A's Programs
+### 步驟二：編譯/執行 Agent A 的程式
 
-After Agent A returns its programs:
+Agent A 回傳程式後：
 
-1. Parse the JSON array of programs
-2. For each program:
+1. 解析程式的 JSON 陣列
+2. 對每個程式，寫入檔案並編譯/執行：
    ```bash
-   echo "$CODE" > /tmp/fuzz_{id}.cpp
-   g++ -std=c++17 -o /tmp/fuzz_{id} /tmp/fuzz_{id}.cpp 2>/tmp/fuzz_{id}_compile.log
+   # 以 C++ 為例
+   echo "$CODE" > /tmp/semorphe-fuzz/fuzz_{id}.cpp
+   g++ -std=c++17 -o /tmp/semorphe-fuzz/fuzz_{id} /tmp/semorphe-fuzz/fuzz_{id}.cpp 2>/tmp/semorphe-fuzz/fuzz_{id}_compile.log
+   timeout 5 /tmp/semorphe-fuzz/fuzz_{id} > /tmp/semorphe-fuzz/fuzz_{id}_expected.txt 2>&1
    ```
-3. Run programs that compiled successfully:
-   ```bash
-   timeout 5 /tmp/fuzz_{id} > /tmp/fuzz_{id}_expected.txt 2>&1
-   ```
-4. Record: compile success/failure, stdout output, stderr
+3. 記錄：編譯/執行成功/失敗、stdout 輸出、stderr
 
-**Discard** programs that don't compile — Agent A made a mistake, not a test failure.
+**捨棄**無法編譯/執行的程式 — 那是 Agent A 的錯誤，不是測試失敗。
 
-### Step 3: Run Round-Trip Pipeline
+### 步驟三：執行 Round-Trip 管線
 
-For each successfully compiled program, run the Semorphe pipeline:
+對每個成功執行的程式，執行 Semorphe 管線：
 
-1. **Lift**: Use the project's lifter to convert C++ → SemanticTree
-2. **Generate**: Use the code generator to convert SemanticTree → C++ code
-3. **Compile generated code**:
+1. **提升（Lift）**：使用該語言的 lifter 將原始碼 → SemanticTree
+2. **語義樹檢查（P1 投影定理驗證）**：
+   - 將 SemanticTree dump 為 JSON
+   - 統計 `raw_code` 和 `unresolved` 節點的數量和比例
+   - 執行二次 round-trip（lift → generate → lift），比較兩次語義樹是否結構等價（P1 可逆性）
+3. **產生（Generate）**：使用程式碼產生器將 SemanticTree → 原始碼
+4. **多層級鷹架測試（P4 漸進式揭露）**：對每個認知層級（L0、L1、L2）分別產生程式碼，驗證：
+   - L0 輸出不包含超出 L0 的概念語法
+   - 各層級輸出皆可編譯/執行
+   - 高層級輸出保留更多語義細節
+5. **編譯/執行產生的程式碼**
+6. **比較輸出**：
    ```bash
-   echo "$GENERATED_CODE" > /tmp/fuzz_{id}_gen.cpp
-   g++ -std=c++17 -o /tmp/fuzz_{id}_gen /tmp/fuzz_{id}_gen.cpp 2>/tmp/fuzz_{id}_gen_compile.log
-   ```
-4. **Run generated code**:
-   ```bash
-   timeout 5 /tmp/fuzz_{id}_gen > /tmp/fuzz_{id}_actual.txt 2>&1
-   ```
-5. **Compare outputs**:
-   ```bash
-   diff /tmp/fuzz_{id}_expected.txt /tmp/fuzz_{id}_actual.txt
+   diff /tmp/semorphe-fuzz/fuzz_{id}_expected.txt /tmp/semorphe-fuzz/fuzz_{id}_actual.txt
    ```
 
-To perform steps 1-2 programmatically, create and run a Node.js script:
+要以程式化方式執行步驟 1-4，建立並執行 Node.js 腳本，import 該語言模組的 lifter 和 generator。
 
-```typescript
-// /tmp/semorphe-fuzz-runner.ts
-import { Lifter } from '../src/core/lift/lifter'
-import { PatternLifter } from '../src/core/lift/pattern-lifter'
-import { registerCppLifters } from '../src/languages/cpp/lifters'
-import { registerCppLanguage } from '../src/languages/cpp/generators'
-import { generateCodeWithMapping } from '../src/core/projection/code-generator'
-import { renderToBlocklyState } from '../src/core/projection/block-renderer'
-// ... initialize parser, lifter, generator
-// ... for each program: parse → lift → generate → write output
-```
+### 步驟四：分類結果
 
-### Step 4: Classify Results
+對每個程式，分類結果：
 
-For each program, classify the result:
+| 結果 | 意義 | 行動 |
+|------|------|------|
+| **PASS** | 產生的程式碼可執行且輸出相同 | 記錄為通過的測試 |
+| **SEMANTIC_DIFF** | 產生的程式碼可執行但輸出不同 | **BUG** — 調查語義樹 |
+| **COMPILE_FAIL** | 產生的程式碼無法編譯/執行 | **BUG** — generator 產生了無效程式碼 |
+| **LIFT_FAIL** | Lifter 當掉或回傳 null | **限制** — 可能需要新概念 |
+| **EXPECTED_DEGRADATION** | 程式碼使用不支援的特性，降級為 raw_code | 預期中 — 記錄覆蓋缺口 |
+| **SCAFFOLD_LEAK** | 低層級輸出包含高層級概念語法 | **BUG** — P4 漸進揭露違規 |
+| **ROUNDTRIP_DRIFT** | 二次 round-trip 語義樹結構不同 | **BUG** — P1 可逆性違規 |
+| **TIMEOUT** | 產生的程式碼掛住 | **BUG** — 可能有無窮迴圈 |
 
-| Result | Meaning | Action |
-|--------|---------|--------|
-| **PASS** | Generated code compiles and produces identical output | Record as passing test |
-| **SEMANTIC_DIFF** | Generated code compiles but output differs | **BUG** — investigate semantic tree |
-| **COMPILE_FAIL** | Generated code doesn't compile | **BUG** — generator produced invalid C++ |
-| **LIFT_FAIL** | Lifter crashed or returned null | **LIMITATION** — may need new concept |
-| **EXPECTED_DEGRADATION** | Code uses unsupported features, degraded to raw_code | Expected — record coverage gap |
-| **TIMEOUT** | Generated code hangs | **BUG** — possible infinite loop in generated code |
+### 步驟五：產生報告和測試
 
-### Step 5: Generate Report and Tests
-
-Create a fuzz report at `tests/fuzz-reports/fuzz-{timestamp}.md`:
+在 `tests/fuzz-reports/fuzz-{lang}-{timestamp}.md` 建立模糊測試報告：
 
 ```markdown
-# Fuzz Test Report — {date}
+# 模糊測試報告 — {language} — {date}
 
-## Summary
-- Programs generated: N
-- Compiled successfully: N
-- Round-trip PASS: N
-- SEMANTIC_DIFF (bugs): N
-- COMPILE_FAIL (bugs): N
-- LIFT_FAIL (limitations): N
-- EXPECTED_DEGRADATION: N
+## 摘要
+- 語言：{language}
+- 產生的程式數：N
+- 成功執行：N
+- Round-trip PASS：N
+- SEMANTIC_DIFF（bug）：N
+- COMPILE_FAIL（bug）：N
+- LIFT_FAIL（限制）：N
+- EXPECTED_DEGRADATION：N
 
-## Bugs Found
+## 發現的 Bug
 
-### Bug 1: {description}
-- **Input**: ```cpp {original code} ```
-- **Expected output**: {expected stdout}
-- **Actual output**: {actual stdout}
-- **Semantic tree**: {JSON dump of lifted tree}
-- **Generated code**: ```cpp {generated code} ```
-- **Root cause hypothesis**: {analysis}
+### Bug 1：{描述}
+- **輸入**：```{lang} {原始程式碼} ```
+- **預期輸出**：{expected stdout}
+- **實際輸出**：{actual stdout}
+- **語義樹**：{提升的樹的 JSON dump}
+- **產生的程式碼**：```{lang} {generated code} ```
+- **根本原因假設**：{分析}
 
-## Coverage Gaps
-{concepts used by Agent A that Semorphe doesn't support yet}
+## 覆蓋缺口
+{Agent A 使用的但 Semorphe 尚未支援的概念}
 
-## Regression Tests Generated
-{list of test files created}
+## 產生的回歸測試
+{建立的測試檔案列表}
 ```
 
-For each **BUG** found, generate a regression test in `tests/integration/fuzz/`:
+對每個 **BUG**，在 `tests/integration/fuzz/` 產生回歸測試。
 
-```typescript
-// tests/integration/fuzz/fuzz_{id}.test.ts
-import { describe, it, expect } from 'vitest'
-// ... imports
+### 步驟六：向使用者總結
 
-describe('fuzz_{id}: {description}', () => {
-  const originalCode = `{code}`
-  const expectedOutput = `{expected stdout}`
+呈現：
+1. 測試了多少程式
+2. 找到多少 bug（含嚴重度）
+3. 識別了多少覆蓋缺口
+4. 建立了哪些回歸測試
+5. 建議：優先修復哪些 bug
 
-  it('should round-trip correctly', () => {
-    // lift → generate → compare
-  })
+## 設定
 
-  it('should produce equivalent compiler output', () => {
-    // compile both → run both → compare stdout
-  })
-})
-```
+- 預設程式數：10
+- 每個程式逾時：5 秒
+- 暫存目錄：`/tmp/semorphe-fuzz/`
 
-### Step 6: Summary to User
+## 有效模糊測試的技巧
 
-Present:
-1. How many programs were tested
-2. How many bugs were found (with severity)
-3. How many coverage gaps were identified
-4. What regression tests were created
-5. Recommendation: which bugs to fix first
-
-## Configuration
-
-- Default program count: 10
-- Compiler: `g++` (fallback to `clang++`)
-- C++ standard: C++17
-- Timeout per program: 5 seconds
-- Temp directory: `/tmp/semorphe-fuzz/`
-
-## Tips for Effective Fuzzing
-
-- Run multiple times — each run generates different programs
-- Start with `easy` to verify basic pipeline, then escalate to `hard`
-- Focus on specific topics when investigating known weak areas
-- The most valuable bugs come from `SEMANTIC_DIFF` — the code compiles but does the wrong thing
+- 多次執行 — 每次執行會產生不同程式
+- 從 `easy` 開始驗證基本管線，再升級到 `hard`
+- 調查已知弱點時指定特定範疇
+- 最有價值的 bug 來自 `SEMANTIC_DIFF` — 程式碼可執行但行為錯誤
+- 跨語言比較：如果通用概念在 A 語言 PASS 但 B 語言 FAIL，問題可能在語言特定的 lifter/generator
