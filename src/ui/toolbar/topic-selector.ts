@@ -92,13 +92,17 @@ export class TopicSelector {
     popover.className = 'topic-tree-popover'
     this.renderTree(this.currentTopic.levelTree, popover, 0)
 
-    // Position below the anchor
+    // Position below the anchor, clamped to viewport
     const rect = anchor.getBoundingClientRect()
     popover.style.position = 'fixed'
     popover.style.top = `${rect.bottom + 4}px`
-    popover.style.left = `${rect.left}px`
 
     document.body.appendChild(popover)
+
+    // Clamp horizontal position so popover stays within viewport
+    const popRect = popover.getBoundingClientRect()
+    const maxLeft = window.innerWidth - popRect.width - 8
+    popover.style.left = `${Math.max(8, Math.min(rect.left, maxLeft))}px`
     this.popover = popover
 
     // Close on outside click

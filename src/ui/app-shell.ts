@@ -139,7 +139,10 @@ export function createAppLayout(
     id: 'console',
     label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
     panel: consoleEl,
-    actions: [{ icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() }],
+    actions: [
+      { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
+      { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
+    ],
   })
 
   const variableEl = document.createElement('div')
@@ -184,7 +187,7 @@ export function createAppLayout(
 
   // Selector mount points — saved for moving between toolbar ↔ mobile menu
   const selectorMounts = {
-    topic: { id: 'level-selector-mount', label: 'Topic' },
+    topic: { id: 'level-selector-mount', label: '主題' },
     style: { id: 'style-selector-mount', label: '風格' },
     blockStyle: { id: 'block-style-selector-mount', label: '積木風格' },
     locale: { id: 'locale-selector-mount', label: '語言' },
@@ -230,6 +233,47 @@ export function createAppLayout(
     const mobileSyncBtn = document.getElementById('mobile-sync-btn')
     if (mobileSyncBtn) mobileSyncBtn.style.display = ''
 
+    // Add toolbox collapse button
+    let collapseBtn = document.getElementById('toolbox-collapse-btn')
+    if (!collapseBtn) {
+      collapseBtn = document.createElement('button')
+      collapseBtn.id = 'toolbox-collapse-btn'
+      collapseBtn.className = 'toolbox-collapse-btn'
+      collapseBtn.textContent = '◀'
+      const positionCollapseBtn = () => {
+        const toolbox = blocklyContainer.querySelector('.blocklyToolbox') as HTMLElement | null
+        if (!toolbox || !collapseBtn) return
+        const isHidden = toolbox.style.display === 'none'
+        collapseBtn.style.left = isHidden ? '0px' : `${toolbox.getBoundingClientRect().width}px`
+      }
+      collapseBtn.addEventListener('click', () => {
+        const toolbox = blocklyContainer.querySelector('.blocklyToolbox') as HTMLElement | null
+        if (!toolbox) return
+        const isHidden = toolbox.style.display === 'none'
+        toolbox.style.display = isHidden ? '' : 'none'
+        collapseBtn!.textContent = isHidden ? '◀' : '▶'
+        window.dispatchEvent(new Event('resize'))
+        requestAnimationFrame(positionCollapseBtn)
+      })
+      mobileBlocksContainer.appendChild(collapseBtn)
+      // Position after Blockly renders
+      requestAnimationFrame(positionCollapseBtn)
+      // Keep position in sync when toolbox resizes (e.g. category expand/collapse)
+      const toolboxEl = blocklyContainer.querySelector('.blocklyToolbox') as HTMLElement | null
+      if (toolboxEl) {
+        new ResizeObserver(() => requestAnimationFrame(positionCollapseBtn)).observe(toolboxEl)
+      }
+      // Hide collapse button when toolbox flyout is open, show when closed
+      const flyoutEl = blocklyContainer.querySelector('.blocklyToolboxFlyout') as SVGElement | null
+      if (flyoutEl) {
+        new MutationObserver(() => {
+          const flyoutVisible = getComputedStyle(flyoutEl).display !== 'none'
+          collapseBtn!.style.visibility = flyoutVisible ? 'hidden' : 'visible'
+        }).observe(flyoutEl, { attributes: true, attributeFilter: ['style', 'display'] })
+      }
+    }
+    collapseBtn.style.display = ''
+
     // Activate the current tab
     const activeTab = mobileTabBar!.getActiveTab()
     activateMobilePanel(activeTab)
@@ -237,6 +281,9 @@ export function createAppLayout(
     // Hide desktop layout elements
     leftPanel.style.display = 'none'
     rightColumn.style.display = 'none'
+
+    // Apply mobile-friendly Monaco options (reduce IME issues)
+    monacoPanel.applyMobileOptions()
 
     window.dispatchEvent(new Event('resize'))
   }
@@ -280,12 +327,21 @@ export function createAppLayout(
     const mobileSyncBtn = document.getElementById('mobile-sync-btn')
     if (mobileSyncBtn) mobileSyncBtn.style.display = 'none'
 
+    // Hide toolbox collapse button and restore toolbox
+    const collapseBtn = document.getElementById('toolbox-collapse-btn')
+    if (collapseBtn) collapseBtn.style.display = 'none'
+    const toolboxDiv = blocklyContainer.querySelector('.blocklyToolbox') as HTMLElement | null
+    if (toolboxDiv) toolboxDiv.style.display = ''
+
     // Close mobile menu
     mobileMenu?.close()
 
     // Restore desktop layout
     leftPanel.style.display = 'flex'
     rightColumn.style.display = ''
+
+    // Restore desktop Monaco options
+    monacoPanel.applyDesktopOptions()
 
     window.dispatchEvent(new Event('resize'))
   }
@@ -294,7 +350,10 @@ export function createAppLayout(
     mobileBlocksContainer.classList.toggle('active', tab === 'blocks')
     mobileCodeContainer.classList.toggle('active', tab === 'code')
     mobileConsoleContainer.classList.toggle('active', tab === 'console')
-    window.dispatchEvent(new Event('resize'))
+    // Use requestAnimationFrame to ensure DOM is fully updated before resize
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
   }
 
   // Connect tab bar to panel switching

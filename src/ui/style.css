@@ -194,7 +194,7 @@ html, body {
 /* ─── Level tree popover ─── */
 
 .topic-tree-popover {
-  z-index: 10000;
+  z-index: 10002;
   background: #2d2d2d;
   border: 1px solid #555;
   border-radius: 6px;
@@ -1089,6 +1089,33 @@ html, body {
   display: none !important;
 }
 
+/* ─── Monaco clipboard bar ─── */
+
+.monaco-clipboard-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.clipboard-btn {
+  background: #2d2d2d;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clipboard-btn:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
 /* ─── Blockly dark overrides ─── */
 
 .blocklyToolboxDiv {
@@ -1259,7 +1286,7 @@ html, body {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 48px; /* above mobile tab bar */
   overflow: hidden;
 }
 
@@ -1272,6 +1299,11 @@ html, body {
 .mobile-panel-container > .monaco-wrapper {
   flex: 1;
   overflow: hidden;
+}
+
+/* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+.mobile-panel-container > .monaco-wrapper .monaco-editor .inputarea {
+  font-size: 16px !important;
 }
 
 .mobile-panel-container > .bottom-panel {
@@ -1337,9 +1369,36 @@ html, body {
     width: 100% !important;
   }
 
-  /* Add bottom padding for tab bar on Blockly workspace */
-  #blockly-panel {
-    padding-bottom: 0;
+  /* Blockly flyout no longer needs padding — mobile-panel-container stops above tab bar */
+
+  .blocklyToolbox {
+    max-height: calc(100vh - 36px - 48px - 27px) !important;
+    overflow-y: auto !important;
+  }
+
+  /* Toolbox collapse button for mobile */
+  .toolbox-collapse-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 200;
+    width: 22px;
+    height: 44px;
+    background: #333;
+    border: 1px solid #555;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .toolbox-collapse-btn:active {
+    background: #444;
   }
 
   /* Ensure full height minus toolbar and tab bar */

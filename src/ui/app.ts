@@ -298,6 +298,13 @@ export class App {
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
 
+    // 12b. Re-layout Monaco when code tab becomes visible (mobile)
+    elements.mobileTabBar?.onTabChange((tab) => {
+      if (tab === 'code') {
+        requestAnimationFrame(() => this.monacoPanel?.relayout())
+      }
+    })
+
     // 13. Update status bar + restore state
     this.refreshStatusBar()
     this.restoreState()
@@ -492,7 +499,7 @@ export class App {
       if (m) this.monacoPanel?.addHighlight(m.startLine + 1, m.endLine + 1, 'block-to-code')
     })
     this.monacoPanel?.onCursorChange((line) => {
-      this.blocklyPanel?.clearHighlight(); this.monacoPanel?.clearHighlight()
+      this.blocklyPanel?.clearHighlight(); this.monacoPanel?.clearHighlight(); this.monacoPanel?.dismissPendingHighlight()
       try { if (Blockly.getSelected()) Blockly.common.setSelected(null as unknown as Blockly.ISelectable) } catch { /* ignore */ }
       const m = this.syncController?.getMappingForLine(line - 1)
       if (!m) return

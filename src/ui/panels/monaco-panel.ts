@@ -18,6 +18,7 @@ export class MonacoPanel implements ViewHost {
   private onCursorChangeCallback: ((line: number) => void) | null = null
   private suppressChange = false
   private highlightCollection: monaco.editor.IEditorDecorationsCollection | null = null
+  private pendingHighlight: { startLine: number; endLine: number; variant: 'block-to-code' | 'code-to-block' } | null = null
   private breakpoints: Set<number> = new Set()
   private breakpointCollection: monaco.editor.IEditorDecorationsCollection | null = null
   private onBreakpointChangeCallback: ((breakpoints: number[]) => void) | null = null
@@ -102,6 +103,9 @@ export class MonacoPanel implements ViewHost {
 
     // Register hover provider for ghost line tooltips
     this.registerGhostHoverProvider()
+
+    // Add clipboard action bar
+    this.createClipboardBar()
   }
 
   onChange(callback: (code: string) => void): void {
@@ -144,9 +148,39 @@ export class MonacoPanel implements ViewHost {
     this.editor?.updateOptions({ readOnly })
   }
 
+  /** Apply mobile-friendly options to reduce IME input issues */
+  applyMobileOptions(): void {
+    this.editor?.updateOptions({
+      fontSize: 14,
+      lineHeight: 20,
+      quickSuggestions: false,
+      suggestOnTriggerCharacters: false,
+      acceptSuggestionOnCommitCharacter: false,
+      wordBasedSuggestions: 'off',
+      parameterHints: { enabled: false },
+      hover: { enabled: false },
+    })
+  }
+
+  /** Restore desktop editor options */
+  applyDesktopOptions(): void {
+    this.editor?.updateOptions({
+      fontSize: 14,
+      lineHeight: 19,
+      quickSuggestions: { other: true, strings: false, comments: false },
+      suggestOnTriggerCharacters: true,
+      acceptSuggestionOnCommitCharacter: true,
+      wordBasedSuggestions: 'currentDocument',
+      parameterHints: { enabled: true },
+      hover: { enabled: true },
+    })
+  }
+
   addHighlight(startLine: number, endLine: number, variant: 'block-to-code' | 'code-to-block' = 'block-to-code'): void {
     if (!this.editor) return
-    this.clearHighlight()
+    this.highlightCollection?.clear()
+    this.highlightCollection = null
+    this.pendingHighlight = { startLine, endLine, variant }
     const suffix = variant === 'code-to-block' ? '-reverse' : ''
     this.highlightCollection = this.editor.createDecorationsCollection([{
       range: new monaco.Range(startLine, 1, endLine, 1),
@@ -156,11 +190,28 @@ export class MonacoPanel implements ViewHost {
         linesDecorationsClassName: `monaco-line-highlight-gutter${suffix}`,
       },
     }])
+    this.editor.revealLineInCenterIfOutsideViewport(startLine)
   }
 
   clearHighlight(): void {
     this.highlightCollection?.clear()
     this.highlightCollection = null
+    // pendingHighlight preserved for cross-tab re-apply on mobile
+  }
+
+  /** Clear pending highlight — call when user explicitly interacts with code editor */
+  dismissPendingHighlight(): void {
+    this.pendingHighlight = null
+  }
+
+  /** Force layout and re-apply pending highlight (call after container becomes visible) */
+  relayout(): void {
+    if (!this.editor) return
+    this.editor.layout()
+    if (this.pendingHighlight) {
+      const { startLine, endLine, variant } = this.pendingHighlight
+      this.addHighlight(startLine, endLine, variant)
+    }
   }
 
   getEditor(): monaco.editor.IStandaloneCodeEditor | null {
@@ -264,6 +315,76 @@ export class MonacoPanel implements ViewHost {
         }
       },
     })
+  }
+
+  private createClipboardBar(): void {
+    const bar = document.createElement('div')
+    bar.className = 'monaco-clipboard-bar'
+
+    const copyBtn = document.createElement('button')
+    copyBtn.className = 'clipboard-btn'
+    copyBtn.textContent = '📋 複製'
+    copyBtn.title = '複製全部程式碼'
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(this.getCode())
+    })
+
+    const pasteInsertBtn = document.createElement('button')
+    pasteInsertBtn.className = 'clipboard-btn'
+    pasteInsertBtn.textContent = '📥 插入'
+    pasteInsertBtn.title = '在游標處插入剪貼簿內容'
+    pasteInsertBtn.addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText()
+      if (!this.editor || !text) return
+      const position = this.editor.getPosition()
+      if (position) {
+        this.editor.executeEdits('clipboard-insert', [{
+          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+          text,
+        }])
+      }
+    })
+
+    const pasteReplaceBtn = document.createElement('button')
+    pasteReplaceBtn.className = 'clipboard-btn'
+    pasteReplaceBtn.textContent = '📋 覆蓋貼上'
+    pasteReplaceBtn.title = '用剪貼簿內容取代全部程式碼'
+    pasteReplaceBtn.addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText()
+      if (!this.editor || !text) return
+      const model = this.editor.getModel()
+      if (model) {
+        this.editor.executeEdits('clipboard-replace', [{
+          range: model.getFullModelRange(),
+          text,
+        }])
+      }
+    })
+
+    const undoBtn = document.createElement('button')
+    undoBtn.className = 'clipboard-btn'
+    undoBtn.textContent = '↩ 還原'
+    undoBtn.title = '還原 (Undo)'
+    undoBtn.addEventListener('click', () => {
+      this.editor?.trigger('clipboard-bar', 'undo', null)
+    })
+
+    const redoBtn = document.createElement('button')
+    redoBtn.className = 'clipboard-btn'
+    redoBtn.textContent = '↪ 取消還原'
+    redoBtn.title = '取消還原 (Redo)'
+    redoBtn.addEventListener('click', () => {
+      this.editor?.trigger('clipboard-bar', 'redo', null)
+    })
+
+    bar.appendChild(copyBtn)
+    bar.appendChild(pasteInsertBtn)
+    bar.appendChild(pasteReplaceBtn)
+    bar.appendChild(undoBtn)
+    bar.appendChild(redoBtn)
+
+    // Insert bar before the editor container (at the top of the wrapper)
+    this.container.insertBefore(bar, this.container.firstChild)
   }
 
   private renderBreakpoints(): void {

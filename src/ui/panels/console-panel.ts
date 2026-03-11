@@ -24,6 +24,8 @@ export class ConsolePanel implements ViewHost {
   private inlineInput: HTMLInputElement | null = null
   private inlineInputLine: HTMLElement | null = null
   private signalHandler: ((signal: ConsoleSignal) => void) | null = null
+  /** Queued input lines from multi-line paste */
+  private pendingInputLines: string[] = []
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -151,6 +153,7 @@ export class ConsolePanel implements ViewHost {
     this.lines = []
     this.outputEl.innerHTML = ''
     this.currentLineEl = null
+    this.pendingInputLines = []
     this.removeInlineInput()
     this.removeInputRow()
     this.setStatus('')
@@ -163,11 +166,30 @@ export class ConsolePanel implements ViewHost {
 
   promptInput(prompt?: string): Promise<string> {
     return new Promise((resolve) => {
-      this.inputResolve = resolve
-
       if (prompt) {
         this.log(prompt)
       }
+
+      // If there are queued lines from a multi-line paste, auto-submit immediately
+      if (this.pendingInputLines.length > 0) {
+        const line = this.pendingInputLines.shift()!
+        // Echo the auto-submitted line
+        if (!this.currentLineEl) {
+          this.currentLineEl = document.createElement('div')
+          this.currentLineEl.className = 'console-line'
+          this.outputEl.appendChild(this.currentLineEl)
+        }
+        const echo = document.createElement('span')
+        echo.className = 'console-input-echo'
+        echo.textContent = line
+        this.currentLineEl.appendChild(echo)
+        this.currentLineEl = null
+        this.scrollToBottom()
+        resolve(line)
+        return
+      }
+
+      this.inputResolve = resolve
 
       this.removeInlineInput()
       this.removeInputRow()
@@ -205,6 +227,18 @@ export class ConsolePanel implements ViewHost {
           const val = input.value
           this.submitInlineInput(val)
         }
+      })
+
+      input.addEventListener('paste', (e) => {
+        const pasted = e.clipboardData?.getData('text')
+        if (!pasted || !pasted.includes('\n')) return
+        e.preventDefault()
+        const lines = pasted.split('\n')
+        // First line: combine with existing input text and submit
+        const firstLine = input.value + lines[0]
+        // Queue remaining non-empty lines (preserve empty lines for blank input)
+        this.pendingInputLines.push(...lines.slice(1))
+        this.submitInlineInput(firstLine)
       })
 
       this.inlineInputLine.appendChild(input)
@@ -247,6 +281,14 @@ export class ConsolePanel implements ViewHost {
 
   getLines(): string[] {
     return [...this.lines]
+  }
+
+  /** Copy all visible output text to clipboard */
+  copyOutput(): void {
+    const text = Array.from(this.outputEl.querySelectorAll('.console-line'))
+      .map(el => el.textContent ?? '')
+      .join('\n')
+    navigator.clipboard.writeText(text)
   }
 
   getElement(): HTMLElement {
