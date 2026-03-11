@@ -71,7 +71,7 @@ languages/{lang}/
 
 | 缺失項目 | 優先級 | 說明 |
 |----------|--------|------|
-| **Topic 系統** | P1 | 主題 × 層級樹 × 積木覆蓋（Phase 6） |
+| ~~**Topic 系統**~~ | ~~P1~~ | ~~主題 × 層級樹 × 積木覆蓋（Phase 6）~~ ✅ 已完成 |
 | **SemanticDiff 增量更新** | P2 | 全量替換→增量（Phase 9.2，nodeId 穩定性已部分完成） |
 | **硬體描述層** | P3 | 等 Arduino 需求（Phase 8） |
 | **DataFlow 視圖** | P3 | 需 annotations 機制（Phase 9.1） |
@@ -282,34 +282,34 @@ Extension Main（Node.js）
 
 前置條件：Phase 5 完成
 
-- [ ] **6.1 Topic 核心型別與註冊表**
-  - [ ] `Topic`、`LevelNode`、`BlockOverride` 型別定義（`src/core/topic.ts`）
-  - [ ] `TopicRegistry`（register / get / list / getForLanguage）
-  - [ ] 核心型別零語言依賴
-  - [ ] 單元測試
-- [ ] **6.2 層級樹引擎**
-  - [ ] `src/core/level-tree.ts`（取代線性 cognitiveLevel）
-  - [ ] `getVisibleConcepts(topic, activatedBranches)` → ConceptId[]
-  - [ ] 分支可疊加（union），無 Topic 退化為 L0/L1/L2
-  - [ ] 倍增軟指引驗證
-- [ ] **6.3 BlockSpec Topic 覆蓋機制**
-  - [ ] `getBlockSpec(conceptId, topic?)` 擴充
-  - [ ] 覆蓋粒度：message、tooltip、args、renderMapping
-  - [ ] 整合測試：覆蓋前後 SemanticNode 不變
-- [ ] **6.4 C++ 內建 Topic 定義**
-  - [ ] cpp-beginner.json / cpp-competitive.json
+- [x] **6.1 Topic 核心型別與註冊表**
+  - [x] `Topic`、`LevelNode`、`BlockOverride` 型別定義（`src/core/types.ts`）
+  - [x] `TopicRegistry`（register / get / list / getForLanguage）
+  - [x] 核心型別零語言依賴
+  - [x] 單元測試
+- [x] **6.2 層級樹引擎**
+  - [x] `src/core/level-tree.ts`（取代線性 cognitiveLevel）
+  - [x] `getVisibleConcepts(topic, activatedBranches)` → ConceptId[]
+  - [x] 分支可疊加（union），無 Topic 退化為 L0/L1/L2
+  - [x] 倍增軟指引驗證
+- [x] **6.3 BlockSpec Topic 覆蓋機制**
+  - [x] `getWithOverride(conceptId, topic?)` 擴充
+  - [x] 覆蓋粒度：message、tooltip、args、renderMapping
+  - [x] 整合測試：覆蓋前後 SemanticNode 不變
+- [x] **6.4 C++ 內建 Topic 定義**
+  - [x] cpp-beginner.json / cpp-competitive.json
   - [ ] manifest.json 加入 `topics` 欄位
-- [ ] **6.5 Toolbox 整合**
-  - [ ] `buildToolbox(topic, activatedBranches, viewParams)`
-  - [ ] Topic 分區 UI + 動態樹 Level selector
-  - [ ] Topic 切換不丟失語義樹
-- [ ] **6.6 Topic 持久化與 User Context**
-  - [ ] StorageService + 慣性快取 + 群體鎖定
-- [ ] **Phase 6 驗證**
-  - [ ] 無 Topic 行為不變、語義不受 Topic 影響
-  - [ ] BlockOverride 可改變輸入欄位
-  - [ ] Topic 不影響 lifter/generator
-  - [ ] 所有現有測試通過
+- [x] **6.5 Toolbox 整合**
+  - [x] `buildToolbox(topic, activatedBranches, viewParams)`
+  - [x] Topic 分區 UI + 動態樹 Level selector（popover 風格）
+  - [x] Topic 切換不丟失語義樹
+- [x] **6.6 Topic 持久化與 User Context**
+  - [x] StorageService（topicId + enabledBranches 持久化）
+- [x] **Phase 6 驗證**
+  - [x] 無 Topic 行為不變、語義不受 Topic 影響
+  - [x] BlockOverride 可改變輸入欄位
+  - [x] Topic 不影響 lifter/generator
+  - [x] 所有現有測試通過（1695/1695）
 
 ### Phase 7：Python 語言套件
 
