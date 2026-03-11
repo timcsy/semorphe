@@ -39,6 +39,12 @@ html, body {
   gap: 12px;
 }
 
+.toolbar-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
 .toolbar-title {
   font-size: 13px;
   font-weight: 500;
@@ -81,23 +87,27 @@ html, body {
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-#auto-sync-btn.auto-sync-on {
+#auto-sync-btn.auto-sync-on,
+#mobile-sync-btn.auto-sync-on {
   color: #4ec9b0;
   border-color: #4ec9b0;
   background: rgba(78, 201, 176, 0.12);
 }
 
-#auto-sync-btn.auto-sync-off {
+#auto-sync-btn.auto-sync-off,
+#mobile-sync-btn.auto-sync-off {
   color: #888;
   border-color: #555;
   background: transparent;
 }
 
-#auto-sync-btn.auto-sync-on:hover {
+#auto-sync-btn.auto-sync-on:hover,
+#mobile-sync-btn.auto-sync-on:hover {
   background: rgba(78, 201, 176, 0.25);
 }
 
-#auto-sync-btn.auto-sync-off:hover {
+#auto-sync-btn.auto-sync-off:hover,
+#mobile-sync-btn.auto-sync-off:hover {
   background: #3a3a3a;
 }
 
@@ -1108,4 +1118,243 @@ html, body {
 
 .blocklyTrash {
   opacity: 0.6;
+}
+
+/* ─── Mobile Tab Bar ─── */
+
+.mobile-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: #252526;
+  border-top: 1px solid #3c3c3c;
+  z-index: 9000;
+}
+
+.mobile-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 4px 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tab-item.active {
+  color: #007acc;
+}
+
+.mobile-tab-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mobile-tab-label {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.mobile-tab-badge {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 16px);
+  width: 8px;
+  height: 8px;
+  background: #e74c3c;
+  border-radius: 50%;
+}
+
+/* ─── Mobile Menu Overlay ─── */
+
+.mobile-menu-overlay {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  background: #2d2d2d;
+  border: 1px solid #555;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+  max-width: 300px;
+  z-index: 10001;
+  padding: 8px 0;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  color: #ccc;
+  font-size: 12px;
+}
+
+.mobile-menu-item label {
+  white-space: nowrap;
+  min-width: 60px;
+  color: #999;
+  font-size: 11px;
+}
+
+.mobile-menu-item .toolbar-select,
+.mobile-menu-item select {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-menu-item .topic-selector {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-menu-separator {
+  height: 1px;
+  background: #3c3c3c;
+  margin: 4px 0;
+}
+
+.mobile-menu-summary {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: #888;
+  border-top: 1px solid #3c3c3c;
+  margin-top: 4px;
+}
+
+.hamburger-btn {
+  display: none;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.hamburger-btn:hover {
+  background: #505050;
+}
+
+/* ─── Mobile panel containers ─── */
+
+.mobile-panel-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.mobile-panel-container.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Monaco and BottomPanel must fill mobile container */
+.mobile-panel-container > .monaco-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+.mobile-panel-container > .bottom-panel {
+  flex: 1 !important;
+}
+
+.mobile-panel-container > .bottom-panel .bottom-panel-divider {
+  display: none;
+}
+
+.mobile-panel-container > .bottom-panel .bottom-panel-content {
+  flex: 1;
+}
+
+/* ─── Responsive: Mobile (≤768px) ─── */
+
+@media (max-width: 768px) {
+  /* Hide desktop split pane elements */
+  .split-divider {
+    display: none !important;
+  }
+
+  #status-bar {
+    display: none !important;
+  }
+
+  /* Hide quick-access-bar sync buttons and selectors on mobile */
+  .quick-access-bar #auto-sync-btn,
+  .quick-access-bar #sync-blocks-btn,
+  .quick-access-bar #sync-code-btn,
+  .quick-access-bar #level-selector-mount,
+  .quick-access-bar #block-style-selector-mount,
+  .quick-access-bar .file-menu-group {
+    display: none !important;
+  }
+
+  /* Simplify quick-access-bar: only undo/redo/clear */
+  .quick-access-bar .toolbar-separator {
+    display: none !important;
+  }
+
+  /* Toolbar: show hamburger, hide secondary controls */
+  .hamburger-btn {
+    display: inline-flex;
+  }
+
+  .toolbar-actions #style-selector-mount,
+  .toolbar-actions #locale-selector-mount,
+  .toolbar-actions .toolbar-separator {
+    display: none !important;
+  }
+
+  /* Main editor area: stack vertically for mobile panels */
+  #editors {
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Hide desktop panels in mobile mode — LayoutManager controls visibility */
+  .split-left,
+  .split-right {
+    position: absolute !important;
+    width: 100% !important;
+  }
+
+  /* Add bottom padding for tab bar on Blockly workspace */
+  #blockly-panel {
+    padding-bottom: 0;
+  }
+
+  /* Ensure full height minus toolbar and tab bar */
+  #editors {
+    height: calc(100vh - 36px - 48px);
+  }
+
+  /* Toast above tab bar */
+  .toast {
+    bottom: 60px;
+  }
+
+  /* Debug toolbar adjustments */
+  .debug-toolbar {
+    top: 38px;
+    font-size: 11px;
+  }
 }

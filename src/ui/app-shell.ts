@@ -1,6 +1,8 @@
 import * as Blockly from 'blockly'
 import { SplitPane } from './layout/split-pane'
 import { BottomPanel } from './layout/bottom-panel'
+import { LayoutManager } from './layout/layout-manager'
+import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import { ConsolePanel } from './panels/console-panel'
 import { VariablePanel } from './panels/variable-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
@@ -10,6 +12,7 @@ import { TopicSelector } from './toolbar/topic-selector'
 import { StyleSelector } from './toolbar/style-selector'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { LocaleSelector } from './toolbar/locale-selector'
+import { MobileMenu } from './toolbar/mobile-menu'
 import { StorageService } from '../core/storage'
 import type { SavedState } from '../core/storage'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -25,6 +28,9 @@ export interface AppShellElements {
   variablePanel: VariablePanel
   bottomPanel: BottomPanel
   quickAccessBar: QuickAccessBar
+  layoutManager: LayoutManager
+  mobileTabBar: MobileTabBar | null
+  mobileMenu: MobileMenu | null
 }
 
 export interface AppShellCallbacks {
@@ -49,11 +55,14 @@ export function createAppLayout(
   blockSpecRegistry: BlockSpecRegistry,
   toolbox: object,
 ): AppShellElements {
+  const layoutManager = new LayoutManager()
+
   // Create toolbar
   const toolbar = document.createElement('header')
   toolbar.id = 'toolbar'
   toolbar.innerHTML = `
     <div class="toolbar-left">
+      <img src="logo.svg" alt="Semorphe" class="toolbar-logo">
       <span class="toolbar-title">Semorphe</span>
     </div>
     <div class="toolbar-actions">
@@ -74,6 +83,8 @@ export function createAppLayout(
           <div class="run-mode-option" data-mode="step">⏭ 逐步</div>
         </div>
       </div>
+      <button id="mobile-sync-btn" class="exec-btn auto-sync-on" title="自動同步：開啟" style="display:none">⇄ 自動</button>
+      <button id="hamburger-btn" class="hamburger-btn" title="選單">☰</button>
     </div>
   `
   appEl.appendChild(toolbar)
@@ -135,7 +146,178 @@ export function createAppLayout(
   const variablePanel = new VariablePanel(variableEl)
   bottomPanel.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
 
-  return { blocklyPanel, monacoPanel, consolePanel, variablePanel, bottomPanel, quickAccessBar }
+  // Mobile layout: create mobile containers and tab bar
+  // These are created once but only shown when in mobile mode
+  const mobileBlocksContainer = document.createElement('div')
+  mobileBlocksContainer.className = 'mobile-panel-container'
+  mobileBlocksContainer.id = 'mobile-blocks'
+  main.appendChild(mobileBlocksContainer)
+
+  const mobileCodeContainer = document.createElement('div')
+  mobileCodeContainer.className = 'mobile-panel-container'
+  mobileCodeContainer.id = 'mobile-code'
+  main.appendChild(mobileCodeContainer)
+
+  const mobileConsoleContainer = document.createElement('div')
+  mobileConsoleContainer.className = 'mobile-panel-container'
+  mobileConsoleContainer.id = 'mobile-console'
+  main.appendChild(mobileConsoleContainer)
+
+  // Create mobile tab bar (hidden in desktop via CSS)
+  let mobileTabBar: MobileTabBar | null = null
+  const tabBarContainer = document.createElement('div')
+  tabBarContainer.id = 'mobile-tab-bar-container'
+  tabBarContainer.style.display = 'none'
+  appEl.appendChild(tabBarContainer)
+  mobileTabBar = new MobileTabBar(tabBarContainer)
+
+  // Create mobile menu
+  const hamburgerBtn = document.getElementById('hamburger-btn')
+  let mobileMenu: MobileMenu | null = null
+  if (hamburgerBtn) {
+    mobileMenu = new MobileMenu(toolbar)
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      mobileMenu!.toggle()
+    })
+  }
+
+  // Selector mount points — saved for moving between toolbar ↔ mobile menu
+  const selectorMounts = {
+    topic: { id: 'level-selector-mount', label: 'Topic' },
+    style: { id: 'style-selector-mount', label: '風格' },
+    blockStyle: { id: 'block-style-selector-mount', label: '積木風格' },
+    locale: { id: 'locale-selector-mount', label: '語言' },
+  }
+
+  // Remember original parent elements for each selector mount
+  const selectorOriginalParents = new Map<string, { parent: HTMLElement; nextSibling: Node | null }>()
+
+  // Panel DOM references for mobile switching
+  const switchToMobile = () => {
+    // Move blockly panel elements to mobile container
+    mobileBlocksContainer.appendChild(quickAccessBar.getElement())
+    mobileBlocksContainer.appendChild(blocklyContainer)
+    mobileBlocksContainer.classList.add('active')
+
+    // Move monaco to mobile container
+    mobileCodeContainer.appendChild(monacoWrapper)
+    mobileCodeContainer.classList.remove('active')
+
+    // Move console/variable (bottom panel) to mobile container
+    mobileConsoleContainer.appendChild(bottomContainer)
+    mobileConsoleContainer.classList.remove('active')
+
+    // Move selectors into mobile menu
+    if (mobileMenu) {
+      for (const info of Object.values(selectorMounts)) {
+        const mount = document.getElementById(info.id)
+        if (mount && mount.parentElement) {
+          // Save original position for restoration
+          selectorOriginalParents.set(info.id, {
+            parent: mount.parentElement,
+            nextSibling: mount.nextSibling,
+          })
+          mobileMenu.addSelectorMount(info.label, mount)
+        }
+      }
+    }
+
+    // Show tab bar
+    tabBarContainer.style.display = ''
+
+    // Show mobile sync button
+    const mobileSyncBtn = document.getElementById('mobile-sync-btn')
+    if (mobileSyncBtn) mobileSyncBtn.style.display = ''
+
+    // Activate the current tab
+    const activeTab = mobileTabBar!.getActiveTab()
+    activateMobilePanel(activeTab)
+
+    // Hide desktop layout elements
+    leftPanel.style.display = 'none'
+    rightColumn.style.display = 'none'
+
+    window.dispatchEvent(new Event('resize'))
+  }
+
+  const switchToDesktop = () => {
+    // Move panels back to desktop containers (order matters: monaco before bottomPanel)
+    leftPanel.appendChild(quickAccessBar.getElement())
+    leftPanel.appendChild(blocklyContainer)
+    // Ensure correct order: monaco first, then bottom panel
+    rightColumn.appendChild(monacoWrapper)
+    rightColumn.appendChild(bottomContainer)
+
+    // Move selectors back to original toolbar positions
+    for (const info of Object.values(selectorMounts)) {
+      const mount = document.getElementById(info.id)
+      const saved = selectorOriginalParents.get(info.id)
+      if (mount && saved) {
+        // Remove the mobile-menu-item wrapper
+        const wrapper = mount.parentElement
+        if (wrapper?.classList.contains('mobile-menu-item')) {
+          if (saved.nextSibling) {
+            saved.parent.insertBefore(mount, saved.nextSibling)
+          } else {
+            saved.parent.appendChild(mount)
+          }
+          wrapper.remove()
+        }
+      }
+    }
+    selectorOriginalParents.clear()
+
+    // Hide mobile containers
+    mobileBlocksContainer.classList.remove('active')
+    mobileCodeContainer.classList.remove('active')
+    mobileConsoleContainer.classList.remove('active')
+
+    // Hide tab bar
+    tabBarContainer.style.display = 'none'
+
+    // Hide mobile sync button
+    const mobileSyncBtn = document.getElementById('mobile-sync-btn')
+    if (mobileSyncBtn) mobileSyncBtn.style.display = 'none'
+
+    // Close mobile menu
+    mobileMenu?.close()
+
+    // Restore desktop layout
+    leftPanel.style.display = 'flex'
+    rightColumn.style.display = ''
+
+    window.dispatchEvent(new Event('resize'))
+  }
+
+  const activateMobilePanel = (tab: TabId) => {
+    mobileBlocksContainer.classList.toggle('active', tab === 'blocks')
+    mobileCodeContainer.classList.toggle('active', tab === 'code')
+    mobileConsoleContainer.classList.toggle('active', tab === 'console')
+    window.dispatchEvent(new Event('resize'))
+  }
+
+  // Connect tab bar to panel switching
+  mobileTabBar.onTabChange((tab) => {
+    activateMobilePanel(tab)
+  })
+
+  // Handle mode changes
+  layoutManager.onModeChange((mode) => {
+    if (mode === 'mobile') {
+      switchToMobile()
+    } else {
+      switchToDesktop()
+    }
+  })
+
+  // Initial layout setup
+  if (layoutManager.getMode() === 'mobile') {
+    // Defer to after all initialization is complete
+    requestAnimationFrame(() => switchToMobile())
+  }
+
+  return { blocklyPanel, monacoPanel, consolePanel, variablePanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu }
 }
 
 export function setupSelectors(
@@ -198,6 +380,9 @@ export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onSyncBl
   replaceBtn('undo-btn')?.addEventListener('click', callbacks.onUndo)
   replaceBtn('redo-btn')?.addEventListener('click', callbacks.onRedo)
   replaceBtn('clear-btn')?.addEventListener('click', callbacks.onClear)
+
+  // Mobile sync button — toggles auto-sync (same as desktop)
+  replaceBtn('mobile-sync-btn')?.addEventListener('click', callbacks.onToggleAutoSync)
 }
 
 export function setupFileButtons(
@@ -289,10 +474,19 @@ export function updateStatusBar(
   currentLocale: string,
   currentBlockStyleId: string,
   topicName: string,
+  mobileMenu?: MobileMenu | null,
 ): void {
-  const statusBar = document.getElementById('status-bar')
-  if (!statusBar) return
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
-  statusBar.innerHTML = `<span>C++ | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}</span>`
+  const summaryText = `C++ | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
+
+  const statusBar = document.getElementById('status-bar')
+  if (statusBar) {
+    statusBar.innerHTML = `<span>${summaryText}</span>`
+  }
+
+  // Also update mobile menu summary (visible when status bar is hidden)
+  if (mobileMenu) {
+    mobileMenu.setSummary(summaryText)
+  }
 }

@@ -44,7 +44,6 @@ TypeScript 5.x: Follow standard conventions
 ## Recent Changes
 - 022-topic-system: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite
 - 022-topic-system: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite
-- 020-dependency-scaffold: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor 0.52.2, Vite 7.3.1
 
 
 <!-- MANUAL ADDITIONS START -->

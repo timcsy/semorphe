@@ -88,6 +88,7 @@ export class App {
   private cppParser: CppParser | null = null
   private codeParserCache: { _lastTree: unknown } | null = null
   private patternRenderer: PatternRenderer | null = null
+  private mobileMenu: import('./toolbar/mobile-menu').MobileMenu | null = null
 
   constructor() {
     this.bus = new SemanticBus()
@@ -141,6 +142,7 @@ export class App {
     const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox())
     this.blocklyPanel = elements.blocklyPanel
     this.monacoPanel = elements.monacoPanel
+    this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, 'cpp', DEFAULT_STYLE)
@@ -478,7 +480,7 @@ export class App {
   }
 
   private refreshStatusBar(): void {
-    updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name)
+    updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu)
   }
 
   private setupBidirectionalHighlight(): void {
@@ -556,11 +558,13 @@ export class App {
 
   private toggleAutoSync(): void {
     this.autoSync = !this.autoSync
-    const btn = document.getElementById('auto-sync-btn')
-    if (btn) {
-      btn.classList.toggle('auto-sync-on', this.autoSync)
-      btn.classList.toggle('auto-sync-off', !this.autoSync)
-      btn.title = this.autoSync ? '自動同步：開啟' : '自動同步：關閉'
+    for (const id of ['auto-sync-btn', 'mobile-sync-btn']) {
+      const btn = document.getElementById(id)
+      if (btn) {
+        btn.classList.toggle('auto-sync-on', this.autoSync)
+        btn.classList.toggle('auto-sync-off', !this.autoSync)
+        btn.title = this.autoSync ? '自動同步：開啟' : '自動同步：關閉'
+      }
     }
     if (!this.autoSync) return
     if (this.blocksDirty) {
