@@ -298,7 +298,7 @@ Extension Main（Node.js）
   - [x] 整合測試：覆蓋前後 SemanticNode 不變
 - [x] **6.4 C++ 內建 Topic 定義**
   - [x] cpp-beginner.json / cpp-competitive.json
-  - [ ] manifest.json 加入 `topics` 欄位
+  - [ ] manifest.json 加入 `topics` 欄位（目前 Topic JSON 與 concepts/blocks 一樣是直接 import，無 manifest 機制。等多語言支援 Phase 7 時再統一做 manifest-driven plugin system）
 - [x] **6.5 Toolbox 整合**
   - [x] `buildToolbox(topic, activatedBranches, viewParams)`
   - [x] Topic 分區 UI + 動態樹 Level selector（popover 風格）
