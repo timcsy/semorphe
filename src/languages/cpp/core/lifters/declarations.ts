@@ -2,20 +2,8 @@ import type { Lifter } from '../../../../core/lift/lifter'
 import { createNode } from '../../../../core/semantic-tree'
 
 export function registerDeclarationLifters(lifter: Lifter): void {
-  // declaration now handled by liftStrategy "cpp:liftDeclaration"
-
-  lifter.register('expression_statement', (node, ctx) => {
-    // Unwrap expression statements
-    if (node.namedChildren.length === 1) {
-      const lifted = ctx.lift(node.namedChildren[0])
-      // func_call_expr in statement context → convert to func_call (statement block)
-      if (lifted && lifted.concept === 'func_call_expr') {
-        return createNode('func_call', lifted.properties, lifted.children)
-      }
-      return lifted
-    }
-    return null
-  })
+  // declaration — handled by JSON pattern + liftStrategy (cpp_declaration)
+  // expression_statement — handled by JSON unwrap pattern (cpp_expression_statement)
 
   lifter.register('assignment_expression', (node, ctx) => {
     const left = node.childForFieldName('left')

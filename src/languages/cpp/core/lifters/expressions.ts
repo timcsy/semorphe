@@ -2,30 +2,14 @@ import type { Lifter } from '../../../../core/lift/lifter'
 import type { SemanticNode } from '../../../../core/types'
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import { createNode } from '../../../../core/semantic-tree'
-import { CPP_BUILTIN_NAMES } from '../../builtins'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
 const LOGIC_OPS = new Set(['&&', '||'])
 
 export function registerExpressionLifters(lifter: Lifter): void {
-  lifter.register('number_literal', (node) => {
-    return createNode('number_literal', { value: node.text })
-  })
-
-  // Built-in constants: identifiers that are language keywords/constants
-  lifter.register('identifier', (node) => {
-    const name = node.text
-    if (CPP_BUILTIN_NAMES.has(name)) {
-      return createNode('builtin_constant', { value: name })
-    }
-    return createNode('var_ref', { name })
-  })
-
-  lifter.register('true', () => createNode('builtin_constant', { value: 'true' }))
-  lifter.register('false', () => createNode('builtin_constant', { value: 'false' }))
-  lifter.register('null', () => createNode('builtin_constant', { value: 'NULL' }))
-  lifter.register('nullptr', () => createNode('builtin_constant', { value: 'nullptr' }))
+  // number_literal, identifier, true/false/null/nullptr — handled by JSON patterns in lift-patterns.json
+  // (cpp_number_literal, cpp_identifier, cpp_endl, cpp_eof, cpp_null_id, cpp_true, cpp_false, cpp_null, cpp_nullptr)
 
   lifter.register('binary_expression', (node, ctx) => {
     const leftNode = node.childForFieldName('left')
@@ -130,31 +114,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return createNode('cpp_increment', { name, operator: op, position })
   })
 
-  lifter.register('parenthesized_expression', (node, ctx) => {
-    // Unwrap parenthesized expressions
-    if (node.namedChildren.length === 1) {
-      return ctx.lift(node.namedChildren[0])
-    }
-    return null
-  })
-
-  // Pointer expression: *ptr (deref) or &x (address-of)
-  lifter.register('pointer_expression', (node, ctx) => {
-    const op = node.children.find(c => !c.isNamed)?.text ?? ''
-    const operandNode = node.namedChildren[0]
-    const operand = operandNode ? ctx.lift(operandNode) : null
-    if (op === '&') {
-      return createNode('cpp_address_of', {}, {
-        var: operand ? [operand] : [],
-      })
-    }
-    if (op === '*') {
-      return createNode('cpp_pointer_deref', {}, {
-        ptr: operand ? [operand] : [],
-      })
-    }
-    return operand
-  })
+  // parenthesized_expression — handled by JSON unwrap pattern (cpp_unwrap_parens)
+  // pointer_expression — handled by JSON constrained patterns (cpp_address_of_ptr, cpp_pointer_deref_ptr)
 
   // Comma expression: i++, j-- (used in for-loop updates)
   lifter.register('comma_expression', (node, ctx) => {
@@ -162,31 +123,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
     return createNode('cpp_comma_expr', {}, { exprs: children })
   })
 
-  // C-style cast: (double)x, (int)y
-  lifter.register('cast_expression', (node, ctx) => {
-    const typeNode = node.childForFieldName('type')
-    const valueNode = node.childForFieldName('value')
-    const targetType = typeNode?.text ?? 'int'
-    const value = valueNode ? ctx.lift(valueNode) : null
-    return createNode('cpp_cast', { target_type: targetType }, {
-      value: value ? [value] : [],
-    })
-  })
-
-  // Ternary / conditional expression: cond ? true_expr : false_expr
-  lifter.register('conditional_expression', (node, ctx) => {
-    const condNode = node.childForFieldName('condition')
-    const trueNode = node.childForFieldName('consequence')
-    const falseNode = node.childForFieldName('alternative')
-    const cond = condNode ? ctx.lift(condNode) : null
-    const trueExpr = trueNode ? ctx.lift(trueNode) : null
-    const falseExpr = falseNode ? ctx.lift(falseNode) : null
-    return createNode('cpp_ternary', {}, {
-      condition: cond ? [cond] : [],
-      true_expr: trueExpr ? [trueExpr] : [],
-      false_expr: falseExpr ? [falseExpr] : [],
-    })
-  })
+  // cast_expression — handled by JSON pattern (cpp_cast_expr)
+  // conditional_expression — handled by JSON pattern (cpp_ternary_expr)
 
   lifter.register('subscript_expression', (node, ctx) => {
     const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]

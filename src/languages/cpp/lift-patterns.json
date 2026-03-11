@@ -326,5 +326,61 @@
       { "semantic": "name", "ast": "name", "extract": "text" },
       { "semantic": "value", "ast": "value", "extract": "text" }
     ]
+  },
+  {
+    "id": "cpp_do_while",
+    "astNodeType": "do_statement",
+    "concept": { "conceptId": "cpp_do_while" },
+    "fieldMappings": [
+      { "semantic": "body", "ast": "body", "extract": "liftBody" },
+      { "semantic": "cond", "ast": "condition", "extract": "lift" }
+    ]
+  },
+  {
+    "id": "cpp_cast_expr",
+    "astNodeType": "cast_expression",
+    "concept": { "conceptId": "cpp_cast" },
+    "fieldMappings": [
+      { "semantic": "target_type", "ast": "type", "extract": "text" },
+      { "semantic": "value", "ast": "value", "extract": "lift" }
+    ]
+  },
+  {
+    "id": "cpp_ternary_expr",
+    "astNodeType": "conditional_expression",
+    "concept": { "conceptId": "cpp_ternary" },
+    "fieldMappings": [
+      { "semantic": "condition", "ast": "condition", "extract": "lift" },
+      { "semantic": "true_expr", "ast": "consequence", "extract": "lift" },
+      { "semantic": "false_expr", "ast": "alternative", "extract": "lift" }
+    ]
+  },
+  {
+    "id": "cpp_compound_stmt",
+    "astNodeType": "compound_statement",
+    "concept": { "conceptId": "_compound" },
+    "fieldMappings": [
+      { "semantic": "body", "ast": "$text", "extract": "liftChildren" }
+    ]
+  },
+  {
+    "id": "cpp_address_of_ptr",
+    "astNodeType": "pointer_expression",
+    "concept": { "conceptId": "cpp_address_of" },
+    "constraints": [{ "field": "$operator", "text": "&" }],
+    "fieldMappings": [
+      { "semantic": "var", "ast": "$namedChildren[0]", "extract": "lift" }
+    ],
+    "priority": 5
+  },
+  {
+    "id": "cpp_pointer_deref_ptr",
+    "astNodeType": "pointer_expression",
+    "concept": { "conceptId": "cpp_pointer_deref" },
+    "constraints": [{ "field": "$operator", "text": "*" }],
+    "fieldMappings": [
+      { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
+    ],
+    "priority": 5
   }
 ]
