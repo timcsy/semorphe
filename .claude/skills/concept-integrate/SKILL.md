@@ -118,6 +118,21 @@ npm test
 4. **Lift patterns**（lifter 註冊或 `src/languages/{lang}/lift-patterns.json`）
 5. **如果是通用概念**：所有已支援語言都有實作
 
+### 步驟七之二：掃描殘留 `it.todo` / `it.skip`（強制）
+
+在整合前，掃描 `tests/integration/` 和 `tests/unit/` 中與此概念相關的測試檔，檢查是否存在殘留的 `it.todo` 或 `it.skip`：
+
+```bash
+grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_or_scope}"
+```
+
+對每個找到的 `it.todo` / `it.skip`：
+1. **檢查註解中的原因**——如果原因是「等 X 概念實作後」，而 X 概念已在本次或之前整合，**必須立刻修復並啟用該測試**
+2. **如果 bug 根因已被本次修改解決**——轉為正式 `it(...)` 測試
+3. **仍無法修復的**——確認註解的阻擋原因仍成立，更新註解中的時間/依賴資訊
+
+**殘留 `it.todo` 數量必須在整合摘要中報告。** 整合後不允許存在「應該能修但沒修」的 `it.todo`。
+
 ### 步驟八：整合決策
 
 | 狀態 | 行動 |

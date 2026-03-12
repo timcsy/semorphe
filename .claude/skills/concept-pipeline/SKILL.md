@@ -119,7 +119,12 @@ $ARGUMENTS
 1. **調用**：`/concept.fuzz {lang} {difficulty} {scope} {count}`
 2. **關卡**：新概念中沒有 SEMANTIC_DIFF、COMPILE_FAIL、SCAFFOLD_LEAK 或 ROUNDTRIP_DRIFT bug
 
-如果模糊測試發現 bug：修復後重新執行。
+如果模糊測試發現 bug：**必須修復後重新執行**，不得只記錄 todo 就繼續。具體規則：
+
+- **能修的立刻修**：根因已定位且不超出當前範疇的 bug，必須當場修復。修復後將 `it.todo` 轉為正式測試。
+- **依賴未實作概念的 bug**：允許留為 `it.todo`，但必須在註解中寫明依賴什麼、何時回頭修。
+- **測試檔不可少**：所有被測試過的程式（無論 PASS 或 BUG）都必須有永久 Vitest 測試案例。
+- **零 todo 為目標**：階段結束時向使用者報告剩餘 `it.todo` 數量和原因，逐條確認是否可修。
 
 ### 階段五：整合（逐個概念）
 
