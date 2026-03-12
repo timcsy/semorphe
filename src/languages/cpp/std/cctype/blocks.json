@@ -1,0 +1,130 @@
+[
+  {
+    "id": "cpp_isalpha",
+    "conceptId": "cpp_isalpha",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_isalpha",
+      "message0": "%{BKY_CPP_ISALPHA_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ISALPHA_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "isalpha(${VALUE})",
+      "imports": ["cctype"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_isdigit",
+    "conceptId": "cpp_isdigit",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_isdigit",
+      "message0": "%{BKY_CPP_ISDIGIT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ISDIGIT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "isdigit(${VALUE})",
+      "imports": ["cctype"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_toupper",
+    "conceptId": "cpp_toupper",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_toupper",
+      "message0": "%{BKY_CPP_TOUPPER_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_TOUPPER_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "toupper(${VALUE})",
+      "imports": ["cctype"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_tolower",
+    "conceptId": "cpp_tolower",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_tolower",
+      "message0": "%{BKY_CPP_TOLOWER_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_TOLOWER_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "tolower(${VALUE})",
+      "imports": ["cctype"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "conceptId": "cpp_rand",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_srand",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "seed": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_abs",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_exit",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "code": "expression"
+    },
+    "role": "statement"
+  }
+]

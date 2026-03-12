@@ -25,5 +25,13 @@
     "properties": [],
     "children": {},
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_swap",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["a", "b"],
+    "children": {},
+    "role": "statement"
   }
 ]

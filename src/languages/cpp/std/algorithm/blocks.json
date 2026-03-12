@@ -103,5 +103,43 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_swap",
+    "conceptId": "cpp_swap",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_swap",
+      "message0": "%{BKY_CPP_SWAP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "A",
+          "text": "a"
+        },
+        {
+          "type": "field_input",
+          "name": "B",
+          "text": "b"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SWAP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::swap(${A}, ${B});",
+      "imports": ["algorithm"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": { "A": "a", "B": "b" },
+      "inputs": {},
+      "statementInputs": {}
+    }
   }
 ]

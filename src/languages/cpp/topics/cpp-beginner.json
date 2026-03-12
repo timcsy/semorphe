@@ -52,7 +52,10 @@
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
           "bitwise_not",
-          "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
+          "cpp_printf", "cpp_scanf", "cpp_scanf_expr",
+          "cpp_rand", "cpp_srand", "cpp_abs", "cpp_exit",
+          "cpp_isalpha", "cpp_isdigit", "cpp_toupper", "cpp_tolower",
+          "cpp_swap"
         ],
         "children": [
           {

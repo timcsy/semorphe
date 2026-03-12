@@ -1,0 +1,42 @@
+[
+  {
+    "conceptId": "cpp_isalpha",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_isdigit",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_toupper",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_tolower",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  }
+]

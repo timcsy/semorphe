@@ -58,6 +58,45 @@ export class SemanticInterpreter implements ExecutionContext {
     registerMutationExecutors(reg)
     registerCmathExecutors(reg)
 
+    // cstdlib functions
+    reg('cpp_rand', async () => ({ type: 'int' as const, value: Math.floor(Math.random() * 32768) }))
+    reg('cpp_srand', async () => {}) // seed ignored in JS
+    reg('cpp_abs', async (node, ctx) => {
+      const v = node.children.value?.[0]
+      if (!v) return { type: 'int' as const, value: 0 }
+      const val = await ctx.evaluate(v)
+      return { type: val.type, value: Math.abs(ctx.toNumber(val)) }
+    })
+    reg('cpp_exit', async () => { throw new RuntimeError(RUNTIME_ERRORS.ABORTED) })
+
+    // cctype functions
+    for (const [concept, fn] of Object.entries({
+      cpp_isalpha: (c: string) => /[a-zA-Z]/.test(c),
+      cpp_isdigit: (c: string) => /[0-9]/.test(c),
+      cpp_toupper: (c: string) => c.toUpperCase(),
+      cpp_tolower: (c: string) => c.toLowerCase(),
+    } as Record<string, (c: string) => boolean | string>)) {
+      reg(concept, async (node, ctx) => {
+        const v = node.children.value?.[0]
+        if (!v) return { type: 'int' as const, value: 0 }
+        const val = await ctx.evaluate(v)
+        const ch = String(val.value).charAt(0)
+        const result = fn(ch)
+        if (typeof result === 'boolean') return { type: 'int' as const, value: result ? 1 : 0 }
+        return { type: 'char' as const, value: result }
+      })
+    }
+
+    // swap
+    reg('cpp_swap', async (node, ctx) => {
+      const a = String(node.properties.a)
+      const b = String(node.properties.b)
+      const va = ctx.scope.get(a)
+      const vb = ctx.scope.get(b)
+      ctx.scope.set(a, vb)
+      ctx.scope.set(b, va)
+    })
+
     // 編譯時/宣告性概念：無執行行為
     const noop: import('./executor-registry').ConceptExecutor = async () => {}
     for (const c of [

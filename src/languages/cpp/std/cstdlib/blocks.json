@@ -1,0 +1,126 @@
+[
+  {
+    "id": "cpp_rand",
+    "conceptId": "cpp_rand",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_rand",
+      "message0": "%{BKY_CPP_RAND_MSG0}",
+      "args0": [],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_RAND_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "rand()",
+      "imports": ["cstdlib"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_srand",
+    "conceptId": "cpp_srand",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_srand",
+      "message0": "%{BKY_CPP_SRAND_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "SEED",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_SRAND_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "srand(${SEED});",
+      "imports": ["cstdlib"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "SEED": "seed" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_abs",
+    "conceptId": "cpp_abs",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_abs",
+      "message0": "%{BKY_CPP_ABS_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ABS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "abs(${VALUE})",
+      "imports": ["cstdlib"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_exit",
+    "conceptId": "cpp_exit",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_exit",
+      "message0": "%{BKY_CPP_EXIT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CODE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_EXIT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "exit(${CODE});",
+      "imports": ["cstdlib"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "CODE": "code" },
+      "statementInputs": {}
+    }
+  }
+]

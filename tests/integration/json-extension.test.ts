@@ -19,9 +19,10 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    expect(all.length).toBe(2)
+    expect(all.length).toBe(3)
     expect(all.map(s => s.id)).toContain('cpp_sort')
     expect(all.map(s => s.id)).toContain('cpp_find')
+    expect(all.map(s => s.id)).toContain('cpp_swap')
   })
 
   it('should load container block specs from JSON', () => {

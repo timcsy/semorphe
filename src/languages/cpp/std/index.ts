@@ -72,6 +72,18 @@ import cmathBlocks from './cmath/blocks.json'
 import { registerGenerators as registerCmathGenerators } from './cmath/generators'
 import { registerLifters as registerCmathLifters } from './cmath/lifters'
 
+// cstdlib
+import cstdlibConcepts from './cstdlib/concepts.json'
+import cstdlibBlocks from './cstdlib/blocks.json'
+import { registerGenerators as registerCstdlibGenerators } from './cstdlib/generators'
+import { registerLifters as registerCstdlibLifters } from './cstdlib/lifters'
+
+// cctype
+import cctypeConcepts from './cctype/concepts.json'
+import cctypeBlocks from './cctype/blocks.json'
+import { registerGenerators as registerCctypeGenerators } from './cctype/generators'
+import { registerLifters as registerCctypeLifters } from './cctype/lifters'
+
 function makeModule(
   header: string,
   concepts: unknown[],
@@ -100,6 +112,8 @@ export const allStdModules: StdModule[] = [
   makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters),
   makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters),
+  makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters),
+  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters),
 ]
 
 /**
