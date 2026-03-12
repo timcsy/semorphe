@@ -128,7 +128,7 @@ describe('L1 Block Roundtrip', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('string_literal')
+      expect(sem!.concept).toBe('cpp_char_literal')
     })
   })
 

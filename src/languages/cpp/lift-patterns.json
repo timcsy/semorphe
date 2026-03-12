@@ -26,9 +26,9 @@
   {
     "id": "cpp_char_literal",
     "astNodeType": "char_literal",
-    "concept": { "conceptId": "string_literal" },
+    "concept": { "conceptId": "cpp_char_literal" },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
+      { "semantic": "char", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
     ]
   },
   {
