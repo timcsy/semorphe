@@ -212,6 +212,20 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `const_cast<${targetType}>(${val})`
   })
 
+  g.set('cpp_new', (node) => {
+    const type = node.properties.type ?? 'int'
+    const args = node.properties.args ?? ''
+    return args ? `new ${type}(${args})` : `new ${type}`
+  })
+
+  g.set('cpp_malloc', (node, ctx) => {
+    const type = node.properties.type ?? 'int*'
+    const sizeofType = node.properties.sizeof_type ?? 'int'
+    const sizeNodes = node.children.size ?? []
+    const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : '1'
+    return `(${type})malloc(${size} * sizeof(${sizeofType}))`
+  })
+
   g.set('var_declare_expr', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'x'
