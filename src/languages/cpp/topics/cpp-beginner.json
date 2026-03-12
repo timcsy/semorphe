@@ -26,7 +26,8 @@
           "cpp_char_literal", "cpp_increment", "cpp_increment_expr",
           "cpp_compound_assign", "cpp_compound_assign_expr",
           "var_declare_expr", "array_assign",
-          "cpp:math_pow", "cpp:math_unary"
+          "cpp:math_pow", "cpp:math_unary",
+          "cpp_rand", "cpp_srand", "cpp_abs"
         ],
         "children": [
           {
@@ -37,10 +38,29 @@
               "array_declare", "array_access",
               "cpp_string_declare",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
+              "cpp_string_length", "cpp_string_substr", "cpp_string_find",
+              "cpp_string_append", "cpp_string_c_str",
+              "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
+              "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign",
               "comment", "doc_comment", "block_comment",
               "cpp_raw_code", "cpp_raw_expression"
             ],
-            "children": []
+            "children": [
+              {
+                "id": "L3a",
+                "level": 3,
+                "label": "L3a: STL 容器操作",
+                "concepts": [
+                  "cpp_vector_pop_back", "cpp_vector_clear", "cpp_vector_empty", "cpp_vector_back",
+                  "cpp_stack_push", "cpp_stack_pop", "cpp_stack_top", "cpp_stack_empty",
+                  "cpp_queue_push", "cpp_queue_pop", "cpp_queue_front", "cpp_queue_empty",
+                  "cpp_map_access", "cpp_map_erase", "cpp_map_count", "cpp_map_empty",
+                  "cpp_set_insert", "cpp_set_erase", "cpp_set_count", "cpp_set_empty",
+                  "cpp_accumulate", "cpp_swap", "cpp_pair_declare", "cpp_make_pair"
+                ],
+                "children": []
+              }
+            ]
           }
         ]
       },
@@ -51,8 +71,11 @@
         "concepts": [
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
-          "bitwise_not",
-          "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
+          "bitwise_not", "cpp_sizeof",
+          "cpp_printf", "cpp_scanf", "cpp_scanf_expr",
+          "cpp_range_for", "cpp_enum",
+          "cpp_isalpha", "cpp_isdigit", "cpp_toupper", "cpp_tolower",
+          "cpp_exit"
         ],
         "children": [
           {
@@ -63,6 +86,7 @@
               "cpp_pointer_declare", "cpp_pointer_deref",
               "cpp_pointer_assign", "cpp_address_of",
               "cpp_malloc", "cpp_free",
+              "cpp_ref_declare", "cpp_static_declare",
               "cpp_include_local", "cpp_define",
               "cpp_ifdef", "cpp_ifndef", "forward_decl"
             ],
@@ -71,7 +95,7 @@
           {
             "id": "L2c",
             "level": 2,
-            "label": "L2c: 結構與容器",
+            "label": "L2c: 結構與類別",
             "concepts": [
               "cpp_struct_declare", "cpp_struct_member_access",
               "cpp_struct_pointer_access",
@@ -83,11 +107,48 @@
               "cpp_map_declare", "cpp_set_declare",
               "cpp_stack_declare", "cpp_queue_declare",
               "cpp_sort", "cpp:sort", "cpp:find",
-              "cpp:math_binary"
+              "cpp:math_binary",
+              "cpp_constructor", "cpp_destructor"
             ],
-            "children": []
+            "children": [
+              {
+                "id": "L3b",
+                "level": 3,
+                "label": "L3b: OOP 進階",
+                "concepts": [
+                  "cpp_virtual_method", "cpp_pure_virtual",
+                  "cpp_override_method", "cpp_operator_overload",
+                  "cpp_static_member",
+                  "cpp_lambda", "cpp_namespace_def"
+                ],
+                "children": []
+              },
+              {
+                "id": "L3c",
+                "level": 3,
+                "label": "L3c: 例外與進階",
+                "concepts": [
+                  "cpp_try_catch", "cpp_throw",
+                  "cpp_static_cast", "cpp_dynamic_cast",
+                  "cpp_reinterpret_cast", "cpp_const_cast",
+                  "cpp_stringstream_declare",
+                  "cpp_ifstream_declare", "cpp_ofstream_declare"
+                ],
+                "children": []
+              }
+            ]
           }
         ]
+      },
+      {
+        "id": "L1c",
+        "level": 1,
+        "label": "L1c: 型別系統",
+        "concepts": [
+          "cpp_const_declare", "cpp_constexpr_declare",
+          "cpp_auto_declare", "cpp_typedef", "cpp_using_alias"
+        ],
+        "children": []
       }
     ]
   }
