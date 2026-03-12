@@ -313,7 +313,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       c.type === 'primitive_type' || c.type === 'type_identifier' ||
       c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
     )
-    const aliasNode = node.namedChildren.find(c => c.type === 'type_identifier' && c !== typeNode)
+    const aliasNode = node.namedChildren.find(c => c.type === 'type_identifier' &&
+      (c.startPosition.row !== typeNode?.startPosition.row || c.startPosition.column !== typeNode?.startPosition.column)
+    )
     const origType = typeNode?.text ?? 'int'
     const alias = aliasNode?.text ?? 'mytype'
     return createNode('cpp_typedef', { orig_type: origType, alias })

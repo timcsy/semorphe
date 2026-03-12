@@ -97,7 +97,12 @@ function liftCaseStatement(
   const isDefault = !valueNode
 
   // Body = all named children except the value
-  const bodyChildren = node.namedChildren.filter(c => c !== valueNode)
+  // Note: web-tree-sitter creates new wrapper objects per access, so === fails.
+  // Use startPosition comparison instead.
+  const vStart = valueNode?.startPosition
+  const bodyChildren = node.namedChildren.filter(c =>
+    !vStart || c.startPosition.row !== vStart.row || c.startPosition.column !== vStart.column
+  )
   const body = ctx.liftChildren(bodyChildren)
 
   if (isDefault) {
