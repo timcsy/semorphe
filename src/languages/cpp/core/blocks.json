@@ -2008,5 +2008,196 @@
         }
       ]
     }
+  },
+  {
+    "id": "c_lambda",
+    "conceptId": "cpp_lambda",
+    "language": "cpp",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_lambda",
+      "message0": "%{BKY_C_LAMBDA_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CAPTURE",
+          "text": "&"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#995BA5",
+      "tooltip": "%{BKY_C_LAMBDA_TOOLTIP}"
+    }
+  },
+  {
+    "id": "c_namespace_def",
+    "conceptId": "cpp_namespace_def",
+    "language": "cpp",
+    "category": "cpp_basic",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_namespace_def",
+      "message0": "%{BKY_C_NAMESPACE_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "myns"
+        },
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": false,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_NAMESPACE_DEF_TOOLTIP}"
+    }
+  },
+  {
+    "id": "c_static_cast",
+    "conceptId": "cpp_static_cast",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_static_cast",
+      "message0": "%{BKY_C_STATIC_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET_TYPE",
+          "text": "int"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5BA58C",
+      "tooltip": "%{BKY_C_STATIC_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "static_cast<${TARGET_TYPE}>(${VALUE})",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_dynamic_cast",
+    "conceptId": "cpp_dynamic_cast",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_dynamic_cast",
+      "message0": "%{BKY_C_DYNAMIC_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET_TYPE",
+          "text": "Derived*"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5BA58C",
+      "tooltip": "%{BKY_C_DYNAMIC_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "dynamic_cast<${TARGET_TYPE}>(${VALUE})",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_reinterpret_cast",
+    "conceptId": "cpp_reinterpret_cast",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_reinterpret_cast",
+      "message0": "%{BKY_C_REINTERPRET_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET_TYPE",
+          "text": "int*"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5BA58C",
+      "tooltip": "%{BKY_C_REINTERPRET_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "reinterpret_cast<${TARGET_TYPE}>(${VALUE})",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_const_cast",
+    "conceptId": "cpp_const_cast",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_const_cast",
+      "message0": "%{BKY_C_CONST_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET_TYPE",
+          "text": "int*"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5BA58C",
+      "tooltip": "%{BKY_C_CONST_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "const_cast<${TARGET_TYPE}>(${VALUE})",
+      "imports": [],
+      "order": 0
+    }
   }
 ]

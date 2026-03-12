@@ -135,7 +135,7 @@ describe('Annotation Roundtrip', () => {
     it('should attach inline comment as annotation even on raw_code nodes', () => {
       setup()
       // Unknown node + inline comment on same row
-      const unknownNode = mockNodeAt('lambda_expression', '[](){}', 0, 0)
+      const unknownNode = mockNodeAt('co_await_expression', 'co_await x', 0, 0)
       const commentNode = mockNodeAt('comment', '// lambda', 0, 10)
 
       const results = lifter.liftStatements([unknownNode, commentNode])

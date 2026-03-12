@@ -475,5 +475,79 @@
       "initializer": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_lambda",
+    "layer": "lang-core",
+    "abstractConcept": "lambda",
+    "properties": [
+      "capture",
+      "return_type"
+    ],
+    "children": {
+      "params": "statements",
+      "body": "statements"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_namespace_def",
+    "layer": "lang-core",
+    "abstractConcept": "namespace_def",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_static_cast",
+    "layer": "lang-core",
+    "abstractConcept": "static_cast",
+    "properties": [
+      "target_type"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_dynamic_cast",
+    "layer": "lang-core",
+    "abstractConcept": "dynamic_cast",
+    "properties": [
+      "target_type"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_reinterpret_cast",
+    "layer": "lang-core",
+    "abstractConcept": "reinterpret_cast",
+    "properties": [
+      "target_type"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_const_cast",
+    "layer": "lang-core",
+    "abstractConcept": "const_cast",
+    "properties": [
+      "target_type"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
   }
 ]

@@ -60,7 +60,53 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   return createNode('var_declare', { name, type })
 }
 
+/** Extract parameters from a parameter_list node */
+function liftParamList(paramList: AstNode | null, _ctx: LiftContext): SemanticNode[] {
+  if (!paramList) return []
+  const params: SemanticNode[] = []
+  for (const p of paramList.namedChildren) {
+    if (p.type === 'parameter_declaration') {
+      const { type, name } = parseParamDeclaration(p)
+      params.push(createNode('param_decl', { type, name }))
+    }
+  }
+  return params
+}
+
 export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void {
+  // lambda_expression: [capture](params) -> ret { body }
+  registry.register('cpp:liftLambda', (node, ctx) => {
+    const captureSpec = node.namedChildren.find(c => c.type === 'lambda_capture_specifier')
+    let capture = '&'
+    if (captureSpec) {
+      const inner = captureSpec.text.slice(1, -1) // strip [ ]
+      capture = inner || ''
+    }
+    const declNode = node.namedChildren.find(c => c.type === 'abstract_function_declarator')
+    const paramList = declNode?.namedChildren.find(c => c.type === 'parameter_list') ?? null
+    const params = liftParamList(paramList, ctx)
+    const trailingReturn = declNode?.namedChildren.find(c => c.type === 'trailing_return_type')
+    const returnType = trailingReturn ? trailingReturn.text.replace(/^->\s*/, '') : ''
+    const bodyNode = node.namedChildren.find(c => c.type === 'compound_statement') ?? null
+    const body = extractBody(bodyNode, ctx)
+    return createNode('cpp_lambda', { capture, return_type: returnType }, { params, body })
+  })
+
+  // namespace_definition: namespace N { body }
+  registry.register('cpp:liftNamespace', (node, ctx) => {
+    const nameNode = node.namedChildren.find(c => c.type === 'namespace_identifier')
+    const name = nameNode?.text ?? 'ns'
+    const bodyNode = node.namedChildren.find(c => c.type === 'declaration_list')
+    const body: SemanticNode[] = []
+    if (bodyNode) {
+      for (const child of bodyNode.namedChildren) {
+        const lifted = ctx.lift(child)
+        if (lifted) body.push(lifted)
+      }
+    }
+    return createNode('cpp_namespace_def', { name }, { body })
+  })
+
   // doc comment: /** ... */ → doc_comment with structured properties
   registry.register('cpp:liftDocComment', (node) => {
     const props = parseDocComment(node.text)

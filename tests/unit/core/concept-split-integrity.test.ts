@@ -14,8 +14,8 @@ describe('Concept/BlockDef split integrity', () => {
   })
 
   it('should have correct core concept and block counts (42 each)', () => {
-    expect(coreConcepts.length).toBe(42)
-    expect(coreBlocks.length).toBe(42)
+    expect(coreConcepts.length).toBe(48)
+    expect(coreBlocks.length).toBe(48)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

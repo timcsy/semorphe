@@ -160,7 +160,7 @@ describe('Confidence & DegradationCause', () => {
   describe('完全未知節點類型 → nonstandard_but_valid', () => {
     it('should set degradationCause to nonstandard_but_valid for unknown node type', () => {
       setup()
-      const ast = mockNode('lambda_expression', '[](){ return 1; }')
+      const ast = mockNode('co_await_expression', 'co_await foo()')
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
       expect(sem!.concept).toBe('raw_code')
@@ -173,7 +173,7 @@ describe('Confidence & DegradationCause', () => {
     it('should set confidence to inferred for partially liftable nodes', () => {
       setup()
       const liftableChild = mockNode('number_literal', '42')
-      const unknownChild = mockNode('lambda_expression', '[](){}')
+      const unknownChild = mockNode('co_await_expression', 'co_await x')
       const ast = mockNode('some_wrapper', 'wrapper(42, [](){})', [liftableChild, unknownChild])
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
@@ -187,7 +187,7 @@ describe('Confidence & DegradationCause', () => {
       // If binary expression matches pattern (outer = high), but one operand degrades,
       // outer should still be high
       const left = mockNode('number_literal', '3')
-      const right = mockNode('lambda_expression', '[](){}')  // degrades
+      const right = mockNode('co_await_expression', 'co_await x')  // degrades
       const op = unnamed('+', '+')
       const ast = mockNode('binary_expression', '3 + [](){}', [left, op, right], { left, right })
       const sem = lifter.liftWithContext(ast, new LiftContextData())

@@ -382,5 +382,19 @@
       { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
     ],
     "priority": 5
+  },
+  {
+    "id": "cpp_lambda_expr",
+    "astNodeType": "lambda_expression",
+    "concept": { "conceptId": "cpp_lambda" },
+    "liftStrategy": "cpp:liftLambda",
+    "fieldMappings": []
+  },
+  {
+    "id": "cpp_namespace_definition",
+    "astNodeType": "namespace_definition",
+    "concept": { "conceptId": "cpp_namespace_def" },
+    "liftStrategy": "cpp:liftNamespace",
+    "fieldMappings": []
   }
 ]

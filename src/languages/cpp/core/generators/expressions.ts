@@ -1,5 +1,5 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { generateExpression } from '../../../../core/projection/code-generator'
+import { generateExpression, generateBody, indented } from '../../../../core/projection/code-generator'
 import type { SemanticNode } from '../../../../core/types'
 
 /** C++ operator precedence data (higher = binds tighter). */
@@ -160,6 +160,47 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
   })
 
   // cpp_scanf_expr moved to std/cstdio/generators.ts
+
+  g.set('cpp_lambda', (node, ctx) => {
+    const capture = node.properties.capture ?? '&'
+    const paramChildren = node.children.params ?? []
+    const body = node.children.body ?? []
+    const paramStr = paramChildren.map(p => {
+      const t = String(p.properties.type ?? 'int')
+      const n = String(p.properties.name ?? '')
+      return n ? `${t} ${n}` : t
+    }).join(', ')
+    const returnType = node.properties.return_type
+    const retStr = returnType && returnType !== '' ? ` -> ${returnType}` : ''
+    let code = `[${capture}](${paramStr})${retStr} {\n`
+    code += generateBody(body, indented(ctx))
+    code += `}`
+    return code
+  })
+
+  g.set('cpp_static_cast', (node, ctx) => {
+    const targetType = node.properties.target_type ?? 'int'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `static_cast<${targetType}>(${val})`
+  })
+
+  g.set('cpp_dynamic_cast', (node, ctx) => {
+    const targetType = node.properties.target_type ?? 'Derived*'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `dynamic_cast<${targetType}>(${val})`
+  })
+
+  g.set('cpp_reinterpret_cast', (node, ctx) => {
+    const targetType = node.properties.target_type ?? 'int*'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `reinterpret_cast<${targetType}>(${val})`
+  })
+
+  g.set('cpp_const_cast', (node, ctx) => {
+    const targetType = node.properties.target_type ?? 'int*'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `const_cast<${targetType}>(${val})`
+  })
 
   g.set('var_declare_expr', (node, ctx) => {
     const type = node.properties.type ?? 'int'

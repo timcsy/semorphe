@@ -52,7 +52,10 @@
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
           "bitwise_not",
-          "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
+          "cpp_printf", "cpp_scanf", "cpp_scanf_expr",
+          "cpp_lambda", "cpp_namespace_def",
+          "cpp_static_cast", "cpp_dynamic_cast",
+          "cpp_reinterpret_cast", "cpp_const_cast"
         ],
         "children": [
           {

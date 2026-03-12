@@ -63,6 +63,8 @@ export class SemanticInterpreter implements ExecutionContext {
     for (const c of [
       'cpp_include', 'cpp_include_local', 'cpp_using_namespace', 'cpp_define',
       'cpp:include', 'cpp:include_local', 'cpp:using_namespace', 'comment',
+      'cpp_namespace_def', 'cpp_lambda',
+      'cpp_static_cast', 'cpp_dynamic_cast', 'cpp_reinterpret_cast', 'cpp_const_cast',
     ]) {
       reg(c, noop)
     }

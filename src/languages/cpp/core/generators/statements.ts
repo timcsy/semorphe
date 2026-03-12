@@ -310,6 +310,17 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     return code
   })
 
+  g.set('cpp_namespace_def', (node, ctx) => {
+    const name = node.properties.name ?? 'myns'
+    const body = node.children.body ?? []
+    const header = `${indent(ctx)}namespace ${name}${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
+    code += generateBody(body, indented(ctx))
+    code += `${indent(ctx)}}\n`
+    return code
+  })
+
   g.set('cpp_pointer_assign', (node, ctx) => {
     const ptrName = node.properties.ptr_name ?? 'ptr'
     const vals = node.children.value ?? []
