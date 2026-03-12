@@ -51,7 +51,7 @@
         "concepts": [
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
-          "bitwise_not", "cpp_sizeof",
+          "bitwise_not",
           "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
         ],
         "children": [
@@ -94,8 +94,7 @@
         "level": 1,
         "label": "L1c: 型別系統",
         "concepts": [
-          "cpp_const_declare", "cpp_constexpr_declare",
-          "cpp_auto_declare", "cpp_typedef", "cpp_using_alias"
+          "cpp_ref_declare", "cpp_static_declare", "cpp_static_member"
         ],
         "children": []
       }
