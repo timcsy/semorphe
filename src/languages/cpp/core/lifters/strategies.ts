@@ -24,6 +24,20 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
   let name = nameNode?.text ?? 'x'
 
+  // Reference declarator: int& ref = x
+  if (nameNode?.type === 'reference_declarator') {
+    const refIdent = nameNode.namedChildren.find(c => c.type === 'identifier')
+    name = refIdent?.text ?? 'ref'
+    const valueNode = decl.childForFieldName('value')
+    if (valueNode) {
+      const value = ctx.lift(valueNode)
+      return createNode('cpp_ref_declare', { name, type }, {
+        initializer: value ? [value] : [],
+      })
+    }
+    return createNode('cpp_ref_declare', { name, type })
+  }
+
   // Pointer declarator: int* ptr = &x
   if (nameNode?.type === 'pointer_declarator') {
     // Extract the actual identifier from pointer_declarator
@@ -125,6 +139,28 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
     )
     const type = typeNode?.text ?? 'int'
+
+    // Static declarations: static int count = 0;
+    const storageSpec = node.namedChildren.find(c => c.type === 'storage_class_specifier')
+    if (storageSpec?.text === 'static') {
+      const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
+      if (decl) {
+        if (decl.type === 'identifier') {
+          return createNode('cpp_static_declare', { name: decl.text, type })
+        }
+        const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
+        const name = nameNode?.text ?? 'x'
+        const valueNode = decl.childForFieldName('value')
+        if (valueNode) {
+          const value = ctx.lift(valueNode)
+          return createNode('cpp_static_declare', { name, type }, {
+            initializer: value ? [value] : [],
+          })
+        }
+        return createNode('cpp_static_declare', { name, type })
+      }
+      return createNode('cpp_static_member', { name: 'x', type })
+    }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl
     const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')

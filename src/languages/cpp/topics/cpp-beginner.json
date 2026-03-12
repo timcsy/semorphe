@@ -88,6 +88,15 @@
             "children": []
           }
         ]
+      },
+      {
+        "id": "L1c",
+        "level": 1,
+        "label": "L1c: 型別系統",
+        "concepts": [
+          "cpp_ref_declare", "cpp_static_declare", "cpp_static_member"
+        ],
+        "children": []
       }
     ]
   }

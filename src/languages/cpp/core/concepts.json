@@ -475,5 +475,42 @@
       "initializer": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_ref_declare",
+    "layer": "lang-core",
+    "abstractConcept": "ref_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_static_declare",
+    "layer": "lang-core",
+    "abstractConcept": "static_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_static_member",
+    "layer": "lang-core",
+    "abstractConcept": "static_member",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
   }
 ]

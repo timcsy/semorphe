@@ -40,4 +40,13 @@ export function registerVariableExecutors(register: (concept: string, executor: 
     const name = String(node.properties.name)
     return ctx.scope.get(name)
   })
+
+  // Reference: aliases the original variable (simplified: just copies value)
+  register('cpp_ref_declare', execVarDeclare)
+
+  // Static: persists across calls (simplified: same as var_declare in interpreter)
+  register('cpp_static_declare', execVarDeclare)
+
+  // Static member: declaration only, noop
+  register('cpp_static_member', async () => {})
 }

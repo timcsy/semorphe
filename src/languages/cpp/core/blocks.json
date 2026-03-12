@@ -2008,5 +2008,133 @@
         }
       ]
     }
+  },
+  {
+    "id": "c_ref_declare",
+    "conceptId": "cpp_ref_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_ref_declare",
+      "message0": "%{BKY_C_REF_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_STRING}", "string"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "ref"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_REF_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE}& ${NAME} = ${INIT};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_static_declare",
+    "conceptId": "cpp_static_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_static_declare",
+      "message0": "%{BKY_C_STATIC_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_BOOL}", "bool"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_STRING}", "string"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "count"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_STATIC_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "static ${TYPE} ${NAME} = ${INIT};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_static_member",
+    "conceptId": "cpp_static_member",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_static_member",
+      "message0": "%{BKY_C_STATIC_MEMBER_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_BOOL}", "bool"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_STRING}", "string"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "count"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_STATIC_MEMBER_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "static ${TYPE} ${NAME};",
+      "imports": [],
+      "order": 0
+    }
   }
 ]

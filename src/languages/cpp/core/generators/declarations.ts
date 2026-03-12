@@ -29,6 +29,34 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type} ${name};\n`
   })
 
+  g.set('cpp_ref_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'ref'
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = generateExpression(inits[0], ctx)
+      return `${indent(ctx)}${type}& ${name} = ${val};\n`
+    }
+    return `${indent(ctx)}${type}& ${name};\n`
+  })
+
+  g.set('cpp_static_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'count'
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = generateExpression(inits[0], ctx)
+      return `${indent(ctx)}static ${type} ${name} = ${val};\n`
+    }
+    return `${indent(ctx)}static ${type} ${name};\n`
+  })
+
+  g.set('cpp_static_member', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'count'
+    return `${indent(ctx)}static ${type} ${name};\n`
+  })
+
   g.set('var_assign', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const vals = node.children.value ?? []
