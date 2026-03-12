@@ -13,9 +13,9 @@ describe('Concept/BlockDef split integrity', () => {
     expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(26)
   })
 
-  it('should have correct core concept and block counts (42 each)', () => {
-    expect(coreConcepts.length).toBe(42)
-    expect(coreBlocks.length).toBe(42)
+  it('should have correct core concept and block counts (47 each)', () => {
+    expect(coreConcepts.length).toBe(47)
+    expect(coreBlocks.length).toBe(47)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

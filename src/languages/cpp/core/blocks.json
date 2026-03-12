@@ -2008,5 +2008,195 @@
         }
       ]
     }
+  },
+  {
+    "id": "c_const_declare",
+    "conceptId": "cpp_const_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_const_declare",
+      "message0": "%{BKY_C_CONST_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_LONG_LONG}", "long long"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_STRING}", "string"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_BOOL}", "bool"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MAX"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_CONST_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "const ${TYPE} ${NAME} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_constexpr_declare",
+    "conceptId": "cpp_constexpr_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_constexpr_declare",
+      "message0": "%{BKY_C_CONSTEXPR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_FLOAT}", "float"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_LONG_LONG}", "long long"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_BOOL}", "bool"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "SIZE"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_CONSTEXPR_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "constexpr ${TYPE} ${NAME} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_auto_declare",
+    "conceptId": "cpp_auto_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_auto_declare",
+      "message0": "%{BKY_C_AUTO_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_AUTO_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "auto ${NAME} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_typedef",
+    "conceptId": "cpp_typedef",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_typedef",
+      "message0": "%{BKY_C_TYPEDEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "ORIG_TYPE",
+          "text": "int"
+        },
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": "myint"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_TYPEDEF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "typedef ${ORIG_TYPE} ${ALIAS};",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_using_alias",
+    "conceptId": "cpp_using_alias",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_using_alias",
+      "message0": "%{BKY_C_USING_ALIAS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": "ll"
+        },
+        {
+          "type": "field_input",
+          "name": "ORIG_TYPE",
+          "text": "long long"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_USING_ALIAS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "using ${ALIAS} = ${ORIG_TYPE};",
+      "imports": [],
+      "order": 0
+    }
   }
 ]

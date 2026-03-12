@@ -283,6 +283,17 @@
   "C_USING_NAMESPACE_MSG0": "using namespace %1",
   "C_USING_NAMESPACE_TOOLTIP": "Allow direct use of features in this namespace without a prefix. For example, use cout instead of std::cout",
 
+  "C_CONST_DECLARE_MSG0": "const %1 %2 = %3",
+  "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization",
+  "C_CONSTEXPR_DECLARE_MSG0": "constexpr %1 %2 = %3",
+  "C_CONSTEXPR_DECLARE_TOOLTIP": "Declare a compile-time constant whose value is determined during compilation",
+  "C_AUTO_DECLARE_MSG0": "auto %1 = %2",
+  "C_AUTO_DECLARE_TOOLTIP": "Declare a variable whose type is automatically deduced from the initial value",
+  "C_TYPEDEF_MSG0": "typedef %1 %2",
+  "C_TYPEDEF_TOOLTIP": "Create a type alias: give an existing type a new name",
+  "C_USING_ALIAS_MSG0": "using %1 = %2",
+  "C_USING_ALIAS_TOOLTIP": "Create a type alias using modern C++ syntax",
+
   "C_FORWARD_DECL_MSG0": "declare %1",
   "C_FORWARD_DECL_TOOLTIP": "Forward declare a function so the compiler knows it exists (define it later)",
 

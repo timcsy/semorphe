@@ -28,6 +28,24 @@ export function registerVariableExecutors(register: (concept: string, executor: 
   register('var_declare', execVarDeclare)
   register('var_declare_expr', execVarDeclare)
 
+  // const/constexpr/auto declarations behave like var_declare in the interpreter
+  register('cpp_const_declare', execVarDeclare)
+  register('cpp_constexpr_declare', execVarDeclare)
+  register('cpp_auto_declare', async (node, ctx) => {
+    const name = String(node.properties.name)
+    const init = node.children.initializer
+    if (init && init.length > 0) {
+      const val = await ctx.evaluate(init[0])
+      ctx.scope.declare(name, val)
+    } else {
+      ctx.scope.declare(name, 0)
+    }
+  })
+
+  // typedef and using alias are type declarations — no runtime effect
+  register('cpp_typedef', async () => {})
+  register('cpp_using_alias', async () => {})
+
   register('var_assign', async (node, ctx) => {
     const name = String(node.properties.name)
     const valueNodes = node.children.value

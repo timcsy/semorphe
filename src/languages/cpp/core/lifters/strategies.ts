@@ -118,13 +118,73 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('func_def', { name, return_type: returnType }, { params: paramChildren, body })
   })
 
+  // type_definition: typedef int myint; → cpp_typedef
+  registry.register('cpp:liftTypedef', (node) => {
+    const typeNode = node.namedChildren.find(c =>
+      c.type === 'primitive_type' || c.type === 'type_identifier' ||
+      c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
+    )
+    const aliasNode = node.namedChildren.find(c => c.type === 'type_identifier' && c !== typeNode)
+    const origType = typeNode?.text ?? 'int'
+    const alias = aliasNode?.text ?? 'mytype'
+    return createNode('cpp_typedef', { orig_type: origType, alias })
+  })
+
+  // alias_declaration: using ll = long long; → cpp_using_alias
+  registry.register('cpp:liftAliasDeclaration', (node) => {
+    const nameNode = node.namedChildren.find(c => c.type === 'type_identifier')
+    const descriptorNode = node.namedChildren.find(c => c.type === 'type_descriptor')
+    const alias = nameNode?.text ?? 'mytype'
+    const origType = descriptorNode?.text ?? 'int'
+    return createNode('cpp_using_alias', { alias, orig_type: origType })
+  })
+
   // declaration: multi-variable + array declarations
   registry.register('cpp:liftDeclaration', (node, ctx) => {
+    // Detect type qualifiers: const, constexpr
+    const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
+    const qualifier = qualifierNode?.text
+
+    // Detect auto (placeholder_type_specifier)
+    const autoNode = node.namedChildren.find(c => c.type === 'placeholder_type_specifier')
+
     const typeNode = node.namedChildren.find(c =>
       c.type === 'primitive_type' || c.type === 'type_identifier' ||
       c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
     )
     const type = typeNode?.text ?? 'int'
+
+    // auto declaration: auto x = expr;
+    if (autoNode) {
+      const decl = node.namedChildren.find(c => c.type === 'init_declarator')
+      if (decl) {
+        const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
+        const name = nameNode?.text ?? 'x'
+        const valueNode = decl.childForFieldName('value')
+        const value = valueNode ? ctx.lift(valueNode) : null
+        return createNode('cpp_auto_declare', { name }, {
+          initializer: value ? [value] : [],
+        })
+      }
+      return createNode('cpp_auto_declare', { name: 'x' })
+    }
+
+    // const/constexpr declaration
+    if (qualifier === 'const' || qualifier === 'constexpr') {
+      const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
+      if (decl) {
+        const lifted = liftSingleDeclarator(decl, type, ctx)
+        const conceptId = qualifier === 'const' ? 'cpp_const_declare' : 'cpp_constexpr_declare'
+        return createNode(conceptId, {
+          type,
+          name: lifted.properties.name as string ?? 'x',
+        }, {
+          initializer: lifted.children.initializer ?? [],
+        })
+      }
+      const conceptId = qualifier === 'const' ? 'cpp_const_declare' : 'cpp_constexpr_declare'
+      return createNode(conceptId, { type, name: 'x' })
+    }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl
     const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')

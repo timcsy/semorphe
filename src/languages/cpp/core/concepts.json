@@ -475,5 +475,65 @@
       "initializer": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_const_declare",
+    "layer": "lang-core",
+    "abstractConcept": "const_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_constexpr_declare",
+    "layer": "lang-core",
+    "abstractConcept": "constexpr_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_auto_declare",
+    "layer": "lang-core",
+    "abstractConcept": "auto_declare",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "initializer": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_typedef",
+    "layer": "lang-core",
+    "abstractConcept": "typedef",
+    "properties": [
+      "orig_type",
+      "alias"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_using_alias",
+    "layer": "lang-core",
+    "abstractConcept": "using_alias",
+    "properties": [
+      "alias",
+      "orig_type"
+    ],
+    "children": {},
+    "role": "statement"
   }
 ]

@@ -283,6 +283,17 @@
   "C_USING_NAMESPACE_MSG0": "使用命名空間 %1",
   "C_USING_NAMESPACE_TOOLTIP": "讓這個命名空間裡的功能可以直接使用，不用加前綴。例如用 cout 代替 std::cout",
 
+  "C_CONST_DECLARE_MSG0": "const %1 %2 = %3",
+  "C_CONST_DECLARE_TOOLTIP": "宣告一個常數變數，初始化後其值不可更改",
+  "C_CONSTEXPR_DECLARE_MSG0": "constexpr %1 %2 = %3",
+  "C_CONSTEXPR_DECLARE_TOOLTIP": "宣告一個編譯期常數，其值在編譯時就已確定",
+  "C_AUTO_DECLARE_MSG0": "auto %1 = %2",
+  "C_AUTO_DECLARE_TOOLTIP": "宣告一個變數，型別由初始值自動推導",
+  "C_TYPEDEF_MSG0": "typedef %1 %2",
+  "C_TYPEDEF_TOOLTIP": "建立型別別名：把既有的型別取一個新名字",
+  "C_USING_ALIAS_MSG0": "using %1 = %2",
+  "C_USING_ALIAS_TOOLTIP": "使用現代 C++ 語法建立型別別名",
+
   "C_FORWARD_DECL_MSG0": "函式宣告 %1",
   "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）",
 

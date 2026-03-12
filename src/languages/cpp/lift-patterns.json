@@ -364,6 +364,20 @@
     ]
   },
   {
+    "id": "cpp_type_definition",
+    "astNodeType": "type_definition",
+    "concept": { "conceptId": "cpp_typedef" },
+    "liftStrategy": "cpp:liftTypedef",
+    "priority": 15
+  },
+  {
+    "id": "cpp_alias_declaration",
+    "astNodeType": "alias_declaration",
+    "concept": { "conceptId": "cpp_using_alias" },
+    "liftStrategy": "cpp:liftAliasDeclaration",
+    "priority": 15
+  },
+  {
     "id": "cpp_address_of_ptr",
     "astNodeType": "pointer_expression",
     "concept": { "conceptId": "cpp_address_of" },

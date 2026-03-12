@@ -78,4 +78,48 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
     return `${indent(ctx)}${name}[${idx}] = ${val};\n`
   })
+
+  g.set('cpp_const_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'MAX'
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = generateExpression(inits[0], ctx)
+      return `${indent(ctx)}const ${type} ${name} = ${val};\n`
+    }
+    return `${indent(ctx)}const ${type} ${name};\n`
+  })
+
+  g.set('cpp_constexpr_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'SIZE'
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = generateExpression(inits[0], ctx)
+      return `${indent(ctx)}constexpr ${type} ${name} = ${val};\n`
+    }
+    return `${indent(ctx)}constexpr ${type} ${name};\n`
+  })
+
+  g.set('cpp_auto_declare', (node, ctx) => {
+    const name = node.properties.name ?? 'x'
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = generateExpression(inits[0], ctx)
+      return `${indent(ctx)}auto ${name} = ${val};\n`
+    }
+    return `${indent(ctx)}auto ${name};\n`
+  })
+
+  g.set('cpp_typedef', (node, ctx) => {
+    const origType = node.properties.orig_type ?? 'int'
+    const alias = node.properties.alias ?? 'myint'
+    return `${indent(ctx)}typedef ${origType} ${alias};\n`
+  })
+
+  g.set('cpp_using_alias', (node, ctx) => {
+    const alias = node.properties.alias ?? 'll'
+    const origType = node.properties.orig_type ?? 'long long'
+    return `${indent(ctx)}using ${alias} = ${origType};\n`
+  })
 }

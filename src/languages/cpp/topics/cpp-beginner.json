@@ -88,6 +88,16 @@
             "children": []
           }
         ]
+      },
+      {
+        "id": "L1c",
+        "level": 1,
+        "label": "L1c: 型別系統",
+        "concepts": [
+          "cpp_const_declare", "cpp_constexpr_declare",
+          "cpp_auto_declare", "cpp_typedef", "cpp_using_alias"
+        ],
+        "children": []
       }
     ]
   }
