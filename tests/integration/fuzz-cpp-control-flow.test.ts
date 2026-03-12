@@ -241,6 +241,378 @@ int main() {
   })
 })
 
+// ─── Round 2: Edge cases and tricky combinations (2026-03-12) ───
+
+describe('fuzz: operator precedence in conditions (&&/||)', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int a = 5, b = 3, c = 0;
+    if (a > 3 && b < 5 || c > 0) {
+        cout << "yes" << endl;
+    } else {
+        cout << "no" << endl;
+    }
+    if (a > 10 && b < 5 || c == 0) {
+        cout << "second" << endl;
+    }
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('yes')
+    expect(out).toContain('second')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: integer division edge cases in loops', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int sum = 0;
+    for (int i = 1; i <= 10; i++) {
+        int half = i / 2;
+        if (half * 2 == i) {
+            sum = sum + i;
+        }
+    }
+    cout << sum << endl;
+    int val = 100;
+    int steps = 0;
+    while (val > 0) {
+        val = val / 3;
+        steps = steps + 1;
+    }
+    cout << steps << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('30')
+    expect(out).toContain('5')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: nested loops with break only affecting inner', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int total = 0;
+    for (int i = 1; i <= 5; i++) {
+        int j = 0;
+        while (j < 100) {
+            j = j + i;
+            if (j > 10) {
+                break;
+            }
+            total = total + 1;
+        }
+    }
+    cout << total << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('22')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: switch with many cases and default', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int results = 0;
+    for (int i = 0; i < 7; i++) {
+        switch (i) {
+            case 0:
+                results = results + 1;
+                break;
+            case 1:
+                results = results + 10;
+                break;
+            case 2:
+                results = results + 100;
+                break;
+            case 3:
+                results = results + 1000;
+                break;
+            default:
+                results = results + 5;
+                break;
+        }
+    }
+    cout << results << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('1126')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: do-while single iteration and break', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int x = 100;
+    int count = 0;
+    do {
+        count = count + 1;
+        x = x + 1;
+    } while (x < 50);
+    cout << count << endl;
+    cout << x << endl;
+    int n = 1;
+    int product = 1;
+    do {
+        product = product * n;
+        n = n + 1;
+        if (n > 6) {
+            break;
+        }
+    } while (product < 1000);
+    cout << product << endl;
+    cout << n << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('1')    // count
+    expect(out).toContain('101')  // x
+    expect(out).toContain('720')  // product
+    expect(out).toContain('7')    // n
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: complex else-if with nested if', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int x = 15;
+    int y = 20;
+    if (x > 20 && y > 20) {
+        cout << "A" << endl;
+    } else if (x > 10 && y > 15) {
+        cout << "B" << endl;
+    } else if (x > 5 || y > 25) {
+        cout << "C" << endl;
+    } else {
+        cout << "D" << endl;
+    }
+    int score = 72;
+    if (score >= 90) {
+        cout << "excellent" << endl;
+    } else if (score >= 60) {
+        if (score >= 80) {
+            cout << "good" << endl;
+        } else if (score >= 70) {
+            cout << "fair" << endl;
+        } else {
+            cout << "pass" << endl;
+        }
+    } else {
+        cout << "fail" << endl;
+    }
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('B')
+    expect(out).toContain('fair')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: for countdown and Collatz sequence', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int sum = 0;
+    for (int i = 10; i >= 1; i--) {
+        sum = sum + i;
+    }
+    cout << sum << endl;
+    int n = 27;
+    int steps = 0;
+    while (n != 1) {
+        if (n % 2 == 0) {
+            n = n / 2;
+        } else {
+            n = 3 * n + 1;
+        }
+        steps = steps + 1;
+    }
+    cout << steps << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('55')
+    expect(out).toContain('111')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: nested for with continue in outer loop', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int total = 0;
+    for (int i = 1; i <= 5; i++) {
+        if (i == 3) {
+            continue;
+        }
+        for (int j = 1; j <= 3; j++) {
+            total = total + i * j;
+        }
+    }
+    cout << total << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('72')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: multiple sequential while loops', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int a = 1;
+    while (a < 10) {
+        a = a * 2;
+    }
+    cout << a << endl;
+    int b = 100;
+    while (b > 1) {
+        b = b / 2;
+    }
+    cout << b << endl;
+    cout << "done" << endl;
+    int c = 0;
+    for (int i = 0; i < 5; i++) {
+        c = c + 1;
+    }
+    cout << c << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('16')
+    expect(out).toContain('done')
+    expect(out).toContain('5')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+describe('fuzz: GCD and Fibonacci algorithms', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int a = 48;
+    int b = 18;
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    cout << a << endl;
+    int f0 = 0;
+    int f1 = 1;
+    for (int i = 0; i < 10; i++) {
+        cout << f0 << " ";
+        int next = f0 + f1;
+        f0 = f1;
+        f1 = next;
+    }
+    cout << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('6')
+    expect(out).toContain('0 1 1 2 3 5 8 13 21 34')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
 // ─── Known issues (not in Phase 2 scope) ───
 
 describe.skip('fuzz: switch fall-through (Phase 2 scope, to fix)', () => {

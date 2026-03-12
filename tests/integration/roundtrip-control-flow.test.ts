@@ -350,3 +350,94 @@ int main() {
     expect(gen1).toBe(gen2)
   })
 })
+
+// ─── Program 11: Nested control flow ───
+describe('control flow: nested control', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    for (int i = 1; i <= 3; i++) {
+        for (int j = 1; j <= 3; j++) {
+            if (i == j) {
+                cout << "*" << " ";
+            } else {
+                cout << "." << " ";
+            }
+        }
+        cout << endl;
+    }
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('* . .')
+    expect(out).toContain('. * .')
+    expect(out).toContain('. . *')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})
+
+// ─── Program 12: Complex control flow (all concepts) ───
+describe('control flow: complex combined', () => {
+  const code = `#include <iostream>
+using namespace std;
+int main() {
+    int total = 0;
+    for (int i = 1; i <= 20; i++) {
+        if (i % 2 == 0) {
+            continue;
+        }
+        int j = i;
+        while (j > 0) {
+            total = total + j;
+            j = j - 2;
+        }
+        if (total > 100) {
+            break;
+        }
+    }
+    cout << total << endl;
+    int grade = 85;
+    switch (grade / 10) {
+        case 10:
+            cout << "perfect" << endl;
+            break;
+        case 9:
+            cout << "excellent" << endl;
+            break;
+        case 8:
+            cout << "good" << endl;
+            break;
+        default:
+            cout << "ok" << endl;
+            break;
+    }
+    int count = 0;
+    do {
+        count = count + 1;
+    } while (count < 5);
+    cout << count << endl;
+    return 0;
+}`
+
+  it('executes correctly', async () => {
+    const interp = await runCode(code)
+    const out = interp.getOutput().join('')
+    expect(out).toContain('140')
+    expect(out).toContain('good')
+    expect(out).toContain('5')
+  })
+
+  it('roundtrip is stable', () => {
+    const gen1 = roundTrip(code)
+    const gen2 = roundTrip(gen1)
+    expect(gen1).toBe(gen2)
+  })
+})

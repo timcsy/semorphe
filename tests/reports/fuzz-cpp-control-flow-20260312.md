@@ -1,36 +1,66 @@
-# 模糊測試報告 — C++ Control Flow — 2026-03-12
+# Fuzz Test Report -- C++ Control Flow -- 2026-03-12
 
-## 摘要
-- 語言：C++
-- 產生的程式數：10
-- 成功執行：10
-- Round-trip PASS：6
-- COMPILE_FAIL：2（switch fall-through + char literal in switch）
-- SEMANTIC_DIFF：2（陣列初始化 — Phase 4 scope）
+## Summary
+- Language: C++
+- Total programs generated: 20 (Round 1: 10, Round 2: 10)
+- Successful execution: 20
+- Round-trip PASS: 16
+- COMPILE_FAIL: 2 (switch fall-through + char literal in switch)
+- SEMANTIC_DIFF: 2 (array initializer -- Phase 4 scope)
 
-## 發現並修復的 Bug
+## Round 1 Results (original)
 
-### Bug 1：switch-case value 洩漏到 body（已修復）
-- **程式**：roundtrip test #8
-- **原始碼**：`case 1: cout << "Mon" << endl; break;`
-- **錯誤輸出**：`case 1:\n1            cout << "Mon" << endl;`
-- **根本原因**：web-tree-sitter 節點 `===` 參考比較失敗，`filter(c => c !== valueNode)` 無效
-- **修復**：改用 `startPosition` 座標比較
-- **修復位置**：`src/languages/cpp/core/lifters/statements.ts`
+| # | Program | Status | Notes |
+|---|---------|--------|-------|
+| 1 | Nested for with break | PASS | |
+| 2 | Do-while compound condition | PASS | |
+| 3 | Continue in for loop | PASS | |
+| 4 | Function with loop | PASS | |
+| 5 | While with break+continue | PASS | |
+| 6 | Nested loops with continue | PASS | |
+| 7 | Switch fall-through | COMPILE_FAIL | Empty case body fall-through not supported |
+| 8 | Char literals in switch | COMPILE_FAIL | Char literal case labels not lifted correctly |
+| 9 | Array initializer lists | SEMANTIC_DIFF | Phase 4 scope |
+| 10 | Array initializer lists | SEMANTIC_DIFF | Phase 4 scope |
 
-## 已知限制
+## Round 2 Results (edge cases + tricky combinations)
+
+| # | Program | Status | Notes |
+|---|---------|--------|-------|
+| 1 | Operator precedence (&&/\|\|) | PASS | Mixed && and \|\| without parens |
+| 2 | Integer division edge cases | PASS | Division truncation in loop conditions |
+| 3 | Nested loops, break inner only | PASS | Break only affects innermost loop |
+| 4 | Switch with many cases + default | PASS | 5 cases + default in loop |
+| 5 | Do-while single iteration + break | PASS | Condition false from start; break in do-while |
+| 6 | Complex else-if with nested if | PASS | Nested if inside else-if branch |
+| 7 | For countdown + Collatz sequence | PASS | Decrementing for loop; Collatz (111 steps) |
+| 8 | Nested for, continue in outer | PASS | Continue skips outer iteration |
+| 9 | Multiple sequential while loops | PASS | Three sequential loops |
+| 10 | GCD + Fibonacci algorithms | PASS | Classic algorithms with while/for |
+
+## Bugs Found and Fixed (Round 1)
+
+### Bug 1: switch-case value leaking into body (fixed)
+- **Program**: roundtrip test #8
+- **Original**: `case 1: cout << "Mon" << endl; break;`
+- **Bad output**: `case 1:\n1            cout << "Mon" << endl;`
+- **Root cause**: web-tree-sitter node `===` reference comparison failed, `filter(c => c !== valueNode)` ineffective
+- **Fix**: Use `startPosition` coordinate comparison
+- **Fix location**: `src/languages/cpp/core/lifters/statements.ts`
+
+## Known Limitations
 
 ### COMPILE_FAIL: switch fall-through
-- 空 case body 的 fall-through 模式（`case 0: case 1:`）code generation 有問題
-- **範疇**：Phase 2 — 可在後續 PR 修復
+- Empty case body fall-through pattern (`case 0: case 1:`) code generation has issues
+- **Scope**: Phase 2
 
 ### COMPILE_FAIL: char literal in switch
-- switch case 中的 char literal `'A'` 被生成為 string literal `"A"`
-- **範疇**：Phase 1 char literal 與 switch 交互
+- Switch case char literal `'A'` generated as string literal `"A"`
+- **Scope**: Phase 1 char literal + switch interaction
 
-### SEMANTIC_DIFF: 陣列初始化列表
-- `int arr[] = {1, 2, 3}` 的初始化列表在 roundtrip 中遺失
-- **範疇**：Phase 4 陣列與指標
+### SEMANTIC_DIFF: array initializer lists
+- `int arr[] = {1, 2, 3}` initializer list lost in roundtrip
+- **Scope**: Phase 4 arrays & pointers
 
-## 產生的回歸測試
-- `tests/integration/fuzz-cpp-control-flow.test.ts`（12 個 PASS 測試 + 3 個 todo）
+## Generated Regression Tests
+- `tests/integration/fuzz-cpp-control-flow.test.ts` (16 PASS tests + 3 todo/skip)
