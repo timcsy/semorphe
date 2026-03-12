@@ -283,8 +283,8 @@ describe('Expressions', () => {
       const body = liftBody("char c = 'A';")
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.concept).toBe('string_literal')
-      expect(inits[0]?.properties.value).toBe('A')
+      expect(inits[0]?.concept).toBe('cpp_char_literal')
+      expect(inits[0]?.properties.char).toBe('A')
     })
   })
 

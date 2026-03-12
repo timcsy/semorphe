@@ -153,12 +153,12 @@ describe('C++ Declaration Lifters', () => {
 })
 
 describe('C++ Expression Lifters', () => {
-  it('should lift char_literal to string_literal', () => {
+  it('should lift char_literal to cpp_char_literal', () => {
     const node = mockNode('char_literal', "'a'")
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('string_literal')
-    expect(result!.properties.value).toBe('a')
+    expect(result!.concept).toBe('cpp_char_literal')
+    expect(result!.properties.char).toBe('a')
   })
 
   it('should lift true/false to builtin_constant', () => {
