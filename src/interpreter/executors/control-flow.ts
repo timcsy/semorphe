@@ -142,6 +142,30 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     }
   })
 
+  register('cpp_range_for', async (node, ctx) => {
+    const varName = String(node.properties.var_name ?? 'x')
+    const containerName = String(node.properties.container ?? 'vec')
+    const body = node.children.body ?? []
+    const parentScope = ctx.scope
+    const container = ctx.scope.get(containerName)
+
+    if (container.type === 'array' && Array.isArray(container.value)) {
+      for (const elem of container.value) {
+        ctx.scope = parentScope.createChild()
+        ctx.scope.declare(varName, elem)
+        try {
+          await ctx.executeBody(body)
+        } catch (signal) {
+          if (signal instanceof BreakSignal) break
+          if (signal instanceof ContinueSignal) continue
+          ctx.scope = parentScope
+          throw signal
+        }
+      }
+    }
+    ctx.scope = parentScope
+  })
+
   register('break', async () => { throw new BreakSignal() })
   register('continue', async () => { throw new ContinueSignal() })
 }

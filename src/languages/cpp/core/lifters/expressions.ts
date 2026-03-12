@@ -128,6 +128,23 @@ export function registerExpressionLifters(lifter: Lifter): void {
 
   lifter.register('subscript_expression', (node, ctx) => {
     const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]
+
+    // 2D array access: arr[i][j] — outer subscript with inner subscript as argument
+    if (arrayNode?.type === 'subscript_expression') {
+      const innerArrayNode = arrayNode.childForFieldName('argument') ?? arrayNode.namedChildren[0]
+      const name = innerArrayNode?.text ?? 'arr'
+      const rowIndices = arrayNode.namedChildren.find(c => c.type === 'subscript_argument_list')
+      const rowNode = rowIndices?.namedChildren[0] ?? arrayNode.namedChildren[1]
+      const colIndices = node.namedChildren.find(c => c.type === 'subscript_argument_list')
+      const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
+      const row = rowNode ? ctx.lift(rowNode) : null
+      const col = colNode ? ctx.lift(colNode) : null
+      return createNode('cpp_array_2d_access', { name }, {
+        row: row ? [row] : [],
+        col: col ? [col] : [],
+      })
+    }
+
     const name = arrayNode?.text ?? 'arr'
     // tree-sitter C++ wraps index in subscript_argument_list: arr[i] → (subscript_argument_list (identifier))
     const indicesNode = node.namedChildren.find(c => c.type === 'subscript_argument_list')

@@ -283,6 +283,17 @@
   "C_USING_NAMESPACE_MSG0": "使用命名空間 %1",
   "C_USING_NAMESPACE_TOOLTIP": "讓這個命名空間裡的功能可以直接使用，不用加前綴。例如用 cout 代替 std::cout",
 
+  "C_ENUM_MSG0": "列舉 %1 { %2 }",
+  "C_ENUM_TOOLTIP": "定義列舉：一組有名字的整數常數",
+  "C_RANGE_FOR_MSG0": "對每個 %1 %2 在 %3 中",
+  "C_RANGE_FOR_TOOLTIP": "遍歷容器（vector、陣列等）中的每個元素",
+  "C_ARRAY_2D_DECLARE_MSG0": "建立 %1 二維陣列 %2 [ %3 ][ %4 ]",
+  "C_ARRAY_2D_DECLARE_TOOLTIP": "建立一個二維陣列（值的方格表）",
+  "C_ARRAY_2D_ACCESS_MSG0": "二維陣列 %1 [ %2 ][ %3 ]",
+  "C_ARRAY_2D_ACCESS_TOOLTIP": "取得二維陣列中特定列和行的值",
+  "C_ARRAY_2D_ASSIGN_MSG0": "設定二維陣列 %1 [ %2 ][ %3 ] ← %4",
+  "C_ARRAY_2D_ASSIGN_TOOLTIP": "將值存入二維陣列的特定列和行",
+
   "C_FORWARD_DECL_MSG0": "函式宣告 %1",
   "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）",
 

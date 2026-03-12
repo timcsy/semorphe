@@ -4,6 +4,15 @@ import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
+  // 2D Array declarator: int arr[3][4] — nested array_declarator
+  if (decl.type === 'array_declarator' && decl.namedChildren[0]?.type === 'array_declarator') {
+    const innerArr = decl.namedChildren[0]
+    const name = innerArr.namedChildren[0]?.text ?? 'arr'
+    const rows = innerArr.namedChildren[1]?.text ?? '0'
+    const cols = decl.namedChildren[1]?.text ?? '0'
+    return createNode('cpp_array_2d_declare', { type, name, rows, cols })
+  }
+
   // Array declarator: int arr[10]
   if (decl.type === 'array_declarator') {
     const name = decl.namedChildren[0]?.text ?? 'arr'
@@ -116,6 +125,38 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     const body = extractBody(bodyNode, ctx)
     return createNode('func_def', { name, return_type: returnType }, { params: paramChildren, body })
+  })
+
+  // enum_specifier: enum Color { RED, GREEN, BLUE };
+  registry.register('cpp:liftEnum', (node) => {
+    const nameNode = node.namedChildren.find(c => c.type === 'type_identifier')
+    const listNode = node.namedChildren.find(c => c.type === 'enumerator_list')
+    const name = nameNode?.text ?? 'MyEnum'
+    const values = listNode
+      ? listNode.namedChildren
+          .filter(c => c.type === 'enumerator')
+          .map(e => e.namedChildren[0]?.text ?? '')
+          .join(', ')
+      : ''
+    return createNode('cpp_enum', { name, values })
+  })
+
+  // for_range_loop: for (auto x : vec) { body }
+  registry.register('cpp:liftRangeFor', (node, ctx) => {
+    const typeNode = node.namedChildren.find(c =>
+      c.type === 'primitive_type' || c.type === 'type_identifier' ||
+      c.type === 'placeholder_type_specifier'
+    )
+    const varType = typeNode?.text ?? 'auto'
+    // The identifier after the type
+    const varNode = node.namedChildren.find(c => c.type === 'identifier')
+    const varName = varNode?.text ?? 'x'
+    // The container is the "right" field or the second identifier
+    const rightNode = node.childForFieldName('right')
+    const container = rightNode?.text ?? 'vec'
+    const bodyNode = node.childForFieldName('body') ?? node.namedChildren.find(c => c.type === 'compound_statement') ?? null
+    const body = extractBody(bodyNode, ctx)
+    return createNode('cpp_range_for', { var_type: varType, var_name: varName, container }, { body })
   })
 
   // declaration: multi-variable + array declarations

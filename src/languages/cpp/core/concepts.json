@@ -475,5 +475,70 @@
       "initializer": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_enum",
+    "layer": "lang-core",
+    "abstractConcept": "enum",
+    "properties": [
+      "name",
+      "values"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_range_for",
+    "layer": "lang-core",
+    "abstractConcept": "range_for",
+    "properties": [
+      "var_type",
+      "var_name",
+      "container"
+    ],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_array_2d_declare",
+    "layer": "lang-core",
+    "abstractConcept": "array_2d_declare",
+    "properties": [
+      "type",
+      "name",
+      "rows",
+      "cols"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_array_2d_access",
+    "layer": "lang-core",
+    "abstractConcept": "array_2d_access",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "row": "expression",
+      "col": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_array_2d_assign",
+    "layer": "lang-core",
+    "abstractConcept": "array_2d_assign",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "row": "expression",
+      "col": "expression",
+      "value": "expression"
+    },
+    "role": "statement"
   }
 ]

@@ -31,10 +31,27 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       })
     }
 
-    // Array element assignment: arr[i] = value
+    // 2D Array element assignment: arr[i][j] = value
     if (left?.type === 'subscript_expression') {
-      const arrayNode = left.childForFieldName('argument') ?? left.namedChildren[0]
-      const name = arrayNode?.text ?? 'arr'
+      const innerNode = left.childForFieldName('argument') ?? left.namedChildren[0]
+      if (innerNode?.type === 'subscript_expression') {
+        const arrayNode = innerNode.childForFieldName('argument') ?? innerNode.namedChildren[0]
+        const name = arrayNode?.text ?? 'arr'
+        const rowIndices = innerNode.namedChildren.find(c => c.type === 'subscript_argument_list')
+        const rowNode = rowIndices?.namedChildren[0] ?? innerNode.namedChildren[1]
+        const colIndices = left.namedChildren.find(c => c.type === 'subscript_argument_list')
+        const colNode = colIndices?.namedChildren[0] ?? left.namedChildren[1]
+        const row = rowNode ? ctx.lift(rowNode) : null
+        const col = colNode ? ctx.lift(colNode) : null
+        return createNode('cpp_array_2d_assign', { name }, {
+          row: row ? [row] : [],
+          col: col ? [col] : [],
+          value: value ? [value] : [],
+        })
+      }
+
+      // 1D Array element assignment: arr[i] = value
+      const name = innerNode?.text ?? 'arr'
       const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null

@@ -1,5 +1,5 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { indent, generateExpression } from '../../../../core/projection/code-generator'
+import { indent, generateExpression, generateBody, indented } from '../../../../core/projection/code-generator'
 
 export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): void {
   g.set('var_declare', (node, ctx) => {
@@ -68,6 +68,50 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
     return `${name}[${idx}]`
+  })
+
+  g.set('cpp_enum', (node, ctx) => {
+    const name = node.properties.name ?? 'MyEnum'
+    const values = node.properties.values ?? ''
+    return `${indent(ctx)}enum ${name} { ${values} };\n`
+  })
+
+  g.set('cpp_range_for', (node, ctx) => {
+    const varType = node.properties.var_type ?? 'auto'
+    const varName = node.properties.var_name ?? 'x'
+    const container = node.properties.container ?? 'vec'
+    const bodyNodes = node.children.body ?? []
+    const bodyCode = generateBody(bodyNodes, indented(ctx))
+    const ind = indent(ctx)
+    return `${ind}for (${varType} ${varName} : ${container}) {\n${bodyCode}${ind}}\n`
+  })
+
+  g.set('cpp_array_2d_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'arr'
+    const rows = node.properties.rows ?? '3'
+    const cols = node.properties.cols ?? '4'
+    return `${indent(ctx)}${type} ${name}[${rows}][${cols}];\n`
+  })
+
+  g.set('cpp_array_2d_access', (node, ctx) => {
+    const name = node.properties.name ?? 'arr'
+    const rowNodes = node.children.row ?? []
+    const colNodes = node.children.col ?? []
+    const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'
+    const col = colNodes.length > 0 ? generateExpression(colNodes[0], ctx) : '0'
+    return `${name}[${row}][${col}]`
+  })
+
+  g.set('cpp_array_2d_assign', (node, ctx) => {
+    const name = node.properties.name ?? 'arr'
+    const rowNodes = node.children.row ?? []
+    const colNodes = node.children.col ?? []
+    const vals = node.children.value ?? []
+    const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'
+    const col = colNodes.length > 0 ? generateExpression(colNodes[0], ctx) : '0'
+    const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
+    return `${indent(ctx)}${name}[${row}][${col}] = ${val};\n`
   })
 
   g.set('array_assign', (node, ctx) => {

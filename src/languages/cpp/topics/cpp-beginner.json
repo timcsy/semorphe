@@ -37,6 +37,7 @@
               "array_declare", "array_access",
               "cpp_string_declare",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
+              "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign",
               "comment", "doc_comment", "block_comment",
               "cpp_raw_code", "cpp_raw_expression"
             ],
@@ -51,7 +52,7 @@
         "concepts": [
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
-          "bitwise_not",
+          "bitwise_not", "cpp_range_for", "cpp_enum",
           "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
         ],
         "children": [

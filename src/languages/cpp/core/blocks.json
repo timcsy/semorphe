@@ -2008,5 +2008,212 @@
         }
       ]
     }
+  },
+  {
+    "id": "c_enum",
+    "conceptId": "cpp_enum",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_enum",
+      "message0": "%{BKY_C_ENUM_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "Color"
+        },
+        {
+          "type": "field_input",
+          "name": "VALUES",
+          "text": "RED, GREEN, BLUE"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_ENUM_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "enum ${NAME} { ${VALUES} };",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_range_for",
+    "conceptId": "cpp_range_for",
+    "language": "cpp",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_range_for",
+      "message0": "%{BKY_C_RANGE_FOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VAR_TYPE",
+          "options": [
+            ["auto", "auto"],
+            ["int", "int"],
+            ["double", "double"],
+            ["char", "char"],
+            ["string", "string"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "VAR_NAME",
+          "text": "x"
+        },
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "vec"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_RANGE_FOR_TOOLTIP}"
+    }
+  },
+  {
+    "id": "c_array_2d_declare",
+    "conceptId": "cpp_array_2d_declare",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_array_2d_declare",
+      "message0": "%{BKY_C_ARRAY_2D_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_U_VAR_DECLARE_TYPE_INT}", "int"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}", "double"],
+            ["%{BKY_U_VAR_DECLARE_TYPE_CHAR}", "char"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "field_input",
+          "name": "ROWS",
+          "text": "3"
+        },
+        {
+          "type": "field_input",
+          "name": "COLS",
+          "text": "4"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_C_ARRAY_2D_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE} ${NAME}[${ROWS}][${COLS}];",
+      "imports": [],
+      "order": 0
+    }
+  },
+  {
+    "id": "c_array_2d_access",
+    "conceptId": "cpp_array_2d_access",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_array_2d_access",
+      "message0": "%{BKY_C_ARRAY_2D_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "ROW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "COL",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_C_ARRAY_2D_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}[${ROW}][${COL}]",
+      "imports": [],
+      "order": 20
+    }
+  },
+  {
+    "id": "c_array_2d_assign",
+    "conceptId": "cpp_array_2d_assign",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_array_2d_assign",
+      "message0": "%{BKY_C_ARRAY_2D_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "ROW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "COL",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_C_ARRAY_2D_ASSIGN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME}[${ROW}][${COL}] = ${VALUE};",
+      "imports": [],
+      "order": 0
+    }
   }
 ]

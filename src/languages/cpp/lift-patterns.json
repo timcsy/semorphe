@@ -364,6 +364,20 @@
     ]
   },
   {
+    "id": "cpp_enum_specifier",
+    "astNodeType": "enum_specifier",
+    "concept": { "conceptId": "cpp_enum" },
+    "liftStrategy": "cpp:liftEnum",
+    "priority": 15
+  },
+  {
+    "id": "cpp_for_range_loop",
+    "astNodeType": "for_range_loop",
+    "concept": { "conceptId": "cpp_range_for" },
+    "liftStrategy": "cpp:liftRangeFor",
+    "priority": 15
+  },
+  {
     "id": "cpp_address_of_ptr",
     "astNodeType": "pointer_expression",
     "concept": { "conceptId": "cpp_address_of" },

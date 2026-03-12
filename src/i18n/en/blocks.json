@@ -283,6 +283,17 @@
   "C_USING_NAMESPACE_MSG0": "using namespace %1",
   "C_USING_NAMESPACE_TOOLTIP": "Allow direct use of features in this namespace without a prefix. For example, use cout instead of std::cout",
 
+  "C_ENUM_MSG0": "enum %1 { %2 }",
+  "C_ENUM_TOOLTIP": "Define an enumeration: a set of named integer constants",
+  "C_RANGE_FOR_MSG0": "for each %1 %2 in %3",
+  "C_RANGE_FOR_TOOLTIP": "Iterate over each element in a container (vector, array, etc.)",
+  "C_ARRAY_2D_DECLARE_MSG0": "create %1 2D array %2 [ %3 ][ %4 ]",
+  "C_ARRAY_2D_DECLARE_TOOLTIP": "Create a two-dimensional array (a grid of values)",
+  "C_ARRAY_2D_ACCESS_MSG0": "2D array %1 [ %2 ][ %3 ]",
+  "C_ARRAY_2D_ACCESS_TOOLTIP": "Get the value at a specific row and column in a 2D array",
+  "C_ARRAY_2D_ASSIGN_MSG0": "set 2D array %1 [ %2 ][ %3 ] ← %4",
+  "C_ARRAY_2D_ASSIGN_TOOLTIP": "Store a value at a specific row and column in a 2D array",
+
   "C_FORWARD_DECL_MSG0": "declare %1",
   "C_FORWARD_DECL_TOOLTIP": "Forward declare a function so the compiler knows it exists (define it later)",
 
