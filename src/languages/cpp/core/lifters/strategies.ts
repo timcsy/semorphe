@@ -118,6 +118,22 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('func_def', { name, return_type: returnType }, { params: paramChildren, body })
   })
 
+  // sizeof_expression: sizeof(int) or sizeof(x)
+  registry.register('cpp:liftSizeof', (node) => {
+    // sizeof(type) → type_descriptor child; sizeof(expr) → parenthesized_expression child
+    const child = node.namedChildren[0]
+    if (child) {
+      if (child.type === 'type_descriptor') {
+        return createNode('cpp_sizeof', { target: child.text })
+      }
+      if (child.type === 'parenthesized_expression') {
+        return createNode('cpp_sizeof', { target: child.namedChildren[0]?.text ?? child.text })
+      }
+      return createNode('cpp_sizeof', { target: child.text })
+    }
+    return createNode('cpp_sizeof', { target: 'int' })
+  })
+
   // declaration: multi-variable + array declarations
   registry.register('cpp:liftDeclaration', (node, ctx) => {
     const typeNode = node.namedChildren.find(c =>

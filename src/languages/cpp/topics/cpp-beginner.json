@@ -51,7 +51,7 @@
         "concepts": [
           "cpp_switch", "cpp_case", "cpp_default",
           "cpp_do_while", "cpp_ternary", "cpp_cast",
-          "bitwise_not",
+          "bitwise_not", "cpp_sizeof",
           "cpp_printf", "cpp_scanf", "cpp_scanf_expr"
         ],
         "children": [

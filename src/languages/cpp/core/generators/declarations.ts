@@ -70,6 +70,11 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${name}[${idx}]`
   })
 
+  g.set('cpp_sizeof', (node) => {
+    const target = node.properties.target ?? 'int'
+    return `sizeof(${target})`
+  })
+
   g.set('array_assign', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
     const indexNodes = node.children.index ?? []

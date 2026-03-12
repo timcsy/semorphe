@@ -124,6 +124,11 @@
         "*": "arithmetic",
         "/": "arithmetic",
         "%": "arithmetic",
+        "&": "arithmetic",
+        "|": "arithmetic",
+        "^": "arithmetic",
+        "<<": "arithmetic",
+        ">>": "arithmetic",
         ">": "compare",
         "<": "compare",
         ">=": "compare",
@@ -362,6 +367,13 @@
     "fieldMappings": [
       { "semantic": "body", "ast": "$text", "extract": "liftChildren" }
     ]
+  },
+  {
+    "id": "cpp_sizeof_expr",
+    "astNodeType": "sizeof_expression",
+    "concept": { "conceptId": "cpp_sizeof" },
+    "liftStrategy": "cpp:liftSizeof",
+    "priority": 5
   },
   {
     "id": "cpp_address_of_ptr",

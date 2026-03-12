@@ -149,6 +149,26 @@
             [
               "%{BKY_U_ARITHMETIC_OP_REMAINDER}",
               "%"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_BITAND}",
+              "&"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_BITOR}",
+              "|"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_BITXOR}",
+              "^"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_LSHIFT}",
+              "<<"
+            ],
+            [
+              "%{BKY_U_ARITHMETIC_OP_RSHIFT}",
+              ">>"
             ]
           ]
         },

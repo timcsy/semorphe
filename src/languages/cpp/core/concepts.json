@@ -475,5 +475,15 @@
       "initializer": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_sizeof",
+    "layer": "lang-core",
+    "abstractConcept": "sizeof",
+    "properties": [
+      "target"
+    ],
+    "children": {},
+    "role": "expression"
   }
 ]

@@ -34,6 +34,16 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     return { type: 'double', value: result }
   })
 
+  register('cpp_sizeof', async (node) => {
+    const target = String(node.properties.target ?? 'int')
+    const sizes: Record<string, number> = {
+      'char': 1, 'bool': 1, 'short': 2,
+      'int': 4, 'float': 4, 'long': 8,
+      'double': 8, 'long long': 8, 'long double': 16,
+    }
+    return { type: 'int', value: sizes[target] ?? 4 }
+  })
+
   register('compare', async (node, ctx) => {
     const op = String(node.properties.operator)
     const left = await ctx.evaluate(node.children.left[0])

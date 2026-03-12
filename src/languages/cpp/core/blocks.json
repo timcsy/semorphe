@@ -2008,5 +2008,32 @@
         }
       ]
     }
+  },
+  {
+    "id": "c_sizeof",
+    "conceptId": "cpp_sizeof",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_sizeof",
+      "message0": "%{BKY_C_SIZEOF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET",
+          "text": "int"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_SIZEOF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "sizeof(${TARGET})",
+      "imports": [],
+      "order": 20
+    }
   }
 ]
