@@ -16,6 +16,7 @@ import { registerArrayExecutors } from './executors/arrays'
 import { registerPointerExecutors } from './executors/pointers'
 import { registerMutationExecutors } from './executors/mutations'
 import { registerCmathExecutors } from './executors/cmath'
+import { registerStringExecutors } from './executors/strings'
 
 interface InterpreterOptions {
   maxSteps?: number
@@ -57,6 +58,7 @@ export class SemanticInterpreter implements ExecutionContext {
     registerPointerExecutors(reg)
     registerMutationExecutors(reg)
     registerCmathExecutors(reg)
+    registerStringExecutors(reg)
 
     // 編譯時/宣告性概念：無執行行為
     const noop: import('./executor-registry').ConceptExecutor = async () => {}

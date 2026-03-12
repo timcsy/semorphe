@@ -43,5 +43,268 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_string_length",
+    "conceptId": "cpp_string_length",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_length",
+      "message0": "%{BKY_CPP_STRING_LENGTH_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_LENGTH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.length()",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_substr",
+    "conceptId": "cpp_string_substr",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_substr",
+      "message0": "%{BKY_CPP_STRING_SUBSTR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "LEN",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_SUBSTR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.substr(${POS}, ${LEN})",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_find",
+    "conceptId": "cpp_string_find",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_find",
+      "message0": "%{BKY_CPP_STRING_FIND_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_FIND_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.find(${ARG})",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_append",
+    "conceptId": "cpp_string_append",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_append",
+      "message0": "%{BKY_CPP_STRING_APPEND_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_APPEND_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.append(${VALUE});",
+      "imports": ["string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_string_c_str",
+    "conceptId": "cpp_string_c_str",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_c_str",
+      "message0": "%{BKY_CPP_STRING_C_STR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_C_STR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.c_str()",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_getline",
+    "conceptId": "cpp_getline",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_getline",
+      "message0": "%{BKY_CPP_GETLINE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "getline(std::cin, ${NAME});",
+      "imports": ["iostream", "string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_to_string",
+    "conceptId": "cpp_to_string",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_to_string",
+      "message0": "%{BKY_CPP_TO_STRING_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_TO_STRING_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::to_string(${VALUE})",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_stoi",
+    "conceptId": "cpp_stoi",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stoi",
+      "message0": "%{BKY_CPP_STOI_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STOI_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::stoi(${VALUE})",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_stod",
+    "conceptId": "cpp_stod",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stod",
+      "message0": "%{BKY_CPP_STOD_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STOD_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::stod(${VALUE})",
+      "imports": ["string"],
+      "order": 20
+    }
   }
 ]

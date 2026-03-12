@@ -37,6 +37,9 @@
               "array_declare", "array_access",
               "cpp_string_declare",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
+              "cpp_string_length", "cpp_string_substr", "cpp_string_find",
+              "cpp_string_append", "cpp_string_c_str",
+              "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "comment", "doc_comment", "block_comment",
               "cpp_raw_code", "cpp_raw_expression"
             ],
