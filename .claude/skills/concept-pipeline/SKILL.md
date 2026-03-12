@@ -8,6 +8,8 @@ description: >
 user-invocable: true
 ---
 
+> **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
+
 # 概念管線 — 端到端
 
 ## 使用者輸入
@@ -52,7 +54,7 @@ $ARGUMENTS
 
 **調用**：`/concept.discover {lang} $ARGUMENTS`
 
-**關卡**：探索報告已產生（路徑由 `/concept.discover` 決定，通常在 `specs/` 目錄下）
+**關卡**：探索報告已產生（路徑在 `specs/concepts/` 目錄下）
 
 **決策點**：探索後，向使用者呈現概念目錄：
 
@@ -151,7 +153,7 @@ $ARGUMENTS
 ## 錯誤恢復
 
 管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
-- `/concept.generate specs/{lang}-{topic}.md`
+- `/concept.generate specs/concepts/{lang}-{topic}.md`
 - `/concept.roundtrip {lang} {concept_name}`
 - `/concept.integrate {lang} {concept_name}`
 

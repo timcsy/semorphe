@@ -7,6 +7,8 @@ description: >
 user-invocable: true
 ---
 
+> **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
+
 # 概念探索
 
 ## 使用者輸入
@@ -110,7 +112,7 @@ $ARGUMENTS
 
 ### 階段五：輸出
 
-產生結構化報告（檔案路徑由 skill 自行決定，建議放在 `specs/` 目錄下，如 `specs/{lang}-{topic}.md`）：
+產生結構化報告，放在 `specs/concepts/` 目錄下，如 `specs/concepts/{lang}-{topic}.md`：
 
 ```markdown
 # 概念探索：{Language} — {Topic}

@@ -25,7 +25,8 @@
           "logic", "logic_not", "negate",
           "cpp_char_literal", "cpp_increment", "cpp_increment_expr",
           "cpp_compound_assign", "cpp_compound_assign_expr",
-          "var_declare_expr", "array_assign"
+          "var_declare_expr", "array_assign",
+          "cpp:math_pow", "cpp:math_unary"
         ],
         "children": [
           {
@@ -81,7 +82,8 @@
               "cpp:vector_push_back", "cpp:vector_size",
               "cpp_map_declare", "cpp_set_declare",
               "cpp_stack_declare", "cpp_queue_declare",
-              "cpp_sort", "cpp:sort", "cpp:find"
+              "cpp_sort", "cpp:sort", "cpp:find",
+              "cpp:math_binary"
             ],
             "children": []
           }

@@ -7,6 +7,8 @@ description: >
 user-invocable: true
 ---
 
+> **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
+
 # 概念 Round-Trip 測試
 
 ## 使用者輸入
@@ -157,9 +159,16 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 
 對每個失敗，包含：原始程式碼、語義樹、產生的程式碼、diff、根本原因假設。
 
-### 步驟八：產生回歸測試（如果找到 bug）
+### 步驟八：產生永久測試（必要）
 
-對每個 ❌ 結果，在 `tests/integration/` 建立回歸測試（扁平結構，檔名加 `roundtrip-` 前綴）。
+**所有測試案例都必須留存為可重複執行的 Vitest 測試檔**，不可用完即丟。
+
+1. **PASS 的測試**：在 `tests/integration/` 建立測試檔（檔名 `roundtrip-{lang}-{concept}.test.ts`），包含所有 PASS 的測試程式作為 round-trip 回歸測試。每個測試驗證：lift → generate → 再 lift 的語義樹結構等價性。
+2. **失敗的測試（❌）**：同樣建立測試檔（檔名加 `roundtrip-` 前綴），但用 `it.skip` 或 `it.todo` 標記，附上失敗原因註解，待修復後啟用。
+3. **Runner 腳本不可作為驗證手段**：`/tmp/` 下的臨時 runner 僅用於探索性執行。最終驗證結果必須轉化為 Vitest 測試案例，確保 CI 可重複捕捉回歸。
+4. 如果目標概念已有測試檔（如 `tests/integration/cmath-roundtrip.test.ts`），將新案例**追加**到既有檔案中，避免重複建檔。
+
+執行 `npm test` 確認新測試通過。
 
 ## 快速模式
 

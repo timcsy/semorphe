@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "conceptId": "cpp:math_pow",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "base": "expression",
+      "exponent": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp:math_unary",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["func"],
+    "children": {
+      "value": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp:math_binary",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["func"],
+    "children": {
+      "arg1": "expression",
+      "arg2": "expression"
+    },
+    "role": "expression"
+  }
+]

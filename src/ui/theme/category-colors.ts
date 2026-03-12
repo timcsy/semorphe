@@ -17,6 +17,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   cpp_strings: '#0FBD8C',
   cpp_containers: '#4C97FF',
   cpp_algorithms: '#4C97FF',
+  cpp_math: '#5C81A6',
   cpp_special: '#888888',
 }
 

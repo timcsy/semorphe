@@ -27,6 +27,7 @@
           "func_def", "func_call", "func_call_expr", "return",
           "logic", "logic_not", "negate",
           "cpp_sort", "cpp:sort", "cpp:find",
+          "cpp:math_pow", "cpp:math_unary",
           "cpp_increment", "cpp_increment_expr",
           "cpp_compound_assign", "cpp_compound_assign_expr",
           "var_declare_expr"
@@ -44,7 +45,8 @@
               "cpp_string_declare",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
               "cpp_method_call", "cpp_method_call_expr",
-              "cpp_template_function"
+              "cpp_template_function",
+              "cpp:math_binary"
             ],
             "children": []
           }

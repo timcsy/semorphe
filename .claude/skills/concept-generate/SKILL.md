@@ -7,6 +7,8 @@ description: >
 user-invocable: true
 ---
 
+> **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
+
 # 概念產生
 
 ## 使用者輸入
@@ -85,6 +87,7 @@ $ARGUMENTS
 - `type` 是**投影層**的積木類型名稱，前綴：`u_` 為通用積木，語言特定用語言縮寫（如 `c_` for C++、`py_` for Python、`j_` for Java）
 - `conceptId` 是**語義層**的概念識別碼，格式為 `snake_case`（通用）或 `{lang}:snake_case`（語言特定）
 - **注意兩者的區別**：`conceptId: "cpp:vector_push"` 對應 `type: "c_vector_push"`；`conceptId: "sort_range"` 對應 `type: "u_sort_range"`。conceptId 用於語義樹，type 用於 Blockly 積木
+- **i18n 必須使用 `%{BKY_...}` key**：`message0`、`tooltip`、以及 `field_dropdown` 的 options 顯示文字，一律使用 `%{BKY_KEY_NAME}` 格式引用，不可硬編碼任何語言的文字。同時在 `src/i18n/zh-TW/blocks.json` 和 `src/i18n/en/blocks.json` 中新增對應的翻譯條目。參考現有 STD 模組（如 vector、cstring）的 i18n 模式。
 - `message0` 在目標語系中應盡可能易讀
 - 最小化 args 數量 — 認知負載原則
 - 語句積木：設定 `previousStatement`/`nextStatement`

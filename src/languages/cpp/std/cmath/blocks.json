@@ -1,1 +1,142 @@
-[]
+[
+  {
+    "id": "c_math_pow",
+    "conceptId": "cpp:math_pow",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_math_pow",
+      "message0": "%{BKY_C_MATH_POW_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BASE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "EXPONENT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_C_MATH_POW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "pow(${BASE}, ${EXPONENT})",
+      "imports": ["cmath"],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        { "field": "function", "text": "pow" }
+      ],
+      "fieldMappings": [
+        { "semantic": "base", "ast": "arguments[0]", "extract": "lift" },
+        { "semantic": "exponent", "ast": "arguments[1]", "extract": "lift" }
+      ]
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "BASE": "base", "EXPONENT": "exponent" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_math_unary",
+    "conceptId": "cpp:math_unary",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_math_unary",
+      "message0": "%{BKY_C_MATH_UNARY_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "FUNC",
+          "options": [
+            ["%{BKY_C_MATH_UNARY_FUNC_ABS}", "abs"],
+            ["%{BKY_C_MATH_UNARY_FUNC_SQRT}", "sqrt"],
+            ["%{BKY_C_MATH_UNARY_FUNC_CEIL}", "ceil"],
+            ["%{BKY_C_MATH_UNARY_FUNC_FLOOR}", "floor"],
+            ["%{BKY_C_MATH_UNARY_FUNC_ROUND}", "round"],
+            ["%{BKY_C_MATH_UNARY_FUNC_SIN}", "sin"],
+            ["%{BKY_C_MATH_UNARY_FUNC_COS}", "cos"],
+            ["%{BKY_C_MATH_UNARY_FUNC_TAN}", "tan"],
+            ["%{BKY_C_MATH_UNARY_FUNC_ASIN}", "asin"],
+            ["%{BKY_C_MATH_UNARY_FUNC_ACOS}", "acos"],
+            ["%{BKY_C_MATH_UNARY_FUNC_ATAN}", "atan"],
+            ["%{BKY_C_MATH_UNARY_FUNC_EXP}", "exp"],
+            ["%{BKY_C_MATH_UNARY_FUNC_LOG}", "log"],
+            ["%{BKY_C_MATH_UNARY_FUNC_LOG2}", "log2"],
+            ["%{BKY_C_MATH_UNARY_FUNC_LOG10}", "log10"],
+            ["%{BKY_C_MATH_UNARY_FUNC_TRUNC}", "trunc"],
+            ["%{BKY_C_MATH_UNARY_FUNC_CBRT}", "cbrt"]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_C_MATH_UNARY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "FUNC": "func" },
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_math_binary",
+    "conceptId": "cpp:math_binary",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_math_binary",
+      "message0": "%{BKY_C_MATH_BINARY_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "FUNC",
+          "options": [
+            ["%{BKY_C_MATH_BINARY_FUNC_FMOD}", "fmod"],
+            ["%{BKY_C_MATH_BINARY_FUNC_HYPOT}", "hypot"],
+            ["%{BKY_C_MATH_BINARY_FUNC_ATAN2}", "atan2"],
+            ["%{BKY_C_MATH_BINARY_FUNC_FMIN}", "fmin"],
+            ["%{BKY_C_MATH_BINARY_FUNC_FMAX}", "fmax"]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "ARG1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG2",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_C_MATH_BINARY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "FUNC": "func" },
+      "inputs": { "ARG1": "arg1", "ARG2": "arg2" },
+      "statementInputs": {}
+    }
+  }
+]

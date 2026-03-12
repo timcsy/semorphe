@@ -1,12 +1,12 @@
-# Concept Refactor Audit Report (C++)
+# 概念重構審計報告（C++）
 
-Generated: 2026-03-11
+產生日期：2026-03-11
 
-## Concept Matrix
+## 概念矩陣
 
-### AST NodeTypes with Dual/Triple Registration
+### 具有雙重/三重註冊的 AST NodeType
 
-| AST NodeType | Hand-Written | JSON Pattern | BlockSpec astPattern | Status |
+| AST NodeType | Hand-Written | JSON Pattern | BlockSpec astPattern | 狀態 |
 |---|---|---|---|---|
 | `number_literal` | expressions.ts:12 | cpp_number_literal (simple) | - | SHADOW |
 | `identifier` | expressions.ts:17 | cpp_identifier (simple) + cpp_endl/cpp_eof/cpp_null_id (constrained, p5) | - | SHADOW |
@@ -26,26 +26,26 @@ Generated: 2026-03-11
 | `translation_unit` | statements.ts:5 | cpp_translation_unit (simple) | - | SHADOW |
 | `expression_statement` | declarations.ts:7 | cpp_expression_statement (unwrap, p1) | - | SHADOW |
 
-**Total dual registrations: 17** (14 SHADOW + 3 FALLBACK)
+**雙重註冊總數：17**（14 個 SHADOW + 3 個 FALLBACK）
 
-### Hand-Written Only (no JSON pattern)
+### 僅有 Hand-Written（無 JSON pattern）
 
-| AST NodeType | File | Concept(s) | Migration |
+| AST NodeType | 檔案 | 概念 | 遷移性 |
 |---|---|---|---|
-| `update_expression` | expressions.ts:109 | cpp_increment | L3-strategy (array element detection) |
+| `update_expression` | expressions.ts:109 | cpp_increment | L3-strategy（陣列元素偵測） |
 | `pointer_expression` | expressions.ts:142 | cpp_address_of, cpp_pointer_deref | L2-dispatch |
 | `comma_expression` | expressions.ts:160 | cpp_comma_expr | L2-chain |
 | `cast_expression` | expressions.ts:166 | cpp_cast | L1-ready |
 | `conditional_expression` | expressions.ts:177 | cpp_ternary | L1-ready |
 | `subscript_expression` | expressions.ts:191 | array_access | L1-ready |
 | `compound_statement` | statements.ts:10 | _compound | L1-ready |
-| `switch_statement` | statements.ts:98 | cpp_switch | unmovable (case collection) |
+| `switch_statement` | statements.ts:98 | cpp_switch | 不可遷移（case 收集邏輯） |
 | `do_statement` | statements.ts:116 | cpp_do_while | L1-ready |
-| `assignment_expression` | declarations.ts:20 | var_assign, cpp_compound_assign, array_assign, cpp_pointer_assign | unmovable (multi-type dispatch) |
+| `assignment_expression` | declarations.ts:20 | var_assign, cpp_compound_assign, array_assign, cpp_pointer_assign | 不可遷移（多型別分派） |
 
-### JSON Pattern Only (no hand-written)
+### 僅有 JSON Pattern（無 hand-written）
 
-| ID | AST NodeType | Concept | Pattern Type |
+| ID | AST NodeType | 概念 | Pattern 類型 |
 |---|---|---|---|
 | cpp_string_literal | string_literal | string_literal | simple |
 | cpp_char_literal | char_literal | string_literal | simple |
@@ -61,129 +61,129 @@ Generated: 2026-03-11
 
 ---
 
-## Dual Registration Details (needs cleanup)
+## 雙重註冊詳情（需清理）
 
-### SHADOW (hand-written never triggers, safe to remove)
+### SHADOW（hand-written 永遠不觸發，可安全移除）
 
-| NodeType | HW Location | JSON Pattern ID | Recommendation |
+| NodeType | HW 位置 | JSON Pattern ID | 建議 |
 |---|---|---|---|
-| `number_literal` | expressions.ts:12 | cpp_number_literal | Remove HW |
-| `identifier` | expressions.ts:17 | cpp_identifier + constrained variants | Remove HW |
-| `true` | expressions.ts:25 | cpp_true | Remove HW |
-| `false` | expressions.ts:26 | cpp_false | Remove HW |
-| `null` | expressions.ts:27 | cpp_null | Remove HW |
-| `nullptr` | expressions.ts:28 | cpp_nullptr | Remove HW |
-| `parenthesized_expression` | expressions.ts:133 | cpp_unwrap_parens | Remove HW |
-| `condition_clause` | statements.ts:130 | cpp_unwrap_condition_clause | Remove HW |
-| `break_statement` | statements.ts:94 | cpp_break | Remove HW |
-| `continue_statement` | statements.ts:95 | cpp_continue | Remove HW |
-| `if_statement` | statements.ts:18 | cpp_if_statement | Remove HW |
-| `while_statement` | statements.ts:39 | cpp_while_statement | Remove HW |
-| `translation_unit` | statements.ts:5 | cpp_translation_unit | Remove HW |
-| `expression_statement` | declarations.ts:7 | cpp_expression_statement | Remove HW |
+| `number_literal` | expressions.ts:12 | cpp_number_literal | 移除 HW |
+| `identifier` | expressions.ts:17 | cpp_identifier + constrained 變體 | 移除 HW |
+| `true` | expressions.ts:25 | cpp_true | 移除 HW |
+| `false` | expressions.ts:26 | cpp_false | 移除 HW |
+| `null` | expressions.ts:27 | cpp_null | 移除 HW |
+| `nullptr` | expressions.ts:28 | cpp_nullptr | 移除 HW |
+| `parenthesized_expression` | expressions.ts:133 | cpp_unwrap_parens | 移除 HW |
+| `condition_clause` | statements.ts:130 | cpp_unwrap_condition_clause | 移除 HW |
+| `break_statement` | statements.ts:94 | cpp_break | 移除 HW |
+| `continue_statement` | statements.ts:95 | cpp_continue | 移除 HW |
+| `if_statement` | statements.ts:18 | cpp_if_statement | 移除 HW |
+| `while_statement` | statements.ts:39 | cpp_while_statement | 移除 HW |
+| `translation_unit` | statements.ts:5 | cpp_translation_unit | 移除 HW |
+| `expression_statement` | declarations.ts:7 | cpp_expression_statement | 移除 HW |
 
-### FALLBACK (hand-written serves as safety net)
+### FALLBACK（hand-written 作為安全網）
 
-| NodeType | HW Handles | JSON Handles | Recommendation |
+| NodeType | HW 處理 | JSON 處理 | 建議 |
 |---|---|---|---|
-| `binary_expression` | All operators + cout/cin chains | dispatch(+,-,*,/,%,&&,\|\|,==,!=,<,>,<=,>=) + chains(<<,>>) | Keep HW as fallback for edge cases |
-| `unary_expression` | !, -, ~, &, * | !, - only | Expand JSON dispatch OR keep HW |
-| `for_statement` | count_loop detection + general for_loop | count_loop only (composite) | Keep HW for general for_loop fallback |
+| `binary_expression` | 所有運算子 + cout/cin 鏈 | dispatch(+,-,*,/,%,&&,\|\|,==,!=,<,>,<=,>=) + chains(<<,>>) | 保留 HW 作為邊界案例的 fallback |
+| `unary_expression` | !, -, ~, &, * | 僅 !, - | 擴展 JSON dispatch 或保留 HW |
+| `for_statement` | count_loop 偵測 + 通用 for_loop | 僅 count_loop（composite） | 保留 HW 作為通用 for_loop 的 fallback |
 
 ---
 
-## Migratable Concepts
+## 可遷移概念
 
-| Concept | Current Location | Migration Target | Difficulty |
+| 概念 | 目前位置 | 遷移目標 | 難度 |
 |---|---|---|---|
-| `cast_expression` → cpp_cast | expressions.ts:166 | JSON simple (2 field mappings) | L1-ready |
-| `conditional_expression` → cpp_ternary | expressions.ts:177 | JSON simple (3 field mappings) | L1-ready |
-| `subscript_expression` → array_access | expressions.ts:191 | JSON simple (2 field mappings) | L1-ready |
-| `compound_statement` → _compound | statements.ts:10 | JSON simple (liftBody) | L1-ready |
-| `do_statement` → cpp_do_while | statements.ts:116 | JSON simple (2 field mappings) | L1-ready |
+| `cast_expression` → cpp_cast | expressions.ts:166 | JSON simple（2 個欄位映射） | L1-ready |
+| `conditional_expression` → cpp_ternary | expressions.ts:177 | JSON simple（3 個欄位映射） | L1-ready |
+| `subscript_expression` → array_access | expressions.ts:191 | JSON simple（2 個欄位映射） | L1-ready |
+| `compound_statement` → _compound | statements.ts:10 | JSON simple（liftBody） | L1-ready |
+| `do_statement` → cpp_do_while | statements.ts:116 | JSON simple（2 個欄位映射） | L1-ready |
 | `comma_expression` → cpp_comma_expr | expressions.ts:160 | JSON chain pattern | L2-chain |
 | `pointer_expression` → address_of/deref | expressions.ts:142 | JSON operatorDispatch | L2-dispatch |
 | `update_expression` → cpp_increment | expressions.ts:109 | JSON composite + liftStrategy | L3-strategy |
-| `switch_statement` → cpp_switch | statements.ts:98 | Keep hand-written (case collection) | unmovable |
-| `assignment_expression` → var_assign etc | declarations.ts:20 | Keep hand-written (multi-type dispatch) | unmovable |
+| `switch_statement` → cpp_switch | statements.ts:98 | 保留 hand-written（case 收集邏輯） | 不可遷移 |
+| `assignment_expression` → var_assign 等 | declarations.ts:20 | 保留 hand-written（多型別分派） | 不可遷移 |
 
 ---
 
-## Render Strategy Audit
+## Render Strategy 審計
 
-### Strategies in Use (10 registered)
+### 使用中的 Strategy（10 個已註冊）
 
-| Strategy | Used By | Dynamic State | Can Auto-Derive? |
+| Strategy | 使用者 | 動態狀態 | 可 Auto-Derive？ |
 |---|---|---|---|
-| cpp:renderPrint | u_print | itemCount (extraState) | No (dynamic inputs) |
-| cpp:renderInput | u_input | args[] with mode (extraState) | No (dynamic three-mode args) |
-| cpp:renderVarDeclare | u_var_declare | items[] (extraState) | No (multi-declarator) |
-| cpp:renderFuncDef | u_func_def | paramCount (extraState) | No (dynamic params) |
-| cpp:renderFuncCall | u_func_call, u_func_call_expr | argCount (extraState) | No (dynamic args) |
-| cpp:renderIf | u_if | elseifCount, hasElse (extraState) | No (dynamic else-if chains) |
-| cpp:renderPrintf | (style variant) | args[] with mode (extraState) | No (dynamic three-mode args) |
-| cpp:renderScanf | (style variant) | args[] with mode (extraState) | No (dynamic three-mode args) |
-| cpp:renderForwardDecl | c_forward_decl | paramCount (extraState) | No (dynamic params) |
-| cpp:renderDocComment | c_comment_doc | paramCount, hasReturn (extraState) | No (dynamic params) |
+| cpp:renderPrint | u_print | itemCount（extraState） | 否（動態 input） |
+| cpp:renderInput | u_input | args[]（含 mode，extraState） | 否（動態三模式 args） |
+| cpp:renderVarDeclare | u_var_declare | items[]（extraState） | 否（多宣告子） |
+| cpp:renderFuncDef | u_func_def | paramCount（extraState） | 否（動態參數） |
+| cpp:renderFuncCall | u_func_call, u_func_call_expr | argCount（extraState） | 否（動態引數） |
+| cpp:renderIf | u_if | elseifCount, hasElse（extraState） | 否（動態 else-if 鏈） |
+| cpp:renderPrintf | （風格變體） | args[]（含 mode，extraState） | 否（動態三模式 args） |
+| cpp:renderScanf | （風格變體） | args[]（含 mode，extraState） | 否（動態三模式 args） |
+| cpp:renderForwardDecl | c_forward_decl | paramCount（extraState） | 否（動態參數） |
+| cpp:renderDocComment | c_comment_doc | paramCount, hasReturn（extraState） | 否（動態參數） |
 
-### Missing Strategies (potential issues)
+### 缺失 Strategy（潛在問題）
 
-| Block Type | Concept | Issue |
+| 積木類型 | 概念 | 問題 |
 |---|---|---|
-| c_switch | cpp_switch | Has dynamic cases — may need strategy for proper rendering |
-| c_increment | cpp_increment | Array element variant — BlockSpec may not capture all variants |
+| c_switch | cpp_switch | 有動態 case — 可能需要 strategy 來正確渲染 |
+| c_increment | cpp_increment | 陣列元素變體 — BlockSpec 可能無法涵蓋所有變體 |
 
-### Sc4 Consistency
+### Sc4 一致性
 
-All 10 strategies appear consistent with their generators. Each strategy's extraState fields match the dynamic input patterns expected by the corresponding generator output.
+全部 10 個 render strategy 與其對應的 generator 一致。每個 strategy 的 extraState 欄位皆與對應 generator 輸出預期的動態 input 模式吻合。
 
 ---
 
-## Statistics
+## 統計
 
-| Metric | Before | After |
+| 指標 | 之前 | 之後 |
 |---|---|---|
-| Hand-written lifter registrations | 27 | 8 |
-| liftStrategy registrations | 5 | 5 |
-| JSON pattern entries | 34 | 42 (+8) |
-| BlockSpec astPattern entries | 44 | 44 |
-| SHADOW (HW shadowed by JSON) | 14 | **0 (all removed)** |
-| FALLBACK (HW as safety net) | 3 | 3 (kept) |
-| HW-only (no JSON equivalent) | 10 | 5 |
-| Render strategies | 10 | 10 (all justified) |
-| **Declarative ratio** | **77%** | **89%** |
+| Hand-written lifter 註冊數 | 27 | 8 |
+| liftStrategy 註冊數 | 5 | 5 |
+| JSON pattern 條目 | 34 | 42（+8） |
+| BlockSpec astPattern 條目 | 44 | 44 |
+| SHADOW（HW 被 JSON 遮蔽） | 14 | **0（全部移除）** |
+| FALLBACK（HW 作為安全網） | 3 | 3（保留） |
+| 僅 HW（無 JSON 等價） | 10 | 5 |
+| Render strategy | 10 | 10（全部合理） |
+| **宣告式比例** | **77%** | **89%** |
 
-### Dedup Results (Phase 2)
+### 去重結果（階段二）
 
-Removed 14 SHADOW hand-written lifters (dead code, never triggered):
-- expressions.ts: number_literal, identifier, true, false, null, nullptr, parenthesized_expression
-- statements.ts: translation_unit, if_statement, while_statement, break_statement, continue_statement, condition_clause
-- declarations.ts: expression_statement
+移除 14 個 SHADOW hand-written lifter（死碼，永遠不觸發）：
+- expressions.ts：number_literal, identifier, true, false, null, nullptr, parenthesized_expression
+- statements.ts：translation_unit, if_statement, while_statement, break_statement, continue_statement, condition_clause
+- declarations.ts：expression_statement
 
-### Migration Results (Phase 3)
+### 遷移結果（階段三）
 
-Migrated 5 HW-only concepts to JSON patterns:
-- `do_statement` → cpp_do_while (L1 simple, 2 field mappings)
-- `cast_expression` → cpp_cast_expr (L1 simple, 2 field mappings)
-- `conditional_expression` → cpp_ternary_expr (L1 simple, 3 field mappings)
-- `compound_statement` → cpp_compound_stmt (L1 simple, liftChildren)
-- `pointer_expression` → cpp_address_of_ptr + cpp_pointer_deref_ptr (L1 constrained, 2 patterns)
+將 5 個僅有 HW 的概念遷移至 JSON pattern：
+- `do_statement` → cpp_do_while（L1 simple，2 個欄位映射）
+- `cast_expression` → cpp_cast_expr（L1 simple，2 個欄位映射）
+- `conditional_expression` → cpp_ternary_expr（L1 simple，3 個欄位映射）
+- `compound_statement` → cpp_compound_stmt（L1 simple，liftChildren）
+- `pointer_expression` → cpp_address_of_ptr + cpp_pointer_deref_ptr（L1 constrained，2 個 pattern）
 
-Kept as HW (justified):
-- `subscript_expression` — tree-sitter wraps index in subscript_argument_list
-- `comma_expression` — no root match, doesn't fit chain pattern
-- `update_expression` — array element detection logic (L3-strategy candidate)
-- `switch_statement` — complex case collection (unmovable)
-- `assignment_expression` — multi-type dispatch with array/pointer/compound variants (unmovable)
-- `binary_expression` — FALLBACK for edge cases not covered by JSON dispatch/chains
-- `unary_expression` — FALLBACK; JSON only handles !, - (not ~, &, *)
-- `for_statement` — FALLBACK for general for-loops (JSON only handles count_for)
+保留為 HW（有正當理由）：
+- `subscript_expression` — tree-sitter 將 index 包在 subscript_argument_list 中
+- `comma_expression` — 無根節點匹配，不適合 chain pattern
+- `update_expression` — 陣列元素偵測邏輯（L3-strategy 候選）
+- `switch_statement` — 複雜 case 收集邏輯（不可遷移）
+- `assignment_expression` — 多型別分派，含陣列/指標/複合賦值變體（不可遷移）
+- `binary_expression` — JSON dispatch/chain 未涵蓋的邊界案例的 FALLBACK
+- `unary_expression` — FALLBACK；JSON 僅處理 !, -（未處理 ~, &, *）
+- `for_statement` — 通用 for 迴圈的 FALLBACK（JSON 僅處理 count_for）
 
-### Render Audit Results (Phase 4)
+### Render 審計結果（階段四）
 
-All 10 render strategies are justified — each uses dynamic extraState that cannot be auto-derived.
+全部 10 個 render strategy 皆有正當理由 — 每個都使用無法 auto-derive 的動態 extraState。
 
-### Verification
+### 驗證
 
-- TypeScript compilation: PASS
-- Test suite: 98 files, 1695 tests — ALL PASSED (same as baseline)
+- TypeScript 編譯：通過
+- 測試套件：98 個檔案，1695 個測試 — 全部通過（與 baseline 相同）

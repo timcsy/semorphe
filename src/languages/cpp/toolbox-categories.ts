@@ -67,6 +67,10 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     registryCategories: ['algorithms'],
   },
   {
+    key: 'cpp_math', nameKey: 'CATEGORY_CPP_MATH', fallback: '數學函式', colorKey: 'cpp_math',
+    registryCategories: ['math'],
+  },
+  {
     key: 'cpp_special', nameKey: 'CATEGORY_CPP_SPECIAL', fallback: 'C++ 特殊', colorKey: 'cpp_special',
     registryCategories: ['special', 'preprocessor'],
   },

@@ -1,6 +1,7 @@
 import type { Lifter } from '../../../core/lift/lifter'
 import { createNode } from '../../../core/semantic-tree'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
+import { tryCmathLift } from '../std/cmath/lifters'
 
 export function registerIOLifters(lifter: Lifter): void {
   lifter.register('call_expression', (node, ctx) => {
@@ -17,6 +18,10 @@ export function registerIOLifters(lifter: Lifter): void {
     if (funcName === 'scanf') {
       return extractScanf(argsNode, ctx)
     }
+
+    // cmath functions (pow, sqrt, sin, cos, etc.)
+    const cmathResult = tryCmathLift(funcName, argsNode, ctx)
+    if (cmathResult) return cmathResult
 
     // General function call
     const args = argsNode
