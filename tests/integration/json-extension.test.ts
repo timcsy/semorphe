@@ -28,10 +28,14 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, containerBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    expect(all.length).toBe(3)
+    expect(all.length).toBe(7)
     expect(all.map(s => s.id)).toContain('cpp_vector_declare')
     expect(all.map(s => s.id)).toContain('cpp_vector_push_back')
     expect(all.map(s => s.id)).toContain('cpp_vector_size')
+    expect(all.map(s => s.id)).toContain('cpp_vector_pop_back')
+    expect(all.map(s => s.id)).toContain('cpp_vector_clear')
+    expect(all.map(s => s.id)).toContain('cpp_vector_empty')
+    expect(all.map(s => s.id)).toContain('cpp_vector_back')
   })
 
   it('should have valid blockDef with type field', () => {

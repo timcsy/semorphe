@@ -93,5 +93,195 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_map_access",
+    "conceptId": "cpp_map_access",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_access",
+      "message0": "%{BKY_CPP_MAP_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "mp"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}[${KEY}]",
+      "imports": [
+        "map"
+      ],
+      "order": 20
+    },
+    "astPattern": null
+  },
+  {
+    "id": "cpp_map_erase",
+    "conceptId": "cpp_map_erase",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_erase",
+      "message0": "%{BKY_CPP_MAP_ERASE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "mp"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_ERASE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.erase(${KEY});",
+      "imports": [
+        "map"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "key",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_map_count",
+    "conceptId": "cpp_map_count",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_count",
+      "message0": "%{BKY_CPP_MAP_COUNT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "mp"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_COUNT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.count(${KEY})",
+      "imports": [
+        "map"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "key",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_map_empty",
+    "conceptId": "cpp_map_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_empty",
+      "message0": "%{BKY_CPP_MAP_EMPTY_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "mp"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": [
+        "map"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    }
   }
 ]

@@ -10,5 +10,51 @@
     ],
     "children": {},
     "role": "statement"
+  },
+  {
+    "conceptId": "cpp_map_access",
+    "layer": "lang-library",
+    "abstractConcept": "map_access",
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_map_erase",
+    "layer": "lang-library",
+    "abstractConcept": "map_erase",
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_map_count",
+    "layer": "lang-library",
+    "abstractConcept": "map_count",
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_map_empty",
+    "layer": "lang-library",
+    "abstractConcept": "map_empty",
+    "properties": [
+      "obj"
+    ],
+    "children": {},
+    "role": "expression"
   }
 ]

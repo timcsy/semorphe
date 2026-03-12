@@ -70,5 +70,195 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_stack_push",
+    "conceptId": "cpp_stack_push",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_push",
+      "message0": "%{BKY_CPP_STACK_PUSH_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_PUSH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push(${VALUE});",
+      "imports": [
+        "stack"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "arguments",
+          "extract": "lift"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_stack_pop",
+    "conceptId": "cpp_stack_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_pop",
+      "message0": "%{BKY_CPP_STACK_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [
+        "stack"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_stack_top",
+    "conceptId": "cpp_stack_top",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_top",
+      "message0": "%{BKY_CPP_STACK_TOP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_TOP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.top()",
+      "imports": [
+        "stack"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_stack_empty",
+    "conceptId": "cpp_stack_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stack_empty",
+      "message0": "%{BKY_CPP_STACK_EMPTY_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": [
+        "stack"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    }
   }
 ]

@@ -33,6 +33,46 @@
     "role": "expression"
   },
   {
+    "conceptId": "cpp_vector_pop_back",
+    "layer": "lang-library",
+    "abstractConcept": "vector_pop_back",
+    "properties": [
+      "vector"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_vector_clear",
+    "layer": "lang-library",
+    "abstractConcept": "vector_clear",
+    "properties": [
+      "vector"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_vector_empty",
+    "layer": "lang-library",
+    "abstractConcept": "vector_empty",
+    "properties": [
+      "vector"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_vector_back",
+    "layer": "lang-library",
+    "abstractConcept": "vector_back",
+    "properties": [
+      "vector"
+    ],
+    "children": {},
+    "role": "expression"
+  },
+  {
     "conceptId": "cpp:vector_push_back",
     "layer": "lang-library",
     "abstractConcept": "container_add",
