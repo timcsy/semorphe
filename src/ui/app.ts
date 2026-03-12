@@ -550,7 +550,7 @@ export class App {
         this.currentTopic = topic
         this.enabledBranches = state.enabledBranches
           ? new Set(state.enabledBranches)
-          : new Set(flattenLevelTree(topic.levelTree).map(n => n.id))
+          : new Set([topic.levelTree.id])
       }
     }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
