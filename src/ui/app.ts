@@ -34,6 +34,7 @@ import { StorageService } from '../core/storage'
 import type { SavedState } from '../core/storage'
 import { LocaleLoader } from '../i18n/loader'
 import type { StyleSelector } from './toolbar/style-selector'
+import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
 import { buildToolbox } from './toolbox-builder'
@@ -83,6 +84,7 @@ export class App {
   private _restoringState = false
   private currentStylePreset: StylePreset = DEFAULT_STYLE
   private styleSelector: StyleSelector | null = null
+  private topicSelector: TopicSelector | null = null
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
   private cppParser: CppParser | null = null
@@ -294,6 +296,7 @@ export class App {
       },
     })
     this.styleSelector = selectors.styleSelector
+    this.topicSelector = selectors.topicSelector
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
@@ -552,6 +555,7 @@ export class App {
     }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.syncController?.setTopic(this.currentTopic, this.enabledBranches)
+    this.topicSelector?.setTopic(this.currentTopic, this.enabledBranches)
     this.updateToolbox()
     this._restoringState = false
 
