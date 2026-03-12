@@ -15,6 +15,7 @@ import { registerIoExecutors } from './executors/io'
 import { registerArrayExecutors } from './executors/arrays'
 import { registerPointerExecutors } from './executors/pointers'
 import { registerMutationExecutors } from './executors/mutations'
+import { registerCmathExecutors } from './executors/cmath'
 
 interface InterpreterOptions {
   maxSteps?: number
@@ -37,6 +38,7 @@ export class SemanticInterpreter implements ExecutionContext {
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((nodeId: string | null) => void) | null = null
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
+  private unknownConceptHandler: ((concept: string) => Promise<'skip' | 'abort'>) | null = null
   private currentNode: SemanticNode | null = null
   private executorRegistry: ConceptExecutorRegistry
 
@@ -54,6 +56,16 @@ export class SemanticInterpreter implements ExecutionContext {
     registerArrayExecutors(reg)
     registerPointerExecutors(reg)
     registerMutationExecutors(reg)
+    registerCmathExecutors(reg)
+
+    // 編譯時/宣告性概念：無執行行為
+    const noop: import('./executor-registry').ConceptExecutor = async () => {}
+    for (const c of [
+      'cpp_include', 'cpp_include_local', 'cpp_using_namespace', 'cpp_define',
+      'cpp:include', 'cpp:include_local', 'cpp:using_namespace', 'comment',
+    ]) {
+      reg(c, noop)
+    }
   }
 
   /** Abort execution from outside (e.g., Ctrl+C) */
@@ -89,6 +101,11 @@ export class SemanticInterpreter implements ExecutionContext {
   /** Register an async callback fired after each step is recorded (for real-time animation) */
   setStepRecordCallback(callback: ((step: StepInfo) => Promise<void>) | null): void {
     this.stepRecordCallback = callback
+  }
+
+  /** Register a handler for unknown concepts. Returns 'skip' to continue or 'abort' to stop. */
+  setUnknownConceptHandler(handler: ((concept: string) => Promise<'skip' | 'abort'>) | null): void {
+    this.unknownConceptHandler = handler
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
@@ -177,14 +194,22 @@ export class SemanticInterpreter implements ExecutionContext {
     this.currentNode = node
     const concept = node.concept
 
-    // 語言特有概念：靜默略過
-    if (concept.includes(':')) return
-
     const executor = this.executorRegistry.get(concept)
     if (executor) {
       return executor(node, this)
     }
-    // 未知概念靜默略過
+
+    // 未知概念：通知使用者決定跳過或停止
+    if (this.unknownConceptHandler) {
+      const action = await this.unknownConceptHandler(concept)
+      if (action === 'abort') {
+        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { concept })
+      }
+      // 'skip' — 繼續執行
+      return
+    }
+    // 無 handler 時預設報錯
+    throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { concept })
   }
 
   async countStep(): Promise<void> {

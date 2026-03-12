@@ -75,7 +75,7 @@ $ARGUMENTS
 **對每個概念**，按實作順序：
 
 1. **調用**：`/concept.generate {lang} {concept_name}`
-2. **關卡**：5 個產出物都存在
+2. **關卡**：6 個產出物都存在（含 interpreter executor）
 3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
 
 如果 TypeScript 失敗，在處理下一個概念之前先修復錯誤。

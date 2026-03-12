@@ -536,6 +536,42 @@ export function registerCppExtractors(registry: BlockExtractorRegistry): void {
     return createNode('doc_comment', props)
   })
 
+  // cmath
+  registry.register('c_math_pow', (b, ctx) => {
+    const block = asBlock(b)
+    const baseBlock = block.getInputTargetBlock('BASE')
+    const expBlock = block.getInputTargetBlock('EXPONENT')
+    const baseNode = baseBlock ? ctx.extractBlock(baseBlock) : createNode('number_literal', { value: '0' })
+    const expNode = expBlock ? ctx.extractBlock(expBlock) : createNode('number_literal', { value: '0' })
+    return createNode('cpp:math_pow', {}, {
+      base: baseNode ? [baseNode] : [],
+      exponent: expNode ? [expNode] : [],
+    })
+  })
+
+  registry.register('c_math_unary', (b, ctx) => {
+    const block = asBlock(b)
+    const func = block.getFieldValue('FUNC') ?? 'abs'
+    const valueBlock = block.getInputTargetBlock('VALUE')
+    const valueNode = valueBlock ? ctx.extractBlock(valueBlock) : createNode('number_literal', { value: '0' })
+    return createNode('cpp:math_unary', { func }, {
+      value: valueNode ? [valueNode] : [],
+    })
+  })
+
+  registry.register('c_math_binary', (b, ctx) => {
+    const block = asBlock(b)
+    const func = block.getFieldValue('FUNC') ?? 'fmod'
+    const arg1Block = block.getInputTargetBlock('ARG1')
+    const arg2Block = block.getInputTargetBlock('ARG2')
+    const arg1Node = arg1Block ? ctx.extractBlock(arg1Block) : createNode('number_literal', { value: '0' })
+    const arg2Node = arg2Block ? ctx.extractBlock(arg2Block) : createNode('number_literal', { value: '0' })
+    return createNode('cpp:math_binary', { func }, {
+      arg1: arg1Node ? [arg1Node] : [],
+      arg2: arg2Node ? [arg2Node] : [],
+    })
+  })
+
   // Preprocessor
   registry.register('c_include', (b) => {
     const block = asBlock(b)

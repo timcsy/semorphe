@@ -773,6 +773,8 @@ ConceptRegistry 的彙整來源：
 
 **判定法**：靜態分析腳本收集所有概念 ID，對每個 ID 檢查四條路徑是否存在。
 
+**執行完備性（實作面補充）**：四路完備性保證概念在**編輯管線**中的 roundtrip 正確性。當系統提供語義直譯器（§4.1）時，每個可執行概念還需要 `⑤ ∃ execute path (concept → Behavior)`——即 interpreter executor 註冊。宣告性概念（如 `#include`、`using namespace`）需註冊 noop executor 以區分「已知不執行」與「未知概念」。未註冊 executor 的概念在執行時應通知使用者，而非靜默跳過。
+
 ### 概念映射與降級（Mapping & Degradation）
 
 每個具體概念**必須**聲明映射到哪個抽象概念：

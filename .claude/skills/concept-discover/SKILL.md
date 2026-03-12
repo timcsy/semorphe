@@ -63,7 +63,7 @@ $ARGUMENTS
 | **先備知識** | 學習者必須已經知道的概念 |
 | **錯誤模式** | 初學者常犯的錯誤 |
 
-**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。
+**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。當系統提供語義直譯器時，還需要第五層——**execute path**（concept → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `docs/technical-experiences.md` §20）。
 
 ### 階段三：Topic 層級樹分類
 

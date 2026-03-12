@@ -39,9 +39,13 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
         code += item.code + '\n'
       }
 
-      // Manual includes from body
+      // Manual includes from body (deduplicated)
+      const seenIncludes = new Set<string>()
       for (const n of body) {
         if (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') {
+          const key = `${n.concept}:${normalizeHeader(String(n.properties.header))}`
+          if (seenIncludes.has(key)) continue
+          seenIncludes.add(key)
           code += generateBody([n], ctx)
         }
       }

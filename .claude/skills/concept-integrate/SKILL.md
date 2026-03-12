@@ -27,7 +27,7 @@ $ARGUMENTS
 
 ## 背景
 
-這是新概念正式成為 Semorphe 一部分之前的**最終關卡**。它驗證所有產出物（BlockSpec、generator、lifter、渲染映射、測試）能正確協同運作，然後將一切接入系統。
+這是新概念正式成為 Semorphe 一部分之前的**最終關卡**。它驗證所有產出物（BlockSpec、generator、lifter、渲染映射、executor、測試）能正確協同運作，然後將一切接入系統。
 
 ## 前置檢查清單
 
@@ -37,7 +37,8 @@ $ARGUMENTS
 - [ ] 程式碼產生器在 `src/languages/{lang}/core/generators/*.ts`
 - [ ] 提升器在 `src/languages/{lang}/core/lifters/*.ts`
 - [ ] 渲染映射在 block spec JSON 中（或顯式 renderStrategy）
-- [ ] 單元測試在 `tests/`
+- [ ] Interpreter executor 在 `src/interpreter/executors/*.ts` 中註冊（可執行概念需實作邏輯，宣告性概念需 noop）
+- [ ] 單元測試在 `tests/`（含執行測試）
 - [ ] 概念在核心 `src/languages/{lang}/core/concepts.json` 或 STD `src/languages/{lang}/std/{module}/concepts.json` 中註冊
 
 如果是通用概念，額外檢查：
@@ -144,6 +145,7 @@ npm test
 - Block spec：核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json` — {block_type}
 - Generator：核心 `src/languages/{lang}/core/generators/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/generators.ts`
 - Lifter：核心 `src/languages/{lang}/core/lifters/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/lifters.ts`
+- Executor：`src/interpreter/executors/{file}.ts`（可執行概念需實作邏輯，宣告性概念需 noop）
 - Concept def：核心 `src/languages/{lang}/core/concepts.json` 或 STD `src/languages/{lang}/std/{module}/concepts.json`
 - 測試：`tests/unit/languages/{lang}/{concept}.test.ts`
 

@@ -21,13 +21,14 @@ $ARGUMENTS
 
 ## 背景
 
-你正在為新的 Semorphe 概念產生完整的實作產出物。每個概念需要 5 個產出物才能端到端運作：
+你正在為新的 Semorphe 概念產生完整的實作產出物。每個概念需要 6 個產出物才能端到端運作：
 
 1. **BlockSpec JSON** — 定義概念如何渲染為 Blockly 積木
 2. **程式碼產生器** — 將 SemanticNode → 目標語言原始碼
 3. **提升器（Lifter）** — 將語言 AST → SemanticNode（透過 tree-sitter）
 4. **渲染映射** — 將 SemanticNode 屬性 → 積木欄位/輸入
-5. **測試** — 基本的 round-trip 測試
+5. **Interpreter Executor** — 將 SemanticNode → 執行行為（在 `src/interpreter/executors/` 中註冊）。可執行概念需實作計算邏輯，宣告性概念（如 `#include`）需註冊 noop executor。見 `docs/technical-experiences.md` §20
+6. **測試** — 基本的 round-trip 測試（含執行測試）
 
 ## 前置作業
 
@@ -145,7 +146,36 @@ lifter.register('{tree_sitter_node_type}', (node, context) => {
 - 多個 tree-sitter 類型可映射到同一個概念
 - 通用概念在不同語言中會有不同的 tree-sitter 映射
 
-### 步驟五：產生測試
+### 步驟五：產生 Interpreter Executor
+
+在 `src/interpreter/executors/` 的適當檔案中加入 executor 註冊。
+
+**可執行概念**（如數學運算、I/O、控制流程）：
+```typescript
+register('{concept_name}', async (node, ctx) => {
+  // 評估子節點
+  const arg = await ctx.evaluate((node.children.arg ?? [])[0])
+  // 執行計算
+  const result = someComputation(ctx.toNumber(arg))
+  // 回傳結果
+  return { type: 'double', value: result }
+})
+```
+
+**宣告性概念**（如 `#include`、`using namespace`、註解）：
+```typescript
+register('{concept_name}', async () => {})  // noop
+```
+
+規則：
+- 參考 `src/interpreter/executors/` 中的現有 executor 模式
+- 子節點評估使用 `ctx.evaluate()`，值轉換使用 `ctx.toNumber()`/`ctx.toBool()`
+- 執行結果回傳 `RuntimeValue`（`{ type, value }`）
+- 語句型概念不需回傳值（`return` 或 `void`）
+- 在 `src/interpreter/interpreter.ts` 的建構函式中 import 並呼叫 `registerXxxExecutors(reg)`
+- **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`（見 `docs/technical-experiences.md` §20）
+
+### 步驟六：產生測試
 
 依照 `tests/` 中的模式建立測試檔案：
 
@@ -169,7 +199,7 @@ describe('{concept_name}', () => {
 })
 ```
 
-### 步驟六：通用概念跨語言產生
+### 步驟七：通用概念跨語言產生
 
 **僅適用於通用概念**（conceptId 為 `snake_case`，無語言前綴）：
 
@@ -182,7 +212,7 @@ describe('{concept_name}', () => {
 
 例如，新增通用概念 `sort_range` 時，若已有 `cpp` 和 `python` 模組，則需同時在兩個語言中產生 generator/lifter/block/test。
 
-### 步驟七：更新註冊
+### 步驟八：更新註冊
 
 確認新概念需要在哪些地方註冊：
 - `src/languages/{lang}/toolbox-categories.ts` 中的工具箱分類
@@ -193,7 +223,7 @@ describe('{concept_name}', () => {
 
 **STD 模組結構**：STD 模組使用扁平結構——每個模組目錄下直接放 `generators.ts`、`lifters.ts`、`blocks.json`、`concepts.json`，不再有子目錄。
 
-### 步驟八：輸出摘要
+### 步驟九：輸出摘要
 
 報告產生了什麼：
 
@@ -204,7 +234,8 @@ describe('{concept_name}', () => {
 - [ ] Generator：核心 `src/languages/{lang}/core/generators/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/generators.ts`
 - [ ] Lifter：核心 `src/languages/{lang}/core/lifters/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/lifters.ts`
 - [ ] 渲染映射：嵌入在 BlockSpec 中
-- [ ] 測試：`tests/unit/languages/{lang}/{concept_name}.test.ts`
+- [ ] Executor：`src/interpreter/executors/{file}.ts`（可執行概念需實作邏輯，宣告性概念需 noop）
+- [ ] 測試：`tests/unit/languages/{lang}/{concept_name}.test.ts`（含執行測試）
 - [ ] 註冊：{加在哪裡}
 
 ### 驗證

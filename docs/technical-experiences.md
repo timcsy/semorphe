@@ -30,6 +30,7 @@
 17. [動態積木常用模式](#17-動態積木常用模式)
 18. [加入新語言的完整清單](#18-加入新語言的完整清單)
 19. [常見陷阱與解法](#19-常見陷阱與解法)
+20. [概念五層完備性：cmath 執行層遺漏的教訓](#20-概念五層完備性cmath-執行層遺漏的教訓)
 
 ---
 
@@ -858,6 +859,76 @@ src/languages/python/
 | liftStrategy 在 constraint 之前執行 | 錯誤的 AST 節點進入 strategy 函式 | pattern-lifter 先跑 strategy 再檢查 constraint | constraint-before-strategy：先驗證再執行 |
 | FieldMultilineInput 不存在 | `Blockly.FieldMultilineInput is not a constructor` | Blockly 12.x 移除了內建版本 | 安裝 `@blockly/field-multilineinput` 外掛 |
 | Mutator label 暴露原始語法 | 使用者在齒輪彈窗看到 `@param`、`*/` | 只改了主積木文字，忘了 mutator 內的 label | mutator container/item label 同樣遵守第一性原理 |
+
+---
+
+## 20. 概念五層完備性：cmath 執行層遺漏的教訓
+
+### 背景
+
+在為 C++ `<cmath>` 標準庫新增概念支援時，完成了 lift、render、extract、generate 四路後，round-trip 測試全數通過。但使用者按下「執行」按鈕時，`pow()` 計算結果為 0，導致二次方程式解出錯誤答案。
+
+### 根本原因
+
+Semorphe 的「執行」按鈕不是呼叫 C++ 編譯器——它使用 `SemanticInterpreter` 直接走訪語義樹執行。每個概念需要在 `src/interpreter/executors/` 中有對應的 executor 才能正確執行。
+
+`cpp:math_pow`、`cpp:math_unary`、`cpp:math_binary` 三個概念完成了四路實作，但沒有註冊 interpreter executor。執行時，interpreter 的 `executeNode()` 找不到 executor，原本的邏輯是 `if (concept.includes(':')) return`——**靜默跳過所有語言特定概念**。
+
+這導致 `pow(discriminant, 0.5)` 在語義樹中被正確提升為 `cpp:math_pow` 節點，但執行時返回 `undefined`，經過 `evaluate()` → `defaultValue('void')` → `toNumber()` 轉換為 `0`。
+
+### 靜默失敗反模式
+
+`if (concept.includes(':')) return` 是一個危險的靜默失敗模式：
+
+```
+語義樹正確 → round-trip 測試全過 → 使用者執行 → 結果錯誤
+                                                    ↑ 沒有任何錯誤訊息
+```
+
+修復方式：
+1. 移除靜默跳過，改為查詢 executor registry
+2. 對編譯期/宣告性概念（`cpp_include`、`cpp_using_namespace` 等）註冊 noop executor
+3. 對未知概念，透過 `unknownConceptHandler` 回呼通知使用者，讓使用者選擇「跳過」或「中止執行」
+
+### 五層完備性
+
+第一性原理 §2.2 定義的四路完備性（lift → render → extract → generate）是**編輯管線**的完備性。但在實作中，概念還需要第五層——**執行層**：
+
+```
+四路完備性（§2.2 編輯管線）：
+  ① lift     (AST → concept)
+  ② render   (concept → Block)
+  ③ extract  (Block → concept)
+  ④ generate (concept → Code)
+
+第五層（§4.1 執行投影）：
+  ⑤ execute  (concept → Behavior)    — 可執行
+```
+
+**分類**：
+- **可執行概念**（如 `arithmetic`、`if`、`while_loop`、`cpp:math_pow`）→ 需要 executor
+- **宣告性概念**（如 `cpp_include`、`cpp_using_namespace`、`comment`）→ 需要 noop executor
+- **未知概念** → 通知使用者決定跳過或中止
+
+### 教訓
+
+| 教訓 | 說明 |
+|------|------|
+| 四路完備性不等於可執行 | 概念可能 round-trip 測試全過，但執行時靜默失敗 |
+| 不可靜默跳過概念 | `if (concept.includes(':')) return` 隱藏了真正的問題 |
+| 新概念需檢查 executor | 新增概念時的 checklist 應包含 interpreter executor |
+| 宣告性概念也需註冊 | 即使不做事，也需要 noop executor 以區分「已知不執行」和「未知」 |
+| 使用者應有選擇權 | 遇到未知概念時，讓使用者決定是否繼續，而非系統自行決定 |
+
+### 相關檔案
+
+| 用途 | 檔案路徑 |
+|------|---------|
+| Interpreter 主體 | `src/interpreter/interpreter.ts` |
+| Executor Registry | `src/interpreter/executor-registry.ts` |
+| cmath Executors | `src/interpreter/executors/cmath.ts` |
+| 執行控制器（UI） | `src/ui/execution-controller.ts` |
+| 錯誤定義 | `src/interpreter/errors.ts` |
 
 ---
 

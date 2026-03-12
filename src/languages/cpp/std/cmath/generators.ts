@@ -3,7 +3,11 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  // cpp:math_pow uses codeTemplate-based generation (defined in blocks.json)
+  g.set('cpp:math_pow', (node, ctx) => {
+    const base = generateExpression((node.children.base ?? [])[0], ctx)
+    const exponent = generateExpression((node.children.exponent ?? [])[0], ctx)
+    return `pow(${base}, ${exponent})`
+  })
 
   g.set('cpp:math_unary', (node, ctx) => {
     const func = (node.properties.func as string) ?? 'abs'
