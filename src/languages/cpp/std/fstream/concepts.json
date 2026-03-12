@@ -1,0 +1,18 @@
+[
+  {
+    "conceptId": "cpp_ifstream_declare",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["name", "file"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_ofstream_declare",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["name", "file"],
+    "children": {},
+    "role": "statement"
+  }
+]

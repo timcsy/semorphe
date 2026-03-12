@@ -72,6 +72,30 @@ import cmathBlocks from './cmath/blocks.json'
 import { registerGenerators as registerCmathGenerators } from './cmath/generators'
 import { registerLifters as registerCmathLifters } from './cmath/lifters'
 
+// numeric
+import numericConcepts from './numeric/concepts.json'
+import numericBlocks from './numeric/blocks.json'
+import { registerGenerators as registerNumericGenerators } from './numeric/generators'
+import { registerLifters as registerNumericLifters } from './numeric/lifters'
+
+// sstream
+import sstreamConcepts from './sstream/concepts.json'
+import sstreamBlocks from './sstream/blocks.json'
+import { registerGenerators as registerSstreamGenerators } from './sstream/generators'
+import { registerLifters as registerSstreamLifters } from './sstream/lifters'
+
+// fstream
+import fstreamConcepts from './fstream/concepts.json'
+import fstreamBlocks from './fstream/blocks.json'
+import { registerGenerators as registerFstreamGenerators } from './fstream/generators'
+import { registerLifters as registerFstreamLifters } from './fstream/lifters'
+
+// utility
+import utilityConcepts from './utility/concepts.json'
+import utilityBlocks from './utility/blocks.json'
+import { registerGenerators as registerUtilityGenerators } from './utility/generators'
+import { registerLifters as registerUtilityLifters } from './utility/lifters'
+
 function makeModule(
   header: string,
   concepts: unknown[],
@@ -100,6 +124,10 @@ export const allStdModules: StdModule[] = [
   makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters),
   makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters),
+  makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters),
+  makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters),
+  makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters),
+  makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters),
 ]
 
 /**

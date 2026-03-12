@@ -1,0 +1,92 @@
+[
+  {
+    "id": "cpp_pair_declare",
+    "conceptId": "cpp_pair_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pair_declare",
+      "message0": "%{BKY_CPP_PAIR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE1",
+          "options": [
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE1_INT}", "int"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE1_DOUBLE}", "double"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE1_STRING}", "string"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE1_CHAR}", "char"]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "TYPE2",
+          "options": [
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE2_INT}", "int"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE2_DOUBLE}", "double"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE2_STRING}", "string"],
+            ["%{BKY_CPP_PAIR_DECLARE_TYPE2_CHAR}", "char"]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "p"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_PAIR_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::pair<${TYPE1}, ${TYPE2}> ${NAME};",
+      "imports": ["utility"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": { "TYPE1": "type1", "TYPE2": "type2", "NAME": "name" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_make_pair",
+    "conceptId": "cpp_make_pair",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_make_pair",
+      "message0": "%{BKY_CPP_MAKE_PAIR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "FIRST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SECOND",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_MAKE_PAIR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::make_pair(${FIRST}, ${SECOND})",
+      "imports": ["utility"],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "FIRST": "first", "SECOND": "second" },
+      "statementInputs": {}
+    }
+  }
+]

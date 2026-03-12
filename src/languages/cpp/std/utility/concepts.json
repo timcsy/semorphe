@@ -1,0 +1,21 @@
+[
+  {
+    "conceptId": "cpp_pair_declare",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["type1", "type2", "name"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_make_pair",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "first": "expression",
+      "second": "expression"
+    },
+    "role": "expression"
+  }
+]

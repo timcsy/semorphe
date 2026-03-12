@@ -83,7 +83,10 @@
               "cpp_map_declare", "cpp_set_declare",
               "cpp_stack_declare", "cpp_queue_declare",
               "cpp_sort", "cpp:sort", "cpp:find",
-              "cpp:math_binary"
+              "cpp:math_binary",
+              "cpp_accumulate", "cpp_stringstream_declare",
+              "cpp_ifstream_declare", "cpp_ofstream_declare",
+              "cpp_pair_declare", "cpp_make_pair"
             ],
             "children": []
           }

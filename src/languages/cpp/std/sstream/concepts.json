@@ -1,0 +1,10 @@
+[
+  {
+    "conceptId": "cpp_stringstream_declare",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["name"],
+    "children": {},
+    "role": "statement"
+  }
+]

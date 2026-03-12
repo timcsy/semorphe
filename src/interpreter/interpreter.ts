@@ -63,9 +63,20 @@ export class SemanticInterpreter implements ExecutionContext {
     for (const c of [
       'cpp_include', 'cpp_include_local', 'cpp_using_namespace', 'cpp_define',
       'cpp:include', 'cpp:include_local', 'cpp:using_namespace', 'comment',
+      'cpp_stringstream_declare', 'cpp_ifstream_declare', 'cpp_ofstream_declare', 'cpp_pair_declare',
     ]) {
       reg(c, noop)
     }
+
+    // stdlib advanced expressions
+    reg('cpp_accumulate', async () => ({ type: 'int' as const, value: 0 }))
+    reg('cpp_make_pair', async (node, ctx) => {
+      const f = node.children.first?.[0]
+      const s = node.children.second?.[0]
+      const fv = f ? await ctx.evaluate(f) : { type: 'int' as const, value: 0 }
+      const sv = s ? await ctx.evaluate(s) : { type: 'int' as const, value: 0 }
+      return { type: 'string' as const, value: `(${fv.value}, ${sv.value})` }
+    })
   }
 
   /** Abort execution from outside (e.g., Ctrl+C) */

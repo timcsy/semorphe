@@ -1,0 +1,78 @@
+[
+  {
+    "id": "cpp_ifstream_declare",
+    "conceptId": "cpp_ifstream_declare",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_ifstream_declare",
+      "message0": "%{BKY_CPP_IFSTREAM_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "fin"
+        },
+        {
+          "type": "field_input",
+          "name": "FILE",
+          "text": "input.txt"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_IFSTREAM_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::ifstream ${NAME}(\"${FILE}\");",
+      "imports": ["fstream"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": { "NAME": "name", "FILE": "file" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_ofstream_declare",
+    "conceptId": "cpp_ofstream_declare",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_ofstream_declare",
+      "message0": "%{BKY_CPP_OFSTREAM_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "fout"
+        },
+        {
+          "type": "field_input",
+          "name": "FILE",
+          "text": "output.txt"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_OFSTREAM_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::ofstream ${NAME}(\"${FILE}\");",
+      "imports": ["fstream"],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": { "NAME": "name", "FILE": "file" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

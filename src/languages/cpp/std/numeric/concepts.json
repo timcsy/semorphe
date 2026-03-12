@@ -1,0 +1,12 @@
+[
+  {
+    "conceptId": "cpp_accumulate",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["begin", "end"],
+    "children": {
+      "init": "expression"
+    },
+    "role": "expression"
+  }
+]
