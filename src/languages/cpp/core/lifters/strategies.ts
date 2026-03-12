@@ -314,6 +314,33 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('var_declare', { type }, { declarators: liftedNodes })
   })
 
+  // try_statement: try { } catch (type name) { }
+  registry.register('cpp:liftTryCatch', (node, ctx) => {
+    const tryBody = extractBody(node.childForFieldName('body') ?? null, ctx)
+    const catchClause = node.namedChildren.find(c => c.type === 'catch_clause') ?? null
+    let catchType = 'exception&'
+    let catchName = 'e'
+    let catchBody: SemanticNode[] = []
+    if (catchClause) {
+      const paramList = catchClause.childForFieldName('parameters')
+        ?? catchClause.namedChildren.find(c => c.type === 'parameter_list')
+      if (paramList) {
+        const param = paramList.namedChildren.find(c => c.type === 'parameter_declaration')
+        if (param) {
+          const { type, name } = parseParamDeclaration(param)
+          catchType = type
+          catchName = name
+        }
+      }
+      const catchBodyNode = catchClause.childForFieldName('body') ?? null
+      catchBody = extractBody(catchBodyNode, ctx)
+    }
+    return createNode('cpp_try_catch', { catch_type: catchType, catch_name: catchName }, {
+      try_body: tryBody,
+      catch_body: catchBody,
+    })
+  })
+
   // count_loop: add inclusive property based on operator (< vs <=)
   registry.register('cpp:liftCountFor', (node, ctx) => {
     const initNode = node.childForFieldName('initializer')

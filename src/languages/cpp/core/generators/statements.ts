@@ -310,6 +310,32 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     return code
   })
 
+  g.set('cpp_try_catch', (node, ctx) => {
+    const tryBody = node.children.try_body ?? []
+    const catchType = node.properties.catch_type ?? 'exception&'
+    const catchName = node.properties.catch_name ?? 'e'
+    const catchBody = node.children.catch_body ?? []
+    const header = `${indent(ctx)}try${openBrace(ctx)}\n`
+    trackOwnText(ctx, header)
+    let code = header
+    code += generateBody(tryBody, indented(ctx))
+    const catchHeader = `${indent(ctx)}}${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}catch (${catchType} ${catchName})${openBrace(ctx)}\n`
+    trackOwnText(ctx, catchHeader)
+    code += catchHeader
+    code += generateBody(catchBody, indented(ctx))
+    code += `${indent(ctx)}}\n`
+    return code
+  })
+
+  g.set('cpp_throw', (node, ctx) => {
+    const vals = node.children.value ?? []
+    if (vals.length > 0) {
+      const val = generateExpression(vals[0], ctx)
+      return `${indent(ctx)}throw ${val};\n`
+    }
+    return `${indent(ctx)}throw;\n`
+  })
+
   g.set('cpp_pointer_assign', (node, ctx) => {
     const ptrName = node.properties.ptr_name ?? 'ptr'
     const vals = node.children.value ?? []

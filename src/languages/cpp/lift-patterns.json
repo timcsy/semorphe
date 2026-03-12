@@ -422,5 +422,20 @@
       { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
     ],
     "priority": 5
+  },
+  {
+    "id": "cpp_try_statement",
+    "astNodeType": "try_statement",
+    "concept": { "conceptId": "cpp_try_catch" },
+    "liftStrategy": "cpp:liftTryCatch",
+    "fieldMappings": []
+  },
+  {
+    "id": "cpp_throw_statement",
+    "astNodeType": "throw_statement",
+    "concept": { "conceptId": "cpp_throw" },
+    "fieldMappings": [
+      { "semantic": "value", "ast": "$namedChildren[0]", "extract": "lift" }
+    ]
   }
 ]

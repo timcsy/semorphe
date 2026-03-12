@@ -647,5 +647,29 @@
       "value": "expression"
     },
     "role": "statement"
+  },
+  {
+    "conceptId": "cpp_try_catch",
+    "layer": "lang-core",
+    "abstractConcept": "try_catch",
+    "properties": [
+      "catch_type",
+      "catch_name"
+    ],
+    "children": {
+      "try_body": "statements",
+      "catch_body": "statements"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_throw",
+    "layer": "lang-core",
+    "abstractConcept": "throw",
+    "properties": [],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
   }
 ]

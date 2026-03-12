@@ -3,6 +3,11 @@ import type { ConceptExecutor } from '../executor-registry'
 /** Break/Continue signals (non-error, used for flow control) */
 export class BreakSignal { readonly _brand = 'break' }
 export class ContinueSignal { readonly _brand = 'continue' }
+export class ThrownSignal {
+  readonly _brand = 'thrown'
+  readonly value: unknown
+  constructor(value: unknown) { this.value = value }
+}
 
 export function registerControlFlowExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('if', async (node, ctx) => {
@@ -168,4 +173,30 @@ export function registerControlFlowExecutors(register: (concept: string, executo
 
   register('break', async () => { throw new BreakSignal() })
   register('continue', async () => { throw new ContinueSignal() })
+
+  register('cpp_try_catch', async (node, ctx) => {
+    const tryBody = node.children.try_body ?? []
+    const catchBody = node.children.catch_body ?? []
+    const catchName = String(node.properties.catch_name ?? 'e')
+    try {
+      await ctx.executeBody(tryBody)
+    } catch (signal) {
+      if (signal instanceof BreakSignal || signal instanceof ContinueSignal) throw signal
+      if (signal instanceof ThrownSignal) {
+        const parentScope = ctx.scope
+        ctx.scope = parentScope.createChild()
+        ctx.scope.declare(catchName, { type: 'string', value: String(signal.value) })
+        await ctx.executeBody(catchBody)
+        ctx.scope = parentScope
+      } else {
+        throw signal
+      }
+    }
+  })
+
+  register('cpp_throw', async (node, ctx) => {
+    const vals = node.children.value ?? []
+    const value = vals.length > 0 ? await ctx.evaluate(vals[0]) : 'exception'
+    throw new ThrownSignal(value)
+  })
 }

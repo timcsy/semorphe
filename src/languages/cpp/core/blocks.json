@@ -2671,5 +2671,74 @@
       "imports": [],
       "order": 0
     }
+  },
+  {
+    "id": "c_try_catch",
+    "conceptId": "cpp_try_catch",
+    "language": "cpp",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_try_catch",
+      "message0": "%{BKY_C_TRY_CATCH_MSG0}",
+      "args0": [
+        {
+          "type": "input_statement",
+          "name": "TRY_BODY",
+          "check": "Statement"
+        }
+      ],
+      "message1": "%{BKY_C_TRY_CATCH_MSG1}",
+      "args1": [
+        {
+          "type": "field_input",
+          "name": "CATCH_TYPE",
+          "text": "exception&"
+        },
+        {
+          "type": "field_input",
+          "name": "CATCH_NAME",
+          "text": "e"
+        },
+        {
+          "type": "input_statement",
+          "name": "CATCH_BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": false,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_C_TRY_CATCH_TOOLTIP}"
+    }
+  },
+  {
+    "id": "c_throw",
+    "conceptId": "cpp_throw",
+    "language": "cpp",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_throw",
+      "message0": "%{BKY_C_THROW_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_C_THROW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "throw ${VALUE};",
+      "imports": [],
+      "order": 0
+    }
   }
 ]
