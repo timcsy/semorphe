@@ -264,11 +264,10 @@
     "properties": [
       "t",
       "return_type",
-      "func_name",
-      "param_type",
-      "param_name"
+      "func_name"
     ],
     "children": {
+      "params": "expressions",
       "body": "statements"
     },
     "role": "statement"

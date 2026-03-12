@@ -588,6 +588,44 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     })
   })
 
+  // template_declaration: template <typename T> T func(T a) { ... }
+  registry.register('cpp:liftTemplateFunction', (node, ctx) => {
+    const templateParams = node.namedChildren.find(c => c.type === 'template_parameter_list')
+    const typeParam = templateParams?.namedChildren.find(c =>
+      c.type === 'type_parameter_declaration'
+    )
+    const t = typeParam?.namedChildren.find(c => c.type === 'type_identifier')?.text ?? 'T'
+
+    const funcDef = node.namedChildren.find(c => c.type === 'function_definition')
+    if (!funcDef) return null
+
+    const returnTypeNode = funcDef.childForFieldName('type')
+    const returnType = returnTypeNode?.text ?? 'T'
+
+    const declarator = funcDef.childForFieldName('declarator')
+    const funcName = declarator?.childForFieldName('declarator')?.text
+      ?? declarator?.namedChildren.find(c => c.type === 'identifier')?.text
+      ?? 'myFunc'
+
+    const paramList = declarator?.namedChildren.find(c => c.type === 'parameter_list')
+    const params: SemanticNode[] = []
+    if (paramList) {
+      for (const p of paramList.namedChildren) {
+        if (p.type === 'parameter_declaration') {
+          const { type, name } = parseParamDeclaration(p)
+          params.push(createNode('var_declare', { type, name }))
+        }
+      }
+    }
+
+    const bodyNode = funcDef.childForFieldName('body')
+    const body = extractBody(bodyNode ?? null, ctx)
+
+    return createNode('cpp_template_function', {
+      t, return_type: returnType, func_name: funcName,
+    }, { params, body })
+  })
+
   registry.register('cpp:liftNewExpression', (node) => {
     const typeNode = node.namedChildren.find(c =>
       c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier'

@@ -122,4 +122,25 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
   register('cpp_operator_overload', async () => {})
   register('cpp_method_call', async () => {})
   register('cpp_method_call_expr', async () => {})
+
+  // Advanced language features — noop in interpreter
+  register('cpp_lambda', async () => {})
+  register('cpp_namespace_def', async () => {})
+  register('cpp_template_function', async () => {})
+  register('cpp_static_cast', async (node, ctx) => {
+    const valNode = (node.children.value ?? [])[0]
+    return valNode ? await ctx.evaluate(valNode) : { type: 'int', value: 0 }
+  })
+  register('cpp_dynamic_cast', async (node, ctx) => {
+    const valNode = (node.children.value ?? [])[0]
+    return valNode ? await ctx.evaluate(valNode) : { type: 'int', value: 0 }
+  })
+  register('cpp_reinterpret_cast', async (node, ctx) => {
+    const valNode = (node.children.value ?? [])[0]
+    return valNode ? await ctx.evaluate(valNode) : { type: 'int', value: 0 }
+  })
+  register('cpp_const_cast', async (node, ctx) => {
+    const valNode = (node.children.value ?? [])[0]
+    return valNode ? await ctx.evaluate(valNode) : { type: 'int', value: 0 }
+  })
 }

@@ -124,6 +124,26 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${ind}for (${varType} ${varName} : ${container}) {\n${bodyCode}${ind}}\n`
   })
 
+  g.set('cpp_template_function', (node, ctx) => {
+    const t = node.properties.t ?? 'T'
+    const returnType = node.properties.return_type ?? 'T'
+    const funcName = node.properties.func_name ?? 'myFunc'
+    const paramChildren = node.children.params ?? []
+    const paramStr = paramChildren.map(p => {
+      const pt = String(p.properties.type ?? 'T')
+      const pn = String(p.properties.name ?? '')
+      if (pt.endsWith('[]')) {
+        const baseType = pt.slice(0, -2)
+        return pn ? `${baseType} ${pn}[]` : `${baseType}[]`
+      }
+      return pn ? `${pt} ${pn}` : pt
+    }).join(', ')
+    const bodyNodes = node.children.body ?? []
+    const bodyCode = generateBody(bodyNodes, indented(ctx))
+    const ind = indent(ctx)
+    return `${ind}template <typename ${t}>\n${ind}${returnType} ${funcName}(${paramStr}) {\n${bodyCode}${ind}}\n`
+  })
+
   g.set('cpp_array_2d_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'arr'

@@ -1797,7 +1797,7 @@
           "text": "T"
         }
       ],
-      "message1": "%1 %2 ( %3 %4 )",
+      "message1": "%1 %2 ( %3 )",
       "args1": [
         {
           "type": "field_input",
@@ -1811,13 +1811,8 @@
         },
         {
           "type": "field_input",
-          "name": "PARAM_TYPE",
-          "text": "T"
-        },
-        {
-          "type": "field_input",
-          "name": "PARAM_NAME",
-          "text": "a"
+          "name": "PARAMS",
+          "text": "T a, T b"
         }
       ],
       "message2": "%1",
@@ -1832,45 +1827,15 @@
       "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAM_TYPE} ${PARAM_NAME}) {\n${BODY}\n}",
+      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAMS}) {\n${BODY}\n}",
       "imports": [],
       "order": 0
     },
     "astPattern": {
       "nodeType": "template_declaration",
       "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "t",
-          "ast": "parameters",
-          "extract": "text"
-        },
-        {
-          "semantic": "return_type",
-          "ast": "declarator.type",
-          "extract": "text"
-        },
-        {
-          "semantic": "func_name",
-          "ast": "declarator.declarator",
-          "extract": "text"
-        },
-        {
-          "semantic": "param_type",
-          "ast": "declarator.parameters[0].type",
-          "extract": "text"
-        },
-        {
-          "semantic": "param_name",
-          "ast": "declarator.parameters[0].declarator",
-          "extract": "text"
-        },
-        {
-          "semantic": "body",
-          "ast": "declarator.body",
-          "extract": "liftBody"
-        }
-      ]
+      "liftStrategy": "cpp:liftTemplateFunction",
+      "fieldMappings": []
     }
   },
   {
