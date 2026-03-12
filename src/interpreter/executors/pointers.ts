@@ -27,6 +27,29 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'int', value: 0 }
   })
 
+  register('cpp_pointer_declare', async (node, ctx) => {
+    const name = String(node.properties.name ?? 'ptr')
+    const inits = node.children.initializer ?? []
+    if (inits.length > 0) {
+      const val = await ctx.evaluate(inits[0])
+      ctx.scope.declare(name, val)
+    } else {
+      ctx.scope.declare(name, { type: 'pointer' as any, value: null })
+    }
+  })
+
+  register('cpp_new', async (node) => {
+    return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
+  })
+
+  register('cpp_delete', async () => {})
+
+  register('cpp_malloc', async (node) => {
+    return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
+  })
+
+  register('cpp_free', async () => {})
+
   register('cpp_pointer_assign', async (node, ctx) => {
     const ptrName = String(node.properties.ptr_name)
     const valueNodes = node.children.value ?? []

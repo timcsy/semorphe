@@ -424,6 +424,21 @@
     "priority": 5
   },
   {
+    "id": "cpp_new_expression",
+    "astNodeType": "new_expression",
+    "concept": { "conceptId": "cpp_new" },
+    "liftStrategy": "cpp:liftNewExpression",
+    "fieldMappings": []
+  },
+  {
+    "id": "cpp_delete_expression",
+    "astNodeType": "delete_expression",
+    "concept": { "conceptId": "cpp_delete" },
+    "fieldMappings": [
+      { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
+    ]
+  },
+  {
     "id": "cpp_try_statement",
     "astNodeType": "try_statement",
     "concept": { "conceptId": "cpp_try_catch" },

@@ -358,6 +358,16 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     return `${indent(ctx)}*${ptrName} = 0;\n`
   })
 
+  g.set('cpp_delete', (node, ctx) => {
+    const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
+    return `${indent(ctx)}delete ${ptr};\n`
+  })
+
+  g.set('cpp_free', (node, ctx) => {
+    const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
+    return `${indent(ctx)}free(${ptr});\n`
+  })
+
   // OOP concepts
   g.set('cpp_class_def', (node, ctx) => {
     const name = node.properties.name ?? 'MyClass'

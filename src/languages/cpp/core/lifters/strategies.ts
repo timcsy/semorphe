@@ -509,6 +509,16 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     })
   })
 
+  registry.register('cpp:liftNewExpression', (node) => {
+    const typeNode = node.namedChildren.find(c =>
+      c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier'
+    )
+    const type = typeNode?.text ?? 'int'
+    const argList = node.namedChildren.find(c => c.type === 'argument_list')
+    const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
+    return createNode('cpp_new', { type, args })
+  })
+
   // count_loop: add inclusive property based on operator (< vs <=)
   registry.register('cpp:liftCountFor', (node, ctx) => {
     const initNode = node.childForFieldName('initializer')
