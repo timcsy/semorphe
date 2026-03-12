@@ -8,5 +8,81 @@
     ],
     "children": {},
     "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_length",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_string_substr",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "pos": { "allowed": ["expression"], "min": 1, "max": 1 },
+      "len": { "allowed": ["expression"], "min": 0, "max": 1 }
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_string_find",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "arg": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_string_append",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_c_str",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_getline",
+    "layer": "lang-library",
+    "properties": ["name"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_to_string",
+    "layer": "lang-library",
+    "properties": [],
+    "children": {
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_stoi",
+    "layer": "lang-library",
+    "properties": [],
+    "children": {
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_stod",
+    "layer": "lang-library",
+    "properties": [],
+    "children": {
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "expression"
   }
 ]
