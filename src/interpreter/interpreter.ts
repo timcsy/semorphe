@@ -116,6 +116,31 @@ export class SemanticInterpreter implements ExecutionContext {
       reg(c, noop)
     }
 
+    // algorithm concepts — noop for sort/reverse/fill (operate on containers, not interpreter values)
+    reg('cpp_sort', async () => {})
+    reg('cpp_reverse', async () => {})
+    reg('cpp_fill', async () => {})
+
+    // min/max — evaluate children and return the smaller/larger
+    reg('cpp_min', async (node, ctx) => {
+      const a = node.children.a?.[0]
+      const b = node.children.b?.[0]
+      const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
+      const vb = b ? await ctx.evaluate(b) : { type: 'int' as const, value: 0 }
+      const na = ctx.toNumber(va)
+      const nb = ctx.toNumber(vb)
+      return na <= nb ? va : vb
+    })
+    reg('cpp_max', async (node, ctx) => {
+      const a = node.children.a?.[0]
+      const b = node.children.b?.[0]
+      const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
+      const vb = b ? await ctx.evaluate(b) : { type: 'int' as const, value: 0 }
+      const na = ctx.toNumber(va)
+      const nb = ctx.toNumber(vb)
+      return na >= nb ? va : vb
+    })
+
     // stdlib advanced expressions
     reg('cpp_accumulate', async () => ({ type: 'int' as const, value: 0 }))
     reg('cpp_make_pair', async (node, ctx) => {

@@ -10,98 +10,146 @@
       "message0": "%{BKY_CPP_SORT_MSG0}",
       "args0": [
         {
-          "type": "input_value",
-          "name": "BEGIN",
-          "check": "Expression"
-        },
-        {
-          "type": "input_value",
-          "name": "END",
-          "check": "Expression"
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "v"
         }
       ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::sort(${BEGIN}, ${END});",
-      "imports": [
-        "algorithm"
-      ],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "sort"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "begin",
-          "ast": "arguments[0]",
-          "extract": "lift"
-        },
-        {
-          "semantic": "end",
-          "ast": "arguments[1]",
-          "extract": "lift"
-        }
-      ]
+    "renderMapping": {
+      "fields": { "CONTAINER": "begin" },
+      "inputs": {},
+      "statementInputs": {}
     }
   },
   {
-    "id": "cpp_find",
-    "conceptId": "cpp:find",
+    "id": "cpp_reverse",
+    "conceptId": "cpp_reverse",
     "language": "cpp",
-    "category": "stdlib",
+    "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_find",
-      "message0": "find %1 in %2 from %3 to %4",
+      "type": "cpp_reverse",
+      "message0": "%{BKY_CPP_REVERSE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "v"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_REVERSE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "CONTAINER": "begin" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_fill",
+    "conceptId": "cpp_fill",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_fill",
+      "message0": "%{BKY_CPP_FILL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "v"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_FILL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "CONTAINER": "begin" },
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_min",
+    "conceptId": "cpp_min",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_min",
+      "message0": "%{BKY_CPP_MIN_MSG0}",
       "args0": [
         {
           "type": "input_value",
-          "name": "VALUE"
-        },
-        {
-          "type": "field_input",
-          "name": "ARRAY",
-          "text": "arr"
+          "name": "A",
+          "check": "Expression"
         },
         {
           "type": "input_value",
-          "name": "FROM"
-        },
-        {
-          "type": "input_value",
-          "name": "TO"
+          "name": "B",
+          "check": "Expression"
         }
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#4C97AF",
-      "tooltip": "Find element in array"
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MIN_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "find(${ARRAY} + ${FROM}, ${ARRAY} + ${TO}, ${VALUE})",
-      "imports": [
-        "algorithm"
-      ],
-      "order": 20
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "A": "a", "B": "b" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_max",
+    "conceptId": "cpp_max",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_max",
+      "message0": "%{BKY_CPP_MAX_MSG0}",
+      "args0": [
         {
-          "field": "function",
-          "text": "find"
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
         }
-      ]
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAX_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "A": "a", "B": "b" },
+      "statementInputs": {}
     }
   },
   {
@@ -130,11 +178,6 @@
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_SWAP_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "std::swap(${A}, ${B});",
-      "imports": ["algorithm"],
-      "order": 0
     },
     "renderMapping": {
       "fields": { "A": "a", "B": "b" },

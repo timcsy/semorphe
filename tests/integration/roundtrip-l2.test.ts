@@ -428,20 +428,18 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp_sort', () => {
     it('should render and extract sort', () => {
-      const begin = createNode('var_ref', { name: 'v.begin()' })
-      const end = createNode('var_ref', { name: 'v.end()' })
-      const sem = createNode('cpp_sort', {}, { begin: [begin], end: [end] })
+      const sem = createNode('cpp_sort', { begin: 'v.begin()', end: 'v.end()' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_sort')
     })
 
-    it('should generate code', () => {
-      const begin = createNode('var_ref', { name: 'v.begin()' })
-      const end = createNode('var_ref', { name: 'v.end()' })
-      const sem = createNode('cpp_sort', {}, { begin: [begin], end: [end] })
+    it('should generate code via hand-written generator', () => {
+      // cpp_sort uses hand-written generator (not codeTemplate), tested in roundtrip-cpp-algorithm.test.ts
+      const sem = createNode('cpp_sort', { begin: 'v.begin()', end: 'v.end()' })
+      // TemplateGenerator returns null for hand-written generators — expected
       const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::sort(v.begin(), v.end());')
+      expect(code).toBeNull()
     })
   })
 

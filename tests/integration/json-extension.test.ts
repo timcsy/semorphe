@@ -19,9 +19,12 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    expect(all.length).toBe(3)
+    expect(all.length).toBe(6)
     expect(all.map(s => s.id)).toContain('cpp_sort')
-    expect(all.map(s => s.id)).toContain('cpp_find')
+    expect(all.map(s => s.id)).toContain('cpp_reverse')
+    expect(all.map(s => s.id)).toContain('cpp_fill')
+    expect(all.map(s => s.id)).toContain('cpp_min')
+    expect(all.map(s => s.id)).toContain('cpp_max')
     expect(all.map(s => s.id)).toContain('cpp_swap')
   })
 
@@ -52,12 +55,14 @@ describe('JSON-only extension (US6)', () => {
     }
   })
 
-  it('should have codeTemplate with pattern', () => {
+  it('should have valid block definitions', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     for (const spec of registry.getAll()) {
-      expect(spec.codeTemplate.pattern).toBeTruthy()
-      expect(spec.codeTemplate.imports).toBeDefined()
+      // Algorithm blocks use hand-written generators, so codeTemplate may be empty
+      // Just verify blockDef is valid
+      expect(spec.blockDef).toBeTruthy()
+      expect((spec.blockDef as Record<string, unknown>).type).toBeTruthy()
     }
   })
 

@@ -266,6 +266,45 @@ export function registerIOLifters(lifter: Lifter): void {
       return createNode('cpp_swap', { a, b })
     }
 
+    // sort, reverse, fill (iterator-range algorithms)
+    // Check arg count to avoid intercepting user-defined functions with same name
+    if ((funcName === 'sort' || funcName === 'std::sort') && argChildren.length === 2) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      return createNode('cpp_sort', { begin: beginText, end: endText })
+    }
+    if ((funcName === 'reverse' || funcName === 'std::reverse') && argChildren.length === 2) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      return createNode('cpp_reverse', { begin: beginText, end: endText })
+    }
+    if ((funcName === 'fill' || funcName === 'std::fill') && argChildren.length === 3) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      const valueChild = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_fill', { begin: beginText, end: endText }, {
+        value: valueChild ? [valueChild] : [],
+      })
+    }
+
+    // min, max (value algorithms)
+    if (funcName === 'min' || funcName === 'std::min') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_min', {}, {
+        a: a ? [a] : [],
+        b: b ? [b] : [],
+      })
+    }
+    if (funcName === 'max' || funcName === 'std::max') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_max', {}, {
+        a: a ? [a] : [],
+        b: b ? [b] : [],
+      })
+    }
+
     // std::accumulate / accumulate
     if (funcName === 'accumulate' || funcName === 'std::accumulate') {
       const accumArgs = argsNode ? argsNode.namedChildren : []
