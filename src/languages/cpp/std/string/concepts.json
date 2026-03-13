@@ -84,5 +84,59 @@
       "value": { "allowed": ["expression"], "min": 1, "max": 1 }
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_string_empty",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_string_erase",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "pos": { "allowed": ["expression"], "min": 1, "max": 1 },
+      "len": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_insert",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "pos": { "allowed": ["expression"], "min": 1, "max": 1 },
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_replace",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "pos": { "allowed": ["expression"], "min": 1, "max": 1 },
+      "len": { "allowed": ["expression"], "min": 1, "max": 1 },
+      "value": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_push_back",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {
+      "char": { "allowed": ["expression"], "min": 1, "max": 1 }
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_string_clear",
+    "layer": "lang-library",
+    "properties": ["obj"],
+    "children": {},
+    "role": "statement"
   }
 ]

@@ -46,6 +46,42 @@ function tryMethodCallLift(
     }
     case 'c_str':
       return createNode('cpp_string_c_str', { obj })
+    case 'empty':
+      return createNode('cpp_string_empty', { obj })
+    case 'erase': {
+      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_string_erase', { obj }, {
+        pos: pos ? [pos] : [],
+        len: len ? [len] : [],
+      })
+    }
+    case 'insert': {
+      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const value = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_string_insert', { obj }, {
+        pos: pos ? [pos] : [],
+        value: value ? [value] : [],
+      })
+    }
+    case 'replace': {
+      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      const value = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_string_replace', { obj }, {
+        pos: pos ? [pos] : [],
+        len: len ? [len] : [],
+        value: value ? [value] : [],
+      })
+    }
+    case 'push_back': {
+      const ch = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_string_push_back', { obj }, {
+        char: ch ? [ch] : [],
+      })
+    }
+    case 'clear':
+      return createNode('cpp_string_clear', { obj })
   }
 
   // Generic method call — lift args as children for proper round-trip

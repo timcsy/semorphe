@@ -306,5 +306,207 @@
       "imports": ["string"],
       "order": 20
     }
+  },
+  {
+    "id": "cpp_string_empty",
+    "conceptId": "cpp_string_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_empty",
+      "message0": "%{BKY_CPP_STRING_EMPTY_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": ["string"],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_erase",
+    "conceptId": "cpp_string_erase",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_erase",
+      "message0": "%{BKY_CPP_STRING_ERASE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "LEN",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_ERASE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.erase(${POS}, ${LEN});",
+      "imports": ["string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_string_insert",
+    "conceptId": "cpp_string_insert",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_insert",
+      "message0": "%{BKY_CPP_STRING_INSERT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_INSERT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.insert(${POS}, ${VALUE});",
+      "imports": ["string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_string_replace",
+    "conceptId": "cpp_string_replace",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_replace",
+      "message0": "%{BKY_CPP_STRING_REPLACE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "LEN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_REPLACE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.replace(${POS}, ${LEN}, ${VALUE});",
+      "imports": ["string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_string_push_back",
+    "conceptId": "cpp_string_push_back",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_push_back",
+      "message0": "%{BKY_CPP_STRING_PUSH_BACK_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "CHAR",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_PUSH_BACK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push_back(${CHAR});",
+      "imports": ["string"],
+      "order": 0
+    }
+  },
+  {
+    "id": "cpp_string_clear",
+    "conceptId": "cpp_string_clear",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_clear",
+      "message0": "%{BKY_CPP_STRING_CLEAR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_CLEAR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.clear();",
+      "imports": ["string"],
+      "order": 0
+    }
   }
 ]

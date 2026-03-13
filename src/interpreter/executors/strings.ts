@@ -2,6 +2,11 @@ import type { ConceptExecutor } from '../executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 
 export function registerStringExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
+  register('cpp_string_declare', async (node, ctx) => {
+    const name = String(node.properties.name ?? 'str')
+    ctx.scope.declare(name, { type: 'string', value: '' })
+  })
+
   register('cpp_string_length', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
@@ -79,5 +84,60 @@ export function registerStringExecutors(register: (concept: string, executor: Co
     const n = parseFloat(String(val.value))
     if (isNaN(n)) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'double' })
     return { type: 'double', value: n }
+  })
+
+  register('cpp_string_empty', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    const val = ctx.scope.get(obj)
+    return { type: 'bool', value: String(val.value).length === 0 }
+  })
+
+  register('cpp_string_erase', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    const val = ctx.scope.get(obj)
+    const str = String(val.value)
+    const posNodes = node.children.pos ?? []
+    const lenNodes = node.children.len ?? []
+    const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
+    const len = lenNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(lenNodes[0])) : str.length - pos
+    ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + str.substring(pos + len) })
+  })
+
+  register('cpp_string_insert', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    const val = ctx.scope.get(obj)
+    const str = String(val.value)
+    const posNodes = node.children.pos ?? []
+    const valueNodes = node.children.value ?? []
+    const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
+    const insertStr = valueNodes.length > 0 ? String((await ctx.evaluate(valueNodes[0])).value) : ''
+    ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + insertStr + str.substring(pos) })
+  })
+
+  register('cpp_string_replace', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    const val = ctx.scope.get(obj)
+    const str = String(val.value)
+    const posNodes = node.children.pos ?? []
+    const lenNodes = node.children.len ?? []
+    const valueNodes = node.children.value ?? []
+    const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
+    const len = lenNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(lenNodes[0])) : 0
+    const replaceStr = valueNodes.length > 0 ? String((await ctx.evaluate(valueNodes[0])).value) : ''
+    ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + replaceStr + str.substring(pos + len) })
+  })
+
+  register('cpp_string_push_back', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    const val = ctx.scope.get(obj)
+    const charNodes = node.children.char ?? []
+    if (charNodes.length === 0) return
+    const ch = await ctx.evaluate(charNodes[0])
+    ctx.scope.set(obj, { type: 'string', value: String(val.value) + String(ch.value) })
+  })
+
+  register('cpp_string_clear', async (node, ctx) => {
+    const obj = String(node.properties.obj)
+    ctx.scope.set(obj, { type: 'string', value: '' })
   })
 }

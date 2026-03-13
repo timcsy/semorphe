@@ -185,18 +185,14 @@ describe('C++ String Operations Roundtrip', () => {
       expect(node!.children.value).toHaveLength(1)
     })
 
-    it('should generate code containing .append() (statement generator pending)', () => {
-      // cpp_string_append is a statement concept; the hand-written statement
-      // generator pipeline does not yet fall back to TemplateGenerator for it.
-      // Once a statement generator is registered, this test should pass with:
-      //   expect(output).toContain('.append(')
+    it('should generate code containing .append()', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const output = generateCode(tree!, 'cpp', style)
-      expect(output).toContain('cpp_string_append')  // emits unknown-concept comment
+      expect(output).toContain('.append(')
     })
 
-    it.skip('should survive P1 structural equivalence on re-lift (blocked by codegen)', () => {
+    it('should survive P1 structural equivalence on re-lift', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
@@ -247,18 +243,14 @@ describe('C++ String Operations Roundtrip', () => {
       expect(node!.properties.name).toBe('line')
     })
 
-    it('should generate code containing getline() (statement generator pending)', () => {
-      // cpp_getline is a statement concept; the hand-written statement
-      // generator pipeline does not yet fall back to TemplateGenerator for it.
-      // Once a statement generator is registered, this test should pass with:
-      //   expect(output).toContain('getline(')
+    it('should generate code containing getline()', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const output = generateCode(tree!, 'cpp', style)
-      expect(output).toContain('cpp_getline')  // emits unknown-concept comment
+      expect(output).toContain('getline(')
     })
 
-    it.skip('should survive P1 structural equivalence on re-lift (blocked by codegen)', () => {
+    it('should survive P1 structural equivalence on re-lift', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
@@ -352,7 +344,175 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 10. Mixed: multiple string ops combined ──────────────
+  // ─── 10. cpp_string_empty ─────────────────────────────────
+
+  describe('cpp_string_empty', () => {
+    const code = 'string s = "";\nbool b = s.empty();'
+
+    it('should lift to cpp_string_empty concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_empty')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .empty()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.empty()')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_empty')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 11. cpp_string_erase ─────────────────────────────────
+
+  describe('cpp_string_erase', () => {
+    const code = 'string s = "hello world";\ns.erase(5, 6);'
+
+    it('should lift to cpp_string_erase concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_erase')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .erase()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.erase(')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_erase')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 12. cpp_string_insert ────────────────────────────────
+
+  describe('cpp_string_insert', () => {
+    const code = 'string s = "helo";\ns.insert(3, "l");'
+
+    it('should lift to cpp_string_insert concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_insert')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .insert()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.insert(')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_insert')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 13. cpp_string_replace ───────────────────────────────
+
+  describe('cpp_string_replace', () => {
+    const code = 'string s = "hello world";\ns.replace(0, 5, "hi");'
+
+    it('should lift to cpp_string_replace concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_replace')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .replace()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.replace(')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_replace')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 14. cpp_string_push_back ─────────────────────────────
+
+  describe('cpp_string_push_back', () => {
+    const code = "string s = \"abc\";\ns.push_back('d');"
+
+    it('should lift to cpp_string_push_back concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_push_back')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .push_back()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.push_back(')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_push_back')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 15. cpp_string_clear ────────────────────────────────
+
+  describe('cpp_string_clear', () => {
+    const code = 'string s = "hello";\ns.clear();'
+
+    it('should lift to cpp_string_clear concept', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const node = findConcept(tree, 'cpp_string_clear')
+      expect(node).not.toBeNull()
+      expect(node!.properties.obj).toBe('s')
+    })
+
+    it('should generate code containing .clear()', () => {
+      const output = roundTripCode(code)
+      expect(output).toContain('.clear()')
+    })
+
+    it('should survive P1 structural equivalence on re-lift', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const node2 = findConcept(tree2, 'cpp_string_clear')
+      expect(node2).not.toBeNull()
+      expect(node2!.properties.obj).toBe('s')
+    })
+  })
+
+  // ─── 16. Mixed: multiple string ops combined ──────────────
 
   describe('mixed string operations', () => {
     const code = [
@@ -367,6 +527,10 @@ describe('C++ String Operations Roundtrip', () => {
       'string numStr = to_string(n);',
       'int parsed = stoi(numStr);',
       'double pi = stod("3.14");',
+      's.erase(5, 1);',
+      's.insert(5, " ");',
+      's.replace(0, 5, "hi");',
+      "s.push_back('!');",
     ].join('\n')
 
     it('should lift all string concepts from mixed program', () => {
@@ -382,9 +546,13 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts.has('cpp_to_string')).toBe(true)
       expect(concepts.has('cpp_stoi')).toBe(true)
       expect(concepts.has('cpp_stod')).toBe(true)
+      expect(concepts.has('cpp_string_erase')).toBe(true)
+      expect(concepts.has('cpp_string_insert')).toBe(true)
+      expect(concepts.has('cpp_string_replace')).toBe(true)
+      expect(concepts.has('cpp_string_push_back')).toBe(true)
     })
 
-    it('should generate code preserving expression-based string operations', () => {
+    it('should generate code preserving all string operations', () => {
       const output = roundTripCode(code)
       expect(output).toContain('.length()')
       expect(output).toContain('.substr(')
@@ -392,27 +560,32 @@ describe('C++ String Operations Roundtrip', () => {
       expect(output).toContain('to_string(')
       expect(output).toContain('stoi(')
       expect(output).toContain('stod(')
-      // Statement concepts (cpp_string_append, cpp_getline) emit unknown-concept
-      // comments because statement generators are not yet registered for them.
-      expect(output).toContain('cpp_string_append')
-      expect(output).toContain('cpp_getline')
+      expect(output).toContain('.append(')
+      expect(output).toContain('getline(')
+      expect(output).toContain('.erase(')
+      expect(output).toContain('.insert(')
+      expect(output).toContain('.replace(')
+      expect(output).toContain('.push_back(')
     })
 
-    it('should survive P1 structural equivalence on re-lift (expression ops)', () => {
+    it('should survive P1 structural equivalence on re-lift', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
 
       const concepts2 = collectConcepts(tree2)
-      // Expression-based string ops survive full roundtrip
       expect(concepts2.has('cpp_string_length')).toBe(true)
       expect(concepts2.has('cpp_string_substr')).toBe(true)
       expect(concepts2.has('cpp_string_find')).toBe(true)
       expect(concepts2.has('cpp_to_string')).toBe(true)
       expect(concepts2.has('cpp_stoi')).toBe(true)
       expect(concepts2.has('cpp_stod')).toBe(true)
-      // Statement concepts lose fidelity through codegen (pending statement generators)
-      // cpp_string_append and cpp_getline are NOT expected to survive re-lift
+      expect(concepts2.has('cpp_string_append')).toBe(true)
+      expect(concepts2.has('cpp_getline')).toBe(true)
+      expect(concepts2.has('cpp_string_erase')).toBe(true)
+      expect(concepts2.has('cpp_string_insert')).toBe(true)
+      expect(concepts2.has('cpp_string_replace')).toBe(true)
+      expect(concepts2.has('cpp_string_push_back')).toBe(true)
     })
   })
 })

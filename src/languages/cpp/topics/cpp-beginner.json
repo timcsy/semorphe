@@ -40,6 +40,8 @@
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
               "cpp_string_length", "cpp_string_substr", "cpp_string_find",
               "cpp_string_append", "cpp_string_c_str",
+              "cpp_string_empty", "cpp_string_erase", "cpp_string_insert",
+              "cpp_string_clear", "cpp_string_push_back",
               "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign",
               "comment", "doc_comment", "block_comment",
@@ -56,7 +58,8 @@
                   "cpp_queue_push", "cpp_queue_pop", "cpp_queue_front", "cpp_queue_empty",
                   "cpp_map_access", "cpp_map_erase", "cpp_map_count", "cpp_map_empty",
                   "cpp_set_insert", "cpp_set_erase", "cpp_set_count", "cpp_set_empty",
-                  "cpp_accumulate", "cpp_swap", "cpp_pair_declare", "cpp_make_pair"
+                  "cpp_accumulate", "cpp_swap", "cpp_pair_declare", "cpp_make_pair",
+                  "cpp_string_replace"
                 ],
                 "children": []
               }

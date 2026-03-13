@@ -51,6 +51,8 @@
               "cpp_string_declare",
               "cpp_string_length", "cpp_string_substr", "cpp_string_find",
               "cpp_string_append", "cpp_string_c_str",
+              "cpp_string_empty", "cpp_string_erase", "cpp_string_insert",
+              "cpp_string_replace", "cpp_string_push_back", "cpp_string_clear",
               "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
               "cpp_method_call", "cpp_method_call_expr",
