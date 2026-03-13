@@ -344,17 +344,18 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 10. cpp_string_empty ─────────────────────────────────
+  // ─── 10. cpp_string_empty (shared method → lifts as cpp_vector_empty) ───
 
   describe('cpp_string_empty', () => {
     const code = 'string s = "";\nbool b = s.empty();'
 
-    it('should lift to cpp_string_empty concept', () => {
+    it('should lift to cpp_vector_empty concept (shared method)', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp_string_empty')
+      // empty() is a shared method — without type info, lifts as vector concept
+      const node = findConcept(tree, 'cpp_vector_empty')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect(node!.properties.vector).toBe('s')
     })
 
     it('should generate code containing .empty()', () => {
@@ -366,9 +367,9 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_string_empty')
+      const node2 = findConcept(tree2, 'cpp_vector_empty')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect(node2!.properties.vector).toBe('s')
     })
   })
 
@@ -456,17 +457,18 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 14. cpp_string_push_back ─────────────────────────────
+  // ─── 14. cpp_string_push_back (shared method → lifts as cpp_vector_push_back) ───
 
   describe('cpp_string_push_back', () => {
     const code = "string s = \"abc\";\ns.push_back('d');"
 
-    it('should lift to cpp_string_push_back concept', () => {
+    it('should lift to cpp_vector_push_back concept (shared method)', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp_string_push_back')
+      // push_back() is a shared method — without type info, lifts as vector concept
+      const node = findConcept(tree, 'cpp_vector_push_back')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect(node!.properties.vector).toBe('s')
     })
 
     it('should generate code containing .push_back()', () => {
@@ -478,23 +480,24 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_string_push_back')
+      const node2 = findConcept(tree2, 'cpp_vector_push_back')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect(node2!.properties.vector).toBe('s')
     })
   })
 
-  // ─── 15. cpp_string_clear ────────────────────────────────
+  // ─── 15. cpp_string_clear (shared method → lifts as cpp_vector_clear) ───
 
   describe('cpp_string_clear', () => {
     const code = 'string s = "hello";\ns.clear();'
 
-    it('should lift to cpp_string_clear concept', () => {
+    it('should lift to cpp_vector_clear concept (shared method)', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp_string_clear')
+      // clear() is a shared method — without type info, lifts as vector concept
+      const node = findConcept(tree, 'cpp_vector_clear')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect(node!.properties.vector).toBe('s')
     })
 
     it('should generate code containing .clear()', () => {
@@ -506,9 +509,9 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_string_clear')
+      const node2 = findConcept(tree2, 'cpp_vector_clear')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect(node2!.properties.vector).toBe('s')
     })
   })
 
@@ -549,7 +552,8 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts.has('cpp_string_erase')).toBe(true)
       expect(concepts.has('cpp_string_insert')).toBe(true)
       expect(concepts.has('cpp_string_replace')).toBe(true)
-      expect(concepts.has('cpp_string_push_back')).toBe(true)
+      // Shared methods lift as vector concepts (no type info available)
+      expect(concepts.has('cpp_vector_push_back')).toBe(true)
     })
 
     it('should generate code preserving all string operations', () => {
@@ -585,7 +589,8 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts2.has('cpp_string_erase')).toBe(true)
       expect(concepts2.has('cpp_string_insert')).toBe(true)
       expect(concepts2.has('cpp_string_replace')).toBe(true)
-      expect(concepts2.has('cpp_string_push_back')).toBe(true)
+      // Shared methods lift as vector concepts (no type info available)
+      expect(concepts2.has('cpp_vector_push_back')).toBe(true)
     })
   })
 })

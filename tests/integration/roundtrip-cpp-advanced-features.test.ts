@@ -249,10 +249,9 @@ int main() {
       expect(concepts).toContain('cpp_range_for')
     })
 
-    it('known issue: vector<int> type is lost in generation (generates int instead)', () => {
+    it('preserves vector<int> declaration through roundtrip', () => {
       const result = roundTripCode(code)
-      // vector<int> is lost - generates as "int" (template type not preserved)
-      expect(result).not.toContain('vector<int>')
+      expect(result).toContain('vector<int>')
       expect(result).toContain('for (auto x : nums)')
     })
   })

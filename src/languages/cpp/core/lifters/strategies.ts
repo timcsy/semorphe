@@ -463,9 +463,49 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // Detect auto (placeholder_type_specifier)
     const autoNode = node.namedChildren.find(c => c.type === 'placeholder_type_specifier')
 
+    // Detect template_type (vector<int>, map<string,int>, etc.)
+    const templateTypeNode = node.namedChildren.find(c => c.type === 'template_type')
+    if (templateTypeNode) {
+      const templateName = templateTypeNode.namedChildren.find(c => c.type === 'type_identifier')?.text ?? ''
+      const templateArgs = templateTypeNode.namedChildren.find(c => c.type === 'template_argument_list')
+      const innerType = templateArgs ? templateArgs.text.slice(1, -1).trim() : 'int' // strip < >
+
+      // Container declare concepts
+      const containerConcepts: Record<string, string> = {
+        'vector': 'cpp_vector_declare',
+        'stack': 'cpp_stack_declare',
+        'queue': 'cpp_queue_declare',
+        'priority_queue': 'cpp_priority_queue_declare',
+        'set': 'cpp_set_declare',
+        'map': 'cpp_map_declare',
+        'pair': 'cpp_pair_declare',
+      }
+
+      const conceptId = containerConcepts[templateName]
+      if (conceptId) {
+        const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
+        const name = decl?.type === 'identifier'
+          ? decl.text
+          : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+
+        // map needs key_type and value_type as separate properties
+        if (templateName === 'map') {
+          const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
+          const keyType = args[0]?.text ?? 'int'
+          const valueType = args[1]?.text ?? 'int'
+          return createNode(conceptId, { key_type: keyType, value_type: valueType, name })
+        }
+
+        return createNode(conceptId, { type: innerType, name })
+      }
+
+      // Unknown template type — fall through to var_declare with full template text
+    }
+
     const typeNode = node.namedChildren.find(c =>
       c.type === 'primitive_type' || c.type === 'type_identifier' ||
-      c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
+      c.type === 'qualified_identifier' || c.type === 'sized_type_specifier' ||
+      c.type === 'template_type'
     )
     const type = typeNode?.text ?? 'int'
 

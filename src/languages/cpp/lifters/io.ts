@@ -4,8 +4,10 @@ import { createNode } from '../../../core/semantic-tree'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { tryCmathLift } from '../std/cmath/lifters'
 
-/** Try to lift a method call (field_expression) into a specific concept */
-function tryMethodCallLift(
+/** Try to lift a method call (field_expression) into a string-specific concept.
+ *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
+ *  can dispatch them via METHOD_TO_CONCEPT for container support. */
+function tryStringMethodLift(
   funcNode: AstNode,
   argsNode: AstNode | null | undefined,
   ctx: LiftContext,
@@ -20,7 +22,7 @@ function tryMethodCallLift(
   const method = fieldNode.text
   const argChildren = argsNode?.namedChildren ?? []
 
-  // String method calls
+  // String-ONLY methods (no other container uses these)
   switch (method) {
     case 'length':
       return createNode('cpp_string_length', { obj })
@@ -46,24 +48,6 @@ function tryMethodCallLift(
     }
     case 'c_str':
       return createNode('cpp_string_c_str', { obj })
-    case 'empty':
-      return createNode('cpp_string_empty', { obj })
-    case 'erase': {
-      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp_string_erase', { obj }, {
-        pos: pos ? [pos] : [],
-        len: len ? [len] : [],
-      })
-    }
-    case 'insert': {
-      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const value = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp_string_insert', { obj }, {
-        pos: pos ? [pos] : [],
-        value: value ? [value] : [],
-      })
-    }
     case 'replace': {
       const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
@@ -74,21 +58,33 @@ function tryMethodCallLift(
         value: value ? [value] : [],
       })
     }
-    case 'push_back': {
-      const ch = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp_string_push_back', { obj }, {
-        char: ch ? [ch] : [],
-      })
-    }
-    case 'clear':
-      return createNode('cpp_string_clear', { obj })
+    // Disambiguate by arg count: 2 args = string erase(pos, len)
+    case 'erase':
+      if (argChildren.length >= 2) {
+        const pos = ctx.lift(argChildren[0])
+        const len = ctx.lift(argChildren[1])
+        return createNode('cpp_string_erase', { obj }, {
+          pos: pos ? [pos] : [],
+          len: len ? [len] : [],
+        })
+      }
+      return null // 1 arg → container erase (handled by METHOD_TO_CONCEPT)
+    // Disambiguate by arg count: 2 args = string insert(pos, val)
+    case 'insert':
+      if (argChildren.length >= 2) {
+        const pos = ctx.lift(argChildren[0])
+        const value = ctx.lift(argChildren[1])
+        return createNode('cpp_string_insert', { obj }, {
+          pos: pos ? [pos] : [],
+          value: value ? [value] : [],
+        })
+      }
+      return null // 1 arg → set insert (handled by METHOD_TO_CONCEPT)
   }
 
-  // Generic method call — lift args as children for proper round-trip
-  const liftedArgs = argChildren
-    .map(a => ctx.lift(a))
-    .filter((n): n is NonNullable<typeof n> => n !== null)
-  return createNode('cpp_method_call_expr', { obj, method }, { args: liftedArgs })
+  // Shared methods (empty, clear, push_back, pop_back, back, size, etc.)
+  // → return null so caller dispatches via METHOD_TO_CONCEPT
+  return null
 }
 
 /** Map method names from field_expression to concept IDs */
@@ -151,10 +147,11 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // Method call: obj.method(...) via field_expression
     if (funcNode && funcNode.type === 'field_expression') {
-      // Try string method calls first (substr, find, append, c_str, length)
-      const stringResult = tryMethodCallLift(funcNode, argsNode, ctx)
+      // Try string-only method calls first (substr, find, append, c_str, length, replace)
+      const stringResult = tryStringMethodLift(funcNode, argsNode, ctx)
       if (stringResult) return stringResult
 
+      // Shared/container methods (push_back, pop_back, clear, size, empty, push, pop, top, front, erase, count, insert)
       const objNode = funcNode.childForFieldName('argument')
       const fieldNode = funcNode.childForFieldName('field')
       const objText = objNode?.text ?? ''
@@ -175,6 +172,11 @@ export function registerIOLifters(lifter: Lifter): void {
 
         return createNode(conceptId, properties)
       }
+
+      // Fallback: unknown method call → generic method_call_expr
+      const allArgs = argsNode?.namedChildren ?? []
+      const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
+      return createNode('cpp_method_call_expr', { obj: objText, method: methodName }, { args: liftedArgs })
     }
 
     // printf("...", args) → cstdio module
@@ -209,12 +211,6 @@ export function registerIOLifters(lifter: Lifter): void {
           value: value ? [value] : [],
         })
       }
-    }
-
-    // Method calls: obj.method(args) via field_expression
-    if (funcNode && funcNode.type === 'field_expression') {
-      const methodResult = tryMethodCallLift(funcNode, argsNode, ctx)
-      if (methodResult) return methodResult
     }
 
     // Free string functions: getline, to_string, stoi, stod
