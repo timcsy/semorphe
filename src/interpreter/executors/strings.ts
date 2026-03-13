@@ -140,4 +140,27 @@ export function registerStringExecutors(register: (concept: string, executor: Co
     const obj = String(node.properties.obj)
     ctx.scope.set(obj, { type: 'string', value: '' })
   })
+
+  // cstring (C-style string functions)
+  register('cpp_strlen', async (node, ctx) => {
+    const strNodes = node.children.str ?? []
+    if (strNodes.length === 0) return { type: 'int', value: 0 }
+    const val = await ctx.evaluate(strNodes[0])
+    return { type: 'int', value: String(val.value).length }
+  })
+
+  register('cpp_strcmp', async (node, ctx) => {
+    const s1Nodes = node.children.s1 ?? []
+    const s2Nodes = node.children.s2 ?? []
+    const s1 = s1Nodes.length > 0 ? String((await ctx.evaluate(s1Nodes[0])).value) : ''
+    const s2 = s2Nodes.length > 0 ? String((await ctx.evaluate(s2Nodes[0])).value) : ''
+    if (s1 < s2) return { type: 'int', value: -1 }
+    if (s1 > s2) return { type: 'int', value: 1 }
+    return { type: 'int', value: 0 }
+  })
+
+  register('cpp_strcpy', async () => {
+    // strcpy modifies char arrays — not fully supported in interpreter
+    // (C-style char arrays are not tracked as mutable string variables)
+  })
 }

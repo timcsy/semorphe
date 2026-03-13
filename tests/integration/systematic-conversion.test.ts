@@ -378,13 +378,12 @@ describe('Expressions', () => {
   })
 
   describe('Function call expression', () => {
-    it('lifts strlen(s) as func_call_expr', () => {
+    it('lifts strlen(s) as cpp_strlen', () => {
       const n = liftExpr('strlen(s)')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('func_call_expr')
-      expect(n!.properties.name).toBe('strlen')
-      const args = n!.children.args ?? []
-      expect(args.length).toBe(1)
+      expect(n!.concept).toBe('cpp_strlen')
+      expect(n!.children.str).toBeDefined()
+      expect(n!.children.str!.length).toBe(1)
     })
 
     it('roundtrips strlen(s)', () => {

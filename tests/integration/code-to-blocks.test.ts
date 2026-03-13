@@ -288,11 +288,10 @@ describe('Code-to-Blocks Pipeline', () => {
   })
 
   describe('Function calls', () => {
-    it('should lift strlen(s) to func_call_expr (hand-written lifter)', () => {
+    it('should lift strlen(s) to cpp_strlen concept', () => {
       const sem = liftCode('int n = strlen(s);')
       const concepts = findConcepts(sem)
-      // call_expression handled by hand-written lifter → func_call_expr
-      expect(concepts).toContain('func_call_expr')
+      expect(concepts).toContain('cpp_strlen')
     })
 
     it('should lift free(ptr) to func_call (hand-written lifter)', () => {

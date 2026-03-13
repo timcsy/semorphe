@@ -327,6 +327,22 @@ export function registerIOLifters(lifter: Lifter): void {
       })
     }
 
+    // cstring functions: strlen, strcmp, strcpy, strcat, strncpy, strncmp, memset, memcpy
+    if (funcName === 'strlen') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_strlen', {}, { str: str ? [str] : [] })
+    }
+    if (funcName === 'strcmp') {
+      const s1 = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const s2 = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strcmp', {}, { s1: s1 ? [s1] : [], s2: s2 ? [s2] : [] })
+    }
+    if (funcName === 'strcpy') {
+      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strcpy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [] })
+    }
+
     // General function call
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
