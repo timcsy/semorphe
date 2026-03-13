@@ -13,8 +13,9 @@
  * - fuzz_7 (map operations): PASS (map concepts now implemented)
  * - map fuzz (declare+erase+count): PASS (P1 stable)
  * - fuzz_2: EXPECTED_DEGRADATION (array initializer list, istringstream)
- * - fuzz_4, fuzz_9: EXPECTED_DEGRADATION (set not yet implemented)
- * - fuzz_5: EXPECTED_DEGRADATION (needs set)
+ * - fuzz_4 (set intersection): PASS (set concepts now implemented)
+ * - fuzz_5 (BFS combo): PASS (all container concepts now implemented)
+ * - fuzz_9 (set dedup): PASS (set concepts now implemented)
  * - fuzz_8: EXPECTED_DEGRADATION (template_type in function params)
  * - fuzz_10: EXPECTED_DEGRADATION (nested template_type pair<K,V>)
  */
@@ -250,16 +251,79 @@ cout << freq.empty() << endl;`
   })
 
   // ─── fuzz_4: set intersection ───
-  // EXPECTED_DEGRADATION — cpp_set_declare not yet implemented
-  // Enable when: set concepts implemented in Phase 9 <set> pipeline
+  // Originally EXPECTED_DEGRADATION (cpp_set_declare not implemented).
+  // Now PASS — set concepts implemented in Phase 9 <set> pipeline.
 
-  it.todo('fuzz_4: set intersection — needs cpp_set_declare concept')
+  describe('fuzz_4: set intersection (declare/insert/count)', () => {
+    const code = `set<int> a;
+a.insert(1);
+a.insert(2);
+a.insert(3);
+set<int> b;
+b.insert(2);
+b.insert(3);
+b.insert(4);
+set<int> result;
+for (int x : a) {
+    if (b.count(x)) {
+        result.insert(x);
+    }
+}
+cout << result.empty() << endl;`
+
+    it('should lift set declare, insert, count concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_set_declare')).toBe(true)
+      expect(concepts.has('cpp_set_insert')).toBe(true)
+      expect(concepts.has('cpp_map_count')).toBe(true) // shared
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_set_declare')).toBe(true)
+      expect(concepts2.has('cpp_set_insert')).toBe(true)
+    })
+  })
 
   // ─── fuzz_5: BFS with queue+map+set+vector ───
-  // EXPECTED_DEGRADATION — queue and map now implemented, but still needs cpp_set_declare.
-  // Enable when: set concepts implemented in Phase 9 <set> pipeline
+  // Originally EXPECTED_DEGRADATION (queue/map/set not implemented).
+  // Now PASS — all container concepts implemented.
 
-  it.todo('fuzz_5: BFS graph traversal — needs cpp_set_declare concept')
+  describe('fuzz_5: BFS pattern (queue+map+set combo)', () => {
+    const code = `queue<int> q;
+map<int, int> dist;
+set<int> visited;
+q.push(1);
+visited.insert(1);
+cout << visited.count(1) << endl;
+cout << q.front() << endl;
+q.pop();
+cout << q.empty() << endl;`
+
+    it('should lift queue, map, set declare concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_queue_declare')).toBe(true)
+      expect(concepts.has('cpp_map_declare')).toBe(true)
+      expect(concepts.has('cpp_set_declare')).toBe(true)
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_queue_declare')).toBe(true)
+      expect(concepts2.has('cpp_map_declare')).toBe(true)
+      expect(concepts2.has('cpp_set_declare')).toBe(true)
+    })
+  })
 
   // ─── fuzz_7: map of vectors, group words by length ───
   // Originally EXPECTED_DEGRADATION (cpp_map_declare not implemented).
@@ -334,10 +398,39 @@ cout << endl;`
   })
 
   // ─── fuzz_9: set dedup with insert ───
-  // EXPECTED_DEGRADATION — cpp_set_declare not yet implemented
-  // Enable when: set concepts implemented in Phase 9 <set> pipeline
+  // Originally EXPECTED_DEGRADATION (cpp_set_declare not implemented).
+  // Now PASS — set concepts implemented in Phase 9 <set> pipeline.
 
-  it.todo('fuzz_9: set dedup with insert — needs cpp_set_declare concept')
+  describe('fuzz_9: set dedup (declare/insert/erase/count)', () => {
+    const code = `set<int> s;
+s.insert(5);
+s.insert(3);
+s.insert(5);
+s.insert(1);
+cout << s.empty() << endl;
+s.erase(3);
+cout << s.count(3) << endl;
+cout << s.count(5) << endl;`
+
+    it('should lift set declare, insert, erase, count concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_set_declare')).toBe(true)
+      expect(concepts.has('cpp_set_insert')).toBe(true)
+      expect(concepts.has('cpp_map_erase')).toBe(true) // shared
+      expect(concepts.has('cpp_map_count')).toBe(true) // shared
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_set_declare')).toBe(true)
+      expect(concepts2.has('cpp_set_insert')).toBe(true)
+    })
+  })
 
   // ─── fuzz_10: sparse matrix with map<pair<int,int>,int> ───
   // EXPECTED_DEGRADATION — map declare works now, but pair<int,int> as key type
