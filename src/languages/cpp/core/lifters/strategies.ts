@@ -487,6 +487,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const name = decl?.type === 'identifier'
           ? decl.text
           : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+
+        // map needs key_type and value_type as separate properties
+        if (templateName === 'map') {
+          const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
+          const keyType = args[0]?.text ?? 'int'
+          const valueType = args[1]?.text ?? 'int'
+          return createNode(conceptId, { key_type: keyType, value_type: valueType, name })
+        }
+
         return createNode(conceptId, { type: innerType, name })
       }
 

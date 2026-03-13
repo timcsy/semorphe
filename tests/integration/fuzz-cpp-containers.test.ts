@@ -7,7 +7,16 @@
  * Results:
  * - fuzz_6 (vector-only): PASS (P1 stable, vector concepts correct)
  * - fuzz_1 (nested vector): EXPECTED_DEGRADATION (initializer lists not supported)
- * - fuzz_2-5, 7-10: EXPECTED_DEGRADATION (stack/queue/map/set not yet implemented)
+ * - stack fuzz (bracket matching): PASS (P1 stable)
+ * - queue fuzz (FIFO drain): PASS (P1 stable)
+ * - fuzz_3 (map frequency): PASS (map concepts now implemented)
+ * - fuzz_7 (map operations): PASS (map concepts now implemented)
+ * - map fuzz (declare+erase+count): PASS (P1 stable)
+ * - fuzz_2: EXPECTED_DEGRADATION (array initializer list, istringstream)
+ * - fuzz_4, fuzz_9: EXPECTED_DEGRADATION (set not yet implemented)
+ * - fuzz_5: EXPECTED_DEGRADATION (needs set)
+ * - fuzz_8: EXPECTED_DEGRADATION (template_type in function params)
+ * - fuzz_10: EXPECTED_DEGRADATION (nested template_type pair<K,V>)
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -207,10 +216,38 @@ cout << st.empty() << endl;`
   })
 
   // ─── fuzz_3: map frequency counter with erase ───
-  // EXPECTED_DEGRADATION — cpp_map_declare not yet implemented
-  // Enable when: map concepts implemented in Phase 9 <map> pipeline
+  // Originally EXPECTED_DEGRADATION (cpp_map_declare not implemented).
+  // Now PASS — map concepts implemented in Phase 9 <map> pipeline.
 
-  it.todo('fuzz_3: map frequency counter — needs cpp_map_declare concept')
+  describe('fuzz_3: map frequency counter (declare/count/erase)', () => {
+    const code = `map<string, int> freq;
+freq["hello"]++;
+freq["world"]++;
+freq["hello"]++;
+cout << freq.count("hello") << endl;
+freq.erase("world");
+cout << freq.count("world") << endl;
+cout << freq.empty() << endl;`
+
+    it('should lift map declare, count, erase concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_map_declare')).toBe(true)
+      expect(concepts.has('cpp_map_count')).toBe(true)
+      expect(concepts.has('cpp_map_erase')).toBe(true)
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_map_declare')).toBe(true)
+      expect(concepts2.has('cpp_map_count')).toBe(true)
+      expect(concepts2.has('cpp_map_erase')).toBe(true)
+    })
+  })
 
   // ─── fuzz_4: set intersection ───
   // EXPECTED_DEGRADATION — cpp_set_declare not yet implemented
@@ -219,16 +256,42 @@ cout << st.empty() << endl;`
   it.todo('fuzz_4: set intersection — needs cpp_set_declare concept')
 
   // ─── fuzz_5: BFS with queue+map+set+vector ───
-  // EXPECTED_DEGRADATION — cpp_queue_declare, cpp_map_declare, cpp_set_declare not yet implemented
-  // Enable when: queue/map/set concepts implemented in Phase 9
+  // EXPECTED_DEGRADATION — queue and map now implemented, but still needs cpp_set_declare.
+  // Enable when: set concepts implemented in Phase 9 <set> pipeline
 
-  it.todo('fuzz_5: BFS graph traversal — needs queue/map/set declare concepts')
+  it.todo('fuzz_5: BFS graph traversal — needs cpp_set_declare concept')
 
   // ─── fuzz_7: map of vectors, group words by length ───
-  // EXPECTED_DEGRADATION — cpp_map_declare not yet implemented
-  // Enable when: map concepts implemented in Phase 9 <map> pipeline
+  // Originally EXPECTED_DEGRADATION (cpp_map_declare not implemented).
+  // Now PASS — map concepts implemented in Phase 9 <map> pipeline.
 
-  it.todo('fuzz_7: map of vectors — needs cpp_map_declare concept')
+  describe('fuzz_7: map operations (declare/count/erase/empty)', () => {
+    const code = `map<int, int> lengths;
+lengths[5] = 10;
+lengths[3] = 20;
+cout << lengths.count(5) << endl;
+cout << lengths.count(99) << endl;
+lengths.erase(3);
+cout << lengths.empty() << endl;`
+
+    it('should lift map declare, count, erase concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_map_declare')).toBe(true)
+      expect(concepts.has('cpp_map_count')).toBe(true)
+      expect(concepts.has('cpp_map_erase')).toBe(true)
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_map_declare')).toBe(true)
+      expect(concepts2.has('cpp_map_count')).toBe(true)
+    })
+  })
 
   // ─── fuzz_8: stack-queue reversal ───
   // EXPECTED_DEGRADATION — stack/queue declare+push+pop now work, but function parameter
@@ -277,8 +340,39 @@ cout << endl;`
   it.todo('fuzz_9: set dedup with insert — needs cpp_set_declare concept')
 
   // ─── fuzz_10: sparse matrix with map<pair<int,int>,int> ───
-  // EXPECTED_DEGRADATION — cpp_map_declare not yet implemented
-  // Enable when: map concepts implemented in Phase 9 <map> pipeline
+  // EXPECTED_DEGRADATION — map declare works now, but pair<int,int> as key type
+  // requires nested template_type parsing which is not yet supported.
+  // Enable when: nested template_type (pair<K,V>) support added
 
-  it.todo('fuzz_10: sparse matrix multiplication — needs cpp_map_declare concept')
+  it.todo('fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
+
+  // ─── map fuzz: declare + erase + count combo (P1 stable) ───
+
+  describe('map fuzz: declare + erase + count combo', () => {
+    const code = `map<int, int> mp;
+mp.erase(5);
+if (mp.count(3)) {
+    cout << "found" << endl;
+}
+cout << mp.empty() << endl;`
+
+    it('should lift map declare, erase, count concepts', () => {
+      const tree = liftCode(code)
+      expect(tree).not.toBeNull()
+      const concepts = collectConcepts(tree)
+      expect(concepts.has('cpp_map_declare')).toBe(true)
+      expect(concepts.has('cpp_map_erase')).toBe(true)
+      expect(concepts.has('cpp_map_count')).toBe(true)
+    })
+
+    it('should survive P1 structural equivalence', () => {
+      const output = roundTripCode(code)
+      const tree2 = liftCode(output)
+      expect(tree2).not.toBeNull()
+      const concepts2 = collectConcepts(tree2)
+      expect(concepts2.has('cpp_map_declare')).toBe(true)
+      expect(concepts2.has('cpp_map_erase')).toBe(true)
+      expect(concepts2.has('cpp_map_count')).toBe(true)
+    })
+  })
 })
