@@ -8,5 +8,45 @@
       "init": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_iota",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["begin", "end"],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_partial_sum",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["begin", "end", "dest"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_gcd",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "a": "expression",
+      "b": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_lcm",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "a": "expression",
+      "b": "expression"
+    },
+    "role": "expression"
   }
 ]

@@ -20,11 +20,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_ISALPHA_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "isalpha(${VALUE})",
-      "imports": ["cctype"],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": { "VALUE": "value" },
@@ -51,11 +46,6 @@
       "output": "Expression",
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_ISDIGIT_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "isdigit(${VALUE})",
-      "imports": ["cctype"],
-      "order": 20
     },
     "renderMapping": {
       "fields": {},
@@ -84,11 +74,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_TOUPPER_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "toupper(${VALUE})",
-      "imports": ["cctype"],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": { "VALUE": "value" },
@@ -115,11 +100,6 @@
       "output": "Expression",
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_TOLOWER_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "tolower(${VALUE})",
-      "imports": ["cctype"],
-      "order": 20
     },
     "renderMapping": {
       "fields": {},

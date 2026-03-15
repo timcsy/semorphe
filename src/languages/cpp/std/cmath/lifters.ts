@@ -4,7 +4,7 @@ import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 
 const UNARY_FUNCS = new Set([
-  'abs', 'fabs', 'sqrt', 'cbrt',
+  'fabs', 'sqrt', 'cbrt',
   'ceil', 'floor', 'round', 'trunc',
   'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
   'exp', 'log', 'log2', 'log10',
@@ -41,9 +41,7 @@ export function tryCmathLift(
   // Unary math functions
   if (UNARY_FUNCS.has(funcName)) {
     const args = liftArgs()
-    // Normalize fabs → abs
-    const normalizedFunc = funcName === 'fabs' ? 'abs' : funcName
-    return createNode('cpp:math_unary', { func: normalizedFunc }, {
+    return createNode('cpp:math_unary', { func: funcName }, {
       value: args[0] ? [args[0]] : [],
     })
   }

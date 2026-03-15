@@ -248,6 +248,14 @@ export function registerIOLifters(lifter: Lifter): void {
       const code = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode('cpp_exit', {}, { code: code ? [code] : [] })
     }
+    if (funcName === 'atoi') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_atoi', {}, { str: str ? [str] : [] })
+    }
+    if (funcName === 'atof') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_atof', {}, { str: str ? [str] : [] })
+    }
 
     // cctype functions
     const cctypeFuncs: Record<string, string> = {
@@ -314,6 +322,40 @@ export function registerIOLifters(lifter: Lifter): void {
       return createNode('cpp_accumulate', { begin: beginText, end: endText }, {
         init: initChild ? [initChild] : [],
       })
+    }
+
+    // std::iota / iota
+    if (funcName === 'iota' || funcName === 'std::iota') {
+      const iotaArgs = argsNode ? argsNode.namedChildren : []
+      const beginText = iotaArgs[0]?.text ?? 'v.begin()'
+      const endText = iotaArgs[1]?.text ?? 'v.end()'
+      const valueChild = iotaArgs[2] ? ctx.lift(iotaArgs[2]) : null
+      return createNode('cpp_iota', { begin: beginText, end: endText }, {
+        value: valueChild ? [valueChild] : [],
+      })
+    }
+
+    // std::partial_sum / partial_sum
+    if (funcName === 'partial_sum' || funcName === 'std::partial_sum') {
+      const psArgs = argsNode ? argsNode.namedChildren : []
+      const beginText = psArgs[0]?.text ?? 'v.begin()'
+      const endText = psArgs[1]?.text ?? 'v.end()'
+      const destText = psArgs[2]?.text ?? 'result.begin()'
+      return createNode('cpp_partial_sum', { begin: beginText, end: endText, dest: destText }, {})
+    }
+
+    // __gcd / gcd / std::gcd
+    if (funcName === '__gcd' || funcName === 'gcd' || funcName === 'std::gcd') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_gcd', {}, { a: a ? [a] : [], b: b ? [b] : [] })
+    }
+
+    // lcm / std::lcm
+    if (funcName === 'lcm' || funcName === 'std::lcm') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_lcm', {}, { a: a ? [a] : [], b: b ? [b] : [] })
     }
 
     // std::make_pair / make_pair

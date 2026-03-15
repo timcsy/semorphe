@@ -72,6 +72,18 @@ export class SemanticInterpreter implements ExecutionContext {
       return { type: val.type, value: Math.abs(ctx.toNumber(val)) }
     })
     reg('cpp_exit', async () => { throw new RuntimeError(RUNTIME_ERRORS.ABORTED) })
+    reg('cpp_atoi', async (node, ctx) => {
+      const v = node.children.str?.[0]
+      if (!v) return { type: 'int' as const, value: 0 }
+      const val = await ctx.evaluate(v)
+      return { type: 'int' as const, value: parseInt(String(val.value), 10) || 0 }
+    })
+    reg('cpp_atof', async (node, ctx) => {
+      const v = node.children.str?.[0]
+      if (!v) return { type: 'double' as const, value: 0.0 }
+      const val = await ctx.evaluate(v)
+      return { type: 'double' as const, value: parseFloat(String(val.value)) || 0.0 }
+    })
 
     // cctype functions
     for (const [concept, fn] of Object.entries({
@@ -143,6 +155,25 @@ export class SemanticInterpreter implements ExecutionContext {
 
     // stdlib advanced expressions
     reg('cpp_accumulate', async () => ({ type: 'int' as const, value: 0 }))
+    reg('cpp_iota', async () => {}) // statement, modifies container in-place
+    reg('cpp_partial_sum', async () => {}) // statement, modifies destination container
+    reg('cpp_gcd', async (node, ctx) => {
+      const a = node.children.a?.[0]
+      const b = node.children.b?.[0]
+      const va = a ? ctx.toNumber(await ctx.evaluate(a)) : 0
+      const vb = b ? ctx.toNumber(await ctx.evaluate(b)) : 0
+      const gcd = (x: number, y: number): number => y === 0 ? x : gcd(y, x % y)
+      return { type: 'int' as const, value: gcd(Math.abs(va), Math.abs(vb)) }
+    })
+    reg('cpp_lcm', async (node, ctx) => {
+      const a = node.children.a?.[0]
+      const b = node.children.b?.[0]
+      const va = a ? ctx.toNumber(await ctx.evaluate(a)) : 0
+      const vb = b ? ctx.toNumber(await ctx.evaluate(b)) : 0
+      const gcd = (x: number, y: number): number => y === 0 ? x : gcd(y, x % y)
+      const g = gcd(Math.abs(va), Math.abs(vb))
+      return { type: 'int' as const, value: g === 0 ? 0 : Math.abs(va * vb) / g }
+    })
     reg('cpp_make_pair', async (node, ctx) => {
       const f = node.children.first?.[0]
       const s = node.children.second?.[0]

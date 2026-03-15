@@ -41,11 +41,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_PAIR_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::pair<${TYPE1}, ${TYPE2}> ${NAME};",
-      "imports": ["utility"],
-      "order": 0
-    },
     "renderMapping": {
       "fields": { "TYPE1": "type1", "TYPE2": "type2", "NAME": "name" },
       "inputs": {},
@@ -77,11 +72,6 @@
       "output": "Expression",
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_MAKE_PAIR_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "std::make_pair(${FIRST}, ${SECOND})",
-      "imports": ["utility"],
-      "order": 20
     },
     "renderMapping": {
       "fields": {},

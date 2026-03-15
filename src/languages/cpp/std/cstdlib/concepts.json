@@ -36,5 +36,25 @@
       "code": "expression"
     },
     "role": "statement"
+  },
+  {
+    "conceptId": "cpp_atoi",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "str": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_atof",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "str": "expression"
+    },
+    "role": "expression"
   }
 ]

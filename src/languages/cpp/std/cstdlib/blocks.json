@@ -14,11 +14,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_RAND_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "rand()",
-      "imports": ["cstdlib"],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {},
@@ -47,11 +42,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_SRAND_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "srand(${SEED});",
-      "imports": ["cstdlib"],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": { "SEED": "seed" },
@@ -78,11 +68,6 @@
       "output": "Expression",
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_ABS_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "abs(${VALUE})",
-      "imports": ["cstdlib"],
-      "order": 20
     },
     "renderMapping": {
       "fields": {},
@@ -112,14 +97,63 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_EXIT_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "exit(${CODE});",
-      "imports": ["cstdlib"],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": { "CODE": "code" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_atoi",
+    "conceptId": "cpp_atoi",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_atoi",
+      "message0": "%{BKY_CPP_ATOI_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ATOI_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "STR": "str" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_atof",
+    "conceptId": "cpp_atof",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_atof",
+      "message0": "%{BKY_CPP_ATOF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ATOF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "STR": "str" },
       "statementInputs": {}
     }
   }
