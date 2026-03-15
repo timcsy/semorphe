@@ -9,6 +9,12 @@ user-invocable: true
 
 > **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
 
+## ⛔ 調用要求
+
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+
+**完成時必須輸出完成標記**（見最後一節）。
+
 # 概念 Round-Trip 測試
 
 ## 使用者輸入
@@ -195,3 +201,13 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 - 每個程式逾時：5 秒
 - 暫存目錄：`/tmp/semorphe-roundtrip/`
 - 成功執行後清理暫存檔（失敗時保留以供除錯）
+
+## 完成標記（強制）
+
+此 skill 完成後，**必須**輸出以下格式的完成標記：
+
+```
+🏁 SKILL_COMPLETE: concept-roundtrip | {lang} | {target} | {N}/{M} PASS | 測試檔：{test_file_path}
+```
+
+如果未輸出此標記，pipeline 不會繼續下一階段。

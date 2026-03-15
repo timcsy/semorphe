@@ -12,6 +12,62 @@ user-invocable: true
 
 # 概念管線 — 端到端
 
+---
+
+## ⛔ 強制執行規則（不可違反）
+
+**本節規則為最高優先級，不可因任何理由違反。**
+
+### 規則 1：每個階段必須透過 Skill tool 調用對應的子 skill
+
+| 階段 | 必須調用的 Skill | 調用方式 |
+|------|-----------------|---------|
+| 1. 探索 | `concept-discover` | `Skill tool: skill="concept-discover", args="{lang} {target}"` |
+| 2. 產生 | `concept-generate` | `Skill tool: skill="concept-generate", args="{lang} {concept}"` |
+| 3. Round-trip | `concept-roundtrip` | `Skill tool: skill="concept-roundtrip", args="{lang} {concept}"` |
+| 4. 模糊測試 | `concept-fuzz` | `Skill tool: skill="concept-fuzz", args="{lang} {difficulty} {scope} {count}"` |
+| 5. 整合 | `concept-integrate` | `Skill tool: skill="concept-integrate", args="{lang} {concept}"` |
+
+**「調用」的唯一合法方式是使用 Skill tool。** 以下行為全部視為違規：
+- ❌ 自己寫程式碼代替 skill 的工作
+- ❌ 用 Agent tool 啟動子代理來「精簡執行」skill 的內容
+- ❌ 手動執行 skill 中描述的步驟而不經過 Skill tool
+- ❌ 聲稱「已經做過等效工作」來跳過 Skill tool 調用
+- ❌ 把多個 skill 的工作合併在一次 Agent 呼叫中完成
+
+### 規則 2：五個階段缺一不可（除非使用者明確設定旗標）
+
+**必須按順序執行所有 5 個階段。** 只有以下旗標允許跳過：
+- `--dry-run` → 允許跳過階段 3、4、5
+- `--skip-fuzz` → 允許跳過階段 4
+
+**沒有旗標時，任何階段都不可跳過。** 不可以因為「概念很簡單」、「已經有類似概念」、「時間不夠」等理由省略任何階段。
+
+### 規則 3：階段間關卡驗證
+
+每個階段完成後，必須在繼續下一階段之前明確確認：
+
+```
+✅ 階段 {N} 完成：{skill_name}
+   產出物：{列出具體產出物}
+   關卡結果：PASS / FAIL
+   → 繼續階段 {N+1}
+```
+
+如果關卡 FAIL，必須先修復再繼續，不可跳過。
+
+### 規則 4：完成標記
+
+每個子 skill 調用完成後，必須輸出以下格式的完成標記（由各子 skill 自動產生）：
+
+```
+🏁 SKILL_COMPLETE: {skill_name} | {lang} | {target} | {result}
+```
+
+如果你無法找到這個標記，代表 skill 未正確完成，不可繼續下一階段。
+
+---
+
 ## 使用者輸入
 
 ```text
@@ -42,8 +98,8 @@ $ARGUMENTS
 │ 分類概念    │    │ generator,   │    │ round-trip    │    │ 盲測         │    │ 註冊         │
 │              │    │ lifter, 測試 │    │ 驗證          │    │              │    │ & commit      │
 └─────────────┘    └──────────────┘    └───────────────┘    └──────────────┘    └───────────────┘
-     WebSearch          程式碼產生          編譯/執行 &         Agent A+B          tsc + test
-     + fetch            + 測試             比較 stdout          雙代理              + 驗證
+   Skill tool:       Skill tool:        Skill tool:          Skill tool:        Skill tool:
+   concept-discover  concept-generate   concept-roundtrip    concept-fuzz       concept-integrate
 ```
 
 每個階段有一個**通過/不通過關卡**。如果某個階段失敗，管線會停下來報告哪裡出了問題，讓你修復後再繼續。
@@ -68,9 +124,14 @@ $ARGUMENTS
 
 ### 階段一：探索
 
-**調用**：`/concept.discover {lang} $ARGUMENTS`
+**⚠️ 必須使用 Skill tool 調用**：
+```
+Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
+```
+不可手動執行探索步驟。必須調用 Skill tool。
 
 **關卡**：探索報告已產生（路徑在 `specs/concepts/` 目錄下）
+**完成標記**：`🏁 SKILL_COMPLETE: concept-discover | ...`
 
 **決策點**：探索後，向使用者呈現概念目錄：
 
@@ -90,9 +151,13 @@ $ARGUMENTS
 
 **對每個概念**，按實作順序：
 
-1. **調用**：`/concept.generate {lang} {concept_name}`
+1. **⚠️ 必須使用 Skill tool 調用**：
+   ```
+   Skill tool: skill="concept-generate", args="{lang} {concept_name}"
+   ```
 2. **關卡**：6 個產出物都存在（含 interpreter executor）
 3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
+4. **完成標記**：`🏁 SKILL_COMPLETE: concept-generate | ...`
 
 如果 TypeScript 失敗，在處理下一個概念之前先修復錯誤。
 
@@ -100,8 +165,12 @@ $ARGUMENTS
 
 **對每個產生的概念**：
 
-1. **調用**：`/concept.roundtrip {lang} {concept_name}`
+1. **⚠️ 必須使用 Skill tool 調用**：
+   ```
+   Skill tool: skill="concept-roundtrip", args="{lang} {concept_name}"
+   ```
 2. **關卡**：所有目標測試必須 PASS 或 DEGRADED
+3. **完成標記**：`🏁 SKILL_COMPLETE: concept-roundtrip | ...`
 
 如果有 ❌ FAIL：
 - 嘗試自動修復
@@ -111,13 +180,18 @@ $ARGUMENTS
 ### 階段四：模糊測試（批次）
 
 **跳過條件**：設定了 `--dry-run` 或 `--skip-fuzz` 旗標。
+**⚠️ 沒有設定跳過旗標時，此階段為強制執行，不可因任何理由省略。**
 
 根據新增概念在 Topic 層級樹中的深度自動決定難度和範疇（scope）：
 - 難度：取新概念所在最深層級樹節點的深度（depth 0→easy、depth 1→medium、depth 2+→hard）
 - 範疇：從新概念的分類中推導（例如新增了迴圈相關概念則範疇為 `loops`）
 
-1. **調用**：`/concept.fuzz {lang} {difficulty} {scope} {count}`
+1. **⚠️ 必須使用 Skill tool 調用**：
+   ```
+   Skill tool: skill="concept-fuzz", args="{lang} {difficulty} {scope} {count}"
+   ```
 2. **關卡**：新概念中沒有 SEMANTIC_DIFF、COMPILE_FAIL、SCAFFOLD_LEAK 或 ROUNDTRIP_DRIFT bug
+3. **完成標記**：`🏁 SKILL_COMPLETE: concept-fuzz | ...`
 
 如果模糊測試發現 bug：**必須修復後重新執行**，不得只記錄 todo 就繼續。具體規則：
 
@@ -132,8 +206,12 @@ $ARGUMENTS
 
 **對每個**通過階段 2-4 的概念：
 
-1. **調用**：`/concept.integrate {lang} {concept_name}`
+1. **⚠️ 必須使用 Skill tool 調用**：
+   ```
+   Skill tool: skill="concept-integrate", args="{lang} {concept_name}"
+   ```
 2. **關卡**：所有檢查通過
+3. **完成標記**：`🏁 SKILL_COMPLETE: concept-integrate | ...`
 
 ### 最終：總結報告
 

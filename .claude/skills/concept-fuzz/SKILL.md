@@ -10,6 +10,14 @@ user-invocable: true
 
 > **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
 
+## ⛔ 調用要求
+
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+
+**此階段不可被跳過**，除非使用者明確設定了 `--dry-run` 或 `--skip-fuzz` 旗標。不可因「概念簡單」、「時間不夠」等理由省略。
+
+**完成時必須輸出完成標記**（見最後一節）。
+
 # 概念模糊測試
 
 ## 使用者輸入
@@ -257,3 +265,13 @@ Agent A 回傳程式後：
 - 調查已知弱點時指定特定範疇
 - 最有價值的 bug 來自 `SEMANTIC_DIFF` — 程式碼可執行但行為錯誤
 - 跨語言比較：如果通用概念在 A 語言 PASS 但 B 語言 FAIL，問題可能在語言特定的 lifter/generator
+
+## 完成標記（強制）
+
+此 skill 完成後，**必須**輸出以下格式的完成標記：
+
+```
+🏁 SKILL_COMPLETE: concept-fuzz | {lang} | {scope} | {N} 程式 | PASS: {P} | BUG: {B} | TODO: {T} | 測試檔：{test_file_path}
+```
+
+如果未輸出此標記，pipeline 不會繼續下一階段。

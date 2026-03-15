@@ -10,6 +10,14 @@ user-invocable: true
 
 > **語言指示**：所有輸出文件（報告、摘要、註解）必須使用**當前對話的語言**撰寫。下方模板僅為結構參考，實際用語應配合使用者的語言設定。
 
+## ⛔ 調用要求
+
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+
+**前置條件**：此 skill 只能在 concept-discover、concept-generate、concept-roundtrip、concept-fuzz 都已完成後才能調用（除非使用了 `--dry-run` 或 `--skip-fuzz` 旗標）。
+
+**完成時必須輸出完成標記**（見最後一節）。
+
 # 概念整合
 
 ## 使用者輸入
@@ -214,3 +222,13 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_o
 - **一次一個概念** — 獨立整合並驗證每個概念
 - **乾淨的 git 狀態** — 永遠從乾淨的 working tree 開始
 - **通用概念需全語言驗證** — 通用概念必須在所有已支援語言中通過測試
+
+## 完成標記（強制）
+
+此 skill 完成後，**必須**輸出以下格式的完成標記：
+
+```
+🏁 SKILL_COMPLETE: concept-integrate | {lang} | {concept_name} | {PASS/FAIL} | 殘留 todo: {N}
+```
+
+如果未輸出此標記，pipeline 的該概念視為未整合。
