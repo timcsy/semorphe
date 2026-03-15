@@ -142,7 +142,19 @@ lifter.register('{tree_sitter_node_type}', (node, context) => {
 
 **Layer 引導**：Layer 1 純 JSON（astPattern）、Layer 2 JSON + transform（TransformRegistry）、Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
 
-**Confidence 引導**：composite pattern 必須先過語義驗證才能設 `high`（§2.1）；推測性對應設 `inferred`；無法結構化則降級為 `raw_code`。
+**信心等級設定規則**（P1 §2.1，強制遵守）：
+
+| 信心等級 | 使用時機 | 範例 |
+|----------|---------|------|
+| `high` | 結構完全匹配**且**通過語義驗證的直接映射 | `number_literal` → `number_literal` |
+| `warning` | 結構匹配但語義**可能不準確**（一對多映射） | `binary_expression` 可能是算術/比較/位元運算 |
+| `inferred` | 推測性對應（從上下文推斷） | 從使用位置推斷變數型別 |
+| `raw_code` | 無法結構化的降級 | 不支援的語法 |
+
+**關鍵規則**：
+- **composite pattern 不可直接設 `high`**——必須先通過語義驗證（至少驗證子節點概念是否合理）
+- **一對多 AST 映射必須設 `warning`**——例如 `call_expression` 可能映射到 `func_call`、`cpp:cout`、`cpp:sort` 等多個概念，在確定具體概念前應設 `warning`
+- **每個 lifter 必須有降級路徑**——當 AST 節點無法識別時，應降級為 `raw_code` 而非靜默丟棄
 
 規則：
 - 第一個參數是 **tree-sitter 節點類型**（不是概念名稱）— 每個語言的 tree-sitter grammar 不同
@@ -204,6 +216,33 @@ describe('{concept_name}', () => {
   })
 })
 ```
+
+### 步驟六之二：四路完備性驗證（強制阻擋）
+
+產生所有產出物後，**必須**執行四路完備性驗證。這是阻擋性關卡——缺少任何一路就不可繼續。
+
+對目標概念逐一確認以下 6 條路徑全部存在：
+
+| # | 路徑 | 驗證方式 | 缺失後果 |
+|---|------|---------|---------|
+| 1 | **Lift** | lifter 檔案中有 `register('{nodeType}', ...)` 或 `lift-patterns.json` 有條目 | ❌ 阻擋 |
+| 2 | **Render** | blocks.json 中有 BlockSpec 條目，且 `renderMapping` 完整（fields + inputs 覆蓋所有語義屬性） | ❌ 阻擋 |
+| 3 | **Extract** | BlockSpec 的 `renderMapping` 可反向提取（Blockly state → SemanticNode） | ❌ 阻擋 |
+| 4 | **Generate** | generator 檔案中有 `generators.set('{concept}', ...)` | ❌ 阻擋 |
+| 5 | **Execute** | executor 檔案中有 `register('{concept}', ...)` | ❌ 阻擋 |
+| 6 | **Test** | 測試檔存在且包含 lift、generate、round-trip 三種測試 | ❌ 阻擋 |
+
+```bash
+# 驗證方式：在各路徑的檔案中搜尋概念名稱
+grep -rn "'{concept_name}'" src/languages/{lang}/ src/interpreter/executors/ tests/
+```
+
+**如果任何路徑缺失**：
+1. 報告缺失的路徑清單
+2. 立即補全缺失的產出物
+3. 重新驗證直到 6/6 通過
+
+完成標記中的 `產出物：{N}/6` 必須反映此驗證結果。**N < 6 時不可輸出 SKILL_COMPLETE 標記。**
 
 ### 步驟七：通用概念跨語言產生
 

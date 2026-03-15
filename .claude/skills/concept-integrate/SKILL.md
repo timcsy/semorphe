@@ -53,9 +53,36 @@ $ARGUMENTS
 - [ ] `src/core/types.ts` 中的 `UniversalConcept` 型別已更新
 - [ ] 所有已支援語言都有對應的 generator 和 lifter
 
-如果缺少任何產出物，報告缺少哪些，並建議先執行 `/concept.generate`。
+如果缺少任何產出物，報告缺少哪些，並建議先執行 `/concept.generate` 或 `/concept.refactor fix`。
 
 ## 工作流程
+
+### 步驟零：四路完備性自動掃描（強制阻擋）
+
+**這是整合的第一道關卡，不可跳過。**
+
+對目標概念執行自動化六路掃描（P2 §2.2 四路完備性 + Execute + Test）：
+
+```bash
+# 用 grep 搜尋概念在各路徑中的存在性
+grep -rn "'{concept_id}'" src/languages/{lang}/ src/interpreter/executors/ tests/ --include="*.ts" --include="*.json"
+```
+
+逐一確認：
+
+| # | 路徑 | 搜尋目標 | 存在？ |
+|---|------|---------|-------|
+| 1 | Lift | lifter `register()` 或 `lift-patterns.json` 條目 | |
+| 2 | Render | blocks.json 中的 BlockSpec + `renderMapping` | |
+| 3 | Extract | `renderMapping` 可反向提取（fields + inputs 覆蓋所有屬性） | |
+| 4 | Generate | generator `generators.set()` | |
+| 5 | Execute | executor `register()` | |
+| 6 | Test | 測試檔含 lift/generate/round-trip 測試 | |
+
+**任何路徑缺失即為阻擋問題**：
+- 報告缺失路徑清單
+- 建議執行 `/concept.generate {lang} {concept}` 補全，或 `/concept.refactor {lang} fix {concept}` 修復
+- **不可繼續後續步驟**
 
 ### 步驟一：TypeScript 編譯檢查
 
@@ -104,6 +131,27 @@ npm test
 2. 執行 `renderToBlocklyState()`
 3. 驗證 Blockly 狀態 JSON 有正確的積木類型、欄位、輸入和連接
 4. 如果概念有 `expressionCounterpart`，驗證兩種形式都能渲染
+
+### 步驟五之二：信心等級合規審計（P1 §2.1）
+
+掃描該概念的 lifter 實作，驗證信心等級設定是否符合第一性原理：
+
+1. **Composite pattern 驗證**：如果概念使用 composite pattern（`pattern-lifter.ts`），確認匹配後有語義驗證步驟，不可在未驗證的情況下設 `confidence: 'high'`
+2. **一對多映射檢查**：如果概念的 AST nodeType 可映射到多個不同概念（如 `call_expression`），確認 lifter 在歧義情境下使用 `confidence: 'warning'` 而非 `'high'`
+3. **降級路徑存在性**：確認 lifter 在無法識別 AST 結構時有 `raw_code` 降級路徑，而非靜默丟棄節點
+4. **`warning` 使用頻率**：如果概念的 lifter 從未設定 `warning`，但存在歧義情境，標記為**建議修復**
+
+輸出信心等級審計結果：
+```
+信心等級審計：
+- high 使用：{N} 處（{是否合規}）
+- warning 使用：{N} 處（{是否合規}）
+- inferred 使用：{N} 處
+- raw_code 降級：{有/無}
+- composite 語義驗證：{有/無}
+```
+
+如果發現 composite pattern 無語義驗證且設為 `high`，標記為**警告**（不阻擋整合，但記錄在已知限制中）。
 
 ### 步驟六：Pattern Priority 衝突偵測（P3 開放擴展）
 

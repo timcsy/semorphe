@@ -115,6 +115,10 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 - 檢查概念名稱是否符合預期
 - **二次 round-trip 驗證**：對產生的程式碼再次 lift，比較兩次語義樹是否結構等價（節點類型、屬性、子節點結構相同），驗證 P1 可逆性
 - 統計 `raw_code`/`unresolved` 節點佔總節點的比例
+- **信心等級分布**：統計語義樹中各信心等級的節點數量（`high`/`warning`/`inferred`/`raw_code`）。如果有 composite pattern 匹配但 `warning` 為 0，標記為可疑（P1 §2.1 合規性警告）。在報告中輸出：
+  ```
+  信心分布：high={N} | warning={N} | inferred={N} | raw_code={N}
+  ```
 
 **層級三 — 多分支鷹架行為（P4 漸進式揭露）**：
 - 對同一個語義樹，使用不同的 `enabledBranches` 集合產生程式碼（例如只啟用根節點、啟用到第一層、啟用全部分支）

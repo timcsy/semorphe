@@ -261,6 +261,20 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 - `/concept.roundtrip {lang} {concept_name}`
 - `/concept.integrate {lang} {concept_name}`
 
+## 既有概念修復
+
+如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/concept.refactor` 的醫治模式修復：
+
+- `/concept.refactor {lang} audit` — 完整審計，了解問題全貌
+- `/concept.refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
+- `/concept.refactor {lang} fix all` — 修復該語言所有概念
+- `/concept.refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
+
+**pipeline 與 refactor 的分工**：
+- `/concept.pipeline` 用於**新增**概念（從零到一）
+- `/concept.refactor fix` 用於**修復**既有概念（從不完整到完整）
+- `/concept.refactor migrate` 用於**重構**既有概念（從 hand-written 到 JSON pattern）
+
 ## 範例
 
 ```bash
