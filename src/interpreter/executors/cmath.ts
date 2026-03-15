@@ -30,6 +30,8 @@ export function registerCmathExecutors(register: (concept: string, executor: Con
       case 'asin': result = Math.asin(v); break
       case 'acos': result = Math.acos(v); break
       case 'atan': result = Math.atan(v); break
+      case 'trunc': result = Math.trunc(v); break
+      case 'cbrt': result = Math.cbrt(v); break
       default: result = v
     }
     return { type: 'double', value: result }
@@ -48,6 +50,7 @@ export function registerCmathExecutors(register: (concept: string, executor: Con
       case 'fmax': case 'max': result = Math.max(v1, v2); break
       case 'fmin': case 'min': result = Math.min(v1, v2); break
       case 'atan2': result = Math.atan2(v1, v2); break
+      case 'hypot': result = Math.hypot(v1, v2); break
       default: result = 0
     }
     return { type: 'double', value: result }

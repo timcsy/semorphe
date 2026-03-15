@@ -31,7 +31,8 @@
           "cpp_increment", "cpp_increment_expr",
           "cpp_compound_assign", "cpp_compound_assign_expr",
           "var_declare_expr",
-          "cpp_rand", "cpp_srand", "cpp_abs", "cpp_swap"
+          "cpp_rand", "cpp_srand", "cpp_abs", "cpp_swap",
+          "cpp_gcd", "cpp_lcm"
         ],
         "children": [
           {
@@ -58,8 +59,10 @@
               "cpp_method_call", "cpp_method_call_expr",
               "cpp_template_function",
               "cpp:math_binary",
-              "cpp_accumulate", "cpp_pair_declare", "cpp_make_pair",
-              "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign"
+              "cpp_accumulate", "cpp_iota", "cpp_partial_sum",
+              "cpp_pair_declare", "cpp_make_pair",
+              "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign",
+              "cpp_atoi", "cpp_atof"
             ],
             "children": []
           }

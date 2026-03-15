@@ -26,11 +26,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_IFSTREAM_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::ifstream ${NAME}(\"${FILE}\");",
-      "imports": ["fstream"],
-      "order": 0
-    },
     "renderMapping": {
       "fields": { "NAME": "name", "FILE": "file" },
       "inputs": {},
@@ -63,11 +58,6 @@
       "nextStatement": "Statement",
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_OFSTREAM_DECLARE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "std::ofstream ${NAME}(\"${FILE}\");",
-      "imports": ["fstream"],
-      "order": 0
     },
     "renderMapping": {
       "fields": { "NAME": "name", "FILE": "file" },

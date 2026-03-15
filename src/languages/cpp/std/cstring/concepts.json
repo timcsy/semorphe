@@ -1,7 +1,7 @@
 [
   {
     "conceptId": "cpp_strlen",
-    "layer": "lang-core",
+    "layer": "lang-library",
     "abstractConcept": "strlen",
     "properties": [],
     "children": {
@@ -11,7 +11,7 @@
   },
   {
     "conceptId": "cpp_strcmp",
-    "layer": "lang-core",
+    "layer": "lang-library",
     "abstractConcept": "strcmp",
     "properties": [],
     "children": {
@@ -22,12 +22,93 @@
   },
   {
     "conceptId": "cpp_strcpy",
-    "layer": "lang-core",
+    "layer": "lang-library",
     "abstractConcept": "strcpy",
     "properties": [],
     "children": {
       "dest": "expression",
       "src": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_strcat",
+    "layer": "lang-library",
+    "abstractConcept": "strcat",
+    "properties": [],
+    "children": {
+      "dest": "expression",
+      "src": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_strncpy",
+    "layer": "lang-library",
+    "abstractConcept": "strncpy",
+    "properties": [],
+    "children": {
+      "dest": "expression",
+      "src": "expression",
+      "n": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_strncmp",
+    "layer": "lang-library",
+    "abstractConcept": "strncmp",
+    "properties": [],
+    "children": {
+      "s1": "expression",
+      "s2": "expression",
+      "n": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_strchr",
+    "layer": "lang-library",
+    "abstractConcept": "strchr",
+    "properties": [],
+    "children": {
+      "str": "expression",
+      "ch": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_strstr",
+    "layer": "lang-library",
+    "abstractConcept": "strstr",
+    "properties": [],
+    "children": {
+      "haystack": "expression",
+      "needle": "expression"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_memset",
+    "layer": "lang-library",
+    "abstractConcept": "memset",
+    "properties": [],
+    "children": {
+      "ptr": "expression",
+      "value": "expression",
+      "size": "expression"
+    },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_memcpy",
+    "layer": "lang-library",
+    "abstractConcept": "memcpy",
+    "properties": [],
+    "children": {
+      "dest": "expression",
+      "src": "expression",
+      "size": "expression"
     },
     "role": "statement"
   }

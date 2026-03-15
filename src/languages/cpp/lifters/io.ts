@@ -248,6 +248,14 @@ export function registerIOLifters(lifter: Lifter): void {
       const code = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode('cpp_exit', {}, { code: code ? [code] : [] })
     }
+    if (funcName === 'atoi') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_atoi', {}, { str: str ? [str] : [] })
+    }
+    if (funcName === 'atof') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_atof', {}, { str: str ? [str] : [] })
+    }
 
     // cctype functions
     const cctypeFuncs: Record<string, string> = {
@@ -266,6 +274,45 @@ export function registerIOLifters(lifter: Lifter): void {
       return createNode('cpp_swap', { a, b })
     }
 
+    // sort, reverse, fill (iterator-range algorithms)
+    // Check arg count to avoid intercepting user-defined functions with same name
+    if ((funcName === 'sort' || funcName === 'std::sort') && argChildren.length === 2) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      return createNode('cpp_sort', { begin: beginText, end: endText })
+    }
+    if ((funcName === 'reverse' || funcName === 'std::reverse') && argChildren.length === 2) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      return createNode('cpp_reverse', { begin: beginText, end: endText })
+    }
+    if ((funcName === 'fill' || funcName === 'std::fill') && argChildren.length === 3) {
+      const beginText = argChildren[0]?.text ?? 'v.begin()'
+      const endText = argChildren[1]?.text ?? 'v.end()'
+      const valueChild = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_fill', { begin: beginText, end: endText }, {
+        value: valueChild ? [valueChild] : [],
+      })
+    }
+
+    // min, max (value algorithms)
+    if (funcName === 'min' || funcName === 'std::min') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_min', {}, {
+        a: a ? [a] : [],
+        b: b ? [b] : [],
+      })
+    }
+    if (funcName === 'max' || funcName === 'std::max') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_max', {}, {
+        a: a ? [a] : [],
+        b: b ? [b] : [],
+      })
+    }
+
     // std::accumulate / accumulate
     if (funcName === 'accumulate' || funcName === 'std::accumulate') {
       const accumArgs = argsNode ? argsNode.namedChildren : []
@@ -277,6 +324,40 @@ export function registerIOLifters(lifter: Lifter): void {
       })
     }
 
+    // std::iota / iota
+    if (funcName === 'iota' || funcName === 'std::iota') {
+      const iotaArgs = argsNode ? argsNode.namedChildren : []
+      const beginText = iotaArgs[0]?.text ?? 'v.begin()'
+      const endText = iotaArgs[1]?.text ?? 'v.end()'
+      const valueChild = iotaArgs[2] ? ctx.lift(iotaArgs[2]) : null
+      return createNode('cpp_iota', { begin: beginText, end: endText }, {
+        value: valueChild ? [valueChild] : [],
+      })
+    }
+
+    // std::partial_sum / partial_sum
+    if (funcName === 'partial_sum' || funcName === 'std::partial_sum') {
+      const psArgs = argsNode ? argsNode.namedChildren : []
+      const beginText = psArgs[0]?.text ?? 'v.begin()'
+      const endText = psArgs[1]?.text ?? 'v.end()'
+      const destText = psArgs[2]?.text ?? 'result.begin()'
+      return createNode('cpp_partial_sum', { begin: beginText, end: endText, dest: destText }, {})
+    }
+
+    // __gcd / gcd / std::gcd
+    if (funcName === '__gcd' || funcName === 'gcd' || funcName === 'std::gcd') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_gcd', {}, { a: a ? [a] : [], b: b ? [b] : [] })
+    }
+
+    // lcm / std::lcm
+    if (funcName === 'lcm' || funcName === 'std::lcm') {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_lcm', {}, { a: a ? [a] : [], b: b ? [b] : [] })
+    }
+
     // std::make_pair / make_pair
     if (funcName === 'make_pair' || funcName === 'std::make_pair') {
       const pairArgs = argsNode ? argsNode.namedChildren : []
@@ -286,6 +367,61 @@ export function registerIOLifters(lifter: Lifter): void {
         first: firstChild ? [firstChild] : [],
         second: secondChild ? [secondChild] : [],
       })
+    }
+
+    // cstring functions
+    if (funcName === 'strlen') {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_strlen', {}, { str: str ? [str] : [] })
+    }
+    if (funcName === 'strcmp') {
+      const s1 = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const s2 = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strcmp', {}, { s1: s1 ? [s1] : [], s2: s2 ? [s2] : [] })
+    }
+    if (funcName === 'strcpy') {
+      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strcpy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [] })
+    }
+    if (funcName === 'strcat') {
+      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strcat', {}, { dest: dest ? [dest] : [], src: src ? [src] : [] })
+    }
+    if (funcName === 'strncpy' && argChildren.length === 3) {
+      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      const n = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_strncpy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [], n: n ? [n] : [] })
+    }
+    if (funcName === 'strncmp' && argChildren.length === 3) {
+      const s1 = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const s2 = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      const n = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_strncmp', {}, { s1: s1 ? [s1] : [], s2: s2 ? [s2] : [], n: n ? [n] : [] })
+    }
+    if (funcName === 'strchr' && argChildren.length === 2) {
+      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const ch = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strchr', {}, { str: str ? [str] : [], ch: ch ? [ch] : [] })
+    }
+    if (funcName === 'strstr' && argChildren.length === 2) {
+      const haystack = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const needle = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      return createNode('cpp_strstr', {}, { haystack: haystack ? [haystack] : [], needle: needle ? [needle] : [] })
+    }
+    if (funcName === 'memset' && argChildren.length === 3) {
+      const ptr = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const value = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      const size = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_memset', {}, { ptr: ptr ? [ptr] : [], value: value ? [value] : [], size: size ? [size] : [] })
+    }
+    if (funcName === 'memcpy' && argChildren.length === 3) {
+      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
+      const size = argChildren[2] ? ctx.lift(argChildren[2]) : null
+      return createNode('cpp_memcpy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [], size: size ? [size] : [] })
     }
 
     // General function call

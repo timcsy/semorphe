@@ -20,28 +20,10 @@
       "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRLEN_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "strlen(${STR})",
-      "imports": [
-        "string.h"
-      ],
-      "order": 20
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "strlen"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "str",
-          "ast": "arguments",
-          "extract": "lift"
-        }
-      ]
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "STR": "str" },
+      "statementInputs": {}
     }
   },
   {
@@ -70,33 +52,10 @@
       "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRCMP_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "strcmp(${S1}, ${S2})",
-      "imports": [
-        "string.h"
-      ],
-      "order": 20
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "strcmp"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "s1",
-          "ast": "arguments[0]",
-          "extract": "lift"
-        },
-        {
-          "semantic": "s2",
-          "ast": "arguments[1]",
-          "extract": "lift"
-        }
-      ]
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "S1": "s1", "S2": "s2" },
+      "statementInputs": {}
     }
   },
   {
@@ -126,33 +85,258 @@
       "colour": "#0FBD8C",
       "tooltip": "%{BKY_C_STRCPY_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "strcpy(${DEST}, ${SRC});",
-      "imports": [
-        "string.h"
-      ],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "DEST": "dest", "SRC": "src" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_strcat",
+    "conceptId": "cpp_strcat",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strcat",
+      "message0": "%{BKY_C_STRCAT_MSG0}",
+      "args0": [
         {
-          "field": "function",
-          "text": "strcpy"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "dest",
-          "ast": "arguments[0]",
-          "extract": "lift"
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
         },
         {
-          "semantic": "src",
-          "ast": "arguments[1]",
-          "extract": "lift"
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
         }
-      ]
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCAT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "DEST": "dest", "SRC": "src" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_strncpy",
+    "conceptId": "cpp_strncpy",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strncpy",
+      "message0": "%{BKY_C_STRNCPY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "N",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRNCPY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "DEST": "dest", "SRC": "src", "N": "n" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_strncmp",
+    "conceptId": "cpp_strncmp",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strncmp",
+      "message0": "%{BKY_C_STRNCMP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "S1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "S2",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "N",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRNCMP_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "S1": "s1", "S2": "s2", "N": "n" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_strchr",
+    "conceptId": "cpp_strchr",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strchr",
+      "message0": "%{BKY_C_STRCHR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "CH",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCHR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "STR": "str", "CH": "ch" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_strstr",
+    "conceptId": "cpp_strstr",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_strstr",
+      "message0": "%{BKY_C_STRSTR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "HAYSTACK",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "NEEDLE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRSTR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "HAYSTACK": "haystack", "NEEDLE": "needle" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_memset",
+    "conceptId": "cpp_memset",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_memset",
+      "message0": "%{BKY_C_MEMSET_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_MEMSET_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "PTR": "ptr", "VALUE": "value", "SIZE": "size" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "c_memcpy",
+    "conceptId": "cpp_memcpy",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_memcpy",
+      "message0": "%{BKY_C_MEMCPY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_MEMCPY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "DEST": "dest", "SRC": "src", "SIZE": "size" },
+      "statementInputs": {}
     }
   }
 ]

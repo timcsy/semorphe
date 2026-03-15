@@ -1,29 +1,50 @@
 [
   {
     "conceptId": "cpp_sort",
-    "layer": "lang-core",
+    "layer": "lang-library",
     "abstractConcept": "sort",
-    "properties": [],
+    "properties": ["begin", "end"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_reverse",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["begin", "end"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_fill",
+    "layer": "lang-library",
+    "abstractConcept": null,
+    "properties": ["begin", "end"],
     "children": {
-      "begin": "expression",
-      "end": "expression"
+      "value": "expression"
     },
     "role": "statement"
   },
   {
-    "conceptId": "cpp:sort",
+    "conceptId": "cpp_min",
     "layer": "lang-library",
-    "abstractConcept": "container_sort",
+    "abstractConcept": null,
     "properties": [],
-    "children": {},
-    "role": "statement"
+    "children": {
+      "a": "expression",
+      "b": "expression"
+    },
+    "role": "expression"
   },
   {
-    "conceptId": "cpp:find",
+    "conceptId": "cpp_max",
     "layer": "lang-library",
-    "abstractConcept": "container_find",
+    "abstractConcept": null,
     "properties": [],
-    "children": {},
+    "children": {
+      "a": "expression",
+      "b": "expression"
+    },
     "role": "expression"
   },
   {

@@ -30,14 +30,149 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_ACCUMULATE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::accumulate(${BEGIN}, ${END}, ${INIT})",
-      "imports": ["numeric"],
-      "order": 20
-    },
     "renderMapping": {
       "fields": { "BEGIN": "begin", "END": "end" },
       "inputs": { "INIT": "init" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_iota",
+    "conceptId": "cpp_iota",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_iota",
+      "message0": "%{BKY_CPP_IOTA_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "BEGIN",
+          "text": "v.begin()"
+        },
+        {
+          "type": "field_input",
+          "name": "END",
+          "text": "v.end()"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_IOTA_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "BEGIN": "begin", "END": "end" },
+      "inputs": { "VALUE": "value" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_partial_sum",
+    "conceptId": "cpp_partial_sum",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_partial_sum",
+      "message0": "%{BKY_CPP_PARTIAL_SUM_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "BEGIN",
+          "text": "v.begin()"
+        },
+        {
+          "type": "field_input",
+          "name": "END",
+          "text": "v.end()"
+        },
+        {
+          "type": "field_input",
+          "name": "DEST",
+          "text": "result.begin()"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_PARTIAL_SUM_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "BEGIN": "begin", "END": "end", "DEST": "dest" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_gcd",
+    "conceptId": "cpp_gcd",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_gcd",
+      "message0": "%{BKY_CPP_GCD_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_GCD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "A": "a", "B": "b" },
+      "statementInputs": {}
+    }
+  },
+  {
+    "id": "cpp_lcm",
+    "conceptId": "cpp_lcm",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_lcm",
+      "message0": "%{BKY_CPP_LCM_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_LCM_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "A": "a", "B": "b" },
       "statementInputs": {}
     }
   }
