@@ -1,10 +1,10 @@
 /**
  * C++ Map Operations Roundtrip Tests
  *
- * Verifies that C++ map concepts (cpp_map_declare, cpp_map_erase,
- * cpp_map_count, cpp_map_empty, cpp_map_access) survive the full roundtrip.
+ * Verifies that C++ map concepts (cpp_map_declare, cpp_container_erase,
+ * cpp_container_count, cpp_map_empty, cpp_map_access) survive the full roundtrip.
  *
- * Note: .empty() maps to cpp_vector_empty (shared method).
+ * Note: .empty() maps to cpp_container_empty (shared method).
  * Note: m[key] maps to array_access (no type info to distinguish map from array).
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -126,12 +126,12 @@ describe('C++ Map Operations Roundtrip', () => {
     })
   })
 
-  describe('cpp_map_erase', () => {
+  describe('cpp_container_erase', () => {
     const code = 'map<string, int> mp;\nmp.erase("hello");\ncout << "erased" << endl;'
 
-    it('should lift to cpp_map_erase with obj and key', () => {
+    it('should lift to cpp_container_erase with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_map_erase')
+      const node = findConcept(tree, 'cpp_container_erase')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
       expect(node!.children.key).toBeDefined()
@@ -146,17 +146,17 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_map_erase')
+      const node2 = findConcept(tree2, 'cpp_container_erase')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp_map_count', () => {
+  describe('cpp_container_count', () => {
     const code = 'map<string, int> mp;\nif (mp.count("key")) {\n    cout << "found" << endl;\n}'
 
-    it('should lift to cpp_map_count with obj and key', () => {
+    it('should lift to cpp_container_count with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_map_count')
+      const node = findConcept(tree, 'cpp_container_count')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
     })
@@ -169,7 +169,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_map_count')
+      const node2 = findConcept(tree2, 'cpp_container_count')
       expect(node2).not.toBeNull()
     })
   })
@@ -193,12 +193,12 @@ describe('C++ Map Operations Roundtrip', () => {
     })
   })
 
-  describe('cpp_map_empty (via cpp_vector_empty)', () => {
+  describe('cpp_map_empty (via cpp_container_empty)', () => {
     const code = 'map<int, int> mp;\nif (mp.empty()) {\n    cout << "empty" << endl;\n}'
 
-    it('should lift .empty() to cpp_vector_empty (shared method)', () => {
+    it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_vector_empty')
+      const node = findConcept(tree, 'cpp_container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -210,7 +210,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_vector_empty')
+      const node2 = findConcept(tree2, 'cpp_container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -222,8 +222,8 @@ describe('C++ Map Operations Roundtrip', () => {
       const tree = liftCode(code)
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_map_erase')).toBe(true)
-      expect(concepts.has('cpp_map_count')).toBe(true)
+      expect(concepts.has('cpp_container_erase')).toBe(true)
+      expect(concepts.has('cpp_container_count')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -231,8 +231,8 @@ describe('C++ Map Operations Roundtrip', () => {
       const tree2 = liftCode(output)
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_map_erase')).toBe(true)
-      expect(concepts2.has('cpp_map_count')).toBe(true)
+      expect(concepts2.has('cpp_container_erase')).toBe(true)
+      expect(concepts2.has('cpp_container_count')).toBe(true)
     })
   })
 })

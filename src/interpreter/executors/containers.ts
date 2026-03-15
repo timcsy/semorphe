@@ -28,18 +28,6 @@ export function registerContainerExecutors(register: (concept: string, executor:
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
 
-  register('cpp_vector_push_back', async (node, ctx) => {
-    const name = String(node.properties.vector)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    arr.value.push(val)
-  })
-
   register('cpp_vector_size', async (node, ctx) => {
     const name = String(node.properties.vector)
     const arr = ctx.scope.get(name)
@@ -60,24 +48,6 @@ export function registerContainerExecutors(register: (concept: string, executor:
     }
   })
 
-  register('cpp_vector_clear', async (node, ctx) => {
-    const name = String(node.properties.vector)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    arr.value.length = 0
-  })
-
-  register('cpp_vector_empty', async (node, ctx) => {
-    const name = String(node.properties.vector)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      return { type: 'bool', value: true }
-    }
-    return { type: 'bool', value: arr.value.length === 0 }
-  })
-
   register('cpp_vector_back', async (node, ctx) => {
     const name = String(node.properties.vector)
     const arr = ctx.scope.get(name)
@@ -94,29 +64,6 @@ export function registerContainerExecutors(register: (concept: string, executor:
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
 
-  register('cpp_stack_push', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    arr.value.push(val)
-  })
-
-  register('cpp_stack_pop', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    if (arr.value.length > 0) {
-      arr.value.pop()
-    }
-  })
-
   register('cpp_stack_top', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
@@ -126,43 +73,11 @@ export function registerContainerExecutors(register: (concept: string, executor:
     return arr.value[arr.value.length - 1]
   })
 
-  register('cpp_stack_empty', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      return { type: 'bool', value: true }
-    }
-    return { type: 'bool', value: arr.value.length === 0 }
-  })
-
   // ─── Queue (simulated with array: push=push, pop=shift, front=first) ───
 
   register('cpp_queue_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [] })
-  })
-
-  register('cpp_queue_push', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    arr.value.push(val)
-  })
-
-  register('cpp_queue_pop', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    if (arr.value.length > 0) {
-      arr.value.shift()
-    }
   })
 
   register('cpp_queue_front', async (node, ctx) => {
@@ -174,17 +89,7 @@ export function registerContainerExecutors(register: (concept: string, executor:
     return arr.value[0]
   })
 
-  register('cpp_queue_empty', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      return { type: 'bool', value: true }
-    }
-    return { type: 'bool', value: arr.value.length === 0 }
-  })
-
   // ─── Map (simulated with array of [key, value] pairs) ───
-  // Stored as { type: 'array', value: [ {type:'array', value:[keyRV, valRV]}, ... ] }
 
   register('cpp_map_declare', async (node, ctx) => {
     const name = String(node.properties.name)
@@ -215,41 +120,6 @@ export function registerContainerExecutors(register: (concept: string, executor:
     return defaultValue('int')
   })
 
-  register('cpp_map_erase', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const keyNodes = node.children.key ?? []
-    if (keyNodes.length === 0) return
-    const keyVal = await ctx.evaluate(keyNodes[0])
-    const map = ctx.scope.get(name)
-    if (map.type !== 'array' || !Array.isArray(map.value)) return
-    const idx = mapFind(map.value, keyVal)
-    if (idx !== -1) {
-      map.value.splice(idx, 1)
-    }
-  })
-
-  register('cpp_map_count', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const keyNodes = node.children.key ?? []
-    if (keyNodes.length === 0) return { type: 'int' as const, value: 0 }
-    const keyVal = await ctx.evaluate(keyNodes[0])
-    const map = ctx.scope.get(name)
-    if (map.type !== 'array' || !Array.isArray(map.value)) {
-      return { type: 'int' as const, value: 0 }
-    }
-    const idx = mapFind(map.value, keyVal)
-    return { type: 'int' as const, value: idx !== -1 ? 1 : 0 }
-  })
-
-  register('cpp_map_empty', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const map = ctx.scope.get(name)
-    if (map.type !== 'array' || !Array.isArray(map.value)) {
-      return { type: 'bool', value: true }
-    }
-    return { type: 'bool', value: map.value.length === 0 }
-  })
-
   // ─── Set (simulated with array + uniqueness) ───
 
   register('cpp_set_declare', async (node, ctx) => {
@@ -278,7 +148,18 @@ export function registerContainerExecutors(register: (concept: string, executor:
     }
   })
 
-  register('cpp_set_erase', async (node, ctx) => {
+  // ─── Generic container concepts (used by lifter for shared methods) ───
+
+  register('cpp_container_empty', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+      return { type: 'bool', value: true }
+    }
+    return { type: 'bool', value: arr.value.length === 0 }
+  })
+
+  register('cpp_container_push', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return
@@ -287,31 +168,75 @@ export function registerContainerExecutors(register: (concept: string, executor:
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }
-    const idx = arr.value.findIndex((v: RuntimeValue) => v.value === val.value)
-    if (idx !== -1) {
-      arr.value.splice(idx, 1)
+    arr.value.push(val)
+  })
+
+  register('cpp_container_pop', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+    }
+    if (arr.value.length > 0) {
+      arr.value.pop()
     }
   })
 
-  register('cpp_set_count', async (node, ctx) => {
+  register('cpp_container_clear', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+    }
+    arr.value.length = 0
+  })
+
+  register('cpp_container_push_back', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return { type: 'int' as const, value: 0 }
+    if (valueNodes.length === 0) return
     const val = await ctx.evaluate(valueNodes[0])
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+    }
+    arr.value.push(val)
+  })
+
+  register('cpp_container_erase', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const keyNodes = node.children.key ?? []
+    if (keyNodes.length === 0) return
+    const keyVal = await ctx.evaluate(keyNodes[0])
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value)) return
+    // Try map-style erase (key-value pairs) first
+    const idx = mapFind(arr.value, keyVal)
+    if (idx !== -1) {
+      arr.value.splice(idx, 1)
+      return
+    }
+    // Set-style erase (direct value match)
+    const setIdx = arr.value.findIndex((v: RuntimeValue) => v.value === keyVal.value)
+    if (setIdx !== -1) {
+      arr.value.splice(setIdx, 1)
+    }
+  })
+
+  register('cpp_container_count', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const keyNodes = node.children.key ?? []
+    if (keyNodes.length === 0) return { type: 'int' as const, value: 0 }
+    const keyVal = await ctx.evaluate(keyNodes[0])
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       return { type: 'int' as const, value: 0 }
     }
-    const exists = arr.value.some((v: RuntimeValue) => v.value === val.value)
+    // Try map-style count (key-value pairs) first
+    const idx = mapFind(arr.value, keyVal)
+    if (idx !== -1) return { type: 'int' as const, value: 1 }
+    // Set-style count (direct value match)
+    const exists = arr.value.some((v: RuntimeValue) => v.value === keyVal.value)
     return { type: 'int' as const, value: exists ? 1 : 0 }
-  })
-
-  register('cpp_set_empty', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      return { type: 'bool', value: true }
-    }
-    return { type: 'bool', value: arr.value.length === 0 }
   })
 }

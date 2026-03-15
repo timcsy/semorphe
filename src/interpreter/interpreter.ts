@@ -117,7 +117,11 @@ export class SemanticInterpreter implements ExecutionContext {
     const noop: import('./executor-registry').ConceptExecutor = async () => {}
     for (const c of [
       'cpp_include', 'cpp_include_local', 'cpp_using_namespace', 'cpp_define',
-      'cpp:include', 'cpp:include_local', 'cpp:using_namespace', 'comment',
+      'cpp_ifdef', 'cpp_ifndef',
+      'cpp:include', 'cpp:include_local', 'cpp:using_namespace',
+      'comment', 'block_comment', 'doc_comment',
+      'cpp_raw_code', 'cpp_raw_expression',
+      'cpp_case', 'cpp_default',
       'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
       'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
       'cpp_operator_overload',

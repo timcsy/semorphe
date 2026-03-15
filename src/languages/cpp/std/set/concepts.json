@@ -21,39 +21,5 @@
       "value": "expression"
     },
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp_set_erase",
-    "layer": "lang-library",
-    "abstractConcept": "set_erase",
-    "properties": [
-      "obj"
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp_set_count",
-    "layer": "lang-library",
-    "abstractConcept": "set_count",
-    "properties": [
-      "obj"
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp_set_empty",
-    "layer": "lang-library",
-    "abstractConcept": "set_empty",
-    "properties": [
-      "obj"
-    ],
-    "children": {},
-    "role": "expression"
   }
 ]

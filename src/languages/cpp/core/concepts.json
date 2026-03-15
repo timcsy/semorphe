@@ -273,6 +273,62 @@
     "role": "statement"
   },
   {
+    "conceptId": "cpp_container_empty",
+    "layer": "lang-core",
+    "abstractConcept": "container_empty",
+    "properties": ["obj"],
+    "children": {},
+    "role": "expression"
+  },
+  {
+    "conceptId": "cpp_container_push",
+    "layer": "lang-core",
+    "abstractConcept": "container_push",
+    "properties": ["obj"],
+    "children": { "value": "expression" },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_container_pop",
+    "layer": "lang-core",
+    "abstractConcept": "container_pop",
+    "properties": ["obj"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_container_clear",
+    "layer": "lang-core",
+    "abstractConcept": "container_clear",
+    "properties": ["obj"],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_container_push_back",
+    "layer": "lang-core",
+    "abstractConcept": "container_push_back",
+    "properties": ["obj"],
+    "children": { "value": "expression" },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_container_erase",
+    "layer": "lang-core",
+    "abstractConcept": "container_erase",
+    "properties": ["obj"],
+    "children": { "key": "expression" },
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_container_count",
+    "layer": "lang-core",
+    "abstractConcept": "container_count",
+    "properties": ["obj"],
+    "children": { "key": "expression" },
+    "role": "expression"
+  },
+  {
     "conceptId": "cpp_method_call",
     "layer": "lang-core",
     "abstractConcept": "method_call",

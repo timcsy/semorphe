@@ -3161,5 +3161,140 @@
       "imports": [],
       "order": 0
     }
+  },
+  {
+    "id": "c_container_empty",
+    "conceptId": "cpp_container_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_empty",
+      "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.empty()", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_push",
+    "conceptId": "cpp_container_push",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_push",
+      "message0": "%{BKY_CPP_CONTAINER_PUSH_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.push(${VALUE});", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_pop",
+    "conceptId": "cpp_container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_pop",
+      "message0": "%{BKY_CPP_CONTAINER_POP_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_POP_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.pop();", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_clear",
+    "conceptId": "cpp_container_clear",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_clear",
+      "message0": "%{BKY_CPP_CONTAINER_CLEAR_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_CLEAR_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.clear();", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_push_back",
+    "conceptId": "cpp_container_push_back",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_push_back",
+      "message0": "%{BKY_CPP_CONTAINER_PUSH_BACK_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_BACK_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.push_back(${VALUE});", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_erase",
+    "conceptId": "cpp_container_erase",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_erase",
+      "message0": "%{BKY_CPP_CONTAINER_ERASE_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "input_value", "name": "KEY", "check": "Expression" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_ERASE_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.erase(${KEY});", "imports": [], "order": 0 }
+  },
+  {
+    "id": "c_container_count",
+    "conceptId": "cpp_container_count",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_count",
+      "message0": "%{BKY_CPP_CONTAINER_COUNT_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "OBJ", "text": "obj" },
+        { "type": "input_value", "name": "KEY", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_COUNT_TOOLTIP}"
+    },
+    "codeTemplate": { "pattern": "${OBJ}.count(${KEY})", "imports": [], "order": 0 }
   }
 ]

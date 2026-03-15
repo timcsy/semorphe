@@ -243,6 +243,40 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     return `#define ${name} ${value}\n`
   })
 
+  g.set('cpp_ifdef', (node, _ctx) => {
+    const name = node.properties.name ?? 'MACRO'
+    return `#ifdef ${name}\n`
+  })
+
+  g.set('cpp_ifndef', (node, _ctx) => {
+    const name = node.properties.name ?? 'MACRO'
+    return `#ifndef ${name}\n`
+  })
+
+  g.set('comment', (node, ctx) => {
+    const text = node.properties.text ?? ''
+    return `${indent(ctx)}// ${text}\n`
+  })
+
+  g.set('block_comment', (node, ctx) => {
+    const text = node.properties.text ?? ''
+    return `${indent(ctx)}/* ${text} */\n`
+  })
+
+  g.set('doc_comment', (node, ctx) => {
+    const brief = node.properties.brief ?? ''
+    return `${indent(ctx)}/// ${brief}\n`
+  })
+
+  g.set('cpp_raw_code', (node, ctx) => {
+    const code = String(node.properties.code ?? '')
+    return `${indent(ctx)}${code}\n`
+  })
+
+  g.set('cpp_raw_expression', (node, _ctx) => {
+    return String(node.properties.code ?? '')
+  })
+
   g.set('cpp_compound_assign', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const op = node.properties.operator ?? '+='
@@ -363,6 +397,36 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
   g.set('cpp_free', (node, ctx) => {
     const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
     return `${indent(ctx)}free(${ptr});\n`
+  })
+
+  // ─── Generic container methods (used by lifter for shared container ops) ───
+
+  g.set('cpp_container_push', (node, ctx) => {
+    const obj = node.properties.obj ?? 'obj'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `${indent(ctx)}${obj}.push(${val});\n`
+  })
+
+  g.set('cpp_container_pop', (node, ctx) => {
+    const obj = node.properties.obj ?? 'obj'
+    return `${indent(ctx)}${obj}.pop();\n`
+  })
+
+  g.set('cpp_container_clear', (node, ctx) => {
+    const obj = node.properties.obj ?? 'obj'
+    return `${indent(ctx)}${obj}.clear();\n`
+  })
+
+  g.set('cpp_container_push_back', (node, ctx) => {
+    const obj = node.properties.obj ?? 'obj'
+    const val = generateExpression((node.children.value ?? [])[0], ctx)
+    return `${indent(ctx)}${obj}.push_back(${val});\n`
+  })
+
+  g.set('cpp_container_erase', (node, ctx) => {
+    const obj = node.properties.obj ?? 'obj'
+    const key = generateExpression((node.children.key ?? [])[0], ctx)
+    return `${indent(ctx)}${obj}.erase(${key});\n`
   })
 
   g.set('cpp_method_call', (node, ctx) => {

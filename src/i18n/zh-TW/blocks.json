@@ -679,5 +679,19 @@
   "CATEGORY_CPP_STRINGS": "C++ 字串",
   "CATEGORY_CPP_CONTAINERS": "C++ 容器",
   "CATEGORY_CPP_ALGORITHMS": "C++ 演算法",
-  "CATEGORY_CPP_SPECIAL": "C++ 特殊"
+  "CATEGORY_CPP_SPECIAL": "C++ 特殊",
+  "CPP_CONTAINER_EMPTY_MSG0": "%1 .empty()",
+  "CPP_CONTAINER_EMPTY_TOOLTIP": "檢查容器是否為空（回傳是/否）",
+  "CPP_CONTAINER_PUSH_MSG0": "%1 .push( %2 )",
+  "CPP_CONTAINER_PUSH_TOOLTIP": "將值推入容器",
+  "CPP_CONTAINER_POP_MSG0": "%1 .pop()",
+  "CPP_CONTAINER_POP_TOOLTIP": "從容器移除頂部/前端元素",
+  "CPP_CONTAINER_CLEAR_MSG0": "%1 .clear()",
+  "CPP_CONTAINER_CLEAR_TOOLTIP": "移除容器中所有元素",
+  "CPP_CONTAINER_PUSH_BACK_MSG0": "%1 .push_back( %2 )",
+  "CPP_CONTAINER_PUSH_BACK_TOOLTIP": "在容器末端新增元素",
+  "CPP_CONTAINER_ERASE_MSG0": "%1 .erase( %2 )",
+  "CPP_CONTAINER_ERASE_TOOLTIP": "從容器移除元素",
+  "CPP_CONTAINER_COUNT_MSG0": "%1 .count( %2 )",
+  "CPP_CONTAINER_COUNT_TOOLTIP": "計算容器中鍵/值出現的次數"
 }

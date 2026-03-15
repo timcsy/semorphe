@@ -154,6 +154,22 @@ export function registerExpressionLifters(lifter: Lifter): void {
       index: index ? [index] : [],
     })
   })
+
+  // field_expression: s.member or p->member (standalone, not inside call_expression)
+  lifter.register('field_expression', (node) => {
+    const objNode = node.childForFieldName('argument')
+    const fieldNode = node.childForFieldName('field')
+    const obj = objNode?.text ?? ''
+    const member = fieldNode?.text ?? ''
+
+    // Check for -> operator (pointer access)
+    const opNode = node.children.find(c => c.type === '->')
+    if (opNode) {
+      return createNode('cpp_struct_pointer_access', { obj, member })
+    }
+
+    return createNode('cpp_struct_member_access', { obj, member })
+  })
 }
 
 /**

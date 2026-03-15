@@ -87,24 +87,24 @@ function tryStringMethodLift(
   return null
 }
 
-/** Map method names from field_expression to concept IDs */
+/** Map method names from field_expression to concept IDs.
+ * Shared methods (empty, push, pop, clear, push_back, erase, count)
+ * use generic container concepts to avoid type disambiguation issues. */
 const METHOD_TO_CONCEPT: Record<string, string> = {
-  // vector
-  push_back: 'cpp_vector_push_back',
+  // container-specific (unique method names)
   pop_back: 'cpp_vector_pop_back',
-  clear: 'cpp_vector_clear',
   back: 'cpp_vector_back',
   size: 'cpp_vector_size',
-  // stack
   top: 'cpp_stack_top',
-  // queue
   front: 'cpp_queue_front',
-  // ambiguous -- pick most common container concept
-  push: 'cpp_stack_push',
-  pop: 'cpp_stack_pop',
-  empty: 'cpp_vector_empty',
-  erase: 'cpp_map_erase',
-  count: 'cpp_map_count',
+  // generic container concepts (shared methods across containers)
+  empty: 'cpp_container_empty',
+  push: 'cpp_container_push',
+  pop: 'cpp_container_pop',
+  clear: 'cpp_container_clear',
+  push_back: 'cpp_container_push_back',
+  erase: 'cpp_container_erase',
+  count: 'cpp_container_count',
   insert: 'cpp_set_insert',
 }
 
@@ -113,21 +113,25 @@ const METHODS_WITH_ARG = new Set([
   'push_back', 'push', 'insert', 'erase', 'count',
 ])
 
-/** Property name used for the object in each concept's semantic node */
+/** Property name used for the object in each concept's semantic node.
+ * Generic container concepts all use 'obj'. Container-specific ones
+ * keep their original property names for backward compatibility. */
 const METHOD_OBJ_PROP: Record<string, string> = {
-  push_back: 'vector',
+  // container-specific (keep original names)
   pop_back: 'vector',
-  clear: 'vector',
   back: 'vector',
   size: 'vector',
-  empty: 'vector',
-  push: 'obj',
-  pop: 'obj',
   top: 'obj',
   front: 'obj',
+  insert: 'obj',
+  // generic (all use 'obj')
+  push_back: 'obj',
+  push: 'obj',
+  pop: 'obj',
+  clear: 'obj',
+  empty: 'obj',
   erase: 'obj',
   count: 'obj',
-  insert: 'obj',
 }
 
 /** Child slot name for the argument value */

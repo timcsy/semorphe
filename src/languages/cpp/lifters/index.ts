@@ -69,4 +69,18 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const value = valueNode?.text ?? ''
     return createNode('cpp_define', { name, value })
   })
+
+  // #ifdef NAME
+  lifter.register('preproc_ifdef', (node) => {
+    const nameNode = node.childForFieldName('name')
+    const name = nameNode?.text ?? 'MACRO'
+    return createNode('cpp_ifdef', { name })
+  })
+
+  // #ifndef NAME
+  lifter.register('preproc_ifndef', (node) => {
+    const nameNode = node.childForFieldName('name')
+    const name = nameNode?.text ?? 'MACRO'
+    return createNode('cpp_ifndef', { name })
+  })
 }

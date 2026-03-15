@@ -4,8 +4,8 @@
  * Verifies that C++ queue concepts (cpp_queue_declare, cpp_queue_push,
  * cpp_queue_pop, cpp_queue_front, cpp_queue_empty) survive the full roundtrip.
  *
- * Note: .push()/.pop() are shared methods that lifter maps to cpp_stack_push/pop.
- * .empty()/.size() map to cpp_vector_empty/size. All generate correct code.
+ * Note: .push()/.pop() are shared methods that lifter maps to cpp_container_push/pop.
+ * .empty()/.size() map to cpp_container_empty/size. All generate correct code.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -105,12 +105,12 @@ describe('C++ Queue Operations Roundtrip', () => {
     })
   })
 
-  describe('cpp_queue_push (via cpp_stack_push)', () => {
+  describe('cpp_queue_push (via cpp_container_push)', () => {
     const code = 'queue<int> q;\nq.push(10);\nq.push(20);\ncout << "pushed" << endl;'
 
-    it('should lift .push() to cpp_stack_push (shared method)', () => {
+    it('should lift .push() to cpp_container_push (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_stack_push')
+      const node = findConcept(tree, 'cpp_container_push')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('q')
     })
@@ -123,7 +123,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_stack_push')
+      const node2 = findConcept(tree2, 'cpp_container_push')
       expect(node2).not.toBeNull()
     })
   })
@@ -151,12 +151,12 @@ describe('C++ Queue Operations Roundtrip', () => {
     })
   })
 
-  describe('cpp_queue_pop (via cpp_stack_pop)', () => {
+  describe('cpp_queue_pop (via cpp_container_pop)', () => {
     const code = 'queue<int> q;\nq.push(1);\nq.push(2);\nq.pop();\ncout << q.front() << endl;'
 
-    it('should lift .pop() to cpp_stack_pop (shared method)', () => {
+    it('should lift .pop() to cpp_container_pop (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_stack_pop')
+      const node = findConcept(tree, 'cpp_container_pop')
       expect(node).not.toBeNull()
     })
 
@@ -168,17 +168,17 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_stack_pop')
+      const node2 = findConcept(tree2, 'cpp_container_pop')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp_queue_empty (via cpp_vector_empty)', () => {
+  describe('cpp_queue_empty (via cpp_container_empty)', () => {
     const code = 'queue<int> q;\nif (q.empty()) {\n    cout << "empty" << endl;\n}'
 
-    it('should lift .empty() to cpp_vector_empty (shared method)', () => {
+    it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_vector_empty')
+      const node = findConcept(tree, 'cpp_container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -190,7 +190,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_vector_empty')
+      const node2 = findConcept(tree2, 'cpp_container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -202,9 +202,9 @@ describe('C++ Queue Operations Roundtrip', () => {
       const tree = liftCode(code)
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp_queue_declare')).toBe(true)
-      expect(concepts.has('cpp_stack_push')).toBe(true)
+      expect(concepts.has('cpp_container_push')).toBe(true)
       expect(concepts.has('cpp_queue_front')).toBe(true)
-      expect(concepts.has('cpp_stack_pop')).toBe(true)
+      expect(concepts.has('cpp_container_pop')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -212,9 +212,9 @@ describe('C++ Queue Operations Roundtrip', () => {
       const tree2 = liftCode(output)
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp_queue_declare')).toBe(true)
-      expect(concepts2.has('cpp_stack_push')).toBe(true)
+      expect(concepts2.has('cpp_container_push')).toBe(true)
       expect(concepts2.has('cpp_queue_front')).toBe(true)
-      expect(concepts2.has('cpp_stack_pop')).toBe(true)
+      expect(concepts2.has('cpp_container_pop')).toBe(true)
     })
   })
 })

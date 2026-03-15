@@ -1,8 +1,8 @@
 /**
  * C++ Stack Operations Roundtrip Tests
  *
- * Verifies that C++ stack concepts (cpp_stack_declare, cpp_stack_push,
- * cpp_stack_pop, cpp_stack_top, cpp_stack_empty) survive the full roundtrip:
+ * Verifies that C++ stack concepts (cpp_stack_declare, cpp_container_push,
+ * cpp_container_pop, cpp_stack_top, cpp_stack_empty) survive the full roundtrip:
  *
  *   C++ code → (tree-sitter parse) → AST → (lift) → SemanticTree
  *     → (generate) → C++ code → (re-lift) → SemanticTree  [P1 structural equivalence]
@@ -110,15 +110,15 @@ describe('C++ Stack Operations Roundtrip', () => {
     })
   })
 
-  // ─── 2. cpp_stack_push ──────────────────────────────────
+  // ─── 2. cpp_container_push ──────────────────────────────────
 
-  describe('cpp_stack_push', () => {
+  describe('cpp_container_push', () => {
     const code = 'stack<int> s;\ns.push(10);\ns.push(20);\ns.push(30);\ncout << "pushed" << endl;'
 
-    it('should lift to cpp_stack_push concept', () => {
+    it('should lift to cpp_container_push concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp_stack_push')
+      const node = findConcept(tree, 'cpp_container_push')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -132,7 +132,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_stack_push')
+      const node2 = findConcept(tree2, 'cpp_container_push')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -166,15 +166,15 @@ describe('C++ Stack Operations Roundtrip', () => {
     })
   })
 
-  // ─── 4. cpp_stack_pop ───────────────────────────────────
+  // ─── 4. cpp_container_pop ───────────────────────────────────
 
-  describe('cpp_stack_pop', () => {
+  describe('cpp_container_pop', () => {
     const code = 'stack<int> s;\ns.push(1);\ns.push(2);\ns.push(3);\ns.pop();\ncout << s.top() << endl;'
 
-    it('should lift to cpp_stack_pop concept', () => {
+    it('should lift to cpp_container_pop concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp_stack_pop')
+      const node = findConcept(tree, 'cpp_container_pop')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -188,22 +188,22 @@ describe('C++ Stack Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_stack_pop')
+      const node2 = findConcept(tree2, 'cpp_container_pop')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
   })
 
-  // ─── 5. cpp_stack_empty (shared method, lifter maps to cpp_vector_empty) ───
+  // ─── 5. cpp_stack_empty (shared method, lifter maps to cpp_container_empty) ───
 
-  describe('cpp_stack_empty (via cpp_vector_empty)', () => {
+  describe('cpp_stack_empty (via cpp_container_empty)', () => {
     const code = 'stack<int> s;\nif (s.empty()) {\n    cout << "empty" << endl;\n}'
 
-    it('should lift .empty() to cpp_vector_empty (shared method)', () => {
+    it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      // .empty() is a shared method, lifter maps to cpp_vector_empty
-      const node = findConcept(tree, 'cpp_vector_empty')
+      // .empty() is a shared method, lifter maps to cpp_container_empty
+      const node = findConcept(tree, 'cpp_container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -216,7 +216,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_vector_empty')
+      const node2 = findConcept(tree2, 'cpp_container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -231,9 +231,9 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp_stack_declare')).toBe(true)
-      expect(concepts.has('cpp_stack_push')).toBe(true)
+      expect(concepts.has('cpp_container_push')).toBe(true)
       expect(concepts.has('cpp_stack_top')).toBe(true)
-      expect(concepts.has('cpp_stack_pop')).toBe(true)
+      expect(concepts.has('cpp_container_pop')).toBe(true)
     })
 
     it('should survive P1 structural equivalence on re-lift', () => {
@@ -242,9 +242,9 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp_stack_declare')).toBe(true)
-      expect(concepts2.has('cpp_stack_push')).toBe(true)
+      expect(concepts2.has('cpp_container_push')).toBe(true)
       expect(concepts2.has('cpp_stack_top')).toBe(true)
-      expect(concepts2.has('cpp_stack_pop')).toBe(true)
+      expect(concepts2.has('cpp_container_pop')).toBe(true)
     })
   })
 
@@ -258,9 +258,9 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp_stack_declare')).toBe(true)
-      expect(concepts.has('cpp_stack_push')).toBe(true)
+      expect(concepts.has('cpp_container_push')).toBe(true)
       expect(concepts.has('cpp_stack_top')).toBe(true)
-      expect(concepts.has('cpp_stack_pop')).toBe(true)
+      expect(concepts.has('cpp_container_pop')).toBe(true)
     })
 
     it('should survive P1 structural equivalence on re-lift', () => {
@@ -269,9 +269,9 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp_stack_declare')).toBe(true)
-      expect(concepts2.has('cpp_stack_push')).toBe(true)
+      expect(concepts2.has('cpp_container_push')).toBe(true)
       expect(concepts2.has('cpp_stack_top')).toBe(true)
-      expect(concepts2.has('cpp_stack_pop')).toBe(true)
+      expect(concepts2.has('cpp_container_pop')).toBe(true)
     })
   })
 })

@@ -679,5 +679,19 @@
   "CATEGORY_CPP_STRINGS": "C++ Strings",
   "CATEGORY_CPP_CONTAINERS": "C++ Containers",
   "CATEGORY_CPP_ALGORITHMS": "C++ Algorithms",
-  "CATEGORY_CPP_SPECIAL": "C++ Special"
+  "CATEGORY_CPP_SPECIAL": "C++ Special",
+  "CPP_CONTAINER_EMPTY_MSG0": "%1 .empty()",
+  "CPP_CONTAINER_EMPTY_TOOLTIP": "Check if container is empty (returns true/false)",
+  "CPP_CONTAINER_PUSH_MSG0": "%1 .push( %2 )",
+  "CPP_CONTAINER_PUSH_TOOLTIP": "Push a value onto the container",
+  "CPP_CONTAINER_POP_MSG0": "%1 .pop()",
+  "CPP_CONTAINER_POP_TOOLTIP": "Remove the top/front element from the container",
+  "CPP_CONTAINER_CLEAR_MSG0": "%1 .clear()",
+  "CPP_CONTAINER_CLEAR_TOOLTIP": "Remove all elements from the container",
+  "CPP_CONTAINER_PUSH_BACK_MSG0": "%1 .push_back( %2 )",
+  "CPP_CONTAINER_PUSH_BACK_TOOLTIP": "Add a value to the end of the container",
+  "CPP_CONTAINER_ERASE_MSG0": "%1 .erase( %2 )",
+  "CPP_CONTAINER_ERASE_TOOLTIP": "Remove an element from the container",
+  "CPP_CONTAINER_COUNT_MSG0": "%1 .count( %2 )",
+  "CPP_CONTAINER_COUNT_TOOLTIP": "Count occurrences of a key/value in the container"
 }
