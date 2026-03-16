@@ -44,4 +44,6 @@ export const INPUT_COMMON_MAPPINGS: Record<string, string[]> = {
   'A': ['left', 'operand'],
   'B': ['right'],
   'EXPR': ['values', 'expression'],
+  'VALUE': ['value', 'initializer'],
+  'INIT': ['initializer'],
 }
