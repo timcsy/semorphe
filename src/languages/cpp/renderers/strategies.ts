@@ -1,33 +1,6 @@
-import type { RenderStrategyRegistry, BlockState, RenderContext } from '../../../core/registry/render-strategy-registry'
-import type { SemanticNode } from '../../../core/types'
+import type { RenderStrategyRegistry, BlockState } from '../../../core/registry/render-strategy-registry'
 
 export function registerCppRenderStrategies(registry: RenderStrategyRegistry): void {
-  // input: cin >> x >> y — three-mode arg slots with extraState.args
-  registry.register('cpp:renderInput', (node, ctx) => {
-    const block: BlockState = {
-      type: 'u_input',
-      id: ctx.nextBlockId(),
-      fields: {},
-      inputs: {},
-    }
-
-    const varNames: string[] = []
-    const inputValues = node.children.values ?? []
-    if (inputValues.length > 0) {
-      for (const v of inputValues) {
-        varNames.push((v.properties.name as string) ?? 'x')
-      }
-    }
-    if (varNames.length === 0) varNames.push((node.properties.variable as string) ?? 'x')
-
-    // Produce extraState.args matching u_input's loadExtraState format
-    block.extraState = {
-      args: varNames.map(name => ({ mode: 'select', text: name })),
-    }
-
-    return block
-  })
-
   // var_declare: multi-variable with per-variable init control
   registry.register('cpp:renderVarDeclare', (node, ctx) => {
     const block: BlockState = {
@@ -66,144 +39,6 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
         }
       }
       block.extraState = { items: [inits.length > 0 ? 'var_init' : 'var'] }
-    }
-
-    return block
-  })
-
-  // print: cout << expr0 << expr1 << ...
-  registry.register('cpp:renderPrint', (node, ctx) => {
-    const block: BlockState = {
-      type: 'u_print',
-      id: ctx.nextBlockId(),
-      fields: {},
-      inputs: {},
-    }
-
-    const values = node.children.values ?? []
-    for (let i = 0; i < values.length; i++) {
-      const valBlock = ctx.renderExpression(values[i])
-      if (valBlock) {
-        block.inputs[`EXPR${i}`] = { block: valBlock }
-      }
-    }
-    if (values.length > 0) {
-      block.extraState = { itemCount: values.length }
-    }
-
-    return block
-  })
-
-  // func_def: function definition with params
-  registry.register('cpp:renderFuncDef', (node, ctx) => {
-    const block: BlockState = {
-      type: 'u_func_def',
-      id: ctx.nextBlockId(),
-      fields: {
-        NAME: node.properties.name ?? 'f',
-        RETURN_TYPE: node.properties.return_type ?? 'void',
-      },
-      inputs: {},
-    }
-
-    const paramChildren = node.children.params ?? []
-    if (paramChildren.length > 0) {
-      for (let i = 0; i < paramChildren.length; i++) {
-        block.fields[`TYPE_${i}`] = paramChildren[i].properties.type ?? 'int'
-        block.fields[`PARAM_${i}`] = paramChildren[i].properties.name ?? `p${i}`
-      }
-      block.extraState = { paramCount: paramChildren.length }
-    }
-
-    const bodyChildren = node.children.body ?? []
-    if (bodyChildren.length > 0) {
-      const chain = ctx.renderStatementChain(bodyChildren)
-      if (chain) {
-        block.inputs.BODY = { block: chain }
-      }
-    }
-
-    return block
-  })
-
-  // cpp_printf: printf with FORMAT field + three-mode dynamic args
-  registry.register('cpp:renderPrintf', (node, ctx) => {
-    const block: BlockState = {
-      type: 'c_printf',
-      id: ctx.nextBlockId(),
-      fields: {
-        FORMAT: (node.properties.format as string) ?? '%d\\n',
-      },
-      inputs: {},
-    }
-
-    const argNodes = node.children.args ?? []
-    const args = renderThreeModeArgs(argNodes, block, ctx)
-    block.extraState = { args }
-
-    return block
-  })
-
-  // cpp_scanf: scanf with FORMAT field + three-mode dynamic args
-  registry.register('cpp:renderScanf', (node, ctx) => {
-    const block: BlockState = {
-      type: 'c_scanf',
-      id: ctx.nextBlockId(),
-      fields: {
-        FORMAT: (node.properties.format as string) ?? '%d',
-      },
-      inputs: {},
-    }
-
-    const argNodes = node.children.args ?? []
-    const args = renderThreeModeArgs(argNodes, block, ctx)
-    block.extraState = { args }
-
-    return block
-  })
-
-  // func_call / func_call_expr: function call with dynamic args
-  registry.register('cpp:renderFuncCall', (node, ctx) => {
-    const blockType = node.concept === 'func_call_expr' ? 'u_func_call_expr' : 'u_func_call'
-    const block: BlockState = {
-      type: blockType,
-      id: ctx.nextBlockId(),
-      fields: { NAME: node.properties.name ?? 'f' },
-      inputs: {},
-    }
-
-    const args = node.children.args ?? []
-    for (let i = 0; i < args.length; i++) {
-      const argBlock = ctx.renderExpression(args[i])
-      if (argBlock) {
-        block.inputs[`ARG_${i}`] = { block: argBlock }
-      }
-    }
-    if (args.length > 0) {
-      block.extraState = { ...block.extraState, argCount: args.length }
-    }
-
-    return block
-  })
-
-  // forward_decl: structured forward declaration with return type, name, params
-  registry.register('cpp:renderForwardDecl', (node, ctx) => {
-    const block: BlockState = {
-      type: 'c_forward_decl',
-      id: ctx.nextBlockId(),
-      fields: {
-        RETURN_TYPE: node.properties.return_type ?? 'void',
-        NAME: node.properties.name ?? 'f',
-      },
-      inputs: {},
-    }
-
-    const paramChildren = node.children.params ?? []
-    if (paramChildren.length > 0) {
-      for (let i = 0; i < paramChildren.length; i++) {
-        block.fields[`TYPE_${i}`] = paramChildren[i].properties.type ?? 'int'
-      }
-      block.extraState = { paramCount: paramChildren.length }
     }
 
     return block
@@ -286,10 +121,10 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
   })
 
   // doc_comment: /** ... */ with @brief, @param, @return
-  registry.register('cpp:renderDocComment', (node, ctx) => {
+  registry.register('cpp:renderDocComment', (node, _ctx) => {
     const block: BlockState = {
       type: 'c_comment_doc',
-      id: ctx.nextBlockId(),
+      id: _ctx.nextBlockId(),
       fields: { BRIEF: node.properties.brief ?? '' },
       inputs: {},
     }
@@ -312,24 +147,5 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     }
 
     return block
-  })
-}
-
-/** Map semantic arg nodes to three-mode arg slots, using compose mode for non-var_ref */
-function renderThreeModeArgs(
-  argNodes: SemanticNode[],
-  block: BlockState,
-  ctx: RenderContext,
-): Array<{ mode: 'select' | 'compose'; text?: string }> {
-  return argNodes.map((a, i) => {
-    if (a.concept === 'var_ref') {
-      return { mode: 'select' as const, text: (a.properties.name as string) ?? 'x' }
-    }
-    // Non-var_ref: use compose mode and render expression block into inputs
-    const exprBlock = ctx.renderExpression(a)
-    if (exprBlock) {
-      block.inputs[`ARG_${i}`] = { block: exprBlock }
-    }
-    return { mode: 'compose' as const }
   })
 }

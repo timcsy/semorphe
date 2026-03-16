@@ -28,32 +28,28 @@ describe('BlockExtractorRegistry', () => {
   })
 })
 
-describe('C++ ExtractorRegistry completeness', () => {
-  it('should register all known block types via registry (no unhandled fallback)', () => {
+describe('C++ ExtractorRegistry — remaining hand-written extractors', () => {
+  it('should have extractors for blocks that require special logic', () => {
     const registry = createCppExtractorRegistry()
-    const knownTypes = [
-      'u_var_declare', 'u_var_assign', 'u_var_ref', 'u_number', 'u_string',
-      'u_arithmetic', 'u_compare', 'u_logic', 'u_logic_not', 'u_negate',
-      'u_if', 'u_if_else', 'u_while_loop', 'u_count_loop', 'c_for_loop',
-      'u_break', 'u_continue',
-      'u_func_def', 'u_func_call', 'u_func_call_expr', 'u_return',
-      'u_print', 'u_input', 'u_input_expr', 'u_endl',
-      'c_printf', 'c_scanf',
-      'u_array_declare', 'u_array_access', 'u_array_assign',
-      'c_increment', 'c_compound_assign',
-      'c_increment_expr', 'c_compound_assign_expr', 'c_scanf_expr', 'c_var_declare_expr',
-      'c_do_while', 'c_ternary', 'c_char_literal', 'c_cast', 'c_bitwise_not',
-      'c_builtin_constant', 'c_forward_decl',
-      'c_raw_code', 'c_raw_expression', 'c_comment_line', 'c_comment_block', 'c_comment_doc',
-      'c_include', 'c_include_local', 'c_using_namespace', 'c_define',
+    // These blocks need hand-written extractors due to complex logic
+    // that cannot be expressed as declarative dynamicRules:
+    const specialTypes = [
+      'u_var_declare',     // multi-variable with items array
+      'u_if',              // elseif chain flattening
+      'u_if_else',         // same as u_if
+      'u_input',           // select mode fallback (SEL_0/NAME)
+      'u_input_expr',      // same as u_input
+      'c_comment_doc',     // flat property model for params
+      'c_var_declare_expr', // expression version of var_declare
     ]
-    for (const type of knownTypes) {
+    for (const type of specialTypes) {
       expect(registry.has(type), `Missing extractor for ${type}`).toBe(true)
     }
   })
 
-  it('should have at least 40 registered extractors', () => {
+  it('should have correct number of remaining extractors', () => {
     const registry = createCppExtractorRegistry()
-    expect(registry.size).toBeGreaterThanOrEqual(40)
+    // 7 blocks still use hand-written extractors; the rest use PatternExtractor + dynamicRules
+    expect(registry.size).toBe(7)
   })
 })
