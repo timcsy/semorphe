@@ -719,14 +719,6 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "u_print",
-      "message0": "%{BKY_U_PRINT_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "EXPR",
-          "check": "Expression"
-        }
-      ],
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
