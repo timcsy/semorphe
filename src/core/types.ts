@@ -63,6 +63,8 @@ export interface NodeMetadata {
   degradationCause?: DegradationCause
   rawCode?: string
   sourceRange?: SourceRange
+  /** Block ID from which this node was extracted (for block↔code highlight mapping) */
+  sourceBlockId?: string
 }
 
 export interface SourceRange {

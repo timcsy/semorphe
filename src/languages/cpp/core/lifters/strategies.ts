@@ -493,7 +493,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     if (!templateTypeNode) {
       const qualifiedNode = node.namedChildren.find(c => c.type === 'qualified_identifier')
       if (qualifiedNode) {
-        templateTypeNode = qualifiedNode.namedChildren.find(c => c.type === 'template_type') ?? null
+        templateTypeNode = qualifiedNode.namedChildren.find(c => c.type === 'template_type') ?? undefined
       }
     }
     if (templateTypeNode) {
