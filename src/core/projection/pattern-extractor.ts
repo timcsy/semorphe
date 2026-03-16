@@ -44,6 +44,7 @@ export class PatternExtractor {
             strategy: explicit.strategy ?? derived.strategy,
             expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
+            extraStateFlags: explicit.extraStateFlags,
           }
         : derived
       this.extractSpecs.set(blockType, { conceptId, mapping })

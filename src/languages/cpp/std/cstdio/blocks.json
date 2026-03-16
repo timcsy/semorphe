@@ -42,10 +42,20 @@
       ]
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "FORMAT": "format" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderPrintf"
+      "dynamicRules": [
+        {
+          "countSource": "args.length",
+          "childSlot": "args",
+          "modeSource": "args[{i}].mode",
+          "modes": {
+            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
+            "compose": { "input": "ARG_{i}" }
+          }
+        }
+      ]
     }
   },
   {
@@ -91,11 +101,21 @@
       ]
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "FORMAT": "format" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderScanf",
-      "expressionCounterpart": "c_scanf_expr"
+      "expressionCounterpart": "c_scanf_expr",
+      "dynamicRules": [
+        {
+          "countSource": "args.length",
+          "childSlot": "args",
+          "modeSource": "args[{i}].mode",
+          "modes": {
+            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
+            "compose": { "input": "ARG_{i}" }
+          }
+        }
+      ]
     }
   },
   {
@@ -108,10 +128,20 @@
       "type": "c_scanf_expr"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "FORMAT": "format" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderScanf"
+      "dynamicRules": [
+        {
+          "countSource": "args.length",
+          "childSlot": "args",
+          "modeSource": "args[{i}].mode",
+          "modes": {
+            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
+            "compose": { "input": "ARG_{i}" }
+          }
+        }
+      ]
     }
   }
 ]

@@ -216,6 +216,8 @@ export interface RenderMapping {
   expressionCounterpart?: string
   /** Declarative rules for dynamic block structure (variable-count inputs, multi-mode slots, etc.) */
   dynamicRules?: DynamicRule[]
+  /** Extra state flags: set extraState[key] = true when children[childSlot] is non-empty */
+  extraStateFlags?: Record<string, string>
 }
 
 export interface DynamicInputDef {

@@ -721,10 +721,17 @@
       "type": "c_forward_decl"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "RETURN_TYPE": "return_type", "NAME": "name" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderForwardDecl"
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "childFields": { "TYPE_{i}": "type" }
+        }
+      ]
     }
   },
   {

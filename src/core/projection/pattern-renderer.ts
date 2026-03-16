@@ -63,6 +63,7 @@ export class PatternRenderer {
             strategy: explicit.strategy ?? derived.strategy,
             expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
+            extraStateFlags: explicit.extraStateFlags,
           }
         : derived
       this.renderSpecs.set(conceptId, { blockType, mapping })
@@ -169,6 +170,17 @@ export class PatternRenderer {
       this.renderDynamicRules(node, spec.mapping.dynamicRules, block, ctx)
     }
 
+    // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty
+    if (spec.mapping.extraStateFlags) {
+      for (const [extraKey, childSlot] of Object.entries(spec.mapping.extraStateFlags)) {
+        const children = node.children[childSlot]
+        if (children && children.length > 0) {
+          if (!block.extraState) block.extraState = {}
+          block.extraState[extraKey] = true
+        }
+      }
+    }
+
     return block
   }
 
@@ -181,12 +193,11 @@ export class PatternRenderer {
   ): void {
     for (const rule of rules) {
       const childNodes = node.children[rule.childSlot] ?? []
-      if (childNodes.length === 0) continue
 
       // Set count in extraState
       if (!block.extraState) block.extraState = {}
 
-      // Multi-mode slot pattern
+      // Multi-mode slot pattern (always emit extraState, even for empty arrays)
       if (rule.modeSource && rule.modes) {
         const argsExtraState: Array<{ mode: string; text?: string }> = []
         for (let i = 0; i < childNodes.length; i++) {
@@ -235,6 +246,7 @@ export class PatternRenderer {
 
       // Repeat field group pattern (childConcept + childFields)
       if (rule.childConcept && rule.childFields) {
+        if (childNodes.length === 0) continue
         for (let i = 0; i < childNodes.length; i++) {
           const child = childNodes[i]
           for (const [fieldPattern, propName] of Object.entries(rule.childFields)) {
@@ -253,6 +265,7 @@ export class PatternRenderer {
 
       // Repeat input pattern (expression or statement)
       if (rule.inputPattern) {
+        if (childNodes.length === 0) continue
         for (let i = 0; i < childNodes.length; i++) {
           const inputName = resolvePattern(rule.inputPattern, i)
           if (rule.isStatementInput) {

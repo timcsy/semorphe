@@ -603,10 +603,17 @@
       "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "NAME": "name", "RETURN_TYPE": "return_type" },
       "inputs": {},
-      "statementInputs": {},
-      "strategy": "cpp:renderFuncDef"
+      "statementInputs": { "BODY": "body" },
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "childFields": { "TYPE_{i}": "type", "PARAM_{i}": "name" }
+        }
+      ]
     }
   },
   {
@@ -636,10 +643,16 @@
       "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "NAME": "name" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderFuncCall"
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
     }
   },
   {
@@ -652,10 +665,16 @@
       "type": "u_func_call_expr"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": { "NAME": "name" },
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderFuncCall"
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
     }
   },
   {
@@ -706,7 +725,13 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderPrint"
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     }
   },
   {
@@ -748,8 +773,18 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderInput",
-      "expressionCounterpart": "u_input_expr"
+      "expressionCounterpart": "u_input_expr",
+      "dynamicRules": [
+        {
+          "countSource": "args.length",
+          "childSlot": "values",
+          "modeSource": "args[{i}].mode",
+          "modes": {
+            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
+            "compose": { "input": "ARG_{i}" }
+          }
+        }
+      ]
     }
   },
   {
