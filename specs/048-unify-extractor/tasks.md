@@ -67,18 +67,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T011 [US2] 新增測試：驗證 PatternExtractor 的 dynamicRules 處理——重複 input pattern（模擬 func_call 的 ARG_0..N + extraState `{ argCount: 3 }`）
-- [ ] T012 [P] [US2] 新增測試：驗證多模式 slot pattern（模擬 scanf 的 select/compose 模式 + extraState `{ args: [{mode:'select',text:'x'},...] }`）
-- [ ] T013 [P] [US2] 新增測試：驗證重複 field 組 pattern（模擬 func_def 的 TYPE_0/PARAM_0..N + extraState `{ paramCount: 2 }`）
-- [ ] T014 [P] [US2] 新增測試：驗證 if-elseif 鏈 pattern（模擬 if + extraState `{ elseifCount: 2, hasElse: true }`）
+- [x] T011 [US2] 新增測試：驗證 PatternExtractor 的 dynamicRules 處理——重複 input pattern（模擬 func_call 的 ARG_0..N + extraState `{ argCount: 3 }`）
+- [x] T012 [P] [US2] 新增測試：驗證多模式 slot pattern（模擬 scanf 的 select/compose 模式 + extraState `{ args: [{mode:'select',text:'x'},...] }`）
+- [x] T013 [P] [US2] 新增測試：驗證重複 field 組 pattern（模擬 func_def 的 TYPE_0/PARAM_0..N + extraState `{ paramCount: 2 }`）
+- [x] T014 [P] [US2] 新增測試：驗證 if-elseif 鏈 pattern（模擬 if + extraState `{ elseifCount: 2, hasElse: true }`）
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] 擴充 `src/core/projection/pattern-extractor.ts` 的 `extract()` 方法：在靜態欄位/輸入處理後，讀取 `block.extraState` 並根據 spec 的 `dynamicRules` 產生動態 children
-- [ ] T016 [US2] 實作 dynamicRules 的五種 pattern 處理邏輯：重複 input、重複 field 組、多模式 slot、多變數宣告、if-elseif 鏈
-- [ ] T017 [US2] 擴充 `src/core/projection/pattern-renderer.ts` 的 `render()` 方法：讀取 SemanticNode 的動態 children 並根據 dynamicRules 產生 extraState + 動態 inputs/fields
-- [ ] T018 [US2] 實作 PatternRenderer 的 dynamicRules 反向處理邏輯（SemanticNode children → extraState + dynamic inputs/fields）
-- [ ] T019 [US2] 驗證：T011-T014 的測試全部 PASS，`npm test` 通過
+- [x] T015 [US2] 擴充 `src/core/projection/pattern-extractor.ts` 的 `extract()` 方法：在靜態欄位/輸入處理後，讀取 `block.extraState` 並根據 spec 的 `dynamicRules` 產生動態 children
+- [x] T016 [US2] 實作 dynamicRules 的五種 pattern 處理邏輯：重複 input、重複 field 組、多模式 slot、多變數宣告、if-elseif 鏈
+- [x] T017 [US2] 擴充 `src/core/projection/pattern-renderer.ts` 的 `render()` 方法：讀取 SemanticNode 的動態 children 並根據 dynamicRules 產生 extraState + 動態 inputs/fields
+- [x] T018 [US2] 實作 PatternRenderer 的 dynamicRules 反向處理邏輯（SemanticNode children → extraState + dynamic inputs/fields）
+- [x] T019 [US2] 驗證：T011-T014 的測試全部 PASS，`npm test` 通過
 
 **Checkpoint**: PatternExtractor 和 PatternRenderer 都能用 dynamicRules 處理動態積木
 

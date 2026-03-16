@@ -247,6 +247,8 @@ export interface DynamicRule {
   childConcept?: string
   /** Map of field patterns → property names for childConcept nodes */
   childFields?: Record<string, string>
+  /** If true, the inputPattern refers to statement inputs (chains) rather than expression inputs */
+  isStatementInput?: boolean
 }
 
 /** Describes how to extract a value in a specific mode (select, input, expression, etc.) */

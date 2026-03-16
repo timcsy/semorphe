@@ -1,6 +1,6 @@
-import type { SemanticNode, BlockSpec, RenderMapping } from '../types'
+import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../types'
 import { createNode } from '../semantic-tree'
-import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS } from './common-mappings'
+import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS, resolvePath, resolvePattern } from './common-mappings'
 
 interface BlockState {
   type: string
@@ -43,6 +43,7 @@ export class PatternExtractor {
             dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
             strategy: explicit.strategy ?? derived.strategy,
             expressionCounterpart: explicit.expressionCounterpart,
+            dynamicRules: explicit.dynamicRules,
           }
         : derived
       this.extractSpecs.set(blockType, { conceptId, mapping })
@@ -84,7 +85,93 @@ export class PatternExtractor {
       }
     }
 
+    // Process dynamicRules from extraState
+    if (spec.mapping.dynamicRules) {
+      this.extractDynamicRules(block, spec.mapping.dynamicRules, children)
+    }
+
     return createNode(spec.conceptId, props, children)
+  }
+
+  /** Process dynamicRules to extract dynamic children from block extraState and inputs/fields */
+  private extractDynamicRules(
+    block: BlockState,
+    rules: DynamicRule[],
+    children: Record<string, SemanticNode[]>,
+  ): void {
+    const extraState = block.extraState ?? {}
+
+    for (const rule of rules) {
+      const count = resolvePath(extraState, rule.countSource)
+      const numCount = typeof count === 'number' ? count : 0
+      if (numCount <= 0) continue
+
+      const childNodes: SemanticNode[] = []
+
+      for (let i = 0; i < numCount; i++) {
+        // Multi-mode slot pattern
+        if (rule.modeSource && rule.modes) {
+          const modePathResolved = resolvePattern(rule.modeSource, i)
+          const mode = resolvePath(extraState, modePathResolved) as string | undefined
+          if (mode && rule.modes[mode]) {
+            const modeRule = rule.modes[mode]
+            if (modeRule.field && modeRule.wrap) {
+              // Select mode: read value from extraState, wrap as concept node
+              const fieldPathResolved = resolvePattern(modeRule.field, i)
+              const value = resolvePath(extraState, fieldPathResolved) as string | undefined
+              if (value !== undefined) {
+                childNodes.push(createNode(modeRule.wrap, { name: value }))
+              }
+            } else if (modeRule.input) {
+              // Compose mode: read from block input
+              const inputName = resolvePattern(modeRule.input, i)
+              const inputData = block.inputs[inputName]
+              if (inputData?.block) {
+                const childNode = this.extract(inputData.block)
+                if (childNode) childNodes.push(childNode)
+              }
+            }
+          }
+          continue
+        }
+
+        // Repeat field group pattern (childConcept + childFields)
+        if (rule.childConcept && rule.childFields) {
+          const fieldProps: Record<string, string> = {}
+          for (const [fieldPattern, propName] of Object.entries(rule.childFields)) {
+            const fieldName = resolvePattern(fieldPattern, i)
+            const value = block.fields[fieldName]
+            if (value !== undefined) {
+              fieldProps[propName] = String(value)
+            }
+          }
+          childNodes.push(createNode(rule.childConcept, fieldProps))
+          continue
+        }
+
+        // Repeat input pattern (expression or statement)
+        if (rule.inputPattern) {
+          const inputName = resolvePattern(rule.inputPattern, i)
+          const inputData = block.inputs[inputName]
+          if (inputData?.block) {
+            if (rule.isStatementInput) {
+              // Statement input: extract chain
+              const chain = this.extractStatementChain(inputData.block)
+              childNodes.push(...chain)
+            } else {
+              // Expression input: extract single node
+              const childNode = this.extract(inputData.block)
+              if (childNode) childNodes.push(childNode)
+            }
+          }
+          continue
+        }
+      }
+
+      if (childNodes.length > 0) {
+        children[rule.childSlot] = childNodes
+      }
+    }
   }
 
   /** Extract a statement chain (block + next chain) into an array of SemanticNodes */

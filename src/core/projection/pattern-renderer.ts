@@ -1,7 +1,7 @@
-import type { SemanticNode, BlockSpec, RenderMapping, Topic } from '../types'
+import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic } from '../types'
 import { applyBlockOverride } from '../block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
-import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS } from './common-mappings'
+import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS, resolvePattern } from './common-mappings'
 
 interface BlockState {
   type: string
@@ -62,6 +62,7 @@ export class PatternRenderer {
             dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
             strategy: explicit.strategy ?? derived.strategy,
             expressionCounterpart: explicit.expressionCounterpart,
+            dynamicRules: explicit.dynamicRules,
           }
         : derived
       this.renderSpecs.set(conceptId, { blockType, mapping })
@@ -163,7 +164,120 @@ export class PatternRenderer {
       }
     }
 
+    // Process dynamicRules: render dynamic children into extraState + inputs/fields
+    if (spec.mapping.dynamicRules) {
+      this.renderDynamicRules(node, spec.mapping.dynamicRules, block, ctx)
+    }
+
     return block
+  }
+
+  /** Process dynamicRules to render semantic children into block extraState + dynamic inputs/fields */
+  private renderDynamicRules(
+    node: SemanticNode,
+    rules: DynamicRule[],
+    block: BlockState,
+    ctx: RenderContext | undefined,
+  ): void {
+    for (const rule of rules) {
+      const childNodes = node.children[rule.childSlot] ?? []
+      if (childNodes.length === 0) continue
+
+      // Set count in extraState
+      if (!block.extraState) block.extraState = {}
+
+      // Multi-mode slot pattern
+      if (rule.modeSource && rule.modes) {
+        const argsExtraState: Array<{ mode: string; text?: string }> = []
+        for (let i = 0; i < childNodes.length; i++) {
+          const child = childNodes[i]
+          // Determine which mode this child maps to:
+          // If a mode has `wrap` matching the child concept, use that mode's select path
+          // Otherwise use compose mode
+          let matched = false
+          for (const [modeName, modeRule] of Object.entries(rule.modes)) {
+            if (modeRule.wrap && child.concept === modeRule.wrap) {
+              // Select mode: store value in extraState
+              const nameValue = (child.properties.name as string) ?? ''
+              argsExtraState.push({ mode: modeName, text: nameValue })
+              matched = true
+              break
+            }
+          }
+          if (!matched) {
+            // Compose mode: render as expression block input
+            for (const [modeName, modeRule] of Object.entries(rule.modes)) {
+              if (modeRule.input) {
+                const inputName = resolvePattern(modeRule.input, i)
+                const childBlock = ctx?.renderExpression
+                  ? ctx.renderExpression(child)
+                  : this.render(child)
+                if (childBlock) {
+                  block.inputs[inputName] = { block: childBlock }
+                }
+                argsExtraState.push({ mode: modeName })
+                matched = true
+                break
+              }
+            }
+            if (!matched) {
+              argsExtraState.push({ mode: 'compose' })
+            }
+          }
+        }
+
+        // Determine the extraState key from countSource
+        // "args.length" → store as "args" array
+        const countKey = rule.countSource.replace('.length', '')
+        block.extraState[countKey] = argsExtraState
+        continue
+      }
+
+      // Repeat field group pattern (childConcept + childFields)
+      if (rule.childConcept && rule.childFields) {
+        for (let i = 0; i < childNodes.length; i++) {
+          const child = childNodes[i]
+          for (const [fieldPattern, propName] of Object.entries(rule.childFields)) {
+            const fieldName = resolvePattern(fieldPattern, i)
+            const value = child.properties[propName]
+            if (value !== undefined) {
+              block.fields[fieldName] = value
+            }
+          }
+        }
+        // Set count in extraState
+        const countKey = rule.countSource
+        block.extraState[countKey] = childNodes.length
+        continue
+      }
+
+      // Repeat input pattern (expression or statement)
+      if (rule.inputPattern) {
+        for (let i = 0; i < childNodes.length; i++) {
+          const inputName = resolvePattern(rule.inputPattern, i)
+          if (rule.isStatementInput) {
+            // Statement input: render chain of single child
+            const chain = ctx?.renderStatementChain
+              ? ctx.renderStatementChain([childNodes[i]])
+              : this.renderStatementChain([childNodes[i]])
+            if (chain) {
+              block.inputs[inputName] = { block: chain }
+            }
+          } else {
+            const childBlock = ctx?.renderExpression
+              ? ctx.renderExpression(childNodes[i])
+              : this.render(childNodes[i])
+            if (childBlock) {
+              block.inputs[inputName] = { block: childBlock }
+            }
+          }
+        }
+        // Set count in extraState
+        const countKey = rule.countSource
+        block.extraState[countKey] = childNodes.length
+        continue
+      }
+    }
   }
 
   private renderStatementChain(nodes: SemanticNode[]): BlockState | null {
