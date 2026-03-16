@@ -465,6 +465,12 @@ export class BlocklyPanel implements ViewHost {
     } finally {
       Blockly.Events.enable()
     }
+    // Force render — Events.disable() may prevent automatic rendering
+    // for dynamically-defined blocks loaded via serialization
+    for (const block of this.workspace.getAllBlocks(false)) {
+      block.initSvg()
+      block.render()
+    }
   }
 
   /** 遍歷所有積木，根據 extraState 套用降級/confidence/annotation 視覺樣式 */
