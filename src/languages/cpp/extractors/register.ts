@@ -599,6 +599,39 @@ export function registerCppExtractors(registry: BlockExtractorRegistry): void {
       value: block.getFieldValue('VALUE') ?? '',
     })
   })
+
+  // ── Declaration blocks with VALUE input → initializer child ──
+
+  /** Helper: extract a declaration block with TYPE, NAME fields and optional VALUE input */
+  function extractDeclWithInit(b: unknown, ctx: BlockExtractContext, conceptId: string): SemanticNode {
+    const block = asBlock(b)
+    const type = block.getFieldValue('TYPE') ?? 'int'
+    const name = block.getFieldValue('NAME') ?? 'x'
+    const valueBlock = block.getInputTargetBlock('VALUE')
+    const initializer = valueBlock ? [ctx.extractBlock(valueBlock)].filter((n): n is SemanticNode => n !== null) : []
+    return createNode(conceptId, { type, name }, { initializer })
+  }
+
+  registry.register('c_const_declare', (b, ctx) => extractDeclWithInit(b, ctx, 'cpp_const_declare'))
+  registry.register('c_constexpr_declare', (b, ctx) => extractDeclWithInit(b, ctx, 'cpp_constexpr_declare'))
+  registry.register('c_static_declare', (b, ctx) => extractDeclWithInit(b, ctx, 'cpp_static_declare'))
+  registry.register('c_auto_declare', (b, ctx) => extractDeclWithInit(b, ctx, 'cpp_auto_declare'))
+  registry.register('c_ref_declare', (b, ctx) => {
+    const block = asBlock(b)
+    const type = block.getFieldValue('TYPE') ?? 'int'
+    const name = block.getFieldValue('NAME') ?? 'ref'
+    const valueBlock = block.getInputTargetBlock('INIT')
+    const initializer = valueBlock ? [ctx.extractBlock(valueBlock)].filter((n): n is SemanticNode => n !== null) : []
+    return createNode('cpp_ref_declare', { type, name }, { initializer })
+  })
+  registry.register('c_pointer_declare', (b, ctx) => {
+    const block = asBlock(b)
+    const type = block.getFieldValue('TYPE') ?? 'int'
+    const name = block.getFieldValue('NAME') ?? 'ptr'
+    const valueBlock = block.getInputTargetBlock('INIT')
+    const initializer = valueBlock ? [ctx.extractBlock(valueBlock)].filter((n): n is SemanticNode => n !== null) : []
+    return createNode('cpp_pointer_declare', { type, name }, { initializer })
+  })
 }
 
 export function createCppExtractorRegistry(): BlockExtractorRegistry {
