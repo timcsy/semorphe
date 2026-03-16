@@ -676,5 +676,12 @@
   "CPP_CONTAINER_COUNT_TOOLTIP": "Count occurrences of a key/value in the container",
   "C_SCANF_EXPR_LABEL": "Formatted input (scanf)",
   "C_SCANF_EXPR_TOOLTIP": "Read formatted input (expression form, usable in conditions or loops)",
-  "U_VAR_DECLARE_EXPR_TOOLTIP": "Declare variable (expression form, usable in for-loop initialization)"
+  "U_VAR_DECLARE_EXPR_TOOLTIP": "Declare variable (expression form, usable in for-loop initialization)",
+  "CATEGORY_ARRAYS_LISTS": "Arrays & Lists",
+  "CATEGORY_TEXT": "Text",
+  "CATEGORY_MAPS_SETS": "Maps & Sets",
+  "CATEGORY_STACKS_QUEUES": "Stacks & Queues",
+  "CATEGORY_POINTERS_MEMORY": "Pointers & Memory",
+  "CATEGORY_STRUCTS_CLASSES": "Structs & Classes",
+  "CATEGORY_PROGRAM_CONFIG": "Program Config"
 }

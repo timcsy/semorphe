@@ -676,5 +676,12 @@
   "CPP_CONTAINER_COUNT_TOOLTIP": "計算容器中鍵/值出現的次數",
   "C_SCANF_EXPR_LABEL": "格式化輸入 (scanf)",
   "C_SCANF_EXPR_TOOLTIP": "格式化讀取輸入（運算式版本，可放在條件或迴圈中）",
-  "U_VAR_DECLARE_EXPR_TOOLTIP": "宣告變數（運算式版本，可放在 for 迴圈初始化中）"
+  "U_VAR_DECLARE_EXPR_TOOLTIP": "宣告變數（運算式版本，可放在 for 迴圈初始化中）",
+  "CATEGORY_ARRAYS_LISTS": "陣列與列表",
+  "CATEGORY_TEXT": "文字",
+  "CATEGORY_MAPS_SETS": "對應與集合",
+  "CATEGORY_STACKS_QUEUES": "堆疊與佇列",
+  "CATEGORY_POINTERS_MEMORY": "指標與記憶體",
+  "CATEGORY_STRUCTS_CLASSES": "結構與類別",
+  "CATEGORY_PROGRAM_CONFIG": "程式設定"
 }

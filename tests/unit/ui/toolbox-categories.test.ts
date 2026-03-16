@@ -35,10 +35,14 @@ describe('C++ toolbox categories (language module)', () => {
     expect(keys).toContain('operators')
     expect(keys).toContain('control')
     expect(keys).toContain('functions')
-    expect(keys).toContain('arrays')
     expect(keys).toContain('io')
-    expect(keys).toContain('cpp_basic')
-    expect(keys).toContain('cpp_special')
+    expect(keys).toContain('arrays_lists')
+    expect(keys).toContain('text')
+    expect(keys).toContain('maps_sets')
+    expect(keys).toContain('stacks_queues')
+    expect(keys).toContain('pointers_memory')
+    expect(keys).toContain('structs_classes')
+    expect(keys).toContain('program_config')
   })
 
   it('each category has required properties', () => {

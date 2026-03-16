@@ -12,7 +12,7 @@ describe('Toolbox 動態生成與顏色集中管理', () => {
   })
 
   it('CATEGORY_COLORS 的 C++ 類別應有定義', () => {
-    const cppCategories = ['cpp_basic', 'cpp_io', 'cpp_pointers', 'cpp_structs', 'cpp_strings', 'cpp_containers', 'cpp_algorithms', 'cpp_special']
+    const cppCategories = ['cpp_io', 'cpp_pointers', 'cpp_structs', 'cpp_strings', 'cpp_containers', 'cpp_special']
     for (const cat of cppCategories) {
       expect(CATEGORY_COLORS[cat]).toBeDefined()
     }
