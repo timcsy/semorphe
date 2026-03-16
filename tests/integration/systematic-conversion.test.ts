@@ -174,7 +174,9 @@ describe('Declarations', () => {
     it('lifts string name = "hello"; correctly', () => {
       const node = liftFirst('string name = "hello";')
       expect(node).not.toBeNull()
-      expect(node!.properties.type).toBe('string')
+      // string declarations are now lifted as cpp_string_declare
+      expect(node!.concept).toBe('cpp_string_declare')
+      expect(node!.properties.name).toBe('name')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
       expect(inits[0].concept).toBe('string_literal')

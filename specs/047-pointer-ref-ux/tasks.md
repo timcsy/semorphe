@@ -133,7 +133,7 @@
 - [x] T021 執行完整測試套件：`npm test`（2709 passed）
 - [x] T022 執行 TypeScript 編譯檢查：`npx tsc --noEmit`（無錯誤）
 - [x] T023 向後相容驗證：roundtrip-l2.test.ts 中無 initializer 的 cpp_pointer_declare 測試通過，Blockly input_value 天然可選
-- [ ] T024 Git commit 所有變更
+- [x] T024 Git commit 所有變更（2 commits: i18n fixes + pointer/ref UX）
 
 ---
 

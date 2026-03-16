@@ -233,10 +233,14 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
   g.set('cpp_malloc', (node, ctx) => {
     const type = node.properties.type ?? 'int*'
-    const sizeofType = node.properties.sizeof_type ?? 'int'
     const sizeNodes = node.children.size ?? []
     const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : '1'
-    return `(${type})malloc(${size} * sizeof(${sizeofType}))`
+    // If sizeof_type is explicitly set (from block), use structured formula
+    if (node.properties.sizeof_type) {
+      return `(${type})malloc(${size} * sizeof(${node.properties.sizeof_type}))`
+    }
+    // From lifter: size child is the full malloc argument expression
+    return `(${type})malloc(${size})`
   })
 
   g.set('cpp_struct_member_access', (node) => {

@@ -373,6 +373,18 @@ export function registerIOLifters(lifter: Lifter): void {
       })
     }
 
+    // free(ptr) → cpp_free
+    if (funcName === 'free' && argChildren.length === 1) {
+      const ptr = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_free', {}, { ptr: ptr ? [ptr] : [] })
+    }
+
+    // malloc(size) → cpp_malloc (without cast; cast is handled in lift-patterns via cast_expression)
+    if (funcName === 'malloc' && argChildren.length === 1) {
+      const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode('cpp_malloc', { type: 'void' }, { size: size ? [size] : [] })
+    }
+
     // cstring functions
     if (funcName === 'strlen') {
       const str = argChildren[0] ? ctx.lift(argChildren[0]) : null

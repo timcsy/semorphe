@@ -65,7 +65,7 @@ export function initCppModule(): CppModuleEngines {
   const allSpecs = registry.getAll()
 
   // 3. Load block specs into engines
-  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression'])
+  const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression', 'preproc_ifdef'])
   patternLifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
   patternRenderer.loadBlockSpecs(allSpecs)
   patternExtractor.loadBlockSpecs(allSpecs)

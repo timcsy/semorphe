@@ -70,14 +70,20 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     return createNode('cpp_define', { name, value })
   })
 
-  // #ifdef NAME
+  // #ifdef NAME / #ifndef NAME
+  // tree-sitter C++ parses both #ifdef and #ifndef as preproc_ifdef node type.
+  // Distinguish by checking the source text for the #ifndef directive.
   lifter.register('preproc_ifdef', (node) => {
     const nameNode = node.childForFieldName('name')
     const name = nameNode?.text ?? 'MACRO'
+    // Check if the source text starts with #ifndef
+    if (node.text.trimStart().startsWith('#ifndef')) {
+      return createNode('cpp_ifndef', { name })
+    }
     return createNode('cpp_ifdef', { name })
   })
 
-  // #ifndef NAME
+  // Keep preproc_ifndef registration in case future tree-sitter versions separate them
   lifter.register('preproc_ifndef', (node) => {
     const nameNode = node.childForFieldName('name')
     const name = nameNode?.text ?? 'MACRO'

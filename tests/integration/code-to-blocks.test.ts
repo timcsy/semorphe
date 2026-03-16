@@ -294,11 +294,11 @@ describe('Code-to-Blocks Pipeline', () => {
       expect(concepts).toContain('cpp_strlen')
     })
 
-    it('should lift free(ptr) to func_call (hand-written lifter)', () => {
+    it('should lift free(ptr) to cpp_free (hand-written lifter)', () => {
       const sem = liftCode('free(ptr);')
       const concepts = findConcepts(sem)
-      // call_expression in statement context → func_call
-      expect(concepts).toContain('func_call')
+      // free() is now recognized as cpp_free concept
+      expect(concepts).toContain('cpp_free')
     })
   })
 

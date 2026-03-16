@@ -345,6 +345,7 @@
     "id": "cpp_cast_expr",
     "astNodeType": "cast_expression",
     "concept": { "conceptId": "cpp_cast" },
+    "liftStrategy": "cpp:liftCastExpression",
     "fieldMappings": [
       { "semantic": "target_type", "ast": "type", "extract": "text" },
       { "semantic": "value", "ast": "value", "extract": "lift" }

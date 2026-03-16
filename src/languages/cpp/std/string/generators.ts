@@ -56,6 +56,11 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
   // Statement concepts — return full line with indent and newline
   g.set('cpp_string_declare', (node, ctx) => {
     const name = node.properties.name ?? 'str'
+    const initNodes = node.children.initializer ?? []
+    if (initNodes.length > 0) {
+      const val = generateExpression(initNodes[0], ctx)
+      return `${indent(ctx)}string ${name} = ${val};\n`
+    }
     return `${indent(ctx)}string ${name};\n`
   })
 
