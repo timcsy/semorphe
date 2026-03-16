@@ -1229,12 +1229,27 @@
           "type": "field_input",
           "name": "NAME",
           "text": "ptr"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
         }
       ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_POINTER_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME": "name"
+      },
+      "inputs": {
+        "INIT": "initializer"
+      }
     },
     "codeTemplate": {
       "pattern": "${TYPE}* ${NAME};",

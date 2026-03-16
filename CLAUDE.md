@@ -23,6 +23,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-02
 - localStorage（瀏覽器自動儲存）+ JSON 檔案匯出匯入 (017-concept-blockdef-split)
 - TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Vite + Blockly, web-tree-sitter, Monaco Editor (VSCode) (019-cpp-std-modules)
 - N/A（記憶體中的 Registry） (019-cpp-std-modules)
+- TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Vite + Blockly（積木渲染）, tree-sitter-cpp（AST 解析）, Vitest（測試） (047-pointer-ref-ux)
 
 - TypeScript 5.x + Blockly 12.x, web-tree-sitter 0.26.x, CodeMirror 6.x (001-code-blockly-converter)
 
@@ -42,6 +43,7 @@ npm test && npm run lint
 TypeScript 5.x: Follow standard conventions
 
 ## Recent Changes
+- 047-pointer-ref-ux: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Vite + Blockly（積木渲染）, tree-sitter-cpp（AST 解析）, Vitest（測試）
 - 022-topic-system: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite
 - 022-topic-system: Added TypeScript 5.x + Blockly 12.4.1, web-tree-sitter 0.26.6, Monaco Editor, Vite
 
