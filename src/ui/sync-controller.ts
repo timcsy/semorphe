@@ -242,17 +242,10 @@ export class SyncController {
 
       this.currentTree = tree
 
-      // Build codeMappings from sourceRange (original code positions) when available,
-      // falling back to generateCodeWithMapping for blocks→code direction.
-      // In code→blocks direction, Monaco keeps the original code — so mappings must
-      // reference original line numbers, not regenerated code line numbers.
-      const sourceRangeMappings = this.buildSourceRangeMappings(tree)
-      if (sourceRangeMappings.length > 0) {
-        this.codeMappings = sourceRangeMappings
-      } else {
-        const { mappings: codeMappings } = generateCodeWithMapping(tree, this.language, this.style)
-        this.codeMappings = codeMappings
-      }
+      // Build codeMappings from generated code, then adjust line numbers to match
+      // the original code displayed in Monaco (which may have extra blank lines, etc.)
+      const { code: generatedCode, mappings: codeMappings } = generateCodeWithMapping(tree, this.language, this.style)
+      this.codeMappings = this.adjustMappingsToOriginal(codeMappings, generatedCode, code)
 
       // Downgrade concepts not in current level to universal equivalents
       // (e.g., cpp_string_declare → var_declare when string isn't in topic level)
@@ -506,23 +499,40 @@ export class SyncController {
     return { blockId: bm?.blockId ?? null, startLine: bestCm.startLine, endLine: bestCm.endLine }
   }
 
-  /** Build CodeMappings from sourceRange metadata (original code positions) */
-  private buildSourceRangeMappings(tree: SemanticNode): CodeMapping[] {
-    const mappings: CodeMapping[] = []
-    this.collectSourceRangeMappings(tree, mappings)
-    return mappings
-  }
+  /**
+   * Adjust code mappings from generated code line numbers to original code line numbers.
+   * The generated code may differ from the original (missing blank lines, different spacing).
+   * Build a line offset table by comparing non-empty lines to find where they align.
+   */
+  private adjustMappingsToOriginal(mappings: CodeMapping[], generatedCode: string, originalCode: string): CodeMapping[] {
+    const genLines = generatedCode.split('\n')
+    const origLines = originalCode.split('\n')
+    if (genLines.length === origLines.length) return mappings // no adjustment needed
 
-  private collectSourceRangeMappings(node: SemanticNode, mappings: CodeMapping[]): void {
-    const sr = node.metadata?.sourceRange as { startLine: number; endLine: number } | undefined
-    if (sr && node.id) {
-      mappings.push({ nodeId: node.id, startLine: sr.startLine, endLine: sr.endLine })
-    }
-    for (const children of Object.values(node.children)) {
-      for (const child of children) {
-        this.collectSourceRangeMappings(child, mappings)
+    // Build mapping: generated line index → original line index
+    // Use greedy forward matching on trimmed non-empty lines
+    const genToOrig: number[] = new Array(genLines.length).fill(-1)
+    let origIdx = 0
+    for (let genIdx = 0; genIdx < genLines.length && origIdx < origLines.length; genIdx++) {
+      const genTrimmed = genLines[genIdx].trim()
+      // Skip blank original lines to find the matching content line
+      while (origIdx < origLines.length && origLines[origIdx].trim() === '' && genTrimmed !== '') {
+        origIdx++
+      }
+      if (origIdx < origLines.length) {
+        genToOrig[genIdx] = origIdx
+        origIdx++
       }
     }
+
+    return mappings.map(m => {
+      const adjStart = genToOrig[m.startLine]
+      const adjEnd = genToOrig[m.endLine]
+      if (adjStart >= 0 && adjEnd >= 0) {
+        return { nodeId: m.nodeId, startLine: adjStart, endLine: adjEnd }
+      }
+      return m // can't adjust, keep original
+    })
   }
 
   private findErrors(node: import('../core/lift/types').AstNode): SyncError[] {
