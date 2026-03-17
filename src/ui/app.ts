@@ -504,20 +504,23 @@ export class App {
   }
 
   private setupBidirectionalHighlight(): void {
-    this.blocklyPanel?.onBlockSelect((blockId) => {
+    // Block → Code: unified via nodeId
+    this.blocklyPanel?.onNodeSelect((nodeId) => {
       this.monacoPanel?.clearHighlight(); this.blocklyPanel?.clearHighlight()
-      if (!blockId) return
-      this.blocklyPanel?.highlightBlock(blockId, 'block-to-code')
-      const m = this.syncController?.getMappingForBlock(blockId)
-      if (m) this.monacoPanel?.addHighlight(m.startLine + 1, m.endLine + 1, 'block-to-code')
+      if (!nodeId) return
+      this.blocklyPanel?.highlightByNodeId(nodeId, 'block-to-code')
+      const range = this.syncController?.codeRangeForNode(nodeId)
+      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
     })
+    // Code → Block: unified via nodeId
     this.monacoPanel?.onCursorChange((line) => {
       this.blocklyPanel?.clearHighlight(); this.monacoPanel?.clearHighlight(); this.monacoPanel?.dismissPendingHighlight()
       try { if (Blockly.getSelected()) Blockly.common.setSelected(null as unknown as Blockly.ISelectable) } catch { /* ignore */ }
-      const m = this.syncController?.getMappingForLine(line - 1)
-      if (!m) return
-      if (m.blockId) this.blocklyPanel?.highlightBlock(m.blockId, 'code-to-block')
-      this.monacoPanel?.addHighlight(m.startLine + 1, m.endLine + 1, 'code-to-block')
+      const nodeId = this.syncController?.nodeIdForLine(line - 1)
+      if (!nodeId) return
+      this.blocklyPanel?.highlightByNodeId(nodeId, 'code-to-block')
+      const range = this.syncController?.codeRangeForNode(nodeId)
+      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
     })
   }
 

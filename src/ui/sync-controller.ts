@@ -487,17 +487,39 @@ export class SyncController {
 
   /** Code→Block: line → CodeMapping → nodeId → BlockMapping → {blockId} */
   getMappingForLine(line: number): { blockId: string | null; startLine: number; endLine: number } | null {
-    let bestCm: CodeMapping | null = null
+    const best = this.bestCodeMappingForLine(line)
+    if (!best) return null
+    const bm = this.blockMappings.find(m => m.nodeId === best.nodeId)
+    return { blockId: bm?.blockId ?? null, startLine: best.startLine, endLine: best.endLine }
+  }
+
+  /** Decoupled query: line → nodeId (smallest enclosing code mapping) */
+  nodeIdForLine(line: number): string | null {
+    return this.bestCodeMappingForLine(line)?.nodeId ?? null
+  }
+
+  /** Decoupled query: nodeId → code range */
+  codeRangeForNode(nodeId: string): { startLine: number; endLine: number } | null {
+    let cm = this.codeMappings.find(m => m.nodeId === nodeId)
+    // Fallback for expression nodes: walk up to nearest ancestor with codeMapping
+    if (!cm && this.currentTree) {
+      const ancestorId = this.findAncestorWithCodeMapping(this.currentTree, nodeId)
+      if (ancestorId) cm = this.codeMappings.find(m => m.nodeId === ancestorId)
+    }
+    return cm ? { startLine: cm.startLine, endLine: cm.endLine } : null
+  }
+
+  /** Find the smallest code mapping containing the given line */
+  private bestCodeMappingForLine(line: number): CodeMapping | null {
+    let best: CodeMapping | null = null
     for (const cm of this.codeMappings) {
       if (line >= cm.startLine && line <= cm.endLine) {
-        if (!bestCm || (cm.endLine - cm.startLine) < (bestCm.endLine - bestCm.startLine)) {
-          bestCm = cm
+        if (!best || (cm.endLine - cm.startLine) < (best.endLine - best.startLine)) {
+          best = cm
         }
       }
     }
-    if (!bestCm) return null
-    const bm = this.blockMappings.find(m => m.nodeId === bestCm!.nodeId)
-    return { blockId: bm?.blockId ?? null, startLine: bestCm.startLine, endLine: bestCm.endLine }
+    return best
   }
 
   /**

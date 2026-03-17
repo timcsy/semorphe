@@ -32,6 +32,7 @@ export class BlocklyPanel implements ViewHost {
   private container: HTMLElement
   private onChangeCallback: (() => void) | null = null
   private onBlockSelectCallback: ((blockId: string | null) => void) | null = null
+  private onNodeSelectCallback: ((nodeId: string | null) => void) | null = null
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
   private busUpdateInProgress = false
@@ -110,7 +111,11 @@ export class BlocklyPanel implements ViewHost {
         // Track block selection (click events)
         if (event.type === Blockly.Events.SELECTED) {
           const selectEvent = event as Blockly.Events.Selected
-          this.onBlockSelectCallback?.(selectEvent.newElementId ?? null)
+          const selectedBlockId = selectEvent.newElementId ?? null
+          this.onBlockSelectCallback?.(selectedBlockId)
+          // Emit nodeId for decoupled highlight: blockId → nodeId via lookup map
+          const nodeId = selectedBlockId ? this._blockIdToNodeId?.get(selectedBlockId) ?? null : null
+          this.onNodeSelectCallback?.(nodeId)
         }
         return
       }
@@ -404,6 +409,27 @@ export class BlocklyPanel implements ViewHost {
 
   onBlockSelect(callback: (blockId: string | null) => void): void {
     this.onBlockSelectCallback = callback
+  }
+
+  /** Register callback for node selection (decoupled via nodeId) */
+  onNodeSelect(callback: (nodeId: string | null) => void): void {
+    this.onNodeSelectCallback = callback
+  }
+
+  /** Highlight block by nodeId (decoupled API — resolves nodeId → blockId internally) */
+  highlightByNodeId(nodeId: string | null, variant: 'block-to-code' | 'code-to-block' | 'execution' = 'block-to-code'): void {
+    if (!nodeId) { this.clearHighlight(); return }
+    // Reverse lookup: nodeId → blockId
+    const blockId = this.getBlockIdForNodeId(nodeId)
+    this.highlightBlock(blockId, variant)
+  }
+
+  /** Resolve nodeId → blockId from current block mappings */
+  private getBlockIdForNodeId(nodeId: string): string | null {
+    for (const m of this._blockMappings) {
+      if (m.nodeId === nodeId) return m.blockId
+    }
+    return null
   }
 
   highlightBlock(blockId: string | null, variant: 'block-to-code' | 'code-to-block' | 'execution' = 'block-to-code'): void {
