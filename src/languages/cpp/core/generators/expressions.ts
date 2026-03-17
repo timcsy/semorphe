@@ -174,12 +174,17 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
   g.set('cpp_compound_assign_expr', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const op = node.properties.operator ?? '+='
+    // Array element compound assign: arr[i] += value
+    const indexNodes = node.children.index ?? []
+    const target = indexNodes.length > 0
+      ? `${name}[${generateExpression(indexNodes[0], ctx)}]`
+      : `${name}`
     const vals = node.children.value ?? []
     if (vals.length > 0) {
       const val = generateExpression(vals[0], ctx)
-      return `${name} ${op} ${val}`
+      return `${target} ${op} ${val}`
     }
-    return `${name} ${op} 0`
+    return `${target} ${op} 0`
   })
 
   // cpp_scanf_expr moved to std/cstdio/generators.ts

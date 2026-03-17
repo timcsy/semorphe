@@ -242,9 +242,17 @@ export class SyncController {
 
       this.currentTree = tree
 
-      // Build codeMappings directly from lifted tree (node.id always available — no blockId dependency)
-      const { mappings: codeMappings } = generateCodeWithMapping(tree, this.language, this.style)
-      this.codeMappings = codeMappings
+      // Build codeMappings from sourceRange (original code positions) when available,
+      // falling back to generateCodeWithMapping for blocks→code direction.
+      // In code→blocks direction, Monaco keeps the original code — so mappings must
+      // reference original line numbers, not regenerated code line numbers.
+      const sourceRangeMappings = this.buildSourceRangeMappings(tree)
+      if (sourceRangeMappings.length > 0) {
+        this.codeMappings = sourceRangeMappings
+      } else {
+        const { mappings: codeMappings } = generateCodeWithMapping(tree, this.language, this.style)
+        this.codeMappings = codeMappings
+      }
 
       // Downgrade concepts not in current level to universal equivalents
       // (e.g., cpp_string_declare → var_declare when string isn't in topic level)
@@ -496,6 +504,25 @@ export class SyncController {
     if (!bestCm) return null
     const bm = this.blockMappings.find(m => m.nodeId === bestCm!.nodeId)
     return { blockId: bm?.blockId ?? null, startLine: bestCm.startLine, endLine: bestCm.endLine }
+  }
+
+  /** Build CodeMappings from sourceRange metadata (original code positions) */
+  private buildSourceRangeMappings(tree: SemanticNode): CodeMapping[] {
+    const mappings: CodeMapping[] = []
+    this.collectSourceRangeMappings(tree, mappings)
+    return mappings
+  }
+
+  private collectSourceRangeMappings(node: SemanticNode, mappings: CodeMapping[]): void {
+    const sr = node.metadata?.sourceRange as { startLine: number; endLine: number } | undefined
+    if (sr && node.id) {
+      mappings.push({ nodeId: node.id, startLine: sr.startLine, endLine: sr.endLine })
+    }
+    for (const children of Object.values(node.children)) {
+      for (const child of children) {
+        this.collectSourceRangeMappings(child, mappings)
+      }
+    }
   }
 
   private findErrors(node: import('../core/lift/types').AstNode): SyncError[] {

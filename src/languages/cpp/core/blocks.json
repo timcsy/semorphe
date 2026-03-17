@@ -102,7 +102,13 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "c_increment_expr"
+      "expressionCounterpart": "c_increment_expr",
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index"
+      }
     }
   },
   {
@@ -184,7 +190,14 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "c_compound_assign_expr"
+      "expressionCounterpart": "c_compound_assign_expr",
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -1193,6 +1206,14 @@
       ],
       "inputsInline": true,
       "output": "Expression"
+    },
+    "renderMapping": {
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index"
+      }
     }
   },
   {
@@ -1222,6 +1243,15 @@
       ],
       "inputsInline": true,
       "output": "Expression"
+    },
+    "renderMapping": {
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      }
     }
   },
   {

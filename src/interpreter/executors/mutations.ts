@@ -8,24 +8,41 @@ export function registerMutationExecutors(register: (concept: string, executor: 
     const op = String(node.properties.operator)
     const position = String(node.properties.position ?? 'postfix')
 
-    // Array element increment
+    // Array/string element increment
     const indexNodes = node.children.index ?? []
     if (indexNodes.length > 0) {
-      const arr = ctx.scope.get(name)
-      if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-      }
+      const container = ctx.scope.get(name)
       const indexVal = await ctx.evaluate(indexNodes[0])
       const index = ctx.toNumber(indexVal)
-      if (index >= 0 && index < arr.value.length) {
-        const current = arr.value[index]
+
+      // String subscript increment: s[i]++ (operates on char code)
+      if (container.type === 'string' && typeof container.value === 'string') {
+        if (index >= 0 && index < container.value.length) {
+          const charCode = container.value.charCodeAt(index)
+          const newCharCode = op === '++' ? charCode + 1 : charCode - 1
+          const chars = container.value.split('')
+          const oldChar = chars[index]
+          chars[index] = String.fromCharCode(newCharCode)
+          ctx.scope.set(name, { type: 'string', value: chars.join('') })
+          const oldRv: RuntimeValue = { type: 'char', value: oldChar }
+          const newRv: RuntimeValue = { type: 'char', value: chars[index] }
+          return position === 'prefix' ? newRv : oldRv
+        }
+        return { type: 'char', value: '' }
+      }
+
+      if (container.type !== 'array' || !Array.isArray(container.value)) {
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+      }
+      if (index >= 0 && index < container.value.length) {
+        const current = container.value[index]
         const val = ctx.toNumber(current)
         const newVal = op === '++' ? val + 1 : val - 1
         const newRv: RuntimeValue = current.type === 'int'
           ? { type: 'int', value: Math.trunc(newVal) }
           : { type: 'double', value: newVal }
         const oldRv: RuntimeValue = { ...current }
-        arr.value[index] = newRv
+        container.value[index] = newRv
         return position === 'prefix' ? newRv : oldRv
       }
       return { type: 'int', value: 0 }
@@ -51,19 +68,32 @@ export function registerMutationExecutors(register: (concept: string, executor: 
     const rhs = await ctx.evaluate(node.children.value[0])
     const rv = ctx.toNumber(rhs)
 
-    // Array element compound assign
+    // Array/string element compound assign
     const indexNodes = node.children.index ?? []
     if (indexNodes.length > 0) {
-      const arr = ctx.scope.get(name)
-      if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-      }
+      const container = ctx.scope.get(name)
       const indexVal = await ctx.evaluate(indexNodes[0])
       const index = ctx.toNumber(indexVal)
-      if (index >= 0 && index < arr.value.length) {
-        const current = arr.value[index]
+
+      // String subscript compound assign: s[i] -= 7 (operates on char code)
+      if (container.type === 'string' && typeof container.value === 'string') {
+        if (index >= 0 && index < container.value.length) {
+          const charCode = container.value.charCodeAt(index)
+          const result = computeCompound(op, charCode, rv)
+          const chars = container.value.split('')
+          chars[index] = String.fromCharCode(Math.trunc(result))
+          ctx.scope.set(name, { type: 'string', value: chars.join('') })
+        }
+        return
+      }
+
+      if (container.type !== 'array' || !Array.isArray(container.value)) {
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+      }
+      if (index >= 0 && index < container.value.length) {
+        const current = container.value[index]
         const result = computeCompound(op, ctx.toNumber(current), rv)
-        arr.value[index] = current.type === 'int' && rhs.type === 'int'
+        container.value[index] = current.type === 'int' && rhs.type === 'int'
           ? { type: 'int', value: Math.trunc(result) }
           : { type: 'double', value: result }
       }

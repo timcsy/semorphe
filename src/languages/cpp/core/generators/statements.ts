@@ -282,7 +282,12 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const op = node.properties.operator ?? '+='
     const vals = node.children.value ?? []
     const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
-    const expr = `${name} ${op} ${val}`
+    // Array element compound assign: arr[i] += value
+    const indexNodes = node.children.index ?? []
+    const target = indexNodes.length > 0
+      ? `${name}[${generateExpression(indexNodes[0], ctx)}]`
+      : `${name}`
+    const expr = `${target} ${op} ${val}`
     if (ctx.isExpression) return expr
     return `${indent(ctx)}${expr};\n`
   })

@@ -39,15 +39,23 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
 
     const indexVal = await ctx.evaluate(indexNodes[0])
     const index = ctx.toNumber(indexVal)
-    const arr = ctx.scope.get(name)
+    const container = ctx.scope.get(name)
 
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+    // String subscript: s[i] returns char
+    if (container.type === 'string' && typeof container.value === 'string') {
+      if (index < 0 || index >= container.value.length) {
+        throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
+      }
+      return { type: 'char', value: container.value[index] }
+    }
+
+    if (container.type !== 'array' || !Array.isArray(container.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }
-    if (index < 0 || index >= arr.value.length) {
+    if (index < 0 || index >= container.value.length) {
       throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
     }
-    return arr.value[index]
+    return container.value[index]
   })
 
   register('array_assign', async (node, ctx) => {
@@ -59,15 +67,27 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     const indexVal = await ctx.evaluate(indexNodes[0])
     const index = ctx.toNumber(indexVal)
     const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
+    const container = ctx.scope.get(name)
 
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
+    // String subscript assign: s[i] = 'x'
+    if (container.type === 'string' && typeof container.value === 'string') {
+      if (index < 0 || index >= container.value.length) {
+        throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
+      }
+      const ch = typeof val.value === 'string' ? val.value[0] ?? '' : String.fromCharCode(ctx.toNumber(val))
+      const chars = container.value.split('')
+      chars[index] = ch
+      ctx.scope.set(name, { type: 'string', value: chars.join('') })
+      return
+    }
+
+    if (container.type !== 'array' || !Array.isArray(container.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }
-    if (index < 0 || index >= arr.value.length) {
+    if (index < 0 || index >= container.value.length) {
       throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
     }
-    arr.value[index] = val
+    container.value[index] = val
   })
 
   register('cpp_array_2d_declare', async (node, ctx) => {

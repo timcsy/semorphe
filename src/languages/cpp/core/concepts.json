@@ -18,7 +18,9 @@
       "operator",
       "position"
     ],
-    "children": {},
+    "children": {
+      "index": "expression"
+    },
     "role": "statement"
   },
   {
@@ -30,7 +32,8 @@
       "operator"
     ],
     "children": {
-      "value": "expression"
+      "value": "expression",
+      "index": "expression"
     },
     "role": "statement"
   },
@@ -505,7 +508,9 @@
       "operator",
       "position"
     ],
-    "children": {},
+    "children": {
+      "index": "expression"
+    },
     "role": "expression"
   },
   {
@@ -517,7 +522,8 @@
       "operator"
     ],
     "children": {
-      "value": "expression"
+      "value": "expression",
+      "index": "expression"
     },
     "role": "expression"
   },

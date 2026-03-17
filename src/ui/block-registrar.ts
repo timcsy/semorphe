@@ -1496,22 +1496,74 @@ export class BlockRegistrar {
     // c_increment
     {
       Blockly.Blocks['c_increment'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
-              [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
-            ]) as Blockly.Field, 'OP')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
-              [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
-            ]) as Blockly.Field, 'POSITION')
+        hasIndex_: false,
+        init: function (this: any) {
+          this.hasIndex_ = false
+          this.buildInputs_()
           this.setPreviousStatement(true, null)
           this.setNextStatement(true, null)
           this.setColour(CATEGORY_COLORS.operators)
           this.setTooltip(Blockly.Msg['C_INCREMENT_TOOLTIP'] || '讓變數的值加 1 或減 1')
+        },
+        buildInputs_: function (this: any) {
+          // Save current field values before rebuild
+          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
+          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
+          const savedPos = this.getField('POSITION') ? this.getFieldValue('POSITION') : null
+          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
+          // Remove existing inputs
+          if (this.getInput('MAIN')) this.removeInput('MAIN')
+          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
+          if (this.getInput('TAIL')) this.removeInput('TAIL')
+
+          if (this.hasIndex_) {
+            this.appendValueInput('INDEX')
+              .setCheck('Expression')
+              .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField('的第 [')
+            this.appendDummyInput('TAIL')
+              .appendField('] 格')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
+                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
+              ]) as Blockly.Field, 'OP')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+              ]) as Blockly.Field, 'POSITION')
+          } else {
+            this.appendDummyInput('MAIN')
+              .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
+                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
+              ]) as Blockly.Field, 'OP')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+              ]) as Blockly.Field, 'POSITION')
+          }
+          this.setInputsInline(true)
+          // Restore saved values
+          if (savedName) this.setFieldValue(savedName, 'NAME')
+          if (savedOp) this.setFieldValue(savedOp, 'OP')
+          if (savedPos) this.setFieldValue(savedPos, 'POSITION')
+          if (savedIndex && this.getInput('INDEX')) {
+            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
+          }
+        },
+        saveExtraState: function (this: any) {
+          if (!this.hasIndex_) return {}
+          return { hasIndex: true }
+        },
+        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
+          const needIndex = !!state?.hasIndex
+          if (needIndex !== this.hasIndex_) {
+            this.hasIndex_ = needIndex
+            this.buildInputs_()
+          }
         },
       }
     }
@@ -1519,23 +1571,73 @@ export class BlockRegistrar {
     // c_compound_assign
     {
       Blockly.Blocks['c_compound_assign'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput('VALUE')
-            .setCheck('Expression')
-            .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
-              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
-              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
-              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
-              [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
-            ]) as Blockly.Field, 'OP')
-          this.setInputsInline(true)
+        hasIndex_: false,
+        init: function (this: any) {
+          this.hasIndex_ = false
+          this.buildInputs_()
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
           this.setColour(CATEGORY_COLORS.operators)
           this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '把變數的值加上、減去、乘以、除以或取餘數後存回去')
+        },
+        buildInputs_: function (this: any) {
+          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
+          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
+          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
+          const savedValue = this.getInput('VALUE') ? this.getInputTargetBlock('VALUE') : null
+          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
+          if (this.getInput('INDEX_LABEL')) this.removeInput('INDEX_LABEL')
+          if (this.getInput('VALUE')) this.removeInput('VALUE', true)
+
+          if (this.hasIndex_) {
+            this.appendValueInput('INDEX')
+              .setCheck('Expression')
+              .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField('的第 [')
+            this.appendValueInput('VALUE')
+              .setCheck('Expression')
+              .appendField('] 格')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
+              ]) as Blockly.Field, 'OP')
+          } else {
+            this.appendValueInput('VALUE')
+              .setCheck('Expression')
+              .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
+                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
+              ]) as Blockly.Field, 'OP')
+          }
+          this.setInputsInline(true)
+          if (savedName) this.setFieldValue(savedName, 'NAME')
+          if (savedOp) this.setFieldValue(savedOp, 'OP')
+          if (savedIndex && this.getInput('INDEX')) {
+            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
+          }
+          if (savedValue && this.getInput('VALUE')) {
+            this.getInput('VALUE')!.connection?.connect(savedValue.outputConnection)
+          }
+        },
+        saveExtraState: function (this: any) {
+          if (!this.hasIndex_) return {}
+          return { hasIndex: true }
+        },
+        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
+          const needIndex = !!state?.hasIndex
+          if (needIndex !== this.hasIndex_) {
+            this.hasIndex_ = needIndex
+            this.buildInputs_()
+          }
         },
       }
     }
@@ -1752,20 +1854,68 @@ export class BlockRegistrar {
     // c_increment_expr
     {
       Blockly.Blocks['c_increment_expr'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '++', '++'],
-              [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '--', '--'],
-            ]) as Blockly.Field, 'OP')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
-              [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
-            ]) as Blockly.Field, 'POSITION')
+        hasIndex_: false,
+        init: function (this: any) {
+          this.hasIndex_ = false
+          this.buildInputs_()
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.operators)
           this.setTooltip(Blockly.Msg['C_INCREMENT_TOOLTIP'] || '遞增/遞減（運算式）')
+        },
+        buildInputs_: function (this: any) {
+          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
+          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
+          const savedPos = this.getField('POSITION') ? this.getFieldValue('POSITION') : null
+          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
+          if (this.getInput('MAIN')) this.removeInput('MAIN')
+          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
+          if (this.getInput('TAIL')) this.removeInput('TAIL')
+
+          if (this.hasIndex_) {
+            this.appendValueInput('INDEX')
+              .setCheck('Expression')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField('[')
+            this.appendDummyInput('TAIL')
+              .appendField(']')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '++', '++'],
+                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '--', '--'],
+              ]) as Blockly.Field, 'OP')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+              ]) as Blockly.Field, 'POSITION')
+          } else {
+            this.appendDummyInput('MAIN')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '++', '++'],
+                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '--', '--'],
+              ]) as Blockly.Field, 'OP')
+              .appendField(new Blockly.FieldDropdown([
+                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
+                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
+              ]) as Blockly.Field, 'POSITION')
+          }
+          this.setInputsInline(true)
+          if (savedName) this.setFieldValue(savedName, 'NAME')
+          if (savedOp) this.setFieldValue(savedOp, 'OP')
+          if (savedPos) this.setFieldValue(savedPos, 'POSITION')
+          if (savedIndex && this.getInput('INDEX')) {
+            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
+          }
+        },
+        saveExtraState: function (this: any) {
+          if (!this.hasIndex_) return {}
+          return { hasIndex: true }
+        },
+        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
+          const needIndex = !!state?.hasIndex
+          if (needIndex !== this.hasIndex_) {
+            this.hasIndex_ = needIndex
+            this.buildInputs_()
+          }
         },
       }
     }
@@ -1773,21 +1923,70 @@ export class BlockRegistrar {
     // c_compound_assign_expr
     {
       Blockly.Blocks['c_compound_assign_expr'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput('VALUE')
-            .setCheck('Expression')
-            .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-            .appendField(new Blockly.FieldDropdown([
-              ['+=', '+='],
-              ['-=', '-='],
-              ['*=', '*='],
-              ['/=', '/='],
-              ['%=', '%='],
-            ]) as Blockly.Field, 'OP')
-          this.setInputsInline(true)
+        hasIndex_: false,
+        init: function (this: any) {
+          this.hasIndex_ = false
+          this.buildInputs_()
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.operators)
           this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '複合賦值（運算式）')
+        },
+        buildInputs_: function (this: any) {
+          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
+          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
+          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
+          const savedValue = this.getInput('VALUE') ? this.getInputTargetBlock('VALUE') : null
+          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
+          if (this.getInput('INDEX_LABEL')) this.removeInput('INDEX_LABEL')
+          if (this.getInput('VALUE')) this.removeInput('VALUE', true)
+
+          if (this.hasIndex_) {
+            this.appendValueInput('INDEX')
+              .setCheck('Expression')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField('[')
+            this.appendValueInput('VALUE')
+              .setCheck('Expression')
+              .appendField(']')
+              .appendField(new Blockly.FieldDropdown([
+                ['+=', '+='],
+                ['-=', '-='],
+                ['*=', '*='],
+                ['/=', '/='],
+                ['%=', '%='],
+              ]) as Blockly.Field, 'OP')
+          } else {
+            this.appendValueInput('VALUE')
+              .setCheck('Expression')
+              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+              .appendField(new Blockly.FieldDropdown([
+                ['+=', '+='],
+                ['-=', '-='],
+                ['*=', '*='],
+                ['/=', '/='],
+                ['%=', '%='],
+              ]) as Blockly.Field, 'OP')
+          }
+          this.setInputsInline(true)
+          if (savedName) this.setFieldValue(savedName, 'NAME')
+          if (savedOp) this.setFieldValue(savedOp, 'OP')
+          if (savedIndex && this.getInput('INDEX')) {
+            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
+          }
+          if (savedValue && this.getInput('VALUE')) {
+            this.getInput('VALUE')!.connection?.connect(savedValue.outputConnection)
+          }
+        },
+        saveExtraState: function (this: any) {
+          if (!this.hasIndex_) return {}
+          return { hasIndex: true }
+        },
+        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
+          const needIndex = !!state?.hasIndex
+          if (needIndex !== this.hasIndex_) {
+            this.hasIndex_ = needIndex
+            this.buildInputs_()
+          }
         },
       }
     }
