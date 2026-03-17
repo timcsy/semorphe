@@ -1,5 +1,5 @@
 import type { SemanticNode, StylePreset, Topic } from '../core/types'
-import { flattenLevelTree } from '../core/level-tree'
+import { flattenLevelTree, getVisibleConcepts } from '../core/level-tree'
 import type { ProgramScaffold, ScaffoldResult } from '../core/program-scaffold'
 import type { CodingStyle } from '../languages/style'
 import {
@@ -246,6 +246,13 @@ export class SyncController {
       const { mappings: codeMappings } = generateCodeWithMapping(tree, this.language, this.style)
       this.codeMappings = codeMappings
 
+      // Downgrade concepts not in current level to universal equivalents
+      // (e.g., cpp_string_declare → var_declare when string isn't in topic level)
+      if (this.currentTopic) {
+        const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
+        this.downgradeConceptsForLevel(tree, visible)
+      }
+
       // For L0: strip scaffold nodes so blocks only show user's logic
       const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
       const renderResult = renderToBlocklyState(displayTree)
@@ -255,6 +262,54 @@ export class SyncController {
       this.bus.emit('semantic:update', { tree, blockState: renderResult, source: 'code' })
     } finally {
       this.syncing = false
+    }
+  }
+
+  /**
+   * Downgrade concepts not visible in current level to universal equivalents.
+   * If no universal equivalent exists, keep the original concept (never degrade to raw_code).
+   * Mutates the tree in place.
+   */
+  private downgradeConceptsForLevel(node: SemanticNode, visible: Set<string>): void {
+    // Mapping: specific concept → universal equivalent concept + property transform
+    const DOWNGRADE_MAP: Record<string, { concept: string; typePrefix?: string }> = {
+      'cpp_string_declare': { concept: 'var_declare', typePrefix: 'string' },
+      'cpp_vector_declare': { concept: 'var_declare' },
+      'cpp_stack_declare': { concept: 'var_declare' },
+      'cpp_queue_declare': { concept: 'var_declare' },
+      'cpp_map_declare': { concept: 'var_declare' },
+      'cpp_set_declare': { concept: 'var_declare' },
+      'cpp_pair_declare': { concept: 'var_declare' },
+      'cpp_ifstream_declare': { concept: 'var_declare' },
+      'cpp_ofstream_declare': { concept: 'var_declare' },
+      'cpp_stringstream_declare': { concept: 'var_declare' },
+      'cpp_const_declare': { concept: 'var_declare' },
+      'cpp_constexpr_declare': { concept: 'var_declare' },
+      'cpp_auto_declare': { concept: 'var_declare' },
+      'cpp_static_declare': { concept: 'var_declare' },
+      'cpp_pointer_declare': { concept: 'var_declare' },
+      'cpp_ref_declare': { concept: 'var_declare' },
+    }
+
+    if (!visible.has(node.concept)) {
+      const downgrade = DOWNGRADE_MAP[node.concept]
+      if (downgrade && visible.has(downgrade.concept)) {
+        // Preserve type info in properties
+        if (downgrade.typePrefix && !node.properties.type) {
+          node.properties.type = downgrade.typePrefix
+        }
+        node.concept = downgrade.concept
+      }
+      // If no downgrade mapping or target also not visible → keep original (never raw_code)
+    }
+
+    // Recurse into children
+    for (const children of Object.values(node.children)) {
+      if (Array.isArray(children)) {
+        for (const child of children) {
+          this.downgradeConceptsForLevel(child, visible)
+        }
+      }
     }
   }
 
