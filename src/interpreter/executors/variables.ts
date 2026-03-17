@@ -4,9 +4,13 @@ import { defaultValue } from '../types'
 export function registerVariableExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   const execVarDeclare: ConceptExecutor = async (node, ctx) => {
     // Multi-variable declaration: int a, b, c;
+    // var_declare has type, var_declarator children inherit it
     const declarators = node.children.declarators
     if (declarators && declarators.length > 0) {
+      const parentType = String(node.properties.type || 'int')
       for (const decl of declarators) {
+        // Propagate parent type to declarator if it doesn't have its own
+        if (!decl.properties.type) decl.properties.type = parentType
         await ctx.executeNode(decl)
       }
       return
@@ -27,6 +31,7 @@ export function registerVariableExecutors(register: (concept: string, executor: 
 
   register('var_declare', execVarDeclare)
   register('var_declare_expr', execVarDeclare)
+  register('var_declarator', execVarDeclare)
 
   // const/constexpr/auto declarations behave like var_declare in the interpreter
   register('cpp_const_declare', execVarDeclare)
