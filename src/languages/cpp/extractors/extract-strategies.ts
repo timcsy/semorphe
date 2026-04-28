@@ -67,23 +67,31 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   extractor.registerExtractStrategy('u_if_else', extractIf)
 
   // ── I/O (input with select mode fallback) ──
-  const extractInput = (block: BlockState, _ctx: ExtractContext): SemanticNode | null => {
+  const extractInput = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
     const extraState = block.extraState as { args?: Array<{ mode: string; text?: string; selectedVar?: string }> } | undefined
     const args = extraState?.args ?? []
-    const varNames: string[] = []
-    for (const a of args) {
+    const valueNodes: SemanticNode[] = []
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i]
       if (a.mode === 'select') {
         const name = a.text ?? a.selectedVar
-        if (name) varNames.push(name)
+        if (name) valueNodes.push(createNode('var_ref', { name }))
+      } else if (a.mode === 'compose') {
+        const inputData = block.inputs[`ARG_${i}`]
+        if (inputData?.block) {
+          const extracted = ctx.extract(inputData.block)
+          if (extracted) valueNodes.push(extracted)
+        }
       }
     }
-    if (varNames.length === 0) {
+    if (valueNodes.length === 0) {
       // Fallback: try SEL_0 field (dynamic dropdown), then NAME field (JSON blockDef)
       const singleVar = (block.fields.SEL_0 as string) ?? (block.fields.NAME as string) ?? 'x'
-      varNames.push(singleVar)
+      valueNodes.push(createNode('var_ref', { name: singleVar }))
     }
-    return createNode('input', { variable: varNames[0] }, {
-      values: varNames.map(n => createNode('var_ref', { name: n })),
+    const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
+    return createNode('input', { variable: firstVarName }, {
+      values: valueNodes,
     })
   }
   extractor.registerExtractStrategy('u_input', extractInput)
