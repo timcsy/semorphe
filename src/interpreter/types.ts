@@ -7,6 +7,7 @@ export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool
 export interface RuntimeValue {
   type: RuntimeType
   value: number | string | boolean | null | RuntimeValue[]
+  tag?: string
 }
 
 /** 函式定義 */

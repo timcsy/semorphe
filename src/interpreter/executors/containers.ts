@@ -77,7 +77,7 @@ export function registerContainerExecutors(register: (concept: string, executor:
 
   register('cpp_queue_declare', async (node, ctx) => {
     const name = String(node.properties.name)
-    ctx.scope.declare(name, { type: 'array', value: [] })
+    ctx.scope.declare(name, { type: 'array', value: [], tag: 'queue' })
   })
 
   register('cpp_queue_front', async (node, ctx) => {
@@ -178,7 +178,11 @@ export function registerContainerExecutors(register: (concept: string, executor:
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }
     if (arr.value.length > 0) {
-      arr.value.pop()
+      if (arr.tag === 'queue') {
+        arr.value.shift()
+      } else {
+        arr.value.pop()
+      }
     }
   })
 
