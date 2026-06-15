@@ -19,5 +19,15 @@
     ],
     "children": {},
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_queue_back",
+    "layer": "lang-library",
+    "abstractConcept": "queue_back",
+    "properties": [
+      "obj"
+    ],
+    "children": {},
+    "role": "expression"
   }
 ]

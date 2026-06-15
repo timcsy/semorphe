@@ -62,7 +62,7 @@
                   "cpp_container_erase", "cpp_container_count",
                   "cpp_vector_pop_back", "cpp_vector_back",
                   "cpp_stack_declare", "cpp_stack_top",
-                  "cpp_queue_declare", "cpp_queue_front",
+                  "cpp_queue_declare", "cpp_queue_front", "cpp_queue_back",
                   "cpp_map_access",
                   "cpp_set_insert",
                   "cpp_accumulate", "cpp_iota", "cpp_partial_sum",

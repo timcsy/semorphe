@@ -101,7 +101,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     registryCategories: [],
     extraTypes: [
       'cpp_stack_declare', 'cpp_stack_top',
-      'cpp_queue_declare', 'cpp_queue_front',
+      'cpp_queue_declare', 'cpp_queue_front', 'cpp_queue_back',
       'cpp_stringstream_declare',
       // generic container ops commonly used with stacks/queues
       'c_container_push', 'c_container_pop', 'c_container_empty',

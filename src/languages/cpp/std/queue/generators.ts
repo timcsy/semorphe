@@ -9,6 +9,11 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}.front()`
   })
 
+  g.set('cpp_queue_back', (node) => {
+    const obj = node.properties.obj ?? 'q'
+    return `${obj}.back()`
+  })
+
   // Statement concepts
   g.set('cpp_queue_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'

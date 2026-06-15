@@ -249,6 +249,8 @@
   "CPP_QUEUE_POP_TOOLTIP": "移除佇列最前面的元素",
   "CPP_QUEUE_FRONT_MSG0": "%1 的前端元素",
   "CPP_QUEUE_FRONT_TOOLTIP": "取得佇列最前面的元素（不移除）",
+  "CPP_QUEUE_BACK_MSG0": "%1 的尾端元素",
+  "CPP_QUEUE_BACK_TOOLTIP": "取得佇列最後面的元素（最後加入的，不移除）",
   "CPP_QUEUE_EMPTY_MSG0": "佇列 %1 是否為空",
   "CPP_QUEUE_EMPTY_TOOLTIP": "檢查佇列是否為空（回傳是/否）",
   "CPP_MAP_ACCESS_MSG0": "%1 中鍵 %2 的值",

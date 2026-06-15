@@ -249,6 +249,8 @@
   "CPP_QUEUE_POP_TOOLTIP": "Remove the front element from the queue",
   "CPP_QUEUE_FRONT_MSG0": "Front of %1",
   "CPP_QUEUE_FRONT_TOOLTIP": "Get the front element of the queue without removing it",
+  "CPP_QUEUE_BACK_MSG0": "Back of %1",
+  "CPP_QUEUE_BACK_TOOLTIP": "Get the last element of the queue (most recently added, without removing it)",
   "CPP_QUEUE_EMPTY_MSG0": "Is queue %1 empty",
   "CPP_QUEUE_EMPTY_TOOLTIP": "Check if the queue has no elements (returns true/false)",
   "CPP_MAP_ACCESS_MSG0": "%1 at key %2",

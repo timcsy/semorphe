@@ -115,5 +115,39 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_queue_back",
+    "conceptId": "cpp_queue_back",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_queue_back",
+      "message0": "%{BKY_CPP_QUEUE_BACK_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "que"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_BACK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.back()",
+      "imports": [
+        "queue"
+      ],
+      "order": 20
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
   }
 ]

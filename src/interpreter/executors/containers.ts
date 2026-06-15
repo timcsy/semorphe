@@ -89,6 +89,15 @@ export function registerContainerExecutors(register: (concept: string, executor:
     return arr.value[0]
   })
 
+  register('cpp_queue_back', async (node, ctx) => {
+    const name = String(node.properties.obj)
+    const arr = ctx.scope.get(name)
+    if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
+      return defaultValue('int')
+    }
+    return arr.value[arr.value.length - 1]
+  })
+
   // ─── Map (simulated with array of [key, value] pairs) ───
 
   register('cpp_map_declare', async (node, ctx) => {
