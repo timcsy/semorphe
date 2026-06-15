@@ -58,6 +58,7 @@ export class SyncController {
   private enabledBranches: Set<string> = new Set()
   private codePatcherFn: ((code: string, tree: SemanticNode) => string | null) | null = null
   private scaffoldNodeFilter: ScaffoldNodeFilter = identityFilter
+  private displayTreeEnhancer: ((tree: SemanticNode, visible: Set<string>, scaffoldVisible: boolean) => SemanticNode) | null = null
 
   constructor(
     bus: SemanticBus,
@@ -130,6 +131,25 @@ export class SyncController {
   /** Set the scaffold node filter for L0 display (strip scaffold from blocks) */
   setScaffoldNodeFilter(fn: ScaffoldNodeFilter): void {
     this.scaffoldNodeFilter = fn
+  }
+
+  /**
+   * Set a display tree enhancer — called just before renderToBlocklyState() to inject
+   * virtual nodes (e.g., auto-include cpp_include nodes) into the display tree.
+   * The enhancer receives the tree, the current visible concept set, and a
+   * `scaffoldVisible` flag (true when depth > 0, i.e., scaffold nodes are shown).
+   * It must NOT mutate the original tree.
+   */
+  setDisplayTreeEnhancer(fn: (tree: SemanticNode, visible: Set<string>, scaffoldVisible: boolean) => SemanticNode): void {
+    this.displayTreeEnhancer = fn
+  }
+
+  /** Apply the display tree enhancer (if set) and return the enhanced tree. */
+  private enhanceDisplayTree(tree: SemanticNode): SemanticNode {
+    if (!this.displayTreeEnhancer || !this.currentTopic) return tree
+    const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
+    const scaffoldVisible = !this.shouldStripScaffold()
+    return this.displayTreeEnhancer(tree, visible, scaffoldVisible)
   }
 
   /** Set a language-specific code patcher for auto-fixing missing dependencies after code→blocks */
@@ -223,7 +243,7 @@ export class SyncController {
             const { mappings: convMappings } = generateCodeWithMapping(converted, this.language, this.style)
             this.codeMappings = convMappings
             const convDisplay = this.shouldStripScaffold() ? this.scaffoldNodeFilter(converted) : converted
-            const convRender = renderToBlocklyState(convDisplay)
+            const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
             this.bus.emit('semantic:update', { tree: converted, blockState: convRender, source: 'code' })
@@ -257,9 +277,8 @@ export class SyncController {
 
       // For L0: strip scaffold nodes so blocks only show user's logic
       const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
-      const renderResult = renderToBlocklyState(displayTree)
+      const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
-
 
       this.bus.emit('semantic:update', { tree, blockState: renderResult, source: 'code' })
     } finally {
@@ -370,7 +389,7 @@ export class SyncController {
 
       // For blocks: strip scaffold if L0
       const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(fullTree) : fullTree
-      const renderResult = renderToBlocklyState(displayTree)
+      const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
       // Emit resync event — updates both code and block panels

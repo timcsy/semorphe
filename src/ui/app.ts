@@ -19,7 +19,8 @@ import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
-import { createCppCodePatcher } from '../languages/cpp/auto-include'
+import { createCppCodePatcher, computeAutoIncludes } from '../languages/cpp/auto-include'
+import { createNode } from '../core/semantic-tree'
 import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
 import { PatternLifter } from '../core/lift/pattern-lifter'
@@ -152,6 +153,24 @@ export class App {
     this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
     this.syncController.setCodePatcher((code, tree) => cppPatcher(code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth()))
+
+    // Inject auto-include nodes into the display tree when scaffold is visible (depth > 0).
+    // Auto-includes are generated transiently by computeAutoIncludes() during code generation
+    // but not stored as semantic nodes. This enhancer makes them visible as blocks whenever
+    // the user is at a level that shows scaffold (i.e., not L0-only mode).
+    this.syncController.setDisplayTreeEnhancer((tree, _visible, scaffoldVisible) => {
+      if (!scaffoldVisible) return tree
+      const autoIncludes = computeAutoIncludes(tree, registry)
+      if (autoIncludes.length === 0) return tree
+      const includeNodes = autoIncludes.map(edge =>
+        createNode('cpp_include', { header: edge.header.replace(/^<|>$/g, '') }, {}),
+      )
+      return {
+        ...tree,
+        children: { ...tree.children, body: [...includeNodes, ...(tree.children.body ?? [])] },
+      }
+    })
+
     this.syncController.setTopic(this.currentTopic, this.enabledBranches)
     this.bus.on('semantic:update', (data) => {
       // Update Monaco: blocks→code and resync both produce code
