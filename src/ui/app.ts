@@ -180,8 +180,8 @@ export class App {
           this.monacoPanel?.applyScaffoldDecorations(data.code, data.scaffoldResult)
         }
       }
-      // Update Blockly: code→blocks and resync both produce blockState
-      if ((data.source === 'code' || data.source === 'resync') && data.blockState) {
+      // Update Blockly: code→blocks, blocks→code (include injection), and resync all produce blockState
+      if ((data.source === 'code' || data.source === 'resync' || data.source === 'blocks') && data.blockState) {
         this.blocklyPanel?.onSemanticUpdate(data)
       }
     })

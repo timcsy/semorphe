@@ -194,7 +194,13 @@ export class SyncController {
         })
       }
 
-      this.bus.emit('semantic:update', { tree, code, source: 'blocks', mappings, scaffoldResult })
+      // Inject auto-include blocks and re-render so blocks panel reflects new includes.
+      // Uses busUpdateInProgress flag (in blockly-panel) to prevent onChange feedback loop.
+      // Note: keep blockMappings from blocklyState (set above) — don't overwrite with re-render IDs.
+      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
+      const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
+
+      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'blocks', mappings, scaffoldResult })
     } finally {
       this.syncing = false
     }
