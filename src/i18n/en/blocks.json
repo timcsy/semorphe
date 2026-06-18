@@ -667,7 +667,7 @@
   "CPP_CONTAINER_PUSH_MSG0": "Push %2 onto %1",
   "CPP_CONTAINER_PUSH_TOOLTIP": "Push a value onto the container",
   "CPP_CONTAINER_POP_MSG0": "Pop from %1",
-  "CPP_CONTAINER_POP_TOOLTIP": "Remove the top/front element from the container",
+  "CPP_CONTAINER_POP_TOOLTIP": "Pop the next element: removes top from stack, front from queue",
   "CPP_CONTAINER_CLEAR_MSG0": "Clear %1",
   "CPP_CONTAINER_CLEAR_TOOLTIP": "Remove all elements from the container",
   "CPP_CONTAINER_PUSH_BACK_MSG0": "Append %2 to %1",
