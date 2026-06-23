@@ -462,15 +462,29 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
   // for_range_loop: for (auto x : vec) { body }
   registry.register('cpp:liftRangeFor', (node, ctx) => {
+    const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
     const typeNode = node.namedChildren.find(c =>
       c.type === 'primitive_type' || c.type === 'type_identifier' ||
-      c.type === 'placeholder_type_specifier'
+      c.type === 'placeholder_type_specifier' || c.type === 'template_type'
     )
-    const varType = typeNode?.text ?? 'auto'
-    // The identifier after the type
-    const varNode = node.namedChildren.find(c => c.type === 'identifier')
+    // Handle reference/pointer declarators: for (const string& w : container)
+    // In this case, the loop var `w` lives inside reference_declarator, not as a bare identifier
+    const refDeclNode = node.namedChildren.find(c =>
+      c.type === 'reference_declarator' || c.type === 'pointer_declarator'
+    )
+    let varNode: any
+    if (refDeclNode) {
+      varNode = refDeclNode.namedChildren.find((c: any) => c.type === 'identifier')
+    } else {
+      varNode = node.namedChildren.find(c => c.type === 'identifier')
+    }
     const varName = varNode?.text ?? 'x'
-    // The container is the "right" field or the second identifier
+    // Build varType with const qualifier and reference sigil if present
+    const baseType = typeNode?.text ?? 'auto'
+    const qualifier = qualifierNode?.text ? qualifierNode.text + ' ' : ''
+    const refSigil = refDeclNode?.type === 'reference_declarator' ? '&' : refDeclNode?.type === 'pointer_declarator' ? '*' : ''
+    const varType = `${qualifier}${baseType}${refSigil}`
+    // The container is the "right" field
     const rightNode = node.childForFieldName('right')
     const container = rightNode?.text ?? 'vec'
     const bodyNode = node.childForFieldName('body') ?? node.namedChildren.find(c => c.type === 'compound_statement') ?? null
@@ -834,9 +848,11 @@ const COMPOUND_TYPE_PREFIXES = [
 
 /** Parse a parameter_declaration AST node into { type, name } */
 function parseParamDeclaration(param: AstNode): { type: string; name: string } {
+  const qualifierNode = param.namedChildren.find(c => c.type === 'type_qualifier')
   const typeNode = param.namedChildren.find(c =>
     c.type === 'primitive_type' || c.type === 'type_identifier' ||
-    c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
+    c.type === 'qualified_identifier' || c.type === 'sized_type_specifier' ||
+    c.type === 'template_type'
   )
   const declNode = param.namedChildren.find(c =>
     c.type === 'identifier' || c.type === 'pointer_declarator' ||
@@ -845,7 +861,8 @@ function parseParamDeclaration(param: AstNode): { type: string; name: string } {
 
   // If we have structured children, use them
   if (typeNode || declNode) {
-    let type = typeNode?.text ?? 'int'
+    const qualifier = qualifierNode?.text ? qualifierNode.text + ' ' : ''
+    let type = qualifier + (typeNode?.text ?? 'int')
     let name = ''
 
     if (declNode) {

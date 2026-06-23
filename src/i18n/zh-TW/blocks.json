@@ -281,6 +281,8 @@
   "CPP_STRING_APPEND_TOOLTIP": "在字串尾端加上文字",
   "CPP_STRING_C_STR_MSG0": "取得 %1 的原生文字 (c_str)",
   "CPP_STRING_C_STR_TOOLTIP": "取得 C 風格字串（const char*）",
+  "CPP_STRING_AT_MSG0": "取得字串 %1 第 %2 個字元",
+  "CPP_STRING_AT_TOOLTIP": "取得字串指定位置的字元（0 起始索引），等同於 str[i]",
   "CPP_GETLINE_MSG0": "讀取整行到 %1 (getline)",
   "CPP_GETLINE_TOOLTIP": "讀取一整行輸入（包含空格）存入字串",
   "CPP_TO_STRING_MSG0": "將 %1 轉為文字",

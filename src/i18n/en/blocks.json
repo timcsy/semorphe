@@ -281,6 +281,8 @@
   "CPP_STRING_APPEND_TOOLTIP": "Append text to the end of the string",
   "CPP_STRING_C_STR_MSG0": "Get raw text of %1 (c_str)",
   "CPP_STRING_C_STR_TOOLTIP": "Get the C-style string (const char*) from this string",
+  "CPP_STRING_AT_MSG0": "Get character at index %2 of string %1",
+  "CPP_STRING_AT_TOOLTIP": "Get the character at the given index in the string (0-based), equivalent to str[i]",
   "CPP_GETLINE_MSG0": "Read entire line into %1 (getline)",
   "CPP_GETLINE_TOOLTIP": "Read an entire line of input (including spaces) into a string",
   "CPP_TO_STRING_MSG0": "Convert %1 to string",

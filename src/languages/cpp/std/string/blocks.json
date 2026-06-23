@@ -508,5 +508,41 @@
       "imports": ["string"],
       "order": 0
     }
+  },
+  {
+    "id": "cpp_string_at",
+    "conceptId": "cpp_string_at",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_at",
+      "message0": "%{BKY_CPP_STRING_AT_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "OBJ",
+          "options": [["str", "str"]]
+        },
+        {
+          "type": "input_value",
+          "name": "INDEX",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_AT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "OBJ": "obj" },
+      "inputs": { "INDEX": "index" }
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}[${INDEX}]",
+      "imports": ["string"],
+      "order": 20
+    }
   }
 ]

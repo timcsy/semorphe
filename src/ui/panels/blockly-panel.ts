@@ -382,6 +382,11 @@ export class BlocklyPanel implements ViewHost {
         const idx = (node.children.index ?? [])[0]
         return `${arrName}[${idx ? this.simpleExpressionToCode(idx) : '0'}]`
       }
+      case 'cpp_string_at': {
+        const strName = node.properties.obj ?? 'str'
+        const idx = (node.children.index ?? [])[0]
+        return `${strName}[${idx ? this.simpleExpressionToCode(idx) : '0'}]`
+      }
       case 'cpp_increment':
       case 'cpp_increment_expr': {
         const incName = (node.properties.name ?? 'i') as string

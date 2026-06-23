@@ -30,6 +30,13 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}.c_str()`
   })
 
+  g.set('cpp_string_at', (node, ctx) => {
+    const obj = node.properties.obj ?? 'str'
+    const indexNodes = node.children.index ?? []
+    const index = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
+    return `${obj}[${index}]`
+  })
+
   g.set('cpp_string_empty', (node) => {
     const obj = node.properties.obj ?? 'str'
     return `${obj}.empty()`
