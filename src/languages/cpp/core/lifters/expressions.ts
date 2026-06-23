@@ -7,6 +7,82 @@ const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
 const LOGIC_OPS = new Set(['&&', '||'])
 
+// ─── 字串型別推斷（供 subscript_expression lifter 使用） ──────────────────────
+
+function isStringTypeName(text: string): boolean {
+  return text === 'string' || text === 'std::string'
+}
+
+function stringVarNamesInDecl(declNode: any): string[] {
+  if (declNode.type !== 'declaration') return []
+  const typeNode = declNode.namedChildren.find((c: any) =>
+    c.type === 'type_identifier' || c.type === 'qualified_identifier'
+  )
+  if (!typeNode || !isStringTypeName(typeNode.text)) return []
+  const names: string[] = []
+  for (const c of declNode.namedChildren) {
+    if (c.type === 'identifier') {
+      names.push(c.text)
+    } else if (c.type === 'init_declarator') {
+      // string s = "hello"  or  string s
+      const id = c.namedChildren.find((d: any) => d.type === 'identifier')
+      if (id) names.push(id.text)
+    }
+  }
+  return names
+}
+
+function stringParamNamesInFunc(funcDefNode: any): string[] {
+  const names: string[] = []
+  // function_definition → declarator (function_declarator) → parameters
+  const declNode = funcDefNode.childForFieldName('declarator')
+  const paramList =
+    declNode?.childForFieldName('parameters') ??
+    declNode?.namedChildren.find((c: any) => c.type === 'parameter_list')
+  if (!paramList) return names
+  for (const param of paramList.namedChildren) {
+    if (param.type !== 'parameter_declaration') continue
+    const typeNode = param.namedChildren.find((c: any) =>
+      c.type === 'type_identifier' || c.type === 'qualified_identifier'
+    )
+    if (!typeNode || !isStringTypeName(typeNode.text)) continue
+    // name may be bare identifier, or inside reference_declarator / pointer_declarator
+    let nameNode = param.namedChildren.find((c: any) => c.type === 'identifier')
+    if (!nameNode) {
+      const refOrPtr = param.namedChildren.find((c: any) =>
+        c.type === 'reference_declarator' || c.type === 'pointer_declarator'
+      )
+      nameNode = refOrPtr?.namedChildren.find((c: any) => c.type === 'identifier')
+    }
+    if (nameNode) names.push(nameNode.text)
+  }
+  return names
+}
+
+// Walk up AST scopes; globals (translation_unit) are scanned without position filter
+// so they're visible regardless of declaration order, matching C++ semantics.
+function isStringVar(varName: string, fromNode: any): boolean {
+  let current = fromNode.parent
+  while (current) {
+    if (current.type === 'compound_statement') {
+      for (const child of current.namedChildren) {
+        if (child.startIndex >= fromNode.startIndex) break
+        if (stringVarNamesInDecl(child).includes(varName)) return true
+      }
+    } else if (current.type === 'translation_unit') {
+      for (const child of current.namedChildren) {
+        if (stringVarNamesInDecl(child).includes(varName)) return true
+      }
+    } else if (current.type === 'function_definition') {
+      if (stringParamNamesInFunc(current).includes(varName)) return true
+    }
+    current = current.parent
+  }
+  return false
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function registerExpressionLifters(lifter: Lifter): void {
   // number_literal, identifier, true/false/null/nullptr — handled by JSON patterns in lift-patterns.json
   // (cpp_number_literal, cpp_identifier, cpp_endl, cpp_eof, cpp_null_id, cpp_true, cpp_false, cpp_null, cpp_nullptr)
@@ -150,6 +226,12 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const indicesNode = node.namedChildren.find(c => c.type === 'subscript_argument_list')
     const indexNode = indicesNode?.namedChildren[0] ?? node.childForFieldName('index') ?? node.namedChildren[1]
     const index = indexNode ? ctx.lift(indexNode) : null
+
+    if (isStringVar(name, node)) {
+      return createNode('cpp_string_at', { obj: name }, {
+        index: index ? [index] : [],
+      })
+    }
     return createNode('array_access', { name }, {
       index: index ? [index] : [],
     })

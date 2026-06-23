@@ -191,10 +191,10 @@ int main() {
 
 // ─── Concept identity (DEGRADED, expected) ───────────────────────────────────
 
-describe('cpp_string_at concept identity (expected degradation)', () => {
-  it('t09: str[i] lifts as array_access (no lifter for cpp_string_at — by design)', () => {
-    // cpp_string_at has no dedicated lifter because type info is unavailable at lift time.
-    // str[i] degrades to array_access, which is acceptable per design decision.
+describe('cpp_string_at concept identity', () => {
+  it('t09: str[i] correctly lifts as cpp_string_at when variable is declared as string', () => {
+    // AST-based type inference: walk up scopes to find the declaration of `word`,
+    // confirm it's a string, and lift subscript_expression as cpp_string_at.
     const code = `#include <string>
 using namespace std;
 int main() {
@@ -204,12 +204,12 @@ int main() {
 }`
     const sem = liftCode(code)
     expect(sem).not.toBeNull()
-    // DEGRADED: str[i] becomes array_access, not cpp_string_at
     const stringAtNodes = findConcepts(sem!, 'cpp_string_at')
-    expect(stringAtNodes).toHaveLength(0)
-    // The subscript is lifted as array_access (acceptable fallback)
+    expect(stringAtNodes.length).toBeGreaterThan(0)
+    expect(stringAtNodes[0].properties.obj).toBe('word')
+    // Should NOT degrade to array_access for string variables
     const arrayAccessNodes = findConcepts(sem!, 'array_access')
-    expect(arrayAccessNodes.length).toBeGreaterThan(0)
+    expect(arrayAccessNodes).toHaveLength(0)
   })
 
   it('t10: cpp_string_at generates correct code and is compilable', () => {
