@@ -176,6 +176,30 @@ export class BlockRegistrar {
     return options
   }
 
+  getWorkspaceStringOptions(currentVal?: string): Array<[string, string]> {
+    const options: Array<[string, string]> = []
+    const seen = new Set<string>()
+    const workspace = this.accessors?.getWorkspace()
+    if (workspace) {
+      for (const block of workspace.getAllBlocks(false)) {
+        if (block.type === 'cpp_string_declare') {
+          const name = block.getFieldValue('NAME')
+          if (name && !seen.has(name)) {
+            seen.add(name)
+            options.push([name, name])
+          }
+        }
+      }
+    }
+    if (currentVal && !seen.has(currentVal)) {
+      options.push([currentVal, currentVal])
+    }
+    if (options.length === 0) {
+      options.push(['str', 'str'])
+    }
+    return options
+  }
+
   getWorkspaceFuncOptions(currentVal?: string): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
@@ -1452,6 +1476,24 @@ export class BlockRegistrar {
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.arrays)
           this.setTooltip(Blockly.Msg['U_ARRAY_ACCESS_TOOLTIP'] || '陣列存取')
+        },
+      }
+    }
+
+    // cpp_string_at — character access with string-variable dropdown
+    {
+      Blockly.Blocks['cpp_string_at'] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('INDEX')
+            .appendField(Blockly.Msg['CPP_STRING_AT_LABEL'] || '取得字串')
+            .appendField(self.createOpenDropdown(() => self.getWorkspaceStringOptions(this.getFieldValue('OBJ') ?? undefined)) as Blockly.Field, 'OBJ')
+            .appendField(Blockly.Msg['CPP_STRING_AT_INDEX_LABEL'] || '第 [')
+          this.appendDummyInput()
+            .appendField(Blockly.Msg['CPP_STRING_AT_END_LABEL'] || '] 個字元')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour('#4C97FF')
+          this.setTooltip(Blockly.Msg['CPP_STRING_AT_TOOLTIP'] || '取得字串指定位置的字元')
         },
       }
     }

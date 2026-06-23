@@ -75,7 +75,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     registryCategories: ['strings'],
     extraTypes: [
       // C++ string (from containers registry)
-      'cpp_string_declare', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find',
+      'cpp_string_declare', 'cpp_string_at', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find',
       'cpp_string_append', 'cpp_string_c_str', 'cpp_to_string', 'cpp_stoi', 'cpp_stod',
       'cpp_string_empty', 'cpp_string_erase', 'cpp_string_insert', 'cpp_string_replace',
       'cpp_string_push_back', 'cpp_string_clear',

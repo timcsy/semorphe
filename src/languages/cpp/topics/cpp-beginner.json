@@ -43,7 +43,7 @@
               "cpp_strcat", "cpp_strncpy", "cpp_strncmp",
               "cpp_strchr", "cpp_strstr",
               "cpp_string_length", "cpp_string_substr", "cpp_string_find",
-              "cpp_string_append", "cpp_string_c_str",
+              "cpp_string_append", "cpp_string_c_str", "cpp_string_at",
               "cpp_string_erase", "cpp_string_insert",
               "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "cpp_atoi", "cpp_atof",
