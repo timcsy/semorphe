@@ -1,5 +1,5 @@
 ---
-name: concept-fuzz
+name: component-fuzz
 description: >
   為 Semorphe 的程式碼↔積木管線產生資訊隔離的模糊測試。
   使用雙代理架構：Agent A（不知道實作）寫真實程式，
@@ -12,7 +12,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/component-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **此階段不可被跳過**，除非使用者明確設定了 `--dry-run` 或 `--skip-fuzz` 旗標。不可因「概念簡單」、「時間不夠」等理由省略。
 
@@ -33,7 +33,7 @@ $ARGUMENTS
 - `java functions 15` — Java 函式範疇 15 題
 
 難度等級：`easy`、`medium`、`hard`、`all`
-難度對應 Topic 層級樹深度：easy = depth 0、medium = depth 1、hard = depth 2+（同 `/concept-pipeline` 階段四）
+難度對應 Topic 層級樹深度：easy = depth 0、medium = depth 1、hard = depth 2+（同 `/component-pipeline` 階段四）
 範疇（scope）範例：`loops`、`functions`、`arrays`、`pointers`、`strings`、`classes`
 
 ## 架構：雙代理資訊隔離
@@ -169,7 +169,7 @@ Agent A 回傳程式後：
 
 ### 步驟四：分類結果
 
-結果分類基礎定義見 `/concept-roundtrip` 步驟六。本 skill 額外加入 `EXPECTED_DEGRADATION`。
+結果分類基礎定義見 `/component-roundtrip` 步驟六。本 skill 額外加入 `EXPECTED_DEGRADATION`。
 
 對每個程式，分類結果：
 
@@ -274,7 +274,7 @@ Agent A 回傳程式後：
 此 skill 完成後，**必須**輸出以下格式的完成標記：
 
 ```
-🏁 SKILL_COMPLETE: concept-fuzz | {lang} | {scope} | {N} 程式 | PASS: {P} | BUG: {B} | TODO: {T} | 測試檔：{test_file_path}
+🏁 SKILL_COMPLETE: component-fuzz | {lang} | {scope} | {N} 程式 | PASS: {P} | BUG: {B} | TODO: {T} | 測試檔：{test_file_path}
 ```
 
 如果未輸出此標記，pipeline 不會繼續下一階段。

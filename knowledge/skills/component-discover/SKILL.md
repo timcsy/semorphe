@@ -1,5 +1,5 @@
 ---
-name: concept-discover
+name: component-discover
 description: >
   研究程式語言的函式庫、標準標頭檔或語言特性。從文件和網路資源中探索函式簽名、
   常見用法模式，按 Topic 層級樹分類，並依 Semorphe 慣例提出概念命名。
@@ -11,7 +11,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/component-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **完成時必須輸出完成標記**（見最後一節）。
 
@@ -45,7 +45,7 @@ $ARGUMENTS
 
 ### 階段零：Feature Branch（獨立使用時）
 
-如果**不是**由 `/concept-pipeline` 調用，且目前不在概念 feature branch 上：
+如果**不是**由 `/component-pipeline` 調用，且目前不在概念 feature branch 上：
 
 1. **偵測當前分支**：檢查是否已在 `{NNN}-{lang}-{topic}` 格式的 feature branch 上
 2. **如果不在**：詢問使用者是否要建立 feature branch
@@ -200,7 +200,7 @@ $ARGUMENTS
 此 skill 完成後，**必須**輸出以下格式的完成標記：
 
 ```
-🏁 SKILL_COMPLETE: concept-discover | {lang} | {target} | 發現 {N} 個概念 | 報告：{report_path}
+🏁 SKILL_COMPLETE: component-discover | {lang} | {target} | 發現 {N} 個概念 | 報告：{report_path}
 ```
 
 如果未輸出此標記，pipeline 不會繼續下一階段。

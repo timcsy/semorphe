@@ -1,8 +1,8 @@
 ---
-name: concept-pipeline
+name: component-pipeline
 description: >
   為 Semorphe 新增概念的端到端管線。
-  串接全部 5 個概念 skill：discover → generate → roundtrip → fuzz → integrate。
+  串接全部 5 個元件 skill：discover → generate → roundtrip → fuzz → integrate。
   當你想從「我要支援 <特性>」到完全整合的概念，用一個指令完成時使用。
   支援任何語言。
 user-invocable: true
@@ -22,11 +22,11 @@ user-invocable: true
 
 | 階段 | 必須調用的 Skill | 調用方式 |
 |------|-----------------|---------|
-| 1. 探索 | `concept-discover` | `Skill tool: skill="concept-discover", args="{lang} {target}"` |
-| 2. 產生 | `concept-generate` | `Skill tool: skill="concept-generate", args="{lang} {concept}"` |
-| 3. Round-trip | `concept-roundtrip` | `Skill tool: skill="concept-roundtrip", args="{lang} {concept}"` |
-| 4. 模糊測試 | `concept-fuzz` | `Skill tool: skill="concept-fuzz", args="{lang} {difficulty} {scope} {count}"` |
-| 5. 整合 | `concept-integrate` | `Skill tool: skill="concept-integrate", args="{lang} {concept}"` |
+| 1. 探索 | `component-discover` | `Skill tool: skill="component-discover", args="{lang} {target}"` |
+| 2. 產生 | `component-generate` | `Skill tool: skill="component-generate", args="{lang} {concept}"` |
+| 3. Round-trip | `component-roundtrip` | `Skill tool: skill="component-roundtrip", args="{lang} {concept}"` |
+| 4. 模糊測試 | `component-fuzz` | `Skill tool: skill="component-fuzz", args="{lang} {difficulty} {scope} {count}"` |
+| 5. 整合 | `component-integrate` | `Skill tool: skill="component-integrate", args="{lang} {concept}"` |
 
 **「調用」的唯一合法方式是使用 Skill tool。** 以下行為全部視為違規：
 - ❌ 自己寫程式碼代替 skill 的工作
@@ -99,7 +99,7 @@ $ARGUMENTS
 │              │    │ lifter, 測試 │    │ 驗證          │    │              │    │ & commit      │
 └─────────────┘    └──────────────┘    └───────────────┘    └──────────────┘    └───────────────┘
    Skill tool:       Skill tool:        Skill tool:          Skill tool:        Skill tool:
-   concept-discover  concept-generate   concept-roundtrip    concept-fuzz       concept-integrate
+   component-discover  component-generate   component-roundtrip    component-fuzz       component-integrate
 ```
 
 每個階段有一個**通過/不通過關卡**。如果某個階段失敗，管線會停下來報告哪裡出了問題，讓你修復後再繼續。
@@ -126,12 +126,12 @@ $ARGUMENTS
 
 **⚠️ 必須使用 Skill tool 調用**：
 ```
-Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
+Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 ```
 不可手動執行探索步驟。必須調用 Skill tool。
 
 **關卡**：探索報告已產生（路徑在 `specs/concepts/` 目錄下）
-**完成標記**：`🏁 SKILL_COMPLETE: concept-discover | ...`
+**完成標記**：`🏁 SKILL_COMPLETE: component-discover | ...`
 
 **決策點**：探索後，向使用者呈現概念目錄：
 
@@ -153,11 +153,11 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="concept-generate", args="{lang} {concept_name}"
+   Skill tool: skill="component-generate", args="{lang} {concept_name}"
    ```
 2. **關卡**：6 個產出物都存在（含 interpreter executor）
 3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
-4. **完成標記**：`🏁 SKILL_COMPLETE: concept-generate | ...`
+4. **完成標記**：`🏁 SKILL_COMPLETE: component-generate | ...`
 
 如果 TypeScript 失敗，在處理下一個概念之前先修復錯誤。
 
@@ -167,10 +167,10 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="concept-roundtrip", args="{lang} {concept_name}"
+   Skill tool: skill="component-roundtrip", args="{lang} {concept_name}"
    ```
 2. **關卡**：所有目標測試必須 PASS 或 DEGRADED
-3. **完成標記**：`🏁 SKILL_COMPLETE: concept-roundtrip | ...`
+3. **完成標記**：`🏁 SKILL_COMPLETE: component-roundtrip | ...`
 
 如果有 ❌ FAIL：
 - 嘗試自動修復
@@ -188,10 +188,10 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="concept-fuzz", args="{lang} {difficulty} {scope} {count}"
+   Skill tool: skill="component-fuzz", args="{lang} {difficulty} {scope} {count}"
    ```
 2. **關卡**：新概念中沒有 SEMANTIC_DIFF、COMPILE_FAIL、SCAFFOLD_LEAK 或 ROUNDTRIP_DRIFT bug
-3. **完成標記**：`🏁 SKILL_COMPLETE: concept-fuzz | ...`
+3. **完成標記**：`🏁 SKILL_COMPLETE: component-fuzz | ...`
 
 如果模糊測試發現 bug：**必須修復後重新執行**，不得只記錄 todo 就繼續。具體規則：
 
@@ -208,10 +208,10 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="concept-integrate", args="{lang} {concept_name}"
+   Skill tool: skill="component-integrate", args="{lang} {concept_name}"
    ```
 2. **關卡**：所有檢查通過
-3. **完成標記**：`🏁 SKILL_COMPLETE: concept-integrate | ...`
+3. **完成標記**：`🏁 SKILL_COMPLETE: component-integrate | ...`
 
 ### 最終：總結報告
 
@@ -235,7 +235,7 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 ### 建議後續步驟
 1. 修復已阻擋的概念
 2. 值得探索的相關特性
-3. 執行 `/concept-fuzz {lang} all 20` 進行更廣泛的回歸測試
+3. 執行 `/component-fuzz {lang} all 20` 進行更廣泛的回歸測試
 ```
 
 ### Git Commit & PR
@@ -257,39 +257,39 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 ## 錯誤恢復
 
 管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
-- `/concept-generate specs/concepts/{lang}-{topic}.md`
-- `/concept-roundtrip {lang} {concept_name}`
-- `/concept-integrate {lang} {concept_name}`
+- `/component-generate specs/concepts/{lang}-{topic}.md`
+- `/component-roundtrip {lang} {concept_name}`
+- `/component-integrate {lang} {concept_name}`
 
 ## 既有概念修復
 
-如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/concept-refactor` 的醫治模式修復：
+如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/component-refactor` 的醫治模式修復：
 
-- `/concept-refactor {lang} audit` — 完整審計，了解問題全貌
-- `/concept-refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
-- `/concept-refactor {lang} fix all` — 修復該語言所有概念
-- `/concept-refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
+- `/component-refactor {lang} audit` — 完整審計，了解問題全貌
+- `/component-refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
+- `/component-refactor {lang} fix all` — 修復該語言所有概念
+- `/component-refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
 
 **pipeline 與 refactor 的分工**：
-- `/concept-pipeline` 用於**新增**概念（從零到一）
-- `/concept-refactor fix` 用於**修復**既有概念（從不完整到完整）
-- `/concept-refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + concept children），無需遷移
+- `/component-pipeline` 用於**新增**概念（從零到一）
+- `/component-refactor fix` 用於**修復**既有概念（從不完整到完整）
+- `/component-refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + concept children），無需遷移
 
 ## 範例
 
 ```bash
 # C++ 完整管線
-/concept-pipeline cpp <algorithm>
+/component-pipeline cpp <algorithm>
 
 # Python 快速管線
-/concept-pipeline python list comprehension --skip-fuzz
+/component-pipeline python list comprehension --skip-fuzz
 
 # Java 只處理特定概念
-/concept-pipeline java Stream API --concepts=stream_map,stream_filter
+/component-pipeline java Stream API --concepts=stream_map,stream_filter
 
 # 乾跑看看會產生什麼
-/concept-pipeline cpp pointer arithmetic --dry-run
+/component-pipeline cpp pointer arithmetic --dry-run
 
 # 帶更多模糊測試覆蓋
-/concept-pipeline python decorators --fuzz-count=30
+/component-pipeline python decorators --fuzz-count=30
 ```
