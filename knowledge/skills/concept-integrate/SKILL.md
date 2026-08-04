@@ -4,7 +4,7 @@ description: >
   新 Semorphe 概念的最終整合關卡。執行所有驗證步驟
   （TypeScript 編譯、單元測試、round-trip 測試、模糊測試），
   然後將通過的概念整合到程式碼庫中並完成正確的註冊。
-  在 /concept.generate 之後作為最終步驟使用。支援任何語言。
+  在 /concept-generate 之後作為最終步驟使用。支援任何語言。
 user-invocable: true
 ---
 
@@ -12,7 +12,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **前置條件**：此 skill 只能在 concept-discover、concept-generate、concept-roundtrip、concept-fuzz 都已完成後才能調用（除非使用了 `--dry-run` 或 `--skip-fuzz` 旗標）。
 
@@ -53,7 +53,7 @@ $ARGUMENTS
 - [ ] `src/core/types.ts` 中的 `UniversalConcept` 型別已更新
 - [ ] 所有已支援語言都有對應的 generator 和 lifter
 
-如果缺少任何產出物，報告缺少哪些，並建議先執行 `/concept.generate` 或 `/concept.refactor fix`。
+如果缺少任何產出物，報告缺少哪些，並建議先執行 `/concept-generate` 或 `/concept-refactor fix`。
 
 ## 工作流程
 
@@ -81,7 +81,7 @@ grep -rn "'{concept_id}'" src/languages/{lang}/ src/interpreter/executors/ tests
 
 **任何路徑缺失即為阻擋問題**：
 - 報告缺失路徑清單
-- 建議執行 `/concept.generate {lang} {concept}` 補全，或 `/concept.refactor {lang} fix {concept}` 修復
+- 建議執行 `/concept-generate {lang} {concept}` 補全，或 `/concept-refactor {lang} fix {concept}` 修復
 - **不可繼續後續步驟**
 
 ### 步驟一：TypeScript 編譯檢查
@@ -108,7 +108,7 @@ npm test
 
 ### 步驟三：執行目標性 Round-Trip 測試
 
-對正在整合的概念，產生 5-10 個代表性程式並執行 round-trip 驗證（同 `/concept.roundtrip` 流程）。
+對正在整合的概念，產生 5-10 個代表性程式並執行 round-trip 驗證（同 `/concept-roundtrip` 流程）。
 
 **概念身分驗證（必要）**：除了驗證 roundtrip 穩定性和 stdout 等價性之外，**每個測試都必須斷言語義樹中使用了正確的 conceptId**。這防止 lifter 退化到通用概念（如 `var_declare`）卻碰巧生成正確程式碼的假陽性。範例：
 ```typescript
@@ -250,7 +250,7 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_o
    - Stage 所有概念相關的變更檔案（blocks.json、generators、lifters、concepts.json、lift-patterns.json、toolbox-categories.ts、topics/*.json、tests 等）
    - 不用 `git add -A`，逐檔 stage 避免加入無關檔案
    - Commit message 格式：`feat({lang}): add {concept_name} concept`
-   - 如果是由 `/concept.pipeline` 批次調用，跳過 commit（由 pipeline 統一 commit）
+   - 如果是由 `/concept-pipeline` 批次調用，跳過 commit（由 pipeline 統一 commit）
 3. **建立摘要**
 
 輸出：

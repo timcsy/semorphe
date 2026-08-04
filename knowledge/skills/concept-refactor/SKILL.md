@@ -308,17 +308,17 @@ cat src/languages/{lang}/core/concepts.json src/languages/{lang}/std/*/concepts.
 
 1. **讀取現有產出物**——理解概念的語義結構（properties、children、用途）
 2. **參考同語言的鄰近概念**——匹配程式碼風格
-3. **產生缺失的產出物**——遵循 `/concept.generate` 的規則
+3. **產生缺失的產出物**——遵循 `/concept-generate` 的規則
 4. **驗證**：
    ```bash
    npx tsc --noEmit  # 型別檢查
    npm test          # 測試不能破壞
    ```
 
-**修復產出物的品質要求**（與 `/concept.generate` 相同）：
+**修復產出物的品質要求**（與 `/concept-generate` 相同）：
 
 - **Lifter**：必須設定正確的信心等級（見信心等級規則）
-- **BlockSpec**：必須有完整的 `renderMapping`（fields + inputs），i18n 使用 `%{BKY_...}` key，**標籤必須符合 `/concept.generate` 步驟二的 i18n 風格規範**（中文描述式、英文動詞短語、函式名不當標籤、tooltip 補充說明、同類一致句式）
+- **BlockSpec**：必須有完整的 `renderMapping`（fields + inputs），i18n 使用 `%{BKY_...}` key，**標籤必須符合 `/concept-generate` 步驟二的 i18n 風格規範**（中文描述式、英文動詞短語、函式名不當標籤、tooltip 補充說明、同類一致句式）
 - **Generator**：必須處理缺失子節點（空字串或預設值）
 - **Executor**：可執行概念需實作邏輯，宣告性概念需 noop
 - **Test**：必須包含 lift、generate、round-trip 三種測試
@@ -427,7 +427,7 @@ npx tsc --noEmit && npm test
 
 ### M6. Round-trip 驗證
 
-對遷移的概念用 Skill tool 調用 `/concept.roundtrip {lang} {concept}` 確保行為等價。
+對遷移的概念用 Skill tool 調用 `/concept-roundtrip {lang} {concept}` 確保行為等價。
 
 ---
 

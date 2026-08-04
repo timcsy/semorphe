@@ -3,7 +3,7 @@ name: concept-generate
 description: >
   為概念探索報告中定義的概念產生 BlockSpec JSON、程式碼產生器、提升器和渲染映射。
   產生在 Semorphe 語義樹管線中支援新概念所需的所有產出物。
-  在 /concept.discover 之後使用，用於建立實作產出物。支援任何語言。
+  在 /concept-discover 之後使用，用於建立實作產出物。支援任何語言。
 user-invocable: true
 ---
 
@@ -11,7 +11,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **完成時必須輸出完成標記**（見最後一節）。
 
@@ -23,7 +23,7 @@ user-invocable: true
 $ARGUMENTS
 ```
 
-參數應為概念探索報告的路徑（來自 `/concept.discover`），或 `{lang} {concept_name}` 格式（例如 `cpp do_while`、`python list_comprehension`）。
+參數應為概念探索報告的路徑（來自 `/concept-discover`），或 `{lang} {concept_name}` 格式（例如 `cpp do_while`、`python list_comprehension`）。
 
 ## 背景
 
@@ -56,7 +56,7 @@ $ARGUMENTS
 
 ### 步驟一：解析概念定義
 
-從探索報告或使用者輸入中，為每個概念提取（命名慣例見 `/concept.discover` 階段四）：
+從探索報告或使用者輸入中，為每個概念提取（命名慣例見 `/concept-discover` 階段四）：
 - 概念名稱
 - 概念類型：通用（universal）還是語言特定（`{lang}:concept`）
 - 建議歸屬的 Topic 層級樹節點

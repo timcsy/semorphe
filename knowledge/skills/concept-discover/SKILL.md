@@ -11,7 +11,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **完成時必須輸出完成標記**（見最後一節）。
 
@@ -45,7 +45,7 @@ $ARGUMENTS
 
 ### 階段零：Feature Branch（獨立使用時）
 
-如果**不是**由 `/concept.pipeline` 調用，且目前不在概念 feature branch 上：
+如果**不是**由 `/concept-pipeline` 調用，且目前不在概念 feature branch 上：
 
 1. **偵測當前分支**：檢查是否已在 `{NNN}-{lang}-{topic}` 格式的 feature branch 上
 2. **如果不在**：詢問使用者是否要建立 feature branch

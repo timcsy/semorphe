@@ -235,7 +235,7 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 ### 建議後續步驟
 1. 修復已阻擋的概念
 2. 值得探索的相關特性
-3. 執行 `/concept.fuzz {lang} all 20` 進行更廣泛的回歸測試
+3. 執行 `/concept-fuzz {lang} all 20` 進行更廣泛的回歸測試
 ```
 
 ### Git Commit & PR
@@ -257,39 +257,39 @@ Skill tool: skill="concept-discover", args="{lang} $ARGUMENTS"
 ## 錯誤恢復
 
 管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
-- `/concept.generate specs/concepts/{lang}-{topic}.md`
-- `/concept.roundtrip {lang} {concept_name}`
-- `/concept.integrate {lang} {concept_name}`
+- `/concept-generate specs/concepts/{lang}-{topic}.md`
+- `/concept-roundtrip {lang} {concept_name}`
+- `/concept-integrate {lang} {concept_name}`
 
 ## 既有概念修復
 
-如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/concept.refactor` 的醫治模式修復：
+如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/concept-refactor` 的醫治模式修復：
 
-- `/concept.refactor {lang} audit` — 完整審計，了解問題全貌
-- `/concept.refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
-- `/concept.refactor {lang} fix all` — 修復該語言所有概念
-- `/concept.refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
+- `/concept-refactor {lang} audit` — 完整審計，了解問題全貌
+- `/concept-refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
+- `/concept-refactor {lang} fix all` — 修復該語言所有概念
+- `/concept-refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
 
 **pipeline 與 refactor 的分工**：
-- `/concept.pipeline` 用於**新增**概念（從零到一）
-- `/concept.refactor fix` 用於**修復**既有概念（從不完整到完整）
-- `/concept.refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + concept children），無需遷移
+- `/concept-pipeline` 用於**新增**概念（從零到一）
+- `/concept-refactor fix` 用於**修復**既有概念（從不完整到完整）
+- `/concept-refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + concept children），無需遷移
 
 ## 範例
 
 ```bash
 # C++ 完整管線
-/concept.pipeline cpp <algorithm>
+/concept-pipeline cpp <algorithm>
 
 # Python 快速管線
-/concept.pipeline python list comprehension --skip-fuzz
+/concept-pipeline python list comprehension --skip-fuzz
 
 # Java 只處理特定概念
-/concept.pipeline java Stream API --concepts=stream_map,stream_filter
+/concept-pipeline java Stream API --concepts=stream_map,stream_filter
 
 # 乾跑看看會產生什麼
-/concept.pipeline cpp pointer arithmetic --dry-run
+/concept-pipeline cpp pointer arithmetic --dry-run
 
 # 帶更多模糊測試覆蓋
-/concept.pipeline python decorators --fuzz-count=30
+/concept-pipeline python decorators --fuzz-count=30
 ```

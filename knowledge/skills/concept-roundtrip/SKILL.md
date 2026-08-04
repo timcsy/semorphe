@@ -11,7 +11,7 @@ user-invocable: true
 
 ## ⛔ 調用要求
 
-此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept.pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
+此 skill **必須透過 Skill tool 調用**，不可手動替代。當由 `/concept-pipeline` 編排時，pipeline 會使用 Skill tool 調用此 skill。
 
 **完成時必須輸出完成標記**（見最後一節）。
 
@@ -31,7 +31,7 @@ $ARGUMENTS
 
 ## 背景
 
-不同於 `/concept.fuzz`（使用資訊隔離的代理進行探索），此 skill 執行**目標性的、感知實作的** round-trip 測試。你可以完整存取 Semorphe 的原始碼，並應利用這些知識來製作精確的測試案例，涵蓋特定的程式碼路徑。
+不同於 `/concept-fuzz`（使用資訊隔離的代理進行探索），此 skill 執行**目標性的、感知實作的** round-trip 測試。你可以完整存取 Semorphe 的原始碼，並應利用這些知識來製作精確的測試案例，涵蓋特定的程式碼路徑。
 
 ## 前置作業
 
@@ -206,8 +206,8 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 快速迭代時，對單一片段執行最小 round-trip：
 
 ```
-/concept.roundtrip `int main() { int x = 5; if (x > 3) { cout << "yes"; } return 0; }`
-/concept.roundtrip `print("hello" if True else "bye")`
+/concept-roundtrip `int main() { int x = 5; if (x > 3) { cout << "yes"; } return 0; }`
+/concept-roundtrip `print("hello" if True else "bye")`
 ```
 
 跳過報告產生，直接顯示：PASS/FAIL + 如果失敗則顯示 diff。
