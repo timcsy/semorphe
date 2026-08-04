@@ -1,0 +1,118 @@
+# 經驗
+
+從 Semorphe 開發中蒸餾出的教訓——理論與實作碰撞後留下的東西。完整的因果軌跡在 [history/](history/)，完整的除錯現場在 [episodes/](episodes/)。
+
+## 教訓
+
+### 型別分裂在「兩邊都能跑」時最危險
+
+- **理論說**：根公理定義了 SemanticNode 的標準形式，實作照著寫就好。
+- **實際發生**：同時存在兩套不相容的 SemanticNode 定義（`children` 一個是 `SemanticNode[]`、一個是 `SemanticNode | SemanticNode[]`）。TypeScript 的 structural typing 讓聯合型別在某些用法下相容，**靜態檢查不報錯**，問題直到 runtime 才爆炸。interpreter 因此塞滿 `as SemanticNode` 斷言和 `Array.isArray()` 判斷。
+- **解決方式**：統一為單一定義（陣列版 children），刪除 `semantic-model.ts`，工具函式遷入 `semantic-tree.ts`，約 15 個檔案的 import 更新 + 所有測試重寫。
+- **教訓**：型別分裂是漸進開發的自然結果，關鍵是**發現時立刻統一，不要因為「兩邊都能跑」就容忍共存**。structural typing 會隱藏不一致，必須靠 review 或定期掃描發現。
+- **來源**：[history/001-兩套-semanticnode-型別統一.md](history/001-兩套-semanticnode-型別統一.md)
+
+### R0 雙射是設計目標，不是工程現實
+
+- **理論說**：P1 定義 blocks 投影為 R0（雙射），`lift(project(T)) ≡ T`，投影是純函數。
+- **實際發生**：Blockly 有大量有狀態的副作用——動態積木的 FieldDropdown 選項來自即時掃描 workspace（不是 `project(tree)` 能覆蓋的）、mutator 的 `decompose()`/`compose()` 生命週期由 Blockly 控制、積木的視覺狀態和語義資訊被框架混在一起。
+- **解決方式**：承認投影不純但確保語義層等價——用 `const self = this` 把 workspace 狀態注入投影過程；用 `extraState` 補語義樹與積木之間的間隙；把反向過程命名為 `extractBlockInner()` 而非 `lift()`，在命名上承認它不是理論中的純投影反函數。
+- **教訓**：在第三方 UI 框架中，投影管線必須適應框架的狀態模型。**正確做法是確保 roundtrip 結果在語義層等價，即使中間經過了有狀態的中介。**
+- **來源**：[concepts/積木投影管線.md](concepts/積木投影管線.md)
+
+### 四路完備性需要自動化驗證，不能靠記憶
+
+- **理論說**：P2 要求每個概念有四條路徑（lift → render → extract → generate）。
+- **實際發生**：加入 `u_negate` 積木時完成了 BlockSpec、動態積木、generator、測試，卻忘記在 `UNIVERSAL_CONCEPTS` registry 註冊。結果 diagnostics 報「unknown concept」、code-to-blocks 轉換失敗，但**積木本身能正常使用**，容易讓人以為沒問題。根因是四條路徑分散在不同檔案，沒有統一檢查點。
+- **解決方式**：補上 registry 條目，並建立認知——新增任何概念時第一步就是註冊。
+- **教訓**：**靠開發者記憶力不可靠。** 應寫測試或 lint 規則：遍歷所有 BlockSpec 的 `conceptId`，檢查每個都在 registry 中存在。
+- **來源**：[concepts/概念代數.md](concepts/概念代數.md)
+
+### P4 在理論上是一維的，在實作中是多維的
+
+- **理論說**：漸進揭露只要 `level <= currentLevel` 就能決定積木是否顯示。
+- **實際發生**：IO 偏好（iostream vs cstdio）需要額外維度；某些積木只在特定 Code Style 下有意義；語言專屬積木和 universal 積木的 level 需要協調。而且切到 L0 時 workspace 上可能已有 L1 積木，使用者看到 toolbox 沒有卻在畫布上有，會困惑。
+- **解決方式**：`buildToolbox()` 實作多維度過濾（level × category × ioPreference × language）；workspace 既有積木不受層級切換影響（只影響 toolbox 可用性）；level 值由教育判斷決定並記錄在 BlockSpec，工程只負責正確過濾。
+- **教訓**：**不要試圖用單一 level 數字解決所有問題。** 接受過濾邏輯天然需要多個正交維度，但維度之間的職責必須分清（Topic 管層級樹結構、Level 管可見性、View Params 管呈現）。
+- **來源**：[concepts/漸進揭露.md](concepts/漸進揭露.md)
+
+### 「只加 JSON 不改程式碼」不等於「不影響既有行為」
+
+- **理論說**：P3 開放擴充——新概念可加入而不破壞既有結構。
+- **實際發生**：`c_pointer_op` 的 astPattern 宣告 `nodeType: "unary_expression"` 但 constraints 為空，結果 `++i`（tree-sitter 也分類為 unary_expression）被搶匹配成指標操作而非 increment。Pattern Engine 按登記順序嘗試，**先匹配到的就贏**。
+- **解決方式**：禁止空 constraints（除非該 nodeType 全局唯一）；歧義改在**註冊時**偏序仲裁而非執行時碰運氣。這個經驗直接推動了第一性原理的修訂。
+- **教訓**：**禁止歧義比仲裁歧義更安全。** 開放擴充的前提是新 pattern 不能改變既有 pattern 的匹配結果——這個保證必須由註冊時的檢查提供，不能靠開發者自律。
+- **來源**：[history/005-pattern-歧義從禁止到偏序仲裁.md](history/005-pattern-歧義從禁止到偏序仲裁.md)
+
+### 第一性原理提供方向，不提供具體設計
+
+- **理論說**：CLT 說「最小化外在認知負荷」，Sc3 說「一個積木 = 一個語法結構」。
+- **實際發生**：怎麼最小化需要反覆試錯。積木文字 `"宣告 %1 型別 變數 %2"` 讀起來生硬，改成 `"宣告 %1 變數 %2"` 又讓 `%1` 語義模糊；變數名用 FieldTextInput 會讓初學者輸入不合法名稱，改成 FieldDropdown 又在 workspace 沒有變數時讓 Blockly 拋錯；I/O 參數從純 ValueInput（太複雜）到純 Dropdown（無法輸入常數）走了三個版本才收斂到三模式。
+- **解決方式**：message 拆成獨立 label key，每段都有明確語義；dropdown 加 fallback 選項；三模式（select/compose/custom）讓簡單情境用最低認知負荷、複雜情境保有完整表達力。
+- **教訓**：**積木文字和互動模式的設計本質上是 UX 問題，不能純靠理論推導。** 原理負責否決錯誤方向，不負責生出正確設計。
+- **來源**：[history/012-io-參數從單一模式到三模式.md](history/012-io-參數從單一模式到三模式.md)
+
+### 需要 parse 回結構才能用的字串，就不該是字串
+
+- **理論說**：P2 定義 properties 為 `Record<string, PropertyValue>`，但沒規定何時用字串、何時用結構化物件。
+- **實際發生**：`func_def` 的 params 存成字串陣列 `["long long base", "int y"]`。同一份字串在四個環節被不同方式解讀——lifter 整串存入、generator 照原樣拼接（正確）、renderer 用 `split(/\s+/)[0]` 取型別（`long long` 被截斷成 `long`）、extractor 從 UI 欄位讀（正確）。
+- **解決方式**：短期用已知複合型別清單做前綴匹配（從最長候選開始）；長期應結構化為 `[{ type: "long long", name: "base" }]`。
+- **教訓**：**判定準則——如果一個屬性值在管線中需要被拆分或解析，它就不該是字串。** 壓扁的唯一合理場景是該值只會被完整傳遞、不會被拆分。
+- **來源**：[concepts/概念代數.md](concepts/概念代數.md)
+
+### 複製貼上積木定義是序列化契約分裂的溫床
+
+- **理論說**：同一概念的 statement 版和 expression 版只是投影差異，語義相同。
+- **實際發生**：`u_input_expr` 是從 `u_input` 複製貼上再改的。`u_input` 的 `saveExtraState` 讀 `getFieldValue('SEL_i')` 存成 `{ text }`，`u_input_expr` 卻直接複製內部狀態 `argSlots_`，而 dropdown validator 寫入的是 `selectedVar` 不是 `text`。`STATEMENT_TO_EXPRESSION` 映射直接搬移 extraState，欄位名不一致導致 `cin >> s` 變成 `cin >> x`——**所有變數 fallback 成預設值**。
+- **解決方式**：兩版本的 `saveExtraState`/`loadExtraState` 格式統一，抽成共用函式而非各自實作。
+- **教訓**：**序列化格式是隱式的 API 契約**，違反不會在編譯期報錯，只在特定語境（如 if 條件中的 cin）才暴露。新增雙版本積木時共用序列化函式，不要複製貼上。
+- **來源**：[episodes/2026-03-12-cin-變數名靜默降級.md](episodes/2026-03-12-cin-變數名靜默降級.md)
+
+### 功能完成 ≠ 功能接通
+
+- **理論說**：auto-include 的元件都寫好了——ModuleRegistry、`computeAutoIncludes()`、工廠函式、`GeneratorContext.moduleRegistry` 欄位。
+- **實際發生**：UI 層從來沒呼叫 `setModuleRegistry()`。`GeneratorContext` 建構時 `moduleRegistry` 永遠是 `undefined`，`if (ctx.moduleRegistry)` 永遠不進去。**所有單元測試都通過**（因為測試手動注入了 registry），但瀏覽器中功能完全無效。同一時期 `ModuleRegistry.register()` 還寫錯欄位名（`concept.id` 而非 `concept.conceptId`），structural typing 沒報錯，registry 靜默註冊了一堆 `undefined` 當 key。
+- **解決方式**：加入全域 setter 並在初始化時呼叫；修正欄位名；認識到依賴解析架構上該抽離為獨立的 Scaffold 層。
+- **教訓**：**端到端驗證不可省**——單元測試手動注入依賴會繞過真實的接線路徑。**全域 setter 模式的風險**：呼叫順序和遺漏都無法被型別系統捕獲。
+- **來源**：[episodes/2026-03-10-auto-include-寫好了卻沒接上.md](episodes/2026-03-10-auto-include-寫好了卻沒接上.md)
+
+### 四路完備性不等於可執行
+
+- **理論說**：P2 的四路完備性（lift → render → extract → generate）保證概念正確。
+- **實際發生**：`<cmath>` 概念完成四路、round-trip 測試全過，但使用者按「執行」時 `pow()` 算出 0，二次方程式解錯。原因是「執行」走的是 `SemanticInterpreter` 而非 C++ 編譯器，而這些概念沒註冊 interpreter executor——interpreter 原本的邏輯是 `if (concept.includes(':')) return`，**靜默跳過所有語言特定概念**，回傳 `undefined` 一路轉換成 `0`。
+- **解決方式**：四路完備性擴充為五層（加執行層）；移除靜默跳過改查 executor registry；宣告性概念註冊 noop executor；未知概念透過 `unknownConceptHandler` 讓使用者選擇跳過或中止。
+- **教訓**：**編輯管線的完備性不等於執行管線的完備性。** 宣告性概念也要註冊 noop executor，才能區分「已知不執行」和「未知」。
+- **來源**：[history/011-四路完備性擴充為五層.md](history/011-四路完備性擴充為五層.md)
+
+### 靜默降級是 bug 的藏身之處
+
+- **理論說**：fallback 值提供 null safety，讓系統在資料缺失時不崩潰。
+- **實際發生**：`cin >> s` 變成 `cin >> x` 的 bug 有**四層防線，每層都靜默降級為同一個預設值 `'x'`**——沒有 console.warn、沒有 annotation、沒有任何可觀察的信號。從使用者角度程式碼「就是錯了」，但系統毫無提示。多層 fallback 用同一預設值會互相掩蓋，讓真正的資料遺失點無法定位。
+- **解決方式**：改為優先嘗試恢復（如檢查 `selectedVar`、讀正確的欄位名），只在確實沒有更好選擇時才用預設值。
+- **教訓**：**「資料格式不符預期」不等於「沒有輸入」。** 前者應該嘗試恢復或發出信號，後者才用預設值。這也是「不做向後相容」的另一面——`??` 是 null safety，不是吞掉舊格式的工具。
+- **來源**：[episodes/2026-03-12-cin-變數名靜默降級.md](episodes/2026-03-12-cin-變數名靜默降級.md)
+
+### Extractor 讀的欄位名必須與積木定義一致
+
+- **實際發生**：`getFieldValue('VAR')` 是想像中的欄位名，真實積木用的是 `'SEL_0'`（動態 dropdown）或 `'NAME'`（JSON blockDef）。`getFieldValue` 對不存在的欄位**只回傳 null，不報錯**，所以這類不匹配在靜態分析中很難發現。
+- **解決方式**：修正欄位名並建立 fallback 鏈（`'SEL_0'` → `'NAME'` → 預設值）。
+- **教訓**：欄位名稱改動必須**全鏈路同步**：blockDef → extract → generate → lift → adapter。**Extractor 測試應覆蓋「欄位名正確性」**——用 mock block 驗證讀取的欄位名確實存在於積木定義中。
+- **來源**：[concepts/積木投影管線.md](concepts/積木投影管線.md)
+
+### 同一概念同時有 template 和 hand-written generator，測試會騙人
+
+- **實際發生**：`input` 概念同時有 universal template 和 hand-written generator。真實 app 中 template 優先，但測試中（未載入 template）hand-written 優先。**測試通過但實際行為不同。** 更早之前也發生過開發者寫了 hand-written generator，卻因為 JSON 還留著 `codeTemplate` 而完全不會被執行，本人毫不知情。
+- **解決方式**：兩者互斥——改用 hand-written 時必須從 JSON 刪除 `codeTemplate`；若必須並存，測試要明確覆蓋兩條路徑。
+- **教訓**：**優先移除 hand-written generator，讓 template 成為唯一來源**（減少雙真相源）。雙真相源的代價不只是維護成本，還包括「測試環境與生產環境走不同路徑」這種最難察覺的失敗模式。
+- **來源**：[concepts/積木投影管線.md](concepts/積木投影管線.md)
+
+## 關鍵延伸（主題觸發必讀）
+
+| 觸發關鍵字 | MUST 讀 |
+|---|---|
+| 積木定義、generator、extractor、動態積木、extraState、欄位同步 | `concepts/積木投影管線.md` |
+| 概念註冊、四路/五層完備性、屬性結構化 | `concepts/概念代數.md` |
+| pattern 搶匹配、歧義、constraint、lifter | `concepts/開放擴充.md` |
+| 靜默失敗、降級、confidence | `concepts/降級與認知邊界.md` |
+| 決策為什麼變成現在這樣 | `history/` |
+| 某個 bug 當初的完整現場 | `episodes/` |

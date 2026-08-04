@@ -34,7 +34,7 @@ $ARGUMENTS
 你正在研究某個程式語言的函式庫或語言特性，準備將其整合進 **Semorphe** — 一個以語義樹驅動的程式教育工具。你的任務是探索有哪些概念存在、它們通常如何被使用，以及如何為學習者分類。
 
 **關鍵**：開始前請先閱讀專案的第一性原理：
-- `docs/first-principles.md` — 特別是 P2（概念代數）和 P4（漸進式揭露）
+- `knowledge/principles.md` — 特別是 P2（概念代數）和 P4（漸進揭露）；細節見 `knowledge/concepts/概念代數.md`、`knowledge/concepts/漸進揭露.md`
 - `src/core/types.ts` — 現有的 UniversalConcept 和 LanguageSpecificConcept 型別
 
 然後確認目標語言的現有支援：
@@ -82,7 +82,7 @@ $ARGUMENTS
 | **先備知識** | 學習者必須已經知道的概念 |
 | **錯誤模式** | 初學者常犯的錯誤 |
 
-**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + concept children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 concept 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（concept → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `docs/technical-experiences.md` §20）。
+**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + concept children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 concept 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（concept → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
 
 ### 階段三：Topic 層級樹分類
 

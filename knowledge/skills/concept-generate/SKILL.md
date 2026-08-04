@@ -33,7 +33,7 @@ $ARGUMENTS
 2. **程式碼產生器** — 將 SemanticNode → 目標語言原始碼
 3. **提升器（Lifter）** — 將語言 AST → SemanticNode（透過 tree-sitter）
 4. **渲染映射** — 將 SemanticNode 屬性 → 積木欄位/輸入。**Extract 路徑由 PatternExtractor 自動從 blockDef args + concept children 推導（auto-derive），無需手寫 extractor。** 若概念有動態結構，須在 renderMapping 加入 `dynamicRules`
-5. **Interpreter Executor** — 將 SemanticNode → 執行行為（在 `src/interpreter/executors/` 中註冊）。可執行概念需實作計算邏輯，宣告性概念（如 `#include`）需註冊 noop executor。見 `docs/technical-experiences.md` §20
+5. **Interpreter Executor** — 將 SemanticNode → 執行行為（在 `src/interpreter/executors/` 中註冊）。可執行概念需實作計算邏輯，宣告性概念（如 `#include`）需註冊 noop executor。見 `knowledge/history/011-四路完備性擴充為五層.md`
 6. **測試** — 基本的 round-trip 測試（含執行測試）
 
 ## 前置作業
@@ -41,7 +41,7 @@ $ARGUMENTS
 產生前，請先閱讀這些檔案以理解現有模式：
 
 - `src/core/types.ts` — SemanticNode 結構、現有概念
-- `docs/first-principles.md` — P2（概念代數）的屬性結構規則
+- `knowledge/concepts/概念代數.md` — P2 的屬性結構化邊界規則
 
 然後閱讀目標語言的既有實作：
 - 核心概念：`src/languages/{lang}/core/blocks.json` — 現有 BlockSpec 範例
@@ -237,7 +237,7 @@ register('{concept_name}', async () => {})  // noop
 - 執行結果回傳 `RuntimeValue`（`{ type, value }`）
 - 語句型概念不需回傳值（`return` 或 `void`）
 - 在 `src/interpreter/interpreter.ts` 的建構函式中 import 並呼叫 `registerXxxExecutors(reg)`
-- **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`（見 `docs/technical-experiences.md` §20）
+- **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`（見 `knowledge/history/011-四路完備性擴充為五層.md`）
 
 ### 步驟六：產生測試
 
