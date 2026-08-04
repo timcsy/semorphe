@@ -174,3 +174,4 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | 降級、raw_code、confidence、巨集、taint、靜默失敗 | `concepts/降級與認知邊界.md` |
 | LLM、AI 輔助、soundness、correctness、自舉、元教學 | `concepts/三維錨定.md` |
 | 積木定義、generator、extractor、欄位同步、動態積木、extraState | `concepts/積木投影管線.md` |
+| 元件、命名、詞彙、埠、參數、形態、跨域、合流、ArduinoCAD、薄協定 | `concepts/元件.md` |
