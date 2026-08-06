@@ -646,6 +646,25 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return createNode(conceptId, { key_type: keyType, value_type: valueType, name })
         }
 
+        // `vector<int> v = {3,1,4}` —— 初始化列表。
+        //
+        // ⚠️ **原本整段被丟掉**：辨識出來的是一個沒有初始值的宣告，
+        // 而**產出的程式碼也少了那一段**，所以來回轉換看起來「成功」了。
+        // 只有跑起來（`v[1]` 索引越界）才會發現。
+        const values: SemanticNode[] = []
+        if (decl && decl.type === 'init_declarator') {
+          const v = decl.childForFieldName('value')
+          // `{3,1,4}` 是 initializer_list；`vector<int> v(5)` 是 argument_list（不是列表初始化）
+          if (v && v.type === 'initializer_list') {
+            for (const item of v.namedChildren) {
+              const lifted = ctx.lift(item)
+              if (lifted) values.push(lifted)
+            }
+          }
+        }
+        if (values.length > 0) {
+          return createNode(conceptId, { type: innerType, name }, { values })
+        }
         return createNode(conceptId, { type: innerType, name })
       }
 

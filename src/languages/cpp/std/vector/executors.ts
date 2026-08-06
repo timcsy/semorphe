@@ -20,7 +20,13 @@ export function registerExecutors(
 ): void {
   register('cpp_vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)
-    ctx.scope.declare(name, { type: 'array', value: [] })
+    // ⚠️ **初始化列表原本被完全忽略**——`vector<int> v = {3,1,4}` 建出一個
+    // 空的向量，於是 `v[1]` 索引越界、`v.size()` 是 0。而**產出的程式碼也
+    // 少了那段初始值**，所以來回轉換看起來「成功」了。
+    const init = node.children.values ?? []
+    const elems = []
+    for (const n of init) elems.push(await ctx.evaluate(n))
+    ctx.scope.declare(name, { type: 'array', value: elems })
   })
 
   register('cpp_vector_size', async (node, ctx) => {

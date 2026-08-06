@@ -91,8 +91,6 @@ describe('C++ String Fuzz Tests (hard)', () => {
   // COMPILE_FAIL — function with const reference params drops const
   // COMPILE_FAIL — cout << inside if/else blocks with string comparisons
   // ROUNDTRIP_DRIFT — s.clear() after cout << becomes chained
-
-  it.todo('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_9: vector<string> with join function')
   // COMPILE_FAIL — vector initializer_list syntax not supported
   // COMPILE_FAIL — find_first_not_of/find_last_not_of not supported as concepts
 })

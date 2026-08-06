@@ -7,7 +7,14 @@
       "type",
       "name"
     ],
-    "children": {},
+    "children": {
+      "values": {
+        "allowed": [
+          "expression"
+        ],
+        "min": 0
+      }
+    },
     "role": "statement"
   },
   {
