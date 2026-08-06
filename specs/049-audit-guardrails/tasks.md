@@ -70,18 +70,18 @@ description: "Task list for 049-audit-guardrails"
 
 **Independent Test**: 單獨跑 `audit-completeness.test.ts` 即得涵蓋全部元件的補完地圖，可直接當補完工作清單。
 
-- [ ] T013 [US2] 在 `tests/helpers/synth-node.ts` 實作 `synthMinimalNode(def: ConceptDefJSON)`：由 `properties` 填預設值、`children` 填最小子節點，合成最小 `SemanticNode`
-- [ ] T014 [US2] 在 `tests/helpers/synth-node.ts` 實作兩種組態的建構（research.md D3）：**現行組態**（不接 TemplateGenerator、不套 Topic）與**宣告組態**（接上載入 universal templates 與各 blockSpec `codeTemplate` 的 TemplateGenerator）
-- [ ] T015 [US2] 在 `tests/integration/audit-completeness.test.ts` 寫斷言骨架（此時應**紅**：基線尚未存在）
-- [ ] T016 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **generate** 路徑的 Verdict：無 generator 且無 codeTemplate → 缺；輸出空／佔位／擲例外 → 殼；否則實作
-- [ ] T017 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **lift** 路徑的 Verdict：以 T016 的 generate 輸出當輸入，比對回來的 componentId 與 confidence（`raw_code` → 殼）
-- [ ] T018 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **render** 與 **extract** 路徑的 Verdict（產不出積木或退回泛用積木 → 殼；extract 回來的 componentId 不符 → 殼）
-- [ ] T019 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **execute** 路徑的 Verdict：讀 `skipPaths` 區分「刻意的空」（實作）與「未宣告的空操作」（殼）
-- [ ] T020 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作兩組態比對，產生 `configDelta`（FR-023）
-- [ ] T021 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 `report`，並寫出補完地圖 `tests/reports/completeness-map.md`（元件 × 五路徑矩陣，**涵蓋全部元件、無靜默略過**）
-- [ ] T022 [US2] 在報表開頭固定印出聲明：**本護欄不檢測「條件性正確」**（單獨測通過、組合時失敗）（FR-025）
-- [ ] T023 [US2] 跑一次護欄產生 `tests/baselines/completeness.json`，確認 `shell` 與 `missing` 為正數、`configDelta` **非空**（依 research.md F3，93 個 codeTemplate 應照出來）後 commit
-- [ ] T024 [US2] 依 quickstart 情境 4 驗證：找一個未宣告的空 executor → 判為殼 → 加 `skipPaths: ["execute"]` → 改判實作 → **還原**（本功能只量不修）
+- [X] T013 [US2] 在 `tests/helpers/synth-node.ts` 實作 `synthMinimalNode(def: ConceptDefJSON)`：由 `properties` 填預設值、`children` 填最小子節點，合成最小 `SemanticNode`
+- [X] T014 [US2] 在 `tests/helpers/synth-node.ts` 實作兩種組態的建構（research.md D3）：**現行組態**（不接 TemplateGenerator、不套 Topic）與**宣告組態**（接上載入 universal templates 與各 blockSpec `codeTemplate` 的 TemplateGenerator）
+- [X] T015 [US2] 在 `tests/integration/audit-completeness.test.ts` 寫斷言骨架（此時應**紅**：基線尚未存在）
+- [X] T016 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **generate** 路徑的 Verdict：無 generator 且無 codeTemplate → 缺；輸出空／佔位／擲例外 → 殼；否則實作
+- [X] T017 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **lift** 路徑的 Verdict：以 T016 的 generate 輸出當輸入，比對回來的 componentId 與 confidence（`raw_code` → 殼）
+- [X] T018 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **render** 與 **extract** 路徑的 Verdict（產不出積木或退回泛用積木 → 殼；extract 回來的 componentId 不符 → 殼）
+- [X] T019 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 **execute** 路徑的 Verdict：讀 `skipPaths` 區分「刻意的空」（實作）與「未宣告的空操作」（殼）
+- [X] T020 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作兩組態比對，產生 `configDelta`（FR-023）
+- [X] T021 [US2] 在 `tests/integration/audit-completeness.test.ts` 實作 `report`，並寫出補完地圖 `tests/reports/completeness-map.md`（元件 × 五路徑矩陣，**涵蓋全部元件、無靜默略過**）
+- [X] T022 [US2] 在報表開頭固定印出聲明：**本護欄不檢測「條件性正確」**（單獨測通過、組合時失敗）（FR-025）
+- [X] T023 [US2] 跑一次護欄產生 `tests/baselines/completeness.json`，確認 `shell` 與 `missing` 為正數、`configDelta` **非空**（依 research.md F3，93 個 codeTemplate 應照出來）後 commit
+- [X] T024 [US2] 依 quickstart 情境 4 驗證：找一個未宣告的空 executor → 判為殼 → 加 `skipPaths: ["execute"]` → 改判實作 → **還原**（本功能只量不修）
 
 **Checkpoint**: US2 完成即可獨立交付——補完地圖可用、殼與缺有數字
 

@@ -1,0 +1,405 @@
+{
+  "_meta": {
+    "guard": "completeness",
+    "measuredAt": "2026-08-06",
+    "rule": "從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
+  },
+  "totals": {
+    "implemented": 778,
+    "shell": 92,
+    "missing": 5
+  },
+  "shells": [
+    {
+      "componentId": "block_comment",
+      "path": "execute"
+    },
+    {
+      "componentId": "builtin_constant",
+      "path": "lift"
+    },
+    {
+      "componentId": "comment",
+      "path": "execute"
+    },
+    {
+      "componentId": "compare",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_case",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_case",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_class_def",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_compound_assign_expr",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_compound_assign",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_const_cast",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_constructor",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_constructor",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_default",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_default",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_define",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_delete",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_destructor",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_destructor",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_dynamic_cast",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_enum",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_fill",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_free",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_ifdef",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_ifndef",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_ifstream_declare",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_include_local",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_include_local",
+      "path": "generate"
+    },
+    {
+      "componentId": "cpp_include",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_include",
+      "path": "generate"
+    },
+    {
+      "componentId": "cpp_increment_expr",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_increment",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_iota",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_lambda",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_lambda",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_map_access",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_memcpy",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_memset",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_method_call_expr",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_method_call",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_method_call",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_namespace_def",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_ofstream_declare",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_operator_overload",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_operator_overload",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_override_method",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_override_method",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_pair_declare",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_partial_sum",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_pure_virtual",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_pure_virtual",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_queue_back",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_raw_code",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_raw_code",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_raw_expression",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_raw_expression",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_reinterpret_cast",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_reverse",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_scanf_expr",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_sort",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_srand",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_static_cast",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_static_member",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_static_member",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_strcat",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_strcpy",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_string_at",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_string_clear",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_string_empty",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_string_push_back",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_stringstream_declare",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_strncpy",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_struct_declare",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_struct_member_access",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_struct_pointer_access",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_template_function",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_typedef",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_using_alias",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_using_alias",
+      "path": "generate"
+    },
+    {
+      "componentId": "cpp_using_namespace",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_using_namespace",
+      "path": "generate"
+    },
+    {
+      "componentId": "cpp_virtual_method",
+      "path": "execute"
+    },
+    {
+      "componentId": "cpp_virtual_method",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp:math_binary",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp:math_unary",
+      "path": "lift"
+    },
+    {
+      "componentId": "doc_comment",
+      "path": "execute"
+    },
+    {
+      "componentId": "forward_decl",
+      "path": "execute"
+    },
+    {
+      "componentId": "if_else",
+      "path": "lift"
+    },
+    {
+      "componentId": "input",
+      "path": "lift"
+    },
+    {
+      "componentId": "logic",
+      "path": "lift"
+    },
+    {
+      "componentId": "negate",
+      "path": "lift"
+    },
+    {
+      "componentId": "print",
+      "path": "lift"
+    },
+    {
+      "componentId": "var_declare_expr",
+      "path": "lift"
+    }
+  ],
+  "missing": [
+    {
+      "componentId": "cpp_include_local",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_include",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_using_alias",
+      "path": "lift"
+    },
+    {
+      "componentId": "cpp_using_namespace",
+      "path": "lift"
+    },
+    {
+      "componentId": "if_else",
+      "path": "execute"
+    }
+  ]
+}

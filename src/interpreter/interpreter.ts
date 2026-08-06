@@ -308,6 +308,17 @@ export class SemanticInterpreter implements ExecutionContext {
 
   // --- ExecutionContext implementation ---
 
+  /**
+   * 查詢某個概念有沒有註冊 executor。**唯讀、零行為改動。**
+   *
+   * 給完備性護欄用（specs/049-audit-guardrails）。若不開這個查詢，護欄就得
+   * 在測試裡複製一份 executor 註冊清單——那會立刻長成第二個真相源，
+   * 正是本專案頭號病灶。
+   */
+  getExecutor(concept: string): ((node: SemanticNode, ctx: ExecutionContext) => unknown) | undefined {
+    return this.executorRegistry.get(concept)
+  }
+
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
     await this.countStep()
     this.currentNode = node
