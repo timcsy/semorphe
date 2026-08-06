@@ -45,14 +45,14 @@ description: "Task list for 053-declare-noop-execute"
 
 ### 先紅
 
-- [ ] T005 [US1b] 建立 `tests/integration/cast-operators.test.ts`：四個轉型各一支最小程式，斷言正確輸出（**此時應紅**——`static_cast` 給 0）
-- [ ] T006 [US1b] 加一支測試證明**覆蓋確實發生**：檢查同一概念在註冊過程中被寫入超過一次（research F8 的推理要跑出來，不是讀出來）
+- [X] T005 [US1b] 建立 `tests/integration/cast-operators.test.ts`：四個轉型各一支最小程式，斷言正確輸出（**此時應紅**——`static_cast` 給 0）
+- [X] T006 [US1b] 加一支測試證明**覆蓋確實發生**：檢查同一概念在註冊過程中被寫入超過一次（research F8 的推理要跑出來，不是讀出來）
   > 跑不出來 → 代表覆蓋來源不只 F8 找到的那一處，**先查清楚再改**
 
 ### 後綠
 
-- [ ] T007 [US1b] 從 `src/interpreter/interpreter.ts` 的清單移除那四個轉型概念——**修法是刪四行，不是新寫實作**（實作一直在 `functions.ts`）
-- [ ] T008 [US1b] 確認 `operators.ts:133` 那個轉型迴圈與 `functions.ts` 的註冊**不互相覆蓋**；只留一處（FR-016）
+- [X] T007 [US1b] 從 `src/interpreter/interpreter.ts` 的清單移除那四個轉型概念——**修法是刪四行，不是新寫實作**（實作一直在 `functions.ts`）
+- [X] T008 [US1b] 確認 `operators.ts:133` 那個轉型迴圈與 `functions.ts` 的註冊**不互相覆蓋**；只留一處（FR-016）
 
 **Checkpoint**: T005 全綠 → US1b 可獨立交付。**這是 MVP。**
 

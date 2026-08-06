@@ -19,8 +19,13 @@
  * ## 自我否證
  *
  * ⚠️ **如果 34 個全部通過，那不是好消息，是最小程式太簡單。**
- * 已知至少 `static_cast` 是壞的（研究階段實測輸出 0）——它若通過，代表這支
- * 測試沒有真的在跑。
+ *
+ * 錨點必須挑**這個功能不會修好的**東西——否則錨點自己會過期。第一版拿
+ * `static_cast` 當錨（當時實測輸出 0），而 US1b 把它修好了，那句話就變成
+ * 「叫未來的讀者不要相信一個正確的結果」。
+ *
+ * 現在的錨是**物件導向那十個**：直譯器不支援 OOP，本功能也不打算實作它。
+ * `cpp_constructor` 若通過，代表這支測試沒有真的在跑。
  *
  * 見 specs/053-declare-noop-execute/research.md F2b、tasks.md T002
  */
@@ -144,21 +149,27 @@ describe('「無執行行為」清單的實測（只量不判）', () => {
         '',
         `  ${pass}/${CASES.length} 通過｜死條目 ${DEAD.length} 個（概念註冊表中不存在）：${DEAD.join('、')}`,
         '',
-        '  ⚠️ 全部通過的話不是好消息，是最小程式太簡單——研究階段已實測',
-        '     static_cast 是壞的（輸出 0）。它若通過，代表這支測試沒有真的在跑。',
+        '  ⚠️ 全部通過的話不是好消息，是最小程式太簡單。錨點是物件導向那十個——',
+        '     直譯器不支援 OOP，本功能也不實作它。cpp_constructor 若通過，',
+        '     代表這支測試沒有真的在跑。',
         '',
       ].join('\n'),
     )
     expect(rows.length).toBe(CASES.length)
   }, 120_000)
 
-  it('★ 自我否證：不得全部通過', async () => {
-    let pass = 0
-    for (const c of CASES) { const r = await run(c); if (r.present && r.got === c.expect) pass++ }
-    expect(
-      pass,
-      '34 個全部通過——最小程式太簡單，或這支測試沒有真的在跑。研究階段已實測 static_cast 輸出 0。',
-    ).toBeLessThan(CASES.length)
+  it('★ 自我否證：物件導向那組必須是紅的（錨點不得挑會被修好的東西）', async () => {
+    // 錨點挑「這個功能不會修好的」——第一版拿 static_cast 當錨，US1b 修好它
+    // 之後那句聲明就變成「叫人不要相信一個正確的結果」。
+    const OOP = ['cpp_constructor', 'cpp_class_def', 'cpp_virtual_method', 'cpp_operator_overload']
+    for (const id of OOP) {
+      const c = CASES.find((x) => x.id === id)!
+      const r = await run(c)
+      expect(
+        r.present && r.got === c.expect,
+        `${id} 通過了——直譯器並不支援物件導向，所以這代表這支測試沒有真的在跑`,
+      ).toBe(false)
+    }
   }, 120_000)
 
   it('★ 對照組：清單外的普通函式必須通過（證明量測本身能給出通過）', async () => {

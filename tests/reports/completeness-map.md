@@ -4,7 +4,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：175｜✅ 實作 778｜🈳 殼 92｜❌ 缺 5（以路徑數計）
+元件：175｜✅ 實作 782｜🈳 殼 88｜❌ 缺 5（以路徑數計）
 
 | 元件 | generate | lift | render | extract | execute |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@
 | `cpp_class_def` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_compound_assign` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_compound_assign_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_const_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_constexpr_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_constructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
@@ -51,7 +51,7 @@
 | `cpp_delete` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_destructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_do_while` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_dynamic_cast` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_dynamic_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_enum` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_exit` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_fill` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -101,7 +101,7 @@
 | `cpp_raw_code` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_raw_expression` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_ref_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_reinterpret_cast` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_reinterpret_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_reverse` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_scanf` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_scanf_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
@@ -112,7 +112,7 @@
 | `cpp_srand` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_stack_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_stack_top` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_static_cast` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_static_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_static_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_static_member` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_stod` | ✅ | ✅ | ✅ | ✅ | ✅ |

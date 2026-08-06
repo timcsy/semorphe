@@ -13,7 +13,7 @@
 |---|---|---|
 | ✅ 真的不執行（`declarative`） | 10 | **可以** |
 | ✅ 由父概念消費（`consumed-by-parent`） | 2 | **可以** |
-| 🔴 還沒實作（跑起來是錯的） | 14 | **不可以** |
+| 🔴 還沒實作（跑起來是錯的） | 14 → **10**（US1b 修好 4 個） | **不可以** |
 | ⬜ 判不出來（概念沒出現在語義樹裡） | 5 | **不可以** |
 | ⚰️ 死條目（概念註冊表中不存在） | 3 | 直接刪 |
 
@@ -59,10 +59,10 @@
 
 | 概念 | 期望 | 實得 | 性質 |
 |---|---|---|---|
-| `cpp_static_cast` | 3 | `void` | **實作存在但被清單覆蓋**（US1b） |
-| `cpp_const_cast` | 5 | `void` | 同上 |
-| `cpp_dynamic_cast` | 2 | `void` | 同上 |
-| `cpp_reinterpret_cast` | 1 | `void` | 同上 |
+| ~~`cpp_static_cast`~~ | 3 | ✅ **3** | **US1b 已修**——實作在 `operators.ts`，被另外兩處覆蓋 |
+| ~~`cpp_const_cast`~~ | 5 | ✅ **5** | US1b 已修 |
+| ~~`cpp_dynamic_cast`~~ | 2 | ✅ **2** | US1b 已修 |
+| ~~`cpp_reinterpret_cast`~~ | 1 | ✅ **1** | US1b 已修 |
 | `cpp_ifdef` | 7 | （空） | `#define N` 後 `#ifdef N` 的 body 沒跑 |
 | `cpp_ifndef` | 7 | （空） | body 沒跑 |
 | `cpp_namespace_def` | 7 | （空，`UNDEFINED_FUNC`） | namespace 內的函式呼叫不到 |

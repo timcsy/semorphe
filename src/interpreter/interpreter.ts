@@ -126,7 +126,6 @@ export class SemanticInterpreter implements ExecutionContext {
       'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
       'cpp_operator_overload',
       'cpp_namespace_def', 'cpp_lambda',
-      'cpp_static_cast', 'cpp_dynamic_cast', 'cpp_reinterpret_cast', 'cpp_const_cast',
       'cpp_stringstream_declare', 'cpp_ifstream_declare', 'cpp_ofstream_declare', 'cpp_pair_declare',
     ]) {
       reg(c, noop)
@@ -317,6 +316,11 @@ export class SemanticInterpreter implements ExecutionContext {
    */
   getExecutor(concept: string): ((node: SemanticNode, ctx: ExecutionContext) => unknown) | undefined {
     return this.executorRegistry.get(concept)
+  }
+
+  /** 被註冊超過一次的概念——勝負由載入順序決定的那些 */
+  duplicateRegistrations(): { concept: string; count: number }[] {
+    return this.executorRegistry.duplicates()
   }
 
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
