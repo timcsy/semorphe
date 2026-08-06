@@ -150,7 +150,6 @@
     "annotations": {
       "control_flow": "branch",
       "introduces_scope": true,
-      "cognitive_level": 0,
       "debug_step": true
     }
   },
@@ -168,7 +167,6 @@
     "annotations": {
       "control_flow": "branch",
       "introduces_scope": true,
-      "cognitive_level": 0,
       "debug_step": true
     }
   },
@@ -189,7 +187,6 @@
     "annotations": {
       "control_flow": "loop",
       "introduces_scope": true,
-      "cognitive_level": 1,
       "debug_step": true
     }
   },
@@ -245,7 +242,6 @@
     "annotations": {
       "control_flow": "sequence",
       "introduces_scope": true,
-      "cognitive_level": 2,
       "debug_step": true
     }
   },

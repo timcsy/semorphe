@@ -64,9 +64,28 @@ const NOT_DETECTED =
 
 interface AdoptionBaseline {
   _meta: BaselineMeta
-  zeroReaders: string[]
+  /** 零讀取點的標註 → 為什麼它還在。**理由必須指向 vision 裡真的存在的路線圖項目** */
+  zeroReaders: Record<string, string>
   total: number
 }
+
+/**
+ * 零讀取點有**三種**，而它們的處置完全不同。
+ *
+ * | 種類 | 意義 | 處置 |
+ * |---|---|---|
+ * | 被取代的殘留 | 舊設計的遺物，新機制已接手 | **刪掉** |
+ * | 建了沒接上 | 機制在、消費者從未寫 | **接上或刪掉** |
+ * | **消費者還沒到** | 為路線圖上的功能先宣告的 | **留著，且理由要指向那個項目** |
+ *
+ * ⚠️ 第三種是「用宣告刷數字」的入口——貼一句「這是為了未來」就能讓任何東西
+ * 合法化。所以理由**不是自由文字**：它必須指名一個 `vision.md` 裡搜得到的
+ * 路線圖項目，而下面有一支測試會去搜。
+ *
+ * 那條紀律來自 `knowledge/history/018`：「宣告需要門檻，而理由只有固定幾個
+ * 值且不得增加——第三個值就是在替『還沒做』找一個體面的名字。」
+ */
+const PENDING = 'pending-consumer:'
 
 /** 讀取點——只認具名的取用，不認「字串出現過」 */
 export function countReaders(source: string, annotation: string): number {
@@ -102,6 +121,13 @@ function measure(): { name: string; declarers: number; readers: number }[] {
 
 const rows = measure()
 const zeroReaders = rows.filter((r) => r.readers === 0)
+
+/** 產生基線時用的理由表——改這裡要同時說得出為什麼 */
+const KNOWN_REASONS: Record<string, string> = {
+  control_flow: 'pending-consumer:9.1 DataFlow 視圖',
+}
+
+const r_in = (b: AdoptionBaseline, n: string): boolean => n in b.zeroReaders
 
 describe('護欄：標註採用率（機制有沒有人用）', () => {
   it('產出可讀報表', () => {
@@ -141,15 +167,33 @@ describe('護欄：標註採用率（機制有沒有人用）', () => {
     expect(rows.length).toBeGreaterThan(2)
   })
 
+  it('★ 每個零讀取點的標註都要有**可複查的**理由', () => {
+    const b = loadBaseline<AdoptionBaseline>('annotation-adoption')
+    const vision = readFileSync(join(REPO_ROOT, 'knowledge/vision.md'), 'utf8')
+    for (const r of zeroReaders) {
+      const reason = b.zeroReaders[r.name]
+      expect(reason, `${r.name} 沒有記錄理由——零讀取點必須說得出為什麼還在`).toBeTruthy()
+      if (reason.startsWith(PENDING)) {
+        const item = reason.slice(PENDING.length)
+        expect(
+          vision.includes(item),
+          `${r.name} 的理由說它在等「${item}」，而 vision 裡搜不到那個項目。` +
+            '**「這是為了未來」是刷數字最方便的入口**——理由必須指向一個真的存在的' +
+            '路線圖項目，否則貼一句話就能讓任何東西合法化。',
+        ).toBe(true)
+      }
+    }
+  })
+
   it('棘輪：零讀取點的標註不得增加', () => {
     const b = loadBaseline<AdoptionBaseline>('annotation-adoption')
-    const 新增 = zeroReaders.map((r) => r.name).filter((n) => !b.zeroReaders.includes(n))
+    const 新增 = zeroReaders.map((r) => r.name).filter((n) => !(r_in(b, n)))
     expect(
       新增,
       '新增了「有人宣告、沒有人讀」的標註。**建一個機制不等於它在運作**——' +
         `建它的時候要同時交付讀取端：\n  ${新增.join('\n  ')}`,
     ).toEqual([])
-    assertRatchet([['零讀取點的標註', zeroReaders.length, b.zeroReaders.length]])
+    assertRatchet([['零讀取點的標註', zeroReaders.length, Object.keys(b.zeroReaders).length]])
   })
 })
 
@@ -162,7 +206,9 @@ if (process.env.GENERATE_BASELINE) {
       rule: RULE,
       note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,
     },
-    zeroReaders: zeroReaders.map((r) => r.name),
+    zeroReaders: Object.fromEntries(
+      zeroReaders.map((r) => [r.name, KNOWN_REASONS[r.name] ?? '（未記錄——請補上理由）']),
+    ),
     total: rows.length,
   })
 }
