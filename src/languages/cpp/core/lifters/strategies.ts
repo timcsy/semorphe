@@ -2,6 +2,25 @@ import type { LiftStrategyRegistry } from '../../../../core/registry/lift-strate
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
+import { allStdModules } from '../../std'
+
+/**
+ * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
+ *
+ * ⚠️ **從 JSON 讀，不寫死。** 第一版對所有容器都掛 `source`，於是
+ * `cpp_pair_declare`（`children` 是空的）收到一個**未宣告的子節點**，
+ * 它的產生器不認得，來回轉換就掉了那一段——`roundtrip-cpp-utility` 立刻變紅。
+ *
+ * 那條紅是**既有缺陷被我的改動照出來**：`pair<int,string> p = make_pair(…)`
+ * 的初始值本來就掉了，只是掉得**對稱**（辨識掉、產生也掉），所以來回轉換
+ * 比對一直是綠的。記在缺陷帳，不在這裡順手擴大範圍。
+ */
+const 有宣告初始值來源 = new Set(
+  allStdModules
+    .flatMap((m) => m.concepts)
+    .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
+    .map((c) => c.conceptId),
+)
 
 /**
  * 把陣列宣告的初始值列表掛上 `values` 子槽。
@@ -661,6 +680,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         // 而**產出的程式碼也少了那一段**，所以來回轉換看起來「成功」了。
         // 只有跑起來（`v[1]` 索引越界）才會發現。
         const values: SemanticNode[] = []
+        // `vector<int> v = f()` —— 初始值是**一整個運算式**，不是元素列表。
+        //
+        // ⚠️ 這一筆原本也被丟掉，症狀與上面的初始化列表完全相同（變數宣告成
+        // 空的、產回去的程式碼少一段、來回轉換看起來「成功」）。而它的停用
+        // 標記寫的是「初始化列表尚無對應概念」——**方向指錯了**：列表早就
+        // 支援了，掉的是函式呼叫。照標記走會去改一段已經正確的程式碼。
+        let source: SemanticNode | null = null
         if (decl && decl.type === 'init_declarator') {
           const v = decl.childForFieldName('value')
           // `{3,1,4}` 是 initializer_list；`vector<int> v(5)` 是 argument_list（不是列表初始化）
@@ -669,10 +695,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               const lifted = ctx.lift(item)
               if (lifted) values.push(lifted)
             }
+          } else if (v && v.type !== 'argument_list') {
+            source = ctx.lift(v)
           }
         }
         if (values.length > 0) {
           return createNode(conceptId, { type: innerType, name }, { values })
+        }
+        if (source && 有宣告初始值來源.has(conceptId)) {
+          return createNode(conceptId, { type: innerType, name }, { source: [source] })
         }
         return createNode(conceptId, { type: innerType, name })
       }

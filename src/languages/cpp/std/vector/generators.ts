@@ -26,6 +26,11 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
       const items = values.map((v) => generateExpression(v, ctx)).join(', ')
       return `${indent(ctx)}vector<${type}> ${name} = {${items}};\n`
     }
+    // 初始值是一整個運算式（`= f()`）——與上面同一個病，同一個處方
+    const source = (node.children.source ?? [])[0]
+    if (source) {
+      return `${indent(ctx)}vector<${type}> ${name} = ${generateExpression(source, ctx)};\n`
+    }
     return `${indent(ctx)}vector<${type}> ${name};\n`
   })
 

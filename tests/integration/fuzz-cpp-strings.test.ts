@@ -128,13 +128,11 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_1: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
-    // BUG: vector<string> declaration with function call initializer is not lifted correctly.
-    // `vector<string> words = splitWords(sentence)` → lifter produces `cpp_vector_declare`
-    // but the initializer (call_expression) is dropped, so the variable is declared empty.
-    // Root cause: liftVectorDeclaration does not handle init_declarator with a call_expression.
-    // Fix: support call_expression as initializer in cpp_vector_declare lifter.
-    // When to fix: when vector initializer support is implemented.
+  it('fuzz_1: round-trip stable and output matches (PASS)', () => {
+    // 095b：`vector<string> words = splitWords(sentence)` 的初始值原本被丟掉。
+    // ⚠️ 這支的停用標記寫的是「初始化列表尚無對應概念」——**方向錯了**：
+    // 列表早就支援了，掉的是**函式呼叫**。照標記走會去改一段已經正確的程式碼。
+    // 修法見 `tests/integration/vector-source-init.test.ts`。
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const gen1 = generateCode(tree!, 'cpp', style)
@@ -322,12 +320,9 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_5: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
-    // BUG: vector<string> with brace-initializer `= {"racecar", "hello", ...}` is not lifted.
-    // The initializer_list (brace-init) is dropped; the variable is declared empty.
-    // Root cause: liftVectorDeclaration does not handle initializer_list syntax.
-    // Fix: support initializer_list as initializer in cpp_vector_declare lifter.
-    // When to fix: when vector initializer support is implemented.
+  it('fuzz_5: round-trip stable and output matches (PASS)', () => {
+    // 095b：花括號初始化早已支援（094 做的），這支的停用標記是**過期的**。
+    // 量過之後直接開回來就綠——測試本體一個字都沒改。
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const gen1 = generateCode(tree!, 'cpp', style)
@@ -529,13 +524,8 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_9: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
-    // BUG: vector<string> brace-initializer `= {"flower", "flow", "flight"}` is not lifted.
-    // All three vectors v1/v2/v3 end up empty; the LCP function receives empty containers
-    // and always returns "".
-    // Root cause: same as fuzz_5 — liftVectorDeclaration does not handle initializer_list.
-    // Fix: support initializer_list as initializer in cpp_vector_declare lifter.
-    // When to fix: when vector initializer support is implemented.
+  it('fuzz_9: round-trip stable and output matches (PASS)', () => {
+    // 095b：同 fuzz_5，停用標記過期。量過之後直接開回來就綠。
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const gen1 = generateCode(tree!, 'cpp', style)
