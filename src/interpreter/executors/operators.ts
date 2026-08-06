@@ -57,6 +57,30 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     const op = String(node.properties.operator)
     const left = await ctx.evaluate(node.children.left[0])
     const right = await ctx.evaluate(node.children.right[0])
+
+    // ⚠️ **字串要比內容。**
+    //
+    // 原本一律走 `toNumber`，而 `Number('abc') || 0` 是 0——**兩個字串都變成
+    // 0，於是 `==` 恆真、`!=` 恆假**。`if (p == "abc")` 對任何字串都成立，
+    // 而程式跑完、印出一個數字、那個數字是錯的。
+    //
+    // 字元（char）不走這裡：C++ 的 `'a' < 'b'` 比的是碼值，而現有行為已對。
+    if (left.type === 'string' || right.type === 'string') {
+      const ls = String(left.value)
+      const rs = String(right.value)
+      let r: boolean
+      switch (op) {
+        case '<': r = ls < rs; break
+        case '>': r = ls > rs; break
+        case '<=': r = ls <= rs; break
+        case '>=': r = ls >= rs; break
+        case '==': r = ls === rs; break
+        case '!=': r = ls !== rs; break
+        default: r = false
+      }
+      return { type: 'bool', value: r }
+    }
+
     const lv = ctx.toNumber(left)
     const rv = ctx.toNumber(right)
 

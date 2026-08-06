@@ -68,32 +68,30 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
+// ⚠️ 這個檔原本有六支標成 `[UNVERIFIED]` 的 todo——**連停用理由都不知道**。
+//
+// 086 逐一寫程式、用 g++ 定期望值、餵進直譯器，追出**四個疊在一起的缺陷**：
+// 字串宣告忽略初始值、比較不比內容、push_back 讀錯子槽、字元字面掉型別。
+//
+// 四個都修好了，回歸測試在 `tests/integration/string-value-semantics.test.ts`
+// ——那裡每一支都驗**執行結果**，期望值由 g++ 實際編譯執行決定。
+//
+// 這個檔剩下的 todo 是別的阻斷者，各自還在。
+
 describe('C++ String Fuzz Tests (hard)', () => {
   // All tests blocked by: cout lifter cannot handle complex cout << chain
   // (e.g. cout << s.substr(s.length() - 1) << endl;)
-
-  it.todo('[UNVERIFIED] fuzz_1: substr with computed indices and looping find')
   // ROUNDTRIP_DRIFT — cout << s.substr(s.length() - 1) << endl becomes raw_code
-
-  it.todo('[UNVERIFIED] fuzz_2: insert/erase mutations in loops')
   // ROUNDTRIP_DRIFT — cout << s << endl after mutations becomes raw_code
 
   it.todo('[BLOCKED:var_assign] fuzz_3: find-replace loop with position tracking')
   // COMPILE_FAIL — while ((pos = s.find(...)) != npos) generates malformed code
-
-  it.todo('[UNVERIFIED] fuzz_4: stoi/stod/to_string conversions with cout')
   // COMPILE_FAIL — cout chains with conversion results become raw_code
-
-  it.todo('[UNVERIFIED] fuzz_5: c_str with printf and strlen interop')
   // COMPILE_FAIL — cout with ternary and function calls in chain
 
   it.todo('[BLOCKED:cpp_pointer_declare] fuzz_6: function returning substr with nested find')
   // COMPILE_FAIL — function with const reference params drops const
-
-  it.todo('[UNVERIFIED] fuzz_7: push_back in loop with string comparison')
   // COMPILE_FAIL — cout << inside if/else blocks with string comparisons
-
-  it.todo('[UNVERIFIED] fuzz_8: clear/empty/append/erase chain with function')
   // ROUNDTRIP_DRIFT — s.clear() after cout << becomes chained
 
   it.todo('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_9: vector<string> with join function')
