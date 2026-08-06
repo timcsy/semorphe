@@ -1,36 +1,25 @@
 /**
- * 概念身分守恆（US2）
+ * 概念身分守恆
  *
- * ## 這裡用 `it.fails` 釘住一個已知缺陷
+ * ## 這裡曾經釘著一個不存在的缺陷
  *
- * 它斷言「這件事目前是壞的」。所以：
+ * `specs/050` 用 `it.fails` 釘住「`print` 走一圈後變成 `cpp_printf`」，並判定
+ * 修它會動到跨風格的既有行為，因而擱置。
  *
- *   - **缺陷還在** → 測試通過，但診斷每次都印出來（不沉默）
- *   - **缺陷被修好** → `it.fails` 自己變紅，提醒你把這根釘子拔掉
+ * **那個缺陷不存在。** 當時的測試傳的是 `{ id: 'default' }`——一個假的風格
+ * 物件。於是 `io_style` 是 undefined，產生器走了非預期的分支產出 `printf(...)`。
+ * 換成真的 `apcs`（`io_style: "cout"`，也是應用程式的預設）之後，`print` 與
+ * `input` 都完整守住身分。
  *
- * ### 為什麼不用「永久紅的測試」
+ * **釘住一個量測假象，比不釘更糟**——它讓後續每一個讀到的人相信系統壞了。
  *
- * 那是本功能實作時第一版的做法，寫完就發現不行：**一支永遠紅的測試會讓
- * 「全套綠」失去意義**，而本專案有四條護欄的全部價值都建立在那個訊號上。
- * 更糟的是紅久了就會被無視——那正是 concepts/執行機構.md 說的「護欄自己
- * 變成殼」。
+ * ## `it.fails` 這個機制本身是對的
  *
- * `it.fails` 兩者兼得：套件保持綠、現象保持可見、而且修好時會主動出聲。
- * 與「留一個 `it.todo` 就走」的差別依然成立：**待辦是沉默的，這個不是。**
+ * 它按設計運作了：假象一被修掉，那支測試立刻變紅提醒拔釘子。**問題不在機制，
+ * 在釘之前沒有先確認缺陷是真的。**
  *
- * ## 釘住的是什麼
- *
- * 「輸出」概念在預設風格下產生 `printf(...)`，而 `printf(...)` 辨識回來是
- * `cpp_printf` ——**另一個概念**。輸出字串合法、執行結果也對，只有身分變了。
- *
- * 專案的既有紀律正好點名這件事：**round-trip 必須驗證概念身分，不能只驗
- * 輸出字串**。這裡就是那個情形。
- *
- * ## 為什麼本功能不修它
- *
- * 兩條可能的修法（讓 printf 在某些情況辨識回 print／讓 print 在 round-trip
- * 語境下走 cout）**都會動到跨風格的既有行為**。那個決定的規模遠大於本功能的
- * 收益。見 specs/050-repay-top-blockers/research.md D3。
+ * 教訓：合成測試的**環境**也要真實，不只輸入要真實。
+ * 見 specs/057、`knowledge/experience.md`「量測工具的第一版會安靜地量錯」
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -43,10 +32,25 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { createNode } from '../../src/core/semantic-tree'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
+import apcsPreset from '../../src/languages/cpp/styles/apcs.json'
 
 let tsParser: Parser
 let lifter: Lifter
-const STYLE = { id: 'default' } as unknown as StylePreset
+/**
+ * **用真的風格預設，不要造一個假的。**
+ *
+ * 原本這裡是 `{ id: 'default' }`——一個不存在的風格。於是 `io_style` 是
+ * undefined，產生器走了非預期的分支：`print` 產生 `printf(...)`、`input`
+ * 產生 `scanf(...)`，再辨識回來自然變成 `cpp_printf`／`cpp_scanf`。
+ *
+ * **那被記錄成「概念身分在 round-trip 後改變」的已知缺陷，而它其實不存在**
+ * ——換成真的 apcs（`io_style: "cout"`，也是應用程式的預設）之後，
+ * `print` 與 `input` 都完整守住身分。
+ *
+ * 教訓：合成測試的**環境**也要真實，不只輸入要真實。
+ * 見 specs/057、`knowledge/experience.md`「量測工具的第一版會安靜地量錯」
+ */
+const STYLE = apcsPreset as unknown as StylePreset
 
 beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
@@ -95,36 +99,24 @@ describe('概念身分守恆：走一圈之後還是同一個概念', () => {
     ).toBe(true)
   })
 
-  // ⚠️ `it.fails`：斷言「這件事目前是壞的」。修好之後它會變紅，提醒你拔釘子。
-  it.fails('📌 已知缺陷（釘住）：`print` 走一圈後變成另一個概念', () => {
+  it('`print` 走一圈之後仍然是 `print`', () => {
     const r = roundTripIdentity('print')
-
-    // 不沉默——每次跑都把現象印出來
-    console.log(
-      [
-        '',
-        '  📌 已知缺陷（釘住中，尚未修）',
-        `     概念身分：print  →  ${r.became.join(', ') || '(什麼都沒有)'}`,
-        `     產生的程式碼：${r.code.replace(/\n/g, ' ')}`,
-        '     原因：預設風格產生 printf(...)，而它辨識回來是 cpp_printf。',
-        '     輸出字串合法、執行結果也對——**只有身分變了**。',
-        '     不修的理由見 specs/050-repay-top-blockers/research.md D3。',
-        '',
-      ].join('\n'),
-    )
-
     expect(
       r.kept,
       `身分未守住：print → ${r.became.join(', ')}｜產生：${r.code.replace(/\n/g, ' ')}`,
     ).toBe(true)
   })
 
-  it('若上面那條變綠了，這裡說明該怎麼辦', () => {
-    // 這條永遠通過——它只是把「拔釘子的步驟」放在讀得到的地方。
-    // 上面的 it.fails 一旦變紅，代表 print 的身分守住了：
-    //   1. 確認跨風格回歸有跑過（cout × printf × endl 組合，已知坑）
-    //   2. 把 it.fails 改成 it
-    //   3. 從缺陷帳移除對應標記並下調基線
-    expect(true).toBe(true)
+  it('`input` 走一圈之後仍然是 `input`', () => {
+    const r = roundTripIdentity('input')
+    expect(r.kept, `身分未守住：input → ${r.became.join(', ')}`).toBe(true)
   })
+
+  it('★ 用真的風格預設——假的風格會讓這支測試量到不存在的缺陷', () => {
+    // 這一支釘住的是**測試環境**而不是被測系統。
+    // 用 `{ id: 'default' }` 這種假物件時，產生器會走非預期的分支，
+    // 於是 print 產出 printf(...)、辨識回來變成 cpp_printf——看起來像缺陷。
+    expect((STYLE as unknown as { io_style?: string }).io_style).toBe('cout')
+  })
+
 })

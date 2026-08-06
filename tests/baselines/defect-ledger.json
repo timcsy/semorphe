@@ -10,8 +10,9 @@
   "titleOnly": 64,
   "unverified": 6,
   "byBlocker": {
-    "print": 5,
+    "print": 2,
     "cpp_increment": 2,
+    "block_comment": 2,
     "cpp_switch": 1,
     "cpp_char_literal": 1,
     "array_declare": 1,
@@ -20,6 +21,7 @@
     "var_assign": 1,
     "cpp_enum": 1,
     "cpp_cast": 1,
-    "cpp_string_declare": 1
+    "cpp_string_declare": 1,
+    "cpp_define": 1
   }
 }

@@ -249,8 +249,9 @@ int main() {
     return 0;
 }`
 
-  // SKIP: interpreter does not handle #define macro substitution
-  it.skip('[BLOCKED:print] executes correctly', async () => {
+  // 阻斷者是 `#define` 巨集展開（墓碑），不是 print——原本的 [BLOCKED:print]
+  // 標記是錯的。歸因見 knowledge/experience.md「宣稱『與我無關』之前先去量」。
+  it.skip('[BLOCKED:cpp_define] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('100')
@@ -304,8 +305,8 @@ int main() {
     return 0;
 }`
 
-  // SKIP: interpreter does not handle block_comment concept
-  it.skip('[BLOCKED:print] executes correctly', async () => {
+  // 阻斷者是 block_comment 的執行，不是 print——原本的標記是錯的
+  it.skip('[BLOCKED:block_comment] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('comments work')
@@ -315,7 +316,8 @@ int main() {
   // SKIP: block_comment P1 instability - lifter does not strip `* ` prefixes
   // added by code generator, causing prefix duplication on re-lift.
   // Also doc_comment `///` rendered as `// /`.
-  it.skip('[BLOCKED:print] roundtrip is stable', () => {
+  // 阻斷者是 block_comment 的 lifter 沒有剝掉 `* ` 前綴，不是 print
+  it.skip('[BLOCKED:block_comment] roundtrip is stable', () => {
     const gen1 = roundTrip(code)
     const gen2 = roundTrip(gen1)
     expect(gen1).toBe(gen2)

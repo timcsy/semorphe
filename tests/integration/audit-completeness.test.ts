@@ -50,6 +50,7 @@ import type {
   PathName,
   StylePreset,
 } from '../../src/core/types'
+import apcsPreset from '../../src/languages/cpp/styles/apcs.json'
 
 const DISCLAIMER =
   '⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——' +
@@ -99,7 +100,21 @@ let interp: SemanticInterpreter
 let renderer: PatternRenderer
 let extractor: PatternExtractor
 let specsCache: ReturnType<BlockSpecRegistry['getAll']> = []
-const STYLE: StylePreset = { id: 'default' } as unknown as StylePreset
+/**
+ * **用真的風格預設，不要造一個假的。**
+ *
+ * 原本這裡是 `{ id: 'default' }`——一個不存在的風格。於是 `io_style` 是
+ * undefined，產生器走了非預期的分支：`print` 產生 `printf(...)`、`input`
+ * 產生 `scanf(...)`，再辨識回來自然變成 `cpp_printf`／`cpp_scanf`。
+ *
+ * **那被記錄成「概念身分在 round-trip 後改變」的已知缺陷，而它其實不存在**
+ * ——換成真的 apcs（`io_style: "cout"`，也是應用程式的預設）之後，
+ * `print` 與 `input` 都完整守住身分。
+ *
+ * 教訓：合成測試的**環境**也要真實，不只輸入要真實。
+ * 見 specs/057、`knowledge/experience.md`「量測工具的第一版會安靜地量錯」
+ */
+const STYLE = apcsPreset as unknown as StylePreset
 
 beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
