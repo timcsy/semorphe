@@ -559,7 +559,7 @@ T add(T a, T b) { return a + b; }`, 'cpp_template_function')
 
   // --- Container Generic Operations ---
 
-  it('cpp_container_push_back', () => {
+  it('cpp_container_push_back（vector → 通用版）', () => {
     assertConceptPresent(`#include <vector>
 int main() { std::vector<int> v; v.push_back(1); }`, 'cpp_container_push_back')
   })
@@ -579,7 +579,7 @@ int main() { std::stack<int> s; s.push(1); }`, 'cpp_container_push')
 int main() { std::vector<int> v; bool b = v.empty(); }`, 'cpp_container_empty')
   })
 
-  it('cpp_container_clear', () => {
+  it('cpp_container_clear（vector → 通用版）', () => {
     assertConceptPresent(`#include <vector>
 int main() { std::vector<int> v; v.clear(); }`, 'cpp_container_clear')
   })
@@ -754,18 +754,22 @@ int main() { std::string s = "hllo"; s.insert(1, "e"); }`, 'cpp_string_insert')
 int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp_string_replace')
   })
 
-  // ARCHITECTURAL: s.push_back('a') on string is lifted as cpp_container_push_back
-  // (generic) because the lifter has no type information.
-  it('cpp_string_push_back — lifter uses generic cpp_container_push_back (no type info)', () => {
+  // ⚠️ 這裡原本標著 `ARCHITECTURAL`，說「辨識器沒有型別資訊，所以只能用
+  // 通用版」——**那句話從來不是真的**。辨識脈絡一直有作用域與型別追蹤，
+  // 只是零呼叫者（076 接上了）。
+  //
+  // `ARCHITECTURAL` 這個標籤讀起來像「這是架構上的必然」，而它其實是
+  // 「還沒接上」。見 knowledge/concepts/執行機構.md「註解把『沒插電』寫成
+  // 『做不到』」。
+  it('cpp_string_push_back（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.push_back('a'); }`, 'cpp_container_push_back')
+int main() { std::string s; s.push_back('a'); }`, 'cpp_string_push_back')
   })
 
-  // ARCHITECTURAL: s.clear() on string is lifted as cpp_container_clear (generic)
-  // because the lifter has no type information.
-  it('cpp_string_clear — lifter uses generic cpp_container_clear (no type info)', () => {
+  // 同上——原本的 `ARCHITECTURAL` 標籤是假的
+  it('cpp_string_clear（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.clear(); }`, 'cpp_container_clear')
+int main() { std::string s; s.clear(); }`, 'cpp_string_clear')
   })
 })
 

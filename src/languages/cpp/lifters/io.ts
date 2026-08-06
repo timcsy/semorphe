@@ -87,9 +87,19 @@ function tryStringMethodLift(
   return null
 }
 
-/** Map method names from field_expression to concept IDs.
- * Shared methods (empty, push, pop, clear, push_back, erase, count)
- * use generic container concepts to avoid type disambiguation issues. */
+/**
+ * 方法名 → 概念身分。
+ *
+ * 共用的方法名（`clear`、`push_back`…）預設用**通用容器概念**——因為光看
+ * 語法樹不知道接收者是什麼型別。
+ *
+ * ⚠️ 這句話以前寫成「為了避免型別消歧問題」，讀起來像**做不到**。
+ * 實際上辨識脈絡一直有作用域與型別追蹤，只是**沒有人接上**（見
+ * `knowledge/concepts/執行機構.md`「機制有了，沒人接上」第五個實例）。
+ *
+ * 076 接上了：脈絡查得到型別時走 `TYPED_METHOD_TO_CONCEPT`，
+ * **查不到就留在通用版**——猜一個錯的專屬身分比誠實降級更糟。
+ */
 const METHOD_TO_CONCEPT: Record<string, string> = {
   // container-specific (unique method names)
   pop_back: 'cpp_vector_pop_back',
@@ -106,6 +116,19 @@ const METHOD_TO_CONCEPT: Record<string, string> = {
   erase: 'cpp_container_erase',
   count: 'cpp_container_count',
   insert: 'cpp_set_insert',
+}
+
+/**
+ * 接收者型別已知時的專屬身分。
+ *
+ * 只列**確定不同**的那些：字串的 `clear` 與容器的 `clear` 是兩個概念，
+ * 產生的程式碼與執行行為都不同。型別查不到時不用這張表。
+ */
+const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
+  string: {
+    clear: 'cpp_string_clear',
+    push_back: 'cpp_string_push_back',
+  },
 }
 
 /** Methods that take one argument (the rest take zero) */
@@ -161,7 +184,12 @@ export function registerIOLifters(lifter: Lifter): void {
       const objText = objNode?.text ?? ''
       const methodName = fieldNode?.text ?? ''
 
-      const conceptId = METHOD_TO_CONCEPT[methodName]
+      // 接收者的型別查得到的話，用專屬身分；**查不到就留在通用版**。
+      // 猜一個的話，猜錯會靜默產生一個錯的身分——那比誠實降級更糟。
+      const objType = objText ? ctx.data.getType(objText) : null
+      const conceptId =
+        (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
+        METHOD_TO_CONCEPT[methodName]
       if (conceptId) {
         const propName = METHOD_OBJ_PROP[methodName] ?? 'obj'
         const properties: Record<string, string> = { [propName]: objText }

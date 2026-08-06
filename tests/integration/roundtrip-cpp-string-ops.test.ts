@@ -349,7 +349,7 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp_string_empty', () => {
     const code = 'string s = "";\nbool b = s.empty();'
 
-    it('should lift to cpp_container_empty concept (shared method)', () => {
+    it('should lift to cpp_container_empty concept（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       // empty() is a shared method — without type info, lifts as generic container concept
@@ -457,16 +457,22 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 14. cpp_string_push_back (shared method → lifts as cpp_container_push_back) ───
+  // ⚠️ 這裡原本斷言的是**降級後**的通用容器概念，標題還寫著「shared method」
+  // ——那是把一個限制寫進了測試。076 接上辨識脈絡的型別追蹤之後，
+  // `s` 宣告成 string 就辨識得出專屬身分了。
+  //
+  // 舊註解說降級是「為了避免型別消歧問題」，讀起來像做不到；實際上消歧的
+  // 機制一直都在，只是零呼叫者。見 knowledge/concepts/執行機構.md。
+  // ─── 14. cpp_string_push_back （型別已知 → 專屬身分） ───
 
   describe('cpp_string_push_back', () => {
     const code = "string s = \"abc\";\ns.push_back('d');"
 
-    it('should lift to cpp_container_push_back concept (shared method)', () => {
+    it('should lift to cpp_string_push_back concept（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       // push_back() is a shared method — without type info, lifts as generic container concept
-      const node = findConcept(tree, 'cpp_container_push_back')
+      const node = findConcept(tree, 'cpp_string_push_back')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -480,22 +486,22 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_container_push_back')
+      const node2 = findConcept(tree2, 'cpp_string_push_back')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
   })
 
-  // ─── 15. cpp_string_clear (shared method → lifts as cpp_container_clear) ───
+  // ─── 15. cpp_string_clear （型別已知 → 專屬身分） ───
 
   describe('cpp_string_clear', () => {
     const code = 'string s = "hello";\ns.clear();'
 
-    it('should lift to cpp_container_clear concept (shared method)', () => {
+    it('should lift to cpp_string_clear concept（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       // clear() is a shared method — without type info, lifts as generic container concept
-      const node = findConcept(tree, 'cpp_container_clear')
+      const node = findConcept(tree, 'cpp_string_clear')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -509,7 +515,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp_container_clear')
+      const node2 = findConcept(tree2, 'cpp_string_clear')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -553,7 +559,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts.has('cpp_string_insert')).toBe(true)
       expect(concepts.has('cpp_string_replace')).toBe(true)
       // Shared methods lift as vector concepts (no type info available)
-      expect(concepts.has('cpp_container_push_back')).toBe(true)
+      expect(concepts.has('cpp_string_push_back')).toBe(true)
     })
 
     it('should generate code preserving all string operations', () => {
@@ -590,7 +596,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts2.has('cpp_string_insert')).toBe(true)
       expect(concepts2.has('cpp_string_replace')).toBe(true)
       // Shared methods lift as vector concepts (no type info available)
-      expect(concepts2.has('cpp_container_push_back')).toBe(true)
+      expect(concepts2.has('cpp_string_push_back')).toBe(true)
     })
   })
 })

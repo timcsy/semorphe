@@ -475,8 +475,8 @@
       "dirs": 4
     },
     "cpp_string_clear": {
-      "files": 5,
-      "dirs": 2
+      "files": 6,
+      "dirs": 3
     },
     "cpp_string_declare": {
       "files": 8,
@@ -503,8 +503,8 @@
       "dirs": 4
     },
     "cpp_string_push_back": {
-      "files": 5,
-      "dirs": 2
+      "files": 6,
+      "dirs": 3
     },
     "cpp_string_replace": {
       "files": 8,
