@@ -36,7 +36,7 @@ beforeAll(async () => {
 
 async function run(body: string): Promise<string> {
   const src =
-    `#include <iostream>\n#include <algorithm>\n#include <numeric>\nusing namespace std;\n` +
+    `#include <iostream>\n#include <algorithm>\n#include <numeric>\n#include <cstring>\nusing namespace std;\n` +
     `int main(){ ${body} return 0; }\n`
   const tree = lifter.lift(tsParser.parse(src).rootNode as never) as SemanticNode
   const out: string[] = []
@@ -92,5 +92,37 @@ describe('標準演算法不再是空操作', () => {
   it('★ 範圍解析不了時**出聲**，不是靜靜地什麼都不做', async () => {
     // 原本的空操作就是這種「安靜的錯」：程式跑完、結果錯了、沒有任何提示
     await expect(run(`int a[3]={1,2,3}; sort(zzz, zzz+3); cout << a[0];`)).rejects.toThrow()
+  })
+})
+
+describe('C 字串函式不再是空操作', () => {
+  it('strcpy 真的複製', async () => {
+    expect(await run(`char s[8]; strcpy(s,"hi"); cout << s;`)).toBe('hi')
+  })
+
+  it('strcat 真的串接', async () => {
+    expect(await run(`char s[8]="a"; strcat(s,"b"); cout << s;`)).toBe('ab')
+  })
+
+  it('memset 存的是字元不是字碼', async () => {
+    // 原本 `'a'` 求值成 97 直接塞進去，`cout << s` 印出 979797
+    expect(await run(`char s[4]; memset(s,'a',3); cout << s;`)).toBe('aaa')
+  })
+
+  it('memcpy 真的複製', async () => {
+    expect(await run(`char a[4]="ab"; char b[4]; memcpy(b,a,3); cout << b;`)).toBe('ab')
+  })
+
+  it('★ 字元陣列印出來是字串，不是 [array]', async () => {
+    // 這一個讓上面四個「看起來」都是壞的——壞的其實是輸出那一段
+    expect(await run(`char s[4]="ab"; cout << s;`)).toBe('ab')
+  })
+
+  it('★ char s[4]="ab" 拆成字元，不是整串塞進 s[0]', async () => {
+    expect(await run(`char s[4]="ab"; cout << s[0] << s[1];`)).toBe('ab')
+  })
+
+  it('★ 非字元陣列不受影響', async () => {
+    expect(await run(`int a[2]={1,2}; cout << a[0] << a[1];`)).toBe('12')
   })
 })

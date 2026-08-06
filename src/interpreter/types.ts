@@ -80,6 +80,22 @@ export function parseInputValue(input: string, targetType: string): RuntimeValue
 export function valueToString(val: RuntimeValue): string {
   if (val.type === 'void') return 'void'
   if (val.type === 'bool') return val.value ? 'true' : 'false'
-  if (val.type === 'array') return '[array]'
+  if (val.type === 'array') {
+    // C 字串（字元陣列）印出來應該是字串，不是 `[array]`。
+    //
+    // `char s[8]; strcpy(s, "hi"); cout << s;` 原本印 `[array]`——那讓五個
+    // cstring 函式**看起來**是壞的，其實壞的是這裡。逐字元讀到結尾的 \0。
+    const arr = val.value as RuntimeValue[] | undefined
+    if (Array.isArray(arr) && arr.every((c) => c?.type === 'char')) {
+      const out: string[] = []
+      for (const c of arr) {
+        const s = String(c.value ?? '')
+        if (s === '' || s === '\0') break
+        out.push(s)
+      }
+      return out.join('')
+    }
+    return '[array]'
+  }
   return String(val.value ?? '')
 }

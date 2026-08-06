@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：178｜✅ 實作 798｜📄 已宣告不提供 19｜❔ 判不出來 16｜🈳 殼 46｜❌ 缺 11（以路徑數計）
+元件：178｜✅ 實作 803｜📄 已宣告不提供 19｜❔ 判不出來 16｜🈳 殼 41｜❌ 缺 11（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -81,8 +81,8 @@
 | `cpp_map_access` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_map_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_memcpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_memset` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_memcpy` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_memset` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_method_call` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_method_call_expr` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -122,10 +122,10 @@
 | `cpp_static_member` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_stod` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_stoi` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_strcat` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_strcat` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strchr` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strcmp` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_strcpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_strcpy` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_append` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_string_c_str` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -142,7 +142,7 @@
 | `cpp_stringstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_strlen` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strncmp` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_strncpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_strncpy` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strstr` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_struct_declare` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_struct_member_access` | ✅ | ✅ | ✅ | ✅ | 🈳 |

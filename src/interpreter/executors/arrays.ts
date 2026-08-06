@@ -36,6 +36,21 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     // 沒有接上**——於是 `int a[3]={3,1,2}; cout << a[0]` 輸出 0。
     // 半條路修好比沒修更難察覺：語義樹裡看得到值，跑起來卻是零。
     const init = node.children.values ?? []
+    // `char s[4] = "ab"` —— 初始值是一個字串字面，要**拆成字元**再填。
+    // 不拆的話整個字串會塞進 s[0]，於是 s[1] 是空的、cout << s 也不對。
+    if (type.includes('char') && init.length === 1) {
+      const v = await ctx.evaluate(init[0])
+      if (typeof v.value === 'string' && v.value.length > 1) {
+        for (let i = 0; i < v.value.length && i < elements.length; i++) {
+          elements[i] = { type: 'char', value: v.value[i] }
+        }
+        if (v.value.length < elements.length) {
+          elements[v.value.length] = { type: 'char', value: '\0' }
+        }
+        ctx.scope.declare(name, { type: 'array', value: elements })
+        return
+      }
+    }
     for (let i = 0; i < init.length && i < elements.length; i++) {
       elements[i] = await ctx.evaluate(init[i])
     }
