@@ -40,17 +40,8 @@
     ],
     "src/ui/block-registrar.ts": [
       "comment",
-      "cpp_ifstream_declare",
-      "cpp_map_declare",
-      "cpp_ofstream_declare",
-      "cpp_pair_declare",
-      "cpp_queue_declare",
-      "cpp_set_declare",
-      "cpp_stack_declare",
       "cpp_string_at",
-      "cpp_string_declare",
-      "cpp_stringstream_declare",
-      "cpp_vector_declare"
+      "cpp_string_declare"
     ],
     "src/ui/panels/blockly-panel.ts": [
       "builtin_constant",
@@ -61,22 +52,7 @@
       "cpp_ternary"
     ],
     "src/ui/sync-controller.ts": [
-      "cpp_auto_declare",
-      "cpp_const_declare",
-      "cpp_constexpr_declare",
-      "cpp_ifstream_declare",
-      "cpp_map_declare",
-      "cpp_ofstream_declare",
-      "cpp_pair_declare",
-      "cpp_pointer_declare",
-      "cpp_queue_declare",
-      "cpp_ref_declare",
-      "cpp_set_declare",
-      "cpp_stack_declare",
-      "cpp_static_declare",
-      "cpp_string_declare",
-      "cpp_stringstream_declare",
-      "cpp_vector_declare"
+      "cpp_string_declare"
     ]
   }
 }

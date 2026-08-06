@@ -2,8 +2,11 @@
   {
     "conceptId": "cpp_sort",
     "layer": "lang-library",
-    "abstractConcept": "sort",
-    "properties": ["begin", "end"],
+    "abstractConcept": null,
+    "properties": [
+      "begin",
+      "end"
+    ],
     "children": {},
     "role": "statement"
   },
@@ -11,7 +14,10 @@
     "conceptId": "cpp_reverse",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["begin", "end"],
+    "properties": [
+      "begin",
+      "end"
+    ],
     "children": {},
     "role": "statement"
   },
@@ -19,7 +25,10 @@
     "conceptId": "cpp_fill",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["begin", "end"],
+    "properties": [
+      "begin",
+      "end"
+    ],
     "children": {
       "value": "expression"
     },
@@ -51,7 +60,10 @@
     "conceptId": "cpp_swap",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["a", "b"],
+    "properties": [
+      "a",
+      "b"
+    ],
     "children": {},
     "role": "statement"
   }

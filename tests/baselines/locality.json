@@ -87,8 +87,8 @@
       "dirs": 4
     },
     "cpp_auto_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_case": {
       "files": 6,
@@ -123,12 +123,12 @@
       "dirs": 5
     },
     "cpp_const_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_constexpr_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_constructor": {
       "files": 7,
@@ -223,8 +223,8 @@
       "dirs": 5
     },
     "cpp_ifstream_declare": {
-      "files": 8,
-      "dirs": 4
+      "files": 6,
+      "dirs": 3
     },
     "cpp_include": {
       "files": 11,
@@ -275,8 +275,8 @@
       "dirs": 3
     },
     "cpp_map_declare": {
-      "files": 10,
-      "dirs": 5
+      "files": 8,
+      "dirs": 4
     },
     "cpp_max": {
       "files": 7,
@@ -311,8 +311,8 @@
       "dirs": 6
     },
     "cpp_ofstream_declare": {
-      "files": 8,
-      "dirs": 4
+      "files": 6,
+      "dirs": 3
     },
     "cpp_operator_overload": {
       "files": 7,
@@ -323,8 +323,8 @@
       "dirs": 5
     },
     "cpp_pair_declare": {
-      "files": 9,
-      "dirs": 5
+      "files": 7,
+      "dirs": 4
     },
     "cpp_partial_sum": {
       "files": 7,
@@ -335,8 +335,8 @@
       "dirs": 5
     },
     "cpp_pointer_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_pointer_deref": {
       "files": 8,
@@ -355,8 +355,8 @@
       "dirs": 3
     },
     "cpp_queue_declare": {
-      "files": 10,
-      "dirs": 5
+      "files": 8,
+      "dirs": 4
     },
     "cpp_queue_front": {
       "files": 8,
@@ -379,8 +379,8 @@
       "dirs": 5
     },
     "cpp_ref_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_reinterpret_cast": {
       "files": 7,
@@ -399,8 +399,8 @@
       "dirs": 2
     },
     "cpp_set_declare": {
-      "files": 10,
-      "dirs": 5
+      "files": 8,
+      "dirs": 4
     },
     "cpp_set_insert": {
       "files": 8,
@@ -419,8 +419,8 @@
       "dirs": 4
     },
     "cpp_stack_declare": {
-      "files": 10,
-      "dirs": 5
+      "files": 8,
+      "dirs": 4
     },
     "cpp_stack_top": {
       "files": 8,
@@ -431,8 +431,8 @@
       "dirs": 5
     },
     "cpp_static_declare": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "cpp_static_member": {
       "files": 7,
@@ -515,8 +515,8 @@
       "dirs": 4
     },
     "cpp_stringstream_declare": {
-      "files": 9,
-      "dirs": 5
+      "files": 7,
+      "dirs": 4
     },
     "cpp_strlen": {
       "files": 7,
@@ -599,8 +599,8 @@
       "dirs": 4
     },
     "cpp_vector_declare": {
-      "files": 10,
-      "dirs": 5
+      "files": 8,
+      "dirs": 4
     },
     "cpp_vector_pop_back": {
       "files": 8,

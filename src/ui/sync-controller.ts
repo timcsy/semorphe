@@ -26,6 +26,7 @@ import type { CodeMapping, BlockMapping } from '../core/projection/code-generato
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
 import { SemanticBus } from '../core/semantic-bus'
+import { abstractConceptOf } from '../core/language-executors'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -298,28 +299,17 @@ export class SyncController {
    * Mutates the tree in place.
    */
   private downgradeConceptsForLevel(node: SemanticNode, visible: Set<string>): void {
-    // Mapping: specific concept → universal equivalent concept + property transform
-    const DOWNGRADE_MAP: Record<string, { concept: string; typePrefix?: string }> = {
-      'cpp_string_declare': { concept: 'var_declare', typePrefix: 'string' },
-      'cpp_vector_declare': { concept: 'var_declare' },
-      'cpp_stack_declare': { concept: 'var_declare' },
-      'cpp_queue_declare': { concept: 'var_declare' },
-      'cpp_map_declare': { concept: 'var_declare' },
-      'cpp_set_declare': { concept: 'var_declare' },
-      'cpp_pair_declare': { concept: 'var_declare' },
-      'cpp_ifstream_declare': { concept: 'var_declare' },
-      'cpp_ofstream_declare': { concept: 'var_declare' },
-      'cpp_stringstream_declare': { concept: 'var_declare' },
-      'cpp_const_declare': { concept: 'var_declare' },
-      'cpp_constexpr_declare': { concept: 'var_declare' },
-      'cpp_auto_declare': { concept: 'var_declare' },
-      'cpp_static_declare': { concept: 'var_declare' },
-      'cpp_pointer_declare': { concept: 'var_declare' },
-      'cpp_ref_declare': { concept: 'var_declare' },
-    }
+    // 降級目標由**概念自己宣告的父概念**決定，不再寫死在這裡。
+    //
+    // 這份清單原本有 16 行，全部在講同一件事：「這些概念是變數宣告的一種」。
+    // 而概念定義裡本來就有 `abstractConcept` 這個欄位在表達它——只是那時
+    // 98 個父概念指向的東西**根本不存在**，所以介面層只好自己寫一份。
+    // 見 specs/056-abstract-concept-integrity
+    // 來源是概念自己的宣告，由語言套件在載入時推進核心
 
     if (!visible.has(node.concept)) {
-      const downgrade = DOWNGRADE_MAP[node.concept]
+      const parent = abstractConceptOf(node.concept)
+      const downgrade = parent ? { concept: parent, typePrefix: node.concept === 'cpp_string_declare' ? 'string' : undefined } : undefined
       if (downgrade && visible.has(downgrade.concept)) {
         // Preserve type info in properties
         if (downgrade.typePrefix && !node.properties.type) {

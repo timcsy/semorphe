@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_stack_declare",
     "layer": "lang-core",
-    "abstractConcept": "stack_declare",
+    "abstractConcept": "var_declare",
     "properties": [
       "type",
       "name"
@@ -13,7 +13,7 @@
   {
     "conceptId": "cpp_stack_top",
     "layer": "lang-library",
-    "abstractConcept": "stack_top",
+    "abstractConcept": null,
     "properties": [
       "obj"
     ],

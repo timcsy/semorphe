@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_map_declare",
     "layer": "lang-library",
-    "abstractConcept": "map_declare",
+    "abstractConcept": "var_declare",
     "properties": [
       "key_type",
       "value_type",
@@ -14,7 +14,7 @@
   {
     "conceptId": "cpp_map_access",
     "layer": "lang-library",
-    "abstractConcept": "map_access",
+    "abstractConcept": "array_access",
     "properties": [
       "obj"
     ],

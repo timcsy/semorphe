@@ -74,6 +74,19 @@ export function universalComponentIds(): string[] {
  * 把原始碼拆成「程式碼」與「註解」兩份文字。
  * 逐字元處理並追蹤字串狀態，避免把 `'http://x'` 裡的 `//` 誤判為註解。
  */
+/**
+ * 把 `"abstractConcept": "x"` 的**值**遮掉。
+ *
+ * 那不是 `x` 的實作足跡，而是**別人在指向 x**——把它算進 `x` 的擴散度，
+ * 等於「越多概念認 var_declare 當父概念，var_declare 就越碎裂」，那是反的。
+ *
+ * 這與註解剝離是同一條紀律：**掃描要分得出「這裡實作了它」與「這裡提到它」**。
+ * 見 specs/056-abstract-concept-integrity
+ */
+export function maskAbstractTargets(src: string): string {
+  return src.replace(/("abstractConcept"\s*:\s*)"[^"]*"/g, '$1""')
+}
+
 export function splitCodeAndComments(src: string): { code: string; comments: string } {
   let code = ''
   let comments = ''
@@ -149,7 +162,9 @@ export interface FileHits {
 
 /** 掃單一檔案，回傳它提到的 componentId */
 export function scanFile(relPath: string, ids: readonly string[]): FileHits {
-  const src = fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8')
+  // `"abstractConcept": "x"` 的**值**先遮掉——那是「別人指向 x」，
+  // 不是 x 的實作足跡。見 maskAbstractTargets。
+  const src = maskAbstractTargets(fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8'))
   const { code, comments } = splitCodeAndComments(src)
   const codeLines = code.split('\n')
 

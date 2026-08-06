@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_queue_declare",
     "layer": "lang-core",
-    "abstractConcept": "queue_declare",
+    "abstractConcept": "var_declare",
     "properties": [
       "type",
       "name"
@@ -13,7 +13,7 @@
   {
     "conceptId": "cpp_queue_front",
     "layer": "lang-library",
-    "abstractConcept": "queue_front",
+    "abstractConcept": null,
     "properties": [
       "obj"
     ],
@@ -23,7 +23,7 @@
   {
     "conceptId": "cpp_queue_back",
     "layer": "lang-library",
-    "abstractConcept": "queue_back",
+    "abstractConcept": null,
     "properties": [
       "obj"
     ],

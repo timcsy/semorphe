@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_set_declare",
     "layer": "lang-library",
-    "abstractConcept": "set_declare",
+    "abstractConcept": "var_declare",
     "properties": [
       "type",
       "name"
@@ -13,7 +13,7 @@
   {
     "conceptId": "cpp_set_insert",
     "layer": "lang-library",
-    "abstractConcept": "set_insert",
+    "abstractConcept": null,
     "properties": [
       "obj"
     ],

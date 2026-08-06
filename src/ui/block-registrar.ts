@@ -3,6 +3,7 @@ import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../blocks/block-input-names'
+import { abstractConceptOf } from '../core/language-executors'
 
 export interface WorkspaceAccessors {
   getWorkspace: () => Blockly.Workspace | null
@@ -70,12 +71,9 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (['c_const_declare', 'c_constexpr_declare', 'c_static_declare',
-                     'c_auto_declare', 'c_ref_declare', 'c_pointer_declare',
-                     'cpp_string_declare', 'cpp_vector_declare', 'cpp_stack_declare',
-                     'cpp_queue_declare', 'cpp_map_declare', 'cpp_set_declare',
-                     'cpp_pair_declare', 'cpp_ifstream_declare', 'cpp_ofstream_declare',
-                     'cpp_stringstream_declare'].includes(block.type)) {
+        } else if (abstractConceptOf(block.type) === 'var_declare') {
+          // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
+          // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')
         } else if (block.type === 'c_for_loop') {
           const initBlock = block.getInputTargetBlock?.('INIT')

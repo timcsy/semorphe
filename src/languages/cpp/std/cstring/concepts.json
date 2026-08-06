@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_strlen",
     "layer": "lang-library",
-    "abstractConcept": "strlen",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "str": "expression"
@@ -12,7 +12,7 @@
   {
     "conceptId": "cpp_strcmp",
     "layer": "lang-library",
-    "abstractConcept": "strcmp",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "s1": "expression",
@@ -23,7 +23,7 @@
   {
     "conceptId": "cpp_strcpy",
     "layer": "lang-library",
-    "abstractConcept": "strcpy",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "dest": "expression",
@@ -34,7 +34,7 @@
   {
     "conceptId": "cpp_strcat",
     "layer": "lang-library",
-    "abstractConcept": "strcat",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "dest": "expression",
@@ -45,7 +45,7 @@
   {
     "conceptId": "cpp_strncpy",
     "layer": "lang-library",
-    "abstractConcept": "strncpy",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "dest": "expression",
@@ -57,7 +57,7 @@
   {
     "conceptId": "cpp_strncmp",
     "layer": "lang-library",
-    "abstractConcept": "strncmp",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "s1": "expression",
@@ -69,7 +69,7 @@
   {
     "conceptId": "cpp_strchr",
     "layer": "lang-library",
-    "abstractConcept": "strchr",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "str": "expression",
@@ -80,7 +80,7 @@
   {
     "conceptId": "cpp_strstr",
     "layer": "lang-library",
-    "abstractConcept": "strstr",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "haystack": "expression",
@@ -91,7 +91,7 @@
   {
     "conceptId": "cpp_memset",
     "layer": "lang-library",
-    "abstractConcept": "memset",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "ptr": "expression",
@@ -103,7 +103,7 @@
   {
     "conceptId": "cpp_memcpy",
     "layer": "lang-library",
-    "abstractConcept": "memcpy",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "dest": "expression",

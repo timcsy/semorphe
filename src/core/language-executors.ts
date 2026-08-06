@@ -65,3 +65,24 @@ export function allBuiltinConstants(): ReadonlyMap<string, { type: RuntimeType; 
 export function isBuiltinName(name: string): boolean {
   return builtinValues.has(name)
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// 概念的語言中立父概念
+//
+// 介面層需要知道「這個語言專屬概念，在低層級時該退回哪個通用概念」。那件事
+// 概念自己就宣告了（`abstractConcept`），但介面層拿不到概念註冊表，於是原本
+// 各自寫死了一份 16 行的對照表。
+// 見 specs/056-abstract-concept-integrity
+// ─────────────────────────────────────────────────────────────────────────
+
+const abstractOf = new Map<string, string>()
+
+/** 語言套件載入時推進來 */
+export function declareAbstract(conceptId: string, parent: string): void {
+  abstractOf.set(conceptId, parent)
+}
+
+/** 這個概念的語言中立父概念（沒有就回 undefined） */
+export function abstractConceptOf(conceptId: string): string | undefined {
+  return abstractOf.get(conceptId)
+}

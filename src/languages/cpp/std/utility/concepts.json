@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_pair_declare",
     "layer": "lang-library",
-    "abstractConcept": null,
+    "abstractConcept": "var_declare",
     "properties": [
       "type1",
       "type2",

@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_vector_declare",
     "layer": "lang-library",
-    "abstractConcept": "vector_declare",
+    "abstractConcept": "var_declare",
     "properties": [
       "type",
       "name"
@@ -13,7 +13,7 @@
   {
     "conceptId": "cpp_vector_size",
     "layer": "lang-library",
-    "abstractConcept": "vector_size",
+    "abstractConcept": null,
     "properties": [
       "vector"
     ],
@@ -23,7 +23,7 @@
   {
     "conceptId": "cpp_vector_pop_back",
     "layer": "lang-library",
-    "abstractConcept": "vector_pop_back",
+    "abstractConcept": null,
     "properties": [
       "vector"
     ],
@@ -33,7 +33,7 @@
   {
     "conceptId": "cpp_vector_back",
     "layer": "lang-library",
-    "abstractConcept": "vector_back",
+    "abstractConcept": null,
     "properties": [
       "vector"
     ],

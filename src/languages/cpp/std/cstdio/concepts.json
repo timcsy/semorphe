@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp_printf",
     "layer": "lang-core",
-    "abstractConcept": "printf",
+    "abstractConcept": "print",
     "properties": [
       "format",
       "args"
@@ -16,7 +16,7 @@
   {
     "conceptId": "cpp_scanf",
     "layer": "lang-core",
-    "abstractConcept": "scanf",
+    "abstractConcept": "input",
     "properties": [
       "format",
       "args"
@@ -30,7 +30,7 @@
   {
     "conceptId": "cpp_scanf_expr",
     "layer": "lang-core",
-    "abstractConcept": "scanf_expr",
+    "abstractConcept": "input",
     "properties": [
       "format",
       "args"
