@@ -61,6 +61,30 @@ input:  chain { operator: '>>', rootMatch: { text: 'cin'  } }
 
 FR-013 要求區分「重複登記」與「優先權設計」，判準就是：**同一個 conceptId 在同一 nodeType 上出現一次以上 = 重複登記**。
 
+## F5：判定程序的第一版太弱——被自我驗證測試抓到（實作階段補記）
+
+D1 的第一版只在「雙方判別式皆空」時判 `definitely`。跑起來 `declaration` 那 8 條全被判成 `unknown`，於是 **FR-022 的自我驗證測試失敗**——它就是為了抓這種事而寫的。
+
+追下去發現實情比預期嚴重：
+
+```
+cpp_vector_declare  constraints: [{ field:"type", nodeType:"template_type" }]
+cpp_map_declare     constraints: [{ field:"type", nodeType:"template_type" }]
+cpp_stack_declare   constraints: [{ field:"type", nodeType:"template_type" }]
+cpp_queue_declare   constraints: [{ field:"type", nodeType:"template_type" }]
+cpp_set_declare     constraints: [{ field:"type", nodeType:"template_type" }]
+```
+
+**五條規則的限定條件完全相同。** 它們不是「可能會撞」——是同一條判別式。第一條贏走全部 `vector`／`map`／`stack`／`queue`／`set` 的宣告，**另外四條永遠不會被試到**。（實際仍能運作，是因為勝出那條的 strategy 內部再依模板名分派——但那代表另外四條是**死規則**。）
+
+**修正**：判定的第 2 條改為**子集關係**：
+
+> 若 A 的判別式 ⊆ B 的判別式，則任何滿足 B 的輸入**必然也滿足 A** → `definitely`。
+
+「雙方皆空」與「完全相同」都是它的特例。∅ ⊆ 任何集合，所以「一邊有限定條件、一邊沒有」也正確地落入 `definitely`——**沒有限定條件那條會匹配全部**。
+
+**這是自我否證機制第一次真的救了東西**：沒有 FR-022 那支測試，護欄會回報「確定會撞 0」，看起來一片和平，而實際上有 4 條死規則和 10 對必撞。
+
 ---
 
 ## 技術決策

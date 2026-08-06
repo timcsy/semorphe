@@ -1,0 +1,85 @@
+{
+  "_meta": {
+    "guard": "lift-ambiguity",
+    "measuredAt": "2026-08-06",
+    "rule": "從實際載入後的規則表量測。判定保守：只有能證明互斥才判「不會撞」，判不出來一律「無法確定」。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 如果 `declaration` 那一群（8 條同時盯著宣告語法）**沒有**出現在「確定會撞」裡，代表本護欄壞了，不是那群沒問題。"
+  },
+  "samePriorityGroups": 8,
+  "definitelyCollide": 10,
+  "unknown": 18,
+  "duplicateRegistrations": 11,
+  "groups": [
+    {
+      "nodeType": "unary_expression",
+      "priority": 85,
+      "rules": [
+        "",
+        ""
+      ]
+    },
+    {
+      "nodeType": "comment",
+      "priority": 15,
+      "rules": [
+        "doc_comment",
+        "block_comment"
+      ]
+    },
+    {
+      "nodeType": "declaration",
+      "priority": 10,
+      "rules": [
+        "cpp_pointer_declare",
+        "cpp_ref_declare",
+        "cpp_vector_declare",
+        "cpp_string_declare",
+        "cpp_map_declare",
+        "cpp_stack_declare",
+        "cpp_queue_declare",
+        "cpp_set_declare"
+      ]
+    },
+    {
+      "nodeType": "pointer_expression",
+      "priority": 20,
+      "rules": [
+        "cpp_address_of",
+        "cpp_pointer_deref"
+      ]
+    },
+    {
+      "nodeType": "pointer_expression",
+      "priority": 10,
+      "rules": [
+        "cpp_pointer_deref",
+        "cpp_address_of"
+      ]
+    },
+    {
+      "nodeType": "field_expression",
+      "priority": 10,
+      "rules": [
+        "cpp_struct_member_access",
+        "cpp_struct_pointer_access"
+      ]
+    },
+    {
+      "nodeType": "identifier",
+      "priority": 20,
+      "rules": [
+        "endl",
+        "builtin_constant",
+        "builtin_constant"
+      ]
+    },
+    {
+      "nodeType": "binary_expression",
+      "priority": 105,
+      "rules": [
+        "print",
+        "input"
+      ]
+    }
+  ]
+}
