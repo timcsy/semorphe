@@ -528,11 +528,9 @@
     "properties": [
       "condition"
     ],
-    "children": [
-      {
-        "body": "statements"
-      }
-    ],
+    "children": {
+      "body": "statements"
+    },
     "role": "statement"
   },
   {
@@ -542,11 +540,9 @@
     "properties": [
       "condition"
     ],
-    "children": [
-      {
-        "body": "statements"
-      }
-    ],
+    "children": {
+      "body": "statements"
+    },
     "role": "statement"
   },
   {

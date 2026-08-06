@@ -30,7 +30,7 @@ describe('ConceptRegistry.loadFromJSON', () => {
     expect(varDecl).toBeDefined()
     expect(varDecl!.propertyNames).toContain('type')
     expect(varDecl!.propertyNames).toContain('name')
-    expect(varDecl!.childNames).toContain('init')
+    expect(varDecl!.childNames).toContain('initializer')
   })
 
   it('should list all concepts by layer', () => {

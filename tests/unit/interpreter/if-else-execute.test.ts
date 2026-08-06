@@ -72,9 +72,9 @@ describe('if_else：兩個分支都要能跑', () => {
     const 分支 = (concept: string, thenKey: string): SemanticNode =>
       n('program', {}, {
         body: [
-          n('var_declare', { name: 'x', type: 'int' }, { value: [n('number_literal', { value: 1 })] }),
+          n('var_declare', { name: 'x', type: 'int' }, { initializer: [n('number_literal', { value: 1 })] }),
           n(concept, {}, { condition: [n('number_literal', { value: 1 })], [thenKey]: [
-            n('var_declare', { name: 'x', type: 'int' }, { value: [n('number_literal', { value: 9 })] }),
+            n('var_declare', { name: 'x', type: 'int' }, { initializer: [n('number_literal', { value: 9 })] }),
           ] }),
           n('print', {}, { values: [n('var_ref', { name: 'x' })] }),
         ],
@@ -115,5 +115,44 @@ describe('if_else 的標註要與 if 一致', () => {
 
   it('★ 引入作用域', () => {
     expect(hasAnnotation('if_else', 'introduces_scope')).toBe(true)
+  })
+})
+
+/**
+ * 分支不建子作用域——一個**既有**缺陷，用會出聲的釘子固定住
+ *
+ * ## 為什麼用 `it.fails` 而不是 `it.todo`
+ *
+ * `it.todo` 只有名字，沒有測試本體——缺陷修好了它不會知道，而缺陷帳護欄已經
+ * 量出這個專案有 64 筆那種東西，**它們需要的是重新產生測試，不是打勾**。
+ *
+ * `it.fails` 兩個方向都會說話：
+ *
+ * | 狀態 | 結果 |
+ * |---|---|
+ * | 缺陷還在 | **綠**，而且每次跑都把缺陷印在測試名裡 |
+ * | 缺陷修好了 | **紅**，提醒把這根釘子拔掉 |
+ *
+ * 見 `knowledge/skills/build-guardrail`「明確否決的做法」——永久紅的測試會讓
+ * 「全套綠」失去意義，而所有護欄的價值都建立在那個訊號上。
+ */
+describe('[BLOCKED:executeBody] 分支不建子作用域（既有缺陷，066 只是量到它）', () => {
+  it.fails('★ 分支裡宣告的變數不應該被外層看見', async () => {
+    // `introduces_scope` 標註存在，**而沒有任何東西在讀它**——
+    // `executeBody` 只是逐一執行子節點，不建子作用域。
+    // 修法是讓 `if` / `if_else` / 迴圈的 body 各自 createChild()，
+    // 而那會改變既有行為，需要單獨評估。
+    const out = await run(
+      prog(
+        n('if_else', {}, {
+          condition: [n('number_literal', { value: 1 })],
+          then: [n('var_declare', { name: '僅限分支內', type: 'int' }, { initializer: [n('number_literal', { value: 9 })] })],
+          else: [],
+        }),
+        n('print', {}, { values: [n('var_ref', { name: '僅限分支內' })] }),
+      ),
+    )
+    // 作用域正確的話，外層讀不到它 → 這裡會丟錯而不是印出 9
+    expect(out).not.toContain('9')
   })
 })
