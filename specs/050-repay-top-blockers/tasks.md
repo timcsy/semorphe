@@ -25,7 +25,7 @@ description: "Task list for 050-repay-top-blockers"
 
 **Purpose**: 本功能不需要新的基礎設施——三處都用既有機制。此階段只確認起點乾淨。
 
-- [ ] T001 執行 `npm test` 確認既有測試全綠，並記下四項量測的當前數字作為回歸基準（`tests/baselines/*.json`）
+- [X] T001 執行 `npm test` 確認既有測試全綠，並記下四項量測的當前數字作為回歸基準（`tests/baselines/*.json`）
 
 ---
 
@@ -37,17 +37,17 @@ description: "Task list for 050-repay-top-blockers"
 
 ### 先紅：把兩個現象都釘住
 
-- [ ] T002 [US1] 在 `tests/integration/roundtrip-array-initializer.test.ts` 寫斷言：帶初始值的陣列宣告，其初始值必須出現在語義結構中（**此時應紅**——研究實測值會消失）
-- [ ] T003 [US1] 在同檔加斷言：**做不到時必須降信心並記原因**——目前 `int a[3]={1,2,3}` 標的是最高信心（**此時應紅**，這是本故事的核心，見 quickstart 情境 2）
-- [ ] T004 [US1] 在同檔加斷言：三態可區分——`int a[3];`（欄位不存在）／`int a[3]={};`（空陣列）／`int a[3]={1,2,3}`（有內容）
-- [ ] T005 [US1] 在同檔加斷言：走完「辨識 → 產生程式碼」一圈後初始值等價，涵蓋**數值、字元、字串、多維**（多維的層次不得壓平）
+- [X] T002 [US1] 在 `tests/integration/roundtrip-array-initializer.test.ts` 寫斷言：帶初始值的陣列宣告，其初始值必須出現在語義結構中（**此時應紅**——研究實測值會消失）
+- [X] T003 [US1] 在同檔加斷言：**做不到時必須降信心並記原因**——目前 `int a[3]={1,2,3}` 標的是最高信心（**此時應紅**，這是本故事的核心，見 quickstart 情境 2）
+- [X] T004 [US1] 在同檔加斷言：三態可區分——`int a[3];`（欄位不存在）／`int a[3]={};`（空陣列）／`int a[3]={1,2,3}`（有內容）
+- [X] T005 [US1] 在同檔加斷言：走完「辨識 → 產生程式碼」一圈後初始值等價，涵蓋**數值、字元、字串、多維**（多維的層次不得壓平）
 
 ### 後綠：實作
 
-- [ ] T006 [US1] 在 `src/languages/cpp/core/lifters/strategies.ts` 為陣列宣告加上初始值分支：把初始值列表逐個辨識成 `values` 子槽（data-model 契約 1）
-- [ ] T007 [US1] 在同處實作多維：巢狀初始值列表遞迴成巢狀節點，**不壓平**
-- [ ] T008 [US1] 在同處實作可見降級：無法完整保留時降低該節點的信心等級並設降級原因——**用既有的 `ConfidenceLevel` 與 `DegradationCause`，不新增型別**
-- [ ] T009 [US1] 確認無初始值的陣列宣告行為**完全未變**（FR-006），跑既有測試驗證
+- [X] T006 [US1] 在 `src/languages/cpp/core/lifters/strategies.ts` 為陣列宣告加上初始值分支：把初始值列表逐個辨識成 `values` 子槽（data-model 契約 1）
+- [X] T007 [US1] 在同處實作多維：巢狀初始值列表遞迴成巢狀節點，**不壓平**
+- [X] T008 [US1] 在同處實作可見降級：無法完整保留時降低該節點的信心等級並設降級原因——**用既有的 `ConfidenceLevel` 與 `DegradationCause`，不新增型別**
+- [X] T009 [US1] 確認無初始值的陣列宣告行為**完全未變**（FR-006），跑既有測試驗證
 
 **Checkpoint**: T002–T005 全綠 → US1 可獨立交付
 

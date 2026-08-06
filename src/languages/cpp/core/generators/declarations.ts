@@ -93,7 +93,16 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     const name = node.properties.name ?? 'arr'
     const sizeNodes = node.children.size ?? []
     const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : (node.properties.size ?? '10')
-    return `${indent(ctx)}${type} ${name}[${size}];\n`
+    // 初始值三態：欄位不存在 → 無初始化；[] → `= {}`；有內容 → `= {…}`
+    const values = node.children.values
+    const init = values === undefined ? '' : ` = {${values.map(v => generateExpression(v, ctx)).join(', ')}}`
+    return `${indent(ctx)}${type} ${name}[${size}]${init};\n`
+  })
+
+  // 巢狀初始值列表（多維陣列的一層）——只在 array_declare 的 values 下出現
+  g.set('cpp_initializer_list', (node, ctx) => {
+    const values = node.children.values ?? []
+    return `{${values.map(v => generateExpression(v, ctx)).join(', ')}}`
   })
 
   g.set('array_access', (node, ctx) => {

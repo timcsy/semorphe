@@ -3,6 +3,73 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 
+/**
+ * 把陣列宣告的初始值列表掛上 `values` 子槽。
+ *
+ * 三態（見 specs/050-repay-top-blockers/data-model.md 契約 1）：
+ *   int a[3];          → 不設 values 欄位
+ *   int a[3] = {};     → values: []
+ *   int a[3] = {1,2};  → values: [節點, 節點]
+ *
+ * **做不到的時候要出聲。** 若有元素無法辨識，降低整個節點的 confidence 並記
+ * 錄原因——絕不回傳一個標著 high 卻少了值的結構。那是 P6 誠實降級明文禁止的
+ * 「看起來合理」的結構，也是既有教訓「靜默降級是 bug 的藏身之處」的形狀。
+ */
+function attachInitializer(
+  node: SemanticNode,
+  valueNode: AstNode | null | undefined,
+  ctx: LiftContext,
+): SemanticNode {
+  // 沒有初始值——三態的第一態，不設欄位
+  if (!valueNode) return node
+
+  // 非初始值列表的初始化寫法（如 int a[] = "abc"）：整個當單一初始值處理
+  if (valueNode.type !== 'initializer_list') {
+    const single = ctx.lift(valueNode)
+    if (single) {
+      node.children.values = [single]
+      return node
+    }
+    return degrade(node, `初始化寫法 ${valueNode.type} 無法辨識`)
+  }
+
+  const elements = valueNode.namedChildren
+  const lifted: SemanticNode[] = []
+  let lost = 0
+
+  for (const el of elements) {
+    // 巢狀列表（多維）：遞迴，層次不壓平
+    if (el.type === 'initializer_list') {
+      const inner = createNode('cpp_initializer_list', {})
+      const withValues = attachInitializer(inner, el, ctx)
+      lifted.push(withValues)
+      continue
+    }
+    const one = ctx.lift(el)
+    if (one) lifted.push(one)
+    else lost++
+  }
+
+  node.children.values = lifted
+
+  // 有元素掉了 → 必須出聲
+  if (lost > 0) {
+    return degrade(node, `初始值列表有 ${lost} 個元素無法辨識`)
+  }
+  return node
+}
+
+/** 降信心並記錄原因——「可見降級」的唯一入口 */
+function degrade(node: SemanticNode, reason: string): SemanticNode {
+  node.metadata = {
+    ...node.metadata,
+    confidence: 'inferred',
+    degradationCause: 'unsupported',
+    rawCode: node.metadata?.rawCode ?? reason,
+  }
+  return node
+}
+
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
   // 2D Array declarator: int arr[3][4] — nested array_declarator
   if (decl.type === 'array_declarator' && decl.namedChildren[0]?.type === 'array_declarator') {
@@ -81,9 +148,10 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const arrName = nameNode.namedChildren[0]?.text ?? 'arr'
     const sizeNode = nameNode.namedChildren[1]
     const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
-    return createNode('array_declare', { type, name: arrName }, {
+    const node = createNode('array_declare', { type, name: arrName }, {
       size: sizeChild ? [sizeChild] : [],
     })
+    return attachInitializer(node, decl.childForFieldName('value'), ctx)
   }
 
   const valueNode = decl.childForFieldName('value')

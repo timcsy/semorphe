@@ -3,10 +3,11 @@
     "guard": "defect-ledger",
     "measuredAt": "2026-08-06",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ／ 2026-08-06 上調 85→86：新增一筆 [BLOCKED:cpp_string_declare]，記錄 `string s[2]={...}` 被誤判成字串宣告（連名字都變成垃圾）。這是實作 050 US1 時發現的**新缺陷**，不是把既有失敗藏起來——棘輪無法分辨兩者，所以由本次顯式上調並在此說明。"
   },
-  "total": 85,
+  "total": 86,
   "byBlocker": {
+    "cpp_string_declare": 1,
     "print": 21,
     "array_declare": 19,
     "cpp_pointer_declare": 9,
