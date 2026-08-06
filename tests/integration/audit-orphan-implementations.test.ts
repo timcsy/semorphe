@@ -24,7 +24,7 @@
  * 見 specs/055-finish-executor-move/research.md F2
  */
 import { describe, it, expect } from 'vitest'
-import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta } from '../helpers/guardrail'
+import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -102,7 +102,7 @@ describe('護欄：有實作卻沒有宣告', () => {
       `新增的孤兒實作：${新增.join('、')}\n` +
         '加執行器之前要先宣告概念——否則它的其餘四條路有沒有缺口，沒有人看得到。',
     ).toEqual([])
-    expect(found.length).toBeLessThanOrEqual(b.orphans)
+    assertRatchet([['孤兒實作', found.length, b.orphans]])
   })
 })
 

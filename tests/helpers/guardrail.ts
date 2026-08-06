@@ -94,3 +94,36 @@ export function listSourceFiles(relDir: string, exts = ['.ts']): string[] {
   walk(abs)
   return out.sort()
 }
+
+/**
+ * 棘輪：**兩個方向都要出聲**。
+ *
+ * ## 為什麼改善也要紅
+ *
+ * 棘輪只擋上升的話，它不會自己收緊。實際發生過：一個功能把「孤兒實作」從 4
+ * 修到 1，**基線卻還寫著 4**——那等於默許它退回 4 而不會有人發現。
+ *
+ * 改善訊息每次都印，但沒有人會為了一行 stdout 去改檔案。**只有紅色會。**
+ *
+ * 下調基線是十秒鐘的事，而且本來就該與那次改善同一個 commit——
+ * 「不准紅著過夜」講的是不要放著，不是不要紅。
+ *
+ * @param rows [名稱, 現值, 基線值][]
+ */
+export function assertRatchet(rows: readonly [string, number, number][]): void {
+  const worse = rows.filter(([, now, base]) => now > base)
+  const better = rows.filter(([, now, base]) => now < base)
+  if (worse.length > 0) {
+    throw new Error(
+      '棘輪退步：\n' +
+        worse.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`).join('\n'),
+    )
+  }
+  if (better.length > 0) {
+    throw new Error(
+      '棘輪有改善，**請下調基線並與這次改善一起 commit**：\n' +
+        better.map(([n, now, base]) => `  ✔ ${n}: ${base} → ${now}`).join('\n') +
+        '\n（棘輪只擋上升的話不會自己收緊——舊基線會默許退回去而沒有人發現）',
+    )
+  }
+}

@@ -22,7 +22,7 @@
  * 不是抽象層健康。報表同時印出兩個數字就是為了讓這件事看得出來。
  */
 import { describe, it, expect } from 'vitest'
-import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta } from '../helpers/guardrail'
+import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { allComponentDefs } from '../helpers/component-scan'
 
 const RULE = '每個 abstractConcept 的目標，必須是一個真的存在的概念。'
@@ -101,7 +101,7 @@ describe('護欄：抽象層完整性', () => {
       `新增的懸空宣告：${新增.join('、')}\n` +
         '宣告父概念之前先確認那個概念存在——指不到的宣告與沒有宣告產出一樣。',
     ).toEqual([])
-    expect(dangling.length).toBeLessThanOrEqual(b.dangling)
+    assertRatchet([['懸空的父概念宣告', dangling.length, b.dangling]])
   })
 })
 

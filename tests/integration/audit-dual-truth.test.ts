@@ -25,7 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, REPO_ROOT, listSourceFiles, type BaselineMeta } from '../helpers/guardrail'
+import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, REPO_ROOT, listSourceFiles, type BaselineMeta , assertRatchet , assertRatchet } from '../helpers/guardrail'
 
 const RULE = '比對 block-registrar 的動態註冊與 JSON blockDef 的 input 名稱集合。'
 
@@ -192,7 +192,7 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
       `新增的雙重定義：${新增.join('、')}\n` +
         '同一顆積木不該有兩處定義——JSON 是消費者（PatternRenderer）讀的那一份。',
     ).toEqual([])
-    expect(both.length).toBeLessThanOrEqual(b.bothDefined)
+    assertRatchet([['兩處都有定義', both.length, b.bothDefined]])
   })
 })
 

@@ -24,7 +24,7 @@
  * `★ 注入` 那支才是這條護欄的健康檢查。
  */
 import { describe, it, expect } from 'vitest'
-import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta } from '../helpers/guardrail'
+import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 
 const RULE = '從實際建構出來的直譯器量測：同一 conceptId 呼叫 register() 超過一次即計入。'
@@ -100,13 +100,8 @@ describe('護欄：執行器重複註冊', () => {
   it('棘輪：不得上升', () => {
     const b = loadBaseline<DupBaseline>('executor-duplicates')
     const 新增 = dups.map((d) => d.concept).filter((c) => !b.concepts.includes(c))
-    if (dups.length < b.duplicateConcepts) {
-      printReport('執行器重複註冊：有改善，可下調基線', [
-        `  ✔ 重複概念：${b.duplicateConcepts} → ${dups.length}`,
-      ])
-    }
     expect(新增, `新增的重複註冊：${新增.join('、')}`).toEqual([])
-    expect(dups.length).toBeLessThanOrEqual(b.duplicateConcepts)
+    assertRatchet([['重複註冊的概念', dups.length, b.duplicateConcepts]])
   })
 })
 

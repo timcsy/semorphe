@@ -24,7 +24,7 @@
  * 見 specs/052-storage-integrity-gate/contracts/storage.md
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta } from '../helpers/guardrail'
+import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { StorageService } from '../../src/core/storage'
 import { SAVED_STATE_FIELDS, CURRENT_VERSION, UPGRADES } from '../../src/core/storage-version'
 import type { SavedState } from '../../src/core/storage'
