@@ -264,14 +264,6 @@ int main() {
 
   describe('known lifter limitations (not cstdlib-specific)', () => {
 
-    it.todo('[BLOCKED:array_declare] fuzz_3: exit in helper function — array initializer {10, 25, 0, -3, 99} lost (pre-existing lifter limitation: array initializer values not preserved)')
-
-    it.todo('[BLOCKED:array_declare] fuzz_4: abs with function chaining — array initializer {-20, 5, 0, 15, -8, 30} lost (pre-existing lifter limitation: array initializer values not preserved)')
-
-    it.todo('[BLOCKED:array_declare] fuzz_5: srand/rand with switch — array initializer {0, 0, 0} lost (pre-existing lifter limitation: array initializer values not preserved)')
-
     it.todo('[UNSUPPORTED:逗號運算子（comma operator）尚無對應概念] fuzz_9: atof with comma operator — comma operator in condition (result = num / den, true) not supported (pre-existing lifter limitation: comma operator in expressions)')
-
-    it.todo('[BLOCKED:array_declare] fuzz_10: exit with multiple functions — array initializer {50, 65, 30, 95, 45} lost (pre-existing lifter limitation: array initializer values not preserved)')
   })
 })

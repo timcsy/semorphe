@@ -175,8 +175,6 @@ cout << rows << endl;`
   // string array initializer list and istringstream which are not supported.
   // Stack operations (push/pop/top) ARE correctly lifted.
 
-  it.todo('[BLOCKED:array_declare] fuzz_2: stack expression evaluator — needs array initializer list and istringstream support')
-
   // ─── stack fuzz: bracket matching (stack-only, P1 stable) ───
 
   describe('stack fuzz: bracket matching (stack concepts only)', () => {

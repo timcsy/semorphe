@@ -72,7 +72,6 @@ int main() {
 }`
 
   // BUG: initializer list values are lost during lift
-  it.todo('[BLOCKED:array_declare] executes correctly (initializer list values lost during lift)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -127,7 +126,6 @@ int main() {
 }`
 
   // BUG: initializer list values lost, pointer arithmetic itself is correct
-  it.todo('[BLOCKED:array_declare] executes correctly (initializer list values lost during lift)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -344,6 +342,21 @@ int main() {
 })
 
 // ─── Known issues summary ───
-describe('known issues: arrays & pointers', () => {
-  it.todo('[BLOCKED:array_declare] array initializer list {val1, val2, ...} should be preserved during lift (BUG-1)')
+describe('曾經的已知問題：陣列與指標', () => {
+  // 這個區塊原本只有一支 `it.todo`，阻斷者寫著「陣列初始化列表在辨識時遺失」。
+  // **082 證明那個阻斷者早就不存在**（050 修好了，而沒有人回頭看）。
+  //
+  // 留一個空的 describe 是殼——它看起來覆蓋了一個情形。改成真的回歸測試，
+  // 完整程式在 `tests/integration/array-initializer-programs.test.ts`。
+  it('★ 陣列初始化列表：來回轉換與執行都正確', async () => {
+    const code = 'int main(){ int a[4] = {3, 1, 4, 1}; int s = 0; for (int i=0;i<4;i++){ s = s + a[i]; } cout << s; return 0; }'
+    expect(roundTrip(`#include <iostream>
+using namespace std;
+${code}`)).toMatch(/\{[^}]*,[^}]*\}/)
+    const interp = new SemanticInterpreter({ maxSteps: 100000 })
+    await interp.execute(lifter.lift(tsParser.parse(`#include <iostream>
+using namespace std;
+${code}`)!.rootNode as never)!)
+    expect(interp.getOutput().join('').trim(), '初始值沒有進到陣列裡').toBe('9')
+  })
 })

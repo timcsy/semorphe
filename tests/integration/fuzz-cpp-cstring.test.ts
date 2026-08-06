@@ -150,22 +150,18 @@ int main() {
 
   // fuzz_02: strncpy/memset with char array initializer — STDOUT_DIFF
   // Root cause: char s[] = "text" array initializer lost (pre-existing lifter limitation)
-  it.todo('[BLOCKED:array_declare] should preserve char array string literal initializers (fuzz_02: strncpy/memset)')
 
   // fuzz_03: strcmp/strncmp with pointer arithmetic — STDOUT_DIFF
   // Root cause: char s[] = "text" initializer lost + const params (pre-existing)
-  it.todo('[BLOCKED:array_declare] should roundtrip strcmp/strncmp with array initializers (fuzz_03)')
 
   // fuzz_05: memcpy/memset with char array initializer — STDOUT_DIFF
   // Root cause: char s[] = "text" array initializer lost (pre-existing)
-  it.todo('[BLOCKED:array_declare] should roundtrip memcpy/memset with initialized char arrays (fuzz_05)')
 
   // fuzz_07: strcat/strncpy/strcpy tokenization — COMPILE_FAIL
   // Root cause: pointer declaration in for-loop init lost (pre-existing)
 
   // fuzz_08: memcpy/memset/strcpy/strncmp packed data — COMPILE_FAIL
   // Root cause: multi-declaration arrays lose size; char a[8],b[8] → char a, char b (pre-existing)
-  it.todo('[BLOCKED:array_declare] should preserve array sizes in multi-declarations (fuzz_08)')
 
   // fuzz_09: strchr/strcat/strncpy removeChar — COMPILE_FAIL
   // Root cause: while((found=strchr(...))!=nullptr) assignment-in-condition pattern (pre-existing)
