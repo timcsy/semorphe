@@ -1,7 +1,20 @@
 import type { SemanticNode } from './types'
+import { CURRENT_VERSION } from './storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB limit
+
+/**
+ * 濾掉值為 `undefined` 的欄位。
+ *
+ * 直接展開的話，「這次沒提供」（`undefined`）會覆蓋掉「上次存的值」——
+ * 那是換一種方式丟資料。
+ */
+function definedOnly<T extends object>(obj: T): Partial<T> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(obj)) if (v !== undefined) out[k] = v
+  return out as Partial<T>
+}
 
 export interface SavedState {
   version: number
@@ -24,19 +37,32 @@ export class StorageService {
     this.defaultLanguage = defaultLanguage
   }
 
-  /** Save state to localStorage */
+  /**
+   * Save state to localStorage.
+   *
+   * 合併用**展開**而不是逐欄位列舉。列舉表與型別宣告是兩份東西，選填欄位漏
+   * 列舉時編譯器不會發現——`blockStyleId` 與 `locale` 就是這樣被丟了。展開
+   * 之後，漏欄位在結構上不可能發生。
+   *
+   * 見 specs/052-storage-integrity-gate/research.md F5（消除，不是偵測）
+   */
   save(state: Partial<SavedState>): boolean {
     try {
       const existing = this.load()
+      const defaults: SavedState = {
+        version: CURRENT_VERSION,
+        tree: null,
+        blocklyState: {},
+        code: '',
+        language: this.defaultLanguage,
+        styleId: 'apcs',
+        lastModified: '',
+      }
       const merged: SavedState = {
-        version: 1,
-        tree: state.tree ?? existing?.tree ?? null,
-        blocklyState: state.blocklyState ?? existing?.blocklyState ?? {},
-        code: state.code ?? existing?.code ?? '',
-        language: state.language ?? existing?.language ?? this.defaultLanguage,
-        styleId: state.styleId ?? existing?.styleId ?? 'apcs',
-        topicId: state.topicId ?? existing?.topicId,
-        enabledBranches: state.enabledBranches ?? existing?.enabledBranches,
+        ...defaults,
+        ...(existing ?? {}), // 未知欄位一併帶下去（FR-017）
+        ...definedOnly(state), // 值為 undefined 的欄位不得覆蓋既有值
+        version: CURRENT_VERSION,
         lastModified: new Date().toISOString(),
       }
       const json = JSON.stringify(merged)
