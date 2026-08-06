@@ -26,12 +26,12 @@ description: "Task list for 053-declare-noop-execute"
 >
 > research F2b 已經現形過一次：靜態掃描的分類答案是**反的**。抓到它的是先做的實測與它矛盾。**先跑，再分類。**
 
-- [ ] T001 執行 `npm test` 確認全綠，記下六項量測作為回歸基準
-- [ ] T002 建立 `tests/integration/noop-classification.test.ts`：為那份清單裡**每一個**概念寫一支最小 C++ 程式與**人工寫定的期望輸出**，跑直譯器、印出 34 列的表（程式碼／期望／實得／是否相符）
+- [X] T001 執行 `npm test` 確認全綠，記下六項量測作為回歸基準
+- [X] T002 建立 `tests/integration/noop-classification.test.ts`：為那份清單裡**每一個**概念寫一支最小 C++ 程式與**人工寫定的期望輸出**，跑直譯器、印出 34 列的表（程式碼／期望／實得／是否相符）
   > 這一步**只量不判**。表印出來之後才進 T003。
-- [ ] T003 依 T002 的實測結果分類，寫入 `specs/053-declare-noop-execute/classification.md`：每一列註明判定（`declarative`／`consumed-by-parent`／`還沒實作`）與**依據**（實測輸出，不是意見）
+- [X] T003 依 T002 的實測結果分類，寫入 `specs/053-declare-noop-execute/classification.md`：每一列註明判定（`declarative`／`consumed-by-parent`／`還沒實作`）與**依據**（實測輸出，不是意見）
   > **若 34 個全部通過**：停下來，回頭看最小程式是不是太簡單（quickstart 情境 0）。**那不是好消息。**
-- [ ] T004 在 `classification.md` 標出 3 個死條目（`cpp:include`／`cpp:include_local`／`cpp:using_namespace`，概念註冊表裡不存在）
+- [X] T004 在 `classification.md` 標出 3 個死條目（`cpp:include`／`cpp:include_local`／`cpp:using_namespace`，概念註冊表裡不存在）
 
 **Checkpoint**: 分類有實測依據 → 後續 Story 可開工
 
