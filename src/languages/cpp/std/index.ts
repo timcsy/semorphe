@@ -108,6 +108,7 @@ import sstreamConcepts from './sstream/concepts.json'
 import sstreamBlocks from './sstream/blocks.json'
 import { registerGenerators as registerSstreamGenerators } from './sstream/generators'
 import { registerLifters as registerSstreamLifters } from './sstream/lifters'
+import { registerExecutors as registerSstreamExecutors } from './sstream/executors'
 
 // fstream
 import fstreamConcepts from './fstream/concepts.json'
@@ -162,7 +163,7 @@ export const allStdModules: StdModule[] = [
   makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, registerCstdlibExecutors),
   makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, registerCctypeExecutors),
   makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, registerNumericExecutors),
-  makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, executorsStillInCore),
+  makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, registerSstreamExecutors),
   makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters, executorsStillInCore),
   makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters, registerUtilityExecutors),
 ]

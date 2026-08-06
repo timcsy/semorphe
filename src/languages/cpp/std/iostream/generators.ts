@@ -56,7 +56,10 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
       ? valueNodes.map(v => generateExpression(v, ctx))
       : [String(node.properties.variable ?? 'x')]
     if (style.io_style === 'cout') {
-      const expr = `cin >> ${vars.join(' >> ')}`
+      // 來源可能是一個**字串串流變數**（`in >> a`），不一定是標準輸入。
+      // 一律產成 `cin` 的話，`istringstream` 的程式來回轉換之後會讀錯地方。
+      const src = node.properties.from !== undefined ? String(node.properties.from) : 'cin'
+      const expr = `${src} >> ${vars.join(' >> ')}`
       if (ctx.isExpression) return expr
       return `${indent(ctx)}${expr};\n`
     }

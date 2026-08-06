@@ -4,6 +4,7 @@ import type { AstNode, NodeLifter, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
 import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
+import { liftPostProcessors } from './post-processors'
 
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
@@ -111,6 +112,22 @@ export class Lifter {
           addSourceRange(converted)
           setConfidenceHigh(converted)
           return converted
+        }
+        // 語言套件宣告的後處理——**判準只有語言套件知道**的改判走這裡。
+        //
+        // 觸發它的例子是 `>>`：`num >> i`（位移）與 `in >> a`（串流讀取）
+        // 語法完全相同，分得出來的唯一依據是根變數的型別，而型別名是 C++ 的。
+        // 核心不認得任何型別名——判準推進來，見 `post-processors.ts`。
+        //
+        // 位置與上面那個 `func_call_expr → func_call` 相同、理由相同：宣告式
+        // 的 pattern 查不到辨識脈絡，所以改判只能發生在 pattern 跑完之後。
+        for (const postProcess of liftPostProcessors()) {
+          const converted = postProcess(patternResult, ctx)
+          if (converted) {
+            addSourceRange(converted)
+            setConfidenceHigh(converted)
+            return converted
+          }
         }
         addSourceRange(patternResult)
         setConfidenceHigh(patternResult)

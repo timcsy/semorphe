@@ -2,6 +2,7 @@ import type { Lifter } from '../../../../core/lift/lifter'
 import type { SemanticNode } from '../../../../core/types'
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import { createNode } from '../../../../core/semantic-tree'
+import type { LiftPostProcessor } from '../../../../core/lift/post-processors'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
@@ -108,9 +109,24 @@ export function registerExpressionLifters(lifter: Lifter): void {
       }
     }
     if (op === '>>') {
-      const cinValues = extractCinChain(node, ctx)
-      if (cinValues) {
-        return createNode('input', {}, { values: cinValues })
+      const cin = extractCinChain(node, ctx)
+      if (cin) {
+        // ⚠️ **`num >> i`（位移）與 `in >> a`（串流讀取）語法完全相同。**
+        //
+        // 曾經試過一條「根是任意識別字」的宣告式規則——它把位移運算也認領走了。
+        // P3：「新增 pattern 不得改變既有 pattern 的匹配結果——**歧義在註冊時
+        // 仲裁，不在執行時碰運氣**。」那條規則就是在碰運氣，已撤。
+        //
+        // 分得出來的唯一依據是**根變數的型別**，而那要查辨識脈絡（076 接上的）。
+        // 查不到型別就**不當串流**——保守方向，位移是遠比串流常見的寫法。
+        if (cin.from === 'cin') {
+          return createNode('input', {}, { values: cin.values })
+        }
+        const rootType = ctx.data.getType(cin.from)
+        if (rootType === 'istringstream' || rootType === 'stringstream') {
+          return createNode('input', { from: cin.from }, { values: cin.values })
+        }
+        // 不是串流 → 落到下面的一般二元運算（位移）
       }
     }
 
@@ -290,7 +306,7 @@ function extractCoutChain(node: AstNode, ctx: LiftContext): SemanticNode[] | nul
 /**
  * Extract cin >> x >> y chain. Returns array of semantic nodes (var_ref or array_access) or null.
  */
-function extractCinChain(node: AstNode, ctx: LiftContext): SemanticNode[] | null {
+function extractCinChain(node: AstNode, ctx: LiftContext): { values: SemanticNode[]; from: string } | null {
   const values: SemanticNode[] = []
   let current: AstNode | null = node
 
@@ -310,6 +326,73 @@ function extractCinChain(node: AstNode, ctx: LiftContext): SemanticNode[] | null
     current = current.childForFieldName('left')
   }
 
-  if (!current || current.text !== 'cin') return null
-  return values.length > 0 ? values : null
+  if (!current) return null
+  // 來源不是 `cin` 就整條放棄——**於是 `in >> a` 這種從字串串流讀的寫法
+  // 完全辨識不出來**。改成回報來源，由呼叫端決定怎麼記。
+  return values.length > 0 ? { values, from: current.text } : null
+}
+
+/**
+ * `in >> a >> b` → 從字串串流讀值，而不是位元位移。
+ *
+ * ⚠️ 這條判準**原本寫在核心層**（`src/core/lift/lifter.ts`）。搬過來的理由
+ * 是 P9：判準裡寫著 `istringstream` / `stringstream`，那是 C++ 的型別名，
+ * 拔掉 C++ 之後核心不該還認得它們。
+ *
+ * **中立性與語法耦合兩條護欄都看不見那筆耦合**——一個找元件身分，一個找
+ * 語法符號，而型別名兩者皆非。叫的是**就近性**護欄（`input` / `var_ref` /
+ * `arithmetic` 的擴散度各 +1 檔），而它量的甚至不是語言耦合。
+ * 見 `knowledge/history/021`「選了哪一維會消失在數字裡」。
+ *
+ * 放在這個檔而不是新開一個，也是就近性：`>>` 的辨識與 `extractCinChain`
+ * 都在這裡，同一個元件的實作該待在一起。
+ */
+/** 哪些型別的 `>>` 是「讀值」而不是「位移」 */
+const READ_STREAM_TYPES = new Set(['istringstream', 'stringstream'])
+
+export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
+  if (node.conceptId !== 'arithmetic' || node.properties?.operator !== '>>') return null
+
+  // 走到最左邊的根，沿路收集右運算元。
+  //
+  // ⚠️ **辨識是由內往外的。** `in >> a >> b >> c` 的巢狀是
+  // `((in >> a) >> b) >> c`，而內層的 `in >> a` **已經先被改判成 `input`**
+  // ——所以外層看到的左子節點是一個 `input`，不是 `arithmetic`。
+  //
+  // 第一版沒有處理這件事，於是只收到 `a` 就停了。**症狀是「讀到第一個值
+  // 就不動」**，看起來像串流本身壞掉，而其實是走訪停太早。
+  const targets: SemanticNode[] = []
+  let cur: SemanticNode | undefined = node
+  let rootName: string | null = null
+
+  while (cur) {
+    if (cur.conceptId === 'input' && cur.properties?.from !== undefined) {
+      // 內層已經改判過——接續它收集到的目標
+      targets.unshift(...(cur.children?.values ?? []))
+      rootName = String(cur.properties.from)
+      break
+    }
+    if (cur.conceptId !== 'arithmetic' || cur.properties?.operator !== '>>') return null
+    const right = (cur.children?.right ?? [])[0]
+    if (!right || right.conceptId !== 'var_ref') return null
+    targets.unshift(right)
+    const left: SemanticNode | undefined = (cur.children?.left ?? [])[0]
+    if (!left) return null
+    if (left.conceptId === 'var_ref') {
+      rootName = String(left.properties?.name ?? '')
+      break
+    }
+    cur = left
+  }
+
+  if (rootName === null || targets.length === 0) return null
+
+  // 判準是**根變數的型別**（辨識脈絡查得到，076 接上的）。查不到就不改判
+  // ——保守方向：位移遠比串流讀取常見。
+  const rootType: string | null = ctx.data.getType(rootName)
+  if (rootType === null || !READ_STREAM_TYPES.has(rootType)) return null
+
+  // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
+  const cloned = targets.map((v) => createNode('var_ref', { ...v.properties }, {}))
+  return createNode('input', { from: rootName }, { values: cloned })
 }

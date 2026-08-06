@@ -42,6 +42,29 @@ export const DEFINITE_TOKENS: SyntaxToken[] = [
   { token: '->', why: 'C/C++ 透過指標取成員。TypeScript 的箭頭函式是 `=>`，不同形' },
   { token: '/**', why: '文件註解開頭。核心不該產生也不該剝除任何語言的註解符號' },
   { token: '*/', why: '區塊註解結尾。核心不該產生也不該剝除任何語言的註解符號' },
+  // ── 標準函式庫的型別名（095 加入）───────────────────────────────────────
+  //
+  // ⚠️ **這一組是耦合的第三種形式，而三條護欄裡沒有一條數得到它。**
+  //
+  // 095 實作 `istringstream` 時，判斷「`>>` 是讀值還是位移」的規則第一版寫在
+  // `src/core/lift/lifter.ts`——核心層於是出現了兩個寫死的 C++ 型別字串。
+  //
+  // | 護欄 | 量什麼 | 有沒有數到 |
+  // |---|---|---|
+  // | 中立性 | 元件身分字串 | ✗ 型別名不是身分 |
+  // | 語法耦合（當時） | 前置處理指令／`std::`／註解符號 | ✗ 清單裡沒有型別名 |
+  // | 就近性 | 一個元件的實作散在幾個檔 | ✓ 但它量的不是語言耦合 |
+  //
+  // **叫的那一條量的甚至不是這件事。** 見 `knowledge/history/021`。
+  //
+  // 這幾個為什麼是「確定」而不是「無法確定」：`int`／`string` 同形於核心的
+  // 執行期型別標籤，這幾個**在 TypeScript 裡沒有任何合法用途**。而含它們的
+  // 元件身分（`cpp_istringstream_declare`）帶著底線前綴，被詞界規則排除——
+  // 那條規則是為 `'u_endl'` 加的，這裡直接受益。
+  { token: 'istringstream', why: 'C++ 的輸入字串串流型別，TypeScript 沒有對應物' },
+  { token: 'ostringstream', why: 'C++ 的輸出字串串流型別，同上' },
+  { token: 'stringstream', why: 'C++ 的雙向字串串流型別，同上' },
+  { token: 'size_t', why: 'C/C++ 的大小型別，TypeScript 用 number' },
 ]
 
 /**
@@ -61,6 +84,14 @@ export const AMBIGUOUS_TOKENS: SyntaxToken[] = [
   { token: '<<', why: 'C++ 的串流插入，也是任何語言的左移運算子' },
   { token: '>>', why: 'C++ 的串流抽取，也是任何語言的右移運算子' },
   { token: '::', why: 'C++ 的解析運算子，但也可能是別的語言的路徑分隔' },
+  // ⚠️ 這五個**看起來**該是「確定」，實測後不是：它們在 `src/ui/` 是**風格
+  // 偏好的識別字**（`io_style === 'printf' ? 'cstdio' : 'iostream'`），不是被
+  // 產生出去的語法。判不出來就不判——`build-guardrail` 第 5 步。
+  { token: 'printf', why: '既是 C 的函式名，也是 UI 的 io_style 風格識別字' },
+  { token: 'scanf', why: '同 printf' },
+  { token: 'cout', why: '既是 iostream 的物件名，也出現在 UI 的風格名稱字串裡' },
+  { token: 'cin', why: '同 cout' },
+  { token: 'iostream', why: '既是 C++ 標頭名，也是 UI 的 ioPreference 值' },
   {
     token: 'endl',
     why:

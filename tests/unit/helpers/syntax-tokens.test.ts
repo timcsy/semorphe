@@ -57,6 +57,17 @@ describe('合成注入（正向）：含語法記號的字串必須被報出', (
   it('★ 註解符號——059 修掉的正是這一類', () => {
     expect(scan(`return indent + '/** ' + text`).definite.map((h) => h.token)).toContain('/**')
   })
+
+  it('★ 標準函式庫型別名——095 寫錯的正是這一行', () => {
+    // 這是我在 `src/core/lift/lifter.ts` 裡實際寫過的判準，一字不改。
+    // 中立性護欄看不見它（沒有元件身分），語法耦合當時也看不見（清單裡
+    // 沒有型別名）。這一支存在的理由就是讓它下次會叫。
+    const 當時寫的 = `if (rootType !== 'istringstream' && rootType !== 'stringstream') return null`
+    expect(
+      scan(當時寫的).definite.map((h) => h.token),
+      '核心層寫死 C++ 型別名而這條護欄沒叫 → 耦合的第三種形式又回到看不見的狀態',
+    ).toEqual(expect.arrayContaining(['istringstream', 'stringstream']))
+  })
 })
 
 describe('合成注入（反向）：乾淨的程式碼不得被報出', () => {
@@ -87,6 +98,27 @@ describe('合成注入（反向）：乾淨的程式碼不得被報出', () => {
 
   it('★ 記號出現在識別字裡不算——只看字串字面內部', () => {
     expect(scan(`const includePath = 1; const stdlib = 2`).definite).toEqual([])
+  })
+
+  it('★ 含型別名的**元件身分**不得被報出——那是中立性護欄的維度', () => {
+    // `cpp_istringstream_declare` 含 `istringstream`。把它報成語法耦合的話，
+    // 同一筆會被兩條護欄各數一次，而修法完全不同（一個要搬投影，一個要
+    // 搬概念）。詞界規則擋住了它——那條規則原本是為 `'u_endl'` 加的。
+    const src = `const decls = collect(tree, (n) => n.conceptId === 'cpp_istringstream_declare')`
+    expect(
+      scan(src).definite,
+      '報出來的話，`endl` ⊂ `u_endl` 那個誤報就換一個名字回來了',
+    ).toEqual([])
+  })
+
+  it('★ 風格識別字不得進「確定」桶——實測過它們在 UI 是設定值', () => {
+    const src = `const ioPref = preset.io_style === 'printf' ? 'cstdio' : 'iostream'`
+    expect(
+      scan(src).definite,
+      '把 printf／iostream 判成確定的話，UI 的風格設定會全部變成語法耦合——' +
+        '那是「為了數字好看而悲觀歸類」，同樣是量錯',
+    ).toEqual([])
+    expect(scan(src).ambiguous.map((h) => h.token)).toContain('printf')
   })
 })
 

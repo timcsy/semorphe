@@ -187,6 +187,15 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       const args = valueNode.namedChildren
         .map(a => ctx.lift(a))
         .filter((n): n is NonNullable<typeof n> => n !== null)
+
+      // `istringstream in("10 20 30")` —— 專屬概念，不落到通用的 var_declare。
+      // 落到通用的話它就只是一個「型別叫 istringstream 的變數」，
+      // 而 `in >> a` 沒有東西可讀。
+      if (type === 'istringstream' || type === 'std::istringstream') {
+        return createNode('cpp_istringstream_declare', { name }, {
+          source: args.length > 0 ? [args[0]] : [],
+        })
+      }
       return createNode('var_declare', { name, type, init_style: 'constructor' }, {
         initializer: args,
       })

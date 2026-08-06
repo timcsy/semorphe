@@ -18,6 +18,28 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
 
   register('input', async (node, ctx) => {
     const valueNodes = node.children.values ?? []
+
+    // `in >> a >> b` —— 來源是一個**字串串流變數**，不是標準輸入。
+    // 串流的狀態是「還沒讀的 token」（見 std/sstream/executors.ts），
+    // 每次讀取取走一個。
+    const from = node.properties.from
+    if (from !== undefined) {
+      const streamName = String(from)
+      const stream = ctx.scope.get(streamName)
+      const tokens = Array.isArray(stream.value) ? [...(stream.value as RuntimeValue[])] : []
+      for (const target of valueNodes) {
+        const tok = tokens.shift()
+        const name = String(target.properties.name)
+        const cur = ctx.scope.has(name) ? ctx.scope.get(name) : { type: 'int' as const, value: 0 }
+        // 依**目標變數的型別**轉換——與 C++ 的 `>>` 一致
+        const parsed = tok === undefined
+          ? cur
+          : (parseInputValue(String(tok.value), cur.type) ?? cur)
+        ctx.scope.set(name, parsed)
+      }
+      ctx.scope.set(streamName, { type: 'array', value: tokens })
+      return
+    }
     if (valueNodes.length > 0) {
       let lastVal: RuntimeValue = { type: 'int', value: 0 }
       let itemsRead = 0

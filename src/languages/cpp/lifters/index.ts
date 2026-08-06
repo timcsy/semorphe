@@ -2,11 +2,12 @@ import type { Lifter } from '../../../core/lift/lifter'
 import { createNode } from '../../../core/semantic-tree'
 import { registerStatementLifters } from '../core/lifters/statements'
 import { registerDeclarationLifters } from '../core/lifters/declarations'
-import { registerExpressionLifters } from '../core/lifters/expressions'
+import { registerExpressionLifters, cppStreamRead } from '../core/lifters/expressions'
 import { registerCppTransforms } from '../core/lifters/transforms'
 import { registerCppLiftStrategies } from '../core/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
+import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { allStdModules } from '../std'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
@@ -33,6 +34,9 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   if (registries?.renderStrategyRegistry) {
     registerCppRenderStrategies(registries.renderStrategyRegistry)
   }
+
+  // 推給核心的辨識後處理——判準寫著 C++ 的型別名，核心不該認得它們
+  declareLiftPostProcessor(cppStreamRead)
 
   // Core lifters
   registerStatementLifters(lifter)

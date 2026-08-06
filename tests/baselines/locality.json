@@ -254,6 +254,10 @@
       "files": 7,
       "dirs": 4
     },
+    "cpp_istringstream_declare": {
+      "files": 5,
+      "dirs": 2
+    },
     "cpp_lambda": {
       "files": 8,
       "dirs": 6

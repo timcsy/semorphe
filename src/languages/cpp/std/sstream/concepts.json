@@ -14,5 +14,23 @@
     "skipReasons": {
       "execute": "declarative"
     }
+  },
+  {
+    "conceptId": "cpp_istringstream_declare",
+    "layer": "lang-library",
+    "abstractConcept": "var_declare",
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "source": {
+        "allowed": [
+          "expression"
+        ],
+        "min": 0,
+        "max": 1
+      }
+    },
+    "role": "statement"
   }
 ]
