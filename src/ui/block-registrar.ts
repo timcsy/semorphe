@@ -4,6 +4,12 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../blocks/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
+import {
+  CPP_STRING_AT_INPUTS,
+  C_COMPOUND_ASSIGN_INPUTS,
+  C_COMPOUND_ASSIGN_EXPR_INPUTS,
+  C_VAR_DECLARE_EXPR_INPUTS,
+} from '../languages/cpp/block-input-names'
 
 export interface WorkspaceAccessors {
   getWorkspace: () => Blockly.Workspace | null
@@ -1482,7 +1488,7 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['cpp_string_at'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('INDEX')
+          this.appendValueInput(CPP_STRING_AT_INPUTS.value[0])
             .appendField(Blockly.Msg['CPP_STRING_AT_LABEL'] || '取得字串')
             .appendField(self.createOpenDropdown(() => self.getWorkspaceStringOptions(this.getFieldValue('OBJ') ?? undefined)) as Blockly.Field, 'OBJ')
             .appendField(Blockly.Msg['CPP_STRING_AT_INDEX_LABEL'] || '第 [')
@@ -1624,10 +1630,10 @@ export class BlockRegistrar {
           const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
           const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
           const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
-          const savedValue = this.getInput('VALUE') ? this.getInputTargetBlock('VALUE') : null
+          const savedValue = this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0]) ? this.getInputTargetBlock('VALUE') : null
           if (this.getInput('INDEX')) this.removeInput('INDEX', true)
           if (this.getInput('INDEX_LABEL')) this.removeInput('INDEX_LABEL')
-          if (this.getInput('VALUE')) this.removeInput('VALUE', true)
+          if (this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])) this.removeInput('VALUE', true)
 
           if (this.hasIndex_) {
             this.appendValueInput('INDEX')
@@ -1635,7 +1641,7 @@ export class BlockRegistrar {
               .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
               .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
               .appendField('的第 [')
-            this.appendValueInput('VALUE')
+            this.appendValueInput(C_COMPOUND_ASSIGN_INPUTS.value[0])
               .setCheck('Expression')
               .appendField('] 格')
               .appendField(new Blockly.FieldDropdown([
@@ -1646,7 +1652,7 @@ export class BlockRegistrar {
                 [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
               ]) as Blockly.Field, 'OP')
           } else {
-            this.appendValueInput('VALUE')
+            this.appendValueInput(C_COMPOUND_ASSIGN_INPUTS.value[0])
               .setCheck('Expression')
               .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
               .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
@@ -1664,8 +1670,8 @@ export class BlockRegistrar {
           if (savedIndex && this.getInput('INDEX')) {
             this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
           }
-          if (savedValue && this.getInput('VALUE')) {
-            this.getInput('VALUE')!.connection?.connect(savedValue.outputConnection)
+          if (savedValue && this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])) {
+            this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])!.connection?.connect(savedValue.outputConnection)
           }
         },
         saveExtraState: function (this: any) {
@@ -1975,17 +1981,17 @@ export class BlockRegistrar {
           const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
           const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
           const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
-          const savedValue = this.getInput('VALUE') ? this.getInputTargetBlock('VALUE') : null
+          const savedValue = this.getInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0]) ? this.getInputTargetBlock('VALUE') : null
           if (this.getInput('INDEX')) this.removeInput('INDEX', true)
           if (this.getInput('INDEX_LABEL')) this.removeInput('INDEX_LABEL')
-          if (this.getInput('VALUE')) this.removeInput('VALUE', true)
+          if (this.getInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0])) this.removeInput('VALUE', true)
 
           if (this.hasIndex_) {
             this.appendValueInput('INDEX')
               .setCheck('Expression')
               .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
               .appendField('[')
-            this.appendValueInput('VALUE')
+            this.appendValueInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0])
               .setCheck('Expression')
               .appendField(']')
               .appendField(new Blockly.FieldDropdown([
@@ -1996,7 +2002,7 @@ export class BlockRegistrar {
                 ['%=', '%='],
               ]) as Blockly.Field, 'OP')
           } else {
-            this.appendValueInput('VALUE')
+            this.appendValueInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0])
               .setCheck('Expression')
               .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
               .appendField(new Blockly.FieldDropdown([
@@ -2013,8 +2019,8 @@ export class BlockRegistrar {
           if (savedIndex && this.getInput('INDEX')) {
             this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
           }
-          if (savedValue && this.getInput('VALUE')) {
-            this.getInput('VALUE')!.connection?.connect(savedValue.outputConnection)
+          if (savedValue && this.getInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0])) {
+            this.getInput(C_COMPOUND_ASSIGN_EXPR_INPUTS.value[0])!.connection?.connect(savedValue.outputConnection)
           }
         },
         saveExtraState: function (this: any) {
@@ -2210,7 +2216,7 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['c_var_declare_expr'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('INIT_0')
+          this.appendValueInput(C_VAR_DECLARE_EXPR_INPUTS.value[0])
             .setCheck('Expression')
             .appendField(self.createOpenDropdown(() => getTypeOptions()) as Blockly.Field, 'TYPE')
             .appendField(new Blockly.FieldTextInput('i') as Blockly.Field, 'NAME_0')
