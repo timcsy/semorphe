@@ -20,7 +20,8 @@
  *
  * ## 失效樣態
  *
- * ⚠️ 如果「兩處都有定義」是 0，先確認兩份清單真的取到了——這個專案已知有 34 個。
+ * ⚠️ 空清單與零違規產出完全一樣。判斷本護欄有沒有壞，看「★ 兩份清單各自都
+ * 取到了」那支，不看報表數字。
  */
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
@@ -30,7 +31,9 @@ import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, REPO_ROOT, list
 const RULE = '比對 block-registrar 的動態註冊與 JSON blockDef 的 input 名稱集合。'
 
 const SELF_FALSIFICATION =
-  '⚠️ 「兩處都有定義」若是 0，先確認兩份清單真的取到了——已知有 34 個。'
+  '⚠️ 這條護欄的健康檢查是「★ 兩份清單各自都取到了」那支，**不是報表上的數字**。' +
+  '空清單與零違規產出完全一樣，而消滅雙重真相正是本護欄的目的——數字歸零是好事，' +
+  '不是護欄壞掉的訊號。'
 
 const NOT_DETECTED =
   '本護欄**不檢測**：input 名稱以外的分歧（欄位型別、tooltip、顏色）、' +
@@ -162,8 +165,15 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
     expect(both.length).toBeGreaterThanOrEqual(0)
   })
 
-  it('★ 兩處都有定義的數量不是 0——0 代表清單沒取到', () => {
-    expect(both.length).toBeGreaterThan(10)
+  // 這支原本斷言「兩處都有定義 > 10」，理由是「0 代表清單沒取到」。
+  // 但**消滅雙重真相正是這條護欄存在的目的**——真的清乾淨那天，它會變成
+  // 一支「斷言病還在」的測試，而修好的人得先刪掉它才能讓套件變綠。
+  //
+  // 健康檢查要釘在**兩份清單各自都取到了**，不是釘在它們有交集。
+  // （build-guardrail 第 2 步：錨點挑不隨修復而失效的東西。）
+  it('★ 兩份清單各自都取到了——空清單與零違規產出一樣', () => {
+    expect(dynamicBodies.size, '動態註冊那份沒解析到東西 → 報表的每個數字都是假的').toBeGreaterThan(10)
+    expect(json.size, 'JSON 定義那份沒載入 → 同上').toBeGreaterThan(10)
   })
 
   it('★ 有 JSON 對應的插槽名不得**新增**寫死', () => {
