@@ -550,54 +550,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "comment",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      "text"
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
-    "conceptId": "doc_comment",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      "brief"
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
-    "conceptId": "block_comment",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      "text"
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
     "conceptId": "cpp_using_namespace",
     "layer": "lang-core",
     "abstractConcept": null,

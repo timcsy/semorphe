@@ -361,5 +361,53 @@
     "annotations": {
       "debug_step": true
     }
+  },
+  {
+    "conceptId": "comment",
+    "layer": "universal",
+    "abstractConcept": null,
+    "properties": [
+      "text"
+    ],
+    "children": {},
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
+  },
+  {
+    "conceptId": "doc_comment",
+    "layer": "universal",
+    "abstractConcept": null,
+    "properties": [
+      "brief"
+    ],
+    "children": {},
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
+  },
+  {
+    "conceptId": "block_comment",
+    "layer": "universal",
+    "abstractConcept": null,
+    "properties": [
+      "text"
+    ],
+    "children": {},
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   }
 ]

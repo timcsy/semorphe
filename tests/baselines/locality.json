@@ -28,7 +28,7 @@
     },
     "block_comment": {
       "files": 7,
-      "dirs": 5
+      "dirs": 6
     },
     "break": {
       "files": 10,
@@ -40,7 +40,7 @@
     },
     "comment": {
       "files": 9,
-      "dirs": 7
+      "dirs": 8
     },
     "compare": {
       "files": 13,
@@ -628,7 +628,7 @@
     },
     "doc_comment": {
       "files": 9,
-      "dirs": 7
+      "dirs": 8
     },
     "endl": {
       "files": 12,
