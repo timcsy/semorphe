@@ -1,4 +1,4 @@
-import { generateCode } from '../../core/projection/code-generator'
+import { generateCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
 import type { StylePreset } from '../../core/types'
 import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
@@ -227,7 +227,8 @@ export class BlocklyPanel implements ViewHost {
       return node
     }
     const node = createNode('raw_code', {})
-    node.metadata = { rawCode: `/* unknown: ${block.type} */` }
+    // 語言中立的標記——介面層不知道任何語言的註解怎麼寫
+    node.metadata = { rawCode: `${UNGENERATABLE_PREFIX}unknown: ${block.type}⟩` }
     return node
   }
 
@@ -357,8 +358,8 @@ export class BlocklyPanel implements ViewHost {
           if (raw) return '    ' + raw
           // Try simpleExpressionToCode for known concepts as statement
           const expr = this.simpleExpressionToCode(n)
-          if (!expr.startsWith('/*')) return '    ' + expr + ';'
-          return `    /* ${n.concept} */`
+          if (!isUngeneratable(expr)) return '    ' + expr + ';'
+          return `    ⟨${n.concept}⟩`
         }).join('\n')
       }
 

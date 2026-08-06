@@ -103,6 +103,24 @@ export function registerMetaConceptGenerators(generators: Map<string, NodeGenera
   )
 }
 
+
+/**
+ * 「產不出來」的標記。
+ *
+ * **必須是共用常數，不能各處各寫一份。** 059 把它從 `/* … *​/` 改成 `⟨…⟩`
+ * （核心不知道任何語言的註解怎麼寫），而介面層有一處用 `expr.startsWith('/*')`
+ * 判斷「產生器有沒有回 fallback」——**那個判斷從此永遠為真，再也偵測不到
+ * fallback，而沒有任何測試變紅**。
+ *
+ * 標記是兩個消費者共用的契約：產生它的人與辨認它的人。散成兩份字面就會漂移。
+ */
+export const UNGENERATABLE_PREFIX = '⟨'
+
+/** 這段輸出是不是「產不出來」的標記？ */
+export function isUngeneratable(code: string): boolean {
+  return code.trimStart().startsWith(UNGENERATABLE_PREFIX)
+}
+
 // ─── Public API ───
 
 export function generateCode(tree: SemanticNode, language: string, style: StylePreset): string {
