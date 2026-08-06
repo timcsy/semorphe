@@ -67,7 +67,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.length()",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -104,7 +106,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.substr(${POS}, ${LEN})",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -136,7 +140,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.find(${ARG})",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -168,7 +174,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.append(${VALUE});",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -195,7 +203,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.c_str()",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -222,7 +232,10 @@
     },
     "codeTemplate": {
       "pattern": "getline(std::cin, ${NAME});",
-      "imports": ["iostream", "string"],
+      "imports": [
+        "iostream",
+        "string"
+      ],
       "order": 0
     }
   },
@@ -249,7 +262,9 @@
     },
     "codeTemplate": {
       "pattern": "std::to_string(${VALUE})",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -276,7 +291,9 @@
     },
     "codeTemplate": {
       "pattern": "std::stoi(${VALUE})",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -303,7 +320,9 @@
     },
     "codeTemplate": {
       "pattern": "std::stod(${VALUE})",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -330,7 +349,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.empty()",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   },
@@ -367,7 +388,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.erase(${POS}, ${LEN});",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -404,7 +427,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.insert(${POS}, ${VALUE});",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -446,7 +471,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.replace(${POS}, ${LEN}, ${VALUE});",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -478,7 +505,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.push_back(${CHAR});",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -505,7 +534,9 @@
     },
     "codeTemplate": {
       "pattern": "${OBJ}.clear();",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
       "order": 0
     }
   },
@@ -522,7 +553,12 @@
         {
           "type": "field_dropdown",
           "name": "OBJ",
-          "options": [["str", "str"]]
+          "options": [
+            [
+              "str",
+              "str"
+            ]
+          ]
         },
         {
           "type": "input_value",
@@ -536,12 +572,86 @@
       "tooltip": "%{BKY_CPP_STRING_AT_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "OBJ": "obj" },
-      "inputs": { "INDEX": "index" }
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "INDEX": "index"
+      }
     },
     "codeTemplate": {
       "pattern": "${OBJ}[${INDEX}]",
-      "imports": ["string"],
+      "imports": [
+        "string"
+      ],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_find_first_not_of",
+    "conceptId": "cpp_string_find_first_not_of",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_find_first_not_of",
+      "message0": "%{BKY_CPP_STRING_FIND_FIRST_NOT_OF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.find_first_not_of(${ARG})",
+      "imports": [
+        "string"
+      ],
+      "order": 20
+    }
+  },
+  {
+    "id": "cpp_string_find_last_not_of",
+    "conceptId": "cpp_string_find_last_not_of",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_find_last_not_of",
+      "message0": "%{BKY_CPP_STRING_FIND_LAST_NOT_OF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.find_last_not_of(${ARG})",
+      "imports": [
+        "string"
+      ],
       "order": 20
     }
   }

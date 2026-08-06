@@ -494,6 +494,14 @@
       "files": 8,
       "dirs": 4
     },
+    "cpp_string_find_first_not_of": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp_string_find_last_not_of": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp_string_insert": {
       "files": 8,
       "dirs": 4

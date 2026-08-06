@@ -45,6 +45,13 @@ function tryStringMethodLift(
         from: from ? [from] : [],
       })
     }
+    // `find_first_not_of` / `find_last_not_of`——與 `find` 同形，
+    // 只是回傳「第一個／最後一個**不屬於**那組字元的位置」。
+    case 'find_first_not_of':
+    case 'find_last_not_of': {
+      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      return createNode(`cpp_string_${method}`, { obj }, { arg: a ? [a] : [] })
+    }
     case 'append': {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode('cpp_string_append', { obj }, {

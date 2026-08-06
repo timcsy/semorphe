@@ -94,7 +94,5 @@ describe('C++ String Fuzz Tests (hard)', () => {
 
   it.todo('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_9: vector<string> with join function')
   // COMPILE_FAIL — vector initializer_list syntax not supported
-
-  it.todo('[UNSUPPORTED:字串搜尋函式 find_first_not_of／find_last_not_of 尚無對應概念] fuzz_10: multi-step string transformation (trim/collapse/replace)')
   // COMPILE_FAIL — find_first_not_of/find_last_not_of not supported as concepts
 })
