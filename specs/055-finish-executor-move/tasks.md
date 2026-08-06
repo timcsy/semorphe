@@ -60,8 +60,8 @@ description: "Task list for 055-finish-executor-move"
 
 - [X] T020 下調 `neutrality.json`；**獨立 commit，說明下降來自哪些概念**
 - [X] T021 確認其餘量測未上升
-- [ ] T022 更新 `knowledge/vision.md`：記錄本輪下降與**新暴露的缺口**
-- [ ] T023 回填 `knowledge/experience.md`／`concepts/執行機構.md`——候選：「護欄只問了一個方向」
+- [X] T022 更新 `knowledge/vision.md`：記錄本輪下降與**新暴露的缺口**
+- [X] T023 回填 `knowledge/experience.md`／`concepts/執行機構.md`——候選：「護欄只問了一個方向」
 
 ---
 
