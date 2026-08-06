@@ -1,4 +1,5 @@
 import type { SemanticNode } from './types'
+import type { RuntimeType } from '../interpreter/types'
 
 /**
  * 語言套件推進來的執行器登記處。
@@ -37,4 +38,30 @@ export function allLanguageExecutors(): readonly { concept: string; executor: La
 /** 測試用：清空（正式流程不呼叫） */
 export function resetLanguageExecutors(): void {
   pending.length = 0
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 語言的內建常數
+//
+// `INT_MAX`、`EOF`、`nullptr` 這些是**語言的**東西，卻原本由核心直接
+// `import ... from '../languages/cpp/builtins'`——那是 P9 原文禁止的形狀，
+// 而中立性護欄只數概念身分字串，一個字都看不到它。
+// 見 specs/055-finish-executor-move
+// ─────────────────────────────────────────────────────────────────────────
+
+const builtinValues = new Map<string, { type: RuntimeType; value: number }>()
+
+/** 語言套件載入時推進來 */
+export function declareBuiltinConstants(m: Record<string, { type: RuntimeType; value: number }>): void {
+  for (const [k, v] of Object.entries(m)) builtinValues.set(k, v)
+}
+
+/** 直譯器建構時取走 */
+export function allBuiltinConstants(): ReadonlyMap<string, { type: RuntimeType; value: number }> {
+  return builtinValues
+}
+
+/** 這個名字是語言的內建常數嗎（除錯快照要略過它們） */
+export function isBuiltinName(name: string): boolean {
+  return builtinValues.has(name)
 }

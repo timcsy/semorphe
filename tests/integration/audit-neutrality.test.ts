@@ -11,6 +11,8 @@
  *
  * 見 specs/049-audit-guardrails/spec.md（US1）、knowledge/concepts/執行機構.md
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
   loadBaseline,
@@ -20,8 +22,10 @@ import {
   fixedItems,
   RATCHET_NOTE,
   type BaselineMeta,
+  listSourceFiles,
+  REPO_ROOT,
 } from '../helpers/guardrail'
-import { languageSpecificComponentIds, universalComponentIds, scanDirs } from '../helpers/component-scan'
+import { languageSpecificComponentIds, universalComponentIds, scanDirs, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
@@ -65,6 +69,44 @@ function measure(): {
 }
 
 const key = (v: Violation): string => `${v.file}::${v.componentId}`
+
+// ─────────────────────────────────────────────────────────────────────
+// P9 的原文是「拔掉 C++ 之後，核心**無 `languages/cpp/` import**」。
+// 本護欄原本只數**概念身分字串**——一個核心檔直接 import 語言套件，它
+// 一個字都看不到。那是這條原則自己寫下的檢查，卻從來沒被做過。
+// 見 specs/055-finish-executor-move
+// ─────────────────────────────────────────────────────────────────────
+function coreImportsOfLanguagePackages(): { file: string; spec: string }[] {
+  const out: { file: string; spec: string }[] = []
+  for (const rel of [...listSourceFiles('src/core'), ...listSourceFiles('src/interpreter')]) {
+    // **只看程式碼，不看註解**——本檔的概念身分掃描早就在做這件事了，
+    // 而這條新檢查第一版忘了套用，於是把一句解釋 P9 的註解報成違規。
+    const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'))
+    for (const m of code.matchAll(/from\s+'([^']*languages\/[^']+)'/g)) {
+      out.push({ file: rel, spec: m[1] })
+    }
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file))
+}
+
+const languageImports = coreImportsOfLanguagePackages()
+
+describe('護欄：核心不得 import 語言套件（P9 的字面要求）', () => {
+  it('★ 這是 P9 原文寫的檢查——概念身分掃描看不到它', () => {
+    printReport('核心 → 語言套件的 import', [
+      '⚠️ 這條與概念身分掃描是**兩種東西**。一個核心檔可以一個 C++ 概念名都不提，',
+      '   卻直接 import 整個語言套件——那時身分掃描是乾淨的，而 P9 已經破了。',
+      '',
+      `目前：${languageImports.length} 處`,
+      ...languageImports.map((x) => `  ${x.file} → ${x.spec}`),
+    ])
+    expect(
+      languageImports.map((x) => `${x.file} → ${x.spec}`),
+      '核心層直接 import 了語言套件。拔掉 C++ 之後這裡會編不過——' +
+        'P9 的原文就是在講這件事。',
+    ).toEqual([])
+  })
+})
 
 describe('護欄：中立性（kernel／app／render 不得認得特定語言的元件身分）', () => {
   const { violations, commentOnly, universalHits } = measure()

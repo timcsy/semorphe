@@ -1,8 +1,7 @@
 import type { SemanticNode } from '../core/types'
 import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
-import { allLanguageExecutors } from '../core/language-executors'
+import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
 import universalConcepts from '../blocks/semantics/universal-concepts.json'
-import { CPP_BUILTIN_CONSTANTS, CPP_BUILTIN_NAMES } from '../languages/cpp/builtins'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
@@ -196,7 +195,7 @@ export class SemanticInterpreter implements ExecutionContext {
     this.scanfTokenBuffer = []
 
     // Built-in C/C++ constants — declare subset needed for scope-based lookup
-    for (const [name, val] of Object.entries(CPP_BUILTIN_CONSTANTS)) {
+    for (const [name, val] of allBuiltinConstants()) {
       this.scope.declare(name, { type: val.type, value: val.value })
     }
 
@@ -401,7 +400,7 @@ export class SemanticInterpreter implements ExecutionContext {
 
     const scopeSnapshot: { name: string; type: string; value: string }[] = []
     for (const [name, val] of this.scope.getAll()) {
-      if (CPP_BUILTIN_NAMES.has(name)) continue
+      if (isBuiltinName(name)) continue
       scopeSnapshot.push({ name, type: val.type, value: valueToString(val) })
     }
 

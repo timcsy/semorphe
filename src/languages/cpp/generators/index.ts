@@ -6,7 +6,8 @@ import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
-import { declareExecutor } from '../../../core/language-executors'
+import { declareExecutor, declareBuiltinConstants } from '../../../core/language-executors'
+import { CPP_BUILTIN_CONSTANTS } from '../builtins'
 import { registerCoreExecutors } from '../core/executors'
 import { coreConcepts } from '../core'
 import type { PathName, SkipReason } from '../../../core/types'
@@ -41,6 +42,7 @@ export function registerCppExecutors(): void {
   executorsPushed = true
   const push = (concept: string, executor: unknown): void =>
     declareExecutor(concept, executor as never)
+  declareBuiltinConstants(CPP_BUILTIN_CONSTANTS)
   registerCoreExecutors(push as never)
   for (const mod of allStdModules) mod.registerExecutors(push as never)
 }
