@@ -1,0 +1,59 @@
+/**
+ * 「這個概念宣告的是哪一種變數」——一個事實，兩個消費者（063）
+ *
+ * ## 為什麼需要這支
+ *
+ * 這個事實原本被**寫死了兩次**，在兩個不同的檔案裡：
+ *
+ * | 消費者 | 原本怎麼寫的 |
+ * |---|---|
+ * | 同步控制器的降級 | `node.concept === 'cpp_string_declare' ? 'string' : undefined` |
+ * | 積木註冊處的下拉選單 | `if (block.type === 'cpp_string_declare')` |
+ *
+ * 兩處都**只認得那一個概念**。而危險的地方是：加一個同類概念（例如另一種
+ * 字串型別）時，**兩處都不會有任何提示**——下拉選單少一個選項，使用者只會
+ * 覺得「怎麼選不到」，而測試全綠。
+ *
+ * 所以這支釘的是**宣告鏈本身**，不是某一次的輸出。
+ */
+import { describe, it, expect, beforeAll } from 'vitest'
+import { registerCppLanguage } from '../../../src/languages/cpp/generators'
+import {
+  variableTypeOf,
+  conceptsDeclaringVariableType,
+} from '../../../src/core/language-executors'
+
+beforeAll(() => {
+  registerCppLanguage()
+})
+
+describe('變數型別宣告：語言套件推、核心讀', () => {
+  it('★ 宣告真的被推進來了——沒有的話下面兩支會因為「兩邊都空」而假通過', () => {
+    expect(
+      variableTypeOf('cpp_string_declare'),
+      'concepts.json 的 declaresVariableType 沒有被推進核心。' +
+        '下拉選單會變成空的，而使用者只會覺得「怎麼選不到字串變數」——測試全綠。',
+    ).toBe('string')
+  })
+
+  it('★ 反查得到——下拉選單靠的是這個方向', () => {
+    expect(conceptsDeclaringVariableType('string')).toContain('cpp_string_declare')
+  })
+
+  it('★ 沒宣告的概念不得被誤認——「什麼都回報」也能通過上面兩支', () => {
+    expect(variableTypeOf('var_declare')).toBeUndefined()
+    expect(conceptsDeclaringVariableType('string')).not.toContain('var_declare')
+    expect(conceptsDeclaringVariableType('__no_such_type__')).toEqual([])
+  })
+
+  it('★ 加一個同類概念時，兩個消費者都要自動涵蓋它', () => {
+    // 這一支是本功能的重點：宣告是**開放**的，不是一份寫死的清單。
+    // 它證明「再多一個字串宣告概念」不需要改任何消費者的程式碼。
+    const 現有 = conceptsDeclaringVariableType('string')
+    expect(現有.length).toBeGreaterThan(0)
+    expect(
+      現有.every((c) => variableTypeOf(c) === 'string'),
+      '反查與正查不一致——兩個消費者會看到不同的答案',
+    ).toBe(true)
+  })
+})

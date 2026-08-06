@@ -1,3 +1,4 @@
+import { conceptsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -181,13 +182,36 @@ export class BlockRegistrar {
     return options
   }
 
+  /**
+   * 工作區裡有哪些字串變數，給下拉選單用。
+   *
+   * **原本寫死 `block.type === 'cpp_string_declare'`。** 那讓介面層認得一個
+   * C++ 專屬概念，而且只認得這一個——換一種語言、或多一個同類的概念，
+   * 都要回頭改這一行，而沒有任何東西會提醒你。
+   *
+   * 現在問的是「**哪些概念宣告了字串變數**」，答案來自概念自己的宣告
+   * （`concepts.json` 的 `declaresVariableType`）。同一個宣告也餵給同步
+   * 控制器的降級——一個事實，兩個消費者。
+   */
+  private blockTypesDeclaringVariableType(type: string): Set<string> {
+    const conceptIds = new Set(conceptsDeclaringVariableType(type))
+    const types = new Set<string>()
+    for (const spec of this.blockSpecRegistry.getAll()) {
+      const cid = spec.conceptMapping?.conceptId
+      const blockType = (spec.blockDef as { type?: string } | undefined)?.type
+      if (cid && conceptIds.has(cid) && blockType) types.add(blockType)
+    }
+    return types
+  }
+
   getWorkspaceStringOptions(currentVal?: string): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
+    const stringBlockTypes = this.blockTypesDeclaringVariableType('string')
     const workspace = this.accessors?.getWorkspace()
     if (workspace) {
       for (const block of workspace.getAllBlocks(false)) {
-        if (block.type === 'cpp_string_declare') {
+        if (stringBlockTypes.has(block.type)) {
           const name = block.getFieldValue('NAME')
           if (name && !seen.has(name)) {
             seen.add(name)

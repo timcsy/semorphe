@@ -83,23 +83,34 @@ export function declareAbstract(conceptId: string, parent: string): void {
 }
 
 /**
- * 降級到父概念時要保留的型別前綴。
+ * 「這個概念宣告的是哪一種型別的變數」。
  *
- * `cpp_string_declare` 降級成 `var_declare` 會掉一個資訊：**它宣告的是字串**。
- * 這件事原本寫死在同步控制器裡（`node.concept === 'cpp_string_declare' ? 'string' : …`）
- * ——介面層認得一個 C++ 專屬概念，且只認得這一個：換一種語言、或多一個同類的
- * 概念，都要回頭改那一行。
+ * **一個事實，兩個消費者**——而它們原本各自寫死了同一個概念身分：
  *
- * 現在是概念自己說的（`concepts.json` 的 `downgradeTypePrefix`）。
+ * | 消費者 | 原本怎麼寫的 |
+ * |---|---|
+ * | 同步控制器的降級 | `node.concept === 'cpp_string_declare' ? 'string' : undefined` |
+ * | 積木註冊處的下拉選單 | `if (block.type === 'cpp_string_declare')` 掃工作區 |
+ *
+ * 兩處都**只認得這一個概念**，而且沒有任何東西提醒下一個同類概念也需要它。
+ * 換一種語言的話兩處都要改。
+ *
+ * 現在是概念自己說的（`concepts.json` 的 `declaresVariableType`）。
  */
-const downgradePrefix = new Map<string, string>()
+const variableType = new Map<string, string>()
 
-export function declareDowngradeTypePrefix(conceptId: string, prefix: string): void {
-  downgradePrefix.set(conceptId, prefix)
+export function declareVariableType(conceptId: string, type: string): void {
+  variableType.set(conceptId, type)
 }
 
-export function downgradeTypePrefixOf(conceptId: string): string | undefined {
-  return downgradePrefix.get(conceptId)
+/** 這個概念宣告的變數是什麼型別（沒宣告就回 undefined） */
+export function variableTypeOf(conceptId: string): string | undefined {
+  return variableType.get(conceptId)
+}
+
+/** 哪些概念宣告了這個型別的變數——反查，給下拉選單那類消費者用 */
+export function conceptsDeclaringVariableType(type: string): string[] {
+  return [...variableType].filter(([, v]) => v === type).map(([c]) => c)
 }
 
 /** 這個概念的語言中立父概念（沒有就回 undefined） */

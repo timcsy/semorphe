@@ -8,8 +8,7 @@
   "total": 1,
   "files": {
     "src/ui/block-registrar.ts": [
-      "cpp_string_at",
-      "cpp_string_declare"
+      "cpp_string_at"
     ]
   }
 }

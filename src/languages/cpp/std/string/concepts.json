@@ -8,7 +8,7 @@
     ],
     "children": {},
     "role": "statement",
-    "downgradeTypePrefix": "string"
+    "declaresVariableType": "string"
   },
   {
     "conceptId": "cpp_string_length",

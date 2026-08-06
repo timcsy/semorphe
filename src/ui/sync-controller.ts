@@ -26,7 +26,7 @@ import type { CodeMapping, BlockMapping } from '../core/projection/code-generato
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
 import { SemanticBus } from '../core/semantic-bus'
-import { abstractConceptOf, downgradeTypePrefixOf } from '../core/language-executors'
+import { abstractConceptOf, variableTypeOf } from '../core/language-executors'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -310,7 +310,7 @@ export class SyncController {
     if (!visible.has(node.concept)) {
       const parent = abstractConceptOf(node.concept)
       // 型別前綴由概念自己宣告——介面層不該認得哪個概念宣告的是字串
-      const downgrade = parent ? { concept: parent, typePrefix: downgradeTypePrefixOf(node.concept) } : undefined
+      const downgrade = parent ? { concept: parent, typePrefix: variableTypeOf(node.concept) } : undefined
       if (downgrade && visible.has(downgrade.concept)) {
         // Preserve type info in properties
         if (downgrade.typePrefix && !node.properties.type) {
