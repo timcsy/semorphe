@@ -1,3 +1,4 @@
+import { registerStructExecutors } from './structs'
 import { registerUnimplementedExecutors } from './unimplemented'
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import { registerPointerExecutors } from './pointers'
@@ -29,6 +30,7 @@ export function registerCoreExecutors(
   registerLiteralsCoreExecutors(register)
   registerFunctionsCoreExecutors(register)
   registerControlFlowCoreExecutors(register)
+  registerStructExecutors(register)
   registerUnimplementedExecutors(register)
   registerArraysCoreExecutors(register)
 }

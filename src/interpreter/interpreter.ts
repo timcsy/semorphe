@@ -1,3 +1,4 @@
+import { StructRegistry } from './struct-types'
 import type { SemanticNode } from '../core/types'
 import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
 import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
@@ -45,6 +46,8 @@ export class SemanticInterpreter implements ExecutionContext {
   io: IOSystem = new IOSystem()
   functions = new Map<string, FunctionDef>()
   pointerTargets = new Map<string, Scope>()
+  /** 結構／類別的型別登記處。**每個實例一份**——全域的話結構會漏到下一個測試 */
+  structs = new StructRegistry()
   scanfTokenBuffer: string[] = []
   private status: ExecutionStatus = 'idle'
   private steps = 0

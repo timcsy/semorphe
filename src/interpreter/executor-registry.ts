@@ -11,6 +11,12 @@ export interface ExecutionContext {
   io: IOSystem
   functions: Map<string, FunctionDef>
   pointerTargets: Map<string, Scope>
+  /** 結構／類別的型別登記處——見 `struct-types.ts` */
+  structs: {
+    has(name: string): boolean
+    declare(name: string, fields: { name: string; type: string }[]): void
+    instantiate(name: string): RuntimeValue
+  }
   scanfTokenBuffer: string[]
   executeNode(node: SemanticNode): Promise<RuntimeValue | void>
   executeBody(nodes: SemanticNode[]): Promise<void>

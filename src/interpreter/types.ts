@@ -1,12 +1,23 @@
 import type { SemanticNode } from '../core/types'
 
 /** 執行期型別 */
-export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer'
+export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer' | 'object'
+
+/**
+ * 一個結構／類別的實例：欄位名 → 值。
+ *
+ * 用 `Map` 而不是普通物件，因為欄位名可能與 `Object.prototype` 的成員撞名
+ * （`toString`、`constructor`…）——那種撞名會讓「讀一個不存在的欄位」
+ * **靜默成功**，而這正是本專案有專門教訓的那種靜默降級。
+ */
+export type ObjectFields = Map<string, RuntimeValue>
 
 /** 執行期值 */
 export interface RuntimeValue {
   type: RuntimeType
-  value: number | string | boolean | null | RuntimeValue[]
+  value: number | string | boolean | null | RuntimeValue[] | ObjectFields
+  /** `type === 'object'` 時，它是哪一個結構／類別 */
+  structName?: string
   tag?: string
 }
 
@@ -78,6 +89,11 @@ export function parseInputValue(input: string, targetType: string): RuntimeValue
 
 /** RuntimeValue 轉字串顯示 */
 export function valueToString(val: RuntimeValue): string {
+  if (val.type === 'object') {
+    // 直接印一個物件在 C++ 不合法（要多載 operator<<）。**出聲，不要靜默印空字串**
+    return `⟨${val.structName ?? 'object'}⟩`
+  }
+
   if (val.type === 'void') return 'void'
   if (val.type === 'bool') return val.value ? 'true' : 'false'
   if (val.type === 'array') {

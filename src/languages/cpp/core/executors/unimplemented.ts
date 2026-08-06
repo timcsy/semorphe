@@ -42,8 +42,9 @@ const RAW_CODE_CONTAINERS = ['cpp_raw_code', 'cpp_raw_expression'] as const
  * 所以那一筆是 053 之後的**殘留**，已刪除——不是搬過來。
  */
 const OOP_NOT_IMPLEMENTED = [
+  // `cpp_struct_declare` 與 `cpp_struct_member_access` 已於 071 真的實作
+  // （見 `structs.ts`），從這裡移除——**那是實作，不是宣告**。
   'cpp_class_def',
-  'cpp_struct_declare',
   'cpp_constructor',
   'cpp_destructor',
   'cpp_virtual_method',
