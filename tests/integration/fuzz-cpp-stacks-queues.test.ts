@@ -367,7 +367,7 @@ int main() {
     expect(concepts.has('cpp_queue_declare')).toBe(true)
   })
 
-  it.skip('[BLOCKED:array_declare] should generate compilable code producing same output [DEGRADED: array initializer list not supported]', () => {
+  it('should generate compilable code producing same output', () => {
     // KNOWN LIMITATION: `int a[] = {1,2,3,2,1}` loses its initializer — generated
     // as `int a[10];` with uninitialized values. Causes SEMANTIC_DIFF (all calls
     // return 0 because comparison with uninitialized values).
