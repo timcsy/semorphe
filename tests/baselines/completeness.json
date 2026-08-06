@@ -7,16 +7,12 @@
   },
   "totals": {
     "implemented": 806,
-    "declared": 28,
-    "undecidable": 16,
-    "shell": 31,
-    "missing": 9
+    "declared": 34,
+    "undecidable": 20,
+    "shell": 29,
+    "missing": 1
   },
   "shells": [
-    {
-      "componentId": "cpp_case",
-      "path": "lift"
-    },
     {
       "componentId": "cpp_class_def",
       "path": "execute"
@@ -24,10 +20,6 @@
     {
       "componentId": "cpp_constructor",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_default",
-      "path": "lift"
     },
     {
       "componentId": "cpp_destructor",
@@ -140,40 +132,8 @@
   ],
   "missing": [
     {
-      "componentId": "cpp_comma_expr",
-      "path": "extract"
-    },
-    {
-      "componentId": "cpp_comma_expr",
-      "path": "render"
-    },
-    {
-      "componentId": "cpp_include_local",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_include",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_using_alias",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_using_namespace",
-      "path": "lift"
-    },
-    {
       "componentId": "if_else",
       "path": "execute"
-    },
-    {
-      "componentId": "program",
-      "path": "extract"
-    },
-    {
-      "componentId": "program",
-      "path": "render"
     }
   ]
 }

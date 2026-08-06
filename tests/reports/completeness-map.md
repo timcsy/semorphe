@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：178｜✅ 實作 806｜📄 已宣告不提供 28｜❔ 判不出來 16｜🈳 殼 31｜❌ 缺 9（以路徑數計）
+元件：178｜✅ 實作 806｜📄 已宣告不提供 34｜❔ 判不出來 20｜🈳 殼 29｜❌ 缺 1（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -33,11 +33,11 @@
 | `cpp_atof` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_atoi` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_auto_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_case` | ✅ | 🈳 | ✅ | ✅ | 📄 |
+| `cpp_case` | ✅ | 📄 | ✅ | ✅ | 📄 |
 | `cpp_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_char_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_class_def` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_comma_expr` | ✅ | ❔ | ❌ | ❌ | ✅ |
+| `cpp_comma_expr` | ✅ | ❔ | 📄 | 📄 | ✅ |
 | `cpp_compound_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_compound_assign_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -51,7 +51,7 @@
 | `cpp_container_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_push` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_push_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_default` | ✅ | 🈳 | ✅ | ✅ | 📄 |
+| `cpp_default` | ✅ | 📄 | ✅ | ✅ | 📄 |
 | `cpp_define` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_destructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
@@ -67,8 +67,8 @@
 | `cpp_ifdef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_ifndef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_ifstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp_include` | 📄 | ❌ | ✅ | ✅ | 📄 |
-| `cpp_include_local` | 📄 | ❌ | ✅ | ✅ | 📄 |
+| `cpp_include` | 📄 | ❔ | ✅ | ✅ | 📄 |
+| `cpp_include_local` | 📄 | ❔ | ✅ | ✅ | 📄 |
 | `cpp_increment` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_increment_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_iota` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -157,8 +157,8 @@
 | `cpp_toupper` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_try_catch` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_typedef` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp_using_alias` | 📄 | ❌ | ✅ | ✅ | 📄 |
-| `cpp_using_namespace` | 📄 | ❌ | ✅ | ✅ | 📄 |
+| `cpp_using_alias` | 📄 | ❔ | ✅ | ✅ | 📄 |
+| `cpp_using_namespace` | 📄 | ❔ | ✅ | ✅ | 📄 |
 | `cpp_vector_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_pop_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -181,7 +181,7 @@
 | `negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `number_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `print` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `program` | ✅ | ✅ | ❌ | ❌ | ✅ |
+| `program` | ✅ | ✅ | 📄 | 📄 | ✅ |
 | `return` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `string_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `var_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |

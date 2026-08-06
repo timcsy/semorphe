@@ -197,6 +197,16 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
   row.lift =
     declared('lift') ??
     (() => {
+      // generate 被宣告為「由父概念消費」時，合成流程產不出程式碼——
+      // **lift 因此沒有輸入可測**。那是判不出來，不是殼也不是缺：
+      // 怪 lift 沒辦到一件沒有輸入的事，只會讓數字灌水。
+      //
+      // （只認 `implemented` 的話會誤判成「缺」，那是另一種灌水。兩種都試過。）
+      if (row.generate.verdict === 'declared')
+        return {
+          verdict: 'undecidable',
+          reason: 'generate 由父概念消費，合成流程產不出程式碼——lift 沒有輸入可測',
+        } as PathResult
       if (row.generate.verdict !== 'implemented')
         return { verdict: 'missing', reason: 'generate 未產出可解析的程式碼' } as PathResult
       try {

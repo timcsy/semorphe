@@ -7,7 +7,15 @@
     "children": {
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "extract",
+      "render"
+    ],
+    "skipReasons": {
+      "render": "consumed-by-parent",
+      "extract": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "var_declare",

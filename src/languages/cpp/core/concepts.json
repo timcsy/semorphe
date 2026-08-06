@@ -65,10 +65,12 @@
     },
     "role": "statement",
     "skipPaths": [
-      "execute"
+      "execute",
+      "lift"
     ],
     "skipReasons": {
-      "execute": "consumed-by-parent"
+      "execute": "consumed-by-parent",
+      "lift": "consumed-by-parent"
     }
   },
   {
@@ -81,10 +83,12 @@
     },
     "role": "statement",
     "skipPaths": [
-      "execute"
+      "execute",
+      "lift"
     ],
     "skipReasons": {
-      "execute": "consumed-by-parent"
+      "execute": "consumed-by-parent",
+      "lift": "consumed-by-parent"
     }
   },
   {
@@ -1047,7 +1051,15 @@
     "children": {
       "exprs": "expressions"
     },
-    "role": "expression"
+    "role": "expression",
+    "skipPaths": [
+      "extract",
+      "render"
+    ],
+    "skipReasons": {
+      "render": "consumed-by-parent",
+      "extract": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "var_declarator",
