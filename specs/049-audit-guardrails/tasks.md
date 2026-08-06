@@ -134,11 +134,11 @@ description: "Task list for 049-audit-guardrails"
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T043 執行 `time npm test`，確認四條護欄合計新增 **≤ 10 秒**（SC-007）；若超出，依 research.md D5 用 vitest 專案切分並記錄理由
-- [ ] T044 確認既有 3006 測全綠、**零行為改動**（SC-006）——除新增護欄輸出外無任何既有輸出改變
-- [ ] T045 依 `quickstart.md` 八個情境逐一驗收，特別確認情境 5（組態差異區塊**非空**）與情境 6（補完地圖涵蓋全部元件）
-- [ ] T046 更新 `knowledge/vision.md` 階段 6.5：勾選「P0 四條護欄進 CI，各自輸出非零基線數字」，並把四個實測基線數字填入
-- [ ] T047 更新 `knowledge/draft/2026-08-05-元件膠囊重構.md`：把 P0 一節的預估基線換成實測值，並記錄 research.md F1–F3 三個既有事實（`module.ts` 死碼、app 從未接 TemplateGenerator、93 個 codeTemplate 未被使用）
+- [X] T043 執行 `time npm test`，確認四條護欄合計新增 **≤ 10 秒**（SC-007）；若超出，依 research.md D5 用 vitest 專案切分並記錄理由
+- [X] T044 確認既有 3006 測全綠、**零行為改動**（SC-006）——除新增護欄輸出外無任何既有輸出改變
+- [X] T045 依 `quickstart.md` 八個情境逐一驗收，特別確認情境 5（組態差異區塊**非空**）與情境 6（補完地圖涵蓋全部元件）
+- [X] T046 更新 `knowledge/vision.md` 階段 6.5：勾選「P0 四條護欄進 CI，各自輸出非零基線數字」，並把四個實測基線數字填入
+- [X] T047 更新 `knowledge/draft/2026-08-05-元件膠囊重構.md`：把 P0 一節的預估基線換成實測值，並記錄 research.md F1–F3 三個既有事實（`module.ts` 死碼、app 從未接 TemplateGenerator、93 個 codeTemplate 未被使用）
 
 ---
 
