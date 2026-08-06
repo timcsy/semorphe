@@ -98,7 +98,7 @@ description: "Task list for 049-audit-guardrails"
 - [X] T025 [US3] 在 `tests/helpers/disabled-scan.ts` 實作停用測試掃描：找出 `it.todo`／`it.skip`／`describe.skip`，記錄檔案、行號、`scope`（test／describe）與標題
 - [X] T026 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 寫斷言骨架（此時應**紅**：全部項目皆未分類）
 - [X] T027 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作標記解析：`[BLOCKED:<id>]`／`[TOMBSTONE:<檔名#錨點>]`／`[DEADSKIP]`
-- [ ] T028 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[BLOCKED:x]` 的 `x` 存在於註冊表（重用 T004）
+- [X] T028 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[BLOCKED:x]` 的 `x` 存在於註冊表（重用 T004）
 - [X] T029 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[TOMBSTONE:F#A]` 的 `knowledge/history/F.md` 存在且含錨點 `A`
 - [X] T030 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作 `byBlocker` 彙總與報表（FR-034：使「修一個解鎖多個」可見）
 
@@ -204,3 +204,39 @@ T037 [P] stacks-queues / oop / variables-ops / types-advanced-ops 的 skip
 - **本功能只量不修**：任何「順手把違規修掉」的衝動都超出範圍（spec Out of Scope）。T024 明確要求驗證後**還原**。
 - **護欄第一天是紅字滿滿的報表，這是預期行為**。要求第一天綠等於沒有真的量（spec Assumptions）。
 - **`[P]` 只標在不同檔案且無未完成相依的任務**；同檔任務一律序列。
+
+---
+
+## 完成紀錄（2026-08-06）
+
+**47/47 任務完成。** 最終驗證：**163 檔／3033 測全綠／0 失敗／31.62 秒**。
+
+### 四條護欄的實測基線（`tests/baselines/`）
+
+| 護欄 | 基線 | 對應原則 |
+|---|---|---|
+| 中立性 | **20 檔／216 筆** 硬編語言專屬元件身分 | P9 語言獨立性 |
+| 完備性 | 175 元件 × 5 路：✅778 ／ 🈳92 ／ ❌5 | P2「0 容忍」 |
+| 缺陷帳 | **85 筆**停用測試，全數分類 | 使用者三次明示的「零 todo」 |
+| 就近性 | 175 元件全數有足跡，平均擴散 **8.5 檔** | P3「不改既有程式碼就能加概念」 |
+
+### 實作中修正的四處設計
+
+1. **中立性只計語言專屬概念**（排除 universal）——P9 談的是「拔掉 C++ 後仍啟動」，而 `print`／`if` 拔掉 C++ 後依然存在。
+2. **掃描規則從字邊界改為引號字串字面**——universal 概念含 `if`／`return` 這些關鍵字，字邊界會把每個 if 陳述都算成違規。
+3. **render／extract 改用 `PatternRenderer`／`PatternExtractor` 直跑**——`renderToBlocklyState` 需要 program 外殼且只處理 statement，第一版因此產生 84 個假的 missing。
+4. **兩組態比對產生的程式碼文字、不是 verdict**——verdict 粒度太粗，第一版得到「無差異」，而我自己的報表就寫著「空的多半是沒接對」。
+
+### 實作中新增的一項（原設計沒有）
+
+**`[UNSUPPORTED:描述]` 第四種標記**。觸發點是「comma operator」——它被一個**還不存在的概念**擋住，而 FR-031 要求 `BLOCKED` 的 id 必須存在於註冊表。「修一個既有元件」與「加一個不存在的概念」是不同的工作，混在一起會讓 `byBlocker` 誤導。
+
+### `src/` 的全部改動：22 行純新增、零刪除、零修改
+
+- `ConceptDefJSON.skipPaths?: PathName[]`（可選欄位，既有 175 個元件零改動）
+- `SemanticInterpreter.getExecutor()`（唯讀查詢——不開它，護欄就得在測試裡複製一份 executor 註冊清單，那會立刻長成第二個真相源）
+
+### 已知、不在範圍內
+
+- **負載敏感的 flake**：會實際呼叫編譯器的 fuzz 測試吃 vitest 預設 5000ms timeout，高負載下會失敗。歸因已做：切回功能前的 commit 跑同一套**失敗更多**（8 個 vs 2–3 個），確認與本功能無關。記在 `knowledge/draft/2026-08-05-元件膠囊重構.md` 坑 ⑥。
+- 本功能**只量不修**：20 個違規、92 個殼、85 筆停用測試全數保留原狀。
