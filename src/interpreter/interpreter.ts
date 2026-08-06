@@ -61,7 +61,8 @@ export class SemanticInterpreter implements ExecutionContext {
   private currentNode: SemanticNode | null = null
   private executorRegistry: ConceptExecutorRegistry
 
-  constructor(options: InterpreterOptions = {}) {
+  constructor(options: InterpreterOptions = {
+}) {
     this.maxSteps = options.maxSteps ?? 100000
     // universal 概念是核心自己的資料（中立性護欄明確排除 universal 層），
     // 所以核心可以自行載入它們的宣告與標註。語言專屬的那些由語言套件推進來。
@@ -78,8 +79,6 @@ export class SemanticInterpreter implements ExecutionContext {
     registerArrayExecutors(reg)
     registerMutationExecutors(reg)
 
-    // 語言套件推進來的執行器——核心不知道有哪些語言，只知道有人推東西進來
-    for (const { concept, executor } of allLanguageExecutors()) reg(concept, executor as never)
 
     // cstdlib functions
 
@@ -132,7 +131,6 @@ export class SemanticInterpreter implements ExecutionContext {
 
     const noop: import('./executor-registry').ConceptExecutor = async () => {}
     for (const c of [
-      'cpp_ifdef', 'cpp_ifndef',
       'cpp_include_local',
       'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
       'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
@@ -146,6 +144,15 @@ export class SemanticInterpreter implements ExecutionContext {
     // min/max — evaluate children and return the smaller/larger
 
     // stdlib advanced expressions
+
+    // ⚠️ **這一段必須在建構式的最後。**
+    //
+    // 語言套件對**自己的概念**有最終發言權。放在前面的話，核心層後面那些
+    // 佔位用的空操作會把語言的真實作蓋掉——這個專案已經被同一件事咬過三次
+    // （`static_cast` 輸出 void、四個轉型被清單覆蓋、條件編譯的 body 不跑）。
+    //
+    // 註冊表是「後註冊的贏」，所以順序就是優先權。見 knowledge/history/020。
+    for (const { concept, executor } of allLanguageExecutors()) reg(concept, executor as never)
   }
 
   /** Abort execution from outside (e.g., Ctrl+C) */
@@ -196,6 +203,7 @@ export class SemanticInterpreter implements ExecutionContext {
   setOutputCallback(callback: ((text: string) => void) | null): void {
     this.outputCallback = callback
     this.io.onOutput(callback)
+
   }
 
   async execute(program: SemanticNode, stdin: string[] = []): Promise<void> {

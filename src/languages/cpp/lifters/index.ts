@@ -73,20 +73,38 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   // #ifdef NAME / #ifndef NAME
   // tree-sitter C++ parses both #ifdef and #ifndef as preproc_ifdef node type.
   // Distinguish by checking the source text for the #ifndef directive.
-  lifter.register('preproc_ifdef', (node) => {
+  lifter.register('preproc_ifdef', (node, ctx) => {
     const nameNode = node.childForFieldName('name')
     const name = nameNode?.text ?? 'MACRO'
-    // Check if the source text starts with #ifndef
-    if (node.text.trimStart().startsWith('#ifndef')) {
-      return createNode('cpp_ifndef', { name })
-    }
-    return createNode('cpp_ifdef', { name })
+    // **body 原本整段被丟掉**——於是 `#ifdef N` 之間的程式碼在語義樹裡不存在，
+    // 執行時自然什麼都不會發生，而且沒有任何提示。
+    // 屬性名同時對齊概念宣告（`condition`），舊的 `name` 一併保留給既有存檔。
+    // 過濾掉巨集名本身——`childForFieldName('name')` 在這個位置不一定回傳它，
+    // 只比對物件參照的話，`N` 會被當成變數引用 lift 進 body（實測過）。
+    const isMacroName = (c: { type: string; text: string }): boolean =>
+      c.type === 'identifier' && c.text === name
+    const body = ctx.liftChildren(
+      node.namedChildren.filter(
+        (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
+      ),
+    )
+    const concept = node.text.trimStart().startsWith('#ifndef') ? 'cpp_ifndef' : 'cpp_ifdef'
+    return createNode(concept, { condition: name, name }, { body })
   })
 
   // Keep preproc_ifndef registration in case future tree-sitter versions separate them
-  lifter.register('preproc_ifndef', (node) => {
+  lifter.register('preproc_ifndef', (node, ctx) => {
     const nameNode = node.childForFieldName('name')
     const name = nameNode?.text ?? 'MACRO'
-    return createNode('cpp_ifndef', { name })
+    // 過濾掉巨集名本身——`childForFieldName('name')` 在這個位置不一定回傳它，
+    // 只比對物件參照的話，`N` 會被當成變數引用 lift 進 body（實測過）。
+    const isMacroName = (c: { type: string; text: string }): boolean =>
+      c.type === 'identifier' && c.text === name
+    const body = ctx.liftChildren(
+      node.namedChildren.filter(
+        (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
+      ),
+    )
+    return createNode('cpp_ifndef', { condition: name, name }, { body })
   })
 }

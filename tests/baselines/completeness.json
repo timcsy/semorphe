@@ -6,10 +6,10 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
   },
   "totals": {
-    "implemented": 806,
-    "declared": 34,
+    "implemented": 809,
+    "declared": 33,
     "undecidable": 20,
-    "shell": 29,
+    "shell": 27,
     "missing": 1
   },
   "shells": [
@@ -28,14 +28,6 @@
     {
       "componentId": "cpp_destructor",
       "path": "lift"
-    },
-    {
-      "componentId": "cpp_ifdef",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_ifndef",
-      "path": "execute"
     },
     {
       "componentId": "cpp_lambda",

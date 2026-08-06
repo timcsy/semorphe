@@ -44,6 +44,7 @@
     "cpp_container_pop",
     "cpp_container_push",
     "cpp_container_push_back",
+    "cpp_define",
     "cpp_delete",
     "cpp_destructor",
     "cpp_do_while",

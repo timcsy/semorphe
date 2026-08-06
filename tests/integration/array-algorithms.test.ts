@@ -157,3 +157,46 @@ describe('辨識不出來的程式碼不再被靜靜略過', () => {
     expect(JSON.stringify(caught)).toContain('XYZZY_MARKER')
   })
 })
+
+describe('條件編譯：#ifdef / #ifndef 的 body 真的會跑', () => {
+  async function runPP(body: string): Promise<string> {
+    const src = `#include <iostream>\nusing namespace std;\nint main(){ \n${body}\n return 0; }\n`
+    const tree = lifter.lift(tsParser.parse(src).rootNode as never) as SemanticNode
+    const out: string[] = []
+    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
+    interp.setOutputCallback((s) => out.push(s))
+    await interp.execute(tree)
+    return out.join('')
+  }
+
+  it('#define 之後 #ifdef 的 body 會跑', async () => {
+    expect(await runPP(`#define N 1\n#ifdef N\ncout << 7;\n#endif`)).toBe('7')
+  })
+
+  it('未定義時 #ifdef 的 body 不跑', async () => {
+    expect(await runPP(`#ifdef ZZZ\ncout << 7;\n#endif\ncout << 1;`)).toBe('1')
+  })
+
+  it('未定義時 #ifndef 的 body 會跑', async () => {
+    expect(await runPP(`#ifndef ZZZ\ncout << 7;\n#endif`)).toBe('7')
+  })
+
+  it('已定義時 #ifndef 的 body 不跑', async () => {
+    expect(await runPP(`#define M 1\n#ifndef M\ncout << 7;\n#endif\ncout << 1;`)).toBe('1')
+  })
+
+  it('★ 巨集名本身不得被當成變數 lift 進 body', async () => {
+    // 實測過：`childForFieldName('name')` 在這個位置不一定回傳巨集名節點，
+    // 只比對物件參照的話 `N` 會變成 var_ref 進到 body，執行時報未宣告變數。
+    const src = `#include <iostream>\nusing namespace std;\nint main(){ \n#define N 1\n#ifdef N\ncout << 7;\n#endif\n return 0; }\n`
+    const tree = lifter.lift(tsParser.parse(src).rootNode as never) as SemanticNode
+    const found: string[] = []
+    const walk = (n: SemanticNode | null): void => {
+      if (!n) return
+      if (n.concept === 'cpp_ifdef') for (const c of n.children?.body ?? []) found.push(c.concept)
+      for (const a of Object.values(n.children ?? {})) for (const c of a) walk(c)
+    }
+    walk(tree)
+    expect(found, `body 裡混進了非程式碼的節點：${found.join('、')}`).not.toContain('var_ref')
+  })
+})

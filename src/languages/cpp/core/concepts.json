@@ -519,13 +519,7 @@
       "value"
     ],
     "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
+    "role": "statement"
   },
   {
     "conceptId": "cpp_ifdef",
