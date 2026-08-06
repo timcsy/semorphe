@@ -42,10 +42,13 @@ const RAW_CODE_CONTAINERS = ['cpp_raw_code', 'cpp_raw_expression'] as const
  * 所以那一筆是 053 之後的**殘留**，已刪除——不是搬過來。
  */
 const OOP_NOT_IMPLEMENTED = [
-  // `cpp_struct_declare` 與 `cpp_struct_member_access` 已於 071 真的實作
-  // （見 `structs.ts`），從這裡移除——**那是實作，不是宣告**。
-  'cpp_class_def',
-  'cpp_constructor',
+  // 已於 071／072 真的實作，從這裡移除——**那是實作，不是宣告**：
+  //   cpp_struct_declare / cpp_struct_member_access（071）
+  //   cpp_class_def / cpp_constructor / cpp_method_call(_expr)（072）
+  //
+  // ⚠️ 留在這裡的話**空操作會蓋掉真實作**——註冊表是後蓋前，而這份清單
+  // 跑在語言套件的真實作之後。`history/018` 記著同一件事：四個轉型概念有
+  // 能用的實作，被清單無聲覆蓋，於是 `static_cast<int>(3.9)` 輸出 void。
   'cpp_destructor',
   'cpp_virtual_method',
   'cpp_pure_virtual',

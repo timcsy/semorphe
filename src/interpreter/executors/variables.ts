@@ -27,7 +27,18 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
   if (ctx.structs.has(type)) {
     const init0 = node.children.initializer
     if (init0 && init0.length > 0) {
-      ctx.scope.declare(name, await ctx.evaluate(init0[0]))
+      const arg0 = init0[0]
+      // `P p(42);` —— 初始化式是一個名字等於型別名的呼叫，那是建構式。
+      //
+      // 核心**不編一個假概念來分派**：第一版那樣做，而孤兒實作護欄當場抓到
+      // 「一個沒有任何概念定義的執行器」。改成呼叫登記處的掛勾，怎麼跑由
+      // 語言套件安裝。
+      const isCtor = (arg0.concept === 'func_call_expr' || arg0.concept === 'func_call')
+        && String(arg0.properties?.name) === type
+      ctx.scope.declare(
+        name,
+        isCtor ? await ctx.structs.construct(type, arg0.children?.args ?? []) : await ctx.evaluate(arg0),
+      )
     } else {
       ctx.scope.declare(name, ctx.structs.instantiate(type))
     }

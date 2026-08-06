@@ -291,11 +291,11 @@
       "dirs": 3
     },
     "cpp_method_call": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_method_call_expr": {
-      "files": 8,
+      "files": 9,
       "dirs": 6
     },
     "cpp_min": {
@@ -639,16 +639,16 @@
       "dirs": 5
     },
     "func_call": {
-      "files": 9,
+      "files": 10,
       "dirs": 8
     },
     "func_call_expr": {
-      "files": 9,
+      "files": 10,
       "dirs": 8
     },
     "func_def": {
-      "files": 13,
-      "dirs": 10
+      "files": 14,
+      "dirs": 11
     },
     "if": {
       "files": 13,

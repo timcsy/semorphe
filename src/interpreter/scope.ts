@@ -64,6 +64,24 @@ export class Scope {
     return new Scope(this)
   }
 
+  /**
+   * 建一個**直接用 `fields` 當變數表**的作用域——給方法呼叫用。
+   *
+   * C++ 的方法直接寫欄位名（`x = 5`，不是 `this->x = 5`）。天真的做法是把
+   * 欄位複製進來、跑完再複製回去，**而那在方法呼叫方法時是錯的**：內層改的
+   * 是自己那份副本。
+   *
+   * 這裡不複製——欄位表就是變數表，讀寫自動穿透。
+   *
+   * ⚠️ 方法裡宣告的區域變數會落進這張表，也就是落進物件。呼叫端要用一個
+   * **子作用域**跑方法本體，讓區域變數落在子層。見 `struct-methods.ts`。
+   */
+  static overFields(fields: Map<string, RuntimeValue>, parent: Scope | null): Scope {
+    const s = new Scope(parent)
+    ;(s as unknown as { variables: Map<string, RuntimeValue> }).variables = fields
+    return s
+  }
+
   getAll(): Map<string, RuntimeValue> {
     const result = new Map<string, RuntimeValue>()
     if (this.parent) {
