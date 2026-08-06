@@ -126,3 +126,34 @@ describe('C 字串函式不再是空操作', () => {
     expect(await run(`int a[2]={1,2}; cout << a[0] << a[1];`)).toBe('12')
   })
 })
+
+describe('辨識不出來的程式碼不再被靜靜略過', () => {
+  it('★ 執行到 raw_code 會出聲，不是什麼都沒發生', async () => {
+    // 兜底容器原本註冊成空操作：使用者寫的一段程式什麼都沒發生、
+    // 而且沒有任何提示——「靜默降級是 bug 的藏身之處」，這裡藏的是
+    // 使用者自己的程式碼。
+    const { createNode } = await import('../../src/core/semantic-tree')
+    const { SemanticInterpreter } = await import('../../src/interpreter/interpreter')
+    const interp = new SemanticInterpreter({ maxSteps: 100 })
+    await expect(
+      interp.execute(
+        createNode('program', {}, { body: [createNode('cpp_raw_code', { code: 'asm volatile("nop")' }, {})] }),
+      ),
+    ).rejects.toThrow(/UNRECOGNIZED_CODE/)
+  })
+
+  it('★ 出聲的訊息說得出是哪一段程式碼', async () => {
+    const { createNode } = await import('../../src/core/semantic-tree')
+    const { SemanticInterpreter } = await import('../../src/interpreter/interpreter')
+    const interp = new SemanticInterpreter({ maxSteps: 100 })
+    let caught: unknown
+    try {
+      await interp.execute(
+        createNode('program', {}, { body: [createNode('cpp_raw_code', { code: 'XYZZY_MARKER' }, {})] }),
+      )
+    } catch (e) {
+      caught = e
+    }
+    expect(JSON.stringify(caught)).toContain('XYZZY_MARKER')
+  })
+})

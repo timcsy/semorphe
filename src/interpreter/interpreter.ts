@@ -114,10 +114,26 @@ export class SemanticInterpreter implements ExecutionContext {
     // 逐一分類與依據見 specs/053-declare-noop-execute/classification.md。
     //
     // 真正的歸屬是語言套件，不是核心層——那需要先把執行器搬過去（階段 6.5 P2）。
+    // 辨識不出來的程式碼：**執行到就出聲**，不能靜靜略過。
+    //
+    // 它們是「我們看不懂這段」的兜底容器。原本註冊成空操作，於是使用者寫的
+    // 一段程式**什麼都沒發生而且沒有任何提示**——那正是「靜默降級是 bug 的
+    // 藏身之處」講的形狀，而這裡藏的是使用者自己的程式碼。
+    //
+    // 出聲的形式是可被 `unknownConceptHandler` 接管的錯誤，與未知概念同一條
+    // 路徑：使用者可以選擇跳過或中止，**但不會不知道**。
+    for (const c of ['cpp_raw_code', 'cpp_raw_expression']) {
+      reg(c, async (node) => {
+        throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+          '%1': String(node.properties?.code ?? '(不明)').slice(0, 60),
+        })
+      })
+    }
+
     const noop: import('./executor-registry').ConceptExecutor = async () => {}
     for (const c of [
       'cpp_ifdef', 'cpp_ifndef',
-      'cpp_include_local', 'cpp_raw_code', 'cpp_raw_expression',
+      'cpp_include_local',
       'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
       'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
       'cpp_operator_overload', 'cpp_namespace_def', 'cpp_lambda',
