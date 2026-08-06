@@ -1,1 +1,3 @@
-{ "feature_directory": "specs/058-core-type-vocabulary" }
+{
+  "feature_directory": "specs/059-concept-id-vs-lookalike"
+}
