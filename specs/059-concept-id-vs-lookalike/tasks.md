@@ -9,13 +9,13 @@
 
 ## Phase 1：Setup
 
-- [ ] T001 拍下目前的中立性違規清單，存為 `specs/059-concept-id-vs-lookalike/baseline-29.txt`，作為全程歸因的依據
+- [X] T001 拍下目前的中立性違規清單，存為 `specs/059-concept-id-vs-lookalike/baseline-29.txt`，作為全程歸因的依據
 
 ---
 
 ## Phase 2：Foundational（阻擋所有 User Story）
 
-- [ ] T002 在 `tests/helpers/component-scan.ts` 建立遮罩管線的接縫：把既有的 `maskAbstractTargets` 與新遮罩收攏成一個具名的 `maskNonIdentityPositions(src)`，並讓 `scanFile` 呼叫它
+- [X] T002 在 `tests/helpers/component-scan.ts` 建立遮罩管線的接縫：把既有的 `maskAbstractTargets` 與新遮罩收攏成一個具名的 `maskNonIdentityPositions(src)`，並讓 `scanFile` 呼叫它
 
 ---
 
@@ -27,23 +27,23 @@
 
 ### 測試先行（憲章 II：MUST 先紅）
 
-- [ ] T003 [P] [US1] 在 `tests/helpers/component-scan.test.ts` 寫注入測試：**真的身分引用必須仍被報出**（合成字串，不掃真實檔案）— FR-003
-- [ ] T004 [P] [US1] 同檔寫反向注入：**型別位置（`type X = 'a' | 'b'`、`prop: 'a' | 'b'`）的字串不得被報出** — FR-004
-- [ ] T005 [P] [US1] 同檔寫反向注入：**`new Field*('x')` 第一引數不得被報出** — FR-004
-- [ ] T006 [US1] 確認 T003–T005 **全部先紅**，再往下做
+- [X] T003 [P] [US1] 在 `tests/helpers/component-scan.test.ts` 寫注入測試：**真的身分引用必須仍被報出**（合成字串，不掃真實檔案）— FR-003
+- [X] T004 [P] [US1] 同檔寫反向注入：**型別位置（`type X = 'a' | 'b'`、`prop: 'a' | 'b'`）的字串不得被報出** — FR-004
+- [X] T005 [P] [US1] 同檔寫反向注入：**`new Field*('x')` 第一引數不得被報出** — FR-004
+- [X] T006 [US1] 確認 T003–T005 **全部先紅**，再往下做
 
 ### 實作
 
-- [ ] T007 [US1] 在 `tests/helpers/component-scan.ts` 實作遮罩 A（型別位置）— research 決策 2
-- [ ] T008 [US1] 同檔實作遮罩 C（`new Field*` 第一引數）— research 決策 2
-- [ ] T009 [US1] 在 `tests/integration/audit-neutrality.test.ts` 的 `NOT_DETECTED` 加一句：**本護欄不檢測「語法層級的語言耦合」**——它只找概念身分字串，`lifter.ts` 剝 `//` 這種耦合它看不見 — research 決策 3
-- [ ] T010 [US1] 同檔把報表改成**兩欄**：「誤報修掉的」與「真的搬走的」，兩欄不得只呈現相加後的總數 — FR-005
-- [ ] T011 [US1] 同檔把自我否證聲明錨在合成注入上，不錨在真實檔案狀態上 — FR-006
-- [ ] T012 [US1] **不得實作遮罩 B**（`.type === 'x'`）；在 `component-scan.ts` 留一段註解記下它被否決的理由與實測數字 — research 決策 2
+- [X] T007 [US1] 在 `tests/helpers/component-scan.ts` 實作遮罩 A（型別位置）— research 決策 2
+- [X] T008 [US1] 同檔實作遮罩 C（`new Field*` 第一引數）— research 決策 2
+- [X] T009 [US1] 在 `tests/integration/audit-neutrality.test.ts` 的 `NOT_DETECTED` 加一句：**本護欄不檢測「語法層級的語言耦合」**——它只找概念身分字串，`lifter.ts` 剝 `//` 這種耦合它看不見 — research 決策 3
+- [X] T010 [US1] 同檔把報表改成**兩欄**：「誤報修掉的」與「真的搬走的」，兩欄不得只呈現相加後的總數 — FR-005
+- [X] T011 [US1] 同檔把自我否證聲明錨在合成注入上，不錨在真實檔案狀態上 — FR-006
+- [X] T012 [US1] **不得實作遮罩 B**（`.type === 'x'`）；在 `component-scan.ts` 留一段註解記下它被否決的理由與實測數字 — research 決策 2
 
 ### 驗收
 
-- [ ] T013 [US1] 執行護欄，確認 **29 → 27**，且兩筆都落在「誤報」欄；重新產生基線並與本 Phase 一起 commit
+- [X] T013 [US1] 執行護欄，確認 **29 → 27**，且兩筆都落在「誤報」欄；重新產生基線並與本 Phase 一起 commit
 
 ---
 
