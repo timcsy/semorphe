@@ -107,11 +107,11 @@ description: "Task list for 053-declare-noop-execute"
 
 ## Phase 6: User Story 4 — 以後不會退回寫死清單（Priority: P2）
 
-- [ ] T024 [US4] 在 `src/interpreter/executor-registry.ts` 加 `duplicates()`：記錄同一概念被註冊超過一次的情形。**不在註冊時報錯**（`history/017`：加嚴之前先回答「被拒絕的東西去哪了」，這裡答案是「不知道」）
-- [ ] T025 [US4] 建立 `tests/baselines/executor-duplicates.json` 與對應棘輪；**獨立 commit**
-- [ ] T026 [US4] 改 `tests/integration/audit-completeness.test.ts` 的報表為三欄：實作／已宣告不提供（附理由）／殼。**棘輪只看殼與缺**（FR-031）
-- [ ] T027 [US4] 報表列出每個宣告的理由，讓宣告可被複查而不是一次性的（FR-032）
-- [ ] T028 [US4] 加自我否證聲明：「如果分類跑出 34 個全部可宣告，代表判準太鬆或最小程式太簡單——**那不是好消息，是工具壞了**」
+- [X] T024 [US4] 在 `src/interpreter/executor-registry.ts` 加 `duplicates()`：記錄同一概念被註冊超過一次的情形。**不在註冊時報錯**（`history/017`：加嚴之前先回答「被拒絕的東西去哪了」，這裡答案是「不知道」）
+- [X] T025 [US4] 建立 `tests/baselines/executor-duplicates.json` 與對應棘輪；**獨立 commit**
+- [X] T026 [US4] 改 `tests/integration/audit-completeness.test.ts` 的報表為三欄：實作／已宣告不提供（附理由）／殼。**棘輪只看殼與缺**（FR-031）
+- [X] T027 [US4] 報表列出每個宣告的理由，讓宣告可被複查而不是一次性的（FR-032）
+- [X] T028 [US4] 加自我否證聲明：「如果分類跑出 34 個全部可宣告，代表判準太鬆或最小程式太簡單——**那不是好消息，是工具壞了**」
 
 **Checkpoint**: 兩種下降分得出來 → US4 可獨立交付
 
@@ -119,10 +119,10 @@ description: "Task list for 053-declare-noop-execute"
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T029 依 `quickstart.md` 八個情境逐一驗收，**特別是情境 0**
-- [ ] T030 下調 `tests/baselines/completeness.json` 與 `neutrality.json`；**獨立 commit，訊息說明下降的來源是宣告還是實作**
-- [ ] T031 確認其餘四項量測未上升
-- [ ] T032 執行 `npm test` 確認全綠
+- [X] T029 依 `quickstart.md` 八個情境逐一驗收，**特別是情境 0**
+- [X] T030 下調 `tests/baselines/completeness.json` 與 `neutrality.json`；**獨立 commit，訊息說明下降的來源是宣告還是實作**
+- [X] T031 確認其餘四項量測未上升
+- [X] T032 執行 `npm test` 確認全綠
 - [ ] T033 更新 `knowledge/concepts/執行機構.md`：第一條判準「讓正確的那個說話」第一次真的被落實，補上實測結果
 - [ ] T034 更新 `knowledge/vision.md`：階段 6.5 記錄中立性與完備性的**第一次下降**，並註明多少來自宣告、多少來自實作
 - [ ] T035 回填 `knowledge/experience.md`——**只在真的有新東西時才寫**。候選：「判準是對的，把它自動化的第一版仍然會量錯」（F2b，第五個實例、新觸發點：兩個量測互相矛盾）

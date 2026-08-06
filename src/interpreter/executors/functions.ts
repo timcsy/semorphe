@@ -110,23 +110,14 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
   })
 
   // OOP concepts — noop in interpreter (no OOP runtime)
-  register('cpp_struct_declare', async () => {})
   register('cpp_struct_member_access', async () => {})
   register('cpp_struct_pointer_access', async () => {})
-  register('cpp_class_def', async () => {})
-  register('cpp_constructor', async () => {})
-  register('cpp_destructor', async () => {})
-  register('cpp_virtual_method', async () => {})
-  register('cpp_pure_virtual', async () => {})
-  register('cpp_override_method', async () => {})
-  register('cpp_operator_overload', async () => {})
   register('cpp_method_call', async () => {})
   register('cpp_method_call_expr', async () => {})
 
-  // Advanced language features — noop in interpreter
-  // 註：四個具名轉型的實作在 operators.ts —— 那一份會看 target_type 並截斷，
-  // 這裡原本那份不會，兩份互相覆蓋且勝負靠載入順序。見 specs/053 research F8。
-  register('cpp_lambda', async () => {})
-  register('cpp_namespace_def', async () => {})
+  // 註：物件導向那批「已知缺口」的空操作集中在 interpreter.ts 的缺口清單，
+  // 那裡有不能直接刪的理由。原本這裡也各註冊一次，兩邊互相覆蓋——行為相同，
+  // 但同一個病（勝負靠載入順序）。四個具名轉型的實作在 operators.ts。
+  // 見 specs/053-declare-noop-execute/research.md F8。
   register('cpp_template_function', async () => {})
 }

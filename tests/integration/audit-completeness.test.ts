@@ -56,11 +56,28 @@ const DISCLAIMER =
   '單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），' +
   '由 fuzz 等組合式測試負責。綠燈 ≠ 完備。'
 
+/** 宣告這條路的失效樣態——照 knowledge/concepts/執行機構.md 的要求 */
+const DECLARATION_WARNING =
+  '⚠️ **📄 的數字上升不是進步。** 宣告會讓 🈳 下降而系統一點都沒變。' +
+  '如果 📄 大幅成長而 ✅ 沒動，多半是有人用宣告刷數字——' +
+  '每一個 📄 都必須通過 `tests/integration/skip-declaration-gate.test.ts` 的門檻，' +
+  '而那份門檻的依據是實測（specs/053-declare-noop-execute/classification.md）。' +
+  '實測 34 個候選裡只有 12 個站得住；**若哪天 📄 逼近 34，那是判準壞了，不是我們變好了**。'
+
 const RULE =
   '從 ConceptDef 合成最小節點跑一圈五路。' +
   'missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。'
 
-type Verdict = 'implemented' | 'shell' | 'missing'
+/**
+ * `declared` 與 `implemented` **必須分開**。
+ *
+ * 兩種下降看起來一樣，意義完全不同：
+ *   因為**實作**了 → 系統多會做一件事
+ *   因為**宣告**了 → 系統沒有變，只是我們終於說清楚它本來就不做
+ *
+ * 混在一起的話，下一個人會用宣告刷數字，而護欄會替他背書。
+ */
+type Verdict = 'implemented' | 'declared' | 'shell' | 'missing'
 const PATHS: PathName[] = ['generate', 'lift', 'render', 'extract', 'execute']
 
 interface PathResult {
@@ -71,7 +88,7 @@ type Row = Record<PathName, PathResult>
 
 interface CompletenessBaseline {
   _meta: BaselineMeta
-  totals: { implemented: number; shell: number; missing: number }
+  totals: { implemented: number; declared: number; shell: number; missing: number }
   shells: { componentId: string; path: PathName }[]
   missing: { componentId: string; path: PathName }[]
 }
@@ -135,7 +152,12 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
   let generated = ''
 
   const declared = (p: PathName): PathResult | null =>
-    skip.has(p) ? { verdict: 'implemented', reason: '已宣告 skipPaths：刻意不提供' } : null
+    skip.has(p)
+      ? {
+          verdict: 'declared',
+          reason: `已宣告刻意不提供（${def.skipReasons?.[p] ?? '未寫理由'}）`,
+        }
+      : null
 
   // ── generate ─────────────────────────────────────────────────────────
   row.generate =
@@ -298,19 +320,32 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     const shells = flatten(result, 'shell')
     const missing = flatten(result, 'missing')
     const impl = flatten(result, 'implemented')
+    const declared = flatten(result, 'declared')
 
     const md: string[] = []
     md.push('# 補完地圖（自動產生，勿手改）')
     md.push('')
     md.push(`> ${DISCLAIMER}`)
+    md.push('>')
+    md.push(`> ${DECLARATION_WARNING}`)
     md.push('')
     md.push(`判定規則：${RULE}`)
     md.push('')
-    md.push(`元件：${total}｜✅ 實作 ${impl.length}｜🈳 殼 ${shells.length}｜❌ 缺 ${missing.length}（以路徑數計）`)
+    md.push(
+      `元件：${total}｜✅ 實作 ${impl.length}｜📄 已宣告不提供 ${declared.length}｜` +
+        `🈳 殼 ${shells.length}｜❌ 缺 ${missing.length}（以路徑數計）`,
+    )
+    md.push('')
+    md.push(
+      '> **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；' +
+        '後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。' +
+        '棘輪只看 🈳 與 ❌。',
+    )
     md.push('')
     md.push('| 元件 | generate | lift | render | extract | execute |')
     md.push('|---|---|---|---|---|---|')
-    const icon = (v: Verdict): string => (v === 'implemented' ? '✅' : v === 'shell' ? '🈳' : '❌')
+    const icon = (v: Verdict): string =>
+      v === 'implemented' ? '✅' : v === 'declared' ? '📄' : v === 'shell' ? '🈳' : '❌'
     for (const [id, row] of [...result].sort(([a], [b]) => a.localeCompare(b))) {
       md.push(`| \`${id}\` | ${PATHS.map((p) => icon(row[p].verdict)).join(' | ')} |`)
     }
@@ -318,10 +353,23 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
 
     printReport('完備性護欄', [
       DISCLAIMER,
+      DECLARATION_WARNING,
       '',
       `判定規則：${RULE}`,
       '',
-      `元件：${total}｜✅ ${impl.length}｜🈳 ${shells.length}｜❌ ${missing.length}（路徑數）`,
+      `元件：${total}｜✅ ${impl.length}｜📄 已宣告 ${declared.length}｜🈳 ${shells.length}｜❌ ${missing.length}（路徑數）`,
+      '',
+      '📄 的理由（宣告要可複查，不是一次性的）：',
+      ...(() => {
+        const byReason = new Map<string, string[]>()
+        for (const d of declared) {
+          const r = result.get(d.componentId)?.[d.path]?.reason ?? '（未寫理由）'
+          const arr = byReason.get(r) ?? []
+          arr.push(`${d.componentId}.${d.path}`)
+          byReason.set(r, arr)
+        }
+        return [...byReason].map(([r, ids]) => `  ${r}：${ids.join('、')}`)
+      })(),
       '',
       '殼最多的路徑：',
       ...PATHS.map((p) => `  ${p.padEnd(9)} 殼 ${shells.filter((s) => s.path === p).length} ｜ 缺 ${missing.filter((s) => s.path === p).length}`),
@@ -383,6 +431,7 @@ if (process.env.GENERATE_BASELINE) {
         },
         totals: {
           implemented: flatten(m, 'implemented').length,
+          declared: flatten(m, 'declared').length,
           shell: shells.length,
           missing: missing.length,
         },
