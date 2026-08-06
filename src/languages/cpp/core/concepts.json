@@ -480,10 +480,12 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute"
+      "execute",
+      "generate"
     ],
     "skipReasons": {
-      "execute": "declarative"
+      "execute": "declarative",
+      "generate": "consumed-by-parent"
     }
   },
   {
@@ -494,7 +496,13 @@
       "header"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "generate"
+    ],
+    "skipReasons": {
+      "generate": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_define",
@@ -599,10 +607,12 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute"
+      "execute",
+      "generate"
     ],
     "skipReasons": {
-      "execute": "declarative"
+      "execute": "declarative",
+      "generate": "consumed-by-parent"
     }
   },
   {
@@ -747,10 +757,12 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute"
+      "execute",
+      "generate"
     ],
     "skipReasons": {
-      "execute": "declarative"
+      "execute": "declarative",
+      "generate": "consumed-by-parent"
     }
   },
   {

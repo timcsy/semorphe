@@ -157,3 +157,17 @@
 | `cpp_strncpy` | `strncpy(s,"hello",2); cout << s;` | he | **[array]** |
 
 **學生排序一個陣列會拿到垃圾，而且沒有任何提示。** 這九個是真的缺口，不得宣告。
+
+
+### ✅ 可宣告：generate 由程式骨架消費（`consumed-by-parent`）4 個
+
+| 概念 | 實測 |
+|---|---|
+| `cpp_include` | `#include <iostream>` 走完 round-trip **完整保留** |
+| `cpp_include_local` | `#include "my.h"` 同上 |
+| `cpp_using_namespace` | `using namespace std;` 同上 |
+| `cpp_using_alias` | `using MyInt = int;` 同上 |
+
+它們自己的 generator 是空的**是對的**——標頭與 using 由**程式骨架**統一產生並排在檔案最上方，概念各自輸出會產生重複。
+
+先實測「round-trip 會不會掉」再宣告，不是看到空的就假設它有理由。

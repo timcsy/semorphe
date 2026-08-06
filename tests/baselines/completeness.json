@@ -7,9 +7,9 @@
   },
   "totals": {
     "implemented": 803,
-    "declared": 19,
+    "declared": 23,
     "undecidable": 16,
-    "shell": 41,
+    "shell": 37,
     "missing": 11
   },
   "shells": [
@@ -48,14 +48,6 @@
     {
       "componentId": "cpp_include_local",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_include_local",
-      "path": "generate"
-    },
-    {
-      "componentId": "cpp_include",
-      "path": "generate"
     },
     {
       "componentId": "cpp_lambda",
@@ -144,14 +136,6 @@
     {
       "componentId": "cpp_template_function",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_using_alias",
-      "path": "generate"
-    },
-    {
-      "componentId": "cpp_using_namespace",
-      "path": "generate"
     },
     {
       "componentId": "cpp_virtual_method",
