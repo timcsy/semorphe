@@ -5,16 +5,10 @@
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），但**先遮掉拼法像身分、實際不是**的位置（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。僅計語言專屬概念（lang-core／lang-library）；universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "total": 3,
+  "total": 1,
   "files": {
-    "src/ui/app.ts": [
-      "cpp_include"
-    ],
     "src/ui/block-registrar.ts": [
       "cpp_string_at",
-      "cpp_string_declare"
-    ],
-    "src/ui/sync-controller.ts": [
       "cpp_string_declare"
     ]
   }

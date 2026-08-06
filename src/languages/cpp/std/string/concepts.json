@@ -7,7 +7,8 @@
       "name"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "downgradeTypePrefix": "string"
   },
   {
     "conceptId": "cpp_string_length",

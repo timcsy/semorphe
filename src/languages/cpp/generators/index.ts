@@ -8,7 +8,7 @@ import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
-import { declareExecutor, declareBuiltinConstants, declareAbstract } from '../../../core/language-executors'
+import { declareExecutor, declareBuiltinConstants, declareAbstract, declareDowngradeTypePrefix } from '../../../core/language-executors'
 import { CPP_BUILTIN_CONSTANTS } from '../builtins'
 import { registerCoreExecutors } from '../core/executors'
 import { coreConcepts } from '../core'
@@ -69,6 +69,8 @@ export function registerCppSkipDeclarations(): void {
     if (reasons && Object.keys(reasons).length > 0) declareSkips(c.conceptId, reasons)
     const parent = (c as { abstractConcept?: string | null }).abstractConcept
     if (parent) declareAbstract(c.conceptId, parent)
+    const prefix = (c as { downgradeTypePrefix?: string }).downgradeTypePrefix
+    if (prefix) declareDowngradeTypePrefix(c.conceptId, prefix)
     const ann = (c as { annotations?: Record<string, unknown> }).annotations
     if (ann && Object.keys(ann).length > 0) declareAnnotations(c.conceptId, ann)
   }

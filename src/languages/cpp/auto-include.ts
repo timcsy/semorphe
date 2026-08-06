@@ -5,6 +5,7 @@
  * DependencyResolver to determine which #include headers are required.
  * Merges with manually placed #include blocks (deduplication).
  */
+import { createNode } from '../../core/semantic-tree'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
@@ -113,4 +114,20 @@ export function createCppCodePatcher(
 
     return changed ? patched : null
   }
+}
+
+/**
+ * 把自動推導出的引入邊轉成語義節點。
+ *
+ * **這一步原本在介面層做**（`src/ui/app.ts` 直接 `createNode('cpp_include', …)`）。
+ * 那讓介面層認得一個 C++ 專屬的概念身分——換一種語言，引入指令的概念叫別的
+ * 名字，而介面層寫死了這一個。
+ *
+ * 現在介面層只知道「請語言套件把這些邊變成節點」。**哪個概念代表引入，是
+ * 語言套件自己的知識。**
+ */
+export function autoIncludeNodes(edges: DependencyEdge[]): SemanticNode[] {
+  return edges.map((edge) =>
+    createNode('cpp_include', { header: edge.header.replace(/^<|>$/g, '') }, {}),
+  )
 }

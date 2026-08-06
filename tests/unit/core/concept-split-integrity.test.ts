@@ -13,12 +13,17 @@ describe('Concept/BlockDef split integrity', () => {
     // 補一個假的投影就能讓數字對齊，但那會把缺口藏回去——完備性報表已經
     // 把它們標成 render／extract 缺，讓它留在那裡被看見。
     // 見 specs/055-finish-executor-move（program 等三個概念補宣告後暴露的缺口）
-    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(27)
+    // 27 → 30（2026-08-06，059）：`comment` / `doc_comment` / `block_comment`
+    // 從 lang-core 移入 universal。判準是 concepts/概念代數.md 的
+    // 「Layer 0: Universal — 所有語言共有」；註解通過，`//` 不通過（那是
+    // Layer 1 的語言核心語法，已下沉到語言套件）。
+    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(30)
     expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(26)
   })
 
   it('should have correct core concept and block counts', () => {
-    expect(coreConcepts.length).toBe(79)
+    // 79 → 76：上面那三個搬出去了
+    expect(coreConcepts.length).toBe(76)
     expect(coreBlocks.length).toBe(77)
   })
 

@@ -19,8 +19,7 @@ import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
-import { createCppCodePatcher, computeAutoIncludes } from '../languages/cpp/auto-include'
-import { createNode } from '../core/semantic-tree'
+import { createCppCodePatcher, computeAutoIncludes, autoIncludeNodes } from '../languages/cpp/auto-include'
 import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
 import { PatternLifter } from '../core/lift/pattern-lifter'
@@ -166,9 +165,8 @@ export class App {
       if (!scaffoldVisible) return tree
       const autoIncludes = computeAutoIncludes(tree, registry)
       if (autoIncludes.length === 0) return tree
-      const includeNodes = autoIncludes.map(edge =>
-        createNode('cpp_include', { header: edge.header.replace(/^<|>$/g, '') }, {}),
-      )
+      // 哪個概念代表「引入」是語言套件的知識，介面層不該認得它
+      const includeNodes = autoIncludeNodes(autoIncludes)
       return {
         ...tree,
         children: { ...tree.children, body: [...includeNodes, ...(tree.children.body ?? [])] },

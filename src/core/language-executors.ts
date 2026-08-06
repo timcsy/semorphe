@@ -82,6 +82,26 @@ export function declareAbstract(conceptId: string, parent: string): void {
   abstractOf.set(conceptId, parent)
 }
 
+/**
+ * 降級到父概念時要保留的型別前綴。
+ *
+ * `cpp_string_declare` 降級成 `var_declare` 會掉一個資訊：**它宣告的是字串**。
+ * 這件事原本寫死在同步控制器裡（`node.concept === 'cpp_string_declare' ? 'string' : …`）
+ * ——介面層認得一個 C++ 專屬概念，且只認得這一個：換一種語言、或多一個同類的
+ * 概念，都要回頭改那一行。
+ *
+ * 現在是概念自己說的（`concepts.json` 的 `downgradeTypePrefix`）。
+ */
+const downgradePrefix = new Map<string, string>()
+
+export function declareDowngradeTypePrefix(conceptId: string, prefix: string): void {
+  downgradePrefix.set(conceptId, prefix)
+}
+
+export function downgradeTypePrefixOf(conceptId: string): string | undefined {
+  return downgradePrefix.get(conceptId)
+}
+
 /** 這個概念的語言中立父概念（沒有就回 undefined） */
 export function abstractConceptOf(conceptId: string): string | undefined {
   return abstractOf.get(conceptId)

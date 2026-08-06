@@ -227,8 +227,8 @@
       "dirs": 3
     },
     "cpp_include": {
-      "files": 11,
-      "dirs": 6
+      "files": 10,
+      "dirs": 5
     },
     "cpp_include_local": {
       "files": 7,
@@ -479,7 +479,7 @@
       "dirs": 2
     },
     "cpp_string_declare": {
-      "files": 10,
+      "files": 9,
       "dirs": 5
     },
     "cpp_string_empty": {
