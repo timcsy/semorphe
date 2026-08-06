@@ -113,7 +113,17 @@ export interface BlockSpec {
   language: string
   category: string
   version: string
-  concept: ConceptMapping
+  /**
+   * 這顆積木對應的概念。
+   *
+   * 舊名 `concept`——與 `SemanticNode.concept`（一個**字串**）同名而不同義，
+   * 是 2026-08-06 那次改名翻車的直接原因：腳本分不出「值是物件」與「值是
+   * 字串」的兩種 `concept`，而測試檔不在型別檢查範圍內，改錯了照樣編得過。
+   *
+   * 改名讓「`concept`」在專案裡的意思收斂。見 experience「同一個欄位名長在
+   * 三個不同型別上時」。
+   */
+  conceptMapping: ConceptMapping
   blockDef: Record<string, unknown>
   codeTemplate: CodeTemplate
   astPattern: AstPattern

@@ -46,8 +46,8 @@ beforeAll(() => {
   extractor.loadBlockSpecs(allSpecs)
 
   for (const spec of allSpecs) {
-    if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
-      generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
+    if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
+      generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
     }
   }
   generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
@@ -58,7 +58,7 @@ beforeAll(() => {
  * based on the block's concept definition.
  */
 function buildDummyNode(spec: BlockSpec) {
-  const concept = spec.concept!
+  const concept = spec.conceptMapping!
   const props: Record<string, string> = {}
   const children: Record<string, any[]> = {}
 
@@ -97,7 +97,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
   describe('Render coverage: every concept renders to correct block type', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
 
       const blockType = (spec.blockDef as any).type
@@ -113,7 +113,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
   describe('Extract coverage: every block extracts to correct concept', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
 
       const blockType = (spec.blockDef as any).type
@@ -132,7 +132,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
   describe('Code generation coverage: every concept generates code', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId || skipConcepts.has(conceptId)) continue
       if (!spec.codeTemplate?.pattern) continue // skip blocks without templates
 

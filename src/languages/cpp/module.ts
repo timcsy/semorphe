@@ -78,8 +78,8 @@ export function initCppModule(): CppModuleEngines {
 
   // 6. Register code templates from block specs
   for (const spec of allSpecs) {
-    if (spec.codeTemplate && spec.concept?.conceptId) {
-      templateGenerator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
+    if (spec.codeTemplate && spec.conceptMapping?.conceptId) {
+      templateGenerator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
     }
   }
 

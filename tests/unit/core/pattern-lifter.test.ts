@@ -52,7 +52,7 @@ describe('PatternLifter', () => {
         category: 'values',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_char_literal',
           abstractConcept: 'char_literal',
           properties: ['char'],
@@ -86,7 +86,7 @@ describe('PatternLifter', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_increment',
           abstractConcept: 'increment',
           properties: ['name', 'operator'],
@@ -128,7 +128,7 @@ describe('PatternLifter', () => {
         category: 'io',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_printf',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
@@ -161,7 +161,7 @@ describe('PatternLifter', () => {
         category: 'io',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_printf',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
@@ -192,7 +192,7 @@ describe('PatternLifter', () => {
         category: 'functions',
         level: 1,
         version: '1.0.0',
-        concept: { conceptId: 'generic_call', role: 'expression' },
+        conceptMapping: { conceptId: 'generic_call', role: 'expression' },
         blockDef: { type: 'generic_call' },
         codeTemplate: { pattern: '${NAME}()', imports: [], order: 20 },
         astPattern: { nodeType: 'call_expression', constraints: [] },
@@ -203,7 +203,7 @@ describe('PatternLifter', () => {
         category: 'io',
         level: 1,
         version: '1.0.0',
-        concept: { conceptId: 'cpp_printf', role: 'statement' },
+        conceptMapping: { conceptId: 'cpp_printf', role: 'statement' },
         blockDef: { type: 'c_printf' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
@@ -233,7 +233,7 @@ describe('PatternLifter', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_compound_assign',
           abstractConcept: 'compound_assign',
           properties: ['name', 'operator'],
@@ -259,7 +259,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -328,7 +328,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -400,7 +400,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'var_ref', role: 'expression' },
+        conceptMapping: { conceptId: 'var_ref', role: 'expression' },
         blockDef: { type: 'u_var_ref' },
         codeTemplate: { pattern: '${NAME}', imports: [], order: 20 },
         astPattern: {
@@ -467,7 +467,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -572,7 +572,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {

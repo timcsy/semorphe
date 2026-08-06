@@ -35,7 +35,7 @@ export class PatternExtractor {
   /** Load block specs and build blockType → ExtractSpec index */
   loadBlockSpecs(specs: BlockSpec[]): void {
     for (const spec of specs) {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId) continue
 
       const blockType = (spec.blockDef as Record<string, unknown>).type as string
@@ -229,7 +229,7 @@ export class PatternExtractor {
       statementInputs: {},
     }
 
-    const concept = spec.concept
+    const concept = spec.conceptMapping
     if (!concept) return mapping
 
     const blockDef = spec.blockDef as Record<string, unknown>

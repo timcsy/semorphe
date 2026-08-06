@@ -27,7 +27,7 @@ describe('PatternExtractor', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'cpp_increment',
           properties: ['name', 'operator'],
           role: 'both',
@@ -67,7 +67,7 @@ describe('PatternExtractor', () => {
         category: 'functions',
         level: 0,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'return',
           children: { value: 'expression' },
           role: 'statement',
@@ -86,7 +86,7 @@ describe('PatternExtractor', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'number_literal',
           properties: ['value'],
           role: 'expression',
@@ -134,7 +134,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        concept: {
+        conceptMapping: {
           conceptId: 'while_loop',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
@@ -154,7 +154,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'break', role: 'statement' },
+        conceptMapping: { conceptId: 'break', role: 'statement' },
         blockDef: { type: 'u_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
@@ -166,7 +166,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'continue', role: 'statement' },
+        conceptMapping: { conceptId: 'continue', role: 'statement' },
         blockDef: { type: 'u_continue' },
         codeTemplate: { pattern: 'continue;', imports: [], order: 0 },
         astPattern: { nodeType: 'continue_statement', constraints: [] },

@@ -69,8 +69,8 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     extractor.loadBlockSpecs(specs)
 
     for (const spec of specs) {
-      if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
-        generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
+      if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
+        generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
       }
     }
   })
@@ -175,7 +175,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        concept: { conceptId: 'number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${value}', imports: [], order: 20 },
         astPattern: {

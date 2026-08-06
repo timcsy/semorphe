@@ -37,7 +37,7 @@ describe('PatternExtractor — extractStrategy', () => {
     // Load a spec that would auto-derive
     extractor.loadBlockSpecs([{
       blockDef: { type: 'u_test', args0: [{ type: 'field_input', name: 'NAME' }] },
-      concept: { conceptId: 'test', properties: ['name'], children: {} },
+      conceptMapping: { conceptId: 'test', properties: ['name'], children: {} },
     }])
     // Register strategy that returns different concept
     extractor.registerExtractStrategy('u_test', () => createNode('strategy_wins', {}))
@@ -105,7 +105,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
     // Also register var_ref strategy so condition extraction works
     extractor.loadBlockSpecs([{
       blockDef: { type: 'u_var_ref', args0: [{ type: 'field_input', name: 'NAME' }], output: 'any' },
-      concept: { conceptId: 'var_ref', properties: ['name'], children: {} },
+      conceptMapping: { conceptId: 'var_ref', properties: ['name'], children: {} },
     }])
 
     const block: BlockState = {

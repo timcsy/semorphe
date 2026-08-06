@@ -616,7 +616,7 @@ export class BlocklyPanel implements ViewHost {
       const svgRoot = (block as Blockly.BlockSvg).getSvgRoot?.()
       if (!svgRoot) continue
       const spec = this.blockSpecRegistry.getAll().find(s => s.blockDef?.type === block.type)
-      const conceptId = spec?.concept?.conceptId
+      const conceptId = spec?.conceptMapping?.conceptId
       // If block has no concept (unknown/custom), treat as visible
       if (!conceptId || visibleConcepts.has(conceptId)) {
         svgRoot.style.opacity = ''

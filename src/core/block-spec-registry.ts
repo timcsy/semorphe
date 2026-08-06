@@ -18,7 +18,7 @@ export class BlockSpecRegistry {
         language: proj.language,
         category: proj.category,
         version: proj.version,
-        concept: {
+        conceptMapping: {
           conceptId: proj.conceptId,
           abstractConcept: concept?.abstractConcept ?? undefined,
           properties: concept?.properties,
@@ -38,14 +38,14 @@ export class BlockSpecRegistry {
   loadFromJSON(specs: BlockSpec[]): void {
     for (const spec of specs) {
       this.specs.set(spec.id, spec)
-      if (spec.concept?.conceptId) {
-        this.byConceptId.set(spec.concept.conceptId, spec)
+      if (spec.conceptMapping?.conceptId) {
+        this.byConceptId.set(spec.conceptMapping.conceptId, spec)
       }
       const blockType = (spec.blockDef as Record<string, unknown>)?.type as string | undefined
       if (blockType) {
         this.byBlockType.set(blockType, spec)
-        if (spec.concept?.conceptId) {
-          this.conceptToBlockType.set(spec.concept.conceptId, blockType)
+        if (spec.conceptMapping?.conceptId) {
+          this.conceptToBlockType.set(spec.conceptMapping.conceptId, blockType)
         }
       }
     }
@@ -94,8 +94,8 @@ export class BlockSpecRegistry {
     return [...this.specs.values()].filter(spec => {
       if (spec.category !== category) return false
       if (!visibleConcepts) return true
-      if (!spec.concept?.conceptId) return true
-      return visibleConcepts.has(spec.concept.conceptId)
+      if (!spec.conceptMapping?.conceptId) return true
+      return visibleConcepts.has(spec.conceptMapping.conceptId)
     })
   }
 
@@ -108,8 +108,8 @@ export class BlockSpecRegistry {
     if (!visibleConcepts) return true
     const spec = this.byBlockType.get(blockType)
     if (!spec) return true
-    if (!spec.concept?.conceptId) return true
-    return visibleConcepts.has(spec.concept.conceptId)
+    if (!spec.conceptMapping?.conceptId) return true
+    return visibleConcepts.has(spec.conceptMapping.conceptId)
   }
 
   /** Get a BlockSpec with Topic override applied (if any) */

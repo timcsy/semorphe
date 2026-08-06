@@ -51,7 +51,7 @@ export class PatternLifter {
       if (skipNodeTypes?.has(ap.nodeType)) continue
 
       const entry: PatternEntry = {
-        conceptId: spec.concept?.conceptId ?? spec.id,
+        conceptId: spec.conceptMapping?.conceptId ?? spec.id,
         patternType: ap.patternType ?? (ap.constraints.length > 0 ? 'constrained' : 'simple'),
         priority: this.calcPriority(ap.patternType ?? 'simple', ap.constraints?.length ?? 0, 0) - 5,
         constraints: ap.constraints,

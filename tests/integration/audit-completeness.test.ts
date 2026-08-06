@@ -325,8 +325,8 @@ function measureConfigDelta(): { componentId: string; actual: string; declared: 
   const tg = new TemplateGenerator()
   tg.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
   for (const spec of specsCache) {
-    if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
-      tg.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
+    if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
+      tg.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
     }
   }
   setTemplateGenerator(tg)

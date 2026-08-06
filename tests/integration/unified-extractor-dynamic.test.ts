@@ -45,7 +45,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      concept: {
+      conceptMapping: {
         conceptId: 'test_func_call',
         properties: ['name'],
         children: { args: 'expression' },
@@ -73,7 +73,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      concept: {
+      conceptMapping: {
         conceptId: 'test_func_def',
         properties: ['name', 'return_type'],
         children: { params: 'expression', body: 'statements' },
@@ -102,7 +102,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      concept: {
+      conceptMapping: {
         conceptId: 'test_scanf',
         properties: ['format'],
         children: { args: 'expression' },
@@ -134,7 +134,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      concept: {
+      conceptMapping: {
         conceptId: 'test_if',
         properties: [],
         children: { condition: 'expression', then_body: 'statements', else_body: 'statements' },
@@ -168,7 +168,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      concept: {
+      conceptMapping: {
         conceptId: 'test_print',
         properties: [],
         children: { values: 'expression' },

@@ -76,8 +76,8 @@ describe('L1 Block Roundtrip', () => {
     extractor.loadBlockSpecs(allSpecs)
 
     for (const spec of allSpecs) {
-      if (spec.codeTemplate?.pattern && spec.concept?.conceptId) {
-        generator.registerTemplate(spec.concept.conceptId, spec.codeTemplate)
+      if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
+        generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
       }
     }
     generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])

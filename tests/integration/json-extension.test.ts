@@ -92,15 +92,15 @@ describe('JSON-only extension (US6)', () => {
     ])
     const sortSpec = registry.getAll().find(s => s.id === 'cpp_sort')
     expect(sortSpec).toBeDefined()
-    expect(sortSpec!.concept.conceptId).toBe('cpp_sort')
+    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp_sort')
     // 原本斷言的是 'sort'——而那個概念**從來不存在**，查詢父概念會靜默回傳
     // undefined。這支測試等於在釘住一個懸空指標。
     // cpp_sort 目前沒有語言中立的父概念（通用概念集裡沒有「排序」這個抽象），
     // 所以正確的值是「沒有」。見 specs/056-abstract-concept-integrity。
-    expect(sortSpec!.concept.abstractConcept ?? null).toBeNull()
+    expect(sortSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
 
     const backSpec = registry.getAll().find(s => s.id === 'cpp_vector_back')
     // 同上：'vector_back' 這個概念從來不存在
-    expect(backSpec!.concept.abstractConcept ?? null).toBeNull()
+    expect(backSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
   })
 })

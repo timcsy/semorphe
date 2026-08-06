@@ -25,7 +25,7 @@ function makeSpec(blockType: string, conceptId: string, opts: {
     category: 'test',
     level: 1,
     version: '1.0.0',
-    concept: { conceptId, properties: [], children: {} },
+    conceptMapping: { conceptId, properties: [], children: {} },
     blockDef,
     codeTemplate: { pattern: '', imports: [], order: 0 },
     astPattern: { nodeType: '_none', constraints: [] },

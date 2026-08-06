@@ -46,7 +46,7 @@ export class PatternRenderer {
   /** Load block specs and build conceptId → RenderSpec index */
   loadBlockSpecs(specs: BlockSpec[]): void {
     for (const spec of specs) {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId) continue
 
       const blockDef = spec.blockDef as Record<string, unknown>
@@ -90,7 +90,7 @@ export class PatternRenderer {
     }
     const overrides = topic.blockOverrides
     const overriddenSpecs = specs.map(spec => {
-      const conceptId = spec.concept?.conceptId
+      const conceptId = spec.conceptMapping?.conceptId
       if (!conceptId) return spec
       const override = overrides[conceptId]
       if (!override) return spec
@@ -345,7 +345,7 @@ export class PatternRenderer {
       statementInputs: {},
     }
 
-    const concept = spec.concept
+    const concept = spec.conceptMapping
     if (!concept) return mapping
 
     const blockDef = spec.blockDef as Record<string, unknown>
