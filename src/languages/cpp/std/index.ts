@@ -17,6 +17,7 @@ import cstdioConcepts from './cstdio/concepts.json'
 import cstdioBlocks from './cstdio/blocks.json'
 import { registerCstdioGenerators } from './cstdio/generators'
 import { registerCstdioLifters } from './cstdio/lifters'
+import { registerExecutors as registerCstdioExecutors } from './cstdio/executors'
 
 // cstring
 import cstringConcepts from './cstring/concepts.json'
@@ -37,6 +38,7 @@ import algorithmConcepts from './algorithm/concepts.json'
 import algorithmBlocks from './algorithm/blocks.json'
 import { registerGenerators as registerAlgorithmGenerators } from './algorithm/generators'
 import { registerLifters as registerAlgorithmLifters } from './algorithm/lifters'
+import { registerExecutors as registerAlgorithmExecutors } from './algorithm/executors'
 
 // string
 import stringConcepts from './string/concepts.json'
@@ -85,6 +87,7 @@ import cstdlibConcepts from './cstdlib/concepts.json'
 import cstdlibBlocks from './cstdlib/blocks.json'
 import { registerGenerators as registerCstdlibGenerators } from './cstdlib/generators'
 import { registerLifters as registerCstdlibLifters } from './cstdlib/lifters'
+import { registerExecutors as registerCstdlibExecutors } from './cstdlib/executors'
 
 // cctype
 import cctypeConcepts from './cctype/concepts.json'
@@ -97,6 +100,7 @@ import numericConcepts from './numeric/concepts.json'
 import numericBlocks from './numeric/blocks.json'
 import { registerGenerators as registerNumericGenerators } from './numeric/generators'
 import { registerLifters as registerNumericLifters } from './numeric/lifters'
+import { registerExecutors as registerNumericExecutors } from './numeric/executors'
 
 // sstream
 import sstreamConcepts from './sstream/concepts.json'
@@ -115,6 +119,7 @@ import utilityConcepts from './utility/concepts.json'
 import utilityBlocks from './utility/blocks.json'
 import { registerGenerators as registerUtilityGenerators } from './utility/generators'
 import { registerLifters as registerUtilityLifters } from './utility/lifters'
+import { registerExecutors as registerUtilityExecutors } from './utility/executors'
 
 /**
  * 這個模組的執行器**還在核心層**，等混住檔案的拆分（見 specs/054 的 Out of Scope）。
@@ -143,22 +148,22 @@ function makeModule(
 
 export const allStdModules: StdModule[] = [
   makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters, executorsStillInCore),
-  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, executorsStillInCore),
+  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, registerCstdioExecutors),
   makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters, registerCstringExecutors),
   makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, registerVectorExecutors),
-  makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, executorsStillInCore),
+  makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, registerAlgorithmExecutors),
   makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, registerStringExecutors),
   makeModule('<map>', mapConcepts, mapBlocks, registerMapGenerators, registerMapLifters, registerMapExecutors),
   makeModule('<stack>', stackConcepts, stackBlocks, registerStackGenerators, registerStackLifters, registerStackExecutors),
   makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters, registerQueueExecutors),
   makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, registerSetExecutors),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters, registerCmathExecutors),
-  makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, executorsStillInCore),
+  makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, registerCstdlibExecutors),
   makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, executorsStillInCore),
-  makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, executorsStillInCore),
+  makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, registerNumericExecutors),
   makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, executorsStillInCore),
   makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters, executorsStillInCore),
-  makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters, executorsStillInCore),
+  makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters, registerUtilityExecutors),
 ]
 
 /**

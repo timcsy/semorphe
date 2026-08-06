@@ -6,10 +6,10 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
   },
   "totals": {
-    "implemented": 782,
+    "implemented": 789,
     "declared": 12,
-    "shell": 76,
-    "missing": 5
+    "shell": 78,
+    "missing": 11
   },
   "shells": [
     {
@@ -27,6 +27,10 @@
     {
       "componentId": "cpp_class_def",
       "path": "execute"
+    },
+    {
+      "componentId": "cpp_comma_expr",
+      "path": "lift"
     },
     {
       "componentId": "cpp_compound_assign_expr",
@@ -313,11 +317,23 @@
       "path": "lift"
     },
     {
+      "componentId": "var_declarator",
+      "path": "lift"
+    },
+    {
       "componentId": "var_declare_expr",
       "path": "lift"
     }
   ],
   "missing": [
+    {
+      "componentId": "cpp_comma_expr",
+      "path": "extract"
+    },
+    {
+      "componentId": "cpp_comma_expr",
+      "path": "render"
+    },
     {
       "componentId": "cpp_include_local",
       "path": "lift"
@@ -337,6 +353,22 @@
     {
       "componentId": "if_else",
       "path": "execute"
+    },
+    {
+      "componentId": "program",
+      "path": "extract"
+    },
+    {
+      "componentId": "program",
+      "path": "render"
+    },
+    {
+      "componentId": "var_declarator",
+      "path": "extract"
+    },
+    {
+      "componentId": "var_declarator",
+      "path": "render"
     }
   ]
 }

@@ -94,6 +94,7 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
   }
 
   register('func_call', execFuncCall)
+
   register('func_call_expr', execFuncCall)
 
   register('return', async (node, ctx) => {
@@ -104,20 +105,4 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
     }
     throw new ReturnSignal(defaultValue('void'))
   })
-
-  register('forward_decl', async () => {
-    // no-op: forward function declaration
-  })
-
-  // OOP concepts — noop in interpreter (no OOP runtime)
-  register('cpp_struct_member_access', async () => {})
-  register('cpp_struct_pointer_access', async () => {})
-  register('cpp_method_call', async () => {})
-  register('cpp_method_call_expr', async () => {})
-
-  // 註：物件導向那批「已知缺口」的空操作集中在 interpreter.ts 的缺口清單，
-  // 那裡有不能直接刪的理由。原本這裡也各註冊一次，兩邊互相覆蓋——行為相同，
-  // 但同一個病（勝負靠載入順序）。四個具名轉型的實作在 operators.ts。
-  // 見 specs/053-declare-noop-execute/research.md F8。
-  register('cpp_template_function', async () => {})
 }

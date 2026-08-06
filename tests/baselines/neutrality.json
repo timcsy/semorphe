@@ -5,7 +5,7 @@
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`）。僅計語言專屬概念（lang-core／lang-library）；universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "total": 16,
+  "total": 8,
   "files": {
     "src/core/lift/lifter.ts": [
       "comment"
@@ -18,98 +18,21 @@
     "src/core/types.ts": [
       "comment"
     ],
-    "src/interpreter/executors/arrays.ts": [
-      "cpp_array_2d_access",
-      "cpp_array_2d_assign",
-      "cpp_array_2d_declare",
-      "cpp_enum"
-    ],
-    "src/interpreter/executors/control-flow.ts": [
-      "cpp_default",
-      "cpp_do_while",
-      "cpp_for_loop",
-      "cpp_range_for",
-      "cpp_switch",
-      "cpp_throw",
-      "cpp_try_catch"
-    ],
-    "src/interpreter/executors/functions.ts": [
-      "cpp_method_call",
-      "cpp_method_call_expr",
-      "cpp_struct_member_access",
-      "cpp_struct_pointer_access",
-      "cpp_template_function",
-      "forward_decl"
-    ],
-    "src/interpreter/executors/io.ts": [
-      "cpp_printf",
-      "cpp_scanf",
-      "cpp_scanf_expr"
-    ],
-    "src/interpreter/executors/literals.ts": [
-      "builtin_constant",
-      "cpp_char_literal"
-    ],
-    "src/interpreter/executors/mutations.ts": [
-      "cpp_compound_assign",
-      "cpp_compound_assign_expr",
-      "cpp_increment",
-      "cpp_increment_expr"
-    ],
-    "src/interpreter/executors/operators.ts": [
-      "bitwise_not",
-      "cpp_cast",
-      "cpp_const_cast",
-      "cpp_dynamic_cast",
-      "cpp_reinterpret_cast",
-      "cpp_sizeof",
-      "cpp_static_cast",
-      "cpp_ternary"
-    ],
-    "src/interpreter/executors/variables.ts": [
-      "cpp_auto_declare",
-      "cpp_const_declare",
-      "cpp_constexpr_declare",
-      "cpp_ref_declare",
-      "cpp_static_declare",
-      "cpp_static_member",
-      "cpp_typedef",
-      "cpp_using_alias",
-      "var_declare_expr"
-    ],
     "src/interpreter/interpreter.ts": [
-      "cpp_abs",
-      "cpp_accumulate",
-      "cpp_atof",
-      "cpp_atoi",
       "cpp_class_def",
       "cpp_constructor",
       "cpp_destructor",
-      "cpp_exit",
-      "cpp_fill",
-      "cpp_gcd",
       "cpp_ifdef",
       "cpp_ifndef",
       "cpp_include_local",
-      "cpp_iota",
       "cpp_lambda",
-      "cpp_lcm",
-      "cpp_make_pair",
-      "cpp_max",
-      "cpp_min",
       "cpp_namespace_def",
       "cpp_operator_overload",
       "cpp_override_method",
-      "cpp_partial_sum",
       "cpp_pure_virtual",
-      "cpp_rand",
       "cpp_raw_code",
       "cpp_raw_expression",
-      "cpp_reverse",
-      "cpp_sort",
-      "cpp_srand",
       "cpp_struct_declare",
-      "cpp_swap",
       "cpp_virtual_method"
     ],
     "src/ui/app.ts": [

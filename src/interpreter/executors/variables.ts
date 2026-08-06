@@ -1,55 +1,36 @@
 import type { ConceptExecutor } from '../executor-registry'
 import { defaultValue } from '../types'
 
-export function registerVariableExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  const execVarDeclare: ConceptExecutor = async (node, ctx) => {
-    // Multi-variable declaration: int a, b, c;
-    // var_declare has type, var_declarator children inherit it
-    const declarators = node.children.declarators
-    if (declarators && declarators.length > 0) {
-      const parentType = String(node.properties.type || 'int')
-      for (const decl of declarators) {
-        // Propagate parent type to declarator if it doesn't have its own
-        if (!decl.properties.type) decl.properties.type = parentType
-        await ctx.executeNode(decl)
-      }
-      return
+export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
+  // Multi-variable declaration: int a, b, c;
+  // var_declare has type, var_declarator children inherit it
+  const declarators = node.children.declarators
+  if (declarators && declarators.length > 0) {
+    const parentType = String(node.properties.type || 'int')
+    for (const decl of declarators) {
+      // Propagate parent type to declarator if it doesn't have its own
+      if (!decl.properties.type) decl.properties.type = parentType
+      await ctx.executeNode(decl)
     }
-
-    const name = String(node.properties.name)
-    const type = String(node.properties.type || 'int')
-
-    const init = node.children.initializer
-    if (init && init.length > 0) {
-      let val = await ctx.evaluate(init[0])
-      val = ctx.coerceType(val, type)
-      ctx.scope.declare(name, val)
-    } else {
-      ctx.scope.declare(name, defaultValue(type))
-    }
+    return
   }
 
+  const name = String(node.properties.name)
+  const type = String(node.properties.type || 'int')
+
+  const init = node.children.initializer
+  if (init && init.length > 0) {
+    let val = await ctx.evaluate(init[0])
+    val = ctx.coerceType(val, type)
+    ctx.scope.declare(name, val)
+  } else {
+    ctx.scope.declare(name, defaultValue(type))
+  }
+}
+
+export function registerVariableExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
+
   register('var_declare', execVarDeclare)
-  register('var_declare_expr', execVarDeclare)
-  register('var_declarator', execVarDeclare)
-
-  // const/constexpr/auto declarations behave like var_declare in the interpreter
-  register('cpp_const_declare', execVarDeclare)
-  register('cpp_constexpr_declare', execVarDeclare)
-  register('cpp_auto_declare', async (node, ctx) => {
-    const name = String(node.properties.name)
-    const init = node.children.initializer
-    if (init && init.length > 0) {
-      const val = await ctx.evaluate(init[0])
-      ctx.scope.declare(name, val)
-    } else {
-      ctx.scope.declare(name, { type: 'int', value: 0 })
-    }
-  })
-
-  // typedef and using alias are type declarations — no runtime effect
-  register('cpp_typedef', async () => {})
-  register('cpp_using_alias', async () => {})
 
   register('var_assign', async (node, ctx) => {
     const name = String(node.properties.name)
@@ -65,11 +46,4 @@ export function registerVariableExecutors(register: (concept: string, executor: 
   })
 
   // Reference: aliases the original variable (simplified: just copies value)
-  register('cpp_ref_declare', execVarDeclare)
-
-  // Static: persists across calls (simplified: same as var_declare in interpreter)
-  register('cpp_static_declare', execVarDeclare)
-
-  // Static member: declaration only, noop
-  register('cpp_static_member', async () => {})
 }

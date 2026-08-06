@@ -1,6 +1,13 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import { registerPointerExecutors } from './pointers'
 import { registerContainerCoreExecutors } from './containers'
+import { registerVariablesCoreExecutors } from './variables'
+import { registerOperatorsCoreExecutors } from './operators'
+import { registerMutationsCoreExecutors } from './mutations'
+import { registerLiteralsCoreExecutors } from './literals'
+import { registerFunctionsCoreExecutors } from './functions'
+import { registerControlFlowCoreExecutors } from './control-flow'
+import { registerArraysCoreExecutors } from './arrays'
 
 /**
  * C++ 語言核心的執行路。
@@ -13,4 +20,11 @@ export function registerCoreExecutors(
 ): void {
   registerPointerExecutors(register)
   registerContainerCoreExecutors(register)
+  registerVariablesCoreExecutors(register)
+  registerOperatorsCoreExecutors(register)
+  registerMutationsCoreExecutors(register)
+  registerLiteralsCoreExecutors(register)
+  registerFunctionsCoreExecutors(register)
+  registerControlFlowCoreExecutors(register)
+  registerArraysCoreExecutors(register)
 }
