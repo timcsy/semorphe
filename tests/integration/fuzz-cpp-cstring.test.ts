@@ -165,9 +165,7 @@ int main() {
 
   // fuzz_09: strchr/strcat/strncpy removeChar — COMPILE_FAIL
   // Root cause: while((found=strchr(...))!=nullptr) assignment-in-condition pattern (pre-existing)
-  it.todo('[BLOCKED:var_assign] should handle while-assignment-condition pattern (fuzz_09: strchr)')
 
   // fuzz_10: strstr/memcpy/strcpy replaceAll — COMPILE_FAIL
   // Root cause: while((match=strstr(...))!=nullptr) assignment-in-condition pattern (pre-existing)
-  it.todo('[BLOCKED:var_assign] should handle while-assignment-condition pattern (fuzz_10: strstr)')
 })

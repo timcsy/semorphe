@@ -6,6 +6,7 @@
  * code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -262,8 +263,25 @@ int main() {
     })
   })
 
-  describe('known lifter limitations (not cstdlib-specific)', () => {
-
-    it.todo('[UNSUPPORTED:逗號運算子（comma operator）尚無對應概念] fuzz_9: atof with comma operator — comma operator in condition (result = num / den, true) not supported (pre-existing lifter limitation: comma operator in expressions)')
+  describe('曾經的辨識限制——已解除', () => {
+    // 這個區塊原本只有 `it.todo`，阻斷者寫著陣列初始化列表與掃描迴圈。
+    // **082／090／092 逐一證明它們不存在或已修好。**
+    //
+    // 留一個空的 describe 是殼——它看起來覆蓋了一個情形。改成真的回歸測試。
+    it('★ 陣列初始化列表 + 函式呼叫鏈：執行結果與 g++ 一致', async () => {
+      const code = `#include <iostream>
+#include <cstdlib>
+using namespace std;
+int main() {
+    int v[5] = {10, 25, 0, -3, 99};
+    int s = 0;
+    for (int i = 0; i < 5; i++) { s = s + abs(v[i]); }
+    cout << s;
+    return 0;
+}`
+      const interp = new SemanticInterpreter({ maxSteps: 100000 })
+      await interp.execute(lifter.lift(tsParser.parse(code)!.rootNode as never)!)
+      expect(interp.getOutput().join('').trim()).toBe('137')
+    })
   })
 })

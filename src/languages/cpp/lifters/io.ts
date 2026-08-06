@@ -35,9 +35,14 @@ function tryStringMethodLift(
       })
     }
     case 'find': {
+      // ⚠️ **第二個引數（起點）原本被丟掉**——`s.find("X", pos)` 於是永遠
+      // 從頭找，而 `while ((pos = s.find("X", pos)) != -1)` 這種掃描寫法
+      // **無限迴圈**（症狀是爆步數上限，離現場很遠）。
       const arg = argChildren[0] ? ctx.lift(argChildren[0]) : null
+      const from = argChildren[1] ? ctx.lift(argChildren[1]) : null
       return createNode('cpp_string_find', { obj }, {
         arg: arg ? [arg] : [],
+        from: from ? [from] : [],
       })
     }
     case 'append': {

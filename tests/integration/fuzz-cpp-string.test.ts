@@ -83,8 +83,6 @@ describe('C++ String Fuzz Tests (hard)', () => {
   // (e.g. cout << s.substr(s.length() - 1) << endl;)
   // ROUNDTRIP_DRIFT — cout << s.substr(s.length() - 1) << endl becomes raw_code
   // ROUNDTRIP_DRIFT — cout << s << endl after mutations becomes raw_code
-
-  it.todo('[BLOCKED:var_assign] fuzz_3: find-replace loop with position tracking')
   // COMPILE_FAIL — while ((pos = s.find(...)) != npos) generates malformed code
   // COMPILE_FAIL — cout chains with conversion results become raw_code
   // COMPILE_FAIL — cout with ternary and function calls in chain

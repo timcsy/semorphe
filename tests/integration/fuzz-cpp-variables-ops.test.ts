@@ -270,8 +270,6 @@ describe.skip('[BLOCKED:print] fuzz: cout with parenthesized boolean expressions
   // vars_ops_005: cout << (a && b) loses parens → COMPILE_FAIL
   // vars_ops_009: cout << (f < 0) loses parens → COMPILE_FAIL
   // Root cause: cout chain lifter strips parentheses from boolean subexpressions
-  it.todo('[BLOCKED:print] should preserve parentheses in cout << (expr && expr)')
-  it.todo('[BLOCKED:print] should preserve parentheses in cout << (expr < expr)')
 })
 
 describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in expressions (Phase 2 scope)', () => {
