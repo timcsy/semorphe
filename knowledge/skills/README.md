@@ -15,3 +15,5 @@
 - knowie 內建的 init/capture/next/judge/update 是**協議 meta skill**，不住這（從 knowie 安裝）。
 
 （只是想讀懂專案？這層可忽略——它是能力庫，不是 why。）
+
+- `build-guardrail`——把一條規範變成會變紅的機械檢查（緣起：一天七條護欄、四次翻車）
