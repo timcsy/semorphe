@@ -150,8 +150,38 @@ beforeAll(async () => {
 }, 60_000)
 
 /** 把節點包成可生成的程式（多數 generator 需要 program 外殼） */
-function wrap(node: SemanticNode): SemanticNode {
-  return createNode('program', {}, { body: [node] })
+/**
+ * 概念身分 → 它需要的**前置宣告**。
+ *
+ * ⚠️ **合成的樣本要提供概念需要的脈絡，否則量到的是別的東西。**
+ *
+ * `x.clear()` 沒有宣告時，辨識器查不到型別，**正確地**退回通用容器版
+ * ——那是保守設計在運作，不是缺陷。但完備性會把它記成「找不到原本的身分」。
+ *
+ * > 「合成測試的**環境**也要真實，不只輸入要真實。」——本檔既有的教訓，
+ * > 而這是它的第二個實例。
+ *
+ * 型別由概念所屬的模組決定（`std/string` 的方法 → 那個物件是字串），
+ * 不是猜的。
+ */
+const SAMPLE_CONTEXT: Record<string, SemanticNode[]> = {}
+for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find']) {
+  SAMPLE_CONTEXT[id] = [createNode('cpp_string_declare', { name: 'x', type: 'string' }, {})]
+}
+
+/**
+ * ⚠️ **試過、失敗、還原：** 把角色是「運算式」的概念一律包進
+ * `auto __probe = …` 再量。
+ *
+ * 想法是對的（`x.x()` 這種裸運算式當敘述放不成立），但**一律套用會改變太多
+ * 概念的產出**——殼從 2 變成 13，而那 11 個原本是誠實的「判不出來」。
+ *
+ * **量測工具的改動也會讓量測變差，而那一樣要被發現。** 還原。
+ * 要做的話得逐概念給脈絡（像上面的 `SAMPLE_CONTEXT`），不是按角色一刀切。
+ */
+function wrap(node: SemanticNode, id?: string): SemanticNode {
+  const prelude = id ? (SAMPLE_CONTEXT[id] ?? []) : []
+  return createNode('program', {}, { body: [...prelude, node] })
 }
 
 function findConcept(node: SemanticNode | null, id: string): boolean {
@@ -180,7 +210,7 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
     declared('generate') ??
     (() => {
       try {
-        generated = generateCode(wrap(node), 'cpp', STYLE)
+        generated = generateCode(wrap(node, id), 'cpp', STYLE)
         const own = generated
           .split('\n')
           .filter((l) => !/^\s*(#include|using |int main|\}|\{|return 0;)/.test(l))
