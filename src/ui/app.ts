@@ -33,6 +33,7 @@ import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
 import { StorageService } from '../core/storage'
 import type { SavedState } from '../core/storage'
+import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
@@ -556,8 +557,18 @@ export class App {
   }
 
   private restoreState(): void {
-    const state = this.storageService.load()
-    if (!state) return
+    const outcome = this.storageService.loadOutcome()
+
+    // 「沒有存檔」與「存檔被拒絕」必須分開。混在一起的話，使用者會以為這是
+    // 新的一頁，動一下就觸發自動存檔，把載不進來的那份蓋掉。
+    // 見 specs/052-storage-integrity-gate/research.md F3
+    if (outcome.kind === 'refused') {
+      showToast(describeRefusal(outcome), 'warning')
+      return
+    }
+    if (outcome.kind === 'empty') return
+
+    const state = outcome.state
 
     // 1. Restore blocks FIRST (before level change triggers resync)
     if (state.blocklyState && Object.keys(state.blocklyState).length > 0) {

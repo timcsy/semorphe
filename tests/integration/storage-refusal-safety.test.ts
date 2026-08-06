@@ -1,33 +1,39 @@
 /**
  * 拒絕不等於丟掉（US3）
  *
- * ## 這支測試的第一個任務是「證明缺陷存在」
+ * ## 這個功能唯一能讓事情比現況更糟的方式
  *
- * `specs/052-storage-integrity-gate/research.md` F3 主張一條四步鏈：
+ * 加嚴版本閘門之後，判錯的代價是**使用者的作品**。所以「拒絕」必須是明確的、
+ * 可見的、而且**不破壞原資料**的。
+ *
+ * ## 設計前提已經先被實測驗證過
+ *
+ * `research.md` F3 主張一條四步鏈：
  *
  *   1. `load()` 回傳 `null`
  *   2. 呼叫端的 `if (!state) return` **分不出**「沒有存檔」與「存檔被拒絕」
  *   3. 使用者以為是新的一頁，開始操作 → 觸發自動存檔
- *   4. `save()` 呼叫 `load()`，又拿到 `null`，於是所有欄位落到預設值 → **寫回去**
+ *   4. `save()` 呼叫 `load()`，又拿到 `null`，所有欄位落到預設值 → **寫回去**
  *
- * **「拒絕載入」在四步之內變成「永久刪除」。**
+ * 那條鏈當時是推理。實作的第一件事就是把它跑出來——**跑出來了**（原始存檔
+ * 在一次自動存檔之後無法復原，而且沒有留在任何地方）。所以下面的設計成立：
+ * **拒絕之前先把原始內容搬到備份鍵。**
  *
- * 那條鏈當時是**推理**——每一環都查證了程式碼，但沒有實際跑過。本檔的第一個
- * describe 就是把它跑出來。跑不出來的話，US3 的設計是建立在讀錯的程式碼上，
- * 要回頭改而不是照著寫。
- *
- * 見 specs/052-storage-integrity-gate/tasks.md T002
+ * 見 specs/052-storage-integrity-gate/tasks.md T002、T025–T026
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../src/core/storage'
 
 const STORAGE_KEY = 'semorphe-state'
+const BACKUP_KEY = 'semorphe-state.rejected'
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
+  let 讓寫入失敗的鍵: string | null = null
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
     setItem: vi.fn((key: string, value: string) => {
+      if (key === 讓寫入失敗的鍵) throw new Error('QuotaExceededError')
       store[key] = value
     }),
     removeItem: vi.fn((key: string) => {
@@ -35,14 +41,29 @@ const localStorageMock = (() => {
     }),
     clear: vi.fn(() => {
       store = {}
+      讓寫入失敗的鍵 = null
     }),
+    失敗於: (key: string | null) => {
+      讓寫入失敗的鍵 = key
+    },
     raw: () => store,
   }
 })()
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
-describe('設計前提：載不進來的存檔，會在下一次自動存檔時被抹掉', () => {
+/** 一份版本高於當前、因此會被拒絕的存檔 */
+const 來自未來的存檔 = JSON.stringify({
+  version: 99,
+  tree: null,
+  blocklyState: {},
+  code: '使用者在另一台裝置寫的作品',
+  language: 'cpp',
+  styleId: 'apcs',
+  lastModified: '2026-08-06T00:00:00.000Z',
+})
+
+describe('拒絕不等於丟掉', () => {
   let storage: StorageService
 
   beforeEach(() => {
@@ -51,44 +72,73 @@ describe('設計前提：載不進來的存檔，會在下一次自動存檔時�
     storage = new StorageService()
   })
 
-  it('📌 現況缺陷：load() 回 null → save() 用預設值覆蓋 → 原資料消失', () => {
-    // 一份載不進來的存檔。今天唯一會讓 load() 回 null 的情形是內容壞掉
-    // （例如寫入途中被中斷）；加上版本閘門之後，「版本不符」也會走同一條路。
-    const 原始內容 = '{"version":1,"code":"使用者的作品","lastMod'
-    localStorage.setItem(STORAGE_KEY, 原始內容)
+  it('拒絕之後再自動存檔，原始內容仍完整存在於備份鍵（T025）', () => {
+    localStorage.setItem(STORAGE_KEY, 來自未來的存檔)
 
-    // 第 1–2 步：載入拿到 null，呼叫端分不出「沒有存檔」與「載不進來」
-    expect(storage.load()).toBeNull()
+    // 第 1–2 步：載入被拒絕，而且呼叫端**問得出來**為什麼
+    const r = storage.loadOutcome()
+    expect(r.kind).toBe('refused')
+    expect(r.kind === 'refused' && r.backedUpTo).toBe(BACKUP_KEY)
 
     // 第 3–4 步：使用者以為是新的一頁，動了一下 → 自動存檔
     storage.save({ code: 'int main(){}' })
 
-    const 現在的內容 = localStorage.getItem(STORAGE_KEY)!
+    // 主鍵確實被新的工作蓋過去了——那是對的，使用者的新工作要存得了
+    expect(localStorage.getItem(STORAGE_KEY)).toContain('int main(){}')
 
-    // 這裡就是那條鏈的終點
-    expect(現在的內容).not.toBe(原始內容)
-    expect(現在的內容).not.toContain('使用者的作品')
-
-    console.log(
-      [
-        '',
-        '  📌 設計前提已驗證（research.md F3 的四步鏈確實會發生）',
-        `     原始存檔：${原始內容}`,
-        `     一次自動存檔之後：${現在的內容.slice(0, 60)}…`,
-        '     原內容已無法復原。US3「先備份再拒絕」的設計成立。',
-        '',
-      ].join('\n'),
-    )
+    // 但原始內容沒有消失
+    expect(localStorage.getItem(BACKUP_KEY)).toBe(來自未來的存檔)
+    expect(localStorage.getItem(BACKUP_KEY)).toContain('使用者在另一台裝置寫的作品')
   })
 
-  it('📌 現況缺陷：連備份都沒有——原始字串沒有被留在任何地方', () => {
-    localStorage.setItem(STORAGE_KEY, '{"version":1,"code":"使用者的作品"')
+  it('備份寫不進去時，仍然回報拒絕，且說得出沒有備份成功（T026）', () => {
+    localStorage.setItem(STORAGE_KEY, 來自未來的存檔)
+    localStorageMock.失敗於(BACKUP_KEY)
+
+    const r = storage.loadOutcome()
+
+    expect(r.kind, '備份失敗不得變成「載入成功」').toBe('refused')
+    expect(
+      r.kind === 'refused' && r.backedUpTo,
+      '備份沒寫成功卻回報備份好了，比沒有備份更危險',
+    ).toBe('')
+
+    // 這條路徑上主鍵完全不動
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(來自未來的存檔)
+  })
+
+  it('拒絕的理由分得出四種，不是一句「載入失敗」', () => {
+    const 情形: [string, string, string][] = [
+      ['版本較高', 來自未來的存檔, 'too-new'],
+      ['不是存檔', JSON.stringify({ hello: 'world' }), 'not-a-save'],
+      ['壞掉的 JSON', '{"version":1,"code":"截斷了', 'not-a-save'],
+      [
+        '版本較低且無升級路徑',
+        JSON.stringify({
+          version: 0, tree: null, blocklyState: {}, code: 'x',
+          language: 'cpp', styleId: 'apcs', lastModified: 'now',
+        }),
+        'no-upgrade-path',
+      ],
+    ]
+
+    for (const [name, raw, 期望] of 情形) {
+      localStorageMock.clear()
+      localStorage.setItem(STORAGE_KEY, raw)
+      const r = storage.loadOutcome()
+      expect(r.kind, `${name}：應被拒絕`).toBe('refused')
+      expect(r.kind === 'refused' && r.reason.code, `${name} 的理由判錯`).toBe(期望)
+    }
+  })
+
+  it('合法存檔不受影響——沒有多出備份鍵（不誤傷）', () => {
+    storage.save({ code: 'int x = 5;' })
     storage.load()
-    storage.save({ code: 'x' })
+    expect(Object.keys(localStorageMock.raw())).toEqual([STORAGE_KEY])
+  })
 
-    const 所有的鍵 = Object.keys(localStorageMock.raw())
-    const 有沒有備份 = 所有的鍵.some((k) => k !== STORAGE_KEY)
-
-    expect(有沒有備份, `目前的鍵：${所有的鍵.join(', ')}`).toBe(false)
+  it('沒有存檔時是 empty，與「被拒絕」分得開', () => {
+    expect(storage.loadOutcome().kind).toBe('empty')
+    expect(Object.keys(localStorageMock.raw())).toEqual([])
   })
 })
