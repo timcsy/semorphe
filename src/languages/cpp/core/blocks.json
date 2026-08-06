@@ -23,17 +23,6 @@
       "pattern": "'${CHAR}'",
       "imports": [],
       "order": 20
-    },
-    "astPattern": {
-      "nodeType": "char_literal",
-      "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "char",
-          "ast": "$text",
-          "extract": "text"
-        }
-      ]
     }
   },
   {
@@ -734,7 +723,10 @@
       "type": "c_forward_decl"
     },
     "renderMapping": {
-      "fields": { "RETURN_TYPE": "return_type", "NAME": "name" },
+      "fields": {
+        "RETURN_TYPE": "return_type",
+        "NAME": "name"
+      },
       "inputs": {},
       "statementInputs": {},
       "dynamicRules": [
@@ -742,7 +734,9 @@
           "countSource": "paramCount",
           "childSlot": "params",
           "childConcept": "param_decl",
-          "childFields": { "TYPE_{i}": "type" }
+          "childFields": {
+            "TYPE_{i}": "type"
+          }
         }
       ]
     }
@@ -902,10 +896,6 @@
       "pattern": "#include <${HEADER}>",
       "imports": [],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "preproc_include",
-      "constraints": []
     }
   },
   {
@@ -974,10 +964,6 @@
       "pattern": "#define ${NAME} ${VALUE}",
       "imports": [],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "preproc_def",
-      "constraints": []
     }
   },
   {
@@ -1085,10 +1071,6 @@
       "pattern": "// ${TEXT}",
       "imports": [],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "comment",
-      "constraints": []
     }
   },
   {
@@ -1191,17 +1173,40 @@
         {
           "type": "field_dropdown",
           "name": "NAME",
-          "options": [["x", "x"]]
+          "options": [
+            [
+              "x",
+              "x"
+            ]
+          ]
         },
         {
           "type": "field_dropdown",
           "name": "OP",
-          "options": [["++", "++"], ["--", "--"]]
+          "options": [
+            [
+              "++",
+              "++"
+            ],
+            [
+              "--",
+              "--"
+            ]
+          ]
         },
         {
           "type": "field_dropdown",
           "name": "POSITION",
-          "options": [["後置", "postfix"], ["前置", "prefix"]]
+          "options": [
+            [
+              "後置",
+              "postfix"
+            ],
+            [
+              "前置",
+              "prefix"
+            ]
+          ]
         }
       ],
       "inputsInline": true,
@@ -1228,12 +1233,38 @@
         {
           "type": "field_dropdown",
           "name": "NAME",
-          "options": [["x", "x"]]
+          "options": [
+            [
+              "x",
+              "x"
+            ]
+          ]
         },
         {
           "type": "field_dropdown",
           "name": "OP",
-          "options": [["+=", "+="], ["-=", "-="], ["*=", "*="], ["/=", "/="], ["%=", "%="]]
+          "options": [
+            [
+              "+=",
+              "+="
+            ],
+            [
+              "-=",
+              "-="
+            ],
+            [
+              "*=",
+              "*="
+            ],
+            [
+              "/=",
+              "/="
+            ],
+            [
+              "%=",
+              "%="
+            ]
+          ]
         },
         {
           "type": "input_value",
@@ -1267,13 +1298,34 @@
           "type": "field_dropdown",
           "name": "TYPE",
           "options": [
-            ["int", "int"],
-            ["double", "double"],
-            ["float", "float"],
-            ["char", "char"],
-            ["long long", "long long"],
-            ["string", "string"],
-            ["bool", "bool"]
+            [
+              "int",
+              "int"
+            ],
+            [
+              "double",
+              "double"
+            ],
+            [
+              "float",
+              "float"
+            ],
+            [
+              "char",
+              "char"
+            ],
+            [
+              "long long",
+              "long long"
+            ],
+            [
+              "string",
+              "string"
+            ],
+            [
+              "bool",
+              "bool"
+            ]
           ]
         },
         {
@@ -1409,22 +1461,6 @@
       "pattern": "*${PTR}",
       "imports": [],
       "order": 8
-    },
-    "astPattern": {
-      "nodeType": "pointer_expression",
-      "constraints": [
-        {
-          "field": "operator",
-          "text": "*"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "ptr",
-          "ast": "argument",
-          "extract": "lift"
-        }
-      ]
     }
   },
   {
@@ -1452,22 +1488,6 @@
       "pattern": "&${VAR}",
       "imports": [],
       "order": 8
-    },
-    "astPattern": {
-      "nodeType": "pointer_expression",
-      "constraints": [
-        {
-          "field": "operator",
-          "text": "&"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "var",
-          "ast": "argument",
-          "extract": "lift"
-        }
-      ]
     }
   },
   {
@@ -1794,27 +1814,6 @@
       "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
       "imports": [],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "class_specifier",
-      "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "name",
-          "ast": "name",
-          "extract": "text"
-        },
-        {
-          "semantic": "public",
-          "ast": "body.public",
-          "extract": "liftBody"
-        },
-        {
-          "semantic": "private",
-          "ast": "body.private",
-          "extract": "liftBody"
-        }
-      ]
     }
   },
   {
@@ -1847,22 +1846,6 @@
       "pattern": "new ${TYPE}(${ARGS})",
       "imports": [],
       "order": 8
-    },
-    "astPattern": {
-      "nodeType": "new_expression",
-      "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "type",
-          "ast": "type",
-          "extract": "text"
-        },
-        {
-          "semantic": "args",
-          "ast": "arguments",
-          "extract": "text"
-        }
-      ]
     }
   },
   {
@@ -1891,17 +1874,6 @@
       "pattern": "delete ${PTR};",
       "imports": [],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "delete_expression",
-      "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "ptr",
-          "ast": "argument",
-          "extract": "lift"
-        }
-      ]
     }
   },
   {
@@ -3325,13 +3297,21 @@
       "type": "c_container_empty",
       "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
       ],
       "output": "Expression",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.empty()", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_push",
@@ -3343,15 +3323,27 @@
       "type": "c_container_push",
       "message0": "%{BKY_CPP_CONTAINER_PUSH_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" },
-        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.push(${VALUE});", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.push(${VALUE});",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_pop",
@@ -3363,14 +3355,22 @@
       "type": "c_container_pop",
       "message0": "%{BKY_CPP_CONTAINER_POP_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_POP_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.pop();", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_clear",
@@ -3382,14 +3382,22 @@
       "type": "c_container_clear",
       "message0": "%{BKY_CPP_CONTAINER_CLEAR_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_CLEAR_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.clear();", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.clear();",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_push_back",
@@ -3401,15 +3409,27 @@
       "type": "c_container_push_back",
       "message0": "%{BKY_CPP_CONTAINER_PUSH_BACK_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" },
-        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_PUSH_BACK_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.push_back(${VALUE});", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.push_back(${VALUE});",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_erase",
@@ -3421,15 +3441,27 @@
       "type": "c_container_erase",
       "message0": "%{BKY_CPP_CONTAINER_ERASE_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" },
-        { "type": "input_value", "name": "KEY", "check": "Expression" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_ERASE_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.erase(${KEY});", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.erase(${KEY});",
+      "imports": [],
+      "order": 0
+    }
   },
   {
     "id": "c_container_count",
@@ -3441,13 +3473,25 @@
       "type": "c_container_count",
       "message0": "%{BKY_CPP_CONTAINER_COUNT_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "OBJ", "text": "obj" },
-        { "type": "input_value", "name": "KEY", "check": "Expression" }
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
       ],
       "output": "Expression",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_CONTAINER_COUNT_TOOLTIP}"
     },
-    "codeTemplate": { "pattern": "${OBJ}.count(${KEY})", "imports": [], "order": 0 }
+    "codeTemplate": {
+      "pattern": "${OBJ}.count(${KEY})",
+      "imports": [],
+      "order": 0
+    }
   }
 ]

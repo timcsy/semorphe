@@ -21,6 +21,7 @@ import { LiftContextData } from '../../src/core/lift/lift-context'
 // Import split concept/projection JSON files
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'
 
 // Mock AST node helper
@@ -65,6 +66,11 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     registry.loadFromSplit(allConcepts, [...coreBlocks, ...allStdModules.flatMap(m => m.blocks)])
     const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)
+    // `lift-patterns.json` **也是 JSON**——這支測試驗的是「不寫程式碼就能加
+    // 積木」，而辨識規則從 blockSpec.astPattern 搬到 lift-patterns.json 之後
+    // 前提沒有變，只是來源換了一份檔案。不載入的話，這裡測的是一個生產環境
+    // 不存在的組態。
+    lifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     renderer.loadBlockSpecs(specs)
     extractor.loadBlockSpecs(specs)
 
