@@ -48,27 +48,6 @@
         "queue"
       ],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "declaration",
-      "constraints": [
-        {
-          "field": "type",
-          "nodeType": "template_type"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "type",
-          "ast": "type",
-          "extract": "text"
-        },
-        {
-          "semantic": "name",
-          "ast": "declarator",
-          "extract": "text"
-        }
-      ]
     }
   },
   {

@@ -33,8 +33,8 @@ const RULE =
 
 /** 護欄的失效樣態——照 concepts/執行機構.md 的要求 */
 const SELF_FALSIFICATION =
-  '⚠️ 如果 `declaration` 那一群（8 條同時盯著宣告語法）**沒有**出現在「確定會撞」裡，' +
-  '代表本護欄壞了，不是那群沒問題。'
+  '⚠️ 這條護欄的健康檢查是下面那兩支「★ 合成注入」，**不是報表上的數字**。' +
+  '「確定會撞 0」與「判定邏輯整個沒接上」產出完全一樣——注入測試是唯一分得出來的東西。'
 
 const NOT_DETECTED =
   '本護欄**不檢測**：跨語法節點的間接競爭（規則 A 讓某節點降級、使規則 B 在父節點上改變行為）、' +
@@ -186,17 +186,35 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
     expect(groups.length).toBeGreaterThan(0)
   })
 
-  it('★ 自我驗證：`declaration` 那一群必須出現在「確定會撞」（FR-022）', () => {
-    const decl = groups.filter((g) => g.nodeType === 'declaration')
-    expect(decl.length, '連 declaration 群組都找不到 → 護欄壞了').toBeGreaterThan(0)
+  // 這兩支原本錨在 `declaration` 那一群的真實狀態上（「8 條同時盯著宣告語法，
+  // 沒被判為確定會撞就代表護欄壞了」）。那群後來被修好了，於是那句自我否證
+  // 變成「叫未來的讀者不要相信一個正確的結果」——比沒有聲明更糟。
+  //
+  // **build-guardrail 第 2 步明文警告過這件事，而這是它第二次發生。**
+  // 錨點改成合成規則：它不隨真實世界的修復而失效。
+  const 合成 = (conceptId: string, constraints?: RuleLike['constraints']): RuleLike => ({
+    conceptId, patternType: 'simple', priority: 10, constraints,
+  })
 
-    const declConcepts = new Set(decl.flatMap((g) => g.rules.map((r) => r.conceptId)))
-    const declDefinitely = definitely.filter((p) => declConcepts.has(p.a) && declConcepts.has(p.b))
+  it('★ 合成注入：兩條約束一字不差的規則必須判「確定會撞」', () => {
+    const 同約束 = [{ field: 'type', nodeType: 'template_type' }]
+    const v = classifyPair(合成('__probe_a__', 同約束), 合成('__probe_b__', [...同約束]))
     expect(
-      declDefinitely.length,
-      '`declaration` 的規則群沒有任何一對被判為「確定會撞」——' +
-        '它們全是無限定條件的 simple 規則，這代表判定邏輯壞了，不是它們沒問題',
-    ).toBeGreaterThan(0)
+      v.verdict,
+      `約束完全相同卻沒被判為確定會撞 → 判定邏輯壞了，報表上的「0」一律不可信。理由：${v.reason}`,
+    ).toBe('definitely')
+  })
+
+  it('★ 合成注入：判別式互斥的兩條不得被誤判為會撞', () => {
+    const v = classifyPair(
+      合成('__probe_c__', [{ field: 'type', text: 'string' }]),
+      合成('__probe_d__', [{ field: 'type', text: 'vector' }]),
+    )
+    expect(
+      v.verdict,
+      `同一欄位要求不同的字面值，兩者不可能同時成立。誤判成會撞的話，' +
+        '一個「什麼都報」的掃描器也能通過上一支。理由：${v.reason}`,
+    ).toBe('never')
   })
 
   it('★ 不誤報最常用的那一對：`print` vs `input` 必須判「不會撞」', () => {

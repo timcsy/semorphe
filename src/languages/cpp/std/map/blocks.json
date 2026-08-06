@@ -66,32 +66,6 @@
         "map"
       ],
       "order": 0
-    },
-    "astPattern": {
-      "nodeType": "declaration",
-      "constraints": [
-        {
-          "field": "type",
-          "nodeType": "template_type"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "key_type",
-          "ast": "type.arguments[0]",
-          "extract": "text"
-        },
-        {
-          "semantic": "value_type",
-          "ast": "type.arguments[1]",
-          "extract": "text"
-        },
-        {
-          "semantic": "name",
-          "ast": "declarator",
-          "extract": "text"
-        }
-      ]
     }
   },
   {
