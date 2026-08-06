@@ -83,8 +83,8 @@
 | `cpp_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_memcpy` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_memset` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_method_call` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `cpp_method_call_expr` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_method_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_method_call_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_new` | ✅ | ✅ | ✅ | ✅ | ✅ |

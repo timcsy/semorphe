@@ -599,15 +599,19 @@ int main() { std::map<int, int> m; int c = m.count(1); }`, 'cpp_container_count'
   // ARCHITECTURAL: expression_statement unwraps to expression context, so method
   // calls as statements are lifted as cpp_method_call_expr. The lifter always
   // produces the expr form since call_expression is inherently an expression.
-  it('cpp_method_call — lifter produces cpp_method_call_expr (architectural)', () => {
+  // ⚠️ 這裡原本標著 `architectural`，說「辨識器產出的是運算式版」——
+  // **又一個把「還沒做」寫成「架構上如此」的標籤**（同一天第二個）。
+  // 078 讓辨識器看語法樹的父節點決定位置，敘述位置就拿到敘述身分。
+  it('cpp_method_call（敘述位置 → 敘述身分）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.resize(10); }`, 'cpp_method_call_expr')
+int main() { std::vector<int> v; v.resize(10); }`, 'cpp_method_call')
   })
 
-  it('cpp_method_call_expr', () => {
-    // Method call in expression context (not matching a specific container concept)
+  // ⚠️ 這一支原本用**與上面完全相同的樣本**（敘述位置）——也就是說
+  // 它從來沒有測到運算式位置。**兩支測試斷言同一件事，看起來像涵蓋了兩種。**
+  it('cpp_method_call_expr（運算式位置 → 運算式身分）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.resize(10); }`, 'cpp_method_call_expr')
+int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp_method_call_expr')
   })
 
   // --- Forward Declaration ---

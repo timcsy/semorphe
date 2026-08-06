@@ -205,10 +205,23 @@ export function registerIOLifters(lifter: Lifter): void {
         return createNode(conceptId, properties)
       }
 
-      // Fallback: unknown method call → generic method_call_expr
+      // 不認得的方法呼叫 → 泛用的方法呼叫概念。
+      //
+      // **敘述位置與運算式位置是兩個概念**，而第一版永遠產出運算式版——
+      // 於是敘述位置的身分永遠拿不到。後果不是「跑不動」（運算式版在敘述
+      // 位置也執行得了），是**身分掉了**：使用者拖一個敘述積木、存檔、
+      // 讀回來，它變成一個運算式積木。
+      //
+      // 判準是語法樹自己說的：呼叫節點的父節點是 `expression_statement`
+      // 就是敘述位置。不用猜。
+      const 是敘述位置 = node.parent?.type === 'expression_statement'
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return createNode('cpp_method_call_expr', { obj: objText, method: methodName }, { args: liftedArgs })
+      return createNode(
+        是敘述位置 ? 'cpp_method_call' : 'cpp_method_call_expr',
+        { obj: objText, method: methodName },
+        { args: liftedArgs },
+      )
     }
 
     // printf("...", args) → cstdio module
