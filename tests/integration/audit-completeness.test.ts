@@ -12,6 +12,7 @@
  *
  * 見 specs/049-audit-guardrails/spec.md（US2）、research.md D6
  */
+import { skipReason } from '../../src/core/skip-declarations'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import {
@@ -228,6 +229,22 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
           return {
             verdict: 'undecidable',
             reason: '合成樣本不是合法的獨立程式（此概念需要父節點才成立）',
+          } as PathResult
+        }
+        // 概念自己宣告了「由父概念消費」——那句話對 lift 一樣成立：
+        // 它**只在父節點裡才出現**，單獨合成一份樣本去量它是在量一個
+        // 不存在的位置。
+        //
+        // ⚠️ 語法解析**不會**報錯（`virtual int f(){}` 放在頂層照樣 parse
+        // 得過），所以上面那道 `hasError` 攔不住它——實測有五個類別成員
+        // 因此被誤判為 lift 殼。包進類別裡量的話它們全部辨識正確。
+        //
+        // 這裡不新增宣告，**重用既有的那個**：能宣告 `consumed-by-parent`
+        // 的門檻已經很嚴（要有逐一查證的證據測試），沿用它就沿用了那道門檻。
+        if (skipReason(id, 'execute') === 'consumed-by-parent') {
+          return {
+            verdict: 'undecidable',
+            reason: '概念宣告了 consumed-by-parent——它只在父節點裡出現，單獨量不到',
           } as PathResult
         }
         if (findConcept(lifted, 'raw_code'))
