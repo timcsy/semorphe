@@ -267,6 +267,9 @@ export interface ModeExtractRule {
 
 // ─── Split JSON Formats (Phase 3: concept/blockDef separation) ───
 
+/** 五路完備性的路徑名 */
+export type PathName = 'lift' | 'render' | 'extract' | 'generate' | 'execute'
+
 /** Concept definition in concepts.json (semantic layer) */
 export interface ConceptDefJSON {
   conceptId: string
@@ -276,6 +279,14 @@ export interface ConceptDefJSON {
   children: Record<string, string>
   role: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>
+  /**
+   * 本概念**刻意**不提供的路徑。純資料、可選、不影響任何執行期行為，
+   * 只有完備性護欄讀它。
+   *
+   * 未宣告的空實作一律判為「殼」——正確的空與缺失的空長得一樣，
+   * 所以要求正確的那個出聲。見 knowledge/concepts/執行機構.md。
+   */
+  skipPaths?: PathName[]
 }
 
 /** Block projection in block-specs.json (projection layer) */

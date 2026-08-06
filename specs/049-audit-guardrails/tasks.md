@@ -29,7 +29,7 @@ description: "Task list for 049-audit-guardrails"
 
 **Purpose**: 建立基線目錄與棘輪語義的說明
 
-- [ ] T001 建立 `tests/baselines/` 目錄，並寫 `tests/baselines/README.md` 說明棘輪語義（數字只准下降；放寬基線＝一次 commit，須在訊息說明原因）
+- [X] T001 建立 `tests/baselines/` 目錄，並寫 `tests/baselines/README.md` 說明棘輪語義（數字只准下降；放寬基線＝一次 commit，須在訊息說明原因）
 
 ---
 
@@ -37,12 +37,12 @@ description: "Task list for 049-audit-guardrails"
 
 **Purpose**: 四條護欄共用的骨架與掃描規則。**必須全部完成才能進入任何 User Story。**
 
-- [ ] T002 在 `tests/helpers/guardrail.ts` 定義護欄共用形狀：`measure()` / `report()` / `compare(result, baseline)`，以及從 `tests/baselines/<name>.json` 載入基線
-- [ ] T003 在 `tests/helpers/guardrail.ts` 實作 `compare` **回傳新增項清單而非布林**（FR-005 要求失敗時指名是哪一項），並在基線檔缺失時擲出可讀錯誤（指示先產生基線）
-- [ ] T004 [P] 在 `tests/helpers/component-scan.ts` 實作 `allComponentIds()`：彙整 universal + core + 全部 std 模組的 conceptId（重用 `setup-lifter.ts` 既有的載入方式）
-- [ ] T005 在 `tests/helpers/component-scan.ts` 實作 D1 掃描規則：字邊界比對、先剝行註解與區塊註解，回傳**程式碼引用**與**註解引用**兩份結果
-- [ ] T006 [P] 在 `src/core/types.ts` 的 `ConceptDefJSON` 新增可選欄位 `skipPaths?: PathName[]`（純資料、可選、既有元件零改動）
-- [ ] T007 在 `tests/unit/helpers/component-scan.test.ts` 為掃描規則寫單元測試：`cpp_string_at` 不得命中 `cpp_string_at_expr`（前綴誤報）、註解中的引用歸入註解結果、字串字面中的引用歸入程式碼結果
+- [X] T002 在 `tests/helpers/guardrail.ts` 定義護欄共用形狀：`measure()` / `report()` / `compare(result, baseline)`，以及從 `tests/baselines/<name>.json` 載入基線
+- [X] T003 在 `tests/helpers/guardrail.ts` 實作 `compare` **回傳新增項清單而非布林**（FR-005 要求失敗時指名是哪一項），並在基線檔缺失時擲出可讀錯誤（指示先產生基線）
+- [X] T004 [P] 在 `tests/helpers/component-scan.ts` 實作 `allComponentIds()`：彙整 universal + core + 全部 std 模組的 conceptId（重用 `setup-lifter.ts` 既有的載入方式）
+- [X] T005 在 `tests/helpers/component-scan.ts` 實作 D1 掃描規則：字邊界比對、先剝行註解與區塊註解，回傳**程式碼引用**與**註解引用**兩份結果
+- [X] T006 [P] 在 `src/core/types.ts` 的 `ConceptDefJSON` 新增可選欄位 `skipPaths?: PathName[]`（純資料、可選、既有元件零改動）
+- [X] T007 在 `tests/unit/helpers/component-scan.test.ts` 為掃描規則寫單元測試：`cpp_string_at` 不得命中 `cpp_string_at_expr`（前綴誤報）、註解中的引用歸入註解結果、字串字面中的引用歸入程式碼結果
 
 **Checkpoint**: T007 綠 → 掃描規則可信，四條護欄可平行開工
 

@@ -1,0 +1,174 @@
+/**
+ * 元件身分的列舉與掃描（中立性護欄與就近性護欄共用）
+ *
+ * ## 判定規則（spec FR-012／FR-042 要求定義並記錄）
+ *
+ * 一個檔案「提到」某個 componentId，指的是**該 id 以完整的字串字面出現**：
+ * `'print'`、`"cpp_string_at"`、`` `print` ``。
+ *
+ * 為什麼是字串字面而不是單純的字邊界比對：
+ *
+ * 1. **這才是實際的耦合形狀**。componentId 在執行期是字串，硬編一定長成
+ *    `case 'cpp_string_at':`、`generators.set('print', ...)`、`register('if', ...)`。
+ * 2. **單純字邊界會災難性誤報**。universal 概念包含 `if`／`return`／`break`／
+ *    `continue`／`print`／`input` 這些常見英文字與 TypeScript 關鍵字——字邊界
+ *    比對會把每一個 if 陳述都算成違規，護欄的可信度會立刻歸零。
+ *
+ * 已知限制（刻意不追）：`id.startsWith('cpp_')` 這類**前綴耦合**不會被抓到。
+ * 它是另一種耦合，不是本護欄的目標。
+ *
+ * 註解中的引用**另外計數、不計入基線**——`// cpp_string_at — character access`
+ * 是說明不是耦合，為了降數字去刪有用的註解是反效果。
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+import { REPO_ROOT } from './guardrail'
+import type { ConceptDefJSON } from '../../src/core/types'
+import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { coreConcepts } from '../../src/languages/cpp/core'
+import { allStdModules } from '../../src/languages/cpp/std'
+
+/** 全部已註冊的 componentId（universal + cpp core + 全部 std 模組） */
+export function allComponentDefs(): ConceptDefJSON[] {
+  return [
+    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...coreConcepts,
+    ...allStdModules.flatMap((m) => m.concepts),
+  ]
+}
+
+export function allComponentIds(): string[] {
+  return [...new Set(allComponentDefs().map((c) => c.conceptId))].sort()
+}
+
+/**
+ * 把原始碼拆成「程式碼」與「註解」兩份文字。
+ * 逐字元處理並追蹤字串狀態，避免把 `'http://x'` 裡的 `//` 誤判為註解。
+ */
+export function splitCodeAndComments(src: string): { code: string; comments: string } {
+  let code = ''
+  let comments = ''
+  let i = 0
+  const n = src.length
+  let quote: string | null = null
+
+  while (i < n) {
+    const c = src[i]
+    const next = src[i + 1]
+
+    if (quote) {
+      code += c
+      if (c === '\\') {
+        code += next ?? ''
+        i += 2
+        continue
+      }
+      if (c === quote) quote = null
+      i++
+      continue
+    }
+
+    if (c === "'" || c === '"' || c === '`') {
+      quote = c
+      code += c
+      i++
+      continue
+    }
+
+    if (c === '/' && next === '/') {
+      const end = src.indexOf('\n', i)
+      const stop = end === -1 ? n : end
+      comments += src.slice(i, stop) + '\n'
+      // 不補換行：stop 停在 '\n' 上，該換行會在下一輪以一般字元進入 code，
+      // 補了會讓行號往下位移一行。
+      i = stop
+      continue
+    }
+
+    if (c === '/' && next === '*') {
+      const end = src.indexOf('*/', i + 2)
+      const stop = end === -1 ? n : end + 2
+      const chunk = src.slice(i, stop)
+      comments += chunk + '\n'
+      // 保留換行，讓行號不位移
+      code += chunk.replace(/[^\n]/g, '')
+      i = stop
+      continue
+    }
+
+    code += c
+    i++
+  }
+
+  return { code, comments }
+}
+
+/** 建立「id → 偵測用 regex」的表。只匹配完整的引號字串字面。 */
+function literalPattern(id: string): RegExp {
+  const esc = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(['"\`])${esc}\\1`)
+}
+
+export interface FileHits {
+  /** 出現在程式碼中的 componentId（計入基線） */
+  code: string[]
+  /** 只出現在註解中的 componentId（列報表、不計基線） */
+  commentOnly: string[]
+  /** 程式碼命中的行號，key 為 componentId */
+  lines: Record<string, number[]>
+}
+
+/** 掃單一檔案，回傳它提到的 componentId */
+export function scanFile(relPath: string, ids: readonly string[]): FileHits {
+  const src = fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8')
+  const { code, comments } = splitCodeAndComments(src)
+  const codeLines = code.split('\n')
+
+  const hitsInCode: string[] = []
+  const hitsInComments: string[] = []
+  const lines: Record<string, number[]> = {}
+
+  for (const id of ids) {
+    const re = literalPattern(id)
+    if (re.test(code)) {
+      hitsInCode.push(id)
+      const at: number[] = []
+      codeLines.forEach((l, idx) => {
+        if (literalPattern(id).test(l)) at.push(idx + 1)
+      })
+      lines[id] = at
+    } else if (re.test(comments) || new RegExp(`(^|[^A-Za-z0-9_])${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Za-z0-9_]|$)`).test(comments)) {
+      hitsInComments.push(id)
+    }
+  }
+
+  return { code: hitsInCode.sort(), commentOnly: hitsInComments.sort(), lines }
+}
+
+/** 掃一組目錄，回傳每個有命中的檔案 */
+export function scanDirs(
+  relDirs: readonly string[],
+  ids: readonly string[],
+): Map<string, FileHits> {
+  const result = new Map<string, FileHits>()
+  for (const dir of relDirs) {
+    const abs = path.join(REPO_ROOT, dir)
+    if (!fs.existsSync(abs)) continue
+    const walk = (d: string): void => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const f = path.join(d, e.name)
+        if (e.isDirectory()) {
+          if (e.name === 'node_modules') continue
+          walk(f)
+          continue
+        }
+        if (!e.name.endsWith('.ts') || e.name.endsWith('.d.ts')) continue
+        const rel = path.relative(REPO_ROOT, f)
+        const hits = scanFile(rel, ids)
+        if (hits.code.length > 0 || hits.commentOnly.length > 0) result.set(rel, hits)
+      }
+    }
+    walk(abs)
+  }
+  return result
+}
