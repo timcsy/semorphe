@@ -29,6 +29,21 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     for (let i = 0; i < size; i++) {
       elements.push(defaultValue(type))
     }
+
+    // 初始值：`int a[3] = {3,1,2}`
+    //
+    // 辨識那半在 specs/050 就修好了（初始值進 `children.values`），**執行這半
+    // 沒有接上**——於是 `int a[3]={3,1,2}; cout << a[0]` 輸出 0。
+    // 半條路修好比沒修更難察覺：語義樹裡看得到值，跑起來卻是零。
+    const init = node.children.values ?? []
+    for (let i = 0; i < init.length && i < elements.length; i++) {
+      elements[i] = await ctx.evaluate(init[i])
+    }
+    // 宣告時沒寫大小（`int a[] = {1,2,3}`）→ 長度由初始值決定
+    if (size === 0 && init.length > 0) {
+      for (const n of init) elements.push(await ctx.evaluate(n))
+    }
+
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 

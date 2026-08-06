@@ -6,10 +6,10 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
   },
   "totals": {
-    "implemented": 793,
-    "declared": 12,
+    "implemented": 798,
+    "declared": 19,
     "undecidable": 16,
-    "shell": 58,
+    "shell": 46,
     "missing": 11
   },
   "shells": [
@@ -30,28 +30,12 @@
       "path": "lift"
     },
     {
-      "componentId": "cpp_delete",
-      "path": "execute"
-    },
-    {
       "componentId": "cpp_destructor",
       "path": "execute"
     },
     {
       "componentId": "cpp_destructor",
       "path": "lift"
-    },
-    {
-      "componentId": "cpp_enum",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_fill",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_free",
-      "path": "execute"
     },
     {
       "componentId": "cpp_ifdef",
@@ -72,10 +56,6 @@
     {
       "componentId": "cpp_include",
       "path": "generate"
-    },
-    {
-      "componentId": "cpp_iota",
-      "path": "execute"
     },
     {
       "componentId": "cpp_lambda",
@@ -126,10 +106,6 @@
       "path": "lift"
     },
     {
-      "componentId": "cpp_partial_sum",
-      "path": "execute"
-    },
-    {
       "componentId": "cpp_pure_virtual",
       "path": "execute"
     },
@@ -143,18 +119,6 @@
     },
     {
       "componentId": "cpp_raw_expression",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_reverse",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_sort",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_srand",
       "path": "execute"
     },
     {
@@ -202,14 +166,6 @@
       "path": "execute"
     },
     {
-      "componentId": "cpp_typedef",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_using_alias",
-      "path": "execute"
-    },
-    {
       "componentId": "cpp_using_alias",
       "path": "generate"
     },
@@ -224,10 +180,6 @@
     {
       "componentId": "cpp_virtual_method",
       "path": "lift"
-    },
-    {
-      "componentId": "forward_decl",
-      "path": "execute"
     },
     {
       "componentId": "if_else",

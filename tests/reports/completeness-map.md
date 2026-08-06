@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：178｜✅ 實作 793｜📄 已宣告不提供 12｜❔ 判不出來 16｜🈳 殼 58｜❌ 缺 11（以路徑數計）
+元件：178｜✅ 實作 798｜📄 已宣告不提供 19｜❔ 判不出來 16｜🈳 殼 46｜❌ 缺 11（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -53,15 +53,15 @@
 | `cpp_container_push_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_default` | ✅ | 🈳 | ✅ | ✅ | 📄 |
 | `cpp_define` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp_delete` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_destructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_do_while` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_dynamic_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_enum` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_enum` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_exit` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_fill` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_fill` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_for_loop` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_free` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_free` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_gcd` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_getline` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_ifdef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -71,7 +71,7 @@
 | `cpp_include_local` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
 | `cpp_increment` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_increment_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp_iota` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_iota` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_isalpha` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_isdigit` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_lambda` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
@@ -92,7 +92,7 @@
 | `cpp_operator_overload` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_override_method` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_pair_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp_partial_sum` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_partial_sum` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_deref` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -107,14 +107,14 @@
 | `cpp_raw_expression` | ✅ | ❔ | ✅ | ✅ | 🈳 |
 | `cpp_ref_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_reinterpret_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_reverse` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_reverse` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_scanf` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_scanf_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_sort` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_srand` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_sort` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_srand` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_stack_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_stack_top` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_static_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -156,8 +156,8 @@
 | `cpp_tolower` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_toupper` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_try_catch` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_typedef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_using_alias` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
+| `cpp_typedef` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp_using_alias` | 🈳 | ❌ | ✅ | ✅ | 📄 |
 | `cpp_using_namespace` | 🈳 | ❌ | ✅ | ✅ | 📄 |
 | `cpp_vector_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -169,7 +169,7 @@
 | `cpp:math_unary` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `forward_decl` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `forward_decl` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `func_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `func_call_expr` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `func_def` | ✅ | ✅ | ✅ | ✅ | ✅ |

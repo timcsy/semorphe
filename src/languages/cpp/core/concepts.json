@@ -220,7 +220,13 @@
     "children": {
       "ptr": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_struct_declare",
@@ -288,7 +294,13 @@
     "children": {
       "ptr": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_template_function",
@@ -440,6 +452,12 @@
     "role": "statement",
     "annotations": {
       "debug_step": true
+    },
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
     }
   },
   {
@@ -710,7 +728,13 @@
       "alias"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_using_alias",
@@ -721,7 +745,13 @@
       "orig_type"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_sizeof",
@@ -753,7 +783,13 @@
       "values"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_range_for",

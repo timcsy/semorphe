@@ -15,7 +15,13 @@
     "children": {
       "seed": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_abs",

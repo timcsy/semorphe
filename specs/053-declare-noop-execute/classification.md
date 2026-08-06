@@ -116,5 +116,44 @@
 | 加入 pair 的成員存取 | `cpp_pair_declare` |
 | 直譯器支援物件導向 | 上表 🔴 的十個 OOP 概念（它們會從「還沒實作」變成「已實作」，不是變成可宣告） |
 | 巨集展開從墓碑復活 | `cpp_define` |
+| 直譯器加入「釋放後使用」偵測 | `cpp_free`、`cpp_delete` |
+| 直譯器支援亂數種子 | `cpp_srand` |
 
 **這張表要跟著宣告一起活著。** 沒有它的話，一個曾經正確的宣告會在系統長出新能力之後靜靜地變成錯的。
+
+
+---
+
+## 追加分類（2026-08-06 稍晚，處理完備性的 38 個 execute 殼）
+
+同一套實測方法套用到剩下的 execute 殼。**7 個配得上宣告，9 個是活的錯答案。**
+
+### ✅ 可宣告：真的不執行（`declarative`）7 個
+
+| 概念 | 最小程式 | 期望／實得 | 為什麼沒有可觀察效果 |
+|---|---|---|---|
+| `cpp_srand` | `srand(1); cout << 7;` | 7／7 | 種子在 JS 直譯器被忽略 |
+| `cpp_free` | `free(p); cout << 7;` | 7／7 | JS 有 GC，釋放沒有可觀察效果 |
+| `cpp_delete` | `delete p; cout << 7;` | 7／7 | 同上 |
+| `forward_decl` | `int g();` | 7／7 | 前置宣告不產生執行行為 |
+| `cpp_typedef` | `typedef int MyInt;` | 7／7 | 型別別名是編譯期的事 |
+| `cpp_using_alias` | `using MyInt = int;` | 7／7 | 同上 |
+| `cpp_enum` | `enum Color { RED };` | 7／7 | 列舉定義本身不執行 |
+
+> **`free`／`delete` 的宣告有一個複查觸發條件**：若日後直譯器加入「釋放後使用」的偵測，它們就有可觀察效果了，必須重新分類。已列入下方觸發表。
+
+### 🔴 不可宣告：活的無聲錯答案 9 個
+
+| 概念 | 最小程式 | 期望 | 實得 |
+|---|---|---|---|
+| `cpp_sort` | `int a[3]={3,1,2}; sort(a,a+3); cout << a[0];` | 1 | **0** |
+| `cpp_reverse` | `reverse(a,a+3); cout << a[0];` | 3 | **0** |
+| `cpp_fill` | `fill(a,a+3,5); cout << a[0];` | 5 | **0** |
+| `cpp_iota` | `iota(a,a+3,1); cout << a[2];` | 3 | **0** |
+| `cpp_partial_sum` | `partial_sum(a,a+3,b); cout << b[2];` | 6 | **0** |
+| `cpp_memset` | `memset(s,'a',3); cout << s[0];` | a | **（空）** |
+| `cpp_strcpy` | `strcpy(s,"hi"); cout << s;` | hi | **[array]** |
+| `cpp_strcat` | `strcat(s,"b"); cout << s;` | ab | **[array]** |
+| `cpp_strncpy` | `strncpy(s,"hello",2); cout << s;` | he | **[array]** |
+
+**學生排序一個陣列會拿到垃圾，而且沒有任何提示。** 這九個是真的缺口，不得宣告。
