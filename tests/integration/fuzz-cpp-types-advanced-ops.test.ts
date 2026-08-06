@@ -294,9 +294,6 @@ describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in variable init
   // types_adv_009: int b = ++a * 2; similarly broken
   // Root cause: increment expression in variable initializer RHS is split into
   // separate increment statement + variable declaration by lifter
-  it.todo('[BLOCKED:cpp_increment] should handle prefix increment in variable initializer')
-  it.todo('[BLOCKED:cpp_increment] should handle postfix decrement in variable initializer')
-  it.todo('[BLOCKED:cpp_increment] should handle prefix increment * expression in variable initializer')
 })
 
 describe.skip('[BLOCKED:cpp_enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {

@@ -358,6 +358,13 @@ export class SemanticInterpreter implements ExecutionContext {
   }
 
   toNumber(val: RuntimeValue): number {
+    // 指標：**空與非空要分得出來**。
+    //
+    // 指標的值存的是被指變數的名字（字串），而下面那句 `Number(字串) || 0`
+    // 會把它變成 0——於是 `p != 0` 對一個**有效的指標**也是假，
+    // `while ((p = strchr(...)) != 0)` 這種寫法**一次都不跑**，
+    // 而程式照樣跑完印出後面的東西。靜默降級最典型的形狀。
+    if (val.type === 'pointer') return val.value === null || val.value === undefined ? 0 : 1
     if (typeof val.value === 'number') return val.value
     if (typeof val.value === 'boolean') return val.value ? 1 : 0
     if (typeof val.value === 'string') return Number(val.value) || 0

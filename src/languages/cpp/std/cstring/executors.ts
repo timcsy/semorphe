@@ -5,10 +5,10 @@
  *
  * 見 specs/054-execute-into-capsules/
  */
+import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import type { SemanticNode } from '../../../../core/types'
 import type { RuntimeValue } from '../../../../interpreter/types'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 
 
 /**
@@ -112,15 +112,26 @@ export function registerExecutors(
     return { type: 'int', value: 0 }
   })
 
-  register('cpp_strchr', async () => {
-    // Returns pointer — not representable in interpreter
-    return { type: 'int', value: 0 }
-  })
-
-  register('cpp_strstr', async () => {
-    // Returns pointer — not representable in interpreter
-    return { type: 'int', value: 0 }
-  })
+  /**
+   * `strchr` / `strstr` 回傳**指向陣列中間的指標**。
+   *
+   * 這個直譯器的指標存的是「被指變數的名字」，表示不了「指向 s 的第 3 個
+   * 字元」——那需要 (基底, 位移) 的表示法，是一個真的功能。
+   *
+   * ⚠️ **但原本的做法是靜默回傳 0**，於是 `strchr(s, 'l') != 0` 對一個
+   * 找得到的字元也是假：`while ((p = strchr(...)) != 0)` **一次都不跑**，
+   * 而程式照樣跑完、印出後面的東西。
+   *
+   * **出聲。** 使用者可以選擇跳過或中止，但不會拿到一個安靜的錯答案。
+   * 這是「靜默降級是 bug 的藏身之處」的直接應用。
+   */
+  for (const c of ['cpp_strchr', 'cpp_strstr']) {
+    register(c, async () => {
+      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
+        '%1': `${c.replace('cpp_', '')} 回傳指向陣列中間的指標，這個直譯器還表示不了`,
+      })
+    })
+  }
 
   register('cpp_memset', async (node, ctx) => {
     const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')

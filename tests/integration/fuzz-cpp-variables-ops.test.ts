@@ -274,5 +274,4 @@ describe.skip('[BLOCKED:print] fuzz: cout with parenthesized boolean expressions
 describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in expressions (Phase 2 scope)', () => {
   // vars_ops_008: int b = a++; has incorrect result in roundtrip
   // Root cause: increment expression handling in variable initializer context
-  it.todo('[BLOCKED:cpp_increment] should handle post-increment in variable initializer correctly')
 })

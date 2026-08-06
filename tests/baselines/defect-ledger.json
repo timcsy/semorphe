@@ -5,9 +5,9 @@
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "total": 71,
+  "total": 67,
   "withBody": 21,
-  "titleOnly": 50,
+  "titleOnly": 46,
   "unverified": 6,
   "byBlocker": {
     "print": 2,

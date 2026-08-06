@@ -117,10 +117,16 @@ export function registerVariableExecutors(register: (concept: string, executor: 
     if (dot > 0 && ctx.scope.has(name.slice(0, dot))) {
       const objName = name.slice(0, dot)
       setMember(ctx.scope.get(objName), name.slice(dot + 1), val, objName)
-      return
+      return val
     }
 
     ctx.scope.set(name, val)
+    // **指派是一個運算式，它求值成被指派的值。**
+    //
+    // 第一版什麼都不回，於是 `while ((p = f()) != 0)` 這種寫法裡的比較
+    // 拿到 undefined —— 判定為假，**迴圈一次都不跑**，而程式照樣「跑完」
+    // 印出後面的東西。那是靜默降級最典型的形狀。
+    return val
   })
 
   register('var_ref', async (node, ctx) => {
