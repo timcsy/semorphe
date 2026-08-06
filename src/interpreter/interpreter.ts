@@ -275,6 +275,23 @@ export class SemanticInterpreter implements ExecutionContext {
 
     const executor = this.executorRegistry.get(concept)
     if (executor) {
+      // ── 概念自己宣告「我引入一個作用域」，核心讀它
+      //
+      // `introduces_scope` 這個標註**存在，而沒有任何東西在讀它**——那是
+      // `concepts/執行機構.md`「機制有了，沒人接上」講的形狀，而這裡藏的是
+      // 一個真的語義錯誤：分支裡宣告的變數會外洩到外層。
+      //
+      // 寫死「if 和 if_else 要建子作用域」也能修，但那會是**第三份**寫死的
+      // 清單（前兩份已經在這個階段換成宣告了）。核心讀宣告，語言套件推宣告。
+      if (hasAnnotation(concept, 'introduces_scope')) {
+        const outer = this.scope
+        this.scope = outer.createChild()
+        try {
+          return await executor(node, this)
+        } finally {
+          this.scope = outer
+        }
+      }
       return executor(node, this)
     }
 

@@ -136,23 +136,69 @@ describe('if_else 的標註要與 if 一致', () => {
  * 見 `knowledge/skills/build-guardrail`「明確否決的做法」——永久紅的測試會讓
  * 「全套綠」失去意義，而所有護欄的價值都建立在那個訊號上。
  */
-describe('[BLOCKED:executeBody] 分支不建子作用域（既有缺陷，066 只是量到它）', () => {
-  it.fails('★ 分支裡宣告的變數不應該被外層看見', async () => {
-    // `introduces_scope` 標註存在，**而沒有任何東西在讀它**——
-    // `executeBody` 只是逐一執行子節點，不建子作用域。
-    // 修法是讓 `if` / `if_else` / 迴圈的 body 各自 createChild()，
-    // 而那會改變既有行為，需要單獨評估。
+describe('分支自成作用域——標註終於被讀了（067 修好，釘子已拔）', () => {
+  /**
+   * ## 這裡原本是一根 `it.fails` 的釘子
+   *
+   * 066 量到分支裡宣告的變數會外洩，但沒修——理由是「修它會改變 `if` 的
+   * 既有行為」。釘子的形式是 `it.fails`：缺陷還在＝綠且出聲，修好了＝紅且
+   * 提醒拔釘子。**它照設計變紅了，所以釘子拔掉，斷言換成正確的行為。**
+   *
+   * ## 修法不是再寫死一份清單
+   *
+   * `introduces_scope` 這個標註**一直都在，而沒有任何東西讀它**——
+   * `concepts/執行機構.md` 的「機制有了，沒人接上」。寫死「if 和 if_else 要
+   * 建子作用域」也能修，但那會是這個階段的**第三份**寫死清單。
+   *
+   * 核心讀宣告，語言套件推宣告——與 skip、executor、註解語法同一個形狀。
+   */
+  it('★ 分支裡宣告的變數，外層讀不到', async () => {
+    const 跑 = async (): Promise<string> => {
+      try {
+        return 'OUT:' + (await run(
+          prog(
+            n('if_else', {}, {
+              condition: [n('number_literal', { value: 1 })],
+              then: [n('var_declare', { name: '僅限分支內', type: 'int' }, { initializer: [n('number_literal', { value: 9 })] })],
+              else: [],
+            }),
+            n('print', {}, { values: [n('var_ref', { name: '僅限分支內' })] }),
+          ),
+        ))
+      } catch (e) {
+        return 'ERR:' + (e as Error).message
+      }
+    }
+    const r = await 跑()
+    expect(r, '外層讀得到分支內的變數 → 作用域沒有隔開').toContain('UNDECLARED_VAR')
+  })
+
+  it('★ 但外層的變數在分支裡讀得到——隔的是往外，不是往內', async () => {
     const out = await run(
       prog(
+        n('var_declare', { name: '外層', type: 'int' }, { initializer: [n('number_literal', { value: 7 })] }),
         n('if_else', {}, {
           condition: [n('number_literal', { value: 1 })],
-          then: [n('var_declare', { name: '僅限分支內', type: 'int' }, { initializer: [n('number_literal', { value: 9 })] })],
+          then: [n('print', {}, { values: [n('var_ref', { name: '外層' })] })],
           else: [],
         }),
-        n('print', {}, { values: [n('var_ref', { name: '僅限分支內' })] }),
       ),
     )
-    // 作用域正確的話，外層讀不到它 → 這裡會丟錯而不是印出 9
-    expect(out).not.toContain('9')
+    expect(out, '子作用域讀不到父層 → 建錯了，那不是巢狀是隔離').toContain('7')
+  })
+
+  it('★ 分支裡的指派要影響外層的變數——那不是宣告', async () => {
+    const out = await run(
+      prog(
+        n('var_declare', { name: 'x', type: 'int' }, { initializer: [n('number_literal', { value: 1 })] }),
+        n('if_else', {}, {
+          condition: [n('number_literal', { value: 1 })],
+          then: [n('var_assign', { name: 'x' }, { value: [n('number_literal', { value: 5 })] })],
+          else: [],
+        }),
+        n('print', {}, { values: [n('var_ref', { name: 'x' })] }),
+      ),
+    )
+    expect(out, '分支裡改外層變數改不到 → 子作用域把指派也攔下來了').toContain('5')
   })
 })
