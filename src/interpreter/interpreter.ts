@@ -89,23 +89,11 @@ export class SemanticInterpreter implements ExecutionContext {
 
     // cstdlib functions
 
-    // cctype functions
-    for (const [concept, fn] of Object.entries({
-      cpp_isalpha: (c: string) => /[a-zA-Z]/.test(c),
-      cpp_isdigit: (c: string) => /[0-9]/.test(c),
-      cpp_toupper: (c: string) => c.toUpperCase(),
-      cpp_tolower: (c: string) => c.toLowerCase(),
-    } as Record<string, (c: string) => boolean | string>)) {
-      reg(concept, async (node, ctx) => {
-        const v = node.children.value?.[0]
-        if (!v) return { type: 'int' as const, value: 0 }
-        const val = await ctx.evaluate(v)
-        const ch = String(val.value).charAt(0)
-        const result = fn(ch)
-        if (typeof result === 'boolean') return { type: 'int' as const, value: result ? 1 : 0 }
-        return { type: 'char' as const, value: result }
-      })
-    }
+    // cctype 的四個字元分類函式已搬進 `languages/cpp/std/cctype/executors.ts`。
+    //
+    // ⚠️ 它們原本寫成**裸的物件鍵**（`cpp_isalpha:` 而非 `'cpp_isalpha'`），
+    // 而中立性護欄只比對引號字串字面——**一筆都沒數到**。那條護欄的「0」
+    // 因此不完整；同一維度的不同書寫形式也會漏掉。
 
     // swap
 

@@ -5,6 +5,7 @@
  * Tests cctype concepts: isalpha, isdigit, toupper, tolower.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -277,9 +278,74 @@ int main() {
     })
   })
 
-  describe('known lifter limitations (not cctype-specific)', () => {
-    it.todo('[BLOCKED:array_declare] fuzz_6: validate identifier — string array initializer lost (pre-existing lifter limitation)')
-    it.todo('[BLOCKED:array_declare] fuzz_9: palindrome check — string array initializer lost (pre-existing lifter limitation)')
-    it.todo('[BLOCKED:array_declare] fuzz_10: character classification — int array initializer {0,0,0} lost (pre-existing lifter limitation)')
+})
+
+// ─────────────────────────────────────────────────────────────
+// 以下是**重新產生**的測試（081/082）。
+//
+// 它們原本是 `it.todo`，阻斷者寫著「陣列初始化列表在辨識時遺失」。
+// 實測那個阻斷者**已經不存在**——050 修好了，而沒有人回頭看。
+//
+// 重新產生 ≠ 把 todo 改成 it：`it.todo` 沒有測試本體，改標記會讓缺陷帳
+// 的數字下降而什麼都沒多驗到。每一支都驗**來回轉換**與**執行結果**。
+// ─────────────────────────────────────────────────────────────
+
+describe('fuzz_6: 驗證識別字：字串陣列初始化列表', () => {
+  const code = "#include <iostream>\n#include <cctype>\nusing namespace std;\nint main() {\n    char s[6] = {'a', 'b', '1', '_', 'z', '\\0'};\n    int ok = 1;\n    for (int i = 0; i < 5; i++) {\n        if (!isalpha(s[i]) && !isdigit(s[i]) && s[i] != '_') { ok = 0; }\n    }\n    cout << ok;\n    return 0;\n}"
+
+  it('陣列初始化列表在來回轉換後仍在', () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    expect(sem).not.toBeNull()
+    const gen = generateCode(sem!, 'cpp', style)
+    expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
+  })
+
+  it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').trim()).toBe("1")
+  })
+})
+
+describe('fuzz_9: 回文檢查：字元陣列初始化列表', () => {
+  const code = "#include <iostream>\nusing namespace std;\nint main() {\n    char s[5] = {'a', 'b', 'c', 'b', 'a'};\n    int ok = 1;\n    for (int i = 0; i < 2; i++) {\n        if (s[i] != s[4 - i]) { ok = 0; }\n    }\n    cout << ok;\n    return 0;\n}"
+
+  it('陣列初始化列表在來回轉換後仍在', () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    expect(sem).not.toBeNull()
+    const gen = generateCode(sem!, 'cpp', style)
+    expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
+  })
+
+  it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').trim()).toBe("1")
+  })
+})
+
+describe('fuzz_10: 字元分類：整數陣列初始化列表 {0,0,0}', () => {
+  const code = "#include <iostream>\n#include <cctype>\nusing namespace std;\nint main() {\n    int counts[3] = {0, 0, 0};\n    char s[4] = {'a', '1', 'B', ' '};\n    for (int i = 0; i < 4; i++) {\n        if (isdigit(s[i])) { counts[0] = counts[0] + 1; }\n        else if (isalpha(s[i])) { counts[1] = counts[1] + 1; }\n        else { counts[2] = counts[2] + 1; }\n    }\n    cout << counts[0] << counts[1] << counts[2];\n    return 0;\n}"
+
+  it('陣列初始化列表在來回轉換後仍在', () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    expect(sem).not.toBeNull()
+    const gen = generateCode(sem!, 'cpp', style)
+    expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
+  })
+
+  it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').trim()).toBe("121")
   })
 })

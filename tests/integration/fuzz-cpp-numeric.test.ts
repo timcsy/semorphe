@@ -5,6 +5,7 @@
  * Tests numeric concepts: accumulate, iota, partial_sum, gcd, lcm.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -345,7 +346,36 @@ int main() {
   })
 
   describe('known lifter limitations (not numeric-specific)', () => {
-    it.todo('[BLOCKED:array_declare] fuzz_4: lcm chain with C-style array initializer — array initializer {2,3,4,5} lost (pre-existing lifter limitation)')
     it.todo('[BLOCKED:cpp_struct_declare] fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// 以下是**重新產生**的測試（081/082）。
+//
+// 它們原本是 `it.todo`，阻斷者寫著「陣列初始化列表在辨識時遺失」。
+// 實測那個阻斷者**已經不存在**——050 修好了，而沒有人回頭看。
+//
+// 重新產生 ≠ 把 todo 改成 it：`it.todo` 沒有測試本體，改標記會讓缺陷帳
+// 的數字下降而什麼都沒多驗到。每一支都驗**來回轉換**與**執行結果**。
+// ─────────────────────────────────────────────────────────────
+
+describe('fuzz_4: 最小公倍數鏈：C 風格陣列初始化列表 {2,3,4,5}', () => {
+  const code = "#include <iostream>\nusing namespace std;\nint gcd(int a, int b) {\n    while (b != 0) {\n        int t = b;\n        b = a % b;\n        a = t;\n    }\n    return a;\n}\nint main() {\n    int nums[4] = {2, 3, 4, 5};\n    int acc = nums[0];\n    for (int i = 1; i < 4; i++) {\n        acc = acc / gcd(acc, nums[i]) * nums[i];\n    }\n    cout << acc;\n    return 0;\n}"
+
+  it('陣列初始化列表在來回轉換後仍在', () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    expect(sem).not.toBeNull()
+    const gen = generateCode(sem!, 'cpp', style)
+    expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
+  })
+
+  it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as never)
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').trim()).toBe("60")
   })
 })

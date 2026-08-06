@@ -94,6 +94,7 @@ import cctypeConcepts from './cctype/concepts.json'
 import cctypeBlocks from './cctype/blocks.json'
 import { registerGenerators as registerCctypeGenerators } from './cctype/generators'
 import { registerLifters as registerCctypeLifters } from './cctype/lifters'
+import { registerCctypeExecutors } from './cctype/executors'
 
 // numeric
 import numericConcepts from './numeric/concepts.json'
@@ -159,7 +160,7 @@ export const allStdModules: StdModule[] = [
   makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, registerSetExecutors),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters, registerCmathExecutors),
   makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, registerCstdlibExecutors),
-  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, executorsStillInCore),
+  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, registerCctypeExecutors),
   makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, registerNumericExecutors),
   makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, executorsStillInCore),
   makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters, executorsStillInCore),

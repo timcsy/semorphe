@@ -52,7 +52,12 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
       }
     }
     for (let i = 0; i < init.length && i < elements.length; i++) {
-      elements[i] = await ctx.evaluate(init[i])
+      // **轉成陣列的元素型別**——C++ 會轉，而不轉的話 `char s[4]={'a','1'}`
+      // 的元素會留著字元字面求值出來的數字碼，於是 `cout << s[0]` 印出 97
+      // 而不是 `a`，`isdigit(s[0])` 也會因為看到 `'9'` 而回傳真。
+      //
+      // **程式跑完、印出東西、而它是錯的**——這正是「靜默降級」的形狀。
+      elements[i] = ctx.coerceType(await ctx.evaluate(init[i]), type)
     }
     // 宣告時沒寫大小（`int a[] = {1,2,3}`）→ 長度由初始值決定
     if (size === 0 && init.length > 0) {
