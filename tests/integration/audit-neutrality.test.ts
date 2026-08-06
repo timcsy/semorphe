@@ -32,8 +32,21 @@ import { languageSpecificComponentIds, universalComponentIds, scanDirs, splitCod
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
 
 const RULE =
-  '只匹配完整的引號字串字面（\'id\' / "id" / `id`）。僅計語言專屬概念（lang-core／lang-library）；' +
+  '只匹配完整的引號字串字面（\'id\' / "id" / `id`），但**先遮掉拼法像身分、實際不是**的位置' +
+  '（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。' +
+  '僅計語言專屬概念（lang-core／lang-library）；' +
   'universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。'
+
+const NOT_DETECTED =
+  '本護欄**不檢測「語法層級」的語言耦合**——它找的是元件身分字串，不是語法。' +
+  '`src/core/lift/lifter.ts` 在核心層剝 `//` 與區塊註解符號，那是比帳面上更嚴重的耦合，' +
+  '而這條護欄一個字都看不到。**身分只是耦合的一種形式。**' +
+  '另不檢測：核心 import 語言套件（另有一支測試看）、執行期才成立的耦合。'
+
+const SELF_FALSIFICATION =
+  '⚠️ 這條護欄的健康檢查是 `tests/unit/helpers/mask-non-identity.test.ts` 的**雙向注入**，' +
+  '**不是報表上的數字**。遮罩若濾掉真違規，數字會一路好看地降到 0，而報表長得一模一樣。' +
+  '那組測試錨在合成字串上，不隨真實檔案被修好而失效。'
 
 interface NeutralityBaseline {
   _meta: BaselineMeta
@@ -70,6 +83,18 @@ function measure(): {
 }
 
 const key = (v: Violation): string => `${v.file}::${v.componentId}`
+
+/**
+ * 逐筆歸因：這一筆是「誤報修掉的」還是「真的搬走的」？
+ *
+ * 判準**不是猜的**，是查 `specs/059-concept-id-vs-lookalike/baseline-29.txt`
+ * 那份快照——它在動任何東西之前拍下，是全程唯一的歸因依據。
+ * 名單寫死在這裡，因為它記錄的是**一次歷史事件**，不是會漂移的狀態。
+ */
+const 誤報名單 = [
+  'src/core/types.ts::comment',            // Annotation 介面的聯集成員
+  'src/ui/block-registrar.ts::comment',    // Blockly 欄位的預設值（使用者看到的提示文字）
+] as const
 
 // ─────────────────────────────────────────────────────────────────────
 // P9 的原文是「拔掉 C++ 之後，核心**無 `languages/cpp/` import**」。
@@ -113,12 +138,36 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   const { violations, commentOnly, universalHits } = measure()
   const files = [...new Set(violations.map((v) => v.file))]
 
+  // 兩欄歸因：拿 059 動工前拍的 29 筆快照當基準，逐筆判斷它為什麼不見了
+  const 動工前 = readFileSync(join(REPO_ROOT, 'specs/059-concept-id-vs-lookalike/baseline-29.txt'), 'utf8')
+    .split('\n')
+    .filter((l) => l.includes('::') && !l.startsWith('#'))
+  const 現存 = new Set(violations.map(key))
+  const 已消失 = 動工前.filter((k) => !現存.has(k))
+  const 誤報修掉的 = 已消失.filter((k) => (誤報名單 as readonly string[]).includes(k))
+  const 真的搬走的 = 已消失.filter((k) => !(誤報名單 as readonly string[]).includes(k))
+
   it('產出可讀報表：違規檔案 × 元件身分 × 行號', () => {
     const lines: string[] = []
+    lines.push(SELF_FALSIFICATION)
+    lines.push(NOT_DETECTED)
+    lines.push('')
     lines.push(`判定規則：${RULE}`)
     lines.push(`掃描範圍：${NEUTRAL_DIRS.join('、')}`)
     lines.push('')
     lines.push(`違規檔案：${files.length} 個｜違規項目：${violations.length} 筆`)
+    lines.push('')
+
+    // ── 兩欄歸因（FR-005）
+    //
+    // 「因為修了量測而消失的」與「因為真的搬走而消失的」**不得相加後只報總數**。
+    // 混在一起的話，修量測會看起來像進步——而護欄會替它背書。
+    // 這是 knowledge/history/018 的直接處方。
+    lines.push('下降的歸因（本護欄的數字下降有兩種來源，意義完全不同）：')
+    lines.push(`  誤報修掉的：${誤報修掉的.length} 筆 ← **系統沒有變**，只是量測不再把撞名字串當身分`)
+    for (const k of 誤報修掉的) lines.push(`      · ${k}`)
+    lines.push(`  真的搬走的：${真的搬走的.length} 筆 ← **系統變了**，那段語言知識離開了核心層`)
+    for (const k of 真的搬走的) lines.push(`      · ${k}`)
     lines.push('')
 
     for (const f of files) {

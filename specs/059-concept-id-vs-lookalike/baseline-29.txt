@@ -1,0 +1,32 @@
+# 中立性違規基線（29 筆／8 檔）——059 的歸因依據
+# 每一筆最後要能歸到「誤報」或「搬走」其中之一
+
+src/core/lift/lifter.ts::comment
+src/core/projection/code-generator.ts::block_comment
+src/core/projection/code-generator.ts::comment
+src/core/projection/code-generator.ts::doc_comment
+src/core/types.ts::comment
+src/interpreter/interpreter.ts::cpp_class_def
+src/interpreter/interpreter.ts::cpp_constructor
+src/interpreter/interpreter.ts::cpp_destructor
+src/interpreter/interpreter.ts::cpp_include_local
+src/interpreter/interpreter.ts::cpp_lambda
+src/interpreter/interpreter.ts::cpp_namespace_def
+src/interpreter/interpreter.ts::cpp_operator_overload
+src/interpreter/interpreter.ts::cpp_override_method
+src/interpreter/interpreter.ts::cpp_pure_virtual
+src/interpreter/interpreter.ts::cpp_raw_code
+src/interpreter/interpreter.ts::cpp_raw_expression
+src/interpreter/interpreter.ts::cpp_struct_declare
+src/interpreter/interpreter.ts::cpp_virtual_method
+src/ui/app.ts::cpp_include
+src/ui/block-registrar.ts::comment
+src/ui/block-registrar.ts::cpp_string_at
+src/ui/block-registrar.ts::cpp_string_declare
+src/ui/panels/blockly-panel.ts::builtin_constant
+src/ui/panels/blockly-panel.ts::cpp_cast
+src/ui/panels/blockly-panel.ts::cpp_increment
+src/ui/panels/blockly-panel.ts::cpp_increment_expr
+src/ui/panels/blockly-panel.ts::cpp_string_at
+src/ui/panels/blockly-panel.ts::cpp_ternary
+src/ui/sync-controller.ts::cpp_string_declare
