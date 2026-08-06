@@ -116,7 +116,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.NAME).toBe('ptr')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_pointer_declare')
+      expect(sem2!.conceptId).toBe('cpp_pointer_declare')
       expect(sem2!.properties.type).toBe('int')
       expect(sem2!.properties.name).toBe('ptr')
     })
@@ -139,7 +139,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_pointer_deref')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_pointer_deref')
+      expect(sem2!.conceptId).toBe('cpp_pointer_deref')
     })
 
     it('should generate code', () => {
@@ -157,7 +157,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_pointer_deref')
+      expect(sem!.conceptId).toBe('cpp_pointer_deref')
     })
   })
 
@@ -170,7 +170,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_address_of')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_address_of')
+      expect(sem2!.conceptId).toBe('cpp_address_of')
     })
 
     it('should generate code', () => {
@@ -188,7 +188,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_address_of')
+      expect(sem!.conceptId).toBe('cpp_address_of')
     })
   })
 
@@ -201,7 +201,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_free')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_free')
+      expect(sem2!.conceptId).toBe('cpp_free')
     })
 
     it('should generate code', () => {
@@ -233,7 +233,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.MEMBER).toBe('x')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_struct_member_access')
+      expect(sem2!.conceptId).toBe('cpp_struct_member_access')
       expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
@@ -254,7 +254,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('cpp_struct_member_access')
+      expect(sem!.conceptId).toBe('cpp_struct_member_access')
     })
   })
 
@@ -266,7 +266,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_struct_pointer_access')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_struct_pointer_access')
+      expect(sem2!.conceptId).toBe('cpp_struct_pointer_access')
       expect(sem2!.properties.ptr).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
@@ -289,7 +289,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_strlen')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_strlen')
+      expect(sem2!.conceptId).toBe('cpp_strlen')
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
@@ -350,7 +350,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.NAME).toBe('v')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_vector_declare')
+      expect(sem2!.conceptId).toBe('cpp_vector_declare')
       expect(sem2!.properties.type).toBe('int')
       expect(sem2!.properties.name).toBe('v')
     })
@@ -371,7 +371,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_container_push_back')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_container_push_back')
+      expect(sem2!.conceptId).toBe('cpp_container_push_back')
       expect(sem2!.properties.obj).toBe('v')
     })
 
@@ -391,7 +391,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_vector_size')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_vector_size')
+      expect(sem2!.conceptId).toBe('cpp_vector_size')
       expect(sem2!.properties.vector).toBe('v')
     })
 
@@ -410,7 +410,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_map_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_map_declare')
+      expect(sem2!.conceptId).toBe('cpp_map_declare')
     })
 
     it('should generate code', () => {
@@ -428,7 +428,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_string_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_string_declare')
+      expect(sem2!.conceptId).toBe('cpp_string_declare')
       expect(sem2!.properties.name).toBe('s')
     })
 
@@ -464,7 +464,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_stack_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_stack_declare')
+      expect(sem2!.conceptId).toBe('cpp_stack_declare')
     })
 
     it('should generate code', () => {
@@ -500,7 +500,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_new')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_new')
+      expect(sem2!.conceptId).toBe('cpp_new')
       expect(sem2!.properties.type).toBe('Node')
     })
 
@@ -536,7 +536,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_method_call')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_method_call')
+      expect(sem2!.conceptId).toBe('cpp_method_call')
       expect(sem2!.properties.obj).toBe('v')
       expect(sem2!.properties.method).toBe('clear')
     })
@@ -556,7 +556,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_method_call_expr')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_method_call_expr')
+      expect(sem2!.conceptId).toBe('cpp_method_call_expr')
     })
 
     it('should generate code', () => {
@@ -577,7 +577,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.CONDITION).toBe('DEBUG')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_ifdef')
+      expect(sem2!.conceptId).toBe('cpp_ifdef')
       expect(sem2!.properties.condition).toBe('DEBUG')
     })
 
@@ -597,7 +597,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_ifndef')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_ifndef')
+      expect(sem2!.conceptId).toBe('cpp_ifndef')
       expect(sem2!.properties.condition).toBe('HEADER_H')
     })
 
@@ -620,7 +620,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.HEADER).toBe('iostream')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_include')
+      expect(sem2!.conceptId).toBe('cpp_include')
       expect(sem2!.properties.header).toBe('iostream')
     })
 
@@ -639,7 +639,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_define')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_define')
+      expect(sem2!.conceptId).toBe('cpp_define')
       expect(sem2!.properties.name).toBe('MAX')
       expect(sem2!.properties.value).toBe('100')
     })
@@ -659,7 +659,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_using_namespace')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('cpp_using_namespace')
+      expect(sem2!.conceptId).toBe('cpp_using_namespace')
       expect(sem2!.properties.ns).toBe('std')
     })
 
@@ -678,7 +678,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('c_comment_line')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.concept).toBe('comment')
+      expect(sem2!.conceptId).toBe('comment')
       expect(sem2!.properties.text).toBe('hello')
     })
 

@@ -16,12 +16,12 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     // Scaffold-driven code generation: when ProgramScaffold is available
     // and the tree body does NOT already contain a main function (i.e., body-only tree from L0).
     // If the tree has func_def(main), it's a full tree — use legacy path to avoid duplication.
-    const hasMainFunc = body.some(n => n.concept === 'func_def' && n.properties.name === 'main')
+    const hasMainFunc = body.some(n => n.conceptId === 'func_def' && n.properties.name === 'main')
     if (ctx.programScaffold && ctx.scaffoldConfig && !hasMainFunc) {
       // Collect manual includes from body for deduplication
       const manualImports: string[] = []
       for (const n of body) {
-        if (n.concept === 'cpp_include' && typeof n.properties.header === 'string') {
+        if (n.conceptId === 'cpp_include' && typeof n.properties.header === 'string') {
           manualImports.push(`<${n.properties.header}>`)
         }
       }
@@ -42,8 +42,8 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
       // Manual includes from body (deduplicated)
       const seenIncludes = new Set<string>()
       for (const n of body) {
-        if (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') {
-          const key = `${n.concept}:${normalizeHeader(String(n.properties.header))}`
+        if (n.conceptId === 'cpp_include' || n.conceptId === 'cpp_include_local') {
+          const key = `${n.conceptId}:${normalizeHeader(String(n.properties.header))}`
           if (seenIncludes.has(key)) continue
           seenIncludes.add(key)
           code += generateBody([n], ctx)
@@ -65,7 +65,7 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
 
       // User body (excluding includes, indented inside main)
       const userBody = body.filter(n =>
-        n.concept !== 'cpp_include' && n.concept !== 'cpp_include_local'
+        n.conceptId !== 'cpp_include' && n.conceptId !== 'cpp_include_local'
       )
       code += generateBody(userBody, indented(ctx))
 
@@ -84,7 +84,7 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
       if (autoEdges.length > 0) {
         // Find insertion point: after existing #include blocks
         const lastIncludeIdx = body.reduce((acc, n, i) =>
-          (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') ? i : acc, -1)
+          (n.conceptId === 'cpp_include' || n.conceptId === 'cpp_include_local') ? i : acc, -1)
         const insertAt = lastIncludeIdx + 1
         const autoNodes: SemanticNode[] = autoEdges.map(e =>
           createNode('cpp_include', { header: e.header.replace(/^<|>$/g, ''), local: false })
@@ -100,8 +100,8 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     // Deduplicate #include directives with identical or equivalent headers
     const seen = new Set<string>()
     const deduped = effectiveBody.filter(n => {
-      if (n.concept === 'cpp_include' || n.concept === 'cpp_include_local') {
-        const key = `${n.concept}:${normalizeHeader(String(n.properties.header))}`
+      if (n.conceptId === 'cpp_include' || n.conceptId === 'cpp_include_local') {
+        const key = `${n.conceptId}:${normalizeHeader(String(n.properties.header))}`
         if (seen.has(key)) return false
         seen.add(key)
       }
@@ -119,7 +119,7 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     let code = header
     code += generateBody(thenBody, indented(ctx))
     code += `${indent(ctx)}}`
-    if (elseBody.length === 1 && elseBody[0].concept === 'if' && elseBody[0].properties.isElseIf === 'true') {
+    if (elseBody.length === 1 && elseBody[0].conceptId === 'if' && elseBody[0].properties.isElseIf === 'true') {
       // else-if chain: produce "} else if (...) {" instead of nested "} else { if ... }"
       const elseIfSep = style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '
       trackOwnText(ctx, `${indent(ctx)}}` + elseIfSep + 'else ')

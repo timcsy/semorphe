@@ -359,7 +359,7 @@ export class BlocklyPanel implements ViewHost {
           // Try simpleExpressionToCode for known concepts as statement
           const expr = this.simpleExpressionToCode(n)
           if (!isUngeneratable(expr)) return '    ' + expr + ';'
-          return `    ⟨${n.concept}⟩`
+          return `    ⟨${n.conceptId}⟩`
         }).join('\n')
       }
 

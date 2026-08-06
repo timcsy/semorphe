@@ -13,7 +13,7 @@ export function resetIdCounter(): void {
 export function createEmptyProgram(): SemanticNode {
   return {
     id: generateId(),
-    concept: 'program',
+    conceptId: 'program',
     properties: {},
     children: { body: [] },
   }
@@ -26,7 +26,7 @@ export function createNode(
 ): SemanticNode {
   return {
     id: generateId(),
-    concept,
+    conceptId: concept,
     properties,
     children,
   }
@@ -145,7 +145,7 @@ export function deserializeTree(json: string): SemanticNode {
 
 /** 深比較兩個 SemanticNode 的語義是否等價（忽略 metadata） */
 export function nodeEquals(a: SemanticNode, b: SemanticNode): boolean {
-  if (a.concept !== b.concept) return false
+  if (a.conceptId !== b.conceptId) return false
 
   const aKeys = Object.keys(a.properties)
   const bKeys = Object.keys(b.properties)

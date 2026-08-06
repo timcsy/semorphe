@@ -173,7 +173,7 @@ describe('Style Exception Conversion', () => {
     const converted = applyStyleConversions(tree, exceptions)
 
     // bits/stdc++.h should be replaced with iostream
-    const includes = converted.children.body.filter(n => n.concept === 'cpp_include')
+    const includes = converted.children.body.filter(n => n.conceptId === 'cpp_include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('iostream')
   })
@@ -185,7 +185,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const includes = converted.children.body.filter(n => n.concept === 'cpp_include')
+    const includes = converted.children.body.filter(n => n.conceptId === 'cpp_include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('iostream')
   })
@@ -197,7 +197,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const includes = converted.children.body.filter(n => n.concept === 'cpp_include')
+    const includes = converted.children.body.filter(n => n.conceptId === 'cpp_include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('cstdio')
   })
@@ -210,10 +210,10 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const prints = converted.children.body.filter(n => n.concept === 'print')
+    const prints = converted.children.body.filter(n => n.conceptId === 'print')
     expect(prints).toHaveLength(1)
     expect(prints[0].children.values).toHaveLength(1)
-    expect(prints[0].children.values[0].concept).toBe('var_ref')
+    expect(prints[0].children.values[0].conceptId).toBe('var_ref')
   })
 
   it('should convert cpp_scanf to input in APCS mode', () => {
@@ -224,7 +224,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const inputs = converted.children.body.filter(n => n.concept === 'input')
+    const inputs = converted.children.body.filter(n => n.conceptId === 'input')
     expect(inputs).toHaveLength(1)
     expect(inputs[0].children.values[0].properties.name).toBe('n')
   })
@@ -241,7 +241,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.concept === 'cpp_printf')
+    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp_printf')
     expect(printfs).toHaveLength(1)
     expect(printfs[0].properties.format).toContain('%d')
     expect(printfs[0].properties.format).toContain('\\n')
@@ -261,7 +261,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const scanfs = converted.children.body.filter(n => n.concept === 'cpp_scanf')
+    const scanfs = converted.children.body.filter(n => n.conceptId === 'cpp_scanf')
     expect(scanfs).toHaveLength(1)
     expect(scanfs[0].properties.format).toBe('%d %d')
     expect(scanfs[0].children.args).toHaveLength(2)
@@ -279,13 +279,13 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.concept === 'cpp_printf')
+    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp_printf')
     expect(printfs).toHaveLength(1)
     // string_literal "hello" embedded directly in format, var uses %d
     expect(printfs[0].properties.format).toBe('hello%d')
     // Only the var_ref should remain as an arg (string is in format)
     expect(printfs[0].children.args).toHaveLength(1)
-    expect(printfs[0].children.args[0].concept).toBe('var_ref')
+    expect(printfs[0].children.args[0].conceptId).toBe('var_ref')
   })
 
   it('should preserve non-exception nodes unchanged', () => {
@@ -298,10 +298,10 @@ describe('Style Exception Conversion', () => {
     const converted = applyStyleConversions(tree, exceptions)
 
     expect(converted.children.body).toHaveLength(3) // include replaced, namespace + var kept
-    expect(converted.children.body[0].concept).toBe('cpp_include')
+    expect(converted.children.body[0].conceptId).toBe('cpp_include')
     expect(converted.children.body[0].properties.header).toBe('iostream')
-    expect(converted.children.body[1].concept).toBe('cpp_using_namespace')
-    expect(converted.children.body[2].concept).toBe('var_declare')
+    expect(converted.children.body[1].conceptId).toBe('cpp_using_namespace')
+    expect(converted.children.body[2].conceptId).toBe('var_declare')
   })
 })
 
@@ -425,7 +425,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       ])
       const exceptions = detectStyleExceptions(tree, apcs, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const printfEx = exceptions.find(e => e.node.concept === 'cpp_printf')
+      const printfEx = exceptions.find(e => e.node.conceptId === 'cpp_printf')
       expect(printfEx).toBeDefined()
     })
 
@@ -435,7 +435,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       ])
       const exceptions = detectStyleExceptions(tree, apcs, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const scanfEx = exceptions.find(e => e.node.concept === 'cpp_scanf')
+      const scanfEx = exceptions.find(e => e.node.conceptId === 'cpp_scanf')
       expect(scanfEx).toBeDefined()
     })
   })
@@ -447,7 +447,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       ])
       const exceptions = detectStyleExceptions(tree, competitive, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const printEx = exceptions.find(e => e.node.concept === 'print')
+      const printEx = exceptions.find(e => e.node.conceptId === 'print')
       expect(printEx).toBeDefined()
     })
 
@@ -457,7 +457,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       ])
       const exceptions = detectStyleExceptions(tree, competitive, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const inputEx = exceptions.find(e => e.node.concept === 'input')
+      const inputEx = exceptions.find(e => e.node.conceptId === 'input')
       expect(inputEx).toBeDefined()
     })
 
@@ -470,7 +470,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       const exceptions = detectStyleExceptions(tree, competitive, registry)
       // print itself is caught by hardcoded rule; endl is a child — not visited as top-level
       // but it IS visited via recursion
-      const endlEx = exceptions.find(e => e.node.concept === 'endl')
+      const endlEx = exceptions.find(e => e.node.conceptId === 'endl')
       // endl inside print's values should be detected via registry
       expect(endlEx).toBeDefined()
     })

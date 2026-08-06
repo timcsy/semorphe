@@ -38,7 +38,7 @@ describe('遮罩：真的身分引用必須仍被報出（FR-003）', () => {
   })
 
   it('★ switch 分支——第二種身分位置', () => {
-    const hits = scanText(`switch (n.concept) { case '${PROBE}': return 1 }`, [PROBE])
+    const hits = scanText(`switch (n.conceptId) { case '${PROBE}': return 1 }`, [PROBE])
     expect(hits.code).toEqual([PROBE])
   })
 

@@ -77,7 +77,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     while (true) {
       const elseChildren = current.children.else_body ?? []
       // If else_body is exactly one `if` node marked as else-if, flatten into mutator inputs
-      if (elseChildren.length === 1 && elseChildren[0].concept === 'if' && elseChildren[0].properties.isElseIf === 'true') {
+      if (elseChildren.length === 1 && elseChildren[0].conceptId === 'if' && elseChildren[0].properties.isElseIf === 'true') {
         const elseIfNode = elseChildren[0]
 
         // Render else-if condition

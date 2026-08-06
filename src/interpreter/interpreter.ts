@@ -266,7 +266,7 @@ export class SemanticInterpreter implements ExecutionContext {
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
     await this.countStep()
     this.currentNode = node
-    const concept = node.concept
+    const concept = node.conceptId
 
     const executor = this.executorRegistry.get(concept)
     if (executor) {
@@ -425,7 +425,7 @@ export class SemanticInterpreter implements ExecutionContext {
 
   private async recordStepInfo(node: SemanticNode): Promise<void> {
     if (!this.recordSteps) return
-    const concept = node.concept
+    const concept = node.conceptId
     if (concept.includes(':')) return
     // 「哪些概念算一個除錯步驟」由概念自己標註，不由核心層的清單決定。
     // 那是視圖層的關心（除錯器要在哪裡停），核心層不該認得語言專屬的名字。

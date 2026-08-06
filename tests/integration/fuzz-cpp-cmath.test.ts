@@ -43,7 +43,7 @@ function liftAndGenerate(code: string): { tree: SemanticNode | null; generated: 
 }
 
 function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
-  if (a.concept !== b.concept) return false
+  if (a.conceptId !== b.conceptId) return false
   const aKeys = Object.keys(a.properties).sort()
   const bKeys = Object.keys(b.properties).sort()
   if (JSON.stringify(aKeys) !== JSON.stringify(bKeys)) return false
@@ -65,7 +65,7 @@ function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
 function countRawCode(node: SemanticNode): number {
   let count = 0
   function walk(n: SemanticNode) {
-    if (n.metadata?.confidence === 'raw_code' || n.concept === 'cpp_raw_code' || n.concept === 'cpp_raw_expression') {
+    if (n.metadata?.confidence === 'raw_code' || n.conceptId === 'cpp_raw_code' || n.conceptId === 'cpp_raw_expression') {
       count++
     }
     for (const children of Object.values(n.children)) {

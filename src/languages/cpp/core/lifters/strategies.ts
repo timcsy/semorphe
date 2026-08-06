@@ -726,7 +726,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const conceptId = qualifier === 'const' ? 'cpp_const_declare' : 'cpp_constexpr_declare'
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
-        if (lifted.concept === 'cpp_pointer_declare') liftedType += '*'
+        if (lifted.conceptId === 'cpp_pointer_declare') liftedType += '*'
         return createNode(conceptId, {
           type: liftedType,
           name: lifted.properties.name as string ?? 'x',
@@ -1034,7 +1034,7 @@ function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {
   if (!node) return []
   const lifted = ctx.lift(node)
   if (!lifted) return []
-  if (lifted.concept === '_compound') {
+  if (lifted.conceptId === '_compound') {
     return lifted.children.body ?? []
   }
   return [lifted]

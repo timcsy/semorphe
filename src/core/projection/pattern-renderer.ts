@@ -105,7 +105,7 @@ export class PatternRenderer {
     if (renderCtx) this.activeRenderCtx = renderCtx
     const ctx = renderCtx ?? this.activeRenderCtx
 
-    const spec = this.renderSpecs.get(node.concept)
+    const spec = this.renderSpecs.get(node.conceptId)
     if (!spec) return null
 
     // Layer 3: renderStrategy takes priority over auto-derive mapping
@@ -207,7 +207,7 @@ export class PatternRenderer {
           // Otherwise use compose mode
           let matched = false
           for (const [modeName, modeRule] of Object.entries(rule.modes)) {
-            if (modeRule.wrap && child.concept === modeRule.wrap) {
+            if (modeRule.wrap && child.conceptId === modeRule.wrap) {
               // Select mode: store value in extraState
               const nameValue = (child.properties.name as string) ?? ''
               argsExtraState.push({ mode: modeName, text: nameValue })

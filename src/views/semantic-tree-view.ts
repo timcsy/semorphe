@@ -26,8 +26,8 @@ export class SemanticTreeView {
       .join('')
 
     return (
-      `${indent}<div class="node" data-concept="${node.concept}">` +
-      `<span class="concept">${node.concept}</span>` +
+      `${indent}<div class="node" data-concept="${node.conceptId}">` +
+      `<span class="concept">${node.conceptId}</span>` +
       (props ? ` ${props}` : '') +
       (childrenHtml ? `\n${childrenHtml}\n${indent}` : '') +
       `</div>\n`

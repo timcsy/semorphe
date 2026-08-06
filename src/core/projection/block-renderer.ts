@@ -36,7 +36,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.concept !== 'program') {
+  if (tree.conceptId !== 'program') {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
@@ -105,9 +105,9 @@ function renderBlock(node: SemanticNode): BlockState | null {
 
   if (!block) {
     // Fallback for meta-concepts with rawCode (raw_code, unresolved, etc.)
-    if (node.metadata?.rawCode != null || node.concept === 'raw_code' || node.concept === 'unresolved') {
+    if (node.metadata?.rawCode != null || node.conceptId === 'raw_code' || node.conceptId === 'unresolved') {
       const extra: Record<string, unknown> = {}
-      if (node.concept === 'unresolved') {
+      if (node.conceptId === 'unresolved') {
         extra.unresolved = true
         extra.nodeType = node.properties.node_type
       }
@@ -161,7 +161,7 @@ function renderExpression(node: SemanticNode): BlockState | null {
       return { ...block, type: exprType }
     }
     // No expression counterpart — fall back to c_raw_expression
-    const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.concept
+    const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.conceptId
     // Strip trailing semicolons/newlines — expression context doesn't need them
     const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw
     return {

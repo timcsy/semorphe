@@ -17,7 +17,7 @@ const style: StylePreset = {
 }
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', concept: 'program', properties: {}, children: { body } }
+  return { id: 'root', conceptId: 'program', properties: {}, children: { body } }
 }
 
 beforeAll(() => {

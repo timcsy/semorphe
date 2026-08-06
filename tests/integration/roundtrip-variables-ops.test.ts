@@ -115,7 +115,7 @@ describe('string_literal', () => {
     // string_literal should have value: hello
     const body = sem!.children.body ?? []
     const node = body[0]
-    expect(node.concept).toBe('string_literal')
+    expect(node.conceptId).toBe('string_literal')
     expect(node.properties.value).toBe('hello')
   })
 
@@ -174,10 +174,10 @@ describe('var_ref', () => {
     expect(sem).not.toBeNull()
     const body = sem!.children.body ?? []
     const decl = body[0]
-    expect(decl.concept).toBe('var_declare')
+    expect(decl.conceptId).toBe('var_declare')
     const init = (decl.children.initializer ?? [])[0]
     expect(init).toBeDefined()
-    expect(init.concept).toBe('var_ref')
+    expect(init.conceptId).toBe('var_ref')
     expect(init.properties.name).toBe('x')
   })
 

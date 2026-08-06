@@ -22,7 +22,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
       let lastVal: RuntimeValue = { type: 'int', value: 0 }
       let itemsRead = 0
       for (const varRefNode of valueNodes) {
-        if (varRefNode.concept === 'array_access') {
+        if (varRefNode.conceptId === 'array_access') {
           const arrName = String(varRefNode.properties.name)
           const arr = ctx.scope.get(arrName)
           if (arr.type !== 'array' || !Array.isArray(arr.value)) {

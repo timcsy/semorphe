@@ -56,7 +56,7 @@ function roundTripCode(code: string): string {
 
 function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode | null {
   if (!node) return null
-  if (node.concept === conceptId) return node
+  if (node.conceptId === conceptId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       const found = findConcept(child, conceptId)

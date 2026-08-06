@@ -47,7 +47,7 @@ describe('Four-level lift pipeline', () => {
       expect(tree).not.toBeNull()
       const body = tree!.children.body
       expect(body).toHaveLength(1)
-      expect(body[0].concept).toBe('var_declare')
+      expect(body[0].conceptId).toBe('var_declare')
       expect(body[0].properties.name).toBe('x')
       expect(body[0].properties.type).toBe('int')
     })
@@ -56,16 +56,16 @@ describe('Four-level lift pipeline', () => {
       const tree = liftCode('int y = a + b * c;')
       expect(tree).not.toBeNull()
       const decl = tree!.children.body[0]
-      expect(decl.concept).toBe('var_declare')
+      expect(decl.conceptId).toBe('var_declare')
       expect(decl.children.initializer).toHaveLength(1)
-      expect(decl.children.initializer[0].concept).toBe('arithmetic')
+      expect(decl.children.initializer[0].conceptId).toBe('arithmetic')
     })
 
     it('should lift if/else with nested body', () => {
       const tree = liftCode('if (x > 0) {\n    y = 1;\n} else {\n    y = 2;\n}')
       expect(tree).not.toBeNull()
       const ifNode = tree!.children.body[0]
-      expect(ifNode.concept).toBe('if')
+      expect(ifNode.conceptId).toBe('if')
       expect(ifNode.children.then_body.length).toBeGreaterThan(0)
       expect(ifNode.children.else_body.length).toBeGreaterThan(0)
     })
@@ -99,8 +99,8 @@ describe('Four-level lift pipeline', () => {
       expect(body.length).toBeGreaterThan(0)
       // The class should be unresolved or raw_code
       const classNode = body[0]
-      expect(['unresolved', 'raw_code', 'cpp_class_def']).toContain(classNode.concept)
-      if (classNode.concept === 'unresolved') {
+      expect(['unresolved', 'raw_code', 'cpp_class_def']).toContain(classNode.conceptId)
+      if (classNode.conceptId === 'unresolved') {
         expect(classNode.metadata?.rawCode).toContain('class Foo')
         expect(classNode.children.children.length).toBeGreaterThan(0)
       }
@@ -111,7 +111,7 @@ describe('Four-level lift pipeline', () => {
       expect(tree).not.toBeNull()
       const body = tree!.children.body
       const nsNode = body[0]
-      if (nsNode.concept === 'unresolved') {
+      if (nsNode.conceptId === 'unresolved') {
         expect(nsNode.metadata?.confidence).toBe('inferred')
       }
     })
@@ -124,7 +124,7 @@ describe('Four-level lift pipeline', () => {
       const body = tree!.children.body
       expect(body.length).toBeGreaterThan(0)
       // Template should be raw_code, unresolved, or cpp_template_function
-      expect(['raw_code', 'unresolved', 'cpp_template_function']).toContain(body[0].concept)
+      expect(['raw_code', 'unresolved', 'cpp_template_function']).toContain(body[0].conceptId)
     })
 
     it('should degrade preprocessor macros to raw_code', () => {
@@ -132,7 +132,7 @@ describe('Four-level lift pipeline', () => {
       expect(tree).not.toBeNull()
       const body = tree!.children.body
       expect(body.length).toBeGreaterThan(0)
-      expect(['raw_code', 'unresolved']).toContain(body[0].concept)
+      expect(['raw_code', 'unresolved']).toContain(body[0].conceptId)
     })
 
     it('should not crash on complex C++ constructs', () => {
@@ -158,7 +158,7 @@ int main() {
 `
       const tree = liftCode(complexCode)
       expect(tree).not.toBeNull()
-      expect(tree!.concept).toBe('program')
+      expect(tree!.conceptId).toBe('program')
       // Should have multiple body nodes — no crashes
       expect(tree!.children.body.length).toBeGreaterThan(0)
     })

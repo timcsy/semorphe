@@ -5,7 +5,7 @@ import type { SemanticNode } from '../../../src/core/types'
 import { setupTestRenderer } from '../../helpers/setup-renderer'
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', concept: 'program', properties: {}, children: { body } }
+  return { id: 'root', conceptId: 'program', properties: {}, children: { body } }
 }
 
 describe('block-renderer', () => {

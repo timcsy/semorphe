@@ -125,7 +125,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
         const extracted = extractor.extract(block!)
         expect(extracted, `Failed to extract block '${blockType}'`).not.toBeNull()
-        expect(extracted!.concept).toBe(conceptId)
+        expect(extracted!.conceptId).toBe(conceptId)
       })
     }
   })

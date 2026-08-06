@@ -44,7 +44,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('enum Color { RED, GREEN, BLUE };')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].concept).toBe('cpp_enum')
+    expect(body[0].conceptId).toBe('cpp_enum')
     expect(body[0].properties.name).toBe('Color')
     expect(body[0].properties.values).toBe('RED, GREEN, BLUE')
 
@@ -56,7 +56,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('for (auto x : vec) {\n    cout << x;\n}')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].concept).toBe('cpp_range_for')
+    expect(body[0].conceptId).toBe('cpp_range_for')
     expect(body[0].properties.var_type).toBe('auto')
     expect(body[0].properties.var_name).toBe('x')
     expect(body[0].properties.container).toBe('vec')
@@ -69,7 +69,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('for (int n : arr) {\n    cout << n;\n}')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].concept).toBe('cpp_range_for')
+    expect(body[0].conceptId).toBe('cpp_range_for')
     expect(body[0].properties.var_type).toBe('int')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -80,7 +80,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('int arr[3][4];')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].concept).toBe('cpp_array_2d_declare')
+    expect(body[0].conceptId).toBe('cpp_array_2d_declare')
     expect(body[0].properties.type).toBe('int')
     expect(body[0].properties.name).toBe('arr')
     expect(body[0].properties.rows).toBe('3')
@@ -95,7 +95,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.concept).toBe('cpp_array_2d_access')
+    expect(init?.conceptId).toBe('cpp_array_2d_access')
     expect(init?.properties.name).toBe('arr')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -106,7 +106,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('arr[1][2] = 5;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].concept).toBe('cpp_array_2d_assign')
+    expect(body[0].conceptId).toBe('cpp_array_2d_assign')
     expect(body[0].properties.name).toBe('arr')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -118,6 +118,6 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.concept).toBe('array_access')
+    expect(init?.conceptId).toBe('array_access')
   })
 })

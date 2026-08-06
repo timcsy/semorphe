@@ -1,18 +1,18 @@
 {
   "id": "test_program",
-  "concept": "program",
+  "conceptId": "program",
   "properties": {},
   "children": {
     "body": [
       {
         "id": "test_var_declare",
-        "concept": "var_declare",
+        "conceptId": "var_declare",
         "properties": { "name": "x", "type": "int" },
         "children": {
           "initializer": [
             {
               "id": "test_number",
-              "concept": "number_literal",
+              "conceptId": "number_literal",
               "properties": { "value": "5" },
               "children": {}
             }

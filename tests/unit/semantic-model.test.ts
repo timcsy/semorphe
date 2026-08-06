@@ -12,7 +12,7 @@ import type { SemanticNode, SemanticModel } from '../../src/core/types'
 describe('createNode', () => {
   it('should create a node with minimal arguments', () => {
     const node = createNode('var_declare')
-    expect(node.concept).toBe('var_declare')
+    expect(node.conceptId).toBe('var_declare')
     expect(node.properties).toEqual({})
     expect(node.children).toEqual({})
     expect(node.id).toBeDefined()
@@ -25,14 +25,14 @@ describe('createNode', () => {
       { name: 'x', type: 'int' },
       { initializer: [child] },
     )
-    expect(node.concept).toBe('var_declare')
+    expect(node.conceptId).toBe('var_declare')
     expect(node.properties).toEqual({ name: 'x', type: 'int' })
     expect(node.children.initializer[0]).toBe(child)
   })
 
   it('should create language-specific concept nodes', () => {
     const node = createNode('cpp:include', { header: 'iostream' })
-    expect(node.concept).toBe('cpp:include')
+    expect(node.conceptId).toBe('cpp:include')
     expect(node.properties.header).toBe('iostream')
   })
 
@@ -150,7 +150,7 @@ describe('walkNodes', () => {
     const root = createNode('program', {}, { body: [child1, child2] })
 
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.concept))
+    walkNodes(root, (node) => visited.push(node.conceptId))
 
     expect(visited).toEqual(['program', 'number_literal', 'string_literal'])
   })
@@ -162,7 +162,7 @@ describe('walkNodes', () => {
     const root = createNode('program', {}, { body: [func] })
 
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.concept))
+    walkNodes(root, (node) => visited.push(node.conceptId))
 
     expect(visited).toEqual(['program', 'func_def', 'var_declare', 'number_literal'])
   })
@@ -170,7 +170,7 @@ describe('walkNodes', () => {
   it('should handle empty children', () => {
     const root = createNode('break')
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.concept))
+    walkNodes(root, (node) => visited.push(node.conceptId))
     expect(visited).toEqual(['break'])
   })
 })

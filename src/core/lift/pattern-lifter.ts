@@ -326,7 +326,7 @@ export class PatternLifter {
               const lifted = ctx.lift(target)
               if (!lifted) {
                 // skip
-              } else if (lifted.concept === '_compound') {
+              } else if (lifted.conceptId === '_compound') {
                 children[semName] = lifted.children.body ?? []
               } else {
                 children[semName] = [lifted]
@@ -390,7 +390,7 @@ export class PatternLifter {
 
     // Apply transform rules
     for (const rule of ct.transformRules) {
-      if (lifted.concept === rule.fromConcept) {
+      if (lifted.conceptId === rule.fromConcept) {
         return createNode(rule.toConcept, { ...lifted.properties }, { ...lifted.children })
       }
     }
@@ -535,9 +535,9 @@ export class PatternLifter {
           // For wrapper nodes (else_clause) that have no lift handler,
           // fall back to lifting their children.
           const lifted = ctx.lift(child)
-          if (lifted && lifted.concept === '_compound') {
+          if (lifted && lifted.conceptId === '_compound') {
             children[fm.semantic] = lifted.children.body ?? []
-          } else if (lifted && lifted.concept !== 'raw_code' && lifted.concept !== 'unresolved') {
+          } else if (lifted && lifted.conceptId !== 'raw_code' && lifted.conceptId !== 'unresolved') {
             children[fm.semantic] = [lifted]
           } else {
             // Fallback: lift named children (handles else_clause, etc.)
@@ -548,7 +548,7 @@ export class PatternLifter {
             // can distinguish from "else { if (...) {} }"
             if (child.type === 'else_clause' && child.namedChildren.length === 1
                 && child.namedChildren[0].type === 'if_statement'
-                && liftedChildren.length === 1 && liftedChildren[0].concept === 'if') {
+                && liftedChildren.length === 1 && liftedChildren[0].conceptId === 'if') {
               liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
             }
             children[fm.semantic] = liftedChildren

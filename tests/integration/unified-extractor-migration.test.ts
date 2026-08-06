@@ -45,11 +45,11 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('func_call')
+    expect(result!.conceptId).toBe('func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].concept).toBe('number_literal')
-    expect(result!.children.args[1].concept).toBe('var_ref')
+    expect(result!.children.args[0].conceptId).toBe('number_literal')
+    expect(result!.children.args[1].conceptId).toBe('var_ref')
   })
 
   it('render → extract roundtrip for func_call', () => {
@@ -65,7 +65,7 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     expect(block!.type).toBe('u_func_call')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.concept).toBe('func_call')
+    expect(reExtracted!.conceptId).toBe('func_call')
     expect(reExtracted!.properties.name).toBe('sum')
     expect(reExtracted!.children.args).toHaveLength(2)
   })
@@ -86,11 +86,11 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('func_def')
+    expect(result!.conceptId).toBe('func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].concept).toBe('param_decl')
+    expect(result!.children.params[0].conceptId).toBe('param_decl')
     expect(result!.children.params[0].properties.type).toBe('int')
     expect(result!.children.params[0].properties.name).toBe('a')
     expect(result!.children.params[1].properties.type).toBe('double')
@@ -110,7 +110,7 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     expect(block!.type).toBe('u_func_def')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.concept).toBe('func_def')
+    expect(reExtracted!.conceptId).toBe('func_def')
     expect(reExtracted!.children.params).toHaveLength(1)
     expect(reExtracted!.children.params[0].properties.name).toBe('name')
   })
@@ -130,7 +130,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('print')
+    expect(result!.conceptId).toBe('print')
     expect(result!.children.values).toHaveLength(2)
   })
 
@@ -147,7 +147,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.concept).toBe('print')
+    expect(reExtracted!.conceptId).toBe('print')
     expect(reExtracted!.children.values).toHaveLength(3)
   })
 })
@@ -168,9 +168,9 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('input')
+    expect(result!.conceptId).toBe('input')
     expect(result!.children.values).toHaveLength(2)
-    expect(result!.children.values[0].concept).toBe('var_ref')
+    expect(result!.children.values[0].conceptId).toBe('var_ref')
     expect(result!.children.values[0].properties.name).toBe('x')
   })
 
@@ -186,7 +186,7 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.concept).toBe('input')
+    expect(reExtracted!.conceptId).toBe('input')
     expect(reExtracted!.children.values).toHaveLength(2)
   })
 })
@@ -212,11 +212,11 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('cpp_scanf')
+    expect(result!.conceptId).toBe('cpp_scanf')
     expect(result!.properties.format).toBe('%d %f')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].concept).toBe('var_ref')
-    expect(result!.children.args[1].concept).toBe('arithmetic')
+    expect(result!.children.args[0].conceptId).toBe('var_ref')
+    expect(result!.children.args[1].conceptId).toBe('arithmetic')
   })
 
   it('render → extract roundtrip for printf', () => {
@@ -228,7 +228,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.concept).toBe('cpp_printf')
+    expect(reExtracted!.conceptId).toBe('cpp_printf')
     expect(reExtracted!.children.args).toHaveLength(1)
   })
 })
@@ -250,7 +250,7 @@ describe('Migration roundtrip: if with elseif chain', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('if')
+    expect(result!.conceptId).toBe('if')
     expect(result!.children.condition).toHaveLength(1)
     expect(result!.children.then_body).toHaveLength(1)
   })
@@ -267,7 +267,7 @@ describe('Migration roundtrip: forward_decl with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('forward_decl')
+    expect(result!.conceptId).toBe('forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.params).toHaveLength(2)
@@ -288,7 +288,7 @@ describe('Migration roundtrip: doc_comment', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('doc_comment')
+    expect(result!.conceptId).toBe('doc_comment')
     expect(result!.properties.brief).toBe('Add two numbers')
   })
 })

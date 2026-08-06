@@ -26,7 +26,7 @@ const n = (
   concept: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
 const num = (v: number): SemanticNode => n('number_literal', { value: v })
 const ret = (v: SemanticNode): SemanticNode => n('return', {}, { value: [v] })

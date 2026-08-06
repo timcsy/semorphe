@@ -53,7 +53,7 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_increment')
+      expect(result!.conceptId).toBe('cpp_increment')
       expect(result!.properties.name).toBe('i')
       expect(result!.properties.operator).toBe('++')
     })
@@ -119,9 +119,9 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('return')
+      expect(result!.conceptId).toBe('return')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].concept).toBe('number_literal')
+      expect(result!.children.value[0].conceptId).toBe('number_literal')
       expect(result!.children.value[0].properties.value).toBe('42')
     })
   })
@@ -200,10 +200,10 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('while_loop')
+      expect(result!.conceptId).toBe('while_loop')
       expect(result!.children.body).toHaveLength(2)
-      expect(result!.children.body[0].concept).toBe('break')
-      expect(result!.children.body[1].concept).toBe('continue')
+      expect(result!.children.body[0].conceptId).toBe('break')
+      expect(result!.children.body[1].conceptId).toBe('continue')
     })
   })
 

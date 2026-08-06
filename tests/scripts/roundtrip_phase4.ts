@@ -148,7 +148,7 @@ int main() {
 function countNodes(node: SemanticNode): { total: number; raw: number } {
   let total = 1
   let raw = 0
-  if (node.concept === 'cpp_raw_code' || node.concept === 'cpp_raw_expression' || node.concept === 'unresolved') {
+  if (node.conceptId === 'cpp_raw_code' || node.conceptId === 'cpp_raw_expression' || node.conceptId === 'unresolved') {
     raw++
   }
   for (const children of Object.values(node.children || {})) {

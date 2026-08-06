@@ -87,7 +87,7 @@ function measure(): { name: string; concept: string }[] {
     const children = (c as { children?: Record<string, unknown> }).children
     if (!children) continue
     for (const name of Object.keys(children)) {
-      if (!isChildRead(src, name)) out.push({ name, concept: c.conceptId })
+      if (!isChildRead(src, name)) out.push({ name, conceptId: c.conceptId })
     }
   }
   return out
@@ -103,7 +103,7 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
     lines.push('**這不是「路徑空的」，是「餵給路徑的東西是空的」**——')
     lines.push('完備性護欄照著概念定義合成節點，宣告錯了它就會量到一個不存在的東西。')
     lines.push('')
-    for (const o of orphans) lines.push(`  ${o.concept} → children.${o.name}`)
+    for (const o of orphans) lines.push(`  ${o.conceptId} → children.${o.name}`)
     printReport('宣告的子節點名護欄（第十條）', lines)
     expect(orphans.length).toBeGreaterThanOrEqual(0)
   })
@@ -133,7 +133,7 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
 
   it('棘輪：不得上升', () => {
     const b = loadBaseline<ChildrenBaseline>('declared-children')
-    const now = orphans.map((o) => `${o.concept}::${o.name}`)
+    const now = orphans.map((o) => `${o.conceptId}::${o.name}`)
     const 新增 = now.filter((k) => !b.list.includes(k))
     expect(新增, `新增了沒有人讀的子節點宣告：\n  ${新增.join('\n  ')}`).toEqual([])
     assertRatchet([['沒有人讀的子節點宣告', orphans.length, b.orphans]])
@@ -150,6 +150,6 @@ if (process.env.GENERATE_BASELINE) {
       note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,
     },
     orphans: orphans.length,
-    list: orphans.map((o) => `${o.concept}::${o.name}`),
+    list: orphans.map((o) => `${o.conceptId}::${o.name}`),
   })
 }

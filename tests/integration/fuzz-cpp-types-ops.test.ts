@@ -65,7 +65,7 @@ function assertStableRoundtrip(code: string) {
 }
 
 function hasNoConcept(node: SemanticNode, forbidden: string[]): boolean {
-  if (forbidden.includes(node.concept)) return false
+  if (forbidden.includes(node.conceptId)) return false
   for (const children of Object.values(node.children || {})) {
     for (const child of children) {
       if (!hasNoConcept(child, forbidden)) return false

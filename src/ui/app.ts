@@ -482,8 +482,8 @@ export class App {
     const code = this.monacoPanel?.getCode() ?? ''
     const depth = this.getScaffoldDepth()
     const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
-      (n: { concept: string; properties: Record<string, unknown> }) =>
-        n.concept === 'func_def' && n.properties.name === 'main'
+      (n: { conceptId: string; properties: Record<string, unknown> }) =>
+        n.conceptId === 'func_def' && n.properties.name === 'main'
     )
     if (needsRelift && this.cppParser && code.trim()) {
       this.cppParser.parse(code).then(parsed => {

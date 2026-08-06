@@ -41,7 +41,7 @@ export class Lifter {
     if (name === undefined) return
     // 型別的來源依概念而異：一般宣告放在 `type`，容器宣告的專屬概念名本身
     // 就帶著型別（`cpp_string_declare` → string）。後者更可靠。
-    const fromConcept = /^cpp_(\w+?)_declare$/.exec(r.concept ?? '')?.[1]
+    const fromConcept = /^cpp_(\w+?)_declare$/.exec(r.conceptId ?? '')?.[1]
     const type = fromConcept ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
     if (type) data.declare(String(name), type)
   }
@@ -106,7 +106,7 @@ export class Lifter {
       const patternResult = this.patternLifter.tryLift(node, ctx)
       if (patternResult) {
         // Post-process: func_call_expr in statement context → func_call
-        if (patternResult.concept === 'func_call_expr' && node.type === 'expression_statement') {
+        if (patternResult.conceptId === 'func_call_expr' && node.type === 'expression_statement') {
           const converted = createNode('func_call', patternResult.properties, patternResult.children)
           addSourceRange(converted)
           setConfidenceHigh(converted)
@@ -131,7 +131,7 @@ export class Lifter {
     // Level 3: check for partially-liftable structures
     if (node.namedChildren.length > 0) {
       const liftedChildren = this.liftStatementsWithContext(node.namedChildren, contextData)
-      if (liftedChildren.length > 0 && liftedChildren.some(c => c.concept !== 'raw_code')) {
+      if (liftedChildren.length > 0 && liftedChildren.some(c => c.conceptId !== 'raw_code')) {
         // Has some meaningful sub-nodes — create unresolved node preserving children
         const unresolved = createNode('unresolved', { node_type: node.type }, {
           children: liftedChildren,
@@ -204,7 +204,7 @@ export class Lifter {
       // This is handled in the comment branch above when we process the comment node
 
       // Flatten _compound nodes (one AST node → multiple semantic nodes)
-      if (lifted.concept === '_compound') {
+      if (lifted.conceptId === '_compound') {
         results.push(...(lifted.children.body ?? []))
       } else {
         results.push(lifted)

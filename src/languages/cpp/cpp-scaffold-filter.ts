@@ -12,14 +12,14 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
 
   for (const node of body) {
     // Skip include directives
-    if (node.concept === 'cpp_include' || node.concept === 'cpp_include_local') continue
+    if (node.conceptId === 'cpp_include' || node.conceptId === 'cpp_include_local') continue
     // Skip using namespace
-    if (node.concept === 'cpp_using_namespace') continue
+    if (node.conceptId === 'cpp_using_namespace') continue
     // Unwrap func_def(main) — extract its body, skip trailing return
-    if (node.concept === 'func_def' && node.properties.name === 'main') {
+    if (node.conceptId === 'func_def' && node.properties.name === 'main') {
       const funcBody = node.children.body ?? []
       for (const stmt of funcBody) {
-        if (stmt.concept === 'return') continue
+        if (stmt.conceptId === 'return') continue
         userBody.push(stmt)
       }
       continue

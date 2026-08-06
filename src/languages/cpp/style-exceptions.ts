@@ -39,7 +39,7 @@ interface StyleExceptionRule {
 /** Header: bits/stdc++.h in non-competitive styles */
 const bitsHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'cpp_include' &&
+    node.conceptId === 'cpp_include' &&
     node.properties.header === 'bits/stdc++.h' &&
     style.headerStyle !== 'bits',
   label: () => '#include <bits/stdc++.h>',
@@ -59,7 +59,7 @@ const bitsHeaderRule: StyleExceptionRule = {
 /** Header: cstdio in iostream-preferred styles */
 const cstdioHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'cpp_include' &&
+    node.conceptId === 'cpp_include' &&
     node.properties.header === 'cstdio' &&
     style.ioPreference === 'iostream',
   label: () => '#include <cstdio>',
@@ -72,7 +72,7 @@ const cstdioHeaderRule: StyleExceptionRule = {
 /** Header: iostream in cstdio-preferred styles */
 const iostreamHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'cpp_include' &&
+    node.conceptId === 'cpp_include' &&
     node.properties.header === 'iostream' &&
     style.ioPreference === 'cstdio',
   label: () => '#include <iostream>',
@@ -85,7 +85,7 @@ const iostreamHeaderRule: StyleExceptionRule = {
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'cpp_printf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp_printf' && style.ioPreference === 'iostream',
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
   convert: (node) => {
@@ -99,7 +99,7 @@ const cppPrintfRule: StyleExceptionRule = {
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'cpp_scanf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp_scanf' && style.ioPreference === 'iostream',
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
@@ -112,18 +112,18 @@ const cppScanfRule: StyleExceptionRule = {
 /** print block (cout-origin) in cstdio-preferred styles */
 const printToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'print' && style.ioPreference === 'cstdio',
+    node.conceptId === 'print' && style.ioPreference === 'cstdio',
   label: () => 'cout << ...',
   suggestion: () => 'printf(...)',
   convert: (node) => {
     const values = node.children.values ?? []
-    const hasEndl = values.some(v => v.concept === 'endl')
+    const hasEndl = values.some(v => v.conceptId === 'endl')
     // Build format string: embed string_literal values directly, use %d for expressions
     const formatParts: string[] = []
     const args: typeof values = []
     for (const v of values) {
-      if (v.concept === 'endl') continue
-      if (v.concept === 'string_literal') {
+      if (v.conceptId === 'endl') continue
+      if (v.conceptId === 'string_literal') {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''
         formatParts.push(text)
@@ -140,7 +140,7 @@ const printToCstdioRule: StyleExceptionRule = {
 /** input block (cin-origin) in cstdio-preferred styles */
 const inputToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.concept === 'input' && style.ioPreference === 'cstdio',
+    node.conceptId === 'input' && style.ioPreference === 'cstdio',
   label: () => 'cin >> ...',
   suggestion: () => 'scanf(...)',
   convert: (node) => {
@@ -277,7 +277,7 @@ function walkTree(
 
   // If no hardcoded rule matched and we have a registry, try module-based detection
   if (!matched && registry) {
-    const header = registry.getHeaderForConcept(node.concept)
+    const header = registry.getHeaderForConcept(node.conceptId)
     if (header && IO_MODULE_HEADERS.has(header)) {
       const preferredHeader = IO_PREF_TO_HEADER[style.ioPreference]
       if (preferredHeader && header !== preferredHeader) {
@@ -286,7 +286,7 @@ function walkTree(
         // but this catches any new concepts added to modules without explicit rules)
         exceptions.push({
           node,
-          label: `${node.concept} (${header})`,
+          label: `${node.conceptId} (${header})`,
           suggestion: `use ${preferredHeader} equivalent`,
           convert: () => [node], // No auto-conversion for unknown concepts
         })

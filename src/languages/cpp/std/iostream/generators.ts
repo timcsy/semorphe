@@ -11,8 +11,8 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
   const LOW_PREC_OPS = new Set(['&', '|', '^', '&&', '||', '>', '<', '>=', '<=', '==', '!='])
 
   function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
-    if (COUT_NEEDS_PARENS.has(v.concept)) return true
-    if ((v.concept === 'arithmetic' || v.concept === 'compare' || v.concept === 'logic') &&
+    if (COUT_NEEDS_PARENS.has(v.conceptId)) return true
+    if ((v.conceptId === 'arithmetic' || v.conceptId === 'compare' || v.conceptId === 'logic') &&
         LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
     return false
   }
@@ -28,12 +28,12 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
       return `${indent(ctx)}cout << ${parts.join(' << ')};\n`
     }
     // printf mode: embed string_literal values into format, use %d for expressions
-    const hasEndl = values.some(v => v.concept === 'endl')
+    const hasEndl = values.some(v => v.conceptId === 'endl')
     const fmtParts: string[] = []
     const argParts: string[] = []
     for (const v of values) {
-      if (v.concept === 'endl') continue
-      if (v.concept === 'string_literal') {
+      if (v.conceptId === 'endl') continue
+      if (v.conceptId === 'string_literal') {
         fmtParts.push((v.properties.value as string) ?? '')
       } else {
         fmtParts.push('%d')

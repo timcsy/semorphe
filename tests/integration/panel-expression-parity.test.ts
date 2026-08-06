@@ -27,7 +27,7 @@ const n = (
   concept: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()

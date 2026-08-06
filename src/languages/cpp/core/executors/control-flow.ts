@@ -86,7 +86,7 @@ export function registerControlFlowCoreExecutors(
 
     for (const caseNode of cases) {
       if (!matched) {
-        const isDefault = caseNode.concept === 'cpp_default'
+        const isDefault = caseNode.conceptId === 'cpp_default'
         if (!isDefault) {
           const caseValNodes = caseNode.children.value ?? []
           if (caseValNodes.length > 0) {

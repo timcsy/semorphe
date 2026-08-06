@@ -307,16 +307,16 @@ export class SyncController {
     // 見 specs/056-abstract-concept-integrity
     // 來源是概念自己的宣告，由語言套件在載入時推進核心
 
-    if (!visible.has(node.concept)) {
-      const parent = abstractConceptOf(node.concept)
+    if (!visible.has(node.conceptId)) {
+      const parent = abstractConceptOf(node.conceptId)
       // 型別前綴由概念自己宣告——介面層不該認得哪個概念宣告的是字串
-      const downgrade = parent ? { concept: parent, typePrefix: variableTypeOf(node.concept) } : undefined
-      if (downgrade && visible.has(downgrade.concept)) {
+      const downgrade = parent ? { conceptId: parent, typePrefix: variableTypeOf(node.conceptId) } : undefined
+      if (downgrade && visible.has(downgrade.conceptId)) {
         // Preserve type info in properties
         if (downgrade.typePrefix && !node.properties.type) {
           node.properties.type = downgrade.typePrefix
         }
-        node.concept = downgrade.concept
+        node.conceptId = downgrade.conceptId
       }
       // If no downgrade mapping or target also not visible → keep original (never raw_code)
     }
@@ -353,7 +353,7 @@ export class SyncController {
       // If switching TO L1/L2 and tree has no main func (body-only from L0),
       // re-lift from the current code to get the full tree
       const hasMainFunc = (extractedTree.children.body ?? []).some(
-        n => n.concept === 'func_def' && n.properties.name === 'main'
+        n => n.conceptId === 'func_def' && n.properties.name === 'main'
       )
       if (this.getScaffoldDepth() > 0 && !hasMainFunc && this.lifter && this.parser) {
         const parseResult = this.parser.parse(currentCode)

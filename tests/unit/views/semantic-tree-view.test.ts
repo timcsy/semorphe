@@ -8,18 +8,18 @@ describe('SemanticTreeView', () => {
   it('should render a tree with concept names and properties', () => {
     const tree: SemanticNode = {
       id: 'root',
-      concept: 'program',
+      conceptId: 'program',
       properties: {},
       children: {
         body: [
           {
             id: 'n1',
-            concept: 'var_declare',
+            conceptId: 'var_declare',
             properties: { type: 'int', name: 'x' },
             children: {
               init: [{
                 id: 'n2',
-                concept: 'number_literal',
+                conceptId: 'number_literal',
                 properties: { value: '5' },
                 children: {},
               }],
@@ -27,12 +27,12 @@ describe('SemanticTreeView', () => {
           },
           {
             id: 'n3',
-            concept: 'print',
+            conceptId: 'print',
             properties: {},
             children: {
               values: [{
                 id: 'n4',
-                concept: 'var_ref',
+                conceptId: 'var_ref',
                 properties: { name: 'x' },
                 children: {},
               }],
@@ -57,7 +57,7 @@ describe('SemanticTreeView', () => {
   it('should handle empty tree without error', () => {
     const emptyTree: SemanticNode = {
       id: 'root',
-      concept: 'program',
+      conceptId: 'program',
       properties: {},
       children: {},
     }

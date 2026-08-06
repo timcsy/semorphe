@@ -41,7 +41,7 @@ export type ConceptId = UniversalConcept | LanguageSpecificConcept
 
 export interface SemanticNode {
   id: string
-  concept: string
+  conceptId: string
   properties: Record<string, PropertyValue>
   children: Record<string, SemanticNode[]>
   annotations?: Annotation[]

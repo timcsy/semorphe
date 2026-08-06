@@ -60,7 +60,7 @@ function liftCode(code: string): SemanticNode | null {
 
 function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode | null {
   if (!node) return null
-  if (node.concept === conceptId) return node
+  if (node.conceptId === conceptId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       const found = findConcept(child, conceptId)
@@ -72,7 +72,7 @@ function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode
 
 function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
-  result.add(node.concept)
+  result.add(node.conceptId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       collectConcepts(child, result)

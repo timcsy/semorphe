@@ -52,11 +52,11 @@ export class TemplateGenerator {
   /** Generate code for a semantic node. Returns null if no template found. */
   generate(node: SemanticNode, ctx: GenerateContext): string | null {
     // 1. Try direct template lookup
-    let template = this.templates.get(node.concept)
+    let template = this.templates.get(node.conceptId)
 
     // 2. Try universal template with style variants
     if (!template) {
-      template = this.resolveUniversalTemplate(node.concept, ctx.style) ?? undefined
+      template = this.resolveUniversalTemplate(node.conceptId, ctx.style) ?? undefined
     }
 
     if (!template) return null
@@ -152,7 +152,7 @@ export class TemplateGenerator {
       const fb = this.expressionFallback(node, ctx)
       if (fb !== null) return fb
     }
-    return (node.metadata?.rawCode as string) ?? `⟨${node.concept}⟩`
+    return (node.metadata?.rawCode as string) ?? `⟨${node.conceptId}⟩`
   }
 
   private generateBody(nodes: SemanticNode[], ctx: GenerateContext): string {
@@ -165,7 +165,7 @@ export class TemplateGenerator {
         const fb = this.bodyFallback(n, ctx)
         if (fb !== null) return fb
       }
-      return `${indentStr}⟨unknown: ${n.concept}⟩`
+      return `${indentStr}⟨unknown: ${n.conceptId}⟩`
     }).join('\n')
   }
 

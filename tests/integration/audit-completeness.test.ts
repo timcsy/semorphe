@@ -199,7 +199,7 @@ function wrap(node: SemanticNode, id?: string): SemanticNode {
 
 function findConcept(node: SemanticNode | null, id: string): boolean {
   if (!node) return false
-  if (node.concept === id) return true
+  if (node.conceptId === id) return true
   return Object.values(node.children ?? {}).some((arr) => arr.some((c) => findConcept(c, id)))
 }
 
@@ -320,8 +320,8 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
       try {
         const back = extractor.extract(block)
         if (!back) return { verdict: 'shell', reason: 'extract 回傳 null' } as PathResult
-        if (back.concept !== id)
-          return { verdict: 'shell', reason: `取回的身分是 ${back.concept}，不是 ${id}` } as PathResult
+        if (back.conceptId !== id)
+          return { verdict: 'shell', reason: `取回的身分是 ${back.conceptId}，不是 ${id}` } as PathResult
         return { verdict: 'implemented' } as PathResult
       } catch (e) {
         return { verdict: 'shell', reason: `擲出例外：${(e as Error).message.slice(0, 60)}` } as PathResult

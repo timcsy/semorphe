@@ -101,7 +101,7 @@ describe('Annotation Roundtrip', () => {
       const data = new LiftContextData()
       const results = lifter.liftStatements([commentNode, stmtNode])
       expect(results.length).toBe(2)
-      expect(results[0].concept).toBe('comment')
+      expect(results[0].conceptId).toBe('comment')
       expect(results[0].properties.text).toBe('// section header')
     })
 
@@ -112,8 +112,8 @@ describe('Annotation Roundtrip', () => {
 
       const results = lifter.liftStatements([c1, c2])
       expect(results.length).toBe(2)
-      expect(results[0].concept).toBe('comment')
-      expect(results[1].concept).toBe('comment')
+      expect(results[0].conceptId).toBe('comment')
+      expect(results[1].conceptId).toBe('comment')
     })
   })
 
@@ -144,7 +144,7 @@ describe('Annotation Roundtrip', () => {
 
       const results = lifter.liftStatements([unknownNode, commentNode])
       expect(results.length).toBe(1)
-      expect(results[0].concept).toBe('raw_code')
+      expect(results[0].conceptId).toBe('raw_code')
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations![0].position).toBe('inline')
       expect(results[0].annotations![0].text).toBe('lambda')

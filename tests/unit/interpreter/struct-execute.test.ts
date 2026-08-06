@@ -35,7 +35,7 @@ const n = (
   concept: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('program', {}, { body })
 const num = (v: number): SemanticNode => n('number_literal', { value: v })

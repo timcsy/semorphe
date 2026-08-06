@@ -85,14 +85,14 @@ describe('Preprocessor Directives', () => {
     it('lifts system include correctly', () => {
       const node = liftFirst('#include <iostream>')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('cpp_include')
+      expect(node!.conceptId).toBe('cpp_include')
       expect(node!.properties.header).toBe('iostream')
     })
 
     it('lifts local include correctly', () => {
       const node = liftFirst('#include "myheader.h"')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('cpp_include_local')
+      expect(node!.conceptId).toBe('cpp_include_local')
       expect(node!.properties.header).toBe('myheader.h')
     })
 
@@ -120,7 +120,7 @@ describe('Preprocessor Directives', () => {
     it('lifts #define correctly', () => {
       const node = liftFirst('#define MAX 100')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('cpp_define')
+      expect(node!.conceptId).toBe('cpp_define')
       expect(node!.properties.name).toBe('MAX')
       expect(node!.properties.value).toBe('100')
     })
@@ -135,7 +135,7 @@ describe('Preprocessor Directives', () => {
     it('lifts using namespace correctly', () => {
       const node = liftFirst('using namespace std;')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('cpp_using_namespace')
+      expect(node!.conceptId).toBe('cpp_using_namespace')
       expect(node!.properties.ns).toBe('std')
     })
 
@@ -155,7 +155,7 @@ describe('Declarations', () => {
     it('lifts int x; correctly', () => {
       const node = liftFirst('int x;')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('var_declare')
+      expect(node!.conceptId).toBe('var_declare')
       expect(node!.properties.type).toBe('int')
       expect(node!.properties.name).toBe('x')
     })
@@ -163,11 +163,11 @@ describe('Declarations', () => {
     it('lifts int x = 5; correctly', () => {
       const node = liftFirst('int x = 5;')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('var_declare')
+      expect(node!.conceptId).toBe('var_declare')
       expect(node!.properties.name).toBe('x')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
-      expect(inits[0].concept).toBe('number_literal')
+      expect(inits[0].conceptId).toBe('number_literal')
       expect(inits[0].properties.value).toBe('5')
     })
 
@@ -175,11 +175,11 @@ describe('Declarations', () => {
       const node = liftFirst('string name = "hello";')
       expect(node).not.toBeNull()
       // string declarations are now lifted as cpp_string_declare
-      expect(node!.concept).toBe('cpp_string_declare')
+      expect(node!.conceptId).toBe('cpp_string_declare')
       expect(node!.properties.name).toBe('name')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
-      expect(inits[0].concept).toBe('string_literal')
+      expect(inits[0].conceptId).toBe('string_literal')
       expect(inits[0].properties.value).toBe('hello')
     })
 
@@ -198,7 +198,7 @@ describe('Declarations', () => {
     it('lifts int a, b = 5; correctly', () => {
       const node = liftFirst('int a, b = 5;')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('var_declare')
+      expect(node!.conceptId).toBe('var_declare')
       expect(node!.properties.type).toBe('int')
       const decls = node!.children.declarators ?? []
       expect(decls.length).toBe(2)
@@ -228,7 +228,7 @@ describe('Declarations', () => {
     it('lifts x = 10; correctly', () => {
       const node = liftFirst('x = 10;')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('var_assign')
+      expect(node!.conceptId).toBe('var_assign')
       expect(node!.properties.name).toBe('x')
     })
 
@@ -242,7 +242,7 @@ describe('Declarations', () => {
     it('lifts int arr[10]; correctly', () => {
       const node = liftFirst('int arr[10];')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('array_declare')
+      expect(node!.conceptId).toBe('array_declare')
     })
 
     it('roundtrips int arr[10];', () => {
@@ -269,7 +269,7 @@ describe('Expressions', () => {
     it('lifts number literal', () => {
       const n = liftExpr('42')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('number_literal')
+      expect(n!.conceptId).toBe('number_literal')
       expect(n!.properties.value).toBe('42')
     })
 
@@ -277,7 +277,7 @@ describe('Expressions', () => {
       const body = liftBody('string s = "hello world";')
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.concept).toBe('string_literal')
+      expect(inits[0]?.conceptId).toBe('string_literal')
       expect(inits[0]?.properties.value).toBe('hello world')
     })
 
@@ -285,7 +285,7 @@ describe('Expressions', () => {
       const body = liftBody("char c = 'A';")
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.concept).toBe('cpp_char_literal')
+      expect(inits[0]?.conceptId).toBe('cpp_char_literal')
       expect(inits[0]?.properties.char).toBe('A')
     })
   })
@@ -294,10 +294,10 @@ describe('Expressions', () => {
     it.each(['+', '-', '*', '/', '%'])('lifts binary %s', (op) => {
       const n = liftExpr(`a ${op} b`)
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('arithmetic')
+      expect(n!.conceptId).toBe('arithmetic')
       expect(n!.properties.operator).toBe(op)
-      expect(n!.children.left?.[0]?.concept).toBe('var_ref')
-      expect(n!.children.right?.[0]?.concept).toBe('var_ref')
+      expect(n!.children.left?.[0]?.conceptId).toBe('var_ref')
+      expect(n!.children.right?.[0]?.conceptId).toBe('var_ref')
     })
 
     it('roundtrips a + b', () => {
@@ -316,7 +316,7 @@ describe('Expressions', () => {
     it.each(['>', '<', '>=', '<=', '==', '!='])('lifts %s', (op) => {
       const n = liftExpr(`x ${op} y`)
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('compare')
+      expect(n!.conceptId).toBe('compare')
       expect(n!.properties.operator).toBe(op)
     })
   })
@@ -325,14 +325,14 @@ describe('Expressions', () => {
     it.each(['&&', '||'])('lifts %s', (op) => {
       const n = liftExpr(`a ${op} b`)
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('logic')
+      expect(n!.conceptId).toBe('logic')
       expect(n!.properties.operator).toBe(op)
     })
 
     it('lifts !x (logic_not)', () => {
       const n = liftExpr('!flag')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('logic_not')
+      expect(n!.conceptId).toBe('logic_not')
     })
 
     it('roundtrips !flag', () => {
@@ -345,7 +345,7 @@ describe('Expressions', () => {
     it('lifts -x (negate)', () => {
       const n = liftExpr('-x')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('negate')
+      expect(n!.conceptId).toBe('negate')
     })
 
     it('roundtrips -x', () => {
@@ -358,7 +358,7 @@ describe('Expressions', () => {
     it('lifts arr[i]', () => {
       const n = liftExpr('arr[i]')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('array_access')
+      expect(n!.conceptId).toBe('array_access')
       expect(n!.properties.name).toBe('arr')
     })
 
@@ -383,7 +383,7 @@ describe('Expressions', () => {
     it('lifts strlen(s) as cpp_strlen', () => {
       const n = liftExpr('strlen(s)')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('cpp_strlen')
+      expect(n!.conceptId).toBe('cpp_strlen')
       expect(n!.children.str).toBeDefined()
       expect(n!.children.str!.length).toBe(1)
     })
@@ -398,21 +398,21 @@ describe('Expressions', () => {
     it('lifts identifier as var_ref', () => {
       const n = liftExpr('myVar')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('var_ref')
+      expect(n!.conceptId).toBe('var_ref')
       expect(n!.properties.name).toBe('myVar')
     })
 
     it('lifts true as builtin_constant', () => {
       const n = liftExpr('true')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('builtin_constant')
+      expect(n!.conceptId).toBe('builtin_constant')
       expect(n!.properties.value).toBe('true')
     })
 
     it('lifts false as builtin_constant', () => {
       const n = liftExpr('false')
       expect(n).not.toBeNull()
-      expect(n!.concept).toBe('builtin_constant')
+      expect(n!.conceptId).toBe('builtin_constant')
       expect(n!.properties.value).toBe('false')
     })
   })
@@ -430,10 +430,10 @@ describe('I/O', () => {
       const mainBody = mainNode?.children.body ?? []
       const printNode = mainBody[0]
       expect(printNode).not.toBeNull()
-      expect(printNode!.concept).toBe('print')
+      expect(printNode!.conceptId).toBe('print')
       const values = printNode!.children.values ?? []
       expect(values.length).toBe(1)
-      expect(values[0].concept).toBe('string_literal')
+      expect(values[0].conceptId).toBe('string_literal')
       expect(values[0].properties.value).toBe('hello')
     })
 
@@ -441,22 +441,22 @@ describe('I/O', () => {
       const body = liftBody('int main() { cout << x << y; }')
       const mainBody = body[0]?.children.body ?? []
       const printNode = mainBody[0]
-      expect(printNode!.concept).toBe('print')
+      expect(printNode!.conceptId).toBe('print')
       const values = printNode!.children.values ?? []
       expect(values.length).toBe(2)
-      expect(values[0].concept).toBe('var_ref')
-      expect(values[1].concept).toBe('var_ref')
+      expect(values[0].conceptId).toBe('var_ref')
+      expect(values[1].conceptId).toBe('var_ref')
     })
 
     it('lifts cout << "hi" << endl; with endl concept', () => {
       const body = liftBody('int main() { cout << "hi" << endl; }')
       const mainBody = body[0]?.children.body ?? []
       const printNode = mainBody[0]
-      expect(printNode!.concept).toBe('print')
+      expect(printNode!.conceptId).toBe('print')
       const values = printNode!.children.values ?? []
       expect(values.length).toBe(2)
-      expect(values[0].concept).toBe('string_literal')
-      expect(values[1].concept).toBe('endl')
+      expect(values[0].conceptId).toBe('string_literal')
+      expect(values[1].conceptId).toBe('endl')
     })
 
     it('roundtrips cout << "big" << endl;', () => {
@@ -488,10 +488,10 @@ describe('I/O', () => {
       const mainBody = body[0]?.children.body ?? []
       const inputNode = mainBody[0]
       expect(inputNode).not.toBeNull()
-      expect(inputNode!.concept).toBe('input')
+      expect(inputNode!.conceptId).toBe('input')
       const values = inputNode!.children.values ?? []
       expect(values.length).toBe(1)
-      expect(values[0].concept).toBe('var_ref')
+      expect(values[0].conceptId).toBe('var_ref')
       expect(values[0].properties.name).toBe('x')
     })
 
@@ -499,7 +499,7 @@ describe('I/O', () => {
       const body = liftBody('int main() { cin >> x >> y; }')
       const mainBody = body[0]?.children.body ?? []
       const inputNode = mainBody[0]
-      expect(inputNode!.concept).toBe('input')
+      expect(inputNode!.conceptId).toBe('input')
       const values = inputNode!.children.values ?? []
       expect(values.length).toBe(2)
     })
@@ -519,10 +519,10 @@ describe('I/O', () => {
       const mainBody = body[0]?.children.body ?? []
       const ifNode = mainBody[0]
       expect(ifNode).toBeDefined()
-      expect(ifNode!.concept).toBe('if')
+      expect(ifNode!.conceptId).toBe('if')
       const cond = (ifNode!.children.condition ?? [])[0]
       expect(cond).toBeDefined()
-      expect(cond!.concept).toBe('input')
+      expect(cond!.conceptId).toBe('input')
       const values = cond!.children.values ?? []
       expect(values.length).toBe(3)
       expect(values[0].properties.name).toBe('a')
@@ -561,7 +561,7 @@ describe('I/O', () => {
       const values = printNode?.children.values ?? []
       expect(values.length).toBeGreaterThan(0)
       const endlNode = values[values.length - 1]
-      expect(endlNode.concept).toBe('endl')
+      expect(endlNode.conceptId).toBe('endl')
     })
 
     it('generates endl token in cout context', () => {
@@ -595,7 +595,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { if (x > 0) { y = 1; } }')
       const mainBody = body[0]?.children.body ?? []
       const ifNode = mainBody[0]
-      expect(ifNode!.concept).toBe('if')
+      expect(ifNode!.conceptId).toBe('if')
       expect(ifNode!.children.condition?.length).toBe(1)
       expect(ifNode!.children.then_body?.length).toBeGreaterThan(0)
       expect(ifNode!.children.else_body?.length ?? 0).toBe(0)
@@ -605,7 +605,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { if (x > 0) { y = 1; } else { y = 2; } }')
       const mainBody = body[0]?.children.body ?? []
       const ifNode = mainBody[0]
-      expect(ifNode!.concept).toBe('if')
+      expect(ifNode!.conceptId).toBe('if')
       expect(ifNode!.children.else_body?.length).toBeGreaterThan(0)
     })
 
@@ -629,7 +629,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { while (x > 0) { x = x - 1; } }')
       const mainBody = body[0]?.children.body ?? []
       const whileNode = mainBody[0]
-      expect(whileNode!.concept).toBe('while_loop')
+      expect(whileNode!.conceptId).toBe('while_loop')
     })
 
     it('roundtrips while loop', () => {
@@ -643,7 +643,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { for (int i = 0; i < 10; i++) { x = i; } }')
       const mainBody = body[0]?.children.body ?? []
       const forNode = mainBody[0]
-      expect(forNode!.concept).toBe('count_loop')
+      expect(forNode!.conceptId).toBe('count_loop')
       expect(forNode!.properties.var_name).toBe('i')
     })
 
@@ -658,14 +658,14 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { while(1) { break; } }')
       const whileBody = body[0]?.children.body?.[0]?.children.body ?? []
       const breakNode = whileBody[0]
-      expect(breakNode!.concept).toBe('break')
+      expect(breakNode!.conceptId).toBe('break')
     })
 
     it('lifts continue', () => {
       const body = liftBody('int main() { while(1) { continue; } }')
       const whileBody = body[0]?.children.body?.[0]?.children.body ?? []
       const contNode = whileBody[0]
-      expect(contNode!.concept).toBe('continue')
+      expect(contNode!.conceptId).toBe('continue')
     })
 
     it('roundtrips break', () => {
@@ -689,7 +689,7 @@ describe('Functions', () => {
     it('lifts int main() {}', () => {
       const node = liftFirst('int main() {}')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('func_def')
+      expect(node!.conceptId).toBe('func_def')
       expect(node!.properties.name).toBe('main')
       expect(node!.properties.return_type).toBe('int')
     })
@@ -697,11 +697,11 @@ describe('Functions', () => {
     it('lifts function with params', () => {
       const node = liftFirst('int add(int a, int b) { return a + b; }')
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('func_def')
+      expect(node!.conceptId).toBe('func_def')
       expect(node!.properties.name).toBe('add')
       const paramChildren = node!.children.params ?? []
       expect(paramChildren).toHaveLength(2)
-      expect(paramChildren[0].concept).toBe('param_decl')
+      expect(paramChildren[0].conceptId).toBe('param_decl')
       expect(paramChildren[0].properties.type).toBe('int')
       expect(paramChildren[0].properties.name).toBe('a')
       expect(paramChildren[1].properties.type).toBe('int')
@@ -769,7 +769,7 @@ describe('Functions', () => {
       const mainBody = body[0]?.children.body ?? []
       const callNode = mainBody[0]
       expect(callNode).not.toBeNull()
-      expect(callNode!.concept).toBe('func_call')
+      expect(callNode!.conceptId).toBe('func_call')
       expect(callNode!.properties.name).toBe('greet')
     })
 
@@ -777,7 +777,7 @@ describe('Functions', () => {
       const body = liftBody('int main() { add(1, 2); }')
       const mainBody = body[0]?.children.body ?? []
       const callNode = mainBody[0]
-      expect(callNode!.concept).toBe('func_call')
+      expect(callNode!.conceptId).toBe('func_call')
       const args = callNode!.children.args ?? []
       expect(args.length).toBe(2)
     })
@@ -807,17 +807,17 @@ describe('Functions', () => {
       const body = liftBody('int main() { return 0; }')
       const mainBody = body[0]?.children.body ?? []
       const retNode = mainBody[0]
-      expect(retNode!.concept).toBe('return')
+      expect(retNode!.conceptId).toBe('return')
       const vals = retNode!.children.value ?? []
       expect(vals.length).toBe(1)
-      expect(vals[0].concept).toBe('number_literal')
+      expect(vals[0].conceptId).toBe('number_literal')
     })
 
     it('lifts return; (no value)', () => {
       const body = liftBody('void f() { return; }')
       const fBody = body[0]?.children.body ?? []
       const retNode = fBody[0]
-      expect(retNode!.concept).toBe('return')
+      expect(retNode!.conceptId).toBe('return')
       const vals = retNode!.children.value ?? []
       expect(vals.length).toBe(0)
     })
@@ -842,14 +842,14 @@ describe('Comments', () => {
   it('lifts // line comment (strips prefix)', () => {
     const node = liftFirst('// this is a comment')
     expect(node).not.toBeNull()
-    expect(node!.concept).toBe('comment')
+    expect(node!.conceptId).toBe('comment')
     expect(node!.properties.text).toBe('this is a comment')
   })
 
   it('lifts /* block comment */ (strips delimiters)', () => {
     const node = liftFirst('/* block comment */')
     expect(node).not.toBeNull()
-    expect(node!.concept).toBe('block_comment')
+    expect(node!.conceptId).toBe('block_comment')
     expect(node!.properties.text).toBe('block comment')
   })
 })
@@ -866,7 +866,7 @@ describe('Compound Assignment & Increment', () => {
       const node = mainBody[0]
       expect(node).not.toBeNull()
       // Should be cpp_compound_assign, NOT var_assign
-      expect(node!.concept).toBe('cpp_compound_assign')
+      expect(node!.conceptId).toBe('cpp_compound_assign')
       expect(node!.properties.name).toBe('x')
       expect(node!.properties.operator).toBe('+=')
     })
@@ -875,7 +875,7 @@ describe('Compound Assignment & Increment', () => {
       const body = liftBody('int main() { x -= 3; }')
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
-      expect(node!.concept).toBe('cpp_compound_assign')
+      expect(node!.conceptId).toBe('cpp_compound_assign')
       expect(node!.properties.operator).toBe('-=')
     })
 
@@ -900,7 +900,7 @@ describe('Compound Assignment & Increment', () => {
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
       expect(node).not.toBeNull()
-      expect(node!.concept).toBe('cpp_increment')
+      expect(node!.conceptId).toBe('cpp_increment')
       expect(node!.properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
@@ -909,7 +909,7 @@ describe('Compound Assignment & Increment', () => {
       const body = liftBody('int main() { i--; }')
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
-      expect(node!.concept).toBe('cpp_increment')
+      expect(node!.conceptId).toBe('cpp_increment')
       expect(node!.properties.operator).toBe('--')
     })
 

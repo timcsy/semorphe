@@ -29,9 +29,9 @@ const OPERATOR_PRECEDENCE: Record<string, (op: unknown) => number> = {
 /** C++ operator precedence (higher = binds tighter) */
 function precedence(node: SemanticNode | undefined): number {
   if (!node) return 100
-  const fixed = PRECEDENCE_MAP.get(node.concept)
+  const fixed = PRECEDENCE_MAP.get(node.conceptId)
   if (fixed !== undefined) return fixed
-  const opFn = OPERATOR_PRECEDENCE[node.concept]
+  const opFn = OPERATOR_PRECEDENCE[node.conceptId]
   if (opFn) return opFn(node.properties.operator)
   return 100 // literals, var_ref, etc. — never need parens
 }
@@ -104,7 +104,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     const childNode = (node.children.value ?? node.children.operand ?? [])[0]
     const val = genChild(childNode, precedence(node), ctx)
     // Prevent --x (pre-decrement) or ++x when nesting unary operators
-    if (childNode && (childNode.concept === 'negate' || childNode.concept === 'cpp_pointer_deref' || childNode.concept === 'cpp_address_of')) {
+    if (childNode && (childNode.conceptId === 'negate' || childNode.conceptId === 'cpp_pointer_deref' || childNode.conceptId === 'cpp_address_of')) {
       return `${op}(${val})`
     }
     return `${op}${val}`

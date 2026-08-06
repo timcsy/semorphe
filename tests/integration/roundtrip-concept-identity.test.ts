@@ -64,7 +64,7 @@ beforeAll(async () => {
 /** 蒐集樹中所有出現過的概念身分 */
 function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
-  acc.add(node.concept)
+  acc.add(node.conceptId)
   for (const arr of Object.values(node.children ?? {})) for (const c of arr) conceptsIn(c, acc)
   return acc
 }

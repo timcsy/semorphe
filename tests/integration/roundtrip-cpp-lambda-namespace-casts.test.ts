@@ -58,7 +58,7 @@ function findConcepts(node: SemanticNode): string[] {
   const concepts: string[] = []
   function walk(n: SemanticNode) {
     if (!n) return
-    if (n.concept) concepts.push(n.concept)
+    if (n.conceptId) concepts.push(n.conceptId)
     if (n.children) {
       for (const ch of Object.values(n.children)) {
         if (Array.isArray(ch)) ch.forEach(walk)
@@ -71,7 +71,7 @@ function findConcepts(node: SemanticNode): string[] {
 
 /** Find a node with a specific concept ID in the tree */
 function findNode(root: SemanticNode, conceptId: string): SemanticNode | undefined {
-  if (root.concept === conceptId) return root
+  if (root.conceptId === conceptId) return root
   if (root.children) {
     for (const ch of Object.values(root.children)) {
       if (Array.isArray(ch)) {

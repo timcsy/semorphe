@@ -62,7 +62,7 @@ function liftCode(code: string): SemanticNode | null {
 
 function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
-  result.add(node.concept)
+  result.add(node.conceptId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       collectConcepts(child, result)

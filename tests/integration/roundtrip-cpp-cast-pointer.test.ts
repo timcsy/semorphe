@@ -53,7 +53,7 @@ function roundTripCode(code: string): string {
 
 function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode | null {
   if (!node) return null
-  if (node.concept === conceptId) return node
+  if (node.conceptId === conceptId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       const found = findConcept(child, conceptId)
@@ -109,7 +109,7 @@ describe('C++ pointer assign Roundtrip', () => {
         // May be lifted as var_assign with pointer deref — check concept exists
         const concepts = new Set<string>()
         function walk(n: SemanticNode) {
-          concepts.add(n.concept)
+          concepts.add(n.conceptId)
           for (const ch of Object.values(n.children ?? {}))
             for (const c of ch as SemanticNode[]) walk(c)
         }

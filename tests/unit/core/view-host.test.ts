@@ -82,7 +82,7 @@ describe('ViewHost', () => {
   it('should receive semantic update events', () => {
     const view = new MockBlocksView()
     const event: SemanticUpdateEvent = {
-      tree: { id: '1', concept: 'program', properties: {}, children: {} },
+      tree: { id: '1', conceptId: 'program', properties: {}, children: {} },
     }
     view.onSemanticUpdate(event)
     expect(view.lastSemanticEvent).toBe(event)

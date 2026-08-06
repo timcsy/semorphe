@@ -93,7 +93,7 @@ function findConcepts(sem: any): string[] {
   const concepts: string[] = []
   function walk(node: any) {
     if (!node) return
-    if (node.concept) concepts.push(node.concept)
+    if (node.conceptId) concepts.push(node.conceptId)
     if (node.children) {
       for (const ch of Object.values(node.children) as any[]) {
         if (Array.isArray(ch)) ch.forEach(walk)
@@ -169,7 +169,7 @@ describe('Code-to-Blocks Pipeline', () => {
       // Walk to find the count_loop and check inclusive
       function findNode(node: any, concept: string): any {
         if (!node) return null
-        if (node.concept === concept) return node
+        if (node.conceptId === concept) return node
         if (node.children) {
           for (const ch of Object.values(node.children) as any[]) {
             if (Array.isArray(ch)) {

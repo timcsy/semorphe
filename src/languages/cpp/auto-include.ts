@@ -14,7 +14,7 @@ import { expandHeaderAliases, normalizeHeader } from './header-aliases'
  * Collect all concept IDs from a semantic tree (recursive).
  */
 export function collectConcepts(node: SemanticNode, out: Set<string>): void {
-  out.add(node.concept)
+  out.add(node.conceptId)
   for (const children of Object.values(node.children)) {
     for (const child of children) {
       collectConcepts(child, out)
@@ -28,7 +28,7 @@ export function collectConcepts(node: SemanticNode, out: Set<string>): void {
 function collectManualIncludes(body: SemanticNode[]): Set<string> {
   const manual = new Set<string>()
   for (const node of body) {
-    if (node.concept === 'cpp_include' && typeof node.properties.header === 'string') {
+    if (node.conceptId === 'cpp_include' && typeof node.properties.header === 'string') {
       manual.add(`<${node.properties.header}>`)
     }
   }

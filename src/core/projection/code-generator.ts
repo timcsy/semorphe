@@ -159,13 +159,13 @@ function wireTemplateFallbacks(ctx: GeneratorContext): void {
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
   if (!tg) return
   tg.setExpressionFallback((node, _tgCtx) => {
-    const generator = ctx.generators.get(node.concept)
+    const generator = ctx.generators.get(node.conceptId)
     if (!generator) return null
     // Hand-written expression generators return just the expression text
     return generator(node, ctx)
   })
   tg.setBodyFallback((node, tgCtx) => {
-    const generator = ctx.generators.get(node.concept)
+    const generator = ctx.generators.get(node.conceptId)
     if (!generator) return null
     const bodyCtx = { ...ctx, indent: tgCtx.indent }
     return generator(node, bodyCtx)
@@ -193,12 +193,12 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
   } else {
     // Fall back to hand-written generators (including meta-concept generators)
-    const generator = ctx.generators.get(node.concept)
+    const generator = ctx.generators.get(node.conceptId)
     if (generator) {
       result = generator(node, ctx)
     } else {
       // 用語言中立的形式，不用 `/* *​/`——核心不知道任何語言怎麼寫註解
-      result = `⟨unknown concept: ${node.concept}⟩\n`
+      result = `⟨unknown concept: ${node.conceptId}⟩\n`
     }
   }
 
@@ -268,11 +268,11 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   if (templateResult !== null) return templateResult
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
-  const generator = exprCtx.generators.get(node.concept)
+  const generator = exprCtx.generators.get(node.conceptId)
   if (generator) return generator(node, exprCtx)
   // Meta-concepts that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
-  return `⟨${node.concept}⟩`
+  return `⟨${node.conceptId}⟩`
 }
 
 export function indent(ctx: GeneratorContext): string {

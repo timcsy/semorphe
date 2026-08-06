@@ -75,7 +75,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_char_literal')
+      expect(result!.conceptId).toBe('cpp_char_literal')
       expect(result!.properties.char).toBe("'a'")
     })
 
@@ -115,7 +115,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_increment')
+      expect(result!.conceptId).toBe('cpp_increment')
       expect(result!.properties.name).toBe('i')
     })
   })
@@ -151,7 +151,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_printf')
+      expect(result!.conceptId).toBe('cpp_printf')
     })
 
     it('should NOT match when constraint fails', () => {
@@ -221,7 +221,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_printf')
+      expect(result!.conceptId).toBe('cpp_printf')
     })
   })
 
@@ -283,10 +283,10 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('cpp_compound_assign')
+      expect(result!.conceptId).toBe('cpp_compound_assign')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].concept).toBe('number_literal')
+      expect(result!.children.value[0].conceptId).toBe('number_literal')
     })
   })
 
@@ -350,7 +350,7 @@ describe('PatternLifter', () => {
       const ctx = makeLiftContext(lifter)
       const addResult = lifter.tryLift(addNode, ctx)
       expect(addResult).not.toBeNull()
-      expect(addResult!.concept).toBe('arithmetic')
+      expect(addResult!.conceptId).toBe('arithmetic')
       expect(addResult!.properties.operator).toBe('+')
       expect(addResult!.children.left).toHaveLength(1)
       expect(addResult!.children.right).toHaveLength(1)
@@ -362,7 +362,7 @@ describe('PatternLifter', () => {
       })
       const cmpResult = lifter.tryLift(cmpNode, makeLiftContext(lifter))
       expect(cmpResult).not.toBeNull()
-      expect(cmpResult!.concept).toBe('compare')
+      expect(cmpResult!.conceptId).toBe('compare')
       expect(cmpResult!.properties.operator).toBe('>')
 
       // Test logic
@@ -372,7 +372,7 @@ describe('PatternLifter', () => {
       })
       const logicResult = lifter.tryLift(logicNode, makeLiftContext(lifter))
       expect(logicResult).not.toBeNull()
-      expect(logicResult!.concept).toBe('logic')
+      expect(logicResult!.conceptId).toBe('logic')
     })
   })
 
@@ -431,7 +431,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(outerBinExpr, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('print')
+      expect(result!.conceptId).toBe('print')
       expect(result!.children.values).toBeDefined()
       expect(result!.children.values.length).toBeGreaterThanOrEqual(2)
     })
@@ -519,7 +519,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(forNode, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('count_loop')
+      expect(result!.conceptId).toBe('count_loop')
     })
 
     it('should NOT match when composite checks fail', () => {
@@ -591,7 +591,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(parens, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('number_literal')
+      expect(result!.conceptId).toBe('number_literal')
       expect(result!.properties.value).toBe('42')
     })
   })
@@ -646,7 +646,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(forNode, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.concept).toBe('count_loop')
+      expect(result!.conceptId).toBe('count_loop')
     })
   })
 })

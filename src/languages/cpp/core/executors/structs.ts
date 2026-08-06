@@ -46,24 +46,24 @@ function 拆解成員(members: SemanticNode[]): {
   /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
   const 方法概念 = new Set(['func_def', 'cpp_virtual_method', 'cpp_override_method'])
   for (const m of members) {
-    if (m.concept === 'cpp_static_member') {
+    if (m.conceptId === 'cpp_static_member') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (m.concept === 'cpp_pure_virtual') {
+    } else if (m.conceptId === 'cpp_pure_virtual') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
-    } else if (m.concept === 'cpp_operator_overload') {
+    } else if (m.conceptId === 'cpp_operator_overload') {
       // 存成名字是 `operator+` 的方法，讓算術執行器找得到
       methods.push({
         name: `operator${String(m.properties.operator)}`,
         params: [{ name: String(m.properties.param_name ?? 'rhs'), type: String(m.properties.param_type ?? 'int') }],
         body: m.children.body ?? [],
       })
-    } else if (方法概念.has(m.concept)) {
+    } else if (方法概念.has(m.conceptId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
-    } else if (m.concept === 'cpp_constructor') {
+    } else if (m.conceptId === 'cpp_constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
-    } else if (m.concept === 'cpp_destructor') {
+    } else if (m.conceptId === 'cpp_destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })

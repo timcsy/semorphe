@@ -217,7 +217,7 @@ describe('SyncController (bus-based)', () => {
 
       // Only user's body (print) should remain — include, namespace, func_def wrapper, return stripped
       expect(body).toHaveLength(1)
-      expect(body[0].concept).toBe('print')
+      expect(body[0].conceptId).toBe('print')
     })
 
     it('should keep non-scaffold nodes (user-defined functions)', () => {
@@ -241,9 +241,9 @@ describe('SyncController (bus-based)', () => {
 
       // helper (user-defined) + var_declare (from main body) should remain
       expect(body).toHaveLength(2)
-      expect(body[0].concept).toBe('func_def')
+      expect(body[0].conceptId).toBe('func_def')
       expect(body[0].properties.name).toBe('helper')
-      expect(body[1].concept).toBe('var_declare')
+      expect(body[1].conceptId).toBe('var_declare')
     })
 
     it('should handle body-only tree (already stripped)', () => {
@@ -255,7 +255,7 @@ describe('SyncController (bus-based)', () => {
       const body = stripped.children.body ?? []
 
       expect(body).toHaveLength(1)
-      expect(body[0].concept).toBe('var_declare')
+      expect(body[0].conceptId).toBe('var_declare')
     })
 
     it('should handle empty program', () => {

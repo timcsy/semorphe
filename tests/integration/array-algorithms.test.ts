@@ -193,7 +193,7 @@ describe('條件編譯：#ifdef / #ifndef 的 body 真的會跑', () => {
     const found: string[] = []
     const walk = (n: SemanticNode | null): void => {
       if (!n) return
-      if (n.concept === 'cpp_ifdef') for (const c of n.children?.body ?? []) found.push(c.concept)
+      if (n.conceptId === 'cpp_ifdef') for (const c of n.children?.body ?? []) found.push(c.conceptId)
       for (const a of Object.values(n.children ?? {})) for (const c of a) walk(c)
     }
     walk(tree)

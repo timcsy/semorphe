@@ -26,10 +26,10 @@ import { splitCodeAndComments } from '../helpers/component-scan'
 import type { SemanticNode } from '../../src/core/types'
 
 const node = (concept: string, properties: Record<string, unknown> = {}): SemanticNode =>
-  ({ concept, properties, children: {} }) as unknown as SemanticNode
+  ({ conceptId: concept, properties, children: {} }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode =>
-  ({ concept: 'program', properties: {}, children: { body } }) as unknown as SemanticNode
+  ({ conceptId: 'program', properties: {}, children: { body } }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()

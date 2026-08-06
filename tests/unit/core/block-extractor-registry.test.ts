@@ -18,7 +18,7 @@ describe('PatternExtractor — extractStrategy', () => {
     }
     const result = extractor.extract(block)
     expect(result).not.toBeNull()
-    expect(result!.concept).toBe('test')
+    expect(result!.conceptId).toBe('test')
   })
 
   it('should return null for block types without strategy or spec', () => {
@@ -49,7 +49,7 @@ describe('PatternExtractor — extractStrategy', () => {
       inputs: {},
     }
     const result = extractor.extract(block)
-    expect(result!.concept).toBe('strategy_wins')
+    expect(result!.conceptId).toBe('strategy_wins')
   })
 })
 
@@ -92,7 +92,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { items: ['var', 'var'] },
     }
     const result = extractor.extract(block)!
-    expect(result.concept).toBe('var_declare')
+    expect(result.conceptId).toBe('var_declare')
     expect(result.properties.type).toBe('int')
     expect(result.children.declarators).toHaveLength(2)
     expect(result.children.declarators![0].properties.name).toBe('a')
@@ -119,10 +119,10 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { elseifCount: 1 },
     }
     const result = extractor.extract(block)!
-    expect(result.concept).toBe('if')
+    expect(result.conceptId).toBe('if')
     expect(result.children.condition![0].properties.name).toBe('x')
     expect(result.children.else_body).toHaveLength(1)
-    expect(result.children.else_body![0].concept).toBe('if')
+    expect(result.children.else_body![0].conceptId).toBe('if')
     expect(result.children.else_body![0].properties.isElseIf).toBe('true')
   })
 
@@ -138,7 +138,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { args: [{ mode: 'select', text: 'myVar' }] },
     }
     const result = extractor.extract(block)!
-    expect(result.concept).toBe('input')
+    expect(result.conceptId).toBe('input')
     expect(result.properties.variable).toBe('myVar')
     expect(result.children.values![0].properties.name).toBe('myVar')
   })

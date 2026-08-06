@@ -69,7 +69,7 @@ describe('Confidence & DegradationCause', () => {
 
     // Register known concept IDs in ConceptRegistry
     for (const spec of allSpecs) {
-      const conceptId = (spec as BlockSpec).concept?.conceptId
+      const conceptId = (spec as BlockSpec).conceptId?.conceptId
       if (conceptId && !registry.get(conceptId)) {
         registry.register({
           id: conceptId,
@@ -122,7 +122,7 @@ describe('Confidence & DegradationCause', () => {
       const ast = mockNode('ERROR', 'int x = ;', [], {}, true)
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('raw_code')
+      expect(sem!.conceptId).toBe('raw_code')
       expect(sem!.metadata?.confidence).toBe('raw_code')
       expect(sem!.metadata?.degradationCause).toBe('syntax_error')
     })
@@ -163,7 +163,7 @@ describe('Confidence & DegradationCause', () => {
       const ast = mockNode('co_await_expression', 'co_await foo()')
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
-      expect(sem!.concept).toBe('raw_code')
+      expect(sem!.conceptId).toBe('raw_code')
       expect(sem!.metadata?.confidence).toBe('raw_code')
       expect(sem!.metadata?.degradationCause).toBe('nonstandard_but_valid')
     })
@@ -196,7 +196,7 @@ describe('Confidence & DegradationCause', () => {
       expect(sem!.metadata?.confidence).toBe('high')
       // The right child should be raw_code
       const rightChild = sem!.children.right?.[0]
-      expect(rightChild?.concept).toBe('raw_code')
+      expect(rightChild?.conceptId).toBe('raw_code')
       expect(rightChild?.metadata?.confidence).toBe('raw_code')
     })
   })

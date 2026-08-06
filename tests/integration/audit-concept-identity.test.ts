@@ -43,7 +43,7 @@ function liftCode(code: string): SemanticNode | null {
 /** Recursively find all nodes with the given conceptId */
 function findConcepts(node: SemanticNode, conceptId: string): SemanticNode[] {
   const found: SemanticNode[] = []
-  if (node.concept === conceptId) {
+  if (node.conceptId === conceptId) {
     found.push(node)
   }
   for (const children of Object.values(node.children || {})) {
@@ -67,7 +67,7 @@ function assertConceptPresent(code: string, conceptId: string) {
 
 /** Collect all concept IDs in the tree (for diagnostics) */
 function collectConceptIds(node: SemanticNode): string[] {
-  const ids: string[] = [node.concept]
+  const ids: string[] = [node.conceptId]
   for (const children of Object.values(node.children || {})) {
     for (const child of children) {
       ids.push(...collectConceptIds(child))

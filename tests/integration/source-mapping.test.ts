@@ -22,7 +22,7 @@ beforeAll(() => {
 function makeProgram(...body: ReturnType<typeof createNode>[]) {
   return {
     id: 'root',
-    concept: 'program',
+    conceptId: 'program',
     properties: {},
     children: { body },
     metadata: {},

@@ -163,10 +163,10 @@ describe('TemplateGenerator', () => {
 
       // Set fallback for concepts without templates
       gen.setExpressionFallback((node) => {
-        if (node.concept === 'cpp_increment_expr') {
+        if (node.conceptId === 'cpp_increment_expr') {
           return `${node.properties.name}${node.properties.operator}`
         }
-        if (node.concept === 'var_declare_expr') {
+        if (node.conceptId === 'var_declare_expr') {
           return `${node.properties.type} ${node.properties.name} = 0`
         }
         return null
@@ -222,7 +222,7 @@ describe('TemplateGenerator', () => {
       })
 
       gen.setBodyFallback((node) => {
-        if (node.concept === 'array_assign') {
+        if (node.conceptId === 'array_assign') {
           return `    ${node.properties.name}[0] = 1;`
         }
         return null
