@@ -135,6 +135,7 @@
 | 觸發關鍵字 | MUST 讀 |
 |---|---|
 | 積木定義、generator、extractor、動態積木、extraState、欄位同步 | `concepts/積木投影管線.md` |
+| 殼、做一半、看起來完成、規範沒有檢查、護欄、audit 測試 | `concepts/執行機構.md` |
 | 元件、接點、埠、關係律、命名、跨域、合流 | `concepts/元件.md` |
 | 概念註冊、四路/五層完備性、屬性結構化 | `concepts/概念代數.md` |
 | pattern 搶匹配、歧義、constraint、lifter | `concepts/開放擴充.md` |
