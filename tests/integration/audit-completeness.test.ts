@@ -179,9 +179,22 @@ for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', '
  * **量測工具的改動也會讓量測變差，而那一樣要被發現。** 還原。
  * 要做的話得逐概念給脈絡（像上面的 `SAMPLE_CONTEXT`），不是按角色一刀切。
  */
+/**
+ * 這些概念的產出是**裸運算式**，當敘述放不成立——包進一個賦值。
+ *
+ * ⚠️ **逐概念列，不按角色一刀切。** 按角色套用試過：殼從 2 變成 13，
+ * 而那 11 個原本是誠實的「判不出來」。逐概念的代價是要維護一份清單，
+ * 而它的好處是**每一筆都可以單獨驗證有沒有讓判定變差**。
+ */
+const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp_lambda'])
+
 function wrap(node: SemanticNode, id?: string): SemanticNode {
   const prelude = id ? (SAMPLE_CONTEXT[id] ?? []) : []
-  return createNode('program', {}, { body: [...prelude, node] })
+  const stmt =
+    id && NEEDS_ASSIGNMENT.has(id)
+      ? createNode('var_declare', { name: '__probe', type: 'auto' }, { initializer: [node] })
+      : node
+  return createNode('program', {}, { body: [...prelude, stmt] })
 }
 
 function findConcept(node: SemanticNode | null, id: string): boolean {
@@ -505,8 +518,41 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     expect(result.size).toBe(new Set(allComponentDefs().map((d) => d.conceptId)).size)
   })
 
-  it('數字不為零——零代表沒有真的量到東西（SC-001）', () => {
-    expect(flatten(result, 'shell').length + flatten(result, 'missing').length).toBeGreaterThan(0)
+  // ─────────────────────────────────────────────────────────────
+  // 這裡原本是「殼與缺的總數不為零——零代表沒有真的量到東西」。
+  //
+  // **2026-08-06：它歸零了。** 而那個錨點爛掉是**設計上的必然**——
+  // 一條護欄的目的就是讓它量的東西變好：
+  //
+  //   > 護欄修好了它要量的東西，就是它的錨點爛掉的時候。
+  //   > ——`knowledge/history/022`
+  //
+  // **同一顆地雷本階段第四次**（辨識歧義、雙重真相、分類護欄、這裡）。
+  // 改成合成注入：一個絕不會被實作的假概念，它的五路必然全缺。
+  // 合成輸入不隨真實世界的修復而失效。
+  // ─────────────────────────────────────────────────────────────
+  it('★ 合成注入：一個不存在的概念必須被判為缺（零才可信）', () => {
+    const 假概念 = {
+      conceptId: '__zz_never_implemented__',
+      layer: 'lang-core',
+      properties: [],
+      children: {},
+      role: 'statement',
+    } as unknown as ConceptDefJSON
+    const { row } = classify(假概念)
+    const 判定 = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
+    expect(
+      判定.some((v) => v === 'missing' || v === 'shell'),
+      '一個**完全不存在**的概念被判為五路俱全 → **量測根本沒有在跑**，' +
+        '而它與健康的量測產出一模一樣。這支是唯一分得出來的地方。',
+    ).toBe(true)
+  })
+
+  it('★ 對照組：一個真的實作了的概念不得被判為缺', () => {
+    // 沒有這支的話，一個「什麼都判缺」的量測也會通過上一支
+    const real = allComponentDefs().find((d) => d.conceptId === 'var_declare')!
+    const { row } = classify(real)
+    expect(row.execute.verdict, 'var_declare 的執行被判為缺 → 量測壞了').not.toBe('missing')
   })
 
   it('棘輪：殼與缺不得出現基線之外的新項目（FR-003、FR-005）', () => {
