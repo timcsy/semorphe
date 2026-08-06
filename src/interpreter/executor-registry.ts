@@ -72,4 +72,21 @@ export class ConceptExecutorRegistry {
   has(concept: string): boolean {
     return this.executors.has(concept)
   }
+
+  /** 目前認得的所有概念。搬移用的清冊靠它——集合比對漏一個會現形，輸出比對不會 */
+  list(): string[] {
+    return [...this.executors.keys()].sort()
+  }
+
+  /**
+   * 有沒有任何語言套件推過執行器。
+   *
+   * 用來分辨「這個概念真的沒人實作」與「語言套件根本沒載入」——後者的錯誤
+   * 訊息若只說「未知概念」，看不出真正的原因。
+   *
+   * **判準是註冊表空不空，不是概念名長得像什麼**——後者會讓核心重新認識語言。
+   */
+  hasAnyExecutor(): boolean {
+    return this.executors.size > 0
+  }
 }
