@@ -7,12 +7,12 @@
   },
   "limits": {
     "arithmetic": {
-      "files": 13,
-      "dirs": 11
+      "files": 12,
+      "dirs": 10
     },
     "array_access": {
-      "files": 14,
-      "dirs": 10
+      "files": 13,
+      "dirs": 9
     },
     "array_assign": {
       "files": 8,
@@ -35,16 +35,16 @@
       "dirs": 9
     },
     "builtin_constant": {
-      "files": 8,
-      "dirs": 6
+      "files": 7,
+      "dirs": 5
     },
     "comment": {
       "files": 9,
       "dirs": 8
     },
     "compare": {
-      "files": 13,
-      "dirs": 11
+      "files": 12,
+      "dirs": 10
     },
     "continue": {
       "files": 12,
@@ -95,8 +95,8 @@
       "dirs": 4
     },
     "cpp_cast": {
-      "files": 10,
-      "dirs": 7
+      "files": 9,
+      "dirs": 6
     },
     "cpp_char_literal": {
       "files": 7,
@@ -235,12 +235,12 @@
       "dirs": 6
     },
     "cpp_increment": {
-      "files": 9,
-      "dirs": 6
+      "files": 8,
+      "dirs": 5
     },
     "cpp_increment_expr": {
-      "files": 7,
-      "dirs": 5
+      "files": 6,
+      "dirs": 4
     },
     "cpp_iota": {
       "files": 7,
@@ -467,8 +467,8 @@
       "dirs": 4
     },
     "cpp_string_at": {
-      "files": 10,
-      "dirs": 6
+      "files": 9,
+      "dirs": 5
     },
     "cpp_string_c_str": {
       "files": 8,
@@ -559,8 +559,8 @@
       "dirs": 5
     },
     "cpp_ternary": {
-      "files": 10,
-      "dirs": 8
+      "files": 9,
+      "dirs": 7
     },
     "cpp_throw": {
       "files": 7,
@@ -639,12 +639,12 @@
       "dirs": 5
     },
     "func_call": {
-      "files": 10,
-      "dirs": 9
+      "files": 9,
+      "dirs": 8
     },
     "func_call_expr": {
-      "files": 10,
-      "dirs": 9
+      "files": 9,
+      "dirs": 8
     },
     "func_def": {
       "files": 13,
@@ -663,20 +663,20 @@
       "dirs": 15
     },
     "logic": {
-      "files": 13,
-      "dirs": 11
+      "files": 12,
+      "dirs": 10
     },
     "logic_not": {
-      "files": 12,
-      "dirs": 10
+      "files": 11,
+      "dirs": 9
     },
     "negate": {
-      "files": 12,
-      "dirs": 10
+      "files": 11,
+      "dirs": 9
     },
     "number_literal": {
-      "files": 11,
-      "dirs": 10
+      "files": 10,
+      "dirs": 9
     },
     "print": {
       "files": 12,
@@ -691,8 +691,8 @@
       "dirs": 9
     },
     "string_literal": {
-      "files": 15,
-      "dirs": 12
+      "files": 14,
+      "dirs": 11
     },
     "var_assign": {
       "files": 11,
@@ -711,8 +711,8 @@
       "dirs": 5
     },
     "var_ref": {
-      "files": 16,
-      "dirs": 12
+      "files": 15,
+      "dirs": 11
     },
     "while_loop": {
       "files": 9,

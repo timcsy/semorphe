@@ -49,14 +49,14 @@
 
 ## Tasks
 
-- [ ] T001 建 `tests/integration/panel-expression-parity.test.ts`：拍下面板 switch 涵蓋的**每一種**節點的產出，含 `default` 分支 — 契約
-- [ ] T002 確認 T001 **先綠**——它必須證明自己真的拍到了東西，否則後面的比對是空的
-- [ ] T003 在面板加入語言與風格的注入點，`sync-controller` 建立面板時推進去 — FR-003
-- [ ] T004 `simpleExpressionToCode` 改為呼叫唯一那套；**整個 switch 刪除** — FR-001／FR-002
-- [ ] T005 `default` 分支的行為保持不變 — FR-005
-- [ ] T006 T001 逐一比對，一字不差 — FR-004
-- [ ] T007 中立性量測，確認下降且全部落在「真的搬走的」欄 — SC-001
-- [ ] T008 全套測試 + 十三條護欄 — FR-010／FR-011
+- [X] T001 建 `tests/integration/panel-expression-parity.test.ts`：拍下面板 switch 涵蓋的**每一種**節點的產出，含 `default` 分支 — 契約
+- [X] T002 確認 T001 **先綠**——它必須證明自己真的拍到了東西，否則後面的比對是空的
+- [X] T003 在面板加入語言與風格的注入點，`sync-controller` 建立面板時推進去 — FR-003
+- [X] T004 `simpleExpressionToCode` 改為呼叫唯一那套；**整個 switch 刪除** — FR-001／FR-002
+- [X] T005 `default` 分支的行為保持不變 — FR-005
+- [X] T006 T001 逐一比對，一字不差 — FR-004
+- [X] T007 中立性量測，確認下降且全部落在「真的搬走的」欄 — SC-001
+- [X] T008 全套測試 + 十三條護欄 — FR-010／FR-011
 
 ## 風險
 

@@ -150,6 +150,9 @@ export class App {
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, 'cpp', DEFAULT_STYLE)
+    // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
+    // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
+    this.blocklyPanel?.setCodeContext('cpp', DEFAULT_STYLE)
     this.syncController.setProgramScaffold(new CppScaffold(registry))
     this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
@@ -288,6 +291,7 @@ export class App {
       },
       onStyleChange: (style) => {
         this.syncController?.setStyle(style)
+        this.blocklyPanel?.setCodeContext('cpp', style)  // 面板不得落後於同步控制器
         this.syncController?.setCodingStyle(style)
         this.syncBlocksToCodeWithMappings()
         this.currentStylePreset = style
@@ -428,6 +432,7 @@ export class App {
   private applyStylePreset(preset: StylePreset): void {
     this.currentStylePreset = preset
     this.syncController?.setStyle(preset)
+    this.blocklyPanel?.setCodeContext('cpp', preset)  // 同上
     this.syncController?.setCodingStyle(preset)
     this.styleSelector?.setValue(preset.id)
     this.refreshStatusBar()

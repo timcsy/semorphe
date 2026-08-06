@@ -1,3 +1,6 @@
+import { generateCode } from '../../core/projection/code-generator'
+import type { StylePreset } from '../../core/types'
+import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
@@ -17,6 +20,9 @@ export interface BlocklyPanelOptions {
   blockSpecRegistry?: BlockSpecRegistry
   bus?: SemanticBus
   media?: string
+  /** 產生降級用的程式碼文字時，用哪一種語言與風格。**不得寫死**（FR-003） */
+  language?: string
+  style?: StylePreset
 }
 
 export class BlocklyPanel implements ViewHost {
@@ -41,6 +47,21 @@ export class BlocklyPanel implements ViewHost {
   private media: string | undefined
   private patternExtractor: PatternExtractor
 
+  /**
+   * 降級路徑產生程式碼時用的語言與風格。
+   *
+   * 有預設值是因為面板可以在語言未定時先建起來；**它不是寫死的選擇**——
+   * `setCodeContext` 會覆蓋它，而應用層在建立時就會傳進來。
+   */
+  private codeLanguage = 'cpp'
+  private codeStyle: StylePreset = apcsStyle as StylePreset
+
+  /** 應用層推進來——與同步控制器持有的是同一組值 */
+  setCodeContext(language: string, style: StylePreset): void {
+    this.codeLanguage = language
+    this.codeStyle = style
+  }
+
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
@@ -51,6 +72,8 @@ export class BlocklyPanel implements ViewHost {
     }
     registerCppExtractStrategies(this.patternExtractor)
     this.media = options.media
+    if (options.language !== undefined) this.codeLanguage = options.language
+    if (options.style !== undefined) this.codeStyle = options.style
   }
 
   async initialize(_config: ViewConfig): Promise<void> {
@@ -345,70 +368,25 @@ export class BlocklyPanel implements ViewHost {
     return code
   }
 
-  /** Convert a simple semantic node to inline code string */
+  /**
+   * 把一個語義節點轉成一行程式碼文字。
+   *
+   * **這裡原本有一個自己的 switch**——十幾個 `case`，涵蓋數字、變數引用、
+   * 算術，以及五個 C++ 專屬概念。那是系統裡的**第二套程式碼產生器**，而
+   * 核心早就有完整的一套（模板引擎 + 語言套件推進來的產生器 + 風格預設）。
+   *
+   * 兩套之間**沒有任何東西在檢查它們一致**。刪掉的時候發現它已經漂移了：
+   * 有一個 `case 'char_literal':` 指向一個**不存在的概念**（真正的是
+   * `cpp_char_literal`），永遠不會觸發，而測試一路全綠。
+   *
+   * 切換前後每一種節點的產出由 `tests/integration/panel-expression-parity.test.ts`
+   * 逐一釘住——這條是**降級路徑**（正常抽取失敗才走到），平常跑不到，
+   * 改壞了不會有人發現。
+   *
+   * 見 specs/060-panel-parallel-generator/
+   */
   private simpleExpressionToCode(node: SemanticNode): string {
-    switch (node.concept) {
-      case 'number_literal': return String(node.properties.value ?? '0')
-      case 'string_literal': return `"${node.properties.value ?? ''}"`
-      case 'var_ref': return String(node.properties.name ?? '')
-      case 'arithmetic':
-      case 'compare':
-      case 'logic': {
-        const left = (node.children.left ?? [])[0]
-        const right = (node.children.right ?? [])[0]
-        const op = node.properties.operator ?? '+'
-        const l = left ? this.simpleExpressionToCode(left) : '0'
-        const r = right ? this.simpleExpressionToCode(right) : '0'
-        return `${l} ${op} ${r}`
-      }
-      case 'logic_not': {
-        const inner = (node.children.operand ?? [])[0]
-        return `!${inner ? this.simpleExpressionToCode(inner) : '0'}`
-      }
-      case 'negate': {
-        const negOp = (node.properties.operator as string) ?? '-'
-        const inner = (node.children.value ?? [])[0]
-        return `${negOp}${inner ? this.simpleExpressionToCode(inner) : '0'}`
-      }
-      case 'raw_code': return node.metadata?.rawCode ?? ''
-      case 'func_call':
-      case 'func_call_expr': {
-        const name = node.properties.name ?? 'f'
-        const args = (node.children.args ?? []).map(a => this.simpleExpressionToCode(a))
-        return `${name}(${args.join(', ')})`
-      }
-      case 'array_access': {
-        const arrName = node.properties.name ?? 'arr'
-        const idx = (node.children.index ?? [])[0]
-        return `${arrName}[${idx ? this.simpleExpressionToCode(idx) : '0'}]`
-      }
-      case 'cpp_string_at': {
-        const strName = node.properties.obj ?? 'str'
-        const idx = (node.children.index ?? [])[0]
-        return `${strName}[${idx ? this.simpleExpressionToCode(idx) : '0'}]`
-      }
-      case 'cpp_increment':
-      case 'cpp_increment_expr': {
-        const incName = (node.properties.name ?? 'i') as string
-        const incOp = (node.properties.operator ?? '++') as string
-        const incPos = (node.properties.position ?? 'postfix') as string
-        return incPos === 'prefix' ? `${incOp}${incName}` : `${incName}${incOp}`
-      }
-      case 'cpp_ternary': {
-        const cond = (node.children.condition ?? [])[0]
-        const trueE = (node.children.true_expr ?? [])[0]
-        const falseE = (node.children.false_expr ?? [])[0]
-        return `${cond ? this.simpleExpressionToCode(cond) : '0'} ? ${trueE ? this.simpleExpressionToCode(trueE) : '0'} : ${falseE ? this.simpleExpressionToCode(falseE) : '0'}`
-      }
-      case 'cpp_cast': {
-        const castType = node.properties.target_type ?? 'int'
-        const castVal = (node.children.value ?? [])[0]
-        return `(${castType})${castVal ? this.simpleExpressionToCode(castVal) : '0'}`
-      }
-      case 'char_literal': return `'${node.properties.value ?? 'a'}'`
-      case 'builtin_constant': return String(node.properties.value ?? 'NULL')
-      default: return node.metadata?.rawCode ?? `/* ${node.concept} */`
-    }
+    return generateCode(node, this.codeLanguage, this.codeStyle)
   }
 
   private extractStatementInput(block: Blockly.Block, inputName: string): SemanticNode[] {
