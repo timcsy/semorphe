@@ -62,12 +62,19 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
  * **不存在的欄位要出聲。** 回 0 的話，打錯欄位名的程式會跑完、印出東西、
  * 而它是錯的——「靜默降級是 bug 的藏身之處」。
  */
-export function getMember(obj: RuntimeValue | undefined, member: string, objName: string): RuntimeValue {
+export function getMember(
+  obj: RuntimeValue | undefined,
+  member: string,
+  objName: string,
+  statics?: Map<string, RuntimeValue>,
+): RuntimeValue {
   if (!obj || obj.type !== 'object') {
     throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個結構）` })
   }
   const fields = obj.value as Map<string, RuntimeValue>
-  const v = fields.get(member)
+  // 實例欄位優先，找不到再看型別的靜態表——C++ 允許 `a.count` 取靜態成員，
+  // 而它住在型別上不在實例上。順序與方法作用域的層次一致。
+  const v = fields.get(member) ?? statics?.get(member)
   if (v === undefined) {
     throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, {
       '%1': `${objName}.${member}（${obj.structName ?? '結構'} 沒有這個欄位）`,

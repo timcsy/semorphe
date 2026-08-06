@@ -45,6 +45,9 @@ const OOP_NOT_IMPLEMENTED = [
   // 已於 071／072 真的實作，從這裡移除——**那是實作，不是宣告**：
   //   cpp_struct_declare / cpp_struct_member_access（071）
   //   cpp_class_def / cpp_constructor / cpp_method_call(_expr)（072）
+  //   cpp_namespace_def / cpp_template_function / cpp_struct_pointer_access
+  //   / cpp_static_member / cpp_virtual_method / cpp_override_method
+  //   / cpp_pure_virtual / cpp_operator_overload（073）
   //
   // ⚠️ 留在這裡的話**空操作會蓋掉真實作**——註冊表是後蓋前，而這份清單
   // 跑在語言套件的真實作之後。`history/018` 記著同一件事：四個轉型概念有
@@ -54,7 +57,6 @@ const OOP_NOT_IMPLEMENTED = [
   'cpp_pure_virtual',
   'cpp_override_method',
   'cpp_operator_overload',
-  'cpp_namespace_def',
   'cpp_lambda',
 ] as const
 

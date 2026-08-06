@@ -20,22 +20,66 @@ export interface MethodDecl {
   name: string
   params: FieldDecl[]
   body: SemanticNode[]
+  /** 純虛擬沒有本體——呼叫時要出聲，不得靜默回傳 */
+  pure?: boolean
 }
 
 export class StructRegistry {
   private types = new Map<string, FieldDecl[]>()
   private methods = new Map<string, Map<string, MethodDecl>>()
   private ctors = new Map<string, MethodDecl>()
+  private bases = new Map<string, string>()
+  /** 靜態成員：由**型別**持有，所有實例共用同一個值 */
+  private statics = new Map<string, ObjectFields>()
 
-  declare(name: string, fields: FieldDecl[], methods: MethodDecl[] = [], ctor?: MethodDecl): void {
+  declare(
+    name: string,
+    fields: FieldDecl[],
+    methods: MethodDecl[] = [],
+    ctor?: MethodDecl,
+    opts: { base?: string; statics?: FieldDecl[] } = {},
+  ): void {
     this.types.set(name, fields)
     this.methods.set(name, new Map(methods.map((m) => [m.name, m])))
     if (ctor) this.ctors.set(name, ctor)
+    if (opts.base) this.bases.set(name, opts.base)
+    if (opts.statics?.length) {
+      const map: ObjectFields = new Map()
+      for (const s of opts.statics) map.set(s.name, defaultValue(s.type))
+      this.statics.set(name, map)
+    }
+  }
+
+  /** 這個型別（含它的基底鏈）共用的靜態成員表 */
+  staticsOf(name: string): ObjectFields | undefined {
+    for (const t of this.chain(name)) {
+      const m = this.statics.get(t)
+      if (m) return m
+    }
+    return undefined
+  }
+
+  /** 從自己往基底走的型別鏈。**擋住循環繼承**，否則這裡會無限迴圈 */
+  chain(name: string): string[] {
+    const out: string[] = []
+    const seen = new Set<string>()
+    let cur: string | undefined = name
+    while (cur && !seen.has(cur)) {
+      seen.add(cur)
+      out.push(cur)
+      cur = this.bases.get(cur)
+    }
+    return out
   }
 
   /** 找一個方法。找不到回 undefined——呼叫端要出聲，不得靜默略過 */
   method(structName: string, methodName: string): MethodDecl | undefined {
-    return this.methods.get(structName)?.get(methodName)
+    // 沿著繼承鏈找——**自己先於基底**，那就是「覆寫蓋掉基底」
+    for (const t of this.chain(structName)) {
+      const m = this.methods.get(t)?.get(methodName)
+      if (m) return m
+    }
+    return undefined
   }
 
   constructorOf(structName: string): MethodDecl | undefined {
@@ -58,6 +102,12 @@ export class StructRegistry {
     this.runner = fn
   }
 
+  /** 在一個實例上跑一個方法——給運算子多載那類「核心需要回呼」的路徑用 */
+  async invoke(obj: RuntimeValue, m: MethodDecl, args: SemanticNode[]): Promise<RuntimeValue | undefined> {
+    if (!this.runner) return undefined
+    return (await this.runner(obj, m, args)) as RuntimeValue
+  }
+
   /** 建一個實例並跑它的建構式（若有）。沒有語言套件安裝 runner 時，只建不跑 */
   async construct(name: string, args: SemanticNode[]): Promise<RuntimeValue> {
     const obj = this.instantiate(name)
@@ -78,15 +128,17 @@ export class StructRegistry {
    * 症狀是瀏覽器整個卡住而不是一則錯誤訊息。
    */
   instantiate(name: string, seen: Set<string> = new Set()): RuntimeValue {
-    const fields = this.types.get(name)
-    if (!fields) return defaultValue(name)
+    if (!this.types.has(name)) return defaultValue(name)
     if (seen.has(name)) {
       throw new Error(`結構 ${name} 直接或間接包含自己——那在 C++ 不合法（要用指標）`)
     }
     const next = new Set(seen).add(name)
     const map: ObjectFields = new Map()
-    for (const f of fields) {
-      map.set(f.name, this.has(f.type) ? this.instantiate(f.type, next) : defaultValue(f.type))
+    // **基底先建**，衍生的同名欄位蓋掉它——與 C++ 的遮蔽一致
+    for (const t of [...this.chain(name)].reverse()) {
+      for (const f of this.types.get(t) ?? []) {
+        map.set(f.name, this.has(f.type) ? this.instantiate(f.type, next) : defaultValue(f.type))
+      }
     }
     return { type: 'object', value: map, structName: name }
   }

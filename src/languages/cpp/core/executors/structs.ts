@@ -26,17 +26,38 @@ import { defaultValue } from '../../../../interpreter/types'
 import type { SemanticNode } from '../../../../core/types'
 
 /** 把一群成員敘述拆成「欄位／方法／建構式」 */
-function 拆解成員(members: SemanticNode[]): { fields: FieldDecl[]; methods: MethodDecl[]; ctor?: MethodDecl } {
+function 拆解成員(members: SemanticNode[]): {
+  fields: FieldDecl[]
+  methods: MethodDecl[]
+  ctor?: MethodDecl
+  statics: FieldDecl[]
+} {
   const fields: FieldDecl[] = []
   const methods: MethodDecl[] = []
+  const statics: FieldDecl[] = []
   let ctor: MethodDecl | undefined
   const params = (m: SemanticNode): FieldDecl[] =>
     (m.children.params ?? []).map((p) => ({
       name: String(p.properties?.name ?? ''),
       type: String(p.properties?.type ?? 'int'),
     }))
+  /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
+  const 方法概念 = new Set(['func_def', 'cpp_virtual_method', 'cpp_override_method'])
   for (const m of members) {
-    if (m.concept === 'func_def') {
+    if (m.concept === 'cpp_static_member') {
+      statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
+    } else if (m.concept === 'cpp_pure_virtual') {
+      // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
+      // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
+      methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
+    } else if (m.concept === 'cpp_operator_overload') {
+      // 存成名字是 `operator+` 的方法，讓算術執行器找得到
+      methods.push({
+        name: `operator${String(m.properties.operator)}`,
+        params: [{ name: String(m.properties.param_name ?? 'rhs'), type: String(m.properties.param_type ?? 'int') }],
+        body: m.children.body ?? [],
+      })
+    } else if (方法概念.has(m.concept)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
     } else if (m.concept === 'cpp_constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
@@ -44,7 +65,7 @@ function 拆解成員(members: SemanticNode[]): { fields: FieldDecl[]; methods: 
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
     }
   }
-  return { fields, methods, ctor }
+  return { fields, methods, ctor, statics }
 }
 
 /**
@@ -65,7 +86,12 @@ async function 在實例上執行(
   for (const a of argNodes) argValues.push(await ctx.evaluate(a))
 
   const outer = ctx.scope
-  const 欄位層 = Scope.overFields(obj.value as ObjectFields, outer)
+  // 型別層在最外——靜態成員由**所有實例共用**，所以它住在型別上不在實例上。
+  // 順序：外層 → 型別層（靜態） → 欄位層（實例） → 本體層（區域變數）。
+  // 實例欄位擋在靜態前面，與 C++ 的遮蔽一致。
+  const 靜態表 = ctx.structs.staticsOf(obj.structName ?? '')
+  const 型別層 = 靜態表 ? Scope.overFields(靜態表, outer) : outer
+  const 欄位層 = Scope.overFields(obj.value as ObjectFields, 型別層)
   const 本體層 = 欄位層.createChild()
   m.params.forEach((p, i) => 本體層.declare(p.name, argValues[i] ?? defaultValue(p.type)))
   // `this` 指向自己，讓 `this.x` 與 `this->method()` 也能用
@@ -125,11 +151,15 @@ export function registerStructExecutors(
   register('cpp_class_def', async (node, ctx) => {
     安裝方法執行器(ctx)
     const name = String(node.properties.name)
-    const { fields, methods, ctor } = 拆解成員([
+    const { fields, methods, ctor, statics } = 拆解成員([
       ...(node.children.public ?? []),
       ...(node.children.private ?? []),
     ])
-    ctx.structs.declare(name, fields, methods, ctor)
+    // 存取控制（public／private）這一片仍不做——兩區一視同仁。
+    ctx.structs.declare(name, fields, methods, ctor, {
+      base: node.properties.base ? String(node.properties.base) : undefined,
+      statics,
+    })
   })
 
   /** `c.bump()` 與 `c.get()` —— 敘述與運算式兩個位置同一個實作 */
@@ -147,6 +177,12 @@ export function registerStructExecutors(
         '%1': `${obj.structName ?? '?'}::${methodName}`,
       })
     }
+    if (m.pure) {
+      // 純虛擬沒有本體。靜默回傳的話，忘了覆寫的程式會跑完而什麼都沒做。
+      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
+        '%1': `${obj.structName ?? '?'}::${methodName}（純虛擬，沒有實作）`,
+      })
+    }
     return 在實例上執行(obj, m, node.children.args ?? [], ctx)
   }
 
@@ -161,9 +197,42 @@ export function registerStructExecutors(
    */
   register('cpp_constructor', async () => {})
 
+  /** `namespace N { … }` —— 這個直譯器沒有名稱隔離，本體直接跑 */
+  register('cpp_namespace_def', async (node, ctx) => {
+    await ctx.executeBody(node.children.body ?? [])
+  })
+
+  /** `template<typename T> R f(…)` —— 執行上與一般函式相同，型別參數不影響求值 */
+  register('cpp_template_function', async (node, ctx) => {
+    ctx.functions.set(String(node.properties.func_name), {
+      name: String(node.properties.func_name),
+      params: (node.children.params ?? []).map((p) => ({
+        type: String(p.properties?.type ?? 'int'),
+        name: String(p.properties?.name ?? ''),
+      })),
+      returnType: String(node.properties.return_type ?? 'void'),
+      body: node.children.body ?? [],
+    })
+  })
+
+  /** `p->x` */
+  register('cpp_struct_pointer_access', async (node, ctx) => {
+    const ptrName = String(node.properties.ptr)
+    const ptr = ctx.scope.get(ptrName)
+    if (ptr.value === null || ptr.value === undefined) {
+      // 對空指標取成員在真的 C++ 會當掉。**出聲**，不要靜默回預設值。
+      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${ptrName}（空指標）` })
+    }
+    const targetName = String(ptr.value)
+    const owner = ctx.pointerTargets.get(ptrName) ?? ctx.scope
+    const target = owner.get(targetName)
+    return getMember(target, String(node.properties.member), targetName, ctx.structs.staticsOf(target.structName ?? ''))
+  })
+
   /** `p.x` */
   register('cpp_struct_member_access', async (node, ctx) => {
     const objName = String(node.properties.obj)
-    return getMember(ctx.scope.get(objName), String(node.properties.member), objName)
+    const o = ctx.scope.get(objName)
+    return getMember(o, String(node.properties.member), objName, ctx.structs.staticsOf(o.structName ?? ''))
   })
 }

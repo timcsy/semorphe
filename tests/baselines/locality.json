@@ -315,11 +315,11 @@
       "dirs": 3
     },
     "cpp_operator_overload": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_override_method": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_pair_declare": {
@@ -347,7 +347,7 @@
       "dirs": 3
     },
     "cpp_pure_virtual": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_queue_back": {
@@ -435,7 +435,7 @@
       "dirs": 5
     },
     "cpp_static_member": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_stod": {
@@ -543,7 +543,7 @@
       "dirs": 5
     },
     "cpp_struct_pointer_access": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_swap": {
@@ -555,7 +555,7 @@
       "dirs": 5
     },
     "cpp_template_function": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp_ternary": {
@@ -611,7 +611,7 @@
       "dirs": 4
     },
     "cpp_virtual_method": {
-      "files": 7,
+      "files": 8,
       "dirs": 5
     },
     "cpp:math_binary": {
