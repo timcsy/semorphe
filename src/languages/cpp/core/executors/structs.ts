@@ -30,12 +30,14 @@ function 拆解成員(members: SemanticNode[]): {
   fields: FieldDecl[]
   methods: MethodDecl[]
   ctor?: MethodDecl
+  dtor?: MethodDecl
   statics: FieldDecl[]
 } {
   const fields: FieldDecl[] = []
   const methods: MethodDecl[] = []
   const statics: FieldDecl[] = []
   let ctor: MethodDecl | undefined
+  let dtor: MethodDecl | undefined
   const params = (m: SemanticNode): FieldDecl[] =>
     (m.children.params ?? []).map((p) => ({
       name: String(p.properties?.name ?? ''),
@@ -61,11 +63,13 @@ function 拆解成員(members: SemanticNode[]): {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
     } else if (m.concept === 'cpp_constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
+    } else if (m.concept === 'cpp_destructor') {
+      dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
     }
   }
-  return { fields, methods, ctor, statics }
+  return { fields, methods, ctor, dtor, statics }
 }
 
 /**
@@ -105,7 +109,7 @@ async function 在實例上執行(
     if (e instanceof ReturnSignal) return e.value as RuntimeValue
     throw e
   } finally {
-    ctx.scope = outer
+    await ctx.exitScope(ctx.scope, outer)
   }
 }
 
@@ -127,6 +131,34 @@ export function registerStructExecutors(
    */
   const 安裝方法執行器 = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
     ctx.structs.installMethodRunner((obj, m, args) => 在實例上執行(obj, m, args, ctx) as Promise<unknown>)
+
+    // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**
+    // 是這裡的知識——別的語言可能什麼都不做。
+    if (!ctx.onScopeExit) {
+      // ⚠️ **正在解構中的物件**——沒有這道防線會無限遞迴。
+      //
+      // 解構式的本體跑在一個作用域裡，而那個作用域宣告了 `this`（指向這個
+      // 物件自己）。離開它時又對同一個物件跑一次解構式 → 堆疊爆掉。
+      // 第一版就是這樣，症狀是 **OOM 而不是一則錯誤訊息**。
+      const 解構中 = new Set<unknown>()
+
+      ctx.onScopeExit = async (own) => {
+        // **反序**：C++ 保證後宣告的先解構。順序錯的實作在單一物件時看不出來。
+        for (const [name, v] of [...own.entries()].reverse()) {
+          if (v.type !== 'object') continue  // 非物件不觸發任何收尾
+          if (name === 'this') continue      // `this` 不是這個作用域擁有的
+          if (解構中.has(v.value)) continue
+          const dtor = ctx.structs.destructorOf(v.structName ?? '')
+          if (!dtor) continue
+          解構中.add(v.value)
+          try {
+            await 在實例上執行(v, dtor, [], ctx)
+          } finally {
+            解構中.delete(v.value)
+          }
+        }
+      }
+    }
   }
 
   register('cpp_struct_declare', async (node, ctx) => {
@@ -151,7 +183,7 @@ export function registerStructExecutors(
   register('cpp_class_def', async (node, ctx) => {
     安裝方法執行器(ctx)
     const name = String(node.properties.name)
-    const { fields, methods, ctor, statics } = 拆解成員([
+    const { fields, methods, ctor, dtor, statics } = 拆解成員([
       ...(node.children.public ?? []),
       ...(node.children.private ?? []),
     ])
@@ -159,6 +191,7 @@ export function registerStructExecutors(
     ctx.structs.declare(name, fields, methods, ctor, {
       base: node.properties.base ? String(node.properties.base) : undefined,
       statics,
+      dtor,
     })
   })
 

@@ -48,11 +48,11 @@ export function registerControlFlowExecutors(register: (concept: string, executo
       } catch (signal) {
         if (signal instanceof BreakSignal) break
         if (signal instanceof ContinueSignal) continue
-        ctx.scope = parentScope
+        await ctx.exitScope(ctx.scope, parentScope)
         throw signal
       }
     }
-    ctx.scope = parentScope
+    await ctx.exitScope(ctx.scope, parentScope)
   })
 
   register('while_loop', async (node, ctx) => {
@@ -67,11 +67,11 @@ export function registerControlFlowExecutors(register: (concept: string, executo
       } catch (signal) {
         if (signal instanceof BreakSignal) break
         if (signal instanceof ContinueSignal) continue
-        ctx.scope = parentScope
+        await ctx.exitScope(ctx.scope, parentScope)
         throw signal
       }
     }
-    ctx.scope = parentScope
+    await ctx.exitScope(ctx.scope, parentScope)
   })
 
   register('break', async () => { throw new BreakSignal() })

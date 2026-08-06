@@ -108,12 +108,12 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
       if (signal instanceof ReturnSignal) {
         returnValue = signal.value
       } else {
-        ctx.scope = parentScope
+        await ctx.exitScope(ctx.scope, parentScope)
         throw signal
       }
     }
 
-    ctx.scope = parentScope
+    await ctx.exitScope(ctx.scope, parentScope)
     return returnValue
   }
 

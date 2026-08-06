@@ -7,20 +7,12 @@
   },
   "totals": {
     "implemented": 819,
-    "declared": 40,
-    "undecidable": 25,
-    "shell": 6,
+    "declared": 41,
+    "undecidable": 26,
+    "shell": 4,
     "missing": 0
   },
   "shells": [
-    {
-      "componentId": "cpp_destructor",
-      "path": "execute"
-    },
-    {
-      "componentId": "cpp_destructor",
-      "path": "lift"
-    },
     {
       "componentId": "cpp_lambda",
       "path": "lift"

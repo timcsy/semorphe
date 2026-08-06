@@ -122,7 +122,9 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     // classification.md 判定不得宣告的那些。這支測試是那份判定的釘子——
     // 有人日後想讓數字好看，最省事的做法就是給它們一個 skipPaths。
     const 不得宣告 = [
-      'cpp_destructor', 'cpp_lambda',
+      // cpp_destructor（080）與 cpp_lambda（079）已真的實作／被父概念消費，
+      // 從這份「不得宣告」的清單移除。依據見
+      // tests/unit/interpreter/consumed-by-parent-evidence.test.ts
       // ⚠️ 以下六個已改判為 `consumed-by-parent`（074），而那正是「用宣告刷
       // 數字」最常見的形狀——053 明明把它們判為「還沒實作」，現在說情況變了。
       // **「情況變了」本身就是最常見的合理化**，所以理由必須可查證：

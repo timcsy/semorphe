@@ -48,6 +48,10 @@ export class SemanticInterpreter implements ExecutionContext {
   pointerTargets = new Map<string, Scope>()
   /** 結構／類別的型別登記處。**每個實例一份**——全域的話結構會漏到下一個測試 */
   structs = new StructRegistry()
+  /** 作用域結束時該做什麼——語言套件安裝（見 executor-registry 的說明） */
+  onScopeExit?: (own: Map<string, RuntimeValue>) => Promise<void>
+  callableOf?: (v: RuntimeValue) => unknown | null
+  invokeCallable?: (c: unknown, args: SemanticNode[]) => Promise<RuntimeValue | void>
   scanfTokenBuffer: string[] = []
   private status: ExecutionStatus = 'idle'
   private steps = 0
@@ -288,11 +292,12 @@ export class SemanticInterpreter implements ExecutionContext {
       // 清單（前兩份已經在這個階段換成宣告了）。核心讀宣告，語言套件推宣告。
       if (hasAnnotation(concept, 'introduces_scope')) {
         const outer = this.scope
-        this.scope = outer.createChild()
+        const inner = outer.createChild()
+        this.scope = inner
         try {
           return await executor(node, this)
         } finally {
-          this.scope = outer
+          await this.exitScope(inner, outer)
         }
       }
       return executor(node, this)
@@ -319,6 +324,21 @@ export class SemanticInterpreter implements ExecutionContext {
         ? {}
         : { hint: '可能是沒有載入語言套件（例如未呼叫 registerCppLanguage()）' }),
     })
+  }
+
+  /**
+   * 離開一個作用域：先收尾，再還原。
+   *
+   * **每一個建立作用域的地方都要走這裡**——分支、迴圈、函式、方法、lambda。
+   * 漏掉任何一個，那裡宣告的物件就永遠不會被收尾，**而症狀是沒有症狀**：
+   * 少跑一段解構式，程式照樣跑完。
+   */
+  async exitScope(inner: Scope, outer: Scope): Promise<void> {
+    try {
+      if (this.onScopeExit) await this.onScopeExit(inner.ownVariables())
+    } finally {
+      this.scope = outer
+    }
   }
 
   async countStep(): Promise<void> {

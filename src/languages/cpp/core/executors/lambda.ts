@@ -55,7 +55,7 @@ export function registerLambdaExecutors(
       } finally {
         // 一定要還原——不還原的話，lambda 呼叫之後外層的程式會跑在 lambda
         // 的作用域裡，而那個錯誤的症狀離現場很遠
-        ctx.scope = outer
+        await ctx.exitScope(ctx.scope, outer)
       }
     }
   }

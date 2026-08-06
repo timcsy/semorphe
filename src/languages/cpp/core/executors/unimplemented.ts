@@ -58,7 +58,6 @@ const OOP_NOT_IMPLEMENTED = [
   // ⚠️ 留在這裡的話**空操作會蓋掉真實作**——註冊表是後蓋前，而這份清單
   // 跑在語言套件的真實作之後。`history/018` 記著同一件事：四個轉型概念有
   // 能用的實作，被清單無聲覆蓋，於是 `static_cast<int>(3.9)` 輸出 void。
-  'cpp_destructor',
 ] as const
 
 export function registerUnimplementedExecutors(

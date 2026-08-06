@@ -865,7 +865,13 @@
     "children": {
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_virtual_method",

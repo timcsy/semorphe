@@ -29,6 +29,7 @@ export class StructRegistry {
   private methods = new Map<string, Map<string, MethodDecl>>()
   private ctors = new Map<string, MethodDecl>()
   private bases = new Map<string, string>()
+  private dtors = new Map<string, MethodDecl>()
   /** 靜態成員：由**型別**持有，所有實例共用同一個值 */
   private statics = new Map<string, ObjectFields>()
 
@@ -37,12 +38,13 @@ export class StructRegistry {
     fields: FieldDecl[],
     methods: MethodDecl[] = [],
     ctor?: MethodDecl,
-    opts: { base?: string; statics?: FieldDecl[] } = {},
+    opts: { base?: string; statics?: FieldDecl[]; dtor?: MethodDecl } = {},
   ): void {
     this.types.set(name, fields)
     this.methods.set(name, new Map(methods.map((m) => [m.name, m])))
     if (ctor) this.ctors.set(name, ctor)
     if (opts.base) this.bases.set(name, opts.base)
+    if (opts.dtor) this.dtors.set(name, opts.dtor)
     if (opts.statics?.length) {
       const map: ObjectFields = new Map()
       for (const s of opts.statics) map.set(s.name, defaultValue(s.type))
@@ -78,6 +80,15 @@ export class StructRegistry {
     for (const t of this.chain(structName)) {
       const m = this.methods.get(t)?.get(methodName)
       if (m) return m
+    }
+    return undefined
+  }
+
+  /** 解構式——沿繼承鏈找，自己先於基底 */
+  destructorOf(structName: string): MethodDecl | undefined {
+    for (const t of this.chain(structName)) {
+      const d = this.dtors.get(t)
+      if (d) return d
     }
     return undefined
   }

@@ -60,6 +60,16 @@ export class Scope {
     return null
   }
 
+  /**
+   * **只有這一層自己**宣告的變數，依宣告順序。
+   *
+   * 與 `getAll()` 不同——後者會把父層的一起攤平，用它來跑收尾的話，
+   * 外層的物件會在每一個內層作用域結束時被重複收尾一次。
+   */
+  ownVariables(): Map<string, RuntimeValue> {
+    return this.variables
+  }
+
   /** 這個名字宣告過嗎？（`get` 找不到會丟錯，所以要先問） */
   has(name: string): boolean {
     if (this.refs.has(name) || this.variables.has(name)) return true

@@ -20,6 +20,15 @@ export interface ExecutionContext {
    * 而**什麼算可呼叫、捕捉語意怎麼實現**是語言套件的知識。
    * 沒安裝時兩個都是 undefined，行為與加入本機制之前完全相同。
    */
+  /**
+   * 一個作用域即將被丟棄——由**語言套件**安裝。
+   *
+   * 核心知道「作用域結束了」，但不知道**結束時該做什麼**（C++ 要跑解構式，
+   * 別的語言可能什麼都不做）。沒安裝時行為與加入本機制之前完全相同。
+   */
+  onScopeExit?: (own: Map<string, RuntimeValue>) => Promise<void>
+  /** 離開一個作用域：先收尾，再還原。**每個建立作用域的地方都要走這裡** */
+  exitScope(inner: Scope, outer: Scope): Promise<void>
   callableOf?: (v: RuntimeValue) => unknown | null
   invokeCallable?: (c: unknown, args: SemanticNode[]) => Promise<RuntimeValue | void>
   scanfTokenBuffer: string[]

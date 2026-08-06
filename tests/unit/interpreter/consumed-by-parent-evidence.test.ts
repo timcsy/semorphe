@@ -80,6 +80,11 @@ describe('cpp_class_def 真的消費這六種成員', () => {
     ).toBe(true)
   })
 
+  it('★ cpp_destructor 被收成型別的解構式', async () => {
+    const interp = await 宣告類別(n('cpp_destructor', { class_name: 'K' }, { body: [] }))
+    expect(interp.structs.destructorOf('K'), 'cpp_destructor 沒有被收進去').toBeDefined()
+  })
+
   it('★ cpp_constructor 被收成型別的建構式', async () => {
     const interp = await 宣告類別(
       n('cpp_constructor', { class_name: 'K' }, { params: [], body: [] }),
@@ -87,30 +92,75 @@ describe('cpp_class_def 真的消費這六種成員', () => {
     expect(interp.structs.constructorOf('K')).toBeDefined()
   })
 
-  it('★ 反面：一個 cpp_class_def 不認得的成員概念不得被誤收', async () => {
-    // 沒有這支的話，一個「什麼都收」的實作也會通過上面每一支
-    const interp = await 宣告類別(n('cpp_destructor', { class_name: 'K' }, { body: [] }))
+  it('★ 反面：不認得的成員概念不得被誤收', async () => {
+    // ⚠️ 這支原本錨在 `cpp_destructor` 上（「它還沒實作，不該被收進去」）
+    // ——而 080 把解構式實作了，那個錨點於是爛掉。**同一個坑今天第四次。**
+    //
+    // 改用**合成的**概念名：它按定義永遠不會被任何實作認得。
+    // 沒有這支的話，一個「什麼都收」的實作會通過上面每一支。
+    const interp = await 宣告類別(n('__不存在的成員概念__', { name: 'zz' }, { body: [] }))
     expect(
-      interp.structs.method('K', 'K'),
-      'cpp_destructor 被當成方法收進去了——它**還沒實作**，不該有依據宣告 consumed-by-parent',
+      interp.structs.method('K', 'zz'),
+      '一個不存在的概念被當成方法收進去了 → 「什麼都收」的實作也會通過上面每一支',
     ).toBeUndefined()
   })
 })
 
-describe('沒有被消費的那兩個，仍然是殼', () => {
-  it('★ cpp_destructor 與 cpp_lambda 不得有 execute 的 skipPaths', async () => {
+describe('宣告的依據必須存在——反過來查一次', () => {
+  /**
+   * ⚠️ 這支原本是「解構式與 lambda 不得有宣告」，而 079／080 把它們實作了
+   * ——清單變空，**那支測試於是什麼都沒驗到，自己成了一個殼**。
+   *
+   * 留一個空清單假通過，比刪掉它更糟：它看起來還在守著什麼。
+   *
+   * 改成**反過來查**：每一個宣告了 `consumed-by-parent` 的概念，
+   * 都必須真的被父概念收進型別。這個形狀不隨「哪些概念實作了」而失效，
+   * 而且**下一個想偷渡宣告的概念會在這裡被擋住**。
+   */
+  it('★ 每個宣告 consumed-by-parent 的概念，都要真的被收進型別', async () => {
     const { allComponentDefs } = await import('../../helpers/component-scan')
-    const 偷渡 = allComponentDefs()
+    // ⚠️ **只查父概念是類別的那些。** 第一版查了全部宣告者，於是 `cpp_case`
+    // 與 `cpp_default` 被報出來——它們的父概念是 switch，不是類別。
+    // 那是這支測試的範圍寫太寬，不是那兩個概念有問題。
+    //
+    // 其他父概念的消費關係要各自有各自的證據測試——本檔不涵蓋，
+    // 而這一行就是那個邊界。
+    const 類別成員 = new Set([
+      'cpp_virtual_method', 'cpp_override_method', 'cpp_pure_virtual',
+      'cpp_operator_overload', 'cpp_static_member', 'cpp_constructor', 'cpp_destructor',
+    ])
+    const 宣告者 = allComponentDefs()
       .filter(
         (d) =>
-          ['cpp_destructor', 'cpp_lambda'].includes(d.conceptId) &&
-          (d.skipPaths ?? []).includes('execute'),
+          類別成員.has(d.conceptId) &&
+          (d.skipReasons as Record<string, string> | undefined)?.execute === 'consumed-by-parent',
       )
       .map((d) => d.conceptId)
+
     expect(
-      偷渡,
-      '解構式需要物件生命週期、lambda 需要閉包——**兩者都還沒實作**。' +
-        '宣告它們「刻意不執行」是把缺陷洗成設計。',
+      宣告者.length,
+      `類別成員裡宣告了 consumed-by-parent 的只有 ${宣告者.length} 個 → ` +
+        '少於預期，這支可能什麼都沒驗到',
+    ).toBe(類別成員.size)
+
+    const 站不住: string[] = []
+    for (const id of 宣告者) {
+      // 每一種成員各建一個類別，看它有沒有被收進型別的任何一張表
+      const interp = await 宣告類別(
+        n(id, { name: 'probe', class_name: 'K', operator: '+', type: 'int', return_type: 'int' }, { params: [], body: [] }),
+      )
+      const 被收了 =
+        interp.structs.method('K', 'probe') !== undefined ||
+        interp.structs.method('K', 'operator+') !== undefined ||
+        interp.structs.staticsOf('K')?.has('probe') === true ||
+        interp.structs.constructorOf('K') !== undefined ||
+        interp.structs.destructorOf('K') !== undefined
+      if (!被收了) 站不住.push(id)
+    }
+    expect(
+      站不住,
+      '以下概念宣告了「由父概念消費」，而父概念**根本沒有收它**——' +
+        `那個宣告就是在把一個空操作洗成設計：\n  ${站不住.join('\n  ')}`,
     ).toEqual([])
   })
 })
