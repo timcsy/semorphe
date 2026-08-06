@@ -123,9 +123,9 @@ description: "Task list for 053-declare-noop-execute"
 - [X] T030 下調 `tests/baselines/completeness.json` 與 `neutrality.json`；**獨立 commit，訊息說明下降的來源是宣告還是實作**
 - [X] T031 確認其餘四項量測未上升
 - [X] T032 執行 `npm test` 確認全綠
-- [ ] T033 更新 `knowledge/concepts/執行機構.md`：第一條判準「讓正確的那個說話」第一次真的被落實，補上實測結果
-- [ ] T034 更新 `knowledge/vision.md`：階段 6.5 記錄中立性與完備性的**第一次下降**，並註明多少來自宣告、多少來自實作
-- [ ] T035 回填 `knowledge/experience.md`——**只在真的有新東西時才寫**。候選：「判準是對的，把它自動化的第一版仍然會量錯」（F2b，第五個實例、新觸發點：兩個量測互相矛盾）
+- [X] T033 更新 `knowledge/concepts/執行機構.md`：第一條判準「讓正確的那個說話」第一次真的被落實，補上實測結果
+- [X] T034 更新 `knowledge/vision.md`：階段 6.5 記錄中立性與完備性的**第一次下降**，並註明多少來自宣告、多少來自實作
+- [X] T035 回填 `knowledge/experience.md`——**只在真的有新東西時才寫**。候選：「判準是對的，把它自動化的第一版仍然會量錯」（F2b，第五個實例、新觸發點：兩個量測互相矛盾）
 
 ---
 
