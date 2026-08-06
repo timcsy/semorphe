@@ -13,9 +13,9 @@ function isStringTypeName(text: string): boolean {
   return text === 'string' || text === 'std::string'
 }
 
-function stringVarNamesInDecl(declNode: any): string[] {
+function stringVarNamesInDecl(declNode: AstNode): string[] {
   if (declNode.type !== 'declaration') return []
-  const typeNode = declNode.namedChildren.find((c: any) =>
+  const typeNode = declNode.namedChildren.find((c: AstNode) =>
     c.type === 'type_identifier' || c.type === 'qualified_identifier'
   )
   if (!typeNode || !isStringTypeName(typeNode.text)) return []
@@ -25,34 +25,34 @@ function stringVarNamesInDecl(declNode: any): string[] {
       names.push(c.text)
     } else if (c.type === 'init_declarator') {
       // string s = "hello"  or  string s
-      const id = c.namedChildren.find((d: any) => d.type === 'identifier')
+      const id = c.namedChildren.find((d: AstNode) => d.type === 'identifier')
       if (id) names.push(id.text)
     }
   }
   return names
 }
 
-function stringParamNamesInFunc(funcDefNode: any): string[] {
+function stringParamNamesInFunc(funcDefNode: AstNode): string[] {
   const names: string[] = []
   // function_definition → declarator (function_declarator) → parameters
   const declNode = funcDefNode.childForFieldName('declarator')
   const paramList =
     declNode?.childForFieldName('parameters') ??
-    declNode?.namedChildren.find((c: any) => c.type === 'parameter_list')
+    declNode?.namedChildren.find((c: AstNode) => c.type === 'parameter_list')
   if (!paramList) return names
   for (const param of paramList.namedChildren) {
     if (param.type !== 'parameter_declaration') continue
-    const typeNode = param.namedChildren.find((c: any) =>
+    const typeNode = param.namedChildren.find((c: AstNode) =>
       c.type === 'type_identifier' || c.type === 'qualified_identifier'
     )
     if (!typeNode || !isStringTypeName(typeNode.text)) continue
     // name may be bare identifier, or inside reference_declarator / pointer_declarator
-    let nameNode = param.namedChildren.find((c: any) => c.type === 'identifier')
+    let nameNode = param.namedChildren.find((c: AstNode) => c.type === 'identifier')
     if (!nameNode) {
-      const refOrPtr = param.namedChildren.find((c: any) =>
+      const refOrPtr = param.namedChildren.find((c: AstNode) =>
         c.type === 'reference_declarator' || c.type === 'pointer_declarator'
       )
-      nameNode = refOrPtr?.namedChildren.find((c: any) => c.type === 'identifier')
+      nameNode = refOrPtr?.namedChildren.find((c: AstNode) => c.type === 'identifier')
     }
     if (nameNode) names.push(nameNode.text)
   }
@@ -61,7 +61,7 @@ function stringParamNamesInFunc(funcDefNode: any): string[] {
 
 // Walk up AST scopes; globals (translation_unit) are scanned without position filter
 // so they're visible regardless of declaration order, matching C++ semantics.
-function isStringVar(varName: string, fromNode: any): boolean {
+function isStringVar(varName: string, fromNode: AstNode): boolean {
   let current = fromNode.parent
   while (current) {
     if (current.type === 'compound_statement') {

@@ -540,11 +540,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const refDeclNode = node.namedChildren.find(c =>
       c.type === 'reference_declarator' || c.type === 'pointer_declarator'
     )
-    let varNode: any
+    let varNode: AstNode | null
     if (refDeclNode) {
-      varNode = refDeclNode.namedChildren.find((c: any) => c.type === 'identifier')
+      varNode = refDeclNode.namedChildren.find((c: AstNode) => c.type === 'identifier') ?? null
     } else {
-      varNode = node.namedChildren.find(c => c.type === 'identifier')
+      varNode = node.namedChildren.find(c => c.type === 'identifier') ?? null
     }
     const varName = varNode?.text ?? 'x'
     // Build varType with const qualifier and reference sigil if present
