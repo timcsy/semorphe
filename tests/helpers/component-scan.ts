@@ -213,6 +213,23 @@ function literalPattern(id: string): RegExp {
   return new RegExp(`(['"\`])${esc}\\1`)
 }
 
+/**
+ * 元件身分寫成**裸的物件鍵**——`cpp_isalpha: (c) => …`，沒有引號。
+ *
+ * ⚠️ **這個形式原本完全看不見。** 判定只比對引號字串字面，於是核心層那四個
+ * 字元分類函式一筆都沒被數到——中立性報「0」的時候，它們還在核心裡。
+ *
+ * 不只**維度**（身分 vs 語法）會消失在數字裡，**同一維度的不同書寫形式也會**。
+ * 見 `knowledge/concepts/執行機構.md`、`specs/082-stale-blockers`。
+ *
+ * 判準：識別字後面接冒號，而前面不是引號也不是識別字字元。
+ * 型別註記（`foo: string`）不會誤中，因為那裡的識別字不是元件身分。
+ */
+function barePropertyKey(id: string): RegExp {
+  const esc = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^'"\`\\w.])${esc}\\s*:`, 'm')
+}
+
 export interface FileHits {
   /** 出現在程式碼中的 componentId（計入基線） */
   code: string[]
@@ -244,11 +261,11 @@ export function scanText(rawSrc: string, ids: readonly string[]): FileHits {
 
   for (const id of ids) {
     const re = literalPattern(id)
-    if (re.test(code)) {
+    if (re.test(code) || barePropertyKey(id).test(code)) {
       hitsInCode.push(id)
       const at: number[] = []
       codeLines.forEach((l, idx) => {
-        if (literalPattern(id).test(l)) at.push(idx + 1)
+        if (literalPattern(id).test(l) || barePropertyKey(id).test(l)) at.push(idx + 1)
       })
       lines[id] = at
     } else if (re.test(comments) || new RegExp(`(^|[^A-Za-z0-9_])${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Za-z0-9_]|$)`).test(comments)) {

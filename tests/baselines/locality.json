@@ -39,8 +39,8 @@
       "dirs": 5
     },
     "comment": {
-      "files": 9,
-      "dirs": 8
+      "files": 10,
+      "dirs": 9
     },
     "compare": {
       "files": 12,
@@ -247,11 +247,11 @@
       "dirs": 3
     },
     "cpp_isalpha": {
-      "files": 6,
+      "files": 7,
       "dirs": 4
     },
     "cpp_isdigit": {
-      "files": 6,
+      "files": 7,
       "dirs": 4
     },
     "cpp_lambda": {
@@ -571,11 +571,11 @@
       "dirs": 4
     },
     "cpp_tolower": {
-      "files": 6,
+      "files": 7,
       "dirs": 4
     },
     "cpp_toupper": {
-      "files": 6,
+      "files": 7,
       "dirs": 4
     },
     "cpp_try_catch": {
@@ -659,8 +659,8 @@
       "dirs": 5
     },
     "input": {
-      "files": 19,
-      "dirs": 15
+      "files": 21,
+      "dirs": 16
     },
     "logic": {
       "files": 12,
@@ -683,8 +683,8 @@
       "dirs": 10
     },
     "program": {
-      "files": 11,
-      "dirs": 9
+      "files": 12,
+      "dirs": 10
     },
     "return": {
       "files": 11,
