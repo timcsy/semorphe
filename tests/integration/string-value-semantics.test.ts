@@ -21,6 +21,9 @@
  * 字串沒有初始值 → `length()` 回 0、`substr()` 回空、`stoi()` 型別不符。
  * 三個看起來是三個 bug，其實是一個。
  */
+// ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
+// （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
+// 期望值已改為 g++ 實際印出的東西。
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
@@ -78,7 +81,7 @@ describe('字串比較要比內容', () => {
   })
 
   it('★ 大小比較用字典序', async () => {
-    expect((await run('string a = "abc"; cout << (a < "abd");')).trim()).toBe('true')
+    expect((await run('string a = "abc"; cout << (a < "abd");')).trim()).toBe('1')
   })
 
   it('★ 數字比較不得被影響', async () => {

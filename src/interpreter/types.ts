@@ -112,7 +112,18 @@ export function valueToString(val: RuntimeValue): string {
   }
 
   if (val.type === 'void') return 'void'
-  if (val.type === 'bool') return val.value ? 'true' : 'false'
+
+  // C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
+  // ——後者要 `std::boolalpha`。印錯的話每一個印布林的程式輸出都不對，
+  // 而它看起來像「只是格式不同」。
+  if (val.type === 'bool') return val.value ? '1' : '0'
+
+  // 字元要印成**字元**，不是碼值。`char g = 'B'; cout << g;` 印 `B`。
+  // 值可能以數字碼存放（陣列初始化列表、轉型的結果），統一還原。
+  if (val.type === 'char') {
+    if (typeof val.value === 'number') return String.fromCharCode(val.value)
+    return String(val.value)
+  }
   if (val.type === 'array') {
     // C 字串（字元陣列）印出來應該是字串，不是 `[array]`。
     //

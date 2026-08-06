@@ -1,3 +1,6 @@
+// ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
+// （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
+// 期望值已改為 g++ 實際印出的東西。
 import { describe, it, expect } from 'vitest'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { SemanticNode } from '../../src/core/types'
@@ -138,12 +141,12 @@ describe('Interpreter - compare', () => {
     return interp.getOutput().join('')
   }
 
-  it('should compare <', async () => expect(await evalCompare('<', '1', '2')).toBe('true'))
-  it('should compare >', async () => expect(await evalCompare('>', '2', '1')).toBe('true'))
-  it('should compare <=', async () => expect(await evalCompare('<=', '2', '2')).toBe('true'))
-  it('should compare >=', async () => expect(await evalCompare('>=', '1', '2')).toBe('false'))
-  it('should compare ==', async () => expect(await evalCompare('==', '3', '3')).toBe('true'))
-  it('should compare !=', async () => expect(await evalCompare('!=', '3', '4')).toBe('true'))
+  it('should compare <', async () => expect(await evalCompare('<', '1', '2')).toBe('1'))
+  it('should compare >', async () => expect(await evalCompare('>', '2', '1')).toBe('1'))
+  it('should compare <=', async () => expect(await evalCompare('<=', '2', '2')).toBe('1'))
+  it('should compare >=', async () => expect(await evalCompare('>=', '1', '2')).toBe('0'))
+  it('should compare ==', async () => expect(await evalCompare('==', '3', '3')).toBe('1'))
+  it('should compare !=', async () => expect(await evalCompare('!=', '3', '4')).toBe('1'))
 })
 
 describe('Interpreter - logic', () => {
@@ -162,7 +165,7 @@ describe('Interpreter - logic', () => {
         })]
       })
     ])
-    expect(interp.getOutput().join('')).toBe('false')
+    expect(interp.getOutput().join('')).toBe('0')
   })
 
   it('should evaluate logic_not', async () => {
@@ -176,7 +179,7 @@ describe('Interpreter - logic', () => {
         })]
       })
     ])
-    expect(interp.getOutput().join('')).toBe('false')
+    expect(interp.getOutput().join('')).toBe('0')
   })
 })
 

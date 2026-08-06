@@ -624,7 +624,6 @@ describe.skip('[BLOCKED:cpp_switch] fuzz: switch fall-through (Phase 2 scope, to
 describe.skip('[BLOCKED:cpp_char_literal] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
   // COMPILE_FAIL: char literal case labels (case 'a':) are not
   // correctly lifted by the switch-case lifter
-  it.todo('[BLOCKED:cpp_char_literal] should handle char literal case labels in switch')
 })
 
 describe.skip('[BLOCKED:array_declare] fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {

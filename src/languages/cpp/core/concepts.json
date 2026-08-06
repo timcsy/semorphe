@@ -749,13 +749,7 @@
       "values"
     ],
     "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
+    "role": "statement"
   },
   {
     "conceptId": "cpp_range_for",

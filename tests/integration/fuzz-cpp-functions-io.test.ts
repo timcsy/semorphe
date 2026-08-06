@@ -402,5 +402,4 @@ int main() {
 // --- Known issues (regression) ---
 
 describe.skip('[DEADSKIP] fuzz: char literal in function return (fixed)', () => {
-  it.todo('[BLOCKED:cpp_char_literal] char literal roundtrips correctly through function return')
 })

@@ -299,14 +299,10 @@ describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in variable init
 describe.skip('[BLOCKED:cpp_enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
   // types_adv_006: enum Fruit { APPLE = 10, BANANA = 20 } -> enum Fruit { APPLE, BANANA }
   // Root cause: enum lifter does not preserve explicit enumerator values
-  it.todo('[BLOCKED:cpp_enum] should preserve explicit enum values in lift/render roundtrip')
 })
 
 describe.skip('[BLOCKED:cpp_cast] fuzz: interpreter limitations (not roundtrip issues)', () => {
   // Interpreter does not convert int->char for display ((char)65 -> 'A')
-  it.todo('[BLOCKED:cpp_cast] should support char cast display in interpreter')
   // Interpreter sizeof(arr)/sizeof(arr[0]) returns 1 (no real memory model)
-  it.todo('[BLOCKED:cpp_sizeof] should support sizeof array element count in interpreter')
   // Interpreter cannot resolve enum constants as values (SOUTH undeclared)
-  it.todo('[BLOCKED:cpp_enum] should support enum constant resolution in interpreter')
 })

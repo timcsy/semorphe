@@ -7,6 +7,9 @@
  *   - Stack is LIFO: pop removes the most recently pushed element
  *   - Queue is FIFO: pop removes the earliest pushed element
  */
+// ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
+// （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
+// 期望值已改為 g++ 實際印出的東西。
 import { describe, it, expect } from 'vitest'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createNode } from '../../src/core/semantic-tree'
@@ -74,14 +77,14 @@ describe('Stack execution (LIFO)', () => {
       createNode('cpp_stack_declare', { name: 's', type: 'int' }, {}),
       printNode(createNode('cpp_container_empty', { obj: 's' }, {})),
     ])
-    expect(emptyBefore).toContain('true')
+    expect(emptyBefore).toContain('1')
 
     const emptyAfter = await run([
       createNode('cpp_stack_declare', { name: 's', type: 'int' }, {}),
       createNode('cpp_container_push', { obj: 's' }, { value: [num(1)] }),
       printNode(createNode('cpp_container_empty', { obj: 's' }, {})),
     ])
-    expect(emptyAfter).toContain('false')
+    expect(emptyAfter).toContain('0')
   })
 
   it('drain loop prints in LIFO order (30 20 10)', async () => {
@@ -136,14 +139,14 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp_queue_declare', { name: 'q', type: 'int' }, {}),
       printNode(createNode('cpp_container_empty', { obj: 'q' }, {})),
     ])
-    expect(emptyBefore).toContain('true')
+    expect(emptyBefore).toContain('1')
 
     const emptyAfter = await run([
       createNode('cpp_queue_declare', { name: 'q', type: 'int' }, {}),
       createNode('cpp_container_push', { obj: 'q' }, { value: [num(1)] }),
       printNode(createNode('cpp_container_empty', { obj: 'q' }, {})),
     ])
-    expect(emptyAfter).toContain('false')
+    expect(emptyAfter).toContain('0')
   })
 
   it('drain loop prints in FIFO order (10 20 30)', async () => {
