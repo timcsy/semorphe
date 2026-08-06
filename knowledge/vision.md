@@ -304,7 +304,9 @@ languages/{lang}/
 >
 > 第六條護欄基線 **0／0／0**（欄位不守恆／兩條路徑判定不一致／缺升級路徑）。三個數字都是 0 的護欄，健康與全瞎長得一樣，所以它的健康檢查是**注入已知違規**而不是斷言數字——見 [concepts/執行機構.md](concepts/執行機構.md)。
 - [x] **P2 動 `strategies.ts` 之前**：先消掉它與 `core/lifters/expressions.ts` 的 `any`（2026-08-06，12 → 0）
-- [ ] **P5 之前**：`concept` 這個欄位名同時長在 `SemanticNode`／`BlockSpec`／`ConceptMapping` 三個型別上，**必須先把後兩者改名**（例如 `BlockSpec.concept` → `BlockSpec.conceptDef`），讓「`concept`」在專案裡只剩一個意思。否則腳本改名一定會改錯，而**型別檢查涵蓋不到測試與 JSON，那裡沒有安全網**。2026-08-06 試過一次、翻車、已回退——見 experience「同一個欄位名長在三個不同型別上時」
+- [x] **P5 之前（一）**：`BlockSpec.concept` → `conceptMapping`（2026-08-06）。`concept` 原本同時長在三個型別上，腳本分不出來——那是第一次改名翻車的直接原因。現在剩兩個，且**剩下的 `LiftPattern.concept` 是物件值**，與 `SemanticNode.concept`（字串）可用機械判準區分。
+- [ ] **P5 之前（二）**：改名要用**型別層級的 codemod**（ts-morph 之類），不是正規表示式。實測「值是物件才不改」這條判準**不夠**——`LiftPattern` 與 `BlockSpec` 都是物件值，兩次都誤改。真正夠用的判準是「這個 `.concept` 的接收者是什麼型別」，而那只有 AST 分析答得出來。
+  > 2026-08-06 試過正規表示式，翻車、已回退。除了改錯欄位，腳本還**刪掉一整段執行器**、把一個**刻意擺在建構式最後**的區塊移到中間。見 experience「同一個欄位名長在三個不同型別上時」
 
 > 換掉的過程發現：**那些 `any` 藏住的是「`AstNode` 這個抽象不完整」**——lifters 需要 `parent` 與 `startIndex`，介面裡沒有。補進去之後 12 個全部消失。**`any` 常常不是「型別難寫」，是「抽象漏了東西」。**
 
