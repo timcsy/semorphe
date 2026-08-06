@@ -195,8 +195,6 @@ export function registerStructExecutors(
    * 這裡只註冊「建構式的定義」不執行任何東西；真正的呼叫由 `var_declare`
    * 的初始化路徑觸發（見下）。
    */
-  register('cpp_constructor', async () => {})
-
   /** `namespace N { … }` —— 這個直譯器沒有名稱隔離，本體直接跑 */
   register('cpp_namespace_def', async (node, ctx) => {
     await ctx.executeBody(node.children.body ?? [])

@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：178｜✅ 實作 818｜📄 已宣告不提供 33｜❔ 判不出來 20｜🈳 殼 19｜❌ 缺 0（以路徑數計）
+元件：178｜✅ 實作 818｜📄 已宣告不提供 39｜❔ 判不出來 20｜🈳 殼 13｜❌ 缺 0（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -43,7 +43,7 @@
 | `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_const_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_constexpr_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_constructor` | ✅ | ❔ | ✅ | ✅ | 🈳 |
+| `cpp_constructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp_container_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_empty` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -89,15 +89,15 @@
 | `cpp_namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_new` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_ofstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp_operator_overload` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp_override_method` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_operator_overload` | ✅ | 🈳 | ✅ | ✅ | 📄 |
+| `cpp_override_method` | ✅ | 🈳 | ✅ | ✅ | 📄 |
 | `cpp_pair_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_partial_sum` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_deref` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_printf` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_pure_virtual` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_pure_virtual` | ✅ | 🈳 | ✅ | ✅ | 📄 |
 | `cpp_queue_back` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_queue_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_queue_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -119,7 +119,7 @@
 | `cpp_stack_top` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_static_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_static_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_static_member` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_static_member` | ✅ | 🈳 | ✅ | ✅ | 📄 |
 | `cpp_stod` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_stoi` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strcat` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -163,7 +163,7 @@
 | `cpp_vector_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_pop_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_virtual_method` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_virtual_method` | ✅ | 🈳 | ✅ | ✅ | 📄 |
 | `cpp:math_binary` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:math_pow` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_unary` | ✅ | ❔ | ✅ | ✅ | ✅ |

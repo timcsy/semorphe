@@ -315,11 +315,11 @@
       "dirs": 3
     },
     "cpp_operator_overload": {
-      "files": 8,
+      "files": 7,
       "dirs": 5
     },
     "cpp_override_method": {
-      "files": 8,
+      "files": 7,
       "dirs": 5
     },
     "cpp_pair_declare": {
@@ -347,7 +347,7 @@
       "dirs": 3
     },
     "cpp_pure_virtual": {
-      "files": 8,
+      "files": 7,
       "dirs": 5
     },
     "cpp_queue_back": {
@@ -611,7 +611,7 @@
       "dirs": 4
     },
     "cpp_virtual_method": {
-      "files": 8,
+      "files": 7,
       "dirs": 5
     },
     "cpp:math_binary": {

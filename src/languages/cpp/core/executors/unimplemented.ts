@@ -49,14 +49,16 @@ const OOP_NOT_IMPLEMENTED = [
   //   / cpp_static_member / cpp_virtual_method / cpp_override_method
   //   / cpp_pure_virtual / cpp_operator_overload（073）
   //
+  // 而 cpp_virtual_method / cpp_override_method / cpp_pure_virtual /
+  // cpp_operator_overload / cpp_static_member / cpp_constructor 這六個
+  // **單獨執行本來就不該做事**——它們是類別內的宣告，由 `cpp_class_def`
+  // 的 `拆解成員` 消費。改成概念自己宣告 `consumed-by-parent`，
+  // 而 `structs.consumed-by-parent.test.ts` 會去驗那個「消費」是真的。
+  //
   // ⚠️ 留在這裡的話**空操作會蓋掉真實作**——註冊表是後蓋前，而這份清單
   // 跑在語言套件的真實作之後。`history/018` 記著同一件事：四個轉型概念有
   // 能用的實作，被清單無聲覆蓋，於是 `static_cast<int>(3.9)` 輸出 void。
   'cpp_destructor',
-  'cpp_virtual_method',
-  'cpp_pure_virtual',
-  'cpp_override_method',
-  'cpp_operator_overload',
   'cpp_lambda',
 ] as const
 

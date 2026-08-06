@@ -75,9 +75,22 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     // classification.md 判定不得宣告的那些。這支測試是那份判定的釘子——
     // 有人日後想讓數字好看，最省事的做法就是給它們一個 skipPaths。
     const 不得宣告 = [
-      'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
-      'cpp_virtual_method', 'cpp_override_method', 'cpp_pure_virtual',
-      'cpp_operator_overload', 'cpp_lambda', 'cpp_namespace_def',
+      'cpp_destructor', 'cpp_lambda',
+      // ⚠️ 以下六個已改判為 `consumed-by-parent`（074），而那正是「用宣告刷
+      // 數字」最常見的形狀——053 明明把它們判為「還沒實作」，現在說情況變了。
+      // **「情況變了」本身就是最常見的合理化**，所以理由必須可查證：
+      //
+      //   `tests/unit/interpreter/consumed-by-parent-evidence.test.ts`
+      //
+      // 那支逐一驗 `cpp_class_def` 的執行器**真的**把每一種成員收進型別，
+      // 並附一支反面測試（`cpp_destructor` 不得被誤收——否則「什麼都收」的
+      // 實作也會通過）。那支若被刪掉或改成總是通過，這六個宣告就失去依據。
+      //
+      //   cpp_virtual_method / cpp_override_method / cpp_pure_virtual
+      //   cpp_operator_overload / cpp_static_member / cpp_constructor
+      //
+      // `cpp_class_def` / `cpp_struct_declare` / `cpp_namespace_def` 則是
+      // **真的實作了**（071–073），不需要宣告也不在這份清單裡。
       'cpp_ifdef', 'cpp_ifndef',
       'cpp_raw_code', 'cpp_raw_expression',
       // `var_declarator` 與 `cpp_include_local` 已改判——**附證據，不是因為想讓數字下降**：

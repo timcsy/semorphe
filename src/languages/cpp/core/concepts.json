@@ -732,7 +732,13 @@
       "name"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_enum",
@@ -841,7 +847,13 @@
       "params": "statements",
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_destructor",
@@ -867,7 +879,13 @@
       "params": "statements",
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_pure_virtual",
@@ -880,7 +898,13 @@
     "children": {
       "params": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_override_method",
@@ -894,7 +918,13 @@
       "params": "statements",
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_operator_overload",
@@ -909,7 +939,13 @@
     "children": {
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_lambda",
