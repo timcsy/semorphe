@@ -5,7 +5,7 @@
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`）。僅計語言專屬概念（lang-core／lang-library）；universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "total": 20,
+  "total": 16,
   "files": {
     "src/core/lift/lifter.ts": [
       "comment"
@@ -23,33 +23,6 @@
       "cpp_array_2d_assign",
       "cpp_array_2d_declare",
       "cpp_enum"
-    ],
-    "src/interpreter/executors/cmath.ts": [
-      "cpp:math_binary",
-      "cpp:math_pow",
-      "cpp:math_unary"
-    ],
-    "src/interpreter/executors/containers.ts": [
-      "cpp_container_clear",
-      "cpp_container_count",
-      "cpp_container_empty",
-      "cpp_container_erase",
-      "cpp_container_pop",
-      "cpp_container_push",
-      "cpp_container_push_back",
-      "cpp_map_access",
-      "cpp_map_declare",
-      "cpp_queue_back",
-      "cpp_queue_declare",
-      "cpp_queue_front",
-      "cpp_set_declare",
-      "cpp_set_insert",
-      "cpp_stack_declare",
-      "cpp_stack_top",
-      "cpp_vector_back",
-      "cpp_vector_declare",
-      "cpp_vector_pop_back",
-      "cpp_vector_size"
     ],
     "src/interpreter/executors/control-flow.ts": [
       "cpp_default",
@@ -92,45 +65,6 @@
       "cpp_sizeof",
       "cpp_static_cast",
       "cpp_ternary"
-    ],
-    "src/interpreter/executors/pointers.ts": [
-      "cpp_address_of",
-      "cpp_delete",
-      "cpp_free",
-      "cpp_malloc",
-      "cpp_new",
-      "cpp_pointer_assign",
-      "cpp_pointer_declare",
-      "cpp_pointer_deref"
-    ],
-    "src/interpreter/executors/strings.ts": [
-      "cpp_getline",
-      "cpp_memcpy",
-      "cpp_memset",
-      "cpp_stod",
-      "cpp_stoi",
-      "cpp_strcat",
-      "cpp_strchr",
-      "cpp_strcmp",
-      "cpp_strcpy",
-      "cpp_string_append",
-      "cpp_string_at",
-      "cpp_string_c_str",
-      "cpp_string_clear",
-      "cpp_string_declare",
-      "cpp_string_empty",
-      "cpp_string_erase",
-      "cpp_string_find",
-      "cpp_string_insert",
-      "cpp_string_length",
-      "cpp_string_push_back",
-      "cpp_string_replace",
-      "cpp_string_substr",
-      "cpp_strlen",
-      "cpp_strncmp",
-      "cpp_strncpy",
-      "cpp_strstr",
-      "cpp_to_string"
     ],
     "src/interpreter/executors/variables.ts": [
       "cpp_auto_declare",
