@@ -9,12 +9,16 @@ import { allStdModules } from '../../../src/languages/cpp/std'
 
 describe('Concept/BlockDef split integrity', () => {
   it('should have correct universal concept and block counts', () => {
-    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(26)
+    // 概念數 ≥ 積木數：有些概念**沒有積木投影**，那是真的缺口而不是巧合。
+    // 補一個假的投影就能讓數字對齊，但那會把缺口藏回去——完備性報表已經
+    // 把它們標成 render／extract 缺，讓它留在那裡被看見。
+    // 見 specs/055-finish-executor-move（program 等三個概念補宣告後暴露的缺口）
+    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(27)
     expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(26)
   })
 
   it('should have correct core concept and block counts', () => {
-    expect(coreConcepts.length).toBe(77)
+    expect(coreConcepts.length).toBe(79)
     expect(coreBlocks.length).toBe(77)
   })
 

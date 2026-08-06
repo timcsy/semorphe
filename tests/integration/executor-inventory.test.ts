@@ -25,6 +25,44 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
 const ASSET = path.resolve(__dirname, '../assets/executor-inventory.json')
+const CPP = path.resolve(__dirname, '../../src/languages/cpp')
+
+/** 所有語言套件裡的執行器檔，以及它所屬的模組目錄 */
+function listExecutorFiles(): { file: string; moduleDir: string }[] {
+  const out: { file: string; moduleDir: string }[] = []
+  const std = path.join(CPP, 'std')
+  if (fs.existsSync(std)) {
+    for (const d of fs.readdirSync(std)) {
+      const f = path.join(std, d, 'executors.ts')
+      if (fs.existsSync(f)) out.push({ file: f, moduleDir: path.join(std, d) })
+    }
+  }
+  const core = path.join(CPP, 'core/executors')
+  if (fs.existsSync(core)) {
+    for (const n of fs.readdirSync(core)) {
+      if (n.endsWith('.ts') && n !== 'index.ts') {
+        out.push({ file: path.join(core, n), moduleDir: path.join(CPP, 'core') })
+      }
+    }
+  }
+  return out
+}
+
+function registeredIn(file: string): string[] {
+  return [...fs.readFileSync(file, 'utf8').matchAll(/register\(\s*'([^']+)'/g)].map((m) => m[1])
+}
+
+/** 這個模組的定義檔宣告了哪些概念（含通用層——通用概念可以住在語言核心的執行器裡） */
+function conceptsDeclaredIn(moduleDir: string): Set<string> {
+  const s = new Set<string>()
+  const f = path.join(moduleDir, 'concepts.json')
+  if (fs.existsSync(f)) {
+    for (const c of JSON.parse(fs.readFileSync(f, 'utf8')) as { conceptId?: string }[]) {
+      if (c.conceptId) s.add(c.conceptId)
+    }
+  }
+  return s
+}
 
 interface Inventory {
   _meta: { note: string; capturedAt: string }
@@ -77,6 +115,23 @@ describe('執行器清冊：搬移前後認得的概念必須完全相同', () =
 
   it('清冊不是空的——空的話代表語言套件沒載入，這支測試什麼都沒驗到', () => {
     expect(currentConcepts().length).toBeGreaterThan(50)
+  })
+})
+
+describe('落點與宣告一致——清冊比對抓漏失，這條抓錯置', () => {
+  it('★ 每個執行器檔裡的概念，都必須宣告在同一個模組', () => {
+    const 錯置: string[] = []
+    for (const f of listExecutorFiles()) {
+      const 宣告在此 = conceptsDeclaredIn(f.moduleDir)
+      for (const cid of registeredIn(f.file)) {
+        if (!宣告在此.has(cid)) 錯置.push(`${cid} 的執行器在 ${f.moduleDir}，但它宣告在別處`)
+      }
+    }
+    expect(
+      錯置,
+      '搬到不符宣告的模組——**集合比對抓不到這種錯**（概念還在，只是跑錯地方）：\n  ' +
+        錯置.join('\n  '),
+    ).toEqual([])
   })
 })
 

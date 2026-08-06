@@ -1,5 +1,15 @@
 [
   {
+    "conceptId": "program",
+    "layer": "universal",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "body": "statements"
+    },
+    "role": "statement"
+  },
+  {
     "conceptId": "var_declare",
     "layer": "universal",
     "abstractConcept": "var_declare",

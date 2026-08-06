@@ -988,5 +988,27 @@
       "value": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_comma_expr",
+    "layer": "lang-core",
+    "abstractConcept": null,
+    "properties": [],
+    "children": {
+      "exprs": "expressions"
+    },
+    "role": "expression"
+  },
+  {
+    "conceptId": "var_declarator",
+    "layer": "lang-core",
+    "abstractConcept": null,
+    "properties": [
+      "name"
+    ],
+    "children": {
+      "value": "expression"
+    },
+    "role": "statement"
   }
 ]
