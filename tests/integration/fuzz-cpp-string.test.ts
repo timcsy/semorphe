@@ -61,33 +61,33 @@ describe('C++ String Fuzz Tests (hard)', () => {
   // All tests blocked by: cout lifter cannot handle complex cout << chain
   // (e.g. cout << s.substr(s.length() - 1) << endl;)
 
-  it.todo('fuzz_1: substr with computed indices and looping find')
+  it.todo('[BLOCKED:print] fuzz_1: substr with computed indices and looping find')
   // ROUNDTRIP_DRIFT — cout << s.substr(s.length() - 1) << endl becomes raw_code
 
-  it.todo('fuzz_2: insert/erase mutations in loops')
+  it.todo('[BLOCKED:print] fuzz_2: insert/erase mutations in loops')
   // ROUNDTRIP_DRIFT — cout << s << endl after mutations becomes raw_code
 
-  it.todo('fuzz_3: find-replace loop with position tracking')
+  it.todo('[BLOCKED:print] fuzz_3: find-replace loop with position tracking')
   // COMPILE_FAIL — while ((pos = s.find(...)) != npos) generates malformed code
 
-  it.todo('fuzz_4: stoi/stod/to_string conversions with cout')
+  it.todo('[BLOCKED:print] fuzz_4: stoi/stod/to_string conversions with cout')
   // COMPILE_FAIL — cout chains with conversion results become raw_code
 
-  it.todo('fuzz_5: c_str with printf and strlen interop')
+  it.todo('[BLOCKED:print] fuzz_5: c_str with printf and strlen interop')
   // COMPILE_FAIL — cout with ternary and function calls in chain
 
-  it.todo('fuzz_6: function returning substr with nested find')
+  it.todo('[BLOCKED:print] fuzz_6: function returning substr with nested find')
   // COMPILE_FAIL — function with const reference params drops const
 
-  it.todo('fuzz_7: push_back in loop with string comparison')
+  it.todo('[BLOCKED:print] fuzz_7: push_back in loop with string comparison')
   // COMPILE_FAIL — cout << inside if/else blocks with string comparisons
 
-  it.todo('fuzz_8: clear/empty/append/erase chain with function')
+  it.todo('[BLOCKED:print] fuzz_8: clear/empty/append/erase chain with function')
   // ROUNDTRIP_DRIFT — s.clear() after cout << becomes chained
 
-  it.todo('fuzz_9: vector<string> with join function')
+  it.todo('[BLOCKED:print] fuzz_9: vector<string> with join function')
   // COMPILE_FAIL — vector initializer_list syntax not supported
 
-  it.todo('fuzz_10: multi-step string transformation (trim/collapse/replace)')
+  it.todo('[BLOCKED:print] fuzz_10: multi-step string transformation (trim/collapse/replace)')
   // COMPILE_FAIL — find_first_not_of/find_last_not_of not supported as concepts
 })

@@ -278,8 +278,8 @@ int main() {
   })
 
   describe('known lifter limitations (not cctype-specific)', () => {
-    it.todo('fuzz_6: validate identifier — string array initializer lost (pre-existing lifter limitation)')
-    it.todo('fuzz_9: palindrome check — string array initializer lost (pre-existing lifter limitation)')
-    it.todo('fuzz_10: character classification — int array initializer {0,0,0} lost (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:array_declare] fuzz_6: validate identifier — string array initializer lost (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:array_declare] fuzz_9: palindrome check — string array initializer lost (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:array_declare] fuzz_10: character classification — int array initializer {0,0,0} lost (pre-existing lifter limitation)')
   })
 })

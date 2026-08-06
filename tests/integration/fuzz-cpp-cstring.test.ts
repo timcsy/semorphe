@@ -147,33 +147,33 @@ int main() {
 
   // fuzz_01: strcpy/strcat/memset with const params — COMPILE_FAIL
   // Root cause: const qualifier dropped from pointer function params (pre-existing lifter limitation)
-  it.todo('should preserve const qualifier on pointer function params (fuzz_01: strcpy/strcat/memset)')
+  it.todo('[BLOCKED:cpp_pointer_declare] should preserve const qualifier on pointer function params (fuzz_01: strcpy/strcat/memset)')
 
   // fuzz_02: strncpy/memset with char array initializer — STDOUT_DIFF
   // Root cause: char s[] = "text" array initializer lost (pre-existing lifter limitation)
-  it.todo('should preserve char array string literal initializers (fuzz_02: strncpy/memset)')
+  it.todo('[BLOCKED:array_declare] should preserve char array string literal initializers (fuzz_02: strncpy/memset)')
 
   // fuzz_03: strcmp/strncmp with pointer arithmetic — STDOUT_DIFF
   // Root cause: char s[] = "text" initializer lost + const params (pre-existing)
-  it.todo('should roundtrip strcmp/strncmp with array initializers (fuzz_03)')
+  it.todo('[BLOCKED:array_declare] should roundtrip strcmp/strncmp with array initializers (fuzz_03)')
 
   // fuzz_05: memcpy/memset with char array initializer — STDOUT_DIFF
   // Root cause: char s[] = "text" array initializer lost (pre-existing)
-  it.todo('should roundtrip memcpy/memset with initialized char arrays (fuzz_05)')
+  it.todo('[BLOCKED:array_declare] should roundtrip memcpy/memset with initialized char arrays (fuzz_05)')
 
   // fuzz_07: strcat/strncpy/strcpy tokenization — COMPILE_FAIL
   // Root cause: pointer declaration in for-loop init lost (pre-existing)
-  it.todo('should handle pointer declarations in for-loop init (fuzz_07)')
+  it.todo('[BLOCKED:cpp_pointer_declare] should handle pointer declarations in for-loop init (fuzz_07)')
 
   // fuzz_08: memcpy/memset/strcpy/strncmp packed data — COMPILE_FAIL
   // Root cause: multi-declaration arrays lose size; char a[8],b[8] → char a, char b (pre-existing)
-  it.todo('should preserve array sizes in multi-declarations (fuzz_08)')
+  it.todo('[BLOCKED:array_declare] should preserve array sizes in multi-declarations (fuzz_08)')
 
   // fuzz_09: strchr/strcat/strncpy removeChar — COMPILE_FAIL
   // Root cause: while((found=strchr(...))!=nullptr) assignment-in-condition pattern (pre-existing)
-  it.todo('should handle while-assignment-condition pattern (fuzz_09: strchr)')
+  it.todo('[BLOCKED:var_assign] should handle while-assignment-condition pattern (fuzz_09: strchr)')
 
   // fuzz_10: strstr/memcpy/strcpy replaceAll — COMPILE_FAIL
   // Root cause: while((match=strstr(...))!=nullptr) assignment-in-condition pattern (pre-existing)
-  it.todo('should handle while-assignment-condition pattern (fuzz_10: strstr)')
+  it.todo('[BLOCKED:var_assign] should handle while-assignment-condition pattern (fuzz_10: strstr)')
 })

@@ -316,7 +316,7 @@ int main() {
     expect(concepts.has('cpp_stack_top')).toBe(true)
   })
 
-  it.skip('should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
+  it.skip('[BLOCKED:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
     // KNOWN LIMITATION: `stack<int>&` as function parameter type is simplified
     // to `int&` by the lifter, causing compile failure. Also `stack<int> a, b;`
     // multi-var declaration only generates the first variable.
@@ -367,7 +367,7 @@ int main() {
     expect(concepts.has('cpp_queue_declare')).toBe(true)
   })
 
-  it.skip('should generate compilable code producing same output [DEGRADED: array initializer list not supported]', () => {
+  it.skip('[BLOCKED:array_declare] should generate compilable code producing same output [DEGRADED: array initializer list not supported]', () => {
     // KNOWN LIMITATION: `int a[] = {1,2,3,2,1}` loses its initializer — generated
     // as `int a[10];` with uninitialized values. Causes SEMANTIC_DIFF (all calls
     // return 0 because comparison with uninitialized values).

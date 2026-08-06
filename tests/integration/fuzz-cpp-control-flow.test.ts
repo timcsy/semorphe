@@ -615,20 +615,20 @@ int main() {
 
 // ─── Known issues (not in Phase 2 scope) ───
 
-describe.skip('fuzz: switch fall-through (Phase 2 scope, to fix)', () => {
+describe.skip('[BLOCKED:cpp_switch] fuzz: switch fall-through (Phase 2 scope, to fix)', () => {
   // COMPILE_FAIL: switch without break causes fall-through behavior
   // that the current lifter does not handle correctly
-  it.todo('should handle switch case without break (fall-through)')
+  it.todo('[BLOCKED:cpp_switch] should handle switch case without break (fall-through)')
 })
 
-describe.skip('fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
+describe.skip('[BLOCKED:cpp_char_literal] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
   // COMPILE_FAIL: char literal case labels (case 'a':) are not
   // correctly lifted by the switch-case lifter
-  it.todo('should handle char literal case labels in switch')
+  it.todo('[BLOCKED:cpp_char_literal] should handle char literal case labels in switch')
 })
 
-describe.skip('fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:array_declare] fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {
   // SEMANTIC_DIFF: array initializer lists like int arr[] = {1, 2, 3}
   // are not yet supported in the semantic tree
-  it.todo('should handle array initializer list syntax')
+  it.todo('[BLOCKED:array_declare] should handle array initializer list syntax')
 })

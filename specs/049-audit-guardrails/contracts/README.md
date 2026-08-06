@@ -97,10 +97,15 @@
 寫在測試／區塊的**標題開頭**。
 
 ```
-[BLOCKED:<componentId>]   缺陷，被某元件擋住
-[TOMBSTONE:<檔名#錨點>]    已否決決定的正確後果
-[DEADSKIP]                已修好但沒開回來
+[BLOCKED:<componentId>]   缺陷，被某個**已存在**的元件擋住 → 要**修**它
+[UNSUPPORTED:<描述>]      被一個**還不存在**的概念擋住     → 要**加**它
+[TOMBSTONE:<檔名#錨點>]    已否決決定的正確後果              → **不該**修
+[DEADSKIP]                已修好但沒開回來                  → 開回來就好
 ```
+
+> **`UNSUPPORTED` 是實作階段補上的第四種**（原設計只有三種）。理由：
+> 「修一個既有元件」與「加一個不存在的概念」是不同的工作，混進 `BLOCKED`
+> 會讓「修哪個解鎖最多」的彙總誤導——你無法「修」一個不存在的東西。
 
 ### 範例
 
@@ -118,6 +123,7 @@ describe.skip('[DEADSKIP] fuzz: char literal in function return (fixed)', ...)
 |---|---|---|
 | 任一停用項目 | 標題必須以三種標記之一開頭 | ❌ 失敗（FR-033） |
 | `[BLOCKED:X]` | `X` 必須是註冊表中存在的 componentId | ❌ 失敗（FR-031） |
+| `[UNSUPPORTED:D]` | `D` 必須寫明缺的是什麼概念 | ❌ 失敗 |
 | `[TOMBSTONE:F#A]` | `knowledge/history/F.md` 必須存在，且含錨點 `A` | ❌ 失敗（FR-032） |
 | `[DEADSKIP]` | 無額外條件 | — |
 

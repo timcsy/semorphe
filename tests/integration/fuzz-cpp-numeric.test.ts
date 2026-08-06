@@ -345,7 +345,7 @@ int main() {
   })
 
   describe('known lifter limitations (not numeric-specific)', () => {
-    it.todo('fuzz_4: lcm chain with C-style array initializer — array initializer {2,3,4,5} lost (pre-existing lifter limitation)')
-    it.todo('fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:array_declare] fuzz_4: lcm chain with C-style array initializer — array initializer {2,3,4,5} lost (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:cpp_struct_declare] fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
   })
 })

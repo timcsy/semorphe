@@ -288,7 +288,7 @@ int main() {
 
 // --- oop_007: scoped destructor call in inner block (SEMANTIC_DIFF) ---
 
-describe.skip('fuzz: scoped destructor call in inner block (SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:cpp_destructor] fuzz: scoped destructor call in inner block (SEMANTIC_DIFF)', () => {
   // Inner block scope { Scope s; } is flattened during lift,
   // causing destructor to fire at end of main instead of end of block.
   // Roundtrip is stable (gen1 == gen2), but output order differs.
@@ -313,7 +313,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('should preserve inner block scope for correct destructor ordering')
+  it.todo('[BLOCKED:cpp_destructor] should preserve inner block scope for correct destructor ordering')
 })
 
 // --- oop_008: class with standalone function using member access ---
@@ -556,11 +556,11 @@ int main() {
 
 // --- Known limitations (EXPECTED_DEGRADATION, fuzz 2026-03-13) ---
 // fuzz_3, fuzz_4: ptr->method() via pointer array generates as .method()
-it.todo('fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
+it.todo('[BLOCKED:cpp_pointer_declare] fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
 // fuzz_5: inner block { } scope flattened, destructor order wrong
-it.todo('fuzz: nested block scope for destructor ordering (needs standalone block concept)')
+it.todo('[BLOCKED:cpp_destructor] fuzz: nested block scope for destructor ordering (needs standalone block concept)')
 // fuzz_10: static int count; and int Widget::count = 0; not supported
-it.todo('fuzz: class with static member and out-of-class definition (needs static member concept)')
+it.todo('[BLOCKED:cpp_class_def] fuzz: class with static member and out-of-class definition (needs static member concept)')
 
 // --- oop_010: two classes with constructors/destructors, destruction order ---
 

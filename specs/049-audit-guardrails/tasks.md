@@ -95,23 +95,23 @@ description: "Task list for 049-audit-guardrails"
 
 ### 護欄本體
 
-- [ ] T025 [US3] 在 `tests/helpers/disabled-scan.ts` 實作停用測試掃描：找出 `it.todo`／`it.skip`／`describe.skip`，記錄檔案、行號、`scope`（test／describe）與標題
-- [ ] T026 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 寫斷言骨架（此時應**紅**：全部項目皆未分類）
-- [ ] T027 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作標記解析：`[BLOCKED:<id>]`／`[TOMBSTONE:<檔名#錨點>]`／`[DEADSKIP]`
+- [X] T025 [US3] 在 `tests/helpers/disabled-scan.ts` 實作停用測試掃描：找出 `it.todo`／`it.skip`／`describe.skip`，記錄檔案、行號、`scope`（test／describe）與標題
+- [X] T026 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 寫斷言骨架（此時應**紅**：全部項目皆未分類）
+- [X] T027 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作標記解析：`[BLOCKED:<id>]`／`[TOMBSTONE:<檔名#錨點>]`／`[DEADSKIP]`
 - [ ] T028 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[BLOCKED:x]` 的 `x` 存在於註冊表（重用 T004）
-- [ ] T029 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[TOMBSTONE:F#A]` 的 `knowledge/history/F.md` 存在且含錨點 `A`
-- [ ] T030 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作 `byBlocker` 彙總與報表（FR-034：使「修一個解鎖多個」可見）
+- [X] T029 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 驗證 `[TOMBSTONE:F#A]` 的 `knowledge/history/F.md` 存在且含錨點 `A`
+- [X] T030 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作 `byBlocker` 彙總與報表（FR-034：使「修一個解鎖多個」可見）
 
 ### 為既有存量補標記
 
-- [ ] T031 [US3] 為 `tests/integration/fuzz-cpp-string.test.ts` 的 10 個 `it.todo` 補 `[BLOCKED:print]`（根因是 cout lifter 認不出 complex chain，非 string 概念的缺陷）
-- [ ] T032 [P] [US3] 為 `tests/integration/fuzz-cpp-arrays-pointers.test.ts`、`fuzz-cpp-types-advanced-ops.test.ts`、`fuzz-cpp-cstring.test.ts` 的 `it.todo` 補標記（逐一判定阻斷者）
-- [ ] T033 [P] [US3] 為 `tests/integration/fuzz-cpp-control-flow.test.ts`、`fuzz-cpp-variables-ops.test.ts`、`fuzz-cpp-strings.test.ts`、`fuzz-cpp-oop.test.ts`、`fuzz-cpp-cstdlib.test.ts`、`fuzz-cpp-advanced.test.ts` 的 `it.todo` 補標記
-- [ ] T034 [US3] 為 `tests/integration/fuzz-cpp-functions-io.test.ts:277` 的 `#define` skip 補 `[TOMBSTONE:014-墓碑目錄#模擬-c-preprocessor-來解決巨集]`（**它是已否決決定的正確後果，不是缺陷**）
-- [ ] T035 [US3] 為 `tests/integration/fuzz-cpp-functions-io.test.ts:404` 標題含 `(fixed)` 的 `describe.skip` 補 `[DEADSKIP]`（已修好卻沒開回來）
-- [ ] T036 [US3] 為 `tests/integration/roundtrip-functions-io.test.ts:253,308` 兩個**完全沒寫理由**的 `it.skip` 判定分類並補標記
-- [ ] T037 [P] [US3] 為 `tests/integration/fuzz-cpp-stacks-queues.test.ts`（2 個 DEGRADED）、`fuzz-cpp-oop.test.ts`（SEMANTIC_DIFF）、`fuzz-cpp-variables-ops.test.ts`（2 個 describe.skip）、`fuzz-cpp-types-advanced-ops.test.ts`（3 個 describe.skip）補標記
-- [ ] T038 [US3] 跑一次護欄確認 `unclassified` 為空，產生 `tests/baselines/defect-ledger.json` 後 commit
+- [X] T031 [US3] 為 `tests/integration/fuzz-cpp-string.test.ts` 的 10 個 `it.todo` 補 `[BLOCKED:print]`（根因是 cout lifter 認不出 complex chain，非 string 概念的缺陷）
+- [X] T032 [P] [US3] 為 `tests/integration/fuzz-cpp-arrays-pointers.test.ts`、`fuzz-cpp-types-advanced-ops.test.ts`、`fuzz-cpp-cstring.test.ts` 的 `it.todo` 補標記（逐一判定阻斷者）
+- [X] T033 [P] [US3] 為 `tests/integration/fuzz-cpp-control-flow.test.ts`、`fuzz-cpp-variables-ops.test.ts`、`fuzz-cpp-strings.test.ts`、`fuzz-cpp-oop.test.ts`、`fuzz-cpp-cstdlib.test.ts`、`fuzz-cpp-advanced.test.ts` 的 `it.todo` 補標記
+- [X] T034 [US3] 為 `tests/integration/fuzz-cpp-functions-io.test.ts:277` 的 `#define` skip 補 `[TOMBSTONE:014-墓碑目錄#模擬-c-preprocessor-來解決巨集]`（**它是已否決決定的正確後果，不是缺陷**）
+- [X] T035 [US3] 為 `tests/integration/fuzz-cpp-functions-io.test.ts:404` 標題含 `(fixed)` 的 `describe.skip` 補 `[DEADSKIP]`（已修好卻沒開回來）
+- [X] T036 [US3] 為 `tests/integration/roundtrip-functions-io.test.ts:253,308` 兩個**完全沒寫理由**的 `it.skip` 判定分類並補標記
+- [X] T037 [P] [US3] 為 `tests/integration/fuzz-cpp-stacks-queues.test.ts`（2 個 DEGRADED）、`fuzz-cpp-oop.test.ts`（SEMANTIC_DIFF）、`fuzz-cpp-variables-ops.test.ts`（2 個 describe.skip）、`fuzz-cpp-types-advanced-ops.test.ts`（3 個 describe.skip）補標記
+- [X] T038 [US3] 跑一次護欄確認 `unclassified` 為空，產生 `tests/baselines/defect-ledger.json` 後 commit
 
 **Checkpoint**: US3 完成即可獨立交付——清償優先序可見
 

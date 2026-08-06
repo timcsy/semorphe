@@ -250,7 +250,7 @@ int main() {
 }`
 
   // SKIP: interpreter does not handle #define macro substitution
-  it.skip('executes correctly', async () => {
+  it.skip('[BLOCKED:print] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('100')
@@ -305,7 +305,7 @@ int main() {
 }`
 
   // SKIP: interpreter does not handle block_comment concept
-  it.skip('executes correctly', async () => {
+  it.skip('[BLOCKED:print] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('comments work')
@@ -315,7 +315,7 @@ int main() {
   // SKIP: block_comment P1 instability - lifter does not strip `* ` prefixes
   // added by code generator, causing prefix duplication on re-lift.
   // Also doc_comment `///` rendered as `// /`.
-  it.skip('roundtrip is stable', () => {
+  it.skip('[BLOCKED:print] roundtrip is stable', () => {
     const gen1 = roundTrip(code)
     const gen2 = roundTrip(gen1)
     expect(gen1).toBe(gen2)

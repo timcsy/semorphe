@@ -72,7 +72,7 @@ int main() {
 }`
 
   // BUG: initializer list values are lost during lift
-  it.todo('executes correctly (initializer list values lost during lift)')
+  it.todo('[BLOCKED:array_declare] executes correctly (initializer list values lost during lift)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -127,7 +127,7 @@ int main() {
 }`
 
   // BUG: initializer list values lost, pointer arithmetic itself is correct
-  it.todo('executes correctly (initializer list values lost during lift)')
+  it.todo('[BLOCKED:array_declare] executes correctly (initializer list values lost during lift)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -219,7 +219,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('executes correctly (interpreter new/delete semantics)')
+  it.todo('[BLOCKED:cpp_new] executes correctly (interpreter new/delete semantics)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -244,7 +244,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('executes correctly (interpreter malloc/free semantics)')
+  it.todo('[BLOCKED:cpp_malloc] executes correctly (interpreter malloc/free semantics)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -300,9 +300,9 @@ int main() {
 }`
 
   // BUG: int* ptrs[3] lifted as int x; - pointer array type not supported
-  it.todo('executes correctly (pointer array declaration lost during lift)')
+  it.todo('[BLOCKED:cpp_pointer_declare] executes correctly (pointer array declaration lost during lift)')
 
-  it.todo('roundtrip is stable (COMPILE_FAIL: int* name[size] not supported)')
+  it.todo('[BLOCKED:cpp_pointer_declare] roundtrip is stable (COMPILE_FAIL: int* name[size] not supported)')
 })
 
 // ─── Fuzz 10: Function returning pointer (to global) ───
@@ -322,14 +322,14 @@ int main() {
 }`
 
   // BUG: int* return type generates as int getGlobalPtr()() - syntax error
-  it.todo('executes correctly (function returning pointer generates syntax error)')
+  it.todo('[BLOCKED:cpp_pointer_declare] executes correctly (function returning pointer generates syntax error)')
 
-  it.todo('roundtrip is stable (COMPILE_FAIL: int* return type broken)')
+  it.todo('[BLOCKED:cpp_pointer_declare] roundtrip is stable (COMPILE_FAIL: int* return type broken)')
 })
 
 // ─── Known issues summary ───
 describe('known issues: arrays & pointers', () => {
-  it.todo('array initializer list {val1, val2, ...} should be preserved during lift (BUG-1)')
-  it.todo('pointer array declaration int* name[size] should be supported (BUG-2)')
-  it.todo('function returning pointer int* func() should generate correctly (BUG-3)')
+  it.todo('[BLOCKED:array_declare] array initializer list {val1, val2, ...} should be preserved during lift (BUG-1)')
+  it.todo('[BLOCKED:cpp_pointer_declare] pointer array declaration int* name[size] should be supported (BUG-2)')
+  it.todo('[BLOCKED:cpp_pointer_declare] function returning pointer int* func() should generate correctly (BUG-3)')
 })

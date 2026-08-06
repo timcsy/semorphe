@@ -274,7 +274,7 @@ int main() {
 
   // Interpreter does not expand #define macros into scope, so execution fails
   // with RUNTIME_ERR_UNDECLARED_VAR for LIMIT. Roundtrip + g++ compilation works.
-  it.skip('executes correctly (interpreter lacks #define expansion)', async () => {
+  it.skip('[TOMBSTONE:014-墓碑目錄#模擬-c-preprocessor-來解決巨集] executes correctly (interpreter lacks #define expansion)', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('8')
@@ -401,6 +401,6 @@ int main() {
 
 // --- Known issues (regression) ---
 
-describe.skip('fuzz: char literal in function return (fixed)', () => {
-  it.todo('char literal roundtrips correctly through function return')
+describe.skip('[DEADSKIP] fuzz: char literal in function return (fixed)', () => {
+  it.todo('[BLOCKED:cpp_char_literal] char literal roundtrips correctly through function return')
 })

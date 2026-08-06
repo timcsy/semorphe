@@ -289,27 +289,27 @@ int main() {
 
 // --- Known issues ---
 
-describe.skip('fuzz: pre/post increment in variable initializer (ROUNDTRIP_DRIFT)', () => {
+describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in variable initializer (ROUNDTRIP_DRIFT)', () => {
   // types_adv_003: int b = ++a; generates malformed code with extra semicolons
   // types_adv_009: int b = ++a * 2; similarly broken
   // Root cause: increment expression in variable initializer RHS is split into
   // separate increment statement + variable declaration by lifter
-  it.todo('should handle prefix increment in variable initializer')
-  it.todo('should handle postfix decrement in variable initializer')
-  it.todo('should handle prefix increment * expression in variable initializer')
+  it.todo('[BLOCKED:cpp_increment] should handle prefix increment in variable initializer')
+  it.todo('[BLOCKED:cpp_increment] should handle postfix decrement in variable initializer')
+  it.todo('[BLOCKED:cpp_increment] should handle prefix increment * expression in variable initializer')
 })
 
-describe.skip('fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:cpp_enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
   // types_adv_006: enum Fruit { APPLE = 10, BANANA = 20 } -> enum Fruit { APPLE, BANANA }
   // Root cause: enum lifter does not preserve explicit enumerator values
-  it.todo('should preserve explicit enum values in lift/render roundtrip')
+  it.todo('[BLOCKED:cpp_enum] should preserve explicit enum values in lift/render roundtrip')
 })
 
-describe.skip('fuzz: interpreter limitations (not roundtrip issues)', () => {
+describe.skip('[BLOCKED:cpp_cast] fuzz: interpreter limitations (not roundtrip issues)', () => {
   // Interpreter does not convert int->char for display ((char)65 -> 'A')
-  it.todo('should support char cast display in interpreter')
+  it.todo('[BLOCKED:cpp_cast] should support char cast display in interpreter')
   // Interpreter sizeof(arr)/sizeof(arr[0]) returns 1 (no real memory model)
-  it.todo('should support sizeof array element count in interpreter')
+  it.todo('[BLOCKED:cpp_sizeof] should support sizeof array element count in interpreter')
   // Interpreter cannot resolve enum constants as values (SOUTH undeclared)
-  it.todo('should support enum constant resolution in interpreter')
+  it.todo('[BLOCKED:cpp_enum] should support enum constant resolution in interpreter')
 })

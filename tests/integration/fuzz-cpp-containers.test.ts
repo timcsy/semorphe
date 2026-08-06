@@ -175,7 +175,7 @@ cout << rows << endl;`
   // string array initializer list and istringstream which are not supported.
   // Stack operations (push/pop/top) ARE correctly lifted.
 
-  it.todo('fuzz_2: stack expression evaluator — needs array initializer list and istringstream support')
+  it.todo('[BLOCKED:array_declare] fuzz_2: stack expression evaluator — needs array initializer list and istringstream support')
 
   // ─── stack fuzz: bracket matching (stack-only, P1 stable) ───
 
@@ -362,7 +362,7 @@ cout << lengths.empty() << endl;`
   // `queue<int> q` degrades to `int q` (template_type not handled in func params).
   // Enable when: template_type detection added for function parameters
 
-  it.todo('fuzz_8: stack-queue reversal — needs template_type in function parameters')
+  it.todo('[BLOCKED:cpp_template_function] fuzz_8: stack-queue reversal — needs template_type in function parameters')
 
   // ─── queue fuzz: FIFO drain with front/pop ───
 
@@ -437,7 +437,7 @@ cout << s.count(5) << endl;`
   // requires nested template_type parsing which is not yet supported.
   // Enable when: nested template_type (pair<K,V>) support added
 
-  it.todo('fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
+  it.todo('[BLOCKED:cpp_template_function] fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
 
   // ─── map fuzz: declare + erase + count combo (P1 stable) ───
 
