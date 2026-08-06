@@ -1,0 +1,710 @@
+{
+  "_meta": {
+    "guard": "locality",
+    "measuredAt": "2026-08-06",
+    "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 全部的 .ts 與 .json——元件的 concepts.json／blocks.json 本來就是它的實作。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。"
+  },
+  "limits": {
+    "arithmetic": {
+      "files": 13,
+      "dirs": 11
+    },
+    "array_access": {
+      "files": 13,
+      "dirs": 9
+    },
+    "array_assign": {
+      "files": 9,
+      "dirs": 7
+    },
+    "array_declare": {
+      "files": 10,
+      "dirs": 9
+    },
+    "bitwise_not": {
+      "files": 7,
+      "dirs": 5
+    },
+    "block_comment": {
+      "files": 8,
+      "dirs": 6
+    },
+    "break": {
+      "files": 11,
+      "dirs": 10
+    },
+    "builtin_constant": {
+      "files": 8,
+      "dirs": 6
+    },
+    "comment": {
+      "files": 12,
+      "dirs": 10
+    },
+    "compare": {
+      "files": 13,
+      "dirs": 11
+    },
+    "continue": {
+      "files": 13,
+      "dirs": 11
+    },
+    "count_loop": {
+      "files": 12,
+      "dirs": 10
+    },
+    "cpp_abs": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_accumulate": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_address_of": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_array_2d_access": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_array_2d_assign": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_array_2d_declare": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_atof": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_atoi": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_auto_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_case": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_cast": {
+      "files": 10,
+      "dirs": 7
+    },
+    "cpp_char_literal": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_class_def": {
+      "files": 9,
+      "dirs": 7
+    },
+    "cpp_compound_assign": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_compound_assign_expr": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_const_cast": {
+      "files": 9,
+      "dirs": 6
+    },
+    "cpp_const_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_constexpr_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_constructor": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_container_clear": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_count": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_empty": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_erase": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_pop": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_push": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_container_push_back": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_default": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_define": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_delete": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_destructor": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_do_while": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_dynamic_cast": {
+      "files": 9,
+      "dirs": 6
+    },
+    "cpp_enum": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_exit": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_fill": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_for_loop": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_free": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_gcd": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_getline": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_ifdef": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_ifndef": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_ifstream_declare": {
+      "files": 9,
+      "dirs": 5
+    },
+    "cpp_include": {
+      "files": 12,
+      "dirs": 7
+    },
+    "cpp_include_local": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_increment": {
+      "files": 10,
+      "dirs": 7
+    },
+    "cpp_increment_expr": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_iota": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_isalpha": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_isdigit": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_lambda": {
+      "files": 9,
+      "dirs": 7
+    },
+    "cpp_lcm": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_make_pair": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_malloc": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_map_access": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_map_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_max": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_memcpy": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_memset": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_method_call": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_method_call_expr": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_min": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_namespace_def": {
+      "files": 9,
+      "dirs": 7
+    },
+    "cpp_new": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_ofstream_declare": {
+      "files": 9,
+      "dirs": 5
+    },
+    "cpp_operator_overload": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_override_method": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_pair_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_partial_sum": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_pointer_assign": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_pointer_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_pointer_deref": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_printf": {
+      "files": 9,
+      "dirs": 5
+    },
+    "cpp_pure_virtual": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_queue_back": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_queue_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_queue_front": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_rand": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_range_for": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_raw_code": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_raw_expression": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_ref_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_reinterpret_cast": {
+      "files": 9,
+      "dirs": 6
+    },
+    "cpp_reverse": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_scanf": {
+      "files": 9,
+      "dirs": 5
+    },
+    "cpp_scanf_expr": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_set_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_set_insert": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_sizeof": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_sort": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_srand": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_stack_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_stack_top": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_static_cast": {
+      "files": 9,
+      "dirs": 6
+    },
+    "cpp_static_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_static_member": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_stod": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_stoi": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_strcat": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strchr": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strcmp": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strcpy": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_string_append": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_at": {
+      "files": 9,
+      "dirs": 7
+    },
+    "cpp_string_c_str": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_clear": {
+      "files": 5,
+      "dirs": 3
+    },
+    "cpp_string_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_string_empty": {
+      "files": 5,
+      "dirs": 3
+    },
+    "cpp_string_erase": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_find": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_insert": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_length": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_push_back": {
+      "files": 5,
+      "dirs": 3
+    },
+    "cpp_string_replace": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_string_substr": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_stringstream_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_strlen": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strncmp": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strncpy": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_strstr": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_struct_declare": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_struct_member_access": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_struct_pointer_access": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_swap": {
+      "files": 7,
+      "dirs": 4
+    },
+    "cpp_switch": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_template_function": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_ternary": {
+      "files": 10,
+      "dirs": 8
+    },
+    "cpp_throw": {
+      "files": 7,
+      "dirs": 5
+    },
+    "cpp_to_string": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_tolower": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_toupper": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp_try_catch": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_typedef": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_using_alias": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_using_namespace": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp_vector_back": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_vector_declare": {
+      "files": 10,
+      "dirs": 6
+    },
+    "cpp_vector_pop_back": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_vector_size": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp_virtual_method": {
+      "files": 8,
+      "dirs": 6
+    },
+    "cpp:math_binary": {
+      "files": 7,
+      "dirs": 3
+    },
+    "cpp:math_pow": {
+      "files": 7,
+      "dirs": 3
+    },
+    "cpp:math_unary": {
+      "files": 7,
+      "dirs": 3
+    },
+    "doc_comment": {
+      "files": 10,
+      "dirs": 8
+    },
+    "endl": {
+      "files": 12,
+      "dirs": 10
+    },
+    "forward_decl": {
+      "files": 8,
+      "dirs": 6
+    },
+    "func_call": {
+      "files": 11,
+      "dirs": 10
+    },
+    "func_call_expr": {
+      "files": 11,
+      "dirs": 10
+    },
+    "func_def": {
+      "files": 14,
+      "dirs": 11
+    },
+    "if": {
+      "files": 14,
+      "dirs": 13
+    },
+    "if_else": {
+      "files": 5,
+      "dirs": 4
+    },
+    "input": {
+      "files": 20,
+      "dirs": 16
+    },
+    "logic": {
+      "files": 13,
+      "dirs": 11
+    },
+    "logic_not": {
+      "files": 12,
+      "dirs": 10
+    },
+    "negate": {
+      "files": 12,
+      "dirs": 10
+    },
+    "number_literal": {
+      "files": 11,
+      "dirs": 10
+    },
+    "print": {
+      "files": 13,
+      "dirs": 11
+    },
+    "return": {
+      "files": 12,
+      "dirs": 10
+    },
+    "string_literal": {
+      "files": 15,
+      "dirs": 12
+    },
+    "var_assign": {
+      "files": 12,
+      "dirs": 9
+    },
+    "var_declare": {
+      "files": 13,
+      "dirs": 11
+    },
+    "var_declare_expr": {
+      "files": 8,
+      "dirs": 6
+    },
+    "var_ref": {
+      "files": 16,
+      "dirs": 12
+    },
+    "while_loop": {
+      "files": 10,
+      "dirs": 9
+    }
+  }
+}

@@ -123,10 +123,10 @@ description: "Task list for 049-audit-guardrails"
 
 **Independent Test**: 單獨跑 `audit-locality.test.ts` 即得每元件擴散度排名，可用來排搬移順序。
 
-- [ ] T039 [US4] 在 `tests/integration/audit-locality.test.ts` 寫斷言骨架（此時應**紅**：基線尚未存在）
-- [ ] T040 [US4] 在 `tests/integration/audit-locality.test.ts` 實作 `measure`：掃 `src/` 全部，對每個 componentId 算檔案數與目錄數（重用 T005）
-- [ ] T041 [US4] 在 `tests/integration/audit-locality.test.ts` 實作 `report`：擴散度排名（最擴散的前幾名）
-- [ ] T042 [US4] 跑一次護欄產生 `tests/baselines/locality.json`（只記每元件上限、不記路徑清單），確認 `cpp_string_at` 的數字為正後 commit
+- [X] T039 [US4] 在 `tests/integration/audit-locality.test.ts` 寫斷言骨架（此時應**紅**：基線尚未存在）
+- [X] T040 [US4] 在 `tests/integration/audit-locality.test.ts` 實作 `measure`：掃 `src/` 全部，對每個 componentId 算檔案數與目錄數（重用 T005）
+- [X] T041 [US4] 在 `tests/integration/audit-locality.test.ts` 實作 `report`：擴散度排名（最擴散的前幾名）
+- [X] T042 [US4] 跑一次護欄產生 `tests/baselines/locality.json`（只記每元件上限、不記路徑清單），確認 `cpp_string_at` 的數字為正後 commit
 
 **Checkpoint**: 四條護欄全數就位
 

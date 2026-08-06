@@ -174,10 +174,17 @@ export function scanFile(relPath: string, ids: readonly string[]): FileHits {
   return { code: hitsInCode.sort(), commentOnly: hitsInComments.sort(), lines }
 }
 
-/** 掃一組目錄，回傳每個有命中的檔案 */
+/**
+ * 掃一組目錄，回傳每個有命中的檔案。
+ *
+ * `exts` 預設只有 `.ts`（中立性護欄用——核心層不該有元件 JSON）。
+ * 就近性護欄要加上 `.json`：一個元件的 `concepts.json`／`blocks.json`
+ * **本來就是它的實作**，不算進去會低估擴散度。
+ */
 export function scanDirs(
   relDirs: readonly string[],
   ids: readonly string[],
+  exts: readonly string[] = ['.ts'],
 ): Map<string, FileHits> {
   const result = new Map<string, FileHits>()
   for (const dir of relDirs) {
@@ -191,7 +198,7 @@ export function scanDirs(
           walk(f)
           continue
         }
-        if (!e.name.endsWith('.ts') || e.name.endsWith('.d.ts')) continue
+        if (!exts.some((x) => e.name.endsWith(x)) || e.name.endsWith('.d.ts')) continue
         const rel = path.relative(REPO_ROOT, f)
         const hits = scanFile(rel, ids)
         if (hits.code.length > 0 || hits.commentOnly.length > 0) result.set(rel, hits)
