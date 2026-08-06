@@ -13,6 +13,15 @@ export interface ExecutionContext {
   pointerTargets: Map<string, Scope>
   /** 結構／類別的型別登記處——見 `struct-types.ts` */
   structs: import('./struct-types').StructRegistry
+  /**
+   * 「這個值可不可以呼叫」與「怎麼呼叫它」——由**語言套件**安裝。
+   *
+   * 核心的 `func_call` 只需要知道「名字指向的東西可不可以呼叫」，
+   * 而**什麼算可呼叫、捕捉語意怎麼實現**是語言套件的知識。
+   * 沒安裝時兩個都是 undefined，行為與加入本機制之前完全相同。
+   */
+  callableOf?: (v: RuntimeValue) => unknown | null
+  invokeCallable?: (c: unknown, args: SemanticNode[]) => Promise<RuntimeValue | void>
   scanfTokenBuffer: string[]
   executeNode(node: SemanticNode): Promise<RuntimeValue | void>
   executeBody(nodes: SemanticNode[]): Promise<void>

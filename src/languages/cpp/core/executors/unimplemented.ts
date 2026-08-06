@@ -47,7 +47,7 @@ const OOP_NOT_IMPLEMENTED = [
   //   cpp_class_def / cpp_constructor / cpp_method_call(_expr)（072）
   //   cpp_namespace_def / cpp_template_function / cpp_struct_pointer_access
   //   / cpp_static_member / cpp_virtual_method / cpp_override_method
-  //   / cpp_pure_virtual / cpp_operator_overload（073）
+  //   / cpp_pure_virtual / cpp_operator_overload（073）／cpp_lambda（079）
   //
   // 而 cpp_virtual_method / cpp_override_method / cpp_pure_virtual /
   // cpp_operator_overload / cpp_static_member / cpp_constructor 這六個
@@ -59,7 +59,6 @@ const OOP_NOT_IMPLEMENTED = [
   // 跑在語言套件的真實作之後。`history/018` 記著同一件事：四個轉型概念有
   // 能用的實作，被清單無聲覆蓋，於是 `static_cast<int>(3.9)` 輸出 void。
   'cpp_destructor',
-  'cpp_lambda',
 ] as const
 
 export function registerUnimplementedExecutors(

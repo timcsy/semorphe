@@ -1,7 +1,7 @@
 import type { SemanticNode } from '../core/types'
 
 /** 執行期型別 */
-export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer' | 'object'
+export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer' | 'object' | 'function' | 'function'
 
 /**
  * 一個結構／類別的實例：欄位名 → 值。
@@ -12,10 +12,27 @@ export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool
  */
 export type ObjectFields = Map<string, RuntimeValue>
 
+/**
+ * 一個可以晚點再呼叫的東西（lambda）。
+ *
+ * `closure` 是**定義時**的作用域——少了它，捕捉來的變數在呼叫時已經不在了。
+ * 這是 lambda 與一般函式唯一的結構差別：函式在全域表裡查，lambda 帶著它
+ * 出生的環境走。
+ */
+export interface Callable {
+  params: { name: string; type: string }[]
+  body: SemanticNode[]
+  /** `&` 參照捕捉（看得到之後的改動）／`=` 值捕捉（定義當下的快照） */
+  capture: '&' | '=' | ''
+  closure: unknown
+  /** `=` 捕捉時的快照。`&` 時是 undefined */
+  snapshot?: Map<string, RuntimeValue>
+}
+
 /** 執行期值 */
 export interface RuntimeValue {
   type: RuntimeType
-  value: number | string | boolean | null | RuntimeValue[] | ObjectFields
+  value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable
   /** `type === 'object'` 時，它是哪一個結構／類別 */
   structName?: string
   tag?: string

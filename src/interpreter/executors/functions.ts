@@ -48,6 +48,23 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
 
   const execFuncCall: ConceptExecutor = async (node, ctx) => {
     const name = String(node.properties.name)
+
+    // 名字先在**變數**裡找——一個變數可能持有 lambda。
+    //
+    // 順序是刻意的：具名函式與變數同名時，C++ 的區域變數會遮蔽外層的函式。
+    // 而 `ctx.scope.get` 找不到時會丟錯，所以用 `has` 先問。
+    if (ctx.scope.has(name)) {
+      const v = ctx.scope.get(name)
+      const callable = ctx.callableOf?.(v) ?? null
+      if (callable) return ctx.invokeCallable!(callable, node.children.args ?? [])
+      // 變數存在但不可呼叫——**出聲**。把一個整數當函式呼叫靜默成功的話，
+      // 使用者只會看到一個莫名其妙的結果。
+      const { RuntimeError, RUNTIME_ERRORS } = await import('../errors')
+      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
+        '%1': `${name}（是一個 ${v.type}，不是函式）`,
+      })
+    }
+
     const funcDef = ctx.functions.get(name)
     if (!funcDef) {
       const { RuntimeError, RUNTIME_ERRORS } = await import('../errors')

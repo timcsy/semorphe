@@ -60,6 +60,12 @@ export class Scope {
     return null
   }
 
+  /** 這個名字宣告過嗎？（`get` 找不到會丟錯，所以要先問） */
+  has(name: string): boolean {
+    if (this.refs.has(name) || this.variables.has(name)) return true
+    return this.parent?.has(name) ?? false
+  }
+
   createChild(): Scope {
     return new Scope(this)
   }
