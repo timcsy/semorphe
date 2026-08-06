@@ -4,6 +4,7 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../blocks/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
+import { setFieldSafely } from './field-write'
 import {
   CPP_STRING_AT_INPUTS,
   C_COMPOUND_ASSIGN_INPUTS,
@@ -599,7 +600,10 @@ export class BlockRegistrar {
       const nextInput = block.getInput(`ARG_${idx + 1}`) ? `ARG_${idx + 1}` : 'TAIL'
       block.moveInputBefore(`ARG_${idx}`, nextInput)
       if (savedBlock) {
-        try { savedBlock.unplug() } catch (_e) { /* ignore */ }
+        // 這一個**刻意**保留吞掉：`unplug()` 在積木已經拔掉時會擲錯，那是
+        // 正常情形而不是缺陷。與 setFieldSafely 那 15 個不同——那些吞的是
+        // 「欄位名對不上」，是已知會發生的**缺陷**。
+        try { savedBlock.unplug() } catch (_e) { /* 已經拔掉了，正常 */ }
       }
     }
 
@@ -616,7 +620,7 @@ export class BlockRegistrar {
             inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
             defaultVar: 'x',
           })
-          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          setFieldSafely(this, 'SEL_0', 'x')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -634,7 +638,7 @@ export class BlockRegistrar {
             defaultVar: 'v' + idx,
           })
           this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          try { this.setFieldValue('v' + idx, `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          setFieldSafely(this, `SEL_${idx}`, 'v' + idx)
           this.argCount_++
           setMinusState(this, false)
         },
@@ -681,7 +685,7 @@ export class BlockRegistrar {
             })
             this.moveInputBefore(`ARG_${i}`, 'TAIL')
             if (a.mode === 'select' && a.text) {
-              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+              setFieldSafely(this, `SEL_${i}`, a.text)
             }
           }
           setMinusState(this, this.argCount_ <= 1)
@@ -706,7 +710,7 @@ export class BlockRegistrar {
             separator: ',',
             defaultVar: 'x',
           })
-          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          setFieldSafely(this, 'SEL_0', 'x')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -726,7 +730,7 @@ export class BlockRegistrar {
             defaultVar: 'x',
           })
           this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          setFieldSafely(this, `SEL_${idx}`, 'x')
           this.argCount_++
           setMinusState(this, false)
         },
@@ -772,7 +776,7 @@ export class BlockRegistrar {
             })
             this.moveInputBefore(`ARG_${i}`, 'TAIL')
             if (a.mode === 'select' && a.text) {
-              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+              setFieldSafely(this, `SEL_${i}`, a.text)
             }
           }
           setMinusState(this, this.argCount_ <= 0)
@@ -808,7 +812,7 @@ export class BlockRegistrar {
             separator: ',',
             defaultVar: 'x',
           })
-          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          setFieldSafely(this, 'SEL_0', 'x')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -829,7 +833,7 @@ export class BlockRegistrar {
             defaultVar: 'x',
           })
           this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          setFieldSafely(this, `SEL_${idx}`, 'x')
           this.argCount_++
           setMinusState(this, false)
         },
@@ -875,7 +879,7 @@ export class BlockRegistrar {
             })
             this.moveInputBefore(`ARG_${i}`, 'TAIL')
             if (a.mode === 'select' && a.text) {
-              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+              setFieldSafely(this, `SEL_${i}`, a.text)
             }
           }
           setMinusState(this, this.argCount_ <= 0)
@@ -2050,7 +2054,7 @@ export class BlockRegistrar {
             inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
             defaultVar: 'x',
           })
-          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          setFieldSafely(this, 'SEL_0', 'x')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -2067,7 +2071,7 @@ export class BlockRegistrar {
             defaultVar: 'v' + idx,
           })
           this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          try { this.setFieldValue('v' + idx, `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          setFieldSafely(this, `SEL_${idx}`, 'v' + idx)
           this.argCount_++
           setMinusState(this, false)
         },
@@ -2109,7 +2113,7 @@ export class BlockRegistrar {
               defaultVar: slot.text ?? slot.selectedVar ?? ('v' + j),
             })
             if (slot.mode === 'select' && (slot.text || slot.selectedVar)) {
-              try { this.setFieldValue(slot.text ?? slot.selectedVar, `SEL_${j}`) } catch (_e) { /* ignore */ }
+              setFieldSafely(this, `SEL_${j}`, slot.text ?? slot.selectedVar)
             }
           }
           this.appendDummyInput('TAIL')
@@ -2138,7 +2142,7 @@ export class BlockRegistrar {
             separator: ',',
             defaultVar: 'x',
           })
-          try { this.setFieldValue('x', 'SEL_0') } catch (_e) { /* ignore */ }
+          setFieldSafely(this, 'SEL_0', 'x')
           this.appendDummyInput('TAIL')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
@@ -2158,7 +2162,7 @@ export class BlockRegistrar {
             defaultVar: 'x',
           })
           this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          try { this.setFieldValue('x', `SEL_${idx}`) } catch (_e) { /* ignore */ }
+          setFieldSafely(this, `SEL_${idx}`, 'x')
           this.argCount_++
           setMinusState(this, false)
         },
@@ -2204,7 +2208,7 @@ export class BlockRegistrar {
             })
             this.moveInputBefore(`ARG_${i}`, 'TAIL')
             if (a.mode === 'select' && a.text) {
-              try { this.setFieldValue(a.text, `SEL_${i}`) } catch (_e) { /* ignore */ }
+              setFieldSafely(this, `SEL_${i}`, a.text)
             }
           }
           setMinusState(this, this.argCount_ <= 0)
