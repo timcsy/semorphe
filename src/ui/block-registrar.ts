@@ -2,7 +2,7 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
-import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../blocks/block-input-names'
+import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../blocks/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
 
 export interface WorkspaceAccessors {
@@ -1144,7 +1144,7 @@ export class BlockRegistrar {
           this.appendDummyInput('PARAMS_END')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
-          this.appendStatementInput('BODY')
+          this.appendStatementInput(FUNDEF_INPUTS.statement[0])
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
@@ -1369,7 +1369,7 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['u_return'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('VALUE')
+          this.appendValueInput(RETURN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_RETURN_MSG'] || '回傳')
           this.setPreviousStatement(true, 'Statement')
           this.setColour(CATEGORY_COLORS.functions)
@@ -1409,7 +1409,7 @@ export class BlockRegistrar {
             .appendField(self.createOpenDropdown(getArrayTypeOptions) as Blockly.Field, 'TYPE')
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_ARRAY_LABEL'] || '陣列')
             .appendField(new Blockly.FieldTextInput('arr') as Blockly.Field, 'NAME')
-          this.appendValueInput('SIZE')
+          this.appendValueInput(ARRAY_DECLARE_INPUTS.value[0])
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE_LABEL'] || '長度')
             .setCheck('Expression')
           this.setInputsInline(true)
@@ -1464,7 +1464,7 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['u_array_access'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('INDEX')
+          this.appendValueInput(ARRAY_ACCESS_INPUTS.value[0])
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_ARRAY_LABEL'] || '陣列')
             .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
@@ -1500,11 +1500,11 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['u_array_assign'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('INDEX')
+          this.appendValueInput(ARRAY_ASSIGN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_ARRAY_ASSIGN_SET_LABEL'] || '設定 陣列')
             .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
-          this.appendValueInput('VALUE')
+          this.appendValueInput(ARRAY_ASSIGN_INPUTS.value[1])
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
             .appendField('←')
           this.setInputsInline(true)
@@ -1520,7 +1520,7 @@ export class BlockRegistrar {
     {
       Blockly.Blocks['u_var_assign'] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput('VALUE')
+          this.appendValueInput(VAR_ASSIGN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_VAR_ASSIGN_LABEL'] || '把變數')
             .appendField(self.createOpenDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
             .appendField(Blockly.Msg['U_VAR_ASSIGN_SET_LABEL'] || '設成')

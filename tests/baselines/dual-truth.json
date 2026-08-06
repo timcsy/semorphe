@@ -6,7 +6,17 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 「兩處都有定義」若是 0，先確認兩份清單真的取到了——已知有 34 個。"
   },
   "bothDefined": 33,
-  "diverging": 29,
+  "diverging": 23,
+  "hardcodedWithJsonCounterpart": 6,
+  "viaConstant": 14,
+  "hardcodedList": [
+    "c_compound_assign.VALUE",
+    "c_compound_assign.VALUE",
+    "c_compound_assign_expr.VALUE",
+    "c_compound_assign_expr.VALUE",
+    "c_var_declare_expr.INIT_0",
+    "cpp_string_at.INDEX"
+  ],
   "blocks": [
     "c_comment_block",
     "c_comment_doc",

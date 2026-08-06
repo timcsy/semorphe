@@ -41,6 +41,9 @@ interface DualBaseline {
   bothDefined: number
   diverging: number
   blocks: string[]
+  hardcodedWithJsonCounterpart: number
+  viaConstant: number
+  hardcodedList?: string[]
 }
 
 function jsonBlockDefs(): Map<string, Record<string, unknown>> {
@@ -90,9 +93,42 @@ const dynamicBodies = (() => {
 const json = jsonBlockDefs()
 const both = [...dynamicBodies.keys()].filter((id) => json.has(id)).sort()
 
+/**
+ * **真正的雙重真相面**：動態註冊裡寫**字串字面**的插槽名，而那個名字在 JSON
+ * 裡有對應物。
+ *
+ * 之前的量法（比對兩邊的名稱集合）量錯過三次：
+ *   1. 動態側只算輸入不算欄位——兩邊定義沒對齊
+ *   2. 用常數寫的插槽名被判成「動態側沒有」——那些恰恰是唯一真相的正例
+ *   3. mutator 容器、執行期插槽（`PARAM_0`）、純排版輸入（`TAIL`）沒有 JSON
+ *      對應物**是設計如此**，把它們算進來會讓分母灌水
+ *
+ * 現在量的是單邊、可數、不需要對齊的東西：**寫死才會分歧，用常數不會。**
+ */
+const hardcoded = both.flatMap((id) => {
+  const body = dynamicBodies.get(id)!
+  const js = inputNamesFromJson(json.get(id)!)
+  return [...body.matchAll(/append(?:Value|Statement|Dummy)Input\('([A-Z0-9_]+)'\)/g)]
+    .map((m) => m[1])
+    .filter((n) => js.has(n))
+    .map((n) => `${id}.${n}`)
+})
+const viaConstant = [...dynamicBodies.values()].reduce(
+  (n, b) => n + [...b.matchAll(/append(?:Value|Statement|Dummy)Input\([A-Z_]+_INPUTS\./g)].length,
+  0,
+)
+
 const diverging = both
   .map((id) => {
-    const dyn = new Set([...dynamicBodies.get(id)!.matchAll(/append\w*Input\('([A-Z0-9_]+)'\)/g)].map((m) => m[1]))
+    // JSON 側算的是 args（**欄位與輸入都算**），動態側也要一起算——
+    // 第一版只抓 `appendXxxInput('X')`，漏掉 `appendField(..., 'X')`，
+    // 於是兩邊其實一致的積木被報成分歧。**兩側的定義要對齊，才叫比對。**
+    const body = dynamicBodies.get(id)!
+    const dyn = new Set([
+      ...[...body.matchAll(/append\w*Input\('([A-Z0-9_]+)'\)/g)].map((m) => m[1]),
+      ...[...body.matchAll(/appendField\([^)]*?,\s*'([A-Z0-9_]+)'\s*\)/g)].map((m) => m[1]),
+      ...[...body.matchAll(/\.appendField\([\s\S]{0,120}?'([A-Z0-9_]+)'\s*\)/g)].map((m) => m[1]),
+    ])
     const js = inputNamesFromJson(json.get(id)!)
     const onlyDyn = [...dyn].filter((x) => !js.has(x)).sort()
     const onlyJson = [...js].filter((x) => !dyn.has(x)).sort()
@@ -108,7 +144,12 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
       '',
       `判定規則：${RULE}`,
       '',
-      `動態註冊：${dynamicBodies.size}｜**兩處都有定義：${both.length}**｜input 名稱有分歧：${diverging.length}`,
+      `動態註冊：${dynamicBodies.size}｜兩處都有定義：${both.length}`,
+      '',
+      `**有 JSON 對應卻仍寫死：${hardcoded.length} 處**｜用唯一真相常數：${viaConstant} 處` +
+        `（採用率 ${Math.round((viaConstant / Math.max(1, viaConstant + hardcoded.length)) * 100)}%）`,
+      '',
+      ...hardcoded.map((h) => `  ${h}`),
       '',
       '**分歧不一定是錯的**——可變參數積木的執行期 input 本來就比靜態宣告多。',
       '這條量的是「分歧有多大、在哪裡」，讓「哪一份是消費者的真相」有得談。',
@@ -123,6 +164,24 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
 
   it('★ 兩處都有定義的數量不是 0——0 代表清單沒取到', () => {
     expect(both.length).toBeGreaterThan(10)
+  })
+
+  it('★ 有 JSON 對應的插槽名不得**新增**寫死', () => {
+    const b = loadBaseline<DualBaseline>('dual-truth')
+    const known = b.hardcodedList ?? []
+    const 新增 = hardcoded.filter((h) => !known.includes(h))
+    expect(
+      新增,
+      '這些插槽名在 JSON 裡有對應物，卻在動態註冊裡寫死。兩邊不一致時**只在切換' +
+        '積木外觀（存檔再讀回）時才炸**，平常測試全綠。改用 block-input-names 導出的常數。',
+    ).toEqual([])
+    expect(hardcoded.length).toBeLessThanOrEqual(b.hardcodedWithJsonCounterpart)
+  })
+
+  it('基線裡剩下的都是「機制目前涵蓋不到」的，不是懶得改', () => {
+    // block-input-names 只載入 universal 積木。語言專屬積木要涵蓋，那個模組
+    // 得引用語言套件——與「核心不認識語言」相衝。那是另一個決定。
+    expect(hardcoded.every((h) => /^(c_|cpp_)/.test(h))).toBe(true)
   })
 
   it('棘輪：兩處都有定義的數量不得上升', () => {
@@ -148,6 +207,9 @@ if (process.env.GENERATE_BASELINE) {
     },
     bothDefined: both.length,
     diverging: diverging.length,
+    hardcodedWithJsonCounterpart: hardcoded.length,
+    viaConstant,
+    hardcodedList: hardcoded,
     blocks: both,
   })
 }
