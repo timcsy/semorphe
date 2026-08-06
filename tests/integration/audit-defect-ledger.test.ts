@@ -33,6 +33,12 @@ const RULE =
 interface DefectBaseline {
   _meta: BaselineMeta
   total: number
+  /** 真的測試，被關掉了——修好缺口就能開回來 */
+  withBody: number
+  /** 只有名字，測試程式從未存在——要讓它變真的得重新產生 */
+  titleOnly: number
+  /** 「不知道為什麼停用」的數量，只准下降，避免變成新垃圾桶 */
+  unverified: number
   byBlocker: Record<string, number>
 }
 
@@ -48,9 +54,21 @@ const badTombstone = entries.filter(
   (e) => e.tag?.type === 'TOMBSTONE' && (!e.tag.tombstoneRef || !tombstoneRefExists(e.tag.tombstoneRef)),
 )
 
+const withBody = entries.filter((e) => e.hasBody)
+const titleOnly = entries.filter((e) => !e.hasBody)
+const unverified = entries.filter((e) => e.tag?.type === 'UNVERIFIED')
+
+/**
+ * 「修這個元件可以解鎖幾個測試」。
+ *
+ * **只統計有測試本體的項目**——只有名字的那些，修好缺口也不會「解鎖」任何
+ * 東西，它們需要的是重新產生測試。把它們算進去會讓優先序失真，而優先序是
+ * 這份彙總存在的唯一理由。（研究 F6：先前的版本把兩者混在一起數，
+ * 「修 print 解鎖 21 個測試」是假的——那 21 個不存在。）
+ */
 function byBlocker(): Record<string, number> {
   const m: Record<string, number> = {}
-  for (const e of entries) {
+  for (const e of withBody) {
     if (e.tag?.type === 'BLOCKED' && e.tag.blocker) m[e.tag.blocker] = (m[e.tag.blocker] ?? 0) + 1
   }
   return Object.fromEntries(Object.entries(m).sort(([, a], [, b]) => b - a))
@@ -77,6 +95,10 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
         `其中 describe 區塊 ${entries.filter((e) => e.scope === 'describe').length} 個——一個區塊會蓋掉多個測試）`,
     )
     lines.push('')
+    lines.push('**兩種東西，需要完全不同的工作**：')
+    lines.push(`  有測試本體  ${String(withBody.length).padStart(3)}  ← 真的測試被關掉了，修好缺口就能開回來`)
+    lines.push(`  只有名字    ${String(titleOnly.length).padStart(3)}  ← 測試程式從未存在，要讓它變真的得**重新產生**`)
+    lines.push('')
     lines.push('分類：')
     for (const [k, v] of Object.entries(counts)) lines.push(`  ${k.padEnd(10)} ${v}`)
     lines.push('')
@@ -87,8 +109,15 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
       for (const e of unsup) lines.push(`  ${e.tag?.wanted}  ← ${e.file}:${e.line}`)
     }
     lines.push('')
-    lines.push('按阻斷者彙總（修上面的解鎖下面的數量）：')
+    lines.push('按阻斷者彙總（修上面的解鎖下面的數量）——**只算有測試本體的**：')
+    if (Object.keys(blockers).length === 0) {
+      lines.push('  （無——目前所有 BLOCKED 都是「只有名字」，修缺口不會解鎖任何既有測試）')
+    }
     for (const [id, n] of Object.entries(blockers)) lines.push(`  ${String(n).padStart(3)}  ${id}`)
+    if (unverified.length > 0) {
+      lines.push('')
+      lines.push(`歸因待確認：${unverified.length} 筆——先前的標記來自檔案層級推測，不可信`)
+    }
 
     if (unclassified.length > 0) {
       lines.push('')
@@ -119,14 +148,36 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
     expect(badTombstone.map((e) => `${e.file}:${e.line} → ${e.tag?.tombstoneRef ?? '(缺)'}`)).toEqual([])
   })
 
-  it('棘輪：停用項目總數不得上升（FR-003）', () => {
+  it('報表分辨「被關掉的測試」與「只有名字的測試」（FR-020）', () => {
+    expect(withBody.length + titleOnly.length).toBe(entries.length)
+    expect(withBody.length, '應該有真的被關掉的測試').toBeGreaterThan(0)
+    expect(titleOnly.length, '應該有只是名字的項目').toBeGreaterThan(0)
+  })
+
+  it('棘輪：三個數字皆不得上升（FR-003、FR-023）', () => {
     const baseline = loadBaseline<DefectBaseline>('defect-ledger')
-    if (entries.length < baseline.total) {
-      printReport('缺陷帳：有改善，可下調基線', [
-        `  ✔ ${baseline.total} → ${entries.length}（少了 ${baseline.total - entries.length} 筆）`,
-      ])
+    const rows: [string, number, number][] = [
+      ['總數', entries.length, baseline.total],
+      ['有測試本體', withBody.length, baseline.withBody],
+      ['只有名字', titleOnly.length, baseline.titleOnly],
+      ['歸因待確認', unverified.length, baseline.unverified],
+    ]
+    const worsened = rows.filter(([, now, base]) => now > base)
+    const improved = rows.filter(([, now, base]) => now < base)
+
+    if (improved.length > 0) {
+      printReport(
+        '缺陷帳：有改善，可下調基線',
+        improved.map(([n, now, base]) => `  ✔ ${n}: ${base} → ${now}`),
+      )
     }
-    expect(entries.length).toBeLessThanOrEqual(baseline.total)
+    if (worsened.length > 0) {
+      printReport(
+        '缺陷帳：數字上升',
+        worsened.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`),
+      )
+    }
+    expect(worsened.map(([n]) => n)).toEqual([])
   })
 })
 
@@ -140,6 +191,9 @@ if (process.env.GENERATE_BASELINE) {
       note: RATCHET_NOTE,
     },
     total: entries.length,
+    withBody: withBody.length,
+    titleOnly: titleOnly.length,
+    unverified: unverified.length,
     byBlocker: byBlocker(),
   })
 }

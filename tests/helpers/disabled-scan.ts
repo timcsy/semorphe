@@ -9,6 +9,13 @@
  *   [UNSUPPORTED:<描述>]      被一個**還不存在**的概念擋住     → 要**加**它
  *   [TOMBSTONE:<檔名#錨點>]    已否決決定的正確後果              → **不該**修
  *   [DEADSKIP]                已修好但沒開回來                  → 開回來就好
+ *   [UNVERIFIED]              **不知道為什麼停用**——先前的標記來自檔案層級
+ *                             的推測，而那個推測被證實會錯               → 先去查
+ *
+ * `[UNVERIFIED]` 是誠實的狀態，不是偷懶：沒有它，「我知道它停用、但不知道
+ * 為什麼」只有兩條路——留空（會被判為未分類而失敗）或編一個阻斷者（把不確定
+ * 偽裝成確定）。兩條都比承認「還沒查」差。它的**數量本身是棘輪**，只准下降，
+ * 避免它變成新垃圾桶。
  *
  * BLOCKED 與 UNSUPPORTED 必須分開：一個是「修一個元件」、一個是「加一個元件」，
  * 混在一起會讓「修哪個解鎖最多」的彙總誤導。
@@ -22,7 +29,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
 
-export type TagType = 'BLOCKED' | 'UNSUPPORTED' | 'TOMBSTONE' | 'DEADSKIP'
+export type TagType = 'BLOCKED' | 'UNSUPPORTED' | 'TOMBSTONE' | 'DEADSKIP' | 'UNVERIFIED'
 
 export interface Tag {
   type: TagType
@@ -40,6 +47,17 @@ export interface DisabledEntry {
   kind: 'todo' | 'skip'
   /** 區塊停用會覆蓋多個測試（FR-035） */
   scope: 'test' | 'describe'
+  /**
+   * 這個停用項目**有沒有測試本體**。
+   *
+   * `it.skip('x', () => {...})` 有——它是一個真的測試，被關掉了，修好缺口就能開回來。
+   * `it.todo('x')` **沒有**——它只是一個名字，測試程式從來不存在，要讓它變成
+   * 真的測試得**重新產生**。
+   *
+   * 兩者需要完全不同的工作量，混在一起統計會讓優先序失真——而優先序是缺陷帳
+   * 存在的唯一理由。見 specs/050-repay-top-blockers/research.md F4／F6。
+   */
+  hasBody: boolean
   title: string
   tag: Tag | null
 }
@@ -48,7 +66,7 @@ export interface DisabledEntry {
 const DISABLED_RE =
   /\b(it|test|describe)\s*\.\s*(todo|skip)\s*\(\s*(['"`])([\s\S]*?)\3/
 
-const TAG_RE = /^\s*\[(BLOCKED|UNSUPPORTED|TOMBSTONE|DEADSKIP)(?::([^\]]+))?\]/
+const TAG_RE = /^\s*\[(BLOCKED|UNSUPPORTED|TOMBSTONE|DEADSKIP|UNVERIFIED)(?::([^\]]+))?\]/
 
 export function parseTag(title: string): Tag | null {
   const m = TAG_RE.exec(title)
@@ -76,6 +94,8 @@ export function scanDisabledInFile(relPath: string): DisabledEntry[] {
       scope: fn === 'describe' ? 'describe' : 'test',
       title,
       tag: parseTag(title),
+      // 停用宣告的同一行有 `=>` 就代表後面接了 callback（有本體）
+      hasBody: /=>/.test(line),
     })
   })
   return out

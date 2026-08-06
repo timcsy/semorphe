@@ -76,13 +76,13 @@ description: "Task list for 050-repay-top-blockers"
 
 **Independent Test**: 重新量測後對照兩個新數字。
 
-- [ ] T014 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 先加斷言：報表必須分別呈現「有測試本體」與「只有名字」兩個數字（**此時應紅**）
-- [ ] T015 [US3] 在 `tests/helpers/disabled-scan.ts` 的 `DisabledEntry` 加 `hasBody`，判定方式為停用宣告後面有沒有 callback（`it.todo('x')` 無、`it.skip('x', () => {})` 有）
-- [ ] T016 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作兩類計數與報表區塊
-- [ ] T017 [US3] 收窄 `byBlocker` 的語義：**只統計有測試本體的項目**（FR-021）——只有那些「修好就能解鎖」
-- [ ] T018 [US3] 報表明確標示「只有名字」的項目需要的是**重新產生測試**，不是修缺口（FR-022）
-- [ ] T019 [US3] 讓兩個新數字各自成為只准下降的棘輪（FR-023）
-- [ ] T020 [US3] 更新 `tests/baselines/defect-ledger.json` 加入兩個新欄位；`total` **保留**以與舊基線可比較。**獨立 commit，訊息說明原因**（FR-024）
+- [X] T014 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 先加斷言：報表必須分別呈現「有測試本體」與「只有名字」兩個數字（**此時應紅**）
+- [X] T015 [US3] 在 `tests/helpers/disabled-scan.ts` 的 `DisabledEntry` 加 `hasBody`，判定方式為停用宣告後面有沒有 callback（`it.todo('x')` 無、`it.skip('x', () => {})` 有）
+- [X] T016 [US3] 在 `tests/integration/audit-defect-ledger.test.ts` 實作兩類計數與報表區塊
+- [X] T017 [US3] 收窄 `byBlocker` 的語義：**只統計有測試本體的項目**（FR-021）——只有那些「修好就能解鎖」
+- [X] T018 [US3] 報表明確標示「只有名字」的項目需要的是**重新產生測試**，不是修缺口（FR-022）
+- [X] T019 [US3] 讓兩個新數字各自成為只准下降的棘輪（FR-023）
+- [X] T020 [US3] 更新 `tests/baselines/defect-ledger.json` 加入兩個新欄位；`total` **保留**以與舊基線可比較。**獨立 commit，訊息說明原因**（FR-024）
 
 **Checkpoint**: 報表能回答「修哪個解鎖最多已存在的測試」→ US3 可獨立交付
 
@@ -94,7 +94,7 @@ description: "Task list for 050-repay-top-blockers"
 
 **Independent Test**: 抽查標記與註解的一致性。
 
-- [ ] T021 [US4] 在 `tests/helpers/disabled-scan.ts` 加入 `[UNVERIFIED]` 標記型別（contracts 契約 3）
+- [X] T021 [US4] 在 `tests/helpers/disabled-scan.ts` 加入 `[UNVERIFIED]` 標記型別（contracts 契約 3）
 - [ ] T022 [US4] 在 `tests/integration/audit-defect-ledger.test.ts` 加斷言：`[UNVERIFIED]` 的**數量本身是棘輪**，只准下降——避免它變成新垃圾桶
 - [ ] T023 [US4] 重新歸因 `tests/integration/fuzz-cpp-string.test.ts` 的 10 筆：逐筆註解寫的是四種不同原因（條件中的賦值、const 遺失、vector 初始化列表、未支援的字串函式），**不是檔頭宣稱的同一個**
 - [ ] T024 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-arrays-pointers.test.ts`、`fuzz-cpp-cstring.test.ts`：逐筆註解已寫明原因的，標記與之一致
