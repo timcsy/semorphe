@@ -58,3 +58,31 @@ export function allSkipDeclarations(): {
 export function resetSkipDeclarations(): void {
   declarations.clear()
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// 語義標註的登記處
+//
+// 同一個形狀的第二個實例：核心層原本用一份 27 個概念名的清單決定「哪些概念
+// 算一個除錯步驟」。那是**視圖層的關心**（除錯器要在哪裡停）寫在核心，而且
+// 用的是語言專屬的名字。
+//
+// 標註本來就是專案規劃中「語言套件 ↔ 視圖套件的開放契約」，`ConceptDefJSON`
+// 上早就有 `annotations` 欄位。
+// ─────────────────────────────────────────────────────────────────────────
+
+const annotations = new Map<string, Record<string, unknown>>()
+
+/** 語言套件載入時呼叫 */
+export function declareAnnotations(conceptId: string, ann: Record<string, unknown>): void {
+  annotations.set(conceptId, ann)
+}
+
+/** 這個概念有沒有帶某個標註且為真。**缺標註時為 false**——與原本「清單外不停」一致 */
+export function hasAnnotation(conceptId: string, key: string): boolean {
+  return annotations.get(conceptId)?.[key] === true
+}
+
+/** 測試用 */
+export function resetAnnotations(): void {
+  annotations.clear()
+}

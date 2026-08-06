@@ -8,7 +8,10 @@
       "args"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "cpp_scanf",
@@ -19,7 +22,10 @@
       "args"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "cpp_scanf_expr",
@@ -30,6 +36,9 @@
       "args"
     ],
     "children": {},
-    "role": "expression"
+    "role": "expression",
+    "annotations": {
+      "debug_step": true
+    }
   }
 ]

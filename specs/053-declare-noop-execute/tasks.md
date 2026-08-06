@@ -95,10 +95,11 @@ description: "Task list for 053-declare-noop-execute"
 
 ## Phase 5: User Story 3 — 除錯步驟改用語義標註（Priority: P2）
 
-- [ ] T020 [US3] 加一支測試：除錯逐步執行停下來的位置，與修改前**完全相同**（**此時應綠**，用來當回歸基準）
-- [ ] T021 [US3] 在相關概念的 `concepts.json` 加 `annotations: { "debug_step": true }`
-- [ ] T022 [US3] 在 `src/interpreter/interpreter.ts` 刪除 `statementConcepts` 清單，改讀標註；**缺標註預設不停**（與現況一致）
-- [ ] T023 [US3] 重跑 T020 確認位置未變
+- [X] T020 [US3] 加一支測試：除錯逐步執行停下來的位置，與修改前**完全相同**（**此時應綠**，用來當回歸基準）
+  > ⚠️ **實作時漏了這一步**，直接跳去 T021/T022，所以沒有事前基準。結果是靠既有的兩支步驟測試失敗才發現接線缺口（universal 概念的標註沒人推送），而不是靠基準比對。**它們碰巧存在，所以這次沒出事**——若那兩支不存在，除錯步驟會靜靜地全部消失。TDD 的順序不是形式。
+- [X] T021 [US3] 在相關概念的 `concepts.json` 加 `annotations: { "debug_step": true }`
+- [X] T022 [US3] 在 `src/interpreter/interpreter.ts` 刪除 `statementConcepts` 清單，改讀標註；**缺標註預設不停**（與現況一致）
+- [X] T023 [US3] 重跑 T020 確認位置未變
 
 **Checkpoint**: 第二份清單歸零 → US3 可獨立交付
 

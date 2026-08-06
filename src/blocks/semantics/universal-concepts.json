@@ -10,7 +10,10 @@
     "children": {
       "init": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "var_assign",
@@ -22,7 +25,10 @@
     "children": {
       "value": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "var_ref",
@@ -126,7 +132,8 @@
     "annotations": {
       "control_flow": "branch",
       "introduces_scope": true,
-      "cognitive_level": 0
+      "cognitive_level": 0,
+      "debug_step": true
     }
   },
   {
@@ -158,7 +165,8 @@
     "annotations": {
       "control_flow": "loop",
       "introduces_scope": true,
-      "cognitive_level": 1
+      "cognitive_level": 1,
+      "debug_step": true
     }
   },
   {
@@ -170,7 +178,10 @@
       "condition": "expression",
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "break",
@@ -178,7 +189,10 @@
     "abstractConcept": "break",
     "properties": [],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "continue",
@@ -186,7 +200,10 @@
     "abstractConcept": "continue",
     "properties": [],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "func_def",
@@ -204,7 +221,8 @@
     "annotations": {
       "control_flow": "sequence",
       "introduces_scope": true,
-      "cognitive_level": 2
+      "cognitive_level": 2,
+      "debug_step": true
     }
   },
   {
@@ -216,7 +234,10 @@
       "args"
     ],
     "children": {},
-    "role": "expression"
+    "role": "expression",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "func_call_expr",
@@ -227,7 +248,10 @@
       "args"
     ],
     "children": {},
-    "role": "expression"
+    "role": "expression",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "return",
@@ -237,7 +261,10 @@
     "children": {
       "value": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "print",
@@ -247,7 +274,10 @@
     "children": {
       "values": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "endl",
@@ -265,7 +295,10 @@
       "name"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "array_declare",
@@ -278,7 +311,10 @@
     "children": {
       "size": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   },
   {
     "conceptId": "array_access",
@@ -303,6 +339,9 @@
       "index": "expression",
       "value": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "annotations": {
+      "debug_step": true
+    }
   }
 ]

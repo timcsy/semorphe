@@ -5,7 +5,7 @@ import { registerStatementGenerators } from '../core/generators/statements'
 import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
-import { declareSkips } from '../../../core/skip-declarations'
+import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
 import { coreConcepts } from '../core'
 import type { PathName, SkipReason } from '../../../core/types'
 
@@ -40,5 +40,7 @@ export function registerCppSkipDeclarations(): void {
   for (const c of all) {
     const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
     if (reasons && Object.keys(reasons).length > 0) declareSkips(c.conceptId, reasons)
+    const ann = (c as { annotations?: Record<string, unknown> }).annotations
+    if (ann && Object.keys(ann).length > 0) declareAnnotations(c.conceptId, ann)
   }
 }

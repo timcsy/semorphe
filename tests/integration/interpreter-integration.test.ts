@@ -3,6 +3,9 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
 import { RuntimeError } from '../../src/interpreter/errors'
+import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
+
+registerCppSkipDeclarations()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })

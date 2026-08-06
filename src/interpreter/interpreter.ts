@@ -1,5 +1,6 @@
 import type { SemanticNode } from '../core/types'
-import { isSkipped } from '../core/skip-declarations'
+import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
+import universalConcepts from '../blocks/semantics/universal-concepts.json'
 import { CPP_BUILTIN_CONSTANTS, CPP_BUILTIN_NAMES } from '../languages/cpp/builtins'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString } from './types'
@@ -22,6 +23,25 @@ import { registerContainerExecutors } from './executors/containers'
 
 interface InterpreterOptions {
   maxSteps?: number
+}
+
+/** universal 概念的宣告與標註——只載入一次 */
+let universalLoaded = false
+function loadUniversalDeclarations(): void {
+  if (universalLoaded) return
+  universalLoaded = true
+  for (const c of universalConcepts as unknown as {
+    conceptId: string
+    skipReasons?: Record<string, string>
+    annotations?: Record<string, unknown>
+  }[]) {
+    if (c.skipReasons && Object.keys(c.skipReasons).length > 0) {
+      declareSkips(c.conceptId, c.skipReasons as never)
+    }
+    if (c.annotations && Object.keys(c.annotations).length > 0) {
+      declareAnnotations(c.conceptId, c.annotations)
+    }
+  }
 }
 
 export class SemanticInterpreter implements ExecutionContext {
@@ -47,6 +67,9 @@ export class SemanticInterpreter implements ExecutionContext {
 
   constructor(options: InterpreterOptions = {}) {
     this.maxSteps = options.maxSteps ?? 100000
+    // universal 概念是核心自己的資料（中立性護欄明確排除 universal 層），
+    // 所以核心可以自行載入它們的宣告與標註。語言專屬的那些由語言套件推進來。
+    loadUniversalDeclarations()
     this.executorRegistry = new ConceptExecutorRegistry()
     const reg = (concept: string, executor: import('./executor-registry').ConceptExecutor) =>
       this.executorRegistry.register(concept, executor)
@@ -445,16 +468,10 @@ export class SemanticInterpreter implements ExecutionContext {
     if (!this.recordSteps) return
     const concept = node.concept
     if (concept.includes(':')) return
-    const statementConcepts = new Set([
-      'var_declare', 'var_declare_expr', 'var_assign', 'print', 'input',
-      'cpp_printf', 'cpp_scanf', 'cpp_scanf_expr',
-      'if', 'count_loop', 'cpp_for_loop', 'while_loop', 'cpp_do_while', 'cpp_switch',
-      'func_def', 'func_call', 'func_call_expr', 'return', 'break', 'continue',
-      'cpp_increment', 'cpp_increment_expr', 'cpp_compound_assign_expr',
-      'array_declare', 'array_assign',
-      'cpp_pointer_assign', 'forward_decl',
-    ])
-    if (!statementConcepts.has(concept)) return
+    // 「哪些概念算一個除錯步驟」由概念自己標註，不由核心層的清單決定。
+    // 那是視圖層的關心（除錯器要在哪裡停），核心層不該認得語言專屬的名字。
+    // 缺標註 → 不停，與原本「清單外不停」一致。
+    if (!hasAnnotation(concept, 'debug_step')) return
 
     const scopeSnapshot: { name: string; type: string; value: string }[] = []
     for (const [name, val] of this.scope.getAll()) {
