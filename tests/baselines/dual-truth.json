@@ -3,12 +3,12 @@
     "guard": "dual-truth",
     "measuredAt": "2026-08-06",
     "rule": "比對 block-registrar 的動態註冊與 JSON blockDef 的 input 名稱集合。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 「兩處都有定義」若是 0，先確認兩份清單真的取到了——已知有 34 個。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 這條護欄的健康檢查是「★ 兩份清單各自都取到了」那支，**不是報表上的數字**。空清單與零違規產出完全一樣，而消滅雙重真相正是本護欄的目的——數字歸零是好事，不是護欄壞掉的訊號。"
   },
-  "bothDefined": 33,
-  "diverging": 25,
+  "bothDefined": 32,
+  "diverging": 24,
   "hardcodedWithJsonCounterpart": 0,
-  "viaConstant": 20,
+  "viaConstant": 19,
   "hardcodedList": [],
   "blocks": [
     "c_comment_block",
@@ -24,7 +24,6 @@
     "c_scanf",
     "c_scanf_expr",
     "c_var_declare_expr",
-    "cpp_string_at",
     "u_array_access",
     "u_array_assign",
     "u_array_declare",

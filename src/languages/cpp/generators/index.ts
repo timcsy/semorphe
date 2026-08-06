@@ -1,3 +1,5 @@
+import { declareVariableDropdownBlock } from '../../../core/variable-dropdown-blocks'
+import { CPP_STRING_AT_INPUTS } from '../block-input-names'
 import { declareCommentSyntax } from '../../../core/comment-syntax'
 import { cppCommentSyntax } from '../core/comment-syntax'
 import type { StylePreset } from '../../../core/types'
@@ -34,6 +36,15 @@ export function registerCppLanguage(): void {
   // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）
   // 原本寫死在核心層。概念身分留在核心，語法住在這裡。
   declareCommentSyntax(cppCommentSyntax)
+  // 取字串某個位置的字元——它的「哪個字串」欄位是一個列出工作區字串變數的
+  // 下拉選單，沒辦法用純 JSON 定義。**介面層提供機制，這裡提供名單。**
+  declareVariableDropdownBlock({
+    blockType: 'cpp_string_at',
+    field: 'OBJ',
+    variableType: 'string',
+    valueInput: CPP_STRING_AT_INPUTS.value[0],
+    colour: '#4C97FF',
+  })
 }
 
 /**

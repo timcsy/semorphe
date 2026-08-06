@@ -26,7 +26,7 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import { languageSpecificComponentIds, universalComponentIds, scanDirs, splitCodeAndComments } from '../helpers/component-scan'
+import { languageSpecificComponentIds, universalComponentIds, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
@@ -194,9 +194,36 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
     expect(files.length).toBeGreaterThanOrEqual(0)
   })
 
-  it('數字不為零——零代表沒有真的量到東西（SC-001）', () => {
-    // 存量已知為正。哪天真的歸零了，這條會提醒你把整條護欄的意義重新定位。
-    expect(violations.length).toBeGreaterThan(0)
+  // ─────────────────────────────────────────────────────────────────
+  // 這裡原本是「數字不為零——零代表沒有真的量到東西」，附註：
+  //
+  //   「存量已知為正。哪天真的歸零了，這條會提醒你把整條護欄的意義重新定位。」
+  //
+  // **2026-08-06：它歸零了，而那句提醒發揮了作用。** 重新定位有兩件事：
+  //
+  // ① 健康檢查改成**合成注入**。用「真實存量為正」當健康訊號，在存量真的
+  //    清完的那天就會失效——那是這個專案本週學到的（`history/022`：
+  //    「護欄修好了它要量的東西，就是它的錨點爛掉的時候」）。
+  //
+  // ② **零不等於語言獨立性成立。** 這條護欄只量得到耦合的**一種形式**
+  //    ——元件身分。核心層寫死語法符號、直接 import 語言套件（另有一支在看）、
+  //    執行期才成立的耦合，它都看不見。見 `history/021`。
+  // ─────────────────────────────────────────────────────────────────
+  it('★ 合成注入：一段含語言專屬身分的程式碼必須被報出（零才可信）', () => {
+    const ids = languageSpecificComponentIds()
+    expect(ids.length, '語言專屬概念清單是空的 → 掃什麼都不會有結果').toBeGreaterThan(10)
+    const probe = ids[0]
+    const hits = scanText(`const x = generators.get('${probe}')`, ids)
+    expect(
+      hits.code,
+      `合成注入沒被報出來 → 掃描壞了。**這時報表上的「0 筆」是假的**，` +
+        '而它與健康的 0 長得一模一樣。',
+    ).toContain(probe)
+  })
+
+  it('★ 合成注入：不含任何身分的程式碼不得被報出', () => {
+    const hits = scanText('const x = 1 + 2', languageSpecificComponentIds())
+    expect(hits.code, '什麼都報的掃描器也會通過上一支').toEqual([])
   })
 
   it('棘輪：不得出現基線之外的新違規（FR-003、FR-005）', () => {

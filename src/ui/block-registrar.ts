@@ -1,3 +1,4 @@
+import { allVariableDropdownBlocks } from '../core/variable-dropdown-blocks'
 import { conceptsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
@@ -7,7 +8,6 @@ import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_L
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import {
-  CPP_STRING_AT_INPUTS,
   C_COMPOUND_ASSIGN_INPUTS,
   C_COMPOUND_ASSIGN_EXPR_INPUTS,
   C_VAR_DECLARE_EXPR_INPUTS,
@@ -204,10 +204,10 @@ export class BlockRegistrar {
     return types
   }
 
-  getWorkspaceStringOptions(currentVal?: string): Array<[string, string]> {
+  getWorkspaceVariableOptions(variableType: string, currentVal?: string): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
-    const stringBlockTypes = this.blockTypesDeclaringVariableType('string')
+    const stringBlockTypes = this.blockTypesDeclaringVariableType(variableType)
     const workspace = this.accessors?.getWorkspace()
     if (workspace) {
       for (const block of workspace.getAllBlocks(false)) {
@@ -1512,20 +1512,33 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_string_at — character access with string-variable dropdown
-    {
-      Blockly.Blocks['cpp_string_at'] = {
+    // ── 有工作區變數下拉選單的積木
+    //
+    // 這一類**沒辦法用純 JSON 定義**：欄位的選項要從即時工作區算出來。
+    // 建構程式碼住在這裡是對的（它是 Blockly 的機制），但**「哪些積木要用
+    // 它」不是介面層的知識**——原本這裡直接寫 `Blockly.Blocks['cpp_string_at']`，
+    // 一個 C++ 專屬身分寫死在呈現層。
+    //
+    // 名單由語言套件宣告（`core/variable-dropdown-blocks.ts`）。
+    // 列哪些變數也是宣告的，所以加一個新的字串宣告概念時這裡自動涵蓋它。
+    for (const d of allVariableDropdownBlocks()) {
+      const KEY = d.blockType.toUpperCase()
+      Blockly.Blocks[d.blockType] = {
         init: function (this: Blockly.Block) {
-          this.appendValueInput(CPP_STRING_AT_INPUTS.value[0])
-            .appendField(Blockly.Msg['CPP_STRING_AT_LABEL'] || '取得字串')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceStringOptions(this.getFieldValue('OBJ') ?? undefined)) as Blockly.Field, 'OBJ')
-            .appendField(Blockly.Msg['CPP_STRING_AT_INDEX_LABEL'] || '第 [')
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['CPP_STRING_AT_END_LABEL'] || '] 個字元')
+          this.appendValueInput(d.valueInput)
+            .appendField(Blockly.Msg[`${KEY}_LABEL`] || '取得字串')
+            .appendField(
+              self.createOpenDropdown(() =>
+                self.getWorkspaceVariableOptions(d.variableType, this.getFieldValue(d.field) ?? undefined),
+              ) as Blockly.Field,
+              d.field,
+            )
+            .appendField(Blockly.Msg[`${KEY}_INDEX_LABEL`] || '第 [')
+          this.appendDummyInput().appendField(Blockly.Msg[`${KEY}_END_LABEL`] || '] 個字元')
           this.setInputsInline(true)
           this.setOutput(true, 'Expression')
-          this.setColour('#4C97FF')
-          this.setTooltip(Blockly.Msg['CPP_STRING_AT_TOOLTIP'] || '取得字串指定位置的字元')
+          this.setColour(d.colour)
+          this.setTooltip(Blockly.Msg[`${KEY}_TOOLTIP`] || '取得字串指定位置的字元')
         },
       }
     }

@@ -22,6 +22,7 @@ import {
   variableTypeOf,
   conceptsDeclaringVariableType,
 } from '../../../src/core/language-executors'
+import { allVariableDropdownBlocks } from '../../../src/core/variable-dropdown-blocks'
 
 beforeAll(() => {
   registerCppLanguage()
@@ -55,5 +56,40 @@ describe('變數型別宣告：語言套件推、核心讀', () => {
       現有.every((c) => variableTypeOf(c) === 'string'),
       '反查與正查不一致——兩個消費者會看到不同的答案',
     ).toBe(true)
+  })
+})
+
+describe('有工作區下拉選單的積木：名單由語言套件宣告（064）', () => {
+  /**
+   * 這一類積木**沒辦法用純 JSON 定義**——欄位的選項要從即時工作區算出來。
+   * 建構程式碼住在介面層是對的（那是 Blockly 的機制），但「哪些積木要用它」
+   * 原本也寫死在介面層：`Blockly.Blocks['cpp_string_at'] = { … }`。
+   *
+   * ⚠️ **空清單與「介面層沒接上」產出完全一樣**——兩者都是積木沒被註冊，
+   * 而那只有真的開啟編輯器才看得到。所以這支釘的是宣告本身。
+   */
+  it('★ 名單不是空的——空的話介面層什麼都不會註冊，而測試不會知道', () => {
+    expect(
+      allVariableDropdownBlocks().length,
+      '語言套件沒有推任何宣告。介面層會跑一個空迴圈，那些積木不會被註冊，' +
+        '使用者開啟編輯器才會看到「未知積木」。',
+    ).toBeGreaterThan(0)
+  })
+
+  it('★ 每一筆的變數型別都必須有概念真的宣告它', () => {
+    for (const d of allVariableDropdownBlocks()) {
+      expect(
+        conceptsDeclaringVariableType(d.variableType).length,
+        `${d.blockType} 的下拉選單要列 ${d.variableType} 變數，` +
+          `但**沒有任何概念宣告自己是 ${d.variableType}**——選單會永遠是空的。`,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  it('★ 欄位名與值輸入名都不得是空的', () => {
+    for (const d of allVariableDropdownBlocks()) {
+      expect(d.field, `${d.blockType} 沒有下拉欄位名`).toBeTruthy()
+      expect(d.valueInput, `${d.blockType} 沒有值輸入名`).toBeTruthy()
+    }
   })
 })
