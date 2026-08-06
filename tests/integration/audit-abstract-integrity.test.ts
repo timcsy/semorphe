@@ -46,6 +46,14 @@ const defs = allComponentDefs()
 const ids = new Set(defs.map((d) => d.conceptId))
 const declared = defs.filter((d) => d.abstractConcept)
 const dangling = declared.filter((d) => !ids.has(d.abstractConcept as string))
+/**
+ * 指向自己的父概念。
+ *
+ * 「`var_declare` 的語言中立父概念是 `var_declare`」語義上是空的——查詢會
+ * 回傳它自己，對跨語言映射毫無意義。**通用概念本身就是抽象層**，不該再宣告
+ * 父概念。第一版的懸空檢查抓不到它（自己當然「存在」）。
+ */
+const selfLoops = declared.filter((d) => d.abstractConcept === d.conceptId)
 
 describe('護欄：抽象層完整性', () => {
   it('產出可讀報表', () => {
@@ -55,7 +63,7 @@ describe('護欄：抽象層完整性', () => {
       '',
       `判定規則：${RULE}`,
       '',
-      `宣告了父概念：${declared.length}｜**指向不存在的：${dangling.length}**`,
+      `宣告了父概念：${declared.length}｜**指向不存在的：${dangling.length}**｜**指向自己的：${selfLoops.length}**`,
       '',
       ...dangling.slice(0, 12).map((d) => `  ${d.conceptId} → ${d.abstractConcept}（不存在）`),
       ...(dangling.length > 12 ? [`  … 另外 ${dangling.length - 12} 個`] : []),
@@ -74,6 +82,14 @@ describe('護欄：抽象層完整性', () => {
   it('★ 注入：指向存在的概念不得被誤報', () => {
     const ok = declared.filter((d) => ids.has(d.abstractConcept as string))
     expect(ok.every((d) => !dangling.includes(d))).toBe(true)
+  })
+
+  it('★ 不得有指向自己的父概念——那是語義上的空話', () => {
+    expect(
+      selfLoops.map((d) => d.conceptId),
+      '父概念指向自己：查詢會回傳它自己，對跨語言映射毫無意義。' +
+        '通用概念本身就是抽象層，不該再宣告父概念。',
+    ).toEqual([])
   })
 
   it('棘輪：懸空數不得上升', () => {

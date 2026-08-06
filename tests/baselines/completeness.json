@@ -6,20 +6,13 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
   },
   "totals": {
-    "implemented": 789,
+    "implemented": 793,
     "declared": 12,
-    "shell": 78,
+    "undecidable": 16,
+    "shell": 58,
     "missing": 11
   },
   "shells": [
-    {
-      "componentId": "builtin_constant",
-      "path": "lift"
-    },
-    {
-      "componentId": "compare",
-      "path": "lift"
-    },
     {
       "componentId": "cpp_case",
       "path": "lift"
@@ -29,24 +22,8 @@
       "path": "execute"
     },
     {
-      "componentId": "cpp_comma_expr",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_compound_assign_expr",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_compound_assign",
-      "path": "lift"
-    },
-    {
       "componentId": "cpp_constructor",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_constructor",
-      "path": "lift"
     },
     {
       "componentId": "cpp_default",
@@ -97,14 +74,6 @@
       "path": "generate"
     },
     {
-      "componentId": "cpp_increment_expr",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_increment",
-      "path": "lift"
-    },
-    {
       "componentId": "cpp_iota",
       "path": "execute"
     },
@@ -114,10 +83,6 @@
     },
     {
       "componentId": "cpp_lambda",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_map_access",
       "path": "lift"
     },
     {
@@ -173,32 +138,16 @@
       "path": "lift"
     },
     {
-      "componentId": "cpp_queue_back",
-      "path": "lift"
-    },
-    {
       "componentId": "cpp_raw_code",
       "path": "execute"
     },
     {
-      "componentId": "cpp_raw_code",
-      "path": "lift"
-    },
-    {
       "componentId": "cpp_raw_expression",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_raw_expression",
-      "path": "lift"
     },
     {
       "componentId": "cpp_reverse",
       "path": "execute"
-    },
-    {
-      "componentId": "cpp_scanf_expr",
-      "path": "lift"
     },
     {
       "componentId": "cpp_sort",
@@ -225,15 +174,7 @@
       "path": "execute"
     },
     {
-      "componentId": "cpp_string_at",
-      "path": "lift"
-    },
-    {
       "componentId": "cpp_string_clear",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp_string_empty",
       "path": "lift"
     },
     {
@@ -285,14 +226,6 @@
       "path": "lift"
     },
     {
-      "componentId": "cpp:math_binary",
-      "path": "lift"
-    },
-    {
-      "componentId": "cpp:math_unary",
-      "path": "lift"
-    },
-    {
       "componentId": "forward_decl",
       "path": "execute"
     },
@@ -305,23 +238,11 @@
       "path": "lift"
     },
     {
-      "componentId": "logic",
-      "path": "lift"
-    },
-    {
-      "componentId": "negate",
-      "path": "lift"
-    },
-    {
       "componentId": "print",
       "path": "lift"
     },
     {
       "componentId": "var_declarator",
-      "path": "lift"
-    },
-    {
-      "componentId": "var_declare_expr",
       "path": "lift"
     }
   ],

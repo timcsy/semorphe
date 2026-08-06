@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：178｜✅ 實作 789｜📄 已宣告不提供 12｜🈳 殼 78｜❌ 缺 11（以路徑數計）
+元件：178｜✅ 實作 793｜📄 已宣告不提供 12｜❔ 判不出來 16｜🈳 殼 58｜❌ 缺 11（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -19,9 +19,9 @@
 | `bitwise_not` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `block_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `break` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `builtin_constant` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `builtin_constant` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `compare` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `compare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `continue` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `count_loop` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_abs` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -37,13 +37,13 @@
 | `cpp_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_char_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_class_def` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_comma_expr` | ✅ | 🈳 | ❌ | ❌ | ✅ |
-| `cpp_compound_assign` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `cpp_compound_assign_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_comma_expr` | ✅ | ❔ | ❌ | ❌ | ✅ |
+| `cpp_compound_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_compound_assign_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_const_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_constexpr_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_constructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_constructor` | ✅ | ❔ | ✅ | ✅ | 🈳 |
 | `cpp_container_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_empty` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -69,8 +69,8 @@
 | `cpp_ifstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp_include` | 🈳 | ❌ | ✅ | ✅ | 📄 |
 | `cpp_include_local` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
-| `cpp_increment` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `cpp_increment_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_increment` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_increment_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_iota` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_isalpha` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_isdigit` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -78,7 +78,7 @@
 | `cpp_lcm` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_make_pair` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_malloc` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_map_access` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_map_access` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_map_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_memcpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -98,18 +98,18 @@
 | `cpp_pointer_deref` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_printf` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pure_virtual` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp_queue_back` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_queue_back` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_queue_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_queue_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_rand` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_range_for` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_raw_code` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp_raw_expression` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_raw_code` | ✅ | ❔ | ✅ | ✅ | 🈳 |
+| `cpp_raw_expression` | ✅ | ❔ | ✅ | ✅ | 🈳 |
 | `cpp_ref_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_reinterpret_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_reverse` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_scanf` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_scanf_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_scanf_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -127,11 +127,11 @@
 | `cpp_strcmp` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strcpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_string_append` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_string_at` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_string_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_string_c_str` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_clear` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_string_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_string_empty` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_string_empty` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_string_erase` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_find` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -164,9 +164,9 @@
 | `cpp_vector_pop_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_virtual_method` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp:math_binary` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp:math_binary` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:math_pow` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_unary` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp:math_unary` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `forward_decl` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -176,9 +176,9 @@
 | `if` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `if_else` | ✅ | 🈳 | ✅ | ✅ | ❌ |
 | `input` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `logic` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `logic` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `logic_not` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `negate` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `number_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `print` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `program` | ✅ | ✅ | ❌ | ❌ | ✅ |
@@ -187,6 +187,6 @@
 | `var_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `var_declarator` | ✅ | 🈳 | ❌ | ❌ | ✅ |
 | `var_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `var_declare_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `var_declare_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `var_ref` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `while_loop` | ✅ | ✅ | ✅ | ✅ | ✅ |

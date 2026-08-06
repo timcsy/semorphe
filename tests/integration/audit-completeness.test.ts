@@ -77,7 +77,7 @@ const RULE =
  *
  * 混在一起的話，下一個人會用宣告刷數字，而護欄會替他背書。
  */
-type Verdict = 'implemented' | 'declared' | 'shell' | 'missing'
+type Verdict = 'implemented' | 'declared' | 'undecidable' | 'shell' | 'missing'
 const PATHS: PathName[] = ['generate', 'lift', 'render', 'extract', 'execute']
 
 interface PathResult {
@@ -88,7 +88,7 @@ type Row = Record<PathName, PathResult>
 
 interface CompletenessBaseline {
   _meta: BaselineMeta
-  totals: { implemented: number; declared: number; shell: number; missing: number }
+  totals: { implemented: number; declared: number; undecidable: number; shell: number; missing: number }
   shells: { componentId: string; path: PathName }[]
   missing: { componentId: string; path: PathName }[]
 }
@@ -186,13 +186,28 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
         return { verdict: 'missing', reason: 'generate 未產出可解析的程式碼' } as PathResult
       try {
         const tree = tsParser.parse(generated)
+        // 樣本本身就不是合法的 C++ → 這一列**判不出來**，不是殼。
+        //
+        // `case 1:` 脫離 switch、`case`／`default` 這類概念本來就不能單獨成立。
+        // 把它算成「lift 是殼」是在怪 lift 沒辦到一件不可能的事——而那會讓
+        // 「殼」這個數字灌水，進而讓清償優先序指錯方向。
         const lifted = lifter.lift(tree.rootNode as never)
         if (!lifted) return { verdict: 'shell', reason: 'lift 回傳 null' } as PathResult
+        if (findConcept(lifted, id)) return { verdict: 'implemented' } as PathResult
+        // 身分沒找到——但樣本本身若不是合法的獨立程式，那是**樣本的問題**。
+        //
+        // `case 1:` 脫離 switch 就不合法；怪 lift 沒辦到不可能的事，會讓「殼」
+        // 這個數字灌水，進而讓清償優先序指錯方向。
+        // **只有樣本合法時，找不到身分才算殼。**
+        if (tree.rootNode.hasError) {
+          return {
+            verdict: 'undecidable',
+            reason: '合成樣本不是合法的獨立程式（此概念需要父節點才成立）',
+          } as PathResult
+        }
         if (findConcept(lifted, 'raw_code'))
           return { verdict: 'shell', reason: '降級成 raw_code' } as PathResult
-        if (!findConcept(lifted, id))
-          return { verdict: 'shell', reason: '回來的樹裡找不到原本的身分' } as PathResult
-        return { verdict: 'implemented' } as PathResult
+        return { verdict: 'shell', reason: '回來的樹裡找不到原本的身分' } as PathResult
       } catch (e) {
         return { verdict: 'shell', reason: `擲出例外：${(e as Error).message.slice(0, 60)}` } as PathResult
       }
@@ -321,6 +336,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     const missing = flatten(result, 'missing')
     const impl = flatten(result, 'implemented')
     const declared = flatten(result, 'declared')
+    const undecidable = flatten(result, 'undecidable')
 
     const md: string[] = []
     md.push('# 補完地圖（自動產生，勿手改）')
@@ -333,7 +349,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     md.push('')
     md.push(
       `元件：${total}｜✅ 實作 ${impl.length}｜📄 已宣告不提供 ${declared.length}｜` +
-        `🈳 殼 ${shells.length}｜❌ 缺 ${missing.length}（以路徑數計）`,
+        `❔ 判不出來 ${undecidable.length}｜🈳 殼 ${shells.length}｜❌ 缺 ${missing.length}（以路徑數計）`,
     )
     md.push('')
     md.push(
@@ -345,11 +361,26 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     md.push('| 元件 | generate | lift | render | extract | execute |')
     md.push('|---|---|---|---|---|---|')
     const icon = (v: Verdict): string =>
-      v === 'implemented' ? '✅' : v === 'declared' ? '📄' : v === 'shell' ? '🈳' : '❌'
+      v === 'implemented' ? '✅' : v === 'declared' ? '📄' : v === 'undecidable' ? '❔' : v === 'shell' ? '🈳' : '❌'
     for (const [id, row] of [...result].sort(([a], [b]) => a.localeCompare(b))) {
       md.push(`| \`${id}\` | ${PATHS.map((p) => icon(row[p].verdict)).join(' | ')} |`)
     }
     writeReport('tests/reports/completeness-map.md', md.join('\n') + '\n')
+
+    // 殼的**原因**分佈——36 個 lift 殼若多數是同一個根因，那是一個問題不是 36 個
+    const reasonCount = new Map<string, string[]>()
+    for (const [id, row] of result) {
+      for (const p of PATHS) {
+        if (row[p].verdict !== 'shell') continue
+        const key = `${p}｜${row[p].reason ?? '（無原因）'}`
+        const arr = reasonCount.get(key) ?? []
+        arr.push(id)
+        reasonCount.set(key, arr)
+      }
+    }
+    const REASON_SUMMARY = [...reasonCount.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([k, ids]) => `  ${ids.length.toString().padStart(3)} 個  ${k}\n         ${ids.slice(0, 8).join('、')}${ids.length > 8 ? ' …' : ''}`)
 
     printReport('完備性護欄', [
       DISCLAIMER,
@@ -357,7 +388,11 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       '',
       `判定規則：${RULE}`,
       '',
-      `元件：${total}｜✅ ${impl.length}｜📄 已宣告 ${declared.length}｜🈳 ${shells.length}｜❌ ${missing.length}（路徑數）`,
+      `元件：${total}｜✅ ${impl.length}｜📄 已宣告 ${declared.length}｜❔ 判不出來 ${undecidable.length}｜🈳 ${shells.length}｜❌ ${missing.length}（路徑數）`,
+      '',
+      '**❔ 判不出來 ≠ 沒問題。** 那是合成樣本本身不合法（概念需要父節點才成立），',
+      '所以這一列量不到東西——把它算成「實作了」是為了讓數字好看，算成「殼」是',
+      '怪 lift 沒辦到不可能的事。它需要的是**更好的樣本**，不是修 lift。',
       '',
       '📄 的理由（宣告要可複查，不是一次性的）：',
       ...(() => {
@@ -370,6 +405,9 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
         }
         return [...byReason].map(([r, ids]) => `  ${r}：${ids.join('、')}`)
       })(),
+      '',
+      '**殼的原因分佈**（同一個根因造成的多個殼，是一個問題不是多個）：',
+      ...REASON_SUMMARY,
       '',
       '殼最多的路徑：',
       ...PATHS.map((p) => `  ${p.padEnd(9)} 殼 ${shells.filter((s) => s.path === p).length} ｜ 缺 ${missing.filter((s) => s.path === p).length}`),
@@ -432,6 +470,7 @@ if (process.env.GENERATE_BASELINE) {
         totals: {
           implemented: flatten(m, 'implemented').length,
           declared: flatten(m, 'declared').length,
+          undecidable: flatten(m, 'undecidable').length,
           shell: shells.length,
           missing: missing.length,
         },

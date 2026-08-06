@@ -114,7 +114,7 @@
   {
     "conceptId": "bitwise_not",
     "layer": "lang-core",
-    "abstractConcept": "bitwise_not",
+    "abstractConcept": null,
     "properties": [],
     "children": {
       "operand": "expression"
@@ -430,7 +430,7 @@
   {
     "conceptId": "forward_decl",
     "layer": "lang-core",
-    "abstractConcept": "forward_decl",
+    "abstractConcept": null,
     "properties": [
       "return_type",
       "name",
@@ -445,7 +445,7 @@
   {
     "conceptId": "builtin_constant",
     "layer": "lang-core",
-    "abstractConcept": "builtin_constant",
+    "abstractConcept": null,
     "properties": [
       "value"
     ],
@@ -526,7 +526,7 @@
   {
     "conceptId": "comment",
     "layer": "lang-core",
-    "abstractConcept": "comment",
+    "abstractConcept": null,
     "properties": [
       "text"
     ],
@@ -542,7 +542,7 @@
   {
     "conceptId": "doc_comment",
     "layer": "lang-core",
-    "abstractConcept": "doc_comment",
+    "abstractConcept": null,
     "properties": [
       "brief"
     ],
@@ -558,7 +558,7 @@
   {
     "conceptId": "block_comment",
     "layer": "lang-core",
-    "abstractConcept": "block_comment",
+    "abstractConcept": null,
     "properties": [
       "text"
     ],
@@ -624,7 +624,7 @@
   {
     "conceptId": "var_declare_expr",
     "layer": "lang-core",
-    "abstractConcept": "var_declare_expr",
+    "abstractConcept": null,
     "properties": [
       "name",
       "type"

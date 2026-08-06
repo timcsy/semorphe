@@ -14,12 +14,35 @@
 import { createNode } from '../../src/core/semantic-tree'
 import type { ConceptDefJSON, SemanticNode, PropertyValue } from '../../src/core/types'
 
-/** 屬性名 → 合理的預設值。合成只要「跑得動」，不要求語義正確。 */
-function defaultFor(prop: string): PropertyValue {
+/**
+ * 概念 → 它的運算子該長什麼樣。
+ *
+ * **原本所有概念的 `operator` 都填 `'+'`**，於是 `compare` 產生 `1 + 1`、
+ * `logic` 也產生 `1 + 1`——那不是比較也不是邏輯運算。完備性護欄的 lift 判定
+ * 用「產生程式碼再辨識回來，身分還在嗎」，而**身分判定需要語義忠實的樣本**。
+ *
+ * 合成器原本的契約是「跑得動就好，不要求語義正確」——那對偵測「路徑存在嗎」
+ * 是夠的，對「身分守得住嗎」不夠。**同一支工具被兩種要求用著。**
+ *
+ * 見 specs/057（完備性的殼有多少是量測造成的）
+ */
+const OPERATOR_FOR: Record<string, string> = {
+  compare: '<',
+  logic: '&&',
+  arithmetic: '+',
+  cpp_compound_assign: '+=',
+  cpp_compound_assign_expr: '+=',
+  cpp_increment: '++',
+  cpp_increment_expr: '++',
+  cpp_bitwise: '&',
+}
+
+/** 屬性名 → 合理的預設值。 */
+function defaultFor(prop: string, conceptId?: string): PropertyValue {
   const p = prop.toLowerCase()
   if (/(^|_)(name|var|obj|target|func|label)($|_)/.test(p)) return 'x'
   if (/(^|_)(type|vartype|rettype)($|_)/.test(p)) return 'int'
-  if (/(^|_)(op|operator)($|_)/.test(p)) return '+'
+  if (/(^|_)(op|operator)($|_)/.test(p)) return OPERATOR_FOR[conceptId ?? ''] ?? '+'
   if (/(^|_)(value|literal|text|str|msg)($|_)/.test(p)) return '1'
   if (/(^|_)(index|idx|pos|size|count|len|n)($|_)/.test(p)) return '0'
   if (/(^|_)(header|include|module)($|_)/.test(p)) return 'iostream'
@@ -48,7 +71,7 @@ export function synthMinimalNode(def: ConceptDefJSON): SynthResult {
   const notes: string[] = []
 
   const properties: Record<string, PropertyValue> = {}
-  for (const p of def.properties ?? []) properties[p] = defaultFor(p)
+  for (const p of def.properties ?? []) properties[p] = defaultFor(p, def.conceptId)
 
   const children: Record<string, SemanticNode[]> = {}
   for (const [slot, slotType] of Object.entries(def.children ?? {})) {
