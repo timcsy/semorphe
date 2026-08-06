@@ -24,10 +24,10 @@ description: "Task list for 054-execute-into-capsules"
 
 > ⚠️ **T002 必須在任何搬移之前完成。搬完才想比對就沒有基準了。**
 
-- [ ] T001 執行 `npm test` 確認全綠，記下七項量測作為回歸基準
-- [ ] T002 建立 `tests/integration/executor-inventory.test.ts` 與 `tests/assets/executor-inventory.json`：把**目前**執行引擎認得的所有概念寫成固定清單，並斷言現況與它相同（**此時應綠**）
+- [X] T001 執行 `npm test` 確認全綠，記下七項量測作為回歸基準
+- [X] T002 建立 `tests/integration/executor-inventory.test.ts` 與 `tests/assets/executor-inventory.json`：把**目前**執行引擎認得的所有概念寫成固定清單，並斷言現況與它相同（**此時應綠**）
   > 失敗訊息必須說得出**少了誰／多了誰**，不能只說「集合不同」
-- [ ] T003 加斷言：集合**不得多**出來——多出來代表重複註冊（既有護欄在看的病）
+- [X] T003 加斷言：集合**不得多**出來——多出來代表重複註冊（既有護欄在看的病）
 
 **Checkpoint**: 基準固定 → 可以開始搬
 
@@ -35,12 +35,12 @@ description: "Task list for 054-execute-into-capsules"
 
 ## Phase 2: Foundational — 模組介面加第五面牆（阻斷所有搬移）
 
-- [ ] T004 在 `src/languages/cpp/std/types.ts` 為 `StdModule` 加 `registerExecutors`，**必填不是選填**（data-model 契約 1）
+- [X] T004 在 `src/languages/cpp/std/types.ts` 為 `StdModule` 加 `registerExecutors`，**必填不是選填**（data-model 契約 1）
   > 選填會讓忘記接上的模組靜靜地少一條路。編譯器擋得住的東西不要留給人。
-- [ ] T005 為既有 11 個模組補上 `registerExecutors`——**還沒有執行器的先給空函式並註明原因**（顯式的空與遺漏的空要分得出來）
-- [ ] T006 在 `src/languages/cpp/std/index.ts` 的聚合處接上 `registerExecutors`
-- [ ] T007 在 `src/languages/cpp/generators/index.ts` 的語言載入流程推送執行器——與既有的宣告推送同一個形狀
-- [ ] T008 跑 T002，確認集合**仍然完全相同**（此時還沒搬任何東西，只是多了一條推送路徑）
+- [X] T005 為既有 11 個模組補上 `registerExecutors`——**還沒有執行器的先給空函式並註明原因**（顯式的空與遺漏的空要分得出來）
+- [X] T006 在 `src/languages/cpp/std/index.ts` 的聚合處接上 `registerExecutors`
+- [X] T007 在 `src/languages/cpp/generators/index.ts` 的語言載入流程推送執行器——與既有的宣告推送同一個形狀
+- [X] T008 跑 T002，確認集合**仍然完全相同**（此時還沒搬任何東西，只是多了一條推送路徑）
 
 **Checkpoint**: 第五面牆的形狀就位，尚未搬移 → 各模組可獨立開工
 
@@ -54,21 +54,21 @@ description: "Task list for 054-execute-into-capsules"
 
 ### 單一模組（整份對應，最單純）
 
-- [ ] T009 [P] [US1] `cmath.ts` 的 3 個 → `src/languages/cpp/std/cmath/executors.ts`
-- [ ] T010 [P] [US1] `pointers.ts` 的 8 個 → `src/languages/cpp/core/executors/pointers.ts`（指標是語言核心，不屬任何標準函式庫）
+- [X] T009 [P] [US1] `cmath.ts` 的 3 個 → `src/languages/cpp/std/cmath/executors.ts`
+- [X] T010 [P] [US1] `pointers.ts` 的 8 個 → `src/languages/cpp/core/executors/pointers.ts`（指標是語言核心，不屬任何標準函式庫）
 
 ### 跨模組（要拆，FR-003）
 
-- [ ] T011 [US1] `strings.ts` 拆成兩份：`std/string/executors.ts`（17）與 `std/cstring/executors.ts`（10）
+- [X] T011 [US1] `strings.ts` 拆成兩份：`std/string/executors.ts`（17）與 `std/cstring/executors.ts`（10）
   > **不得整份塞進 `std/string`**——只用 `<cstring>` 的程式會連帶載進 `<string>` 的執行器
-- [ ] T012 [US1] `containers.ts` 的 13 個依概念拆進 `std/{vector,queue,map,set,stack}/executors.ts`
-- [ ] T013 [US1] `containers.ts` 剩的 7 個跨容器泛用操作 → `src/languages/cpp/core/executors/containers.ts`（research F2：它們的家本來就在核心）
+- [X] T012 [US1] `containers.ts` 的 13 個依概念拆進 `std/{vector,queue,map,set,stack}/executors.ts`
+- [X] T013 [US1] `containers.ts` 剩的 7 個跨容器泛用操作 → `src/languages/cpp/core/executors/containers.ts`（research F2：它們的家本來就在核心）
 
 ### 收尾
 
-- [ ] T014 [US1] 刪除 `src/interpreter/executors/{strings,containers,pointers,cmath}.ts`
-- [ ] T015 [US1] 移除 `src/interpreter/interpreter.ts` 中對那四份的匯入與註冊呼叫
-- [ ] T016 [US1] 執行中立性護欄，確認數字下降，並記錄**下降可歸因到哪些概念**（FR-005）
+- [X] T014 [US1] 刪除 `src/interpreter/executors/{strings,containers,pointers,cmath}.ts`
+- [X] T015 [US1] 移除 `src/interpreter/interpreter.ts` 中對那四份的匯入與註冊呼叫
+- [X] T016 [US1] 執行中立性護欄，確認數字下降，並記錄**下降可歸因到哪些概念**（FR-005）
 
 **Checkpoint**: T002 集合不變 + 中立性下降 → US1 可獨立交付
 
@@ -78,10 +78,10 @@ description: "Task list for 054-execute-into-capsules"
 
 **Goal**: 證明這是純搬移。
 
-- [ ] T017 [US2] 跑完整測試套件，確認既有測試全數通過
-- [ ] T018 [US2] 執行完備性護欄，確認執行那一欄的「缺」**未增加**（FR-012）
-- [ ] T019 [US2] 執行重複註冊護欄，確認**未增加**（FR-013）
-- [ ] T020 [US2] 依 quickstart 情境 2 驗拆分：只載入單一模組時，不得連帶載進另一個模組的執行器
+- [X] T017 [US2] 跑完整測試套件，確認既有測試全數通過
+- [X] T018 [US2] 執行完備性護欄，確認執行那一欄的「缺」**未增加**（FR-012）
+- [X] T019 [US2] 執行重複註冊護欄，確認**未增加**（FR-013）
+- [X] T020 [US2] 依 quickstart 情境 2 驗拆分：只載入單一模組時，不得連帶載進另一個模組的執行器
 
 **Checkpoint**: 三項量測皆未惡化 → US2 可獨立交付
 
@@ -89,10 +89,10 @@ description: "Task list for 054-execute-into-capsules"
 
 ## Phase 5: User Story 3 — 忘了載入語言套件時說得出原因（Priority: P2）
 
-- [ ] T021 [US3] 加一支測試：沒載入語言套件時執行語言概念，錯誤訊息含「可能是沒有載入語言套件」（**此時應紅**）
-- [ ] T022 [US3] 加一支測試：已載入時該提示**不出現**，行為與現況相同
-- [ ] T023 [US3] 在 `src/interpreter/executor-registry.ts` 加 `hasAnyExecutor()`
-- [ ] T024 [US3] 在未知概念的錯誤路徑補上那句提示——**判準是「註冊表是空的」，不是「概念名長得像 C++」**（後者又會讓核心去認識語言）
+- [X] T021 [US3] 加一支測試：沒載入語言套件時執行語言概念，錯誤訊息含「可能是沒有載入語言套件」（**此時應紅**）
+- [X] T022 [US3] 加一支測試：已載入時該提示**不出現**，行為與現況相同
+- [X] T023 [US3] 在 `src/interpreter/executor-registry.ts` 加 `hasAnyExecutor()`
+- [X] T024 [US3] 在未知概念的錯誤路徑補上那句提示——**判準是「註冊表是空的」，不是「概念名長得像 C++」**（後者又會讓核心去認識語言）
 
 **Checkpoint**: 訊息說得出原因 → US3 可獨立交付
 

@@ -23,12 +23,14 @@ import cstringConcepts from './cstring/concepts.json'
 import cstringBlocks from './cstring/blocks.json'
 import { registerGenerators as registerCstringGenerators } from './cstring/generators'
 import { registerLifters as registerCstringLifters } from './cstring/lifters'
+import { registerExecutors as registerCstringExecutors } from './cstring/executors'
 
 // vector
 import vectorConcepts from './vector/concepts.json'
 import vectorBlocks from './vector/blocks.json'
 import { registerGenerators as registerVectorGenerators } from './vector/generators'
 import { registerLifters as registerVectorLifters } from './vector/lifters'
+import { registerExecutors as registerVectorExecutors } from './vector/executors'
 
 // algorithm
 import algorithmConcepts from './algorithm/concepts.json'
@@ -41,30 +43,35 @@ import stringConcepts from './string/concepts.json'
 import stringBlocks from './string/blocks.json'
 import { registerGenerators as registerStringGenerators } from './string/generators'
 import { registerLifters as registerStringLifters } from './string/lifters'
+import { registerExecutors as registerStringExecutors } from './string/executors'
 
 // map
 import mapConcepts from './map/concepts.json'
 import mapBlocks from './map/blocks.json'
 import { registerGenerators as registerMapGenerators } from './map/generators'
 import { registerLifters as registerMapLifters } from './map/lifters'
+import { registerExecutors as registerMapExecutors } from './map/executors'
 
 // stack
 import stackConcepts from './stack/concepts.json'
 import stackBlocks from './stack/blocks.json'
 import { registerGenerators as registerStackGenerators } from './stack/generators'
 import { registerLifters as registerStackLifters } from './stack/lifters'
+import { registerExecutors as registerStackExecutors } from './stack/executors'
 
 // queue
 import queueConcepts from './queue/concepts.json'
 import queueBlocks from './queue/blocks.json'
 import { registerGenerators as registerQueueGenerators } from './queue/generators'
 import { registerLifters as registerQueueLifters } from './queue/lifters'
+import { registerExecutors as registerQueueExecutors } from './queue/executors'
 
 // set
 import setConcepts from './set/concepts.json'
 import setBlocks from './set/blocks.json'
 import { registerGenerators as registerSetGenerators } from './set/generators'
 import { registerLifters as registerSetLifters } from './set/lifters'
+import { registerExecutors as registerSetExecutors } from './set/executors'
 
 // cmath
 import cmathConcepts from './cmath/concepts.json'
@@ -137,14 +144,14 @@ function makeModule(
 export const allStdModules: StdModule[] = [
   makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters, executorsStillInCore),
   makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, executorsStillInCore),
-  makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters, executorsStillInCore),
-  makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, executorsStillInCore),
+  makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters, registerCstringExecutors),
+  makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, registerVectorExecutors),
   makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, executorsStillInCore),
-  makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, executorsStillInCore),
-  makeModule('<map>', mapConcepts, mapBlocks, registerMapGenerators, registerMapLifters, executorsStillInCore),
-  makeModule('<stack>', stackConcepts, stackBlocks, registerStackGenerators, registerStackLifters, executorsStillInCore),
-  makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters, executorsStillInCore),
-  makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, executorsStillInCore),
+  makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, registerStringExecutors),
+  makeModule('<map>', mapConcepts, mapBlocks, registerMapGenerators, registerMapLifters, registerMapExecutors),
+  makeModule('<stack>', stackConcepts, stackBlocks, registerStackGenerators, registerStackLifters, registerStackExecutors),
+  makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters, registerQueueExecutors),
+  makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, registerSetExecutors),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters, registerCmathExecutors),
   makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, executorsStillInCore),
   makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, executorsStillInCore),

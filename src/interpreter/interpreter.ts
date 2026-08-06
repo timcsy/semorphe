@@ -17,8 +17,6 @@ import { registerFunctionExecutors } from './executors/functions'
 import { registerIoExecutors } from './executors/io'
 import { registerArrayExecutors } from './executors/arrays'
 import { registerMutationExecutors } from './executors/mutations'
-import { registerStringExecutors } from './executors/strings'
-import { registerContainerExecutors } from './executors/containers'
 
 interface InterpreterOptions {
   maxSteps?: number
@@ -80,8 +78,6 @@ export class SemanticInterpreter implements ExecutionContext {
     registerIoExecutors(reg)
     registerArrayExecutors(reg)
     registerMutationExecutors(reg)
-    registerStringExecutors(reg)
-    registerContainerExecutors(reg)
 
     // 語言套件推進來的執行器——核心不知道有哪些語言，只知道有人推東西進來
     for (const { concept, executor } of allLanguageExecutors()) reg(concept, executor as never)
@@ -374,7 +370,14 @@ export class SemanticInterpreter implements ExecutionContext {
       return
     }
     // 無 handler 時預設報錯
-    throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { concept })
+    throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, {
+      concept,
+      // 判準是「註冊表空不空」，不是「概念名長得像什麼」——後者會讓核心
+      // 重新認識語言，等於把剛搬走的東西搬回來
+      ...(this.executorRegistry.hasAnyExecutor()
+        ? {}
+        : { hint: '可能是沒有載入語言套件（例如未呼叫 registerCppLanguage()）' }),
+    })
   }
 
   async countStep(): Promise<void> {

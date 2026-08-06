@@ -11,6 +11,9 @@ import { describe, it, expect } from 'vitest'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+
+registerCppLanguage()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })

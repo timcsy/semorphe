@@ -1,5 +1,6 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import { registerPointerExecutors } from './pointers'
+import { registerContainerCoreExecutors } from './containers'
 
 /**
  * C++ 語言核心的執行路。
@@ -11,4 +12,5 @@ export function registerCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   registerPointerExecutors(register)
+  registerContainerCoreExecutors(register)
 }
