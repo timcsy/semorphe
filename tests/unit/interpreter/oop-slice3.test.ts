@@ -13,6 +13,8 @@
  * 兩者都不是「補一個執行器」的量級，**留在殼的清單裡繼續被數**。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+// ⚠️ 成員指派用**辨識器真正產出的形狀**（帶點號的名字）。
+// 手寫一個沒有生產者的形狀，測試會通過而什麼都沒驗到。
 import { SemanticInterpreter } from '../../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../../src/core/types'
@@ -82,7 +84,7 @@ describe('指標取成員 `p->x`', () => {
       prog(
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
-        n('var_assign', { name: 'p', member: 'x' }, { value: [num(9)] }),
+        n('var_assign', { name: 'p.x' }, { value: [num(9)] }),
         n('cpp_pointer_declare', { name: 'ptr', type: 'Point' }, {
           initializer: [n('cpp_address_of', {}, { var: [ref('p')] })],
         }),
@@ -192,8 +194,8 @@ describe('運算子多載', () => {
       prog(vec,
         n('var_declare', { name: 'a', type: 'V' }),
         n('var_declare', { name: 'b', type: 'V' }),
-        n('var_assign', { name: 'a', member: 'x' }, { value: [num(3)] }),
-        n('var_assign', { name: 'b', member: 'x' }, { value: [num(4)] }),
+        n('var_assign', { name: 'a.x' }, { value: [num(3)] }),
+        n('var_assign', { name: 'b.x' }, { value: [num(4)] }),
         show(n('arithmetic', { operator: '+' }, { left: [ref('a')], right: [ref('b')] }))),
     )
     expect(out.trim(), '兩個物件相加沒有走多載的運算子').toBe('7')

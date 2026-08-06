@@ -25,6 +25,8 @@
  * 單獨驗證。剩下的殼留在完備性報表裡繼續被數。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+// ⚠️ 成員指派用**辨識器真正產出的形狀**（帶點號的名字）。
+// 手寫一個沒有生產者的形狀，測試會通過而什麼都沒驗到。
 import { SemanticInterpreter } from '../../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../../src/core/types'
@@ -79,7 +81,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
-        n('var_assign', { name: 'p', member: 'x' }, { value: [num(7)] }),
+        n('var_assign', { name: 'p.x' }, { value: [num(7)] }),
         show(n('cpp_struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
@@ -91,7 +93,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
-        n('var_assign', { name: 'p', member: 'x' }, { value: [num(7)] }),
+        n('var_assign', { name: 'p.x' }, { value: [num(7)] }),
         show(n('cpp_struct_member_access', { obj: 'p', member: 'y' })),
       ),
     )
@@ -104,7 +106,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('var_declare', { name: 'a', type: 'Point' }),
         n('var_declare', { name: 'b', type: 'Point' }),
-        n('var_assign', { name: 'a', member: 'x' }, { value: [num(3)] }),
+        n('var_assign', { name: 'a.x' }, { value: [num(3)] }),
         show(n('cpp_struct_member_access', { obj: 'b', member: 'x' })),
       ),
     )

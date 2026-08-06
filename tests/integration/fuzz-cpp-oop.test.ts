@@ -558,9 +558,80 @@ int main() {
 // fuzz_3, fuzz_4: ptr->method() via pointer array generates as .method()
 it.todo('[BLOCKED:cpp_pointer_declare] fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
 // fuzz_5: inner block { } scope flattened, destructor order wrong
-it.todo('[BLOCKED:cpp_destructor] fuzz: nested block scope for destructor ordering (needs standalone block concept)')
+// 080 實作了解構式與作用域結束的時機
+describe('fuzz: 解構式的順序', () => {
+  const code = `#include <iostream>
+using namespace std;
+class Tag {
+public:
+    int n;
+    ~Tag() {
+        cout << n;
+    }
+};
+int main() {
+    if (1) {
+        Tag a;
+        a.n = 1;
+        Tag b;
+        b.n = 2;
+    }
+    cout << "-";
+    return 0;
+}`
+
+  it('來回轉換保住解構式', () => {
+    expect(roundTrip(code)).toContain('~Tag()')
+  })
+
+  it('★ 反序，且在離開區塊時就跑完——不是程式結束才跑', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as any)
+    const interp = new SemanticInterpreter({ maxSteps: 20000 })
+    registerCppLanguage()
+    await interp.execute(sem!)
+    const out = interp.getOutput().join('')
+    expect(out.replace(/\s/g, ''), 'C++ 保證後宣告的先解構，且在離開區塊時就跑').toBe('21-')
+  })
+})
 // fuzz_10: static int count; and int Widget::count = 0; not supported
-it.todo('[BLOCKED:cpp_class_def] fuzz: class with static member and out-of-class definition (needs static member concept)')
+// 073 實作了靜態成員——這支從 `it.todo`（只有名字）變成真的測試。
+// **重新產生**而不是打勾：todo 沒有測試本體，把它改成 `it` 不會多驗到任何東西。
+describe('fuzz: class with static member', () => {
+  const code = `#include <iostream>
+using namespace std;
+class Counter {
+public:
+    static int total;
+    int id;
+    void reg() {
+        total = total + 1;
+        id = total;
+    }
+};
+int main() {
+    Counter a;
+    Counter b;
+    a.reg();
+    b.reg();
+    cout << b.id << endl;
+    return 0;
+}`
+
+  it('來回轉換保住靜態成員的宣告', () => {
+    const gen = roundTrip(code)
+    expect(gen).toContain('static int total')
+  })
+
+  it('靜態成員由所有實例共用——執行結果證明它不是每個實例各一份', async () => {
+    const tree = tsParser.parse(code)
+    const sem = lifter.lift(tree.rootNode as any)
+    const interp = new SemanticInterpreter({ maxSteps: 20000 })
+    registerCppLanguage()
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').trim(), '第二個實例拿到 1 → 靜態成員被當成實例欄位了').toContain('2')
+  })
+})
 
 // --- oop_010: two classes with constructors/destructors, destruction order ---
 
