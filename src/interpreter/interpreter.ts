@@ -102,42 +102,17 @@ export class SemanticInterpreter implements ExecutionContext {
 
     // swap
 
-    // ⚠️ 已知缺口，**不是**「刻意不執行」
+    // ⚠️ 「執行不了」的那兩類概念已搬進語言套件
+    // （`languages/cpp/core/executors/unimplemented.ts`）——看不懂的兜底容器
+    // （執行到就出聲，不靜靜略過）與未實作的物件導向（十個空操作）。
     //
-    // 這些概念實測跑起來**結果是錯的**（十個是物件導向，直譯器不支援它）。
-    // 它們留在這裡當空操作，是因為改成報錯會讓原本印得出東西的程式整個停掉
-    // ——見 knowledge/history/017「加嚴一個檢查可能比不檢查更糟」。
+    // **那是「搬」不是「宣告」。** 那十個仍然是殼，完備性護欄照樣數它們；
+    // 搬移只改變了住處，沒有改變任何一個判定。它們**不得**取得 `skipPaths`
+    // 宣告——見 history/018「拿判準當藉口，把缺陷洗成設計」。
     //
-    // 它們**不得**取得 `skipPaths` 宣告；完備性報表仍把它們算成殼，
-    // `tests/integration/noop-classification.test.ts` 每次跑都會把它們印出來。
-    // 逐一分類與依據見 specs/053-declare-noop-execute/classification.md。
-    //
-    // 真正的歸屬是語言套件，不是核心層——那需要先把執行器搬過去（階段 6.5 P2）。
-    // 辨識不出來的程式碼：**執行到就出聲**，不能靜靜略過。
-    //
-    // 它們是「我們看不懂這段」的兜底容器。原本註冊成空操作，於是使用者寫的
-    // 一段程式**什麼都沒發生而且沒有任何提示**——那正是「靜默降級是 bug 的
-    // 藏身之處」講的形狀，而這裡藏的是使用者自己的程式碼。
-    //
-    // 出聲的形式是可被 `unknownConceptHandler` 接管的錯誤，與未知概念同一條
-    // 路徑：使用者可以選擇跳過或中止，**但不會不知道**。
-    for (const c of ['cpp_raw_code', 'cpp_raw_expression']) {
-      reg(c, async (node) => {
-        throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
-          '%1': String(node.properties?.code ?? '(不明)').slice(0, 60),
-        })
-      })
-    }
-
-    const noop: import('./executor-registry').ConceptExecutor = async () => {}
-    for (const c of [
-      'cpp_include_local',
-      'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
-      'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
-      'cpp_operator_overload', 'cpp_namespace_def', 'cpp_lambda',
-    ]) {
-      reg(c, noop)
-    }
+    // `cpp_include_local` 曾在同一份清單裡，但它有真的宣告（concepts.json
+    // 的 `skipPaths: ['execute']`），而下面的 `isSkipped` 會讀它。那一筆是
+    // 053 之後的殘留，已刪除——不是搬過去。
 
     // algorithm concepts — noop for sort/reverse/fill (operate on containers, not interpreter values)
 
