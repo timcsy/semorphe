@@ -3,12 +3,12 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { SemanticNode } from '../../src/core/types'
 import { createNode } from '../../src/core/semantic-tree'
 import { RuntimeError } from '../../src/interpreter/errors'
-import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
 // 執行 C++ 概念前必須先載入語言套件——「哪些概念刻意不執行」現在由概念自己
 // 宣告，語言套件載入時推進核心。沒載入的話，那些概念會被判為未知概念。
 // 這個相依是刻意的：核心層不再認識任何 C++ 概念名（P9）。
-registerCppSkipDeclarations()
+registerCppLanguage()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })
