@@ -57,7 +57,13 @@
       "value": "expression",
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_default",
@@ -67,7 +73,13 @@
     "children": {
       "body": "statements"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "consumed-by-parent"
+    }
   },
   {
     "conceptId": "cpp_ternary",
@@ -282,7 +294,9 @@
     "conceptId": "cpp_container_empty",
     "layer": "lang-core",
     "abstractConcept": "container_empty",
-    "properties": ["obj"],
+    "properties": [
+      "obj"
+    ],
     "children": {},
     "role": "expression"
   },
@@ -290,15 +304,21 @@
     "conceptId": "cpp_container_push",
     "layer": "lang-core",
     "abstractConcept": "container_push",
-    "properties": ["obj"],
-    "children": { "value": "expression" },
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "value": "expression"
+    },
     "role": "statement"
   },
   {
     "conceptId": "cpp_container_pop",
     "layer": "lang-core",
     "abstractConcept": "container_pop",
-    "properties": ["obj"],
+    "properties": [
+      "obj"
+    ],
     "children": {},
     "role": "statement"
   },
@@ -306,7 +326,9 @@
     "conceptId": "cpp_container_clear",
     "layer": "lang-core",
     "abstractConcept": "container_clear",
-    "properties": ["obj"],
+    "properties": [
+      "obj"
+    ],
     "children": {},
     "role": "statement"
   },
@@ -314,24 +336,36 @@
     "conceptId": "cpp_container_push_back",
     "layer": "lang-core",
     "abstractConcept": "container_push_back",
-    "properties": ["obj"],
-    "children": { "value": "expression" },
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "value": "expression"
+    },
     "role": "statement"
   },
   {
     "conceptId": "cpp_container_erase",
     "layer": "lang-core",
     "abstractConcept": "container_erase",
-    "properties": ["obj"],
-    "children": { "key": "expression" },
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression"
+    },
     "role": "statement"
   },
   {
     "conceptId": "cpp_container_count",
     "layer": "lang-core",
     "abstractConcept": "container_count",
-    "properties": ["obj"],
-    "children": { "key": "expression" },
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression"
+    },
     "role": "expression"
   },
   {
@@ -408,7 +442,13 @@
       "header"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_include_local",
@@ -429,7 +469,13 @@
       "value"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_ifdef",
@@ -467,7 +513,13 @@
       "text"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "doc_comment",
@@ -477,7 +529,13 @@
       "brief"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "block_comment",
@@ -487,7 +545,13 @@
       "text"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_using_namespace",
@@ -497,7 +561,13 @@
       "ns"
     ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_increment_expr",

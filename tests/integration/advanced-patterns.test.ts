@@ -17,11 +17,13 @@ import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createTestLifter } from '../helpers/setup-lifter'
+import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
 
 let tsParser: Parser
 let lifter: Lifter
 
 beforeAll(async () => {
+  registerCppSkipDeclarations()
   await Parser.init({
     locateFile: (scriptName: string) => `${process.cwd()}/public/${scriptName}`,
   })

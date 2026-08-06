@@ -62,12 +62,13 @@ description: "Task list for 053-declare-noop-execute"
 
 **Goal**: 只有 T003 判定可宣告的概念拿到宣告；其餘仍算殼並進缺陷帳。
 
-- [ ] T009 [US1] 在 `src/core/types.ts` 新增 `SkipReason = 'declarative' | 'consumed-by-parent'` 與 `skipReasons?: Partial<Record<PathName, SkipReason>>`，並**改寫 `skipPaths` 的型別註解**——它不再是「不影響執行期行為」的純資料
-- [ ] T010 [US1] 加一支測試強制：有 `skipPaths` 必有對應 `skipReasons`（**沒有理由的宣告是把缺陷洗成設計**）
-- [ ] T011 [US1] 加一支測試強制：宣告 `execute` 被跳過的概念，**不得**同時註冊非空執行器（矛盾偵測，FR-012）
-- [ ] T012 [US1] 依 T003 的分類，把可宣告的概念加上 `skipPaths: ["execute"]` + `skipReasons`（改 `concepts.json`；通用概念如 `comment` 放通用層）
-- [ ] T013 [US1] 確認判為「還沒實作」的概念**沒有**拿到宣告，且仍出現在完備性報表的殼裡（FR-003）
-- [ ] T014 [US1] 把判為「還沒實作」的概念登記進缺陷帳，標記為**執行結果可能錯誤**（FR-004／FR-005）
+- [X] T009 [US1] 在 `src/core/types.ts` 新增 `SkipReason = 'declarative' | 'consumed-by-parent'` 與 `skipReasons?: Partial<Record<PathName, SkipReason>>`，並**改寫 `skipPaths` 的型別註解**——它不再是「不影響執行期行為」的純資料
+- [X] T010 [US1] 加一支測試強制：有 `skipPaths` 必有對應 `skipReasons`（**沒有理由的宣告是把缺陷洗成設計**）
+- [X] T011 [US1] 加一支測試強制：宣告 `execute` 被跳過的概念，**不得**同時註冊非空執行器（矛盾偵測，FR-012）
+- [X] T012 [US1] 依 T003 的分類，把可宣告的概念加上 `skipPaths: ["execute"]` + `skipReasons`（改 `concepts.json`；通用概念如 `comment` 放通用層）
+- [X] T013 [US1] 確認判為「還沒實作」的概念**沒有**拿到宣告，且仍出現在完備性報表的殼裡（FR-003）
+- [X] T014 [US1] 把判為「還沒實作」的概念登記進缺陷帳，標記為**執行結果可能錯誤**（FR-004／FR-005）
+  > **實作偏離**：原訂寫進缺陷帳，但缺陷帳掃的是停用測試——那等於新增 15 個 `it.todo`，而 050 剛學到那正是噪音（「只有名字的測試」需要的是重新產生，不是修缺口）。改為：它們已被完備性報表算成殼，且 `noop-classification.test.ts` 每次跑都把 14 列印出來。**不沉默，比 todo 好。**
 
 **Checkpoint**: 宣告有依據、缺陷仍可見 → US1 可獨立交付
 
@@ -79,14 +80,14 @@ description: "Task list for 053-declare-noop-execute"
 
 ### 先紅
 
-- [ ] T015 [US2] 加一支測試：對每個被宣告的概念，執行行為與**修改前逐一比對相同**（跳過、不報錯）
-- [ ] T016 [US2] 加一支測試：既無宣告也無執行器的概念仍回報未知概念（現況，不得改變）
+- [X] T015 [US2] 加一支測試：對每個被宣告的概念，執行行為與**修改前逐一比對相同**（跳過、不報錯）
+- [X] T016 [US2] 加一支測試：既無宣告也無執行器的概念仍回報未知概念（現況，不得改變）
 
 ### 後綠
 
-- [ ] T017 [US2] 在 `src/interpreter/interpreter.ts` 刪除 34 個概念名的清單，改為走訪概念註冊表：`skipPaths` 含 `execute` 者註冊 noop（data-model 契約 3）
-- [ ] T018 [US2] 確認直譯器建構時取得概念註冊表的方式**不引入對語言套件的 import**（否則違反的是同一條 P9）
-- [ ] T019 [US2] 執行中立性護欄，確認 `interpreter.ts` 的違規數下降，並記錄下降幅度可歸因到哪些概念（FR-030）
+- [X] T017 [US2] 在 `src/interpreter/interpreter.ts` 刪除 34 個概念名的清單，改為走訪概念註冊表：`skipPaths` 含 `execute` 者註冊 noop（data-model 契約 3）
+- [X] T018 [US2] 確認直譯器建構時取得概念註冊表的方式**不引入對語言套件的 import**（否則違反的是同一條 P9）
+- [X] T019 [US2] 執行中立性護欄，確認 `interpreter.ts` 的違規數下降，並記錄下降幅度可歸因到哪些概念（FR-030）
 
 **Checkpoint**: 清單歸零、行為不變 → US2 可獨立交付
 

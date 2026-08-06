@@ -21,11 +21,13 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
+import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
 
 let tsParser: Parser
 let lifter: Lifter
 
 beforeAll(async () => {
+  registerCppSkipDeclarations()
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
   tsParser = new Parser()
   tsParser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))

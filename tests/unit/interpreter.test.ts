@@ -3,6 +3,12 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { SemanticNode } from '../../src/core/types'
 import { createNode } from '../../src/core/semantic-tree'
 import { RuntimeError } from '../../src/interpreter/errors'
+import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
+
+// 執行 C++ 概念前必須先載入語言套件——「哪些概念刻意不執行」現在由概念自己
+// 宣告，語言套件載入時推進核心。沒載入的話，那些概念會被判為未知概念。
+// 這個相依是刻意的：核心層不再認識任何 C++ 概念名（P9）。
+registerCppSkipDeclarations()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
   return createNode('program', {}, { body })
@@ -445,10 +451,13 @@ describe('Interpreter - edge cases', () => {
     ).rejects.toThrow(RuntimeError)
   })
 
+  // 概念名從冒號式改為底線式；冒號版在 src/ 已無任何地方產生，因此不再被
+  // 當成「刻意不執行」——沒有註冊過的概念就是未知概念，那是對的。
+  // 見 specs/053-declare-noop-execute/classification.md 的死條目。
   it('should skip language-specific concepts', async () => {
     const interp = await run([
-      createNode('cpp:include' as any, { header: 'iostream' }, {}),
-      createNode('cpp:using_namespace' as any, { namespace: 'std' }, {}),
+      createNode('cpp_include' as any, { header: 'iostream' }, {}),
+      createNode('cpp_using_namespace' as any, { namespace: 'std' }, {}),
       createNode('print', {}, {
         values: [createNode('string_literal', { value: 'ok' }, {})]
       })

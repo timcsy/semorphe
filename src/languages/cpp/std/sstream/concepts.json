@@ -3,8 +3,16 @@
     "conceptId": "cpp_stringstream_declare",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["name"],
+    "properties": [
+      "name"
+    ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   }
 ]

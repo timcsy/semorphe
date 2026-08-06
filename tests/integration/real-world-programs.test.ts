@@ -21,12 +21,14 @@ import universalConcepts from '../../src/blocks/semantics/universal-concepts.jso
 import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
+import { registerCppSkipDeclarations } from '../../src/languages/cpp/generators'
 
 let tsParser: Parser
 let lifter: Lifter
 let patternRenderer: PatternRenderer
 
 beforeAll(async () => {
+  registerCppSkipDeclarations()
   await Parser.init({
     locateFile: (scriptName: string) => `${process.cwd()}/public/${scriptName}`,
   })

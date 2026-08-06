@@ -1,4 +1,5 @@
 import type { SemanticNode } from '../core/types'
+import { isSkipped } from '../core/skip-declarations'
 import { CPP_BUILTIN_CONSTANTS, CPP_BUILTIN_NAMES } from '../languages/cpp/builtins'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString } from './types'
@@ -113,20 +114,24 @@ export class SemanticInterpreter implements ExecutionContext {
       ctx.scope.set(b, va)
     })
 
-    // 編譯時/宣告性概念：無執行行為
+    // ⚠️ 已知缺口，**不是**「刻意不執行」
+    //
+    // 這些概念實測跑起來**結果是錯的**（十個是物件導向，直譯器不支援它）。
+    // 它們留在這裡當空操作，是因為改成報錯會讓原本印得出東西的程式整個停掉
+    // ——見 knowledge/history/017「加嚴一個檢查可能比不檢查更糟」。
+    //
+    // 它們**不得**取得 `skipPaths` 宣告；完備性報表仍把它們算成殼，
+    // `tests/integration/noop-classification.test.ts` 每次跑都會把它們印出來。
+    // 逐一分類與依據見 specs/053-declare-noop-execute/classification.md。
+    //
+    // 真正的歸屬是語言套件，不是核心層——那需要先把執行器搬過去（階段 6.5 P2）。
     const noop: import('./executor-registry').ConceptExecutor = async () => {}
     for (const c of [
-      'cpp_include', 'cpp_include_local', 'cpp_using_namespace', 'cpp_define',
       'cpp_ifdef', 'cpp_ifndef',
-      'cpp:include', 'cpp:include_local', 'cpp:using_namespace',
-      'comment', 'block_comment', 'doc_comment',
-      'cpp_raw_code', 'cpp_raw_expression',
-      'cpp_case', 'cpp_default',
+      'cpp_include_local', 'cpp_raw_code', 'cpp_raw_expression',
       'cpp_class_def', 'cpp_struct_declare', 'cpp_constructor', 'cpp_destructor',
       'cpp_virtual_method', 'cpp_pure_virtual', 'cpp_override_method',
-      'cpp_operator_overload',
-      'cpp_namespace_def', 'cpp_lambda',
-      'cpp_stringstream_declare', 'cpp_ifstream_declare', 'cpp_ofstream_declare', 'cpp_pair_declare',
+      'cpp_operator_overload', 'cpp_namespace_def', 'cpp_lambda',
     ]) {
       reg(c, noop)
     }
@@ -332,6 +337,9 @@ export class SemanticInterpreter implements ExecutionContext {
     if (executor) {
       return executor(node, this)
     }
+
+    // 概念自己宣告了「刻意不執行」——來源是概念檔，不是核心層的清單
+    if (isSkipped(concept, 'execute')) return
 
     // 未知概念：通知使用者決定跳過或停止
     if (this.unknownConceptHandler) {

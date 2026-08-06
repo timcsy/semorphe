@@ -5,6 +5,9 @@ import { registerStatementGenerators } from '../core/generators/statements'
 import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
+import { declareSkips } from '../../../core/skip-declarations'
+import { coreConcepts } from '../core'
+import type { PathName, SkipReason } from '../../../core/types'
 
 function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
   const g = new Map<string, NodeGenerator>()
@@ -21,4 +24,21 @@ function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
 
 export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
+  registerCppSkipDeclarations()
+}
+
+/**
+ * 把「這個概念刻意不執行」的宣告推進核心。
+ *
+ * 在此之前這件事寫死在 `src/interpreter/interpreter.ts` 的一份清單裡——
+ * 核心層認識 34 個 C++ 概念名。現在核心只認識「有沒有人宣告過」。
+ *
+ * 見 specs/053-declare-noop-execute/classification.md
+ */
+export function registerCppSkipDeclarations(): void {
+  const all = [...coreConcepts, ...allStdModules.flatMap((m) => m.concepts)]
+  for (const c of all) {
+    const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
+    if (reasons && Object.keys(reasons).length > 0) declareSkips(c.conceptId, reasons)
+  }
 }

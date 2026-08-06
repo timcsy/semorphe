@@ -1,0 +1,60 @@
+import type { PathName, SkipReason } from './types'
+
+/**
+ * 「這個概念刻意不走某條路徑」的宣告登記處。
+ *
+ * ## 為什麼需要這個模組
+ *
+ * 在此之前，「哪些概念不執行」寫死在核心直譯器的一份 34 行清單裡。那違反
+ * 「核心層不得認識語言專屬概念」，而且同一個事實有兩處記載（概念檔的
+ * `skipPaths` 欄位與那份清單），**兩處從未一致過**——宣告那邊是 0 個。
+ *
+ * 現在只有一處：**概念自己說**。語言套件載入時把宣告推進來，核心層讀它。
+ * 這與既有的 `registerLanguage`／`setDependencyResolver` 是同一個形狀。
+ *
+ * ## 空的登記處代表什麼
+ *
+ * 代表沒有語言套件載入過。這時每個沒有執行器的概念都會回報未知概念——
+ * **與加入本機制之前的行為相同**（那時清單外的概念本來就是未知）。
+ *
+ * 見 specs/053-declare-noop-execute/、knowledge/concepts/執行機構.md
+ */
+const declarations = new Map<string, Partial<Record<PathName, SkipReason>>>()
+
+/** 語言套件載入時呼叫，把概念自己的宣告推進來 */
+export function declareSkips(
+  conceptId: string,
+  reasons: Partial<Record<PathName, SkipReason>>,
+): void {
+  declarations.set(conceptId, reasons)
+}
+
+/** 這個概念是否宣告了刻意不走這條路徑 */
+export function isSkipped(conceptId: string, path: PathName): boolean {
+  return declarations.get(conceptId)?.[path] !== undefined
+}
+
+/** 宣告的理由——報表要說得出「為什麼」，宣告才是可複查的 */
+export function skipReason(conceptId: string, path: PathName): SkipReason | undefined {
+  return declarations.get(conceptId)?.[path]
+}
+
+/** 全部宣告（護欄報表用） */
+export function allSkipDeclarations(): {
+  conceptId: string
+  path: PathName
+  reason: SkipReason
+}[] {
+  const out: { conceptId: string; path: PathName; reason: SkipReason }[] = []
+  for (const [conceptId, reasons] of declarations) {
+    for (const [path, reason] of Object.entries(reasons)) {
+      if (reason) out.push({ conceptId, path: path as PathName, reason })
+    }
+  }
+  return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+}
+
+/** 測試用：清空（正式流程不呼叫） */
+export function resetSkipDeclarations(): void {
+  declarations.clear()
+}

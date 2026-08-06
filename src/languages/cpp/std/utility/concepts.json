@@ -3,9 +3,19 @@
     "conceptId": "cpp_pair_declare",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["type1", "type2", "name"],
+    "properties": [
+      "type1",
+      "type2",
+      "name"
+    ],
     "children": {},
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "execute"
+    ],
+    "skipReasons": {
+      "execute": "declarative"
+    }
   },
   {
     "conceptId": "cpp_make_pair",

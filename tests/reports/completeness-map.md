@@ -4,7 +4,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：175｜✅ 實作 782｜🈳 殼 88｜❌ 缺 5（以路徑數計）
+元件：175｜✅ 實作 794｜🈳 殼 76｜❌ 缺 5（以路徑數計）
 
 | 元件 | generate | lift | render | extract | execute |
 |---|---|---|---|---|---|
@@ -13,10 +13,10 @@
 | `array_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `array_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `bitwise_not` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `block_comment` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `block_comment` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `break` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `builtin_constant` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `comment` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `comment` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `compare` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `continue` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `count_loop` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -29,7 +29,7 @@
 | `cpp_atof` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_atoi` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_auto_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_case` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
+| `cpp_case` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_char_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_class_def` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -46,8 +46,8 @@
 | `cpp_container_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_push` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_container_push_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_default` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp_define` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_default` | ✅ | 🈳 | ✅ | ✅ | ✅ |
+| `cpp_define` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_delete` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_destructor` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_do_while` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -61,8 +61,8 @@
 | `cpp_getline` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_ifdef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_ifndef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_ifstream_declare` | ✅ | ✅ | ✅ | ✅ | 🈳 |
-| `cpp_include` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
+| `cpp_ifstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp_include` | 🈳 | ❌ | ✅ | ✅ | ✅ |
 | `cpp_include_local` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
 | `cpp_increment` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_increment_expr` | ✅ | 🈳 | ✅ | ✅ | ✅ |
@@ -83,10 +83,10 @@
 | `cpp_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_namespace_def` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_new` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_ofstream_declare` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_ofstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_operator_overload` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
 | `cpp_override_method` | ✅ | 🈳 | ✅ | ✅ | 🈳 |
-| `cpp_pair_declare` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_pair_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_partial_sum` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_pointer_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -134,7 +134,7 @@
 | `cpp_string_push_back` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp_string_replace` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_string_substr` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_stringstream_declare` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `cpp_stringstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strlen` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strncmp` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_strncpy` | ✅ | ✅ | ✅ | ✅ | 🈳 |
@@ -153,7 +153,7 @@
 | `cpp_try_catch` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_typedef` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `cpp_using_alias` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
-| `cpp_using_namespace` | 🈳 | ❌ | ✅ | ✅ | 🈳 |
+| `cpp_using_namespace` | 🈳 | ❌ | ✅ | ✅ | ✅ |
 | `cpp_vector_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_vector_pop_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -162,7 +162,7 @@
 | `cpp:math_binary` | ✅ | 🈳 | ✅ | ✅ | ✅ |
 | `cpp:math_pow` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_unary` | ✅ | 🈳 | ✅ | ✅ | ✅ |
-| `doc_comment` | ✅ | ✅ | ✅ | ✅ | 🈳 |
+| `doc_comment` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `forward_decl` | ✅ | ✅ | ✅ | ✅ | 🈳 |
 | `func_call` | ✅ | ✅ | ✅ | ✅ | ✅ |

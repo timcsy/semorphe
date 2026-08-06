@@ -280,14 +280,36 @@ export interface ConceptDefJSON {
   role: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>
   /**
-   * 本概念**刻意**不提供的路徑。純資料、可選、不影響任何執行期行為，
-   * 只有完備性護欄讀它。
+   * 本概念**刻意**不提供的路徑。
+   *
+   * **這不再只是文件——執行引擎會讀它。** 在此之前「哪些概念不執行」寫死在
+   * 核心直譯器的一份清單裡，而這個欄位一個概念都沒用過；同一個事實有兩處
+   * 記載，且兩處從未一致。現在只有一處：概念自己說。
    *
    * 未宣告的空實作一律判為「殼」——正確的空與缺失的空長得一樣，
    * 所以要求正確的那個出聲。見 knowledge/concepts/執行機構.md。
    */
   skipPaths?: PathName[]
+  /**
+   * 每條被跳過的路徑**為什麼**被跳過。有 `skipPaths` 就必須有它。
+   *
+   * 沒有理由的宣告是**把缺陷洗成設計**——而且宣告下去之後，護欄會替它背書。
+   * 實測 34 個「無執行行為」的概念裡，只有 12 個說得出理由（見
+   * `specs/053-declare-noop-execute/classification.md`）。
+   */
+  skipReasons?: Partial<Record<PathName, SkipReason>>
 }
+
+/**
+ * 一條路徑被刻意跳過的理由。**只有兩個值，而且不得增加。**
+ *
+ * 第三個值就是在替「還沒做」找一個體面的名字。
+ */
+export type SkipReason =
+  /** 這個概念在執行期沒有任何可觀察效果（註解、include、define…） */
+  | 'declarative'
+  /** 有子槽，但由父概念的執行器負責走訪（cpp_case ← cpp_switch） */
+  | 'consumed-by-parent'
 
 /** Block projection in block-specs.json (projection layer) */
 export interface BlockProjectionJSON {
