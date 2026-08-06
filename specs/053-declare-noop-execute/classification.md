@@ -171,3 +171,22 @@
 它們自己的 generator 是空的**是對的**——標頭與 using 由**程式骨架**統一產生並排在檔案最上方，概念各自輸出會產生重複。
 
 先實測「round-trip 會不會掉」再宣告，不是看到空的就假設它有理由。
+
+
+---
+
+## 改判（2026-08-06 更晚，處理完備性剩下的殼時）
+
+兩個原本判「不得宣告」的，**在拿到證據之後改判**。改判必須附證據——不是因為想讓數字下降。
+
+| 概念 | 原判定 | 改判 | 證據 |
+|---|---|---|---|
+| `var_declarator` | 判不出來（概念沒出現在語義樹裡） | **四路皆 `consumed-by-parent`** | `var_declare` 的產生器直接讀 `declarators` 的 `name` 與 `initializer`（`core/generators/declarations.ts:5-19`）；extract 策略也是它建的（`extractors/extract-strategies.ts:23`） |
+| `cpp_include_local` | 還沒實作 | **execute 為 `declarative`** | 與 `cpp_include` 是同一件事，後者早已依實測宣告 |
+
+同時改正一個 056 補宣告時填錯的欄位：`var_declarator` 的子槽宣告成 `value`，
+實際用的是 `initializer`。**宣告與實際不符的欄位不會有任何錯誤**——這是
+「指不到與沒有回傳同一個值」的又一個形狀。
+
+`cpp_raw_code` / `cpp_raw_expression` **維持不得宣告**，但它們的執行已從空操作
+改為擲 `UNRECOGNIZED_CODE`——那是降級要出聲，不是宣告它們不執行。

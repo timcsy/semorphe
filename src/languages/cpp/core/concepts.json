@@ -498,10 +498,12 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
+      "execute",
       "generate"
     ],
     "skipReasons": {
-      "generate": "consumed-by-parent"
+      "generate": "consumed-by-parent",
+      "execute": "declarative"
     }
   },
   {
@@ -1055,8 +1057,20 @@
       "name"
     ],
     "children": {
-      "value": "expression"
+      "initializer": "expression"
     },
-    "role": "statement"
+    "role": "statement",
+    "skipPaths": [
+      "extract",
+      "generate",
+      "lift",
+      "render"
+    ],
+    "skipReasons": {
+      "extract": "consumed-by-parent",
+      "generate": "consumed-by-parent",
+      "lift": "consumed-by-parent",
+      "render": "consumed-by-parent"
+    }
   }
 ]

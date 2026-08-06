@@ -79,7 +79,12 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       'cpp_virtual_method', 'cpp_override_method', 'cpp_pure_virtual',
       'cpp_operator_overload', 'cpp_lambda', 'cpp_namespace_def',
       'cpp_ifdef', 'cpp_ifndef',
-      'cpp_raw_code', 'cpp_raw_expression', 'cpp_include_local',
+      'cpp_raw_code', 'cpp_raw_expression',
+      // `var_declarator` 與 `cpp_include_local` 已改判——**附證據，不是因為想讓數字下降**：
+      //   var_declarator：`var_declare` 的產生器直接讀 `declarators` 的 `name` 與
+      //     `initializer`（core/generators/declarations.ts:5-19），extract 策略也是它
+      //     建的。四路都由父概念消費。053 當時判「判不出來」是證據不足。
+      //   cpp_include_local：與 `cpp_include` 是同一件事，後者早已宣告 declarative。
     ]
     const 偷渡 = allComponentDefs()
       .filter((d) => 不得宣告.includes(d.conceptId) && (d.skipPaths ?? []).includes('execute'))
