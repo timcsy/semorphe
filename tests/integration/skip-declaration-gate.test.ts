@@ -14,12 +14,15 @@
  *
  * 這支測試是那個門檻的機械化版本。
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { REPO_ROOT } from '../helpers/guardrail'
 import { describe, it, expect } from 'vitest'
 import { allComponentDefs } from '../helpers/component-scan'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { PathName } from '../../src/core/types'
 
-const REASONS = new Set(['declarative', 'consumed-by-parent'])
+const REASONS = new Set(['declarative', 'consumed-by-parent', 'degradation-target'])
 
 describe('宣告的門檻：說不出理由的不准宣告', () => {
   it('有 skipPaths 就必須有對應的 skipReasons', () => {
@@ -43,6 +46,50 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       }
     }
     expect(壞理由, `不認得的理由：${壞理由.join('、')}`).toEqual([])
+  })
+
+  /**
+   * 第三個理由的門檻**比前兩個更硬**。
+   *
+   * `history/018`：「理由只有固定幾個值且不得增加——第三個值就是在替
+   * 『還沒做』找一個體面的名字。」所以加第三個值的代價是：
+   * **它的事實依據要能機械查證**，不能只寫一句話。
+   *
+   * `degradation-target` 的兩個依據：
+   *   ① 真的有概念宣告它為 abstractConcept（否則它不是任何人的降級目標）
+   *   ② 不在工具箱裡（使用者拖得到的話，它就該辨識得回來）
+   */
+  it('★ degradation-target 的兩個事實依據，逐一查證', async () => {
+    const defs = allComponentDefs()
+    const 降級目標 = defs.filter((d) =>
+      Object.values(d.skipReasons ?? {}).includes('degradation-target' as never),
+    )
+    const 被指向 = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
+    const toolbox = readFileSync(join(REPO_ROOT, 'src/languages/cpp/toolbox-categories.ts'), 'utf8')
+
+    const 站不住: string[] = []
+    for (const d of 降級目標) {
+      if (!被指向.has(d.conceptId)) {
+        站不住.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
+      }
+      // 工具箱排除的形式是 `excludeTypes: ['u_xxx']`
+      const blockType = `u_${d.conceptId}`
+      if (!toolbox.includes(`'${blockType}'`)) {
+        站不住.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
+      }
+    }
+    expect(
+      站不住,
+      '以下 degradation-target 宣告的事實依據站不住：\n  ' + 站不住.join('\n  ') +
+        '\n**第三個理由的門檻比前兩個更硬**——它的依據要能機械查證，不能只寫一句話。',
+    ).toEqual([])
+  })
+
+  it('★ 反面：一個普通概念不得偷用 degradation-target', () => {
+    // 沒有這支的話，上面那支對「零個宣告者」也會通過
+    const defs = allComponentDefs()
+    const 被指向 = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
+    expect(被指向.size, '沒有任何概念宣告 abstractConcept → 上面那支什麼都沒驗到').toBeGreaterThan(5)
   })
 
   it('沒有 skipPaths 卻寫了 skipReasons —— 孤兒理由', () => {

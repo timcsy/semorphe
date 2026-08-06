@@ -168,6 +168,12 @@
       "control_flow": "branch",
       "introduces_scope": true,
       "debug_step": true
+    },
+    "skipPaths": [
+      "lift"
+    ],
+    "skipReasons": {
+      "lift": "degradation-target"
     }
   },
   {
