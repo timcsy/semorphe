@@ -299,10 +299,18 @@ int main() {
     return 0;
 }`
 
-  // BUG: int* ptrs[3] lifted as int x; - pointer array type not supported
-  it.todo('[BLOCKED:cpp_pointer_declare] executes correctly (pointer array declaration lost during lift)')
+    // 這個 `BUG:` 註解在 084 修好了——**兩個的根因是同一種**：
+  // 語法樹的 `pointer_declarator` 包了一層，而辨識器沒有下鑽。
+  it('★ 來回轉換保住指標陣列的名字與大小', () => {
+    expect(roundTrip(code)).toContain('int* ptrs[3]')
+  })
 
-  it.todo('[BLOCKED:cpp_pointer_declare] roundtrip is stable (COMPILE_FAIL: int* name[size] not supported)')
+  it('★ 執行結果正確——期望值由 g++ 實際編譯執行決定，不心算', async () => {
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    const sem = lifter.lift(tsParser.parse(code)!.rootNode as never)
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').replace(/\s/g, '')).toBe('6')
+  })
 })
 
 // ─── Fuzz 10: Function returning pointer (to global) ───
@@ -321,15 +329,21 @@ int main() {
     return 0;
 }`
 
-  // BUG: int* return type generates as int getGlobalPtr()() - syntax error
-  it.todo('[BLOCKED:cpp_pointer_declare] executes correctly (function returning pointer generates syntax error)')
+    // 這個 `BUG:` 註解在 084 修好了——**兩個的根因是同一種**：
+  // 語法樹的 `pointer_declarator` 包了一層，而辨識器沒有下鑽。
+  it('★ 來回轉換保住回傳指標的型別', () => {
+    expect(roundTrip(code)).toContain('int* getGlobalPtr(')
+  })
 
-  it.todo('[BLOCKED:cpp_pointer_declare] roundtrip is stable (COMPILE_FAIL: int* return type broken)')
+  it('★ 執行結果正確——期望值由 g++ 實際編譯執行決定，不心算', async () => {
+    const interp = new SemanticInterpreter({ maxSteps: 200000 })
+    const sem = lifter.lift(tsParser.parse(code)!.rootNode as never)
+    await interp.execute(sem!)
+    expect(interp.getOutput().join('').replace(/\s/g, '')).toBe('777888')
+  })
 })
 
 // ─── Known issues summary ───
 describe('known issues: arrays & pointers', () => {
   it.todo('[BLOCKED:array_declare] array initializer list {val1, val2, ...} should be preserved during lift (BUG-1)')
-  it.todo('[BLOCKED:cpp_pointer_declare] pointer array declaration int* name[size] should be supported (BUG-2)')
-  it.todo('[BLOCKED:cpp_pointer_declare] function returning pointer int* func() should generate correctly (BUG-3)')
 })

@@ -98,6 +98,19 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // Bare pointer declarator without init: int* ptr;
   if (decl.type === 'pointer_declarator') {
+    // ⚠️ `int* a[3]` 的 pointer_declarator 裡包的是 **array_declarator**，
+    // 不是 identifier。只找 identifier 的話名字取不到，落到預設 `'ptr'`
+    // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
+    const inner = decl.namedChildren.find(c => c.type === 'array_declarator')
+    if (inner) {
+      const arrName = inner.namedChildren[0]?.text ?? 'arr'
+      const sizeNode = inner.namedChildren[1]
+      const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
+      // 指標陣列：元素型別帶星號，其餘與一般陣列相同
+      return createNode('array_declare', { type: `${type}*`, name: arrName }, {
+        size: sizeChild ? [sizeChild] : [],
+      })
+    }
     const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = ptrIdent?.text ?? 'ptr'
     return createNode('cpp_pointer_declare', { name, type })
@@ -130,7 +143,20 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // Pointer declarator: int* ptr = &x
   if (nameNode?.type === 'pointer_declarator') {
-    // Extract the actual identifier from pointer_declarator
+    // ⚠️ `int* a[3]` 的 pointer_declarator 裡包的是 **array_declarator**，
+    // 不是 identifier。只找 identifier 的話名字取不到，落到預設 `'ptr'`
+    // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
+    const inner = nameNode.namedChildren.find(c => c.type === 'array_declarator')
+    if (inner) {
+      const arrName = inner.namedChildren[0]?.text ?? 'arr'
+      const sizeNode = inner.namedChildren[1]
+      const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
+      // 指標陣列：元素型別帶星號，其餘與一般陣列相同
+      const arrNode = createNode('array_declare', { type: `${type}*`, name: arrName }, {
+        size: sizeChild ? [sizeChild] : [],
+      })
+      return attachInitializer(arrNode, decl.childForFieldName('value'), ctx)
+    }
     const ptrIdent = nameNode.namedChildren.find(c => c.type === 'identifier')
     name = ptrIdent?.text ?? 'ptr'
     const valueNode = decl.childForFieldName('value')
@@ -449,15 +475,26 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const declaratorNode = node.childForFieldName('declarator')
     const bodyNode = node.childForFieldName('body')
 
-    const returnType = typeNode?.text ?? 'void'
+    let returnType = typeNode?.text ?? 'void'
     let name = 'f'
     const paramChildren: SemanticNode[] = []
 
-    if (declaratorNode) {
-      const nameNode = declaratorNode.childForFieldName('declarator')
-      name = nameNode?.text ?? declaratorNode.namedChildren[0]?.text ?? 'f'
+    // ⚠️ `int* f(…)` 的 declarator 是 **pointer_declarator**，函式宣告子包在
+    // 它裡面。不下鑽的話，`declarator` 欄位取到的是整個 `f(int* p)` 字串，
+    // 於是產出 `int f(int* p)()`——**星號跑錯位置，還多出一對括號**。
+    //
+    // 每下鑽一層就把一顆星號還給回傳型別，這樣 `int**` 也對。
+    let fnDecl = declaratorNode
+    while (fnDecl?.type === 'pointer_declarator') {
+      returnType += '*'
+      fnDecl = fnDecl.childForFieldName('declarator')
+    }
 
-      const paramList = declaratorNode.childForFieldName('parameters')
+    if (fnDecl) {
+      const nameNode = fnDecl.childForFieldName('declarator')
+      name = nameNode?.text ?? fnDecl.namedChildren[0]?.text ?? 'f'
+
+      const paramList = fnDecl.childForFieldName('parameters')
       if (paramList) {
         for (const param of paramList.namedChildren) {
           if (param.type === 'parameter_declaration') {

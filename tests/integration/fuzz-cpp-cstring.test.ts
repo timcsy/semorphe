@@ -147,7 +147,6 @@ int main() {
 
   // fuzz_01: strcpy/strcat/memset with const params — COMPILE_FAIL
   // Root cause: const qualifier dropped from pointer function params (pre-existing lifter limitation)
-  it.todo('[BLOCKED:cpp_pointer_declare] should preserve const qualifier on pointer function params (fuzz_01: strcpy/strcat/memset)')
 
   // fuzz_02: strncpy/memset with char array initializer — STDOUT_DIFF
   // Root cause: char s[] = "text" array initializer lost (pre-existing lifter limitation)
@@ -163,7 +162,6 @@ int main() {
 
   // fuzz_07: strcat/strncpy/strcpy tokenization — COMPILE_FAIL
   // Root cause: pointer declaration in for-loop init lost (pre-existing)
-  it.todo('[BLOCKED:cpp_pointer_declare] should handle pointer declarations in for-loop init (fuzz_07)')
 
   // fuzz_08: memcpy/memset/strcpy/strncmp packed data — COMPILE_FAIL
   // Root cause: multi-declaration arrays lose size; char a[8],b[8] → char a, char b (pre-existing)
