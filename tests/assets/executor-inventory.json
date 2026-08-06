@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 2026-08-06（061）：移除 cpp_include_local——它有真的宣告（concepts.json 的 skipPaths: [execute]），核心的空操作是 053 之前的殘留。行為由 tests/unit/interpreter/skip-declaration-takeover.test.ts 釘住。",
+    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 2026-08-06（066）：新增 if_else——它有概念定義、產生器與積木投影（u_if_else，使用者拖得到），長期沒有執行器。完備性護欄五路裡唯一的「缺」就是它。",
     "capturedAt": "2026-08-06"
   },
   "concepts": [
@@ -155,6 +155,7 @@
     "func_call_expr",
     "func_def",
     "if",
+    "if_else",
     "input",
     "logic",
     "logic_not",
