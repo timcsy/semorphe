@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "guard": "storage-integrity",
+    "measuredAt": "2026-08-06",
+    "rule": "欄位守恆：存入可辨識值後讀回比對。判定一致性：自動載入與匯入對同一輸入的接受／拒絕須相同。升級路徑：從 1 到 CURRENT_VERSION 的每一步都須註冊。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 這條護欄的三個數字都是 0，而「健康的 0」與「什麼都沒量到的 0」產出一樣。判斷它有沒有壞的唯一方式是「注入已知違規」那組測試——**那組如果沒跑或跑綠了卻沒報出違規，這裡的 0 一律不可信**。"
+  },
+  "fieldsNotConserved": 0,
+  "verdictDisagreements": 0,
+  "missingUpgradeSteps": 0,
+  "notConservedFields": []
+}
