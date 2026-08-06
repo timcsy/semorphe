@@ -24,6 +24,7 @@ import {
   type BaselineMeta,
   listSourceFiles,
   REPO_ROOT,
+  assertRatchet,
 } from '../helpers/guardrail'
 import { languageSpecificComponentIds, universalComponentIds, scanDirs, splitCodeAndComments } from '../helpers/component-scan'
 
@@ -174,6 +175,10 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
 
     // FR-005：失敗時指名是哪一項，而不只是總數變了
     expect(added.map(key)).toEqual([])
+    // 只擋上升的棘輪不會自己收緊——舊基線會默許退回去，而**綠色套件的輸出
+    // 沒有人會讀**，所以「有改善」只印一行報表等於沒有發生。改善必須讓測試
+    // 變紅，逼基線與改善一起 commit。
+    assertRatchet([['違規項目', violations.length, known.length]])
   })
 })
 

@@ -16,6 +16,7 @@ import {
   printReport,
   RATCHET_NOTE,
   type BaselineMeta,
+  assertRatchet,
 } from '../helpers/guardrail'
 import { allComponentIds, scanDirs } from '../helpers/component-scan'
 
@@ -135,6 +136,10 @@ describe('護欄：就近性（一個元件的實作散在幾個檔）', () => {
     if (worsened.length > 0) printReport('就近性：偵測到擴散惡化', worsened)
 
     expect(worsened).toEqual([])
+    // 只擋上升的棘輪不會自己收緊——舊基線會默許退回去，而**綠色套件的輸出
+    // 沒有人會讀**，所以「有改善」只印一行報表等於沒有發生。改善必須讓測試
+    // 變紅，逼基線與改善一起 commit。
+    assertRatchet([['擴散度低於上限的元件', 0, improved.length]])
   })
 })
 

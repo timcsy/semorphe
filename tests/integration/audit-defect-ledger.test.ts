@@ -21,6 +21,7 @@ import {
   printReport,
   RATCHET_NOTE,
   type BaselineMeta,
+  assertRatchet,
 } from '../helpers/guardrail'
 import { scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
 import { allComponentIds } from '../helpers/component-scan'
@@ -177,7 +178,10 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
         worsened.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`),
       )
     }
-    expect(worsened.map(([n]) => n)).toEqual([])
+    // 只擋上升的棘輪不會自己收緊——舊基線會默許退回去，而**綠色套件的輸出
+    // 沒有人會讀**，所以「有改善」只印一行報表等於沒有發生。改善必須讓測試
+    // 變紅，逼基線與改善一起 commit。
+    assertRatchet(rows)
   })
 })
 

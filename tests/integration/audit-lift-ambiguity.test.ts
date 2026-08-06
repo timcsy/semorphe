@@ -24,6 +24,7 @@ import {
   printReport,
   RATCHET_NOTE,
   type BaselineMeta,
+  assertRatchet,
 } from '../helpers/guardrail'
 import { classifyPair, type RuleLike, type PairVerdict } from '../helpers/discriminator'
 import { createTestLifter } from '../helpers/setup-lifter'
@@ -251,7 +252,10 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
         ...newGroups.map((g) => `  ✘ 新群組：${g.nodeType} @優先權=${g.priority} → ${g.rules.map((r) => r.conceptId).join(', ')}`),
       ])
     }
-    expect(worsened.map(([n]) => n)).toEqual([])
+    // 只擋上升的棘輪不會自己收緊——舊基線會默許退回去，而**綠色套件的輸出
+    // 沒有人會讀**，所以「有改善」只印一行報表等於沒有發生。改善必須讓測試
+    // 變紅，逼基線與改善一起 commit。
+    assertRatchet(rows)
   })
 })
 

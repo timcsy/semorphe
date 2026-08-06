@@ -22,8 +22,6 @@
       "cpp_class_def",
       "cpp_constructor",
       "cpp_destructor",
-      "cpp_ifdef",
-      "cpp_ifndef",
       "cpp_include_local",
       "cpp_lambda",
       "cpp_namespace_def",
