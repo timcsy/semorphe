@@ -198,7 +198,7 @@ describe('TemplateGenerator', () => {
       expect(result).toBe('f(raw_text_here)')
     })
 
-    it('should show /* concept */ when no fallback and no rawCode', () => {
+    it('should show ⟨concept⟩ when no fallback and no rawCode', () => {
       gen.registerTemplate('parent', {
         pattern: 'f(${CHILD})',
         imports: [],
@@ -209,7 +209,7 @@ describe('TemplateGenerator', () => {
       const parent = createNode('parent', {}, { child: [child] })
 
       const result = gen.generate(parent, { indent: 0, style: defaultStyle })
-      expect(result).toBe('f(/* mystery */)')
+      expect(result).toBe('f(⟨mystery⟩)')
     })
   })
 
@@ -235,7 +235,7 @@ describe('TemplateGenerator', () => {
       expect(result).toContain('arr[0] = 1;')
     })
 
-    it('should show /* unknown: concept */ when body fallback fails', () => {
+    it('should show ⟨unknown: concept⟩ when body fallback fails', () => {
       gen.registerTemplate('while_loop', {
         pattern: 'while (true) {\n${BODY}\n}',
         imports: [],
@@ -246,7 +246,7 @@ describe('TemplateGenerator', () => {
       const whileNode = createNode('while_loop', {}, { body: [bodyChild] })
 
       const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })
-      expect(result).toContain('/* unknown: mystery_stmt */')
+      expect(result).toContain('⟨unknown: mystery_stmt⟩')
     })
   })
 })

@@ -1,3 +1,4 @@
+import { commentSyntax } from '../comment-syntax'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig } from '../program-scaffold'
@@ -84,57 +85,22 @@ export function registerMetaConceptGenerators(generators: Map<string, NodeGenera
     return raw.endsWith('\n') ? raw : raw + '\n'
   })
 
-  generators.set('comment', (node, ctx) => {
-    return `${indent(ctx)}// ${node.properties.text}\n`
-  })
+  // ── 註解那三個概念的**語法**已搬進語言套件（`src/core/comment-syntax.ts`）
+  //
+  // 核心層原本自己寫死 `//`、`/** *​/`、`/* *​/`。那違反 P9（拔掉 C++，
+  // 核心仍能運作——Python 要 `#`），而**中立性護欄看不見它**：那條護欄找的
+  // 是元件身分字串，這裡寫死的是語法符號。
+  //
+  // 概念身分留在核心（註解是所有語言共有的），語法下沉到語言套件。
+  generators.set('comment', (node, ctx) =>
+    commentSyntax().line(String(node.properties.text ?? ''), indent(ctx)),
+  )
 
-  generators.set('doc_comment', (node, ctx) => {
-    const ind = indent(ctx)
-    let result = `${ind}/**\n`
-    if (node.properties.brief) {
-      const briefText = String(node.properties.brief)
-      const hasTags = node.properties.param_0_name !== undefined || node.properties.return_desc !== undefined
-      if (briefText.includes('\n') && !hasTags) {
-        for (const line of briefText.split('\n')) {
-          result += `${ind} * ${line}\n`
-        }
-      } else if (briefText.includes('\n')) {
-        const lines = briefText.split('\n')
-        result += `${ind} * @brief ${lines[0]}\n`
-        for (let j = 1; j < lines.length; j++) {
-          result += `${ind} * ${lines[j]}\n`
-        }
-      } else {
-        result += `${ind} * @brief ${briefText}\n`
-      }
-    }
-    let i = 0
-    while (node.properties[`param_${i}_name`] !== undefined) {
-      const name = node.properties[`param_${i}_name`]
-      const desc = node.properties[`param_${i}_desc`] ?? ''
-      result += `${ind} * @param ${name}${desc ? ' ' + desc : ''}\n`
-      i++
-    }
-    if (node.properties.return_desc) {
-      result += `${ind} * @return ${node.properties.return_desc}\n`
-    }
-    result += `${ind} */\n`
-    return result
-  })
+  generators.set('doc_comment', (node, ctx) => commentSyntax().doc(node.properties, indent(ctx)))
 
-  generators.set('block_comment', (node, ctx) => {
-    const text = String(node.properties.text ?? '')
-    if (text.includes('\n')) {
-      const lines = text.split('\n')
-      let result = `${indent(ctx)}/*\n`
-      for (const line of lines) {
-        result += `${indent(ctx)} * ${line.trim()}\n`
-      }
-      result += `${indent(ctx)} */\n`
-      return result
-    }
-    return `${indent(ctx)}/* ${text} */\n`
-  })
+  generators.set('block_comment', (node, ctx) =>
+    commentSyntax().block(String(node.properties.text ?? ''), indent(ctx)),
+  )
 }
 
 // ─── Public API ───
@@ -213,7 +179,8 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     if (generator) {
       result = generator(node, ctx)
     } else {
-      result = `/* unknown concept: ${node.concept} */\n`
+      // 用語言中立的形式，不用 `/* *​/`——核心不知道任何語言怎麼寫註解
+      result = `⟨unknown concept: ${node.concept}⟩\n`
     }
   }
 
@@ -223,10 +190,11 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     if (inlineComments.length > 0) {
       const commentText = inlineComments.map(a => a.text).join('; ')
       // Insert trailing comment before the final newline
+      const cs = commentSyntax()
       if (result.endsWith('\n')) {
-        result = result.slice(0, -1).trimEnd() + ' // ' + commentText + '\n'
+        result = cs.trailing(result.slice(0, -1).trimEnd(), commentText) + '\n'
       } else {
-        result = result.trimEnd() + ' // ' + commentText
+        result = cs.trailing(result.trimEnd(), commentText)
       }
     }
   }
@@ -286,7 +254,7 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   if (generator) return generator(node, exprCtx)
   // Meta-concepts that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
-  return `/* ${node.concept} */`
+  return `⟨${node.concept}⟩`
 }
 
 export function indent(ctx: GeneratorContext): string {

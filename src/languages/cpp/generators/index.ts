@@ -1,3 +1,5 @@
+import { declareCommentSyntax } from '../../../core/comment-syntax'
+import { cppCommentSyntax } from '../core/comment-syntax'
 import type { StylePreset } from '../../../core/types'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { registerLanguage } from '../../../core/projection/code-generator'
@@ -29,6 +31,9 @@ export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
   registerCppSkipDeclarations()
   registerCppExecutors()
+  // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）
+  // 原本寫死在核心層。概念身分留在核心，語法住在這裡。
+  declareCommentSyntax(cppCommentSyntax)
 }
 
 /**

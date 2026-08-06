@@ -1,3 +1,4 @@
+import { commentSyntax } from '../comment-syntax'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
@@ -149,7 +150,8 @@ export class Lifter {
           if (!prev.annotations) prev.annotations = []
           prev.annotations.push({
             type: 'comment',
-            text: node.text.replace(/^\/\/\s?/, '').replace(/^\/\*\s?|\s?\*\/$/g, ''),
+            // 剝除註解符號的規則已搬進語言套件——核心不該知道 `//` 長什麼樣
+            text: commentSyntax().strip(node.text),
             position: 'inline',
           })
           continue

@@ -152,7 +152,7 @@ export class TemplateGenerator {
       const fb = this.expressionFallback(node, ctx)
       if (fb !== null) return fb
     }
-    return node.metadata?.rawCode as string ?? `/* ${node.concept} */`
+    return (node.metadata?.rawCode as string) ?? `⟨${node.concept}⟩`
   }
 
   private generateBody(nodes: SemanticNode[], ctx: GenerateContext): string {
@@ -165,7 +165,7 @@ export class TemplateGenerator {
         const fb = this.bodyFallback(n, ctx)
         if (fb !== null) return fb
       }
-      return `${indentStr}/* unknown: ${n.concept} */`
+      return `${indentStr}⟨unknown: ${n.concept}⟩`
     }).join('\n')
   }
 

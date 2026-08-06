@@ -3,7 +3,7 @@
  *
  * 驗證行尾註解、獨立註解、表達式內部註解在 lift → generate roundtrip 後保留
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
@@ -18,6 +18,10 @@ import universalBlocks from '../../../src/blocks/projections/blocks/universal-bl
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
+import { registerCppLanguage } from '../../../src/languages/cpp/generators'
+
+// 見上：行尾註解的語法（` // text`）也搬進了語言套件
+beforeAll(() => registerCppLanguage())
 
 function mockNode(
   type: string,

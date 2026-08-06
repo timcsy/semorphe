@@ -55,21 +55,21 @@
 
 ### 測試先行（憲章 II：MUST 先紅）
 
-- [ ] T014 [US2] 建 `tests/integration/comment-projection-snapshot.test.ts`：拍下單行／區塊／文件註解（含 `@brief`／`@param`／`@return` 各種組合）在三種積木風格下的產出 — 契約 2
-- [ ] T015 [US2] 同檔加一支：**核心層零註解語法符號**（掃 `src/core/`）— FR-012。此時必須**紅**
-- [ ] T016 [US2] 加一支：**沒有載入語言套件時產生註解**，行為必須明確、不得無聲產出空字串 — FR-014。此時必須**紅**
+- [X] T014 [US2] 建 `tests/integration/comment-projection-snapshot.test.ts`：拍下單行／區塊／文件註解（含 `@brief`／`@param`／`@return` 各種組合）在三種積木風格下的產出 — 契約 2
+- [X] T015 [US2] 同檔加一支：**核心層零註解語法符號**（掃 `src/core/`）— FR-012。此時必須**紅**
+- [X] T016 [US2] 加一支：**沒有載入語言套件時產生註解**，行為必須明確、不得無聲產出空字串 — FR-014。此時必須**紅**
 
 ### 實作
 
-- [ ] T017 [US2] 在核心建立宣告入口——語言套件推、核心讀，與 `src/core/skip-declarations.ts`／`language-executors.ts` 同形 — FR-011
-- [ ] T018 [US2] 把 `registerMetaConceptGenerators` 裡的 `comment`／`doc_comment`／`block_comment` 三個產生器從 `src/core/projection/code-generator.ts` 搬進 C++ 語言套件 — FR-010
-- [ ] T019 [US2] 把 `src/core/lift/lifter.ts:152` 剝 `//` 與 `/* */` 的邏輯搬進 C++ 語言套件 — FR-012、research 決策 3
-- [ ] T020 [US2] 決定並實作「沒有語言套件」時的行為（語言中立預設 **或** 明說沒有語言套件），在 T016 中釘住選了哪一個 — FR-014
+- [X] T017 [US2] 在核心建立宣告入口——語言套件推、核心讀，與 `src/core/skip-declarations.ts`／`language-executors.ts` 同形 — FR-011
+- [X] T018 [US2] 把 `registerMetaConceptGenerators` 裡的 `comment`／`doc_comment`／`block_comment` 三個產生器從 `src/core/projection/code-generator.ts` 搬進 C++ 語言套件 — FR-010
+- [X] T019 [US2] 把 `src/core/lift/lifter.ts:152` 剝 `//` 與 `/* */` 的邏輯搬進 C++ 語言套件 — FR-012、research 決策 3
+- [X] T020 [US2] 決定並實作「沒有語言套件」時的行為（語言中立預設 **或** 明說沒有語言套件），在 T016 中釘住選了哪一個 — FR-014
 
 ### 驗收
 
-- [ ] T021 [US2] T014 的快照逐一比對，**一字不差** — FR-013
-- [ ] T022 [US2] 執行護欄，確認 **27 → 24**，且三筆都落在「搬走」欄；重新產生基線並與本 Phase 一起 commit
+- [X] T021 [US2] T014 的快照逐一比對，**一字不差** — FR-013
+- [X] T022 [US2] 執行護欄，確認 **27 → 24**，且三筆都落在「搬走」欄；重新產生基線並與本 Phase 一起 commit
 
 ---
 

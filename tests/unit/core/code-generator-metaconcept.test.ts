@@ -4,9 +4,15 @@
  * After refactoring, meta-concepts (raw_code, unresolved, comment, doc_comment, block_comment)
  * should be registered as regular generators, not handled by if-else chain.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { generateNode, type GeneratorContext, registerMetaConceptGenerators } from '../../../src/core/projection/code-generator'
 import type { SemanticNode } from '../../../src/core/types'
+import { registerCppLanguage } from '../../../src/languages/cpp/generators'
+
+// ⚠️ 註解那三個概念的**語法**已搬進 C++ 語言套件（specs/059）。
+// 核心只留身分，語法由語言套件推進來——不載入的話這裡測到的是
+// **生產環境不存在的組態**（語言中立的退路，不是任何語言的註解）。
+beforeAll(() => registerCppLanguage())
 
 function makeNode(concept: string, props: Record<string, any> = {}, children: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
   return {
