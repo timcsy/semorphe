@@ -42,6 +42,35 @@ export function allComponentIds(): string[] {
 }
 
 /**
+ * 只有**語言專屬**的元件身分（`lang-core` + `lang-library`）。
+ *
+ * 中立性護欄用這一組，因為 P9 談的是**語言獨立性**——「拔掉 C++，只裝
+ * Python stub → 所有視圖仍啟動」。universal 概念（`print`／`if`／`count_loop`）
+ * 拔掉 C++ 之後**依然存在**，kernel 認得它們不妨礙那條原則。
+ *
+ * （kernel 認得 universal 概念仍屬碎裂的一種，但那是**就近性護欄**的職責。）
+ */
+export function languageSpecificComponentIds(): string[] {
+  return [
+    ...new Set(
+      allComponentDefs()
+        .filter((c) => c.layer !== 'universal')
+        .map((c) => c.conceptId),
+    ),
+  ].sort()
+}
+
+export function universalComponentIds(): string[] {
+  return [
+    ...new Set(
+      allComponentDefs()
+        .filter((c) => c.layer === 'universal')
+        .map((c) => c.conceptId),
+    ),
+  ].sort()
+}
+
+/**
  * 把原始碼拆成「程式碼」與「註解」兩份文字。
  * 逐字元處理並追蹤字串狀態，避免把 `'http://x'` 裡的 `//` 誤判為註解。
  */

@@ -54,11 +54,11 @@ description: "Task list for 049-audit-guardrails"
 
 **Independent Test**: 單獨跑 `audit-neutrality.test.ts` 即得違規清單，可據以排後續清償順序；其餘三條護欄不存在也不影響。
 
-- [ ] T008 [US1] 在 `tests/integration/audit-neutrality.test.ts` 寫斷言骨架（此時應**紅**：`tests/baselines/neutrality.json` 尚未存在）
-- [ ] T009 [US1] 在 `tests/integration/audit-neutrality.test.ts` 實作 `measure`：掃 `src/core/`、`src/ui/`、`src/interpreter/`、`src/views/`，用 T005 的規則產生 `NeutralityResult`
-- [ ] T010 [US1] 在 `tests/integration/audit-neutrality.test.ts` 實作 `report`：列出違規檔案 × componentId × 行號；**註解引用另列一區塊且不計入總數**
-- [ ] T011 [US1] 跑一次護欄產生 `tests/baselines/neutrality.json`（含 `_meta.rule` 記載判定方式），確認 `total` 為正數後 commit
-- [ ] T012 [US1] 依 quickstart 情境 2 驗證棘輪：在 `src/core/` 任一檔加一行含 componentId 的程式碼 → 護欄失敗且**指名該檔與該 id** → 還原後通過
+- [X] T008 [US1] 在 `tests/integration/audit-neutrality.test.ts` 寫斷言骨架（此時應**紅**：`tests/baselines/neutrality.json` 尚未存在）
+- [X] T009 [US1] 在 `tests/integration/audit-neutrality.test.ts` 實作 `measure`：掃 `src/core/`、`src/ui/`、`src/interpreter/`、`src/views/`，用 T005 的規則產生 `NeutralityResult`
+- [X] T010 [US1] 在 `tests/integration/audit-neutrality.test.ts` 實作 `report`：列出違規檔案 × componentId × 行號；**註解引用另列一區塊且不計入總數**
+- [X] T011 [US1] 跑一次護欄產生 `tests/baselines/neutrality.json`（含 `_meta.rule` 記載判定方式），確認 `total` 為正數後 commit
+- [X] T012 [US1] 依 quickstart 情境 2 驗證棘輪：在 `src/core/` 任一檔加一行含 componentId 的程式碼 → 護欄失敗且**指名該檔與該 id** → 還原後通過
 
 **Checkpoint**: US1 完成即可獨立交付——中立性基線可見、惡化擋得住
 
