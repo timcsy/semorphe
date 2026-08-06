@@ -100,13 +100,13 @@ description: "Task list for 054-execute-into-capsules"
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T025 依 `quickstart.md` 八個情境逐一驗收，**特別是情境 0 與情境 2**
-- [ ] T026 手動驗情境 3 的執行機構：拿掉某模組的 `registerExecutors` → **應該編不過**
-- [ ] T027 下調 `tests/baselines/neutrality.json`；**獨立 commit，訊息說明下降來自哪些概念**
-- [ ] T028 確認其餘六項量測未上升
-- [ ] T029 執行 `npm test` 確認全綠
-- [ ] T030 更新 `knowledge/vision.md`：記錄中立性的第二次下降，並註明這次是**純搬移**（與 053 的「4 個真修好 + 12 個說清楚」不同性質）
-- [ ] T031 回填 `knowledge/experience.md`——**只在真的有新東西時才寫**。候選：「用檔名推歸屬會錯」（research F1）
+- [X] T025 依 `quickstart.md` 八個情境逐一驗收，**特別是情境 0 與情境 2**
+- [X] T026 手動驗情境 3 的執行機構：拿掉某模組的 `registerExecutors` → **應該編不過**
+- [X] T027 下調 `tests/baselines/neutrality.json`；**獨立 commit，訊息說明下降來自哪些概念**
+- [X] T028 確認其餘六項量測未上升
+- [X] T029 執行 `npm test` 確認全綠
+- [X] T030 更新 `knowledge/vision.md`：記錄中立性的第二次下降，並註明這次是**純搬移**（與 053 的「4 個真修好 + 12 個說清楚」不同性質）
+- [X] T031 回填 `knowledge/experience.md`——**只在真的有新東西時才寫**。候選：「用檔名推歸屬會錯」（research F1）
 
 ---
 
