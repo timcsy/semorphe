@@ -3,20 +3,21 @@
     "guard": "defect-ledger",
     "measuredAt": "2026-08-06",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ／ 2026-08-06 unverified 0→6：US4 重新歸因後，6 筆的舊標記來自被實證推翻的檔頭宣稱，無獨立證據支持，改標 [UNVERIFIED]。**這是把偽裝成確定的不確定還原成不確定**，不是新增缺陷——它們本來就在那裡，只是先前被記成了別的東西。此數字只准下降。"
   },
   "total": 86,
   "withBody": 22,
   "titleOnly": 64,
-  "unverified": 0,
+  "unverified": 6,
   "byBlocker": {
-    "print": 9,
+    "print": 5,
     "array_declare": 2,
     "cpp_increment": 2,
     "cpp_switch": 1,
     "cpp_char_literal": 1,
     "cpp_destructor": 1,
     "func_def": 1,
+    "var_assign": 1,
     "cpp_enum": 1,
     "cpp_cast": 1,
     "cpp_string_declare": 1

@@ -95,12 +95,12 @@ description: "Task list for 050-repay-top-blockers"
 **Independent Test**: 抽查標記與註解的一致性。
 
 - [X] T021 [US4] 在 `tests/helpers/disabled-scan.ts` 加入 `[UNVERIFIED]` 標記型別（contracts 契約 3）
-- [ ] T022 [US4] 在 `tests/integration/audit-defect-ledger.test.ts` 加斷言：`[UNVERIFIED]` 的**數量本身是棘輪**，只准下降——避免它變成新垃圾桶
-- [ ] T023 [US4] 重新歸因 `tests/integration/fuzz-cpp-string.test.ts` 的 10 筆：逐筆註解寫的是四種不同原因（條件中的賦值、const 遺失、vector 初始化列表、未支援的字串函式），**不是檔頭宣稱的同一個**
-- [ ] T024 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-arrays-pointers.test.ts`、`fuzz-cpp-cstring.test.ts`：逐筆註解已寫明原因的，標記與之一致
-- [ ] T025 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-cctype.test.ts`、`fuzz-cpp-cstdlib.test.ts`、`fuzz-cpp-containers.test.ts`、`fuzz-cpp-numeric.test.ts`
-- [ ] T026 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-control-flow.test.ts`、`fuzz-cpp-oop.test.ts`、`fuzz-cpp-types-advanced-ops.test.ts`、`fuzz-cpp-variables-ops.test.ts`、`fuzz-cpp-advanced.test.ts`、`fuzz-cpp-stacks-queues.test.ts`、`roundtrip-functions-io.test.ts`
-- [ ] T027 [US4] 確認重新歸因**未改變停用項目總數**（FR-032）——它只改標籤，不改狀態
+- [X] T022 [US4] 在 `tests/integration/audit-defect-ledger.test.ts` 加斷言：`[UNVERIFIED]` 的**數量本身是棘輪**，只准下降——避免它變成新垃圾桶
+- [X] T023 [US4] 重新歸因 `tests/integration/fuzz-cpp-string.test.ts` 的 10 筆：逐筆註解寫的是四種不同原因（條件中的賦值、const 遺失、vector 初始化列表、未支援的字串函式），**不是檔頭宣稱的同一個**
+- [X] T024 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-arrays-pointers.test.ts`、`fuzz-cpp-cstring.test.ts`：逐筆註解已寫明原因的，標記與之一致
+- [X] T025 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-cctype.test.ts`、`fuzz-cpp-cstdlib.test.ts`、`fuzz-cpp-containers.test.ts`、`fuzz-cpp-numeric.test.ts`
+- [X] T026 [P] [US4] 重新歸因 `tests/integration/fuzz-cpp-control-flow.test.ts`、`fuzz-cpp-oop.test.ts`、`fuzz-cpp-types-advanced-ops.test.ts`、`fuzz-cpp-variables-ops.test.ts`、`fuzz-cpp-advanced.test.ts`、`fuzz-cpp-stacks-queues.test.ts`、`roundtrip-functions-io.test.ts`
+- [X] T027 [US4] 確認重新歸因**未改變停用項目總數**（FR-032）——它只改標籤，不改狀態
 
 **Checkpoint**: 標記與註解一致 → US4 可獨立交付
 

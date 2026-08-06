@@ -128,7 +128,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:print] fuzz_1: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
+  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_1: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
     // BUG: vector<string> declaration with function call initializer is not lifted correctly.
     // `vector<string> words = splitWords(sentence)` → lifter produces `cpp_vector_declare`
     // but the initializer (call_expression) is dropped, so the variable is declared empty.
@@ -322,7 +322,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:print] fuzz_5: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
+  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_5: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
     // BUG: vector<string> with brace-initializer `= {"racecar", "hello", ...}` is not lifted.
     // The initializer_list (brace-init) is dropped; the variable is declared empty.
     // Root cause: liftVectorDeclaration does not handle initializer_list syntax.
@@ -529,7 +529,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:print] fuzz_9: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
+  it.skip('[UNSUPPORTED:vector 的初始化列表語法尚無對應概念] fuzz_9: round-trip stable and output matches (SEMANTIC_DIFF — pre-existing bug)', () => {
     // BUG: vector<string> brace-initializer `= {"flower", "flow", "flight"}` is not lifted.
     // All three vectors v1/v2/v3 end up empty; the LCP function receives empty containers
     // and always returns "".
@@ -578,7 +578,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:print] fuzz_10: round-trip stable and output matches (COMPILE_FAIL — pre-existing bug)', () => {
+  it.skip('[BLOCKED:var_assign] fuzz_10: round-trip stable and output matches (COMPILE_FAIL — pre-existing bug)', () => {
     // BUG: `while ((pos = s.find(from, pos)) != string::npos)` generates malformed code.
     // The assignment-inside-while-condition pattern is not handled by liftWhile.
     // The condition expression involves a method call with 2 args and assignment; the lifter
