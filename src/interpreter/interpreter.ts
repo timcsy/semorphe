@@ -1,5 +1,6 @@
 import type { SemanticNode } from '../core/types'
 import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
+import { allLanguageExecutors } from '../core/language-executors'
 import universalConcepts from '../blocks/semantics/universal-concepts.json'
 import { CPP_BUILTIN_CONSTANTS, CPP_BUILTIN_NAMES } from '../languages/cpp/builtins'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
@@ -15,9 +16,7 @@ import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
 import { registerIoExecutors } from './executors/io'
 import { registerArrayExecutors } from './executors/arrays'
-import { registerPointerExecutors } from './executors/pointers'
 import { registerMutationExecutors } from './executors/mutations'
-import { registerCmathExecutors } from './executors/cmath'
 import { registerStringExecutors } from './executors/strings'
 import { registerContainerExecutors } from './executors/containers'
 
@@ -80,11 +79,12 @@ export class SemanticInterpreter implements ExecutionContext {
     registerFunctionExecutors(reg)
     registerIoExecutors(reg)
     registerArrayExecutors(reg)
-    registerPointerExecutors(reg)
     registerMutationExecutors(reg)
-    registerCmathExecutors(reg)
     registerStringExecutors(reg)
     registerContainerExecutors(reg)
+
+    // 語言套件推進來的執行器——核心不知道有哪些語言，只知道有人推東西進來
+    for (const { concept, executor } of allLanguageExecutors()) reg(concept, executor as never)
 
     // cstdlib functions
     reg('cpp_rand', async () => ({ type: 'int' as const, value: Math.floor(Math.random() * 32768) }))

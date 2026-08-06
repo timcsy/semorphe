@@ -6,6 +6,8 @@ import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
+import { declareExecutor } from '../../../core/language-executors'
+import { registerCoreExecutors } from '../core/executors'
 import { coreConcepts } from '../core'
 import type { PathName, SkipReason } from '../../../core/types'
 
@@ -25,7 +27,25 @@ function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
 export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
   registerCppSkipDeclarations()
+  registerCppExecutors()
 }
+
+/**
+ * 把各模組的執行器推進直譯器。
+ *
+ * 與 `registerGenerators` / `registerLifters` 同一個形狀：模組提供註冊函式，
+ * 載入時被呼叫。核心**不知道**有哪些模組，只知道有人推東西進來。
+ */
+export function registerCppExecutors(): void {
+  if (executorsPushed) return
+  executorsPushed = true
+  const push = (concept: string, executor: unknown): void =>
+    declareExecutor(concept, executor as never)
+  registerCoreExecutors(push as never)
+  for (const mod of allStdModules) mod.registerExecutors(push as never)
+}
+
+let executorsPushed = false
 
 /**
  * 把「這個概念刻意不執行」的宣告推進核心。

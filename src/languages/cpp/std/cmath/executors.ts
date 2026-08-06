@@ -1,6 +1,14 @@
-import type { ConceptExecutor } from '../executor-registry'
+/**
+ * `<cmath>` 的執行路——模組的第五面牆。
+ *
+ * 在此之前它住在 `src/interpreter/executors/cmath.ts`，讓核心層認識了
+ * 三個 C++ 專屬的概念身分。搬回來之後，這個模組的五條路才齊。
+ *
+ * 見 specs/054-execute-into-capsules/
+ */
+import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
-export function registerCmathExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:math_pow', async (node, ctx) => {
     const base = await ctx.evaluate((node.children.base ?? [])[0])
     const exponent = await ctx.evaluate((node.children.exponent ?? [])[0])

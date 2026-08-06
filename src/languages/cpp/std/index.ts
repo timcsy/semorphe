@@ -71,6 +71,7 @@ import cmathConcepts from './cmath/concepts.json'
 import cmathBlocks from './cmath/blocks.json'
 import { registerGenerators as registerCmathGenerators } from './cmath/generators'
 import { registerLifters as registerCmathLifters } from './cmath/lifters'
+import { registerExecutors as registerCmathExecutors } from './cmath/executors'
 
 // cstdlib
 import cstdlibConcepts from './cstdlib/concepts.json'
@@ -108,12 +109,20 @@ import utilityBlocks from './utility/blocks.json'
 import { registerGenerators as registerUtilityGenerators } from './utility/generators'
 import { registerLifters as registerUtilityLifters } from './utility/lifters'
 
+/**
+ * 這個模組的執行器**還在核心層**，等混住檔案的拆分（見 specs/054 的 Out of Scope）。
+ *
+ * 具名而非匿名 `() => {}`，是為了讓它可被搜尋——「顯式的待辦」與「遺漏」要分得出來。
+ */
+const executorsStillInCore: StdModule['registerExecutors'] = () => {}
+
 function makeModule(
   header: string,
   concepts: unknown[],
   blocks: unknown[],
   registerGenerators: StdModule['registerGenerators'],
   registerLifters: StdModule['registerLifters'],
+  registerExecutors: StdModule['registerExecutors'],
 ): StdModule {
   return {
     header,
@@ -121,27 +130,28 @@ function makeModule(
     blocks: blocks as BlockProjectionJSON[],
     registerGenerators,
     registerLifters,
+    registerExecutors,
   }
 }
 
 export const allStdModules: StdModule[] = [
-  makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters),
-  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters),
-  makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters),
-  makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters),
-  makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters),
-  makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters),
-  makeModule('<map>', mapConcepts, mapBlocks, registerMapGenerators, registerMapLifters),
-  makeModule('<stack>', stackConcepts, stackBlocks, registerStackGenerators, registerStackLifters),
-  makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters),
-  makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters),
-  makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters),
-  makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters),
-  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters),
-  makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters),
-  makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters),
-  makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters),
-  makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters),
+  makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters, executorsStillInCore),
+  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, executorsStillInCore),
+  makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters, executorsStillInCore),
+  makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, executorsStillInCore),
+  makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, executorsStillInCore),
+  makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, executorsStillInCore),
+  makeModule('<map>', mapConcepts, mapBlocks, registerMapGenerators, registerMapLifters, executorsStillInCore),
+  makeModule('<stack>', stackConcepts, stackBlocks, registerStackGenerators, registerStackLifters, executorsStillInCore),
+  makeModule('<queue>', queueConcepts, queueBlocks, registerQueueGenerators, registerQueueLifters, executorsStillInCore),
+  makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, executorsStillInCore),
+  makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters, registerCmathExecutors),
+  makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, executorsStillInCore),
+  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, executorsStillInCore),
+  makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, executorsStillInCore),
+  makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, executorsStillInCore),
+  makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters, executorsStillInCore),
+  makeModule('<utility>', utilityConcepts, utilityBlocks, registerUtilityGenerators, registerUtilityLifters, executorsStillInCore),
 ]
 
 /**

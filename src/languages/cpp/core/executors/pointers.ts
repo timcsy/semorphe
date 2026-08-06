@@ -1,4 +1,12 @@
-import type { ConceptExecutor } from '../executor-registry'
+/**
+ * 指標的執行路——語言核心的第五面牆。
+ *
+ * 指標不屬於任何標準函式庫標頭，所以歸語言核心，與 `core/generators/`、
+ * `core/lifters/` 並列。
+ *
+ * 見 specs/054-execute-into-capsules/
+ */
+import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
 export function registerPointerExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp_address_of', async (node, ctx) => {
