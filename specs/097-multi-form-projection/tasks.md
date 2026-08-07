@@ -134,12 +134,12 @@
 
 ## Phase 6：Polish 與交叉驗證
 
-- [ ] T034 跑 `tests/integration/audit-*.test.ts`，逐條比對 T001 的基線——**任一護欄上升即停下歸因**
-- [ ] T035 中立性護欄特別複查：選擇函式裡不得出現具體元件身分（C-2 是這份契約唯一有機械檢查的一條）
-- [ ] T036 執行器重複註冊維持 0（SC-004）
-- [ ] T037 跑全套 `npm test`，**完整列出 FAIL 清單，不得用 `head` 截斷**
-- [ ] T038 手動驗（機器驗不到的那一格）：開瀏覽器，拖 push 積木接到堆疊變數上，**不滑鼠停留**，讀積木上的字，問自己「我知道等一下 pop 會拿到什麼嗎」
-- [ ] T039 更新 `specs/097-multi-form-projection/spec.md` 的量測欄；把 research.md 對規格的那處更正（阻斷點是 `PatternRenderer` 不是 `BlockSpecRegistry`）回填到 spec
+- [X] T034 跑 `tests/integration/audit-*.test.ts`，逐條比對 T001 的基線——**任一護欄上升即停下歸因**
+- [X] T035 中立性護欄特別複查：選擇函式裡不得出現具體元件身分（C-2 是這份契約唯一有機械檢查的一條）
+- [X] T036 執行器重複註冊維持 0（SC-004）
+- [X] T037 跑全套 `npm test`，**完整列出 FAIL 清單，不得用 `head` 截斷**
+- [~] T038 **未執行**（需要人）手動驗（機器驗不到的那一格）：開瀏覽器，拖 push 積木接到堆疊變數上，**不滑鼠停留**，讀積木上的字，問自己「我知道等一下 pop 會拿到什麼嗎」
+- [X] T039 更新 `specs/097-multi-form-projection/spec.md` 的量測欄；把 research.md 對規格的那處更正（阻斷點是 `PatternRenderer` 不是 `BlockSpecRegistry`）回填到 spec
 
 ---
 
