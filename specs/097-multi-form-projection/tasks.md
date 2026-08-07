@@ -2,13 +2,23 @@
 
 **Feature**: `097-multi-form-projection` ｜ **Plan**: [plan.md](plan.md) ｜ **Spec**: [spec.md](spec.md)
 
-## ⚠️ 一條不可調換的順序
+## ⚠️ 那條「不可調換的順序」已撤銷（2026-08-07，實作中實測）
 
-> **存檔轉換（T007–T009）必須全部完成，才能碰積木型別（T024 起）。**
+> **原本寫著**：存檔轉換（T007–T009）必須先於積木型別改名（T024）。
 >
-> 反過來做的話，中間會有一段時間**任何人重開專案都會壞**——而那段時間有多長取決於後續順不順利。那是不能賭的。
+> **實測推翻了它的前提。** 計畫假設「復活分開的形態＝改名既有積木型別」，而那個假設沒有被驗證：
 >
-> 這條寫在 `plan.md` 的「實作順序」，這裡再釘一次，因為 tasks 是實際被執行的那份。
+> - `src/ui/app.ts:241`：載入時 `blocklyState` **原樣還原** → 舊存檔裡的積木型別必須仍然有效
+> - `src/ui/sync-controller.ts:202`：**任何編輯都會從語義樹重新渲染**
+>
+> → 正確做法是**加法式**：`c_container_push` **保留**為 fallback 形態，**新增** `c_stack_push`／`c_queue_push`。
+> 舊存檔照樣載得起來（型別還在），第一次編輯就重新渲染成新形態——**自癒**。
+>
+> **所以存檔轉換不需要**，硬邊也隨之消失。而這正是本專案記過的那條：
+> **「加法式併行通道 >> 加寬共享型別」**（`concepts/元件.md` 引 ArduinoCAD）。
+>
+> ⚠️ **不 bump `CURRENT_VERSION`**：格式沒有變。為了「看起來有處理」而 bump，
+> 會逼出一個什麼都不做的 upgrade 函式——那比不做更糟。
 
 ## TDD（憲章 II，非妥協）
 
@@ -19,8 +29,8 @@
 
 ## Phase 1：Setup
 
-- [ ] T001 記錄動工前的基線數字到 `specs/097-multi-form-projection/baseline.md`：全套測試檔數、身分健檢／就近性／中立性／雙重真相／執行器重複註冊各護欄的當下值
-- [ ] T002 建立測試檔骨架 `tests/unit/core/form-selection.test.ts`（契約 C-1..C-5，全部 `it.fails` 或會紅的斷言，**不得用 `it.todo`**）
+- [X] T001 記錄動工前的基線數字到 `specs/097-multi-form-projection/baseline.md`：全套測試檔數、身分健檢／就近性／中立性／雙重真相／執行器重複註冊各護欄的當下值
+- [X] T002 建立測試檔骨架 `tests/unit/core/form-selection.test.ts`（契約 C-1..C-5，全部 `it.fails` 或會紅的斷言，**不得用 `it.todo`**）
 
 > T001 不是儀式：**護欄「不得上升」的驗收需要一個比較基準**，而全套跑一次就會有人手癢去改基線。
 
@@ -30,24 +40,28 @@
 
 ### 契約測試（先紅）
 
-- [ ] T003 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-1（選擇是全函數：軸值取不到 → 回 default；取到但無對應 → 回 default 且出聲）
-- [ ] T004 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-3（同一 conceptId 的任兩形態產出相同的碼）
-- [ ] T005 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-4（任一形態反推得到同一個 conceptId）——**這條目前免費成立，測試是為了防它日後被改壞**
-- [ ] T006 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-5（選擇只讀 node 與呈現位置，不走樹、不查全域）
+- [X] T003 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-1（選擇是全函數：軸值取不到 → 回 default；取到但無對應 → 回 default 且出聲）
+- [X] T004 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-3（同一 conceptId 的任兩形態產出相同的碼）
+- [X] T005 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-4（任一形態反推得到同一個 conceptId）——**這條目前免費成立，測試是為了防它日後被改壞**
+- [X] T006 [P] 在 `tests/unit/core/form-selection.test.ts` 寫 C-5（選擇只讀 node 與呈現位置，不走樹、不查全域）
 
-### 存檔轉換（硬性優先，必須在型別改名之前）
+### ~~存檔轉換~~ → 改為證明「不需要轉換」
 
-- [ ] T007 在 `tests/unit/storage-version.test.ts` 加一支會紅的測試：`UPGRADES[1]` 存在，且能把含 `c_container_push` 積木的 v1 存檔轉成 v2
-- [ ] T008 在 `src/core/storage-version.ts` 實作 `UPGRADES[1]`：把統一的容器積木型別依 `container_kind`（若存檔中有）或依中性預設，映射到新的積木型別
-- [ ] T009 在 `src/core/storage-version.ts` 把 `CURRENT_VERSION` 從 1 調成 2，確認既有那支「每一階都要有 Upgrade」的階梯測試綠
+- [X] ~~T007 UPGRADES[1] 的測試~~ **撤銷**——加法式不改名，舊存檔的積木型別仍然有效
+- [X] ~~T008 實作 UPGRADES[1]~~ **撤銷**——同上
+- [X] ~~T009 CURRENT_VERSION 1→2~~ **撤銷**——格式沒變，不得為了「看起來有處理」而 bump
 
-> ⚠️ T009 之後 **T007–T009 的測試必須綠**才能往下。這是那條硬性順序的檢查點。
+**取代它們的**（同樣是 US3 要的保證，但驗的是加法式的正確性）：
+
+- [ ] T007 在 `tests/integration/multi-form-container.test.ts` 寫「舊存檔裡的 `c_container_push` 積木型別**仍然註冊得到**」——這是加法式的核心保證，一旦有人手癢改名它就紅
+- [ ] T008 寫「含舊積木型別的存檔載入後不報錯」
+- [ ] T009 寫「舊存檔重新渲染後升級成新形態」（自癒），並釘住 `renderToBlocklyState` 是那條自癒路徑
 
 ### 核心型別與選擇函式
 
-- [ ] T010 在 `src/core/types.ts` 新增 `FormSet` 與 `FormAxis` 型別（依 `data-model.md` 的不變式 FS-1..FS-4）
-- [ ] T011 在 `src/core/projection/pattern-renderer.ts` 實作選擇函式，滿足 C-1..C-5。**函式內 MUST NOT 出現任何具體元件身分**（C-2）
-- [ ] T012 讓 T003–T006 轉綠
+- [X] T010 在 `src/core/types.ts` 新增 `FormSet` 與 `FormAxis` 型別（依 `data-model.md` 的不變式 FS-1..FS-4）
+- [X] T011 在 `src/core/projection/pattern-renderer.ts` 實作選擇函式，滿足 C-1..C-5。**函式內 MUST NOT 出現任何具體元件身分**（C-2）
+- [X] T012 讓 T003–T006 轉綠
 
 **Checkpoint**：契約測試全綠 ＋ 存檔轉換全綠 → User Story 可以開始
 
@@ -136,7 +150,7 @@ Setup (T001–T002)
    ↓
 Foundational
    ├─ 契約測試 T003–T006  [可並行]
-   ├─ 存檔轉換 T007→T008→T009   ⚠️ 必須先於 T024
+   ├─ 加法式保證 T007–T009  [可並行]  ← 原本的「存檔轉換」，前提被實測推翻
    └─ 核心型別 T010→T011→T012
    ↓
 US1 (T013–T025)  ← MVP，交付學生看得到的價值
@@ -148,7 +162,7 @@ US3 (T031–T033)  ← 驗收（實作已在 Foundational 完成）
 Polish (T034–T039)
 ```
 
-**跨階段的硬邊**：`T009 → T024`。存檔轉換沒綠，不准碰積木型別。
+**原本的硬邊已消失**（加法式不改名）。剩下的順序約束只有一般的 TDD：測試先於實作。
 
 ## 可並行的機會
 

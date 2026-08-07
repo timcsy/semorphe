@@ -218,6 +218,44 @@ export interface ExtractRule {
 
 // ─── Render Mapping (JSON-driven) ───
 
+/**
+ * 形態選擇軸——**具名**，而不是寫死的兩個欄位。
+ *
+ * 目前有兩條軸在跑，而且**取值來源不同**：
+ *
+ * | 軸 | `from` | 例 |
+ * |---|---|---|
+ * | `role` | `position`——由呈現位置決定 | 敘述版／運算式版 |
+ * | `container_kind` | `property`——讀節點屬性 | 堆疊／佇列 |
+ *
+ * 寫死兩個欄位裝不下第二條軸，而 P3 說「新增不得改變既有」。
+ * **但不建外掛系統**——軸的解析就是一張表，加一條軸就是加一列。
+ */
+export interface FormAxis {
+  /** 軸名，只用於診斷訊息 */
+  name: string
+  /** 值從哪來 */
+  from: 'position' | 'property'
+  /** `from: 'property'` 時讀哪個屬性 */
+  property?: string
+}
+
+/**
+ * 一個元件身分可對應的所有積木形態，以及**怎麼選**。
+ *
+ * 不變式 FS-1..FS-4 見 `specs/097-multi-form-projection/data-model.md`，
+ * 由 `validateFormSet()` 檢查。
+ */
+export interface FormSet {
+  conceptId: string
+  /** null = 只有一個形態（絕大多數元件） */
+  axis: FormAxis | null
+  /** 軸值 → 積木型別 */
+  forms: Record<string, string>
+  /** 選不出時用哪個。MUST 在 `forms` 的值域裡（FS-2） */
+  fallback: string
+}
+
 export interface RenderMapping {
   fields: Record<string, string>
   inputs: Record<string, string>
