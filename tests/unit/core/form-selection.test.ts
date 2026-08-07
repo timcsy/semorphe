@@ -13,7 +13,7 @@
  * 「投影是逐節點的」這件事可以——選擇函式只拿得到 node 與呈現位置，拿不到樹。
  */
 import { describe, it, expect } from 'vitest'
-import { selectForm, validateFormSet } from '../../../src/core/projection/form-selection'
+import { selectForm, validateFormSet, buildFormSets } from '../../../src/core/projection/form-selection'
 import type { FormSet } from '../../../src/core/types'
 import { createNode } from '../../../src/core/semantic-tree'
 
@@ -154,5 +154,79 @@ describe('C-4 反向唯一——一個 blockType 只能屬於一個 conceptId', 
 
   it('★ 反向：不撞的兩個形態集合必須通過', () => {
     expect(validateFormSet(位置形態, [容器形態]).ok).toBe(true)
+  })
+})
+
+// ─── US2：登錄側支援一個身分多個形態（FR-002）────────────────────────
+
+describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉先來的', () => {
+  it('★ 三個宣告收攏成一個形態集合', () => {
+    const sets = buildFormSets([
+      { conceptId: 'synth_push', blockType: 'synth_neutral' },
+      { conceptId: 'synth_push', blockType: 'synth_stack', form: { axis: 'container_kind', value: 'stack' } },
+      { conceptId: 'synth_push', blockType: 'synth_queue', form: { axis: 'container_kind', value: 'queue' } },
+    ])
+    const fs = sets.get('synth_push')!
+    expect(Object.values(fs.forms).sort(), '第二次註冊蓋掉第一次的話這裡只會有一個').toEqual(
+      ['synth_neutral', 'synth_queue', 'synth_stack'],
+    )
+    expect(fs.fallback).toBe('synth_neutral')
+    expect(validateFormSet(fs).ok).toBe(true)
+  })
+
+  it('★ SC-006：一對 statement/expression 可以併成一個身分兩個形態', () => {
+    // **不改動任何既有身分**——用合成宣告證明機制成立。
+    // 這是 B 項（身分整併）的前提：`func_call` 與 `func_call_expr` 目前是
+    // 兩個 conceptId，而它們是同一個概念的兩個位置。
+    const sets = buildFormSets([
+      { conceptId: 'synth_call', blockType: 'synth_call_stmt' },
+      { conceptId: 'synth_call', blockType: 'synth_call_stmt', form: { axis: 'role', value: 'statement' } },
+      { conceptId: 'synth_call', blockType: 'synth_call_expr', form: { axis: 'role', value: 'expression' } },
+    ])
+    const fs = sets.get('synth_call')!
+    expect(validateFormSet(fs).ok).toBe(true)
+    const node = createNode('synth_call', { name: 'f' }, {})
+    expect(selectForm(fs, node, { position: 'statement' }).blockType).toBe('synth_call_stmt')
+    expect(selectForm(fs, node, { position: 'expression' }).blockType).toBe('synth_call_expr')
+  })
+
+  it('★ 沒有變體的元件仍然拿得到形態集合（走同一條路）', () => {
+    const sets = buildFormSets([{ conceptId: 'synth_plain2', blockType: 'synth_plain2' }])
+    const fs = sets.get('synth_plain2')!
+    expect(fs.axis).toBeNull()
+    expect(selectForm(fs, createNode('synth_plain2', {}, {}), {}).blockType).toBe('synth_plain2')
+  })
+
+  it('★ 負向：兩個中性宣告時，第一個勝出（載入順序不得決定行為）', () => {
+    const sets = buildFormSets([
+      { conceptId: 'synth_dup', blockType: 'synth_first' },
+      { conceptId: 'synth_dup', blockType: 'synth_second' },
+    ])
+    expect(sets.get('synth_dup')!.fallback, '後者覆寫的話，改變 JSON 順序就會改變行為').toBe('synth_first')
+  })
+})
+
+// ─── 登錄表的宣告側也要一致（T028）──────────────────────────────────
+
+describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
+  it('★ getFormsByConceptId 回傳全部三顆，而不是最後註冊的那顆', async () => {
+    const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
+    const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(coreConcepts, coreBlocks)
+    const forms = reg.getFormsByConceptId('cpp_container_push')
+    expect(
+      forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort(),
+      'byConceptId 是 Map<string, BlockSpec> 的話這裡只會有一顆——' +
+        '而宣告與實作分歧正是雙重真相護欄在看的東西',
+    ).toEqual(['c_container_push', 'c_queue_push', 'c_stack_push'])
+  })
+
+  it('★ 反向：沒有變體的元件回傳恰好一顆', async () => {
+    const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
+    const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(coreConcepts, coreBlocks)
+    expect(reg.getFormsByConceptId('cpp_container_empty')).toHaveLength(1)
   })
 })

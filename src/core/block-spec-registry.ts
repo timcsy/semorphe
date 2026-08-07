@@ -4,6 +4,8 @@ import { applyBlockOverride } from './block-override'
 export class BlockSpecRegistry {
   private specs = new Map<string, BlockSpec>()
   private byConceptId = new Map<string, BlockSpec>()
+  /** 一個元件身分的**所有**形態（含中性與各變體） */
+  private formsByConceptId = new Map<string, BlockSpec[]>()
   private byBlockType = new Map<string, BlockSpec>()
   private conceptToBlockType = new Map<string, string>()
 
@@ -44,20 +46,41 @@ export class BlockSpecRegistry {
     for (const spec of specs) {
       this.specs.set(spec.id, spec)
       if (spec.conceptMapping?.conceptId) {
-        this.byConceptId.set(spec.conceptMapping.conceptId, spec)
+        const cid = spec.conceptMapping.conceptId
+        // ⚠️ **一個元件身分可以有多個形態**（097）。
+        //
+        // 在此之前這裡是直接 `set`，於是第二顆積木會蓋掉第一顆——
+        // 而「統一身分」因此被迫連帶「統一形態」，那產生了一個真實的使用者困惑
+        // （見 `knowledge/episodes/2026-08-07-學生說積木寫錯了.md`）。
+        //
+        // `byConceptId` 保留「中性形態」給既有呼叫端；完整的形態清單走
+        // `getFormsByConceptId()`。中性 = 沒有宣告 `form` 的那一顆，
+        // **第一個勝出**——後者覆寫的話，改變 JSON 順序就會改變行為。
+        if (!spec.form && !this.byConceptId.has(cid)) this.byConceptId.set(cid, spec)
+        const list = this.formsByConceptId.get(cid) ?? []
+        list.push(spec)
+        this.formsByConceptId.set(cid, list)
       }
       const blockType = (spec.blockDef as Record<string, unknown>)?.type as string | undefined
       if (blockType) {
         this.byBlockType.set(blockType, spec)
-        if (spec.conceptMapping?.conceptId) {
-          this.conceptToBlockType.set(spec.conceptMapping.conceptId, blockType)
+        // 只記中性形態——這張表的消費者要的是「這個概念預設長什麼樣」
+        if (spec.conceptMapping?.conceptId && !spec.form) {
+          const cid = spec.conceptMapping.conceptId
+          if (!this.conceptToBlockType.has(cid)) this.conceptToBlockType.set(cid, blockType)
         }
       }
     }
   }
 
+  /** 中性形態（沒有宣告 `form` 的那一顆）。要全部請用 `getFormsByConceptId` */
   getByConceptId(conceptId: string): BlockSpec | undefined {
     return this.byConceptId.get(conceptId)
+  }
+
+  /** 一個元件身分的**所有**積木形態 */
+  getFormsByConceptId(conceptId: string): BlockSpec[] {
+    return this.formsByConceptId.get(conceptId) ?? []
   }
 
   getByBlockType(blockType: string): BlockSpec | undefined {

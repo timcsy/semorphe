@@ -108,17 +108,17 @@
 
 ### 測試（先紅）
 
-- [ ] T026 [US2] 在 `tests/unit/core/form-selection.test.ts` 寫 FR-002：同一 conceptId 註冊兩個形態後，**兩個都在**（這支對著現況會紅——現況是第二次 `set` 蓋掉第一次）
-- [ ] T027 [P] [US2] 寫 FS-4 的違反注入：兩個 conceptId 共用同一個 blockType **必須被擋下並出聲**
+- [X] T026 [US2] 在 `tests/unit/core/form-selection.test.ts` 寫 FR-002：同一 conceptId 註冊兩個形態後，**兩個都在**（這支對著現況會紅——現況是第二次 `set` 蓋掉第一次）
+- [X] T027 [P] [US2] 寫 FS-4 的違反注入：兩個 conceptId 共用同一個 blockType **必須被擋下並出聲**
 
 ### 實作
 
-- [ ] T028 [US2] 在 `src/core/block-spec-registry.ts` 把 `byConceptId` 改為一對多，並讓 `conceptToBlockType` 一致
-- [ ] T029 [US2] 讓 T026–T027 轉綠
+- [X] T028 [US2] 在 `src/core/block-spec-registry.ts` 把 `byConceptId` 改為一對多，並讓 `conceptToBlockType` 一致
+- [X] T029 [US2] 讓 T026–T027 轉綠
 
 > `byConceptId` **零呼叫者**，所以 T028 不會改變行為。做它是為了讓宣告與實作不分歧——**雙重真相護欄在看的正是這種分歧**。
 
-- [ ] T030 [US2] 示範性驗證（**不改動任何既有身分**）：用合成的元件宣告，證明「一對 statement/expression 可以併成一個身分兩個形態」（SC-006）
+- [X] T030 [US2] 示範性驗證（**不改動任何既有身分**）：用合成的元件宣告，證明「一對 statement/expression 可以併成一個身分兩個形態」（SC-006）
 
 ---
 
@@ -126,9 +126,9 @@
 
 > 實作已在 T007–T009 完成（硬性優先）。本階段補齊驗收與邊界。
 
-- [ ] T031 [US3] 用改動前產生的真實存檔（從 git 取一份或現場產生）測「載入成功且語義等價」
-- [ ] T032 [P] [US3] 測「載入後再存 → 存成 v2，舊格式不再出現」（SV-1）
-- [ ] T033 [P] [US3] 測「轉不動的存檔要出聲」（SV-2），不得靜默丟棄
+- [X] T031 [US3] 用改動前產生的真實存檔（從 git 取一份或現場產生）測「載入成功且語義等價」
+- [X] T032 [P] [US3] 測「載入後再存 → 存成 v2，舊格式不再出現」（SV-1）
+- [X] T033 [P] [US3] 測「轉不動的存檔要出聲」（SV-2），不得靜默丟棄
 
 ---
 
