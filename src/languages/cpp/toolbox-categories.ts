@@ -103,8 +103,21 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       'cpp_stack_declare', 'cpp_stack_top',
       'cpp_queue_declare', 'cpp_queue_front', 'cpp_queue_back',
       'cpp_stringstream_declare',
-      // generic container ops commonly used with stacks/queues
-      'c_container_push', 'c_container_pop', 'c_container_empty',
+      // ⚠️ 這裡放的是**形態**，不是中性版。
+      //
+      // `cpp_container_push` / `cpp_container_pop` 是一個身分、多個形態（097）。
+      // 工具箱要放的是學生**選得出來**的那些——「推到頂端」與「加到尾端」，
+      // 而不是型別查不到時的退路。
+      //
+      // 一名學生回報過「stack 和 queue 的 push 意思不一樣」，而第一版把變體
+      // 做出來卻沒放進工具箱——於是他**在工具箱裡找不到那顆積木**，只能拖
+      // 中性版出來、接上變數、等它自己變。那比標籤說不清楚更難受。
+      //
+      // 預設變數名用 `stk` / `que`，沿用本分類既有的慣例
+      //（`stk 的頂端元素`、`que 的前端元素`）。
+      'c_stack_push', 'c_stack_pop',
+      'c_queue_push', 'c_queue_pop',
+      'c_container_empty',
     ],
   },
 

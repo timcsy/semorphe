@@ -3385,7 +3385,7 @@
         {
           "type": "field_input",
           "name": "OBJ",
-          "text": "obj"
+          "text": "stk"
         },
         {
           "type": "input_value",
@@ -3421,7 +3421,7 @@
         {
           "type": "field_input",
           "name": "OBJ",
-          "text": "obj"
+          "text": "que"
         },
         {
           "type": "input_value",
@@ -3457,7 +3457,7 @@
         {
           "type": "field_input",
           "name": "OBJ",
-          "text": "obj"
+          "text": "stk"
         }
       ],
       "previousStatement": "Statement",
@@ -3488,7 +3488,7 @@
         {
           "type": "field_input",
           "name": "OBJ",
-          "text": "obj"
+          "text": "que"
         }
       ],
       "previousStatement": "Statement",

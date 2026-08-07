@@ -227,3 +227,34 @@ describe('加法式：舊存檔不會壞', () => {
     expect(types.some((t) => t === 'c_stack_push'), '重新渲染沒有升級 → 自癒那條路斷了').toBe(true)
   })
 })
+
+// ─── 工具箱：學生找得到嗎（一名學生實際問的問題）──────────────────
+
+describe('工具箱放的是形態，不是退路', () => {
+  it('★ 四顆變體都在工具箱裡——學生找得到', async () => {
+    const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
+    const 全部 = cppCategoryDefs.flatMap((c) => c.extraTypes ?? [])
+    for (const t of ['c_stack_push', 'c_queue_push', 'c_stack_pop', 'c_queue_pop']) {
+      expect(全部, `${t} 不在工具箱 → 學生只能拖中性版出來、接上變數、等它自己變`).toContain(t)
+    }
+  })
+
+  it('★ 中性版**不在**工具箱——它是型別查不到時的退路，不是一個選項', async () => {
+    const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
+    const 全部 = cppCategoryDefs.flatMap((c) => c.extraTypes ?? [])
+    expect(全部, '放著只會變成三顆很像的積木').not.toContain('c_container_push')
+    expect(全部).not.toContain('c_container_pop')
+  })
+
+  it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {
+    const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(coreConcepts, coreBlocks)
+    const objDefault = (bt: string): string | undefined => {
+      const args = ((reg.getByBlockType(bt)?.blockDef as Record<string, unknown>)?.args0 ?? []) as { name?: string; text?: string }[]
+      return args.find((a) => a.name === 'OBJ')?.text
+    }
+    expect(objDefault('c_stack_push')).toBe('stk')
+    expect(objDefault('c_queue_push')).toBe('que')
+  })
+})
