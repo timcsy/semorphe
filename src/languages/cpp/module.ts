@@ -14,13 +14,12 @@ import { PatternRenderer } from '../../core/projection/pattern-renderer'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
 // Semantic layer: concept definitions
-import universalConcepts from '../../blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../blocks/universal'
+import { allCppProjections } from './all-declarations'
 import { coreConcepts } from './core'
 import { allStdModules } from './std'
 
 // Projection layer: block definitions
-import universalBlocks from '../../blocks/projections/blocks/universal-blocks.json'
-import { coreBlocks } from './core'
 
 // Other resources
 import liftPatternsJson from './lift-patterns.json'
@@ -56,11 +55,7 @@ export function initCppModule(): CppModuleEngines {
   conceptRegistry.loadFromJSON(allConcepts)
 
   // 2. Load split JSON directly into registry
-  const allProjections: BlockProjectionJSON[] = [
-    ...universalBlocks as unknown as BlockProjectionJSON[],
-    ...coreBlocks,
-    ...allStdModules.flatMap(m => m.blocks),
-  ]
+  const allProjections: BlockProjectionJSON[] = allCppProjections()
   registry.loadFromSplit(allConcepts, allProjections)
   const allSpecs = registry.getAll()
 

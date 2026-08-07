@@ -36,7 +36,7 @@ import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
-import type { StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../core/types'
+import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
 import { buildToolbox } from './toolbox-builder'
 import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
@@ -45,12 +45,8 @@ import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons,
 import type { AppShellElements } from './app-shell'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
-import universalConcepts from '../blocks/semantics/universal-concepts.json'
-import { coreConcepts } from '../languages/cpp/core'
-import { allStdModules } from '../languages/cpp/std'
+import { allCppConcepts, allCppProjections } from '../languages/cpp/all-declarations'
 // Projection layer
-import universalBlockProjections from '../blocks/projections/blocks/universal-blocks.json'
-import { coreBlocks } from '../languages/cpp/core'
 import apcsPreset from '../languages/cpp/styles/apcs.json'
 import competitivePreset from '../languages/cpp/styles/competitive.json'
 import googlePreset from '../languages/cpp/styles/google.json'
@@ -121,16 +117,8 @@ export class App {
     await this.localeLoader.load('zh-TW')
 
     // 2. Load block specs (split concept/projection architecture)
-    const allConcepts = [
-      ...universalConcepts as unknown as ConceptDefJSON[],
-      ...coreConcepts,
-      ...allStdModules.flatMap(m => m.concepts),
-    ]
-    const allProjections = [
-      ...universalBlockProjections as unknown as BlockProjectionJSON[],
-      ...coreBlocks,
-      ...allStdModules.flatMap(m => m.blocks),
-    ]
+    const allConcepts = allCppConcepts()
+    const allProjections = allCppProjections()
     this.blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
 
     // 4. Register all blocks with Blockly

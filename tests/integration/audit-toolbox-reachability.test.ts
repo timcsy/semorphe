@@ -206,6 +206,39 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     ).toContain('堆疊與佇列')
   })
 
+  it('★ 每顆積木都蓋了 owner 章——沒蓋的話整批段落會**靜靜地**回傳零筆', () => {
+    // ⚠️ **這一支是使用者截圖逼出來的。**
+    //
+    // 導出改完之後 `app.ts` 仍然載入沒蓋 owner 章的原始 JSON，於是每個
+    // `(universal)` 段落回傳零筆——**通用積木整批從工具箱消失，而全套測試是綠的**
+    // （測試走的是另一份組裝）。使用者打開瀏覽器只看到兩個分類。
+    //
+    // 「少一顆積木」有可拿性護欄在看；「**一整包來源查無此章**」沒有人看，
+    // 因為它不會產生違規——它產生的是**空的段落**，而空段落與「這個分類就是這麼小」
+    // 長得一模一樣。
+    const { allProjections, registry } = loadToolbox()
+    const 沒蓋章 = allProjections
+      .filter((p) => !p.owner)
+      .map((p) => (p.blockDef as unknown as { type: string }).type)
+    expect(沒蓋章, 'owner 是段落比對的鍵，缺了它那顆積木對任何分類都不存在').toEqual([])
+
+    // 反向：登錄表裡的 spec 也要帶著章（`loadFromSplit` 用展開合併，不得再吃掉欄位）
+    const specs沒章 = registry.getAll().filter((s) => !s.owner).length
+    expect(specs沒章, '投影有章而 spec 沒有 → 又一次逐欄位建構吃掉欄位（experience.md:232）').toBe(0)
+  })
+
+  it('★ 每個宣告的來源段落都必須真的對得到積木', () => {
+    // 一個 `{ from, category }` 打錯字（`'<cstring>'` 寫成 `'<string>'`）不會有人叫，
+    // 它只是回傳空陣列。這一支讓打錯字**當場變紅**。
+    const { registry } = loadToolbox()
+    const 空段落 = cppCategoryDefs.flatMap((d) =>
+      d.sources
+        .filter((src) => registry.listBySource(src.from, src.category).length === 0)
+        .map((src) => `${d.key}: ${src.from}/${src.category}`),
+    )
+    expect(空段落, '宣告了一個對不到任何積木的來源段落——多半是打錯字或來源被改名').toEqual([])
+  })
+
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     const { total } = measure()
     expect(total, '零顆積木 → 是載入壞了，不是專案空了').toBeGreaterThan(150)

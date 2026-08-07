@@ -13,8 +13,9 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { universalConcepts, universalBlocks, UNIVERSAL_OWNER } from '../../src/blocks/universal'
-import { coreConcepts, coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
+import { universalBlocks, UNIVERSAL_OWNER } from '../../src/blocks/universal'
+import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 
@@ -54,16 +55,16 @@ export function loadToolbox(
   extraConcepts: ConceptDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
 ): LoadedToolbox {
-  const allConcepts: ConceptDefJSON[] = [
-    ...universalConcepts,
-    ...coreConcepts,
-    ...allStdModules.flatMap((m) => m.concepts),
-    ...extraConcepts,
-  ]
+  // ⚠️ **走 production 的同一個組裝函式。**
+  //
+  // 在此之前這裡自己列了一份，而 `app.ts` 列的是另一份（載入沒蓋 owner 章的
+  // 原始 JSON）。兩份看起來一樣，於是護欄與快照全綠，而**正式路徑上的通用積木
+  // 整批從工具箱消失**——使用者截圖才發現。
+  //
+  // 組裝只留一份，測試與 production 就不可能分歧。
+  const allConcepts: ConceptDefJSON[] = [...allCppConcepts(), ...extraConcepts]
   const allProjections: BlockProjectionJSON[] = [
-    ...universalBlocks,
-    ...coreBlocks,
-    ...allStdModules.flatMap((m) => m.blocks),
+    ...allCppProjections(),
     // 合成注入預設蓋核心的章；要驗「加一顆元件到某模組」就自己帶 owner
     ...extraProjections.map((b) => ({ ...b, owner: b.owner ?? CORE_OWNER })),
   ]

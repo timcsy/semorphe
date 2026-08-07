@@ -24,6 +24,12 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { buildToolbox } from '../../src/ui/toolbox-builder'
+import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
+import { getVisibleConcepts } from '../../src/core/level-tree'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { REPO_ROOT } from '../helpers/guardrail'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
 import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
@@ -71,6 +77,49 @@ describe('工具箱快照', () => {
     expect(snapshot.categories.length, '零個分類 → 是工具箱空了，不是它沒變').toBeGreaterThan(5)
     const total = snapshot.categories.reduce((n, c) => n + c.blocks.length, 0)
     expect(total, '零顆積木 → 同上').toBeGreaterThan(100)
+  })
+})
+
+describe('起始關卡的工具箱——**使用者第一眼看到的東西**', () => {
+  // ⚠️ **這一段是使用者截圖逼出來的。**
+  //
+  // 上面的快照用「全部概念可見」，而使用者打開瀏覽器看到的是**課程的起始關卡**。
+  // 導出改完之後 `app.ts` 仍載入沒蓋 owner 章的原始 JSON，於是每個 `(universal)`
+  // 段落回傳零筆——**學生只看到兩個分類、沒有任何 statement 積木**，
+  // 而全套測試（走另一份組裝）全綠。
+  //
+  // 全部可見的快照**結構上看不到這個病**：核心與 std 的積木照樣在，
+  // 少掉的那一批被其他分類的數量蓋過去。只有**起始關卡**會讓它裸露出來，
+  // 因為那一關幾乎只有通用積木。
+  const reg = new BlockSpecRegistry()
+  reg.loadFromSplit(allCppConcepts(), allCppProjections())
+  const L0 = buildToolbox({
+    blockSpecRegistry: reg,
+    visibleConcepts: getVisibleConcepts(cppBeginner as never, new Set(['L0'])),
+    ioPreference: 'iostream',
+    msgs: {},
+    categoryColors: CATEGORY_COLORS,
+    categoryDefs: cppCategoryDefs,
+  }) as { contents: { name: string; contents: { type: string }[] }[] }
+  const 全部 = L0.contents.flatMap((c) => c.contents.map((b) => b.type))
+
+  it('★ L0 至少有五個分類——只剩兩個代表整批來源查無此章', () => {
+    expect(
+      L0.contents.map((c) => c.name),
+      '學生第一眼只看到兩個分類 → 通用積木整批消失了',
+    ).toEqual(['資料', '運算', '控制', '輸入/輸出', '程式設定'])
+  })
+
+  it('★ L0 有 statement 積木——沒有的話學生連第一行都寫不出來', () => {
+    for (const t of ['u_var_declare', 'u_var_assign', 'u_print', 'u_input', 'u_if', 'u_while_loop']) {
+      expect(全部, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+    }
+  })
+
+  it('★ L0 有基本資料積木——整數與字串是「基本資料」', () => {
+    for (const t of ['u_number', 'u_string', 'u_var_ref']) {
+      expect(全部, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+    }
   })
 })
 

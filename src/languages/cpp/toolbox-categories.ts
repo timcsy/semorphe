@@ -84,7 +84,6 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     isIoCategory: true,
     sources: [
       { from: '(universal)', category: 'io' },
-      { from: '(core)', category: 'io' },
       { from: '<cstdio>', category: 'io' },
       { from: '<string>', category: 'io' },
       { from: '<fstream>', category: 'io' },
