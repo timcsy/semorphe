@@ -32,6 +32,11 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
   {
     key: 'control', nameKey: 'CATEGORY_CONTROL', fallback: '控制', colorKey: 'control',
     registryCategories: ['control', 'loops', 'conditions'],
+    // ⚠️ **明確排除，不是忘了。**「忘了」與「刻意不放」必須分得出來
+    // ——與 `skipPaths` 同一種紀律（可拿性護欄會把兩者分成不同的桶）。
+    //
+    // `u_if_else` 被下面三個帶 `extraState` 的 `u_if` 入口取代：
+    // 光是 if／if-else／if-elseif-else。同時放兩套是給學生兩條路做同一件事。
     excludeTypes: ['u_if_else'],
     extraTypes: [
       { type: 'u_if' },
@@ -79,6 +84,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       'cpp_string_append', 'cpp_string_c_str', 'cpp_to_string', 'cpp_stoi', 'cpp_stod',
       'cpp_string_empty', 'cpp_string_erase', 'cpp_string_insert', 'cpp_string_replace',
       'cpp_string_push_back', 'cpp_string_clear',
+      'cpp_string_find_first_not_of', 'cpp_string_find_last_not_of',
       // stdlib char functions
       'cpp_isalpha', 'cpp_isdigit', 'cpp_toupper', 'cpp_tolower',
       // stdlib conversion
@@ -89,7 +95,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     key: 'maps_sets', nameKey: 'CATEGORY_MAPS_SETS', fallback: '對應與集合', colorKey: 'cpp_containers',
     registryCategories: [],
     extraTypes: [
-      'cpp_map_declare', 'cpp_map_access',
+      'cpp_map_declare', 'cpp_map_access', 'c_map_assign',
       'cpp_set_declare', 'cpp_set_insert',
       'cpp_pair_declare', 'cpp_make_pair',
       // generic container ops commonly used with maps/sets
@@ -102,7 +108,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     extraTypes: [
       'cpp_stack_declare', 'cpp_stack_top',
       'cpp_queue_declare', 'cpp_queue_front', 'cpp_queue_back',
-      'cpp_stringstream_declare',
+      'cpp_stringstream_declare', 'cpp_istringstream_declare',
       // ⚠️ 這裡放的是**形態**，不是中性版。
       //
       // `cpp_container_push` / `cpp_container_pop` 是一個身分、多個形態（097）。
@@ -145,33 +151,12 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
 ]
 
 /**
- * Build I/O category contents with iostream/cstdio sorting.
- * Extracted from toolbox-builder.ts to be reusable by the language module.
+ * ⚠️ 這裡原本有一份 `buildIoCategoryContents`——**與 `toolbox-builder.ts` 的
+ * `buildIoContents` 是同一段邏輯的第二份拷貝，而且沒有任何產品程式碼用它**
+ * （`isIoCategory` 走的是 builder 的預設路徑；只有它自己的單元測試在叫它）。
+ *
+ * 兩份會漂移，而漂移的那一刻沒有人會知道——實測時 builder 那份把三顆
+ * `cpp_*` 的 I/O 積木靜靜丟掉，而這份拷貝有一模一樣的缺陷、一模一樣沒被抓到。
+ *
+ * 已刪除。要測 I/O 排序請測真的那條路（`buildToolbox` + `isIoCategory`）。
  */
-export function buildIoCategoryContents(
-  blockSpecRegistry: BlockSpecRegistry,
-  visibleConcepts: Set<string>,
-  ioPreference: 'iostream' | 'cstdio',
-): { kind: string; type: string }[] {
-  const ioSpecs = [
-    ...blockSpecRegistry.listByCategory('io', visibleConcepts),
-    ...blockSpecRegistry.listByCategory('cpp_io', visibleConcepts),
-  ]
-  const ioTypes = ioSpecs
-    .map(s => (s.blockDef as Record<string, unknown>)?.type as string)
-    .filter(t => t && blockSpecRegistry.isBlockVisible(t, visibleConcepts))
-
-  const ensureTypes = ['u_print', 'u_input', 'u_input_expr', 'u_endl', 'c_printf', 'c_scanf']
-  for (const t of ensureTypes) {
-    if (!ioTypes.includes(t) && blockSpecRegistry.isBlockVisible(t, visibleConcepts)) {
-      ioTypes.push(t)
-    }
-  }
-
-  const universalIo = ioTypes.filter(t => t.startsWith('u_'))
-  const cppIo = ioTypes.filter(t => t.startsWith('c_'))
-  const sorted = ioPreference === 'iostream'
-    ? [...universalIo, ...cppIo]
-    : [...cppIo, ...universalIo]
-  return sorted.map(t => ({ kind: 'block', type: t }))
-}

@@ -1,0 +1,250 @@
+{
+  "categories": [
+    {
+      "name": "資料",
+      "blocks": [
+        "u_var_declare",
+        "u_var_assign",
+        "u_var_ref",
+        "u_number",
+        "u_string",
+        "c_builtin_constant",
+        "c_const_declare",
+        "c_constexpr_declare",
+        "c_auto_declare",
+        "c_typedef",
+        "c_using_alias",
+        "c_ref_declare",
+        "c_static_declare",
+        "c_static_member",
+        "c_enum",
+        "c_char_literal",
+        "c_var_declare_expr"
+      ]
+    },
+    {
+      "name": "運算",
+      "blocks": [
+        "u_arithmetic",
+        "u_compare",
+        "u_logic",
+        "u_logic_not",
+        "u_negate",
+        "c_increment",
+        "c_compound_assign",
+        "c_ternary",
+        "c_cast",
+        "c_bitwise_not",
+        "c_increment_expr",
+        "c_compound_assign_expr",
+        "c_sizeof",
+        "c_static_cast",
+        "c_dynamic_cast",
+        "c_reinterpret_cast",
+        "c_const_cast",
+        "c_math_pow",
+        "c_math_unary",
+        "c_math_binary",
+        "cpp_abs",
+        "cpp_rand",
+        "cpp_srand"
+      ]
+    },
+    {
+      "name": "控制",
+      "blocks": [
+        "u_if",
+        "u_if",
+        "u_if",
+        "u_count_loop",
+        "u_while_loop",
+        "u_break",
+        "u_continue",
+        "c_try_catch",
+        "c_throw",
+        "c_for_loop",
+        "c_do_while",
+        "c_range_for",
+        "c_switch",
+        "c_case",
+        "c_default",
+        "cpp_exit"
+      ]
+    },
+    {
+      "name": "函式",
+      "blocks": [
+        "u_func_def",
+        "u_func_call",
+        "u_func_call_expr",
+        "u_return",
+        "c_forward_decl",
+        "c_lambda",
+        "cpp_template_function",
+        "cpp_method_call",
+        "cpp_method_call_expr"
+      ]
+    },
+    {
+      "name": "輸入/輸出",
+      "blocks": [
+        "u_print",
+        "u_endl",
+        "u_input",
+        "u_input_expr",
+        "c_printf",
+        "c_scanf",
+        "c_scanf_expr",
+        "cpp_getline",
+        "cpp_ifstream_declare",
+        "cpp_ofstream_declare"
+      ]
+    },
+    {
+      "name": "陣列與列表",
+      "blocks": [
+        "u_array_declare",
+        "u_array_access",
+        "u_array_assign",
+        "c_array_2d_declare",
+        "c_array_2d_access",
+        "c_array_2d_assign",
+        "cpp_sort",
+        "cpp_reverse",
+        "cpp_fill",
+        "cpp_min",
+        "cpp_max",
+        "cpp_swap",
+        "cpp_accumulate",
+        "cpp_iota",
+        "cpp_partial_sum",
+        "cpp_gcd",
+        "cpp_lcm",
+        "cpp_vector_declare",
+        "cpp_vector_size",
+        "cpp_vector_pop_back",
+        "cpp_vector_back",
+        "c_container_push_back",
+        "c_container_empty",
+        "c_container_clear"
+      ]
+    },
+    {
+      "name": "文字",
+      "blocks": [
+        "c_strlen",
+        "c_strcmp",
+        "c_strcpy",
+        "c_strcat",
+        "c_strncpy",
+        "c_strncmp",
+        "c_strchr",
+        "c_strstr",
+        "c_memset",
+        "c_memcpy",
+        "cpp_string_declare",
+        "cpp_string_at",
+        "cpp_string_length",
+        "cpp_string_substr",
+        "cpp_string_find",
+        "cpp_string_append",
+        "cpp_string_c_str",
+        "cpp_to_string",
+        "cpp_stoi",
+        "cpp_stod",
+        "cpp_string_empty",
+        "cpp_string_erase",
+        "cpp_string_insert",
+        "cpp_string_replace",
+        "cpp_string_push_back",
+        "cpp_string_clear",
+        "cpp_string_find_first_not_of",
+        "cpp_string_find_last_not_of",
+        "cpp_isalpha",
+        "cpp_isdigit",
+        "cpp_toupper",
+        "cpp_tolower",
+        "cpp_atoi",
+        "cpp_atof"
+      ]
+    },
+    {
+      "name": "對應與集合",
+      "blocks": [
+        "cpp_map_declare",
+        "cpp_map_access",
+        "c_map_assign",
+        "cpp_set_declare",
+        "cpp_set_insert",
+        "cpp_pair_declare",
+        "cpp_make_pair",
+        "c_container_erase",
+        "c_container_count"
+      ]
+    },
+    {
+      "name": "堆疊與佇列",
+      "blocks": [
+        "cpp_stack_declare",
+        "cpp_stack_top",
+        "cpp_queue_declare",
+        "cpp_queue_front",
+        "cpp_queue_back",
+        "cpp_stringstream_declare",
+        "cpp_istringstream_declare",
+        "c_stack_push",
+        "c_stack_pop",
+        "c_queue_push",
+        "c_queue_pop",
+        "c_container_empty"
+      ]
+    },
+    {
+      "name": "指標與記憶體",
+      "blocks": [
+        "c_pointer_assign",
+        "c_pointer_declare",
+        "c_pointer_deref",
+        "c_address_of",
+        "c_malloc",
+        "c_free",
+        "c_memset",
+        "c_memcpy"
+      ]
+    },
+    {
+      "name": "結構與類別",
+      "blocks": [
+        "c_struct_declare",
+        "c_struct_member_access",
+        "c_struct_pointer_access",
+        "cpp_class_def",
+        "cpp_new",
+        "cpp_delete",
+        "c_constructor",
+        "c_destructor",
+        "c_virtual_method",
+        "c_pure_virtual",
+        "c_override_method",
+        "c_operator_overload"
+      ]
+    },
+    {
+      "name": "程式設定",
+      "blocks": [
+        "c_include",
+        "c_include_local",
+        "c_define",
+        "c_ifdef",
+        "c_ifndef",
+        "c_using_namespace",
+        "c_raw_code",
+        "c_raw_expression",
+        "c_comment_line",
+        "c_comment_doc",
+        "c_comment_block",
+        "c_namespace_def"
+      ]
+    }
+  ]
+}

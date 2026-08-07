@@ -2,7 +2,7 @@
  * TDD tests for C++ toolbox categories (language module)
  */
 import { describe, it, expect } from 'vitest'
-import { cppCategoryDefs, buildIoCategoryContents } from '../../../src/languages/cpp/toolbox-categories'
+import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
@@ -13,6 +13,7 @@ import universalBlocks from '../../../src/blocks/projections/blocks/universal-bl
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
+import { loadToolbox } from '../../helpers/toolbox'
 
 const topic = cppBeginnerTopic as Topic
 
@@ -55,16 +56,50 @@ describe('C++ toolbox categories (language module)', () => {
     }
   })
 
-  it('buildIoCategoryContents sorts iostream first for iostream pref', () => {
+  // ⚠️ 這一支原本測的是 `buildIoCategoryContents`——一份**沒有任何產品程式碼
+  // 在用**的拷貝。它通過了三個月，而真正上線的那條路有一模一樣的缺陷。
+  // 改成走 `buildToolbox` 的真實路徑。
+  function ioContents(pref: 'iostream' | 'cstdio'): string[] {
     const reg = createRegistry()
-    const allConcepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
-    const contents = buildIoCategoryContents(reg, allConcepts, 'iostream')
-    const types = contents.map(c => c.type)
-    // iostream types (u_*) should come before cstdio types (c_*)
-    const firstCIdx = types.findIndex(t => t.startsWith('c_'))
-    const lastUIdx = types.length - 1 - [...types].reverse().findIndex(t => t.startsWith('u_'))
-    if (firstCIdx >= 0 && lastUIdx >= 0) {
-      expect(firstCIdx).toBeGreaterThan(lastUIdx)
+    const visible = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const tb = buildToolbox({
+      blockSpecRegistry: reg,
+      visibleConcepts: visible,
+      ioPreference: pref,
+      msgs: {},
+      categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
+    }) as { contents: { name: string; contents: { type: string }[] }[] }
+    const io = tb.contents.find(c => c.name.includes('輸入'))
+    return (io?.contents ?? []).map(b => b.type)
+  }
+
+  it('I/O 分類：iostream 偏好時通用版排在語言版之前', () => {
+    const types = ioContents('iostream')
+    const firstLang = types.findIndex(t => !t.startsWith('u_'))
+    const lastUniversal = types.length - 1 - [...types].reverse().findIndex(t => t.startsWith('u_'))
+    expect(firstLang, 'I/O 分類是空的 → 是建構壞了，不是排序對了').toBeGreaterThan(0)
+    expect(firstLang).toBeGreaterThan(lastUniversal)
+  })
+
+  it('I/O 分類：cstdio 偏好時反過來', () => {
+    const types = ioContents('cstdio')
+    const firstUniversal = types.findIndex(t => t.startsWith('u_'))
+    const lastLang = types.length - 1 - [...types].reverse().findIndex(t => !t.startsWith('u_'))
+    expect(firstUniversal).toBeGreaterThan(lastLang)
+  })
+
+  it('★ `cpp_` 開頭的 I/O 積木不得被排序函式丟掉', () => {
+    // 迴歸釘：原本的 `startsWith('c_')` 兩邊都不收 `cpp_*`，
+    // 於是三顆 `category: 'io'` 的積木靜靜消失。
+    //
+    // ⚠️ 這裡必須用**全部概念可見**。用 topic 的可見集合會把 `<fstream>`
+    // 擋掉（課程沒收錄它），於是這支測試會因為**別的理由**紅——
+    // 而「課程沒收錄」與「排序函式吃掉它」是兩件完全不同的事。
+    const { snapshot } = loadToolbox()
+    const types = snapshot.categories.find(c => c.name.includes('輸入'))?.blocks ?? []
+    for (const t of ['cpp_getline', 'cpp_ifstream_declare', 'cpp_ofstream_declare']) {
+      expect(types, `${t} 的 category 明明是 'io'，卻不在 I/O 分類裡`).toContain(t)
     }
   })
 

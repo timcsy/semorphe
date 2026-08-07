@@ -50,11 +50,19 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
       }
     }
 
+    // ⚠️ **分成兩堆時，第二堆要是「其餘」，不是另一個前綴。**
+    //
+    // 這裡原本寫 `filter(t => t.startsWith('c_'))`，於是 `cpp_getline`、
+    // `cpp_ifstream_declare`、`cpp_ofstream_declare` 三顆**兩邊都不屬於**，
+    // 被這個排序函式**靜靜地丟掉**——它們的 `category` 明明就是 `'io'`。
+    //
+    // 那不是「忘了加進清單」，是**宣告是對的，而呈現層把它吃掉了**。
+    // 症狀完全一樣（使用者拿不到），根因差很遠。
     const universalIo = ioTypes.filter(t => t.startsWith('u_'))
-    const cppIo = ioTypes.filter(t => t.startsWith('c_'))
+    const langIo = ioTypes.filter(t => !t.startsWith('u_'))
     const sorted = ioPref === 'iostream'
-      ? [...universalIo, ...cppIo]
-      : [...cppIo, ...universalIo]
+      ? [...universalIo, ...langIo]
+      : [...langIo, ...universalIo]
     return sorted.map(t => ({ kind: 'block', type: t }))
   }
 

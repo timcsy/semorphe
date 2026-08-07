@@ -1,0 +1,24 @@
+{
+  "guard": "toolbox-reachability",
+  "缺陷": [],
+  "imperativeOnly": [
+    "u_input_expr"
+  ],
+  "findings": [
+    {
+      "type": "c_container_pop",
+      "owner": "(core)",
+      "bucket": "中性形態"
+    },
+    {
+      "type": "c_container_push",
+      "owner": "(core)",
+      "bucket": "中性形態"
+    },
+    {
+      "type": "u_if_else",
+      "owner": "(universal)",
+      "bucket": "分類排除"
+    }
+  ]
+}

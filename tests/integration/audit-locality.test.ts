@@ -19,13 +19,15 @@ import {
   assertRatchet,
 } from '../helpers/guardrail'
 import { allComponentIds, scanDirs } from '../helpers/component-scan'
+import { classifyFile } from '../helpers/file-classification'
 
 /** 就近性關心的是實作擴散，範圍是整個 src/（不只核心層） */
 const SCAN_DIRS = ['src'] as const
 
 const RULE =
   '只匹配完整的引號字串字面（\'id\' / "id" / `id`），與中立性護欄同一套規則。' +
-  '掃 src/ 全部的 .ts 與 .json——元件的 concepts.json／blocks.json 本來就是它的實作。'
+  '掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——' +
+  '課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。'
 
 interface LocalityBaseline {
   _meta: BaselineMeta
@@ -45,6 +47,13 @@ function measure(): Spread[] {
 
   const byId = new Map<string, string[]>()
   for (const [file, h] of hits) {
+    // ⚠️ **清單不是實作。** 一顆元件出現在 `topics/cpp-beginner.json` 裡代表
+    // 「這門課教它」，不代表「它的實作散到那裡去了」。前兩大共用檔各含 166／164
+    // 顆元件，全部被算成擴散——那個數字量的是登錄表的視圖，不是碎裂。
+    //
+    // 分類與身分健檢護欄共用（`tests/helpers/file-classification.ts`），
+    // 因為兩份判準會漂移。
+    if (classifyFile(file) !== '實作') continue
     for (const id of h.code) {
       const arr = byId.get(id) ?? []
       arr.push(file)
@@ -154,7 +163,13 @@ if (process.env.GENERATE_BASELINE) {
       guard: 'locality',
       measuredAt: new Date().toISOString().slice(0, 10),
       rule: RULE,
-      note: RATCHET_NOTE + ' 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。',
+      note:
+        RATCHET_NOTE +
+        ' 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。' +
+        ' ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：' +
+        '課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。' +
+        '系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。' +
+        '（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）',
     },
     limits: Object.fromEntries(Object.entries(limits).sort(([a], [b]) => a.localeCompare(b))),
   })

@@ -43,6 +43,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
+import { classifyFile } from '../helpers/file-classification'
 import 已判定 from '../assets/identity-review-decisions.json'
 import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
 import { coreConcepts } from '../../src/languages/cpp/core'
@@ -79,12 +80,10 @@ const BY_ID = new Map(ALL.map((c) => [c.conceptId, c]))
  * **抓到第一個的是本檔的自我否證聲明**（「這個是 0 就代表偵測沒接上」），
  * 另外兩個是順著它推出來的。
  */
-function classify(rel: string): '宣告' | '清單' | '實作' | '清冊' {
-  if (/\/(concepts|blocks)\.json$/.test(rel) || /universal-(concepts|blocks)\.json$/.test(rel)) return '宣告'
-  if (/\/(topics|templates)\//.test(rel) || /toolbox-categories\.ts$/.test(rel)) return '清單'
-  if (/^tests\/(baselines|assets|reports)\//.test(rel)) return '清冊'
-  return '實作'
-}
+// 分類本體已抽到 `tests/helpers/file-classification.ts` 供就近性護欄共用——
+// 兩條護欄各寫一份判準，就是兩份會漂移的真相。下面的合成注入測試留在這裡，
+// 因為**這裡是最先需要它的地方**，而注入測試跟著判準走。
+const classify = classifyFile
 
 function scanTree(dirs: readonly string[]): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>()
