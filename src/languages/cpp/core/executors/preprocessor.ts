@@ -32,12 +32,12 @@ export function registerPreprocessorExecutors(
   })
 
   register('cpp_ifdef', async (node, ctx) => {
-    const name = String(node.properties.condition ?? node.properties.name ?? '')
+    const name = String(node.properties.condition ?? '')
     if (defined.has(name)) await ctx.executeBody(node.children.body ?? [])
   })
 
   register('cpp_ifndef', async (node, ctx) => {
-    const name = String(node.properties.condition ?? node.properties.name ?? '')
+    const name = String(node.properties.condition ?? '')
     if (!defined.has(name)) await ctx.executeBody(node.children.body ?? [])
   })
 }

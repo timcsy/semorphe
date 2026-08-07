@@ -249,13 +249,20 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     return `#define ${name} ${value}\n`
   })
 
+  // ⚠️ **產生器讀 `name`、執行器讀 `condition`——同一顆元件，兩條路各讀各的。**
+  //
+  // 沒有人發現，是因為辨識器**兩個都寫**（`{ condition: name, name }`）。
+  // 那不是相容層，是重複；而重複讓兩條路的分歧變成隱形的。
+  //
+  // 只要有一條路徑只產出其中一個（例如抽取器），另一條就會靜靜地退到 `'MACRO'`。
+  // 已收斂成 `condition`——參數規格護欄逼出來的。
   g.set('cpp_ifdef', (node, _ctx) => {
-    const name = node.properties.name ?? 'MACRO'
+    const name = node.properties.condition ?? 'MACRO'
     return `#ifdef ${name}\n`
   })
 
   g.set('cpp_ifndef', (node, _ctx) => {
-    const name = node.properties.name ?? 'MACRO'
+    const name = node.properties.condition ?? 'MACRO'
     return `#ifndef ${name}\n`
   })
 
@@ -299,6 +306,12 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
   })
 
   g.set('cpp_increment', (node, ctx) => {
+    // ⚠️ **這三個大寫退路不是死的——不要刪。** 我刪過一次，來回轉換當場紅。
+    //
+    // 大寫是**積木欄位名**，而 `cpp_increment` 的 `renderMapping` 沒有 `fields`
+    // 對應，所以抽取器產出的就是大寫鍵。真正的修法是把對應宣告出來，
+    // 而那要連同「`properties` 會驅動 `deriveRenderMapping`」一起處理——
+    // 見 specs/102-param-spec/research.md 決定 6。
     const name = (node.properties.name ?? node.properties.NAME ?? 'i') as string
     const op = (node.properties.operator ?? node.properties.OP ?? '++') as string
     const pos = (node.properties.position ?? node.properties.POSITION ?? 'postfix') as string

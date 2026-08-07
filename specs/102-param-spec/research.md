@@ -79,3 +79,48 @@ fmtParts.push((v.properties.value as string) ?? '')
 
 與 100／101 同一條紀律，但這次多一層：**小批做完時消費者的報告必須有變化**（SC-004）。
 沒有變化就代表規格寫了而沒人讀——**那時停下來，比展開到 124 顆便宜得多**。
+
+---
+
+## 決定 6（**推翻決定 5 的一部分**）：`properties` 不是描述，是**驅動抽取的資料**
+
+### 實作時才發現
+
+`PatternExtractor.deriveRenderMapping`（`src/core/projection/pattern-extractor.ts:243`）
+拿 `concept.properties` 去比對積木欄位名：
+
+```ts
+const properties = concept.properties ?? []
+…
+const semProp = this.findMatchingProperty(argName, properties)   // 'NAME' → 'name'
+if (semProp) mapping.fields[argName] = semProp
+```
+
+**所以「把宣告改成符合實際」不是文件工作，它會改變行為。**
+
+### 兩次實測撞牆
+
+| 我做的 | 結果 |
+|---|---|
+| 把 `input` 的參數列從 `['name']` 改成 `['from','type','variable']` | 來回轉換紅：`input → arithmetic, var_ref`——`name` 是**抽取器經推導對應**讀的，我的掃描器看不到那條路 |
+| 刪掉 `cpp_increment` 看似死掉的大寫退路（`?? properties.NAME`） | 來回轉換紅：`i++` vs `j--`——那個退路是**抽取器餵的**，因為 `cpp_increment` 的 `renderMapping` 沒有 `fields` 對應 |
+
+兩次都**還原了**。
+
+### 這改變了 C1 的形狀
+
+- **第三條讀取路徑**：除了 TS 產生器／執行器、`codeTemplate.pattern`，還有
+  **`deriveRenderMapping` 經由積木欄位名的隱式讀取**。掃描器看得到前兩條。
+- **判定改成棘輪，不是硬性零**。我先前判成硬性零，理由是「留一筆規範就不成立」——
+  那句話仍然對，而**判準選硬性零還是棘輪，看的是修法的代價**：
+  這裡每一筆修法都要驗行為，屬於「大量既有違規、慢慢還」。
+  → `build-guardrail` 第 6.8 步要補上這半句。
+
+### 沒有還原的一筆
+
+`cpp_ifdef`／`cpp_ifndef` 的 `{ condition: name, name }`——**同一個值兩個名字**，
+而產生器讀 `name`、執行器讀 `condition`，**兩條路各讀各的**。
+去重之後全綠，並補了一支迴歸測試（`tests/integration/ifdef-param-name.test.ts`）
+釘住「只有 `condition` 的節點也要產得對」。
+
+> 那一筆是護欄真正的第一個戰果：**它逼出了一個沒有人知道的分歧**。

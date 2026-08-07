@@ -93,7 +93,10 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
       ),
     )
     const concept = node.text.trimStart().startsWith('#ifndef') ? 'cpp_ifndef' : 'cpp_ifdef'
-    return createNode(concept, { condition: name, name }, { body })
+    // ⚠️ 原本寫 `{ condition: name, name }`——**同一個值兩個名字**，
+    // 而執行器對應地寫著 `properties.condition ?? properties.name`。
+    // 兩個名字不是相容層，是重複：沒有任何情境只有其中一個。已收斂成 `condition`。
+    return createNode(concept, { condition: name }, { body })
   })
 
   // Keep preproc_ifndef registration in case future tree-sitter versions separate them
