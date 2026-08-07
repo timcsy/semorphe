@@ -29,7 +29,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # ⚠️ **要完整歷史**（`fetch-depth: 0`）。
+      #
+      # CI 接上的第一次執行就被這件事擋下來：`syntax-tokens.test.ts` 用
+      # `git show 35e96d8:…` 去讀 059 動工**之前**的核心檔——那是
+      # `build-guardrail` 第 6 步要求的「已知答案的樣本」，用當時確實有問題的
+      # 真實程式碼驗判準抓不抓得到。
+      #
+      # 而 `actions/checkout` 預設是淺複製（depth 1），那個 commit 在 CI 裡不存在：
+      #
+      #   fatal: invalid object name '35e96d8'.
+      #
+      # 這是**只在本機通得過**的測試——完整複製才看得到。它也正好說明了為什麼
+      # 要接 CI：測試在誰的機器上跑得過，與它是不是真的在跑，是兩件事。
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
