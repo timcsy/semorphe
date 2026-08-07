@@ -689,5 +689,13 @@
   "CATEGORY_STACKS_QUEUES": "Stacks & Queues",
   "CATEGORY_POINTERS_MEMORY": "Pointers & Memory",
   "CATEGORY_STRUCTS_CLASSES": "Structs & Classes",
-  "CATEGORY_PROGRAM_CONFIG": "Program Config"
+  "CATEGORY_PROGRAM_CONFIG": "Program Config",
+  "CPP_PRIORITY_QUEUE_DECLARE_MSG0": "create %1 priority queue %2",
+  "CPP_PRIORITY_QUEUE_DECLARE_TOOLTIP": "Create a priority queue — the element you take out is always the largest, not the first one pushed",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_INT": "int",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_FLOAT": "float",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_STRING": "string",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_CHAR": "char",
+  "CPP_PRIORITY_QUEUE_TOP_MSG0": "top of %1",
+  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "Get the largest element of the priority queue (without removing it)"
 }

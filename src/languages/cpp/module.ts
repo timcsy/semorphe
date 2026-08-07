@@ -15,6 +15,7 @@ import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
 // Semantic layer: concept definitions
 import { universalConcepts } from '../../blocks/universal'
+import { declareNonComponent } from '../../core/non-components'
 import { allCppProjections } from './all-declarations'
 import { coreConcepts } from './core'
 import { allStdModules } from './std'
@@ -38,6 +39,35 @@ export interface CppModuleEngines {
  * Initialize the C++ language module with all four engines.
  * Returns the initialized engines for wiring into the app.
  */
+/**
+ * C++ 套件裡**不是元件**的樹節點。
+ *
+ * 它們沒有概念定義是**刻意的**，而在此之前那與「忘了寫定義」分不出來——
+ * 兩者都只是「不在登錄表裡」。見 `src/core/non-components.ts` 的檔頭。
+ */
+declareNonComponent(
+  'param_decl',
+  'structural',
+  '函式參數的結構化節點（`{type, name}`）。它是 `func_def` 的子節點，不會單獨成為一顆積木；' +
+    '把它做成元件會多出一顆只有一路的殼。⚠️ C1（參數規格化）可能把它升級成 ParamSpec 的一部分。',
+)
+declareNonComponent(
+  'cpp_initializer_list',
+  'structural',
+  '陣列初始值列表 `{1,2,3}` 的容器節點，巢狀時遞迴。它是宣告的子節點、不獨立存在；' +
+    '有產生器（`generators/declarations.ts`）但沒有身分——本身不是一個學生會選的概念。',
+)
+declareNonComponent(
+  '_compound',
+  'sentinel',
+  '辨識過程的中間產物：pattern 匹配到多個節點時的暫時包裝，攤平後就消失，不會進入最終語義樹。',
+)
+declareNonComponent(
+  '_multi_field',
+  'sentinel',
+  '同上——一次宣告多個結構成員時的暫時包裝。底線前綴是慣例，而**判準是這份宣告，不是前綴**。',
+)
+
 export function initCppModule(): CppModuleEngines {
   const registry = new BlockSpecRegistry()
   const conceptRegistry = new ConceptRegistry()

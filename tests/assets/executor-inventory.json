@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 093／095：各新增概念的五路。 ｜ 098（B 項）：新增 cpp_map_assign。 ｜ 099（B 項）：移除六個 `*_expr` 身分——位置不是身分，是形態；積木保留。 ｜ 099b：`var_declarator` 進墓碑——有執行器、有抽取器、有定義，而**沒有任何辨識路徑產出過它**。 ⚠️ 重新產生會沖掉這一欄，補回來（已被沖掉四次）。",
+    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。",
     "capturedAt": "2026-08-07"
   },
   "concepts": [
@@ -79,6 +79,8 @@
     "cpp_pointer_declare",
     "cpp_pointer_deref",
     "cpp_printf",
+    "cpp_priority_queue_declare",
+    "cpp_priority_queue_top",
     "cpp_queue_back",
     "cpp_queue_declare",
     "cpp_queue_front",

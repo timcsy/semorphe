@@ -141,6 +141,14 @@ const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
     clear: 'cpp_string_clear',
     push_back: 'cpp_string_push_back',
   },
+  // ⚠️ `top` 的通用退路是 `cpp_stack_top`（回傳最後推入的）。
+  // 優先佇列的 `top()` 回傳的是**最大的**——`g++` 對
+  // `pq.push(1); pq.push(5); pq.push(3); pq.top()` 的答案是 5，不是 3。
+  //
+  // 型別查得到時才走這裡；查不到就留在通用版——**猜一個錯的專屬身分比誠實降級更糟**。
+  priority_queue: {
+    top: 'cpp_priority_queue_top',
+  },
 }
 
 /**

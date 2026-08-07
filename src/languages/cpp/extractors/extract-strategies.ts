@@ -117,13 +117,25 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     return createNode('doc_comment', props)
   })
 
-  // ── var_declare_expr (expression version) ──
+  // ── 運算式位的變數宣告 ──
+  //
+  // ⚠️ **身分是 `var_declare`，不是 `var_declare_expr`。**
+  //
+  // B 項（098／099）把 `var_declare_expr` 併進了 `var_declare`——**位置不是身分**，
+  // 而運算式／敘述是位置。當時概念定義刪了、存檔轉換寫了（`storage-version.ts:92`）、
+  // 身分健檢的「確定桶 9 → 0」、全套綠。
+  //
+  // **而這一條生產路徑被留下來了**，兩天沒有人發現。存檔轉換救不了它：
+  // 轉換只在**載入**時跑，而這裡是使用者拖積木**新產生**的節點。
+  //
+  // 積木型別 `c_var_declare_expr` **不動**——那是形態（`form: { axis: 'role' }`），
+  // 形態與身分本來就該分開。
   extractor.registerExtractStrategy('c_var_declare_expr', (block: BlockState, ctx: ExtractContext) => {
     const type = (block.fields.TYPE as string) ?? 'int'
     const name = (block.fields.NAME_0 as string) ?? 'i'
     const initInput = block.inputs.INIT_0
     const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-    return createNode('var_declare_expr', { name, type }, {
+    return createNode('var_declare', { name, type }, {
       initializer: initNode ? [initNode] : [],
     })
   })

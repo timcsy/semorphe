@@ -342,6 +342,14 @@
       "files": 4,
       "dirs": 2
     },
+    "cpp_priority_queue_declare": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp_priority_queue_top": {
+      "files": 3,
+      "dirs": 2
+    },
     "cpp_pure_virtual": {
       "files": 3,
       "dirs": 3
@@ -643,7 +651,7 @@
       "dirs": 5
     },
     "func_def": {
-      "files": 9,
+      "files": 10,
       "dirs": 7
     },
     "if": {

@@ -190,6 +190,8 @@
         "cpp_queue_declare",
         "cpp_queue_front",
         "cpp_queue_back",
+        "cpp_priority_queue_declare",
+        "cpp_priority_queue_top",
         "cpp_stringstream_declare",
         "cpp_istringstream_declare",
         "c_stack_push",

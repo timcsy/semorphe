@@ -29,5 +29,26 @@
     ],
     "children": {},
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_priority_queue_declare",
+    "layer": "lang-core",
+    "abstractConcept": "var_declare",
+    "properties": [
+      "type",
+      "name"
+    ],
+    "children": {},
+    "role": "statement"
+  },
+  {
+    "conceptId": "cpp_priority_queue_top",
+    "layer": "lang-core",
+    "abstractConcept": null,
+    "properties": [
+      "obj"
+    ],
+    "children": {},
+    "role": "expression"
   }
 ]

@@ -14,10 +14,21 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}.back()`
   })
 
+  g.set('cpp_priority_queue_top', (node) => {
+    const obj = node.properties.obj ?? 'pq'
+    return `${obj}.top()`
+  })
+
   // Statement concepts
   g.set('cpp_queue_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'q'
     return `${indent(ctx)}queue<${type}> ${name};\n`
+  })
+
+  g.set('cpp_priority_queue_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const name = node.properties.name ?? 'pq'
+    return `${indent(ctx)}priority_queue<${type}> ${name};\n`
   })
 }
