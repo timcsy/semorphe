@@ -490,10 +490,39 @@ export class App {
     this.syncController?.syncBlocksToCode(tree, blockMappings)
   }
 
+  /**
+   * 重建工具箱。
+   *
+   * ⚠️ **重建之後必須把飛出選單關掉。**
+   *
+   * `updateToolbox()` 會換掉分類與內容，而**開著的飛出選單不會跟著重排**：
+   * 它留著舊的積木，而那些積木的 `transform` 全部是 `translate(0, 0)`、
+   * 高度 0——於是**整疊積木畫在同一個座標上**。
+   *
+   * 使用者的描述是「把所有關卡都打勾後就疊了」：改關卡 → `updateToolbox()` →
+   * 飛出選單沒重排 → 下一次打開看到一堆疊在一起的積木。重新載入頁面就正常，
+   * 因為那是一次乾淨的排版。
+   *
+   * 關掉之後，下一次點分類會走 `flyout.show()` 的完整排版路徑。
+   */
   private updateToolbox(): void {
     const ws = this.blocklyPanel?.getWorkspace()
     if (!ws) return
+    // ⚠️ **順序是「先關，再換」。**
+    //
+    // 反過來（先 `updateToolbox` 再關）不夠：實測飛出選單仍然留著 8 顆
+    // `translate(0, 0)`、`textContent` 空的積木——它們在換掉工具箱的那一刻
+    // 就已經失去被排版的機會，事後關掉救不回來。
+    const before = ws.getToolbox()
+    before?.getFlyout()?.hide()
+    before?.clearSelection()
+
     ws.updateToolbox(this.callBuildToolbox() as Blockly.utils.toolbox.ToolboxDefinition)
+
+    // 換完再關一次：`updateToolbox` 會重建分類，而重建的過程可能又選了一個。
+    const after = ws.getToolbox()
+    after?.getFlyout()?.hide()
+    after?.clearSelection()
   }
 
   private wireBlocklyChangeHandler(): void {
