@@ -207,22 +207,6 @@
         "queue"
       ],
       "order": 20
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "nodeType": "field_expression"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "obj",
-          "ast": "function.argument",
-          "extract": "text"
-        }
-      ]
     }
   }
 ]
