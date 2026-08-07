@@ -248,6 +248,20 @@ export function registerExpressionLifters(lifter: Lifter): void {
         index: index ? [index] : [],
       })
     }
+    // `m[key]` 的 m 是**對應表**時，那不是陣列索引。
+    //
+    // ⚠️ 差別在律：**陣列的索引超出範圍是錯誤，對應表的鍵不存在是插入。**
+    // 在此之前這裡一律產出 `array_access`，於是 `m["x"]` 把 `"x"` 當索引
+    // → 索引越界。而 `cpp_map_access` **五路齊備、在工具箱、在兩份課程清單裡，
+    // 卻沒有任何辨識路徑到得了它**——第十八條護欄的「零測試足跡」報出來的。
+    //
+    // 判準是根變數的型別（辨識脈絡查得到，076 接上的）。這是同一個機制的
+    // 第三次使用：095 的 istringstream、097 的 container_kind、這裡。
+    if (ctx.data.getType(name) === 'map') {
+      return createNode('cpp_map_access', { obj: name }, {
+        key: index ? [index] : [],
+      })
+    }
     return createNode('array_access', { name }, {
       index: index ? [index] : [],
     })

@@ -11,6 +11,15 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}[${key}]`
   })
 
+  g.set('cpp_map_assign', (node, ctx) => {
+    const obj = node.properties.obj ?? 'mp'
+    const keyNodes = node.children.key ?? []
+    const valueNodes = node.children.value ?? []
+    const key = keyNodes.length > 0 ? generateExpression(keyNodes[0], ctx) : '0'
+    const value = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '0'
+    return `${indent(ctx)}${obj}[${key}] = ${value};\n`
+  })
+
   // Statement concepts
   g.set('cpp_map_declare', (node, ctx) => {
     const keyType = node.properties.key_type ?? 'int'

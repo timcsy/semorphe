@@ -22,5 +22,18 @@
       "key": "expression"
     },
     "role": "expression"
+  },
+  {
+    "conceptId": "cpp_map_assign",
+    "layer": "lang-library",
+    "abstractConcept": "array_assign",
+    "properties": [
+      "obj"
+    ],
+    "children": {
+      "key": "expression",
+      "value": "expression"
+    },
+    "role": "statement"
   }
 ]

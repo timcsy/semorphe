@@ -55,6 +55,13 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
+      // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
+      if (ctx.data.getType(name) === 'map') {
+        return createNode('cpp_map_assign', { obj: name }, {
+          key: index ? [index] : [],
+          value: value ? [value] : [],
+        })
+      }
       return createNode('array_assign', { name }, {
         index: index ? [index] : [],
         value: value ? [value] : [],

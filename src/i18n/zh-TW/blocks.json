@@ -253,6 +253,8 @@
   "CPP_QUEUE_BACK_TOOLTIP": "取得佇列最後面的元素（最後加入的，不移除）",
   "CPP_QUEUE_EMPTY_MSG0": "佇列 %1 是否為空",
   "CPP_QUEUE_EMPTY_TOOLTIP": "檢查佇列是否為空（回傳是/否）",
+  "CPP_MAP_ASSIGN_MSG0": "設定 %1 的鍵 %2 為 %3",
+  "CPP_MAP_ASSIGN_TOOLTIP": "把對應表中某個鍵的值設成新的值（鍵不存在就新增）",
   "CPP_MAP_ACCESS_MSG0": "%1 中鍵 %2 的值",
   "CPP_MAP_ACCESS_TOOLTIP": "用鍵來存取或新增對照表中的值",
   "CPP_MAP_ERASE_MSG0": "從 %1 移除鍵 %2",

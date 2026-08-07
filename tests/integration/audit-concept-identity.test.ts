@@ -1041,12 +1041,22 @@ describe('STD: map', () => {
 int main() { std::map<int, int> m; }`, 'cpp_map_declare')
   })
 
-  // ARCHITECTURAL: m[1] is lifted as array_access because the subscript expression
-  // AST node is syntactically identical for arrays and maps. The lifter has no type
-  // information to distinguish them.
-  it('cpp_map_access — lifter uses array_access (no type info for subscript)', () => {
+  // ⚠️ 這一支原本標著 `ARCHITECTURAL`，說「辨識器**沒有型別資訊**可以區分陣列與
+  // 對應表」，並斷言 `m[1]` 應該降級成 `array_access`。
+  //
+  // **那句話是假的。** 型別追蹤（`ctx.data.getType`）在 076 就接上了，095 的
+  // istringstream 與 097 的 container_kind 都在用。這支測試把一個假宣稱**編碼成
+  // 預期行為**，於是沒有人會去質疑它——比一句註解更難發現。
+  //
+  // 這是 experience「一句解釋為什麼『只能這樣』的註解，會讓那個限制看起來是本質的」
+  // 的第四個實例，而**前三個都在註解裡，這個在測試名稱裡**。
+  it('cpp_map_access — 對應表的鍵存取有自己的身分（型別查得到）', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; int x = m[1]; }`, 'array_access')
+int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp_map_access')
+  })
+
+  it('負向：真的陣列仍然是 array_access', () => {
+    assertConceptPresent(`int main() { int a[3]; int x = a[1]; }`, 'array_access')
   })
 })
 

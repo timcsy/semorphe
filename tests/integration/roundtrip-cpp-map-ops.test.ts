@@ -174,22 +174,21 @@ describe('C++ Map Operations Roundtrip', () => {
     })
   })
 
-  describe('cpp_map_access (degrades to array_access)', () => {
+  // ⚠️ 這一組原本叫「cpp_map_access (**degrades to** array_access)」，理由寫著
+  // 「Without type info」——**假的**。型別追蹤 076 就接上了。降級不是架構限制，
+  // 是沒有人去接。而把降級寫成測試的名字，等於宣告它是設計。
+  describe('cpp_map_access — 對應表的鍵存取', () => {
     const code = 'map<string, int> mp;\ncout << mp["key"] << endl;'
 
-    it('should lift m[key] as array_access (no type info)', () => {
-      const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      // Without type info, subscript lifts as array_access
-      expect(concepts.has('array_access')).toBe(true)
+    it('★ m[key] 辨識成 cpp_map_access，不是 array_access', () => {
+      const concepts = collectConcepts(liftCode(code))
+      expect(concepts.has('cpp_map_access')).toBe(true)
+      expect(concepts.has('array_access'), '降級回去了——型別查得到卻沒用').toBe(false)
     })
 
-    it('should survive P1 structural equivalence despite degradation', () => {
-      const output = roundTripCode(code)
-      const tree2 = liftCode(output)
-      expect(tree2).not.toBeNull()
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('array_access')).toBe(true)
+    it('★ 來回轉換之後身分不變', () => {
+      const concepts2 = collectConcepts(liftCode(roundTripCode(code)))
+      expect(concepts2.has('cpp_map_access')).toBe(true)
     })
   })
 

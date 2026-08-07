@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 093：新增 cpp_string_find_first_not_of / cpp_string_find_last_not_of 兩個概念的**五路**（不只執行器）。 ｜ 095：新增 cpp_istringstream_declare 的**五路**（辨識／渲染／抽取／產生／執行）。",
-    "capturedAt": "2026-08-06"
+    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 093：新增 cpp_string_find_first_not_of / cpp_string_find_last_not_of 兩個概念的**五路**。 ｜ 095：新增 cpp_istringstream_declare 的**五路**。 ｜ 098（階段 6.5 的 B 項）：新增 cpp_map_assign——`m[k]=v` 原本被辨識成 array_assign，把鍵當索引寫進錯的位置，而 cpp_map_access 是護欄報出的「零測試足跡」三顆之一。 ⚠️ 重新產生會沖掉這一欄，補回來（已被沖掉兩次）。",
+    "capturedAt": "2026-08-07"
   },
   "concepts": [
     "arithmetic",
@@ -67,6 +67,7 @@
     "cpp_make_pair",
     "cpp_malloc",
     "cpp_map_access",
+    "cpp_map_assign",
     "cpp_map_declare",
     "cpp_max",
     "cpp_memcpy",

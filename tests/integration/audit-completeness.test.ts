@@ -168,6 +168,15 @@ const SAMPLE_CONTEXT: Record<string, SemanticNode[]> = {}
 for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find']) {
   SAMPLE_CONTEXT[id] = [createNode('cpp_string_declare', { name: 'x', type: 'string' }, {})]
 }
+// **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，
+// **正確地**退回 `array_assign`／`array_access`——同一個保守設計。
+// ⚠️ 脈絡宣告的變數名**必須與合成節點用的那個一致**。第一版用了 `mp`
+// （產生器的預設值），而 `synth-node.ts` 給 `obj` 這類屬性的合成值是 `'x'`
+// ——名字對不上，型別自然查不到，於是它仍然被判成殼。**脈絡有了、接不上，
+// 與「機制有了沒人接上」同一個形狀。**
+for (const id of ['cpp_map_access', 'cpp_map_assign']) {
+  SAMPLE_CONTEXT[id] = [createNode('cpp_map_declare', { name: 'x', key_type: 'int', value_type: 'int' }, {})]
+}
 
 /**
  * ⚠️ **試過、失敗、還原：** 把角色是「運算式」的概念一律包進
