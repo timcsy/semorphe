@@ -57,6 +57,7 @@
 - **理論說**：P2 定義 properties 為 `Record<string, PropertyValue>`，但沒規定何時用字串、何時用結構化物件。
 - **實際發生**：`func_def` 的 params 存成字串陣列 `["long long base", "int y"]`。同一份字串在四個環節被不同方式解讀——lifter 整串存入、generator 照原樣拼接（正確）、renderer 用 `split(/\s+/)[0]` 取型別（`long long` 被截斷成 `long`）、extractor 從 UI 欄位讀（正確）。
 - **解決方式**：短期用已知複合型別清單做前綴匹配（從最長候選開始）；長期應結構化為 `[{ type: "long long", name: "base" }]`。
+  → **✅ 長期那條已經做了**（2026-08-07 實測確認）：`func_def` 的參數現在是 `param_decl` 子節點，`{type: "long long", name: "base"}`／`{type: "const string&"}`／`{type: "int*"}` 全部完整。**這一欄曾經過期**——教訓成立，而狀態寫著一個已經付掉的債。
 - **教訓**：**判定準則——如果一個屬性值在管線中需要被拆分或解析，它就不該是字串。** 壓扁的唯一合理場景是該值只會被完整傳遞、不會被拆分。
 - **來源**：[concepts/概念代數.md](concepts/概念代數.md)
 
