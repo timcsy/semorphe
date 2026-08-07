@@ -24,14 +24,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
 import type { ConceptDefJSON } from '../../src/core/types'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
 /** 全部已註冊的 componentId（universal + cpp core + 全部 std 模組） */
 export function allComponentDefs(): ConceptDefJSON[] {
   return [
-    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...(universalConcepts),
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
   ]

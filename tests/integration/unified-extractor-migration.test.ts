@@ -9,8 +9,7 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -21,8 +20,8 @@ let renderer: PatternRenderer
 beforeAll(() => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(
-    [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)],
-    [...universalBlocks as unknown as BlockProjectionJSON[], ...coreBlocks, ...allStdModules.flatMap(m => m.blocks)]
+    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)],
+    [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks)]
   )
   extractor = new PatternExtractor()
   renderer = new PatternRenderer()

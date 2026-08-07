@@ -6,8 +6,7 @@ import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import type { LiftPattern, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
@@ -23,9 +22,9 @@ export function createTestLifter(): Lifter {
 
   // Load BlockSpec patterns (for c_increment, c_compound_assign, etc.)
   const blockSpecRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
-    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...universalBlocks,
     ...coreBlocks,
     ...allStdModules.flatMap(m => m.blocks),
   ]

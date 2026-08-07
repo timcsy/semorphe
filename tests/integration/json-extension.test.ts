@@ -1,15 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import algorithmBlocks from '../../src/languages/cpp/std/algorithm/blocks.json'
 import containerBlocks from '../../src/languages/cpp/std/vector/blocks.json'
 
 const allConcepts = [
-  ...universalConcepts as unknown as ConceptDefJSON[],
+  ...universalConcepts,
   ...coreConcepts,
   ...allStdModules.flatMap(m => m.concepts),
 ]
@@ -74,7 +73,7 @@ describe('JSON-only extension (US6)', () => {
   it('should coexist with universal blocks without conflicts', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, [
-      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...universalBlocks,
       ...algorithmBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])

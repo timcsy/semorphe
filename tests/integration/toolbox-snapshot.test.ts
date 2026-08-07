@@ -93,34 +93,57 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
   // 因為那一關幾乎只有通用積木。
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(allCppConcepts(), allCppProjections())
-  const L0 = buildToolbox({
-    blockSpecRegistry: reg,
-    visibleConcepts: getVisibleConcepts(cppBeginner as never, new Set(['L0'])),
-    ioPreference: 'iostream',
-    msgs: {},
-    categoryColors: CATEGORY_COLORS,
-    categoryDefs: cppCategoryDefs,
-  }) as { contents: { name: string; contents: { type: string }[] }[] }
-  const 全部 = L0.contents.flatMap((c) => c.contents.map((b) => b.type))
 
-  it('★ L0 至少有五個分類——只剩兩個代表整批來源查無此章', () => {
-    expect(
-      L0.contents.map((c) => c.name),
-      '學生第一眼只看到兩個分類 → 通用積木整批消失了',
-    ).toEqual(['資料', '運算', '控制', '輸入/輸出', '程式設定'])
-  })
-
-  it('★ L0 有 statement 積木——沒有的話學生連第一行都寫不出來', () => {
-    for (const t of ['u_var_declare', 'u_var_assign', 'u_print', 'u_input', 'u_if', 'u_while_loop']) {
-      expect(全部, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+  /** 一門課的**起始關卡**——使用者第一次打開看到的就是這個 */
+  function 起始關卡(topic: unknown): { 分類: string[]; 積木: string[] } {
+    const tb = buildToolbox({
+      blockSpecRegistry: reg,
+      visibleConcepts: getVisibleConcepts(topic as never, new Set(['L0'])),
+      ioPreference: 'iostream',
+      msgs: {},
+      categoryColors: CATEGORY_COLORS,
+      categoryDefs: cppCategoryDefs,
+    }) as { contents: { name: string; contents: { type: string }[] }[] }
+    return {
+      分類: tb.contents.map((c) => c.name),
+      積木: tb.contents.flatMap((c) => c.contents.map((b) => b.type)),
     }
-  })
+  }
 
-  it('★ L0 有基本資料積木——整數與字串是「基本資料」', () => {
-    for (const t of ['u_number', 'u_string', 'u_var_ref']) {
-      expect(全部, `${t} 不在起始關卡的工具箱裡`).toContain(t)
-    }
-  })
+  // ⚠️ **兩門課都要釘。** 只釘一門的話，另一門的起始關卡壞掉不會有人知道——
+  // 而「只有其中一門壞了」正是這一類 bug 最可能的形狀（可見度是逐課算的）。
+  const 課程 = [
+    ['初學 C++', cppBeginner],
+    ['競程 C++', cppCompetitive],
+  ] as const
+
+  for (const [名稱, topic] of 課程) {
+    describe(名稱, () => {
+      const { 分類, 積木 } = 起始關卡(topic)
+
+      it('★ 起始關卡至少有五個分類——只剩兩個代表整批來源查無此章', () => {
+        expect(分類.length, `學生第一眼只看到 ${分類.length} 個分類（${分類.join('、')}）→ 有整批來源消失了`)
+          .toBeGreaterThanOrEqual(5)
+      })
+
+      it('★ 有 statement 積木——沒有的話學生連第一行都寫不出來', () => {
+        for (const t of ['u_var_declare', 'u_var_assign', 'u_print', 'u_if']) {
+          expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+        }
+      })
+
+      it('★ 有基本資料積木——整數與字串是「基本資料」', () => {
+        for (const t of ['u_number', 'u_string', 'u_var_ref']) {
+          expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+        }
+      })
+
+      it('★ 每個出現的分類都不是空的', () => {
+        // 空分類會被 buildToolbox 濾掉，所以這一支釘的是「濾掉之後還有東西」
+        expect(積木.length, '起始關卡一顆積木都沒有').toBeGreaterThan(10)
+      })
+    })
+  }
 })
 
 describe('課程清單快照', () => {

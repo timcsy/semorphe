@@ -45,7 +45,7 @@ import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
 import 已判定 from '../assets/identity-review-decisions.json'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 

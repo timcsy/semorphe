@@ -42,7 +42,7 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON } from '../../src/core/types'
@@ -105,7 +105,7 @@ function measure(): { name: string; declarers: number; readers: number }[] {
   const src = allSource()
   const counts = new Map<string, number>()
   const all = [
-    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...(universalConcepts),
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
   ]

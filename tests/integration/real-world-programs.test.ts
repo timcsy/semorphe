@@ -17,8 +17,7 @@ import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
@@ -39,9 +38,9 @@ beforeAll(async () => {
 
   // Set up PatternRenderer for render pipeline tests
   const tempRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
-    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...universalBlocks,
     ...coreBlocks,
     ...allStdModules.flatMap(m => m.blocks),
   ]

@@ -19,7 +19,7 @@ import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
 // Import split concept/projection JSON files
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'
@@ -62,7 +62,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
     registry.loadFromSplit(allConcepts, [...coreBlocks, ...allStdModules.flatMap(m => m.blocks)])
     const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)

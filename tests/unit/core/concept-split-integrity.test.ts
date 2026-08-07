@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
-import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 
@@ -18,11 +17,11 @@ describe('Concept/BlockDef split integrity', () => {
     // 「Layer 0: Universal — 所有語言共有」；註解通過，`//` 不通過（那是
     // Layer 1 的語言核心語法，已下沉到語言套件）。
     // 30 → 29：B 項把 `var_declare_expr` 併進 `var_declare`（積木保留，身分合一）
-    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(29)
+    expect((universalConcepts).length).toBe(29)
     // 26 → 27（100，E 項）：`u_input_expr` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
-    expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(27)
+    expect((universalBlocks).length).toBe(27)
   })
 
   it('should have correct core concept and block counts', () => {
@@ -60,13 +59,13 @@ describe('Concept/BlockDef split integrity', () => {
 
   it('should have every projection conceptId present in concepts', () => {
     const allConceptIds = new Set([
-      ...(universalConcepts as unknown as ConceptDefJSON[]).map(c => c.conceptId),
+      ...(universalConcepts).map(c => c.conceptId),
       ...coreConcepts.map(c => c.conceptId),
       ...allStdModules.flatMap(m => m.concepts).map(c => c.conceptId),
     ])
 
     const allProjections = [
-      ...(universalBlocks as unknown as BlockProjectionJSON[]) as Array<{ conceptId: string }>,
+      ...(universalBlocks) as Array<{ conceptId: string }>,
       ...coreBlocks as Array<{ conceptId: string }>,
       ...allStdModules.flatMap(m => m.blocks) as Array<{ conceptId: string }>,
     ]

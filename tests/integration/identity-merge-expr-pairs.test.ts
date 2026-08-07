@@ -37,8 +37,7 @@ import type { SemanticNode } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -65,7 +64,7 @@ const 已合併的 = [
 
 function 全部概念(): ConceptDefJSON[] {
   return [
-    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...(universalConcepts),
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
   ]
@@ -74,7 +73,7 @@ function 全部概念(): ConceptDefJSON[] {
 function 登錄表(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(全部概念(), [
-    ...(universalBlocks as unknown as BlockProjectionJSON[]),
+    ...(universalBlocks),
     ...coreBlocks,
     ...allStdModules.flatMap((m) => m.blocks),
   ])

@@ -38,7 +38,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalBlocks } from '../../src/blocks/universal'
 import { coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { createNode } from '../../src/core/semantic-tree'
@@ -133,7 +133,7 @@ beforeAll(async () => {
   reg.loadFromSplit(
     allComponentDefs(),
     [
-      ...(universalBlocks as unknown as BlockProjectionJSON[]),
+      ...(universalBlocks),
       ...coreBlocks,
       ...allStdModules.flatMap((m) => m.blocks),
     ],

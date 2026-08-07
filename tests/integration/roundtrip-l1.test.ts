@@ -17,8 +17,7 @@ import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ConceptDef
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
@@ -60,9 +59,9 @@ describe('L1 Block Roundtrip', () => {
     extractor = new PatternExtractor()
 
     const registry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
     const allProjections = [
-      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...universalBlocks,
       ...coreBlocks,
       ...allStdModules.flatMap(m => m.blocks),
     ]

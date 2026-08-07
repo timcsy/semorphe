@@ -2,8 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import type { ConceptDefJSON, BlockProjectionJSON, Topic } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { getVisibleConcepts } from '../../src/core/level-tree'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../src/languages/cpp/topics/cpp-beginner.json'
@@ -15,9 +14,9 @@ describe('Topic-Based Block Visibility', () => {
 
   beforeAll(() => {
     reg = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
     const allProjections = [
-      ...universalBlocks as unknown as BlockProjectionJSON[],
+      ...universalBlocks,
       ...coreBlocks,
       ...allStdModules.flatMap(m => m.blocks),
     ]

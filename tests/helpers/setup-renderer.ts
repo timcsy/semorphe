@@ -4,17 +4,16 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
 /** Set up the global PatternRenderer with all block specs and render strategies */
 export function setupTestRenderer(): void {
   const registry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
-    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...universalBlocks,
     ...coreBlocks,
     ...allStdModules.flatMap(m => m.blocks),
   ]

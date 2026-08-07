@@ -34,7 +34,7 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
+import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON } from '../../src/core/types'
@@ -78,7 +78,7 @@ export function isChildRead(source: string, name: string): boolean {
 function measure(): { name: string; concept: string }[] {
   const src = allSource()
   const all = [
-    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...(universalConcepts),
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
   ]

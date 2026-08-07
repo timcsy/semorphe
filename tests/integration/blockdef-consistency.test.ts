@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { extractInputNames, getInputs } from '../../src/blocks/block-input-names'
 import type { BlockSpec, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
+import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
@@ -45,8 +44,8 @@ describe('block-input-names utility', () => {
 
 describe('blockDef input name sanity checks', () => {
   const _reg = new BlockSpecRegistry()
-  const _allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  _reg.loadFromSplit(_allConcepts, universalBlocks as unknown as BlockProjectionJSON[])
+  const _allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+  _reg.loadFromSplit(_allConcepts, universalBlocks)
   const specs = _reg.getAll()
 
   // Blocks where COND was historically used but should be CONDITION
