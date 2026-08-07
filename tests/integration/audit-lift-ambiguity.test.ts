@@ -183,8 +183,18 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
     expect(groups.length).toBeGreaterThanOrEqual(0)
   })
 
-  it('數字不為零——零代表沒有真的量到東西', () => {
-    expect(groups.length).toBeGreaterThan(0)
+  it('★ 掃描規模不為零——錨在**輸入**上，不錨在缺陷上', () => {
+    // ⚠️ 這一支原本是 `expect(groups.length).toBeGreaterThan(0)`
+    // ——**而 `groups.length` 正是這條護欄想推向零的那個數字**。
+    //
+    // 諷刺的是：它下面三行就在解釋這個教訓（兩支錨在真實狀態上的自我否證
+    // 已經被改過），而這一支帶著同樣的反模式活了下來。
+    //
+    // **判準**：斷言的那個數字，是不是這條護欄想推向零的？
+    // 是 → 錨錯了，它會在成功的那天變紅。
+    // 錨在**規則載入了幾條**上——那個數字不會因為修好而歸零。
+    const 規則總數 = [...loadRules().values()].reduce((n, l) => n + l.length, 0)
+    expect(規則總數, '一條辨識規則都沒載入 → 報表上的每個數字都是假的').toBeGreaterThan(20)
   })
 
   // 這兩支原本錨在 `declaration` 那一群的真實狀態上（「8 條同時盯著宣告語法，

@@ -22,6 +22,7 @@ import {
   RATCHET_NOTE,
   type BaselineMeta,
   assertRatchet,
+  listSourceFiles,
 } from '../helpers/guardrail'
 import { scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
 import { allComponentIds } from '../helpers/component-scan'
@@ -150,9 +151,18 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
   })
 
   it('報表分辨「被關掉的測試」與「只有名字的測試」（FR-020）', () => {
+    // ⚠️ 這兩個分類必須**加起來等於總數**——那是分類器的不變式，
+    // 不隨清償而失效。
     expect(withBody.length + titleOnly.length).toBe(entries.length)
-    expect(withBody.length, '應該有真的被關掉的測試').toBeGreaterThan(0)
-    expect(titleOnly.length, '應該有只是名字的項目').toBeGreaterThan(0)
+
+    // ⚠️ **原本這裡是 `withBody > 0` 與 `titleOnly > 0`**，理由是「應該有」。
+    // 而這條護欄的目標寫在 vision 裡：**停用測試 85 → 1**。
+    // 也就是說，**它成功的那天這兩支就會紅**——錨在缺陷還在不在上面。
+    //
+    // 判準：斷言的那個數字，是不是這條護欄想推向零的？是 → 錨錯了。
+    // 改錨在**掃描規模**上——測試檔的數量不會因為清償而歸零。
+    const 掃到的測試檔數 = listSourceFiles('tests').filter((f) => f.endsWith('.test.ts')).length
+    expect(掃到的測試檔數, '一個測試檔都沒掃到 → 報表上的每個數字都是假的').toBeGreaterThan(50)
   })
 
   it('棘輪：三個數字皆不得上升（FR-003、FR-023）', () => {
