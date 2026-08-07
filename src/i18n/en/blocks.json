@@ -697,5 +697,15 @@
   "CPP_PRIORITY_QUEUE_DECLARE_TYPE_STRING": "string",
   "CPP_PRIORITY_QUEUE_DECLARE_TYPE_CHAR": "char",
   "CPP_PRIORITY_QUEUE_TOP_MSG0": "top of %1",
-  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "Get the largest element of the priority queue (without removing it)"
+  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "Get the largest element of the priority queue (without removing it)",
+  "C_COMMENT_DOC_MSG0": "doc comment %1",
+  "C_COMMENT_DOC_TOOLTIP": "Emit a /** ... */ documentation comment",
+  "C_COMMENT_BLOCK_MSG0": "block comment %1",
+  "C_COMMENT_BLOCK_TOOLTIP": "Emit a /* ... */ multi-line comment",
+  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "create string input stream %1 reading %2",
+  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "Treat a string as an input source; read from it with >> like cin",
+  "CPP_STRING_FIND_FIRST_NOT_OF_MSG0": "first position in %1 not in %2",
+  "CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP": "Find the first character not in the given set (often used to trim leading spaces)",
+  "CPP_STRING_FIND_LAST_NOT_OF_MSG0": "last position in %1 not in %2",
+  "CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP": "Find the last character not in the given set (often used to trim trailing spaces)"
 }

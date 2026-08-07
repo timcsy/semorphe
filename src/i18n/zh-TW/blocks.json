@@ -697,5 +697,15 @@
   "CPP_PRIORITY_QUEUE_DECLARE_TYPE_STRING": "string（字串）",
   "CPP_PRIORITY_QUEUE_DECLARE_TYPE_CHAR": "char（字元）",
   "CPP_PRIORITY_QUEUE_TOP_MSG0": "%1 的最大元素",
-  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "取得優先佇列裡最大的元素（不移除）"
+  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "取得優先佇列裡最大的元素（不移除）",
+  "C_COMMENT_DOC_MSG0": "文件註解 %1",
+  "C_COMMENT_DOC_TOOLTIP": "產生 /** ... */ 形式的文件註解",
+  "C_COMMENT_BLOCK_MSG0": "區塊註解 %1",
+  "C_COMMENT_BLOCK_TOOLTIP": "產生 /* ... */ 形式的多行註解",
+  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "建立字串輸入流 %1 讀取 %2",
+  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "把一段字串當成輸入來源，之後可以像 cin 一樣用 >> 逐項讀出",
+  "CPP_STRING_FIND_FIRST_NOT_OF_MSG0": "%1 中第一個不屬於 %2 的位置",
+  "CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP": "從左邊找第一個不在指定字元集合裡的字元位置（常用來去掉開頭空白）",
+  "CPP_STRING_FIND_LAST_NOT_OF_MSG0": "%1 中最後一個不屬於 %2 的位置",
+  "CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP": "從右邊找最後一個不在指定字元集合裡的字元位置（常用來去掉結尾空白）"
 }
