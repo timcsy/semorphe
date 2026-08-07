@@ -15,7 +15,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ⚠️ **這個 job 是 2026-08-08 才加的，而在那之前 CI 一行測試都沒跑。**
+  #
+  # 當時的狀態：22 條護欄、226 個測試檔、3633 個測試——**而自動執行它們的
+  # 機制是零**。它們只在有人手動打 `npm test` 時跑。
+  #
+  # 那正是這個專案的核心信條打在自己身上（`knowledge/concepts/執行機構.md`）：
+  #
+  #   「一條規範沒有機械化的檢查，它本身就是殼——而殼看起來像完成。」
+  #
+  # 檢查有了，而沒有機械化的東西去跑那些檢查。這是「機制有了，沒人接上」
+  # 的**第七個實例**，也是最大的一個：前六個各漏掉一個機制，這個漏掉的是全部。
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+      # ⚠️ **護欄的基線不得在 CI 裡被重新產生。**
+      #
+      # `GENERATE_BASELINE=1` 會把當下的狀態封為合格。如果 CI 跑完之後基線檔
+      # 有改動，代表有人（或某支測試）在刷分數——那會讓棘輪失去意義，
+      # 而且它是**靜默的**：測試照樣綠。
+      #
+      # 見 `knowledge/history/018`（用宣告刷數字）。
+      - name: 基線與清冊不得被改動
+        run: |
+          if ! git diff --exit-code --stat tests/baselines tests/assets; then
+            echo "::error::測試執行後基線／清冊被改動了——那是在刷分數，不是通過。"
+            exit 1
+          fi
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
