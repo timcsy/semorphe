@@ -47,16 +47,28 @@
 | 分類順序由程式算出來 | 破 R-4 |
 | 為了讓護欄綠而把新元件塞進課程 | 破 R-5 的用意 |
 
-## 已知的違反（動工前實測）
+## 已知的違反（動工前實測，全部概念可見）
 
 ```
-cpp_string_find_first_not_of   093 加的，忘了工具箱
-cpp_string_find_last_not_of    093 加的，忘了工具箱
-c_map_assign                   098 加的，忘了工具箱
-cpp_istringstream_declare      095 加的，忘了工具箱
+積木 183｜可拿到 173｜拿不到 10 ── 其中 7 顆是缺陷
+
+cpp_getline                    忘了工具箱
+cpp_string_find_first_not_of   093 加的，忘了
+cpp_string_find_last_not_of    093 加的，忘了
+c_map_assign                   098 加的，忘了
+cpp_istringstream_declare      095 加的，忘了
+cpp_ifstream_declare           忘了 ┐ **`<fstream>` 整個模組**
+cpp_ofstream_declare           忘了 ┘ 使用者拿不到
+
+── 以下三顆是明確排除，不是缺陷 ──
+c_container_push / c_container_pop   中性形態（097）
+u_if_else                            在 excludeTypes 裡，被三個 u_if 變體取代
 ```
 
-**三顆是同一個 session 加的**，而其中一顆是在寫完「機制做對了，而使用者拿不到它」
+**兩顆是同一個 session 加的**，而其中一顆是在寫完「機制做對了，而使用者拿不到它」
 那條教訓**之後**加的。
+
+護欄第一次跑必須**指名這 7 顆**。少報一顆就是掃描寫錯了——
+（規劃階段的第一版掃描報 4 顆，第二版報 25 顆，兩個都是錯的。見 research.md 的更正。）
 
 > 一條教訓寫進知識庫，不會讓下一次不發生。**只有機械檢查會。**
