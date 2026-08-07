@@ -8,8 +8,9 @@ import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
 import type { ConceptDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
 import { getVisibleConcepts } from '../../../src/core/level-tree'
-import universalConcepts from '../../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../../src/blocks/projections/blocks/universal-blocks.json'
+// ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
+// 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
+import { universalConcepts, universalBlocks } from '../../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
@@ -19,9 +20,9 @@ const topic = cppBeginnerTopic as Topic
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts as unknown as ConceptDefJSON[], ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
   const allProjections = [
-    ...universalBlocks as unknown as BlockProjectionJSON[],
+    ...universalBlocks,
     ...coreBlocks,
     ...allStdModules.flatMap(m => m.blocks),
   ]
@@ -52,7 +53,11 @@ describe('C++ toolbox categories (language module)', () => {
       expect(def.nameKey).toBeDefined()
       expect(def.fallback).toBeDefined()
       expect(def.colorKey).toBeDefined()
-      expect(def.registryCategories).toBeInstanceOf(Array)
+      expect(def.sources, '每個分類都要有**有序的**來源段落——那是教學順序').toBeInstanceOf(Array)
+      for (const src of def.sources) {
+        expect(src.from, '段落要指名來源（模組 header／(core)／(universal)）').toBeTruthy()
+        expect(src.category, '段落要指名登錄分類').toBeTruthy()
+      }
     }
   })
 

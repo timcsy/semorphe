@@ -1,5 +1,6 @@
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
-import type { ToolboxCategoryDef } from '../core/types'
+import type { BlockSpec, ToolboxCategoryDef } from '../core/types'
+import { KNOWN_AXES } from '../core/projection/form-selection'
 
 export type { ToolboxCategoryDef }
 
@@ -15,40 +16,78 @@ export interface ToolboxBuildConfig {
 
 type ToolboxEntry = { kind: string; type: string; extraState?: Record<string, unknown> }
 
+/**
+ * 這一顆是不是「軸值取不到時的退路」？
+ *
+ * 是 → 它不是學生選得出來的選項，不進工具箱。
+ * 判準是**兄弟形態所在那條軸的 `from`**：只有 `property`（要去查型別）
+ * 才需要退路；`position` 永遠取得到，所以那條軸上沒宣告 `form` 的是敘述版。
+ */
+export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpec): boolean {
+  if (spec.form) return false
+  const cid = spec.conceptMapping?.conceptId
+  if (!cid) return false
+  const siblings = registry.getFormsByConceptId(cid).filter(s => s.form)
+  if (siblings.length === 0) return false
+  return siblings.some(s => KNOWN_AXES[s.form!.axis]?.from === 'property')
+}
+
+/**
+ * 組工具箱：**段落的順序是宣告的，段落的成員是導出的。**
+ *
+ * 在此之前這裡是「登錄分類拉一批 ＋ 80 筆手寫積木型別」。手寫的那半直接違反
+ * P3（「不修改既有程式碼的前提下加入新概念」）——加一顆元件要來這裡登記，
+ * 而**忘了登記的下場是使用者拿不到它**，實測有 7 顆。
+ *
+ * 現在一顆積木出現在工具箱裡，只因為它被宣告在某個模組的 `blocks.json` 裡。
+ */
 export function buildToolbox(config: ToolboxBuildConfig): object {
   const { blockSpecRegistry, visibleConcepts, ioPreference: ioPref, msgs, categoryColors, categoryDefs = [] } = config
 
   const isVisible = (blockType: string): boolean =>
     blockSpecRegistry.isBlockVisible(blockType, visibleConcepts)
 
-  const registryBlocks = (category: string): { kind: string; type: string }[] => {
-    const specs = blockSpecRegistry.listByCategory(category, visibleConcepts)
-    return specs
+  /**
+   * 一個段落裡**屬於這個工具箱分類**的積木型別，維持宣告順序。
+   *
+   * 兩道過濾，兩者都是**推導**的，不是清單：
+   *
+   * 1. **中性形態不進工具箱**（TB-3）——它是軸值取不到時的退路，
+   *    不是學生選得出來的選項（097）。
+   *
+   *    ⚠️ **「沒有宣告 `form`」在兩條軸上意思不一樣**，這裡踩過一次：
+   *
+   *    | 軸 | `from` | 沒宣告 form 的那一顆是 |
+   *    |---|---|---|
+   *    | `container_kind` | `property` | **退路**——型別查不到時才用它 |
+   *    | `role` | `position` | **敘述版**——一個真正的選項 |
+   *
+   *    位置永遠知道（它是結構性的），所以 `role` 軸**不需要退路**；
+   *    把它一律當退路排掉，會讓 `u_var_declare`／`u_input`／`u_func_call`
+   *    等七顆敘述版積木從工具箱裡消失——而它們是最常用的那幾顆。
+   *
+   *    所以判準是**軸的 `from`**，不是「有沒有 form」。
+   *
+   * 2. **逐顆宣告的歸屬優先**——`<cstdlib>` 的六顆散進運算／控制／文字三個
+   *    分類，那是三個不同的教學意圖，來源決定不了。
+   */
+  const sourceBlocks = (from: string, category: string, targetKey: string): string[] =>
+    blockSpecRegistry
+      .listBySource(from, category, visibleConcepts)
       .filter(s => {
-        const blockType = (s.blockDef as Record<string, unknown>)?.type as string | undefined
-        return blockType && isVisible(blockType)
+        if (isTypeLookupFallback(blockSpecRegistry, s)) return false
+        const declared = s.toolboxCategory
+        if (declared === undefined) return true
+        return Array.isArray(declared) ? declared.includes(targetKey) : declared === targetKey
       })
-      .map(s => ({ kind: 'block', type: (s.blockDef as Record<string, unknown>).type as string }))
-  }
+      .map(s => (s.blockDef as Record<string, unknown>)?.type as string | undefined)
+      .filter((t): t is string => Boolean(t) && isVisible(t!))
 
   const buildIoContents = (def: ToolboxCategoryDef): ToolboxEntry[] => {
     if (def.buildContents) {
       return def.buildContents(blockSpecRegistry, visibleConcepts, ioPref)
     }
-    // Default I/O category builder
-    const ioSpecs = def.registryCategories.flatMap(cat =>
-      blockSpecRegistry.listByCategory(cat, visibleConcepts)
-    )
-    const ioTypes = ioSpecs
-      .map(s => (s.blockDef as Record<string, unknown>)?.type as string)
-      .filter(t => t && isVisible(t))
-
-    const ensureTypes = ['u_print', 'u_input', 'u_input_expr', 'u_endl', 'c_printf', 'c_scanf']
-    for (const t of ensureTypes) {
-      if (!ioTypes.includes(t) && isVisible(t)) {
-        ioTypes.push(t)
-      }
-    }
+    const ioTypes = def.sources.flatMap(src => sourceBlocks(src.from, src.category, def.key))
 
     // ⚠️ **分成兩堆時，第二堆要是「其餘」，不是另一個前綴。**
     //
@@ -77,41 +116,38 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
       }
     }
 
-    // Standard category
     const excludeSet = new Set(def.excludeTypes ?? [])
-    const blockSet = new Set<string>()
-    for (const cat of def.registryCategories) {
-      for (const b of registryBlocks(cat)) {
-        if (!excludeSet.has(b.type)) blockSet.add(b.type)
+
+    // 帶 `extraState` 的入口：同一顆積木用不同的預設狀態出現數次。
+    // 那是教學設計（「有 else 的 if 值得一個獨立入口」），登錄表推不出來，
+    // 所以它**留著**，並在該積木出現的位置就地展開。
+    const stateEntries = new Map<string, ToolboxEntry[]>()
+    for (const t of def.extraTypes ?? []) {
+      if (typeof t === 'string') {
+        throw new Error(
+          `工具箱分類 '${def.key}' 的 extraTypes 仍有純字串項目 '${t}'。` +
+            `純字串代表「這顆積木屬於這個分類」——**登錄表知道**，請改用 sources 導出。` +
+            `extraTypes 只保留帶 extraState 的入口。`,
+        )
       }
+      if (!isVisible(t.type)) continue
+      const list = stateEntries.get(t.type) ?? []
+      list.push({ kind: 'block', type: t.type, ...(t.extraState ? { extraState: t.extraState } : {}) })
+      stateEntries.set(t.type, list)
     }
-    const extraReplacements = new Map<string, ToolboxEntry[]>()
-    const extraAppend: ToolboxEntry[] = []
-    const extraAdded = new Set<string>()
-    if (def.extraTypes) {
-      for (const t of def.extraTypes) {
-        if (typeof t === 'string') {
-          if (!isVisible(t)) continue
-          if (!blockSet.has(t) && !extraAdded.has(t)) {
-            extraAppend.push({ kind: 'block', type: t })
-            extraAdded.add(t)
-          }
-        } else {
-          if (!isVisible(t.type)) continue
-          if (!extraReplacements.has(t.type)) extraReplacements.set(t.type, [])
-          extraReplacements.get(t.type)!.push({ kind: 'block', type: t.type, ...(t.extraState ? { extraState: t.extraState } : {}) })
-        }
-      }
-    }
+
     const contents: ToolboxEntry[] = []
-    for (const t of blockSet) {
-      if (extraReplacements.has(t)) {
-        contents.push(...extraReplacements.get(t)!)
-      } else {
-        contents.push({ kind: 'block', type: t })
+    const seen = new Set<string>()
+    for (const src of def.sources) {
+      for (const t of sourceBlocks(src.from, src.category, def.key)) {
+        if (excludeSet.has(t) || seen.has(t)) continue
+        seen.add(t)
+        const withState = stateEntries.get(t)
+        if (withState) contents.push(...withState)
+        else contents.push({ kind: 'block', type: t })
       }
     }
-    contents.push(...extraAppend)
+
     return {
       kind: 'category',
       name: msgs[def.nameKey] || def.fallback,

@@ -127,6 +127,22 @@ export class BlockSpecRegistry {
     })
   }
 
+  /**
+   * 一個**段落**的成員：某個來源（模組／核心／通用）底下某個登錄分類的積木。
+   *
+   * 回傳順序 = 載入順序 = 該來源 `blocks.json` 的宣告順序。
+   * **那個順序就是學生在工具箱裡看到的順序**——所以把一顆積木放進
+   * `blocks.json` 的正確位置，它在工具箱裡就會出現在正確的位置。
+   */
+  listBySource(owner: string, category: string, visibleConcepts?: Set<string>): BlockSpec[] {
+    return [...this.specs.values()].filter(spec => {
+      if (spec.owner !== owner || spec.category !== category) return false
+      if (!visibleConcepts) return true
+      if (!spec.conceptMapping?.conceptId) return true
+      return visibleConcepts.has(spec.conceptMapping.conceptId)
+    })
+  }
+
   getAll(): BlockSpec[] {
     return [...this.specs.values()]
   }

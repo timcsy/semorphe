@@ -22,9 +22,12 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "STR": "str" },
+      "inputs": {
+        "STR": "str"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strcmp",
@@ -54,9 +57,13 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "S1": "s1", "S2": "s2" },
+      "inputs": {
+        "S1": "s1",
+        "S2": "s2"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strcpy",
@@ -87,9 +94,13 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "DEST": "dest", "SRC": "src" },
+      "inputs": {
+        "DEST": "dest",
+        "SRC": "src"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strcat",
@@ -120,9 +131,13 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "DEST": "dest", "SRC": "src" },
+      "inputs": {
+        "DEST": "dest",
+        "SRC": "src"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strncpy",
@@ -158,9 +173,14 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "DEST": "dest", "SRC": "src", "N": "n" },
+      "inputs": {
+        "DEST": "dest",
+        "SRC": "src",
+        "N": "n"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strncmp",
@@ -195,9 +215,14 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "S1": "s1", "S2": "s2", "N": "n" },
+      "inputs": {
+        "S1": "s1",
+        "S2": "s2",
+        "N": "n"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strchr",
@@ -227,9 +252,13 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "STR": "str", "CH": "ch" },
+      "inputs": {
+        "STR": "str",
+        "CH": "ch"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_strstr",
@@ -259,9 +288,13 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "HAYSTACK": "haystack", "NEEDLE": "needle" },
+      "inputs": {
+        "HAYSTACK": "haystack",
+        "NEEDLE": "needle"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "c_memset",
@@ -297,9 +330,17 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "PTR": "ptr", "VALUE": "value", "SIZE": "size" },
+      "inputs": {
+        "PTR": "ptr",
+        "VALUE": "value",
+        "SIZE": "size"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": [
+      "text",
+      "pointers_memory"
+    ]
   },
   {
     "id": "c_memcpy",
@@ -335,8 +376,16 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "DEST": "dest", "SRC": "src", "SIZE": "size" },
+      "inputs": {
+        "DEST": "dest",
+        "SRC": "src",
+        "SIZE": "size"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": [
+      "text",
+      "pointers_memory"
+    ]
   }
 ]

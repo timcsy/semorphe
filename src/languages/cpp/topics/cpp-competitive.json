@@ -42,7 +42,6 @@
               "cpp_container_erase", "cpp_container_count",
               "cpp_vector_declare", "cpp_vector_size",
               "cpp_vector_pop_back", "cpp_vector_back",
-              "cpp:vector_push_back", "cpp:vector_size",
               "cpp_map_declare", "cpp_set_declare",
               "cpp_stack_declare", "cpp_queue_declare",
               "cpp_stack_top",

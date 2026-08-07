@@ -1,9 +1,7 @@
 {
   "guard": "toolbox-reachability",
   "缺陷": [],
-  "imperativeOnly": [
-    "u_input_expr"
-  ],
+  "imperativeOnly": [],
   "findings": [
     {
       "type": "c_container_pop",

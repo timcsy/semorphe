@@ -120,6 +120,34 @@ export interface BlockSpec {
    */
   form?: { axis: string; value: string }
 
+  /**
+   * 這顆積木是**誰宣告的**——std 模組的 header、`'(core)'` 或 `'(universal)'`。
+   *
+   * 由組裝處蓋章（`makeModule` / `coreBlocks` / `universalBlocks` 的匯出），
+   * **不是寫在 JSON 裡**：一顆積木屬於哪個模組，是它所在的資料夾說了算，
+   * 讓它自己再宣告一次就是第二份會漂移的真相。
+   *
+   * 工具箱靠它把「`<map>` 的容器」與「`<stack>` 的容器」分開——兩者的
+   * `category` 都是 `'containers'`，而它們該去不同的工具箱分類。
+   */
+  owner?: string
+
+  /**
+   * 這顆積木該出現在**哪個（些）工具箱分類**——只在「來源不足以決定」時宣告。
+   *
+   * 絕大多數積木不寫這一欄：它所屬的來源＋登錄分類（`<map>` 的 `containers`）
+   * 只對到一個工具箱分類，導得出來。
+   *
+   * 需要寫的是**真的散開**的那幾包，而那是逐顆的教學決定：
+   * `<cstdlib>` 的 `abs` 是運算、`exit` 是控制、`atoi` 是文字——一個標頭三個意圖。
+   *
+   * 陣列代表**同時屬於多個分類**（`c_memset` 既是文字也是記憶體操作）。
+   *
+   * ⚠️ **中性形態不寫這一欄。** 它不進工具箱是推導出來的
+   * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
+   */
+  toolboxCategory?: string | string[]
+
   id: string
   language: string
   category: string
@@ -405,6 +433,34 @@ export interface BlockProjectionJSON {
    */
   form?: { axis: string; value: string }
 
+  /**
+   * 這顆積木是**誰宣告的**——std 模組的 header、`'(core)'` 或 `'(universal)'`。
+   *
+   * 由組裝處蓋章（`makeModule` / `coreBlocks` / `universalBlocks` 的匯出），
+   * **不是寫在 JSON 裡**：一顆積木屬於哪個模組，是它所在的資料夾說了算，
+   * 讓它自己再宣告一次就是第二份會漂移的真相。
+   *
+   * 工具箱靠它把「`<map>` 的容器」與「`<stack>` 的容器」分開——兩者的
+   * `category` 都是 `'containers'`，而它們該去不同的工具箱分類。
+   */
+  owner?: string
+
+  /**
+   * 這顆積木該出現在**哪個（些）工具箱分類**——只在「來源不足以決定」時宣告。
+   *
+   * 絕大多數積木不寫這一欄：它所屬的來源＋登錄分類（`<map>` 的 `containers`）
+   * 只對到一個工具箱分類，導得出來。
+   *
+   * 需要寫的是**真的散開**的那幾包，而那是逐顆的教學決定：
+   * `<cstdlib>` 的 `abs` 是運算、`exit` 是控制、`atoi` 是文字——一個標頭三個意圖。
+   *
+   * 陣列代表**同時屬於多個分類**（`c_memset` 既是文字也是記憶體操作）。
+   *
+   * ⚠️ **中性形態不寫這一欄。** 它不進工具箱是推導出來的
+   * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
+   */
+  toolboxCategory?: string | string[]
+
   id: string
   conceptId: string
   language: string
@@ -528,12 +584,39 @@ export interface LiftResult {
 
 type ExtraBlockDef = string | { type: string; extraState?: Record<string, unknown> }
 
+/**
+ * 工具箱分類裡的一個**段落**：一個來源的一個登錄分類。
+ *
+ * 段落的**順序**是教學設計（宣告的）；段落的**成員**是導出的（登錄表知道）。
+ * 這條線是整個工具箱導出的判準——問「登錄表知道嗎」，不問「這是不是一份清單」。
+ */
+export interface ToolboxSource {
+  /** 來源：std 模組的 header（`'<string>'`）、`'(core)'`、`'(universal)'` */
+  from: string
+  /** 該來源裡的登錄分類（積木 JSON 的 `category`） */
+  category: string
+}
+
 export interface ToolboxCategoryDef {
   key: string
   nameKey: string
   fallback: string
   colorKey: string
-  registryCategories: string[]
+  /**
+   * **有序**的段落清單——順序即學生看到的順序。
+   *
+   * 取代了原本的 `registryCategories: string[]` ＋ 80 筆手寫 `extraTypes`。
+   * 實測發現既有的每一個分類，其積木順序**本來就是**一串互不重複的連續段落
+   * （`<cstring>/strings → <string>/containers → <cctype>/stdlib → …`），
+   * 所以這個形狀是把既有的教學設計**寫下來**，不是重新發明一個。
+   */
+  sources: ToolboxSource[]
+  /**
+   * 只留**帶 `extraState`** 的入口——那是「這個預設狀態值得一個獨立入口」的
+   * 教學判斷（三個 `u_if` 變體），登錄表推不出來。
+   *
+   * 純字串的項目已全數消除：那些是「這顆積木屬於這個分類」，**登錄表知道**。
+   */
   extraTypes?: ExtraBlockDef[]
   excludeTypes?: string[]
   /** If true, this category uses the I/O builder (iostream/cstdio sorting) */

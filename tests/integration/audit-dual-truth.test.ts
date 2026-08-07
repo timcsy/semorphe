@@ -213,7 +213,15 @@ if (process.env.GENERATE_BASELINE) {
       guard: 'dual-truth',
       measuredAt: new Date().toISOString().slice(0, 10),
       rule: RULE,
-      note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,
+      note:
+        RATCHET_NOTE +
+        ' ' +
+        SELF_FALSIFICATION +
+        ' ⚠️ 2026-08-07 顯式**上調** 32 → 33：`u_input_expr` 補上 JSON 投影。' +
+        '五顆 `_expr` 積木裡只有它沒有——它活在命令式註冊裡而登錄表看不見它，' +
+        '於是工具箱導出導不到它。這一格從「登錄表看不見」換成「與其餘四顆同樣的已知雙重定義」，' +
+        '是把一個隱形的洞換成一筆記在帳上的債。**上調棘輪不是常態**，' +
+        '這一次的理由寫在這裡，下一次要再上調必須有同樣強度的理由。',
     },
     bothDefined: both.length,
     diverging: diverging.length,

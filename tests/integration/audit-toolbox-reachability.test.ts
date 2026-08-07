@@ -40,15 +40,20 @@
  *
  * | 排除 | 判準 | 誰宣告的 |
  * |---|---|---|
- * | 中性形態 | 這個 conceptId 有多個形態，而這一顆**沒有** `form` 欄位 | 積木自己（097） |
+ * | 中性形態 | 兄弟形態所在那條軸的 `from` 是 `property`，而這一顆沒有 `form` | 積木自己（097） |
  * | 分類排除 | 出現在某個分類的 `excludeTypes` | 分類定義 |
  *
  * 兩種都**推導得出來**。「忘了加進清單」推導不出來——那正是要抓的東西。
+ *
+ * ⚠️ 中性形態的判準**不是**「有沒有宣告 `form`」。`role` 軸上沒宣告 `form` 的
+ * 那一顆是**敘述版**——位置永遠取得到，那條軸不需要退路。把它一律當退路排掉，
+ * 會讓 `u_var_declare`／`u_input`／`u_func_call` 等最常用的積木從工具箱消失。
  */
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { loadToolbox } from '../helpers/toolbox'
+import { isTypeLookupFallback } from '../../src/ui/toolbox-builder'
 import { loadBaseline, writeBaseline, printReport, newItems, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -83,7 +88,7 @@ const imperativelyRegistered = new Set(
 function measure(
   extraConcepts: ConceptDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
-): { findings: Finding[]; ghosts: string[]; total: number } {
+): { findings: Finding[]; ghosts: string[]; imperativeOnly: string[]; total: number; categoriesOf: Map<string, string[]> } {
   const { registry, origins, categoriesOf } = loadToolbox(extraConcepts, extraProjections)
 
   const findings: Finding[] = []
@@ -92,15 +97,17 @@ function measure(
 
     // 判定保守（第 5 步）：判不出來就歸「缺陷」。
     // 為了讓數字好看而樂觀歸類，比沒有護欄更糟。
-    const spec = registry.getByBlockType?.(type)
-    const cid = spec?.conceptMapping?.conceptId
-    const siblings = cid ? registry.getFormsByConceptId(cid) : []
-    const isNeutralFallback = Boolean(spec && !spec.form && siblings.length > 1)
+    const spec = registry.getByBlockType(type)
+
+    // ⚠️ 判準是**軸的 `from`**，不是「有沒有宣告 form」——
+    // `role` 軸上沒宣告 form 的那一顆是**敘述版**（一個真正的選項），
+    // 不是退路。用同一個函式，不要在這裡重寫一份會漂移的判準。
+    const isFallback = Boolean(spec && isTypeLookupFallback(registry, spec))
 
     findings.push({
       type,
       owner,
-      bucket: declaredExcludes.has(type) ? '分類排除' : isNeutralFallback ? '中性形態' : '缺陷',
+      bucket: declaredExcludes.has(type) ? '分類排除' : isFallback ? '中性形態' : '缺陷',
     })
   }
 
@@ -122,6 +129,7 @@ function measure(
     ghosts,
     imperativeOnly,
     total: origins.length,
+    categoriesOf,
   }
 }
 
@@ -130,10 +138,11 @@ function measure(
 const 合成概念 = (id: string): ConceptDefJSON =>
   ({ conceptId: id, category: '__不存在的分類__', properties: {}, children: {} }) as unknown as ConceptDefJSON
 
-const 合成積木 = (id: string, type: string, category: string): BlockProjectionJSON =>
+const 合成積木 = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
   ({
     conceptId: id,
     category,
+    owner,
     blockDef: { type, message0: '合成 %1', args0: [{ type: 'input_value', name: 'A' }] },
     conceptMapping: { conceptId: id },
   }) as unknown as BlockProjectionJSON
@@ -153,10 +162,10 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 注入一顆有分類收它的積木 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
-    // `algorithms` 是 arrays_lists 分類的 registryCategories 之一。
+    // `(core)/pointers` 是「指標與記憶體」分類的段落之一。
     const { findings } = measure(
       [合成概念('__合成_拿得到__')],
-      [合成積木('__合成_拿得到__', '__合成_拿得到__', 'algorithms')],
+      [合成積木('__合成_拿得到__', '__合成_拿得到__', 'pointers')],
     )
     expect(
       findings.find((f) => f.type === '__合成_拿得到__'),
@@ -164,11 +173,37 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     ).toBeUndefined()
   })
 
-  it('★ 中性形態被歸為「中性形態」，不是「缺陷」', () => {
-    const { findings } = measure()
-    const 中性 = findings.filter((f) => f.bucket === '中性形態').map((f) => f.type)
-    expect(中性, '中性形態是型別查不到時的退路，不是選項（097 定下的原則）').toContain('c_container_push')
-    expect(中性).toContain('c_container_pop')
+  it('★ 中性形態不在工具箱裡，且被歸為「中性形態」不是「缺陷」', () => {
+    const { findings, categoriesOf } = measure()
+    for (const t of ['c_container_push', 'c_container_pop']) {
+      expect(categoriesOf.has(t), `${t} 是型別查不到時的退路，不該讓學生選（097）`).toBe(false)
+      expect(
+        findings.find((f) => f.type === t)?.bucket,
+        '歸成「缺陷」的話，有人會「修好它」——把退路放進工具箱，正是學生回報的那個困惑',
+      ).toBe('中性形態')
+    }
+  })
+
+  it('★ 反向：`role` 軸上沒宣告 form 的**敘述版**不是退路，必須留在工具箱', () => {
+    // 沒有這一支的話，「所有沒宣告 form 的都是退路」這個錯誤判準會通過上一支
+    // ——而它會讓 u_var_declare／u_input／u_func_call 等七顆最常用的敘述版
+    // 積木從工具箱裡消失。實作時真的踩到了。
+    const { categoriesOf } = measure()
+    for (const t of ['u_var_declare', 'u_input', 'u_func_call', 'cpp_method_call', 'c_increment', 'c_scanf']) {
+      expect(categoriesOf.has(t), `${t} 是敘述版，位置永遠取得到，它不需要也不是退路`).toBe(true)
+    }
+  })
+
+  it('★ R-3：加一顆元件到既有模組，**不編輯任何清單**，它自己出現', () => {
+    // 這是「導出」與「把手寫換個地方」的分界線（FR-003 / P3）。
+    const { categoriesOf } = measure(
+      [合成概念('__合成_新元件__')],
+      [合成積木('__合成_新元件__', '__合成_新元件__', 'containers', '<stack>')],
+    )
+    expect(
+      categoriesOf.get('__合成_新元件__'),
+      '一顆宣告在 <stack> 模組裡的新積木沒有自己出現在「堆疊與佇列」——那代表歸屬仍然是手寫的',
+    ).toContain('堆疊與佇列')
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {

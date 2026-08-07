@@ -801,6 +801,41 @@
     }
   },
   {
+    "id": "u_input_expr",
+    "conceptId": "input",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "u_input_expr"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "args.length",
+          "childSlot": "values",
+          "modeSource": "args[{i}].mode",
+          "modes": {
+            "select": {
+              "field": "args[{i}].text",
+              "wrap": "var_ref"
+            },
+            "compose": {
+              "input": "ARG_{i}"
+            }
+          }
+        }
+      ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  },
+  {
     "id": "u_array_declare",
     "conceptId": "array_declare",
     "language": "universal",

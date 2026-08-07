@@ -141,7 +141,9 @@ function makeModule(
   return {
     header,
     concepts: concepts as ConceptDefJSON[],
-    blocks: blocks as BlockProjectionJSON[],
+    // ⚠️ 蓋 owner 章。工具箱靠它把 `<map>` 的容器與 `<stack>` 的容器分開——
+    // 兩者的 `category` 都是 `'containers'`，而它們該去不同的工具箱分類。
+    blocks: (blocks as BlockProjectionJSON[]).map((b) => ({ ...b, owner: header })),
     registerGenerators,
     registerLifters,
     registerExecutors,

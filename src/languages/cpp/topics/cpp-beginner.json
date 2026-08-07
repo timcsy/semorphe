@@ -112,7 +112,6 @@
               "cpp_class_def", "cpp_new", "cpp_delete",
               "cpp_template_function",
               "cpp_method_call", "cpp_vector_declare", "cpp_vector_size",
-              "cpp:vector_push_back", "cpp:vector_size",
               "cpp_map_declare", "cpp_set_declare",
               "cpp_sort",
               "cpp:math_binary",

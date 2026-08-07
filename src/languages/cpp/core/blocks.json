@@ -2009,7 +2009,8 @@
     },
     "renderMapping": {
       "expressionCounterpart": "cpp_method_call_expr"
-    }
+    },
+    "toolboxCategory": "functions"
   },
   {
     "id": "cpp_method_call_expr",
@@ -2076,7 +2077,8 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
+    },
+    "toolboxCategory": "functions"
   },
   {
     "id": "c_const_declare",
@@ -3307,32 +3309,6 @@
     }
   },
   {
-    "id": "c_container_empty",
-    "conceptId": "cpp_container_empty",
-    "language": "cpp",
-    "category": "containers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "c_container_empty",
-      "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "OBJ",
-          "text": "obj"
-        }
-      ],
-      "output": "Expression",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}.empty()",
-      "imports": [],
-      "order": 0
-    }
-  },
-  {
     "id": "c_container_push",
     "conceptId": "cpp_container_push",
     "language": "cpp",
@@ -3425,7 +3401,40 @@
     "form": {
       "axis": "container_kind",
       "value": "stack"
-    }
+    },
+    "toolboxCategory": "stacks_queues"
+  },
+  {
+    "id": "c_stack_pop",
+    "conceptId": "cpp_container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_stack_pop",
+      "message0": "%{BKY_CPP_STACK_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "stack"
+    },
+    "toolboxCategory": "stacks_queues"
   },
   {
     "id": "c_queue_push",
@@ -3461,38 +3470,8 @@
     "form": {
       "axis": "container_kind",
       "value": "queue"
-    }
-  },
-  {
-    "id": "c_stack_pop",
-    "conceptId": "cpp_container_pop",
-    "language": "cpp",
-    "category": "containers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "c_stack_pop",
-      "message0": "%{BKY_CPP_STACK_POP_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "OBJ",
-          "text": "stk"
-        }
-      ],
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.pop();",
-      "imports": [],
-      "order": 0
-    },
-    "form": {
-      "axis": "container_kind",
-      "value": "stack"
-    }
+    "toolboxCategory": "stacks_queues"
   },
   {
     "id": "c_queue_pop",
@@ -3523,34 +3502,8 @@
     "form": {
       "axis": "container_kind",
       "value": "queue"
-    }
-  },
-  {
-    "id": "c_container_clear",
-    "conceptId": "cpp_container_clear",
-    "language": "cpp",
-    "category": "containers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "c_container_clear",
-      "message0": "%{BKY_CPP_CONTAINER_CLEAR_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "OBJ",
-          "text": "obj"
-        }
-      ],
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_CLEAR_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.clear();",
-      "imports": [],
-      "order": 0
-    }
+    "toolboxCategory": "stacks_queues"
   },
   {
     "id": "c_container_push_back",
@@ -3582,7 +3535,66 @@
       "pattern": "${OBJ}.push_back(${VALUE});",
       "imports": [],
       "order": 0
-    }
+    },
+    "toolboxCategory": "arrays_lists"
+  },
+  {
+    "id": "c_container_empty",
+    "conceptId": "cpp_container_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_empty",
+      "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": [],
+      "order": 0
+    },
+    "toolboxCategory": [
+      "arrays_lists",
+      "stacks_queues"
+    ]
+  },
+  {
+    "id": "c_container_clear",
+    "conceptId": "cpp_container_clear",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_container_clear",
+      "message0": "%{BKY_CPP_CONTAINER_CLEAR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_CLEAR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.clear();",
+      "imports": [],
+      "order": 0
+    },
+    "toolboxCategory": "arrays_lists"
   },
   {
     "id": "c_container_erase",
@@ -3614,7 +3626,8 @@
       "pattern": "${OBJ}.erase(${KEY});",
       "imports": [],
       "order": 0
-    }
+    },
+    "toolboxCategory": "maps_sets"
   },
   {
     "id": "c_container_count",
@@ -3645,6 +3658,7 @@
       "pattern": "${OBJ}.count(${KEY})",
       "imports": [],
       "order": 0
-    }
+    },
+    "toolboxCategory": "maps_sets"
   }
 ]

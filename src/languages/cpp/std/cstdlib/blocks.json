@@ -1,5 +1,35 @@
 [
   {
+    "id": "cpp_abs",
+    "conceptId": "cpp_abs",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_abs",
+      "message0": "%{BKY_CPP_ABS_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ABS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "operators"
+  },
+  {
     "id": "cpp_rand",
     "conceptId": "cpp_rand",
     "language": "cpp",
@@ -18,7 +48,8 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "operators"
   },
   {
     "id": "cpp_srand",
@@ -44,36 +75,12 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "SEED": "seed" },
+      "inputs": {
+        "SEED": "seed"
+      },
       "statementInputs": {}
-    }
-  },
-  {
-    "id": "cpp_abs",
-    "conceptId": "cpp_abs",
-    "language": "cpp",
-    "category": "stdlib",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_abs",
-      "message0": "%{BKY_CPP_ABS_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#D67D3E",
-      "tooltip": "%{BKY_CPP_ABS_TOOLTIP}"
     },
-    "renderMapping": {
-      "fields": {},
-      "inputs": { "VALUE": "value" },
-      "statementInputs": {}
-    }
+    "toolboxCategory": "operators"
   },
   {
     "id": "cpp_exit",
@@ -99,9 +106,12 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "CODE": "code" },
+      "inputs": {
+        "CODE": "code"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "control"
   },
   {
     "id": "cpp_atoi",
@@ -126,9 +136,12 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "STR": "str" },
+      "inputs": {
+        "STR": "str"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   },
   {
     "id": "cpp_atof",
@@ -153,8 +166,11 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "STR": "str" },
+      "inputs": {
+        "STR": "str"
+      },
       "statementInputs": {}
-    }
+    },
+    "toolboxCategory": "text"
   }
 ]

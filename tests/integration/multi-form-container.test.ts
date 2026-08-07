@@ -231,19 +231,24 @@ describe('加法式：舊存檔不會壞', () => {
 // ─── 工具箱：學生找得到嗎（一名學生實際問的問題）──────────────────
 
 describe('工具箱放的是形態，不是退路', () => {
+  // ⚠️ 這兩支原本讀的是 `cppCategoryDefs` 的 `extraTypes` **宣告清單**。
+  // 100（E 項）把歸屬改成導出之後那份清單不再存在，而更重要的是：
+  // **讀宣告永遠回答不了「學生看不看得到」**——中間還隔著一個建構器，
+  // 而那個建構器真的吃掉過三顆積木（`buildIoContents` 的前綴分堆）。
+  // 改成看**真正建出來的工具箱**。
   it('★ 四顆變體都在工具箱裡——學生找得到', async () => {
-    const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
-    const 全部 = cppCategoryDefs.flatMap((c) => c.extraTypes ?? [])
+    const { loadToolbox } = await import('../helpers/toolbox')
+    const { categoriesOf } = loadToolbox()
     for (const t of ['c_stack_push', 'c_queue_push', 'c_stack_pop', 'c_queue_pop']) {
-      expect(全部, `${t} 不在工具箱 → 學生只能拖中性版出來、接上變數、等它自己變`).toContain(t)
+      expect(categoriesOf.has(t), `${t} 不在工具箱 → 學生只能拖中性版出來、接上變數、等它自己變`).toBe(true)
     }
   })
 
   it('★ 中性版**不在**工具箱——它是型別查不到時的退路，不是一個選項', async () => {
-    const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
-    const 全部 = cppCategoryDefs.flatMap((c) => c.extraTypes ?? [])
-    expect(全部, '放著只會變成三顆很像的積木').not.toContain('c_container_push')
-    expect(全部).not.toContain('c_container_pop')
+    const { loadToolbox } = await import('../helpers/toolbox')
+    const { categoriesOf } = loadToolbox()
+    expect(categoriesOf.has('c_container_push'), '放著只會變成三顆很像的積木').toBe(false)
+    expect(categoriesOf.has('c_container_pop')).toBe(false)
   })
 
   it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {

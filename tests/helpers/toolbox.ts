@@ -13,9 +13,8 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import universalConcepts from '../../src/blocks/semantics/universal-concepts.json'
-import universalBlocks from '../../src/blocks/projections/blocks/universal-blocks.json'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { universalConcepts, universalBlocks, UNIVERSAL_OWNER } from '../../src/blocks/universal'
+import { coreConcepts, coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 
@@ -56,26 +55,27 @@ export function loadToolbox(
   extraProjections: BlockProjectionJSON[] = [],
 ): LoadedToolbox {
   const allConcepts: ConceptDefJSON[] = [
-    ...(universalConcepts as unknown as ConceptDefJSON[]),
+    ...universalConcepts,
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
     ...extraConcepts,
   ]
   const allProjections: BlockProjectionJSON[] = [
-    ...(universalBlocks as unknown as BlockProjectionJSON[]),
+    ...universalBlocks,
     ...coreBlocks,
     ...allStdModules.flatMap((m) => m.blocks),
-    ...extraProjections,
+    // 合成注入預設蓋核心的章；要驗「加一顆元件到某模組」就自己帶 owner
+    ...extraProjections.map((b) => ({ ...b, owner: b.owner ?? CORE_OWNER })),
   ]
 
   const registry = new BlockSpecRegistry()
   registry.loadFromSplit(allConcepts, allProjections)
 
   const origins: BlockOrigin[] = [
-    ...(universalBlocks as unknown as BlockProjectionJSON[]).map((b) => ({ type: typeOf(b), owner: '(universal)' })),
-    ...coreBlocks.map((b) => ({ type: typeOf(b), owner: '(core)' })),
+    ...universalBlocks.map((b) => ({ type: typeOf(b), owner: UNIVERSAL_OWNER })),
+    ...coreBlocks.map((b) => ({ type: typeOf(b), owner: CORE_OWNER })),
     ...allStdModules.flatMap((m) => m.blocks.map((b) => ({ type: typeOf(b), owner: m.header }))),
-    ...extraProjections.map((b) => ({ type: typeOf(b), owner: '(合成)' })),
+    ...extraProjections.map((b) => ({ type: typeOf(b), owner: b.owner ?? CORE_OWNER })),
   ]
 
   // ⚠️ 全部概念可見——見檔頭
