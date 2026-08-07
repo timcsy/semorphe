@@ -92,6 +92,49 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     expect(被指向.size, '沒有任何概念宣告 abstractConcept → 上面那支什麼都沒驗到').toBeGreaterThan(5)
   })
 
+  /**
+   * **矛盾偵測，其餘四路**（2026-08-07 補）。
+   *
+   * 既有的矛盾偵測只看 `execute`（宣告不執行卻註冊了會做事的執行器）。
+   * 另外四路只憑一句話——而實測抓到四筆假的：
+   *
+   * `cpp_include`／`cpp_include_local`／`cpp_using_namespace`／`cpp_using_alias`
+   * 宣告「generate 由父概念消費」，**而它們各自註冊了模板、也真的自己產出**
+   * （有無節點兩次產生，差分證明）。
+   *
+   * **那個假宣告的來源是一個量測假象**：完備性 harness 靠正則剝掉「看起來像
+   * 鷹架」的行，而這幾個概念的產出就是那個形狀 → 被判成殼 → 有人用宣告
+   * 把殼消掉。**`history/018` 的「用宣告刷數字」，一字不差。**
+   */
+  it('★ 宣告 generate 由父概念消費，就不得自己註冊模板（矛盾偵測）', async () => {
+    const { initCppModule } = await import('../../src/languages/cpp/module')
+    const m = initCppModule() as unknown as { templateGenerator: { templates: Map<string, unknown> } }
+    const 矛盾: string[] = []
+    for (const def of allComponentDefs()) {
+      if (!(def.skipPaths ?? []).includes('generate' as never)) continue
+      if (m.templateGenerator.templates.has(def.conceptId)) {
+        矛盾.push(`${def.conceptId}（宣告不產生，卻註冊了模板）`)
+      }
+    }
+    expect(
+      矛盾,
+      '以下宣告與實作矛盾：\n  ' + 矛盾.join('\n  ') +
+        '\n**先確認是不是量測假象**——這四筆的來源正是完備性 harness 把它們的產出當成鷹架剝掉了。',
+    ).toEqual([])
+  })
+
+  it('★ 反面：這條檢查不得對「零個宣告者」也通過', () => {
+    // 沒有任何概念宣告 skip generate 的話，上面那支什麼都沒驗到
+    const n = allComponentDefs().filter((d) => (d.skipPaths ?? []).includes('generate' as never)).length
+    // 目前預期是 0（四筆假宣告已撤）——所以這裡改成釘住**機制**：
+    // 合成一個宣告 skip generate 又有模板的假元件，必須被判為矛盾
+    const 假元件 = { conceptId: 'synth_fake', skipPaths: ['generate'] }
+    const 假模板 = new Map<string, unknown>([['synth_fake', {}]])
+    const 會叫 = (假元件.skipPaths ?? []).includes('generate') && 假模板.has(假元件.conceptId)
+    expect(會叫, '合成的矛盾沒被判出來 → 上面那支是死的').toBe(true)
+    expect(n, '真實資料目前應為 0（四筆假宣告已撤）').toBe(0)
+  })
+
   it('沒有 skipPaths 卻寫了 skipReasons —— 孤兒理由', () => {
     const 孤兒: string[] = []
     for (const def of allComponentDefs()) {

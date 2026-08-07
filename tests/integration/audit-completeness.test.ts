@@ -197,8 +197,10 @@ for (const id of ['cpp_map_access', 'cpp_map_assign']) {
  */
 const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp_lambda'])
 
-function wrap(node: SemanticNode, id?: string): SemanticNode {
+function wrap(node: SemanticNode | null, id?: string): SemanticNode {
   const prelude = id ? (SAMPLE_CONTEXT[id] ?? []) : []
+  // `node` 為 null＝**只有鷹架**（差分的基準，見 generate 那一段）
+  if (!node) return createNode('program', {}, { body: [...prelude] })
   const stmt =
     id && NEEDS_ASSIGNMENT.has(id)
       ? createNode('var_declare', { name: '__probe', type: 'auto' }, { initializer: [node] })
@@ -233,9 +235,23 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
     (() => {
       try {
         generated = generateCode(wrap(node, id), 'cpp', STYLE)
+        // ⚠️ **「這個概念自己產出了什麼」用差分算，不用形狀猜。**
+        //
+        // 第一版靠正則剝掉「看起來像鷹架」的行（`#include`／`using `／`int main`…）。
+        // 而 `cpp_include`／`cpp_using_namespace` 這幾個概念的**產出就是那個形狀**
+        // ——它們的輸出被自己的過濾器剝光，於是判成殼。
+        //
+        // 後果不只是數字錯：那四個概念因此被加上 `skipPaths: ['generate']`
+        // 宣告成「由父概念消費」——**一個為了繞過量測假象而生的假宣告**，
+        // 正是 `history/018` 說的「用宣告刷數字」。實測（有無節點兩次產生）
+        // 證明它們自己就會產出，父概念沒有消費它們。
+        //
+        // 差分不需要知道哪些行是鷹架：**沒有這個節點時也會出現的，就不是它產的。**
+        const 鷹架 = generateCode(wrap(null, id), 'cpp', STYLE)
+        const 鷹架行 = new Set(鷹架.split('\n').map((l) => l.trim()))
         const own = generated
           .split('\n')
-          .filter((l) => !/^\s*(#include|using |int main|\}|\{|return 0;)/.test(l))
+          .filter((l) => !鷹架行.has(l.trim()))
           .join('\n')
         if (isPlaceholderOutput(own)) return { verdict: 'shell', reason: '輸出為空或佔位' } as PathResult
         if (/\braw_code\b|\bunresolved\b/.test(own))

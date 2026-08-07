@@ -6,9 +6,9 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。"
   },
   "totals": {
-    "implemented": 844,
-    "declared": 40,
-    "undecidable": 26,
+    "implemented": 825,
+    "declared": 32,
+    "undecidable": 18,
     "shell": 0,
     "missing": 0
   },

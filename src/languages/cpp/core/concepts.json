@@ -472,12 +472,10 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute",
-      "generate"
+      "execute"
     ],
     "skipReasons": {
-      "execute": "declarative",
-      "generate": "consumed-by-parent"
+      "execute": "declarative"
     }
   },
   {
@@ -490,11 +488,9 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute",
-      "generate"
+      "execute"
     ],
     "skipReasons": {
-      "generate": "consumed-by-parent",
       "execute": "declarative"
     }
   },
@@ -543,12 +539,10 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute",
-      "generate"
+      "execute"
     ],
     "skipReasons": {
-      "execute": "declarative",
-      "generate": "consumed-by-parent"
+      "execute": "declarative"
     }
   },
   {
@@ -643,12 +637,10 @@
     "children": {},
     "role": "statement",
     "skipPaths": [
-      "execute",
-      "generate"
+      "execute"
     ],
     "skipReasons": {
-      "execute": "declarative",
-      "generate": "consumed-by-parent"
+      "execute": "declarative"
     }
   },
   {
