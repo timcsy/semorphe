@@ -694,17 +694,13 @@
       "files": 11,
       "dirs": 8
     },
-    "var_declarator": {
-      "files": 3,
-      "dirs": 3
-    },
     "var_declare": {
       "files": 14,
       "dirs": 11
     },
     "var_ref": {
-      "files": 15,
-      "dirs": 11
+      "files": 16,
+      "dirs": 12
     },
     "while_loop": {
       "files": 9,
