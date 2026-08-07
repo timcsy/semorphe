@@ -30,7 +30,7 @@
  * - **C-2 規則來自宣告**——本檔 MUST NOT 出現任何具體元件身分。
  *   **這條有機械檢查：中立性護欄。** 破了它那條護欄會叫。
  */
-import type { SemanticNode, FormSet } from '../types'
+import type { SemanticNode, FormSet, FormAxis } from '../types'
 
 /** 選擇形態時呼叫端知道、而節點不知道的脈絡 */
 /**
@@ -153,4 +153,77 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
  */
 export function singleForm(conceptId: string, blockType: string): FormSet {
   return { conceptId, axis: null, forms: { _: blockType }, fallback: blockType }
+}
+
+/**
+ * 已知的選擇軸——**一張表，不是外掛系統**。
+ *
+ * 加一條軸就是加一列。研究階段刻意否決了「軸的外掛註冊」：目前只有兩條軸，
+ * 而為想像中的第三條軸建抽象是憲章 I（簡約優先／YAGNI）明文禁止的。
+ *
+ * 這裡的鍵是**軸名**，不是元件身分——中立性護欄數的是後者。
+ */
+export const KNOWN_AXES: Record<string, FormAxis> = {
+  /** 依呈現位置：敘述版／運算式版。既有 `expressionCounterpart` 的一般化 */
+  role: { name: 'role', from: 'position' },
+  /** 依容器種類：堆疊／佇列／… */
+  container_kind: { name: 'container_kind', from: 'property', property: 'container_kind' },
+}
+
+/** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
+export interface FormDeclaration {
+  conceptId: string
+  blockType: string
+  form?: { axis: string; value: string }
+}
+
+/**
+ * 把一堆積木宣告收攏成「每個元件身分一個形態集合」。
+ *
+ * ⚠️ **同一個 conceptId 的第二個宣告不得蓋掉第一個**（FR-002）——
+ * 那正是這個功能存在之前的實際行為（`Map.set` 直接覆寫）。
+ */
+export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, FormSet> {
+  const 中性 = new Map<string, string>()
+  const 變體 = new Map<string, { axis: string; values: Record<string, string> }>()
+
+  for (const d of decls) {
+    if (!d.form) {
+      // 第一個中性宣告勝出——後來的不覆寫，否則載入順序會決定行為
+      if (!中性.has(d.conceptId)) 中性.set(d.conceptId, d.blockType)
+      continue
+    }
+    const cur = 變體.get(d.conceptId) ?? { axis: d.form.axis, values: {} }
+    cur.values[d.form.value] = d.blockType
+    變體.set(d.conceptId, cur)
+  }
+
+  const out = new Map<string, FormSet>()
+  for (const [conceptId, blockType] of 中性) {
+    const v = 變體.get(conceptId)
+    if (!v) {
+      out.set(conceptId, singleForm(conceptId, blockType))
+      continue
+    }
+    out.set(conceptId, {
+      conceptId,
+      axis: KNOWN_AXES[v.axis] ?? null,
+      forms: { [NEUTRAL_KEY]: blockType, ...v.values },
+      fallback: blockType,
+    })
+  }
+
+  // 只有變體、沒有中性宣告 → 拿第一個變體當中性，並且**出聲**不了（這裡沒有報表）
+  // ——所以改成不接受：沒有中性形態的元件在 validateFormSet 會被擋下。
+  for (const [conceptId, v] of 變體) {
+    if (out.has(conceptId)) continue
+    const first = Object.values(v.values)[0]
+    out.set(conceptId, {
+      conceptId,
+      axis: KNOWN_AXES[v.axis] ?? null,
+      forms: { [NEUTRAL_KEY]: first, ...v.values },
+      fallback: first,
+    })
+  }
+  return out
 }

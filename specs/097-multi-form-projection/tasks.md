@@ -53,9 +53,9 @@
 
 **取代它們的**（同樣是 US3 要的保證，但驗的是加法式的正確性）：
 
-- [ ] T007 在 `tests/integration/multi-form-container.test.ts` 寫「舊存檔裡的 `c_container_push` 積木型別**仍然註冊得到**」——這是加法式的核心保證，一旦有人手癢改名它就紅
-- [ ] T008 寫「含舊積木型別的存檔載入後不報錯」
-- [ ] T009 寫「舊存檔重新渲染後升級成新形態」（自癒），並釘住 `renderToBlocklyState` 是那條自癒路徑
+- [X] T007 在 `tests/integration/multi-form-container.test.ts` 寫「舊存檔裡的 `c_container_push` 積木型別**仍然註冊得到**」——這是加法式的核心保證，一旦有人手癢改名它就紅
+- [X] T008 寫「含舊積木型別的存檔載入後不報錯」
+- [X] T009 寫「舊存檔重新渲染後升級成新形態」（自癒），並釘住 `renderToBlocklyState` 是那條自癒路徑
 
 ### 核心型別與選擇函式
 
@@ -75,28 +75,28 @@
 
 ### 測試（先紅）
 
-- [ ] T013 [US1] 建 `tests/integration/multi-form-container.test.ts`，寫「堆疊上的 push 積木文字提到頂端、佇列上的提到尾端」——**斷言 MSG0 對應的字串，不是 tooltip**
-- [ ] T014 [P] [US1] 在同檔寫「兩個形態產出相同的 C++」（都是 `.push(...)`）
-- [ ] T015 [P] [US1] 在同檔寫「兩個形態執行結果相同」
-- [ ] T016 [P] [US1] 在同檔寫**負向**：容器種類查不到時，用中性標籤且**不宣稱位置**（FR-007）
+- [X] T013 [US1] 建 `tests/integration/multi-form-container.test.ts`，寫「堆疊上的 push 積木文字提到頂端、佇列上的提到尾端」——**斷言 MSG0 對應的字串，不是 tooltip**
+- [X] T014 [P] [US1] 在同檔寫「兩個形態產出相同的 C++」（都是 `.push(...)`）
+- [X] T015 [P] [US1] 在同檔寫「兩個形態執行結果相同」
+- [X] T016 [P] [US1] 在同檔寫**負向**：容器種類查不到時，用中性標籤且**不宣稱位置**（FR-007）
 
 ### 辨識側
 
-- [ ] T017 [US1] 在 `tests/integration/multi-form-container.test.ts` 寫「辨識 `st.push(x)` 時節點帶 `container_kind: 'stack'`」與「查不到型別時**不寫**該屬性」（CK-1）
-- [ ] T018 [US1] 在 `src/languages/cpp/core/lifters/strategies.ts` 辨識容器方法呼叫時寫入 `container_kind`，做法與 095 的 `input.from` 同型（用 `ctx.data.getType()`）
-- [ ] T019 [US1] 寫一支測試釘住 **CK-3：執行器 MUST NOT 讀 `container_kind`**（把該屬性改成錯的值，執行結果必須不變）
+- [X] T017 [US1] 在 `tests/integration/multi-form-container.test.ts` 寫「辨識 `st.push(x)` 時節點帶 `container_kind: 'stack'`」與「查不到型別時**不寫**該屬性」（CK-1）
+- [X] T018 [US1] 在 `src/languages/cpp/core/lifters/strategies.ts` 辨識容器方法呼叫時寫入 `container_kind`，做法與 095 的 `input.from` 同型（用 `ctx.data.getType()`）
+- [X] T019 [US1] 寫一支測試釘住 **CK-3：執行器 MUST NOT 讀 `container_kind`**（把該屬性改成錯的值，執行結果必須不變）
 
 ### 形態宣告與標籤
 
-- [ ] T020 [P] [US1] 在 `src/languages/cpp/core/blocks.json` 為 `cpp_container_push` 新增依 `container_kind` 分的兩個形態宣告（stack／queue），保留現有的中性形態當 default
-- [ ] T021 [P] [US1] 同上，為 `cpp_container_pop` 新增兩個形態
-- [ ] T022 [US1] 接上既有的死字串：`CPP_STACK_PUSH_MSG0`／`CPP_QUEUE_PUSH_MSG0`／`CPP_STACK_POP_MSG0`／`CPP_QUEUE_POP_MSG0`——**MUST NOT 另寫一份**（FR-011）
-- [ ] T023 [US1] 檢查那四個字串的措辭是否**說出作用在哪裡**（FR-010）；英文 `CPP_QUEUE_PUSH_MSG0` 目前是 `"Push %2 onto queue %1"`，**onto 同樣是堆疊語義，要改**
+- [X] T020 [P] [US1] 在 `src/languages/cpp/core/blocks.json` 為 `cpp_container_push` 新增依 `container_kind` 分的兩個形態宣告（stack／queue），保留現有的中性形態當 default
+- [X] T021 [P] [US1] 同上，為 `cpp_container_pop` 新增兩個形態
+- [X] T022 [US1] 接上既有的死字串：`CPP_STACK_PUSH_MSG0`／`CPP_QUEUE_PUSH_MSG0`／`CPP_STACK_POP_MSG0`／`CPP_QUEUE_POP_MSG0`——**MUST NOT 另寫一份**（FR-011）
+- [X] T023 [US1] 檢查那四個字串的措辭是否**說出作用在哪裡**（FR-010）；英文 `CPP_QUEUE_PUSH_MSG0` 目前是 `"Push %2 onto queue %1"`，**onto 同樣是堆疊語義，要改**
 
 ### 接上活的路徑
 
-- [ ] T024 [US1] 在 `src/core/projection/pattern-renderer.ts` 把 `renderSpecs` 從 `Map<conceptId, RenderSpec>` 改為承載 `FormSet`，`render()` 改走選擇函式
-- [ ] T025 [US1] 讓 T013–T017 轉綠
+- [X] T024 [US1] 在 `src/core/projection/pattern-renderer.ts` 把 `renderSpecs` 從 `Map<conceptId, RenderSpec>` 改為承載 `FormSet`，`render()` 改走選擇函式
+- [X] T025 [US1] 讓 T013–T017 轉綠
 
 **Checkpoint**：US1 可獨立驗收——跑 quickstart 的第 1、2 步
 

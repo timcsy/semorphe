@@ -1,7 +1,8 @@
-import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic } from '../types'
+import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic, FormSet } from '../types'
 import { applyBlockOverride } from '../block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
 import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS, resolvePattern } from './common-mappings'
+import { selectForm, buildFormSets, type FormDeclaration } from './form-selection'
 
 interface BlockState {
   type: string
@@ -29,6 +30,10 @@ function nextBlockId(): string {
  */
 export class PatternRenderer {
   private renderSpecs = new Map<string, RenderSpec>()
+  /** 每個元件身分的形態集合——由 `formDeclarations` 建出來 */
+  private formSets = new Map<string, FormSet>()
+  private formDeclarations: FormDeclaration[] = []
+  private mappingByBlockType = new Map<string, RenderMapping>()
   private expressionOnlyBlockTypes = new Set<string>()
   private statementOnlyBlockTypes = new Set<string>()
   private renderStrategyRegistry: RenderStrategyRegistry | null = null
@@ -66,7 +71,13 @@ export class PatternRenderer {
             extraStateFlags: explicit.extraStateFlags,
           }
         : derived
-      this.renderSpecs.set(conceptId, { blockType, mapping })
+      // ⚠️ **第一個宣告勝出，後來的不覆寫。**
+      // 在此之前這裡是直接 `set`，於是同一個 conceptId 的第二顆積木會**蓋掉**
+      // 第一顆——「一個身分多個形態」因此做不到，而那正是本功能要修的東西。
+      if (!this.renderSpecs.has(conceptId)) this.renderSpecs.set(conceptId, { blockType, mapping })
+      // 變體的 mapping 也要收——選到變體之後仍然要用它的 mapping 渲染欄位
+      this.mappingByBlockType.set(blockType, mapping)
+      this.formDeclarations.push({ conceptId, blockType, form: spec.form })
 
       // Track expression-only block types (have output but no previousStatement)
       if (blockDef.output !== undefined && blockDef.previousStatement === undefined) {
@@ -77,6 +88,7 @@ export class PatternRenderer {
         this.statementOnlyBlockTypes.add(blockType)
       }
     }
+    this.formSets = buildFormSets(this.formDeclarations)
   }
 
   /** Reload block specs with Topic overrides applied */
@@ -123,15 +135,27 @@ export class PatternRenderer {
       }
     }
 
+    // 選形態——**規則來自宣告**（契約 C-2：本函式不得出現任何具體元件身分）。
+    // 沒有多形態的元件走的是同一條路，只是形態集合只有一個成員。
+    const formSet = this.formSets.get(node.conceptId)
+    // 位置軸（statement/expression）在本功能中沒有任何積木宣告它——那是 B 項的事。
+    // 傳 undefined 是誠實的：呼叫端目前不知道呈現位置。
+    const chosen = formSet ? selectForm(formSet, node, {}) : undefined
+    if (chosen?.degraded) {
+      console.warn(`[PatternRenderer] ${node.conceptId}：${chosen.degraded.reason}`)
+    }
+    const 形態型別 = chosen?.blockType ?? spec.blockType
+    const 形態映射 = this.mappingByBlockType.get(形態型別) ?? spec.mapping
+
     const block: BlockState = {
-      type: spec.blockType,
+      type: 形態型別,
       id: nextBlockId(),
       fields: {},
       inputs: {},
     }
 
     // Map fields: blockField → semanticProperty
-    for (const [blockField, semProp] of Object.entries(spec.mapping.fields)) {
+    for (const [blockField, semProp] of Object.entries(形態映射.fields)) {
       const value = node.properties[semProp]
       if (value !== undefined) {
         block.fields[blockField] = value
@@ -140,7 +164,7 @@ export class PatternRenderer {
 
     // Map inputs: blockInput → semanticChild (expression)
     // Use ctx.renderExpression() for expression slots to handle statement-only blocks safely
-    for (const [blockInput, semChild] of Object.entries(spec.mapping.inputs)) {
+    for (const [blockInput, semChild] of Object.entries(形態映射.inputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
         const childBlock = ctx?.renderExpression
@@ -153,7 +177,7 @@ export class PatternRenderer {
     }
 
     // Map statementInputs: blockInput → semanticChild (statement chain)
-    for (const [blockInput, semChild] of Object.entries(spec.mapping.statementInputs)) {
+    for (const [blockInput, semChild] of Object.entries(形態映射.statementInputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
         const chain = ctx?.renderStatementChain
@@ -166,13 +190,13 @@ export class PatternRenderer {
     }
 
     // Process dynamicRules: render dynamic children into extraState + inputs/fields
-    if (spec.mapping.dynamicRules) {
-      this.renderDynamicRules(node, spec.mapping.dynamicRules, block, ctx)
+    if (形態映射.dynamicRules) {
+      this.renderDynamicRules(node, 形態映射.dynamicRules, block, ctx)
     }
 
     // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty
-    if (spec.mapping.extraStateFlags) {
-      for (const [extraKey, childSlot] of Object.entries(spec.mapping.extraStateFlags)) {
+    if (形態映射.extraStateFlags) {
+      for (const [extraKey, childSlot] of Object.entries(形態映射.extraStateFlags)) {
         const children = node.children[childSlot]
         if (children && children.length > 0) {
           if (!block.extraState) block.extraState = {}

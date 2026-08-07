@@ -30,6 +30,11 @@ export class BlockSpecRegistry {
         codeTemplate: proj.codeTemplate ?? { pattern: '', imports: [], order: 0 },
         astPattern: proj.astPattern ?? { nodeType: '_none', constraints: [] },
         renderMapping: proj.renderMapping,
+        // ⚠️ 逐欄位列舉的建構**每加一個欄位就會漏一次**——`form` 第一版就是這樣掉的，
+        // 而症狀是「多形態完全沒生效」，看起來像選擇函式壞掉。
+        // 這裡守著的不變式與存檔那條相同：見 experience「與其偵測錯誤，不如換一個
+        // 讓錯誤無法被表達的形式」——展開合併讓漏欄位不可能發生。
+        form: proj.form,
       }
     })
     this.loadFromJSON(specs)

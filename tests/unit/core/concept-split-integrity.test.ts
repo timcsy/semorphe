@@ -24,7 +24,10 @@ describe('Concept/BlockDef split integrity', () => {
   it('should have correct core concept and block counts', () => {
     // 79 → 76：上面那三個搬出去了
     expect(coreConcepts.length).toBe(76)
-    expect(coreBlocks.length).toBe(77)
+    // 77 → 81：097 為 `cpp_container_push` / `cpp_container_pop` 各加了
+    // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
+    // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。
+    expect(coreBlocks.length).toBe(81)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

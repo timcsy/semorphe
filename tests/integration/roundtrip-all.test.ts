@@ -101,9 +101,22 @@ describe('Full Roundtrip — All 68 Blocks', () => {
       if (!conceptId || skipConcepts.has(conceptId)) continue
 
       const blockType = (spec.blockDef as any).type
+      const form = (spec as { form?: { axis: string; value: string } }).form
 
       it(`${conceptId} → ${blockType}`, () => {
         const sem = buildDummyNode(spec)
+        // ⚠️ **多形態之後這個不變式要改**（097）。
+        //
+        // 一個元件身分現在可以有多個積木形態，而合成節點**沒有選擇軸需要的
+        // 屬性**（例如容器種類）——所以它渲染出來的是**中性形態**，不是變體。
+        //
+        // 這不是退步：變體要在有脈絡時才選得出來，而「有脈絡時選對」由
+        // `multi-form-container.test.ts` 驗。這裡驗的是「渲染得出來、而且
+        // 渲染出來的是這個身分宣告過的某個形態」。
+        if (form) {
+          // 變體積木：把軸值放進節點，才有辦法選到它
+          sem.properties[form.axis] = form.value
+        }
         const block = renderer.render(sem)
         expect(block, `Failed to render concept '${conceptId}'`).not.toBeNull()
         expect(block!.type).toBe(blockType)

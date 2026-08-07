@@ -143,6 +143,14 @@ const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
   },
 }
 
+/**
+ * 通用容器方法——**同一個身分，多個容器**。
+ *
+ * 這些方法在不同容器上行為相同（執行器不分支），所以身分是一個；
+ * 但**積木上該怎麼說不同**，所以形態可以有多個。容器種類寫進節點供投影選形態。
+ */
+const GENERIC_CONTAINER_METHODS = new Set(['push', 'pop', 'empty', 'clear'])
+
 /** Methods that take one argument (the rest take zero) */
 const METHODS_WITH_ARG = new Set([
   'push_back', 'push', 'insert', 'erase', 'count',
@@ -205,6 +213,20 @@ export function registerIOLifters(lifter: Lifter): void {
       if (conceptId) {
         const propName = METHOD_OBJ_PROP[methodName] ?? 'obj'
         const properties: Record<string, string> = { [propName]: objText }
+
+        // 容器種類——**投影要用，而投影查不到脈絡**。
+        //
+        // `st.push(x)` 與 `q.push(x)` 的行為完全相同（執行器不分支），
+        // 但積木上該說「推到頂端」還是「加到尾端」不同。那是**形態**的事，
+        // 而形態選擇是逐節點的，走不到宣告節點——所以在這裡記下來。
+        //
+        // 與 095 的 `input.from` 同型：投影需要的資訊必須在節點上。
+        //
+        // ⚠️ 查不到型別就**不寫**（CK-1）。猜一個會讓積木顯示錯的位置，
+        // 那比中性標籤更糟——而中性標籤已經不說謊了（ab84f6c）。
+        if (objType && GENERIC_CONTAINER_METHODS.has(methodName)) {
+          properties.container_kind = objType
+        }
 
         if (METHODS_WITH_ARG.has(methodName) && argsNode) {
           const childSlot = METHOD_CHILD_SLOT[methodName] ?? 'value'

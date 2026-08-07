@@ -3373,6 +3373,140 @@
     }
   },
   {
+    "id": "c_stack_push",
+    "conceptId": "cpp_container_push",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_stack_push",
+      "message0": "%{BKY_CPP_STACK_PUSH_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_PUSH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push(${VALUE});",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "stack"
+    }
+  },
+  {
+    "id": "c_queue_push",
+    "conceptId": "cpp_container_push",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_queue_push",
+      "message0": "%{BKY_CPP_QUEUE_PUSH_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_PUSH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push(${VALUE});",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "queue"
+    }
+  },
+  {
+    "id": "c_stack_pop",
+    "conceptId": "cpp_container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_stack_pop",
+      "message0": "%{BKY_CPP_STACK_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "stack"
+    }
+  },
+  {
+    "id": "c_queue_pop",
+    "conceptId": "cpp_container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_queue_pop",
+      "message0": "%{BKY_CPP_QUEUE_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "queue"
+    }
+  },
+  {
     "id": "c_container_clear",
     "conceptId": "cpp_container_clear",
     "language": "cpp",

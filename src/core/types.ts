@@ -109,6 +109,17 @@ export interface SemanticContract {
 // ─── Block Spec (JSON-driven) ───
 
 export interface BlockSpec {
+  /**
+   * 這顆積木是哪個**形態**。
+   *
+   * 不寫 = 中性形態（軸值取不到時用的那個）。寫了就是某條軸上的一個值，
+   * 例如 `{ axis: 'container_kind', value: 'stack' }`。
+   *
+   * ⚠️ **軸的定義不重複寫在每個變體上**——它是核心的一張表（`KNOWN_AXES`）。
+   * 加一條軸就是加一列，不是加一個外掛系統。
+   */
+  form?: { axis: string; value: string }
+
   id: string
   language: string
   category: string
@@ -383,6 +394,17 @@ export type SkipReason =
 
 /** Block projection in block-specs.json (projection layer) */
 export interface BlockProjectionJSON {
+  /**
+   * 這顆積木是哪個**形態**。
+   *
+   * 不寫 = 中性形態（軸值取不到時用的那個）。寫了就是某條軸上的一個值，
+   * 例如 `{ axis: 'container_kind', value: 'stack' }`。
+   *
+   * ⚠️ **軸的定義不重複寫在每個變體上**——它是核心的一張表（`KNOWN_AXES`）。
+   * 加一條軸就是加一列，不是加一個外掛系統。
+   */
+  form?: { axis: string; value: string }
+
   id: string
   conceptId: string
   language: string
