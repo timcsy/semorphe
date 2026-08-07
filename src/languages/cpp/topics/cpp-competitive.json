@@ -23,7 +23,7 @@
         "label": "L1a: 陣列與排序",
         "concepts": [
           "array_declare", "array_access", "array_assign",
-          "count_loop", "cpp_for_loop", "break", "continue",
+          "count_loop", "cpp_for_loop", "cpp_comma_expr", "break", "continue",
           "func_def", "func_call", "return",
           "cpp_sort",
           "cpp:math_pow", "cpp:math_unary",
@@ -42,8 +42,9 @@
               "cpp_container_erase", "cpp_container_count",
               "cpp_vector_declare", "cpp_vector_size",
               "cpp_vector_pop_back", "cpp_vector_back",
-              "cpp_map_declare", "cpp_set_declare",
+              "cpp_map_declare", "cpp_map_assign", "cpp_set_declare",
               "cpp_stack_declare", "cpp_queue_declare",
+              "cpp_priority_queue_declare", "cpp_priority_queue_top",
               "cpp_stack_top",
               "cpp_queue_front",
               "cpp_map_access",
@@ -52,6 +53,8 @@
               "cpp_string_length", "cpp_string_substr", "cpp_string_find",
               "cpp_string_append", "cpp_string_c_str",
               "cpp_string_erase", "cpp_string_insert",
+              "cpp_string_empty", "cpp_string_clear", "cpp_string_push_back",
+              "cpp_string_find_first_not_of", "cpp_string_find_last_not_of",
               "cpp_string_replace",
               "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "cpp_strlen", "cpp_strcmp", "cpp_strcpy",
@@ -110,7 +113,7 @@
               "cpp_override_method", "cpp_operator_overload",
               "cpp_static_member",
               "cpp_memset", "cpp_memcpy",
-              "cpp_stringstream_declare",
+              "cpp_stringstream_declare", "cpp_istringstream_declare",
               "cpp_ifstream_declare", "cpp_ofstream_declare"
             ],
             "children": []

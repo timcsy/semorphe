@@ -106,12 +106,55 @@ describe('execute（執行）——期望值來自 g++ -std=c++17', () => {
 })
 
 describe('工具箱（E 項的第一次回報）', () => {
-  it('★ 自動出現在「堆疊與佇列」——`toolbox-categories.ts` 一個字都沒改', () => {
+  it('★ 歸屬是導出的——`toolbox-categories.ts` 一個字都沒改', () => {
     const { categoriesOf } = loadToolbox()
     expect(
       categoriesOf.get('cpp_priority_queue_declare'),
       '新元件沒有自動出現 → 那代表歸屬又變回手寫的了',
     ).toContain('堆疊與佇列')
     expect(categoriesOf.get('cpp_priority_queue_top')).toContain('堆疊與佇列')
+  })
+
+  // ⚠️ **上面那一支是使用者拿不到的證據，不是拿得到的證據。**
+  //
+  // `loadToolbox()` 用「全部概念可見」。而使用者看到的是**課程**的可見集合——
+  // 一顆沒有被任何課程收錄的元件，`getVisibleConcepts` 會把它擋掉，
+  // 學生**永遠看不到**。
+  //
+  // 第一版只有上面那一支，於是它綠著，而使用者回報「priority_queue 我沒看到呀」。
+  //
+  // **這是同一個坑的第三次**：標籤說謊（097）、通用積木消失（100）、這一次。
+  // 而「快照要釘在使用者實際會看到的狀態上，不是最大的那個狀態」這句話
+  // 三個 commit 前才寫進 experience.md。
+  it('★ **學生真的看得到**——在課程的可見集合裡', async () => {
+    const { getVisibleConcepts } = await import('../../src/core/level-tree')
+    const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
+    const { buildToolbox } = await import('../../src/ui/toolbox-builder')
+    const { CATEGORY_COLORS } = await import('../../src/ui/theme/category-colors')
+    const { allCppConcepts, allCppProjections } = await import('../../src/languages/cpp/all-declarations')
+    const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
+    const beginner = (await import('../../src/languages/cpp/topics/cpp-beginner.json')).default
+    const competitive = (await import('../../src/languages/cpp/topics/cpp-competitive.json')).default
+
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+
+    for (const [名稱, topic, levels] of [
+      ['初學 C++', beginner, ['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c', 'L3a']],
+      ['競程 C++', competitive, ['L0', 'L1a', 'L2a']],
+    ] as const) {
+      const tb = buildToolbox({
+        blockSpecRegistry: reg,
+        visibleConcepts: getVisibleConcepts(topic as never, new Set(levels)),
+        ioPreference: 'iostream',
+        msgs: {},
+        categoryColors: CATEGORY_COLORS,
+        categoryDefs: cppCategoryDefs,
+      }) as { contents: { name: string; contents: { type: string }[] }[] }
+      const 全部 = tb.contents.flatMap((c) => c.contents.map((b) => b.type))
+      for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_top']) {
+        expect(全部, `${名稱}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
+      }
+    }
   })
 })

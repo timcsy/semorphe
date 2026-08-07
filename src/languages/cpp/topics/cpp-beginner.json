@@ -22,7 +22,7 @@
         "label": "L1a: 函式與迴圈",
         "concepts": [
           "func_def", "func_call", "return",
-          "count_loop", "cpp_for_loop", "break", "continue",
+          "count_loop", "cpp_for_loop", "cpp_comma_expr", "break", "continue",
           "cpp_char_literal", "cpp_increment", "cpp_compound_assign", "array_assign",
           "cpp:math_pow", "cpp:math_unary",
           "cpp_rand", "cpp_srand", "cpp_abs",
@@ -43,6 +43,8 @@
               "cpp_string_length", "cpp_string_substr", "cpp_string_find",
               "cpp_string_append", "cpp_string_c_str", "cpp_string_at",
               "cpp_string_erase", "cpp_string_insert",
+              "cpp_string_empty", "cpp_string_clear", "cpp_string_push_back",
+              "cpp_string_find_first_not_of", "cpp_string_find_last_not_of",
               "cpp_getline", "cpp_to_string", "cpp_stoi", "cpp_stod",
               "cpp_atoi", "cpp_atof",
               "cpp_array_2d_declare", "cpp_array_2d_access", "cpp_array_2d_assign",
@@ -61,6 +63,7 @@
                   "cpp_vector_pop_back", "cpp_vector_back",
                   "cpp_stack_declare", "cpp_stack_top",
                   "cpp_queue_declare", "cpp_queue_front", "cpp_queue_back",
+                  "cpp_priority_queue_declare", "cpp_priority_queue_top",
                   "cpp_map_access",
                   "cpp_set_insert",
                   "cpp_accumulate", "cpp_iota", "cpp_partial_sum",
@@ -112,7 +115,7 @@
               "cpp_class_def", "cpp_new", "cpp_delete",
               "cpp_template_function",
               "cpp_method_call", "cpp_vector_declare", "cpp_vector_size",
-              "cpp_map_declare", "cpp_set_declare",
+              "cpp_map_declare", "cpp_map_assign", "cpp_set_declare",
               "cpp_sort",
               "cpp:math_binary",
               "cpp_constructor", "cpp_destructor"
@@ -138,7 +141,7 @@
                   "cpp_try_catch", "cpp_throw",
                   "cpp_static_cast", "cpp_dynamic_cast",
                   "cpp_reinterpret_cast", "cpp_const_cast",
-                  "cpp_stringstream_declare",
+                  "cpp_stringstream_declare", "cpp_istringstream_declare",
                   "cpp_ifstream_declare", "cpp_ofstream_declare"
                 ],
                 "children": []
