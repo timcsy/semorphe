@@ -16,10 +16,15 @@ export class BlockSpecRegistry {
     const specs: BlockSpec[] = projections.map(proj => {
       const concept = conceptMap.get(proj.conceptId)
       return {
-        id: proj.id,
-        language: proj.language,
-        category: proj.category,
-        version: proj.version,
+        // ⚠️ **展開合併，不要逐欄位列舉。**
+        //
+        // 第一版是列舉的，於是 097 新增的 `form` 欄位被安靜地丟掉——症狀看起來
+        // 像形態選擇函式壞掉，而其實資料在進到它之前就沒了。
+        //
+        // 而這個處方 `experience.md` 早就寫下來了（「展開合併 → 漏欄位不可能」），
+        // **只是當時只套用在發現它的那一處（存檔），沒有掃同形的地方。**
+        // 一個教訓被記下來、處方也被記下來，而程式碼仍然帶著那個病。
+        ...proj,
         conceptMapping: {
           conceptId: proj.conceptId,
           abstractConcept: concept?.abstractConcept ?? undefined,
@@ -32,11 +37,6 @@ export class BlockSpecRegistry {
         codeTemplate: proj.codeTemplate ?? { pattern: '', imports: [], order: 0 },
         astPattern: proj.astPattern ?? { nodeType: '_none', constraints: [] },
         renderMapping: proj.renderMapping,
-        // ⚠️ 逐欄位列舉的建構**每加一個欄位就會漏一次**——`form` 第一版就是這樣掉的，
-        // 而症狀是「多形態完全沒生效」，看起來像選擇函式壞掉。
-        // 這裡守著的不變式與存檔那條相同：見 experience「與其偵測錯誤，不如換一個
-        // 讓錯誤無法被表達的形式」——展開合併讓漏欄位不可能發生。
-        form: proj.form,
       }
     })
     this.loadFromJSON(specs)
