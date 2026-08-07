@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "note": "元件身分健檢（第十八條護欄）**看過並判定**的項目。護欄只排順序，判定在這裡。",
+    "why": "一條沒有辦法記錄『看過了、理由是這個』的護欄，會永遠報同一件事——然後人學會忽略它。這份檔案讓判定進入護欄的視野：已判定的移出『要看』，另立一欄。",
+    "rule": "每一筆必須有 reason。而**判定會過期**——若某一筆的信號已經不再出現，護欄要報出來，因為那代表底下的事實變了、判定可能不再成立。",
+    "reviewedAt": "2026-08-07"
+  },
+  "decisions": [
+    {
+      "conceptId": "var_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "量過執行器：pointer 有自己的；static 與 ref 的行為缺口已於 099d 補上（跨呼叫保存／別名）。const 與 constexpr 的執行期行為確實相同，但修飾詞要不要變成參數取決於參數規格化（C 項）——現在決定會決定兩次。"
+    },
+    {
+      "conceptId": "cpp_pointer_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "有自己的執行器——存的是位址，行為與一般宣告不同。"
+    },
+    {
+      "conceptId": "cpp_const_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "暫留，待 C 項",
+      "reason": "執行期行為與 var_declare 相同（不可變是編譯期約束，本直譯器不強制）。碼形態不同（`const int` vs `int`）。要不要把修飾詞變成參數，屬參數規格化（C 項）。"
+    },
+    {
+      "conceptId": "cpp_constexpr_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "暫留，待 C 項",
+      "reason": "同 cpp_const_declare。"
+    },
+    {
+      "conceptId": "cpp_ref_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "**行為不同，而且原本是壞的**：`int& r = a; r = 9;` 印 59 而 g++ 印 99。099d 接上 `Scope.declareRef`（機制早就在）。"
+    },
+    {
+      "conceptId": "cpp_static_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "**行為不同，而且原本是壞的**：區域 static 不跨呼叫保存，印 111 而 g++ 印 123。099d 改存在根作用域、用宣告節點 id 當鍵。"
+    },
+    {
+      "conceptId": "cpp_stack_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "容器的紀律（LIFO／FIFO／去重）住在容器裡，而取出端（top／front／insert）是不同的概念。實測 set 的去重正確（size 2，與 g++ 一致）。合併宣告會逼著把紀律搬到每個操作上——那是雙重真相。"
+    },
+    {
+      "conceptId": "cpp_queue_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "同 cpp_stack_declare。而且它的執行器已經標了 `tag: 'queue'`——行為上有區分。"
+    },
+    {
+      "conceptId": "cpp_set_declare",
+      "signal": "宣告與另外 N 顆完全相同",
+      "decision": "保留",
+      "reason": "同 cpp_stack_declare。去重行為實測正確。"
+    }
+  ]
+}
