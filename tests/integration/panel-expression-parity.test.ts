@@ -19,7 +19,7 @@
  * 靜默更新，等於「跑一下就自動接受惡化」。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { generateCode } from '../../src/core/projection/code-generator'
+import { generateExpressionCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -64,8 +64,8 @@ const 切換前的產出: [string, SemanticNode, string][] = [
     '-v',
   ],
   [
-    'func_call_expr',
-    n('func_call_expr', { name: 'g' }, { args: [n('number_literal', { value: 2 }), n('var_ref', { name: 'y' })] }),
+    'func_call',
+    n('func_call', { name: 'g' }, { args: [n('number_literal', { value: 2 }), n('var_ref', { name: 'y' })] }),
     'g(2, y)',
   ],
   [
@@ -80,8 +80,8 @@ const 切換前的產出: [string, SemanticNode, string][] = [
     's[0]',
   ],
   [
-    'cpp_increment_expr',
-    n('cpp_increment_expr', { name: 'i', operator: '++', position: 'postfix' }),
+    'cpp_increment',
+    n('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }),
     'i++',
   ],
   [
@@ -112,7 +112,7 @@ describe('面板的運算式產生：切換前後一字不差', () => {
   for (const [name, node, expected] of 切換前的產出) {
     it(`${name} → ${expected}`, () => {
       expect(
-        generateCode(node, 'cpp', 'apcs' as never),
+        generateExpressionCode(node, 'cpp', 'apcs' as never),
         `舊 switch 產出 ${JSON.stringify(expected)}。這是純替換，不得有任何差異——` +
           '而這條是降級路徑，平常跑不到，改壞了不會有人發現。',
       ).toBe(expected)
@@ -126,7 +126,7 @@ describe('面板的運算式產生：切換前後一字不差', () => {
 
 describe('產不出來時的行為不得無聲改變（FR-005）', () => {
   it('★ 認不得的概念仍然產出可見的標記，不是空字串', () => {
-    const out = generateCode(n('__no_such_concept__', {}), 'cpp', 'apcs' as never)
+    const out = generateExpressionCode(n('__no_such_concept__', {}), 'cpp', 'apcs' as never)
     expect(out, '認不得的概念無聲產出空字串——降級路徑上的靜默失敗最難發現').not.toBe('')
     expect(out).toContain('__no_such_concept__')
   })

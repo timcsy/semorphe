@@ -3,6 +3,8 @@ import type { SemanticNode, CodeTemplate, UniversalTemplate, StylePreset } from 
 interface GenerateContext {
   indent: number
   style: StylePreset
+  /** 這個節點正被產生到運算式位置（無分號、無縮排）還是敘述位置 */
+  isExpression?: boolean
 }
 
 /**
@@ -14,6 +16,14 @@ export type BodyFallback = (node: SemanticNode, ctx: { indent: number; style: St
 
 export class TemplateGenerator {
   private templates = new Map<string, CodeTemplate>()
+  /**
+   * 位置分化的模板——`conceptId` → 運算式版。
+   *
+   * 一個元件身分可以有多個形態（097），而它們的**碼形態也不同**：
+   * `i++;`（敘述）vs `i++`（運算式）。索引若只有一份，兩者會互相覆蓋——
+   * 實測後果是 `v.push_back(5)` 少了分號，或 `g(2, y);` 多了分號。
+   */
+  private expressionTemplates = new Map<string, CodeTemplate>()
   private universalTemplates: UniversalTemplate[] = []
   private collectedImports = new Set<string>()
   private expressionFallback: ExpressionFallback | null = null
@@ -30,7 +40,12 @@ export class TemplateGenerator {
   }
 
   /** Register a code template for a specific conceptId */
-  registerTemplate(conceptId: string, template: CodeTemplate): void {
+  registerTemplate(conceptId: string, template: CodeTemplate, form?: { axis: string; value: string }): void {
+    if (form?.axis === 'role' && form.value === 'expression') {
+      this.expressionTemplates.set(conceptId, template)
+      return
+    }
+    if (form) return  // 其他軸的形態（例如容器種類）碼形態相同，不另存
     this.templates.set(conceptId, template)
   }
 
@@ -51,8 +66,10 @@ export class TemplateGenerator {
 
   /** Generate code for a semantic node. Returns null if no template found. */
   generate(node: SemanticNode, ctx: GenerateContext): string | null {
-    // 1. Try direct template lookup
-    let template = this.templates.get(node.conceptId)
+    // 1. Try direct template lookup —— **位置決定用哪一份**
+    let template = ctx.isExpression
+      ? (this.expressionTemplates.get(node.conceptId) ?? this.templates.get(node.conceptId))
+      : this.templates.get(node.conceptId)
 
     // 2. Try universal template with style variants
     if (!template) {

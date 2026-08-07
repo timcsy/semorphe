@@ -79,7 +79,6 @@ export function registerExecutors(
 
   register('cpp_scanf', execScanf)
 
-  register('cpp_scanf_expr', execScanf)
 }
 
 /** Format a printf-style string with runtime values */

@@ -119,11 +119,17 @@ export const execCompoundAssign: ConceptExecutor = async (node, ctx) => {
   const current = ctx.scope.get(name)
   const lv = ctx.toNumber(current)
   const result = computeCompound(op, lv, rv)
-  if (current.type === 'int' && rhs.type === 'int') {
-    ctx.scope.set(name, { type: 'int', value: Math.trunc(result) })
-  } else {
-    ctx.scope.set(name, { type: 'double', value: result })
-  }
+  // ⚠️ **複合指定是一個運算式，它產出指定後的值。**
+  //
+  // `int b = (a += 3);` 的 b 應該是 5。在此之前這裡什麼都不回傳，於是
+  // 運算式位置拿到 0——而**測試沒有碰過那個位置**，因為敘述位置不用回傳值。
+  // 這個缺陷在合併 statement／expression 雙版本時才現形（兩個身分共用同一個
+  // 執行器，所以兩邊一樣壞）。與 095 讓 `var_assign` 回傳指定值同一個形狀。
+  const 新值 = current.type === 'int' && rhs.type === 'int'
+    ? { type: 'int' as const, value: Math.trunc(result) }
+    : { type: 'double' as const, value: result }
+  ctx.scope.set(name, 新值)
+  return 新值
 }
 
 export function registerMutationExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {

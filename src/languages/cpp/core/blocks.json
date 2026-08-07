@@ -1163,7 +1163,7 @@
   },
   {
     "id": "c_increment_expr",
-    "conceptId": "cpp_increment_expr",
+    "conceptId": "cpp_increment",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -1219,11 +1219,15 @@
       "inputs": {
         "INDEX": "index"
       }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   },
   {
     "id": "c_compound_assign_expr",
-    "conceptId": "cpp_compound_assign_expr",
+    "conceptId": "cpp_compound_assign",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -1283,11 +1287,15 @@
         "INDEX": "index",
         "VALUE": "value"
       }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   },
   {
     "id": "c_var_declare_expr",
-    "conceptId": "var_declare_expr",
+    "conceptId": "var_declare",
     "language": "cpp",
     "category": "variables",
     "version": "1.0.0",
@@ -1350,6 +1358,10 @@
       "inputs": {
         "INIT_0": "initializer"
       }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   },
   {
@@ -1994,11 +2006,14 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "cpp_method_call_expr"
     }
   },
   {
     "id": "cpp_method_call_expr",
-    "conceptId": "cpp_method_call_expr",
+    "conceptId": "cpp_method_call",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -2057,6 +2072,10 @@
           "extract": "text"
         }
       ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   },
   {

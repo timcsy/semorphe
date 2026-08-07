@@ -207,9 +207,15 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
   })
 
   g.set('func_call', (node, ctx) => {
+    // ⚠️ **位置感知**：同一個身分在敘述位置與運算式位置產出不同的**文字形式**
+    // （分號與縮排），但那是**形態**不是身分。`ctx.isExpression` 這個機制一直
+    // 都在（`cpp_increment` 與 `cpp_compound_assign` 早就在用），而這四個
+    // 沒有用它——於是被迫存在一個 `_expr` 雙胞胎概念。B 項合併掉那六對。
     const name = node.properties.name ?? 'f'
     const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
-    return `${indent(ctx)}${name}(${args.join(', ')});\n`
+    const expr = `${name}(${args.join(', ')})`
+    if (ctx.isExpression) return expr
+    return `${indent(ctx)}${expr};\n`
   })
 
   g.set('return', (node, ctx) => {
@@ -438,7 +444,9 @@ export function registerStatementGenerators(g: Map<string, NodeGenerator>, style
     const obj = node.properties.obj ?? 'obj'
     const method = node.properties.method ?? 'method'
     const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
-    return `${indent(ctx)}${obj}.${method}(${args.join(', ')});\n`
+    const expr = `${obj}.${method}(${args.join(', ')})`
+    if (ctx.isExpression) return expr
+    return `${indent(ctx)}${expr};\n`
   })
 
   // OOP concepts

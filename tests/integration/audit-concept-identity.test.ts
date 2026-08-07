@@ -175,10 +175,10 @@ int main() { cout << "hello"; }`, 'string_literal')
 int main() { add(1, 2); }`, 'func_call')
   })
 
-  it('func_call_expr', () => {
+  it('func_call', () => {
     // Function call in expression context (assigned to a variable)
     assertConceptPresent(`int add(int a, int b) { return a + b; }
-int main() { int x = add(1, 2); }`, 'func_call_expr')
+int main() { int x = add(1, 2); }`, 'func_call')
   })
 
   it('return', () => {
@@ -611,7 +611,7 @@ int main() { std::vector<int> v; v.resize(10); }`, 'cpp_method_call')
   // 它從來沒有測到運算式位置。**兩支測試斷言同一件事，看起來像涵蓋了兩種。**
   it('cpp_method_call_expr（運算式位置 → 運算式身分）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp_method_call_expr')
+int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp_method_call')
   })
 
   // --- Forward Declaration ---

@@ -94,7 +94,7 @@ describe('類別與方法', () => {
     const out = await run(
       prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
         n('cpp_method_call', { obj: 'c', method: 'bump' }, { args: [] }),
-        show(n('cpp_method_call_expr', { obj: 'c', method: 'get' }, { args: [] }))),
+        show(n('cpp_method_call', { obj: 'c', method: 'get' }, { args: [] }))),
     )
     expect(out.trim()).toBe('1')
   })
@@ -167,7 +167,7 @@ describe('建構式', () => {
   it('★ 有參數的建構式會被呼叫', async () => {
     const out = await run(
       prog(withCtor(),
-        n('var_declare', { name: 'p', type: 'P' }, { initializer: [n('func_call_expr', { name: 'P' }, { args: [num(42)] })] }),
+        n('var_declare', { name: 'p', type: 'P' }, { initializer: [n('func_call', { name: 'P' }, { args: [num(42)] })] }),
         show(n('cpp_struct_member_access', { obj: 'p', member: 'v' }))),
     )
     expect(out.trim(), '建構式沒有跑——欄位還是預設值').toBe('42')

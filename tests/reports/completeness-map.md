@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：182｜✅ 實作 844｜📄 已宣告不提供 40｜❔ 判不出來 26｜🈳 殼 0｜❌ 缺 0（以路徑數計）
+元件：175｜✅ 實作 817｜📄 已宣告不提供 36｜❔ 判不出來 22｜🈳 殼 0｜❌ 缺 0（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -39,7 +39,6 @@
 | `cpp_class_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_comma_expr` | ✅ | ❔ | 📄 | 📄 | ✅ |
 | `cpp_compound_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_compound_assign_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_const_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_const_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_constexpr_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -70,7 +69,6 @@
 | `cpp_include` | 📄 | ❔ | ✅ | ✅ | 📄 |
 | `cpp_include_local` | 📄 | ❔ | ✅ | ✅ | 📄 |
 | `cpp_increment` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_increment_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_iota` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_isalpha` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_isdigit` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -86,7 +84,6 @@
 | `cpp_memcpy` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_memset` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_method_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_method_call_expr` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_new` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -111,7 +108,6 @@
 | `cpp_reinterpret_cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_reverse` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_scanf` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp_scanf_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp_set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp_sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -175,7 +171,6 @@
 | `endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `forward_decl` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `func_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `func_call_expr` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `func_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `if` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `if_else` | ✅ | 📄 | ✅ | ✅ | ✅ |
@@ -189,8 +184,6 @@
 | `return` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `string_literal` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `var_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `var_declarator` | 📄 | 📄 | 📄 | 📄 | ✅ |
 | `var_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `var_declare_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `var_ref` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `while_loop` | ✅ | ✅ | ✅ | ✅ | ✅ |

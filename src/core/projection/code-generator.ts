@@ -135,6 +135,28 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   return generateNode(tree, ctx).trim()
 }
 
+/**
+ * 產生一段**運算式**的程式碼——無分號、無縮排。
+ *
+ * ⚠️ 與 `generateCode` 的差別**不是格式偏好，是位置**。
+ *
+ * B 項把六對 statement／expression 雙版本合併成六個身分之後，「這個節點在哪個
+ * 位置」不再由**身分**決定，而由呼叫端說。`generateCode` 講的是敘述位置；
+ * 需要運算式的地方（例如變數面板的即時預覽）必須用這一個。
+ *
+ * 合併前那些地方靠的是「這個概念的身分是 `*_expr`」——**那是把位置編碼進身分**，
+ * 正是被合併掉的那個雙重身分。
+ */
+export function generateExpressionCode(node: SemanticNode, language: string, style: StylePreset): string {
+  const factory = languageFactories.get(language)
+  const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  registerMetaConceptGenerators(generators)
+  const ctx: GeneratorContext = { indent: 0, style, language, generators, isExpression: true }
+  if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
+  wireTemplateFallbacks(ctx)
+  return generateExpression(node, ctx).trim()
+}
+
 export function generateCodeWithMapping(
   tree: SemanticNode,
   language: string,
@@ -187,7 +209,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
 
   // Try JSON-driven template generator first
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
-  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null
+  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style, isExpression: ctx.isExpression }) ?? null
 
   if (templateResult !== null) {
     result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
@@ -264,7 +286,7 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
 
   // Try JSON-driven template generator first
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
-  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style }) ?? null
+  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style, isExpression: true }) ?? null
   if (templateResult !== null) return templateResult
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }

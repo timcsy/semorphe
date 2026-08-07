@@ -201,7 +201,7 @@ const FOR_LOOP_CONCEPTS = new Set([
   // expressions
   'number', 'number_literal', 'string', 'string_literal', 'boolean', 'var_ref', 'cpp_raw_expression',
   'arithmetic', 'compare', 'logic', 'logic_not', 'negate',
-  'func_call_expr', 'array_access', 'cpp_ternary',
+  'func_call', 'array_access', 'cpp_ternary',
   // statements valid in for-loop parts
   'var_declare', 'var_assign', 'cpp_compound_assign', 'cpp_increment', 'array_assign',
   'cpp_comma_expr', 'cpp_cast',

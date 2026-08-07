@@ -1,4 +1,4 @@
-import { generateCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
+import { generateExpressionCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
 import type { StylePreset } from '../../core/types'
 import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
@@ -387,7 +387,9 @@ export class BlocklyPanel implements ViewHost {
    * 見 specs/060-panel-parallel-generator/
    */
   private simpleExpressionToCode(node: SemanticNode): string {
-    return generateCode(node, this.codeLanguage, this.codeStyle)
+    // ⚠️ **運算式位置**——不是格式偏好，是位置（見 `generateExpressionCode` 的說明）。
+    // B 項合併掉 `*_expr` 雙重身分之後，位置由呼叫端說，不再由身分編碼。
+    return generateExpressionCode(node, this.codeLanguage, this.codeStyle)
   }
 
   private extractStatementInput(block: Blockly.Block, inputName: string): SemanticNode[] {

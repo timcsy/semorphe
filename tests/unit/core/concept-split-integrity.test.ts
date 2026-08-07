@@ -17,13 +17,17 @@ describe('Concept/BlockDef split integrity', () => {
     // 從 lang-core 移入 universal。判準是 concepts/概念代數.md 的
     // 「Layer 0: Universal — 所有語言共有」；註解通過，`//` 不通過（那是
     // Layer 1 的語言核心語法，已下沉到語言套件）。
-    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(30)
+    // 30 → 29：B 項把 `var_declare_expr` 併進 `var_declare`（積木保留，身分合一）
+    expect((universalConcepts as unknown as ConceptDefJSON[]).length).toBe(29)
     expect((universalBlocks as unknown as BlockProjectionJSON[]).length).toBe(26)
   })
 
   it('should have correct core concept and block counts', () => {
     // 79 → 76：上面那三個搬出去了
-    expect(coreConcepts.length).toBe(76)
+    // 76 → 72：B 項合併四對 statement／expression 雙版本
+    // 72 → 71：`var_declarator` 進墓碑——有執行器、有抽取器、有定義，
+    // 而**沒有任何辨識路徑產出過它**
+    expect(coreConcepts.length).toBe(71)
     // 77 → 81：097 為 `cpp_container_push` / `cpp_container_pop` 各加了
     // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
     // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。

@@ -774,7 +774,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('func_call_expr')
+    expect(result!.conceptId).toBe('func_call')
     expect(result!.properties.name).toBe('myFunc')
     expect(result!.children.args).toHaveLength(1)
   })

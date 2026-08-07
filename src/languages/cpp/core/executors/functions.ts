@@ -31,7 +31,6 @@ export function registerFunctionsCoreExecutors(
 
   register('cpp_method_call', async () => {})
 
-  register('cpp_method_call_expr', async () => {})
 
   // 註：物件導向那批「已知缺口」的空操作集中在 interpreter.ts 的缺口清單，
   // 那裡有不能直接刪的理由。原本這裡也各註冊一次，兩邊互相覆蓋——行為相同，

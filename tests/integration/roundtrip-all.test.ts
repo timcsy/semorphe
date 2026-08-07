@@ -113,13 +113,24 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         // 這不是退步：變體要在有脈絡時才選得出來，而「有脈絡時選對」由
         // `multi-form-container.test.ts` 驗。這裡驗的是「渲染得出來、而且
         // 渲染出來的是這個身分宣告過的某個形態」。
-        if (form) {
-          // 變體積木：把軸值放進節點，才有辦法選到它
-          sem.properties[form.axis] = form.value
-        }
+        // ⚠️ **兩種軸要分開處理**（B 項之後）。
+        //
+        // `container_kind` 這類軸讀的是**節點屬性**——放進去就選得到。
+        // 而 `role` 軸讀的是**呈現位置**，而 `render()` 是敘述路徑、不帶位置
+        // ——所以 role 變體在這裡選不到，會落到中性形態。**那是對的**：
+        // 位置由呼叫端說，運算式位置走 `renderExpression`（另有測試驗）。
+        if (form && form.axis !== 'role') sem.properties[form.axis] = form.value
         const block = renderer.render(sem)
         expect(block, `Failed to render concept '${conceptId}'`).not.toBeNull()
-        expect(block!.type).toBe(blockType)
+        if (form?.axis === 'role') {
+          // 只驗「渲染得出來、而且是這個身分宣告過的某個形態」
+          const 全部形態 = allSpecs
+            .filter((s) => s.conceptMapping?.conceptId === conceptId)
+            .map((s) => (s.blockDef as any).type)
+          expect(全部形態).toContain(block!.type)
+        } else {
+          expect(block!.type).toBe(blockType)
+        }
       })
     }
   })

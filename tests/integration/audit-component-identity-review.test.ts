@@ -233,10 +233,16 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     expect(ALL.length).toBeGreaterThan(0)
   })
 
-  it('★ 三個桶都不是空的——任一為 0 代表偵測沒接上', () => {
+  it('★ 健康檢查：不得全部可疑，且偵測要對**合成注入**有反應', () => {
+    // ⚠️ **這一支的第一版錨在真實狀態上**（「確定桶不得為空」），而 B 項把那 9 筆
+    // 全部修掉之後它就爛了——**護欄修好了它要量的東西，就是它的錨點爛掉的時候**
+    //（`knowledge/history/022`）。而 `build-guardrail` 第 2 步早就寫著
+    // 「錨點不要挑真實世界的狀態，挑合成的」。**同一個 session 內又犯一次。**
+    //
+    // 改成：真實資料只驗「不是全部可疑」（那是信號太寬的訊號，不隨修復而變），
+    // 偵測是否活著由下面那幾支**合成注入**負責。
     expect(ALL.length - suspectIds.size, '全部可疑 → 信號太寬').toBeGreaterThan(0)
-    expect(byBucket('確定').length, '確定桶是空的 → if_else 那類死概念沒被抓到').toBeGreaterThan(0)
-    expect(byBucket('要看').length, '要看桶是空的 → skipPaths 與極小足跡沒被掃到').toBeGreaterThan(0)
+    expect(ALL.length, '一顆元件都沒載入 → 每個數字都是假的').toBeGreaterThan(50)
   })
 
   it('★ 掃描範圍不是空的——沒掃到檔的話每個數字都是假的', () => {
@@ -265,13 +271,18 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
 
   it('★ 「零測試足跡」信號是活的——排除清冊之後才量得到', () => {
     // 正向：報出來的那幾顆，在**排除清冊後**的測試樹裡確實一次都沒出現
+    // ⚠️ 同上——**不錨在「真實資料裡一定有零測試足跡的元件」**。
+    // B 項把那三顆全部補了測試之後，這個數字就該是 0，而 0 是好事。
+    //
+    // 錨在**機制**上：報出來的每一顆，在排除清冊後的測試樹裡確實一次都沒出現；
+    // 而一顆有大量測試的元件不得被報出。這兩條不隨真實世界的修復而失效。
     const zero = findings.filter((f) => f.signal === '零測試足跡').map((f) => f.id)
-    expect(zero.length, '一顆都沒有 → 清冊沒排乾淨，這個 0 是假的').toBeGreaterThan(0)
     for (const id of zero) {
       expect(footprint(testFiles, id), `${id} 被報成零測試足跡，但測試樹裡找得到它`).toEqual([])
     }
-    // 反向：一顆有測試的元件不得被報出
     expect(zero, 'if 有大量測試，報出來的話信號太寬').not.toContain('if')
+    // 合成證明信號活著：一個不存在於任何測試裡的假 id 必須被判為零足跡
+    expect(footprint(testFiles, 'synth__never_mentioned__')).toEqual([])
   })
 
   it('★ 「標 universal 但只有語言側」信號是活的——用合成元件證明', () => {

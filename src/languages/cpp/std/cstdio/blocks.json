@@ -42,7 +42,9 @@
       ]
     },
     "renderMapping": {
-      "fields": { "FORMAT": "format" },
+      "fields": {
+        "FORMAT": "format"
+      },
       "inputs": {},
       "statementInputs": {},
       "dynamicRules": [
@@ -51,8 +53,13 @@
           "childSlot": "args",
           "modeSource": "args[{i}].mode",
           "modes": {
-            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
-            "compose": { "input": "ARG_{i}" }
+            "select": {
+              "field": "args[{i}].text",
+              "wrap": "var_ref"
+            },
+            "compose": {
+              "input": "ARG_{i}"
+            }
           }
         }
       ]
@@ -101,7 +108,9 @@
       ]
     },
     "renderMapping": {
-      "fields": { "FORMAT": "format" },
+      "fields": {
+        "FORMAT": "format"
+      },
       "inputs": {},
       "statementInputs": {},
       "expressionCounterpart": "c_scanf_expr",
@@ -111,8 +120,13 @@
           "childSlot": "args",
           "modeSource": "args[{i}].mode",
           "modes": {
-            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
-            "compose": { "input": "ARG_{i}" }
+            "select": {
+              "field": "args[{i}].text",
+              "wrap": "var_ref"
+            },
+            "compose": {
+              "input": "ARG_{i}"
+            }
           }
         }
       ]
@@ -120,7 +134,7 @@
   },
   {
     "id": "c_scanf_expr",
-    "conceptId": "cpp_scanf_expr",
+    "conceptId": "cpp_scanf",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
@@ -128,7 +142,9 @@
       "type": "c_scanf_expr"
     },
     "renderMapping": {
-      "fields": { "FORMAT": "format" },
+      "fields": {
+        "FORMAT": "format"
+      },
       "inputs": {},
       "statementInputs": {},
       "dynamicRules": [
@@ -137,11 +153,20 @@
           "childSlot": "args",
           "modeSource": "args[{i}].mode",
           "modes": {
-            "select": { "field": "args[{i}].text", "wrap": "var_ref" },
-            "compose": { "input": "ARG_{i}" }
+            "select": {
+              "field": "args[{i}].text",
+              "wrap": "var_ref"
+            },
+            "compose": {
+              "input": "ARG_{i}"
+            }
           }
         }
       ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   }
 ]

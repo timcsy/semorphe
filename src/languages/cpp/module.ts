@@ -79,7 +79,18 @@ export function initCppModule(): CppModuleEngines {
   // 6. Register code templates from block specs
   for (const spec of allSpecs) {
     if (spec.codeTemplate && spec.conceptMapping?.conceptId) {
-      templateGenerator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+      // ⚠️ **只註冊中性形態的模板。**
+      //
+      // 一個元件身分現在可以有多個積木形態（097），而模板索引是
+      // `conceptId → 模板` 的一對一。變體也註冊的話，後來的會蓋掉中性版
+      // ——實測後果是 `v.push_back(5);` 少了分號（拿到運算式版的模板）。
+      //
+      // 位置的差別由產生器的 `ctx.isExpression` 表達，不由模板分岔。
+      templateGenerator.registerTemplate(
+        spec.conceptMapping.conceptId,
+        spec.codeTemplate,
+        (spec as { form?: { axis: string; value: string } }).form,
+      )
     }
   }
 

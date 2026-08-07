@@ -98,6 +98,26 @@ describe('cpp_comma_expr — 逗號運算子', () => {
 describe('var_declarator — 多變數宣告', () => {
   const 程式 = 'int a = 1, b = 2, c; c = a + b; cout << a << b << c;'
 
+  it('身分：三個宣告子都在樹裡，而且各自是完整的宣告概念', () => {
+    // ⚠️ **具名斷言**——只驗輸出的話，這個概念可以完全不存在而測試照樣綠。
+    // 「測試通過卻什麼都沒測到」在這個專案發生過（五支假的通過）。
+    //
+    // 而這一支第一版斷言的是 `var_declarator`，**立刻紅**——那個概念
+    // 有執行器、有抽取器、有定義，而**沒有任何辨識路徑產出過它**。
+    // 它假設所有宣告子都是純名字，但 `int a, *p, arr[3];` 的三個宣告子是
+    // 三個**不同**的概念。系統做對了，模型錯了。已進墓碑。
+    const 外層 = collect(lift(程式), 'var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)
+    expect(外層).toHaveLength(1)
+    expect(外層[0].children!.declarators).toHaveLength(3)
+  })
+
+  it('負向：不同形狀的宣告子拿到**不同**的概念', () => {
+    const 樹 = lift('int a = 1, *p = nullptr, arr[3];')
+    const 外層 = collect(樹, 'var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)[0]
+    const ids = (外層.children!.declarators as SemanticNode[]).map((d) => d.conceptId)
+    expect(new Set(ids).size, '全部同一個概念 → 指標與陣列的形狀資訊掉了').toBeGreaterThan(1)
+  })
+
   it('執行：g++ 說是 123', async () => {
     expect(await run(程式)).toBe('123')
   })

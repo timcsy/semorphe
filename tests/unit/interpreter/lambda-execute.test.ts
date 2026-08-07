@@ -38,7 +38,7 @@ const decl = (name: string, init?: SemanticNode): SemanticNode =>
 const assign = (name: string, v: SemanticNode): SemanticNode =>
   n('var_assign', { name }, { value: [v] })
 const call = (name: string, ...args: SemanticNode[]): SemanticNode =>
-  n('func_call_expr', { name }, { args })
+  n('func_call', { name }, { args })
 
 /** `[capture](int a){ return <bodyExpr>; }` */
 const lambda = (capture: string, params: string[], bodyExpr: SemanticNode): SemanticNode =>

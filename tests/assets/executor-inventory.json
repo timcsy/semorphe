@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 093：新增 cpp_string_find_first_not_of / cpp_string_find_last_not_of 兩個概念的**五路**。 ｜ 095：新增 cpp_istringstream_declare 的**五路**。 ｜ 098（階段 6.5 的 B 項）：新增 cpp_map_assign——`m[k]=v` 原本被辨識成 array_assign，把鍵當索引寫進錯的位置，而 cpp_map_access 是護欄報出的「零測試足跡」三顆之一。 ⚠️ 重新產生會沖掉這一欄，補回來（已被沖掉兩次）。",
+    "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。 ｜ 093／095：各新增概念的五路。 ｜ 098（B 項）：新增 cpp_map_assign。 ｜ 099（B 項）：移除六個 `*_expr` 身分——位置不是身分，是形態；積木保留。 ｜ 099b：`var_declarator` 進墓碑——有執行器、有抽取器、有定義，而**沒有任何辨識路徑產出過它**。 ⚠️ 重新產生會沖掉這一欄，補回來（已被沖掉四次）。",
     "capturedAt": "2026-08-07"
   },
   "concepts": [
@@ -32,7 +32,6 @@
     "cpp_class_def",
     "cpp_comma_expr",
     "cpp_compound_assign",
-    "cpp_compound_assign_expr",
     "cpp_const_cast",
     "cpp_const_declare",
     "cpp_constexpr_declare",
@@ -57,7 +56,6 @@
     "cpp_ifdef",
     "cpp_ifndef",
     "cpp_increment",
-    "cpp_increment_expr",
     "cpp_iota",
     "cpp_isalpha",
     "cpp_isdigit",
@@ -73,7 +71,6 @@
     "cpp_memcpy",
     "cpp_memset",
     "cpp_method_call",
-    "cpp_method_call_expr",
     "cpp_min",
     "cpp_namespace_def",
     "cpp_new",
@@ -93,7 +90,6 @@
     "cpp_reinterpret_cast",
     "cpp_reverse",
     "cpp_scanf",
-    "cpp_scanf_expr",
     "cpp_set_declare",
     "cpp_set_insert",
     "cpp_sizeof",
@@ -150,7 +146,6 @@
     "endl",
     "forward_decl",
     "func_call",
-    "func_call_expr",
     "func_def",
     "if",
     "if_else",
@@ -164,9 +159,7 @@
     "return",
     "string_literal",
     "var_assign",
-    "var_declarator",
     "var_declare",
-    "var_declare_expr",
     "var_ref",
     "while_loop"
   ]

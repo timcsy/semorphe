@@ -20,7 +20,11 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       if (name === null || name === undefined) break
       const initInput = block.inputs[`INIT_${i}`]
       const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-      declarators.push(createNode('var_declarator', { name }, {
+      // ⚠️ **與辨識端一致**：`declarators` 槽裡放的是各自完整的宣告概念
+      // （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
+      // 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
+      // ——它假設所有宣告子都是純名字，而系統刻意不那樣做。已進墓碑。
+      declarators.push(createNode('var_declare', { name, type }, {
         initializer: initNode ? [initNode] : [],
       }))
       i++

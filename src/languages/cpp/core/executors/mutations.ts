@@ -15,11 +15,9 @@ export function registerMutationsCoreExecutors(
 ): void {
   register('cpp_increment', execIncrement)
 
-  register('cpp_increment_expr', execIncrement)
 
 
   register('cpp_compound_assign', execCompoundAssign)
 
-  register('cpp_compound_assign_expr', execCompoundAssign)
 }
 

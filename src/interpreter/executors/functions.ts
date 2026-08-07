@@ -119,7 +119,6 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
 
   register('func_call', execFuncCall)
 
-  register('func_call_expr', execFuncCall)
 
   register('return', async (node, ctx) => {
     const valueNodes = node.children.value

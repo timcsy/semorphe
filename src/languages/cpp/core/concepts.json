@@ -412,18 +412,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_method_call_expr",
-    "layer": "lang-core",
-    "abstractConcept": "func_call_expr",
-    "properties": [
-      "obj",
-      "method",
-      "args"
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp_raw_code",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -561,56 +549,6 @@
     "skipReasons": {
       "execute": "declarative",
       "generate": "consumed-by-parent"
-    }
-  },
-  {
-    "conceptId": "cpp_increment_expr",
-    "layer": "lang-core",
-    "abstractConcept": "var_assign",
-    "properties": [
-      "name",
-      "operator",
-      "position"
-    ],
-    "children": {
-      "index": "expression"
-    },
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp_compound_assign_expr",
-    "layer": "lang-core",
-    "abstractConcept": "var_assign",
-    "properties": [
-      "name",
-      "operator"
-    ],
-    "children": {
-      "value": "expression",
-      "index": "expression"
-    },
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "var_declare_expr",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      "name",
-      "type"
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
     }
   },
   {
@@ -1037,30 +975,6 @@
     "skipReasons": {
       "render": "consumed-by-parent",
       "extract": "consumed-by-parent"
-    }
-  },
-  {
-    "conceptId": "var_declarator",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      "name"
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement",
-    "skipPaths": [
-      "extract",
-      "generate",
-      "lift",
-      "render"
-    ],
-    "skipReasons": {
-      "extract": "consumed-by-parent",
-      "generate": "consumed-by-parent",
-      "lift": "consumed-by-parent",
-      "render": "consumed-by-parent"
     }
   }
 ]

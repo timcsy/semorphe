@@ -21,6 +21,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../../src/core/storage'
 import { SAVED_STATE_FIELDS } from '../../../src/core/storage-version'
 import type { SavedState } from '../../../src/core/storage'
+import { CURRENT_VERSION } from '../../../src/core/storage-version'
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
@@ -42,7 +43,7 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
 /** 每個欄位一個**可辨識**的值——用預設值的話，「丟了」與「存對了」會長得一樣 */
 const 填滿的狀態: SavedState = {
-  version: 1,
+  version: CURRENT_VERSION,
   tree: null,
   blocklyState: { blocks: { languageVersion: 0, blocks: [] } },
   code: 'int main(){ return 0; }',

@@ -3,6 +3,9 @@ import { indent, generateExpression, generateBody, indented } from '../../../../
 
 export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): void {
   g.set('var_declare', (node, ctx) => {
+    // ⚠️ **位置感知**：`for (int i = 0; …)` 的初始化位置不要分號與縮排。
+    // 那是**形態**不是身分——B 項把 `var_declare_expr` 合併進來。
+    const 收尾 = (expr: string): string => (ctx.isExpression ? expr : `${indent(ctx)}${expr};\n`)
     const type = node.properties.type ?? 'int'
     const declarators = node.children.declarators ?? []
 
@@ -16,7 +19,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
         }
         return name
       })
-      return `${indent(ctx)}${type} ${parts.join(', ')};\n`
+      return 收尾(`${type} ${parts.join(', ')}`)
     }
 
     // Single variable
@@ -26,12 +29,12 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
       // Constructor-style initialization: Type name(args)
       if (node.properties.init_style === 'constructor') {
         const args = inits.map(a => generateExpression(a, ctx))
-        return `${indent(ctx)}${type} ${name}(${args.join(', ')});\n`
+        return 收尾(`${type} ${name}(${args.join(', ')})`)
       }
       const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}${type} ${name} = ${val};\n`
+      return 收尾(`${type} ${name} = ${val}`)
     }
-    return `${indent(ctx)}${type} ${name};\n`
+    return 收尾(`${type} ${name}`)
   })
 
   g.set('cpp_ref_declare', (node, ctx) => {

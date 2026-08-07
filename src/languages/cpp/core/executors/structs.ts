@@ -220,7 +220,6 @@ export function registerStructExecutors(
   }
 
   register('cpp_method_call', 呼叫方法)
-  register('cpp_method_call_expr', 呼叫方法)
 
   /**
    * `P p(42);` —— 建構式在 `func_call_expr` 的位置出現，名字就是類別名。

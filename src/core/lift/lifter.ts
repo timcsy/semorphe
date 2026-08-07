@@ -106,13 +106,10 @@ export class Lifter {
     if (this.patternLifter) {
       const patternResult = this.patternLifter.tryLift(node, ctx)
       if (patternResult) {
-        // Post-process: func_call_expr in statement context → func_call
-        if (patternResult.conceptId === 'func_call_expr' && node.type === 'expression_statement') {
-          const converted = createNode('func_call', patternResult.properties, patternResult.children)
-          addSourceRange(converted)
-          setConfidenceHigh(converted)
-          return converted
-        }
+        // ⚠️ 這裡原本有一段「`func_call_expr` 在敘述位置 → 改判成 `func_call`」。
+        // **B 項把那一對合併成一個身分之後，它沒有東西可做了**——兩個位置本來
+        // 就是同一個概念，位置的差別由**形態**表達（`ctx.isExpression` 與 role 軸）。
+        // 這段後處理是雙重身分的代價，身分合併之後代價一併消失。
         // 語言套件宣告的後處理——**判準只有語言套件知道**的改判走這裡。
         //
         // 觸發它的例子是 `>>`：`num >> i`（位移）與 `in >> a`（串流讀取）

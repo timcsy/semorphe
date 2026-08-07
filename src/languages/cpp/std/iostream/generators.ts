@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../../core/projection/code-gen
 export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style: StylePreset): void {
   // Concepts that need parentheses in cout << chain due to lower precedence than <<
   const COUT_NEEDS_PARENS = new Set([
-    'cpp_ternary', 'cpp_comma_expr', 'cpp_compound_assign_expr',
+    'cpp_ternary', 'cpp_comma_expr', 'cpp_compound_assign',
   ])
   // Bitwise/comparison/logic operators have lower precedence than <<
   const LOW_PREC_OPS = new Set(['&', '|', '^', '&&', '||', '>', '<', '>=', '<=', '==', '!='])

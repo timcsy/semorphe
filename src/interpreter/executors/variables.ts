@@ -5,7 +5,6 @@ import { defaultValue } from '../types'
 
 export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
   // Multi-variable declaration: int a, b, c;
-  // var_declare has type, var_declarator children inherit it
   const declarators = node.children.declarators
   if (declarators && declarators.length > 0) {
     const parentType = String(node.properties.type || 'int')
@@ -33,7 +32,7 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
       // 核心**不編一個假概念來分派**：第一版那樣做，而孤兒實作護欄當場抓到
       // 「一個沒有任何概念定義的執行器」。改成呼叫登記處的掛勾，怎麼跑由
       // 語言套件安裝。
-      const isCtor = (arg0.conceptId === 'func_call_expr' || arg0.conceptId === 'func_call')
+      const isCtor = arg0.conceptId === 'func_call'
         && String(arg0.properties?.name) === type
       ctx.scope.declare(
         name,

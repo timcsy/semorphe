@@ -26,19 +26,5 @@
     "annotations": {
       "debug_step": true
     }
-  },
-  {
-    "conceptId": "cpp_scanf_expr",
-    "layer": "lang-core",
-    "abstractConcept": "input",
-    "properties": [
-      "format",
-      "args"
-    ],
-    "children": {},
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
-    }
   }
 ]

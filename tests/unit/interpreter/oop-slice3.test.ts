@@ -66,7 +66,7 @@ describe('模板函式', () => {
           params: [n('var_declare', { name: 'x', type: 'int' })],
           body: [ret(n('arithmetic', { operator: '*' }, { left: [ref('x')], right: [num(2)] }))],
         }),
-        show(n('func_call_expr', { name: 'twice' }, { args: [num(21)] })),
+        show(n('func_call', { name: 'twice' }, { args: [num(21)] })),
       ),
     )
     expect(out.trim()).toBe('42')
@@ -133,7 +133,7 @@ describe('繼承與虛擬方法', () => {
   it('★ 虛擬方法可以被呼叫', async () => {
     const out = await run(
       prog(animal(), n('var_declare', { name: 'a', type: 'Animal' }),
-        show(n('cpp_method_call_expr', { obj: 'a', method: 'speak' }, { args: [] }))),
+        show(n('cpp_method_call', { obj: 'a', method: 'speak' }, { args: [] }))),
     )
     expect(out.trim()).toBe('1')
   })
@@ -141,7 +141,7 @@ describe('繼承與虛擬方法', () => {
   it('★ 覆寫的方法蓋掉基底的', async () => {
     const out = await run(
       prog(animal(), dog(), n('var_declare', { name: 'd', type: 'Dog' }),
-        show(n('cpp_method_call_expr', { obj: 'd', method: 'speak' }, { args: [] }))),
+        show(n('cpp_method_call', { obj: 'd', method: 'speak' }, { args: [] }))),
     )
     expect(out.trim(), '呼叫到基底的實作了——覆寫沒有生效').toBe('2')
   })
@@ -170,7 +170,7 @@ describe('繼承與虛擬方法', () => {
     })
     const 訊息 = await errOf(
       prog(abs, n('var_declare', { name: 'a', type: 'A' }),
-        show(n('cpp_method_call_expr', { obj: 'a', method: 'f' }, { args: [] }))),
+        show(n('cpp_method_call', { obj: 'a', method: 'f' }, { args: [] }))),
     )
     expect(訊息, '呼叫一個沒有本體的純虛擬方法靜默回傳了').not.toBe('')
   })

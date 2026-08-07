@@ -1,3 +1,4 @@
+import { CURRENT_VERSION } from '../../../src/core/storage-version'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../../src/core/storage'
 import type { SavedState } from '../../../src/core/storage'
@@ -38,7 +39,7 @@ describe('StorageService', () => {
       expect(loaded).not.toBeNull()
       expect(loaded!.code).toBe('int x = 5;')
       expect(loaded!.language).toBe('cpp')
-      expect(loaded!.version).toBe(1)
+      expect(loaded!.version).toBe(CURRENT_VERSION)
     })
 
     it('should return null when no state saved', () => {
@@ -65,7 +66,7 @@ describe('StorageService', () => {
   describe('export and import', () => {
     it('should export state as blob', () => {
       const state: SavedState = {
-        version: 1,
+        version: CURRENT_VERSION,
         tree: null,
         blocklyState: {},
         code: 'int x = 5;',
@@ -81,7 +82,7 @@ describe('StorageService', () => {
 
     it('should import valid JSON', () => {
       const json = JSON.stringify({
-        version: 1,
+        version: CURRENT_VERSION,
         tree: null,
         blocklyState: {},
         code: 'int x = 5;',

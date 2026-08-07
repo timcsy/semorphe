@@ -86,7 +86,12 @@ describe('L2 Block Roundtrip', () => {
 
     for (const spec of allSpecs) {
       if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
-        generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+        // 形態要一起傳——不傳的話變體的模板會蓋掉中性版（實測：少一個分號）
+        generator.registerTemplate(
+          spec.conceptMapping.conceptId,
+          spec.codeTemplate,
+          (spec as { form?: { axis: string; value: string } }).form,
+        )
       }
     }
     generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
@@ -548,20 +553,21 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('cpp_method_call_expr', () => {
+  describe('cpp_method_call', () => {
     it('should render and extract method call expression', () => {
-      const sem = createNode('cpp_method_call_expr', { obj: 'v', method: 'size', args: '' })
+      const sem = createNode('cpp_method_call', { obj: 'v', method: 'size', args: '' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('cpp_method_call_expr')
+      expect(block!.type).toBe('cpp_method_call')  // 中性形態（渲染端未給位置）
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp_method_call_expr')
+      expect(sem2!.conceptId).toBe('cpp_method_call')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp_method_call_expr', { obj: 'v', method: 'size', args: '' })
-      const code = generator.generate(sem, genCtx)
+      const sem = createNode('cpp_method_call', { obj: 'v', method: 'size', args: '' })
+      // ⚠️ **運算式位置**——B 項合併身分之後，位置由 ctx 說，不由身分編碼
+      const code = generator.generate(sem, { ...genCtx, isExpression: true })
       expect(code).toBe('v.size()')
     })
   })

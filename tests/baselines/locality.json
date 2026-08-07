@@ -111,12 +111,8 @@
       "dirs": 5
     },
     "cpp_compound_assign": {
-      "files": 8,
-      "dirs": 5
-    },
-    "cpp_compound_assign_expr": {
-      "files": 7,
-      "dirs": 5
+      "files": 10,
+      "dirs": 7
     },
     "cpp_const_cast": {
       "files": 7,
@@ -235,12 +231,8 @@
       "dirs": 5
     },
     "cpp_increment": {
-      "files": 8,
-      "dirs": 5
-    },
-    "cpp_increment_expr": {
-      "files": 6,
-      "dirs": 4
+      "files": 9,
+      "dirs": 6
     },
     "cpp_iota": {
       "files": 7,
@@ -299,12 +291,8 @@
       "dirs": 3
     },
     "cpp_method_call": {
-      "files": 9,
-      "dirs": 6
-    },
-    "cpp_method_call_expr": {
-      "files": 9,
-      "dirs": 6
+      "files": 10,
+      "dirs": 7
     },
     "cpp_min": {
       "files": 7,
@@ -399,12 +387,8 @@
       "dirs": 3
     },
     "cpp_scanf": {
-      "files": 8,
-      "dirs": 3
-    },
-    "cpp_scanf_expr": {
-      "files": 6,
-      "dirs": 2
+      "files": 9,
+      "dirs": 4
     },
     "cpp_set_declare": {
       "files": 8,
@@ -655,12 +639,8 @@
       "dirs": 5
     },
     "func_call": {
-      "files": 10,
-      "dirs": 8
-    },
-    "func_call_expr": {
-      "files": 10,
-      "dirs": 8
+      "files": 12,
+      "dirs": 9
     },
     "func_def": {
       "files": 14,
@@ -719,12 +699,8 @@
       "dirs": 3
     },
     "var_declare": {
-      "files": 12,
-      "dirs": 10
-    },
-    "var_declare_expr": {
-      "files": 7,
-      "dirs": 5
+      "files": 14,
+      "dirs": 11
     },
     "var_ref": {
       "files": 15,

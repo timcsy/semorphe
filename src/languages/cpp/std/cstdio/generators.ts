@@ -31,25 +31,15 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
         // no-addr var_ref, or compose/custom: user already controls &
         return expr
       })
-      return `${indent(ctx)}scanf("${format}", ${args.join(', ')});\n`
+      const expr = `scanf("${format}", ${args.join(', ')})`
+      if (ctx.isExpression) return expr
+      return `${indent(ctx)}${expr};\n`
     }
     const argsText = (node.properties.args as string) ?? ''
-    return `${indent(ctx)}scanf("${format}"${argsText});\n`
+    const expr = `scanf("${format}"${argsText})`
+    if (ctx.isExpression) return expr
+    return `${indent(ctx)}${expr};\n`
   })
 
   // Expression version of scanf (for use in for-loop init/update)
-  g.set('cpp_scanf_expr', (node, ctx) => {
-    const format = (node.properties.format as string) ?? '%d'
-    const argNodes = node.children.args ?? []
-    if (argNodes.length > 0) {
-      const args = argNodes.map(a => {
-        const expr = generateExpression(a, ctx)
-        if (a.conceptId === 'var_ref' && !a.properties.noAddr) return `&${expr}`
-        return expr
-      })
-      return `scanf("${format}", ${args.join(', ')})`
-    }
-    const argsText = (node.properties.args as string) ?? ''
-    return `scanf("${format}"${argsText})`
-  })
 }

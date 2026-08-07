@@ -13,7 +13,7 @@
 import type { SavedState } from './storage'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 1
+export const CURRENT_VERSION = 2
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -68,7 +68,51 @@ export type Upgrade = (raw: Record<string, unknown>) => Record<string, unknown>
  * `storage-version.test.ts` 有一支測試釘住「從 1 到 `CURRENT_VERSION` 的
  * 每一步都必須有註冊」。調高版本卻忘了寫升級函式，那支測試會變紅。
  */
-export const UPGRADES: Record<number, Upgrade> = {}
+/**
+ * 1 → 2：**六對 statement／expression 雙版本合併成六個身分**（階段 6.5 的 B 項）。
+ *
+ * ## 為什麼這動得起
+ *
+ * P8「不做向後相容」的**範圍**已於 2026-08-07 釐清為**不含語義詞彙本身**
+ * （`knowledge/history/026`）：P8 推導自「投影可重建」，而 componentId 改名動的是
+ * **真實**，沒有東西可以重建它。這類變更 MUST 附一次性轉換。
+ *
+ * **這是那條釐清的第一次真正使用。**
+ *
+ * ## 只轉語義樹，不轉積木
+ *
+ * 積木型別是**加法式**保留的（`c_increment_expr` 仍然有效，只是現在對應到
+ * `cpp_increment`）。轉積木型別是不必要的，而不必要的轉換是額外的風險面。
+ */
+const 合併掉的身分: Record<string, string> = {
+  func_call_expr: 'func_call',
+  cpp_method_call_expr: 'cpp_method_call',
+  cpp_increment_expr: 'cpp_increment',
+  cpp_compound_assign_expr: 'cpp_compound_assign',
+  var_declare_expr: 'var_declare',
+  cpp_scanf_expr: 'cpp_scanf',
+}
+
+/** 就地改寫語義樹裡的舊身分。**只改認得的，其餘原樣通過。** */
+function 改寫身分(node: unknown): unknown {
+  if (!node || typeof node !== 'object') return node
+  if (Array.isArray(node)) return node.map(改寫身分)
+  const n = node as Record<string, unknown>
+  const out: Record<string, unknown> = { ...n }
+  const cid = out.conceptId
+  if (typeof cid === 'string' && 合併掉的身分[cid]) out.conceptId = 合併掉的身分[cid]
+  const children = out.children
+  if (children && typeof children === 'object' && !Array.isArray(children)) {
+    const c: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = 改寫身分(v)
+    out.children = c
+  }
+  return out
+}
+
+export const UPGRADES: Record<number, Upgrade> = {
+  1: (raw) => ({ ...raw, tree: 改寫身分(raw.tree), version: 2 }),
+}
 
 export type VersionVerdict =
   | { kind: 'ok' }

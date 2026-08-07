@@ -12,9 +12,7 @@ import { execVarDeclare } from '../../../../interpreter/executors/variables'
 export function registerVariablesCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('var_declare_expr', execVarDeclare)
 
-  register('var_declarator', execVarDeclare)
 
   // const/constexpr/auto declarations behave like var_declare in the interpreter
 

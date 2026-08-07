@@ -266,20 +266,6 @@
     }
   },
   {
-    "conceptId": "func_call_expr",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      "name",
-      "args"
-    ],
-    "children": {},
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "return",
     "layer": "universal",
     "abstractConcept": null,

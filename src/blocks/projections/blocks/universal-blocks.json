@@ -667,7 +667,7 @@
   },
   {
     "id": "u_func_call_expr",
-    "conceptId": "func_call_expr",
+    "conceptId": "func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -687,6 +687,10 @@
           "inputPattern": "ARG_{i}"
         }
       ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
     }
   },
   {

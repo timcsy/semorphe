@@ -241,21 +241,15 @@ export function registerIOLifters(lifter: Lifter): void {
 
       // 不認得的方法呼叫 → 泛用的方法呼叫概念。
       //
-      // **敘述位置與運算式位置是兩個概念**，而第一版永遠產出運算式版——
-      // 於是敘述位置的身分永遠拿不到。後果不是「跑不動」（運算式版在敘述
-      // 位置也執行得了），是**身分掉了**：使用者拖一個敘述積木、存檔、
-      // 讀回來，它變成一個運算式積木。
+      // ⚠️ 這裡原本依語法樹的父節點在**兩個身分**之間選（敘述版／運算式版）。
+      // B 項把那一對合併了——**位置不是身分**，它是形態。
       //
-      // 判準是語法樹自己說的：呼叫節點的父節點是 `expression_statement`
-      // 就是敘述位置。不用猜。
-      const 是敘述位置 = node.parent?.type === 'expression_statement'
+      // 那個修法本身是對的（原本第一版永遠產出運算式版，敘述位置的身分永遠
+      // 拿不到），只是它把位置修進了**錯的槽**：修進身分，於是每一對雙版本
+      // 都要在五路上各維護一份，而 `saveExtraState` 的格式契約要人工同步。
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return createNode(
-        是敘述位置 ? 'cpp_method_call' : 'cpp_method_call_expr',
-        { obj: objText, method: methodName },
-        { args: liftedArgs },
-      )
+      return createNode('cpp_method_call', { obj: objText, method: methodName }, { args: liftedArgs })
     }
 
     // printf("...", args) → cstdio module
@@ -519,6 +513,6 @@ export function registerIOLifters(lifter: Lifter): void {
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
       : []
-    return createNode('func_call_expr', { name: funcName }, { args })
+    return createNode('func_call', { name: funcName }, { args })
   })
 }

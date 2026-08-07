@@ -1,12 +1,11 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { generateExpression, generateBody, indented, indent } from '../../../../core/projection/code-generator'
+import { generateExpression, generateBody, indented } from '../../../../core/projection/code-generator'
 import type { SemanticNode } from '../../../../core/types'
 
 /** C++ operator precedence data (higher = binds tighter). */
 const PRECEDENCE_MAP = new Map<string, number>([
   ['cpp_comma_expr', 1],
   ['var_assign', 2],
-  ['cpp_compound_assign_expr', 2],
   ['cpp_ternary', 3],
   ['negate', 14],
   ['logic_not', 14],
@@ -14,8 +13,6 @@ const PRECEDENCE_MAP = new Map<string, number>([
   ['cpp_address_of', 14],
   ['cpp_pointer_deref', 14],
   ['cpp_cast', 14],
-  ['cpp_increment_expr', 15],
-  ['func_call_expr', 16],
   ['array_access', 16],
 ])
 
@@ -110,11 +107,6 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${op}${val}`
   })
 
-  g.set('func_call_expr', (node, ctx) => {
-    const name = node.properties.name ?? 'f'
-    const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
-    return `${name}(${args.join(', ')})`
-  })
 
   g.set('cpp_ternary', (node, ctx) => {
     const cond = generateExpression((node.children.condition ?? [])[0], ctx)
@@ -163,29 +155,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
   })
 
   // Expression versions of statement-only blocks (no indent, no semicolons)
-  g.set('cpp_increment_expr', (node) => {
-    const name = (node.properties.name ?? node.properties.NAME ?? 'i') as string
-    const op = (node.properties.operator ?? node.properties.OP ?? '++') as string
-    const pos = (node.properties.position ?? node.properties.POSITION ?? 'postfix') as string
-    if (pos === 'prefix') return `${op}${name}`
-    return `${name}${op}`
-  })
 
-  g.set('cpp_compound_assign_expr', (node, ctx) => {
-    const name = node.properties.name ?? 'x'
-    const op = node.properties.operator ?? '+='
-    // Array element compound assign: arr[i] += value
-    const indexNodes = node.children.index ?? []
-    const target = indexNodes.length > 0
-      ? `${name}[${generateExpression(indexNodes[0], ctx)}]`
-      : `${name}`
-    const vals = node.children.value ?? []
-    if (vals.length > 0) {
-      const val = generateExpression(vals[0], ctx)
-      return `${target} ${op} ${val}`
-    }
-    return `${target} ${op} 0`
-  })
 
   // cpp_scanf_expr moved to std/cstdio/generators.ts
 
@@ -260,23 +230,5 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${ptr}->${member}`
   })
 
-  g.set('cpp_method_call_expr', (node, ctx) => {
-    const obj = node.properties.obj ?? 'obj'
-    const method = node.properties.method ?? 'method'
-    const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
-    const expr = `${obj}.${method}(${args.join(', ')})`
-    if (ctx.isExpression) return expr
-    return `${indent(ctx)}${expr};\n`
-  })
 
-  g.set('var_declare_expr', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'x'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${type} ${name} = ${val}`
-    }
-    return `${type} ${name}`
-  })
 }
