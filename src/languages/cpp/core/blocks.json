@@ -23,6 +23,11 @@
       "pattern": "'${CHAR}'",
       "imports": [],
       "order": 20
+    },
+    "renderMapping": {
+      "fields": {
+        "CHAR": "char"
+      }
     }
   },
   {
@@ -97,6 +102,11 @@
       },
       "inputs": {
         "INDEX": "index"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator",
+        "POSITION": "position"
       }
     }
   },
@@ -186,6 +196,10 @@
       "inputs": {
         "INDEX": "index",
         "VALUE": "value"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator"
       }
     }
   },
@@ -238,6 +252,14 @@
           "extract": "liftChildren"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "EXPR": "expr"
+      },
+      "statementInputs": {
+        "CASES": "cases"
+      }
     }
   },
   {
@@ -277,6 +299,14 @@
     "astPattern": {
       "nodeType": "case_statement",
       "constraints": []
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -309,6 +339,11 @@
     "astPattern": {
       "nodeType": "case_statement",
       "constraints": []
+    },
+    "renderMapping": {
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -367,6 +402,13 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition",
+        "FALSE_EXPR": "false_expr",
+        "TRUE_EXPR": "true_expr"
+      }
     }
   },
   {
@@ -436,6 +478,14 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -479,6 +529,11 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "OPERAND": "operand"
+      }
     }
   },
   {
@@ -528,6 +583,14 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "PTR_NAME": "ptr_name"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -599,6 +662,16 @@
           "extract": "liftBody"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "COND": "cond",
+        "INIT": "init",
+        "UPDATE": "update"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -650,6 +723,14 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "COND": "cond"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -681,6 +762,11 @@
     "astPattern": {
       "nodeType": "_raw_code",
       "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CODE": "code"
+      }
     }
   },
   {
@@ -711,6 +797,11 @@
     "astPattern": {
       "nodeType": "_raw_expression",
       "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CODE": "code"
+      }
     }
   },
   {
@@ -896,6 +987,11 @@
       "pattern": "#include <${HEADER}>",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "HEADER": "header"
+      }
     }
   },
   {
@@ -932,6 +1028,11 @@
           "nodeType": "string_literal"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "HEADER": "header"
+      }
     }
   },
   {
@@ -964,6 +1065,12 @@
       "pattern": "#define ${NAME} ${VALUE}",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -1004,6 +1111,14 @@
     "astPattern": {
       "nodeType": "preproc_ifdef",
       "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -1044,6 +1159,14 @@
     "astPattern": {
       "nodeType": "preproc_ifndef",
       "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -1071,6 +1194,11 @@
       "pattern": "// ${TEXT}",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "text"
+      }
     }
   },
   {
@@ -1128,6 +1256,11 @@
       "pattern": "/* ${TEXT} */",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "text"
+      }
     }
   },
   {
@@ -1159,6 +1292,11 @@
     "astPattern": {
       "nodeType": "using_declaration",
       "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "NS": "ns"
+      }
     }
   },
   {
@@ -1218,6 +1356,11 @@
       },
       "inputs": {
         "INDEX": "index"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator",
+        "POSITION": "position"
       }
     },
     "form": {
@@ -1286,6 +1429,10 @@
       "inputs": {
         "INDEX": "index",
         "VALUE": "value"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator"
       }
     },
     "form": {
@@ -1473,6 +1620,11 @@
       "pattern": "*${PTR}",
       "imports": [],
       "order": 8
+    },
+    "renderMapping": {
+      "inputs": {
+        "PTR": "ptr"
+      }
     }
   },
   {
@@ -1500,6 +1652,11 @@
       "pattern": "&${VAR}",
       "imports": [],
       "order": 8
+    },
+    "renderMapping": {
+      "inputs": {
+        "VAR": "var"
+      }
     }
   },
   {
@@ -1594,6 +1751,15 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "SIZEOF_TYPE": "sizeof_type",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "SIZE": "size"
+      }
     }
   },
   {
@@ -1640,6 +1806,11 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "PTR": "ptr"
+      }
     }
   },
   {
@@ -1679,6 +1850,14 @@
       "constraints": [],
       "liftStrategy": "cpp:liftStructDef",
       "fieldMappings": []
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "MEMBERS": "members"
+      }
     }
   },
   {
@@ -1732,6 +1911,12 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "MEMBER": "member",
+        "OBJ": "obj"
+      }
     }
   },
   {
@@ -1785,6 +1970,12 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "MEMBER": "member",
+        "PTR": "ptr"
+      }
     }
   },
   {
@@ -1826,6 +2017,15 @@
       "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "PRIVATE": "private",
+        "PUBLIC": "public"
+      }
     }
   },
   {
@@ -1858,6 +2058,12 @@
       "pattern": "new ${TYPE}(${ARGS})",
       "imports": [],
       "order": 8
+    },
+    "renderMapping": {
+      "fields": {
+        "ARGS": "args",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -1886,6 +2092,11 @@
       "pattern": "delete ${PTR};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "inputs": {
+        "PTR": "ptr"
+      }
     }
   },
   {
@@ -1943,6 +2154,16 @@
       "constraints": [],
       "liftStrategy": "cpp:liftTemplateFunction",
       "fieldMappings": []
+    },
+    "renderMapping": {
+      "fields": {
+        "FUNC_NAME": "func_name",
+        "RETURN_TYPE": "return_type",
+        "T": "t"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -2008,7 +2229,12 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "cpp_method_call_expr"
+      "expressionCounterpart": "cpp_method_call_expr",
+      "fields": {
+        "ARGS": "args",
+        "METHOD": "method",
+        "OBJ": "obj"
+      }
     },
     "toolboxCategory": "functions"
   },
@@ -2078,7 +2304,14 @@
       "axis": "role",
       "value": "expression"
     },
-    "toolboxCategory": "functions"
+    "toolboxCategory": "functions",
+    "renderMapping": {
+      "fields": {
+        "ARGS": "args",
+        "METHOD": "method",
+        "OBJ": "obj"
+      }
+    }
   },
   {
     "id": "c_const_declare",
@@ -2145,6 +2378,15 @@
       "pattern": "const ${TYPE} ${NAME} = ${VALUE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "VALUE": "initializer"
+      }
     }
   },
   {
@@ -2208,6 +2450,15 @@
       "pattern": "constexpr ${TYPE} ${NAME} = ${VALUE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "VALUE": "initializer"
+      }
     }
   },
   {
@@ -2241,6 +2492,14 @@
       "pattern": "auto ${NAME} = ${VALUE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "VALUE": "initializer"
+      }
     }
   },
   {
@@ -2274,6 +2533,12 @@
       "pattern": "typedef ${ORIG_TYPE} ${ALIAS};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "ALIAS": "alias",
+        "ORIG_TYPE": "orig_type"
+      }
     }
   },
   {
@@ -2307,6 +2572,12 @@
       "pattern": "using ${ALIAS} = ${ORIG_TYPE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "ALIAS": "alias",
+        "ORIG_TYPE": "orig_type"
+      }
     }
   },
   {
@@ -2334,6 +2605,11 @@
       "pattern": "sizeof(${TARGET})",
       "imports": [],
       "order": 20
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET": "target"
+      }
     }
   },
   {
@@ -2482,6 +2758,15 @@
       "pattern": "static ${TYPE} ${NAME} = ${INIT};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "INIT": "initializer"
+      }
     }
   },
   {
@@ -2540,6 +2825,12 @@
       "pattern": "static ${TYPE} ${NAME};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -2573,6 +2864,12 @@
       "pattern": "enum ${NAME} { ${VALUES} };",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "VALUES": "values"
+      }
     }
   },
   {
@@ -2635,6 +2932,16 @@
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_C_RANGE_FOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CONTAINER": "container",
+        "VAR_NAME": "var_name",
+        "VAR_TYPE": "var_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -2691,6 +2998,14 @@
       "pattern": "${TYPE} ${NAME}[${ROWS}][${COLS}];",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "COLS": "cols",
+        "NAME": "name",
+        "ROWS": "rows",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -2728,6 +3043,15 @@
       "pattern": "${NAME}[${ROW}][${COL}]",
       "imports": [],
       "order": 20
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "COL": "col",
+        "ROW": "row"
+      }
     }
   },
   {
@@ -2771,6 +3095,16 @@
       "pattern": "${NAME}[${ROW}][${COL}] = ${VALUE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "COL": "col",
+        "ROW": "row",
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -2812,6 +3146,16 @@
       "nextStatement": "Statement",
       "colour": "#FF6680",
       "tooltip": "%{BKY_C_TRY_CATCH_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CATCH_NAME": "catch_name",
+        "CATCH_TYPE": "catch_type"
+      },
+      "statementInputs": {
+        "CATCH_BODY": "catch_body",
+        "TRY_BODY": "try_body"
+      }
     }
   },
   {
@@ -2840,6 +3184,11 @@
       "pattern": "throw ${VALUE};",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -2884,6 +3233,15 @@
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_CONSTRUCTOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CLASS_NAME": "class_name",
+        "INIT_LIST": "init_list"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -2912,6 +3270,14 @@
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_DESTRUCTOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CLASS_NAME": "class_name"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -2953,6 +3319,15 @@
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_VIRTUAL_METHOD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -2991,6 +3366,12 @@
       "pattern": "virtual ${RETURN_TYPE} ${NAME}(${PARAMS}) = 0;",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      }
     }
   },
   {
@@ -3032,6 +3413,15 @@
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_OVERRIDE_METHOD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -3115,6 +3505,17 @@
       "nextStatement": "Statement",
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_OPERATOR_OVERLOAD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator",
+        "PARAM_NAME": "param_name",
+        "PARAM_TYPE": "param_type",
+        "RETURN_TYPE": "return_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -3150,6 +3551,14 @@
       "output": "Expression",
       "colour": "#995BA5",
       "tooltip": "%{BKY_C_LAMBDA_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CAPTURE": "capture"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -3178,6 +3587,14 @@
       "nextStatement": "Statement",
       "colour": "#5B80A5",
       "tooltip": "%{BKY_C_NAMESPACE_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -3210,6 +3627,14 @@
       "pattern": "static_cast<${TARGET_TYPE}>(${VALUE})",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -3242,6 +3667,14 @@
       "pattern": "dynamic_cast<${TARGET_TYPE}>(${VALUE})",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -3274,6 +3707,14 @@
       "pattern": "reinterpret_cast<${TARGET_TYPE}>(${VALUE})",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -3306,6 +3747,14 @@
       "pattern": "const_cast<${TARGET_TYPE}>(${VALUE})",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -3338,6 +3787,14 @@
       "pattern": "${OBJ}.push(${VALUE});",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -3365,6 +3822,11 @@
       "pattern": "${OBJ}.pop();",
       "imports": [],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
     }
   },
   {
@@ -3402,7 +3864,15 @@
       "axis": "container_kind",
       "value": "stack"
     },
-    "toolboxCategory": "stacks_queues"
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
   },
   {
     "id": "c_stack_pop",
@@ -3434,7 +3904,12 @@
       "axis": "container_kind",
       "value": "stack"
     },
-    "toolboxCategory": "stacks_queues"
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
   },
   {
     "id": "c_queue_push",
@@ -3471,7 +3946,15 @@
       "axis": "container_kind",
       "value": "queue"
     },
-    "toolboxCategory": "stacks_queues"
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
   },
   {
     "id": "c_queue_pop",
@@ -3503,7 +3986,12 @@
       "axis": "container_kind",
       "value": "queue"
     },
-    "toolboxCategory": "stacks_queues"
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
   },
   {
     "id": "c_container_push_back",
@@ -3536,7 +4024,15 @@
       "imports": [],
       "order": 0
     },
-    "toolboxCategory": "arrays_lists"
+    "toolboxCategory": "arrays_lists",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
   },
   {
     "id": "c_container_empty",
@@ -3566,7 +4062,12 @@
     "toolboxCategory": [
       "arrays_lists",
       "stacks_queues"
-    ]
+    ],
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
   },
   {
     "id": "c_container_clear",
@@ -3594,7 +4095,12 @@
       "imports": [],
       "order": 0
     },
-    "toolboxCategory": "arrays_lists"
+    "toolboxCategory": "arrays_lists",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
   },
   {
     "id": "c_container_erase",
@@ -3627,7 +4133,15 @@
       "imports": [],
       "order": 0
     },
-    "toolboxCategory": "maps_sets"
+    "toolboxCategory": "maps_sets",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
   },
   {
     "id": "c_container_count",
@@ -3659,6 +4173,14 @@
       "imports": [],
       "order": 0
     },
-    "toolboxCategory": "maps_sets"
+    "toolboxCategory": "maps_sets",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
   }
 ]

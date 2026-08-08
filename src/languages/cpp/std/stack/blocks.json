@@ -48,6 +48,12 @@
         "stack"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -93,6 +99,11 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
     }
   }
 ]

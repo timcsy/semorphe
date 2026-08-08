@@ -66,6 +66,13 @@
         "map"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "KEY_TYPE": "key_type",
+        "NAME": "name",
+        "VALUE_TYPE": "value_type"
+      }
     }
   },
   {
@@ -101,7 +108,15 @@
       ],
       "order": 20
     },
-    "astPattern": null
+    "astPattern": null,
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
   },
   {
     "id": "c_map_assign",
@@ -141,6 +156,15 @@
         "map"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key",
+        "VALUE": "value"
+      }
     }
   }
 ]

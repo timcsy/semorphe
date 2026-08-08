@@ -1,7 +1,7 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic, FormSet } from '../types'
 import { applyBlockOverride } from '../block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
-import { deriveRenderMapping, resolvePattern } from './common-mappings'
+import { resolvePattern } from './common-mappings'
 import { selectForm, buildFormSets, type FormDeclaration } from './form-selection'
 
 interface BlockState {
@@ -57,7 +57,16 @@ export class PatternRenderer {
       const blockDef = spec.blockDef as Record<string, unknown>
       const blockType = blockDef.type as string
       // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
-      const derived = this.deriveRenderMapping(spec)
+      // ⚠️ **推導已退場。** 186 筆對應全部固化成顯式宣告（驗過「合併結果一字不差」），
+      // 於是這裡不再從 `concept.properties` 推導任何東西。
+      //
+      // 那正是重點：推導在的時候，**參數宣告驅動了抽取行為**——改一顆元件的
+      // 參數列就會改變它的積木怎麼被讀回來，而那是 C1（參數規格化）動不了的原因。
+      // 現在 `properties` 只描述、不驅動。
+      //
+      // 代價：新積木**必須自己宣告** `renderMapping`。忘了不會靜默推導，
+      // 會被 `audit-explicit-mapping` 當場指名——**顯式 ＋ 護欄**，不是隱式魔法。
+      const derived: RenderMapping = { fields: {}, inputs: {}, statementInputs: {} }
       const explicit = spec.renderMapping
       const mapping = explicit
         ? {
@@ -361,24 +370,6 @@ export class PatternRenderer {
     return undefined
   }
 
-  /**
-   * ⚠️ **推導只有一份**——`common-mappings.ts` 的 `deriveRenderMapping`。
-   *
-   * 這裡與 `PatternExtractor` 曾經各有一份，**兩份不一樣**：這份認
-   * `field_multilinetext`，那份不認。於是 `c_comment_block` 的內容
-   * **渲染得出去、抽取不回來**——使用者寫的區塊註解會消失。
-   *
-   * 已合併。一致性由 `audit-derive-agreement` 護欄看著——它**餵同一個輸入給
-   * 兩邊、比對輸出**，而不是比對程式碼。
-   */
-  private deriveRenderMapping(spec: BlockSpec): RenderMapping {
-    const c = spec.conceptMapping
-    return deriveRenderMapping(
-      spec.blockDef as Record<string, unknown>,
-      c?.properties ?? [],
-      (c?.children ?? {}) as Record<string, unknown>,
-    )
-  }
 
 
 }

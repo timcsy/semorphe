@@ -103,9 +103,17 @@ describe('C++ extract strategies on PatternExtractor', () => {
     const extractor = new PatternExtractor()
     registerCppExtractStrategies(extractor)
     // Also register var_ref strategy so condition extraction works
+    // ⚠️ `renderMapping` 現在是**必填**——自動推導已退場。
+    //
+    // 在此之前這裡不寫也能過：`deriveRenderMapping` 會拿 `properties: ['name']`
+    // 去比對欄位名 `NAME`，自動補上對應。而那個便利的代價是**參數宣告驅動了
+    // 抽取行為**——改一顆元件的參數列就會改變它的積木怎麼被讀回來。
+    //
+    // 186 筆對應已固化成顯式宣告，推導已刪除，缺宣告由 `audit-explicit-mapping` 指名。
     extractor.loadBlockSpecs([{
       blockDef: { type: 'u_var_ref', args0: [{ type: 'field_input', name: 'NAME' }], output: 'any' },
       conceptMapping: { conceptId: 'var_ref', properties: ['name'], children: {} },
+      renderMapping: { fields: { NAME: 'name' }, inputs: {}, statementInputs: {} },
     }])
 
     const block: BlockState = {

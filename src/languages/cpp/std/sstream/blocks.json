@@ -61,6 +61,14 @@
         "sstream"
       ],
       "order": 10
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "SOURCE": "source"
+      }
     }
   }
 ]

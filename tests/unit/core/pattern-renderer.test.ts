@@ -31,6 +31,7 @@ describe('PatternRenderer', () => {
             { type: 'field_dropdown', name: 'OP', options: [['++', '++'], ['--', '--']] },
           ],
         },
+        renderMapping: { fields: { NAME: 'name', OP: 'operator' }, inputs: {}, statementInputs: {} },
         codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: { nodeType: 'update_expression', constraints: [] },
       }
@@ -98,6 +99,7 @@ describe('PatternRenderer', () => {
             { type: 'input_value', name: 'VALUE', check: 'Expression' },
           ],
         },
+        renderMapping: { fields: {}, inputs: { VALUE: 'value' }, statementInputs: {} },
         codeTemplate: { pattern: 'return ${VALUE};', imports: [], order: 0 },
         astPattern: { nodeType: 'return_statement', constraints: [] },
       }
@@ -117,6 +119,7 @@ describe('PatternRenderer', () => {
           type: 'u_number',
           args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
         },
+        renderMapping: { fields: { NUM: 'value' }, inputs: {}, statementInputs: {} },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: { nodeType: 'number_literal', constraints: [] },
       }
@@ -153,6 +156,7 @@ describe('PatternRenderer', () => {
           args0: [{ type: 'input_value', name: 'COND', check: 'Expression' }],
           args1: [{ type: 'input_statement', name: 'BODY', check: 'Statement' }],
         },
+        renderMapping: { fields: {}, inputs: { COND: 'condition' }, statementInputs: { BODY: 'body' } },
         codeTemplate: { pattern: 'while (${COND}) {\n${BODY}\n}', imports: [], order: 0 },
         astPattern: { nodeType: 'while_statement', constraints: [] },
       }

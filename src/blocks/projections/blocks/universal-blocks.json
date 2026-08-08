@@ -46,6 +46,14 @@
       "nextStatement": "Statement",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -67,6 +75,11 @@
       "output": "Expression",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_VAR_REF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      }
     }
   },
   {
@@ -88,6 +101,11 @@
       "output": "Expression",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_NUMBER_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NUM": "value"
+      }
     }
   },
   {
@@ -109,6 +127,11 @@
       "output": "Expression",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_U_STRING_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "value"
+      }
     }
   },
   {
@@ -182,6 +205,15 @@
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_U_ARITHMETIC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
     }
   },
   {
@@ -239,6 +271,15 @@
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_U_COMPARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
     }
   },
   {
@@ -280,6 +321,15 @@
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_U_LOGIC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
     }
   },
   {
@@ -302,6 +352,11 @@
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_U_LOGIC_NOT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "A": "operand"
+      }
     }
   },
   {
@@ -338,6 +393,11 @@
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_U_NEGATE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -371,8 +431,12 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": {},
-      "statementInputs": {},
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "THEN": "then_body"
+      },
       "strategy": "cpp:renderIf"
     }
   },
@@ -413,6 +477,15 @@
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_U_IF_ELSE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "ELSE": "else",
+        "THEN": "then"
+      }
     }
   },
   {
@@ -468,6 +541,19 @@
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_U_COUNT_LOOP_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "BOUND": "inclusive",
+        "VAR": "var_name"
+      },
+      "inputs": {
+        "FROM": "from",
+        "TO": "to"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -498,6 +584,14 @@
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_U_WHILE_LOOP_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
     }
   },
   {
@@ -713,6 +807,11 @@
       "nextStatement": "Statement",
       "colour": "#FF6680",
       "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   },
   {
@@ -778,7 +877,9 @@
       "tooltip": "%{BKY_U_INPUT_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": {
+        "NAME": "name"
+      },
       "inputs": {},
       "statementInputs": {},
       "expressionCounterpart": "u_input_expr",
@@ -887,6 +988,15 @@
       "nextStatement": "Statement",
       "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "SIZE": "size"
+      }
     }
   },
   {
@@ -919,6 +1029,14 @@
       "output": "Expression",
       "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_ACCESS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "INDEX": "index"
+      }
     }
   },
   {
@@ -957,6 +1075,15 @@
       "nextStatement": null,
       "colour": "#FF661A",
       "tooltip": "%{BKY_U_ARRAY_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      }
     }
   }
 ]

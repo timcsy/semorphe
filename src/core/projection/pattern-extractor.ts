@@ -1,6 +1,6 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../types'
 import { createNode } from '../semantic-tree'
-import { deriveRenderMapping, resolvePath, resolvePattern } from './common-mappings'
+import { resolvePath, resolvePattern } from './common-mappings'
 
 export interface BlockState {
   type: string
@@ -42,7 +42,16 @@ export class PatternExtractor {
       if (!blockType) continue
 
       // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
-      const derived = this.deriveRenderMapping(spec)
+      // ⚠️ **推導已退場。** 186 筆對應全部固化成顯式宣告（驗過「合併結果一字不差」），
+      // 於是這裡不再從 `concept.properties` 推導任何東西。
+      //
+      // 那正是重點：推導在的時候，**參數宣告驅動了抽取行為**——改一顆元件的
+      // 參數列就會改變它的積木怎麼被讀回來，而那是 C1（參數規格化）動不了的原因。
+      // 現在 `properties` 只描述、不驅動。
+      //
+      // 代價：新積木**必須自己宣告** `renderMapping`。忘了不會靜默推導，
+      // 會被 `audit-explicit-mapping` 當場指名——**顯式 ＋ 護欄**，不是隱式魔法。
+      const derived: RenderMapping = { fields: {}, inputs: {}, statementInputs: {} }
       const explicit = spec.renderMapping
       const mapping = explicit
         ? {
@@ -221,25 +230,6 @@ export class PatternExtractor {
     return results
   }
 
-  /**
-   * ⚠️ **推導只有一份**——`common-mappings.ts` 的 `deriveRenderMapping`。
-   *
-   * 這裡曾經有一份自己的拷貝，而 `PatternRenderer` 有另一份，**兩份不一樣**：
-   * 渲染那份認 `field_multilinetext`，這份不認。於是 `c_comment_block` 的內容
-   * **渲染得出去、抽取不回來**——使用者在積木編輯器裡寫的區塊註解會消失，
-   * 而唯一的症狀是「切換積木風格之後東西不見了」。
-   *
-   * 已合併成一份。一致性由 `audit-derive-agreement` 護欄看著——它**餵同一個
-   * 輸入給渲染與抽取、比對輸出**，而不是比對程式碼。
-   */
-  private deriveRenderMapping(spec: BlockSpec): RenderMapping {
-    const c = spec.conceptMapping
-    return deriveRenderMapping(
-      spec.blockDef as Record<string, unknown>,
-      c?.properties ?? [],
-      (c?.children ?? {}) as Record<string, unknown>,
-    )
-  }
 
   // `findMatchingProperty` / `findMatchingChild` 已移到 `common-mappings.ts`——
   // 它們是推導的一部分，而推導只有一份。

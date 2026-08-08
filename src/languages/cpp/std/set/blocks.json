@@ -48,6 +48,12 @@
         "set"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -103,6 +109,14 @@
           "extract": "lift"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   }
 ]

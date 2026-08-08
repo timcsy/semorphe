@@ -48,6 +48,12 @@
         "queue"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -93,6 +99,11 @@
           "extract": "text"
         }
       ]
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
     }
   },
   {
@@ -178,6 +189,12 @@
         "queue"
       ],
       "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
     }
   },
   {
@@ -207,6 +224,11 @@
         "queue"
       ],
       "order": 20
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
     }
   }
 ]
