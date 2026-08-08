@@ -9,6 +9,8 @@
  * 見 specs/052-storage-integrity-gate/research.md F2
  */
 import { isValidComponentId, isNamespaced } from '../../../src/core/identity'
+// 副作用：讓兩份套件的身分改名表登錄進來
+import '../../../src/languages/cpp/all-declarations'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../../src/core/storage'
 import {
@@ -19,7 +21,7 @@ import {
   SAVED_STATE_FIELDS,
   REQUIRED_FIELDS,
   UPGRADES,
-  加上命名空間,
+  registeredIdMigrations,
 } from '../../../src/core/storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
@@ -251,7 +253,7 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
   })
 
   it('⑤ 轉換表涵蓋全部 174 顆，且每一筆的 scope 都在白名單內', () => {
-    const 表 = Object.entries(加上命名空間)
+    const 表 = Object.entries(registeredIdMigrations())
     expect(表.length).toBe(174)
     for (const [old, neo] of 表) {
       expect(isValidComponentId(neo), `${old} → ${neo} 的 scope 不在白名單`).toBe(true)

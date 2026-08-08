@@ -10,12 +10,12 @@
 
 ## Phase 1：Setup
 
-- [ ] T001 建立角色分類器 `tests/helpers/identity-refs.ts`：掃描 `src/` 與 `tests/` 的
+- [X] T001 建立角色分類器 `tests/helpers/identity-refs.ts`：掃描 `src/` 與 `tests/` 的
       TypeScript 字串字面與 JSON 欄位，回報每一處的角色（`conceptId`／`blockType`／`非身分`）
       與檔案行號。JSON 側靠欄位位置（`conceptId`／`abstractConcept`／課程清單 vs `blockDef.type`），
       TS 側靠呼叫位置。檔頭必須寫明**已知低報**（變數指派、未列入的註冊函式）與
       「低報會讓棘輪提早喊零」這個後果
-- [ ] T002 [P] 在 `src/core/identity.ts` 定義 scope 白名單（`lang`｜`cpp`）與
+- [X] T002 [P] 在 `src/core/identity.ts` 定義 scope 白名單（`lang`｜`cpp`）與
       `parseComponentId(id)`／`isNamespaced(id)`。白名單必須是明列清單，
       不是「任何冒號前的東西」——否則打錯字會變成一個新命名空間（FR-002）
 
@@ -25,18 +25,18 @@
 
 ⚠️ **這一階段結束時，兩條護欄都必須是紅的。** 綠代表它們沒接上。
 
-- [ ] T003 新增護欄 `tests/integration/audit-identity-namespace.test.ts`，含兩個量測：
+- [X] T003 新增護欄 `tests/integration/audit-identity-namespace.test.ts`，含兩個量測：
       **(a)** 身分格式違規顆數（FR-011，指名元件與檔案位置）
       **(b)** 舊格式引用數棘輪（FR-012，用 T001 的角色分類器，**不得用純字串比對**）
-- [ ] T004 為 T003 補自我否證（FR-014）：注入一顆不含冒號的身分**必須被報出**；
+- [X] T004 為 T003 補自我否證（FR-014）：注入一顆不含冒號的身分**必須被報出**；
       注入一顆 scope 不在白名單的身分**必須被報出**；注入一顆格式正確的身分
       **必須不被報出**；掃描器有真的掃到東西（第 10 步）
-- [ ] T005 **第一次跑，確認它紅**：格式違規 **174 顆**、舊格式引用 **4657 處**。
+- [X] T005 **第一次跑，確認它紅**：格式違規 **174 顆**、舊格式引用 **4657 處**。
       數字對不上就是分類器壞了，不是世界長那樣——停下來修 T001
-- [ ] T006 新增第三個量測：JSON 裡 `blockDef.type` 落在身分清單中的處數，
+- [X] T006 新增第三個量測：JSON 裡 `blockDef.type` 落在身分清單中的處數，
       基線 **66**（SC-007）。這個數字**在整個遷移過程中不得變動**
-- [ ] T007 寫入基線 `tests/baselines/identity-namespace.json`，接上棘輪
-- [ ] T008 修 `src/languages/cpp/core/generators/statements.ts:46` 的複合鍵
+- [X] T007 寫入基線 `tests/baselines/identity-namespace.json`，接上棘輪
+- [X] T008 修 `src/languages/cpp/core/generators/statements.ts:46` 的複合鍵
       （`` `${n.conceptId}:${...}` ``）——身分含冒號後切法會曖昧。
       全樹只有這一處（contracts/identity-format.md）
 

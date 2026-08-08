@@ -18,6 +18,12 @@ import type { ConceptDefJSON, BlockProjectionJSON } from '../../core/types'
 import { universalConcepts, universalBlocks } from '../../blocks/universal'
 import { coreConcepts, coreBlocks } from './core'
 import { allStdModules } from './std'
+// ⚠️ **副作用匯入**：這兩份模組在載入時登錄自己的身分改名表（v2 → v3）。
+// 掛在這個組裝點上，是因為它已經是「所有宣告的唯一入口」（spec 100）——
+// 忘了匯入的話存檔會靜靜地不轉換，而 `audit-identity-namespace` 的涵蓋率檢查會指名。
+import '../../blocks/id-migrations'
+import './id-migrations'
+
 
 export function allCppConcepts(): ConceptDefJSON[] {
   return [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap((m) => m.concepts)]

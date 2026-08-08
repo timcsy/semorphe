@@ -25,13 +25,18 @@ export type FileClass = '宣告' | '清單' | '實作' | '清冊'
  * | 類別 | 是什麼 | 例 |
  * |---|---|---|
  * | **宣告** | 元件自己的定義 | `std/vector/concepts.json`、`universal-blocks.json` |
- * | **清單** | 登錄表的視圖／策展 | `topics/*.json`、`toolbox-categories.ts` |
+ * | **清單** | 登錄表的視圖／策展／歷史名冊 | `topics/*.json`、`toolbox-categories.ts`、`id-migrations.ts` |
  * | **實作** | 真的做事的程式碼 | `std/vector/executors.ts`、測試 |
  * | **清冊** | 產生出來的紀錄 | `tests/baselines/*`、`tests/assets/*` |
  */
 export function classifyFile(rel: string): FileClass {
   if (/\/(concepts|blocks)\.json$/.test(rel) || /universal-(concepts|blocks)\.json$/.test(rel)) return '宣告'
+  // ⚠️ **身分改名表是清單，不是實作。** `id-migrations.ts` 列出「這顆元件
+  // 曾經叫什麼」——那是凍結的歷史名冊，不是它的實作散到那裡去了。
+  // 不加這一條的話，遷移一落地，就近性會回報 168 顆元件擴散超標，
+  // 而那與 E 項踩過的是同一個誤判（`history/029`：把清單算成實作擴散）。
   if (/\/(topics|templates)\//.test(rel) || /toolbox-categories\.ts$/.test(rel)) return '清單'
+  if (/id-migrations\.ts$/.test(rel)) return '清單'
   if (/^tests\/(baselines|assets|reports)\//.test(rel)) return '清冊'
   return '實作'
 }

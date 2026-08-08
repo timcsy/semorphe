@@ -35,8 +35,24 @@ import ts from 'typescript'
 import fs from 'node:fs'
 import path from 'node:path'
 import { listSourceFiles, REPO_ROOT } from './guardrail'
+import { classifyFile } from './file-classification'
 
 export type Role = 'conceptId' | 'blockType' | '非身分'
+
+/**
+ * **永久豁免**：這些檔案就是在處理舊身分，它們裡面的舊名字是資料不是債。
+ *
+ * ⚠️ 具名列出、附理由，而不是靠某個路徑規則順便放過——
+ * `history/018` 的教訓是「用宣告刷數字」，防它的辦法是**每一筆豁免都要說得出理由**。
+ */
+export const 豁免: { pattern: RegExp; 理由: string }[] = [
+  {
+    pattern: /storage-version\.test\.ts$/,
+    理由: '存檔轉換的測試必須指名它轉換的東西——舊身分是它的輸入樣本，不是待清的引用',
+  },
+]
+
+const 被豁免 = (rel: string): boolean => 豁免.some((e) => e.pattern.test(rel))
 
 export interface IdRef {
   file: string
@@ -118,10 +134,15 @@ export function scanTsRefs(ids: Set<string>, extra: { file: string; source: stri
   const out: IdRef[] = []
   const files: { file: string; source: string }[] = [
     ...['src', 'tests'].flatMap((d) =>
-      listSourceFiles(d, ['.ts']).map((rel) => ({
+      listSourceFiles(d, ['.ts'])
+        // ⚠️ **改名表列的就是舊名字，那是它的工作。** 不排除的話這條棘輪
+        // 永遠收不到零——而量測工具量到自己，這是本輪第二次
+        //（第一次是棘輪把自己的基線 JSON 數了進來）。
+        .filter((rel) => classifyFile(rel) !== '清單' && !被豁免(rel))
+        .map((rel) => ({
         file: rel,
-        source: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
-      })),
+          source: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
+        })),
     ),
     ...extra,
   ]

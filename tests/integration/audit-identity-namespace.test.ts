@@ -32,6 +32,7 @@ import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
 import { scanTsRefs, scanJsonRefs, residualRefs } from '../helpers/identity-refs'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { registeredIdMigrations } from '../../src/core/storage-version'
 import { isValidComponentId, isNamespaced, SCOPES } from '../../src/core/identity'
 import type { ConceptDefJSON } from '../../src/core/types'
 
@@ -116,6 +117,33 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     expect(全部身分.size, '登錄表是空的 → 每一個量測都會是假的零').toBeGreaterThan(150)
     expect(scanTsRefs(全部身分).length, '零筆引用 → 是掃描壞了').toBeGreaterThan(1000)
+  })
+})
+
+// ─── 改名表有沒有人接上 ─────────────────────────────────────────────
+
+describe('身分改名表的涵蓋率', () => {
+  it('★ 已登錄的改名表必須涵蓋**全部**沒有命名空間的身分', () => {
+    // ⚠️ 這條檢查是為了一個**自己造出來的**風險。
+    //
+    // 改名表放在套件側（`cpp` 知道自己的身分曾經叫什麼），核心只提供
+    // `registerIdMigration`。那個設計是對的——中立性護欄擋下了把 174 顆
+    // 語言身分寫進 `src/core` 的第一版。
+    //
+    // 但登錄式機制天生有 `concepts/執行機構.md` 的病：**套件忘了登錄，
+    // 存檔就靜靜地不轉換**，而症狀要等到使用者打開舊檔才出現。
+    //
+    // > 建一個機制時，同時交付一條量採用率的檢查。
+    const 表 = registeredIdMigrations()
+    const 漏 = [...全部身分].filter((id) => !isNamespaced(id) && !表[id])
+    expect(漏, '這些身分沒有任何套件登錄改名——舊存檔打開後它們會留在舊格式').toEqual([])
+  })
+
+  it('★ 改名表的每一筆目標都必須是合法身分', () => {
+    const 壞 = Object.entries(registeredIdMigrations())
+      .filter(([, neo]) => !isValidComponentId(neo))
+      .map(([old, neo]) => `${old} → ${neo}`)
+    expect(壞, '改名的目標格式不合法或 scope 不在白名單').toEqual([])
   })
 })
 
