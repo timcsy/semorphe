@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_set_declare",
+    "conceptId": "cpp:set_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
@@ -25,7 +25,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_set_insert",
+    "conceptId": "cpp:set_insert",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

@@ -53,7 +53,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_char_literal',
+          conceptId: 'cpp:char_literal',
           abstractConcept: 'char_literal',
           properties: ['char'],
           role: 'expression',
@@ -75,7 +75,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_char_literal')
+      expect(result!.conceptId).toBe('cpp:char_literal')
       expect(result!.properties.char).toBe("'a'")
     })
 
@@ -87,7 +87,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_increment',
+          conceptId: 'cpp:increment',
           abstractConcept: 'increment',
           properties: ['name', 'operator'],
           role: 'both',
@@ -115,7 +115,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_increment')
+      expect(result!.conceptId).toBe('cpp:increment')
       expect(result!.properties.name).toBe('i')
     })
   })
@@ -129,7 +129,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_printf',
+          conceptId: 'cpp:printf',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
@@ -151,7 +151,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_printf')
+      expect(result!.conceptId).toBe('cpp:printf')
     })
 
     it('should NOT match when constraint fails', () => {
@@ -162,7 +162,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_printf',
+          conceptId: 'cpp:printf',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
@@ -203,7 +203,7 @@ describe('PatternLifter', () => {
         category: 'io',
         level: 1,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp_printf', role: 'statement' },
+        conceptMapping: { conceptId: 'cpp:printf', role: 'statement' },
         blockDef: { type: 'c_printf' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
@@ -221,7 +221,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_printf')
+      expect(result!.conceptId).toBe('cpp:printf')
     })
   })
 
@@ -234,7 +234,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_compound_assign',
+          conceptId: 'cpp:compound_assign',
           abstractConcept: 'compound_assign',
           properties: ['name', 'operator'],
           children: { value: 'expression' },
@@ -283,7 +283,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_compound_assign')
+      expect(result!.conceptId).toBe('cpp:compound_assign')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
       expect(result!.children.value[0].conceptId).toBe('number_literal')
@@ -605,7 +605,7 @@ describe('PatternLifter', () => {
         category: 'loops',
         level: 1,
         version: '1.0.0',
-        concept: { conceptId: 'cpp_for_loop', role: 'statement' },
+        concept: { conceptId: 'cpp:for_loop', role: 'statement' },
         blockDef: { type: 'c_for_loop' },
         codeTemplate: { pattern: 'for (...) { ... }', imports: [], order: 0 },
         astPattern: { nodeType: 'for_statement', constraints: [] },

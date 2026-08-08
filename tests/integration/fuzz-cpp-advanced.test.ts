@@ -276,10 +276,10 @@ int main() {
 
 // --- Known limitations (EXPECTED_DEGRADATION, fuzz 2026-03-13) ---
 // fuzz_1: mutable lambda keyword not preserved
-it.todo('[BLOCKED:cpp_lambda] fuzz: mutable lambda with value capture (needs mutable keyword support)')
+it.todo('[BLOCKED:cpp:lambda] fuzz: mutable lambda with value capture (needs mutable keyword support)')
 // fuzz_2: template specialization template<> not supported
-it.todo('[BLOCKED:cpp_template_function] fuzz: template specialization with namespace (needs template specialization concept)')
+it.todo('[BLOCKED:cpp:template_function] fuzz: template specialization with namespace (needs template specialization concept)')
 // fuzz_7: multiple catch blocks only one catch supported
-it.todo('[BLOCKED:cpp_try_catch] fuzz: multiple catch blocks and rethrow (needs multi-catch support)')
+it.todo('[BLOCKED:cpp:try_catch] fuzz: multiple catch blocks and rethrow (needs multi-catch support)')
 // fuzz_8: variadic templates and fold expressions not supported
-it.todo('[BLOCKED:cpp_template_function] fuzz: variadic templates with fold expressions (needs variadic template concept)')
+it.todo('[BLOCKED:cpp:template_function] fuzz: variadic templates with fold expressions (needs variadic template concept)')

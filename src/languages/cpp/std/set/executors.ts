@@ -18,12 +18,12 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_set_declare', async (node, ctx) => {
+  register('cpp:set_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
 
-  register('cpp_set_insert', async (node, ctx) => {
+  register('cpp:set_insert', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return

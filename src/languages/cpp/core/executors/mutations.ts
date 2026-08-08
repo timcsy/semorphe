@@ -13,11 +13,11 @@ import { execIncrement, execCompoundAssign } from '../../../../interpreter/execu
 export function registerMutationsCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_increment', execIncrement)
+  register('cpp:increment', execIncrement)
 
 
 
-  register('cpp_compound_assign', execCompoundAssign)
+  register('cpp:compound_assign', execCompoundAssign)
 
 }
 

@@ -289,19 +289,19 @@ int main() {
 
 // --- Known issues ---
 
-describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in variable initializer (ROUNDTRIP_DRIFT)', () => {
+describe.skip('[BLOCKED:cpp:increment] fuzz: pre/post increment in variable initializer (ROUNDTRIP_DRIFT)', () => {
   // types_adv_003: int b = ++a; generates malformed code with extra semicolons
   // types_adv_009: int b = ++a * 2; similarly broken
   // Root cause: increment expression in variable initializer RHS is split into
   // separate increment statement + variable declaration by lifter
 })
 
-describe.skip('[BLOCKED:cpp_enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:cpp:enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
   // types_adv_006: enum Fruit { APPLE = 10, BANANA = 20 } -> enum Fruit { APPLE, BANANA }
   // Root cause: enum lifter does not preserve explicit enumerator values
 })
 
-describe.skip('[BLOCKED:cpp_cast] fuzz: interpreter limitations (not roundtrip issues)', () => {
+describe.skip('[BLOCKED:cpp:cast] fuzz: interpreter limitations (not roundtrip issues)', () => {
   // Interpreter does not convert int->char for display ((char)65 -> 'A')
   // Interpreter sizeof(arr)/sizeof(arr[0]) returns 1 (no real memory model)
   // Interpreter cannot resolve enum constants as values (SOUTH undeclared)

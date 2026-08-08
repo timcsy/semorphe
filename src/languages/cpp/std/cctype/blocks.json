@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_isalpha",
-    "conceptId": "cpp_isalpha",
+    "id": "cpp:isalpha",
+    "conceptId": "cpp:isalpha",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -22,13 +22,15 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "VALUE": "value" },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_isdigit",
-    "conceptId": "cpp_isdigit",
+    "id": "cpp:isdigit",
+    "conceptId": "cpp:isdigit",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -49,13 +51,15 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "VALUE": "value" },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_toupper",
-    "conceptId": "cpp_toupper",
+    "id": "cpp:toupper",
+    "conceptId": "cpp:toupper",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -76,13 +80,15 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "VALUE": "value" },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_tolower",
-    "conceptId": "cpp_tolower",
+    "id": "cpp:tolower",
+    "conceptId": "cpp:tolower",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -103,7 +109,9 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "VALUE": "value" },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   }

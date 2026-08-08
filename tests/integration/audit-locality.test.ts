@@ -104,7 +104,7 @@ describe('護欄：就近性（一個元件的實作散在幾個檔）', () => {
   })
 
   it('數字不為零——零代表沒有真的量到東西（SC-001）', () => {
-    const target = spreads.find((s) => s.componentId === 'cpp_string_at')
+    const target = spreads.find((s) => s.componentId === 'cpp:string_at')
     expect(target).toBeDefined()
     expect(target!.files).toBeGreaterThan(0)
   })

@@ -116,12 +116,12 @@ cout << "Odd count: " << odds.size() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_vector_declare')).toBe(true)
-      expect(concepts.has('cpp_vector_back')).toBe(true)
-      expect(concepts.has('cpp_vector_pop_back')).toBe(true)
-      expect(concepts.has('cpp_container_empty')).toBe(true)
-      expect(concepts.has('cpp_container_push_back')).toBe(true)
-      expect(concepts.has('cpp_vector_size')).toBe(true)
+      expect(concepts.has('cpp:vector_declare')).toBe(true)
+      expect(concepts.has('cpp:vector_back')).toBe(true)
+      expect(concepts.has('cpp:vector_pop_back')).toBe(true)
+      expect(concepts.has('cpp:container_empty')).toBe(true)
+      expect(concepts.has('cpp:container_push_back')).toBe(true)
+      expect(concepts.has('cpp:vector_size')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -129,12 +129,12 @@ cout << "Odd count: " << odds.size() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_vector_declare')).toBe(true)
-      expect(concepts2.has('cpp_vector_back')).toBe(true)
-      expect(concepts2.has('cpp_vector_pop_back')).toBe(true)
-      expect(concepts2.has('cpp_container_empty')).toBe(true)
-      expect(concepts2.has('cpp_container_push_back')).toBe(true)
-      expect(concepts2.has('cpp_vector_size')).toBe(true)
+      expect(concepts2.has('cpp:vector_declare')).toBe(true)
+      expect(concepts2.has('cpp:vector_back')).toBe(true)
+      expect(concepts2.has('cpp:vector_pop_back')).toBe(true)
+      expect(concepts2.has('cpp:container_empty')).toBe(true)
+      expect(concepts2.has('cpp:container_push_back')).toBe(true)
+      expect(concepts2.has('cpp:vector_size')).toBe(true)
     })
 
     it('should generate correct vector method calls', () => {
@@ -161,7 +161,7 @@ cout << rows << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_vector_declare')).toBe(true)
+      expect(concepts.has('cpp:vector_declare')).toBe(true)
     })
 
     it('should generate vector<vector<int>> declaration', () => {
@@ -196,10 +196,10 @@ cout << st.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_stack_declare')).toBe(true)
-      expect(concepts.has('cpp_container_push')).toBe(true)
-      expect(concepts.has('cpp_stack_top')).toBe(true)
-      expect(concepts.has('cpp_container_pop')).toBe(true)
+      expect(concepts.has('cpp:stack_declare')).toBe(true)
+      expect(concepts.has('cpp:container_push')).toBe(true)
+      expect(concepts.has('cpp:stack_top')).toBe(true)
+      expect(concepts.has('cpp:container_pop')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -207,10 +207,10 @@ cout << st.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_stack_declare')).toBe(true)
-      expect(concepts2.has('cpp_container_push')).toBe(true)
-      expect(concepts2.has('cpp_stack_top')).toBe(true)
-      expect(concepts2.has('cpp_container_pop')).toBe(true)
+      expect(concepts2.has('cpp:stack_declare')).toBe(true)
+      expect(concepts2.has('cpp:container_push')).toBe(true)
+      expect(concepts2.has('cpp:stack_top')).toBe(true)
+      expect(concepts2.has('cpp:container_pop')).toBe(true)
     })
   })
 
@@ -232,9 +232,9 @@ cout << freq.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_container_count')).toBe(true)
-      expect(concepts.has('cpp_container_erase')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
+      expect(concepts.has('cpp:container_count')).toBe(true)
+      expect(concepts.has('cpp:container_erase')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -242,9 +242,9 @@ cout << freq.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_container_count')).toBe(true)
-      expect(concepts2.has('cpp_container_erase')).toBe(true)
+      expect(concepts2.has('cpp:map_declare')).toBe(true)
+      expect(concepts2.has('cpp:container_count')).toBe(true)
+      expect(concepts2.has('cpp:container_erase')).toBe(true)
     })
   })
 
@@ -273,9 +273,9 @@ cout << result.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_set_declare')).toBe(true)
-      expect(concepts.has('cpp_set_insert')).toBe(true)
-      expect(concepts.has('cpp_container_count')).toBe(true) // shared
+      expect(concepts.has('cpp:set_declare')).toBe(true)
+      expect(concepts.has('cpp:set_insert')).toBe(true)
+      expect(concepts.has('cpp:container_count')).toBe(true) // shared
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -283,8 +283,8 @@ cout << result.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_set_declare')).toBe(true)
-      expect(concepts2.has('cpp_set_insert')).toBe(true)
+      expect(concepts2.has('cpp:set_declare')).toBe(true)
+      expect(concepts2.has('cpp:set_insert')).toBe(true)
     })
   })
 
@@ -307,9 +307,9 @@ cout << q.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_queue_declare')).toBe(true)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_set_declare')).toBe(true)
+      expect(concepts.has('cpp:queue_declare')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
+      expect(concepts.has('cpp:set_declare')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -317,9 +317,9 @@ cout << q.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_queue_declare')).toBe(true)
-      expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_set_declare')).toBe(true)
+      expect(concepts2.has('cpp:queue_declare')).toBe(true)
+      expect(concepts2.has('cpp:map_declare')).toBe(true)
+      expect(concepts2.has('cpp:set_declare')).toBe(true)
     })
   })
 
@@ -340,9 +340,9 @@ cout << lengths.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_container_count')).toBe(true)
-      expect(concepts.has('cpp_container_erase')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
+      expect(concepts.has('cpp:container_count')).toBe(true)
+      expect(concepts.has('cpp:container_erase')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -350,8 +350,8 @@ cout << lengths.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_container_count')).toBe(true)
+      expect(concepts2.has('cpp:map_declare')).toBe(true)
+      expect(concepts2.has('cpp:container_count')).toBe(true)
     })
   })
 
@@ -360,7 +360,7 @@ cout << lengths.empty() << endl;`
   // `queue<int> q` degrades to `int q` (template_type not handled in func params).
   // Enable when: template_type detection added for function parameters
 
-  it.todo('[BLOCKED:cpp_template_function] fuzz_8: stack-queue reversal — needs template_type in function parameters')
+  it.todo('[BLOCKED:cpp:template_function] fuzz_8: stack-queue reversal — needs template_type in function parameters')
 
   // ─── queue fuzz: FIFO drain with front/pop ───
 
@@ -379,10 +379,10 @@ cout << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_queue_declare')).toBe(true)
-      expect(concepts.has('cpp_container_push')).toBe(true) // shared .push()
-      expect(concepts.has('cpp_queue_front')).toBe(true)
-      expect(concepts.has('cpp_container_pop')).toBe(true) // shared .pop()
+      expect(concepts.has('cpp:queue_declare')).toBe(true)
+      expect(concepts.has('cpp:container_push')).toBe(true) // shared .push()
+      expect(concepts.has('cpp:queue_front')).toBe(true)
+      expect(concepts.has('cpp:container_pop')).toBe(true) // shared .pop()
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -390,8 +390,8 @@ cout << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_queue_declare')).toBe(true)
-      expect(concepts2.has('cpp_queue_front')).toBe(true)
+      expect(concepts2.has('cpp:queue_declare')).toBe(true)
+      expect(concepts2.has('cpp:queue_front')).toBe(true)
     })
   })
 
@@ -414,10 +414,10 @@ cout << s.count(5) << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_set_declare')).toBe(true)
-      expect(concepts.has('cpp_set_insert')).toBe(true)
-      expect(concepts.has('cpp_container_erase')).toBe(true) // shared
-      expect(concepts.has('cpp_container_count')).toBe(true) // shared
+      expect(concepts.has('cpp:set_declare')).toBe(true)
+      expect(concepts.has('cpp:set_insert')).toBe(true)
+      expect(concepts.has('cpp:container_erase')).toBe(true) // shared
+      expect(concepts.has('cpp:container_count')).toBe(true) // shared
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -425,8 +425,8 @@ cout << s.count(5) << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_set_declare')).toBe(true)
-      expect(concepts2.has('cpp_set_insert')).toBe(true)
+      expect(concepts2.has('cpp:set_declare')).toBe(true)
+      expect(concepts2.has('cpp:set_insert')).toBe(true)
     })
   })
 
@@ -435,7 +435,7 @@ cout << s.count(5) << endl;`
   // requires nested template_type parsing which is not yet supported.
   // Enable when: nested template_type (pair<K,V>) support added
 
-  it.todo('[BLOCKED:cpp_template_function] fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
+  it.todo('[BLOCKED:cpp:template_function] fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
 
   // ─── map fuzz: declare + erase + count combo (P1 stable) ───
 
@@ -451,9 +451,9 @@ cout << mp.empty() << endl;`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_container_erase')).toBe(true)
-      expect(concepts.has('cpp_container_count')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
+      expect(concepts.has('cpp:container_erase')).toBe(true)
+      expect(concepts.has('cpp:container_count')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
@@ -461,9 +461,9 @@ cout << mp.empty() << endl;`
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_container_erase')).toBe(true)
-      expect(concepts2.has('cpp_container_count')).toBe(true)
+      expect(concepts2.has('cpp:map_declare')).toBe(true)
+      expect(concepts2.has('cpp:container_erase')).toBe(true)
+      expect(concepts2.has('cpp:container_count')).toBe(true)
     })
   })
 })

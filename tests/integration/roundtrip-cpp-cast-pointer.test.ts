@@ -68,7 +68,7 @@ describe('C++ cast Roundtrip', () => {
     it('should lift (int)x to cpp_cast concept', () => {
       const tree = liftCode('int y = (int)x;')
       expect(tree).not.toBeNull()
-      const castNode = findConcept(tree, 'cpp_cast')
+      const castNode = findConcept(tree, 'cpp:cast')
       expect(castNode).not.toBeNull()
       expect(castNode!.properties.target_type).toBe('int')
     })
@@ -76,14 +76,14 @@ describe('C++ cast Roundtrip', () => {
     it('should lift (double)n to cpp_cast with double type', () => {
       const tree = liftCode('double y = (double)n;')
       expect(tree).not.toBeNull()
-      const castNode = findConcept(tree, 'cpp_cast')
+      const castNode = findConcept(tree, 'cpp:cast')
       expect(castNode).not.toBeNull()
       expect(castNode!.properties.target_type).toBe('double')
     })
 
     it('should generate correct C-style cast code', () => {
       const valNode = createNode('var_ref', { name: 'x' })
-      const castNode = createNode('cpp_cast', { target_type: 'int' }, {
+      const castNode = createNode('cpp:cast', { target_type: 'int' }, {
         value: [valNode],
       })
       const declNode = createNode('var_declare', { type: 'int', name: 'y' }, {
@@ -102,7 +102,7 @@ describe('C++ pointer assign Roundtrip', () => {
       // tree-sitter parses *ptr = 5 as assignment to pointer_expression
       const tree = liftCode('*ptr = 5;')
       expect(tree).not.toBeNull()
-      const assignNode = findConcept(tree, 'cpp_pointer_assign')
+      const assignNode = findConcept(tree, 'cpp:pointer_assign')
       if (assignNode) {
         expect(assignNode.properties.ptr_name).toBe('ptr')
       } else {
@@ -115,13 +115,13 @@ describe('C++ pointer assign Roundtrip', () => {
         }
         walk(tree!)
         // Either cpp_pointer_assign or var_assign with cpp_pointer_deref
-        expect(concepts.has('cpp_pointer_assign') || concepts.has('var_assign')).toBe(true)
+        expect(concepts.has('cpp:pointer_assign') || concepts.has('var_assign')).toBe(true)
       }
     })
 
     it('should generate *ptr = value code', () => {
       const valNode = createNode('number_literal', { value: '42' })
-      const ptrAssign = createNode('cpp_pointer_assign', { ptr_name: 'ptr' }, {
+      const ptrAssign = createNode('cpp:pointer_assign', { ptr_name: 'ptr' }, {
         value: [valNode],
       })
       const prog = createNode('program', {}, { body: [ptrAssign] })

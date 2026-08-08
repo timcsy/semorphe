@@ -30,7 +30,7 @@ function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
 export function registerContainerCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_container_empty', async (node, ctx) => {
+  register('cpp:container_empty', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
@@ -39,7 +39,7 @@ export function registerContainerCoreExecutors(
     return { type: 'bool', value: arr.value.length === 0 }
   })
 
-  register('cpp_container_push', async (node, ctx) => {
+  register('cpp:container_push', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return
@@ -51,7 +51,7 @@ export function registerContainerCoreExecutors(
     arr.value.push(val)
   })
 
-  register('cpp_container_pop', async (node, ctx) => {
+  register('cpp:container_pop', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
@@ -66,7 +66,7 @@ export function registerContainerCoreExecutors(
     }
   })
 
-  register('cpp_container_clear', async (node, ctx) => {
+  register('cpp:container_clear', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
@@ -75,7 +75,7 @@ export function registerContainerCoreExecutors(
     arr.value.length = 0
   })
 
-  register('cpp_container_push_back', async (node, ctx) => {
+  register('cpp:container_push_back', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return
@@ -87,7 +87,7 @@ export function registerContainerCoreExecutors(
     arr.value.push(val)
   })
 
-  register('cpp_container_erase', async (node, ctx) => {
+  register('cpp:container_erase', async (node, ctx) => {
     const name = String(node.properties.obj)
     const keyNodes = node.children.key ?? []
     if (keyNodes.length === 0) return
@@ -107,7 +107,7 @@ export function registerContainerCoreExecutors(
     }
   })
 
-  register('cpp_container_count', async (node, ctx) => {
+  register('cpp:container_count', async (node, ctx) => {
     const name = String(node.properties.obj)
     const keyNodes = node.children.key ?? []
     if (keyNodes.length === 0) return { type: 'int' as const, value: 0 }

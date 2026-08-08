@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_map_declare",
+    "conceptId": "cpp:map_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
@@ -35,7 +35,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_map_access",
+    "conceptId": "cpp:map_access",
     "layer": "lang-library",
     "abstractConcept": "array_access",
     "properties": [
@@ -51,7 +51,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_map_assign",
+    "conceptId": "cpp:map_assign",
     "layer": "lang-library",
     "abstractConcept": "array_assign",
     "properties": [

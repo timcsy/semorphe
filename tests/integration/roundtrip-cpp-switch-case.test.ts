@@ -87,7 +87,7 @@ describe('C++ switch/case/default Roundtrip', () => {
     it('should lift to cpp_case concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const caseNode = findConcept(tree, 'cpp_case')
+      const caseNode = findConcept(tree, 'cpp:case')
       expect(caseNode).not.toBeNull()
     })
 
@@ -111,7 +111,7 @@ describe('C++ switch/case/default Roundtrip', () => {
     it('should lift to cpp_default concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const defaultNode = findConcept(tree, 'cpp_default')
+      const defaultNode = findConcept(tree, 'cpp:default')
       expect(defaultNode).not.toBeNull()
     })
 
@@ -147,9 +147,9 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_case')).toBe(true)
-      expect(concepts.has('cpp_default')).toBe(true)
-      expect(concepts.has('cpp_switch')).toBe(true)
+      expect(concepts.has('cpp:case')).toBe(true)
+      expect(concepts.has('cpp:default')).toBe(true)
+      expect(concepts.has('cpp:switch')).toBe(true)
     })
 
     it('should roundtrip complete switch statement', () => {

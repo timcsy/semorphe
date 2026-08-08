@@ -4,13 +4,13 @@ import { indent, generateExpression } from '../../../../core/projection/code-gen
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
   // Statement concepts
-  g.set('cpp_set_declare', (node, ctx) => {
+  g.set('cpp:set_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 's'
     return `${indent(ctx)}set<${type}> ${name};\n`
   })
 
-  g.set('cpp_set_insert', (node, ctx) => {
+  g.set('cpp:set_insert', (node, ctx) => {
     const obj = node.properties.obj ?? 's'
     const valueNodes = node.children.value ?? []
     const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '0'

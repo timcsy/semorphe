@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_ifstream_declare",
+    "conceptId": "cpp:ifstream_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
@@ -23,7 +23,7 @@
     }
   },
   {
-    "conceptId": "cpp_ofstream_declare",
+    "conceptId": "cpp:ofstream_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [

@@ -9,7 +9,7 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
 export function registerPointerExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('cpp_address_of', async (node, ctx) => {
+  register('cpp:address_of', async (node, ctx) => {
     const varNodes = node.children.var ?? []
     if (varNodes.length > 0) {
       const varName = String(varNodes[0].properties.name ?? '')
@@ -21,7 +21,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'int', value: 0 }
   })
 
-  register('cpp_pointer_deref', async (node, ctx) => {
+  register('cpp:pointer_deref', async (node, ctx) => {
     const ptrNodes = node.children.ptr ?? []
     if (ptrNodes.length > 0) {
       const ptrVal = await ctx.evaluate(ptrNodes[0])
@@ -35,7 +35,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'int', value: 0 }
   })
 
-  register('cpp_pointer_declare', async (node, ctx) => {
+  register('cpp:pointer_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'ptr')
     const inits = node.children.initializer ?? []
     if (inits.length > 0) {
@@ -46,22 +46,22 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     }
   })
 
-  register('cpp_new', async (node) => {
+  register('cpp:new', async (node) => {
     return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
   })
 
-  register('cpp_delete', async () => {})
+  register('cpp:delete', async () => {})
 
-  register('cpp_malloc', async (node) => {
+  register('cpp:malloc', async (node) => {
     // ⚠️ 退路是 `int*` 不是 `int`——`type` 在這顆元件裡是**轉型型別**（指標），
     // 產生器寫的是 `(${type})malloc(…)`。兩邊曾經不一致，而積木下拉當時給的
     // 是元素型別，於是使用者選 `int` 會產出 `(int)malloc(…)`，不合法的 C++。
     return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int*'}` }
   })
 
-  register('cpp_free', async () => {})
+  register('cpp:free', async () => {})
 
-  register('cpp_pointer_assign', async (node, ctx) => {
+  register('cpp:pointer_assign', async (node, ctx) => {
     const ptrName = String(node.properties.ptr_name)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return

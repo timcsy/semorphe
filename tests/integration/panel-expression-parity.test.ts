@@ -75,19 +75,19 @@ const 切換前的產出: [string, SemanticNode, string][] = [
   ],
   // ── 以下是語言專屬的，正是中立性報的那六筆
   [
-    'cpp_string_at',
-    n('cpp_string_at', { obj: 's' }, { index: [n('number_literal', { value: 0 })] }),
+    'cpp:string_at',
+    n('cpp:string_at', { obj: 's' }, { index: [n('number_literal', { value: 0 })] }),
     's[0]',
   ],
   [
-    'cpp_increment',
-    n('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }),
+    'cpp:increment',
+    n('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }),
     'i++',
   ],
   [
-    'cpp_ternary',
+    'cpp:ternary',
     n(
-      'cpp_ternary',
+      'cpp:ternary',
       {},
       {
         condition: [n('var_ref', { name: 'c' })],
@@ -97,7 +97,7 @@ const 切換前的產出: [string, SemanticNode, string][] = [
     ),
     'c ? 1 : 2',
   ],
-  ['cpp_cast', n('cpp_cast', { target_type: 'int' }, { value: [n('var_ref', { name: 'd' })] }), '(int)d'],
+  ['cpp:cast', n('cpp:cast', { target_type: 'int' }, { value: [n('var_ref', { name: 'd' })] }), '(int)d'],
   ['builtin_constant', n('builtin_constant', { value: 'INT_MAX' }), 'INT_MAX'],
   // ⚠️ 舊 switch 寫的是 `case 'char_literal':`，而**那個概念不存在**——
   // 真正的概念是 `cpp_char_literal`。那是一個永遠不會觸發的死分支。
@@ -105,7 +105,7 @@ const 切換前的產出: [string, SemanticNode, string][] = [
   // **平行機制已經漂移過了，而沒有人發現。** 這正是 060 要治的病：
   // 兩套實作沒有任何東西在檢查它們一致，其中一套指向一個不存在的概念，
   // 測試照樣全綠。
-  ['cpp_char_literal', n('cpp_char_literal', { value: 'a' }), "'a'"],
+  ['cpp:char_literal', n('cpp:char_literal', { value: 'a' }), "'a'"],
 ]
 
 describe('面板的運算式產生：切換前後一字不差', () => {

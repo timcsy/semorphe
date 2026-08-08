@@ -40,7 +40,7 @@ const assign = (name: string, v: SemanticNode): SemanticNode => n('var_assign', 
  * };
  */
 const counter = (): SemanticNode =>
-  n('cpp_class_def', { name: 'Counter' }, {
+  n('cpp:class_def', { name: 'Counter' }, {
     public: [
       n('var_declare', { name: 'n', type: 'int' }),
       n('func_def', { name: 'bump', return_type: 'void' }, {
@@ -50,8 +50,8 @@ const counter = (): SemanticNode =>
       n('func_def', { name: 'bumpTwice', return_type: 'void' }, {
         params: [],
         body: [
-          n('cpp_method_call', { obj: 'this', method: 'bump' }, { args: [] }),
-          n('cpp_method_call', { obj: 'this', method: 'bump' }, { args: [] }),
+          n('cpp:method_call', { obj: 'this', method: 'bump' }, { args: [] }),
+          n('cpp:method_call', { obj: 'this', method: 'bump' }, { args: [] }),
         ],
       }),
       n('func_def', { name: 'get', return_type: 'int' }, {
@@ -76,7 +76,7 @@ describe('類別與方法', () => {
   it('★ 宣告一個類別 → 它的欄位可以實例化', async () => {
     const out = await run(
       prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
-        show(n('cpp_struct_member_access', { obj: 'c', member: 'n' }))),
+        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '類別的欄位沒有被建出來').toBe('0')
   })
@@ -84,8 +84,8 @@ describe('類別與方法', () => {
   it('★ 呼叫一個方法，它改的是**這個實例**的欄位', async () => {
     const out = await run(
       prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp_method_call', { obj: 'c', method: 'bump' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'c', member: 'n' }))),
+        n('cpp:method_call', { obj: 'c', method: 'bump' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '方法改不到欄位——多半是欄位被複製進方法的作用域了').toBe('1')
   })
@@ -93,8 +93,8 @@ describe('類別與方法', () => {
   it('★ 有回傳值的方法（運算式位置）', async () => {
     const out = await run(
       prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp_method_call', { obj: 'c', method: 'bump' }, { args: [] }),
-        show(n('cpp_method_call', { obj: 'c', method: 'get' }, { args: [] }))),
+        n('cpp:method_call', { obj: 'c', method: 'bump' }, { args: [] }),
+        show(n('cpp:method_call', { obj: 'c', method: 'get' }, { args: [] }))),
     )
     expect(out.trim()).toBe('1')
   })
@@ -103,8 +103,8 @@ describe('類別與方法', () => {
     // 內層方法改的必須是同一個實例，不是自己那份副本
     const out = await run(
       prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp_method_call', { obj: 'c', method: 'bumpTwice' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'c', member: 'n' }))),
+        n('cpp:method_call', { obj: 'c', method: 'bumpTwice' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '內層方法改的是副本——這正是「複製進去、跑完複製回來」的失效樣態').toBe('2')
   })
@@ -114,8 +114,8 @@ describe('類別與方法', () => {
       prog(counter(),
         n('var_declare', { name: 'a', type: 'Counter' }),
         n('var_declare', { name: 'b', type: 'Counter' }),
-        n('cpp_method_call', { obj: 'a', method: 'bump' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'b', member: 'n' }))),
+        n('cpp:method_call', { obj: 'a', method: 'bump' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'b', member: 'n' }))),
     )
     expect(out.trim(), 'b 被 a 的方法改到了——方法綁在型別上而不是實例上').toBe('0')
   })
@@ -124,13 +124,13 @@ describe('類別與方法', () => {
     let 訊息 = ''
     try {
       await run(prog(counter(), n('var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp_method_call', { obj: 'c', method: '沒有這個方法' }, { args: [] })))
+        n('cpp:method_call', { obj: 'c', method: '沒有這個方法' }, { args: [] })))
     } catch (e) { 訊息 = (e as Error).message }
     expect(訊息, '呼叫不存在的方法靜默成功了').not.toBe('')
   })
 
   it('★ 方法裡的區域變數不得洩漏成欄位', async () => {
-    const withLocal = n('cpp_class_def', { name: 'L' }, {
+    const withLocal = n('cpp:class_def', { name: 'L' }, {
       public: [
         n('var_declare', { name: 'f', type: 'int' }),
         n('func_def', { name: 'run', return_type: 'void' }, {
@@ -143,8 +143,8 @@ describe('類別與方法', () => {
     let 訊息 = ''
     try {
       await run(prog(withLocal, n('var_declare', { name: 'o', type: 'L' }),
-        n('cpp_method_call', { obj: 'o', method: 'run' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'o', member: '區域' }))))
+        n('cpp:method_call', { obj: 'o', method: 'run' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'o', member: '區域' }))))
     } catch (e) { 訊息 = (e as Error).message }
     expect(訊息, '方法裡宣告的區域變數變成了物件的欄位').not.toBe('')
   })
@@ -153,10 +153,10 @@ describe('類別與方法', () => {
 describe('建構式', () => {
   /** class P { public: int v; P(int a) { v = a; } }; */
   const withCtor = (): SemanticNode =>
-    n('cpp_class_def', { name: 'P' }, {
+    n('cpp:class_def', { name: 'P' }, {
       public: [
         n('var_declare', { name: 'v', type: 'int' }),
-        n('cpp_constructor', { class_name: 'P' }, {
+        n('cpp:constructor', { class_name: 'P' }, {
           params: [n('var_declare', { name: 'a', type: 'int' })],
           body: [assign('v', ref('a'))],
         }),
@@ -168,7 +168,7 @@ describe('建構式', () => {
     const out = await run(
       prog(withCtor(),
         n('var_declare', { name: 'p', type: 'P' }, { initializer: [n('func_call', { name: 'P' }, { args: [num(42)] })] }),
-        show(n('cpp_struct_member_access', { obj: 'p', member: 'v' }))),
+        show(n('cpp:struct_member_access', { obj: 'p', member: 'v' }))),
     )
     expect(out.trim(), '建構式沒有跑——欄位還是預設值').toBe('42')
   })
@@ -176,7 +176,7 @@ describe('建構式', () => {
   it('★ 沒有呼叫建構式時，欄位仍是預設值（不得炸）', async () => {
     const out = await run(
       prog(withCtor(), n('var_declare', { name: 'p', type: 'P' }),
-        show(n('cpp_struct_member_access', { obj: 'p', member: 'v' }))),
+        show(n('cpp:struct_member_access', { obj: 'p', member: 'v' }))),
     )
     expect(out.trim()).toBe('0')
   })

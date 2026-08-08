@@ -96,8 +96,8 @@ describe('classifyPair：三分類', () => {
     // 先登記的贏走全部，其餘永遠不會被試到。
     const c = [{ field: 'type', nodeType: 'template_type' }]
     const v = classifyPair(
-      rule({ conceptId: 'cpp_vector_declare', patternType: 'constrained', constraints: c }),
-      rule({ conceptId: 'cpp_map_declare', patternType: 'constrained', constraints: c }),
+      rule({ conceptId: 'cpp:vector_declare', patternType: 'constrained', constraints: c }),
+      rule({ conceptId: 'cpp:map_declare', patternType: 'constrained', constraints: c }),
     )
     expect(v.verdict).toBe('definitely')
     expect(v.reason).toContain('永遠不會被試到')

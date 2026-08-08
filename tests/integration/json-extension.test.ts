@@ -19,12 +19,12 @@ describe('JSON-only extension (US6)', () => {
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(6)
-    expect(all.map(s => s.id)).toContain('cpp_sort')
-    expect(all.map(s => s.id)).toContain('cpp_reverse')
-    expect(all.map(s => s.id)).toContain('cpp_fill')
-    expect(all.map(s => s.id)).toContain('cpp_min')
-    expect(all.map(s => s.id)).toContain('cpp_max')
-    expect(all.map(s => s.id)).toContain('cpp_swap')
+    expect(all.map(s => s.id)).toContain('cpp:sort')
+    expect(all.map(s => s.id)).toContain('cpp:reverse')
+    expect(all.map(s => s.id)).toContain('cpp:fill')
+    expect(all.map(s => s.id)).toContain('cpp:min')
+    expect(all.map(s => s.id)).toContain('cpp:max')
+    expect(all.map(s => s.id)).toContain('cpp:swap')
   })
 
   it('should load container block specs from JSON', () => {
@@ -32,10 +32,10 @@ describe('JSON-only extension (US6)', () => {
     registry.loadFromSplit(allConcepts, containerBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(4)
-    expect(all.map(s => s.id)).toContain('cpp_vector_declare')
-    expect(all.map(s => s.id)).toContain('cpp_vector_size')
-    expect(all.map(s => s.id)).toContain('cpp_vector_pop_back')
-    expect(all.map(s => s.id)).toContain('cpp_vector_back')
+    expect(all.map(s => s.id)).toContain('cpp:vector_declare')
+    expect(all.map(s => s.id)).toContain('cpp:vector_size')
+    expect(all.map(s => s.id)).toContain('cpp:vector_pop_back')
+    expect(all.map(s => s.id)).toContain('cpp:vector_back')
   })
 
   it('should have valid blockDef with type field', () => {
@@ -89,16 +89,16 @@ describe('JSON-only extension (US6)', () => {
       ...algorithmBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
-    const sortSpec = registry.getAll().find(s => s.id === 'cpp_sort')
+    const sortSpec = registry.getAll().find(s => s.id === 'cpp:sort')
     expect(sortSpec).toBeDefined()
-    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp_sort')
+    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp:sort')
     // 原本斷言的是 'sort'——而那個概念**從來不存在**，查詢父概念會靜默回傳
     // undefined。這支測試等於在釘住一個懸空指標。
     // cpp_sort 目前沒有語言中立的父概念（通用概念集裡沒有「排序」這個抽象），
     // 所以正確的值是「沒有」。見 specs/056-abstract-concept-integrity。
     expect(sortSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
 
-    const backSpec = registry.getAll().find(s => s.id === 'cpp_vector_back')
+    const backSpec = registry.getAll().find(s => s.id === 'cpp:vector_back')
     // 同上：'vector_back' 這個概念從來不存在
     expect(backSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
   })

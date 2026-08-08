@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_char_literal",
+    "conceptId": "cpp:char_literal",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -14,7 +14,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_increment",
+    "conceptId": "cpp:increment",
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
@@ -48,7 +48,7 @@
     }
   },
   {
-    "conceptId": "cpp_compound_assign",
+    "conceptId": "cpp:compound_assign",
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
@@ -77,7 +77,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_switch",
+    "conceptId": "cpp:switch",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -91,7 +91,7 @@
     }
   },
   {
-    "conceptId": "cpp_case",
+    "conceptId": "cpp:case",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -110,7 +110,7 @@
     }
   },
   {
-    "conceptId": "cpp_default",
+    "conceptId": "cpp:default",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -128,7 +128,7 @@
     }
   },
   {
-    "conceptId": "cpp_ternary",
+    "conceptId": "cpp:ternary",
     "layer": "lang-core",
     "abstractConcept": "if_else",
     "properties": [],
@@ -140,7 +140,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_cast",
+    "conceptId": "cpp:cast",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -173,7 +173,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_pointer_assign",
+    "conceptId": "cpp:pointer_assign",
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
@@ -192,7 +192,7 @@
     }
   },
   {
-    "conceptId": "cpp_for_loop",
+    "conceptId": "cpp:for_loop",
     "layer": "lang-core",
     "abstractConcept": "count_loop",
     "properties": [],
@@ -208,7 +208,7 @@
     }
   },
   {
-    "conceptId": "cpp_do_while",
+    "conceptId": "cpp:do_while",
     "layer": "lang-core",
     "abstractConcept": "while_loop",
     "properties": [],
@@ -222,7 +222,7 @@
     }
   },
   {
-    "conceptId": "cpp_pointer_declare",
+    "conceptId": "cpp:pointer_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -245,7 +245,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_pointer_deref",
+    "conceptId": "cpp:pointer_deref",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -255,7 +255,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_address_of",
+    "conceptId": "cpp:address_of",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -265,7 +265,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_malloc",
+    "conceptId": "cpp:malloc",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -297,7 +297,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_free",
+    "conceptId": "cpp:free",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -313,7 +313,7 @@
     }
   },
   {
-    "conceptId": "cpp_struct_declare",
+    "conceptId": "cpp:struct_declare",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -329,7 +329,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_struct_member_access",
+    "conceptId": "cpp:struct_member_access",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -348,7 +348,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_struct_pointer_access",
+    "conceptId": "cpp:struct_pointer_access",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -367,7 +367,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_class_def",
+    "conceptId": "cpp:class_def",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -384,7 +384,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_new",
+    "conceptId": "cpp:new",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -403,7 +403,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_delete",
+    "conceptId": "cpp:delete",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -419,7 +419,7 @@
     }
   },
   {
-    "conceptId": "cpp_template_function",
+    "conceptId": "cpp:template_function",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -446,7 +446,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_empty",
+    "conceptId": "cpp:container_empty",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -460,7 +460,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_container_push",
+    "conceptId": "cpp:container_push",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -476,7 +476,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_pop",
+    "conceptId": "cpp:container_pop",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -490,7 +490,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_clear",
+    "conceptId": "cpp:container_clear",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -504,7 +504,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_push_back",
+    "conceptId": "cpp:container_push_back",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -520,7 +520,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_erase",
+    "conceptId": "cpp:container_erase",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -536,7 +536,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_container_count",
+    "conceptId": "cpp:container_count",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -552,7 +552,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_method_call",
+    "conceptId": "cpp:method_call",
     "layer": "lang-core",
     "abstractConcept": "func_call",
     "properties": [
@@ -575,7 +575,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_raw_code",
+    "conceptId": "cpp:raw_code",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -589,7 +589,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_raw_expression",
+    "conceptId": "cpp:raw_expression",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -656,7 +656,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_include",
+    "conceptId": "cpp:include",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -698,7 +698,7 @@
     }
   },
   {
-    "conceptId": "cpp_include_local",
+    "conceptId": "cpp:include_local",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -718,7 +718,7 @@
     }
   },
   {
-    "conceptId": "cpp_define",
+    "conceptId": "cpp:define",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -737,7 +737,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_ifdef",
+    "conceptId": "cpp:ifdef",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -753,7 +753,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_ifndef",
+    "conceptId": "cpp:ifndef",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -769,7 +769,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_using_namespace",
+    "conceptId": "cpp:using_namespace",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -789,7 +789,7 @@
     }
   },
   {
-    "conceptId": "cpp_const_declare",
+    "conceptId": "cpp:const_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -812,7 +812,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_ref_declare",
+    "conceptId": "cpp:ref_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -835,7 +835,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_constexpr_declare",
+    "conceptId": "cpp:constexpr_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -858,7 +858,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_static_declare",
+    "conceptId": "cpp:static_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -881,7 +881,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_auto_declare",
+    "conceptId": "cpp:auto_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -897,7 +897,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_typedef",
+    "conceptId": "cpp:typedef",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -922,7 +922,7 @@
     }
   },
   {
-    "conceptId": "cpp_using_alias",
+    "conceptId": "cpp:using_alias",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -947,7 +947,7 @@
     }
   },
   {
-    "conceptId": "cpp_sizeof",
+    "conceptId": "cpp:sizeof",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -961,7 +961,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_static_member",
+    "conceptId": "cpp:static_member",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -994,7 +994,7 @@
     }
   },
   {
-    "conceptId": "cpp_enum",
+    "conceptId": "cpp:enum",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -1013,7 +1013,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_range_for",
+    "conceptId": "cpp:range_for",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1046,7 +1046,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_array_2d_declare",
+    "conceptId": "cpp:array_2d_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -1080,7 +1080,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_array_2d_access",
+    "conceptId": "cpp:array_2d_access",
     "layer": "lang-core",
     "abstractConcept": "array_access",
     "properties": [
@@ -1097,7 +1097,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_array_2d_assign",
+    "conceptId": "cpp:array_2d_assign",
     "layer": "lang-core",
     "abstractConcept": "array_assign",
     "properties": [
@@ -1115,7 +1115,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_try_catch",
+    "conceptId": "cpp:try_catch",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1137,7 +1137,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_throw",
+    "conceptId": "cpp:throw",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -1147,7 +1147,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_constructor",
+    "conceptId": "cpp:constructor",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1175,7 +1175,7 @@
     }
   },
   {
-    "conceptId": "cpp_destructor",
+    "conceptId": "cpp:destructor",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1197,7 +1197,7 @@
     }
   },
   {
-    "conceptId": "cpp_virtual_method",
+    "conceptId": "cpp:virtual_method",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1225,7 +1225,7 @@
     }
   },
   {
-    "conceptId": "cpp_pure_virtual",
+    "conceptId": "cpp:pure_virtual",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1252,7 +1252,7 @@
     }
   },
   {
-    "conceptId": "cpp_override_method",
+    "conceptId": "cpp:override_method",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1280,7 +1280,7 @@
     }
   },
   {
-    "conceptId": "cpp_operator_overload",
+    "conceptId": "cpp:operator_overload",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1328,7 +1328,7 @@
     }
   },
   {
-    "conceptId": "cpp_lambda",
+    "conceptId": "cpp:lambda",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1349,7 +1349,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_namespace_def",
+    "conceptId": "cpp:namespace_def",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1365,7 +1365,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_static_cast",
+    "conceptId": "cpp:static_cast",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1381,7 +1381,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_dynamic_cast",
+    "conceptId": "cpp:dynamic_cast",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1397,7 +1397,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_reinterpret_cast",
+    "conceptId": "cpp:reinterpret_cast",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1413,7 +1413,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_const_cast",
+    "conceptId": "cpp:const_cast",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1429,7 +1429,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_comma_expr",
+    "conceptId": "cpp:comma_expr",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],

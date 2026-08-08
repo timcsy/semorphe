@@ -615,13 +615,13 @@ int main() {
 
 // ─── Known issues (not in Phase 2 scope) ───
 
-describe.skip('[BLOCKED:cpp_switch] fuzz: switch fall-through (Phase 2 scope, to fix)', () => {
+describe.skip('[BLOCKED:cpp:switch] fuzz: switch fall-through (Phase 2 scope, to fix)', () => {
   // COMPILE_FAIL: switch without break causes fall-through behavior
   // that the current lifter does not handle correctly
-  it.todo('[BLOCKED:cpp_switch] should handle switch case without break (fall-through)')
+  it.todo('[BLOCKED:cpp:switch] should handle switch case without break (fall-through)')
 })
 
-describe.skip('[BLOCKED:cpp_char_literal] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
+describe.skip('[BLOCKED:cpp:char_literal] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
   // COMPILE_FAIL: char literal case labels (case 'a':) are not
   // correctly lifted by the switch-case lifter
 })

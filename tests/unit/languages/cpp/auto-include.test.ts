@@ -32,7 +32,7 @@ describe('Auto-include engine', () => {
       const tree = makeProgram([
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
           ],
         }),
       ])
@@ -42,7 +42,7 @@ describe('Auto-include engine', () => {
 
     it('should return <vector> for cpp_vector_declare concept', () => {
       const tree = makeProgram([
-        createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+        createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).toContain('<vector>')
@@ -53,7 +53,7 @@ describe('Auto-include engine', () => {
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
-            createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+            createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
           ],
         }),
       ])
@@ -75,7 +75,7 @@ describe('Auto-include engine', () => {
 
     it('should exclude manually included headers', () => {
       const tree = makeProgram([
-        createNode('cpp_include', { header: 'iostream', local: false }),
+        createNode('cpp:include', { header: 'iostream', local: false }),
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
@@ -103,8 +103,8 @@ describe('Auto-include engine', () => {
 
     it('should exclude C-style equivalent of auto-included headers (stdio.h ≡ cstdio)', () => {
       const tree = makeProgram([
-        createNode('cpp_include', { header: 'stdio.h', local: false }),
-        createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+        createNode('cpp:include', { header: 'stdio.h', local: false }),
+        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).not.toContain('<cstdio>')
@@ -112,8 +112,8 @@ describe('Auto-include engine', () => {
 
     it('should exclude C-style equivalent of auto-included headers (string.h ≡ cstring)', () => {
       const tree = makeProgram([
-        createNode('cpp_include', { header: 'string.h', local: false }),
-        createNode('cpp_strlen', { name: 's' }),
+        createNode('cpp:include', { header: 'string.h', local: false }),
+        createNode('cpp:strlen', { name: 's' }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).not.toContain('<cstring>')
@@ -121,7 +121,7 @@ describe('Auto-include engine', () => {
 
     it('should exclude C-style equivalent of auto-included headers (math.h ≡ cmath)', () => {
       const tree = makeProgram([
-        createNode('cpp_include', { header: 'math.h', local: false }),
+        createNode('cpp:include', { header: 'math.h', local: false }),
         createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('number_literal', { value: '4' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
@@ -130,7 +130,7 @@ describe('Auto-include engine', () => {
 
     it('should return sorted headers', () => {
       const tree = makeProgram([
-        createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+        createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
         createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)

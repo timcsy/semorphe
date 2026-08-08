@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_queue_declare",
+    "conceptId": "cpp:queue_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -25,7 +25,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_queue_front",
+    "conceptId": "cpp:queue_front",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -39,7 +39,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_queue_back",
+    "conceptId": "cpp:queue_back",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -53,7 +53,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_priority_queue_declare",
+    "conceptId": "cpp:priority_queue_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -78,7 +78,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_priority_queue_top",
+    "conceptId": "cpp:priority_queue_top",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [

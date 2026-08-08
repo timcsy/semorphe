@@ -47,7 +47,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_const_declare')
+    expect(result!.conceptId).toBe('cpp:const_declare')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('limit')
     expect(result!.children.initializer).toHaveLength(1)
@@ -74,11 +74,11 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_pointer_declare')
+    expect(result!.conceptId).toBe('cpp:pointer_declare')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('ptr')
     expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].conceptId).toBe('cpp_address_of')
+    expect(result!.children.initializer[0].conceptId).toBe('cpp:address_of')
   })
 
   it('c_ref_declare with INIT input → cpp_ref_declare with initializer', () => {
@@ -92,7 +92,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_ref_declare')
+    expect(result!.conceptId).toBe('cpp:ref_declare')
     expect(result!.properties.name).toBe('ref')
     expect(result!.children.initializer).toHaveLength(1)
   })
@@ -108,7 +108,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_cast')
+    expect(result!.conceptId).toBe('cpp:cast')
     expect(result!.properties.target_type).toBe('int')
     expect(result!.children.value).toHaveLength(1)
   })

@@ -74,7 +74,7 @@ describe('Auto-include integration', () => {
       body: [
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
           ],
         }),
       ],
@@ -87,7 +87,7 @@ describe('Auto-include integration', () => {
   it('should NOT duplicate manually placed #include', () => {
     const tree = createNode('program', {}, {
       body: [
-        createNode('cpp_include', { header: 'iostream', local: false }),
+        createNode('cpp:include', { header: 'iostream', local: false }),
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
@@ -120,7 +120,7 @@ describe('Auto-include integration', () => {
         createNode('func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
-            createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+            createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
           ],
         }),
       ],

@@ -65,7 +65,7 @@ function wrap(body: string): string {
 describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
   it('int* ptr = &x → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    int x = 42;\n    int* ptr = &x;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('int')
     expect(ptrs[0].properties.name).toBe('ptr')
@@ -74,7 +74,7 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
 
   it('int* ptr; (no init) → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    int* ptr;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('int')
     expect(ptrs[0].properties.name).toBe('ptr')
@@ -82,7 +82,7 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
 
   it('char* str = "hello" → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    char* str = "hello";'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('char')
     expect(ptrs[0].properties.name).toBe('str')
@@ -90,14 +90,14 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
 
   it('char* str; (no init) → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    char* str;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.name).toBe('str')
   })
 
   it('double* dp = nullptr → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    double* dp = nullptr;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('double')
     expect(ptrs[0].properties.name).toBe('dp')
@@ -105,14 +105,14 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
 
   it('float* fp; → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    float* fp;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('float')
   })
 
   it('void* vp; → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    void* vp;'))!
-    const ptrs = findConcepts(sem, 'cpp_pointer_declare')
+    const ptrs = findConcepts(sem, 'cpp:pointer_declare')
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('void')
   })
@@ -135,19 +135,19 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
 describe('CONCEPT_IDENTITY audit: pointer operations', () => {
   it('*ptr → cpp_pointer_deref', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int* p = &x;\n    cout << *p << endl;'))!
-    const derefs = findConcepts(sem, 'cpp_pointer_deref')
+    const derefs = findConcepts(sem, 'cpp:pointer_deref')
     expect(derefs.length).toBeGreaterThan(0)
   })
 
   it('&x → cpp_address_of', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int* p = &x;'))!
-    const addrs = findConcepts(sem, 'cpp_address_of')
+    const addrs = findConcepts(sem, 'cpp:address_of')
     expect(addrs.length).toBe(1)
   })
 
   it('*ptr = val → cpp_pointer_assign', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int* p = &x;\n    *p = 10;'))!
-    const assigns = findConcepts(sem, 'cpp_pointer_assign')
+    const assigns = findConcepts(sem, 'cpp:pointer_assign')
     expect(assigns.length).toBe(1)
     expect(assigns[0].properties.ptr_name).toBe('p')
   })
@@ -156,7 +156,7 @@ describe('CONCEPT_IDENTITY audit: pointer operations', () => {
 describe('CONCEPT_IDENTITY audit: reference declarations', () => {
   it('int& ref = x → cpp_ref_declare', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int& ref = x;'))!
-    const refs = findConcepts(sem, 'cpp_ref_declare')
+    const refs = findConcepts(sem, 'cpp:ref_declare')
     expect(refs.length).toBe(1)
     expect(refs[0].properties.type).toBe('int')
     expect(refs[0].properties.name).toBe('ref')
@@ -164,7 +164,7 @@ describe('CONCEPT_IDENTITY audit: reference declarations', () => {
 
   it('double& dr = d → cpp_ref_declare', () => {
     const sem = liftCode(wrap('    double d = 3.14;\n    double& dr = d;'))!
-    const refs = findConcepts(sem, 'cpp_ref_declare')
+    const refs = findConcepts(sem, 'cpp:ref_declare')
     expect(refs.length).toBe(1)
     expect(refs[0].properties.type).toBe('double')
   })
@@ -180,19 +180,19 @@ describe('CONCEPT_IDENTITY audit: reference declarations', () => {
 describe('CONCEPT_IDENTITY audit: memory management', () => {
   it('new Type() → cpp_new', () => {
     const sem = liftCode(wrap('    int* p = new int(5);\n    delete p;'))!
-    const news = findConcepts(sem, 'cpp_new')
+    const news = findConcepts(sem, 'cpp:new')
     expect(news.length).toBe(1)
   })
 
   it('delete ptr → cpp_delete', () => {
     const sem = liftCode(wrap('    int* p = new int(5);\n    delete p;'))!
-    const dels = findConcepts(sem, 'cpp_delete')
+    const dels = findConcepts(sem, 'cpp:delete')
     expect(dels.length).toBe(1)
   })
 
   it('malloc → cpp_malloc', () => {
     const sem = liftCode(`#include <cstdlib>\nint main() {\n    int* p = (int*)malloc(10 * sizeof(int));\n    free(p);\n    return 0;\n}`)!
-    const mallocs = findConcepts(sem, 'cpp_malloc')
+    const mallocs = findConcepts(sem, 'cpp:malloc')
     // malloc might be lifted differently, check what we get
     const allConcepts = findAllConcepts(sem)
     console.log('malloc program concepts:', [...new Set(allConcepts)].sort().join(', '))
@@ -200,7 +200,7 @@ describe('CONCEPT_IDENTITY audit: memory management', () => {
 
   it('free → cpp_free', () => {
     const sem = liftCode(`#include <cstdlib>\nint main() {\n    int* p = (int*)malloc(10 * sizeof(int));\n    free(p);\n    return 0;\n}`)!
-    const frees = findConcepts(sem, 'cpp_free')
+    const frees = findConcepts(sem, 'cpp:free')
     const allConcepts = findAllConcepts(sem)
     console.log('free program concepts:', [...new Set(allConcepts)].sort().join(', '))
   })
@@ -209,7 +209,7 @@ describe('CONCEPT_IDENTITY audit: memory management', () => {
 describe('CONCEPT_IDENTITY audit: const + pointer', () => {
   it('const int* cp = &x → cpp_const_declare with type int*', () => {
     const sem = liftCode(wrap('    const int x = 42;\n    const int* cp = &x;'))!
-    const consts = findConcepts(sem, 'cpp_const_declare')
+    const consts = findConcepts(sem, 'cpp:const_declare')
     const ptrConst = consts.find(c => String(c.properties.type ?? '').includes('*'))
     expect(ptrConst, 'should have const with pointer type').toBeTruthy()
     expect(ptrConst!.properties.type).toBe('int*')
@@ -227,7 +227,7 @@ int main() {
     return 0;
 }`
     const sem = liftCode(code)!
-    const accesses = findConcepts(sem, 'cpp_struct_pointer_access')
+    const accesses = findConcepts(sem, 'cpp:struct_pointer_access')
     const allConcepts = findAllConcepts(sem)
     console.log('struct ptr access concepts:', [...new Set(allConcepts)].sort().join(', '))
   })

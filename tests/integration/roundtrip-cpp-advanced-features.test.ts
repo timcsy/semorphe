@@ -106,7 +106,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_try_catch')
+      expect(concepts).toContain('cpp:try_catch')
     })
 
     it('generates compilable code preserving try-catch structure', () => {
@@ -137,8 +137,8 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_try_catch')
-      expect(concepts).toContain('cpp_throw')
+      expect(concepts).toContain('cpp:try_catch')
+      expect(concepts).toContain('cpp:throw')
     })
 
     it('preserves catch type in generated code', () => {
@@ -180,8 +180,8 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_throw')
-      expect(concepts).toContain('cpp_try_catch')
+      expect(concepts).toContain('cpp:throw')
+      expect(concepts).toContain('cpp:try_catch')
       expect(concepts).toContain('func_def')
     })
 
@@ -210,7 +210,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_range_for')
+      expect(concepts).toContain('cpp:range_for')
     })
 
     it('generates range-for syntax', () => {
@@ -246,7 +246,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_range_for')
+      expect(concepts).toContain('cpp:range_for')
     })
 
     it('preserves vector<int> declaration through roundtrip', () => {
@@ -273,7 +273,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:lambda')
     })
 
     it('generates lambda with capture and return type', () => {
@@ -286,7 +286,7 @@ int main() {
     it('preserves lambda properties in semantic tree', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const lambdaNode = findNode(tree!, 'cpp_lambda')
+      const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
       expect(lambdaNode!.properties.capture).toBe('&')
       expect(lambdaNode!.properties.return_type).toBe('int')
@@ -308,7 +308,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:lambda')
     })
 
     it('generates lambda comparator', () => {
@@ -347,13 +347,13 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_namespace_def')
+      expect(concepts).toContain('cpp:namespace_def')
     })
 
     it('preserves namespace name and body', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const nsNode = findNode(tree!, 'cpp_namespace_def')
+      const nsNode = findNode(tree!, 'cpp:namespace_def')
       expect(nsNode).toBeDefined()
       expect(nsNode!.properties.name).toBe('Math')
       expect(nsNode!.children.body.length).toBeGreaterThan(0)
@@ -383,13 +383,13 @@ int n = static_cast<int>(pi);`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_static_cast')
+      expect(concepts).toContain('cpp:static_cast')
     })
 
     it('preserves target type', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const castNode = findNode(tree!, 'cpp_static_cast')
+      const castNode = findNode(tree!, 'cpp:static_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('int')
     })
@@ -425,7 +425,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      const castCount = concepts.filter(c => c === 'cpp_static_cast').length
+      const castCount = concepts.filter(c => c === 'cpp:static_cast').length
       expect(castCount).toBeGreaterThanOrEqual(2)
     })
 
@@ -453,8 +453,8 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_try_catch')
-      expect(concepts).toContain('cpp_range_for')
+      expect(concepts).toContain('cpp:try_catch')
+      expect(concepts).toContain('cpp:range_for')
     })
 
     it('generates combined structure', () => {
@@ -492,12 +492,12 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_template_function')
+      expect(concepts).toContain('cpp:template_function')
     })
 
     it('preserves template type param and function name', () => {
       const tree = liftCode(code)
-      const tmplNode = findNode(tree!, 'cpp_template_function')
+      const tmplNode = findNode(tree!, 'cpp:template_function')
       expect(tmplNode).toBeDefined()
       expect(tmplNode!.properties.t).toBe('T')
       expect(tmplNode!.properties.func_name).toBe('myMax')
@@ -586,7 +586,7 @@ int main() {
 
     it('lifts cpp_lambda with & capture', () => {
       const tree = liftCode(code)
-      const lambdaNode = findNode(tree!, 'cpp_lambda')
+      const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
       expect(lambdaNode!.properties.capture).toBe('&')
     })
@@ -643,7 +643,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_throw')
+      expect(concepts).toContain('cpp:throw')
       expect(concepts).toContain('func_def')
     })
 

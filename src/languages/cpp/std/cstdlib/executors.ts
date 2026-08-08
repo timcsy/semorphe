@@ -12,27 +12,27 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_rand', async () => ({ type: 'int' as const, value: Math.floor(Math.random() * 32768) }))
+  register('cpp:rand', async () => ({ type: 'int' as const, value: Math.floor(Math.random() * 32768) }))
 
-  register('cpp_srand', async () => {}) // seed ignored in JS
+  register('cpp:srand', async () => {}) // seed ignored in JS
 
-  register('cpp_abs', async (node, ctx) => {
+  register('cpp:abs', async (node, ctx) => {
     const v = node.children.value?.[0]
     if (!v) return { type: 'int' as const, value: 0 }
     const val = await ctx.evaluate(v)
     return { type: val.type, value: Math.abs(ctx.toNumber(val)) }
   })
 
-  register('cpp_exit', async () => { throw new RuntimeError(RUNTIME_ERRORS.ABORTED) })
+  register('cpp:exit', async () => { throw new RuntimeError(RUNTIME_ERRORS.ABORTED) })
 
-  register('cpp_atoi', async (node, ctx) => {
+  register('cpp:atoi', async (node, ctx) => {
     const v = node.children.str?.[0]
     if (!v) return { type: 'int' as const, value: 0 }
     const val = await ctx.evaluate(v)
     return { type: 'int' as const, value: parseInt(String(val.value), 10) || 0 }
   })
 
-  register('cpp_atof', async (node, ctx) => {
+  register('cpp:atof', async (node, ctx) => {
     const v = node.children.str?.[0]
     if (!v) return { type: 'double' as const, value: 0.0 }
     const val = await ctx.evaluate(v)

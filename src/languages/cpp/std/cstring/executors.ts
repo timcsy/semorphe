@@ -60,14 +60,14 @@ function writeCString(arr: RuntimeValue[], s: string, from = 0): void {
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_strlen', async (node, ctx) => {
+  register('cpp:strlen', async (node, ctx) => {
     const strNodes = node.children.str ?? []
     if (strNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(strNodes[0])
     return { type: 'int', value: String(val.value).length }
   })
 
-  register('cpp_strcmp', async (node, ctx) => {
+  register('cpp:strcmp', async (node, ctx) => {
     const s1Nodes = node.children.s1 ?? []
     const s2Nodes = node.children.s2 ?? []
     const s1 = s1Nodes.length > 0 ? String((await ctx.evaluate(s1Nodes[0])).value) : ''
@@ -77,18 +77,18 @@ export function registerExecutors(
     return { type: 'int', value: 0 }
   })
 
-  register('cpp_strcpy', async (node, ctx) => {
+  register('cpp:strcpy', async (node, ctx) => {
     const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcpy 的目標')
     writeCString(dest, readCString(await ctx.evaluate((node.children.src ?? [])[0])))
   })
 
-  register('cpp_strcat', async (node, ctx) => {
+  register('cpp:strcat', async (node, ctx) => {
     const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcat 的目標')
     const cur = readCString({ type: 'array', value: dest } as RuntimeValue)
     writeCString(dest, cur + readCString(await ctx.evaluate((node.children.src ?? [])[0])))
   })
 
-  register('cpp_strncpy', async (node, ctx) => {
+  register('cpp:strncpy', async (node, ctx) => {
     const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')
     const n = ctx.toNumber(await ctx.evaluate((node.children.n ?? [])[0]))
     const src = readCString(await ctx.evaluate((node.children.src ?? [])[0]))
@@ -98,7 +98,7 @@ export function registerExecutors(
     }
   })
 
-  register('cpp_strncmp', async (node, ctx) => {
+  register('cpp:strncmp', async (node, ctx) => {
     const s1Nodes = node.children.s1 ?? []
     const s2Nodes = node.children.s2 ?? []
     const nNodes = node.children.n ?? []
@@ -125,7 +125,7 @@ export function registerExecutors(
    * **出聲。** 使用者可以選擇跳過或中止，但不會拿到一個安靜的錯答案。
    * 這是「靜默降級是 bug 的藏身之處」的直接應用。
    */
-  for (const c of ['cpp_strchr', 'cpp_strstr']) {
+  for (const c of ['cpp:strchr', 'cpp:strstr']) {
     register(c, async () => {
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
         '%1': `${c.replace('cpp_', '')} 回傳指向陣列中間的指標，這個直譯器還表示不了`,
@@ -133,7 +133,7 @@ export function registerExecutors(
     })
   }
 
-  register('cpp_memset', async (node, ctx) => {
+  register('cpp:memset', async (node, ctx) => {
     const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')
     const v = await ctx.evaluate((node.children.value ?? [])[0])
     const size = ctx.toNumber(await ctx.evaluate((node.children.size ?? [])[0]))
@@ -146,7 +146,7 @@ export function registerExecutors(
     for (let i = 0; i < size && i < arr.length; i++) arr[i] = { ...fill }
   })
 
-  register('cpp_memcpy', async (node, ctx) => {
+  register('cpp:memcpy', async (node, ctx) => {
     const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'memcpy 的目標')
     const srcNode = (node.children.src ?? [])[0]
     const src = writableArray(ctx as never, srcNode, 'memcpy 的來源')

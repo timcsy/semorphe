@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_map_declare",
-    "conceptId": "cpp_map_declare",
+    "id": "cpp:map_declare",
+    "conceptId": "cpp:map_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -76,8 +76,8 @@
     }
   },
   {
-    "id": "cpp_map_access",
-    "conceptId": "cpp_map_access",
+    "id": "cpp:map_access",
+    "conceptId": "cpp:map_access",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -120,7 +120,7 @@
   },
   {
     "id": "c_map_assign",
-    "conceptId": "cpp_map_assign",
+    "conceptId": "cpp:map_assign",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

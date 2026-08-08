@@ -129,7 +129,7 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_for_loop (three-part)', () => {
-    const loop = createNode('cpp_for_loop', {}, {
+    const loop = createNode('cpp:for_loop', {}, {
       init: [createNode('var_assign', { name: 'i' }, {
         value: [createNode('number_literal', { value: '0' })],
       })],
@@ -137,7 +137,7 @@ describe('C++ statements generator', () => {
         left: [createNode('var_ref', { name: 'i' })],
         right: [createNode('number_literal', { value: '10' })],
       })],
-      update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+      update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       body: [createNode('break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -146,7 +146,7 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_compound_assign', () => {
-    const stmt = createNode('cpp_compound_assign', { name: 'x', operator: '+=' }, {
+    const stmt = createNode('cpp:compound_assign', { name: 'x', operator: '+=' }, {
       value: [createNode('number_literal', { value: '5' })],
     })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
@@ -163,7 +163,7 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_increment', () => {
-    const stmt = createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })
+    const stmt = createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
     expect(code).toBe('i++;')
   })
@@ -293,8 +293,8 @@ describe('C++ I/O generator', () => {
 
 describe('C++ header deduplication', () => {
   it('should deduplicate identical #include directives', () => {
-    const inc1 = createNode('cpp_include', { header: 'cstdio', local: false })
-    const inc2 = createNode('cpp_include', { header: 'cstdio', local: false })
+    const inc1 = createNode('cpp:include', { header: 'cstdio', local: false })
+    const inc2 = createNode('cpp:include', { header: 'cstdio', local: false })
     const main = createNode('func_def', { name: 'main', return_type: 'int' }, { params: [], body: [] })
     const code = generateCode(makeProgram(inc1, inc2, main), 'cpp', printfStyle)
     const matches = code.match(/#include <cstdio>/g)
@@ -302,8 +302,8 @@ describe('C++ header deduplication', () => {
   })
 
   it('should keep different #include directives', () => {
-    const inc1 = createNode('cpp_include', { header: 'cstdio', local: false })
-    const inc2 = createNode('cpp_include', { header: 'cstring', local: false })
+    const inc1 = createNode('cpp:include', { header: 'cstdio', local: false })
+    const inc2 = createNode('cpp:include', { header: 'cstring', local: false })
     const code = generateCode(makeProgram(inc1, inc2), 'cpp', printfStyle)
     expect(code).toContain('#include <cstdio>')
     expect(code).toContain('#include <cstring>')
@@ -313,21 +313,21 @@ describe('C++ header deduplication', () => {
 describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_increment_expr postfix', () => {
     // Expression context: no indent, no semicolons
-    const node = createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })
+    const node = createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })
     const assign = createNode('var_assign', { name: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = i++;')
   })
 
   it('should generate cpp_increment_expr prefix', () => {
-    const node = createNode('cpp_increment', { name: 'j', operator: '--', position: 'prefix' })
+    const node = createNode('cpp:increment', { name: 'j', operator: '--', position: 'prefix' })
     const assign = createNode('var_assign', { name: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = --j;')
   })
 
   it('should generate cpp_compound_assign_expr', () => {
-    const node = createNode('cpp_compound_assign', { name: 'j', operator: '+=' }, {
+    const node = createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
       value: [createNode('var_ref', { name: 'i' })],
     })
     const assign = createNode('var_assign', { name: 'x' }, { value: [node] })
@@ -336,7 +336,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_scanf_expr', () => {
-    const node = createNode('cpp_scanf', { format: '%d' }, {
+    const node = createNode('cpp:scanf', { format: '%d' }, {
       args: [createNode('var_ref', { name: 'n' })],
     })
     const assign = createNode('var_assign', { name: 'x' }, { value: [node] })
@@ -354,7 +354,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should work in cpp_for_loop init/cond/update', () => {
-    const loop = createNode('cpp_for_loop', {}, {
+    const loop = createNode('cpp:for_loop', {}, {
       init: [createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '2' })],
       })],
@@ -365,7 +365,7 @@ describe('C++ expression generators (for expression blocks)', () => {
         })],
         right: [createNode('var_ref', { name: 'max' })],
       })],
-      update: [createNode('cpp_compound_assign', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
         value: [createNode('var_ref', { name: 'i' })],
       })],
       body: [createNode('break', {})],
@@ -375,7 +375,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_increment_expr in for-loop update via template fallback', () => {
-    const loop = createNode('cpp_for_loop', {}, {
+    const loop = createNode('cpp:for_loop', {}, {
       init: [createNode('var_declare', { name: 'm', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' })],
       })],
@@ -383,7 +383,7 @@ describe('C++ expression generators (for expression blocks)', () => {
         left: [createNode('var_ref', { name: 'm' })],
         right: [createNode('number_literal', { value: '10' })],
       })],
-      update: [createNode('cpp_increment', { name: 'm', operator: '++', position: 'postfix' })],
+      update: [createNode('cpp:increment', { name: 'm', operator: '++', position: 'postfix' })],
       body: [createNode('break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -393,7 +393,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_scanf_expr in while condition', () => {
     const whileLoop = createNode('while_loop', {}, {
       condition: [createNode('compare', { operator: '!=' }, {
-        left: [createNode('cpp_scanf', { format: '%d' }, {
+        left: [createNode('cpp:scanf', { format: '%d' }, {
           args: [createNode('var_ref', { name: 'n' })],
         })],
         right: [createNode('var_ref', { name: 'EOF' })],
@@ -419,8 +419,8 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_increment inside do-while body via template fallback', () => {
-    const doWhile = createNode('cpp_do_while', {}, {
-      body: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+    const doWhile = createNode('cpp:do_while', {}, {
+      body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       cond: [createNode('var_ref', { name: 'x' })],
     })
     const code = generateCode(makeProgram(doWhile), 'cpp', apcsStyle)
@@ -429,7 +429,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate ternary with func_call_expr in condition', () => {
-    const ternary = createNode('cpp_ternary', {}, {
+    const ternary = createNode('cpp:ternary', {}, {
       condition: [createNode('func_call', { name: 'isPrime' }, {
         args: [createNode('var_ref', { name: 'n' })],
       })],
@@ -446,8 +446,8 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate do-while with array_access and logic_not in condition', () => {
-    const doWhile = createNode('cpp_do_while', {}, {
-      body: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+    const doWhile = createNode('cpp:do_while', {}, {
+      body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       cond: [createNode('logic', { operator: '&&' }, {
         left: [createNode('compare', { operator: '<=' }, {
           left: [createNode('arithmetic', { operator: '*' }, {
@@ -520,7 +520,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_compound_assign_expr in for-loop update', () => {
-    const loop = createNode('cpp_for_loop', {}, {
+    const loop = createNode('cpp:for_loop', {}, {
       init: [createNode('var_declare', { type: 'int', name: 'j' }, {
         initializer: [createNode('arithmetic', { operator: '*' }, {
           left: [createNode('var_ref', { name: 'i' })],
@@ -531,7 +531,7 @@ describe('C++ expression generators (for expression blocks)', () => {
         left: [createNode('var_ref', { name: 'j' })],
         right: [createNode('var_ref', { name: 'max' })],
       })],
-      update: [createNode('cpp_compound_assign', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
         value: [createNode('var_ref', { name: 'i' })],
       })],
       body: [createNode('array_assign', { name: 'sieve' }, {
@@ -566,7 +566,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should use builtin_constant in while condition with EOF', () => {
     const whileLoop = createNode('while_loop', {}, {
       condition: [createNode('compare', { operator: '!=' }, {
-        left: [createNode('cpp_scanf', { format: '%d' }, {
+        left: [createNode('cpp:scanf', { format: '%d' }, {
           args: [createNode('var_ref', { name: 'n' })],
         })],
         right: [createNode('builtin_constant', { value: 'EOF' })],

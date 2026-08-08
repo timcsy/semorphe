@@ -20,7 +20,7 @@ function coutTree() {
 function coutVectorTree() {
   return makeProgram([
     createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
-    createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+    createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
   ])
 }
 
@@ -106,7 +106,7 @@ describe('CppScaffold', () => {
 
     it('should exclude C-style equivalent headers (stdio.h ≡ cstdio)', () => {
       const tree = makeProgram([
-        createNode('cpp_printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
       ])
       const result = scaffold.resolve(tree, {
         scaffoldDepth: 1,

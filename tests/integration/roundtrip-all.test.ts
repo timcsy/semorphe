@@ -92,7 +92,7 @@ function buildDummyNode(spec: BlockSpec) {
 
 describe('Full Roundtrip — All 68 Blocks', () => {
   // Skip blocks that are raw/unresolved (no real concept mapping)
-  const skipConcepts = new Set(['cpp_raw_code', 'cpp_raw_expression'])
+  const skipConcepts = new Set(['cpp:raw_code', 'cpp:raw_expression'])
 
   describe('Render coverage: every concept renders to correct block type', () => {
     for (const spec of allSpecs) {

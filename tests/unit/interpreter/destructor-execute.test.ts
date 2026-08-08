@@ -37,10 +37,10 @@ const show = (x: SemanticNode): SemanticNode => n('print', {}, { values: [x] })
 
 /** class C { public: int tag; ~C(){ cout << "~" << tag; } }; */
 const withDtor = (name = 'C'): SemanticNode =>
-  n('cpp_class_def', { name }, {
+  n('cpp:class_def', { name }, {
     public: [
       n('var_declare', { name: 'tag', type: 'int' }),
-      n('cpp_destructor', { class_name: name }, {
+      n('cpp:destructor', { class_name: name }, {
         body: [n('print', {}, { values: [str('~'), n('var_ref', { name: 'tag' })] })],
       }),
     ],
@@ -123,7 +123,7 @@ describe('解構式在離開作用域時執行', () => {
   })
 
   it('★ 沒有解構式的類別不得出錯', async () => {
-    const noDtor = n('cpp_class_def', { name: 'D' }, {
+    const noDtor = n('cpp:class_def', { name: 'D' }, {
       public: [n('var_declare', { name: 'v', type: 'int' })],
       private: [],
     })

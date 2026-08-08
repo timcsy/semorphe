@@ -43,7 +43,7 @@ const show = (x: SemanticNode): SemanticNode => n('print', {}, { values: [x] })
 
 /** struct Point { int x; int y; }; */
 const point = (): SemanticNode =>
-  n('cpp_struct_declare', { name: 'Point' }, {
+  n('cpp:struct_declare', { name: 'Point' }, {
     members: [
       n('var_declare', { name: 'x', type: 'int' }),
       n('var_declare', { name: 'y', type: 'int' }),
@@ -70,7 +70,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
-        show(n('cpp_struct_member_access', { obj: 'p', member: 'x' })),
+        show(n('cpp:struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
     expect(out, '結構變數的欄位沒有預設值——int 應該是 0').toContain('0')
@@ -82,7 +82,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
         n('var_assign', { name: 'p.x' }, { value: [num(7)] }),
-        show(n('cpp_struct_member_access', { obj: 'p', member: 'x' })),
+        show(n('cpp:struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
     expect(out).toContain('7')
@@ -94,7 +94,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
         n('var_assign', { name: 'p.x' }, { value: [num(7)] }),
-        show(n('cpp_struct_member_access', { obj: 'p', member: 'y' })),
+        show(n('cpp:struct_member_access', { obj: 'p', member: 'y' })),
       ),
     )
     expect(out.trim(), 'y 被 x 的指派改到了').toBe('0')
@@ -107,7 +107,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         n('var_declare', { name: 'a', type: 'Point' }),
         n('var_declare', { name: 'b', type: 'Point' }),
         n('var_assign', { name: 'a.x' }, { value: [num(3)] }),
-        show(n('cpp_struct_member_access', { obj: 'b', member: 'x' })),
+        show(n('cpp:struct_member_access', { obj: 'b', member: 'x' })),
       ),
     )
     expect(out.trim(), 'b.x 被 a.x 的指派改到了——兩個實例共用同一份欄位').toBe('0')
@@ -120,7 +120,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     try {
       await run(
         prog(point(), n('var_declare', { name: 'p', type: 'Point' }),
-          show(n('cpp_struct_member_access', { obj: 'p', member: '沒有這個欄位' }))),
+          show(n('cpp:struct_member_access', { obj: 'p', member: '沒有這個欄位' }))),
       )
     } catch (e) {
       訊息 = (e as Error).message
@@ -132,11 +132,11 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     const out = await run(
       prog(
         point(),
-        n('cpp_struct_declare', { name: 'Line' }, {
+        n('cpp:struct_declare', { name: 'Line' }, {
           members: [n('var_declare', { name: 'from', type: 'Point' })],
         }),
         n('var_declare', { name: 'l', type: 'Line' }),
-        show(n('cpp_struct_member_access', { obj: 'l', member: 'from' })),
+        show(n('cpp:struct_member_access', { obj: 'l', member: 'from' })),
       ),
     )
     expect(out, '巢狀結構的欄位沒有被建出來').not.toBe('')

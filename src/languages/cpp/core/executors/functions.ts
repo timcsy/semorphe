@@ -25,11 +25,11 @@ export function registerFunctionsCoreExecutors(
 
   // OOP concepts — noop in interpreter (no OOP runtime)
 
-  register('cpp_struct_member_access', async () => {})
+  register('cpp:struct_member_access', async () => {})
 
-  register('cpp_struct_pointer_access', async () => {})
+  register('cpp:struct_pointer_access', async () => {})
 
-  register('cpp_method_call', async () => {})
+  register('cpp:method_call', async () => {})
 
 
   // 註：物件導向那批「已知缺口」的空操作集中在 interpreter.ts 的缺口清單，
@@ -37,5 +37,5 @@ export function registerFunctionsCoreExecutors(
   // 但同一個病（勝負靠載入順序）。四個具名轉型的實作在 operators.ts。
   // 見 specs/053-declare-noop-execute/research.md F8。
 
-  register('cpp_template_function', async () => {})
+  register('cpp:template_function', async () => {})
 }

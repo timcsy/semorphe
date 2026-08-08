@@ -13,7 +13,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerArraysCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_array_2d_declare', async (node, ctx) => {
+  register('cpp:array_2d_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     const type = String(node.properties.type || 'int')
     const rows = Number(node.properties.rows || 0)
@@ -30,7 +30,7 @@ export function registerArraysCoreExecutors(
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 
-  register('cpp_array_2d_access', async (node, ctx) => {
+  register('cpp:array_2d_access', async (node, ctx) => {
     const name = String(node.properties.name)
     const rowNodes = node.children.row
     const colNodes = node.children.col
@@ -50,7 +50,7 @@ export function registerArraysCoreExecutors(
     return rowArr.value[col] ?? defaultValue('int')
   })
 
-  register('cpp_array_2d_assign', async (node, ctx) => {
+  register('cpp:array_2d_assign', async (node, ctx) => {
     const name = String(node.properties.name)
     const rowNodes = node.children.row
     const colNodes = node.children.col
@@ -88,7 +88,7 @@ export function registerArraysCoreExecutors(
    * （同 func_def 的參數），不在這一刀的範圍。沒寫值的成員依 C++ 規則
    * 從前一個 +1 開始。
    */
-  register('cpp_enum', async (node, ctx) => {
+  register('cpp:enum', async (node, ctx) => {
     const raw = String(node.properties.values ?? '')
     let next = 0
     for (const part of raw.split(',')) {

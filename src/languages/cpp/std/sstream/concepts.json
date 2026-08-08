@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_stringstream_declare",
+    "conceptId": "cpp:stringstream_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
@@ -19,7 +19,7 @@
     }
   },
   {
-    "conceptId": "cpp_istringstream_declare",
+    "conceptId": "cpp:istringstream_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [

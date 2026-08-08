@@ -156,7 +156,7 @@ describe('Auto-include across cognitive levels', () => {
     // but user may NOT have manually added #include — auto-include should add it
     const tree = createNode('program', {}, {
       body: [
-        createNode('cpp_using_namespace', { ns: 'std' }),
+        createNode('cpp:using_namespace', { ns: 'std' }),
         createNode('func_def', { name: 'main', return_type: 'int' }, {
           body: [
             createNode('print', {}, {
@@ -179,8 +179,8 @@ describe('Auto-include across cognitive levels', () => {
   it('L2: full tree WITH manual include should NOT duplicate', () => {
     const tree = createNode('program', {}, {
       body: [
-        createNode('cpp_include', { header: 'iostream' }),
-        createNode('cpp_using_namespace', { ns: 'std' }),
+        createNode('cpp:include', { header: 'iostream' }),
+        createNode('cpp:using_namespace', { ns: 'std' }),
         createNode('func_def', { name: 'main', return_type: 'int' }, {
           body: [
             createNode('print', {}, {
@@ -202,7 +202,7 @@ describe('Auto-include across cognitive levels', () => {
     const tree = createNode('program', {}, {
       body: [
         createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
-        createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+        createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ],
     })
     const ctx = { ...makeCtx(apcsStyle), scaffoldConfig: { cognitiveLevel: 0 as const } }
@@ -234,7 +234,7 @@ describe('Scaffold-driven code generation', () => {
     const tree = createNode('program', {}, {
       body: [
         createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
-        createNode('cpp_vector_declare', { type: 'int', name: 'v' }),
+        createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ],
     })
     const code = generateNode(tree, makeCtx(apcsStyle))

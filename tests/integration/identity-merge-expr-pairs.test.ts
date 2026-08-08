@@ -131,12 +131,12 @@ describe('六對雙版本已合併成六個身分', () => {
 
   it('★ 運算式版的積木反推得到**合併後**的身分（C-4）', () => {
     const reg = 登錄表()
-    expect(reg.getByBlockType('c_increment_expr')?.conceptMapping?.conceptId).toBe('cpp_increment')
-    expect(reg.getByBlockType('c_increment')?.conceptMapping?.conceptId).toBe('cpp_increment')
+    expect(reg.getByBlockType('c_increment_expr')?.conceptMapping?.conceptId).toBe('cpp:increment')
+    expect(reg.getByBlockType('c_increment')?.conceptMapping?.conceptId).toBe('cpp:increment')
   })
 
   it('★ 一個身分查得到兩個形態', () => {
-    const forms = 登錄表().getFormsByConceptId('cpp_increment')
+    const forms = 登錄表().getFormsByConceptId('cpp:increment')
     expect(forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort()).toEqual(
       ['c_increment', 'c_increment_expr'],
     )
@@ -181,8 +181,8 @@ describe('同一個身分，兩個位置選到不同積木', () => {
   })
 
   it('★ 而語義樹裡**兩者都是同一個身分**', () => {
-    const 敘述 = collect(lift('int i = 0; i++;'), (n) => n.conceptId === 'cpp_increment')
-    const 運算式 = collect(lift('int i = 0; int j = i++;'), (n) => n.conceptId === 'cpp_increment')
+    const 敘述 = collect(lift('int i = 0; i++;'), (n) => n.conceptId === 'cpp:increment')
+    const 運算式 = collect(lift('int i = 0; int j = i++;'), (n) => n.conceptId === 'cpp:increment')
     expect(敘述.length).toBeGreaterThan(0)
     expect(運算式.length, '運算式位置沒有拿到合併後的身分 → 合併只做了一半').toBeGreaterThan(0)
   })
@@ -221,7 +221,7 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     }
     const 升級後 = UPGRADES[1](舊存檔 as unknown as Record<string, unknown>)
     const body = (升級後.tree as { children: { body: { conceptId: string }[] } }).children.body
-    expect(body[0].conceptId, '舊身分沒被轉換 → 那棵樹裡有一個不存在的概念').toBe('cpp_increment')
+    expect(body[0].conceptId, '舊身分沒被轉換 → 那棵樹裡有一個不存在的概念').toBe('cpp:increment')
   })
 
   it('★ 負向：沒有 `_expr` 的樹**原樣通過**，不得被亂改', async () => {

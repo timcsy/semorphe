@@ -42,7 +42,7 @@ beforeAll(async () => {
 
 function countRawCode(node: SemanticNode): number {
   let count = 0
-  if (node.conceptId === 'raw_code' || node.conceptId === 'cpp_raw_code') count++
+  if (node.conceptId === 'raw_code' || node.conceptId === 'cpp:raw_code') count++
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) count += countRawCode(child)
   }

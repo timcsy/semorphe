@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_sort",
-    "conceptId": "cpp_sort",
+    "id": "cpp:sort",
+    "conceptId": "cpp:sort",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -22,14 +22,16 @@
       "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "CONTAINER": "begin" },
+      "fields": {
+        "CONTAINER": "begin"
+      },
       "inputs": {},
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_reverse",
-    "conceptId": "cpp_reverse",
+    "id": "cpp:reverse",
+    "conceptId": "cpp:reverse",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -50,14 +52,16 @@
       "tooltip": "%{BKY_CPP_REVERSE_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "CONTAINER": "begin" },
+      "fields": {
+        "CONTAINER": "begin"
+      },
       "inputs": {},
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_fill",
-    "conceptId": "cpp_fill",
+    "id": "cpp:fill",
+    "conceptId": "cpp:fill",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -83,14 +87,18 @@
       "tooltip": "%{BKY_CPP_FILL_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "CONTAINER": "begin" },
-      "inputs": { "VALUE": "value" },
+      "fields": {
+        "CONTAINER": "begin"
+      },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_min",
-    "conceptId": "cpp_min",
+    "id": "cpp:min",
+    "conceptId": "cpp:min",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -116,13 +124,16 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "A": "a", "B": "b" },
+      "inputs": {
+        "A": "a",
+        "B": "b"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_max",
-    "conceptId": "cpp_max",
+    "id": "cpp:max",
+    "conceptId": "cpp:max",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -148,13 +159,16 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "A": "a", "B": "b" },
+      "inputs": {
+        "A": "a",
+        "B": "b"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_swap",
-    "conceptId": "cpp_swap",
+    "id": "cpp:swap",
+    "conceptId": "cpp:swap",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -180,7 +194,10 @@
       "tooltip": "%{BKY_CPP_SWAP_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "A": "a", "B": "b" },
+      "fields": {
+        "A": "a",
+        "B": "b"
+      },
       "inputs": {},
       "statementInputs": {}
     }

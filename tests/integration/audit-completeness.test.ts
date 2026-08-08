@@ -177,8 +177,8 @@ beforeAll(async () => {
 // 是讓脈絡**跟著合成節點走**。
 type Prelude = (varName: string) => SemanticNode[]
 const SAMPLE_CONTEXT: Record<string, Prelude> = {}
-for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find']) {
-  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp_string_declare', { name: v, type: 'string' }, {})]
+for (const id of ['cpp:string_clear', 'cpp:string_push_back', 'cpp:string_at', 'cpp:string_length', 'cpp:string_substr', 'cpp:string_find']) {
+  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:string_declare', { name: v, type: 'string' }, {})]
 }
 // **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，
 // **正確地**退回 `array_assign`／`array_access`——同一個保守設計。
@@ -186,8 +186,8 @@ for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', '
 // （產生器的預設值），而 `synth-node.ts` 給 `obj` 這類屬性的合成值是 `'x'`
 // ——名字對不上，型別自然查不到，於是它仍然被判成殼。**脈絡有了、接不上，
 // 與「機制有了沒人接上」同一個形狀。**
-for (const id of ['cpp_map_access', 'cpp_map_assign']) {
-  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp_map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
+for (const id of ['cpp:map_access', 'cpp:map_assign']) {
+  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
 }
 
 /**
@@ -207,7 +207,7 @@ for (const id of ['cpp_map_access', 'cpp_map_assign']) {
  * 而那 11 個原本是誠實的「判不出來」。逐概念的代價是要維護一份清單，
  * 而它的好處是**每一筆都可以單獨驗證有沒有讓判定變差**。
  */
-const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp_lambda'])
+const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp:lambda'])
 
 /** 合成節點裡「那個變數叫什麼」——脈絡宣告要用同一個名字 */
 function 接收者名(node: SemanticNode | null): string {

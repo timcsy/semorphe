@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_string_declare",
+    "conceptId": "cpp:string_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -15,7 +15,7 @@
     "declaresVariableType": "string"
   },
   {
-    "conceptId": "cpp_string_length",
+    "conceptId": "cpp:string_length",
     "layer": "lang-library",
     "properties": [
       {
@@ -28,7 +28,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_substr",
+    "conceptId": "cpp:string_substr",
     "layer": "lang-library",
     "properties": [
       {
@@ -56,7 +56,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_find",
+    "conceptId": "cpp:string_find",
     "layer": "lang-library",
     "properties": [
       {
@@ -77,7 +77,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_append",
+    "conceptId": "cpp:string_append",
     "layer": "lang-library",
     "properties": [
       {
@@ -98,7 +98,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_c_str",
+    "conceptId": "cpp:string_c_str",
     "layer": "lang-library",
     "properties": [
       {
@@ -111,7 +111,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_getline",
+    "conceptId": "cpp:getline",
     "layer": "lang-library",
     "properties": [
       {
@@ -124,7 +124,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_to_string",
+    "conceptId": "cpp:to_string",
     "layer": "lang-library",
     "properties": [],
     "children": {
@@ -139,7 +139,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_stoi",
+    "conceptId": "cpp:stoi",
     "layer": "lang-library",
     "properties": [],
     "children": {
@@ -154,7 +154,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_stod",
+    "conceptId": "cpp:stod",
     "layer": "lang-library",
     "properties": [],
     "children": {
@@ -169,7 +169,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_empty",
+    "conceptId": "cpp:string_empty",
     "layer": "lang-library",
     "properties": [
       {
@@ -182,7 +182,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_erase",
+    "conceptId": "cpp:string_erase",
     "layer": "lang-library",
     "properties": [
       {
@@ -210,7 +210,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_insert",
+    "conceptId": "cpp:string_insert",
     "layer": "lang-library",
     "properties": [
       {
@@ -238,7 +238,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_replace",
+    "conceptId": "cpp:string_replace",
     "layer": "lang-library",
     "properties": [
       {
@@ -273,7 +273,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_push_back",
+    "conceptId": "cpp:string_push_back",
     "layer": "lang-library",
     "properties": [
       {
@@ -294,7 +294,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_clear",
+    "conceptId": "cpp:string_clear",
     "layer": "lang-library",
     "properties": [
       {
@@ -307,7 +307,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_string_at",
+    "conceptId": "cpp:string_at",
     "layer": "lang-library",
     "properties": [
       {
@@ -328,7 +328,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_find_first_not_of",
+    "conceptId": "cpp:string_find_first_not_of",
     "layer": "lang-library",
     "properties": [
       {
@@ -348,7 +348,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_string_find_last_not_of",
+    "conceptId": "cpp:string_find_last_not_of",
     "layer": "lang-library",
     "properties": [
       {

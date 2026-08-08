@@ -20,13 +20,13 @@ export function registerDeclarationLifters(lifter: Lifter): void {
         const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
         const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
         const index = indexNode ? ctx.lift(indexNode) : null
-        return createNode('cpp_compound_assign', { name: arrName, operator: op }, {
+        return createNode('cpp:compound_assign', { name: arrName, operator: op }, {
           index: index ? [index] : [],
           value: value ? [value] : [],
         })
       }
       const name = left?.text ?? 'x'
-      return createNode('cpp_compound_assign', { name, operator: op }, {
+      return createNode('cpp:compound_assign', { name, operator: op }, {
         value: value ? [value] : [],
       })
     }
@@ -43,7 +43,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
         const colNode = colIndices?.namedChildren[0] ?? left.namedChildren[1]
         const row = rowNode ? ctx.lift(rowNode) : null
         const col = colNode ? ctx.lift(colNode) : null
-        return createNode('cpp_array_2d_assign', { name }, {
+        return createNode('cpp:array_2d_assign', { name }, {
           row: row ? [row] : [],
           col: col ? [col] : [],
           value: value ? [value] : [],
@@ -57,7 +57,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       const index = indexNode ? ctx.lift(indexNode) : null
       // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
       if (ctx.data.getType(name) === 'map') {
-        return createNode('cpp_map_assign', { obj: name }, {
+        return createNode('cpp:map_assign', { obj: name }, {
           key: index ? [index] : [],
           value: value ? [value] : [],
         })
@@ -74,7 +74,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       if (ptrOp === '*') {
         const ptrNameNode = left.namedChildren[0]
         const ptrName = ptrNameNode?.text ?? 'ptr'
-        return createNode('cpp_pointer_assign', { ptr_name: ptrName }, {
+        return createNode('cpp:pointer_assign', { ptr_name: ptrName }, {
           value: value ? [value] : [],
         })
       }

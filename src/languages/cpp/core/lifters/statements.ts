@@ -39,7 +39,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     const condSem = wrapForExpr(condNode, ctx)
     const updateSem = wrapForExpr(updateNode, ctx)
 
-    return createNode('cpp_for_loop', {}, {
+    return createNode('cpp:for_loop', {}, {
       init: initSem ? [initSem] : [],
       cond: condSem ? [condSem] : [],
       update: updateSem ? [updateSem] : [],
@@ -63,7 +63,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     ) ?? []
     const cases = caseNodes.map(c => liftCaseStatement(c, ctx)).filter(Boolean) as import('../../../../core/types').SemanticNode[]
 
-    return createNode('cpp_switch', {}, {
+    return createNode('cpp:switch', {}, {
       expr: cond ? [cond] : [],
       cases,
     })
@@ -106,11 +106,11 @@ function liftCaseStatement(
   const body = ctx.liftChildren(bodyChildren)
 
   if (isDefault) {
-    return createNode('cpp_default', {}, { body })
+    return createNode('cpp:default', {}, { body })
   }
 
   const value = ctx.lift(valueNode!)
-  return createNode('cpp_case', {}, {
+  return createNode('cpp:case', {}, {
     value: value ? [value] : [],
     body,
   })
@@ -199,12 +199,12 @@ function extractUpdateVar(update: import('../../../../core/lift/types').AstNode 
 // Concepts that can be used in for-loop init/cond/update positions
 const FOR_LOOP_CONCEPTS = new Set([
   // expressions
-  'number', 'number_literal', 'string', 'string_literal', 'boolean', 'var_ref', 'cpp_raw_expression',
+  'number', 'number_literal', 'string', 'string_literal', 'boolean', 'var_ref', 'cpp:raw_expression',
   'arithmetic', 'compare', 'logic', 'logic_not', 'negate',
-  'func_call', 'array_access', 'cpp_ternary',
+  'func_call', 'array_access', 'cpp:ternary',
   // statements valid in for-loop parts
-  'var_declare', 'var_assign', 'cpp_compound_assign', 'cpp_increment', 'array_assign',
-  'cpp_comma_expr', 'cpp_cast',
+  'var_declare', 'var_assign', 'cpp:compound_assign', 'cpp:increment', 'array_assign',
+  'cpp:comma_expr', 'cpp:cast',
 ])
 
 /** Lift a for-loop part (init/cond/update) and wrap non-expression concepts as cpp_raw_expression */
@@ -219,5 +219,5 @@ function wrapForExpr(
   if (FOR_LOOP_CONCEPTS.has(lifted.conceptId)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
   // Strip trailing semicolons — for-loop parts don't need them
-  return createNode('cpp_raw_expression', { code: node.text.replace(/;\s*$/, '').trim() })
+  return createNode('cpp:raw_expression', { code: node.text.replace(/;\s*$/, '').trim() })
 }

@@ -44,15 +44,15 @@ function 拆解成員(members: SemanticNode[]): {
       type: String(p.properties?.type ?? 'int'),
     }))
   /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
-  const 方法概念 = new Set(['func_def', 'cpp_virtual_method', 'cpp_override_method'])
+  const 方法概念 = new Set(['func_def', 'cpp:virtual_method', 'cpp:override_method'])
   for (const m of members) {
-    if (m.conceptId === 'cpp_static_member') {
+    if (m.conceptId === 'cpp:static_member') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (m.conceptId === 'cpp_pure_virtual') {
+    } else if (m.conceptId === 'cpp:pure_virtual') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
-    } else if (m.conceptId === 'cpp_operator_overload') {
+    } else if (m.conceptId === 'cpp:operator_overload') {
       // 存成名字是 `operator+` 的方法，讓算術執行器找得到
       methods.push({
         name: `operator${String(m.properties.operator)}`,
@@ -61,9 +61,9 @@ function 拆解成員(members: SemanticNode[]): {
       })
     } else if (方法概念.has(m.conceptId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
-    } else if (m.conceptId === 'cpp_constructor') {
+    } else if (m.conceptId === 'cpp:constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
-    } else if (m.conceptId === 'cpp_destructor') {
+    } else if (m.conceptId === 'cpp:destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
@@ -161,7 +161,7 @@ export function registerStructExecutors(
     }
   }
 
-  register('cpp_struct_declare', async (node, ctx) => {
+  register('cpp:struct_declare', async (node, ctx) => {
     安裝方法執行器(ctx)
     const name = String(node.properties.name)
     const fields: FieldDecl[] = []
@@ -180,7 +180,7 @@ export function registerStructExecutors(
    * 那讓 `cpp_class_def` 從殼變成可執行，但**不代表類別支援完整了**：
    * 存取控制、繼承、虛擬函式仍然是殼，完備性報表照樣數它們。
    */
-  register('cpp_class_def', async (node, ctx) => {
+  register('cpp:class_def', async (node, ctx) => {
     安裝方法執行器(ctx)
     const name = String(node.properties.name)
     const { fields, methods, ctor, dtor, statics } = 拆解成員([
@@ -219,7 +219,7 @@ export function registerStructExecutors(
     return 在實例上執行(obj, m, node.children.args ?? [], ctx)
   }
 
-  register('cpp_method_call', 呼叫方法)
+  register('cpp:method_call', 呼叫方法)
 
   /**
    * `P p(42);` —— 建構式在 `func_call_expr` 的位置出現，名字就是類別名。
@@ -228,12 +228,12 @@ export function registerStructExecutors(
    * 的初始化路徑觸發（見下）。
    */
   /** `namespace N { … }` —— 這個直譯器沒有名稱隔離，本體直接跑 */
-  register('cpp_namespace_def', async (node, ctx) => {
+  register('cpp:namespace_def', async (node, ctx) => {
     await ctx.executeBody(node.children.body ?? [])
   })
 
   /** `template<typename T> R f(…)` —— 執行上與一般函式相同，型別參數不影響求值 */
-  register('cpp_template_function', async (node, ctx) => {
+  register('cpp:template_function', async (node, ctx) => {
     ctx.functions.set(String(node.properties.func_name), {
       name: String(node.properties.func_name),
       params: (node.children.params ?? []).map((p) => ({
@@ -246,7 +246,7 @@ export function registerStructExecutors(
   })
 
   /** `p->x` */
-  register('cpp_struct_pointer_access', async (node, ctx) => {
+  register('cpp:struct_pointer_access', async (node, ctx) => {
     const ptrName = String(node.properties.ptr)
     const ptr = ctx.scope.get(ptrName)
     if (ptr.value === null || ptr.value === undefined) {
@@ -260,7 +260,7 @@ export function registerStructExecutors(
   })
 
   /** `p.x` */
-  register('cpp_struct_member_access', async (node, ctx) => {
+  register('cpp:struct_member_access', async (node, ctx) => {
     const objName = String(node.properties.obj)
     const o = ctx.scope.get(objName)
     return getMember(o, String(node.properties.member), objName, ctx.structs.staticsOf(o.structName ?? ''))

@@ -16,7 +16,7 @@ function makeProgram(body: SemanticNode[]): SemanticNode {
 describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
   it('strips include directives', () => {
     const tree = makeProgram([
-      createNode('cpp_include', { header: 'iostream' }),
+      createNode('cpp:include', { header: 'iostream' }),
       createNode('var_declare', { name: 'x', type: 'int' }),
     ])
     const result = cppStripScaffoldNodes(tree)
@@ -26,7 +26,7 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
 
   it('strips using namespace', () => {
     const tree = makeProgram([
-      createNode('cpp_using_namespace', { namespace: 'std' }),
+      createNode('cpp:using_namespace', { namespace: 'std' }),
       createNode('print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)
@@ -64,7 +64,7 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
 
   it('strips cpp_include_local too', () => {
     const tree = makeProgram([
-      createNode('cpp_include_local', { header: 'mylib.h' }),
+      createNode('cpp:include_local', { header: 'mylib.h' }),
       createNode('print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)

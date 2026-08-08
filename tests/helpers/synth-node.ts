@@ -31,9 +31,9 @@ const OPERATOR_FOR: Record<string, string> = {
   compare: '<',
   logic: '&&',
   arithmetic: '+',
-  cpp_compound_assign: '+=',
+  'cpp:compound_assign': '+=',
   cpp_compound_assign_expr: '+=',
-  cpp_increment: '++',
+  'cpp:increment': '++',
   cpp_increment_expr: '++',
   cpp_bitwise: '&',
 }

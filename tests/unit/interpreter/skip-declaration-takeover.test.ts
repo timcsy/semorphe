@@ -30,7 +30,7 @@ beforeAll(() => {
 describe('cpp_include_local：核心的空操作刪了，宣告接手', () => {
   it('★ 宣告存在——沒有它，下面那支會因為「執行器還在」而假通過', () => {
     expect(
-      isSkipped('cpp_include_local', 'execute'),
+      isSkipped('cpp:include_local', 'execute'),
       '概念檔的 skipPaths 宣告不見了。核心的空操作已經刪除，' +
         '兩邊都沒有的話這個概念會變成「未知概念」而中斷使用者的程式。',
     ).toBe(true)
@@ -40,7 +40,7 @@ describe('cpp_include_local：核心的空操作刪了，宣告接手', () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
     const reg = (interp as unknown as { executorRegistry: { list(): string[] } }).executorRegistry
     expect(
-      reg.list().includes('cpp_include_local'),
+      reg.list().includes('cpp:include_local'),
       '執行器又被註冊回來了。它有宣告，不需要空操作——兩個都在的話，' +
         '哪一個生效取決於註冊順序，而那個順序沒有人設計過。',
     ).toBe(false)
@@ -54,7 +54,7 @@ describe('cpp_include_local：核心的空操作刪了，宣告接手', () => {
       return 'skip'
     }
     // 宣告接手的話會靜靜返回；沒接手的話會走未知概念那條路
-    await interp.executeNode(n('cpp_include_local', { header: 'mine.h' }))
+    await interp.executeNode(n('cpp:include_local', { header: 'mine.h' }))
     expect(未知概念被觸發, '宣告沒有接手——這個概念變成了未知概念，會中斷使用者的程式').toBe(false)
   })
 })

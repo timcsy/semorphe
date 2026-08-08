@@ -26,17 +26,17 @@ const defined = new Set<string>()
 export function registerPreprocessorExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_define', async (node) => {
+  register('cpp:define', async (node) => {
     const name = String(node.properties.name ?? '')
     if (name) defined.add(name)
   })
 
-  register('cpp_ifdef', async (node, ctx) => {
+  register('cpp:ifdef', async (node, ctx) => {
     const name = String(node.properties.condition ?? '')
     if (defined.has(name)) await ctx.executeBody(node.children.body ?? [])
   })
 
-  register('cpp_ifndef', async (node, ctx) => {
+  register('cpp:ifndef', async (node, ctx) => {
     const name = String(node.properties.condition ?? '')
     if (!defined.has(name)) await ctx.executeBody(node.children.body ?? [])
   })

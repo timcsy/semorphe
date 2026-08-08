@@ -17,7 +17,7 @@ import { defaultValue } from '../../../../interpreter/types'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_queue_declare', async (node, ctx) => {
+  register('cpp:queue_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [], tag: 'queue' })
   })
@@ -42,12 +42,12 @@ export function registerExecutors(
    *
    * `tag: 'priority_queue'` 讓表示法自己說出它是哪一種，而不是靠呼叫端記得。
    */
-  register('cpp_priority_queue_declare', async (node, ctx) => {
+  register('cpp:priority_queue_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue' })
   })
 
-  register('cpp_priority_queue_top', async (node, ctx) => {
+  register('cpp:priority_queue_top', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
@@ -59,7 +59,7 @@ export function registerExecutors(
     )
   })
 
-  register('cpp_queue_front', async (node, ctx) => {
+  register('cpp:queue_front', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
@@ -68,7 +68,7 @@ export function registerExecutors(
     return arr.value[0]
   })
 
-  register('cpp_queue_back', async (node, ctx) => {
+  register('cpp:queue_back', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {

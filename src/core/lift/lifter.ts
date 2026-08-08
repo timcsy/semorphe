@@ -41,8 +41,15 @@ export class Lifter {
     const name = r.properties?.name
     if (name === undefined) return
     // 型別的來源依概念而異：一般宣告放在 `type`，容器宣告的專屬概念名本身
-    // 就帶著型別（`cpp_string_declare` → string）。後者更可靠。
-    const fromConcept = /^cpp_(\w+?)_declare$/.exec(r.conceptId ?? '')?.[1]
+    // 就帶著型別（`cpp:string_declare` → string）。後者更可靠。
+    //
+    // ⚠️ **正則裡的身分形狀，掃描器看不到。** 命名空間遷移（103）時這一行
+    // 還寫著 `/^cpp_(\w+?)_declare$/`，而它不是字串字面——AST 掃描器只看
+    // 字串節點，於是它安靜地不再匹配，症狀是「字串的 clear 被辨識成通用容器版」。
+    //
+    // 順手把 `cpp` 也拿掉：scope 不該寫死在核心（P9）。任何 scope 的
+    // `<x>_declare` 都適用同一條規則。
+    const fromConcept = /^[a-z]+:(\w+?)_declare$/.exec(r.conceptId ?? '')?.[1]
     const type = fromConcept ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
     if (type) data.declare(String(name), type)
   }

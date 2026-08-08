@@ -4,15 +4,15 @@ import type { SemanticNode } from '../../../../core/types'
 
 /** C++ operator precedence data (higher = binds tighter). */
 const PRECEDENCE_MAP = new Map<string, number>([
-  ['cpp_comma_expr', 1],
+  ['cpp:comma_expr', 1],
   ['var_assign', 2],
-  ['cpp_ternary', 3],
+  ['cpp:ternary', 3],
   ['negate', 14],
   ['logic_not', 14],
   ['bitwise_not', 14],
-  ['cpp_address_of', 14],
-  ['cpp_pointer_deref', 14],
-  ['cpp_cast', 14],
+  ['cpp:address_of', 14],
+  ['cpp:pointer_deref', 14],
+  ['cpp:cast', 14],
   ['array_access', 16],
 ])
 
@@ -54,7 +54,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `"${node.properties.value ?? ''}"`
   })
 
-  g.set('cpp_char_literal', (node, _ctx) => {
+  g.set('cpp:char_literal', (node, _ctx) => {
     const ch = node.properties.char ?? 'a'
     return `'${ch}'`
   })
@@ -101,21 +101,21 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     const childNode = (node.children.value ?? node.children.operand ?? [])[0]
     const val = genChild(childNode, precedence(node), ctx)
     // Prevent --x (pre-decrement) or ++x when nesting unary operators
-    if (childNode && (childNode.conceptId === 'negate' || childNode.conceptId === 'cpp_pointer_deref' || childNode.conceptId === 'cpp_address_of')) {
+    if (childNode && (childNode.conceptId === 'negate' || childNode.conceptId === 'cpp:pointer_deref' || childNode.conceptId === 'cpp:address_of')) {
       return `${op}(${val})`
     }
     return `${op}${val}`
   })
 
 
-  g.set('cpp_ternary', (node, ctx) => {
+  g.set('cpp:ternary', (node, ctx) => {
     const cond = generateExpression((node.children.condition ?? [])[0], ctx)
     const trueExpr = generateExpression((node.children.true_expr ?? [])[0], ctx)
     const falseExpr = generateExpression((node.children.false_expr ?? [])[0], ctx)
     return `${cond} ? ${trueExpr} : ${falseExpr}`
   })
 
-  g.set('cpp_cast', (node, ctx) => {
+  g.set('cpp:cast', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `(${targetType})${val}`
@@ -126,29 +126,29 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `~${operand}`
   })
 
-  g.set('cpp_address_of', (node, ctx) => {
+  g.set('cpp:address_of', (node, ctx) => {
     const v = generateExpression((node.children.var ?? [])[0], ctx)
     return `&${v}`
   })
 
-  g.set('cpp_pointer_deref', (node, ctx) => {
+  g.set('cpp:pointer_deref', (node, ctx) => {
     const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
     return `*${ptr}`
   })
 
-  g.set('cpp_comma_expr', (node, ctx) => {
+  g.set('cpp:comma_expr', (node, ctx) => {
     const exprs = (node.children.exprs ?? []).map(e => generateExpression(e, ctx))
     return exprs.join(', ')
   })
 
   // ─── Generic container expression concepts ───
 
-  g.set('cpp_container_empty', (node) => {
+  g.set('cpp:container_empty', (node) => {
     const obj = node.properties.obj ?? 'obj'
     return `${obj}.empty()`
   })
 
-  g.set('cpp_container_count', (node, ctx) => {
+  g.set('cpp:container_count', (node, ctx) => {
     const obj = node.properties.obj ?? 'obj'
     const key = generateExpression((node.children.key ?? [])[0], ctx)
     return `${obj}.count(${key})`
@@ -159,7 +159,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
   // cpp_scanf_expr moved to std/cstdio/generators.ts
 
-  g.set('cpp_lambda', (node, ctx) => {
+  g.set('cpp:lambda', (node, ctx) => {
     const capture = node.properties.capture ?? '&'
     const paramChildren = node.children.params ?? []
     const body = node.children.body ?? []
@@ -176,37 +176,37 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return code
   })
 
-  g.set('cpp_static_cast', (node, ctx) => {
+  g.set('cpp:static_cast', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `static_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp_dynamic_cast', (node, ctx) => {
+  g.set('cpp:dynamic_cast', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'Derived*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `dynamic_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp_reinterpret_cast', (node, ctx) => {
+  g.set('cpp:reinterpret_cast', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `reinterpret_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp_const_cast', (node, ctx) => {
+  g.set('cpp:const_cast', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `const_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp_new', (node) => {
+  g.set('cpp:new', (node) => {
     const type = node.properties.type ?? 'int'
     const args = node.properties.args ?? ''
     return args ? `new ${type}(${args})` : `new ${type}`
   })
 
-  g.set('cpp_malloc', (node, ctx) => {
+  g.set('cpp:malloc', (node, ctx) => {
     const type = node.properties.type ?? 'int*'
     const sizeNodes = node.children.size ?? []
     const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : '1'
@@ -218,13 +218,13 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `(${type})malloc(${size})`
   })
 
-  g.set('cpp_struct_member_access', (node) => {
+  g.set('cpp:struct_member_access', (node) => {
     const obj = node.properties.obj ?? 'obj'
     const member = node.properties.member ?? 'field'
     return `${obj}.${member}`
   })
 
-  g.set('cpp_struct_pointer_access', (node) => {
+  g.set('cpp:struct_pointer_access', (node) => {
     const ptr = node.properties.ptr ?? 'ptr'
     const member = node.properties.member ?? 'field'
     return `${ptr}->${member}`

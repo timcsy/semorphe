@@ -68,18 +68,18 @@ async function run(body: string): Promise<string> {
 describe('辨識：兩個方法各自拿到專屬身分', () => {
   it('★ find_first_not_of', () => {
     expect(concepts('string s = "  hi"; cout << s.find_first_not_of(" ");'))
-      .toContain('cpp_string_find_first_not_of')
+      .toContain('cpp:string_find_first_not_of')
   })
 
   it('★ find_last_not_of', () => {
     expect(concepts('string s = "hi  "; cout << s.find_last_not_of(" ");'))
-      .toContain('cpp_string_find_last_not_of')
+      .toContain('cpp:string_find_last_not_of')
   })
 
   it('★ 一般的 find 不得被混進來', () => {
     const c = concepts('string s = "abc"; cout << s.find("b");')
-    expect(c).toContain('cpp_string_find')
-    expect(c).not.toContain('cpp_string_find_first_not_of')
+    expect(c).toContain('cpp:string_find')
+    expect(c).not.toContain('cpp:string_find_first_not_of')
   })
 })
 

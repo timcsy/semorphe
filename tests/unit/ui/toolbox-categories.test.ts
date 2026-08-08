@@ -103,6 +103,8 @@ describe('C++ toolbox categories (language module)', () => {
     // 而「課程沒收錄」與「排序函式吃掉它」是兩件完全不同的事。
     const { snapshot } = loadToolbox()
     const types = snapshot.categories.find(c => c.name.includes('輸入'))?.blocks ?? []
+    // ⚠️ 這裡列的是**積木型別**（`snapshot.categories[].blocks`），不是元件身分。
+    // 命名空間遷移只動身分，積木型別維持 `cpp_`（B 項加法式保留）。
     for (const t of ['cpp_getline', 'cpp_ifstream_declare', 'cpp_ofstream_declare']) {
       expect(types, `${t} 的 category 明明是 'io'，卻不在 I/O 分類裡`).toContain(t)
     }

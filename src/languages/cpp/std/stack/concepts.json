@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_stack_declare",
+    "conceptId": "cpp:stack_declare",
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
@@ -25,7 +25,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_stack_top",
+    "conceptId": "cpp:stack_top",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

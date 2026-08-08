@@ -18,7 +18,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_vector_declare', async (node, ctx) => {
+  register('cpp:vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     // ⚠️ **初始化列表原本被完全忽略**——`vector<int> v = {3,1,4}` 建出一個
     // 空的向量，於是 `v[1]` 索引越界、`v.size()` 是 0。而**產出的程式碼也
@@ -40,7 +40,7 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'array', value: elems })
   })
 
-  register('cpp_vector_size', async (node, ctx) => {
+  register('cpp:vector_size', async (node, ctx) => {
     const name = String(node.properties.vector)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
@@ -49,7 +49,7 @@ export function registerExecutors(
     return { type: 'int', value: arr.value.length }
   })
 
-  register('cpp_vector_pop_back', async (node, ctx) => {
+  register('cpp:vector_pop_back', async (node, ctx) => {
     const name = String(node.properties.vector)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
@@ -60,7 +60,7 @@ export function registerExecutors(
     }
   })
 
-  register('cpp_vector_back', async (node, ctx) => {
+  register('cpp:vector_back', async (node, ctx) => {
     const name = String(node.properties.vector)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {

@@ -28,7 +28,7 @@ describe('PatternExtractor', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_increment',
+          conceptId: 'cpp:increment',
           properties: ['name', 'operator'],
           role: 'both',
         },
@@ -54,7 +54,7 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp_increment')
+      expect(result!.conceptId).toBe('cpp:increment')
       expect(result!.properties.name).toBe('i')
       expect(result!.properties.operator).toBe('++')
     })

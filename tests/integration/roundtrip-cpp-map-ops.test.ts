@@ -79,12 +79,12 @@ function collectConcepts(node: SemanticNode | null, result: Set<string> = new Se
 
 describe('C++ Map Operations Roundtrip', () => {
 
-  describe('cpp_map_declare', () => {
+  describe('cpp:map_declare', () => {
     const code = 'map<string, int> freq;\ncout << "created" << endl;'
 
     it('should lift to cpp_map_declare with key_type and value_type', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_map_declare')
+      const node = findConcept(tree, 'cpp:map_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.key_type).toBe('string')
       expect(node!.properties.value_type).toBe('int')
@@ -100,7 +100,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_map_declare')
+      const node2 = findConcept(tree2, 'cpp:map_declare')
       expect(node2).not.toBeNull()
       expect(node2!.properties.key_type).toBe('string')
       expect(node2!.properties.value_type).toBe('int')
@@ -112,7 +112,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift with both types as int', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_map_declare')
+      const node = findConcept(tree, 'cpp:map_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.key_type).toBe('int')
       expect(node!.properties.value_type).toBe('int')
@@ -121,17 +121,17 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_map_declare')
+      const node2 = findConcept(tree2, 'cpp:map_declare')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp_container_erase', () => {
+  describe('cpp:container_erase', () => {
     const code = 'map<string, int> mp;\nmp.erase("hello");\ncout << "erased" << endl;'
 
     it('should lift to cpp_container_erase with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_container_erase')
+      const node = findConcept(tree, 'cpp:container_erase')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
       expect(node!.children.key).toBeDefined()
@@ -146,17 +146,17 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_container_erase')
+      const node2 = findConcept(tree2, 'cpp:container_erase')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp_container_count', () => {
+  describe('cpp:container_count', () => {
     const code = 'map<string, int> mp;\nif (mp.count("key")) {\n    cout << "found" << endl;\n}'
 
     it('should lift to cpp_container_count with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_container_count')
+      const node = findConcept(tree, 'cpp:container_count')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
     })
@@ -169,7 +169,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_container_count')
+      const node2 = findConcept(tree2, 'cpp:container_count')
       expect(node2).not.toBeNull()
     })
   })
@@ -182,13 +182,13 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('★ m[key] 辨識成 cpp_map_access，不是 array_access', () => {
       const concepts = collectConcepts(liftCode(code))
-      expect(concepts.has('cpp_map_access')).toBe(true)
+      expect(concepts.has('cpp:map_access')).toBe(true)
       expect(concepts.has('array_access'), '降級回去了——型別查得到卻沒用').toBe(false)
     })
 
     it('★ 來回轉換之後身分不變', () => {
       const concepts2 = collectConcepts(liftCode(roundTripCode(code)))
-      expect(concepts2.has('cpp_map_access')).toBe(true)
+      expect(concepts2.has('cpp:map_access')).toBe(true)
     })
   })
 
@@ -197,7 +197,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp_container_empty')
+      const node = findConcept(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -209,7 +209,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp_container_empty')
+      const node2 = findConcept(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -220,18 +220,18 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should lift all map concepts', () => {
       const tree = liftCode(code)
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
-      expect(concepts.has('cpp_container_erase')).toBe(true)
-      expect(concepts.has('cpp_container_count')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
+      expect(concepts.has('cpp:container_erase')).toBe(true)
+      expect(concepts.has('cpp:container_count')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp_map_declare')).toBe(true)
-      expect(concepts2.has('cpp_container_erase')).toBe(true)
-      expect(concepts2.has('cpp_container_count')).toBe(true)
+      expect(concepts2.has('cpp:map_declare')).toBe(true)
+      expect(concepts2.has('cpp:container_erase')).toBe(true)
+      expect(concepts2.has('cpp:container_count')).toBe(true)
     })
   })
 })

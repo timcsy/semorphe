@@ -201,8 +201,8 @@ describe('SyncController (bus-based)', () => {
     it('should strip include, using_namespace, and unwrap func_def(main)', () => {
       const fullTree = createNode('program', {}, {
         body: [
-          createNode('cpp_include', { header: 'iostream' }),
-          createNode('cpp_using_namespace', { ns: 'std' }),
+          createNode('cpp:include', { header: 'iostream' }),
+          createNode('cpp:using_namespace', { ns: 'std' }),
           createNode('func_def', { name: 'main', return_type: 'int' }, {
             body: [
               createNode('print', {}, { values: [createNode('string', { value: 'hello' })] }),
@@ -223,7 +223,7 @@ describe('SyncController (bus-based)', () => {
     it('should keep non-scaffold nodes (user-defined functions)', () => {
       const tree = createNode('program', {}, {
         body: [
-          createNode('cpp_include', { header: 'iostream' }),
+          createNode('cpp:include', { header: 'iostream' }),
           createNode('func_def', { name: 'helper', return_type: 'void' }, {
             body: [createNode('print', {}, { values: [] })],
           }),
@@ -274,7 +274,7 @@ describe('SyncController (bus-based)', () => {
 
       const fullTree = createNode('program', {}, {
         body: [
-          createNode('cpp_include', { header: 'iostream' }),
+          createNode('cpp:include', { header: 'iostream' }),
           createNode('func_def', { name: 'main', return_type: 'int' }, {
             body: [
               createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
@@ -328,7 +328,7 @@ describe('SyncController (bus-based)', () => {
       controller.onStyleExceptions(exceptionsCallback)
 
       const tree = createNode('program', {}, {
-        body: [createNode('cpp_printf', { format: '%d\\n' })],
+        body: [createNode('cpp:printf', { format: '%d\\n' })],
       })
 
       const rootNode = {

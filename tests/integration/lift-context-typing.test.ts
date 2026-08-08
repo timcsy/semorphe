@@ -57,33 +57,33 @@ describe('脈絡有型別時，方法辨識成專屬概念', () => {
     expect(
       concepts('int main(){ string s; s.clear(); }'),
       '字串的 clear 被辨識成通用容器版——專屬身分掉了',
-    ).toContain('cpp_string_clear')
+    ).toContain('cpp:string_clear')
   })
 
   it('★ `s.push_back(c)`（s 是 string）→ 字串專屬', () => {
-    expect(concepts("int main(){ string s; s.push_back('a'); }")).toContain('cpp_string_push_back')
+    expect(concepts("int main(){ string s; s.push_back('a'); }")).toContain('cpp:string_push_back')
   })
 })
 
 describe('脈絡沒有型別時，保守地留在通用版', () => {
   it('★ 容器的同名方法仍然是通用版', () => {
     const c = concepts('int main(){ vector<int> v; v.clear(); }')
-    expect(c, 'vector 的 clear 被誤判成字串版了').toContain('cpp_container_clear')
-    expect(c).not.toContain('cpp_string_clear')
+    expect(c, 'vector 的 clear 被誤判成字串版了').toContain('cpp:container_clear')
+    expect(c).not.toContain('cpp:string_clear')
   })
 
   it('★ 型別不明的變數 → 通用版，**不得猜**', () => {
     // 沒有宣告就沒有型別。猜一個的話，猜錯會靜默產生一個錯的身分，
     // 而那比留在通用版更糟——通用版至少是誠實的降級。
     const c = concepts('int main(){ unknownVar.clear(); }')
-    expect(c, '型別不明卻猜了一個專屬身分').not.toContain('cpp_string_clear')
+    expect(c, '型別不明卻猜了一個專屬身分').not.toContain('cpp:string_clear')
   })
 
   it('★ 同名變數在內層被遮蔽時，用內層的型別', () => {
     // 這支是**作用域**追蹤的釘子，不只是「有沒有型別表」。
     // 只做一張平表的實作會在這裡拿到外層的 string。
     const c = concepts('int main(){ string s; { vector<int> s; s.clear(); } }')
-    expect(c, '內層的 vector 遮蔽了外層的 string，卻還是辨識成字串版').not.toContain('cpp_string_clear')
+    expect(c, '內層的 vector 遮蔽了外層的 string，卻還是辨識成字串版').not.toContain('cpp:string_clear')
   })
 })
 
@@ -91,6 +91,6 @@ describe('★ 自我驗證：脈絡真的被填了', () => {
   it('沒有這支的話，一個「什麼都不填」的實作也會讓上面的保守測試通過', () => {
     // 正面那兩支才是證據——它們只有在脈絡真的有型別時才會過。
     // 這支把它們的前提釘住：型別追蹤不是空的。
-    expect(concepts('int main(){ string s; s.clear(); }')).toContain('cpp_string_clear')
+    expect(concepts('int main(){ string s; s.clear(); }')).toContain('cpp:string_clear')
   })
 })

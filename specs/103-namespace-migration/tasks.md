@@ -47,14 +47,14 @@
 **目標**：遷移不是資料破壞。
 **獨立驗證**：一份 v2 存檔載入後，產出的程式碼與遷移前**逐字相同**。
 
-- [ ] T009 [US1] 在 `src/core/storage-version.ts` 建立 v2→v3 轉換表（174 筆）與升級函式，
+- [X] T009 [US1] 在 `src/core/storage-version.ts` 建立 v2→v3 轉換表（174 筆）與升級函式，
       沿用 v1→v2 的既有結構
-- [ ] T010 [US1] 轉換必須**冪等**（`cpp:math_pow` 原樣通過）且**保守**
+- [X] T010 [US1] 轉換必須**冪等**（`cpp:math_pow` 原樣通過）且**保守**
       （表裡沒有的身分原樣保留，不丟棄）——FR-006、FR-007
-- [ ] T011 [US1] 轉換 **MUST NOT** 改寫 `blocklyState` 裡的積木型別（FR-008）
-- [ ] T012 [US1] 在 `tests/unit/core/storage-version.test.ts` 補四支測試，對應
+- [X] T011 [US1] 轉換 **MUST NOT** 改寫 `blocklyState` 裡的積木型別（FR-008）
+- [X] T012 [US1] 在 `tests/unit/core/storage-version.test.ts` 補四支測試，對應
       spec 的四個 Acceptance Scenario（舊身分轉得動／冪等／不認得的保留／v3 不重轉）
-- [ ] T013 [US1] `CURRENT_VERSION` 調成 3，確認既有那支
+- [X] T013 [US1] `CURRENT_VERSION` 調成 3，確認既有那支
       「從 1 到 CURRENT_VERSION 的每一步都必須有註冊」測試仍然通過
 
 ---
@@ -64,13 +64,13 @@
 **為什麼先做 `cpp_`**：`cpp_foo` 不可能是英文字／DOM 標籤／tree-sitter 節點型別
 → **零誤報**，這是它可以機械改的唯一理由（research 發現二）。
 
-- [ ] T014 [US3] JSON 側改寫：`conceptId`／`abstractConcept`／課程清單的 `cpp_*` → `cpp:*`，
+- [X] T014 [US3] JSON 側改寫：`conceptId`／`abstractConcept`／課程清單的 `cpp_*` → `cpp:*`，
       **靠欄位位置**，不碰 `blockDef.type`
-- [ ] T015 [US3] TS 側改寫：`src/` 與 `tests/` 的 `'cpp_*'` 字面 → `'cpp:*'`，
+- [X] T015 [US3] TS 側改寫：`src/` 與 `tests/` 的 `'cpp_*'` 字面 → `'cpp:*'`，
       排除 `registerExtractStrategy` 等 blockType 位置
-- [ ] T016 [US3] 跑 `npx tsc --noEmit` 與全套。**期待**：全綠、
+- [X] T016 [US3] 跑 `npx tsc --noEmit` 與全套。**期待**：全綠、
       舊格式引用 4657 → **1438**、格式違規 174 → **32**、`blockDef.type` 維持 **66**
-- [ ] T017 [US3] 若紅：**回退整段**，不要就地修補。分段的意義就是每段可獨立回退
+- [X] T017 [US3] 若紅：**回退整段**，不要就地修補。分段的意義就是每段可獨立回退
 
 ---
 

@@ -19,7 +19,7 @@ describe('PatternRenderer', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_increment',
+          conceptId: 'cpp:increment',
           abstractConcept: 'increment',
           properties: ['name', 'operator'],
           role: 'both',
@@ -37,7 +37,7 @@ describe('PatternRenderer', () => {
       }
       renderer.loadBlockSpecs([spec])
 
-      const node = createNode('cpp_increment', { name: 'i', operator: '++' })
+      const node = createNode('cpp:increment', { name: 'i', operator: '++' })
       const result = renderer.render(node)
 
       expect(result).not.toBeNull()
@@ -56,7 +56,7 @@ describe('PatternRenderer', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp_increment',
+          conceptId: 'cpp:increment',
           properties: ['name', 'operator'],
           role: 'both',
         },
@@ -71,7 +71,7 @@ describe('PatternRenderer', () => {
       }
       renderer.loadBlockSpecs([spec])
 
-      const node = createNode('cpp_increment', { name: 'j', operator: '--' })
+      const node = createNode('cpp:increment', { name: 'j', operator: '--' })
       const result = renderer.render(node)
 
       expect(result).not.toBeNull()

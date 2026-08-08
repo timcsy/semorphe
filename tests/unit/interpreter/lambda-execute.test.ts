@@ -42,7 +42,7 @@ const call = (name: string, ...args: SemanticNode[]): SemanticNode =>
 
 /** `[capture](int a){ return <bodyExpr>; }` */
 const lambda = (capture: string, params: string[], bodyExpr: SemanticNode): SemanticNode =>
-  n('cpp_lambda', { capture, return_type: 'int' }, {
+  n('cpp:lambda', { capture, return_type: 'int' }, {
     params: params.map((p) => n('var_declare', { name: p, type: 'int' })),
     body: [ret(bodyExpr)],
   })

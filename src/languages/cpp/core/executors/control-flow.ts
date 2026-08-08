@@ -21,7 +21,7 @@ export class ThrownSignal {
 export function registerControlFlowCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_for_loop', async (node, ctx) => {
+  register('cpp:for_loop', async (node, ctx) => {
     const body = node.children.body ?? []
     const parentScope = ctx.scope
     const forScope = parentScope.createChild()
@@ -58,7 +58,7 @@ export function registerControlFlowCoreExecutors(
     ctx.scope = parentScope
   })
 
-  register('cpp_do_while', async (node, ctx) => {
+  register('cpp:do_while', async (node, ctx) => {
     const body = node.children.body ?? []
     const condNodes = node.children.cond ?? []
     const parentScope = ctx.scope
@@ -76,7 +76,7 @@ export function registerControlFlowCoreExecutors(
     ctx.scope = parentScope
   })
 
-  register('cpp_switch', async (node, ctx) => {
+  register('cpp:switch', async (node, ctx) => {
     const exprNodes = node.children.expr ?? []
     if (exprNodes.length === 0) return
     const switchVal = await ctx.evaluate(exprNodes[0])
@@ -86,7 +86,7 @@ export function registerControlFlowCoreExecutors(
 
     for (const caseNode of cases) {
       if (!matched) {
-        const isDefault = caseNode.conceptId === 'cpp_default'
+        const isDefault = caseNode.conceptId === 'cpp:default'
         if (!isDefault) {
           const caseValNodes = caseNode.children.value ?? []
           if (caseValNodes.length > 0) {
@@ -107,7 +107,7 @@ export function registerControlFlowCoreExecutors(
     }
   })
 
-  register('cpp_range_for', async (node, ctx) => {
+  register('cpp:range_for', async (node, ctx) => {
     const varName = String(node.properties.var_name ?? 'x')
     const containerName = String(node.properties.container ?? 'vec')
     const body = node.children.body ?? []
@@ -131,7 +131,7 @@ export function registerControlFlowCoreExecutors(
     ctx.scope = parentScope
   })
 
-  register('cpp_try_catch', async (node, ctx) => {
+  register('cpp:try_catch', async (node, ctx) => {
     const tryBody = node.children.try_body ?? []
     const catchBody = node.children.catch_body ?? []
     const catchName = String(node.properties.catch_name ?? 'e')
@@ -151,7 +151,7 @@ export function registerControlFlowCoreExecutors(
     }
   })
 
-  register('cpp_throw', async (node, ctx) => {
+  register('cpp:throw', async (node, ctx) => {
     const vals = node.children.value ?? []
     const value = vals.length > 0 ? await ctx.evaluate(vals[0]) : 'exception'
     throw new ThrownSignal(value)

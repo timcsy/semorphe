@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_pair_declare",
+    "conceptId": "cpp:pair_declare",
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
@@ -39,7 +39,7 @@
     }
   },
   {
-    "conceptId": "cpp_make_pair",
+    "conceptId": "cpp:make_pair",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

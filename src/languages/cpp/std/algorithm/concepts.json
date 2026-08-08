@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_sort",
+    "conceptId": "cpp:sort",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -19,7 +19,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_reverse",
+    "conceptId": "cpp:reverse",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -38,7 +38,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_fill",
+    "conceptId": "cpp:fill",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -59,7 +59,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_min",
+    "conceptId": "cpp:min",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -70,7 +70,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_max",
+    "conceptId": "cpp:max",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -81,7 +81,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_swap",
+    "conceptId": "cpp:swap",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

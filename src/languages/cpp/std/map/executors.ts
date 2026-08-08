@@ -30,7 +30,7 @@ function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_map_declare', async (node, ctx) => {
+  register('cpp:map_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
@@ -46,7 +46,7 @@ export function registerExecutors(
    * 所以這不能與 `array_assign` 共用一顆——共用就要在執行器裡分支，
    * 而那是把碎裂搬進元件內部。
    */
-  register('cpp_map_assign', async (node, ctx) => {
+  register('cpp:map_assign', async (node, ctx) => {
     const name = String(node.properties.obj)
     const keyNodes = node.children.key ?? []
     const valueNodes = node.children.value ?? []
@@ -64,7 +64,7 @@ export function registerExecutors(
     if (pair.type === 'array' && Array.isArray(pair.value)) pair.value[1] = val
   })
 
-  register('cpp_map_access', async (node, ctx) => {
+  register('cpp:map_access', async (node, ctx) => {
     const name = String(node.properties.obj)
     const keyNodes = node.children.key ?? []
     if (keyNodes.length === 0) return defaultValue('int')

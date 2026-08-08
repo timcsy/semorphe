@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_accumulate",
+    "conceptId": "cpp:accumulate",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -19,7 +19,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_iota",
+    "conceptId": "cpp:iota",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -38,7 +38,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_partial_sum",
+    "conceptId": "cpp:partial_sum",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -59,7 +59,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_gcd",
+    "conceptId": "cpp:gcd",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -70,7 +70,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_lcm",
+    "conceptId": "cpp:lcm",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

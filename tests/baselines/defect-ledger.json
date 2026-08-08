@@ -1,7 +1,7 @@
 {
   "_meta": {
     "guard": "defect-ledger",
-    "measuredAt": "2026-08-06",
+    "measuredAt": "2026-08-08",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },

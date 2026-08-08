@@ -43,7 +43,7 @@ beforeAll(async () => {
 
 function countRawCode(node: SemanticNode): number {
   let count = 0
-  if (node.conceptId === 'raw_code' || node.conceptId === 'cpp_raw_code') count++
+  if (node.conceptId === 'raw_code' || node.conceptId === 'cpp:raw_code') count++
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) count += countRawCode(child)
   }
@@ -346,7 +346,7 @@ int main() {
   })
 
   describe('known lifter limitations (not numeric-specific)', () => {
-    it.todo('[BLOCKED:cpp_struct_declare] fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
+    it.todo('[BLOCKED:cpp:struct_declare] fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
   })
 })
 

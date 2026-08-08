@@ -157,7 +157,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // ⚠️ 規劃階段的靜態掃描第一版把積木型別與 AST 節點型別當成元件身分，
     // 報了 27 筆假的。救它的是這一支——**用查過的答案，不是記得的答案**。
     expect(已宣告.has('var_declare'), 'var_declare 是真元件').toBe(true)
-    expect(已宣告.has('cpp_vector_declare'), 'cpp_vector_declare 是真元件').toBe(true)
+    expect(已宣告.has('cpp:vector_declare'), 'cpp_vector_declare 是真元件').toBe(true)
     expect(已宣告.has('u_if'), '`u_if` 是**積木型別**不是元件身分——它不該在登錄表裡').toBe(false)
     expect(已宣告.has('binary_expression'), '`binary_expression` 是 AST 節點型別').toBe(false)
   })

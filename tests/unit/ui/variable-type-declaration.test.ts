@@ -31,14 +31,14 @@ beforeAll(() => {
 describe('變數型別宣告：語言套件推、核心讀', () => {
   it('★ 宣告真的被推進來了——沒有的話下面兩支會因為「兩邊都空」而假通過', () => {
     expect(
-      variableTypeOf('cpp_string_declare'),
+      variableTypeOf('cpp:string_declare'),
       'concepts.json 的 declaresVariableType 沒有被推進核心。' +
         '下拉選單會變成空的，而使用者只會覺得「怎麼選不到字串變數」——測試全綠。',
     ).toBe('string')
   })
 
   it('★ 反查得到——下拉選單靠的是這個方向', () => {
-    expect(conceptsDeclaringVariableType('string')).toContain('cpp_string_declare')
+    expect(conceptsDeclaringVariableType('string')).toContain('cpp:string_declare')
   })
 
   it('★ 沒宣告的概念不得被誤認——「什麼都回報」也能通過上面兩支', () => {

@@ -217,7 +217,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp_new] executes correctly (interpreter new/delete semantics)')
+  it.todo('[BLOCKED:cpp:new] executes correctly (interpreter new/delete semantics)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -242,7 +242,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp_malloc] executes correctly (interpreter malloc/free semantics)')
+  it.todo('[BLOCKED:cpp:malloc] executes correctly (interpreter malloc/free semantics)')
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)

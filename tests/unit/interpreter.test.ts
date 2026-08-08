@@ -459,8 +459,8 @@ describe('Interpreter - edge cases', () => {
   // 見 specs/053-declare-noop-execute/classification.md 的死條目。
   it('should skip language-specific concepts', async () => {
     const interp = await run([
-      createNode('cpp_include' as any, { header: 'iostream' }, {}),
-      createNode('cpp_using_namespace' as any, { namespace: 'std' }, {}),
+      createNode('cpp:include' as any, { header: 'iostream' }, {}),
+      createNode('cpp:using_namespace' as any, { namespace: 'std' }, {}),
       createNode('print', {}, {
         values: [createNode('string_literal', { value: 'ok' }, {})]
       })
@@ -563,7 +563,7 @@ describe('Interpreter - cpp_for_loop', () => {
       createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' }, {})]
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_assign', { name: 'i' }, {
           value: [createNode('number_literal', { value: '0' }, {})]
         })],
@@ -571,7 +571,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('var_ref', { name: 'i' }, {})],
           right: [createNode('number_literal', { value: '3' }, {})],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
           createNode('print', {}, {
             values: [createNode('var_ref', { name: 'i' }, {})]
@@ -587,7 +587,7 @@ describe('Interpreter - cpp_for_loop', () => {
       createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' }, {})]
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_assign', { name: 'i' }, {
           value: [createNode('number_literal', { value: '0' }, {})]
         })],
@@ -595,7 +595,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('var_ref', { name: 'i' }, {})],
           right: [createNode('number_literal', { value: '10' }, {})],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
           createNode('if', {}, {
             condition: [createNode('compare', { operator: '==' }, {
@@ -618,7 +618,7 @@ describe('Interpreter - cpp_for_loop', () => {
       createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' }, {})]
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_assign', { name: 'i' }, {
           value: [createNode('number_literal', { value: '0' }, {})]
         })],
@@ -626,7 +626,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('var_ref', { name: 'i' }, {})],
           right: [createNode('number_literal', { value: '5' }, {})],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
           createNode('if', {}, {
             condition: [createNode('compare', { operator: '==' }, {
@@ -649,7 +649,7 @@ describe('Interpreter - cpp_for_loop', () => {
       createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' }, {})]
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_assign', { name: 'i' }, {
           value: [createNode('number_literal', { value: '0' }, {})]
         })],
@@ -657,7 +657,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('var_ref', { name: 'i' }, {})],
           right: [createNode('number_literal', { value: '3' }, {})],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [],
       })
     ])
@@ -1013,7 +1013,7 @@ describe('Interpreter - more edge cases', () => {
       createNode('var_declare', { name: 'n', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '5' }, {})]
       }),
-      createNode('cpp_increment', { name: 'n', operator: '++', position: 'postfix' }, {}),
+      createNode('cpp:increment', { name: 'n', operator: '++', position: 'postfix' }, {}),
       createNode('print', {}, {
         values: [createNode('var_ref', { name: 'n' }, {})]
       })
@@ -1037,7 +1037,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
   it('should handle var_declare_expr in for-loop init', async () => {
     // for (int i = 0; i < 3; i++) { print i }
     const interp = await run([
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_declare', { type: 'int', name: 'i' }, {
           initializer: [createNode('number_literal', { value: '0' })],
         })],
@@ -1045,7 +1045,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
           left: [createNode('var_ref', { name: 'i' })],
           right: [createNode('number_literal', { value: '3' })],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
         body: [createNode('print', {}, {
           values: [createNode('var_ref', { name: 'i' })],
         })],
@@ -1060,13 +1060,13 @@ describe('Interpreter - expression concepts in for-loop', () => {
       createNode('var_declare', { name: 'i', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' })],
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [],
         cond: [createNode('compare', { operator: '<' }, {
           left: [createNode('var_ref', { name: 'i' })],
           right: [createNode('number_literal', { value: '3' })],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
         body: [],
       }),
       createNode('print', {}, {
@@ -1083,7 +1083,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
       createNode('var_declare', { name: 's', type: 'int' }, {
         initializer: [createNode('number_literal', { value: '0' })],
       }),
-      createNode('cpp_for_loop', {}, {
+      createNode('cpp:for_loop', {}, {
         init: [createNode('var_declare', { type: 'int', name: 'i' }, {
           initializer: [createNode('number_literal', { value: '1' })],
         })],
@@ -1091,8 +1091,8 @@ describe('Interpreter - expression concepts in for-loop', () => {
           left: [createNode('var_ref', { name: 'i' })],
           right: [createNode('number_literal', { value: '3' })],
         })],
-        update: [createNode('cpp_increment', { name: 'i', operator: '++', position: 'postfix' })],
-        body: [createNode('cpp_compound_assign', { name: 's', operator: '+=' }, {
+        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+        body: [createNode('cpp:compound_assign', { name: 's', operator: '+=' }, {
           value: [createNode('var_ref', { name: 'i' })],
         })],
       }),
@@ -1109,7 +1109,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
       createNode('var_declare', { name: 'n', type: 'int' }),
       createNode('while_loop', {}, {
         condition: [createNode('compare', { operator: '!=' }, {
-          left: [createNode('cpp_scanf', { format: '%d' }, {
+          left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('var_ref', { name: 'n' })],
           })],
           right: [createNode('var_ref', { name: 'EOF' })],
@@ -1165,7 +1165,7 @@ describe('Interpreter - builtin_constant', () => {
       createNode('var_declare', { name: 'n', type: 'int' }),
       createNode('while_loop', {}, {
         condition: [createNode('compare', { operator: '!=' }, {
-          left: [createNode('cpp_scanf', { format: '%d' }, {
+          left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('var_ref', { name: 'n' })],
           })],
           right: [createNode('builtin_constant', { value: 'EOF' })],
@@ -1275,7 +1275,7 @@ describe('Interpreter - abort', () => {
       // while (scanf("%d", &n) != EOF) { print n; }
       createNode('while_loop', {}, {
         condition: [createNode('compare', { operator: '!=' }, {
-          left: [createNode('cpp_scanf', { format: '%d' }, {
+          left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('var_ref', { name: 'n' })],
           })],
           right: [createNode('builtin_constant', { value: 'EOF' })],

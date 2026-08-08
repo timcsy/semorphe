@@ -96,7 +96,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const name = innerArr.namedChildren[0]?.text ?? 'arr'
     const rows = innerArr.namedChildren[1]?.text ?? '0'
     const cols = decl.namedChildren[1]?.text ?? '0'
-    return createNode('cpp_array_2d_declare', { type, name, rows, cols })
+    return createNode('cpp:array_2d_declare', { type, name, rows, cols })
   }
 
   // Array declarator: int arr[10]
@@ -132,14 +132,14 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     }
     const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = ptrIdent?.text ?? 'ptr'
-    return createNode('cpp_pointer_declare', { name, type })
+    return createNode('cpp:pointer_declare', { name, type })
   }
 
   // Bare reference declarator without init: int& ref; (rare, usually has init)
   if (decl.type === 'reference_declarator') {
     const refIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = refIdent?.text ?? 'ref'
-    return createNode('cpp_ref_declare', { name, type })
+    return createNode('cpp:ref_declare', { name, type })
   }
 
   // init_declarator: name = value
@@ -153,11 +153,11 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return createNode('cpp_ref_declare', { name, type }, {
+      return createNode('cpp:ref_declare', { name, type }, {
         initializer: value ? [value] : [],
       })
     }
-    return createNode('cpp_ref_declare', { name, type })
+    return createNode('cpp:ref_declare', { name, type })
   }
 
   // Pointer declarator: int* ptr = &x
@@ -181,11 +181,11 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return createNode('cpp_pointer_declare', { name, type }, {
+      return createNode('cpp:pointer_declare', { name, type }, {
         initializer: value ? [value] : [],
       })
     }
-    return createNode('cpp_pointer_declare', { name, type })
+    return createNode('cpp:pointer_declare', { name, type })
   }
 
   // Array init_declarator: int arr[10] = {...}
@@ -211,7 +211,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 落到通用的話它就只是一個「型別叫 istringstream 的變數」，
       // 而 `in >> a` 沒有東西可讀。
       if (type === 'istringstream' || type === 'std::istringstream') {
-        return createNode('cpp_istringstream_declare', { name }, {
+        return createNode('cpp:istringstream_declare', { name }, {
           source: args.length > 0 ? [args[0]] : [],
         })
       }
@@ -244,13 +244,13 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
       const initList = initListNode ? initListNode.text.replace(/^:\s*/, '') : ''
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp_constructor', { class_name: className, init_list: initList }, { params, body })
+      return createNode('cpp:constructor', { class_name: className, init_list: initList }, { params, body })
     }
 
     // Destructor: function_definition where declarator is destructor_name
     if (nameNode?.type === 'destructor_name') {
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp_destructor', { class_name: className }, { body })
+      return createNode('cpp:destructor', { class_name: className }, { body })
     }
 
     // Operator overload: function_definition where declarator is operator_name
@@ -269,7 +269,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
         }
       }
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp_operator_overload', { return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
+      return createNode('cpp:operator_overload', { return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
     }
 
     // Check for override keyword (via virtual_specifier node in declarator)
@@ -282,7 +282,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp_override_method', { return_type: returnType, name: methodName }, { params, body })
+      return createNode('cpp:override_method', { return_type: returnType, name: methodName }, { params, body })
     }
 
     // Virtual method with body
@@ -292,7 +292,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp_virtual_method', { return_type: returnType, name: methodName }, { params, body })
+      return createNode('cpp:virtual_method', { return_type: returnType, name: methodName }, { params, body })
     }
 
     // Regular member function → lift as func_def
@@ -310,7 +310,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const returnType = typeNode?.text ?? 'void'
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      return createNode('cpp_pure_virtual', { return_type: returnType, name: methodName }, { params })
+      return createNode('cpp:pure_virtual', { return_type: returnType, name: methodName }, { params })
     }
 
     // Static member: static int count;
@@ -320,7 +320,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
       const name = declNode?.text ?? 'member'
-      return createNode('cpp_static_member', { type, name })
+      return createNode('cpp:static_member', { type, name })
     }
 
     // Regular field declaration: type name; or type x, y;
@@ -378,7 +378,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       }
     }
 
-    return createNode('cpp_struct_declare', { name: structName }, { members })
+    return createNode('cpp:struct_declare', { name: structName }, { members })
   })
 
   // class_specifier: class Name : public Base { public: ... private: ... protected: ... };
@@ -429,7 +429,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       props.base_access = baseAccess
     }
 
-    return createNode('cpp_class_def', props, {
+    return createNode('cpp:class_def', props, {
       public: publicMembers,
       protected: protectedMembers,
       private: privateMembers,
@@ -451,7 +451,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const returnType = trailingReturn ? trailingReturn.text.replace(/^->\s*/, '') : ''
     const bodyNode = node.namedChildren.find(c => c.type === 'compound_statement') ?? null
     const body = extractBody(bodyNode, ctx)
-    return createNode('cpp_lambda', { capture, return_type: returnType }, { params, body })
+    return createNode('cpp:lambda', { capture, return_type: returnType }, { params, body })
   })
 
   // namespace_definition: namespace N { body }
@@ -466,7 +466,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         if (lifted) body.push(lifted)
       }
     }
-    return createNode('cpp_namespace_def', { name }, { body })
+    return createNode('cpp:namespace_def', { name }, { body })
   })
 
   // doc comment: /** ... */ → doc_comment with structured properties
@@ -486,11 +486,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const rawPath = pathNode.text
     if (rawPath.startsWith('<') && rawPath.endsWith('>')) {
       const header = rawPath.slice(1, -1)
-      return createNode('cpp_include', { header, local: false })
+      return createNode('cpp:include', { header, local: false })
     }
     if (rawPath.startsWith('"') && rawPath.endsWith('"')) {
       const header = rawPath.slice(1, -1)
-      return createNode('cpp_include_local', { header })
+      return createNode('cpp:include_local', { header })
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: node.text }
@@ -548,7 +548,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
     const origType = typeNode?.text ?? 'int'
     const alias = aliasNode?.text ?? 'mytype'
-    return createNode('cpp_typedef', { orig_type: origType, alias })
+    return createNode('cpp:typedef', { orig_type: origType, alias })
   })
 
   // alias_declaration: using ll = long long; → cpp_using_alias
@@ -557,7 +557,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const descriptorNode = node.namedChildren.find(c => c.type === 'type_descriptor')
     const alias = nameNode?.text ?? 'mytype'
     const origType = descriptorNode?.text ?? 'int'
-    return createNode('cpp_using_alias', { alias, orig_type: origType })
+    return createNode('cpp:using_alias', { alias, orig_type: origType })
   })
 
   // sizeof_expression: sizeof(int) or sizeof(x)
@@ -565,14 +565,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const child = node.namedChildren[0]
     if (child) {
       if (child.type === 'type_descriptor') {
-        return createNode('cpp_sizeof', { target: child.text })
+        return createNode('cpp:sizeof', { target: child.text })
       }
       if (child.type === 'parenthesized_expression') {
-        return createNode('cpp_sizeof', { target: child.namedChildren[0]?.text ?? child.text })
+        return createNode('cpp:sizeof', { target: child.namedChildren[0]?.text ?? child.text })
       }
-      return createNode('cpp_sizeof', { target: child.text })
+      return createNode('cpp:sizeof', { target: child.text })
     }
-    return createNode('cpp_sizeof', { target: 'int' })
+    return createNode('cpp:sizeof', { target: 'int' })
   })
 
   // enum_specifier: enum Color { RED, GREEN, BLUE };
@@ -590,7 +590,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           })
           .join(', ')
       : ''
-    return createNode('cpp_enum', { name, values })
+    return createNode('cpp:enum', { name, values })
   })
 
   // for_range_loop: for (auto x : vec) { body }
@@ -622,7 +622,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const container = rightNode?.text ?? 'vec'
     const bodyNode = node.childForFieldName('body') ?? node.namedChildren.find(c => c.type === 'compound_statement') ?? null
     const body = extractBody(bodyNode, ctx)
-    return createNode('cpp_range_for', { var_type: varType, var_name: varName, container }, { body })
+    return createNode('cpp:range_for', { var_type: varType, var_name: varName, container }, { body })
   })
 
   // declaration: multi-variable + array declarations
@@ -650,13 +650,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
       // Container declare concepts
       const containerConcepts: Record<string, string> = {
-        'vector': 'cpp_vector_declare',
-        'stack': 'cpp_stack_declare',
-        'queue': 'cpp_queue_declare',
-        'priority_queue': 'cpp_priority_queue_declare',
-        'set': 'cpp_set_declare',
-        'map': 'cpp_map_declare',
-        'pair': 'cpp_pair_declare',
+        'vector': 'cpp:vector_declare',
+        'stack': 'cpp:stack_declare',
+        'queue': 'cpp:queue_declare',
+        'priority_queue': 'cpp:priority_queue_declare',
+        'set': 'cpp:set_declare',
+        'map': 'cpp:map_declare',
+        'pair': 'cpp:pair_declare',
       }
 
       const conceptId = containerConcepts[templateName]
@@ -714,10 +714,10 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // Detect non-template container/stream types (string, ifstream, ofstream, stringstream)
     // These are type_identifier, possibly inside qualified_identifier (std::string, std::ifstream, etc.)
     const streamConcepts: Record<string, string> = {
-      'string': 'cpp_string_declare',
-      'ifstream': 'cpp_ifstream_declare',
-      'ofstream': 'cpp_ofstream_declare',
-      'stringstream': 'cpp_stringstream_declare',
+      'string': 'cpp:string_declare',
+      'ifstream': 'cpp:ifstream_declare',
+      'ofstream': 'cpp:ofstream_declare',
+      'stringstream': 'cpp:stringstream_declare',
     }
     const typeIdentNode = node.namedChildren.find(c => c.type === 'type_identifier')
     const qualifiedIdNode = node.namedChildren.find(c => c.type === 'qualified_identifier')
@@ -770,11 +770,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         const value = valueNode ? ctx.lift(valueNode) : null
-        return createNode('cpp_auto_declare', { name }, {
+        return createNode('cpp:auto_declare', { name }, {
           initializer: value ? [value] : [],
         })
       }
-      return createNode('cpp_auto_declare', { name: 'x' })
+      return createNode('cpp:auto_declare', { name: 'x' })
     }
 
     // const/constexpr declaration
@@ -782,10 +782,10 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
       if (decl) {
         const lifted = liftSingleDeclarator(decl, type, ctx)
-        const conceptId = qualifier === 'const' ? 'cpp_const_declare' : 'cpp_constexpr_declare'
+        const conceptId = qualifier === 'const' ? 'cpp:const_declare' : 'cpp:constexpr_declare'
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
-        if (lifted.conceptId === 'cpp_pointer_declare') liftedType += '*'
+        if (lifted.conceptId === 'cpp:pointer_declare') liftedType += '*'
         return createNode(conceptId, {
           type: liftedType,
           name: lifted.properties.name as string ?? 'x',
@@ -793,7 +793,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           initializer: lifted.children.initializer ?? [],
         })
       }
-      const conceptId = qualifier === 'const' ? 'cpp_const_declare' : 'cpp_constexpr_declare'
+      const conceptId = qualifier === 'const' ? 'cpp:const_declare' : 'cpp:constexpr_declare'
       return createNode(conceptId, { type, name: 'x' })
     }
 
@@ -803,20 +803,20 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       if (decl) {
         if (decl.type === 'identifier') {
-          return createNode('cpp_static_declare', { name: decl.text, type })
+          return createNode('cpp:static_declare', { name: decl.text, type })
         }
         const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode('cpp_static_declare', { name, type }, {
+          return createNode('cpp:static_declare', { name, type }, {
             initializer: value ? [value] : [],
           })
         }
-        return createNode('cpp_static_declare', { name, type })
+        return createNode('cpp:static_declare', { name, type })
       }
-      return createNode('cpp_static_member', { name: 'x', type })
+      return createNode('cpp:static_member', { name: 'x', type })
     }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl
@@ -877,7 +877,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const catchBodyNode = catchClause.childForFieldName('body') ?? null
       catchBody = extractBody(catchBodyNode, ctx)
     }
-    return createNode('cpp_try_catch', { catch_type: catchType, catch_name: catchName }, {
+    return createNode('cpp:try_catch', { catch_type: catchType, catch_name: catchName }, {
       try_body: tryBody,
       catch_body: catchBody,
     })
@@ -916,7 +916,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const bodyNode = funcDef.childForFieldName('body')
     const body = extractBody(bodyNode ?? null, ctx)
 
-    return createNode('cpp_template_function', {
+    return createNode('cpp:template_function', {
       t, return_type: returnType, func_name: funcName,
     }, { params, body })
   })
@@ -934,13 +934,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const argsNode = valueNode.childForFieldName('arguments')
         const argChildren = argsNode?.namedChildren ?? []
         const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-        return createNode('cpp_malloc', { type: targetType }, { size: size ? [size] : [] })
+        return createNode('cpp:malloc', { type: targetType }, { size: size ? [size] : [] })
       }
     }
 
     // Default: regular cast
     const value = valueNode ? ctx.lift(valueNode) : null
-    return createNode('cpp_cast', { target_type: targetType }, {
+    return createNode('cpp:cast', { target_type: targetType }, {
       value: value ? [value] : [],
     })
   })
@@ -952,7 +952,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const type = typeNode?.text ?? 'int'
     const argList = node.namedChildren.find(c => c.type === 'argument_list')
     const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
-    return createNode('cpp_new', { type, args })
+    return createNode('cpp:new', { type, args })
   })
 
   // count_loop: add inclusive property based on operator (< vs <=)

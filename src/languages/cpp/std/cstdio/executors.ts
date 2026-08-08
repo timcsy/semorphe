@@ -13,7 +13,7 @@ import { defaultValue, parseInputValue, valueToString } from '../../../../interp
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_printf', async (node, ctx) => {
+  register('cpp:printf', async (node, ctx) => {
     const format = String(node.properties.format ?? '')
     const argNodes = node.children.args ?? []
     const argValues: RuntimeValue[] = []
@@ -77,7 +77,7 @@ export function registerExecutors(
     return { type: 'int', value: itemsRead }
   }
 
-  register('cpp_scanf', execScanf)
+  register('cpp:scanf', execScanf)
 
 }
 

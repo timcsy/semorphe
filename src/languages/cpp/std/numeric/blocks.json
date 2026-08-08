@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_accumulate",
-    "conceptId": "cpp_accumulate",
+    "id": "cpp:accumulate",
+    "conceptId": "cpp:accumulate",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -31,14 +31,19 @@
       "tooltip": "%{BKY_CPP_ACCUMULATE_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "BEGIN": "begin", "END": "end" },
-      "inputs": { "INIT": "init" },
+      "fields": {
+        "BEGIN": "begin",
+        "END": "end"
+      },
+      "inputs": {
+        "INIT": "init"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_iota",
-    "conceptId": "cpp_iota",
+    "id": "cpp:iota",
+    "conceptId": "cpp:iota",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -69,14 +74,19 @@
       "tooltip": "%{BKY_CPP_IOTA_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "BEGIN": "begin", "END": "end" },
-      "inputs": { "VALUE": "value" },
+      "fields": {
+        "BEGIN": "begin",
+        "END": "end"
+      },
+      "inputs": {
+        "VALUE": "value"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_partial_sum",
-    "conceptId": "cpp_partial_sum",
+    "id": "cpp:partial_sum",
+    "conceptId": "cpp:partial_sum",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -107,14 +117,18 @@
       "tooltip": "%{BKY_CPP_PARTIAL_SUM_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "BEGIN": "begin", "END": "end", "DEST": "dest" },
+      "fields": {
+        "BEGIN": "begin",
+        "END": "end",
+        "DEST": "dest"
+      },
       "inputs": {},
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_gcd",
-    "conceptId": "cpp_gcd",
+    "id": "cpp:gcd",
+    "conceptId": "cpp:gcd",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -140,13 +154,16 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "A": "a", "B": "b" },
+      "inputs": {
+        "A": "a",
+        "B": "b"
+      },
       "statementInputs": {}
     }
   },
   {
-    "id": "cpp_lcm",
-    "conceptId": "cpp_lcm",
+    "id": "cpp:lcm",
+    "conceptId": "cpp:lcm",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -172,7 +189,10 @@
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "A": "a", "B": "b" },
+      "inputs": {
+        "A": "a",
+        "B": "b"
+      },
       "statementInputs": {}
     }
   }

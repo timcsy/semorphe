@@ -16,7 +16,7 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_istringstream_declare', async (node, ctx) => {
+  register('cpp:istringstream_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'in')
     const src = node.children.source ?? []
     const text = src.length > 0 ? String((await ctx.evaluate(src[0])).value) : ''

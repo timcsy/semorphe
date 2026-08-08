@@ -212,7 +212,7 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     const out = 升({
       conceptId: 'if',
       children: {
-        body: [{ conceptId: 'cpp_vector_declare', children: {} }],
+        body: [{ conceptId: 'cpp:vector_declare', children: {} }],
         condition: [{ conceptId: 'compare', children: {} }],
       },
     }) as { conceptId: string; children: Record<string, { conceptId: string }[]> }
@@ -241,7 +241,7 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
   it('④ 積木型別**完全不動**——66 顆身分與積木型別同名', () => {
     const raw = {
       version: 2,
-      tree: { conceptId: 'cpp_class_def', children: {} },
+      tree: { conceptId: 'cpp:class_def', children: {} },
       blocklyState: { blocks: { blocks: [{ type: 'cpp_class_def' }] } },
     } as Record<string, unknown>
     const out = UPGRADES[2](raw) as { tree: { conceptId: string }; blocklyState: unknown }

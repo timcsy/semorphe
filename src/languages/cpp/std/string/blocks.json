@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_string_declare",
-    "conceptId": "cpp_string_declare",
+    "id": "cpp:string_declare",
+    "conceptId": "cpp:string_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -50,8 +50,8 @@
     }
   },
   {
-    "id": "cpp_string_at",
-    "conceptId": "cpp_string_at",
+    "id": "cpp:string_at",
+    "conceptId": "cpp:string_at",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -97,8 +97,8 @@
     }
   },
   {
-    "id": "cpp_string_length",
-    "conceptId": "cpp_string_length",
+    "id": "cpp:string_length",
+    "conceptId": "cpp:string_length",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -131,8 +131,8 @@
     }
   },
   {
-    "id": "cpp_string_substr",
-    "conceptId": "cpp_string_substr",
+    "id": "cpp:string_substr",
+    "conceptId": "cpp:string_substr",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -179,8 +179,8 @@
     }
   },
   {
-    "id": "cpp_string_find",
-    "conceptId": "cpp_string_find",
+    "id": "cpp:string_find",
+    "conceptId": "cpp:string_find",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -221,8 +221,8 @@
     }
   },
   {
-    "id": "cpp_string_append",
-    "conceptId": "cpp_string_append",
+    "id": "cpp:string_append",
+    "conceptId": "cpp:string_append",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -263,8 +263,8 @@
     }
   },
   {
-    "id": "cpp_getline",
-    "conceptId": "cpp_getline",
+    "id": "cpp:getline",
+    "conceptId": "cpp:getline",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
@@ -298,8 +298,8 @@
     }
   },
   {
-    "id": "cpp_string_c_str",
-    "conceptId": "cpp_string_c_str",
+    "id": "cpp:string_c_str",
+    "conceptId": "cpp:string_c_str",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -332,8 +332,8 @@
     }
   },
   {
-    "id": "cpp_to_string",
-    "conceptId": "cpp_to_string",
+    "id": "cpp:to_string",
+    "conceptId": "cpp:to_string",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -366,8 +366,8 @@
     }
   },
   {
-    "id": "cpp_stoi",
-    "conceptId": "cpp_stoi",
+    "id": "cpp:stoi",
+    "conceptId": "cpp:stoi",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -400,8 +400,8 @@
     }
   },
   {
-    "id": "cpp_stod",
-    "conceptId": "cpp_stod",
+    "id": "cpp:stod",
+    "conceptId": "cpp:stod",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -434,8 +434,8 @@
     }
   },
   {
-    "id": "cpp_string_empty",
-    "conceptId": "cpp_string_empty",
+    "id": "cpp:string_empty",
+    "conceptId": "cpp:string_empty",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -468,8 +468,8 @@
     }
   },
   {
-    "id": "cpp_string_erase",
-    "conceptId": "cpp_string_erase",
+    "id": "cpp:string_erase",
+    "conceptId": "cpp:string_erase",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -516,8 +516,8 @@
     }
   },
   {
-    "id": "cpp_string_insert",
-    "conceptId": "cpp_string_insert",
+    "id": "cpp:string_insert",
+    "conceptId": "cpp:string_insert",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -564,8 +564,8 @@
     }
   },
   {
-    "id": "cpp_string_replace",
-    "conceptId": "cpp_string_replace",
+    "id": "cpp:string_replace",
+    "conceptId": "cpp:string_replace",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -618,8 +618,8 @@
     }
   },
   {
-    "id": "cpp_string_push_back",
-    "conceptId": "cpp_string_push_back",
+    "id": "cpp:string_push_back",
+    "conceptId": "cpp:string_push_back",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -660,8 +660,8 @@
     }
   },
   {
-    "id": "cpp_string_clear",
-    "conceptId": "cpp_string_clear",
+    "id": "cpp:string_clear",
+    "conceptId": "cpp:string_clear",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -694,8 +694,8 @@
     }
   },
   {
-    "id": "cpp_string_find_first_not_of",
-    "conceptId": "cpp_string_find_first_not_of",
+    "id": "cpp:string_find_first_not_of",
+    "conceptId": "cpp:string_find_first_not_of",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -736,8 +736,8 @@
     }
   },
   {
-    "id": "cpp_string_find_last_not_of",
-    "conceptId": "cpp_string_find_last_not_of",
+    "id": "cpp:string_find_last_not_of",
+    "conceptId": "cpp:string_find_last_not_of",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

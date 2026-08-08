@@ -67,7 +67,7 @@ async function run(body: string): Promise<string> {
 
 describe('lift（辨識）', () => {
   it('★ `priority_queue<int> pq;` 辨識得出 cpp_priority_queue_declare', () => {
-    const nodes = collect(lift(`${P}int main(){ priority_queue<int> pq; return 0; }`), 'cpp_priority_queue_declare')
+    const nodes = collect(lift(`${P}int main(){ priority_queue<int> pq; return 0; }`), 'cpp:priority_queue_declare')
     expect(nodes.length, '零個 → 對照表指向的身分仍然不存在').toBeGreaterThan(0)
     expect(nodes[0].properties.name).toBe('pq')
   })
@@ -152,6 +152,7 @@ describe('工具箱（E 項的第一次回報）', () => {
         categoryDefs: cppCategoryDefs,
       }) as { contents: { name: string; contents: { type: string }[] }[] }
       const 全部 = tb.contents.flatMap((c) => c.contents.map((b) => b.type))
+      // ⚠️ `b.type` 是**積木型別**，遷移不動它（B 項加法式保留）
       for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_top']) {
         expect(全部, `${名稱}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
       }

@@ -77,7 +77,7 @@ describe('cpp_comma_expr — 逗號運算子', () => {
 
   it('身分：辨識得出 cpp_comma_expr', () => {
     expect(
-      collect(lift(程式), 'cpp_comma_expr').length,
+      collect(lift(程式), 'cpp:comma_expr').length,
       '零個 → 這個概念沒有辨識路徑到得了，那它是死的',
     ).toBeGreaterThan(0)
   })
@@ -145,7 +145,7 @@ describe('cpp_map_access — map 的鍵存取', () => {
 
   it('身分：讀取位置辨識得出 cpp_map_access', () => {
     expect(
-      collect(lift(程式), 'cpp_map_access').length,
+      collect(lift(程式), 'cpp:map_access').length,
       '零個 → 這顆元件五路齊備、進了工具箱與兩份課程清單，卻沒有任何路徑到得了它',
     ).toBeGreaterThan(0)
   })

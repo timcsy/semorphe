@@ -39,7 +39,7 @@ interface StyleExceptionRule {
 /** Header: bits/stdc++.h in non-competitive styles */
 const bitsHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp_include' &&
+    node.conceptId === 'cpp:include' &&
     node.properties.header === 'bits/stdc++.h' &&
     style.headerStyle !== 'bits',
   label: () => '#include <bits/stdc++.h>',
@@ -52,40 +52,40 @@ const bitsHeaderRule: StyleExceptionRule = {
     const headers = style.ioPreference === 'iostream'
       ? ['iostream']
       : ['cstdio']
-    return headers.map(h => createNode('cpp_include', { header: h, local: false }))
+    return headers.map(h => createNode('cpp:include', { header: h, local: false }))
   },
 }
 
 /** Header: cstdio in iostream-preferred styles */
 const cstdioHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp_include' &&
+    node.conceptId === 'cpp:include' &&
     node.properties.header === 'cstdio' &&
     style.ioPreference === 'iostream',
   label: () => '#include <cstdio>',
   suggestion: () => '#include <iostream>',
   convert: () => {
-    return [createNode('cpp_include', { header: 'iostream', local: false })]
+    return [createNode('cpp:include', { header: 'iostream', local: false })]
   },
 }
 
 /** Header: iostream in cstdio-preferred styles */
 const iostreamHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp_include' &&
+    node.conceptId === 'cpp:include' &&
     node.properties.header === 'iostream' &&
     style.ioPreference === 'cstdio',
   label: () => '#include <iostream>',
   suggestion: () => '#include <cstdio>',
   convert: () => {
-    return [createNode('cpp_include', { header: 'cstdio', local: false })]
+    return [createNode('cpp:include', { header: 'cstdio', local: false })]
   },
 }
 
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp_printf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp:printf' && style.ioPreference === 'iostream',
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
   convert: (node) => {
@@ -99,7 +99,7 @@ const cppPrintfRule: StyleExceptionRule = {
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp_scanf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp:scanf' && style.ioPreference === 'iostream',
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
@@ -133,7 +133,7 @@ const printToCstdioRule: StyleExceptionRule = {
       }
     }
     const format = formatParts.join('') + (hasEndl ? '\\n' : '')
-    return [createNode('cpp_printf', { format }, { args })]
+    return [createNode('cpp:printf', { format }, { args })]
   },
 }
 
@@ -146,7 +146,7 @@ const inputToCstdioRule: StyleExceptionRule = {
   convert: (node) => {
     const values = node.children.values ?? []
     const format = values.map(() => '%d').join(' ')
-    return [createNode('cpp_scanf', { format }, { args: values })]
+    return [createNode('cpp:scanf', { format }, { args: values })]
   },
 }
 

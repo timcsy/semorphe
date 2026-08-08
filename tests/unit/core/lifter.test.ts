@@ -99,7 +99,7 @@ describe('Lifter', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     // With BlockSpec patterns loaded, template functions may be lifted instead of degraded
-    expect(['raw_code', 'cpp_template_function']).toContain(result!.conceptId)
+    expect(['raw_code', 'cpp:template_function']).toContain(result!.conceptId)
   })
 
   it('should lift translation_unit as program', () => {

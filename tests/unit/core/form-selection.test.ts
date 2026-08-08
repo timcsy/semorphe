@@ -214,7 +214,7 @@ describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
     const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(coreConcepts, coreBlocks)
-    const forms = reg.getFormsByConceptId('cpp_container_push')
+    const forms = reg.getFormsByConceptId('cpp:container_push')
     expect(
       forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort(),
       'byConceptId 是 Map<string, BlockSpec> 的話這裡只會有一顆——' +
@@ -227,6 +227,6 @@ describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
     const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(coreConcepts, coreBlocks)
-    expect(reg.getFormsByConceptId('cpp_container_empty')).toHaveLength(1)
+    expect(reg.getFormsByConceptId('cpp:container_empty')).toHaveLength(1)
   })
 })

@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_vector_declare",
-    "conceptId": "cpp_vector_declare",
+    "id": "cpp:vector_declare",
+    "conceptId": "cpp:vector_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -65,8 +65,8 @@
     }
   },
   {
-    "id": "cpp_vector_size",
-    "conceptId": "cpp_vector_size",
+    "id": "cpp:vector_size",
+    "conceptId": "cpp:vector_size",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -115,8 +115,8 @@
     }
   },
   {
-    "id": "cpp_vector_pop_back",
-    "conceptId": "cpp_vector_pop_back",
+    "id": "cpp:vector_pop_back",
+    "conceptId": "cpp:vector_pop_back",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -165,8 +165,8 @@
     }
   },
   {
-    "id": "cpp_vector_back",
-    "conceptId": "cpp_vector_back",
+    "id": "cpp:vector_back",
+    "conceptId": "cpp:vector_back",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

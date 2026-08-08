@@ -58,7 +58,7 @@ function find(node: SemanticNode, id: string): SemanticNode | undefined {
 
 describe('#ifdef 的巨集名只用一個參數名', () => {
   it('★ 辨識只寫 `condition`，不再重複寫 `name`', () => {
-    const n = find(lift(SRC), 'cpp_ifdef')
+    const n = find(lift(SRC), 'cpp:ifdef')
     expect(n, 'cpp_ifdef 辨識不出來').toBeDefined()
     expect(n!.properties.condition).toBe('DEBUG_MODE')
     expect(
@@ -72,7 +72,7 @@ describe('#ifdef 的巨集名只用一個參數名', () => {
     // 產生器若還讀 `name`，這裡會拿到 `#ifdef MACRO`——
     // 語法正確、語義錯誤，而來回轉換測試不一定抓得到。
     const node = createNode('program', {}, {
-      body: [createNode('cpp_ifdef', { condition: 'ONLY_CONDITION' }, { body: [] })],
+      body: [createNode('cpp:ifdef', { condition: 'ONLY_CONDITION' }, { body: [] })],
     })
     const code = generateCode(node, 'cpp', apcs as never)
     expect(code, '產生器退到了預設值 MACRO → 它讀的是另一個參數名').toContain('#ifdef ONLY_CONDITION')

@@ -8,40 +8,40 @@
       "where": "src/interpreter/executors/arrays.ts:16"
     },
     {
-      "componentId": "cpp_class_def",
+      "componentId": "cpp:class_def",
       "param": "base",
       "方向": "讀了沒宣告",
       "where": "src/languages/cpp/core/executors/structs.ts:192"
     },
     {
-      "componentId": "cpp_class_def",
+      "componentId": "cpp:class_def",
       "param": "base_access",
       "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:469"
+      "where": "src/languages/cpp/core/generators/statements.ts:472"
     },
     {
-      "componentId": "cpp_class_def",
+      "componentId": "cpp:class_def",
       "param": "base_class",
       "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:468"
+      "where": "src/languages/cpp/core/generators/statements.ts:471"
     },
     {
-      "componentId": "cpp_increment",
+      "componentId": "cpp:increment",
       "param": "NAME",
       "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:315"
+      "where": "src/languages/cpp/core/generators/statements.ts:318"
     },
     {
-      "componentId": "cpp_increment",
+      "componentId": "cpp:increment",
       "param": "OP",
       "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:316"
+      "where": "src/languages/cpp/core/generators/statements.ts:319"
     },
     {
-      "componentId": "cpp_increment",
+      "componentId": "cpp:increment",
       "param": "POSITION",
       "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:317"
+      "where": "src/languages/cpp/core/generators/statements.ts:320"
     },
     {
       "componentId": "input",
@@ -76,22 +76,22 @@
   ],
   "退路自相矛盾": [
     {
-      "componentId": "cpp_define",
+      "componentId": "cpp:define",
       "param": "name",
       "方向": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:30→\"\"  src/languages/cpp/core/generators/statements.ts:247→\"MACRO\""
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:30→\"\"  src/languages/cpp/core/generators/statements.ts:250→\"MACRO\""
     },
     {
-      "componentId": "cpp_ifdef",
+      "componentId": "cpp:ifdef",
       "param": "condition",
       "方向": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:35→\"\"  src/languages/cpp/core/generators/statements.ts:260→\"MACRO\""
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:35→\"\"  src/languages/cpp/core/generators/statements.ts:263→\"MACRO\""
     },
     {
-      "componentId": "cpp_ifndef",
+      "componentId": "cpp:ifndef",
       "param": "condition",
       "方向": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:265→\"MACRO\""
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:268→\"MACRO\""
     }
   ]
 }

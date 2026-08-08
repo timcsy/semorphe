@@ -189,6 +189,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // ——而它會讓 u_var_declare／u_input／u_func_call 等七顆最常用的敘述版
     // 積木從工具箱裡消失。實作時真的踩到了。
     const { categoriesOf } = measure()
+    // ⚠️ 這一列是**積木型別**（`u_`／`c_` 前綴看得出來），遷移不動它們
     for (const t of ['u_var_declare', 'u_input', 'u_func_call', 'cpp_method_call', 'c_increment', 'c_scanf']) {
       expect(categoriesOf.has(t), `${t} 是敘述版，位置永遠取得到，它不需要也不是退路`).toBe(true)
     }

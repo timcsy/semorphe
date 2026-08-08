@@ -85,14 +85,14 @@ describe('Preprocessor Directives', () => {
     it('lifts system include correctly', () => {
       const node = liftFirst('#include <iostream>')
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp_include')
+      expect(node!.conceptId).toBe('cpp:include')
       expect(node!.properties.header).toBe('iostream')
     })
 
     it('lifts local include correctly', () => {
       const node = liftFirst('#include "myheader.h"')
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp_include_local')
+      expect(node!.conceptId).toBe('cpp:include_local')
       expect(node!.properties.header).toBe('myheader.h')
     })
 
@@ -120,7 +120,7 @@ describe('Preprocessor Directives', () => {
     it('lifts #define correctly', () => {
       const node = liftFirst('#define MAX 100')
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp_define')
+      expect(node!.conceptId).toBe('cpp:define')
       expect(node!.properties.name).toBe('MAX')
       expect(node!.properties.value).toBe('100')
     })
@@ -135,7 +135,7 @@ describe('Preprocessor Directives', () => {
     it('lifts using namespace correctly', () => {
       const node = liftFirst('using namespace std;')
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp_using_namespace')
+      expect(node!.conceptId).toBe('cpp:using_namespace')
       expect(node!.properties.ns).toBe('std')
     })
 
@@ -175,7 +175,7 @@ describe('Declarations', () => {
       const node = liftFirst('string name = "hello";')
       expect(node).not.toBeNull()
       // string declarations are now lifted as cpp_string_declare
-      expect(node!.conceptId).toBe('cpp_string_declare')
+      expect(node!.conceptId).toBe('cpp:string_declare')
       expect(node!.properties.name).toBe('name')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
@@ -285,7 +285,7 @@ describe('Expressions', () => {
       const body = liftBody("char c = 'A';")
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.conceptId).toBe('cpp_char_literal')
+      expect(inits[0]?.conceptId).toBe('cpp:char_literal')
       expect(inits[0]?.properties.char).toBe('A')
     })
   })
@@ -383,7 +383,7 @@ describe('Expressions', () => {
     it('lifts strlen(s) as cpp_strlen', () => {
       const n = liftExpr('strlen(s)')
       expect(n).not.toBeNull()
-      expect(n!.conceptId).toBe('cpp_strlen')
+      expect(n!.conceptId).toBe('cpp:strlen')
       expect(n!.children.str).toBeDefined()
       expect(n!.children.str!.length).toBe(1)
     })
@@ -866,7 +866,7 @@ describe('Compound Assignment & Increment', () => {
       const node = mainBody[0]
       expect(node).not.toBeNull()
       // Should be cpp_compound_assign, NOT var_assign
-      expect(node!.conceptId).toBe('cpp_compound_assign')
+      expect(node!.conceptId).toBe('cpp:compound_assign')
       expect(node!.properties.name).toBe('x')
       expect(node!.properties.operator).toBe('+=')
     })
@@ -875,7 +875,7 @@ describe('Compound Assignment & Increment', () => {
       const body = liftBody('int main() { x -= 3; }')
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
-      expect(node!.conceptId).toBe('cpp_compound_assign')
+      expect(node!.conceptId).toBe('cpp:compound_assign')
       expect(node!.properties.operator).toBe('-=')
     })
 
@@ -900,7 +900,7 @@ describe('Compound Assignment & Increment', () => {
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp_increment')
+      expect(node!.conceptId).toBe('cpp:increment')
       expect(node!.properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
@@ -909,7 +909,7 @@ describe('Compound Assignment & Increment', () => {
       const body = liftBody('int main() { i--; }')
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
-      expect(node!.conceptId).toBe('cpp_increment')
+      expect(node!.conceptId).toBe('cpp:increment')
       expect(node!.properties.operator).toBe('--')
     })
 

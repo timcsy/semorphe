@@ -87,7 +87,7 @@ describe('C++ String Fuzz Tests (hard)', () => {
   // COMPILE_FAIL — cout chains with conversion results become raw_code
   // COMPILE_FAIL — cout with ternary and function calls in chain
 
-  it.todo('[BLOCKED:cpp_pointer_declare] fuzz_6: function returning substr with nested find')
+  it.todo('[BLOCKED:cpp:pointer_declare] fuzz_6: function returning substr with nested find')
   // COMPILE_FAIL — function with const reference params drops const
   // COMPILE_FAIL — cout << inside if/else blocks with string comparisons
   // ROUNDTRIP_DRIFT — s.clear() after cout << becomes chained

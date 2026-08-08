@@ -40,7 +40,7 @@ async function 宣告類別(member: SemanticNode, className = 'K'): Promise<Sema
   const interp = new SemanticInterpreter({ maxSteps: 5000 })
   await interp.execute(
     n('program', {}, {
-      body: [n('cpp_class_def', { name: className }, { public: [member], private: [] })],
+      body: [n('cpp:class_def', { name: className }, { public: [member], private: [] })],
     }),
   )
   return interp
@@ -48,14 +48,14 @@ async function 宣告類別(member: SemanticNode, className = 'K'): Promise<Sema
 
 describe('cpp_class_def 真的消費這六種成員', () => {
   const 方法類: [string, string][] = [
-    ['cpp_virtual_method', 'v'],
-    ['cpp_override_method', 'o'],
-    ['cpp_pure_virtual', 'pv'],
+    ['cpp:virtual_method', 'v'],
+    ['cpp:override_method', 'o'],
+    ['cpp:pure_virtual', 'pv'],
   ]
 
   for (const [concept, name] of 方法類) {
     it(`★ ${concept} 被收進型別的方法表`, async () => {
-      const body = concept === 'cpp_pure_virtual' ? {} : { body: [ret(num(1))] }
+      const body = concept === 'cpp:pure_virtual' ? {} : { body: [ret(num(1))] }
       const interp = await 宣告類別(n(concept, { name, return_type: 'int' }, { params: [], ...body }))
       expect(
         interp.structs.method('K', name),
@@ -67,13 +67,13 @@ describe('cpp_class_def 真的消費這六種成員', () => {
 
   it('★ cpp_operator_overload 被收成 `operator+`', async () => {
     const interp = await 宣告類別(
-      n('cpp_operator_overload', { operator: '+', param_type: 'K', param_name: 'r' }, { body: [ret(num(1))] }),
+      n('cpp:operator_overload', { operator: '+', param_type: 'K', param_name: 'r' }, { body: [ret(num(1))] }),
     )
     expect(interp.structs.method('K', 'operator+')).toBeDefined()
   })
 
   it('★ cpp_static_member 被收進型別的靜態表', async () => {
-    const interp = await 宣告類別(n('cpp_static_member', { name: 's', type: 'int' }))
+    const interp = await 宣告類別(n('cpp:static_member', { name: 's', type: 'int' }))
     expect(
       interp.structs.staticsOf('K')?.has('s'),
       'cpp_static_member 沒有被收進靜態表',
@@ -81,13 +81,13 @@ describe('cpp_class_def 真的消費這六種成員', () => {
   })
 
   it('★ cpp_destructor 被收成型別的解構式', async () => {
-    const interp = await 宣告類別(n('cpp_destructor', { class_name: 'K' }, { body: [] }))
+    const interp = await 宣告類別(n('cpp:destructor', { class_name: 'K' }, { body: [] }))
     expect(interp.structs.destructorOf('K'), 'cpp_destructor 沒有被收進去').toBeDefined()
   })
 
   it('★ cpp_constructor 被收成型別的建構式', async () => {
     const interp = await 宣告類別(
-      n('cpp_constructor', { class_name: 'K' }, { params: [], body: [] }),
+      n('cpp:constructor', { class_name: 'K' }, { params: [], body: [] }),
     )
     expect(interp.structs.constructorOf('K')).toBeDefined()
   })
@@ -126,8 +126,8 @@ describe('宣告的依據必須存在——反過來查一次', () => {
     // 其他父概念的消費關係要各自有各自的證據測試——本檔不涵蓋，
     // 而這一行就是那個邊界。
     const 類別成員 = new Set([
-      'cpp_virtual_method', 'cpp_override_method', 'cpp_pure_virtual',
-      'cpp_operator_overload', 'cpp_static_member', 'cpp_constructor', 'cpp_destructor',
+      'cpp:virtual_method', 'cpp:override_method', 'cpp:pure_virtual',
+      'cpp:operator_overload', 'cpp:static_member', 'cpp:constructor', 'cpp:destructor',
     ])
     const 宣告者 = allComponentDefs()
       .filter(

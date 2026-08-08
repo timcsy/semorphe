@@ -11,7 +11,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_string_declare', async (node, ctx) => {
+  register('cpp:string_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'str')
     // ⚠️ **初始值原本被完全忽略**——`string s = "abc";` 之後 `s` 是 `""`。
     //
@@ -29,14 +29,14 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'string', value: '' })
   })
 
-  register('cpp_string_length', async (node, ctx) => {
+  register('cpp:string_length', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
     return { type: 'int', value: str.length }
   })
 
-  register('cpp_string_substr', async (node, ctx) => {
+  register('cpp:string_substr', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -47,7 +47,7 @@ export function registerExecutors(
     return { type: 'string', value: str.substring(pos, pos + len) }
   })
 
-  register('cpp_string_find', async (node, ctx) => {
+  register('cpp:string_find', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -71,8 +71,8 @@ export function registerExecutors(
    * 找不到時回 **-1**，與 `find` 一致（理由見 092：使用者常寫 `!= -1`）。
    */
   for (const [concept, fromEnd] of [
-    ['cpp_string_find_first_not_of', false],
-    ['cpp_string_find_last_not_of', true],
+    ['cpp:string_find_first_not_of', false],
+    ['cpp:string_find_last_not_of', true],
   ] as [string, boolean][]) {
     register(concept, async (node, ctx) => {
       const str = String(ctx.scope.get(String(node.properties.obj)).value)
@@ -84,7 +84,7 @@ export function registerExecutors(
     })
   }
 
-  register('cpp_string_append', async (node, ctx) => {
+  register('cpp:string_append', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const valueNodes = node.children.value ?? []
@@ -93,13 +93,13 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: String(val.value) + String(appendVal.value) })
   })
 
-  register('cpp_string_c_str', async (node, ctx) => {
+  register('cpp:string_c_str', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     return { type: 'string', value: String(val.value) }
   })
 
-  register('cpp_getline', async (node, ctx) => {
+  register('cpp:getline', async (node, ctx) => {
     const name = String(node.properties.name)
     const line = ctx.io.read()
     try {
@@ -109,14 +109,14 @@ export function registerExecutors(
     }
   })
 
-  register('cpp_to_string', async (node, ctx) => {
+  register('cpp:to_string', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'string', value: '' }
     const val = await ctx.evaluate(valueNodes[0])
     return { type: 'string', value: String(val.value) }
   })
 
-  register('cpp_stoi', async (node, ctx) => {
+  register('cpp:stoi', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
@@ -125,7 +125,7 @@ export function registerExecutors(
     return { type: 'int', value: n }
   })
 
-  register('cpp_stod', async (node, ctx) => {
+  register('cpp:stod', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'double', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
@@ -134,13 +134,13 @@ export function registerExecutors(
     return { type: 'double', value: n }
   })
 
-  register('cpp_string_empty', async (node, ctx) => {
+  register('cpp:string_empty', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     return { type: 'bool', value: String(val.value).length === 0 }
   })
 
-  register('cpp_string_erase', async (node, ctx) => {
+  register('cpp:string_erase', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -151,7 +151,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + str.substring(pos + len) })
   })
 
-  register('cpp_string_insert', async (node, ctx) => {
+  register('cpp:string_insert', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -162,7 +162,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + insertStr + str.substring(pos) })
   })
 
-  register('cpp_string_replace', async (node, ctx) => {
+  register('cpp:string_replace', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -175,7 +175,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + replaceStr + str.substring(pos + len) })
   })
 
-  register('cpp_string_push_back', async (node, ctx) => {
+  register('cpp:string_push_back', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     // ⚠️ 辨識器把引數放在 `value`（見 `METHOD_CHILD_SLOT`），而這裡原本只讀
@@ -194,12 +194,12 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: String(val.value) + chStr })
   })
 
-  register('cpp_string_clear', async (node, ctx) => {
+  register('cpp:string_clear', async (node, ctx) => {
     const obj = String(node.properties.obj)
     ctx.scope.set(obj, { type: 'string', value: '' })
   })
 
-  register('cpp_string_at', async (node, ctx) => {
+  register('cpp:string_at', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)

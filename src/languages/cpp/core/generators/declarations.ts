@@ -37,7 +37,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return 收尾(`${type} ${name}`)
   })
 
-  g.set('cpp_ref_declare', (node, ctx) => {
+  g.set('cpp:ref_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'ref'
     const inits = node.children.initializer ?? []
@@ -48,7 +48,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type}& ${name};\n`
   })
 
-  g.set('cpp_static_declare', (node, ctx) => {
+  g.set('cpp:static_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'count'
     const inits = node.children.initializer ?? []
@@ -59,7 +59,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}static ${type} ${name};\n`
   })
 
-  g.set('cpp_static_member', (node, ctx) => {
+  g.set('cpp:static_member', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'count'
     return `${indent(ctx)}static ${type} ${name};\n`
@@ -115,18 +115,18 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${name}[${idx}]`
   })
 
-  g.set('cpp_sizeof', (node) => {
+  g.set('cpp:sizeof', (node) => {
     const target = node.properties.target ?? 'int'
     return `sizeof(${target})`
   })
 
-  g.set('cpp_enum', (node, ctx) => {
+  g.set('cpp:enum', (node, ctx) => {
     const name = node.properties.name ?? 'MyEnum'
     const values = node.properties.values ?? ''
     return `${indent(ctx)}enum ${name} { ${values} };\n`
   })
 
-  g.set('cpp_range_for', (node, ctx) => {
+  g.set('cpp:range_for', (node, ctx) => {
     const varType = node.properties.var_type ?? 'auto'
     const varName = node.properties.var_name ?? 'x'
     const container = node.properties.container ?? 'vec'
@@ -136,7 +136,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${ind}for (${varType} ${varName} : ${container}) {\n${bodyCode}${ind}}\n`
   })
 
-  g.set('cpp_template_function', (node, ctx) => {
+  g.set('cpp:template_function', (node, ctx) => {
     const t = node.properties.t ?? 'T'
     const returnType = node.properties.return_type ?? 'T'
     const funcName = node.properties.func_name ?? 'myFunc'
@@ -156,7 +156,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${ind}template <typename ${t}>\n${ind}${returnType} ${funcName}(${paramStr}) {\n${bodyCode}${ind}}\n`
   })
 
-  g.set('cpp_array_2d_declare', (node, ctx) => {
+  g.set('cpp:array_2d_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'arr'
     const rows = node.properties.rows ?? '3'
@@ -164,7 +164,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type} ${name}[${rows}][${cols}];\n`
   })
 
-  g.set('cpp_array_2d_access', (node, ctx) => {
+  g.set('cpp:array_2d_access', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []
@@ -173,7 +173,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${name}[${row}][${col}]`
   })
 
-  g.set('cpp_array_2d_assign', (node, ctx) => {
+  g.set('cpp:array_2d_assign', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []
@@ -193,7 +193,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name}[${idx}] = ${val};\n`
   })
 
-  g.set('cpp_pointer_declare', (node, ctx) => {
+  g.set('cpp:pointer_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'ptr'
     const inits = node.children.initializer ?? []
@@ -204,7 +204,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type}* ${name};\n`
   })
 
-  g.set('cpp_const_declare', (node, ctx) => {
+  g.set('cpp:const_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'MAX'
     const inits = node.children.initializer ?? []
@@ -215,7 +215,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}const ${type} ${name};\n`
   })
 
-  g.set('cpp_constexpr_declare', (node, ctx) => {
+  g.set('cpp:constexpr_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'SIZE'
     const inits = node.children.initializer ?? []
@@ -226,7 +226,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}constexpr ${type} ${name};\n`
   })
 
-  g.set('cpp_auto_declare', (node, ctx) => {
+  g.set('cpp:auto_declare', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const inits = node.children.initializer ?? []
     if (inits.length > 0) {
@@ -236,19 +236,19 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}auto ${name};\n`
   })
 
-  g.set('cpp_typedef', (node, ctx) => {
+  g.set('cpp:typedef', (node, ctx) => {
     const origType = node.properties.orig_type ?? 'int'
     const alias = node.properties.alias ?? 'myint'
     return `${indent(ctx)}typedef ${origType} ${alias};\n`
   })
 
-  g.set('cpp_using_alias', (node, ctx) => {
+  g.set('cpp:using_alias', (node, ctx) => {
     const alias = node.properties.alias ?? 'll'
     const origType = node.properties.orig_type ?? 'long long'
     return `${indent(ctx)}using ${alias} = ${origType};\n`
   })
 
-  g.set('cpp_struct_declare', (node, ctx) => {
+  g.set('cpp:struct_declare', (node, ctx) => {
     const name = node.properties.name ?? 'MyStruct'
     const members = node.children.members ?? []
     let code = `${indent(ctx)}struct ${name} {\n`

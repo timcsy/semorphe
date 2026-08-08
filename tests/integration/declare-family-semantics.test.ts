@@ -112,11 +112,11 @@ describe('cpp_ref_declare — 參照是別名', () => {
 describe('六顆宣告概念的身分', () => {
   const 樣本: [string, string][] = [
     ['int a = 1;', 'var_declare'],
-    ['const int b = 2;', 'cpp_const_declare'],
-    ['constexpr int c = 3;', 'cpp_constexpr_declare'],
-    ['static int d = 4;', 'cpp_static_declare'],
-    ['int* p = nullptr;', 'cpp_pointer_declare'],
-    ['int& r = a;', 'cpp_ref_declare'],
+    ['const int b = 2;', 'cpp:const_declare'],
+    ['constexpr int c = 3;', 'cpp:constexpr_declare'],
+    ['static int d = 4;', 'cpp:static_declare'],
+    ['int* p = nullptr;', 'cpp:pointer_declare'],
+    ['int& r = a;', 'cpp:ref_declare'],
   ]
 
   for (const [程式, 身分] of 樣本) {

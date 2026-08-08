@@ -66,20 +66,20 @@ describe('Topic-Based Block Visibility', () => {
   describe('concept visibility with different branches', () => {
     it('should show control flow concepts when L1b enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1b']))
-      expect(concepts.has('cpp_switch')).toBe(true)
-      expect(concepts.has('cpp_do_while')).toBe(true)
+      expect(concepts.has('cpp:switch')).toBe(true)
+      expect(concepts.has('cpp:do_while')).toBe(true)
     })
 
     it('should show pointer concepts when L2b enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1b', 'L2b']))
-      expect(concepts.has('cpp_pointer_declare')).toBe(true)
-      expect(concepts.has('cpp_address_of')).toBe(true)
+      expect(concepts.has('cpp:pointer_declare')).toBe(true)
+      expect(concepts.has('cpp:address_of')).toBe(true)
     })
 
     it('should show container concepts when L2c enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1b', 'L2c']))
-      expect(concepts.has('cpp_vector_declare')).toBe(true)
-      expect(concepts.has('cpp_map_declare')).toBe(true)
+      expect(concepts.has('cpp:vector_declare')).toBe(true)
+      expect(concepts.has('cpp:map_declare')).toBe(true)
     })
   })
 

@@ -72,7 +72,7 @@ describe('轉型運算：實作一直都在，只是被清單蓋掉', () => {
 
   it('★ 每個轉型概念只有一處註冊——重複註冊時勝負由載入順序決定', () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
-    for (const c of ['cpp_static_cast', 'cpp_dynamic_cast', 'cpp_reinterpret_cast', 'cpp_const_cast']) {
+    for (const c of ['cpp:static_cast', 'cpp:dynamic_cast', 'cpp:reinterpret_cast', 'cpp:const_cast']) {
       const ex = interp.getExecutor(c)
       expect(ex, `${c} 完全沒有執行器`).toBeDefined()
     }

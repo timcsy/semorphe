@@ -99,7 +99,7 @@ describe('Four-level lift pipeline', () => {
       expect(body.length).toBeGreaterThan(0)
       // The class should be unresolved or raw_code
       const classNode = body[0]
-      expect(['unresolved', 'raw_code', 'cpp_class_def']).toContain(classNode.conceptId)
+      expect(['unresolved', 'raw_code', 'cpp:class_def']).toContain(classNode.conceptId)
       if (classNode.conceptId === 'unresolved') {
         expect(classNode.metadata?.rawCode).toContain('class Foo')
         expect(classNode.children.children.length).toBeGreaterThan(0)
@@ -124,7 +124,7 @@ describe('Four-level lift pipeline', () => {
       const body = tree!.children.body
       expect(body.length).toBeGreaterThan(0)
       // Template should be raw_code, unresolved, or cpp_template_function
-      expect(['raw_code', 'unresolved', 'cpp_template_function']).toContain(body[0].conceptId)
+      expect(['raw_code', 'unresolved', 'cpp:template_function']).toContain(body[0].conceptId)
     })
 
     it('should degrade preprocessor macros to raw_code', () => {

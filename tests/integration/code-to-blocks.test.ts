@@ -126,7 +126,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift i++ to cpp_increment concept', () => {
       const sem = liftCode('i++;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_increment')
+      expect(concepts).toContain('cpp:increment')
     })
 
     it('should render i++ to c_increment block', () => {
@@ -141,7 +141,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift x += 5 to cpp_compound_assign concept', () => {
       const sem = liftCode('x += 5;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_compound_assign')
+      expect(concepts).toContain('cpp:compound_assign')
     })
   })
 
@@ -191,7 +191,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift non-counting for loop to cpp_for_loop concept', () => {
       const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_for_loop')
+      expect(concepts).toContain('cpp:for_loop')
     })
 
     it('should render non-counting for to c_for_loop block', () => {
@@ -276,13 +276,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift *ptr to cpp_pointer_deref', () => {
       const sem = liftCode('int x = *ptr;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_pointer_deref')
+      expect(concepts).toContain('cpp:pointer_deref')
     })
 
     it('should lift &x to cpp_address_of', () => {
       const sem = liftCode('int *p = &x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_address_of')
+      expect(concepts).toContain('cpp:address_of')
     })
   })
 
@@ -290,14 +290,14 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift strlen(s) to cpp_strlen concept', () => {
       const sem = liftCode('int n = strlen(s);')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_strlen')
+      expect(concepts).toContain('cpp:strlen')
     })
 
     it('should lift free(ptr) to cpp_free (hand-written lifter)', () => {
       const sem = liftCode('free(ptr);')
       const concepts = findConcepts(sem)
       // free() is now recognized as cpp_free concept
-      expect(concepts).toContain('cpp_free')
+      expect(concepts).toContain('cpp:free')
     })
   })
 
@@ -305,13 +305,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift p.x to cpp_struct_member_access', () => {
       const sem = liftCode('int v = p.x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_struct_member_access')
+      expect(concepts).toContain('cpp:struct_member_access')
     })
 
     it('should lift p->x to cpp_struct_pointer_access', () => {
       const sem = liftCode('int v = p->x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_struct_pointer_access')
+      expect(concepts).toContain('cpp:struct_pointer_access')
     })
   })
 
@@ -319,13 +319,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift #include to cpp_include', () => {
       const sem = liftCode('#include <iostream>')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_include')
+      expect(concepts).toContain('cpp:include')
     })
 
     it('should lift #define to cpp_define', () => {
       const sem = liftCode('#define MAX 100')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_define')
+      expect(concepts).toContain('cpp:define')
     })
   })
 
@@ -369,7 +369,7 @@ int main() {
       const sem = liftCode(code)
       expect(sem).not.toBeNull()
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp_include')
+      expect(concepts).toContain('cpp:include')
       expect(concepts).toContain('input')
       expect(concepts).toContain('count_loop')
       expect(concepts).toContain('print')

@@ -137,7 +137,7 @@ describe('辨識不出來的程式碼不再被靜靜略過', () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
     await expect(
       interp.execute(
-        createNode('program', {}, { body: [createNode('cpp_raw_code', { code: 'asm volatile("nop")' }, {})] }),
+        createNode('program', {}, { body: [createNode('cpp:raw_code', { code: 'asm volatile("nop")' }, {})] }),
       ),
     ).rejects.toThrow(/UNRECOGNIZED_CODE/)
   })
@@ -149,7 +149,7 @@ describe('辨識不出來的程式碼不再被靜靜略過', () => {
     let caught: unknown
     try {
       await interp.execute(
-        createNode('program', {}, { body: [createNode('cpp_raw_code', { code: 'XYZZY_MARKER' }, {})] }),
+        createNode('program', {}, { body: [createNode('cpp:raw_code', { code: 'XYZZY_MARKER' }, {})] }),
       )
     } catch (e) {
       caught = e
@@ -193,7 +193,7 @@ describe('條件編譯：#ifdef / #ifndef 的 body 真的會跑', () => {
     const found: string[] = []
     const walk = (n: SemanticNode | null): void => {
       if (!n) return
-      if (n.conceptId === 'cpp_ifdef') for (const c of n.children?.body ?? []) found.push(c.conceptId)
+      if (n.conceptId === 'cpp:ifdef') for (const c of n.children?.body ?? []) found.push(c.conceptId)
       for (const a of Object.values(n.children ?? {})) for (const c of a) walk(c)
     }
     walk(tree)

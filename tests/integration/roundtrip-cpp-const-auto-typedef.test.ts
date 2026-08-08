@@ -45,7 +45,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     expect(body.length).toBe(1)
-    expect(body[0].conceptId).toBe('cpp_const_declare')
+    expect(body[0].conceptId).toBe('cpp:const_declare')
     expect(body[0].properties.type).toBe('int')
     expect(body[0].properties.name).toBe('MAX')
 
@@ -56,7 +56,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     const tree2 = liftCode(code.trim())
     expect(tree2).not.toBeNull()
     const body2 = tree2!.children.body ?? []
-    expect(body2.some(n => n.conceptId === 'cpp_const_declare')).toBe(true)
+    expect(body2.some(n => n.conceptId === 'cpp:const_declare')).toBe(true)
   })
 
   it('should round-trip constexpr int declaration', () => {
@@ -64,7 +64,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     expect(body.length).toBe(1)
-    expect(body[0].conceptId).toBe('cpp_constexpr_declare')
+    expect(body[0].conceptId).toBe('cpp:constexpr_declare')
     expect(body[0].properties.type).toBe('int')
     expect(body[0].properties.name).toBe('SIZE')
 
@@ -77,7 +77,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     expect(body.length).toBe(1)
-    expect(body[0].conceptId).toBe('cpp_auto_declare')
+    expect(body[0].conceptId).toBe('cpp:auto_declare')
     expect(body[0].properties.name).toBe('x')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -89,7 +89,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     expect(body.length).toBe(1)
-    expect(body[0].conceptId).toBe('cpp_typedef')
+    expect(body[0].conceptId).toBe('cpp:typedef')
     expect(body[0].properties.orig_type).toBe('int')
     expect(body[0].properties.alias).toBe('myint')
 
@@ -102,7 +102,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     expect(body.length).toBe(1)
-    expect(body[0].conceptId).toBe('cpp_using_alias')
+    expect(body[0].conceptId).toBe('cpp:using_alias')
     expect(body[0].properties.alias).toBe('ll')
     expect(body[0].properties.orig_type).toBe('long long')
 
@@ -114,7 +114,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     const tree = liftCode('const int N = 3 + 4;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp_const_declare')
+    expect(body[0].conceptId).toBe('cpp:const_declare')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('const int N = 3 + 4;')
@@ -124,7 +124,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     const tree = liftCode('auto y = a + b;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp_auto_declare')
+    expect(body[0].conceptId).toBe('cpp:auto_declare')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('auto y = a + b;')
@@ -134,7 +134,7 @@ describe('Round-trip: const/constexpr/auto/typedef/using alias', () => {
     const tree = liftCode('const double PI = 3.14;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp_const_declare')
+    expect(body[0].conceptId).toBe('cpp:const_declare')
     expect(body[0].properties.type).toBe('double')
 
     const code = generateCode(tree!, 'cpp', style)

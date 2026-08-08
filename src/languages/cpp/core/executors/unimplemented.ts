@@ -31,7 +31,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
  * 出聲的形式是可被 `unknownConceptHandler` 接管的錯誤，與未知概念同一條路徑：
  * 使用者可以選擇跳過或中止，**但不會不知道**。
  */
-const RAW_CODE_CONTAINERS = ['cpp_raw_code', 'cpp_raw_expression'] as const
+const RAW_CODE_CONTAINERS = ['cpp:raw_code', 'cpp:raw_expression'] as const
 
 /**
  * 直譯器不支援物件導向。這十個是**殼**，不是宣告——見檔頭。

@@ -23,26 +23,26 @@ describe('TemplateGenerator', () => {
 
   describe('property substitution', () => {
     it('should substitute ${FIELD} with properties', () => {
-      gen.registerTemplate('cpp_increment', {
+      gen.registerTemplate('cpp:increment', {
         pattern: '${NAME}${OP}',
         imports: [],
         order: 8,
       })
 
-      const node = createNode('cpp_increment', { NAME: 'i', OP: '++' })
+      const node = createNode('cpp:increment', { NAME: 'i', OP: '++' })
       const result = gen.generate(node, { indent: 0, style: defaultStyle })
       expect(result).toBe('i++')
     })
 
     it('should substitute multiple fields', () => {
-      gen.registerTemplate('cpp_compound_assign', {
+      gen.registerTemplate('cpp:compound_assign', {
         pattern: '${NAME} ${OP} ${VALUE};',
         imports: [],
         order: 0,
       })
 
       const valueNode = createNode('number_literal', { value: '5' })
-      const node = createNode('cpp_compound_assign', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
+      const node = createNode('cpp:compound_assign', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
 
       // Register child generator
       gen.registerTemplate('number_literal', { pattern: '${value}', imports: [], order: 20 })
@@ -139,13 +139,13 @@ describe('TemplateGenerator', () => {
 
   describe('imports collection', () => {
     it('should collect imports from templates', () => {
-      gen.registerTemplate('cpp_printf', {
+      gen.registerTemplate('cpp:printf', {
         pattern: 'printf("${FORMAT}"${ARGS});',
         imports: ['stdio.h'],
         order: 0,
       })
 
-      const node = createNode('cpp_printf', { FORMAT: '%d', ARGS: ', x' })
+      const node = createNode('cpp:printf', { FORMAT: '%d', ARGS: ', x' })
       gen.generate(node, { indent: 0, style: defaultStyle })
       expect(gen.getCollectedImports()).toContain('stdio.h')
     })
@@ -153,7 +153,7 @@ describe('TemplateGenerator', () => {
 
   describe('expression fallback to hand-written generators', () => {
     it('should use expressionFallback when child has no template', () => {
-      gen.registerTemplate('cpp_for_loop', {
+      gen.registerTemplate('cpp:for_loop', {
         pattern: 'for (${INIT}; ${COND}; ${UPDATE}) {}',
         imports: [],
         order: 0,
@@ -172,7 +172,7 @@ describe('TemplateGenerator', () => {
         return null
       })
 
-      const forNode = createNode('cpp_for_loop', {}, {
+      const forNode = createNode('cpp:for_loop', {}, {
         init: [createNode('var_declare_expr', { type: 'int', name: 'i' })],
         cond: [createNode('var_ref', { name: 'x' })],
         update: [createNode('cpp_increment_expr', { name: 'i', operator: '++' })],

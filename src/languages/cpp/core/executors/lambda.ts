@@ -60,7 +60,7 @@ export function registerLambdaExecutors(
     }
   }
 
-  register('cpp_lambda', async (node, ctx) => {
+  register('cpp:lambda', async (node, ctx) => {
     安裝(ctx)
     const raw = String(node.properties.capture ?? '&')
     const capture: Callable['capture'] = raw.includes('&') ? '&' : raw.includes('=') ? '=' : ''

@@ -156,9 +156,9 @@ describe('自我驗證：這條護欄的判準是準的', () => {
     const 樣本: [string, string, boolean, string][] = [
       ['var_declare', 'init_style', true, 'core/generators/declarations.ts:30 用它分支'],
       ['array_declare', 'size', true, 'interpreter/executors/arrays.ts:16 讀它'],
-      ['cpp_define', 'value', true, 'core/generators/statements.ts:248，真的是自己的'],
+      ['cpp:define', 'value', true, 'core/generators/statements.ts:248，真的是自己的'],
       ['print', 'value', false, '那一行是子節點的 value（values.map(v => v.properties.value)）'],
-      ['cpp_include', 'local', false, '沒有任何程式碼讀它——實例帶著它，而它是死資料'],
+      ['cpp:include', 'local', false, '沒有任何程式碼讀它——實例帶著它，而它是死資料'],
     ]
     for (const [cid, p, exp, why] of 樣本) {
       expect(讀了(cid, p), `${cid}.${p} 應為「${exp ? '讀了' : '沒讀'}」——${why}`).toBe(exp)

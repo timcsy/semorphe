@@ -251,7 +251,7 @@ int main() {
 
   // 阻斷者是 `#define` 巨集展開（墓碑），不是 print——原本的 [BLOCKED:print]
   // 標記是錯的。歸因見 knowledge/experience.md「宣稱『與我無關』之前先去量」。
-  it.skip('[BLOCKED:cpp_define] executes correctly', async () => {
+  it.skip('[BLOCKED:cpp:define] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('100')

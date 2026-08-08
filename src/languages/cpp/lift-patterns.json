@@ -2,103 +2,186 @@
   {
     "id": "cpp_number_literal",
     "astNodeType": "number_literal",
-    "concept": { "conceptId": "number_literal" },
+    "concept": {
+      "conceptId": "number_literal"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_identifier",
     "astNodeType": "identifier",
-    "concept": { "conceptId": "var_ref" },
+    "concept": {
+      "conceptId": "var_ref"
+    },
     "fieldMappings": [
-      { "semantic": "name", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "name",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_string_literal",
     "astNodeType": "string_literal",
-    "concept": { "conceptId": "string_literal" },
+    "concept": {
+      "conceptId": "string_literal"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "stripQuotes"
+      }
     ]
   },
   {
-    "id": "cpp_char_literal",
+    "id": "cpp:char_literal",
     "astNodeType": "char_literal",
-    "concept": { "conceptId": "cpp_char_literal" },
+    "concept": {
+      "conceptId": "cpp:char_literal"
+    },
     "fieldMappings": [
-      { "semantic": "char", "ast": "$text", "extract": "text", "transform": "stripQuotes" }
+      {
+        "semantic": "char",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "stripQuotes"
+      }
     ]
   },
   {
     "id": "cpp_endl",
     "astNodeType": "identifier",
-    "concept": { "conceptId": "endl" },
-    "constraints": [{ "field": "$text", "text": "endl" }],
+    "concept": {
+      "conceptId": "endl"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "endl"
+      }
+    ],
     "priority": 5
   },
   {
     "id": "cpp_eof",
     "astNodeType": "identifier",
-    "concept": { "conceptId": "builtin_constant" },
-    "constraints": [{ "field": "$text", "text": "EOF" }],
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "EOF"
+      }
+    ],
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ],
     "priority": 5
   },
   {
     "id": "cpp_null_id",
     "astNodeType": "identifier",
-    "concept": { "conceptId": "builtin_constant" },
-    "constraints": [{ "field": "$text", "text": "NULL" }],
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "NULL"
+      }
+    ],
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ],
     "priority": 5
   },
   {
     "id": "cpp_true",
     "astNodeType": "true",
-    "concept": { "conceptId": "builtin_constant" },
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_false",
     "astNodeType": "false",
-    "concept": { "conceptId": "builtin_constant" },
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_nullptr",
     "astNodeType": "nullptr",
-    "concept": { "conceptId": "builtin_constant" },
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_null",
     "astNodeType": "null",
-    "concept": { "conceptId": "builtin_constant" },
+    "concept": {
+      "conceptId": "builtin_constant"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$text", "extract": "text" }
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
     ]
   },
   {
     "id": "cpp_break",
     "astNodeType": "break_statement",
-    "concept": { "conceptId": "break" }
+    "concept": {
+      "conceptId": "break"
+    }
   },
   {
     "id": "cpp_continue",
     "astNodeType": "continue_statement",
-    "concept": { "conceptId": "continue" }
+    "concept": {
+      "conceptId": "continue"
+    }
   },
   {
     "id": "cpp_unwrap_parens",
@@ -139,9 +222,21 @@
         "||": "logic"
       },
       "fieldMappings": [
-        { "semantic": "operator", "ast": "$operator", "extract": "text" },
-        { "semantic": "left", "ast": "left", "extract": "lift" },
-        { "semantic": "right", "ast": "right", "extract": "lift" }
+        {
+          "semantic": "operator",
+          "ast": "$operator",
+          "extract": "text"
+        },
+        {
+          "semantic": "left",
+          "ast": "left",
+          "extract": "lift"
+        },
+        {
+          "semantic": "right",
+          "ast": "right",
+          "extract": "lift"
+        }
       ]
     },
     "priority": 5
@@ -150,11 +245,15 @@
     "id": "cpp_cout_chain",
     "astNodeType": "binary_expression",
     "patternType": "chain",
-    "concept": { "conceptId": "print" },
+    "concept": {
+      "conceptId": "print"
+    },
     "chain": {
       "operator": "<<",
       "direction": "left",
-      "rootMatch": { "text": "cout" },
+      "rootMatch": {
+        "text": "cout"
+      },
       "collectField": "right"
     },
     "priority": 15
@@ -163,11 +262,15 @@
     "id": "cpp_cin_chain",
     "astNodeType": "binary_expression",
     "patternType": "chain",
-    "concept": { "conceptId": "input" },
+    "concept": {
+      "conceptId": "input"
+    },
     "chain": {
       "operator": ">>",
       "direction": "left",
-      "rootMatch": { "text": "cin" },
+      "rootMatch": {
+        "text": "cin"
+      },
       "collectField": "right"
     },
     "priority": 15
@@ -176,19 +279,42 @@
     "id": "cpp_count_for",
     "astNodeType": "for_statement",
     "patternType": "composite",
-    "concept": { "conceptId": "count_loop" },
+    "concept": {
+      "conceptId": "count_loop"
+    },
     "liftStrategy": "cpp:liftCountFor",
     "composite": {
       "checks": [
-        { "field": "initializer", "typeIs": "declaration" },
-        { "field": "condition", "typeIs": "binary_expression" },
-        { "field": "update", "typeIs": "update_expression" }
+        {
+          "field": "initializer",
+          "typeIs": "declaration"
+        },
+        {
+          "field": "condition",
+          "typeIs": "binary_expression"
+        },
+        {
+          "field": "update",
+          "typeIs": "update_expression"
+        }
       ],
       "extract": {
-        "var_name": { "source": "path", "path": "initializer.init_declarator.declarator" },
-        "from": { "source": "lift", "path": "initializer.init_declarator.value" },
-        "to": { "source": "lift", "path": "condition.right" },
-        "body": { "source": "liftBody", "path": "body" }
+        "var_name": {
+          "source": "path",
+          "path": "initializer.init_declarator.declarator"
+        },
+        "from": {
+          "source": "lift",
+          "path": "initializer.init_declarator.value"
+        },
+        "to": {
+          "source": "lift",
+          "path": "condition.right"
+        },
+        "body": {
+          "source": "liftBody",
+          "path": "body"
+        }
       }
     },
     "priority": 10
@@ -203,7 +329,11 @@
         "!": "logic_not"
       },
       "fieldMappings": [
-        { "semantic": "operand", "ast": "argument", "extract": "lift" }
+        {
+          "semantic": "operand",
+          "ast": "argument",
+          "extract": "lift"
+        }
       ]
     },
     "priority": 5
@@ -218,7 +348,11 @@
         "-": "negate"
       },
       "fieldMappings": [
-        { "semantic": "value", "ast": "argument", "extract": "lift" }
+        {
+          "semantic": "value",
+          "ast": "argument",
+          "extract": "lift"
+        }
       ]
     },
     "priority": 5
@@ -226,28 +360,58 @@
   {
     "id": "cpp_if_statement",
     "astNodeType": "if_statement",
-    "concept": { "conceptId": "if" },
+    "concept": {
+      "conceptId": "if"
+    },
     "fieldMappings": [
-      { "semantic": "condition", "ast": "condition", "extract": "lift" },
-      { "semantic": "then_body", "ast": "consequence", "extract": "liftBody" },
-      { "semantic": "else_body", "ast": "alternative", "extract": "liftBody" }
+      {
+        "semantic": "condition",
+        "ast": "condition",
+        "extract": "lift"
+      },
+      {
+        "semantic": "then_body",
+        "ast": "consequence",
+        "extract": "liftBody"
+      },
+      {
+        "semantic": "else_body",
+        "ast": "alternative",
+        "extract": "liftBody"
+      }
     ]
   },
   {
     "id": "cpp_while_statement",
     "astNodeType": "while_statement",
-    "concept": { "conceptId": "while_loop" },
+    "concept": {
+      "conceptId": "while_loop"
+    },
     "fieldMappings": [
-      { "semantic": "condition", "ast": "condition", "extract": "lift" },
-      { "semantic": "body", "ast": "body", "extract": "liftBody" }
+      {
+        "semantic": "condition",
+        "ast": "condition",
+        "extract": "lift"
+      },
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      }
     ]
   },
   {
     "id": "cpp_return_statement",
     "astNodeType": "return_statement",
-    "concept": { "conceptId": "return" },
+    "concept": {
+      "conceptId": "return"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$namedChildren[0]", "extract": "lift" }
+      {
+        "semantic": "value",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
     ]
   },
   {
@@ -267,197 +431,346 @@
   {
     "id": "cpp_translation_unit",
     "astNodeType": "translation_unit",
-    "concept": { "conceptId": "program" },
+    "concept": {
+      "conceptId": "program"
+    },
     "fieldMappings": [
-      { "semantic": "body", "ast": "$text", "extract": "liftChildren" }
+      {
+        "semantic": "body",
+        "ast": "$text",
+        "extract": "liftChildren"
+      }
     ]
   },
   {
     "id": "cpp_function_definition",
     "astNodeType": "function_definition",
-    "concept": { "conceptId": "func_def" },
+    "concept": {
+      "conceptId": "func_def"
+    },
     "liftStrategy": "cpp:liftFunctionDef",
     "fieldMappings": [
-      { "semantic": "body", "ast": "body", "extract": "liftBody" }
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      }
     ]
   },
   {
     "id": "cpp_doc_comment",
     "astNodeType": "comment",
-    "concept": { "conceptId": "doc_comment" },
-    "constraints": [{ "field": "$text", "match": "startsWith", "text": "/**" }],
+    "concept": {
+      "conceptId": "doc_comment"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "match": "startsWith",
+        "text": "/**"
+      }
+    ],
     "liftStrategy": "cpp:liftDocComment",
     "fieldMappings": []
   },
   {
     "id": "cpp_block_comment",
     "astNodeType": "comment",
-    "concept": { "conceptId": "block_comment" },
-    "constraints": [{ "field": "$text", "match": "startsWith", "text": "/*" }],
+    "concept": {
+      "conceptId": "block_comment"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "match": "startsWith",
+        "text": "/*"
+      }
+    ],
     "fieldMappings": [
-      { "semantic": "text", "ast": "$text", "extract": "text", "transform": "cpp:stripBlockComment" }
+      {
+        "semantic": "text",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "cpp:stripBlockComment"
+      }
     ]
   },
   {
     "id": "cpp_comment",
     "astNodeType": "comment",
-    "concept": { "conceptId": "comment" },
+    "concept": {
+      "conceptId": "comment"
+    },
     "fieldMappings": [
-      { "semantic": "text", "ast": "$text", "extract": "text", "transform": "cpp:stripComment" }
+      {
+        "semantic": "text",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "cpp:stripComment"
+      }
     ]
   },
   {
     "id": "cpp_preproc_include",
     "astNodeType": "preproc_include",
-    "concept": { "conceptId": "cpp_include" },
+    "concept": {
+      "conceptId": "cpp:include"
+    },
     "liftStrategy": "cpp:liftPreprocInclude",
     "fieldMappings": [
-      { "semantic": "header", "ast": "path", "extract": "text", "transform": "stripAngleBrackets" }
+      {
+        "semantic": "header",
+        "ast": "path",
+        "extract": "text",
+        "transform": "stripAngleBrackets"
+      }
     ],
     "priority": 15
   },
   {
     "id": "cpp_declaration",
     "astNodeType": "declaration",
-    "concept": { "conceptId": "var_declare" },
+    "concept": {
+      "conceptId": "var_declare"
+    },
     "liftStrategy": "cpp:liftDeclaration",
     "priority": 15
   },
   {
     "id": "cpp_preproc_def",
     "astNodeType": "preproc_def",
-    "concept": { "conceptId": "cpp_define" },
+    "concept": {
+      "conceptId": "cpp:define"
+    },
     "fieldMappings": [
-      { "semantic": "name", "ast": "name", "extract": "text" },
-      { "semantic": "value", "ast": "value", "extract": "text" }
+      {
+        "semantic": "name",
+        "ast": "name",
+        "extract": "text"
+      },
+      {
+        "semantic": "value",
+        "ast": "value",
+        "extract": "text"
+      }
     ]
   },
   {
-    "id": "cpp_do_while",
+    "id": "cpp:do_while",
     "astNodeType": "do_statement",
-    "concept": { "conceptId": "cpp_do_while" },
+    "concept": {
+      "conceptId": "cpp:do_while"
+    },
     "fieldMappings": [
-      { "semantic": "body", "ast": "body", "extract": "liftBody" },
-      { "semantic": "cond", "ast": "condition", "extract": "lift" }
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      },
+      {
+        "semantic": "cond",
+        "ast": "condition",
+        "extract": "lift"
+      }
     ]
   },
   {
     "id": "cpp_cast_expr",
     "astNodeType": "cast_expression",
-    "concept": { "conceptId": "cpp_cast" },
+    "concept": {
+      "conceptId": "cpp:cast"
+    },
     "liftStrategy": "cpp:liftCastExpression",
     "fieldMappings": [
-      { "semantic": "target_type", "ast": "type", "extract": "text" },
-      { "semantic": "value", "ast": "value", "extract": "lift" }
+      {
+        "semantic": "target_type",
+        "ast": "type",
+        "extract": "text"
+      },
+      {
+        "semantic": "value",
+        "ast": "value",
+        "extract": "lift"
+      }
     ]
   },
   {
     "id": "cpp_ternary_expr",
     "astNodeType": "conditional_expression",
-    "concept": { "conceptId": "cpp_ternary" },
+    "concept": {
+      "conceptId": "cpp:ternary"
+    },
     "fieldMappings": [
-      { "semantic": "condition", "ast": "condition", "extract": "lift" },
-      { "semantic": "true_expr", "ast": "consequence", "extract": "lift" },
-      { "semantic": "false_expr", "ast": "alternative", "extract": "lift" }
+      {
+        "semantic": "condition",
+        "ast": "condition",
+        "extract": "lift"
+      },
+      {
+        "semantic": "true_expr",
+        "ast": "consequence",
+        "extract": "lift"
+      },
+      {
+        "semantic": "false_expr",
+        "ast": "alternative",
+        "extract": "lift"
+      }
     ]
   },
   {
     "id": "cpp_compound_stmt",
     "astNodeType": "compound_statement",
-    "concept": { "conceptId": "_compound" },
+    "concept": {
+      "conceptId": "_compound"
+    },
     "fieldMappings": [
-      { "semantic": "body", "ast": "$text", "extract": "liftChildren" }
+      {
+        "semantic": "body",
+        "ast": "$text",
+        "extract": "liftChildren"
+      }
     ]
   },
   {
     "id": "cpp_type_definition",
     "astNodeType": "type_definition",
-    "concept": { "conceptId": "cpp_typedef" },
+    "concept": {
+      "conceptId": "cpp:typedef"
+    },
     "liftStrategy": "cpp:liftTypedef",
     "priority": 15
   },
   {
     "id": "cpp_alias_declaration",
     "astNodeType": "alias_declaration",
-    "concept": { "conceptId": "cpp_using_alias" },
+    "concept": {
+      "conceptId": "cpp:using_alias"
+    },
     "liftStrategy": "cpp:liftAliasDeclaration",
     "priority": 15
   },
   {
     "id": "cpp_sizeof_expr",
     "astNodeType": "sizeof_expression",
-    "concept": { "conceptId": "cpp_sizeof" },
+    "concept": {
+      "conceptId": "cpp:sizeof"
+    },
     "liftStrategy": "cpp:liftSizeof",
     "priority": 5
   },
   {
     "id": "cpp_enum_specifier",
     "astNodeType": "enum_specifier",
-    "concept": { "conceptId": "cpp_enum" },
+    "concept": {
+      "conceptId": "cpp:enum"
+    },
     "liftStrategy": "cpp:liftEnum",
     "priority": 15
   },
   {
     "id": "cpp_for_range_loop",
     "astNodeType": "for_range_loop",
-    "concept": { "conceptId": "cpp_range_for" },
+    "concept": {
+      "conceptId": "cpp:range_for"
+    },
     "liftStrategy": "cpp:liftRangeFor",
     "priority": 15
   },
   {
     "id": "cpp_address_of_ptr",
     "astNodeType": "pointer_expression",
-    "concept": { "conceptId": "cpp_address_of" },
-    "constraints": [{ "field": "$operator", "text": "&" }],
+    "concept": {
+      "conceptId": "cpp:address_of"
+    },
+    "constraints": [
+      {
+        "field": "$operator",
+        "text": "&"
+      }
+    ],
     "fieldMappings": [
-      { "semantic": "var", "ast": "$namedChildren[0]", "extract": "lift" }
+      {
+        "semantic": "var",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
     ],
     "priority": 5
   },
   {
     "id": "cpp_pointer_deref_ptr",
     "astNodeType": "pointer_expression",
-    "concept": { "conceptId": "cpp_pointer_deref" },
-    "constraints": [{ "field": "$operator", "text": "*" }],
+    "concept": {
+      "conceptId": "cpp:pointer_deref"
+    },
+    "constraints": [
+      {
+        "field": "$operator",
+        "text": "*"
+      }
+    ],
     "fieldMappings": [
-      { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
+      {
+        "semantic": "ptr",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
     ],
     "priority": 5
   },
   {
     "id": "cpp_new_expression",
     "astNodeType": "new_expression",
-    "concept": { "conceptId": "cpp_new" },
+    "concept": {
+      "conceptId": "cpp:new"
+    },
     "liftStrategy": "cpp:liftNewExpression",
     "fieldMappings": []
   },
   {
     "id": "cpp_delete_expression",
     "astNodeType": "delete_expression",
-    "concept": { "conceptId": "cpp_delete" },
+    "concept": {
+      "conceptId": "cpp:delete"
+    },
     "fieldMappings": [
-      { "semantic": "ptr", "ast": "$namedChildren[0]", "extract": "lift" }
+      {
+        "semantic": "ptr",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
     ]
   },
   {
     "id": "cpp_try_statement",
     "astNodeType": "try_statement",
-    "concept": { "conceptId": "cpp_try_catch" },
+    "concept": {
+      "conceptId": "cpp:try_catch"
+    },
     "liftStrategy": "cpp:liftTryCatch",
     "fieldMappings": []
   },
   {
     "id": "cpp_throw_statement",
     "astNodeType": "throw_statement",
-    "concept": { "conceptId": "cpp_throw" },
+    "concept": {
+      "conceptId": "cpp:throw"
+    },
     "fieldMappings": [
-      { "semantic": "value", "ast": "$namedChildren[0]", "extract": "lift" }
+      {
+        "semantic": "value",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
     ]
   },
   {
     "id": "cpp_class_specifier",
     "astNodeType": "class_specifier",
-    "concept": { "conceptId": "cpp_class_def" },
+    "concept": {
+      "conceptId": "cpp:class_def"
+    },
     "liftStrategy": "cpp:liftClassDef",
     "fieldMappings": [],
     "priority": 10
@@ -465,14 +778,18 @@
   {
     "id": "cpp_lambda_expr",
     "astNodeType": "lambda_expression",
-    "concept": { "conceptId": "cpp_lambda" },
+    "concept": {
+      "conceptId": "cpp:lambda"
+    },
     "liftStrategy": "cpp:liftLambda",
     "fieldMappings": []
   },
   {
     "id": "cpp_namespace_definition",
     "astNodeType": "namespace_definition",
-    "concept": { "conceptId": "cpp_namespace_def" },
+    "concept": {
+      "conceptId": "cpp:namespace_def"
+    },
     "liftStrategy": "cpp:liftNamespace",
     "fieldMappings": []
   }

@@ -1,7 +1,7 @@
 [
   {
     "id": "c_printf",
-    "conceptId": "cpp_printf",
+    "conceptId": "cpp:printf",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
@@ -67,7 +67,7 @@
   },
   {
     "id": "c_scanf",
-    "conceptId": "cpp_scanf",
+    "conceptId": "cpp:scanf",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
@@ -134,7 +134,7 @@
   },
   {
     "id": "c_scanf_expr",
-    "conceptId": "cpp_scanf",
+    "conceptId": "cpp:scanf",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

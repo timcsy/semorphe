@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_stringstream_declare",
-    "conceptId": "cpp_stringstream_declare",
+    "id": "cpp:stringstream_declare",
+    "conceptId": "cpp:stringstream_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -29,8 +29,8 @@
     }
   },
   {
-    "id": "cpp_istringstream_declare",
-    "conceptId": "cpp_istringstream_declare",
+    "id": "cpp:istringstream_declare",
+    "conceptId": "cpp:istringstream_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

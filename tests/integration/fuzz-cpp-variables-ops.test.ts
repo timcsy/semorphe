@@ -272,7 +272,7 @@ describe.skip('[BLOCKED:print] fuzz: cout with parenthesized boolean expressions
   // Root cause: cout chain lifter strips parentheses from boolean subexpressions
 })
 
-describe.skip('[BLOCKED:cpp_increment] fuzz: pre/post increment in expressions (Phase 2 scope)', () => {
+describe.skip('[BLOCKED:cpp:increment] fuzz: pre/post increment in expressions (Phase 2 scope)', () => {
   // vars_ops_008: int b = a++; has incorrect result in roundtrip
   // Root cause: increment expression handling in variable initializer context
 })

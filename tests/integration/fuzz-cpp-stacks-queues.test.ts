@@ -116,8 +116,8 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_top')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {
@@ -152,10 +152,10 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_front')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_front')).toBe(true)
     // back() lifts to cpp_vector_back (shared method — known design decision)
-    expect(concepts.has('cpp_vector_back')).toBe(true)
+    expect(concepts.has('cpp:vector_back')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS — back() via cpp_vector_back)', () => {
@@ -191,8 +191,8 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {
@@ -226,10 +226,10 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_front')).toBe(true)
-    expect(concepts.has('cpp_stack_top')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_front')).toBe(true)
+    expect(concepts.has('cpp:stack_top')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {
@@ -264,9 +264,9 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
     // back() lifts to cpp_vector_back — known design decision
-    expect(concepts.has('cpp_vector_back')).toBe(true)
+    expect(concepts.has('cpp:vector_back')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS — back() via cpp_vector_back)', () => {
@@ -312,8 +312,8 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_top')).toBe(true)
   })
 
   it.skip('[BLOCKED:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
@@ -363,8 +363,8 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
   })
 
   it('should generate compilable code producing same output', () => {
@@ -411,10 +411,10 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_front')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_front')).toBe(true)
     // back() lifts to cpp_vector_back — known design decision
-    expect(concepts.has('cpp_vector_back')).toBe(true)
+    expect(concepts.has('cpp:vector_back')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS — back() via cpp_vector_back)', () => {
@@ -458,10 +458,10 @@ int main() {
     const tree = liftCode(code)
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
-    expect(concepts.has('cpp_stack_declare')).toBe(true)
-    expect(concepts.has('cpp_queue_declare')).toBe(true)
-    expect(concepts.has('cpp_stack_top')).toBe(true)
-    expect(concepts.has('cpp_queue_front')).toBe(true)
+    expect(concepts.has('cpp:stack_declare')).toBe(true)
+    expect(concepts.has('cpp:queue_declare')).toBe(true)
+    expect(concepts.has('cpp:stack_top')).toBe(true)
+    expect(concepts.has('cpp:queue_front')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {

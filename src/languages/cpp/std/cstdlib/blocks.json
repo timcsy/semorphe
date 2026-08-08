@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp_abs",
-    "conceptId": "cpp_abs",
+    "id": "cpp:abs",
+    "conceptId": "cpp:abs",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -30,8 +30,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp_rand",
-    "conceptId": "cpp_rand",
+    "id": "cpp:rand",
+    "conceptId": "cpp:rand",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -52,8 +52,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp_srand",
-    "conceptId": "cpp_srand",
+    "id": "cpp:srand",
+    "conceptId": "cpp:srand",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -83,8 +83,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp_exit",
-    "conceptId": "cpp_exit",
+    "id": "cpp:exit",
+    "conceptId": "cpp:exit",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -114,8 +114,8 @@
     "toolboxCategory": "control"
   },
   {
-    "id": "cpp_atoi",
-    "conceptId": "cpp_atoi",
+    "id": "cpp:atoi",
+    "conceptId": "cpp:atoi",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -144,8 +144,8 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "cpp_atof",
-    "conceptId": "cpp_atof",
+    "id": "cpp:atof",
+    "conceptId": "cpp:atof",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

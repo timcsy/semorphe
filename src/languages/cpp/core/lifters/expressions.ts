@@ -166,12 +166,12 @@ export function registerExpressionLifters(lifter: Lifter): void {
       })
     }
     if (op === '&') {
-      return createNode('cpp_address_of', {}, {
+      return createNode('cpp:address_of', {}, {
         var: operand ? [operand] : [],
       })
     }
     if (op === '*') {
-      return createNode('cpp_pointer_deref', {}, {
+      return createNode('cpp:pointer_deref', {}, {
         ptr: operand ? [operand] : [],
       })
     }
@@ -197,13 +197,13 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const indicesNode = nameNode.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? nameNode.childForFieldName('index') ?? nameNode.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
-      return createNode('cpp_increment', { name: arrName, operator: op, position }, {
+      return createNode('cpp:increment', { name: arrName, operator: op, position }, {
         index: index ? [index] : [],
       })
     }
 
     const name = nameNode?.text ?? 'i'
-    return createNode('cpp_increment', { name, operator: op, position })
+    return createNode('cpp:increment', { name, operator: op, position })
   })
 
   // parenthesized_expression — handled by JSON unwrap pattern (cpp_unwrap_parens)
@@ -212,7 +212,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
   // Comma expression: i++, j-- (used in for-loop updates)
   lifter.register('comma_expression', (node, ctx) => {
     const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
-    return createNode('cpp_comma_expr', {}, { exprs: children })
+    return createNode('cpp:comma_expr', {}, { exprs: children })
   })
 
   // cast_expression — handled by JSON pattern (cpp_cast_expr)
@@ -231,7 +231,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
       const row = rowNode ? ctx.lift(rowNode) : null
       const col = colNode ? ctx.lift(colNode) : null
-      return createNode('cpp_array_2d_access', { name }, {
+      return createNode('cpp:array_2d_access', { name }, {
         row: row ? [row] : [],
         col: col ? [col] : [],
       })
@@ -244,7 +244,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const index = indexNode ? ctx.lift(indexNode) : null
 
     if (isStringVar(name, node)) {
-      return createNode('cpp_string_at', { obj: name }, {
+      return createNode('cpp:string_at', { obj: name }, {
         index: index ? [index] : [],
       })
     }
@@ -258,7 +258,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     // 判準是根變數的型別（辨識脈絡查得到，076 接上的）。這是同一個機制的
     // 第三次使用：095 的 istringstream、097 的 container_kind、這裡。
     if (ctx.data.getType(name) === 'map') {
-      return createNode('cpp_map_access', { obj: name }, {
+      return createNode('cpp:map_access', { obj: name }, {
         key: index ? [index] : [],
       })
     }
@@ -277,10 +277,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
     // Check for -> operator (pointer access)
     const opNode = node.children.find(c => c.type === '->')
     if (opNode) {
-      return createNode('cpp_struct_pointer_access', { obj, member })
+      return createNode('cpp:struct_pointer_access', { obj, member })
     }
 
-    return createNode('cpp_struct_member_access', { obj, member })
+    return createNode('cpp:struct_member_access', { obj, member })
   })
 }
 

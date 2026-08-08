@@ -183,8 +183,8 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       //
       // `cpp_class_def` / `cpp_struct_declare` / `cpp_namespace_def` 則是
       // **真的實作了**（071–073），不需要宣告也不在這份清單裡。
-      'cpp_ifdef', 'cpp_ifndef',
-      'cpp_raw_code', 'cpp_raw_expression',
+      'cpp:ifdef', 'cpp:ifndef',
+      'cpp:raw_code', 'cpp:raw_expression',
       // `var_declarator` 與 `cpp_include_local` 已改判——**附證據，不是因為想讓數字下降**：
       //   var_declarator：`var_declare` 的產生器直接讀 `declarators` 的 `name` 與
       //     `initializer`（core/generators/declarations.ts:5-19），extract 策略也是它
@@ -204,13 +204,13 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
 
   it('★ 對照組：該宣告的 12 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
     const 應宣告 = [
-      'comment', 'block_comment', 'doc_comment', 'cpp_include', 'cpp_using_namespace',
+      'comment', 'block_comment', 'doc_comment', 'cpp:include', 'cpp:using_namespace',
       // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
       //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
       // 宣告會隨系統長出新能力而過期，classification.md 的「複查觸發條件」
       // 列的就是這種情形。
-      'cpp_stringstream_declare', 'cpp_ifstream_declare',
-      'cpp_ofstream_declare', 'cpp_pair_declare', 'cpp_case', 'cpp_default',
+      'cpp:stringstream_declare', 'cpp:ifstream_declare',
+      'cpp:ofstream_declare', 'cpp:pair_declare', 'cpp:case', 'cpp:default',
     ]
     const 漏掉 = 應宣告.filter((id) => {
       const d = allComponentDefs().find((x) => x.conceptId === id)

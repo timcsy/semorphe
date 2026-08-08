@@ -74,7 +74,7 @@ describe('Round-trip: C++ OOP concepts', () => {
 };`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree!, 'cpp_struct_declare')).toBe(true)
+      expect(findConcept(tree!, 'cpp:struct_declare')).toBe(true)
     })
 
     it('struct generates back', () => {
@@ -248,7 +248,7 @@ public:
 };`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree!, 'cpp_struct_declare')).toBe(true)
+      expect(findConcept(tree!, 'cpp:struct_declare')).toBe(true)
     })
   })
 
@@ -368,7 +368,7 @@ public:
   })
 
   // ---- 13. reference declare ----
-  describe('cpp_ref_declare', () => {
+  describe('cpp:ref_declare', () => {
     it('reference declaration generates back', () => {
       const code = `#include <iostream>
 using namespace std;
@@ -442,8 +442,8 @@ public:
       const gen1 = generateCode(tree1!, 'cpp', style)
       const tree2 = liftCode(gen1)
       expect(tree2).not.toBeNull()
-      expect(findConcept(tree1!, 'cpp_class_def')).toBe(true)
-      expect(findConcept(tree2!, 'cpp_class_def')).toBe(true)
+      expect(findConcept(tree1!, 'cpp:class_def')).toBe(true)
+      expect(findConcept(tree2!, 'cpp:class_def')).toBe(true)
     })
 
     it('virtual method class is P1 stable', () => {

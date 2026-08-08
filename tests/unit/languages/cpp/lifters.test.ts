@@ -157,7 +157,7 @@ describe('C++ Expression Lifters', () => {
     const node = mockNode('char_literal', "'a'")
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_char_literal')
+    expect(result!.conceptId).toBe('cpp:char_literal')
     expect(result!.properties.char).toBe('a')
   })
 
@@ -459,7 +459,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
   })
 
   it('should lift non-counting for to cpp_for_loop', () => {
@@ -478,7 +478,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
     expect(result!.children.init).toBeDefined()
     expect(result!.children.cond).toBeDefined()
     expect(result!.children.update).toBeDefined()
@@ -507,7 +507,7 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     // Should NOT be count_loop — variable mismatch
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
   })
 
   it('should reject mismatched variable in counting for (update uses different var)', () => {
@@ -532,7 +532,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
   })
 
   it('should lift for(int i = 1;;) with no condition/update to cpp_for_loop', () => {
@@ -550,7 +550,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
     // init should be var_declare (passed through as-is)
     expect(result!.children.init).toHaveLength(1)
     expect(result!.children.init[0].conceptId).toBe('var_declare')
@@ -585,13 +585,13 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_for_loop')
+    expect(result!.conceptId).toBe('cpp:for_loop')
     // init (declaration) → var_declare (passed through)
     expect(result!.children.init[0].conceptId).toBe('var_declare')
     // cond present
     expect(result!.children.cond).toHaveLength(1)
     // update (assignment_expression with +=) → cpp_compound_assign (passed through)
-    expect(result!.children.update[0].conceptId).toBe('cpp_compound_assign')
+    expect(result!.children.update[0].conceptId).toBe('cpp:compound_assign')
   })
 
   it('should lift function_definition', () => {
@@ -659,7 +659,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_printf')
+    expect(result!.conceptId).toBe('cpp:printf')
     expect(result!.properties.format).toBe('%d')
     expect(result!.children.args).toHaveLength(1)
     expect(result!.children.args[0].conceptId).toBe('var_ref')
@@ -676,7 +676,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_printf')
+    expect(result!.conceptId).toBe('cpp:printf')
     expect(result!.properties.format).toBe('%.2f\\n')
     expect(result!.children.args).toHaveLength(1)
   })
@@ -691,7 +691,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_printf')
+    expect(result!.conceptId).toBe('cpp:printf')
     expect(result!.properties.format).toBe('hello\\n')
     expect(result!.children.args).toHaveLength(0)
   })
@@ -710,7 +710,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_scanf')
+    expect(result!.conceptId).toBe('cpp:scanf')
     expect(result!.properties.format).toBe('%d')
     expect(result!.children.args).toHaveLength(1)
     expect(result!.children.args[0].conceptId).toBe('var_ref')
@@ -732,7 +732,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_scanf')
+    expect(result!.conceptId).toBe('cpp:scanf')
     expect(result!.properties.format).toBe('%d %s')
     expect(result!.children.args).toHaveLength(2)
     expect(result!.children.args[0].properties.name).toBe('x')
@@ -757,7 +757,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp_scanf')
+    expect(result!.conceptId).toBe('cpp:scanf')
     expect(result!.properties.format).toBe('%d %d')
     expect(result!.children.args).toHaveLength(2)
     expect(result!.children.args[0].properties.name).toBe('a')

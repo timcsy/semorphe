@@ -57,7 +57,7 @@ function roundTrip(code: string): string {
 
 function countRawNodes(node: SemanticNode): number {
   let raw = 0
-  if (node.conceptId === 'cpp_raw_code' || node.conceptId === 'cpp_raw_expression' || node.conceptId === 'unresolved') {
+  if (node.conceptId === 'cpp:raw_code' || node.conceptId === 'cpp:raw_expression' || node.conceptId === 'unresolved') {
     raw++
   }
   for (const children of Object.values(node.children || {})) {

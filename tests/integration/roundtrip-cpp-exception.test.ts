@@ -52,7 +52,7 @@ function roundTripCode(code: string): string {
 }
 
 describe('Round-trip: C++ exception handling (cpp_try_catch, cpp_throw)', () => {
-  describe('cpp_try_catch', () => {
+  describe('cpp:try_catch', () => {
     it('basic try-catch with empty bodies', () => {
       const code = `try {
     int x = 10;
@@ -106,7 +106,7 @@ int main() {
     })
   })
 
-  describe('cpp_throw', () => {
+  describe('cpp:throw', () => {
     it('throw with integer literal', () => {
       const code = `throw 42;`
       const result = roundTripCode(code)
@@ -180,8 +180,8 @@ int main() {
         }
         return false
       }
-      expect(findConcept(tree1!, 'cpp_try_catch')).toBe(true)
-      expect(findConcept(tree2!, 'cpp_try_catch')).toBe(true)
+      expect(findConcept(tree1!, 'cpp:try_catch')).toBe(true)
+      expect(findConcept(tree2!, 'cpp:try_catch')).toBe(true)
     })
   })
 })

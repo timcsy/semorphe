@@ -25,7 +25,7 @@ function countNodes(node: SemanticNode): { total: number; raw: number; rawList: 
   let total = 1
   let raw = 0
   const rawList: string[] = []
-  if (node.conceptId === 'cpp_raw_code' || node.conceptId === 'cpp_raw_expression' || node.conceptId === 'unresolved') {
+  if (node.conceptId === 'cpp:raw_code' || node.conceptId === 'cpp:raw_expression' || node.conceptId === 'unresolved') {
     raw++
     rawList.push(node.conceptId + (node.metadata?.rawCode ? `: ${node.metadata.rawCode.substring(0, 60)}` : ''))
   }

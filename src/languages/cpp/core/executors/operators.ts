@@ -11,7 +11,7 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 export function registerOperatorsCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_sizeof', async (node, ctx) => {
+  register('cpp:sizeof', async (node, ctx) => {
     const target = String(node.properties.target ?? 'int')
     const sizes: Record<string, number> = {
       'char': 1, 'bool': 1, 'short': 2,
@@ -41,7 +41,7 @@ export function registerOperatorsCoreExecutors(
     return { type: 'int', value: ~Math.trunc(val) }
   })
 
-  register('cpp_ternary', async (node, ctx) => {
+  register('cpp:ternary', async (node, ctx) => {
     const condNodes = node.children.condition ?? []
     const trueNodes = node.children.true_expr ?? []
     const falseNodes = node.children.false_expr ?? []
@@ -55,7 +55,7 @@ export function registerOperatorsCoreExecutors(
     }
   })
 
-  register('cpp_cast', async (node, ctx) => {
+  register('cpp:cast', async (node, ctx) => {
     const targetType = String(node.properties.target_type ?? 'int')
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
@@ -75,7 +75,7 @@ export function registerOperatorsCoreExecutors(
   })
 
   // C++ named casts behave the same as C-style cast at runtime
-  for (const castConcept of ['cpp_static_cast', 'cpp_dynamic_cast', 'cpp_reinterpret_cast', 'cpp_const_cast']) {
+  for (const castConcept of ['cpp:static_cast', 'cpp:dynamic_cast', 'cpp:reinterpret_cast', 'cpp:const_cast']) {
     register(castConcept, async (node, ctx) => {
       const targetType = String(node.properties.target_type ?? 'int')
       const valueNodes = node.children.value ?? []
@@ -92,7 +92,7 @@ export function registerOperatorsCoreExecutors(
     })
   }
 
-  register('cpp_comma_expr', async (node, ctx) => {
+  register('cpp:comma_expr', async (node, ctx) => {
     const exprs = node.children.exprs ?? []
     let last: import('../../../../interpreter/types').RuntimeValue = { type: 'int', value: 0 }
     for (const expr of exprs) {

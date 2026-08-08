@@ -97,24 +97,24 @@ const 佇列程式 = 'queue<int> q; q.push(1); q.pop();'
 
 describe('辨識：容器種類寫進節點', () => {
   it('★ 堆疊上的 push 帶 container_kind: stack', () => {
-    const pushes = collect(lift(堆疊程式), (n) => n.conceptId === 'cpp_container_push')
+    const pushes = collect(lift(堆疊程式), (n) => n.conceptId === 'cpp:container_push')
     expect(pushes).toHaveLength(1)
     expect(pushes[0].properties?.container_kind).toBe('stack')
   })
 
   it('★ 佇列上的 push 帶 container_kind: queue', () => {
-    const pushes = collect(lift(佇列程式), (n) => n.conceptId === 'cpp_container_push')
+    const pushes = collect(lift(佇列程式), (n) => n.conceptId === 'cpp:container_push')
     expect(pushes[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ pop 同樣帶容器種類', () => {
-    expect(collect(lift(堆疊程式), (n) => n.conceptId === 'cpp_container_pop')[0].properties?.container_kind).toBe('stack')
-    expect(collect(lift(佇列程式), (n) => n.conceptId === 'cpp_container_pop')[0].properties?.container_kind).toBe('queue')
+    expect(collect(lift(堆疊程式), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('stack')
+    expect(collect(lift(佇列程式), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ 負向（CK-1）：查不到型別時**不寫**該屬性，不猜', () => {
     // `unknownThing` 沒有宣告 → 辨識脈絡查不到型別
-    const pushes = collect(lift('unknownThing.push(1);'), (n) => n.conceptId === 'cpp_container_push')
+    const pushes = collect(lift('unknownThing.push(1);'), (n) => n.conceptId === 'cpp:container_push')
     expect(pushes).toHaveLength(1)
     expect(
       pushes[0].properties?.container_kind,
@@ -181,10 +181,10 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
       if (kind !== undefined) props.container_kind = kind
       const tree = createNode('program', {}, {
         body: [
-          createNode('cpp_stack_declare', { name: 's', type: 'int' }, {}),
-          createNode('cpp_container_push', { ...props }, { value: [createNode('number_literal', { value: '1' }, {})] }),
-          createNode('cpp_container_push', { ...props }, { value: [createNode('number_literal', { value: '2' }, {})] }),
-          createNode('print', {}, { values: [createNode('cpp_stack_top', { obj: 's' }, {})] }),
+          createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('number_literal', { value: '1' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('number_literal', { value: '2' }, {})] }),
+          createNode('print', {}, { values: [createNode('cpp:stack_top', { obj: 's' }, {})] }),
         ],
       })
       const i = new SemanticInterpreter({ maxSteps: 50000 })
@@ -215,9 +215,9 @@ describe('加法式：舊存檔不會壞', () => {
     const 中性 = reg.getByBlockType('c_container_push')?.conceptMapping?.conceptId
     const 堆疊 = reg.getByBlockType('c_stack_push')?.conceptMapping?.conceptId
     const 佇列 = reg.getByBlockType('c_queue_push')?.conceptMapping?.conceptId
-    expect(中性).toBe('cpp_container_push')
-    expect(堆疊).toBe('cpp_container_push')
-    expect(佇列).toBe('cpp_container_push')
+    expect(中性).toBe('cpp:container_push')
+    expect(堆疊).toBe('cpp:container_push')
+    expect(佇列).toBe('cpp:container_push')
   })
 
   it('★ 自癒：舊存檔重新渲染後升級成新形態', () => {

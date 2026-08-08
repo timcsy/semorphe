@@ -29,7 +29,9 @@
  * → 收硬性零之前必須看過 `residualRefs()`，那份清單就是為此存在的。
  */
 import { describe, it, expect } from 'vitest'
-import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
+import fs from 'node:fs'
+import path from 'node:path'
+import { listSourceFiles, REPO_ROOT, printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
 import { scanTsRefs, scanJsonRefs, residualRefs } from '../helpers/identity-refs'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { registeredIdMigrations } from '../../src/core/storage-version'
@@ -62,9 +64,34 @@ function 舊格式引用(extra: { file: string; source: string }[] = []): { ts: 
   }
 }
 
-/** JSON 裡 `blockDef.type` 落在身分清單中的處數——**這個數字不得變動** */
-function 同名積木型別(): number {
-  return scanJsonRefs(全部身分).filter((r) => r.role === 'blockType').length
+/**
+ * 全部積木型別字串的指紋——**這個值不得變動**。
+ *
+ * ⚠️ 第一版量的是「`blockDef.type` 落在身分清單中的處數」，基線 66。
+ * 那個指標**在遷移一落地就失效**：身分變成 `cpp:x`、積木型別還是 `cpp_x`，
+ * 交集自然歸零——它會在什麼都沒壞的時候報 `66 → 0`。
+ *
+ * > **量「兩個集合的交集」量不到「其中一個集合有沒有變」。**
+ *
+ * 改成直接釘積木型別集合本身。66 顆與身分同名的積木型別是這個集合的一部分，
+ * 改到它們的話指紋會變。
+ */
+function 積木型別指紋(): string {
+  const types: string[] = []
+  for (const rel of listSourceFiles('src', ['.json'])) {
+    if (rel.includes('/i18n/')) continue
+    let a: unknown
+    try {
+      a = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'))
+    } catch {
+      continue
+    }
+    if (!Array.isArray(a)) continue
+    for (const p of a as { blockDef?: { type?: string } }[]) {
+      if (p.blockDef?.type) types.push(p.blockDef.type)
+    }
+  }
+  return types.sort().join('|')
 }
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
@@ -152,7 +179,7 @@ describe('身分改名表的涵蓋率', () => {
 describe('元件身分命名空間', () => {
   const 違規 = 檢格式()
   const 引用 = 舊格式引用()
-  const 同名 = 同名積木型別()
+  const 同名 = 積木型別指紋()
   const 殘留 = residualRefs(new Set([...全部身分].filter((id) => !isNamespaced(id))))
 
   it('報表', () => {
@@ -163,7 +190,7 @@ describe('元件身分命名空間', () => {
     }
     printReport('身分命名空間', [
       `元件 ${全部身分.size}｜格式違規 ${違規.length}｜舊格式引用 ts ${引用.ts} ／ json ${引用.json}`,
-      `同名積木型別 ${同名}（**不得變動**）｜殘留待人看 ${殘留.length}`,
+      `積木型別 ${同名.split('|').length} 顆（指紋不得變動）｜殘留待人看 ${殘留.length}`,
       '',
       'scope 分佈：' + [...scope分佈].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join('｜'),
       '',
@@ -177,17 +204,23 @@ describe('元件身分命名空間', () => {
     expect(true).toBe(true)
   })
 
-  it('★ 同名積木型別的處數**不得變動**', () => {
+  it('★ 積木型別集合**不得變動**', () => {
     // ⚠️ 這一條不是「越少越好」。66 顆元件身分與積木型別字串相同，
     // 而積木型別**必須原地不動**（B 項已定加法式保留）。
     // 這個數字動了 = 改名改到了不該改的那一邊，而症狀（積木消失）
     // 有十幾種成因，等到有人回報時已經無從歸因。
-    const base = loadBaseline<{ 同名積木型別: number }>('identity-namespace')
-    expect(同名, '改名動到了積木型別——立刻回退，不要就地修補').toBe(base.同名積木型別)
+    const base = loadBaseline<{ 積木型別指紋: string }>('identity-namespace')
+    const 現 = new Set(同名.split('|'))
+    const 舊 = new Set(base.積木型別指紋.split('|'))
+    expect(
+      [...舊].filter((t) => !現.has(t)),
+      '積木型別消失了——改名動到了不該改的那一邊。立刻回退，不要就地修補',
+    ).toEqual([])
+    expect([...現].filter((t) => !舊.has(t)), '積木型別憑空多出來了').toEqual([])
   })
 
   it('★ 棘輪：格式違規與舊格式引用只准下降', () => {
-    const current = { guard: 'identity-namespace', 違規, 引用, 同名積木型別: 同名 }
+    const current = { guard: 'identity-namespace', 違規, 引用, 積木型別指紋: 同名 }
     if (process.env.GENERATE_BASELINE) {
       writeBaseline('identity-namespace', current)
       return

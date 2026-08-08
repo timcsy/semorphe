@@ -53,7 +53,7 @@ async function errOf(tree: SemanticNode): Promise<string> {
 
 describe('命名空間', () => {
   it('★ 命名空間裡的敘述會執行', async () => {
-    const out = await run(prog(n('cpp_namespace_def', { name: 'N' }, { body: [show(num(5))] })))
+    const out = await run(prog(n('cpp:namespace_def', { name: 'N' }, { body: [show(num(5))] })))
     expect(out.trim(), '命名空間的本體沒有跑——它是空操作').toBe('5')
   })
 })
@@ -62,7 +62,7 @@ describe('模板函式', () => {
   it('★ 模板函式可以被呼叫', async () => {
     const out = await run(
       prog(
-        n('cpp_template_function', { func_name: 'twice', return_type: 'int', t: 'T' }, {
+        n('cpp:template_function', { func_name: 'twice', return_type: 'int', t: 'T' }, {
           params: [n('var_declare', { name: 'x', type: 'int' })],
           body: [ret(n('arithmetic', { operator: '*' }, { left: [ref('x')], right: [num(2)] }))],
         }),
@@ -75,7 +75,7 @@ describe('模板函式', () => {
 
 describe('指標取成員 `p->x`', () => {
   const point = (): SemanticNode =>
-    n('cpp_struct_declare', { name: 'Point' }, {
+    n('cpp:struct_declare', { name: 'Point' }, {
       members: [n('var_declare', { name: 'x', type: 'int' })],
     })
 
@@ -85,10 +85,10 @@ describe('指標取成員 `p->x`', () => {
         point(),
         n('var_declare', { name: 'p', type: 'Point' }),
         n('var_assign', { name: 'p.x' }, { value: [num(9)] }),
-        n('cpp_pointer_declare', { name: 'ptr', type: 'Point' }, {
-          initializer: [n('cpp_address_of', {}, { var: [ref('p')] })],
+        n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }, {
+          initializer: [n('cpp:address_of', {}, { var: [ref('p')] })],
         }),
-        show(n('cpp_struct_pointer_access', { ptr: 'ptr', member: 'x' })),
+        show(n('cpp:struct_pointer_access', { ptr: 'ptr', member: 'x' })),
       ),
     )
     expect(out.trim(), '指標取成員讀不到——多半是沒有解參照').toBe('9')
@@ -96,8 +96,8 @@ describe('指標取成員 `p->x`', () => {
 
   it('★ 空指標取成員要出聲', async () => {
     const 訊息 = await errOf(
-      prog(point(), n('cpp_pointer_declare', { name: 'ptr', type: 'Point' }),
-        show(n('cpp_struct_pointer_access', { ptr: 'ptr', member: 'x' }))),
+      prog(point(), n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }),
+        show(n('cpp:struct_pointer_access', { ptr: 'ptr', member: 'x' }))),
     )
     expect(訊息, '對空指標取成員靜默成功了——那在真的 C++ 會當掉').not.toBe('')
   })
@@ -109,9 +109,9 @@ describe('繼承與虛擬方法', () => {
    * class Dog : public Animal { public: string speak() override { return "汪"; } };
    */
   const animal = (): SemanticNode =>
-    n('cpp_class_def', { name: 'Animal' }, {
+    n('cpp:class_def', { name: 'Animal' }, {
       public: [
-        n('cpp_virtual_method', { name: 'speak', return_type: 'int' }, {
+        n('cpp:virtual_method', { name: 'speak', return_type: 'int' }, {
           params: [],
           body: [ret(num(1))],
         }),
@@ -120,9 +120,9 @@ describe('繼承與虛擬方法', () => {
     })
 
   const dog = (): SemanticNode =>
-    n('cpp_class_def', { name: 'Dog', base: 'Animal' }, {
+    n('cpp:class_def', { name: 'Dog', base: 'Animal' }, {
       public: [
-        n('cpp_override_method', { name: 'speak', return_type: 'int' }, {
+        n('cpp:override_method', { name: 'speak', return_type: 'int' }, {
           params: [],
           body: [ret(num(2))],
         }),
@@ -133,7 +133,7 @@ describe('繼承與虛擬方法', () => {
   it('★ 虛擬方法可以被呼叫', async () => {
     const out = await run(
       prog(animal(), n('var_declare', { name: 'a', type: 'Animal' }),
-        show(n('cpp_method_call', { obj: 'a', method: 'speak' }, { args: [] }))),
+        show(n('cpp:method_call', { obj: 'a', method: 'speak' }, { args: [] }))),
     )
     expect(out.trim()).toBe('1')
   })
@@ -141,36 +141,36 @@ describe('繼承與虛擬方法', () => {
   it('★ 覆寫的方法蓋掉基底的', async () => {
     const out = await run(
       prog(animal(), dog(), n('var_declare', { name: 'd', type: 'Dog' }),
-        show(n('cpp_method_call', { obj: 'd', method: 'speak' }, { args: [] }))),
+        show(n('cpp:method_call', { obj: 'd', method: 'speak' }, { args: [] }))),
     )
     expect(out.trim(), '呼叫到基底的實作了——覆寫沒有生效').toBe('2')
   })
 
   it('★ 沒有覆寫時，繼承基底的方法與欄位', async () => {
-    const base = n('cpp_class_def', { name: 'B' }, {
+    const base = n('cpp:class_def', { name: 'B' }, {
       public: [
         n('var_declare', { name: 'v', type: 'int' }),
         n('func_def', { name: 'setV', return_type: 'void' }, { params: [], body: [assign('v', num(8))] }),
       ],
       private: [],
     })
-    const derived = n('cpp_class_def', { name: 'D', base: 'B' }, { public: [], private: [] })
+    const derived = n('cpp:class_def', { name: 'D', base: 'B' }, { public: [], private: [] })
     const out = await run(
       prog(base, derived, n('var_declare', { name: 'd', type: 'D' }),
-        n('cpp_method_call', { obj: 'd', method: 'setV' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'd', member: 'v' }))),
+        n('cpp:method_call', { obj: 'd', method: 'setV' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'd', member: 'v' }))),
     )
     expect(out.trim(), '衍生類別沒有繼承基底的欄位或方法').toBe('8')
   })
 
   it('★ 純虛擬方法被呼叫時要出聲——它沒有本體', async () => {
-    const abs = n('cpp_class_def', { name: 'A' }, {
-      public: [n('cpp_pure_virtual', { name: 'f', return_type: 'int' }, { params: [] })],
+    const abs = n('cpp:class_def', { name: 'A' }, {
+      public: [n('cpp:pure_virtual', { name: 'f', return_type: 'int' }, { params: [] })],
       private: [],
     })
     const 訊息 = await errOf(
       prog(abs, n('var_declare', { name: 'a', type: 'A' }),
-        show(n('cpp_method_call', { obj: 'a', method: 'f' }, { args: [] }))),
+        show(n('cpp:method_call', { obj: 'a', method: 'f' }, { args: [] }))),
     )
     expect(訊息, '呼叫一個沒有本體的純虛擬方法靜默回傳了').not.toBe('')
   })
@@ -178,13 +178,13 @@ describe('繼承與虛擬方法', () => {
 
 describe('運算子多載', () => {
   it('★ 多載的 `+` 會被用到', async () => {
-    const vec = n('cpp_class_def', { name: 'V' }, {
+    const vec = n('cpp:class_def', { name: 'V' }, {
       public: [
         n('var_declare', { name: 'x', type: 'int' }),
-        n('cpp_operator_overload', { operator: '+', return_type: 'V', param_type: 'V', param_name: 'o' }, {
+        n('cpp:operator_overload', { operator: '+', return_type: 'V', param_type: 'V', param_name: 'o' }, {
           body: [ret(n('arithmetic', { operator: '+' }, {
             left: [ref('x')],
-            right: [n('cpp_struct_member_access', { obj: 'o', member: 'x' })],
+            right: [n('cpp:struct_member_access', { obj: 'o', member: 'x' })],
           }))],
         }),
       ],
@@ -204,9 +204,9 @@ describe('運算子多載', () => {
 
 describe('靜態成員', () => {
   it('★ 靜態成員由所有實例共用', async () => {
-    const c = n('cpp_class_def', { name: 'C' }, {
+    const c = n('cpp:class_def', { name: 'C' }, {
       public: [
-        n('cpp_static_member', { name: 'count', type: 'int' }),
+        n('cpp:static_member', { name: 'count', type: 'int' }),
         n('func_def', { name: 'inc', return_type: 'void' }, {
           params: [],
           body: [assign('count', n('arithmetic', { operator: '+' }, { left: [ref('count')], right: [num(1)] }))],
@@ -218,9 +218,9 @@ describe('靜態成員', () => {
       prog(c,
         n('var_declare', { name: 'a', type: 'C' }),
         n('var_declare', { name: 'b', type: 'C' }),
-        n('cpp_method_call', { obj: 'a', method: 'inc' }, { args: [] }),
-        n('cpp_method_call', { obj: 'b', method: 'inc' }, { args: [] }),
-        show(n('cpp_struct_member_access', { obj: 'a', member: 'count' }))),
+        n('cpp:method_call', { obj: 'a', method: 'inc' }, { args: [] }),
+        n('cpp:method_call', { obj: 'b', method: 'inc' }, { args: [] }),
+        show(n('cpp:struct_member_access', { obj: 'a', member: 'count' }))),
     )
     expect(out.trim(), '靜態成員沒有共用——它變成了每個實例各一份').toBe('2')
   })

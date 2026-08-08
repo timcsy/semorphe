@@ -12,9 +12,9 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
 
   for (const node of body) {
     // Skip include directives
-    if (node.conceptId === 'cpp_include' || node.conceptId === 'cpp_include_local') continue
+    if (node.conceptId === 'cpp:include' || node.conceptId === 'cpp:include_local') continue
     // Skip using namespace
-    if (node.conceptId === 'cpp_using_namespace') continue
+    if (node.conceptId === 'cpp:using_namespace') continue
     // Unwrap func_def(main) — extract its body, skip trailing return
     if (node.conceptId === 'func_def' && node.properties.name === 'main') {
       const funcBody = node.children.body ?? []

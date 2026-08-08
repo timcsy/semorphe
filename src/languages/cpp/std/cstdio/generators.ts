@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../../core/projection/code-gen
 
 export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
   // c_printf with structured args (0 or more)
-  g.set('cpp_printf', (node, ctx) => {
+  g.set('cpp:printf', (node, ctx) => {
     const format = (node.properties.format as string) ?? '%d\\n'
     const argNodes = node.children.args ?? []
     if (argNodes.length > 0) {
@@ -18,7 +18,7 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
   })
 
   // c_scanf with structured args + auto & for simple vars (0 or more)
-  g.set('cpp_scanf', (node, ctx) => {
+  g.set('cpp:scanf', (node, ctx) => {
     const format = (node.properties.format as string) ?? '%d'
     const argNodes = node.children.args ?? []
     if (argNodes.length > 0) {

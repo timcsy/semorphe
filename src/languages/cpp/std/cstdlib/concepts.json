@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_rand",
+    "conceptId": "cpp:rand",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -8,7 +8,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_srand",
+    "conceptId": "cpp:srand",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -24,7 +24,7 @@
     }
   },
   {
-    "conceptId": "cpp_abs",
+    "conceptId": "cpp:abs",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -34,7 +34,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_exit",
+    "conceptId": "cpp:exit",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -44,7 +44,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_atoi",
+    "conceptId": "cpp:atoi",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -54,7 +54,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_atof",
+    "conceptId": "cpp:atof",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

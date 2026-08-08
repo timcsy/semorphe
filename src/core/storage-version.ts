@@ -86,11 +86,11 @@ export type Upgrade = (raw: Record<string, unknown>) => Record<string, unknown>
  */
 const 合併掉的身分: Record<string, string> = {
   func_call_expr: 'func_call',
-  cpp_method_call_expr: 'cpp_method_call',
-  cpp_increment_expr: 'cpp_increment',
-  cpp_compound_assign_expr: 'cpp_compound_assign',
+  cpp_method_call_expr: 'cpp:method_call',
+  cpp_increment_expr: 'cpp:increment',
+  cpp_compound_assign_expr: 'cpp:compound_assign',
   var_declare_expr: 'var_declare',
-  cpp_scanf_expr: 'cpp_scanf',
+  cpp_scanf_expr: 'cpp:scanf',
 }
 
 /**

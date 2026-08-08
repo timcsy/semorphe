@@ -88,15 +88,15 @@ function findNode(root: SemanticNode, conceptId: string): SemanticNode | undefin
 describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
   // ─── Lambda ────────────────────────────────────────────────
 
-  describe('cpp_lambda', () => {
+  describe('cpp:lambda', () => {
     it('basic lambda: auto f = [](int x) { return x + 1; };', () => {
       const code = 'auto f = [](int x) { return x + 1; };'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:lambda')
 
-      const lambdaNode = findNode(tree!, 'cpp_lambda')
+      const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
       expect(lambdaNode!.children.params).toHaveLength(1)
       expect(lambdaNode!.children.params[0].properties.type).toBe('int')
@@ -111,7 +111,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_lambda')
+      expect(concepts2).toContain('cpp:lambda')
     })
 
     it('lambda with capture: auto f = [&](int x) { return x * 2; };', () => {
@@ -119,9 +119,9 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:lambda')
 
-      const lambdaNode = findNode(tree!, 'cpp_lambda')
+      const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
       expect(lambdaNode!.properties.capture).toBe('&')
 
@@ -132,7 +132,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       // P1: re-lift
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
-      const lambda2 = findNode(tree2!, 'cpp_lambda')
+      const lambda2 = findNode(tree2!, 'cpp:lambda')
       expect(lambda2).toBeDefined()
       expect(lambda2!.properties.capture).toBe('&')
     })
@@ -142,9 +142,9 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:lambda')
 
-      const lambdaNode = findNode(tree!, 'cpp_lambda')
+      const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
       expect(lambdaNode!.properties.return_type).toBe('int')
 
@@ -155,7 +155,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       // P1: re-lift
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
-      const lambda2 = findNode(tree2!, 'cpp_lambda')
+      const lambda2 = findNode(tree2!, 'cpp:lambda')
       expect(lambda2).toBeDefined()
       expect(lambda2!.properties.return_type).toBe('int')
     })
@@ -163,15 +163,15 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
   // ─── Namespace ─────────────────────────────────────────────
 
-  describe('cpp_namespace_def', () => {
+  describe('cpp:namespace_def', () => {
     it('namespace definition: namespace Math { int add(int a, int b) { return a + b; } }', () => {
       const code = 'namespace Math { int add(int a, int b) { return a + b; } }'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_namespace_def')
+      expect(concepts).toContain('cpp:namespace_def')
 
-      const nsNode = findNode(tree!, 'cpp_namespace_def')
+      const nsNode = findNode(tree!, 'cpp:namespace_def')
       expect(nsNode).toBeDefined()
       expect(nsNode!.properties.name).toBe('Math')
       expect(nsNode!.children.body.length).toBeGreaterThan(0)
@@ -188,8 +188,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_namespace_def')
-      const ns2 = findNode(tree2!, 'cpp_namespace_def')
+      expect(concepts2).toContain('cpp:namespace_def')
+      const ns2 = findNode(tree2!, 'cpp:namespace_def')
       expect(ns2).toBeDefined()
       expect(ns2!.properties.name).toBe('Math')
     })
@@ -197,15 +197,15 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
   // ─── static_cast ───────────────────────────────────────────
 
-  describe('cpp_static_cast', () => {
+  describe('cpp:static_cast', () => {
     it('static_cast: double d = 3.14; int n = static_cast<int>(d);', () => {
       const code = 'double d = 3.14;\nint n = static_cast<int>(d);'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_static_cast')
+      expect(concepts).toContain('cpp:static_cast')
 
-      const castNode = findNode(tree!, 'cpp_static_cast')
+      const castNode = findNode(tree!, 'cpp:static_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('int')
 
@@ -217,8 +217,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_static_cast')
-      const cast2 = findNode(tree2!, 'cpp_static_cast')
+      expect(concepts2).toContain('cpp:static_cast')
+      const cast2 = findNode(tree2!, 'cpp:static_cast')
       expect(cast2).toBeDefined()
       expect(cast2!.properties.target_type).toBe('int')
     })
@@ -226,15 +226,15 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
   // ─── dynamic_cast ──────────────────────────────────────────
 
-  describe('cpp_dynamic_cast', () => {
+  describe('cpp:dynamic_cast', () => {
     it('dynamic_cast: Base* b = new Derived(); Derived* d = dynamic_cast<Derived*>(b);', () => {
       const code = 'Base* b = new Derived();\nDerived* d = dynamic_cast<Derived*>(b);'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_dynamic_cast')
+      expect(concepts).toContain('cpp:dynamic_cast')
 
-      const castNode = findNode(tree!, 'cpp_dynamic_cast')
+      const castNode = findNode(tree!, 'cpp:dynamic_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('Derived*')
 
@@ -245,8 +245,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_dynamic_cast')
-      const cast2 = findNode(tree2!, 'cpp_dynamic_cast')
+      expect(concepts2).toContain('cpp:dynamic_cast')
+      const cast2 = findNode(tree2!, 'cpp:dynamic_cast')
       expect(cast2).toBeDefined()
       expect(cast2!.properties.target_type).toBe('Derived*')
     })
@@ -254,15 +254,15 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
   // ─── reinterpret_cast ──────────────────────────────────────
 
-  describe('cpp_reinterpret_cast', () => {
+  describe('cpp:reinterpret_cast', () => {
     it('reinterpret_cast: int n = 42; void* p = reinterpret_cast<void*>(&n);', () => {
       const code = 'int n = 42;\nvoid* p = reinterpret_cast<void*>(&n);'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_reinterpret_cast')
+      expect(concepts).toContain('cpp:reinterpret_cast')
 
-      const castNode = findNode(tree!, 'cpp_reinterpret_cast')
+      const castNode = findNode(tree!, 'cpp:reinterpret_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('void*')
 
@@ -273,8 +273,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_reinterpret_cast')
-      const cast2 = findNode(tree2!, 'cpp_reinterpret_cast')
+      expect(concepts2).toContain('cpp:reinterpret_cast')
+      const cast2 = findNode(tree2!, 'cpp:reinterpret_cast')
       expect(cast2).toBeDefined()
       expect(cast2!.properties.target_type).toBe('void*')
     })
@@ -282,15 +282,15 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
   // ─── const_cast ────────────────────────────────────────────
 
-  describe('cpp_const_cast', () => {
+  describe('cpp:const_cast', () => {
     it('const_cast: const int* cp = &n; int* p = const_cast<int*>(cp);', () => {
       const code = 'const int* cp = &n;\nint* p = const_cast<int*>(cp);'
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_const_cast')
+      expect(concepts).toContain('cpp:const_cast')
 
-      const castNode = findNode(tree!, 'cpp_const_cast')
+      const castNode = findNode(tree!, 'cpp:const_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('int*')
 
@@ -301,8 +301,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_const_cast')
-      const cast2 = findNode(tree2!, 'cpp_const_cast')
+      expect(concepts2).toContain('cpp:const_cast')
+      const cast2 = findNode(tree2!, 'cpp:const_cast')
       expect(cast2).toBeDefined()
       expect(cast2!.properties.target_type).toBe('int*')
     })
@@ -318,10 +318,10 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_namespace_def')
-      expect(concepts).toContain('cpp_lambda')
+      expect(concepts).toContain('cpp:namespace_def')
+      expect(concepts).toContain('cpp:lambda')
 
-      const nsNode = findNode(tree!, 'cpp_namespace_def')
+      const nsNode = findNode(tree!, 'cpp:namespace_def')
       expect(nsNode).toBeDefined()
       expect(nsNode!.properties.name).toBe('Utils')
 
@@ -333,8 +333,8 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_namespace_def')
-      expect(concepts2).toContain('cpp_lambda')
+      expect(concepts2).toContain('cpp:namespace_def')
+      expect(concepts2).toContain('cpp:lambda')
     })
   })
 
@@ -346,10 +346,10 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp_static_cast')
+      expect(concepts).toContain('cpp:static_cast')
       expect(concepts).toContain('arithmetic')
 
-      const castNode = findNode(tree!, 'cpp_static_cast')
+      const castNode = findNode(tree!, 'cpp:static_cast')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('int')
 
@@ -361,7 +361,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const tree2 = liftCode(gen)
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
-      expect(concepts2).toContain('cpp_static_cast')
+      expect(concepts2).toContain('cpp:static_cast')
       expect(concepts2).toContain('arithmetic')
     })
   })

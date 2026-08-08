@@ -58,7 +58,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const text = node.text
     const match = text.match(/using\s+namespace\s+(\w+)\s*;?/)
     if (match) {
-      return createNode('cpp_using_namespace', { ns: match[1] })
+      return createNode('cpp:using_namespace', { ns: match[1] })
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: text }
@@ -71,7 +71,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const valueNode = node.childForFieldName('value')
     const name = nameNode?.text ?? 'MACRO'
     const value = valueNode?.text ?? ''
-    return createNode('cpp_define', { name, value })
+    return createNode('cpp:define', { name, value })
   })
 
   // #ifdef NAME / #ifndef NAME
@@ -92,7 +92,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
         (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
       ),
     )
-    const concept = node.text.trimStart().startsWith('#ifndef') ? 'cpp_ifndef' : 'cpp_ifdef'
+    const concept = node.text.trimStart().startsWith('#ifndef') ? 'cpp:ifndef' : 'cpp:ifdef'
     // ⚠️ 原本寫 `{ condition: name, name }`——**同一個值兩個名字**，
     // 而執行器對應地寫著 `properties.condition ?? properties.name`。
     // 兩個名字不是相容層，是重複：沒有任何情境只有其中一個。已收斂成 `condition`。
@@ -112,6 +112,6 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
         (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
       ),
     )
-    return createNode('cpp_ifndef', { condition: name, name }, { body })
+    return createNode('cpp:ifndef', { condition: name, name }, { body })
   })
 }

@@ -43,16 +43,16 @@ beforeAll(async () => {
 
 describe('C++ stream declarations', () => {
   // ─── cpp_ifstream_declare ──────────────────────────────
-  describe('cpp_ifstream_declare', () => {
+  describe('cpp:ifstream_declare', () => {
     it('should generate ifstream declaration with name and file', () => {
-      const node = createNode('cpp_ifstream_declare', { name: 'fin', file: 'input.txt' })
+      const node = createNode('cpp:ifstream_declare', { name: 'fin', file: 'input.txt' })
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('ifstream fin("input.txt")')
     })
 
     it('should use default values when properties missing', () => {
-      const node = createNode('cpp_ifstream_declare', {})
+      const node = createNode('cpp:ifstream_declare', {})
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('ifstream fin("input.txt")')
@@ -60,16 +60,16 @@ describe('C++ stream declarations', () => {
   })
 
   // ─── cpp_ofstream_declare ──────────────────────────────
-  describe('cpp_ofstream_declare', () => {
+  describe('cpp:ofstream_declare', () => {
     it('should generate ofstream declaration with name and file', () => {
-      const node = createNode('cpp_ofstream_declare', { name: 'fout', file: 'output.txt' })
+      const node = createNode('cpp:ofstream_declare', { name: 'fout', file: 'output.txt' })
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('ofstream fout("output.txt")')
     })
 
     it('should generate with custom name and file', () => {
-      const node = createNode('cpp_ofstream_declare', { name: 'out', file: 'result.txt' })
+      const node = createNode('cpp:ofstream_declare', { name: 'out', file: 'result.txt' })
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('ofstream out("result.txt")')
@@ -77,16 +77,16 @@ describe('C++ stream declarations', () => {
   })
 
   // ─── cpp_stringstream_declare ──────────────────────────
-  describe('cpp_stringstream_declare', () => {
+  describe('cpp:stringstream_declare', () => {
     it('should generate stringstream declaration with name', () => {
-      const node = createNode('cpp_stringstream_declare', { name: 'ss' })
+      const node = createNode('cpp:stringstream_declare', { name: 'ss' })
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('stringstream ss')
     })
 
     it('should use default name when property missing', () => {
-      const node = createNode('cpp_stringstream_declare', {})
+      const node = createNode('cpp:stringstream_declare', {})
       const prog = createNode('program', {}, { body: [node] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('stringstream ss')

@@ -114,7 +114,7 @@ describe('概念身分與五路', () => {
 
   it('宣告升成 cpp_istringstream_declare，來源掛在 source 底下', () => {
     const tree = lift('istringstream in("10 20 30");')
-    const decls = collect(tree, (n) => n.conceptId === 'cpp_istringstream_declare')
+    const decls = collect(tree, (n) => n.conceptId === 'cpp:istringstream_declare')
     expect(decls).toHaveLength(1)
     expect(decls[0].properties?.name).toBe('in')
     expect((decls[0].children?.source ?? []).length).toBe(1)

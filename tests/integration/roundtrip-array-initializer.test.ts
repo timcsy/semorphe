@@ -79,7 +79,7 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
     expect((n!.children.values ?? []).length).toBe(3)
   })
 
-  it.skip('[BLOCKED:cpp_string_declare] 字串陣列的初始值被保留', () => {
+  it.skip('[BLOCKED:cpp:string_declare] 字串陣列的初始值被保留', () => {
     // 這一條與 array_declare 無關：`string s[2] = {...}` 根本沒有被辨識成
     // array_declare——`cpp_string_declare` 的匹配過寬，把它整個吞掉，連名字
     // 都變成垃圾（`s[2] = {"ab","cd"}`）。

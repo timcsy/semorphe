@@ -288,7 +288,7 @@ int main() {
 
 // --- oop_007: scoped destructor call in inner block (SEMANTIC_DIFF) ---
 
-describe.skip('[BLOCKED:cpp_destructor] fuzz: scoped destructor call in inner block (SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:cpp:destructor] fuzz: scoped destructor call in inner block (SEMANTIC_DIFF)', () => {
   // Inner block scope { Scope s; } is flattened during lift,
   // causing destructor to fire at end of main instead of end of block.
   // Roundtrip is stable (gen1 == gen2), but output order differs.
@@ -313,7 +313,7 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp_destructor] should preserve inner block scope for correct destructor ordering')
+  it.todo('[BLOCKED:cpp:destructor] should preserve inner block scope for correct destructor ordering')
 })
 
 // --- oop_008: class with standalone function using member access ---
@@ -556,7 +556,7 @@ int main() {
 
 // --- Known limitations (EXPECTED_DEGRADATION, fuzz 2026-03-13) ---
 // fuzz_3, fuzz_4: ptr->method() via pointer array generates as .method()
-it.todo('[BLOCKED:cpp_pointer_declare] fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
+it.todo('[BLOCKED:cpp:pointer_declare] fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
 // fuzz_5: inner block { } scope flattened, destructor order wrong
 // 080 實作了解構式與作用域結束的時機
 describe('fuzz: 解構式的順序', () => {

@@ -17,12 +17,12 @@ import { defaultValue } from '../../../../interpreter/types'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp_stack_declare', async (node, ctx) => {
+  register('cpp:stack_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
 
-  register('cpp_stack_top', async (node, ctx) => {
+  register('cpp:stack_top', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {

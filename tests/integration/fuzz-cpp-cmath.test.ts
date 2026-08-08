@@ -65,7 +65,7 @@ function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
 function countRawCode(node: SemanticNode): number {
   let count = 0
   function walk(n: SemanticNode) {
-    if (n.metadata?.confidence === 'raw_code' || n.conceptId === 'cpp_raw_code' || n.conceptId === 'cpp_raw_expression') {
+    if (n.metadata?.confidence === 'raw_code' || n.conceptId === 'cpp:raw_code' || n.conceptId === 'cpp:raw_expression') {
       count++
     }
     for (const children of Object.values(n.children)) {

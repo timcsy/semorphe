@@ -59,11 +59,14 @@ describe('splitCodeAndComments', () => {
 })
 
 describe('scanFile — 只匹配完整的引號字串字面', () => {
-  it('前綴不誤報：cpp_string_at 不得命中 cpp_string_at_expr', () => {
-    withTempFile(`const x = 'cpp_string_at_expr'\n`, (rel) => {
-      const hits = scanFile(rel, ['cpp_string_at', 'cpp_string_at_expr'])
-      expect(hits.code).toEqual(['cpp_string_at_expr'])
-      expect(hits.code).not.toContain('cpp_string_at')
+  it('前綴不誤報：cpp:string_at 不得命中 cpp:string_at_expr', () => {
+    // ⚠️ 兩個樣本必須**共用前綴**，否則這支測試就不再測前綴誤報了。
+    // 命名空間遷移把第一個改成 `cpp:string_at`、第二個留在 `cpp_string_at_expr`，
+    // 前綴當場不共用——測試會綠，而它綠得沒有意義。
+    withTempFile(`const x = 'cpp:string_at_expr'\n`, (rel) => {
+      const hits = scanFile(rel, ['cpp:string_at', 'cpp:string_at_expr'])
+      expect(hits.code).toEqual(['cpp:string_at_expr'])
+      expect(hits.code).not.toContain('cpp:string_at')
     })
   })
 
@@ -89,17 +92,17 @@ describe('scanFile — 只匹配完整的引號字串字面', () => {
   })
 
   it('註解中的引用歸入 commentOnly，不入 code', () => {
-    withTempFile(`// cpp_string_at — character access\nconst x = 1\n`, (rel) => {
-      const hits = scanFile(rel, ['cpp_string_at'])
+    withTempFile(`// cpp:string_at — character access\nconst x = 1\n`, (rel) => {
+      const hits = scanFile(rel, ['cpp:string_at'])
       expect(hits.code).toEqual([])
-      expect(hits.commentOnly).toEqual(['cpp_string_at'])
+      expect(hits.commentOnly).toEqual(['cpp:string_at'])
     })
   })
 
   it('同時出現在程式碼與註解時，算程式碼引用', () => {
-    withTempFile(`// cpp_string_at 說明\nconst x = 'cpp_string_at'\n`, (rel) => {
-      const hits = scanFile(rel, ['cpp_string_at'])
-      expect(hits.code).toEqual(['cpp_string_at'])
+    withTempFile(`// cpp:string_at 說明\nconst x = 'cpp:string_at'\n`, (rel) => {
+      const hits = scanFile(rel, ['cpp:string_at'])
+      expect(hits.code).toEqual(['cpp:string_at'])
       expect(hits.commentOnly).toEqual([])
     })
   })
@@ -118,6 +121,6 @@ describe('allComponentIds', () => {
     expect(ids.length).toBeGreaterThan(100)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).toContain('print')
-    expect(ids).toContain('cpp_string_at')
+    expect(ids).toContain('cpp:string_at')
   })
 })

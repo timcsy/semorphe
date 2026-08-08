@@ -65,12 +65,12 @@ function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode
 
 describe('C++ cctype Roundtrip', () => {
 
-  describe('cpp_isalpha', () => {
+  describe('cpp:isalpha', () => {
     const code = "if (isalpha('A')) { cout << \"yes\" << endl; }"
 
     it('should lift to cpp_isalpha concept', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp_isalpha')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:isalpha')).not.toBeNull()
     })
 
     it('should generate code containing isalpha()', () => {
@@ -81,16 +81,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp_isalpha')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:isalpha')).not.toBeNull()
     })
   })
 
-  describe('cpp_isdigit', () => {
+  describe('cpp:isdigit', () => {
     const code = "if (isdigit('5')) { cout << \"digit\" << endl; }"
 
     it('should lift to cpp_isdigit concept', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp_isdigit')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:isdigit')).not.toBeNull()
     })
 
     it('should generate code containing isdigit()', () => {
@@ -101,16 +101,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp_isdigit')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:isdigit')).not.toBeNull()
     })
   })
 
-  describe('cpp_toupper', () => {
+  describe('cpp:toupper', () => {
     const code = "char c = toupper('a');"
 
     it('should lift to cpp_toupper concept', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp_toupper')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:toupper')).not.toBeNull()
     })
 
     it('should generate code containing toupper()', () => {
@@ -121,16 +121,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp_toupper')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:toupper')).not.toBeNull()
     })
   })
 
-  describe('cpp_tolower', () => {
+  describe('cpp:tolower', () => {
     const code = "char c = tolower('Z');"
 
     it('should lift to cpp_tolower concept', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp_tolower')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:tolower')).not.toBeNull()
     })
 
     it('should generate code containing tolower()', () => {
@@ -141,7 +141,7 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp_tolower')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:tolower')).not.toBeNull()
     })
   })
 
@@ -157,17 +157,17 @@ cout << (char)tolower('Z') << endl;`
 
     it('should lift all four cctype concepts', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp_isalpha')).not.toBeNull()
-      expect(findConcept(tree, 'cpp_isdigit')).not.toBeNull()
-      expect(findConcept(tree, 'cpp_toupper')).not.toBeNull()
-      expect(findConcept(tree, 'cpp_tolower')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:isalpha')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:isdigit')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:toupper')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:tolower')).not.toBeNull()
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp_isalpha')).not.toBeNull()
-      expect(findConcept(tree2, 'cpp_toupper')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:isalpha')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:toupper')).not.toBeNull()
     })
   })
 })

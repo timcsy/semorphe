@@ -228,38 +228,38 @@ describe('C++ Core Concepts', () => {
 
   // --- Literals & Constants ---
 
-  it('cpp_char_literal', () => {
-    assertConceptPresent(`int main() { char c = 'a'; }`, 'cpp_char_literal')
+  it('cpp:char_literal', () => {
+    assertConceptPresent(`int main() { char c = 'a'; }`, 'cpp:char_literal')
   })
 
   // --- Operators ---
 
   it('cpp_increment (statement)', () => {
-    assertConceptPresent(`int main() { int i = 0; i++; }`, 'cpp_increment')
+    assertConceptPresent(`int main() { int i = 0; i++; }`, 'cpp:increment')
   })
 
   // ARCHITECTURAL: cpp_increment_expr is only produced during block rendering
   // (expressionCounterpart), not by the lifter. The lifter always produces cpp_increment.
   it('cpp_increment_expr — expression counterpart, verify cpp_increment exists', () => {
-    assertConceptPresent(`int main() { int i = 0; int x = i++; }`, 'cpp_increment')
+    assertConceptPresent(`int main() { int i = 0; int x = i++; }`, 'cpp:increment')
   })
 
   it('cpp_compound_assign (statement)', () => {
-    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp_compound_assign')
+    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:compound_assign')
   })
 
   // ARCHITECTURAL: cpp_compound_assign_expr is only produced during block rendering
   // (expressionCounterpart), not by the lifter. Verify cpp_compound_assign exists.
   it('cpp_compound_assign_expr — expression counterpart, verify cpp_compound_assign exists', () => {
-    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp_compound_assign')
+    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:compound_assign')
   })
 
-  it('cpp_ternary', () => {
-    assertConceptPresent(`int main() { int x = (1 > 0) ? 1 : 0; }`, 'cpp_ternary')
+  it('cpp:ternary', () => {
+    assertConceptPresent(`int main() { int x = (1 > 0) ? 1 : 0; }`, 'cpp:ternary')
   })
 
-  it('cpp_cast', () => {
-    assertConceptPresent(`int main() { double d = 3.14; int x = (int)d; }`, 'cpp_cast')
+  it('cpp:cast', () => {
+    assertConceptPresent(`int main() { double d = 3.14; int x = (int)d; }`, 'cpp:cast')
   })
 
   it('bitwise_not', () => {
@@ -268,90 +268,90 @@ describe('C++ Core Concepts', () => {
 
   // --- Control Flow ---
 
-  it('cpp_switch', () => {
-    assertConceptPresent(`int main() { int x = 1; switch (x) { case 1: break; } }`, 'cpp_switch')
+  it('cpp:switch', () => {
+    assertConceptPresent(`int main() { int x = 1; switch (x) { case 1: break; } }`, 'cpp:switch')
   })
 
-  it('cpp_case', () => {
-    assertConceptPresent(`int main() { int x = 1; switch (x) { case 1: break; } }`, 'cpp_case')
+  it('cpp:case', () => {
+    assertConceptPresent(`int main() { int x = 1; switch (x) { case 1: break; } }`, 'cpp:case')
   })
 
-  it('cpp_default', () => {
-    assertConceptPresent(`int main() { int x = 1; switch (x) { default: break; } }`, 'cpp_default')
+  it('cpp:default', () => {
+    assertConceptPresent(`int main() { int x = 1; switch (x) { default: break; } }`, 'cpp:default')
   })
 
-  it('cpp_for_loop', () => {
+  it('cpp:for_loop', () => {
     // A non-counting for loop (uses compound assign, not ++/-- update)
-    assertConceptPresent(`int main() { for (int i = 0; i < 100; i += 2) { int x = i; } }`, 'cpp_for_loop')
+    assertConceptPresent(`int main() { for (int i = 0; i < 100; i += 2) { int x = i; } }`, 'cpp:for_loop')
   })
 
-  it('cpp_do_while', () => {
-    assertConceptPresent(`int main() { int x = 0; do { x++; } while (x < 10); }`, 'cpp_do_while')
+  it('cpp:do_while', () => {
+    assertConceptPresent(`int main() { int x = 0; do { x++; } while (x < 10); }`, 'cpp:do_while')
   })
 
-  it('cpp_range_for', () => {
+  it('cpp:range_for', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; for (int x : v) { int y = x; } }`, 'cpp_range_for')
+int main() { std::vector<int> v; for (int x : v) { int y = x; } }`, 'cpp:range_for')
   })
 
   // --- Pointers & References ---
 
-  it('cpp_pointer_declare', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; }`, 'cpp_pointer_declare')
+  it('cpp:pointer_declare', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; }`, 'cpp:pointer_declare')
   })
 
-  it('cpp_pointer_deref', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; int y = *p; }`, 'cpp_pointer_deref')
+  it('cpp:pointer_deref', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; int y = *p; }`, 'cpp:pointer_deref')
   })
 
-  it('cpp_address_of', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; }`, 'cpp_address_of')
+  it('cpp:address_of', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; }`, 'cpp:address_of')
   })
 
-  it('cpp_pointer_assign', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; *p = 100; }`, 'cpp_pointer_assign')
+  it('cpp:pointer_assign', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; *p = 100; }`, 'cpp:pointer_assign')
   })
 
-  it('cpp_ref_declare', () => {
-    assertConceptPresent(`int main() { int x = 42; int& r = x; }`, 'cpp_ref_declare')
+  it('cpp:ref_declare', () => {
+    assertConceptPresent(`int main() { int x = 42; int& r = x; }`, 'cpp:ref_declare')
   })
 
-  it('cpp_new', () => {
-    assertConceptPresent(`int main() { int* p = new int; }`, 'cpp_new')
+  it('cpp:new', () => {
+    assertConceptPresent(`int main() { int* p = new int; }`, 'cpp:new')
   })
 
-  it('cpp_delete', () => {
-    assertConceptPresent(`int main() { int* p = new int; delete p; }`, 'cpp_delete')
+  it('cpp:delete', () => {
+    assertConceptPresent(`int main() { int* p = new int; delete p; }`, 'cpp:delete')
   })
 
   // FIXED: cast_expression liftStrategy now detects (Type*)malloc(...) pattern.
-  it('cpp_malloc', () => {
+  it('cpp:malloc', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int* p = (int*)malloc(10 * sizeof(int)); }`, 'cpp_malloc')
+int main() { int* p = (int*)malloc(10 * sizeof(int)); }`, 'cpp:malloc')
   })
 
   // FIXED: call_expression handler now recognizes free() as cpp_free.
-  it('cpp_free', () => {
+  it('cpp:free', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int* p = (int*)malloc(sizeof(int)); free(p); }`, 'cpp_free')
+int main() { int* p = (int*)malloc(sizeof(int)); free(p); }`, 'cpp:free')
   })
 
   // --- Variable Qualifiers ---
 
-  it('cpp_const_declare', () => {
-    assertConceptPresent(`int main() { const int x = 42; }`, 'cpp_const_declare')
+  it('cpp:const_declare', () => {
+    assertConceptPresent(`int main() { const int x = 42; }`, 'cpp:const_declare')
   })
 
-  it('cpp_auto_declare', () => {
-    assertConceptPresent(`int main() { auto x = 42; }`, 'cpp_auto_declare')
+  it('cpp:auto_declare', () => {
+    assertConceptPresent(`int main() { auto x = 42; }`, 'cpp:auto_declare')
   })
 
-  it('cpp_static_declare', () => {
-    assertConceptPresent(`void foo() { static int x = 0; }`, 'cpp_static_declare')
+  it('cpp:static_declare', () => {
+    assertConceptPresent(`void foo() { static int x = 0; }`, 'cpp:static_declare')
   })
 
-  it('cpp_constexpr_declare', () => {
-    assertConceptPresent(`int main() { constexpr int x = 42; }`, 'cpp_constexpr_declare')
+  it('cpp:constexpr_declare', () => {
+    assertConceptPresent(`int main() { constexpr int x = 42; }`, 'cpp:constexpr_declare')
   })
 
   // ARCHITECTURAL: var_declare_expr is only produced during block rendering
@@ -364,140 +364,140 @@ int main() { int* p = (int*)malloc(sizeof(int)); free(p); }`, 'cpp_free')
 
   // --- Preprocessor ---
 
-  it('cpp_include', () => {
-    assertConceptPresent(`#include <iostream>`, 'cpp_include')
+  it('cpp:include', () => {
+    assertConceptPresent(`#include <iostream>`, 'cpp:include')
   })
 
-  it('cpp_include_local', () => {
-    assertConceptPresent(`#include "myheader.h"`, 'cpp_include_local')
+  it('cpp:include_local', () => {
+    assertConceptPresent(`#include "myheader.h"`, 'cpp:include_local')
   })
 
-  it('cpp_define', () => {
-    assertConceptPresent(`#define MAX 100`, 'cpp_define')
+  it('cpp:define', () => {
+    assertConceptPresent(`#define MAX 100`, 'cpp:define')
   })
 
-  it('cpp_ifdef', () => {
+  it('cpp:ifdef', () => {
     assertConceptPresent(`#ifdef DEBUG
 int x = 1;
-#endif`, 'cpp_ifdef')
+#endif`, 'cpp:ifdef')
   })
 
   // FIXED: tree-sitter C++ parses both #ifdef and #ifndef as preproc_ifdef node type.
   // The lifter now checks the source text to distinguish them.
-  it('cpp_ifndef', () => {
+  it('cpp:ifndef', () => {
     assertConceptPresent(`#ifndef DEBUG
 int x = 1;
-#endif`, 'cpp_ifndef')
+#endif`, 'cpp:ifndef')
   })
 
   // --- Namespace ---
 
-  it('cpp_using_namespace', () => {
-    assertConceptPresent(`using namespace std;`, 'cpp_using_namespace')
+  it('cpp:using_namespace', () => {
+    assertConceptPresent(`using namespace std;`, 'cpp:using_namespace')
   })
 
   // --- Structures ---
 
-  it('cpp_struct_declare', () => {
-    assertConceptPresent(`struct Point { int x; int y; };`, 'cpp_struct_declare')
+  it('cpp:struct_declare', () => {
+    assertConceptPresent(`struct Point { int x; int y; };`, 'cpp:struct_declare')
   })
 
-  it('cpp_struct_member_access', () => {
+  it('cpp:struct_member_access', () => {
     assertConceptPresent(`struct Point { int x; };
-int main() { Point p; int x = p.x; }`, 'cpp_struct_member_access')
+int main() { Point p; int x = p.x; }`, 'cpp:struct_member_access')
   })
 
-  it('cpp_struct_pointer_access', () => {
+  it('cpp:struct_pointer_access', () => {
     assertConceptPresent(`struct Point { int x; };
-int main() { Point p; Point* pp = &p; int x = pp->x; }`, 'cpp_struct_pointer_access')
+int main() { Point p; Point* pp = &p; int x = pp->x; }`, 'cpp:struct_pointer_access')
   })
 
   // --- Classes (advanced) ---
 
-  it('cpp_class_def', () => {
+  it('cpp:class_def', () => {
     assertConceptPresent(`class MyClass {
 public:
     int x;
-};`, 'cpp_class_def')
+};`, 'cpp:class_def')
   })
 
   // --- Type Operations ---
 
-  it('cpp_sizeof', () => {
-    assertConceptPresent(`int main() { int x = sizeof(int); }`, 'cpp_sizeof')
+  it('cpp:sizeof', () => {
+    assertConceptPresent(`int main() { int x = sizeof(int); }`, 'cpp:sizeof')
   })
 
-  it('cpp_typedef', () => {
-    assertConceptPresent(`typedef int myint;`, 'cpp_typedef')
+  it('cpp:typedef', () => {
+    assertConceptPresent(`typedef int myint;`, 'cpp:typedef')
   })
 
-  it('cpp_using_alias', () => {
-    assertConceptPresent(`using myint = int;`, 'cpp_using_alias')
+  it('cpp:using_alias', () => {
+    assertConceptPresent(`using myint = int;`, 'cpp:using_alias')
   })
 
   // --- Enum ---
 
-  it('cpp_enum', () => {
-    assertConceptPresent(`enum Color { RED, GREEN, BLUE };`, 'cpp_enum')
+  it('cpp:enum', () => {
+    assertConceptPresent(`enum Color { RED, GREEN, BLUE };`, 'cpp:enum')
   })
 
   // --- 2D Arrays ---
 
-  it('cpp_array_2d_declare', () => {
-    assertConceptPresent(`int main() { int arr[3][4]; }`, 'cpp_array_2d_declare')
+  it('cpp:array_2d_declare', () => {
+    assertConceptPresent(`int main() { int arr[3][4]; }`, 'cpp:array_2d_declare')
   })
 
-  it('cpp_array_2d_access', () => {
-    assertConceptPresent(`int main() { int arr[3][4]; int x = arr[0][1]; }`, 'cpp_array_2d_access')
+  it('cpp:array_2d_access', () => {
+    assertConceptPresent(`int main() { int arr[3][4]; int x = arr[0][1]; }`, 'cpp:array_2d_access')
   })
 
-  it('cpp_array_2d_assign', () => {
-    assertConceptPresent(`int main() { int arr[3][4]; arr[0][1] = 10; }`, 'cpp_array_2d_assign')
+  it('cpp:array_2d_assign', () => {
+    assertConceptPresent(`int main() { int arr[3][4]; arr[0][1] = 10; }`, 'cpp:array_2d_assign')
   })
 
   // --- Exception Handling ---
 
-  it('cpp_try_catch', () => {
+  it('cpp:try_catch', () => {
     assertConceptPresent(`#include <stdexcept>
-int main() { try { int x = 1; } catch (int e) { int y = 2; } }`, 'cpp_try_catch')
+int main() { try { int x = 1; } catch (int e) { int y = 2; } }`, 'cpp:try_catch')
   })
 
-  it('cpp_throw', () => {
-    assertConceptPresent(`int main() { throw 42; }`, 'cpp_throw')
+  it('cpp:throw', () => {
+    assertConceptPresent(`int main() { throw 42; }`, 'cpp:throw')
   })
 
   // --- OOP (advanced) ---
 
-  it('cpp_constructor', () => {
+  it('cpp:constructor', () => {
     assertConceptPresent(`class Foo {
 public:
     int x;
     Foo(int a) : x(a) {}
-};`, 'cpp_constructor')
+};`, 'cpp:constructor')
   })
 
-  it('cpp_destructor', () => {
+  it('cpp:destructor', () => {
     assertConceptPresent(`class Foo {
 public:
     ~Foo() {}
-};`, 'cpp_destructor')
+};`, 'cpp:destructor')
   })
 
-  it('cpp_virtual_method', () => {
+  it('cpp:virtual_method', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() {}
-};`, 'cpp_virtual_method')
+};`, 'cpp:virtual_method')
   })
 
-  it('cpp_pure_virtual', () => {
+  it('cpp:pure_virtual', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() = 0;
-};`, 'cpp_pure_virtual')
+};`, 'cpp:pure_virtual')
   })
 
-  it('cpp_override_method', () => {
+  it('cpp:override_method', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() {}
@@ -505,93 +505,93 @@ public:
 class Derived : public Base {
 public:
     void foo() override {}
-};`, 'cpp_override_method')
+};`, 'cpp:override_method')
   })
 
-  it('cpp_operator_overload', () => {
+  it('cpp:operator_overload', () => {
     assertConceptPresent(`class Vec {
 public:
     int x;
     Vec operator+(const Vec& other) { Vec r; r.x = x + other.x; return r; }
-};`, 'cpp_operator_overload')
+};`, 'cpp:operator_overload')
   })
 
   // --- Lambda ---
 
-  it('cpp_lambda', () => {
+  it('cpp:lambda', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { auto f = [](int x) { return x + 1; }; }`, 'cpp_lambda')
+int main() { auto f = [](int x) { return x + 1; }; }`, 'cpp:lambda')
   })
 
   // --- Namespace ---
 
-  it('cpp_namespace_def', () => {
-    assertConceptPresent(`namespace myns { int x = 1; }`, 'cpp_namespace_def')
+  it('cpp:namespace_def', () => {
+    assertConceptPresent(`namespace myns { int x = 1; }`, 'cpp:namespace_def')
   })
 
   // --- C++ Casts ---
 
-  it('cpp_static_cast', () => {
-    assertConceptPresent(`int main() { double d = 3.14; int x = static_cast<int>(d); }`, 'cpp_static_cast')
+  it('cpp:static_cast', () => {
+    assertConceptPresent(`int main() { double d = 3.14; int x = static_cast<int>(d); }`, 'cpp:static_cast')
   })
 
-  it('cpp_dynamic_cast', () => {
+  it('cpp:dynamic_cast', () => {
     assertConceptPresent(`class Base { public: virtual ~Base() {} };
 class Derived : public Base {};
-int main() { Base* b = new Derived(); Derived* d = dynamic_cast<Derived*>(b); }`, 'cpp_dynamic_cast')
+int main() { Base* b = new Derived(); Derived* d = dynamic_cast<Derived*>(b); }`, 'cpp:dynamic_cast')
   })
 
-  it('cpp_reinterpret_cast', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; long l = reinterpret_cast<long>(p); }`, 'cpp_reinterpret_cast')
+  it('cpp:reinterpret_cast', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; long l = reinterpret_cast<long>(p); }`, 'cpp:reinterpret_cast')
   })
 
-  it('cpp_const_cast', () => {
-    assertConceptPresent(`int main() { const int x = 42; int* p = const_cast<int*>(&x); }`, 'cpp_const_cast')
+  it('cpp:const_cast', () => {
+    assertConceptPresent(`int main() { const int x = 42; int* p = const_cast<int*>(&x); }`, 'cpp:const_cast')
   })
 
   // --- Template ---
 
-  it('cpp_template_function', () => {
+  it('cpp:template_function', () => {
     assertConceptPresent(`template <typename T>
-T add(T a, T b) { return a + b; }`, 'cpp_template_function')
+T add(T a, T b) { return a + b; }`, 'cpp:template_function')
   })
 
   // --- Container Generic Operations ---
 
   it('cpp_container_push_back（vector → 通用版）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.push_back(1); }`, 'cpp_container_push_back')
+int main() { std::vector<int> v; v.push_back(1); }`, 'cpp:container_push_back')
   })
 
-  it('cpp_container_pop', () => {
+  it('cpp:container_pop', () => {
     assertConceptPresent(`#include <stack>
-int main() { std::stack<int> s; s.pop(); }`, 'cpp_container_pop')
+int main() { std::stack<int> s; s.pop(); }`, 'cpp:container_pop')
   })
 
-  it('cpp_container_push', () => {
+  it('cpp:container_push', () => {
     assertConceptPresent(`#include <stack>
-int main() { std::stack<int> s; s.push(1); }`, 'cpp_container_push')
+int main() { std::stack<int> s; s.push(1); }`, 'cpp:container_push')
   })
 
-  it('cpp_container_empty', () => {
+  it('cpp:container_empty', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; bool b = v.empty(); }`, 'cpp_container_empty')
+int main() { std::vector<int> v; bool b = v.empty(); }`, 'cpp:container_empty')
   })
 
   it('cpp_container_clear（vector → 通用版）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.clear(); }`, 'cpp_container_clear')
+int main() { std::vector<int> v; v.clear(); }`, 'cpp:container_clear')
   })
 
-  it('cpp_container_erase', () => {
+  it('cpp:container_erase', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; m.erase(1); }`, 'cpp_container_erase')
+int main() { std::map<int, int> m; m.erase(1); }`, 'cpp:container_erase')
   })
 
-  it('cpp_container_count', () => {
+  it('cpp:container_count', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; int c = m.count(1); }`, 'cpp_container_count')
+int main() { std::map<int, int> m; int c = m.count(1); }`, 'cpp:container_count')
   })
 
   // --- Generic Method Call ---
@@ -604,14 +604,14 @@ int main() { std::map<int, int> m; int c = m.count(1); }`, 'cpp_container_count'
   // 078 讓辨識器看語法樹的父節點決定位置，敘述位置就拿到敘述身分。
   it('cpp_method_call（敘述位置 → 敘述身分）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.resize(10); }`, 'cpp_method_call')
+int main() { std::vector<int> v; v.resize(10); }`, 'cpp:method_call')
   })
 
   // ⚠️ 這一支原本用**與上面完全相同的樣本**（敘述位置）——也就是說
   // 它從來沒有測到運算式位置。**兩支測試斷言同一件事，看起來像涵蓋了兩種。**
   it('cpp_method_call_expr（運算式位置 → 運算式身分）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp_method_call')
+int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp:method_call')
   })
 
   // --- Forward Declaration ---
@@ -624,11 +624,11 @@ int add(int a, int b) { return a + b; }`, 'forward_decl')
   // --- Static Member ---
 
   // FIXED: liftClassMember now checks for static storage_class_specifier in field_declaration.
-  it('cpp_static_member', () => {
+  it('cpp:static_member', () => {
     assertConceptPresent(`class Foo {
 public:
     static int count;
-};`, 'cpp_static_member')
+};`, 'cpp:static_member')
   })
 })
 
@@ -637,21 +637,21 @@ public:
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdio', () => {
-  it('cpp_printf', () => {
+  it('cpp:printf', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { printf("hello %d\\n", 42); }`, 'cpp_printf')
+int main() { printf("hello %d\\n", 42); }`, 'cpp:printf')
   })
 
-  it('cpp_scanf', () => {
+  it('cpp:scanf', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { int x; scanf("%d", &x); }`, 'cpp_scanf')
+int main() { int x; scanf("%d", &x); }`, 'cpp:scanf')
   })
 
   // ARCHITECTURAL: cpp_scanf_expr is only produced during block rendering
   // (expressionCounterpart). The lifter produces cpp_scanf.
   it('cpp_scanf_expr — expression counterpart, verify cpp_scanf exists', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { int x; scanf("%d", &x); }`, 'cpp_scanf')
+int main() { int x; scanf("%d", &x); }`, 'cpp:scanf')
   })
 })
 
@@ -682,57 +682,57 @@ int main() { double x = fmod(5.0, 3.0); }`, 'cpp:math_binary')
 
 describe('STD: string', () => {
   // FIXED: liftDeclaration now detects string type_identifier in qualified_identifier.
-  it('cpp_string_declare', () => {
+  it('cpp:string_declare', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; }`, 'cpp_string_declare')
+int main() { std::string s; }`, 'cpp:string_declare')
   })
 
-  it('cpp_string_length', () => {
+  it('cpp:string_length', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; int n = s.length(); }`, 'cpp_string_length')
+int main() { std::string s; int n = s.length(); }`, 'cpp:string_length')
   })
 
-  it('cpp_string_substr', () => {
+  it('cpp:string_substr', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = "hello"; std::string t = s.substr(0, 3); }`, 'cpp_string_substr')
+int main() { std::string s = "hello"; std::string t = s.substr(0, 3); }`, 'cpp:string_substr')
   })
 
-  it('cpp_string_find', () => {
+  it('cpp:string_find', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = "hello"; int pos = s.find("ll"); }`, 'cpp_string_find')
+int main() { std::string s = "hello"; int pos = s.find("ll"); }`, 'cpp:string_find')
   })
 
-  it('cpp_string_append', () => {
+  it('cpp:string_append', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.append("hi"); }`, 'cpp_string_append')
+int main() { std::string s; s.append("hi"); }`, 'cpp:string_append')
   })
 
-  it('cpp_string_c_str', () => {
+  it('cpp:string_c_str', () => {
     assertConceptPresent(`#include <string>
 #include <cstdio>
-int main() { std::string s = "hello"; printf("%s", s.c_str()); }`, 'cpp_string_c_str')
+int main() { std::string s = "hello"; printf("%s", s.c_str()); }`, 'cpp:string_c_str')
   })
 
-  it('cpp_getline', () => {
+  it('cpp:getline', () => {
     assertConceptPresent(`#include <iostream>
 #include <string>
 using namespace std;
-int main() { string s; getline(cin, s); }`, 'cpp_getline')
+int main() { string s; getline(cin, s); }`, 'cpp:getline')
   })
 
-  it('cpp_to_string', () => {
+  it('cpp:to_string', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = std::to_string(42); }`, 'cpp_to_string')
+int main() { std::string s = std::to_string(42); }`, 'cpp:to_string')
   })
 
-  it('cpp_stoi', () => {
+  it('cpp:stoi', () => {
     assertConceptPresent(`#include <string>
-int main() { int x = std::stoi("42"); }`, 'cpp_stoi')
+int main() { int x = std::stoi("42"); }`, 'cpp:stoi')
   })
 
-  it('cpp_stod', () => {
+  it('cpp:stod', () => {
     assertConceptPresent(`#include <string>
-int main() { double x = std::stod("3.14"); }`, 'cpp_stod')
+int main() { double x = std::stod("3.14"); }`, 'cpp:stod')
   })
 
   // ARCHITECTURAL: s.empty() on string is lifted as cpp_container_empty (generic)
@@ -740,22 +740,22 @@ int main() { double x = std::stod("3.14"); }`, 'cpp_stod')
   // vector.empty(). This is correct behavior for a syntax-only lifter.
   it('cpp_string_empty — lifter uses generic cpp_container_empty (no type info)', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; bool b = s.empty(); }`, 'cpp_container_empty')
+int main() { std::string s; bool b = s.empty(); }`, 'cpp:container_empty')
   })
 
-  it('cpp_string_erase', () => {
+  it('cpp:string_erase', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = "hello"; s.erase(0, 1); }`, 'cpp_string_erase')
+int main() { std::string s = "hello"; s.erase(0, 1); }`, 'cpp:string_erase')
   })
 
-  it('cpp_string_insert', () => {
+  it('cpp:string_insert', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = "hllo"; s.insert(1, "e"); }`, 'cpp_string_insert')
+int main() { std::string s = "hllo"; s.insert(1, "e"); }`, 'cpp:string_insert')
   })
 
-  it('cpp_string_replace', () => {
+  it('cpp:string_replace', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp_string_replace')
+int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp:string_replace')
   })
 
   // ⚠️ 這裡原本標著 `ARCHITECTURAL`，說「辨識器沒有型別資訊，所以只能用
@@ -767,13 +767,13 @@ int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp_string_repl
   // 『做不到』」。
   it('cpp_string_push_back（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.push_back('a'); }`, 'cpp_string_push_back')
+int main() { std::string s; s.push_back('a'); }`, 'cpp:string_push_back')
   })
 
   // 同上——原本的 `ARCHITECTURAL` 標籤是假的
   it('cpp_string_clear（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.clear(); }`, 'cpp_string_clear')
+int main() { std::string s; s.clear(); }`, 'cpp:string_clear')
   })
 })
 
@@ -782,24 +782,24 @@ int main() { std::string s; s.clear(); }`, 'cpp_string_clear')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cctype', () => {
-  it('cpp_isalpha', () => {
+  it('cpp:isalpha', () => {
     assertConceptPresent(`#include <cctype>
-int main() { bool b = isalpha('a'); }`, 'cpp_isalpha')
+int main() { bool b = isalpha('a'); }`, 'cpp:isalpha')
   })
 
-  it('cpp_isdigit', () => {
+  it('cpp:isdigit', () => {
     assertConceptPresent(`#include <cctype>
-int main() { bool b = isdigit('1'); }`, 'cpp_isdigit')
+int main() { bool b = isdigit('1'); }`, 'cpp:isdigit')
   })
 
-  it('cpp_toupper', () => {
+  it('cpp:toupper', () => {
     assertConceptPresent(`#include <cctype>
-int main() { char c = toupper('a'); }`, 'cpp_toupper')
+int main() { char c = toupper('a'); }`, 'cpp:toupper')
   })
 
-  it('cpp_tolower', () => {
+  it('cpp:tolower', () => {
     assertConceptPresent(`#include <cctype>
-int main() { char c = tolower('A'); }`, 'cpp_tolower')
+int main() { char c = tolower('A'); }`, 'cpp:tolower')
   })
 })
 
@@ -808,37 +808,37 @@ int main() { char c = tolower('A'); }`, 'cpp_tolower')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: algorithm', () => {
-  it('cpp_sort', () => {
+  it('cpp:sort', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v; sort(v.begin(), v.end()); }`, 'cpp_sort')
+int main() { std::vector<int> v; sort(v.begin(), v.end()); }`, 'cpp:sort')
   })
 
-  it('cpp_reverse', () => {
+  it('cpp:reverse', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v; reverse(v.begin(), v.end()); }`, 'cpp_reverse')
+int main() { std::vector<int> v; reverse(v.begin(), v.end()); }`, 'cpp:reverse')
   })
 
-  it('cpp_fill', () => {
+  it('cpp:fill', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v(10); fill(v.begin(), v.end(), 0); }`, 'cpp_fill')
+int main() { std::vector<int> v(10); fill(v.begin(), v.end(), 0); }`, 'cpp:fill')
   })
 
-  it('cpp_min', () => {
+  it('cpp:min', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int x = min(1, 2); }`, 'cpp_min')
+int main() { int x = min(1, 2); }`, 'cpp:min')
   })
 
-  it('cpp_max', () => {
+  it('cpp:max', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int x = max(1, 2); }`, 'cpp_max')
+int main() { int x = max(1, 2); }`, 'cpp:max')
   })
 
-  it('cpp_swap', () => {
+  it('cpp:swap', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp_swap')
+int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp:swap')
   })
 })
 
@@ -847,34 +847,34 @@ int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp_swap')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdlib', () => {
-  it('cpp_rand', () => {
+  it('cpp:rand', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = rand(); }`, 'cpp_rand')
+int main() { int x = rand(); }`, 'cpp:rand')
   })
 
-  it('cpp_srand', () => {
+  it('cpp:srand', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { srand(42); }`, 'cpp_srand')
+int main() { srand(42); }`, 'cpp:srand')
   })
 
-  it('cpp_abs', () => {
+  it('cpp:abs', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = abs(-5); }`, 'cpp_abs')
+int main() { int x = abs(-5); }`, 'cpp:abs')
   })
 
-  it('cpp_exit', () => {
+  it('cpp:exit', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { exit(0); }`, 'cpp_exit')
+int main() { exit(0); }`, 'cpp:exit')
   })
 
-  it('cpp_atoi', () => {
+  it('cpp:atoi', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = atoi("42"); }`, 'cpp_atoi')
+int main() { int x = atoi("42"); }`, 'cpp:atoi')
   })
 
-  it('cpp_atof', () => {
+  it('cpp:atof', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { double x = atof("3.14"); }`, 'cpp_atof')
+int main() { double x = atof("3.14"); }`, 'cpp:atof')
   })
 })
 
@@ -883,54 +883,54 @@ int main() { double x = atof("3.14"); }`, 'cpp_atof')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstring', () => {
-  it('cpp_strlen', () => {
+  it('cpp:strlen', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int n = strlen("hello"); }`, 'cpp_strlen')
+int main() { int n = strlen("hello"); }`, 'cpp:strlen')
   })
 
-  it('cpp_strcmp', () => {
+  it('cpp:strcmp', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int r = strcmp("abc", "def"); }`, 'cpp_strcmp')
+int main() { int r = strcmp("abc", "def"); }`, 'cpp:strcmp')
   })
 
-  it('cpp_strcpy', () => {
+  it('cpp:strcpy', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[10]; strcpy(dest, "hi"); }`, 'cpp_strcpy')
+int main() { char dest[10]; strcpy(dest, "hi"); }`, 'cpp:strcpy')
   })
 
-  it('cpp_strcat', () => {
+  it('cpp:strcat', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[20]; strcpy(dest, "hello"); strcat(dest, " world"); }`, 'cpp_strcat')
+int main() { char dest[20]; strcpy(dest, "hello"); strcat(dest, " world"); }`, 'cpp:strcat')
   })
 
-  it('cpp_strncpy', () => {
+  it('cpp:strncpy', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[10]; strncpy(dest, "hello", 3); }`, 'cpp_strncpy')
+int main() { char dest[10]; strncpy(dest, "hello", 3); }`, 'cpp:strncpy')
   })
 
-  it('cpp_strncmp', () => {
+  it('cpp:strncmp', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int r = strncmp("abc", "abd", 2); }`, 'cpp_strncmp')
+int main() { int r = strncmp("abc", "abd", 2); }`, 'cpp:strncmp')
   })
 
-  it('cpp_strchr', () => {
+  it('cpp:strchr', () => {
     assertConceptPresent(`#include <cstring>
-int main() { const char* p = strchr("hello", 'l'); }`, 'cpp_strchr')
+int main() { const char* p = strchr("hello", 'l'); }`, 'cpp:strchr')
   })
 
-  it('cpp_strstr', () => {
+  it('cpp:strstr', () => {
     assertConceptPresent(`#include <cstring>
-int main() { const char* p = strstr("hello world", "world"); }`, 'cpp_strstr')
+int main() { const char* p = strstr("hello world", "world"); }`, 'cpp:strstr')
   })
 
-  it('cpp_memset', () => {
+  it('cpp:memset', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int arr[10]; memset(arr, 0, sizeof(arr)); }`, 'cpp_memset')
+int main() { int arr[10]; memset(arr, 0, sizeof(arr)); }`, 'cpp:memset')
   })
 
-  it('cpp_memcpy', () => {
+  it('cpp:memcpy', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp_memcpy')
+int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp:memcpy')
   })
 })
 
@@ -939,33 +939,33 @@ int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp_m
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: numeric', () => {
-  it('cpp_accumulate', () => {
+  it('cpp:accumulate', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v; int sum = accumulate(v.begin(), v.end(), 0); }`, 'cpp_accumulate')
+int main() { std::vector<int> v; int sum = accumulate(v.begin(), v.end(), 0); }`, 'cpp:accumulate')
   })
 
-  it('cpp_iota', () => {
+  it('cpp:iota', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v(10); iota(v.begin(), v.end(), 0); }`, 'cpp_iota')
+int main() { std::vector<int> v(10); iota(v.begin(), v.end(), 0); }`, 'cpp:iota')
   })
 
-  it('cpp_partial_sum', () => {
+  it('cpp:partial_sum', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v(10); std::vector<int> r(10); partial_sum(v.begin(), v.end(), r.begin()); }`, 'cpp_partial_sum')
+int main() { std::vector<int> v(10); std::vector<int> r(10); partial_sum(v.begin(), v.end(), r.begin()); }`, 'cpp:partial_sum')
   })
 
-  it('cpp_gcd', () => {
+  it('cpp:gcd', () => {
     assertConceptPresent(`#include <numeric>
-int main() { int g = __gcd(12, 8); }`, 'cpp_gcd')
+int main() { int g = __gcd(12, 8); }`, 'cpp:gcd')
   })
 
-  it('cpp_lcm', () => {
+  it('cpp:lcm', () => {
     // Note: lcm might need C++17; lifter may or may not support it
     assertConceptPresent(`#include <numeric>
-int main() { int l = lcm(12, 8); }`, 'cpp_lcm')
+int main() { int l = lcm(12, 8); }`, 'cpp:lcm')
   })
 })
 
@@ -975,24 +975,24 @@ int main() { int l = lcm(12, 8); }`, 'cpp_lcm')
 
 describe('STD: vector', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier (std::vector<int>).
-  it('cpp_vector_declare', () => {
+  it('cpp:vector_declare', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; }`, 'cpp_vector_declare')
+int main() { std::vector<int> v; }`, 'cpp:vector_declare')
   })
 
-  it('cpp_vector_size', () => {
+  it('cpp:vector_size', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; int n = v.size(); }`, 'cpp_vector_size')
+int main() { std::vector<int> v; int n = v.size(); }`, 'cpp:vector_size')
   })
 
-  it('cpp_vector_pop_back', () => {
+  it('cpp:vector_pop_back', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.pop_back(); }`, 'cpp_vector_pop_back')
+int main() { std::vector<int> v; v.pop_back(); }`, 'cpp:vector_pop_back')
   })
 
-  it('cpp_vector_back', () => {
+  it('cpp:vector_back', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; int x = v.back(); }`, 'cpp_vector_back')
+int main() { std::vector<int> v; int x = v.back(); }`, 'cpp:vector_back')
   })
 })
 
@@ -1002,14 +1002,14 @@ int main() { std::vector<int> v; int x = v.back(); }`, 'cpp_vector_back')
 
 describe('STD: stack', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier.
-  it('cpp_stack_declare', () => {
+  it('cpp:stack_declare', () => {
     assertConceptPresent(`#include <stack>
-int main() { std::stack<int> s; }`, 'cpp_stack_declare')
+int main() { std::stack<int> s; }`, 'cpp:stack_declare')
   })
 
-  it('cpp_stack_top', () => {
+  it('cpp:stack_top', () => {
     assertConceptPresent(`#include <stack>
-int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp_stack_top')
+int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp:stack_top')
   })
 })
 
@@ -1019,14 +1019,14 @@ int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp_stack_top')
 
 describe('STD: queue', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier.
-  it('cpp_queue_declare', () => {
+  it('cpp:queue_declare', () => {
     assertConceptPresent(`#include <queue>
-int main() { std::queue<int> q; }`, 'cpp_queue_declare')
+int main() { std::queue<int> q; }`, 'cpp:queue_declare')
   })
 
-  it('cpp_queue_front', () => {
+  it('cpp:queue_front', () => {
     assertConceptPresent(`#include <queue>
-int main() { std::queue<int> q; q.push(1); int x = q.front(); }`, 'cpp_queue_front')
+int main() { std::queue<int> q; q.push(1); int x = q.front(); }`, 'cpp:queue_front')
   })
 })
 
@@ -1036,9 +1036,9 @@ int main() { std::queue<int> q; q.push(1); int x = q.front(); }`, 'cpp_queue_fro
 
 describe('STD: map', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier.
-  it('cpp_map_declare', () => {
+  it('cpp:map_declare', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; }`, 'cpp_map_declare')
+int main() { std::map<int, int> m; }`, 'cpp:map_declare')
   })
 
   // ⚠️ 這一支原本標著 `ARCHITECTURAL`，說「辨識器**沒有型別資訊**可以區分陣列與
@@ -1052,7 +1052,7 @@ int main() { std::map<int, int> m; }`, 'cpp_map_declare')
   // 的第四個實例，而**前三個都在註解裡，這個在測試名稱裡**。
   it('cpp_map_access — 對應表的鍵存取有自己的身分（型別查得到）', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp_map_access')
+int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_access')
   })
 
   it('負向：真的陣列仍然是 array_access', () => {
@@ -1066,14 +1066,14 @@ int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp_map_access')
 
 describe('STD: set', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier.
-  it('cpp_set_declare', () => {
+  it('cpp:set_declare', () => {
     assertConceptPresent(`#include <set>
-int main() { std::set<int> s; }`, 'cpp_set_declare')
+int main() { std::set<int> s; }`, 'cpp:set_declare')
   })
 
-  it('cpp_set_insert', () => {
+  it('cpp:set_insert', () => {
     assertConceptPresent(`#include <set>
-int main() { std::set<int> s; s.insert(1); }`, 'cpp_set_insert')
+int main() { std::set<int> s; s.insert(1); }`, 'cpp:set_insert')
   })
 })
 
@@ -1083,14 +1083,14 @@ int main() { std::set<int> s; s.insert(1); }`, 'cpp_set_insert')
 
 describe('STD: fstream', () => {
   // FIXED: liftDeclaration now detects stream type_identifiers in qualified_identifier.
-  it('cpp_ifstream_declare', () => {
+  it('cpp:ifstream_declare', () => {
     assertConceptPresent(`#include <fstream>
-int main() { std::ifstream fin("input.txt"); }`, 'cpp_ifstream_declare')
+int main() { std::ifstream fin("input.txt"); }`, 'cpp:ifstream_declare')
   })
 
-  it('cpp_ofstream_declare', () => {
+  it('cpp:ofstream_declare', () => {
     assertConceptPresent(`#include <fstream>
-int main() { std::ofstream fout("output.txt"); }`, 'cpp_ofstream_declare')
+int main() { std::ofstream fout("output.txt"); }`, 'cpp:ofstream_declare')
   })
 })
 
@@ -1100,9 +1100,9 @@ int main() { std::ofstream fout("output.txt"); }`, 'cpp_ofstream_declare')
 
 describe('STD: sstream', () => {
   // FIXED: liftDeclaration now detects stream type_identifiers in qualified_identifier.
-  it('cpp_stringstream_declare', () => {
+  it('cpp:stringstream_declare', () => {
     assertConceptPresent(`#include <sstream>
-int main() { std::stringstream ss; }`, 'cpp_stringstream_declare')
+int main() { std::stringstream ss; }`, 'cpp:stringstream_declare')
   })
 })
 
@@ -1112,13 +1112,13 @@ int main() { std::stringstream ss; }`, 'cpp_stringstream_declare')
 
 describe('STD: utility', () => {
   // FIXED: liftDeclaration now finds template_type inside qualified_identifier.
-  it('cpp_pair_declare', () => {
+  it('cpp:pair_declare', () => {
     assertConceptPresent(`#include <utility>
-int main() { std::pair<int, int> p; }`, 'cpp_pair_declare')
+int main() { std::pair<int, int> p; }`, 'cpp:pair_declare')
   })
 
-  it('cpp_make_pair', () => {
+  it('cpp:make_pair', () => {
     assertConceptPresent(`#include <utility>
-int main() { auto p = make_pair(1, 2); }`, 'cpp_make_pair')
+int main() { auto p = make_pair(1, 2); }`, 'cpp:make_pair')
   })
 })

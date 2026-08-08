@@ -100,19 +100,19 @@ describe('L1 Block Roundtrip', () => {
 
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp_increment')
+      expect(sem!.conceptId).toBe('cpp:increment')
 
       const block = renderer.render(sem!)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_increment')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp_increment')
+      expect(sem2!.conceptId).toBe('cpp:increment')
       expect(sem2!.properties.name).toBe('i')
     })
 
     it('should generate code for cpp_increment (hand-written generator for prefix/postfix)', () => {
-      const node = createNode('cpp_increment', { NAME: 'j', OP: '--' })
+      const node = createNode('cpp:increment', { NAME: 'j', OP: '--' })
       const generators = new Map<string, NodeGenerator>()
       const style = { indent_size: 4, brace_style: 'K&R' } as StylePreset
       registerStatementGenerators(generators, style)
@@ -127,7 +127,7 @@ describe('L1 Block Roundtrip', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp_char_literal')
+      expect(sem!.conceptId).toBe('cpp:char_literal')
     })
   })
 
@@ -141,7 +141,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp_compound_assign')
+      expect(sem!.conceptId).toBe('cpp:compound_assign')
       expect(sem!.properties.name).toBe('x')
       expect(sem!.children.value).toHaveLength(1)
     })

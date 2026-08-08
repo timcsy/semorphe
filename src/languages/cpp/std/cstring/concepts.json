@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp_strlen",
+    "conceptId": "cpp:strlen",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -10,7 +10,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_strcmp",
+    "conceptId": "cpp:strcmp",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -21,7 +21,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_strcpy",
+    "conceptId": "cpp:strcpy",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -32,7 +32,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_strcat",
+    "conceptId": "cpp:strcat",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -43,7 +43,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_strncpy",
+    "conceptId": "cpp:strncpy",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -55,7 +55,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_strncmp",
+    "conceptId": "cpp:strncmp",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -67,7 +67,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_strchr",
+    "conceptId": "cpp:strchr",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -78,7 +78,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_strstr",
+    "conceptId": "cpp:strstr",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -89,7 +89,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp_memset",
+    "conceptId": "cpp:memset",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -101,7 +101,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp_memcpy",
+    "conceptId": "cpp:memcpy",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
