@@ -248,7 +248,21 @@ export class PatternExtractor {
       const argName = arg.name as string
       if (!argName) continue
 
-      if (argType === 'field_input' || argType === 'field_dropdown' || argType === 'field_number') {
+      // ⚠️ **這份清單必須與 `pattern-renderer.ts` 的那份一致。**
+      //
+      // 它原本少了 `field_multilinetext`，於是 `c_comment_block` 的內容
+      // **渲染得出去、抽取不回來**——使用者在積木編輯器寫的區塊註解會消失，
+      // 而唯一的症狀是「切換積木風格之後東西不見了」。
+      //
+      // `c_comment_doc` 沒中，只因為它剛好有顯式的 `renderMapping.fields`。
+      //
+      // 兩份推導的一致性現在有護欄在看（`audit-derive-agreement`）。
+      if (
+        argType === 'field_input' ||
+        argType === 'field_dropdown' ||
+        argType === 'field_number' ||
+        argType === 'field_multilinetext'
+      ) {
         const semProp = this.findMatchingProperty(argName, properties)
         if (semProp) mapping.fields[argName] = semProp
       } else if (argType === 'input_value') {
