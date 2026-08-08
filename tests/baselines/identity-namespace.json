@@ -1,0 +1,706 @@
+{
+  "guard": "identity-namespace",
+  "違規": [
+    {
+      "conceptId": "arithmetic",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "array_access",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "array_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "array_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "bitwise_not",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "block_comment",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "break",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "builtin_constant",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "comment",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "compare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "continue",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "count_loop",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_abs",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_accumulate",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_address_of",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_array_2d_access",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_array_2d_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_array_2d_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_atof",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_atoi",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_auto_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_case",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_cast",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_char_literal",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_class_def",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_comma_expr",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_compound_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_const_cast",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_const_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_constexpr_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_constructor",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_clear",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_count",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_empty",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_erase",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_pop",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_push",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_container_push_back",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_default",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_define",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_delete",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_destructor",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_do_while",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_dynamic_cast",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_enum",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_exit",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_fill",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_for_loop",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_free",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_gcd",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_getline",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ifdef",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ifndef",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ifstream_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_include",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_include_local",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_increment",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_iota",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_isalpha",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_isdigit",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_istringstream_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_lambda",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_lcm",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_make_pair",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_malloc",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_map_access",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_map_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_map_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_max",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_memcpy",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_memset",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_method_call",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_min",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_namespace_def",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_new",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ofstream_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_operator_overload",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_override_method",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_pair_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_partial_sum",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_pointer_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_pointer_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_pointer_deref",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_printf",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_priority_queue_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_priority_queue_top",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_pure_virtual",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_queue_back",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_queue_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_queue_front",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_rand",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_range_for",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_raw_code",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_raw_expression",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ref_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_reinterpret_cast",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_reverse",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_scanf",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_set_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_set_insert",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_sizeof",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_sort",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_srand",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_stack_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_stack_top",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_static_cast",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_static_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_static_member",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_stod",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_stoi",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strcat",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strchr",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strcmp",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strcpy",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_append",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_at",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_c_str",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_clear",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_empty",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_erase",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_find",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_find_first_not_of",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_find_last_not_of",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_insert",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_length",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_push_back",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_replace",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_string_substr",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_stringstream_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strlen",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strncmp",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strncpy",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_strstr",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_struct_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_struct_member_access",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_struct_pointer_access",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_swap",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_switch",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_template_function",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_ternary",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_throw",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_to_string",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_tolower",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_toupper",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_try_catch",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_typedef",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_using_alias",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_using_namespace",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_vector_back",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_vector_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_vector_pop_back",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_vector_size",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "cpp_virtual_method",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "doc_comment",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "endl",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "forward_decl",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "func_call",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "func_def",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "if",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "if_else",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "input",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "logic",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "logic_not",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "negate",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "number_literal",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "print",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "program",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "return",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "string_literal",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "var_assign",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "var_declare",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "var_ref",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    },
+    {
+      "conceptId": "while_loop",
+      "為何": "沒有命名空間（裸名或缺 scope）"
+    }
+  ],
+  "引用": {
+    "ts": 2179,
+    "json": 1072
+  },
+  "同名積木型別": 66
+}

@@ -8,6 +8,7 @@
  *
  * 見 specs/052-storage-integrity-gate/research.md F2
  */
+import { isValidComponentId, isNamespaced } from '../../../src/core/identity'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../../src/core/storage'
 import {
@@ -18,6 +19,7 @@ import {
   SAVED_STATE_FIELDS,
   REQUIRED_FIELDS,
   UPGRADES,
+  加上命名空間,
 } from '../../../src/core/storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
@@ -197,5 +199,63 @@ describe('自動載入的行為', () => {
 
   it('沒有存檔 → empty，與「被拒絕」可區分', () => {
     expect(storage.loadOutcome().kind).toBe('empty')
+  })
+})
+
+describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Acceptance Scenario）', () => {
+  const 升 = (tree: unknown): unknown =>
+    (UPGRADES[2]({ version: 2, tree } as Record<string, unknown>) as { tree: unknown }).tree
+
+  it('① 舊身分（cpp_ 與裸名）都轉得動，含巢狀子節點', () => {
+    const out = 升({
+      conceptId: 'if',
+      children: {
+        body: [{ conceptId: 'cpp_vector_declare', children: {} }],
+        condition: [{ conceptId: 'compare', children: {} }],
+      },
+    }) as { conceptId: string; children: Record<string, { conceptId: string }[]> }
+    expect(out.conceptId).toBe('lang:if')
+    expect(out.children.body[0].conceptId).toBe('cpp:vector_declare')
+    expect(out.children.condition[0].conceptId).toBe('lang:compare')
+  })
+
+  it('② 已是新格式的身分**原樣通過**（冪等）', () => {
+    // 樹裡本來就有三顆 `cpp:math_*`——它們不得被加成 `cpp:cpp:math_pow`。
+    const out = 升({ conceptId: 'cpp:math_pow', children: {} }) as { conceptId: string }
+    expect(out.conceptId).toBe('cpp:math_pow')
+  })
+
+  it('③ 表裡認不得的身分**原樣保留**，該節點不丟棄', () => {
+    const out = 升({
+      conceptId: '__某個未來的身分__',
+      properties: { keep: 'me' },
+      children: { body: [{ conceptId: 'print', children: {} }] },
+    }) as { conceptId: string; properties: Record<string, string>; children: Record<string, { conceptId: string }[]> }
+    expect(out.conceptId).toBe('__某個未來的身分__')
+    expect(out.properties.keep, '認不得就整個節點丟掉的話，使用者的資料會消失').toBe('me')
+    expect(out.children.body[0].conceptId, '認不得的父節點不得阻斷子節點的轉換').toBe('lang:print')
+  })
+
+  it('④ 積木型別**完全不動**——66 顆身分與積木型別同名', () => {
+    const raw = {
+      version: 2,
+      tree: { conceptId: 'cpp_class_def', children: {} },
+      blocklyState: { blocks: { blocks: [{ type: 'cpp_class_def' }] } },
+    } as Record<string, unknown>
+    const out = UPGRADES[2](raw) as { tree: { conceptId: string }; blocklyState: unknown }
+    expect(out.tree.conceptId).toBe('cpp:class_def')
+    expect(
+      JSON.stringify(out.blocklyState),
+      '積木型別被轉了 → 積木會消失，而那有十幾種成因，無從歸因',
+    ).toBe(JSON.stringify(raw.blocklyState))
+  })
+
+  it('⑤ 轉換表涵蓋全部 174 顆，且每一筆的 scope 都在白名單內', () => {
+    const 表 = Object.entries(加上命名空間)
+    expect(表.length).toBe(174)
+    for (const [old, neo] of 表) {
+      expect(isValidComponentId(neo), `${old} → ${neo} 的 scope 不在白名單`).toBe(true)
+      expect(isNamespaced(old), `${old} 本來就有命名空間，不該在表裡`).toBe(false)
+    }
   })
 })
