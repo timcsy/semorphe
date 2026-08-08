@@ -71,9 +71,9 @@ describe('Std module structure consistency', () => {
 
   it('populated registry should have universal IO concepts mapped to <iostream>', () => {
     const registry = createPopulatedRegistry()
-    expect(registry.getHeaderForConcept('print')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('input')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('endl')).toBe('<iostream>')
+    expect(registry.getHeaderForConcept('lang:print')).toBe('<iostream>')
+    expect(registry.getHeaderForConcept('lang:input')).toBe('<iostream>')
+    expect(registry.getHeaderForConcept('lang:endl')).toBe('<iostream>')
   })
 
   it('should have 17 std modules', () => {

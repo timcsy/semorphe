@@ -2,7 +2,7 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression, generateBody, indented } from '../../../../core/projection/code-generator'
 
 export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): void {
-  g.set('var_declare', (node, ctx) => {
+  g.set('lang:var_declare', (node, ctx) => {
     // ⚠️ **位置感知**：`for (int i = 0; …)` 的初始化位置不要分號與縮排。
     // 那是**形態**不是身分——B 項把 `var_declare_expr` 合併進來。
     const 收尾 = (expr: string): string => (ctx.isExpression ? expr : `${indent(ctx)}${expr};\n`)
@@ -65,7 +65,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}static ${type} ${name};\n`
   })
 
-  g.set('var_assign', (node, ctx) => {
+  g.set('lang:var_assign', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const vals = node.children.value ?? []
     if (vals.length > 0) {
@@ -75,7 +75,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name};\n`
   })
 
-  g.set('forward_decl', (node, ctx) => {
+  g.set('lang:forward_decl', (node, ctx) => {
     const returnType = node.properties.return_type ?? 'void'
     const name = node.properties.name ?? ''
     const paramChildren = node.children.params ?? []
@@ -91,7 +91,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${returnType} ${name}(${paramStr});\n`
   })
 
-  g.set('array_declare', (node, ctx) => {
+  g.set('lang:array_declare', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'arr'
     const sizeNodes = node.children.size ?? []
@@ -108,7 +108,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `{${values.map(v => generateExpression(v, ctx)).join(', ')}}`
   })
 
-  g.set('array_access', (node, ctx) => {
+  g.set('lang:array_access', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
@@ -184,7 +184,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name}[${row}][${col}] = ${val};\n`
   })
 
-  g.set('array_assign', (node, ctx) => {
+  g.set('lang:array_assign', (node, ctx) => {
     const name = node.properties.name ?? 'arr'
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'

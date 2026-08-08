@@ -1,129 +1,153 @@
 [
   {
-    "conceptId": "number_literal",
+    "conceptId": "lang:number_literal",
     "pattern": "${value}",
     "order": 20
   },
   {
-    "conceptId": "string_literal",
+    "conceptId": "lang:string_literal",
     "pattern": "${value}",
     "order": 20
   },
   {
-    "conceptId": "var_ref",
+    "conceptId": "lang:var_ref",
     "pattern": "${name}",
     "order": 20
   },
   {
-    "conceptId": "break",
+    "conceptId": "lang:break",
     "pattern": "break;",
     "order": 0
   },
   {
-    "conceptId": "continue",
+    "conceptId": "lang:continue",
     "pattern": "continue;",
     "order": 0
   },
   {
-    "conceptId": "endl",
+    "conceptId": "lang:endl",
     "pattern": "endl",
     "order": 20
   },
   {
-    "conceptId": "arithmetic",
+    "conceptId": "lang:arithmetic",
     "pattern": "${left} ${operator} ${right}",
     "order": 14
   },
   {
-    "conceptId": "compare",
+    "conceptId": "lang:compare",
     "pattern": "${left} ${operator} ${right}",
     "order": 11
   },
   {
-    "conceptId": "logic",
+    "conceptId": "lang:logic",
     "pattern": "${left} ${operator} ${right}",
     "order": 6
   },
   {
-    "conceptId": "logic_not",
+    "conceptId": "lang:logic_not",
     "pattern": "!${operand}",
     "order": 17
   },
   {
-    "conceptId": "negate",
+    "conceptId": "lang:negate",
     "pattern": "-${operand}",
     "order": 17
   },
   {
-    "conceptId": "var_assign",
+    "conceptId": "lang:var_assign",
     "pattern": "${name} = ${value};",
     "order": 0
   },
   {
-    "conceptId": "return",
+    "conceptId": "lang:return",
     "pattern": "return ${value};",
     "order": 0
   },
   {
-    "conceptId": "if",
+    "conceptId": "lang:if",
     "pattern": "if (${condition}) {\n${then_body}\n}",
     "order": 0
   },
   {
-    "conceptId": "while_loop",
+    "conceptId": "lang:while_loop",
     "pattern": "while (${condition}) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "count_loop",
+    "conceptId": "lang:count_loop",
     "pattern": "for (int ${var_name} = ${from}; ${var_name} < ${to}; ${var_name}++) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "func_def",
+    "conceptId": "lang:func_def",
     "pattern": "${return_type} ${name}(${params}) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "func_call",
+    "conceptId": "lang:func_call",
     "pattern": "${name}(${args})",
     "order": 20
   },
   {
-    "conceptId": "array_declare",
+    "conceptId": "lang:array_declare",
     "pattern": "${type} ${name}[${size}];",
     "order": 0
   },
   {
-    "conceptId": "array_access",
+    "conceptId": "lang:array_access",
     "pattern": "${name}[${index}]",
     "order": 20
   },
   {
-    "conceptId": "print",
+    "conceptId": "lang:print",
     "styleVariants": {
-      "cout": { "pattern": "cout << ${values: << }", "imports": ["iostream"], "order": 0 },
-      "printf": { "pattern": "printf(${values:, })", "imports": ["stdio.h"], "order": 0 }
+      "cout": {
+        "pattern": "cout << ${values: << }",
+        "imports": [
+          "iostream"
+        ],
+        "order": 0
+      },
+      "printf": {
+        "pattern": "printf(${values:, })",
+        "imports": [
+          "stdio.h"
+        ],
+        "order": 0
+      }
     },
     "styleKey": "io_style",
     "order": 0
   },
   {
-    "conceptId": "input",
+    "conceptId": "lang:input",
     "styleVariants": {
-      "cout": { "pattern": "cin >> ${values: >> }", "imports": ["iostream"], "order": 0 },
-      "printf": { "pattern": "scanf(${values:, })", "imports": ["stdio.h"], "order": 0 }
+      "cout": {
+        "pattern": "cin >> ${values: >> }",
+        "imports": [
+          "iostream"
+        ],
+        "order": 0
+      },
+      "printf": {
+        "pattern": "scanf(${values:, })",
+        "imports": [
+          "stdio.h"
+        ],
+        "order": 0
+      }
     },
     "styleKey": "io_style",
     "order": 0
   },
   {
-    "conceptId": "comment",
+    "conceptId": "lang:comment",
     "pattern": "// ${text}",
     "order": 0
   },
   {
-    "conceptId": "program",
+    "conceptId": "lang:program",
     "pattern": "${body}",
     "order": 0
   }

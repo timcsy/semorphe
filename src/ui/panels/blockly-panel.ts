@@ -172,7 +172,7 @@ export class BlocklyPanel implements ViewHost {
 
   /** Extract semantic tree from workspace blocks, plus blockMappings for nodeId↔blockId */
   extractSemanticTree(): SemanticNode {
-    if (!this.workspace) return createNode('program', {}, { body: [] })
+    if (!this.workspace) return createNode('lang:program', {}, { body: [] })
     this._blockMappings = []
     const topBlocks = this.workspace.getTopBlocks(true)
     const body: SemanticNode[] = []
@@ -180,7 +180,7 @@ export class BlocklyPanel implements ViewHost {
       const nodes = this.extractBlockChain(block)
       body.push(...nodes)
     }
-    return createNode('program', {}, { body })
+    return createNode('lang:program', {}, { body })
   }
 
   /** Get block mappings from the last extraction */

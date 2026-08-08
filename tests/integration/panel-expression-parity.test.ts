@@ -40,43 +40,43 @@ beforeAll(() => {
  * 漏一個 case，那個 case 的漂移就不會被抓到。
  */
 const 切換前的產出: [string, SemanticNode, string][] = [
-  ['number_literal', n('number_literal', { value: 5 }), '5'],
-  ['string_literal', n('string_literal', { value: 'hi' }), '"hi"'],
-  ['var_ref', n('var_ref', { name: 'x' }), 'x'],
+  ['lang:number_literal', n('lang:number_literal', { value: 5 }), '5'],
+  ['lang:string_literal', n('lang:string_literal', { value: 'hi' }), '"hi"'],
+  ['lang:var_ref', n('lang:var_ref', { name: 'x' }), 'x'],
   [
-    'arithmetic',
-    n('arithmetic', { operator: '+' }, { left: [n('var_ref', { name: 'a' })], right: [n('number_literal', { value: 1 })] }),
+    'lang:arithmetic',
+    n('lang:arithmetic', { operator: '+' }, { left: [n('lang:var_ref', { name: 'a' })], right: [n('lang:number_literal', { value: 1 })] }),
     'a + 1',
   ],
   [
-    'compare',
-    n('compare', { operator: '<' }, { left: [n('var_ref', { name: 'a' })], right: [n('number_literal', { value: 3 })] }),
+    'lang:compare',
+    n('lang:compare', { operator: '<' }, { left: [n('lang:var_ref', { name: 'a' })], right: [n('lang:number_literal', { value: 3 })] }),
     'a < 3',
   ],
   [
-    'logic_not',
-    n('logic_not', {}, { operand: [n('var_ref', { name: 'f' })] }),
+    'lang:logic_not',
+    n('lang:logic_not', {}, { operand: [n('lang:var_ref', { name: 'f' })] }),
     '!f',
   ],
   [
-    'negate',
-    n('negate', { operator: '-' }, { value: [n('var_ref', { name: 'v' })] }),
+    'lang:negate',
+    n('lang:negate', { operator: '-' }, { value: [n('lang:var_ref', { name: 'v' })] }),
     '-v',
   ],
   [
-    'func_call',
-    n('func_call', { name: 'g' }, { args: [n('number_literal', { value: 2 }), n('var_ref', { name: 'y' })] }),
+    'lang:func_call',
+    n('lang:func_call', { name: 'g' }, { args: [n('lang:number_literal', { value: 2 }), n('lang:var_ref', { name: 'y' })] }),
     'g(2, y)',
   ],
   [
-    'array_access',
-    n('array_access', { name: 'arr' }, { index: [n('number_literal', { value: 1 })] }),
+    'lang:array_access',
+    n('lang:array_access', { name: 'arr' }, { index: [n('lang:number_literal', { value: 1 })] }),
     'arr[1]',
   ],
   // ── 以下是語言專屬的，正是中立性報的那六筆
   [
     'cpp:string_at',
-    n('cpp:string_at', { obj: 's' }, { index: [n('number_literal', { value: 0 })] }),
+    n('cpp:string_at', { obj: 's' }, { index: [n('lang:number_literal', { value: 0 })] }),
     's[0]',
   ],
   [
@@ -90,15 +90,15 @@ const 切換前的產出: [string, SemanticNode, string][] = [
       'cpp:ternary',
       {},
       {
-        condition: [n('var_ref', { name: 'c' })],
-        true_expr: [n('number_literal', { value: 1 })],
-        false_expr: [n('number_literal', { value: 2 })],
+        condition: [n('lang:var_ref', { name: 'c' })],
+        true_expr: [n('lang:number_literal', { value: 1 })],
+        false_expr: [n('lang:number_literal', { value: 2 })],
       },
     ),
     'c ? 1 : 2',
   ],
-  ['cpp:cast', n('cpp:cast', { target_type: 'int' }, { value: [n('var_ref', { name: 'd' })] }), '(int)d'],
-  ['builtin_constant', n('builtin_constant', { value: 'INT_MAX' }), 'INT_MAX'],
+  ['cpp:cast', n('cpp:cast', { target_type: 'int' }, { value: [n('lang:var_ref', { name: 'd' })] }), '(int)d'],
+  ['lang:builtin_constant', n('lang:builtin_constant', { value: 'INT_MAX' }), 'INT_MAX'],
   // ⚠️ 舊 switch 寫的是 `case 'char_literal':`，而**那個概念不存在**——
   // 真正的概念是 `cpp_char_literal`。那是一個永遠不會觸發的死分支。
   //

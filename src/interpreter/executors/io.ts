@@ -4,7 +4,7 @@ import { defaultValue, parseInputValue, valueToString } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 
 export function registerIoExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('print', async (node, ctx) => {
+  register('lang:print', async (node, ctx) => {
     const values = node.children.values ?? []
     for (const valNode of values) {
       const val = await ctx.evaluate(valNode)
@@ -16,7 +16,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
     }
   })
 
-  register('input', async (node, ctx) => {
+  register('lang:input', async (node, ctx) => {
     const valueNodes = node.children.values ?? []
 
     // `in >> a >> b` —— 來源是一個**字串串流變數**，不是標準輸入。
@@ -44,7 +44,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
       let lastVal: RuntimeValue = { type: 'int', value: 0 }
       let itemsRead = 0
       for (const varRefNode of valueNodes) {
-        if (varRefNode.conceptId === 'array_access') {
+        if (varRefNode.conceptId === 'lang:array_access') {
           const arrName = String(varRefNode.properties.name)
           const arr = ctx.scope.get(arrName)
           if (arr.type !== 'array' || !Array.isArray(arr.value)) {

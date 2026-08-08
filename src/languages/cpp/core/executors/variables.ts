@@ -61,7 +61,7 @@ export function registerVariablesCoreExecutors(
     const name = String(node.properties.name)
     const inits = node.children.initializer ?? []
     const 目標 = inits[0]
-    if (目標?.conceptId === 'var_ref' && 目標.properties?.name !== undefined) {
+    if (目標?.conceptId === 'lang:var_ref' && 目標.properties?.name !== undefined) {
       // `get`／`set` 會沿 parent 往上找，所以目標作用域傳當前的就夠
       ctx.scope.declareRef(name, ctx.scope, String(目標.properties.name))
       return

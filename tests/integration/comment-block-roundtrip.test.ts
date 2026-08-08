@@ -37,8 +37,8 @@ function pipeline(): { render: PatternRenderer; extract: PatternExtractor } {
 
 describe('多行文字欄位走一圈不掉內容', () => {
   const 樣本: [string, string, string][] = [
-    ['block_comment', 'text', '第一行\n第二行\n第三行'],
-    ['doc_comment', 'brief', '這個函式做什麼'],
+    ['lang:block_comment', 'text', '第一行\n第二行\n第三行'],
+    ['lang:doc_comment', 'brief', '這個函式做什麼'],
   ]
 
   for (const [conceptId, prop, value] of 樣本) {
@@ -59,7 +59,7 @@ describe('多行文字欄位走一圈不掉內容', () => {
   it('★ 換行保得住——多行文字的重點就是多行', () => {
     const { render, extract } = pipeline()
     const value = 'a\nb'
-    const state = render.render(createNode('block_comment', { text: value }) as never)
+    const state = render.render(createNode('lang:block_comment', { text: value }) as never)
     const back = extract.extract(state as never)
     expect(String(back?.properties?.text)).toContain('\n')
   })

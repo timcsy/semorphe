@@ -28,9 +28,9 @@ import type { ConceptDefJSON, SemanticNode, PropertyValue, ParamSpec, ParamKind 
  * 見 specs/057（完備性的殼有多少是量測造成的）
  */
 const OPERATOR_FOR: Record<string, string> = {
-  compare: '<',
-  logic: '&&',
-  arithmetic: '+',
+  'lang:compare': '<',
+  'lang:logic': '&&',
+  'lang:arithmetic': '+',
   'cpp:compound_assign': '+=',
   cpp_compound_assign_expr: '+=',
   'cpp:increment': '++',
@@ -86,9 +86,9 @@ function defaultFor(prop: string, conceptId?: string): PropertyValue {
 function fillerFor(slotType: string): SemanticNode {
   const t = (slotType || '').toLowerCase()
   if (t.includes('statement') || t.includes('body') || t.includes('block')) {
-    return createNode('var_declare', { name: 'x', type: 'int' })
+    return createNode('lang:var_declare', { name: 'x', type: 'int' })
   }
-  return createNode('number_literal', { value: '1' })
+  return createNode('lang:number_literal', { value: '1' })
 }
 
 export interface SynthResult {

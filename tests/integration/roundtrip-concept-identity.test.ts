@@ -79,20 +79,20 @@ function roundTripIdentity(conceptId: string): { kept: boolean; became: string[]
   const def = allComponentDefs().find((d) => d.conceptId === conceptId)
   if (!def) throw new Error(`註冊表中沒有 ${conceptId}`)
   const { node } = synthMinimalNode(def)
-  const code = generateCode(createNode('program', {}, { body: [node] }), 'cpp', STYLE)
+  const code = generateCode(createNode('lang:program', {}, { body: [node] }), 'cpp', STYLE)
   const back = lifter.lift(tsParser.parse(code).rootNode as never)
   const found = conceptsIn(back)
   return {
     kept: found.has(conceptId),
     // 回來的樹裡出現、但不是結構性外殼的概念——就是「它變成了什麼」
-    became: [...found].filter((c) => !['program', 'func_def', 'number_literal', 'string_literal'].includes(c)),
+    became: [...found].filter((c) => !['lang:program', 'lang:func_def', 'lang:number_literal', 'lang:string_literal'].includes(c)),
     code: code.trim(),
   }
 }
 
 describe('概念身分守恆：走一圈之後還是同一個概念', () => {
   it('對照組：`if` 的身分守得住（證明測試本身能通過）', () => {
-    const r = roundTripIdentity('if')
+    const r = roundTripIdentity('lang:if')
     expect(
       r.kept,
       `身分未守住：if → ${r.became.join(', ')}\n產生的程式碼：\n${r.code}`,
@@ -100,7 +100,7 @@ describe('概念身分守恆：走一圈之後還是同一個概念', () => {
   })
 
   it('`print` 走一圈之後仍然是 `print`', () => {
-    const r = roundTripIdentity('print')
+    const r = roundTripIdentity('lang:print')
     expect(
       r.kept,
       `身分未守住：print → ${r.became.join(', ')}｜產生：${r.code.replace(/\n/g, ' ')}`,
@@ -108,7 +108,7 @@ describe('概念身分守恆：走一圈之後還是同一個概念', () => {
   })
 
   it('`input` 走一圈之後仍然是 `input`', () => {
-    const r = roundTripIdentity('input')
+    const r = roundTripIdentity('lang:input')
     expect(r.kept, `身分未守住：input → ${r.became.join(', ')}`).toBe(true)
   })
 

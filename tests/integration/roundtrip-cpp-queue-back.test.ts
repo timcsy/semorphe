@@ -35,11 +35,11 @@ beforeAll(() => {
 })
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('program', {}, { body })
+  return createNode('lang:program', {}, { body })
 }
 
 function num(v: number): SemanticNode {
-  return createNode('number_literal', { value: String(v) }, {})
+  return createNode('lang:number_literal', { value: String(v) }, {})
 }
 
 async function runInterpreter(body: SemanticNode[]): Promise<string> {
@@ -55,7 +55,7 @@ describe('cpp_queue_back — generate (block→code)', () => {
     const node = createNode('cpp:queue_back', { obj: 'q' }, {})
     const program = makeProgram([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('var_assign', { name: 'x' }, { value: [node] }),
+      createNode('lang:var_assign', { name: 'x' }, { value: [node] }),
     ])
     const code = generateCode(program, 'cpp', style)
     expect(code).toContain('.back()')
@@ -78,7 +78,7 @@ describe('cpp_queue_back — execute (interpreter)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(30)] }),
-      createNode('print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
     ])
     expect(output).toContain('30')
   })
@@ -89,14 +89,14 @@ describe('cpp_queue_back — execute (interpreter)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(3)] }),
-      createNode('print', {}, { values: [createNode('cpp:queue_front', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_front', { obj: 'q' }, {})] }),
     ])
     const backOutput = await runInterpreter([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(3)] }),
-      createNode('print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
     ])
     expect(frontOutput).toContain('1')
     expect(backOutput).toContain('3')
@@ -105,7 +105,7 @@ describe('cpp_queue_back — execute (interpreter)', () => {
   it('back() on empty queue returns default value without throwing', async () => {
     const output = await runInterpreter([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
     ])
     expect(output).toContain('0')
   })
@@ -114,8 +114,8 @@ describe('cpp_queue_back — execute (interpreter)', () => {
     const output = await runInterpreter([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(42)] }),
-      createNode('print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
-      createNode('print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
+      createNode('lang:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' }, {})] }),
     ])
     expect(output).toBe('4242')
   })

@@ -219,6 +219,17 @@ describe('元件身分命名空間', () => {
     expect([...現].filter((t) => !舊.has(t)), '積木型別憑空多出來了').toEqual([])
   })
 
+  it('★ 硬性零：沒有任何身分是舊格式', () => {
+    // ⚠️ **硬性零，不是棘輪。**（`build-guardrail` 第 6.8 步）
+    //
+    // 「留一筆還成立嗎」→ 不成立：一顆沒有命名空間的身分就是一顆沒有擁有者的
+    // 身分，第三方套件與硬體域都建立在「身分有主」這件事上。
+    // 「修法貴不貴」→ 遷移已經做完了，維持它是免費的。
+    expect(違規.map((f) => `${f.conceptId}：${f.為何}`), '身分格式退回舊樣了').toEqual([])
+    expect(引用.ts, '程式碼裡還有舊格式的身分引用').toBe(0)
+    expect(引用.json, '宣告裡還有舊格式的身分引用').toBe(0)
+  })
+
   it('★ 棘輪：格式違規與舊格式引用只准下降', () => {
     const current = { guard: 'identity-namespace', 違規, 引用, 積木型別指紋: 同名 }
     if (process.env.GENERATE_BASELINE) {

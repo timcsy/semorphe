@@ -15,7 +15,7 @@ describe('降級視覺區分 — extraState.degradationCause 傳遞', () => {
   }
 
   function wrapInProgram(...nodes: SemanticNode[]): SemanticNode {
-    return createNode('program', {}, { body: nodes })
+    return createNode('lang:program', {}, { body: nodes })
   }
 
   it('syntax_error 節點應攜帶 degradationCause=syntax_error', () => {

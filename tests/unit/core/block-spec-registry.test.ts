@@ -7,7 +7,7 @@ const sampleSpec: BlockSpec = {
   language: 'universal',
   category: 'variables',
   version: '1.0.0',
-  conceptMapping: { conceptId: 'var_declare' },
+  conceptMapping: { conceptId: 'lang:var_declare' },
   blockDef: { type: 'u_var_declare', message0: 'declare %1 %2', colour: '#FF8C1A' },
   codeTemplate: { pattern: '${TYPE} ${NAME};', imports: [], order: 0 },
   astPattern: { nodeType: 'declaration', constraints: [] },
@@ -37,7 +37,7 @@ describe('BlockSpecRegistry', () => {
   describe('loadFromJSON', () => {
     it('should load block specs from array', () => {
       registry.loadFromJSON([sampleSpec, sortSpec])
-      expect(registry.getByConceptId('var_declare')).toEqual(sampleSpec)
+      expect(registry.getByConceptId('lang:var_declare')).toEqual(sampleSpec)
       expect(registry.getByConceptId('cpp:stdlib:sort')).toEqual(sortSpec)
     })
   })
@@ -45,7 +45,7 @@ describe('BlockSpecRegistry', () => {
   describe('getByConceptId', () => {
     it('should find spec by concept id', () => {
       registry.loadFromJSON([sampleSpec])
-      const found = registry.getByConceptId('var_declare')
+      const found = registry.getByConceptId('lang:var_declare')
       expect(found).toBeTruthy()
       expect(found?.id).toBe('u_var_declare')
     })
@@ -85,7 +85,7 @@ describe('BlockSpecRegistry', () => {
       const allVars = registry.listByCategory('variables')
       expect(allVars).toHaveLength(1)
 
-      const filteredAlgos = registry.listByCategory('algorithms', new Set(['var_declare']))
+      const filteredAlgos = registry.listByCategory('algorithms', new Set(['lang:var_declare']))
       expect(filteredAlgos).toHaveLength(0)
 
       const visibleAlgos = registry.listByCategory('algorithms', new Set(['cpp:stdlib:sort']))

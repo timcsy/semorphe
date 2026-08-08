@@ -30,7 +30,7 @@ describe('Concept Algebra (US8)', () => {
 
     // Lang-core layer
     registry.register({
-      id: 'var_declare',
+      id: 'lang:var_declare',
       layer: 'lang-core',
       propertyNames: ['name', 'type'],
       childNames: ['initializer'],
@@ -76,7 +76,7 @@ describe('Concept Algebra (US8)', () => {
     it('should list lang-core concepts', () => {
       const core = registry.listByLayer('lang-core')
       expect(core).toHaveLength(1)
-      expect(core[0].id).toBe('var_declare')
+      expect(core[0].id).toBe('lang:var_declare')
     })
   })
 
@@ -95,7 +95,7 @@ describe('Concept Algebra (US8)', () => {
     })
 
     it('should return undefined for concept without abstract', () => {
-      expect(registry.findAbstract('var_declare')).toBeUndefined()
+      expect(registry.findAbstract('lang:var_declare')).toBeUndefined()
     })
 
     it('should return undefined for unknown concept', () => {
@@ -108,13 +108,13 @@ describe('Concept Algebra (US8)', () => {
       const universal = registry.listByLayer('universal')
       expect(universal).toHaveLength(3)
       expect(universal.map(c => c.id)).toContain('container_add')
-      expect(universal.map(c => c.id)).not.toContain('var_declare')
+      expect(universal.map(c => c.id)).not.toContain('lang:var_declare')
     })
 
     it('should list only lang-core layer concepts', () => {
       const core = registry.listByLayer('lang-core')
       expect(core).toHaveLength(1)
-      expect(core.map(c => c.id)).toContain('var_declare')
+      expect(core.map(c => c.id)).toContain('lang:var_declare')
     })
 
     it('should list all lang-library concepts', () => {

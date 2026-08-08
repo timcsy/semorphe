@@ -118,6 +118,6 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.conceptId).toBe('array_access')
+    expect(init?.conceptId).toBe('lang:array_access')
   })
 })

@@ -89,7 +89,7 @@ describe('PatternRenderer', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'return',
+          conceptId: 'lang:return',
           children: { value: 'expression' },
           role: 'statement',
         },
@@ -111,7 +111,7 @@ describe('PatternRenderer', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'number_literal',
+          conceptId: 'lang:number_literal',
           properties: ['value'],
           role: 'expression',
         },
@@ -126,8 +126,8 @@ describe('PatternRenderer', () => {
 
       renderer.loadBlockSpecs([spec, numSpec])
 
-      const valNode = createNode('number_literal', { value: '42' })
-      const retNode = createNode('return', {}, { value: [valNode] })
+      const valNode = createNode('lang:number_literal', { value: '42' })
+      const retNode = createNode('lang:return', {}, { value: [valNode] })
       const result = renderer.render(retNode)
 
       expect(result).not.toBeNull()
@@ -147,7 +147,7 @@ describe('PatternRenderer', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'while_loop',
+          conceptId: 'lang:while_loop',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -167,7 +167,7 @@ describe('PatternRenderer', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'break', role: 'statement' },
+        conceptMapping: { conceptId: 'lang:break', role: 'statement' },
         blockDef: { type: 'u_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
@@ -175,9 +175,9 @@ describe('PatternRenderer', () => {
 
       renderer.loadBlockSpecs([spec, breakSpec])
 
-      const condNode = createNode('var_ref', { name: 'x' })
-      const bodyNode = createNode('break', {})
-      const whileNode = createNode('while_loop', {}, {
+      const condNode = createNode('lang:var_ref', { name: 'x' })
+      const bodyNode = createNode('lang:break', {})
+      const whileNode = createNode('lang:while_loop', {}, {
         condition: [condNode],
         body: [bodyNode],
       })

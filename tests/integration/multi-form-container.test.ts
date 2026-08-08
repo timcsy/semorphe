@@ -179,12 +179,12 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
     const run = async (kind: string | undefined): Promise<string> => {
       const props: Record<string, string> = { obj: 's' }
       if (kind !== undefined) props.container_kind = kind
-      const tree = createNode('program', {}, {
+      const tree = createNode('lang:program', {}, {
         body: [
           createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('number_literal', { value: '1' }, {})] }),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('number_literal', { value: '2' }, {})] }),
-          createNode('print', {}, { values: [createNode('cpp:stack_top', { obj: 's' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('lang:number_literal', { value: '1' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('lang:number_literal', { value: '2' }, {})] }),
+          createNode('lang:print', {}, { values: [createNode('cpp:stack_top', { obj: 's' }, {})] }),
         ],
       })
       const i = new SemanticInterpreter({ maxSteps: 50000 })

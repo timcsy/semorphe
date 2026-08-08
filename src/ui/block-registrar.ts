@@ -79,7 +79,7 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (abstractConceptOf(block.type) === 'var_declare') {
+        } else if (abstractConceptOf(block.type) === 'lang:var_declare') {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')

@@ -140,7 +140,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一個建出**真身分**的節點 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     expect(
-      measure([合成真身分]).find((f) => f.id === 'var_declare'),
+      measure([合成真身分]).find((f) => f.id === 'lang:var_declare'),
       '一個確實存在的身分被報成幽靈 → 這條護欄會亂叫，而亂叫的護欄很快就被忽略',
     ).toBeUndefined()
   })
@@ -156,7 +156,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 已知答案樣本：判準先驗過再拿來下結論（第 6 步）', () => {
     // ⚠️ 規劃階段的靜態掃描第一版把積木型別與 AST 節點型別當成元件身分，
     // 報了 27 筆假的。救它的是這一支——**用查過的答案，不是記得的答案**。
-    expect(已宣告.has('var_declare'), 'var_declare 是真元件').toBe(true)
+    expect(已宣告.has('lang:var_declare'), 'var_declare 是真元件').toBe(true)
     expect(已宣告.has('cpp:vector_declare'), 'cpp_vector_declare 是真元件').toBe(true)
     expect(已宣告.has('u_if'), '`u_if` 是**積木型別**不是元件身分——它不該在登錄表裡').toBe(false)
     expect(已宣告.has('binary_expression'), '`binary_expression` 是 AST 節點型別').toBe(false)

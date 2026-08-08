@@ -25,7 +25,7 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
       const args = argNodes.map(a => {
         const expr = generateExpression(a, ctx)
         // var_ref nodes need & prefix (unless array/string/pointer)
-        if (a.conceptId === 'var_ref' && !a.properties.noAddr) {
+        if (a.conceptId === 'lang:var_ref' && !a.properties.noAddr) {
           return `&${expr}`
         }
         // no-addr var_ref, or compose/custom: user already controls &

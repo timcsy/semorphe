@@ -100,7 +100,7 @@ describe('Annotation Roundtrip', () => {
       const data = new LiftContextData()
       const results = lifter.liftStatements([commentNode, stmtNode])
       expect(results.length).toBe(2)
-      expect(results[0].conceptId).toBe('comment')
+      expect(results[0].conceptId).toBe('lang:comment')
       expect(results[0].properties.text).toBe('// section header')
     })
 
@@ -111,8 +111,8 @@ describe('Annotation Roundtrip', () => {
 
       const results = lifter.liftStatements([c1, c2])
       expect(results.length).toBe(2)
-      expect(results[0].conceptId).toBe('comment')
-      expect(results[1].conceptId).toBe('comment')
+      expect(results[0].conceptId).toBe('lang:comment')
+      expect(results[1].conceptId).toBe('lang:comment')
     })
   })
 

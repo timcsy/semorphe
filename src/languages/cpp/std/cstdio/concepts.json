@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp:printf",
     "layer": "lang-core",
-    "abstractConcept": "print",
+    "abstractConcept": "lang:print",
     "properties": [
       {
         "name": "format",
@@ -23,7 +23,7 @@
   {
     "conceptId": "cpp:scanf",
     "layer": "lang-core",
-    "abstractConcept": "input",
+    "abstractConcept": "lang:input",
     "properties": [
       {
         "name": "format",

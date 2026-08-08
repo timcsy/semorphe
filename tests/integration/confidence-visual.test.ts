@@ -11,7 +11,7 @@ beforeAll(() => {
 
 describe('Confidence 視覺回饋 — extraState.confidence 傳遞', () => {
   function wrapInProgram(...nodes: SemanticNode[]): SemanticNode {
-    return createNode('program', {}, { body: nodes })
+    return createNode('lang:program', {}, { body: nodes })
   }
 
   it('confidence=high 的節點不應在 extraState 中設定 confidence', () => {

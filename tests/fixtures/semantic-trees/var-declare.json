@@ -1,19 +1,24 @@
 {
   "id": "test_program",
-  "conceptId": "program",
+  "conceptId": "lang:program",
   "properties": {},
   "children": {
     "body": [
       {
         "id": "test_var_declare",
-        "conceptId": "var_declare",
-        "properties": { "name": "x", "type": "int" },
+        "conceptId": "lang:var_declare",
+        "properties": {
+          "name": "x",
+          "type": "int"
+        },
         "children": {
           "initializer": [
             {
               "id": "test_number",
-              "conceptId": "number_literal",
-              "properties": { "value": "5" },
+              "conceptId": "lang:number_literal",
+              "properties": {
+                "value": "5"
+              },
               "children": {}
             }
           ]

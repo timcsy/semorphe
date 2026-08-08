@@ -524,6 +524,6 @@ export function registerIOLifters(lifter: Lifter): void {
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
       : []
-    return createNode('func_call', { name: funcName }, { args })
+    return createNode('lang:func_call', { name: funcName }, { args })
   })
 }

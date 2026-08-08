@@ -84,56 +84,56 @@ describe('Universal Concepts', () => {
 
   // --- Data / Variables ---
 
-  it('var_declare', () => {
-    assertConceptPresent(`int main() { int x = 5; }`, 'var_declare')
+  it('lang:var_declare', () => {
+    assertConceptPresent(`int main() { int x = 5; }`, 'lang:var_declare')
   })
 
-  it('var_assign', () => {
-    assertConceptPresent(`int main() { int x; x = 5; }`, 'var_assign')
+  it('lang:var_assign', () => {
+    assertConceptPresent(`int main() { int x; x = 5; }`, 'lang:var_assign')
   })
 
-  it('var_ref', () => {
-    assertConceptPresent(`int main() { int x = 5; int y = x; }`, 'var_ref')
+  it('lang:var_ref', () => {
+    assertConceptPresent(`int main() { int x = 5; int y = x; }`, 'lang:var_ref')
   })
 
-  it('number_literal', () => {
-    assertConceptPresent(`int main() { int x = 42; }`, 'number_literal')
+  it('lang:number_literal', () => {
+    assertConceptPresent(`int main() { int x = 42; }`, 'lang:number_literal')
   })
 
-  it('string_literal', () => {
+  it('lang:string_literal', () => {
     assertConceptPresent(`#include <iostream>
 using namespace std;
-int main() { cout << "hello"; }`, 'string_literal')
+int main() { cout << "hello"; }`, 'lang:string_literal')
   })
 
   // --- Operators ---
 
   it('arithmetic (+)', () => {
-    assertConceptPresent(`int main() { int x = 1 + 2; }`, 'arithmetic')
+    assertConceptPresent(`int main() { int x = 1 + 2; }`, 'lang:arithmetic')
   })
 
   it('compare (==)', () => {
-    assertConceptPresent(`int main() { bool b = (1 == 2); }`, 'compare')
+    assertConceptPresent(`int main() { bool b = (1 == 2); }`, 'lang:compare')
   })
 
   it('logic (&&)', () => {
-    assertConceptPresent(`int main() { bool b = (true && false); }`, 'logic')
+    assertConceptPresent(`int main() { bool b = (true && false); }`, 'lang:logic')
   })
 
   it('logic_not (!)', () => {
-    assertConceptPresent(`int main() { bool b = !true; }`, 'logic_not')
+    assertConceptPresent(`int main() { bool b = !true; }`, 'lang:logic_not')
   })
 
   it('negate (-)', () => {
     // Note: `-5` is parsed by tree-sitter as a single number_literal, not unary negate.
     // Use a variable negation to trigger the unary_expression AST node.
-    assertConceptPresent(`int main() { int x = 1; int y = -x; }`, 'negate')
+    assertConceptPresent(`int main() { int x = 1; int y = -x; }`, 'lang:negate')
   })
 
   // --- Control Flow ---
 
-  it('if', () => {
-    assertConceptPresent(`int main() { if (true) { int x = 1; } }`, 'if')
+  it('lang:if', () => {
+    assertConceptPresent(`int main() { if (true) { int x = 1; } }`, 'lang:if')
   })
 
   // ARCHITECTURAL: if_else concept is never produced by the lifter. The lifter always
@@ -142,47 +142,47 @@ int main() { cout << "hello"; }`, 'string_literal')
   it('if_else — lifter uses if with else_body child (architectural)', () => {
     const sem = liftCode(`int main() { if (true) { int x = 1; } else { int y = 2; } }`)
     expect(sem).not.toBeNull()
-    const ifNodes = findConcepts(sem!, 'if')
+    const ifNodes = findConcepts(sem!, 'lang:if')
     expect(ifNodes.length).toBeGreaterThan(0)
     const hasElse = ifNodes.some(n => (n.children.else_body?.length ?? 0) > 0)
     expect(hasElse, 'Expected if concept with non-empty else_body child').toBe(true)
   })
 
-  it('count_loop', () => {
-    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { int x = i; } }`, 'count_loop')
+  it('lang:count_loop', () => {
+    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { int x = i; } }`, 'lang:count_loop')
   })
 
-  it('while_loop', () => {
-    assertConceptPresent(`int main() { while (true) { break; } }`, 'while_loop')
+  it('lang:while_loop', () => {
+    assertConceptPresent(`int main() { while (true) { break; } }`, 'lang:while_loop')
   })
 
-  it('break', () => {
-    assertConceptPresent(`int main() { while (true) { break; } }`, 'break')
+  it('lang:break', () => {
+    assertConceptPresent(`int main() { while (true) { break; } }`, 'lang:break')
   })
 
-  it('continue', () => {
-    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { continue; } }`, 'continue')
+  it('lang:continue', () => {
+    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { continue; } }`, 'lang:continue')
   })
 
   // --- Functions ---
 
-  it('func_def', () => {
-    assertConceptPresent(`int add(int a, int b) { return a + b; }`, 'func_def')
+  it('lang:func_def', () => {
+    assertConceptPresent(`int add(int a, int b) { return a + b; }`, 'lang:func_def')
   })
 
-  it('func_call', () => {
+  it('lang:func_call', () => {
     assertConceptPresent(`int add(int a, int b) { return a + b; }
-int main() { add(1, 2); }`, 'func_call')
+int main() { add(1, 2); }`, 'lang:func_call')
   })
 
-  it('func_call', () => {
+  it('lang:func_call', () => {
     // Function call in expression context (assigned to a variable)
     assertConceptPresent(`int add(int a, int b) { return a + b; }
-int main() { int x = add(1, 2); }`, 'func_call')
+int main() { int x = add(1, 2); }`, 'lang:func_call')
   })
 
-  it('return', () => {
-    assertConceptPresent(`int main() { return 0; }`, 'return')
+  it('lang:return', () => {
+    assertConceptPresent(`int main() { return 0; }`, 'lang:return')
   })
 
   // --- I/O ---
@@ -190,33 +190,33 @@ int main() { int x = add(1, 2); }`, 'func_call')
   it('print (cout)', () => {
     assertConceptPresent(`#include <iostream>
 using namespace std;
-int main() { cout << 42; }`, 'print')
+int main() { cout << 42; }`, 'lang:print')
   })
 
-  it('endl', () => {
+  it('lang:endl', () => {
     assertConceptPresent(`#include <iostream>
 using namespace std;
-int main() { cout << endl; }`, 'endl')
+int main() { cout << endl; }`, 'lang:endl')
   })
 
   it('input (cin)', () => {
     assertConceptPresent(`#include <iostream>
 using namespace std;
-int main() { int x; cin >> x; }`, 'input')
+int main() { int x; cin >> x; }`, 'lang:input')
   })
 
   // --- Arrays ---
 
-  it('array_declare', () => {
-    assertConceptPresent(`int main() { int arr[5]; }`, 'array_declare')
+  it('lang:array_declare', () => {
+    assertConceptPresent(`int main() { int arr[5]; }`, 'lang:array_declare')
   })
 
-  it('array_access', () => {
-    assertConceptPresent(`int main() { int arr[5]; int x = arr[0]; }`, 'array_access')
+  it('lang:array_access', () => {
+    assertConceptPresent(`int main() { int arr[5]; int x = arr[0]; }`, 'lang:array_access')
   })
 
-  it('array_assign', () => {
-    assertConceptPresent(`int main() { int arr[5]; arr[0] = 10; }`, 'array_assign')
+  it('lang:array_assign', () => {
+    assertConceptPresent(`int main() { int arr[5]; arr[0] = 10; }`, 'lang:array_assign')
   })
 })
 
@@ -262,8 +262,8 @@ describe('C++ Core Concepts', () => {
     assertConceptPresent(`int main() { double d = 3.14; int x = (int)d; }`, 'cpp:cast')
   })
 
-  it('bitwise_not', () => {
-    assertConceptPresent(`int main() { int x = ~0; }`, 'bitwise_not')
+  it('lang:bitwise_not', () => {
+    assertConceptPresent(`int main() { int x = ~0; }`, 'lang:bitwise_not')
   })
 
   // --- Control Flow ---
@@ -359,7 +359,7 @@ int main() { int* p = (int*)malloc(sizeof(int)); free(p); }`, 'cpp:free')
   // slot uses the expression counterpart at render time. Use a non-loop context
   // to verify var_declare is produced correctly.
   it('var_declare_expr — expression counterpart, verify var_declare exists', () => {
-    assertConceptPresent(`int main() { int x = 5; }`, 'var_declare')
+    assertConceptPresent(`int main() { int x = 5; }`, 'lang:var_declare')
   })
 
   // --- Preprocessor ---
@@ -616,9 +616,9 @@ int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp:method_call')
 
   // --- Forward Declaration ---
 
-  it('forward_decl', () => {
+  it('lang:forward_decl', () => {
     assertConceptPresent(`int add(int a, int b);
-int add(int a, int b) { return a + b; }`, 'forward_decl')
+int add(int a, int b) { return a + b; }`, 'lang:forward_decl')
   })
 
   // --- Static Member ---
@@ -1056,7 +1056,7 @@ int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_access')
   })
 
   it('負向：真的陣列仍然是 array_access', () => {
-    assertConceptPresent(`int main() { int a[3]; int x = a[1]; }`, 'array_access')
+    assertConceptPresent(`int main() { int a[3]; int x = a[1]; }`, 'lang:array_access')
   })
 })
 

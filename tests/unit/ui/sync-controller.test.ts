@@ -48,8 +48,8 @@ describe('SyncController (bus-based)', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
-      const tree = createNode('program', {}, {
-        body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
+      const tree = createNode('lang:program', {}, {
+        body: [createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
       })
       const blockState = renderToBlocklyState(tree)
 
@@ -64,7 +64,7 @@ describe('SyncController (bus-based)', () => {
     })
 
     it('should store current tree after blocks→code sync', () => {
-      const tree = createNode('program', {}, { body: [] })
+      const tree = createNode('lang:program', {}, { body: [] })
       bus.emit('edit:blocks', { blocklyState: { tree } })
       expect(controller.getCurrentTree()).not.toBeNull()
     })
@@ -73,8 +73,8 @@ describe('SyncController (bus-based)', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
-      const tree = createNode('program', {}, {
-        body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
+      const tree = createNode('lang:program', {}, {
+        body: [createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
       })
       bus.emit('edit:blocks', { blocklyState: { tree } })
 
@@ -98,7 +98,7 @@ describe('SyncController (bus-based)', () => {
       }
       const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
-      lifter.register('translation_unit', () => createNode('program', {}, { body: [] }))
+      lifter.register('translation_unit', () => createNode('lang:program', {}, { body: [] }))
       controller.setCodeToBlocksPipeline(lifter, mockParser)
     }
 
@@ -170,10 +170,10 @@ describe('SyncController (bus-based)', () => {
       bus.on('semantic:update', () => {
         callCount.blocks++
         // Simulate a panel re-emitting (should be ignored)
-        bus.emit('edit:blocks', { blocklyState: { tree: createNode('program', {}, { body: [] }) } })
+        bus.emit('edit:blocks', { blocklyState: { tree: createNode('lang:program', {}, { body: [] }) } })
       })
 
-      const tree = createNode('program', {}, { body: [] })
+      const tree = createNode('lang:program', {}, { body: [] })
       bus.emit('edit:blocks', { blocklyState: { tree } })
 
       // Should only be called once (re-entrant call blocked)
@@ -199,14 +199,14 @@ describe('SyncController (bus-based)', () => {
 
   describe('stripScaffoldNodes (unit)', () => {
     it('should strip include, using_namespace, and unwrap func_def(main)', () => {
-      const fullTree = createNode('program', {}, {
+      const fullTree = createNode('lang:program', {}, {
         body: [
           createNode('cpp:include', { header: 'iostream' }),
           createNode('cpp:using_namespace', { ns: 'std' }),
-          createNode('func_def', { name: 'main', return_type: 'int' }, {
+          createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
             body: [
-              createNode('print', {}, { values: [createNode('string', { value: 'hello' })] }),
-              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+              createNode('lang:print', {}, { values: [createNode('string', { value: 'hello' })] }),
+              createNode('lang:return', {}, { value: [createNode('number', { value: 0 })] }),
             ],
           }),
         ],
@@ -217,20 +217,20 @@ describe('SyncController (bus-based)', () => {
 
       // Only user's body (print) should remain — include, namespace, func_def wrapper, return stripped
       expect(body).toHaveLength(1)
-      expect(body[0].conceptId).toBe('print')
+      expect(body[0].conceptId).toBe('lang:print')
     })
 
     it('should keep non-scaffold nodes (user-defined functions)', () => {
-      const tree = createNode('program', {}, {
+      const tree = createNode('lang:program', {}, {
         body: [
           createNode('cpp:include', { header: 'iostream' }),
-          createNode('func_def', { name: 'helper', return_type: 'void' }, {
-            body: [createNode('print', {}, { values: [] })],
+          createNode('lang:func_def', { name: 'helper', return_type: 'void' }, {
+            body: [createNode('lang:print', {}, { values: [] })],
           }),
-          createNode('func_def', { name: 'main', return_type: 'int' }, {
+          createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
             body: [
-              createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
-              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+              createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+              createNode('lang:return', {}, { value: [createNode('number', { value: 0 })] }),
             ],
           }),
         ],
@@ -241,25 +241,25 @@ describe('SyncController (bus-based)', () => {
 
       // helper (user-defined) + var_declare (from main body) should remain
       expect(body).toHaveLength(2)
-      expect(body[0].conceptId).toBe('func_def')
+      expect(body[0].conceptId).toBe('lang:func_def')
       expect(body[0].properties.name).toBe('helper')
-      expect(body[1].conceptId).toBe('var_declare')
+      expect(body[1].conceptId).toBe('lang:var_declare')
     })
 
     it('should handle body-only tree (already stripped)', () => {
-      const tree = createNode('program', {}, {
-        body: [createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
+      const tree = createNode('lang:program', {}, {
+        body: [createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
       })
 
       const stripped = stripScaffoldNodes(tree)
       const body = stripped.children.body ?? []
 
       expect(body).toHaveLength(1)
-      expect(body[0].conceptId).toBe('var_declare')
+      expect(body[0].conceptId).toBe('lang:var_declare')
     })
 
     it('should handle empty program', () => {
-      const tree = createNode('program', {}, { body: [] })
+      const tree = createNode('lang:program', {}, { body: [] })
       const stripped = stripScaffoldNodes(tree)
       expect(stripped.children.body ?? []).toHaveLength(0)
     })
@@ -272,13 +272,13 @@ describe('SyncController (bus-based)', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
-      const fullTree = createNode('program', {}, {
+      const fullTree = createNode('lang:program', {}, {
         body: [
           createNode('cpp:include', { header: 'iostream' }),
-          createNode('func_def', { name: 'main', return_type: 'int' }, {
+          createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
             body: [
-              createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
-              createNode('return', {}, { value: [createNode('number', { value: 0 })] }),
+              createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+              createNode('lang:return', {}, { value: [createNode('number', { value: 0 })] }),
             ],
           }),
         ],
@@ -300,9 +300,9 @@ describe('SyncController (bus-based)', () => {
       bus.on('semantic:update', handler)
 
       // Body-only tree (no scaffold nodes) — as extracted from blocks
-      const bodyTree = createNode('program', {}, {
+      const bodyTree = createNode('lang:program', {}, {
         body: [
-          createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
+          createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] }),
         ],
       })
 
@@ -327,7 +327,7 @@ describe('SyncController (bus-based)', () => {
       const exceptionsCallback = vi.fn()
       controller.onStyleExceptions(exceptionsCallback)
 
-      const tree = createNode('program', {}, {
+      const tree = createNode('lang:program', {}, {
         body: [createNode('cpp:printf', { format: '%d\\n' })],
       })
 
@@ -360,8 +360,8 @@ describe('SyncController (bus-based)', () => {
       const exceptionsCallback = vi.fn()
       controller.onStyleExceptions(exceptionsCallback)
 
-      const tree = createNode('program', {}, {
-        body: [createNode('print', {}, { values: [createNode('string', { value: 'hello' })] })],
+      const tree = createNode('lang:program', {}, {
+        body: [createNode('lang:print', {}, { values: [createNode('string', { value: 'hello' })] })],
       })
 
       const rootNode = {
@@ -399,7 +399,7 @@ describe('SyncController (bus-based)', () => {
       }
       const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
       const lifter = new Lifter()
-      lifter.register('translation_unit', () => createNode('program', {}, { body: [] }))
+      lifter.register('translation_unit', () => createNode('lang:program', {}, { body: [] }))
       controller.setCodeToBlocksPipeline(lifter, mockParser)
       // We need to make the code available via the edit:code event
       return code
@@ -455,8 +455,8 @@ describe('SyncController (bus-based)', () => {
   describe('nodeId-based cross-projection queries (US2)', () => {
     it('getMappingForBlock should resolve via blockId→nodeId→codeMappings join', () => {
       // Simulate a tree with externally-provided blockMappings (no metadata.blockId)
-      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
-      const tree = createNode('program', {}, { body: [decl] })
+      const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('lang:program', {}, { body: [decl] })
       const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
 
       // Trigger blocks→code sync with blockMappings
@@ -481,8 +481,8 @@ describe('SyncController (bus-based)', () => {
     })
 
     it('getMappingForLine should resolve via line→codeMappings→nodeId→blockMappings join', () => {
-      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
-      const tree = createNode('program', {}, { body: [decl] })
+      const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('lang:program', {}, { body: [decl] })
       const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
 
       bus.emit('edit:blocks', { blocklyState: { tree, blockMappings } })
@@ -497,7 +497,7 @@ describe('SyncController (bus-based)', () => {
     })
 
     it('getMappingForBlock should return null for unknown blockId', () => {
-      const tree = createNode('program', {}, { body: [] })
+      const tree = createNode('lang:program', {}, { body: [] })
       bus.emit('edit:blocks', { blocklyState: { tree } })
 
       const result = controller.getMappingForBlock('nonexistent')
@@ -505,8 +505,8 @@ describe('SyncController (bus-based)', () => {
     })
 
     it('codeMappings should not contain blockId field (FR-001)', () => {
-      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
-      const tree = createNode('program', {}, { body: [decl] })
+      const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+      const tree = createNode('lang:program', {}, { body: [decl] })
       bus.emit('edit:blocks', { blocklyState: { tree } })
 
       const codeMappings = controller.getCodeMappings()

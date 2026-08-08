@@ -71,22 +71,22 @@ describe('scanFile — 只匹配完整的引號字串字面', () => {
   })
 
   it('三種引號都算：單引號、雙引號、反引號', () => {
-    withTempFile(`a('print'); b("input"); c(\`if\`)\n`, (rel) => {
-      const hits = scanFile(rel, ['print', 'input', 'if'])
-      expect(hits.code.sort()).toEqual(['if', 'input', 'print'])
+    withTempFile(`a('lang:print'); b("lang:input"); c(\`lang:if\`)\n`, (rel) => {
+      const hits = scanFile(rel, ['lang:print', 'lang:input', 'lang:if'])
+      expect(hits.code.sort()).toEqual(['lang:if', 'lang:input', 'lang:print'])
     })
   })
 
   it('關鍵字不誤報：裸的 if / return 不算命中', () => {
     withTempFile(`if (x) { return 1 }\nfor (;;) break\n`, (rel) => {
-      const hits = scanFile(rel, ['if', 'return', 'break'])
+      const hits = scanFile(rel, ['lang:if', 'lang:return', 'lang:break'])
       expect(hits.code).toEqual([])
     })
   })
 
   it('識別符不誤報：變數叫 print 不算命中', () => {
     withTempFile(`const print = 1\nprint + 2\n`, (rel) => {
-      const hits = scanFile(rel, ['print'])
+      const hits = scanFile(rel, ['lang:print'])
       expect(hits.code).toEqual([])
     })
   })
@@ -108,9 +108,9 @@ describe('scanFile — 只匹配完整的引號字串字面', () => {
   })
 
   it('記錄命中的行號', () => {
-    withTempFile(`const a = 1\nconst b = 'print'\nconst c = 3\nconst d = 'print'\n`, (rel) => {
-      const hits = scanFile(rel, ['print'])
-      expect(hits.lines['print']).toEqual([2, 4])
+    withTempFile(`const a = 1\nconst b = 'lang:print'\nconst c = 3\nconst d = 'lang:print'\n`, (rel) => {
+      const hits = scanFile(rel, ['lang:print'])
+      expect(hits.lines['lang:print']).toEqual([2, 4])
     })
   })
 })
@@ -120,7 +120,7 @@ describe('allComponentIds', () => {
     const ids = allComponentIds()
     expect(ids.length).toBeGreaterThan(100)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toContain('print')
+    expect(ids).toContain('lang:print')
     expect(ids).toContain('cpp:string_at')
   })
 })

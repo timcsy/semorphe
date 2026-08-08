@@ -73,7 +73,9 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
         站不住.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
       }
       // 工具箱排除的形式是 `excludeTypes: ['u_xxx']`
-      const blockType = `u_${d.conceptId}`
+      // ⚠️ 積木型別**不含 scope**——身分是 `lang:if_else`，積木型別是 `u_if_else`。
+      // 命名空間遷移（103）之後這裡直接串接會組出 `u_lang:if_else`。
+      const blockType = `u_${d.conceptId.split(':').pop()}`
       if (!toolbox.includes(`'${blockType}'`)) {
         站不住.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
       }
@@ -204,7 +206,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
 
   it('★ 對照組：該宣告的 12 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
     const 應宣告 = [
-      'comment', 'block_comment', 'doc_comment', 'cpp:include', 'cpp:using_namespace',
+      'lang:comment', 'lang:block_comment', 'lang:doc_comment', 'cpp:include', 'cpp:using_namespace',
       // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
       //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
       // 宣告會隨系統長出新能力而過期，classification.md 的「複查觸發條件」

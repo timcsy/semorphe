@@ -6,54 +6,6 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
   "limits": {
-    "arithmetic": {
-      "files": 7,
-      "dirs": 6
-    },
-    "array_access": {
-      "files": 8,
-      "dirs": 5
-    },
-    "array_assign": {
-      "files": 4,
-      "dirs": 3
-    },
-    "array_declare": {
-      "files": 4,
-      "dirs": 4
-    },
-    "bitwise_not": {
-      "files": 3,
-      "dirs": 3
-    },
-    "block_comment": {
-      "files": 3,
-      "dirs": 3
-    },
-    "break": {
-      "files": 4,
-      "dirs": 4
-    },
-    "builtin_constant": {
-      "files": 3,
-      "dirs": 3
-    },
-    "comment": {
-      "files": 5,
-      "dirs": 5
-    },
-    "compare": {
-      "files": 7,
-      "dirs": 6
-    },
-    "continue": {
-      "files": 6,
-      "dirs": 5
-    },
-    "count_loop": {
-      "files": 6,
-      "dirs": 5
-    },
     "cpp:abs": {
       "files": 3,
       "dirs": 2
@@ -634,83 +586,131 @@
       "files": 3,
       "dirs": 3
     },
-    "doc_comment": {
-      "files": 5,
-      "dirs": 5
-    },
-    "endl": {
+    "lang:arithmetic": {
       "files": 7,
       "dirs": 6
     },
-    "forward_decl": {
+    "lang:array_access": {
+      "files": 8,
+      "dirs": 5
+    },
+    "lang:array_assign": {
+      "files": 4,
+      "dirs": 3
+    },
+    "lang:array_declare": {
+      "files": 4,
+      "dirs": 4
+    },
+    "lang:bitwise_not": {
       "files": 3,
       "dirs": 3
     },
-    "func_call": {
-      "files": 7,
-      "dirs": 5
+    "lang:block_comment": {
+      "files": 3,
+      "dirs": 3
     },
-    "func_def": {
-      "files": 10,
-      "dirs": 7
+    "lang:break": {
+      "files": 4,
+      "dirs": 4
     },
-    "if": {
-      "files": 7,
-      "dirs": 7
+    "lang:builtin_constant": {
+      "files": 3,
+      "dirs": 3
     },
-    "if_else": {
-      "files": 2,
-      "dirs": 2
+    "lang:comment": {
+      "files": 3,
+      "dirs": 3
     },
-    "input": {
-      "files": 15,
-      "dirs": 11
-    },
-    "logic": {
+    "lang:compare": {
       "files": 7,
       "dirs": 6
     },
-    "logic_not": {
+    "lang:continue": {
+      "files": 4,
+      "dirs": 4
+    },
+    "lang:count_loop": {
       "files": 6,
       "dirs": 5
     },
-    "negate": {
-      "files": 6,
-      "dirs": 5
-    },
-    "number_literal": {
+    "lang:doc_comment": {
       "files": 5,
       "dirs": 5
     },
-    "print": {
+    "lang:endl": {
       "files": 7,
       "dirs": 6
     },
-    "program": {
-      "files": 10,
-      "dirs": 8
+    "lang:forward_decl": {
+      "files": 3,
+      "dirs": 3
     },
-    "return": {
-      "files": 5,
-      "dirs": 4
-    },
-    "string_literal": {
-      "files": 8,
-      "dirs": 6
-    },
-    "var_assign": {
+    "lang:func_call": {
       "files": 6,
-      "dirs": 4
+      "dirs": 5
     },
-    "var_declare": {
+    "lang:func_def": {
       "files": 9,
       "dirs": 7
     },
-    "var_ref": {
+    "lang:if": {
+      "files": 7,
+      "dirs": 7
+    },
+    "lang:if_else": {
+      "files": 2,
+      "dirs": 2
+    },
+    "lang:input": {
+      "files": 8,
+      "dirs": 7
+    },
+    "lang:logic": {
+      "files": 7,
+      "dirs": 6
+    },
+    "lang:logic_not": {
+      "files": 6,
+      "dirs": 5
+    },
+    "lang:negate": {
+      "files": 6,
+      "dirs": 5
+    },
+    "lang:number_literal": {
+      "files": 5,
+      "dirs": 5
+    },
+    "lang:print": {
+      "files": 7,
+      "dirs": 6
+    },
+    "lang:program": {
+      "files": 9,
+      "dirs": 7
+    },
+    "lang:return": {
+      "files": 5,
+      "dirs": 4
+    },
+    "lang:string_literal": {
+      "files": 7,
+      "dirs": 6
+    },
+    "lang:var_assign": {
+      "files": 6,
+      "dirs": 4
+    },
+    "lang:var_declare": {
+      "files": 8,
+      "dirs": 7
+    },
+    "lang:var_ref": {
       "files": 10,
       "dirs": 8
     },
-    "while_loop": {
+    "lang:while_loop": {
       "files": 4,
       "dirs": 4
     }

@@ -1,7 +1,7 @@
 [
   {
     "id": "u_var_declare",
-    "conceptId": "var_declare",
+    "conceptId": "lang:var_declare",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -22,7 +22,7 @@
   },
   {
     "id": "u_var_assign",
-    "conceptId": "var_assign",
+    "conceptId": "lang:var_assign",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -58,7 +58,7 @@
   },
   {
     "id": "u_var_ref",
-    "conceptId": "var_ref",
+    "conceptId": "lang:var_ref",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -84,7 +84,7 @@
   },
   {
     "id": "u_number",
-    "conceptId": "number_literal",
+    "conceptId": "lang:number_literal",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -110,7 +110,7 @@
   },
   {
     "id": "u_string",
-    "conceptId": "string_literal",
+    "conceptId": "lang:string_literal",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -136,7 +136,7 @@
   },
   {
     "id": "u_arithmetic",
-    "conceptId": "arithmetic",
+    "conceptId": "lang:arithmetic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
@@ -218,7 +218,7 @@
   },
   {
     "id": "u_compare",
-    "conceptId": "compare",
+    "conceptId": "lang:compare",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
@@ -284,7 +284,7 @@
   },
   {
     "id": "u_logic",
-    "conceptId": "logic",
+    "conceptId": "lang:logic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
@@ -334,7 +334,7 @@
   },
   {
     "id": "u_logic_not",
-    "conceptId": "logic_not",
+    "conceptId": "lang:logic_not",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
@@ -361,7 +361,7 @@
   },
   {
     "id": "u_negate",
-    "conceptId": "negate",
+    "conceptId": "lang:negate",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
@@ -402,7 +402,7 @@
   },
   {
     "id": "u_if",
-    "conceptId": "if",
+    "conceptId": "lang:if",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -442,7 +442,7 @@
   },
   {
     "id": "u_if_else",
-    "conceptId": "if_else",
+    "conceptId": "lang:if_else",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -490,7 +490,7 @@
   },
   {
     "id": "u_count_loop",
-    "conceptId": "count_loop",
+    "conceptId": "lang:count_loop",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -558,7 +558,7 @@
   },
   {
     "id": "u_while_loop",
-    "conceptId": "while_loop",
+    "conceptId": "lang:while_loop",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -596,7 +596,7 @@
   },
   {
     "id": "u_break",
-    "conceptId": "break",
+    "conceptId": "lang:break",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -611,7 +611,7 @@
   },
   {
     "id": "u_continue",
-    "conceptId": "continue",
+    "conceptId": "lang:continue",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -626,7 +626,7 @@
   },
   {
     "id": "u_func_def",
-    "conceptId": "func_def",
+    "conceptId": "lang:func_def",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -720,7 +720,7 @@
   },
   {
     "id": "u_func_call",
-    "conceptId": "func_call",
+    "conceptId": "lang:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -761,7 +761,7 @@
   },
   {
     "id": "u_func_call_expr",
-    "conceptId": "func_call",
+    "conceptId": "lang:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -789,7 +789,7 @@
   },
   {
     "id": "u_return",
-    "conceptId": "return",
+    "conceptId": "lang:return",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -816,7 +816,7 @@
   },
   {
     "id": "u_print",
-    "conceptId": "print",
+    "conceptId": "lang:print",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
@@ -843,7 +843,7 @@
   },
   {
     "id": "u_endl",
-    "conceptId": "endl",
+    "conceptId": "lang:endl",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
@@ -857,7 +857,7 @@
   },
   {
     "id": "u_input",
-    "conceptId": "input",
+    "conceptId": "lang:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
@@ -891,7 +891,7 @@
           "modes": {
             "select": {
               "field": "args[{i}].text",
-              "wrap": "var_ref"
+              "wrap": "lang:var_ref"
             },
             "compose": {
               "input": "ARG_{i}"
@@ -903,7 +903,7 @@
   },
   {
     "id": "u_input_expr",
-    "conceptId": "input",
+    "conceptId": "lang:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
@@ -922,7 +922,7 @@
           "modes": {
             "select": {
               "field": "args[{i}].text",
-              "wrap": "var_ref"
+              "wrap": "lang:var_ref"
             },
             "compose": {
               "input": "ARG_{i}"
@@ -938,7 +938,7 @@
   },
   {
     "id": "u_array_declare",
-    "conceptId": "array_declare",
+    "conceptId": "lang:array_declare",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
@@ -1001,7 +1001,7 @@
   },
   {
     "id": "u_array_access",
-    "conceptId": "array_access",
+    "conceptId": "lang:array_access",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
@@ -1041,7 +1041,7 @@
   },
   {
     "id": "u_array_assign",
-    "conceptId": "array_assign",
+    "conceptId": "lang:array_assign",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",

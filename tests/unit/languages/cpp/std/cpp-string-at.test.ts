@@ -17,7 +17,7 @@ const style: StylePreset = {
 }
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'program', properties: {}, children: { body } }
+  return { id: 'root', conceptId: 'lang:program', properties: {}, children: { body } }
 }
 
 beforeAll(() => {
@@ -26,14 +26,14 @@ beforeAll(() => {
 
 describe('cpp:string_at', () => {
   it('should generate str[i] expression', () => {
-    const idx = createNode('number_literal', { value: '0' })
+    const idx = createNode('lang:number_literal', { value: '0' })
     const node = createNode('cpp:string_at', { obj: 'str' }, { index: [idx] })
     const code = generateCode(makeProgram(node), 'cpp', style)
     expect(code).toContain('str[0]')
   })
 
   it('should generate str[i] with variable index', () => {
-    const idx = createNode('var_ref', { name: 'i' })
+    const idx = createNode('lang:var_ref', { name: 'i' })
     const node = createNode('cpp:string_at', { obj: 'msg' }, { index: [idx] })
     const code = generateCode(makeProgram(node), 'cpp', style)
     expect(code).toContain('msg[i]')
@@ -60,15 +60,15 @@ int main() {
   })
 
   it('round-trip: cpp_string_at node generates compilable code', () => {
-    const idx = createNode('number_literal', { value: '2' })
+    const idx = createNode('lang:number_literal', { value: '2' })
     const strDecl = createNode('cpp:string_declare', { name: 'word' }, {
-      initializer: [createNode('string_literal', { value: 'hello' })]
+      initializer: [createNode('lang:string_literal', { value: 'hello' })]
     })
     const access = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
-    const printNode = createNode('print', {}, {
+    const printNode = createNode('lang:print', {}, {
       values: [access]
     })
-    const main = createNode('func_def', { name: 'main', return_type: 'int', params: '' }, {
+    const main = createNode('lang:func_def', { name: 'main', return_type: 'int', params: '' }, {
       body: [strDecl, printNode]
     })
     const prog = makeProgram(main)

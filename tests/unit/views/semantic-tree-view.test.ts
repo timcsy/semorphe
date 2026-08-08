@@ -8,18 +8,18 @@ describe('SemanticTreeView', () => {
   it('should render a tree with concept names and properties', () => {
     const tree: SemanticNode = {
       id: 'root',
-      conceptId: 'program',
+      conceptId: 'lang:program',
       properties: {},
       children: {
         body: [
           {
             id: 'n1',
-            conceptId: 'var_declare',
+            conceptId: 'lang:var_declare',
             properties: { type: 'int', name: 'x' },
             children: {
               init: [{
                 id: 'n2',
-                conceptId: 'number_literal',
+                conceptId: 'lang:number_literal',
                 properties: { value: '5' },
                 children: {},
               }],
@@ -27,12 +27,12 @@ describe('SemanticTreeView', () => {
           },
           {
             id: 'n3',
-            conceptId: 'print',
+            conceptId: 'lang:print',
             properties: {},
             children: {
               values: [{
                 id: 'n4',
-                conceptId: 'var_ref',
+                conceptId: 'lang:var_ref',
                 properties: { name: 'x' },
                 children: {},
               }],
@@ -45,11 +45,11 @@ describe('SemanticTreeView', () => {
     const view = new SemanticTreeView()
     const html = view.render(tree)
 
-    expect(html).toContain('program')
-    expect(html).toContain('var_declare')
-    expect(html).toContain('print')
-    expect(html).toContain('number_literal')
-    expect(html).toContain('var_ref')
+    expect(html).toContain('lang:program')
+    expect(html).toContain('lang:var_declare')
+    expect(html).toContain('lang:print')
+    expect(html).toContain('lang:number_literal')
+    expect(html).toContain('lang:var_ref')
     expect(html).toContain('int')
     expect(html).toContain('x')
   })
@@ -57,14 +57,14 @@ describe('SemanticTreeView', () => {
   it('should handle empty tree without error', () => {
     const emptyTree: SemanticNode = {
       id: 'root',
-      conceptId: 'program',
+      conceptId: 'lang:program',
       properties: {},
       children: {},
     }
 
     const view = new SemanticTreeView()
     const html = view.render(emptyTree)
-    expect(html).toContain('program')
+    expect(html).toContain('lang:program')
   })
 
   it('semantic-tree-view.ts should not import blockly (static analysis)', () => {

@@ -62,7 +62,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
           value: value ? [value] : [],
         })
       }
-      return createNode('array_assign', { name }, {
+      return createNode('lang:array_assign', { name }, {
         index: index ? [index] : [],
         value: value ? [value] : [],
       })
@@ -82,7 +82,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
 
     // Simple variable assignment: x = value
     const name = left?.text ?? 'x'
-    return createNode('var_assign', { name }, {
+    return createNode('lang:var_assign', { name }, {
       value: value ? [value] : [],
     })
   })

@@ -42,8 +42,8 @@ describe('變數型別宣告：語言套件推、核心讀', () => {
   })
 
   it('★ 沒宣告的概念不得被誤認——「什麼都回報」也能通過上面兩支', () => {
-    expect(variableTypeOf('var_declare')).toBeUndefined()
-    expect(conceptsDeclaringVariableType('string')).not.toContain('var_declare')
+    expect(variableTypeOf('lang:var_declare')).toBeUndefined()
+    expect(conceptsDeclaringVariableType('string')).not.toContain('lang:var_declare')
     expect(conceptsDeclaringVariableType('__no_such_type__')).toEqual([])
   })
 

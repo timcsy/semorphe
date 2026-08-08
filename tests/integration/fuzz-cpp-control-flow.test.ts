@@ -626,7 +626,7 @@ describe.skip('[BLOCKED:cpp:char_literal] fuzz: char literals in switch cases (C
   // correctly lifted by the switch-case lifter
 })
 
-describe.skip('[BLOCKED:array_declare] fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {
+describe.skip('[BLOCKED:lang:array_declare] fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {
   // SEMANTIC_DIFF: array initializer lists like int arr[] = {1, 2, 3}
   // are not yet supported in the semantic tree
 })

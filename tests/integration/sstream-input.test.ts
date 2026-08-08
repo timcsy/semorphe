@@ -88,15 +88,15 @@ describe('負向：`>>` 在非串流變數上仍是位元位移', () => {
 
   it('位移的概念身分是 arithmetic，不是 input', () => {
     const tree = lift('int num = 8; int r = num >> 1; cout << r;')
-    const inputs = collect(tree, (n) => n.conceptId === 'input')
+    const inputs = collect(tree, (n) => n.conceptId === 'lang:input')
     expect(inputs).toHaveLength(0)
-    const shifts = collect(tree, (n) => n.conceptId === 'arithmetic' && n.properties?.operator === '>>')
+    const shifts = collect(tree, (n) => n.conceptId === 'lang:arithmetic' && n.properties?.operator === '>>')
     expect(shifts).toHaveLength(1)
   })
 
   it('cin 讀取不帶 from（cin 是標準輸入，不是具名串流）', () => {
     const tree = lift('int x; cin >> x; cout << x;')
-    const inputs = collect(tree, (n) => n.conceptId === 'input')
+    const inputs = collect(tree, (n) => n.conceptId === 'lang:input')
     expect(inputs).toHaveLength(1)
     expect(inputs[0].properties?.from).toBeUndefined()
   })
@@ -105,7 +105,7 @@ describe('負向：`>>` 在非串流變數上仍是位元位移', () => {
 describe('概念身分與五路', () => {
   it('串流讀取升成 input，且記得來源與全部目標', () => {
     const tree = lift('istringstream in("10 20 30"); int a; int b; int c; in >> a >> b >> c;')
-    const inputs = collect(tree, (n) => n.conceptId === 'input')
+    const inputs = collect(tree, (n) => n.conceptId === 'lang:input')
     expect(inputs).toHaveLength(1)
     expect(inputs[0].properties?.from).toBe('in')
     // 只收到第一個目標曾經是實際的缺陷（走訪停太早），這條釘住它

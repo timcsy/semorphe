@@ -8,18 +8,18 @@ const resolver = createPopulatedRegistry()
 const scaffold = new CppScaffold(resolver)
 
 function makeProgram(body: ReturnType<typeof createNode>[]) {
-  return createNode('program', {}, { body })
+  return createNode('lang:program', {}, { body })
 }
 
 function coutTree() {
   return makeProgram([
-    createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
+    createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
   ])
 }
 
 function coutVectorTree() {
   return makeProgram([
-    createNode('print', {}, { values: [createNode('var_ref', { name: 'x' })] }),
+    createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
     createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
   ])
 }
@@ -106,7 +106,7 @@ describe('CppScaffold', () => {
 
     it('should exclude C-style equivalent headers (stdio.h ≡ cstdio)', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('var_ref', { name: 'x' })] }),
+        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('lang:var_ref', { name: 'x' })] }),
       ])
       const result = scaffold.resolve(tree, {
         scaffoldDepth: 1,

@@ -13,7 +13,7 @@ export function resetIdCounter(): void {
 export function createEmptyProgram(): SemanticNode {
   return {
     id: generateId(),
-    conceptId: 'program',
+    conceptId: 'lang:program',
     properties: {},
     children: { body: [] },
   }

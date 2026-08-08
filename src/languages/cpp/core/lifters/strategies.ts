@@ -105,14 +105,14 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const sizeNode = decl.namedChildren[1]
     // Lift size as a child expression node for proper rendering
     const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
-    return createNode('array_declare', { type, name }, {
+    return createNode('lang:array_declare', { type, name }, {
       size: sizeChild ? [sizeChild] : [],
     })
   }
 
   // Plain identifier: int x
   if (decl.type === 'identifier') {
-    return createNode('var_declare', { name: decl.text, type })
+    return createNode('lang:var_declare', { name: decl.text, type })
   }
 
   // Bare pointer declarator without init: int* ptr;
@@ -126,7 +126,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       const sizeNode = inner.namedChildren[1]
       const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return createNode('array_declare', { type: `${type}*`, name: arrName }, {
+      return createNode('lang:array_declare', { type: `${type}*`, name: arrName }, {
         size: sizeChild ? [sizeChild] : [],
       })
     }
@@ -171,7 +171,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       const sizeNode = inner.namedChildren[1]
       const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      const arrNode = createNode('array_declare', { type: `${type}*`, name: arrName }, {
+      const arrNode = createNode('lang:array_declare', { type: `${type}*`, name: arrName }, {
         size: sizeChild ? [sizeChild] : [],
       })
       return attachInitializer(arrNode, decl.childForFieldName('value'), ctx)
@@ -193,7 +193,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const arrName = nameNode.namedChildren[0]?.text ?? 'arr'
     const sizeNode = nameNode.namedChildren[1]
     const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
-    const node = createNode('array_declare', { type, name: arrName }, {
+    const node = createNode('lang:array_declare', { type, name: arrName }, {
       size: sizeChild ? [sizeChild] : [],
     })
     return attachInitializer(node, decl.childForFieldName('value'), ctx)
@@ -215,17 +215,17 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
           source: args.length > 0 ? [args[0]] : [],
         })
       }
-      return createNode('var_declare', { name, type, init_style: 'constructor' }, {
+      return createNode('lang:var_declare', { name, type, init_style: 'constructor' }, {
         initializer: args,
       })
     }
     const value = ctx.lift(valueNode)
-    return createNode('var_declare', { name, type }, {
+    return createNode('lang:var_declare', { name, type }, {
       initializer: value ? [value] : [],
     })
   }
 
-  return createNode('var_declare', { name, type })
+  return createNode('lang:var_declare', { name, type })
 }
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
@@ -333,7 +333,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
     ).filter(c => c !== typeNode) // exclude the type node itself
     if (declarators.length > 1) {
       // Multi-variable: create individual var_declare nodes wrapped in a container
-      const nodes = declarators.map(d => createNode('var_declare', { type, name: d.text }))
+      const nodes = declarators.map(d => createNode('lang:var_declare', { type, name: d.text }))
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
       // collects all children. Return a compound node that generateBody will flatten.
@@ -341,7 +341,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
     }
     const declNode = node.childForFieldName('declarator')
     const name = declNode?.text ?? 'x'
-    return createNode('var_declare', { type, name })
+    return createNode('lang:var_declare', { type, name })
   }
 
   // Fallback: try generic lift
@@ -472,7 +472,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
   // doc comment: /** ... */ → doc_comment with structured properties
   registry.register('cpp:liftDocComment', (node) => {
     const props = parseDocComment(node.text)
-    return createNode('doc_comment', props)
+    return createNode('lang:doc_comment', props)
   })
 
   // preproc_include: system vs local include distinction
@@ -534,7 +534,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
 
     const body = extractBody(bodyNode, ctx)
-    return createNode('func_def', { name, return_type: returnType }, { params: paramChildren, body })
+    return createNode('lang:func_def', { name, return_type: returnType }, { params: paramChildren, body })
   })
 
   // type_definition: typedef int myint; → cpp_typedef
@@ -834,7 +834,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           }
         }
       }
-      return createNode('forward_decl', {
+      return createNode('lang:forward_decl', {
         return_type: type,
         name: nameNode?.text ?? 'f',
       }, { params: paramChildren })
@@ -846,14 +846,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
 
     if (declarators.length === 0) {
-      return createNode('var_declare', { name: 'x', type })
+      return createNode('lang:var_declare', { name: 'x', type })
     }
 
     const liftedNodes = declarators.map(decl => liftSingleDeclarator(decl, type, ctx))
 
     if (liftedNodes.length === 1) return liftedNodes[0]
 
-    return createNode('var_declare', { type }, { declarators: liftedNodes })
+    return createNode('lang:var_declare', { type }, { declarators: liftedNodes })
   })
 
   // try_statement: try { } catch (type name) { }
@@ -908,7 +908,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       for (const p of paramList.namedChildren) {
         if (p.type === 'parameter_declaration') {
           const { type, name } = parseParamDeclaration(p)
-          params.push(createNode('var_declare', { type, name }))
+          params.push(createNode('lang:var_declare', { type, name }))
         }
       }
     }
@@ -996,7 +996,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const to = toNode ? ctx.lift(toNode) : null
     const body = extractBody(bodyNode, ctx)
 
-    return createNode('count_loop', { var_name: varName, inclusive }, {
+    return createNode('lang:count_loop', { var_name: varName, inclusive }, {
       from: from ? [from] : [],
       to: to ? [to] : [],
       body,

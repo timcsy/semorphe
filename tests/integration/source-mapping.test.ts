@@ -22,7 +22,7 @@ beforeAll(() => {
 function makeProgram(...body: ReturnType<typeof createNode>[]) {
   return {
     id: 'root',
-    conceptId: 'program',
+    conceptId: 'lang:program',
     properties: {},
     children: { body },
     metadata: {},
@@ -31,12 +31,12 @@ function makeProgram(...body: ReturnType<typeof createNode>[]) {
 
 describe('CodeMapping integration (nodeId-based)', () => {
   it('should produce mappings using nodeId for nodes with id', () => {
-    const decl = createNode('var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('number_literal', { value: '5' })],
+    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('lang:number_literal', { value: '5' })],
     })
 
-    const print = createNode('print', {}, {
-      values: [createNode('var_ref', { name: 'x' })],
+    const print = createNode('lang:print', {}, {
+      values: [createNode('lang:var_ref', { name: 'x' })],
     })
 
     const tree = makeProgram(decl, print)
@@ -58,8 +58,8 @@ describe('CodeMapping integration (nodeId-based)', () => {
   it('should produce mappings for all nodes with id (no blockId dependency)', () => {
     // This is the key US1 test: nodes created by createNode have id automatically,
     // so mappings are produced WITHOUT needing metadata.blockId
-    const decl = createNode('var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('number_literal', { value: '1' })],
+    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('lang:number_literal', { value: '1' })],
     })
     const tree = makeProgram(decl)
     const { mappings } = generateCodeWithMapping(tree, 'cpp', style)
@@ -69,16 +69,16 @@ describe('CodeMapping integration (nodeId-based)', () => {
   })
 
   it('should handle nested structures with nodeId', () => {
-    const cond = createNode('compare', { operator: '>' }, {
-      left: [createNode('var_ref', { name: 'x' })],
-      right: [createNode('number_literal', { value: '0' })],
+    const cond = createNode('lang:compare', { operator: '>' }, {
+      left: [createNode('lang:var_ref', { name: 'x' })],
+      right: [createNode('lang:number_literal', { value: '0' })],
     })
 
-    const print = createNode('print', {}, {
-      values: [createNode('string_literal', { value: 'positive' })],
+    const print = createNode('lang:print', {}, {
+      values: [createNode('lang:string_literal', { value: 'positive' })],
     })
 
-    const ifNode = createNode('if', {}, {
+    const ifNode = createNode('lang:if', {}, {
       condition: [cond],
       then_body: [print],
       else_body: [],
@@ -97,8 +97,8 @@ describe('CodeMapping integration (nodeId-based)', () => {
 
   it('should produce CodeMapping from lifted tree without Blockly rendering (FR-005)', () => {
     // Simulates a lifted tree — nodes have id from createNode(), no metadata.blockId
-    const print = createNode('print', {}, {
-      values: [createNode('string_literal', { value: 'Hello' })],
+    const print = createNode('lang:print', {}, {
+      values: [createNode('lang:string_literal', { value: 'Hello' })],
     })
     const tree = makeProgram(print)
     const { code, mappings } = generateCodeWithMapping(tree, 'cpp', style)
@@ -113,11 +113,11 @@ describe('CodeMapping integration (nodeId-based)', () => {
 describe('Round-trip node identity (US3)', () => {
   it('should produce valid nodeIds in CodeMapping after round-trip (best-effort)', () => {
     // Create tree → generate code → verify codeMappings have valid nodeIds
-    const decl = createNode('var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('number_literal', { value: '5' })],
+    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('lang:number_literal', { value: '5' })],
     })
-    const print = createNode('print', {}, {
-      values: [createNode('var_ref', { name: 'x' })],
+    const print = createNode('lang:print', {}, {
+      values: [createNode('lang:var_ref', { name: 'x' })],
     })
 
     const tree = makeProgram(decl, print)
@@ -133,7 +133,7 @@ describe('Round-trip node identity (US3)', () => {
   })
 
   it('all createNode-produced nodes should have id (prerequisite for identity)', () => {
-    const node = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+    const node = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
     expect(node.id).toBeTruthy()
     expect(typeof node.id).toBe('string')
     expect(node.id.startsWith('node_')).toBe(true)

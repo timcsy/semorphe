@@ -32,7 +32,7 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
       // 核心**不編一個假概念來分派**：第一版那樣做，而孤兒實作護欄當場抓到
       // 「一個沒有任何概念定義的執行器」。改成呼叫登記處的掛勾，怎麼跑由
       // 語言套件安裝。
-      const isCtor = arg0.conceptId === 'func_call'
+      const isCtor = arg0.conceptId === 'lang:func_call'
         && String(arg0.properties?.name) === type
       ctx.scope.declare(
         name,
@@ -90,9 +90,9 @@ export function setMember(obj: RuntimeValue | undefined, member: string, val: Ru
 
 export function registerVariableExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
 
-  register('var_declare', execVarDeclare)
+  register('lang:var_declare', execVarDeclare)
 
-  register('var_assign', async (node, ctx) => {
+  register('lang:var_assign', async (node, ctx) => {
     const name = String(node.properties.name)
     const valueNodes = node.children.value
     if (!valueNodes || valueNodes.length === 0) return
@@ -128,7 +128,7 @@ export function registerVariableExecutors(register: (concept: string, executor: 
     return val
   })
 
-  register('var_ref', async (node, ctx) => {
+  register('lang:var_ref', async (node, ctx) => {
     const name = String(node.properties.name)
     return ctx.scope.get(name)
   })

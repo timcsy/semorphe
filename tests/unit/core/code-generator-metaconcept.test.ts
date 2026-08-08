@@ -42,9 +42,9 @@ describe('meta-concept generators', () => {
     registerMetaConceptGenerators(map)
     expect(map.has('raw_code')).toBe(true)
     expect(map.has('unresolved')).toBe(true)
-    expect(map.has('comment')).toBe(true)
-    expect(map.has('doc_comment')).toBe(true)
-    expect(map.has('block_comment')).toBe(true)
+    expect(map.has('lang:comment')).toBe(true)
+    expect(map.has('lang:doc_comment')).toBe(true)
+    expect(map.has('lang:block_comment')).toBe(true)
   })
 
   it('raw_code generator produces correct output', () => {
@@ -71,14 +71,14 @@ describe('meta-concept generators', () => {
 
   it('comment generator produces // comment', () => {
     const ctx = makeCtx()
-    const node = makeNode('comment', { text: 'hello world' })
+    const node = makeNode('lang:comment', { text: 'hello world' })
     const result = generateNode(node, ctx)
     expect(result).toBe('// hello world\n')
   })
 
   it('doc_comment generator produces /** ... */', () => {
     const ctx = makeCtx()
-    const node = makeNode('doc_comment', { brief: 'A function' })
+    const node = makeNode('lang:doc_comment', { brief: 'A function' })
     const result = generateNode(node, ctx)
     expect(result).toContain('/**')
     expect(result).toContain('@brief A function')
@@ -87,7 +87,7 @@ describe('meta-concept generators', () => {
 
   it('doc_comment with params and return', () => {
     const ctx = makeCtx()
-    const node = makeNode('doc_comment', {
+    const node = makeNode('lang:doc_comment', {
       brief: 'Add two numbers',
       param_0_name: 'a',
       param_0_desc: 'first number',
@@ -102,14 +102,14 @@ describe('meta-concept generators', () => {
 
   it('block_comment single line', () => {
     const ctx = makeCtx()
-    const node = makeNode('block_comment', { text: 'single line' })
+    const node = makeNode('lang:block_comment', { text: 'single line' })
     const result = generateNode(node, ctx)
     expect(result).toBe('/* single line */\n')
   })
 
   it('block_comment multi-line', () => {
     const ctx = makeCtx()
-    const node = makeNode('block_comment', { text: 'line1\nline2' })
+    const node = makeNode('lang:block_comment', { text: 'line1\nline2' })
     const result = generateNode(node, ctx)
     expect(result).toContain('/*')
     expect(result).toContain(' * line1')

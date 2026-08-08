@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp:stringstream_declare",
     "layer": "lang-library",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "name",
@@ -21,7 +21,7 @@
   {
     "conceptId": "cpp:istringstream_declare",
     "layer": "lang-library",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "name",

@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "program",
+    "conceptId": "lang:program",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -18,7 +18,7 @@
     }
   },
   {
-    "conceptId": "var_declare",
+    "conceptId": "lang:var_declare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -52,7 +52,7 @@
     }
   },
   {
-    "conceptId": "var_assign",
+    "conceptId": "lang:var_assign",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -71,7 +71,7 @@
     }
   },
   {
-    "conceptId": "var_ref",
+    "conceptId": "lang:var_ref",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -85,7 +85,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "number_literal",
+    "conceptId": "lang:number_literal",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -99,7 +99,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "string_literal",
+    "conceptId": "lang:string_literal",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -113,7 +113,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "arithmetic",
+    "conceptId": "lang:arithmetic",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -142,7 +142,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "compare",
+    "conceptId": "lang:compare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -167,7 +167,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "logic",
+    "conceptId": "lang:logic",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -188,7 +188,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "logic_not",
+    "conceptId": "lang:logic_not",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -198,7 +198,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "negate",
+    "conceptId": "lang:negate",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -208,7 +208,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "if",
+    "conceptId": "lang:if",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -224,7 +224,7 @@
     }
   },
   {
-    "conceptId": "if_else",
+    "conceptId": "lang:if_else",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -247,7 +247,7 @@
     }
   },
   {
-    "conceptId": "count_loop",
+    "conceptId": "lang:count_loop",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -278,7 +278,7 @@
     }
   },
   {
-    "conceptId": "while_loop",
+    "conceptId": "lang:while_loop",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -292,7 +292,7 @@
     }
   },
   {
-    "conceptId": "break",
+    "conceptId": "lang:break",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -303,7 +303,7 @@
     }
   },
   {
-    "conceptId": "continue",
+    "conceptId": "lang:continue",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -314,7 +314,7 @@
     }
   },
   {
-    "conceptId": "func_def",
+    "conceptId": "lang:func_def",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -354,7 +354,7 @@
     }
   },
   {
-    "conceptId": "func_call",
+    "conceptId": "lang:func_call",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -375,7 +375,7 @@
     }
   },
   {
-    "conceptId": "return",
+    "conceptId": "lang:return",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -388,7 +388,7 @@
     }
   },
   {
-    "conceptId": "print",
+    "conceptId": "lang:print",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -401,7 +401,7 @@
     }
   },
   {
-    "conceptId": "endl",
+    "conceptId": "lang:endl",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -409,7 +409,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "input",
+    "conceptId": "lang:input",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -425,7 +425,7 @@
     }
   },
   {
-    "conceptId": "array_declare",
+    "conceptId": "lang:array_declare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -456,7 +456,7 @@
     }
   },
   {
-    "conceptId": "array_access",
+    "conceptId": "lang:array_access",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -472,7 +472,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "array_assign",
+    "conceptId": "lang:array_assign",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -492,7 +492,7 @@
     }
   },
   {
-    "conceptId": "comment",
+    "conceptId": "lang:comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -512,7 +512,7 @@
     }
   },
   {
-    "conceptId": "doc_comment",
+    "conceptId": "lang:doc_comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -532,7 +532,7 @@
     }
   },
   {
-    "conceptId": "block_comment",
+    "conceptId": "lang:block_comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [

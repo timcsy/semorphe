@@ -92,7 +92,7 @@ const cppPrintfRule: StyleExceptionRule = {
     // Convert cpp_printf to universal print
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [createNode('print', {}, { values })]
+    return [createNode('lang:print', {}, { values })]
   },
 }
 
@@ -105,25 +105,25 @@ const cppScanfRule: StyleExceptionRule = {
   convert: (node) => {
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [createNode('input', {}, { values })]
+    return [createNode('lang:input', {}, { values })]
   },
 }
 
 /** print block (cout-origin) in cstdio-preferred styles */
 const printToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'print' && style.ioPreference === 'cstdio',
+    node.conceptId === 'lang:print' && style.ioPreference === 'cstdio',
   label: () => 'cout << ...',
   suggestion: () => 'printf(...)',
   convert: (node) => {
     const values = node.children.values ?? []
-    const hasEndl = values.some(v => v.conceptId === 'endl')
+    const hasEndl = values.some(v => v.conceptId === 'lang:endl')
     // Build format string: embed string_literal values directly, use %d for expressions
     const formatParts: string[] = []
     const args: typeof values = []
     for (const v of values) {
-      if (v.conceptId === 'endl') continue
-      if (v.conceptId === 'string_literal') {
+      if (v.conceptId === 'lang:endl') continue
+      if (v.conceptId === 'lang:string_literal') {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''
         formatParts.push(text)
@@ -140,7 +140,7 @@ const printToCstdioRule: StyleExceptionRule = {
 /** input block (cin-origin) in cstdio-preferred styles */
 const inputToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'input' && style.ioPreference === 'cstdio',
+    node.conceptId === 'lang:input' && style.ioPreference === 'cstdio',
   label: () => 'cin >> ...',
   suggestion: () => 'scanf(...)',
   convert: (node) => {

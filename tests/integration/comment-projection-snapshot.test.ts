@@ -29,7 +29,7 @@ const node = (concept: string, properties: Record<string, unknown> = {}): Semant
   ({ conceptId: concept, properties, children: {} }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode =>
-  ({ conceptId: 'program', properties: {}, children: { body } }) as unknown as SemanticNode
+  ({ conceptId: 'lang:program', properties: {}, children: { body } }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()
@@ -39,15 +39,15 @@ const gen = (n: SemanticNode): string => generateCode(prog(n), 'cpp', 'apcs' as 
 
 describe('註解的產出——搬移前後一字不差', () => {
   it('單行註解', () => {
-    expect(gen(node('comment', { text: '這是一行註解' }))).toContain('// 這是一行註解')
+    expect(gen(node('lang:comment', { text: '這是一行註解' }))).toContain('// 這是一行註解')
   })
 
   it('區塊註解：單行', () => {
-    expect(gen(node('block_comment', { text: '一行' }))).toContain('/* 一行 */')
+    expect(gen(node('lang:block_comment', { text: '一行' }))).toContain('/* 一行 */')
   })
 
   it('區塊註解：多行', () => {
-    const out = gen(node('block_comment', { text: '第一行\n第二行' }))
+    const out = gen(node('lang:block_comment', { text: '第一行\n第二行' }))
     expect(out).toContain('/*')
     expect(out).toContain('* 第一行')
     expect(out).toContain('* 第二行')
@@ -55,7 +55,7 @@ describe('註解的產出——搬移前後一字不差', () => {
   })
 
   it('文件註解：只有 brief', () => {
-    const out = gen(node('doc_comment', { brief: '做一件事' }))
+    const out = gen(node('lang:doc_comment', { brief: '做一件事' }))
     expect(out).toContain('/**')
     expect(out).toContain('* @brief 做一件事')
     expect(out).toContain('*/')
@@ -63,14 +63,14 @@ describe('註解的產出——搬移前後一字不差', () => {
 
   it('文件註解：brief 多行且無標籤 → 不加 @brief', () => {
     // 這是最容易在搬移中掉掉的分支
-    const out = gen(node('doc_comment', { brief: '第一行\n第二行' }))
+    const out = gen(node('lang:doc_comment', { brief: '第一行\n第二行' }))
     expect(out).toContain('* 第一行')
     expect(out).toContain('* 第二行')
     expect(out, 'brief 多行且沒有其他標籤時不該加 @brief——這個分支最容易掉').not.toContain('@brief')
   })
 
   it('文件註解：brief 多行且有標籤 → 第一行加 @brief', () => {
-    const out = gen(node('doc_comment', { brief: '第一行\n第二行', param_0_name: 'x' }))
+    const out = gen(node('lang:doc_comment', { brief: '第一行\n第二行', param_0_name: 'x' }))
     expect(out).toContain('* @brief 第一行')
     expect(out).toContain('* 第二行')
     expect(out).toContain('* @param x')
@@ -78,14 +78,14 @@ describe('註解的產出——搬移前後一字不差', () => {
 
   it('文件註解：param 有描述與無描述', () => {
     const out = gen(
-      node('doc_comment', { brief: 'f', param_0_name: 'a', param_0_desc: '第一個', param_1_name: 'b' }),
+      node('lang:doc_comment', { brief: 'f', param_0_name: 'a', param_0_desc: '第一個', param_1_name: 'b' }),
     )
     expect(out).toContain('* @param a 第一個')
     expect(out).toContain('* @param b\n')
   })
 
   it('文件註解：return', () => {
-    expect(gen(node('doc_comment', { brief: 'f', return_desc: '總和' }))).toContain('* @return 總和')
+    expect(gen(node('lang:doc_comment', { brief: 'f', return_desc: '總和' }))).toContain('* @return 總和')
   })
 })
 
@@ -132,7 +132,7 @@ describe('沒有語言套件時的行為必須明確（FR-014）', () => {
     // 包起來的話這支測試根本走不到註解那條路，會變成一支「通過卻什麼都沒測到」
     // 的測試（本專案有這個教訓的既有實例）。
     resetCommentSyntax()
-    const out = generateCode(node('comment', { text: '不該消失' }), '__no_such_language__', 'apcs' as never)
+    const out = generateCode(node('lang:comment', { text: '不該消失' }), '__no_such_language__', 'apcs' as never)
     expect(
       out,
       '註解在沒有語言套件時無聲產出了空字串。使用者不會收到任何訊號，' +

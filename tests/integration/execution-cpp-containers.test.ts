@@ -19,24 +19,24 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 registerCppLanguage()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('program', {}, { body })
+  return createNode('lang:program', {}, { body })
 }
 
 function num(v: number) {
-  return createNode('number_literal', { value: String(v) }, {})
+  return createNode('lang:number_literal', { value: String(v) }, {})
 }
 
 function varRef(name: string) {
-  return createNode('var_ref', { name }, {})
+  return createNode('lang:var_ref', { name }, {})
 }
 
 function printNode(expr: SemanticNode) {
-  return createNode('print', {}, { values: [expr] })
+  return createNode('lang:print', {}, { values: [expr] })
 }
 
 function printLine(expr: SemanticNode) {
-  return createNode('print', {}, {
-    values: [expr, createNode('string_literal', { value: '\n' }, {})],
+  return createNode('lang:print', {}, {
+    values: [expr, createNode('lang:string_literal', { value: '\n' }, {})],
   })
 }
 
@@ -93,8 +93,8 @@ describe('Stack execution (LIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(30)] }),
-      createNode('while_loop', {}, {
-        condition: [createNode('logic_not', {}, {
+      createNode('lang:while_loop', {}, {
+        condition: [createNode('lang:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
         body: [
@@ -155,8 +155,8 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(30)] }),
-      createNode('while_loop', {}, {
-        condition: [createNode('logic_not', {}, {
+      createNode('lang:while_loop', {}, {
+        condition: [createNode('lang:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 'q' }, {})],
         })],
         body: [
@@ -175,8 +175,8 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(3)] }),
-      createNode('while_loop', {}, {
-        condition: [createNode('logic_not', {}, {
+      createNode('lang:while_loop', {}, {
+        condition: [createNode('lang:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
         body: [
@@ -191,8 +191,8 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(3)] }),
-      createNode('while_loop', {}, {
-        condition: [createNode('logic_not', {}, {
+      createNode('lang:while_loop', {}, {
+        condition: [createNode('lang:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 'q' }, {})],
         })],
         body: [

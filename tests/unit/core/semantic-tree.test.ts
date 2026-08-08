@@ -15,7 +15,7 @@ describe('SemanticTree', () => {
   describe('createEmptyProgram', () => {
     it('should create a program node with empty body', () => {
       const tree = createEmptyProgram()
-      expect(tree.conceptId).toBe('program')
+      expect(tree.conceptId).toBe('lang:program')
       expect(tree.children.body).toEqual([])
       expect(tree.id).toBeTruthy()
     })
@@ -23,36 +23,36 @@ describe('SemanticTree', () => {
 
   describe('createNode', () => {
     it('should create a node with given concept and properties', () => {
-      const node = createNode('var_declare', { name: 'x', type: 'int' })
-      expect(node.conceptId).toBe('var_declare')
+      const node = createNode('lang:var_declare', { name: 'x', type: 'int' })
+      expect(node.conceptId).toBe('lang:var_declare')
       expect(node.properties.name).toBe('x')
       expect(node.properties.type).toBe('int')
       expect(node.id).toBeTruthy()
     })
 
     it('should create a node with children', () => {
-      const value = createNode('number_literal', { value: '5' })
-      const node = createNode('var_declare', { name: 'x' }, { initializer: [value] })
+      const value = createNode('lang:number_literal', { value: '5' })
+      const node = createNode('lang:var_declare', { name: 'x' }, { initializer: [value] })
       expect(node.children.initializer).toHaveLength(1)
-      expect(node.children.initializer[0].conceptId).toBe('number_literal')
+      expect(node.children.initializer[0].conceptId).toBe('lang:number_literal')
     })
   })
 
   describe('addChild', () => {
     it('should return a new tree with the child added', () => {
       const tree = createEmptyProgram()
-      const child = createNode('var_declare', { name: 'x' })
+      const child = createNode('lang:var_declare', { name: 'x' })
       const newTree = addChild(tree, tree.id, 'body', child)
       expect(newTree.children.body).toHaveLength(1)
-      expect(newTree.children.body[0].conceptId).toBe('var_declare')
+      expect(newTree.children.body[0].conceptId).toBe('lang:var_declare')
       // original tree is unchanged (immutable)
       expect(tree.children.body).toHaveLength(0)
     })
 
     it('should append to existing children', () => {
       const tree = createEmptyProgram()
-      const child1 = createNode('var_declare', { name: 'x' })
-      const child2 = createNode('var_declare', { name: 'y' })
+      const child1 = createNode('lang:var_declare', { name: 'x' })
+      const child2 = createNode('lang:var_declare', { name: 'y' })
       const t1 = addChild(tree, tree.id, 'body', child1)
       const t2 = addChild(t1, t1.id, 'body', child2)
       expect(t2.children.body).toHaveLength(2)
@@ -62,7 +62,7 @@ describe('SemanticTree', () => {
   describe('removeChild', () => {
     it('should return a new tree with the child removed', () => {
       const tree = createEmptyProgram()
-      const child = createNode('var_declare', { name: 'x' })
+      const child = createNode('lang:var_declare', { name: 'x' })
       const withChild = addChild(tree, tree.id, 'body', child)
       const removed = removeChild(withChild, withChild.id, 'body', 0)
       expect(removed.children.body).toHaveLength(0)
@@ -73,7 +73,7 @@ describe('SemanticTree', () => {
 
   describe('updateProperty', () => {
     it('should return a new tree with updated property', () => {
-      const node = createNode('var_declare', { name: 'x', type: 'int' })
+      const node = createNode('lang:var_declare', { name: 'x', type: 'int' })
       const tree: SemanticNode = {
         ...createEmptyProgram(),
         children: { body: [node] },
@@ -89,15 +89,15 @@ describe('SemanticTree', () => {
 
   describe('findById', () => {
     it('should find a node by id in a nested tree', () => {
-      const inner = createNode('number_literal', { value: '5' })
-      const outer = createNode('var_declare', { name: 'x' }, { initializer: [inner] })
+      const inner = createNode('lang:number_literal', { value: '5' })
+      const outer = createNode('lang:var_declare', { name: 'x' }, { initializer: [inner] })
       const tree: SemanticNode = {
         ...createEmptyProgram(),
         children: { body: [outer] },
       }
       const found = findById(tree, inner.id)
       expect(found).toBeTruthy()
-      expect(found?.conceptId).toBe('number_literal')
+      expect(found?.conceptId).toBe('lang:number_literal')
     })
 
     it('should return null for non-existent id', () => {
@@ -108,8 +108,8 @@ describe('SemanticTree', () => {
 
   describe('serialization', () => {
     it('should round-trip through JSON', () => {
-      const value = createNode('number_literal', { value: '5' })
-      const decl = createNode('var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
+      const value = createNode('lang:number_literal', { value: '5' })
+      const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
       const tree = addChild(createEmptyProgram(), createEmptyProgram().id, 'body', decl)
       // Need to use the actual tree's id
       const program = createEmptyProgram()
@@ -117,14 +117,14 @@ describe('SemanticTree', () => {
 
       const json = serializeTree(withDecl)
       const restored = deserializeTree(json)
-      expect(restored.conceptId).toBe('program')
+      expect(restored.conceptId).toBe('lang:program')
       expect(restored.children.body).toHaveLength(1)
-      expect(restored.children.body[0].conceptId).toBe('var_declare')
+      expect(restored.children.body[0].conceptId).toBe('lang:var_declare')
       expect(restored.children.body[0].properties.name).toBe('x')
     })
 
     it('should preserve annotations and metadata', () => {
-      const node = createNode('var_declare', { name: 'x' })
+      const node = createNode('lang:var_declare', { name: 'x' })
       node.annotations = [{ type: 'comment', text: 'set x', position: 'inline' }]
       node.metadata = { syntaxPreference: 'compound_assign', confidence: 'high' }
       const json = serializeTree(node)

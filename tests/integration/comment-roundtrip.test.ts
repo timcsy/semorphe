@@ -46,7 +46,7 @@ describe('Comment Round-trip (US7)', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body
     expect(body.length).toBeGreaterThanOrEqual(2)
-    const commentNode = body.find(n => n.conceptId === 'comment')
+    const commentNode = body.find(n => n.conceptId === 'lang:comment')
     expect(commentNode).toBeDefined()
     expect(commentNode!.properties.text).toBe('this is a comment')
   })
@@ -77,7 +77,7 @@ describe('Comment Round-trip (US7)', () => {
     const tree = liftCode('// first\n// second\nint x = 5;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body
-    const comments = body.filter(n => n.conceptId === 'comment')
+    const comments = body.filter(n => n.conceptId === 'lang:comment')
     expect(comments.length).toBe(2)
   })
 })
@@ -87,7 +87,7 @@ describe('Block Comment Round-trip', () => {
     const tree = liftCode('/* this is a block comment */\nint x = 5;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body
-    const commentNode = body.find(n => n.conceptId === 'block_comment')
+    const commentNode = body.find(n => n.conceptId === 'lang:block_comment')
     expect(commentNode).toBeDefined()
     expect(commentNode!.properties.text).toBe('this is a block comment')
   })
@@ -96,7 +96,7 @@ describe('Block Comment Round-trip', () => {
     const tree = liftCode('/* line 1\n   line 2\n   line 3 */\nint x = 5;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body
-    const commentNode = body.find(n => n.conceptId === 'block_comment')
+    const commentNode = body.find(n => n.conceptId === 'lang:block_comment')
     expect(commentNode).toBeDefined()
     expect(commentNode!.properties.text).toContain('line 1')
     expect(commentNode!.properties.text).toContain('line 2')
@@ -138,7 +138,7 @@ describe('Doc Comment (JSDoc/Doxygen) Round-trip', () => {
     const tree = liftCode('/** Calculate sum */\nint add(int a, int b) { return a + b; }')
     expect(tree).not.toBeNull()
     const body = tree!.children.body
-    const docNode = body.find(n => n.conceptId === 'doc_comment')
+    const docNode = body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     expect(docNode!.properties.brief).toBe('Calculate sum')
   })
@@ -149,7 +149,7 @@ describe('Doc Comment (JSDoc/Doxygen) Round-trip', () => {
  */
 int add(int a, int b) { return a + b; }`
     const tree = liftCode(code)
-    const docNode = tree!.children.body.find(n => n.conceptId === 'doc_comment')
+    const docNode = tree!.children.body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     expect(docNode!.properties.brief).toBe('Calculate the sum')
   })
@@ -162,7 +162,7 @@ int add(int a, int b) { return a + b; }`
  */
 int add(int a, int b) { return a + b; }`
     const tree = liftCode(code)
-    const docNode = tree!.children.body.find(n => n.conceptId === 'doc_comment')
+    const docNode = tree!.children.body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     expect(docNode!.properties.param_0_name).toBe('a')
     expect(docNode!.properties.param_0_desc).toBe('first number')
@@ -177,7 +177,7 @@ int add(int a, int b) { return a + b; }`
  */
 int add(int a, int b) { return a + b; }`
     const tree = liftCode(code)
-    const docNode = tree!.children.body.find(n => n.conceptId === 'doc_comment')
+    const docNode = tree!.children.body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     expect(docNode!.properties.return_desc).toBe('the sum')
   })
@@ -237,7 +237,7 @@ int f(int x) { return x; }`
  */
 int power(int base, int exp, int mod) { return 0; }`
     const tree = liftCode(code)
-    const docNode = tree!.children.body.find(n => n.conceptId === 'doc_comment')
+    const docNode = tree!.children.body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     // All description lines joined as brief
     expect(docNode!.properties.brief).toContain('計算 (base^exp) % mod')
@@ -271,7 +271,7 @@ int power(int base, int exp, int mod) { return 0; }`
  */
 int add(int a, int b) { return a + b; }`
     const tree = liftCode(code)
-    const docNode = tree!.children.body.find(n => n.conceptId === 'doc_comment')
+    const docNode = tree!.children.body.find(n => n.conceptId === 'lang:doc_comment')
     expect(docNode).toBeDefined()
     expect(docNode!.properties.brief).toContain('計算兩數之和')
     expect(docNode!.properties.brief).toContain('使用簡單加法')

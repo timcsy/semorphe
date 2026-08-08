@@ -19,7 +19,7 @@ export { ReturnSignal }
 export function registerFunctionsCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('forward_decl', async () => {
+  register('lang:forward_decl', async () => {
     // no-op: forward function declaration
   })
 

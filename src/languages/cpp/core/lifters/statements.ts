@@ -22,7 +22,7 @@ export function registerStatementLifters(lifter: Lifter): void {
       const inclusive = extractForInclusive(condNode)
       const body = extractBody(bodyNode, ctx)
 
-      return createNode('count_loop', { var_name: varName, inclusive }, {
+      return createNode('lang:count_loop', { var_name: varName, inclusive }, {
         from: fromNode ? [fromNode] : [],
         to: toNode ? [toNode] : [],
         body,
@@ -199,11 +199,11 @@ function extractUpdateVar(update: import('../../../../core/lift/types').AstNode 
 // Concepts that can be used in for-loop init/cond/update positions
 const FOR_LOOP_CONCEPTS = new Set([
   // expressions
-  'number', 'number_literal', 'string', 'string_literal', 'boolean', 'var_ref', 'cpp:raw_expression',
-  'arithmetic', 'compare', 'logic', 'logic_not', 'negate',
-  'func_call', 'array_access', 'cpp:ternary',
+  'number', 'lang:number_literal', 'string', 'lang:string_literal', 'boolean', 'lang:var_ref', 'cpp:raw_expression',
+  'lang:arithmetic', 'lang:compare', 'lang:logic', 'lang:logic_not', 'lang:negate',
+  'lang:func_call', 'lang:array_access', 'cpp:ternary',
   // statements valid in for-loop parts
-  'var_declare', 'var_assign', 'cpp:compound_assign', 'cpp:increment', 'array_assign',
+  'lang:var_declare', 'lang:var_assign', 'cpp:compound_assign', 'cpp:increment', 'lang:array_assign',
   'cpp:comma_expr', 'cpp:cast',
 ])
 

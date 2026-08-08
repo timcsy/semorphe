@@ -177,7 +177,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       expect(nsNode!.children.body.length).toBeGreaterThan(0)
 
       // Should contain func_def inside namespace body
-      expect(concepts).toContain('func_def')
+      expect(concepts).toContain('lang:func_def')
 
       const gen = generateCode(tree!, 'cpp', style)
       expect(gen).toContain('namespace Math')
@@ -347,7 +347,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
       expect(concepts).toContain('cpp:static_cast')
-      expect(concepts).toContain('arithmetic')
+      expect(concepts).toContain('lang:arithmetic')
 
       const castNode = findNode(tree!, 'cpp:static_cast')
       expect(castNode).toBeDefined()
@@ -362,7 +362,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       expect(tree2).not.toBeNull()
       const concepts2 = findConcepts(tree2!)
       expect(concepts2).toContain('cpp:static_cast')
-      expect(concepts2).toContain('arithmetic')
+      expect(concepts2).toContain('lang:arithmetic')
     })
   })
 })

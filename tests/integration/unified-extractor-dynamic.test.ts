@@ -120,7 +120,7 @@ function createTestBlockSpecs(): BlockSpec[] {
             childSlot: 'args',
             modeSource: 'args[{i}].mode',
             modes: {
-              select: { field: 'args[{i}].text', wrap: 'var_ref' },
+              select: { field: 'args[{i}].text', wrap: 'lang:var_ref' },
               compose: { input: 'ARG_{i}' },
             },
           },
@@ -210,9 +210,9 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     expect(result!.conceptId).toBe('test_func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(3)
-    expect(result!.children.args[0].conceptId).toBe('number_literal')
+    expect(result!.children.args[0].conceptId).toBe('lang:number_literal')
     expect(result!.children.args[0].properties.value).toBe('1')
-    expect(result!.children.args[2].conceptId).toBe('var_ref')
+    expect(result!.children.args[2].conceptId).toBe('lang:var_ref')
     expect(result!.children.args[2].properties.name).toBe('x')
   })
 
@@ -249,9 +249,9 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     expect(result!.conceptId).toBe('test_scanf')
     expect(result!.properties.format).toBe('%d %d')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('var_ref')
+    expect(result!.children.args[0].conceptId).toBe('lang:var_ref')
     expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].conceptId).toBe('var_ref')
+    expect(result!.children.args[1].conceptId).toBe('lang:var_ref')
     expect(result!.children.args[1].properties.name).toBe('y')
   })
 
@@ -276,9 +276,9 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('var_ref')
+    expect(result!.children.args[0].conceptId).toBe('lang:var_ref')
     expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].conceptId).toBe('arithmetic')
+    expect(result!.children.args[1].conceptId).toBe('lang:arithmetic')
   })
 })
 
@@ -342,7 +342,7 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
     expect(result!.children.else_body).toHaveLength(1)
     // Dynamic elseif conditions
     expect(result!.children.elseif_conditions).toHaveLength(2)
-    expect(result!.children.elseif_conditions[0].conceptId).toBe('var_ref')
+    expect(result!.children.elseif_conditions[0].conceptId).toBe('lang:var_ref')
     expect(result!.children.elseif_conditions[0].properties.name).toBe('cond1')
     // Dynamic elseif bodies (statement chains)
     expect(result!.children.elseif_bodies).toHaveLength(2)
@@ -381,9 +381,9 @@ describe('T011 (print): PatternExtractor dynamicRules — repeat expression (pri
     expect(result).not.toBeNull()
     expect(result!.conceptId).toBe('test_print')
     expect(result!.children.values).toHaveLength(3)
-    expect(result!.children.values[0].conceptId).toBe('string_literal')
-    expect(result!.children.values[1].conceptId).toBe('var_ref')
-    expect(result!.children.values[2].conceptId).toBe('endl')
+    expect(result!.children.values[0].conceptId).toBe('lang:string_literal')
+    expect(result!.children.values[1].conceptId).toBe('lang:var_ref')
+    expect(result!.children.values[2].conceptId).toBe('lang:endl')
   })
 })
 
@@ -393,9 +393,9 @@ describe('PatternRenderer dynamicRules — repeat input (func_call)', () => {
   it('renders func_call with 3 args into dynamic inputs + extraState', () => {
     const node = createNode('test_func_call', { name: 'add' }, {
       args: [
-        createNode('number_literal', { value: '1' }),
-        createNode('number_literal', { value: '2' }),
-        createNode('var_ref', { name: 'x' }),
+        createNode('lang:number_literal', { value: '1' }),
+        createNode('lang:number_literal', { value: '2' }),
+        createNode('lang:var_ref', { name: 'x' }),
       ],
     })
     renderer.resetIds()
@@ -415,10 +415,10 @@ describe('PatternRenderer dynamicRules — multi-mode slot (scanf)', () => {
   it('renders mixed select/compose args into extraState.args + inputs', () => {
     const node = createNode('test_scanf', { format: '%d %d' }, {
       args: [
-        createNode('var_ref', { name: 'x' }),
-        createNode('arithmetic', { operator: '+' }, {
-          left: [createNode('number_literal', { value: '1' })],
-          right: [createNode('number_literal', { value: '2' })],
+        createNode('lang:var_ref', { name: 'x' }),
+        createNode('lang:arithmetic', { operator: '+' }, {
+          left: [createNode('lang:number_literal', { value: '1' })],
+          right: [createNode('lang:number_literal', { value: '2' })],
         }),
       ],
     })
@@ -466,9 +466,9 @@ describe('PatternRenderer dynamicRules — repeat expression (print)', () => {
   it('renders print with 3 values as dynamic inputs + extraState', () => {
     const node = createNode('test_print', {}, {
       values: [
-        createNode('string_literal', { value: 'hello' }),
-        createNode('var_ref', { name: 'x' }),
-        createNode('endl', {}),
+        createNode('lang:string_literal', { value: 'hello' }),
+        createNode('lang:var_ref', { name: 'x' }),
+        createNode('lang:endl', {}),
       ],
     })
     renderer.resetIds()
@@ -506,7 +506,7 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     expect(reExtracted!.conceptId).toBe('test_func_call')
     expect(reExtracted!.properties.name).toBe('f')
     expect(reExtracted!.children.args).toHaveLength(1)
-    expect(reExtracted!.children.args[0].conceptId).toBe('number_literal')
+    expect(reExtracted!.children.args[0].conceptId).toBe('lang:number_literal')
   })
 
   it('print roundtrips correctly', () => {

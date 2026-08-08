@@ -92,13 +92,13 @@ export function registerMetaConceptGenerators(generators: Map<string, NodeGenera
   // 是元件身分字串，這裡寫死的是語法符號。
   //
   // 概念身分留在核心（註解是所有語言共有的），語法下沉到語言套件。
-  generators.set('comment', (node, ctx) =>
+  generators.set('lang:comment', (node, ctx) =>
     commentSyntax().line(String(node.properties.text ?? ''), indent(ctx)),
   )
 
-  generators.set('doc_comment', (node, ctx) => commentSyntax().doc(node.properties, indent(ctx)))
+  generators.set('lang:doc_comment', (node, ctx) => commentSyntax().doc(node.properties, indent(ctx)))
 
-  generators.set('block_comment', (node, ctx) =>
+  generators.set('lang:block_comment', (node, ctx) =>
     commentSyntax().block(String(node.properties.text ?? ''), indent(ctx)),
   )
 }

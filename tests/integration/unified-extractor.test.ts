@@ -51,7 +51,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('limit')
     expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].conceptId).toBe('arithmetic')
+    expect(result!.children.initializer[0].conceptId).toBe('lang:arithmetic')
   })
 
   it('c_pointer_declare with INIT input → cpp_pointer_declare with initializer', () => {
@@ -125,7 +125,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('arithmetic')
+    expect(result!.conceptId).toBe('lang:arithmetic')
     expect(result!.properties.operator).toBe('+')
     expect(result!.children.left).toHaveLength(1)
     expect(result!.children.right).toHaveLength(1)

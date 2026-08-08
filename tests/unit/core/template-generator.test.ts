@@ -41,11 +41,11 @@ describe('TemplateGenerator', () => {
         order: 0,
       })
 
-      const valueNode = createNode('number_literal', { value: '5' })
+      const valueNode = createNode('lang:number_literal', { value: '5' })
       const node = createNode('cpp:compound_assign', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
 
       // Register child generator
-      gen.registerTemplate('number_literal', { pattern: '${value}', imports: [], order: 20 })
+      gen.registerTemplate('lang:number_literal', { pattern: '${value}', imports: [], order: 20 })
 
       const result = gen.generate(node, { indent: 0, style: defaultStyle })
       expect(result).toBe('x += 5;')
@@ -54,19 +54,19 @@ describe('TemplateGenerator', () => {
 
   describe('child expression substitution', () => {
     it('should substitute ${CHILD} by generating child expression', () => {
-      gen.registerTemplate('return', {
+      gen.registerTemplate('lang:return', {
         pattern: 'return ${VALUE};',
         imports: [],
         order: 0,
       })
-      gen.registerTemplate('number_literal', {
+      gen.registerTemplate('lang:number_literal', {
         pattern: '${value}',
         imports: [],
         order: 20,
       })
 
-      const valNode = createNode('number_literal', { value: '42' })
-      const node = createNode('return', {}, { VALUE: [valNode] })
+      const valNode = createNode('lang:number_literal', { value: '42' })
+      const node = createNode('lang:return', {}, { VALUE: [valNode] })
 
       const result = gen.generate(node, { indent: 0, style: defaultStyle })
       expect(result).toBe('return 42;')
@@ -75,28 +75,28 @@ describe('TemplateGenerator', () => {
 
   describe('body substitution', () => {
     it('should substitute ${BODY} with indented child statements', () => {
-      gen.registerTemplate('while_loop', {
+      gen.registerTemplate('lang:while_loop', {
         pattern: 'while (${CONDITION}) {\n${BODY}\n}',
         imports: [],
         order: 0,
       })
-      gen.registerTemplate('var_assign', {
+      gen.registerTemplate('lang:var_assign', {
         pattern: '${name} = ${VALUE};',
         imports: [],
         order: 0,
       })
-      gen.registerTemplate('number_literal', {
+      gen.registerTemplate('lang:number_literal', {
         pattern: '${value}',
         imports: [],
         order: 20,
       })
 
-      const assignVal = createNode('number_literal', { value: '1' })
-      const assignNode = createNode('var_assign', { name: 'x' }, { VALUE: [assignVal] })
-      const condNode = createNode('var_ref', { name: 'running' })
-      gen.registerTemplate('var_ref', { pattern: '${name}', imports: [], order: 20 })
+      const assignVal = createNode('lang:number_literal', { value: '1' })
+      const assignNode = createNode('lang:var_assign', { name: 'x' }, { VALUE: [assignVal] })
+      const condNode = createNode('lang:var_ref', { name: 'running' })
+      gen.registerTemplate('lang:var_ref', { pattern: '${name}', imports: [], order: 20 })
 
-      const whileNode = createNode('while_loop', {}, {
+      const whileNode = createNode('lang:while_loop', {}, {
         CONDITION: [condNode],
         BODY: [assignNode],
       })
@@ -110,7 +110,7 @@ describe('TemplateGenerator', () => {
   describe('universal templates with styleVariants', () => {
     it('should select correct style variant', () => {
       const template: UniversalTemplate = {
-        conceptId: 'print',
+        conceptId: 'lang:print',
         styleVariants: {
           cout: { pattern: 'cout << ${EXPR}', imports: ['iostream'], order: 0 },
           printf: { pattern: 'printf("%s", ${EXPR})', imports: ['stdio.h'], order: 0 },
@@ -120,10 +120,10 @@ describe('TemplateGenerator', () => {
       }
       gen.loadUniversalTemplates([template])
 
-      const exprNode = createNode('var_ref', { name: 'x' })
-      gen.registerTemplate('var_ref', { pattern: '${name}', imports: [], order: 20 })
+      const exprNode = createNode('lang:var_ref', { name: 'x' })
+      gen.registerTemplate('lang:var_ref', { pattern: '${name}', imports: [], order: 20 })
 
-      const printNode = createNode('print', {}, { EXPR: [exprNode] })
+      const printNode = createNode('lang:print', {}, { EXPR: [exprNode] })
       const result = gen.generate(printNode, { indent: 0, style: defaultStyle }) // io_style = 'cout'
       expect(result).toContain('cout << x')
     })
@@ -159,7 +159,7 @@ describe('TemplateGenerator', () => {
         order: 0,
       })
       // Register template for COND but NOT for INIT or UPDATE
-      gen.registerTemplate('var_ref', { pattern: '${name}', imports: [], order: 20 })
+      gen.registerTemplate('lang:var_ref', { pattern: '${name}', imports: [], order: 20 })
 
       // Set fallback for concepts without templates
       gen.setExpressionFallback((node) => {
@@ -174,7 +174,7 @@ describe('TemplateGenerator', () => {
 
       const forNode = createNode('cpp:for_loop', {}, {
         init: [createNode('var_declare_expr', { type: 'int', name: 'i' })],
-        cond: [createNode('var_ref', { name: 'x' })],
+        cond: [createNode('lang:var_ref', { name: 'x' })],
         update: [createNode('cpp_increment_expr', { name: 'i', operator: '++' })],
       })
 
@@ -215,35 +215,35 @@ describe('TemplateGenerator', () => {
 
   describe('body fallback to hand-written generators', () => {
     it('should use bodyFallback when body child has no template', () => {
-      gen.registerTemplate('while_loop', {
+      gen.registerTemplate('lang:while_loop', {
         pattern: 'while (true) {\n${BODY}\n}',
         imports: [],
         order: 0,
       })
 
       gen.setBodyFallback((node) => {
-        if (node.conceptId === 'array_assign') {
+        if (node.conceptId === 'lang:array_assign') {
           return `    ${node.properties.name}[0] = 1;`
         }
         return null
       })
 
-      const bodyChild = createNode('array_assign', { name: 'arr' })
-      const whileNode = createNode('while_loop', {}, { body: [bodyChild] })
+      const bodyChild = createNode('lang:array_assign', { name: 'arr' })
+      const whileNode = createNode('lang:while_loop', {}, { body: [bodyChild] })
 
       const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })
       expect(result).toContain('arr[0] = 1;')
     })
 
     it('should show ⟨unknown: concept⟩ when body fallback fails', () => {
-      gen.registerTemplate('while_loop', {
+      gen.registerTemplate('lang:while_loop', {
         pattern: 'while (true) {\n${BODY}\n}',
         imports: [],
         order: 0,
       })
 
       const bodyChild = createNode('mystery_stmt', {})
-      const whileNode = createNode('while_loop', {}, { body: [bodyChild] })
+      const whileNode = createNode('lang:while_loop', {}, { body: [bodyChild] })
 
       const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })
       expect(result).toContain('⟨unknown: mystery_stmt⟩')

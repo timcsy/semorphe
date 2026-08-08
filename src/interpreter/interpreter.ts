@@ -426,7 +426,13 @@ export class SemanticInterpreter implements ExecutionContext {
   private async recordStepInfo(node: SemanticNode): Promise<void> {
     if (!this.recordSteps) return
     const concept = node.conceptId
-    if (concept.includes(':')) return
+    // ⚠️ 這裡原本有一行 `if (concept.includes(':')) return`——用「有沒有冒號」
+    // 當「是不是語言專屬」的判準。命名空間遷移（103）之後**每一顆身分都有冒號**，
+    // 那一行變成「什麼都不記錄」，症狀是單步除錯完全失效。
+    //
+    // 它本來就是多餘的：真正的閘門是下面的 `debug_step` 標註。
+    // **拿身分的形狀當判斷，就是把命名慣例當成契約。**
+    //
     // 「哪些概念算一個除錯步驟」由概念自己標註，不由核心層的清單決定。
     // 那是視圖層的關心（除錯器要在哪裡停），核心層不該認得語言專屬的名字。
     // 缺標註 → 不停，與原本「清單外不停」一致。

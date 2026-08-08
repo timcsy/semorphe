@@ -16,7 +16,7 @@
   {
     "conceptId": "cpp:increment",
     "layer": "lang-core",
-    "abstractConcept": "var_assign",
+    "abstractConcept": "lang:var_assign",
     "properties": [
       {
         "name": "name",
@@ -50,7 +50,7 @@
   {
     "conceptId": "cpp:compound_assign",
     "layer": "lang-core",
-    "abstractConcept": "var_assign",
+    "abstractConcept": "lang:var_assign",
     "properties": [
       {
         "name": "name",
@@ -130,7 +130,7 @@
   {
     "conceptId": "cpp:ternary",
     "layer": "lang-core",
-    "abstractConcept": "if_else",
+    "abstractConcept": "lang:if_else",
     "properties": [],
     "children": {
       "condition": "expression",
@@ -163,7 +163,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "bitwise_not",
+    "conceptId": "lang:bitwise_not",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [],
@@ -175,7 +175,7 @@
   {
     "conceptId": "cpp:pointer_assign",
     "layer": "lang-core",
-    "abstractConcept": "var_assign",
+    "abstractConcept": "lang:var_assign",
     "properties": [
       {
         "name": "ptr_name",
@@ -194,7 +194,7 @@
   {
     "conceptId": "cpp:for_loop",
     "layer": "lang-core",
-    "abstractConcept": "count_loop",
+    "abstractConcept": "lang:count_loop",
     "properties": [],
     "children": {
       "init": "expression",
@@ -210,7 +210,7 @@
   {
     "conceptId": "cpp:do_while",
     "layer": "lang-core",
-    "abstractConcept": "while_loop",
+    "abstractConcept": "lang:while_loop",
     "properties": [],
     "children": {
       "body": "statements",
@@ -224,7 +224,7 @@
   {
     "conceptId": "cpp:pointer_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -554,7 +554,7 @@
   {
     "conceptId": "cpp:method_call",
     "layer": "lang-core",
-    "abstractConcept": "func_call",
+    "abstractConcept": "lang:func_call",
     "properties": [
       {
         "name": "obj",
@@ -603,7 +603,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "forward_decl",
+    "conceptId": "lang:forward_decl",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -635,7 +635,7 @@
     }
   },
   {
-    "conceptId": "builtin_constant",
+    "conceptId": "lang:builtin_constant",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -791,7 +791,7 @@
   {
     "conceptId": "cpp:const_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -814,7 +814,7 @@
   {
     "conceptId": "cpp:ref_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -837,7 +837,7 @@
   {
     "conceptId": "cpp:constexpr_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -860,7 +860,7 @@
   {
     "conceptId": "cpp:static_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -883,7 +883,7 @@
   {
     "conceptId": "cpp:auto_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "name",
@@ -996,7 +996,7 @@
   {
     "conceptId": "cpp:enum",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "name",
@@ -1048,7 +1048,7 @@
   {
     "conceptId": "cpp:array_2d_declare",
     "layer": "lang-core",
-    "abstractConcept": "var_declare",
+    "abstractConcept": "lang:var_declare",
     "properties": [
       {
         "name": "type",
@@ -1082,7 +1082,7 @@
   {
     "conceptId": "cpp:array_2d_access",
     "layer": "lang-core",
-    "abstractConcept": "array_access",
+    "abstractConcept": "lang:array_access",
     "properties": [
       {
         "name": "name",
@@ -1099,7 +1099,7 @@
   {
     "conceptId": "cpp:array_2d_assign",
     "layer": "lang-core",
-    "abstractConcept": "array_assign",
+    "abstractConcept": "lang:array_assign",
     "properties": [
       {
         "name": "name",

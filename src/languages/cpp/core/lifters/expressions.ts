@@ -105,7 +105,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (op === '<<') {
       const coutValues = extractCoutChain(node, ctx)
       if (coutValues) {
-        return createNode('print', {}, { values: coutValues })
+        return createNode('lang:print', {}, { values: coutValues })
       }
     }
     if (op === '>>') {
@@ -120,11 +120,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
         // 分得出來的唯一依據是**根變數的型別**，而那要查辨識脈絡（076 接上的）。
         // 查不到型別就**不當串流**——保守方向，位移是遠比串流常見的寫法。
         if (cin.from === 'cin') {
-          return createNode('input', {}, { values: cin.values })
+          return createNode('lang:input', {}, { values: cin.values })
         }
         const rootType = ctx.data.getType(cin.from)
         if (rootType === 'istringstream' || rootType === 'stringstream') {
-          return createNode('input', { from: cin.from }, { values: cin.values })
+          return createNode('lang:input', { from: cin.from }, { values: cin.values })
         }
         // 不是串流 → 落到下面的一般二元運算（位移）
       }
@@ -134,10 +134,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const right = rightNode ? ctx.lift(rightNode) : null
 
     let concept: string
-    if (ARITHMETIC_OPS.has(op)) concept = 'arithmetic'
-    else if (COMPARE_OPS.has(op)) concept = 'compare'
-    else if (LOGIC_OPS.has(op)) concept = 'logic'
-    else concept = 'arithmetic' // fallback
+    if (ARITHMETIC_OPS.has(op)) concept = 'lang:arithmetic'
+    else if (COMPARE_OPS.has(op)) concept = 'lang:compare'
+    else if (LOGIC_OPS.has(op)) concept = 'lang:logic'
+    else concept = 'lang:arithmetic' // fallback
 
     return createNode(concept, { operator: op }, {
       left: left ? [left] : [],
@@ -151,17 +151,17 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const operand = operandNode ? ctx.lift(operandNode) : null
 
     if (op === '!') {
-      return createNode('logic_not', {}, {
+      return createNode('lang:logic_not', {}, {
         operand: operand ? [operand] : [],
       })
     }
     if (op === '-') {
-      return createNode('negate', {}, {
+      return createNode('lang:negate', {}, {
         value: operand ? [operand] : [],
       })
     }
     if (op === '~') {
-      return createNode('bitwise_not', {}, {
+      return createNode('lang:bitwise_not', {}, {
         operand: operand ? [operand] : [],
       })
     }
@@ -262,7 +262,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
         key: index ? [index] : [],
       })
     }
-    return createNode('array_access', { name }, {
+    return createNode('lang:array_access', { name }, {
       index: index ? [index] : [],
     })
   })
@@ -303,7 +303,7 @@ function extractCoutChain(node: AstNode, ctx: LiftContext): SemanticNode[] | nul
     if (rightNode) {
       // Check for endl
       if (rightNode.text === 'endl') {
-        values.unshift(createNode('endl', {}))
+        values.unshift(createNode('lang:endl', {}))
       } else {
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
@@ -334,7 +334,7 @@ function extractCinChain(node: AstNode, ctx: LiftContext): { values: SemanticNod
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
       } else {
-        values.unshift(createNode('var_ref', { name: rightNode.text }))
+        values.unshift(createNode('lang:var_ref', { name: rightNode.text }))
       }
     }
     current = current.childForFieldName('left')
@@ -365,7 +365,7 @@ function extractCinChain(node: AstNode, ctx: LiftContext): { values: SemanticNod
 const READ_STREAM_TYPES = new Set(['istringstream', 'stringstream'])
 
 export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
-  if (node.conceptId !== 'arithmetic' || node.properties?.operator !== '>>') return null
+  if (node.conceptId !== 'lang:arithmetic' || node.properties?.operator !== '>>') return null
 
   // 走到最左邊的根，沿路收集右運算元。
   //
@@ -380,19 +380,19 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   let rootName: string | null = null
 
   while (cur) {
-    if (cur.conceptId === 'input' && cur.properties?.from !== undefined) {
+    if (cur.conceptId === 'lang:input' && cur.properties?.from !== undefined) {
       // 內層已經改判過——接續它收集到的目標
       targets.unshift(...(cur.children?.values ?? []))
       rootName = String(cur.properties.from)
       break
     }
-    if (cur.conceptId !== 'arithmetic' || cur.properties?.operator !== '>>') return null
+    if (cur.conceptId !== 'lang:arithmetic' || cur.properties?.operator !== '>>') return null
     const right = (cur.children?.right ?? [])[0]
-    if (!right || right.conceptId !== 'var_ref') return null
+    if (!right || right.conceptId !== 'lang:var_ref') return null
     targets.unshift(right)
     const left: SemanticNode | undefined = (cur.children?.left ?? [])[0]
     if (!left) return null
-    if (left.conceptId === 'var_ref') {
+    if (left.conceptId === 'lang:var_ref') {
       rootName = String(left.properties?.name ?? '')
       break
     }
@@ -407,6 +407,6 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   if (rootType === null || !READ_STREAM_TYPES.has(rootType)) return null
 
   // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
-  const cloned = targets.map((v) => createNode('var_ref', { ...v.properties }, {}))
-  return createNode('input', { from: rootName }, { values: cloned })
+  const cloned = targets.map((v) => createNode('lang:var_ref', { ...v.properties }, {}))
+  return createNode('lang:input', { from: rootName }, { values: cloned })
 }

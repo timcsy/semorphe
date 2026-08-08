@@ -10,18 +10,18 @@
   "titleOnly": 13,
   "unverified": 0,
   "byBlocker": {
-    "print": 2,
-    "cpp_increment": 2,
-    "block_comment": 2,
-    "cpp_switch": 1,
-    "cpp_char_literal": 1,
-    "array_declare": 1,
-    "cpp_destructor": 1,
-    "func_def": 1,
-    "var_assign": 1,
-    "cpp_enum": 1,
-    "cpp_cast": 1,
-    "cpp_string_declare": 1,
-    "cpp_define": 1
+    "lang:print": 2,
+    "cpp:increment": 2,
+    "lang:block_comment": 2,
+    "cpp:switch": 1,
+    "cpp:char_literal": 1,
+    "lang:array_declare": 1,
+    "cpp:destructor": 1,
+    "lang:func_def": 1,
+    "lang:var_assign": 1,
+    "cpp:enum": 1,
+    "cpp:cast": 1,
+    "cpp:string_declare": 1,
+    "cpp:define": 1
   }
 }

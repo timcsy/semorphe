@@ -12,18 +12,18 @@ describe('ConceptRegistry', () => {
   describe('register and get', () => {
     it('should register and retrieve a concept', () => {
       const def: ConceptDef = {
-        id: 'var_declare',
+        id: 'lang:var_declare',
         layer: 'universal',
         propertyNames: ['name', 'type'],
         childNames: ['initializer'],
       }
       registry.register(def)
-      expect(registry.get('var_declare')).toEqual(def)
+      expect(registry.get('lang:var_declare')).toEqual(def)
     })
 
     it('should throw on duplicate registration', () => {
       const def: ConceptDef = {
-        id: 'var_declare',
+        id: 'lang:var_declare',
         layer: 'universal',
         propertyNames: ['name'],
         childNames: [],
@@ -40,7 +40,7 @@ describe('ConceptRegistry', () => {
   describe('listByLayer', () => {
     it('should list concepts by layer', () => {
       registry.register({
-        id: 'var_declare', layer: 'universal',
+        id: 'lang:var_declare', layer: 'universal',
         propertyNames: [], childNames: [],
       })
       registry.register({
@@ -78,10 +78,10 @@ describe('ConceptRegistry', () => {
 
     it('should return undefined if no abstract mapping', () => {
       registry.register({
-        id: 'var_declare', layer: 'universal',
+        id: 'lang:var_declare', layer: 'universal',
         propertyNames: [], childNames: [],
       })
-      expect(registry.findAbstract('var_declare')).toBeUndefined()
+      expect(registry.findAbstract('lang:var_declare')).toBeUndefined()
     })
   })
 
@@ -99,11 +99,11 @@ describe('ConceptRegistry', () => {
 
     it('should return undefined for missing annotation key', () => {
       registry.register({
-        id: 'if', layer: 'universal',
+        id: 'lang:if', layer: 'universal',
         propertyNames: [], childNames: [],
         annotations: { control_flow: 'branch' },
       })
-      expect(registry.getAnnotation('if', 'hardware_binding')).toBeUndefined()
+      expect(registry.getAnnotation('lang:if', 'hardware_binding')).toBeUndefined()
     })
 
     it('should return undefined for unregistered concept', () => {
@@ -112,10 +112,10 @@ describe('ConceptRegistry', () => {
 
     it('should return undefined when concept has no annotations', () => {
       registry.register({
-        id: 'var_ref', layer: 'universal',
+        id: 'lang:var_ref', layer: 'universal',
         propertyNames: ['name'], childNames: [],
       })
-      expect(registry.getAnnotation('var_ref', 'control_flow')).toBeUndefined()
+      expect(registry.getAnnotation('lang:var_ref', 'control_flow')).toBeUndefined()
     })
 
     it('should use latest annotations when concept is re-registered', () => {

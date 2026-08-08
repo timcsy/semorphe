@@ -72,24 +72,24 @@ function findConcepts(node: SemanticNode, target: string): SemanticNode[] {
 
 describe('cpp_string_at generate direction', () => {
   it('t01: generates str[0] for literal index', () => {
-    const idx = createNode('number_literal', { value: '1' })
+    const idx = createNode('lang:number_literal', { value: '1' })
     const node = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
-    const prog = { id: 'root', conceptId: 'program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', conceptId: 'lang:program', properties: {}, children: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('word[1]')
   })
 
   it('t02: generates str[i] for variable index', () => {
-    const idx = createNode('var_ref', { name: 'i' })
+    const idx = createNode('lang:var_ref', { name: 'i' })
     const node = createNode('cpp:string_at', { obj: 'msg' }, { index: [idx] })
-    const prog = { id: 'root', conceptId: 'program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', conceptId: 'lang:program', properties: {}, children: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('msg[i]')
   })
 
   it('t03: generates str[0] when index missing', () => {
     const node = createNode('cpp:string_at', { obj: 'str' }, { index: [] })
-    const prog = { id: 'root', conceptId: 'program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', conceptId: 'lang:program', properties: {}, children: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('str[0]')
   })
@@ -208,22 +208,22 @@ int main() {
     expect(stringAtNodes.length).toBeGreaterThan(0)
     expect(stringAtNodes[0].properties.obj).toBe('word')
     // Should NOT degrade to array_access for string variables
-    const arrayAccessNodes = findConcepts(sem!, 'array_access')
+    const arrayAccessNodes = findConcepts(sem!, 'lang:array_access')
     expect(arrayAccessNodes).toHaveLength(0)
   })
 
   it('t10: cpp_string_at generates correct code and is compilable', () => {
     // Verify the generate direction: cpp_string_at → str[i]
-    const idx = createNode('number_literal', { value: '2' })
+    const idx = createNode('lang:number_literal', { value: '2' })
     const strDecl = createNode('cpp:string_declare', { name: 'word' }, {
-      initializer: [createNode('string_literal', { value: 'hello' })]
+      initializer: [createNode('lang:string_literal', { value: 'hello' })]
     })
     const access = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
-    const print = createNode('print', {}, { values: [access] })
-    const main = createNode('func_def', { name: 'main', return_type: 'int', params: '' }, {
+    const print = createNode('lang:print', {}, { values: [access] })
+    const main = createNode('lang:func_def', { name: 'main', return_type: 'int', params: '' }, {
       body: [strDecl, print]
     })
-    const prog = { id: 'root', conceptId: 'program', properties: {}, children: { body: [main] } }
+    const prog = { id: 'root', conceptId: 'lang:program', properties: {}, children: { body: [main] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('word[2]')
     expect(code).toContain('"hello"')

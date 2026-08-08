@@ -182,7 +182,7 @@ int main() {
       const concepts = findConcepts(tree!)
       expect(concepts).toContain('cpp:throw')
       expect(concepts).toContain('cpp:try_catch')
-      expect(concepts).toContain('func_def')
+      expect(concepts).toContain('lang:func_def')
     })
 
     it('generates code with throw in function body', () => {
@@ -555,7 +555,7 @@ int add(int a, int b) {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('forward_decl')
+      expect(concepts).toContain('lang:forward_decl')
     })
 
     it('generates forward declaration before main', () => {
@@ -644,7 +644,7 @@ int main() {
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
       expect(concepts).toContain('cpp:throw')
-      expect(concepts).toContain('func_def')
+      expect(concepts).toContain('lang:func_def')
     })
 
     it('generates throw inside if blocks', () => {

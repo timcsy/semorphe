@@ -36,7 +36,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.conceptId !== 'program') {
+  if (tree.conceptId !== 'lang:program') {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 

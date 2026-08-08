@@ -16,10 +16,10 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
     // Skip using namespace
     if (node.conceptId === 'cpp:using_namespace') continue
     // Unwrap func_def(main) — extract its body, skip trailing return
-    if (node.conceptId === 'func_def' && node.properties.name === 'main') {
+    if (node.conceptId === 'lang:func_def' && node.properties.name === 'main') {
       const funcBody = node.children.body ?? []
       for (const stmt of funcBody) {
-        if (stmt.conceptId === 'return') continue
+        if (stmt.conceptId === 'lang:return') continue
         userBody.push(stmt)
       }
       continue
@@ -28,5 +28,5 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
     userBody.push(node)
   }
 
-  return createNode('program', {}, { body: userBody })
+  return createNode('lang:program', {}, { body: userBody })
 }

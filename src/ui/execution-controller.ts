@@ -115,6 +115,7 @@ export class ExecutionController {
 
     this.debugToolbar.onAction((action) => {
       switch (action) {
+        // ⚠️ 這是 `DebugAction`（繼續執行），不是元件身分 `lang:continue`
         case 'continue':
           if (this.animatePaused && this.animateResolve) {
             this.animatePaused = false

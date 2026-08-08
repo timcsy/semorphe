@@ -213,7 +213,7 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     const 舊存檔 = {
       version: 1,
       tree: {
-        id: 'n1', conceptId: 'program', properties: {}, children: {
+        id: 'n1', conceptId: 'lang:program', properties: {}, children: {
           body: [{ id: 'n2', conceptId: 'cpp_increment_expr', properties: { name: 'i', operator: '++', position: 'postfix' }, children: {} }],
         },
       },
@@ -228,11 +228,11 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     const { UPGRADES } = await import('../../src/core/storage-version')
     const 存檔 = {
       version: 1,
-      tree: { id: 'n1', conceptId: 'var_declare', properties: { name: 'x', type: 'int' }, children: {} },
+      tree: { id: 'n1', conceptId: 'lang:var_declare', properties: { name: 'x', type: 'int' }, children: {} },
       blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const 後 = UPGRADES[1](存檔 as unknown as Record<string, unknown>)
-    expect((後.tree as { conceptId: string }).conceptId).toBe('var_declare')
+    expect((後.tree as { conceptId: string }).conceptId).toBe('lang:var_declare')
   })
 
   it('★ 積木型別**不轉**——加法式，`c_increment_expr` 仍然有效', async () => {

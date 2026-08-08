@@ -28,22 +28,22 @@ const n = (
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
-const prog = (...body: SemanticNode[]): SemanticNode => n('program', {}, { body })
-const num = (v: number): SemanticNode => n('number_literal', { value: v })
-const ref = (name: string): SemanticNode => n('var_ref', { name })
-const show = (x: SemanticNode): SemanticNode => n('print', {}, { values: [x] })
-const ret = (v: SemanticNode): SemanticNode => n('return', {}, { value: [v] })
+const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { body })
+const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
+const ref = (name: string): SemanticNode => n('lang:var_ref', { name })
+const show = (x: SemanticNode): SemanticNode => n('lang:print', {}, { values: [x] })
+const ret = (v: SemanticNode): SemanticNode => n('lang:return', {}, { value: [v] })
 const decl = (name: string, init?: SemanticNode): SemanticNode =>
-  n('var_declare', { name, type: 'int' }, init ? { initializer: [init] } : {})
+  n('lang:var_declare', { name, type: 'int' }, init ? { initializer: [init] } : {})
 const assign = (name: string, v: SemanticNode): SemanticNode =>
-  n('var_assign', { name }, { value: [v] })
+  n('lang:var_assign', { name }, { value: [v] })
 const call = (name: string, ...args: SemanticNode[]): SemanticNode =>
-  n('func_call', { name }, { args })
+  n('lang:func_call', { name }, { args })
 
 /** `[capture](int a){ return <bodyExpr>; }` */
 const lambda = (capture: string, params: string[], bodyExpr: SemanticNode): SemanticNode =>
   n('cpp:lambda', { capture, return_type: 'int' }, {
-    params: params.map((p) => n('var_declare', { name: p, type: 'int' })),
+    params: params.map((p) => n('lang:var_declare', { name: p, type: 'int' })),
     body: [ret(bodyExpr)],
   })
 
@@ -70,8 +70,8 @@ describe('lambda 的基本呼叫', () => {
   it('★ 無捕捉、有參數', async () => {
     const out = await run(
       prog(
-        n('var_declare', { name: 'f', type: 'auto' }, {
-          initializer: [lambda('', ['a'], n('arithmetic', { operator: '*' }, { left: [ref('a')], right: [num(2)] }))],
+        n('lang:var_declare', { name: 'f', type: 'auto' }, {
+          initializer: [lambda('', ['a'], n('lang:arithmetic', { operator: '*' }, { left: [ref('a')], right: [num(2)] }))],
         }),
         show(call('f', num(21))),
       ),
@@ -90,7 +90,7 @@ describe('捕捉語意——兩支要成對讀', () => {
     const out = await run(
       prog(
         decl('n', num(1)),
-        n('var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('&', [], ref('n'))] }),
+        n('lang:var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('&', [], ref('n'))] }),
         assign('n', num(9)),
         show(call('f')),
       ),
@@ -102,7 +102,7 @@ describe('捕捉語意——兩支要成對讀', () => {
     const out = await run(
       prog(
         decl('n', num(1)),
-        n('var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('=', [], ref('n'))] }),
+        n('lang:var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('=', [], ref('n'))] }),
         assign('n', num(9)),
         show(call('f')),
       ),
@@ -115,7 +115,7 @@ describe('作用域', () => {
   it('★ lambda 的參數不得洩漏到外層', async () => {
     const 訊息 = await errOf(
       prog(
-        n('var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('', ['內部參數'], num(1))] }),
+        n('lang:var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('', ['內部參數'], num(1))] }),
         show(call('f', num(1))),
         show(ref('內部參數')),
       ),
@@ -126,8 +126,8 @@ describe('作用域', () => {
   it('★ 同一個 lambda 可以呼叫多次，彼此不互相汙染', async () => {
     const out = await run(
       prog(
-        n('var_declare', { name: 'f', type: 'auto' }, {
-          initializer: [lambda('', ['a'], n('arithmetic', { operator: '+' }, { left: [ref('a')], right: [num(1)] }))],
+        n('lang:var_declare', { name: 'f', type: 'auto' }, {
+          initializer: [lambda('', ['a'], n('lang:arithmetic', { operator: '+' }, { left: [ref('a')], right: [num(1)] }))],
         }),
         show(call('f', num(1))),
         show(call('f', num(10))),

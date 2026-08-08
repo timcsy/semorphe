@@ -210,10 +210,10 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
 
   it('① 舊身分（cpp_ 與裸名）都轉得動，含巢狀子節點', () => {
     const out = 升({
-      conceptId: 'if',
+      conceptId: 'lang:if',
       children: {
         body: [{ conceptId: 'cpp:vector_declare', children: {} }],
-        condition: [{ conceptId: 'compare', children: {} }],
+        condition: [{ conceptId: 'lang:compare', children: {} }],
       },
     }) as { conceptId: string; children: Record<string, { conceptId: string }[]> }
     expect(out.conceptId).toBe('lang:if')
@@ -231,7 +231,7 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     const out = 升({
       conceptId: '__某個未來的身分__',
       properties: { keep: 'me' },
-      children: { body: [{ conceptId: 'print', children: {} }] },
+      children: { body: [{ conceptId: 'lang:print', children: {} }] },
     }) as { conceptId: string; properties: Record<string, string>; children: Record<string, { conceptId: string }[]> }
     expect(out.conceptId).toBe('__某個未來的身分__')
     expect(out.properties.keep, '認不得就整個節點丟掉的話，使用者的資料會消失').toBe('me')

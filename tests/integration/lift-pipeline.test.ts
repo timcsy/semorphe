@@ -47,7 +47,7 @@ describe('Four-level lift pipeline', () => {
       expect(tree).not.toBeNull()
       const body = tree!.children.body
       expect(body).toHaveLength(1)
-      expect(body[0].conceptId).toBe('var_declare')
+      expect(body[0].conceptId).toBe('lang:var_declare')
       expect(body[0].properties.name).toBe('x')
       expect(body[0].properties.type).toBe('int')
     })
@@ -56,16 +56,16 @@ describe('Four-level lift pipeline', () => {
       const tree = liftCode('int y = a + b * c;')
       expect(tree).not.toBeNull()
       const decl = tree!.children.body[0]
-      expect(decl.conceptId).toBe('var_declare')
+      expect(decl.conceptId).toBe('lang:var_declare')
       expect(decl.children.initializer).toHaveLength(1)
-      expect(decl.children.initializer[0].conceptId).toBe('arithmetic')
+      expect(decl.children.initializer[0].conceptId).toBe('lang:arithmetic')
     })
 
     it('should lift if/else with nested body', () => {
       const tree = liftCode('if (x > 0) {\n    y = 1;\n} else {\n    y = 2;\n}')
       expect(tree).not.toBeNull()
       const ifNode = tree!.children.body[0]
-      expect(ifNode.conceptId).toBe('if')
+      expect(ifNode.conceptId).toBe('lang:if')
       expect(ifNode.children.then_body.length).toBeGreaterThan(0)
       expect(ifNode.children.else_body.length).toBeGreaterThan(0)
     })
@@ -158,7 +158,7 @@ int main() {
 `
       const tree = liftCode(complexCode)
       expect(tree).not.toBeNull()
-      expect(tree!.conceptId).toBe('program')
+      expect(tree!.conceptId).toBe('lang:program')
       // Should have multiple body nodes — no crashes
       expect(tree!.children.body.length).toBeGreaterThan(0)
     })

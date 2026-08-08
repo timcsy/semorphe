@@ -1,0 +1,82 @@
+/**
+ * SC-003：**一份遷移前存的檔案，載入後產出的程式碼逐字相同**
+ *
+ * 這一支釘的是整個 D 項唯一不可逆的風險：改名動的是**真實**，
+ * 而使用者的存檔裡寫著舊名字。P8 的範圍（`knowledge/history/026`）
+ * 因此要求這類變更 MUST 附一次性轉換——這裡驗它真的成立。
+ */
+import { describe, it, expect, beforeAll } from 'vitest'
+import { UPGRADES } from '../../src/core/storage-version'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { generateCode } from '../../src/core/projection/code-generator'
+import type { SemanticNode, StylePreset } from '../../src/core/types'
+import apcs from '../../src/languages/cpp/styles/apcs.json'
+import '../../src/languages/cpp/all-declarations'
+
+const STYLE = apcs as unknown as StylePreset
+
+/** 一份 v2 存檔的語義樹——**全部是舊格式身分**，逐字保留當時的樣子 */
+const v2樹 = {
+  conceptId: 'program',
+  properties: {},
+  children: {
+    body: [
+      {
+        conceptId: 'func_def',
+        properties: { name: 'main', return_type: 'int' },
+        children: {
+          params: [],
+          body: [
+            {
+              conceptId: 'var_declare',
+              properties: { name: 'x', type: 'int' },
+              children: { initializer: [{ conceptId: 'number_literal', properties: { value: '42' }, children: {} }] },
+            },
+            {
+              conceptId: 'cpp_vector_declare',
+              properties: { name: 'v', type: 'int' },
+              children: {},
+            },
+            {
+              conceptId: 'print',
+              properties: {},
+              children: { values: [{ conceptId: 'var_ref', properties: { name: 'x' }, children: {} }] },
+            },
+          ],
+        },
+      },
+    ],
+  },
+}
+
+describe('SC-003：v2 存檔升級後產出不變', () => {
+  beforeAll(() => registerCppLanguage())
+
+  const 升 = (tree: unknown): SemanticNode =>
+    (UPGRADES[2]({ version: 2, tree } as Record<string, unknown>) as { tree: SemanticNode }).tree
+
+  it('★ 升級後每一顆身分都是新格式', () => {
+    const ids: string[] = []
+    const walk = (n: SemanticNode): void => {
+      ids.push(n.conceptId)
+      for (const arr of Object.values(n.children ?? {})) arr.forEach(walk)
+    }
+    walk(升(v2樹))
+    expect(ids.filter((i) => !i.includes(':')), '升級後仍有舊格式身分').toEqual([])
+  })
+
+  it('★ 產出的程式碼是完整可讀的 C++（不是一串 ⟨unknown⟩）', () => {
+    const code = generateCode(升(v2樹), 'cpp', STYLE)
+    expect(code).toContain('int x = 42;')
+    expect(code).toContain('vector<int> v;')
+    expect(code).toContain('cout << x')
+    expect(code, '有身分沒轉成功 → 產生器找不到它，會退化成佔位符').not.toContain('⟨')
+  })
+
+  it('★ 反向：不升級直接產出 → **必須**是壞的', () => {
+    // 沒有這一支的話，上一支綠可能只是因為「舊身分本來也產得出來」——
+    // 那樣的話整個轉換就是白做的。
+    const code = generateCode(v2樹 as unknown as SemanticNode, 'cpp', STYLE)
+    expect(code, '舊身分不升級也產得出正確程式碼 → 那這個轉換沒有存在的必要').toContain('⟨')
+  })
+})

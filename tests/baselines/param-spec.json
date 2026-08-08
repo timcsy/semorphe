@@ -2,12 +2,6 @@
   "guard": "param-spec",
   "讀了沒宣告": [
     {
-      "componentId": "array_declare",
-      "param": "size",
-      "方向": "讀了沒宣告",
-      "where": "src/interpreter/executors/arrays.ts:16"
-    },
-    {
       "componentId": "cpp:class_def",
       "param": "base",
       "方向": "讀了沒宣告",
@@ -44,31 +38,37 @@
       "where": "src/languages/cpp/core/generators/statements.ts:320"
     },
     {
-      "componentId": "input",
+      "componentId": "lang:array_declare",
+      "param": "size",
+      "方向": "讀了沒宣告",
+      "where": "src/interpreter/executors/arrays.ts:16"
+    },
+    {
+      "componentId": "lang:input",
       "param": "from",
       "方向": "讀了沒宣告",
       "where": "src/interpreter/executors/io.ts:25"
     },
     {
-      "componentId": "input",
+      "componentId": "lang:input",
       "param": "type",
       "方向": "讀了沒宣告",
       "where": "src/interpreter/executors/io.ts:95"
     },
     {
-      "componentId": "input",
+      "componentId": "lang:input",
       "param": "variable",
       "方向": "讀了沒宣告",
       "where": "src/languages/cpp/std/iostream/generators.ts:57"
     },
     {
-      "componentId": "negate",
+      "componentId": "lang:negate",
       "param": "operator",
       "方向": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/expressions.ts:100"
     },
     {
-      "componentId": "var_assign",
+      "componentId": "lang:var_assign",
       "param": "member",
       "方向": "讀了沒宣告",
       "where": "src/interpreter/executors/variables.ts:110"

@@ -137,7 +137,7 @@ describe('辨識不出來的程式碼不再被靜靜略過', () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
     await expect(
       interp.execute(
-        createNode('program', {}, { body: [createNode('cpp:raw_code', { code: 'asm volatile("nop")' }, {})] }),
+        createNode('lang:program', {}, { body: [createNode('cpp:raw_code', { code: 'asm volatile("nop")' }, {})] }),
       ),
     ).rejects.toThrow(/UNRECOGNIZED_CODE/)
   })
@@ -149,7 +149,7 @@ describe('辨識不出來的程式碼不再被靜靜略過', () => {
     let caught: unknown
     try {
       await interp.execute(
-        createNode('program', {}, { body: [createNode('cpp:raw_code', { code: 'XYZZY_MARKER' }, {})] }),
+        createNode('lang:program', {}, { body: [createNode('cpp:raw_code', { code: 'XYZZY_MARKER' }, {})] }),
       )
     } catch (e) {
       caught = e
@@ -197,6 +197,6 @@ describe('條件編譯：#ifdef / #ifndef 的 body 真的會跑', () => {
       for (const a of Object.values(n.children ?? {})) for (const c of a) walk(c)
     }
     walk(tree)
-    expect(found, `body 裡混進了非程式碼的節點：${found.join('、')}`).not.toContain('var_ref')
+    expect(found, `body 裡混進了非程式碼的節點：${found.join('、')}`).not.toContain('lang:var_ref')
   })
 })

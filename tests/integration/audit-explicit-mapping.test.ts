@@ -93,7 +93,7 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
 const 合成 = (type: string): BlockProjectionJSON =>
   ({
     id: type,
-    conceptId: 'var_declare', // 有 properties 的真概念
+    conceptId: 'lang:var_declare', // 有 properties 的真概念
     language: 'cpp',
     category: 'data',
     version: '1.0.0',

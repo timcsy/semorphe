@@ -64,7 +64,7 @@ function blocks(code: string) {
 }
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('program', {}, { body })
+  return createNode('lang:program', {}, { body })
 }
 
 async function run(body: SemanticNode[], stdin: string[] = []) {

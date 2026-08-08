@@ -154,10 +154,10 @@ describe('自我驗證：這條護欄的判準是準的', () => {
     // 查了之後沒有）——`build-guardrail` 第 6 步說「先在已知答案上驗」，
     // 這一輪補上它沒說出來的前提：**那個答案必須是查過的**。
     const 樣本: [string, string, boolean, string][] = [
-      ['var_declare', 'init_style', true, 'core/generators/declarations.ts:30 用它分支'],
-      ['array_declare', 'size', true, 'interpreter/executors/arrays.ts:16 讀它'],
+      ['lang:var_declare', 'init_style', true, 'core/generators/declarations.ts:30 用它分支'],
+      ['lang:array_declare', 'size', true, 'interpreter/executors/arrays.ts:16 讀它'],
       ['cpp:define', 'value', true, 'core/generators/statements.ts:248，真的是自己的'],
-      ['print', 'value', false, '那一行是子節點的 value（values.map(v => v.properties.value)）'],
+      ['lang:print', 'value', false, '那一行是子節點的 value（values.map(v => v.properties.value)）'],
       ['cpp:include', 'local', false, '沒有任何程式碼讀它——實例帶著它，而它是死資料'],
     ]
     for (const [cid, p, exp, why] of 樣本) {
@@ -169,7 +169,7 @@ describe('自我驗證：這條護欄的判準是準的', () => {
     const hit = measure([
       {
         file: '合成/讀了沒宣告.ts',
-        source: "g.set('var_declare', (node, ctx) => node.properties.__合成_沒宣告__)\n",
+        source: "g.set('lang:var_declare', (node, ctx) => node.properties.__合成_沒宣告__)\n",
       },
     ]).filter((f) => f.param === '__合成_沒宣告__')
     expect(hit, '合成的違規沒有被報出來 → **護欄壞了**').toHaveLength(1)
@@ -180,8 +180,8 @@ describe('自我驗證：這條護欄的判準是準的', () => {
   it('★ 反向：合成一個讀了**已宣告**參數的產生器 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     const hit = measure([
-      { file: '合成/正確.ts', source: "g.set('var_declare', (node, ctx) => node.properties.name)\n" },
-    ]).filter((f) => f.componentId === 'var_declare' && f.param === 'name' && f.方向 === '讀了沒宣告')
+      { file: '合成/正確.ts', source: "g.set('lang:var_declare', (node, ctx) => node.properties.name)\n" },
+    ]).filter((f) => f.componentId === 'lang:var_declare' && f.param === 'name' && f.方向 === '讀了沒宣告')
     expect(hit, '一個已宣告的參數被報成違規 → 這條護欄會亂叫').toEqual([])
   })
 
@@ -191,7 +191,7 @@ describe('自我驗證：這條護欄的判準是準的', () => {
       {
         file: '合成/子節點.ts',
         source:
-          "g.set('var_declare', (node, ctx) => (node.children.values ?? []).map(v => v.properties.__子節點的__))\n",
+          "g.set('lang:var_declare', (node, ctx) => (node.children.values ?? []).map(v => v.properties.__子節點的__))\n",
       },
     ]).filter((f) => f.param === '__子節點的__')
     expect(hit, '子節點的參數被算給父元件——那正是 print.value 那筆假報的成因').toEqual([])
@@ -297,8 +297,8 @@ describe('規格自身要自洽', () => {
     // 用一顆**真的有下拉的元件**（`arithmetic` 的 `operator`）宣告錯的值域，
     // 才證明得了這條有接上。
     const hit = 檢規格([
-      { conceptId: 'arithmetic', properties: [{ name: 'operator', kind: 'enum', values: ['+'], default: '+' }] },
-    ]).filter((x) => x.conceptId === 'arithmetic')
+      { conceptId: 'lang:arithmetic', properties: [{ name: 'operator', kind: 'enum', values: ['+'], default: '+' }] },
+    ]).filter((x) => x.conceptId === 'lang:arithmetic')
     expect(hit, '值域與積木下拉不一致沒被報出 → 第 ③ 條沒有接上').toHaveLength(1)
     expect(hit[0].問題).toContain('與積木下拉')
   })
