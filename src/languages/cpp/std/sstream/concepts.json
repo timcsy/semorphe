@@ -4,7 +4,10 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -20,7 +23,11 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "in"
+      }
     ],
     "children": {
       "source": {

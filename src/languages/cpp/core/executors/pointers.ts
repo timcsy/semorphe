@@ -53,7 +53,10 @@ export function registerPointerExecutors(register: (concept: string, executor: C
   register('cpp_delete', async () => {})
 
   register('cpp_malloc', async (node) => {
-    return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
+    // ⚠️ 退路是 `int*` 不是 `int`——`type` 在這顆元件裡是**轉型型別**（指標），
+    // 產生器寫的是 `(${type})malloc(…)`。兩邊曾經不一致，而積木下拉當時給的
+    // 是元素型別，於是使用者選 `int` 會產出 `(int)malloc(…)`，不合法的 C++。
+    return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int*'}` }
   })
 
   register('cpp_free', async () => {})

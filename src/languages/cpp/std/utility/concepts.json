@@ -4,9 +4,30 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "type1",
-      "type2",
-      "name"
+      {
+        "name": "type1",
+        "kind": "enum",
+        "values": [
+          "int",
+          "double",
+          "string",
+          "char"
+        ]
+      },
+      {
+        "name": "type2",
+        "kind": "enum",
+        "values": [
+          "int",
+          "double",
+          "string",
+          "char"
+        ]
+      },
+      {
+        "name": "name",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",

@@ -60,7 +60,11 @@ const BY_KIND: Record<ParamKind, PropertyValue> = {
  * （enum 唯一保證合法的值）→ `kind` → 名字正則。
  */
 function synthValue(sp: ParamSpec, conceptId?: string): PropertyValue {
-  if (sp.default !== undefined) return sp.default
+  // ⚠️ **空字串不算可用的合成值。** `default: ''` 是誠實的（產生器的退路
+  // 真的是空），而拿它去合成節點會產出 `var_ref` 沒有名字、`cpp_raw_code`
+  // 沒有內容——完備性護欄當場多出七個假的「殼」。
+  // 宣告的預設值回答「缺省時產出什麼」，合成器問的是「一個像樣的樣本長怎樣」。
+  if (sp.default !== undefined && sp.default !== '') return sp.default
   if (sp.kind === 'enum' && sp.values?.length) return sp.values[0]
   if (sp.kind !== 'literal') return BY_KIND[sp.kind]
   return defaultFor(sp.name, conceptId)

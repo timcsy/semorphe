@@ -14,7 +14,32 @@
     "conceptId": "cpp:math_unary",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["func"],
+    "properties": [
+      {
+        "name": "func",
+        "kind": "enum",
+        "values": [
+          "abs",
+          "sqrt",
+          "ceil",
+          "floor",
+          "round",
+          "sin",
+          "cos",
+          "tan",
+          "asin",
+          "acos",
+          "atan",
+          "exp",
+          "log",
+          "log2",
+          "log10",
+          "trunc",
+          "cbrt"
+        ],
+        "default": "abs"
+      }
+    ],
     "children": {
       "value": "expression"
     },
@@ -24,7 +49,20 @@
     "conceptId": "cpp:math_binary",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["func"],
+    "properties": [
+      {
+        "name": "func",
+        "kind": "enum",
+        "values": [
+          "fmod",
+          "hypot",
+          "atan2",
+          "fmin",
+          "fmax"
+        ],
+        "default": "fmod"
+      }
+    ],
     "children": {
       "arg1": "expression",
       "arg2": "expression"

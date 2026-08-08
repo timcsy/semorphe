@@ -4,8 +4,22 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "std::string",
+          "char"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "q"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -15,7 +29,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "q"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -25,7 +43,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "q"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -35,8 +57,22 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "std::string",
+          "char"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "pq"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -46,7 +82,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "pq"
+      }
     ],
     "children": {},
     "role": "expression"

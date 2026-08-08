@@ -164,9 +164,21 @@ beforeAll(async () => {
  * 型別由概念所屬的模組決定（`std/string` 的方法 → 那個物件是字串），
  * 不是猜的。
  */
-const SAMPLE_CONTEXT: Record<string, SemanticNode[]> = {}
+//
+// ⚠️ **變數名從合成節點自己讀，不寫死。**
+//
+// 這份清單原本寫死 `name: 'x'`，因為 `synth-node` 當時給 `obj` 這類屬性的
+// 合成值就是 `'x'`。參數規格化（102）之後合成值改用**宣告的預設值**
+// （`cpp_string_*` 是 `'str'`、`cpp_map_*` 是 `'mp'`），名字當場對不上，
+// 三顆概念一起變成假的「殼」。
+//
+// 這是同一個病的**第四個實例**：脈絡有了、接不上。
+// 治法不是把 `'x'` 改成 `'str'`（下次合成值再變還是會斷），
+// 是讓脈絡**跟著合成節點走**。
+type Prelude = (varName: string) => SemanticNode[]
+const SAMPLE_CONTEXT: Record<string, Prelude> = {}
 for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', 'cpp_string_length', 'cpp_string_substr', 'cpp_string_find']) {
-  SAMPLE_CONTEXT[id] = [createNode('cpp_string_declare', { name: 'x', type: 'string' }, {})]
+  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp_string_declare', { name: v, type: 'string' }, {})]
 }
 // **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，
 // **正確地**退回 `array_assign`／`array_access`——同一個保守設計。
@@ -175,7 +187,7 @@ for (const id of ['cpp_string_clear', 'cpp_string_push_back', 'cpp_string_at', '
 // ——名字對不上，型別自然查不到，於是它仍然被判成殼。**脈絡有了、接不上，
 // 與「機制有了沒人接上」同一個形狀。**
 for (const id of ['cpp_map_access', 'cpp_map_assign']) {
-  SAMPLE_CONTEXT[id] = [createNode('cpp_map_declare', { name: 'x', key_type: 'int', value_type: 'int' }, {})]
+  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp_map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
 }
 
 /**
@@ -197,8 +209,22 @@ for (const id of ['cpp_map_access', 'cpp_map_assign']) {
  */
 const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp_lambda'])
 
-function wrap(node: SemanticNode | null, id?: string): SemanticNode {
-  const prelude = id ? (SAMPLE_CONTEXT[id] ?? []) : []
+/** 合成節點裡「那個變數叫什麼」——脈絡宣告要用同一個名字 */
+function 接收者名(node: SemanticNode | null): string {
+  for (const k of ['obj', 'name', 'container', 'vector', 'ptr']) {
+    const v = node?.properties?.[k]
+    if (typeof v === 'string' && v !== '') return v
+  }
+  return 'x'
+}
+
+/**
+ * @param 脈絡節點 前置宣告要對齊的節點。差分基準（`node === null`）**必須傳它**
+ *   ——否則基準會宣告 `string x;` 而本體宣告 `string str;`，那一行就漏進差分，
+ *   讓每一顆有脈絡的概念都看起來「有產出」，真殼會被判成實作。
+ */
+function wrap(node: SemanticNode | null, id?: string, 脈絡節點?: SemanticNode | null): SemanticNode {
+  const prelude = id ? (SAMPLE_CONTEXT[id]?.(接收者名(脈絡節點 ?? node)) ?? []) : []
   // `node` 為 null＝**只有鷹架**（差分的基準，見 generate 那一段）
   if (!node) return createNode('program', {}, { body: [...prelude] })
   const stmt =
@@ -247,7 +273,7 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
         // 證明它們自己就會產出，父概念沒有消費它們。
         //
         // 差分不需要知道哪些行是鷹架：**沒有這個節點時也會出現的，就不是它產的。**
-        const 鷹架 = generateCode(wrap(null, id), 'cpp', STYLE)
+        const 鷹架 = generateCode(wrap(null, id, node), 'cpp', STYLE)
         const 鷹架行 = new Set(鷹架.split('\n').map((l) => l.trim()))
         const own = generated
           .split('\n')

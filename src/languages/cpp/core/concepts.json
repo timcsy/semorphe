@@ -4,7 +4,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "char"
+      {
+        "name": "char",
+        "kind": "literal",
+        "default": "a"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -14,9 +18,26 @@
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
-      "name",
-      "operator",
-      "position"
+      {
+        "name": "name",
+        "kind": "literal"
+      },
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          "++",
+          "--"
+        ]
+      },
+      {
+        "name": "position",
+        "kind": "enum",
+        "values": [
+          "postfix",
+          "prefix"
+        ]
+      }
     ],
     "children": {
       "index": "expression"
@@ -31,8 +52,23 @@
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
-      "name",
-      "operator"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "x"
+      },
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          "+=",
+          "-=",
+          "*=",
+          "/=",
+          "%="
+        ],
+        "default": "+="
+      }
     ],
     "children": {
       "value": "expression",
@@ -108,7 +144,18 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target_type"
+      {
+        "name": "target_type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "char",
+          "long long"
+        ],
+        "default": "int"
+      }
     ],
     "children": {
       "value": "expression"
@@ -130,7 +177,11 @@
     "layer": "lang-core",
     "abstractConcept": "var_assign",
     "properties": [
-      "ptr_name"
+      {
+        "name": "ptr_name",
+        "kind": "identifier",
+        "default": "ptr"
+      }
     ],
     "children": {
       "value": "expression"
@@ -218,8 +269,27 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "type",
-      "sizeof_type"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int*",
+          "float*",
+          "double*",
+          "char*"
+        ],
+        "default": "int*"
+      },
+      {
+        "name": "sizeof_type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "char"
+        ]
+      }
     ],
     "children": {
       "size": "expression"
@@ -247,7 +317,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "MyStruct"
+      }
     ],
     "children": {
       "members": "statements"
@@ -259,8 +333,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj",
-      "member"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      },
+      {
+        "name": "member",
+        "kind": "literal",
+        "default": "field"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -270,8 +352,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "ptr",
-      "member"
+      {
+        "name": "ptr",
+        "kind": "identifier",
+        "default": "ptr"
+      },
+      {
+        "name": "member",
+        "kind": "literal",
+        "default": "field"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -281,7 +371,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "MyClass"
+      }
     ],
     "children": {
       "public": "statements",
@@ -294,8 +388,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "type",
-      "args"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "default": "int"
+      },
+      {
+        "name": "args",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "expression"
@@ -321,9 +423,21 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "t",
-      "return_type",
-      "func_name"
+      {
+        "name": "t",
+        "kind": "type_expr",
+        "default": "T"
+      },
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "T"
+      },
+      {
+        "name": "func_name",
+        "kind": "literal",
+        "default": "myFunc"
+      }
     ],
     "children": {
       "params": "expressions",
@@ -336,7 +450,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -346,7 +464,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {
       "value": "expression"
@@ -358,7 +480,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -368,7 +494,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -378,7 +508,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {
       "value": "expression"
@@ -390,7 +524,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {
       "key": "expression"
@@ -402,7 +540,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "obj"
+      }
     ],
     "children": {
       "key": "expression"
@@ -414,9 +556,20 @@
     "layer": "lang-core",
     "abstractConcept": "func_call",
     "properties": [
-      "obj",
-      "method",
-      "args"
+      {
+        "name": "obj",
+        "kind": "literal",
+        "default": "obj"
+      },
+      {
+        "name": "method",
+        "kind": "literal",
+        "default": "method"
+      },
+      {
+        "name": "args",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -426,7 +579,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "code"
+      {
+        "name": "code",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement"
@@ -436,7 +593,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "code"
+      {
+        "name": "code",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "expression"
@@ -446,9 +607,20 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "return_type",
-      "name",
-      "params"
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "void"
+      },
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": ""
+      },
+      {
+        "name": "params",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -467,7 +639,18 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "value"
+      {
+        "name": "value",
+        "kind": "enum",
+        "values": [
+          "true",
+          "false",
+          "EOF",
+          "NULL",
+          "nullptr"
+        ],
+        "default": "NULL"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -477,7 +660,33 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "header"
+      {
+        "name": "header",
+        "kind": "enum",
+        "values": [
+          "stdio.h",
+          "stdlib.h",
+          "string.h",
+          "math.h",
+          "stdbool.h",
+          "iostream",
+          "vector",
+          "string",
+          "algorithm",
+          "map",
+          "set",
+          "stack",
+          "queue",
+          "cmath",
+          "cstring",
+          "climits",
+          "cstdio",
+          "cstdlib",
+          "cctype",
+          "cfloat"
+        ],
+        "default": "iostream"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -493,7 +702,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "header"
+      {
+        "name": "header",
+        "kind": "literal",
+        "default": "myheader.h"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -509,8 +722,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "name",
-      "value"
+      {
+        "name": "name",
+        "kind": "literal",
+        "required": true
+      },
+      {
+        "name": "value",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement"
@@ -520,7 +741,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "condition"
+      {
+        "name": "condition",
+        "kind": "literal",
+        "required": true
+      }
     ],
     "children": {
       "body": "statements"
@@ -532,7 +757,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "condition"
+      {
+        "name": "condition",
+        "kind": "literal",
+        "required": true
+      }
     ],
     "children": {
       "body": "statements"
@@ -544,7 +773,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "ns"
+      {
+        "name": "ns",
+        "kind": "literal",
+        "default": "std"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -652,7 +885,11 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "x"
+      }
     ],
     "children": {
       "initializer": "expression"
@@ -664,8 +901,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "orig_type",
-      "alias"
+      {
+        "name": "orig_type",
+        "kind": "type_expr",
+        "default": "int"
+      },
+      {
+        "name": "alias",
+        "kind": "literal",
+        "default": "myint"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -681,8 +926,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "alias",
-      "orig_type"
+      {
+        "name": "alias",
+        "kind": "literal",
+        "default": "ll"
+      },
+      {
+        "name": "orig_type",
+        "kind": "type_expr",
+        "default": "long long"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -698,7 +951,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target"
+      {
+        "name": "target",
+        "kind": "identifier",
+        "default": "int"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -708,8 +965,24 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "char",
+          "bool",
+          "string"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "count"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -725,8 +998,16 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "name",
-      "values"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "MyEnum"
+      },
+      {
+        "name": "values",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement"
@@ -736,9 +1017,28 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "var_type",
-      "var_name",
-      "container"
+      {
+        "name": "var_type",
+        "kind": "enum",
+        "values": [
+          "auto",
+          "int",
+          "double",
+          "char",
+          "string"
+        ],
+        "default": "auto"
+      },
+      {
+        "name": "var_name",
+        "kind": "identifier",
+        "default": "x"
+      },
+      {
+        "name": "container",
+        "kind": "identifier",
+        "default": "vec"
+      }
     ],
     "children": {
       "body": "statements"
@@ -750,10 +1050,31 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name",
-      "rows",
-      "cols"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "double",
+          "char"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      },
+      {
+        "name": "rows",
+        "kind": "count",
+        "default": "3"
+      },
+      {
+        "name": "cols",
+        "kind": "count",
+        "default": "4"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -763,7 +1084,11 @@
     "layer": "lang-core",
     "abstractConcept": "array_access",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      }
     ],
     "children": {
       "row": "expression",
@@ -776,7 +1101,11 @@
     "layer": "lang-core",
     "abstractConcept": "array_assign",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      }
     ],
     "children": {
       "row": "expression",
@@ -790,8 +1119,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "catch_type",
-      "catch_name"
+      {
+        "name": "catch_type",
+        "kind": "type_expr",
+        "default": "exception&"
+      },
+      {
+        "name": "catch_name",
+        "kind": "identifier",
+        "default": "e"
+      }
     ],
     "children": {
       "try_body": "statements",
@@ -814,8 +1151,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "class_name",
-      "init_list"
+      {
+        "name": "class_name",
+        "kind": "literal",
+        "default": "MyClass"
+      },
+      {
+        "name": "init_list",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {
       "params": "statements",
@@ -834,7 +1179,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "class_name"
+      {
+        "name": "class_name",
+        "kind": "literal",
+        "default": "MyClass"
+      }
     ],
     "children": {
       "body": "statements"
@@ -852,8 +1201,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "return_type",
-      "name"
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "void"
+      },
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "method"
+      }
     ],
     "children": {
       "params": "statements",
@@ -872,8 +1229,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "return_type",
-      "name"
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "void"
+      },
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "method"
+      }
     ],
     "children": {
       "params": "statements"
@@ -891,8 +1256,16 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "return_type",
-      "name"
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "void"
+      },
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "method"
+      }
     ],
     "children": {
       "params": "statements",
@@ -911,10 +1284,37 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "return_type",
-      "operator",
-      "param_type",
-      "param_name"
+      {
+        "name": "return_type",
+        "kind": "type_expr",
+        "default": "void"
+      },
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          "+",
+          "-",
+          "*",
+          "==",
+          "!=",
+          "<",
+          ">",
+          "<<",
+          ">>"
+        ],
+        "default": "+"
+      },
+      {
+        "name": "param_type",
+        "kind": "type_expr",
+        "default": ""
+      },
+      {
+        "name": "param_name",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {
       "body": "statements"
@@ -932,8 +1332,15 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "capture",
-      "return_type"
+      {
+        "name": "capture",
+        "kind": "literal",
+        "default": "&"
+      },
+      {
+        "name": "return_type",
+        "kind": "literal"
+      }
     ],
     "children": {
       "params": "statements",
@@ -946,7 +1353,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "myns"
+      }
     ],
     "children": {
       "body": "statements"
@@ -958,7 +1369,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target_type"
+      {
+        "name": "target_type",
+        "kind": "type_expr",
+        "default": "int"
+      }
     ],
     "children": {
       "value": "expression"
@@ -970,7 +1385,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target_type"
+      {
+        "name": "target_type",
+        "kind": "type_expr",
+        "default": "Derived*"
+      }
     ],
     "children": {
       "value": "expression"
@@ -982,7 +1401,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target_type"
+      {
+        "name": "target_type",
+        "kind": "type_expr",
+        "default": "int*"
+      }
     ],
     "children": {
       "value": "expression"
@@ -994,7 +1417,11 @@
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
-      "target_type"
+      {
+        "name": "target_type",
+        "kind": "type_expr",
+        "default": "int*"
+      }
     ],
     "children": {
       "value": "expression"

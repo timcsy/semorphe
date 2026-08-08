@@ -169,6 +169,112 @@ export function templateReads(): Map<string, Set<string>> {
 }
 
 /**
+ * 「這個參數被當成**變數名**用了」——`ctx.scope.declare/get/set/has(x)`
+ *
+ * ## 為什麼這是證據而不是猜測
+ *
+ * `ParamKind` 分 `identifier` 與 `literal`，而從名字分不出來：實測
+ * `string_literal.value` 的欄位預設是 `"hello"`，一個合法識別字；
+ * `comment.text` 預設 `"comment"`。**任何靠名字或預設值長相的判準都會判錯它們。**
+ *
+ * 而「這個字串被拿去查變數環境」是結構上的事實：只有識別字能當作用域的鍵。
+ *
+ * ⚠️ 追一層區域變數綁定（`const name = String(node.properties.name)`），
+ * 因為那是實際的寫法。不追跨函式——那類會**低報**，不會誤報。
+ */
+export function scopeKeyParams(
+  extra: { file: string; source: string }[] = [],
+): Map<string, Set<string>> {
+  const SCOPE_METHODS = new Set(['declare', 'get', 'set', 'has'])
+  const out = new Map<string, Set<string>>()
+
+  const files: { file: string; source: string }[] = [
+    ...listSourceFiles('src', ['.ts']).map((rel) => ({
+      file: rel,
+      source: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
+    })),
+    ...extra,
+  ]
+
+  for (const { file, source } of files) {
+    const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+    const visit = (node: ts.Node): void => {
+      if (ts.isCallExpression(node) && node.arguments.length >= 2) {
+        const callee = node.expression
+        const cname = ts.isPropertyAccessExpression(callee)
+          ? callee.name.text
+          : ts.isIdentifier(callee)
+            ? callee.text
+            : null
+        const [idArg, fnArg] = node.arguments
+        if (
+          cname &&
+          REGISTRARS.has(cname) &&
+          ts.isStringLiteral(idArg) &&
+          (ts.isArrowFunction(fnArg) || ts.isFunctionExpression(fnArg))
+        ) {
+          const p0 = fnArg.parameters[0]
+          if (p0 && ts.isIdentifier(p0.name)) {
+            const self = p0.name.text
+            // 區域變數 → 它源自哪個參數（追一層）
+            const bound = new Map<string, string>()
+            const paramOf = (n: ts.Node): string | undefined => {
+              let found: string | undefined
+              const dig = (x: ts.Node): void => {
+                if (
+                  ts.isPropertyAccessExpression(x) &&
+                  ts.isPropertyAccessExpression(x.expression) &&
+                  x.expression.name.text === 'properties' &&
+                  ts.isIdentifier(x.expression.expression) &&
+                  x.expression.expression.text === self
+                ) {
+                  found ??= x.name.text
+                }
+                ts.forEachChild(x, dig)
+              }
+              dig(n)
+              return found
+            }
+            const collect = (n: ts.Node): void => {
+              if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.initializer) {
+                const p = paramOf(n.initializer)
+                if (p) bound.set(n.name.text, p)
+              }
+              ts.forEachChild(n, collect)
+            }
+            collect(fnArg)
+
+            const scan = (n: ts.Node): void => {
+              if (
+                ts.isCallExpression(n) &&
+                ts.isPropertyAccessExpression(n.expression) &&
+                SCOPE_METHODS.has(n.expression.name.text) &&
+                /(^|\.)scope$/.test(n.expression.expression.getText(sf)) &&
+                n.arguments.length >= 1
+              ) {
+                const a0 = n.arguments[0]
+                const p =
+                  ts.isIdentifier(a0) ? bound.get(a0.text) : paramOf(a0)
+                if (p) {
+                  const set = out.get(idArg.text) ?? new Set<string>()
+                  set.add(p)
+                  out.set(idArg.text, set)
+                }
+              }
+              ts.forEachChild(n, scan)
+            }
+            scan(fnArg)
+          }
+        }
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(sf)
+  }
+  return out
+}
+
+/**
  * componentId → 參數 → 產生器裡的**退路字面值**（`?? 'x'`）。
  *
  * 給「宣告的 `default` 有沒有說謊」用。同一個參數在多處有不同退路時

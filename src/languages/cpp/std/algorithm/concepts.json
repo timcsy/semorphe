@@ -4,8 +4,16 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "begin",
-      "end"
+      {
+        "name": "begin",
+        "kind": "literal",
+        "default": "v.begin()"
+      },
+      {
+        "name": "end",
+        "kind": "literal",
+        "default": "v.end()"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -15,8 +23,16 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "begin",
-      "end"
+      {
+        "name": "begin",
+        "kind": "literal",
+        "default": "v.begin()"
+      },
+      {
+        "name": "end",
+        "kind": "literal",
+        "default": "v.end()"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -26,8 +42,16 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "begin",
-      "end"
+      {
+        "name": "begin",
+        "kind": "literal",
+        "default": "v.begin()"
+      },
+      {
+        "name": "end",
+        "kind": "literal",
+        "default": "v.end()"
+      }
     ],
     "children": {
       "value": "expression"
@@ -61,8 +85,16 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "a",
-      "b"
+      {
+        "name": "a",
+        "kind": "identifier",
+        "default": "a"
+      },
+      {
+        "name": "b",
+        "kind": "identifier",
+        "default": "b"
+      }
     ],
     "children": {},
     "role": "statement"

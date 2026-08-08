@@ -4,8 +4,24 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "char",
+          "std::string",
+          "long long"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "vec"
+      }
     ],
     "children": {
       "values": {
@@ -29,7 +45,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "vector"
+      {
+        "name": "vector",
+        "kind": "identifier",
+        "default": "vec"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -39,7 +59,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "vector"
+      {
+        "name": "vector",
+        "kind": "identifier",
+        "default": "vec"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -49,7 +73,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "vector"
+      {
+        "name": "vector",
+        "kind": "identifier",
+        "default": "vec"
+      }
     ],
     "children": {},
     "role": "expression"

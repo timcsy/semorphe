@@ -240,7 +240,7 @@ export function registerStructExecutors(
         type: String(p.properties?.type ?? 'int'),
         name: String(p.properties?.name ?? ''),
       })),
-      returnType: String(node.properties.return_type ?? 'void'),
+      returnType: String(node.properties.return_type ?? 'T'),
       body: node.children.body ?? [],
     })
   })

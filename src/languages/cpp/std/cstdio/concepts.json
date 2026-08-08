@@ -4,8 +4,15 @@
     "layer": "lang-core",
     "abstractConcept": "print",
     "properties": [
-      "format",
-      "args"
+      {
+        "name": "format",
+        "kind": "literal",
+        "default": ""
+      },
+      {
+        "name": "args",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -18,8 +25,14 @@
     "layer": "lang-core",
     "abstractConcept": "input",
     "properties": [
-      "format",
-      "args"
+      {
+        "name": "format",
+        "kind": "literal"
+      },
+      {
+        "name": "args",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",

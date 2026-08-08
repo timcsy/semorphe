@@ -56,7 +56,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "x"
+      }
     ],
     "children": {
       "value": "expression"
@@ -71,7 +75,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "expression"
@@ -81,7 +89,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "value"
+      {
+        "name": "value",
+        "kind": "literal",
+        "default": "0"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -91,7 +103,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "value"
+      {
+        "name": "value",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "expression"
@@ -101,7 +117,23 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "operator"
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          "+",
+          "-",
+          "*",
+          "/",
+          "%",
+          "&",
+          "|",
+          "^",
+          "<<",
+          ">>"
+        ],
+        "default": "+"
+      }
     ],
     "children": {
       "left": "expression",
@@ -114,7 +146,19 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "operator"
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          ">",
+          "<",
+          ">=",
+          "<=",
+          "==",
+          "!="
+        ],
+        "default": "=="
+      }
     ],
     "children": {
       "left": "expression",
@@ -127,7 +171,15 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "operator"
+      {
+        "name": "operator",
+        "kind": "enum",
+        "values": [
+          "&&",
+          "||"
+        ],
+        "default": "&&"
+      }
     ],
     "children": {
       "left": "expression",
@@ -199,8 +251,19 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "var_name",
-      "inclusive"
+      {
+        "name": "var_name",
+        "kind": "identifier",
+        "default": "i"
+      },
+      {
+        "name": "inclusive",
+        "kind": "enum",
+        "values": [
+          "FALSE",
+          "TRUE"
+        ]
+      }
     ],
     "children": {
       "from": "expression",
@@ -255,9 +318,30 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name",
-      "params",
-      "return_type"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "f"
+      },
+      {
+        "name": "params",
+        "kind": "literal"
+      },
+      {
+        "name": "return_type",
+        "kind": "enum",
+        "values": [
+          "void",
+          "int",
+          "float",
+          "double",
+          "char",
+          "long long",
+          "string",
+          "bool"
+        ],
+        "default": "void"
+      }
     ],
     "children": {
       "body": "statements"
@@ -274,8 +358,15 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name",
-      "args"
+      {
+        "name": "name",
+        "kind": "literal",
+        "default": "f"
+      },
+      {
+        "name": "args",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "expression",
@@ -322,7 +413,10 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -335,8 +429,23 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "char",
+          "long long"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      }
     ],
     "children": {
       "size": "expression"
@@ -351,7 +460,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      }
     ],
     "children": {
       "index": "expression"
@@ -363,7 +476,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "arr"
+      }
     ],
     "children": {
       "index": "expression",
@@ -379,7 +496,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "text"
+      {
+        "name": "text",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement",
@@ -395,7 +516,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "brief"
+      {
+        "name": "brief",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement",
@@ -411,7 +536,11 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "text"
+      {
+        "name": "text",
+        "kind": "literal",
+        "default": ""
+      }
     ],
     "children": {},
     "role": "statement",

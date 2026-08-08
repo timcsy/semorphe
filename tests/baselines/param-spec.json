@@ -73,5 +73,25 @@
       "方向": "讀了沒宣告",
       "where": "src/interpreter/executors/variables.ts:110"
     }
+  ],
+  "退路自相矛盾": [
+    {
+      "componentId": "cpp_define",
+      "param": "name",
+      "方向": "退路自相矛盾",
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:30→\"\"  src/languages/cpp/core/generators/statements.ts:247→\"MACRO\""
+    },
+    {
+      "componentId": "cpp_ifdef",
+      "param": "condition",
+      "方向": "退路自相矛盾",
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:35→\"\"  src/languages/cpp/core/generators/statements.ts:260→\"MACRO\""
+    },
+    {
+      "componentId": "cpp_ifndef",
+      "param": "condition",
+      "方向": "退路自相矛盾",
+      "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:265→\"MACRO\""
+    }
   ]
 }

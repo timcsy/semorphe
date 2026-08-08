@@ -4,8 +4,14 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "name",
-      "file"
+      {
+        "name": "name",
+        "kind": "literal"
+      },
+      {
+        "name": "file",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -21,8 +27,14 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "name",
-      "file"
+      {
+        "name": "name",
+        "kind": "literal"
+      },
+      {
+        "name": "file",
+        "kind": "literal"
+      }
     ],
     "children": {},
     "role": "statement",

@@ -3,7 +3,16 @@
     "conceptId": "cpp_accumulate",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["begin", "end"],
+    "properties": [
+      {
+        "name": "begin",
+        "kind": "literal"
+      },
+      {
+        "name": "end",
+        "kind": "literal"
+      }
+    ],
     "children": {
       "init": "expression"
     },
@@ -13,7 +22,16 @@
     "conceptId": "cpp_iota",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["begin", "end"],
+    "properties": [
+      {
+        "name": "begin",
+        "kind": "literal"
+      },
+      {
+        "name": "end",
+        "kind": "literal"
+      }
+    ],
     "children": {
       "value": "expression"
     },
@@ -23,7 +41,20 @@
     "conceptId": "cpp_partial_sum",
     "layer": "lang-library",
     "abstractConcept": null,
-    "properties": ["begin", "end", "dest"],
+    "properties": [
+      {
+        "name": "begin",
+        "kind": "literal"
+      },
+      {
+        "name": "end",
+        "kind": "literal"
+      },
+      {
+        "name": "dest",
+        "kind": "literal"
+      }
+    ],
     "children": {},
     "role": "statement"
   },

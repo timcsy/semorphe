@@ -4,9 +4,32 @@
     "layer": "lang-library",
     "abstractConcept": "var_declare",
     "properties": [
-      "key_type",
-      "value_type",
-      "name"
+      {
+        "name": "key_type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "std::string",
+          "char"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "value_type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "double",
+          "std::string"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "mp"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -16,7 +39,11 @@
     "layer": "lang-library",
     "abstractConcept": "array_access",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "mp"
+      }
     ],
     "children": {
       "key": "expression"
@@ -28,7 +55,11 @@
     "layer": "lang-library",
     "abstractConcept": "array_assign",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "mp"
+      }
     ],
     "children": {
       "key": "expression",

@@ -4,8 +4,22 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "enum",
+        "values": [
+          "int",
+          "float",
+          "std::string",
+          "char"
+        ],
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "stk"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -15,7 +29,11 @@
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "stk"
+      }
     ],
     "children": {},
     "role": "expression"

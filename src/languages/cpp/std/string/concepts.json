@@ -4,7 +4,11 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "statement",
@@ -14,7 +18,11 @@
     "conceptId": "cpp_string_length",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -23,7 +31,11 @@
     "conceptId": "cpp_string_substr",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "pos": {
@@ -47,7 +59,11 @@
     "conceptId": "cpp_string_find",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "arg": {
@@ -64,7 +80,11 @@
     "conceptId": "cpp_string_append",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "value": {
@@ -81,7 +101,11 @@
     "conceptId": "cpp_string_c_str",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -90,7 +114,11 @@
     "conceptId": "cpp_getline",
     "layer": "lang-library",
     "properties": [
-      "name"
+      {
+        "name": "name",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -144,7 +172,11 @@
     "conceptId": "cpp_string_empty",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "expression"
@@ -153,7 +185,11 @@
     "conceptId": "cpp_string_erase",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "pos": {
@@ -177,7 +213,11 @@
     "conceptId": "cpp_string_insert",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "pos": {
@@ -201,7 +241,11 @@
     "conceptId": "cpp_string_replace",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "pos": {
@@ -232,7 +276,11 @@
     "conceptId": "cpp_string_push_back",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "char": {
@@ -249,7 +297,11 @@
     "conceptId": "cpp_string_clear",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {},
     "role": "statement"
@@ -258,7 +310,11 @@
     "conceptId": "cpp_string_at",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "identifier",
+        "default": "str"
+      }
     ],
     "children": {
       "index": {
@@ -275,7 +331,10 @@
     "conceptId": "cpp_string_find_first_not_of",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "literal"
+      }
     ],
     "children": {
       "arg": {
@@ -292,7 +351,10 @@
     "conceptId": "cpp_string_find_last_not_of",
     "layer": "lang-library",
     "properties": [
-      "obj"
+      {
+        "name": "obj",
+        "kind": "literal"
+      }
     ],
     "children": {
       "arg": {

@@ -1675,19 +1675,19 @@
           "options": [
             [
               "%{BKY_C_MALLOC_TYPE_INT}",
-              "int"
+              "int*"
             ],
             [
               "%{BKY_C_MALLOC_TYPE_FLOAT}",
-              "float"
+              "float*"
             ],
             [
               "%{BKY_C_MALLOC_TYPE_DOUBLE}",
-              "double"
+              "double*"
             ],
             [
               "%{BKY_C_MALLOC_TYPE_CHAR}",
-              "char"
+              "char*"
             ]
           ]
         },

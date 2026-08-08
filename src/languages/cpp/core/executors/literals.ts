@@ -13,7 +13,7 @@ export function registerLiteralsCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   register('cpp_char_literal', async (node) => {
-    const ch = String(node.properties.char ?? '')
+    const ch = String(node.properties.char ?? 'a')
     return { type: 'char', value: ch.charCodeAt(0) || 0 }
   })
 
