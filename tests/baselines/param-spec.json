@@ -72,12 +72,6 @@
       "param": "member",
       "方向": "讀了沒宣告",
       "where": "src/interpreter/executors/variables.ts:110"
-    },
-    {
-      "componentId": "var_declare",
-      "param": "init_style",
-      "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/declarations.ts:30"
     }
   ]
 }

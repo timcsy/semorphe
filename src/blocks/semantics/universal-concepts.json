@@ -22,8 +22,26 @@
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "x"
+      },
+      {
+        "name": "init_style",
+        "kind": "enum",
+        "values": [
+          "constructor"
+        ],
+        "required": false
+      }
     ],
     "children": {
       "initializer": "expression"

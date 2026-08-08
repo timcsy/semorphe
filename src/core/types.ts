@@ -358,11 +358,54 @@ export interface ModeExtractRule {
 export type PathName = 'lift' | 'render' | 'extract' | 'generate' | 'execute'
 
 /** Concept definition in concepts.json (semantic layer) */
+/**
+ * 一個參數的**語義種類**——決定「什麼值是錯的」。
+ *
+ * ⚠️ **刻意不是 JS 型別。** 實測 177 顆元件的實例側幾乎全是字串
+ * （唯一的布林是 `cpp_include.local`），所以 `'string' | 'number'` 這種詞彙
+ * **等於什麼都沒說**——那正是「沒有指涉物的設計」（`knowledge/experience.md`）。
+ *
+ * 每一個種類都以**它能讓什麼失敗**來定義。生不出檢查的種類不該存在。
+ *
+ * | 種類 | 實測的參數名（節錄） | 它讓什麼失敗 |
+ * |---|---|---|
+ * | `identifier` | `name`(43)、`obj`(30)、`class_name`、`alias` | 空字串、不合法的識別字 |
+ * | `type_expr` | `type`(16)、`return_type`(8)、`key_type` | 空字串（`long long` 那條債的所在） |
+ * | `enum` | `operator`(6)、`position`、`inclusive` | **值不在宣告的集合裡** ← 最強的一條 |
+ * | `literal` | `value`、`text`、`code`、`format` | 只驗存在——內容是使用者的資料 |
+ * | `count` | `rows`、`cols` | 非數字、負數 |
+ */
+export type ParamKind = 'identifier' | 'type_expr' | 'enum' | 'literal' | 'count'
+
+/**
+ * 型別側的參數宣告——**規格**，不是名字清單。
+ *
+ * 詞彙出自 `knowledge/concepts/元件.md:203`（「型別側參數宣告 = 參數規格 = `ParamSpec`」）。
+ *
+ * ⚠️ **實例側（`SemanticNode.properties`）不動。** 這裡只描述，不驅動任何行為——
+ * 曾經驅動過（`deriveRenderMapping` 拿 `properties` 比對積木欄位名），
+ * 那個耦合已於 2026-08-08 解除。
+ */
+export interface ParamSpec {
+  name: string
+  kind: ParamKind
+  /** `kind: 'enum'` 時的允許值。少了它，enum 這個種類就退化成 literal */
+  values?: string[]
+  /** 沒有它這顆元件就不完整嗎 */
+  required?: boolean
+  /** 沒給的時候用什麼 */
+  default?: string
+}
+
 export interface ConceptDefJSON {
   conceptId: string
   layer: ConceptLayer
   abstractConcept?: string | null
-  properties: string[]
+  /**
+   * ⚠️ **過渡中**：純名字清單（124 顆）與 `ParamSpec[]`（規格化後）並存。
+   * 見 `specs/102-param-spec`。全部遷完之後這裡只留 `ParamSpec[]`。
+   */
+  properties: string[] | ParamSpec[]
   children: Record<string, string>
   role: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>

@@ -1,5 +1,6 @@
 import type { BlockSpec, AstConstraint, ConceptDefJSON, BlockProjectionJSON, Topic } from './types'
 import { applyBlockOverride } from './block-override'
+import { paramNames } from './param-spec'
 
 export class BlockSpecRegistry {
   private specs = new Map<string, BlockSpec>()
@@ -28,7 +29,7 @@ export class BlockSpecRegistry {
         conceptMapping: {
           conceptId: proj.conceptId,
           abstractConcept: concept?.abstractConcept ?? undefined,
-          properties: concept?.properties,
+          properties: paramNames(concept?.properties),
           children: concept?.children,
           role: concept?.role,
           annotations: concept?.annotations,

@@ -175,8 +175,18 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "ptr"
+      }
     ],
     "children": {
       "initializer": "expression"
@@ -550,8 +560,18 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "MAX"
+      }
     ],
     "children": {
       "initializer": "expression"
@@ -563,8 +583,18 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "ref"
+      }
     ],
     "children": {
       "initializer": "expression"
@@ -576,8 +606,18 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "SIZE"
+      }
     ],
     "children": {
       "initializer": "expression"
@@ -589,8 +629,18 @@
     "layer": "lang-core",
     "abstractConcept": "var_declare",
     "properties": [
-      "type",
-      "name"
+      {
+        "name": "type",
+        "kind": "type_expr",
+        "required": true,
+        "default": "int"
+      },
+      {
+        "name": "name",
+        "kind": "identifier",
+        "required": true,
+        "default": "count"
+      }
     ],
     "children": {
       "initializer": "expression"

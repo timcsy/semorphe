@@ -12,7 +12,8 @@
  * 見 specs/049-audit-guardrails/research.md D6
  */
 import { createNode } from '../../src/core/semantic-tree'
-import type { ConceptDefJSON, SemanticNode, PropertyValue } from '../../src/core/types'
+import { paramSpecs } from '../../src/core/param-spec'
+import type { ConceptDefJSON, SemanticNode, PropertyValue, ParamSpec, ParamKind } from '../../src/core/types'
 
 /**
  * 概念 → 它的運算子該長什麼樣。
@@ -37,7 +38,35 @@ const OPERATOR_FOR: Record<string, string> = {
   cpp_bitwise: '&',
 }
 
-/** 屬性名 → 合理的預設值。 */
+/**
+ * `ParamKind` → 一個型別上正確的預設值。
+ *
+ * ⚠️ 這是**規格驅動**的路，優於底下 `defaultFor` 的名字正則猜測：
+ * 猜測靠的是「叫 `type` 的大概是型別」，而規格是宣告出來的事實。
+ * 規格化推進到哪，猜測就退到哪。
+ */
+const BY_KIND: Record<ParamKind, PropertyValue> = {
+  identifier: 'x',
+  type_expr: 'int',
+  enum: 'x', // 沒有 values 時的保底；有 values 走下面第一個允許值
+  literal: '1',
+  count: '0',
+}
+
+/**
+ * 一個參數的合成值。**規格優先，名字猜測墊底。**
+ *
+ * 順序有理由：`default`（產生器實際的退路，最貼近真實）→ `values[0]`
+ * （enum 唯一保證合法的值）→ `kind` → 名字正則。
+ */
+function synthValue(sp: ParamSpec, conceptId?: string): PropertyValue {
+  if (sp.default !== undefined) return sp.default
+  if (sp.kind === 'enum' && sp.values?.length) return sp.values[0]
+  if (sp.kind !== 'literal') return BY_KIND[sp.kind]
+  return defaultFor(sp.name, conceptId)
+}
+
+/** 屬性名 → 合理的預設值。**未規格化的元件走這條**——靠名字猜。 */
 function defaultFor(prop: string, conceptId?: string): PropertyValue {
   const p = prop.toLowerCase()
   if (/(^|_)(name|var|obj|target|func|label)($|_)/.test(p)) return 'x'
@@ -71,7 +100,11 @@ export function synthMinimalNode(def: ConceptDefJSON): SynthResult {
   const notes: string[] = []
 
   const properties: Record<string, PropertyValue> = {}
-  for (const p of def.properties ?? []) properties[p] = defaultFor(p, def.conceptId)
+  // ⚠️ 已規格化的元件走 `synthValue`（讀宣告），其餘走 `defaultFor`（猜名字）。
+  // `paramSpecs` 把純名字清單正規化成 `kind: 'literal'`，於是那條路自動落回猜測。
+  for (const sp of paramSpecs(def.properties)) {
+    properties[sp.name] = synthValue(sp, def.conceptId)
+  }
 
   const children: Record<string, SemanticNode[]> = {}
   for (const [slot, slotType] of Object.entries(def.children ?? {})) {

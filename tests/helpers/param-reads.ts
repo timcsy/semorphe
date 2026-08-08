@@ -37,6 +37,13 @@ export interface ParamRead {
   componentId: string
   param: string
   where: string
+  /**
+   * 這次讀取的**退路字面值**：`node.properties.name ?? 'ptr'` 的 `'ptr'`。
+   *
+   * ⚠️ 只有字面值算。`?? someVar` 不記——那個值靜態看不到，
+   * 記一個猜的比不記更糟（`build-guardrail` 第 5 步：判定保守）。
+   */
+  fallback?: string
 }
 
 function readsInCallback(fn: ts.Node, selfName: string, sf: ts.SourceFile, file: string): ParamRead[] {
@@ -49,10 +56,25 @@ function readsInCallback(fn: ts.Node, selfName: string, sf: ts.SourceFile, file:
     ts.isIdentifier(n.expression) &&
     n.expression.text === selfName
 
+  /** `X ?? '字面值'` → 那個字面值。其餘（含 `?? 變數`）→ undefined */
+  const fallbackOf = (n: ts.Node): string | undefined => {
+    const p = n.parent
+    if (
+      p &&
+      ts.isBinaryExpression(p) &&
+      p.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken &&
+      p.left === n &&
+      ts.isStringLiteral(p.right)
+    ) {
+      return p.right.text
+    }
+    return undefined
+  }
+
   const walk = (n: ts.Node): void => {
     // node.properties.X
     if (ts.isPropertyAccessExpression(n) && isSelfProperties(n.expression)) {
-      out.push({ componentId: '', param: n.name.text, where: at(n) })
+      out.push({ componentId: '', param: n.name.text, where: at(n), fallback: fallbackOf(n) })
     }
     // node.properties['X']
     if (
@@ -144,6 +166,27 @@ export function templateReads(): Map<string, Set<string>> {
     }
   }
   return out
+}
+
+/**
+ * componentId → 參數 → 產生器裡的**退路字面值**（`?? 'x'`）。
+ *
+ * 給「宣告的 `default` 有沒有說謊」用。同一個參數在多處有不同退路時
+ * 全部記下來——那本身就是一種分歧。
+ */
+export function fallbacksByComponent(
+  extra: { file: string; source: string }[] = [],
+): Map<string, Map<string, { value: string; where: string }[]>> {
+  const byId = new Map<string, Map<string, { value: string; where: string }[]>>()
+  for (const r of scanParamReads(extra)) {
+    if (r.fallback === undefined) continue
+    const params = byId.get(r.componentId) ?? new Map<string, { value: string; where: string }[]>()
+    const list = params.get(r.param) ?? []
+    list.push({ value: r.fallback, where: r.where })
+    params.set(r.param, list)
+    byId.set(r.componentId, params)
+  }
+  return byId
 }
 
 /** componentId → 被讀到的參數集合 */

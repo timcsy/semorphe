@@ -136,7 +136,7 @@ function measure(
 // ─── 合成注入：兩個方向都要釘（第 9 步）─────────────────────────────
 
 const 合成概念 = (id: string): ConceptDefJSON =>
-  ({ conceptId: id, category: '__不存在的分類__', properties: {}, children: {} }) as unknown as ConceptDefJSON
+  ({ conceptId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ConceptDefJSON
 
 const 合成積木 = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
   ({

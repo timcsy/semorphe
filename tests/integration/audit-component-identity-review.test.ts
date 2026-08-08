@@ -41,6 +41,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { paramSpecs } from '../../src/core/param-spec'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
@@ -179,8 +180,18 @@ for (const c of ALL) {
 // ── 信號 6：同前綴族 ＋ 宣告幾乎相同 → 型別可能是參數而非身分
 // 例：cpp_{vector,stack,queue,map,set,pair,string}_declare 九顆都是「宣告一個 T 的容器」
 const declareFamily = ALL.filter((c) => /_declare$/.test(c.conceptId))
+// ⚠️ 簽章比的是**參數的名字與種類**，不是預設值。
+//
+// 參數規格化（102）之後這六顆的 `default` 各不相同（`x`／`MAX`／`SIZE`／
+// `count`／`ptr`／`ref`）——而那是產生器的退路字串，跟「型別是身分還是參數」
+// 這個問題無關。第一版把整個 `properties` 塞進 JSON 比對，於是規格化一落地
+// 這個信號就整組消失，六筆判定同時變孤兒。**信號不該被無關的欄位打散。**
 const sig = (c: ConceptDef): string =>
-  JSON.stringify({ p: [...(c.properties ?? [])].sort(), ch: Object.keys(c.children ?? {}).sort(), r: c.role })
+  JSON.stringify({
+    p: paramSpecs(c.properties).map((x) => `${x.name}:${x.kind}`).sort(),
+    ch: Object.keys(c.children ?? {}).sort(),
+    r: c.role,
+  })
 const bySig = new Map<string, string[]>()
 for (const c of declareFamily) {
   const k = sig(c)

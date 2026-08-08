@@ -37,21 +37,30 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
-import { paramReadsByComponent, scanParamReads, templateReads } from '../helpers/param-reads'
+import { paramReadsByComponent, scanParamReads, templateReads, fallbacksByComponent } from '../helpers/param-reads'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { paramNames, paramSpecs, isSpecified } from '../../src/core/param-spec'
+import type { ParamSpec } from '../../src/core/types'
 
 /** componentId → 宣告的參數名 */
-const 宣告 = new Map(
-  allCppConcepts().map((c) => [
-    c.conceptId,
-    new Set(((c as unknown as { properties?: string[] }).properties ?? []) as string[]),
-  ]),
+const 宣告 = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramNames(c.properties))]))
+
+/**
+ * componentId → 規格（只含**已規格化**的元件）。
+ *
+ * ⚠️ 只收 `isSpecified` 的。純名字清單經 `paramSpecs` 會變成
+ * `kind: 'literal'` 的假規格——拿假規格去比對預設值，會對著 124 顆亂叫。
+ */
+const 規格 = new Map<string, ParamSpec[]>(
+  allCppConcepts()
+    .filter((c) => isSpecified(c.properties))
+    .map((c) => [c.conceptId, paramSpecs(c.properties)]),
 )
 
 interface Finding {
   componentId: string
   param: string
-  方向: '讀了沒宣告' | '宣告了沒人讀'
+  方向: '讀了沒宣告' | '宣告了沒人讀' | '預設值說謊'
   where: string
 }
 
@@ -77,6 +86,30 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
     for (const p of decl) {
       if (read?.has(p) || tpl?.has(p)) continue
       out.push({ componentId: cid, param: p, 方向: '宣告了沒人讀', where: '（無）' })
+    }
+  }
+
+  // ─── 第三個方向：**宣告的 `default` 與產生器的退路不符** ───
+  //
+  // 這一段只有在參數規格化之後才可能存在——純名字清單裡沒有 `default` 可比。
+  // 它就是 SC-004 要的「消費者會叫」：規格不是寫給人看的裝飾，
+  // 寫錯一個字，這裡會指名。
+  const fallbacks = fallbacksByComponent(extra)
+  for (const [cid, specs] of 規格) {
+    const fb = fallbacks.get(cid)
+    if (!fb) continue
+    for (const sp of specs) {
+      const actual = fb.get(sp.name)
+      if (!actual || actual.length === 0) continue
+      const 不符 = actual.filter((a) => a.value !== sp.default)
+      for (const a of 不符) {
+        out.push({
+          componentId: cid,
+          param: sp.name,
+          方向: '預設值說謊',
+          where: `宣告 default=${JSON.stringify(sp.default)}，而 ${a.where} 退路是 ${JSON.stringify(a.value)}`,
+        })
+      }
     }
   }
 
@@ -156,11 +189,16 @@ describe('參數規格與實際使用的一致性', () => {
   const findings = measure()
   const 讀了沒宣告 = findings.filter((f) => f.方向 === '讀了沒宣告')
   const 宣告了沒人讀 = findings.filter((f) => f.方向 === '宣告了沒人讀')
+  const 預設值說謊 = findings.filter((f) => f.方向 === '預設值說謊')
 
   it('報表', () => {
     printReport('參數規格一致性', [
-      `元件 ${宣告.size}｜讀了沒宣告 ${讀了沒宣告.length}｜宣告了沒人讀 ${宣告了沒人讀.length}`,
+      `元件 ${宣告.size}（已規格化 ${規格.size}）｜讀了沒宣告 ${讀了沒宣告.length}｜` +
+        `宣告了沒人讀 ${宣告了沒人讀.length}｜預設值說謊 ${預設值說謊.length}`,
       '',
+      ...(預設值說謊.length
+        ? ['**預設值說謊**（規格與產生器退路不符——改其中一邊）：', ...預設值說謊.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`), '']
+        : []),
       '**讀了沒宣告**（規格不完整——補宣告）：',
       ...讀了沒宣告.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`),
       '',
@@ -197,5 +235,18 @@ describe('參數規格與實際使用的一致性', () => {
       '新增了「程式碼讀了規格裡沒有的參數」——規格更不完整了。',
     ).toEqual([])
     assertRatchet([['讀了沒宣告', 讀了沒宣告.length, base.讀了沒宣告.length]])
+  })
+
+  it('★ 已規格化的元件：宣告的 default 不得與產生器退路不符 = 0', () => {
+    // ⚠️ **硬性零，而且範圍只在已規格化的元件上**——這是 6.8 步的判準：
+    // 這條規範「留一筆還成立嗎」→ 不成立（一筆說謊的預設值就是一顆會誤導人的規格），
+    // 而「修法貴不貴」→ 不貴（規格是這一輪自己寫的，寫錯就改）。
+    //
+    // 範圍限定讓它可以是硬性零：124 顆未規格化的不在裡面，不會逼出棘輪。
+    // 規格化推進到哪，這條就守到哪。
+    expect(
+      預設值說謊.map((f) => `${f.componentId}.${f.param}｜${f.where}`),
+      '規格宣告的預設值與程式碼實際的退路不一樣——規格在說謊。',
+    ).toEqual([])
   })
 })

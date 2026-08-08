@@ -7,12 +7,6 @@
   },
   "decisions": [
     {
-      "conceptId": "var_declare",
-      "signal": "宣告與另外 N 顆完全相同",
-      "decision": "保留",
-      "reason": "量過執行器：pointer 有自己的；static 與 ref 的行為缺口已於 099d 補上（跨呼叫保存／別名）。const 與 constexpr 的執行期行為確實相同，但修飾詞要不要變成參數取決於參數規格化（C 項）——現在決定會決定兩次。"
-    },
-    {
       "conceptId": "cpp_pointer_declare",
       "signal": "宣告與另外 N 顆完全相同",
       "decision": "保留",
@@ -22,13 +16,13 @@
       "conceptId": "cpp_const_declare",
       "signal": "宣告與另外 N 顆完全相同",
       "decision": "暫留，待 C 項",
-      "reason": "執行期行為與 var_declare 相同（不可變是編譯期約束，本直譯器不強制）。碼形態不同（`const int` vs `int`）。要不要把修飾詞變成參數，屬參數規格化（C 項）。"
+      "reason": "量過執行器：const 與 constexpr 的執行期行為相同，產生器也只差關鍵字，參數規格（102）落地後兩顆的 name:kind 完全一致——**修飾詞確實是參數不是身分**。仍判「保留」，因為合併是 componentId 改名，依 P8 的範圍（history/026）必須附一次性轉換，那是獨立一項的工作量，不該當作 C1 的副作用。"
     },
     {
       "conceptId": "cpp_constexpr_declare",
       "signal": "宣告與另外 N 顆完全相同",
       "decision": "暫留，待 C 項",
-      "reason": "同 cpp_const_declare。"
+      "reason": "量過執行器：const 與 constexpr 的執行期行為相同，產生器也只差關鍵字，參數規格（102）落地後兩顆的 name:kind 完全一致——**修飾詞確實是參數不是身分**。仍判「保留」，因為合併是 componentId 改名，依 P8 的範圍（history/026）必須附一次性轉換，那是獨立一項的工作量，不該當作 C1 的副作用。"
     },
     {
       "conceptId": "cpp_ref_declare",

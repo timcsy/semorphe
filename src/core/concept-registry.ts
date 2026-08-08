@@ -1,4 +1,5 @@
 import type { ConceptDef, ConceptDefJSON } from './types'
+import { paramNames } from './param-spec'
 
 export class ConceptRegistry {
   private concepts = new Map<string, ConceptDef>()
@@ -40,7 +41,7 @@ export class ConceptRegistry {
         id: c.conceptId,
         layer: c.layer,
         abstractConcept: c.abstractConcept ?? undefined,
-        propertyNames: c.properties,
+        propertyNames: paramNames(c.properties),
         childNames: Object.keys(c.children),
         annotations: c.annotations,
       })
