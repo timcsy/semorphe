@@ -1,6 +1,6 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../types'
 import { createNode } from '../semantic-tree'
-import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS, resolvePath, resolvePattern } from './common-mappings'
+import { deriveRenderMapping, resolvePath, resolvePattern } from './common-mappings'
 
 export interface BlockState {
   type: string
@@ -221,87 +221,26 @@ export class PatternExtractor {
     return results
   }
 
-  /** Auto-derive renderMapping from blockDef and concept (same logic as PatternRenderer) */
+  /**
+   * ⚠️ **推導只有一份**——`common-mappings.ts` 的 `deriveRenderMapping`。
+   *
+   * 這裡曾經有一份自己的拷貝，而 `PatternRenderer` 有另一份，**兩份不一樣**：
+   * 渲染那份認 `field_multilinetext`，這份不認。於是 `c_comment_block` 的內容
+   * **渲染得出去、抽取不回來**——使用者在積木編輯器裡寫的區塊註解會消失，
+   * 而唯一的症狀是「切換積木風格之後東西不見了」。
+   *
+   * 已合併成一份。一致性由 `audit-derive-agreement` 護欄看著——它**餵同一個
+   * 輸入給渲染與抽取、比對輸出**，而不是比對程式碼。
+   */
   private deriveRenderMapping(spec: BlockSpec): RenderMapping {
-    const mapping: RenderMapping = {
-      fields: {},
-      inputs: {},
-      statementInputs: {},
-    }
-
-    const concept = spec.conceptMapping
-    if (!concept) return mapping
-
-    const blockDef = spec.blockDef as Record<string, unknown>
-
-    const allArgs: Array<Record<string, unknown>> = []
-    for (let i = 0; i <= 9; i++) {
-      const args = blockDef[`args${i}`] as Array<Record<string, unknown>> | undefined
-      if (args) allArgs.push(...args)
-    }
-
-    const properties = concept.properties ?? []
-    const children = concept.children ?? {}
-
-    for (const arg of allArgs) {
-      const argType = arg.type as string
-      const argName = arg.name as string
-      if (!argName) continue
-
-      // ⚠️ **這份清單必須與 `pattern-renderer.ts` 的那份一致。**
-      //
-      // 它原本少了 `field_multilinetext`，於是 `c_comment_block` 的內容
-      // **渲染得出去、抽取不回來**——使用者在積木編輯器寫的區塊註解會消失，
-      // 而唯一的症狀是「切換積木風格之後東西不見了」。
-      //
-      // `c_comment_doc` 沒中，只因為它剛好有顯式的 `renderMapping.fields`。
-      //
-      // 兩份推導的一致性現在有護欄在看（`audit-derive-agreement`）。
-      if (
-        argType === 'field_input' ||
-        argType === 'field_dropdown' ||
-        argType === 'field_number' ||
-        argType === 'field_multilinetext'
-      ) {
-        const semProp = this.findMatchingProperty(argName, properties)
-        if (semProp) mapping.fields[argName] = semProp
-      } else if (argType === 'input_value') {
-        const semChild = this.findMatchingChild(argName, children)
-        if (semChild) mapping.inputs[argName] = semChild
-      } else if (argType === 'input_statement') {
-        const semChild = this.findMatchingChild(argName, children)
-        if (semChild) mapping.statementInputs[argName] = semChild
-      }
-    }
-
-    return mapping
+    const c = spec.conceptMapping
+    return deriveRenderMapping(
+      spec.blockDef as Record<string, unknown>,
+      c?.properties ?? [],
+      (c?.children ?? {}) as Record<string, unknown>,
+    )
   }
 
-  private findMatchingProperty(fieldName: string, properties: string[]): string | null {
-    const lower = fieldName.toLowerCase()
-    for (const prop of properties) {
-      if (prop.toLowerCase() === lower) return prop
-    }
-    const mapped = FIELD_COMMON_MAPPINGS[fieldName]
-    if (mapped) {
-      for (const m of mapped) {
-        if (properties.includes(m)) return m
-      }
-    }
-    return null
-  }
-
-  private findMatchingChild(inputName: string, children: Record<string, string>): string | null {
-    const lower = inputName.toLowerCase()
-    for (const child of Object.keys(children)) {
-      if (child.toLowerCase() === lower) return child
-    }
-    const mapped = INPUT_COMMON_MAPPINGS[inputName]
-    if (mapped) {
-      for (const m of mapped) {
-        if (m in children) return m
-      }
-    }
-    return null
-  }
+  // `findMatchingProperty` / `findMatchingChild` 已移到 `common-mappings.ts`——
+  // 它們是推導的一部分，而推導只有一份。
 }

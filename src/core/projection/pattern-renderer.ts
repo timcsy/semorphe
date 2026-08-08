@@ -1,7 +1,7 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic, FormSet } from '../types'
 import { applyBlockOverride } from '../block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
-import { FIELD_COMMON_MAPPINGS, INPUT_COMMON_MAPPINGS, resolvePattern } from './common-mappings'
+import { deriveRenderMapping, resolvePattern } from './common-mappings'
 import { selectForm, buildFormSets, type FormDeclaration } from './form-selection'
 
 interface BlockState {
@@ -361,88 +361,24 @@ export class PatternRenderer {
     return undefined
   }
 
-  /** Auto-derive renderMapping from blockDef and concept */
+  /**
+   * ⚠️ **推導只有一份**——`common-mappings.ts` 的 `deriveRenderMapping`。
+   *
+   * 這裡與 `PatternExtractor` 曾經各有一份，**兩份不一樣**：這份認
+   * `field_multilinetext`，那份不認。於是 `c_comment_block` 的內容
+   * **渲染得出去、抽取不回來**——使用者寫的區塊註解會消失。
+   *
+   * 已合併。一致性由 `audit-derive-agreement` 護欄看著——它**餵同一個輸入給
+   * 兩邊、比對輸出**，而不是比對程式碼。
+   */
   private deriveRenderMapping(spec: BlockSpec): RenderMapping {
-    const mapping: RenderMapping = {
-      fields: {},
-      inputs: {},
-      statementInputs: {},
-    }
-
-    const concept = spec.conceptMapping
-    if (!concept) return mapping
-
-    const blockDef = spec.blockDef as Record<string, unknown>
-
-    // Collect all args from args0, args1, args2, args3...
-    const allArgs: Array<Record<string, unknown>> = []
-    for (let i = 0; i <= 9; i++) {
-      const args = blockDef[`args${i}`] as Array<Record<string, unknown>> | undefined
-      if (args) allArgs.push(...args)
-    }
-
-    const properties = concept.properties ?? []
-    const children = concept.children ?? {}
-
-    for (const arg of allArgs) {
-      const argType = arg.type as string
-      const argName = arg.name as string
-      if (!argName) continue
-
-      if (argType === 'field_input' || argType === 'field_dropdown' || argType === 'field_number' || argType === 'field_multilinetext') {
-        // Map to a semantic property
-        const semProp = this.findMatchingProperty(argName, properties)
-        if (semProp) {
-          mapping.fields[argName] = semProp
-        }
-      } else if (argType === 'input_value') {
-        // Map to a semantic child (expression)
-        const semChild = this.findMatchingChild(argName, children)
-        if (semChild) {
-          mapping.inputs[argName] = semChild
-        }
-      } else if (argType === 'input_statement') {
-        // Map to a semantic child (statements)
-        const semChild = this.findMatchingChild(argName, children)
-        if (semChild) {
-          mapping.statementInputs[argName] = semChild
-        }
-      }
-    }
-
-    return mapping
+    const c = spec.conceptMapping
+    return deriveRenderMapping(
+      spec.blockDef as Record<string, unknown>,
+      c?.properties ?? [],
+      (c?.children ?? {}) as Record<string, unknown>,
+    )
   }
 
-  /** Find matching semantic property for a block field name */
-  private findMatchingProperty(fieldName: string, properties: string[]): string | null {
-    // Exact case-insensitive match
-    const lower = fieldName.toLowerCase()
-    for (const prop of properties) {
-      if (prop.toLowerCase() === lower) return prop
-    }
-    // Try common mappings
-    const mapped = FIELD_COMMON_MAPPINGS[fieldName]
-    if (mapped) {
-      for (const m of mapped) {
-        if (properties.includes(m)) return m
-      }
-    }
-    return null
-  }
 
-  /** Find matching semantic child for a block input name */
-  private findMatchingChild(inputName: string, children: Record<string, string>): string | null {
-    const lower = inputName.toLowerCase()
-    for (const child of Object.keys(children)) {
-      if (child.toLowerCase() === lower) return child
-    }
-    // Common mappings
-    const mapped = INPUT_COMMON_MAPPINGS[inputName]
-    if (mapped) {
-      for (const m of mapped) {
-        if (m in children) return m
-      }
-    }
-    return null
-  }
 }
