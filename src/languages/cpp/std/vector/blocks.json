@@ -86,7 +86,7 @@
       "tooltip": "%{BKY_CPP_VECTOR_SIZE_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${VECTOR}.size()",
+      "pattern": "${OBJ}.size()",
       "imports": [
         "vector"
       ],
@@ -110,7 +110,7 @@
     },
     "renderMapping": {
       "fields": {
-        "VECTOR": "vector"
+        "VECTOR": "obj"
       }
     }
   },
@@ -136,7 +136,7 @@
       "tooltip": "%{BKY_CPP_VECTOR_POP_BACK_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${VECTOR}.pop_back();",
+      "pattern": "${OBJ}.pop_back();",
       "imports": [
         "vector"
       ],
@@ -160,7 +160,7 @@
     },
     "renderMapping": {
       "fields": {
-        "VECTOR": "vector"
+        "VECTOR": "obj"
       }
     }
   },
@@ -186,7 +186,7 @@
       "tooltip": "%{BKY_CPP_VECTOR_BACK_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${VECTOR}.back()",
+      "pattern": "${OBJ}.back()",
       "imports": [
         "vector"
       ],
@@ -210,7 +210,7 @@
     },
     "renderMapping": {
       "fields": {
-        "VECTOR": "vector"
+        "VECTOR": "obj"
       }
     }
   }

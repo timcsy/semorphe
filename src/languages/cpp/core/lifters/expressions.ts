@@ -231,7 +231,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
       const row = rowNode ? ctx.lift(rowNode) : null
       const col = colNode ? ctx.lift(colNode) : null
-      return createNode('cpp:array_2d_access', { name }, {
+      return createNode('cpp:array_2d_access', { obj: name }, {
         row: row ? [row] : [],
         col: col ? [col] : [],
       })
@@ -262,7 +262,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
         key: index ? [index] : [],
       })
     }
-    return createNode('lang:array_access', { name }, {
+    return createNode('lang:array_access', { obj: name }, {
       index: index ? [index] : [],
     })
   })

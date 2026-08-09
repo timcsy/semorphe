@@ -264,19 +264,19 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_struct_pointer_access', () => {
     it('should render and extract struct pointer access', () => {
-      const sem = createNode('cpp:struct_pointer_access', { ptr: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_pointer_access', { obj: 'p', member: 'x' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_struct_pointer_access')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:struct_pointer_access')
-      expect(sem2!.properties.ptr).toBe('p')
+      expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_pointer_access', { ptr: 'node', member: 'next' })
+      const sem = createNode('cpp:struct_pointer_access', { obj: 'node', member: 'next' })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('node->next')
     })
@@ -389,18 +389,18 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:vector_size', () => {
     it('should render and extract vector size', () => {
-      const sem = createNode('cpp:vector_size', { vector: 'v' })
+      const sem = createNode('cpp:vector_size', { obj: 'v' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_vector_size')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:vector_size')
-      expect(sem2!.properties.vector).toBe('v')
+      expect(sem2!.properties.obj).toBe('v')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:vector_size', { vector: 'nums' })
+      const sem = createNode('cpp:vector_size', { obj: 'nums' })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('nums.size()')
     })

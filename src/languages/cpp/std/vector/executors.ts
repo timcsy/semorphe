@@ -41,7 +41,7 @@ export function registerExecutors(
   })
 
   register('cpp:vector_size', async (node, ctx) => {
-    const name = String(node.properties.vector)
+    const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       return { type: 'int', value: 0 }
@@ -50,7 +50,7 @@ export function registerExecutors(
   })
 
   register('cpp:vector_pop_back', async (node, ctx) => {
-    const name = String(node.properties.vector)
+    const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
@@ -61,7 +61,7 @@ export function registerExecutors(
   })
 
   register('cpp:vector_back', async (node, ctx) => {
-    const name = String(node.properties.vector)
+    const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
       return defaultValue('int')

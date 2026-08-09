@@ -54,7 +54,7 @@ export function registerExecutors(
       itemsRead++
 
       if (argNode.conceptId === 'lang:array_access') {
-        const arrName = String(argNode.properties.name)
+        const arrName = String(argNode.properties.obj)
         const arr = ctx.scope.get(arrName)
         if (arr.type === 'array' && Array.isArray(arr.value)) {
           const indexVal = await ctx.evaluate((argNode.children.index ?? [])[0])

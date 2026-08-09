@@ -31,7 +31,7 @@ export function registerArraysCoreExecutors(
   })
 
   register('cpp:array_2d_access', async (node, ctx) => {
-    const name = String(node.properties.name)
+    const name = String(node.properties.obj)
     const rowNodes = node.children.row
     const colNodes = node.children.col
     if (!rowNodes?.length || !colNodes?.length) return defaultValue('int')
@@ -51,7 +51,7 @@ export function registerArraysCoreExecutors(
   })
 
   register('cpp:array_2d_assign', async (node, ctx) => {
-    const name = String(node.properties.name)
+    const name = String(node.properties.obj)
     const rowNodes = node.children.row
     const colNodes = node.children.col
     const valueNodes = node.children.value

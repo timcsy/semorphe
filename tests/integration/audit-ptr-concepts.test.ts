@@ -149,7 +149,7 @@ describe('CONCEPT_IDENTITY audit: pointer operations', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int* p = &x;\n    *p = 10;'))!
     const assigns = findConcepts(sem, 'cpp:pointer_assign')
     expect(assigns.length).toBe(1)
-    expect(assigns[0].properties.ptr_name).toBe('p')
+    expect(assigns[0].properties.obj).toBe('p')
   })
 })
 

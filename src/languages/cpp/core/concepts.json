@@ -178,7 +178,7 @@
     "abstractConcept": "lang:var_assign",
     "properties": [
       {
-        "name": "ptr_name",
+        "name": "obj",
         "kind": "identifier",
         "default": "ptr"
       }
@@ -353,7 +353,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "ptr",
+        "name": "obj",
         "kind": "identifier",
         "default": "ptr"
       },
@@ -1085,7 +1085,7 @@
     "abstractConcept": "lang:array_access",
     "properties": [
       {
-        "name": "name",
+        "name": "obj",
         "kind": "identifier",
         "default": "arr"
       }
@@ -1102,7 +1102,7 @@
     "abstractConcept": "lang:array_assign",
     "properties": [
       {
-        "name": "name",
+        "name": "obj",
         "kind": "identifier",
         "default": "arr"
       }

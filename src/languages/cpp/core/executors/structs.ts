@@ -247,7 +247,7 @@ export function registerStructExecutors(
 
   /** `p->x` */
   register('cpp:struct_pointer_access', async (node, ctx) => {
-    const ptrName = String(node.properties.ptr)
+    const ptrName = String(node.properties.obj)
     const ptr = ctx.scope.get(ptrName)
     if (ptr.value === null || ptr.value === undefined) {
       // 對空指標取成員在真的 C++ 會當掉。**出聲**，不要靜默回預設值。

@@ -13,7 +13,7 @@
 import type { SavedState } from './storage'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 3
+export const CURRENT_VERSION = 4
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -148,6 +148,51 @@ export function registerIdMigration(m: Record<string, string>): void {
   Object.assign(idMigrations, m)
 }
 
+/**
+ * **參數改名**——`{ conceptId: { 舊屬性名: 新屬性名 } }`。
+ *
+ * 與身分改名同一個形狀，而且同樣由**套件**提供：核心不得認得
+ * `cpp:vector_size` 的參數叫什麼（第二十二條護欄會叫）。
+ *
+ * ⚠️ 為什麼參數改名也要遷移：**語義樹是存下去的**（`SavedState.tree`），
+ * 所以 `properties.vector` 就在使用者的檔案裡。改名不遷移的話，
+ * 讀回來的節點會少一個屬性，而產生器會靜靜地用退路值。
+ */
+const propMigrations: Record<string, Record<string, string>> = {}
+
+export function registerPropertyMigration(m: Record<string, Record<string, string>>): void {
+  for (const [cid, map] of Object.entries(m)) {
+    propMigrations[cid] = { ...(propMigrations[cid] ?? {}), ...map }
+  }
+}
+
+/** 目前已登錄的參數改名——給護欄查涵蓋率用 */
+export function registeredPropertyMigrations(): Record<string, Record<string, string>> {
+  return JSON.parse(JSON.stringify(propMigrations)) as Record<string, Record<string, string>>
+}
+
+/** 就地改寫語義樹裡的參數名。**只改認得的，其餘原樣通過。** */
+function 改寫參數(node: unknown): unknown {
+  if (!node || typeof node !== 'object') return node
+  if (Array.isArray(node)) return node.map(改寫參數)
+  const n = node as Record<string, unknown>
+  const out: Record<string, unknown> = { ...n }
+  const cid = out.conceptId
+  const map = typeof cid === 'string' ? propMigrations[cid] : undefined
+  if (map && out.properties && typeof out.properties === 'object') {
+    const props: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(out.properties as Record<string, unknown>)) props[map[k] ?? k] = v
+    out.properties = props
+  }
+  const children = out.children
+  if (children && typeof children === 'object' && !Array.isArray(children)) {
+    const c: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = 改寫參數(v)
+    out.children = c
+  }
+  return out
+}
+
 /** 目前已登錄的全部改名——給護欄查涵蓋率用 */
 export function registeredIdMigrations(): Record<string, string> {
   return { ...idMigrations }
@@ -156,6 +201,11 @@ export function registeredIdMigrations(): Record<string, string> {
 export const UPGRADES: Record<number, Upgrade> = {
   1: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, 合併掉的身分), version: 2 }),
   2: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 3 }),
+  // 3 → 4：**接收者參數統一叫 `obj`**（G 項第 1 步，2026-08-09）。
+  // 10 顆元件的接收者原本叫 `name`／`vector`／`ptr_name`／`ptr`——
+  // 同一個角色四個名字。統一之後，`lifters/io.ts` 裡那張只為了容納不一致
+  // 而存在的 `METHOD_OBJ_PROP` 對應表整個消失了。
+  3: (raw) => ({ ...raw, tree: 改寫參數(raw.tree), version: 4 }),
 }
 
 export type VersionVerdict =

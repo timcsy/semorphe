@@ -57,7 +57,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "name",
+        "name": "obj",
         "kind": "identifier",
         "default": "x"
       }
@@ -461,7 +461,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "name",
+        "name": "obj",
         "kind": "identifier",
         "default": "arr"
       }
@@ -477,7 +477,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "name",
+        "name": "obj",
         "kind": "identifier",
         "default": "arr"
       }

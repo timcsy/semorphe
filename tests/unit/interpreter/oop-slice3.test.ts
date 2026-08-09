@@ -29,7 +29,7 @@ const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { 
 const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
 const ref = (name: string): SemanticNode => n('lang:var_ref', { name })
 const show = (x: SemanticNode): SemanticNode => n('lang:print', {}, { values: [x] })
-const assign = (name: string, v: SemanticNode): SemanticNode => n('lang:var_assign', { name }, { value: [v] })
+const assign = (name: string, v: SemanticNode): SemanticNode => n('lang:var_assign', { obj: name }, { value: [v] })
 const ret = (v: SemanticNode): SemanticNode => n('lang:return', {}, { value: [v] })
 
 beforeAll(() => {
@@ -84,11 +84,11 @@ describe('指標取成員 `p->x`', () => {
       prog(
         point(),
         n('lang:var_declare', { name: 'p', type: 'Point' }),
-        n('lang:var_assign', { name: 'p.x' }, { value: [num(9)] }),
+        n('lang:var_assign', { obj: 'p.x' }, { value: [num(9)] }),
         n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }, {
           initializer: [n('cpp:address_of', {}, { var: [ref('p')] })],
         }),
-        show(n('cpp:struct_pointer_access', { ptr: 'ptr', member: 'x' })),
+        show(n('cpp:struct_pointer_access', { obj: 'ptr', member: 'x' })),
       ),
     )
     expect(out.trim(), '指標取成員讀不到——多半是沒有解參照').toBe('9')
@@ -97,7 +97,7 @@ describe('指標取成員 `p->x`', () => {
   it('★ 空指標取成員要出聲', async () => {
     const 訊息 = await errOf(
       prog(point(), n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }),
-        show(n('cpp:struct_pointer_access', { ptr: 'ptr', member: 'x' }))),
+        show(n('cpp:struct_pointer_access', { obj: 'ptr', member: 'x' }))),
     )
     expect(訊息, '對空指標取成員靜默成功了——那在真的 C++ 會當掉').not.toBe('')
   })
@@ -194,8 +194,8 @@ describe('運算子多載', () => {
       prog(vec,
         n('lang:var_declare', { name: 'a', type: 'V' }),
         n('lang:var_declare', { name: 'b', type: 'V' }),
-        n('lang:var_assign', { name: 'a.x' }, { value: [num(3)] }),
-        n('lang:var_assign', { name: 'b.x' }, { value: [num(4)] }),
+        n('lang:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
+        n('lang:var_assign', { obj: 'b.x' }, { value: [num(4)] }),
         show(n('lang:arithmetic', { operator: '+' }, { left: [ref('a')], right: [ref('b')] }))),
     )
     expect(out.trim(), '兩個物件相加沒有走多載的運算子').toBe('7')

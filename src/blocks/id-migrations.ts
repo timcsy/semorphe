@@ -12,7 +12,7 @@
  *
  * 寫成明表讓每一筆都看得見：規則若對某一顆是錯的，讀的人指得出來。
  */
-import { registerIdMigration } from '../core/storage-version'
+import { registerIdMigration, registerPropertyMigration } from '../core/storage-version'
 
 export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   arithmetic: 'lang:arithmetic',
@@ -50,3 +50,12 @@ export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
 }
 
 registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
+
+/** 參數改名（v3 → v4）：通用元件的接收者統一叫 `obj` */
+export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
+  'lang:array_access': { name: 'obj' },
+  'lang:array_assign': { name: 'obj' },
+  'lang:var_assign': { name: 'obj' },
+}
+
+registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)

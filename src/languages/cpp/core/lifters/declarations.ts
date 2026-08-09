@@ -43,7 +43,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
         const colNode = colIndices?.namedChildren[0] ?? left.namedChildren[1]
         const row = rowNode ? ctx.lift(rowNode) : null
         const col = colNode ? ctx.lift(colNode) : null
-        return createNode('cpp:array_2d_assign', { name }, {
+        return createNode('cpp:array_2d_assign', { obj: name }, {
           row: row ? [row] : [],
           col: col ? [col] : [],
           value: value ? [value] : [],
@@ -62,7 +62,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
           value: value ? [value] : [],
         })
       }
-      return createNode('lang:array_assign', { name }, {
+      return createNode('lang:array_assign', { obj: name }, {
         index: index ? [index] : [],
         value: value ? [value] : [],
       })
@@ -74,7 +74,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       if (ptrOp === '*') {
         const ptrNameNode = left.namedChildren[0]
         const ptrName = ptrNameNode?.text ?? 'ptr'
-        return createNode('cpp:pointer_assign', { ptr_name: ptrName }, {
+        return createNode('cpp:pointer_assign', { obj: ptrName }, {
           value: value ? [value] : [],
         })
       }
@@ -82,7 +82,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
 
     // Simple variable assignment: x = value
     const name = left?.text ?? 'x'
-    return createNode('lang:var_assign', { name }, {
+    return createNode('lang:var_assign', { obj: name }, {
       value: value ? [value] : [],
     })
   })

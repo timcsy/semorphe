@@ -36,7 +36,7 @@ const ret = (v: SemanticNode): SemanticNode => n('lang:return', {}, { value: [v]
 const decl = (name: string, init?: SemanticNode): SemanticNode =>
   n('lang:var_declare', { name, type: 'int' }, init ? { initializer: [init] } : {})
 const assign = (name: string, v: SemanticNode): SemanticNode =>
-  n('lang:var_assign', { name }, { value: [v] })
+  n('lang:var_assign', { obj: name }, { value: [v] })
 const call = (name: string, ...args: SemanticNode[]): SemanticNode =>
   n('lang:func_call', { name }, { args })
 

@@ -93,7 +93,7 @@ export function registerVariableExecutors(register: (concept: string, executor: 
   register('lang:var_declare', execVarDeclare)
 
   register('lang:var_assign', async (node, ctx) => {
-    const name = String(node.properties.name)
+    const name = String(node.properties.obj)
     const valueNodes = node.children.value
     if (!valueNodes || valueNodes.length === 0) return
     const val = await ctx.evaluate(valueNodes[0])

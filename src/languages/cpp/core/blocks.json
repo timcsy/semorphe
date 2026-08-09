@@ -564,7 +564,7 @@
       "tooltip": "%{BKY_C_POINTER_ASSIGN_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "*${PTR_NAME} = ${VALUE};",
+      "pattern": "*${OBJ} = ${VALUE};",
       "imports": [],
       "order": 0
     },
@@ -586,7 +586,7 @@
     },
     "renderMapping": {
       "fields": {
-        "PTR_NAME": "ptr_name"
+        "PTR_NAME": "obj"
       },
       "inputs": {
         "VALUE": "value"
@@ -1946,7 +1946,7 @@
       "tooltip": "%{BKY_C_STRUCT_POINTER_ACCESS_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${PTR}->${MEMBER}",
+      "pattern": "${OBJ}->${MEMBER}",
       "imports": [],
       "order": 20
     },
@@ -1974,7 +1974,7 @@
     "renderMapping": {
       "fields": {
         "MEMBER": "member",
-        "PTR": "ptr"
+        "PTR": "obj"
       }
     }
   },
@@ -3040,13 +3040,13 @@
       "tooltip": "%{BKY_C_ARRAY_2D_ACCESS_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${NAME}[${ROW}][${COL}]",
+      "pattern": "${OBJ}[${ROW}][${COL}]",
       "imports": [],
       "order": 20
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "obj"
       },
       "inputs": {
         "COL": "col",
@@ -3092,13 +3092,13 @@
       "tooltip": "%{BKY_C_ARRAY_2D_ASSIGN_TOOLTIP}"
     },
     "codeTemplate": {
-      "pattern": "${NAME}[${ROW}][${COL}] = ${VALUE};",
+      "pattern": "${OBJ}[${ROW}][${COL}] = ${VALUE};",
       "imports": [],
       "order": 0
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "obj"
       },
       "inputs": {
         "COL": "col",

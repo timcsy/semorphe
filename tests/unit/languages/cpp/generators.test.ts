@@ -37,10 +37,10 @@ describe('C++ declarations generator', () => {
   })
 
   it('should generate array access in expression', () => {
-    const access = createNode('lang:array_access', { name: 'arr' }, {
+    const access = createNode('lang:array_access', { obj: 'arr' }, {
       index: [createNode('lang:var_ref', { name: 'i' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [access] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [access] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = arr[i];')
   })
@@ -52,7 +52,7 @@ describe('C++ expressions generator', () => {
       left: [createNode('lang:var_ref', { name: 'a' })],
       right: [createNode('lang:number_literal', { value: '0' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'result' }, { value: [cmp] })
+    const assign = createNode('lang:var_assign', { obj: 'result' }, { value: [cmp] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('result = a >= 0;')
   })
@@ -62,7 +62,7 @@ describe('C++ expressions generator', () => {
       left: [createNode('lang:var_ref', { name: 'a' })],
       right: [createNode('lang:var_ref', { name: 'b' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [logic] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [logic] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = a || b;')
   })
@@ -71,7 +71,7 @@ describe('C++ expressions generator', () => {
     const notExpr = createNode('lang:logic_not', {}, {
       operand: [createNode('lang:var_ref', { name: 'done' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [notExpr] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [notExpr] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = !done;')
   })
@@ -80,7 +80,7 @@ describe('C++ expressions generator', () => {
     const neg = createNode('lang:negate', {}, {
       value: [createNode('lang:var_ref', { name: 'x' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'y' }, { value: [neg] })
+    const assign = createNode('lang:var_assign', { obj: 'y' }, { value: [neg] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('y = -x;')
   })
@@ -97,8 +97,8 @@ describe('C++ statements generator', () => {
   it('should generate if-else', () => {
     const ifStmt = createNode('lang:if', {}, {
       condition: [createNode('lang:var_ref', { name: 'x' })],
-      then_body: [createNode('lang:var_assign', { name: 'y' }, { value: [createNode('lang:number_literal', { value: '1' })] })],
-      else_body: [createNode('lang:var_assign', { name: 'y' }, { value: [createNode('lang:number_literal', { value: '2' })] })],
+      then_body: [createNode('lang:var_assign', { obj: 'y' }, { value: [createNode('lang:number_literal', { value: '1' })] })],
+      else_body: [createNode('lang:var_assign', { obj: 'y' }, { value: [createNode('lang:number_literal', { value: '2' })] })],
     })
     const code = generateCode(makeProgram(ifStmt), 'cpp', apcsStyle)
     expect(code).toContain('if (x) {')
@@ -130,7 +130,7 @@ describe('C++ statements generator', () => {
 
   it('should generate cpp_for_loop (three-part)', () => {
     const loop = createNode('cpp:for_loop', {}, {
-      init: [createNode('lang:var_assign', { name: 'i' }, {
+      init: [createNode('lang:var_assign', { obj: 'i' }, {
         value: [createNode('lang:number_literal', { value: '0' })],
       })],
       cond: [createNode('lang:compare', { operator: '<' }, {
@@ -154,7 +154,7 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate array_assign', () => {
-    const stmt = createNode('lang:array_assign', { name: 'arr' }, {
+    const stmt = createNode('lang:array_assign', { obj: 'arr' }, {
       index: [createNode('lang:var_ref', { name: 'i' })],
       value: [createNode('lang:number_literal', { value: '1' })],
     })
@@ -314,14 +314,14 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_increment_expr postfix', () => {
     // Expression context: no indent, no semicolons
     const node = createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [node] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = i++;')
   })
 
   it('should generate cpp_increment_expr prefix', () => {
     const node = createNode('cpp:increment', { name: 'j', operator: '--', position: 'prefix' })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [node] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = --j;')
   })
@@ -330,7 +330,7 @@ describe('C++ expression generators (for expression blocks)', () => {
     const node = createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
       value: [createNode('lang:var_ref', { name: 'i' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [node] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = j += i;')
   })
@@ -339,7 +339,7 @@ describe('C++ expression generators (for expression blocks)', () => {
     const node = createNode('cpp:scanf', { format: '%d' }, {
       args: [createNode('lang:var_ref', { name: 'n' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [node] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = scanf("%d", &n);')
   })
@@ -348,7 +348,7 @@ describe('C++ expression generators (for expression blocks)', () => {
     const node = createNode('lang:var_declare', { name: 'i', type: 'int' }, {
       initializer: [createNode('lang:number_literal', { value: '2' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [node] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = int i = 2;')
   })
@@ -408,7 +408,7 @@ describe('C++ expression generators (for expression blocks)', () => {
     const loop = createNode('lang:count_loop', { var_name: 'i' }, {
       from: [createNode('lang:number_literal', { value: '0' })],
       to: [createNode('lang:number_literal', { value: '10' })],
-      body: [createNode('lang:array_assign', { name: 'arr' }, {
+      body: [createNode('lang:array_assign', { obj: 'arr' }, {
         index: [createNode('lang:var_ref', { name: 'i' })],
         value: [createNode('lang:number_literal', { value: '1' })],
       })],
@@ -457,7 +457,7 @@ describe('C++ expression generators (for expression blocks)', () => {
           right: [createNode('lang:var_ref', { name: 'max' })],
         })],
         right: [createNode('lang:logic_not', {}, {
-          operand: [createNode('lang:array_access', { name: 'sieve' }, {
+          operand: [createNode('lang:array_access', { obj: 'sieve' }, {
             index: [createNode('lang:var_ref', { name: 'i' })],
           })],
         })],
@@ -534,7 +534,7 @@ describe('C++ expression generators (for expression blocks)', () => {
       update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
         value: [createNode('lang:var_ref', { name: 'i' })],
       })],
-      body: [createNode('lang:array_assign', { name: 'sieve' }, {
+      body: [createNode('lang:array_assign', { obj: 'sieve' }, {
         index: [createNode('lang:var_ref', { name: 'j' })],
         value: [createNode('lang:number_literal', { value: '1' })],
       })],

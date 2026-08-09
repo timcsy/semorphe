@@ -66,7 +66,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   })
 
   g.set('lang:var_assign', (node, ctx) => {
-    const name = node.properties.name ?? 'x'
+    const name = node.properties.obj ?? 'x'
     const vals = node.children.value ?? []
     if (vals.length > 0) {
       const val = generateExpression(vals[0], ctx)
@@ -109,7 +109,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   })
 
   g.set('lang:array_access', (node, ctx) => {
-    const name = node.properties.name ?? 'arr'
+    const name = node.properties.obj ?? 'arr'
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
     return `${name}[${idx}]`
@@ -165,7 +165,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   })
 
   g.set('cpp:array_2d_access', (node, ctx) => {
-    const name = node.properties.name ?? 'arr'
+    const name = node.properties.obj ?? 'arr'
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []
     const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'
@@ -174,7 +174,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   })
 
   g.set('cpp:array_2d_assign', (node, ctx) => {
-    const name = node.properties.name ?? 'arr'
+    const name = node.properties.obj ?? 'arr'
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []
     const vals = node.children.value ?? []
@@ -185,7 +185,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
   })
 
   g.set('lang:array_assign', (node, ctx) => {
-    const name = node.properties.name ?? 'arr'
+    const name = node.properties.obj ?? 'arr'
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
     const vals = node.children.value ?? []

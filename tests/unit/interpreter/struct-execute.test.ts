@@ -81,7 +81,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('lang:var_declare', { name: 'p', type: 'Point' }),
-        n('lang:var_assign', { name: 'p.x' }, { value: [num(7)] }),
+        n('lang:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
         show(n('cpp:struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
@@ -93,7 +93,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('lang:var_declare', { name: 'p', type: 'Point' }),
-        n('lang:var_assign', { name: 'p.x' }, { value: [num(7)] }),
+        n('lang:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
         show(n('cpp:struct_member_access', { obj: 'p', member: 'y' })),
       ),
     )
@@ -106,7 +106,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('lang:var_declare', { name: 'a', type: 'Point' }),
         n('lang:var_declare', { name: 'b', type: 'Point' }),
-        n('lang:var_assign', { name: 'a.x' }, { value: [num(3)] }),
+        n('lang:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
         show(n('cpp:struct_member_access', { obj: 'b', member: 'x' })),
       ),
     )

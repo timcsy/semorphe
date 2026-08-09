@@ -229,7 +229,7 @@ describe('Declarations', () => {
       const node = liftFirst('x = 10;')
       expect(node).not.toBeNull()
       expect(node!.conceptId).toBe('lang:var_assign')
-      expect(node!.properties.name).toBe('x')
+      expect(node!.properties.obj).toBe('x')
     })
 
     it('roundtrips x = 10;', () => {
@@ -359,7 +359,7 @@ describe('Expressions', () => {
       const n = liftExpr('arr[i]')
       expect(n).not.toBeNull()
       expect(n!.conceptId).toBe('lang:array_access')
-      expect(n!.properties.name).toBe('arr')
+      expect(n!.properties.obj).toBe('arr')
     })
 
     it('roundtrips arr[i] in expression', () => {

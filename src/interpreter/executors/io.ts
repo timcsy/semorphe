@@ -45,7 +45,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
       let itemsRead = 0
       for (const varRefNode of valueNodes) {
         if (varRefNode.conceptId === 'lang:array_access') {
-          const arrName = String(varRefNode.properties.name)
+          const arrName = String(varRefNode.properties.obj)
           const arr = ctx.scope.get(arrName)
           if (arr.type !== 'array' || !Array.isArray(arr.value)) {
             throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })

@@ -104,7 +104,7 @@ describe('C++ pointer assign Roundtrip', () => {
       expect(tree).not.toBeNull()
       const assignNode = findConcept(tree, 'cpp:pointer_assign')
       if (assignNode) {
-        expect(assignNode.properties.ptr_name).toBe('ptr')
+        expect(assignNode.properties.obj).toBe('ptr')
       } else {
         // May be lifted as var_assign with pointer deref — check concept exists
         const concepts = new Set<string>()
@@ -121,7 +121,7 @@ describe('C++ pointer assign Roundtrip', () => {
 
     it('should generate *ptr = value code', () => {
       const valNode = createNode('lang:number_literal', { value: '42' })
-      const ptrAssign = createNode('cpp:pointer_assign', { ptr_name: 'ptr' }, {
+      const ptrAssign = createNode('cpp:pointer_assign', { obj: 'ptr' }, {
         value: [valNode],
       })
       const prog = createNode('lang:program', {}, { body: [ptrAssign] })

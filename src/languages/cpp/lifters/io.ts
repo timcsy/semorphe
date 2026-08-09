@@ -167,26 +167,14 @@ const METHODS_WITH_ARG = new Set([
   'push_back', 'push', 'insert', 'erase', 'count',
 ])
 
-/** Property name used for the object in each concept's semantic node.
- * Generic container concepts all use 'obj'. Container-specific ones
- * keep their original property names for backward compatibility. */
-const METHOD_OBJ_PROP: Record<string, string> = {
-  // container-specific (keep original names)
-  pop_back: 'vector',
-  back: 'vector',
-  size: 'vector',
-  top: 'obj',
-  front: 'obj',
-  insert: 'obj',
-  // generic (all use 'obj')
-  push_back: 'obj',
-  push: 'obj',
-  pop: 'obj',
-  clear: 'obj',
-  empty: 'obj',
-  erase: 'obj',
-  count: 'obj',
-}
+// ⚠️ 這裡原本有一張 `METHOD_OBJ_PROP` 表——把方法名對應到「這顆概念的
+// 接收者參數叫什麼」，因為 `vector_size` 叫 `vector` 而 `stack_top` 叫 `obj`。
+// 它的註解寫著「container-specific ones **keep their original property names
+// for backward compatibility**」。
+//
+// **統一成 `obj` 之後，這張表整個消失了**（G 項第 1 步，2026-08-09）。
+// 那是命名一致的直接回報：一張只為了容納不一致而存在的對應表，
+// 在不一致消失時自己就不見了。
 
 /** Child slot name for the argument value */
 const METHOD_CHILD_SLOT: Record<string, string> = {
@@ -222,8 +210,7 @@ export function registerIOLifters(lifter: Lifter): void {
         (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
         METHOD_TO_CONCEPT[methodName]
       if (conceptId) {
-        const propName = METHOD_OBJ_PROP[methodName] ?? 'obj'
-        const properties: Record<string, string> = { [propName]: objText }
+        const properties: Record<string, string> = { obj: objText }
 
         // 容器種類——**投影要用，而投影查不到脈絡**。
         //

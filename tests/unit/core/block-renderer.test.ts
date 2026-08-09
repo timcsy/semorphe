@@ -33,7 +33,7 @@ describe('block-renderer', () => {
   })
 
   it('should render var_assign', () => {
-    const assign = createNode('lang:var_assign', { name: 'x' }, {
+    const assign = createNode('lang:var_assign', { obj: 'x' }, {
       value: [createNode('lang:var_ref', { name: 'y' })],
     })
     const state = renderToBlocklyState(makeProgram(assign))
@@ -48,7 +48,7 @@ describe('block-renderer', () => {
       left: [createNode('lang:var_ref', { name: 'a' })],
       right: [createNode('lang:number_literal', { value: '1' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [expr] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [expr] })
     const state = renderToBlocklyState(makeProgram(assign))
     const block = state.blocks.blocks[0]
     expect(block.inputs.VALUE.block.type).toBe('u_arithmetic')

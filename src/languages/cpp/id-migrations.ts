@@ -11,7 +11,7 @@
  *
  * 寫成明表讓每一筆都看得見：規則若對某一顆是錯的，讀的人指得出來。
  */
-import { registerIdMigration } from '../../core/storage-version'
+import { registerIdMigration, registerPropertyMigration } from '../../core/storage-version'
 
 export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   cpp_abs: 'cpp:abs',
@@ -159,3 +159,22 @@ export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
 }
 
 registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
+
+/**
+ * 參數改名（v3 → v4，G 項第 1 步）：**接收者統一叫 `obj`**。
+ *
+ * 同一個角色原本有四個名字（`name`／`vector`／`ptr_name`／`ptr`），
+ * 而 `lifters/io.ts` 有一張 `METHOD_OBJ_PROP` 對應表專門在容納這件事——
+ * 統一之後那張表整個消失。
+ */
+export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
+  'cpp:array_2d_access': { name: 'obj' },
+  'cpp:array_2d_assign': { name: 'obj' },
+  'cpp:pointer_assign': { ptr_name: 'obj' },
+  'cpp:struct_pointer_access': { ptr: 'obj' },
+  'cpp:vector_back': { vector: 'obj' },
+  'cpp:vector_pop_back': { vector: 'obj' },
+  'cpp:vector_size': { vector: 'obj' },
+}
+
+registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)

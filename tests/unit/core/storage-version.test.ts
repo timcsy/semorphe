@@ -22,6 +22,7 @@ import {
   REQUIRED_FIELDS,
   UPGRADES,
   registeredIdMigrations,
+  registeredPropertyMigrations,
 } from '../../../src/core/storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
@@ -258,6 +259,58 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     for (const [old, neo] of 表) {
       expect(isValidComponentId(neo), `${old} → ${neo} 的 scope 不在白名單`).toBe(true)
       expect(isNamespaced(old), `${old} 本來就有命名空間，不該在表裡`).toBe(false)
+    }
+  })
+})
+
+describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
+  const 升 = (tree: unknown): unknown =>
+    (UPGRADES[3]({ version: 3, tree } as Record<string, unknown>) as { tree: unknown }).tree
+
+  it('★ 舊參數名轉得動，含巢狀', () => {
+    const out = 升({
+      conceptId: 'lang:program',
+      properties: {},
+      children: {
+        body: [
+          { conceptId: 'lang:var_assign', properties: { name: 'x' }, children: {} },
+          { conceptId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} },
+          { conceptId: 'cpp:pointer_assign', properties: { ptr_name: 'p' }, children: {} },
+        ],
+      },
+    }) as { children: Record<string, { properties: Record<string, string> }[]> }
+    const b = out.children.body
+    expect(b[0].properties.obj, 'var_assign 的 name 沒轉成 obj').toBe('x')
+    expect(b[1].properties.obj).toBe('v')
+    expect(b[2].properties.obj).toBe('p')
+    expect(b[0].properties.name, '舊的鍵應該不見了').toBeUndefined()
+  })
+
+  it('★ 不在表裡的屬性原樣保留', () => {
+    const out = 升({
+      conceptId: 'lang:var_declare',
+      properties: { name: 'x', type: 'int' },
+      children: {},
+    }) as { properties: Record<string, string> }
+    // `var_declare.name` 是**它自己的名字**，不是接收者——不該被改
+    expect(out.properties.name, 'var_declare 的 name 被誤改了').toBe('x')
+    expect(out.properties.type).toBe('int')
+  })
+
+  it('★ 反向：不升級的話，產生器會拿不到接收者', () => {
+    // 沒有這一支，前兩支綠可能只是因為「舊屬性名本來也讀得到」。
+    const 舊 = { conceptId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} }
+    expect(
+      (舊.properties as Record<string, string>).obj,
+      '舊格式本來就有 obj → 那這個遷移沒有存在的必要',
+    ).toBeUndefined()
+  })
+
+  it('★ 兩個套件的參數改名表都登錄了（機制有沒有接上）', () => {
+    const 表 = registeredPropertyMigrations()
+    expect(Object.keys(表).length, '沒有任何套件登錄參數改名——機制有了沒人接上').toBe(10)
+    for (const map of Object.values(表)) {
+      expect(Object.values(map), '接收者統一叫 obj').toEqual(['obj'])
     }
   })
 })

@@ -70,7 +70,7 @@ const 切換前的產出: [string, SemanticNode, string][] = [
   ],
   [
     'lang:array_access',
-    n('lang:array_access', { name: 'arr' }, { index: [n('lang:number_literal', { value: 1 })] }),
+    n('lang:array_access', { obj: 'arr' }, { index: [n('lang:number_literal', { value: 1 })] }),
     'arr[1]',
   ],
   // ── 以下是語言專屬的，正是中立性報的那六筆

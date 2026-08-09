@@ -81,7 +81,7 @@ describe('TemplateGenerator', () => {
         order: 0,
       })
       gen.registerTemplate('lang:var_assign', {
-        pattern: '${name} = ${VALUE};',
+        pattern: '${obj} = ${VALUE};',
         imports: [],
         order: 0,
       })
@@ -92,7 +92,7 @@ describe('TemplateGenerator', () => {
       })
 
       const assignVal = createNode('lang:number_literal', { value: '1' })
-      const assignNode = createNode('lang:var_assign', { name: 'x' }, { VALUE: [assignVal] })
+      const assignNode = createNode('lang:var_assign', { obj: 'x' }, { VALUE: [assignVal] })
       const condNode = createNode('lang:var_ref', { name: 'running' })
       gen.registerTemplate('lang:var_ref', { pattern: '${name}', imports: [], order: 20 })
 
@@ -223,12 +223,12 @@ describe('TemplateGenerator', () => {
 
       gen.setBodyFallback((node) => {
         if (node.conceptId === 'lang:array_assign') {
-          return `    ${node.properties.name}[0] = 1;`
+          return `    ${node.properties.obj}[0] = 1;`
         }
         return null
       })
 
-      const bodyChild = createNode('lang:array_assign', { name: 'arr' })
+      const bodyChild = createNode('lang:array_assign', { obj: 'arr' })
       const whileNode = createNode('lang:while_loop', {}, { body: [bodyChild] })
 
       const result = gen.generate(whileNode, { indent: 0, style: defaultStyle })

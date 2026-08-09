@@ -49,7 +49,7 @@ const withDtor = (name = 'C'): SemanticNode =>
 
 const make = (varName: string, tag: number, type = 'C'): SemanticNode[] => [
   n('lang:var_declare', { name: varName, type }),
-  n('lang:var_assign', { name: varName, member: 'tag' }, { value: [num(tag)] }),
+  n('lang:var_assign', { obj: varName, member: 'tag' }, { value: [num(tag)] }),
 ]
 
 beforeAll(() => {

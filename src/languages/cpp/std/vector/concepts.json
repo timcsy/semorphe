@@ -46,7 +46,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "vector",
+        "name": "obj",
         "kind": "identifier",
         "default": "vec"
       }
@@ -60,7 +60,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "vector",
+        "name": "obj",
         "kind": "identifier",
         "default": "vec"
       }
@@ -74,7 +74,7 @@
     "abstractConcept": null,
     "properties": [
       {
-        "name": "vector",
+        "name": "obj",
         "kind": "identifier",
         "default": "vec"
       }

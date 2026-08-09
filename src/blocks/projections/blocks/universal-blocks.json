@@ -49,7 +49,7 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "obj"
       },
       "inputs": {
         "VALUE": "value"
@@ -1032,7 +1032,7 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "obj"
       },
       "inputs": {
         "INDEX": "index"
@@ -1078,7 +1078,7 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "obj"
       },
       "inputs": {
         "INDEX": "index",

@@ -193,7 +193,7 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
         n('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [n('lang:number_literal', { value: 1 })] }),
         n('lang:if_else', {}, {
           condition: [n('lang:number_literal', { value: 1 })],
-          then: [n('lang:var_assign', { name: 'x' }, { value: [n('lang:number_literal', { value: 5 })] })],
+          then: [n('lang:var_assign', { obj: 'x' }, { value: [n('lang:number_literal', { value: 5 })] })],
           else: [],
         }),
         n('lang:print', {}, { values: [n('lang:var_ref', { name: 'x' })] }),

@@ -28,7 +28,7 @@ const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { 
 const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
 const ref = (name: string): SemanticNode => n('lang:var_ref', { name })
 const show = (x: SemanticNode): SemanticNode => n('lang:print', {}, { values: [x] })
-const assign = (name: string, v: SemanticNode): SemanticNode => n('lang:var_assign', { name }, { value: [v] })
+const assign = (name: string, v: SemanticNode): SemanticNode => n('lang:var_assign', { obj: name }, { value: [v] })
 
 /**
  * class Counter {

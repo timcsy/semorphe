@@ -225,7 +225,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
   })
 
   g.set('cpp:struct_pointer_access', (node) => {
-    const ptr = node.properties.ptr ?? 'ptr'
+    const ptr = node.properties.obj ?? 'ptr'
     const member = node.properties.member ?? 'field'
     return `${ptr}->${member}`
   })

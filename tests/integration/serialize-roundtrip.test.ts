@@ -46,10 +46,10 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
         left: [createNode('lang:var_ref', { name: 'a' })],
         right: [createNode('lang:number_literal', { value: '0' })],
       })],
-      then_body: [createNode('lang:var_assign', { name: 'x' }, {
+      then_body: [createNode('lang:var_assign', { obj: 'x' }, {
         value: [createNode('lang:number_literal', { value: '1' })],
       })],
-      else_body: [createNode('lang:var_assign', { name: 'x' }, {
+      else_body: [createNode('lang:var_assign', { obj: 'x' }, {
         value: [createNode('lang:number_literal', { value: '2' })],
       })],
     })
@@ -123,7 +123,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
         left: [createNode('lang:var_ref', { name: 'a' })],
         right: [createNode('lang:number_literal', { value: '0' })],
       })],
-      then_body: [createNode('lang:var_assign', { name: 'x' }, {
+      then_body: [createNode('lang:var_assign', { obj: 'x' }, {
         value: [createNode('lang:number_literal', { value: '1' })],
       })],
       else_body: [createNode('lang:if', { isElseIf: 'true' }, {
@@ -131,7 +131,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
           left: [createNode('lang:var_ref', { name: 'b' })],
           right: [createNode('lang:number_literal', { value: '0' })],
         })],
-        then_body: [createNode('lang:var_assign', { name: 'x' }, {
+        then_body: [createNode('lang:var_assign', { obj: 'x' }, {
           value: [createNode('lang:number_literal', { value: '2' })],
         })],
         else_body: [createNode('lang:if', { isElseIf: 'true' }, {
@@ -139,10 +139,10 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
             left: [createNode('lang:var_ref', { name: 'c' })],
             right: [createNode('lang:number_literal', { value: '0' })],
           })],
-          then_body: [createNode('lang:var_assign', { name: 'x' }, {
+          then_body: [createNode('lang:var_assign', { obj: 'x' }, {
             value: [createNode('lang:number_literal', { value: '3' })],
           })],
-          else_body: [createNode('lang:var_assign', { name: 'x' }, {
+          else_body: [createNode('lang:var_assign', { obj: 'x' }, {
             value: [createNode('lang:number_literal', { value: '4' })],
           })],
         })],
@@ -193,7 +193,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const negateExpr = createNode('lang:negate', {}, {
       value: [createNode('lang:var_ref', { name: 'b' })],
     })
-    const assign = createNode('lang:var_assign', { name: 'result' }, {
+    const assign = createNode('lang:var_assign', { obj: 'result' }, {
       value: [negateExpr],
     })
     const state = renderToBlocklyState(makeProgram(assign))

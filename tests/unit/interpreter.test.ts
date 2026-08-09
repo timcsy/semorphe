@@ -66,7 +66,7 @@ describe('Interpreter - basics', () => {
       createNode('lang:var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('lang:number_literal', { value: '1' }, {})]
       }),
-      createNode('lang:var_assign', { name: 'x' }, {
+      createNode('lang:var_assign', { obj: 'x' }, {
         value: [createNode('lang:number_literal', { value: '10' }, {})]
       }),
       createNode('lang:print', {}, {
@@ -259,7 +259,7 @@ describe('Interpreter - control flow', () => {
           createNode('lang:print', {}, {
             values: [createNode('lang:var_ref', { name: 'n' }, {})]
           }),
-          createNode('lang:var_assign', { name: 'n' }, {
+          createNode('lang:var_assign', { obj: 'n' }, {
             value: [createNode('lang:arithmetic', { operator: '-' }, {
               left: [createNode('lang:var_ref', { name: 'n' }, {})],
               right: [createNode('lang:number_literal', { value: '1' }, {})],
@@ -405,7 +405,7 @@ describe('Interpreter - arrays', () => {
     const interp = await run([
       createNode('lang:array_declare', { name: 'arr', type: 'int', size: '3' }, {}),
       createNode('lang:print', {}, {
-        values: [createNode('lang:array_access', { name: 'arr' }, {
+        values: [createNode('lang:array_access', { obj: 'arr' }, {
           index: [createNode('lang:number_literal', { value: '0' }, {})]
         })]
       })
@@ -564,7 +564,7 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('lang:number_literal', { value: '0' }, {})]
       }),
       createNode('cpp:for_loop', {}, {
-        init: [createNode('lang:var_assign', { name: 'i' }, {
+        init: [createNode('lang:var_assign', { obj: 'i' }, {
           value: [createNode('lang:number_literal', { value: '0' }, {})]
         })],
         cond: [createNode('lang:compare', { operator: '<' }, {
@@ -588,7 +588,7 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('lang:number_literal', { value: '0' }, {})]
       }),
       createNode('cpp:for_loop', {}, {
-        init: [createNode('lang:var_assign', { name: 'i' }, {
+        init: [createNode('lang:var_assign', { obj: 'i' }, {
           value: [createNode('lang:number_literal', { value: '0' }, {})]
         })],
         cond: [createNode('lang:compare', { operator: '<' }, {
@@ -619,7 +619,7 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('lang:number_literal', { value: '0' }, {})]
       }),
       createNode('cpp:for_loop', {}, {
-        init: [createNode('lang:var_assign', { name: 'i' }, {
+        init: [createNode('lang:var_assign', { obj: 'i' }, {
           value: [createNode('lang:number_literal', { value: '0' }, {})]
         })],
         cond: [createNode('lang:compare', { operator: '<' }, {
@@ -650,7 +650,7 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('lang:number_literal', { value: '0' }, {})]
       }),
       createNode('cpp:for_loop', {}, {
-        init: [createNode('lang:var_assign', { name: 'i' }, {
+        init: [createNode('lang:var_assign', { obj: 'i' }, {
           value: [createNode('lang:number_literal', { value: '0' }, {})]
         })],
         cond: [createNode('lang:compare', { operator: '<' }, {
@@ -1181,12 +1181,12 @@ describe('Interpreter - builtin_constant', () => {
   it('should use true in array assignment', async () => {
     const interp = await run([
       createNode('lang:array_declare', { name: 'flags', type: 'bool', size: '3' }),
-      createNode('lang:array_assign', { name: 'flags' }, {
+      createNode('lang:array_assign', { obj: 'flags' }, {
         index: [createNode('lang:number_literal', { value: '0' })],
         value: [createNode('lang:builtin_constant', { value: 'true' })],
       }),
       createNode('lang:print', {}, {
-        values: [createNode('lang:array_access', { name: 'flags' }, {
+        values: [createNode('lang:array_access', { obj: 'flags' }, {
           index: [createNode('lang:number_literal', { value: '0' })],
         })],
       }),
@@ -1250,7 +1250,7 @@ describe('Interpreter - abort', () => {
         condition: [createNode('lang:input', {}, {
           values: [createNode('lang:var_ref', { name: 'x' })],
         })],
-        body: [createNode('lang:var_assign', { name: 'sum' }, {
+        body: [createNode('lang:var_assign', { obj: 'sum' }, {
           value: [createNode('lang:arithmetic', { operator: '+' }, {
             left: [createNode('lang:var_ref', { name: 'sum' })],
             right: [createNode('lang:var_ref', { name: 'x' })],

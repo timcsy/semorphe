@@ -56,7 +56,7 @@
   },
   {
     "conceptId": "lang:var_assign",
-    "pattern": "${name} = ${value};",
+    "pattern": "${obj} = ${value};",
     "order": 0
   },
   {
@@ -96,7 +96,7 @@
   },
   {
     "conceptId": "lang:array_access",
-    "pattern": "${name}[${index}]",
+    "pattern": "${obj}[${index}]",
     "order": 20
   },
   {

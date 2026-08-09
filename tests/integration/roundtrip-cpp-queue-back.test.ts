@@ -55,7 +55,7 @@ describe('cpp_queue_back — generate (block→code)', () => {
     const node = createNode('cpp:queue_back', { obj: 'q' }, {})
     const program = makeProgram([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('lang:var_assign', { name: 'x' }, { value: [node] }),
+      createNode('lang:var_assign', { obj: 'x' }, { value: [node] }),
     ])
     const code = generateCode(program, 'cpp', style)
     expect(code).toContain('.back()')

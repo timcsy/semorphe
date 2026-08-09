@@ -5,12 +5,12 @@ import { indent, generateExpression } from '../../../../core/projection/code-gen
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
   // Expression concepts — return expression string (no indent, no newline)
   g.set('cpp:vector_size', (node) => {
-    const vector = node.properties.vector ?? 'vec'
+    const vector = node.properties.obj ?? 'vec'
     return `${vector}.size()`
   })
 
   g.set('cpp:vector_back', (node) => {
-    const vector = node.properties.vector ?? 'vec'
+    const vector = node.properties.obj ?? 'vec'
     return `${vector}.back()`
   })
 
@@ -35,7 +35,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
   })
 
   g.set('cpp:vector_pop_back', (node, ctx) => {
-    const vector = node.properties.vector ?? 'vec'
+    const vector = node.properties.obj ?? 'vec'
     return `${indent(ctx)}${vector}.pop_back();\n`
   })
 }

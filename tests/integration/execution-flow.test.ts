@@ -41,7 +41,7 @@ describe('Execution flow integration', () => {
       createNode('lang:var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('lang:number_literal', { value: '10' }, {})]
       }),
-      createNode('lang:var_assign', { name: 'x' }, {
+      createNode('lang:var_assign', { obj: 'x' }, {
         value: [createNode('lang:number_literal', { value: '20' }, {})]
       }),
     ]))

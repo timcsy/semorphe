@@ -62,7 +62,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
   register('cpp:free', async () => {})
 
   register('cpp:pointer_assign', async (node, ctx) => {
-    const ptrName = String(node.properties.ptr_name)
+    const ptrName = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return
     const val = await ctx.evaluate(valueNodes[0])

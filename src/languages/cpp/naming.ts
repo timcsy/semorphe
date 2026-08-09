@@ -105,6 +105,29 @@ export const ATOMIC_NAMES = [
   'raw_code', 'raw_expression',
 ] as const
 
+/**
+ * **接收者參數的名字**——「這個操作作用在哪個既有物件上」。
+ *
+ * 現況 26 顆叫 `obj`、9 顆叫別的（`name`／`vector`／`ptr_name`）。多數決不是理由，
+ * 理由是**同一個角色只能有一個名字**，否則讀的人得記三種寫法。
+ */
+export const RECEIVER_PARAM = 'obj'
+
+/**
+ * 這些操作的第一個識別字參數**是那個東西自己的名字，不是接收者**。
+ *
+ * | 操作 | 第一個參數是什麼 |
+ * |---|---|
+ * | `declare` | 正在被創造的名字（`int x` 的 `x`） |
+ * | `ref` | 正在被引用的名字 |
+ * | `call` | 正在被呼叫的函式名 |
+ * | `def`／`literal`／`loop`／`cast` | 同理，不是「對某物做事」 |
+ *
+ * 判準是**創造／引用 vs 操作**：前者的參數是那個東西的識別字，
+ * 後者的參數是被操作的物件。
+ */
+export const SELF_NAMING_OPERATIONS = ['declare', 'ref', 'call', 'def', 'literal', 'loop', 'cast'] as const
+
 export const CPP_NAMING: NamingVocabulary = {
   subjects: SUBJECTS,
   operations: OPERATIONS,

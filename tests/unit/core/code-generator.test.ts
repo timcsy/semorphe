@@ -52,7 +52,7 @@ describe('generateCode', () => {
 
   it('should generate var assignment', () => {
     const value = createNode('lang:number_literal', { value: '10' })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [value] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [value] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = 10;')
@@ -62,7 +62,7 @@ describe('generateCode', () => {
     const left = createNode('lang:var_ref', { name: 'a' })
     const right = createNode('lang:var_ref', { name: 'b' })
     const expr = createNode('lang:arithmetic', { operator: '+' }, { left: [left], right: [right] })
-    const assign = createNode('lang:var_assign', { name: 'x' }, { value: [expr] })
+    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [expr] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = a + b;')
@@ -70,7 +70,7 @@ describe('generateCode', () => {
 
   it('should generate if statement', () => {
     const cond = createNode('lang:var_ref', { name: 'x' })
-    const body = createNode('lang:var_assign', { name: 'y' }, { value: [createNode('lang:number_literal', { value: '1' })] })
+    const body = createNode('lang:var_assign', { obj: 'y' }, { value: [createNode('lang:number_literal', { value: '1' })] })
     const ifStmt = createNode('lang:if', {}, {
       condition: [cond],
       then_body: [body],
@@ -87,7 +87,7 @@ describe('generateCode', () => {
       left: [createNode('lang:var_ref', { name: 'i' })],
       right: [createNode('lang:number_literal', { value: '10' })],
     })
-    const body = createNode('lang:var_assign', { name: 'i' }, {
+    const body = createNode('lang:var_assign', { obj: 'i' }, {
       value: [createNode('lang:arithmetic', { operator: '+' }, {
         left: [createNode('lang:var_ref', { name: 'i' })],
         right: [createNode('lang:number_literal', { value: '1' })],

@@ -28,23 +28,35 @@ import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } fro
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
-import { OPERATIONS, MODIFIERS, ATOMIC_NAMES, SUBJECTS } from '../../src/languages/cpp/naming'
+import { OPERATIONS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
 
 type 違規類 = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { 類: 違規類; id: string; 說明: string }
 
 interface 概念 { conceptId: string; properties?: unknown }
 
-/** 接收者 = 模板開頭 `${X}.` 或 `${X}[` 指到的那個參數 */
-function 接收者參數名(): Map<string, string> {
+/**
+ * 接收者 = **操作作用在它身上的那個既有物件**。
+ *
+ * ⚠️ 第一版靠模板判定（開頭是 `${X}.` 或 `${X}[`），**漏報四顆**——
+ * `lang:array_access`／`lang:array_assign`／`lang:var_assign` 是手寫產生器（沒有模板），
+ * `cpp:pointer_assign` 的模板開頭是 `*${PTR_NAME}`。
+ *
+ * 現在靠**操作**判定：非單字名、且操作不在 `SELF_NAMING_OPERATIONS` 裡的元件，
+ * 它的第一個識別字參數就是接收者。判準是**創造／引用 vs 操作**。
+ *
+ * **已知盲點**：單字名的元件（`increment`／`input`）拆不出操作，這裡看不到。
+ * 那類會**低報**，不會誤報。
+ */
+function 接收者參數名(concepts: 概念[]): Map<string, string> {
+  const 自名 = new Set<string>(SELF_NAMING_OPERATIONS)
   const out = new Map<string, string>()
-  for (const p of allCppProjections() as unknown as Record<string, any>[]) {
-    const pat = p.codeTemplate?.pattern as string | undefined
-    if (!pat) continue
-    const m = /^\$\{([A-Z_0-9]+)\}[.[]/.exec(pat)
-    if (!m) continue
-    const param = (p.renderMapping?.fields ?? {})[m[1]] as string | undefined
-    if (param && !out.has(p.conceptId as string)) out.set(p.conceptId as string, param)
+  for (const c of concepts) {
+    const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+    const op = parseName(bare, SUBJECTS).operation
+    if (!op || 自名.has(op)) continue
+    const first = paramSpecs(c.properties as never)[0]
+    if (first?.kind === 'identifier') out.set(c.conceptId, first.name)
   }
   return out
 }
@@ -52,19 +64,15 @@ function 接收者參數名(): Map<string, string> {
 function measure(注入: 概念[] = []): Finding[] {
   const out: Finding[] = []
   const 概念們 = [...(allCppConcepts() as unknown as 概念[]), ...注入]
-  const recv = 接收者參數名()
+  const recv = 接收者參數名(概念們)
   const ops = new Set<string>(OPERATIONS)
   const mods = new Set<string>(MODIFIERS)
   const atomics = new Set<string>(ATOMIC_NAMES)
 
-  // ① 接收者角色只准有一個名字
-  const 接收者名字 = new Set([...recv.values()])
-  const 主流 = [...接收者名字].sort(
-    (a, b) => [...recv.values()].filter((v) => v === b).length - [...recv.values()].filter((v) => v === a).length,
-  )[0]
+  // ① 接收者角色只准有一個名字，而那個名字是**宣告出來的**，不是多數決
   for (const [id, name] of recv) {
-    if (主流 && name !== 主流) {
-      out.push({ 類: '接收者參數名', id, 說明: `接收者叫 \`${name}\`，而其餘 ${recv.size - 1} 顆叫 \`${主流}\`` })
+    if (name !== RECEIVER_PARAM) {
+      out.push({ 類: '接收者參數名', id, 說明: `接收者叫 \`${name}\`，而宣告的名字是 \`${RECEIVER_PARAM}\`` })
     }
   }
 
@@ -148,7 +156,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     expect(allCppConcepts().length, '登錄表是空的 → 每一項都會是假的零').toBeGreaterThan(150)
-    expect(接收者參數名().size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
+    expect(接收者參數名(allCppConcepts() as unknown as 概念[]).size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
   })
 })
 
