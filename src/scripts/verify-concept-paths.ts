@@ -168,7 +168,7 @@ const INTERNAL_CONCEPTS = new Set([
   '_compound',     // 內部展開用
   'raw_code',      // 降級概念，不需要 lift pattern
   'unresolved',    // 內部降級概念
-  'lang:program',       // 根節點，不需要 render/extract
+  'cpp:program',       // 根節點，不需要 render/extract
 ])
 
 // ─── Main Verification ───

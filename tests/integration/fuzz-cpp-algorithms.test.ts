@@ -121,7 +121,7 @@ describe('C++ Algorithm Fuzz Tests', () => {
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:sort')).toBe(true)
       expect(concepts.has('cpp:reverse')).toBe(true)
-      expect(concepts.has('lang:func_def')).toBe(true)
+      expect(concepts.has('cpp:func_def')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {

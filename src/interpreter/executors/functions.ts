@@ -19,18 +19,18 @@ export class ReturnSignal {
 
 
 export function registerFunctionExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('lang:program', async (node, ctx) => {
+  register('cpp:program', async (node, ctx) => {
     const body = node.children.body ?? []
     await ctx.executeBody(body)
     if (ctx.functions.has('main')) {
       const execFuncCall = async (callNode: import('../../core/types').SemanticNode) => {
         await ctx.executeNode(callNode)
       }
-      await execFuncCall(createNode('lang:func_call', { name: 'main' }, { args: [] }))
+      await execFuncCall(createNode('cpp:func_call', { name: 'main' }, { args: [] }))
     }
   })
 
-  register('lang:func_def', async (node, ctx) => {
+  register('cpp:func_def', async (node, ctx) => {
     const name = String(node.properties.name)
     const returnType = String(node.properties.return_type || 'void')
     const paramChildren = node.children.params ?? []
@@ -117,10 +117,10 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
     return returnValue
   }
 
-  register('lang:func_call', execFuncCall)
+  register('cpp:func_call', execFuncCall)
 
 
-  register('lang:return', async (node, ctx) => {
+  register('cpp:return', async (node, ctx) => {
     const valueNodes = node.children.value
     if (valueNodes && valueNodes.length > 0) {
       const val = await ctx.evaluate(valueNodes[0])

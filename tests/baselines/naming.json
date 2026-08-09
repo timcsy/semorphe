@@ -10,6 +10,11 @@
       },
       {
         "類": "操作詞不在詞彙",
+        "id": "cpp:array_access",
+        "說明": "操作 `access` 不在詞彙表（同義詞請合併）"
+      },
+      {
+        "類": "操作詞不在詞彙",
         "id": "cpp:container_push_back",
         "說明": "操作 `push_back` 不在詞彙表（同義詞請合併）"
       },
@@ -117,11 +122,6 @@
         "類": "操作詞不在詞彙",
         "id": "cpp:vector_pop_back",
         "說明": "操作 `pop_back` 不在詞彙表（同義詞請合併）"
-      },
-      {
-        "類": "操作詞不在詞彙",
-        "id": "lang:array_access",
-        "說明": "操作 `access` 不在詞彙表（同義詞請合併）"
       }
     ],
     "裸的函式庫名": [
@@ -386,6 +386,11 @@
       },
       {
         "類": "主體不在前",
+        "id": "cpp:count_loop",
+        "說明": "主體 `loop` 在後面——排序即分群，同族要排得在一起"
+      },
+      {
+        "類": "主體不在前",
         "id": "cpp:for_loop",
         "說明": "主體 `loop` 在後面——排序即分群，同族要排得在一起"
       },
@@ -396,191 +401,25 @@
       },
       {
         "類": "主體不在前",
+        "id": "cpp:number_literal",
+        "說明": "主體 `literal` 在後面——排序即分群，同族要排得在一起"
+      },
+      {
+        "類": "主體不在前",
+        "id": "cpp:string_literal",
+        "說明": "主體 `literal` 在後面——排序即分群，同族要排得在一起"
+      },
+      {
+        "類": "主體不在前",
         "id": "cpp:to_string",
         "說明": "主體 `string` 在後面——排序即分群，同族要排得在一起"
       },
       {
         "類": "主體不在前",
-        "id": "lang:count_loop",
-        "說明": "主體 `loop` 在後面——排序即分群，同族要排得在一起"
-      },
-      {
-        "類": "主體不在前",
-        "id": "lang:number_literal",
-        "說明": "主體 `literal` 在後面——排序即分群，同族要排得在一起"
-      },
-      {
-        "類": "主體不在前",
-        "id": "lang:string_literal",
-        "說明": "主體 `literal` 在後面——排序即分群，同族要排得在一起"
-      },
-      {
-        "類": "主體不在前",
-        "id": "lang:while_loop",
+        "id": "cpp:while_loop",
         "說明": "主體 `loop` 在後面——排序即分群，同族要排得在一起"
       }
     ],
-    "殘留 lang: scope": [
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:arithmetic",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:array_access",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:array_assign",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:array_declare",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:bitwise_not",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:block_comment",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:break",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:builtin_constant",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:comment",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:compare",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:continue",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:count_loop",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:doc_comment",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:endl",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:forward_decl",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:func_call",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:func_def",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:if",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:if_else",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:input",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:logic",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:logic_not",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:negate",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:number_literal",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:print",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:program",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:return",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:string_literal",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:var_assign",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:var_declare",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:var_ref",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      },
-      {
-        "類": "殘留 lang: scope",
-        "id": "lang:while_loop",
-        "說明": "各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱"
-      }
-    ]
+    "殘留 lang: scope": []
   }
 }

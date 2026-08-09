@@ -5,7 +5,7 @@ import type { SemanticNode } from '../../../src/core/types'
 import { setupTestRenderer } from '../../helpers/setup-renderer'
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'lang:program', properties: {}, children: { body } }
+  return { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body } }
 }
 
 describe('block-renderer', () => {
@@ -19,8 +19,8 @@ describe('block-renderer', () => {
   })
 
   it('should render var_declare', () => {
-    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('lang:number_literal', { value: '5' })],
+    const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('cpp:number_literal', { value: '5' })],
     })
     const state = renderToBlocklyState(makeProgram(decl))
     expect(state.blocks.blocks).toHaveLength(1)
@@ -33,8 +33,8 @@ describe('block-renderer', () => {
   })
 
   it('should render var_assign', () => {
-    const assign = createNode('lang:var_assign', { obj: 'x' }, {
-      value: [createNode('lang:var_ref', { name: 'y' })],
+    const assign = createNode('cpp:var_assign', { obj: 'x' }, {
+      value: [createNode('cpp:var_ref', { name: 'y' })],
     })
     const state = renderToBlocklyState(makeProgram(assign))
     const block = state.blocks.blocks[0]
@@ -44,11 +44,11 @@ describe('block-renderer', () => {
   })
 
   it('should render arithmetic expression', () => {
-    const expr = createNode('lang:arithmetic', { operator: '+' }, {
-      left: [createNode('lang:var_ref', { name: 'a' })],
-      right: [createNode('lang:number_literal', { value: '1' })],
+    const expr = createNode('cpp:arithmetic', { operator: '+' }, {
+      left: [createNode('cpp:var_ref', { name: 'a' })],
+      right: [createNode('cpp:number_literal', { value: '1' })],
     })
-    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [expr] })
+    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [expr] })
     const state = renderToBlocklyState(makeProgram(assign))
     const block = state.blocks.blocks[0]
     expect(block.inputs.VALUE.block.type).toBe('u_arithmetic')
@@ -56,10 +56,10 @@ describe('block-renderer', () => {
   })
 
   it('should render if with else', () => {
-    const ifStmt = createNode('lang:if', {}, {
-      condition: [createNode('lang:var_ref', { name: 'x' })],
-      then_body: [createNode('lang:break', {})],
-      else_body: [createNode('lang:continue', {})],
+    const ifStmt = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'x' })],
+      then_body: [createNode('cpp:break', {})],
+      else_body: [createNode('cpp:continue', {})],
     })
     const state = renderToBlocklyState(makeProgram(ifStmt))
     const block = state.blocks.blocks[0]
@@ -71,9 +71,9 @@ describe('block-renderer', () => {
   })
 
   it('should render if without else as u_if', () => {
-    const ifStmt = createNode('lang:if', {}, {
-      condition: [createNode('lang:var_ref', { name: 'x' })],
-      then_body: [createNode('lang:break', {})],
+    const ifStmt = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'x' })],
+      then_body: [createNode('cpp:break', {})],
       else_body: [],
     })
     const state = renderToBlocklyState(makeProgram(ifStmt))
@@ -81,8 +81,8 @@ describe('block-renderer', () => {
   })
 
   it('should chain statement blocks via next', () => {
-    const s1 = createNode('lang:break', {})
-    const s2 = createNode('lang:continue', {})
+    const s1 = createNode('cpp:break', {})
+    const s2 = createNode('cpp:continue', {})
     const state = renderToBlocklyState(makeProgram(s1, s2))
     expect(state.blocks.blocks).toHaveLength(1)
     const first = state.blocks.blocks[0]
@@ -91,14 +91,14 @@ describe('block-renderer', () => {
   })
 
   it('should render func_def', () => {
-    const func = createNode('lang:func_def', {
+    const func = createNode('cpp:func_def', {
       name: 'main', return_type: 'int',
     }, {
       params: [
         createNode('param_decl', { type: 'int', name: 'a' }),
         createNode('param_decl', { type: 'int', name: 'b' }),
       ],
-      body: [createNode('lang:return', {}, { value: [createNode('lang:number_literal', { value: '0' })] })],
+      body: [createNode('cpp:return', {}, { value: [createNode('cpp:number_literal', { value: '0' })] })],
     })
     const state = renderToBlocklyState(makeProgram(func))
     const block = state.blocks.blocks[0]
@@ -108,10 +108,10 @@ describe('block-renderer', () => {
   })
 
   it('should render print with values', () => {
-    const print = createNode('lang:print', {}, {
+    const print = createNode('cpp:print', {}, {
       values: [
-        createNode('lang:var_ref', { name: 'x' }),
-        createNode('lang:endl', {}),
+        createNode('cpp:var_ref', { name: 'x' }),
+        createNode('cpp:endl', {}),
       ],
     })
     const state = renderToBlocklyState(makeProgram(print))
@@ -123,7 +123,7 @@ describe('block-renderer', () => {
 
   it('should render cpp_printf with format and args', () => {
     const printf = createNode('cpp:printf', { format: '%.2f\\n' }, {
-      args: [createNode('lang:var_ref', { name: 'x' })],
+      args: [createNode('cpp:var_ref', { name: 'x' })],
     })
     const state = renderToBlocklyState(makeProgram(printf))
     const block = state.blocks.blocks[0]
@@ -148,8 +148,8 @@ describe('block-renderer', () => {
   it('should render cpp_scanf with format and args', () => {
     const scanf = createNode('cpp:scanf', { format: '%d %d' }, {
       args: [
-        createNode('lang:var_ref', { name: 'a' }),
-        createNode('lang:var_ref', { name: 'b' }),
+        createNode('cpp:var_ref', { name: 'a' }),
+        createNode('cpp:var_ref', { name: 'b' }),
       ],
     })
     const state = renderToBlocklyState(makeProgram(scanf))
@@ -164,9 +164,9 @@ describe('block-renderer', () => {
 
   it('should render cpp_printf with non-var_ref args in compose mode', () => {
     const printf = createNode('cpp:printf', { format: 'sum=%d\\n' }, {
-      args: [createNode('lang:arithmetic', { operator: '+' }, {
-        left: [createNode('lang:var_ref', { name: 'x' })],
-        right: [createNode('lang:var_ref', { name: 'y' })],
+      args: [createNode('cpp:arithmetic', { operator: '+' }, {
+        left: [createNode('cpp:var_ref', { name: 'x' })],
+        right: [createNode('cpp:var_ref', { name: 'y' })],
       })],
     })
     const state = renderToBlocklyState(makeProgram(printf))
@@ -191,15 +191,15 @@ describe('block-renderer', () => {
 
   it('should render cpp_increment in expression context as c_increment_expr', () => {
     const forLoop = createNode('cpp:for_loop', {}, {
-      init: [createNode('lang:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '0' })],
+      init: [createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '0' })],
       })],
-      cond: [createNode('lang:compare', { operator: '<' }, {
-        left: [createNode('lang:var_ref', { name: 'i' })],
-        right: [createNode('lang:number_literal', { value: '10' })],
+      cond: [createNode('cpp:compare', { operator: '<' }, {
+        left: [createNode('cpp:var_ref', { name: 'i' })],
+        right: [createNode('cpp:number_literal', { value: '10' })],
       })],
       update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
-      body: [createNode('lang:break', {})],
+      body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(forLoop))
     const block = state.blocks.blocks[0]
@@ -214,12 +214,12 @@ describe('block-renderer', () => {
 
   it('should render cpp_compound_assign in expression context as c_compound_assign_expr', () => {
     const forLoop = createNode('cpp:for_loop', {}, {
-      init: [createNode('lang:var_ref', { name: 'i' })],
-      cond: [createNode('lang:var_ref', { name: 'x' })],
+      init: [createNode('cpp:var_ref', { name: 'i' })],
+      cond: [createNode('cpp:var_ref', { name: 'x' })],
       update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
-        value: [createNode('lang:var_ref', { name: 'i' })],
+        value: [createNode('cpp:var_ref', { name: 'i' })],
       })],
-      body: [createNode('lang:break', {})],
+      body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(forLoop))
     const block = state.blocks.blocks[0]
@@ -232,12 +232,12 @@ describe('block-renderer', () => {
 
   it('should render var_declare in expression context as c_var_declare_expr', () => {
     const forLoop = createNode('cpp:for_loop', {}, {
-      init: [createNode('lang:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '2' })],
+      init: [createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '2' })],
       })],
-      cond: [createNode('lang:var_ref', { name: 'x' })],
-      update: [createNode('lang:var_ref', { name: 'i' })],
-      body: [createNode('lang:break', {})],
+      cond: [createNode('cpp:var_ref', { name: 'x' })],
+      update: [createNode('cpp:var_ref', { name: 'i' })],
+      body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(forLoop))
     const block = state.blocks.blocks[0]

@@ -24,7 +24,9 @@
  *
  * 未落地（域尚不存在）：`hw`（硬體）、`@<user>`（第三方）。
  */
-export const SCOPES = ['lang', 'cpp'] as const
+// ⚠️ `lang` 已於 D1（2026-08-09）退場——它是一個**假的通用宣稱**。
+// 各套件自理，通用性住在轉換規範裡。見 `knowledge/concepts/元件.md`。
+export const SCOPES = ['cpp'] as const
 export type Scope = (typeof SCOPES)[number]
 
 export interface ParsedId {

@@ -62,9 +62,9 @@ interface Case {
 /** main 之外的片段（函式、類別、命名空間）用 `%%` 分隔前置與 main 內容 */
 const CASES: Case[] = [
   // ── 無子槽：宣告性概念。它們不執行，程式其餘部分照跑
-  { id: 'lang:comment', code: `// 一行註解\ncout << 1;`, expect: '1', why: '註解不影響輸出' },
-  { id: 'lang:block_comment', code: `/* 區塊 */ cout << 1;`, expect: '1', why: '註解不影響輸出' },
-  { id: 'lang:doc_comment', code: `/** doc */ cout << 1;`, expect: '1', why: '註解不影響輸出' },
+  { id: 'cpp:comment', code: `// 一行註解\ncout << 1;`, expect: '1', why: '註解不影響輸出' },
+  { id: 'cpp:block_comment', code: `/* 區塊 */ cout << 1;`, expect: '1', why: '註解不影響輸出' },
+  { id: 'cpp:doc_comment', code: `/** doc */ cout << 1;`, expect: '1', why: '註解不影響輸出' },
   { id: 'cpp:include', code: `cout << 1;`, expect: '1', why: 'include 在標頭，不影響執行' },
   { id: 'cpp:include_local', code: `cout << 1;`, expect: '1', why: '同上' },
   { id: 'cpp:using_namespace', code: `cout << 1;`, expect: '1', why: 'using 不影響執行' },

@@ -206,7 +206,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
 
   it('★ 對照組：該宣告的 12 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
     const 應宣告 = [
-      'lang:comment', 'lang:block_comment', 'lang:doc_comment', 'cpp:include', 'cpp:using_namespace',
+      'cpp:comment', 'cpp:block_comment', 'cpp:doc_comment', 'cpp:include', 'cpp:using_namespace',
       // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
       //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
       // 宣告會隨系統長出新能力而過期，classification.md 的「複查觸發條件」

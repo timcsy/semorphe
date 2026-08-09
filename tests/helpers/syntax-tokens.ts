@@ -95,7 +95,7 @@ export const AMBIGUOUS_TOKENS: SyntaxToken[] = [
   { token: 'cin', why: '同 cout' },
   { token: 'iostream', why: '既是 C++ 標頭名，也是 UI 的 ioPreference 值' },
   {
-    token: 'lang:endl',
+    token: 'cpp:endl',
     why:
       'iostream 的操縱器——但**它在這個系統裡同時是一個元件身分**（`register(\'endl\', …)`）。' +
       '第一版把它列為「確定」，於是把三處概念身分報成語法耦合。',

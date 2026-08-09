@@ -82,14 +82,14 @@ describe('C++ cast Roundtrip', () => {
     })
 
     it('should generate correct C-style cast code', () => {
-      const valNode = createNode('lang:var_ref', { name: 'x' })
+      const valNode = createNode('cpp:var_ref', { name: 'x' })
       const castNode = createNode('cpp:cast', { target_type: 'int' }, {
         value: [valNode],
       })
-      const declNode = createNode('lang:var_declare', { type: 'int', name: 'y' }, {
+      const declNode = createNode('cpp:var_declare', { type: 'int', name: 'y' }, {
         initializer: [castNode],
       })
-      const prog = createNode('lang:program', {}, { body: [declNode] })
+      const prog = createNode('cpp:program', {}, { body: [declNode] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('(int)x')
     })
@@ -115,16 +115,16 @@ describe('C++ pointer assign Roundtrip', () => {
         }
         walk(tree!)
         // Either cpp_pointer_assign or var_assign with cpp_pointer_deref
-        expect(concepts.has('cpp:pointer_assign') || concepts.has('lang:var_assign')).toBe(true)
+        expect(concepts.has('cpp:pointer_assign') || concepts.has('cpp:var_assign')).toBe(true)
       }
     })
 
     it('should generate *ptr = value code', () => {
-      const valNode = createNode('lang:number_literal', { value: '42' })
+      const valNode = createNode('cpp:number_literal', { value: '42' })
       const ptrAssign = createNode('cpp:pointer_assign', { obj: 'ptr' }, {
         value: [valNode],
       })
-      const prog = createNode('lang:program', {}, { body: [ptrAssign] })
+      const prog = createNode('cpp:program', {}, { body: [ptrAssign] })
       const code = generateCode(prog, 'cpp', style)
       expect(code).toContain('*ptr = 42')
     })

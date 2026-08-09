@@ -30,26 +30,26 @@ const n = (
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
-const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { body })
-const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
-const str = (v: string): SemanticNode => n('lang:string_literal', { value: v })
-const show = (x: SemanticNode): SemanticNode => n('lang:print', {}, { values: [x] })
+const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
+const num = (v: number): SemanticNode => n('cpp:number_literal', { value: v })
+const str = (v: string): SemanticNode => n('cpp:string_literal', { value: v })
+const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
 
 /** class C { public: int tag; ~C(){ cout << "~" << tag; } }; */
 const withDtor = (name = 'C'): SemanticNode =>
   n('cpp:class_def', { name }, {
     public: [
-      n('lang:var_declare', { name: 'tag', type: 'int' }),
+      n('cpp:var_declare', { name: 'tag', type: 'int' }),
       n('cpp:destructor', { class_name: name }, {
-        body: [n('lang:print', {}, { values: [str('~'), n('lang:var_ref', { name: 'tag' })] })],
+        body: [n('cpp:print', {}, { values: [str('~'), n('cpp:var_ref', { name: 'tag' })] })],
       }),
     ],
     private: [],
   })
 
 const make = (varName: string, tag: number, type = 'C'): SemanticNode[] => [
-  n('lang:var_declare', { name: varName, type }),
-  n('lang:var_assign', { obj: varName, member: 'tag' }, { value: [num(tag)] }),
+  n('cpp:var_declare', { name: varName, type }),
+  n('cpp:var_assign', { obj: varName, member: 'tag' }, { value: [num(tag)] }),
 ]
 
 beforeAll(() => {
@@ -67,7 +67,7 @@ describe('解構式在離開作用域時執行', () => {
     const out = await run(
       prog(
         withDtor(),
-        n('lang:if_else', {}, {
+        n('cpp:if_else', {}, {
           condition: [num(1)],
           then: [...make('a', 7)],
           else: [],
@@ -84,7 +84,7 @@ describe('解構式在離開作用域時執行', () => {
     const out = await run(
       prog(
         withDtor(),
-        n('lang:if_else', {}, {
+        n('cpp:if_else', {}, {
           condition: [num(1)],
           then: [...make('a', 1), ...make('b', 2)],
           else: [],
@@ -98,7 +98,7 @@ describe('解構式在離開作用域時執行', () => {
     const out = await run(
       prog(
         withDtor(),
-        n('lang:if_else', {}, {
+        n('cpp:if_else', {}, {
           condition: [num(1)],
           then: [...make('a', 1), ...make('b', 2), ...make('c', 3)],
           else: [],
@@ -113,8 +113,8 @@ describe('解構式在離開作用域時執行', () => {
     const out = await run(
       prog(
         withDtor(),
-        n('lang:func_def', { name: 'f', return_type: 'void' }, { params: [], body: [...make('x', 5)] }),
-        n('lang:func_call', { name: 'f' }, { args: [] }),
+        n('cpp:func_def', { name: 'f', return_type: 'void' }, { params: [], body: [...make('x', 5)] }),
+        n('cpp:func_call', { name: 'f' }, { args: [] }),
         show(str('回來了')),
       ),
     )
@@ -124,11 +124,11 @@ describe('解構式在離開作用域時執行', () => {
 
   it('★ 沒有解構式的類別不得出錯', async () => {
     const noDtor = n('cpp:class_def', { name: 'D' }, {
-      public: [n('lang:var_declare', { name: 'v', type: 'int' })],
+      public: [n('cpp:var_declare', { name: 'v', type: 'int' })],
       private: [],
     })
     const out = await run(
-      prog(noDtor, n('lang:if_else', {}, { condition: [num(1)], then: [n('lang:var_declare', { name: 'd', type: 'D' })], else: [] }), show(str('OK'))),
+      prog(noDtor, n('cpp:if_else', {}, { condition: [num(1)], then: [n('cpp:var_declare', { name: 'd', type: 'D' })], else: [] }), show(str('OK'))),
     )
     expect(out).toContain('OK')
   })
@@ -138,9 +138,9 @@ describe('解構式在離開作用域時執行', () => {
     const out = await run(
       prog(
         withDtor(),
-        n('lang:if_else', {}, {
+        n('cpp:if_else', {}, {
           condition: [num(1)],
-          then: [n('lang:var_declare', { name: 'i', type: 'int' }, { initializer: [num(3)] })],
+          then: [n('cpp:var_declare', { name: 'i', type: 'int' }, { initializer: [num(3)] })],
           else: [],
         }),
         show(str('OK')),

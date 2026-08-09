@@ -379,7 +379,7 @@ export class SyncController {
       // If switching TO L1/L2 and tree has no main func (body-only from L0),
       // re-lift from the current code to get the full tree
       const hasMainFunc = (extractedTree.children.body ?? []).some(
-        n => n.conceptId === 'lang:func_def' && n.properties.name === 'main'
+        n => n.conceptId === 'cpp:func_def' && n.properties.name === 'main'
       )
       if (this.getScaffoldDepth() > 0 && !hasMainFunc && this.lifter && this.parser) {
         const parseResult = this.parser.parse(currentCode)

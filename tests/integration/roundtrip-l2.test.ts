@@ -136,7 +136,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_pointer_deref', () => {
     it('should render and extract pointer dereference', () => {
-      const inner = createNode('lang:var_ref', { name: 'ptr' })
+      const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:pointer_deref', {}, { ptr: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -147,7 +147,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const inner = createNode('lang:var_ref', { name: 'p' })
+      const inner = createNode('cpp:var_ref', { name: 'p' })
       const sem = createNode('cpp:pointer_deref', {}, { ptr: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('*p')
@@ -167,7 +167,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_address_of', () => {
     it('should render and extract address-of', () => {
-      const inner = createNode('lang:var_ref', { name: 'x' })
+      const inner = createNode('cpp:var_ref', { name: 'x' })
       const sem = createNode('cpp:address_of', {}, { var: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -178,7 +178,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const inner = createNode('lang:var_ref', { name: 'x' })
+      const inner = createNode('cpp:var_ref', { name: 'x' })
       const sem = createNode('cpp:address_of', {}, { var: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('&x')
@@ -198,7 +198,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_free', () => {
     it('should render and extract free()', () => {
-      const inner = createNode('lang:var_ref', { name: 'ptr' })
+      const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:free', {}, { ptr: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -209,7 +209,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const inner = createNode('lang:var_ref', { name: 'ptr' })
+      const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:free', {}, { ptr: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('free(ptr);')
@@ -286,7 +286,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_strlen', () => {
     it('should render and extract strlen', () => {
-      const inner = createNode('lang:var_ref', { name: 's' })
+      const inner = createNode('cpp:var_ref', { name: 's' })
       const sem = createNode('cpp:strlen', {}, { str: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -297,7 +297,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
-      const inner = createNode('lang:var_ref', { name: 's' })
+      const inner = createNode('cpp:var_ref', { name: 's' })
       const sem = createNode('cpp:strlen', {}, { str: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
@@ -315,8 +315,8 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_strcmp', () => {
     it('should render and extract strcmp', () => {
-      const s1 = createNode('lang:var_ref', { name: 'a' })
-      const s2 = createNode('lang:var_ref', { name: 'b' })
+      const s1 = createNode('cpp:var_ref', { name: 'a' })
+      const s2 = createNode('cpp:var_ref', { name: 'b' })
       const sem = createNode('cpp:strcmp', {}, { s1: [s1], s2: [s2] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -324,8 +324,8 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
-      const s1 = createNode('lang:var_ref', { name: 'a' })
-      const s2 = createNode('lang:var_ref', { name: 'b' })
+      const s1 = createNode('cpp:var_ref', { name: 'a' })
+      const s2 = createNode('cpp:var_ref', { name: 'b' })
       const sem = createNode('cpp:strcmp', {}, { s1: [s1], s2: [s2] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
@@ -334,8 +334,8 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_strcpy', () => {
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
-      const dest = createNode('lang:var_ref', { name: 'dst' })
-      const src = createNode('lang:var_ref', { name: 'src' })
+      const dest = createNode('cpp:var_ref', { name: 'dst' })
+      const src = createNode('cpp:var_ref', { name: 'src' })
       const sem = createNode('cpp:strcpy', {}, { dest: [dest], src: [src] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
@@ -368,7 +368,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:container_push_back', () => {
     it('should render and extract push_back', () => {
-      const val = createNode('lang:number_literal', { value: '42' })
+      const val = createNode('cpp:number_literal', { value: '42' })
       const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -380,7 +380,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const val = createNode('lang:number_literal', { value: '5' })
+      const val = createNode('cpp:number_literal', { value: '5' })
       const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('v.push_back(5);')
@@ -517,7 +517,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:delete', () => {
     it('should render and extract delete', () => {
-      const inner = createNode('lang:var_ref', { name: 'ptr' })
+      const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:delete', {}, { ptr: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -525,7 +525,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const inner = createNode('lang:var_ref', { name: 'p' })
+      const inner = createNode('cpp:var_ref', { name: 'p' })
       const sem = createNode('cpp:delete', {}, { ptr: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('delete p;')
@@ -677,18 +677,18 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_comment_line', () => {
     it('should render and extract comment', () => {
-      const sem = createNode('lang:comment', { text: 'hello' })
+      const sem = createNode('cpp:comment', { text: 'hello' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_comment_line')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('lang:comment')
+      expect(sem2!.conceptId).toBe('cpp:comment')
       expect(sem2!.properties.text).toBe('hello')
     })
 
     it('should generate code', () => {
-      const sem = createNode('lang:comment', { text: 'test' })
+      const sem = createNode('cpp:comment', { text: 'test' })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('// test')
     })

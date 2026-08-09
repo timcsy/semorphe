@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp:map_declare",
     "layer": "lang-library",
-    "abstractConcept": "lang:var_declare",
+    "abstractConcept": "cpp:var_declare",
     "properties": [
       {
         "name": "key_type",
@@ -37,7 +37,7 @@
   {
     "conceptId": "cpp:map_access",
     "layer": "lang-library",
-    "abstractConcept": "lang:array_access",
+    "abstractConcept": "cpp:array_access",
     "properties": [
       {
         "name": "obj",
@@ -53,7 +53,7 @@
   {
     "conceptId": "cpp:map_assign",
     "layer": "lang-library",
-    "abstractConcept": "lang:array_assign",
+    "abstractConcept": "cpp:array_assign",
     "properties": [
       {
         "name": "obj",

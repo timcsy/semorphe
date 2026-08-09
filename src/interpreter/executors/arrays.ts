@@ -3,7 +3,7 @@ import { defaultValue } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 
 export function registerArrayExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('lang:array_declare', async (node, ctx) => {
+  register('cpp:array_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     const type = String(node.properties.type || 'int')
 
@@ -67,7 +67,7 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 
-  register('lang:array_access', async (node, ctx) => {
+  register('cpp:array_access', async (node, ctx) => {
     const name = String(node.properties.obj)
     const indexNodes = node.children.index
     if (!indexNodes || indexNodes.length === 0) return defaultValue('int')
@@ -93,7 +93,7 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     return container.value[index]
   })
 
-  register('lang:array_assign', async (node, ctx) => {
+  register('cpp:array_assign', async (node, ctx) => {
     const name = String(node.properties.obj)
     const indexNodes = node.children.index
     const valueNodes = node.children.value

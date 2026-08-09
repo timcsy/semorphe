@@ -37,16 +37,16 @@ const n = (
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
-const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { body })
-const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
-const show = (x: SemanticNode): SemanticNode => n('lang:print', {}, { values: [x] })
+const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
+const num = (v: number): SemanticNode => n('cpp:number_literal', { value: v })
+const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
 
 /** struct Point { int x; int y; }; */
 const point = (): SemanticNode =>
   n('cpp:struct_declare', { name: 'Point' }, {
     members: [
-      n('lang:var_declare', { name: 'x', type: 'int' }),
-      n('lang:var_declare', { name: 'y', type: 'int' }),
+      n('cpp:var_declare', { name: 'x', type: 'int' }),
+      n('cpp:var_declare', { name: 'y', type: 'int' }),
     ],
   })
 
@@ -69,7 +69,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     const out = await run(
       prog(
         point(),
-        n('lang:var_declare', { name: 'p', type: 'Point' }),
+        n('cpp:var_declare', { name: 'p', type: 'Point' }),
         show(n('cpp:struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
@@ -80,8 +80,8 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     const out = await run(
       prog(
         point(),
-        n('lang:var_declare', { name: 'p', type: 'Point' }),
-        n('lang:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
+        n('cpp:var_declare', { name: 'p', type: 'Point' }),
+        n('cpp:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
         show(n('cpp:struct_member_access', { obj: 'p', member: 'x' })),
       ),
     )
@@ -92,8 +92,8 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     const out = await run(
       prog(
         point(),
-        n('lang:var_declare', { name: 'p', type: 'Point' }),
-        n('lang:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
+        n('cpp:var_declare', { name: 'p', type: 'Point' }),
+        n('cpp:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
         show(n('cpp:struct_member_access', { obj: 'p', member: 'y' })),
       ),
     )
@@ -104,9 +104,9 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     const out = await run(
       prog(
         point(),
-        n('lang:var_declare', { name: 'a', type: 'Point' }),
-        n('lang:var_declare', { name: 'b', type: 'Point' }),
-        n('lang:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
+        n('cpp:var_declare', { name: 'a', type: 'Point' }),
+        n('cpp:var_declare', { name: 'b', type: 'Point' }),
+        n('cpp:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
         show(n('cpp:struct_member_access', { obj: 'b', member: 'x' })),
       ),
     )
@@ -119,7 +119,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     let 訊息 = ''
     try {
       await run(
-        prog(point(), n('lang:var_declare', { name: 'p', type: 'Point' }),
+        prog(point(), n('cpp:var_declare', { name: 'p', type: 'Point' }),
           show(n('cpp:struct_member_access', { obj: 'p', member: '沒有這個欄位' }))),
       )
     } catch (e) {
@@ -133,9 +133,9 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('cpp:struct_declare', { name: 'Line' }, {
-          members: [n('lang:var_declare', { name: 'from', type: 'Point' })],
+          members: [n('cpp:var_declare', { name: 'from', type: 'Point' })],
         }),
-        n('lang:var_declare', { name: 'l', type: 'Line' }),
+        n('cpp:var_declare', { name: 'l', type: 'Line' }),
         show(n('cpp:struct_member_access', { obj: 'l', member: 'from' })),
       ),
     )

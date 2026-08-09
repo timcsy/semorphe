@@ -6,7 +6,7 @@ import { createNode } from '../../../../src/core/semantic-tree'
 const registry = createPopulatedRegistry()
 
 function makeProgram(body: ReturnType<typeof createNode>[]) {
-  return createNode('lang:program', {}, { body })
+  return createNode('cpp:program', {}, { body })
 }
 
 /** Extract header strings from DependencyEdge[] for backward-compatible assertions */
@@ -18,9 +18,9 @@ describe('Auto-include engine', () => {
   describe('computeAutoIncludes', () => {
     it('should return <iostream> for print concept', () => {
       const tree = makeProgram([
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ])
@@ -30,9 +30,9 @@ describe('Auto-include engine', () => {
 
     it('should return <cstdio> for cpp_printf concept', () => {
       const tree = makeProgram([
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ])
@@ -50,9 +50,9 @@ describe('Auto-include engine', () => {
 
     it('should return multiple headers for mixed concepts', () => {
       const tree = makeProgram([
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
             createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
           ],
         }),
@@ -64,9 +64,9 @@ describe('Auto-include engine', () => {
 
     it('should deduplicate headers (multiple print nodes)', () => {
       const tree = makeProgram([
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'y' })] }),
-        createNode('lang:input', {}, { values: [createNode('lang:var_ref', { name: 'z' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'y' })] }),
+        createNode('cpp:input', {}, { values: [createNode('cpp:var_ref', { name: 'z' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       const iostreamCount = headers(edges).filter(h => h === '<iostream>').length
@@ -76,9 +76,9 @@ describe('Auto-include engine', () => {
     it('should exclude manually included headers', () => {
       const tree = makeProgram([
         createNode('cpp:include', { header: 'iostream', local: false }),
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ])
@@ -88,11 +88,11 @@ describe('Auto-include engine', () => {
 
     it('should return empty for core-only concepts (no #include needed)', () => {
       const tree = makeProgram([
-        createNode('lang:var_declare', { name: 'x', type: 'int' }),
-        createNode('lang:if', {}, {
-          condition: [createNode('lang:compare', { operator: '==' }, {
-            left: [createNode('lang:var_ref', { name: 'x' })],
-            right: [createNode('lang:number_literal', { value: '0' })],
+        createNode('cpp:var_declare', { name: 'x', type: 'int' }),
+        createNode('cpp:if', {}, {
+          condition: [createNode('cpp:compare', { operator: '==' }, {
+            left: [createNode('cpp:var_ref', { name: 'x' })],
+            right: [createNode('cpp:number_literal', { value: '0' })],
           })],
           then_body: [],
         }),
@@ -104,7 +104,7 @@ describe('Auto-include engine', () => {
     it('should exclude C-style equivalent of auto-included headers (stdio.h ≡ cstdio)', () => {
       const tree = makeProgram([
         createNode('cpp:include', { header: 'stdio.h', local: false }),
-        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('lang:var_ref', { name: 'x' })] }),
+        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).not.toContain('<cstdio>')
@@ -122,7 +122,7 @@ describe('Auto-include engine', () => {
     it('should exclude C-style equivalent of auto-included headers (math.h ≡ cmath)', () => {
       const tree = makeProgram([
         createNode('cpp:include', { header: 'math.h', local: false }),
-        createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('lang:number_literal', { value: '4' })] }),
+        createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('cpp:number_literal', { value: '4' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).not.toContain('<cmath>')
@@ -131,7 +131,7 @@ describe('Auto-include engine', () => {
     it('should return sorted headers', () => {
       const tree = makeProgram([
         createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       const h = headers(edges)
@@ -141,7 +141,7 @@ describe('Auto-include engine', () => {
 
     it('should return DependencyEdge objects with correct fields', () => {
       const tree = makeProgram([
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(edges.length).toBeGreaterThan(0)

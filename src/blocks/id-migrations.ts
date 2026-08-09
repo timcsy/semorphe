@@ -51,7 +51,14 @@ export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
 
 registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
 
-/** 參數改名（v3 → v4）：通用元件的接收者統一叫 `obj` */
+/**
+ * 參數改名（v3 → v4）：通用元件的接收者統一叫 `obj`
+ *
+ * ⚠️ **鍵是 v3 當時的 id**（`lang:*`），不是現在的 `cpp:*`。
+ * 參數改名跑在 v3→v4，而 D1 的身分改名跑在 v4→v5——**順序不能倒**。
+ * 我一度把鍵「順手」更新成 `cpp:*`，那會讓 v3 的樹完全對不上，
+ * 結果是 id 改了而參數沒改。**遷移表的鍵屬於它那個版本，不屬於現在。**
+ */
 export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
   'lang:array_access': { name: 'obj' },
   'lang:array_assign': { name: 'obj' },
@@ -59,3 +66,56 @@ export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>
 }
 
 registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)
+
+/**
+ * v4 → v5（**D1**，G 項第 2 步，2026-08-09）：`lang:` 這個 scope 退場。
+ *
+ * ## 為什麼 `lang:` 沒有工作了
+ *
+ * - **不是元件套件**——各套件自理（見 `knowledge/concepts/元件.md`）
+ * - **不是積木套件**——積木各語言各自，共用會變成所有語言需求的聯集
+ * - **抽象概念住在圖鑑**，那是內容不是 scope
+ *
+ * 留著它就是留一個**假的通用宣稱**：「這 32 顆是跨語言的」——
+ * 而那件事只有第二個語言到場才驗證得了，現在說就是猜。
+ *
+ * Python 進來時 `py:if` 是**新元件 ＋ 一條轉換邊**，不是改名。
+ *
+ * ⚠️ 這份檔案在 D1 之後成為**純歷史**——它記的是這些 id 曾經屬於通用套件。
+ */
+export const ID_MIGRATIONS_V4_TO_V5: Record<string, string> = {
+  'lang:arithmetic': 'cpp:arithmetic',
+  'lang:array_access': 'cpp:array_access',
+  'lang:array_assign': 'cpp:array_assign',
+  'lang:array_declare': 'cpp:array_declare',
+  'lang:bitwise_not': 'cpp:bitwise_not',
+  'lang:block_comment': 'cpp:block_comment',
+  'lang:break': 'cpp:break',
+  'lang:builtin_constant': 'cpp:builtin_constant',
+  'lang:comment': 'cpp:comment',
+  'lang:compare': 'cpp:compare',
+  'lang:continue': 'cpp:continue',
+  'lang:count_loop': 'cpp:count_loop',
+  'lang:doc_comment': 'cpp:doc_comment',
+  'lang:endl': 'cpp:endl',
+  'lang:forward_decl': 'cpp:forward_decl',
+  'lang:func_call': 'cpp:func_call',
+  'lang:func_def': 'cpp:func_def',
+  'lang:if': 'cpp:if',
+  'lang:if_else': 'cpp:if_else',
+  'lang:input': 'cpp:input',
+  'lang:logic': 'cpp:logic',
+  'lang:logic_not': 'cpp:logic_not',
+  'lang:negate': 'cpp:negate',
+  'lang:number_literal': 'cpp:number_literal',
+  'lang:print': 'cpp:print',
+  'lang:program': 'cpp:program',
+  'lang:return': 'cpp:return',
+  'lang:string_literal': 'cpp:string_literal',
+  'lang:var_assign': 'cpp:var_assign',
+  'lang:var_declare': 'cpp:var_declare',
+  'lang:var_ref': 'cpp:var_ref',
+  'lang:while_loop': 'cpp:while_loop',
+}
+
+registerIdMigration(ID_MIGRATIONS_V4_TO_V5)

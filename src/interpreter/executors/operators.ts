@@ -2,7 +2,7 @@ import type { ConceptExecutor } from '../executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 
 export function registerOperatorExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('lang:arithmetic', async (node, ctx) => {
+  register('cpp:arithmetic', async (node, ctx) => {
     const op = String(node.properties.operator)
     const left = await ctx.evaluate(node.children.left[0])
 
@@ -53,7 +53,7 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     return { type: 'double', value: result }
   })
 
-  register('lang:compare', async (node, ctx) => {
+  register('cpp:compare', async (node, ctx) => {
     const op = String(node.properties.operator)
     const left = await ctx.evaluate(node.children.left[0])
     const right = await ctx.evaluate(node.children.right[0])
@@ -97,7 +97,7 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     return { type: 'bool', value: result }
   })
 
-  register('lang:logic', async (node, ctx) => {
+  register('cpp:logic', async (node, ctx) => {
     const op = String(node.properties.operator)
     const left = await ctx.evaluate(node.children.left[0])
 
@@ -114,12 +114,12 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     return { type: 'bool', value: false }
   })
 
-  register('lang:logic_not', async (node, ctx) => {
+  register('cpp:logic_not', async (node, ctx) => {
     const operand = await ctx.evaluate(node.children.operand[0])
     return { type: 'bool', value: !ctx.toBool(operand) }
   })
 
-  register('lang:negate', async (node, ctx) => {
+  register('cpp:negate', async (node, ctx) => {
     const operand = await ctx.evaluate(node.children.value[0])
     const val = ctx.toNumber(operand)
     return operand.type === 'int'

@@ -44,7 +44,7 @@ function 拆解成員(members: SemanticNode[]): {
       type: String(p.properties?.type ?? 'int'),
     }))
   /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
-  const 方法概念 = new Set(['lang:func_def', 'cpp:virtual_method', 'cpp:override_method'])
+  const 方法概念 = new Set(['cpp:func_def', 'cpp:virtual_method', 'cpp:override_method'])
   for (const m of members) {
     if (m.conceptId === 'cpp:static_member') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })

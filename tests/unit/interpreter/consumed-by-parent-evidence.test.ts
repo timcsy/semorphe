@@ -28,8 +28,8 @@ const n = (
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
-const num = (v: number): SemanticNode => n('lang:number_literal', { value: v })
-const ret = (v: SemanticNode): SemanticNode => n('lang:return', {}, { value: [v] })
+const num = (v: number): SemanticNode => n('cpp:number_literal', { value: v })
+const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })
 
 beforeAll(() => {
   registerCppLanguage()
@@ -39,7 +39,7 @@ beforeAll(() => {
 async function 宣告類別(member: SemanticNode, className = 'K'): Promise<SemanticInterpreter> {
   const interp = new SemanticInterpreter({ maxSteps: 5000 })
   await interp.execute(
-    n('lang:program', {}, {
+    n('cpp:program', {}, {
       body: [n('cpp:class_def', { name: className }, { public: [member], private: [] })],
     }),
   )

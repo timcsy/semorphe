@@ -71,7 +71,7 @@ describe('#ifdef 的巨集名只用一個參數名', () => {
     // ⚠️ 這是關鍵那一支：手動合成一個**只有 `condition`** 的節點。
     // 產生器若還讀 `name`，這裡會拿到 `#ifdef MACRO`——
     // 語法正確、語義錯誤，而來回轉換測試不一定抓得到。
-    const node = createNode('lang:program', {}, {
+    const node = createNode('cpp:program', {}, {
       body: [createNode('cpp:ifdef', { condition: 'ONLY_CONDITION' }, { body: [] })],
     })
     const code = generateCode(node, 'cpp', apcs as never)

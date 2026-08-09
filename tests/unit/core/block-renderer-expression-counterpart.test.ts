@@ -47,8 +47,8 @@ describe('PatternRenderer.getExpressionCounterpart', () => {
       makeSpec('c_increment', 'cpp_increment', { expressionCounterpart: 'c_increment_expr' }),
       makeSpec('c_compound_assign', 'cpp_compound_assign', { expressionCounterpart: 'c_compound_assign_expr' }),
       makeSpec('c_scanf', 'cpp_scanf', { expressionCounterpart: 'c_scanf_expr' }),
-      makeSpec('u_var_declare', 'lang:var_declare', { expressionCounterpart: 'c_var_declare_expr' }),
-      makeSpec('u_input', 'lang:input', { expressionCounterpart: 'u_input_expr' }),
+      makeSpec('u_var_declare', 'cpp:var_declare', { expressionCounterpart: 'c_var_declare_expr' }),
+      makeSpec('u_input', 'cpp:input', { expressionCounterpart: 'u_input_expr' }),
       makeSpec('c_increment_expr', 'cpp_increment_expr', { hasOutput: true }),
     ])
   })

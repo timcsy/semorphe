@@ -35,7 +35,7 @@ export function registerOperatorsCoreExecutors(
     return { type: 'int', value: 4 }
   })
 
-  register('lang:bitwise_not', async (node, ctx) => {
+  register('cpp:bitwise_not', async (node, ctx) => {
     const operand = await ctx.evaluate(node.children.operand[0])
     const val = ctx.toNumber(operand)
     return { type: 'int', value: ~Math.trunc(val) }

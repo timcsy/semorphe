@@ -166,11 +166,23 @@ describe('身分改名表的涵蓋率', () => {
     expect(漏, '這些身分沒有任何套件登錄改名——舊存檔打開後它們會留在舊格式').toEqual([])
   })
 
-  it('★ 改名表的每一筆目標都必須是合法身分', () => {
-    const 壞 = Object.entries(registeredIdMigrations())
-      .filter(([, neo]) => !isValidComponentId(neo))
-      .map(([old, neo]) => `${old} → ${neo}`)
-    expect(壞, '改名的目標格式不合法或 scope 不在白名單').toEqual([])
+  it('★ 任何舊 id 都要能被帶到一個合法的現存身分（**組合**，不是單張表）', () => {
+    // ⚠️ 第一版檢查「每一筆的目標是否合法」——**那在第二次改名之後就錯了**。
+    // v2→v3 把裸名帶到 `lang:*`，而 D1（v4→v5）又把 `lang:*` 帶到 `cpp:*`。
+    // 中間那一站**本來就不該是合法的現存身分**，它是歷史的一個中繼點。
+    //
+    // 要檢查的是**組合的終點**：反覆套用改名表，最後必須落在登錄表裡。
+    const 表 = registeredIdMigrations()
+    const 解析 = (id: string): string => {
+      let cur = id
+      for (let i = 0; i < 10 && 表[cur]; i++) cur = 表[cur]
+      return cur
+    }
+    const 壞 = Object.keys(表)
+      .map((old) => [old, 解析(old)] as const)
+      .filter(([, fin]) => !isValidComponentId(fin) || !全部身分.has(fin))
+      .map(([old, fin]) => `${old} → … → ${fin}`)
+    expect(壞, '這些舊 id 走完改名鏈之後，落在一個不存在或格式不合法的身分上').toEqual([])
   })
 })
 

@@ -5,7 +5,7 @@ import type { SemanticNode, Annotation } from '../../src/core/types'
 
 describe('Annotations 積木可見 — extraState.annotations 傳遞', () => {
   function wrapInProgram(...nodes: SemanticNode[]): SemanticNode {
-    return createNode('lang:program', {}, { body: nodes })
+    return createNode('cpp:program', {}, { body: nodes })
   }
 
   it('行內 annotation 應傳遞到 extraState.annotations', () => {

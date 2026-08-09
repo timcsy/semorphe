@@ -111,7 +111,7 @@ describe('cpp_ref_declare — 參照是別名', () => {
 
 describe('六顆宣告概念的身分', () => {
   const 樣本: [string, string][] = [
-    ['int a = 1;', 'lang:var_declare'],
+    ['int a = 1;', 'cpp:var_declare'],
     ['const int b = 2;', 'cpp:const_declare'],
     ['constexpr int c = 3;', 'cpp:constexpr_declare'],
     ['static int d = 4;', 'cpp:static_declare'],

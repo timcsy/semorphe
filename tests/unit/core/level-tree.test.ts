@@ -12,19 +12,19 @@ const sampleTree: LevelNode = {
   id: 'L0',
   level: 0,
   label: 'L0: 基礎',
-  concepts: ['lang:print', 'lang:var_declare', 'lang:if', 'while'],
+  concepts: ['cpp:print', 'cpp:var_declare', 'cpp:if', 'while'],
   children: [
     {
       id: 'L1a',
       level: 1,
       label: 'L1a: 函式',
-      concepts: ['lang:func_def', 'lang:func_call', 'for_loop'],
+      concepts: ['cpp:func_def', 'cpp:func_call', 'for_loop'],
       children: [
         {
           id: 'L2a',
           level: 2,
           label: 'L2a: 陣列',
-          concepts: ['lang:array_declare', 'lang:array_access'],
+          concepts: ['cpp:array_declare', 'cpp:array_access'],
           children: [],
         },
       ],
@@ -57,27 +57,27 @@ const sampleTopic: Topic = {
 describe('getVisibleConcepts', () => {
   it('should return root concepts when only root enabled', () => {
     const result = getVisibleConcepts(sampleTopic, new Set(['L0']))
-    expect(result).toEqual(new Set(['lang:print', 'lang:var_declare', 'lang:if', 'while']))
+    expect(result).toEqual(new Set(['cpp:print', 'cpp:var_declare', 'cpp:if', 'while']))
   })
 
   it('should return union of enabled branches', () => {
     const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a']))
     expect(result).toEqual(
-      new Set(['lang:print', 'lang:var_declare', 'lang:if', 'while', 'lang:func_def', 'lang:func_call', 'for_loop'])
+      new Set(['cpp:print', 'cpp:var_declare', 'cpp:if', 'while', 'cpp:func_def', 'cpp:func_call', 'for_loop'])
     )
   })
 
   it('should support multiple branches (union semantics)', () => {
     const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a', 'L1b']))
-    expect(result.has('lang:func_def')).toBe(true)
+    expect(result.has('cpp:func_def')).toBe(true)
     expect(result.has('switch_case')).toBe(true)
     expect(result.size).toBe(9)
   })
 
   it('should include deep branch concepts', () => {
     const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a', 'L2a']))
-    expect(result.has('lang:array_declare')).toBe(true)
-    expect(result.has('lang:array_access')).toBe(true)
+    expect(result.has('cpp:array_declare')).toBe(true)
+    expect(result.has('cpp:array_access')).toBe(true)
   })
 
   it('should return empty set when no branches enabled', () => {
@@ -150,7 +150,7 @@ describe('validateDoublingGuideline', () => {
 
 describe('isConceptVisible', () => {
   it('should return true for concept in enabled branch', () => {
-    expect(isConceptVisible('lang:func_def', sampleTopic, new Set(['L0', 'L1a']))).toBe(true)
+    expect(isConceptVisible('cpp:func_def', sampleTopic, new Set(['L0', 'L1a']))).toBe(true)
   })
 
   it('should return false for concept not in enabled branches', () => {

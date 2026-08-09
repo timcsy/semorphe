@@ -62,7 +62,7 @@ function find(node: SemanticNode | null, concept: string): SemanticNode | null {
   return null
 }
 
-const arrayOf = (code: string): SemanticNode | null => find(lift(`int main(){ ${code} }`), 'lang:array_declare')
+const arrayOf = (code: string): SemanticNode | null => find(lift(`int main(){ ${code} }`), 'cpp:array_declare')
 
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -230,7 +230,7 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
 
   it('★ 不誤報最常用的那一對：`print` vs `input` 必須判「不會撞」', () => {
     const pair = pairs.find(
-      (p) => (p.a === 'lang:print' && p.b === 'lang:input') || (p.a === 'lang:input' && p.b === 'lang:print'),
+      (p) => (p.a === 'cpp:print' && p.b === 'cpp:input') || (p.a === 'cpp:input' && p.b === 'cpp:print'),
     )
     if (!pair) return // 它們若不同優先權就不在同優先權群組裡，不算問題
     expect(

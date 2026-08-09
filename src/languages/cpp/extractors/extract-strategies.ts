@@ -24,13 +24,13 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       // （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
       // 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
       // ——它假設所有宣告子都是純名字，而系統刻意不那樣做。已進墓碑。
-      declarators.push(createNode('lang:var_declare', { name, type }, {
+      declarators.push(createNode('cpp:var_declare', { name, type }, {
         initializer: initNode ? [initNode] : [],
       }))
       i++
     }
     if (declarators.length > 1) {
-      return createNode('lang:var_declare', { type }, { declarators })
+      return createNode('cpp:var_declare', { type }, { declarators })
     }
     const name = declarators.length === 1
       ? declarators[0].properties.name
@@ -42,13 +42,13 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
           return initNode ? [initNode] : []
         })()
-    return createNode('lang:var_declare', { name, type }, { initializer: initChildren })
+    return createNode('cpp:var_declare', { name, type }, { initializer: initChildren })
   })
 
   // ── Control flow (if-elseif chain flattening) ──
   const extractIf = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
     const condInput = block.inputs.CONDITION
-    const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('lang:var_ref', { name: 'true' })
+    const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('cpp:var_ref', { name: 'true' })
     const thenInput = block.inputs.THEN
     const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
 
@@ -61,7 +61,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       elseBody = elseInput?.block ? ctx.extractStatementChain(elseInput.block) : []
     }
 
-    return createNode('lang:if', {}, {
+    return createNode('cpp:if', {}, {
       condition: cond ? [cond] : [],
       then_body: thenBody,
       else_body: elseBody,
@@ -79,7 +79,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       const a = args[i]
       if (a.mode === 'select') {
         const name = a.text ?? a.selectedVar
-        if (name) valueNodes.push(createNode('lang:var_ref', { name }))
+        if (name) valueNodes.push(createNode('cpp:var_ref', { name }))
       } else if (a.mode === 'compose') {
         const inputData = block.inputs[`ARG_${i}`]
         if (inputData?.block) {
@@ -91,10 +91,10 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (valueNodes.length === 0) {
       // Fallback: try SEL_0 field (dynamic dropdown), then NAME field (JSON blockDef)
       const singleVar = (block.fields.SEL_0 as string) ?? (block.fields.NAME as string) ?? 'x'
-      valueNodes.push(createNode('lang:var_ref', { name: singleVar }))
+      valueNodes.push(createNode('cpp:var_ref', { name: singleVar }))
     }
     const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
-    return createNode('lang:input', { variable: firstVarName }, {
+    return createNode('cpp:input', { variable: firstVarName }, {
       values: valueNodes,
     })
   }
@@ -114,7 +114,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     }
     const returnDesc = block.fields.RETURN as string | undefined
     if (returnDesc) props.return_desc = returnDesc
-    return createNode('lang:doc_comment', props)
+    return createNode('cpp:doc_comment', props)
   })
 
   // ── 運算式位的變數宣告 ──
@@ -135,7 +135,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     const name = (block.fields.NAME_0 as string) ?? 'i'
     const initInput = block.inputs.INIT_0
     const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-    return createNode('lang:var_declare', { name, type }, {
+    return createNode('cpp:var_declare', { name, type }, {
       initializer: initNode ? [initNode] : [],
     })
   })
@@ -157,12 +157,12 @@ function buildElseIfChain(block: BlockState, index: number, ctx: ExtractContext)
   }
 
   const condInput = block.inputs[`ELSEIF_CONDITION_${index}`]
-  const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('lang:var_ref', { name: 'true' })
+  const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('cpp:var_ref', { name: 'true' })
   const thenInput = block.inputs[`ELSEIF_THEN_${index}`]
   const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
   const elseBody = buildElseIfChain(block, index + 1, ctx)
 
-  return [createNode('lang:if', { isElseIf: 'true' }, {
+  return [createNode('cpp:if', { isElseIf: 'true' }, {
     condition: cond ? [cond] : [],
     then_body: thenBody,
     else_body: elseBody,

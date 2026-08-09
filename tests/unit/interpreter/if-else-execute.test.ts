@@ -27,9 +27,9 @@ const n = (
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
-const prog = (...body: SemanticNode[]): SemanticNode => n('lang:program', {}, { body })
+const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
 
-const say = (t: string): SemanticNode => n('lang:print', {}, { values: [n('lang:string_literal', { value: t })] })
+const say = (t: string): SemanticNode => n('cpp:print', {}, { values: [n('cpp:string_literal', { value: t })] })
 
 beforeAll(() => {
   registerCppLanguage()
@@ -45,7 +45,7 @@ async function run(tree: SemanticNode): Promise<string> {
 describe('if_else：兩個分支都要能跑', () => {
   it('★ 條件為真 → 走 then', async () => {
     const out = await run(
-      prog(n('lang:if_else', {}, { condition: [n('lang:number_literal', { value: 1 })], then: [say('T')], else: [say('F')] })),
+      prog(n('cpp:if_else', {}, { condition: [n('cpp:number_literal', { value: 1 })], then: [say('T')], else: [say('F')] })),
     )
     expect(out, 'if_else 沒有執行器——使用者拖得到這個積木、產得出程式碼、跑不了').toContain('T')
     expect(out).not.toContain('F')
@@ -53,7 +53,7 @@ describe('if_else：兩個分支都要能跑', () => {
 
   it('★ 條件為假 → 走 else', async () => {
     const out = await run(
-      prog(n('lang:if_else', {}, { condition: [n('lang:number_literal', { value: 0 })], then: [say('T')], else: [say('F')] })),
+      prog(n('cpp:if_else', {}, { condition: [n('cpp:number_literal', { value: 0 })], then: [say('T')], else: [say('F')] })),
     )
     expect(out).toContain('F')
     expect(out).not.toContain('T')
@@ -70,13 +70,13 @@ describe('if_else：兩個分支都要能跑', () => {
     // ⚠️ 哪天作用域修好了，這支會**因為兩者仍然一致而繼續通過**——
     // 所以它不是那個缺陷的釘子。缺陷本身另記。
     const 分支 = (concept: string, thenKey: string): SemanticNode =>
-      n('lang:program', {}, {
+      n('cpp:program', {}, {
         body: [
-          n('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [n('lang:number_literal', { value: 1 })] }),
-          n(concept, {}, { condition: [n('lang:number_literal', { value: 1 })], [thenKey]: [
-            n('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [n('lang:number_literal', { value: 9 })] }),
+          n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:number_literal', { value: 1 })] }),
+          n(concept, {}, { condition: [n('cpp:number_literal', { value: 1 })], [thenKey]: [
+            n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:number_literal', { value: 9 })] }),
           ] }),
-          n('lang:print', {}, { values: [n('lang:var_ref', { name: 'x' })] }),
+          n('cpp:print', {}, { values: [n('cpp:var_ref', { name: 'x' })] }),
         ],
       })
     // 比對**結果**，包含丟出來的錯誤——重宣告在兩者都是錯誤，那也算一致
@@ -87,8 +87,8 @@ describe('if_else：兩個分支都要能跑', () => {
         return 'ERR:' + (e as Error).message
       }
     }
-    const if結果 = await 跑('lang:if', 'then_body')
-    const ifElse結果 = await 跑('lang:if_else', 'then')
+    const if結果 = await 跑('cpp:if', 'then_body')
+    const ifElse結果 = await 跑('cpp:if_else', 'then')
     expect(
       ifElse結果,
       `\`if\` → ${if結果}\n\`if_else\` → ${ifElse結果}\n` +
@@ -98,7 +98,7 @@ describe('if_else：兩個分支都要能跑', () => {
 
   it('★ 空的 else 不得炸', async () => {
     const out = await run(
-      prog(n('lang:if_else', {}, { condition: [n('lang:number_literal', { value: 0 })], then: [say('T')], else: [] })),
+      prog(n('cpp:if_else', {}, { condition: [n('cpp:number_literal', { value: 0 })], then: [say('T')], else: [] })),
     )
     expect(out).not.toContain('T')
   })
@@ -107,14 +107,14 @@ describe('if_else：兩個分支都要能跑', () => {
 describe('if_else 的標註要與 if 一致', () => {
   it('★ 是一個除錯步進點——否則單步執行會跳過整段分支', () => {
     expect(
-      hasAnnotation('lang:if_else', 'debug_step'),
+      hasAnnotation('cpp:if_else', 'debug_step'),
       '`if` 有這個標註而 `if_else` 沒有。同一件事的兩個概念，' +
         '使用者換一個積木就換一套除錯行為。',
     ).toBe(true)
   })
 
   it('★ 引入作用域', () => {
-    expect(hasAnnotation('lang:if_else', 'introduces_scope')).toBe(true)
+    expect(hasAnnotation('cpp:if_else', 'introduces_scope')).toBe(true)
   })
 })
 
@@ -157,12 +157,12 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
       try {
         return 'OUT:' + (await run(
           prog(
-            n('lang:if_else', {}, {
-              condition: [n('lang:number_literal', { value: 1 })],
-              then: [n('lang:var_declare', { name: '僅限分支內', type: 'int' }, { initializer: [n('lang:number_literal', { value: 9 })] })],
+            n('cpp:if_else', {}, {
+              condition: [n('cpp:number_literal', { value: 1 })],
+              then: [n('cpp:var_declare', { name: '僅限分支內', type: 'int' }, { initializer: [n('cpp:number_literal', { value: 9 })] })],
               else: [],
             }),
-            n('lang:print', {}, { values: [n('lang:var_ref', { name: '僅限分支內' })] }),
+            n('cpp:print', {}, { values: [n('cpp:var_ref', { name: '僅限分支內' })] }),
           ),
         ))
       } catch (e) {
@@ -176,10 +176,10 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
   it('★ 但外層的變數在分支裡讀得到——隔的是往外，不是往內', async () => {
     const out = await run(
       prog(
-        n('lang:var_declare', { name: '外層', type: 'int' }, { initializer: [n('lang:number_literal', { value: 7 })] }),
-        n('lang:if_else', {}, {
-          condition: [n('lang:number_literal', { value: 1 })],
-          then: [n('lang:print', {}, { values: [n('lang:var_ref', { name: '外層' })] })],
+        n('cpp:var_declare', { name: '外層', type: 'int' }, { initializer: [n('cpp:number_literal', { value: 7 })] }),
+        n('cpp:if_else', {}, {
+          condition: [n('cpp:number_literal', { value: 1 })],
+          then: [n('cpp:print', {}, { values: [n('cpp:var_ref', { name: '外層' })] })],
           else: [],
         }),
       ),
@@ -190,13 +190,13 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
   it('★ 分支裡的指派要影響外層的變數——那不是宣告', async () => {
     const out = await run(
       prog(
-        n('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [n('lang:number_literal', { value: 1 })] }),
-        n('lang:if_else', {}, {
-          condition: [n('lang:number_literal', { value: 1 })],
-          then: [n('lang:var_assign', { obj: 'x' }, { value: [n('lang:number_literal', { value: 5 })] })],
+        n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:number_literal', { value: 1 })] }),
+        n('cpp:if_else', {}, {
+          condition: [n('cpp:number_literal', { value: 1 })],
+          then: [n('cpp:var_assign', { obj: 'x' }, { value: [n('cpp:number_literal', { value: 5 })] })],
           else: [],
         }),
-        n('lang:print', {}, { values: [n('lang:var_ref', { name: 'x' })] }),
+        n('cpp:print', {}, { values: [n('cpp:var_ref', { name: 'x' })] }),
       ),
     )
     expect(out, '分支裡改外層變數改不到 → 子作用域把指派也攔下來了').toContain('5')

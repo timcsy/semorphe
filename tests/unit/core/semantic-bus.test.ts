@@ -14,7 +14,7 @@ describe('SemanticBus', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
-      const tree = { id: '1', conceptId: 'lang:program', properties: {}, children: {} }
+      const tree = { id: '1', conceptId: 'cpp:program', properties: {}, children: {} }
       bus.emit('semantic:update', { tree, source: 'blocks' })
 
       expect(handler).toHaveBeenCalledOnce()
@@ -58,7 +58,7 @@ describe('SemanticBus', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
-      const tree = { id: '1', conceptId: 'lang:program', properties: {}, children: {} }
+      const tree = { id: '1', conceptId: 'cpp:program', properties: {}, children: {} }
       bus.emit('semantic:update', { tree, source: 'blocks' })
       expect(handler).toHaveBeenCalledOnce()
 
@@ -90,7 +90,7 @@ describe('SemanticBus', () => {
       bus.on('semantic:update', bad)
       bus.on('semantic:update', good)
 
-      const tree = { id: '1', conceptId: 'lang:program', properties: {}, children: {} }
+      const tree = { id: '1', conceptId: 'cpp:program', properties: {}, children: {} }
       bus.emit('semantic:update', { tree, source: 'blocks' })
 
       expect(bad).toHaveBeenCalledOnce()
@@ -104,7 +104,7 @@ describe('SemanticBus', () => {
   describe('no subscribers', () => {
     it('should not throw when emitting with no subscribers', () => {
       expect(() => {
-        bus.emit('semantic:update', { tree: { id: '1', conceptId: 'lang:program', properties: {}, children: {} }, source: 'blocks' })
+        bus.emit('semantic:update', { tree: { id: '1', conceptId: 'cpp:program', properties: {}, children: {} }, source: 'blocks' })
       }).not.toThrow()
     })
   })

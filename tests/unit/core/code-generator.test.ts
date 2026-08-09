@@ -22,7 +22,7 @@ const defaultStyle: StylePreset = {
 function makeProgram(...body: SemanticNode[]): SemanticNode {
   return {
     id: 'test_root',
-    conceptId: 'lang:program',
+    conceptId: 'cpp:program',
     properties: {},
     children: { body },
   }
@@ -36,42 +36,42 @@ describe('generateCode', () => {
   })
 
   it('should generate var declaration with initializer', () => {
-    const value = createNode('lang:number_literal', { value: '5' })
-    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
+    const value = createNode('cpp:number_literal', { value: '5' })
+    const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
     const tree = makeProgram(decl)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('int x = 5;')
   })
 
   it('should generate var declaration without initializer', () => {
-    const decl = createNode('lang:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
+    const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
     const tree = makeProgram(decl)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('int x;')
   })
 
   it('should generate var assignment', () => {
-    const value = createNode('lang:number_literal', { value: '10' })
-    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [value] })
+    const value = createNode('cpp:number_literal', { value: '10' })
+    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [value] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = 10;')
   })
 
   it('should generate arithmetic expression', () => {
-    const left = createNode('lang:var_ref', { name: 'a' })
-    const right = createNode('lang:var_ref', { name: 'b' })
-    const expr = createNode('lang:arithmetic', { operator: '+' }, { left: [left], right: [right] })
-    const assign = createNode('lang:var_assign', { obj: 'x' }, { value: [expr] })
+    const left = createNode('cpp:var_ref', { name: 'a' })
+    const right = createNode('cpp:var_ref', { name: 'b' })
+    const expr = createNode('cpp:arithmetic', { operator: '+' }, { left: [left], right: [right] })
+    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [expr] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = a + b;')
   })
 
   it('should generate if statement', () => {
-    const cond = createNode('lang:var_ref', { name: 'x' })
-    const body = createNode('lang:var_assign', { obj: 'y' }, { value: [createNode('lang:number_literal', { value: '1' })] })
-    const ifStmt = createNode('lang:if', {}, {
+    const cond = createNode('cpp:var_ref', { name: 'x' })
+    const body = createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:number_literal', { value: '1' })] })
+    const ifStmt = createNode('cpp:if', {}, {
       condition: [cond],
       then_body: [body],
       else_body: [],
@@ -83,25 +83,25 @@ describe('generateCode', () => {
   })
 
   it('should generate while loop', () => {
-    const cond = createNode('lang:compare', { operator: '<' }, {
-      left: [createNode('lang:var_ref', { name: 'i' })],
-      right: [createNode('lang:number_literal', { value: '10' })],
+    const cond = createNode('cpp:compare', { operator: '<' }, {
+      left: [createNode('cpp:var_ref', { name: 'i' })],
+      right: [createNode('cpp:number_literal', { value: '10' })],
     })
-    const body = createNode('lang:var_assign', { obj: 'i' }, {
-      value: [createNode('lang:arithmetic', { operator: '+' }, {
-        left: [createNode('lang:var_ref', { name: 'i' })],
-        right: [createNode('lang:number_literal', { value: '1' })],
+    const body = createNode('cpp:var_assign', { obj: 'i' }, {
+      value: [createNode('cpp:arithmetic', { operator: '+' }, {
+        left: [createNode('cpp:var_ref', { name: 'i' })],
+        right: [createNode('cpp:number_literal', { value: '1' })],
       })],
     })
-    const loop = createNode('lang:while_loop', {}, { condition: [cond], body: [body] })
+    const loop = createNode('cpp:while_loop', {}, { condition: [cond], body: [body] })
     const tree = makeProgram(loop)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('while (i < 10)')
   })
 
   it('should generate function definition', () => {
-    const ret = createNode('lang:return', {}, { value: [createNode('lang:number_literal', { value: '0' })] })
-    const func = createNode('lang:func_def', { name: 'main', return_type: 'int' }, { params: [], body: [ret] })
+    const ret = createNode('cpp:return', {}, { value: [createNode('cpp:number_literal', { value: '0' })] })
+    const func = createNode('cpp:func_def', { name: 'main', return_type: 'int' }, { params: [], body: [ret] })
     const tree = makeProgram(func)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('int main()')
@@ -109,16 +109,16 @@ describe('generateCode', () => {
   })
 
   it('should generate cout print (APCS style)', () => {
-    const val = createNode('lang:var_ref', { name: 'x' })
-    const print = createNode('lang:print', {}, { values: [val] })
+    const val = createNode('cpp:var_ref', { name: 'x' })
+    const print = createNode('cpp:print', {}, { values: [val] })
     const tree = makeProgram(print)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('cout << x')
   })
 
   it('should output inline annotations as trailing comments', () => {
-    const node = createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('lang:number_literal', { value: '1' })],
+    const node = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+      initializer: [createNode('cpp:number_literal', { value: '1' })],
     })
     node.annotations = [{ type: 'comment', text: 'set x', position: 'inline' }]
     const code = generateCode(makeProgram(node), 'cpp', defaultStyle)

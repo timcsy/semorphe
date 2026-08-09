@@ -259,7 +259,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -286,7 +286,7 @@ describe('PatternLifter', () => {
       expect(result!.conceptId).toBe('cpp:compound_assign')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('lang:number_literal')
+      expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
     })
   })
 
@@ -299,19 +299,19 @@ describe('PatternLifter', () => {
         operatorDispatch: {
           operatorField: '$operator',
           routes: {
-            '+': 'lang:arithmetic',
-            '-': 'lang:arithmetic',
-            '*': 'lang:arithmetic',
-            '/': 'lang:arithmetic',
-            '%': 'lang:arithmetic',
-            '>': 'lang:compare',
-            '<': 'lang:compare',
-            '>=': 'lang:compare',
-            '<=': 'lang:compare',
-            '==': 'lang:compare',
-            '!=': 'lang:compare',
-            '&&': 'lang:logic',
-            '||': 'lang:logic',
+            '+': 'cpp:arithmetic',
+            '-': 'cpp:arithmetic',
+            '*': 'cpp:arithmetic',
+            '/': 'cpp:arithmetic',
+            '%': 'cpp:arithmetic',
+            '>': 'cpp:compare',
+            '<': 'cpp:compare',
+            '>=': 'cpp:compare',
+            '<=': 'cpp:compare',
+            '==': 'cpp:compare',
+            '!=': 'cpp:compare',
+            '&&': 'cpp:logic',
+            '||': 'cpp:logic',
           },
           fieldMappings: [
             { semantic: 'operator', ast: '$operator', extract: 'text' },
@@ -328,7 +328,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -350,7 +350,7 @@ describe('PatternLifter', () => {
       const ctx = makeLiftContext(lifter)
       const addResult = lifter.tryLift(addNode, ctx)
       expect(addResult).not.toBeNull()
-      expect(addResult!.conceptId).toBe('lang:arithmetic')
+      expect(addResult!.conceptId).toBe('cpp:arithmetic')
       expect(addResult!.properties.operator).toBe('+')
       expect(addResult!.children.left).toHaveLength(1)
       expect(addResult!.children.right).toHaveLength(1)
@@ -362,7 +362,7 @@ describe('PatternLifter', () => {
       })
       const cmpResult = lifter.tryLift(cmpNode, makeLiftContext(lifter))
       expect(cmpResult).not.toBeNull()
-      expect(cmpResult!.conceptId).toBe('lang:compare')
+      expect(cmpResult!.conceptId).toBe('cpp:compare')
       expect(cmpResult!.properties.operator).toBe('>')
 
       // Test logic
@@ -372,7 +372,7 @@ describe('PatternLifter', () => {
       })
       const logicResult = lifter.tryLift(logicNode, makeLiftContext(lifter))
       expect(logicResult).not.toBeNull()
-      expect(logicResult!.conceptId).toBe('lang:logic')
+      expect(logicResult!.conceptId).toBe('cpp:logic')
     })
   })
 
@@ -382,7 +382,7 @@ describe('PatternLifter', () => {
         id: 'cout_chain',
         astNodeType: 'binary_expression',
         patternType: 'chain',
-        concept: { conceptId: 'lang:print' },
+        concept: { conceptId: 'cpp:print' },
         chain: {
           operator: '<<',
           direction: 'left',
@@ -400,7 +400,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:var_ref', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:var_ref', role: 'expression' },
         blockDef: { type: 'u_var_ref' },
         codeTemplate: { pattern: '${NAME}', imports: [], order: 20 },
         astPattern: {
@@ -431,7 +431,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(outerBinExpr, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:print')
+      expect(result!.conceptId).toBe('cpp:print')
       expect(result!.children.values).toBeDefined()
       expect(result!.children.values.length).toBeGreaterThanOrEqual(2)
     })
@@ -443,7 +443,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { conceptId: 'lang:count_loop' },
+        concept: { conceptId: 'cpp:count_loop' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },
@@ -467,7 +467,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -519,7 +519,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(forNode, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:count_loop')
+      expect(result!.conceptId).toBe('cpp:count_loop')
     })
 
     it('should NOT match when composite checks fail', () => {
@@ -527,7 +527,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { conceptId: 'lang:count_loop' },
+        concept: { conceptId: 'cpp:count_loop' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },
@@ -572,7 +572,7 @@ describe('PatternLifter', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:number_literal', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
@@ -591,7 +591,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(parens, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:number_literal')
+      expect(result!.conceptId).toBe('cpp:number_literal')
       expect(result!.properties.value).toBe('42')
     })
   })
@@ -616,7 +616,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { conceptId: 'lang:count_loop' },
+        concept: { conceptId: 'cpp:count_loop' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },
@@ -646,7 +646,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(forNode, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:count_loop')
+      expect(result!.conceptId).toBe('cpp:count_loop')
     })
   })
 })

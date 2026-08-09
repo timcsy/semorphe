@@ -50,7 +50,7 @@ function clone(node: SemanticNode): SemanticNode {
 
 describe('降級是投影，不得寫回真實', () => {
   const 真實 = (): SemanticNode =>
-    createNode('lang:program', {}, {
+    createNode('cpp:program', {}, {
       body: [createNode('cpp:vector_declare', { name: 'v', type: 'int' }, {})],
     })
 
@@ -61,14 +61,14 @@ describe('降級是投影，不得寫回真實', () => {
     expect(parent, '這顆元件沒宣告父概念 → 這支測試釘不到東西').toBeTruthy()
 
     const 顯示 = clone(真實())
-    就地降級(顯示, new Set(['lang:program', parent!]))
+    就地降級(顯示, new Set(['cpp:program', parent!]))
     expect(顯示.children.body![0].conceptId, '降級沒有發生 → 這支測試沒有在測降級').toBe(parent)
   })
 
   it('★ 降級作用在拷貝上時，真實不變', () => {
     const t = 真實()
     const parent = abstractConceptOf('cpp:vector_declare')!
-    就地降級(clone(t), new Set(['lang:program', parent]))
+    就地降級(clone(t), new Set(['cpp:program', parent]))
     expect(
       t.children.body![0].conceptId,
       '真實被降級改掉了——執行會拿到 `int v;`，而 `v[0]` 會炸',
@@ -80,7 +80,7 @@ describe('降級是投影，不得寫回真實', () => {
     // 而「拷貝」會在某次重構中被當成多餘的開銷刪掉。
     const t = 真實()
     const parent = abstractConceptOf('cpp:vector_declare')!
-    就地降級(t, new Set(['lang:program', parent]))
+    就地降級(t, new Set(['cpp:program', parent]))
     expect(t.children.body![0].conceptId, '就地降級沒有改到真實 → 那前一支就沒有在防什麼').toBe(parent)
   })
 })

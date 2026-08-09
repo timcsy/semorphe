@@ -53,12 +53,12 @@ function makeCtx(style: StylePreset, withRegistry = false): GeneratorContext {
 
 describe('Auto-include integration', () => {
   it('should auto-inject #include <iostream> for cout code', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, {
-              values: [createNode('lang:string_literal', { value: 'hello' }), createNode('lang:endl', {})],
+            createNode('cpp:print', {}, {
+              values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
             }),
           ],
         }),
@@ -70,11 +70,11 @@ describe('Auto-include integration', () => {
   })
 
   it('should auto-inject #include <cstdio> for printf code', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ],
@@ -85,12 +85,12 @@ describe('Auto-include integration', () => {
   })
 
   it('should NOT duplicate manually placed #include', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:include', { header: 'iostream', local: false }),
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ],
@@ -101,11 +101,11 @@ describe('Auto-include integration', () => {
   })
 
   it('should NOT inject includes when no dependencyResolver provided', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ],
@@ -115,11 +115,11 @@ describe('Auto-include integration', () => {
   })
 
   it('should inject multiple headers for mixed concepts', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:func_def', { name: 'main', return_type: 'int', params: [] }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+            createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
             createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
           ],
         }),

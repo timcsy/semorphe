@@ -69,7 +69,7 @@ describe('PatternExtractor', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'lang:return',
+          conceptId: 'cpp:return',
           children: { value: 'expression' },
           role: 'statement',
         },
@@ -89,7 +89,7 @@ describe('PatternExtractor', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'lang:number_literal',
+          conceptId: 'cpp:number_literal',
           properties: ['value'],
           role: 'expression',
         },
@@ -122,9 +122,9 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:return')
+      expect(result!.conceptId).toBe('cpp:return')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('lang:number_literal')
+      expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
       expect(result!.children.value[0].properties.value).toBe('42')
     })
   })
@@ -138,7 +138,7 @@ describe('PatternExtractor', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'lang:while_loop',
+          conceptId: 'cpp:while_loop',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -158,7 +158,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:break', role: 'statement' },
+        conceptMapping: { conceptId: 'cpp:break', role: 'statement' },
         blockDef: { type: 'u_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
@@ -170,7 +170,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'lang:continue', role: 'statement' },
+        conceptMapping: { conceptId: 'cpp:continue', role: 'statement' },
         blockDef: { type: 'u_continue' },
         codeTemplate: { pattern: 'continue;', imports: [], order: 0 },
         astPattern: { nodeType: 'continue_statement', constraints: [] },
@@ -204,10 +204,10 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('lang:while_loop')
+      expect(result!.conceptId).toBe('cpp:while_loop')
       expect(result!.children.body).toHaveLength(2)
-      expect(result!.children.body[0].conceptId).toBe('lang:break')
-      expect(result!.children.body[1].conceptId).toBe('lang:continue')
+      expect(result!.children.body[0].conceptId).toBe('cpp:break')
+      expect(result!.children.body[1].conceptId).toBe('cpp:continue')
     })
   })
 

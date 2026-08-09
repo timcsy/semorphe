@@ -548,7 +548,7 @@ export class PatternLifter {
             // can distinguish from "else { if (...) {} }"
             if (child.type === 'else_clause' && child.namedChildren.length === 1
                 && child.namedChildren[0].type === 'if_statement'
-                && liftedChildren.length === 1 && liftedChildren[0].conceptId === 'lang:if') {
+                && liftedChildren.length === 1 && liftedChildren[0].conceptId === 'cpp:if') {
               liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
             }
             children[fm.semantic] = liftedChildren

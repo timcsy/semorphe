@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "lang:program",
+    "conceptId": "cpp:program",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -18,7 +18,7 @@
     }
   },
   {
-    "conceptId": "lang:var_declare",
+    "conceptId": "cpp:var_declare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -52,7 +52,7 @@
     }
   },
   {
-    "conceptId": "lang:var_assign",
+    "conceptId": "cpp:var_assign",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -71,7 +71,7 @@
     }
   },
   {
-    "conceptId": "lang:var_ref",
+    "conceptId": "cpp:var_ref",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -85,7 +85,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:number_literal",
+    "conceptId": "cpp:number_literal",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -99,7 +99,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:string_literal",
+    "conceptId": "cpp:string_literal",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -113,7 +113,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:arithmetic",
+    "conceptId": "cpp:arithmetic",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -142,7 +142,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:compare",
+    "conceptId": "cpp:compare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -167,7 +167,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:logic",
+    "conceptId": "cpp:logic",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -188,7 +188,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:logic_not",
+    "conceptId": "cpp:logic_not",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -198,7 +198,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:negate",
+    "conceptId": "cpp:negate",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -208,7 +208,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:if",
+    "conceptId": "cpp:if",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -224,7 +224,7 @@
     }
   },
   {
-    "conceptId": "lang:if_else",
+    "conceptId": "cpp:if_else",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -247,7 +247,7 @@
     }
   },
   {
-    "conceptId": "lang:count_loop",
+    "conceptId": "cpp:count_loop",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -278,7 +278,7 @@
     }
   },
   {
-    "conceptId": "lang:while_loop",
+    "conceptId": "cpp:while_loop",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -292,7 +292,7 @@
     }
   },
   {
-    "conceptId": "lang:break",
+    "conceptId": "cpp:break",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -303,7 +303,7 @@
     }
   },
   {
-    "conceptId": "lang:continue",
+    "conceptId": "cpp:continue",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -314,7 +314,7 @@
     }
   },
   {
-    "conceptId": "lang:func_def",
+    "conceptId": "cpp:func_def",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -354,7 +354,7 @@
     }
   },
   {
-    "conceptId": "lang:func_call",
+    "conceptId": "cpp:func_call",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -375,7 +375,7 @@
     }
   },
   {
-    "conceptId": "lang:return",
+    "conceptId": "cpp:return",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -388,7 +388,7 @@
     }
   },
   {
-    "conceptId": "lang:print",
+    "conceptId": "cpp:print",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -401,7 +401,7 @@
     }
   },
   {
-    "conceptId": "lang:endl",
+    "conceptId": "cpp:endl",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],
@@ -409,7 +409,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:input",
+    "conceptId": "cpp:input",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -425,7 +425,7 @@
     }
   },
   {
-    "conceptId": "lang:array_declare",
+    "conceptId": "cpp:array_declare",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -456,7 +456,7 @@
     }
   },
   {
-    "conceptId": "lang:array_access",
+    "conceptId": "cpp:array_access",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -472,7 +472,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "lang:array_assign",
+    "conceptId": "cpp:array_assign",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -492,7 +492,7 @@
     }
   },
   {
-    "conceptId": "lang:comment",
+    "conceptId": "cpp:comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -512,7 +512,7 @@
     }
   },
   {
-    "conceptId": "lang:doc_comment",
+    "conceptId": "cpp:doc_comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -532,7 +532,7 @@
     }
   },
   {
-    "conceptId": "lang:block_comment",
+    "conceptId": "cpp:block_comment",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [

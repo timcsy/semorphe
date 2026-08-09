@@ -58,12 +58,12 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
       expect(code).toContain('int y;')
     })
 
-    it('lang:var_assign', () => {
+    it('cpp:var_assign', () => {
       const code = roundTripCode('x = 10;')
       expect(code).toContain('x = 10;')
     })
 
-    it('lang:array_declare', () => {
+    it('cpp:array_declare', () => {
       const code = roundTripCode('int arr[10];')
       expect(code).toContain('int arr[10];')
     })

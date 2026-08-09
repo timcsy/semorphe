@@ -3,7 +3,7 @@
     "id": "cpp_number_literal",
     "astNodeType": "number_literal",
     "concept": {
-      "conceptId": "lang:number_literal"
+      "conceptId": "cpp:number_literal"
     },
     "fieldMappings": [
       {
@@ -17,7 +17,7 @@
     "id": "cpp_identifier",
     "astNodeType": "identifier",
     "concept": {
-      "conceptId": "lang:var_ref"
+      "conceptId": "cpp:var_ref"
     },
     "fieldMappings": [
       {
@@ -31,7 +31,7 @@
     "id": "cpp_string_literal",
     "astNodeType": "string_literal",
     "concept": {
-      "conceptId": "lang:string_literal"
+      "conceptId": "cpp:string_literal"
     },
     "fieldMappings": [
       {
@@ -61,7 +61,7 @@
     "id": "cpp_endl",
     "astNodeType": "identifier",
     "concept": {
-      "conceptId": "lang:endl"
+      "conceptId": "cpp:endl"
     },
     "constraints": [
       {
@@ -75,7 +75,7 @@
     "id": "cpp_eof",
     "astNodeType": "identifier",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "constraints": [
       {
@@ -96,7 +96,7 @@
     "id": "cpp_null_id",
     "astNodeType": "identifier",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "constraints": [
       {
@@ -117,7 +117,7 @@
     "id": "cpp_true",
     "astNodeType": "true",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "fieldMappings": [
       {
@@ -131,7 +131,7 @@
     "id": "cpp_false",
     "astNodeType": "false",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "fieldMappings": [
       {
@@ -145,7 +145,7 @@
     "id": "cpp_nullptr",
     "astNodeType": "nullptr",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "fieldMappings": [
       {
@@ -159,7 +159,7 @@
     "id": "cpp_null",
     "astNodeType": "null",
     "concept": {
-      "conceptId": "lang:builtin_constant"
+      "conceptId": "cpp:builtin_constant"
     },
     "fieldMappings": [
       {
@@ -173,14 +173,14 @@
     "id": "cpp_break",
     "astNodeType": "break_statement",
     "concept": {
-      "conceptId": "lang:break"
+      "conceptId": "cpp:break"
     }
   },
   {
     "id": "cpp_continue",
     "astNodeType": "continue_statement",
     "concept": {
-      "conceptId": "lang:continue"
+      "conceptId": "cpp:continue"
     }
   },
   {
@@ -202,24 +202,24 @@
     "operatorDispatch": {
       "operatorField": "$operator",
       "routes": {
-        "+": "lang:arithmetic",
-        "-": "lang:arithmetic",
-        "*": "lang:arithmetic",
-        "/": "lang:arithmetic",
-        "%": "lang:arithmetic",
-        "&": "lang:arithmetic",
-        "|": "lang:arithmetic",
-        "^": "lang:arithmetic",
-        "<<": "lang:arithmetic",
-        ">>": "lang:arithmetic",
-        ">": "lang:compare",
-        "<": "lang:compare",
-        ">=": "lang:compare",
-        "<=": "lang:compare",
-        "==": "lang:compare",
-        "!=": "lang:compare",
-        "&&": "lang:logic",
-        "||": "lang:logic"
+        "+": "cpp:arithmetic",
+        "-": "cpp:arithmetic",
+        "*": "cpp:arithmetic",
+        "/": "cpp:arithmetic",
+        "%": "cpp:arithmetic",
+        "&": "cpp:arithmetic",
+        "|": "cpp:arithmetic",
+        "^": "cpp:arithmetic",
+        "<<": "cpp:arithmetic",
+        ">>": "cpp:arithmetic",
+        ">": "cpp:compare",
+        "<": "cpp:compare",
+        ">=": "cpp:compare",
+        "<=": "cpp:compare",
+        "==": "cpp:compare",
+        "!=": "cpp:compare",
+        "&&": "cpp:logic",
+        "||": "cpp:logic"
       },
       "fieldMappings": [
         {
@@ -246,7 +246,7 @@
     "astNodeType": "binary_expression",
     "patternType": "chain",
     "concept": {
-      "conceptId": "lang:print"
+      "conceptId": "cpp:print"
     },
     "chain": {
       "operator": "<<",
@@ -263,7 +263,7 @@
     "astNodeType": "binary_expression",
     "patternType": "chain",
     "concept": {
-      "conceptId": "lang:input"
+      "conceptId": "cpp:input"
     },
     "chain": {
       "operator": ">>",
@@ -280,7 +280,7 @@
     "astNodeType": "for_statement",
     "patternType": "composite",
     "concept": {
-      "conceptId": "lang:count_loop"
+      "conceptId": "cpp:count_loop"
     },
     "liftStrategy": "cpp:liftCountFor",
     "composite": {
@@ -326,7 +326,7 @@
     "operatorDispatch": {
       "operatorField": "$operator",
       "routes": {
-        "!": "lang:logic_not"
+        "!": "cpp:logic_not"
       },
       "fieldMappings": [
         {
@@ -345,7 +345,7 @@
     "operatorDispatch": {
       "operatorField": "$operator",
       "routes": {
-        "-": "lang:negate"
+        "-": "cpp:negate"
       },
       "fieldMappings": [
         {
@@ -361,7 +361,7 @@
     "id": "cpp_if_statement",
     "astNodeType": "if_statement",
     "concept": {
-      "conceptId": "lang:if"
+      "conceptId": "cpp:if"
     },
     "fieldMappings": [
       {
@@ -385,7 +385,7 @@
     "id": "cpp_while_statement",
     "astNodeType": "while_statement",
     "concept": {
-      "conceptId": "lang:while_loop"
+      "conceptId": "cpp:while_loop"
     },
     "fieldMappings": [
       {
@@ -404,7 +404,7 @@
     "id": "cpp_return_statement",
     "astNodeType": "return_statement",
     "concept": {
-      "conceptId": "lang:return"
+      "conceptId": "cpp:return"
     },
     "fieldMappings": [
       {
@@ -432,7 +432,7 @@
     "id": "cpp_translation_unit",
     "astNodeType": "translation_unit",
     "concept": {
-      "conceptId": "lang:program"
+      "conceptId": "cpp:program"
     },
     "fieldMappings": [
       {
@@ -446,7 +446,7 @@
     "id": "cpp_function_definition",
     "astNodeType": "function_definition",
     "concept": {
-      "conceptId": "lang:func_def"
+      "conceptId": "cpp:func_def"
     },
     "liftStrategy": "cpp:liftFunctionDef",
     "fieldMappings": [
@@ -461,7 +461,7 @@
     "id": "cpp_doc_comment",
     "astNodeType": "comment",
     "concept": {
-      "conceptId": "lang:doc_comment"
+      "conceptId": "cpp:doc_comment"
     },
     "constraints": [
       {
@@ -477,7 +477,7 @@
     "id": "cpp_block_comment",
     "astNodeType": "comment",
     "concept": {
-      "conceptId": "lang:block_comment"
+      "conceptId": "cpp:block_comment"
     },
     "constraints": [
       {
@@ -499,7 +499,7 @@
     "id": "cpp_comment",
     "astNodeType": "comment",
     "concept": {
-      "conceptId": "lang:comment"
+      "conceptId": "cpp:comment"
     },
     "fieldMappings": [
       {
@@ -531,7 +531,7 @@
     "id": "cpp_declaration",
     "astNodeType": "declaration",
     "concept": {
-      "conceptId": "lang:var_declare"
+      "conceptId": "cpp:var_declare"
     },
     "liftStrategy": "cpp:liftDeclaration",
     "priority": 15

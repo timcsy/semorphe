@@ -317,7 +317,7 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     for (const id of zero) {
       expect(footprint(testFiles, id), `${id} 被報成零測試足跡，但測試樹裡找得到它`).toEqual([])
     }
-    expect(zero, 'if 有大量測試，報出來的話信號太寬').not.toContain('lang:if')
+    expect(zero, 'if 有大量測試，報出來的話信號太寬').not.toContain('cpp:if')
     // 合成證明信號活著：一個不存在於任何測試裡的假 id 必須被判為零足跡
     expect(footprint(testFiles, 'synth__never_mentioned__')).toEqual([])
   })

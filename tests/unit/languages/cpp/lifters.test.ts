@@ -42,11 +42,11 @@ describe('C++ Declaration Lifters', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_declare')
+    expect(result!.conceptId).toBe('cpp:var_declare')
     expect(result!.properties.name).toBe('x')
     expect(result!.properties.type).toBe('int')
     expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].conceptId).toBe('lang:number_literal')
+    expect(result!.children.initializer[0].conceptId).toBe('cpp:number_literal')
   })
 
   it('should lift declaration without init to var_declare', () => {
@@ -56,7 +56,7 @@ describe('C++ Declaration Lifters', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_declare')
+    expect(result!.conceptId).toBe('cpp:var_declare')
     expect(result!.properties.name).toBe('y')
     expect(result!.properties.type).toBe('int')
   })
@@ -81,7 +81,7 @@ describe('C++ Declaration Lifters', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:forward_decl')
+    expect(result!.conceptId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('void')
     expect(result!.properties.name).toBe('listp')
     expect(result!.children.params).toHaveLength(2)
@@ -105,7 +105,7 @@ describe('C++ Declaration Lifters', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:forward_decl')
+    expect(result!.conceptId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('getVal')
     expect(result!.children.params).toHaveLength(0)
@@ -122,7 +122,7 @@ describe('C++ Declaration Lifters', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:array_declare')
+    expect(result!.conceptId).toBe('cpp:array_declare')
     expect(result!.properties.name).toBe('arr')
     // Size is now a child expression node
     const sizeChildren = result!.children.size ?? []
@@ -134,7 +134,7 @@ describe('C++ Declaration Lifters', () => {
     const node = mockNode('expression_statement', 'x;', [inner])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_ref')
+    expect(result!.conceptId).toBe('cpp:var_ref')
     expect(result!.properties.name).toBe('x')
   })
 
@@ -146,7 +146,7 @@ describe('C++ Declaration Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_assign')
+    expect(result!.conceptId).toBe('cpp:var_assign')
     expect(result!.properties.obj).toBe('x')
     expect(result!.children.value).toHaveLength(1)
   })
@@ -164,9 +164,9 @@ describe('C++ Expression Lifters', () => {
   it('should lift true/false to builtin_constant', () => {
     const trueNode = mockNode('true', 'true')
     const falseNode = mockNode('false', 'false')
-    expect(lifter.lift(trueNode)!.conceptId).toBe('lang:builtin_constant')
+    expect(lifter.lift(trueNode)!.conceptId).toBe('cpp:builtin_constant')
     expect(lifter.lift(trueNode)!.properties.value).toBe('true')
-    expect(lifter.lift(falseNode)!.conceptId).toBe('lang:builtin_constant')
+    expect(lifter.lift(falseNode)!.conceptId).toBe('cpp:builtin_constant')
     expect(lifter.lift(falseNode)!.properties.value).toBe('false')
   })
 
@@ -174,7 +174,7 @@ describe('C++ Expression Lifters', () => {
     const node = mockNode('null', 'NULL')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:builtin_constant')
+    expect(result!.conceptId).toBe('cpp:builtin_constant')
     expect(result!.properties.value).toBe('NULL')
   })
 
@@ -182,7 +182,7 @@ describe('C++ Expression Lifters', () => {
     const node = mockNode('identifier', 'EOF')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:builtin_constant')
+    expect(result!.conceptId).toBe('cpp:builtin_constant')
     expect(result!.properties.value).toBe('EOF')
   })
 
@@ -190,7 +190,7 @@ describe('C++ Expression Lifters', () => {
     const node = mockNode('nullptr', 'nullptr')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:builtin_constant')
+    expect(result!.conceptId).toBe('cpp:builtin_constant')
     expect(result!.properties.value).toBe('nullptr')
   })
 
@@ -202,7 +202,7 @@ describe('C++ Expression Lifters', () => {
     ], { argument: operand })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:logic_not')
+    expect(result!.conceptId).toBe('cpp:logic_not')
     expect(result!.children.operand).toHaveLength(1)
   })
 
@@ -214,7 +214,7 @@ describe('C++ Expression Lifters', () => {
     ], { argument: operand })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:negate')
+    expect(result!.conceptId).toBe('cpp:negate')
     expect(result!.children.value).toHaveLength(1)
   })
 
@@ -234,7 +234,7 @@ describe('C++ Expression Lifters', () => {
     const node = mockNode('parenthesized_expression', '(42)', [inner])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:number_literal')
+    expect(result!.conceptId).toBe('cpp:number_literal')
     expect(result!.properties.value).toBe('42')
   })
 
@@ -246,7 +246,7 @@ describe('C++ Expression Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:array_access')
+    expect(result!.conceptId).toBe('cpp:array_access')
     expect(result!.properties.obj).toBe('arr')
     expect(result!.children.index).toHaveLength(1)
   })
@@ -280,7 +280,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:if')
+    expect(result!.conceptId).toBe('cpp:if')
     expect(result!.children.condition).toHaveLength(1)
     expect(result!.children.then_body.length).toBeGreaterThan(0)
     expect(result!.children.else_body).toHaveLength(0)
@@ -301,7 +301,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:if')
+    expect(result!.conceptId).toBe('cpp:if')
     expect(result!.children.else_body.length).toBeGreaterThan(0)
   })
 
@@ -323,7 +323,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:while_loop')
+    expect(result!.conceptId).toBe('cpp:while_loop')
     expect(result!.children.condition).toHaveLength(1)
   })
 
@@ -351,7 +351,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:count_loop')
+    expect(result!.conceptId).toBe('cpp:count_loop')
     expect(result!.properties.var_name).toBe('i')
     expect(result!.children.from).toHaveLength(1)
     expect(result!.children.to).toHaveLength(1)
@@ -378,7 +378,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:count_loop')
+    expect(result!.conceptId).toBe('cpp:count_loop')
     expect(result!.properties.inclusive).toBe('TRUE')
   })
 
@@ -403,7 +403,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:count_loop')
+    expect(result!.conceptId).toBe('cpp:count_loop')
     expect(result!.properties.inclusive).toBe('FALSE')
   })
 
@@ -428,7 +428,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:count_loop')
+    expect(result!.conceptId).toBe('cpp:count_loop')
     expect(result!.properties.var_name).toBe('i')
     expect(result!.properties.inclusive).toBe('FALSE')
     // No initializer value → empty from
@@ -553,7 +553,7 @@ describe('C++ Statement Lifters', () => {
     expect(result!.conceptId).toBe('cpp:for_loop')
     // init should be var_declare (passed through as-is)
     expect(result!.children.init).toHaveLength(1)
-    expect(result!.children.init[0].conceptId).toBe('lang:var_declare')
+    expect(result!.children.init[0].conceptId).toBe('cpp:var_declare')
     // No condition or update
     expect(result!.children.cond).toHaveLength(0)
     expect(result!.children.update).toHaveLength(0)
@@ -587,7 +587,7 @@ describe('C++ Statement Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.conceptId).toBe('cpp:for_loop')
     // init (declaration) → var_declare (passed through)
-    expect(result!.children.init[0].conceptId).toBe('lang:var_declare')
+    expect(result!.children.init[0].conceptId).toBe('cpp:var_declare')
     // cond present
     expect(result!.children.cond).toHaveLength(1)
     // update (assignment_expression with +=) → cpp_compound_assign (passed through)
@@ -605,7 +605,7 @@ describe('C++ Statement Lifters', () => {
     })
     const body = mockNode('compound_statement', '{ return 0; }', [
       mockNode('return_statement', 'return 0;', [
-        unnamed('lang:return', 'lang:return'),
+        unnamed('cpp:return', 'cpp:return'),
         mockNode('number_literal', '0'),
         unnamed(';', ';'),
       ]),
@@ -617,7 +617,7 @@ describe('C++ Statement Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:func_def')
+    expect(result!.conceptId).toBe('cpp:func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.children.params).toHaveLength(1)
@@ -642,7 +642,7 @@ describe('C++ Statement Lifters', () => {
     const node = mockNode('condition_clause', '(flag)', [inner])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_ref')
+    expect(result!.conceptId).toBe('cpp:var_ref')
     expect(result!.properties.name).toBe('flag')
   })
 })
@@ -662,7 +662,7 @@ describe('C++ I/O Lifters', () => {
     expect(result!.conceptId).toBe('cpp:printf')
     expect(result!.properties.format).toBe('%d')
     expect(result!.children.args).toHaveLength(1)
-    expect(result!.children.args[0].conceptId).toBe('lang:var_ref')
+    expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
   })
 
   it('should lift printf("%.2f\\n", x) preserving float format', () => {
@@ -713,7 +713,7 @@ describe('C++ I/O Lifters', () => {
     expect(result!.conceptId).toBe('cpp:scanf')
     expect(result!.properties.format).toBe('%d')
     expect(result!.children.args).toHaveLength(1)
-    expect(result!.children.args[0].conceptId).toBe('lang:var_ref')
+    expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
     expect(result!.children.args[0].properties.name).toBe('x')
   })
 
@@ -774,7 +774,7 @@ describe('C++ I/O Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:func_call')
+    expect(result!.conceptId).toBe('cpp:func_call')
     expect(result!.properties.name).toBe('myFunc')
     expect(result!.children.args).toHaveLength(1)
   })

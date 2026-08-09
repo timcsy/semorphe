@@ -12,12 +12,12 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
 
   function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
     if (COUT_NEEDS_PARENS.has(v.conceptId)) return true
-    if ((v.conceptId === 'lang:arithmetic' || v.conceptId === 'lang:compare' || v.conceptId === 'lang:logic') &&
+    if ((v.conceptId === 'cpp:arithmetic' || v.conceptId === 'cpp:compare' || v.conceptId === 'cpp:logic') &&
         LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
     return false
   }
 
-  g.set('lang:print', (node, ctx) => {
+  g.set('cpp:print', (node, ctx) => {
     const values = node.children.values ?? []
     if (style.io_style === 'cout') {
       const parts = values.map(v => {
@@ -28,12 +28,12 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
       return `${indent(ctx)}cout << ${parts.join(' << ')};\n`
     }
     // printf mode: embed string_literal values into format, use %d for expressions
-    const hasEndl = values.some(v => v.conceptId === 'lang:endl')
+    const hasEndl = values.some(v => v.conceptId === 'cpp:endl')
     const fmtParts: string[] = []
     const argParts: string[] = []
     for (const v of values) {
-      if (v.conceptId === 'lang:endl') continue
-      if (v.conceptId === 'lang:string_literal') {
+      if (v.conceptId === 'cpp:endl') continue
+      if (v.conceptId === 'cpp:string_literal') {
         fmtParts.push((v.properties.value as string) ?? '')
       } else {
         fmtParts.push('%d')
@@ -50,7 +50,7 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
     return `${indent(ctx)}printf("${fmt}");\n`
   })
 
-  g.set('lang:input', (node, ctx) => {
+  g.set('cpp:input', (node, ctx) => {
     const valueNodes = node.children.values ?? []
     const vars = valueNodes.length > 0
       ? valueNodes.map(v => generateExpression(v, ctx))
@@ -73,5 +73,5 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
   // ⚠️ 第一個 `'lang:endl'` 是**元件身分**，第二個是**產出的 C++ 程式碼**。
   // 命名空間遷移把兩個都改了——症狀是產出 `cout << x << lang:endl;`。
   // 同一個字串，兩種意義，而位置分得出來：註冊鍵 vs 回傳值。
-  g.set('lang:endl', (_node, _ctx) => 'endl')
+  g.set('cpp:endl', (_node, _ctx) => 'endl')
 }

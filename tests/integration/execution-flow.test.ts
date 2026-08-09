@@ -8,15 +8,15 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 registerCppLanguage()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('lang:program', {}, { body })
+  return createNode('cpp:program', {}, { body })
 }
 
 describe('Execution flow integration', () => {
   it('should execute a simple print program', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
-      createNode('lang:print', {}, {
-        values: [createNode('lang:string_literal', { value: 'Hello, World!' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:string_literal', { value: 'Hello, World!' }, {})]
       })
     ]))
     expect(interp.getOutput().join('')).toBe('Hello, World!')
@@ -25,11 +25,11 @@ describe('Execution flow integration', () => {
   it('should execute variable declaration and print', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
-      createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '42' }, {})]
+      createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '42' }, {})]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:var_ref', { name: 'x' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:var_ref', { name: 'x' }, {})]
       })
     ]))
     expect(interp.getOutput().join('')).toContain('42')
@@ -38,11 +38,11 @@ describe('Execution flow integration', () => {
   it('should provide step records via executeWithSteps', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     const steps = await interp.executeWithSteps(makeProgram([
-      createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '10' }, {})]
+      createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '10' }, {})]
       }),
-      createNode('lang:var_assign', { obj: 'x' }, {
-        value: [createNode('lang:number_literal', { value: '20' }, {})]
+      createNode('cpp:var_assign', { obj: 'x' }, {
+        value: [createNode('cpp:number_literal', { value: '20' }, {})]
       }),
     ]))
     expect(steps.length).toBeGreaterThan(0)
@@ -52,14 +52,14 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 50 })
     await expect(
       interp.execute(makeProgram([
-        createNode('lang:while_loop', {}, {
-          condition: [createNode('lang:compare', { operator: '>' }, {
-            left: [createNode('lang:number_literal', { value: '1' }, {})],
-            right: [createNode('lang:number_literal', { value: '0' }, {})],
+        createNode('cpp:while_loop', {}, {
+          condition: [createNode('cpp:compare', { operator: '>' }, {
+            left: [createNode('cpp:number_literal', { value: '1' }, {})],
+            right: [createNode('cpp:number_literal', { value: '0' }, {})],
           })],
           body: [
-            createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-              initializer: [createNode('lang:number_literal', { value: '0' }, {})]
+            createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+              initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
             }),
           ],
         })
@@ -70,11 +70,11 @@ describe('Execution flow integration', () => {
   it('should handle stdin input', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
-      createNode('lang:var_declare', { name: 'n', type: 'int' }, {
-        initializer: [createNode('lang:input', { type: 'int' }, {})]
+      createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
+        initializer: [createNode('cpp:input', { type: 'int' }, {})]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:var_ref', { name: 'n' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:var_ref', { name: 'n' }, {})]
       })
     ]), ['7'])
     expect(interp.getOutput().join('')).toContain('7')

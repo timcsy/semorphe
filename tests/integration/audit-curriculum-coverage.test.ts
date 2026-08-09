@@ -61,7 +61,7 @@ const 已知元件 = new Set(allConcepts.map((c) => c.conceptId))
  * 對學生隱形（`priority_queue` 就是這樣被使用者發現的）。
  */
 const 刻意不收錄: Record<string, string> = {
-  'lang:program':
+  'cpp:program':
     '程式的根鷹架。它不是學生選得出來的積木——每個程式都有一個，由系統自動建立，' +
     '收進課程等於在工具箱裡放一顆「整個程式」。',
 }
@@ -88,7 +88,7 @@ describe('自我驗證：這條檢查真的量得到東西', () => {
 
   it('★ 反向：注入一個引用真元件的層級 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上一支。
-    const 合成: Level[] = [{ id: '__合成層級__', label: '合成', concepts: ['lang:print'] }]
+    const 合成: Level[] = [{ id: '__合成層級__', label: '合成', concepts: ['cpp:print'] }]
     expect(dangling(合成), '一個引用真元件的層級被報成懸空 → 這條檢查會亂叫').toEqual([])
   })
 

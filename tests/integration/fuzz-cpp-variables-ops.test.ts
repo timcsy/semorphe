@@ -266,7 +266,7 @@ int main() {
 
 // ─── Known issues (not in Phase 1 scope) ───
 
-describe.skip('[BLOCKED:lang:print] fuzz: cout with parenthesized boolean expressions (Phase 3 I/O scope)', () => {
+describe.skip('[BLOCKED:cpp:print] fuzz: cout with parenthesized boolean expressions (Phase 3 I/O scope)', () => {
   // vars_ops_005: cout << (a && b) loses parens → COMPILE_FAIL
   // vars_ops_009: cout << (f < 0) loses parens → COMPILE_FAIL
   // Root cause: cout chain lifter strips parentheses from boolean subexpressions

@@ -10,7 +10,7 @@ export class ThrownSignal {
 }
 
 export function registerControlFlowExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('lang:if', async (node, ctx) => {
+  register('cpp:if', async (node, ctx) => {
     const condition = await ctx.evaluate(node.children.condition[0])
     if (ctx.toBool(condition)) {
       await ctx.executeBody(node.children.then_body ?? [])
@@ -27,12 +27,12 @@ export function registerControlFlowExecutors(register: (concept: string, executo
    * 使用者拖得到），跑起來丟未知概念。完備性護欄的五路裡唯一的一個「缺」
    * 就是它，而我第一次看到時以為那是誤報。**實測它是真的。**
    */
-  register('lang:if_else', async (node, ctx) => {
+  register('cpp:if_else', async (node, ctx) => {
     const condition = await ctx.evaluate(node.children.condition[0])
     await ctx.executeBody(ctx.toBool(condition) ? (node.children.then ?? []) : (node.children.else ?? []))
   })
 
-  register('lang:count_loop', async (node, ctx) => {
+  register('cpp:count_loop', async (node, ctx) => {
     const varName = String(node.properties.var_name)
     const from = ctx.toNumber(await ctx.evaluate(node.children.from[0]))
     const to = ctx.toNumber(await ctx.evaluate(node.children.to[0]))
@@ -55,7 +55,7 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     await ctx.exitScope(ctx.scope, parentScope)
   })
 
-  register('lang:while_loop', async (node, ctx) => {
+  register('cpp:while_loop', async (node, ctx) => {
     const body = node.children.body ?? []
     const parentScope = ctx.scope
     while (true) {
@@ -74,7 +74,7 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     await ctx.exitScope(ctx.scope, parentScope)
   })
 
-  register('lang:break', async () => { throw new BreakSignal() })
+  register('cpp:break', async () => { throw new BreakSignal() })
 
-  register('lang:continue', async () => { throw new ContinueSignal() })
+  register('cpp:continue', async () => { throw new ContinueSignal() })
 }

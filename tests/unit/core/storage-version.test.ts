@@ -211,15 +211,15 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
 
   it('① 舊身分（cpp_ 與裸名）都轉得動，含巢狀子節點', () => {
     const out = 升({
-      conceptId: 'lang:if',
+      conceptId: 'cpp:if',
       children: {
         body: [{ conceptId: 'cpp:vector_declare', children: {} }],
-        condition: [{ conceptId: 'lang:compare', children: {} }],
+        condition: [{ conceptId: 'cpp:compare', children: {} }],
       },
     }) as { conceptId: string; children: Record<string, { conceptId: string }[]> }
-    expect(out.conceptId).toBe('lang:if')
+    expect(out.conceptId).toBe('cpp:if')
     expect(out.children.body[0].conceptId).toBe('cpp:vector_declare')
-    expect(out.children.condition[0].conceptId).toBe('lang:compare')
+    expect(out.children.condition[0].conceptId).toBe('cpp:compare')
   })
 
   it('② 已是新格式的身分**原樣通過**（冪等）', () => {
@@ -232,11 +232,11 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     const out = 升({
       conceptId: '__某個未來的身分__',
       properties: { keep: 'me' },
-      children: { body: [{ conceptId: 'lang:print', children: {} }] },
+      children: { body: [{ conceptId: 'cpp:print', children: {} }] },
     }) as { conceptId: string; properties: Record<string, string>; children: Record<string, { conceptId: string }[]> }
     expect(out.conceptId).toBe('__某個未來的身分__')
     expect(out.properties.keep, '認不得就整個節點丟掉的話，使用者的資料會消失').toBe('me')
-    expect(out.children.body[0].conceptId, '認不得的父節點不得阻斷子節點的轉換').toBe('lang:print')
+    expect(out.children.body[0].conceptId, '認不得的父節點不得阻斷子節點的轉換').toBe('cpp:print')
   })
 
   it('④ 積木型別**完全不動**——66 顆身分與積木型別同名', () => {
@@ -253,13 +253,21 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     ).toBe(JSON.stringify(raw.blocklyState))
   })
 
-  it('⑤ 轉換表涵蓋全部 174 顆，且每一筆的 scope 都在白名單內', () => {
-    const 表 = Object.entries(registeredIdMigrations())
-    expect(表.length).toBe(174)
-    for (const [old, neo] of 表) {
-      expect(isValidComponentId(neo), `${old} → ${neo} 的 scope 不在白名單`).toBe(true)
-      expect(isNamespaced(old), `${old} 本來就有命名空間，不該在表裡`).toBe(false)
+  it('⑤ 轉換表的每一筆走完鏈都要落在合法身分上', () => {
+    // ⚠️ 原本檢查「每一筆的目標在白名單內」——**D1 之後那是錯的**。
+    // v2→v3 把裸名帶到 `lang:*`，而 v4→v5 又把 `lang:*` 帶到 `cpp:*`。
+    // 中間那一站**本來就不該是合法的現存 scope**，它是歷史的中繼點。
+    const 表 = registeredIdMigrations()
+    expect(Object.keys(表).length, '174（v2→v3）＋ 32（D1）').toBe(206)
+    const 解析 = (id: string): string => {
+      let cur = id
+      for (let i = 0; i < 10 && 表[cur]; i++) cur = 表[cur]
+      return cur
     }
+    for (const old of Object.keys(表)) {
+      expect(isValidComponentId(解析(old)), `${old} → … → ${解析(old)} 走完鏈仍不合法`).toBe(true)
+    }
+    void isNamespaced
   })
 })
 
@@ -312,5 +320,29 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
     for (const map of Object.values(表)) {
       expect(Object.values(map), '接收者統一叫 obj').toEqual(['obj'])
     }
+  })
+})
+
+describe('端到端：v2 的存檔走完整條鏈（順序不能倒）', () => {
+  it('★ 身分與參數都要落在最終形態', () => {
+    // ⚠️ 這一支是為了一個**我真的犯過的錯**：
+    // 參數改名跑在 v3→v4，身分改名（D1）跑在 v4→v5。
+    // 我一度把參數改名表的鍵「順手」更新成 `cpp:*`——那會讓 v3 的樹對不上，
+    // 結果是 **id 改了而參數沒改**，而分段各自的單元測試**都會過**。
+    //
+    // > **遷移表的鍵屬於它那個版本，不屬於現在。**
+    const r = upgrade(
+      {
+        version: 2,
+        tree: { conceptId: 'var_assign', properties: { name: 'x' }, children: {} },
+        blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: 0,
+      } as Record<string, unknown>,
+      2,
+    )
+    expect(r.ok, r.ok ? '' : (r as { reason: string }).reason).toBe(true)
+    const tree = (r as { value: { tree: { conceptId: string; properties: Record<string, string> } } }).value.tree
+    expect(tree.conceptId, '身分沒走到最終形態').toBe('cpp:var_assign')
+    expect(tree.properties.obj, '參數沒改到——多半是遷移表的鍵用了現在的 id').toBe('x')
+    expect(tree.properties.name).toBeUndefined()
   })
 })

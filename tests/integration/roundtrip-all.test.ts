@@ -73,7 +73,7 @@ function buildDummyNode(spec: BlockSpec) {
         if (role === 'statements') {
           children[name] = [] // empty statement list
         } else {
-          children[name] = [createNode('lang:number_literal', { value: '0' })]
+          children[name] = [createNode('cpp:number_literal', { value: '0' })]
         }
       }
     }
@@ -82,7 +82,7 @@ function buildDummyNode(spec: BlockSpec) {
       if (role === 'statements') {
         children[name] = []
       } else {
-        children[name] = [createNode('lang:number_literal', { value: '0' })]
+        children[name] = [createNode('cpp:number_literal', { value: '0' })]
       }
     }
   }

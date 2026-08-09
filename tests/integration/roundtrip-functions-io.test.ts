@@ -249,7 +249,7 @@ int main() {
     return 0;
 }`
 
-  // 阻斷者是 `#define` 巨集展開（墓碑），不是 print——原本的 [BLOCKED:lang:print]
+  // 阻斷者是 `#define` 巨集展開（墓碑），不是 print——原本的 [BLOCKED:cpp:print]
   // 標記是錯的。歸因見 knowledge/experience.md「宣稱『與我無關』之前先去量」。
   it.skip('[BLOCKED:cpp:define] executes correctly', async () => {
     const interp = await runCode(code)
@@ -306,7 +306,7 @@ int main() {
 }`
 
   // 阻斷者是 block_comment 的執行，不是 print——原本的標記是錯的
-  it.skip('[BLOCKED:lang:block_comment] executes correctly', async () => {
+  it.skip('[BLOCKED:cpp:block_comment] executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('comments work')
@@ -317,7 +317,7 @@ int main() {
   // added by code generator, causing prefix duplication on re-lift.
   // Also doc_comment `///` rendered as `// /`.
   // 阻斷者是 block_comment 的 lifter 沒有剝掉 `* ` 前綴，不是 print
-  it.skip('[BLOCKED:lang:block_comment] roundtrip is stable', () => {
+  it.skip('[BLOCKED:cpp:block_comment] roundtrip is stable', () => {
     const gen1 = roundTrip(code)
     const gen2 = roundTrip(gen1)
     expect(gen1).toBe(gen2)

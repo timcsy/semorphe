@@ -12,7 +12,7 @@ function makeTopic(overrides: Partial<Topic> = {}): Topic {
       id: 'L0',
       level: 0,
       label: 'L0',
-      concepts: ['lang:print', 'lang:var_declare'],
+      concepts: ['cpp:print', 'cpp:var_declare'],
       children: [],
     },
     ...overrides,

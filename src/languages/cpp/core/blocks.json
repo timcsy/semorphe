@@ -490,7 +490,7 @@
   },
   {
     "id": "c_bitwise_not",
-    "conceptId": "lang:bitwise_not",
+    "conceptId": "cpp:bitwise_not",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -806,7 +806,7 @@
   },
   {
     "id": "c_forward_decl",
-    "conceptId": "lang:forward_decl",
+    "conceptId": "cpp:forward_decl",
     "language": "cpp",
     "category": "functions",
     "version": "1.0.0",
@@ -834,7 +834,7 @@
   },
   {
     "id": "c_builtin_constant",
-    "conceptId": "lang:builtin_constant",
+    "conceptId": "cpp:builtin_constant",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "c_comment_line",
-    "conceptId": "lang:comment",
+    "conceptId": "cpp:comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
@@ -1203,7 +1203,7 @@
   },
   {
     "id": "c_comment_doc",
-    "conceptId": "lang:doc_comment",
+    "conceptId": "cpp:doc_comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
@@ -1233,7 +1233,7 @@
   },
   {
     "id": "c_comment_block",
-    "conceptId": "lang:block_comment",
+    "conceptId": "cpp:block_comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
@@ -1442,7 +1442,7 @@
   },
   {
     "id": "c_var_declare_expr",
-    "conceptId": "lang:var_declare",
+    "conceptId": "cpp:var_declare",
     "language": "cpp",
     "category": "variables",
     "version": "1.0.0",

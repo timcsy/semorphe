@@ -2,7 +2,7 @@
   {
     "conceptId": "cpp:stack_declare",
     "layer": "lang-core",
-    "abstractConcept": "lang:var_declare",
+    "abstractConcept": "cpp:var_declare",
     "properties": [
       {
         "name": "type",

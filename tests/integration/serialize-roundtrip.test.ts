@@ -15,7 +15,7 @@ import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../../src/blocks/blo
  */
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'lang:program', properties: {}, children: { body } }
+  return { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body } }
 }
 
 describe('serialize roundtrip: rendered block state matches runtime input names', () => {
@@ -24,9 +24,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_if rendered state uses CONDITION and THEN (not COND/BODY)', () => {
-    const ifStmt = createNode('lang:if', {}, {
-      condition: [createNode('lang:var_ref', { name: 'x' })],
-      then_body: [createNode('lang:break', {})],
+    const ifStmt = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'x' })],
+      then_body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(ifStmt))
     const block = state.blocks.blocks[0]
@@ -41,16 +41,16 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_if with else uses CONDITION, THEN, ELSE', () => {
-    const ifElse = createNode('lang:if', {}, {
-      condition: [createNode('lang:compare', { operator: '>' }, {
-        left: [createNode('lang:var_ref', { name: 'a' })],
-        right: [createNode('lang:number_literal', { value: '0' })],
+    const ifElse = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:compare', { operator: '>' }, {
+        left: [createNode('cpp:var_ref', { name: 'a' })],
+        right: [createNode('cpp:number_literal', { value: '0' })],
       })],
-      then_body: [createNode('lang:var_assign', { obj: 'x' }, {
-        value: [createNode('lang:number_literal', { value: '1' })],
+      then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+        value: [createNode('cpp:number_literal', { value: '1' })],
       })],
-      else_body: [createNode('lang:var_assign', { obj: 'x' }, {
-        value: [createNode('lang:number_literal', { value: '2' })],
+      else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+        value: [createNode('cpp:number_literal', { value: '2' })],
       })],
     })
     const state = renderToBlocklyState(makeProgram(ifElse))
@@ -64,9 +64,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_while_loop rendered state uses CONDITION and BODY', () => {
-    const whileStmt = createNode('lang:while_loop', {}, {
-      condition: [createNode('lang:var_ref', { name: 'running' })],
-      body: [createNode('lang:break', {})],
+    const whileStmt = createNode('cpp:while_loop', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'running' })],
+      body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(whileStmt))
     const block = state.blocks.blocks[0]
@@ -78,10 +78,10 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_count_loop rendered state uses FROM, TO, BODY', () => {
-    const countLoop = createNode('lang:count_loop', { var_name: 'i' }, {
-      from: [createNode('lang:number_literal', { value: '0' })],
-      to: [createNode('lang:number_literal', { value: '10' })],
-      body: [createNode('lang:break', {})],
+    const countLoop = createNode('cpp:count_loop', { var_name: 'i' }, {
+      from: [createNode('cpp:number_literal', { value: '0' })],
+      to: [createNode('cpp:number_literal', { value: '10' })],
+      body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(countLoop))
     const block = state.blocks.blocks[0]
@@ -93,12 +93,12 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('nested if inside while: all input names correct at both levels', () => {
-    const nested = createNode('lang:while_loop', {}, {
-      condition: [createNode('lang:var_ref', { name: 'ok' })],
+    const nested = createNode('cpp:while_loop', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'ok' })],
       body: [
-        createNode('lang:if', {}, {
-          condition: [createNode('lang:var_ref', { name: 'flag' })],
-          then_body: [createNode('lang:break', {})],
+        createNode('cpp:if', {}, {
+          condition: [createNode('cpp:var_ref', { name: 'flag' })],
+          then_body: [createNode('cpp:break', {})],
         }),
       ],
     })
@@ -118,32 +118,32 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   it('if-else-if-else chain flattened into single u_if with ELSEIF inputs', () => {
     // Semantic tree: nested if chain (as produced by lifter)
     // if (a > 0) { x = 1 } else if (b > 0) { x = 2 } else if (c > 0) { x = 3 } else { x = 4 }
-    const ifChain = createNode('lang:if', {}, {
-      condition: [createNode('lang:compare', { operator: '>' }, {
-        left: [createNode('lang:var_ref', { name: 'a' })],
-        right: [createNode('lang:number_literal', { value: '0' })],
+    const ifChain = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:compare', { operator: '>' }, {
+        left: [createNode('cpp:var_ref', { name: 'a' })],
+        right: [createNode('cpp:number_literal', { value: '0' })],
       })],
-      then_body: [createNode('lang:var_assign', { obj: 'x' }, {
-        value: [createNode('lang:number_literal', { value: '1' })],
+      then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+        value: [createNode('cpp:number_literal', { value: '1' })],
       })],
-      else_body: [createNode('lang:if', { isElseIf: 'true' }, {
-        condition: [createNode('lang:compare', { operator: '>' }, {
-          left: [createNode('lang:var_ref', { name: 'b' })],
-          right: [createNode('lang:number_literal', { value: '0' })],
+      else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
+        condition: [createNode('cpp:compare', { operator: '>' }, {
+          left: [createNode('cpp:var_ref', { name: 'b' })],
+          right: [createNode('cpp:number_literal', { value: '0' })],
         })],
-        then_body: [createNode('lang:var_assign', { obj: 'x' }, {
-          value: [createNode('lang:number_literal', { value: '2' })],
+        then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+          value: [createNode('cpp:number_literal', { value: '2' })],
         })],
-        else_body: [createNode('lang:if', { isElseIf: 'true' }, {
-          condition: [createNode('lang:compare', { operator: '>' }, {
-            left: [createNode('lang:var_ref', { name: 'c' })],
-            right: [createNode('lang:number_literal', { value: '0' })],
+        else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
+          condition: [createNode('cpp:compare', { operator: '>' }, {
+            left: [createNode('cpp:var_ref', { name: 'c' })],
+            right: [createNode('cpp:number_literal', { value: '0' })],
           })],
-          then_body: [createNode('lang:var_assign', { obj: 'x' }, {
-            value: [createNode('lang:number_literal', { value: '3' })],
+          then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+            value: [createNode('cpp:number_literal', { value: '3' })],
           })],
-          else_body: [createNode('lang:var_assign', { obj: 'x' }, {
-            value: [createNode('lang:number_literal', { value: '4' })],
+          else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+            value: [createNode('cpp:number_literal', { value: '4' })],
           })],
         })],
       })],
@@ -170,12 +170,12 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('if-else-if without final else', () => {
-    const ifChain = createNode('lang:if', {}, {
-      condition: [createNode('lang:var_ref', { name: 'a' })],
-      then_body: [createNode('lang:break', {})],
-      else_body: [createNode('lang:if', { isElseIf: 'true' }, {
-        condition: [createNode('lang:var_ref', { name: 'b' })],
-        then_body: [createNode('lang:continue', {})],
+    const ifChain = createNode('cpp:if', {}, {
+      condition: [createNode('cpp:var_ref', { name: 'a' })],
+      then_body: [createNode('cpp:break', {})],
+      else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
+        condition: [createNode('cpp:var_ref', { name: 'b' })],
+        then_body: [createNode('cpp:continue', {})],
       })],
     })
 
@@ -190,10 +190,10 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_negate rendered state has VALUE input with child expression', () => {
-    const negateExpr = createNode('lang:negate', {}, {
-      value: [createNode('lang:var_ref', { name: 'b' })],
+    const negateExpr = createNode('cpp:negate', {}, {
+      value: [createNode('cpp:var_ref', { name: 'b' })],
     })
-    const assign = createNode('lang:var_assign', { obj: 'result' }, {
+    const assign = createNode('cpp:var_assign', { obj: 'result' }, {
       value: [negateExpr],
     })
     const state = renderToBlocklyState(makeProgram(assign))

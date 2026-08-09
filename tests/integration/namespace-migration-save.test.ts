@@ -6,7 +6,7 @@
  * 因此要求這類變更 MUST 附一次性轉換——這裡驗它真的成立。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { UPGRADES } from '../../src/core/storage-version'
+import { UPGRADES, upgrade, CURRENT_VERSION } from '../../src/core/storage-version'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
@@ -52,10 +52,26 @@ const v2樹 = {
 describe('SC-003：v2 存檔升級後產出不變', () => {
   beforeAll(() => registerCppLanguage())
 
-  const 升 = (tree: unknown): SemanticNode =>
-    (UPGRADES[2]({ version: 2, tree } as Record<string, unknown>) as { tree: SemanticNode }).tree
+  // ⚠️ 走**完整的升級鏈**，不是只呼叫 `UPGRADES[2]`。
+  // D1 之後 v2 的目標（`lang:*`）又被 v4→v5 帶到 `cpp:*`——
+  // 只跑一段會停在中繼點上，而那個 id 不存在。
+  const 升 = (tree: unknown): SemanticNode => {
+    // ⚠️ `upgrade()` 走完鏈之後會用 `judge()` 驗形狀，所以必填欄位要齊——
+    // 只給 `{ version, tree }` 會以「升級後仍然不是可用的存檔」失敗，
+    // 而那個訊息與「遷移壞了」長得不一樣，值得一眼看得出來。
+    const r = upgrade(
+      {
+        version: 2, tree, blocklyState: {}, code: '', language: 'cpp',
+        styleId: 'apcs', lastModified: 0,
+      } as Record<string, unknown>,
+      2,
+    )
+    if (!r.ok) throw new Error(`升級失敗：${r.reason}`)
+    return (r.value as { tree: SemanticNode }).tree
+  }
 
   it('★ 升級後每一顆身分都是新格式', () => {
+    void UPGRADES
     const ids: string[] = []
     const walk = (n: SemanticNode): void => {
       ids.push(n.conceptId)

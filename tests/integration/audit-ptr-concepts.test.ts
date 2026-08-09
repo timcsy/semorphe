@@ -125,7 +125,7 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
     ]
     for (const body of codes) {
       const sem = liftCode(wrap(body))!
-      const vars = findConcepts(sem, 'lang:var_declare')
+      const vars = findConcepts(sem, 'cpp:var_declare')
       const ptrVars = vars.filter(v => String(v.properties.type ?? '').includes('*'))
       expect(ptrVars.length, `var_declare with * type found for: ${body.trim()}`).toBe(0)
     }
@@ -171,7 +171,7 @@ describe('CONCEPT_IDENTITY audit: reference declarations', () => {
 
   it('NOT var_declare for reference', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int& ref = x;'))!
-    const vars = findConcepts(sem, 'lang:var_declare')
+    const vars = findConcepts(sem, 'cpp:var_declare')
     const refVars = vars.filter(v => String(v.properties.type ?? '').includes('&'))
     expect(refVars.length).toBe(0)
   })

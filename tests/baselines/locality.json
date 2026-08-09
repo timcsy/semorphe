@@ -1,7 +1,7 @@
 {
   "_meta": {
     "guard": "locality",
-    "measuredAt": "2026-08-08",
+    "measuredAt": "2026-08-09",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
@@ -18,6 +18,10 @@
       "files": 4,
       "dirs": 4
     },
+    "cpp:arithmetic": {
+      "files": 7,
+      "dirs": 6
+    },
     "cpp:array_2d_access": {
       "files": 3,
       "dirs": 3
@@ -30,6 +34,18 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:array_access": {
+      "files": 8,
+      "dirs": 5
+    },
+    "cpp:array_assign": {
+      "files": 4,
+      "dirs": 3
+    },
+    "cpp:array_declare": {
+      "files": 4,
+      "dirs": 4
+    },
     "cpp:atof": {
       "files": 3,
       "dirs": 2
@@ -39,6 +55,22 @@
       "dirs": 2
     },
     "cpp:auto_declare": {
+      "files": 3,
+      "dirs": 3
+    },
+    "cpp:bitwise_not": {
+      "files": 3,
+      "dirs": 3
+    },
+    "cpp:block_comment": {
+      "files": 3,
+      "dirs": 3
+    },
+    "cpp:break": {
+      "files": 4,
+      "dirs": 4
+    },
+    "cpp:builtin_constant": {
       "files": 3,
       "dirs": 3
     },
@@ -61,6 +93,14 @@
     "cpp:comma_expr": {
       "files": 5,
       "dirs": 4
+    },
+    "cpp:comment": {
+      "files": 3,
+      "dirs": 3
+    },
+    "cpp:compare": {
+      "files": 7,
+      "dirs": 6
     },
     "cpp:compound_assign": {
       "files": 6,
@@ -110,6 +150,14 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:continue": {
+      "files": 4,
+      "dirs": 4
+    },
+    "cpp:count_loop": {
+      "files": 6,
+      "dirs": 5
+    },
     "cpp:default": {
       "files": 3,
       "dirs": 3
@@ -130,9 +178,17 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:doc_comment": {
+      "files": 5,
+      "dirs": 5
+    },
     "cpp:dynamic_cast": {
       "files": 3,
       "dirs": 3
+    },
+    "cpp:endl": {
+      "files": 7,
+      "dirs": 6
     },
     "cpp:enum": {
       "files": 4,
@@ -150,9 +206,21 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:forward_decl": {
+      "files": 3,
+      "dirs": 3
+    },
     "cpp:free": {
       "files": 3,
       "dirs": 3
+    },
+    "cpp:func_call": {
+      "files": 6,
+      "dirs": 5
+    },
+    "cpp:func_def": {
+      "files": 9,
+      "dirs": 7
     },
     "cpp:gcd": {
       "files": 3,
@@ -160,6 +228,14 @@
     },
     "cpp:getline": {
       "files": 3,
+      "dirs": 2
+    },
+    "cpp:if": {
+      "files": 7,
+      "dirs": 7
+    },
+    "cpp:if_else": {
+      "files": 2,
       "dirs": 2
     },
     "cpp:ifdef": {
@@ -186,6 +262,10 @@
       "files": 5,
       "dirs": 4
     },
+    "cpp:input": {
+      "files": 8,
+      "dirs": 7
+    },
     "cpp:iota": {
       "files": 3,
       "dirs": 2
@@ -209,6 +289,14 @@
     "cpp:lcm": {
       "files": 3,
       "dirs": 2
+    },
+    "cpp:logic": {
+      "files": 7,
+      "dirs": 6
+    },
+    "cpp:logic_not": {
+      "files": 6,
+      "dirs": 5
     },
     "cpp:make_pair": {
       "files": 3,
@@ -266,9 +354,17 @@
       "files": 4,
       "dirs": 4
     },
+    "cpp:negate": {
+      "files": 6,
+      "dirs": 5
+    },
     "cpp:new": {
       "files": 4,
       "dirs": 4
+    },
+    "cpp:number_literal": {
+      "files": 5,
+      "dirs": 5
     },
     "cpp:ofstream_declare": {
       "files": 2,
@@ -302,6 +398,10 @@
       "files": 4,
       "dirs": 4
     },
+    "cpp:print": {
+      "files": 7,
+      "dirs": 6
+    },
     "cpp:printf": {
       "files": 4,
       "dirs": 2
@@ -313,6 +413,10 @@
     "cpp:priority_queue_top": {
       "files": 3,
       "dirs": 2
+    },
+    "cpp:program": {
+      "files": 9,
+      "dirs": 7
     },
     "cpp:pure_virtual": {
       "files": 3,
@@ -353,6 +457,10 @@
     "cpp:reinterpret_cast": {
       "files": 3,
       "dirs": 3
+    },
+    "cpp:return": {
+      "files": 5,
+      "dirs": 4
     },
     "cpp:reverse": {
       "files": 3,
@@ -474,6 +582,10 @@
       "files": 3,
       "dirs": 2
     },
+    "cpp:string_literal": {
+      "files": 7,
+      "dirs": 6
+    },
     "cpp:string_push_back": {
       "files": 3,
       "dirs": 2
@@ -566,6 +678,18 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:var_assign": {
+      "files": 6,
+      "dirs": 4
+    },
+    "cpp:var_declare": {
+      "files": 8,
+      "dirs": 7
+    },
+    "cpp:var_ref": {
+      "files": 10,
+      "dirs": 8
+    },
     "cpp:vector_back": {
       "files": 3,
       "dirs": 2
@@ -586,131 +710,7 @@
       "files": 3,
       "dirs": 3
     },
-    "lang:arithmetic": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:array_access": {
-      "files": 8,
-      "dirs": 5
-    },
-    "lang:array_assign": {
-      "files": 4,
-      "dirs": 3
-    },
-    "lang:array_declare": {
-      "files": 4,
-      "dirs": 4
-    },
-    "lang:bitwise_not": {
-      "files": 3,
-      "dirs": 3
-    },
-    "lang:block_comment": {
-      "files": 3,
-      "dirs": 3
-    },
-    "lang:break": {
-      "files": 4,
-      "dirs": 4
-    },
-    "lang:builtin_constant": {
-      "files": 3,
-      "dirs": 3
-    },
-    "lang:comment": {
-      "files": 3,
-      "dirs": 3
-    },
-    "lang:compare": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:continue": {
-      "files": 4,
-      "dirs": 4
-    },
-    "lang:count_loop": {
-      "files": 6,
-      "dirs": 5
-    },
-    "lang:doc_comment": {
-      "files": 5,
-      "dirs": 5
-    },
-    "lang:endl": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:forward_decl": {
-      "files": 3,
-      "dirs": 3
-    },
-    "lang:func_call": {
-      "files": 6,
-      "dirs": 5
-    },
-    "lang:func_def": {
-      "files": 9,
-      "dirs": 7
-    },
-    "lang:if": {
-      "files": 7,
-      "dirs": 7
-    },
-    "lang:if_else": {
-      "files": 2,
-      "dirs": 2
-    },
-    "lang:input": {
-      "files": 8,
-      "dirs": 7
-    },
-    "lang:logic": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:logic_not": {
-      "files": 6,
-      "dirs": 5
-    },
-    "lang:negate": {
-      "files": 6,
-      "dirs": 5
-    },
-    "lang:number_literal": {
-      "files": 5,
-      "dirs": 5
-    },
-    "lang:print": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:program": {
-      "files": 9,
-      "dirs": 7
-    },
-    "lang:return": {
-      "files": 5,
-      "dirs": 4
-    },
-    "lang:string_literal": {
-      "files": 7,
-      "dirs": 6
-    },
-    "lang:var_assign": {
-      "files": 6,
-      "dirs": 4
-    },
-    "lang:var_declare": {
-      "files": 8,
-      "dirs": 7
-    },
-    "lang:var_ref": {
-      "files": 10,
-      "dirs": 8
-    },
-    "lang:while_loop": {
+    "cpp:while_loop": {
       "files": 4,
       "dirs": 4
     }

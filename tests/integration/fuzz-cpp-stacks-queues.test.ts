@@ -316,7 +316,7 @@ int main() {
     expect(concepts.has('cpp:stack_top')).toBe(true)
   })
 
-  it.skip('[BLOCKED:lang:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
+  it.skip('[BLOCKED:cpp:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
     // KNOWN LIMITATION: `stack<int>&` as function parameter type is simplified
     // to `int&` by the lifter, causing compile failure. Also `stack<int> a, b;`
     // multi-var declaration only generates the first variable.

@@ -5,22 +5,22 @@ import type { SemanticNode } from '../../../../core/types'
 /** C++ operator precedence data (higher = binds tighter). */
 const PRECEDENCE_MAP = new Map<string, number>([
   ['cpp:comma_expr', 1],
-  ['lang:var_assign', 2],
+  ['cpp:var_assign', 2],
   ['cpp:ternary', 3],
-  ['lang:negate', 14],
-  ['lang:logic_not', 14],
-  ['lang:bitwise_not', 14],
+  ['cpp:negate', 14],
+  ['cpp:logic_not', 14],
+  ['cpp:bitwise_not', 14],
   ['cpp:address_of', 14],
   ['cpp:pointer_deref', 14],
   ['cpp:cast', 14],
-  ['lang:array_access', 16],
+  ['cpp:array_access', 16],
 ])
 
 /** Operator-dependent precedence for concepts with varying operators. */
 const OPERATOR_PRECEDENCE: Record<string, (op: unknown) => number> = {
-  'lang:logic': (op) => op === '||' ? 4 : 5,
-  'lang:compare': (op) => (op === '==' || op === '!=') ? 8 : 9,
-  'lang:arithmetic': (op) => (op === '+' || op === '-') ? 11 : 12,
+  'cpp:logic': (op) => op === '||' ? 4 : 5,
+  'cpp:compare': (op) => (op === '==' || op === '!=') ? 8 : 9,
+  'cpp:arithmetic': (op) => (op === '+' || op === '-') ? 11 : 12,
 }
 
 /** C++ operator precedence (higher = binds tighter) */
@@ -42,15 +42,15 @@ function genChild(child: SemanticNode | undefined, parentPrec: number, ctx: Para
 }
 
 export function registerExpressionGenerators(g: Map<string, NodeGenerator>): void {
-  g.set('lang:var_ref', (node, _ctx) => {
+  g.set('cpp:var_ref', (node, _ctx) => {
     return String(node.properties.name ?? '')
   })
 
-  g.set('lang:number_literal', (node, _ctx) => {
+  g.set('cpp:number_literal', (node, _ctx) => {
     return String(node.properties.value ?? '0')
   })
 
-  g.set('lang:string_literal', (node, _ctx) => {
+  g.set('cpp:string_literal', (node, _ctx) => {
     return `"${node.properties.value ?? ''}"`
   })
 
@@ -59,11 +59,11 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `'${ch}'`
   })
 
-  g.set('lang:builtin_constant', (node, _ctx) => {
+  g.set('cpp:builtin_constant', (node, _ctx) => {
     return String(node.properties.value ?? 'NULL')
   })
 
-  g.set('lang:arithmetic', (node, ctx) => {
+  g.set('cpp:arithmetic', (node, ctx) => {
     const op = node.properties.operator ?? '+'
     const prec = precedence(node)
     const leftNode = (node.children.left ?? [])[0]
@@ -75,7 +75,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${left} ${op} ${right}`
   })
 
-  g.set('lang:compare', (node, ctx) => {
+  g.set('cpp:compare', (node, ctx) => {
     const prec = precedence(node)
     const left = genChild((node.children.left ?? [])[0], prec, ctx)
     const right = genChild((node.children.right ?? [])[0], prec, ctx)
@@ -83,7 +83,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${left} ${op} ${right}`
   })
 
-  g.set('lang:logic', (node, ctx) => {
+  g.set('cpp:logic', (node, ctx) => {
     const prec = precedence(node)
     const left = genChild((node.children.left ?? [])[0], prec, ctx)
     const right = genChild((node.children.right ?? [])[0], prec + 1, ctx)
@@ -91,17 +91,17 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${left} ${op} ${right}`
   })
 
-  g.set('lang:logic_not', (node, ctx) => {
+  g.set('cpp:logic_not', (node, ctx) => {
     const operand = genChild((node.children.operand ?? [])[0], precedence(node), ctx)
     return `!${operand}`
   })
 
-  g.set('lang:negate', (node, ctx) => {
+  g.set('cpp:negate', (node, ctx) => {
     const op = (node.properties.operator as string) ?? '-'
     const childNode = (node.children.value ?? node.children.operand ?? [])[0]
     const val = genChild(childNode, precedence(node), ctx)
     // Prevent --x (pre-decrement) or ++x when nesting unary operators
-    if (childNode && (childNode.conceptId === 'lang:negate' || childNode.conceptId === 'cpp:pointer_deref' || childNode.conceptId === 'cpp:address_of')) {
+    if (childNode && (childNode.conceptId === 'cpp:negate' || childNode.conceptId === 'cpp:pointer_deref' || childNode.conceptId === 'cpp:address_of')) {
       return `${op}(${val})`
     }
     return `${op}${val}`
@@ -121,7 +121,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `(${targetType})${val}`
   })
 
-  g.set('lang:bitwise_not', (node, ctx) => {
+  g.set('cpp:bitwise_not', (node, ctx) => {
     const operand = generateExpression((node.children.operand ?? [])[0], ctx)
     return `~${operand}`
   })

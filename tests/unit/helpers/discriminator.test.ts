@@ -25,7 +25,7 @@ describe('extractDiscriminators：判別式不只在限定條件裡', () => {
 
   it('★ 從 chain 萃取——這是最容易漏的一層', () => {
     const d = extractDiscriminators(rule({
-      conceptId: 'lang:print', patternType: 'chain',
+      conceptId: 'cpp:print', patternType: 'chain',
       chain: { operator: '<<', rootMatch: { text: 'cout' } },
     }))
     expect(d.map(x => x.dimension).sort()).toEqual(['chain:operator', 'chain:rootText'])
@@ -76,9 +76,9 @@ describe('provablyDisjoint：只有證明得出來才回 true', () => {
 
 describe('classifyPair：三分類', () => {
   it('★ print vs input 必須是 never——它們是專案最常用的兩條規則', () => {
-    const print = rule({ conceptId: 'lang:print', patternType: 'chain', priority: 105,
+    const print = rule({ conceptId: 'cpp:print', patternType: 'chain', priority: 105,
       chain: { operator: '<<', rootMatch: { text: 'cout' } } })
-    const input = rule({ conceptId: 'lang:input', patternType: 'chain', priority: 105,
+    const input = rule({ conceptId: 'cpp:input', patternType: 'chain', priority: 105,
       chain: { operator: '>>', rootMatch: { text: 'cin' } } })
     const v = classifyPair(print, input)
     expect(v.verdict, `誤報這一對會讓維護者立刻學會忽略整個護欄。理由：${v.reason}`).toBe('never')

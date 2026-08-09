@@ -1,7 +1,7 @@
 {
   "_meta": {
     "guard": "defect-ledger",
-    "measuredAt": "2026-08-08",
+    "measuredAt": "2026-08-09",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
@@ -10,15 +10,15 @@
   "titleOnly": 13,
   "unverified": 0,
   "byBlocker": {
-    "lang:print": 2,
+    "cpp:print": 2,
     "cpp:increment": 2,
-    "lang:block_comment": 2,
+    "cpp:block_comment": 2,
     "cpp:switch": 1,
     "cpp:char_literal": 1,
-    "lang:array_declare": 1,
+    "cpp:array_declare": 1,
     "cpp:destructor": 1,
-    "lang:func_def": 1,
-    "lang:var_assign": 1,
+    "cpp:func_def": 1,
+    "cpp:var_assign": 1,
     "cpp:enum": 1,
     "cpp:cast": 1,
     "cpp:string_declare": 1,

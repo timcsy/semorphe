@@ -26,7 +26,7 @@ describe('未知概念的診斷', () => {
 
     let caught: unknown
     try {
-      await interp.execute(createNode('lang:program', {}, { body: [createNode('查無此概念', {}, {})] }))
+      await interp.execute(createNode('cpp:program', {}, { body: [createNode('查無此概念', {}, {})] }))
     } catch (e) {
       caught = e
     }

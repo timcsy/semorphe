@@ -320,12 +320,12 @@ describe('prime checker program', () => {
       }
     `)
     expect(sem).not.toBeNull()
-    expect(sem!.conceptId).toBe('lang:program')
+    expect(sem!.conceptId).toBe('cpp:program')
     // Should have body children including includes, forward decls, main, listp, checkp
     const body = sem!.children.body ?? []
     expect(body.length).toBeGreaterThanOrEqual(5) // at least: 2 includes + using + main + listp + checkp
     // Should have function definitions for main, listp, checkp
-    const funcDefs = body.filter(n => n.conceptId === 'lang:func_def')
+    const funcDefs = body.filter(n => n.conceptId === 'cpp:func_def')
     expect(funcDefs.length).toBe(3)
     const funcNames = funcDefs.map(n => n.properties.name)
     expect(funcNames).toContain('main')
@@ -473,10 +473,10 @@ describe('full render pipeline', () => {
     `)
     // Check that the semantic tree has array_assign concepts
     const body = sem.children.body ?? []
-    const mainFunc = body.find(n => n.conceptId === 'lang:func_def' && n.properties.name === 'main')
+    const mainFunc = body.find(n => n.conceptId === 'cpp:func_def' && n.properties.name === 'main')
     expect(mainFunc).toBeDefined()
     const mainBody = mainFunc!.children.body ?? []
-    const arrayAssigns = mainBody.filter(n => n.conceptId === 'lang:array_assign')
+    const arrayAssigns = mainBody.filter(n => n.conceptId === 'cpp:array_assign')
     expect(arrayAssigns.length).toBe(2)
   })
 })

@@ -67,7 +67,7 @@ async function runCode(code: string, stdin: string[] = []) {
 }
 
 // ─── number_literal ───
-describe('lang:number_literal', () => {
+describe('cpp:number_literal', () => {
   it('integer literal roundtrip', () => {
     const code = roundTrip('int x = 42;')
     expect(code).toContain('42')
@@ -108,14 +108,14 @@ describe('lang:number_literal', () => {
 })
 
 // ─── string_literal ───
-describe('lang:string_literal', () => {
+describe('cpp:string_literal', () => {
   it('simple string roundtrip', () => {
     const sem = liftCode('"hello"')
     expect(sem).not.toBeNull()
     // string_literal should have value: hello
     const body = sem!.children.body ?? []
     const node = body[0]
-    expect(node.conceptId).toBe('lang:string_literal')
+    expect(node.conceptId).toBe('cpp:string_literal')
     expect(node.properties.value).toBe('hello')
   })
 
@@ -135,7 +135,7 @@ describe('lang:string_literal', () => {
 })
 
 // ─── builtin_constant ───
-describe('lang:builtin_constant', () => {
+describe('cpp:builtin_constant', () => {
   it('true roundtrip', () => {
     const code = roundTrip('bool b = true;')
     expect(code).toContain('true')
@@ -168,16 +168,16 @@ describe('lang:builtin_constant', () => {
 })
 
 // ─── var_ref ───
-describe('lang:var_ref', () => {
+describe('cpp:var_ref', () => {
   it('variable reference in declaration initializer', () => {
     const sem = liftCode('int y = x;')
     expect(sem).not.toBeNull()
     const body = sem!.children.body ?? []
     const decl = body[0]
-    expect(decl.conceptId).toBe('lang:var_declare')
+    expect(decl.conceptId).toBe('cpp:var_declare')
     const init = (decl.children.initializer ?? [])[0]
     expect(init).toBeDefined()
-    expect(init.conceptId).toBe('lang:var_ref')
+    expect(init.conceptId).toBe('cpp:var_ref')
     expect(init.properties.name).toBe('x')
   })
 
@@ -188,7 +188,7 @@ describe('lang:var_ref', () => {
 })
 
 // ─── var_declare ───
-describe('lang:var_declare', () => {
+describe('cpp:var_declare', () => {
   it('int with initializer', () => {
     const code = roundTrip('int x = 5;')
     expect(code).toContain('int x = 5;')
@@ -238,7 +238,7 @@ describe('lang:var_declare', () => {
 })
 
 // ─── var_assign ───
-describe('lang:var_assign', () => {
+describe('cpp:var_assign', () => {
   it('simple assignment roundtrip', () => {
     const code = roundTrip('x = 10;')
     expect(code).toContain('x = 10;')
@@ -265,7 +265,7 @@ describe('lang:var_assign', () => {
 })
 
 // ─── arithmetic ───
-describe('lang:arithmetic', () => {
+describe('cpp:arithmetic', () => {
   it('addition roundtrip', () => {
     const code = roundTrip('int x = a + b;')
     expect(code).toContain('a + b')
@@ -337,7 +337,7 @@ describe('lang:arithmetic', () => {
 })
 
 // ─── compare ───
-describe('lang:compare', () => {
+describe('cpp:compare', () => {
   const ops = ['<', '>', '<=', '>=', '==', '!=']
   for (const op of ops) {
     it(`${op} roundtrip`, () => {
@@ -371,7 +371,7 @@ describe('lang:compare', () => {
 })
 
 // ─── logic ───
-describe('lang:logic', () => {
+describe('cpp:logic', () => {
   it('&& roundtrip', () => {
     const code = roundTrip('if (a && b) { x = 1; }')
     expect(code).toContain('a && b')
@@ -412,7 +412,7 @@ describe('lang:logic', () => {
 })
 
 // ─── logic_not ───
-describe('lang:logic_not', () => {
+describe('cpp:logic_not', () => {
   it('roundtrip', () => {
     const code = roundTrip('if (!done) { x = 1; }')
     expect(code).toContain('!done')
@@ -433,7 +433,7 @@ describe('lang:logic_not', () => {
 })
 
 // ─── negate ───
-describe('lang:negate', () => {
+describe('cpp:negate', () => {
   it('unary minus roundtrip', () => {
     const code = roundTrip('int x = -y;')
     expect(code).toContain('-y')

@@ -33,7 +33,7 @@ describe('Lifter', () => {
     const node = mockNode('number_literal', '42')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:number_literal')
+    expect(result!.conceptId).toBe('cpp:number_literal')
     expect(result!.properties.value).toBe('42')
   })
 
@@ -41,7 +41,7 @@ describe('Lifter', () => {
     const node = mockNode('identifier', 'myVar')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:var_ref')
+    expect(result!.conceptId).toBe('cpp:var_ref')
     expect(result!.properties.name).toBe('myVar')
   })
 
@@ -49,7 +49,7 @@ describe('Lifter', () => {
     const node = mockNode('string_literal', '"hello"')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:string_literal')
+    expect(result!.conceptId).toBe('cpp:string_literal')
     expect(result!.properties.value).toBe('hello')
   })
 
@@ -62,7 +62,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:arithmetic')
+    expect(result!.conceptId).toBe('cpp:arithmetic')
     expect(result!.properties.operator).toBe('+')
     expect(result!.children.left).toHaveLength(1)
     expect(result!.children.right).toHaveLength(1)
@@ -77,7 +77,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:compare')
+    expect(result!.conceptId).toBe('cpp:compare')
     expect(result!.properties.operator).toBe('>=')
   })
 
@@ -90,7 +90,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:logic')
+    expect(result!.conceptId).toBe('cpp:logic')
     expect(result!.properties.operator).toBe('&&')
   })
 
@@ -115,27 +115,27 @@ describe('Lifter', () => {
     const root = mockNode('translation_unit', 'int x = 42;', [declNode])
     const result = lifter.lift(root)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:program')
+    expect(result!.conceptId).toBe('cpp:program')
     expect(result!.children.body.length).toBeGreaterThan(0)
   })
 
   it('should lift return_statement', () => {
     const val = mockNode('number_literal', '0')
     const node = mockNode('return_statement', 'return 0;', [
-      unnamed('lang:return', 'lang:return'), val, unnamed(';', ';'),
+      unnamed('cpp:return', 'cpp:return'), val, unnamed(';', ';'),
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('lang:return')
+    expect(result!.conceptId).toBe('cpp:return')
     expect(result!.children.value).toHaveLength(1)
-    expect(result!.children.value[0].conceptId).toBe('lang:number_literal')
+    expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
   })
 
   it('should lift break_statement and continue_statement', () => {
     const breakNode = mockNode('break_statement', 'break;')
     const contNode = mockNode('continue_statement', 'continue;')
-    expect(lifter.lift(breakNode)!.conceptId).toBe('lang:break')
-    expect(lifter.lift(contNode)!.conceptId).toBe('lang:continue')
+    expect(lifter.lift(breakNode)!.conceptId).toBe('cpp:break')
+    expect(lifter.lift(contNode)!.conceptId).toBe('cpp:continue')
   })
 
   it('should detect deeply nested ERROR descendant (not just direct children)', () => {

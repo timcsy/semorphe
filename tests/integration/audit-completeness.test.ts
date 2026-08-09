@@ -226,12 +226,12 @@ function 接收者名(node: SemanticNode | null): string {
 function wrap(node: SemanticNode | null, id?: string, 脈絡節點?: SemanticNode | null): SemanticNode {
   const prelude = id ? (SAMPLE_CONTEXT[id]?.(接收者名(脈絡節點 ?? node)) ?? []) : []
   // `node` 為 null＝**只有鷹架**（差分的基準，見 generate 那一段）
-  if (!node) return createNode('lang:program', {}, { body: [...prelude] })
+  if (!node) return createNode('cpp:program', {}, { body: [...prelude] })
   const stmt =
     id && NEEDS_ASSIGNMENT.has(id)
-      ? createNode('lang:var_declare', { name: '__probe', type: 'auto' }, { initializer: [node] })
+      ? createNode('cpp:var_declare', { name: '__probe', type: 'auto' }, { initializer: [node] })
       : node
-  return createNode('lang:program', {}, { body: [...prelude, stmt] })
+  return createNode('cpp:program', {}, { body: [...prelude, stmt] })
 }
 
 function findConcept(node: SemanticNode | null, id: string): boolean {
@@ -601,7 +601,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
 
   it('★ 對照組：一個真的實作了的概念不得被判為缺', () => {
     // 沒有這支的話，一個「什麼都判缺」的量測也會通過上一支
-    const real = allComponentDefs().find((d) => d.conceptId === 'lang:var_declare')!
+    const real = allComponentDefs().find((d) => d.conceptId === 'cpp:var_declare')!
     const { row } = classify(real)
     expect(row.execute.verdict, 'var_declare 的執行被判為缺 → 量測壞了').not.toBe('missing')
   })

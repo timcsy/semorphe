@@ -8,7 +8,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 registerCppLanguage()
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('lang:program', {}, { body })
+  return createNode('cpp:program', {}, { body })
 }
 
 async function run(body: SemanticNode[], stdin: string[] = []) {
@@ -21,8 +21,8 @@ async function run(body: SemanticNode[], stdin: string[] = []) {
 describe('Integration - Scenario 1: Hello World', () => {
   it('should print Hello World', async () => {
     const interp = await run([
-      createNode('lang:print', {}, {
-        values: [createNode('lang:string_literal', { value: 'Hello World' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:string_literal', { value: 'Hello World' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('Hello World')
@@ -34,16 +34,16 @@ describe('Integration - Scenario 1: Hello World', () => {
 describe('Integration - Scenario 2: Variable + Arithmetic', () => {
   it('should compute x + y = 7', async () => {
     const interp = await run([
-      createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '3' }, {})]
+      createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '3' }, {})]
       }),
-      createNode('lang:var_declare', { name: 'y', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '4' }, {})]
+      createNode('cpp:var_declare', { name: 'y', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '4' }, {})]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:arithmetic', { operator: '+' }, {
-          left: [createNode('lang:var_ref', { name: 'x' }, {})],
-          right: [createNode('lang:var_ref', { name: 'y' }, {})],
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:arithmetic', { operator: '+' }, {
+          left: [createNode('cpp:var_ref', { name: 'x' }, {})],
+          right: [createNode('cpp:var_ref', { name: 'y' }, {})],
         })]
       })
     ])
@@ -55,13 +55,13 @@ describe('Integration - Scenario 2: Variable + Arithmetic', () => {
 describe('Integration - Scenario 3: Input Read', () => {
   it('should read input and compute n * 2 = 10', async () => {
     const interp = await run([
-      createNode('lang:var_declare', { name: 'n', type: 'int' }, {
-        initializer: [createNode('lang:input', { type: 'int' }, {})]
+      createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
+        initializer: [createNode('cpp:input', { type: 'int' }, {})]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:arithmetic', { operator: '*' }, {
-          left: [createNode('lang:var_ref', { name: 'n' }, {})],
-          right: [createNode('lang:number_literal', { value: '2' }, {})],
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:arithmetic', { operator: '*' }, {
+          left: [createNode('cpp:var_ref', { name: 'n' }, {})],
+          right: [createNode('cpp:number_literal', { value: '2' }, {})],
         })]
       })
     ], ['5'])
@@ -73,14 +73,14 @@ describe('Integration - Scenario 3: Input Read', () => {
 describe('Integration - Scenario 4: Loop', () => {
   it('should print 1 to 5 with newlines', async () => {
     const interp = await run([
-      createNode('lang:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('lang:number_literal', { value: '1' }, {})],
-        to: [createNode('lang:number_literal', { value: '5' }, {})],
+      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:number_literal', { value: '1' }, {})],
+        to: [createNode('cpp:number_literal', { value: '5' }, {})],
         body: [
-          createNode('lang:print', {}, {
+          createNode('cpp:print', {}, {
             values: [
-              createNode('lang:var_ref', { name: 'i' }, {}),
-              createNode('lang:endl', {}, {}),
+              createNode('cpp:var_ref', { name: 'i' }, {}),
+              createNode('cpp:endl', {}, {}),
             ]
           })
         ],
@@ -94,39 +94,39 @@ describe('Integration - Scenario 4: Loop', () => {
 describe('Integration - Scenario 5: Recursive Function', () => {
   it('should compute factorial(5) = 120', async () => {
     const interp = await run([
-      createNode('lang:func_def', {
+      createNode('cpp:func_def', {
         name: 'factorial',
         return_type: 'int',
       }, {
         params: [createNode('param_decl', { type: 'int', name: 'n' })],
         body: [
-          createNode('lang:if', {}, {
-            condition: [createNode('lang:compare', { operator: '<=' }, {
-              left: [createNode('lang:var_ref', { name: 'n' }, {})],
-              right: [createNode('lang:number_literal', { value: '1' }, {})],
+          createNode('cpp:if', {}, {
+            condition: [createNode('cpp:compare', { operator: '<=' }, {
+              left: [createNode('cpp:var_ref', { name: 'n' }, {})],
+              right: [createNode('cpp:number_literal', { value: '1' }, {})],
             })],
             then_body: [
-              createNode('lang:return', {}, {
-                value: [createNode('lang:number_literal', { value: '1' }, {})]
+              createNode('cpp:return', {}, {
+                value: [createNode('cpp:number_literal', { value: '1' }, {})]
               })
             ],
           }),
-          createNode('lang:return', {}, {
-            value: [createNode('lang:arithmetic', { operator: '*' }, {
-              left: [createNode('lang:var_ref', { name: 'n' }, {})],
-              right: [createNode('lang:func_call', { name: 'factorial' }, {
-                args: [createNode('lang:arithmetic', { operator: '-' }, {
-                  left: [createNode('lang:var_ref', { name: 'n' }, {})],
-                  right: [createNode('lang:number_literal', { value: '1' }, {})],
+          createNode('cpp:return', {}, {
+            value: [createNode('cpp:arithmetic', { operator: '*' }, {
+              left: [createNode('cpp:var_ref', { name: 'n' }, {})],
+              right: [createNode('cpp:func_call', { name: 'factorial' }, {
+                args: [createNode('cpp:arithmetic', { operator: '-' }, {
+                  left: [createNode('cpp:var_ref', { name: 'n' }, {})],
+                  right: [createNode('cpp:number_literal', { value: '1' }, {})],
                 })]
               })],
             })]
           }),
         ]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:func_call', { name: 'factorial' }, {
-          args: [createNode('lang:number_literal', { value: '5' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:func_call', { name: 'factorial' }, {
+          args: [createNode('cpp:number_literal', { value: '5' }, {})]
         })]
       }),
     ])
@@ -139,20 +139,20 @@ describe('Integration - Scenario 6: Step Execution', () => {
   it('should record 4 steps for a simple program', async () => {
     const interp = new SemanticInterpreter()
     const program = makeProgram([
-      createNode('lang:var_declare', { name: 'a', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '1' }, {})]
+      createNode('cpp:var_declare', { name: 'a', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '1' }, {})]
       }),
-      createNode('lang:var_declare', { name: 'b', type: 'int' }, {
-        initializer: [createNode('lang:number_literal', { value: '2' }, {})]
+      createNode('cpp:var_declare', { name: 'b', type: 'int' }, {
+        initializer: [createNode('cpp:number_literal', { value: '2' }, {})]
       }),
-      createNode('lang:var_declare', { name: 'c', type: 'int' }, {
-        initializer: [createNode('lang:arithmetic', { operator: '+' }, {
-          left: [createNode('lang:var_ref', { name: 'a' }, {})],
-          right: [createNode('lang:var_ref', { name: 'b' }, {})],
+      createNode('cpp:var_declare', { name: 'c', type: 'int' }, {
+        initializer: [createNode('cpp:arithmetic', { operator: '+' }, {
+          left: [createNode('cpp:var_ref', { name: 'a' }, {})],
+          right: [createNode('cpp:var_ref', { name: 'b' }, {})],
         })]
       }),
-      createNode('lang:print', {}, {
-        values: [createNode('lang:var_ref', { name: 'c' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:var_ref', { name: 'c' }, {})]
       })
     ])
     const steps = await interp.executeWithSteps(program)
@@ -167,14 +167,14 @@ describe('Integration - Scenario 7: Infinite Loop Protection', () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
     await expect(
       interp.execute(makeProgram([
-        createNode('lang:while_loop', {}, {
-          condition: [createNode('lang:compare', { operator: '>' }, {
-            left: [createNode('lang:number_literal', { value: '1' }, {})],
-            right: [createNode('lang:number_literal', { value: '0' }, {})],
+        createNode('cpp:while_loop', {}, {
+          condition: [createNode('cpp:compare', { operator: '>' }, {
+            left: [createNode('cpp:number_literal', { value: '1' }, {})],
+            right: [createNode('cpp:number_literal', { value: '0' }, {})],
           })],
           body: [
-            createNode('lang:var_declare', { name: 'x', type: 'int' }, {
-              initializer: [createNode('lang:number_literal', { value: '0' }, {})]
+            createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
+              initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
             }),
           ],
         })
@@ -187,8 +187,8 @@ describe('Integration - Scenario 7: Infinite Loop Protection', () => {
 describe('Integration - Scenario 8: Runtime Error', () => {
   it('should throw on undeclared variable', async () => {
     await expect(run([
-      createNode('lang:print', {}, {
-        values: [createNode('lang:var_ref', { name: 'x' }, {})]
+      createNode('cpp:print', {}, {
+        values: [createNode('cpp:var_ref', { name: 'x' }, {})]
       })
     ])).rejects.toThrow(RuntimeError)
   })

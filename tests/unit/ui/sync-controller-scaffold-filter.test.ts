@@ -10,62 +10,62 @@ import { cppStripScaffoldNodes } from '../../../src/languages/cpp/cpp-scaffold-f
 import type { SemanticNode } from '../../../src/core/types'
 
 function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('lang:program', {}, { body })
+  return createNode('cpp:program', {}, { body })
 }
 
 describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
   it('strips include directives', () => {
     const tree = makeProgram([
       createNode('cpp:include', { header: 'iostream' }),
-      createNode('lang:var_declare', { name: 'x', type: 'int' }),
+      createNode('cpp:var_declare', { name: 'x', type: 'int' }),
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('lang:var_declare')
+    expect(result.children.body[0].conceptId).toBe('cpp:var_declare')
   })
 
   it('strips using namespace', () => {
     const tree = makeProgram([
       createNode('cpp:using_namespace', { namespace: 'std' }),
-      createNode('lang:print', {}),
+      createNode('cpp:print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('lang:print')
+    expect(result.children.body[0].conceptId).toBe('cpp:print')
   })
 
   it('unwraps func_def main body and skips return', () => {
     const tree = makeProgram([
-      createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
+      createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
         body: [
-          createNode('lang:var_declare', { name: 'a', type: 'int' }),
-          createNode('lang:return', {}),
+          createNode('cpp:var_declare', { name: 'a', type: 'int' }),
+          createNode('cpp:return', {}),
         ],
       }),
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('lang:var_declare')
+    expect(result.children.body[0].conceptId).toBe('cpp:var_declare')
   })
 
   it('keeps user-defined functions', () => {
     const tree = makeProgram([
-      createNode('lang:func_def', { name: 'helper', return_type: 'void' }, { body: [] }),
-      createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
-        body: [createNode('lang:print', {})],
+      createNode('cpp:func_def', { name: 'helper', return_type: 'void' }, { body: [] }),
+      createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
+        body: [createNode('cpp:print', {})],
       }),
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(2)
-    expect(result.children.body[0].conceptId).toBe('lang:func_def')
+    expect(result.children.body[0].conceptId).toBe('cpp:func_def')
     expect(result.children.body[0].properties.name).toBe('helper')
-    expect(result.children.body[1].conceptId).toBe('lang:print')
+    expect(result.children.body[1].conceptId).toBe('cpp:print')
   })
 
   it('strips cpp_include_local too', () => {
     const tree = makeProgram([
       createNode('cpp:include_local', { header: 'mylib.h' }),
-      createNode('lang:print', {}),
+      createNode('cpp:print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)

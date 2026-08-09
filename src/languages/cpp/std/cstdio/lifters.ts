@@ -18,7 +18,7 @@ export function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
 }
 
 export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('cpp:scanf', { format: '%d' }, { args: [createNode('lang:var_ref', { name: 'x' })] })
+  if (!argsNode) return createNode('cpp:scanf', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'x' })] })
   const args = argsNode.namedChildren
   const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d'
   const values = args.slice(1).map(varArg => {
@@ -29,11 +29,11 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
         if (lifted) return lifted
       }
       const varName = inner?.text ?? 'x'
-      return createNode('lang:var_ref', { name: varName })
+      return createNode('cpp:var_ref', { name: varName })
     }
     const rawText = varArg.text
     const varName = rawText.startsWith('&') ? rawText.slice(1) : rawText
-    return createNode('lang:var_ref', { name: varName })
+    return createNode('cpp:var_ref', { name: varName })
   })
   return createNode('cpp:scanf', { format: formatStr }, { args: values })
 }

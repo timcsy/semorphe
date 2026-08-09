@@ -149,7 +149,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift counting for loop to count_loop concept', () => {
       const sem = liftCode('for (int i = 0; i < 10; i++) { x = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:count_loop')
+      expect(concepts).toContain('cpp:count_loop')
     })
 
     it('should render to u_count_loop block', () => {
@@ -164,7 +164,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift i <= n counting for loop with inclusive TRUE', () => {
       const sem = liftCode('for (int i = 1; i <= n; i++) { x = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:count_loop')
+      expect(concepts).toContain('cpp:count_loop')
       // Walk to find the count_loop and check inclusive
       function findNode(node: any, concept: string): any {
         if (!node) return null
@@ -181,7 +181,7 @@ describe('Code-to-Blocks Pipeline', () => {
         }
         return null
       }
-      const countLoop = findNode(sem, 'lang:count_loop')
+      const countLoop = findNode(sem, 'cpp:count_loop')
       expect(countLoop).not.toBeNull()
       expect(countLoop.properties.inclusive).toBe('TRUE')
     })
@@ -206,13 +206,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift cout << x to print concept', () => {
       const sem = liftCode('cout << x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:print')
+      expect(concepts).toContain('cpp:print')
     })
 
     it('should lift cin >> x to input concept', () => {
       const sem = liftCode('cin >> x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:input')
+      expect(concepts).toContain('cpp:input')
     })
   })
 
@@ -220,13 +220,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift if statement to if concept', () => {
       const sem = liftCode('if (x > 0) { y = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:if')
+      expect(concepts).toContain('cpp:if')
     })
 
     it('should lift if-else to if concept with else_body', () => {
       const sem = liftCode('if (x > 0) { y = 1; } else { y = 0; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:if')
+      expect(concepts).toContain('cpp:if')
     })
   })
 
@@ -234,7 +234,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift while loop to while_loop concept', () => {
       const sem = liftCode('while (x > 0) { x--; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:while_loop')
+      expect(concepts).toContain('cpp:while_loop')
     })
   })
 
@@ -242,19 +242,19 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift arithmetic: a + b', () => {
       const sem = liftCode('int r = a + b;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:arithmetic')
+      expect(concepts).toContain('cpp:arithmetic')
     })
 
     it('should lift comparison: x > 0', () => {
       const sem = liftCode('if (x > 0) {}')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:compare')
+      expect(concepts).toContain('cpp:compare')
     })
 
     it('should lift logic: a && b', () => {
       const sem = liftCode('if (a && b) {}')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:logic')
+      expect(concepts).toContain('cpp:logic')
     })
   })
 
@@ -262,13 +262,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift !x to logic_not', () => {
       const sem = liftCode('if (!x) {}')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:logic_not')
+      expect(concepts).toContain('cpp:logic_not')
     })
 
     it('should lift -x to negate', () => {
       const sem = liftCode('int y = -x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:negate')
+      expect(concepts).toContain('cpp:negate')
     })
   })
 
@@ -333,7 +333,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift return 0 to return concept', () => {
       const sem = liftCode('int main() { return 0; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:return')
+      expect(concepts).toContain('cpp:return')
     })
   })
 
@@ -341,13 +341,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift break to break concept', () => {
       const sem = liftCode('while(1) { break; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:break')
+      expect(concepts).toContain('cpp:break')
     })
 
     it('should lift continue to continue concept', () => {
       const sem = liftCode('while(1) { continue; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('lang:continue')
+      expect(concepts).toContain('cpp:continue')
     })
   })
 
@@ -370,10 +370,10 @@ int main() {
       expect(sem).not.toBeNull()
       const concepts = findConcepts(sem)
       expect(concepts).toContain('cpp:include')
-      expect(concepts).toContain('lang:input')
-      expect(concepts).toContain('lang:count_loop')
-      expect(concepts).toContain('lang:print')
-      expect(concepts).toContain('lang:return')
+      expect(concepts).toContain('cpp:input')
+      expect(concepts).toContain('cpp:count_loop')
+      expect(concepts).toContain('cpp:print')
+      expect(concepts).toContain('cpp:return')
 
       // Verify code generation roundtrip
       const generated = generateCode(sem!, 'cpp', style)

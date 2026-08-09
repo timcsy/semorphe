@@ -26,7 +26,7 @@ describe('ConceptRegistry.loadFromJSON', () => {
   it('should load var_declare with correct properties and children', () => {
     const registry = new ConceptRegistry()
     registry.loadFromJSON(loadConcepts())
-    const varDecl = registry.get('lang:var_declare')
+    const varDecl = registry.get('cpp:var_declare')
     expect(varDecl).toBeDefined()
     expect(varDecl!.propertyNames).toContain('type')
     expect(varDecl!.propertyNames).toContain('name')

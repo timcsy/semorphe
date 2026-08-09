@@ -167,7 +167,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('+', '+')
       const ast = mockNode('binary_expression', '3 + 5', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:arithmetic')
+      expect(sem!.conceptId).toBe('cpp:arithmetic')
       expect(sem!.properties.operator).toBe('+')
     })
 
@@ -177,7 +177,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('>', '>')
       const ast = mockNode('binary_expression', 'x > 0', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:compare')
+      expect(sem!.conceptId).toBe('cpp:compare')
     })
 
     it('should dispatch && to logic', () => {
@@ -186,7 +186,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('&&', '&&')
       const ast = mockNode('binary_expression', 'a && b', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:logic')
+      expect(sem!.conceptId).toBe('cpp:logic')
     })
   })
 
@@ -206,7 +206,7 @@ describe('L1 Block Roundtrip', () => {
 
       const sem = lifter.tryLift(outer, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('lang:print')
+      expect(sem!.conceptId).toBe('cpp:print')
       expect(sem!.children.values.length).toBeGreaterThanOrEqual(2)
     })
   })
@@ -222,7 +222,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('lang:if')
+      expect(sem!.conceptId).toBe('cpp:if')
       expect(sem!.children.then_body).toBeDefined()
     })
   })
@@ -235,7 +235,7 @@ describe('L1 Block Roundtrip', () => {
         condition: cond, body: body,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:while_loop')
+      expect(sem!.conceptId).toBe('cpp:while_loop')
     })
   })
 
@@ -265,18 +265,18 @@ describe('L1 Block Roundtrip', () => {
       )
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('lang:count_loop')
+      expect(sem!.conceptId).toBe('cpp:count_loop')
     })
   })
 
   describe('return_statement', () => {
     it('should lift return 0', () => {
       const val = mockNode('number_literal', '0')
-      const ast = mockNode('return_statement', 'return 0;', [unnamed('lang:return', 'lang:return'), val], {
+      const ast = mockNode('return_statement', 'return 0;', [unnamed('cpp:return', 'cpp:return'), val], {
         value: val,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:return')
+      expect(sem!.conceptId).toBe('cpp:return')
       expect(sem!.children.value).toHaveLength(1)
     })
   })
@@ -284,12 +284,12 @@ describe('L1 Block Roundtrip', () => {
   describe('break / continue', () => {
     it('should lift break_statement', () => {
       const sem = lifter.tryLift(mockNode('break_statement', 'break;'), liftCtx())
-      expect(sem!.conceptId).toBe('lang:break')
+      expect(sem!.conceptId).toBe('cpp:break')
     })
 
     it('should lift continue_statement', () => {
       const sem = lifter.tryLift(mockNode('continue_statement', 'continue;'), liftCtx())
-      expect(sem!.conceptId).toBe('lang:continue')
+      expect(sem!.conceptId).toBe('cpp:continue')
     })
   })
 
@@ -300,7 +300,7 @@ describe('L1 Block Roundtrip', () => {
         argument: arg,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:logic_not')
+      expect(sem!.conceptId).toBe('cpp:logic_not')
     })
 
     it('should lift -x to negate', () => {
@@ -309,7 +309,7 @@ describe('L1 Block Roundtrip', () => {
         argument: arg,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:negate')
+      expect(sem!.conceptId).toBe('cpp:negate')
     })
   })
 
@@ -333,7 +333,7 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('parenthesized_expression', '(42)', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:number_literal')
+      expect(sem!.conceptId).toBe('cpp:number_literal')
       expect(sem!.properties.value).toBe('42')
     })
   })
@@ -343,27 +343,27 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('expression_statement', '42;', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('lang:number_literal')
+      expect(sem!.conceptId).toBe('cpp:number_literal')
     })
   })
 
   describe('code generation for universal concepts', () => {
     it('should generate var_ref code', () => {
-      const node = createNode('lang:var_ref', { name: 'myVar' })
+      const node = createNode('cpp:var_ref', { name: 'myVar' })
       const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
       expect(code).toBe('myVar')
     })
 
     it('should generate break code', () => {
-      const node = createNode('lang:break', {})
+      const node = createNode('cpp:break', {})
       const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
       expect(code).toBe('break;')
     })
 
     it('should generate arithmetic expression code', () => {
-      const left = createNode('lang:var_ref', { name: 'x' })
-      const right = createNode('lang:number_literal', { value: '5' })
-      const node = createNode('lang:arithmetic', { operator: '+' }, { left: [left], right: [right] })
+      const left = createNode('cpp:var_ref', { name: 'x' })
+      const right = createNode('cpp:number_literal', { value: '5' })
+      const node = createNode('cpp:arithmetic', { operator: '+' }, { left: [left], right: [right] })
       const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
       expect(code).toBe('x + 5')
     })

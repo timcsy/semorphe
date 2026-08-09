@@ -1,106 +1,106 @@
 [
   {
-    "conceptId": "lang:number_literal",
+    "conceptId": "cpp:number_literal",
     "pattern": "${value}",
     "order": 20
   },
   {
-    "conceptId": "lang:string_literal",
+    "conceptId": "cpp:string_literal",
     "pattern": "${value}",
     "order": 20
   },
   {
-    "conceptId": "lang:var_ref",
+    "conceptId": "cpp:var_ref",
     "pattern": "${name}",
     "order": 20
   },
   {
-    "conceptId": "lang:break",
+    "conceptId": "cpp:break",
     "pattern": "break;",
     "order": 0
   },
   {
-    "conceptId": "lang:continue",
+    "conceptId": "cpp:continue",
     "pattern": "continue;",
     "order": 0
   },
   {
-    "conceptId": "lang:endl",
+    "conceptId": "cpp:endl",
     "pattern": "endl",
     "order": 20
   },
   {
-    "conceptId": "lang:arithmetic",
+    "conceptId": "cpp:arithmetic",
     "pattern": "${left} ${operator} ${right}",
     "order": 14
   },
   {
-    "conceptId": "lang:compare",
+    "conceptId": "cpp:compare",
     "pattern": "${left} ${operator} ${right}",
     "order": 11
   },
   {
-    "conceptId": "lang:logic",
+    "conceptId": "cpp:logic",
     "pattern": "${left} ${operator} ${right}",
     "order": 6
   },
   {
-    "conceptId": "lang:logic_not",
+    "conceptId": "cpp:logic_not",
     "pattern": "!${operand}",
     "order": 17
   },
   {
-    "conceptId": "lang:negate",
+    "conceptId": "cpp:negate",
     "pattern": "-${operand}",
     "order": 17
   },
   {
-    "conceptId": "lang:var_assign",
+    "conceptId": "cpp:var_assign",
     "pattern": "${obj} = ${value};",
     "order": 0
   },
   {
-    "conceptId": "lang:return",
+    "conceptId": "cpp:return",
     "pattern": "return ${value};",
     "order": 0
   },
   {
-    "conceptId": "lang:if",
+    "conceptId": "cpp:if",
     "pattern": "if (${condition}) {\n${then_body}\n}",
     "order": 0
   },
   {
-    "conceptId": "lang:while_loop",
+    "conceptId": "cpp:while_loop",
     "pattern": "while (${condition}) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "lang:count_loop",
+    "conceptId": "cpp:count_loop",
     "pattern": "for (int ${var_name} = ${from}; ${var_name} < ${to}; ${var_name}++) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "lang:func_def",
+    "conceptId": "cpp:func_def",
     "pattern": "${return_type} ${name}(${params}) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "lang:func_call",
+    "conceptId": "cpp:func_call",
     "pattern": "${name}(${args})",
     "order": 20
   },
   {
-    "conceptId": "lang:array_declare",
+    "conceptId": "cpp:array_declare",
     "pattern": "${type} ${name}[${size}];",
     "order": 0
   },
   {
-    "conceptId": "lang:array_access",
+    "conceptId": "cpp:array_access",
     "pattern": "${obj}[${index}]",
     "order": 20
   },
   {
-    "conceptId": "lang:print",
+    "conceptId": "cpp:print",
     "styleVariants": {
       "cout": {
         "pattern": "cout << ${values: << }",
@@ -121,7 +121,7 @@
     "order": 0
   },
   {
-    "conceptId": "lang:input",
+    "conceptId": "cpp:input",
     "styleVariants": {
       "cout": {
         "pattern": "cin >> ${values: >> }",
@@ -142,12 +142,12 @@
     "order": 0
   },
   {
-    "conceptId": "lang:comment",
+    "conceptId": "cpp:comment",
     "pattern": "// ${text}",
     "order": 0
   },
   {
-    "conceptId": "lang:program",
+    "conceptId": "cpp:program",
     "pattern": "${body}",
     "order": 0
   }

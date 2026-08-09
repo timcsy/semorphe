@@ -61,10 +61,10 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
     setProgramScaffold(scaffold)
     setScaffoldConfig({ cognitiveLevel: 0 })
 
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, {
-          values: [createNode('lang:string_literal', { value: 'hello' }), createNode('lang:endl', {})],
+        createNode('cpp:print', {}, {
+          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -85,10 +85,10 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
     setProgramScaffold(scaffold)
     setScaffoldConfig({ cognitiveLevel: 0 })
 
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, {
-          values: [createNode('lang:endl', {})],
+        createNode('cpp:print', {}, {
+          values: [createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -107,10 +107,10 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
     setProgramScaffold(scaffold)
     setScaffoldConfig({ cognitiveLevel: 0 })
 
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, {
-          values: [createNode('lang:string_literal', { value: 'hi' }), createNode('lang:endl', {})],
+        createNode('cpp:print', {}, {
+          values: [createNode('cpp:string_literal', { value: 'hi' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -135,10 +135,10 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
 describe('Auto-include across cognitive levels', () => {
   it('L0: body-only tree should auto-include required headers via scaffold', () => {
     // L0 blocks only have body (no include/namespace/main) — scaffold wraps
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, {
-          values: [createNode('lang:string_literal', { value: 'hello' }), createNode('lang:endl', {})],
+        createNode('cpp:print', {}, {
+          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -154,15 +154,15 @@ describe('Auto-include across cognitive levels', () => {
   it('L2: full tree with func_def(main) should auto-include via legacy path', () => {
     // L2 blocks have the full tree structure including func_def(main)
     // but user may NOT have manually added #include — auto-include should add it
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:using_namespace', { ns: 'std' }),
-        createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
           body: [
-            createNode('lang:print', {}, {
-              values: [createNode('lang:string_literal', { value: 'hello' }), createNode('lang:endl', {})],
+            createNode('cpp:print', {}, {
+              values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
             }),
-            createNode('lang:return', {}, { value: [createNode('number', { value: 0 })] }),
+            createNode('cpp:return', {}, { value: [createNode('number', { value: 0 })] }),
           ],
         }),
       ],
@@ -177,16 +177,16 @@ describe('Auto-include across cognitive levels', () => {
   })
 
   it('L2: full tree WITH manual include should NOT duplicate', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:include', { header: 'iostream' }),
         createNode('cpp:using_namespace', { ns: 'std' }),
-        createNode('lang:func_def', { name: 'main', return_type: 'int' }, {
+        createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
           body: [
-            createNode('lang:print', {}, {
-              values: [createNode('lang:string_literal', { value: 'hi' })],
+            createNode('cpp:print', {}, {
+              values: [createNode('cpp:string_literal', { value: 'hi' })],
             }),
-            createNode('lang:return', {}, { value: [createNode('number', { value: 0 })] }),
+            createNode('cpp:return', {}, { value: [createNode('number', { value: 0 })] }),
           ],
         }),
       ],
@@ -199,9 +199,9 @@ describe('Auto-include across cognitive levels', () => {
   })
 
   it('L0: multiple concepts should auto-include all required headers', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
         createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ],
     })
@@ -214,10 +214,10 @@ describe('Auto-include across cognitive levels', () => {
 
 describe('Scaffold-driven code generation', () => {
   it('should produce complete hello world program with scaffold', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, {
-          values: [createNode('lang:string_literal', { value: 'hello' }), createNode('lang:endl', {})],
+        createNode('cpp:print', {}, {
+          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -231,9 +231,9 @@ describe('Scaffold-driven code generation', () => {
   })
 
   it('should include multiple headers in sorted order', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, { values: [createNode('lang:var_ref', { name: 'x' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
         createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ],
     })
@@ -247,9 +247,9 @@ describe('Scaffold-driven code generation', () => {
   })
 
   it('should place scaffold in correct order: imports → preamble → entryPoint → body → epilogue', () => {
-    const tree = createNode('lang:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('lang:print', {}, { values: [createNode('lang:string_literal', { value: 'hello' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:string_literal', { value: 'hello' })] }),
       ],
     })
     const code = generateNode(tree, makeCtx(apcsStyle))

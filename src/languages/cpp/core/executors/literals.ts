@@ -17,7 +17,7 @@ export function registerLiteralsCoreExecutors(
     return { type: 'char', value: ch.charCodeAt(0) || 0 }
   })
 
-  register('lang:builtin_constant', async (node) => {
+  register('cpp:builtin_constant', async (node) => {
     const value = String(node.properties.value)
     const builtin = CPP_BUILTIN_CONSTANTS[value]
     if (builtin) return { type: builtin.type, value: builtin.value }
