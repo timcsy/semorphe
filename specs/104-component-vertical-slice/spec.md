@@ -1,6 +1,6 @@
 # Feature Specification: F 膠囊搬家——第一顆垂直切片
 
-**Feature Branch**: `104-capsule-vertical-slice`
+**Feature Branch**: `104-component-vertical-slice`
 
 **Created**: 2026-08-09
 

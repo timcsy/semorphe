@@ -1,8 +1,8 @@
 # Implementation Plan: F 膠囊搬家——第一顆垂直切片
 
-**Branch**: `104-capsule-vertical-slice` | **Date**: 2026-08-09 | **Spec**: [spec.md](spec.md)
+**Branch**: `104-component-vertical-slice` | **Date**: 2026-08-09 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `specs/104-capsule-vertical-slice/spec.md`
+**Input**: Feature specification from `specs/104-component-vertical-slice/spec.md`
 
 ## Summary
 
@@ -44,7 +44,7 @@
 ### Documentation (this feature)
 
 ```
-specs/104-capsule-vertical-slice/
+specs/104-component-vertical-slice/
 ├── spec.md
 ├── plan.md              ← 本檔
 ├── research.md          ← 五個未知的查證與決定
@@ -72,7 +72,7 @@ src/
 │           ├── labels/en.json
 │           └── spec.test.ts              自證測（強制正負兩向）
 │
-├── core/capsule/                        ← 新增（膠囊的載入與登錄機制）
+├── core/component/                        ← 新增（膠囊的載入與登錄機制）
 │   ├── registry.ts                      掃描並登錄膠囊，記錄「註冊來源」
 │   └── labels.ts                        合併各膠囊的標籤（鍵撞了要爆）
 │
@@ -85,9 +85,9 @@ src/
 
 tests/
 ├── integration/
-│   ├── audit-capsule-locality.test.ts     ⬅ 新護欄（雙向，FR-010/011/012）
-│   └── capsule-move-parity.test.ts        ⬅ 兩條防線（FR-007/008/009）
-└── baselines/capsule-locality.json        ⬅ 第一次跑必須紅，逐項指名後才產
+│   ├── audit-component-locality.test.ts     ⬅ 新護欄（雙向，FR-010/011/012）
+│   └── component-move-parity.test.ts        ⬅ 兩條防線（FR-007/008/009）
+└── baselines/component-locality.json        ⬅ 第一次跑必須紅，逐項指名後才產
 ```
 
 **Structure Decision**：膠囊放 `src/components/<scope>/<name>/`，與 `src/languages/`
@@ -105,7 +105,7 @@ tests/
 | **0** | 錄搬家前基準（五路輸出、來回轉換、標籤字串、conceptId 集合） | 基準檔存在，全綠 |
 | **1** | 蓋膠囊護欄（雙向 ＋ 標籤維度），**第一次跑必須紅**，逐項指名 | 紅，且違規已逐項列出 |
 | **2** | 蓋兩條防線（漏失／錯置）＋ 各自的「抓不到什麼」聲明 | 綠（此時無膠囊，防線是恆等的） |
-| **3** | 建 `core/capsule/`（登錄機制 ＋ 標籤合併），零膠囊時是 no-op | 全綠 |
+| **3** | 建 `core/component/`（登錄機制 ＋ 標籤合併），零膠囊時是 no-op | 全綠 |
 | **4** | 搬**宣告**：`component.json` ＋ `forms/blocks.json`；`std/vector` 4 → 3 | 全綠，防線一綠 |
 | **5** | 搬**標籤**：`labels/{zh-TW,en}.json`；i18n 共用檔各刪 8 筆 | 全綠，UI 標籤逐字相同 |
 | **6** | 搬 **generate**／**execute** | 全綠，防線二指出來源是膠囊 |
@@ -121,8 +121,8 @@ tests/
 
 | 新增的複雜度 | 當前需求 | 不加會怎樣 |
 |---|---|---|
-| `core/capsule/registry.ts` | 膠囊要能被載入，且要記錄註冊來源 | 防線二（抓錯置）沒有地基 |
-| `core/capsule/labels.ts` | 標籤要能從膠囊合回 loader 的扁平字典 | 標籤那一維搬不出去，FR-012 達不到 |
+| `core/component/registry.ts` | 膠囊要能被載入，且要記錄註冊來源 | 防線二（抓錯置）沒有地基 |
+| `core/component/labels.ts` | 標籤要能從膠囊合回 loader 的扁平字典 | 標籤那一維搬不出去，FR-012 達不到 |
 | `component.json` 的 `requires` | `#include` 依賴解析 ＋ 工具箱 owner 章，**當前兩個消費者** | 產生的碼少 `#include <vector>`；工具箱分類錯 |
 | `strategies.ts` 塌成路由器 | lift 那一路搬不出去（R1） | SC-001 達不到 |
 

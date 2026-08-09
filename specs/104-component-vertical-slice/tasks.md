@@ -1,6 +1,6 @@
 # Tasks: F 膠囊搬家——第一顆垂直切片
 
-**Input**: [spec.md](spec.md) · [plan.md](plan.md) · [research.md](research.md) · [data-model.md](data-model.md) · [contracts/capsule.md](contracts/capsule.md) · [quickstart.md](quickstart.md)
+**Input**: [spec.md](spec.md) · [plan.md](plan.md) · [research.md](research.md) · [data-model.md](data-model.md) · [contracts/component.md](contracts/component.md) · [quickstart.md](quickstart.md)
 
 **Tests**: 本 feature **要求**測試——它的主體就是護欄與防線（FR-004～FR-014）。
 
@@ -11,7 +11,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 建立膠囊路徑常數與型別骨架 in `src/core/capsule/types.ts`（`CapsuleManifest`、`CapsuleRegistration`、`CAPSULE_ROOT = 'src/components'`）
+- [ ] T001 建立膠囊路徑常數與型別骨架 in `src/core/component/types.ts`（`ComponentManifest`、`ComponentRegistration`、`COMPONENT_ROOT = 'src/components'`）
 - [ ] T002 [P] 建立 `src/components/.gitkeep` 與 `src/components/README.md`（說明「一顆元件一個資料夾」與 scope 分層）
 
 ---
@@ -23,31 +23,31 @@
 
 ### 基準（步驟 0）
 
-- [ ] T003 寫「搬家前基準」錄製器 in `tests/integration/capsule-move-parity.test.ts`：錄下 (a) 系統認得的全部 conceptId 集合、(b) `cpp:vector_declare` 五路可及性、(c) 該元件的產生碼／執行結果／來回轉換、(d) 該元件的 16 筆標籤字串
-- [ ] T004 產出基準檔 in `tests/baselines/capsule-parity-vector-declare.json` 並進版控
+- [ ] T003 寫「搬家前基準」錄製器 in `tests/integration/component-move-parity.test.ts`：錄下 (a) 系統認得的全部 conceptId 集合、(b) `cpp:vector_declare` 五路可及性、(c) 該元件的產生碼／執行結果／來回轉換、(d) 該元件的 16 筆標籤字串
+- [ ] T004 產出基準檔 in `tests/baselines/component-parity-vector-declare.json` 並進版控
 
 ### 防線（FR-007／008／009）
 
-- [ ] T005 實作**防線一：集合比對**（抓「漏失」）in `tests/integration/capsule-move-parity.test.ts`
-- [ ] T006 實作**防線二：註冊來源核對**（抓「錯置」）in `tests/integration/capsule-move-parity.test.ts`——斷言宣告裡的 `componentId` 與從路徑推導的來源一致，**兩者都要且互相核對**
+- [ ] T005 實作**防線一：集合比對**（抓「漏失」）in `tests/integration/component-move-parity.test.ts`
+- [ ] T006 實作**防線二：註冊來源核對**（抓「錯置」）in `tests/integration/component-move-parity.test.ts`——斷言宣告裡的 `componentId` 與從路徑推導的來源一致，**兩者都要且互相核對**
 - [ ] T007 在該檔頂端寫下**兩條防線各自抓不到什麼**（FR-009）：集合比對抓不到錯置（054 前例：兩筆註冊併進錯模組，集合完全相同、防線全綠）；來源核對抓不到來源標記本身被寫錯
 
 ### 護欄（FR-010～FR-014）
 
-- [ ] T008 蓋膠囊就近性護欄 in `tests/integration/audit-capsule-locality.test.ts`——**正向**：已膠囊化的元件，其 componentId 不得出現在自己資料夾外的非清單類檔（FR-010）
+- [ ] T008 蓋膠囊就近性護欄 in `tests/integration/audit-component-locality.test.ts`——**正向**：已膠囊化的元件，其 componentId 不得出現在自己資料夾外的非清單類檔（FR-010）
 - [ ] T009 加**反向**檢查到同一支護欄（FR-011）：膠囊資料夾內不得出現別顆元件的 componentId
 - [ ] T010 加**標籤那一維**（FR-012）：已膠囊化元件的標籤鍵不得留在共用 i18n 檔——今天沒有任何護欄看得到這一維
 - [ ] T011 加護欄的自我驗證兩向（`build-guardrail` 步驟 9）：注入一個假的違規必須報；注入一個正確的膠囊必須不報
 - [ ] T012 寫「本護欄不檢測什麼」聲明（`build-guardrail` 步驟 3）：不檢測語義正確性、不檢測標籤有沒有說出「作用在哪裡」、不檢測跨元件的組合正確性
 - [ ] T013 **執行護欄，確認它是紅的**，並把違規**逐項指名**寫進 `slice-record.md`（FR-013）。⚠️ 綠代表判準寫錯／資料沒載入／基線先產了——三種都不是好消息
-- [ ] T014 產基線 in `tests/baselines/capsule-locality.json`，`_meta` 註明「維度與現行就近性不同（宣告＋實作＋標籤 vs 只算實作），數字不得與 3.46 相比」（FR-014）
+- [ ] T014 產基線 in `tests/baselines/component-locality.json`，`_meta` 註明「維度與現行就近性不同（宣告＋實作＋標籤 vs 只算實作），數字不得與 3.46 相比」（FR-014）
 
 ### 膠囊機制（零膠囊時是 no-op）
 
-- [ ] T015 實作膠囊登錄表 in `src/core/capsule/registry.ts`：掃描 `src/components/**/component.json`、驗 C1–C4、記錄 `CapsuleRegistration`
-- [ ] T016 實作標籤合併 in `src/core/capsule/labels.ts`：合併各膠囊的 `labels/<locale>.json`，**鍵撞了 throw**（不得後者覆蓋前者）
-- [ ] T017 [P] 單元測試 in `tests/unit/capsule-registry.test.ts`：C1–C4 各一個違規案例必須 throw
-- [ ] T018 [P] 單元測試 in `tests/unit/capsule-labels.test.ts`：鍵相撞必須 throw，不得靜默覆蓋
+- [ ] T015 實作膠囊登錄表 in `src/core/component/registry.ts`：掃描 `src/components/**/component.json`、驗 C1–C4、記錄 `ComponentRegistration`
+- [ ] T016 實作標籤合併 in `src/core/component/labels.ts`：合併各膠囊的 `labels/<locale>.json`，**鍵撞了 throw**（不得後者覆蓋前者）
+- [ ] T017 [P] 單元測試 in `tests/unit/component-registry.test.ts`：C1–C4 各一個違規案例必須 throw
+- [ ] T018 [P] 單元測試 in `tests/unit/component-labels.test.ts`：鍵相撞必須 throw，不得靜默覆蓋
 
 **Checkpoint**：全套測試綠（護欄除外——它應該紅著，因為 177 顆都還沒搬）
 
@@ -73,7 +73,7 @@
 - [ ] T025 [P] [US1] 建 `src/components/cpp/vector_declare/labels/zh-TW.json`（8 筆，鍵不改名）
 - [ ] T026 [P] [US1] 建 `src/components/cpp/vector_declare/labels/en.json`（8 筆）
 - [ ] T027 [US1] 從 `src/i18n/zh-TW/blocks.json` 與 `src/i18n/en/blocks.json` 各刪那 8 筆
-- [ ] T028 [US1] 接上 `core/capsule/labels.ts` 到 `src/i18n/loader.ts` 的載入路徑
+- [ ] T028 [US1] 接上 `core/component/labels.ts` 到 `src/i18n/loader.ts` 的載入路徑
 - [ ] T029 [US1] `npm test` 全綠 ＋ 標籤字串與基準逐字相同 → **commit**
 
 ### 步驟 6：搬 generate 與 execute
@@ -98,7 +98,7 @@
 ### 步驟 9：收數字
 
 - [ ] T040 [US1] 執行膠囊護欄，確認該顆「自己資料夾外的非清單類檔數」= **0**（8 → 0，SC-001）
-- [ ] T041 [US1] 下調 `tests/baselines/capsule-locality.json`，`_meta` 註明是**第一顆膠囊化**造成的下降
+- [ ] T041 [US1] 下調 `tests/baselines/component-locality.json`，`_meta` 註明是**第一顆膠囊化**造成的下降
 - [ ] T042 [US1] 驗**可拆性**（SC-006）：`mv src/components/cpp/vector_declare /tmp/` → 只有該顆相關測試紅，其餘 176 顆零失敗；驗完搬回
 - [ ] T043 [US1] 驗**兄弟元件**（research.md 未驗項）：跑同時用到 4 顆的程式，輸出與基準逐字相同
 - [ ] T044 [US1] 驗**未搬的 176 顆擴散度一筆都沒變差**（SC-004）：`tests/baselines/locality.json` 無需下調也無需上調
@@ -127,7 +127,7 @@
 
 **Goal**：答得出剩餘 176 顆的範圍與形狀分類。
 
-- [ ] T050 [US3] 寫 `specs/104-capsule-vertical-slice/slice-record.md`：每一步的實際動作、耗時、卡點
+- [ ] T050 [US3] 寫 `specs/104-component-vertical-slice/slice-record.md`：每一步的實際動作、耗時、卡點
 - [ ] T051 [US3] 量出**形狀分類**：掃全部 177 顆，數出「lift 靠 pattern 而非顯式 lifter」「無執行器」「多形態」「宣告與兄弟共用陣列」各幾顆，**附查詢方式**（可重跑）
 - [ ] T052 [US3] 給出剩餘 176 顆的範圍估計，**標明它基於幾個樣本**（FR-019）
 - [ ] T053 [US3] 列出 `component-encapsulate` skill 該收的步驟，**每一步指回切片裡真的發生過的一次操作或卡點**（US3 場景 2）——沒發生過的不得寫進去

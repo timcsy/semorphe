@@ -10,7 +10,7 @@ npm test            # 235 檔／3700 tests，動手前必須全綠
 ## 一、搬家前先錄基準（步驟 0）
 
 ```bash
-npx vitest run tests/integration/capsule-move-parity.test.ts -t 基準
+npx vitest run tests/integration/component-move-parity.test.ts -t 基準
 ```
 
 錄下四樣：該元件的五路輸出、來回轉換結果、標籤字串、系統認得的 conceptId 集合。
@@ -19,7 +19,7 @@ npx vitest run tests/integration/capsule-move-parity.test.ts -t 基準
 ## 二、護欄第一次跑必須是紅的（步驟 1）
 
 ```bash
-npx vitest run tests/integration/audit-capsule-locality.test.ts
+npx vitest run tests/integration/audit-component-locality.test.ts
 ```
 
 **預期：紅。** 177 顆全部未膠囊化。
@@ -28,7 +28,7 @@ npx vitest run tests/integration/audit-capsule-locality.test.ts
 逐項指名之後才產基線：
 
 ```bash
-GENERATE_BASELINE=1 npx vitest run tests/integration/audit-capsule-locality.test.ts
+GENERATE_BASELINE=1 npx vitest run tests/integration/audit-component-locality.test.ts
 ```
 
 ## 三、每一步搬完都跑全套
@@ -45,7 +45,7 @@ npm test
 ### 行為零改變
 
 ```bash
-npx vitest run tests/integration/capsule-move-parity.test.ts
+npx vitest run tests/integration/component-move-parity.test.ts
 ```
 
 斷言搬家前後**逐字相同**。這條是搬家而非重寫的證據。
@@ -53,7 +53,7 @@ npx vitest run tests/integration/capsule-move-parity.test.ts
 ### 自己資料夾外 → 0
 
 ```bash
-npx vitest run tests/integration/audit-capsule-locality.test.ts
+npx vitest run tests/integration/audit-component-locality.test.ts
 ```
 
 期望該顆從 8 降到 0（清單類檔案豁免：課程主題 ×2、歷史改名表）。

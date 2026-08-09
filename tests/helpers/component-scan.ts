@@ -146,6 +146,22 @@ export function maskNonIdentityPositions(src: string): string {
     (_m, lead: string) => lead + '«»',
   )
 
+  // ── 遮罩 D：`import.meta.glob(...)` 的路徑樣式
+  // 判準同樣是語言規則：那個引數**必須是字面常數**（Vite 在建置時展開它），
+  // 而它是**檔案路徑樣式**，不是身分也不是語法記號。
+  //
+  // ⚠️ 這一條是被咬出來的：`'/src/components/*/*/component.json'` 裡的 `*/`
+  // 被語法耦合護欄判成「C 家族的區塊註解結尾」。而那個記號的入選理由寫著
+  // 「在 TypeScript 的字串字面裡，它還可能是什麼？」——**答案是 glob 萬用字元
+  // 後面接分隔符**，只是提問的時候還沒有人在核心裡寫過 glob。
+  //
+  // 不把 `*/` 降級成「無法確定」，是因為那會讓真正的註解剝除程式碼也一起變隱形；
+  // 遮掉**位置**才是對的刀口（與遮罩 A 同一條紀律）。
+  out = out.replace(
+    /(import\.meta\.glob\(\s*)(['"`])[^'"`\n]*\2/g,
+    (_m, lead: string) => lead + '«»',
+  )
+
   return out
 }
 

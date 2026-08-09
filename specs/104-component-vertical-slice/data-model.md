@@ -65,7 +65,7 @@
 ## 註冊來源（記憶體中，不落地）
 
 ```ts
-interface CapsuleRegistration {
+interface ComponentRegistration {
   componentId: string     // 宣告裡寫的
   sourceDir: string       // 從檔案路徑推導出來的
 }
@@ -83,4 +83,4 @@ interface CapsuleRegistration {
 |---|---|
 | 膠囊 | `src/components/<scope>/<name>/` 一個資料夾 |
 | 歸屬 | `component.json` 的 `componentId`（唯一真相）＋ 路徑（核對用） |
-| 切片紀錄 | `specs/104-capsule-vertical-slice/slice-record.md` |
+| 切片紀錄 | `specs/104-component-vertical-slice/slice-record.md` |

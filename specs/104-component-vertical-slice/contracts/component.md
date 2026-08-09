@@ -19,9 +19,9 @@
 
 | # | 保證 | 兌現處 |
 |---|---|---|
-| S1 | 我登錄的五路，系統會用；沒登錄的不會被偷偷補預設值 | `core/capsule/registry.ts` |
+| S1 | 我登錄的五路，系統會用；沒登錄的不會被偷偷補預設值 | `core/component/registry.ts` |
 | S2 | 我的 `requires` 會變成產出碼的 `#include` 與工具箱的 owner 章 | 依賴解析 ＋ 工具箱 |
-| S3 | 我的標籤會出現在 UI，鍵不變 | `core/capsule/labels.ts` |
+| S3 | 我的標籤會出現在 UI，鍵不變 | `core/component/labels.ts` |
 | S4 | 刪掉我這個資料夾，其餘元件不受影響 | SC-006 |
 
 ## 這份契約**不管**什麼
