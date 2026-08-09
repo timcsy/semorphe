@@ -275,15 +275,17 @@ export class SyncController {
       const { mappings: genMappings } = generateCodeWithMapping(tree, this.language, this.style)
       this.codeMappings = this.buildCodeMappingsFromSourceRange(tree, genMappings)
 
-      // Downgrade concepts not in current level to universal equivalents
-      // (e.g., cpp_string_declare → var_declare when string isn't in topic level)
+      // 降級只作用在**顯示用的拷貝**上——`tree` 是真實，執行要拿到它。
+      // （`downgradeConceptsForLevel` 是就地改寫，見 `cloneTree` 的說明）
+      let 顯示樹 = tree
       if (this.currentTopic) {
         const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
-        this.downgradeConceptsForLevel(tree, visible)
+        顯示樹 = this.cloneTree(tree)
+        this.downgradeConceptsForLevel(顯示樹, visible)
       }
 
       // For L0: strip scaffold nodes so blocks only show user's logic
-      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
+      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(顯示樹) : 顯示樹
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
@@ -291,6 +293,30 @@ export class SyncController {
     } finally {
       this.syncing = false
     }
+  }
+
+  /**
+   * 深拷貝一棵語義樹——**給降級用的**。
+   *
+   * ⚠️ `downgradeConceptsForLevel` 是**就地改寫**，而 `this.currentTree` 指向
+   * 同一個物件。少了這個拷貝，降級的結果會**直接覆寫真實**：
+   *
+   * ```
+   * vector<int> v;  →  cpp:vector_declare  →（初學課程看不到它）→ lang:var_declare
+   *                                            ↑ currentTree 也變成這個
+   * 然後按「執行」→ int v; → v[0] → RUNTIME_ERR_TYPE_MISMATCH
+   * ```
+   *
+   * **降級是投影層的事，不該寫回真實**（根公理：唯一真實，各式投影）。
+   * 顯示可以退到父概念，執行必須拿到原本的那棵。
+   *
+   * 實測發現於 2026-08-08 的瀏覽器驗證，而全套 3682 支測試是綠的——
+   * 因為降級只在「課程可見集合」這條路上發生，而測試幾乎都用全部可見的設定跑。
+   */
+  private cloneTree(node: SemanticNode): SemanticNode {
+    const children: Record<string, SemanticNode[]> = {}
+    for (const [k, arr] of Object.entries(node.children ?? {})) children[k] = arr.map((c) => this.cloneTree(c))
+    return { ...node, properties: { ...node.properties }, children }
   }
 
   /**
@@ -378,14 +404,16 @@ export class SyncController {
         })
       }
 
-      // Downgrade concepts not in current level to universal equivalents
+      // 同上：降級只作用在顯示用的拷貝上，`fullTree` 保持真實
+      let 顯示樹 = fullTree
       if (this.currentTopic) {
         const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
-        this.downgradeConceptsForLevel(fullTree, visible)
+        顯示樹 = this.cloneTree(fullTree)
+        this.downgradeConceptsForLevel(顯示樹, visible)
       }
 
       // For blocks: strip scaffold if L0
-      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(fullTree) : fullTree
+      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(顯示樹) : 顯示樹
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
