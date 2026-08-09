@@ -149,7 +149,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift counting for loop to count_loop concept', () => {
       const sem = liftCode('for (int i = 0; i < 10; i++) { x = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:count_loop')
+      expect(concepts).toContain('cpp:loop_count')
     })
 
     it('should render to u_count_loop block', () => {
@@ -164,7 +164,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift i <= n counting for loop with inclusive TRUE', () => {
       const sem = liftCode('for (int i = 1; i <= n; i++) { x = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:count_loop')
+      expect(concepts).toContain('cpp:loop_count')
       // Walk to find the count_loop and check inclusive
       function findNode(node: any, concept: string): any {
         if (!node) return null
@@ -181,7 +181,7 @@ describe('Code-to-Blocks Pipeline', () => {
         }
         return null
       }
-      const countLoop = findNode(sem, 'cpp:count_loop')
+      const countLoop = findNode(sem, 'cpp:loop_count')
       expect(countLoop).not.toBeNull()
       expect(countLoop.properties.inclusive).toBe('TRUE')
     })
@@ -191,7 +191,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift non-counting for loop to cpp_for_loop concept', () => {
       const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:for_loop')
+      expect(concepts).toContain('cpp:loop_for')
     })
 
     it('should render non-counting for to c_for_loop block', () => {
@@ -234,7 +234,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift while loop to while_loop concept', () => {
       const sem = liftCode('while (x > 0) { x--; }')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:while_loop')
+      expect(concepts).toContain('cpp:loop_while')
     })
   })
 
@@ -371,7 +371,7 @@ int main() {
       const concepts = findConcepts(sem)
       expect(concepts).toContain('cpp:include')
       expect(concepts).toContain('cpp:input')
-      expect(concepts).toContain('cpp:count_loop')
+      expect(concepts).toContain('cpp:loop_count')
       expect(concepts).toContain('cpp:print')
       expect(concepts).toContain('cpp:return')
 

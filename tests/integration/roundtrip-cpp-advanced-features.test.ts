@@ -210,7 +210,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:range_for')
+      expect(concepts).toContain('cpp:loop_range')
     })
 
     it('generates range-for syntax', () => {
@@ -246,7 +246,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:range_for')
+      expect(concepts).toContain('cpp:loop_range')
     })
 
     it('preserves vector<int> declaration through roundtrip', () => {
@@ -454,7 +454,7 @@ int main() {
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
       expect(concepts).toContain('cpp:try_catch')
-      expect(concepts).toContain('cpp:range_for')
+      expect(concepts).toContain('cpp:loop_range')
     })
 
     it('generates combined structure', () => {

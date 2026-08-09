@@ -292,7 +292,7 @@ export function registerIOLifters(lifter: Lifter): void {
     }
     if (funcName === 'to_string' || funcName === 'std::to_string') {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:to_string', {}, { value: value ? [value] : [] })
+      return createNode('cpp:string_make', {}, { value: value ? [value] : [] })
     }
     if (funcName === 'stoi' || funcName === 'std::stoi') {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
@@ -434,7 +434,7 @@ export function registerIOLifters(lifter: Lifter): void {
       const pairArgs = argsNode ? argsNode.namedChildren : []
       const firstChild = pairArgs[0] ? ctx.lift(pairArgs[0]) : null
       const secondChild = pairArgs[1] ? ctx.lift(pairArgs[1]) : null
-      return createNode('cpp:make_pair', {}, {
+      return createNode('cpp:pair_make', {}, {
         first: firstChild ? [firstChild] : [],
         second: secondChild ? [secondChild] : [],
       })

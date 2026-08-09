@@ -13,7 +13,7 @@
 import type { SavedState } from './storage'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 5
+export const CURRENT_VERSION = 6
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -209,6 +209,8 @@ export const UPGRADES: Record<number, Upgrade> = {
   // 4 → 5：**D1**——`lang:` scope 退場，32 顆歸 `cpp:`。
   // 沿用同一張 `idMigrations`（套件登錄的表是累積的）。
   4: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 5 }),
+  // 5 → 6：G 項第 3 步——主體移到前面（`count_loop` → `loop_count`）
+  5: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 6 }),
 }
 
 export type VersionVerdict =

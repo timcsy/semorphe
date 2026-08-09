@@ -368,7 +368,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:container_push_back', () => {
     it('should render and extract push_back', () => {
-      const val = createNode('cpp:number_literal', { value: '42' })
+      const val = createNode('cpp:literal_number', { value: '42' })
       const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
@@ -380,7 +380,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const val = createNode('cpp:number_literal', { value: '5' })
+      const val = createNode('cpp:literal_number', { value: '5' })
       const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('v.push_back(5);')

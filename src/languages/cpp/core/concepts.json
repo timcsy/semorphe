@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:char_literal",
+    "conceptId": "cpp:literal_char",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -192,9 +192,9 @@
     }
   },
   {
-    "conceptId": "cpp:for_loop",
+    "conceptId": "cpp:loop_for",
     "layer": "lang-core",
-    "abstractConcept": "cpp:count_loop",
+    "abstractConcept": "cpp:loop_count",
     "properties": [],
     "children": {
       "init": "expression",
@@ -208,9 +208,9 @@
     }
   },
   {
-    "conceptId": "cpp:do_while",
+    "conceptId": "cpp:loop_do_while",
     "layer": "lang-core",
-    "abstractConcept": "cpp:while_loop",
+    "abstractConcept": "cpp:loop_while",
     "properties": [],
     "children": {
       "body": "statements",
@@ -1013,7 +1013,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:range_for",
+    "conceptId": "cpp:loop_range",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [

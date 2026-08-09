@@ -167,7 +167,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const node = mockNode('char_literal', "'a'")
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:char_literal')
+      expect(result!.conceptId).toBe('cpp:literal_char')
       expect(result!.properties.char).toBe("'a'")
     })
   })
@@ -181,7 +181,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:number_literal', role: 'expression' },
+        conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'u_number' },
         codeTemplate: { pattern: '${value}', imports: [], order: 20 },
         astPattern: {
@@ -205,7 +205,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       expect(result!.conceptId).toBe('cpp:compound_assign')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
+      expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
     })
   })
 })

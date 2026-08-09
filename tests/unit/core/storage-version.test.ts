@@ -258,7 +258,9 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     // v2→v3 把裸名帶到 `lang:*`，而 v4→v5 又把 `lang:*` 帶到 `cpp:*`。
     // 中間那一站**本來就不該是合法的現存 scope**，它是歷史的中繼點。
     const 表 = registeredIdMigrations()
-    expect(Object.keys(表).length, '174（v2→v3）＋ 32（D1）').toBe(206)
+    // ⚠️ 這個數字會隨每一次 G 的改名增加——**它不該是硬編的**。
+    // 它要驗的是「表非空且每一筆都走得通」，不是「剛好幾筆」。
+    expect(Object.keys(表).length, '改名表是空的 → 沒有任何套件登錄').toBeGreaterThan(200)
     const 解析 = (id: string): string => {
       let cur = id
       for (let i = 0; i < 10 && 表[cur]; i++) cur = 表[cur]

@@ -58,7 +58,7 @@ describe('Auto-include integration', () => {
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('cpp:print', {}, {
-              values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
+              values: [createNode('cpp:literal_string', { value: 'hello' }), createNode('cpp:endl', {})],
             }),
           ],
         }),

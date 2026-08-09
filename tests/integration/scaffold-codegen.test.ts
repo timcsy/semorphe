@@ -64,7 +64,7 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:print', {}, {
-          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
+          values: [createNode('cpp:literal_string', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -110,7 +110,7 @@ describe('Auto-include via global generateCode (mimics real app path)', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:print', {}, {
-          values: [createNode('cpp:string_literal', { value: 'hi' }), createNode('cpp:endl', {})],
+          values: [createNode('cpp:literal_string', { value: 'hi' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -138,7 +138,7 @@ describe('Auto-include across cognitive levels', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:print', {}, {
-          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
+          values: [createNode('cpp:literal_string', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -160,7 +160,7 @@ describe('Auto-include across cognitive levels', () => {
         createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
           body: [
             createNode('cpp:print', {}, {
-              values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
+              values: [createNode('cpp:literal_string', { value: 'hello' }), createNode('cpp:endl', {})],
             }),
             createNode('cpp:return', {}, { value: [createNode('number', { value: 0 })] }),
           ],
@@ -184,7 +184,7 @@ describe('Auto-include across cognitive levels', () => {
         createNode('cpp:func_def', { name: 'main', return_type: 'int' }, {
           body: [
             createNode('cpp:print', {}, {
-              values: [createNode('cpp:string_literal', { value: 'hi' })],
+              values: [createNode('cpp:literal_string', { value: 'hi' })],
             }),
             createNode('cpp:return', {}, { value: [createNode('number', { value: 0 })] }),
           ],
@@ -217,7 +217,7 @@ describe('Scaffold-driven code generation', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:print', {}, {
-          values: [createNode('cpp:string_literal', { value: 'hello' }), createNode('cpp:endl', {})],
+          values: [createNode('cpp:literal_string', { value: 'hello' }), createNode('cpp:endl', {})],
         }),
       ],
     })
@@ -249,7 +249,7 @@ describe('Scaffold-driven code generation', () => {
   it('should place scaffold in correct order: imports → preamble → entryPoint → body → epilogue', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
-        createNode('cpp:print', {}, { values: [createNode('cpp:string_literal', { value: 'hello' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:literal_string', { value: 'hello' })] }),
       ],
     })
     const code = generateNode(tree, makeCtx(apcsStyle))

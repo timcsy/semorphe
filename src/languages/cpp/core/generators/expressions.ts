@@ -46,15 +46,15 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return String(node.properties.name ?? '')
   })
 
-  g.set('cpp:number_literal', (node, _ctx) => {
+  g.set('cpp:literal_number', (node, _ctx) => {
     return String(node.properties.value ?? '0')
   })
 
-  g.set('cpp:string_literal', (node, _ctx) => {
+  g.set('cpp:literal_string', (node, _ctx) => {
     return `"${node.properties.value ?? ''}"`
   })
 
-  g.set('cpp:char_literal', (node, _ctx) => {
+  g.set('cpp:literal_char', (node, _ctx) => {
     const ch = node.properties.char ?? 'a'
     return `'${ch}'`
   })

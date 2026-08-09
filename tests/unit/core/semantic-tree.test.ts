@@ -31,10 +31,10 @@ describe('SemanticTree', () => {
     })
 
     it('should create a node with children', () => {
-      const value = createNode('cpp:number_literal', { value: '5' })
+      const value = createNode('cpp:literal_number', { value: '5' })
       const node = createNode('cpp:var_declare', { name: 'x' }, { initializer: [value] })
       expect(node.children.initializer).toHaveLength(1)
-      expect(node.children.initializer[0].conceptId).toBe('cpp:number_literal')
+      expect(node.children.initializer[0].conceptId).toBe('cpp:literal_number')
     })
   })
 
@@ -89,7 +89,7 @@ describe('SemanticTree', () => {
 
   describe('findById', () => {
     it('should find a node by id in a nested tree', () => {
-      const inner = createNode('cpp:number_literal', { value: '5' })
+      const inner = createNode('cpp:literal_number', { value: '5' })
       const outer = createNode('cpp:var_declare', { name: 'x' }, { initializer: [inner] })
       const tree: SemanticNode = {
         ...createEmptyProgram(),
@@ -97,7 +97,7 @@ describe('SemanticTree', () => {
       }
       const found = findById(tree, inner.id)
       expect(found).toBeTruthy()
-      expect(found?.conceptId).toBe('cpp:number_literal')
+      expect(found?.conceptId).toBe('cpp:literal_number')
     })
 
     it('should return null for non-existent id', () => {
@@ -108,7 +108,7 @@ describe('SemanticTree', () => {
 
   describe('serialization', () => {
     it('should round-trip through JSON', () => {
-      const value = createNode('cpp:number_literal', { value: '5' })
+      const value = createNode('cpp:literal_number', { value: '5' })
       const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
       const tree = addChild(createEmptyProgram(), createEmptyProgram().id, 'body', decl)
       // Need to use the actual tree's id

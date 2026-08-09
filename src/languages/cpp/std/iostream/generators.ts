@@ -33,7 +33,7 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
     const argParts: string[] = []
     for (const v of values) {
       if (v.conceptId === 'cpp:endl') continue
-      if (v.conceptId === 'cpp:string_literal') {
+      if (v.conceptId === 'cpp:literal_string') {
         fmtParts.push((v.properties.value as string) ?? '')
       } else {
         fmtParts.push('%d')

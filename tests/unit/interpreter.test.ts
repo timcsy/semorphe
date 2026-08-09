@@ -34,7 +34,7 @@ describe('Interpreter - basics', () => {
   it('should handle number_literal via print', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:number_literal', { value: '42' }, {})]
+        values: [createNode('cpp:literal_number', { value: '42' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('42')
@@ -43,7 +43,7 @@ describe('Interpreter - basics', () => {
   it('should handle string_literal via print', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'hello' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'hello' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('hello')
@@ -52,7 +52,7 @@ describe('Interpreter - basics', () => {
   it('should declare and reference variable', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '5' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:var_ref', { name: 'x' }, {})]
@@ -64,10 +64,10 @@ describe('Interpreter - basics', () => {
   it('should assign variable', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '1' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '1' }, {})]
       }),
       createNode('cpp:var_assign', { obj: 'x' }, {
-        value: [createNode('cpp:number_literal', { value: '10' }, {})]
+        value: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:var_ref', { name: 'x' }, {})]
@@ -80,7 +80,7 @@ describe('Interpreter - basics', () => {
     const interp = await run([
       createNode('cpp:print', {}, {
         values: [
-          createNode('cpp:string_literal', { value: 'a' }, {}),
+          createNode('cpp:literal_string', { value: 'a' }, {}),
           createNode('cpp:endl', {}, {})
         ]
       })
@@ -95,8 +95,8 @@ describe('Interpreter - arithmetic', () => {
     const interp = await run([
       createNode('cpp:print', {}, {
         values: [createNode('cpp:arithmetic', { operator: op }, {
-          left: [createNode('cpp:number_literal', { value: left }, {})],
-          right: [createNode('cpp:number_literal', { value: right }, {})],
+          left: [createNode('cpp:literal_number', { value: left }, {})],
+          right: [createNode('cpp:literal_number', { value: right }, {})],
         })]
       })
     ])
@@ -113,10 +113,10 @@ describe('Interpreter - arithmetic', () => {
     const interp = await run([
       createNode('cpp:print', {}, {
         values: [createNode('cpp:arithmetic', { operator: '+' }, {
-          left: [createNode('cpp:number_literal', { value: '3' }, {})],
+          left: [createNode('cpp:literal_number', { value: '3' }, {})],
           right: [createNode('cpp:arithmetic', { operator: '*' }, {
-            left: [createNode('cpp:number_literal', { value: '4' }, {})],
-            right: [createNode('cpp:number_literal', { value: '2' }, {})],
+            left: [createNode('cpp:literal_number', { value: '4' }, {})],
+            right: [createNode('cpp:literal_number', { value: '2' }, {})],
           })],
         })]
       })
@@ -130,8 +130,8 @@ describe('Interpreter - compare', () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'r', type: 'bool' }, {
         initializer: [createNode('cpp:compare', { operator: op }, {
-          left: [createNode('cpp:number_literal', { value: left }, {})],
-          right: [createNode('cpp:number_literal', { value: right }, {})],
+          left: [createNode('cpp:literal_number', { value: left }, {})],
+          right: [createNode('cpp:literal_number', { value: right }, {})],
         })]
       }),
       createNode('cpp:print', {}, {
@@ -155,12 +155,12 @@ describe('Interpreter - logic', () => {
       createNode('cpp:print', {}, {
         values: [createNode('cpp:logic', { operator: '&&' }, {
           left: [createNode('cpp:compare', { operator: '>' }, {
-            left: [createNode('cpp:number_literal', { value: '5' }, {})],
-            right: [createNode('cpp:number_literal', { value: '3' }, {})],
+            left: [createNode('cpp:literal_number', { value: '5' }, {})],
+            right: [createNode('cpp:literal_number', { value: '3' }, {})],
           })],
           right: [createNode('cpp:compare', { operator: '<' }, {
-            left: [createNode('cpp:number_literal', { value: '5' }, {})],
-            right: [createNode('cpp:number_literal', { value: '3' }, {})],
+            left: [createNode('cpp:literal_number', { value: '5' }, {})],
+            right: [createNode('cpp:literal_number', { value: '3' }, {})],
           })],
         })]
       })
@@ -173,8 +173,8 @@ describe('Interpreter - logic', () => {
       createNode('cpp:print', {}, {
         values: [createNode('cpp:logic_not', {}, {
           operand: [createNode('cpp:compare', { operator: '>' }, {
-            left: [createNode('cpp:number_literal', { value: '5' }, {})],
-            right: [createNode('cpp:number_literal', { value: '3' }, {})],
+            left: [createNode('cpp:literal_number', { value: '5' }, {})],
+            right: [createNode('cpp:literal_number', { value: '3' }, {})],
           })],
         })]
       })
@@ -188,16 +188,16 @@ describe('Interpreter - control flow', () => {
   it('should execute if (true branch)', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '5' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
       createNode('cpp:if', {}, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
           left: [createNode('cpp:var_ref', { name: 'x' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })],
         then_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'positive' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'positive' }, {})]
           })
         ],
       })
@@ -208,21 +208,21 @@ describe('Interpreter - control flow', () => {
   it('should execute if with else_body', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '-1' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '-1' }, {})]
       }),
       createNode('cpp:if', {}, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
           left: [createNode('cpp:var_ref', { name: 'x' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })],
         then_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'positive' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'positive' }, {})]
           })
         ],
         else_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'non-positive' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'non-positive' }, {})]
           })
         ],
       })
@@ -232,9 +232,9 @@ describe('Interpreter - control flow', () => {
 
   it('should execute count_loop', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '3' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '3' }, {})],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
@@ -248,12 +248,12 @@ describe('Interpreter - control flow', () => {
   it('should execute while_loop', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '3' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '3' }, {})]
       }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
           left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })],
         body: [
           createNode('cpp:print', {}, {
@@ -262,7 +262,7 @@ describe('Interpreter - control flow', () => {
           createNode('cpp:var_assign', { obj: 'n' }, {
             value: [createNode('cpp:arithmetic', { operator: '-' }, {
               left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-              right: [createNode('cpp:number_literal', { value: '1' }, {})],
+              right: [createNode('cpp:literal_number', { value: '1' }, {})],
             })]
           }),
         ],
@@ -273,14 +273,14 @@ describe('Interpreter - control flow', () => {
 
   it('should handle break in loop', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '10' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '10' }, {})],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '>' }, {
               left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-              right: [createNode('cpp:number_literal', { value: '3' }, {})],
+              right: [createNode('cpp:literal_number', { value: '3' }, {})],
             })],
             then_body: [createNode('cpp:break', {}, {})],
           }),
@@ -295,14 +295,14 @@ describe('Interpreter - control flow', () => {
 
   it('should handle continue in loop', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '5' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '5' }, {})],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '==' }, {
               left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-              right: [createNode('cpp:number_literal', { value: '3' }, {})],
+              right: [createNode('cpp:literal_number', { value: '3' }, {})],
             })],
             then_body: [createNode('cpp:continue', {}, {})],
           }),
@@ -323,7 +323,7 @@ describe('Interpreter - functions', () => {
       createNode('cpp:func_def', { name: 'greet', return_type: 'void', params: '[]' }, {
         body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'hi' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'hi' }, {})]
           })
         ]
       }),
@@ -343,14 +343,14 @@ describe('Interpreter - functions', () => {
           createNode('cpp:return', {}, {
             value: [createNode('cpp:arithmetic', { operator: '*' }, {
               left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-              right: [createNode('cpp:number_literal', { value: '2' }, {})],
+              right: [createNode('cpp:literal_number', { value: '2' }, {})],
             })]
           })
         ]
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:func_call', { name: 'double' }, {
-          args: [createNode('cpp:number_literal', { value: '7' }, {})]
+          args: [createNode('cpp:literal_number', { value: '7' }, {})]
         })]
       }),
     ])
@@ -368,11 +368,11 @@ describe('Interpreter - functions', () => {
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '<=' }, {
               left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-              right: [createNode('cpp:number_literal', { value: '1' }, {})],
+              right: [createNode('cpp:literal_number', { value: '1' }, {})],
             })],
             then_body: [
               createNode('cpp:return', {}, {
-                value: [createNode('cpp:number_literal', { value: '1' }, {})]
+                value: [createNode('cpp:literal_number', { value: '1' }, {})]
               })
             ],
           }),
@@ -382,7 +382,7 @@ describe('Interpreter - functions', () => {
               right: [createNode('cpp:func_call', { name: 'fact' }, {
                 args: [createNode('cpp:arithmetic', { operator: '-' }, {
                   left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-                  right: [createNode('cpp:number_literal', { value: '1' }, {})],
+                  right: [createNode('cpp:literal_number', { value: '1' }, {})],
                 })]
               })],
             })]
@@ -391,7 +391,7 @@ describe('Interpreter - functions', () => {
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:func_call', { name: 'fact' }, {
-          args: [createNode('cpp:number_literal', { value: '5' }, {})]
+          args: [createNode('cpp:literal_number', { value: '5' }, {})]
         })]
       }),
     ])
@@ -406,7 +406,7 @@ describe('Interpreter - arrays', () => {
       createNode('cpp:array_declare', { name: 'arr', type: 'int', size: '3' }, {}),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:array_access', { obj: 'arr' }, {
-          index: [createNode('cpp:number_literal', { value: '0' }, {})]
+          index: [createNode('cpp:literal_number', { value: '0' }, {})]
         })]
       })
     ])
@@ -428,8 +428,8 @@ describe('Interpreter - edge cases', () => {
     await expect(run([
       createNode('cpp:print', {}, {
         values: [createNode('cpp:arithmetic', { operator: '/' }, {
-          left: [createNode('cpp:number_literal', { value: '5' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          left: [createNode('cpp:literal_number', { value: '5' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })]
       })
     ])).rejects.toThrow(RuntimeError)
@@ -439,14 +439,14 @@ describe('Interpreter - edge cases', () => {
     const interp = new SemanticInterpreter({ maxSteps: 10 })
     await expect(
       interp.execute(makeProgram([
-        createNode('cpp:while_loop', {}, {
+        createNode('cpp:loop_while', {}, {
           condition: [createNode('cpp:compare', { operator: '>' }, {
-            left: [createNode('cpp:number_literal', { value: '1' }, {})],
-            right: [createNode('cpp:number_literal', { value: '0' }, {})],
+            left: [createNode('cpp:literal_number', { value: '1' }, {})],
+            right: [createNode('cpp:literal_number', { value: '0' }, {})],
           })],
           body: [
             createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-              initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+              initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
             }),
           ],
         })
@@ -462,7 +462,7 @@ describe('Interpreter - edge cases', () => {
       createNode('cpp:include' as any, { header: 'iostream' }, {}),
       createNode('cpp:using_namespace' as any, { namespace: 'std' }, {}),
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'ok' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'ok' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('ok')
@@ -491,7 +491,7 @@ describe('Interpreter - input', () => {
       createNode('cpp:print', {}, {
         values: [createNode('cpp:arithmetic', { operator: '+' }, {
           left: [createNode('cpp:var_ref', { name: 'n' }, {})],
-          right: [createNode('cpp:number_literal', { value: '1' }, {})],
+          right: [createNode('cpp:literal_number', { value: '1' }, {})],
         })]
       })
     ], ['10'])
@@ -547,7 +547,7 @@ describe('Interpreter - input', () => {
       }),
       createNode('cpp:print', {}, {
         values: [
-          createNode('cpp:string_literal', { value: 'hello, ' }, {}),
+          createNode('cpp:literal_string', { value: 'hello, ' }, {}),
           createNode('cpp:var_ref', { name: 's' }, {}),
         ]
       })
@@ -561,15 +561,15 @@ describe('Interpreter - cpp_for_loop', () => {
   it('should execute basic three-part for loop', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_assign', { obj: 'i' }, {
-          value: [createNode('cpp:number_literal', { value: '0' }, {})]
+          value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-          right: [createNode('cpp:number_literal', { value: '3' }, {})],
+          right: [createNode('cpp:literal_number', { value: '3' }, {})],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
@@ -585,22 +585,22 @@ describe('Interpreter - cpp_for_loop', () => {
   it('should handle break in three-part for loop', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_assign', { obj: 'i' }, {
-          value: [createNode('cpp:number_literal', { value: '0' }, {})]
+          value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-          right: [createNode('cpp:number_literal', { value: '10' }, {})],
+          right: [createNode('cpp:literal_number', { value: '10' }, {})],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '==' }, {
               left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-              right: [createNode('cpp:number_literal', { value: '3' }, {})],
+              right: [createNode('cpp:literal_number', { value: '3' }, {})],
             })],
             then_body: [createNode('cpp:break', {}, {})],
           }),
@@ -616,22 +616,22 @@ describe('Interpreter - cpp_for_loop', () => {
   it('should handle continue in three-part for loop', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_assign', { obj: 'i' }, {
-          value: [createNode('cpp:number_literal', { value: '0' }, {})]
+          value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-          right: [createNode('cpp:number_literal', { value: '5' }, {})],
+          right: [createNode('cpp:literal_number', { value: '5' }, {})],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '==' }, {
               left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-              right: [createNode('cpp:number_literal', { value: '2' }, {})],
+              right: [createNode('cpp:literal_number', { value: '2' }, {})],
             })],
             then_body: [createNode('cpp:continue', {}, {})],
           }),
@@ -647,15 +647,15 @@ describe('Interpreter - cpp_for_loop', () => {
   it('should handle empty body for loop', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_assign', { obj: 'i' }, {
-          value: [createNode('cpp:number_literal', { value: '0' }, {})]
+          value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
-          right: [createNode('cpp:number_literal', { value: '3' }, {})],
+          right: [createNode('cpp:literal_number', { value: '3' }, {})],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
         body: [],
@@ -670,9 +670,9 @@ describe('Interpreter - cpp_for_loop', () => {
 describe('Interpreter - count_loop inclusive/exclusive', () => {
   it('should execute exclusive count_loop (default)', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '3' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '3' }, {})],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
@@ -685,9 +685,9 @@ describe('Interpreter - count_loop inclusive/exclusive', () => {
 
   it('should execute exclusive count_loop (explicit FALSE)', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'FALSE' }, {
-        from: [createNode('cpp:number_literal', { value: '0' }, {})],
-        to: [createNode('cpp:number_literal', { value: '5' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'FALSE' }, {
+        from: [createNode('cpp:literal_number', { value: '0' }, {})],
+        to: [createNode('cpp:literal_number', { value: '5' }, {})],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
@@ -703,18 +703,18 @@ describe('Interpreter - count_loop inclusive/exclusive', () => {
 describe('Interpreter - nested loops', () => {
   it('should break only inner loop', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '3' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '3' }, {})],
         body: [
-          createNode('cpp:count_loop', { var_name: 'j', inclusive: 'TRUE' }, {
-            from: [createNode('cpp:number_literal', { value: '1' }, {})],
-            to: [createNode('cpp:number_literal', { value: '3' }, {})],
+          createNode('cpp:loop_count', { var_name: 'j', inclusive: 'TRUE' }, {
+            from: [createNode('cpp:literal_number', { value: '1' }, {})],
+            to: [createNode('cpp:literal_number', { value: '3' }, {})],
             body: [
               createNode('cpp:if', {}, {
                 condition: [createNode('cpp:compare', { operator: '==' }, {
                   left: [createNode('cpp:var_ref', { name: 'j' }, {})],
-                  right: [createNode('cpp:number_literal', { value: '2' }, {})],
+                  right: [createNode('cpp:literal_number', { value: '2' }, {})],
                 })],
                 then_body: [createNode('cpp:break', {}, {})],
               }),
@@ -732,18 +732,18 @@ describe('Interpreter - nested loops', () => {
 
   it('should continue only inner loop', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '2' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '2' }, {})],
         body: [
-          createNode('cpp:count_loop', { var_name: 'j', inclusive: 'TRUE' }, {
-            from: [createNode('cpp:number_literal', { value: '1' }, {})],
-            to: [createNode('cpp:number_literal', { value: '3' }, {})],
+          createNode('cpp:loop_count', { var_name: 'j', inclusive: 'TRUE' }, {
+            from: [createNode('cpp:literal_number', { value: '1' }, {})],
+            to: [createNode('cpp:literal_number', { value: '3' }, {})],
             body: [
               createNode('cpp:if', {}, {
                 condition: [createNode('cpp:compare', { operator: '==' }, {
                   left: [createNode('cpp:var_ref', { name: 'j' }, {})],
-                  right: [createNode('cpp:number_literal', { value: '2' }, {})],
+                  right: [createNode('cpp:literal_number', { value: '2' }, {})],
                 })],
                 then_body: [createNode('cpp:continue', {}, {})],
               }),
@@ -765,7 +765,7 @@ describe('Interpreter - string escape sequences', () => {
   it('should unescape \\n in string literal', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'a\\nb' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'a\\nb' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('a\nb')
@@ -774,7 +774,7 @@ describe('Interpreter - string escape sequences', () => {
   it('should unescape \\t in string literal', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'a\\tb' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'a\\tb' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('a\tb')
@@ -783,7 +783,7 @@ describe('Interpreter - string escape sequences', () => {
   it('should unescape \\\\ in string literal', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'a\\\\b' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'a\\\\b' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('a\\b')
@@ -792,7 +792,7 @@ describe('Interpreter - string escape sequences', () => {
   it('should unescape \\0 in string literal', async () => {
     const interp = await run([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'a\\0b' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'a\\0b' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('a\0b')
@@ -804,11 +804,11 @@ describe('Interpreter - scope and shadowing', () => {
   it('should isolate loop variable from outer scope', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '99' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '99' }, {})]
       }),
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '2' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '2' }, {})],
         body: [],
       }),
       createNode('cpp:print', {}, {
@@ -821,18 +821,18 @@ describe('Interpreter - scope and shadowing', () => {
 
   it('should allow reusing loop variable in sequential loops', async () => {
     const interp = await run([
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '1' }, {})],
-        to: [createNode('cpp:number_literal', { value: '2' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '1' }, {})],
+        to: [createNode('cpp:literal_number', { value: '2' }, {})],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
           })
         ],
       }),
-      createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-        from: [createNode('cpp:number_literal', { value: '3' }, {})],
-        to: [createNode('cpp:number_literal', { value: '4' }, {})],
+      createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+        from: [createNode('cpp:literal_number', { value: '3' }, {})],
+        to: [createNode('cpp:literal_number', { value: '4' }, {})],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
@@ -850,8 +850,8 @@ describe('Interpreter - more edge cases', () => {
     await expect(run([
       createNode('cpp:print', {}, {
         values: [createNode('cpp:arithmetic', { operator: '%' }, {
-          left: [createNode('cpp:number_literal', { value: '5' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          left: [createNode('cpp:literal_number', { value: '5' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })]
       })
     ])).rejects.toThrow(RuntimeError)
@@ -861,12 +861,12 @@ describe('Interpreter - more edge cases', () => {
     const interp = await run([
       createNode('cpp:if', {}, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
-          left: [createNode('cpp:number_literal', { value: '1' }, {})],
-          right: [createNode('cpp:number_literal', { value: '5' }, {})],
+          left: [createNode('cpp:literal_number', { value: '1' }, {})],
+          right: [createNode('cpp:literal_number', { value: '5' }, {})],
         })],
         then_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'nope' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'nope' }, {})]
           })
         ],
       })
@@ -877,17 +877,17 @@ describe('Interpreter - more edge cases', () => {
   it('should handle empty while loop body', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
           left: [createNode('cpp:var_ref', { name: 'x' }, {})],
-          right: [createNode('cpp:number_literal', { value: '0' }, {})],
+          right: [createNode('cpp:literal_number', { value: '0' }, {})],
         })],
         body: [],
       }),
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'done' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'done' }, {})]
       })
     ])
     expect(interp.getOutput().join('')).toBe('done')
@@ -904,7 +904,7 @@ describe('Interpreter - more edge cases', () => {
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '<' }, {
               left: [createNode('cpp:var_ref', { name: 'x' }, {})],
-              right: [createNode('cpp:number_literal', { value: '0' }, {})],
+              right: [createNode('cpp:literal_number', { value: '0' }, {})],
             })],
             then_body: [
               createNode('cpp:return', {}, {
@@ -921,7 +921,7 @@ describe('Interpreter - more edge cases', () => {
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:func_call', { name: 'abs_val' }, {
-          args: [createNode('cpp:negate', {}, { value: [createNode('cpp:number_literal', { value: '7' }, {})] })]
+          args: [createNode('cpp:negate', {}, { value: [createNode('cpp:literal_number', { value: '7' }, {})] })]
         })]
       }),
     ])
@@ -941,7 +941,7 @@ describe('Interpreter - more edge cases', () => {
       createNode('cpp:print', {}, {
         values: [
           createNode('cpp:var_ref', { name: 'a' }, {}),
-          createNode('cpp:string_literal', { value: ' ' }, {}),
+          createNode('cpp:literal_string', { value: ' ' }, {}),
           createNode('cpp:var_ref', { name: 'b' }, {}),
         ]
       })
@@ -964,9 +964,9 @@ describe('Interpreter - more edge cases', () => {
       createNode('cpp:print', {}, {
         values: [
           createNode('cpp:var_ref', { name: 'a' }, {}),
-          createNode('cpp:string_literal', { value: ' ' }, {}),
+          createNode('cpp:literal_string', { value: ' ' }, {}),
           createNode('cpp:var_ref', { name: 'b' }, {}),
-          createNode('cpp:string_literal', { value: ' ' }, {}),
+          createNode('cpp:literal_string', { value: ' ' }, {}),
           createNode('cpp:var_ref', { name: 'c' }, {}),
         ]
       })
@@ -977,15 +977,15 @@ describe('Interpreter - more edge cases', () => {
   it('should handle boolean-like logic with numbers', async () => {
     const interp = await run([
       createNode('cpp:if', {}, {
-        condition: [createNode('cpp:number_literal', { value: '0' }, {})],
+        condition: [createNode('cpp:literal_number', { value: '0' }, {})],
         then_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'yes' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'yes' }, {})]
           })
         ],
         else_body: [
           createNode('cpp:print', {}, {
-            values: [createNode('cpp:string_literal', { value: 'no' }, {})]
+            values: [createNode('cpp:literal_string', { value: 'no' }, {})]
           })
         ],
       })
@@ -996,10 +996,10 @@ describe('Interpreter - more edge cases', () => {
   it('should handle compound assignment operators', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '10' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
       createNode('compound_assign', { name: 'x', operator: '+=' }, {
-        value: [createNode('cpp:number_literal', { value: '5' }, {})]
+        value: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:var_ref', { name: 'x' }, {})]
@@ -1011,7 +1011,7 @@ describe('Interpreter - more edge cases', () => {
   it('should handle cpp_increment', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '5' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
       createNode('cpp:increment', { name: 'n', operator: '++', position: 'postfix' }, {}),
       createNode('cpp:print', {}, {
@@ -1025,7 +1025,7 @@ describe('Interpreter - more edge cases', () => {
     const interp = await run([
       createNode('cpp:print', {}, {
         values: [createNode('cpp:negate', {}, {
-          value: [createNode('cpp:number_literal', { value: '42' }, {})]
+          value: [createNode('cpp:literal_number', { value: '42' }, {})]
         })]
       })
     ])
@@ -1037,13 +1037,13 @@ describe('Interpreter - expression concepts in for-loop', () => {
   it('should handle var_declare_expr in for-loop init', async () => {
     // for (int i = 0; i < 3; i++) { print i }
     const interp = await run([
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_declare', { type: 'int', name: 'i' }, {
-          initializer: [createNode('cpp:number_literal', { value: '0' })],
+          initializer: [createNode('cpp:literal_number', { value: '0' })],
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' })],
-          right: [createNode('cpp:number_literal', { value: '3' })],
+          right: [createNode('cpp:literal_number', { value: '3' })],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
         body: [createNode('cpp:print', {}, {
@@ -1058,13 +1058,13 @@ describe('Interpreter - expression concepts in for-loop', () => {
     // var i = 0; for(;;i++) { if i>=3 break; } print i → 3
     const interp = await run([
       createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' })],
+        initializer: [createNode('cpp:literal_number', { value: '0' })],
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [],
         cond: [createNode('cpp:compare', { operator: '<' }, {
           left: [createNode('cpp:var_ref', { name: 'i' })],
-          right: [createNode('cpp:number_literal', { value: '3' })],
+          right: [createNode('cpp:literal_number', { value: '3' })],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
         body: [],
@@ -1081,15 +1081,15 @@ describe('Interpreter - expression concepts in for-loop', () => {
     // Simpler: var s = 0; for(int i=1; i<=3; i++) { s += i } print s → 6
     const interp = await run([
       createNode('cpp:var_declare', { name: 's', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' })],
+        initializer: [createNode('cpp:literal_number', { value: '0' })],
       }),
-      createNode('cpp:for_loop', {}, {
+      createNode('cpp:loop_for', {}, {
         init: [createNode('cpp:var_declare', { type: 'int', name: 'i' }, {
-          initializer: [createNode('cpp:number_literal', { value: '1' })],
+          initializer: [createNode('cpp:literal_number', { value: '1' })],
         })],
         cond: [createNode('cpp:compare', { operator: '<=' }, {
           left: [createNode('cpp:var_ref', { name: 'i' })],
-          right: [createNode('cpp:number_literal', { value: '3' })],
+          right: [createNode('cpp:literal_number', { value: '3' })],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
         body: [createNode('cpp:compound_assign', { name: 's', operator: '+=' }, {
@@ -1107,7 +1107,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
     // while (scanf("%d", &n) != EOF) { print n }
     const interp = await run([
       createNode('cpp:var_declare', { name: 'n', type: 'int' }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
           left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],
@@ -1163,7 +1163,7 @@ describe('Interpreter - builtin_constant', () => {
   it('should use builtin_constant in condition (while != EOF)', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'n', type: 'int' }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
           left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],
@@ -1182,12 +1182,12 @@ describe('Interpreter - builtin_constant', () => {
     const interp = await run([
       createNode('cpp:array_declare', { name: 'flags', type: 'bool', size: '3' }),
       createNode('cpp:array_assign', { obj: 'flags' }, {
-        index: [createNode('cpp:number_literal', { value: '0' })],
+        index: [createNode('cpp:literal_number', { value: '0' })],
         value: [createNode('cpp:builtin_constant', { value: 'true' })],
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:array_access', { obj: 'flags' }, {
-          index: [createNode('cpp:number_literal', { value: '0' })],
+          index: [createNode('cpp:literal_number', { value: '0' })],
         })],
       }),
     ])
@@ -1199,10 +1199,10 @@ describe('Interpreter - abort', () => {
   it('should abort a running infinite loop', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 10_000_000 })
     const program = makeProgram([
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:builtin_constant', { value: 'true' })],
         body: [createNode('cpp:print', {}, {
-          values: [createNode('cpp:string_literal', { value: 'x' })],
+          values: [createNode('cpp:literal_string', { value: 'x' })],
         })],
       }),
     ])
@@ -1243,10 +1243,10 @@ describe('Interpreter - abort', () => {
     const program = makeProgram([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }),
       createNode('cpp:var_declare', { name: 'sum', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' })],
+        initializer: [createNode('cpp:literal_number', { value: '0' })],
       }),
       // while (cin >> x) { sum = sum + x; }
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:input', {}, {
           values: [createNode('cpp:var_ref', { name: 'x' })],
         })],
@@ -1273,7 +1273,7 @@ describe('Interpreter - abort', () => {
     const program = makeProgram([
       createNode('cpp:var_declare', { name: 'n', type: 'int' }),
       // while (scanf("%d", &n) != EOF) { print n; }
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
           left: [createNode('cpp:scanf', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],

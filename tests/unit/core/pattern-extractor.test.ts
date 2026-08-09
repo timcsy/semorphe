@@ -89,7 +89,7 @@ describe('PatternExtractor', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:number_literal',
+          conceptId: 'cpp:literal_number',
           properties: ['value'],
           role: 'expression',
         },
@@ -124,7 +124,7 @@ describe('PatternExtractor', () => {
       expect(result).not.toBeNull()
       expect(result!.conceptId).toBe('cpp:return')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
+      expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
       expect(result!.children.value[0].properties.value).toBe('42')
     })
   })
@@ -138,7 +138,7 @@ describe('PatternExtractor', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:while_loop',
+          conceptId: 'cpp:loop_while',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -204,7 +204,7 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:while_loop')
+      expect(result!.conceptId).toBe('cpp:loop_while')
       expect(result!.children.body).toHaveLength(2)
       expect(result!.children.body[0].conceptId).toBe('cpp:break')
       expect(result!.children.body[1].conceptId).toBe('cpp:continue')

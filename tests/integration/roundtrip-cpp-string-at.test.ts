@@ -72,7 +72,7 @@ function findConcepts(node: SemanticNode, target: string): SemanticNode[] {
 
 describe('cpp_string_at generate direction', () => {
   it('t01: generates str[0] for literal index', () => {
-    const idx = createNode('cpp:number_literal', { value: '1' })
+    const idx = createNode('cpp:literal_number', { value: '1' })
     const node = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
     const prog = { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
@@ -214,9 +214,9 @@ int main() {
 
   it('t10: cpp_string_at generates correct code and is compilable', () => {
     // Verify the generate direction: cpp_string_at → str[i]
-    const idx = createNode('cpp:number_literal', { value: '2' })
+    const idx = createNode('cpp:literal_number', { value: '2' })
     const strDecl = createNode('cpp:string_declare', { name: 'word' }, {
-      initializer: [createNode('cpp:string_literal', { value: 'hello' })]
+      initializer: [createNode('cpp:literal_string', { value: 'hello' })]
     })
     const access = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
     const print = createNode('cpp:print', {}, { values: [access] })

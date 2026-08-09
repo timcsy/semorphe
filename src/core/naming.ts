@@ -27,6 +27,14 @@ export interface NamingVocabulary {
   subjects: readonly string[]
   /** 操作——**封閉集合**，同一個操作在任何主體上用同一個字 */
   operations: readonly string[]
+  /**
+   * 種類——**名詞性的種差**（`literal_char` 的 `char`、`loop_while` 的 `while`）。
+   *
+   * ⚠️ 「屬 ＋ 種差」的種差不一定是操作。有些元件是**東西**不是動作：
+   * 一個 `literal` 不對誰做事，它只是某一種字面值。第一版只有 `operations`，
+   * 於是 `literal_char` 會因為 `char` 不是操作而被誤報。
+   */
+  kinds: readonly string[]
   /** 修飾詞——**不得站在主體的位置**（該是參數或形態） */
   modifiers: readonly string[]
   /** 允許的單字名——語言構造（`switch`／`lambda`），不含抄來的函式庫名 */

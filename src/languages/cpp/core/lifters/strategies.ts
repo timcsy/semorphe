@@ -622,7 +622,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const container = rightNode?.text ?? 'vec'
     const bodyNode = node.childForFieldName('body') ?? node.namedChildren.find(c => c.type === 'compound_statement') ?? null
     const body = extractBody(bodyNode, ctx)
-    return createNode('cpp:range_for', { var_type: varType, var_name: varName, container }, { body })
+    return createNode('cpp:loop_range', { var_type: varType, var_name: varName, container }, { body })
   })
 
   // declaration: multi-variable + array declarations
@@ -996,7 +996,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const to = toNode ? ctx.lift(toNode) : null
     const body = extractBody(bodyNode, ctx)
 
-    return createNode('cpp:count_loop', { var_name: varName, inclusive }, {
+    return createNode('cpp:loop_count', { var_name: varName, inclusive }, {
       from: from ? [from] : [],
       to: to ? [to] : [],
       body,

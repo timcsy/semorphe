@@ -271,7 +271,7 @@ describe('Style Exception Conversion', () => {
     const tree = makeProgram([
       createNode('cpp:print', {}, {
         values: [
-          createNode('cpp:string_literal', { value: 'hello' }),
+          createNode('cpp:literal_string', { value: 'hello' }),
           createNode('cpp:var_ref', { name: 'x' }),
         ],
       }),

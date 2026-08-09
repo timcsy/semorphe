@@ -67,7 +67,7 @@ async function runCode(code: string, stdin: string[] = []) {
 }
 
 // ─── number_literal ───
-describe('cpp:number_literal', () => {
+describe('cpp:literal_number', () => {
   it('integer literal roundtrip', () => {
     const code = roundTrip('int x = 42;')
     expect(code).toContain('42')
@@ -108,14 +108,14 @@ describe('cpp:number_literal', () => {
 })
 
 // ─── string_literal ───
-describe('cpp:string_literal', () => {
+describe('cpp:literal_string', () => {
   it('simple string roundtrip', () => {
     const sem = liftCode('"hello"')
     expect(sem).not.toBeNull()
     // string_literal should have value: hello
     const body = sem!.children.body ?? []
     const node = body[0]
-    expect(node.conceptId).toBe('cpp:string_literal')
+    expect(node.conceptId).toBe('cpp:literal_string')
     expect(node.properties.value).toBe('hello')
   })
 

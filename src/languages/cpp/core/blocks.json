@@ -1,7 +1,7 @@
 [
   {
     "id": "c_char_literal",
-    "conceptId": "cpp:char_literal",
+    "conceptId": "cpp:literal_char",
     "language": "cpp",
     "category": "values",
     "version": "1.0.0",
@@ -595,7 +595,7 @@
   },
   {
     "id": "c_for_loop",
-    "conceptId": "cpp:for_loop",
+    "conceptId": "cpp:loop_for",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
@@ -676,7 +676,7 @@
   },
   {
     "id": "c_do_while",
-    "conceptId": "cpp:do_while",
+    "conceptId": "cpp:loop_do_while",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
@@ -2874,7 +2874,7 @@
   },
   {
     "id": "c_range_for",
-    "conceptId": "cpp:range_for",
+    "conceptId": "cpp:loop_range",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",

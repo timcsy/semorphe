@@ -92,7 +92,7 @@ describe('Auto-include engine', () => {
         createNode('cpp:if', {}, {
           condition: [createNode('cpp:compare', { operator: '==' }, {
             left: [createNode('cpp:var_ref', { name: 'x' })],
-            right: [createNode('cpp:number_literal', { value: '0' })],
+            right: [createNode('cpp:literal_number', { value: '0' })],
           })],
           then_body: [],
         }),
@@ -122,7 +122,7 @@ describe('Auto-include engine', () => {
     it('should exclude C-style equivalent of auto-included headers (math.h ≡ cmath)', () => {
       const tree = makeProgram([
         createNode('cpp:include', { header: 'math.h', local: false }),
-        createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('cpp:number_literal', { value: '4' })] }),
+        createNode('cpp_math_func', { func: 'sqrt' }, { args: [createNode('cpp:literal_number', { value: '4' })] }),
       ])
       const edges = computeAutoIncludes(tree, registry)
       expect(headers(edges)).not.toContain('<cmath>')

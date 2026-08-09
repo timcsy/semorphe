@@ -67,7 +67,7 @@ describe('Topic-Based Block Visibility', () => {
     it('should show control flow concepts when L1b enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1b']))
       expect(concepts.has('cpp:switch')).toBe(true)
-      expect(concepts.has('cpp:do_while')).toBe(true)
+      expect(concepts.has('cpp:loop_do_while')).toBe(true)
     })
 
     it('should show pointer concepts when L2b enabled', () => {

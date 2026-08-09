@@ -182,8 +182,8 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
       const tree = createNode('cpp:program', {}, {
         body: [
           createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:number_literal', { value: '1' }, {})] }),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:number_literal', { value: '2' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:literal_number', { value: '1' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:literal_number', { value: '2' }, {})] }),
           createNode('cpp:print', {}, { values: [createNode('cpp:stack_top', { obj: 's' }, {})] }),
         ],
       })

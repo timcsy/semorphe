@@ -109,7 +109,7 @@ export function registerExecutors(
     }
   })
 
-  register('cpp:to_string', async (node, ctx) => {
+  register('cpp:string_make', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'string', value: '' }
     const val = await ctx.evaluate(valueNodes[0])

@@ -56,7 +56,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('for (auto x : vec) {\n    cout << x;\n}')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp:range_for')
+    expect(body[0].conceptId).toBe('cpp:loop_range')
     expect(body[0].properties.var_type).toBe('auto')
     expect(body[0].properties.var_name).toBe('x')
     expect(body[0].properties.container).toBe('vec')
@@ -69,7 +69,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const tree = liftCode('for (int n : arr) {\n    cout << n;\n}')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp:range_for')
+    expect(body[0].conceptId).toBe('cpp:loop_range')
     expect(body[0].properties.var_type).toBe('int')
 
     const code = generateCode(tree!, 'cpp', style)

@@ -21,7 +21,7 @@ export class ThrownSignal {
 export function registerControlFlowCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:for_loop', async (node, ctx) => {
+  register('cpp:loop_for', async (node, ctx) => {
     const body = node.children.body ?? []
     const parentScope = ctx.scope
     const forScope = parentScope.createChild()
@@ -58,7 +58,7 @@ export function registerControlFlowCoreExecutors(
     ctx.scope = parentScope
   })
 
-  register('cpp:do_while', async (node, ctx) => {
+  register('cpp:loop_do_while', async (node, ctx) => {
     const body = node.children.body ?? []
     const condNodes = node.children.cond ?? []
     const parentScope = ctx.scope
@@ -107,7 +107,7 @@ export function registerControlFlowCoreExecutors(
     }
   })
 
-  register('cpp:range_for', async (node, ctx) => {
+  register('cpp:loop_range', async (node, ctx) => {
     const varName = String(node.properties.var_name ?? 'x')
     const containerName = String(node.properties.container ?? 'vec')
     const body = node.children.body ?? []

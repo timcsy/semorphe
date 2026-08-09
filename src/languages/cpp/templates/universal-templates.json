@@ -1,11 +1,11 @@
 [
   {
-    "conceptId": "cpp:number_literal",
+    "conceptId": "cpp:literal_number",
     "pattern": "${value}",
     "order": 20
   },
   {
-    "conceptId": "cpp:string_literal",
+    "conceptId": "cpp:literal_string",
     "pattern": "${value}",
     "order": 20
   },
@@ -70,12 +70,12 @@
     "order": 0
   },
   {
-    "conceptId": "cpp:while_loop",
+    "conceptId": "cpp:loop_while",
     "pattern": "while (${condition}) {\n${body}\n}",
     "order": 0
   },
   {
-    "conceptId": "cpp:count_loop",
+    "conceptId": "cpp:loop_count",
     "pattern": "for (int ${var_name} = ${from}; ${var_name} < ${to}; ${var_name}++) {\n${body}\n}",
     "order": 0
   },

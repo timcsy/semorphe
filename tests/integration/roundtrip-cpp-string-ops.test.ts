@@ -262,13 +262,13 @@ describe('C++ String Operations Roundtrip', () => {
 
   // ─── 7. cpp_to_string ─────────────────────────────────────
 
-  describe('cpp:to_string', () => {
+  describe('cpp:string_make', () => {
     const code = 'int n = 42;\nstring s = to_string(n);'
 
     it('should lift to cpp_to_string concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:to_string')
+      const node = findConcept(tree, 'cpp:string_make')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -282,7 +282,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:to_string')
+      const node2 = findConcept(tree2, 'cpp:string_make')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -552,7 +552,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts.has('cpp:string_find')).toBe(true)
       expect(concepts.has('cpp:string_append')).toBe(true)
       expect(concepts.has('cpp:getline')).toBe(true)
-      expect(concepts.has('cpp:to_string')).toBe(true)
+      expect(concepts.has('cpp:string_make')).toBe(true)
       expect(concepts.has('cpp:stoi')).toBe(true)
       expect(concepts.has('cpp:stod')).toBe(true)
       expect(concepts.has('cpp:string_erase')).toBe(true)
@@ -587,7 +587,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts2.has('cpp:string_length')).toBe(true)
       expect(concepts2.has('cpp:string_substr')).toBe(true)
       expect(concepts2.has('cpp:string_find')).toBe(true)
-      expect(concepts2.has('cpp:to_string')).toBe(true)
+      expect(concepts2.has('cpp:string_make')).toBe(true)
       expect(concepts2.has('cpp:stoi')).toBe(true)
       expect(concepts2.has('cpp:stod')).toBe(true)
       expect(concepts2.has('cpp:string_append')).toBe(true)

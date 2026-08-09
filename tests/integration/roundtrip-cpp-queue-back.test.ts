@@ -39,7 +39,7 @@ function makeProgram(body: SemanticNode[]): SemanticNode {
 }
 
 function num(v: number): SemanticNode {
-  return createNode('cpp:number_literal', { value: String(v) }, {})
+  return createNode('cpp:literal_number', { value: String(v) }, {})
 }
 
 async function runInterpreter(body: SemanticNode[]): Promise<string> {

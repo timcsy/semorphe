@@ -111,7 +111,7 @@ describe('PatternRenderer', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:number_literal',
+          conceptId: 'cpp:literal_number',
           properties: ['value'],
           role: 'expression',
         },
@@ -126,7 +126,7 @@ describe('PatternRenderer', () => {
 
       renderer.loadBlockSpecs([spec, numSpec])
 
-      const valNode = createNode('cpp:number_literal', { value: '42' })
+      const valNode = createNode('cpp:literal_number', { value: '42' })
       const retNode = createNode('cpp:return', {}, { value: [valNode] })
       const result = renderer.render(retNode)
 
@@ -147,7 +147,7 @@ describe('PatternRenderer', () => {
         level: 0,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:while_loop',
+          conceptId: 'cpp:loop_while',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -177,7 +177,7 @@ describe('PatternRenderer', () => {
 
       const condNode = createNode('cpp:var_ref', { name: 'x' })
       const bodyNode = createNode('cpp:break', {})
-      const whileNode = createNode('cpp:while_loop', {}, {
+      const whileNode = createNode('cpp:loop_while', {}, {
         condition: [condNode],
         body: [bodyNode],
       })

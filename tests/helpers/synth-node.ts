@@ -88,7 +88,7 @@ function fillerFor(slotType: string): SemanticNode {
   if (t.includes('statement') || t.includes('body') || t.includes('block')) {
     return createNode('cpp:var_declare', { name: 'x', type: 'int' })
   }
-  return createNode('cpp:number_literal', { value: '1' })
+  return createNode('cpp:literal_number', { value: '1' })
 }
 
 export interface SynthResult {

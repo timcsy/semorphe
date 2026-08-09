@@ -33,7 +33,7 @@ describe('Lifter', () => {
     const node = mockNode('number_literal', '42')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:number_literal')
+    expect(result!.conceptId).toBe('cpp:literal_number')
     expect(result!.properties.value).toBe('42')
   })
 
@@ -49,7 +49,7 @@ describe('Lifter', () => {
     const node = mockNode('string_literal', '"hello"')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:string_literal')
+    expect(result!.conceptId).toBe('cpp:literal_string')
     expect(result!.properties.value).toBe('hello')
   })
 
@@ -128,7 +128,7 @@ describe('Lifter', () => {
     expect(result).not.toBeNull()
     expect(result!.conceptId).toBe('cpp:return')
     expect(result!.children.value).toHaveLength(1)
-    expect(result!.children.value[0].conceptId).toBe('cpp:number_literal')
+    expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
   })
 
   it('should lift break_statement and continue_statement', () => {

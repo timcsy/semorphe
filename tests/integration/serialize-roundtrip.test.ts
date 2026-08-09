@@ -44,13 +44,13 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const ifElse = createNode('cpp:if', {}, {
       condition: [createNode('cpp:compare', { operator: '>' }, {
         left: [createNode('cpp:var_ref', { name: 'a' })],
-        right: [createNode('cpp:number_literal', { value: '0' })],
+        right: [createNode('cpp:literal_number', { value: '0' })],
       })],
       then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-        value: [createNode('cpp:number_literal', { value: '1' })],
+        value: [createNode('cpp:literal_number', { value: '1' })],
       })],
       else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-        value: [createNode('cpp:number_literal', { value: '2' })],
+        value: [createNode('cpp:literal_number', { value: '2' })],
       })],
     })
     const state = renderToBlocklyState(makeProgram(ifElse))
@@ -64,7 +64,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_while_loop rendered state uses CONDITION and BODY', () => {
-    const whileStmt = createNode('cpp:while_loop', {}, {
+    const whileStmt = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:var_ref', { name: 'running' })],
       body: [createNode('cpp:break', {})],
     })
@@ -78,9 +78,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('u_count_loop rendered state uses FROM, TO, BODY', () => {
-    const countLoop = createNode('cpp:count_loop', { var_name: 'i' }, {
-      from: [createNode('cpp:number_literal', { value: '0' })],
-      to: [createNode('cpp:number_literal', { value: '10' })],
+    const countLoop = createNode('cpp:loop_count', { var_name: 'i' }, {
+      from: [createNode('cpp:literal_number', { value: '0' })],
+      to: [createNode('cpp:literal_number', { value: '10' })],
       body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(countLoop))
@@ -93,7 +93,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
   })
 
   it('nested if inside while: all input names correct at both levels', () => {
-    const nested = createNode('cpp:while_loop', {}, {
+    const nested = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:var_ref', { name: 'ok' })],
       body: [
         createNode('cpp:if', {}, {
@@ -121,29 +121,29 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const ifChain = createNode('cpp:if', {}, {
       condition: [createNode('cpp:compare', { operator: '>' }, {
         left: [createNode('cpp:var_ref', { name: 'a' })],
-        right: [createNode('cpp:number_literal', { value: '0' })],
+        right: [createNode('cpp:literal_number', { value: '0' })],
       })],
       then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-        value: [createNode('cpp:number_literal', { value: '1' })],
+        value: [createNode('cpp:literal_number', { value: '1' })],
       })],
       else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
         condition: [createNode('cpp:compare', { operator: '>' }, {
           left: [createNode('cpp:var_ref', { name: 'b' })],
-          right: [createNode('cpp:number_literal', { value: '0' })],
+          right: [createNode('cpp:literal_number', { value: '0' })],
         })],
         then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-          value: [createNode('cpp:number_literal', { value: '2' })],
+          value: [createNode('cpp:literal_number', { value: '2' })],
         })],
         else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
           condition: [createNode('cpp:compare', { operator: '>' }, {
             left: [createNode('cpp:var_ref', { name: 'c' })],
-            right: [createNode('cpp:number_literal', { value: '0' })],
+            right: [createNode('cpp:literal_number', { value: '0' })],
           })],
           then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-            value: [createNode('cpp:number_literal', { value: '3' })],
+            value: [createNode('cpp:literal_number', { value: '3' })],
           })],
           else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
-            value: [createNode('cpp:number_literal', { value: '4' })],
+            value: [createNode('cpp:literal_number', { value: '4' })],
           })],
         })],
       })],

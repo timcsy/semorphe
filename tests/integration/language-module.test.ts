@@ -23,7 +23,7 @@ class MockLanguageModule implements NewLanguageModule {
   }
 
   getSupportedConcepts(): ConceptId[] {
-    return ['cpp:var_declare', 'cpp:var_assign', 'cpp:if', 'cpp:while_loop', 'cpp:func_def', 'cpp:func_call', 'cpp:print', 'cpp:input']
+    return ['cpp:var_declare', 'cpp:var_assign', 'cpp:if', 'cpp:loop_while', 'cpp:func_def', 'cpp:func_call', 'cpp:print', 'cpp:input']
   }
 
   getAdditionalConcepts() { return [] }

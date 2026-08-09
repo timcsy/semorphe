@@ -47,14 +47,14 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     expect(result!.conceptId).toBe('cpp:func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('cpp:number_literal')
+    expect(result!.children.args[0].conceptId).toBe('cpp:literal_number')
     expect(result!.children.args[1].conceptId).toBe('cpp:var_ref')
   })
 
   it('render → extract roundtrip for func_call', () => {
     const node = createNode('cpp:func_call', { name: 'sum' }, {
       args: [
-        createNode('cpp:number_literal', { value: '42' }),
+        createNode('cpp:literal_number', { value: '42' }),
         createNode('cpp:var_ref', { name: 'y' }),
       ],
     })
@@ -136,7 +136,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
   it('render → extract roundtrip for print', () => {
     const node = createNode('cpp:print', {}, {
       values: [
-        createNode('cpp:string_literal', { value: 'hi' }),
+        createNode('cpp:literal_string', { value: 'hi' }),
         createNode('cpp:var_ref', { name: 'x' }),
         createNode('cpp:endl', {}),
       ],

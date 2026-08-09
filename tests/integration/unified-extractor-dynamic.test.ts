@@ -210,7 +210,7 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     expect(result!.conceptId).toBe('test_func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(3)
-    expect(result!.children.args[0].conceptId).toBe('cpp:number_literal')
+    expect(result!.children.args[0].conceptId).toBe('cpp:literal_number')
     expect(result!.children.args[0].properties.value).toBe('1')
     expect(result!.children.args[2].conceptId).toBe('cpp:var_ref')
     expect(result!.children.args[2].properties.name).toBe('x')
@@ -381,7 +381,7 @@ describe('T011 (print): PatternExtractor dynamicRules — repeat expression (pri
     expect(result).not.toBeNull()
     expect(result!.conceptId).toBe('test_print')
     expect(result!.children.values).toHaveLength(3)
-    expect(result!.children.values[0].conceptId).toBe('cpp:string_literal')
+    expect(result!.children.values[0].conceptId).toBe('cpp:literal_string')
     expect(result!.children.values[1].conceptId).toBe('cpp:var_ref')
     expect(result!.children.values[2].conceptId).toBe('cpp:endl')
   })
@@ -393,8 +393,8 @@ describe('PatternRenderer dynamicRules — repeat input (func_call)', () => {
   it('renders func_call with 3 args into dynamic inputs + extraState', () => {
     const node = createNode('test_func_call', { name: 'add' }, {
       args: [
-        createNode('cpp:number_literal', { value: '1' }),
-        createNode('cpp:number_literal', { value: '2' }),
+        createNode('cpp:literal_number', { value: '1' }),
+        createNode('cpp:literal_number', { value: '2' }),
         createNode('cpp:var_ref', { name: 'x' }),
       ],
     })
@@ -417,8 +417,8 @@ describe('PatternRenderer dynamicRules — multi-mode slot (scanf)', () => {
       args: [
         createNode('cpp:var_ref', { name: 'x' }),
         createNode('cpp:arithmetic', { operator: '+' }, {
-          left: [createNode('cpp:number_literal', { value: '1' })],
-          right: [createNode('cpp:number_literal', { value: '2' })],
+          left: [createNode('cpp:literal_number', { value: '1' })],
+          right: [createNode('cpp:literal_number', { value: '2' })],
         }),
       ],
     })
@@ -466,7 +466,7 @@ describe('PatternRenderer dynamicRules — repeat expression (print)', () => {
   it('renders print with 3 values as dynamic inputs + extraState', () => {
     const node = createNode('test_print', {}, {
       values: [
-        createNode('cpp:string_literal', { value: 'hello' }),
+        createNode('cpp:literal_string', { value: 'hello' }),
         createNode('cpp:var_ref', { name: 'x' }),
         createNode('cpp:endl', {}),
       ],
@@ -506,7 +506,7 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     expect(reExtracted!.conceptId).toBe('test_func_call')
     expect(reExtracted!.properties.name).toBe('f')
     expect(reExtracted!.children.args).toHaveLength(1)
-    expect(reExtracted!.children.args[0].conceptId).toBe('cpp:number_literal')
+    expect(reExtracted!.children.args[0].conceptId).toBe('cpp:literal_number')
   })
 
   it('print roundtrips correctly', () => {

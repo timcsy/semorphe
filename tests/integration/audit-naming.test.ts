@@ -28,7 +28,7 @@ import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } fro
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
-import { OPERATIONS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
+import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
 
 type 違規類 = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { 類: 違規類; id: string; 說明: string }
@@ -49,7 +49,10 @@ interface 概念 { conceptId: string; properties?: unknown }
  * 那類會**低報**，不會誤報。
  */
 function 接收者參數名(concepts: 概念[]): Map<string, string> {
-  const 自名 = new Set<string>(SELF_NAMING_OPERATIONS)
+  // ⚠️ **第二段是「種類」的元件沒有接收者**——它是一個東西，不是一個動作。
+  // `loop_count` 的 `var_name` 是被創造的迴圈變數，不是被操作的物件。
+  // 第一版只排除 `SELF_NAMING_OPERATIONS`，於是 loop 家族改名後全被誤報。
+  const 自名 = new Set<string>([...SELF_NAMING_OPERATIONS, ...KINDS])
   const out = new Map<string, string>()
   for (const c of concepts) {
     const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
@@ -65,7 +68,8 @@ function measure(注入: 概念[] = []): Finding[] {
   const out: Finding[] = []
   const 概念們 = [...(allCppConcepts() as unknown as 概念[]), ...注入]
   const recv = 接收者參數名(概念們)
-  const ops = new Set<string>(OPERATIONS)
+  // 第二段可以是**操作**（動作）或**種類**（名詞性的種差）
+  const ops = new Set<string>([...OPERATIONS, ...KINDS])
   const mods = new Set<string>(MODIFIERS)
   const atomics = new Set<string>(ATOMIC_NAMES)
 
@@ -97,10 +101,16 @@ function measure(注入: 概念[] = []): Finding[] {
     // 檢查的順序就是判定的優先權——第一版把它排在後面，於是三顆被誤報。
     if (atomics.has(bare)) continue
 
-    // ③ 主體在前：後綴若是已知主體，代表主體被放到後面去了
-    //    （`count_loop` 的主體是 `loop`——而「排序即分群」要求 `loop_count`）
-    const 後綴 = [...SUBJECTS].sort((a, b) => b.length - a.length)
-      .find((sub) => bare !== sub && bare.endsWith(SEPARATOR + sub))
+    // ③ 主體在前：**開頭沒有主體、而結尾有**，才是主體被放到後面去了。
+    //
+    // ⚠️ 少了「開頭沒有主體」這個條件，`literal_string` 會被誤報——
+    // 它的主體是 `literal`，而結尾的 `string` 是**種類**。
+    // 一個字可以同時是某處的主體與另一處的種類，位置才決定它扮演什麼。
+    const parsedFirst = parseName(bare, SUBJECTS)
+    const 後綴 = parsedFirst.subject
+      ? undefined
+      : [...SUBJECTS].sort((a, b) => b.length - a.length)
+          .find((sub) => bare !== sub && bare.endsWith(SEPARATOR + sub))
     if (後綴) {
       out.push({ 類: '主體不在前', id: c.conceptId, 說明: `主體 \`${後綴}\` 在後面——排序即分群，同族要排得在一起` })
       continue

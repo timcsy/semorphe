@@ -96,14 +96,14 @@ describe('Universal Concepts', () => {
     assertConceptPresent(`int main() { int x = 5; int y = x; }`, 'cpp:var_ref')
   })
 
-  it('cpp:number_literal', () => {
-    assertConceptPresent(`int main() { int x = 42; }`, 'cpp:number_literal')
+  it('cpp:literal_number', () => {
+    assertConceptPresent(`int main() { int x = 42; }`, 'cpp:literal_number')
   })
 
-  it('cpp:string_literal', () => {
+  it('cpp:literal_string', () => {
     assertConceptPresent(`#include <iostream>
 using namespace std;
-int main() { cout << "hello"; }`, 'cpp:string_literal')
+int main() { cout << "hello"; }`, 'cpp:literal_string')
   })
 
   // --- Operators ---
@@ -148,12 +148,12 @@ int main() { cout << "hello"; }`, 'cpp:string_literal')
     expect(hasElse, 'Expected if concept with non-empty else_body child').toBe(true)
   })
 
-  it('cpp:count_loop', () => {
-    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { int x = i; } }`, 'cpp:count_loop')
+  it('cpp:loop_count', () => {
+    assertConceptPresent(`int main() { for (int i = 0; i < 10; i++) { int x = i; } }`, 'cpp:loop_count')
   })
 
-  it('cpp:while_loop', () => {
-    assertConceptPresent(`int main() { while (true) { break; } }`, 'cpp:while_loop')
+  it('cpp:loop_while', () => {
+    assertConceptPresent(`int main() { while (true) { break; } }`, 'cpp:loop_while')
   })
 
   it('cpp:break', () => {
@@ -228,8 +228,8 @@ describe('C++ Core Concepts', () => {
 
   // --- Literals & Constants ---
 
-  it('cpp:char_literal', () => {
-    assertConceptPresent(`int main() { char c = 'a'; }`, 'cpp:char_literal')
+  it('cpp:literal_char', () => {
+    assertConceptPresent(`int main() { char c = 'a'; }`, 'cpp:literal_char')
   })
 
   // --- Operators ---
@@ -280,18 +280,18 @@ describe('C++ Core Concepts', () => {
     assertConceptPresent(`int main() { int x = 1; switch (x) { default: break; } }`, 'cpp:default')
   })
 
-  it('cpp:for_loop', () => {
+  it('cpp:loop_for', () => {
     // A non-counting for loop (uses compound assign, not ++/-- update)
-    assertConceptPresent(`int main() { for (int i = 0; i < 100; i += 2) { int x = i; } }`, 'cpp:for_loop')
+    assertConceptPresent(`int main() { for (int i = 0; i < 100; i += 2) { int x = i; } }`, 'cpp:loop_for')
   })
 
-  it('cpp:do_while', () => {
-    assertConceptPresent(`int main() { int x = 0; do { x++; } while (x < 10); }`, 'cpp:do_while')
+  it('cpp:loop_do_while', () => {
+    assertConceptPresent(`int main() { int x = 0; do { x++; } while (x < 10); }`, 'cpp:loop_do_while')
   })
 
-  it('cpp:range_for', () => {
+  it('cpp:loop_range', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; for (int x : v) { int y = x; } }`, 'cpp:range_for')
+int main() { std::vector<int> v; for (int x : v) { int y = x; } }`, 'cpp:loop_range')
   })
 
   // --- Pointers & References ---
@@ -720,9 +720,9 @@ using namespace std;
 int main() { string s; getline(cin, s); }`, 'cpp:getline')
   })
 
-  it('cpp:to_string', () => {
+  it('cpp:string_make', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s = std::to_string(42); }`, 'cpp:to_string')
+int main() { std::string s = std::to_string(42); }`, 'cpp:string_make')
   })
 
   it('cpp:stoi', () => {
@@ -1117,8 +1117,8 @@ describe('STD: utility', () => {
 int main() { std::pair<int, int> p; }`, 'cpp:pair_declare')
   })
 
-  it('cpp:make_pair', () => {
+  it('cpp:pair_make', () => {
     assertConceptPresent(`#include <utility>
-int main() { auto p = make_pair(1, 2); }`, 'cpp:make_pair')
+int main() { auto p = make_pair(1, 2); }`, 'cpp:pair_make')
   })
 })

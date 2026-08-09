@@ -3,7 +3,7 @@
     "id": "cpp_number_literal",
     "astNodeType": "number_literal",
     "concept": {
-      "conceptId": "cpp:number_literal"
+      "conceptId": "cpp:literal_number"
     },
     "fieldMappings": [
       {
@@ -31,7 +31,7 @@
     "id": "cpp_string_literal",
     "astNodeType": "string_literal",
     "concept": {
-      "conceptId": "cpp:string_literal"
+      "conceptId": "cpp:literal_string"
     },
     "fieldMappings": [
       {
@@ -46,7 +46,7 @@
     "id": "cpp:char_literal",
     "astNodeType": "char_literal",
     "concept": {
-      "conceptId": "cpp:char_literal"
+      "conceptId": "cpp:literal_char"
     },
     "fieldMappings": [
       {
@@ -280,7 +280,7 @@
     "astNodeType": "for_statement",
     "patternType": "composite",
     "concept": {
-      "conceptId": "cpp:count_loop"
+      "conceptId": "cpp:loop_count"
     },
     "liftStrategy": "cpp:liftCountFor",
     "composite": {
@@ -385,7 +385,7 @@
     "id": "cpp_while_statement",
     "astNodeType": "while_statement",
     "concept": {
-      "conceptId": "cpp:while_loop"
+      "conceptId": "cpp:loop_while"
     },
     "fieldMappings": [
       {
@@ -559,7 +559,7 @@
     "id": "cpp:do_while",
     "astNodeType": "do_statement",
     "concept": {
-      "conceptId": "cpp:do_while"
+      "conceptId": "cpp:loop_do_while"
     },
     "fieldMappings": [
       {
@@ -672,7 +672,7 @@
     "id": "cpp_for_range_loop",
     "astNodeType": "for_range_loop",
     "concept": {
-      "conceptId": "cpp:range_for"
+      "conceptId": "cpp:loop_range"
     },
     "liftStrategy": "cpp:liftRangeFor",
     "priority": 15

@@ -16,7 +16,7 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:string_literal', { value: 'Hello, World!' }, {})]
+        values: [createNode('cpp:literal_string', { value: 'Hello, World!' }, {})]
       })
     ]))
     expect(interp.getOutput().join('')).toBe('Hello, World!')
@@ -26,7 +26,7 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     await interp.execute(makeProgram([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '42' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '42' }, {})]
       }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:var_ref', { name: 'x' }, {})]
@@ -39,10 +39,10 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 1000 })
     const steps = await interp.executeWithSteps(makeProgram([
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '10' }, {})]
+        initializer: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
       createNode('cpp:var_assign', { obj: 'x' }, {
-        value: [createNode('cpp:number_literal', { value: '20' }, {})]
+        value: [createNode('cpp:literal_number', { value: '20' }, {})]
       }),
     ]))
     expect(steps.length).toBeGreaterThan(0)
@@ -52,14 +52,14 @@ describe('Execution flow integration', () => {
     const interp = new SemanticInterpreter({ maxSteps: 50 })
     await expect(
       interp.execute(makeProgram([
-        createNode('cpp:while_loop', {}, {
+        createNode('cpp:loop_while', {}, {
           condition: [createNode('cpp:compare', { operator: '>' }, {
-            left: [createNode('cpp:number_literal', { value: '1' }, {})],
-            right: [createNode('cpp:number_literal', { value: '0' }, {})],
+            left: [createNode('cpp:literal_number', { value: '1' }, {})],
+            right: [createNode('cpp:literal_number', { value: '0' }, {})],
           })],
           body: [
             createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-              initializer: [createNode('cpp:number_literal', { value: '0' }, {})]
+              initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
             }),
           ],
         })

@@ -22,7 +22,7 @@ export function registerStatementLifters(lifter: Lifter): void {
       const inclusive = extractForInclusive(condNode)
       const body = extractBody(bodyNode, ctx)
 
-      return createNode('cpp:count_loop', { var_name: varName, inclusive }, {
+      return createNode('cpp:loop_count', { var_name: varName, inclusive }, {
         from: fromNode ? [fromNode] : [],
         to: toNode ? [toNode] : [],
         body,
@@ -39,7 +39,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     const condSem = wrapForExpr(condNode, ctx)
     const updateSem = wrapForExpr(updateNode, ctx)
 
-    return createNode('cpp:for_loop', {}, {
+    return createNode('cpp:loop_for', {}, {
       init: initSem ? [initSem] : [],
       cond: condSem ? [condSem] : [],
       update: updateSem ? [updateSem] : [],
@@ -199,7 +199,7 @@ function extractUpdateVar(update: import('../../../../core/lift/types').AstNode 
 // Concepts that can be used in for-loop init/cond/update positions
 const FOR_LOOP_CONCEPTS = new Set([
   // expressions
-  'number', 'cpp:number_literal', 'string', 'cpp:string_literal', 'boolean', 'cpp:var_ref', 'cpp:raw_expression',
+  'number', 'cpp:literal_number', 'string', 'cpp:literal_string', 'boolean', 'cpp:var_ref', 'cpp:raw_expression',
   'cpp:arithmetic', 'cpp:compare', 'cpp:logic', 'cpp:logic_not', 'cpp:negate',
   'cpp:func_call', 'cpp:array_access', 'cpp:ternary',
   // statements valid in for-loop parts

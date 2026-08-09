@@ -124,7 +124,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:to_string",
+    "conceptId": "cpp:string_make",
     "layer": "lang-library",
     "properties": [],
     "children": {

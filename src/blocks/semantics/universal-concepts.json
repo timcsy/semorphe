@@ -85,7 +85,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:number_literal",
+    "conceptId": "cpp:literal_number",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -99,7 +99,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:string_literal",
+    "conceptId": "cpp:literal_string",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -247,7 +247,7 @@
     }
   },
   {
-    "conceptId": "cpp:count_loop",
+    "conceptId": "cpp:loop_count",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [
@@ -278,7 +278,7 @@
     }
   },
   {
-    "conceptId": "cpp:while_loop",
+    "conceptId": "cpp:loop_while",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [],

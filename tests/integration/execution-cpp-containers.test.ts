@@ -23,7 +23,7 @@ function makeProgram(body: SemanticNode[]): SemanticNode {
 }
 
 function num(v: number) {
-  return createNode('cpp:number_literal', { value: String(v) }, {})
+  return createNode('cpp:literal_number', { value: String(v) }, {})
 }
 
 function varRef(name: string) {
@@ -36,7 +36,7 @@ function printNode(expr: SemanticNode) {
 
 function printLine(expr: SemanticNode) {
   return createNode('cpp:print', {}, {
-    values: [expr, createNode('cpp:string_literal', { value: '\n' }, {})],
+    values: [expr, createNode('cpp:literal_string', { value: '\n' }, {})],
   })
 }
 
@@ -93,7 +93,7 @@ describe('Stack execution (LIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(30)] }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
@@ -155,7 +155,7 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(30)] }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 'q' }, {})],
         })],
@@ -175,7 +175,7 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(3)] }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
@@ -191,7 +191,7 @@ describe('Queue execution (FIFO)', () => {
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(1)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(2)] }),
       createNode('cpp:container_push', { obj: 'q' }, { value: [num(3)] }),
-      createNode('cpp:while_loop', {}, {
+      createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:logic_not', {}, {
           operand: [createNode('cpp:container_empty', { obj: 'q' }, {})],
         })],

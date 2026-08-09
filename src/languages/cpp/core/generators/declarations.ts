@@ -126,7 +126,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}enum ${name} { ${values} };\n`
   })
 
-  g.set('cpp:range_for', (node, ctx) => {
+  g.set('cpp:loop_range', (node, ctx) => {
     const varType = node.properties.var_type ?? 'auto'
     const varName = node.properties.var_name ?? 'x'
     const container = node.properties.container ?? 'vec'

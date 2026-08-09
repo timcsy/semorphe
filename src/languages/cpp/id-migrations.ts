@@ -178,3 +178,27 @@ export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>
 }
 
 registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)
+
+/**
+ * v5 → v6（G 項第 3 步）：**主體移到前面**。
+ *
+ * 「排序即分群」——`count_loop`／`while_loop`／`for_loop` 排不在一起，
+ * `loop_*` 排得在一起。而登錄表、工具箱、以及 F 之後的目錄名都吃這個順序。
+ *
+ * 同時把 `do_while`／`range_for` 併進 loop 家族，它們原本掛在「語言構造」
+ * 的單字名清單裡——那是因為當時沒有 `loop` 這個主體。
+ */
+export const ID_MIGRATIONS_V5_TO_V6: Record<string, string> = {
+  'cpp:char_literal': 'cpp:literal_char',
+  'cpp:count_loop': 'cpp:loop_count',
+  'cpp:do_while': 'cpp:loop_do_while',
+  'cpp:for_loop': 'cpp:loop_for',
+  'cpp:make_pair': 'cpp:pair_make',
+  'cpp:number_literal': 'cpp:literal_number',
+  'cpp:range_for': 'cpp:loop_range',
+  'cpp:string_literal': 'cpp:literal_string',
+  'cpp:to_string': 'cpp:string_make',
+  'cpp:while_loop': 'cpp:loop_while',
+}
+
+registerIdMigration(ID_MIGRATIONS_V5_TO_V6)

@@ -167,7 +167,7 @@ describe('Declarations', () => {
       expect(node!.properties.name).toBe('x')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
-      expect(inits[0].conceptId).toBe('cpp:number_literal')
+      expect(inits[0].conceptId).toBe('cpp:literal_number')
       expect(inits[0].properties.value).toBe('5')
     })
 
@@ -179,7 +179,7 @@ describe('Declarations', () => {
       expect(node!.properties.name).toBe('name')
       const inits = node!.children.initializer ?? []
       expect(inits.length).toBe(1)
-      expect(inits[0].conceptId).toBe('cpp:string_literal')
+      expect(inits[0].conceptId).toBe('cpp:literal_string')
       expect(inits[0].properties.value).toBe('hello')
     })
 
@@ -269,7 +269,7 @@ describe('Expressions', () => {
     it('lifts number literal', () => {
       const n = liftExpr('42')
       expect(n).not.toBeNull()
-      expect(n!.conceptId).toBe('cpp:number_literal')
+      expect(n!.conceptId).toBe('cpp:literal_number')
       expect(n!.properties.value).toBe('42')
     })
 
@@ -277,7 +277,7 @@ describe('Expressions', () => {
       const body = liftBody('string s = "hello world";')
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.conceptId).toBe('cpp:string_literal')
+      expect(inits[0]?.conceptId).toBe('cpp:literal_string')
       expect(inits[0]?.properties.value).toBe('hello world')
     })
 
@@ -285,7 +285,7 @@ describe('Expressions', () => {
       const body = liftBody("char c = 'A';")
       const node = body[0]
       const inits = node?.children.initializer ?? []
-      expect(inits[0]?.conceptId).toBe('cpp:char_literal')
+      expect(inits[0]?.conceptId).toBe('cpp:literal_char')
       expect(inits[0]?.properties.char).toBe('A')
     })
   })
@@ -433,7 +433,7 @@ describe('I/O', () => {
       expect(printNode!.conceptId).toBe('cpp:print')
       const values = printNode!.children.values ?? []
       expect(values.length).toBe(1)
-      expect(values[0].conceptId).toBe('cpp:string_literal')
+      expect(values[0].conceptId).toBe('cpp:literal_string')
       expect(values[0].properties.value).toBe('hello')
     })
 
@@ -455,7 +455,7 @@ describe('I/O', () => {
       expect(printNode!.conceptId).toBe('cpp:print')
       const values = printNode!.children.values ?? []
       expect(values.length).toBe(2)
-      expect(values[0].conceptId).toBe('cpp:string_literal')
+      expect(values[0].conceptId).toBe('cpp:literal_string')
       expect(values[1].conceptId).toBe('cpp:endl')
     })
 
@@ -629,7 +629,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { while (x > 0) { x = x - 1; } }')
       const mainBody = body[0]?.children.body ?? []
       const whileNode = mainBody[0]
-      expect(whileNode!.conceptId).toBe('cpp:while_loop')
+      expect(whileNode!.conceptId).toBe('cpp:loop_while')
     })
 
     it('roundtrips while loop', () => {
@@ -643,7 +643,7 @@ describe('Control Flow', () => {
       const body = liftBody('int main() { for (int i = 0; i < 10; i++) { x = i; } }')
       const mainBody = body[0]?.children.body ?? []
       const forNode = mainBody[0]
-      expect(forNode!.conceptId).toBe('cpp:count_loop')
+      expect(forNode!.conceptId).toBe('cpp:loop_count')
       expect(forNode!.properties.var_name).toBe('i')
     })
 
@@ -810,7 +810,7 @@ describe('Functions', () => {
       expect(retNode!.conceptId).toBe('cpp:return')
       const vals = retNode!.children.value ?? []
       expect(vals.length).toBe(1)
-      expect(vals[0].conceptId).toBe('cpp:number_literal')
+      expect(vals[0].conceptId).toBe('cpp:literal_number')
     })
 
     it('lifts return; (no value)', () => {

@@ -85,7 +85,7 @@ function roundTripIdentity(conceptId: string): { kept: boolean; became: string[]
   return {
     kept: found.has(conceptId),
     // 回來的樹裡出現、但不是結構性外殼的概念——就是「它變成了什麼」
-    became: [...found].filter((c) => !['cpp:program', 'cpp:func_def', 'cpp:number_literal', 'cpp:string_literal'].includes(c)),
+    became: [...found].filter((c) => !['cpp:program', 'cpp:func_def', 'cpp:literal_number', 'cpp:literal_string'].includes(c)),
     code: code.trim(),
   }
 }

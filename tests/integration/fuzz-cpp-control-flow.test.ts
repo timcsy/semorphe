@@ -621,7 +621,7 @@ describe.skip('[BLOCKED:cpp:switch] fuzz: switch fall-through (Phase 2 scope, to
   it.todo('[BLOCKED:cpp:switch] should handle switch case without break (fall-through)')
 })
 
-describe.skip('[BLOCKED:cpp:char_literal] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
+describe.skip('[BLOCKED:cpp:literal_char] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
   // COMPILE_FAIL: char literal case labels (case 'a':) are not
   // correctly lifted by the switch-case lifter
 })

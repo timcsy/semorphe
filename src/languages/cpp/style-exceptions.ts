@@ -123,7 +123,7 @@ const printToCstdioRule: StyleExceptionRule = {
     const args: typeof values = []
     for (const v of values) {
       if (v.conceptId === 'cpp:endl') continue
-      if (v.conceptId === 'cpp:string_literal') {
+      if (v.conceptId === 'cpp:literal_string') {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''
         formatParts.push(text)

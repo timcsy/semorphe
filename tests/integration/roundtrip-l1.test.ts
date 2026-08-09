@@ -127,7 +127,7 @@ describe('L1 Block Roundtrip', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:char_literal')
+      expect(sem!.conceptId).toBe('cpp:literal_char')
     })
   })
 
@@ -235,7 +235,7 @@ describe('L1 Block Roundtrip', () => {
         condition: cond, body: body,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:while_loop')
+      expect(sem!.conceptId).toBe('cpp:loop_while')
     })
   })
 
@@ -265,7 +265,7 @@ describe('L1 Block Roundtrip', () => {
       )
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:count_loop')
+      expect(sem!.conceptId).toBe('cpp:loop_count')
     })
   })
 
@@ -333,7 +333,7 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('parenthesized_expression', '(42)', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:number_literal')
+      expect(sem!.conceptId).toBe('cpp:literal_number')
       expect(sem!.properties.value).toBe('42')
     })
   })
@@ -343,7 +343,7 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('expression_statement', '42;', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:number_literal')
+      expect(sem!.conceptId).toBe('cpp:literal_number')
     })
   })
 
@@ -362,7 +362,7 @@ describe('L1 Block Roundtrip', () => {
 
     it('should generate arithmetic expression code', () => {
       const left = createNode('cpp:var_ref', { name: 'x' })
-      const right = createNode('cpp:number_literal', { value: '5' })
+      const right = createNode('cpp:literal_number', { value: '5' })
       const node = createNode('cpp:arithmetic', { operator: '+' }, { left: [left], right: [right] })
       const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
       expect(code).toBe('x + 5')

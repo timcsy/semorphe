@@ -25,7 +25,7 @@ const n = (
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
-const num = (v: number): SemanticNode => n('cpp:number_literal', { value: v })
+const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ref = (name: string): SemanticNode => n('cpp:var_ref', { name })
 const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
 const assign = (name: string, v: SemanticNode): SemanticNode => n('cpp:var_assign', { obj: name }, { value: [v] })

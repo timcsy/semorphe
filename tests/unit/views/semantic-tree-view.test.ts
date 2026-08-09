@@ -19,7 +19,7 @@ describe('SemanticTreeView', () => {
             children: {
               init: [{
                 id: 'n2',
-                conceptId: 'cpp:number_literal',
+                conceptId: 'cpp:literal_number',
                 properties: { value: '5' },
                 children: {},
               }],
@@ -48,7 +48,7 @@ describe('SemanticTreeView', () => {
     expect(html).toContain('cpp:program')
     expect(html).toContain('cpp:var_declare')
     expect(html).toContain('cpp:print')
-    expect(html).toContain('cpp:number_literal')
+    expect(html).toContain('cpp:literal_number')
     expect(html).toContain('cpp:var_ref')
     expect(html).toContain('int')
     expect(html).toContain('x')

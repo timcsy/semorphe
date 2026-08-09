@@ -32,7 +32,7 @@ function makeProgram(...body: ReturnType<typeof createNode>[]) {
 describe('CodeMapping integration (nodeId-based)', () => {
   it('should produce mappings using nodeId for nodes with id', () => {
     const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '5' })],
+      initializer: [createNode('cpp:literal_number', { value: '5' })],
     })
 
     const print = createNode('cpp:print', {}, {
@@ -59,7 +59,7 @@ describe('CodeMapping integration (nodeId-based)', () => {
     // This is the key US1 test: nodes created by createNode have id automatically,
     // so mappings are produced WITHOUT needing metadata.blockId
     const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '1' })],
+      initializer: [createNode('cpp:literal_number', { value: '1' })],
     })
     const tree = makeProgram(decl)
     const { mappings } = generateCodeWithMapping(tree, 'cpp', style)
@@ -71,11 +71,11 @@ describe('CodeMapping integration (nodeId-based)', () => {
   it('should handle nested structures with nodeId', () => {
     const cond = createNode('cpp:compare', { operator: '>' }, {
       left: [createNode('cpp:var_ref', { name: 'x' })],
-      right: [createNode('cpp:number_literal', { value: '0' })],
+      right: [createNode('cpp:literal_number', { value: '0' })],
     })
 
     const print = createNode('cpp:print', {}, {
-      values: [createNode('cpp:string_literal', { value: 'positive' })],
+      values: [createNode('cpp:literal_string', { value: 'positive' })],
     })
 
     const ifNode = createNode('cpp:if', {}, {
@@ -98,7 +98,7 @@ describe('CodeMapping integration (nodeId-based)', () => {
   it('should produce CodeMapping from lifted tree without Blockly rendering (FR-005)', () => {
     // Simulates a lifted tree — nodes have id from createNode(), no metadata.blockId
     const print = createNode('cpp:print', {}, {
-      values: [createNode('cpp:string_literal', { value: 'Hello' })],
+      values: [createNode('cpp:literal_string', { value: 'Hello' })],
     })
     const tree = makeProgram(print)
     const { code, mappings } = generateCodeWithMapping(tree, 'cpp', style)
@@ -114,7 +114,7 @@ describe('Round-trip node identity (US3)', () => {
   it('should produce valid nodeIds in CodeMapping after round-trip (best-effort)', () => {
     // Create tree → generate code → verify codeMappings have valid nodeIds
     const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '5' })],
+      initializer: [createNode('cpp:literal_number', { value: '5' })],
     })
     const print = createNode('cpp:print', {}, {
       values: [createNode('cpp:var_ref', { name: 'x' })],

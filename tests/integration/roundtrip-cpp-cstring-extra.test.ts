@@ -93,7 +93,7 @@ describe('C++ <cstring> extra roundtrip', () => {
     it('should generate strncpy(dest, src, n) from SemanticNode', () => {
       const dest = createNode('cpp:var_ref', { name: 'buf' })
       const src = createNode('cpp:var_ref', { name: 'str' })
-      const n = createNode('cpp:number_literal', { value: '5' })
+      const n = createNode('cpp:literal_number', { value: '5' })
       const strncpy = createNode('cpp:strncpy', {}, {
         dest: [dest],
         src: [src],
@@ -117,7 +117,7 @@ describe('C++ <cstring> extra roundtrip', () => {
     it('should generate strncmp(s1, s2, n) as expression', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
-      const n = createNode('cpp:number_literal', { value: '4' })
+      const n = createNode('cpp:literal_number', { value: '4' })
       const strncmp = createNode('cpp:strncmp', {}, {
         s1: [s1],
         s2: [s2],
@@ -143,8 +143,8 @@ describe('C++ <cstring> extra roundtrip', () => {
 
     it('should generate memset(ptr, value, size) from SemanticNode', () => {
       const ptr = createNode('cpp:var_ref', { name: 'buf' })
-      const val = createNode('cpp:number_literal', { value: '0' })
-      const size = createNode('cpp:number_literal', { value: '256' })
+      const val = createNode('cpp:literal_number', { value: '0' })
+      const size = createNode('cpp:literal_number', { value: '256' })
       const memset = createNode('cpp:memset', {}, {
         ptr: [ptr],
         value: [val],
@@ -168,7 +168,7 @@ describe('C++ <cstring> extra roundtrip', () => {
     it('should generate memcpy(dest, src, size) from SemanticNode', () => {
       const dest = createNode('cpp:var_ref', { name: 'dst' })
       const src = createNode('cpp:var_ref', { name: 'src' })
-      const size = createNode('cpp:number_literal', { value: '32' })
+      const size = createNode('cpp:literal_number', { value: '32' })
       const memcpy = createNode('cpp:memcpy', {}, {
         dest: [dest],
         src: [src],

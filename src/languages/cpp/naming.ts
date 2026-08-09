@@ -55,9 +55,18 @@ export const SUBJECTS = [
  */
 export const OPERATIONS = [
   'append', 'assign', 'at', 'call', 'cast', 'clear', 'count', 'declare',
-  'def', 'empty', 'erase', 'find', 'insert', 'literal', 'loop', 'peek',
+  'def', 'empty', 'erase', 'find', 'insert', 'make', 'peek',
   'pop', 'push', 'ref', 'size', 'swap',
 ] as const
+
+/**
+ * 種類——名詞性的種差。
+ *
+ * `literal` 與 `loop` 從**操作**改成**主體**（`literal_char`／`loop_while`），
+ * 於是第二段變成種類。理由是「排序即分群」：`count_loop`／`while_loop`／`for_loop`
+ * 排不在一起，`loop_*` 排得在一起——而登錄表、工具箱、目錄都吃這個順序。
+ */
+export const KINDS = ['char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while'] as const
 
 /**
  * 修飾詞——**不得站在主體的位置**。
@@ -96,7 +105,7 @@ export const ATOMIC_NAMES = [
   'logic', 'logic_not', 'negate', 'bitwise_not', 'increment',
   // C／C++ 家族的**語言構造**
   'switch', 'case', 'default', 'ternary', 'throw', 'try_catch', 'lambda',
-  'new', 'delete', 'malloc', 'free', 'sizeof', 'do_while', 'range_for',
+  'new', 'delete', 'malloc', 'free', 'sizeof',
   'comma_expr', 'address_of', 'cast', 'constructor', 'destructor',
   'operator_overload', 'typedef', 'using_alias', 'using_namespace',
   'include', 'include_local', 'define', 'ifdef', 'ifndef',
@@ -131,6 +140,7 @@ export const SELF_NAMING_OPERATIONS = ['declare', 'ref', 'call', 'def', 'literal
 export const CPP_NAMING: NamingVocabulary = {
   subjects: SUBJECTS,
   operations: OPERATIONS,
+  kinds: KINDS,
   modifiers: MODIFIERS,
   atomicNames: ATOMIC_NAMES,
 }

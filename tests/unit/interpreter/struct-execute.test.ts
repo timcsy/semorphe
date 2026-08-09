@@ -38,7 +38,7 @@ const n = (
 ): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
-const num = (v: number): SemanticNode => n('cpp:number_literal', { value: v })
+const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
 
 /** struct Point { int x; int y; }; */

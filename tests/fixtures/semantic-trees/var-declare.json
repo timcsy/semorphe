@@ -15,7 +15,7 @@
           "initializer": [
             {
               "id": "test_number",
-              "conceptId": "cpp:number_literal",
+              "conceptId": "cpp:literal_number",
               "properties": {
                 "value": "5"
               },

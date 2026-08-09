@@ -32,7 +32,7 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     await ctx.executeBody(ctx.toBool(condition) ? (node.children.then ?? []) : (node.children.else ?? []))
   })
 
-  register('cpp:count_loop', async (node, ctx) => {
+  register('cpp:loop_count', async (node, ctx) => {
     const varName = String(node.properties.var_name)
     const from = ctx.toNumber(await ctx.evaluate(node.children.from[0]))
     const to = ctx.toNumber(await ctx.evaluate(node.children.to[0]))
@@ -55,7 +55,7 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     await ctx.exitScope(ctx.scope, parentScope)
   })
 
-  register('cpp:while_loop', async (node, ctx) => {
+  register('cpp:loop_while', async (node, ctx) => {
     const body = node.children.body ?? []
     const parentScope = ctx.scope
     while (true) {

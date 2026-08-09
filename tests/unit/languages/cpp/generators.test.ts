@@ -50,7 +50,7 @@ describe('C++ expressions generator', () => {
   it('should generate comparison', () => {
     const cmp = createNode('cpp:compare', { operator: '>=' }, {
       left: [createNode('cpp:var_ref', { name: 'a' })],
-      right: [createNode('cpp:number_literal', { value: '0' })],
+      right: [createNode('cpp:literal_number', { value: '0' })],
     })
     const assign = createNode('cpp:var_assign', { obj: 'result' }, { value: [cmp] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
@@ -86,7 +86,7 @@ describe('C++ expressions generator', () => {
   })
 
   it('should generate string literal', () => {
-    const str = createNode('cpp:string_literal', { value: 'hello' })
+    const str = createNode('cpp:literal_string', { value: 'hello' })
     const decl = createNode('cpp:var_declare', { name: 's', type: 'string' }, { initializer: [str] })
     const code = generateCode(makeProgram(decl), 'cpp', apcsStyle)
     expect(code).toBe('string s = "hello";')
@@ -97,8 +97,8 @@ describe('C++ statements generator', () => {
   it('should generate if-else', () => {
     const ifStmt = createNode('cpp:if', {}, {
       condition: [createNode('cpp:var_ref', { name: 'x' })],
-      then_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:number_literal', { value: '1' })] })],
-      else_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:number_literal', { value: '2' })] })],
+      then_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '1' })] })],
+      else_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '2' })] })],
     })
     const code = generateCode(makeProgram(ifStmt), 'cpp', apcsStyle)
     expect(code).toContain('if (x) {')
@@ -108,9 +108,9 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate count_loop (for)', () => {
-    const loop = createNode('cpp:count_loop', { var_name: 'i' }, {
-      from: [createNode('cpp:number_literal', { value: '0' })],
-      to: [createNode('cpp:number_literal', { value: '10' })],
+    const loop = createNode('cpp:loop_count', { var_name: 'i' }, {
+      from: [createNode('cpp:literal_number', { value: '0' })],
+      to: [createNode('cpp:literal_number', { value: '10' })],
       body: [createNode('cpp:break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -119,9 +119,9 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate count_loop with inclusive', () => {
-    const loop = createNode('cpp:count_loop', { var_name: 'i', inclusive: 'TRUE' }, {
-      from: [createNode('cpp:number_literal', { value: '1' })],
-      to: [createNode('cpp:number_literal', { value: '10' })],
+    const loop = createNode('cpp:loop_count', { var_name: 'i', inclusive: 'TRUE' }, {
+      from: [createNode('cpp:literal_number', { value: '1' })],
+      to: [createNode('cpp:literal_number', { value: '10' })],
       body: [createNode('cpp:break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -129,13 +129,13 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_for_loop (three-part)', () => {
-    const loop = createNode('cpp:for_loop', {}, {
+    const loop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_assign', { obj: 'i' }, {
-        value: [createNode('cpp:number_literal', { value: '0' })],
+        value: [createNode('cpp:literal_number', { value: '0' })],
       })],
       cond: [createNode('cpp:compare', { operator: '<' }, {
         left: [createNode('cpp:var_ref', { name: 'i' })],
-        right: [createNode('cpp:number_literal', { value: '10' })],
+        right: [createNode('cpp:literal_number', { value: '10' })],
       })],
       update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       body: [createNode('cpp:break', {})],
@@ -147,7 +147,7 @@ describe('C++ statements generator', () => {
 
   it('should generate cpp_compound_assign', () => {
     const stmt = createNode('cpp:compound_assign', { name: 'x', operator: '+=' }, {
-      value: [createNode('cpp:number_literal', { value: '5' })],
+      value: [createNode('cpp:literal_number', { value: '5' })],
     })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
     expect(code).toBe('x += 5;')
@@ -156,7 +156,7 @@ describe('C++ statements generator', () => {
   it('should generate array_assign', () => {
     const stmt = createNode('cpp:array_assign', { obj: 'arr' }, {
       index: [createNode('cpp:var_ref', { name: 'i' })],
-      value: [createNode('cpp:number_literal', { value: '1' })],
+      value: [createNode('cpp:literal_number', { value: '1' })],
     })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
     expect(code).toBe('arr[i] = 1;')
@@ -179,7 +179,7 @@ describe('C++ statements generator', () => {
 
   it('should generate func_call', () => {
     const call = createNode('cpp:func_call', { name: 'solve' }, {
-      args: [createNode('cpp:var_ref', { name: 'n' }), createNode('cpp:number_literal', { value: '42' })],
+      args: [createNode('cpp:var_ref', { name: 'n' }), createNode('cpp:literal_number', { value: '42' })],
     })
     const code = generateCode(makeProgram(call), 'cpp', apcsStyle)
     expect(code).toBe('solve(n, 42);')
@@ -270,7 +270,7 @@ describe('C++ I/O generator', () => {
   it('should generate printf with string_literal embedded in format', () => {
     const print = createNode('cpp:print', {}, {
       values: [
-        createNode('cpp:string_literal', { value: 'Done' }),
+        createNode('cpp:literal_string', { value: 'Done' }),
         createNode('cpp:endl', {}),
       ],
     })
@@ -281,7 +281,7 @@ describe('C++ I/O generator', () => {
   it('should generate printf with mixed types: string embedded and int as arg', () => {
     const print = createNode('cpp:print', {}, {
       values: [
-        createNode('cpp:string_literal', { value: 'ans=' }),
+        createNode('cpp:literal_string', { value: 'ans=' }),
         createNode('cpp:var_ref', { name: 'x' }),
         createNode('cpp:endl', {}),
       ],
@@ -346,7 +346,7 @@ describe('C++ expression generators (for expression blocks)', () => {
 
   it('should generate var_declare_expr', () => {
     const node = createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '2' })],
+      initializer: [createNode('cpp:literal_number', { value: '2' })],
     })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
@@ -354,9 +354,9 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should work in cpp_for_loop init/cond/update', () => {
-    const loop = createNode('cpp:for_loop', {}, {
+    const loop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '2' })],
+        initializer: [createNode('cpp:literal_number', { value: '2' })],
       })],
       cond: [createNode('cpp:compare', { operator: '<=' }, {
         left: [createNode('cpp:arithmetic', { operator: '*' }, {
@@ -375,13 +375,13 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_increment_expr in for-loop update via template fallback', () => {
-    const loop = createNode('cpp:for_loop', {}, {
+    const loop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_declare', { name: 'm', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' })],
+        initializer: [createNode('cpp:literal_number', { value: '0' })],
       })],
       cond: [createNode('cpp:compare', { operator: '<' }, {
         left: [createNode('cpp:var_ref', { name: 'm' })],
-        right: [createNode('cpp:number_literal', { value: '10' })],
+        right: [createNode('cpp:literal_number', { value: '10' })],
       })],
       update: [createNode('cpp:increment', { name: 'm', operator: '++', position: 'postfix' })],
       body: [createNode('cpp:break', {})],
@@ -391,7 +391,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_scanf_expr in while condition', () => {
-    const whileLoop = createNode('cpp:while_loop', {}, {
+    const whileLoop = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:compare', { operator: '!=' }, {
         left: [createNode('cpp:scanf', { format: '%d' }, {
           args: [createNode('cpp:var_ref', { name: 'n' })],
@@ -405,12 +405,12 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate array_assign inside for-loop body via template fallback', () => {
-    const loop = createNode('cpp:count_loop', { var_name: 'i' }, {
-      from: [createNode('cpp:number_literal', { value: '0' })],
-      to: [createNode('cpp:number_literal', { value: '10' })],
+    const loop = createNode('cpp:loop_count', { var_name: 'i' }, {
+      from: [createNode('cpp:literal_number', { value: '0' })],
+      to: [createNode('cpp:literal_number', { value: '10' })],
       body: [createNode('cpp:array_assign', { obj: 'arr' }, {
         index: [createNode('cpp:var_ref', { name: 'i' })],
-        value: [createNode('cpp:number_literal', { value: '1' })],
+        value: [createNode('cpp:literal_number', { value: '1' })],
       })],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -419,7 +419,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_increment inside do-while body via template fallback', () => {
-    const doWhile = createNode('cpp:do_while', {}, {
+    const doWhile = createNode('cpp:loop_do_while', {}, {
       body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
     })
@@ -433,11 +433,11 @@ describe('C++ expression generators (for expression blocks)', () => {
       condition: [createNode('cpp:func_call', { name: 'isPrime' }, {
         args: [createNode('cpp:var_ref', { name: 'n' })],
       })],
-      true_expr: [createNode('cpp:string_literal', { value: '質數' })],
-      false_expr: [createNode('cpp:string_literal', { value: '非質數' })],
+      true_expr: [createNode('cpp:literal_string', { value: '質數' })],
+      false_expr: [createNode('cpp:literal_string', { value: '非質數' })],
     })
     const printNode = createNode('cpp:print', {}, {
-      values: [createNode('cpp:string_literal', { value: '%s\\n' }), ternary],
+      values: [createNode('cpp:literal_string', { value: '%s\\n' }), ternary],
     })
     const code = generateCode(makeProgram(printNode), 'cpp', apcsStyle)
     expect(code).toContain('isPrime(n)')
@@ -446,7 +446,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate do-while with array_access and logic_not in condition', () => {
-    const doWhile = createNode('cpp:do_while', {}, {
+    const doWhile = createNode('cpp:loop_do_while', {}, {
       body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       cond: [createNode('cpp:logic', { operator: '&&' }, {
         left: [createNode('cpp:compare', { operator: '<=' }, {
@@ -520,7 +520,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_compound_assign_expr in for-loop update', () => {
-    const loop = createNode('cpp:for_loop', {}, {
+    const loop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_declare', { type: 'int', name: 'j' }, {
         initializer: [createNode('cpp:arithmetic', { operator: '*' }, {
           left: [createNode('cpp:var_ref', { name: 'i' })],
@@ -536,7 +536,7 @@ describe('C++ expression generators (for expression blocks)', () => {
       })],
       body: [createNode('cpp:array_assign', { obj: 'sieve' }, {
         index: [createNode('cpp:var_ref', { name: 'j' })],
-        value: [createNode('cpp:number_literal', { value: '1' })],
+        value: [createNode('cpp:literal_number', { value: '1' })],
       })],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -564,7 +564,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should use builtin_constant in while condition with EOF', () => {
-    const whileLoop = createNode('cpp:while_loop', {}, {
+    const whileLoop = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:compare', { operator: '!=' }, {
         left: [createNode('cpp:scanf', { format: '%d' }, {
           args: [createNode('cpp:var_ref', { name: 'n' })],

@@ -40,17 +40,17 @@ beforeAll(() => {
  * 漏一個 case，那個 case 的漂移就不會被抓到。
  */
 const 切換前的產出: [string, SemanticNode, string][] = [
-  ['cpp:number_literal', n('cpp:number_literal', { value: 5 }), '5'],
-  ['cpp:string_literal', n('cpp:string_literal', { value: 'hi' }), '"hi"'],
+  ['cpp:literal_number', n('cpp:literal_number', { value: 5 }), '5'],
+  ['cpp:literal_string', n('cpp:literal_string', { value: 'hi' }), '"hi"'],
   ['cpp:var_ref', n('cpp:var_ref', { name: 'x' }), 'x'],
   [
     'cpp:arithmetic',
-    n('cpp:arithmetic', { operator: '+' }, { left: [n('cpp:var_ref', { name: 'a' })], right: [n('cpp:number_literal', { value: 1 })] }),
+    n('cpp:arithmetic', { operator: '+' }, { left: [n('cpp:var_ref', { name: 'a' })], right: [n('cpp:literal_number', { value: 1 })] }),
     'a + 1',
   ],
   [
     'cpp:compare',
-    n('cpp:compare', { operator: '<' }, { left: [n('cpp:var_ref', { name: 'a' })], right: [n('cpp:number_literal', { value: 3 })] }),
+    n('cpp:compare', { operator: '<' }, { left: [n('cpp:var_ref', { name: 'a' })], right: [n('cpp:literal_number', { value: 3 })] }),
     'a < 3',
   ],
   [
@@ -65,18 +65,18 @@ const 切換前的產出: [string, SemanticNode, string][] = [
   ],
   [
     'cpp:func_call',
-    n('cpp:func_call', { name: 'g' }, { args: [n('cpp:number_literal', { value: 2 }), n('cpp:var_ref', { name: 'y' })] }),
+    n('cpp:func_call', { name: 'g' }, { args: [n('cpp:literal_number', { value: 2 }), n('cpp:var_ref', { name: 'y' })] }),
     'g(2, y)',
   ],
   [
     'cpp:array_access',
-    n('cpp:array_access', { obj: 'arr' }, { index: [n('cpp:number_literal', { value: 1 })] }),
+    n('cpp:array_access', { obj: 'arr' }, { index: [n('cpp:literal_number', { value: 1 })] }),
     'arr[1]',
   ],
   // ── 以下是語言專屬的，正是中立性報的那六筆
   [
     'cpp:string_at',
-    n('cpp:string_at', { obj: 's' }, { index: [n('cpp:number_literal', { value: 0 })] }),
+    n('cpp:string_at', { obj: 's' }, { index: [n('cpp:literal_number', { value: 0 })] }),
     's[0]',
   ],
   [
@@ -91,8 +91,8 @@ const 切換前的產出: [string, SemanticNode, string][] = [
       {},
       {
         condition: [n('cpp:var_ref', { name: 'c' })],
-        true_expr: [n('cpp:number_literal', { value: 1 })],
-        false_expr: [n('cpp:number_literal', { value: 2 })],
+        true_expr: [n('cpp:literal_number', { value: 1 })],
+        false_expr: [n('cpp:literal_number', { value: 2 })],
       },
     ),
     'c ? 1 : 2',
@@ -105,7 +105,7 @@ const 切換前的產出: [string, SemanticNode, string][] = [
   // **平行機制已經漂移過了，而沒有人發現。** 這正是 060 要治的病：
   // 兩套實作沒有任何東西在檢查它們一致，其中一套指向一個不存在的概念，
   // 測試照樣全綠。
-  ['cpp:char_literal', n('cpp:char_literal', { value: 'a' }), "'a'"],
+  ['cpp:literal_char', n('cpp:literal_char', { value: 'a' }), "'a'"],
 ]
 
 describe('面板的運算式產生：切換前後一字不差', () => {

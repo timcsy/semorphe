@@ -84,7 +84,7 @@
   },
   {
     "id": "u_number",
-    "conceptId": "cpp:number_literal",
+    "conceptId": "cpp:literal_number",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -110,7 +110,7 @@
   },
   {
     "id": "u_string",
-    "conceptId": "cpp:string_literal",
+    "conceptId": "cpp:literal_string",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
@@ -490,7 +490,7 @@
   },
   {
     "id": "u_count_loop",
-    "conceptId": "cpp:count_loop",
+    "conceptId": "cpp:loop_count",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
@@ -558,7 +558,7 @@
   },
   {
     "id": "u_while_loop",
-    "conceptId": "cpp:while_loop",
+    "conceptId": "cpp:loop_while",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",

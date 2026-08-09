@@ -36,7 +36,7 @@ describe('generateCode', () => {
   })
 
   it('should generate var declaration with initializer', () => {
-    const value = createNode('cpp:number_literal', { value: '5' })
+    const value = createNode('cpp:literal_number', { value: '5' })
     const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [value] })
     const tree = makeProgram(decl)
     const code = generateCode(tree, 'cpp', defaultStyle)
@@ -51,7 +51,7 @@ describe('generateCode', () => {
   })
 
   it('should generate var assignment', () => {
-    const value = createNode('cpp:number_literal', { value: '10' })
+    const value = createNode('cpp:literal_number', { value: '10' })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [value] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
@@ -70,7 +70,7 @@ describe('generateCode', () => {
 
   it('should generate if statement', () => {
     const cond = createNode('cpp:var_ref', { name: 'x' })
-    const body = createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:number_literal', { value: '1' })] })
+    const body = createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '1' })] })
     const ifStmt = createNode('cpp:if', {}, {
       condition: [cond],
       then_body: [body],
@@ -85,22 +85,22 @@ describe('generateCode', () => {
   it('should generate while loop', () => {
     const cond = createNode('cpp:compare', { operator: '<' }, {
       left: [createNode('cpp:var_ref', { name: 'i' })],
-      right: [createNode('cpp:number_literal', { value: '10' })],
+      right: [createNode('cpp:literal_number', { value: '10' })],
     })
     const body = createNode('cpp:var_assign', { obj: 'i' }, {
       value: [createNode('cpp:arithmetic', { operator: '+' }, {
         left: [createNode('cpp:var_ref', { name: 'i' })],
-        right: [createNode('cpp:number_literal', { value: '1' })],
+        right: [createNode('cpp:literal_number', { value: '1' })],
       })],
     })
-    const loop = createNode('cpp:while_loop', {}, { condition: [cond], body: [body] })
+    const loop = createNode('cpp:loop_while', {}, { condition: [cond], body: [body] })
     const tree = makeProgram(loop)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('while (i < 10)')
   })
 
   it('should generate function definition', () => {
-    const ret = createNode('cpp:return', {}, { value: [createNode('cpp:number_literal', { value: '0' })] })
+    const ret = createNode('cpp:return', {}, { value: [createNode('cpp:literal_number', { value: '0' })] })
     const func = createNode('cpp:func_def', { name: 'main', return_type: 'int' }, { params: [], body: [ret] })
     const tree = makeProgram(func)
     const code = generateCode(tree, 'cpp', defaultStyle)
@@ -118,7 +118,7 @@ describe('generateCode', () => {
 
   it('should output inline annotations as trailing comments', () => {
     const node = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '1' })],
+      initializer: [createNode('cpp:literal_number', { value: '1' })],
     })
     node.annotations = [{ type: 'comment', text: 'set x', position: 'inline' }]
     const code = generateCode(makeProgram(node), 'cpp', defaultStyle)

@@ -12,7 +12,7 @@ import { CPP_BUILTIN_CONSTANTS } from '../../builtins'
 export function registerLiteralsCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:char_literal', async (node) => {
+  register('cpp:literal_char', async (node) => {
     const ch = String(node.properties.char ?? 'a')
     return { type: 'char', value: ch.charCodeAt(0) || 0 }
   })

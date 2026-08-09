@@ -120,7 +120,7 @@ describe('C++ pointer assign Roundtrip', () => {
     })
 
     it('should generate *ptr = value code', () => {
-      const valNode = createNode('cpp:number_literal', { value: '42' })
+      const valNode = createNode('cpp:literal_number', { value: '42' })
       const ptrAssign = createNode('cpp:pointer_assign', { obj: 'ptr' }, {
         value: [valNode],
       })

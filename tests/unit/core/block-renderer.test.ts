@@ -20,7 +20,7 @@ describe('block-renderer', () => {
 
   it('should render var_declare', () => {
     const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-      initializer: [createNode('cpp:number_literal', { value: '5' })],
+      initializer: [createNode('cpp:literal_number', { value: '5' })],
     })
     const state = renderToBlocklyState(makeProgram(decl))
     expect(state.blocks.blocks).toHaveLength(1)
@@ -46,7 +46,7 @@ describe('block-renderer', () => {
   it('should render arithmetic expression', () => {
     const expr = createNode('cpp:arithmetic', { operator: '+' }, {
       left: [createNode('cpp:var_ref', { name: 'a' })],
-      right: [createNode('cpp:number_literal', { value: '1' })],
+      right: [createNode('cpp:literal_number', { value: '1' })],
     })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [expr] })
     const state = renderToBlocklyState(makeProgram(assign))
@@ -98,7 +98,7 @@ describe('block-renderer', () => {
         createNode('param_decl', { type: 'int', name: 'a' }),
         createNode('param_decl', { type: 'int', name: 'b' }),
       ],
-      body: [createNode('cpp:return', {}, { value: [createNode('cpp:number_literal', { value: '0' })] })],
+      body: [createNode('cpp:return', {}, { value: [createNode('cpp:literal_number', { value: '0' })] })],
     })
     const state = renderToBlocklyState(makeProgram(func))
     const block = state.blocks.blocks[0]
@@ -190,13 +190,13 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_increment in expression context as c_increment_expr', () => {
-    const forLoop = createNode('cpp:for_loop', {}, {
+    const forLoop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '0' })],
+        initializer: [createNode('cpp:literal_number', { value: '0' })],
       })],
       cond: [createNode('cpp:compare', { operator: '<' }, {
         left: [createNode('cpp:var_ref', { name: 'i' })],
-        right: [createNode('cpp:number_literal', { value: '10' })],
+        right: [createNode('cpp:literal_number', { value: '10' })],
       })],
       update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
       body: [createNode('cpp:break', {})],
@@ -213,7 +213,7 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_compound_assign in expression context as c_compound_assign_expr', () => {
-    const forLoop = createNode('cpp:for_loop', {}, {
+    const forLoop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_ref', { name: 'i' })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
       update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
@@ -231,9 +231,9 @@ describe('block-renderer', () => {
   })
 
   it('should render var_declare in expression context as c_var_declare_expr', () => {
-    const forLoop = createNode('cpp:for_loop', {}, {
+    const forLoop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
-        initializer: [createNode('cpp:number_literal', { value: '2' })],
+        initializer: [createNode('cpp:literal_number', { value: '2' })],
       })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
       update: [createNode('cpp:var_ref', { name: 'i' })],
