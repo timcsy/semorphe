@@ -29,7 +29,7 @@ export type UniversalConcept =
   | 'cpp:input'
   | 'cpp:endl'
   | 'cpp:array_declare'
-  | 'cpp:array_access'
+  | 'cpp:array_at'
 
 /** 語言特有概念使用 `lang:concept` 格式 */
 export type LanguageSpecificConcept = `${string}:${string}`

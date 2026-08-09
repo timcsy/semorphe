@@ -68,8 +68,20 @@ function measure(注入: 概念[] = []): Finding[] {
   const out: Finding[] = []
   const 概念們 = [...(allCppConcepts() as unknown as 概念[]), ...注入]
   const recv = 接收者參數名(概念們)
-  // 第二段可以是**操作**（動作）或**種類**（名詞性的種差）
-  const ops = new Set<string>([...OPERATIONS, ...KINDS])
+  // 第二段可以是**操作**、**種類**、或**操作＋種類**的複合。
+  //
+  // ⚠️ 複合這一層是必要的：`string_append_char`（加一個字元）與
+  // `string_append`（加一個字串）產出的 C++ 不同，不能合併；而
+  // 「append」這個操作又必須是同一個字。**種差可以再細分。**
+  const opSet = new Set<string>(OPERATIONS)
+  const kindSet = new Set<string>(KINDS)
+  const 合法第二段 = (d: string): boolean => {
+    if (opSet.has(d) || kindSet.has(d)) return true
+    for (const o of opSet) {
+      if (d.startsWith(o + SEPARATOR) && kindSet.has(d.slice(o.length + 1))) return true
+    }
+    return false
+  }
   const mods = new Set<string>(MODIFIERS)
   const atomics = new Set<string>(ATOMIC_NAMES)
 
@@ -125,7 +137,7 @@ function measure(注入: 概念[] = []): Finding[] {
       continue
     }
     // ② 操作詞必須在封閉詞彙裡
-    if (parsed.operation && !ops.has(parsed.operation)) {
+    if (parsed.operation && !合法第二段(parsed.operation)) {
       out.push({ 類: '操作詞不在詞彙', id: c.conceptId, 說明: `操作 \`${parsed.operation}\` 不在詞彙表（同義詞請合併）` })
     }
   }

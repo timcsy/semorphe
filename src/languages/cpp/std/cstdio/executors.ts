@@ -53,7 +53,7 @@ export function registerExecutors(
       const lastVal = parseInputValue(raw, targetType) ?? defaultValue(targetType)
       itemsRead++
 
-      if (argNode.conceptId === 'cpp:array_access') {
+      if (argNode.conceptId === 'cpp:array_at') {
         const arrName = String(argNode.properties.obj)
         const arr = ctx.scope.get(arrName)
         if (arr.type === 'array' && Array.isArray(arr.value)) {

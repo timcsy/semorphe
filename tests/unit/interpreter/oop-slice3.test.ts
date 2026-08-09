@@ -88,7 +88,7 @@ describe('指標取成員 `p->x`', () => {
         n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }, {
           initializer: [n('cpp:address_of', {}, { var: [ref('p')] })],
         }),
-        show(n('cpp:struct_pointer_access', { obj: 'ptr', member: 'x' })),
+        show(n('cpp:struct_at_ptr', { obj: 'ptr', member: 'x' })),
       ),
     )
     expect(out.trim(), '指標取成員讀不到——多半是沒有解參照').toBe('9')
@@ -97,7 +97,7 @@ describe('指標取成員 `p->x`', () => {
   it('★ 空指標取成員要出聲', async () => {
     const 訊息 = await errOf(
       prog(point(), n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }),
-        show(n('cpp:struct_pointer_access', { obj: 'ptr', member: 'x' }))),
+        show(n('cpp:struct_at_ptr', { obj: 'ptr', member: 'x' }))),
     )
     expect(訊息, '對空指標取成員靜默成功了——那在真的 C++ 會當掉').not.toBe('')
   })
@@ -158,7 +158,7 @@ describe('繼承與虛擬方法', () => {
     const out = await run(
       prog(base, derived, n('cpp:var_declare', { name: 'd', type: 'D' }),
         n('cpp:method_call', { obj: 'd', method: 'setV' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'd', member: 'v' }))),
+        show(n('cpp:struct_at_member', { obj: 'd', member: 'v' }))),
     )
     expect(out.trim(), '衍生類別沒有繼承基底的欄位或方法').toBe('8')
   })
@@ -184,7 +184,7 @@ describe('運算子多載', () => {
         n('cpp:operator_overload', { operator: '+', return_type: 'V', param_type: 'V', param_name: 'o' }, {
           body: [ret(n('cpp:arithmetic', { operator: '+' }, {
             left: [ref('x')],
-            right: [n('cpp:struct_member_access', { obj: 'o', member: 'x' })],
+            right: [n('cpp:struct_at_member', { obj: 'o', member: 'x' })],
           }))],
         }),
       ],
@@ -220,7 +220,7 @@ describe('靜態成員', () => {
         n('cpp:var_declare', { name: 'b', type: 'C' }),
         n('cpp:method_call', { obj: 'a', method: 'inc' }, { args: [] }),
         n('cpp:method_call', { obj: 'b', method: 'inc' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'a', member: 'count' }))),
+        show(n('cpp:struct_at_member', { obj: 'a', member: 'count' }))),
     )
     expect(out.trim(), '靜態成員沒有共用——它變成了每個實例各一份').toBe('2')
   })

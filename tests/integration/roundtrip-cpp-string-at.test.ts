@@ -208,7 +208,7 @@ int main() {
     expect(stringAtNodes.length).toBeGreaterThan(0)
     expect(stringAtNodes[0].properties.obj).toBe('word')
     // Should NOT degrade to array_access for string variables
-    const arrayAccessNodes = findConcepts(sem!, 'cpp:array_access')
+    const arrayAccessNodes = findConcepts(sem!, 'cpp:array_at')
     expect(arrayAccessNodes).toHaveLength(0)
   })
 

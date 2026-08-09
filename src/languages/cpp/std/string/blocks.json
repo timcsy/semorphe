@@ -97,8 +97,8 @@
     }
   },
   {
-    "id": "cpp:string_length",
-    "conceptId": "cpp:string_length",
+    "id": "cpp:string_size",
+    "conceptId": "cpp:string_size",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -298,8 +298,8 @@
     }
   },
   {
-    "id": "cpp:string_c_str",
-    "conceptId": "cpp:string_c_str",
+    "id": "cpp:string_as_cstring",
+    "conceptId": "cpp:string_as_cstring",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -332,7 +332,7 @@
     }
   },
   {
-    "id": "cpp:to_string",
+    "id": "cpp:string_make",
     "conceptId": "cpp:string_make",
     "language": "cpp",
     "category": "containers",
@@ -618,8 +618,8 @@
     }
   },
   {
-    "id": "cpp:string_push_back",
-    "conceptId": "cpp:string_push_back",
+    "id": "cpp:string_append_char",
+    "conceptId": "cpp:string_append_char",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

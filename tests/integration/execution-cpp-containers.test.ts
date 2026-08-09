@@ -55,7 +55,7 @@ describe('Stack execution (LIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(10)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(30)] }),
-      printNode(createNode('cpp:stack_top', { obj: 's' }, {})),
+      printNode(createNode('cpp:stack_peek', { obj: 's' }, {})),
     ])
     expect(output).toContain('30')
   })
@@ -67,7 +67,7 @@ describe('Stack execution (LIFO)', () => {
       createNode('cpp:container_push', { obj: 's' }, { value: [num(20)] }),
       createNode('cpp:container_push', { obj: 's' }, { value: [num(30)] }),
       createNode('cpp:container_pop', { obj: 's' }, {}),
-      printNode(createNode('cpp:stack_top', { obj: 's' }, {})),
+      printNode(createNode('cpp:stack_peek', { obj: 's' }, {})),
     ])
     expect(output).toContain('20')
   })
@@ -98,7 +98,7 @@ describe('Stack execution (LIFO)', () => {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
         body: [
-          printLine(createNode('cpp:stack_top', { obj: 's' }, {})),
+          printLine(createNode('cpp:stack_peek', { obj: 's' }, {})),
           createNode('cpp:container_pop', { obj: 's' }, {}),
         ],
       }),
@@ -180,7 +180,7 @@ describe('Queue execution (FIFO)', () => {
           operand: [createNode('cpp:container_empty', { obj: 's' }, {})],
         })],
         body: [
-          printLine(createNode('cpp:stack_top', { obj: 's' }, {})),
+          printLine(createNode('cpp:stack_peek', { obj: 's' }, {})),
           createNode('cpp:container_pop', { obj: 's' }, {}),
         ],
       }),

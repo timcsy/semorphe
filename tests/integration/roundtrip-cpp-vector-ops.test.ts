@@ -122,7 +122,7 @@ describe('C++ Vector Operations Roundtrip', () => {
     it('should lift to cpp_vector_push_back concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:container_push_back')
+      const node = findConcept(tree, 'cpp:container_append')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('v')
     })
@@ -136,7 +136,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:container_push_back')
+      const node2 = findConcept(tree2, 'cpp:container_append')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('v')
     })
@@ -172,13 +172,13 @@ describe('C++ Vector Operations Roundtrip', () => {
 
   // ─── 4. cpp_vector_pop_back ───────────────────────────────
 
-  describe('cpp:vector_pop_back', () => {
+  describe('cpp:vector_pop', () => {
     const code = 'vector<int> v;\nv.push_back(1);\nv.push_back(2);\nv.push_back(3);\nv.pop_back();\ncout << v.size() << endl;'
 
     it('should lift to cpp_vector_pop_back concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:vector_pop_back')
+      const node = findConcept(tree, 'cpp:vector_pop')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('v')
     })
@@ -192,7 +192,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:vector_pop_back')
+      const node2 = findConcept(tree2, 'cpp:vector_pop')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('v')
     })
@@ -292,7 +292,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:vector_declare')).toBe(true)
-      expect(concepts.has('cpp:container_push_back')).toBe(true)
+      expect(concepts.has('cpp:container_append')).toBe(true)
       expect(concepts.has('cpp:vector_size')).toBe(true)
       expect(concepts.has('cpp:vector_back')).toBe(true)
     })
@@ -303,7 +303,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp:vector_declare')).toBe(true)
-      expect(concepts2.has('cpp:container_push_back')).toBe(true)
+      expect(concepts2.has('cpp:container_append')).toBe(true)
       expect(concepts2.has('cpp:vector_size')).toBe(true)
       expect(concepts2.has('cpp:vector_back')).toBe(true)
     })
@@ -318,8 +318,8 @@ describe('C++ Vector Operations Roundtrip', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:container_push_back')).toBe(true)
-      expect(concepts.has('cpp:vector_pop_back')).toBe(true)
+      expect(concepts.has('cpp:container_append')).toBe(true)
+      expect(concepts.has('cpp:vector_pop')).toBe(true)
       expect(concepts.has('cpp:container_empty')).toBe(true)
     })
 
@@ -328,8 +328,8 @@ describe('C++ Vector Operations Roundtrip', () => {
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:container_push_back')).toBe(true)
-      expect(concepts2.has('cpp:vector_pop_back')).toBe(true)
+      expect(concepts2.has('cpp:container_append')).toBe(true)
+      expect(concepts2.has('cpp:vector_pop')).toBe(true)
       expect(concepts2.has('cpp:container_empty')).toBe(true)
     })
   })
@@ -343,7 +343,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:container_push_back')).toBe(true)
+      expect(concepts.has('cpp:container_append')).toBe(true)
       expect(concepts.has('cpp:container_clear')).toBe(true)
       expect(concepts.has('cpp:vector_size')).toBe(true)
     })
@@ -353,7 +353,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:container_push_back')).toBe(true)
+      expect(concepts2.has('cpp:container_append')).toBe(true)
       expect(concepts2.has('cpp:container_clear')).toBe(true)
       expect(concepts2.has('cpp:vector_size')).toBe(true)
     })

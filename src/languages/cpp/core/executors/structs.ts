@@ -246,7 +246,7 @@ export function registerStructExecutors(
   })
 
   /** `p->x` */
-  register('cpp:struct_pointer_access', async (node, ctx) => {
+  register('cpp:struct_at_ptr', async (node, ctx) => {
     const ptrName = String(node.properties.obj)
     const ptr = ctx.scope.get(ptrName)
     if (ptr.value === null || ptr.value === undefined) {
@@ -260,7 +260,7 @@ export function registerStructExecutors(
   })
 
   /** `p.x` */
-  register('cpp:struct_member_access', async (node, ctx) => {
+  register('cpp:struct_at_member', async (node, ctx) => {
     const objName = String(node.properties.obj)
     const o = ctx.scope.get(objName)
     return getMember(o, String(node.properties.member), objName, ctx.structs.staticsOf(o.structName ?? ''))

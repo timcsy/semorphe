@@ -34,7 +34,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}vector<${type}> ${name};\n`
   })
 
-  g.set('cpp:vector_pop_back', (node, ctx) => {
+  g.set('cpp:vector_pop', (node, ctx) => {
     const vector = node.properties.obj ?? 'vec'
     return `${indent(ctx)}${vector}.pop_back();\n`
   })

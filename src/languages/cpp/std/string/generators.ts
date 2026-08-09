@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../../core/projection/code-gen
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
   // Expression concepts — return expression string (no indent, no newline)
-  g.set('cpp:string_length', (node) => {
+  g.set('cpp:string_size', (node) => {
     const obj = node.properties.obj ?? 'str'
     return `${obj}.length()`
   })
@@ -25,7 +25,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}.find(${arg})`
   })
 
-  g.set('cpp:string_c_str', (node) => {
+  g.set('cpp:string_as_cstring', (node) => {
     const obj = node.properties.obj ?? 'str'
     return `${obj}.c_str()`
   })
@@ -112,7 +112,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}${obj}.replace(${pos}, ${len}, ${val});\n`
   })
 
-  g.set('cpp:string_push_back', (node, ctx) => {
+  g.set('cpp:string_append_char', (node, ctx) => {
     const obj = node.properties.obj ?? 'str'
     const charNodes = node.children.char ?? []
     const ch = charNodes.length > 0 ? generateExpression(charNodes[0], ctx) : "'a'"

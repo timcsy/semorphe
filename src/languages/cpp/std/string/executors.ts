@@ -29,7 +29,7 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'string', value: '' })
   })
 
-  register('cpp:string_length', async (node, ctx) => {
+  register('cpp:string_size', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     const str = String(val.value)
@@ -93,7 +93,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: String(val.value) + String(appendVal.value) })
   })
 
-  register('cpp:string_c_str', async (node, ctx) => {
+  register('cpp:string_as_cstring', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     return { type: 'string', value: String(val.value) }
@@ -175,7 +175,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + replaceStr + str.substring(pos + len) })
   })
 
-  register('cpp:string_push_back', async (node, ctx) => {
+  register('cpp:string_append_char', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)
     // ⚠️ 辨識器把引數放在 `value`（見 `METHOD_CHILD_SLOT`），而這裡原本只讀

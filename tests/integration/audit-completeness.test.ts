@@ -177,7 +177,7 @@ beforeAll(async () => {
 // 是讓脈絡**跟著合成節點走**。
 type Prelude = (varName: string) => SemanticNode[]
 const SAMPLE_CONTEXT: Record<string, Prelude> = {}
-for (const id of ['cpp:string_clear', 'cpp:string_push_back', 'cpp:string_at', 'cpp:string_length', 'cpp:string_substr', 'cpp:string_find']) {
+for (const id of ['cpp:string_clear', 'cpp:string_append_char', 'cpp:string_at', 'cpp:string_size', 'cpp:string_substr', 'cpp:string_find']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:string_declare', { name: v, type: 'string' }, {})]
 }
 // **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，
@@ -186,7 +186,7 @@ for (const id of ['cpp:string_clear', 'cpp:string_push_back', 'cpp:string_at', '
 // （產生器的預設值），而 `synth-node.ts` 給 `obj` 這類屬性的合成值是 `'x'`
 // ——名字對不上，型別自然查不到，於是它仍然被判成殼。**脈絡有了、接不上，
 // 與「機制有了沒人接上」同一個形狀。**
-for (const id of ['cpp:map_access', 'cpp:map_assign']) {
+for (const id of ['cpp:map_at', 'cpp:map_assign']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
 }
 

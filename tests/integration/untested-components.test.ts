@@ -145,7 +145,7 @@ describe('cpp_map_access — map 的鍵存取', () => {
 
   it('身分：讀取位置辨識得出 cpp_map_access', () => {
     expect(
-      collect(lift(程式), 'cpp:map_access').length,
+      collect(lift(程式), 'cpp:map_at').length,
       '零個 → 這顆元件五路齊備、進了工具箱與兩份課程清單，卻沒有任何路徑到得了它',
     ).toBeGreaterThan(0)
   })

@@ -13,7 +13,7 @@ const PRECEDENCE_MAP = new Map<string, number>([
   ['cpp:address_of', 14],
   ['cpp:pointer_deref', 14],
   ['cpp:cast', 14],
-  ['cpp:array_access', 16],
+  ['cpp:array_at', 16],
 ])
 
 /** Operator-dependent precedence for concepts with varying operators. */
@@ -218,13 +218,13 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `(${type})malloc(${size})`
   })
 
-  g.set('cpp:struct_member_access', (node) => {
+  g.set('cpp:struct_at_member', (node) => {
     const obj = node.properties.obj ?? 'obj'
     const member = node.properties.member ?? 'field'
     return `${obj}.${member}`
   })
 
-  g.set('cpp:struct_pointer_access', (node) => {
+  g.set('cpp:struct_at_ptr', (node) => {
     const ptr = node.properties.obj ?? 'ptr'
     const member = node.properties.member ?? 'field'
     return `${ptr}->${member}`

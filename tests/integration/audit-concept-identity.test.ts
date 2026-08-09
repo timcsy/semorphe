@@ -211,8 +211,8 @@ int main() { int x; cin >> x; }`, 'cpp:input')
     assertConceptPresent(`int main() { int arr[5]; }`, 'cpp:array_declare')
   })
 
-  it('cpp:array_access', () => {
-    assertConceptPresent(`int main() { int arr[5]; int x = arr[0]; }`, 'cpp:array_access')
+  it('cpp:array_at', () => {
+    assertConceptPresent(`int main() { int arr[5]; int x = arr[0]; }`, 'cpp:array_at')
   })
 
   it('cpp:array_assign', () => {
@@ -402,14 +402,14 @@ int x = 1;
     assertConceptPresent(`struct Point { int x; int y; };`, 'cpp:struct_declare')
   })
 
-  it('cpp:struct_member_access', () => {
+  it('cpp:struct_at_member', () => {
     assertConceptPresent(`struct Point { int x; };
-int main() { Point p; int x = p.x; }`, 'cpp:struct_member_access')
+int main() { Point p; int x = p.x; }`, 'cpp:struct_at_member')
   })
 
-  it('cpp:struct_pointer_access', () => {
+  it('cpp:struct_at_ptr', () => {
     assertConceptPresent(`struct Point { int x; };
-int main() { Point p; Point* pp = &p; int x = pp->x; }`, 'cpp:struct_pointer_access')
+int main() { Point p; Point* pp = &p; int x = pp->x; }`, 'cpp:struct_at_ptr')
   })
 
   // --- Classes (advanced) ---
@@ -447,8 +447,8 @@ public:
     assertConceptPresent(`int main() { int arr[3][4]; }`, 'cpp:array_2d_declare')
   })
 
-  it('cpp:array_2d_access', () => {
-    assertConceptPresent(`int main() { int arr[3][4]; int x = arr[0][1]; }`, 'cpp:array_2d_access')
+  it('cpp:array_2d_at', () => {
+    assertConceptPresent(`int main() { int arr[3][4]; int x = arr[0][1]; }`, 'cpp:array_2d_at')
   })
 
   it('cpp:array_2d_assign', () => {
@@ -561,7 +561,7 @@ T add(T a, T b) { return a + b; }`, 'cpp:template_function')
 
   it('cpp_container_push_back（vector → 通用版）', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.push_back(1); }`, 'cpp:container_push_back')
+int main() { std::vector<int> v; v.push_back(1); }`, 'cpp:container_append')
   })
 
   it('cpp:container_pop', () => {
@@ -687,9 +687,9 @@ describe('STD: string', () => {
 int main() { std::string s; }`, 'cpp:string_declare')
   })
 
-  it('cpp:string_length', () => {
+  it('cpp:string_size', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; int n = s.length(); }`, 'cpp:string_length')
+int main() { std::string s; int n = s.length(); }`, 'cpp:string_size')
   })
 
   it('cpp:string_substr', () => {
@@ -707,10 +707,10 @@ int main() { std::string s = "hello"; int pos = s.find("ll"); }`, 'cpp:string_fi
 int main() { std::string s; s.append("hi"); }`, 'cpp:string_append')
   })
 
-  it('cpp:string_c_str', () => {
+  it('cpp:string_as_cstring', () => {
     assertConceptPresent(`#include <string>
 #include <cstdio>
-int main() { std::string s = "hello"; printf("%s", s.c_str()); }`, 'cpp:string_c_str')
+int main() { std::string s = "hello"; printf("%s", s.c_str()); }`, 'cpp:string_as_cstring')
   })
 
   it('cpp:getline', () => {
@@ -767,7 +767,7 @@ int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp:string_repl
   // 『做不到』」。
   it('cpp_string_push_back（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
-int main() { std::string s; s.push_back('a'); }`, 'cpp:string_push_back')
+int main() { std::string s; s.push_back('a'); }`, 'cpp:string_append_char')
   })
 
   // 同上——原本的 `ARCHITECTURAL` 標籤是假的
@@ -985,9 +985,9 @@ int main() { std::vector<int> v; }`, 'cpp:vector_declare')
 int main() { std::vector<int> v; int n = v.size(); }`, 'cpp:vector_size')
   })
 
-  it('cpp:vector_pop_back', () => {
+  it('cpp:vector_pop', () => {
     assertConceptPresent(`#include <vector>
-int main() { std::vector<int> v; v.pop_back(); }`, 'cpp:vector_pop_back')
+int main() { std::vector<int> v; v.pop_back(); }`, 'cpp:vector_pop')
   })
 
   it('cpp:vector_back', () => {
@@ -1007,9 +1007,9 @@ describe('STD: stack', () => {
 int main() { std::stack<int> s; }`, 'cpp:stack_declare')
   })
 
-  it('cpp:stack_top', () => {
+  it('cpp:stack_peek', () => {
     assertConceptPresent(`#include <stack>
-int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp:stack_top')
+int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp:stack_peek')
   })
 })
 
@@ -1052,11 +1052,11 @@ int main() { std::map<int, int> m; }`, 'cpp:map_declare')
   // 的第四個實例，而**前三個都在註解裡，這個在測試名稱裡**。
   it('cpp_map_access — 對應表的鍵存取有自己的身分（型別查得到）', () => {
     assertConceptPresent(`#include <map>
-int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_access')
+int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_at')
   })
 
   it('負向：真的陣列仍然是 array_access', () => {
-    assertConceptPresent(`int main() { int a[3]; int x = a[1]; }`, 'cpp:array_access')
+    assertConceptPresent(`int main() { int a[3]; int x = a[1]; }`, 'cpp:array_at')
   })
 })
 

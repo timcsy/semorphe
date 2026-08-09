@@ -34,7 +34,7 @@ describe('JSON-only extension (US6)', () => {
     expect(all.length).toBe(4)
     expect(all.map(s => s.id)).toContain('cpp:vector_declare')
     expect(all.map(s => s.id)).toContain('cpp:vector_size')
-    expect(all.map(s => s.id)).toContain('cpp:vector_pop_back')
+    expect(all.map(s => s.id)).toContain('cpp:vector_pop')
     expect(all.map(s => s.id)).toContain('cpp:vector_back')
   })
 

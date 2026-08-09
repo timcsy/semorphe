@@ -108,7 +108,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `{${values.map(v => generateExpression(v, ctx)).join(', ')}}`
   })
 
-  g.set('cpp:array_access', (node, ctx) => {
+  g.set('cpp:array_at', (node, ctx) => {
     const name = node.properties.obj ?? 'arr'
     const indexNodes = node.children.index ?? []
     const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
@@ -164,7 +164,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type} ${name}[${rows}][${cols}];\n`
   })
 
-  g.set('cpp:array_2d_access', (node, ctx) => {
+  g.set('cpp:array_2d_at', (node, ctx) => {
     const name = node.properties.obj ?? 'arr'
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []

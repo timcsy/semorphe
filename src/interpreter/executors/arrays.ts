@@ -67,7 +67,7 @@ export function registerArrayExecutors(register: (concept: string, executor: Con
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 
-  register('cpp:array_access', async (node, ctx) => {
+  register('cpp:array_at', async (node, ctx) => {
     const name = String(node.properties.obj)
     const indexNodes = node.children.index
     if (!indexNodes || indexNodes.length === 0) return defaultValue('int')

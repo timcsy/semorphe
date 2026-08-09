@@ -95,7 +95,7 @@
     "order": 0
   },
   {
-    "conceptId": "cpp:array_access",
+    "conceptId": "cpp:array_at",
     "pattern": "${obj}[${index}]",
     "order": 20
   },

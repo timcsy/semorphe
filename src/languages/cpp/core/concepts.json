@@ -329,7 +329,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:struct_member_access",
+    "conceptId": "cpp:struct_at_member",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -348,7 +348,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:struct_pointer_access",
+    "conceptId": "cpp:struct_at_ptr",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -504,7 +504,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:container_push_back",
+    "conceptId": "cpp:container_append",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1080,9 +1080,9 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:array_2d_access",
+    "conceptId": "cpp:array_2d_at",
     "layer": "lang-core",
-    "abstractConcept": "cpp:array_access",
+    "abstractConcept": "cpp:array_at",
     "properties": [
       {
         "name": "obj",

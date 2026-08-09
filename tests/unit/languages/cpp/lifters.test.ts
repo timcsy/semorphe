@@ -246,7 +246,7 @@ describe('C++ Expression Lifters', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:array_access')
+    expect(result!.conceptId).toBe('cpp:array_at')
     expect(result!.properties.obj).toBe('arr')
     expect(result!.children.index).toHaveLength(1)
   })

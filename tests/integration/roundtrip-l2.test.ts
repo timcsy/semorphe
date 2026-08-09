@@ -229,7 +229,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('c_struct_member_access', () => {
     it('should render and extract struct member access', () => {
-      const sem = createNode('cpp:struct_member_access', { obj: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_at_member', { obj: 'p', member: 'x' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_struct_member_access')
@@ -237,13 +237,13 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.MEMBER).toBe('x')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:struct_member_access')
+      expect(sem2!.conceptId).toBe('cpp:struct_at_member')
       expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_member_access', { obj: 'point', member: 'y' })
+      const sem = createNode('cpp:struct_at_member', { obj: 'point', member: 'y' })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('point.y')
     })
@@ -258,25 +258,25 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:struct_member_access')
+      expect(sem!.conceptId).toBe('cpp:struct_at_member')
     })
   })
 
   describe('c_struct_pointer_access', () => {
     it('should render and extract struct pointer access', () => {
-      const sem = createNode('cpp:struct_pointer_access', { obj: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_at_ptr', { obj: 'p', member: 'x' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_struct_pointer_access')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:struct_pointer_access')
+      expect(sem2!.conceptId).toBe('cpp:struct_at_ptr')
       expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_pointer_access', { obj: 'node', member: 'next' })
+      const sem = createNode('cpp:struct_at_ptr', { obj: 'node', member: 'next' })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('node->next')
     })
@@ -366,22 +366,22 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('cpp:container_push_back', () => {
+  describe('cpp:container_append', () => {
     it('should render and extract push_back', () => {
       const val = createNode('cpp:literal_number', { value: '42' })
-      const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
+      const sem = createNode('cpp:container_append', { obj: 'v' }, { value: [val] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_container_push_back')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:container_push_back')
+      expect(sem2!.conceptId).toBe('cpp:container_append')
       expect(sem2!.properties.obj).toBe('v')
     })
 
     it('should generate code', () => {
       const val = createNode('cpp:literal_number', { value: '5' })
-      const sem = createNode('cpp:container_push_back', { obj: 'v' }, { value: [val] })
+      const sem = createNode('cpp:container_append', { obj: 'v' }, { value: [val] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('v.push_back(5);')
     })

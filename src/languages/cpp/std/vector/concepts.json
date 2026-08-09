@@ -55,7 +55,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:vector_pop_back",
+    "conceptId": "cpp:vector_pop",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

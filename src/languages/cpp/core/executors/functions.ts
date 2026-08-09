@@ -25,9 +25,9 @@ export function registerFunctionsCoreExecutors(
 
   // OOP concepts — noop in interpreter (no OOP runtime)
 
-  register('cpp:struct_member_access', async () => {})
+  register('cpp:struct_at_member', async () => {})
 
-  register('cpp:struct_pointer_access', async () => {})
+  register('cpp:struct_at_ptr', async () => {})
 
   register('cpp:method_call', async () => {})
 

@@ -69,8 +69,8 @@ const 切換前的產出: [string, SemanticNode, string][] = [
     'g(2, y)',
   ],
   [
-    'cpp:array_access',
-    n('cpp:array_access', { obj: 'arr' }, { index: [n('cpp:literal_number', { value: 1 })] }),
+    'cpp:array_at',
+    n('cpp:array_at', { obj: 'arr' }, { index: [n('cpp:literal_number', { value: 1 })] }),
     'arr[1]',
   ],
   // ── 以下是語言專屬的，正是中立性報的那六筆

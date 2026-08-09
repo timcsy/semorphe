@@ -43,6 +43,7 @@ export interface NamingVocabulary {
 
 export interface ParsedName {
   subject?: string
+  /** 第二段整體（可能是 `操作`、`種類`、或 `操作_種類`） */
   operation?: string
   /** 不可分解——要嘛是宣告過的單字名，要嘛是違規 */
   atomic: boolean

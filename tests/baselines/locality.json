@@ -22,11 +22,11 @@
       "files": 7,
       "dirs": 6
     },
-    "cpp:array_2d_access": {
+    "cpp:array_2d_assign": {
       "files": 3,
       "dirs": 3
     },
-    "cpp:array_2d_assign": {
+    "cpp:array_2d_at": {
       "files": 3,
       "dirs": 3
     },
@@ -34,13 +34,13 @@
       "files": 3,
       "dirs": 3
     },
-    "cpp:array_access": {
-      "files": 8,
-      "dirs": 5
-    },
     "cpp:array_assign": {
       "files": 4,
       "dirs": 3
+    },
+    "cpp:array_at": {
+      "files": 8,
+      "dirs": 5
     },
     "cpp:array_declare": {
       "files": 4,
@@ -118,6 +118,10 @@
       "files": 3,
       "dirs": 3
     },
+    "cpp:container_append": {
+      "files": 3,
+      "dirs": 3
+    },
     "cpp:container_clear": {
       "files": 3,
       "dirs": 3
@@ -139,10 +143,6 @@
       "dirs": 3
     },
     "cpp:container_push": {
-      "files": 3,
-      "dirs": 3
-    },
-    "cpp:container_push_back": {
       "files": 3,
       "dirs": 3
     },
@@ -318,11 +318,11 @@
       "files": 4,
       "dirs": 4
     },
-    "cpp:map_access": {
+    "cpp:map_assign": {
       "files": 3,
       "dirs": 2
     },
-    "cpp:map_assign": {
+    "cpp:map_at": {
       "files": 3,
       "dirs": 2
     },
@@ -422,7 +422,7 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:priority_queue_top": {
+    "cpp:priority_queue_peek": {
       "files": 3,
       "dirs": 2
     },
@@ -502,7 +502,7 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:stack_top": {
+    "cpp:stack_peek": {
       "files": 3,
       "dirs": 2
     },
@@ -546,11 +546,15 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:string_at": {
+    "cpp:string_append_char": {
       "files": 3,
       "dirs": 2
     },
-    "cpp:string_c_str": {
+    "cpp:string_as_cstring": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:string_at": {
       "files": 3,
       "dirs": 2
     },
@@ -586,19 +590,15 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:string_length": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:string_make": {
       "files": 3,
       "dirs": 2
     },
-    "cpp:string_push_back": {
+    "cpp:string_replace": {
       "files": 3,
       "dirs": 2
     },
-    "cpp:string_replace": {
+    "cpp:string_size": {
       "files": 3,
       "dirs": 2
     },
@@ -626,16 +626,16 @@
       "files": 3,
       "dirs": 2
     },
+    "cpp:struct_at_member": {
+      "files": 4,
+      "dirs": 3
+    },
+    "cpp:struct_at_ptr": {
+      "files": 4,
+      "dirs": 3
+    },
     "cpp:struct_declare": {
       "files": 3,
-      "dirs": 3
-    },
-    "cpp:struct_member_access": {
-      "files": 4,
-      "dirs": 3
-    },
-    "cpp:struct_pointer_access": {
-      "files": 4,
       "dirs": 3
     },
     "cpp:swap": {
@@ -702,7 +702,7 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:vector_pop_back": {
+    "cpp:vector_pop": {
       "files": 3,
       "dirs": 2
     },

@@ -76,7 +76,7 @@ describe('類別與方法', () => {
   it('★ 宣告一個類別 → 它的欄位可以實例化', async () => {
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
-        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
+        show(n('cpp:struct_at_member', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '類別的欄位沒有被建出來').toBe('0')
   })
@@ -85,7 +85,7 @@ describe('類別與方法', () => {
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
         n('cpp:method_call', { obj: 'c', method: 'bump' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
+        show(n('cpp:struct_at_member', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '方法改不到欄位——多半是欄位被複製進方法的作用域了').toBe('1')
   })
@@ -104,7 +104,7 @@ describe('類別與方法', () => {
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
         n('cpp:method_call', { obj: 'c', method: 'bumpTwice' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'c', member: 'n' }))),
+        show(n('cpp:struct_at_member', { obj: 'c', member: 'n' }))),
     )
     expect(out.trim(), '內層方法改的是副本——這正是「複製進去、跑完複製回來」的失效樣態').toBe('2')
   })
@@ -115,7 +115,7 @@ describe('類別與方法', () => {
         n('cpp:var_declare', { name: 'a', type: 'Counter' }),
         n('cpp:var_declare', { name: 'b', type: 'Counter' }),
         n('cpp:method_call', { obj: 'a', method: 'bump' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'b', member: 'n' }))),
+        show(n('cpp:struct_at_member', { obj: 'b', member: 'n' }))),
     )
     expect(out.trim(), 'b 被 a 的方法改到了——方法綁在型別上而不是實例上').toBe('0')
   })
@@ -144,7 +144,7 @@ describe('類別與方法', () => {
     try {
       await run(prog(withLocal, n('cpp:var_declare', { name: 'o', type: 'L' }),
         n('cpp:method_call', { obj: 'o', method: 'run' }, { args: [] }),
-        show(n('cpp:struct_member_access', { obj: 'o', member: '區域' }))))
+        show(n('cpp:struct_at_member', { obj: 'o', member: '區域' }))))
     } catch (e) { 訊息 = (e as Error).message }
     expect(訊息, '方法裡宣告的區域變數變成了物件的欄位').not.toBe('')
   })
@@ -168,7 +168,7 @@ describe('建構式', () => {
     const out = await run(
       prog(withCtor(),
         n('cpp:var_declare', { name: 'p', type: 'P' }, { initializer: [n('cpp:func_call', { name: 'P' }, { args: [num(42)] })] }),
-        show(n('cpp:struct_member_access', { obj: 'p', member: 'v' }))),
+        show(n('cpp:struct_at_member', { obj: 'p', member: 'v' }))),
     )
     expect(out.trim(), '建構式沒有跑——欄位還是預設值').toBe('42')
   })
@@ -176,7 +176,7 @@ describe('建構式', () => {
   it('★ 沒有呼叫建構式時，欄位仍是預設值（不得炸）', async () => {
     const out = await run(
       prog(withCtor(), n('cpp:var_declare', { name: 'p', type: 'P' }),
-        show(n('cpp:struct_member_access', { obj: 'p', member: 'v' }))),
+        show(n('cpp:struct_at_member', { obj: 'p', member: 'v' }))),
     )
     expect(out.trim()).toBe('0')
   })

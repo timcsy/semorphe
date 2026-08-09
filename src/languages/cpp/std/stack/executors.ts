@@ -22,7 +22,7 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'array', value: [] })
   })
 
-  register('cpp:stack_top', async (node, ctx) => {
+  register('cpp:stack_peek', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {

@@ -456,7 +456,7 @@
     }
   },
   {
-    "conceptId": "cpp:array_access",
+    "conceptId": "cpp:array_at",
     "layer": "universal",
     "abstractConcept": null,
     "properties": [

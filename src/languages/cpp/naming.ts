@@ -55,6 +55,7 @@ export const SUBJECTS = [
  */
 export const OPERATIONS = [
   'append', 'assign', 'at', 'call', 'cast', 'clear', 'count', 'declare',
+  'append', 'as', 'back', 'deref', 'front', 'replace', 'substr',
   'def', 'empty', 'erase', 'find', 'insert', 'make', 'peek',
   'pop', 'push', 'ref', 'size', 'swap',
 ] as const
@@ -66,7 +67,12 @@ export const OPERATIONS = [
  * 於是第二段變成種類。理由是「排序即分群」：`count_loop`／`while_loop`／`for_loop`
  * 排不在一起，`loop_*` 排得在一起——而登錄表、工具箱、目錄都吃這個順序。
  */
-export const KINDS = ['char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while'] as const
+export const KINDS = [
+  'char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while',
+  // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
+  'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',
+  'member', 'ptr', 'cstring',
+] as const
 
 /**
  * 修飾詞——**不得站在主體的位置**。

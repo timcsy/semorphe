@@ -182,13 +182,13 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('★ m[key] 辨識成 cpp_map_access，不是 array_access', () => {
       const concepts = collectConcepts(liftCode(code))
-      expect(concepts.has('cpp:map_access')).toBe(true)
-      expect(concepts.has('cpp:array_access'), '降級回去了——型別查得到卻沒用').toBe(false)
+      expect(concepts.has('cpp:map_at')).toBe(true)
+      expect(concepts.has('cpp:array_at'), '降級回去了——型別查得到卻沒用').toBe(false)
     })
 
     it('★ 來回轉換之後身分不變', () => {
       const concepts2 = collectConcepts(liftCode(roundTripCode(code)))
-      expect(concepts2.has('cpp:map_access')).toBe(true)
+      expect(concepts2.has('cpp:map_at')).toBe(true)
     })
   })
 

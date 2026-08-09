@@ -25,7 +25,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:stack_top",
+    "conceptId": "cpp:stack_peek",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

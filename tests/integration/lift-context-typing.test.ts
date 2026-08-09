@@ -61,7 +61,7 @@ describe('脈絡有型別時，方法辨識成專屬概念', () => {
   })
 
   it('★ `s.push_back(c)`（s 是 string）→ 字串專屬', () => {
-    expect(concepts("int main(){ string s; s.push_back('a'); }")).toContain('cpp:string_push_back')
+    expect(concepts("int main(){ string s; s.push_back('a'); }")).toContain('cpp:string_append_char')
   })
 })
 

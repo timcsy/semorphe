@@ -305,13 +305,13 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift p.x to cpp_struct_member_access', () => {
       const sem = liftCode('int v = p.x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:struct_member_access')
+      expect(concepts).toContain('cpp:struct_at_member')
     })
 
     it('should lift p->x to cpp_struct_pointer_access', () => {
       const sem = liftCode('int v = p->x;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:struct_pointer_access')
+      expect(concepts).toContain('cpp:struct_at_ptr')
     })
   })
 

@@ -24,7 +24,7 @@ const sampleTree: LevelNode = {
           id: 'L2a',
           level: 2,
           label: 'L2a: 陣列',
-          concepts: ['cpp:array_declare', 'cpp:array_access'],
+          concepts: ['cpp:array_declare', 'cpp:array_at'],
           children: [],
         },
       ],
@@ -77,7 +77,7 @@ describe('getVisibleConcepts', () => {
   it('should include deep branch concepts', () => {
     const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a', 'L2a']))
     expect(result.has('cpp:array_declare')).toBe(true)
-    expect(result.has('cpp:array_access')).toBe(true)
+    expect(result.has('cpp:array_at')).toBe(true)
   })
 
   it('should return empty set when no branches enabled', () => {

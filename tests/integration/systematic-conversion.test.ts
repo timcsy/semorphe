@@ -358,7 +358,7 @@ describe('Expressions', () => {
     it('lifts arr[i]', () => {
       const n = liftExpr('arr[i]')
       expect(n).not.toBeNull()
-      expect(n!.conceptId).toBe('cpp:array_access')
+      expect(n!.conceptId).toBe('cpp:array_at')
       expect(n!.properties.obj).toBe('arr')
     })
 

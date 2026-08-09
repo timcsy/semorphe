@@ -44,7 +44,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
       let lastVal: RuntimeValue = { type: 'int', value: 0 }
       let itemsRead = 0
       for (const varRefNode of valueNodes) {
-        if (varRefNode.conceptId === 'cpp:array_access') {
+        if (varRefNode.conceptId === 'cpp:array_at') {
           const arrName = String(varRefNode.properties.obj)
           const arr = ctx.scope.get(arrName)
           if (arr.type !== 'array' || !Array.isArray(arr.value)) {

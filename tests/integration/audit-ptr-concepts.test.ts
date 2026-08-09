@@ -227,7 +227,7 @@ int main() {
     return 0;
 }`
     const sem = liftCode(code)!
-    const accesses = findConcepts(sem, 'cpp:struct_pointer_access')
+    const accesses = findConcepts(sem, 'cpp:struct_at_ptr')
     const allConcepts = findAllConcepts(sem)
     console.log('struct ptr access concepts:', [...new Set(allConcepts)].sort().join(', '))
   })

@@ -25,7 +25,7 @@ function tryStringMethodLift(
   // String-ONLY methods (no other container uses these)
   switch (method) {
     case 'length':
-      return createNode('cpp:string_length', { obj })
+      return createNode('cpp:string_size', { obj })
     case 'substr': {
       const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
@@ -62,7 +62,7 @@ function tryStringMethodLift(
       })
     }
     case 'c_str':
-      return createNode('cpp:string_c_str', { obj })
+      return createNode('cpp:string_as_cstring', { obj })
     case 'replace': {
       const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
@@ -117,17 +117,17 @@ function tryStringMethodLift(
  */
 const METHOD_TO_CONCEPT: Record<string, string> = {
   // container-specific (unique method names)
-  pop_back: 'cpp:vector_pop_back',
+  pop_back: 'cpp:vector_pop',
   back: 'cpp:vector_back',
   size: 'cpp:vector_size',
-  top: 'cpp:stack_top',
+  top: 'cpp:stack_peek',
   front: 'cpp:queue_front',
   // generic container concepts (shared methods across containers)
   empty: 'cpp:container_empty',
   push: 'cpp:container_push',
   pop: 'cpp:container_pop',
   clear: 'cpp:container_clear',
-  push_back: 'cpp:container_push_back',
+  push_back: 'cpp:container_append',
   erase: 'cpp:container_erase',
   count: 'cpp:container_count',
   insert: 'cpp:set_insert',
@@ -142,7 +142,7 @@ const METHOD_TO_CONCEPT: Record<string, string> = {
 const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
   string: {
     clear: 'cpp:string_clear',
-    push_back: 'cpp:string_push_back',
+    push_back: 'cpp:string_append_char',
   },
   // ⚠️ `top` 的通用退路是 `cpp_stack_top`（回傳最後推入的）。
   // 優先佇列的 `top()` 回傳的是**最大的**——`g++` 對
@@ -150,7 +150,7 @@ const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
   //
   // 型別查得到時才走這裡；查不到就留在通用版——**猜一個錯的專屬身分比誠實降級更糟**。
   priority_queue: {
-    top: 'cpp:priority_queue_top',
+    top: 'cpp:priority_queue_peek',
   },
 }
 

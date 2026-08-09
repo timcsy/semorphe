@@ -49,7 +49,7 @@ export function registerExecutors(
     return { type: 'int', value: arr.value.length }
   })
 
-  register('cpp:vector_pop_back', async (node, ctx) => {
+  register('cpp:vector_pop', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {

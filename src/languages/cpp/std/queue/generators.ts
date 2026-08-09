@@ -14,7 +14,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}.back()`
   })
 
-  g.set('cpp:priority_queue_top', (node) => {
+  g.set('cpp:priority_queue_peek', (node) => {
     const obj = node.properties.obj ?? 'pq'
     return `${obj}.top()`
   })

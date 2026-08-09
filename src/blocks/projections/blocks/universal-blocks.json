@@ -1001,7 +1001,7 @@
   },
   {
     "id": "u_array_access",
-    "conceptId": "cpp:array_access",
+    "conceptId": "cpp:array_at",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",

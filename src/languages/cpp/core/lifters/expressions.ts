@@ -231,7 +231,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
       const row = rowNode ? ctx.lift(rowNode) : null
       const col = colNode ? ctx.lift(colNode) : null
-      return createNode('cpp:array_2d_access', { obj: name }, {
+      return createNode('cpp:array_2d_at', { obj: name }, {
         row: row ? [row] : [],
         col: col ? [col] : [],
       })
@@ -258,11 +258,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
     // 判準是根變數的型別（辨識脈絡查得到，076 接上的）。這是同一個機制的
     // 第三次使用：095 的 istringstream、097 的 container_kind、這裡。
     if (ctx.data.getType(name) === 'map') {
-      return createNode('cpp:map_access', { obj: name }, {
+      return createNode('cpp:map_at', { obj: name }, {
         key: index ? [index] : [],
       })
     }
-    return createNode('cpp:array_access', { obj: name }, {
+    return createNode('cpp:array_at', { obj: name }, {
       index: index ? [index] : [],
     })
   })
@@ -277,10 +277,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
     // Check for -> operator (pointer access)
     const opNode = node.children.find(c => c.type === '->')
     if (opNode) {
-      return createNode('cpp:struct_pointer_access', { obj, member })
+      return createNode('cpp:struct_at_ptr', { obj, member })
     }
 
-    return createNode('cpp:struct_member_access', { obj, member })
+    return createNode('cpp:struct_at_member', { obj, member })
   })
 }
 

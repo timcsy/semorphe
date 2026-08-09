@@ -405,7 +405,7 @@ describe('Interpreter - arrays', () => {
     const interp = await run([
       createNode('cpp:array_declare', { name: 'arr', type: 'int', size: '3' }, {}),
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:array_access', { obj: 'arr' }, {
+        values: [createNode('cpp:array_at', { obj: 'arr' }, {
           index: [createNode('cpp:literal_number', { value: '0' }, {})]
         })]
       })
@@ -1186,7 +1186,7 @@ describe('Interpreter - builtin_constant', () => {
         value: [createNode('cpp:builtin_constant', { value: 'true' })],
       }),
       createNode('cpp:print', {}, {
-        values: [createNode('cpp:array_access', { obj: 'flags' }, {
+        values: [createNode('cpp:array_at', { obj: 'flags' }, {
           index: [createNode('cpp:literal_number', { value: '0' })],
         })],
       }),

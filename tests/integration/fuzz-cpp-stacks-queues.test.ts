@@ -117,7 +117,7 @@ int main() {
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
     expect(concepts.has('cpp:stack_declare')).toBe(true)
-    expect(concepts.has('cpp:stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_peek')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {
@@ -229,7 +229,7 @@ int main() {
     expect(concepts.has('cpp:queue_declare')).toBe(true)
     expect(concepts.has('cpp:stack_declare')).toBe(true)
     expect(concepts.has('cpp:queue_front')).toBe(true)
-    expect(concepts.has('cpp:stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_peek')).toBe(true)
   })
 
   it('should generate compilable code producing same output (PASS)', () => {
@@ -313,7 +313,7 @@ int main() {
     expect(tree).not.toBeNull()
     const concepts = collectConcepts(tree)
     expect(concepts.has('cpp:stack_declare')).toBe(true)
-    expect(concepts.has('cpp:stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_peek')).toBe(true)
   })
 
   it.skip('[BLOCKED:cpp:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
@@ -460,7 +460,7 @@ int main() {
     const concepts = collectConcepts(tree)
     expect(concepts.has('cpp:stack_declare')).toBe(true)
     expect(concepts.has('cpp:queue_declare')).toBe(true)
-    expect(concepts.has('cpp:stack_top')).toBe(true)
+    expect(concepts.has('cpp:stack_peek')).toBe(true)
     expect(concepts.has('cpp:queue_front')).toBe(true)
   })
 

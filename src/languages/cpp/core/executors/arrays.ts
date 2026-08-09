@@ -30,7 +30,7 @@ export function registerArraysCoreExecutors(
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 
-  register('cpp:array_2d_access', async (node, ctx) => {
+  register('cpp:array_2d_at', async (node, ctx) => {
     const name = String(node.properties.obj)
     const rowNodes = node.children.row
     const colNodes = node.children.col

@@ -47,7 +47,7 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue' })
   })
 
-  register('cpp:priority_queue_top', async (node, ctx) => {
+  register('cpp:priority_queue_peek', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {

@@ -64,7 +64,7 @@ export function registerExecutors(
     if (pair.type === 'array' && Array.isArray(pair.value)) pair.value[1] = val
   })
 
-  register('cpp:map_access', async (node, ctx) => {
+  register('cpp:map_at', async (node, ctx) => {
     const name = String(node.properties.obj)
     const keyNodes = node.children.key ?? []
     if (keyNodes.length === 0) return defaultValue('int')

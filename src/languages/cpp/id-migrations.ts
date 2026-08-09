@@ -202,3 +202,34 @@ export const ID_MIGRATIONS_V5_TO_V6: Record<string, string> = {
 }
 
 registerIdMigration(ID_MIGRATIONS_V5_TO_V6)
+
+/**
+ * v6 → v7（G 項第 4 步）：**同義操作詞合併**。
+ *
+ * | 一件事 | 原本有 | 統一成 |
+ * |---|---|---|
+ * | 索引取值 | `access`／`at` | `at` |
+ * | 加到尾端 | `push_back`／`append` | `append` |
+ * | 從尾端移除 | `pop_back`／`pop` | `pop` |
+ * | 大小 | `length`／`size` | `size` |
+ * | 看可存取的那一端 | `top` | `peek`（`front`／`back` 保留——**它們是位置，不是同義**） |
+ *
+ * ⚠️ `string_append_char` 沒有併進 `string_append`——兩者產出的 C++ 不同
+ * （`.push_back(c)` vs `.append(s)`），合併會丟資訊。**種差可以再細分。**
+ */
+export const ID_MIGRATIONS_V6_TO_V7: Record<string, string> = {
+  'cpp:array_2d_access': 'cpp:array_2d_at',
+  'cpp:array_access': 'cpp:array_at',
+  'cpp:container_push_back': 'cpp:container_append',
+  'cpp:map_access': 'cpp:map_at',
+  'cpp:priority_queue_top': 'cpp:priority_queue_peek',
+  'cpp:stack_top': 'cpp:stack_peek',
+  'cpp:string_c_str': 'cpp:string_as_cstring',
+  'cpp:string_length': 'cpp:string_size',
+  'cpp:string_push_back': 'cpp:string_append_char',
+  'cpp:struct_member_access': 'cpp:struct_at_member',
+  'cpp:struct_pointer_access': 'cpp:struct_at_ptr',
+  'cpp:vector_pop_back': 'cpp:vector_pop',
+}
+
+registerIdMigration(ID_MIGRATIONS_V6_TO_V7)

@@ -35,9 +35,9 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:map_access",
+    "conceptId": "cpp:map_at",
     "layer": "lang-library",
-    "abstractConcept": "cpp:array_access",
+    "abstractConcept": "cpp:array_at",
     "properties": [
       {
         "name": "obj",

@@ -15,7 +15,7 @@
     "declaresVariableType": "string"
   },
   {
-    "conceptId": "cpp:string_length",
+    "conceptId": "cpp:string_size",
     "layer": "lang-library",
     "properties": [
       {
@@ -98,7 +98,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:string_c_str",
+    "conceptId": "cpp:string_as_cstring",
     "layer": "lang-library",
     "properties": [
       {
@@ -273,7 +273,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:string_push_back",
+    "conceptId": "cpp:string_append_char",
     "layer": "lang-library",
     "properties": [
       {

@@ -76,7 +76,7 @@
     }
   },
   {
-    "id": "cpp:make_pair",
+    "id": "cpp:pair_make",
     "conceptId": "cpp:pair_make",
     "language": "cpp",
     "category": "containers",

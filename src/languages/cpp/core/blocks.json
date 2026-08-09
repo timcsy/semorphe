@@ -1862,7 +1862,7 @@
   },
   {
     "id": "c_struct_member_access",
-    "conceptId": "cpp:struct_member_access",
+    "conceptId": "cpp:struct_at_member",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
@@ -1921,7 +1921,7 @@
   },
   {
     "id": "c_struct_pointer_access",
-    "conceptId": "cpp:struct_pointer_access",
+    "conceptId": "cpp:struct_at_ptr",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
@@ -3010,7 +3010,7 @@
   },
   {
     "id": "c_array_2d_access",
-    "conceptId": "cpp:array_2d_access",
+    "conceptId": "cpp:array_2d_at",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",
@@ -3995,7 +3995,7 @@
   },
   {
     "id": "c_container_push_back",
-    "conceptId": "cpp:container_push_back",
+    "conceptId": "cpp:container_append",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

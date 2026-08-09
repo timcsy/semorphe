@@ -95,7 +95,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.conceptId).toBe('cpp:array_2d_access')
+    expect(init?.conceptId).toBe('cpp:array_2d_at')
     expect(init?.properties.obj).toBe('arr')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -118,6 +118,6 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.conceptId).toBe('cpp:array_access')
+    expect(init?.conceptId).toBe('cpp:array_at')
   })
 })

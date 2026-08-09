@@ -115,8 +115,8 @@
     }
   },
   {
-    "id": "cpp:vector_pop_back",
-    "conceptId": "cpp:vector_pop_back",
+    "id": "cpp:vector_pop",
+    "conceptId": "cpp:vector_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

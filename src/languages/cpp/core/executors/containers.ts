@@ -75,7 +75,7 @@ export function registerContainerCoreExecutors(
     arr.value.length = 0
   })
 
-  register('cpp:container_push_back', async (node, ctx) => {
+  register('cpp:container_append', async (node, ctx) => {
     const name = String(node.properties.obj)
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return

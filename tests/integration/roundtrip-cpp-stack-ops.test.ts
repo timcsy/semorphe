@@ -140,13 +140,13 @@ describe('C++ Stack Operations Roundtrip', () => {
 
   // ─── 3. cpp_stack_top ───────────────────────────────────
 
-  describe('cpp:stack_top', () => {
+  describe('cpp:stack_peek', () => {
     const code = 'stack<int> s;\ns.push(42);\ncout << s.top() << endl;'
 
     it('should lift to cpp_stack_top concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:stack_top')
+      const node = findConcept(tree, 'cpp:stack_peek')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -160,7 +160,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:stack_top')
+      const node2 = findConcept(tree2, 'cpp:stack_peek')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -232,7 +232,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:stack_declare')).toBe(true)
       expect(concepts.has('cpp:container_push')).toBe(true)
-      expect(concepts.has('cpp:stack_top')).toBe(true)
+      expect(concepts.has('cpp:stack_peek')).toBe(true)
       expect(concepts.has('cpp:container_pop')).toBe(true)
     })
 
@@ -243,7 +243,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp:stack_declare')).toBe(true)
       expect(concepts2.has('cpp:container_push')).toBe(true)
-      expect(concepts2.has('cpp:stack_top')).toBe(true)
+      expect(concepts2.has('cpp:stack_peek')).toBe(true)
       expect(concepts2.has('cpp:container_pop')).toBe(true)
     })
   })
@@ -259,7 +259,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:stack_declare')).toBe(true)
       expect(concepts.has('cpp:container_push')).toBe(true)
-      expect(concepts.has('cpp:stack_top')).toBe(true)
+      expect(concepts.has('cpp:stack_peek')).toBe(true)
       expect(concepts.has('cpp:container_pop')).toBe(true)
     })
 
@@ -270,7 +270,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       const concepts2 = collectConcepts(tree2)
       expect(concepts2.has('cpp:stack_declare')).toBe(true)
       expect(concepts2.has('cpp:container_push')).toBe(true)
-      expect(concepts2.has('cpp:stack_top')).toBe(true)
+      expect(concepts2.has('cpp:stack_peek')).toBe(true)
       expect(concepts2.has('cpp:container_pop')).toBe(true)
     })
   })
