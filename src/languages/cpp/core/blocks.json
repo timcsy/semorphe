@@ -112,7 +112,7 @@
   },
   {
     "id": "c_compound_assign",
-    "conceptId": "cpp:compound_assign",
+    "conceptId": "cpp:var_assign_compound",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -1370,7 +1370,7 @@
   },
   {
     "id": "c_compound_assign_expr",
-    "conceptId": "cpp:compound_assign",
+    "conceptId": "cpp:var_assign_compound",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -2315,7 +2315,7 @@
   },
   {
     "id": "c_const_declare",
-    "conceptId": "cpp:const_declare",
+    "conceptId": "cpp:var_declare_const",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -2391,7 +2391,7 @@
   },
   {
     "id": "c_constexpr_declare",
-    "conceptId": "cpp:constexpr_declare",
+    "conceptId": "cpp:var_declare_constexpr",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -2463,7 +2463,7 @@
   },
   {
     "id": "c_auto_declare",
-    "conceptId": "cpp:auto_declare",
+    "conceptId": "cpp:var_declare_auto",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -2614,7 +2614,7 @@
   },
   {
     "id": "c_ref_declare",
-    "conceptId": "cpp:ref_declare",
+    "conceptId": "cpp:var_declare_ref",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -2699,7 +2699,7 @@
   },
   {
     "id": "c_static_declare",
-    "conceptId": "cpp:static_declare",
+    "conceptId": "cpp:var_declare_static",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -2771,7 +2771,7 @@
   },
   {
     "id": "c_static_member",
-    "conceptId": "cpp:static_member",
+    "conceptId": "cpp:member_static",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
@@ -3282,7 +3282,7 @@
   },
   {
     "id": "c_virtual_method",
-    "conceptId": "cpp:virtual_method",
+    "conceptId": "cpp:method_virtual",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
@@ -3332,7 +3332,7 @@
   },
   {
     "id": "c_pure_virtual",
-    "conceptId": "cpp:pure_virtual",
+    "conceptId": "cpp:method_virtual_pure",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
@@ -3376,7 +3376,7 @@
   },
   {
     "id": "c_override_method",
-    "conceptId": "cpp:override_method",
+    "conceptId": "cpp:method_override",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
@@ -3599,7 +3599,7 @@
   },
   {
     "id": "c_static_cast",
-    "conceptId": "cpp:static_cast",
+    "conceptId": "cpp:cast_static",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -3639,7 +3639,7 @@
   },
   {
     "id": "c_dynamic_cast",
-    "conceptId": "cpp:dynamic_cast",
+    "conceptId": "cpp:cast_dynamic",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -3679,7 +3679,7 @@
   },
   {
     "id": "c_reinterpret_cast",
-    "conceptId": "cpp:reinterpret_cast",
+    "conceptId": "cpp:cast_reinterpret",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -3719,7 +3719,7 @@
   },
   {
     "id": "c_const_cast",
-    "conceptId": "cpp:const_cast",
+    "conceptId": "cpp:cast_const",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

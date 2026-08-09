@@ -47,7 +47,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:const_declare')
+    expect(result!.conceptId).toBe('cpp:var_declare_const')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('limit')
     expect(result!.children.initializer).toHaveLength(1)
@@ -92,7 +92,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:ref_declare')
+    expect(result!.conceptId).toBe('cpp:var_declare_ref')
     expect(result!.properties.name).toBe('ref')
     expect(result!.children.initializer).toHaveLength(1)
   })

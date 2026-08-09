@@ -30,7 +30,8 @@ import type { NamingVocabulary } from '../../core/naming'
  * 而「排序即分群」要求它排在 `loop_*` 那一族裡。
  */
 export const SUBJECTS = [
-  'array', 'array_2d', 'char', 'class', 'container', 'cstring', 'enum', 'func', 'ifstream',
+  'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum', 'func', 'ifstream',
+  'member',
   'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
   'ofstream', 'pair', 'pointer', 'priority_queue', 'queue', 'set', 'stack',
@@ -78,6 +79,13 @@ export const KINDS = [
   // 第 5 步（裸的函式庫名）帶進來的種差
   'alpha', 'digit', 'lower', 'upper', 'int', 'double',
   'bounded', 'formatted', 'line', 'sequence', 'partial',
+  // 第 6 步：**修飾詞從主體位置移到種差位置**。
+  // `static` 曾同時是 `static_cast`／`static_declare`／`static_member` 的「主體」
+  // ——而它三次都是修飾詞。移到後面之後它們各自歸到真正的主體底下
+  // （`cast_*`／`var_declare_*`／`member_*`），而**「這些只差一個修飾詞」
+  // 也就一目了然了**——那正是 C1 查證過的「修飾詞是參數不是身分」。
+  'auto', 'const', 'constexpr', 'static', 'ref', 'compound', 'dynamic', 'reinterpret',
+  'virtual', 'virtual_pure', 'override',
 ] as const
 
 /**

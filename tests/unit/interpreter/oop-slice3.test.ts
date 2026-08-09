@@ -111,7 +111,7 @@ describe('繼承與虛擬方法', () => {
   const animal = (): SemanticNode =>
     n('cpp:class_def', { name: 'Animal' }, {
       public: [
-        n('cpp:virtual_method', { name: 'speak', return_type: 'int' }, {
+        n('cpp:method_virtual', { name: 'speak', return_type: 'int' }, {
           params: [],
           body: [ret(num(1))],
         }),
@@ -122,7 +122,7 @@ describe('繼承與虛擬方法', () => {
   const dog = (): SemanticNode =>
     n('cpp:class_def', { name: 'Dog', base: 'Animal' }, {
       public: [
-        n('cpp:override_method', { name: 'speak', return_type: 'int' }, {
+        n('cpp:method_override', { name: 'speak', return_type: 'int' }, {
           params: [],
           body: [ret(num(2))],
         }),
@@ -165,7 +165,7 @@ describe('繼承與虛擬方法', () => {
 
   it('★ 純虛擬方法被呼叫時要出聲——它沒有本體', async () => {
     const abs = n('cpp:class_def', { name: 'A' }, {
-      public: [n('cpp:pure_virtual', { name: 'f', return_type: 'int' }, { params: [] })],
+      public: [n('cpp:method_virtual_pure', { name: 'f', return_type: 'int' }, { params: [] })],
       private: [],
     })
     const 訊息 = await errOf(
@@ -206,7 +206,7 @@ describe('靜態成員', () => {
   it('★ 靜態成員由所有實例共用', async () => {
     const c = n('cpp:class_def', { name: 'C' }, {
       public: [
-        n('cpp:static_member', { name: 'count', type: 'int' }),
+        n('cpp:member_static', { name: 'count', type: 'int' }),
         n('cpp:func_def', { name: 'inc', return_type: 'void' }, {
           params: [],
           body: [assign('count', n('cpp:arithmetic', { operator: '+' }, { left: [ref('count')], right: [num(1)] }))],

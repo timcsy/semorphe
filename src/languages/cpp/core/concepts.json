@@ -48,7 +48,7 @@
     }
   },
   {
-    "conceptId": "cpp:compound_assign",
+    "conceptId": "cpp:var_assign_compound",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_assign",
     "properties": [
@@ -789,7 +789,7 @@
     }
   },
   {
-    "conceptId": "cpp:const_declare",
+    "conceptId": "cpp:var_declare_const",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
     "properties": [
@@ -812,7 +812,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:ref_declare",
+    "conceptId": "cpp:var_declare_ref",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
     "properties": [
@@ -835,7 +835,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:constexpr_declare",
+    "conceptId": "cpp:var_declare_constexpr",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
     "properties": [
@@ -858,7 +858,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:static_declare",
+    "conceptId": "cpp:var_declare_static",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
     "properties": [
@@ -881,7 +881,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:auto_declare",
+    "conceptId": "cpp:var_declare_auto",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
     "properties": [
@@ -961,7 +961,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:static_member",
+    "conceptId": "cpp:member_static",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1197,7 +1197,7 @@
     }
   },
   {
-    "conceptId": "cpp:virtual_method",
+    "conceptId": "cpp:method_virtual",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1225,7 +1225,7 @@
     }
   },
   {
-    "conceptId": "cpp:pure_virtual",
+    "conceptId": "cpp:method_virtual_pure",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1252,7 +1252,7 @@
     }
   },
   {
-    "conceptId": "cpp:override_method",
+    "conceptId": "cpp:method_override",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1365,7 +1365,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:static_cast",
+    "conceptId": "cpp:cast_static",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1381,7 +1381,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:dynamic_cast",
+    "conceptId": "cpp:cast_dynamic",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1397,7 +1397,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:reinterpret_cast",
+    "conceptId": "cpp:cast_reinterpret",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [
@@ -1413,7 +1413,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:const_cast",
+    "conceptId": "cpp:cast_const",
     "layer": "lang-core",
     "abstractConcept": null,
     "properties": [

@@ -245,13 +245,13 @@ describe('C++ Core Concepts', () => {
   })
 
   it('cpp_compound_assign (statement)', () => {
-    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:compound_assign')
+    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:var_assign_compound')
   })
 
   // ARCHITECTURAL: cpp_compound_assign_expr is only produced during block rendering
   // (expressionCounterpart), not by the lifter. Verify cpp_compound_assign exists.
   it('cpp_compound_assign_expr — expression counterpart, verify cpp_compound_assign exists', () => {
-    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:compound_assign')
+    assertConceptPresent(`int main() { int x = 0; x += 5; }`, 'cpp:var_assign_compound')
   })
 
   it('cpp:ternary', () => {
@@ -312,8 +312,8 @@ int main() { std::vector<int> v; for (int x : v) { int y = x; } }`, 'cpp:loop_ra
     assertConceptPresent(`int main() { int x = 42; int* p = &x; *p = 100; }`, 'cpp:pointer_assign')
   })
 
-  it('cpp:ref_declare', () => {
-    assertConceptPresent(`int main() { int x = 42; int& r = x; }`, 'cpp:ref_declare')
+  it('cpp:var_declare_ref', () => {
+    assertConceptPresent(`int main() { int x = 42; int& r = x; }`, 'cpp:var_declare_ref')
   })
 
   it('cpp:new', () => {
@@ -338,20 +338,20 @@ int main() { int* p = (int*)malloc(sizeof(int)); free(p); }`, 'cpp:free')
 
   // --- Variable Qualifiers ---
 
-  it('cpp:const_declare', () => {
-    assertConceptPresent(`int main() { const int x = 42; }`, 'cpp:const_declare')
+  it('cpp:var_declare_const', () => {
+    assertConceptPresent(`int main() { const int x = 42; }`, 'cpp:var_declare_const')
   })
 
-  it('cpp:auto_declare', () => {
-    assertConceptPresent(`int main() { auto x = 42; }`, 'cpp:auto_declare')
+  it('cpp:var_declare_auto', () => {
+    assertConceptPresent(`int main() { auto x = 42; }`, 'cpp:var_declare_auto')
   })
 
-  it('cpp:static_declare', () => {
-    assertConceptPresent(`void foo() { static int x = 0; }`, 'cpp:static_declare')
+  it('cpp:var_declare_static', () => {
+    assertConceptPresent(`void foo() { static int x = 0; }`, 'cpp:var_declare_static')
   })
 
-  it('cpp:constexpr_declare', () => {
-    assertConceptPresent(`int main() { constexpr int x = 42; }`, 'cpp:constexpr_declare')
+  it('cpp:var_declare_constexpr', () => {
+    assertConceptPresent(`int main() { constexpr int x = 42; }`, 'cpp:var_declare_constexpr')
   })
 
   // ARCHITECTURAL: var_declare_expr is only produced during block rendering
@@ -483,21 +483,21 @@ public:
 };`, 'cpp:destructor')
   })
 
-  it('cpp:virtual_method', () => {
+  it('cpp:method_virtual', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() {}
-};`, 'cpp:virtual_method')
+};`, 'cpp:method_virtual')
   })
 
-  it('cpp:pure_virtual', () => {
+  it('cpp:method_virtual_pure', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() = 0;
-};`, 'cpp:pure_virtual')
+};`, 'cpp:method_virtual_pure')
   })
 
-  it('cpp:override_method', () => {
+  it('cpp:method_override', () => {
     assertConceptPresent(`class Base {
 public:
     virtual void foo() {}
@@ -505,7 +505,7 @@ public:
 class Derived : public Base {
 public:
     void foo() override {}
-};`, 'cpp:override_method')
+};`, 'cpp:method_override')
   })
 
   it('cpp:operator_overload', () => {
@@ -532,22 +532,22 @@ int main() { auto f = [](int x) { return x + 1; }; }`, 'cpp:lambda')
 
   // --- C++ Casts ---
 
-  it('cpp:static_cast', () => {
-    assertConceptPresent(`int main() { double d = 3.14; int x = static_cast<int>(d); }`, 'cpp:static_cast')
+  it('cpp:cast_static', () => {
+    assertConceptPresent(`int main() { double d = 3.14; int x = static_cast<int>(d); }`, 'cpp:cast_static')
   })
 
-  it('cpp:dynamic_cast', () => {
+  it('cpp:cast_dynamic', () => {
     assertConceptPresent(`class Base { public: virtual ~Base() {} };
 class Derived : public Base {};
-int main() { Base* b = new Derived(); Derived* d = dynamic_cast<Derived*>(b); }`, 'cpp:dynamic_cast')
+int main() { Base* b = new Derived(); Derived* d = dynamic_cast<Derived*>(b); }`, 'cpp:cast_dynamic')
   })
 
-  it('cpp:reinterpret_cast', () => {
-    assertConceptPresent(`int main() { int x = 42; int* p = &x; long l = reinterpret_cast<long>(p); }`, 'cpp:reinterpret_cast')
+  it('cpp:cast_reinterpret', () => {
+    assertConceptPresent(`int main() { int x = 42; int* p = &x; long l = reinterpret_cast<long>(p); }`, 'cpp:cast_reinterpret')
   })
 
-  it('cpp:const_cast', () => {
-    assertConceptPresent(`int main() { const int x = 42; int* p = const_cast<int*>(&x); }`, 'cpp:const_cast')
+  it('cpp:cast_const', () => {
+    assertConceptPresent(`int main() { const int x = 42; int* p = const_cast<int*>(&x); }`, 'cpp:cast_const')
   })
 
   // --- Template ---
@@ -624,11 +624,11 @@ int add(int a, int b) { return a + b; }`, 'cpp:forward_decl')
   // --- Static Member ---
 
   // FIXED: liftClassMember now checks for static storage_class_specifier in field_declaration.
-  it('cpp:static_member', () => {
+  it('cpp:member_static', () => {
     assertConceptPresent(`class Foo {
 public:
     static int count;
-};`, 'cpp:static_member')
+};`, 'cpp:member_static')
   })
 })
 

@@ -591,7 +591,7 @@ describe('C++ Statement Lifters', () => {
     // cond present
     expect(result!.children.cond).toHaveLength(1)
     // update (assignment_expression with +=) → cpp_compound_assign (passed through)
-    expect(result!.children.update[0].conceptId).toBe('cpp:compound_assign')
+    expect(result!.children.update[0].conceptId).toBe('cpp:var_assign_compound')
   })
 
   it('should lift function_definition', () => {

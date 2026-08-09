@@ -368,7 +368,7 @@ public:
   })
 
   // ---- 13. reference declare ----
-  describe('cpp:ref_declare', () => {
+  describe('cpp:var_declare_ref', () => {
     it('reference declaration generates back', () => {
       const code = `#include <iostream>
 using namespace std;

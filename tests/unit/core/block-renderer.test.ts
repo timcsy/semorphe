@@ -216,7 +216,7 @@ describe('block-renderer', () => {
     const forLoop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_ref', { name: 'i' })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
-      update: [createNode('cpp:compound_assign', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:var_assign_compound', { name: 'j', operator: '+=' }, {
         value: [createNode('cpp:var_ref', { name: 'i' })],
       })],
       body: [createNode('cpp:break', {})],

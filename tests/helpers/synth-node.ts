@@ -31,7 +31,7 @@ const OPERATOR_FOR: Record<string, string> = {
   'cpp:compare': '<',
   'cpp:logic': '&&',
   'cpp:arithmetic': '+',
-  'cpp:compound_assign': '+=',
+  'cpp:var_assign_compound': '+=',
   cpp_compound_assign_expr: '+=',
   'cpp:increment': '++',
   cpp_increment_expr: '++',

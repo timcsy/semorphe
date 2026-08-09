@@ -176,25 +176,25 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return code
   })
 
-  g.set('cpp:static_cast', (node, ctx) => {
+  g.set('cpp:cast_static', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `static_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp:dynamic_cast', (node, ctx) => {
+  g.set('cpp:cast_dynamic', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'Derived*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `dynamic_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp:reinterpret_cast', (node, ctx) => {
+  g.set('cpp:cast_reinterpret', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `reinterpret_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp:const_cast', (node, ctx) => {
+  g.set('cpp:cast_const', (node, ctx) => {
     const targetType = node.properties.target_type ?? 'int*'
     const val = generateExpression((node.children.value ?? [])[0], ctx)
     return `const_cast<${targetType}>(${val})`

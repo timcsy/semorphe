@@ -141,7 +141,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift x += 5 to cpp_compound_assign concept', () => {
       const sem = liftCode('x += 5;')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:compound_assign')
+      expect(concepts).toContain('cpp:var_assign_compound')
     })
   })
 

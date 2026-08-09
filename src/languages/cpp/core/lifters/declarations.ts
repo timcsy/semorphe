@@ -20,13 +20,13 @@ export function registerDeclarationLifters(lifter: Lifter): void {
         const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
         const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
         const index = indexNode ? ctx.lift(indexNode) : null
-        return createNode('cpp:compound_assign', { name: arrName, operator: op }, {
+        return createNode('cpp:var_assign_compound', { name: arrName, operator: op }, {
           index: index ? [index] : [],
           value: value ? [value] : [],
         })
       }
       const name = left?.text ?? 'x'
-      return createNode('cpp:compound_assign', { name, operator: op }, {
+      return createNode('cpp:var_assign_compound', { name, operator: op }, {
         value: value ? [value] : [],
       })
     }

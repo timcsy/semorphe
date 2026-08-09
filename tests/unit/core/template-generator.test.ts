@@ -35,14 +35,14 @@ describe('TemplateGenerator', () => {
     })
 
     it('should substitute multiple fields', () => {
-      gen.registerTemplate('cpp:compound_assign', {
+      gen.registerTemplate('cpp:var_assign_compound', {
         pattern: '${NAME} ${OP} ${VALUE};',
         imports: [],
         order: 0,
       })
 
       const valueNode = createNode('cpp:literal_number', { value: '5' })
-      const node = createNode('cpp:compound_assign', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
+      const node = createNode('cpp:var_assign_compound', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
 
       // Register child generator
       gen.registerTemplate('cpp:literal_number', { pattern: '${value}', imports: [], order: 20 })

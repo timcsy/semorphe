@@ -8,7 +8,6 @@
   "total": 1,
   "files": {
     "src/core/storage-version.ts": [
-      "cpp:compound_assign",
       "cpp:increment",
       "cpp:method_call"
     ]

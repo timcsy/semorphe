@@ -57,7 +57,13 @@ function 接收者參數名(concepts: 概念[]): Map<string, string> {
   for (const c of concepts) {
     const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
     const op = parseName(bare, SUBJECTS).operation
-    if (!op || 自名.has(op)) continue
+    // ⚠️ 複合的第二段要看**開頭的操作**——`var_declare_auto` 的操作是 `declare`
+    // （創造，不是操作既有物件），而整段 `declare_auto` 不在自名清單裡。
+    // 少了這一層，第 6 步一改名，`var_declare_*` 全族會被誤報成接收者不一致。
+    const 主操作 = op && !自名.has(op)
+      ? [...SELF_NAMING_OPERATIONS].find((o) => op.startsWith(o + SEPARATOR))
+      : undefined
+    if (!op || 自名.has(op) || 主操作) continue
     const first = paramSpecs(c.properties as never)[0]
     if (first?.kind === 'identifier') out.set(c.conceptId, first.name)
   }
@@ -206,9 +212,9 @@ describe('詞彙表不得長出沒人用的字', () => {
 describe('命名一致性（G 項的驗收）', () => {
   const findings = measure()
   const 依類 = (k: 違規類): Finding[] => findings.filter((f) => f.類 === k)
+  const 類別 = ['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as 違規類[]
 
   it('報表', () => {
-    const 類別 = ['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as 違規類[]
     printReport('命名一致性', [
       類別.map((k) => `${k} ${依類(k).length}`).join('｜'),
       '',
@@ -224,6 +230,19 @@ describe('命名一致性（G 項的驗收）', () => {
       }),
     ])
     expect(true).toBe(true)
+  })
+
+  it('★ 硬性零：六項全部歸零（G 完成）', () => {
+    // ⚠️ **從棘輪收成硬性零**（`build-guardrail` 第 6.8 步）。
+    //
+    // 開工時判成棘輪，理由是「修法昂貴、違規量大」。做完之後兩個前提都不在了：
+    // 違規是 0，而**維持 0 是免費的**——新加一顆元件照著詞彙命名就好。
+    //
+    // 而收硬性零是有時效的：**G 完成而不收，下一個人加元件時沒有東西擋他**，
+    // 於是名字慢慢漂回去，而那時已經有版本，改起來要發版＋遷移＋立墓碑。
+    for (const k of 類別) {
+      expect(依類(k).map((f) => `${f.id}：${f.說明}`), `【${k}】命名退步了`).toEqual([])
+    }
   })
 
   it('★ 棘輪：五項都只准下降，上升時指名', () => {

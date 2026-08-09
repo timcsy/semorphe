@@ -202,7 +202,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
 
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:compound_assign')
+      expect(result!.conceptId).toBe('cpp:var_assign_compound')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
       expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')

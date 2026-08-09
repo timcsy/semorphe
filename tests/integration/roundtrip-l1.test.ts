@@ -141,7 +141,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:compound_assign')
+      expect(sem!.conceptId).toBe('cpp:var_assign_compound')
       expect(sem!.properties.name).toBe('x')
       expect(sem!.children.value).toHaveLength(1)
     })

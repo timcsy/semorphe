@@ -28,11 +28,11 @@ export function registerVariablesCoreExecutors(
   // const/constexpr 的**執行期**行為確實與 var_declare 相同——不可變是編譯期
   // 的約束，這個直譯器不強制它。身分保留：碼形態不同（`const int` vs `int`），
   // 而修飾詞要不要變成參數，取決於參數規格化（C 項）。
-  register('cpp:const_declare', execVarDeclare)
+  register('cpp:var_declare_const', execVarDeclare)
 
-  register('cpp:constexpr_declare', execVarDeclare)
+  register('cpp:var_declare_constexpr', execVarDeclare)
 
-  register('cpp:auto_declare', async (node, ctx) => {
+  register('cpp:var_declare_auto', async (node, ctx) => {
     const name = String(node.properties.name)
     const init = node.children.initializer
     if (init && init.length > 0) {
@@ -57,7 +57,7 @@ export function registerVariablesCoreExecutors(
    *
    * `Scope.declareRef` 一直都在——又一次「機制有了，沒人接上」。
    */
-  register('cpp:ref_declare', async (node, ctx) => {
+  register('cpp:var_declare_ref', async (node, ctx) => {
     const name = String(node.properties.name)
     const inits = node.children.initializer ?? []
     const 目標 = inits[0]
@@ -86,7 +86,7 @@ export function registerVariablesCoreExecutors(
    * 儲存位置是**根作用域**，鍵用宣告節點的 id——同一個宣告點共用一格，
    * 不同函式的同名 static 互不干擾。別名機制（`declareRef`）本來就在。
    */
-  register('cpp:static_declare', async (node, ctx) => {
+  register('cpp:var_declare_static', async (node, ctx) => {
     const name = String(node.properties.name)
     const type = String(node.properties.type || 'int')
     const 儲存名 = `__static__${node.id}__${name}`
@@ -103,5 +103,5 @@ export function registerVariablesCoreExecutors(
 
   // Static member: declaration only, noop
 
-  register('cpp:static_member', async () => {})
+  register('cpp:member_static', async () => {})
 }

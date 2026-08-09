@@ -234,7 +234,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:compound_assign',
+          conceptId: 'cpp:var_assign_compound',
           abstractConcept: 'compound_assign',
           properties: ['name', 'operator'],
           children: { value: 'expression' },
@@ -283,7 +283,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:compound_assign')
+      expect(result!.conceptId).toBe('cpp:var_assign_compound')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
       expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')

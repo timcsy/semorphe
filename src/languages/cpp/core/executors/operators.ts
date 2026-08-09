@@ -75,7 +75,7 @@ export function registerOperatorsCoreExecutors(
   })
 
   // C++ named casts behave the same as C-style cast at runtime
-  for (const castConcept of ['cpp:static_cast', 'cpp:dynamic_cast', 'cpp:reinterpret_cast', 'cpp:const_cast']) {
+  for (const castConcept of ['cpp:cast_static', 'cpp:cast_dynamic', 'cpp:cast_reinterpret', 'cpp:cast_const']) {
     register(castConcept, async (node, ctx) => {
       const targetType = String(node.properties.target_type ?? 'int')
       const valueNodes = node.children.value ?? []

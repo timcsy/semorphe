@@ -52,7 +52,7 @@ function roundTripCode(code: string): string {
 }
 
 describe('Round-trip: C++ reference and static (cpp_ref_declare, cpp_static_declare, cpp_static_member)', () => {
-  describe('cpp:ref_declare', () => {
+  describe('cpp:var_declare_ref', () => {
     it('basic reference with initializer', () => {
       const code = `int& ref = x;`
       const result = roundTripCode(code)
@@ -75,7 +75,7 @@ describe('Round-trip: C++ reference and static (cpp_ref_declare, cpp_static_decl
     })
   })
 
-  describe('cpp:static_declare', () => {
+  describe('cpp:var_declare_static', () => {
     it('static int with initializer', () => {
       const code = `static int count = 0;`
       const result = roundTripCode(code)
@@ -125,8 +125,8 @@ describe('Round-trip: C++ reference and static (cpp_ref_declare, cpp_static_decl
         }
         return false
       }
-      expect(findConcept(tree1!, 'cpp:static_declare')).toBe(true)
-      expect(findConcept(tree2!, 'cpp:static_declare')).toBe(true)
+      expect(findConcept(tree1!, 'cpp:var_declare_static')).toBe(true)
+      expect(findConcept(tree2!, 'cpp:var_declare_static')).toBe(true)
     })
   })
 })

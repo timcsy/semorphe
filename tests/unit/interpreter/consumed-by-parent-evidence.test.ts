@@ -48,14 +48,14 @@ async function 宣告類別(member: SemanticNode, className = 'K'): Promise<Sema
 
 describe('cpp_class_def 真的消費這六種成員', () => {
   const 方法類: [string, string][] = [
-    ['cpp:virtual_method', 'v'],
-    ['cpp:override_method', 'o'],
-    ['cpp:pure_virtual', 'pv'],
+    ['cpp:method_virtual', 'v'],
+    ['cpp:method_override', 'o'],
+    ['cpp:method_virtual_pure', 'pv'],
   ]
 
   for (const [concept, name] of 方法類) {
     it(`★ ${concept} 被收進型別的方法表`, async () => {
-      const body = concept === 'cpp:pure_virtual' ? {} : { body: [ret(num(1))] }
+      const body = concept === 'cpp:method_virtual_pure' ? {} : { body: [ret(num(1))] }
       const interp = await 宣告類別(n(concept, { name, return_type: 'int' }, { params: [], ...body }))
       expect(
         interp.structs.method('K', name),
@@ -73,7 +73,7 @@ describe('cpp_class_def 真的消費這六種成員', () => {
   })
 
   it('★ cpp_static_member 被收進型別的靜態表', async () => {
-    const interp = await 宣告類別(n('cpp:static_member', { name: 's', type: 'int' }))
+    const interp = await 宣告類別(n('cpp:member_static', { name: 's', type: 'int' }))
     expect(
       interp.structs.staticsOf('K')?.has('s'),
       'cpp_static_member 沒有被收進靜態表',
@@ -126,8 +126,8 @@ describe('宣告的依據必須存在——反過來查一次', () => {
     // 其他父概念的消費關係要各自有各自的證據測試——本檔不涵蓋，
     // 而這一行就是那個邊界。
     const 類別成員 = new Set([
-      'cpp:virtual_method', 'cpp:override_method', 'cpp:pure_virtual',
-      'cpp:operator_overload', 'cpp:static_member', 'cpp:constructor', 'cpp:destructor',
+      'cpp:method_virtual', 'cpp:method_override', 'cpp:method_virtual_pure',
+      'cpp:operator_overload', 'cpp:member_static', 'cpp:constructor', 'cpp:destructor',
     ])
     const 宣告者 = allComponentDefs()
       .filter(

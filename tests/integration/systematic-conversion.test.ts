@@ -866,7 +866,7 @@ describe('Compound Assignment & Increment', () => {
       const node = mainBody[0]
       expect(node).not.toBeNull()
       // Should be cpp_compound_assign, NOT var_assign
-      expect(node!.conceptId).toBe('cpp:compound_assign')
+      expect(node!.conceptId).toBe('cpp:var_assign_compound')
       expect(node!.properties.name).toBe('x')
       expect(node!.properties.operator).toBe('+=')
     })
@@ -875,7 +875,7 @@ describe('Compound Assignment & Increment', () => {
       const body = liftBody('int main() { x -= 3; }')
       const mainBody = body[0]?.children.body ?? []
       const node = mainBody[0]
-      expect(node!.conceptId).toBe('cpp:compound_assign')
+      expect(node!.conceptId).toBe('cpp:var_assign_compound')
       expect(node!.properties.operator).toBe('-=')
     })
 

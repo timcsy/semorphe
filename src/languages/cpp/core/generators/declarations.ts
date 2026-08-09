@@ -37,7 +37,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return 收尾(`${type} ${name}`)
   })
 
-  g.set('cpp:ref_declare', (node, ctx) => {
+  g.set('cpp:var_declare_ref', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'ref'
     const inits = node.children.initializer ?? []
@@ -48,7 +48,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type}& ${name};\n`
   })
 
-  g.set('cpp:static_declare', (node, ctx) => {
+  g.set('cpp:var_declare_static', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'count'
     const inits = node.children.initializer ?? []
@@ -59,7 +59,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}static ${type} ${name};\n`
   })
 
-  g.set('cpp:static_member', (node, ctx) => {
+  g.set('cpp:member_static', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'count'
     return `${indent(ctx)}static ${type} ${name};\n`
@@ -204,7 +204,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type}* ${name};\n`
   })
 
-  g.set('cpp:const_declare', (node, ctx) => {
+  g.set('cpp:var_declare_const', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'MAX'
     const inits = node.children.initializer ?? []
@@ -215,7 +215,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}const ${type} ${name};\n`
   })
 
-  g.set('cpp:constexpr_declare', (node, ctx) => {
+  g.set('cpp:var_declare_constexpr', (node, ctx) => {
     const type = node.properties.type ?? 'int'
     const name = node.properties.name ?? 'SIZE'
     const inits = node.children.initializer ?? []
@@ -226,7 +226,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}constexpr ${type} ${name};\n`
   })
 
-  g.set('cpp:auto_declare', (node, ctx) => {
+  g.set('cpp:var_declare_auto', (node, ctx) => {
     const name = node.properties.name ?? 'x'
     const inits = node.children.initializer ?? []
     if (inits.length > 0) {

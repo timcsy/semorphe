@@ -139,7 +139,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   if (decl.type === 'reference_declarator') {
     const refIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = refIdent?.text ?? 'ref'
-    return createNode('cpp:ref_declare', { name, type })
+    return createNode('cpp:var_declare_ref', { name, type })
   }
 
   // init_declarator: name = value
@@ -153,11 +153,11 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return createNode('cpp:ref_declare', { name, type }, {
+      return createNode('cpp:var_declare_ref', { name, type }, {
         initializer: value ? [value] : [],
       })
     }
-    return createNode('cpp:ref_declare', { name, type })
+    return createNode('cpp:var_declare_ref', { name, type })
   }
 
   // Pointer declarator: int* ptr = &x
@@ -282,7 +282,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:override_method', { return_type: returnType, name: methodName }, { params, body })
+      return createNode('cpp:method_override', { return_type: returnType, name: methodName }, { params, body })
     }
 
     // Virtual method with body
@@ -292,7 +292,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:virtual_method', { return_type: returnType, name: methodName }, { params, body })
+      return createNode('cpp:method_virtual', { return_type: returnType, name: methodName }, { params, body })
     }
 
     // Regular member function → lift as func_def
@@ -310,7 +310,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const returnType = typeNode?.text ?? 'void'
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      return createNode('cpp:pure_virtual', { return_type: returnType, name: methodName }, { params })
+      return createNode('cpp:method_virtual_pure', { return_type: returnType, name: methodName }, { params })
     }
 
     // Static member: static int count;
@@ -320,7 +320,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
       const name = declNode?.text ?? 'member'
-      return createNode('cpp:static_member', { type, name })
+      return createNode('cpp:member_static', { type, name })
     }
 
     // Regular field declaration: type name; or type x, y;
@@ -770,11 +770,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         const value = valueNode ? ctx.lift(valueNode) : null
-        return createNode('cpp:auto_declare', { name }, {
+        return createNode('cpp:var_declare_auto', { name }, {
           initializer: value ? [value] : [],
         })
       }
-      return createNode('cpp:auto_declare', { name: 'x' })
+      return createNode('cpp:var_declare_auto', { name: 'x' })
     }
 
     // const/constexpr declaration
@@ -782,7 +782,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
       if (decl) {
         const lifted = liftSingleDeclarator(decl, type, ctx)
-        const conceptId = qualifier === 'const' ? 'cpp:const_declare' : 'cpp:constexpr_declare'
+        const conceptId = qualifier === 'const' ? 'cpp:var_declare_const' : 'cpp:var_declare_constexpr'
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
         if (lifted.conceptId === 'cpp:pointer_declare') liftedType += '*'
@@ -793,7 +793,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           initializer: lifted.children.initializer ?? [],
         })
       }
-      const conceptId = qualifier === 'const' ? 'cpp:const_declare' : 'cpp:constexpr_declare'
+      const conceptId = qualifier === 'const' ? 'cpp:var_declare_const' : 'cpp:var_declare_constexpr'
       return createNode(conceptId, { type, name: 'x' })
     }
 
@@ -803,20 +803,20 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       if (decl) {
         if (decl.type === 'identifier') {
-          return createNode('cpp:static_declare', { name: decl.text, type })
+          return createNode('cpp:var_declare_static', { name: decl.text, type })
         }
         const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode('cpp:static_declare', { name, type }, {
+          return createNode('cpp:var_declare_static', { name, type }, {
             initializer: value ? [value] : [],
           })
         }
-        return createNode('cpp:static_declare', { name, type })
+        return createNode('cpp:var_declare_static', { name, type })
       }
-      return createNode('cpp:static_member', { name: 'x', type })
+      return createNode('cpp:member_static', { name: 'x', type })
     }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl

@@ -44,11 +44,11 @@ function 拆解成員(members: SemanticNode[]): {
       type: String(p.properties?.type ?? 'int'),
     }))
   /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
-  const 方法概念 = new Set(['cpp:func_def', 'cpp:virtual_method', 'cpp:override_method'])
+  const 方法概念 = new Set(['cpp:func_def', 'cpp:method_virtual', 'cpp:method_override'])
   for (const m of members) {
-    if (m.conceptId === 'cpp:static_member') {
+    if (m.conceptId === 'cpp:member_static') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (m.conceptId === 'cpp:pure_virtual') {
+    } else if (m.conceptId === 'cpp:method_virtual_pure') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })

@@ -156,7 +156,7 @@ describe('CONCEPT_IDENTITY audit: pointer operations', () => {
 describe('CONCEPT_IDENTITY audit: reference declarations', () => {
   it('int& ref = x → cpp_ref_declare', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int& ref = x;'))!
-    const refs = findConcepts(sem, 'cpp:ref_declare')
+    const refs = findConcepts(sem, 'cpp:var_declare_ref')
     expect(refs.length).toBe(1)
     expect(refs[0].properties.type).toBe('int')
     expect(refs[0].properties.name).toBe('ref')
@@ -164,7 +164,7 @@ describe('CONCEPT_IDENTITY audit: reference declarations', () => {
 
   it('double& dr = d → cpp_ref_declare', () => {
     const sem = liftCode(wrap('    double d = 3.14;\n    double& dr = d;'))!
-    const refs = findConcepts(sem, 'cpp:ref_declare')
+    const refs = findConcepts(sem, 'cpp:var_declare_ref')
     expect(refs.length).toBe(1)
     expect(refs[0].properties.type).toBe('double')
   })
@@ -209,7 +209,7 @@ describe('CONCEPT_IDENTITY audit: memory management', () => {
 describe('CONCEPT_IDENTITY audit: const + pointer', () => {
   it('const int* cp = &x → cpp_const_declare with type int*', () => {
     const sem = liftCode(wrap('    const int x = 42;\n    const int* cp = &x;'))!
-    const consts = findConcepts(sem, 'cpp:const_declare')
+    const consts = findConcepts(sem, 'cpp:var_declare_const')
     const ptrConst = consts.find(c => String(c.properties.type ?? '').includes('*'))
     expect(ptrConst, 'should have const with pointer type').toBeTruthy()
     expect(ptrConst!.properties.type).toBe('int*')

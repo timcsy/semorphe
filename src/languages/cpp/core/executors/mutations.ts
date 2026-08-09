@@ -17,7 +17,7 @@ export function registerMutationsCoreExecutors(
 
 
 
-  register('cpp:compound_assign', execCompoundAssign)
+  register('cpp:var_assign_compound', execCompoundAssign)
 
 }
 

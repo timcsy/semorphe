@@ -42,6 +42,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { paramSpecs } from '../../src/core/param-spec'
+import { parseName } from '../../src/core/naming'
+import { SUBJECTS } from '../../src/languages/cpp/naming'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
@@ -179,7 +181,18 @@ for (const c of ALL) {
 
 // ── 信號 6：同前綴族 ＋ 宣告幾乎相同 → 型別可能是參數而非身分
 // 例：cpp_{vector,stack,queue,map,set,pair,string}_declare 九顆都是「宣告一個 T 的容器」
-const declareFamily = ALL.filter((c) => /_declare$/.test(c.conceptId))
+// ⚠️ 用**拆出來的操作**判族，不是用名字的後綴。
+//
+// 原本是 `/_declare$/`。G 項第 6 步把修飾詞移到後面之後，`var_declare_const`
+// 不再以 `_declare` 結尾——整族當場從信號裡消失，五筆判定同時變孤兒。
+//
+// 這與 `lifter.ts` 那條 `/^cpp_(\w+?)_declare$/` 是同一個病：
+// **拿名字的形狀做判斷，形狀一改就靜默失效。**
+const declareFamily = ALL.filter((c) => {
+  const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+  const op = parseName(bare, SUBJECTS).operation
+  return op === 'declare' || op?.startsWith('declare_')
+})
 // ⚠️ 簽章比的是**參數的名字與種類**，不是預設值。
 //
 // 參數規格化（102）之後這六顆的 `default` 各不相同（`x`／`MAX`／`SIZE`／

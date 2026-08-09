@@ -270,10 +270,10 @@ export function registerIOLifters(lifter: Lifter): void {
       const templateArgs = funcNode.namedChildren.find(c => c.type === 'template_argument_list')
       const targetType = templateArgs ? templateArgs.text.slice(1, -1) : 'int' // strip < >
       const castConcepts: Record<string, string> = {
-        'static_cast': 'cpp:static_cast',
-        'dynamic_cast': 'cpp:dynamic_cast',
-        'reinterpret_cast': 'cpp:reinterpret_cast',
-        'const_cast': 'cpp:const_cast',
+        'static_cast': 'cpp:cast_static',
+        'dynamic_cast': 'cpp:cast_dynamic',
+        'reinterpret_cast': 'cpp:cast_reinterpret',
+        'const_cast': 'cpp:cast_const',
       }
       if (castName && castConcepts[castName]) {
         const argNodes = argsNode?.namedChildren ?? []

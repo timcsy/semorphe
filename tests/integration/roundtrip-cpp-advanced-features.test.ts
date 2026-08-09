@@ -383,13 +383,13 @@ int n = static_cast<int>(pi);`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:static_cast')
+      expect(concepts).toContain('cpp:cast_static')
     })
 
     it('preserves target type', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const castNode = findNode(tree!, 'cpp:static_cast')
+      const castNode = findNode(tree!, 'cpp:cast_static')
       expect(castNode).toBeDefined()
       expect(castNode!.properties.target_type).toBe('int')
     })
@@ -425,7 +425,7 @@ int main() {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const concepts = findConcepts(tree!)
-      const castCount = concepts.filter(c => c === 'cpp:static_cast').length
+      const castCount = concepts.filter(c => c === 'cpp:cast_static').length
       expect(castCount).toBeGreaterThanOrEqual(2)
     })
 

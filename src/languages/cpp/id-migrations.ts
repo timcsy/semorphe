@@ -289,3 +289,44 @@ export const ID_MIGRATIONS_V7_TO_V8: Record<string, string> = {
 }
 
 registerIdMigration(ID_MIGRATIONS_V7_TO_V8)
+
+/**
+ * v8 → v9（G 項第 6 步，最後一項）：**修飾詞從主體位置移到種差位置**。
+ *
+ * `static` 曾同時是 `static_cast`（轉型）、`static_declare`（宣告）、
+ * `static_member`（成員）的「主體」——而它三次都是修飾詞。
+ *
+ * 移到後面之後它們各自歸到真正的主體底下：
+ *
+ * ```
+ * cast_static / cast_dynamic / cast_const / cast_reinterpret
+ * var_declare_auto / _const / _constexpr / _static / _ref
+ * method_virtual / method_virtual_pure / method_override
+ * ```
+ *
+ * ⚠️ **這只解決了「站錯位置」，沒有解決「該是參數」。**
+ * `knowledge/concepts/元件.md` 的跨域規則②說修飾詞該是參數或形態，
+ * 而 C1 已經查證過「修飾詞確實是參數不是身分」
+ * （`tests/assets/identity-review-decisions.json`）——只是合併是 componentId
+ * 改名，依 P8 的範圍要附一次性轉換，那是獨立一項的工作量。
+ *
+ * **但排好之後那件事一目了然了**：`var_declare_*` 五顆只差一個修飾詞。
+ */
+export const ID_MIGRATIONS_V8_TO_V9: Record<string, string> = {
+  'cpp:auto_declare': 'cpp:var_declare_auto',
+  'cpp:compound_assign': 'cpp:var_assign_compound',
+  'cpp:const_cast': 'cpp:cast_const',
+  'cpp:const_declare': 'cpp:var_declare_const',
+  'cpp:constexpr_declare': 'cpp:var_declare_constexpr',
+  'cpp:dynamic_cast': 'cpp:cast_dynamic',
+  'cpp:override_method': 'cpp:method_override',
+  'cpp:pure_virtual': 'cpp:method_virtual_pure',
+  'cpp:ref_declare': 'cpp:var_declare_ref',
+  'cpp:reinterpret_cast': 'cpp:cast_reinterpret',
+  'cpp:static_cast': 'cpp:cast_static',
+  'cpp:static_declare': 'cpp:var_declare_static',
+  'cpp:static_member': 'cpp:member_static',
+  'cpp:virtual_method': 'cpp:method_virtual',
+}
+
+registerIdMigration(ID_MIGRATIONS_V8_TO_V9)

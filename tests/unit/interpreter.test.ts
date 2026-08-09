@@ -1092,7 +1092,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
           right: [createNode('cpp:literal_number', { value: '3' })],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
-        body: [createNode('cpp:compound_assign', { name: 's', operator: '+=' }, {
+        body: [createNode('cpp:var_assign_compound', { name: 's', operator: '+=' }, {
           value: [createNode('cpp:var_ref', { name: 'i' })],
         })],
       }),
