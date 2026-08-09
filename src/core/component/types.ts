@@ -48,7 +48,17 @@ export const FIVE_PATHS: readonly FivePath[] = ['lift', 'generate', 'render', 'e
  * | `paths` | 「宣告了沒實作」要看得出來——沒有它，少一路只會安靜地不做事 |
  */
 export interface ComponentManifest {
-  componentId: string
+  /**
+   * 身分。**欄位名是 `conceptId` 而不是 `componentId`。**
+   *
+   * `concepts/元件.md` 的詞彙表用 `componentId`，而程式碼裡 `conceptId` 有 707 處、
+   * `componentId` 只有 21 處。在 `component.json` 裡改用後者，等於為同一件事造
+   * **第二個名字**——而那正是這整個階段在清的雙重真相。
+   *
+   * 詞彙表與程式碼的分歧是真的，但它的處置是**一次全域改名**（`skills/component-rename`），
+   * 不是在新檔案裡開一個孤島。⚠️ 那件事還沒做，記在切片紀錄的「後續」。
+   */
+  conceptId: string
   layer?: string
   abstractConcept?: string
   /** 依賴。C++ 是標頭檔（`['<vector>']`）。⚠️ **不得從資料夾名推**——`cpp:pair_declare` 的 header 是 `<utility>`。 */
@@ -71,7 +81,7 @@ export interface ComponentManifest {
  *
  * ## 為什麼兩個都要
  *
- * `componentId` 是宣告寫的、`sourceDir` 是從路徑推的，而**兩者要互相核對**：
+ * `conceptId` 是宣告寫的、`sourceDir` 是從路徑推的，而**兩者要互相核對**：
  *
  * - 只信宣告 → 有人複製膠囊忘了改 id，抓不到
  * - 只信路徑 → 就變成「從檔名推歸屬」，而那是明令禁止的
@@ -81,15 +91,15 @@ export interface ComponentManifest {
  */
 export interface ComponentRegistration {
   /** 宣告裡寫的 */
-  componentId: string
+  conceptId: string
   /** 從檔案路徑推導出來的，例如 `cpp/vector_declare` */
   sourceDir: string
   manifest: ComponentManifest
 }
 
 /** `<scope>:<name>` → `<scope>/<name>`。路徑與身分的唯一換算處。 */
-export function idToDir(componentId: string): string {
-  const i = componentId.indexOf(':')
-  if (i < 0) throw new Error(`膠囊身分必須是 <scope>:<name> 格式，收到：${componentId}`)
-  return `${componentId.slice(0, i)}/${componentId.slice(i + 1)}`
+export function idToDir(conceptId: string): string {
+  const i = conceptId.indexOf(':')
+  if (i < 0) throw new Error(`膠囊身分必須是 <scope>:<name> 格式，收到：${conceptId}`)
+  return `${conceptId.slice(0, i)}/${conceptId.slice(i + 1)}`
 }

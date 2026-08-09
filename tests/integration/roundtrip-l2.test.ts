@@ -23,6 +23,7 @@ import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 function mockNode(
   type: string,
@@ -68,13 +69,10 @@ describe('L2 Block Roundtrip', () => {
     registerCppLanguage()
 
     const registry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-    const allProjections = [
-      ...universalBlocks,
-      ...coreBlocks,
-      ...allStdModules.flatMap(m => m.blocks),
-    ]
-    registry.loadFromSplit(allConcepts, allProjections)
+    // ⚠️ **走唯一組裝點，不在這裡自己串一份。**
+    // 這是第六份被找到的各自組裝。它們全部在元件膠囊接上正式路徑那天一起現形
+    // ——因為膠囊是第一個「只存在於正式路徑」的宣告來源。
+    registry.loadFromSplit(allCppConcepts(), allCppProjections())
     const allSpecs = registry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])

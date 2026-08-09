@@ -6,17 +6,16 @@ import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/s
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
-import { allStdModules } from '../../src/languages/cpp/std'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 /** Set up the global PatternRenderer with all block specs and render strategies */
 export function setupTestRenderer(): void {
   const registry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  const allProjections = [
-    ...universalBlocks,
-    ...coreBlocks,
-    ...allStdModules.flatMap(m => m.blocks),
-  ]
+  // ⚠️ **走唯一組裝點。** 這是第七份被找到的各自組裝——少了它，
+  // 已元件化的元件在完備性報表上會變成「render 缺、extract 缺」，
+  // 而那顆元件的積木定義好端端地在膠囊裡。
+  const allConcepts = allCppConcepts()
+  const allProjections = allCppProjections()
   registry.loadFromSplit(allConcepts, allProjections)
 
   const renderStrategyRegistry = new RenderStrategyRegistry()

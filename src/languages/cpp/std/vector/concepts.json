@@ -1,46 +1,5 @@
 [
   {
-    "conceptId": "cpp:vector_declare",
-    "layer": "lang-library",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "double",
-          "char",
-          "std::string",
-          "long long"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "vec"
-      }
-    ],
-    "children": {
-      "values": {
-        "allowed": [
-          "expression"
-        ],
-        "min": 0
-      },
-      "source": {
-        "allowed": [
-          "expression"
-        ],
-        "min": 0,
-        "max": 1
-      }
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:vector_size",
     "layer": "lang-library",
     "abstractConcept": null,

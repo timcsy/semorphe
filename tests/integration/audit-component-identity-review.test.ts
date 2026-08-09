@@ -102,9 +102,17 @@ function scanTree(dirs: readonly string[]): Map<string, Set<string>> {
 
 const srcFiles = scanTree(['src'])
 const allTestFiles = scanTree(['tests'])
-/** 真正的測試——**排除清冊**（基線與清單檔列出每一顆元件，那不是「被測到」） */
-const testFiles = new Map([...allTestFiles].filter(([rel]) => classify(rel) !== '清冊'))
-/** 實作足跡——排除宣告與清單（一顆元件的定義不是它的實作） */
+/**
+ * 真正的測試——**排除清冊**（基線與清單檔列出每一顆元件，那不是「被測到」）。
+ *
+ * ⚠️ 掃描範圍含 `src/`：元件膠囊的**自證測住在膠囊裡**
+ * （`src/components/<scope>/<name>/spec.test.ts`）。不含的話，一顆搬進膠囊
+ * 而且**有自證測**的元件會被回報成「零測試足跡」——搬對了反而變紅。
+ */
+const testFiles = new Map(
+  [...allTestFiles, ...srcFiles].filter(([rel]) => classify(rel) === '測試'),
+)
+/** 實作足跡——排除宣告、清單與測試（一顆元件的定義與它的測試都不是它的實作） */
 const implFiles = new Map([...srcFiles].filter(([rel]) => classify(rel) === '實作'))
 
 function footprint(map: Map<string, Set<string>>, id: string): string[] {
@@ -312,7 +320,10 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     // 而 0 與健康的 0 長得一模一樣。
     expect(classify('tests/baselines/locality.json'), '基線列出每顆元件，算成測試的話「零測試足跡」永遠是 0').toBe('清冊')
     expect(classify('tests/assets/executor-inventory.json')).toBe('清冊')
-    expect(classify('tests/integration/sstream-input.test.ts'), '真正的測試不得被當成清冊排除掉').toBe('實作')
+    // 2026-08-10：測試自成一類（`'測試'`），觸發者是元件膠囊的自證測——
+    // 它的負向斷言必然提到別的元件身分，算成實作擴散會讓別人的數字上升。
+    expect(classify('tests/integration/sstream-input.test.ts'), '真正的測試不得被當成清冊排除掉').toBe('測試')
+    expect(classify('src/components/cpp/vector_declare/spec.test.ts'), '膠囊裡的自證測也要算測試足跡').toBe('測試')
     expect(classify('src/languages/cpp/std/vector/concepts.json'), '元件自己的定義不是它的實作').toBe('宣告')
     expect(classify('src/blocks/semantics/universal-concepts.json')).toBe('宣告')
     expect(classify('src/languages/cpp/topics/cpp-beginner.json'), '課程清單是登錄表的視圖，不是實作').toBe('清單')

@@ -1,0 +1,10 @@
+{
+  "CPP_VECTOR_DECLARE_MSG0": "建立 %1 列表 %2",
+  "CPP_VECTOR_DECLARE_TOOLTIP": "建立一個列表（可變長度的陣列），可以隨時加入或移除元素",
+  "CPP_VECTOR_DECLARE_TYPE_INT": "int（整數）",
+  "CPP_VECTOR_DECLARE_TYPE_FLOAT": "float（小數）",
+  "CPP_VECTOR_DECLARE_TYPE_DOUBLE": "double（精確小數）",
+  "CPP_VECTOR_DECLARE_TYPE_CHAR": "char（字元）",
+  "CPP_VECTOR_DECLARE_TYPE_STRING": "string（文字）",
+  "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long（大整數）"
+}

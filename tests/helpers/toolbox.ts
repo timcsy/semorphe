@@ -17,6 +17,7 @@ import { universalBlocks, UNIVERSAL_OWNER } from '../../src/blocks/universal'
 import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
+import { componentBlocks } from '../../src/core/component/registry'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 
 export interface ToolboxSnapshot {
@@ -75,7 +76,14 @@ export function loadToolbox(
   const origins: BlockOrigin[] = [
     ...universalBlocks.map((b) => ({ type: typeOf(b), owner: UNIVERSAL_OWNER })),
     ...coreBlocks.map((b) => ({ type: typeOf(b), owner: CORE_OWNER })),
-    ...allStdModules.flatMap((m) => m.blocks.map((b) => ({ type: typeOf(b), owner: m.header }))),
+    // ⚠️ 這裡原本只走 `allStdModules`——**第三份各自組裝**（前兩份見
+    // `all-declarations.ts` 的檔頭與 `component-scan.ts` 的 `allComponentDefs`）。
+    // 元件膠囊接上正式路徑之後，可拿性護欄從這裡回報「`cpp_vector_declare`
+    // 是幽靈積木」——**一顆剛搬好的元件看起來像被刪掉了。**
+    ...allStdModules.flatMap((m) => [
+      ...(componentBlocks(m.header) as BlockProjectionJSON[]).map((b) => ({ type: typeOf(b), owner: m.header })),
+      ...m.blocks.map((b) => ({ type: typeOf(b), owner: m.header })),
+    ]),
     ...extraProjections.map((b) => ({ type: typeOf(b), owner: b.owner ?? CORE_OWNER })),
   ]
 

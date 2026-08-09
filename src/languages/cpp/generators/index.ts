@@ -9,6 +9,8 @@ import { registerStatementGenerators } from '../core/generators/statements'
 import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { registerExpressionGenerators } from '../core/generators/expressions'
 import { allStdModules } from '../std'
+import { componentConcepts } from '../../../core/component/registry'
+import { componentGenerateRegistrars, componentExecuteRegistrars } from '../../../core/component/paths'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
 import { declareExecutor, declareBuiltinConstants, declareAbstract, declareVariableType } from '../../../core/language-executors'
 import { CPP_BUILTIN_CONSTANTS } from '../builtins'
@@ -26,6 +28,8 @@ function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
   for (const mod of allStdModules) {
     mod.registerGenerators(g, style)
   }
+  // 元件膠囊的產生路
+  for (const reg of componentGenerateRegistrars()) (reg as (m: typeof g) => void)(g)
   return g
 }
 
@@ -61,6 +65,7 @@ export function registerCppExecutors(): void {
   declareBuiltinConstants(CPP_BUILTIN_CONSTANTS)
   registerCoreExecutors(push as never)
   for (const mod of allStdModules) mod.registerExecutors(push as never)
+  for (const reg of componentExecuteRegistrars()) (reg as (p: typeof push) => void)(push)
 }
 
 let executorsPushed = false
@@ -74,7 +79,7 @@ let executorsPushed = false
  * 見 specs/053-declare-noop-execute/classification.md
  */
 export function registerCppSkipDeclarations(): void {
-  const all = [...coreConcepts, ...allStdModules.flatMap((m) => m.concepts)]
+  const all = [...coreConcepts, ...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
   for (const c of all) {
     const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
     if (reasons && Object.keys(reasons).length > 0) declareSkips(c.conceptId, reasons)

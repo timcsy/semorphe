@@ -5,6 +5,7 @@ export type { DependencyEdge, DependencyResolver } from '../../../core/dependenc
 import type { StdModule } from './types'
 import { ModuleRegistry } from './module-registry'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../../core/types'
+import { componentConceptMappings } from '../../../core/component/registry'
 
 // iostream
 import iostreamConcepts from './iostream/concepts.json'
@@ -184,5 +185,10 @@ export function createPopulatedRegistry(): ModuleRegistry {
   registry.registerConceptMapping('cpp:print', '<iostream>')
   registry.registerConceptMapping('cpp:input', '<iostream>')
   registry.registerConceptMapping('cpp:endl', '<iostream>')
+  // 元件膠囊的依賴——它們不屬於任何 std 模組，所以走這個既有的機制
+  // （`cpp:print` → `<iostream>` 從一開始就是這樣掛的）。
+  for (const [conceptId, header] of componentConceptMappings()) {
+    registry.registerConceptMapping(conceptId, header)
+  }
   return registry
 }

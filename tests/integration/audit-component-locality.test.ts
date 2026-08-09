@@ -78,7 +78,7 @@ function 計入(rel: string): boolean {
 describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料夾裡嗎）', () => {
   // ── 棘輪：膠囊化的進度 ────────────────────────────────────
   it('棘輪：尚未膠囊化的元件數只准下降', () => {
-    const 已膠囊 = new Set(registeredComponents().map((c) => c.componentId))
+    const 已膠囊 = new Set(registeredComponents().map((c) => c.conceptId))
     const 未膠囊化 = 全部身分().filter((id) => !已膠囊.has(id))
 
     if (process.env.GENERATE_BASELINE) {
@@ -112,7 +112,7 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
 
   // ── 正向（FR-010）：硬性零 ──────────────────────────────
   it('正向：已膠囊化的元件，其身分不得出現在自己資料夾以外的非清單類檔', () => {
-    const 已膠囊 = registeredComponents().map((c) => c.componentId)
+    const 已膠囊 = registeredComponents().map((c) => c.conceptId)
     if (已膠囊.length === 0) {
       // 還沒有膠囊時這一條無事可做，而「無事可做」不等於「通過」。
       // 注入測試（下方）才是它此刻的健康檢查——`build-guardrail` 第 9 步：
@@ -136,15 +136,15 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     const ids = 全部身分()
     const 外來: string[] = []
     for (const c of registeredComponents()) {
-      const dir = 膠囊目錄(c.componentId)
+      const dir = 膠囊目錄(c.conceptId)
       for (const rel of listSourceFiles(dir.replace(/\/$/, ''), ['.ts', '.json'])) {
         const hits = scanText(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'), ids)
         for (const id of hits.code) {
           // 自證測**必須**能提到別的身分（負向斷言就是在說「這不是那顆」），
           // 所以測試檔豁免——但豁免要具名，不是靠路徑規則順便放過。
           if (rel.endsWith('.test.ts')) continue
-          if (id === c.componentId) continue
-          外來.push(`${rel} 提到了不屬於 ${c.componentId} 的 ${id}`)
+          if (id === c.conceptId) continue
+          外來.push(`${rel} 提到了不屬於 ${c.conceptId} 的 ${id}`)
         }
       }
     }
@@ -164,7 +164,7 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
   })
 
   it('標籤：每顆膠囊都要有標籤檔（沒有標籤的元件在 UI 上是空白的）', () => {
-    const 沒有 = registeredComponents().filter((c) => labelKeysOf(c).length === 0).map((c) => c.componentId)
+    const 沒有 = registeredComponents().filter((c) => labelKeysOf(c).length === 0).map((c) => c.conceptId)
     expect(沒有, `這些膠囊沒有任何標籤：${沒有.join('、')}`).toEqual([])
   })
 

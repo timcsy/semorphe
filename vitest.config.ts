@@ -3,7 +3,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'happy-dom',
-    include: ['tests/**/*.test.ts'],
+    // 元件膠囊的**自證測住在膠囊裡**（`src/components/<scope>/<name>/spec.test.ts`）。
+    // 那是刻意的：一顆元件的語義主張與它的實作住在一起，審查者只需要讀一個資料夾。
+    include: ['tests/**/*.test.ts', 'src/components/**/*.test.ts'],
     /**
      * 十七個測試檔會**真的呼叫 `g++`**——期望值由編譯器決定，不是推想出來的。
      *

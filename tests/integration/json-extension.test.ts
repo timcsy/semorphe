@@ -5,7 +5,14 @@ import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import algorithmBlocks from '../../src/languages/cpp/std/algorithm/blocks.json'
-import containerBlocks from '../../src/languages/cpp/std/vector/blocks.json'
+// ⚠️ `cpp:vector_declare` 已元件化，不在這個模組檔裡了——走唯一組裝點。
+import { allCppProjections } from '../../src/languages/cpp/all-declarations'
+
+// `<vector>` 模組的積木 ＋ 已元件化的那幾顆。原本直接讀模組的 blocks.json，
+// 而 `cpp:vector_declare` 搬進膠囊之後那個檔就少了一筆。
+const containerBlocks = allCppProjections().filter(
+  (b) => (b as { owner?: string }).owner === '<vector>',
+)
 
 const allConcepts = [
   ...universalConcepts,

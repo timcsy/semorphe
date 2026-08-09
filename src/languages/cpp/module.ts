@@ -19,6 +19,7 @@ import { declareNonComponent } from '../../core/non-components'
 import { allCppProjections } from './all-declarations'
 import { coreConcepts } from './core'
 import { allStdModules } from './std'
+import { componentConcepts } from '../../core/component/registry'
 
 // Projection layer: block definitions
 
@@ -81,6 +82,7 @@ export function initCppModule(): CppModuleEngines {
     ...universalConcepts as unknown as ConceptDefJSON[],
     ...coreConcepts,
     ...allStdModules.flatMap(m => m.concepts),
+    ...(componentConcepts() as unknown as ConceptDefJSON[]),
   ]
   conceptRegistry.loadFromJSON(allConcepts)
 

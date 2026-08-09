@@ -24,17 +24,26 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
 import type { ConceptDefJSON } from '../../src/core/types'
-import { universalConcepts } from '../../src/blocks/universal'
-import { coreConcepts } from '../../src/languages/cpp/core'
-import { allStdModules } from '../../src/languages/cpp/std'
+import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 
-/** 全部已註冊的 componentId（universal + cpp core + 全部 std 模組） */
+/**
+ * 全部已註冊的元件定義。
+ *
+ * ⚠️ **必須走 `allCppConcepts()`，不得在這裡自己組一份。**
+ *
+ * 這個函式原本自己 import `universalConcepts` ＋ `coreConcepts` ＋ `allStdModules`
+ * 再串起來——而 `all-declarations.ts` 的存在理由就是要消滅這種第二份組裝，
+ * 它的檔頭寫著：
+ *
+ * > 在此之前，`app.ts`、`module.ts` 與測試 helper **各自組裝一次**同一份清單。
+ * > 三份看起來一樣，而其中兩份載入的是**沒有蓋 `owner` 章的原始 JSON**。
+ *
+ * **測試 helper 那一份當時沒有被改掉。** 元件膠囊進來時它才現形：
+ * 膠囊接上了正式組裝點，而孤兒實作護欄走的是這裡，於是回報
+ * 「`cpp:vector_declare` 有實作卻沒有宣告」——**一顆剛搬好的元件，看起來像孤兒。**
+ */
 export function allComponentDefs(): ConceptDefJSON[] {
-  return [
-    ...(universalConcepts),
-    ...coreConcepts,
-    ...allStdModules.flatMap((m) => m.concepts),
-  ]
+  return allCppConcepts()
 }
 
 export function allComponentIds(): string[] {

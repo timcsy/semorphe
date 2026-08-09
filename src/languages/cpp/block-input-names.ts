@@ -16,6 +16,7 @@
 import type { BlockProjectionJSON } from '../../core/types'
 import coreBlocks from './core/blocks.json'
 import { allStdModules } from './std'
+import { componentBlocks } from '../../core/component/registry'
 
 interface InputNames {
   value: string[]
@@ -25,6 +26,7 @@ interface InputNames {
 const all = [
   ...(coreBlocks as unknown as BlockProjectionJSON[]),
   ...allStdModules.flatMap((m) => m.blocks),
+  ...(componentBlocks() as BlockProjectionJSON[]),
 ]
 
 function extract(blockDef: Record<string, unknown>): InputNames {

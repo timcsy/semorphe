@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cpp:vector_declare",
+    "conceptId": "cpp:vector_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_declare",
+      "message0": "%{BKY_CPP_VECTOR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_VECTOR_DECLARE_TYPE_LONG_LONG}",
+              "long long"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "vec"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::vector<${TYPE}> ${NAME};",
+      "imports": [
+        "vector"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
+    }
+  }
+]

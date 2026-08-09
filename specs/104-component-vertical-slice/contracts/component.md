@@ -6,14 +6,14 @@
 
 | # | 要求 | 違反時 |
 |---|---|---|
-| C1 | 資料夾根有 `component.json`，其 `componentId` 格式為 `<scope>:<name>` | 載入時 throw |
-| C2 | `componentId` 的 scope／name 與資料夾路徑一致 | 護欄紅（來源核對） |
+| C1 | 資料夾根有 `component.json`，其 `conceptId` 格式為 `<scope>:<name>` | 載入時 throw |
+| C2 | `conceptId` 的 scope／name 與資料夾路徑一致 | 護欄紅（來源核對） |
 | C3 | `paths` 列出**全部五路**，沒有的寫 `null` ＋ `_<path>_why` 理由 | 護欄紅（宣告即紅燈） |
 | C4 | `paths` 指到的檔案存在且匯出約定的註冊函式 | 載入時 throw |
 | C5 | `labels/<locale>.json` 的鍵不得與其他膠囊相撞 | 合併時 throw |
 | C6 | 有 `spec.test.ts`，含**至少一個正向與一個負向**斷言 | 護欄紅 |
-| C7 | 該 `componentId` **不得**出現在膠囊資料夾以外的非清單類檔案 | 護欄紅（就近性正向） |
-| C8 | 膠囊資料夾內**不得**出現別顆元件的 `componentId` | 護欄紅（就近性反向） |
+| C7 | 該 `conceptId` **不得**出現在膠囊資料夾以外的非清單類檔案 | 護欄紅（就近性正向） |
+| C8 | 膠囊資料夾內**不得**出現別顆元件的 `conceptId` | 護欄紅（就近性反向） |
 
 ## 膠囊向系統要什麼
 

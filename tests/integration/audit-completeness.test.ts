@@ -40,7 +40,7 @@ import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/s
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { universalBlocks } from '../../src/blocks/universal'
 import { coreBlocks } from '../../src/languages/cpp/core'
-import { allStdModules } from '../../src/languages/cpp/std'
+import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { createNode } from '../../src/core/semantic-tree'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type {
@@ -130,14 +130,10 @@ beforeAll(async () => {
   // renderToBlocklyState 需要 program 外殼且只處理 statement，
   // 用它會讓所有 expression 元件無故判為殼。
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(
-    allComponentDefs(),
-    [
-      ...(universalBlocks),
-      ...coreBlocks,
-      ...allStdModules.flatMap((m) => m.blocks),
-    ],
-  )
+  // ⚠️ 積木投影走唯一組裝點——**第八份被找到的各自組裝**。
+  // 少了它，已元件化的元件會被回報成「render 缺、extract 缺」，
+  // 而它的積木定義好端端地在膠囊裡。
+  reg.loadFromSplit(allComponentDefs(), allCppProjections())
   const specs = reg.getAll()
   specsCache = specs
   const rsr = new RenderStrategyRegistry()

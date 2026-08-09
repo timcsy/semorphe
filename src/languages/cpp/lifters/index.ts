@@ -9,6 +9,8 @@ import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { allStdModules } from '../std'
+import { componentLiftRegistrars } from '../../../core/component/paths'
+import { registerPendingContainers } from '../pending-containers'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
@@ -50,6 +52,11 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   for (const mod of allStdModules) {
     mod.registerLifters(lifter)
   }
+
+  // 元件膠囊的 lift 路
+  for (const reg of componentLiftRegistrars()) (reg as (l: typeof lifter) => void)(lifter)
+  // 還沒元件化的容器——過渡表，只准變短
+  registerPendingContainers()
 
   // preproc_include now handled by liftStrategy "cpp:liftPreprocInclude"
 

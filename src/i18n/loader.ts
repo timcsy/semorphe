@@ -1,3 +1,5 @@
+import { componentLabels } from '../core/component/labels'
+
 /** LocaleBundle — 一個語言環境的完整翻譯資料 */
 export interface LocaleBundle {
   readonly localeId: string
@@ -45,7 +47,11 @@ export class LocaleLoader implements LocaleLoaderInterface {
 
     try {
       const blocksModule = await import(`./${localeId}/blocks.json`)
-      blocks = blocksModule.default ?? blocksModule
+      // 共用檔 ＋ 各元件膠囊自己的標籤。
+      // ⚠️ 順序不影響結果：`componentLabels` 內部會在鍵相撞時 throw，
+      // **不會後者覆蓋前者**。靜默覆蓋的症狀是「某顆積木顯示別人的字」，
+      // 而那是使用者看得到、護欄看不到的那一類。
+      blocks = { ...(blocksModule.default ?? blocksModule), ...componentLabels(localeId) }
     } catch {
       // Fallback: empty blocks
     }

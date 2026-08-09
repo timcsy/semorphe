@@ -4,7 +4,7 @@
 
 ```jsonc
 {
-  "componentId": "cpp:vector_declare",   // 身分。與資料夾路徑一致，但路徑不是真相
+  "conceptId": "cpp:vector_declare",   // 身分。與資料夾路徑一致，但路徑不是真相
   "layer": "lang-library",
   "abstractConcept": "cpp:var_declare",
   "requires": ["<vector>"],              // 依賴。#include 與工具箱 owner 章的來源
@@ -66,7 +66,7 @@
 
 ```ts
 interface ComponentRegistration {
-  componentId: string     // 宣告裡寫的
+  conceptId: string     // 宣告裡寫的
   sourceDir: string       // 從檔案路徑推導出來的
 }
 ```
@@ -82,5 +82,5 @@ interface ComponentRegistration {
 | spec 的實體 | 落在哪 |
 |---|---|
 | 膠囊 | `src/components/<scope>/<name>/` 一個資料夾 |
-| 歸屬 | `component.json` 的 `componentId`（唯一真相）＋ 路徑（核對用） |
+| 歸屬 | `component.json` 的 `conceptId`（唯一真相）＋ 路徑（核對用） |
 | 切片紀錄 | `specs/104-component-vertical-slice/slice-record.md` |

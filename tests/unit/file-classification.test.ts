@@ -39,7 +39,22 @@ describe('檔案分類', () => {
     expect(classifyFile('src/languages/cpp/std/vector/executors.ts'), '執行器是實作').toBe('實作')
     expect(classifyFile('src/core/foo.ts')).toBe('實作')
     expect(classifyFile('src/ui/toolbox-builder.ts'), '**組工具箱的程式碼是實作**——只有那份清單資料才是清單').toBe('實作')
-    expect(classifyFile('tests/integration/sstream-input.test.ts'), '真正的測試不得被當成清冊排除掉').toBe('實作')
+    // ⚠️ 2026-08-10 改判：測試自成一類（`'測試'`），不再算「實作」。
+    // 觸發它的是元件膠囊——自證測住在膠囊裡，而它的**負向斷言必然提到別的
+    // 元件身分**（「`stack<int> s` 不得被認成 vector」）。算成實作擴散的話，
+    // 搬一顆元件會讓別的七顆的擴散度上升，而它們一行都沒動。
+    //
+    // **這不是把測試「排除掉」**——它有自己的桶，護欄各自決定要不要算。
+    // 就近性不算（測試不在 production 執行），完備性仍然可以算。
+    expect(classifyFile('tests/integration/sstream-input.test.ts'), '測試自成一類，不是清冊').toBe('測試')
+    expect(classifyFile('src/components/cpp/vector_declare/spec.test.ts'), '膠囊裡的自證測也是測試').toBe('測試')
+  })
+
+  it('★ 反向：`.test.ts` 之外的 src 檔仍然是實作（不得整批被新規則吃掉）', () => {
+    // 沒有這一支的話，一個把 `src/**` 都判成「測試」的規則也會通過上面那支。
+    expect(classifyFile('src/components/cpp/vector_declare/generate.ts')).toBe('實作')
+    expect(classifyFile('src/components/cpp/vector_declare/component.json'), '膠囊的宣告與 concepts.json 同一類').toBe('宣告')
+    expect(classifyFile('src/components/cpp/vector_declare/forms/blocks.json')).toBe('宣告')
   })
 
   it('★ 判準是路徑規則，不是檔名清單（FC-1）', () => {

@@ -3,6 +3,10 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 import { allStdModules } from '../../std'
+import { conceptForContainerTemplate } from '../../../../core/component/container-templates'
+// ⚠️ 元件膠囊也要算進來——第五處「從 allStdModules 推導」的地方。
+// 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
+import { componentConcepts } from '../../../../core/component/registry'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -16,10 +20,9 @@ import { allStdModules } from '../../std'
  * 比對一直是綠的。記在缺陷帳，不在這裡順手擴大範圍。
  */
 const 有宣告初始值來源 = new Set(
-  allStdModules
-    .flatMap((m) => m.concepts)
+  [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
-    .map((c) => c.conceptId),
+    .map((c) => (c as { conceptId: string }).conceptId),
 )
 
 /**
@@ -648,18 +651,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const templateArgs = templateTypeNode.namedChildren.find(c => c.type === 'template_argument_list')
       const innerType = templateArgs ? templateArgs.text.slice(1, -1).trim() : 'int' // strip < >
 
-      // Container declare concepts
-      const containerConcepts: Record<string, string> = {
-        'vector': 'cpp:vector_declare',
-        'stack': 'cpp:stack_declare',
-        'queue': 'cpp:queue_declare',
-        'priority_queue': 'cpp:priority_queue_declare',
-        'set': 'cpp:set_declare',
-        'map': 'cpp:map_declare',
-        'pair': 'cpp:pair_declare',
-      }
-
-      const conceptId = containerConcepts[templateName]
+      // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
+      // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
+      const conceptId = conceptForContainerTemplate(templateName)
       if (conceptId) {
         const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
         const name = decl?.type === 'identifier'

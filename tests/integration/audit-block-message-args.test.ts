@@ -46,8 +46,16 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
-import zhTW from '../../src/i18n/zh-TW/blocks.json'
-import en from '../../src/i18n/en/blocks.json'
+import zhTWShared from '../../src/i18n/zh-TW/blocks.json'
+import enShared from '../../src/i18n/en/blocks.json'
+import { componentLabels } from '../../src/core/component/labels'
+
+// ⚠️ **i18n 鍵不再只住在共用檔裡。** 元件膠囊自帶 `labels/<locale>.json`，
+// 而這條護欄原本只讀共用檔——一顆把標籤搬進膠囊的元件，會被回報成「缺 i18n 鍵」，
+// 症狀（依本檔開頭的說明）是「使用者看到一疊互相重疊的積木」。
+// **搬對了反而報錯**，而錯的方向剛好是最嚇人的那種。
+const zhTW = { ...zhTWShared, ...componentLabels('zh-TW') }
+const en = { ...enShared, ...componentLabels('en') }
 
 const MSGS = { ...(en as Record<string, string>), ...(zhTW as Record<string, string>) }
 

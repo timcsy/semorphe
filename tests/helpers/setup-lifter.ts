@@ -8,7 +8,7 @@ import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import type { LiftPattern, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
-import { allStdModules } from '../../src/languages/cpp/std'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 /** Create a fully wired Lifter with PatternLifter + registries for testing */
 export function createTestLifter(): Lifter {
@@ -22,12 +22,13 @@ export function createTestLifter(): Lifter {
 
   // Load BlockSpec patterns (for c_increment, c_compound_assign, etc.)
   const blockSpecRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  const allProjections = [
-    ...universalBlocks,
-    ...coreBlocks,
-    ...allStdModules.flatMap(m => m.blocks),
-  ]
+  // ⚠️ **走唯一組裝點，不在這裡自己串一份。**
+  // 這是第四份被找到的各自組裝（前三份：`component-scan.ts` 的 `allComponentDefs`、
+  // `toolbox.ts` 的積木來源、以及 `all-declarations.ts` 檔頭記的那兩份）。
+  // 元件膠囊接上正式路徑之後它才現形：這裡看不到膠囊，於是
+  // 「`vector<int> v = f()` 的初始值被丟掉」——而那正是這個檔頭在講的那個缺陷。
+  const allConcepts = allCppConcepts()
+  const allProjections = allCppProjections()
   blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
 
   const pl = new PatternLifter()

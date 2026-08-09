@@ -37,7 +37,7 @@ let 快取: ComponentRegistration[] | null = null
 /**
  * 從檔案路徑推出 `<scope>/<name>`。
  *
- * **這不是「從檔名推歸屬」**——歸屬的唯一真相仍是 manifest 裡的 `componentId`。
+ * **這不是「從檔名推歸屬」**——歸屬的唯一真相仍是 manifest 裡的 `conceptId`。
  * 這個值只有一個用途：**與宣告核對**。兩個來源不一致就代表有人複製膠囊
  * 忘了改 id，而那是只信宣告抓不到的（見 `component-move-parity.test.ts`）。
  */
@@ -59,16 +59,16 @@ function 驗契約(manifest: ComponentManifest, sourceDir: string): void {
   const where = `膠囊 ${sourceDir}`
 
   // C1：身分格式
-  if (typeof manifest.componentId !== 'string' || !manifest.componentId.includes(':')) {
-    throw new Error(`${where}：componentId 必須是 <scope>:<name> 格式，收到 ${String(manifest.componentId)}`)
+  if (typeof manifest.conceptId !== 'string' || !manifest.conceptId.includes(':')) {
+    throw new Error(`${where}：conceptId 必須是 <scope>:<name> 格式，收到 ${String(manifest.conceptId)}`)
   }
 
   // C2：身分與路徑一致
-  if (idToDir(manifest.componentId) !== sourceDir) {
+  if (idToDir(manifest.conceptId) !== sourceDir) {
     throw new Error(
-      `${where}：componentId「${manifest.componentId}」對應的資料夾應是 ` +
-        `${idToDir(manifest.componentId)}，但它住在 ${sourceDir}。` +
-        `（複製膠囊時忘了改 componentId？）`,
+      `${where}：conceptId「${manifest.conceptId}」對應的資料夾應是 ` +
+        `${idToDir(manifest.conceptId)}，但它住在 ${sourceDir}。` +
+        `（複製膠囊時忘了改 conceptId？）`,
     )
   }
 
@@ -97,9 +97,9 @@ export function registeredComponents(): ComponentRegistration[] {
     const sourceDir = pathToDir(key)
     const manifest = mod.default
     驗契約(manifest, sourceDir)
-    out.push({ componentId: manifest.componentId, sourceDir, manifest })
+    out.push({ conceptId: manifest.conceptId, sourceDir, manifest })
   }
-  快取 = out.sort((a, b) => a.componentId.localeCompare(b.componentId))
+  快取 = out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
   return 快取
 }
 
@@ -113,7 +113,61 @@ export function componentManifests(): ComponentManifest[] {
   return registeredComponents().map((c) => c.manifest)
 }
 
-/** `componentId` → 它宣告的依賴（C++ 是標頭檔）。給 `#include` 解析與工具箱 owner 章用。 */
-export function componentRequires(): [componentId: string, header: string][] {
-  return registeredComponents().flatMap((c) => (c.manifest.requires ?? []).map((h) => [c.componentId, h] as [string, string]))
+/** `conceptId` → 它宣告的依賴（C++ 是標頭檔）。給 `#include` 解析與工具箱 owner 章用。 */
+export function componentRequires(): [conceptId: string, header: string][] {
+  return registeredComponents().flatMap((c) => (c.manifest.requires ?? []).map((h) => [c.conceptId, h] as [string, string]))
+}
+
+// ── 接回既有的載入路徑 ─────────────────────────────────────────
+//
+// R4 的決定：**膠囊自我登錄，不改載入架構**。所以這裡提供的是既有組裝點
+// 已經在用的兩種形狀（概念定義陣列、積木投影陣列），呼叫端只多加一個展開。
+//
+// 順手把 `std/index.ts` 改成「掃描元件」是誘人的，但那會讓這次切片的成本數字
+// 混進一次架構改動——`history/018` 的另一面。**架構收斂等元件夠多再做。**
+
+// ⚠️ 樣式必須字面常數（同上）。
+const FORMS = import.meta.glob('/src/components/*/*/forms/blocks.json', { eager: true }) as Record<
+  string,
+  { default: unknown[] }
+>
+
+/** 元件宣告的概念定義。形狀與 `concepts.json` 的一筆相同，因為它就是那一筆。 */
+export function componentConcepts(): ComponentManifest[] {
+  return registeredComponents().map((c) => c.manifest)
+}
+
+/**
+ * 元件宣告的積木投影，**已蓋 owner 章**。
+ *
+ * `owner` 原本由 `makeModule(header, …)` 蓋——工具箱靠它把 `<map>` 的容器與
+ * `<stack>` 的容器分開（兩者的 `category` 都是 `'containers'`）。元件化之後
+ * 沒有模組了，所以章從 `requires[0]` 蓋。
+ *
+ * ⚠️ 沒有 `requires` 就不蓋章，**不給預設值**——一顆該有 header 卻忘了宣告的
+ * 元件，症狀會是「積木掉進錯的工具箱分類」，而給了預設值它會變成「掉進一個
+ * 看起來合理的分類」，更難發現。
+ */
+export function componentBlocks(owner?: string | null): unknown[] {
+  const byDir = new Map(registeredComponents().map((c) => [c.sourceDir, c]))
+  const out: unknown[] = []
+  for (const [key, mod] of Object.entries(FORMS)) {
+    const parts = key.split('/').filter(Boolean)
+    const i = parts.indexOf('components')
+    if (i < 0) continue
+    const c = byDir.get(`${parts[i + 1]}/${parts[i + 2]}`)
+    if (!c) throw new Error(`${key} 沒有對應的 component.json——forms 不得孤兒存在`)
+    const 章 = c.manifest.requires?.[0] ?? null
+    // `owner === undefined` ＝ 全要；否則只要這個 owner 的（`null` ＝ 沒有 owner 的）。
+    if (owner !== undefined && 章 !== owner) continue
+    for (const b of mod.default) out.push(章 ? { ...(b as object), owner: 章 } : b)
+  }
+  return out
+}
+
+/** `conceptId` → 依賴（C++ 是標頭檔）。給 `#include` 解析用。 */
+export function componentConceptMappings(): [conceptId: string, header: string][] {
+  return registeredComponents().flatMap((c) =>
+    (c.manifest.requires ?? []).map((h) => [c.conceptId, h] as [string, string]),
+  )
 }
