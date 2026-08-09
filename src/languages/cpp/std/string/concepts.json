@@ -111,7 +111,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:getline",
+    "conceptId": "cpp:input_line",
     "layer": "lang-library",
     "properties": [
       {
@@ -139,7 +139,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:stoi",
+    "conceptId": "cpp:string_as_int",
     "layer": "lang-library",
     "properties": [],
     "children": {
@@ -154,7 +154,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:stod",
+    "conceptId": "cpp:string_as_double",
     "layer": "lang-library",
     "properties": [],
     "children": {

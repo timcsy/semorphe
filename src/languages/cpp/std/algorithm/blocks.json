@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp:sort",
-    "conceptId": "cpp:sort",
+    "id": "cpp:range_sort",
+    "conceptId": "cpp:range_sort",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -30,8 +30,8 @@
     }
   },
   {
-    "id": "cpp:reverse",
-    "conceptId": "cpp:reverse",
+    "id": "cpp:range_reverse",
+    "conceptId": "cpp:range_reverse",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -60,8 +60,8 @@
     }
   },
   {
-    "id": "cpp:fill",
-    "conceptId": "cpp:fill",
+    "id": "cpp:range_fill",
+    "conceptId": "cpp:range_fill",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -97,8 +97,8 @@
     }
   },
   {
-    "id": "cpp:min",
-    "conceptId": "cpp:min",
+    "id": "cpp:math_min",
+    "conceptId": "cpp:math_min",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -132,8 +132,8 @@
     }
   },
   {
-    "id": "cpp:max",
-    "conceptId": "cpp:max",
+    "id": "cpp:math_max",
+    "conceptId": "cpp:math_max",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -167,8 +167,8 @@
     }
   },
   {
-    "id": "cpp:swap",
-    "conceptId": "cpp:swap",
+    "id": "cpp:var_swap",
+    "conceptId": "cpp:var_swap",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

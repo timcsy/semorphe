@@ -30,7 +30,8 @@ import type { NamingVocabulary } from '../../core/naming'
  * 而「排序即分群」要求它排在 `loop_*` 那一族裡。
  */
 export const SUBJECTS = [
-  'array', 'array_2d', 'class', 'container', 'enum', 'func', 'ifstream',
+  'array', 'array_2d', 'char', 'class', 'container', 'cstring', 'enum', 'func', 'ifstream',
+  'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
   'ofstream', 'pair', 'pointer', 'priority_queue', 'queue', 'set', 'stack',
   'string', 'stringstream', 'struct', 'template', 'var', 'vector',
@@ -55,7 +56,9 @@ export const SUBJECTS = [
  */
 export const OPERATIONS = [
   'append', 'assign', 'at', 'call', 'cast', 'clear', 'count', 'declare',
-  'append', 'as', 'back', 'deref', 'front', 'replace', 'substr',
+  'abs', 'append', 'as', 'back', 'compare', 'copy', 'deref', 'exit', 'fill',
+  'front', 'gcd', 'is', 'lcm', 'max', 'min', 'next', 'replace', 'reverse',
+  'seed', 'sort', 'substr', 'sum', 'to',
   'def', 'empty', 'erase', 'find', 'insert', 'make', 'peek',
   'pop', 'push', 'ref', 'size', 'swap',
 ] as const
@@ -72,6 +75,9 @@ export const KINDS = [
   // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
   'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',
   'member', 'ptr', 'cstring',
+  // 第 5 步（裸的函式庫名）帶進來的種差
+  'alpha', 'digit', 'lower', 'upper', 'int', 'double',
+  'bounded', 'formatted', 'line', 'sequence', 'partial',
 ] as const
 
 /**
@@ -141,7 +147,12 @@ export const RECEIVER_PARAM = 'obj'
  * 判準是**創造／引用 vs 操作**：前者的參數是那個東西的識別字，
  * 後者的參數是被操作的物件。
  */
-export const SELF_NAMING_OPERATIONS = ['declare', 'ref', 'call', 'def', 'literal', 'loop', 'cast'] as const
+export const SELF_NAMING_OPERATIONS = [
+  'declare', 'ref', 'call', 'def', 'literal', 'loop', 'cast',
+  // ⚠️ `swap` 是**對稱的**——兩個運算元，沒有哪一個是「被操作的那個」。
+  // 「接收者」這個角色只在「一個東西被操作」時才存在。
+  'swap',
+] as const
 
 export const CPP_NAMING: NamingVocabulary = {
   subjects: SUBJECTS,

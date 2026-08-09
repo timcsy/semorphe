@@ -74,7 +74,7 @@ describe('Auto-include integration', () => {
       body: [
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
+            createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
           ],
         }),
       ],

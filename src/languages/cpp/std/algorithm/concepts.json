@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:sort",
+    "conceptId": "cpp:range_sort",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -19,7 +19,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:reverse",
+    "conceptId": "cpp:range_reverse",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -38,7 +38,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:fill",
+    "conceptId": "cpp:range_fill",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [
@@ -59,7 +59,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:min",
+    "conceptId": "cpp:math_min",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -70,7 +70,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:max",
+    "conceptId": "cpp:math_max",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -81,7 +81,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:swap",
+    "conceptId": "cpp:var_swap",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [

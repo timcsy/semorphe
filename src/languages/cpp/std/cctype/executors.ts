@@ -52,13 +52,13 @@ function charOf(v: RuntimeValue): string {
  * 要加它們的話是**五路一起加**，那是另一個功能，不是這一刀的順手。
  */
 const CLASSIFIERS: Record<string, (c: string) => boolean> = {
-  'cpp:isalpha': (c) => /[a-zA-Z]/.test(c),
-  'cpp:isdigit': (c) => /[0-9]/.test(c),
+  'cpp:char_is_alpha': (c) => /[a-zA-Z]/.test(c),
+  'cpp:char_is_digit': (c) => /[0-9]/.test(c),
 }
 
 const TRANSFORMERS: Record<string, (c: string) => string> = {
-  'cpp:toupper': (c) => c.toUpperCase(),
-  'cpp:tolower': (c) => c.toLowerCase(),
+  'cpp:char_to_upper': (c) => c.toUpperCase(),
+  'cpp:char_to_lower': (c) => c.toLowerCase(),
 }
 
 export function registerCctypeExecutors(

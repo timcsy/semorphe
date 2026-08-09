@@ -233,3 +233,59 @@ export const ID_MIGRATIONS_V6_TO_V7: Record<string, string> = {
 }
 
 registerIdMigration(ID_MIGRATIONS_V6_TO_V7)
+
+/**
+ * v7 → v8（G 項第 5 步）：**抄來的函式庫名全部拆成「主體 ＋ 操作」**。
+ *
+ * `strlen` → `cstring_size`、`isalpha` → `char_is_alpha`、`sort` → `range_sort`…
+ *
+ * 判準是**語言構造 vs 函式庫函式**：`switch` 可以是單字名（原生的，沒有主體
+ * 可拆），`strlen` 不行——它有主體（C 字串的大小）。抄函式庫的名字，
+ * 連帶抄了它的縮寫（`strlen`／`atoi`）與詞性不一致（`partial_sum` 是名詞、
+ * `sort` 是動詞）。
+ *
+ * 新主體：`cstring`／`memory`／`range`／`char`／`random`／`input`／`print`／`program`。
+ * `range` 那一族（`sort`／`reverse`／`fill`／`sum`）**同時把 C++ 迭代器詞彙
+ * 從名字裡拿掉了**——它們作用在「一段範圍」上，那是語義；`begin`／`end`
+ * 是 C++ 的介面。
+ */
+export const ID_MIGRATIONS_V7_TO_V8: Record<string, string> = {
+  'cpp:abs': 'cpp:math_abs',
+  'cpp:accumulate': 'cpp:range_sum',
+  'cpp:atof': 'cpp:cstring_as_double',
+  'cpp:atoi': 'cpp:cstring_as_int',
+  'cpp:exit': 'cpp:program_exit',
+  'cpp:fill': 'cpp:range_fill',
+  'cpp:gcd': 'cpp:math_gcd',
+  'cpp:getline': 'cpp:input_line',
+  'cpp:iota': 'cpp:range_fill_sequence',
+  'cpp:isalpha': 'cpp:char_is_alpha',
+  'cpp:isdigit': 'cpp:char_is_digit',
+  'cpp:lcm': 'cpp:math_lcm',
+  'cpp:max': 'cpp:math_max',
+  'cpp:memcpy': 'cpp:memory_copy',
+  'cpp:memset': 'cpp:memory_fill',
+  'cpp:min': 'cpp:math_min',
+  'cpp:partial_sum': 'cpp:range_sum_partial',
+  'cpp:printf': 'cpp:print_formatted',
+  'cpp:rand': 'cpp:random_next',
+  'cpp:reverse': 'cpp:range_reverse',
+  'cpp:scanf': 'cpp:input_formatted',
+  'cpp:sort': 'cpp:range_sort',
+  'cpp:srand': 'cpp:random_seed',
+  'cpp:stod': 'cpp:string_as_double',
+  'cpp:stoi': 'cpp:string_as_int',
+  'cpp:strcat': 'cpp:cstring_append',
+  'cpp:strchr': 'cpp:cstring_find_char',
+  'cpp:strcmp': 'cpp:cstring_compare',
+  'cpp:strcpy': 'cpp:cstring_copy',
+  'cpp:strlen': 'cpp:cstring_size',
+  'cpp:strncmp': 'cpp:cstring_compare_bounded',
+  'cpp:strncpy': 'cpp:cstring_copy_bounded',
+  'cpp:strstr': 'cpp:cstring_find',
+  'cpp:swap': 'cpp:var_swap',
+  'cpp:tolower': 'cpp:char_to_lower',
+  'cpp:toupper': 'cpp:char_to_upper',
+}
+
+registerIdMigration(ID_MIGRATIONS_V7_TO_V8)

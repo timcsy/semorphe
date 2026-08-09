@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:printf",
+    "conceptId": "cpp:print_formatted",
     "layer": "lang-core",
     "abstractConcept": "cpp:print",
     "properties": [
@@ -21,7 +21,7 @@
     }
   },
   {
-    "conceptId": "cpp:scanf",
+    "conceptId": "cpp:input_formatted",
     "layer": "lang-core",
     "abstractConcept": "cpp:input",
     "properties": [

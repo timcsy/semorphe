@@ -6,14 +6,6 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
   "limits": {
-    "cpp:abs": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:accumulate": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:address_of": {
       "files": 4,
       "dirs": 4
@@ -46,14 +38,6 @@
       "files": 4,
       "dirs": 4
     },
-    "cpp:atof": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:atoi": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:auto_declare": {
       "files": 3,
       "dirs": 3
@@ -81,6 +65,22 @@
     "cpp:cast": {
       "files": 5,
       "dirs": 4
+    },
+    "cpp:char_is_alpha": {
+      "files": 2,
+      "dirs": 2
+    },
+    "cpp:char_is_digit": {
+      "files": 2,
+      "dirs": 2
+    },
+    "cpp:char_to_lower": {
+      "files": 2,
+      "dirs": 2
+    },
+    "cpp:char_to_upper": {
+      "files": 2,
+      "dirs": 2
     },
     "cpp:class_def": {
       "files": 4,
@@ -150,6 +150,46 @@
       "files": 4,
       "dirs": 4
     },
+    "cpp:cstring_append": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_as_double": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_as_int": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_compare": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_compare_bounded": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_copy": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_copy_bounded": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_find": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_find_char": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:cstring_size": {
+      "files": 3,
+      "dirs": 2
+    },
     "cpp:default": {
       "files": 3,
       "dirs": 3
@@ -182,14 +222,6 @@
       "files": 4,
       "dirs": 4
     },
-    "cpp:exit": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:fill": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:forward_decl": {
       "files": 3,
       "dirs": 3
@@ -205,14 +237,6 @@
     "cpp:func_def": {
       "files": 9,
       "dirs": 7
-    },
-    "cpp:gcd": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:getline": {
-      "files": 3,
-      "dirs": 2
     },
     "cpp:if": {
       "files": 7,
@@ -250,16 +274,12 @@
       "files": 8,
       "dirs": 7
     },
-    "cpp:iota": {
+    "cpp:input_formatted": {
+      "files": 4,
+      "dirs": 2
+    },
+    "cpp:input_line": {
       "files": 3,
-      "dirs": 2
-    },
-    "cpp:isalpha": {
-      "files": 2,
-      "dirs": 2
-    },
-    "cpp:isdigit": {
-      "files": 2,
       "dirs": 2
     },
     "cpp:istringstream_declare": {
@@ -269,10 +289,6 @@
     "cpp:lambda": {
       "files": 4,
       "dirs": 4
-    },
-    "cpp:lcm": {
-      "files": 3,
-      "dirs": 2
     },
     "cpp:literal_char": {
       "files": 3,
@@ -330,9 +346,29 @@
       "files": 3,
       "dirs": 2
     },
+    "cpp:math_abs": {
+      "files": 3,
+      "dirs": 2
+    },
     "cpp:math_binary": {
       "files": 3,
       "dirs": 1
+    },
+    "cpp:math_gcd": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:math_lcm": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:math_max": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:math_min": {
+      "files": 3,
+      "dirs": 2
     },
     "cpp:math_pow": {
       "files": 3,
@@ -342,25 +378,17 @@
       "files": 3,
       "dirs": 1
     },
-    "cpp:max": {
+    "cpp:memory_copy": {
       "files": 3,
       "dirs": 2
     },
-    "cpp:memcpy": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:memset": {
+    "cpp:memory_fill": {
       "files": 3,
       "dirs": 2
     },
     "cpp:method_call": {
       "files": 5,
       "dirs": 4
-    },
-    "cpp:min": {
-      "files": 3,
-      "dirs": 2
     },
     "cpp:namespace_def": {
       "files": 4,
@@ -394,10 +422,6 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:partial_sum": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:pointer_assign": {
       "files": 3,
       "dirs": 3
@@ -414,7 +438,7 @@
       "files": 7,
       "dirs": 6
     },
-    "cpp:printf": {
+    "cpp:print_formatted": {
       "files": 4,
       "dirs": 2
     },
@@ -429,6 +453,10 @@
     "cpp:program": {
       "files": 9,
       "dirs": 7
+    },
+    "cpp:program_exit": {
+      "files": 3,
+      "dirs": 2
     },
     "cpp:pure_virtual": {
       "files": 3,
@@ -446,7 +474,35 @@
       "files": 3,
       "dirs": 2
     },
-    "cpp:rand": {
+    "cpp:random_next": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:random_seed": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_fill": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_fill_sequence": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_reverse": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_sort": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_sum": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:range_sum_partial": {
       "files": 3,
       "dirs": 2
     },
@@ -470,14 +526,6 @@
       "files": 5,
       "dirs": 4
     },
-    "cpp:reverse": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:scanf": {
-      "files": 5,
-      "dirs": 3
-    },
     "cpp:set_declare": {
       "files": 3,
       "dirs": 2
@@ -489,14 +537,6 @@
     "cpp:sizeof": {
       "files": 4,
       "dirs": 4
-    },
-    "cpp:sort": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:srand": {
-      "files": 3,
-      "dirs": 2
     },
     "cpp:stack_declare": {
       "files": 3,
@@ -518,30 +558,6 @@
       "files": 4,
       "dirs": 3
     },
-    "cpp:stod": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:stoi": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strcat": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strchr": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strcmp": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strcpy": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:string_append": {
       "files": 3,
       "dirs": 2
@@ -551,6 +567,14 @@
       "dirs": 2
     },
     "cpp:string_as_cstring": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:string_as_double": {
+      "files": 3,
+      "dirs": 2
+    },
+    "cpp:string_as_int": {
       "files": 3,
       "dirs": 2
     },
@@ -610,22 +634,6 @@
       "files": 2,
       "dirs": 2
     },
-    "cpp:strlen": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strncmp": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strncpy": {
-      "files": 3,
-      "dirs": 2
-    },
-    "cpp:strstr": {
-      "files": 3,
-      "dirs": 2
-    },
     "cpp:struct_at_member": {
       "files": 4,
       "dirs": 3
@@ -637,10 +645,6 @@
     "cpp:struct_declare": {
       "files": 3,
       "dirs": 3
-    },
-    "cpp:swap": {
-      "files": 3,
-      "dirs": 2
     },
     "cpp:switch": {
       "files": 3,
@@ -657,14 +661,6 @@
     "cpp:throw": {
       "files": 3,
       "dirs": 3
-    },
-    "cpp:tolower": {
-      "files": 2,
-      "dirs": 2
-    },
-    "cpp:toupper": {
-      "files": 2,
-      "dirs": 2
     },
     "cpp:try_catch": {
       "files": 4,
@@ -693,6 +689,10 @@
     "cpp:var_ref": {
       "files": 10,
       "dirs": 8
+    },
+    "cpp:var_swap": {
+      "files": 3,
+      "dirs": 2
     },
     "cpp:vector_back": {
       "files": 3,

@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:rand",
+    "conceptId": "cpp:random_next",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -8,7 +8,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:srand",
+    "conceptId": "cpp:random_seed",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -24,7 +24,7 @@
     }
   },
   {
-    "conceptId": "cpp:abs",
+    "conceptId": "cpp:math_abs",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -34,7 +34,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:exit",
+    "conceptId": "cpp:program_exit",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -44,7 +44,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:atoi",
+    "conceptId": "cpp:cstring_as_int",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -54,7 +54,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:atof",
+    "conceptId": "cpp:cstring_as_double",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

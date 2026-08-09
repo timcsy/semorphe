@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:strlen",
+    "conceptId": "cpp:cstring_size",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -10,7 +10,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:strcmp",
+    "conceptId": "cpp:cstring_compare",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -21,7 +21,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:strcpy",
+    "conceptId": "cpp:cstring_copy",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -32,7 +32,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:strcat",
+    "conceptId": "cpp:cstring_append",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -43,7 +43,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:strncpy",
+    "conceptId": "cpp:cstring_copy_bounded",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -55,7 +55,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:strncmp",
+    "conceptId": "cpp:cstring_compare_bounded",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -67,7 +67,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:strchr",
+    "conceptId": "cpp:cstring_find_char",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -78,7 +78,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:strstr",
+    "conceptId": "cpp:cstring_find",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -89,7 +89,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:memset",
+    "conceptId": "cpp:memory_fill",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -101,7 +101,7 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:memcpy",
+    "conceptId": "cpp:memory_copy",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

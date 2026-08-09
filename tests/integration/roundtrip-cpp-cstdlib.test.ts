@@ -66,12 +66,12 @@ function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode
 
 describe('C++ cstdlib Roundtrip', () => {
 
-  describe('cpp:rand', () => {
+  describe('cpp:random_next', () => {
     const code = 'int x = rand();'
 
     it('should lift to cpp_rand concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:rand')
+      const node = findConcept(tree, 'cpp:random_next')
       expect(node).not.toBeNull()
     })
 
@@ -83,17 +83,17 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:rand')
+      const node2 = findConcept(tree2, 'cpp:random_next')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp:srand', () => {
+  describe('cpp:random_seed', () => {
     const code = 'srand(42);'
 
     it('should lift to cpp_srand concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:srand')
+      const node = findConcept(tree, 'cpp:random_seed')
       expect(node).not.toBeNull()
     })
 
@@ -105,17 +105,17 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:srand')
+      const node2 = findConcept(tree2, 'cpp:random_seed')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp:abs', () => {
+  describe('cpp:math_abs', () => {
     const code = 'int y = abs(-5);'
 
     it('should lift to cpp_abs concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:abs')
+      const node = findConcept(tree, 'cpp:math_abs')
       expect(node).not.toBeNull()
     })
 
@@ -127,17 +127,17 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:abs')
+      const node2 = findConcept(tree2, 'cpp:math_abs')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp:exit', () => {
+  describe('cpp:program_exit', () => {
     const code = 'exit(0);'
 
     it('should lift to cpp_exit concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:exit')
+      const node = findConcept(tree, 'cpp:program_exit')
       expect(node).not.toBeNull()
     })
 
@@ -149,17 +149,17 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:exit')
+      const node2 = findConcept(tree2, 'cpp:program_exit')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp:atoi', () => {
+  describe('cpp:cstring_as_int', () => {
     const code = 'int n = atoi("123");'
 
     it('should lift to cpp_atoi concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:atoi')
+      const node = findConcept(tree, 'cpp:cstring_as_int')
       expect(node).not.toBeNull()
     })
 
@@ -171,17 +171,17 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:atoi')
+      const node2 = findConcept(tree2, 'cpp:cstring_as_int')
       expect(node2).not.toBeNull()
     })
   })
 
-  describe('cpp:atof', () => {
+  describe('cpp:cstring_as_double', () => {
     const code = 'double d = atof("3.14");'
 
     it('should lift to cpp_atof concept', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:atof')
+      const node = findConcept(tree, 'cpp:cstring_as_double')
       expect(node).not.toBeNull()
     })
 
@@ -193,7 +193,7 @@ describe('C++ cstdlib Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:atof')
+      const node2 = findConcept(tree2, 'cpp:cstring_as_double')
       expect(node2).not.toBeNull()
     })
   })
@@ -203,16 +203,16 @@ describe('C++ cstdlib Roundtrip', () => {
 
     it('should lift all three concepts', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:srand')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:rand')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:abs')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:random_seed')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:random_next')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_abs')).not.toBeNull()
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:srand')).not.toBeNull()
-      expect(findConcept(tree2, 'cpp:rand')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:random_seed')).not.toBeNull()
+      expect(findConcept(tree2, 'cpp:random_next')).not.toBeNull()
     })
   })
 })

@@ -637,21 +637,21 @@ public:
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdio', () => {
-  it('cpp:printf', () => {
+  it('cpp:print_formatted', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { printf("hello %d\\n", 42); }`, 'cpp:printf')
+int main() { printf("hello %d\\n", 42); }`, 'cpp:print_formatted')
   })
 
-  it('cpp:scanf', () => {
+  it('cpp:input_formatted', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { int x; scanf("%d", &x); }`, 'cpp:scanf')
+int main() { int x; scanf("%d", &x); }`, 'cpp:input_formatted')
   })
 
   // ARCHITECTURAL: cpp_scanf_expr is only produced during block rendering
   // (expressionCounterpart). The lifter produces cpp_scanf.
   it('cpp_scanf_expr — expression counterpart, verify cpp_scanf exists', () => {
     assertConceptPresent(`#include <cstdio>
-int main() { int x; scanf("%d", &x); }`, 'cpp:scanf')
+int main() { int x; scanf("%d", &x); }`, 'cpp:input_formatted')
   })
 })
 
@@ -713,11 +713,11 @@ int main() { std::string s; s.append("hi"); }`, 'cpp:string_append')
 int main() { std::string s = "hello"; printf("%s", s.c_str()); }`, 'cpp:string_as_cstring')
   })
 
-  it('cpp:getline', () => {
+  it('cpp:input_line', () => {
     assertConceptPresent(`#include <iostream>
 #include <string>
 using namespace std;
-int main() { string s; getline(cin, s); }`, 'cpp:getline')
+int main() { string s; getline(cin, s); }`, 'cpp:input_line')
   })
 
   it('cpp:string_make', () => {
@@ -725,14 +725,14 @@ int main() { string s; getline(cin, s); }`, 'cpp:getline')
 int main() { std::string s = std::to_string(42); }`, 'cpp:string_make')
   })
 
-  it('cpp:stoi', () => {
+  it('cpp:string_as_int', () => {
     assertConceptPresent(`#include <string>
-int main() { int x = std::stoi("42"); }`, 'cpp:stoi')
+int main() { int x = std::stoi("42"); }`, 'cpp:string_as_int')
   })
 
-  it('cpp:stod', () => {
+  it('cpp:string_as_double', () => {
     assertConceptPresent(`#include <string>
-int main() { double x = std::stod("3.14"); }`, 'cpp:stod')
+int main() { double x = std::stod("3.14"); }`, 'cpp:string_as_double')
   })
 
   // ARCHITECTURAL: s.empty() on string is lifted as cpp_container_empty (generic)
@@ -782,24 +782,24 @@ int main() { std::string s; s.clear(); }`, 'cpp:string_clear')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cctype', () => {
-  it('cpp:isalpha', () => {
+  it('cpp:char_is_alpha', () => {
     assertConceptPresent(`#include <cctype>
-int main() { bool b = isalpha('a'); }`, 'cpp:isalpha')
+int main() { bool b = isalpha('a'); }`, 'cpp:char_is_alpha')
   })
 
-  it('cpp:isdigit', () => {
+  it('cpp:char_is_digit', () => {
     assertConceptPresent(`#include <cctype>
-int main() { bool b = isdigit('1'); }`, 'cpp:isdigit')
+int main() { bool b = isdigit('1'); }`, 'cpp:char_is_digit')
   })
 
-  it('cpp:toupper', () => {
+  it('cpp:char_to_upper', () => {
     assertConceptPresent(`#include <cctype>
-int main() { char c = toupper('a'); }`, 'cpp:toupper')
+int main() { char c = toupper('a'); }`, 'cpp:char_to_upper')
   })
 
-  it('cpp:tolower', () => {
+  it('cpp:char_to_lower', () => {
     assertConceptPresent(`#include <cctype>
-int main() { char c = tolower('A'); }`, 'cpp:tolower')
+int main() { char c = tolower('A'); }`, 'cpp:char_to_lower')
   })
 })
 
@@ -808,37 +808,37 @@ int main() { char c = tolower('A'); }`, 'cpp:tolower')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: algorithm', () => {
-  it('cpp:sort', () => {
+  it('cpp:range_sort', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v; sort(v.begin(), v.end()); }`, 'cpp:sort')
+int main() { std::vector<int> v; sort(v.begin(), v.end()); }`, 'cpp:range_sort')
   })
 
-  it('cpp:reverse', () => {
+  it('cpp:range_reverse', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v; reverse(v.begin(), v.end()); }`, 'cpp:reverse')
+int main() { std::vector<int> v; reverse(v.begin(), v.end()); }`, 'cpp:range_reverse')
   })
 
-  it('cpp:fill', () => {
+  it('cpp:range_fill', () => {
     assertConceptPresent(`#include <algorithm>
 #include <vector>
-int main() { std::vector<int> v(10); fill(v.begin(), v.end(), 0); }`, 'cpp:fill')
+int main() { std::vector<int> v(10); fill(v.begin(), v.end(), 0); }`, 'cpp:range_fill')
   })
 
-  it('cpp:min', () => {
+  it('cpp:math_min', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int x = min(1, 2); }`, 'cpp:min')
+int main() { int x = min(1, 2); }`, 'cpp:math_min')
   })
 
-  it('cpp:max', () => {
+  it('cpp:math_max', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int x = max(1, 2); }`, 'cpp:max')
+int main() { int x = max(1, 2); }`, 'cpp:math_max')
   })
 
-  it('cpp:swap', () => {
+  it('cpp:var_swap', () => {
     assertConceptPresent(`#include <algorithm>
-int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp:swap')
+int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp:var_swap')
   })
 })
 
@@ -847,34 +847,34 @@ int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp:swap')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdlib', () => {
-  it('cpp:rand', () => {
+  it('cpp:random_next', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = rand(); }`, 'cpp:rand')
+int main() { int x = rand(); }`, 'cpp:random_next')
   })
 
-  it('cpp:srand', () => {
+  it('cpp:random_seed', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { srand(42); }`, 'cpp:srand')
+int main() { srand(42); }`, 'cpp:random_seed')
   })
 
-  it('cpp:abs', () => {
+  it('cpp:math_abs', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = abs(-5); }`, 'cpp:abs')
+int main() { int x = abs(-5); }`, 'cpp:math_abs')
   })
 
-  it('cpp:exit', () => {
+  it('cpp:program_exit', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { exit(0); }`, 'cpp:exit')
+int main() { exit(0); }`, 'cpp:program_exit')
   })
 
-  it('cpp:atoi', () => {
+  it('cpp:cstring_as_int', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { int x = atoi("42"); }`, 'cpp:atoi')
+int main() { int x = atoi("42"); }`, 'cpp:cstring_as_int')
   })
 
-  it('cpp:atof', () => {
+  it('cpp:cstring_as_double', () => {
     assertConceptPresent(`#include <cstdlib>
-int main() { double x = atof("3.14"); }`, 'cpp:atof')
+int main() { double x = atof("3.14"); }`, 'cpp:cstring_as_double')
   })
 })
 
@@ -883,54 +883,54 @@ int main() { double x = atof("3.14"); }`, 'cpp:atof')
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstring', () => {
-  it('cpp:strlen', () => {
+  it('cpp:cstring_size', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int n = strlen("hello"); }`, 'cpp:strlen')
+int main() { int n = strlen("hello"); }`, 'cpp:cstring_size')
   })
 
-  it('cpp:strcmp', () => {
+  it('cpp:cstring_compare', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int r = strcmp("abc", "def"); }`, 'cpp:strcmp')
+int main() { int r = strcmp("abc", "def"); }`, 'cpp:cstring_compare')
   })
 
-  it('cpp:strcpy', () => {
+  it('cpp:cstring_copy', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[10]; strcpy(dest, "hi"); }`, 'cpp:strcpy')
+int main() { char dest[10]; strcpy(dest, "hi"); }`, 'cpp:cstring_copy')
   })
 
-  it('cpp:strcat', () => {
+  it('cpp:cstring_append', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[20]; strcpy(dest, "hello"); strcat(dest, " world"); }`, 'cpp:strcat')
+int main() { char dest[20]; strcpy(dest, "hello"); strcat(dest, " world"); }`, 'cpp:cstring_append')
   })
 
-  it('cpp:strncpy', () => {
+  it('cpp:cstring_copy_bounded', () => {
     assertConceptPresent(`#include <cstring>
-int main() { char dest[10]; strncpy(dest, "hello", 3); }`, 'cpp:strncpy')
+int main() { char dest[10]; strncpy(dest, "hello", 3); }`, 'cpp:cstring_copy_bounded')
   })
 
-  it('cpp:strncmp', () => {
+  it('cpp:cstring_compare_bounded', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int r = strncmp("abc", "abd", 2); }`, 'cpp:strncmp')
+int main() { int r = strncmp("abc", "abd", 2); }`, 'cpp:cstring_compare_bounded')
   })
 
-  it('cpp:strchr', () => {
+  it('cpp:cstring_find_char', () => {
     assertConceptPresent(`#include <cstring>
-int main() { const char* p = strchr("hello", 'l'); }`, 'cpp:strchr')
+int main() { const char* p = strchr("hello", 'l'); }`, 'cpp:cstring_find_char')
   })
 
-  it('cpp:strstr', () => {
+  it('cpp:cstring_find', () => {
     assertConceptPresent(`#include <cstring>
-int main() { const char* p = strstr("hello world", "world"); }`, 'cpp:strstr')
+int main() { const char* p = strstr("hello world", "world"); }`, 'cpp:cstring_find')
   })
 
-  it('cpp:memset', () => {
+  it('cpp:memory_fill', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int arr[10]; memset(arr, 0, sizeof(arr)); }`, 'cpp:memset')
+int main() { int arr[10]; memset(arr, 0, sizeof(arr)); }`, 'cpp:memory_fill')
   })
 
-  it('cpp:memcpy', () => {
+  it('cpp:memory_copy', () => {
     assertConceptPresent(`#include <cstring>
-int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp:memcpy')
+int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp:memory_copy')
   })
 })
 
@@ -939,33 +939,33 @@ int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp:m
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: numeric', () => {
-  it('cpp:accumulate', () => {
+  it('cpp:range_sum', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v; int sum = accumulate(v.begin(), v.end(), 0); }`, 'cpp:accumulate')
+int main() { std::vector<int> v; int sum = accumulate(v.begin(), v.end(), 0); }`, 'cpp:range_sum')
   })
 
-  it('cpp:iota', () => {
+  it('cpp:range_fill_sequence', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v(10); iota(v.begin(), v.end(), 0); }`, 'cpp:iota')
+int main() { std::vector<int> v(10); iota(v.begin(), v.end(), 0); }`, 'cpp:range_fill_sequence')
   })
 
-  it('cpp:partial_sum', () => {
+  it('cpp:range_sum_partial', () => {
     assertConceptPresent(`#include <numeric>
 #include <vector>
-int main() { std::vector<int> v(10); std::vector<int> r(10); partial_sum(v.begin(), v.end(), r.begin()); }`, 'cpp:partial_sum')
+int main() { std::vector<int> v(10); std::vector<int> r(10); partial_sum(v.begin(), v.end(), r.begin()); }`, 'cpp:range_sum_partial')
   })
 
-  it('cpp:gcd', () => {
+  it('cpp:math_gcd', () => {
     assertConceptPresent(`#include <numeric>
-int main() { int g = __gcd(12, 8); }`, 'cpp:gcd')
+int main() { int g = __gcd(12, 8); }`, 'cpp:math_gcd')
   })
 
-  it('cpp:lcm', () => {
+  it('cpp:math_lcm', () => {
     // Note: lcm might need C++17; lifter may or may not support it
     assertConceptPresent(`#include <numeric>
-int main() { int l = lcm(12, 8); }`, 'cpp:lcm')
+int main() { int l = lcm(12, 8); }`, 'cpp:math_lcm')
   })
 })
 

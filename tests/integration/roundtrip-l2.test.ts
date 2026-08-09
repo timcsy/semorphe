@@ -287,18 +287,18 @@ describe('L2 Block Roundtrip', () => {
   describe('c_strlen', () => {
     it('should render and extract strlen', () => {
       const inner = createNode('cpp:var_ref', { name: 's' })
-      const sem = createNode('cpp:strlen', {}, { str: [inner] })
+      const sem = createNode('cpp:cstring_size', {}, { str: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_strlen')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:strlen')
+      expect(sem2!.conceptId).toBe('cpp:cstring_size')
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
       const inner = createNode('cpp:var_ref', { name: 's' })
-      const sem = createNode('cpp:strlen', {}, { str: [inner] })
+      const sem = createNode('cpp:cstring_size', {}, { str: [inner] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
     })
@@ -317,7 +317,7 @@ describe('L2 Block Roundtrip', () => {
     it('should render and extract strcmp', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
-      const sem = createNode('cpp:strcmp', {}, { s1: [s1], s2: [s2] })
+      const sem = createNode('cpp:cstring_compare', {}, { s1: [s1], s2: [s2] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('c_strcmp')
@@ -326,7 +326,7 @@ describe('L2 Block Roundtrip', () => {
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
-      const sem = createNode('cpp:strcmp', {}, { s1: [s1], s2: [s2] })
+      const sem = createNode('cpp:cstring_compare', {}, { s1: [s1], s2: [s2] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
     })
@@ -336,7 +336,7 @@ describe('L2 Block Roundtrip', () => {
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
       const dest = createNode('cpp:var_ref', { name: 'dst' })
       const src = createNode('cpp:var_ref', { name: 'src' })
-      const sem = createNode('cpp:strcpy', {}, { dest: [dest], src: [src] })
+      const sem = createNode('cpp:cstring_copy', {}, { dest: [dest], src: [src] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()
     })
@@ -443,9 +443,9 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('cpp:sort', () => {
+  describe('cpp:range_sort', () => {
     it('should render and extract sort', () => {
-      const sem = createNode('cpp:sort', { begin: 'v.begin()', end: 'v.end()' })
+      const sem = createNode('cpp:range_sort', { begin: 'v.begin()', end: 'v.end()' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_sort')
@@ -453,7 +453,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code via hand-written generator', () => {
       // cpp_sort uses hand-written generator (not codeTemplate), tested in roundtrip-cpp-algorithm.test.ts
-      const sem = createNode('cpp:sort', { begin: 'v.begin()', end: 'v.end()' })
+      const sem = createNode('cpp:range_sort', { begin: 'v.begin()', end: 'v.end()' })
       // TemplateGenerator returns null for hand-written generators — expected
       const code = generator.generate(sem, genCtx)
       expect(code).toBeNull()

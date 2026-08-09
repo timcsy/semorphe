@@ -139,13 +139,13 @@ describe('TemplateGenerator', () => {
 
   describe('imports collection', () => {
     it('should collect imports from templates', () => {
-      gen.registerTemplate('cpp:printf', {
+      gen.registerTemplate('cpp:print_formatted', {
         pattern: 'printf("${FORMAT}"${ARGS});',
         imports: ['stdio.h'],
         order: 0,
       })
 
-      const node = createNode('cpp:printf', { FORMAT: '%d', ARGS: ', x' })
+      const node = createNode('cpp:print_formatted', { FORMAT: '%d', ARGS: ', x' })
       gen.generate(node, { indent: 0, style: defaultStyle })
       expect(gen.getCollectedImports()).toContain('stdio.h')
     })

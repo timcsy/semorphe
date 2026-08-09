@@ -328,7 +328,7 @@ describe('SyncController (bus-based)', () => {
       controller.onStyleExceptions(exceptionsCallback)
 
       const tree = createNode('cpp:program', {}, {
-        body: [createNode('cpp:printf', { format: '%d\\n' })],
+        body: [createNode('cpp:print_formatted', { format: '%d\\n' })],
       })
 
       const rootNode = {

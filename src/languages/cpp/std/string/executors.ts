@@ -99,7 +99,7 @@ export function registerExecutors(
     return { type: 'string', value: String(val.value) }
   })
 
-  register('cpp:getline', async (node, ctx) => {
+  register('cpp:input_line', async (node, ctx) => {
     const name = String(node.properties.name)
     const line = ctx.io.read()
     try {
@@ -116,7 +116,7 @@ export function registerExecutors(
     return { type: 'string', value: String(val.value) }
   })
 
-  register('cpp:stoi', async (node, ctx) => {
+  register('cpp:string_as_int', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
@@ -125,7 +125,7 @@ export function registerExecutors(
     return { type: 'int', value: n }
   })
 
-  register('cpp:stod', async (node, ctx) => {
+  register('cpp:string_as_double', async (node, ctx) => {
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'double', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])

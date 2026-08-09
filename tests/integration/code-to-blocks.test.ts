@@ -290,7 +290,7 @@ describe('Code-to-Blocks Pipeline', () => {
     it('should lift strlen(s) to cpp_strlen concept', () => {
       const sem = liftCode('int n = strlen(s);')
       const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:strlen')
+      expect(concepts).toContain('cpp:cstring_size')
     })
 
     it('should lift free(ptr) to cpp_free (hand-written lifter)', () => {

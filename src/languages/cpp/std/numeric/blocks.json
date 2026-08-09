@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp:accumulate",
-    "conceptId": "cpp:accumulate",
+    "id": "cpp:range_sum",
+    "conceptId": "cpp:range_sum",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -42,8 +42,8 @@
     }
   },
   {
-    "id": "cpp:iota",
-    "conceptId": "cpp:iota",
+    "id": "cpp:range_fill_sequence",
+    "conceptId": "cpp:range_fill_sequence",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -85,8 +85,8 @@
     }
   },
   {
-    "id": "cpp:partial_sum",
-    "conceptId": "cpp:partial_sum",
+    "id": "cpp:range_sum_partial",
+    "conceptId": "cpp:range_sum_partial",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -127,8 +127,8 @@
     }
   },
   {
-    "id": "cpp:gcd",
-    "conceptId": "cpp:gcd",
+    "id": "cpp:math_gcd",
+    "conceptId": "cpp:math_gcd",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",
@@ -162,8 +162,8 @@
     }
   },
   {
-    "id": "cpp:lcm",
-    "conceptId": "cpp:lcm",
+    "id": "cpp:math_lcm",
+    "conceptId": "cpp:math_lcm",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

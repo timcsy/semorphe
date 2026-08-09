@@ -1,7 +1,7 @@
 [
   {
     "id": "c_strlen",
-    "conceptId": "cpp:strlen",
+    "conceptId": "cpp:cstring_size",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -31,7 +31,7 @@
   },
   {
     "id": "c_strcmp",
-    "conceptId": "cpp:strcmp",
+    "conceptId": "cpp:cstring_compare",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -67,7 +67,7 @@
   },
   {
     "id": "c_strcpy",
-    "conceptId": "cpp:strcpy",
+    "conceptId": "cpp:cstring_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -104,7 +104,7 @@
   },
   {
     "id": "c_strcat",
-    "conceptId": "cpp:strcat",
+    "conceptId": "cpp:cstring_append",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -141,7 +141,7 @@
   },
   {
     "id": "c_strncpy",
-    "conceptId": "cpp:strncpy",
+    "conceptId": "cpp:cstring_copy_bounded",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -184,7 +184,7 @@
   },
   {
     "id": "c_strncmp",
-    "conceptId": "cpp:strncmp",
+    "conceptId": "cpp:cstring_compare_bounded",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -226,7 +226,7 @@
   },
   {
     "id": "c_strchr",
-    "conceptId": "cpp:strchr",
+    "conceptId": "cpp:cstring_find_char",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -262,7 +262,7 @@
   },
   {
     "id": "c_strstr",
-    "conceptId": "cpp:strstr",
+    "conceptId": "cpp:cstring_find",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -298,7 +298,7 @@
   },
   {
     "id": "c_memset",
-    "conceptId": "cpp:memset",
+    "conceptId": "cpp:memory_fill",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
@@ -344,7 +344,7 @@
   },
   {
     "id": "c_memcpy",
-    "conceptId": "cpp:memcpy",
+    "conceptId": "cpp:memory_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

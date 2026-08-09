@@ -25,17 +25,17 @@ describe('ModuleRegistry', () => {
   it('should map concepts to headers', () => {
     const registry = new ModuleRegistry()
     registry.register(createMockModule('<iostream>', ['cpp:print', 'cpp:input']))
-    registry.register(createMockModule('<cstdio>', ['cpp:printf', 'cpp:scanf']))
+    registry.register(createMockModule('<cstdio>', ['cpp:print_formatted', 'cpp:input_formatted']))
 
     expect(registry.getHeaderForConcept('cpp:print')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('cpp:printf')).toBe('<cstdio>')
+    expect(registry.getHeaderForConcept('cpp:print_formatted')).toBe('<cstdio>')
     expect(registry.getHeaderForConcept('cpp:if')).toBeNull()
   })
 
   it('should return all modules', () => {
     const registry = new ModuleRegistry()
     registry.register(createMockModule('<iostream>', ['cpp:print']))
-    registry.register(createMockModule('<cstdio>', ['cpp:printf']))
+    registry.register(createMockModule('<cstdio>', ['cpp:print_formatted']))
 
     expect(registry.getAllModules()).toHaveLength(2)
   })

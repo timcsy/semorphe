@@ -60,18 +60,18 @@ function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode
 
 describe('C++ <cstring> extra roundtrip', () => {
   // ─── cpp_strcat ────────────────────────────────────────
-  describe('cpp:strcat', () => {
+  describe('cpp:cstring_append', () => {
     it('should lift strcat(dest, src) to cpp_strcat concept', () => {
       const tree = liftCode('strcat(dest, src);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:strcat')
+      const node = findConcept(tree, 'cpp:cstring_append')
       expect(node).not.toBeNull()
     })
 
     it('should generate strcat(dest, src) from SemanticNode', () => {
       const dest = createNode('cpp:var_ref', { name: 'buf' })
       const src = createNode('cpp:var_ref', { name: 'suffix' })
-      const strcat = createNode('cpp:strcat', {}, {
+      const strcat = createNode('cpp:cstring_append', {}, {
         dest: [dest],
         src: [src],
       })
@@ -82,11 +82,11 @@ describe('C++ <cstring> extra roundtrip', () => {
   })
 
   // ─── cpp_strncpy ───────────────────────────────────────
-  describe('cpp:strncpy', () => {
+  describe('cpp:cstring_copy_bounded', () => {
     it('should lift strncpy(dest, src, n) to cpp_strncpy concept', () => {
       const tree = liftCode('strncpy(dest, src, 10);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:strncpy')
+      const node = findConcept(tree, 'cpp:cstring_copy_bounded')
       expect(node).not.toBeNull()
     })
 
@@ -94,7 +94,7 @@ describe('C++ <cstring> extra roundtrip', () => {
       const dest = createNode('cpp:var_ref', { name: 'buf' })
       const src = createNode('cpp:var_ref', { name: 'str' })
       const n = createNode('cpp:literal_number', { value: '5' })
-      const strncpy = createNode('cpp:strncpy', {}, {
+      const strncpy = createNode('cpp:cstring_copy_bounded', {}, {
         dest: [dest],
         src: [src],
         n: [n],
@@ -106,11 +106,11 @@ describe('C++ <cstring> extra roundtrip', () => {
   })
 
   // ─── cpp_strncmp ───────────────────────────────────────
-  describe('cpp:strncmp', () => {
+  describe('cpp:cstring_compare_bounded', () => {
     it('should lift strncmp(s1, s2, n) to cpp_strncmp concept', () => {
       const tree = liftCode('int r = strncmp(s1, s2, 3);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:strncmp')
+      const node = findConcept(tree, 'cpp:cstring_compare_bounded')
       expect(node).not.toBeNull()
     })
 
@@ -118,7 +118,7 @@ describe('C++ <cstring> extra roundtrip', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
       const n = createNode('cpp:literal_number', { value: '4' })
-      const strncmp = createNode('cpp:strncmp', {}, {
+      const strncmp = createNode('cpp:cstring_compare_bounded', {}, {
         s1: [s1],
         s2: [s2],
         n: [n],
@@ -133,11 +133,11 @@ describe('C++ <cstring> extra roundtrip', () => {
   })
 
   // ─── cpp_memset ────────────────────────────────────────
-  describe('cpp:memset', () => {
+  describe('cpp:memory_fill', () => {
     it('should lift memset(ptr, val, size) to cpp_memset concept', () => {
       const tree = liftCode('memset(arr, 0, 100);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:memset')
+      const node = findConcept(tree, 'cpp:memory_fill')
       expect(node).not.toBeNull()
     })
 
@@ -145,7 +145,7 @@ describe('C++ <cstring> extra roundtrip', () => {
       const ptr = createNode('cpp:var_ref', { name: 'buf' })
       const val = createNode('cpp:literal_number', { value: '0' })
       const size = createNode('cpp:literal_number', { value: '256' })
-      const memset = createNode('cpp:memset', {}, {
+      const memset = createNode('cpp:memory_fill', {}, {
         ptr: [ptr],
         value: [val],
         size: [size],
@@ -157,11 +157,11 @@ describe('C++ <cstring> extra roundtrip', () => {
   })
 
   // ─── cpp_memcpy ────────────────────────────────────────
-  describe('cpp:memcpy', () => {
+  describe('cpp:memory_copy', () => {
     it('should lift memcpy(dest, src, size) to cpp_memcpy concept', () => {
       const tree = liftCode('memcpy(dest, src, 64);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:memcpy')
+      const node = findConcept(tree, 'cpp:memory_copy')
       expect(node).not.toBeNull()
     })
 
@@ -169,7 +169,7 @@ describe('C++ <cstring> extra roundtrip', () => {
       const dest = createNode('cpp:var_ref', { name: 'dst' })
       const src = createNode('cpp:var_ref', { name: 'src' })
       const size = createNode('cpp:literal_number', { value: '32' })
-      const memcpy = createNode('cpp:memcpy', {}, {
+      const memcpy = createNode('cpp:memory_copy', {}, {
         dest: [dest],
         src: [src],
         size: [size],

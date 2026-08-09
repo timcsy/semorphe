@@ -211,7 +211,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:scanf')
+    expect(result!.conceptId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %f')
     expect(result!.children.args).toHaveLength(2)
     expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
@@ -219,7 +219,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
   })
 
   it('render → extract roundtrip for printf', () => {
-    const node = createNode('cpp:printf', { format: '%d\\n' }, {
+    const node = createNode('cpp:print_formatted', { format: '%d\\n' }, {
       args: [createNode('cpp:var_ref', { name: 'x' })],
     })
     renderer.resetIds()
@@ -227,7 +227,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:printf')
+    expect(reExtracted!.conceptId).toBe('cpp:print_formatted')
     expect(reExtracted!.children.args).toHaveLength(1)
   })
 })

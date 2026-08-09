@@ -232,13 +232,13 @@ describe('C++ String Operations Roundtrip', () => {
 
   // ─── 6. cpp_getline ───────────────────────────────────────
 
-  describe('cpp:getline', () => {
+  describe('cpp:input_line', () => {
     const code = 'string line;\ngetline(cin, line);'
 
     it('should lift to cpp_getline concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:getline')
+      const node = findConcept(tree, 'cpp:input_line')
       expect(node).not.toBeNull()
       expect(node!.properties.name).toBe('line')
     })
@@ -254,7 +254,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:getline')
+      const node2 = findConcept(tree2, 'cpp:input_line')
       expect(node2).not.toBeNull()
       expect(node2!.properties.name).toBe('line')
     })
@@ -290,13 +290,13 @@ describe('C++ String Operations Roundtrip', () => {
 
   // ─── 8. cpp_stoi ──────────────────────────────────────────
 
-  describe('cpp:stoi', () => {
+  describe('cpp:string_as_int', () => {
     const code = 'string s = "42";\nint n = stoi(s);'
 
     it('should lift to cpp_stoi concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:stoi')
+      const node = findConcept(tree, 'cpp:string_as_int')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -310,7 +310,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:stoi')
+      const node2 = findConcept(tree2, 'cpp:string_as_int')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -318,13 +318,13 @@ describe('C++ String Operations Roundtrip', () => {
 
   // ─── 9. cpp_stod ──────────────────────────────────────────
 
-  describe('cpp:stod', () => {
+  describe('cpp:string_as_double', () => {
     const code = 'string s = "3.14";\ndouble d = stod(s);'
 
     it('should lift to cpp_stod concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:stod')
+      const node = findConcept(tree, 'cpp:string_as_double')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -338,7 +338,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:stod')
+      const node2 = findConcept(tree2, 'cpp:string_as_double')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -551,10 +551,10 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts.has('cpp:string_substr')).toBe(true)
       expect(concepts.has('cpp:string_find')).toBe(true)
       expect(concepts.has('cpp:string_append')).toBe(true)
-      expect(concepts.has('cpp:getline')).toBe(true)
+      expect(concepts.has('cpp:input_line')).toBe(true)
       expect(concepts.has('cpp:string_make')).toBe(true)
-      expect(concepts.has('cpp:stoi')).toBe(true)
-      expect(concepts.has('cpp:stod')).toBe(true)
+      expect(concepts.has('cpp:string_as_int')).toBe(true)
+      expect(concepts.has('cpp:string_as_double')).toBe(true)
       expect(concepts.has('cpp:string_erase')).toBe(true)
       expect(concepts.has('cpp:string_insert')).toBe(true)
       expect(concepts.has('cpp:string_replace')).toBe(true)
@@ -588,10 +588,10 @@ describe('C++ String Operations Roundtrip', () => {
       expect(concepts2.has('cpp:string_substr')).toBe(true)
       expect(concepts2.has('cpp:string_find')).toBe(true)
       expect(concepts2.has('cpp:string_make')).toBe(true)
-      expect(concepts2.has('cpp:stoi')).toBe(true)
-      expect(concepts2.has('cpp:stod')).toBe(true)
+      expect(concepts2.has('cpp:string_as_int')).toBe(true)
+      expect(concepts2.has('cpp:string_as_double')).toBe(true)
       expect(concepts2.has('cpp:string_append')).toBe(true)
-      expect(concepts2.has('cpp:getline')).toBe(true)
+      expect(concepts2.has('cpp:input_line')).toBe(true)
       expect(concepts2.has('cpp:string_erase')).toBe(true)
       expect(concepts2.has('cpp:string_insert')).toBe(true)
       expect(concepts2.has('cpp:string_replace')).toBe(true)

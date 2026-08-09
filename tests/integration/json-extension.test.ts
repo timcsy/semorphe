@@ -19,12 +19,12 @@ describe('JSON-only extension (US6)', () => {
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(6)
-    expect(all.map(s => s.id)).toContain('cpp:sort')
-    expect(all.map(s => s.id)).toContain('cpp:reverse')
-    expect(all.map(s => s.id)).toContain('cpp:fill')
-    expect(all.map(s => s.id)).toContain('cpp:min')
-    expect(all.map(s => s.id)).toContain('cpp:max')
-    expect(all.map(s => s.id)).toContain('cpp:swap')
+    expect(all.map(s => s.id)).toContain('cpp:range_sort')
+    expect(all.map(s => s.id)).toContain('cpp:range_reverse')
+    expect(all.map(s => s.id)).toContain('cpp:range_fill')
+    expect(all.map(s => s.id)).toContain('cpp:math_min')
+    expect(all.map(s => s.id)).toContain('cpp:math_max')
+    expect(all.map(s => s.id)).toContain('cpp:var_swap')
   })
 
   it('should load container block specs from JSON', () => {
@@ -89,9 +89,9 @@ describe('JSON-only extension (US6)', () => {
       ...algorithmBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
-    const sortSpec = registry.getAll().find(s => s.id === 'cpp:sort')
+    const sortSpec = registry.getAll().find(s => s.id === 'cpp:range_sort')
     expect(sortSpec).toBeDefined()
-    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp:sort')
+    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp:range_sort')
     // 原本斷言的是 'sort'——而那個概念**從來不存在**，查詢父概念會靜默回傳
     // undefined。這支測試等於在釘住一個懸空指標。
     // cpp_sort 目前沒有語言中立的父概念（通用概念集裡沒有「排序」這個抽象），

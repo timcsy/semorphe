@@ -48,13 +48,13 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `to_string(${val})`
   })
 
-  g.set('cpp:stoi', (node, ctx) => {
+  g.set('cpp:string_as_int', (node, ctx) => {
     const valueNodes = node.children.value ?? []
     const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
     return `stoi(${val})`
   })
 
-  g.set('cpp:stod', (node, ctx) => {
+  g.set('cpp:string_as_double', (node, ctx) => {
     const valueNodes = node.children.value ?? []
     const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
     return `stod(${val})`
@@ -78,7 +78,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}${obj}.append(${val});\n`
   })
 
-  g.set('cpp:getline', (node, ctx) => {
+  g.set('cpp:input_line', (node, ctx) => {
     const name = node.properties.name ?? 'str'
     return `${indent(ctx)}getline(cin, ${name});\n`
   })

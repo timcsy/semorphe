@@ -45,7 +45,7 @@ describe('Concept Algebra (US8)', () => {
       childNames: ['value'],
     })
     registry.register({
-      id: 'cpp:sort',
+      id: 'cpp:range_sort',
       layer: 'lang-library',
       abstractConcept: 'container_sort',
       propertyNames: ['array'],
@@ -89,7 +89,7 @@ describe('Concept Algebra (US8)', () => {
     })
 
     it('should find abstract concept for cpp:sort', () => {
-      const abstract = registry.findAbstract('cpp:sort')
+      const abstract = registry.findAbstract('cpp:range_sort')
       expect(abstract).toBeDefined()
       expect(abstract!.id).toBe('container_sort')
     })

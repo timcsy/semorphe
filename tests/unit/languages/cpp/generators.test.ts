@@ -336,7 +336,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_scanf_expr', () => {
-    const node = createNode('cpp:scanf', { format: '%d' }, {
+    const node = createNode('cpp:input_formatted', { format: '%d' }, {
       args: [createNode('cpp:var_ref', { name: 'n' })],
     })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
@@ -393,7 +393,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_scanf_expr in while condition', () => {
     const whileLoop = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:compare', { operator: '!=' }, {
-        left: [createNode('cpp:scanf', { format: '%d' }, {
+        left: [createNode('cpp:input_formatted', { format: '%d' }, {
           args: [createNode('cpp:var_ref', { name: 'n' })],
         })],
         right: [createNode('cpp:var_ref', { name: 'EOF' })],
@@ -566,7 +566,7 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should use builtin_constant in while condition with EOF', () => {
     const whileLoop = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:compare', { operator: '!=' }, {
-        left: [createNode('cpp:scanf', { format: '%d' }, {
+        left: [createNode('cpp:input_formatted', { format: '%d' }, {
           args: [createNode('cpp:var_ref', { name: 'n' })],
         })],
         right: [createNode('cpp:builtin_constant', { value: 'EOF' })],

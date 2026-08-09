@@ -51,7 +51,7 @@ const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:swap', async (node, ctx) => {
+  register('cpp:var_swap', async (node, ctx) => {
     const a = String(node.properties.a)
     const b = String(node.properties.b)
     const va = ctx.scope.get(a)
@@ -60,25 +60,25 @@ export function registerExecutors(
     ctx.scope.set(b, va)
   })
 
-  register('cpp:sort', async (node, ctx) => {
+  register('cpp:range_sort', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
     const slice = r.arr.slice(r.from, r.to).sort((a, b) => numOf(a) - numOf(b))
     for (let i = 0; i < slice.length; i++) r.arr[r.from + i] = slice[i]
   })
 
-  register('cpp:reverse', async (node, ctx) => {
+  register('cpp:range_reverse', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
     const slice = r.arr.slice(r.from, r.to).reverse()
     for (let i = 0; i < slice.length; i++) r.arr[r.from + i] = slice[i]
   })
 
-  register('cpp:fill', async (node, ctx) => {
+  register('cpp:range_fill', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
     const v = await ctx.evaluate((node.children.value ?? [])[0])
     for (let i = r.from; i < r.to; i++) r.arr[i] = v
   })
 
-  register('cpp:min', async (node, ctx) => {
+  register('cpp:math_min', async (node, ctx) => {
     const a = node.children.a?.[0]
     const b = node.children.b?.[0]
     const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
@@ -88,7 +88,7 @@ export function registerExecutors(
     return na <= nb ? va : vb
   })
 
-  register('cpp:max', async (node, ctx) => {
+  register('cpp:math_max', async (node, ctx) => {
     const a = node.children.a?.[0]
     const b = node.children.b?.[0]
     const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }

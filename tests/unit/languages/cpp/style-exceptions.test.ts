@@ -65,7 +65,7 @@ describe('Style Exception Detection', () => {
   describe('I/O block exceptions (from toolbox blocks)', () => {
     it('should detect cpp_printf in APCS (iostream) mode', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n', args: '' }),
+        createNode('cpp:print_formatted', { format: '%d\\n', args: '' }),
       ])
       const exceptions = detectStyleExceptions(tree, apcs)
       expect(exceptions).toHaveLength(1)
@@ -75,7 +75,7 @@ describe('Style Exception Detection', () => {
 
     it('should detect cpp_scanf in APCS mode', () => {
       const tree = makeProgram([
-        createNode('cpp:scanf', { format: '%d', args: '' }),
+        createNode('cpp:input_formatted', { format: '%d', args: '' }),
       ])
       const exceptions = detectStyleExceptions(tree, apcs)
       expect(exceptions).toHaveLength(1)
@@ -85,7 +85,7 @@ describe('Style Exception Detection', () => {
 
     it('should NOT detect cpp_printf in competitive mode', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n' }),
+        createNode('cpp:print_formatted', { format: '%d\\n' }),
       ])
       const exceptions = detectStyleExceptions(tree, competitive)
       expect(exceptions).toHaveLength(0)
@@ -98,8 +98,8 @@ describe('Style Exception Detection', () => {
         createNode('cpp:include', { header: 'bits/stdc++.h', local: false }),
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
-            createNode('cpp:printf', { format: 'hello\\n' }),
-            createNode('cpp:scanf', { format: '%d' }),
+            createNode('cpp:print_formatted', { format: 'hello\\n' }),
+            createNode('cpp:input_formatted', { format: '%d' }),
           ],
         }),
       ])
@@ -205,7 +205,7 @@ describe('Style Exception Conversion', () => {
   it('should convert cpp_printf to print in APCS mode', () => {
     const varRef = createNode('cpp:var_ref', { name: 'x' })
     const tree = makeProgram([
-      createNode('cpp:printf', { format: '%d\\n' }, { args: [varRef] }),
+      createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [varRef] }),
     ])
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
@@ -219,7 +219,7 @@ describe('Style Exception Conversion', () => {
   it('should convert cpp_scanf to input in APCS mode', () => {
     const varRef = createNode('cpp:var_ref', { name: 'n' })
     const tree = makeProgram([
-      createNode('cpp:scanf', { format: '%d' }, { args: [varRef] }),
+      createNode('cpp:input_formatted', { format: '%d' }, { args: [varRef] }),
     ])
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
@@ -241,7 +241,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp:printf')
+    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp:print_formatted')
     expect(printfs).toHaveLength(1)
     expect(printfs[0].properties.format).toContain('%d')
     expect(printfs[0].properties.format).toContain('\\n')
@@ -261,7 +261,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const scanfs = converted.children.body.filter(n => n.conceptId === 'cpp:scanf')
+    const scanfs = converted.children.body.filter(n => n.conceptId === 'cpp:input_formatted')
     expect(scanfs).toHaveLength(1)
     expect(scanfs[0].properties.format).toBe('%d %d')
     expect(scanfs[0].children.args).toHaveLength(2)
@@ -279,7 +279,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp:printf')
+    const printfs = converted.children.body.filter(n => n.conceptId === 'cpp:print_formatted')
     expect(printfs).toHaveLength(1)
     // string_literal "hello" embedded directly in format, var uses %d
     expect(printfs[0].properties.format).toBe('hello%d')
@@ -421,21 +421,21 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
   describe('APCS (iostream-preferred) + cstdio concepts = borrowing', () => {
     it('should detect cpp_printf as borrowing via registry', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
+        createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
       ])
       const exceptions = detectStyleExceptions(tree, apcs, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const printfEx = exceptions.find(e => e.node.conceptId === 'cpp:printf')
+      const printfEx = exceptions.find(e => e.node.conceptId === 'cpp:print_formatted')
       expect(printfEx).toBeDefined()
     })
 
     it('should detect cpp_scanf as borrowing via registry', () => {
       const tree = makeProgram([
-        createNode('cpp:scanf', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'n' })] }),
+        createNode('cpp:input_formatted', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'n' })] }),
       ])
       const exceptions = detectStyleExceptions(tree, apcs, registry)
       expect(exceptions.length).toBeGreaterThanOrEqual(1)
-      const scanfEx = exceptions.find(e => e.node.conceptId === 'cpp:scanf')
+      const scanfEx = exceptions.find(e => e.node.conceptId === 'cpp:input_formatted')
       expect(scanfEx).toBeDefined()
     })
   })
@@ -487,7 +487,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
 
     it('should NOT flag cpp_printf in competitive (cstdio-preferred) with registry', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n' }),
+        createNode('cpp:print_formatted', { format: '%d\\n' }),
       ])
       const exceptions = detectStyleExceptions(tree, competitive, registry)
       expect(exceptions).toHaveLength(0)
@@ -524,11 +524,11 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
     })
 
     it('should map cpp_printf to <cstdio>', () => {
-      expect(registry.getHeaderForConcept('cpp:printf')).toBe('<cstdio>')
+      expect(registry.getHeaderForConcept('cpp:print_formatted')).toBe('<cstdio>')
     })
 
     it('should map cpp_scanf to <cstdio>', () => {
-      expect(registry.getHeaderForConcept('cpp:scanf')).toBe('<cstdio>')
+      expect(registry.getHeaderForConcept('cpp:input_formatted')).toBe('<cstdio>')
     })
 
     it('should map cpp_vector_declare to <vector>', () => {

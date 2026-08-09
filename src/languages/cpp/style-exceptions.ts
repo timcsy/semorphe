@@ -85,7 +85,7 @@ const iostreamHeaderRule: StyleExceptionRule = {
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:printf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp:print_formatted' && style.ioPreference === 'iostream',
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
   convert: (node) => {
@@ -99,7 +99,7 @@ const cppPrintfRule: StyleExceptionRule = {
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:scanf' && style.ioPreference === 'iostream',
+    node.conceptId === 'cpp:input_formatted' && style.ioPreference === 'iostream',
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
@@ -133,7 +133,7 @@ const printToCstdioRule: StyleExceptionRule = {
       }
     }
     const format = formatParts.join('') + (hasEndl ? '\\n' : '')
-    return [createNode('cpp:printf', { format }, { args })]
+    return [createNode('cpp:print_formatted', { format }, { args })]
   },
 }
 
@@ -146,7 +146,7 @@ const inputToCstdioRule: StyleExceptionRule = {
   convert: (node) => {
     const values = node.children.values ?? []
     const format = values.map(() => '%d').join(' ')
-    return [createNode('cpp:scanf', { format }, { args: values })]
+    return [createNode('cpp:input_formatted', { format }, { args: values })]
   },
 }
 

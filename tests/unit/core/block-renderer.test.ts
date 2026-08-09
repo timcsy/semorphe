@@ -122,7 +122,7 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_printf with format and args', () => {
-    const printf = createNode('cpp:printf', { format: '%.2f\\n' }, {
+    const printf = createNode('cpp:print_formatted', { format: '%.2f\\n' }, {
       args: [createNode('cpp:var_ref', { name: 'x' })],
     })
     const state = renderToBlocklyState(makeProgram(printf))
@@ -136,7 +136,7 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_printf with no args', () => {
-    const printf = createNode('cpp:printf', { format: 'hello\\n' }, { args: [] })
+    const printf = createNode('cpp:print_formatted', { format: 'hello\\n' }, { args: [] })
     const state = renderToBlocklyState(makeProgram(printf))
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('c_printf')
@@ -146,7 +146,7 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_scanf with format and args', () => {
-    const scanf = createNode('cpp:scanf', { format: '%d %d' }, {
+    const scanf = createNode('cpp:input_formatted', { format: '%d %d' }, {
       args: [
         createNode('cpp:var_ref', { name: 'a' }),
         createNode('cpp:var_ref', { name: 'b' }),
@@ -163,7 +163,7 @@ describe('block-renderer', () => {
   })
 
   it('should render cpp_printf with non-var_ref args in compose mode', () => {
-    const printf = createNode('cpp:printf', { format: 'sum=%d\\n' }, {
+    const printf = createNode('cpp:print_formatted', { format: 'sum=%d\\n' }, {
       args: [createNode('cpp:arithmetic', { operator: '+' }, {
         left: [createNode('cpp:var_ref', { name: 'x' })],
         right: [createNode('cpp:var_ref', { name: 'y' })],

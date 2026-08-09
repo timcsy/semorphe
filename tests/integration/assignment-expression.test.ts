@@ -85,6 +85,6 @@ describe('做不到的事要出聲，不得靜默回 0', () => {
       訊息,
       'strchr 靜默回 0 → `strchr(...) != 0` 對找得到的字元也是假，' +
         '而程式跑完印出後面的東西。**安靜的錯答案比報錯更糟。**',
-    ).toContain('strchr')
+    ).toContain('cstring_find_char')
   })
 })

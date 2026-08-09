@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp:abs",
-    "conceptId": "cpp:abs",
+    "id": "cpp:math_abs",
+    "conceptId": "cpp:math_abs",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -30,8 +30,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp:rand",
-    "conceptId": "cpp:rand",
+    "id": "cpp:random_next",
+    "conceptId": "cpp:random_next",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -52,8 +52,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp:srand",
-    "conceptId": "cpp:srand",
+    "id": "cpp:random_seed",
+    "conceptId": "cpp:random_seed",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -83,8 +83,8 @@
     "toolboxCategory": "operators"
   },
   {
-    "id": "cpp:exit",
-    "conceptId": "cpp:exit",
+    "id": "cpp:program_exit",
+    "conceptId": "cpp:program_exit",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -114,8 +114,8 @@
     "toolboxCategory": "control"
   },
   {
-    "id": "cpp:atoi",
-    "conceptId": "cpp:atoi",
+    "id": "cpp:cstring_as_int",
+    "conceptId": "cpp:cstring_as_int",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -144,8 +144,8 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "cpp:atof",
-    "conceptId": "cpp:atof",
+    "id": "cpp:cstring_as_double",
+    "conceptId": "cpp:cstring_as_double",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

@@ -3,19 +3,19 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  g.set('cpp:sort', (node, ctx) => {
+  g.set('cpp:range_sort', (node, ctx) => {
     const begin = node.properties.begin ?? 'v.begin()'
     const end = node.properties.end ?? 'v.end()'
     return `${indent(ctx)}sort(${begin}, ${end});\n`
   })
 
-  g.set('cpp:reverse', (node, ctx) => {
+  g.set('cpp:range_reverse', (node, ctx) => {
     const begin = node.properties.begin ?? 'v.begin()'
     const end = node.properties.end ?? 'v.end()'
     return `${indent(ctx)}reverse(${begin}, ${end});\n`
   })
 
-  g.set('cpp:fill', (node, ctx) => {
+  g.set('cpp:range_fill', (node, ctx) => {
     const begin = node.properties.begin ?? 'v.begin()'
     const end = node.properties.end ?? 'v.end()'
     const valueNodes = node.children.value ?? []
@@ -23,7 +23,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}fill(${begin}, ${end}, ${value});\n`
   })
 
-  g.set('cpp:min', (node, ctx) => {
+  g.set('cpp:math_min', (node, ctx) => {
     const aNodes = node.children.a ?? []
     const bNodes = node.children.b ?? []
     const a = aNodes.length > 0 ? generateExpression(aNodes[0], ctx) : '0'
@@ -31,7 +31,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `min(${a}, ${b})`
   })
 
-  g.set('cpp:max', (node, ctx) => {
+  g.set('cpp:math_max', (node, ctx) => {
     const aNodes = node.children.a ?? []
     const bNodes = node.children.b ?? []
     const a = aNodes.length > 0 ? generateExpression(aNodes[0], ctx) : '0'
@@ -39,7 +39,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `max(${a}, ${b})`
   })
 
-  g.set('cpp:swap', (node, ctx) => {
+  g.set('cpp:var_swap', (node, ctx) => {
     const a = node.properties.a ?? 'a'
     const b = node.properties.b ?? 'b'
     return `${indent(ctx)}swap(${a}, ${b});\n`

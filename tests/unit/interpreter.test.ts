@@ -1109,7 +1109,7 @@ describe('Interpreter - expression concepts in for-loop', () => {
       createNode('cpp:var_declare', { name: 'n', type: 'int' }),
       createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
-          left: [createNode('cpp:scanf', { format: '%d' }, {
+          left: [createNode('cpp:input_formatted', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],
           })],
           right: [createNode('cpp:var_ref', { name: 'EOF' })],
@@ -1165,7 +1165,7 @@ describe('Interpreter - builtin_constant', () => {
       createNode('cpp:var_declare', { name: 'n', type: 'int' }),
       createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
-          left: [createNode('cpp:scanf', { format: '%d' }, {
+          left: [createNode('cpp:input_formatted', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],
           })],
           right: [createNode('cpp:builtin_constant', { value: 'EOF' })],
@@ -1275,7 +1275,7 @@ describe('Interpreter - abort', () => {
       // while (scanf("%d", &n) != EOF) { print n; }
       createNode('cpp:loop_while', {}, {
         condition: [createNode('cpp:compare', { operator: '!=' }, {
-          left: [createNode('cpp:scanf', { format: '%d' }, {
+          left: [createNode('cpp:input_formatted', { format: '%d' }, {
             args: [createNode('cpp:var_ref', { name: 'n' })],
           })],
           right: [createNode('cpp:builtin_constant', { value: 'EOF' })],

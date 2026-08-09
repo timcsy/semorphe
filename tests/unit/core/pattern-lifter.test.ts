@@ -129,7 +129,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:printf',
+          conceptId: 'cpp:print_formatted',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
@@ -151,7 +151,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:printf')
+      expect(result!.conceptId).toBe('cpp:print_formatted')
     })
 
     it('should NOT match when constraint fails', () => {
@@ -162,7 +162,7 @@ describe('PatternLifter', () => {
         level: 1,
         version: '1.0.0',
         conceptMapping: {
-          conceptId: 'cpp:printf',
+          conceptId: 'cpp:print_formatted',
           abstractConcept: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
@@ -203,7 +203,7 @@ describe('PatternLifter', () => {
         category: 'io',
         level: 1,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:printf', role: 'statement' },
+        conceptMapping: { conceptId: 'cpp:print_formatted', role: 'statement' },
         blockDef: { type: 'c_printf' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
@@ -221,7 +221,7 @@ describe('PatternLifter', () => {
       const result = lifter.tryLift(node, ctx)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:printf')
+      expect(result!.conceptId).toBe('cpp:print_formatted')
     })
   })
 

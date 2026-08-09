@@ -106,7 +106,7 @@ describe('CppScaffold', () => {
 
     it('should exclude C-style equivalent headers (stdio.h ≡ cstdio)', () => {
       const tree = makeProgram([
-        createNode('cpp:printf', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
+        createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
       ])
       const result = scaffold.resolve(tree, {
         scaffoldDepth: 1,

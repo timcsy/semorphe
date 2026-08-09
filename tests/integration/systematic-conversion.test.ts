@@ -383,7 +383,7 @@ describe('Expressions', () => {
     it('lifts strlen(s) as cpp_strlen', () => {
       const n = liftExpr('strlen(s)')
       expect(n).not.toBeNull()
-      expect(n!.conceptId).toBe('cpp:strlen')
+      expect(n!.conceptId).toBe('cpp:cstring_size')
       expect(n!.children.str).toBeDefined()
       expect(n!.children.str!.length).toBe(1)
     })

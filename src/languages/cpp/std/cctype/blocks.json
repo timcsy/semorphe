@@ -1,7 +1,7 @@
 [
   {
-    "id": "cpp:isalpha",
-    "conceptId": "cpp:isalpha",
+    "id": "cpp:char_is_alpha",
+    "conceptId": "cpp:char_is_alpha",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -29,8 +29,8 @@
     }
   },
   {
-    "id": "cpp:isdigit",
-    "conceptId": "cpp:isdigit",
+    "id": "cpp:char_is_digit",
+    "conceptId": "cpp:char_is_digit",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -58,8 +58,8 @@
     }
   },
   {
-    "id": "cpp:toupper",
-    "conceptId": "cpp:toupper",
+    "id": "cpp:char_to_upper",
+    "conceptId": "cpp:char_to_upper",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",
@@ -87,8 +87,8 @@
     }
   },
   {
-    "id": "cpp:tolower",
-    "conceptId": "cpp:tolower",
+    "id": "cpp:char_to_lower",
+    "conceptId": "cpp:char_to_lower",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

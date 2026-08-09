@@ -13,7 +13,7 @@
 import type { SavedState } from './storage'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 7
+export const CURRENT_VERSION = 8
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -213,6 +213,8 @@ export const UPGRADES: Record<number, Upgrade> = {
   5: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 6 }),
   // 6 → 7：G 項第 4 步——同義操作詞合併（`length` → `size` 等）
   6: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 7 }),
+  // 7 → 8：G 項第 5 步——抄來的函式庫名拆成「主體 ＋ 操作」
+  7: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 8 }),
 }
 
 export type VersionVerdict =

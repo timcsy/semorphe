@@ -10,15 +10,15 @@ export function registerCstdioLifters(_lifter: Lifter): void {
 }
 
 export function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('cpp:printf', { format: '' }, { args: [] })
+  if (!argsNode) return createNode('cpp:print_formatted', { format: '' }, { args: [] })
   const args = argsNode.namedChildren
   const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d\\n'
   const values = args.slice(1).map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-  return createNode('cpp:printf', { format: formatStr }, { args: values })
+  return createNode('cpp:print_formatted', { format: formatStr }, { args: values })
 }
 
 export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('cpp:scanf', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'x' })] })
+  if (!argsNode) return createNode('cpp:input_formatted', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'x' })] })
   const args = argsNode.namedChildren
   const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d'
   const values = args.slice(1).map(varArg => {
@@ -35,5 +35,5 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
     const varName = rawText.startsWith('&') ? rawText.slice(1) : rawText
     return createNode('cpp:var_ref', { name: varName })
   })
-  return createNode('cpp:scanf', { format: formatStr }, { args: values })
+  return createNode('cpp:input_formatted', { format: formatStr }, { args: values })
 }

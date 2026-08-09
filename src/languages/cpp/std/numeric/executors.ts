@@ -51,15 +51,15 @@ const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:accumulate', async () => ({ type: 'int' as const, value: 0 }))
+  register('cpp:range_sum', async () => ({ type: 'int' as const, value: 0 }))
 
-  register('cpp:iota', async (node, ctx) => {
+  register('cpp:range_fill_sequence', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
     const start = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))
     for (let i = r.from; i < r.to; i++) r.arr[i] = { type: 'int', value: start + (i - r.from) }
   }) // statement, modifies container in-place
 
-  register('cpp:partial_sum', async (node, ctx) => {
+  register('cpp:range_sum_partial', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
     const dest = resolveRange(ctx as never, String(node.properties.dest), String(node.properties.dest))
     let acc = 0
@@ -69,7 +69,7 @@ export function registerExecutors(
     }
   }) // statement, modifies destination container
 
-  register('cpp:gcd', async (node, ctx) => {
+  register('cpp:math_gcd', async (node, ctx) => {
     const a = node.children.a?.[0]
     const b = node.children.b?.[0]
     const va = a ? ctx.toNumber(await ctx.evaluate(a)) : 0
@@ -78,7 +78,7 @@ export function registerExecutors(
     return { type: 'int' as const, value: gcd(Math.abs(va), Math.abs(vb)) }
   })
 
-  register('cpp:lcm', async (node, ctx) => {
+  register('cpp:math_lcm', async (node, ctx) => {
     const a = node.children.a?.[0]
     const b = node.children.b?.[0]
     const va = a ? ctx.toNumber(await ctx.evaluate(a)) : 0

@@ -1,6 +1,6 @@
 [
   {
-    "conceptId": "cpp:isalpha",
+    "conceptId": "cpp:char_is_alpha",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -10,7 +10,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:isdigit",
+    "conceptId": "cpp:char_is_digit",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -20,7 +20,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:toupper",
+    "conceptId": "cpp:char_to_upper",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],
@@ -30,7 +30,7 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:tolower",
+    "conceptId": "cpp:char_to_lower",
     "layer": "lang-library",
     "abstractConcept": null,
     "properties": [],

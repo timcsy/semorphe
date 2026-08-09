@@ -91,7 +91,7 @@ function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
 
 describe('C++ numeric Roundtrip', () => {
 
-  describe('cpp:accumulate', () => {
+  describe('cpp:range_sum', () => {
     it('should lift and roundtrip accumulate with vector', () => {
       const code = `#include <iostream>
 #include <numeric>
@@ -105,7 +105,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:accumulate')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_sum')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       expect(generated).toContain('accumulate(')
@@ -126,7 +126,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:accumulate')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_sum')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       const tree2 = liftCode(generated)
@@ -134,7 +134,7 @@ int main() {
     })
   })
 
-  describe('cpp:gcd', () => {
+  describe('cpp:math_gcd', () => {
     it('should lift __gcd call', () => {
       const code = `#include <iostream>
 using namespace std;
@@ -146,7 +146,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:gcd')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_gcd')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       expect(generated).toContain('__gcd(')
@@ -165,7 +165,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:gcd')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_gcd')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       const tree2 = liftCode(generated)
@@ -173,7 +173,7 @@ int main() {
     })
   })
 
-  describe('cpp:lcm', () => {
+  describe('cpp:math_lcm', () => {
     it('should lift lcm call', () => {
       const code = `#include <iostream>
 #include <numeric>
@@ -186,7 +186,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:lcm')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_lcm')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       expect(generated).toContain('lcm(')
@@ -195,7 +195,7 @@ int main() {
     })
   })
 
-  describe('cpp:iota', () => {
+  describe('cpp:range_fill_sequence', () => {
     it('should lift iota with vector', () => {
       const code = `#include <iostream>
 #include <numeric>
@@ -212,7 +212,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:iota')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_fill_sequence')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       expect(generated).toContain('iota(')
@@ -234,7 +234,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:iota')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_fill_sequence')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       const tree2 = liftCode(generated)
@@ -242,7 +242,7 @@ int main() {
     })
   })
 
-  describe('cpp:partial_sum', () => {
+  describe('cpp:range_sum_partial', () => {
     it('should lift partial_sum call', () => {
       const code = `#include <iostream>
 #include <numeric>
@@ -260,7 +260,7 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:partial_sum')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_sum_partial')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       expect(generated).toContain('partial_sum(')
@@ -289,11 +289,11 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:accumulate')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:gcd')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:lcm')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:iota')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:partial_sum')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_sum')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_gcd')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_lcm')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_fill_sequence')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:range_sum_partial')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       const tree2 = liftCode(generated)
@@ -312,8 +312,8 @@ int main() {
 }`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree, 'cpp:gcd')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:lcm')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_gcd')).not.toBeNull()
+      expect(findConcept(tree, 'cpp:math_lcm')).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       const generated = roundTripCode(code)
       const tree2 = liftCode(generated)
