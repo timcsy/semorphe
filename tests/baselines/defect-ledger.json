@@ -3,18 +3,19 @@
     "guard": "defect-ledger",
     "measuredAt": "2026-08-09",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 2026-08-10 31 → 32，**揭露不是退步**：掃描範圍原本只有 `tests/`，而元件膠囊的自證測住在 `src/components/`（spec 104）。新增的那一筆是 `cpp:vector_declare` 的初始值走不過積木投影——**既有缺陷**，在動工前的 commit 跑同一支探針輸出逐字相同。同時補上「跨行寫的停用宣告」檢查：掃描逐行進行，把標題換到下一行那筆缺陷就從帳上消失，而測試依然是綠的——低報的方向是零，是最糟的方向。"
   },
-  "total": 31,
-  "withBody": 18,
+  "total": 32,
+  "withBody": 19,
   "titleOnly": 13,
   "unverified": 0,
   "byBlocker": {
     "cpp:print": 2,
     "cpp:increment": 2,
     "cpp:block_comment": 2,
+    "cpp:vector_declare": 1,
     "cpp:switch": 1,
-    "cpp:char_literal": 1,
+    "cpp:literal_char": 1,
     "cpp:array_declare": 1,
     "cpp:destructor": 1,
     "cpp:func_def": 1,

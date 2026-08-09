@@ -101,6 +101,38 @@ export function scanDisabledInFile(relPath: string): DisabledEntry[] {
   return out
 }
 
+/**
+ * **跨行寫的停用測試**——掃描逐行進行，所以這些是隱形的。
+ *
+ * ⚠️ 這是「量測工具會安靜地低報」的又一個實例，而它的特別之處是
+ * **低報的方向是零**：一筆看不見的缺陷，與一筆不存在的缺陷，在報表上
+ * 長得一模一樣。缺陷帳存在的唯一理由是讓優先序看得見，而看不見的那些
+ * 不會排進任何優先序。
+ *
+ * 沒有這個函式的話，只要有人把 `it.skip(` 的標題換到下一行，那筆缺陷就
+ * 從帳上消失——而**測試依然是綠的**。
+ */
+export function findMultilineDisabled(dirs: readonly string[]): { file: string; line: number }[] {
+  const out: { file: string; line: number }[] = []
+  const 開頭沒有標題 = /\b(it|test|describe)\s*\.\s*(todo|skip)\s*\(\s*$/
+  const walk = (d: string): void => {
+    if (!fs.existsSync(d)) return
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const f = path.join(d, e.name)
+      if (e.isDirectory()) {
+        if (e.name !== 'node_modules') walk(f)
+        continue
+      }
+      if (!e.name.endsWith('.test.ts')) continue
+      fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+        if (開頭沒有標題.test(line)) out.push({ file: path.relative(REPO_ROOT, f), line: i + 1 })
+      })
+    }
+  }
+  for (const d of dirs) walk(path.join(REPO_ROOT, d))
+  return out
+}
+
 /** 掃整個 tests/ 目錄 */
 export function scanAllDisabled(): DisabledEntry[] {
   const out: DisabledEntry[] = []
@@ -117,6 +149,12 @@ export function scanAllDisabled(): DisabledEntry[] {
     }
   }
   walk(path.join(REPO_ROOT, 'tests'))
+  // ⚠️ **元件膠囊的自證測住在 `src/components/` 裡。**
+  // 只掃 `tests/` 的話，一個寫在膠囊裡的 `[BLOCKED:]` 對缺陷帳是**隱形的**
+  // ——而缺陷帳存在的唯一理由就是讓優先序看得見。
+  // 一筆看不見的缺陷，與一筆不存在的缺陷，在報表上長得一模一樣。
+  const 膠囊根 = path.join(REPO_ROOT, 'src/components')
+  if (fs.existsSync(膠囊根)) walk(膠囊根)
   return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
 }
 

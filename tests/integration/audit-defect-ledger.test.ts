@@ -24,7 +24,7 @@ import {
   assertRatchet,
   listSourceFiles,
 } from '../helpers/guardrail'
-import { scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
+import { findMultilineDisabled, scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
 import { allComponentIds } from '../helpers/component-scan'
 
 const RULE =
@@ -193,6 +193,26 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
     // 變紅，逼基線與改善一起 commit。
     assertRatchet(rows)
   })
+
+  it('★ 沒有跨行寫的停用測試——那種寫法對這本帳是隱形的', () => {
+    // ⚠️ 掃描是**逐行**的（`hasBody` 靠同一行有沒有 `=>` 判斷）。把標題換到下一行，
+    // 那筆缺陷就從帳上消失，**而測試依然是綠的**。
+    //
+    // 低報的方向是**零**，而那是最糟的方向：**一筆看不見的缺陷，與一筆不存在的
+    // 缺陷，在報表上長得一模一樣。** 缺陷帳存在的唯一理由是讓優先序看得見。
+    //
+    // ⚠️ **這條訊息不得寫出停用宣告的字面**（函式名 ＋ 點 ＋ skip ＋ 左括號 ＋ 引號）
+    // ——掃描會把它算成一筆真的停用測試。第一版就是這樣把自己多算了兩筆。
+    //
+    // （2026-08-10：寫元件膠囊的自證測時真的踩到——那筆 `[BLOCKED:]` 一開始
+    // 寫成跨行，帳上完全沒有出現，而全套是綠的。）
+    const 隱形 = findMultilineDisabled(['tests', 'src/components'])
+    expect(
+      隱形.map((x) => `${x.file}:${x.line}`),
+      '停用宣告的標題與 callback 要寫回同一行——不然這筆缺陷對缺陷帳是隱形的',
+    ).toEqual([])
+  })
+
 })
 
 /** 產生基線：`GENERATE_BASELINE=1 npx vitest run tests/integration/audit-defect-ledger.test.ts` */

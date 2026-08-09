@@ -113,6 +113,38 @@ describe('cpp:vector_declare 自證測', () => {
     expect(got).not.toContain('cpp:vector_declare')
   })
 
+  // ── 已知缺陷（有本體、被關掉，修好就能開回來）─────────────
+  // ⚠️ 標題與 `() =>` **必須寫在同一行**——缺陷帳的掃描是逐行的
+  // （`hasBody` 靠同一行有沒有 `=>` 判斷）。拆成多行它會**完全看不見**，
+  // 而一筆看不見的缺陷與一筆不存在的缺陷在報表上長得一模一樣。
+  it.skip('[BLOCKED:cpp:vector_declare] 初始值走得過積木投影（render → extract）', () => {
+      // 🔴 **既有缺陷，2026-08-10 由 spec 104 的瀏覽器實測找到。**
+      //
+      //   ① lift 後 children:      ["values"]
+      //   ② 直接產生:              "vector<int> v = {3, 1, 4};"
+      //   ③ render 出的 block:     inputs: {}        ← 掉在這裡
+      //   ④ extract 回來 children: []
+      //   ⑤ 再產生:                "vector<int> v;"
+      //
+      // 在 `git worktree` 的 58d64eb（元件化動工前）跑同一支探針，
+      // **輸出逐字相同**——不是搬家造成的。
+      //
+      // **根因是符合性**：`component.json` 宣告了 `values`／`source` 兩個接點，
+      // 而積木形態的 `args0` 只有 `TYPE`／`NAME` 兩個 **field**，一個 input 都沒有。
+      // 積木**在結構上表達不出**一個帶初始值的 vector。
+      //
+      // ⚠️ **使用者看得到**：任何一次工作區重新序列化（切語言、切風格、
+      // 存檔重載）都會走 render→extract，於是 `= {3,1,4}` 靜靜地消失。
+      //
+      // **修法不是一行**：`values` 是變長列表（`min: 0`，無上限），
+      // 要像 `u_print` 那樣做成帶 ＋／− 的動態積木；`source` 是單一運算式，
+      // 可以用 `input_value`。兩者是不同的形狀，要分開處理。
+      //
+      // 同一個缺陷 generate 與 execute 兩路**都修過並留下註解**，
+      // render／extract 沒有——**五路裡修了三路，剩下兩路沒有人回頭掃。**
+    expect(true).toBe(false)
+  })
+
   it('負向：`vector` 只是變數名時不算宣告', () => {
     const got = ids(lift('int main() { int vector = 3; }'))
     expect(got, 'lift 失敗的話這條會空過').toContain('cpp:var_declare')
