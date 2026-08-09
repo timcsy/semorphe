@@ -68,11 +68,56 @@ const 全部身分 = (): string[] => allCppConcepts().map((c) => c.conceptId)
 /** 一個膠囊資料夾的絕對前綴（相對 repo）。 */
 const 膠囊目錄 = (id: string): string => `src/components/${idToDir(id)}/`
 
-/** 這個檔案要不要計入「外洩」。清單類與清冊類刻意豁免——理由與現行就近性一致。 */
+/**
+ * 這個檔案要不要計入「外洩」。
+ *
+ * 豁免三類，各有理由：
+ * - **清單**（課程主題、歷史改名表）：登錄表的視圖與名冊，不是實作擴散
+ * - **清冊**（基線、報表）：產生出來的紀錄
+ * - **測試**：自證測的負向斷言**必然**提到別的元件身分，那不是擴散
+ */
 function 計入(rel: string): boolean {
   const cls = classifyFile(rel)
-  if (cls === '清單' || cls === '清冊') return false
-  return true
+  return cls !== '清單' && cls !== '清冊' && cls !== '測試'
+}
+
+// ── 偵測核心：純函式，注入才餵得進合成輸入 ────────────────────
+//
+// 分出來的理由與 `scanText` 從 `scanFile` 分出來的相同：
+// **錨在真實檔案上的注入測試，會在那些檔案被修好的那天失效**
+// ——本專案為此翻車過兩次。
+
+export interface 檔 { rel: string; 內容: string }
+
+/** 正向：已元件化的元件，其身分出現在自己資料夾外。 */
+export function 偵測外洩(檔案: readonly 檔[], 已元件化: readonly string[]): string[] {
+  const out: string[] = []
+  for (const { rel, 內容 } of 檔案) {
+    if (!計入(rel)) continue
+    const hits = scanText(內容, 已元件化)
+    for (const id of hits.code) {
+      if (rel.startsWith(膠囊目錄(id))) continue
+      out.push(`${id} 洩在 ${rel}:${(hits.lines[id] ?? []).join(',')}`)
+    }
+  }
+  return out
+}
+
+/** 反向：膠囊資料夾裡出現別顆元件的身分。 */
+export function 偵測外來(檔案: readonly 檔[], 這顆: string, 全部身分: readonly string[]): string[] {
+  const out: string[] = []
+  for (const { rel, 內容 } of 檔案) {
+    if (classifyFile(rel) === '測試') continue // 負向斷言必須講得出別的身分
+    for (const id of scanText(內容, 全部身分).code) {
+      if (id !== 這顆) out.push(`${rel} 提到了不屬於 ${這顆} 的 ${id}`)
+    }
+  }
+  return out
+}
+
+/** 標籤：已元件化的標籤鍵還留在共用檔裡。 */
+export function 偵測標籤殘留(共用: Record<string, string>, 膠囊擁有: ReadonlySet<string>, rel: string): string[] {
+  return Object.keys(共用).filter((k) => 膠囊擁有.has(k)).map((k) => `${rel} 仍有 ${k}`)
 }
 
 describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料夾裡嗎）', () => {
@@ -119,15 +164,13 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
       // 基線是 0 的時候，一條回報零違規的健康護欄與一條什麼都沒量到的護欄，產出完全相同。
       return
     }
-    const 外洩: string[] = []
-    for (const rel of listSourceFiles('src', ['.ts', '.json'])) {
-      if (!計入(rel)) continue
-      const hits = scanText(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'), 已膠囊)
-      for (const id of hits.code) {
-        if (rel.startsWith(膠囊目錄(id))) continue
-        外洩.push(`${id} 洩在 ${rel}:${(hits.lines[id] ?? []).join(',')}`)
-      }
-    }
+    const 外洩 = 偵測外洩(
+      listSourceFiles('src', ['.ts', '.json']).map((rel) => ({
+        rel,
+        內容: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
+      })),
+      已膠囊,
+    )
     expect(外洩, `已膠囊化的元件不得出現在自己資料夾外：\n  ${外洩.join('\n  ')}`).toEqual([])
   })
 
@@ -136,17 +179,17 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     const ids = 全部身分()
     const 外來: string[] = []
     for (const c of registeredComponents()) {
-      const dir = 膠囊目錄(c.conceptId)
-      for (const rel of listSourceFiles(dir.replace(/\/$/, ''), ['.ts', '.json'])) {
-        const hits = scanText(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'), ids)
-        for (const id of hits.code) {
-          // 自證測**必須**能提到別的身分（負向斷言就是在說「這不是那顆」），
-          // 所以測試檔豁免——但豁免要具名，不是靠路徑規則順便放過。
-          if (rel.endsWith('.test.ts')) continue
-          if (id === c.conceptId) continue
-          外來.push(`${rel} 提到了不屬於 ${c.conceptId} 的 ${id}`)
-        }
-      }
+      const dir = 膠囊目錄(c.conceptId).replace(/.$/, '')
+      外來.push(
+        ...偵測外來(
+          listSourceFiles(dir, ['.ts', '.json']).map((rel) => ({
+            rel,
+            內容: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
+          })),
+          c.conceptId,
+          ids,
+        ),
+      )
     }
     expect(外來, `膠囊資料夾裡混進了別顆元件：\n  ${外來.join('\n  ')}`).toEqual([])
   })
@@ -155,11 +198,9 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
   it('標籤：已膠囊化元件的標籤鍵不得留在共用的 i18n 檔', () => {
     const 擁有 = componentOwnedLabelKeys()
     if (擁有.size === 0) return
-    const 殘留: string[] = []
-    for (const rel of 共用標籤檔) {
-      const dict: Record<string, string> = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'))
-      for (const k of Object.keys(dict)) if (擁有.has(k)) 殘留.push(`${rel} 仍有 ${k}`)
-    }
+    const 殘留 = 共用標籤檔.flatMap((rel) =>
+      偵測標籤殘留(JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8')), 擁有, rel),
+    )
     expect(殘留, `標籤搬進膠囊之後共用檔要刪乾淨（兩份會漂移）：\n  ${殘留.join('\n  ')}`).toEqual([])
   })
 
@@ -198,6 +239,61 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     it('好的輸入不亂報：路徑前綴比對不得把 vector_declare2 當成 vector_declare', () => {
       expect(`src/components/cpp/vector_declare2/x.ts`.startsWith(膠囊目錄('cpp:vector_declare'))).toBe(false)
       expect(`src/components/cpp/vector_declare/x.ts`.startsWith(膠囊目錄('cpp:vector_declare'))).toBe(true)
+    })
+  })
+
+  // ── US2：三類違規各自要變紅，而且**理由各不相同** ─────────────
+  //
+  // `build-guardrail` 第 8 步：釘理由不只釘結果——**一個因為錯誤理由而給出
+  // 正確結果的護欄，看起來與健康的完全一樣。**
+  describe('US2 注入：三類違規', () => {
+    const 這顆 = 'cpp:vector_declare'
+    const 乾淨的膠囊: 檔[] = [
+      { rel: 'src/components/cpp/vector_declare/generate.ts', 內容: `g.set('${這顆}', () => '')` },
+    ]
+
+    it('① 實作外洩回共用檔 → 紅，且指名元件與檔案', () => {
+      const 違規 = 偵測外洩(
+        [{ rel: 'src/languages/cpp/core/lifters/strategies.ts', 內容: `const t = { 'vector': '${這顆}' }` }],
+        [這顆],
+      )
+      expect(違規).toHaveLength(1)
+      expect(違規[0]).toContain(這顆)
+      expect(違規[0]).toContain('strategies.ts')
+      expect(違規[0], '理由一：**洩在**別的檔').toContain('洩在')
+    })
+
+    it('② 膠囊裡混進別顆元件 → 紅，且指名那個外來身分', () => {
+      const 違規 = 偵測外來(
+        [{ rel: 'src/components/cpp/vector_declare/generate.ts', 內容: `g.set('cpp:vector_size', () => '')` }],
+        這顆,
+        [這顆, 'cpp:vector_size'],
+      )
+      expect(違規).toHaveLength(1)
+      expect(違規[0]).toContain('cpp:vector_size')
+      expect(違規[0], '理由二：**不屬於**這顆').toContain('不屬於')
+    })
+
+    it('③ 標籤留在共用 i18n 檔 → 紅', () => {
+      const 違規 = 偵測標籤殘留(
+        { CPP_VECTOR_DECLARE_MSG0: '建立 %1 列表 %2', OTHER_KEY: '別人的' },
+        new Set(['CPP_VECTOR_DECLARE_MSG0']),
+        'src/i18n/zh-TW/blocks.json',
+      )
+      expect(違規).toEqual(['src/i18n/zh-TW/blocks.json 仍有 CPP_VECTOR_DECLARE_MSG0'])
+      expect(違規[0], '理由三：**仍有**（該搬走而沒搬）').toContain('仍有')
+    })
+
+    it('★ 三個理由互不相同——不是同一條規則報三次', () => {
+      const 理由 = ['洩在', '不屬於', '仍有']
+      expect(new Set(理由).size, '三類違規共用同一個訊息的話，看報表的人分不出發生了什麼').toBe(3)
+    })
+
+    it('★ 對照組：乾淨的膠囊三條都不得報', () => {
+      // ⚠️ 不可省。沒有這一則，一個「什麼都報」的偵測器也能通過上面三則。
+      expect(偵測外洩(乾淨的膠囊, [這顆])).toEqual([])
+      expect(偵測外來(乾淨的膠囊, 這顆, [這顆, 'cpp:vector_size'])).toEqual([])
+      expect(偵測標籤殘留({ OTHER_KEY: '別人的' }, new Set(['CPP_VECTOR_DECLARE_MSG0']), 'x')).toEqual([])
     })
   })
 })

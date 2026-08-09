@@ -23,5 +23,9 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-  "exclude": ["src/scripts"]
+  // 元件膠囊的自證測住在 `src/components/**/` 裡（刻意：一顆元件的語義主張與
+  // 它的實作住在一起）。但**測試不進建置**——它們用 node 全域（`process`），
+  // 而 production 的 tsconfig 沒有 node types，也不該有。
+  // Vitest 走自己的 include（見 vitest.config.ts），不受這裡影響。
+  "exclude": ["src/scripts", "src/**/*.test.ts"]
 }
