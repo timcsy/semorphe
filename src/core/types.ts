@@ -4,38 +4,22 @@ export type PropertyValue = string | number | boolean | string[]
 
 // ─── Concept IDs ───
 
-/** Universal 概念（所有程式語言共通） */
-export type UniversalConcept =
-  | 'cpp:program'
-  | 'cpp:var_declare'
-  | 'cpp:var_assign'
-  | 'cpp:var_ref'
-  | 'cpp:literal_number'
-  | 'cpp:literal_string'
-  | 'cpp:arithmetic'
-  | 'cpp:compare'
-  | 'cpp:logic'
-  | 'cpp:logic_not'
-  | 'cpp:negate'
-  | 'cpp:if'
-  | 'cpp:loop_count'
-  | 'cpp:loop_while'
-  | 'cpp:break'
-  | 'cpp:continue'
-  | 'cpp:func_def'
-  | 'cpp:func_call'
-  | 'cpp:return'
-  | 'cpp:print'
-  | 'cpp:input'
-  | 'cpp:endl'
-  | 'cpp:array_declare'
-  | 'cpp:array_at'
-
-/** 語言特有概念使用 `lang:concept` 格式 */
-export type LanguageSpecificConcept = `${string}:${string}`
-
-/** ConceptId 是 universal 或 language-specific 概念的聯集 */
-export type ConceptId = UniversalConcept | LanguageSpecificConcept
+/**
+ * 元件身分：`<scope>:<name>`。
+ *
+ * ## 為什麼這裡沒有一份「通用概念」的聯集了（2026-08-09 刪）
+ *
+ * 這裡原本列著 24 顆 `UniversalConcept` 的字面聯集。**D 之後它對型別零貢獻**——
+ * 所有身分都加上了 `:`，於是每一顆都已經是 `` `${string}:${string}` ``，
+ * 整個聯集被完全吸收（`UniversalConcept extends ConceptId` 恆真，反向不成立）。
+ * 而 `UniversalConcept` 除了餵這一行之外沒有任何使用者。
+ *
+ * ⚠️ 它同時是 P9 的一筆違規，而**中立性護欄回報 0**——那條護欄按設計遮掉
+ * 「型別位置的聯集成員」。加一顆通用元件本來要編輯核心的型別；現在不用了。
+ * （`draft/2026-08-07-元件目錄與膠囊契約.md` §九 把這批列為「落在護欄維度外面」，
+ * 而正確的處置比改護欄便宜：刪掉，沒有任何東西會變。）
+ */
+export type ConceptId = `${string}:${string}`
 
 // ─── Semantic Tree ───
 
