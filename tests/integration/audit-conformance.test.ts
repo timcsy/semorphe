@@ -177,25 +177,39 @@ function 量一次(): 判定[] {
         createNode(caf.childConcept, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
       ]
     }
-    const 放進去 = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
-    let 回來: string[] | null = null
-    try {
-      const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [node] }))
-      // 走生產的反向：把產出的 Blockly state 抽回語義樹，找回這顆元件。
-      // **完全不比名字**——`extract` 自己會套用 `renderMapping`。
-      const 抽回 = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
-      const 找 = (n: SemanticNode | null): SemanticNode | null => {
-        if (!n) return null
-        if (n.conceptId === c.conceptId) return n
-        for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = 找(k); if (r) return r }
-        return null
-      }
-      const 它 = 抽回.map((x) => 找(x as SemanticNode)).find(Boolean) ?? null
-      回來 = 它 ? Object.keys(它.children ?? {}).filter((k) => (它.children[k] ?? []).length > 0) : null
-    } catch {
-      回來 = null
+    // ⚠️ **一個接點合成一棵樹，不要一次全放。**
+    //
+    // 合成器不知道哪些接點是**互斥**的。實測：`cpp:var_declare` 在真實程式碼裡
+    // `int a = 5;` 只有 `initializer`、`int a, b;` 只有 `declarators`——
+    // **從來不會同時有**。一次全放會造出一棵真實世界不存在的樹，
+    // 而 render 走了不該走的路，於是連本來好好的 `initializer` 也被報成掉了。
+    //
+    // 每個接點各自跑一次，它就只會為自己的失敗負責。
+    const 全部接點 = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
+    const 缺: string[] = []
+    let 有一次渲染得出來 = false
+    for (const 這個接點 of 全部接點) {
+      const 單槽 = { ...node, children: { [這個接點]: node.children[這個接點] } }
+      let 回來: string[] | null = null
+      try {
+        const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [單槽 as SemanticNode] }))
+        const 抽回 = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
+        const 找 = (n: SemanticNode | null): SemanticNode | null => {
+          if (!n) return null
+          if (n.conceptId === c.conceptId) return n
+          for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = 找(k); if (r) return r }
+          return null
+        }
+        const 它 = 抽回.map((x) => 找(x as SemanticNode)).find(Boolean) ?? null
+        回來 = 它 ? Object.keys(它.children ?? {}).filter((k) => (它.children[k] ?? []).length > 0) : null
+      } catch { 回來 = null }
+      if (回來 !== null) { 有一次渲染得出來 = true; if (!回來.includes(這個接點)) 缺.push(這個接點) }
     }
-    out.push(判定符合性(c.conceptId, 放進去, 回來))
+    out.push(
+      有一次渲染得出來
+        ? 判定符合性(c.conceptId, 全部接點, 全部接點.filter((k) => !缺.includes(k)))
+        : 判定符合性(c.conceptId, 全部接點, null),
+    )
   }
   快取 = out
   return out
@@ -218,13 +232,26 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     expect(量一次().length, '一顆有接點的元件都沒掃到 → 下面的數字是假的').toBeGreaterThan(100)
   })
 
-  it('★ 健康檢查：已知答案的樣本——動態積木必須被判為安全', () => {
-    // 這一則釘的是**第一版錯在哪**。靜態比對把這三顆報成違規，
-    // 而它們的插槽由 `block-registrar.ts` 在執行期加上，名字與接點不同詞。
+  it('★ 健康檢查：動態積木的那個接點必須被判為走得過', () => {
+    // 這一則釘的是**第一版錯在哪**：靜態比對把這幾顆報成違規，
+    // 而它們的插槽由 `block-registrar.ts` 在執行期加上，名字與接點不同詞
+    // （`EXPR0` vs `values`、`INIT_0` vs `initializer`）。
     // 沒有這一則，9 筆誤報會被當成真相寫進基線。
+    //
+    // ⚠️ **這一則的第一版錨錯了**：它斷言「這三顆整顆是安全的」，
+    // 於是 `specs/106` 給 `cpp:var_declare` 補上 `declarators` 接點的當天
+    // ——那是**正確的改動**——這條健康檢查自己變紅。
+    //
+    // 那是 `build-guardrail` 第 2 步那個形狀的又一個實例，而機制值得記：
+    // **錨在「整顆乾淨」上，等於錨在「這顆元件的每一個接點都沒問題」**，
+    // 而那是一個會隨世界變動的合取。正確的錨是**單一接點**——
+    // 「`INIT_0` 那條動態插槽的路走得通」在補宣告前後都成立。
     const d = new Map(量一次().map((x) => [x.conceptId, x]))
-    for (const id of ['cpp:print', 'cpp:var_declare', 'cpp:if']) {
-      expect(d.get(id)?.桶, `${id} 是動態積木，實測走得過投影——判成違規代表判準退回靜態了`).toBe('安全')
+    for (const [id, 接點] of [['cpp:print', 'values'], ['cpp:var_declare', 'initializer'], ['cpp:if', 'then_body']] as const) {
+      expect(
+        d.get(id)?.缺 ?? [],
+        `${id} 的 ${接點} 是動態積木的插槽，實測走得過投影——被判成掉了代表判準退回靜態了`,
+      ).not.toContain(接點)
     }
   })
 
