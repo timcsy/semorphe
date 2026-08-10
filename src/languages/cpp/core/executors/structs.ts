@@ -26,7 +26,7 @@ import { defaultValue } from '../../../../interpreter/types'
 import type { SemanticNode } from '../../../../core/types'
 
 /** 把一群成員敘述拆成「欄位／方法／建構式」 */
-function 拆解成員(members: SemanticNode[]): {
+export function 拆解成員(members: SemanticNode[]): {
   fields: FieldDecl[]
   methods: MethodDecl[]
   ctor?: MethodDecl
@@ -113,53 +113,51 @@ async function 在實例上執行(
   }
 }
 
-export function registerStructExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-  /**
-   * `struct Point { int x; int y; };`
-   *
-   * 成員宣告本身**不執行**——它們是型別的一部分，不是要跑的敘述。
-   * 執行它們的話 `x` 和 `y` 會變成外層作用域的真變數。
-   */
-  /**
-   * 告訴核心「怎麼在一個實例上跑一段方法本體」。
-   *
-   * 核心知道「這個型別有建構式」，但不知道怎麼綁 `this`、怎麼接回傳訊號
-   * ——那些是語言套件的知識。安裝在宣告執行器裡，因為它們一定在任何
-   * 實例化之前跑，而登記處是**每個直譯器一份**（不能在模組載入時裝）。
-   */
-  const 安裝方法執行器 = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
-    ctx.structs.installMethodRunner((obj, m, args) => 在實例上執行(obj, m, args, ctx) as Promise<unknown>)
+/**
+ * 安裝方法執行器——**從宣告執行器的閉包提升為模組層級的匯出**。
+ *
+ * ⚠️ 它原本是 `registerStructExecutors` 內部的閉包。與 `openBrace` 同一個病：
+ * **一個閉包 helper 會把它所在的整個函式變成不可分割的單位**，
+ * 而那個單位是「一個檔案」不是「一顆元件」——擋住膠囊化。
+ *
+ * 提升之後行為一字未變（它本來就只用 `ctx`，沒有捕獲別的東西）。
+ */
+export const 安裝方法執行器 = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
+  ctx.structs.installMethodRunner((obj, m, args) => 在實例上執行(obj, m, args, ctx) as Promise<unknown>)
 
-    // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**
-    // 是這裡的知識——別的語言可能什麼都不做。
-    if (!ctx.onScopeExit) {
-      // ⚠️ **正在解構中的物件**——沒有這道防線會無限遞迴。
-      //
-      // 解構式的本體跑在一個作用域裡，而那個作用域宣告了 `this`（指向這個
-      // 物件自己）。離開它時又對同一個物件跑一次解構式 → 堆疊爆掉。
-      // 第一版就是這樣，症狀是 **OOM 而不是一則錯誤訊息**。
-      const 解構中 = new Set<unknown>()
+  // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**
+  // 是這裡的知識——別的語言可能什麼都不做。
+  if (!ctx.onScopeExit) {
+    // ⚠️ **正在解構中的物件**——沒有這道防線會無限遞迴。
+    //
+    // 解構式的本體跑在一個作用域裡，而那個作用域宣告了 `this`（指向這個
+    // 物件自己）。離開它時又對同一個物件跑一次解構式 → 堆疊爆掉。
+    // 第一版就是這樣，症狀是 **OOM 而不是一則錯誤訊息**。
+    const 解構中 = new Set<unknown>()
 
-      ctx.onScopeExit = async (own) => {
-        // **反序**：C++ 保證後宣告的先解構。順序錯的實作在單一物件時看不出來。
-        for (const [name, v] of [...own.entries()].reverse()) {
-          if (v.type !== 'object') continue  // 非物件不觸發任何收尾
-          if (name === 'this') continue      // `this` 不是這個作用域擁有的
-          if (解構中.has(v.value)) continue
-          const dtor = ctx.structs.destructorOf(v.structName ?? '')
-          if (!dtor) continue
-          解構中.add(v.value)
-          try {
-            await 在實例上執行(v, dtor, [], ctx)
-          } finally {
-            解構中.delete(v.value)
-          }
+    ctx.onScopeExit = async (own) => {
+      // **反序**：C++ 保證後宣告的先解構。順序錯的實作在單一物件時看不出來。
+      for (const [name, v] of [...own.entries()].reverse()) {
+        if (v.type !== 'object') continue  // 非物件不觸發任何收尾
+        if (name === 'this') continue      // `this` 不是這個作用域擁有的
+        if (解構中.has(v.value)) continue
+        const dtor = ctx.structs.destructorOf(v.structName ?? '')
+        if (!dtor) continue
+        解構中.add(v.value)
+        try {
+          await 在實例上執行(v, dtor, [], ctx)
+        } finally {
+          解構中.delete(v.value)
         }
       }
     }
   }
+}
+
+export function registerStructExecutors(
+  register: (concept: string, executor: ConceptExecutor) => void,
+): void {
+
 
   register('cpp:struct_declare', async (node, ctx) => {
     安裝方法執行器(ctx)

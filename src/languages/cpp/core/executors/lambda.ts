@@ -29,39 +29,47 @@ import { Scope } from '../../../../interpreter/scope'
 // 從定義它的地方導入——**不要再建一份**，`instanceof` 會失效
 import { ReturnSignal } from '../../../../interpreter/executors/functions'
 
+/**
+ * 安裝 lambda 執行機構——**從閉包提升為模組層級的匯出**（同 `openBraceFor`）。
+ *
+ * ⚠️ 一個閉包 helper 會把它所在的整個函式變成不可分割的單位，
+ * 而那個單位是「一個檔案」不是「一顆元件」——擋住膠囊化。
+ */
+export const 安裝Lambda = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
+  if (ctx.callableOf) return
+  ctx.callableOf = (v) => asCallable(v)
+  ctx.invokeCallable = async (c, argNodes) => {
+    const callable = c as Callable
+    const argValues: RuntimeValue[] = []
+    for (const a of argNodes) argValues.push(await ctx.evaluate(a))
+
+    const outer = ctx.scope
+    const inner = lambdaScope(callable)
+    callable.params.forEach((p, i) => inner.declare(p.name, argValues[i] ?? { type: 'int', value: 0 }))
+    ctx.scope = inner
+    try {
+      await ctx.executeBody(callable.body)
+      return { type: 'void', value: null }
+    } catch (e) {
+      if (e instanceof ReturnSignal) return e.value as RuntimeValue
+      throw e
+    } finally {
+      // 一定要還原——不還原的話，lambda 呼叫之後外層的程式會跑在 lambda
+      // 的作用域裡，而那個錯誤的症狀離現場很遠
+      await ctx.exitScope(ctx.scope, outer)
+    }
+  }
+}
+
 export function registerLambdaExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   // 告訴核心「什麼算可呼叫」與「怎麼呼叫它」。裝在執行器裡而不是模組載入時，
   // 因為掛勾掛在**每一個直譯器實例**上（與結構的方法執行器同一個理由）。
-  const 安裝 = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
-    if (ctx.callableOf) return
-    ctx.callableOf = (v) => asCallable(v)
-    ctx.invokeCallable = async (c, argNodes) => {
-      const callable = c as Callable
-      const argValues: RuntimeValue[] = []
-      for (const a of argNodes) argValues.push(await ctx.evaluate(a))
 
-      const outer = ctx.scope
-      const inner = lambdaScope(callable)
-      callable.params.forEach((p, i) => inner.declare(p.name, argValues[i] ?? { type: 'int', value: 0 }))
-      ctx.scope = inner
-      try {
-        await ctx.executeBody(callable.body)
-        return { type: 'void', value: null }
-      } catch (e) {
-        if (e instanceof ReturnSignal) return e.value as RuntimeValue
-        throw e
-      } finally {
-        // 一定要還原——不還原的話，lambda 呼叫之後外層的程式會跑在 lambda
-        // 的作用域裡，而那個錯誤的症狀離現場很遠
-        await ctx.exitScope(ctx.scope, outer)
-      }
-    }
-  }
 
   register('cpp:lambda', async (node, ctx) => {
-    安裝(ctx)
+    安裝Lambda(ctx)
     const raw = String(node.properties.capture ?? '&')
     const capture: Callable['capture'] = raw.includes('&') ? '&' : raw.includes('=') ? '=' : ''
 
