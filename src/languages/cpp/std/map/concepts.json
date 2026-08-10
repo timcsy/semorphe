@@ -1,18 +1,1 @@
-[
-  {
-    "conceptId": "cpp:map_at",
-    "layer": "lang-library",
-    "abstractConcept": "cpp:array_at",
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "mp"
-      }
-    ],
-    "children": {
-      "key": "expression"
-    },
-    "role": "expression"
-  }
-]
+[]

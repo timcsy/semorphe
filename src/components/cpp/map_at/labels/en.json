@@ -1,0 +1,4 @@
+{
+  "CPP_MAP_ACCESS_MSG0": "%1 at key %2",
+  "CPP_MAP_ACCESS_TOOLTIP": "Access or insert a value in the map by its key"
+}

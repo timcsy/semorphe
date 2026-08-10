@@ -2433,52 +2433,6 @@
     }
   },
   {
-    "id": "cpp_array_2d_at",
-    "conceptId": "cpp:array_2d_at",
-    "language": "cpp",
-    "category": "arrays",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_array_2d_at",
-      "message0": "%{BKY_C_ARRAY_2D_ACCESS_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "arr"
-        },
-        {
-          "type": "input_value",
-          "name": "ROW",
-          "check": "Expression"
-        },
-        {
-          "type": "input_value",
-          "name": "COL",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_C_ARRAY_2D_ACCESS_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${ROW}][${COL}]",
-      "imports": [],
-      "order": 20
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
-      "inputs": {
-        "COL": "col",
-        "ROW": "row"
-      }
-    }
-  },
-  {
     "id": "cpp_constructor",
     "conceptId": "cpp:constructor",
     "language": "cpp",

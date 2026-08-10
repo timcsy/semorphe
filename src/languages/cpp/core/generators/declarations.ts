@@ -149,14 +149,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type} ${name}[${rows}][${cols}];\n`
   })
 
-  g.set('cpp:array_2d_at', (node, ctx) => {
-    const name = node.properties.obj ?? 'arr'
-    const rowNodes = node.children.row ?? []
-    const colNodes = node.children.col ?? []
-    const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'
-    const col = colNodes.length > 0 ? generateExpression(colNodes[0], ctx) : '0'
-    return `${name}[${row}][${col}]`
-  })
+
 
 
 

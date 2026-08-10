@@ -758,23 +758,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:array_2d_at",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:array_at",
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "arr"
-      }
-    ],
-    "children": {
-      "row": "expression",
-      "col": "expression"
-    },
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:constructor",
     "layer": "lang-core",
     "abstractConcept": null,

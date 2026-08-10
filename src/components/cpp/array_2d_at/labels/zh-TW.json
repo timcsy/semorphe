@@ -1,0 +1,4 @@
+{
+  "C_ARRAY_2D_ACCESS_MSG0": "二維陣列 %1 [ %2 ][ %3 ]",
+  "C_ARRAY_2D_ACCESS_TOOLTIP": "取得二維陣列中特定列和行的值"
+}

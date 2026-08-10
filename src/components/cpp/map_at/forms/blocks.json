@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cpp:map_at",
+    "conceptId": "cpp:map_at",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_map_at",
+      "message0": "%{BKY_CPP_MAP_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "mp"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAP_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}[${KEY}]",
+      "imports": [
+        "map"
+      ],
+      "order": 20
+    },
+    "astPattern": null,
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
+  }
+]

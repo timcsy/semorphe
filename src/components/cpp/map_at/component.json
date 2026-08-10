@@ -1,0 +1,26 @@
+{
+  "conceptId": "cpp:map_at",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:array_at",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "mp"
+    }
+  ],
+  "children": {
+    "key": "expression"
+  },
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<map>"
+  ]
+}

@@ -20,7 +20,7 @@
     },
     "cpp:array_2d_at": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:array_2d_declare": {
       "files": 3,
@@ -332,7 +332,7 @@
     },
     "cpp:map_at": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:map_declare": {
       "files": 3,

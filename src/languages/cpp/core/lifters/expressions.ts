@@ -3,6 +3,7 @@ import type { SemanticNode } from '../../../../core/types'
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import { createNode } from '../../../../core/semantic-tree'
 import type { LiftPostProcessor } from '../../../../core/lift/post-processors'
+import { tryAstBranches } from '../../../../core/component/lift-branches'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
@@ -219,23 +220,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
   // conditional_expression — handled by JSON pattern (cpp_ternary_expr)
 
   lifter.register('subscript_expression', (node, ctx) => {
-    const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]
+    // **膠囊自己的判別先問**——「外層下標裡面還是下標時是我」是元件的知識。
+    const 認領 = tryAstBranches('subscript_expression', node, ctx)
+    if (認領) return 認領
 
-    // 2D array access: arr[i][j] — outer subscript with inner subscript as argument
-    if (arrayNode?.type === 'subscript_expression') {
-      const innerArrayNode = arrayNode.childForFieldName('argument') ?? arrayNode.namedChildren[0]
-      const name = innerArrayNode?.text ?? 'arr'
-      const rowIndices = arrayNode.namedChildren.find(c => c.type === 'subscript_argument_list')
-      const rowNode = rowIndices?.namedChildren[0] ?? arrayNode.namedChildren[1]
-      const colIndices = node.namedChildren.find(c => c.type === 'subscript_argument_list')
-      const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
-      const row = rowNode ? ctx.lift(rowNode) : null
-      const col = colNode ? ctx.lift(colNode) : null
-      return createNode('cpp:array_2d_at', { obj: name }, {
-        row: row ? [row] : [],
-        col: col ? [col] : [],
-      })
-    }
+    const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]
 
     const name = arrayNode?.text ?? 'arr'
     // tree-sitter C++ wraps index in subscript_argument_list: arr[i] → (subscript_argument_list (identifier))
@@ -246,20 +235,6 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (isStringVar(name, node)) {
       return createNode('cpp:string_at', { obj: name }, {
         index: index ? [index] : [],
-      })
-    }
-    // `m[key]` 的 m 是**對應表**時，那不是陣列索引。
-    //
-    // ⚠️ 差別在律：**陣列的索引超出範圍是錯誤，對應表的鍵不存在是插入。**
-    // 在此之前這裡一律產出 `array_access`，於是 `m["x"]` 把 `"x"` 當索引
-    // → 索引越界。而 `cpp_map_at` **五路齊備、在工具箱、在兩份課程清單裡，
-    // 卻沒有任何辨識路徑到得了它**——第十八條護欄的「零測試足跡」報出來的。
-    //
-    // 判準是根變數的型別（辨識脈絡查得到，076 接上的）。這是同一個機制的
-    // 第三次使用：095 的 istringstream、097 的 container_kind、這裡。
-    if (ctx.data.getType(name) === 'map') {
-      return createNode('cpp:map_at', { obj: name }, {
-        key: index ? [index] : [],
       })
     }
     return createNode('cpp:array_at', { obj: name }, {

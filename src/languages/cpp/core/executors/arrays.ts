@@ -8,7 +8,6 @@
  */
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import { defaultValue } from '../../../../interpreter/types'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 
 export function registerArraysCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
@@ -30,25 +29,7 @@ export function registerArraysCoreExecutors(
     ctx.scope.declare(name, { type: 'array', value: elements })
   })
 
-  register('cpp:array_2d_at', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const rowNodes = node.children.row
-    const colNodes = node.children.col
-    if (!rowNodes?.length || !colNodes?.length) return defaultValue('int')
 
-    const row = ctx.toNumber(await ctx.evaluate(rowNodes[0]))
-    const col = ctx.toNumber(await ctx.evaluate(colNodes[0]))
-    const arr = ctx.scope.get(name)
-
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    const rowArr = arr.value[row]
-    if (!rowArr || rowArr.type !== 'array' || !Array.isArray(rowArr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(row) })
-    }
-    return rowArr.value[col] ?? defaultValue('int')
-  })
 
 
 

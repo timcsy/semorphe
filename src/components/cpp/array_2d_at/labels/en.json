@@ -1,0 +1,4 @@
+{
+  "C_ARRAY_2D_ACCESS_MSG0": "2D array %1 [ %2 ][ %3 ]",
+  "C_ARRAY_2D_ACCESS_TOOLTIP": "Get the value at a specific row and column in a 2D array"
+}
