@@ -1,135 +1,121 @@
 [
   {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int arr[5] = {2, 4, 6, 8, ",
-    "訊號": "直譯器「0⏎0⏎0⏎」 參照「2⏎6⏎10⏎」",
+    "語料鍵": "#include <iostream> using namespace std; int main() { int ar#ztq1mz",
+    "訊號": "直「0⏎0⏎0⏎」 參「2⏎6⏎10⏎」",
     "判定": "真誤差",
-    "理由": "int arr[5] = {2,4,6,8,10} 的初始化列表沒有寫進陣列，全部讀成 0。",
-    "根因": "容器取值在組合情境下回 0"
-  },
-  {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int* a = new int; int* b =",
-    "訊號": "直譯器「50⏎50⏎」 參照「40⏎40⏎」",
-    "判定": "真誤差",
-    "理由": "new int 配置出的指標，解參考後的值與參照不同。",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
     "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> #include <cctype> #include <string> using namespace std; int",
-    "訊號": "直譯器「Alpha: 0⏎Digit: 0⏎Other: 0⏎」 參照「Alpha: 8⏎Digit: 6⏎Other: 3⏎」",
+    "語料鍵": "#include <iostream> using namespace std; int main() { int* a#a3lmo",
+    "訊號": "直「50⏎50⏎」 參「40⏎40⏎」",
     "判定": "真誤差",
-    "理由": "<cctype> 整組（toupper/tolower/isalpha/isdigit）沒有作用——字元原樣返回。一整個模組。",
-    "根因": "cctype 回傳值經轉型被截斷 → char 轉型（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> #include <cctype> #include <string> using namespace std; str",
-    "訊號": "直譯器「Original: Hello, World! 123⏎Upper: Hello」 參照「Original: Hello, World! 123⏎Upper: HELLO」",
-    "判定": "真誤差",
-    "理由": "<cctype> 整組（toupper/tolower/isalpha/isdigit）沒有作用——字元原樣返回。一整個模組。",
-    "根因": "cctype 回傳值經轉型被截斷 → char 轉型（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> #include <cctype> #include <string> using namespace std; str",
-    "訊號": "直譯器「HeLLo WoRLd!⏎」 參照「hEllO wOrlD!⏎」",
-    "判定": "真誤差",
-    "理由": "<cctype> 整組（toupper/tolower/isalpha/isdigit）沒有作用——字元原樣返回。一整個模組。",
-    "根因": "cctype 回傳值經轉型被截斷 → char 轉型（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> #include <cctype> #include <string> using namespace std; int",
-    "訊號": "直譯器「Digits: ⏎Sum: 0⏎」 參照「Digits: 12345⏎Sum: 15⏎」",
-    "判定": "真誤差",
-    "理由": "<cctype> 整組（toupper/tolower/isalpha/isdigit）沒有作用——字元原樣返回。一整個模組。",
-    "根因": "cctype 回傳值經轉型被截斷 → char 轉型（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> #include <cctype> #include <string> using namespace std; str",
-    "訊號": "直譯器「hELLO wORLD fOO bAR⏎」 參照「Hello World Foo Bar⏎」",
-    "判定": "真誤差",
-    "理由": "<cctype> 整組（toupper/tolower/isalpha/isdigit）沒有作用——字元原樣返回。一整個模組。",
-    "根因": "cctype 回傳值經轉型被截斷 → char 轉型（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int a = 5; double b = 2.0;",
-    "訊號": "直譯器「2⏎2.5⏎66⏎66⏎0⏎0.3333333333333333⏎」 參照「2⏎2.5⏎66⏎B⏎0⏎0.333333⏎」",
-    "判定": "真誤差",
-    "理由": "浮點輸出格式：cout 預設 6 位有效數字，直譯器印完整 double 表示。是輸出層的差，不是算錯，但使用者看到的字串不同。",
-    "根因": "浮點輸出未套用 C++ 預設六位有效數字（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> using namespace std; class Scope { public: Scope() { cout <<",
-    "訊號": "直譯器「main start⏎inner⏎main end⏎exit⏎」 參照「main start⏎enter⏎inner⏎exit⏎main end⏎」",
-    "判定": "真誤差",
-    "理由": "建構子／解構子沒有被執行——類別的初始化訊息完全沒印，成員維持 0。這是最嚴重的一組。",
-    "根因": "建構式未被呼叫（specs/109 修了同族的一部分，這一筆仍在——根因與已修的那些不同）"
-  },
-  {
-    "語料鍵": "#include <iostream> using namespace std; class NumberHolder { public: int num; N",
-    "訊號": "直譯器「equal⏎also equal⏎」 參照「equal⏎not equal⏎」",
-    "判定": "真誤差",
-    "理由": "物件比較的語義不同（參照說 not equal，直譯器說 also equal）。",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
     "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> #include <string> #include <vector> using namespace std; str",
-    "訊號": "直譯器「racecar -> no⏎hello -> no⏎abba -> no⏎wor」 參照「racecar -> yes⏎hello -> no⏎abba -> yes⏎w」",
+    "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
+    "訊號": "直「Alpha: 8⏎Digit: 0⏎Other: 9⏎」 參「Alpha: 8⏎Digit: 6⏎Other: 3⏎」",
     "判定": "真誤差",
-    "理由": "字串函式（回文判定／replaceAll）的結果與參照不同。",
-    "根因": "字串函式在組合情境下結果不同"
+    "理由": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
+    "根因": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
   },
   {
-    "語料鍵": "#include <iostream> #include <string> using namespace std; string replaceAll(str",
-    "訊號": "直譯器「hello world⏎aaa⏎abcabcabc⏎no match here⏎」 參照「hello there⏎ba⏎XXX⏎no match here⏎」",
+    "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#15fugmd",
+    "訊號": "直「hello world!⏎」 參「hEllO wOrlD!⏎」",
     "判定": "真誤差",
-    "理由": "字串函式（回文判定／replaceAll）的結果與參照不同。",
-    "根因": "字串函式在組合情境下結果不同"
+    "理由": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
+    "根因": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
   },
   {
-    "語料鍵": "#include <iostream> using namespace std; int main() { cout << sizeof(char) << en",
-    "訊號": "直譯器「1⏎4⏎8⏎8⏎1⏎4⏎4⏎4⏎1⏎4⏎」 參照「1⏎4⏎8⏎8⏎1⏎4⏎4⏎8⏎1⏎4⏎」",
+    "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
+    "訊號": "直「Digits: 15⏎Sum: -225⏎」 參「Digits: 12345⏎Sum: 15⏎」",
     "判定": "真誤差",
-    "理由": "sizeof 其中一項與參照不同（第八項 4 vs 8）。",
+    "理由": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
+    "根因": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
+  },
+  {
+    "語料鍵": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
+    "訊號": "直「equal⏎also equal⏎」 參「equal⏎not equal⏎」",
+    "判定": "真誤差",
+    "理由": "物件導向：建構式路徑已修一部分，這一筆的根因不同",
+    "根因": "物件導向：建構式路徑已修一部分，這一筆的根因不同"
+  },
+  {
+    "語料鍵": "#include <iostream> using namespace std; class Scope { publi#142pep4",
+    "訊號": "直「main start⏎enter⏎inner⏎main end⏎exit⏎」 參「main start⏎enter⏎inner⏎exit⏎main end⏎」",
+    "判定": "真誤差",
+    "理由": "物件導向：建構式路徑已修一部分，這一筆的根因不同",
+    "根因": "物件導向：建構式路徑已修一部分，這一筆的根因不同"
+  },
+  {
+    "語料鍵": "#include <iostream> #include <string> #include <vector> usin#gy8xq3",
+    "訊號": "直「racecar -> no⏎hello -> no⏎abba -> no⏎wor」 參「racecar -> yes⏎hello -> no⏎abba -> yes⏎w」",
+    "判定": "真誤差",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
     "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int a = 0b1010; int b = 0b",
-    "訊號": "直譯器「8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎」 參照「8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎」",
+    "語料鍵": "#include <iostream> #include <string> using namespace std; s#8cx34x",
+    "訊號": "直「hello world⏎aaa⏎abcabcabc⏎no match here⏎」 參「hello there⏎ba⏎XXX⏎no match here⏎」",
     "判定": "真誤差",
-    "理由": "位元運算／unsigned char 的結果 -1 vs 255——型別寬度與號誌沒有被模擬。",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
     "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> using namespace std; int* firstPositive(int* arr, int n) { f",
-    "訊號": "直譯器「0」 參照「7」",
+    "語料鍵": "#include <iostream> using namespace std; int main() { int a #1qwxvi9",
+    "訊號": "直「2⏎2.5⏎66⏎66⏎0⏎0.333333⏎」 參「2⏎2.5⏎66⏎B⏎0⏎0.333333⏎」",
     "判定": "真誤差",
-    "理由": "陣列／vector／string 的取值回 0 或空字串，參照有值。",
-    "根因": "容器取值在組合情境下回 0"
+    "理由": "浮點顯示：預設精度已修，這一筆的根因不同",
+    "根因": "浮點顯示：預設精度已修，這一筆的根因不同"
   },
   {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int arr[3]; arr[0] = 10; a",
-    "訊號": "直譯器「0⏎10⏎」 參照「10⏎15⏎」",
+    "語料鍵": "#include <iostream> using namespace std; int main() { cout <#ye3m8s",
+    "訊號": "直「1⏎4⏎8⏎8⏎1⏎4⏎4⏎4⏎1⏎4⏎」 參「1⏎4⏎8⏎8⏎1⏎4⏎4⏎8⏎1⏎4⏎」",
     "判定": "真誤差",
-    "理由": "陣列／vector／string 的取值回 0 或空字串，參照有值。",
-    "根因": "容器取值在組合情境下回 0"
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> #include <string> using namespace std; int main() { string n",
-    "訊號": "直譯器「」 參照「starts with A」",
+    "語料鍵": "#include <iostream> using namespace std; int main() { int a #4f4o9q",
+    "訊號": "直「8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎」 參「8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎」",
     "判定": "真誤差",
-    "理由": "陣列／vector／string 的取值回 0 或空字串，參照有值。",
-    "根因": "容器取值在組合情境下回 0"
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> #include <string> using namespace std; int main() { string s",
-    "訊號": "直譯器「0」 參照「3」",
+    "語料鍵": "#include <iostream> using namespace std; int* firstPositive(#9n014o",
+    "訊號": "直「0」 參「7」",
     "判定": "真誤差",
-    "理由": "陣列／vector／string 的取值回 0 或空字串，參照有值。",
-    "根因": "容器取值在組合情境下回 0"
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "語料鍵": "#include <iostream> using namespace std; int main() { int x; cout << x << endl; ",
-    "訊號": "直譯器「0⏎」 參照「38518960⏎」",
-    "判定": "其他",
-    "理由": "`int x;` 未初始化就讀取是**未定義行為**——參照印出的垃圾值不是可比對的答案，直譯器印 0 也不算錯。這一筆不可判定，而它沒有 cin 所以自動分類抓不到。",
+    "語料鍵": "#include <iostream> using namespace std; int main() { int ar#b62aof",
+    "訊號": "直「0⏎10⏎」 參「10⏎15⏎」",
+    "判定": "真誤差",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
+  },
+  {
+    "語料鍵": "#include <iostream> #include <string> using namespace std; i#lti6mm",
+    "訊號": "直「」 參「starts with A」",
+    "判定": "真誤差",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
+  },
+  {
+    "語料鍵": "#include <iostream> #include <string> using namespace std; i#15t2v9g",
+    "訊號": "直「0」 參「3」",
+    "判定": "真誤差",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
+    "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
+  },
+  {
+    "語料鍵": "#include <iostream> using namespace std; int main() { int x;#v9325h",
+    "訊號": "直「0⏎」 參「38518960⏎」",
+    "判定": "真誤差",
+    "理由": "未定位——單獨測通過，組合才壞（條件性正確）",
     "根因": "未定位——單獨測通過，組合才壞（條件性正確）"
   }
 ]

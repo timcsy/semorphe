@@ -110,7 +110,23 @@ function 撈語料(): string[] {
   return [...new Set(out)]
 }
 
-const 鍵 = (c: string): string => c.replace(/\s+/g, ' ').trim().slice(0, 80)
+/**
+ * 語料的識別鍵。
+ *
+ * ⚠️ **第一版只截前 80 字元，而它會碰撞**（2026-08-10 `specs/110` 發現）：
+ * 17 筆明細只有 16 個不同鍵、19 筆判定只有 16 個。後果是
+ * **孤兒檢查與「要看」都不可靠**——一筆新誤差會被同鍵的舊判定遮掉，
+ * 而報表上看起來是「已判定」。
+ *
+ * 這與「**以名字為基礎的比對忘了詞界**」是同一族：**識別碼必須識別得出那個東西。**
+ * 所以補上全文的雜湊。
+ */
+const 鍵 = (c: string): string => {
+  const 正規 = c.replace(/\s+/g, ' ').trim()
+  let h = 0
+  for (let i = 0; i < 正規.length; i++) h = ((h << 5) - h + 正規.charCodeAt(i)) | 0
+  return `${正規.slice(0, 60)}#${(h >>> 0).toString(36)}`
+}
 
 async function 跑直譯器(code: string): Promise<string | null> {
   try {

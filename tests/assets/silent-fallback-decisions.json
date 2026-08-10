@@ -46,11 +46,5 @@
     "訊號": "if (valueNodes.length === 0) → value: 0",
     "判定": "靜默回退",
     "理由": "同上，回 0.0 與 stod(\"0\") 無法區分"
-  },
-  {
-    "位置": "src/languages/cpp/std/vector/executors.ts:25",
-    "訊號": "if (非陣列) → value: 0",
-    "判定": "靜默回退",
-    "理由": "**本輪的病灶**：s.size() 被辨識成 cpp:vector_size 後拿到字串，回 0 讓「空容器」與「不是容器」無法區分，於是辨識的錯躲了很久"
   }
 ]
