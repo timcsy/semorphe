@@ -12,7 +12,7 @@
  * **版本字串原文**，不是「g++」這個名字——否則換一台機器跑出不同數字時，
  * 沒有人查得出原因。
  */
-import { execSync } from 'node:child_process'
+import { execSync, exec } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
@@ -69,6 +69,55 @@ export function runCppDetailed(code: string): 執行結果 {
     } catch (e) {
       return { ok: false, stage: 'run', message: String((e as Error).message).slice(0, 200) }
     }
+  } finally {
+    rmSync(src, { force: true })
+    rmSync(bin, { force: true })
+  }
+}
+
+/**
+ * 批次版：**並行**編譯執行，回傳與輸入同序的結果。
+ *
+ * 為什麼需要它：序列跑 300 段約 8 分鐘，而 `npm test` 多 8 分鐘會讓人
+ * 改成手動跑——**沒有人跑的護欄等於沒有護欄**。
+ *
+ * ⚠️ 不抽樣。抽樣的護欄不能當棘輪，而且靜默的抽樣會讓「涵蓋了全部」
+ * 這句話變成假的。要縮短時間就並行，不是少跑。
+ */
+export async function runCppBatch(codes: readonly string[], 並行度 = 8): Promise<(string | null)[]> {
+  const out: (string | null)[] = new Array(codes.length).fill(null)
+  let 下一個 = 0
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = 下一個++
+      if (i >= codes.length) return
+      out[i] = await runCppAsync(codes[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(並行度, codes.length) }, worker))
+  return out
+}
+
+/**
+ * 非同步單次執行。
+ *
+ * ⚠️ **必須是 `exec` 不是 `execSync`**：`execSync` 阻塞整條 Node 執行緒，
+ * 用它寫出來的「並行」是零並行——而它看起來與真的並行一模一樣。
+ */
+async function runCppAsync(code: string): Promise<string | null> {
+  if (!hasReferenceCompiler()) {
+    throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
+  }
+  mkdirSync(工作目錄, { recursive: true })
+  const 名 = `a${process.pid}_${序號++}`
+  const src = path.join(工作目錄, `${名}.cpp`)
+  const bin = path.join(工作目錄, 名)
+  const 跑 = (cmd: string, timeout: number): Promise<string | null> =>
+    new Promise((res) => exec(cmd, { encoding: 'utf-8', timeout }, (err, stdout) => res(err ? null : stdout)))
+  try {
+    writeFileSync(src, code)
+    if ((await 跑(`g++ ${旗標} -o ${bin} ${src}`, 30000)) === null) return null
+    return await 跑(`${bin} < /dev/null`, 執行時限毫秒)
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })
