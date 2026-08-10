@@ -1,0 +1,4 @@
+{
+  "CPP_QUEUE_BACK_MSG0": "%1 的尾端元素",
+  "CPP_QUEUE_BACK_TOOLTIP": "取得佇列最後面的元素（最後加入的，不移除）"
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "語料": "int main(){ queue<int> q; q.push(1); q.push(2); cout << q.back(); }",
+    "身分": [
+      "cpp:queue_declare"
+    ],
+    "產出": "#include <iostream>\n#include <queue>\nusing namespace std;\nint main() {\n    queue<int> q;\n    q.push(1);\n    q.push(2);\n    cout << q.back();\n}",
+    "執行": "2"
+  },
+  {
+    "語料": "int main(){ queue<int> q; q.push(7); cout << q.front() << q.back(); }",
+    "身分": [
+      "cpp:queue_declare",
+      "cpp:queue_front"
+    ],
+    "產出": "#include <iostream>\n#include <queue>\nusing namespace std;\nint main() {\n    queue<int> q;\n    q.push(7);\n    cout << q.front() << q.back();\n}",
+    "執行": "77"
+  }
+]

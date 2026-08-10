@@ -1,0 +1,4 @@
+{
+  "CPP_QUEUE_BACK_MSG0": "Back of %1",
+  "CPP_QUEUE_BACK_TOOLTIP": "Get the last element of the queue (most recently added, without removing it)"
+}

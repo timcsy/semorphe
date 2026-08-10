@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:queue_back",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "q"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "requires": [
+    "<queue>"
+  ],
+  "paths": {
+    "lift": null,
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts",
+    "_lift_why": "辨識層把 q.back() 判成 cpp:vector_back（.back() 不看容器型別），所以這顆身分**從程式碼永遠得不到**，只能從積木拖。這是「路徑滿的但到不了」的第二個實例（第一個是 cpp:if_else）。⚠️ 這是**顯式的空**，不是遺漏——診斷見 draft/2026-08-11-容器方法的辨識不看型別.md"
+  }
+}

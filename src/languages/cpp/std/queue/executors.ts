@@ -68,14 +68,5 @@ export function registerExecutors(
     return arr.value[0]
   })
 
-  register('cpp:queue_back', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
-      return defaultValue('int')
-    }
-    return arr.value[arr.value.length - 1]
-  })
-
   // ─── Map (simulated with array of [key, value] pairs) ───
 }

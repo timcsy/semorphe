@@ -187,9 +187,9 @@
       "blocks": [
         "cpp_stack_declare",
         "cpp_stack_top",
+        "cpp_queue_back",
         "cpp_queue_declare",
         "cpp_queue_front",
-        "cpp_queue_back",
         "cpp_priority_queue_declare",
         "cpp_priority_queue_top",
         "cpp_stringstream_declare",
