@@ -870,7 +870,7 @@
 | 概念註冊、四路/五層完備性、屬性結構化 | `concepts/概念代數.md` |
 | pattern 搶匹配、歧義、constraint、lifter | `concepts/開放擴充.md` |
 | 靜默失敗、降級、confidence | `concepts/降級與認知邊界.md` |
-| 這兩個算不算同一個、合併、外延等價、觀察集、容差、殘差／回饋、數位孿生 | `concepts/等價與觀察集.md` |
+| 這兩個算不算同一個、合併、外延等價、觀察集、容差、**殘差 vs 誤差**／回饋、數位孿生 | `concepts/等價與觀察集.md` |
 | 命名、scope、對內對外、詞彙表、套件與版本 | `concepts/元件.md`（命名章節） |
 | 決策為什麼變成現在這樣 | `history/` |
 | 某個 bug 當初的完整現場 | `episodes/` |
