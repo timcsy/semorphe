@@ -232,7 +232,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 }
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
-function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
+export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
   if (node.type === 'function_definition') {
     const declNode = node.childForFieldName('declarator')
     const typeNode = node.childForFieldName('type')
@@ -353,7 +353,7 @@ function liftClassMember(node: AstNode, className: string, ctx: LiftContext): Se
 
 
 /** Extract parameters from a parameter_list node */
-function liftParamList(paramList: AstNode | null, _ctx: LiftContext): SemanticNode[] {
+export function liftParamList(paramList: AstNode | null, _ctx: LiftContext): SemanticNode[] {
   if (!paramList) return []
   const params: SemanticNode[] = []
   for (const p of paramList.namedChildren) {
@@ -366,96 +366,11 @@ function liftParamList(paramList: AstNode | null, _ctx: LiftContext): SemanticNo
 }
 
 export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void {
-  // struct_specifier: struct Name { members };
-  registry.register('cpp:liftStructDef', (node, ctx) => {
-    const nameNode = node.childForFieldName('name')
-    const structName = nameNode?.text ?? 'MyStruct'
-    const bodyNode = node.childForFieldName('body')
-    const members: SemanticNode[] = []
 
-    if (bodyNode) {
-      for (const child of bodyNode.namedChildren) {
-        if (child.type === 'access_specifier') continue
-        const lifted = liftClassMember(child, structName, ctx)
-        if (lifted) members.push(lifted)
-      }
-    }
 
-    return createNode('cpp:struct_declare', { name: structName }, { members })
-  })
 
-  // class_specifier: class Name : public Base { public: ... private: ... protected: ... };
-  registry.register('cpp:liftClassDef', (node, ctx) => {
-    const nameNode = node.childForFieldName('name')
-    const className = nameNode?.text ?? 'MyClass'
-    const bodyNode = node.childForFieldName('body')
 
-    // Extract base class from base_class_clause
-    const baseClause = node.namedChildren.find(c => c.type === 'base_class_clause')
-    let baseClass = ''
-    let baseAccess = 'public'
-    if (baseClause) {
-      // base_class_clause contains access_specifier? and type_identifier
-      for (const child of baseClause.namedChildren) {
-        if (child.type === 'access_specifier') {
-          baseAccess = child.text.replace(/:$/, '').trim()
-        } else if (child.type === 'type_identifier' || child.type === 'qualified_identifier') {
-          baseClass = child.text
-        }
-      }
-    }
 
-    const publicMembers: SemanticNode[] = []
-    const privateMembers: SemanticNode[] = []
-    const protectedMembers: SemanticNode[] = []
-    let currentAccess = 'private' // default access in class
-
-    if (bodyNode) {
-      for (const child of bodyNode.namedChildren) {
-        if (child.type === 'access_specifier') {
-          const accessText = child.text.replace(/:$/, '').trim()
-          currentAccess = accessText
-          continue
-        }
-        const lifted = liftClassMember(child, className, ctx)
-        if (lifted) {
-          if (currentAccess === 'public' || currentAccess === 'public:') publicMembers.push(lifted)
-          else if (currentAccess === 'protected' || currentAccess === 'protected:') protectedMembers.push(lifted)
-          else privateMembers.push(lifted)
-        }
-      }
-    }
-
-    const props: Record<string, string> = { name: className }
-    if (baseClass) {
-      props.base_class = baseClass
-      props.base_access = baseAccess
-    }
-
-    return createNode('cpp:class_def', props, {
-      public: publicMembers,
-      protected: protectedMembers,
-      private: privateMembers,
-    })
-  })
-
-  // lambda_expression: [capture](params) -> ret { body }
-  registry.register('cpp:liftLambda', (node, ctx) => {
-    const captureSpec = node.namedChildren.find(c => c.type === 'lambda_capture_specifier')
-    let capture = '&'
-    if (captureSpec) {
-      const inner = captureSpec.text.slice(1, -1) // strip [ ]
-      capture = inner || ''
-    }
-    const declNode = node.namedChildren.find(c => c.type === 'abstract_function_declarator')
-    const paramList = declNode?.namedChildren.find(c => c.type === 'parameter_list') ?? null
-    const params = liftParamList(paramList, ctx)
-    const trailingReturn = declNode?.namedChildren.find(c => c.type === 'trailing_return_type')
-    const returnType = trailingReturn ? trailingReturn.text.replace(/^->\s*/, '') : ''
-    const bodyNode = node.namedChildren.find(c => c.type === 'compound_statement') ?? null
-    const body = extractBody(bodyNode, ctx)
-    return createNode('cpp:lambda', { capture, return_type: returnType }, { params, body })
-  })
 
 
 

@@ -96,7 +96,7 @@
     },
     "cpp:class_def": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:comma_expr": {
       "files": 5,
@@ -280,7 +280,7 @@
     },
     "cpp:lambda": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:literal_char": {
       "files": 3,
@@ -624,7 +624,7 @@
     },
     "cpp:struct_declare": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:switch": {
       "files": 3,

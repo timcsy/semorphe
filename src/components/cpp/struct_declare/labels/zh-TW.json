@@ -1,0 +1,4 @@
+{
+  "C_STRUCT_DECLARE_MSG0": "定義結構 %1",
+  "C_STRUCT_DECLARE_TOOLTIP": "定義一個結構，把多個相關的變數組合在一起，像是一張有多個欄位的表格"
+}

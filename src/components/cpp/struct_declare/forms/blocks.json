@@ -1,0 +1,49 @@
+[
+  {
+    "id": "cpp_struct_declare",
+    "conceptId": "cpp:struct_declare",
+    "language": "cpp",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_struct_declare",
+      "message0": "%{BKY_C_STRUCT_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MyStruct"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "MEMBERS",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "struct ${NAME} {\n${MEMBERS}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "struct_specifier",
+      "constraints": [],
+      "liftStrategy": "cpp:liftStructDef",
+      "fieldMappings": []
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "MEMBERS": "members"
+      }
+    }
+  }
+]

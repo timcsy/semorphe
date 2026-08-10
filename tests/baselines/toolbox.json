@@ -217,16 +217,16 @@
     {
       "name": "結構與類別",
       "blocks": [
-        "cpp_struct_declare",
         "cpp_struct_at_member",
         "cpp_struct_at_ptr",
-        "cpp_class_def",
+        "cpp_struct_declare",
         "cpp_constructor",
         "cpp_destructor",
         "cpp_method_virtual",
         "cpp_method_virtual_pure",
         "cpp_method_override",
         "cpp_operator_overload",
+        "cpp_class_def",
         "cpp_delete",
         "cpp_new"
       ]

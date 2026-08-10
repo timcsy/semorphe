@@ -1,0 +1,42 @@
+{
+  "conceptId": "cpp:class_def",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "MyClass"
+    },
+    {
+      "name": "base_class",
+      "kind": "literal",
+      "default": ""
+    },
+    {
+      "name": "base_access",
+      "kind": "enum",
+      "values": [
+        "public",
+        "protected",
+        "private"
+      ],
+      "default": "public"
+    }
+  ],
+  "children": {
+    "public": "statements",
+    "private": "statements",
+    "protected": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

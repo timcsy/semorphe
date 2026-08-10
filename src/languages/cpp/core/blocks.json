@@ -1724,53 +1724,6 @@
     }
   },
   {
-    "id": "cpp_struct_declare",
-    "conceptId": "cpp:struct_declare",
-    "language": "cpp",
-    "category": "structures",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_struct_declare",
-      "message0": "%{BKY_C_STRUCT_DECLARE_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "MyStruct"
-        }
-      ],
-      "message1": "%1",
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "MEMBERS",
-          "check": "Statement"
-        }
-      ],
-      "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "struct ${NAME} {\n${MEMBERS}\n};",
-      "imports": [],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "struct_specifier",
-      "constraints": [],
-      "liftStrategy": "cpp:liftStructDef",
-      "fieldMappings": []
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "statementInputs": {
-        "MEMBERS": "members"
-      }
-    }
-  },
-  {
     "id": "cpp_struct_at_member",
     "conceptId": "cpp:struct_at_member",
     "language": "cpp",
@@ -1885,56 +1838,6 @@
       "fields": {
         "MEMBER": "member",
         "PTR": "obj"
-      }
-    }
-  },
-  {
-    "id": "cpp:class_def",
-    "conceptId": "cpp:class_def",
-    "language": "cpp",
-    "category": "oop",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_class_def",
-      "message0": "%{BKY_CPP_CLASS_DEF_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "MyClass"
-        }
-      ],
-      "message1": "%{BKY_CPP_CLASS_DEF_MSG1}",
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "PUBLIC",
-          "check": "Statement"
-        }
-      ],
-      "message2": "%{BKY_CPP_CLASS_DEF_MSG2}",
-      "args2": [
-        {
-          "type": "input_statement",
-          "name": "PRIVATE",
-          "check": "Statement"
-        }
-      ],
-      "colour": "#9966FF",
-      "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
-      "imports": [],
-      "order": 0
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "statementInputs": {
-        "PRIVATE": "private",
-        "PUBLIC": "public"
       }
     }
   },
@@ -3105,60 +3008,6 @@
       "statementInputs": {
         "BODY": "body"
       }
-    }
-  },
-  {
-    "id": "cpp_lambda",
-    "conceptId": "cpp:lambda",
-    "language": "cpp",
-    "category": "functions",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_lambda",
-      "message0": "%{BKY_C_LAMBDA_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "CAPTURE",
-          "text": "&"
-        },
-        {
-          "type": "field_input",
-          "name": "PARAMS",
-          "text": ""
-        }
-      ],
-      "message1": "%1",
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#995BA5",
-      "tooltip": "%{BKY_C_LAMBDA_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "CAPTURE": "capture"
-      },
-      "statementInputs": {
-        "BODY": "body"
-      },
-      "childrenAsField": [
-        {
-          "field": "PARAMS",
-          "childSlot": "params",
-          "childConcept": "param_decl",
-          "parts": [
-            "type",
-            "name"
-          ]
-        }
-      ]
     }
   },
   {

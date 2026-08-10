@@ -1,0 +1,4 @@
+{
+  "C_LAMBDA_MSG0": "匿名函式 擷取 %1 參數 %2",
+  "C_LAMBDA_TOOLTIP": "建立一個匿名函式（lambda），可以捕捉周圍範圍的變數"
+}

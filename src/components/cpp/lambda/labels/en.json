@@ -1,0 +1,4 @@
+{
+  "C_LAMBDA_MSG0": "Anonymous function capturing %1 with parameters %2 (lambda)",
+  "C_LAMBDA_TOOLTIP": "Create an anonymous function (lambda) that captures variables from the surrounding scope"
+}

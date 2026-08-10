@@ -225,14 +225,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
 
-  g.set('cpp:struct_declare', (node, ctx) => {
-    const name = node.properties.name ?? 'MyStruct'
-    const members = node.children.members ?? []
-    let code = `${indent(ctx)}struct ${name} {\n`
-    code += generateBody(members, indented(ctx))
-    code += `${indent(ctx)}};\n`
-    return code
-  })
+
 
   g.set('_multi_field', (node, ctx) => {
     const fields = node.children.fields ?? []

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "cpp:class_def",
+    "conceptId": "cpp:class_def",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_class_def",
+      "message0": "%{BKY_CPP_CLASS_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MyClass"
+        }
+      ],
+      "message1": "%{BKY_CPP_CLASS_DEF_MSG1}",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "PUBLIC",
+          "check": "Statement"
+        }
+      ],
+      "message2": "%{BKY_CPP_CLASS_DEF_MSG2}",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "PRIVATE",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "PRIVATE": "private",
+        "PUBLIC": "public"
+      }
+    }
+  }
+]

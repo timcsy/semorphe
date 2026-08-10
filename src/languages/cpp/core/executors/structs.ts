@@ -159,39 +159,9 @@ export function registerStructExecutors(
 ): void {
 
 
-  register('cpp:struct_declare', async (node, ctx) => {
-    安裝方法執行器(ctx)
-    const name = String(node.properties.name)
-    const fields: FieldDecl[] = []
-    for (const m of node.children.members ?? []) {
-      const fname = m.properties?.name
-      if (fname === undefined) continue
-      fields.push({ name: String(fname), type: String(m.properties?.type ?? 'int') })
-    }
-    ctx.structs.declare(name, fields)
-  })
 
-  /**
-   * `class C { public: … private: … };`
-   *
-   * 存取控制（public／private）**這一片不做**——兩區的成員一視同仁。
-   * 那讓 `cpp_class_def` 從殼變成可執行，但**不代表類別支援完整了**：
-   * 存取控制、繼承、虛擬函式仍然是殼，完備性報表照樣數它們。
-   */
-  register('cpp:class_def', async (node, ctx) => {
-    安裝方法執行器(ctx)
-    const name = String(node.properties.name)
-    const { fields, methods, ctor, dtor, statics } = 拆解成員([
-      ...(node.children.public ?? []),
-      ...(node.children.private ?? []),
-    ])
-    // 存取控制（public／private）這一片仍不做——兩區一視同仁。
-    ctx.structs.declare(name, fields, methods, ctor, {
-      base: node.properties.base ? String(node.properties.base) : undefined,
-      statics,
-      dtor,
-    })
-  })
+
+
 
   /** `c.bump()` 與 `c.get()` —— 敘述與運算式兩個位置同一個實作 */
   const 呼叫方法: ConceptExecutor = async (node, ctx) => {

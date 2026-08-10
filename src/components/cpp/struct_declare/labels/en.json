@@ -1,0 +1,4 @@
+{
+  "C_STRUCT_DECLARE_MSG0": "define struct %1",
+  "C_STRUCT_DECLARE_TOOLTIP": "Define a struct that groups related variables together, like a form with multiple fields"
+}

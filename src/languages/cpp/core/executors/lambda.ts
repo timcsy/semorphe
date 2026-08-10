@@ -62,34 +62,13 @@ export const 安裝Lambda = (ctx: import('../../../../interpreter/executor-regis
 }
 
 export function registerLambdaExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  _register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   // 告訴核心「什麼算可呼叫」與「怎麼呼叫它」。裝在執行器裡而不是模組載入時，
   // 因為掛勾掛在**每一個直譯器實例**上（與結構的方法執行器同一個理由）。
 
 
-  register('cpp:lambda', async (node, ctx) => {
-    安裝Lambda(ctx)
-    const raw = String(node.properties.capture ?? '&')
-    const capture: Callable['capture'] = raw.includes('&') ? '&' : raw.includes('=') ? '=' : ''
 
-    const params = (node.children.params ?? []).map((p) => ({
-      name: String(p.properties?.name ?? ''),
-      type: String(p.properties?.type ?? 'int'),
-    }))
-
-    // `=` 是**定義當下**拍快照——晚一步拍就不是值捕捉了
-    const snapshot = capture === '=' ? new Map(ctx.scope.getAll()) : undefined
-
-    const callable: Callable = {
-      params,
-      body: node.children.body ?? [],
-      capture,
-      closure: ctx.scope,
-      snapshot,
-    }
-    return { type: 'function', value: callable } as RuntimeValue
-  })
 }
 
 /** 這個值是不是可呼叫的？呼叫端用它決定要不要走 lambda 路徑 */
