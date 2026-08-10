@@ -83,6 +83,38 @@ interface 判定 {
   理由: string
 }
 
+/**
+ * 「語料沒碰到」的**逐筆判定**（`build-guardrail` 第 11 步）。
+ *
+ * ## ⚠️ 為什麼這條護欄需要它——它的「誠實度指標」說不出誠實在哪
+ *
+ * 檔頭寫著「**『無法確定』的顆數是這條護欄的誠實度指標**」。而 2026-08-11
+ * 逐筆看那 8 筆時發現它**混了至少三種原因**：
+ *
+ * ```
+ * cpp:if_else                     宣告過的降級目標    ← 正確，不是缺口
+ * cpp:raw_code / raw_expression   元概念              ← 正確
+ * cpp:queue_back / string_empty   **辨識歧義到不了**  ← 真的缺口
+ * 其餘                            可能只是語料沒覆蓋
+ * ```
+ *
+ * > **一個桶裡混了不同原因的東西，而報表上長得一樣。**
+ * > 「無法確定 8」讀起來像「語料再補一點就好」，而其中兩筆
+ * > **補再多語料也永遠碰不到**。
+ *
+ * ⚠️ 這條護欄是四條有判定落點的護欄裡**唯一沒有的**（#32／#33／#35 都有）。
+ *
+ * ## 鍵用 conceptId，不用行號或截斷的字串
+ *
+ * `conceptId` 是**穩定身分**——它天生沒有那兩個坑
+ * （`specs/110` 的截斷碰撞、`specs/113` 的行號漂移）。
+ */
+interface 無法確定判定 {
+  conceptId: string
+  原因: '宣告過的降級目標' | '元概念' | '辨識到不了' | '語料沒覆蓋'
+  理由: string
+}
+
 interface Baseline {
   _meta: { guard: string; measuredAt: string; rule: string; note: string }
   確定違規: number
@@ -239,6 +271,28 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
       [`  ？ ${待查.slice(0, 10).map((d) => d.conceptId).join('、')}${待查.length > 10 ? ' …' : ''}`],
     )
 
+    // ── 判定落點：逐筆說出「為什麼無法確定」 ────────────────
+    const 判定檔 = path.join(REPO_ROOT, 'tests/assets/declared-slots-decisions.json')
+    const 判定s: 無法確定判定[] = fs.existsSync(判定檔)
+      ? (JSON.parse(fs.readFileSync(判定檔, 'utf8')) as 無法確定判定[])
+      : []
+    const 已判定 = new Map(判定s.map((d) => [d.conceptId, d]))
+    const 要看 = 待查.filter((d) => !已判定.has(d.conceptId))
+    const 孤兒 = 判定s.filter((d) => !待查.some((x) => x.conceptId === d.conceptId))
+    const 依原因 = (r: 無法確定判定['原因']): number =>
+      待查.filter((d) => 已判定.get(d.conceptId)?.原因 === r).length
+
+    printReport('宣告完整性：「無法確定」的原因分佈', [
+      `  辨識到不了     ${依原因('辨識到不了')} 顆 ← **真的缺口**（補語料也碰不到）`,
+      `  宣告過的降級目標 ${依原因('宣告過的降級目標')} 顆   正確`,
+      `  元概念         ${依原因('元概念')} 顆   正確`,
+      `  語料沒覆蓋     ${依原因('語料沒覆蓋')} 顆   補語料就會動`,
+      `  要看           ${要看.length} 顆`,
+      '',
+      '⚠️ 只看總數的話，「辨識到不了」與「語料沒覆蓋」讀起來一樣',
+      '   ——而前者補再多語料也永遠碰不到。',
+    ])
+
     if (process.env.GENERATE_BASELINE) {
       writeBaseline(GUARD, {
         _meta: {
@@ -258,6 +312,12 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     }
 
     const base = loadBaseline<Baseline>(GUARD)
+    expect(要看.map((d) => d.conceptId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
+    expect(孤兒.map((d) => d.conceptId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
+    expect(
+      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      '沒有理由的判定是把「懶得看」寫成「看過了」',
+    ).toHaveLength(0)
     assertRatchet([
       ['確定違規', 違規.length, base.確定違規],
       ['無法確定', 待查.length, base.無法確定],
