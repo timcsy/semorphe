@@ -69,13 +69,35 @@ const GUARD = 'anchor-rot'
 const 判定檔 = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
 
 interface 命中 {
+  /**
+   * 識別碼。
+   *
+   * ⚠️ **第一版用 `檔:行號`，而這是同一個坑的第三次**：
+   * `specs/110` 是「前 80 字元會碰撞」、`specs/113` 是「刪一行讓行號全漂移」，
+   * 而本護欄在 `specs/113` 的**同一天**蓋起來，又寫了一次行號。
+   *
+   * 更糟的是**它掃的是測試檔**——那些檔每一輪都在改，
+   * 所以行號漂移在這裡不是偶爾，是**每一輪**。
+   *
+   * > **識別碼必須識別得出那個東西**——行號識別的是位置，不是東西。
+   * → 同一個處方第三次：**顯示與識別分開**。
+   */
+  鍵: string
   位置: string
   區塊: string
   身分: string
   程式碼: string
 }
 
+/** 內容雜湊——讓識別碼不隨行號漂移。 */
+function 雜湊(s: string): string {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
+  return (h >>> 0).toString(36)
+}
+
 interface 判定 {
+  鍵: string
   位置: string
   判定: '已知答案樣本' | '錨錯了'
   理由: string
@@ -137,7 +159,8 @@ export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<strin
     const 期望值 = mm[2]
     for (const id of ids) {
       if (期望值.includes(`'${id}'`) || 期望值.includes(`"${id}"`)) {
-        out.push({ 位置: `${檔名}:${i + 1}`, 區塊, 身分: id, 程式碼: l.trim().slice(0, 90) })
+        const 碼 = l.trim().slice(0, 90)
+        out.push({ 鍵: `${檔名}#${雜湊(碼)}`, 位置: `${檔名}:${i + 1}`, 區塊, 身分: id, 程式碼: 碼 })
         break
       }
     }
@@ -198,10 +221,10 @@ describe('第三十五條護欄：錨點會爛', () => {
     const 檔s = audit檔()
     const 命中 = 檔s.flatMap((f) => 掃(fs.readFileSync(f, 'utf8'), path.basename(f), ids))
     const 判定s = 讀判定()
-    const 已判定 = new Map(判定s.map((d) => [d.位置, d]))
-    const 要看 = 命中.filter((h) => !已判定.has(h.位置))
-    const 錨錯了 = 命中.filter((h) => 已判定.get(h.位置)?.判定 === '錨錯了')
-    const 孤兒 = 判定s.filter((d) => !命中.some((h) => h.位置 === d.位置))
+    const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
+    const 要看 = 命中.filter((h) => !已判定.has(h.鍵))
+    const 錨錯了 = 命中.filter((h) => 已判定.get(h.鍵)?.判定 === '錨錯了')
+    const 孤兒 = 判定s.filter((d) => !命中.some((h) => h.鍵 === d.鍵))
 
     printReport('錨點會爛（注入／健康檢查錨在缺陷還在不在上）', [
       `掃描   ${檔s.length} 個 audit 檔｜${ids.size} 個真實身分`,
@@ -237,7 +260,7 @@ describe('第三十五條護欄：錨點會爛', () => {
     }
 
     const base = loadBaseline<基線>(GUARD)
-    expect(孤兒.map((d) => d.位置), '判定過期了——底下的程式碼變了').toEqual([])
+    expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了').toEqual([])
     expect(
       判定s.filter((d) => !d.理由 || d.理由.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
