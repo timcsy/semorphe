@@ -85,6 +85,13 @@ function defaultFor(prop: string, conceptId?: string): PropertyValue {
 /** 子槽宣告的型別 → 一個最小的填充節點 */
 function fillerFor(slotType: string): SemanticNode {
   const t = (slotType || '').toLowerCase()
+  // ⚠️ **宣告指名了子節點型別時，就合成那個型別**——不要退回猜測。
+  //
+  // `params` 的子節點是 `param_decl`（結構節點，帶 `{type, name}`）。
+  // 退回 `cpp:literal_number` 的話，合成出來的參數沒有型別也沒有名字，
+  // 於是任何「參數走得過投影嗎」的判定都會拿到垃圾——`specs/105` 的符合性
+  // 護欄就在這裡誤報過一次（`cpp:template_function`）。
+  if (t === 'param_decl') return createNode('param_decl', { type: 'int', name: 'p' })
   if (t.includes('statement') || t.includes('body') || t.includes('block')) {
     return createNode('cpp:var_declare', { name: 'x', type: 'int' })
   }

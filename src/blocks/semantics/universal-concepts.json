@@ -362,13 +362,11 @@
         "name": "name",
         "kind": "literal",
         "default": "f"
-      },
-      {
-        "name": "args",
-        "kind": "literal"
       }
     ],
-    "children": {},
+    "children": {
+      "args": "expressions"
+    },
     "role": "expression",
     "annotations": {
       "debug_step": true
