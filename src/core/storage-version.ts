@@ -12,6 +12,7 @@
  */
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../blocks/block-type-migrations'
+import { 合併掉的身分 } from '../blocks/merged-identities'
 
 /** 目前的存檔格式世代 */
 export const CURRENT_VERSION = 10
@@ -59,40 +60,7 @@ export const REQUIRED_FIELDS = {
 /** 版本 N → N+1 的升級函式 */
 export type Upgrade = (raw: Record<string, unknown>) => Record<string, unknown>
 
-/**
- * 升級路徑註冊表。**目前刻意是空的——沒有需要升級的版本。**
- *
- * 它不是為未來預留的：沒有它，「版本較舊」只剩「拒絕」一條路，而
- * `CURRENT_VERSION` 首次調成 2 的那天，那等於拒絕掉每一位既有使用者的
- * 存檔——**比現況更糟**。它完成的是當下的 `needs-upgrade` 分支。
- *
- * `storage-version.test.ts` 有一支測試釘住「從 1 到 `CURRENT_VERSION` 的
- * 每一步都必須有註冊」。調高版本卻忘了寫升級函式，那支測試會變紅。
- */
-/**
- * 1 → 2：**六對 statement／expression 雙版本合併成六個身分**（階段 6.5 的 B 項）。
- *
- * ## 為什麼這動得起
- *
- * P8「不做向後相容」的**範圍**已於 2026-08-07 釐清為**不含語義詞彙本身**
- * （`knowledge/history/026`）：P8 推導自「投影可重建」，而 componentId 改名動的是
- * **真實**，沒有東西可以重建它。這類變更 MUST 附一次性轉換。
- *
- * **這是那條釐清的第一次真正使用。**
- *
- * ## 只轉語義樹，不轉積木
- *
- * 積木型別是**加法式**保留的（`cpp_increment_expression` 仍然有效，只是現在對應到
- * `cpp_increment`）。轉積木型別是不必要的，而不必要的轉換是額外的風險面。
- */
-const 合併掉的身分: Record<string, string> = {
-  func_call_expr: 'func_call',
-  cpp_method_call_expression: 'cpp:method_call',
-  cpp_increment_expr: 'cpp:increment',
-  cpp_compound_assign_expr: 'cpp:compound_assign',
-  var_declare_expr: 'var_declare',
-  cpp_scanf_expr: 'cpp:scanf',
-}
+
 
 /**
  * 就地改寫語義樹裡的舊身分。**只改認得的，其餘原樣通過。**

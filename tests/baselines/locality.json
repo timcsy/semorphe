@@ -259,8 +259,8 @@
       "dirs": 3
     },
     "cpp:increment": {
-      "files": 5,
-      "dirs": 4
+      "files": 4,
+      "dirs": 3
     },
     "cpp:input": {
       "files": 7,
@@ -383,8 +383,8 @@
       "dirs": 1
     },
     "cpp:method_call": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 3
     },
     "cpp:method_override": {
       "files": 3,

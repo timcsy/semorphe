@@ -53,7 +53,11 @@ export function classifyFile(rel: string): FileClass {
   // 不加這一條的話，遷移一落地，就近性會回報 168 顆元件擴散超標，
   // 而那與 E 項踩過的是同一個誤判（`history/029`：把清單算成實作擴散）。
   if (/\/(topics|templates)\//.test(rel) || /toolbox-categories\.ts$/.test(rel)) return '清單'
-  if (/id-migrations\.ts$/.test(rel)) return '清單'
+  // 同理：`merged-identities.ts`（v1→v2 合併掉的身分）也是凍結名冊。
+  // ⚠️ 它 2026-08-11 之前住在 `storage-version.ts` 裡——**一張凍結的名冊
+  // 住在機制檔裡，會讓它列到的每一顆元件都多背一筆擴散**，
+  // 而那些元件一行實作都不在那裡。搬出來之後這一條才寫得出來。
+  if (/(id-migrations|merged-identities)\.ts$/.test(rel)) return '清單'
   if (/^tests\/(baselines|assets|reports)\//.test(rel)) return '清冊'
   if (/\.test\.ts$/.test(rel)) return '測試'
   return '實作'
