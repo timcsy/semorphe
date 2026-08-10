@@ -1,0 +1,39 @@
+{
+  "conceptId": "cpp:forward_decl",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "return_type",
+      "kind": "type_expr",
+      "default": "void"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {
+    "params": "param_decl"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建前置宣告`）而不是判別——參數列的解析是 C++ 語法的知識，留在共用檔；這顆元件知道的是「這種形狀叫什麼、參數放哪個子節點」。**判別與建構屬於元件；語法的解析屬於語言。**"
+  }
+}

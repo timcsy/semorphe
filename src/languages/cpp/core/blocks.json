@@ -658,34 +658,6 @@
     }
   },
   {
-    "id": "cpp_forward_decl",
-    "conceptId": "cpp:forward_decl",
-    "language": "cpp",
-    "category": "functions",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_forward_decl"
-    },
-    "renderMapping": {
-      "fields": {
-        "RETURN_TYPE": "return_type",
-        "NAME": "name"
-      },
-      "inputs": {},
-      "statementInputs": {},
-      "dynamicRules": [
-        {
-          "countSource": "paramCount",
-          "childSlot": "params",
-          "childConcept": "param_decl",
-          "childFields": {
-            "TYPE_{i}": "type"
-          }
-        }
-      ]
-    }
-  },
-  {
     "id": "cpp_builtin_constant",
     "conceptId": "cpp:builtin_constant",
     "language": "cpp",

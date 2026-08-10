@@ -11,6 +11,7 @@ import { plainTypeConcept } from '../../../../core/component/container-templates
 import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
+import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -624,10 +625,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           }
         }
       }
-      return createNode('cpp:forward_decl', {
-        return_type: type,
-        name: nameNode?.text ?? 'f',
-      }, { params: paramChildren })
+      return 建前置宣告(type, nameNode?.text ?? 'f', paramChildren)
     }
 
     const declarators = node.namedChildren.filter(c =>

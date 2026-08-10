@@ -356,36 +356,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:forward_decl",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "return_type",
-        "kind": "type_expr",
-        "default": "void"
-      },
-      {
-        "name": "name",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {
-      "params": "param_decl"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    },
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
     "conceptId": "cpp:builtin_constant",
     "layer": "lang-core",
     "abstractConcept": null,

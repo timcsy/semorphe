@@ -1,0 +1,4 @@
+{
+  "C_FORWARD_DECL_MSG0": "函式宣告 %1",
+  "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）"
+}

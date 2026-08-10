@@ -75,21 +75,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name};\n`
   })
 
-  g.set('cpp:forward_decl', (node, ctx) => {
-    const returnType = node.properties.return_type ?? 'void'
-    const name = node.properties.name ?? ''
-    const paramChildren = node.children.params ?? []
-    const paramStr = paramChildren.map(p => {
-      const t = String(p.properties.type ?? 'int')
-      const n = String(p.properties.name ?? '')
-      if (t.endsWith('[]')) {
-        const baseType = t.slice(0, -2)
-        return n ? `${baseType} ${n}[]` : `${baseType}[]`
-      }
-      return n ? `${t} ${n}` : t
-    }).join(', ')
-    return `${indent(ctx)}${returnType} ${name}(${paramStr});\n`
-  })
+
 
 
 

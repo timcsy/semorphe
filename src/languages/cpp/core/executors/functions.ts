@@ -17,11 +17,9 @@ class ReturnSignal {
 export { ReturnSignal }
 
 export function registerFunctionsCoreExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  _register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:forward_decl', async () => {
-    // no-op: forward function declaration
-  })
+
 
   // ⚠️ **這裡原本有四顆 OOP 概念的空操作**（`struct_at_member`／`struct_at_ptr`／
   // `method_call`／`template_function`），註解寫著「no OOP runtime」。
