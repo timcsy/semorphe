@@ -116,7 +116,7 @@ describe('概念身分與五路', () => {
     expect(decls[0].children?.values ?? []).toHaveLength(0)
   })
 
-  it.fails('（已知缺陷）pair 的初始值仍然掉——**掉得對稱，所以來回轉換是綠的**', () => {
+  it.fails('[BLOCKED:cpp:pair_declare] pair 的初始值仍然掉——**掉得對稱，所以來回轉換是綠的**', () => {
     // `pair<int,string> p = make_pair(42, "hello")` 的初始值辨識時就掉了。
     //
     // ⚠️ 這是**被這次改動照出來的既有缺陷**，不是新的：辨識掉、產生也掉，

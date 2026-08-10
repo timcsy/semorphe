@@ -44,7 +44,7 @@ export interface Tag {
 export interface DisabledEntry {
   file: string
   line: number
-  kind: 'todo' | 'skip'
+  kind: 'todo' | 'skip' | 'fails'
   /** 區塊停用會覆蓋多個測試（FR-035） */
   scope: 'test' | 'describe'
   /**
@@ -62,9 +62,23 @@ export interface DisabledEntry {
   tag: Tag | null
 }
 
-/** `it.todo('...')` / `it.skip('...')` / `describe.skip('...')` / `test.todo(...)` */
+/**
+ * `it.todo('...')` / `it.skip('...')` / `describe.skip('...')` / `it.fails('...')`
+ *
+ * ## ⚠️ `fails` 是 2026-08-10 才加進來的，而在那之前它是**隱形的**
+ *
+ * `build-guardrail` 明確推薦用 `it.fails` 釘住已知缺陷——它會跑，
+ * 缺陷還在時綠、修好時紅並提醒拔釘子，比 `it.skip` 好。
+ *
+ * **而缺陷帳看不到它。** 於是「用推薦的方式釘住缺陷」＝「那筆缺陷從帳上消失」
+ * ——一個獎勵錯誤行為的量測。
+ *
+ * 這是同一個月裡第三個「低報到零」的盲區（前兩個：掃描範圍不含
+ * `src/components/`、跨行寫的停用宣告）。三個的形狀相同：
+ * **一筆看不見的缺陷，與一筆不存在的缺陷，在報表上長得一模一樣。**
+ */
 const DISABLED_RE =
-  /\b(it|test|describe)\s*\.\s*(todo|skip)\s*\(\s*(['"`])([\s\S]*?)\3/
+  /\b(it|test|describe)\s*\.\s*(todo|skip|fails)\s*\(\s*(['"`])([\s\S]*?)\3/
 
 const TAG_RE = /^\s*\[(BLOCKED|UNSUPPORTED|TOMBSTONE|DEADSKIP|UNVERIFIED)(?::([^\]]+))?\]/
 
@@ -90,7 +104,7 @@ export function scanDisabledInFile(relPath: string): DisabledEntry[] {
     out.push({
       file: relPath,
       line: idx + 1,
-      kind: kind as 'todo' | 'skip',
+      kind: kind as 'todo' | 'skip' | 'fails',
       scope: fn === 'describe' ? 'describe' : 'test',
       title,
       tag: parseTag(title),

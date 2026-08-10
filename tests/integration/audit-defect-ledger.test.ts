@@ -93,7 +93,8 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
     lines.push(
       `停用項目：${entries.length} 筆` +
         `（todo ${entries.filter((e) => e.kind === 'todo').length}｜` +
-        `skip ${entries.filter((e) => e.kind === 'skip').length}；` +
+        `skip ${entries.filter((e) => e.kind === 'skip').length}｜` +
+        `fails ${entries.filter((e) => e.kind === 'fails').length}；` +
         `其中 describe 區塊 ${entries.filter((e) => e.scope === 'describe').length} 個——一個區塊會蓋掉多個測試）`,
     )
     lines.push('')
