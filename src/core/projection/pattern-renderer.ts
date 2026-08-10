@@ -18,6 +18,7 @@ interface RenderSpec {
   mapping: RenderMapping
 }
 
+import { serializeChildren } from './children-as-field'
 import { nextBlockId as _nextBlockId, resetBlockIdCounter } from './common-mappings'
 
 function nextBlockId(): string {
@@ -78,6 +79,7 @@ export class PatternRenderer {
             expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
+            childrenAsField: explicit.childrenAsField,
           }
         : derived
       // ⚠️ **第一個宣告勝出，後來的不覆寫。**
@@ -201,6 +203,14 @@ export class PatternRenderer {
     // Process dynamicRules: render dynamic children into extraState + inputs/fields
     if (形態映射.dynamicRules) {
       this.renderDynamicRules(node, 形態映射.dynamicRules, block, ctx)
+    }
+
+    // childrenAsField：把一個接點的子節點序列化進一個文字欄位。
+    // ⚠️ 零個子節點時**不寫欄位**（`serializeChildren` 回傳 null）——
+    // 寫一個空欄位與不寫，在來回比對上是不同的東西。
+    for (const spec of 形態映射.childrenAsField ?? []) {
+      const text = serializeChildren(node.children[spec.childSlot] ?? [], spec)
+      if (text !== null) block.fields[spec.field] = text
     }
 
     // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty

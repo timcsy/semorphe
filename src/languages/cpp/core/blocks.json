@@ -2163,7 +2163,18 @@
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {
@@ -3241,7 +3252,18 @@
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {
@@ -3327,7 +3349,18 @@
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {
@@ -3371,7 +3404,18 @@
       "fields": {
         "NAME": "name",
         "RETURN_TYPE": "return_type"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {
@@ -3421,7 +3465,18 @@
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {
@@ -3558,7 +3613,18 @@
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
     }
   },
   {

@@ -1,4 +1,5 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../types'
+import { parseToChildren } from './children-as-field'
 import { createNode } from '../semantic-tree'
 import { resolvePath, resolvePattern } from './common-mappings'
 
@@ -63,6 +64,7 @@ export class PatternExtractor {
             expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
+            childrenAsField: explicit.childrenAsField,
           }
         : derived
       this.extractSpecs.set(blockType, { conceptId, mapping })
@@ -122,6 +124,17 @@ export class PatternExtractor {
       if (inputData?.block) {
         children[semChild] = this.extractStatementChain(inputData.block)
       }
+    }
+
+    // childrenAsField：把一個文字欄位解析回子節點。
+    // ⚠️ 欄位空白時**不建立**子節點陣列——`{}` 與 `{params: []}` 不同。
+    // ⚠️ 迴圈變數不叫 `spec`——外層已經有一個 `spec`（BlockSpec），
+    // 遮蔽之後讀的人分不出 `spec.mapping` 是哪一個。
+    for (const caf of spec.mapping.childrenAsField ?? []) {
+      const text = String(block.fields?.[caf.field] ?? '').trim()
+      if (!text) continue
+      const kids = parseToChildren(text, caf)
+      if (kids.length) children[caf.childSlot] = kids
     }
 
     // Process dynamicRules from extraState

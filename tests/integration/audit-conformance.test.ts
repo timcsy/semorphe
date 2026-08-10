@@ -145,6 +145,10 @@ export function 判定符合性(
 }
 
 
+interface 形態 { conceptId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
+const formsOf = (id: string): 形態[] =>
+  (allCppProjections() as never as 形態[]).filter((f) => f.conceptId === id)
+
 let extractor: PatternExtractor
 let 快取: 判定[] | null = null
 
@@ -161,6 +165,17 @@ function 量一次(): 判定[] {
     } catch {
       out.push({ conceptId: c.conceptId, 桶: '無法確定', 缺: 接點宣告, 理由: '合成不出最小節點' })
       continue
+    }
+    // ⚠️ **合成器不知道某個接點該放什麼型別的子節點**——它按 `allowed`
+    // （`'expression'`）挑一顆，於是 `params` 會拿到 `cpp:literal_number`。
+    // 那不是違規，是合成產物：一顆沒有 `type`／`name` 屬性的節點當然序列化不出東西。
+    //
+    // 而**宣告裡就寫著該放什麼**（`childrenAsField.childConcept`）。讀它，不要猜。
+    for (const caf of formsOf(c.conceptId).flatMap((f) => f.renderMapping?.childrenAsField ?? [])) {
+      if (!(node.children[caf.childSlot] ?? []).length) continue
+      node.children[caf.childSlot] = [
+        createNode(caf.childConcept, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
+      ]
     }
     const 放進去 = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
     let 回來: string[] | null = null
@@ -287,6 +302,28 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
 
     it('★ 沒有接點的元件不得被判成違規', () => {
       expect(判定符合性('cpp:fake', [], []).桶).toBe('安全')
+    })
+
+    // ── FR-003：第七顆忘了寫宣告，必須被抓到 ─────────────────
+    //
+    // 這一則是 spec 105 最容易漏的一條。六顆各寫一行修好了眼前的問題，
+    // 而**下一個加元件的人不會知道要寫那一行**——沒有這條檢查，
+    // 這次的修法只治了六顆。
+    it('★ 有 params 接點但沒宣告 childrenAsField 的元件必須被報為違規', () => {
+      // 合成一顆「有接點、沒宣告」的元件：它的參數走不過投影，
+      // 而**沉默不得等於通過**。
+      const 沒宣告 = 判定符合性('cpp:seventh', ['params'], ['body'])
+      expect(沒宣告.桶).toBe('確定違規')
+      expect(沒宣告.缺).toEqual(['params'])
+    })
+
+    it('★ 已宣告的六顆，宣告確實存在（不是靠測試放水）', () => {
+      // 釘住宣告本身——有人刪掉某一顆的 `childrenAsField`，這裡先紅，
+      // 而不是等到來回轉換的樣本紅。兩者都會紅，但這一條**指得出是哪一顆**。
+      const 應有 = ['cpp:lambda', 'cpp:constructor', 'cpp:method_virtual',
+        'cpp:method_virtual_pure', 'cpp:method_override', 'cpp:template_function']
+      const 缺宣告 = 應有.filter((id) => !formsOf(id).some((f) => (f.renderMapping?.childrenAsField ?? []).length))
+      expect(缺宣告, '這些元件的 params 沒有形態映射，參數會靜默消失').toEqual([])
     })
   })
 })

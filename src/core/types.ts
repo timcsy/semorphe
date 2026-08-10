@@ -291,7 +291,22 @@ export interface RenderMapping {
   dynamicRules?: DynamicRule[]
   /** Extra state flags: set extraState[key] = true when children[childSlot] is non-empty */
   extraStateFlags?: Record<string, string>
+  /**
+   * 把一個接點的子節點序列化進**一個文字欄位**，並解析回來。
+   *
+   * 與 `dynamicRules` 是**兩種不同的形態**——那個是「每項一組欄位」
+   * （`u_func_def` 的 `TYPE_{i}`／`PARAM_{i}`），這個是「全部擠進一個欄位」
+   * （`c_lambda` 的 `PARAMS`）。並列在同一層，讓「這顆元件的參數長什麼樣」
+   * 一眼看得出來。
+   *
+   * 見 `src/core/projection/children-as-field.ts` 的檔頭（含**升級成結構化
+   * 插槽的三個訊號**）。
+   */
+  childrenAsField?: ChildrenAsField[]
 }
+
+import type { ChildrenAsField } from './projection/children-as-field'
+export type { ChildrenAsField }
 
 export interface DynamicInputDef {
   semanticChild: string
