@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "guard": "declared-slots",
+    "measuredAt": "2026-08-10",
+    "rule": "跑 lift 在真實語料上（掃測試檔裡的 C++ 片段），比對「實際產出的非空接點」與「concepts.json 宣告的 children 鍵」。⚠️ **是實測不是靜態掃描**——靜態掃 `createNode(` 看得到產生了什麼概念，看不到它被掛在**哪個接點**下，而後者才是這條護欄要問的。語料沒碰到的元件歸「無法確定」，**不計入安全**——那個數字是這條護欄的誠實度指標。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ **用棘輪不用硬性零**（build-guardrail 6.8 的兩個問題分開答）：「留一筆規範還成立嗎」→ 不成立，宣告是唯一真相，留一個沒宣告的接點那句話就是假的；「修一筆要付多少」→ 加一個接點宣告會讓**第二十九條護欄開始檢查它**，可能開出新違規，**每一筆都要驗行為**，所以慢慢還。⚠️ 修的時候要預期 #29 的數字上升——那是揭露不是退步，而且正是要的。"
+  },
+  "確定違規": 16,
+  "無法確定": 8,
+  "違規清單": [
+    "cpp:array_declare: values",
+    "cpp:class_def: protected",
+    "cpp:forward_decl: params",
+    "cpp:func_call: args",
+    "cpp:func_def: params",
+    "cpp:if: else_body",
+    "cpp:ifstream_declare: initializer",
+    "cpp:input: values",
+    "cpp:input_formatted: args",
+    "cpp:method_call: args",
+    "cpp:ofstream_declare: initializer",
+    "cpp:print_formatted: args",
+    "cpp:string_append_char: value",
+    "cpp:string_declare: initializer",
+    "cpp:string_find: from",
+    "cpp:var_declare: declarators"
+  ]
+}
