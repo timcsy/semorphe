@@ -141,13 +141,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${ind}template <typename ${t}>\n${ind}${returnType} ${funcName}(${paramStr}) {\n${bodyCode}${ind}}\n`
   })
 
-  g.set('cpp:array_2d_declare', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'arr'
-    const rows = node.properties.rows ?? '3'
-    const cols = node.properties.cols ?? '4'
-    return `${indent(ctx)}${type} ${name}[${rows}][${cols}];\n`
-  })
+
 
 
 

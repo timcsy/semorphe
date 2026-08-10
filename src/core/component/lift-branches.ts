@@ -139,3 +139,29 @@ export function tryAstBranches(astType: string, node: AstNode, ctx: LiftContext)
 export function astBranchSources(): { astType: string; 來源: string }[] {
   return [...AST分支.entries()].flatMap(([t, a]) => a.map((b) => ({ astType: t, 來源: b.來源 })))
 }
+
+/**
+ * **宣告子（declarator）的分支**——比 `AstBranch` 多一個 `type`
+ *
+ * `int arr[10]` 的型別 `int` 與宣告子 `arr[10]` 在 AST 上是**兄弟節點**，
+ * 而共用的 `liftSingleDeclarator` 已經把它們配好了。分支拿不到父節點，
+ * 所以 `type` 要**當參數傳進來**。
+ *
+ * > **一個分支需要的脈絡，如果它自己看不到，就必須由呼叫端給。**
+ * > 讓分支自己去爬父節點是另一條會漂移的路——它要假設 AST 的形狀。
+ */
+export type DeclaratorBranch = (decl: AstNode, type: string, ctx: LiftContext) => SemanticNode | null
+
+const 宣告子分支: { 來源: string; fn: DeclaratorBranch }[] = []
+
+export function registerDeclaratorBranch(來源: string, fn: DeclaratorBranch): void {
+  宣告子分支.push({ 來源, fn })
+}
+
+export function tryDeclaratorBranches(decl: AstNode, type: string, ctx: LiftContext): SemanticNode | null {
+  for (const b of 宣告子分支) {
+    const n = b.fn(decl, type, ctx)
+    if (n) return n
+  }
+  return null
+}

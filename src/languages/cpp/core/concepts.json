@@ -686,40 +686,6 @@
     }
   },
   {
-    "conceptId": "cpp:array_2d_declare",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "double",
-          "char"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "arr"
-      },
-      {
-        "name": "rows",
-        "kind": "count",
-        "default": "3"
-      },
-      {
-        "name": "cols",
-        "kind": "count",
-        "default": "4"
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:constructor",
     "layer": "lang-core",
     "abstractConcept": null,

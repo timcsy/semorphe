@@ -8,6 +8,7 @@ import { conceptForContainerTemplate } from '../../../../core/component/containe
 // 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
 import { componentConcepts } from '../../../../core/component/registry'
 import { plainTypeConcept } from '../../../../core/component/container-templates'
+import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -94,14 +95,9 @@ function degrade(node: SemanticNode, reason: string): SemanticNode {
 }
 
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
-  // 2D Array declarator: int arr[3][4] — nested array_declarator
-  if (decl.type === 'array_declarator' && decl.namedChildren[0]?.type === 'array_declarator') {
-    const innerArr = decl.namedChildren[0]
-    const name = innerArr.namedChildren[0]?.text ?? 'arr'
-    const rows = innerArr.namedChildren[1]?.text ?? '0'
-    const cols = decl.namedChildren[1]?.text ?? '0'
-    return createNode('cpp:array_2d_declare', { type, name, rows, cols })
-  }
+  // **膠囊自己的判別先問**——「宣告子長成這樣時是我」是元件的知識。
+  const 認領 = tryDeclaratorBranches(decl, type, ctx)
+  if (認領) return 認領
 
   // Array declarator: int arr[10]
   if (decl.type === 'array_declarator') {
