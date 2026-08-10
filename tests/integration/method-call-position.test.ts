@@ -84,7 +84,7 @@ describe('方法呼叫：位置決定形態，不決定身分', () => {
 
   it('★ 而語義樹裡**不存在**運算式版的身分', () => {
     const c = concepts('int main(){ MyObj x; int a = 1 + x.getThing(); }')
-    expect(c, 'B 項合併掉的身分又出現了').not.toContain('cpp_method_call_expr')
+    expect(c, 'B 項合併掉的身分又出現了').not.toContain('cpp_method_call_expression')
   })
 
   it('★ 敘述位置渲染成敘述積木', () => {
@@ -98,7 +98,7 @@ describe('方法呼叫：位置決定形態，不決定身分', () => {
     expect(
       型別,
       '運算式位置沒拿到運算式形態——那會讓賦值的右邊掉進 raw_expression',
-    ).toContain('cpp_method_call_expr')
+    ).toContain('cpp_method_call_expression')
   })
 
   it('★ 已知的容器／字串方法不受影響——它們有自己的專屬身分', () => {

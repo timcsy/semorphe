@@ -83,8 +83,12 @@ describe('ToolboxBuilder', () => {
     const toolbox = result as { contents: Array<{ name: string; contents: Array<{ type: string }> }> }
     const ioCat = toolbox.contents.find(c => c.name.includes('輸入') || c.name.includes('I/O') || c.name.includes('輸出'))
     if (ioCat && ioCat.contents.length > 1) {
+      // ⚠️ 原本寫 `firstType.startsWith('c_')`——**又是拿形狀當判斷**。
+      // 116 之後沒有型別以 `c_` 開頭，這一句會永遠是 false。
+      // 要問的是「它是不是語言專屬的」，而那寫在概念宣告的 `layer` 上。
       const firstType = ioCat.contents[0]?.type
-      expect(firstType?.startsWith('c_')).toBe(true)
+      const layer = firstType ? reg.getByBlockType(firstType)?.conceptMapping?.layer : undefined
+      expect(layer, `cstdio 偏好時第一顆該是語言專屬的，實得 ${firstType}`).not.toBe('universal')
     }
   })
 
@@ -103,7 +107,7 @@ describe('ToolboxBuilder', () => {
     expect(Array.isArray(toolbox.contents)).toBe(true)
   })
 
-  it('should include u_input_expr when input concept is visible', () => {
+  it('should include cpp_input_expression when input concept is visible', () => {
     const reg = createRegistry()
     const allConcepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
     const result = buildToolbox({
@@ -116,7 +120,7 @@ describe('ToolboxBuilder', () => {
     })
     const toolbox = result as { contents: Array<{ contents: Array<{ type: string }> }> }
     const allTypes = toolbox.contents.flatMap(c => c.contents.map(b => b.type))
-    expect(allTypes).toContain('u_input_expr')
+    expect(allTypes).toContain('cpp_input_expression')
   })
 
   it('toolbox should be monotonically inclusive: root ⊆ root+L1 ⊆ all', () => {

@@ -54,7 +54,7 @@ describe('if-else-if round-trip', () => {
     const state = renderToBlocklyState(result!)
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_if')
+    expect(block.type).toBe('cpp_if')
     expect(block.inputs['ELSEIF_CONDITION_0']).toBeDefined()
     expect(block.inputs['ELSEIF_THEN_0']).toBeDefined()
     expect(block.inputs['ELSE']).toBeDefined()

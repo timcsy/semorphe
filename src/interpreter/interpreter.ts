@@ -91,7 +91,7 @@ export class SemanticInterpreter implements ExecutionContext {
 
     // cctype 的四個字元分類函式已搬進 `languages/cpp/std/cctype/executors.ts`。
     //
-    // ⚠️ 它們原本寫成**裸的物件鍵**（`cpp_isalpha:` 而非 `'cpp_isalpha'`），
+    // ⚠️ 它們原本寫成**裸的物件鍵**（`cpp_char_is_alpha:` 而非 `'cpp_char_is_alpha'`），
     // 而中立性護欄只比對引號字串字面——**一筆都沒數到**。那條護欄的「0」
     // 因此不完整；同一維度的不同書寫形式也會漏掉。
 

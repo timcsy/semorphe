@@ -8,7 +8,7 @@
  *
  * 專案記憶裡點名過這個坑：
  *
- * > `universal.json` 曾經把 `u_if` 的 input 命名為 `COND`，而動態註冊用的是
+ * > `universal.json` 曾經把 `cpp_if` 的 input 命名為 `COND`，而動態註冊用的是
  * > `CONDITION`。PatternRenderer 從 JSON 自動推導 → 產出錯的 input 名 →
  * > **只在切換積木風格（序列化→反序列化）時才炸**。
  *
@@ -217,7 +217,7 @@ if (process.env.GENERATE_BASELINE) {
         RATCHET_NOTE +
         ' ' +
         SELF_FALSIFICATION +
-        ' ⚠️ 2026-08-07 顯式**上調** 32 → 33：`u_input_expr` 補上 JSON 投影。' +
+        ' ⚠️ 2026-08-07 顯式**上調** 32 → 33：`cpp_input_expression` 補上 JSON 投影。' +
         '五顆 `_expr` 積木裡只有它沒有——它活在命令式註冊裡而登錄表看不見它，' +
         '於是工具箱導出導不到它。這一格從「登錄表看不見」換成「與其餘四顆同樣的已知雙重定義」，' +
         '是把一個隱形的洞換成一筆記在帳上的債。**上調棘輪不是常態**，' +

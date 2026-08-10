@@ -23,7 +23,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     setupTestRenderer()
   })
 
-  it('u_if rendered state uses CONDITION and THEN (not COND/BODY)', () => {
+  it('cpp_if rendered state uses CONDITION and THEN (not COND/BODY)', () => {
     const ifStmt = createNode('cpp:if', {}, {
       condition: [createNode('cpp:var_ref', { name: 'x' })],
       then_body: [createNode('cpp:break', {})],
@@ -31,7 +31,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(ifStmt))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_if')
+    expect(block.type).toBe('cpp_if')
     // Must use the same names as block-input-names.ts (derived from JSON)
     expect(block.inputs[IF_INPUTS.value[0]]).toBeDefined()     // CONDITION
     expect(block.inputs[IF_INPUTS.statement[0]]).toBeDefined()  // THEN
@@ -40,7 +40,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     expect(block.inputs['BODY']).toBeUndefined()
   })
 
-  it('u_if with else uses CONDITION, THEN, ELSE', () => {
+  it('cpp_if with else uses CONDITION, THEN, ELSE', () => {
     const ifElse = createNode('cpp:if', {}, {
       condition: [createNode('cpp:compare', { operator: '>' }, {
         left: [createNode('cpp:var_ref', { name: 'a' })],
@@ -56,14 +56,14 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(ifElse))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_if')
+    expect(block.type).toBe('cpp_if')
     expect(block.inputs[IF_INPUTS.value[0]]).toBeDefined()     // CONDITION
     expect(block.inputs[IF_INPUTS.statement[0]]).toBeDefined()  // THEN
     expect(block.inputs['ELSE']).toBeDefined()
     expect(block.inputs['COND']).toBeUndefined()
   })
 
-  it('u_while_loop rendered state uses CONDITION and BODY', () => {
+  it('cpp_loop_while rendered state uses CONDITION and BODY', () => {
     const whileStmt = createNode('cpp:loop_while', {}, {
       condition: [createNode('cpp:var_ref', { name: 'running' })],
       body: [createNode('cpp:break', {})],
@@ -71,13 +71,13 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(whileStmt))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_while_loop')
+    expect(block.type).toBe('cpp_loop_while')
     expect(block.inputs[WHILE_INPUTS.value[0]]).toBeDefined()     // CONDITION
     expect(block.inputs[WHILE_INPUTS.statement[0]]).toBeDefined() // BODY
     expect(block.inputs['COND']).toBeUndefined()
   })
 
-  it('u_count_loop rendered state uses FROM, TO, BODY', () => {
+  it('cpp_loop_count rendered state uses FROM, TO, BODY', () => {
     const countLoop = createNode('cpp:loop_count', { var_name: 'i' }, {
       from: [createNode('cpp:literal_number', { value: '0' })],
       to: [createNode('cpp:literal_number', { value: '10' })],
@@ -86,7 +86,7 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(countLoop))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_count_loop')
+    expect(block.type).toBe('cpp_loop_count')
     expect(block.inputs[COUNT_LOOP_INPUTS.value[0]]).toBeDefined()     // FROM
     expect(block.inputs[COUNT_LOOP_INPUTS.value[1]]).toBeDefined()     // TO
     expect(block.inputs[COUNT_LOOP_INPUTS.statement[0]]).toBeDefined() // BODY
@@ -105,17 +105,17 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(nested))
     const whileBlock = state.blocks.blocks[0]
 
-    expect(whileBlock.type).toBe('u_while_loop')
+    expect(whileBlock.type).toBe('cpp_loop_while')
     expect(whileBlock.inputs[WHILE_INPUTS.value[0]]).toBeDefined()
 
     const ifBlock = whileBlock.inputs[WHILE_INPUTS.statement[0]].block
-    expect(ifBlock.type).toBe('u_if')
+    expect(ifBlock.type).toBe('cpp_if')
     expect(ifBlock.inputs[IF_INPUTS.value[0]]).toBeDefined()
     expect(ifBlock.inputs[IF_INPUTS.statement[0]]).toBeDefined()
     expect(ifBlock.inputs['COND']).toBeUndefined()
   })
 
-  it('if-else-if-else chain flattened into single u_if with ELSEIF inputs', () => {
+  it('if-else-if-else chain flattened into single cpp_if with ELSEIF inputs', () => {
     // Semantic tree: nested if chain (as produced by lifter)
     // if (a > 0) { x = 1 } else if (b > 0) { x = 2 } else if (c > 0) { x = 3 } else { x = 4 }
     const ifChain = createNode('cpp:if', {}, {
@@ -152,11 +152,11 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(ifChain))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_if')
+    expect(block.type).toBe('cpp_if')
     // Primary condition and body
     expect(block.inputs['CONDITION']).toBeDefined()
     expect(block.inputs['THEN']).toBeDefined()
-    // Flattened else-if inputs (not nested u_if blocks)
+    // Flattened else-if inputs (not nested cpp_if blocks)
     expect(block.inputs['ELSEIF_CONDITION_0']).toBeDefined()
     expect(block.inputs['ELSEIF_THEN_0']).toBeDefined()
     expect(block.inputs['ELSEIF_CONDITION_1']).toBeDefined()
@@ -165,8 +165,8 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     expect(block.inputs['ELSE']).toBeDefined()
     // extraState should reflect the structure
     expect(block.extraState).toEqual({ elseifCount: 2, hasElse: true })
-    // Should NOT have nested u_if in ELSE
-    expect(block.inputs['ELSE'].block.type).not.toBe('u_if')
+    // Should NOT have nested cpp_if in ELSE
+    expect(block.inputs['ELSE'].block.type).not.toBe('cpp_if')
   })
 
   it('if-else-if without final else', () => {
@@ -182,14 +182,14 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(ifChain))
     const block = state.blocks.blocks[0]
 
-    expect(block.type).toBe('u_if')
+    expect(block.type).toBe('cpp_if')
     expect(block.inputs['ELSEIF_CONDITION_0']).toBeDefined()
     expect(block.inputs['ELSEIF_THEN_0']).toBeDefined()
     expect(block.inputs['ELSE']).toBeUndefined()
     expect(block.extraState).toEqual({ elseifCount: 1, hasElse: false })
   })
 
-  it('u_negate rendered state has VALUE input with child expression', () => {
+  it('cpp_negate rendered state has VALUE input with child expression', () => {
     const negateExpr = createNode('cpp:negate', {}, {
       value: [createNode('cpp:var_ref', { name: 'b' })],
     })
@@ -199,15 +199,15 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const state = renderToBlocklyState(makeProgram(assign))
     const assignBlock = state.blocks.blocks[0]
 
-    expect(assignBlock.type).toBe('u_var_assign')
+    expect(assignBlock.type).toBe('cpp_var_assign')
     // The negate block should be in the VALUE input of the assignment
     const valueInput = assignBlock.inputs['VALUE']
     expect(valueInput).toBeDefined()
     const negateBlock = valueInput.block
-    expect(negateBlock.type).toBe('u_negate')
+    expect(negateBlock.type).toBe('cpp_negate')
     // The negate block must have a VALUE input containing var_ref(b)
     expect(negateBlock.inputs['VALUE']).toBeDefined()
     expect(negateBlock.inputs['VALUE'].block).toBeDefined()
-    expect(negateBlock.inputs['VALUE'].block.type).toBe('u_var_ref')
+    expect(negateBlock.inputs['VALUE'].block.type).toBe('cpp_var_ref')
   })
 })

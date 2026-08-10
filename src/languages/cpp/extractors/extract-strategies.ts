@@ -11,7 +11,7 @@ import type { PatternExtractor, BlockState, ExtractContext } from '../../../core
  */
 export function registerCppExtractStrategies(extractor: PatternExtractor): void {
   // ── Variable declarations (complex multi-variable logic) ──
-  extractor.registerExtractStrategy('u_var_declare', (block: BlockState, ctx: ExtractContext) => {
+  extractor.registerExtractStrategy('cpp_var_declare', (block: BlockState, ctx: ExtractContext) => {
     const type = (block.fields.TYPE as string) ?? 'int'
     const declarators: SemanticNode[] = []
     let i = 0
@@ -67,8 +67,8 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       else_body: elseBody,
     })
   }
-  extractor.registerExtractStrategy('u_if', extractIf)
-  extractor.registerExtractStrategy('u_if_else', extractIf)
+  extractor.registerExtractStrategy('cpp_if', extractIf)
+  extractor.registerExtractStrategy('cpp_if_else', extractIf)
 
   // ── I/O (input with select mode fallback) ──
   const extractInput = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
@@ -98,11 +98,11 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       values: valueNodes,
     })
   }
-  extractor.registerExtractStrategy('u_input', extractInput)
-  extractor.registerExtractStrategy('u_input_expr', extractInput)
+  extractor.registerExtractStrategy('cpp_input', extractInput)
+  extractor.registerExtractStrategy('cpp_input_expression', extractInput)
 
   // ── Doc comment (flat property model) ──
-  extractor.registerExtractStrategy('c_comment_doc', (block: BlockState) => {
+  extractor.registerExtractStrategy('cpp_doc_comment', (block: BlockState) => {
     const props: Record<string, string> = { brief: (block.fields.BRIEF as string) ?? '' }
     let i = 0
     while (true) {
@@ -128,9 +128,9 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   // **而這一條生產路徑被留下來了**，兩天沒有人發現。存檔轉換救不了它：
   // 轉換只在**載入**時跑，而這裡是使用者拖積木**新產生**的節點。
   //
-  // 積木型別 `c_var_declare_expr` **不動**——那是形態（`form: { axis: 'role' }`），
+  // 積木型別 `cpp_var_declare_expression` **不動**——那是形態（`form: { axis: 'role' }`），
   // 形態與身分本來就該分開。
-  extractor.registerExtractStrategy('c_var_declare_expr', (block: BlockState, ctx: ExtractContext) => {
+  extractor.registerExtractStrategy('cpp_var_declare_expression', (block: BlockState, ctx: ExtractContext) => {
     const type = (block.fields.TYPE as string) ?? 'int'
     const name = (block.fields.NAME_0 as string) ?? 'i'
     const initInput = block.inputs.INIT_0

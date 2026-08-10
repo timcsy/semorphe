@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_increment",
+    "id": "cpp_increment",
     "conceptId": "cpp:increment",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_increment",
+      "type": "cpp_increment",
       "message0": "%{BKY_C_INCREMENT_MSG0}",
       "args0": [
         {
@@ -65,7 +65,7 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "c_increment_expr",
+      "expressionCounterpart": "cpp_increment_expression",
       "extraStateFlags": {
         "hasIndex": "index"
       },
@@ -80,13 +80,13 @@
     }
   },
   {
-    "id": "c_compound_assign",
+    "id": "cpp_var_assign_compound",
     "conceptId": "cpp:var_assign_compound",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_compound_assign",
+      "type": "cpp_var_assign_compound",
       "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
       "args0": [
         {
@@ -158,7 +158,7 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "c_compound_assign_expr",
+      "expressionCounterpart": "cpp_var_assign_compound_expression",
       "extraStateFlags": {
         "hasIndex": "index"
       },
@@ -173,13 +173,13 @@
     }
   },
   {
-    "id": "c_switch",
+    "id": "cpp_switch",
     "conceptId": "cpp:switch",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_switch",
+      "type": "cpp_switch",
       "message0": "%{BKY_C_SWITCH_MSG0}",
       "args0": [
         {
@@ -232,13 +232,13 @@
     }
   },
   {
-    "id": "c_case",
+    "id": "cpp_case",
     "conceptId": "cpp:case",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_case",
+      "type": "cpp_case",
       "message0": "%{BKY_C_CASE_MSG0}",
       "args0": [
         {
@@ -279,13 +279,13 @@
     }
   },
   {
-    "id": "c_default",
+    "id": "cpp_default",
     "conceptId": "cpp:default",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_default",
+      "type": "cpp_default",
       "message0": "%{BKY_C_DEFAULT_MSG0}",
       "message1": "%1",
       "args1": [
@@ -316,13 +316,13 @@
     }
   },
   {
-    "id": "c_ternary",
+    "id": "cpp_ternary",
     "conceptId": "cpp:ternary",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_ternary",
+      "type": "cpp_ternary",
       "message0": "%{BKY_C_TERNARY_MSG0}",
       "args0": [
         {
@@ -381,13 +381,13 @@
     }
   },
   {
-    "id": "c_cast",
+    "id": "cpp_cast",
     "conceptId": "cpp:cast",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_cast",
+      "type": "cpp_cast",
       "message0": "%{BKY_C_CAST_MSG0}",
       "args0": [
         {
@@ -458,13 +458,13 @@
     }
   },
   {
-    "id": "c_bitwise_not",
+    "id": "cpp_bitwise_not",
     "conceptId": "cpp:bitwise_not",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_bitwise_not",
+      "type": "cpp_bitwise_not",
       "message0": "%{BKY_C_BITWISE_NOT_MSG0}",
       "args0": [
         {
@@ -506,13 +506,13 @@
     }
   },
   {
-    "id": "c_pointer_assign",
+    "id": "cpp_pointer_assign",
     "conceptId": "cpp:pointer_assign",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_pointer_assign",
+      "type": "cpp_pointer_assign",
       "message0": "%{BKY_C_POINTER_ASSIGN_MSG0}",
       "args0": [
         {
@@ -563,13 +563,13 @@
     }
   },
   {
-    "id": "c_for_loop",
+    "id": "cpp_loop_for",
     "conceptId": "cpp:loop_for",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_for_loop",
+      "type": "cpp_loop_for",
       "message0": "%{BKY_C_FOR_LOOP_MSG0}",
       "args0": [
         {
@@ -644,13 +644,13 @@
     }
   },
   {
-    "id": "c_do_while",
+    "id": "cpp_loop_do_while",
     "conceptId": "cpp:loop_do_while",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_do_while",
+      "type": "cpp_loop_do_while",
       "message0": "%{BKY_C_DO_WHILE_MSG0}",
       "args0": [
         {
@@ -703,13 +703,13 @@
     }
   },
   {
-    "id": "c_raw_code",
+    "id": "cpp_raw_code",
     "conceptId": "cpp:raw_code",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_raw_code",
+      "type": "cpp_raw_code",
       "message0": "%{BKY_C_RAW_CODE_MSG0}",
       "args0": [
         {
@@ -739,13 +739,13 @@
     }
   },
   {
-    "id": "c_raw_expression",
+    "id": "cpp_raw_expression",
     "conceptId": "cpp:raw_expression",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_raw_expression",
+      "type": "cpp_raw_expression",
       "message0": "%{BKY_C_RAW_EXPRESSION_MSG0}",
       "args0": [
         {
@@ -774,13 +774,13 @@
     }
   },
   {
-    "id": "c_forward_decl",
+    "id": "cpp_forward_decl",
     "conceptId": "cpp:forward_decl",
     "language": "cpp",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_forward_decl"
+      "type": "cpp_forward_decl"
     },
     "renderMapping": {
       "fields": {
@@ -802,13 +802,13 @@
     }
   },
   {
-    "id": "c_builtin_constant",
+    "id": "cpp_builtin_constant",
     "conceptId": "cpp:builtin_constant",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_builtin_constant",
+      "type": "cpp_builtin_constant",
       "message0": "%1",
       "args0": [
         {
@@ -851,13 +851,13 @@
     }
   },
   {
-    "id": "c_include",
+    "id": "cpp_include",
     "conceptId": "cpp:include",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_include",
+      "type": "cpp_include",
       "message0": "%{BKY_C_INCLUDE_MSG0}",
       "args0": [
         {
@@ -964,13 +964,13 @@
     }
   },
   {
-    "id": "c_include_local",
+    "id": "cpp_include_local",
     "conceptId": "cpp:include_local",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_include_local",
+      "type": "cpp_include_local",
       "message0": "%{BKY_C_INCLUDE_LOCAL_MSG0}",
       "args0": [
         {
@@ -1005,13 +1005,13 @@
     }
   },
   {
-    "id": "c_define",
+    "id": "cpp_define",
     "conceptId": "cpp:define",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_define",
+      "type": "cpp_define",
       "message0": "%{BKY_C_DEFINE_MSG0}",
       "args0": [
         {
@@ -1043,13 +1043,13 @@
     }
   },
   {
-    "id": "c_ifdef",
+    "id": "cpp_ifdef",
     "conceptId": "cpp:ifdef",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_ifdef",
+      "type": "cpp_ifdef",
       "message0": "%{BKY_C_IFDEF_MSG0}",
       "args0": [
         {
@@ -1091,13 +1091,13 @@
     }
   },
   {
-    "id": "c_ifndef",
+    "id": "cpp_ifndef",
     "conceptId": "cpp:ifndef",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_ifndef",
+      "type": "cpp_ifndef",
       "message0": "%{BKY_C_IFNDEF_MSG0}",
       "args0": [
         {
@@ -1139,13 +1139,13 @@
     }
   },
   {
-    "id": "c_comment_line",
+    "id": "cpp_comment",
     "conceptId": "cpp:comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_comment_line",
+      "type": "cpp_comment",
       "message0": "%{BKY_C_COMMENT_LINE_MSG0}",
       "args0": [
         {
@@ -1171,13 +1171,13 @@
     }
   },
   {
-    "id": "c_comment_doc",
+    "id": "cpp_doc_comment",
     "conceptId": "cpp:doc_comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_comment_doc",
+      "type": "cpp_doc_comment",
       "message0": "%{BKY_C_COMMENT_DOC_MSG0}",
       "args0": [
         {
@@ -1201,13 +1201,13 @@
     }
   },
   {
-    "id": "c_comment_block",
+    "id": "cpp_block_comment",
     "conceptId": "cpp:block_comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_comment_block",
+      "type": "cpp_block_comment",
       "message0": "%{BKY_C_COMMENT_BLOCK_MSG0}",
       "args0": [
         {
@@ -1233,13 +1233,13 @@
     }
   },
   {
-    "id": "c_using_namespace",
+    "id": "cpp_using_namespace",
     "conceptId": "cpp:using_namespace",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_using_namespace",
+      "type": "cpp_using_namespace",
       "message0": "%{BKY_C_USING_NAMESPACE_MSG0}",
       "args0": [
         {
@@ -1269,13 +1269,13 @@
     }
   },
   {
-    "id": "c_increment_expr",
+    "id": "cpp_increment_expression",
     "conceptId": "cpp:increment",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_increment_expr",
+      "type": "cpp_increment_expression",
       "args0": [
         {
           "type": "field_dropdown",
@@ -1338,13 +1338,13 @@
     }
   },
   {
-    "id": "c_compound_assign_expr",
+    "id": "cpp_var_assign_compound_expression",
     "conceptId": "cpp:var_assign_compound",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_compound_assign_expr",
+      "type": "cpp_var_assign_compound_expression",
       "args0": [
         {
           "type": "field_dropdown",
@@ -1410,13 +1410,13 @@
     }
   },
   {
-    "id": "c_var_declare_expr",
+    "id": "cpp_var_declare_expression",
     "conceptId": "cpp:var_declare",
     "language": "cpp",
     "category": "variables",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_var_declare_expr",
+      "type": "cpp_var_declare_expression",
       "args0": [
         {
           "type": "field_dropdown",
@@ -1481,13 +1481,13 @@
     }
   },
   {
-    "id": "c_pointer_declare",
+    "id": "cpp_pointer_declare",
     "conceptId": "cpp:pointer_declare",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_pointer_declare",
+      "type": "cpp_pointer_declare",
       "message0": "%{BKY_C_POINTER_DECLARE_MSG0}",
       "args0": [
         {
@@ -1565,13 +1565,13 @@
     }
   },
   {
-    "id": "c_pointer_deref",
+    "id": "cpp_pointer_deref",
     "conceptId": "cpp:pointer_deref",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_pointer_deref",
+      "type": "cpp_pointer_deref",
       "message0": "%{BKY_C_POINTER_DEREF_MSG0}",
       "args0": [
         {
@@ -1597,13 +1597,13 @@
     }
   },
   {
-    "id": "c_address_of",
+    "id": "cpp_address_of",
     "conceptId": "cpp:address_of",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_address_of",
+      "type": "cpp_address_of",
       "message0": "%{BKY_C_ADDRESS_OF_MSG0}",
       "args0": [
         {
@@ -1629,13 +1629,13 @@
     }
   },
   {
-    "id": "c_malloc",
+    "id": "cpp_malloc",
     "conceptId": "cpp:malloc",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_malloc",
+      "type": "cpp_malloc",
       "message0": "%{BKY_C_MALLOC_MSG0}",
       "args0": [
         {
@@ -1732,13 +1732,13 @@
     }
   },
   {
-    "id": "c_free",
+    "id": "cpp_free",
     "conceptId": "cpp:free",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_free",
+      "type": "cpp_free",
       "message0": "%{BKY_C_FREE_MSG0}",
       "args0": [
         {
@@ -1783,13 +1783,13 @@
     }
   },
   {
-    "id": "c_struct_declare",
+    "id": "cpp_struct_declare",
     "conceptId": "cpp:struct_declare",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_struct_declare",
+      "type": "cpp_struct_declare",
       "message0": "%{BKY_C_STRUCT_DECLARE_MSG0}",
       "args0": [
         {
@@ -1830,13 +1830,13 @@
     }
   },
   {
-    "id": "c_struct_member_access",
+    "id": "cpp_struct_at_member",
     "conceptId": "cpp:struct_at_member",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_struct_member_access",
+      "type": "cpp_struct_at_member",
       "message0": "%{BKY_C_STRUCT_MEMBER_ACCESS_MSG0}",
       "args0": [
         {
@@ -1889,13 +1889,13 @@
     }
   },
   {
-    "id": "c_struct_pointer_access",
+    "id": "cpp_struct_at_ptr",
     "conceptId": "cpp:struct_at_ptr",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_struct_pointer_access",
+      "type": "cpp_struct_at_ptr",
       "message0": "%{BKY_C_STRUCT_POINTER_ACCESS_MSG0}",
       "args0": [
         {
@@ -2209,7 +2209,7 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "cpp_method_call_expr",
+      "expressionCounterpart": "cpp_method_call_expression",
       "fields": {
         "ARGS": "args",
         "METHOD": "method",
@@ -2219,13 +2219,13 @@
     "toolboxCategory": "functions"
   },
   {
-    "id": "cpp_method_call_expr",
+    "id": "cpp_method_call_expression",
     "conceptId": "cpp:method_call",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_method_call_expr",
+      "type": "cpp_method_call_expression",
       "message0": "%{BKY_CPP_METHOD_CALL_EXPR_MSG0}",
       "args0": [
         {
@@ -2294,13 +2294,13 @@
     }
   },
   {
-    "id": "c_const_declare",
+    "id": "cpp_var_declare_const",
     "conceptId": "cpp:var_declare_const",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_const_declare",
+      "type": "cpp_var_declare_const",
       "message0": "%{BKY_C_CONST_DECLARE_MSG0}",
       "args0": [
         {
@@ -2370,13 +2370,13 @@
     }
   },
   {
-    "id": "c_constexpr_declare",
+    "id": "cpp_var_declare_constexpr",
     "conceptId": "cpp:var_declare_constexpr",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_constexpr_declare",
+      "type": "cpp_var_declare_constexpr",
       "message0": "%{BKY_C_CONSTEXPR_DECLARE_MSG0}",
       "args0": [
         {
@@ -2442,13 +2442,13 @@
     }
   },
   {
-    "id": "c_auto_declare",
+    "id": "cpp_var_declare_auto",
     "conceptId": "cpp:var_declare_auto",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_auto_declare",
+      "type": "cpp_var_declare_auto",
       "message0": "%{BKY_C_AUTO_DECLARE_MSG0}",
       "args0": [
         {
@@ -2483,13 +2483,13 @@
     }
   },
   {
-    "id": "c_typedef",
+    "id": "cpp_typedef",
     "conceptId": "cpp:typedef",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_typedef",
+      "type": "cpp_typedef",
       "message0": "%{BKY_C_TYPEDEF_MSG0}",
       "args0": [
         {
@@ -2522,13 +2522,13 @@
     }
   },
   {
-    "id": "c_using_alias",
+    "id": "cpp_using_alias",
     "conceptId": "cpp:using_alias",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_using_alias",
+      "type": "cpp_using_alias",
       "message0": "%{BKY_C_USING_ALIAS_MSG0}",
       "args0": [
         {
@@ -2561,13 +2561,13 @@
     }
   },
   {
-    "id": "c_sizeof",
+    "id": "cpp_sizeof",
     "conceptId": "cpp:sizeof",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_sizeof",
+      "type": "cpp_sizeof",
       "message0": "%{BKY_C_SIZEOF_MSG0}",
       "args0": [
         {
@@ -2593,13 +2593,13 @@
     }
   },
   {
-    "id": "c_ref_declare",
+    "id": "cpp_var_declare_ref",
     "conceptId": "cpp:var_declare_ref",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_ref_declare",
+      "type": "cpp_var_declare_ref",
       "message0": "%{BKY_C_REF_DECLARE_MSG0}",
       "args0": [
         {
@@ -2678,13 +2678,13 @@
     }
   },
   {
-    "id": "c_static_declare",
+    "id": "cpp_var_declare_static",
     "conceptId": "cpp:var_declare_static",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_static_declare",
+      "type": "cpp_var_declare_static",
       "message0": "%{BKY_C_STATIC_DECLARE_MSG0}",
       "args0": [
         {
@@ -2750,13 +2750,13 @@
     }
   },
   {
-    "id": "c_static_member",
+    "id": "cpp_member_static",
     "conceptId": "cpp:member_static",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_static_member",
+      "type": "cpp_member_static",
       "message0": "%{BKY_C_STATIC_MEMBER_MSG0}",
       "args0": [
         {
@@ -2814,13 +2814,13 @@
     }
   },
   {
-    "id": "c_enum",
+    "id": "cpp_enum",
     "conceptId": "cpp:enum",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_enum",
+      "type": "cpp_enum",
       "message0": "%{BKY_C_ENUM_MSG0}",
       "args0": [
         {
@@ -2853,13 +2853,13 @@
     }
   },
   {
-    "id": "c_range_for",
+    "id": "cpp_loop_range",
     "conceptId": "cpp:loop_range",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_range_for",
+      "type": "cpp_loop_range",
       "message0": "%{BKY_C_RANGE_FOR_MSG0}",
       "args0": [
         {
@@ -2925,13 +2925,13 @@
     }
   },
   {
-    "id": "c_array_2d_declare",
+    "id": "cpp_array_2d_declare",
     "conceptId": "cpp:array_2d_declare",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_array_2d_declare",
+      "type": "cpp_array_2d_declare",
       "message0": "%{BKY_C_ARRAY_2D_DECLARE_MSG0}",
       "args0": [
         {
@@ -2989,13 +2989,13 @@
     }
   },
   {
-    "id": "c_array_2d_access",
+    "id": "cpp_array_2d_at",
     "conceptId": "cpp:array_2d_at",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_array_2d_access",
+      "type": "cpp_array_2d_at",
       "message0": "%{BKY_C_ARRAY_2D_ACCESS_MSG0}",
       "args0": [
         {
@@ -3035,13 +3035,13 @@
     }
   },
   {
-    "id": "c_array_2d_assign",
+    "id": "cpp_array_2d_assign",
     "conceptId": "cpp:array_2d_assign",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_array_2d_assign",
+      "type": "cpp_array_2d_assign",
       "message0": "%{BKY_C_ARRAY_2D_ASSIGN_MSG0}",
       "args0": [
         {
@@ -3088,13 +3088,13 @@
     }
   },
   {
-    "id": "c_try_catch",
+    "id": "cpp_try_catch",
     "conceptId": "cpp:try_catch",
     "language": "cpp",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_try_catch",
+      "type": "cpp_try_catch",
       "message0": "%{BKY_C_TRY_CATCH_MSG0}",
       "args0": [
         {
@@ -3139,13 +3139,13 @@
     }
   },
   {
-    "id": "c_throw",
+    "id": "cpp_throw",
     "conceptId": "cpp:throw",
     "language": "cpp",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_throw",
+      "type": "cpp_throw",
       "message0": "%{BKY_C_THROW_MSG0}",
       "args0": [
         {
@@ -3172,13 +3172,13 @@
     }
   },
   {
-    "id": "c_constructor",
+    "id": "cpp_constructor",
     "conceptId": "cpp:constructor",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_constructor",
+      "type": "cpp_constructor",
       "message0": "%{BKY_C_CONSTRUCTOR_MSG0}",
       "args0": [
         {
@@ -3236,13 +3236,13 @@
     }
   },
   {
-    "id": "c_destructor",
+    "id": "cpp_destructor",
     "conceptId": "cpp:destructor",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_destructor",
+      "type": "cpp_destructor",
       "message0": "%{BKY_C_DESTRUCTOR_MSG0}",
       "args0": [
         {
@@ -3272,13 +3272,13 @@
     }
   },
   {
-    "id": "c_virtual_method",
+    "id": "cpp_method_virtual",
     "conceptId": "cpp:method_virtual",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_virtual_method",
+      "type": "cpp_method_virtual",
       "message0": "%{BKY_C_VIRTUAL_METHOD_MSG0}",
       "args0": [
         {
@@ -3333,13 +3333,13 @@
     }
   },
   {
-    "id": "c_pure_virtual",
+    "id": "cpp_method_virtual_pure",
     "conceptId": "cpp:method_virtual_pure",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_pure_virtual",
+      "type": "cpp_method_virtual_pure",
       "message0": "%{BKY_C_PURE_VIRTUAL_MSG0}",
       "args0": [
         {
@@ -3388,13 +3388,13 @@
     }
   },
   {
-    "id": "c_override_method",
+    "id": "cpp_method_override",
     "conceptId": "cpp:method_override",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_override_method",
+      "type": "cpp_method_override",
       "message0": "%{BKY_C_OVERRIDE_METHOD_MSG0}",
       "args0": [
         {
@@ -3449,13 +3449,13 @@
     }
   },
   {
-    "id": "c_operator_overload",
+    "id": "cpp_operator_overload",
     "conceptId": "cpp:operator_overload",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_operator_overload",
+      "type": "cpp_operator_overload",
       "message0": "%{BKY_C_OPERATOR_OVERLOAD_MSG0}",
       "args0": [
         {
@@ -3543,13 +3543,13 @@
     }
   },
   {
-    "id": "c_lambda",
+    "id": "cpp_lambda",
     "conceptId": "cpp:lambda",
     "language": "cpp",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_lambda",
+      "type": "cpp_lambda",
       "message0": "%{BKY_C_LAMBDA_MSG0}",
       "args0": [
         {
@@ -3597,13 +3597,13 @@
     }
   },
   {
-    "id": "c_namespace_def",
+    "id": "cpp_namespace_def",
     "conceptId": "cpp:namespace_def",
     "language": "cpp",
     "category": "cpp_basic",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_namespace_def",
+      "type": "cpp_namespace_def",
       "message0": "%{BKY_C_NAMESPACE_DEF_MSG0}",
       "args0": [
         {
@@ -3633,13 +3633,13 @@
     }
   },
   {
-    "id": "c_static_cast",
+    "id": "cpp_cast_static",
     "conceptId": "cpp:cast_static",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_static_cast",
+      "type": "cpp_cast_static",
       "message0": "%{BKY_C_STATIC_CAST_MSG0}",
       "args0": [
         {
@@ -3673,13 +3673,13 @@
     }
   },
   {
-    "id": "c_dynamic_cast",
+    "id": "cpp_cast_dynamic",
     "conceptId": "cpp:cast_dynamic",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_dynamic_cast",
+      "type": "cpp_cast_dynamic",
       "message0": "%{BKY_C_DYNAMIC_CAST_MSG0}",
       "args0": [
         {
@@ -3713,13 +3713,13 @@
     }
   },
   {
-    "id": "c_reinterpret_cast",
+    "id": "cpp_cast_reinterpret",
     "conceptId": "cpp:cast_reinterpret",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_reinterpret_cast",
+      "type": "cpp_cast_reinterpret",
       "message0": "%{BKY_C_REINTERPRET_CAST_MSG0}",
       "args0": [
         {
@@ -3753,13 +3753,13 @@
     }
   },
   {
-    "id": "c_const_cast",
+    "id": "cpp_cast_const",
     "conceptId": "cpp:cast_const",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_const_cast",
+      "type": "cpp_cast_const",
       "message0": "%{BKY_C_CONST_CAST_MSG0}",
       "args0": [
         {
@@ -3793,13 +3793,13 @@
     }
   },
   {
-    "id": "c_container_push",
+    "id": "cpp_container_push",
     "conceptId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_push",
+      "type": "cpp_container_push",
       "message0": "%{BKY_CPP_CONTAINER_PUSH_MSG0}",
       "args0": [
         {
@@ -3833,13 +3833,13 @@
     }
   },
   {
-    "id": "c_container_pop",
+    "id": "cpp_container_pop",
     "conceptId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_pop",
+      "type": "cpp_container_pop",
       "message0": "%{BKY_CPP_CONTAINER_POP_MSG0}",
       "args0": [
         {
@@ -3865,13 +3865,13 @@
     }
   },
   {
-    "id": "c_stack_push",
+    "id": "cpp_container_push_stack",
     "conceptId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_stack_push",
+      "type": "cpp_container_push_stack",
       "message0": "%{BKY_CPP_STACK_PUSH_MSG0}",
       "args0": [
         {
@@ -3910,13 +3910,13 @@
     }
   },
   {
-    "id": "c_stack_pop",
+    "id": "cpp_container_pop_stack",
     "conceptId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_stack_pop",
+      "type": "cpp_container_pop_stack",
       "message0": "%{BKY_CPP_STACK_POP_MSG0}",
       "args0": [
         {
@@ -3947,13 +3947,13 @@
     }
   },
   {
-    "id": "c_queue_push",
+    "id": "cpp_container_push_queue",
     "conceptId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_queue_push",
+      "type": "cpp_container_push_queue",
       "message0": "%{BKY_CPP_QUEUE_PUSH_MSG0}",
       "args0": [
         {
@@ -3992,13 +3992,13 @@
     }
   },
   {
-    "id": "c_queue_pop",
+    "id": "cpp_container_pop_queue",
     "conceptId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_queue_pop",
+      "type": "cpp_container_pop_queue",
       "message0": "%{BKY_CPP_QUEUE_POP_MSG0}",
       "args0": [
         {
@@ -4029,13 +4029,13 @@
     }
   },
   {
-    "id": "c_container_push_back",
+    "id": "cpp_container_append",
     "conceptId": "cpp:container_append",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_push_back",
+      "type": "cpp_container_append",
       "message0": "%{BKY_CPP_CONTAINER_PUSH_BACK_MSG0}",
       "args0": [
         {
@@ -4070,13 +4070,13 @@
     }
   },
   {
-    "id": "c_container_empty",
+    "id": "cpp_container_empty",
     "conceptId": "cpp:container_empty",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_empty",
+      "type": "cpp_container_empty",
       "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
       "args0": [
         {
@@ -4105,13 +4105,13 @@
     }
   },
   {
-    "id": "c_container_clear",
+    "id": "cpp_container_clear",
     "conceptId": "cpp:container_clear",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_clear",
+      "type": "cpp_container_clear",
       "message0": "%{BKY_CPP_CONTAINER_CLEAR_MSG0}",
       "args0": [
         {
@@ -4138,13 +4138,13 @@
     }
   },
   {
-    "id": "c_container_erase",
+    "id": "cpp_container_erase",
     "conceptId": "cpp:container_erase",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_erase",
+      "type": "cpp_container_erase",
       "message0": "%{BKY_CPP_CONTAINER_ERASE_MSG0}",
       "args0": [
         {
@@ -4179,13 +4179,13 @@
     }
   },
   {
-    "id": "c_container_count",
+    "id": "cpp_container_count",
     "conceptId": "cpp:container_count",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_container_count",
+      "type": "cpp_container_count",
       "message0": "%{BKY_CPP_CONTAINER_COUNT_MSG0}",
       "args0": [
         {

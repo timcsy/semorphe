@@ -53,22 +53,22 @@ function getInputs(blockType: string): InputNames {
 }
 
 // Pre-extract for blocks that have dynamic overrides in app.new.ts
-export const IF_INPUTS = getInputs('u_if')
-export const WHILE_INPUTS = getInputs('u_while_loop')
-export const COUNT_LOOP_INPUTS = getInputs('u_count_loop')
+export const IF_INPUTS = getInputs('cpp_if')
+export const WHILE_INPUTS = getInputs('cpp_loop_while')
+export const COUNT_LOOP_INPUTS = getInputs('cpp_loop_count')
 
 // 057：把寫死的插槽名換成這裡導出的常數——JSON 改了動態註冊自動跟上
 //
 // ⚠️ **本模組只涵蓋 universal 積木**（它只載入 universal-blocks.json）。
-// 語言專屬積木（`cpp_string_at`、`c_compound_assign` 等）的插槽名因此仍然
+// 語言專屬積木（`cpp_string_at`、`cpp_var_assign_compound` 等）的插槽名因此仍然
 // 寫死——要涵蓋它們，這個模組得引用語言套件，那與「核心不認識語言」相衝。
 // 那是另一個決定，不在 057 的範圍。**不硬湊。**
-export const FUNDEF_INPUTS = getInputs('u_func_def')
-export const RETURN_INPUTS = getInputs('u_return')
-export const ARRAY_DECLARE_INPUTS = getInputs('u_array_declare')
-export const ARRAY_ACCESS_INPUTS = getInputs('u_array_access')
-export const ARRAY_ASSIGN_INPUTS = getInputs('u_array_assign')
-export const VAR_ASSIGN_INPUTS = getInputs('u_var_assign')
+export const FUNDEF_INPUTS = getInputs('cpp_func_def')
+export const RETURN_INPUTS = getInputs('cpp_return')
+export const ARRAY_DECLARE_INPUTS = getInputs('cpp_array_declare')
+export const ARRAY_ACCESS_INPUTS = getInputs('cpp_array_at')
+export const ARRAY_ASSIGN_INPUTS = getInputs('cpp_array_assign')
+export const VAR_ASSIGN_INPUTS = getInputs('cpp_var_assign')
 
 // Re-export the extractor for use in tests
 export { extractInputNames, getInputs }

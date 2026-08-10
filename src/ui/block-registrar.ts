@@ -45,21 +45,21 @@ export class BlockRegistrar {
     if (workspace) {
       const blocks = workspace.getAllBlocks(false)
       for (const block of blocks) {
-        if (block.type === 'u_var_declare') {
+        if (block.type === 'cpp_var_declare') {
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`NAME_${i}`)
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (block.type === 'u_func_def') {
+        } else if (block.type === 'cpp_func_def') {
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`PARAM_${i}`)
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (block.type === 'u_count_loop') {
+        } else if (block.type === 'cpp_loop_count') {
           addOption(block.getFieldValue('VAR'))
-        } else if (block.type === 'u_input') {
+        } else if (block.type === 'cpp_input') {
           for (let i = 0; ; i++) {
             const sel = block.getFieldValue(`SEL_${i}`)
             if (sel !== null && sel !== undefined && sel !== '__COMPOSE__' && sel !== '__CUSTOM__') {
@@ -73,7 +73,7 @@ export class BlockRegistrar {
             }
             break
           }
-        } else if (block.type === 'c_var_declare_expr') {
+        } else if (block.type === 'cpp_var_declare_expression') {
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`NAME_${i}`)
             if (name === null || name === undefined) break
@@ -83,9 +83,9 @@ export class BlockRegistrar {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')
-        } else if (block.type === 'c_for_loop') {
+        } else if (block.type === 'cpp_loop_for') {
           const initBlock = block.getInputTargetBlock?.('INIT')
-          if (initBlock && initBlock.type === 'c_var_declare_expr') {
+          if (initBlock && initBlock.type === 'cpp_var_declare_expression') {
             for (let i = 0; ; i++) {
               const name = initBlock.getFieldValue(`NAME_${i}`)
               if (name === null || name === undefined) break
@@ -112,14 +112,14 @@ export class BlockRegistrar {
       const varTypes = new Map<string, string>()
       const arrayVars = new Set<string>()
       for (const block of blocks) {
-        if (block.type === 'u_var_declare') {
+        if (block.type === 'cpp_var_declare') {
           const type = block.getFieldValue('TYPE') ?? 'int'
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`NAME_${i}`)
             if (name === null || name === undefined) break
             varTypes.set(name, type)
           }
-        } else if (block.type === 'u_array_declare') {
+        } else if (block.type === 'cpp_array_declare') {
           const name = block.getFieldValue('NAME')
           if (name) arrayVars.add(name)
         }
@@ -133,21 +133,21 @@ export class BlockRegistrar {
         options.push([display, name])
       }
       for (const block of blocks) {
-        if (block.type === 'u_var_declare') {
+        if (block.type === 'cpp_var_declare') {
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`NAME_${i}`)
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (block.type === 'u_array_declare') {
+        } else if (block.type === 'cpp_array_declare') {
           addOption(block.getFieldValue('NAME'))
-        } else if (block.type === 'u_func_def') {
+        } else if (block.type === 'cpp_func_def') {
           for (let i = 0; ; i++) {
             const name = block.getFieldValue(`PARAM_${i}`)
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (block.type === 'u_count_loop') {
+        } else if (block.type === 'cpp_loop_count') {
           addOption(block.getFieldValue('VAR'))
         }
       }
@@ -164,7 +164,7 @@ export class BlockRegistrar {
     const workspace = this.accessors?.getWorkspace()
     if (workspace) {
       for (const block of workspace.getAllBlocks(false)) {
-        if (block.type === 'u_array_declare') {
+        if (block.type === 'cpp_array_declare') {
           const name = block.getFieldValue('NAME')
           if (name && !seen.has(name)) {
             seen.add(name)
@@ -235,7 +235,7 @@ export class BlockRegistrar {
     const workspace = this.accessors?.getWorkspace()
     if (workspace) {
       for (const block of workspace.getAllBlocks(false)) {
-        if (block.type === 'u_func_def') {
+        if (block.type === 'cpp_func_def') {
           const name = block.getFieldValue('NAME')
           if (name && !seen.has(name)) {
             seen.add(name)
@@ -309,9 +309,9 @@ export class BlockRegistrar {
       if (f) f.setValue(isAtMin ? MINUS_DISABLED_IMG : MINUS_IMG)
     }
 
-    // u_string
+    // cpp_literal_string
     {
-      Blockly.Blocks['u_string'] = {
+      Blockly.Blocks['cpp_literal_string'] = {
         init: function (this: any) {
           const field = new Blockly.FieldTextInput('hello')
           ;(field as any).getDisplayText_ = function (this: any) {
@@ -372,7 +372,7 @@ export class BlockRegistrar {
         },
       }
 
-      Blockly.Blocks['u_var_declare'] = {
+      Blockly.Blocks['cpp_var_declare'] = {
         items_: ['var_init'] as string[],
         init: function (this: any) {
           this.items_ = ['var_init']
@@ -495,9 +495,9 @@ export class BlockRegistrar {
         },
       }
 
-    // u_print
+    // cpp_print
     {
-      Blockly.Blocks['u_print'] = {
+      Blockly.Blocks['cpp_print'] = {
         itemCount_: 1,
         init: function (this: any) {
           this.itemCount_ = 1
@@ -631,9 +631,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_input
+    // cpp_input
     {
-      Blockly.Blocks['u_input'] = {
+      Blockly.Blocks['cpp_input'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
@@ -717,9 +717,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_printf
+    // cpp_print_formatted
     {
-      Blockly.Blocks['c_printf'] = {
+      Blockly.Blocks['cpp_print_formatted'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
@@ -812,16 +812,16 @@ export class BlockRegistrar {
       const workspace = self.accessors?.getWorkspace()
       if (!workspace) return false
       for (const block of workspace.getAllBlocks(false)) {
-        if (block.type === 'u_array_declare') {
+        if (block.type === 'cpp_array_declare') {
           if (block.getFieldValue('NAME') === varName) return true
         }
       }
       return false
     }
 
-    // c_scanf
+    // cpp_input_formatted
     {
-      Blockly.Blocks['c_scanf'] = {
+      Blockly.Blocks['cpp_input_formatted'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
@@ -911,9 +911,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_endl
+    // cpp_endl
     {
-      Blockly.Blocks['u_endl'] = {
+      Blockly.Blocks['cpp_endl'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_ENDL_MSG0'] || '換行')
@@ -924,7 +924,7 @@ export class BlockRegistrar {
       }
     }
 
-    // u_if
+    // cpp_if
     {
       Blockly.Blocks['u_if_container'] = {
         init: function (this: Blockly.Block) {
@@ -952,7 +952,7 @@ export class BlockRegistrar {
         },
       }
 
-      Blockly.Blocks['u_if'] = {
+      Blockly.Blocks['cpp_if'] = {
         elseifCount_: 0,
         hasElse_: false,
         init: function (this: any) {
@@ -1065,12 +1065,12 @@ export class BlockRegistrar {
         },
       }
 
-      Blockly.Blocks['u_if_else'] = Blockly.Blocks['u_if']
+      Blockly.Blocks['cpp_if_else'] = Blockly.Blocks['cpp_if']
     }
 
-    // u_while_loop
+    // cpp_loop_while
     {
-      Blockly.Blocks['u_while_loop'] = {
+      Blockly.Blocks['cpp_loop_while'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(WHILE_INPUTS.value[0])
             .appendField(Blockly.Msg['U_WHILE_MSG'] || '當')
@@ -1084,9 +1084,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_count_loop
+    // cpp_loop_count
     {
-      Blockly.Blocks['u_count_loop'] = {
+      Blockly.Blocks['cpp_loop_count'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_COUNT_LOOP_MSG'] || '計數')
@@ -1109,9 +1109,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_break, u_continue
+    // cpp_break, cpp_continue
     {
-      Blockly.Blocks['u_break'] = {
+      Blockly.Blocks['cpp_break'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput().appendField(Blockly.Msg['U_BREAK_MSG'] || '跳出迴圈')
           this.setPreviousStatement(true, 'Statement')
@@ -1121,7 +1121,7 @@ export class BlockRegistrar {
       }
     }
     {
-      Blockly.Blocks['u_continue'] = {
+      Blockly.Blocks['cpp_continue'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput().appendField(Blockly.Msg['U_CONTINUE_MSG'] || '跳至下一次')
           this.setPreviousStatement(true, 'Statement')
@@ -1156,11 +1156,11 @@ export class BlockRegistrar {
      *
      * ## 為什麼是工廠
      *
-     * `u_func_def` 與 `c_forward_decl` 原本各有一份，而它們是**同一份程式碼的
+     * `cpp_func_def` 與 `cpp_forward_decl` 原本各有一份，而它們是**同一份程式碼的
      * 兩份拷貝**：`loadExtraState` 100% 相同、`minusParam_` 96%、`plusParam_` 89%。
      *
-     * 而**兩份已經開始漂移**——`c_forward_decl` 的括號寫死 `'('`／`')'`，
-     * `u_func_def` 走 `Blockly.Msg`。那不是設計，是抄過去的時候漏掉的。
+     * 而**兩份已經開始漂移**——`cpp_forward_decl` 的括號寫死 `'('`／`')'`，
+     * `cpp_func_def` 走 `Blockly.Msg`。那不是設計，是抄過去的時候漏掉的。
      *
      * > 抽出來不是為了讓第三顆好加，是**因為它已經重複了**。
      * > （判準見 `knowledge/history/033`：一個操作值不值得固化，看的不是重複幾次，
@@ -1168,7 +1168,7 @@ export class BlockRegistrar {
      *
      * ## 三個變異點，全部是資料
      *
-     * | | `u_func_def` | `c_forward_decl` |
+     * | | `cpp_func_def` | `cpp_forward_decl` |
      * |---|---|---|
      * | 帶名字欄位 | ✅ `int a` | ❌ `int f(int, int);` |
      * | 括號標籤 | `（參數`／`）` | `(`／`)` |
@@ -1269,10 +1269,10 @@ export class BlockRegistrar {
       [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_STRING'] || 'string', 'string'],
     ]
 
-    // u_func_def
+    // cpp_func_def
     /* eslint-disable @typescript-eslint/no-explicit-any */
     {
-      Blockly.Blocks['u_func_def'] = {
+      Blockly.Blocks['cpp_func_def'] = {
         paramCount_: 0,
         init: function (this: any) {
           this.paramCount_ = 0
@@ -1293,8 +1293,8 @@ export class BlockRegistrar {
           this.setTooltip(Blockly.Msg['U_FUNC_DEF_TOOLTIP'] || '定義函式')
         },
       }
-      // 參數列（型別 ＋ 名字）由工廠提供——與 `c_forward_decl` 共用同一份。
-      定義參數列(Blockly.Blocks['u_func_def'], {
+      // 參數列（型別 ＋ 名字）由工廠提供——與 `cpp_forward_decl` 共用同一份。
+      定義參數列(Blockly.Blocks['cpp_func_def'], {
         帶名字欄位: true,
         開括號: ['U_FUNC_DEF_PARAMS_OPEN', '（參數'],
         閉括號: ['U_FUNC_DEF_PARAMS_CLOSE', '）'],
@@ -1302,9 +1302,9 @@ export class BlockRegistrar {
       })
     }
 
-    // u_func_call
+    // cpp_func_call
     {
-      Blockly.Blocks['u_func_call'] = {
+      Blockly.Blocks['cpp_func_call'] = {
         argCount_: 0,
         init: function (this: any) {
           this.argCount_ = 0
@@ -1379,9 +1379,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_func_call_expr
+    // cpp_func_call_expression
     {
-      Blockly.Blocks['u_func_call_expr'] = {
+      Blockly.Blocks['cpp_func_call_expression'] = {
         argCount_: 0,
         init: function (this: any) {
           this.argCount_ = 0
@@ -1456,9 +1456,9 @@ export class BlockRegistrar {
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    // u_return
+    // cpp_return
     {
-      Blockly.Blocks['u_return'] = {
+      Blockly.Blocks['cpp_return'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(RETURN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_RETURN_MSG'] || '回傳')
@@ -1469,9 +1469,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_var_ref
+    // cpp_var_ref
     {
-      Blockly.Blocks['u_var_ref'] = {
+      Blockly.Blocks['cpp_var_ref'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_VAR_REF_LABEL'] || '變數')
@@ -1483,9 +1483,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_array_declare
+    // cpp_array_declare
     {
-      Blockly.Blocks['u_array_declare'] = {
+      Blockly.Blocks['cpp_array_declare'] = {
         init: function (this: Blockly.Block) {
           const getArrayTypeOptions = (): Array<[string, string]> => [
             [Blockly.Msg['U_ARRAY_DECLARE_TYPE_INT'] || 'int', 'int'],
@@ -1512,9 +1512,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_raw_code
+    // cpp_raw_code
     {
-      Blockly.Blocks['c_raw_code'] = {
+      Blockly.Blocks['cpp_raw_code'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['C_RAW_CODE_LABEL'] || '直接寫程式碼：')
@@ -1551,9 +1551,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_array_access
+    // cpp_array_at
     {
-      Blockly.Blocks['u_array_access'] = {
+      Blockly.Blocks['cpp_array_at'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(ARRAY_ACCESS_INPUTS.value[0])
             .appendField(Blockly.Msg['U_ARRAY_ACCESS_ARRAY_LABEL'] || '陣列')
@@ -1600,9 +1600,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_array_assign
+    // cpp_array_assign
     {
-      Blockly.Blocks['u_array_assign'] = {
+      Blockly.Blocks['cpp_array_assign'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(ARRAY_ASSIGN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_ARRAY_ASSIGN_SET_LABEL'] || '設定 陣列')
@@ -1620,9 +1620,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_var_assign
+    // cpp_var_assign
     {
-      Blockly.Blocks['u_var_assign'] = {
+      Blockly.Blocks['cpp_var_assign'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(VAR_ASSIGN_INPUTS.value[0])
             .appendField(Blockly.Msg['U_VAR_ASSIGN_LABEL'] || '把變數')
@@ -1637,9 +1637,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_increment
+    // cpp_increment
     {
-      Blockly.Blocks['c_increment'] = {
+      Blockly.Blocks['cpp_increment'] = {
         hasIndex_: false,
         init: function (this: any) {
           this.hasIndex_ = false
@@ -1712,9 +1712,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_compound_assign
+    // cpp_var_assign_compound
     {
-      Blockly.Blocks['c_compound_assign'] = {
+      Blockly.Blocks['cpp_var_assign_compound'] = {
         hasIndex_: false,
         init: function (this: any) {
           this.hasIndex_ = false
@@ -1786,9 +1786,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_forward_decl
+    // cpp_forward_decl
     {
-      Blockly.Blocks['c_forward_decl'] = {
+      Blockly.Blocks['cpp_forward_decl'] = {
         paramCount_: 0,
         init: function (this: any) {
           this.paramCount_ = 0
@@ -1810,7 +1810,7 @@ export class BlockRegistrar {
       // 參數列（只有型別，沒有名字——前向宣告不需要）由同一個工廠提供。
       // ⚠️ 括號改走 `Blockly.Msg`，**fallback 是原本的 `(`／`)`**——
       // 翻譯鍵補上之前顯示完全不變。原本沒走 i18n 是抄過去時漏掉的。
-      定義參數列(Blockly.Blocks['c_forward_decl'], {
+      定義參數列(Blockly.Blocks['cpp_forward_decl'], {
         帶名字欄位: false,
         開括號: ['C_FORWARD_DECL_PARAMS_OPEN', '('],
         閉括號: ['C_FORWARD_DECL_PARAMS_CLOSE', ')'],
@@ -1818,9 +1818,9 @@ export class BlockRegistrar {
       })
     }
 
-    // c_comment_line
+    // cpp_comment
     {
-      Blockly.Blocks['c_comment_line'] = {
+      Blockly.Blocks['cpp_comment'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['C_COMMENT_LINE_LABEL'] || '註解：')
@@ -1833,9 +1833,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_comment_block
+    // cpp_block_comment
     {
-      Blockly.Blocks['c_comment_block'] = {
+      Blockly.Blocks['cpp_block_comment'] = {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['C_COMMENT_BLOCK_LABEL'] || '多行註解：')
@@ -1848,7 +1848,7 @@ export class BlockRegistrar {
       }
     }
 
-    // c_comment_doc
+    // cpp_doc_comment
     {
       Blockly.Blocks['c_doc_container'] = {
         init: function (this: Blockly.Block) {
@@ -1876,7 +1876,7 @@ export class BlockRegistrar {
         },
       }
 
-      Blockly.Blocks['c_comment_doc'] = {
+      Blockly.Blocks['cpp_doc_comment'] = {
         paramCount_: 0,
         hasReturn_: false,
         init: function (this: any) {
@@ -1959,9 +1959,9 @@ export class BlockRegistrar {
 
     // ── Expression versions ──
 
-    // c_increment_expr
+    // cpp_increment_expression
     {
-      Blockly.Blocks['c_increment_expr'] = {
+      Blockly.Blocks['cpp_increment_expression'] = {
         hasIndex_: false,
         init: function (this: any) {
           this.hasIndex_ = false
@@ -2028,9 +2028,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_compound_assign_expr
+    // cpp_var_assign_compound_expression
     {
-      Blockly.Blocks['c_compound_assign_expr'] = {
+      Blockly.Blocks['cpp_var_assign_compound_expression'] = {
         hasIndex_: false,
         init: function (this: any) {
           this.hasIndex_ = false
@@ -2099,9 +2099,9 @@ export class BlockRegistrar {
       }
     }
 
-    // u_input_expr
+    // cpp_input_expression
     {
-      Blockly.Blocks['u_input_expr'] = {
+      Blockly.Blocks['cpp_input_expression'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
@@ -2183,9 +2183,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_scanf_expr
+    // cpp_input_formatted_expression
     {
-      Blockly.Blocks['c_scanf_expr'] = {
+      Blockly.Blocks['cpp_input_formatted_expression'] = {
         argCount_: 1,
         argSlots_: [{ mode: 'select' }] as ArgSlotState[],
         init: function (this: any) {
@@ -2274,9 +2274,9 @@ export class BlockRegistrar {
       }
     }
 
-    // c_var_declare_expr
+    // cpp_var_declare_expression
     {
-      Blockly.Blocks['c_var_declare_expr'] = {
+      Blockly.Blocks['cpp_var_declare_expression'] = {
         init: function (this: Blockly.Block) {
           this.appendValueInput(C_VAR_DECLARE_EXPR_INPUTS.value[0])
             .setCheck('Expression')

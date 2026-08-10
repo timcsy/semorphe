@@ -29,7 +29,7 @@
  * | **靜態掃 `createNode(`** | ⚠️ 只能排順序 | 提供檔案與行號 |
  *
  * ⚠️ **靜態掃描不能單獨下結論。** 規劃階段第一版報了 **27 筆**，其中大多是
- * **積木型別**（`u_if`）與 **AST 節點型別**（`binary_expression`）——它們出現在
+ * **積木型別**（`cpp_if`）與 **AST 節點型別**（`binary_expression`）——它們出現在
  * `registerExtractStrategy(...)` 與 `g.set(...)` 的第一個參數，那**不是元件身分**。
  * 抓到它的是「先在已知答案的樣本上驗」（`build-guardrail` 第 6 步）。
  *
@@ -58,7 +58,7 @@ const 已宣告 = new Set(allCppConcepts().map((c) => c.conceptId))
 
 // ─── 靜態掃描：只認 `createNode(` ────────────────────────────────
 //
-// ⚠️ 刻意**只**認這一個入口。`registerExtractStrategy('u_if')` 的第一個參數是
+// ⚠️ 刻意**只**認這一個入口。`registerExtractStrategy('cpp_if')` 的第一個參數是
 // **積木型別**、`g.set('binary_expression')` 的是 **AST 節點型別**——把它們一起
 // 掃進來就是規劃階段那 27 筆假報。
 
@@ -158,7 +158,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // 報了 27 筆假的。救它的是這一支——**用查過的答案，不是記得的答案**。
     expect(已宣告.has('cpp:var_declare'), 'var_declare 是真元件').toBe(true)
     expect(已宣告.has('cpp:vector_declare'), 'cpp_vector_declare 是真元件').toBe(true)
-    expect(已宣告.has('u_if'), '`u_if` 是**積木型別**不是元件身分——它不該在登錄表裡').toBe(false)
+    expect(已宣告.has('cpp_if'), '`cpp_if` 是**積木型別**不是元件身分——它不該在登錄表裡').toBe(false)
     expect(已宣告.has('binary_expression'), '`binary_expression` 是 AST 節點型別').toBe(false)
   })
 

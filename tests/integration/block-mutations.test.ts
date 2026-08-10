@@ -14,8 +14,8 @@ function makeBlock(overrides: Partial<DiagnosticBlock> & { id: string; type: str
 
 describe('Block mutations integration', () => {
   describe('if-else with else-if chains', () => {
-    it('should diagnose missing condition in u_if_else', () => {
-      const block = makeBlock({ id: 'if1', type: 'u_if_else' })
+    it('should diagnose missing condition in cpp_if_else', () => {
+      const block = makeBlock({ id: 'if1', type: 'cpp_if_else' })
       const result = runDiagnostics([block], cppDiagnosticRules)
       expect(result).toHaveLength(1)
       expect(result[0].message).toBe('DIAG_MISSING_CONDITION')
@@ -24,9 +24,9 @@ describe('Block mutations integration', () => {
     it('should pass when condition is present', () => {
       const block = makeBlock({
         id: 'if1',
-        type: 'u_if_else',
+        type: 'cpp_if_else',
         getInputTargetBlock: (name: string) =>
-          name === 'CONDITION' ? makeBlock({ id: 'c', type: 'u_compare' }) : null,
+          name === 'CONDITION' ? makeBlock({ id: 'c', type: 'cpp_compare' }) : null,
       })
       expect(runDiagnostics([block], cppDiagnosticRules)).toEqual([])
     })
@@ -36,7 +36,7 @@ describe('Block mutations integration', () => {
     it('should diagnose empty first variable name', () => {
       const block = makeBlock({
         id: 'v1',
-        type: 'u_var_declare',
+        type: 'cpp_var_declare',
         getFieldValue: (name: string) => {
           if (name === 'NAME_0') return ''
           return null
@@ -50,7 +50,7 @@ describe('Block mutations integration', () => {
     it('should pass when all variables have names', () => {
       const block = makeBlock({
         id: 'v1',
-        type: 'u_var_declare',
+        type: 'cpp_var_declare',
         getFieldValue: (name: string) => {
           if (name === 'NAME_0') return 'x'
           if (name === 'NAME_1') return 'y'
@@ -63,7 +63,7 @@ describe('Block mutations integration', () => {
     it('should detect empty name among multiple vars', () => {
       const block = makeBlock({
         id: 'v2',
-        type: 'u_var_declare',
+        type: 'cpp_var_declare',
         getFieldValue: (name: string) => {
           if (name === 'NAME_0') return 'x'
           if (name === 'NAME_1') return '  '
@@ -77,8 +77,8 @@ describe('Block mutations integration', () => {
   })
 
   describe('input block multi-variable', () => {
-    it('should not diagnose u_input (no current rule)', () => {
-      const block = makeBlock({ id: 'i1', type: 'u_input' })
+    it('should not diagnose cpp_input (no current rule)', () => {
+      const block = makeBlock({ id: 'i1', type: 'cpp_input' })
       expect(runDiagnostics([block], cppDiagnosticRules)).toEqual([])
     })
   })
@@ -86,17 +86,17 @@ describe('Block mutations integration', () => {
   describe('mixed workspace diagnostics', () => {
     it('should detect multiple issues across blocks', () => {
       const blocks = [
-        makeBlock({ id: 'b1', type: 'u_if' }), // missing condition
-        makeBlock({ id: 'b2', type: 'u_while_loop' }), // missing condition
+        makeBlock({ id: 'b1', type: 'cpp_if' }), // missing condition
+        makeBlock({ id: 'b2', type: 'cpp_loop_while' }), // missing condition
         makeBlock({
           id: 'b3',
-          type: 'u_print',
+          type: 'cpp_print',
           getInputTargetBlock: (name: string) =>
-            name === 'EXPR0' ? makeBlock({ id: 'e', type: 'u_string' }) : null,
+            name === 'EXPR0' ? makeBlock({ id: 'e', type: 'cpp_literal_string' }) : null,
         }), // OK
         makeBlock({
           id: 'b4',
-          type: 'u_var_declare',
+          type: 'cpp_var_declare',
           getFieldValue: (name: string) => name === 'NAME' ? '' : null,
         }), // empty name
       ]

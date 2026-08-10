@@ -108,12 +108,12 @@ describe('L2 Block Roundtrip', () => {
 
   // ─── Pointer Operations ─────────────────────────────────────
 
-  describe('c_pointer_declare', () => {
+  describe('cpp_pointer_declare', () => {
     it('should render and extract pointer declaration', () => {
       const sem = createNode('cpp:pointer_declare', { type: 'int', name: 'ptr' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_pointer_declare')
+      expect(block!.type).toBe('cpp_pointer_declare')
       expect(block!.fields?.TYPE).toBe('int')
       expect(block!.fields?.NAME).toBe('ptr')
 
@@ -132,13 +132,13 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_pointer_deref', () => {
+  describe('cpp_pointer_deref', () => {
     it('should render and extract pointer dereference', () => {
       const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:pointer_deref', {}, { ptr: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_pointer_deref')
+      expect(block!.type).toBe('cpp_pointer_deref')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:pointer_deref')
@@ -163,13 +163,13 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_address_of', () => {
+  describe('cpp_address_of', () => {
     it('should render and extract address-of', () => {
       const inner = createNode('cpp:var_ref', { name: 'x' })
       const sem = createNode('cpp:address_of', {}, { var: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_address_of')
+      expect(block!.type).toBe('cpp_address_of')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:address_of')
@@ -194,13 +194,13 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_free', () => {
+  describe('cpp_free', () => {
     it('should render and extract free()', () => {
       const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:free', {}, { ptr: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_free')
+      expect(block!.type).toBe('cpp_free')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:free')
@@ -225,12 +225,12 @@ describe('L2 Block Roundtrip', () => {
 
   // ─── Struct Operations ──────────────────────────────────────
 
-  describe('c_struct_member_access', () => {
+  describe('cpp_struct_at_member', () => {
     it('should render and extract struct member access', () => {
       const sem = createNode('cpp:struct_at_member', { obj: 'p', member: 'x' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_struct_member_access')
+      expect(block!.type).toBe('cpp_struct_at_member')
       expect(block!.fields?.OBJ).toBe('p')
       expect(block!.fields?.MEMBER).toBe('x')
 
@@ -260,12 +260,12 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_struct_pointer_access', () => {
+  describe('cpp_struct_at_ptr', () => {
     it('should render and extract struct pointer access', () => {
       const sem = createNode('cpp:struct_at_ptr', { obj: 'p', member: 'x' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_struct_pointer_access')
+      expect(block!.type).toBe('cpp_struct_at_ptr')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:struct_at_ptr')
@@ -282,13 +282,13 @@ describe('L2 Block Roundtrip', () => {
 
   // ─── String Functions ───────────────────────────────────────
 
-  describe('c_strlen', () => {
+  describe('cpp_cstring_size', () => {
     it('should render and extract strlen', () => {
       const inner = createNode('cpp:var_ref', { name: 's' })
       const sem = createNode('cpp:cstring_size', {}, { str: [inner] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_strlen')
+      expect(block!.type).toBe('cpp_cstring_size')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:cstring_size')
@@ -311,14 +311,14 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_strcmp', () => {
+  describe('cpp_cstring_compare', () => {
     it('should render and extract strcmp', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
       const sem = createNode('cpp:cstring_compare', {}, { s1: [s1], s2: [s2] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_strcmp')
+      expect(block!.type).toBe('cpp_cstring_compare')
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
@@ -330,7 +330,7 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_strcpy', () => {
+  describe('cpp_cstring_copy', () => {
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
       const dest = createNode('cpp:var_ref', { name: 'dst' })
       const src = createNode('cpp:var_ref', { name: 'src' })
@@ -370,7 +370,7 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:container_append', { obj: 'v' }, { value: [val] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_container_push_back')
+      expect(block!.type).toBe('cpp_container_append')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:container_append')
@@ -446,11 +446,11 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:range_sort', { begin: 'v.begin()', end: 'v.end()' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('cpp_sort')
+      expect(block!.type).toBe('cpp_range_sort')
     })
 
     it('should generate code via hand-written generator', () => {
-      // cpp_sort uses hand-written generator (not codeTemplate), tested in roundtrip-cpp-algorithm.test.ts
+      // cpp_range_sort uses hand-written generator (not codeTemplate), tested in roundtrip-cpp-algorithm.test.ts
       const sem = createNode('cpp:range_sort', { begin: 'v.begin()', end: 'v.end()' })
       // TemplateGenerator returns null for hand-written generators — expected
       const code = generator.generate(sem, genCtx)
@@ -571,12 +571,12 @@ describe('L2 Block Roundtrip', () => {
 
   // ─── Preprocessor (Special) ─────────────────────────────────
 
-  describe('c_ifdef', () => {
+  describe('cpp_ifdef', () => {
     it('should render and extract ifdef', () => {
       const sem = createNode('cpp:ifdef', { condition: 'DEBUG' }, { body: [] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_ifdef')
+      expect(block!.type).toBe('cpp_ifdef')
       expect(block!.fields?.CONDITION).toBe('DEBUG')
 
       const sem2 = extractor.extract(block!)
@@ -592,12 +592,12 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_ifndef', () => {
+  describe('cpp_ifndef', () => {
     it('should render and extract ifndef', () => {
       const sem = createNode('cpp:ifndef', { condition: 'HEADER_H' }, { body: [] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_ifndef')
+      expect(block!.type).toBe('cpp_ifndef')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:ifndef')
@@ -614,12 +614,12 @@ describe('L2 Block Roundtrip', () => {
 
   // ─── Other Special Blocks ───────────────────────────────────
 
-  describe('c_include', () => {
+  describe('cpp_include', () => {
     it('should render and extract include', () => {
       const sem = createNode('cpp:include', { header: 'iostream' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_include')
+      expect(block!.type).toBe('cpp_include')
       expect(block!.fields?.HEADER).toBe('iostream')
 
       const sem2 = extractor.extract(block!)
@@ -634,12 +634,12 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_define', () => {
+  describe('cpp_define', () => {
     it('should render and extract define', () => {
       const sem = createNode('cpp:define', { name: 'MAX', value: '100' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_define')
+      expect(block!.type).toBe('cpp_define')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:define')
@@ -654,12 +654,12 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_using_namespace', () => {
+  describe('cpp_using_namespace', () => {
     it('should render and extract using namespace', () => {
       const sem = createNode('cpp:using_namespace', { ns: 'std' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_using_namespace')
+      expect(block!.type).toBe('cpp_using_namespace')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:using_namespace')
@@ -673,12 +673,12 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
-  describe('c_comment_line', () => {
+  describe('cpp_comment', () => {
     it('should render and extract comment', () => {
       const sem = createNode('cpp:comment', { text: 'hello' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_comment_line')
+      expect(block!.type).toBe('cpp_comment')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:comment')

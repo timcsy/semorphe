@@ -2,7 +2,7 @@
  * C++ Vector Operations Roundtrip Tests
  *
  * Verifies that C++ vector operation concepts (cpp_vector_declare, cpp_vector_push_back,
- * cpp_vector_size, cpp_vector_pop_back, cpp_vector_clear, cpp_vector_empty, cpp_vector_back)
+ * cpp_vector_size, cpp_vector_pop, cpp_vector_clear, cpp_vector_empty, cpp_vector_back)
  * survive the full roundtrip:
  *
  *   C++ code → (tree-sitter parse) → AST → (lift) → SemanticTree
@@ -170,12 +170,12 @@ describe('C++ Vector Operations Roundtrip', () => {
     })
   })
 
-  // ─── 4. cpp_vector_pop_back ───────────────────────────────
+  // ─── 4. cpp_vector_pop ───────────────────────────────
 
   describe('cpp:vector_pop', () => {
     const code = 'vector<int> v;\nv.push_back(1);\nv.push_back(2);\nv.push_back(3);\nv.pop_back();\ncout << v.size() << endl;'
 
-    it('should lift to cpp_vector_pop_back concept', () => {
+    it('should lift to cpp_vector_pop concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:vector_pop')

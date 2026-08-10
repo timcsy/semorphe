@@ -63,7 +63,7 @@
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_stack_top",
+      "type": "cpp_stack_peek",
       "message0": "%{BKY_CPP_STACK_TOP_MSG0}",
       "args0": [
         {

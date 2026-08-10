@@ -1,7 +1,7 @@
 /**
  * C++ utility Roundtrip Tests
  *
- * Verifies that C++ <utility> concepts (cpp_pair_declare, cpp_make_pair)
+ * Verifies that C++ <utility> concepts (cpp_pair_declare, cpp_pair_make)
  * survive the full roundtrip: code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'

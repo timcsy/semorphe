@@ -59,18 +59,18 @@ describe('Comment Round-trip (US7)', () => {
     expect(code).toContain('int x = 5;')
   })
 
-  it('should render comment as c_comment_line block', () => {
+  it('should render comment as cpp_comment block', () => {
     const tree = liftCode('// test comment\nint x = 5;')
     expect(tree).not.toBeNull()
     const state = renderToBlocklyState(tree!)
     expect(state.blocks.blocks).toHaveLength(1)
     // First block in chain should be comment
     const firstBlock = state.blocks.blocks[0]
-    expect(firstBlock.type).toBe('c_comment_line')
+    expect(firstBlock.type).toBe('cpp_comment')
     expect(firstBlock.fields.TEXT).toBe('test comment')
     // Should chain to var_declare
     expect(firstBlock.next).toBeDefined()
-    expect(firstBlock.next!.block.type).toBe('u_var_declare')
+    expect(firstBlock.next!.block.type).toBe('cpp_var_declare')
   })
 
   it('should handle multiple comments', () => {
@@ -112,12 +112,12 @@ describe('Block Comment Round-trip', () => {
     expect(code).toContain('*/')
   })
 
-  it('should render block comment as c_comment_block block', () => {
+  it('should render block comment as cpp_block_comment block', () => {
     const tree = liftCode('/* test comment */\nint x = 5;')
     expect(tree).not.toBeNull()
     const state = renderToBlocklyState(tree!)
     const firstBlock = state.blocks.blocks[0]
-    expect(firstBlock.type).toBe('c_comment_block')
+    expect(firstBlock.type).toBe('cpp_block_comment')
     expect(firstBlock.fields.TEXT).toBe('test comment')
   })
 
@@ -200,7 +200,7 @@ int add(int a, int b) { return a + b; }`
     expect(generated).toContain('*/')
   })
 
-  it('should render doc comment as c_comment_doc block with fields', () => {
+  it('should render doc comment as cpp_doc_comment block with fields', () => {
     const code = `/**
  * @brief Calculate sum
  * @param x input value
@@ -210,7 +210,7 @@ int f(int x) { return x; }`
     const tree = liftCode(code)
     const state = renderToBlocklyState(tree!)
     const firstBlock = state.blocks.blocks[0]
-    expect(firstBlock.type).toBe('c_comment_doc')
+    expect(firstBlock.type).toBe('cpp_doc_comment')
     expect(firstBlock.fields.BRIEF).toBe('Calculate sum')
     expect(firstBlock.fields.PARAM_NAME_0).toBe('x')
     expect(firstBlock.fields.PARAM_DESC_0).toBe('input value')

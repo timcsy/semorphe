@@ -28,6 +28,8 @@ export class BlockSpecRegistry {
         ...proj,
         conceptMapping: {
           conceptId: proj.conceptId,
+          // 呈現層要分「通用 vs 語言專屬」時問這個欄位，不要看名字前綴（116）。
+          layer: concept?.layer,
           abstractConcept: concept?.abstractConcept ?? undefined,
           properties: paramNames(concept?.properties),
           children: concept?.children,

@@ -26,35 +26,35 @@ describe('Topic-Based Block Visibility', () => {
   describe('isBlockVisible', () => {
     it('should make root-level blocks visible with only root enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0']))
-      expect(reg.isBlockVisible('u_var_declare', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_number', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_if', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_print', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_var_declare', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_literal_number', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_if', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_print', concepts)).toBe(true)
     })
 
     it('should hide L1 concept blocks with only root enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0']))
-      expect(reg.isBlockVisible('u_func_def', concepts)).toBe(false)
-      expect(reg.isBlockVisible('u_count_loop', concepts)).toBe(false)
+      expect(reg.isBlockVisible('cpp_func_def', concepts)).toBe(false)
+      expect(reg.isBlockVisible('cpp_loop_count', concepts)).toBe(false)
       // logic moved to L0 — use a different L1-only concept for this test
-      expect(reg.isBlockVisible('c_increment', concepts)).toBe(false)
+      expect(reg.isBlockVisible('cpp_increment', concepts)).toBe(false)
     })
 
     it('should show L1 concept blocks when L1a branch enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1a']))
-      expect(reg.isBlockVisible('u_func_def', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_count_loop', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_func_def', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_loop_count', concepts)).toBe(true)
     })
 
     it('should hide L2 blocks when only L1 enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1a']))
-      expect(reg.isBlockVisible('u_array_declare', concepts)).toBe(false)
+      expect(reg.isBlockVisible('cpp_array_declare', concepts)).toBe(false)
     })
 
     it('should show array blocks when L2a enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L2a']))
-      expect(reg.isBlockVisible('u_array_declare', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_array_access', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_array_declare', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_array_at', concepts)).toBe(true)
     })
 
     it('should show unknown blocks as visible (no concept restriction)', () => {
@@ -84,12 +84,12 @@ describe('Topic-Based Block Visibility', () => {
   })
 
   describe('Statement↔Expression extraState contract', () => {
-    it('u_input/u_input_expr use { args: ArgSlotState[] } shape', () => {
+    it('cpp_input/cpp_input_expression use { args: ArgSlotState[] } shape', () => {
       const state = { args: [{ mode: 'select', selectedVar: 'x' }] }
       expect(state.args).toBeInstanceOf(Array)
       expect(state.args[0]).toHaveProperty('mode')
     })
-    it('u_func_call/u_func_call_expr use { argCount: number } shape', () => {
+    it('cpp_func_call/cpp_func_call_expression use { argCount: number } shape', () => {
       const state = { argCount: 3 }
       expect(typeof state.argCount).toBe('number')
     })
@@ -98,22 +98,22 @@ describe('Topic-Based Block Visibility', () => {
   describe('block visibility filtering', () => {
     it('should hide function blocks with only root enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0']))
-      const funcBlocks = ['u_func_def', 'u_func_call', 'u_return']
+      const funcBlocks = ['cpp_func_def', 'cpp_func_call', 'cpp_return']
       const visible = funcBlocks.filter(t => reg.isBlockVisible(t, concepts))
       expect(visible).toHaveLength(0)
     })
 
     it('should show function blocks with L1a enabled', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0', 'L1a']))
-      const funcBlocks = ['u_func_def', 'u_func_call', 'u_return']
+      const funcBlocks = ['cpp_func_def', 'cpp_func_call', 'cpp_return']
       const visible = funcBlocks.filter(t => reg.isBlockVisible(t, concepts))
       expect(visible).toHaveLength(3)
     })
 
     it('should show data blocks but not arrays with only root', () => {
       const concepts = getVisibleConcepts(topic, new Set(['L0']))
-      expect(reg.isBlockVisible('u_var_declare', concepts)).toBe(true)
-      expect(reg.isBlockVisible('u_array_declare', concepts)).toBe(false)
+      expect(reg.isBlockVisible('cpp_var_declare', concepts)).toBe(true)
+      expect(reg.isBlockVisible('cpp_array_declare', concepts)).toBe(false)
     })
   })
 })

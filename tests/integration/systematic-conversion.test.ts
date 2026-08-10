@@ -111,7 +111,7 @@ describe('Preprocessor Directives', () => {
       const topBlocks = state.blocks?.blocks ?? []
       expect(topBlocks.length).toBeGreaterThan(0)
       const includeBlock = topBlocks[0]
-      expect(includeBlock.type).toBe('c_include')
+      expect(includeBlock.type).toBe('cpp_include')
       expect(includeBlock.fields?.HEADER).toBe('iostream')
     })
   })
@@ -217,7 +217,7 @@ describe('Declarations', () => {
       const state = blocks('int a, b = 5;')
       const topBlocks = state.blocks?.blocks ?? []
       const declBlock = topBlocks[0]
-      expect(declBlock.type).toBe('u_var_declare')
+      expect(declBlock.type).toBe('cpp_var_declare')
       expect(declBlock.extraState).toBeDefined()
       expect(declBlock.extraState?.items).toContain('var')
       expect(declBlock.extraState?.items).toContain('var_init')
@@ -374,7 +374,7 @@ describe('Expressions', () => {
       // Find the array access block in the input tree
       const initInput = declBlock?.inputs?.INIT_0?.block
       expect(initInput).toBeDefined()
-      expect(initInput?.type).toBe('u_array_access')
+      expect(initInput?.type).toBe('cpp_array_at')
       expect(initInput?.fields?.NAME).toBe('arr')
     })
   })
@@ -476,7 +476,7 @@ describe('I/O', () => {
       const mainBlock = topBlocks[0]
       const bodyChain = mainBlock?.inputs?.BODY?.block
       expect(bodyChain).toBeDefined()
-      expect(bodyChain!.type).toBe('u_print')
+      expect(bodyChain!.type).toBe('cpp_print')
       // Should have at least 2 expression inputs (string + endl)
       expect(bodyChain!.extraState?.itemCount).toBeGreaterThanOrEqual(2)
     })
@@ -543,8 +543,8 @@ describe('I/O', () => {
       const mainBlock = topBlocks[0]
       const bodyChain = mainBlock?.inputs?.BODY?.block
       expect(bodyChain).toBeDefined()
-      expect(bodyChain!.type).toBe('u_input')
-      // extraState.args matches u_input's loadExtraState format
+      expect(bodyChain!.type).toBe('cpp_input')
+      // extraState.args matches cpp_input's loadExtraState format
       const args = bodyChain!.extraState?.args as Array<{ mode: string; text: string }>
       expect(args).toBeDefined()
       expect(args.length).toBe(2)
@@ -569,16 +569,16 @@ describe('I/O', () => {
       expect(code).toContain('cout << endl;')
     })
 
-    it('renders endl block (u_endl)', () => {
+    it('renders endl block (cpp_endl)', () => {
       const state = blocks('int main() { cout << endl; }')
       const topBlocks = state.blocks?.blocks ?? []
       const mainBlock = topBlocks[0]
       const printBlock = mainBlock?.inputs?.BODY?.block
-      expect(printBlock?.type).toBe('u_print')
-      // Check that one of the expression inputs is u_endl
+      expect(printBlock?.type).toBe('cpp_print')
+      // Check that one of the expression inputs is cpp_endl
       const inputs = printBlock?.inputs ?? {}
       const endlInput = Object.values(inputs).find(
-        (inp: any) => inp.block?.type === 'u_endl'
+        (inp: any) => inp.block?.type === 'cpp_endl'
       )
       expect(endlInput).toBeDefined()
     })
@@ -613,7 +613,7 @@ describe('Control Flow', () => {
       const state = blocks('int main() { if (x > 0) { y = 1; } else { y = 2; } }')
       const mainBlock = state.blocks?.blocks?.[0]
       const ifBlock = mainBlock?.inputs?.BODY?.block
-      expect(ifBlock?.type).toBe('u_if')
+      expect(ifBlock?.type).toBe('cpp_if')
       expect(ifBlock?.extraState?.hasElse).toBe(true)
     })
 
@@ -729,7 +729,7 @@ describe('Functions', () => {
       const state = blocks('int add(int a, int b) { return a + b; }')
       const topBlocks = state.blocks?.blocks ?? []
       const funcBlock = topBlocks[0]
-      expect(funcBlock.type).toBe('u_func_def')
+      expect(funcBlock.type).toBe('cpp_func_def')
       expect(funcBlock.fields?.NAME).toBe('add')
       expect(funcBlock.fields?.RETURN_TYPE).toBe('int')
       expect(funcBlock.extraState?.paramCount).toBe(2)
@@ -739,7 +739,7 @@ describe('Functions', () => {
       const state = blocks('long long fast_pow(long long base, long long exp, long long mod) { return 1; }')
       const topBlocks = state.blocks?.blocks ?? []
       const funcBlock = topBlocks[0]
-      expect(funcBlock.type).toBe('u_func_def')
+      expect(funcBlock.type).toBe('cpp_func_def')
       expect(funcBlock.fields?.RETURN_TYPE).toBe('long long')
       expect(funcBlock.fields?.TYPE_0).toBe('long long')
       expect(funcBlock.fields?.PARAM_0).toBe('base')
@@ -796,7 +796,7 @@ describe('Functions', () => {
       const state = blocks('int main() { add(1, 2); }')
       const mainBlock = state.blocks?.blocks?.[0]
       const callBlock = mainBlock?.inputs?.BODY?.block
-      expect(callBlock?.type).toBe('u_func_call')
+      expect(callBlock?.type).toBe('cpp_func_call')
       expect(callBlock?.fields?.NAME).toBe('add')
       expect(callBlock?.extraState?.argCount).toBe(2)
     })
@@ -888,7 +888,7 @@ describe('Compound Assignment & Increment', () => {
       const state = blocks('int main() { x += 5; }')
       const mainBlock = state.blocks?.blocks?.[0]
       const compBlock = mainBlock?.inputs?.BODY?.block
-      expect(compBlock?.type).toBe('c_compound_assign')
+      expect(compBlock?.type).toBe('cpp_var_assign_compound')
       expect(compBlock?.fields?.NAME).toBe('x')
       expect(compBlock?.fields?.OP).toBe('+=')
     })
@@ -922,7 +922,7 @@ describe('Compound Assignment & Increment', () => {
       const state = blocks('int main() { i++; }')
       const mainBlock = state.blocks?.blocks?.[0]
       const incBlock = mainBlock?.inputs?.BODY?.block
-      expect(incBlock?.type).toBe('c_increment')
+      expect(incBlock?.type).toBe('cpp_increment')
       expect(incBlock?.fields?.NAME).toBe('i')
     })
   })
@@ -1006,8 +1006,8 @@ int main() {
       types.push(current.type)
       current = current.next?.block
     }
-    expect(types).toContain('c_include')
-    expect(types).toContain('c_using_namespace')
-    expect(types).toContain('u_func_def')
+    expect(types).toContain('cpp_include')
+    expect(types).toContain('cpp_using_namespace')
+    expect(types).toContain('cpp_func_def')
   })
 })

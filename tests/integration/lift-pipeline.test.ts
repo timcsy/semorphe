@@ -178,7 +178,7 @@ int main() {
       const state = renderToBlocklyState(tree!)
       expect(state.blocks.blocks).toHaveLength(1)
       // First block should be var_declare, chained with raw_code
-      expect(state.blocks.blocks[0].type).toBe('u_var_declare')
+      expect(state.blocks.blocks[0].type).toBe('cpp_var_declare')
       expect(state.blocks.blocks[0].next).toBeDefined()
     })
   })

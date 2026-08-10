@@ -206,15 +206,15 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
       expect(state.blocks.blocks).toHaveLength(1)
 
       let block = state.blocks.blocks[0]
-      expect(block.type).toBe('u_var_declare')
+      expect(block.type).toBe('cpp_var_declare')
       expect(block.next).toBeDefined()
 
       block = block.next!.block
-      expect(block.type).toBe('u_var_declare')
+      expect(block.type).toBe('cpp_var_declare')
       expect(block.next).toBeDefined()
 
       block = block.next!.block
-      expect(block.type).toBe('u_var_assign')
+      expect(block.type).toBe('cpp_var_assign')
     })
 
     it('nested structure produces correct block tree', () => {
@@ -222,7 +222,7 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
       expect(tree).not.toBeNull()
       const state = renderToBlocklyState(tree!)
       const ifBlock = state.blocks.blocks[0]
-      expect(ifBlock.type).toBe('u_if')
+      expect(ifBlock.type).toBe('cpp_if')
       expect(ifBlock.inputs.CONDITION).toBeDefined()
       expect(ifBlock.inputs.THEN).toBeDefined()
     })
@@ -232,7 +232,7 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
       expect(tree).not.toBeNull()
       const state = renderToBlocklyState(tree!)
       const funcBlock = state.blocks.blocks[0]
-      expect(funcBlock.type).toBe('u_func_def')
+      expect(funcBlock.type).toBe('cpp_func_def')
       expect(funcBlock.inputs.BODY).toBeDefined()
     })
   })

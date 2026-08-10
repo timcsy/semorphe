@@ -125,7 +125,7 @@ export interface BlockSpec {
    * 需要寫的是**真的散開**的那幾包，而那是逐顆的教學決定：
    * `<cstdlib>` 的 `abs` 是運算、`exit` 是控制、`atoi` 是文字——一個標頭三個意圖。
    *
-   * 陣列代表**同時屬於多個分類**（`c_memset` 既是文字也是記憶體操作）。
+   * 陣列代表**同時屬於多個分類**（`cpp_memory_fill` 既是文字也是記憶體操作）。
    *
    * ⚠️ **中性形態不寫這一欄。** 它不進工具箱是推導出來的
    * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
@@ -155,6 +155,17 @@ export interface BlockSpec {
 
 export interface ConceptMapping {
   conceptId: string
+  /**
+   * 這顆概念屬於哪一層——**呈現層要分「通用 vs 語言專屬」時問這裡，
+   * 不要看名字的前綴。**
+   *
+   * ⚠️ 116 之前，工具箱用 `blockType.startsWith('u_')` 判。積木型別改成
+   * 從身分導出之後沒有型別以 `u_` 開頭，那個判斷**靜靜地失效**
+   * （`universalIo` 恆為空，iostream／printf 的排序偏好不再有作用）。
+   *
+   * > **命名慣例不是契約。** 要判斷「這顆概念是不是 X」，就宣告一個 X 標註。
+   */
+  layer?: ConceptLayer
   abstractConcept?: string
   properties?: string[]
   children?: Record<string, string>
@@ -295,8 +306,8 @@ export interface RenderMapping {
    * 把一個接點的子節點序列化進**一個文字欄位**，並解析回來。
    *
    * 與 `dynamicRules` 是**兩種不同的形態**——那個是「每項一組欄位」
-   * （`u_func_def` 的 `TYPE_{i}`／`PARAM_{i}`），這個是「全部擠進一個欄位」
-   * （`c_lambda` 的 `PARAMS`）。並列在同一層，讓「這顆元件的參數長什麼樣」
+   * （`cpp_func_def` 的 `TYPE_{i}`／`PARAM_{i}`），這個是「全部擠進一個欄位」
+   * （`cpp_lambda` 的 `PARAMS`）。並列在同一層，讓「這顆元件的參數長什麼樣」
    * 一眼看得出來。
    *
    * 見 `src/core/projection/children-as-field.ts` 的檔頭（含**升級成結構化
@@ -496,7 +507,7 @@ export interface BlockProjectionJSON {
    * 需要寫的是**真的散開**的那幾包，而那是逐顆的教學決定：
    * `<cstdlib>` 的 `abs` 是運算、`exit` 是控制、`atoi` 是文字——一個標頭三個意圖。
    *
-   * 陣列代表**同時屬於多個分類**（`c_memset` 既是文字也是記憶體操作）。
+   * 陣列代表**同時屬於多個分類**（`cpp_memory_fill` 既是文字也是記憶體操作）。
    *
    * ⚠️ **中性形態不寫這一欄。** 它不進工具箱是推導出來的
    * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
@@ -655,7 +666,7 @@ export interface ToolboxCategoryDef {
   sources: ToolboxSource[]
   /**
    * 只留**帶 `extraState`** 的入口——那是「這個預設狀態值得一個獨立入口」的
-   * 教學判斷（三個 `u_if` 變體），登錄表推不出來。
+   * 教學判斷（三個 `cpp_if` 變體），登錄表推不出來。
    *
    * 純字串的項目已全數消除：那些是「這顆積木屬於這個分類」，**登錄表知道**。
    */

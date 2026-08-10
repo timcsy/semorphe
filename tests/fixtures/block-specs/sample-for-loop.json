@@ -1,10 +1,10 @@
 {
-  "id": "c_for_loop",
+  "id": "cpp_loop_for",
   "language": "cpp",
   "category": "loops",
   "version": "1.0.0",
   "blockDef": {
-    "type": "c_for_loop",
+    "type": "cpp_loop_for",
     "message0": "for %1 ; %2 ; %3",
     "args0": [
       { "type": "input_value", "name": "INIT", "check": "Expression" },

@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_math_pow",
+    "id": "cpp_math_pow",
     "conceptId": "cpp:math_pow",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_math_pow",
+      "type": "cpp_math_pow",
       "message0": "%{BKY_C_MATH_POW_MSG0}",
       "args0": [
         {

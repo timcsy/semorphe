@@ -1,8 +1,8 @@
 /**
  * C++ Algorithm Roundtrip Tests
  *
- * Verifies that C++ algorithm concepts (cpp_sort, cpp_reverse, cpp_fill,
- * cpp_min, cpp_max, cpp_swap) survive the full roundtrip:
+ * Verifies that C++ algorithm concepts (cpp_range_sort, cpp_range_reverse, cpp_range_fill,
+ * cpp_math_min, cpp_math_max, cpp_var_swap) survive the full roundtrip:
  * code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -80,7 +80,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_sort', () => {
     const code = 'vector<int> v;\nv.push_back(3);\nv.push_back(1);\nv.push_back(2);\nsort(v.begin(), v.end());\ncout << v[0] << endl;'
 
-    it('should lift to cpp_sort concept', () => {
+    it('should lift to cpp_range_sort concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:range_sort')
       expect(node).not.toBeNull()
@@ -107,7 +107,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_reverse', () => {
     const code = 'vector<int> v;\nv.push_back(1);\nv.push_back(2);\nv.push_back(3);\nreverse(v.begin(), v.end());\ncout << v[0] << endl;'
 
-    it('should lift to cpp_reverse concept', () => {
+    it('should lift to cpp_range_reverse concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:range_reverse')
       expect(node).not.toBeNull()
@@ -131,7 +131,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_fill', () => {
     const code = 'vector<int> v;\nv.push_back(0);\nv.push_back(0);\nv.push_back(0);\nfill(v.begin(), v.end(), 42);\ncout << v[0] << endl;'
 
-    it('should lift to cpp_fill concept with value child', () => {
+    it('should lift to cpp_range_fill concept with value child', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:range_fill')
       expect(node).not.toBeNull()
@@ -157,7 +157,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:math_min', () => {
     const code = 'int a = 5;\nint b = 3;\ncout << min(a, b) << endl;'
 
-    it('should lift to cpp_min concept', () => {
+    it('should lift to cpp_math_min concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:math_min')
       expect(node).not.toBeNull()
@@ -181,7 +181,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:math_max', () => {
     const code = 'int a = 5;\nint b = 3;\ncout << max(a, b) << endl;'
 
-    it('should lift to cpp_max concept', () => {
+    it('should lift to cpp_math_max concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:math_max')
       expect(node).not.toBeNull()
@@ -205,7 +205,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:var_swap', () => {
     const code = 'int a = 10;\nint b = 20;\nswap(a, b);\ncout << a << " " << b << endl;'
 
-    it('should lift to cpp_swap concept', () => {
+    it('should lift to cpp_var_swap concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:var_swap')
       expect(node).not.toBeNull()
@@ -229,7 +229,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('combo: min + max', () => {
     const code = 'int x = 7;\nint y = 3;\nint z = 5;\ncout << min(x, y) << endl;\ncout << max(y, z) << endl;'
 
-    it('should lift both cpp_min and cpp_max', () => {
+    it('should lift both cpp_math_min and cpp_math_max', () => {
       const tree = liftCode(code)
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:math_min')).toBe(true)
@@ -248,7 +248,7 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('combo: sort + reverse', () => {
     const code = 'vector<int> v;\nv.push_back(5);\nv.push_back(2);\nv.push_back(8);\nv.push_back(1);\nsort(v.begin(), v.end());\ncout << v[0] << endl;\nreverse(v.begin(), v.end());\ncout << v[0] << endl;'
 
-    it('should lift both cpp_sort and cpp_reverse', () => {
+    it('should lift both cpp_range_sort and cpp_range_reverse', () => {
       const tree = liftCode(code)
       const concepts = collectConcepts(tree)
       expect(concepts.has('cpp:range_sort')).toBe(true)

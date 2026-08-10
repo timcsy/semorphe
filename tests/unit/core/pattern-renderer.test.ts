@@ -13,7 +13,7 @@ describe('PatternRenderer', () => {
   describe('auto-derive renderMapping from blockDef', () => {
     it('should derive fields mapping for field_input', () => {
       const spec: BlockSpec = {
-        id: 'c_increment',
+        id: 'cpp_increment',
         language: 'cpp',
         category: 'operators',
         level: 1,
@@ -25,7 +25,7 @@ describe('PatternRenderer', () => {
           role: 'both',
         },
         blockDef: {
-          type: 'c_increment',
+          type: 'cpp_increment',
           args0: [
             { type: 'field_input', name: 'NAME', text: 'i' },
             { type: 'field_dropdown', name: 'OP', options: [['++', '++'], ['--', '--']] },
@@ -41,7 +41,7 @@ describe('PatternRenderer', () => {
       const result = renderer.render(node)
 
       expect(result).not.toBeNull()
-      expect(result!.type).toBe('c_increment')
+      expect(result!.type).toBe('cpp_increment')
       expect(result!.fields.NAME).toBe('i')
       expect(result!.fields.OP).toBe('++')
     })
@@ -50,7 +50,7 @@ describe('PatternRenderer', () => {
   describe('explicit renderMapping', () => {
     it('should use explicit renderMapping when provided', () => {
       const spec: BlockSpec = {
-        id: 'c_increment',
+        id: 'cpp_increment',
         language: 'cpp',
         category: 'operators',
         level: 1,
@@ -60,7 +60,7 @@ describe('PatternRenderer', () => {
           properties: ['name', 'operator'],
           role: 'both',
         },
-        blockDef: { type: 'c_increment' },
+        blockDef: { type: 'cpp_increment' },
         codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: { nodeType: 'update_expression', constraints: [] },
         renderMapping: {
@@ -83,7 +83,7 @@ describe('PatternRenderer', () => {
   describe('inputs mapping (expression children)', () => {
     it('should render expression child as input', () => {
       const spec: BlockSpec = {
-        id: 'u_return',
+        id: 'cpp_return',
         language: 'universal',
         category: 'functions',
         level: 0,
@@ -94,7 +94,7 @@ describe('PatternRenderer', () => {
           role: 'statement',
         },
         blockDef: {
-          type: 'u_return',
+          type: 'cpp_return',
           args0: [
             { type: 'input_value', name: 'VALUE', check: 'Expression' },
           ],
@@ -105,7 +105,7 @@ describe('PatternRenderer', () => {
       }
 
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
@@ -116,7 +116,7 @@ describe('PatternRenderer', () => {
           role: 'expression',
         },
         blockDef: {
-          type: 'u_number',
+          type: 'cpp_literal_number',
           args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
         },
         renderMapping: { fields: { NUM: 'value' }, inputs: {}, statementInputs: {} },
@@ -131,9 +131,9 @@ describe('PatternRenderer', () => {
       const result = renderer.render(retNode)
 
       expect(result).not.toBeNull()
-      expect(result!.type).toBe('u_return')
+      expect(result!.type).toBe('cpp_return')
       expect(result!.inputs.VALUE).toBeDefined()
-      expect(result!.inputs.VALUE.block.type).toBe('u_number')
+      expect(result!.inputs.VALUE.block.type).toBe('cpp_literal_number')
       expect(result!.inputs.VALUE.block.fields.NUM).toBe('42')
     })
   })
@@ -141,7 +141,7 @@ describe('PatternRenderer', () => {
   describe('statementInputs mapping', () => {
     it('should render statement children as chained blocks', () => {
       const spec: BlockSpec = {
-        id: 'u_while_loop',
+        id: 'cpp_loop_while',
         language: 'universal',
         category: 'control',
         level: 0,
@@ -152,7 +152,7 @@ describe('PatternRenderer', () => {
           role: 'statement',
         },
         blockDef: {
-          type: 'u_while_loop',
+          type: 'cpp_loop_while',
           args0: [{ type: 'input_value', name: 'COND', check: 'Expression' }],
           args1: [{ type: 'input_statement', name: 'BODY', check: 'Statement' }],
         },
@@ -162,13 +162,13 @@ describe('PatternRenderer', () => {
       }
 
       const breakSpec: BlockSpec = {
-        id: 'u_break',
+        id: 'cpp_break',
         language: 'universal',
         category: 'control',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:break', role: 'statement' },
-        blockDef: { type: 'u_break' },
+        blockDef: { type: 'cpp_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
       }
@@ -184,9 +184,9 @@ describe('PatternRenderer', () => {
       const result = renderer.render(whileNode)
 
       expect(result).not.toBeNull()
-      expect(result!.type).toBe('u_while_loop')
+      expect(result!.type).toBe('cpp_loop_while')
       expect(result!.inputs.BODY).toBeDefined()
-      expect(result!.inputs.BODY.block.type).toBe('u_break')
+      expect(result!.inputs.BODY.block.type).toBe('cpp_break')
     })
   })
 

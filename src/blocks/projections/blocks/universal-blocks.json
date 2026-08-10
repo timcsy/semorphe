@@ -1,12 +1,12 @@
 [
   {
-    "id": "u_var_declare",
+    "id": "cpp_var_declare",
     "conceptId": "cpp:var_declare",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_var_declare",
+      "type": "cpp_var_declare",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF8C1A",
@@ -17,17 +17,17 @@
       "inputs": {},
       "statementInputs": {},
       "strategy": "cpp:renderVarDeclare",
-      "expressionCounterpart": "c_var_declare_expr"
+      "expressionCounterpart": "cpp_var_declare_expression"
     }
   },
   {
-    "id": "u_var_assign",
+    "id": "cpp_var_assign",
     "conceptId": "cpp:var_assign",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_var_assign",
+      "type": "cpp_var_assign",
       "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
       "args0": [
         {
@@ -57,13 +57,13 @@
     }
   },
   {
-    "id": "u_var_ref",
+    "id": "cpp_var_ref",
     "conceptId": "cpp:var_ref",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_var_ref",
+      "type": "cpp_var_ref",
       "message0": "%1",
       "args0": [
         {
@@ -83,13 +83,13 @@
     }
   },
   {
-    "id": "u_number",
+    "id": "cpp_literal_number",
     "conceptId": "cpp:literal_number",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_number",
+      "type": "cpp_literal_number",
       "message0": "%1",
       "args0": [
         {
@@ -109,13 +109,13 @@
     }
   },
   {
-    "id": "u_string",
+    "id": "cpp_literal_string",
     "conceptId": "cpp:literal_string",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_string",
+      "type": "cpp_literal_string",
       "message0": "\" %1 \"",
       "args0": [
         {
@@ -135,13 +135,13 @@
     }
   },
   {
-    "id": "u_arithmetic",
+    "id": "cpp_arithmetic",
     "conceptId": "cpp:arithmetic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_arithmetic",
+      "type": "cpp_arithmetic",
       "message0": "%1 %2 %3",
       "args0": [
         {
@@ -217,13 +217,13 @@
     }
   },
   {
-    "id": "u_compare",
+    "id": "cpp_compare",
     "conceptId": "cpp:compare",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_compare",
+      "type": "cpp_compare",
       "message0": "%1 %2 %3",
       "args0": [
         {
@@ -283,13 +283,13 @@
     }
   },
   {
-    "id": "u_logic",
+    "id": "cpp_logic",
     "conceptId": "cpp:logic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_logic",
+      "type": "cpp_logic",
       "message0": "%1 %2 %3",
       "args0": [
         {
@@ -333,13 +333,13 @@
     }
   },
   {
-    "id": "u_logic_not",
+    "id": "cpp_logic_not",
     "conceptId": "cpp:logic_not",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_logic_not",
+      "type": "cpp_logic_not",
       "message0": "%{BKY_U_LOGIC_NOT_MSG0}",
       "args0": [
         {
@@ -360,13 +360,13 @@
     }
   },
   {
-    "id": "u_negate",
+    "id": "cpp_negate",
     "conceptId": "cpp:negate",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_negate",
+      "type": "cpp_negate",
       "message0": "%1 %2",
       "args0": [
         {
@@ -401,13 +401,13 @@
     }
   },
   {
-    "id": "u_if",
+    "id": "cpp_if",
     "conceptId": "cpp:if",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_if",
+      "type": "cpp_if",
       "message0": "%{BKY_U_IF_MSG0}",
       "args0": [
         {
@@ -441,13 +441,13 @@
     }
   },
   {
-    "id": "u_if_else",
+    "id": "cpp_if_else",
     "conceptId": "cpp:if_else",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_if_else",
+      "type": "cpp_if_else",
       "message0": "%{BKY_U_IF_ELSE_MSG0}",
       "args0": [
         {
@@ -489,13 +489,13 @@
     }
   },
   {
-    "id": "u_count_loop",
+    "id": "cpp_loop_count",
     "conceptId": "cpp:loop_count",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_count_loop",
+      "type": "cpp_loop_count",
       "message0": "%{BKY_U_COUNT_LOOP_MSG0}",
       "args0": [
         {
@@ -557,13 +557,13 @@
     }
   },
   {
-    "id": "u_while_loop",
+    "id": "cpp_loop_while",
     "conceptId": "cpp:loop_while",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_while_loop",
+      "type": "cpp_loop_while",
       "message0": "%{BKY_U_WHILE_LOOP_MSG0}",
       "args0": [
         {
@@ -595,13 +595,13 @@
     }
   },
   {
-    "id": "u_break",
+    "id": "cpp_break",
     "conceptId": "cpp:break",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_break",
+      "type": "cpp_break",
       "message0": "%{BKY_U_BREAK_MSG0}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -610,13 +610,13 @@
     }
   },
   {
-    "id": "u_continue",
+    "id": "cpp_continue",
     "conceptId": "cpp:continue",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_continue",
+      "type": "cpp_continue",
       "message0": "%{BKY_U_CONTINUE_MSG0}",
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -625,13 +625,13 @@
     }
   },
   {
-    "id": "u_func_def",
+    "id": "cpp_func_def",
     "conceptId": "cpp:func_def",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_func_def",
+      "type": "cpp_func_def",
       "message0": "%{BKY_U_FUNC_DEF_MSG0}",
       "args0": [
         {
@@ -719,13 +719,13 @@
     }
   },
   {
-    "id": "u_func_call",
+    "id": "cpp_func_call",
     "conceptId": "cpp:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_func_call",
+      "type": "cpp_func_call",
       "message0": "%{BKY_U_FUNC_CALL_MSG0}",
       "args0": [
         {
@@ -760,13 +760,13 @@
     }
   },
   {
-    "id": "u_func_call_expr",
+    "id": "cpp_func_call_expression",
     "conceptId": "cpp:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_func_call_expr"
+      "type": "cpp_func_call_expression"
     },
     "renderMapping": {
       "fields": {
@@ -788,13 +788,13 @@
     }
   },
   {
-    "id": "u_return",
+    "id": "cpp_return",
     "conceptId": "cpp:return",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_return",
+      "type": "cpp_return",
       "message0": "%{BKY_U_RETURN_MSG0}",
       "args0": [
         {
@@ -815,13 +815,13 @@
     }
   },
   {
-    "id": "u_print",
+    "id": "cpp_print",
     "conceptId": "cpp:print",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_print",
+      "type": "cpp_print",
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -842,13 +842,13 @@
     }
   },
   {
-    "id": "u_endl",
+    "id": "cpp_endl",
     "conceptId": "cpp:endl",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_endl",
+      "type": "cpp_endl",
       "message0": "%{BKY_U_ENDL_MSG0}",
       "output": "Expression",
       "colour": "#5CB1D6",
@@ -856,13 +856,13 @@
     }
   },
   {
-    "id": "u_input",
+    "id": "cpp_input",
     "conceptId": "cpp:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_input",
+      "type": "cpp_input",
       "message0": "%{BKY_U_INPUT_MSG0}",
       "args0": [
         {
@@ -882,7 +882,7 @@
       },
       "inputs": {},
       "statementInputs": {},
-      "expressionCounterpart": "u_input_expr",
+      "expressionCounterpart": "cpp_input_expression",
       "dynamicRules": [
         {
           "countSource": "args.length",
@@ -902,13 +902,13 @@
     }
   },
   {
-    "id": "u_input_expr",
+    "id": "cpp_input_expression",
     "conceptId": "cpp:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_input_expr"
+      "type": "cpp_input_expression"
     },
     "renderMapping": {
       "fields": {},
@@ -937,13 +937,13 @@
     }
   },
   {
-    "id": "u_array_declare",
+    "id": "cpp_array_declare",
     "conceptId": "cpp:array_declare",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_array_declare",
+      "type": "cpp_array_declare",
       "message0": "%{BKY_U_ARRAY_DECLARE_MSG0}",
       "args0": [
         {
@@ -1000,13 +1000,13 @@
     }
   },
   {
-    "id": "u_array_access",
+    "id": "cpp_array_at",
     "conceptId": "cpp:array_at",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_array_access",
+      "type": "cpp_array_at",
       "message0": "%{BKY_U_ARRAY_ACCESS_MSG0}",
       "args0": [
         {
@@ -1040,13 +1040,13 @@
     }
   },
   {
-    "id": "u_array_assign",
+    "id": "cpp_array_assign",
     "conceptId": "cpp:array_assign",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
-      "type": "u_array_assign",
+      "type": "cpp_array_assign",
       "message0": "%{BKY_U_ARRAY_ASSIGN_MSG0}",
       "args0": [
         {

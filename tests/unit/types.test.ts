@@ -5,12 +5,12 @@ import type { CodeMapping } from '../../src/core/projection/code-generator'
 describe('BlockSpec 型別驗證', () => {
   it('should accept a valid BlockSpec object', () => {
     const spec: BlockSpec = {
-      id: 'c_for_loop',
+      id: 'cpp_loop_for',
       language: 'cpp',
       category: 'loops',
       version: '1.0.0',
       blockDef: {
-        type: 'c_for_loop',
+        type: 'cpp_loop_for',
         message0: 'for %1 ; %2 ; %3',
         colour: 120,
       },
@@ -25,7 +25,7 @@ describe('BlockSpec 型別驗證', () => {
       },
     }
 
-    expect(spec.id).toBe('c_for_loop')
+    expect(spec.id).toBe('cpp_loop_for')
     expect(spec.category).toBe('loops')
     expect(spec.codeTemplate?.pattern).toContain('${INIT}')
     expect(spec.astPattern?.nodeType).toBe('for_statement')
@@ -79,12 +79,12 @@ describe('BlockSpec 型別驗證', () => {
 
   it('should accept universal BlockSpec without codeTemplate/astPattern', () => {
     const spec: BlockSpec = {
-      id: 'u_var_declare',
+      id: 'cpp_var_declare',
       language: 'universal',
       category: 'data',
       version: '1.0.0',
       blockDef: {
-        type: 'u_var_declare',
+        type: 'cpp_var_declare',
         message0: '建立 %1 變數 %2 = %3',
         colour: 330,
       },
@@ -97,11 +97,11 @@ describe('BlockSpec 型別驗證', () => {
 
   it('should require language field on BlockSpec', () => {
     const spec: BlockSpec = {
-      id: 'c_for_loop',
+      id: 'cpp_loop_for',
       language: 'cpp',
       category: 'loops',
       version: '1.0.0',
-      blockDef: { type: 'c_for_loop' },
+      blockDef: { type: 'cpp_loop_for' },
       codeTemplate: { pattern: 'for(...)', imports: [], order: 0 },
       astPattern: { nodeType: 'for_statement', constraints: [] },
     }
@@ -123,16 +123,16 @@ describe('BlockSpec 型別驗證', () => {
 
   it('should accept BlockJSON structure', () => {
     const block: BlockJSON = {
-      type: 'u_var_declare',
+      type: 'cpp_var_declare',
       id: 'block_1',
       fields: { TYPE: 'int', NAME_0: 'x' },
       inputs: {
-        INIT_0: { block: { type: 'u_number', id: 'block_2', fields: { NUM: 0 } } },
+        INIT_0: { block: { type: 'cpp_literal_number', id: 'block_2', fields: { NUM: 0 } } },
       },
     }
 
-    expect(block.type).toBe('u_var_declare')
-    expect(block.inputs?.INIT_0.block.type).toBe('u_number')
+    expect(block.type).toBe('cpp_var_declare')
+    expect(block.inputs?.INIT_0.block.type).toBe('cpp_literal_number')
   })
 
   it('should accept WorkspaceJSON structure', () => {
@@ -140,12 +140,12 @@ describe('BlockSpec 型別驗證', () => {
       blocks: {
         languageVersion: 0,
         blocks: [
-          { type: 'u_print', id: 'b1', inputs: { EXPR0: { block: { type: 'u_string', id: 'b2', fields: { TEXT: 'Hello' } } }, EXPR1: { block: { type: 'u_endl', id: 'b3' } } } },
+          { type: 'cpp_print', id: 'b1', inputs: { EXPR0: { block: { type: 'cpp_literal_string', id: 'b2', fields: { TEXT: 'Hello' } } }, EXPR1: { block: { type: 'cpp_endl', id: 'b3' } } } },
         ],
       },
     }
 
     expect(ws.blocks.blocks).toHaveLength(1)
-    expect(ws.blocks.blocks[0].type).toBe('u_print')
+    expect(ws.blocks.blocks[0].type).toBe('cpp_print')
   })
 })

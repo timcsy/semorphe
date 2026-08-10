@@ -137,7 +137,7 @@ describe('cpp:vector_declare 自證測', () => {
       // 存檔重載）都會走 render→extract，於是 `= {3,1,4}` 靜靜地消失。
       //
       // **修法不是一行**：`values` 是變長列表（`min: 0`，無上限），
-      // 要像 `u_print` 那樣做成帶 ＋／− 的動態積木；`source` 是單一運算式，
+      // 要像 `cpp_print` 那樣做成帶 ＋／− 的動態積木；`source` 是單一運算式，
       // 可以用 `input_value`。兩者是不同的形狀，要分開處理。
       //
       // 同一個缺陷 generate 與 execute 兩路**都修過並留下註解**，

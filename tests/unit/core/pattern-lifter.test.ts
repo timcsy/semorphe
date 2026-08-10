@@ -47,7 +47,7 @@ describe('PatternLifter', () => {
   describe('simple pattern (from BlockSpec astPattern)', () => {
     it('should lift a simple nodeType match with fieldMappings', () => {
       const spec: BlockSpec = {
-        id: 'c_char_literal',
+        id: 'cpp_literal_char',
         language: 'cpp',
         category: 'values',
         level: 1,
@@ -58,7 +58,7 @@ describe('PatternLifter', () => {
           properties: ['char'],
           role: 'expression',
         },
-        blockDef: { type: 'c_char_literal' },
+        blockDef: { type: 'cpp_literal_char' },
         codeTemplate: { pattern: "'${CHAR}'", imports: [], order: 20 },
         astPattern: {
           nodeType: 'char_literal',
@@ -81,7 +81,7 @@ describe('PatternLifter', () => {
 
     it('should lift with field_name based fieldMappings', () => {
       const spec: BlockSpec = {
-        id: 'c_increment',
+        id: 'cpp_increment',
         language: 'cpp',
         category: 'operators',
         level: 1,
@@ -92,7 +92,7 @@ describe('PatternLifter', () => {
           properties: ['name', 'operator'],
           role: 'both',
         },
-        blockDef: { type: 'c_increment' },
+        blockDef: { type: 'cpp_increment' },
         codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: {
           nodeType: 'update_expression',
@@ -123,7 +123,7 @@ describe('PatternLifter', () => {
   describe('constrained pattern', () => {
     it('should match nodeType + field text constraint', () => {
       const spec: BlockSpec = {
-        id: 'c_printf',
+        id: 'cpp_print_formatted',
         language: 'cpp',
         category: 'io',
         level: 1,
@@ -134,7 +134,7 @@ describe('PatternLifter', () => {
           properties: ['format', 'args'],
           role: 'statement',
         },
-        blockDef: { type: 'c_printf' },
+        blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: ['stdio.h'], order: 0 },
         astPattern: {
           nodeType: 'call_expression',
@@ -156,7 +156,7 @@ describe('PatternLifter', () => {
 
     it('should NOT match when constraint fails', () => {
       const spec: BlockSpec = {
-        id: 'c_printf',
+        id: 'cpp_print_formatted',
         language: 'cpp',
         category: 'io',
         level: 1,
@@ -167,7 +167,7 @@ describe('PatternLifter', () => {
           properties: ['format', 'args'],
           role: 'statement',
         },
-        blockDef: { type: 'c_printf' },
+        blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
           nodeType: 'call_expression',
@@ -198,13 +198,13 @@ describe('PatternLifter', () => {
         astPattern: { nodeType: 'call_expression', constraints: [] },
       }
       const printfSpec: BlockSpec = {
-        id: 'c_printf',
+        id: 'cpp_print_formatted',
         language: 'cpp',
         category: 'io',
         level: 1,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:print_formatted', role: 'statement' },
-        blockDef: { type: 'c_printf' },
+        blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
           nodeType: 'call_expression',
@@ -228,7 +228,7 @@ describe('PatternLifter', () => {
   describe('lift extract modes', () => {
     it('should extract "lift" mode - recursively lift a child', () => {
       const parentSpec: BlockSpec = {
-        id: 'c_compound_assign',
+        id: 'cpp_var_assign_compound',
         language: 'cpp',
         category: 'operators',
         level: 1,
@@ -240,7 +240,7 @@ describe('PatternLifter', () => {
           children: { value: 'expression' },
           role: 'statement',
         },
-        blockDef: { type: 'c_compound_assign' },
+        blockDef: { type: 'cpp_var_assign_compound' },
         codeTemplate: { pattern: '${NAME} ${OP} ${VALUE};', imports: [], order: 0 },
         astPattern: {
           nodeType: 'assignment_expression',
@@ -254,13 +254,13 @@ describe('PatternLifter', () => {
       }
       // Also register number_literal for lifting the right side
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
-        blockDef: { type: 'u_number' },
+        blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',
@@ -323,13 +323,13 @@ describe('PatternLifter', () => {
 
       // Register number_literal for child lifting
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
-        blockDef: { type: 'u_number' },
+        blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',
@@ -395,13 +395,13 @@ describe('PatternLifter', () => {
 
       // Register specs for child lifting
       const idSpec: BlockSpec = {
-        id: 'u_var_ref',
+        id: 'cpp_var_ref',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:var_ref', role: 'expression' },
-        blockDef: { type: 'u_var_ref' },
+        blockDef: { type: 'cpp_var_ref' },
         codeTemplate: { pattern: '${NAME}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'identifier',
@@ -462,13 +462,13 @@ describe('PatternLifter', () => {
 
       // Register number spec for child lifting
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
-        blockDef: { type: 'u_number' },
+        blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',
@@ -567,13 +567,13 @@ describe('PatternLifter', () => {
       }
 
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
-        blockDef: { type: 'u_number' },
+        blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',
@@ -600,13 +600,13 @@ describe('PatternLifter', () => {
     it('should prefer lift patterns over block spec patterns for same nodeType', () => {
       // Block spec: simple pattern for for_statement
       const simpleForSpec: BlockSpec = {
-        id: 'c_for_loop',
+        id: 'cpp_loop_for',
         language: 'cpp',
         category: 'loops',
         level: 1,
         version: '1.0.0',
         concept: { conceptId: 'cpp:loop_for', role: 'statement' },
-        blockDef: { type: 'c_for_loop' },
+        blockDef: { type: 'cpp_loop_for' },
         codeTemplate: { pattern: 'for (...) { ... }', imports: [], order: 0 },
         astPattern: { nodeType: 'for_statement', constraints: [] },
       }

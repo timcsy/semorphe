@@ -51,6 +51,6 @@ function getInputs(blockType: string): InputNames {
 }
 
 export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
-export const C_COMPOUND_ASSIGN_INPUTS = getInputs('c_compound_assign')
-export const C_COMPOUND_ASSIGN_EXPR_INPUTS = getInputs('c_compound_assign_expr')
-export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('c_var_declare_expr')
+export const C_COMPOUND_ASSIGN_INPUTS = getInputs('cpp_var_assign_compound')
+export const C_COMPOUND_ASSIGN_EXPR_INPUTS = getInputs('cpp_var_assign_compound_expression')
+export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')

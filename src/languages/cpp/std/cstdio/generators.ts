@@ -3,7 +3,7 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  // c_printf with structured args (0 or more)
+  // cpp_print_formatted with structured args (0 or more)
   g.set('cpp:print_formatted', (node, ctx) => {
     const format = (node.properties.format as string) ?? '%d\\n'
     const argNodes = node.children.args ?? []
@@ -18,7 +18,7 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
     return `${indent(ctx)}printf("${format}");\n`
   })
 
-  // c_scanf with structured args + auto & for simple vars (0 or more)
+  // cpp_input_formatted with structured args + auto & for simple vars (0 or more)
   g.set('cpp:input_formatted', (node, ctx) => {
     const format = (node.properties.format as string) ?? '%d'
     const argNodes = node.children.args ?? []

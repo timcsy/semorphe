@@ -1,7 +1,7 @@
 /**
  * C++ numeric Roundtrip Tests
  *
- * Verifies that C++ <numeric> concepts (cpp_accumulate, cpp_iota, cpp_partial_sum, cpp_gcd, cpp_lcm)
+ * Verifies that C++ <numeric> concepts (cpp_range_sum, cpp_range_fill_sequence, cpp_range_sum_partial, cpp_math_gcd, cpp_math_lcm)
  * survive the full roundtrip: code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'

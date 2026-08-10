@@ -31,7 +31,7 @@
  *
  * ## 本護欄不檢測什麼
  *
- * - **不檢測「放對分類」**——它只保證「在某個分類裡」。把 `cpp_sort` 放進
+ * - **不檢測「放對分類」**——它只保證「在某個分類裡」。把 `cpp_range_sort` 放進
  *   「程式設定」它照樣綠。放對分類要人看。
  * - **不檢測積木好不好用**——標籤看不看得懂、預設值合不合理，都不在範圍。
  * - **不檢測課程有沒有收錄**——那是策展，見 `audit-curriculum-coverage`。
@@ -47,7 +47,7 @@
  *
  * ⚠️ 中性形態的判準**不是**「有沒有宣告 `form`」。`role` 軸上沒宣告 `form` 的
  * 那一顆是**敘述版**——位置永遠取得到，那條軸不需要退路。把它一律當退路排掉，
- * 會讓 `u_var_declare`／`u_input`／`u_func_call` 等最常用的積木從工具箱消失。
+ * 會讓 `cpp_var_declare`／`cpp_input`／`cpp_func_call` 等最常用的積木從工具箱消失。
  */
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
@@ -113,7 +113,7 @@ function measure(
 
   // 反向：工具箱不得指向幽靈（TB-2）
   //
-  // ⚠️ **「不在 JSON 宣告裡」不等於「不存在」。** 第一次跑報了 `u_input_expr`
+  // ⚠️ **「不在 JSON 宣告裡」不等於「不存在」。** 第一次跑報了 `cpp_input_expression`
   // 是幽靈，而它其實活著——只是活在 `block-registrar.ts` 的命令式註冊裡，
   // 登錄表看不見它。那是 MEMORY.md 早就記過的「雙重真相來源」。
   //
@@ -175,7 +175,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 中性形態不在工具箱裡，且被歸為「中性形態」不是「缺陷」', () => {
     const { findings, categoriesOf } = measure()
-    for (const t of ['c_container_push', 'c_container_pop']) {
+    for (const t of ['cpp_container_push', 'cpp_container_pop']) {
       expect(categoriesOf.has(t), `${t} 是型別查不到時的退路，不該讓學生選（097）`).toBe(false)
       expect(
         findings.find((f) => f.type === t)?.bucket,
@@ -186,11 +186,11 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 反向：`role` 軸上沒宣告 form 的**敘述版**不是退路，必須留在工具箱', () => {
     // 沒有這一支的話，「所有沒宣告 form 的都是退路」這個錯誤判準會通過上一支
-    // ——而它會讓 u_var_declare／u_input／u_func_call 等七顆最常用的敘述版
+    // ——而它會讓 cpp_var_declare／cpp_input／cpp_func_call 等七顆最常用的敘述版
     // 積木從工具箱裡消失。實作時真的踩到了。
     const { categoriesOf } = measure()
     // ⚠️ 這一列是**積木型別**（`u_`／`c_` 前綴看得出來），遷移不動它們
-    for (const t of ['u_var_declare', 'u_input', 'u_func_call', 'cpp_method_call', 'c_increment', 'c_scanf']) {
+    for (const t of ['cpp_var_declare', 'cpp_input', 'cpp_func_call', 'cpp_method_call', 'cpp_increment', 'cpp_input_formatted']) {
       expect(categoriesOf.has(t), `${t} 是敘述版，位置永遠取得到，它不需要也不是退路`).toBe(true)
     }
   })

@@ -614,12 +614,12 @@ describe('Block Structure', () => {
       }
     `)
     const outerIf = state.blocks.blocks[0]
-    expect(outerIf.type).toBe('u_if')
+    expect(outerIf.type).toBe('cpp_if')
     expect(outerIf.inputs.THEN).toBeDefined()
     expect(outerIf.inputs.ELSE).toBeDefined()
     // Inner if should be nested in THEN
     const innerIf = outerIf.inputs.THEN.block
-    expect(innerIf.type).toBe('u_if')
+    expect(innerIf.type).toBe('cpp_if')
   })
 
   it('for loop with body renders correctly', () => {
@@ -639,7 +639,7 @@ describe('Block Structure', () => {
       printf("result=%d\\n", a + b);
     `)
     const printfBlock = state.blocks.blocks[0]
-    expect(printfBlock.type).toBe('c_printf')
+    expect(printfBlock.type).toBe('cpp_print_formatted')
     expect(printfBlock.fields.FORMAT).toBe('result=%d\\n')
     // The a+b expression should be in compose mode
     expect(printfBlock.extraState.args).toHaveLength(1)
@@ -652,7 +652,7 @@ describe('Block Structure', () => {
       scanf("%d %d", &x, &y);
     `)
     const scanfBlock = state.blocks.blocks[0]
-    expect(scanfBlock.type).toBe('c_scanf')
+    expect(scanfBlock.type).toBe('cpp_input_formatted')
     expect(scanfBlock.fields.FORMAT).toBe('%d %d')
     expect(scanfBlock.extraState.args).toHaveLength(2)
     expect(scanfBlock.extraState.args[0].mode).toBe('select')

@@ -36,7 +36,7 @@ import type { SemanticNode, FormSet, FormAxis } from '../types'
 /**
  * 保留鍵：**中性形態**——軸值取不到時用的那個。
  *
- * 它是一顆真實存在的積木（例如統一的 `c_container_push`），所以它該被宣告在
+ * 它是一顆真實存在的積木（例如統一的 `cpp_container_push`），所以它該被宣告在
  * `forms` 裡而不是只出現在 `fallback`。第一版沒有這個鍵，於是 FS-2 永遠不成立。
  */
 export const NEUTRAL_KEY = '_'

@@ -18,7 +18,7 @@
  * `children.init` 是 `children.initializer` 的**子字串**。第一版沒加詞界，
  * 於是這條護欄回報「0 個問題」——**而它要抓的那一個正好被自己的子字串遮掉**。
  *
- * 同一個坑這個專案今天踩了四次（撞名的概念身分、`'u_endl'` 裡的 `endl`、
+ * 同一個坑這個專案今天踩了四次（撞名的概念身分、`'cpp_endl'` 裡的 `endl`、
  * 正則字面、這裡）。見 `knowledge/experience.md`。
  */
 import { readFileSync } from 'node:fs'

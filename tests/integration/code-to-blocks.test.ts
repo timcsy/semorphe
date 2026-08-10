@@ -129,11 +129,11 @@ describe('Code-to-Blocks Pipeline', () => {
       expect(concepts).toContain('cpp:increment')
     })
 
-    it('should render i++ to c_increment block', () => {
+    it('should render i++ to cpp_increment block', () => {
       const sem = liftCode('i++;')
       const state = renderToBlocklyState(sem!)
       const types = findBlockTypes(state)
-      expect(types).toContain('c_increment')
+      expect(types).toContain('cpp_increment')
     })
   })
 
@@ -152,11 +152,11 @@ describe('Code-to-Blocks Pipeline', () => {
       expect(concepts).toContain('cpp:loop_count')
     })
 
-    it('should render to u_count_loop block', () => {
+    it('should render to cpp_loop_count block', () => {
       const sem = liftCode('for (int i = 0; i < 10; i++) { x = 1; }')
       const state = renderToBlocklyState(sem!)
       const types = findBlockTypes(state)
-      expect(types).toContain('u_count_loop')
+      expect(types).toContain('cpp_loop_count')
     })
   })
 
@@ -194,11 +194,11 @@ describe('Code-to-Blocks Pipeline', () => {
       expect(concepts).toContain('cpp:loop_for')
     })
 
-    it('should render non-counting for to c_for_loop block', () => {
+    it('should render non-counting for to cpp_loop_for block', () => {
       const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
       const state = renderToBlocklyState(sem!)
       const types = findBlockTypes(state)
-      expect(types).toContain('c_for_loop')
+      expect(types).toContain('cpp_loop_for')
     })
   })
 
@@ -395,9 +395,9 @@ int main() {
       const state = renderToBlocklyState(sem!)
       const types = findBlockTypes(state)
       // At L2 the full tree should produce blocks for scaffold + body
-      expect(types).toContain('c_include')
-      expect(types).toContain('u_var_declare')
-      expect(types).toContain('u_input')
+      expect(types).toContain('cpp_include')
+      expect(types).toContain('cpp_var_declare')
+      expect(types).toContain('cpp_input')
     })
   })
 })

@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_math_binary",
+    "id": "cpp_math_binary",
     "conceptId": "cpp:math_binary",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_math_binary",
+      "type": "cpp_math_binary",
       "message0": "%{BKY_C_MATH_BINARY_MSG0}",
       "args0": [
         {

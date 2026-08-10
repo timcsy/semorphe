@@ -22,7 +22,7 @@ describe('PatternExtractor', () => {
   describe('field extraction', () => {
     it('should extract fields to semantic properties', () => {
       const spec: BlockSpec = {
-        id: 'c_increment',
+        id: 'cpp_increment',
         language: 'cpp',
         category: 'operators',
         level: 1,
@@ -33,7 +33,7 @@ describe('PatternExtractor', () => {
           role: 'both',
         },
         blockDef: {
-          type: 'c_increment',
+          type: 'cpp_increment',
           args0: [
             { type: 'field_input', name: 'NAME', text: 'i' },
             { type: 'field_dropdown', name: 'OP', options: [['++', '++'], ['--', '--']] },
@@ -46,7 +46,7 @@ describe('PatternExtractor', () => {
       extractor.loadBlockSpecs([spec])
 
       const block: TestBlockState = {
-        type: 'c_increment',
+        type: 'cpp_increment',
         id: 'block_1',
         fields: { NAME: 'i', OP: '++' },
         inputs: {},
@@ -63,7 +63,7 @@ describe('PatternExtractor', () => {
   describe('input extraction (expression children)', () => {
     it('should extract value inputs as expression children', () => {
       const retSpec: BlockSpec = {
-        id: 'u_return',
+        id: 'cpp_return',
         language: 'universal',
         category: 'functions',
         level: 0,
@@ -74,7 +74,7 @@ describe('PatternExtractor', () => {
           role: 'statement',
         },
         blockDef: {
-          type: 'u_return',
+          type: 'cpp_return',
           args0: [{ type: 'input_value', name: 'VALUE', check: 'Expression' }],
         },
         renderMapping: { fields: {}, inputs: { VALUE: 'value' }, statementInputs: {} },
@@ -83,7 +83,7 @@ describe('PatternExtractor', () => {
       }
 
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
@@ -94,7 +94,7 @@ describe('PatternExtractor', () => {
           role: 'expression',
         },
         blockDef: {
-          type: 'u_number',
+          type: 'cpp_literal_number',
           args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
         },
         renderMapping: { fields: { NUM: 'value' }, inputs: {}, statementInputs: {} },
@@ -105,13 +105,13 @@ describe('PatternExtractor', () => {
       extractor.loadBlockSpecs([retSpec, numSpec])
 
       const block: TestBlockState = {
-        type: 'u_return',
+        type: 'cpp_return',
         id: 'block_1',
         fields: {},
         inputs: {
           VALUE: {
             block: {
-              type: 'u_number',
+              type: 'cpp_literal_number',
               id: 'block_2',
               fields: { NUM: 42 },
               inputs: {},
@@ -132,7 +132,7 @@ describe('PatternExtractor', () => {
   describe('statement input extraction', () => {
     it('should extract statement chain as children array', () => {
       const whileSpec: BlockSpec = {
-        id: 'u_while_loop',
+        id: 'cpp_loop_while',
         language: 'universal',
         category: 'control',
         level: 0,
@@ -143,7 +143,7 @@ describe('PatternExtractor', () => {
           role: 'statement',
         },
         blockDef: {
-          type: 'u_while_loop',
+          type: 'cpp_loop_while',
           args0: [{ type: 'input_value', name: 'COND', check: 'Expression' }],
           args1: [{ type: 'input_statement', name: 'BODY', check: 'Statement' }],
         },
@@ -153,25 +153,25 @@ describe('PatternExtractor', () => {
       }
 
       const breakSpec: BlockSpec = {
-        id: 'u_break',
+        id: 'cpp_break',
         language: 'universal',
         category: 'control',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:break', role: 'statement' },
-        blockDef: { type: 'u_break' },
+        blockDef: { type: 'cpp_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
       }
 
       const contSpec: BlockSpec = {
-        id: 'u_continue',
+        id: 'cpp_continue',
         language: 'universal',
         category: 'control',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:continue', role: 'statement' },
-        blockDef: { type: 'u_continue' },
+        blockDef: { type: 'cpp_continue' },
         codeTemplate: { pattern: 'continue;', imports: [], order: 0 },
         astPattern: { nodeType: 'continue_statement', constraints: [] },
       }
@@ -179,19 +179,19 @@ describe('PatternExtractor', () => {
       extractor.loadBlockSpecs([whileSpec, breakSpec, contSpec])
 
       const block: TestBlockState = {
-        type: 'u_while_loop',
+        type: 'cpp_loop_while',
         id: 'block_1',
         fields: {},
         inputs: {
           BODY: {
             block: {
-              type: 'u_break',
+              type: 'cpp_break',
               id: 'block_2',
               fields: {},
               inputs: {},
               next: {
                 block: {
-                  type: 'u_continue',
+                  type: 'cpp_continue',
                   id: 'block_3',
                   fields: {},
                   inputs: {},

@@ -199,9 +199,9 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
       id: 'fc1',
       fields: { NAME: 'add' },
       inputs: {
-        ARG_0: { block: { type: 'u_number', id: 'a0', fields: { NUM: '1' }, inputs: {} } },
-        ARG_1: { block: { type: 'u_number', id: 'a1', fields: { NUM: '2' }, inputs: {} } },
-        ARG_2: { block: { type: 'u_var_ref', id: 'a2', fields: { NAME: 'x' }, inputs: {} } },
+        ARG_0: { block: { type: 'cpp_literal_number', id: 'a0', fields: { NUM: '1' }, inputs: {} } },
+        ARG_1: { block: { type: 'cpp_literal_number', id: 'a1', fields: { NUM: '2' }, inputs: {} } },
+        ARG_2: { block: { type: 'cpp_var_ref', id: 'a2', fields: { NAME: 'x' }, inputs: {} } },
       },
       extraState: { argCount: 3 },
     }
@@ -261,9 +261,9 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
       id: 'sc2',
       fields: { FORMAT: '%d' },
       inputs: {
-        ARG_1: { block: { type: 'u_arithmetic', id: 'ex1', fields: { OP: '+' }, inputs: {
-          A: { block: { type: 'u_number', id: 'n1', fields: { NUM: '1' }, inputs: {} } },
-          B: { block: { type: 'u_number', id: 'n2', fields: { NUM: '2' }, inputs: {} } },
+        ARG_1: { block: { type: 'cpp_arithmetic', id: 'ex1', fields: { OP: '+' }, inputs: {
+          A: { block: { type: 'cpp_literal_number', id: 'n1', fields: { NUM: '1' }, inputs: {} } },
+          B: { block: { type: 'cpp_literal_number', id: 'n2', fields: { NUM: '2' }, inputs: {} } },
         } } },
       },
       extraState: {
@@ -323,13 +323,13 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
       id: 'if1',
       fields: {},
       inputs: {
-        CONDITION: { block: { type: 'u_var_ref', id: 'c0', fields: { NAME: 'cond0' }, inputs: {} } },
-        THEN: { block: { type: 'u_break', id: 't0', fields: {}, inputs: {} } },
-        ELSEIF_CONDITION_0: { block: { type: 'u_var_ref', id: 'c1', fields: { NAME: 'cond1' }, inputs: {} } },
-        ELSEIF_THEN_0: { block: { type: 'u_continue', id: 't1', fields: {}, inputs: {} } },
-        ELSEIF_CONDITION_1: { block: { type: 'u_var_ref', id: 'c2', fields: { NAME: 'cond2' }, inputs: {} } },
-        ELSEIF_THEN_1: { block: { type: 'u_break', id: 't2', fields: {}, inputs: {} } },
-        ELSE: { block: { type: 'u_continue', id: 'e1', fields: {}, inputs: {} } },
+        CONDITION: { block: { type: 'cpp_var_ref', id: 'c0', fields: { NAME: 'cond0' }, inputs: {} } },
+        THEN: { block: { type: 'cpp_break', id: 't0', fields: {}, inputs: {} } },
+        ELSEIF_CONDITION_0: { block: { type: 'cpp_var_ref', id: 'c1', fields: { NAME: 'cond1' }, inputs: {} } },
+        ELSEIF_THEN_0: { block: { type: 'cpp_continue', id: 't1', fields: {}, inputs: {} } },
+        ELSEIF_CONDITION_1: { block: { type: 'cpp_var_ref', id: 'c2', fields: { NAME: 'cond2' }, inputs: {} } },
+        ELSEIF_THEN_1: { block: { type: 'cpp_break', id: 't2', fields: {}, inputs: {} } },
+        ELSE: { block: { type: 'cpp_continue', id: 'e1', fields: {}, inputs: {} } },
       },
       extraState: { elseifCount: 2, hasElse: true },
     }
@@ -354,8 +354,8 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
       id: 'if2',
       fields: {},
       inputs: {
-        CONDITION: { block: { type: 'u_var_ref', id: 'c0', fields: { NAME: 'x' }, inputs: {} } },
-        THEN: { block: { type: 'u_break', id: 't0', fields: {}, inputs: {} } },
+        CONDITION: { block: { type: 'cpp_var_ref', id: 'c0', fields: { NAME: 'x' }, inputs: {} } },
+        THEN: { block: { type: 'cpp_break', id: 't0', fields: {}, inputs: {} } },
       },
     }
     const result = extractor.extract(blockState as never)
@@ -371,9 +371,9 @@ describe('T011 (print): PatternExtractor dynamicRules — repeat expression (pri
       id: 'pr1',
       fields: {},
       inputs: {
-        EXPR0: { block: { type: 'u_string', id: 's1', fields: { TEXT: 'hello' }, inputs: {} } },
-        EXPR1: { block: { type: 'u_var_ref', id: 'v1', fields: { NAME: 'x' }, inputs: {} } },
-        EXPR2: { block: { type: 'u_endl', id: 'e1', fields: {}, inputs: {} } },
+        EXPR0: { block: { type: 'cpp_literal_string', id: 's1', fields: { TEXT: 'hello' }, inputs: {} } },
+        EXPR1: { block: { type: 'cpp_var_ref', id: 'v1', fields: { NAME: 'x' }, inputs: {} } },
+        EXPR2: { block: { type: 'cpp_endl', id: 'e1', fields: {}, inputs: {} } },
       },
       extraState: { itemCount: 3 },
     }
@@ -492,7 +492,7 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
       id: 'rt1',
       fields: { NAME: 'f' },
       inputs: {
-        ARG_0: { block: { type: 'u_number', id: 'n1', fields: { NUM: '42' }, inputs: {} } },
+        ARG_0: { block: { type: 'cpp_literal_number', id: 'n1', fields: { NUM: '42' }, inputs: {} } },
       },
       extraState: { argCount: 1 },
     }
@@ -515,8 +515,8 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
       id: 'rt2',
       fields: {},
       inputs: {
-        EXPR0: { block: { type: 'u_string', id: 's1', fields: { TEXT: 'hi' }, inputs: {} } },
-        EXPR1: { block: { type: 'u_endl', id: 'e1', fields: {}, inputs: {} } },
+        EXPR0: { block: { type: 'cpp_literal_string', id: 's1', fields: { TEXT: 'hi' }, inputs: {} } },
+        EXPR1: { block: { type: 'cpp_endl', id: 'e1', fields: {}, inputs: {} } },
       },
       extraState: { itemCount: 2 },
     }

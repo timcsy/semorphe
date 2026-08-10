@@ -6,7 +6,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_isalpha",
+      "type": "cpp_char_is_alpha",
       "message0": "%{BKY_CPP_ISALPHA_MSG0}",
       "args0": [
         {

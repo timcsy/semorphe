@@ -448,16 +448,16 @@ describe('full render pipeline', () => {
     // Debug: show rendered block types
     console.log('Rendered block types:', types)
     // Should contain function definitions
-    expect(types).toContain('u_func_def')
+    expect(types).toContain('cpp_func_def')
     // Should contain key block types (not all raw_code)
-    const nonRawTypes = types.filter(t => t !== 'c_raw_code' && t !== 'c_raw_expression')
+    const nonRawTypes = types.filter(t => t !== 'cpp_raw_code' && t !== 'cpp_raw_expression')
     expect(nonRawTypes.length).toBeGreaterThan(5)
     // Should have while_loop, count_loop, do_while, etc.
-    expect(types).toContain('u_while_loop')
-    expect(types).toContain('c_do_while')
-    // c_scanf in expression context should NOT appear as a statement block in expression slots
-    // It should be rendered as c_raw_expression (safety fallback)
-    expect(types).not.toContain('c_scanf')
+    expect(types).toContain('cpp_loop_while')
+    expect(types).toContain('cpp_loop_do_while')
+    // cpp_input_formatted in expression context should NOT appear as a statement block in expression slots
+    // It should be rendered as cpp_raw_expression (safety fallback)
+    expect(types).not.toContain('cpp_input_formatted')
   })
 
   it('should render array_assign blocks (not silently drop them)', () => {

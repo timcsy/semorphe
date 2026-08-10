@@ -3,34 +3,34 @@ import { describe, it, expect } from 'vitest'
 describe('Code Style 影響 Toolbox I/O 排序', () => {
   // buildToolbox 是 App 的 private 方法，這裡測試排序邏輯
   function sortIoBlocks(ioPreference: 'iostream' | 'cstdio'): string[] {
-    const universalIo = ['u_print', 'u_input', 'u_endl']
-    const cppIo = ['c_printf', 'c_scanf']
+    const universalIo = ['cpp_print', 'cpp_input', 'cpp_endl']
+    const cppIo = ['cpp_print_formatted', 'cpp_input_formatted']
     return ioPreference === 'iostream'
       ? [...universalIo, ...cppIo]
       : [...cppIo, ...universalIo]
   }
 
-  it('iostream 偏好時 u_print 應在 c_printf 前面', () => {
+  it('iostream 偏好時 cpp_print 應在 cpp_print_formatted 前面', () => {
     const order = sortIoBlocks('iostream')
-    const printIdx = order.indexOf('u_print')
-    const printfIdx = order.indexOf('c_printf')
+    const printIdx = order.indexOf('cpp_print')
+    const printfIdx = order.indexOf('cpp_print_formatted')
     expect(printIdx).toBeLessThan(printfIdx)
   })
 
-  it('cstdio 偏好時 c_printf 應在 u_print 前面', () => {
+  it('cstdio 偏好時 cpp_print_formatted 應在 cpp_print 前面', () => {
     const order = sortIoBlocks('cstdio')
-    const printfIdx = order.indexOf('c_printf')
-    const printIdx = order.indexOf('u_print')
+    const printfIdx = order.indexOf('cpp_print_formatted')
+    const printIdx = order.indexOf('cpp_print')
     expect(printfIdx).toBeLessThan(printIdx)
   })
 
-  it('iostream 偏好時 u_input 應在 c_scanf 前面', () => {
+  it('iostream 偏好時 cpp_input 應在 cpp_input_formatted 前面', () => {
     const order = sortIoBlocks('iostream')
-    expect(order.indexOf('u_input')).toBeLessThan(order.indexOf('c_scanf'))
+    expect(order.indexOf('cpp_input')).toBeLessThan(order.indexOf('cpp_input_formatted'))
   })
 
-  it('cstdio 偏好時 c_scanf 應在 u_input 前面', () => {
+  it('cstdio 偏好時 cpp_input_formatted 應在 cpp_input 前面', () => {
     const order = sortIoBlocks('cstdio')
-    expect(order.indexOf('c_scanf')).toBeLessThan(order.indexOf('u_input'))
+    expect(order.indexOf('cpp_input_formatted')).toBeLessThan(order.indexOf('cpp_input'))
   })
 })

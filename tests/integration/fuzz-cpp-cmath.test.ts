@@ -96,7 +96,7 @@ int main() {
       expect(tree).not.toBeNull()
       expect(countRawCode(tree!)).toBe(0)
       expect(generated).toContain('abs(')
-      // fabs stays as fabs (cmath), abs is now cstdlib cpp_abs
+      // fabs stays as fabs (cmath), abs is now cstdlib cpp_math_abs
       // fabs is no longer normalized to abs, preserving round-trip stability
       expect(generated).toContain('fabs(')
 

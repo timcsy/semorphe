@@ -1,9 +1,9 @@
 /**
  * C++ String Operations Roundtrip Tests
  *
- * Verifies that C++ string operation concepts (cpp_string_length, cpp_string_substr,
- * cpp_string_find, cpp_string_append, cpp_string_c_str, cpp_getline, cpp_to_string,
- * cpp_stoi, cpp_stod) survive the full roundtrip:
+ * Verifies that C++ string operation concepts (cpp_string_size, cpp_string_substr,
+ * cpp_string_find, cpp_string_append, cpp_string_as_cstring, cpp_input_line, cpp_string_make,
+ * cpp_string_as_int, cpp_string_as_double) survive the full roundtrip:
  *
  *   C++ code → (tree-sitter parse) → AST → (lift) → SemanticTree
  *     → (generate) → C++ code → (re-lift) → SemanticTree  [P1 structural equivalence]
@@ -82,12 +82,12 @@ function collectConcepts(node: SemanticNode | null, result: Set<string> = new Se
 }
 
 describe('C++ String Operations Roundtrip', () => {
-  // ─── 1. cpp_string_length ──────────────────────────────────
+  // ─── 1. cpp_string_size ──────────────────────────────────
 
   describe('cpp:string_size', () => {
     const code = 'string s = "hello";\nint n = s.length();'
 
-    it('should lift to cpp_string_length concept', () => {
+    it('should lift to cpp_string_size concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:string_size')
@@ -202,12 +202,12 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 5. cpp_string_c_str ──────────────────────────────────
+  // ─── 5. cpp_string_as_cstring ──────────────────────────────────
 
   describe('cpp:string_as_cstring', () => {
     const code = 'string s = "hello";\nprintf("%s", s.c_str());'
 
-    it('should lift to cpp_string_c_str concept', () => {
+    it('should lift to cpp_string_as_cstring concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:string_as_cstring')
@@ -230,12 +230,12 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 6. cpp_getline ───────────────────────────────────────
+  // ─── 6. cpp_input_line ───────────────────────────────────────
 
   describe('cpp:input_line', () => {
     const code = 'string line;\ngetline(cin, line);'
 
-    it('should lift to cpp_getline concept', () => {
+    it('should lift to cpp_input_line concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:input_line')
@@ -260,12 +260,12 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 7. cpp_to_string ─────────────────────────────────────
+  // ─── 7. cpp_string_make ─────────────────────────────────────
 
   describe('cpp:string_make', () => {
     const code = 'int n = 42;\nstring s = to_string(n);'
 
-    it('should lift to cpp_to_string concept', () => {
+    it('should lift to cpp_string_make concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:string_make')
@@ -288,12 +288,12 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 8. cpp_stoi ──────────────────────────────────────────
+  // ─── 8. cpp_string_as_int ──────────────────────────────────────────
 
   describe('cpp:string_as_int', () => {
     const code = 'string s = "42";\nint n = stoi(s);'
 
-    it('should lift to cpp_stoi concept', () => {
+    it('should lift to cpp_string_as_int concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:string_as_int')
@@ -316,12 +316,12 @@ describe('C++ String Operations Roundtrip', () => {
     })
   })
 
-  // ─── 9. cpp_stod ──────────────────────────────────────────
+  // ─── 9. cpp_string_as_double ──────────────────────────────────────────
 
   describe('cpp:string_as_double', () => {
     const code = 'string s = "3.14";\ndouble d = stod(s);'
 
-    it('should lift to cpp_stod concept', () => {
+    it('should lift to cpp_string_as_double concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:string_as_double')
@@ -463,12 +463,12 @@ describe('C++ String Operations Roundtrip', () => {
   //
   // 舊註解說降級是「為了避免型別消歧問題」，讀起來像做不到；實際上消歧的
   // 機制一直都在，只是零呼叫者。見 knowledge/concepts/執行機構.md。
-  // ─── 14. cpp_string_push_back （型別已知 → 專屬身分） ───
+  // ─── 14. cpp_string_append_char （型別已知 → 專屬身分） ───
 
   describe('cpp:string_append_char', () => {
     const code = "string s = \"abc\";\ns.push_back('d');"
 
-    it('should lift to cpp_string_push_back concept（型別已知時的專屬身分）', () => {
+    it('should lift to cpp_string_append_char concept（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       // push_back() is a shared method — without type info, lifts as generic container concept

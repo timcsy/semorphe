@@ -23,10 +23,10 @@ describe('BlockRegistrar', () => {
     const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
-      'u_print', 'u_input', 'u_var_declare', 'u_if',
-      'u_func_def', 'u_func_call', 'c_printf', 'c_scanf',
-      'u_string', 'u_endl', 'u_while_loop', 'u_count_loop',
-      'c_raw_code', 'c_comment_doc',
+      'cpp_print', 'cpp_input', 'cpp_var_declare', 'cpp_if',
+      'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted',
+      'cpp_literal_string', 'cpp_endl', 'cpp_loop_while', 'cpp_loop_count',
+      'cpp_raw_code', 'cpp_doc_comment',
     ]
     for (const t of expectedTypes) {
       expect(content).toContain(`'${t}'`)

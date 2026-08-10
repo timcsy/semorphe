@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_printf",
+    "id": "cpp_print_formatted",
     "conceptId": "cpp:print_formatted",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_printf",
+      "type": "cpp_print_formatted",
       "message0": "%{BKY_C_PRINTF_MSG0}",
       "args0": [
         {
@@ -66,13 +66,13 @@
     }
   },
   {
-    "id": "c_scanf",
+    "id": "cpp_input_formatted",
     "conceptId": "cpp:input_formatted",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_scanf",
+      "type": "cpp_input_formatted",
       "message0": "%{BKY_C_SCANF_MSG0}",
       "args0": [
         {
@@ -113,7 +113,7 @@
       },
       "inputs": {},
       "statementInputs": {},
-      "expressionCounterpart": "c_scanf_expr",
+      "expressionCounterpart": "cpp_input_formatted_expression",
       "dynamicRules": [
         {
           "countSource": "args.length",
@@ -133,13 +133,13 @@
     }
   },
   {
-    "id": "c_scanf_expr",
+    "id": "cpp_input_formatted_expression",
     "conceptId": "cpp:input_formatted",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_scanf_expr"
+      "type": "cpp_input_formatted_expression"
     },
     "renderMapping": {
       "fields": {

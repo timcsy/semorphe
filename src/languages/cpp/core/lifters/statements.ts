@@ -32,7 +32,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     // General three-part for loop
     const body = extractBody(bodyNode, ctx)
 
-    // c_for_loop's INIT/COND/UPDATE are expression inputs, but for-loop parts
+    // cpp_loop_for's INIT/COND/UPDATE are expression inputs, but for-loop parts
     // may lift to statement concepts (var_declare, cpp_compound_assign, etc.)
     // Wrap non-expression concepts as cpp_raw_expression with the source text
     const initSem = wrapForExpr(initNode, ctx)

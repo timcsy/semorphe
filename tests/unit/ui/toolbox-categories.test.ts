@@ -79,18 +79,25 @@ describe('C++ toolbox categories (language module)', () => {
     return (io?.contents ?? []).map(b => b.type)
   }
 
+  // ⚠️ **這兩支測試自己也在拿形狀當判斷**（`startsWith('u_')`）。
+  // 116 把積木型別改成從身分導出之後沒有型別以 `u_` 開頭，於是它們
+  // 量到的「通用積木」是空集合——**測試與被測物同時犯同一個錯**，
+  // 而那時測試不會保護任何東西。改成問宣告的 `layer`。
+  const 是通用的 = (t: string) =>
+    createRegistry().getByBlockType(t)?.conceptMapping?.layer === 'universal'
+
   it('I/O 分類：iostream 偏好時通用版排在語言版之前', () => {
     const types = ioContents('iostream')
-    const firstLang = types.findIndex(t => !t.startsWith('u_'))
-    const lastUniversal = types.length - 1 - [...types].reverse().findIndex(t => t.startsWith('u_'))
+    const firstLang = types.findIndex(t => !是通用的(t))
+    const lastUniversal = types.length - 1 - [...types].reverse().findIndex(是通用的)
     expect(firstLang, 'I/O 分類是空的 → 是建構壞了，不是排序對了').toBeGreaterThan(0)
     expect(firstLang).toBeGreaterThan(lastUniversal)
   })
 
   it('I/O 分類：cstdio 偏好時反過來', () => {
     const types = ioContents('cstdio')
-    const firstUniversal = types.findIndex(t => t.startsWith('u_'))
-    const lastLang = types.length - 1 - [...types].reverse().findIndex(t => !t.startsWith('u_'))
+    const firstUniversal = types.findIndex(是通用的)
+    const lastLang = types.length - 1 - [...types].reverse().findIndex(t => !是通用的(t))
     expect(firstUniversal).toBeGreaterThan(lastLang)
   })
 
@@ -105,7 +112,7 @@ describe('C++ toolbox categories (language module)', () => {
     const types = snapshot.categories.find(c => c.name.includes('輸入'))?.blocks ?? []
     // ⚠️ 這裡列的是**積木型別**（`snapshot.categories[].blocks`），不是元件身分。
     // 命名空間遷移只動身分，積木型別維持 `cpp_`（B 項加法式保留）。
-    for (const t of ['cpp_getline', 'cpp_ifstream_declare', 'cpp_ofstream_declare']) {
+    for (const t of ['cpp_input_line', 'cpp_ifstream_declare', 'cpp_ofstream_declare']) {
       expect(types, `${t} 的 category 明明是 'io'，卻不在 I/O 分類裡`).toContain(t)
     }
   })

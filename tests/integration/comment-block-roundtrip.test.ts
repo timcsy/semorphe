@@ -14,7 +14,7 @@
  * 使用者在積木編輯器裡寫的區塊註解**會消失**，而唯一的症狀是
  * 「切換積木風格之後東西不見了」——那時他已經不記得自己寫過什麼。
  *
- * `c_comment_doc` 沒中，只因為它剛好有**顯式**的 `renderMapping.fields`。
+ * `cpp_doc_comment` 沒中，只因為它剛好有**顯式**的 `renderMapping.fields`。
  * 兩顆長得幾乎一樣，一顆會掉一顆不會——這就是為什麼推導必須只有一份。
  */
 import { describe, it, expect } from 'vitest'

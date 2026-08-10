@@ -20,7 +20,7 @@ export function createTestLifter(): Lifter {
   registerCppLiftStrategies(liftStrategyRegistry)
   const renderStrategyRegistry = new RenderStrategyRegistry()
 
-  // Load BlockSpec patterns (for c_increment, c_compound_assign, etc.)
+  // Load BlockSpec patterns (for cpp_increment, cpp_var_assign_compound, etc.)
   const blockSpecRegistry = new BlockSpecRegistry()
   // ⚠️ **走唯一組裝點，不在這裡自己串一份。**
   // 這是第四份被找到的各自組裝（前三份：`component-scan.ts` 的 `allComponentDefs`、

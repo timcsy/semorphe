@@ -4,7 +4,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
   // var_declare: multi-variable with per-variable init control
   registry.register('cpp:renderVarDeclare', (node, ctx) => {
     const block: BlockState = {
-      type: 'u_var_declare',
+      type: 'cpp_var_declare',
       id: ctx.nextBlockId(),
       fields: { TYPE: node.properties.type ?? 'int' },
       inputs: {},
@@ -47,7 +47,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
   // if: progressive if/if-else block — flattens nested else-if chains
   registry.register('cpp:renderIf', (node, ctx) => {
     const block: BlockState = {
-      type: 'u_if',
+      type: 'cpp_if',
       id: ctx.nextBlockId(),
       fields: {},
       inputs: {},
@@ -123,7 +123,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
   // doc_comment: /** ... */ with @brief, @param, @return
   registry.register('cpp:renderDocComment', (node, _ctx) => {
     const block: BlockState = {
-      type: 'c_comment_doc',
+      type: 'cpp_doc_comment',
       id: _ctx.nextBlockId(),
       fields: { BRIEF: node.properties.brief ?? '' },
       inputs: {},

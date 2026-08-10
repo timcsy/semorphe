@@ -44,25 +44,25 @@ describe('PatternRenderer.getExpressionCounterpart', () => {
   beforeEach(() => {
     renderer = new PatternRenderer()
     renderer.loadBlockSpecs([
-      makeSpec('c_increment', 'cpp_increment', { expressionCounterpart: 'c_increment_expr' }),
-      makeSpec('c_compound_assign', 'cpp_compound_assign', { expressionCounterpart: 'c_compound_assign_expr' }),
-      makeSpec('c_scanf', 'cpp_scanf', { expressionCounterpart: 'c_scanf_expr' }),
-      makeSpec('u_var_declare', 'cpp:var_declare', { expressionCounterpart: 'c_var_declare_expr' }),
-      makeSpec('u_input', 'cpp:input', { expressionCounterpart: 'u_input_expr' }),
-      makeSpec('c_increment_expr', 'cpp_increment_expr', { hasOutput: true }),
+      makeSpec('cpp_increment', 'cpp_increment', { expressionCounterpart: 'cpp_increment_expression' }),
+      makeSpec('cpp_var_assign_compound', 'cpp_compound_assign', { expressionCounterpart: 'cpp_var_assign_compound_expression' }),
+      makeSpec('cpp_input_formatted', 'cpp_scanf', { expressionCounterpart: 'cpp_input_formatted_expression' }),
+      makeSpec('cpp_var_declare', 'cpp:var_declare', { expressionCounterpart: 'cpp_var_declare_expression' }),
+      makeSpec('cpp_input', 'cpp:input', { expressionCounterpart: 'cpp_input_expression' }),
+      makeSpec('cpp_increment_expression', 'cpp_increment_expr', { hasOutput: true }),
     ])
   })
 
   it('returns expression counterpart for statement blocks', () => {
-    expect(renderer.getExpressionCounterpart('c_increment')).toBe('c_increment_expr')
-    expect(renderer.getExpressionCounterpart('c_compound_assign')).toBe('c_compound_assign_expr')
-    expect(renderer.getExpressionCounterpart('c_scanf')).toBe('c_scanf_expr')
-    expect(renderer.getExpressionCounterpart('u_var_declare')).toBe('c_var_declare_expr')
-    expect(renderer.getExpressionCounterpart('u_input')).toBe('u_input_expr')
+    expect(renderer.getExpressionCounterpart('cpp_increment')).toBe('cpp_increment_expression')
+    expect(renderer.getExpressionCounterpart('cpp_var_assign_compound')).toBe('cpp_var_assign_compound_expression')
+    expect(renderer.getExpressionCounterpart('cpp_input_formatted')).toBe('cpp_input_formatted_expression')
+    expect(renderer.getExpressionCounterpart('cpp_var_declare')).toBe('cpp_var_declare_expression')
+    expect(renderer.getExpressionCounterpart('cpp_input')).toBe('cpp_input_expression')
   })
 
   it('returns undefined for blocks without expression counterpart', () => {
-    expect(renderer.getExpressionCounterpart('c_increment_expr')).toBeUndefined()
+    expect(renderer.getExpressionCounterpart('cpp_increment_expression')).toBeUndefined()
     expect(renderer.getExpressionCounterpart('nonexistent')).toBeUndefined()
   })
 })

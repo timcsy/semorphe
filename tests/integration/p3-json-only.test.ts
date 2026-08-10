@@ -91,7 +91,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     }
   }
 
-  describe('c_increment (update_expression)', () => {
+  describe('cpp_increment (update_expression)', () => {
     it('should lift i++ from AST to semantic node', () => {
       const argNode = mockNode('identifier', 'i')
       const opNode = unnamed('++', '++')
@@ -119,14 +119,14 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const node = createNode('cpp:increment', { name: 'i', operator: '++' })
       const block = renderer.render(node)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_increment')
+      expect(block!.type).toBe('cpp_increment')
       expect(block!.fields.NAME).toBe('i')
       expect(block!.fields.OP).toBe('++')
     })
 
     it('should extract block state back to semantic', () => {
       const block = {
-        type: 'c_increment',
+        type: 'cpp_increment',
         id: 'test_1',
         fields: { NAME: 'i', OP: '++' },
         inputs: {},
@@ -152,7 +152,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       // Step 2: Semantic → Block (render)
       const block = renderer.render(semantic1!)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_increment')
+      expect(block!.type).toBe('cpp_increment')
 
       // Step 3: Block → Semantic (extract)
       const semantic2 = extractor.extract(block!)
@@ -162,7 +162,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     })
   })
 
-  describe('c_char_literal (char_literal)', () => {
+  describe('cpp_literal_char (char_literal)', () => {
     it('should lift char literal from AST', () => {
       const node = mockNode('char_literal', "'a'")
       const result = lifter.tryLift(node, liftCtx())
@@ -172,17 +172,17 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     })
   })
 
-  describe('c_compound_assign (assignment_expression)', () => {
+  describe('cpp_var_assign_compound (assignment_expression)', () => {
     it('should lift x += 5 from AST', () => {
       // Register number_literal for child lifting
       const numSpec: BlockSpec = {
-        id: 'u_number',
+        id: 'cpp_literal_number',
         language: 'universal',
         category: 'data',
         level: 0,
         version: '1.0.0',
         conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
-        blockDef: { type: 'u_number' },
+        blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${value}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',

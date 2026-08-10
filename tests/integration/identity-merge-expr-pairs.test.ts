@@ -55,7 +55,7 @@ afterAll(() => clearTestRenderer())
 /** 被合併掉的那六個身分 */
 const 已合併的 = [
   'func_call_expr',
-  'cpp_method_call_expr',
+  'cpp_method_call_expression',
   'cpp_increment_expr',
   'cpp_compound_assign_expr',
   'var_declare_expr',
@@ -124,21 +124,21 @@ describe('六對雙版本已合併成六個身分', () => {
 
   it('★ 而它們的積木**仍然存在**（形態不得跟著消失）', () => {
     const reg = 登錄表()
-    for (const bt of ['c_increment_expr', 'c_compound_assign_expr', 'c_var_declare_expr', 'c_scanf_expr']) {
+    for (const bt of ['cpp_increment_expression', 'cpp_var_assign_compound_expression', 'cpp_var_declare_expression', 'cpp_input_formatted_expression']) {
       expect(reg.getByBlockType(bt), `${bt} 不見了 → 既有存檔裡那顆積木會變成不認得的型別`).toBeDefined()
     }
   })
 
   it('★ 運算式版的積木反推得到**合併後**的身分（C-4）', () => {
     const reg = 登錄表()
-    expect(reg.getByBlockType('c_increment_expr')?.conceptMapping?.conceptId).toBe('cpp:increment')
-    expect(reg.getByBlockType('c_increment')?.conceptMapping?.conceptId).toBe('cpp:increment')
+    expect(reg.getByBlockType('cpp_increment_expression')?.conceptMapping?.conceptId).toBe('cpp:increment')
+    expect(reg.getByBlockType('cpp_increment')?.conceptMapping?.conceptId).toBe('cpp:increment')
   })
 
   it('★ 一個身分查得到兩個形態', () => {
     const forms = 登錄表().getFormsByConceptId('cpp:increment')
     expect(forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort()).toEqual(
-      ['c_increment', 'c_increment_expr'],
+      ['cpp_increment', 'cpp_increment_expression'],
     )
   })
 })
@@ -173,11 +173,11 @@ describe('兩個位置的行為都不變', () => {
 
 describe('同一個身分，兩個位置選到不同積木', () => {
   it('★ 敘述位置用敘述版積木', () => {
-    expect(blockTypes(lift('int i = 0; i++;'))).toContain('c_increment')
+    expect(blockTypes(lift('int i = 0; i++;'))).toContain('cpp_increment')
   })
 
   it('★ 運算式位置用運算式版積木', () => {
-    expect(blockTypes(lift('int i = 0; int j = i++;'))).toContain('c_increment_expr')
+    expect(blockTypes(lift('int i = 0; int j = i++;'))).toContain('cpp_increment_expression')
   })
 
   it('★ 而語義樹裡**兩者都是同一個身分**', () => {
@@ -235,15 +235,15 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     expect((後.tree as { conceptId: string }).conceptId).toBe('cpp:var_declare')
   })
 
-  it('★ 積木型別**不轉**——加法式，`c_increment_expr` 仍然有效', async () => {
+  it('★ 積木型別**不轉**——加法式，`cpp_increment_expression` 仍然有效', async () => {
     const { UPGRADES } = await import('../../src/core/storage-version')
     const 存檔 = {
       version: 1, tree: null,
-      blocklyState: { blocks: { blocks: [{ type: 'c_increment_expr', id: 'b1' }] } },
+      blocklyState: { blocks: { blocks: [{ type: 'cpp_increment_expression', id: 'b1' }] } },
       code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const 後 = UPGRADES[1](存檔 as unknown as Record<string, unknown>)
     const blocks = (後.blocklyState as { blocks: { blocks: { type: string }[] } }).blocks.blocks
-    expect(blocks[0].type, '積木型別被改掉了 → 那是不必要的，形態本來就保留').toBe('c_increment_expr')
+    expect(blocks[0].type, '積木型別被改掉了 → 那是不必要的，形態本來就保留').toBe('cpp_increment_expression')
   })
 })

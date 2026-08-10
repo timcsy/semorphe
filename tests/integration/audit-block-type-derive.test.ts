@@ -112,8 +112,12 @@ describe('護欄自我驗證：兩個方向都要釘', () => {
   // 與一條什麼都沒量到的護欄，產出完全相同。
 
   it('注入①：不導出的名字**會被報**，而且指得出是哪一顆', () => {
+    // ⚠️ 這個「壞名字」是**合成的**（`__不導出的名字__`），不是真實世界的舊名。
+    // 第一版用了真的舊名 `cpp_stack_top`——而改名腳本把它一起改掉了，
+    // 於是**壞的輸入變成對的，注入測試靜靜地失去意義**。
+    // build-guardrail 第 2 步：**錨點要挑合成的，不要挑真實世界的狀態。**
     const 壞的: 積木宣告[] = [
-      { conceptId: 'cpp:stack_peek', form: null, blockType: 'cpp_stack_top' },
+      { conceptId: 'cpp:stack_peek', form: null, blockType: '__不導出的名字__' },
     ]
     const 報出 = 壞的.filter((b) => b.blockType !== deriveBlockType(b.conceptId, b.form))
     expect(報出).toHaveLength(1)

@@ -11,8 +11,8 @@ import { allStdModules } from '../../src/languages/cpp/std'
  * correctly exposed via block-input-names.ts.
  *
  * Root cause context:
- *   universal.json once defined u_if with input "COND", but app.new.ts
- *   dynamically registered u_if with input "CONDITION". PatternRenderer
+ *   universal.json once defined cpp_if with input "COND", but app.new.ts
+ *   dynamically registered cpp_if with input "CONDITION". PatternRenderer
  *   auto-derivation reads JSON → generated wrong input names →
  *   serialization broke on Block Style switching.
  *
@@ -23,19 +23,19 @@ import { allStdModules } from '../../src/languages/cpp/std'
 
 describe('block-input-names utility', () => {
   it('IF_INPUTS should contain CONDITION value input and THEN statement input', () => {
-    const inputs = getInputs('u_if')
+    const inputs = getInputs('cpp_if')
     expect(inputs.value).toContain('CONDITION')
     expect(inputs.statement).toContain('THEN')
   })
 
   it('WHILE_INPUTS should contain CONDITION value input and BODY statement input', () => {
-    const inputs = getInputs('u_while_loop')
+    const inputs = getInputs('cpp_loop_while')
     expect(inputs.value).toContain('CONDITION')
     expect(inputs.statement).toContain('BODY')
   })
 
   it('COUNT_LOOP_INPUTS should contain FROM, TO value inputs and BODY statement input', () => {
-    const inputs = getInputs('u_count_loop')
+    const inputs = getInputs('cpp_loop_count')
     expect(inputs.value).toContain('FROM')
     expect(inputs.value).toContain('TO')
     expect(inputs.statement).toContain('BODY')
@@ -49,7 +49,7 @@ describe('blockDef input name sanity checks', () => {
   const specs = _reg.getAll()
 
   // Blocks where COND was historically used but should be CONDITION
-  const mustNotUseCOND = ['u_if', 'u_if_else', 'u_while_loop']
+  const mustNotUseCOND = ['cpp_if', 'cpp_if_else', 'cpp_loop_while']
 
   for (const blockType of mustNotUseCOND) {
     it(`${blockType}: must use CONDITION, not COND`, () => {
@@ -61,15 +61,15 @@ describe('blockDef input name sanity checks', () => {
     })
   }
 
-  it('u_if: must use THEN, not BODY for its statement input', () => {
-    const spec = specs.find(s => s.blockDef?.type === 'u_if')!
+  it('cpp_if: must use THEN, not BODY for its statement input', () => {
+    const spec = specs.find(s => s.blockDef?.type === 'cpp_if')!
     const inputs = extractInputNames(spec.blockDef)
     expect(inputs.statement).toContain('THEN')
     expect(inputs.statement).not.toContain('BODY')
   })
 
-  it('u_if_else: must have THEN and ELSE statement inputs', () => {
-    const spec = specs.find(s => s.blockDef?.type === 'u_if_else')!
+  it('cpp_if_else: must have THEN and ELSE statement inputs', () => {
+    const spec = specs.find(s => s.blockDef?.type === 'cpp_if_else')!
     const inputs = extractInputNames(spec.blockDef)
     expect(inputs.statement).toContain('THEN')
     expect(inputs.statement).toContain('ELSE')

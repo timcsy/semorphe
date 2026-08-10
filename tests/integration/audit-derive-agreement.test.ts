@@ -16,14 +16,14 @@
  * pattern-extractor.ts:225  deriveRenderMapping   ← **不認**
  * ```
  *
- * 於是 `c_comment_block` 的內容**渲染得出去、抽取不回來**：
+ * 於是 `cpp_block_comment` 的內容**渲染得出去、抽取不回來**：
  *
  * ```
  * 渲染 fields = {"TEXT":"區塊註解內容"}
  * 抽回 props  = {}                      ← 掉了
  * ```
  *
- * 而 `c_comment_doc` 活著，只因為它剛好有**顯式**的 `fields`。
+ * 而 `cpp_doc_comment` 活著，只因為它剛好有**顯式**的 `fields`。
  *
  * > MEMORY.md 早就記著這個坑的形狀：「沒有顯式 renderStrategy 的積木會從 JSON
  * > blockDef 自動推導 input mapping…**只在 Block Style 切換（serialize→deserialize）
@@ -112,7 +112,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 已知答案：`doc_comment` 有顯式 fields，兩邊一致；`block_comment` 靠推導', () => {
     // ⚠️ 這一對是整條護欄的錨點，而它們的差別是**查證過的**：
-    // `c_comment_doc` 的投影有顯式 `renderMapping.fields`，`c_comment_block` 沒有。
+    // `cpp_doc_comment` 的投影有顯式 `renderMapping.fields`，`cpp_block_comment` 沒有。
     const r = new PatternRenderer()
     const e = new PatternExtractor()
     r.loadBlockSpecs(specs)

@@ -1,7 +1,7 @@
 /**
  * C++ cctype Roundtrip Tests
  *
- * Verifies that C++ cctype concepts (cpp_isalpha, cpp_isdigit, cpp_toupper, cpp_tolower)
+ * Verifies that C++ cctype concepts (cpp_char_is_alpha, cpp_char_is_digit, cpp_char_to_upper, cpp_char_to_lower)
  * survive the full roundtrip: code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -68,7 +68,7 @@ describe('C++ cctype Roundtrip', () => {
   describe('cpp:char_is_alpha', () => {
     const code = "if (isalpha('A')) { cout << \"yes\" << endl; }"
 
-    it('should lift to cpp_isalpha concept', () => {
+    it('should lift to cpp_char_is_alpha concept', () => {
       const tree = liftCode(code)
       expect(findConcept(tree, 'cpp:char_is_alpha')).not.toBeNull()
     })
@@ -88,7 +88,7 @@ describe('C++ cctype Roundtrip', () => {
   describe('cpp:char_is_digit', () => {
     const code = "if (isdigit('5')) { cout << \"digit\" << endl; }"
 
-    it('should lift to cpp_isdigit concept', () => {
+    it('should lift to cpp_char_is_digit concept', () => {
       const tree = liftCode(code)
       expect(findConcept(tree, 'cpp:char_is_digit')).not.toBeNull()
     })
@@ -108,7 +108,7 @@ describe('C++ cctype Roundtrip', () => {
   describe('cpp:char_to_upper', () => {
     const code = "char c = toupper('a');"
 
-    it('should lift to cpp_toupper concept', () => {
+    it('should lift to cpp_char_to_upper concept', () => {
       const tree = liftCode(code)
       expect(findConcept(tree, 'cpp:char_to_upper')).not.toBeNull()
     })
@@ -128,7 +128,7 @@ describe('C++ cctype Roundtrip', () => {
   describe('cpp:char_to_lower', () => {
     const code = "char c = tolower('Z');"
 
-    it('should lift to cpp_tolower concept', () => {
+    it('should lift to cpp_char_to_lower concept', () => {
       const tree = liftCode(code)
       expect(findConcept(tree, 'cpp:char_to_lower')).not.toBeNull()
     })

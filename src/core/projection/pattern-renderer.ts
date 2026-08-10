@@ -340,7 +340,7 @@ export class PatternRenderer {
     if (nodes.length === 0) return null
 
     // Filter: only render blocks that have previousStatement (statement blocks)
-    // Expression-only blocks (e.g. u_var_ref with only output) cannot be chained
+    // Expression-only blocks (e.g. cpp_var_ref with only output) cannot be chained
     let first: BlockState | null = null
     let current: BlockState | null = null
     for (const node of nodes) {

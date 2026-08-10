@@ -2,7 +2,7 @@
  * C++ Map Operations Roundtrip Tests
  *
  * Verifies that C++ map concepts (cpp_map_declare, cpp_container_erase,
- * cpp_container_count, cpp_map_empty, cpp_map_access) survive the full roundtrip.
+ * cpp_container_count, cpp_map_empty, cpp_map_at) survive the full roundtrip.
  *
  * Note: .empty() maps to cpp_container_empty (shared method).
  * Note: m[key] maps to array_access (no type info to distinguish map from array).
@@ -174,13 +174,13 @@ describe('C++ Map Operations Roundtrip', () => {
     })
   })
 
-  // ⚠️ 這一組原本叫「cpp_map_access (**degrades to** array_access)」，理由寫著
+  // ⚠️ 這一組原本叫「cpp_map_at (**degrades to** array_access)」，理由寫著
   // 「Without type info」——**假的**。型別追蹤 076 就接上了。降級不是架構限制，
   // 是沒有人去接。而把降級寫成測試的名字，等於宣告它是設計。
-  describe('cpp_map_access — 對應表的鍵存取', () => {
+  describe('cpp_map_at — 對應表的鍵存取', () => {
     const code = 'map<string, int> mp;\ncout << mp["key"] << endl;'
 
-    it('★ m[key] 辨識成 cpp_map_access，不是 array_access', () => {
+    it('★ m[key] 辨識成 cpp_map_at，不是 array_access', () => {
       const concepts = collectConcepts(liftCode(code))
       expect(concepts.has('cpp:map_at')).toBe(true)
       expect(concepts.has('cpp:array_at'), '降級回去了——型別查得到卻沒用').toBe(false)

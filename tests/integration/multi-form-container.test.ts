@@ -200,21 +200,21 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
 // ─── 加法式的保證（T007–T009，取代原本的存檔轉換）──────────────────
 
 describe('加法式：舊存檔不會壞', () => {
-  it('★ 舊的積木型別 c_container_push **仍然註冊得到**', () => {
+  it('★ 舊的積木型別 cpp_container_push **仍然註冊得到**', () => {
     // 這是加法式的核心保證。**一旦有人手癢把它改名，這支就紅**——
     // 而改名會讓每一份既有存檔裡的那顆積木變成不認得的型別。
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(coreConcepts, coreBlocks)
-    expect(reg.getByBlockType('c_container_push')).toBeDefined()
-    expect(reg.getByBlockType('c_container_pop')).toBeDefined()
+    expect(reg.getByBlockType('cpp_container_push')).toBeDefined()
+    expect(reg.getByBlockType('cpp_container_pop')).toBeDefined()
   })
 
   it('★ 舊積木型別反推得到同一個 conceptId（C-4）', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(coreConcepts, coreBlocks)
-    const 中性 = reg.getByBlockType('c_container_push')?.conceptMapping?.conceptId
-    const 堆疊 = reg.getByBlockType('c_stack_push')?.conceptMapping?.conceptId
-    const 佇列 = reg.getByBlockType('c_queue_push')?.conceptMapping?.conceptId
+    const 中性 = reg.getByBlockType('cpp_container_push')?.conceptMapping?.conceptId
+    const 堆疊 = reg.getByBlockType('cpp_container_push_stack')?.conceptMapping?.conceptId
+    const 佇列 = reg.getByBlockType('cpp_container_push_queue')?.conceptMapping?.conceptId
     expect(中性).toBe('cpp:container_push')
     expect(堆疊).toBe('cpp:container_push')
     expect(佇列).toBe('cpp:container_push')
@@ -224,7 +224,7 @@ describe('加法式：舊存檔不會壞', () => {
     // `sync-controller.ts` 的任何編輯都會走 `renderToBlocklyState`。
     // 所以帶著中性積木的舊專案，第一次編輯就會拿到說得清楚的那顆。
     const types = blockTypes(lift(堆疊程式))
-    expect(types.some((t) => t === 'c_stack_push'), '重新渲染沒有升級 → 自癒那條路斷了').toBe(true)
+    expect(types.some((t) => t === 'cpp_container_push_stack'), '重新渲染沒有升級 → 自癒那條路斷了').toBe(true)
   })
 })
 
@@ -239,7 +239,7 @@ describe('工具箱放的是形態，不是退路', () => {
   it('★ 四顆變體都在工具箱裡——學生找得到', async () => {
     const { loadToolbox } = await import('../helpers/toolbox')
     const { categoriesOf } = loadToolbox()
-    for (const t of ['c_stack_push', 'c_queue_push', 'c_stack_pop', 'c_queue_pop']) {
+    for (const t of ['cpp_container_push_stack', 'cpp_container_push_queue', 'cpp_container_pop_stack', 'cpp_container_pop_queue']) {
       expect(categoriesOf.has(t), `${t} 不在工具箱 → 學生只能拖中性版出來、接上變數、等它自己變`).toBe(true)
     }
   })
@@ -247,8 +247,8 @@ describe('工具箱放的是形態，不是退路', () => {
   it('★ 中性版**不在**工具箱——它是型別查不到時的退路，不是一個選項', async () => {
     const { loadToolbox } = await import('../helpers/toolbox')
     const { categoriesOf } = loadToolbox()
-    expect(categoriesOf.has('c_container_push'), '放著只會變成三顆很像的積木').toBe(false)
-    expect(categoriesOf.has('c_container_pop')).toBe(false)
+    expect(categoriesOf.has('cpp_container_push'), '放著只會變成三顆很像的積木').toBe(false)
+    expect(categoriesOf.has('cpp_container_pop')).toBe(false)
   })
 
   it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {
@@ -259,7 +259,7 @@ describe('工具箱放的是形態，不是退路', () => {
       const args = ((reg.getByBlockType(bt)?.blockDef as Record<string, unknown>)?.args0 ?? []) as { name?: string; text?: string }[]
       return args.find((a) => a.name === 'OBJ')?.text
     }
-    expect(objDefault('c_stack_push')).toBe('stk')
-    expect(objDefault('c_queue_push')).toBe('que')
+    expect(objDefault('cpp_container_push_stack')).toBe('stk')
+    expect(objDefault('cpp_container_push_queue')).toBe('que')
   })
 })

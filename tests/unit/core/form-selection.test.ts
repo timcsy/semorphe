@@ -219,7 +219,7 @@ describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
       forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort(),
       'byConceptId 是 Map<string, BlockSpec> 的話這裡只會有一顆——' +
         '而宣告與實作分歧正是雙重真相護欄在看的東西',
-    ).toEqual(['c_container_push', 'c_queue_push', 'c_stack_push'])
+    ).toEqual(['cpp_container_push', 'cpp_container_push_queue', 'cpp_container_push_stack'])
   })
 
   it('★ 反向：沒有變體的元件回傳恰好一顆', async () => {

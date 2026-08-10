@@ -2,7 +2,7 @@
  * 三顆**零測試足跡**的元件（B 項，身分整併的第一批）
  *
  * 元件身分健檢護欄（第十八條）報出 `cpp_comma_expr`、`var_declarator`、
- * `cpp_map_access` **在整個測試樹裡一次都沒被提到過**。
+ * `cpp_map_at` **在整個測試樹裡一次都沒被提到過**。
  *
  * ## 為什麼「沒被測過」是一個身分問題
  *
@@ -138,12 +138,12 @@ describe('var_declarator — 多變數宣告', () => {
   })
 })
 
-// ─── cpp_map_access ───────────────────────────────────────────────────
+// ─── cpp_map_at ───────────────────────────────────────────────────
 
-describe('cpp_map_access — map 的鍵存取', () => {
+describe('cpp_map_at — map 的鍵存取', () => {
   const 程式 = 'map<string, int> m; m["x"] = 7; m["y"] = m["x"] + 1; cout << m["x"] << m["y"];'
 
-  it('身分：讀取位置辨識得出 cpp_map_access', () => {
+  it('身分：讀取位置辨識得出 cpp_map_at', () => {
     expect(
       collect(lift(程式), 'cpp:map_at').length,
       '零個 → 這顆元件五路齊備、進了工具箱與兩份課程清單，卻沒有任何路徑到得了它',

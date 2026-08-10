@@ -116,7 +116,7 @@ describe('New Round-trip: code → semantic tree → blocks', () => {
     expect(tree).not.toBeNull()
     const state = renderToBlocklyState(tree!)
     expect(state.blocks.blocks).toHaveLength(1)
-    expect(state.blocks.blocks[0].type).toBe('u_var_declare')
+    expect(state.blocks.blocks[0].type).toBe('cpp_var_declare')
   })
 
   it('should produce chained blocks for multiple statements', () => {

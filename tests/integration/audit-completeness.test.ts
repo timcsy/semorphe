@@ -203,7 +203,7 @@ for (const id of ['cpp:map_at', 'cpp:map_assign']) {
  * 而那 11 個原本是誠實的「判不出來」。逐概念的代價是要維護一份清單，
  * 而它的好處是**每一筆都可以單獨驗證有沒有讓判定變差**。
  */
-const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expr', 'cpp:lambda'])
+const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expression', 'cpp:lambda'])
 
 /** 合成節點裡「那個變數叫什麼」——脈絡宣告要用同一個名字 */
 function 接收者名(node: SemanticNode | null): string {

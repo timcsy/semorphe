@@ -2,7 +2,7 @@
  * C++ Stack Operations Roundtrip Tests
  *
  * Verifies that C++ stack concepts (cpp_stack_declare, cpp_container_push,
- * cpp_container_pop, cpp_stack_top, cpp_stack_empty) survive the full roundtrip:
+ * cpp_container_pop, cpp_stack_peek, cpp_stack_empty) survive the full roundtrip:
  *
  *   C++ code → (tree-sitter parse) → AST → (lift) → SemanticTree
  *     → (generate) → C++ code → (re-lift) → SemanticTree  [P1 structural equivalence]
@@ -138,12 +138,12 @@ describe('C++ Stack Operations Roundtrip', () => {
     })
   })
 
-  // ─── 3. cpp_stack_top ───────────────────────────────────
+  // ─── 3. cpp_stack_peek ───────────────────────────────────
 
   describe('cpp:stack_peek', () => {
     const code = 'stack<int> s;\ns.push(42);\ncout << s.top() << endl;'
 
-    it('should lift to cpp_stack_top concept', () => {
+    it('should lift to cpp_stack_peek concept', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
       const node = findConcept(tree, 'cpp:stack_peek')

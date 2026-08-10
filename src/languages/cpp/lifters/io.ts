@@ -155,7 +155,7 @@ const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
     clear: 'cpp:string_clear',
     push_back: 'cpp:string_append_char',
   },
-  // ⚠️ `top` 的通用退路是 `cpp_stack_top`（回傳最後推入的）。
+  // ⚠️ `top` 的通用退路是 `cpp_stack_peek`（回傳最後推入的）。
   // 優先佇列的 `top()` 回傳的是**最大的**——`g++` 對
   // `pq.push(1); pq.push(5); pq.push(3); pq.top()` 的答案是 5，不是 3。
   //

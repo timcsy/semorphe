@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_char_literal",
+    "id": "cpp_literal_char",
     "conceptId": "cpp:literal_char",
     "language": "cpp",
     "category": "values",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_char_literal",
+      "type": "cpp_literal_char",
       "message0": "%{BKY_C_CHAR_LITERAL_MSG0}",
       "args0": [
         {

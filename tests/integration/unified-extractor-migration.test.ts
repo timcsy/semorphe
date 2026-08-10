@@ -33,12 +33,12 @@ beforeAll(() => {
 describe('Migration roundtrip: func_call with dynamicRules', () => {
   it('extract → concept identity preserved for func_call with args', () => {
     const blockState = {
-      type: 'u_func_call',
+      type: 'cpp_func_call',
       id: 'fc1',
       fields: { NAME: 'add' },
       inputs: {
-        ARG_0: { block: { type: 'u_number', id: 'a0', fields: { NUM: '1' }, inputs: {} } },
-        ARG_1: { block: { type: 'u_var_ref', id: 'a1', fields: { NAME: 'x' }, inputs: {} } },
+        ARG_0: { block: { type: 'cpp_literal_number', id: 'a0', fields: { NUM: '1' }, inputs: {} } },
+        ARG_1: { block: { type: 'cpp_var_ref', id: 'a1', fields: { NAME: 'x' }, inputs: {} } },
       },
       extraState: { argCount: 2 },
     }
@@ -61,7 +61,7 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     renderer.resetIds()
     const block = renderer.render(node)
     expect(block).not.toBeNull()
-    expect(block!.type).toBe('u_func_call')
+    expect(block!.type).toBe('cpp_func_call')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.conceptId).toBe('cpp:func_call')
@@ -73,12 +73,12 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
 describe('Migration roundtrip: func_def with dynamicRules', () => {
   it('extract → concept identity preserved for func_def with params', () => {
     const blockState = {
-      type: 'u_func_def',
+      type: 'cpp_func_def',
       id: 'fd1',
       fields: { NAME: 'add', RETURN_TYPE: 'int', TYPE_0: 'int', PARAM_0: 'a', TYPE_1: 'double', PARAM_1: 'b' },
       inputs: {
-        BODY: { block: { type: 'u_return', id: 'r1', fields: {}, inputs: {
-          VALUE: { block: { type: 'u_var_ref', id: 'v1', fields: { NAME: 'a' }, inputs: {} } }
+        BODY: { block: { type: 'cpp_return', id: 'r1', fields: {}, inputs: {
+          VALUE: { block: { type: 'cpp_var_ref', id: 'v1', fields: { NAME: 'a' }, inputs: {} } }
         } } },
       },
       extraState: { paramCount: 2 },
@@ -106,7 +106,7 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     renderer.resetIds()
     const block = renderer.render(node)
     expect(block).not.toBeNull()
-    expect(block!.type).toBe('u_func_def')
+    expect(block!.type).toBe('cpp_func_def')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.conceptId).toBe('cpp:func_def')
@@ -118,12 +118,12 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
 describe('Migration roundtrip: print with dynamicRules', () => {
   it('extract → concept identity preserved for print with values', () => {
     const blockState = {
-      type: 'u_print',
+      type: 'cpp_print',
       id: 'pr1',
       fields: {},
       inputs: {
-        EXPR0: { block: { type: 'u_string', id: 's1', fields: { TEXT: 'hello' }, inputs: {} } },
-        EXPR1: { block: { type: 'u_endl', id: 'e1', fields: {}, inputs: {} } },
+        EXPR0: { block: { type: 'cpp_literal_string', id: 's1', fields: { TEXT: 'hello' }, inputs: {} } },
+        EXPR1: { block: { type: 'cpp_endl', id: 'e1', fields: {}, inputs: {} } },
       },
       extraState: { itemCount: 2 },
     }
@@ -154,7 +154,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
 describe('Migration roundtrip: input with dynamicRules', () => {
   it('extract → concept identity preserved for cin with select vars', () => {
     const blockState = {
-      type: 'u_input',
+      type: 'cpp_input',
       id: 'in1',
       fields: {},
       inputs: {},
@@ -193,13 +193,13 @@ describe('Migration roundtrip: input with dynamicRules', () => {
 describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
   it('extract → concept identity for scanf with select/compose args', () => {
     const blockState = {
-      type: 'c_scanf',
+      type: 'cpp_input_formatted',
       id: 'sc1',
       fields: { FORMAT: '%d %f' },
       inputs: {
-        ARG_1: { block: { type: 'u_arithmetic', id: 'a1', fields: { OP: '+' }, inputs: {
-          A: { block: { type: 'u_number', id: 'n1', fields: { NUM: '1' }, inputs: {} } },
-          B: { block: { type: 'u_number', id: 'n2', fields: { NUM: '2' }, inputs: {} } },
+        ARG_1: { block: { type: 'cpp_arithmetic', id: 'a1', fields: { OP: '+' }, inputs: {
+          A: { block: { type: 'cpp_literal_number', id: 'n1', fields: { NUM: '1' }, inputs: {} } },
+          B: { block: { type: 'cpp_literal_number', id: 'n2', fields: { NUM: '2' }, inputs: {} } },
         } } },
       },
       extraState: {
@@ -239,12 +239,12 @@ describe('Migration roundtrip: if with elseif chain', () => {
   // the nested→flat transformation.
   it('extract → static mapping works for simple if', () => {
     const blockState = {
-      type: 'u_if',
+      type: 'cpp_if',
       id: 'if1',
       fields: {},
       inputs: {
-        CONDITION: { block: { type: 'u_var_ref', id: 'c0', fields: { NAME: 'a' }, inputs: {} } },
-        THEN: { block: { type: 'u_break', id: 't0', fields: {}, inputs: {} } },
+        CONDITION: { block: { type: 'cpp_var_ref', id: 'c0', fields: { NAME: 'a' }, inputs: {} } },
+        THEN: { block: { type: 'cpp_break', id: 't0', fields: {}, inputs: {} } },
       },
     }
     const result = extractor.extract(blockState as never)
@@ -258,7 +258,7 @@ describe('Migration roundtrip: if with elseif chain', () => {
 describe('Migration roundtrip: forward_decl with dynamicRules', () => {
   it('extract → concept identity for forward_decl with params', () => {
     const blockState = {
-      type: 'c_forward_decl',
+      type: 'cpp_forward_decl',
       id: 'fwd1',
       fields: { RETURN_TYPE: 'int', NAME: 'add', TYPE_0: 'int', TYPE_1: 'double' },
       inputs: {},
@@ -280,7 +280,7 @@ describe('Migration roundtrip: doc_comment', () => {
   // not children. Keeping strategy-based rendering for now.
   it('extract → concept identity for doc_comment brief field', () => {
     const blockState = {
-      type: 'c_comment_doc',
+      type: 'cpp_doc_comment',
       id: 'doc1',
       fields: { BRIEF: 'Add two numbers' },
       inputs: {},

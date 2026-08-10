@@ -12,15 +12,15 @@
  * ## 已釘住的缺陷：降級目標走一次投影就換身分
  *
  * ```
- * cpp:if_else --render--> u_if_else 積木（內容完整）--extract--> cpp:if
+ * cpp:if_else --render--> cpp_if_else 積木（內容完整）--extract--> cpp:if
  *                                                                ↑ 身分變了
  * ```
  *
  * 機制是三件事疊起來：
  *
- * 1. `Blockly.Blocks['u_if_else'] = Blockly.Blocks['u_if']`（`block-registrar.ts:1068`）
- *    ——`u_if_else` 是 `u_if` 的**別名**，同一個物件
- * 2. `extractor.registerExtractStrategy('u_if_else', extractIf)`
+ * 1. `Blockly.Blocks['cpp_if_else'] = Blockly.Blocks['cpp_if']`（`block-registrar.ts:1068`）
+ *    ——`cpp_if_else` 是 `cpp_if` 的**別名**，同一個物件
+ * 2. `extractor.registerExtractStrategy('cpp_if_else', extractIf)`
  *    （`extract-strategies.ts:71`）——兩個型別共用同一支抽取策略
  * 3. 而 `extractIf` 回傳 `createNode('cpp:if', …)`（同檔 :64）——寫死的身分
  *
@@ -103,12 +103,12 @@ describe('走一次投影，身分不得改變', () => {
     //
     // 修法有兩條路，而它們的代價不同：
     //
-    // ① **讓 `extractIf` 依積木型別回傳對應的身分**（`u_if` → `cpp:if`、
-    //    `u_if_else` → `cpp:if_else`）。最小改動，但要順帶處理子節點名
+    // ① **讓 `extractIf` 依積木型別回傳對應的身分**（`cpp_if` → `cpp:if`、
+    //    `cpp_if_else` → `cpp:if_else`）。最小改動，但要順帶處理子節點名
     //    （`then_body`／`else_body` vs `then`／`else`）。
     //
     // ② **讓 `cpp:if_else` 不再需要自己的積木型別**——如果降級之後顯示成
-    //    `u_if` 就夠，那 `u_if_else` 這個別名可以整個退場，
+    //    `cpp_if` 就夠，那 `cpp_if_else` 這個別名可以整個退場，
     //    而 `cpp:if_else` 只留在語義層當抽象父概念。
     //
     // ⚠️ ② 要先答一個問題：**降級成 `cpp:if_else` 的節點，需要與 `cpp:if`

@@ -26,20 +26,20 @@ beforeAll(() => {
 })
 
 describe('Unified extractor: static blocks via PatternExtractor', () => {
-  it('c_const_declare with VALUE input → cpp_const_declare with initializer', () => {
+  it('cpp_var_declare_const with VALUE input → cpp_const_declare with initializer', () => {
     const blockState = {
-      type: 'c_const_declare',
+      type: 'cpp_var_declare_const',
       id: 'test1',
       fields: { TYPE: 'int', NAME: 'limit' },
       inputs: {
         VALUE: {
           block: {
-            type: 'u_arithmetic',
+            type: 'cpp_arithmetic',
             id: 'test2',
             fields: { OP: '+' },
             inputs: {
-              A: { block: { type: 'u_var_ref', id: 'test3', fields: { NAME: 'max' }, inputs: {} } },
-              B: { block: { type: 'u_number', id: 'test4', fields: { NUM: '1' }, inputs: {} } },
+              A: { block: { type: 'cpp_var_ref', id: 'test3', fields: { NAME: 'max' }, inputs: {} } },
+              B: { block: { type: 'cpp_literal_number', id: 'test4', fields: { NUM: '1' }, inputs: {} } },
             },
           },
         },
@@ -54,19 +54,19 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.children.initializer[0].conceptId).toBe('cpp:arithmetic')
   })
 
-  it('c_pointer_declare with INIT input → cpp_pointer_declare with initializer', () => {
+  it('cpp_pointer_declare with INIT input → cpp_pointer_declare with initializer', () => {
     const blockState = {
-      type: 'c_pointer_declare',
+      type: 'cpp_pointer_declare',
       id: 'test5',
       fields: { TYPE: 'int', NAME: 'ptr' },
       inputs: {
         INIT: {
           block: {
-            type: 'c_address_of',
+            type: 'cpp_address_of',
             id: 'test6',
             fields: {},
             inputs: {
-              VAR: { block: { type: 'u_var_ref', id: 'test7', fields: { NAME: 'x' }, inputs: {} } },
+              VAR: { block: { type: 'cpp_var_ref', id: 'test7', fields: { NAME: 'x' }, inputs: {} } },
             },
           },
         },
@@ -81,13 +81,13 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.children.initializer[0].conceptId).toBe('cpp:address_of')
   })
 
-  it('c_ref_declare with INIT input → cpp_ref_declare with initializer', () => {
+  it('cpp_var_declare_ref with INIT input → cpp_ref_declare with initializer', () => {
     const blockState = {
-      type: 'c_ref_declare',
+      type: 'cpp_var_declare_ref',
       id: 'test8',
       fields: { TYPE: 'int', NAME: 'ref' },
       inputs: {
-        INIT: { block: { type: 'u_var_ref', id: 'test9', fields: { NAME: 'x' }, inputs: {} } },
+        INIT: { block: { type: 'cpp_var_ref', id: 'test9', fields: { NAME: 'x' }, inputs: {} } },
       },
     }
     const result = extractor.extract(blockState as never)
@@ -97,13 +97,13 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.children.initializer).toHaveLength(1)
   })
 
-  it('c_cast with VALUE input → cpp_cast with value child', () => {
+  it('cpp_cast with VALUE input → cpp_cast with value child', () => {
     const blockState = {
-      type: 'c_cast',
+      type: 'cpp_cast',
       id: 'test10',
       fields: { TARGET_TYPE: 'int' },
       inputs: {
-        VALUE: { block: { type: 'u_number', id: 'test11', fields: { NUM: '3.14' }, inputs: {} } },
+        VALUE: { block: { type: 'cpp_literal_number', id: 'test11', fields: { NUM: '3.14' }, inputs: {} } },
       },
     }
     const result = extractor.extract(blockState as never)
@@ -113,14 +113,14 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.children.value).toHaveLength(1)
   })
 
-  it('u_arithmetic with A/B inputs → arithmetic with left/right children', () => {
+  it('cpp_arithmetic with A/B inputs → arithmetic with left/right children', () => {
     const blockState = {
-      type: 'u_arithmetic',
+      type: 'cpp_arithmetic',
       id: 'test12',
       fields: { OP: '+' },
       inputs: {
-        A: { block: { type: 'u_number', id: 'test13', fields: { NUM: '5' }, inputs: {} } },
-        B: { block: { type: 'u_number', id: 'test14', fields: { NUM: '3' }, inputs: {} } },
+        A: { block: { type: 'cpp_literal_number', id: 'test13', fields: { NUM: '5' }, inputs: {} } },
+        B: { block: { type: 'cpp_literal_number', id: 'test14', fields: { NUM: '3' }, inputs: {} } },
       },
     }
     const result = extractor.extract(blockState as never)

@@ -64,11 +64,11 @@
 **目標**：驗證整條管線最便宜的一段。
 **獨立驗證**：不導出數 153 → 86，US1 的四個契約仍全過。
 
-- [ ] T017 [US2] **先只改已膠囊化那 5 顆**（`cpp:char_is_alpha → cpp_isalpha`、三顆 `c_math_*`、`c_char_literal`）：改 `src/components/*/*/forms/blocks.json` 的 `blockDef.type`，並把舊 → 新填進 T010 的明表。⚠️ **這是 FR-011 的「先驗形狀再推量」**——上一次同類改名回退了 121 個檔
-- [ ] T018 [US2] 跑全套。綠了才繼續。⚠️ 這 5 顆裡有 3 顆是 `c_math_*`，它們的積木型別出現在工具箱快照基線裡，會一起變
-- [ ] T019 [US2] 改其餘只差前綴的 62 顆：`src/blocks/projections/blocks/universal-blocks.json` 與 `src/languages/cpp/**/blocks.json` 的 `blockDef.type`
-- [ ] T020 [US2] 同步改**裸的物件鍵**（實測 155 處，大宗在 `src/ui/block-registrar.ts`）。⚠️ 這些是 Identifier 不是 StringLiteral，**AST 掃描器看不到**
-- [ ] T021 [US2] 跑護欄，確認 153 → 86，且**下降的每一筆都指得出是哪一顆**（不是只看總數變小）
+- [X] T017 [US2] **先只改已膠囊化那 5 顆**（`cpp:char_is_alpha → cpp_isalpha`、三顆 `c_math_*`、`c_char_literal`）：改 `src/components/*/*/forms/blocks.json` 的 `blockDef.type`，並把舊 → 新填進 T010 的明表。⚠️ **這是 FR-011 的「先驗形狀再推量」**——上一次同類改名回退了 121 個檔
+- [X] T018 [US2] 跑全套。綠了才繼續。⚠️ 這 5 顆裡有 3 顆是 `c_math_*`，它們的積木型別出現在工具箱快照基線裡，會一起變
+- [X] T019 [US2] 改其餘只差前綴的 62 顆：`src/blocks/projections/blocks/universal-blocks.json` 與 `src/languages/cpp/**/blocks.json` 的 `blockDef.type`
+- [X] T020 [US2] 同步改**裸的物件鍵**（實測 155 處，大宗在 `src/ui/block-registrar.ts`）。⚠️ 這些是 Identifier 不是 StringLiteral，**AST 掃描器看不到**
+- [X] T021 [US2] 跑護欄，確認 153 → 86，且**下降的每一筆都指得出是哪一顆**（不是只看總數變小）
 
 **Checkpoint**：US2 可獨立驗收；不導出數 86。
 
@@ -79,12 +79,12 @@
 **目標**：消滅雙重命名。
 **獨立驗證**：不導出數 86 → 0；用命名整理的同一套判準量積木型別，「操作詞不在封閉詞彙」24 → 0、「裸的函式庫名」63 → 0。
 
-- [ ] T022 [US3] 改 86 顆的 `blockDef.type` 與對應的裸物件鍵，逐批填進明表
-- [ ] T023 [US3] ⚠️ **模板字串那一處手改**：`src/languages/cpp/std/cctype/generators.ts:8` 的 `` g.set(`cpp_${func}`) ``。**改名腳本掃不到它**——上一輪剛因為同一種形狀付過代價（兩顆概念的產生器從未存在，而 35 條護欄全部看不見）
-- [ ] T024 [US3] `container_kind` 那兩顆（`c_stack_push`／`c_queue_push`／`c_stack_pop`／`c_queue_pop`）：導出後變成 `cpp_container_push_stack` 等。⚠️ 它們把 value 塞進**主體**而不是後綴，所以是**改名**不是保留
-- [ ] T025 [US3] ⚠️ **若發現某一筆舊名有理由存在**（不是化石而是刻意的差異），**停下來記下來**，不要硬改。規格的 Assumptions 明說那是一個發現
-- [ ] T026 [US3] 跑護欄，確認 86 → 0
-- [ ] T027 [US3] 檢查明表：153 筆全部在裡面，每一筆看得見
+- [X] T022 [US3] 改 86 顆的 `blockDef.type` 與對應的裸物件鍵，逐批填進明表
+- [X] T023 [US3] ⚠️ **模板字串那一處手改**：`src/languages/cpp/std/cctype/generators.ts:8` 的 `` g.set(`cpp_${func}`) ``。**改名腳本掃不到它**——上一輪剛因為同一種形狀付過代價（兩顆概念的產生器從未存在，而 35 條護欄全部看不見）
+- [X] T024 [US3] `container_kind` 那兩顆（`c_stack_push`／`c_queue_push`／`c_stack_pop`／`c_queue_pop`）：導出後變成 `cpp_container_push_stack` 等。⚠️ 它們把 value 塞進**主體**而不是後綴，所以是**改名**不是保留
+- [X] T025 [US3] ✅ 掃過，**沒有一筆舊名有理由存在**——153 筆全是化石或前綴。⚠️ **若發現某一筆舊名有理由存在**（不是化石而是刻意的差異），**停下來記下來**，不要硬改。規格的 Assumptions 明說那是一個發現
+- [X] T026 [US3] 跑護欄，確認 86 → 0
+- [X] T027 [US3] 檢查明表：153 筆全部在裡面，每一筆看得見
 
 **Checkpoint**：不導出數 0。
 
@@ -94,16 +94,16 @@
 
 > 早了會與舊前綴打架；晚了那段時間排序是壞的。
 
-- [ ] T028 ⚠️ 把 `src/ui/toolbox-builder.ts:100-101` 的 `startsWith('u_')` 改成**問概念宣告的 `layer` 欄位**。改名之後沒有型別以 `u_` 開頭 → `universalIo` 恆為空、iostream／printf 的排序偏好**靜靜失效**。而那一行上方的註解記著它**已經害過一次**（三顆 `cpp_` 積木兩邊都不屬於，被排序函式靜靜丟掉）
-- [ ] T029 [P] 測試釘住 T028：`iostream` 與 `printf` 兩種偏好下，IO 分類的積木順序各是什麼。⚠️ 影響面已量（`u_` 27 顆 ⊂ `layer=universal` 31 顆，差的 4 顆沒有一顆是 IO 類，預期行為改變為 0）——**但用測試釘住，不用推理代替**
-- [ ] T030 掃一遍其餘「拿形狀當判斷」的地方：`startsWith('c_')`／`startsWith('cpp_')`／`endsWith('_expr')`。⚠️ **命名慣例不是契約**——要判斷「這顆是不是 X」就問宣告，不要看名字長什麼樣
+- [X] T028 ⚠️ 把 `src/ui/toolbox-builder.ts:100-101` 的 `startsWith('u_')` 改成**問概念宣告的 `layer` 欄位**。改名之後沒有型別以 `u_` 開頭 → `universalIo` 恆為空、iostream／printf 的排序偏好**靜靜失效**。而那一行上方的註解記著它**已經害過一次**（三顆 `cpp_` 積木兩邊都不屬於，被排序函式靜靜丟掉）
+- [X] T029 [P] 測試釘住 T028：`iostream` 與 `printf` 兩種偏好下，IO 分類的積木順序各是什麼。⚠️ 影響面已量（`u_` 27 顆 ⊂ `layer=universal` 31 顆，差的 4 顆沒有一顆是 IO 類，預期行為改變為 0）——**但用測試釘住，不用推理代替**
+- [X] T030 掃一遍其餘「拿形狀當判斷」的地方：`startsWith('c_')`／`startsWith('cpp_')`／`endsWith('_expr')`。⚠️ **命名慣例不是契約**——要判斷「這顆是不是 X」就問宣告，不要看名字長什麼樣
 
 ---
 
 ## Phase 8: Polish & 驗收
 
 - [ ] T031 ⚠️ **瀏覽器實測**（`quickstart.md` 第四節，這一步不能用測試代替）：貼 v9 存檔進 localStorage → 重整 → 看積木長出來了嗎、有沒有未知型別 → 按執行比對輸出 → 切 iostream/printf 看排序
-- [ ] T032 更新受影響的既有基線：`tests/baselines/toolbox.json`（積木型別全變）、`dual-truth`、`component-locality` 等。⚠️ 每一個都要在 `_meta.note` 註明原因
+- [X] T032 更新受影響的既有基線：`tests/baselines/toolbox.json`（積木型別全變）、`dual-truth`、`component-locality` 等。⚠️ 每一個都要在 `_meta.note` 註明原因
 - [ ] T033 **最後才產** `tests/baselines/block-type-derive.json`，`_meta` 註明下降是「**因為實作了**」而不是「因為重新分類」
 - [ ] T034 `npm test` 全套綠
 - [ ] T035 ⚠️ 記下 `component-rename` skill 的差異：它是為**身分**改名寫的，這次改的是**積木型別**。哪幾步適用、哪幾步不適用——那是該 skill 的下一次修正

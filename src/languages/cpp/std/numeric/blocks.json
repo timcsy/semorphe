@@ -6,7 +6,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_accumulate",
+      "type": "cpp_range_sum",
       "message0": "%{BKY_CPP_ACCUMULATE_MSG0}",
       "args0": [
         {
@@ -48,7 +48,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_iota",
+      "type": "cpp_range_fill_sequence",
       "message0": "%{BKY_CPP_IOTA_MSG0}",
       "args0": [
         {
@@ -91,7 +91,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_partial_sum",
+      "type": "cpp_range_sum_partial",
       "message0": "%{BKY_CPP_PARTIAL_SUM_MSG0}",
       "args0": [
         {
@@ -133,7 +133,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_gcd",
+      "type": "cpp_math_gcd",
       "message0": "%{BKY_CPP_GCD_MSG0}",
       "args0": [
         {
@@ -168,7 +168,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_lcm",
+      "type": "cpp_math_lcm",
       "message0": "%{BKY_CPP_LCM_MSG0}",
       "args0": [
         {

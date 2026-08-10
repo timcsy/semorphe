@@ -62,7 +62,7 @@ export const DEFINITE_TOKENS: SyntaxToken[] = [
   // 這幾個為什麼是「確定」而不是「無法確定」：`int`／`string` 同形於核心的
   // 執行期型別標籤，這幾個**在 TypeScript 裡沒有任何合法用途**。而含它們的
   // 元件身分（`cpp_istringstream_declare`）帶著底線前綴，被詞界規則排除——
-  // 那條規則是為 `'u_endl'` 加的，這裡直接受益。
+  // 那條規則是為 `'cpp_endl'` 加的，這裡直接受益。
   { token: 'istringstream', why: 'C++ 的輸入字串串流型別，TypeScript 沒有對應物' },
   { token: 'ostringstream', why: 'C++ 的輸出字串串流型別，同上' },
   { token: 'stringstream', why: 'C++ 的雙向字串串流型別，同上' },
@@ -140,7 +140,7 @@ export interface SyntaxScanResult {
 /**
  * 把記號包成「只匹配字串字面內部」的 regex。
  *
- * ⚠️ **詞形記號要加詞界。** 第一版沒加，於是 `'u_endl'`（一個積木型別）
+ * ⚠️ **詞形記號要加詞界。** 第一版沒加，於是 `'cpp_endl'`（一個積木型別）
  * 被報成 C++ 的 `endl`——三處誤報。判準：記號由字母數字底線組成的話，
  * 它前後必須不是識別字字元。符號類（`->`、`std::`、`#include`）不受此限。
  */

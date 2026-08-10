@@ -84,10 +84,10 @@ export function resolvePattern(pattern: string, index: number): string {
  *
  * `PatternRenderer` 與 `PatternExtractor` 各有一份 `deriveRenderMapping`。
  * 渲染那份認 `field_multilinetext`，抽取那份**不認**——於是
- * `c_comment_block` 的內容**渲染得出去、抽取不回來**：使用者在積木編輯器裡
+ * `cpp_block_comment` 的內容**渲染得出去、抽取不回來**：使用者在積木編輯器裡
  * 寫的區塊註解會消失，而唯一的症狀是「切換積木風格之後東西不見了」。
  *
- * `c_comment_doc` 幾乎一模一樣卻沒中，只因為它剛好有**顯式**的 `fields`。
+ * `cpp_doc_comment` 幾乎一模一樣卻沒中，只因為它剛好有**顯式**的 `fields`。
  * **一顆會掉、一顆不會，而兩顆看起來一樣。**
  *
  * > **同一件事在兩個地方各推導一次，就是在等它們分歧。**

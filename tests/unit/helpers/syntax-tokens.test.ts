@@ -103,11 +103,11 @@ describe('合成注入（反向）：乾淨的程式碼不得被報出', () => {
   it('★ 含型別名的**元件身分**不得被報出——那是中立性護欄的維度', () => {
     // `cpp_istringstream_declare` 含 `istringstream`。把它報成語法耦合的話，
     // 同一筆會被兩條護欄各數一次，而修法完全不同（一個要搬投影，一個要
-    // 搬概念）。詞界規則擋住了它——那條規則原本是為 `'u_endl'` 加的。
+    // 搬概念）。詞界規則擋住了它——那條規則原本是為 `'cpp_endl'` 加的。
     const src = `const decls = collect(tree, (n) => n.conceptId === 'cpp_istringstream_declare')`
     expect(
       scan(src).definite,
-      '報出來的話，`endl` ⊂ `u_endl` 那個誤報就換一個名字回來了',
+      '報出來的話，`endl` ⊂ `cpp_endl` 那個誤報就換一個名字回來了',
     ).toEqual([])
   })
 

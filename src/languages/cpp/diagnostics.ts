@@ -3,28 +3,28 @@ import type { DiagnosticRule } from '../../core/diagnostics'
 /** C++ specific diagnostic rules for block validation. */
 export const cppDiagnosticRules: DiagnosticRule[] = [
   {
-    blockTypes: ['u_if', 'u_if_else'],
+    blockTypes: ['cpp_if', 'cpp_if_else'],
     check: 'hasInput',
     inputName: 'CONDITION',
     severity: 'warning',
     message: 'DIAG_MISSING_CONDITION',
   },
   {
-    blockTypes: ['u_while_loop'],
+    blockTypes: ['cpp_loop_while'],
     check: 'hasInput',
     inputName: 'CONDITION',
     severity: 'warning',
     message: 'DIAG_MISSING_CONDITION',
   },
   {
-    blockTypes: ['u_print'],
+    blockTypes: ['cpp_print'],
     check: 'hasInput',
     inputName: 'EXPR0',
     severity: 'warning',
     message: 'DIAG_MISSING_VALUE',
   },
   {
-    blockTypes: ['u_var_declare'],
+    blockTypes: ['cpp_var_declare'],
     check: 'varDeclareNames',
     severity: 'warning',
     message: 'DIAG_MISSING_VALUE',

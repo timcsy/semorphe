@@ -56,7 +56,7 @@
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_vector_pop_back",
+      "type": "cpp_vector_pop",
       "message0": "%{BKY_CPP_VECTOR_POP_BACK_MSG0}",
       "args0": [
         {

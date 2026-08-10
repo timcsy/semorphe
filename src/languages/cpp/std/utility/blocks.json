@@ -82,7 +82,7 @@
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_make_pair",
+      "type": "cpp_pair_make",
       "message0": "%{BKY_CPP_MAKE_PAIR_MSG0}",
       "args0": [
         {

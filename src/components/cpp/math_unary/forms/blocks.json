@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_math_unary",
+    "id": "cpp_math_unary",
     "conceptId": "cpp:math_unary",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_math_unary",
+      "type": "cpp_math_unary",
       "message0": "%{BKY_C_MATH_UNARY_MSG0}",
       "args0": [
         {

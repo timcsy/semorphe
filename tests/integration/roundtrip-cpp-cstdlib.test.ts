@@ -1,8 +1,8 @@
 /**
  * C++ cstdlib Roundtrip Tests
  *
- * Verifies that C++ cstdlib concepts (cpp_rand, cpp_srand, cpp_abs, cpp_exit,
- * cpp_atoi, cpp_atof) survive the full roundtrip:
+ * Verifies that C++ cstdlib concepts (cpp_random_next, cpp_random_seed, cpp_math_abs, cpp_program_exit,
+ * cpp_cstring_as_int, cpp_cstring_as_double) survive the full roundtrip:
  * code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -69,7 +69,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:random_next', () => {
     const code = 'int x = rand();'
 
-    it('should lift to cpp_rand concept', () => {
+    it('should lift to cpp_random_next concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:random_next')
       expect(node).not.toBeNull()
@@ -91,7 +91,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:random_seed', () => {
     const code = 'srand(42);'
 
-    it('should lift to cpp_srand concept', () => {
+    it('should lift to cpp_random_seed concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:random_seed')
       expect(node).not.toBeNull()
@@ -113,7 +113,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:math_abs', () => {
     const code = 'int y = abs(-5);'
 
-    it('should lift to cpp_abs concept', () => {
+    it('should lift to cpp_math_abs concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:math_abs')
       expect(node).not.toBeNull()
@@ -135,7 +135,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:program_exit', () => {
     const code = 'exit(0);'
 
-    it('should lift to cpp_exit concept', () => {
+    it('should lift to cpp_program_exit concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:program_exit')
       expect(node).not.toBeNull()
@@ -157,7 +157,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:cstring_as_int', () => {
     const code = 'int n = atoi("123");'
 
-    it('should lift to cpp_atoi concept', () => {
+    it('should lift to cpp_cstring_as_int concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:cstring_as_int')
       expect(node).not.toBeNull()
@@ -179,7 +179,7 @@ describe('C++ cstdlib Roundtrip', () => {
   describe('cpp:cstring_as_double', () => {
     const code = 'double d = atof("3.14");'
 
-    it('should lift to cpp_atof concept', () => {
+    it('should lift to cpp_cstring_as_double concept', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:cstring_as_double')
       expect(node).not.toBeNull()

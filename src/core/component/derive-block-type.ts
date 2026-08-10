@@ -4,7 +4,7 @@
  * ## 為什麼需要它
  *
  * 到 2026-08-11 為止，一顆元件要取**兩個**名字：概念身分（`cpp:stack_peek`）
- * 與積木型別（`cpp_stack_top`）。186 顆積木裡 **153 顆**的積木型別不等於
+ * 與積木型別（`cpp_stack_peek`）。186 顆積木裡 **153 顆**的積木型別不等於
  * 身分的導出名，而那不是隨機——是**兩個時間層疊在一起**：
  *
  * ```
@@ -33,7 +33,7 @@
  *
  * ```
  * form.value = 'expression'   而積木型別的後綴是  _expr    ← 縮寫，不是 value
- * form.value = 'stack'        而積木型別是  c_stack_push   ← value 塞在主體裡
+ * form.value = 'stack'        而積木型別是  cpp_container_push_stack   ← value 塞在主體裡
  * ```
  *
  * > **「照抄已驗證的形狀」這個理由本身沒有被驗證過。**

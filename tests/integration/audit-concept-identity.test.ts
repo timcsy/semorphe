@@ -597,7 +597,7 @@ int main() { std::map<int, int> m; int c = m.count(1); }`, 'cpp:container_count'
   // --- Generic Method Call ---
 
   // ARCHITECTURAL: expression_statement unwraps to expression context, so method
-  // calls as statements are lifted as cpp_method_call_expr. The lifter always
+  // calls as statements are lifted as cpp_method_call_expression. The lifter always
   // produces the expr form since call_expression is inherently an expression.
   // ⚠️ 這裡原本標著 `architectural`，說「辨識器產出的是運算式版」——
   // **又一個把「還沒做」寫成「架構上如此」的標籤**（同一天第二個）。
@@ -609,7 +609,7 @@ int main() { std::vector<int> v; v.resize(10); }`, 'cpp:method_call')
 
   // ⚠️ 這一支原本用**與上面完全相同的樣本**（敘述位置）——也就是說
   // 它從來沒有測到運算式位置。**兩支測試斷言同一件事，看起來像涵蓋了兩種。**
-  it('cpp_method_call_expr（運算式位置 → 運算式身分）', () => {
+  it('cpp_method_call_expression（運算式位置 → 運算式身分）', () => {
     assertConceptPresent(`#include <vector>
 int main() { std::vector<int> v; int n = v.at(0); }`, 'cpp:method_call')
   })
@@ -765,7 +765,7 @@ int main() { std::string s = "hello"; s.replace(0, 1, "H"); }`, 'cpp:string_repl
   // `ARCHITECTURAL` 這個標籤讀起來像「這是架構上的必然」，而它其實是
   // 「還沒接上」。見 knowledge/concepts/執行機構.md「註解把『沒插電』寫成
   // 『做不到』」。
-  it('cpp_string_push_back（string 宣告在前 → 專屬身分）', () => {
+  it('cpp_string_append_char（string 宣告在前 → 專屬身分）', () => {
     assertConceptPresent(`#include <string>
 int main() { std::string s; s.push_back('a'); }`, 'cpp:string_append_char')
   })
@@ -1050,7 +1050,7 @@ int main() { std::map<int, int> m; }`, 'cpp:map_declare')
   //
   // 這是 experience「一句解釋為什麼『只能這樣』的註解，會讓那個限制看起來是本質的」
   // 的第四個實例，而**前三個都在註解裡，這個在測試名稱裡**。
-  it('cpp_map_access — 對應表的鍵存取有自己的身分（型別查得到）', () => {
+  it('cpp_map_at — 對應表的鍵存取有自己的身分（型別查得到）', () => {
     assertConceptPresent(`#include <map>
 int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_at')
   })

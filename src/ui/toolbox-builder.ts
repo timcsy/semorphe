@@ -63,7 +63,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
    *    | `role` | `position` | **敘述版**——一個真正的選項 |
    *
    *    位置永遠知道（它是結構性的），所以 `role` 軸**不需要退路**；
-   *    把它一律當退路排掉，會讓 `u_var_declare`／`u_input`／`u_func_call`
+   *    把它一律當退路排掉，會讓 `cpp_var_declare`／`cpp_input`／`cpp_func_call`
    *    等七顆敘述版積木從工具箱裡消失——而它們是最常用的那幾顆。
    *
    *    所以判準是**軸的 `from`**，不是「有沒有 form」。
@@ -91,14 +91,22 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
 
     // ⚠️ **分成兩堆時，第二堆要是「其餘」，不是另一個前綴。**
     //
-    // 這裡原本寫 `filter(t => t.startsWith('c_'))`，於是 `cpp_getline`、
+    // 這裡原本寫 `filter(t => t.startsWith('c_'))`，於是 `cpp_input_line`、
     // `cpp_ifstream_declare`、`cpp_ofstream_declare` 三顆**兩邊都不屬於**，
     // 被這個排序函式**靜靜地丟掉**——它們的 `category` 明明就是 `'io'`。
     //
     // 那不是「忘了加進清單」，是**宣告是對的，而呈現層把它吃掉了**。
     // 症狀完全一樣（使用者拿不到），根因差很遠。
-    const universalIo = ioTypes.filter(t => t.startsWith('u_'))
-    const langIo = ioTypes.filter(t => !t.startsWith('u_'))
+    //
+    // ⚠️ **而第二版仍然是拿形狀當判斷**：`startsWith('u_')`。
+    // 116 把積木型別改成從身分導出之後**沒有型別以 `u_` 開頭**，
+    // 於是 `universalIo` 恆為空、排序偏好靜靜失效——同一個病的第二次。
+    //
+    // > **命名慣例不是契約。** 要判斷「這顆概念是不是通用的」，就問宣告。
+    const 是通用的 = (t: string) =>
+      blockSpecRegistry.getByBlockType(t)?.conceptMapping?.layer === 'universal'
+    const universalIo = ioTypes.filter(是通用的)
+    const langIo = ioTypes.filter(t => !是通用的(t))
     const sorted = ioPref === 'iostream'
       ? [...universalIo, ...langIo]
       : [...langIo, ...universalIo]

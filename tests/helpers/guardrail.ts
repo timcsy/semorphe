@@ -37,10 +37,33 @@ export function loadBaseline<T>(guard: string): T {
   return JSON.parse(fs.readFileSync(file, 'utf8')) as T
 }
 
+/**
+ * 重產基線。
+ *
+ * ⚠️ **既有的 `_meta` 會被保留。**
+ *
+ * `build-guardrail` 第 7 步說「上調的理由要寫進基線檔的 `note`，不是只寫在
+ * commit 訊息裡——commit 訊息沒有人會回頭翻，而基線檔是下一個看到這個數字的人
+ * **一定會打開**的地方」。
+ *
+ * 而在此之前這個函式**直接覆寫整個檔**：寫的人以為留下了理由，
+ * 下一次重產就沒了。**一個會靜默清掉理由的寫入器，等於把那個約定變成謊話。**
+ *
+ * 2026-08-11 發現：同一個病先在 `toolbox-snapshot` 的區域寫入器上修過一次，
+ * **而沒有掃同形的地方**——共用的這一份也有，於是 `identity-namespace` 的
+ * 上調理由當場被吃掉。這是「一個教訓被記下來、處方也被記下來，
+ * 而程式碼仍然帶著那個病」的又一次。
+ *
+ * 呼叫端要**顯式覆寫** `_meta` 的話，把它放進 `data` 就好——傳進來的贏。
+ */
 export function writeBaseline(guard: string, data: object): void {
   const file = path.join(BASELINE_DIR, `${guard}.json`)
   fs.mkdirSync(BASELINE_DIR, { recursive: true })
-  fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', 'utf8')
+  const 舊 = fs.existsSync(file)
+    ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: unknown })
+    : {}
+  const 帶著 = 舊._meta !== undefined ? { _meta: 舊._meta, ...data } : data
+  fs.writeFileSync(file, JSON.stringify(帶著, null, 2) + '\n', 'utf8')
 }
 
 /**

@@ -51,9 +51,9 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     // ⚠️ **明確排除，不是忘了。**「忘了」與「刻意不放」必須分得出來
     // ——與 `skipPaths` 同一種紀律（可拿性護欄會把兩者分成不同的桶）。
     //
-    // `u_if_else` 被下面三個帶 `extraState` 的 `u_if` 入口取代：
+    // `cpp_if_else` 被下面三個帶 `extraState` 的 `cpp_if` 入口取代：
     // 光是 if／if-else／if-elseif-else。同時放兩套是給學生兩條路做同一件事。
-    excludeTypes: ['u_if_else'],
+    excludeTypes: ['cpp_if_else'],
     sources: [
       { from: '(universal)', category: 'control' },
       { from: '(core)', category: 'control' },
@@ -61,12 +61,12 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'conditions' },
       { from: '<cstdlib>', category: 'stdlib' },
     ],
-    // 同一顆 `u_if` 用三個不同的預設狀態出現——那是教學設計
+    // 同一顆 `cpp_if` 用三個不同的預設狀態出現——那是教學設計
     // （讓學生直接拖到「有 else 的 if」），**登錄表推不出來**，所以留著。
     extraTypes: [
-      { type: 'u_if' },
-      { type: 'u_if', extraState: { hasElse: true } },
-      { type: 'u_if', extraState: { elseifCount: 1, hasElse: true } },
+      { type: 'cpp_if' },
+      { type: 'cpp_if', extraState: { hasElse: true } },
+      { type: 'cpp_if', extraState: { elseifCount: 1, hasElse: true } },
     ],
   },
   {

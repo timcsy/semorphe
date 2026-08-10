@@ -1,12 +1,12 @@
 [
   {
-    "id": "c_strlen",
+    "id": "cpp_cstring_size",
     "conceptId": "cpp:cstring_size",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strlen",
+      "type": "cpp_cstring_size",
       "message0": "%{BKY_C_STRLEN_MSG0}",
       "args0": [
         {
@@ -30,13 +30,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strcmp",
+    "id": "cpp_cstring_compare",
     "conceptId": "cpp:cstring_compare",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strcmp",
+      "type": "cpp_cstring_compare",
       "message0": "%{BKY_C_STRCMP_MSG0}",
       "args0": [
         {
@@ -66,13 +66,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strcpy",
+    "id": "cpp_cstring_copy",
     "conceptId": "cpp:cstring_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strcpy",
+      "type": "cpp_cstring_copy",
       "message0": "%{BKY_C_STRCPY_MSG0}",
       "args0": [
         {
@@ -103,13 +103,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strcat",
+    "id": "cpp_cstring_append",
     "conceptId": "cpp:cstring_append",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strcat",
+      "type": "cpp_cstring_append",
       "message0": "%{BKY_C_STRCAT_MSG0}",
       "args0": [
         {
@@ -140,13 +140,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strncpy",
+    "id": "cpp_cstring_copy_bounded",
     "conceptId": "cpp:cstring_copy_bounded",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strncpy",
+      "type": "cpp_cstring_copy_bounded",
       "message0": "%{BKY_C_STRNCPY_MSG0}",
       "args0": [
         {
@@ -183,13 +183,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strncmp",
+    "id": "cpp_cstring_compare_bounded",
     "conceptId": "cpp:cstring_compare_bounded",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strncmp",
+      "type": "cpp_cstring_compare_bounded",
       "message0": "%{BKY_C_STRNCMP_MSG0}",
       "args0": [
         {
@@ -225,13 +225,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strchr",
+    "id": "cpp_cstring_find_char",
     "conceptId": "cpp:cstring_find_char",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strchr",
+      "type": "cpp_cstring_find_char",
       "message0": "%{BKY_C_STRCHR_MSG0}",
       "args0": [
         {
@@ -261,13 +261,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_strstr",
+    "id": "cpp_cstring_find",
     "conceptId": "cpp:cstring_find",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_strstr",
+      "type": "cpp_cstring_find",
       "message0": "%{BKY_C_STRSTR_MSG0}",
       "args0": [
         {
@@ -297,13 +297,13 @@
     "toolboxCategory": "text"
   },
   {
-    "id": "c_memset",
+    "id": "cpp_memory_fill",
     "conceptId": "cpp:memory_fill",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_memset",
+      "type": "cpp_memory_fill",
       "message0": "%{BKY_C_MEMSET_MSG0}",
       "args0": [
         {
@@ -343,13 +343,13 @@
     ]
   },
   {
-    "id": "c_memcpy",
+    "id": "cpp_memory_copy",
     "conceptId": "cpp:memory_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_memcpy",
+      "type": "cpp_memory_copy",
       "message0": "%{BKY_C_MEMCPY_MSG0}",
       "args0": [
         {

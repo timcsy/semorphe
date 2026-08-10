@@ -92,7 +92,7 @@ describe('L1 Block Roundtrip', () => {
     }
   }
 
-  describe('c_increment — i++ / i--', () => {
+  describe('cpp_increment — i++ / i--', () => {
     it('should lift and render i++ roundtrip', () => {
       const argNode = mockNode('identifier', 'i')
       const opNode = unnamed('++', '++')
@@ -104,7 +104,7 @@ describe('L1 Block Roundtrip', () => {
 
       const block = renderer.render(sem!)
       expect(block).not.toBeNull()
-      expect(block!.type).toBe('c_increment')
+      expect(block!.type).toBe('cpp_increment')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.conceptId).toBe('cpp:increment')
@@ -122,7 +122,7 @@ describe('L1 Block Roundtrip', () => {
     })
   })
 
-  describe('c_char_literal', () => {
+  describe('cpp_literal_char', () => {
     it('should lift char_literal AST', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
@@ -131,7 +131,7 @@ describe('L1 Block Roundtrip', () => {
     })
   })
 
-  describe('c_compound_assign — x += 5', () => {
+  describe('cpp_var_assign_compound — x += 5', () => {
     it('should lift assignment_expression with compound operator', () => {
       const left = mockNode('identifier', 'x')
       const op = unnamed('+=', '+=')
@@ -147,7 +147,7 @@ describe('L1 Block Roundtrip', () => {
     })
   })
 
-  describe('c_printf / c_scanf (constrained)', () => {
+  describe('cpp_print_formatted / cpp_input_formatted (constrained)', () => {
     it('should skip call_expression (handled by hand-written lifter)', () => {
       // call_expression is excluded from BlockSpec pattern loading
       // because hand-written lifters convert printf→print, scanf→input

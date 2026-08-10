@@ -6,7 +6,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_isdigit",
+      "type": "cpp_char_is_digit",
       "message0": "%{BKY_CPP_ISDIGIT_MSG0}",
       "args0": [
         {
@@ -35,7 +35,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_toupper",
+      "type": "cpp_char_to_upper",
       "message0": "%{BKY_CPP_TOUPPER_MSG0}",
       "args0": [
         {
@@ -64,7 +64,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_tolower",
+      "type": "cpp_char_to_lower",
       "message0": "%{BKY_CPP_TOLOWER_MSG0}",
       "args0": [
         {

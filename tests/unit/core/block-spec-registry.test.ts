@@ -3,12 +3,12 @@ import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import type { BlockSpec } from '../../../src/core/types'
 
 const sampleSpec: BlockSpec = {
-  id: 'u_var_declare',
+  id: 'cpp_var_declare',
   language: 'universal',
   category: 'variables',
   version: '1.0.0',
   conceptMapping: { conceptId: 'cpp:var_declare' },
-  blockDef: { type: 'u_var_declare', message0: 'declare %1 %2', colour: '#FF8C1A' },
+  blockDef: { type: 'cpp_var_declare', message0: 'declare %1 %2', colour: '#FF8C1A' },
   codeTemplate: { pattern: '${TYPE} ${NAME};', imports: [], order: 0 },
   astPattern: { nodeType: 'declaration', constraints: [] },
 }
@@ -19,7 +19,7 @@ const sortSpec: BlockSpec = {
   category: 'algorithms',
   version: '1.0.0',
   conceptMapping: { conceptId: 'cpp:stdlib:sort', abstractConcept: 'collection_sort' },
-  blockDef: { type: 'cpp_sort', message0: 'sort %1 to %2', colour: '#4C97FF' },
+  blockDef: { type: 'cpp_range_sort', message0: 'sort %1 to %2', colour: '#4C97FF' },
   codeTemplate: { pattern: 'sort(${BEGIN}, ${END});', imports: ['algorithm'], order: 0 },
   astPattern: {
     nodeType: 'call_expression',
@@ -47,7 +47,7 @@ describe('BlockSpecRegistry', () => {
       registry.loadFromJSON([sampleSpec])
       const found = registry.getByConceptId('cpp:var_declare')
       expect(found).toBeTruthy()
-      expect(found?.id).toBe('u_var_declare')
+      expect(found?.id).toBe('cpp_var_declare')
     })
 
     it('should return undefined for unknown concept', () => {

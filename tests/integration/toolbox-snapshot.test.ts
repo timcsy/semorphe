@@ -134,13 +134,13 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
       })
 
       it('★ 有 statement 積木——沒有的話學生連第一行都寫不出來', () => {
-        for (const t of ['u_var_declare', 'u_var_assign', 'u_print', 'u_if']) {
+        for (const t of ['cpp_var_declare', 'cpp_var_assign', 'cpp_print', 'cpp_if']) {
           expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
         }
       })
 
       it('★ 有基本資料積木——整數與字串是「基本資料」', () => {
-        for (const t of ['u_number', 'u_string', 'u_var_ref']) {
+        for (const t of ['cpp_literal_number', 'cpp_literal_string', 'cpp_var_ref']) {
           expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
         }
       })

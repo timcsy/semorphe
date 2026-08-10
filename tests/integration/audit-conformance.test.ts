@@ -27,7 +27,7 @@
  *
  * 第一版比對「`blockDef` 的 input 名 ＋ `renderMapping`」與接點名，報 **9 筆**。
  * 實測（合成節點走一次投影）只有 **1 筆**——差額全是**動態積木**：
- * `u_print` 的插槽叫 `EXPR0`、`u_var_declare` 的叫 `INIT_0`，由
+ * `cpp_print` 的插槽叫 `EXPR0`、`cpp_var_declare` 的叫 `INIT_0`，由
  * `src/ui/block-registrar.ts` 在執行期加上，靜態比對看不到，
  * 名字也對不上接點（`values`／`initializer`）。
  *

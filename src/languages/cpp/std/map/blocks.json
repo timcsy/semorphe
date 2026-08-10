@@ -82,7 +82,7 @@
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_map_access",
+      "type": "cpp_map_at",
       "message0": "%{BKY_CPP_MAP_ACCESS_MSG0}",
       "args0": [
         {
@@ -119,13 +119,13 @@
     }
   },
   {
-    "id": "c_map_assign",
+    "id": "cpp_map_assign",
     "conceptId": "cpp:map_assign",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "c_map_assign",
+      "type": "cpp_map_assign",
       "message0": "%{BKY_CPP_MAP_ASSIGN_MSG0}",
       "args0": [
         {

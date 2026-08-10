@@ -6,7 +6,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_abs",
+      "type": "cpp_math_abs",
       "message0": "%{BKY_CPP_ABS_MSG0}",
       "args0": [
         {
@@ -36,7 +36,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_rand",
+      "type": "cpp_random_next",
       "message0": "%{BKY_CPP_RAND_MSG0}",
       "args0": [],
       "inputsInline": true,
@@ -58,7 +58,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_srand",
+      "type": "cpp_random_seed",
       "message0": "%{BKY_CPP_SRAND_MSG0}",
       "args0": [
         {
@@ -89,7 +89,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_exit",
+      "type": "cpp_program_exit",
       "message0": "%{BKY_CPP_EXIT_MSG0}",
       "args0": [
         {
@@ -120,7 +120,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_atoi",
+      "type": "cpp_cstring_as_int",
       "message0": "%{BKY_CPP_ATOI_MSG0}",
       "args0": [
         {
@@ -150,7 +150,7 @@
     "category": "stdlib",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_atof",
+      "type": "cpp_cstring_as_double",
       "message0": "%{BKY_CPP_ATOF_MSG0}",
       "args0": [
         {

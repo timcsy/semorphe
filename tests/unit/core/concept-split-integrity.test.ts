@@ -18,7 +18,7 @@ describe('Concept/BlockDef split integrity', () => {
     // Layer 1 的語言核心語法，已下沉到語言套件）。
     // 30 → 29：B 項把 `var_declare_expr` 併進 `var_declare`（積木保留，身分合一）
     expect((universalConcepts).length).toBe(29)
-    // 26 → 27（100，E 項）：`u_input_expr` 補上它缺的 JSON 投影。
+    // 26 → 27（100，E 項）：`cpp_input_expression` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
     expect((universalBlocks).length).toBe(27)

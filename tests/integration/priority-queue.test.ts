@@ -112,7 +112,7 @@ describe('工具箱（E 項的第一次回報）', () => {
       categoriesOf.get('cpp_priority_queue_declare'),
       '新元件沒有自動出現 → 那代表歸屬又變回手寫的了',
     ).toContain('堆疊與佇列')
-    expect(categoriesOf.get('cpp_priority_queue_top')).toContain('堆疊與佇列')
+    expect(categoriesOf.get('cpp_priority_queue_peek')).toContain('堆疊與佇列')
   })
 
   // ⚠️ **上面那一支是使用者拿不到的證據，不是拿得到的證據。**
@@ -153,7 +153,7 @@ describe('工具箱（E 項的第一次回報）', () => {
       }) as { contents: { name: string; contents: { type: string }[] }[] }
       const 全部 = tb.contents.flatMap((c) => c.contents.map((b) => b.type))
       // ⚠️ `b.type` 是**積木型別**，遷移不動它（B 項加法式保留）
-      for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_top']) {
+      for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_peek']) {
         expect(全部, `${名稱}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
       }
     }

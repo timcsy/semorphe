@@ -21,6 +21,7 @@ import { describe, it, expect } from 'vitest'
 import { allComponentDefs } from '../helpers/component-scan'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { PathName } from '../../src/core/types'
+import { deriveBlockType } from '../../src/core/component/derive-block-type'
 
 const REASONS = new Set(['declarative', 'consumed-by-parent', 'degradation-target'])
 
@@ -72,10 +73,17 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       if (!被指向.has(d.conceptId)) {
         站不住.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
       }
-      // 工具箱排除的形式是 `excludeTypes: ['u_xxx']`
-      // ⚠️ 積木型別**不含 scope**——身分是 `lang:if_else`，積木型別是 `u_if_else`。
-      // 命名空間遷移（103）之後這裡直接串接會組出 `u_lang:if_else`。
-      const blockType = `u_${d.conceptId.split(':').pop()}`
+      // 工具箱排除的形式是 `excludeTypes: ['cpp_xxx']`
+      //
+      // ⚠️ 這裡原本是**字串手術**：`` `u_${d.conceptId.split(':').pop()}` ``。
+      // 它壞過一次（命名空間遷移後組出 `u_lang:if_else`），被補了一則註解
+      // ——**而註解擋不住第二次**：116 把積木型別改成從身分導出之後，
+      // `u_` 這個前綴不再存在，同一行又壞了。
+      //
+      // > **會漂移的不是那一行，是「用手拼出另一個系統的名字」這件事本身。**
+      //
+      // 改成呼叫導出規則——那是這個問題今天唯一的正確答案。
+      const blockType = deriveBlockType(d.conceptId)
       if (!toolbox.includes(`'${blockType}'`)) {
         站不住.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
       }

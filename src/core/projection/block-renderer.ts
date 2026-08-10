@@ -112,7 +112,7 @@ function renderBlock(node: SemanticNode): BlockState | null {
         extra.nodeType = node.properties.node_type
       }
       block = {
-        type: 'c_raw_code',
+        type: 'cpp_raw_code',
         id: nextBlockId('block_'),
         fields: { CODE: node.metadata?.rawCode ?? node.properties.code ?? '' },
         inputs: {},
@@ -150,9 +150,9 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
 function renderExpression(node: SemanticNode): BlockState | null {
   const block = renderBlock(node)
   if (!block) return null
-  // If it's a raw_code (statement) block in expression context, use c_raw_expression instead
-  if (block.type === 'c_raw_code') {
-    return { ...block, type: 'c_raw_expression' }
+  // If it's a raw_code (statement) block in expression context, use cpp_raw_expression instead
+  if (block.type === 'cpp_raw_code') {
+    return { ...block, type: 'cpp_raw_expression' }
   }
   // Check if a statement-only block has an expression counterpart
   if (globalPatternRenderer?.isStatementOnly(block.type)) {
@@ -160,12 +160,12 @@ function renderExpression(node: SemanticNode): BlockState | null {
     if (exprType) {
       return { ...block, type: exprType }
     }
-    // No expression counterpart — fall back to c_raw_expression
+    // No expression counterpart — fall back to cpp_raw_expression
     const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.conceptId
     // Strip trailing semicolons/newlines — expression context doesn't need them
     const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw
     return {
-      type: 'c_raw_expression',
+      type: 'cpp_raw_expression',
       id: block.id,
       fields: { CODE: rawCode },
       inputs: {},

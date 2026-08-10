@@ -6,7 +6,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_sort",
+      "type": "cpp_range_sort",
       "message0": "%{BKY_CPP_SORT_MSG0}",
       "args0": [
         {
@@ -36,7 +36,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_reverse",
+      "type": "cpp_range_reverse",
       "message0": "%{BKY_CPP_REVERSE_MSG0}",
       "args0": [
         {
@@ -66,7 +66,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_fill",
+      "type": "cpp_range_fill",
       "message0": "%{BKY_CPP_FILL_MSG0}",
       "args0": [
         {
@@ -103,7 +103,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_min",
+      "type": "cpp_math_min",
       "message0": "%{BKY_CPP_MIN_MSG0}",
       "args0": [
         {
@@ -138,7 +138,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_max",
+      "type": "cpp_math_max",
       "message0": "%{BKY_CPP_MAX_MSG0}",
       "args0": [
         {
@@ -173,7 +173,7 @@
     "category": "algorithms",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_swap",
+      "type": "cpp_var_swap",
       "message0": "%{BKY_CPP_SWAP_MSG0}",
       "args0": [
         {

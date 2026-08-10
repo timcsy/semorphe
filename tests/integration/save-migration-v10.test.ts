@@ -87,8 +87,8 @@ describe('v9 → v10：積木狀態遷移的四個契約', () => {
   })
 
   it('C1：表上的舊型別**全部**被換掉——含巢狀 inputs／shadow／next', () => {
-    用表跑({ u_if: 'cpp_if' }, () => {
-      const r = UPGRADES[9](造v9('u_if') as never) as Record<string, unknown>
+    用表跑({ cpp_if: 'cpp_if' }, () => {
+      const r = UPGRADES[9](造v9('cpp_if') as never) as Record<string, unknown>
       const 型別們 = 收集型別(r.blocklyState)
       expect(型別們.length, '樣本有 4 顆積木（本體＋input＋shadow＋next）').toBe(4)
       expect(型別們.every((t) => t === 'cpp_if'), `還留著舊型別：${型別們}`).toBe(true)
@@ -100,15 +100,15 @@ describe('v9 → v10：積木狀態遷移的四個契約', () => {
     // ⚠️ 這不是理論上的整潔。匯出那條路曾經把每一份檔案標成 `version: 1`
     // （2026-08-11 修掉），於是一份已經轉換過的內容會再被餵進這一步一次。
     // **一個「只跑一次才對」的轉換，遲早會被跑第二次。**
-    用表跑({ u_if: 'cpp_if' }, () => {
-      const 一次 = UPGRADES[9](造v9('u_if') as never) as Record<string, unknown>
+    用表跑({ cpp_if: 'cpp_if' }, () => {
+      const 一次 = UPGRADES[9](造v9('cpp_if') as never) as Record<string, unknown>
       const 兩次 = UPGRADES[9]({ ...一次, version: 9 } as never) as Record<string, unknown>
       expect(JSON.stringify(兩次.blocklyState)).toBe(JSON.stringify(一次.blocklyState))
     })
   })
 
   it('C3：表上沒有的型別**出聲**，不得靜默丟棄', () => {
-    用表跑({ u_if: 'cpp_if' }, () => {
+    用表跑({ cpp_if: 'cpp_if' }, () => {
       expect(() => UPGRADES[9](造v9('u_不存在的東西') as never)).toThrow(未知積木型別)
       try {
         UPGRADES[9](造v9('u_不存在的東西') as never)
@@ -122,13 +122,13 @@ describe('v9 → v10：積木狀態遷移的四個契約', () => {
 
   it('C3 的反面：表是**空的**時候不得丟錯——那是「還沒開始改名」，不是「檔案壞了」', () => {
     用表跑({}, () => {
-      expect(() => UPGRADES[9](造v9('u_if') as never)).not.toThrow()
+      expect(() => UPGRADES[9](造v9('cpp_if') as never)).not.toThrow()
     })
   })
 
   it('C4：語義樹**逐字不變**——這一步只碰投影', () => {
-    用表跑({ u_if: 'cpp_if' }, () => {
-      const 原 = 造v9('u_if')
+    用表跑({ cpp_if: 'cpp_if' }, () => {
+      const 原 = 造v9('cpp_if')
       const 樹前 = JSON.stringify(原.tree)
       const r = UPGRADES[9](原 as never) as Record<string, unknown>
       expect(JSON.stringify(r.tree)).toBe(樹前)
@@ -139,8 +139,8 @@ describe('v9 → v10：積木狀態遷移的四個契約', () => {
     // ⚠️ Blockly 積木定義的 `args` 裡也有 `type`（input_value…），
     // 字面一樣而意思完全無關。上一次「同一個欄位名長在三個型別上」的
     // 改名回退了 121 個檔。
-    用表跑({ u_if: 'cpp_if', input_value: '**不該被碰**' }, () => {
-      const s = 造v9('u_if')
+    用表跑({ cpp_if: 'cpp_if', input_value: '**不該被碰**' }, () => {
+      const s = 造v9('cpp_if')
       ;(s.blocklyState as never as Record<string, never>)['args0' as never] = [
         { type: 'input_value', name: 'VALUE' },
       ] as never
@@ -157,7 +157,11 @@ describe('回歸樣本：改名前的真實 v9 存檔還打得開', () => {
     expect(s.version).toBe(9)
     const 型別們 = new Set(收集型別(s.blocklyState))
     expect(型別們.size, '樣本應該有 17 種積木型別').toBe(17)
-    // 四種情況各釘一顆——樣本被換掉時這一句會指出少了哪一種
+    // 四種情況各釘一顆——樣本被換掉時這一句會指出少了哪一種。
+    //
+    // ⚠️ **這些必須是 v9 的舊名。** 改名腳本曾經把這四行一起改成新名，
+    // 於是「一份 v9 存檔」被拿去比對 v10 的名字——**斷言還在，但它問錯了問題**。
+    // 資產描述的是過去，所以描述資產的斷言也停在過去。
     expect(型別們.has('c_stack_push'), 'container_kind 形態').toBe(true)
     expect(型別們.has('c_var_declare_expr'), 'role 形態').toBe(true)
     expect(型別們.has('cpp_stack_top'), '化石詞彙').toBe(true)

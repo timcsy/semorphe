@@ -170,7 +170,7 @@
     "category": "containers",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_priority_queue_top",
+      "type": "cpp_priority_queue_peek",
       "message0": "%{BKY_CPP_PRIORITY_QUEUE_TOP_MSG0}",
       "args0": [
         {

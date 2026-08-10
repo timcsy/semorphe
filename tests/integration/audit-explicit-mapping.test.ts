@@ -12,7 +12,7 @@
  * 對應——拿 `concept.properties` 去比對積木欄位名。方便，而代價有兩層：
  *
  * 1. **推導有兩份，而兩份不一樣**（`audit-derive-agreement` 抓到的）：
- *    `c_comment_block` 的內容渲染得出去、抽取不回來，使用者寫的註解會消失。
+ *    `cpp_block_comment` 的內容渲染得出去、抽取不回來，使用者寫的註解會消失。
  * 2. **參數宣告驅動了抽取行為**：改一顆元件的參數列，就會改變它的積木怎麼被
  *    讀回來。那是 C1（參數規格化）動不了 124 顆宣告的原因——實測改兩次、
  *    來回轉換紅兩次。
@@ -37,10 +37,10 @@ import type { BlockProjectionJSON, BlockSpec } from '../../src/core/types'
 
 /** 手寫抽取策略的積木——它們的欄位由程式碼讀，不走宣告式對應 */
 const 手寫策略 = new Set([
-  'u_var_declare', 'u_var_assign', 'u_var_ref', 'u_print', 'u_input', 'u_input_expr',
-  'u_if', 'u_if_else', 'u_func_call', 'u_func_call_expr', 'u_func_def',
-  'c_var_declare_expr', 'c_increment_expr', 'c_compound_assign_expr',
-  'c_scanf', 'c_scanf_expr', 'c_printf', 'c_comment_doc',
+  'cpp_var_declare', 'cpp_var_assign', 'cpp_var_ref', 'cpp_print', 'cpp_input', 'cpp_input_expression',
+  'cpp_if', 'cpp_if_else', 'cpp_func_call', 'cpp_func_call_expression', 'cpp_func_def',
+  'cpp_var_declare_expression', 'cpp_increment_expression', 'cpp_var_assign_compound_expression',
+  'cpp_input_formatted', 'cpp_input_formatted_expression', 'cpp_print_formatted', 'cpp_doc_comment',
 ])
 
 interface Finding {
@@ -138,7 +138,7 @@ describe('欄位對應必須是顯式宣告', () => {
 
   it('★ 缺宣告 = 0', () => {
     // ⚠️ **硬性零**：推導已經刪除，所以「缺宣告」不再有退路——
-    // 那顆積木的欄位會**靜靜地讀不回來**，症狀與 `c_comment_block` 一模一樣。
+    // 那顆積木的欄位會**靜靜地讀不回來**，症狀與 `cpp_block_comment` 一模一樣。
     expect(
       findings.map((f) => `${f.blockType} 缺 ${f.缺.join('、')}`),
       '這顆積木有欄位／輸入，而沒有宣告對應。推導已退場，沒有東西會替它補上——' +
