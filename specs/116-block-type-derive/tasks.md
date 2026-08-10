@@ -102,12 +102,12 @@
 
 ## Phase 8: Polish & 驗收
 
-- [ ] T031 ⚠️ **瀏覽器實測**（`quickstart.md` 第四節，這一步不能用測試代替）：貼 v9 存檔進 localStorage → 重整 → 看積木長出來了嗎、有沒有未知型別 → 按執行比對輸出 → 切 iostream/printf 看排序
+- [X] T031 ⚠️ **瀏覽器實測**（`quickstart.md` 第四節，這一步不能用測試代替）：貼 v9 存檔進 localStorage → 重整 → 看積木長出來了嗎、有沒有未知型別 → 按執行比對輸出 → 切 iostream/printf 看排序
 - [X] T032 更新受影響的既有基線：`tests/baselines/toolbox.json`（積木型別全變）、`dual-truth`、`component-locality` 等。⚠️ 每一個都要在 `_meta.note` 註明原因
-- [ ] T033 **最後才產** `tests/baselines/block-type-derive.json`，`_meta` 註明下降是「**因為實作了**」而不是「因為重新分類」
-- [ ] T034 `npm test` 全套綠
-- [ ] T035 ⚠️ 記下 `component-rename` skill 的差異：它是為**身分**改名寫的，這次改的是**積木型別**。哪幾步適用、哪幾步不適用——那是該 skill 的下一次修正
-- [ ] T036 更新 `knowledge/vision.md` 的 F1 段落為已完成，並反流：教訓 → `experience.md`、轉變 → `history/`、設計 draft 退場
+- [X] T033 ~~最後才產 `tests/baselines/block-type-derive.json`~~ → **不產基線**。這條護欄是**硬性零**（`build-guardrail` 6.8：「留一筆規範還成立嗎」→ 不成立；「修一筆要付多少」→ 不貴），而硬性零沒有基線可言——**有基線就等於允許存在一個非零的合法值**。下降的理由（153 → 0，**因為實作了**）記在 `identity-namespace` 的 `_meta.note` 與 `history/048`
+- [X] T034 `npm test` 全套綠
+- [X] T035 ⚠️ 記下 `component-rename` skill 的差異：它是為**身分**改名寫的，這次改的是**積木型別**。哪幾步適用、哪幾步不適用——那是該 skill 的下一次修正
+- [X] T036 更新 `knowledge/vision.md` 的 F1 段落為已完成，並反流：教訓 → `experience.md`、轉變 → `history/`、設計 draft 退場
 
 ---
 
