@@ -50,6 +50,7 @@ import { allCppConcepts, allCppProjections } from '../languages/cpp/all-declarat
 import apcsPreset from '../languages/cpp/styles/apcs.json'
 import competitivePreset from '../languages/cpp/styles/competitive.json'
 import googlePreset from '../languages/cpp/styles/google.json'
+import { CURRENT_VERSION } from '../core/storage-version'
 
 const STYLE_PRESETS: StylePreset[] = [
   apcsPreset as StylePreset,
@@ -535,8 +536,24 @@ export class App {
     })
   }
 
+  /**
+   * ⚠️ `version` 必須是 `CURRENT_VERSION`，不是寫死的數字。
+   *
+   * 這裡原本寫 `version: 1`。自動存檔沒事——`storage.save()` 會強制蓋成
+   * `CURRENT_VERSION`。**而匯出繞過 `save()`**（`getExportState()` →
+   * `exportToBlob()`），所以每一份匯出的 `.json` 都自稱 v1，
+   * 匯入時被跑過**八次**它不需要的升級。
+   *
+   * 今天沒有壞，因為那八次在現有資料上是冪等的（實測樹逐字未變）。
+   * 但那是**巧合不是保證**——116 正要加一個會改寫積木狀態的 v10 步驟，
+   * 而一份自稱 v1 的檔案會走到它。
+   *
+   * > **一個欄位有兩個寫入點，其中一個是對的，症狀就只在另一條路上出現。**
+   *
+   * 2026-08-11 錄 v9 存檔樣本時發現：localStorage 裡是 9，匯出的檔是 1。
+   */
   private buildSaveState(): SavedState {
-    return { version: 1, tree: this.syncController?.getCurrentTree() ?? null,
+    return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
       blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.monacoPanel?.getCode() ?? '',
       language: 'cpp', styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, enabledBranches: [...this.enabledBranches],

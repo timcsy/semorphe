@@ -1,0 +1,947 @@
+{
+  "version": 9,
+  "tree": {
+    "id": "node_154_msniwd0d",
+    "conceptId": "cpp:program",
+    "properties": {},
+    "children": {
+      "body": [
+        {
+          "id": "node_112_msniwd0c",
+          "conceptId": "cpp:var_declare",
+          "properties": {
+            "name": "n",
+            "type": "int"
+          },
+          "children": {
+            "initializer": [
+              {
+                "id": "node_110_msniwd0c",
+                "conceptId": "cpp:literal_number",
+                "properties": {
+                  "value": "0"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_2"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "block_1"
+          }
+        },
+        {
+          "id": "node_114_msniwd0c",
+          "conceptId": "cpp:var_declare",
+          "properties": {
+            "name": "v",
+            "type": "int"
+          },
+          "children": {
+            "initializer": []
+          },
+          "metadata": {
+            "sourceBlockId": "block_3"
+          }
+        },
+        {
+          "id": "node_116_msniwd0d",
+          "conceptId": "cpp:container_append",
+          "properties": {
+            "obj": "v"
+          },
+          "children": {
+            "value": [
+              {
+                "id": "node_115_msniwd0d",
+                "conceptId": "cpp:literal_number",
+                "properties": {
+                  "value": "3"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_5"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_4"
+          }
+        },
+        {
+          "id": "node_118_msniwd0d",
+          "conceptId": "cpp:container_append",
+          "properties": {
+            "obj": "v"
+          },
+          "children": {
+            "value": [
+              {
+                "id": "node_117_msniwd0d",
+                "conceptId": "cpp:literal_number",
+                "properties": {
+                  "value": "4"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_7"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_6"
+          }
+        },
+        {
+          "id": "node_124_msniwd0d",
+          "conceptId": "cpp:var_assign",
+          "properties": {
+            "obj": "n"
+          },
+          "children": {
+            "value": [
+              {
+                "id": "node_123_msniwd0d",
+                "conceptId": "cpp:arithmetic",
+                "properties": {
+                  "operator": "+"
+                },
+                "children": {
+                  "left": [
+                    {
+                      "id": "node_120_msniwd0d",
+                      "conceptId": "cpp:array_at",
+                      "properties": {
+                        "obj": "v"
+                      },
+                      "children": {
+                        "index": [
+                          {
+                            "id": "node_119_msniwd0d",
+                            "conceptId": "cpp:literal_number",
+                            "properties": {
+                              "value": "0"
+                            },
+                            "children": {},
+                            "metadata": {
+                              "sourceBlockId": "pblock_11"
+                            }
+                          }
+                        ]
+                      },
+                      "metadata": {
+                        "sourceBlockId": "pblock_10"
+                      }
+                    }
+                  ],
+                  "right": [
+                    {
+                      "id": "node_122_msniwd0d",
+                      "conceptId": "cpp:array_at",
+                      "properties": {
+                        "obj": "v"
+                      },
+                      "children": {
+                        "index": [
+                          {
+                            "id": "node_121_msniwd0d",
+                            "conceptId": "cpp:literal_number",
+                            "properties": {
+                              "value": "1"
+                            },
+                            "children": {},
+                            "metadata": {
+                              "sourceBlockId": "pblock_13"
+                            }
+                          }
+                        ]
+                      },
+                      "metadata": {
+                        "sourceBlockId": "pblock_12"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_9"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_8"
+          }
+        },
+        {
+          "id": "node_135_msniwd0d",
+          "conceptId": "cpp:if",
+          "properties": {},
+          "children": {
+            "condition": [
+              {
+                "id": "node_127_msniwd0d",
+                "conceptId": "cpp:compare",
+                "properties": {
+                  "operator": ">"
+                },
+                "children": {
+                  "left": [
+                    {
+                      "id": "node_125_msniwd0d",
+                      "conceptId": "cpp:var_ref",
+                      "properties": {
+                        "name": "n"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_16"
+                      }
+                    }
+                  ],
+                  "right": [
+                    {
+                      "id": "node_126_msniwd0d",
+                      "conceptId": "cpp:literal_number",
+                      "properties": {
+                        "value": "5"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_17"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_15"
+                }
+              }
+            ],
+            "then_body": [
+              {
+                "id": "node_131_msniwd0d",
+                "conceptId": "cpp:print",
+                "properties": {},
+                "children": {
+                  "values": [
+                    {
+                      "id": "node_128_msniwd0d",
+                      "conceptId": "cpp:literal_string",
+                      "properties": {
+                        "value": "big "
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_19"
+                      }
+                    },
+                    {
+                      "id": "node_129_msniwd0d",
+                      "conceptId": "cpp:var_ref",
+                      "properties": {
+                        "name": "n"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_20"
+                      }
+                    },
+                    {
+                      "id": "node_130_msniwd0d",
+                      "conceptId": "cpp:endl",
+                      "properties": {},
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_21"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_18"
+                }
+              }
+            ],
+            "else_body": [
+              {
+                "id": "node_134_msniwd0d",
+                "conceptId": "cpp:print",
+                "properties": {},
+                "children": {
+                  "values": [
+                    {
+                      "id": "node_132_msniwd0d",
+                      "conceptId": "cpp:literal_string",
+                      "properties": {
+                        "value": "small"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_23"
+                      }
+                    },
+                    {
+                      "id": "node_133_msniwd0d",
+                      "conceptId": "cpp:endl",
+                      "properties": {},
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_24"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_22"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "block_14"
+          }
+        },
+        {
+          "id": "node_146_msniwd0d",
+          "conceptId": "cpp:loop_for",
+          "properties": {},
+          "children": {
+            "cond": [
+              {
+                "id": "node_138_msniwd0d",
+                "conceptId": "cpp:compare",
+                "properties": {
+                  "operator": "<"
+                },
+                "children": {
+                  "left": [
+                    {
+                      "id": "node_136_msniwd0d",
+                      "conceptId": "cpp:var_ref",
+                      "properties": {
+                        "name": "i"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_27"
+                      }
+                    }
+                  ],
+                  "right": [
+                    {
+                      "id": "node_137_msniwd0d",
+                      "conceptId": "cpp:literal_number",
+                      "properties": {
+                        "value": "2"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_28"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_26"
+                }
+              }
+            ],
+            "init": [
+              {
+                "id": "node_140_msniwd0d",
+                "conceptId": "cpp:var_declare",
+                "properties": {
+                  "name": "i",
+                  "type": "int"
+                },
+                "children": {
+                  "initializer": [
+                    {
+                      "id": "node_139_msniwd0d",
+                      "conceptId": "cpp:literal_number",
+                      "properties": {
+                        "value": "0"
+                      },
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_30"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "block_29"
+                }
+              }
+            ],
+            "update": [
+              {
+                "id": "node_141_msniwd0d",
+                "conceptId": "cpp:raw_expression",
+                "properties": {
+                  "code": "i = i + 1"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_31"
+                }
+              }
+            ],
+            "body": [
+              {
+                "id": "node_145_msniwd0d",
+                "conceptId": "cpp:print",
+                "properties": {},
+                "children": {
+                  "values": [
+                    {
+                      "id": "node_143_msniwd0d",
+                      "conceptId": "cpp:array_at",
+                      "properties": {
+                        "obj": "v"
+                      },
+                      "children": {
+                        "index": [
+                          {
+                            "id": "node_142_msniwd0d",
+                            "conceptId": "cpp:var_ref",
+                            "properties": {
+                              "name": "i"
+                            },
+                            "children": {},
+                            "metadata": {
+                              "sourceBlockId": "pblock_37"
+                            }
+                          }
+                        ]
+                      },
+                      "metadata": {
+                        "sourceBlockId": "pblock_36"
+                      }
+                    },
+                    {
+                      "id": "node_144_msniwd0d",
+                      "conceptId": "cpp:endl",
+                      "properties": {},
+                      "children": {},
+                      "metadata": {
+                        "sourceBlockId": "pblock_38"
+                      }
+                    }
+                  ]
+                },
+                "metadata": {
+                  "sourceBlockId": "pblock_35"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_25"
+          }
+        },
+        {
+          "id": "node_148_msniwd0d",
+          "conceptId": "cpp:var_declare",
+          "properties": {
+            "name": "st",
+            "type": "int"
+          },
+          "children": {
+            "initializer": []
+          },
+          "metadata": {
+            "sourceBlockId": "block_39"
+          }
+        },
+        {
+          "id": "node_150_msniwd0d",
+          "conceptId": "cpp:container_push",
+          "properties": {
+            "obj": "st"
+          },
+          "children": {
+            "value": [
+              {
+                "id": "node_149_msniwd0d",
+                "conceptId": "cpp:literal_number",
+                "properties": {
+                  "value": "7"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_41"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_40"
+          }
+        },
+        {
+          "id": "node_153_msniwd0d",
+          "conceptId": "cpp:print",
+          "properties": {},
+          "children": {
+            "values": [
+              {
+                "id": "node_151_msniwd0d",
+                "conceptId": "cpp:stack_peek",
+                "properties": {
+                  "obj": "st"
+                },
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_43"
+                }
+              },
+              {
+                "id": "node_152_msniwd0d",
+                "conceptId": "cpp:endl",
+                "properties": {},
+                "children": {},
+                "metadata": {
+                  "sourceBlockId": "pblock_44"
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "sourceBlockId": "pblock_42"
+          }
+        }
+      ]
+    }
+  },
+  "blocklyState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "u_var_declare",
+          "id": "block_1",
+          "x": 50,
+          "y": 30,
+          "extraState": {
+            "items": [
+              "var_init"
+            ]
+          },
+          "fields": {
+            "TYPE": "int",
+            "NAME_0": "n"
+          },
+          "inputs": {
+            "INIT_0": {
+              "block": {
+                "type": "u_number",
+                "id": "pblock_2",
+                "fields": {
+                  "NUM": 0
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "u_var_declare",
+              "id": "block_3",
+              "extraState": {
+                "items": [
+                  "var"
+                ]
+              },
+              "fields": {
+                "TYPE": "int",
+                "NAME_0": "v"
+              },
+              "next": {
+                "block": {
+                  "type": "c_container_push_back",
+                  "id": "pblock_4",
+                  "fields": {
+                    "OBJ": "v"
+                  },
+                  "inputs": {
+                    "VALUE": {
+                      "block": {
+                        "type": "u_number",
+                        "id": "pblock_5",
+                        "fields": {
+                          "NUM": 3
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "c_container_push_back",
+                      "id": "pblock_6",
+                      "fields": {
+                        "OBJ": "v"
+                      },
+                      "inputs": {
+                        "VALUE": {
+                          "block": {
+                            "type": "u_number",
+                            "id": "pblock_7",
+                            "fields": {
+                              "NUM": 4
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "u_var_assign",
+                          "id": "pblock_8",
+                          "fields": {
+                            "NAME": "n"
+                          },
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "u_arithmetic",
+                                "id": "pblock_9",
+                                "fields": {
+                                  "OP": "+"
+                                },
+                                "inputs": {
+                                  "A": {
+                                    "block": {
+                                      "type": "u_array_access",
+                                      "id": "pblock_10",
+                                      "fields": {
+                                        "NAME": "v"
+                                      },
+                                      "inputs": {
+                                        "INDEX": {
+                                          "block": {
+                                            "type": "u_number",
+                                            "id": "pblock_11",
+                                            "fields": {
+                                              "NUM": 0
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "B": {
+                                    "block": {
+                                      "type": "u_array_access",
+                                      "id": "pblock_12",
+                                      "fields": {
+                                        "NAME": "v"
+                                      },
+                                      "inputs": {
+                                        "INDEX": {
+                                          "block": {
+                                            "type": "u_number",
+                                            "id": "pblock_13",
+                                            "fields": {
+                                              "NUM": 1
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "u_if",
+                              "id": "block_14",
+                              "extraState": {
+                                "hasElse": true
+                              },
+                              "inputs": {
+                                "CONDITION": {
+                                  "block": {
+                                    "type": "u_compare",
+                                    "id": "pblock_15",
+                                    "fields": {
+                                      "OP": ">"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "u_var_ref",
+                                          "id": "pblock_16",
+                                          "fields": {
+                                            "NAME": "n"
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "u_number",
+                                          "id": "pblock_17",
+                                          "fields": {
+                                            "NUM": 5
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "THEN": {
+                                  "block": {
+                                    "type": "u_print",
+                                    "id": "pblock_18",
+                                    "extraState": {
+                                      "itemCount": 3
+                                    },
+                                    "inputs": {
+                                      "EXPR0": {
+                                        "block": {
+                                          "type": "u_string",
+                                          "id": "pblock_19",
+                                          "fields": {
+                                            "TEXT": "big "
+                                          }
+                                        }
+                                      },
+                                      "EXPR1": {
+                                        "block": {
+                                          "type": "u_var_ref",
+                                          "id": "pblock_20",
+                                          "fields": {
+                                            "NAME": "n"
+                                          }
+                                        }
+                                      },
+                                      "EXPR2": {
+                                        "block": {
+                                          "type": "u_endl",
+                                          "id": "pblock_21"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "ELSE": {
+                                  "block": {
+                                    "type": "u_print",
+                                    "id": "pblock_22",
+                                    "extraState": {
+                                      "itemCount": 2
+                                    },
+                                    "inputs": {
+                                      "EXPR0": {
+                                        "block": {
+                                          "type": "u_string",
+                                          "id": "pblock_23",
+                                          "fields": {
+                                            "TEXT": "small"
+                                          }
+                                        }
+                                      },
+                                      "EXPR1": {
+                                        "block": {
+                                          "type": "u_endl",
+                                          "id": "pblock_24"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "c_for_loop",
+                                  "id": "pblock_25",
+                                  "inputs": {
+                                    "INIT": {
+                                      "block": {
+                                        "type": "c_var_declare_expr",
+                                        "id": "block_29",
+                                        "fields": {
+                                          "TYPE": "int",
+                                          "NAME_0": "i"
+                                        },
+                                        "inputs": {
+                                          "INIT_0": {
+                                            "block": {
+                                              "type": "u_number",
+                                              "id": "pblock_30",
+                                              "fields": {
+                                                "NUM": 0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "COND": {
+                                      "block": {
+                                        "type": "u_compare",
+                                        "id": "pblock_26",
+                                        "fields": {
+                                          "OP": "<"
+                                        },
+                                        "inputs": {
+                                          "A": {
+                                            "block": {
+                                              "type": "u_var_ref",
+                                              "id": "pblock_27",
+                                              "fields": {
+                                                "NAME": "i"
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "u_number",
+                                              "id": "pblock_28",
+                                              "fields": {
+                                                "NUM": 2
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "UPDATE": {
+                                      "block": {
+                                        "type": "c_raw_expression",
+                                        "id": "pblock_31",
+                                        "fields": {
+                                          "CODE": "i = i + 1"
+                                        }
+                                      }
+                                    },
+                                    "BODY": {
+                                      "block": {
+                                        "type": "u_print",
+                                        "id": "pblock_35",
+                                        "extraState": {
+                                          "itemCount": 2
+                                        },
+                                        "inputs": {
+                                          "EXPR0": {
+                                            "block": {
+                                              "type": "u_array_access",
+                                              "id": "pblock_36",
+                                              "fields": {
+                                                "NAME": "v"
+                                              },
+                                              "inputs": {
+                                                "INDEX": {
+                                                  "block": {
+                                                    "type": "u_var_ref",
+                                                    "id": "pblock_37",
+                                                    "fields": {
+                                                      "NAME": "i"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "EXPR1": {
+                                            "block": {
+                                              "type": "u_endl",
+                                              "id": "pblock_38"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "u_var_declare",
+                                      "id": "block_39",
+                                      "extraState": {
+                                        "items": [
+                                          "var"
+                                        ]
+                                      },
+                                      "fields": {
+                                        "TYPE": "int",
+                                        "NAME_0": "st"
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "c_stack_push",
+                                          "id": "pblock_40",
+                                          "fields": {
+                                            "OBJ": "st"
+                                          },
+                                          "inputs": {
+                                            "VALUE": {
+                                              "block": {
+                                                "type": "u_number",
+                                                "id": "pblock_41",
+                                                "fields": {
+                                                  "NUM": 7
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "u_print",
+                                              "id": "pblock_42",
+                                              "extraState": {
+                                                "itemCount": 2
+                                              },
+                                              "inputs": {
+                                                "EXPR0": {
+                                                  "block": {
+                                                    "type": "cpp_stack_top",
+                                                    "id": "pblock_43",
+                                                    "fields": {
+                                                      "OBJ": "st"
+                                                    }
+                                                  }
+                                                },
+                                                "EXPR1": {
+                                                  "block": {
+                                                    "type": "u_endl",
+                                                    "id": "pblock_44"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": "#include <iostream>\n#include <stack>\nusing namespace std;\nint main() {\n    int n = 0;\n    int v;\n    v.push_back(3);\n    v.push_back(4);\n    n = v[0] + v[1];\n    if (n > 5) {\n        cout << \"big \" << n << endl;\n    } else {\n        cout << \"small\" << endl;\n    }\n    for (int i = 0; i < 2; i = i + 1) {\n        cout << v[i] << endl;\n    }\n    int st;\n    st.push(7);\n    cout << st.top() << endl;\n    return 0;\n}",
+  "language": "cpp",
+  "styleId": "apcs",
+  "topicId": "cpp-beginner",
+  "enabledBranches": [
+    "L0"
+  ],
+  "lastModified": "2026-08-10T17:48:36.967Z",
+  "blockStyleId": "scratch",
+  "locale": "zh-TW"
+}
