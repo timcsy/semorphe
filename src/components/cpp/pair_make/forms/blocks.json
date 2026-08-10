@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cpp:pair_make",
+    "conceptId": "cpp:pair_make",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pair_make",
+      "message0": "%{BKY_CPP_MAKE_PAIR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "FIRST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SECOND",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_MAKE_PAIR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "FIRST": "first",
+        "SECOND": "second"
+      },
+      "statementInputs": {}
+    }
+  }
+]

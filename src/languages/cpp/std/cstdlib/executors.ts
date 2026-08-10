@@ -9,9 +9,9 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
 export function registerExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  _register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:random_next', async () => ({ type: 'int' as const, value: Math.floor(Math.random() * 32768) }))
+
 
  // seed ignored in JS
 

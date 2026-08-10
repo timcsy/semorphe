@@ -57,46 +57,5 @@
       "value": "expression"
     },
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp:math_min",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "a": "expression",
-      "b": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:math_max",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "a": "expression",
-      "b": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:var_swap",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "a",
-        "kind": "identifier",
-        "default": "a"
-      },
-      {
-        "name": "b",
-        "kind": "identifier",
-        "default": "b"
-      }
-    ],
-    "children": {},
-    "role": "statement"
   }
 ]

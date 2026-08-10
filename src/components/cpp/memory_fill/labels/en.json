@@ -1,0 +1,4 @@
+{
+  "C_MEMSET_MSG0": "Fill memory %1 with %2 for %3 bytes",
+  "C_MEMSET_TOOLTIP": "Fill a block of memory with the specified value"
+}

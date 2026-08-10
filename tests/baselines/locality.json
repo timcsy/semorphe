@@ -164,7 +164,7 @@
     },
     "cpp:cstring_compare_bounded": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_copy": {
       "files": 3,
@@ -172,7 +172,7 @@
     },
     "cpp:cstring_copy_bounded": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_find": {
       "files": 3,
@@ -220,7 +220,7 @@
     },
     "cpp:free": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:func_call": {
       "files": 5,
@@ -272,7 +272,7 @@
     },
     "cpp:input_line": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:istringstream_declare": {
       "files": 3,
@@ -348,19 +348,19 @@
     },
     "cpp:math_gcd": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_lcm": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_max": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_min": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_pow": {
       "files": 3,
@@ -376,11 +376,11 @@
     },
     "cpp:memory_copy": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:memory_fill": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:method_call": {
       "files": 4,
@@ -424,7 +424,7 @@
     },
     "cpp:pair_make": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:pointer_assign": {
       "files": 3,
@@ -476,7 +476,7 @@
     },
     "cpp:random_next": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:random_seed": {
       "files": 3,
@@ -488,7 +488,7 @@
     },
     "cpp:range_fill_sequence": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_reverse": {
       "files": 3,
@@ -500,11 +500,11 @@
     },
     "cpp:range_sum": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_sum_partial": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:raw_code": {
       "files": 2,
@@ -552,11 +552,11 @@
     },
     "cpp:string_as_double": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_as_int": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_at": {
       "files": 3,
@@ -596,7 +596,7 @@
     },
     "cpp:string_make": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_replace": {
       "files": 3,
@@ -696,7 +696,7 @@
     },
     "cpp:var_swap": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:vector_back": {
       "files": 3,

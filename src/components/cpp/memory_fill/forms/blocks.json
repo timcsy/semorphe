@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cpp_memory_fill",
+    "conceptId": "cpp:memory_fill",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_memory_fill",
+      "message0": "%{BKY_C_MEMSET_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_MEMSET_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "PTR": "ptr",
+        "VALUE": "value",
+        "SIZE": "size"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": [
+      "text",
+      "pointers_memory"
+    ]
+  }
+]

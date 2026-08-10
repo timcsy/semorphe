@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cpp:string_as_double",
+    "conceptId": "cpp:string_as_double",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_as_double",
+      "message0": "%{BKY_CPP_STOD_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STOD_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::stod(${VALUE})",
+      "imports": [
+        "string"
+      ],
+      "order": 20
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "CPP_GCD_MSG0": "GCD of %1 %2",
+  "CPP_GCD_TOOLTIP": "Compute the greatest common divisor of two integers"
+}

@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:range_fill_sequence",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "begin",
+      "kind": "literal"
+    },
+    {
+      "name": "end",
+      "kind": "literal"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<numeric>"
+  ]
+}

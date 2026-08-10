@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cpp:input_line",
+    "conceptId": "cpp:input_line",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_input_line",
+      "message0": "%{BKY_CPP_GETLINE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "getline(std::cin, ${NAME});",
+      "imports": [
+        "iostream",
+        "string"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      }
+    }
+  }
+]

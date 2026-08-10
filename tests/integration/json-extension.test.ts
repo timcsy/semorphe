@@ -25,13 +25,14 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    expect(all.length).toBe(6)
+    // ⚠️ 這一支讀的是 `std/algorithm/blocks.json` **這一個檔**，不是全部宣告。
+    // 元件膠囊化會把積木從共用檔剪走，所以這個數字**隨 F 下降**
+    // ——`cpp:math_min`／`math_max`／`range_sum` 已進膠囊（2026-08-11 第六批）。
+    // 它量的是「JSON-only 擴充這條路還通不通」，不是「有幾顆積木」。
+    expect(all.length).toBe(3)
     expect(all.map(s => s.id)).toContain('cpp:range_sort')
     expect(all.map(s => s.id)).toContain('cpp:range_reverse')
     expect(all.map(s => s.id)).toContain('cpp:range_fill')
-    expect(all.map(s => s.id)).toContain('cpp:math_min')
-    expect(all.map(s => s.id)).toContain('cpp:math_max')
-    expect(all.map(s => s.id)).toContain('cpp:var_swap')
   })
 
   it('should load container block specs from JSON', () => {

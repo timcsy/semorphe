@@ -1,0 +1,21 @@
+{
+  "conceptId": "cpp:math_max",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "a": "expression",
+    "b": "expression"
+  },
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<algorithm>"
+  ]
+}

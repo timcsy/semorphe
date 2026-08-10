@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cpp_cstring_compare_bounded",
+    "conceptId": "cpp:cstring_compare_bounded",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cstring_compare_bounded",
+      "message0": "%{BKY_C_STRNCMP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "S1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "S2",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "N",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRNCMP_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "S1": "s1",
+        "S2": "s2",
+        "N": "n"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "text"
+  }
+]

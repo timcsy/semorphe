@@ -289,27 +289,8 @@ export function registerIOLifters(lifter: Lifter): void {
       if (認領) return 認領
     }
 
-    if (funcName === 'getline' && argChildren.length >= 2) {
-      const nameNode = argChildren[1]
-      return createNode('cpp:input_line', { name: nameNode?.text ?? 'str' })
-    }
-    if (funcName === 'to_string' || funcName === 'std::to_string') {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:string_make', {}, { value: value ? [value] : [] })
-    }
-    if (funcName === 'stoi' || funcName === 'std::stoi') {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:string_as_int', {}, { value: value ? [value] : [] })
-    }
-    if (funcName === 'stod' || funcName === 'std::stod') {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:string_as_double', {}, { value: value ? [value] : [] })
-    }
 
     // cstdlib functions
-    if (funcName === 'rand') {
-      return createNode('cpp:random_next', {})
-    }
 
     // 單引數函式的**過渡表**——膠囊登錄的那些在上面就被接走了（`callConceptFor`）。
     //
@@ -326,11 +307,6 @@ export function registerIOLifters(lifter: Lifter): void {
     }
 
     // swap
-    if (funcName === 'swap' || funcName === 'std::swap') {
-      const a = argChildren[0]?.text ?? 'a'
-      const b = argChildren[1]?.text ?? 'b'
-      return createNode('cpp:var_swap', { a, b })
-    }
 
     // sort, reverse, fill (iterator-range algorithms)
     // Check arg count to avoid intercepting user-defined functions with same name
@@ -354,84 +330,20 @@ export function registerIOLifters(lifter: Lifter): void {
     }
 
     // min, max (value algorithms)
-    if (funcName === 'min' || funcName === 'std::min') {
-      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:math_min', {}, {
-        a: a ? [a] : [],
-        b: b ? [b] : [],
-      })
-    }
-    if (funcName === 'max' || funcName === 'std::max') {
-      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:math_max', {}, {
-        a: a ? [a] : [],
-        b: b ? [b] : [],
-      })
-    }
 
     // std::accumulate / accumulate
-    if (funcName === 'accumulate' || funcName === 'std::accumulate') {
-      const accumArgs = argsNode ? argsNode.namedChildren : []
-      const beginText = accumArgs[0]?.text ?? 'v.begin()'
-      const endText = accumArgs[1]?.text ?? 'v.end()'
-      const initChild = accumArgs[2] ? ctx.lift(accumArgs[2]) : null
-      return createNode('cpp:range_sum', { begin: beginText, end: endText }, {
-        init: initChild ? [initChild] : [],
-      })
-    }
 
     // std::iota / iota
-    if (funcName === 'iota' || funcName === 'std::iota') {
-      const iotaArgs = argsNode ? argsNode.namedChildren : []
-      const beginText = iotaArgs[0]?.text ?? 'v.begin()'
-      const endText = iotaArgs[1]?.text ?? 'v.end()'
-      const valueChild = iotaArgs[2] ? ctx.lift(iotaArgs[2]) : null
-      return createNode('cpp:range_fill_sequence', { begin: beginText, end: endText }, {
-        value: valueChild ? [valueChild] : [],
-      })
-    }
 
     // std::partial_sum / partial_sum
-    if (funcName === 'partial_sum' || funcName === 'std::partial_sum') {
-      const psArgs = argsNode ? argsNode.namedChildren : []
-      const beginText = psArgs[0]?.text ?? 'v.begin()'
-      const endText = psArgs[1]?.text ?? 'v.end()'
-      const destText = psArgs[2]?.text ?? 'result.begin()'
-      return createNode('cpp:range_sum_partial', { begin: beginText, end: endText, dest: destText }, {})
-    }
 
     // __gcd / gcd / std::gcd
-    if (funcName === '__gcd' || funcName === 'gcd' || funcName === 'std::gcd') {
-      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:math_gcd', {}, { a: a ? [a] : [], b: b ? [b] : [] })
-    }
 
     // lcm / std::lcm
-    if (funcName === 'lcm' || funcName === 'std::lcm') {
-      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const b = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:math_lcm', {}, { a: a ? [a] : [], b: b ? [b] : [] })
-    }
 
     // std::make_pair / make_pair
-    if (funcName === 'make_pair' || funcName === 'std::make_pair') {
-      const pairArgs = argsNode ? argsNode.namedChildren : []
-      const firstChild = pairArgs[0] ? ctx.lift(pairArgs[0]) : null
-      const secondChild = pairArgs[1] ? ctx.lift(pairArgs[1]) : null
-      return createNode('cpp:pair_make', {}, {
-        first: firstChild ? [firstChild] : [],
-        second: secondChild ? [secondChild] : [],
-      })
-    }
 
     // free(ptr) → cpp_free
-    if (funcName === 'free' && argChildren.length === 1) {
-      const ptr = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:free', {}, { ptr: ptr ? [ptr] : [] })
-    }
 
     // malloc(size) → cpp_malloc (without cast; cast is handled in lift-patterns via cast_expression)
     if (funcName === 'malloc' && argChildren.length === 1) {
@@ -440,18 +352,6 @@ export function registerIOLifters(lifter: Lifter): void {
     }
 
     // cstring functions
-    if (funcName === 'strncpy' && argChildren.length === 3) {
-      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      const n = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:cstring_copy_bounded', {}, { dest: dest ? [dest] : [], src: src ? [src] : [], n: n ? [n] : [] })
-    }
-    if (funcName === 'strncmp' && argChildren.length === 3) {
-      const s1 = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const s2 = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      const n = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:cstring_compare_bounded', {}, { s1: s1 ? [s1] : [], s2: s2 ? [s2] : [], n: n ? [n] : [] })
-    }
     if (funcName === 'strchr' && argChildren.length === 2) {
       const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const ch = argChildren[1] ? ctx.lift(argChildren[1]) : null
@@ -461,18 +361,6 @@ export function registerIOLifters(lifter: Lifter): void {
       const haystack = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const needle = argChildren[1] ? ctx.lift(argChildren[1]) : null
       return createNode('cpp:cstring_find', {}, { haystack: haystack ? [haystack] : [], needle: needle ? [needle] : [] })
-    }
-    if (funcName === 'memset' && argChildren.length === 3) {
-      const ptr = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const value = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      const size = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:memory_fill', {}, { ptr: ptr ? [ptr] : [], value: value ? [value] : [], size: size ? [size] : [] })
-    }
-    if (funcName === 'memcpy' && argChildren.length === 3) {
-      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      const size = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:memory_copy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [], size: size ? [size] : [] })
     }
 
     // General function call

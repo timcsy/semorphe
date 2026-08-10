@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cpp_memory_copy",
+    "conceptId": "cpp:memory_copy",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_memory_copy",
+      "message0": "%{BKY_C_MEMCPY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "DEST",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SRC",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_MEMCPY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "DEST": "dest",
+        "SRC": "src",
+        "SIZE": "size"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": [
+      "text",
+      "pointers_memory"
+    ]
+  }
+]

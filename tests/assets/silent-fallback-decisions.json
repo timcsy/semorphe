@@ -2,36 +2,57 @@
   {
     "鍵": "src/languages/cpp/std/cctype/executors.ts#a4cbw",
     "位置": "src/languages/cpp/std/cctype/executors.ts:77",
-    "訊號": "if (!v) → if (!v) return { type: 'int', value: 0 }",
+    "訊號": "!v → if (!v) return { type: 'int', value: 0 }",
     "判定": "防禦性",
-    "理由": "取不到引數的執行期值時回預設值，而合法結果也可能是那個值——兩者無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
+    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
   },
   {
     "鍵": "src/languages/cpp/std/cctype/executors.ts#8ysipl",
     "位置": "src/languages/cpp/std/cctype/executors.ts:85",
-    "訊號": "if (!v) → if (!v) return { type: 'char', value: ''",
+    "訊號": "!v → if (!v) return { type: 'char', value: ''",
     "判定": "防禦性",
-    "理由": "取不到引數的執行期值時回預設值，而合法結果也可能是那個值——兩者無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
+    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
   },
   {
-    "鍵": "src/languages/cpp/std/string/executors.ts#hc8ivd",
-    "位置": "src/languages/cpp/std/string/executors.ts:114",
-    "訊號": "if (valueNodes.length === 0) → if (valueNodes.length === 0) return { ty",
+    "鍵": "src/components/cpp/cstring_as_int/execute.ts#1r70e0t",
+    "位置": "src/components/cpp/cstring_as_int/execute.ts:7",
+    "訊號": "!v → if (!v) return { type: 'int' as const, v",
     "判定": "防禦性",
-    "理由": "語義樹缺子節點時回預設值，與「結果就是那個值」無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
+    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
   },
   {
-    "鍵": "src/languages/cpp/std/string/executors.ts#a0uoa9",
-    "位置": "src/languages/cpp/std/string/executors.ts:121",
-    "訊號": "if (valueNodes.length === 0) → if (valueNodes.length === 0) return { ty",
+    "鍵": "src/components/cpp/cstring_size/execute.ts#w5tnl8",
+    "位置": "src/components/cpp/cstring_size/execute.ts:7",
+    "訊號": "strNodes.length === 0 → if (strNodes.length === 0) return { type",
     "判定": "防禦性",
-    "理由": "語義樹缺子節點時回預設值，與「結果就是那個值」無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
+    "理由": "語義樹缺子節點時的退路；實測語料未觸發。"
   },
   {
-    "鍵": "src/languages/cpp/std/string/executors.ts#5q0349",
-    "位置": "src/languages/cpp/std/string/executors.ts:130",
-    "訊號": "if (valueNodes.length === 0) → if (valueNodes.length === 0) return { ty",
+    "鍵": "src/components/cpp/math_abs/execute.ts#1r70e0t",
+    "位置": "src/components/cpp/math_abs/execute.ts:7",
+    "訊號": "!v → if (!v) return { type: 'int' as const, v",
     "判定": "防禦性",
-    "理由": "語義樹缺子節點時回預設值，與「結果就是那個值」無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
+    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
+  },
+  {
+    "鍵": "src/components/cpp/string_as_double/execute.ts#5q0349",
+    "位置": "src/components/cpp/string_as_double/execute.ts:8",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { ty",
+    "判定": "防禦性",
+    "理由": "語義樹缺子節點時的退路；實測語料未觸發。"
+  },
+  {
+    "鍵": "src/components/cpp/string_as_int/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/string_as_int/execute.ts:8",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { ty",
+    "判定": "防禦性",
+    "理由": "語義樹缺子節點時的退路；實測語料未觸發。"
+  },
+  {
+    "鍵": "src/components/cpp/string_make/execute.ts#hc8ivd",
+    "位置": "src/components/cpp/string_make/execute.ts:7",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { ty",
+    "判定": "防禦性",
+    "理由": "語義樹缺子節點時的退路；實測語料未觸發。"
   }
 ]

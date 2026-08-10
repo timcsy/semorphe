@@ -42,40 +42,13 @@ export function registerExecutors(
 
 
 
-  register('cpp:input_line', async (node, ctx) => {
-    const name = String(node.properties.name)
-    const line = ctx.io.read()
-    try {
-      ctx.scope.set(name, { type: 'string', value: line ?? '' })
-    } catch {
-      ctx.scope.declare(name, { type: 'string', value: line ?? '' })
-    }
-  })
 
-  register('cpp:string_make', async (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return { type: 'string', value: '' }
-    const val = await ctx.evaluate(valueNodes[0])
-    return { type: 'string', value: String(val.value) }
-  })
 
-  register('cpp:string_as_int', async (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return { type: 'int', value: 0 }
-    const val = await ctx.evaluate(valueNodes[0])
-    const n = parseInt(String(val.value), 10)
-    if (isNaN(n)) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'int' })
-    return { type: 'int', value: n }
-  })
 
-  register('cpp:string_as_double', async (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return { type: 'double', value: 0 }
-    const val = await ctx.evaluate(valueNodes[0])
-    const n = parseFloat(String(val.value))
-    if (isNaN(n)) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'double' })
-    return { type: 'double', value: n }
-  })
+
+
+
+
 
   register('cpp:string_erase', async (node, ctx) => {
     const obj = String(node.properties.obj)

@@ -37,16 +37,5 @@
     "skipReasons": {
       "execute": "declarative"
     }
-  },
-  {
-    "conceptId": "cpp:pair_make",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "first": "expression",
-      "second": "expression"
-    },
-    "role": "expression"
   }
 ]

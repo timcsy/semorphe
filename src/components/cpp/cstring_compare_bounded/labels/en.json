@@ -1,0 +1,4 @@
+{
+  "C_STRNCMP_MSG0": "compare %3 chars of %1 and %2",
+  "C_STRNCMP_TOOLTIP": "Compare up to n characters of two strings. Returns 0 if equal"
+}

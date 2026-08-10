@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:memory_copy",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "dest": "expression",
+    "src": "expression",
+    "size": "expression"
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<cstring>"
+  ]
+}

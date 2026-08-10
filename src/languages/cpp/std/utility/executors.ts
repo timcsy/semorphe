@@ -9,13 +9,7 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
 export function registerExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  _register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:pair_make', async (node, ctx) => {
-    const f = node.children.first?.[0]
-    const s = node.children.second?.[0]
-    const fv = f ? await ctx.evaluate(f) : { type: 'int' as const, value: 0 }
-    const sv = s ? await ctx.evaluate(s) : { type: 'int' as const, value: 0 }
-    return { type: 'string' as const, value: `(${fv.value}, ${sv.value})` }
-  })
+
 }

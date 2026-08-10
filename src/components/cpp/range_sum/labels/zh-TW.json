@@ -1,0 +1,4 @@
+{
+  "CPP_ACCUMULATE_MSG0": "累加（ %1 , %2 , %3 ）",
+  "CPP_ACCUMULATE_TOOLTIP": "將範圍內的元素加總，加上初始值"
+}

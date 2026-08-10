@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:input_line",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "str"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<string>"
+  ]
+}

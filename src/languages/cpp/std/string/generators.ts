@@ -18,23 +18,11 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${obj}[${index}]`
   })
 
-  g.set('cpp:string_make', (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '0'
-    return `to_string(${val})`
-  })
 
-  g.set('cpp:string_as_int', (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
-    return `stoi(${val})`
-  })
 
-  g.set('cpp:string_as_double', (node, ctx) => {
-    const valueNodes = node.children.value ?? []
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
-    return `stod(${val})`
-  })
+
+
+
 
   // Statement concepts — return full line with indent and newline
   g.set('cpp:string_declare', (node, ctx) => {
@@ -49,10 +37,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
 
 
 
-  g.set('cpp:input_line', (node, ctx) => {
-    const name = node.properties.name ?? 'str'
-    return `${indent(ctx)}getline(cin, ${name});\n`
-  })
+
 
   g.set('cpp:string_erase', (node, ctx) => {
     const obj = node.properties.obj ?? 'str'

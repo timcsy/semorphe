@@ -51,14 +51,7 @@ const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:var_swap', async (node, ctx) => {
-    const a = String(node.properties.a)
-    const b = String(node.properties.b)
-    const va = ctx.scope.get(a)
-    const vb = ctx.scope.get(b)
-    ctx.scope.set(a, vb)
-    ctx.scope.set(b, va)
-  })
+
 
   register('cpp:range_sort', async (node, ctx) => {
     const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
@@ -78,23 +71,7 @@ export function registerExecutors(
     for (let i = r.from; i < r.to; i++) r.arr[i] = v
   })
 
-  register('cpp:math_min', async (node, ctx) => {
-    const a = node.children.a?.[0]
-    const b = node.children.b?.[0]
-    const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
-    const vb = b ? await ctx.evaluate(b) : { type: 'int' as const, value: 0 }
-    const na = ctx.toNumber(va)
-    const nb = ctx.toNumber(vb)
-    return na <= nb ? va : vb
-  })
 
-  register('cpp:math_max', async (node, ctx) => {
-    const a = node.children.a?.[0]
-    const b = node.children.b?.[0]
-    const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
-    const vb = b ? await ctx.evaluate(b) : { type: 'int' as const, value: 0 }
-    const na = ctx.toNumber(va)
-    const nb = ctx.toNumber(vb)
-    return na >= nb ? va : vb
-  })
+
+
 }

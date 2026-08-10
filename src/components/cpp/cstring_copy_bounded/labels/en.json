@@ -1,0 +1,4 @@
+{
+  "C_STRNCPY_MSG0": "copy %3 chars of %2 to %1",
+  "C_STRNCPY_TOOLTIP": "Copy up to n characters from source to destination"
+}

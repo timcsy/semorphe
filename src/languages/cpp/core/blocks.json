@@ -1673,57 +1673,6 @@
     }
   },
   {
-    "id": "cpp_free",
-    "conceptId": "cpp:free",
-    "language": "cpp",
-    "category": "pointers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_free",
-      "message0": "%{BKY_C_FREE_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "PTR",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#9966FF",
-      "tooltip": "%{BKY_C_FREE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "free(${PTR});",
-      "imports": [
-        "stdlib.h"
-      ],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "call_expression",
-      "constraints": [
-        {
-          "field": "function",
-          "text": "free"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "ptr",
-          "ast": "arguments",
-          "extract": "lift"
-        }
-      ]
-    },
-    "renderMapping": {
-      "inputs": {
-        "PTR": "ptr"
-      }
-    }
-  },
-  {
     "id": "cpp_struct_at_member",
     "conceptId": "cpp:struct_at_member",
     "language": "cpp",

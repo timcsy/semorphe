@@ -1,29 +1,5 @@
 [
   {
-    "conceptId": "cpp:cstring_copy_bounded",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "dest": "expression",
-      "src": "expression",
-      "n": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:cstring_compare_bounded",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "s1": "expression",
-      "s2": "expression",
-      "n": "expression"
-    },
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:cstring_find_char",
     "layer": "lang-library",
     "abstractConcept": null,
@@ -44,29 +20,5 @@
       "needle": "expression"
     },
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:memory_fill",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "ptr": "expression",
-      "value": "expression",
-      "size": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:memory_copy",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "dest": "expression",
-      "src": "expression",
-      "size": "expression"
-    },
-    "role": "statement"
   }
 ]

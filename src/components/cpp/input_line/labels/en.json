@@ -1,0 +1,4 @@
+{
+  "CPP_GETLINE_MSG0": "Read entire line into %1 (getline)",
+  "CPP_GETLINE_TOOLTIP": "Read an entire line of input (including spaces) into a string"
+}

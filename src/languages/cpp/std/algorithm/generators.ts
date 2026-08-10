@@ -23,25 +23,9 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}fill(${begin}, ${end}, ${value});\n`
   })
 
-  g.set('cpp:math_min', (node, ctx) => {
-    const aNodes = node.children.a ?? []
-    const bNodes = node.children.b ?? []
-    const a = aNodes.length > 0 ? generateExpression(aNodes[0], ctx) : '0'
-    const b = bNodes.length > 0 ? generateExpression(bNodes[0], ctx) : '0'
-    return `min(${a}, ${b})`
-  })
 
-  g.set('cpp:math_max', (node, ctx) => {
-    const aNodes = node.children.a ?? []
-    const bNodes = node.children.b ?? []
-    const a = aNodes.length > 0 ? generateExpression(aNodes[0], ctx) : '0'
-    const b = bNodes.length > 0 ? generateExpression(bNodes[0], ctx) : '0'
-    return `max(${a}, ${b})`
-  })
 
-  g.set('cpp:var_swap', (node, ctx) => {
-    const a = node.properties.a ?? 'a'
-    const b = node.properties.b ?? 'b'
-    return `${indent(ctx)}swap(${a}, ${b});\n`
-  })
+
+
+
 }

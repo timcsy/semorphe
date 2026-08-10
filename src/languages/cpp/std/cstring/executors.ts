@@ -68,29 +68,9 @@ export function registerExecutors(
 
 
 
-  register('cpp:cstring_copy_bounded', async (node, ctx) => {
-    const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')
-    const n = ctx.toNumber(await ctx.evaluate((node.children.n ?? [])[0]))
-    const src = readCString(await ctx.evaluate((node.children.src ?? [])[0]))
-    // strncpy 的語義：只複製 n 個字元，**不保證結尾有 \0**
-    for (let i = 0; i < n && i < dest.length; i++) {
-      dest[i] = { type: 'char', value: src[i] ?? '\0' }
-    }
-  })
 
-  register('cpp:cstring_compare_bounded', async (node, ctx) => {
-    const s1Nodes = node.children.s1 ?? []
-    const s2Nodes = node.children.s2 ?? []
-    const nNodes = node.children.n ?? []
-    const s1 = s1Nodes.length > 0 ? String((await ctx.evaluate(s1Nodes[0])).value) : ''
-    const s2 = s2Nodes.length > 0 ? String((await ctx.evaluate(s2Nodes[0])).value) : ''
-    const n = nNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(nNodes[0])) : 0
-    const sub1 = s1.substring(0, n)
-    const sub2 = s2.substring(0, n)
-    if (sub1 < sub2) return { type: 'int', value: -1 }
-    if (sub1 > sub2) return { type: 'int', value: 1 }
-    return { type: 'int', value: 0 }
-  })
+
+
 
   /**
    * `strchr` / `strstr` 回傳**指向陣列中間的指標**。
@@ -113,24 +93,7 @@ export function registerExecutors(
     })
   }
 
-  register('cpp:memory_fill', async (node, ctx) => {
-    const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')
-    const v = await ctx.evaluate((node.children.value ?? [])[0])
-    const size = ctx.toNumber(await ctx.evaluate((node.children.size ?? [])[0]))
-    // 目標是字元陣列時要存**字元**——`'a'` 求值成數字 97，直接塞進去會讓
-    // `cout << s` 印出 `979797`。
-    const asChar = arr.length > 0 && arr[0]?.type === 'char'
-    const fill: RuntimeValue = asChar
-      ? { type: 'char', value: typeof v.value === 'number' ? String.fromCharCode(v.value) : String(v.value) }
-      : { ...v }
-    for (let i = 0; i < size && i < arr.length; i++) arr[i] = { ...fill }
-  })
 
-  register('cpp:memory_copy', async (node, ctx) => {
-    const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'memcpy 的目標')
-    const srcNode = (node.children.src ?? [])[0]
-    const src = writableArray(ctx as never, srcNode, 'memcpy 的來源')
-    const size = ctx.toNumber(await ctx.evaluate((node.children.size ?? [])[0]))
-    for (let i = 0; i < size && i < dest.length && i < src.length; i++) dest[i] = { ...src[i] }
-  })
+
+
 }

@@ -131,7 +131,11 @@ function 執行器檔(): string[] {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
       if (e.isDirectory()) 走(p)
-      else if (e.name.endsWith('.ts') && /executors?\.ts$/.test(e.name)) out.push(p)
+      // ⚠️ **檔名也要跟著膠囊走。** 共用檔叫 `executors.ts`，膠囊的叫 `execute.ts`
+      // ——只認前者的話，搬進膠囊的執行器**整批從掃描裡消失**，
+      // 而「掃到的 return 數」會安靜地掉下去。這是「掃描範圍沒跟著走」的第二面：
+      // **目錄跟上了，檔名沒跟上。**
+      else if (/^(executors?|execute)\.ts$/.test(e.name)) out.push(p)
     }
   }
   走(path.join(REPO_ROOT, 'src/languages'))

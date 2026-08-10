@@ -1,0 +1,4 @@
+{
+  "C_FREE_MSG0": "釋放記憶體 %1",
+  "C_FREE_TOOLTIP": "把之前用 malloc 要來的記憶體歸還給系統"
+}

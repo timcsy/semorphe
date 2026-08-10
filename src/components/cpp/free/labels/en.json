@@ -1,0 +1,4 @@
+{
+  "C_FREE_MSG0": "Free memory %1",
+  "C_FREE_TOOLTIP": "Return memory previously allocated with malloc back to the system"
+}

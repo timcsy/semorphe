@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cpp:math_max",
+    "conceptId": "cpp:math_max",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_math_max",
+      "message0": "%{BKY_CPP_MAX_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_MAX_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "A": "a",
+        "B": "b"
+      },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "CPP_IOTA_MSG0": "Fill %1 incrementing from %2 to %3",
+  "CPP_IOTA_TOOLTIP": "Fill a range with sequentially increasing values starting from the given value"
+}

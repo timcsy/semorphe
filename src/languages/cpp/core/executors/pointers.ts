@@ -57,7 +57,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int*'}` }
   })
 
-  register('cpp:free', async () => {})
+
 
   register('cpp:pointer_assign', async (node, ctx) => {
     const ptrName = String(node.properties.obj)

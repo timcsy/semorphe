@@ -1,0 +1,4 @@
+{
+  "CPP_PARTIAL_SUM_MSG0": "前綴和 %1 存入 %2（運算 %3）",
+  "CPP_PARTIAL_SUM_TOOLTIP": "計算範圍的前綴和，儲存到目標位置"
+}

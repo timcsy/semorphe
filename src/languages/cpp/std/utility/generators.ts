@@ -1,6 +1,6 @@
 import type { StylePreset } from '../../../../core/types'
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { indent, generateExpression } from '../../../../core/projection/code-generator'
+import { indent } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
   g.set('cpp:pair_declare', (node, ctx) => {
@@ -10,9 +10,5 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}pair<${type1}, ${type2}> ${name};\n`
   })
 
-  g.set('cpp:pair_make', (node, ctx) => {
-    const first = generateExpression((node.children.first ?? [])[0], ctx)
-    const second = generateExpression((node.children.second ?? [])[0], ctx)
-    return `make_pair(${first}, ${second})`
-  })
+
 }

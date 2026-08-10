@@ -1,0 +1,4 @@
+{
+  "C_MEMCPY_MSG0": "Copy memory %2 to %1 for %3 bytes",
+  "C_MEMCPY_TOOLTIP": "Copy a block of memory from source to destination"
+}

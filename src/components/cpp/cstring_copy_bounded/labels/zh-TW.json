@@ -1,0 +1,4 @@
+{
+  "C_STRNCPY_MSG0": "複製 %2 的前 %3 個字元到 %1",
+  "C_STRNCPY_TOOLTIP": "最多複製 n 個字元到目的地"
+}

@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:var_swap",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "a",
+      "kind": "identifier",
+      "default": "a"
+    },
+    {
+      "name": "b",
+      "kind": "identifier",
+      "default": "b"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<algorithm>"
+  ]
+}
