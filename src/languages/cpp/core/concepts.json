@@ -379,7 +379,8 @@
     ],
     "children": {
       "public": "statements",
-      "private": "statements"
+      "private": "statements",
+      "protected": "statements"
     },
     "role": "statement"
   },
