@@ -1,0 +1,14 @@
+{
+  "id": "cpp_delete_expression",
+  "astNodeType": "delete_expression",
+  "concept": {
+    "conceptId": "cpp:delete"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "ptr",
+      "ast": "$namedChildren[0]",
+      "extract": "lift"
+    }
+  ]
+}

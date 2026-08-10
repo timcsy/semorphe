@@ -29,7 +29,12 @@ function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
     mod.registerGenerators(g, style)
   }
   // 元件膠囊的產生路
-  for (const reg of componentGenerateRegistrars()) (reg as (m: typeof g) => void)(g)
+  // ⚠️ **`style` 一定要傳。** 共用產生器裡有一批 helper 是**捕獲 `style` 的閉包**
+  // （`registerStatementGenerators` 的 `openBrace` 依 `brace_style` 決定換不換行）。
+  // 剪出去的膠囊拿不到那個閉包，只能自己從 `style` 算。
+  // ⚠️ 少傳不會紅——**排版差異多數測試不比**，症狀是「膠囊化之後大括號位置變了」。
+  for (const reg of componentGenerateRegistrars())
+    (reg as (m: typeof g, s: typeof style) => void)(g, style)
   return g
 }
 

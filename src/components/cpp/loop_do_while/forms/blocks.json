@@ -1,0 +1,61 @@
+[
+  {
+    "id": "cpp_loop_do_while",
+    "conceptId": "cpp:loop_do_while",
+    "language": "cpp",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_loop_do_while",
+      "message0": "%{BKY_C_DO_WHILE_MSG0}",
+      "args0": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "message1": "%{BKY_C_DO_WHILE_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "COND",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_DO_WHILE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "do {\n${BODY}\n} while (${COND});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "do_statement",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "body",
+          "ast": "body",
+          "extract": "liftBody"
+        },
+        {
+          "semantic": "cond",
+          "ast": "condition",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "COND": "cond"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

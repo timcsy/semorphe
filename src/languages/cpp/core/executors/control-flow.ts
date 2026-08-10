@@ -58,23 +58,7 @@ export function registerControlFlowCoreExecutors(
     ctx.scope = parentScope
   })
 
-  register('cpp:loop_do_while', async (node, ctx) => {
-    const body = node.children.body ?? []
-    const condNodes = node.children.cond ?? []
-    const parentScope = ctx.scope
-    do {
-      ctx.scope = parentScope.createChild()
-      try {
-        await ctx.executeBody(body)
-      } catch (signal) {
-        if (signal instanceof BreakSignal) { ctx.scope = parentScope; return }
-        if (signal instanceof ContinueSignal) { /* fall through to condition check */ }
-        else { ctx.scope = parentScope; throw signal }
-      }
-      if (condNodes.length === 0) break
-    } while (ctx.toBool(await ctx.evaluate(condNodes[0])))
-    ctx.scope = parentScope
-  })
+
 
   register('cpp:switch', async (node, ctx) => {
     const exprNodes = node.children.expr ?? []
@@ -159,9 +143,5 @@ export function registerControlFlowCoreExecutors(
     }
   })
 
-  register('cpp:throw', async (node, ctx) => {
-    const vals = node.children.value ?? []
-    const value = vals.length > 0 ? await ctx.evaluate(vals[0]) : 'exception'
-    throw new ThrownSignal(value)
-  })
+
 }

@@ -1,0 +1,4 @@
+{
+  "C_THROW_MSG0": "Signal error %1 (throw)",
+  "C_THROW_TOOLTIP": "Throw an exception to signal an error condition"
+}

@@ -541,25 +541,6 @@
     ]
   },
   {
-    "id": "cpp:loop_do_while",
-    "astNodeType": "do_statement",
-    "concept": {
-      "conceptId": "cpp:loop_do_while"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "body",
-        "ast": "body",
-        "extract": "liftBody"
-      },
-      {
-        "semantic": "cond",
-        "ast": "condition",
-        "extract": "lift"
-      }
-    ]
-  },
-  {
     "id": "cpp_cast_expr",
     "astNodeType": "cast_expression",
     "concept": {
@@ -714,20 +695,6 @@
     "fieldMappings": []
   },
   {
-    "id": "cpp_delete_expression",
-    "astNodeType": "delete_expression",
-    "concept": {
-      "conceptId": "cpp:delete"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "ptr",
-        "ast": "$namedChildren[0]",
-        "extract": "lift"
-      }
-    ]
-  },
-  {
     "id": "cpp_try_statement",
     "astNodeType": "try_statement",
     "concept": {
@@ -735,20 +702,6 @@
     },
     "liftStrategy": "cpp:liftTryCatch",
     "fieldMappings": []
-  },
-  {
-    "id": "cpp_throw_statement",
-    "astNodeType": "throw_statement",
-    "concept": {
-      "conceptId": "cpp:throw"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$namedChildren[0]",
-        "extract": "lift"
-      }
-    ]
   },
   {
     "id": "cpp_class_specifier",

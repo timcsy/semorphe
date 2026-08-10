@@ -1,0 +1,35 @@
+[
+  {
+    "id": "cpp:delete",
+    "conceptId": "cpp:delete",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_delete",
+      "message0": "%{BKY_CPP_DELETE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PTR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_DELETE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "delete ${PTR};",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "inputs": {
+        "PTR": "ptr"
+      }
+    }
+  }
+]

@@ -50,7 +50,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
   })
 
-  register('cpp:delete', async () => {})
+
 
   register('cpp:malloc', async (node) => {
     // ⚠️ 退路是 `int*` 不是 `int`——`type` 在這顆元件裡是**轉型型別**（指標），

@@ -1,0 +1,4 @@
+{
+  "CPP_DELETE_MSG0": "Delete object %1 (delete)",
+  "CPP_DELETE_TOOLTIP": "Delete an object created with new and free the memory"
+}

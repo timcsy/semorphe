@@ -18,7 +18,7 @@ import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/s
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
@@ -37,14 +37,18 @@ beforeAll(async () => {
   lifter = createTestLifter()
 
   // Set up PatternRenderer for render pipeline tests
+  // ⚠️ **第九個組裝點**（2026-08-11 發現）。
+  //
+  // 這裡原本自己列舉 `universalBlocks ＋ coreBlocks ＋ std 模組`
+  // ——**漏了元件膠囊**。於是一顆核心元件搬進膠囊之後，這支測試看不到它，
+  // 症狀是「render pipeline 少了一顆積木」而不是「膠囊沒接上」。
+  //
+  // `all-declarations.ts` 早就是唯一入口了（spec 100 的八份各自組裝收斂成一份），
+  // 而這一份**沒有被收進去**——因為它列舉的是「來源」而不是呼叫組裝函式。
+  //
+  // > **列舉式的組裝點，每加一種來源就漏一次。**
   const tempRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  const allProjections = [
-    ...universalBlocks,
-    ...coreBlocks,
-    ...allStdModules.flatMap(m => m.blocks),
-  ]
-  tempRegistry.loadFromSplit(allConcepts, allProjections)
+  tempRegistry.loadFromSplit(allCppConcepts(), allCppProjections())
   const allSpecs = tempRegistry.getAll()
   patternRenderer = new PatternRenderer()
   const renderStrategyRegistry = new RenderStrategyRegistry()

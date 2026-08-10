@@ -63,8 +63,8 @@
         "cpp_try_catch",
         "cpp_throw",
         "cpp_loop_for",
-        "cpp_loop_do_while",
         "cpp_loop_range",
+        "cpp_loop_do_while",
         "cpp_switch",
         "cpp_case",
         "cpp_default",
@@ -222,13 +222,13 @@
         "cpp_struct_at_ptr",
         "cpp_class_def",
         "cpp_new",
-        "cpp_delete",
         "cpp_constructor",
         "cpp_destructor",
         "cpp_method_virtual",
         "cpp_method_virtual_pure",
         "cpp_method_override",
-        "cpp_operator_overload"
+        "cpp_operator_overload",
+        "cpp_delete"
       ]
     },
     {

@@ -1,0 +1,4 @@
+{
+  "CPP_DELETE_MSG0": "刪除物件 %1 (delete)",
+  "CPP_DELETE_TOOLTIP": "刪除用 new 建立的物件，歸還記憶體空間"
+}

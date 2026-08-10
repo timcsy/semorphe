@@ -1,0 +1,18 @@
+{
+  "conceptId": "cpp:throw",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  }
+}

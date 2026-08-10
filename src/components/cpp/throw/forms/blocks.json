@@ -1,0 +1,35 @@
+[
+  {
+    "id": "cpp_throw",
+    "conceptId": "cpp:throw",
+    "language": "cpp",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_throw",
+      "message0": "%{BKY_C_THROW_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_C_THROW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "throw ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

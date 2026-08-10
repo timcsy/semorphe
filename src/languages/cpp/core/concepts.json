@@ -194,20 +194,6 @@
     }
   },
   {
-    "conceptId": "cpp:loop_do_while",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:loop_while",
-    "properties": [],
-    "children": {
-      "body": "statements",
-      "cond": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:pointer_declare",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
@@ -403,22 +389,6 @@
     ],
     "children": {},
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:delete",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "ptr": "expression"
-    },
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
   },
   {
     "conceptId": "cpp:template_function",
@@ -1136,16 +1106,6 @@
     "children": {
       "try_body": "statements",
       "catch_body": "statements"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:throw",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "value": "expression"
     },
     "role": "statement"
   },

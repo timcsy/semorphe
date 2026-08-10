@@ -1,0 +1,5 @@
+{
+  "C_DO_WHILE_MSG0": "先執行 %1",
+  "C_DO_WHILE_MSG1": "當 %1 繼續重複",
+  "C_DO_WHILE_TOOLTIP": "先執行一次裡面的程式，然後檢查條件，成立就繼續重複"
+}

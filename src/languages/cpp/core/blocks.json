@@ -644,65 +644,6 @@
     }
   },
   {
-    "id": "cpp_loop_do_while",
-    "conceptId": "cpp:loop_do_while",
-    "language": "cpp",
-    "category": "loops",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_loop_do_while",
-      "message0": "%{BKY_C_DO_WHILE_MSG0}",
-      "args0": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
-      ],
-      "message1": "%{BKY_C_DO_WHILE_MSG1}",
-      "args1": [
-        {
-          "type": "input_value",
-          "name": "COND",
-          "check": "Expression"
-        }
-      ],
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FFAB19",
-      "tooltip": "%{BKY_C_DO_WHILE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "do {\n${BODY}\n} while (${COND});",
-      "imports": [],
-      "order": 0
-    },
-    "astPattern": {
-      "nodeType": "do_statement",
-      "constraints": [],
-      "fieldMappings": [
-        {
-          "semantic": "body",
-          "ast": "body",
-          "extract": "liftBody"
-        },
-        {
-          "semantic": "cond",
-          "ast": "condition",
-          "extract": "lift"
-        }
-      ]
-    },
-    "renderMapping": {
-      "inputs": {
-        "COND": "cond"
-      },
-      "statementInputs": {
-        "BODY": "body"
-      }
-    }
-  },
-  {
     "id": "cpp_raw_code",
     "conceptId": "cpp:raw_code",
     "language": "cpp",
@@ -2036,39 +1977,6 @@
     }
   },
   {
-    "id": "cpp:delete",
-    "conceptId": "cpp:delete",
-    "language": "cpp",
-    "category": "oop",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_delete",
-      "message0": "%{BKY_CPP_DELETE_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "PTR",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#9966FF",
-      "tooltip": "%{BKY_CPP_DELETE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "delete ${PTR};",
-      "imports": [],
-      "order": 0
-    },
-    "renderMapping": {
-      "inputs": {
-        "PTR": "ptr"
-      }
-    }
-  },
-  {
     "id": "cpp:template_function",
     "conceptId": "cpp:template_function",
     "language": "cpp",
@@ -3135,39 +3043,6 @@
       "statementInputs": {
         "CATCH_BODY": "catch_body",
         "TRY_BODY": "try_body"
-      }
-    }
-  },
-  {
-    "id": "cpp_throw",
-    "conceptId": "cpp:throw",
-    "language": "cpp",
-    "category": "control",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_throw",
-      "message0": "%{BKY_C_THROW_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FF6680",
-      "tooltip": "%{BKY_C_THROW_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "throw ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
-    "renderMapping": {
-      "inputs": {
-        "VALUE": "value"
       }
     }
   },

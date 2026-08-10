@@ -1,0 +1,5 @@
+{
+  "C_DO_WHILE_MSG0": "do %1",
+  "C_DO_WHILE_MSG1": "while %1 keep repeating",
+  "C_DO_WHILE_TOOLTIP": "Execute the code once first, then check the condition and repeat if true"
+}
