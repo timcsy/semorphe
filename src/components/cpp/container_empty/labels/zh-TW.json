@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_EMPTY_MSG0": "%1 是否為空",
+  "CPP_CONTAINER_EMPTY_TOOLTIP": "檢查容器是否為空（回傳是/否）"
+}

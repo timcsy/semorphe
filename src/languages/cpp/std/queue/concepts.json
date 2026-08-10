@@ -1,19 +1,5 @@
 [
   {
-    "conceptId": "cpp:queue_front",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "q"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:priority_queue_peek",
     "layer": "lang-core",
     "abstractConcept": null,

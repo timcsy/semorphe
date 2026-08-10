@@ -83,3 +83,36 @@ export function methodConceptFor(方法名: string): MethodConceptShape | undefi
 export function methodConceptSources(): [方法名: string, 來源: string][] {
   return [...表.entries()].map(([k, v]) => [k, v.來源])
 }
+
+/**
+ * **容器方法**的登錄表——與上面那張分開，因為**查詢點不同**。
+ *
+ * ⚠️ 上面那張（`methodConceptFor`）在路由器**早期**被查，直接建節點。
+ * 而容器方法要先做兩件事才建得出正確的節點：
+ *
+ * 1. **依接收者型別分派**（`s.clear()` 是字串版、`v.clear()` 是容器版）
+ * 2. **記下 `container_kind`**——`st.push(x)` 與 `q.push(x)` 行為相同，
+ *    而積木上該說「推到頂端」還是「加到尾端」不同。那是形態的事。
+ *
+ * 塞進同一張表的話，早期那次查詢會**先攔截**，於是型別分派與
+ * `container_kind` 都不會發生——**而那不會報錯，只會安靜地產生一個少了資訊的節點。**
+ *
+ * > **兩個查詢點就是兩張表。**
+ */
+const 容器方法表 = new Map<string, { conceptId: string; 來源: string }>()
+
+export function registerContainerMethodConcept(方法名: string, conceptId: string, 來源: string): void {
+  const 先來的 = 容器方法表.get(方法名)
+  if (先來的 && 先來的.conceptId !== conceptId) {
+    throw new Error(
+      `容器方法「${方法名}」被登錄兩次且指向不同身分：` +
+        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+    )
+  }
+  容器方法表.set(方法名, { conceptId, 來源 })
+}
+
+/** 容器方法名 → 元件身分。認不得回傳 `undefined`。 */
+export function containerMethodConcept(方法名: string): string | undefined {
+  return 容器方法表.get(方法名)?.conceptId
+}

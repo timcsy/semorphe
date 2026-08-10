@@ -224,9 +224,12 @@ describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
 
   it('★ 反向：沒有變體的元件回傳恰好一顆', async () => {
     const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
-    const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
+    // ⚠️ 原本讀 `coreConcepts`／`coreBlocks`——**又是列舉式的組裝**。
+    // `cpp:container_empty` 進膠囊之後那兩個陣列裡就沒有它了，
+    // 而這一支測的是「沒有變體的元件回傳恰好一顆」，不是「它住在哪」。
+    const { allCppConcepts, allCppProjections } = await import('../../../src/languages/cpp/all-declarations')
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(coreConcepts, coreBlocks)
+    reg.loadFromSplit(allCppConcepts(), allCppProjections())
     expect(reg.getFormsByConceptId('cpp:container_empty')).toHaveLength(1)
   })
 })

@@ -138,16 +138,9 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
   // ─── Generic container expression concepts ───
 
-  g.set('cpp:container_empty', (node) => {
-    const obj = node.properties.obj ?? 'obj'
-    return `${obj}.empty()`
-  })
 
-  g.set('cpp:container_count', (node, ctx) => {
-    const obj = node.properties.obj ?? 'obj'
-    const key = generateExpression((node.children.key ?? [])[0], ctx)
-    return `${obj}.count(${key})`
-  })
+
+
 
   // Expression versions of statement-only blocks (no indent, no semicolons)
 

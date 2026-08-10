@@ -4,7 +4,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { callConceptFor } from '../../../core/component/call-concepts'
-import { methodConceptFor } from '../../../core/component/method-concepts'
+import { methodConceptFor, containerMethodConcept } from '../../../core/component/method-concepts'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
@@ -76,20 +76,10 @@ function tryStringMethodLift(
  */
 const METHOD_TO_CONCEPT: Record<string, string> = {
   // container-specific (unique method names)
-  pop_back: 'cpp:vector_pop',
-  back: 'cpp:vector_back',
-  size: 'cpp:vector_size',
-  top: 'cpp:stack_peek',
-  front: 'cpp:queue_front',
   // generic container concepts (shared methods across containers)
-  empty: 'cpp:container_empty',
   push: 'cpp:container_push',
   pop: 'cpp:container_pop',
-  clear: 'cpp:container_clear',
-  push_back: 'cpp:container_append',
-  erase: 'cpp:container_erase',
-  count: 'cpp:container_count',
-  insert: 'cpp:set_insert',
+
 }
 
 /**
@@ -167,7 +157,8 @@ export function registerIOLifters(lifter: Lifter): void {
       const objType = objText ? ctx.data.getType(objText) : null
       const conceptId =
         (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
-        METHOD_TO_CONCEPT[methodName]
+        METHOD_TO_CONCEPT[methodName] ??
+        containerMethodConcept(methodName)
       if (conceptId) {
         const properties: Record<string, string> = { obj: objText }
 

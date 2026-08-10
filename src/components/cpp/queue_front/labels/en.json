@@ -1,0 +1,4 @@
+{
+  "CPP_QUEUE_FRONT_MSG0": "Front of %1",
+  "CPP_QUEUE_FRONT_TOOLTIP": "Get the front element of the queue without removing it"
+}

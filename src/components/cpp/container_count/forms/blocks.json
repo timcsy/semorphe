@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp_container_count",
+    "conceptId": "cpp:container_count",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_count",
+      "message0": "%{BKY_CPP_CONTAINER_COUNT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_COUNT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.count(${KEY})",
+      "imports": [],
+      "order": 0
+    },
+    "toolboxCategory": "maps_sets",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
+  }
+]

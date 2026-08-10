@@ -1,0 +1,52 @@
+[
+  {
+    "id": "cpp:queue_front",
+    "conceptId": "cpp:queue_front",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_queue_front",
+      "message0": "%{BKY_CPP_QUEUE_FRONT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "que"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_FRONT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.front()",
+      "imports": [
+        "queue"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  }
+]

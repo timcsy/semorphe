@@ -1,0 +1,4 @@
+{
+  "CPP_SET_INSERT_MSG0": "Insert %2 into set %1",
+  "CPP_SET_INSERT_TOOLTIP": "Insert an element into the set (duplicates are ignored)"
+}

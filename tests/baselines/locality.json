@@ -116,23 +116,23 @@
     },
     "cpp:container_append": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_clear": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_count": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_empty": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_erase": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_pop": {
       "files": 3,
@@ -472,7 +472,7 @@
     },
     "cpp:queue_front": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:random_next": {
       "files": 3,
@@ -524,7 +524,7 @@
     },
     "cpp:set_insert": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:sizeof": {
       "files": 4,
@@ -536,7 +536,7 @@
     },
     "cpp:stack_peek": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_append": {
       "files": 3,
@@ -700,7 +700,7 @@
     },
     "cpp:vector_back": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:vector_declare": {
       "files": 3,
@@ -708,11 +708,11 @@
     },
     "cpp:vector_pop": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:vector_size": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     }
   }
 }

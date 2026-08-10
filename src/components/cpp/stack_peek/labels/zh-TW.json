@@ -1,0 +1,4 @@
+{
+  "CPP_STACK_TOP_MSG0": "%1 的頂端元素",
+  "CPP_STACK_TOP_TOOLTIP": "取得堆疊頂端的元素（不移除）"
+}

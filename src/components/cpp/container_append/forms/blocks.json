@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp_container_append",
+    "conceptId": "cpp:container_append",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_append",
+      "message0": "%{BKY_CPP_CONTAINER_PUSH_BACK_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_BACK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push_back(${VALUE});",
+      "imports": [],
+      "order": 0
+    },
+    "toolboxCategory": "arrays_lists",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

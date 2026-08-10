@@ -1,0 +1,4 @@
+{
+  "CPP_SET_INSERT_MSG0": "將 %2 加入集合 %1",
+  "CPP_SET_INSERT_TOOLTIP": "把元素加入集合（重複的會被忽略）"
+}

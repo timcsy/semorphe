@@ -1,0 +1,4 @@
+{
+  "CPP_VECTOR_POP_BACK_MSG0": "移除 %1 末端元素",
+  "CPP_VECTOR_POP_BACK_TOOLTIP": "移除列表最後一個元素"
+}

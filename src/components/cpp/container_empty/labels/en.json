@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_EMPTY_MSG0": "Is %1 empty",
+  "CPP_CONTAINER_EMPTY_TOOLTIP": "Check if container is empty (returns true/false)"
+}

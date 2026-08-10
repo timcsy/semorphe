@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cpp_container_empty",
+    "conceptId": "cpp:container_empty",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_empty",
+      "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.empty()",
+      "imports": [],
+      "order": 0
+    },
+    "toolboxCategory": [
+      "arrays_lists",
+      "stacks_queues"
+    ],
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  }
+]

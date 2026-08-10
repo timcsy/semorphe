@@ -1,0 +1,4 @@
+{
+  "CPP_VECTOR_SIZE_MSG0": "size of vector %1",
+  "CPP_VECTOR_SIZE_TOOLTIP": "Get the number of elements in the vector"
+}

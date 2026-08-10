@@ -1,0 +1,4 @@
+{
+  "CPP_STACK_TOP_MSG0": "Top of %1",
+  "CPP_STACK_TOP_TOOLTIP": "Get the top element of the stack without removing it"
+}

@@ -1,16 +1,1 @@
-[
-  {
-    "conceptId": "cpp:stack_peek",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "stk"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  }
-]
+[]

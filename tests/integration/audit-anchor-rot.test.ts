@@ -110,10 +110,23 @@ function 真實身分(): Set<string> {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
       if (e.isDirectory()) 走(p)
-      else if (e.name === 'concepts.json' || /universal-concepts\.json$/.test(e.name)) {
+      // ⚠️ **膠囊的宣告檔叫 `component.json`，不叫 `concepts.json`。**
+      //
+      // 這條護欄的入口條件錨在「載入幾顆真實身分」上，而 F（膠囊搬家）
+      // 會把身分從共用的 `concepts.json` 一顆一顆搬走。只認舊檔名的話，
+      // **這個數字隨 F 下降，而它是這條護欄自己的健康錨點**
+      // ——2026-08-11 它跌破 100 當場變紅。
+      //
+      // > **一條「錨點會爛」的護欄，自己的錨點爛了。**
+      // > 而它爛的方式正是它在講的那一種：錨在一個會隨進度改變的數字上。
+      else if (e.name === 'concepts.json' || e.name === 'component.json' || /universal-concepts\.json$/.test(e.name)) {
         try {
           const j = JSON.parse(fs.readFileSync(p, 'utf8')) as unknown
-          const arr = Array.isArray(j) ? j : ((j as { concepts?: unknown[] }).concepts ?? [])
+          const arr = Array.isArray(j)
+            ? j
+            : (j as { concepts?: unknown[]; conceptId?: string }).conceptId
+              ? [j]                                   // 膠囊的 component.json 是單一物件
+              : ((j as { concepts?: unknown[] }).concepts ?? [])
           for (const c of arr as { conceptId?: string }[]) if (c?.conceptId) ids.add(c.conceptId)
         } catch {
           /* 壞掉的 JSON 由別條護欄管 */

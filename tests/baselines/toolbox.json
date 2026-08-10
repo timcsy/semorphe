@@ -120,13 +120,13 @@
         "cpp_range_fill_sequence",
         "cpp_range_sum",
         "cpp_range_sum_partial",
-        "cpp_vector_declare",
-        "cpp_vector_size",
-        "cpp_vector_pop",
         "cpp_vector_back",
+        "cpp_vector_declare",
+        "cpp_vector_pop",
+        "cpp_vector_size",
         "cpp_container_append",
-        "cpp_container_empty",
-        "cpp_container_clear"
+        "cpp_container_clear",
+        "cpp_container_empty"
       ]
     },
     {
@@ -178,8 +178,8 @@
         "cpp_set_insert",
         "cpp_pair_declare",
         "cpp_pair_make",
-        "cpp_container_erase",
-        "cpp_container_count"
+        "cpp_container_count",
+        "cpp_container_erase"
       ]
     },
     {

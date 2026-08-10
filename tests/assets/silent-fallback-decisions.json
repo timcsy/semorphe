@@ -54,5 +54,12 @@
     "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { ty",
     "判定": "防禦性",
     "理由": "語義樹缺子節點時的退路；實測語料未觸發。"
+  },
+  {
+    "鍵": "src/components/cpp/container_count/execute.ts#pmgw8m",
+    "位置": "src/components/cpp/container_count/execute.ts:10",
+    "訊號": "keyNodes.length === 0 → if (keyNodes.length === 0) return { type",
+    "判定": "防禦性",
+    "理由": "語義樹缺 key 子節點時回 0——`count` 沒有鍵可查，0 是正確答案。"
   }
 ]

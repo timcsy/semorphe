@@ -334,20 +334,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:container_empty",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:container_push",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -376,68 +362,6 @@
     ],
     "children": {},
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp:container_clear",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:container_append",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:container_erase",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {
-      "key": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:container_count",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {
-      "key": "expression"
-    },
-    "role": "expression"
   },
   {
     "conceptId": "cpp:method_call",

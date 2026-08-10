@@ -1,0 +1,4 @@
+{
+  "CPP_QUEUE_FRONT_MSG0": "%1 的前端元素",
+  "CPP_QUEUE_FRONT_TOOLTIP": "取得佇列最前面的元素（不移除）"
+}
