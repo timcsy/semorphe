@@ -10,7 +10,9 @@
         "default": "str"
       }
     ],
-    "children": {},
+    "children": {
+      "initializer": "expression"
+    },
     "role": "statement",
     "declaresVariableType": "string"
   },
