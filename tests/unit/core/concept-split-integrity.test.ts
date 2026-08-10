@@ -17,14 +17,14 @@ describe('Concept/BlockDef split integrity', () => {
     // 「Layer 0: Universal — 所有語言共有」；註解通過，`//` 不通過（那是
     // Layer 1 的語言核心語法，已下沉到語言套件）。
     // 30 → 29：B 項把 `var_declare_expr` 併進 `var_declare`（積木保留，身分合一）
-    // 29 → 26（2026-08-11）：`cpp:break`／`cpp:continue`／`cpp:loop_while` 進膠囊。
+    // 29 → 26 → 25（2026-08-11）：break／continue／loop_while／array_declare 進膠囊。
     // ⚠️ 這個數字**隨 F 下降**——它量的是「還住在共用宣告檔的通用概念」，
     // 不是「有幾顆通用概念」。後者是 `allCppConcepts()`。
-    expect((universalConcepts).length).toBe(26)
+    expect((universalConcepts).length).toBe(25)
     // 26 → 27（100，E 項）：`cpp_input_expression` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
-    expect((universalBlocks).length).toBe(24)
+    expect((universalBlocks).length).toBe(23)
   })
 
   it('should have correct core concept and block counts', () => {

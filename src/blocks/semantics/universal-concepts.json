@@ -387,38 +387,6 @@
     }
   },
   {
-    "conceptId": "cpp:array_declare",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "double",
-          "char",
-          "long long"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "arr"
-      }
-    ],
-    "children": {
-      "size": "expression",
-      "values": "expressions"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:array_at",
     "layer": "universal",
     "abstractConcept": null,

@@ -9,6 +9,8 @@ import { conceptForContainerTemplate } from '../../../../core/component/containe
 import { componentConcepts } from '../../../../core/component/registry'
 import { plainTypeConcept } from '../../../../core/component/container-templates'
 import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
+// ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
+import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -100,15 +102,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   if (認領) return 認領
 
   // Array declarator: int arr[10]
-  if (decl.type === 'array_declarator') {
-    const name = decl.namedChildren[0]?.text ?? 'arr'
-    const sizeNode = decl.namedChildren[1]
-    // Lift size as a child expression node for proper rendering
-    const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
-    return createNode('cpp:array_declare', { type, name }, {
-      size: sizeChild ? [sizeChild] : [],
-    })
-  }
+  if (decl.type === 'array_declarator') return 建陣列宣告(type, decl, ctx)
 
   // Plain identifier: int x
   if (decl.type === 'identifier') {
@@ -122,13 +116,8 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
     const inner = decl.namedChildren.find(c => c.type === 'array_declarator')
     if (inner) {
-      const arrName = inner.namedChildren[0]?.text ?? 'arr'
-      const sizeNode = inner.namedChildren[1]
-      const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return createNode('cpp:array_declare', { type: `${type}*`, name: arrName }, {
-        size: sizeChild ? [sizeChild] : [],
-      })
+      return 建陣列宣告(`${type}*`, inner, ctx)
     }
     const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = ptrIdent?.text ?? 'ptr'
@@ -167,14 +156,8 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
     const inner = nameNode.namedChildren.find(c => c.type === 'array_declarator')
     if (inner) {
-      const arrName = inner.namedChildren[0]?.text ?? 'arr'
-      const sizeNode = inner.namedChildren[1]
-      const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      const arrNode = createNode('cpp:array_declare', { type: `${type}*`, name: arrName }, {
-        size: sizeChild ? [sizeChild] : [],
-      })
-      return attachInitializer(arrNode, decl.childForFieldName('value'), ctx)
+      return attachInitializer(建陣列宣告(`${type}*`, inner, ctx), decl.childForFieldName('value'), ctx)
     }
     const ptrIdent = nameNode.namedChildren.find(c => c.type === 'identifier')
     name = ptrIdent?.text ?? 'ptr'
@@ -190,13 +173,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // Array init_declarator: int arr[10] = {...}
   if (nameNode?.type === 'array_declarator') {
-    const arrName = nameNode.namedChildren[0]?.text ?? 'arr'
-    const sizeNode = nameNode.namedChildren[1]
-    const sizeChild = sizeNode ? ctx.lift(sizeNode) : null
-    const node = createNode('cpp:array_declare', { type, name: arrName }, {
-      size: sizeChild ? [sizeChild] : [],
-    })
-    return attachInitializer(node, decl.childForFieldName('value'), ctx)
+    return attachInitializer(建陣列宣告(type, nameNode, ctx), decl.childForFieldName('value'), ctx)
   }
 
   const valueNode = decl.childForFieldName('value')

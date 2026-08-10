@@ -1,0 +1,41 @@
+{
+  "conceptId": "cpp:array_declare",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "enum",
+      "values": [
+        "int",
+        "float",
+        "double",
+        "char",
+        "long long"
+      ],
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "arr"
+    }
+  ],
+  "children": {
+    "size": "expression",
+    "values": "expressions"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建陣列宣告`）而不是判別——共用檔有四個位置會造這顆元件（一般／指標陣列兩種寫法／帶初始值），節點形狀四處相同。**同一顆元件在同一個檔裡被建立四次，該收的不是分支，是建構子。**"
+  }
+}

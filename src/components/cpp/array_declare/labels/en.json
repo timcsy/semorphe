@@ -1,0 +1,9 @@
+{
+  "U_ARRAY_DECLARE_MSG0": "create %1 array %2 size %3",
+  "U_ARRAY_DECLARE_TOOLTIP": "Create a fixed-size array (a row of consecutive slots), indexed starting from 0",
+  "U_ARRAY_DECLARE_TYPE_INT": "int (integer)",
+  "U_ARRAY_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "U_ARRAY_DECLARE_TYPE_DOUBLE": "double (precise decimal)",
+  "U_ARRAY_DECLARE_TYPE_CHAR": "char (character)",
+  "U_ARRAY_DECLARE_TYPE_LONG_LONG": "long long (large integer)"
+}
