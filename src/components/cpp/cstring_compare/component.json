@@ -1,0 +1,21 @@
+{
+  "conceptId": "cpp:cstring_compare",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "s1": "expression",
+    "s2": "expression"
+  },
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<cstring>"
+  ]
+}

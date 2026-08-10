@@ -136,6 +136,15 @@ function 執行器檔(): string[] {
   }
   走(path.join(REPO_ROOT, 'src/languages'))
   走(path.join(REPO_ROOT, 'src/interpreter'))
+  // ⚠️ **膠囊也要掃。**
+  //
+  // 2026-08-11 發現：這條護欄只掃 `src/languages` 與 `src/interpreter`，
+  // 於是**一顆元件搬進 `src/components/` 之後，它的靜默回退就從視野裡消失**
+  // ——判定變成孤兒，而數字下降看起來像「修好了」。
+  //
+  // > **膠囊化會讓元件離開所有「按舊目錄結構」寫死的護欄。**
+  // > 每搬一批就要問一次：**哪條護欄的掃描範圍沒跟著走？**
+  走(path.join(REPO_ROOT, 'src/components'))
   return out
 }
 

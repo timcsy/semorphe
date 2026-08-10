@@ -1,0 +1,4 @@
+{
+  "C_STRCMP_MSG0": "Compare %1 and %2",
+  "C_STRCMP_TOOLTIP": "Compare two strings. Returns 0 if they are equal, other values if different"
+}

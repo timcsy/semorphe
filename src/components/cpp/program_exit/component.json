@@ -1,0 +1,20 @@
+{
+  "conceptId": "cpp:program_exit",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "code": "expression"
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<cstdlib>"
+  ]
+}

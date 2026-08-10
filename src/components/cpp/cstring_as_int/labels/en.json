@@ -1,0 +1,4 @@
+{
+  "CPP_ATOI_MSG0": "Convert text %1 to integer (atoi)",
+  "CPP_ATOI_TOOLTIP": "Convert a C-string to an integer"
+}

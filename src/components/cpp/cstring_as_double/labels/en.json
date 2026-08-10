@@ -1,0 +1,4 @@
+{
+  "CPP_ATOF_MSG0": "Convert text %1 to decimal (atof)",
+  "CPP_ATOF_TOOLTIP": "Convert a C-string to a double"
+}

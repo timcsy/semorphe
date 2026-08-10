@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp_cstring_size",
+    "conceptId": "cpp:cstring_size",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cstring_size",
+      "message0": "%{BKY_C_STRLEN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRLEN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "STR": "str"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "text"
+  }
+]

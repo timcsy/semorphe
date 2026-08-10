@@ -1,0 +1,4 @@
+{
+  "C_STRCPY_MSG0": "copy string %2 to %1",
+  "C_STRCPY_TOOLTIP": "Copy a string to another location"
+}

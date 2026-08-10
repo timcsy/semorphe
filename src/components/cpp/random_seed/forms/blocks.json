@@ -1,0 +1,33 @@
+[
+  {
+    "id": "cpp:random_seed",
+    "conceptId": "cpp:random_seed",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_random_seed",
+      "message0": "%{BKY_CPP_SRAND_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "SEED",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_SRAND_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "SEED": "seed"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "operators"
+  }
+]

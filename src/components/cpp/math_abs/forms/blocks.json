@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp:math_abs",
+    "conceptId": "cpp:math_abs",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_math_abs",
+      "message0": "%{BKY_CPP_ABS_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ABS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "operators"
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "CPP_ATOI_MSG0": "文字 %1 轉整數 (atoi)",
+  "CPP_ATOI_TOOLTIP": "將 C 字串轉換為整數"
+}

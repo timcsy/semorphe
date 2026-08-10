@@ -1,0 +1,33 @@
+[
+  {
+    "id": "cpp:program_exit",
+    "conceptId": "cpp:program_exit",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_program_exit",
+      "message0": "%{BKY_CPP_EXIT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CODE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_EXIT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "CODE": "code"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "control"
+  }
+]

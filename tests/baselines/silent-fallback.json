@@ -1,61 +1,48 @@
 {
   "_meta": {
-    "note": "靜默回退：執行器遇到處理不了的輸入時回傳一個與合法結果無法區分的預設值。\n⚠️ 它的危害不只是自己錯，是**讓別的缺陷看不見**——觸發本護欄的實例是\n`s.size()` 被辨識成 cpp:vector_size（身分錯），而 vector_size 對非陣列回 0，\n於是 `for (i=0; i<s.size(); i++)` 一次都不跑而沒有任何訊號。辨識的錯躲在執行的回退後面。\n⚠️ 棘輪盯的是**判為「靜默回退」的筆數**，不是命中總數——命中裡有合法的\n（strcmp 相等回 0 是語義）。只盯總數的話，把一筆改判成「合法」就能讓數字下降。\n⚠️ 判準刻意寬：寧可多報讓人判，也不要發明一個分得出合法與回退的規則——它們語法上相同。\n\n【2026-08-10 / specs/113】缺子節點 8 → 7：cctype 的 `if (!v) return 0` 隨 char_is_alpha 搬進膠囊，而新實作**丟錯不回 0**。\n⚠️ 這是第一次有回退因為「元件搬家」而消失——膠囊化順帶還了一筆靜默回退。",
+    "note": "靜默回退：執行器遇到處理不了的輸入時回傳一個與合法結果無法區分的預設值。\n⚠️ 它的危害不只是自己錯，是**讓別的缺陷看不見**——觸發本護欄的實例是\n`s.size()` 被辨識成 cpp:vector_size（身分錯），而 vector_size 對非陣列回 0，\n於是 `for (i=0; i<s.size(); i++)` 一次都不跑而沒有任何訊號。辨識的錯躲在執行的回退後面。\n⚠️ 棘輪盯的是**判為「靜默回退」的筆數**，不是命中總數——命中裡有合法的\n（strcmp 相等回 0 是語義）。只盯總數的話，把一筆改判成「合法」就能讓數字下降。\n⚠️ 判準刻意寬：寧可多報讓人判，也不要發明一個分得出合法與回退的規則——它們語法上相同。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "掃描": {
     "檔數": 15,
-    "return 總數": 44
+    "return 總數": 27
   },
   "型別不符": 0,
-  "缺子節點": 8,
+  "缺子節點": 5,
   "命中": {
-    "筆數": 8,
+    "筆數": 5,
     "明細": [
       {
+        "鍵": "src/languages/cpp/std/cctype/executors.ts#a4cbw",
         "位置": "src/languages/cpp/std/cctype/executors.ts:77",
         "條件": "!v",
         "回傳": "if (!v) return { type: 'int', value: 0 }",
         "形狀": "缺子節點"
       },
       {
+        "鍵": "src/languages/cpp/std/cctype/executors.ts#8ysipl",
         "位置": "src/languages/cpp/std/cctype/executors.ts:85",
         "條件": "!v",
         "回傳": "if (!v) return { type: 'char', value: '' }",
         "形狀": "缺子節點"
       },
       {
-        "位置": "src/languages/cpp/std/cstdlib/executors.ts:21",
-        "條件": "!v",
-        "回傳": "if (!v) return { type: 'int' as const, value: 0 }",
-        "形狀": "缺子節點"
-      },
-      {
-        "位置": "src/languages/cpp/std/cstdlib/executors.ts:30",
-        "條件": "!v",
-        "回傳": "if (!v) return { type: 'int' as const, value: 0 }",
-        "形狀": "缺子節點"
-      },
-      {
-        "位置": "src/languages/cpp/std/cstring/executors.ts:65",
-        "條件": "strNodes.length === 0",
-        "回傳": "if (strNodes.length === 0) return { type: 'int', value: 0 }",
-        "形狀": "缺子節點"
-      },
-      {
-        "位置": "src/languages/cpp/std/string/executors.ts:114",
+        "鍵": "src/languages/cpp/std/string/executors.ts#hc8ivd",
+        "位置": "src/languages/cpp/std/string/executors.ts:97",
         "條件": "valueNodes.length === 0",
         "回傳": "if (valueNodes.length === 0) return { type: 'string', value:",
         "形狀": "缺子節點"
       },
       {
-        "位置": "src/languages/cpp/std/string/executors.ts:121",
+        "鍵": "src/languages/cpp/std/string/executors.ts#a0uoa9",
+        "位置": "src/languages/cpp/std/string/executors.ts:104",
         "條件": "valueNodes.length === 0",
         "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
         "形狀": "缺子節點"
       },
       {
-        "位置": "src/languages/cpp/std/string/executors.ts:130",
+        "鍵": "src/languages/cpp/std/string/executors.ts#5q0349",
+        "位置": "src/languages/cpp/std/string/executors.ts:113",
         "條件": "valueNodes.length === 0",
         "回傳": "if (valueNodes.length === 0) return { type: 'double', value:",
         "形狀": "缺子節點"

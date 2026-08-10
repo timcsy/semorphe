@@ -46,8 +46,8 @@
         "cpp_math_pow",
         "cpp_math_unary",
         "cpp_math_abs",
-        "cpp_random_next",
-        "cpp_random_seed"
+        "cpp_random_seed",
+        "cpp_random_next"
       ]
     },
     {
@@ -132,10 +132,10 @@
     {
       "name": "文字",
       "blocks": [
-        "cpp_cstring_size",
+        "cpp_cstring_append",
         "cpp_cstring_compare",
         "cpp_cstring_copy",
-        "cpp_cstring_append",
+        "cpp_cstring_size",
         "cpp_cstring_copy_bounded",
         "cpp_cstring_compare_bounded",
         "cpp_cstring_find_char",
@@ -164,8 +164,8 @@
         "cpp_char_is_digit",
         "cpp_char_to_upper",
         "cpp_char_to_lower",
-        "cpp_cstring_as_int",
-        "cpp_cstring_as_double"
+        "cpp_cstring_as_double",
+        "cpp_cstring_as_int"
       ]
     },
     {

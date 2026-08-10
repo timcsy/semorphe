@@ -1,0 +1,4 @@
+{
+  "C_STRLEN_MSG0": "Length of %1",
+  "C_STRLEN_TOOLTIP": "Count the number of characters in a string (excluding the null terminator)"
+}

@@ -1,48 +1,5 @@
 [
   {
-    "conceptId": "cpp:cstring_size",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "str": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:cstring_compare",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "s1": "expression",
-      "s2": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:cstring_copy",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "dest": "expression",
-      "src": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:cstring_append",
-    "layer": "lang-library",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "dest": "expression",
-      "src": "expression"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:cstring_copy_bounded",
     "layer": "lang-library",
     "abstractConcept": null,

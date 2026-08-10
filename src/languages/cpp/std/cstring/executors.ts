@@ -20,7 +20,7 @@ import type { RuntimeValue } from '../../../../interpreter/types'
  * **解析不了時擲錯，不回傳「沒事」**——原本這五個都是空操作，於是
  * `strcpy(s, "hi"); cout << s;` 印出 `[array]`，而使用者不知道發生什麼事。
  */
-function writableArray(
+export function writableArray(
   ctx: { scope: { get(n: string): { type: string; value: unknown } | undefined } },
   node: SemanticNode | undefined,
   what: string,
@@ -35,7 +35,7 @@ function writableArray(
 }
 
 /** 把 RuntimeValue 讀成字串（字元陣列 → 到第一個 \0 為止） */
-function readCString(v: RuntimeValue): string {
+export function readCString(v: RuntimeValue): string {
   if (typeof v.value === 'string') return v.value
   if (Array.isArray(v.value)) {
     const out: string[] = []
@@ -50,7 +50,7 @@ function readCString(v: RuntimeValue): string {
 }
 
 /** 把字串寫進字元陣列，補上結尾的 \0 */
-function writeCString(arr: RuntimeValue[], s: string, from = 0): void {
+export function writeCString(arr: RuntimeValue[], s: string, from = 0): void {
   for (let i = 0; i < s.length && from + i < arr.length; i++) {
     arr[from + i] = { type: 'char', value: s[i] }
   }
@@ -60,33 +60,13 @@ function writeCString(arr: RuntimeValue[], s: string, from = 0): void {
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:cstring_size', async (node, ctx) => {
-    const strNodes = node.children.str ?? []
-    if (strNodes.length === 0) return { type: 'int', value: 0 }
-    const val = await ctx.evaluate(strNodes[0])
-    return { type: 'int', value: String(val.value).length }
-  })
 
-  register('cpp:cstring_compare', async (node, ctx) => {
-    const s1Nodes = node.children.s1 ?? []
-    const s2Nodes = node.children.s2 ?? []
-    const s1 = s1Nodes.length > 0 ? String((await ctx.evaluate(s1Nodes[0])).value) : ''
-    const s2 = s2Nodes.length > 0 ? String((await ctx.evaluate(s2Nodes[0])).value) : ''
-    if (s1 < s2) return { type: 'int', value: -1 }
-    if (s1 > s2) return { type: 'int', value: 1 }
-    return { type: 'int', value: 0 }
-  })
 
-  register('cpp:cstring_copy', async (node, ctx) => {
-    const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcpy 的目標')
-    writeCString(dest, readCString(await ctx.evaluate((node.children.src ?? [])[0])))
-  })
 
-  register('cpp:cstring_append', async (node, ctx) => {
-    const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcat 的目標')
-    const cur = readCString({ type: 'array', value: dest } as RuntimeValue)
-    writeCString(dest, cur + readCString(await ctx.evaluate((node.children.src ?? [])[0])))
-  })
+
+
+
+
 
   register('cpp:cstring_copy_bounded', async (node, ctx) => {
     const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')

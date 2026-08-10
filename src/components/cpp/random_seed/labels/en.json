@@ -1,0 +1,4 @@
+{
+  "CPP_SRAND_MSG0": "Set random seed %1",
+  "CPP_SRAND_TOOLTIP": "Seed the random number generator"
+}

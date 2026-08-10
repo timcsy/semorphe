@@ -334,26 +334,6 @@ export function registerIOLifters(lifter: Lifter): void {
     if (funcName === 'rand') {
       return createNode('cpp:random_next', {})
     }
-    if (funcName === 'srand') {
-      const seed = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:random_seed', {}, { seed: seed ? [seed] : [] })
-    }
-    if (funcName === 'abs') {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:math_abs', {}, { value: value ? [value] : [] })
-    }
-    if (funcName === 'exit') {
-      const code = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:program_exit', {}, { code: code ? [code] : [] })
-    }
-    if (funcName === 'atoi') {
-      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:cstring_as_int', {}, { str: str ? [str] : [] })
-    }
-    if (funcName === 'atof') {
-      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:cstring_as_double', {}, { str: str ? [str] : [] })
-    }
 
     // 單引數函式的**過渡表**——膠囊登錄的那些在上面就被接走了（`callConceptFor`）。
     //
@@ -484,25 +464,6 @@ export function registerIOLifters(lifter: Lifter): void {
     }
 
     // cstring functions
-    if (funcName === 'strlen') {
-      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:cstring_size', {}, { str: str ? [str] : [] })
-    }
-    if (funcName === 'strcmp') {
-      const s1 = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const s2 = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:cstring_compare', {}, { s1: s1 ? [s1] : [], s2: s2 ? [s2] : [] })
-    }
-    if (funcName === 'strcpy') {
-      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:cstring_copy', {}, { dest: dest ? [dest] : [], src: src ? [src] : [] })
-    }
-    if (funcName === 'strcat') {
-      const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const src = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:cstring_append', {}, { dest: dest ? [dest] : [], src: src ? [src] : [] })
-    }
     if (funcName === 'strncpy' && argChildren.length === 3) {
       const dest = argChildren[0] ? ctx.lift(argChildren[0]) : null
       const src = argChildren[1] ? ctx.lift(argChildren[1]) : null

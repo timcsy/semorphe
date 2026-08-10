@@ -1,0 +1,21 @@
+{
+  "conceptId": "cpp:cstring_append",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "dest": "expression",
+    "src": "expression"
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<cstring>"
+  ]
+}

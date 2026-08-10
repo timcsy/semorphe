@@ -3,7 +3,7 @@
     "guard": "locality",
     "measuredAt": "2026-08-10",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）\n\n【2026-08-10 / specs/114】literal_char 的擴散下降——五路從五個共用檔剪進自己的資料夾。 ｜ 2026-08-11：cpp:string_find_first_not_of／find_last_not_of 由 1 檔上調為 3 檔（同一個膠囊目錄內）。⚠️ **上調不是變散了，是終於看得見**——這兩顆的身分原本在 lifters/io.ts 由樣板字串組出來（createNode(`cpp:string_${method}`)），而掃描器只匹配字面字串，所以那一檔一直沒被算進去。搬進膠囊時身分改成字面，掃描器看到 lift.ts／generate.ts／execute.ts 三檔，全部在 1 個目錄裡。目錄數仍是 1——就近性沒有惡化。 ｜ 2026-08-11：cpp:delete／loop_do_while／throw 上調為 3 檔（同一個膠囊目錄內，目錄仍是 1）。**上調不是變散了，是搬進膠囊之後三路各自成檔**——lift-pattern.json／generate.ts／execute.ts。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
   "limits": {
     "cpp:address_of": {
@@ -148,19 +148,19 @@
     },
     "cpp:cstring_append": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_as_double": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_as_int": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_compare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_compare_bounded": {
       "files": 3,
@@ -168,7 +168,7 @@
     },
     "cpp:cstring_copy": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_copy_bounded": {
       "files": 3,
@@ -184,7 +184,7 @@
     },
     "cpp:cstring_size": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:default": {
       "files": 3,
@@ -340,7 +340,7 @@
     },
     "cpp:math_abs": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_binary": {
       "files": 3,
@@ -460,7 +460,7 @@
     },
     "cpp:program_exit": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:queue_back": {
       "files": 2,
@@ -480,7 +480,7 @@
     },
     "cpp:random_seed": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_fill": {
       "files": 3,

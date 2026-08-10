@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp:cstring_as_int",
+    "conceptId": "cpp:cstring_as_int",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cstring_as_int",
+      "message0": "%{BKY_CPP_ATOI_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_ATOI_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "STR": "str"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "text"
+  }
+]

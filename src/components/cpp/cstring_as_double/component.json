@@ -1,0 +1,20 @@
+{
+  "conceptId": "cpp:cstring_as_double",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "str": "expression"
+  },
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<cstdlib>"
+  ]
+}

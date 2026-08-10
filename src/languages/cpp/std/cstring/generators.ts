@@ -3,28 +3,13 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  g.set('cpp:cstring_size', (node, ctx) => {
-    const str = generateExpression((node.children.str ?? [])[0], ctx)
-    return `strlen(${str})`
-  })
 
-  g.set('cpp:cstring_compare', (node, ctx) => {
-    const s1 = generateExpression((node.children.s1 ?? [])[0], ctx)
-    const s2 = generateExpression((node.children.s2 ?? [])[0], ctx)
-    return `strcmp(${s1}, ${s2})`
-  })
 
-  g.set('cpp:cstring_copy', (node, ctx) => {
-    const dest = generateExpression((node.children.dest ?? [])[0], ctx)
-    const src = generateExpression((node.children.src ?? [])[0], ctx)
-    return `${indent(ctx)}strcpy(${dest}, ${src});\n`
-  })
 
-  g.set('cpp:cstring_append', (node, ctx) => {
-    const dest = generateExpression((node.children.dest ?? [])[0], ctx)
-    const src = generateExpression((node.children.src ?? [])[0], ctx)
-    return `${indent(ctx)}strcat(${dest}, ${src});\n`
-  })
+
+
+
+
 
   g.set('cpp:cstring_copy_bounded', (node, ctx) => {
     const dest = generateExpression((node.children.dest ?? [])[0], ctx)

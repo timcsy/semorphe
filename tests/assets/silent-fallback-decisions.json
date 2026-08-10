@@ -14,27 +14,6 @@
     "理由": "取不到引數的執行期值時回預設值，而合法結果也可能是那個值——兩者無法區分。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
   },
   {
-    "鍵": "src/languages/cpp/std/cstdlib/executors.ts#1r70e0t",
-    "位置": "src/languages/cpp/std/cstdlib/executors.ts:21",
-    "訊號": "if (!v) → if (!v) return { type: 'int' as const, v",
-    "判定": "防禦性",
-    "理由": "取不到引數時回 0，而 abs(0)／atoi(\"0\") 的合法結果也是 0。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
-  },
-  {
-    "鍵": "src/languages/cpp/std/cstdlib/executors.ts#1r70e0t",
-    "位置": "src/languages/cpp/std/cstdlib/executors.ts:30",
-    "訊號": "if (!v) → if (!v) return { type: 'int' as const, v",
-    "判定": "防禦性",
-    "理由": "取不到引數時回 0，而 abs(0)／atoi(\"0\") 的合法結果也是 0。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
-  },
-  {
-    "鍵": "src/languages/cpp/std/cstring/executors.ts#w5tnl8",
-    "位置": "src/languages/cpp/std/cstring/executors.ts:65",
-    "訊號": "if (strNodes.length === 0) → if (strNodes.length === 0) return { type",
-    "判定": "防禦性",
-    "理由": "語義樹缺子節點時回 0，而 strlen(\"\") 的合法結果也是 0。⚠️ 而它**實測不會發生**（specs/111，415 段語料 0 次觸發）——缺子節點只在語義樹本身壞掉時才成立，是防禦性分支：**不會發生 ≠ 不該存在**。"
-  },
-  {
     "鍵": "src/languages/cpp/std/string/executors.ts#hc8ivd",
     "位置": "src/languages/cpp/std/string/executors.ts:114",
     "訊號": "if (valueNodes.length === 0) → if (valueNodes.length === 0) return { ty",

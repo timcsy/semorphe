@@ -1,0 +1,4 @@
+{
+  "C_STRCAT_MSG0": "append string %2 to %1",
+  "C_STRCAT_TOOLTIP": "Concatenate (append) source string to the end of destination string"
+}
