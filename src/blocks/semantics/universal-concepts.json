@@ -414,7 +414,9 @@
         "kind": "literal"
       }
     ],
-    "children": {},
+    "children": {
+      "values": "expressions"
+    },
     "role": "statement",
     "annotations": {
       "debug_step": true
