@@ -26,13 +26,11 @@
       {
         "name": "format",
         "kind": "literal"
-      },
-      {
-        "name": "args",
-        "kind": "literal"
       }
     ],
-    "children": {},
+    "children": {
+      "args": "expressions"
+    },
     "role": "statement",
     "annotations": {
       "debug_step": true
