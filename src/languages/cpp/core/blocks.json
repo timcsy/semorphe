@@ -1960,7 +1960,7 @@
       ],
       "fieldMappings": [
         {
-          "semantic": "ptr",
+          "semantic": "obj",
           "ast": "argument",
           "extract": "text"
         },

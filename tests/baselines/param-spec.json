@@ -14,18 +14,6 @@
       "where": "src/languages/cpp/core/executors/structs.ts:192"
     },
     {
-      "componentId": "cpp:class_def",
-      "param": "base_access",
-      "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:472"
-    },
-    {
-      "componentId": "cpp:class_def",
-      "param": "base_class",
-      "方向": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:471"
-    },
-    {
       "componentId": "cpp:increment",
       "param": "NAME",
       "方向": "讀了沒宣告",
@@ -71,7 +59,7 @@
       "componentId": "cpp:var_assign",
       "param": "member",
       "方向": "讀了沒宣告",
-      "where": "src/interpreter/executors/variables.ts:110"
+      "where": "src/interpreter/executors/variables.ts:129"
     }
   ],
   "退路自相矛盾": [
@@ -93,5 +81,8 @@
       "方向": "退路自相矛盾",
       "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:268→\"MACRO\""
     }
-  ]
+  ],
+  "_meta": {
+    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 concepts.json 的 properties。系統一行行為都沒變。"
+  }
 }

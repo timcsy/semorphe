@@ -375,6 +375,21 @@
         "name": "name",
         "kind": "literal",
         "default": "MyClass"
+      },
+      {
+        "name": "base_class",
+        "kind": "literal",
+        "default": ""
+      },
+      {
+        "name": "base_access",
+        "kind": "enum",
+        "values": [
+          "public",
+          "protected",
+          "private"
+        ],
+        "default": "public"
       }
     ],
     "children": {
@@ -683,6 +698,11 @@
           "cfloat"
         ],
         "default": "iostream"
+      },
+      {
+        "name": "local",
+        "kind": "literal",
+        "default": "false"
       }
     ],
     "children": {},

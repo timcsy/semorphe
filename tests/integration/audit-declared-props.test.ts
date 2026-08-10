@@ -186,11 +186,22 @@ describe('第三十四條護欄：屬性方向的宣告完整性', () => {
 
   // ── 注入：量測本身 ────────────────────────────────────────────
   it('★ 注入③：產出了宣告裡沒有的屬性必須被報出', () => {
-    // `#include <string>` 的 lift 會產生 local 屬性，而 cpp:include 沒宣告它。
-    const r = 量(['#include <string>\nint main(){ return 0; }'])
-    expect(r.命中.map((h) => h.鍵), '已知會產生未宣告屬性的輸入沒被報 → 這條護欄抓不到東西').toContain(
-      'cpp:include.local',
-    )
+    // ⚠️ **第一版錨在 `cpp:include.local` 這個真實缺陷上**，而同一輪就把它補了宣告
+    // ——注入當場爛掉。那是 `build-guardrail` 第 2 步記了七次的形狀，這是第八次：
+    // **錨在「缺陷還在不在」上，必然會在成功的那天失效。**
+    //
+    // 改成錨在**合成輸入**上：直接餵一顆宣告表裡查得到、而屬性名一定不在宣告裡的節點。
+    // 合成規則不隨真實世界的修復而失效。
+    const 假節點 = {
+      conceptId: 'cpp:include',
+      properties: { header: 'string', 這個屬性一定不在宣告裡: 'x' },
+      children: {},
+    } as unknown as SemanticNode
+    const 宣告 = 宣告表()
+    expect(宣告.has('cpp:include'), '宣告表沒載入 → 這支測試什麼都沒測到').toBe(true)
+    const 未宣告 = Object.keys(假節點.properties).filter((k) => !宣告.get('cpp:include')!.has(k))
+    expect(未宣告, '合成的未宣告屬性沒被認出來 → 判定邏輯壞了').toEqual(['這個屬性一定不在宣告裡'])
+    expect(分類屬性('cpp:include', '這個屬性一定不在宣告裡')).toBe('漏宣告')
   })
 
   it('★ 注入④：宣告齊全的輸入不得被誤報', () => {

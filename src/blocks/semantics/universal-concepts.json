@@ -519,6 +519,11 @@
         "name": "brief",
         "kind": "literal",
         "default": ""
+      },
+      {
+        "name": "return_desc",
+        "kind": "literal",
+        "default": ""
       }
     ],
     "children": {},
