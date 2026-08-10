@@ -1,0 +1,4 @@
+{
+  "C_MATH_POW_MSG0": "%1 的 %2 次方",
+  "C_MATH_POW_TOOLTIP": "計算 base 的 exponent 次方（回傳 double）"
+}

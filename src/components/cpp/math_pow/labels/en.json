@@ -1,0 +1,4 @@
+{
+  "C_MATH_POW_MSG0": "%1 to the power of %2",
+  "C_MATH_POW_TOOLTIP": "Calculate base raised to the power of exponent (returns double)"
+}

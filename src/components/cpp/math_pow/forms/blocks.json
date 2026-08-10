@@ -1,0 +1,65 @@
+[
+  {
+    "id": "c_math_pow",
+    "conceptId": "cpp:math_pow",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_math_pow",
+      "message0": "%{BKY_C_MATH_POW_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BASE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "EXPONENT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_C_MATH_POW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "pow(${BASE}, ${EXPONENT})",
+      "imports": [
+        "cmath"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "text": "pow"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "base",
+          "ast": "arguments[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "exponent",
+          "ast": "arguments[1]",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "BASE": "base",
+        "EXPONENT": "exponent"
+      },
+      "statementInputs": {}
+    }
+  }
+]

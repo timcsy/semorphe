@@ -1,0 +1,34 @@
+{
+  "conceptId": "cpp:math_binary",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "func",
+      "kind": "enum",
+      "values": [
+        "fmod",
+        "hypot",
+        "atan2",
+        "fmin",
+        "fmax"
+      ],
+      "default": "fmod"
+    }
+  ],
+  "children": {
+    "arg1": "expression",
+    "arg2": "expression"
+  },
+  "role": "expression",
+  "requires": [
+    "<cmath>"
+  ],
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}

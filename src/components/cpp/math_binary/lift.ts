@@ -1,0 +1,21 @@
+/**
+ * `cpp:math_binary` 的 **lift** 路——**一顆身分涵蓋 5 個函式名**
+ *
+ * 與 `cpp:math_unary` 同一個處置，差在兩個引數槽。
+ * 形狀的來歷見 `../math_pow/lift.ts`。
+ *
+ * ⚠️ **`max` / `min` 不在這張表裡**——它們是 `<algorithm>` 的，
+ * 而執行器的 switch 仍認得（見 `execute.ts`）。
+ */
+import { registerCallConcept } from '../../../core/component/call-concepts'
+
+const 二元函式 = ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']
+
+export function registerLift(): void {
+  registerCallConcept(二元函式, {
+    conceptId: 'cpp:math_binary',
+    argSlots: ['arg1', 'arg2'],
+    funcProp: 'func',
+    來源: 'cpp/math_binary',
+  })
+}

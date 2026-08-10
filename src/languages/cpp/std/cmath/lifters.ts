@@ -1,66 +1,22 @@
-import type { Lifter } from '../../../../core/lift/lifter'
-import type { AstNode, LiftContext } from '../../../../core/lift/types'
-import type { SemanticNode } from '../../../../core/types'
-import { createNode } from '../../../../core/semantic-tree'
-
-const UNARY_FUNCS = new Set([
-  'fabs', 'sqrt', 'cbrt',
-  'ceil', 'floor', 'round', 'trunc',
-  'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
-  'exp', 'log', 'log2', 'log10',
-])
-
-const BINARY_FUNCS = new Set([
-  'fmod', 'hypot', 'atan2', 'fmin', 'fmax',
-])
-
 /**
- * Try to lift a call_expression as a cmath function.
- * Returns a SemanticNode if the function name matches, null otherwise.
- * Called from the central call_expression dispatcher (lifters/io.ts).
+ * `<cmath>` 的辨識路——**空的，而且是顯式的空**（理由見 `generators.ts`）。
+ *
+ * ## 這裡原本有一個 40 行的 `tryCmathLift()`
+ *
+ * 它有三個分支、自己組 `createNode`，看起來完全像實作。而拆開之後只剩三列：
+ *
+ * ```
+ * pow      → cpp:math_pow    引數槽 base, exponent
+ * 18 個名字 → cpp:math_unary  引數槽 value      ＋ func 屬性
+ *  5 個名字 → cpp:math_binary 引數槽 arg1, arg2 ＋ func 屬性
+ * ```
+ *
+ * > **一個函式長得像實作，不代表它是實作。**
+ * > 判準：把它的分支排成表，每一列還剩下什麼？只剩資料 → 它是分派表。
+ *
+ * 三列現在登錄在各自的膠囊裡（`core/component/call-concepts.ts`），
+ * 判別邏輯（找 `call_expression`、依序取引數）留在 `lifters/io.ts`。
  */
-export function tryCmathLift(
-  funcName: string,
-  argsNode: AstNode | null,
-  ctx: LiftContext,
-): SemanticNode | null {
-  const liftArgs = () =>
-    argsNode
-      ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is SemanticNode => n !== null)
-      : []
+import type { Lifter } from '../../../../core/lift/lifter'
 
-  // pow — dedicated concept (also handled by astPattern, but this is the hand-written path)
-  if (funcName === 'pow') {
-    const args = liftArgs()
-    return createNode('cpp:math_pow', {}, {
-      base: args[0] ? [args[0]] : [],
-      exponent: args[1] ? [args[1]] : [],
-    })
-  }
-
-  // Unary math functions
-  if (UNARY_FUNCS.has(funcName)) {
-    const args = liftArgs()
-    return createNode('cpp:math_unary', { func: funcName }, {
-      value: args[0] ? [args[0]] : [],
-    })
-  }
-
-  // Binary math functions
-  if (BINARY_FUNCS.has(funcName)) {
-    const args = liftArgs()
-    return createNode('cpp:math_binary', { func: funcName }, {
-      arg1: args[0] ? [args[0]] : [],
-      arg2: args[1] ? [args[1]] : [],
-    })
-  }
-
-  return null
-}
-
-export function registerLifters(_lifter: Lifter): void {
-  // cmath lifting is handled by tryCmathLift(), called from the
-  // central call_expression dispatcher in lifters/io.ts.
-  // We don't register a separate call_expression lifter here to avoid
-  // overwriting the existing dispatcher.
-}
+export function registerLifters(_lifter: Lifter): void {}

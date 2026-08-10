@@ -1,0 +1,65 @@
+[
+  {
+    "id": "c_math_binary",
+    "conceptId": "cpp:math_binary",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "c_math_binary",
+      "message0": "%{BKY_C_MATH_BINARY_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "FUNC",
+          "options": [
+            [
+              "%{BKY_C_MATH_BINARY_FUNC_FMOD}",
+              "fmod"
+            ],
+            [
+              "%{BKY_C_MATH_BINARY_FUNC_HYPOT}",
+              "hypot"
+            ],
+            [
+              "%{BKY_C_MATH_BINARY_FUNC_ATAN2}",
+              "atan2"
+            ],
+            [
+              "%{BKY_C_MATH_BINARY_FUNC_FMIN}",
+              "fmin"
+            ],
+            [
+              "%{BKY_C_MATH_BINARY_FUNC_FMAX}",
+              "fmax"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "ARG1",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG2",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_C_MATH_BINARY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "FUNC": "func"
+      },
+      "inputs": {
+        "ARG1": "arg1",
+        "ARG2": "arg2"
+      },
+      "statementInputs": {}
+    }
+  }
+]

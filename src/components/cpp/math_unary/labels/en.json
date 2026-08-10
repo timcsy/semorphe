@@ -1,0 +1,21 @@
+{
+  "C_MATH_UNARY_MSG0": "%1 ( %2 )",
+  "C_MATH_UNARY_TOOLTIP": "Single-argument math function (requires #include <cmath>). Trig functions use radians.",
+  "C_MATH_UNARY_FUNC_ABS": "abs (absolute value)",
+  "C_MATH_UNARY_FUNC_SQRT": "sqrt (square root)",
+  "C_MATH_UNARY_FUNC_CEIL": "ceil (round up)",
+  "C_MATH_UNARY_FUNC_FLOOR": "floor (round down)",
+  "C_MATH_UNARY_FUNC_ROUND": "round (nearest integer)",
+  "C_MATH_UNARY_FUNC_SIN": "sin (sine)",
+  "C_MATH_UNARY_FUNC_COS": "cos (cosine)",
+  "C_MATH_UNARY_FUNC_TAN": "tan (tangent)",
+  "C_MATH_UNARY_FUNC_ASIN": "asin (arc sine)",
+  "C_MATH_UNARY_FUNC_ACOS": "acos (arc cosine)",
+  "C_MATH_UNARY_FUNC_ATAN": "atan (arc tangent)",
+  "C_MATH_UNARY_FUNC_EXP": "exp (natural exponent)",
+  "C_MATH_UNARY_FUNC_LOG": "log (natural logarithm)",
+  "C_MATH_UNARY_FUNC_LOG2": "log₂ (base-2 log)",
+  "C_MATH_UNARY_FUNC_LOG10": "log₁₀ (base-10 log)",
+  "C_MATH_UNARY_FUNC_TRUNC": "trunc (truncate decimal)",
+  "C_MATH_UNARY_FUNC_CBRT": "cbrt (cube root)"
+}

@@ -1,9 +1,9 @@
 import type { Lifter } from '../../../core/lift/lifter'
 import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
+import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
-import { tryCmathLift } from '../std/cmath/lifters'
-import { conceptForSingleArgFunction } from '../../../core/component/single-arg-functions'
+import { callConceptFor } from '../../../core/component/call-concepts'
 import { conceptForMethod } from '../../../core/component/method-concepts'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
@@ -271,9 +271,25 @@ export function registerIOLifters(lifter: Lifter): void {
       return extractScanf(argsNode, ctx)
     }
 
-    // cmath functions (pow, sqrt, sin, cos, etc.)
-    const cmathResult = tryCmathLift(funcName, argsNode, ctx)
-    if (cmathResult) return cmathResult
+    // **自由函式呼叫 → 身分**由膠囊登錄（`core/component/call-concepts.ts`）。
+    //
+    // ⚠️ 這一段取代了原本的 `tryCmathLift`——那個函式看起來像實作，
+    // 拆開看只是三筆「名字 → 身分 ＋ 引數槽名」的資料配上共用判別。
+    // 資料回膠囊，判別留這裡。
+    {
+      const 形狀 = callConceptFor(funcName)
+      if (形狀 && 形狀.argSlots.length > 0) {
+        const args = argsNode
+          ? argsNode.namedChildren.map((a) => ctx.lift(a)).filter((n): n is SemanticNode => n !== null)
+          : []
+        const children: Record<string, SemanticNode[]> = {}
+        形狀.argSlots.forEach((slot, i) => {
+          children[slot] = args[i] ? [args[i]] : []
+        })
+        const props = 形狀.funcProp ? { [形狀.funcProp]: funcName } : {}
+        return createNode(形狀.conceptId, props, children)
+      }
+    }
 
     // C++ named casts: static_cast<T>(expr), dynamic_cast<T>(expr), etc.
     if (funcNode?.type === 'template_function') {
@@ -339,16 +355,15 @@ export function registerIOLifters(lifter: Lifter): void {
       return createNode('cpp:cstring_as_double', {}, { str: str ? [str] : [] })
     }
 
-    // 單引數函式：**先查登錄表**（膠囊登錄的），再退回過渡表。
+    // 單引數函式的**過渡表**——膠囊登錄的那些在上面就被接走了（`callConceptFor`）。
     //
-    // ⚠️ 過渡表裡剩下的那幾筆是**還沒膠囊化**的，不是設計。
+    // ⚠️ 這裡剩下的那幾筆是**還沒膠囊化**的，不是設計。
     // 它應該只減不增——每搬走一顆就少一列，搬完就整個消失。
-    const 登錄的 = conceptForSingleArgFunction(funcName)
     const cctypeFuncs: Record<string, string> = {
       'isdigit': 'cpp:char_is_digit',
       'toupper': 'cpp:char_to_upper', 'tolower': 'cpp:char_to_lower',
     }
-    const 單引數概念 = 登錄的 ?? cctypeFuncs[funcName]
+    const 單引數概念 = cctypeFuncs[funcName]
     if (單引數概念) {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode(單引數概念, {}, { value: value ? [value] : [] })

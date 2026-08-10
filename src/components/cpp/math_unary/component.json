@@ -1,0 +1,45 @@
+{
+  "conceptId": "cpp:math_unary",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "func",
+      "kind": "enum",
+      "values": [
+        "abs",
+        "sqrt",
+        "ceil",
+        "floor",
+        "round",
+        "sin",
+        "cos",
+        "tan",
+        "asin",
+        "acos",
+        "atan",
+        "exp",
+        "log",
+        "log2",
+        "log10",
+        "trunc",
+        "cbrt"
+      ],
+      "default": "abs"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "requires": [
+    "<cmath>"
+  ],
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}

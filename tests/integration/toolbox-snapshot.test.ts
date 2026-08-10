@@ -40,7 +40,14 @@ const GENERATE = process.env.GENERATE_BASELINE === '1'
 function baseline<T>(name: string, current: T): T {
   const file = path.join(BASELINE_DIR, `${name}.json`)
   if (GENERATE) {
-    fs.writeFileSync(file, JSON.stringify(current, null, 2) + '\n', 'utf8')
+    // ⚠️ **重產不得吃掉 `_meta`。** 基準檔的 `note` 是「下一個看到這個數字的人
+    // 一定會打開」的地方（build-guardrail 第 7 步），而一個會靜默清掉它的寫入器
+    // 等於把那個約定變成謊話——寫的人以為留下了理由，下一次重產就沒了。
+    const 舊 = fs.existsSync(file)
+      ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: unknown })
+      : {}
+    const 帶著 = 舊._meta ? { ...(current as object), _meta: 舊._meta } : current
+    fs.writeFileSync(file, JSON.stringify(帶著, null, 2) + '\n', 'utf8')
     return current
   }
   if (!fs.existsSync(file)) {

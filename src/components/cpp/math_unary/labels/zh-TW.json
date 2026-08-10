@@ -1,0 +1,21 @@
+{
+  "C_MATH_UNARY_MSG0": "%1 （ %2 ）",
+  "C_MATH_UNARY_TOOLTIP": "單參數數學函式（需 #include <cmath>）。三角函式使用弧度。",
+  "C_MATH_UNARY_FUNC_ABS": "abs（絕對值）",
+  "C_MATH_UNARY_FUNC_SQRT": "sqrt（平方根）",
+  "C_MATH_UNARY_FUNC_CEIL": "ceil（無條件進位）",
+  "C_MATH_UNARY_FUNC_FLOOR": "floor（無條件捨去）",
+  "C_MATH_UNARY_FUNC_ROUND": "round（四捨五入）",
+  "C_MATH_UNARY_FUNC_SIN": "sin（正弦）",
+  "C_MATH_UNARY_FUNC_COS": "cos（餘弦）",
+  "C_MATH_UNARY_FUNC_TAN": "tan（正切）",
+  "C_MATH_UNARY_FUNC_ASIN": "asin（反正弦）",
+  "C_MATH_UNARY_FUNC_ACOS": "acos（反餘弦）",
+  "C_MATH_UNARY_FUNC_ATAN": "atan（反正切）",
+  "C_MATH_UNARY_FUNC_EXP": "exp（自然指數）",
+  "C_MATH_UNARY_FUNC_LOG": "log（自然對數）",
+  "C_MATH_UNARY_FUNC_LOG2": "log₂（以 2 為底）",
+  "C_MATH_UNARY_FUNC_LOG10": "log₁₀（以 10 為底）",
+  "C_MATH_UNARY_FUNC_TRUNC": "trunc（截斷小數）",
+  "C_MATH_UNARY_FUNC_CBRT": "cbrt（立方根）"
+}

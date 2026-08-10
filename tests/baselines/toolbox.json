@@ -42,9 +42,9 @@
         "c_dynamic_cast",
         "c_reinterpret_cast",
         "c_const_cast",
+        "c_math_binary",
         "c_math_pow",
         "c_math_unary",
-        "c_math_binary",
         "cpp_abs",
         "cpp_rand",
         "cpp_srand"
@@ -250,6 +250,6 @@
     }
   ],
   "_meta": {
-    "note": "｜ 2026-08-11：文字分類新增三顆膠囊積木（cpp_string_empty／find_first_not_of／find_last_not_of），位置在模組自有積木**之前**、身分字母序——與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處**；三顆都不是「該第一眼看到」的那一顆，所以不為它們設計順序機制。"
+    "note": "2026-08-11：三顆 `<string>` 膠囊（string_empty／find_first_not_of／find_last_not_of）與三顆 `<cmath>` 膠囊（math_pow／math_unary／math_binary）改變了所屬分類裡的**位置**——膠囊積木排在模組自有積木**之前**、身分字母序，與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處。**\n⚠️ `<cmath>` 這個模組現在自有積木為零，數學分類整段都由膠囊供給——這是第一個被完全清空的模組。\n六顆都不是「該第一眼看到」的那一顆（已知清單只有 vector_declare 排在「陣列與列表」第一），所以不為它們設計順序機制。"
   }
 }

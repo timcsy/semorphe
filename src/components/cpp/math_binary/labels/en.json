@@ -1,0 +1,9 @@
+{
+  "C_MATH_BINARY_MSG0": "%1 ( %2 , %3 )",
+  "C_MATH_BINARY_TOOLTIP": "Two-argument math function (requires #include <cmath>). Note: atan2 takes (y, x).",
+  "C_MATH_BINARY_FUNC_FMOD": "fmod (float remainder)",
+  "C_MATH_BINARY_FUNC_HYPOT": "hypot (hypotenuse)",
+  "C_MATH_BINARY_FUNC_ATAN2": "atan2 (angle of vector)",
+  "C_MATH_BINARY_FUNC_FMIN": "fmin (float minimum)",
+  "C_MATH_BINARY_FUNC_FMAX": "fmax (float maximum)"
+}

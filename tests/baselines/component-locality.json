@@ -3,7 +3,7 @@
     "guard": "component-locality",
     "measuredAt": "2026-08-11",
     "rule": "一顆元件的宣告／實作／標籤都住在 src/components/<scope>/<name>/ 裡。⚠️ **維度與現行就近性護欄不同**：這條算宣告＋實作＋標籤，現行那條只算「實作」類（audit-locality.test.ts:56）。**兩個數字不得互相比較**——3.46 與這裡的數字量的不是同一件事。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n【2026-08-11 / specs/115】174 → 173：第四顆膠囊 `cpp:queue_back`（最便宜的那 7 顆之一）。⚠️ 它的 `paths.lift` 是**顯式的 null**——`q.back()` 在辨識層被判成 `cpp:vector_back`，這顆身分從程式碼永遠得不到。診斷見 draft/2026-08-11-容器方法的辨識不看型別.md\n\n【2026-08-11】173 → 170：第五～七顆膠囊，全部 owner 是 `<string>`——**下降原因是「因為搬了」，不是重新分類**。\n  · `cpp:string_empty`：`paths.lift` 顯式 null（`.empty()` 被判成中性的 `cpp:container_empty`）——「路徑滿的但到不了」第三例\n  · `cpp:string_find_first_not_of` / `cpp:string_find_last_not_of`：lift 從 `lifters/io.ts` 的一個 case 塌成新的方法登錄表（`core/component/method-concepts.ts`）。⚠️ 順帶補了一路**從未存在的產生器**——這兩顆的身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n【2026-08-11】170 → 167：第八～十顆，`<cmath>` 的全部三顆（math_pow／math_unary／math_binary）。**下降原因是「因為搬了」。**\n  · ⚠️ 這一批把**整個模組清空**——`<cmath>` 的 concepts／blocks 是 `[]`，三個 register 是空函式。模組是搬家的中途站，不是終點（`specs/054` 才剛把執行那一路從核心搬進模組）。\n  · lift 的形狀是**第五種**：原本是 `std/cmath/lifters.ts` 一個 40 行、看起來像實作的 `tryCmathLift()`，拆開只剩三列「名字 → 身分 ＋ 引數槽名」。已驗證的 `single-arg-functions` 表因此擴成 `call-concepts`，多帶一個引數槽名。"
   },
-  "未膠囊化": 170
+  "未膠囊化": 167
 }

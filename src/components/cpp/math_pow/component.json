@@ -1,0 +1,21 @@
+{
+  "conceptId": "cpp:math_pow",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "base": "expression",
+    "exponent": "expression"
+  },
+  "role": "expression",
+  "requires": [
+    "<cmath>"
+  ],
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}
