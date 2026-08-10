@@ -616,11 +616,11 @@
     },
     "cpp:struct_at_member": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:struct_at_ptr": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:struct_declare": {
       "files": 3,

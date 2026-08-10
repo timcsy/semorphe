@@ -1,0 +1,4 @@
+{
+  "C_STRUCT_POINTER_ACCESS_MSG0": "指標 %1 的欄位 %2 (->)",
+  "C_STRUCT_POINTER_ACCESS_TOOLTIP": "透過指標來取得或設定結構裡某個欄位的值"
+}

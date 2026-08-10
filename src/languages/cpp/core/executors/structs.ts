@@ -15,7 +15,6 @@
  * 見 specs/071-struct-execute/
  */
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
-import { getMember } from '../../../../interpreter/executors/variables'
 import type { FieldDecl, MethodDecl } from '../../../../interpreter/struct-types'
 import { Scope } from '../../../../interpreter/scope'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
@@ -204,24 +203,7 @@ export function registerStructExecutors(
     })
   })
 
-  /** `p->x` */
-  register('cpp:struct_at_ptr', async (node, ctx) => {
-    const ptrName = String(node.properties.obj)
-    const ptr = ctx.scope.get(ptrName)
-    if (ptr.value === null || ptr.value === undefined) {
-      // 對空指標取成員在真的 C++ 會當掉。**出聲**，不要靜默回預設值。
-      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${ptrName}（空指標）` })
-    }
-    const targetName = String(ptr.value)
-    const owner = ctx.pointerTargets.get(ptrName) ?? ctx.scope
-    const target = owner.get(targetName)
-    return getMember(target, String(node.properties.member), targetName, ctx.structs.staticsOf(target.structName ?? ''))
-  })
 
-  /** `p.x` */
-  register('cpp:struct_at_member', async (node, ctx) => {
-    const objName = String(node.properties.obj)
-    const o = ctx.scope.get(objName)
-    return getMember(o, String(node.properties.member), objName, ctx.structs.staticsOf(o.structName ?? ''))
-  })
+
+
 }

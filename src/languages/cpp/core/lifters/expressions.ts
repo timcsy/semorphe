@@ -242,21 +242,13 @@ export function registerExpressionLifters(lifter: Lifter): void {
     })
   })
 
-  // field_expression: s.member or p->member (standalone, not inside call_expression)
-  lifter.register('field_expression', (node) => {
-    const objNode = node.childForFieldName('argument')
-    const fieldNode = node.childForFieldName('field')
-    const obj = objNode?.text ?? ''
-    const member = fieldNode?.text ?? ''
+  // `s.member` / `p->member`——兩顆元件各自登錄分支（`registerAstBranch`）。
+  // 共用檔只剩「問一遍」。
+  lifter.register('field_expression', (node, ctx) =>
+    tryAstBranches('field_expression', node, ctx),
+  )
 
-    // Check for -> operator (pointer access)
-    const opNode = node.children.find(c => c.type === '->')
-    if (opNode) {
-      return createNode('cpp:struct_at_ptr', { obj, member })
-    }
 
-    return createNode('cpp:struct_at_member', { obj, member })
-  })
 }
 
 /**

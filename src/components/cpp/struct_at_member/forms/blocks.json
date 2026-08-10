@@ -1,0 +1,61 @@
+[
+  {
+    "id": "cpp_struct_at_member",
+    "conceptId": "cpp:struct_at_member",
+    "language": "cpp",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_struct_at_member",
+      "message0": "%{BKY_C_STRUCT_MEMBER_ACCESS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "MEMBER",
+          "text": "field"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${MEMBER}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "field_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "."
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "member",
+          "ast": "field",
+          "extract": "text"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "MEMBER": "member",
+        "OBJ": "obj"
+      }
+    }
+  }
+]

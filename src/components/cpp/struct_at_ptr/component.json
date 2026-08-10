@@ -1,0 +1,27 @@
+{
+  "conceptId": "cpp:struct_at_ptr",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "ptr"
+    },
+    {
+      "name": "member",
+      "kind": "literal",
+      "default": "field"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

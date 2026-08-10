@@ -1,0 +1,4 @@
+{
+  "C_STRUCT_POINTER_ACCESS_MSG0": "Pointer %1 field %2 (->)",
+  "C_STRUCT_POINTER_ACCESS_TOOLTIP": "Get or set the value of a struct field through a pointer"
+}

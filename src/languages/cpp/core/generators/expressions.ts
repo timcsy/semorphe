@@ -187,17 +187,9 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `(${type})malloc(${size})`
   })
 
-  g.set('cpp:struct_at_member', (node) => {
-    const obj = node.properties.obj ?? 'obj'
-    const member = node.properties.member ?? 'field'
-    return `${obj}.${member}`
-  })
 
-  g.set('cpp:struct_at_ptr', (node) => {
-    const ptr = node.properties.obj ?? 'ptr'
-    const member = node.properties.member ?? 'field'
-    return `${ptr}->${member}`
-  })
+
+
 
 
 }
