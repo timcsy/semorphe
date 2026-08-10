@@ -1,0 +1,4 @@
+{
+  "CPP_IFSTREAM_DECLARE_MSG0": "開啟檔案 %2 讀取為 %1",
+  "CPP_IFSTREAM_DECLARE_TOOLTIP": "開啟一個檔案來讀取資料"
+}

@@ -1,0 +1,4 @@
+{
+  "CPP_STRINGSTREAM_DECLARE_MSG0": "Create text stream %1 (stringstream)",
+  "CPP_STRINGSTREAM_DECLARE_TOOLTIP": "Create a string stream for parsing and formatting"
+}

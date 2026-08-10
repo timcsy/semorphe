@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_DECLARE_MSG0": "create string %1",
+  "CPP_STRING_DECLARE_TOOLTIP": "Create a string variable to store and manipulate text"
+}

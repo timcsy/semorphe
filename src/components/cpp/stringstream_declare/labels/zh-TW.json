@@ -1,0 +1,4 @@
+{
+  "CPP_STRINGSTREAM_DECLARE_MSG0": "建立字串串流 %1",
+  "CPP_STRINGSTREAM_DECLARE_TOOLTIP": "建立一個字串串流，用於解析和格式化"
+}

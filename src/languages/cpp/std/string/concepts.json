@@ -1,22 +1,5 @@
 [
   {
-    "conceptId": "cpp:string_declare",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "str"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement",
-    "declaresVariableType": "string"
-  },
-  {
     "conceptId": "cpp:string_at",
     "layer": "lang-library",
     "properties": [

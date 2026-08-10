@@ -1,24 +1,5 @@
 [
   {
-    "conceptId": "cpp:stringstream_declare",
-    "layer": "lang-library",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
     "conceptId": "cpp:istringstream_declare",
     "layer": "lang-library",
     "abstractConcept": "cpp:var_declare",

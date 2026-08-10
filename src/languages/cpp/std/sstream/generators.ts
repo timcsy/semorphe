@@ -10,8 +10,5 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}istringstream ${name}(${arg});\n`
   })
 
-  g.set('cpp:stringstream_declare', (node, ctx) => {
-    const name = (node.properties.name as string) ?? 'ss'
-    return `${indent(ctx)}stringstream ${name};\n`
-  })
+
 }

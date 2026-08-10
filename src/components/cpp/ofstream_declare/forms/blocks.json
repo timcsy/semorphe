@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp:ofstream_declare",
+    "conceptId": "cpp:ofstream_declare",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_ofstream_declare",
+      "message0": "%{BKY_CPP_OFSTREAM_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "fout"
+        },
+        {
+          "type": "field_input",
+          "name": "FILE",
+          "text": "output.txt"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_OFSTREAM_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "FILE": "file"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

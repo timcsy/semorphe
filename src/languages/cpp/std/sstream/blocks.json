@@ -1,34 +1,5 @@
 [
   {
-    "id": "cpp:stringstream_declare",
-    "conceptId": "cpp:stringstream_declare",
-    "language": "cpp",
-    "category": "containers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_stringstream_declare",
-      "message0": "%{BKY_CPP_STRINGSTREAM_DECLARE_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "ss"
-        }
-      ],
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#D67D3E",
-      "tooltip": "%{BKY_CPP_STRINGSTREAM_DECLARE_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "inputs": {},
-      "statementInputs": {}
-    }
-  },
-  {
     "id": "cpp:istringstream_declare",
     "conceptId": "cpp:istringstream_declare",
     "language": "cpp",

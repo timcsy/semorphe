@@ -1,0 +1,4 @@
+{
+  "CPP_IFSTREAM_DECLARE_MSG0": "open file %2 for reading as %1",
+  "CPP_IFSTREAM_DECLARE_TOOLTIP": "Open a file for reading input"
+}

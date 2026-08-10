@@ -1,0 +1,36 @@
+{
+  "conceptId": "cpp:ofstream_declare",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal"
+    },
+    {
+      "name": "file",
+      "kind": "literal"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "execute": null,
+    "_execute_why": "這顆沒有獨立的執行語義。**顯式的空，不是遺漏。**"
+  },
+  "requires": [
+    "<fstream>"
+  ]
+}

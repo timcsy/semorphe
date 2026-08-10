@@ -1,0 +1,4 @@
+{
+  "CPP_OFSTREAM_DECLARE_MSG0": "開啟檔案 %2 寫入為 %1",
+  "CPP_OFSTREAM_DECLARE_TOOLTIP": "開啟一個檔案來寫入資料"
+}

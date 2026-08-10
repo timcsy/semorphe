@@ -7,6 +7,7 @@ import { conceptForContainerTemplate } from '../../../../core/component/containe
 // ⚠️ 元件膠囊也要算進來——第五處「從 allStdModules 推導」的地方。
 // 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
 import { componentConcepts } from '../../../../core/component/registry'
+import { plainTypeConcept } from '../../../../core/component/container-templates'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -531,27 +532,25 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // Detect non-template container/stream types (string, ifstream, ofstream, stringstream)
     // These are type_identifier, possibly inside qualified_identifier (std::string, std::ifstream, etc.)
-    const streamConcepts: Record<string, string> = {
-      'string': 'cpp:string_declare',
-      'ifstream': 'cpp:ifstream_declare',
-      'ofstream': 'cpp:ofstream_declare',
-      'stringstream': 'cpp:stringstream_declare',
-    }
+    // ⚠️ **這張表已經空了**——五顆元件各自登錄自己的型別名
+    // （`core/component/container-templates.ts` 的 `registerPlainTypeConcept`）。
+    // 留著空表是為了讓「查不到」與「忘了查」分得出來。
+    const streamConcepts: Record<string, string> = {}
     const typeIdentNode = node.namedChildren.find(c => c.type === 'type_identifier')
     const qualifiedIdNode = node.namedChildren.find(c => c.type === 'qualified_identifier')
     // Get the final type name (e.g., "string" from "std::string" or plain "string")
     let simpleTypeName: string | null = null
-    if (typeIdentNode && streamConcepts[typeIdentNode.text]) {
+    if (typeIdentNode && (streamConcepts[typeIdentNode.text] ?? plainTypeConcept(typeIdentNode.text))) {
       simpleTypeName = typeIdentNode.text
     } else if (qualifiedIdNode) {
       // Look for type_identifier inside qualified_identifier (e.g., std::string → "string")
       const innerTypeIdent = qualifiedIdNode.namedChildren.find(c => c.type === 'type_identifier')
-      if (innerTypeIdent && streamConcepts[innerTypeIdent.text]) {
+      if (innerTypeIdent && (streamConcepts[innerTypeIdent.text] ?? plainTypeConcept(innerTypeIdent.text))) {
         simpleTypeName = innerTypeIdent.text
       }
     }
-    if (simpleTypeName && streamConcepts[simpleTypeName]) {
-      const conceptId = streamConcepts[simpleTypeName]
+    if (simpleTypeName && (streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName))) {
+      const conceptId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       const name = decl?.type === 'identifier'
         ? decl.text

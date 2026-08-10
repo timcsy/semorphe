@@ -53,3 +53,30 @@ export function conceptForContainerTemplate(樣板名: string): string | undefin
 export function containerTemplateSources(): [樣板名: string, 來源: string][] {
   return [...表.entries()].map(([k, v]) => [k, v.來源])
 }
+
+/**
+ * **非樣板的型別名 → 身分**——`string s;`／`ifstream f;`／`stringstream ss;`
+ *
+ * 與上面那張的差別是**語法位置**：容器樣板是 `vector<int> v;`（template_type），
+ * 這些是 `string s;`（type_identifier，可能包在 `std::` 裡）。
+ * 判別邏輯不同，所以是兩張表——**位置決定形狀**（同 `call-concepts` 的三表註解）。
+ *
+ * ⚠️ 表是空的：核心給機制、套件給資料。
+ */
+const 型別名表 = new Map<string, { conceptId: string; 來源: string }>()
+
+export function registerPlainTypeConcept(型別名: string, conceptId: string, 來源: string): void {
+  const 先來的 = 型別名表.get(型別名)
+  if (先來的 && 先來的.conceptId !== conceptId) {
+    throw new Error(
+      `型別名「${型別名}」被登錄兩次且指向不同身分：` +
+        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+    )
+  }
+  型別名表.set(型別名, { conceptId, 來源 })
+}
+
+/** 型別名 → 元件身分。認不得回 `undefined`。 */
+export function plainTypeConcept(型別名: string): string | undefined {
+  return 型別名表.get(型別名)?.conceptId
+}

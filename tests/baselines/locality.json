@@ -248,7 +248,7 @@
     },
     "cpp:ifstream_declare": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:include": {
       "files": 6,
@@ -412,7 +412,7 @@
     },
     "cpp:ofstream_declare": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:operator_overload": {
       "files": 3,
@@ -568,7 +568,7 @@
     },
     "cpp:string_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_empty": {
       "files": 2,
@@ -612,7 +612,7 @@
     },
     "cpp:stringstream_declare": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:struct_at_member": {
       "files": 3,
