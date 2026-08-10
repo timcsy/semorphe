@@ -9,7 +9,7 @@ import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { allStdModules } from '../std'
-import { componentLiftRegistrars } from '../../../core/component/paths'
+import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../../core/component/paths'
 import { registerPendingContainers } from '../pending-containers'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
@@ -28,8 +28,12 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   }
 
   // Register C++ lift strategies (Layer 3)
-  if (registries?.liftStrategyRegistry) {
-    registerCppLiftStrategies(registries.liftStrategyRegistry)
+  const 策略表 = registries?.liftStrategyRegistry
+  if (策略表) {
+    registerCppLiftStrategies(策略表)
+    // 膠囊的具名辨識策略（`lift-strategy.ts`）——與 `lift.ts` 是不同的登錄表
+    for (const reg of componentLiftStrategyRegistrars())
+      (reg as (r: typeof 策略表) => void)(策略表)
   }
 
   // Register C++ render strategies (Layer 3)
