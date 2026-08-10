@@ -159,25 +159,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:pointer_assign",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_assign",
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "ptr"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:loop_for",
     "layer": "lang-core",
     "abstractConcept": "cpp:loop_count",
@@ -792,24 +773,6 @@
       "col": "expression"
     },
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:array_2d_assign",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:array_assign",
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "arr"
-      }
-    ],
-    "children": {
-      "row": "expression",
-      "col": "expression",
-      "value": "expression"
-    },
-    "role": "statement"
   },
   {
     "conceptId": "cpp:constructor",

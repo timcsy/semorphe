@@ -171,9 +171,9 @@
     {
       "name": "對應與集合",
       "blocks": [
+        "cpp_map_assign",
         "cpp_map_declare",
         "cpp_map_at",
-        "cpp_map_assign",
         "cpp_set_declare",
         "cpp_set_insert",
         "cpp_pair_declare",
@@ -204,12 +204,12 @@
     {
       "name": "指標與記憶體",
       "blocks": [
-        "cpp_pointer_assign",
         "cpp_pointer_declare",
         "cpp_pointer_deref",
         "cpp_address_of",
         "cpp_malloc",
         "cpp_free",
+        "cpp_pointer_assign",
         "cpp_memory_copy",
         "cpp_memory_fill"
       ]

@@ -1,0 +1,4 @@
+{
+  "CPP_MAP_ASSIGN_MSG0": "設定 %1 的鍵 %2 為 %3",
+  "CPP_MAP_ASSIGN_TOOLTIP": "把對應表中某個鍵的值設成新的值（鍵不存在就新增）"
+}

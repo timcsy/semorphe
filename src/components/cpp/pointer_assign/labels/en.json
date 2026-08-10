@@ -1,0 +1,4 @@
+{
+  "C_POINTER_ASSIGN_MSG0": "Store %2 at where %1 points to (*)",
+  "C_POINTER_ASSIGN_TOOLTIP": "Modify the value at the location the pointer points to, like going to the address on the note and changing what's there."
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "cpp_pointer_assign",
+    "conceptId": "cpp:pointer_assign",
+    "language": "cpp",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pointer_assign",
+      "message0": "%{BKY_C_POINTER_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "PTR_NAME",
+          "text": "ptr"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_POINTER_ASSIGN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "*${OBJ} = ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "assignment_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "ptr_name",
+          "ast": "left",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "right",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "PTR_NAME": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

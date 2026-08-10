@@ -50,27 +50,7 @@ export function registerArraysCoreExecutors(
     return rowArr.value[col] ?? defaultValue('int')
   })
 
-  register('cpp:array_2d_assign', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const rowNodes = node.children.row
-    const colNodes = node.children.col
-    const valueNodes = node.children.value
-    if (!rowNodes?.length || !colNodes?.length || !valueNodes?.length) return
 
-    const row = ctx.toNumber(await ctx.evaluate(rowNodes[0]))
-    const col = ctx.toNumber(await ctx.evaluate(colNodes[0]))
-    const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
-
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    const rowArr = arr.value[row]
-    if (!rowArr || rowArr.type !== 'array' || !Array.isArray(rowArr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(row) })
-    }
-    rowArr.value[col] = val
-  })
 
   // enum is a type declaration — no runtime effect
 

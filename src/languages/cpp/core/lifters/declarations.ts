@@ -37,53 +37,18 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       })
     }
 
-    // 2D Array element assignment: arr[i][j] = value
     if (left?.type === 'subscript_expression') {
       const innerNode = left.childForFieldName('argument') ?? left.namedChildren[0]
-      if (innerNode?.type === 'subscript_expression') {
-        const arrayNode = innerNode.childForFieldName('argument') ?? innerNode.namedChildren[0]
-        const name = arrayNode?.text ?? 'arr'
-        const rowIndices = innerNode.namedChildren.find(c => c.type === 'subscript_argument_list')
-        const rowNode = rowIndices?.namedChildren[0] ?? innerNode.namedChildren[1]
-        const colIndices = left.namedChildren.find(c => c.type === 'subscript_argument_list')
-        const colNode = colIndices?.namedChildren[0] ?? left.namedChildren[1]
-        const row = rowNode ? ctx.lift(rowNode) : null
-        const col = colNode ? ctx.lift(colNode) : null
-        return createNode('cpp:array_2d_assign', { obj: name }, {
-          row: row ? [row] : [],
-          col: col ? [col] : [],
-          value: value ? [value] : [],
-        })
-      }
-
       // 1D Array element assignment: arr[i] = value
       const name = innerNode?.text ?? 'arr'
       const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
       // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
-      if (ctx.data.getType(name) === 'map') {
-        return createNode('cpp:map_assign', { obj: name }, {
-          key: index ? [index] : [],
-          value: value ? [value] : [],
-        })
-      }
       return createNode('cpp:array_assign', { obj: name }, {
         index: index ? [index] : [],
         value: value ? [value] : [],
       })
-    }
-
-    // Pointer dereference assignment: *ptr = value
-    if (left?.type === 'pointer_expression') {
-      const ptrOp = left.children.find(c => !c.isNamed)?.text
-      if (ptrOp === '*') {
-        const ptrNameNode = left.namedChildren[0]
-        const ptrName = ptrNameNode?.text ?? 'ptr'
-        return createNode('cpp:pointer_assign', { obj: ptrName }, {
-          value: value ? [value] : [],
-        })
-      }
     }
 
     // Simple variable assignment: x = value

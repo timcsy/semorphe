@@ -1,0 +1,4 @@
+{
+  "C_POINTER_ASSIGN_MSG0": "把 %2 存到 %1 指向的位置 (*)",
+  "C_POINTER_ASSIGN_TOOLTIP": "透過指標修改它所指向的變數的值，就像按照紙條上的地址去改那裡的東西。"
+}

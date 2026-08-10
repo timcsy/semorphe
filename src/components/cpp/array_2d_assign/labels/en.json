@@ -1,0 +1,4 @@
+{
+  "C_ARRAY_2D_ASSIGN_MSG0": "set 2D array %1 [ %2 ][ %3 ] ← %4",
+  "C_ARRAY_2D_ASSIGN_TOOLTIP": "Store a value at a specific row and column in a 2D array"
+}

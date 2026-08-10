@@ -59,17 +59,5 @@ export function registerPointerExecutors(register: (concept: string, executor: C
 
 
 
-  register('cpp:pointer_assign', async (node, ctx) => {
-    const ptrName = String(node.properties.obj)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const val = await ctx.evaluate(valueNodes[0])
-    const ptrVal = ctx.scope.get(ptrName)
-    if (ptrVal.type === ('pointer' as any) && typeof ptrVal.value === 'string') {
-      const targetName = ptrVal.value as string
-      const targetScope = ctx.pointerTargets.get(targetName)
-      if (targetScope) { targetScope.set(targetName, val); return }
-      ctx.scope.set(targetName, val)
-    }
-  })
+
 }

@@ -1,0 +1,4 @@
+{
+  "CPP_MAP_ASSIGN_MSG0": "Set key %2 of %1 to %3",
+  "CPP_MAP_ASSIGN_TOOLTIP": "Set the value for a key in the map (inserts the key if absent)"
+}

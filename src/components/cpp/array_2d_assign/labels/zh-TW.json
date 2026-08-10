@@ -1,0 +1,4 @@
+{
+  "C_ARRAY_2D_ASSIGN_MSG0": "設定二維陣列 %1 [ %2 ][ %3 ] ← %4",
+  "C_ARRAY_2D_ASSIGN_TOOLTIP": "將值存入二維陣列的特定列和行"
+}
