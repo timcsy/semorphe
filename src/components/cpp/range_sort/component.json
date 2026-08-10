@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:range_sort",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "begin",
+      "kind": "literal",
+      "default": "v.begin()"
+    },
+    {
+      "name": "end",
+      "kind": "literal",
+      "default": "v.end()"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<algorithm>"
+  ]
+}

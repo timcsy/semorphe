@@ -53,27 +53,7 @@ function tryStringMethodLift(
   }
   switch (method) {
     // Disambiguate by arg count: 2 args = string erase(pos, len)
-    case 'erase':
-      if (argChildren.length >= 2) {
-        const pos = ctx.lift(argChildren[0])
-        const len = ctx.lift(argChildren[1])
-        return createNode('cpp:string_erase', { obj }, {
-          pos: pos ? [pos] : [],
-          len: len ? [len] : [],
-        })
-      }
-      return null // 1 arg → container erase (handled by METHOD_TO_CONCEPT)
     // Disambiguate by arg count: 2 args = string insert(pos, val)
-    case 'insert':
-      if (argChildren.length >= 2) {
-        const pos = ctx.lift(argChildren[0])
-        const value = ctx.lift(argChildren[1])
-        return createNode('cpp:string_insert', { obj }, {
-          pos: pos ? [pos] : [],
-          value: value ? [value] : [],
-        })
-      }
-      return null // 1 arg → set insert (handled by METHOD_TO_CONCEPT)
   }
 
   // Shared methods (empty, clear, push_back, pop_back, back, size, etc.)
@@ -310,24 +290,6 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // sort, reverse, fill (iterator-range algorithms)
     // Check arg count to avoid intercepting user-defined functions with same name
-    if ((funcName === 'sort' || funcName === 'std::sort') && argChildren.length === 2) {
-      const beginText = argChildren[0]?.text ?? 'v.begin()'
-      const endText = argChildren[1]?.text ?? 'v.end()'
-      return createNode('cpp:range_sort', { begin: beginText, end: endText })
-    }
-    if ((funcName === 'reverse' || funcName === 'std::reverse') && argChildren.length === 2) {
-      const beginText = argChildren[0]?.text ?? 'v.begin()'
-      const endText = argChildren[1]?.text ?? 'v.end()'
-      return createNode('cpp:range_reverse', { begin: beginText, end: endText })
-    }
-    if ((funcName === 'fill' || funcName === 'std::fill') && argChildren.length === 3) {
-      const beginText = argChildren[0]?.text ?? 'v.begin()'
-      const endText = argChildren[1]?.text ?? 'v.end()'
-      const valueChild = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:range_fill', { begin: beginText, end: endText }, {
-        value: valueChild ? [valueChild] : [],
-      })
-    }
 
     // min, max (value algorithms)
 

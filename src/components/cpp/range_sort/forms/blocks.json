@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp:range_sort",
+    "conceptId": "cpp:range_sort",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_sort",
+      "message0": "%{BKY_CPP_SORT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "v"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CONTAINER": "begin"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

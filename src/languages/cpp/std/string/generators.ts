@@ -39,23 +39,9 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
 
 
 
-  g.set('cpp:string_erase', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const posNodes = node.children.pos ?? []
-    const lenNodes = node.children.len ?? []
-    const pos = posNodes.length > 0 ? generateExpression(posNodes[0], ctx) : '0'
-    const len = lenNodes.length > 0 ? generateExpression(lenNodes[0], ctx) : '1'
-    return `${indent(ctx)}${obj}.erase(${pos}, ${len});\n`
-  })
 
-  g.set('cpp:string_insert', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const posNodes = node.children.pos ?? []
-    const valueNodes = node.children.value ?? []
-    const pos = posNodes.length > 0 ? generateExpression(posNodes[0], ctx) : '0'
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
-    return `${indent(ctx)}${obj}.insert(${pos}, ${val});\n`
-  })
+
+
 
 
 

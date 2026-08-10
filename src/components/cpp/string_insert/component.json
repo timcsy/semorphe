@@ -1,0 +1,38 @@
+{
+  "conceptId": "cpp:string_insert",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "str"
+    }
+  ],
+  "children": {
+    "pos": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<string>"
+  ]
+}

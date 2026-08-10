@@ -4,7 +4,7 @@ import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import algorithmBlocks from '../../src/languages/cpp/std/algorithm/blocks.json'
+import rangeSortBlocks from '../../src/components/cpp/range_sort/forms/blocks.json'
 // ⚠️ `cpp:vector_declare` 已元件化，不在這個模組檔裡了——走唯一組裝點。
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 
@@ -21,18 +21,20 @@ const allConcepts = [
 ]
 
 describe('JSON-only extension (US6)', () => {
-  it('should load algorithm block specs from JSON', () => {
+  // ⚠️ **`std/algorithm/blocks.json` 已經空了**（2026-08-11，第八批）——
+  // 它的積木全部進了膠囊。這一支要測的是「**JSON-only 擴充這條路還通不通**」，
+  // 而那條路今天的形式是**膠囊的 `forms/blocks.json`**。
+  //
+  // > 主題檔空掉時，該問的是「這個測試在測什麼」，不是「把數字改成 0」。
+  //
+  // 改成讀膠囊的 forms——同一條路，新的住處。
+  it('should load block specs from JSON alone（膠囊的 forms/blocks.json）', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
-    // ⚠️ 這一支讀的是 `std/algorithm/blocks.json` **這一個檔**，不是全部宣告。
-    // 元件膠囊化會把積木從共用檔剪走，所以這個數字**隨 F 下降**
-    // ——`cpp:math_min`／`math_max`／`range_sum` 已進膠囊（2026-08-11 第六批）。
-    // 它量的是「JSON-only 擴充這條路還通不通」，不是「有幾顆積木」。
-    expect(all.length).toBe(3)
+    expect(all.length).toBe(1)
     expect(all.map(s => s.id)).toContain('cpp:range_sort')
-    expect(all.map(s => s.id)).toContain('cpp:range_reverse')
-    expect(all.map(s => s.id)).toContain('cpp:range_fill')
+    expect(all[0].blockDef).toBeDefined()
   })
 
   it('should load container block specs from JSON', () => {
@@ -49,7 +51,7 @@ describe('JSON-only extension (US6)', () => {
   it('should have valid blockDef with type field', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, [
-      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
     for (const spec of registry.getAll()) {
@@ -61,7 +63,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should have valid block definitions', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
     for (const spec of registry.getAll()) {
       // Algorithm blocks use hand-written generators, so codeTemplate may be empty
       // Just verify blockDef is valid
@@ -72,7 +74,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should have astPattern for lifting', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, algorithmBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
     for (const spec of registry.getAll()) {
       expect(spec.astPattern.nodeType).toBeTruthy()
     }
@@ -82,7 +84,7 @@ describe('JSON-only extension (US6)', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, [
       ...universalBlocks,
-      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
     const all = registry.getAll()
@@ -94,7 +96,7 @@ describe('JSON-only extension (US6)', () => {
   it('should have concept mapping with abstractConcept', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromSplit(allConcepts, [
-      ...algorithmBlocks as unknown as BlockProjectionJSON[],
+      ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
     const sortSpec = registry.getAll().find(s => s.id === 'cpp:range_sort')

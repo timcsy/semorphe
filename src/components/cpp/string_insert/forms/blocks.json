@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cpp:string_insert",
+    "conceptId": "cpp:string_insert",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_insert",
+      "message0": "%{BKY_CPP_STRING_INSERT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_INSERT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.insert(${POS}, ${VALUE});",
+      "imports": [
+        "string"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "POS": "pos",
+        "VALUE": "value"
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_ERASE_MSG0": "Erase from %1 at %2 length %3",
+  "CPP_STRING_ERASE_TOOLTIP": "Remove characters from the string starting at position for given length"
+}

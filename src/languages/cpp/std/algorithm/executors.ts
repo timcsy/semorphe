@@ -22,7 +22,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
  * **解析不了時擲錯，不回傳「沒事」**——原本的實作是空操作，於是
  * `sort(a, a+3)` 靜靜地什麼都不做，學生拿到未排序的陣列而毫無提示。
  */
-function resolveRange(
+export function resolveRange(
   ctx: { scope: { get(n: string): { type: string; value: unknown } | undefined } },
   begin: string,
   end: string,
@@ -46,30 +46,18 @@ function resolveRange(
   return { arr, from: b.offset, to: e.atEnd ? arr.length : e.offset, name: b.name }
 }
 
-const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?? x) || 0
+export const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?? x) || 0
 
 export function registerExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  _register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
 
 
-  register('cpp:range_sort', async (node, ctx) => {
-    const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-    const slice = r.arr.slice(r.from, r.to).sort((a, b) => numOf(a) - numOf(b))
-    for (let i = 0; i < slice.length; i++) r.arr[r.from + i] = slice[i]
-  })
 
-  register('cpp:range_reverse', async (node, ctx) => {
-    const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-    const slice = r.arr.slice(r.from, r.to).reverse()
-    for (let i = 0; i < slice.length; i++) r.arr[r.from + i] = slice[i]
-  })
 
-  register('cpp:range_fill', async (node, ctx) => {
-    const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-    const v = await ctx.evaluate((node.children.value ?? [])[0])
-    for (let i = r.from; i < r.to; i++) r.arr[i] = v
-  })
+
+
+
 
 
 

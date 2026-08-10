@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_INSERT_MSG0": "Insert %3 into %1 at %2",
+  "CPP_STRING_INSERT_TOOLTIP": "Insert text at the specified position in the string"
+}

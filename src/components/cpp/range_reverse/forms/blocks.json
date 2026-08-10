@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp:range_reverse",
+    "conceptId": "cpp:range_reverse",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_reverse",
+      "message0": "%{BKY_CPP_REVERSE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "v"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_REVERSE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CONTAINER": "begin"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

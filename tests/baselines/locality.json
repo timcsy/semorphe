@@ -484,7 +484,7 @@
     },
     "cpp:range_fill": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_fill_sequence": {
       "files": 3,
@@ -492,11 +492,11 @@
     },
     "cpp:range_reverse": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_sort": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:range_sum": {
       "files": 3,
@@ -576,7 +576,7 @@
     },
     "cpp:string_erase": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_find": {
       "files": 3,
@@ -592,7 +592,7 @@
     },
     "cpp:string_insert": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_make": {
       "files": 3,

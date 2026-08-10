@@ -1,0 +1,38 @@
+{
+  "conceptId": "cpp:string_erase",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "str"
+    }
+  ],
+  "children": {
+    "pos": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "len": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<string>"
+  ]
+}
