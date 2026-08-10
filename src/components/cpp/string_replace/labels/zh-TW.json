@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_REPLACE_MSG0": "替換 %1（位置 %2 長度 %3）為 %4",
+  "CPP_STRING_REPLACE_TOOLTIP": "從指定位置替換指定長度的子字串為新文字"
+}

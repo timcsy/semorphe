@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:string_size",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "str"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<string>"
+  ]
+}

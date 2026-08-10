@@ -3,32 +3,13 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  // Expression concepts — return expression string (no indent, no newline)
-  g.set('cpp:string_size', (node) => {
-    const obj = node.properties.obj ?? 'str'
-    return `${obj}.length()`
-  })
 
-  g.set('cpp:string_substr', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const posNodes = node.children.pos ?? []
-    const lenNodes = node.children.len ?? []
-    const pos = posNodes.length > 0 ? generateExpression(posNodes[0], ctx) : '0'
-    const len = lenNodes.length > 0 ? generateExpression(lenNodes[0], ctx) : ''
-    return len ? `${obj}.substr(${pos}, ${len})` : `${obj}.substr(${pos})`
-  })
 
-  g.set('cpp:string_find', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const argNodes = node.children.arg ?? []
-    const arg = argNodes.length > 0 ? generateExpression(argNodes[0], ctx) : '""'
-    return `${obj}.find(${arg})`
-  })
 
-  g.set('cpp:string_as_cstring', (node) => {
-    const obj = node.properties.obj ?? 'str'
-    return `${obj}.c_str()`
-  })
+
+
+
+
 
   g.set('cpp:string_at', (node, ctx) => {
     const obj = node.properties.obj ?? 'str'
@@ -66,12 +47,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}string ${name};\n`
   })
 
-  g.set('cpp:string_append', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const valueNodes = node.children.value ?? []
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
-    return `${indent(ctx)}${obj}.append(${val});\n`
-  })
+
 
   g.set('cpp:input_line', (node, ctx) => {
     const name = node.properties.name ?? 'str'
@@ -96,16 +72,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}${obj}.insert(${pos}, ${val});\n`
   })
 
-  g.set('cpp:string_replace', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const posNodes = node.children.pos ?? []
-    const lenNodes = node.children.len ?? []
-    const valueNodes = node.children.value ?? []
-    const pos = posNodes.length > 0 ? generateExpression(posNodes[0], ctx) : '0'
-    const len = lenNodes.length > 0 ? generateExpression(lenNodes[0], ctx) : '0'
-    const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
-    return `${indent(ctx)}${obj}.replace(${pos}, ${len}, ${val});\n`
-  })
+
 
   g.set('cpp:string_append_char', (node, ctx) => {
     const obj = node.properties.obj ?? 'str'

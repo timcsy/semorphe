@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_REPLACE_MSG0": "Replace in %1 at %2 length %3 with %4",
+  "CPP_STRING_REPLACE_TOOLTIP": "Replace part of the string starting at position for given length with new text"
+}

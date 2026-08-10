@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_LENGTH_MSG0": "length of %1",
+  "CPP_STRING_LENGTH_TOOLTIP": "Get the number of characters in the string"
+}

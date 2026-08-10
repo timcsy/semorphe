@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_SUBSTR_MSG0": "%1 的子字串（位置 %2 長度 %3）",
+  "CPP_STRING_SUBSTR_TOOLTIP": "從指定位置取得指定長度的子字串"
+}

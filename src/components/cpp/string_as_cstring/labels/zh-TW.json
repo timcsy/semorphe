@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_C_STR_MSG0": "取得 %1 的原生文字 (c_str)",
+  "CPP_STRING_C_STR_TOOLTIP": "取得 C 風格字串（const char*）"
+}

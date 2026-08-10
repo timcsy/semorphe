@@ -1,0 +1,9 @@
+/** `cpp:string_as_cstring` 的 **generate** 路——從共用檔原封剪過來（批次第五批：lift 是 io.ts 的方法 case（純資料））。 */
+import type { NodeGenerator } from '../../../core/projection/code-generator'
+
+export function registerGenerate(g: Map<string, NodeGenerator>): void {
+  g.set('cpp:string_as_cstring', (node) => {
+      const obj = node.properties.obj ?? 'str'
+      return `${obj}.c_str()`
+    })
+}

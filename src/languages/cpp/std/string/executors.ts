@@ -29,58 +29,18 @@ export function registerExecutors(
     ctx.scope.declare(name, { type: 'string', value: '' })
   })
 
-  register('cpp:string_size', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    const str = String(val.value)
-    return { type: 'int', value: str.length }
-  })
 
-  register('cpp:string_substr', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    const str = String(val.value)
-    const posNodes = node.children.pos ?? []
-    const lenNodes = node.children.len ?? []
-    const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
-    const len = lenNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(lenNodes[0])) : str.length - pos
-    return { type: 'string', value: str.substring(pos, pos + len) }
-  })
 
-  register('cpp:string_find', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    const str = String(val.value)
-    const argNodes = node.children.arg ?? []
-    if (argNodes.length === 0) return { type: 'int', value: -1 }
-    const sub = String((await ctx.evaluate(argNodes[0])).value)
-    const fromNodes = node.children.from ?? []
-    const from = fromNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(fromNodes[0])) : 0
-    const idx = str.indexOf(sub, from)
-    // 找不到時 C++ 回 `string::npos`。而**使用者常寫 `!= -1` 來比**——
-    // 回 4294967295 的話那個比較永遠成立，迴圈停不下來。
-    // 回 -1：`!= -1` 與 `!= string::npos` 兩種寫法都對，而 npos 本身
-    // 在這個直譯器裡沒有被表示成一個常數。
-    return { type: 'int', value: idx }
-  })
+
+
+
 
   // `find_first_not_of` / `find_last_not_of` 已元件化——執行那一路搬進
   // `src/components/cpp/string_find_{first,last}_not_of/execute.ts`。
 
-  register('cpp:string_append', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const appendVal = await ctx.evaluate(valueNodes[0])
-    ctx.scope.set(obj, { type: 'string', value: String(val.value) + String(appendVal.value) })
-  })
 
-  register('cpp:string_as_cstring', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    return { type: 'string', value: String(val.value) }
-  })
+
+
 
   register('cpp:input_line', async (node, ctx) => {
     const name = String(node.properties.name)
@@ -139,18 +99,7 @@ export function registerExecutors(
     ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + insertStr + str.substring(pos) })
   })
 
-  register('cpp:string_replace', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    const str = String(val.value)
-    const posNodes = node.children.pos ?? []
-    const lenNodes = node.children.len ?? []
-    const valueNodes = node.children.value ?? []
-    const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
-    const len = lenNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(lenNodes[0])) : 0
-    const replaceStr = valueNodes.length > 0 ? String((await ctx.evaluate(valueNodes[0])).value) : ''
-    ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + replaceStr + str.substring(pos + len) })
-  })
+
 
   register('cpp:string_append_char', async (node, ctx) => {
     const obj = String(node.properties.obj)

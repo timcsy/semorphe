@@ -26,27 +26,6 @@ function tryStringMethodLift(
 
   // String-ONLY methods (no other container uses these)
   switch (method) {
-    case 'length':
-      return createNode('cpp:string_size', { obj })
-    case 'substr': {
-      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:string_substr', { obj }, {
-        pos: pos ? [pos] : [],
-        len: len ? [len] : [],
-      })
-    }
-    case 'find': {
-      // ⚠️ **第二個引數（起點）原本被丟掉**——`s.find("X", pos)` 於是永遠
-      // 從頭找，而 `while ((pos = s.find("X", pos)) != -1)` 這種掃描寫法
-      // **無限迴圈**（症狀是爆步數上限，離現場很遠）。
-      const arg = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const from = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:string_find', { obj }, {
-        arg: arg ? [arg] : [],
-        from: from ? [from] : [],
-      })
-    }
     // `find_first_not_of` / `find_last_not_of` 已元件化——身分由膠囊登錄，
     // 見下方 `conceptForMethod` 的分支。
     //
@@ -70,24 +49,6 @@ function tryStringMethodLift(
     }
   }
   switch (method) {
-    case 'append': {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:string_append', { obj }, {
-        value: value ? [value] : [],
-      })
-    }
-    case 'c_str':
-      return createNode('cpp:string_as_cstring', { obj })
-    case 'replace': {
-      const pos = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const len = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      const value = argChildren[2] ? ctx.lift(argChildren[2]) : null
-      return createNode('cpp:string_replace', { obj }, {
-        pos: pos ? [pos] : [],
-        len: len ? [len] : [],
-        value: value ? [value] : [],
-      })
-    }
     // Disambiguate by arg count: 2 args = string erase(pos, len)
     case 'erase':
       if (argChildren.length >= 2) {

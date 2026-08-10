@@ -540,7 +540,7 @@
     },
     "cpp:string_append": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_append_char": {
       "files": 3,
@@ -548,7 +548,7 @@
     },
     "cpp:string_as_cstring": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_as_double": {
       "files": 3,
@@ -580,7 +580,7 @@
     },
     "cpp:string_find": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_find_first_not_of": {
       "files": 3,
@@ -600,15 +600,15 @@
     },
     "cpp:string_replace": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_size": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_substr": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:stringstream_declare": {
       "files": 2,

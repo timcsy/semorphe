@@ -73,6 +73,7 @@ export function conceptForMethod(方法名: string): string | undefined {
   return 表.get(方法名)?.conceptId
 }
 
+
 /** 方法名 → 完整形狀（含引數槽名）。 */
 export function methodConceptFor(方法名: string): MethodConceptShape | undefined {
   return 表.get(方法名)

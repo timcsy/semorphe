@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_SUBSTR_MSG0": "Substring of %1 from %2 length %3",
+  "CPP_STRING_SUBSTR_TOOLTIP": "Get a substring starting at position with given length"
+}

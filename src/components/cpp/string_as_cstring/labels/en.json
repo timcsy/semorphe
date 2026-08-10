@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_C_STR_MSG0": "Get raw text of %1 (c_str)",
+  "CPP_STRING_C_STR_TOOLTIP": "Get the C-style string (const char*) from this string"
+}
