@@ -672,7 +672,7 @@
     },
     "cpp:var_declare_auto": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:var_declare_const": {
       "files": 3,

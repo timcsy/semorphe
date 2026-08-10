@@ -607,22 +607,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:var_declare_auto",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "x"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:member_static",
     "layer": "lang-core",
     "abstractConcept": null,

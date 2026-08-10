@@ -32,16 +32,7 @@ export function registerVariablesCoreExecutors(
 
   register('cpp:var_declare_constexpr', execVarDeclare)
 
-  register('cpp:var_declare_auto', async (node, ctx) => {
-    const name = String(node.properties.name)
-    const init = node.children.initializer
-    if (init && init.length > 0) {
-      const val = await ctx.evaluate(init[0])
-      ctx.scope.declare(name, val)
-    } else {
-      ctx.scope.declare(name, { type: 'int', value: 0 })
-    }
-  })
+
 
   // typedef and using alias are type declarations — no runtime effect
 

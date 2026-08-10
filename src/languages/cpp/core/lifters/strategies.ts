@@ -12,6 +12,7 @@ import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
 import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
+import { 建自動宣告 } from '../../../../components/cpp/var_declare_auto/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -561,11 +562,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         const value = valueNode ? ctx.lift(valueNode) : null
-        return createNode('cpp:var_declare_auto', { name }, {
-          initializer: value ? [value] : [],
-        })
+        return 建自動宣告(name, value)
       }
-      return createNode('cpp:var_declare_auto', { name: 'x' })
+      return 建自動宣告('x', null)
     }
 
     // const/constexpr declaration

@@ -217,8 +217,6 @@
   "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization",
   "C_CONSTEXPR_DECLARE_MSG0": "Compile-time constant %1 %2 = %3",
   "C_CONSTEXPR_DECLARE_TOOLTIP": "Declare a compile-time constant whose value is determined during compilation",
-  "C_AUTO_DECLARE_MSG0": "Auto-infer %1 = %2",
-  "C_AUTO_DECLARE_TOOLTIP": "Declare a variable whose type is automatically deduced from the initial value",
   "U_PRINT_LABEL": "Print",
   "U_FUNC_DEF_LABEL": "Define function",
   "U_FUNC_DEF_RETURN_LABEL": "return type",

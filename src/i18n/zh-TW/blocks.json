@@ -217,8 +217,6 @@
   "C_CONST_DECLARE_TOOLTIP": "宣告一個常數變數，初始化後其值不可更改",
   "C_CONSTEXPR_DECLARE_MSG0": "編譯期常數 %1 %2 = %3",
   "C_CONSTEXPR_DECLARE_TOOLTIP": "宣告一個編譯期常數，其值在編譯時就已確定",
-  "C_AUTO_DECLARE_MSG0": "自動推斷 %1 = %2",
-  "C_AUTO_DECLARE_TOOLTIP": "宣告一個變數，型別由初始值自動推導",
   "U_PRINT_LABEL": "輸出",
   "U_FUNC_DEF_LABEL": "定義函式",
   "U_FUNC_DEF_RETURN_LABEL": "回傳型別",

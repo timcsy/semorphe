@@ -1,0 +1,4 @@
+{
+  "C_AUTO_DECLARE_MSG0": "自動推斷 %1 = %2",
+  "C_AUTO_DECLARE_TOOLTIP": "宣告一個變數，型別由初始值自動推導"
+}

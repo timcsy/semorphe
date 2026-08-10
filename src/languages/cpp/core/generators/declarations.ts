@@ -166,15 +166,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}constexpr ${type} ${name};\n`
   })
 
-  g.set('cpp:var_declare_auto', (node, ctx) => {
-    const name = node.properties.name ?? 'x'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}auto ${name} = ${val};\n`
-    }
-    return `${indent(ctx)}auto ${name};\n`
-  })
+
 
 
 

@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:var_declare_auto",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "x"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建自動宣告`）——「型別修飾詞是 auto」的判別是 C++ 語法的知識，留在共用檔。"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "C_AUTO_DECLARE_MSG0": "Auto-infer %1 = %2",
+  "C_AUTO_DECLARE_TOOLTIP": "Declare a variable whose type is automatically deduced from the initial value"
+}

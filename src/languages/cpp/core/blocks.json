@@ -1961,47 +1961,6 @@
     }
   },
   {
-    "id": "cpp_var_declare_auto",
-    "conceptId": "cpp:var_declare_auto",
-    "language": "cpp",
-    "category": "data",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_var_declare_auto",
-      "message0": "%{BKY_C_AUTO_DECLARE_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        },
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#A855F7",
-      "tooltip": "%{BKY_C_AUTO_DECLARE_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "auto ${NAME} = ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "inputs": {
-        "VALUE": "initializer"
-      }
-    }
-  },
-  {
     "id": "cpp_var_declare_ref",
     "conceptId": "cpp:var_declare_ref",
     "language": "cpp",

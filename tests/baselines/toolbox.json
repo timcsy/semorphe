@@ -11,13 +11,13 @@
         "cpp_builtin_constant",
         "cpp_var_declare_const",
         "cpp_var_declare_constexpr",
-        "cpp_var_declare_auto",
         "cpp_var_declare_ref",
         "cpp_var_declare_static",
         "cpp_member_static",
         "cpp_enum",
         "cpp_typedef",
         "cpp_using_alias",
+        "cpp_var_declare_auto",
         "cpp_literal_char",
         "cpp_var_declare_expression"
       ]
