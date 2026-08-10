@@ -13,7 +13,9 @@
         "kind": "literal"
       }
     ],
-    "children": {},
+    "children": {
+      "initializer": "expression"
+    },
     "role": "statement",
     "skipPaths": [
       "execute"
