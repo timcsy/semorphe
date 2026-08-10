@@ -614,13 +614,11 @@
         "name": "name",
         "kind": "literal",
         "default": ""
-      },
-      {
-        "name": "params",
-        "kind": "literal"
       }
     ],
-    "children": {},
+    "children": {
+      "params": "param_decl"
+    },
     "role": "statement",
     "annotations": {
       "debug_step": true
