@@ -13,18 +13,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 量出今天的三個數字並寫進 `specs/116-block-type-derive/measured.md`：嚴格不導出 153、只差前綴 67、化石 86、已符合 33（`186 = 33+67+86`）。**這是後面每一步的對照基準**
+- [X] T001 量出今天的三個數字並寫進 `specs/116-block-type-derive/measured.md`：嚴格不導出 153、只差前綴 67、化石 86、已符合 33（`186 = 33+67+86`）。**這是後面每一步的對照基準**
 
 ## Phase 2: Foundational（阻斷全部使用者故事）
 
-- [ ] T002 新增護欄 `tests/integration/audit-block-type-derive.test.ts`：量「專案宣告的積木裡，`blockDef.type` 不等於導出名」的筆數。⚠️ **範圍限定「專案宣告的積木」**，不是 Blockly 執行期 registry（使用者自訂積木沒有 conceptId，見 `contracts/derive-rule.md` 的邊界一節）
-- [ ] T003 跑 T002，**確認它是紅的且報 153 筆並逐項指名**。⚠️ 一開始就綠有三種可能，沒有一種是好消息：判準寫錯、資料沒載入、或基線先產了。**此時不得產基線**
+- [X] T002 新增護欄 `tests/integration/audit-block-type-derive.test.ts`：量「專案宣告的積木裡，`blockDef.type` 不等於導出名」的筆數。⚠️ **範圍限定「專案宣告的積木」**，不是 Blockly 執行期 registry（使用者自訂積木沒有 conceptId，見 `contracts/derive-rule.md` 的邊界一節）
+- [X] T003 跑 T002，**確認它是紅的且報 153 筆並逐項指名**。⚠️ 一開始就綠有三種可能，沒有一種是好消息：判準寫錯、資料沒載入、或基線先產了。**此時不得產基線**
 - [ ] T004 ⚠️ **在任何改名之前**：在瀏覽器裡建一份用到 `if`／`for`／`vector`／`cout`／`stack` 的程式，存檔，把 `localStorage['semorphe-state']` 的內容存成 `tests/assets/v9-savedstate.json`，並把當時的積木清單、產生的程式碼、執行輸出一併記進 `tests/assets/v9-savedstate.expected.md`
-- [ ] T005 [P] 在 `src/core/component/` 新增導出規則的**單一實作** `derive-block-type.ts`：`derive(conceptId, form?)` → `:` 換 `_`，非預設形態接 `_` + `form.value`。⚠️ **`axis` 不進名字**（理由見 `contracts/derive-rule.md`：7/9 顆已在用這個形狀）
-- [ ] T006 [P] 自證測 `src/core/component/derive-block-type.test.ts`：三種形狀各一例（預設／`role=expression`／`container_kind=stack`），**外加一條負向**——兩個形態導出同名時必須丟錯（不變式 I1）
-- [ ] T007 護欄補一項：全部積木的導出名**必須唯一**（不變式 I1／I2）。今天實測不撞名，而那是事實不是保證
-- [ ] T008 護欄的兩個注入方向（`build-guardrail` 第 9 步）：① 把一顆積木型別改成不導出的名字 → **會報且指名那一顆**；② 全部符合 → **不亂報**。⚠️ 基線是 0 的時候這是唯一的健康檢查
-- [ ] T009 ⚠️ 檢查護欄的自我否證聲明**沒有錨在缺陷計數上**（`build-guardrail` 第 2 步的語法簽名：健康檢查裡不得出現 `expect(<缺陷計數>).toBeGreaterThan(0)`）——那種錨點會在這條規範成功的那天變紅
+- [X] T005 [P] 在 `src/core/component/` 新增導出規則的**單一實作** `derive-block-type.ts`：`derive(conceptId, form?)` → `:` 換 `_`，非預設形態接 `_` + `form.value`。⚠️ **`axis` 不進名字**（理由見 `contracts/derive-rule.md`：7/9 顆已在用這個形狀）
+- [X] T006 [P] ~~自證測 `src/core/component/derive-block-type.test.ts`~~ **併進護欄的「兩個方向都要釘」那一段**（注入②③④）——分兩個檔會變成兩份會漂移的斷言。原文：自證測：三種形狀各一例（預設／`role=expression`／`container_kind=stack`），**外加一條負向**——兩個形態導出同名時必須丟錯（不變式 I1）
+- [X] T007 護欄補一項：全部積木的導出名**必須唯一**（不變式 I1／I2）。今天實測不撞名，而那是事實不是保證
+- [X] T008 護欄的兩個注入方向（`build-guardrail` 第 9 步）：① 把一顆積木型別改成不導出的名字 → **會報且指名那一顆**；② 全部符合 → **不亂報**。⚠️ 基線是 0 的時候這是唯一的健康檢查
+- [X] T009 ⚠️ 檢查護欄的自我否證聲明**沒有錨在缺陷計數上**（`build-guardrail` 第 2 步的語法簽名：健康檢查裡不得出現 `expect(<缺陷計數>).toBeGreaterThan(0)`）——那種錨點會在這條規範成功的那天變紅
 
 **Checkpoint**：護欄紅著、報 153、指得出名字；導出規則有單一實作且測過；v9 樣本已錄。
 

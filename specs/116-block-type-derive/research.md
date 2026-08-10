@@ -58,12 +58,33 @@
 | `cpp:container_push` | `c_container_push`／`c_stack_push`／`c_queue_push` | –／`container_kind=stack`／`queue` |
 | `cpp:container_pop` | `c_container_pop`／`c_stack_pop`／`c_queue_pop` | –／`container_kind=queue`／`stack` |
 
-**7 顆已經在用 `_` + value 的後綴慣例**（`_expr`）——導出規則不是新發明，
-是**把一條已經跑了很久的慣例宣告出來**。
+~~**7 顆已經在用 `_` + value 的後綴慣例**（`_expr`）——導出規則不是新發明，
+是把一條已經跑了很久的慣例宣告出來。~~
 
-只有 `container_kind` 那兩顆例外：它們把 value 塞進**主體**（`c_stack_push`）
-而不是後綴。導出後會變成 `cpp_container_push_stack`——**那是一個改名，不是保留**，
-所以它們屬於「86 顆化石」那一批，不是「67 顆只差前綴」那一批。
+### ⚠️ 訂正（2026-08-11，護欄第一次跑當場否證）
+
+**那句話是錯的，而它是本份研究唯一一個「照抄」的理由。**
+
+```
+form.value = 'expression'   而積木型別的後綴是  _expr     ← 縮寫，不是 value
+form.value = 'stack'        而積木型別是  c_stack_push    ← value 塞在主體裡
+```
+
+11 個非中性形態裡**一個都沒有**在用「`_` ＋ form.value」。
+我看到 `_expr` 就以為它是 `_` ＋ value，**而 value 是 `expression`**。
+
+> **「照抄已驗證的形狀」這個理由本身沒有被驗證過。**
+> 而它差一點就成為一個設計決定的唯一依據。
+
+**規則不變**（`_` ＋ form.value），理由換成真的那個：
+
+- 加 `axis` 會讓名字裡出現**兩份分類資訊**——`cpp_var_declare_role_expression`
+  裡的 `role` 讀不出任何東西，`expression` 已經說完了
+- **縮寫表（`expression` → `expr`）是第三份會漂移的命名**，正是本規格要消滅的
+  東西。所以不縮寫
+
+**代價**：11 個非中性形態**全部要改名**（`u_input_expr` → `cpp_input_expression`），
+而不是原本以為的「7 顆保留、4 顆改」。它們本來就在 153 筆裡，所以總數不變。
 
 **⚠️ 撞名風險**：兩個形態的 `form.value` 若相同就會導出同名。
 實測 9 顆的 value 只有三種（`expression`／`stack`／`queue`），
@@ -71,8 +92,11 @@
 （規格的 FR-010）。
 
 **Alternatives considered**：
-- 後綴用 `axis_value`（`cpp_var_declare_role_expression`）→ ❌ 太長，
-  而且會把 7 顆已經對的變成要改。**照抄已驗證的形狀**。
+- 後綴用 `axis_value`（`cpp_var_declare_role_expression`）→ ❌ 名字裡兩份分類資訊，
+  而 `role` 讀不出任何東西（~~原本寫「會把 7 顆已經對的變成要改」——**那是錯的**，
+  見上面的訂正：一顆都沒有已經對~~）。
+- 後綴用縮寫（`expression` → `expr`，保留今天的 7 顆）→ ❌ **縮寫表是第三份會漂移的
+  命名**，正是本規格要消滅的東西。
 - 不加後綴、讓多形態共用一個型別 → ❌ Blockly 的 registry 以 type 為鍵，
   共用就只剩一顆積木。
 
@@ -179,5 +203,5 @@ layer=universal 但沒 u_ 前綴 4   c_comment_block / c_comment_doc /
 | 規格原文 | 實測 | 建議 |
 |---|---|---|
 | Assumptions：「只有 localStorage 與匯出檔兩個存檔管道」 | 存檔管道是 2 個 ✅，但**積木型別入口是 3 個** | 補一句：護欄範圍限定「專案宣告的積木」 |
-| FR-010「同一顆身分若有多個積木形態，MUST 有明確且可檢查的區分方式」 | 慣例已存在（`_` + form.value，7/9 已符合） | 規則寫定，不用另外設計 |
+| FR-010「同一顆身分若有多個積木形態，MUST 有明確且可檢查的區分方式」 | ⚠️ **慣例不存在**——11 個非中性形態**一個都沒有**在用 `_` + form.value（`_expr` 是縮寫） | 規則仍是 `_` + value，但理由不是「照抄」而是「不要縮寫表」；11 顆全部要改名 |
 | 明確不做：「`u_`/`c_`/`cpp_` 與 `layer` 差 2 顆」 | 今天差 **4** 顆，而且 `u_ ⊂ layer=universal` | 差集不處理仍然對，但 **`toolbox-builder` 必須跟著改**，那不是「不做」 |
