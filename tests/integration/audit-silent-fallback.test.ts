@@ -49,10 +49,34 @@ import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RAT
 const 護欄名 = 'silent-fallback'
 const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.json')
 
+/**
+ * 回退的**兩種形狀**——而它們的發生時機根本不同（`specs/111` 實測）。
+ *
+ * ```
+ * 型別不符   if (x.type !== 'array')       上游辨識判錯身分時發生   ← 415 段語料裡**會**發生
+ * 缺子節點   if (!v) / (nodes.length === 0) 語義樹本身壞掉時發生     ← 實測 **0 次**
+ * ```
+ *
+ * `specs/110` 把兩者混成一個數字並全部判為「靜默回退」，於是基線的 8 筆
+ * **全部是死分支**。一條數字永遠不動的棘輪，與一條沒有人跑的護欄是同一件事。
+ *
+ * ⚠️ 分不出來的歸 `未分類` 並**計入要看**——不得靜靜歸進防禦欄
+ * （`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全）。
+ */
+type 形狀 = '型別不符' | '缺子節點' | '未分類'
+
 interface 命中 {
   位置: string
   條件: string
   回傳: string
+  形狀: 形狀
+}
+
+/** 依條件的語法形狀分類。**新的寫法會落到「未分類」而不是被默許。** */
+function 分類(條件: string): 形狀 {
+  if (/\.type\s*[!=]==|typeof\s|instanceof\s|!Array\.isArray|Array\.isArray/.test(條件)) return '型別不符'
+  if (/^!\w|\.length\s*===\s*0|\.length\s*<\s*1|=== undefined|== null|!\w+\?\./.test(條件)) return '缺子節點'
+  return '未分類'
 }
 
 interface 判定 {
@@ -112,7 +136,8 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
         }
       }
       if (!條件) continue // 無條件的回傳不是回退
-      命中.push({ 位置: `${rel}:${i + 1}`, 條件: 條件.trim().slice(0, 80), 回傳: l.trim().slice(0, 60) })
+      const c = 條件.trim().slice(0, 80)
+      命中.push({ 位置: `${rel}:${i + 1}`, 條件: c, 回傳: l.trim().slice(0, 60), 形狀: 分類(c) })
     }
   }
   return { 命中, "return 總數": total }
@@ -154,6 +179,16 @@ describe('第三十三條護欄：靜默回退', () => {
     }
   })
 
+  it('★ 注入③：兩種形狀要分得開，而認不得的條件要落到「未分類」', () => {
+    // 沒有這一支，一個「什麼都歸缺子節點」的分類器也會讓棘輪永遠是 0。
+    expect(分類("arr.type !== 'array'")).toBe('型別不符')
+    expect(分類('!Array.isArray(v.value)')).toBe('型別不符')
+    expect(分類('!v')).toBe('缺子節點')
+    expect(分類('valueNodes.length === 0')).toBe('缺子節點')
+    // ⚠️ 認不得的**不得**被默許歸進防禦欄——那會讓一個會發生的回退靜靜消失
+    expect(分類('someWeirdPredicate(x)')).toBe('未分類')
+  })
+
   // ── 判定落點（第 11 步） ────────────────────────────────────────
   it('每一筆判定必須有理由，且判定不得過期', () => {
     const 現 = 掃(執行器檔()).命中
@@ -175,12 +210,17 @@ describe('第三十三條護欄：靜默回退', () => {
     const 判定s = 讀判定()
     const 已判定 = new Map(判定s.map((d) => [d.位置, d]))
     const 要看 = 命中.filter((h) => !已判定.has(h.位置))
-    const 回退 = 命中.filter((h) => 已判定.get(h.位置)?.判定 === '靜默回退')
+    const 型別不符 = 命中.filter((h) => h.形狀 === '型別不符')
+    const 缺子節點 = 命中.filter((h) => h.形狀 === '缺子節點')
+    const 未分類 = 命中.filter((h) => h.形狀 === '未分類')
 
     printReport('靜默回退（執行器遇到處理不了的輸入時有沒有出聲）', [
       `掃描   ${檔s.length} 個執行器檔｜${returnTotal} 個帶 value 的 return`,
       `命中   ${命中.length}（已判定 ${命中.length - 要看.length}，要看 ${要看.length}）`,
-      `其中判為**靜默回退** ${回退.length} 筆 ← 棘輪盯的是這個數字`,
+      '',
+      `  **型別不符** ${型別不符.length} 筆 ← 棘輪盯這一欄（上游辨識判錯時**會**走到）`,
+      `  缺子節點   ${缺子節點.length} 筆   防禦性；415 段語料實測走到 **0** 次`,
+      `  未分類     ${未分類.length} 筆   ⚠️ 新的條件寫法，要人看`,
       '',
       ...要看.map((h, i) => `  ${i + 1}. ${h.位置}\n       if (${h.條件})\n       ${h.回傳}`),
       '',
@@ -202,14 +242,21 @@ describe('第三十三條護欄：靜默回退', () => {
           ratchet: RATCHET_NOTE,
         },
         掃描: { 檔數: 檔s.length, 'return 總數': returnTotal },
+        型別不符: 型別不符.length,
+        缺子節點: 缺子節點.length,
         命中: { 筆數: 命中.length, 明細: 命中 },
       })
       return
     }
 
     const base = loadBaseline<基線>(護欄名)
-    const 基線回退 = (base as unknown as { 回退筆數?: number }).回退筆數 ?? base.命中.筆數
+    const b = base as unknown as { 型別不符?: number; 缺子節點?: number }
     expect(要看, '有未判定的命中——護欄只排順序，判定要人做').toHaveLength(0)
-    assertRatchet([['靜默回退筆數', 回退.length, 基線回退]])
+    expect(未分類.map((h) => `${h.位置} if(${h.條件})`), '出現了分類器認不得的條件寫法——不得靜靜歸進防禦欄').toEqual([])
+    expect(
+      型別不符.length + 缺子節點.length,
+      '兩欄總和變了。只做重新分類時總和必須不變——變了代表真的多了或少了一處回退。',
+    ).toBe((b.型別不符 ?? 0) + (b.缺子節點 ?? 0))
+    assertRatchet([['型別不符', 型別不符.length, b.型別不符 ?? 0]])
   })
 })
