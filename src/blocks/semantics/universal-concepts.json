@@ -443,7 +443,8 @@
       }
     ],
     "children": {
-      "size": "expression"
+      "size": "expression",
+      "values": "expressions"
     },
     "role": "statement",
     "annotations": {

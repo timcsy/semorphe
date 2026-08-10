@@ -11,9 +11,10 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
       const args = argNodes.map(a => generateExpression(a, ctx))
       return `${indent(ctx)}printf("${format}", ${args.join(', ')});\n`
     }
-    // 0 args or legacy: just format string
-    const argsText = (node.properties.args as string) ?? ''
-    if (argsText) return `${indent(ctx)}printf("${format}"${argsText});\n`
+    // ⚠️ **這裡原本有一條 legacy fallback**：`node.properties.args` 存在就用它。
+    // 而 `args` **從來不是屬性**——lift 產出的是接點（實測：屬性出現 0 次）。
+    // 那條分支永遠走不到，卻讓宣告必須同時列出屬性與接點兩份（`specs/106`）。
+    // 刪掉它，宣告才收得乾淨。存檔遷移從來沒有產生過這個屬性。
     return `${indent(ctx)}printf("${format}");\n`
   })
 
@@ -35,8 +36,8 @@ export function registerCstdioGenerators(g: Map<string, NodeGenerator>, _style: 
       if (ctx.isExpression) return expr
       return `${indent(ctx)}${expr};\n`
     }
-    const argsText = (node.properties.args as string) ?? ''
-    const expr = `scanf("${format}"${argsText})`
+    // 同上：`args` 從來不是屬性，那條 legacy fallback 永遠走不到。
+    const expr = `scanf("${format}")`
     if (ctx.isExpression) return expr
     return `${indent(ctx)}${expr};\n`
   })

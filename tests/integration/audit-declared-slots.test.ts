@@ -142,6 +142,19 @@ function 取語料(): string[] {
   return out
 }
 
+/** 跑一段程式碼，回傳「每顆元件實際產出的非空接點」。健康檢查用。 */
+export function 取實際產出(l: Lifter, p: Parser, code: string): Map<string, string[]> {
+  const out = new Map<string, string[]>()
+  const 走 = (n: SemanticNode): void => {
+    const 有值 = Object.keys(n.children ?? {}).filter((k) => (n.children[k] ?? []).length > 0)
+    out.set(n.conceptId, [...new Set([...(out.get(n.conceptId) ?? []), ...有值])])
+    for (const kids of Object.values(n.children ?? {})) for (const c of kids) 走(c)
+  }
+  const t = l.lift(p.parse(code)!.rootNode as never)
+  if (t) 走(t)
+  return out
+}
+
 let 快取: { 判定: 判定[]; 語料數: number; 碰到數: number } | null = null
 
 function 量一次(lifter: Lifter, p: Parser): NonNullable<typeof 快取> {
@@ -195,12 +208,20 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     expect(碰到數, '一顆元件都沒碰到 → 同上').toBeGreaterThan(30)
   })
 
-  it('★ 健康檢查：已知答案的樣本必須在違規清單裡', () => {
-    // `cpp:func_def` 的宣告把 `params` 寫成**屬性**而 lift 產出**接點**
-    // ——`specs/105` 診斷過。它是這條護欄的定錨樣本：
-    // **它不在清單裡，代表量測沒跑到 lift 的實際產出。**
-    const d = new Map(量一次(lifter, tsParser).判定.map((x) => [x.conceptId, x]))
-    expect(d.get('cpp:func_def')?.未宣告, 'cpp:func_def 的 params 沒被抓到').toContain('params')
+  it('★ 健康檢查：量測看得到 lift 的實際產出（不是只讀宣告）', () => {
+    // ⚠️ **這一則的第一版錨錯了**，而錯法正是 `build-guardrail` 第 2 步記了
+    // 五次的那個形狀——它斷言「`cpp:func_def` 必須在**違規清單**裡」，
+    // 於是 `specs/106` 把那顆修好的當天，**這條健康檢查自己變紅**。
+    //
+    // 那是第六個實例，而且發生在**寫下那條規則的同一輪**。
+    // 語法簽名擋得住散文擋不住的：斷言的數字若是這條護欄想推向零的，錨就錯了。
+    //
+    // 正確的錨是**不隨修復而改變的事實**：lift 對 `int f(int a)`
+    // 產出的樹上，`cpp:func_def` 底下有一個非空的 `params` 接點。
+    // 那句話在修好宣告之前與之後都成立——它證明的是「量測跑到了 lift 的
+    // 實際產出」，而不是「缺陷還在」。
+    const 實際 = 取實際產出(lifter, tsParser, 'int f(int a) { return a; }')
+    expect(實際.get('cpp:func_def'), '量測沒看到 func_def 的 params 接點 → 它沒跑到 lift 的實際產出').toContain('params')
   })
 
   // ── 棘輪 ────────────────────────────────────────────────
