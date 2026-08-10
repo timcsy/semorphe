@@ -1,0 +1,8 @@
+{
+  "CPP_QUEUE_DECLARE_MSG0": "建立 %1 佇列 %2",
+  "CPP_QUEUE_DECLARE_TOOLTIP": "建立一個佇列，像排隊一樣，最先來的最先處理（先進先出）",
+  "CPP_QUEUE_DECLARE_TYPE_INT": "int（整數）",
+  "CPP_QUEUE_DECLARE_TYPE_FLOAT": "float（小數）",
+  "CPP_QUEUE_DECLARE_TYPE_STRING": "string（文字）",
+  "CPP_QUEUE_DECLARE_TYPE_CHAR": "char（字元）"
+}

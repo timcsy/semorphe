@@ -20,11 +20,5 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
     return `${indent(ctx)}${obj}[${key}] = ${value};\n`
   })
 
-  // Statement concepts
-  g.set('cpp:map_declare', (node, ctx) => {
-    const keyType = node.properties.key_type ?? 'int'
-    const valueType = node.properties.value_type ?? 'int'
-    const name = node.properties.name ?? 'mp'
-    return `${indent(ctx)}map<${keyType}, ${valueType}> ${name};\n`
-  })
+
 }

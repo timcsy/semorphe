@@ -1,0 +1,8 @@
+{
+  "CPP_QUEUE_DECLARE_MSG0": "create %1 queue %2",
+  "CPP_QUEUE_DECLARE_TOOLTIP": "Create a queue, like standing in line: the first one in is the first one processed (FIFO)",
+  "CPP_QUEUE_DECLARE_TYPE_INT": "int (integer)",
+  "CPP_QUEUE_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "CPP_QUEUE_DECLARE_TYPE_STRING": "string (text)",
+  "CPP_QUEUE_DECLARE_TYPE_CHAR": "char (character)"
+}

@@ -1,0 +1,8 @@
+{
+  "CPP_SET_DECLARE_MSG0": "建立 %1 集合 %2",
+  "CPP_SET_DECLARE_TOOLTIP": "建立一個集合，裡面的元素不會重複，而且會自動排序",
+  "CPP_SET_DECLARE_TYPE_INT": "int（整數）",
+  "CPP_SET_DECLARE_TYPE_FLOAT": "float（小數）",
+  "CPP_SET_DECLARE_TYPE_STRING": "string（文字）",
+  "CPP_SET_DECLARE_TYPE_CHAR": "char（字元）"
+}

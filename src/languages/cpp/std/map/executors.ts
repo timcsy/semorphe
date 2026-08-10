@@ -30,10 +30,7 @@ function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:map_declare', async (node, ctx) => {
-    const name = String(node.properties.name)
-    ctx.scope.declare(name, { type: 'array', value: [] })
-  })
+
 
   /**
    * `m[key] = value`——**對應表的寫入，與陣列的索引寫入是不同的行為**。

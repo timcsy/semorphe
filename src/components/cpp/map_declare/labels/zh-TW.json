@@ -1,0 +1,11 @@
+{
+  "CPP_MAP_DECLARE_MSG0": "建立對照表 %3（鍵 %1 值 %2）",
+  "CPP_MAP_DECLARE_TOOLTIP": "建立一個對照表，用一個「鍵」來查詢對應的「值」，像字典一樣",
+  "CPP_MAP_DECLARE_KEY_TYPE_INT": "int（整數）",
+  "CPP_MAP_DECLARE_KEY_TYPE_STRING": "string（文字）",
+  "CPP_MAP_DECLARE_KEY_TYPE_CHAR": "char（字元）",
+  "CPP_MAP_DECLARE_VALUE_TYPE_INT": "int（整數）",
+  "CPP_MAP_DECLARE_VALUE_TYPE_FLOAT": "float（小數）",
+  "CPP_MAP_DECLARE_VALUE_TYPE_DOUBLE": "double（精確小數）",
+  "CPP_MAP_DECLARE_VALUE_TYPE_STRING": "string（文字）"
+}

@@ -1,0 +1,8 @@
+{
+  "CPP_PRIORITY_QUEUE_DECLARE_MSG0": "建立 %1 優先佇列 %2",
+  "CPP_PRIORITY_QUEUE_DECLARE_TOOLTIP": "建立一個優先佇列——**取出的永遠是最大的那個**，不是最先放進去的",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_INT": "int（整數）",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_FLOAT": "float（小數）",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_STRING": "string（字串）",
+  "CPP_PRIORITY_QUEUE_DECLARE_TYPE_CHAR": "char（字元）"
+}

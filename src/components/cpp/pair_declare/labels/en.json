@@ -1,0 +1,12 @@
+{
+  "CPP_PAIR_DECLARE_MSG0": "create pair <%1, %2> %3",
+  "CPP_PAIR_DECLARE_TOOLTIP": "Create a pair variable to hold two values",
+  "CPP_PAIR_DECLARE_TYPE1_INT": "int (integer)",
+  "CPP_PAIR_DECLARE_TYPE1_DOUBLE": "double (precise decimal)",
+  "CPP_PAIR_DECLARE_TYPE1_STRING": "string (text)",
+  "CPP_PAIR_DECLARE_TYPE1_CHAR": "char (character)",
+  "CPP_PAIR_DECLARE_TYPE2_INT": "int (integer)",
+  "CPP_PAIR_DECLARE_TYPE2_DOUBLE": "double (precise decimal)",
+  "CPP_PAIR_DECLARE_TYPE2_STRING": "string (text)",
+  "CPP_PAIR_DECLARE_TYPE2_CHAR": "char (character)"
+}

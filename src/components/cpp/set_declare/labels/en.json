@@ -1,0 +1,8 @@
+{
+  "CPP_SET_DECLARE_MSG0": "create %1 set %2",
+  "CPP_SET_DECLARE_TOOLTIP": "Create a set where elements are unique and automatically sorted",
+  "CPP_SET_DECLARE_TYPE_INT": "int (integer)",
+  "CPP_SET_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "CPP_SET_DECLARE_TYPE_STRING": "string (text)",
+  "CPP_SET_DECLARE_TYPE_CHAR": "char (character)"
+}

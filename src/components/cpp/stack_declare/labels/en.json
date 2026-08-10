@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_DECLARE_MSG0": "create %1 stack %2",
+  "CPP_STACK_DECLARE_TOOLTIP": "Create a stack, like stacking plates: the last one placed is the first one removed (LIFO)",
+  "CPP_STACK_DECLARE_TYPE_INT": "int (integer)",
+  "CPP_STACK_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "CPP_STACK_DECLARE_TYPE_STRING": "string (text)",
+  "CPP_STACK_DECLARE_TYPE_CHAR": "char (character)"
+}

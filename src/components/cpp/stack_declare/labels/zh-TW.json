@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_DECLARE_MSG0": "建立 %1 堆疊 %2",
+  "CPP_STACK_DECLARE_TOOLTIP": "建立一個堆疊，像疊盤子一樣，最後放的最先拿出來（後進先出）",
+  "CPP_STACK_DECLARE_TYPE_INT": "int（整數）",
+  "CPP_STACK_DECLARE_TYPE_FLOAT": "float（小數）",
+  "CPP_STACK_DECLARE_TYPE_STRING": "string（文字）",
+  "CPP_STACK_DECLARE_TYPE_CHAR": "char（字元）"
+}

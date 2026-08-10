@@ -336,7 +336,7 @@
     },
     "cpp:map_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:math_abs": {
       "files": 3,
@@ -420,7 +420,7 @@
     },
     "cpp:pair_declare": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:pair_make": {
       "files": 3,
@@ -448,7 +448,7 @@
     },
     "cpp:priority_queue_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:priority_queue_peek": {
       "files": 3,
@@ -468,7 +468,7 @@
     },
     "cpp:queue_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:queue_front": {
       "files": 3,
@@ -520,7 +520,7 @@
     },
     "cpp:set_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:set_insert": {
       "files": 3,
@@ -532,7 +532,7 @@
     },
     "cpp:stack_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:stack_peek": {
       "files": 3,

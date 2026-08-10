@@ -1,30 +1,5 @@
 [
   {
-    "conceptId": "cpp:stack_declare",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "std::string",
-          "char"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "stk"
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:stack_peek",
     "layer": "lang-library",
     "abstractConcept": null,

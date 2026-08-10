@@ -1,0 +1,35 @@
+{
+  "conceptId": "cpp:priority_queue_declare",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type",
+      "kind": "enum",
+      "values": [
+        "int",
+        "float",
+        "std::string",
+        "char"
+      ],
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "pq"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<queue>"
+  ]
+}

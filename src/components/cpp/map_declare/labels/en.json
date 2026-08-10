@@ -1,0 +1,11 @@
+{
+  "CPP_MAP_DECLARE_MSG0": "Create lookup table %3 (key %1, value %2) (map)",
+  "CPP_MAP_DECLARE_TOOLTIP": "Create a map that looks up a value by a key, like a dictionary",
+  "CPP_MAP_DECLARE_KEY_TYPE_INT": "int (integer)",
+  "CPP_MAP_DECLARE_KEY_TYPE_STRING": "string (text)",
+  "CPP_MAP_DECLARE_KEY_TYPE_CHAR": "char (character)",
+  "CPP_MAP_DECLARE_VALUE_TYPE_INT": "int (integer)",
+  "CPP_MAP_DECLARE_VALUE_TYPE_FLOAT": "float (decimal)",
+  "CPP_MAP_DECLARE_VALUE_TYPE_DOUBLE": "double (precise decimal)",
+  "CPP_MAP_DECLARE_VALUE_TYPE_STRING": "string (text)"
+}

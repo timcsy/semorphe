@@ -18,10 +18,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:set_declare', async (node, ctx) => {
-    const name = String(node.properties.name)
-    ctx.scope.declare(name, { type: 'array', value: [] })
-  })
+
 
   register('cpp:set_insert', async (node, ctx) => {
     const name = String(node.properties.obj)

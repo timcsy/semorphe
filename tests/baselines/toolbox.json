@@ -176,8 +176,8 @@
         "cpp_map_assign",
         "cpp_set_declare",
         "cpp_set_insert",
-        "cpp_pair_make",
         "cpp_pair_declare",
+        "cpp_pair_make",
         "cpp_container_erase",
         "cpp_container_count"
       ]
@@ -187,10 +187,10 @@
       "blocks": [
         "cpp_stack_declare",
         "cpp_stack_peek",
+        "cpp_priority_queue_declare",
         "cpp_queue_back",
         "cpp_queue_declare",
         "cpp_queue_front",
-        "cpp_priority_queue_declare",
         "cpp_priority_queue_peek",
         "cpp_stringstream_declare",
         "cpp_istringstream_declare",

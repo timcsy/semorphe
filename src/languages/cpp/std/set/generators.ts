@@ -3,12 +3,7 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 
 export function registerGenerators(g: Map<string, NodeGenerator>, _style: StylePreset): void {
-  // Statement concepts
-  g.set('cpp:set_declare', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 's'
-    return `${indent(ctx)}set<${type}> ${name};\n`
-  })
+
 
   g.set('cpp:set_insert', (node, ctx) => {
     const obj = node.properties.obj ?? 's'

@@ -1,0 +1,50 @@
+{
+  "conceptId": "cpp:pair_declare",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type1",
+      "kind": "enum",
+      "values": [
+        "int",
+        "double",
+        "string",
+        "char"
+      ]
+    },
+    {
+      "name": "type2",
+      "kind": "enum",
+      "values": [
+        "int",
+        "double",
+        "string",
+        "char"
+      ]
+    },
+    {
+      "name": "name",
+      "kind": "literal"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "execute": null,
+    "_execute_why": "這顆沒有獨立的執行語義。**顯式的空，不是遺漏。**"
+  },
+  "requires": [
+    "<utility>"
+  ]
+}

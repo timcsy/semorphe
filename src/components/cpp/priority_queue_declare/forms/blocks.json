@@ -1,0 +1,59 @@
+[
+  {
+    "id": "cpp:priority_queue_declare",
+    "conceptId": "cpp:priority_queue_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_priority_queue_declare",
+      "message0": "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "pq"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "std::priority_queue<${TYPE}> ${NAME};",
+      "imports": [
+        "queue"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      }
+    }
+  }
+]

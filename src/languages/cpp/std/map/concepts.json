@@ -1,40 +1,5 @@
 [
   {
-    "conceptId": "cpp:map_declare",
-    "layer": "lang-library",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "key_type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "std::string",
-          "char"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "value_type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "double",
-          "std::string"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": "mp"
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:map_at",
     "layer": "lang-library",
     "abstractConcept": "cpp:array_at",

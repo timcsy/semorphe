@@ -17,10 +17,7 @@ import { defaultValue } from '../../../../interpreter/types'
 export function registerExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:stack_declare', async (node, ctx) => {
-    const name = String(node.properties.name)
-    ctx.scope.declare(name, { type: 'array', value: [] })
-  })
+
 
   register('cpp:stack_peek', async (node, ctx) => {
     const name = String(node.properties.obj)

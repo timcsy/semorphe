@@ -10,7 +10,6 @@ import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { allStdModules } from '../std'
 import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../../core/component/paths'
-import { registerPendingContainers } from '../pending-containers'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
@@ -59,8 +58,9 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
 
   // 元件膠囊的 lift 路
   for (const reg of componentLiftRegistrars()) (reg as (l: typeof lifter) => void)(lifter)
-  // 還沒元件化的容器——過渡表，只准變短
-  registerPendingContainers()
+  // ✅ **過渡表已退場**（2026-08-11）：`pending-containers.ts` 那六顆容器
+  // 全部進了膠囊，各自登錄自己的型別名。那個檔的檔頭寫著
+  // 「這張表歸零的那天就刪掉這個檔」——照做了。
 
   // preproc_include now handled by liftStrategy "cpp:liftPreprocInclude"
 
