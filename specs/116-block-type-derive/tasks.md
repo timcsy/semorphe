@@ -19,7 +19,7 @@
 
 - [X] T002 新增護欄 `tests/integration/audit-block-type-derive.test.ts`：量「專案宣告的積木裡，`blockDef.type` 不等於導出名」的筆數。⚠️ **範圍限定「專案宣告的積木」**，不是 Blockly 執行期 registry（使用者自訂積木沒有 conceptId，見 `contracts/derive-rule.md` 的邊界一節）
 - [X] T003 跑 T002，**確認它是紅的且報 153 筆並逐項指名**。⚠️ 一開始就綠有三種可能，沒有一種是好消息：判準寫錯、資料沒載入、或基線先產了。**此時不得產基線**
-- [ ] T004 ⚠️ **在任何改名之前**：在瀏覽器裡建一份用到 `if`／`for`／`vector`／`cout`／`stack` 的程式，存檔，把 `localStorage['semorphe-state']` 的內容存成 `tests/assets/v9-savedstate.json`，並把當時的積木清單、產生的程式碼、執行輸出一併記進 `tests/assets/v9-savedstate.expected.md`
+- [X] T004 ⚠️ **在任何改名之前**：在瀏覽器裡建一份用到 `if`／`for`／`vector`／`cout`／`stack` 的程式，存檔，把 `localStorage['semorphe-state']` 的內容存成 `tests/assets/v9-savedstate.json`，並把當時的積木清單、產生的程式碼、執行輸出一併記進 `tests/assets/v9-savedstate.expected.md`
 - [X] T005 [P] 在 `src/core/component/` 新增導出規則的**單一實作** `derive-block-type.ts`：`derive(conceptId, form?)` → `:` 換 `_`，非預設形態接 `_` + `form.value`。⚠️ **`axis` 不進名字**（理由見 `contracts/derive-rule.md`：7/9 顆已在用這個形狀）
 - [X] T006 [P] ~~自證測 `src/core/component/derive-block-type.test.ts`~~ **併進護欄的「兩個方向都要釘」那一段**（注入②③④）——分兩個檔會變成兩份會漂移的斷言。原文：自證測：三種形狀各一例（預設／`role=expression`／`container_kind=stack`），**外加一條負向**——兩個形態導出同名時必須丟錯（不變式 I1）
 - [X] T007 護欄補一項：全部積木的導出名**必須唯一**（不變式 I1／I2）。今天實測不撞名，而那是事實不是保證
@@ -35,12 +35,12 @@
 **目標**：一次性轉換掛上版本鏈，四個契約全過。
 **獨立驗證**：`tests/assets/v9-savedstate.json` 載入後積木清單／語義樹／程式碼／輸出四者與 `.expected.md` 相同。
 
-- [ ] T010 [US1] 在 `src/blocks/` 新增 `block-type-migrations.ts`——舊積木型別 → 新積木型別的**凍結明表**。⚠️ 照 `src/blocks/id-migrations.ts` 的形狀（它的檔頭寫著為什麼是明表不是規則：「那一版存在哪些名字是**歷史事實**」）。**先留空，由 T017／T022／T027 逐批填**
-- [ ] T011 [US1] 在 `src/core/storage-version.ts` 加 v9 → v10 升級步驟。⚠️ **這是專案第一次改寫積木狀態**——既有八步每一步都只碰 `raw.tree`。改寫的目標寫成「積木狀態裡每顆積木的型別欄位」，**不是「所有叫 type 的欄位」**（Blockly 積木定義的 `args` 裡也有 `type`，字面一樣但完全無關，而兩邊都是 string、型別檢查看不到）
-- [ ] T012 [US1] 未知型別要**出聲**（契約 C3）：轉換時遇到表上沒有的型別，回可辨識的失敗，**不得靜默丟棄那顆積木**
-- [ ] T013 [P] [US1] 契約測試 `tests/integration/save-migration-v10.test.ts` 四支：C1 換得乾淨／C2 冪等／C3 未知型別出聲／C4 語義樹逐欄位不變
-- [ ] T014 [P] [US1] 回歸測試：載入 `tests/assets/v9-savedstate.json`，比對積木清單、產生的程式碼、執行輸出三者與 `.expected.md` 相同。⚠️ **這一支讓「舊檔還打得開」每次跑測試都被驗證**，而不只在改名當天被人工確認一次
-- [ ] T015 [US1] 確認匯入 JSON 那條路也走同一個升級入口（研究一實測是 ✅，但要有測試釘住——**兩處各寫一份會漂移**）
+- [X] T010 [US1] 在 `src/blocks/` 新增 `block-type-migrations.ts`——舊積木型別 → 新積木型別的**凍結明表**。⚠️ 照 `src/blocks/id-migrations.ts` 的形狀（它的檔頭寫著為什麼是明表不是規則：「那一版存在哪些名字是**歷史事實**」）。**先留空，由 T017／T022／T027 逐批填**
+- [X] T011 [US1] 在 `src/core/storage-version.ts` 加 v9 → v10 升級步驟。⚠️ **這是專案第一次改寫積木狀態**——既有八步每一步都只碰 `raw.tree`。改寫的目標寫成「積木狀態裡每顆積木的型別欄位」，**不是「所有叫 type 的欄位」**（Blockly 積木定義的 `args` 裡也有 `type`，字面一樣但完全無關，而兩邊都是 string、型別檢查看不到）
+- [X] T012 [US1] 未知型別要**出聲**（契約 C3）：轉換時遇到表上沒有的型別，回可辨識的失敗，**不得靜默丟棄那顆積木**
+- [X] T013 [P] [US1] 契約測試 `tests/integration/save-migration-v10.test.ts` 四支：C1 換得乾淨／C2 冪等／C3 未知型別出聲／C4 語義樹逐欄位不變
+- [X] T014 [P] [US1] 回歸測試：載入 `tests/assets/v9-savedstate.json`，比對積木清單、產生的程式碼、執行輸出三者與 `.expected.md` 相同。⚠️ **這一支讓「舊檔還打得開」每次跑測試都被驗證**，而不只在改名當天被人工確認一次
+- [X] T015 [US1] ~~確認匯入 JSON 那條路也走同一個升級入口~~ ✅ 實測共用 `judgeJSON`／`upgrade`（`storage.ts:194`）。⚠️ **而錄樣本時掀出真正的缺陷在別處**：`buildSaveState()` 寫死 `version: 1`，匯出繞過 `save()` → 每份匯出檔自稱 v1。已修，理由記在 `app.ts` 的檔頭註解
 
 **Checkpoint**：US1 可獨立驗收。此時尚未改任何名字，轉換表是空的——四個契約在空表上仍必須成立。
 
@@ -55,7 +55,7 @@
 > 如果規範是為了配合重構才立的，把重構先做完，違規會被重構「順便」修掉
 > ——**一個被順便修掉的缺陷不會留下任何紀錄，而它的同類還會再來。**
 
-- [ ] T016 [US4] 確認 T002–T009 的護欄與注入都就位且紅著（153）。這一項是**檢查點不是新工作**——它存在是為了讓「護欄先於改名」在任務表上是一個可勾選的事實
+- [X] T016 [US4] 確認 T002–T009 的護欄與注入都就位且紅著（153）。這一項是**檢查點不是新工作**——它存在是為了讓「護欄先於改名」在任務表上是一個可勾選的事實
 
 ---
 

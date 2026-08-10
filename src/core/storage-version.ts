@@ -11,9 +11,10 @@
  * 見 specs/052-storage-integrity-gate/research.md F2、contracts/storage.md
  */
 import type { SavedState } from './storage'
+import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../blocks/block-type-migrations'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 9
+export const CURRENT_VERSION = 10
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -198,6 +199,83 @@ export function registeredIdMigrations(): Record<string, string> {
   return { ...idMigrations }
 }
 
+
+/**
+ * 已登錄的積木型別改名——給護欄與遷移用。
+ *
+ * ⚠️ **與身分改名不同，這張表由核心 `import` 進來而不是套件登錄。**
+ * 理由：積木型別是**投影**，而投影的命名規則是核心定的（`deriveBlockType`）；
+ * 身分是**真實**，而真實屬於套件。兩者的歸屬不同，機制就不該長一樣。
+ */
+const 積木型別改名 = () => BLOCK_TYPE_MIGRATIONS_V9_TO_V10
+
+/** 轉換遇到表上沒有的型別時，怎麼處理。 */
+export class 未知積木型別 extends Error {
+  readonly 型別們: readonly string[]
+  constructor(型別們: readonly string[]) {
+    super(
+      `存檔裡有 ${型別們.length} 種積木型別不在 v9→v10 的改名表上：` +
+        `${型別們.join('、')}。**不靜默丟棄**——一顆被吞掉的積木，` +
+        `使用者感覺到的是「我的程式少了一段」而沒有任何錯誤訊息。`,
+    )
+    this.型別們 = 型別們
+    this.name = '未知積木型別'
+  }
+}
+
+/**
+ * 就地改寫**積木狀態**裡的積木型別。
+ *
+ * ⚠️ **只改 Blockly 積木節點的 `type`，不是所有叫 `type` 的欄位。**
+ * Blockly 的積木定義 JSON 裡 `args` 也有 `type`（`input_value`／
+ * `field_dropdown`…），字面一模一樣而意思完全無關——**兩邊都是 string，
+ * 型別檢查看不到**。上一次「同一個欄位名長在三個型別上」的改名回退了 121 個檔。
+ *
+ * 判別方式：只在**已知是積木節點**的位置遞迴（`blocks.blocks[]`、`inputs.*.block`
+ * ／`.shadow`、`next.block`／`.shadow`）。認不得的結構原樣通過。
+ */
+function 改寫積木型別(blocklyState: unknown, 表: Record<string, string>, 未知: Set<string>): unknown {
+  // ⚠️ **已經是新名的不算未知**——否則轉換就不冪等，而不冪等會咬人：
+  // 匯出那條路曾經把每一份檔案標成 `version: 1`（2026-08-11 修掉），
+  // 於是一份已經轉換過的內容會再被餵進這一步一次。
+  // **一個「只跑一次才對」的轉換，遲早會被跑第二次。**
+  const 新名們 = new Set(Object.values(表))
+  const 一顆積木 = (b: unknown): unknown => {
+    if (!b || typeof b !== 'object' || Array.isArray(b)) return b
+    const n = { ...(b as Record<string, unknown>) }
+    if (typeof n.type === 'string') {
+      const 新 = 表[n.type]
+      if (新 !== undefined) n.type = 新
+      else if (!新名們.has(n.type)) 未知.add(n.type)
+    }
+    if (n.inputs && typeof n.inputs === 'object') {
+      const ins: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(n.inputs as Record<string, unknown>)) {
+        const slot = { ...(v as Record<string, unknown>) }
+        if (slot.block) slot.block = 一顆積木(slot.block)
+        if (slot.shadow) slot.shadow = 一顆積木(slot.shadow)
+        ins[k] = slot
+      }
+      n.inputs = ins
+    }
+    if (n.next && typeof n.next === 'object') {
+      const nx = { ...(n.next as Record<string, unknown>) }
+      if (nx.block) nx.block = 一顆積木(nx.block)
+      if (nx.shadow) nx.shadow = 一顆積木(nx.shadow)
+      n.next = nx
+    }
+    return n
+  }
+
+  if (!blocklyState || typeof blocklyState !== 'object') return blocklyState
+  const s = { ...(blocklyState as Record<string, unknown>) }
+  const blocks = s.blocks as Record<string, unknown> | undefined
+  if (blocks && Array.isArray(blocks.blocks)) {
+    s.blocks = { ...blocks, blocks: (blocks.blocks as unknown[]).map(一顆積木) }
+  }
+  return s
+}
+
 export const UPGRADES: Record<number, Upgrade> = {
   1: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, 合併掉的身分), version: 2 }),
   2: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 3 }),
@@ -217,6 +295,21 @@ export const UPGRADES: Record<number, Upgrade> = {
   7: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 8 }),
   // 8 → 9：G 項第 6 步——修飾詞從主體位置移到種差位置
   8: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 9 }),
+  // 9 → 10：**積木型別從概念身分導出**（spec 116）。
+  //
+  // ⚠️ **這是第一個改寫 `blocklyState` 的升級步驟**——上面八個都只碰 `tree`。
+  // 理由見 `blocks/block-type-migrations.ts` 的檔頭：積木狀態是載入時的
+  // **主要還原來源**，所以它行為上是真實，適用 P8 的例外條款。
+  9: (raw) => {
+    const 未知 = new Set<string>()
+    const 新狀態 = 改寫積木型別(raw.blocklyState, 積木型別改名(), 未知)
+    // 表是空的時候（改名還沒開始）不該把每一顆都當成未知——那會讓
+    // 一個還沒做的遷移把所有舊檔擋在門外。
+    if (Object.keys(積木型別改名()).length > 0 && 未知.size > 0) {
+      throw new 未知積木型別([...未知].sort())
+    }
+    return { ...raw, blocklyState: 新狀態, version: 10 }
+  },
 }
 
 export type VersionVerdict =
