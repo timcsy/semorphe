@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_EMPTY_MSG0": "%1 是否為空",
+  "CPP_STRING_EMPTY_TOOLTIP": "檢查字串是否為空（回傳是/否）"
+}

@@ -142,6 +142,9 @@
         "c_strstr",
         "c_memset",
         "c_memcpy",
+        "cpp_string_empty",
+        "cpp_string_find_first_not_of",
+        "cpp_string_find_last_not_of",
         "cpp_string_declare",
         "cpp_string_at",
         "cpp_string_length",
@@ -152,14 +155,11 @@
         "cpp_to_string",
         "cpp_stoi",
         "cpp_stod",
-        "cpp_string_empty",
         "cpp_string_erase",
         "cpp_string_insert",
         "cpp_string_replace",
         "cpp_string_push_back",
         "cpp_string_clear",
-        "cpp_string_find_first_not_of",
-        "cpp_string_find_last_not_of",
         "cpp_isalpha",
         "cpp_isdigit",
         "cpp_toupper",
@@ -248,5 +248,8 @@
         "c_namespace_def"
       ]
     }
-  ]
+  ],
+  "_meta": {
+    "note": "｜ 2026-08-11：文字分類新增三顆膠囊積木（cpp_string_empty／find_first_not_of／find_last_not_of），位置在模組自有積木**之前**、身分字母序——與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處**；三顆都不是「該第一眼看到」的那一顆，所以不為它們設計順序機制。"
+  }
 }

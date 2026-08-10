@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:string_find_last_not_of",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "literal",
+      "default": "str",
+      "_default_why": "⚠️ **這個退路是搬家時從同族的 find 那顆照抄帶過來的，不是設計出來的。** 第二十三條護欄（參數規格一致性）在搬家當下就指名了它：宣告沒有 default，而產生器寫著 `?? 'str'`——**規格與程式碼對缺省的看法不一致**。這裡選擇「讓宣告說實話」而不是「改掉退路」，因為搬家不重寫；而退路本身仍有味道（obj 缺席時憑空生一個叫 str 的變數名，是靜默降級），要改的話是另一個 commit。"
+    }
+  ],
+  "children": {
+    "arg": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "requires": [
+    "<string>"
+  ],
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts",
+    "_generate_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown concept⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。"
+  }
+}

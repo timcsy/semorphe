@@ -1,0 +1,24 @@
+{
+  "conceptId": "cpp:string_empty",
+  "layer": "lang-library",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "str"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "requires": [
+    "<string>"
+  ],
+  "paths": {
+    "lift": null,
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts",
+    "_lift_why": "`.empty()` 在辨識層被判成中性的 cpp:container_empty（GENERIC_CONTAINER_METHODS），所以這顆身分**從程式碼永遠得不到**，只能從積木拖。這是「路徑滿的但到不了」的第三個實例，而 #30 的判定落點把它記為「辨識到不了」——**補再多語料也碰不到**。診斷見 draft/2026-08-11-容器方法的辨識不看型別.md"
+  }
+}

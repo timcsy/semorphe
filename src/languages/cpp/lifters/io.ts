@@ -4,6 +4,7 @@ import { createNode } from '../../../core/semantic-tree'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { tryCmathLift } from '../std/cmath/lifters'
 import { conceptForSingleArgFunction } from '../../../core/component/single-arg-functions'
+import { conceptForMethod } from '../../../core/component/method-concepts'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -46,16 +47,25 @@ function tryStringMethodLift(
         from: from ? [from] : [],
       })
     }
-    // `find_first_not_of` / `find_last_not_of`——與 `find` 同形，
-    // 只是回傳「第一個／最後一個**不屬於**那組字元的位置」。
-    case 'find_first_not_of':
-    case 'find_last_not_of': {
+    // `find_first_not_of` / `find_last_not_of` 已元件化——身分由膠囊登錄，
+    // 見下方 `conceptForMethod` 的分支。
+    //
+    // ⚠️ 原本這裡是兩個 case 標籤 ＋ `createNode(\`cpp:string_${method}\`)`，
+    // 而那一行的註解記著它害過一次：**模板字串組出來的身分，掃描器看不到**
+    // ——命名空間遷移時它還組著舊前綴，於是兩顆概念**安靜地建不出來**。
+    // 搬進膠囊順帶治了它：**身分現在是字面字串。**
+    default:
+      break
+  }
+  // **方法名 → 身分**由膠囊登錄（`core/component/method-concepts.ts`）。
+  {
+    const 登錄的 = conceptForMethod(method)
+    if (登錄的) {
       const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      // ⚠️ **模板字串組出來的身分，掃描器看不到。** 命名空間遷移（103）時
-      // 這一行還組著 `cpp_string_…`，而它不是字串字面——症狀是這兩顆概念
-      // 安靜地建不出來，而 C3 的引用完備性護欄當場指名（它掃的是執行期，不是字串）。
-      return createNode(`cpp:string_${method}`, { obj }, { arg: a ? [a] : [] })
+      return createNode(登錄的, { obj }, { arg: a ? [a] : [] })
     }
+  }
+  switch (method) {
     case 'append': {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode('cpp:string_append', { obj }, {

@@ -281,8 +281,6 @@
   "CPP_STOI_TOOLTIP": "Convert a string to an integer",
   "CPP_STOD_MSG0": "Convert %1 to decimal",
   "CPP_STOD_TOOLTIP": "Convert a string to a double",
-  "CPP_STRING_EMPTY_MSG0": "Is %1 empty",
-  "CPP_STRING_EMPTY_TOOLTIP": "Check if the string is empty (returns true/false)",
   "CPP_STRING_ERASE_MSG0": "Erase from %1 at %2 length %3",
   "CPP_STRING_ERASE_TOOLTIP": "Remove characters from the string starting at position for given length",
   "CPP_STRING_INSERT_MSG0": "Insert %3 into %1 at %2",
@@ -689,9 +687,5 @@
   "C_COMMENT_BLOCK_MSG0": "block comment %1",
   "C_COMMENT_BLOCK_TOOLTIP": "Emit a /* ... */ multi-line comment",
   "CPP_ISTRINGSTREAM_DECLARE_MSG0": "create string input stream %1 reading %2",
-  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "Treat a string as an input source; read from it with >> like cin",
-  "CPP_STRING_FIND_FIRST_NOT_OF_MSG0": "first position in %1 not in %2",
-  "CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP": "Find the first character not in the given set (often used to trim leading spaces)",
-  "CPP_STRING_FIND_LAST_NOT_OF_MSG0": "last position in %1 not in %2",
-  "CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP": "Find the last character not in the given set (often used to trim trailing spaces)"
+  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "Treat a string as an input source; read from it with >> like cin"
 }

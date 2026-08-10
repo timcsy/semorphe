@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_FIND_FIRST_NOT_OF_MSG0": "%1 中第一個不屬於 %2 的位置",
+  "CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP": "從左邊找第一個不在指定字元集合裡的字元位置（常用來去掉開頭空白）"
+}

@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_FIND_LAST_NOT_OF_MSG0": "%1 中最後一個不屬於 %2 的位置",
+  "CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP": "從右邊找最後一個不在指定字元集合裡的字元位置（常用來去掉結尾空白）"
+}

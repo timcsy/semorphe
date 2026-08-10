@@ -64,25 +64,8 @@ export function registerExecutors(
     return { type: 'int', value: idx }
   })
 
-  /**
-   * `find_first_not_of` / `find_last_not_of`——第一個／最後一個**不屬於**
-   * 那組字元的位置。常用來去頭尾空白。
-   *
-   * 找不到時回 **-1**，與 `find` 一致（理由見 092：使用者常寫 `!= -1`）。
-   */
-  for (const [concept, fromEnd] of [
-    ['cpp:string_find_first_not_of', false],
-    ['cpp:string_find_last_not_of', true],
-  ] as [string, boolean][]) {
-    register(concept, async (node, ctx) => {
-      const str = String(ctx.scope.get(String(node.properties.obj)).value)
-      const argNodes = node.children.arg ?? []
-      if (argNodes.length === 0) return { type: 'int', value: -1 }
-      const set = new Set(String((await ctx.evaluate(argNodes[0])).value))
-      const idxs = [...str].map((c, i) => (set.has(c) ? -1 : i)).filter((i) => i >= 0)
-      return { type: 'int', value: idxs.length === 0 ? -1 : (fromEnd ? idxs[idxs.length - 1] : idxs[0]) }
-    })
-  }
+  // `find_first_not_of` / `find_last_not_of` 已元件化——執行那一路搬進
+  // `src/components/cpp/string_find_{first,last}_not_of/execute.ts`。
 
   register('cpp:string_append', async (node, ctx) => {
     const obj = String(node.properties.obj)
@@ -132,12 +115,6 @@ export function registerExecutors(
     const n = parseFloat(String(val.value))
     if (isNaN(n)) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'double' })
     return { type: 'double', value: n }
-  })
-
-  register('cpp:string_empty', async (node, ctx) => {
-    const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
-    return { type: 'bool', value: String(val.value).length === 0 }
   })
 
   register('cpp:string_erase', async (node, ctx) => {

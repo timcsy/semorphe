@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_FIND_FIRST_NOT_OF_MSG0": "first position in %1 not in %2",
+  "CPP_STRING_FIND_FIRST_NOT_OF_TOOLTIP": "Find the first character not in the given set (often used to trim leading spaces)"
+}
