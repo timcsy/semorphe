@@ -1,0 +1,4 @@
+{
+  "CPP_PRIORITY_QUEUE_TOP_MSG0": "top of %1",
+  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "Get the largest element of the priority queue (without removing it)"
+}

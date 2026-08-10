@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_PUSH_BACK_MSG0": "Append char %2 to %1",
+  "CPP_STRING_PUSH_BACK_TOOLTIP": "Add a character to the end of the string"
+}

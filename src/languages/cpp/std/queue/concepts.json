@@ -1,16 +1,1 @@
-[
-  {
-    "conceptId": "cpp:priority_queue_peek",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "pq"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  }
-]
+[]

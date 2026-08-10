@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cpp:string_clear",
+    "conceptId": "cpp:string_clear",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_clear",
+      "message0": "%{BKY_CPP_STRING_CLEAR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_CLEAR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.clear();",
+      "imports": [
+        "string"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  }
+]

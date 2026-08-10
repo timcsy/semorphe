@@ -452,7 +452,7 @@
     },
     "cpp:priority_queue_peek": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:program": {
       "files": 8,
@@ -544,7 +544,7 @@
     },
     "cpp:string_append_char": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_as_cstring": {
       "files": 3,
@@ -564,7 +564,7 @@
     },
     "cpp:string_clear": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_declare": {
       "files": 3,

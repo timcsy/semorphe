@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cpp:string_append_char",
+    "conceptId": "cpp:string_append_char",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_string_append_char",
+      "message0": "%{BKY_CPP_STRING_PUSH_BACK_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "CHAR",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STRING_PUSH_BACK_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push_back(${CHAR});",
+      "imports": [
+        "string"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "CHAR": "char"
+      }
+    }
+  }
+]

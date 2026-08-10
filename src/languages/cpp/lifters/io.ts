@@ -4,7 +4,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { callConceptFor } from '../../../core/component/call-concepts'
-import { methodConceptFor, containerMethodConcept } from '../../../core/component/method-concepts'
+import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-concepts'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
@@ -79,7 +79,6 @@ const METHOD_TO_CONCEPT: Record<string, string> = {
   // generic container concepts (shared methods across containers)
   push: 'cpp:container_push',
   pop: 'cpp:container_pop',
-
 }
 
 /**
@@ -90,8 +89,6 @@ const METHOD_TO_CONCEPT: Record<string, string> = {
  */
 const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
   string: {
-    clear: 'cpp:string_clear',
-    push_back: 'cpp:string_append_char',
   },
   // ⚠️ `top` 的通用退路是 `cpp_stack_peek`（回傳最後推入的）。
   // 優先佇列的 `top()` 回傳的是**最大的**——`g++` 對
@@ -99,7 +96,6 @@ const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
   //
   // 型別查得到時才走這裡；查不到就留在通用版——**猜一個錯的專屬身分比誠實降級更糟**。
   priority_queue: {
-    top: 'cpp:priority_queue_peek',
   },
 }
 
@@ -157,6 +153,7 @@ export function registerIOLifters(lifter: Lifter): void {
       const objType = objText ? ctx.data.getType(objText) : null
       const conceptId =
         (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
+        (objType ? typedMethodConcept(objType, methodName) : undefined) ??
         METHOD_TO_CONCEPT[methodName] ??
         containerMethodConcept(methodName)
       if (conceptId) {

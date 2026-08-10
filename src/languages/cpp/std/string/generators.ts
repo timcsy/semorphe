@@ -45,15 +45,7 @@ export function registerGenerators(g: Map<string, NodeGenerator>, _style: StyleP
 
 
 
-  g.set('cpp:string_append_char', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    const charNodes = node.children.char ?? []
-    const ch = charNodes.length > 0 ? generateExpression(charNodes[0], ctx) : "'a'"
-    return `${indent(ctx)}${obj}.push_back(${ch});\n`
-  })
 
-  g.set('cpp:string_clear', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
-    return `${indent(ctx)}${obj}.clear();\n`
-  })
+
+
 }

@@ -116,3 +116,32 @@ export function registerContainerMethodConcept(方法名: string, conceptId: str
 export function containerMethodConcept(方法名: string): string | undefined {
   return 容器方法表.get(方法名)?.conceptId
 }
+
+/**
+ * **依接收者型別分派**的方法表——第三張，理由同樣是**查詢點不同**。
+ *
+ * `s.clear()` 是字串版、`v.clear()` 是容器版；`pq.top()` 回傳**最大的**，
+ * 而通用的 `top` 回傳最後推入的。這些差別只有**型別查得到時**才成立。
+ *
+ * ⚠️ 型別查不到時**不猜**——留在通用版。
+ * **猜一個錯的專屬身分比誠實降級更糟**（原註解的原話）。
+ */
+const 型別方法表 = new Map<string, Map<string, { conceptId: string; 來源: string }>>()
+
+export function registerTypedMethodConcept(型別: string, 方法名: string, conceptId: string, 來源: string): void {
+  const m = 型別方法表.get(型別) ?? new Map()
+  const 先來的 = m.get(方法名)
+  if (先來的 && 先來的.conceptId !== conceptId) {
+    throw new Error(
+      `「${型別}.${方法名}」被登錄兩次且指向不同身分：` +
+        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+    )
+  }
+  m.set(方法名, { conceptId, 來源 })
+  型別方法表.set(型別, m)
+}
+
+/** 型別 ＋ 方法名 → 元件身分。查不到回 `undefined`——**不猜**。 */
+export function typedMethodConcept(型別: string, 方法名: string): string | undefined {
+  return 型別方法表.get(型別)?.get(方法名)?.conceptId
+}

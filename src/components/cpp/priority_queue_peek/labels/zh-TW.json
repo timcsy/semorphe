@@ -1,0 +1,4 @@
+{
+  "CPP_PRIORITY_QUEUE_TOP_MSG0": "%1 的最大元素",
+  "CPP_PRIORITY_QUEUE_TOP_TOOLTIP": "取得優先佇列裡最大的元素（不移除）"
+}
