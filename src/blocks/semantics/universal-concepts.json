@@ -324,10 +324,6 @@
         "default": "f"
       },
       {
-        "name": "params",
-        "kind": "literal"
-      },
-      {
         "name": "return_type",
         "kind": "enum",
         "values": [
@@ -344,7 +340,8 @@
       }
     ],
     "children": {
-      "body": "statements"
+      "body": "statements",
+      "params": "param_decl"
     },
     "role": "statement",
     "annotations": {
