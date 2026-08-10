@@ -63,7 +63,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
 
 const GUARD = 'anchor-rot'
 const 判定檔 = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
@@ -89,12 +89,6 @@ interface 命中 {
   程式碼: string
 }
 
-/** 內容雜湊——讓識別碼不隨行號漂移。 */
-function 雜湊(s: string): string {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
-  return (h >>> 0).toString(36)
-}
 
 interface 判定 {
   鍵: string
@@ -160,7 +154,7 @@ export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<strin
     for (const id of ids) {
       if (期望值.includes(`'${id}'`) || 期望值.includes(`"${id}"`)) {
         const 碼 = l.trim().slice(0, 90)
-        out.push({ 鍵: `${檔名}#${雜湊(碼)}`, 位置: `${檔名}:${i + 1}`, 區塊, 身分: id, 程式碼: 碼 })
+        out.push({ 鍵: 判定鍵(檔名, 碼), 位置: `${檔名}:${i + 1}`, 區塊, 身分: id, 程式碼: 碼 })
         break
       }
     }

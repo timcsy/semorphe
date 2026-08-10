@@ -50,7 +50,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { runCppDetailed, runCppBatch, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -134,9 +134,7 @@ function 撈語料(): string[] {
  */
 const 鍵 = (c: string): string => {
   const 正規 = c.replace(/\s+/g, ' ').trim()
-  let h = 0
-  for (let i = 0; i < 正規.length; i++) h = ((h << 5) - h + 正規.charCodeAt(i)) | 0
-  return `${正規.slice(0, 60)}#${(h >>> 0).toString(36)}`
+  return 判定鍵(正規.slice(0, 60), 正規)
 }
 
 async function 跑直譯器(code: string): Promise<string | null> {

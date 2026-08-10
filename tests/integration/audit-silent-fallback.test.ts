@@ -44,7 +44,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
 
 const 護欄名 = 'silent-fallback'
 const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.json')
@@ -84,12 +84,6 @@ interface 命中 {
   形狀: 形狀
 }
 
-/** 內容雜湊——讓識別碼不隨行號漂移。 */
-function 雜湊(s: string): string {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
-  return (h >>> 0).toString(36)
-}
 
 /** 依條件的語法形狀分類。**新的寫法會落到「未分類」而不是被默許。** */
 function 分類(條件: string): 形狀 {
@@ -177,7 +171,7 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
       const c = 條件.trim().slice(0, 80)
       const 回 = l.trim().slice(0, 60)
       命中.push({
-        鍵: `${rel}#${雜湊(c + '|' + 回)}`,
+        鍵: 判定鍵(rel, c + '|' + 回),
         位置: `${rel}:${i + 1}`,
         條件: c,
         回傳: 回,
