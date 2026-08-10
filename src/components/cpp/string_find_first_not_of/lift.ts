@@ -11,5 +11,5 @@
 import { registerMethodConcept } from '../../../core/component/method-concepts'
 
 export function registerLift(): void {
-  registerMethodConcept('find_first_not_of', 'cpp:string_find_first_not_of', 'cpp/string_find_first_not_of')
+  registerMethodConcept('find_first_not_of', 'cpp:string_find_first_not_of', 'cpp/string_find_first_not_of', ['arg'])
 }

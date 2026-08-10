@@ -4,7 +4,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { callConceptFor } from '../../../core/component/call-concepts'
-import { conceptForMethod } from '../../../core/component/method-concepts'
+import { methodConceptFor } from '../../../core/component/method-concepts'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -59,10 +59,14 @@ function tryStringMethodLift(
   }
   // **方法名 → 身分**由膠囊登錄（`core/component/method-concepts.ts`）。
   {
-    const 登錄的 = conceptForMethod(method)
-    if (登錄的) {
-      const a = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode(登錄的, { obj }, { arg: a ? [a] : [] })
+    const 形狀 = methodConceptFor(method)
+    if (形狀) {
+      const children: Record<string, SemanticNode[]> = {}
+      形狀.argSlots.forEach((slot, i) => {
+        const n = argChildren[i] ? ctx.lift(argChildren[i]) : null
+        children[slot] = n ? [n] : []
+      })
+      return createNode(形狀.conceptId, { obj }, children)
     }
   }
   switch (method) {

@@ -29,7 +29,20 @@
  * 表是空的。與 `container-templates.ts`／`single-arg-functions.ts` 同一個處置。
  */
 
-const 表 = new Map<string, { conceptId: string; 來源: string }>()
+/** 一個方法名對應的節點形狀。 */
+export interface MethodConceptShape {
+  conceptId: string
+  /**
+   * 引數依序放進哪些子節點槽。空陣列 = 這個方法不吃引數（`s.length()`）。
+   *
+   * ⚠️ **槽名是契約**，與 `component.json` 的 `children` 必須一致，
+   * 否則產生器讀不到——而那是安靜的（子節點是空陣列，不是錯誤）。
+   */
+  argSlots: string[]
+  來源: string
+}
+
+const 表 = new Map<string, MethodConceptShape>()
 
 /**
  * 登錄一個方法名。
@@ -38,7 +51,12 @@ const 表 = new Map<string, { conceptId: string; 來源: string }>()
  * @param conceptId 對應的元件身分——**寫成字面字串**，別用樣板組
  * @param 來源 誰登錄的——膠囊填自己的資料夾
  */
-export function registerMethodConcept(方法名: string, conceptId: string, 來源: string): void {
+export function registerMethodConcept(
+  方法名: string,
+  conceptId: string,
+  來源: string,
+  argSlots: string[] = ['arg'],
+): void {
   const 先來的 = 表.get(方法名)
   if (先來的 && 先來的.conceptId !== conceptId) {
     throw new Error(
@@ -47,12 +65,17 @@ export function registerMethodConcept(方法名: string, conceptId: string, 來�
         `不自動取其一——靜默覆蓋的症狀是「某個方法被辨識成另一個概念」。`,
     )
   }
-  表.set(方法名, { conceptId, 來源 })
+  表.set(方法名, { conceptId, argSlots, 來源 })
 }
 
 /** 方法名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
 export function conceptForMethod(方法名: string): string | undefined {
   return 表.get(方法名)?.conceptId
+}
+
+/** 方法名 → 完整形狀（含引數槽名）。 */
+export function methodConceptFor(方法名: string): MethodConceptShape | undefined {
+  return 表.get(方法名)
 }
 
 /** 護欄用：每一筆是誰登錄的。 */
