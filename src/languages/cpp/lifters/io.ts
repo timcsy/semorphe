@@ -5,6 +5,7 @@ import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { callConceptFor } from '../../../core/component/call-concepts'
 import { methodConceptFor } from '../../../core/component/method-concepts'
+import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -38,6 +39,8 @@ function tryStringMethodLift(
   }
   // **方法名 → 身分**由膠囊登錄（`core/component/method-concepts.ts`）。
   {
+    const 認領 = tryMethodBranches(obj, method, argChildren, ctx)
+    if (認領) return 認領
     const 形狀 = methodConceptFor(method)
     if (形狀) {
       const children: Record<string, SemanticNode[]> = {}
@@ -278,6 +281,14 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // Free string functions: getline, to_string, stoi, stod
     const argChildren = argsNode?.namedChildren ?? []
+
+    // **膠囊自己的辨識分支**（帶真邏輯的那一種）——見 `core/component/lift-branches.ts`。
+    // 路由器該知道的是「去問誰」，不是「答案是什麼」。
+    {
+      const 認領 = tryCallBranches(funcName, argChildren, ctx, argsNode)
+      if (認領) return 認領
+    }
+
     if (funcName === 'getline' && argChildren.length >= 2) {
       const nameNode = argChildren[1]
       return createNode('cpp:input_line', { name: nameNode?.text ?? 'str' })
