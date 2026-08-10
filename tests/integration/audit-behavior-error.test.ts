@@ -62,6 +62,8 @@ interface 判定 {
   訊號: string
   判定: '真誤差' | '語料需要標準輸入' | '語料是故意錯的示範' | '其他'
   理由: string
+  /** 這一筆的成因。「一筆 ≠ 一個工作」——同一個根因下的筆數會一起消失。 */
+  根因?: string
 }
 
 interface 明細 {
@@ -256,12 +258,8 @@ describe('第三十二條護欄：行為的誤差', () => {
       ...(孤兒.length ? ['', `⚠️ 孤兒判定 ${孤兒.length} 筆（訊號已消失，判定可能不再成立）：`, ...孤兒.map((d) => `  - ${d.語料鍵}`)] : []),
     ])
 
-    expect(孤兒, '判定過期了。底下的事實變了，留著會讓一個過期的結論繼續生效。').toHaveLength(0)
-    expect(
-      判定s.filter((d) => !d.理由 || d.理由.length < 4),
-      '每一筆判定必須有理由——沒有理由的判定是把「懶得看」寫成「看過了」',
-    ).toHaveLength(0)
-
+    // ⚠️ 斷言放在產基線**之後**。放在之前會死結：孤兒判定要靠新基線才知道
+    // 哪些消失了，而新基線又產不出來。**產基線是維護模式，不是一次量測。**
     if (process.env.GENERATE_BASELINE) {
       writeBaseline(護欄名, {
         _meta: {
@@ -288,6 +286,16 @@ describe('第三十二條護欄：行為的誤差', () => {
       })
       return
     }
+
+    expect(孤兒, '判定過期了。底下的事實變了，留著會讓一個過期的結論繼續生效。').toHaveLength(0)
+    expect(
+      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      '每一筆判定必須有理由——沒有理由的判定是把「懶得看」寫成「看過了」',
+    ).toHaveLength(0)
+    expect(
+      判定s.filter((d) => !d.根因),
+      '每一筆判定必須有根因——「一筆 ≠ 一個工作」，沒有根因就看不出哪些會一起消失',
+    ).toHaveLength(0)
 
     const base = loadBaseline<基線>(護欄名)
     assertRatchet([['不一致筆數', r.明細.length, base.誤差.不一致筆數]])

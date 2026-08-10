@@ -117,7 +117,7 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('5')
   })
 
-  it.fails('[BLOCKED:lift] 成員預設值要讀得到', async () => {
+  it.fails('[BLOCKED:cpp:class_def] 成員預設值要讀得到', async () => {
     // 🔴 實測拿到 `0`，而**缺陷不在執行那一路**——是辨識掉了初始值：
     //
     //   class A { public: int v = 7; };
