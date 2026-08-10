@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_namespace_def",
+    "conceptId": "cpp:namespace_def",
+    "language": "cpp",
+    "category": "cpp_basic",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_namespace_def",
+      "message0": "%{BKY_C_NAMESPACE_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "myns"
+        },
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": false,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_NAMESPACE_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

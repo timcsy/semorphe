@@ -1,0 +1,4 @@
+{
+  "C_RANGE_FOR_MSG0": "for each %1 %2 in %3",
+  "C_RANGE_FOR_TOOLTIP": "Iterate over each element in a container (vector, array, etc.)"
+}

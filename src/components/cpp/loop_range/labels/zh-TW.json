@@ -1,0 +1,4 @@
+{
+  "C_RANGE_FOR_MSG0": "對每個 %1 %2 在 %3 中",
+  "C_RANGE_FOR_TOOLTIP": "遍歷容器（vector、陣列等）中的每個元素"
+}

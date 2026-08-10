@@ -1,0 +1,4 @@
+{
+  "CPP_NEW_MSG0": "Create %1 instance (%2) (new)",
+  "CPP_NEW_TOOLTIP": "Create a new object and allocate memory for it"
+}

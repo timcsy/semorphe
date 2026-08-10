@@ -45,9 +45,9 @@ export function registerVariablesCoreExecutors(
 
   // typedef and using alias are type declarations — no runtime effect
 
-  register('cpp:typedef', async () => {})
 
-  register('cpp:using_alias', async () => {})
+
+
 
   /**
    * `int& r = a;`——**別名，不是複製**。

@@ -34,12 +34,13 @@ describe('Concept/BlockDef split integrity', () => {
     // 它不是「核心少了東西」，是**核心的東西回家了**。
     // 2026-08-11：70 → 67（`cpp:delete`／`cpp:loop_do_while`／`cpp:throw` 同批搬進膠囊，
     // 是第一批用批次工具搬的——lift 是一整筆 pattern，glob 直讀）。
-    expect(coreConcepts.length).toBe(67)
+    // 同日：67 → 59（第三批 8 顆，lift 是只產一種身分的具名策略）。
+    expect(coreConcepts.length).toBe(59)
     // 77 → 81：097 為 `cpp_container_push` / `cpp_container_pop` 各加了
     // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
     // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。
-    // 同上：81 → 80。2026-08-11：80 → 77（同批三顆）。
-    expect(coreBlocks.length).toBe(77)
+    // 同上：81 → 80。2026-08-11：80 → 77（第一批三顆）→ 69（第三批八顆）。
+    expect(coreBlocks.length).toBe(69)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

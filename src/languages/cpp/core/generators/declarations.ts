@@ -115,26 +115,11 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${name}[${idx}]`
   })
 
-  g.set('cpp:sizeof', (node) => {
-    const target = node.properties.target ?? 'int'
-    return `sizeof(${target})`
-  })
 
-  g.set('cpp:enum', (node, ctx) => {
-    const name = node.properties.name ?? 'MyEnum'
-    const values = node.properties.values ?? ''
-    return `${indent(ctx)}enum ${name} { ${values} };\n`
-  })
 
-  g.set('cpp:loop_range', (node, ctx) => {
-    const varType = node.properties.var_type ?? 'auto'
-    const varName = node.properties.var_name ?? 'x'
-    const container = node.properties.container ?? 'vec'
-    const bodyNodes = node.children.body ?? []
-    const bodyCode = generateBody(bodyNodes, indented(ctx))
-    const ind = indent(ctx)
-    return `${ind}for (${varType} ${varName} : ${container}) {\n${bodyCode}${ind}}\n`
-  })
+
+
+
 
   g.set('cpp:template_function', (node, ctx) => {
     const t = node.properties.t ?? 'T'
@@ -236,17 +221,9 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}auto ${name};\n`
   })
 
-  g.set('cpp:typedef', (node, ctx) => {
-    const origType = node.properties.orig_type ?? 'int'
-    const alias = node.properties.alias ?? 'myint'
-    return `${indent(ctx)}typedef ${origType} ${alias};\n`
-  })
 
-  g.set('cpp:using_alias', (node, ctx) => {
-    const alias = node.properties.alias ?? 'll'
-    const origType = node.properties.orig_type ?? 'long long'
-    return `${indent(ctx)}using ${alias} = ${origType};\n`
-  })
+
+
 
   g.set('cpp:struct_declare', (node, ctx) => {
     const name = node.properties.name ?? 'MyStruct'

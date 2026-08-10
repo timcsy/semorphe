@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:sizeof",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "target",
+      "kind": "identifier",
+      "default": "int"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

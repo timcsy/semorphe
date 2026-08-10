@@ -46,9 +46,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     }
   })
 
-  register('cpp:new', async (node) => {
-    return { type: 'pointer' as any, value: `heap_${node.properties.type ?? 'int'}` }
-  })
+
 
 
 

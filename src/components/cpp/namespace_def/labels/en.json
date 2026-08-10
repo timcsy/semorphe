@@ -1,0 +1,4 @@
+{
+  "C_NAMESPACE_DEF_MSG0": "Define namespace %1 %2 (namespace)",
+  "C_NAMESPACE_DEF_TOOLTIP": "Define a namespace to organize code and prevent name conflicts"
+}

@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:namespace_def",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "myns"
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

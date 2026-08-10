@@ -1,0 +1,42 @@
+{
+  "conceptId": "cpp:loop_range",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "var_type",
+      "kind": "enum",
+      "values": [
+        "auto",
+        "int",
+        "double",
+        "char",
+        "string"
+      ],
+      "default": "auto"
+    },
+    {
+      "name": "var_name",
+      "kind": "identifier",
+      "default": "x"
+    },
+    {
+      "name": "container",
+      "kind": "identifier",
+      "default": "vec"
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

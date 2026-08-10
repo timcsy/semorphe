@@ -1,0 +1,28 @@
+{
+  "conceptId": "cpp:new",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "default": "int"
+    },
+    {
+      "name": "args",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

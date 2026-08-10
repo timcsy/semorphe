@@ -1,0 +1,4 @@
+{
+  "C_TYPEDEF_MSG0": "Type alias %2 for %1",
+  "C_TYPEDEF_TOOLTIP": "Create a type alias: give an existing type a new name"
+}

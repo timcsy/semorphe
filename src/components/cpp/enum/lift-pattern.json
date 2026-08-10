@@ -1,0 +1,9 @@
+{
+  "id": "cpp_enum_specifier",
+  "astNodeType": "enum_specifier",
+  "concept": {
+    "conceptId": "cpp:enum"
+  },
+  "liftStrategy": "cpp:liftEnum",
+  "priority": 15
+}

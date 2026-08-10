@@ -212,7 +212,7 @@
     },
     "cpp:enum": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:forward_decl": {
       "files": 3,
@@ -316,7 +316,7 @@
     },
     "cpp:loop_range": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:loop_while": {
       "files": 3,
@@ -400,7 +400,7 @@
     },
     "cpp:namespace_def": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:negate": {
       "files": 5,
@@ -408,7 +408,7 @@
     },
     "cpp:new": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:ofstream_declare": {
       "files": 2,
@@ -528,7 +528,7 @@
     },
     "cpp:sizeof": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:stack_declare": {
       "files": 3,
@@ -644,15 +644,15 @@
     },
     "cpp:try_catch": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:typedef": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:using_alias": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:using_namespace": {
       "files": 3,

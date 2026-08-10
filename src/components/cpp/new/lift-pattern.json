@@ -1,0 +1,9 @@
+{
+  "id": "cpp_new_expression",
+  "astNodeType": "new_expression",
+  "concept": {
+    "conceptId": "cpp:new"
+  },
+  "liftStrategy": "cpp:liftNewExpression",
+  "fieldMappings": []
+}

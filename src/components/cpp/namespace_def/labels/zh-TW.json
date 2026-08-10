@@ -1,0 +1,4 @@
+{
+  "C_NAMESPACE_DEF_MSG0": "命名空間 %1 %2",
+  "C_NAMESPACE_DEF_TOOLTIP": "定義一個命名空間來組織程式碼並避免名稱衝突"
+}

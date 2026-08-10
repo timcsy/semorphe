@@ -372,25 +372,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:new",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "default": "int"
-      },
-      {
-        "name": "args",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:template_function",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -870,70 +851,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:typedef",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "orig_type",
-        "kind": "type_expr",
-        "default": "int"
-      },
-      {
-        "name": "alias",
-        "kind": "literal",
-        "default": "myint"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
-    "conceptId": "cpp:using_alias",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "alias",
-        "kind": "literal",
-        "default": "ll"
-      },
-      {
-        "name": "orig_type",
-        "kind": "type_expr",
-        "default": "long long"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
-    "conceptId": "cpp:sizeof",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target",
-        "kind": "identifier",
-        "default": "int"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:member_static",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -965,58 +882,6 @@
     "skipReasons": {
       "execute": "consumed-by-parent"
     }
-  },
-  {
-    "conceptId": "cpp:enum",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal",
-        "default": "MyEnum"
-      },
-      {
-        "name": "values",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:loop_range",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "var_type",
-        "kind": "enum",
-        "values": [
-          "auto",
-          "int",
-          "double",
-          "char",
-          "string"
-        ],
-        "default": "auto"
-      },
-      {
-        "name": "var_name",
-        "kind": "identifier",
-        "default": "x"
-      },
-      {
-        "name": "container",
-        "kind": "identifier",
-        "default": "vec"
-      }
-    ],
-    "children": {
-      "body": "statements"
-    },
-    "role": "statement"
   },
   {
     "conceptId": "cpp:array_2d_declare",
@@ -1084,28 +949,6 @@
       "row": "expression",
       "col": "expression",
       "value": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:try_catch",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "catch_type",
-        "kind": "type_expr",
-        "default": "exception&"
-      },
-      {
-        "name": "catch_name",
-        "kind": "identifier",
-        "default": "e"
-      }
-    ],
-    "children": {
-      "try_body": "statements",
-      "catch_body": "statements"
     },
     "role": "statement"
   },
@@ -1310,22 +1153,6 @@
       "body": "statements"
     },
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:namespace_def",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal",
-        "default": "myns"
-      }
-    ],
-    "children": {
-      "body": "statements"
-    },
-    "role": "statement"
   },
   {
     "conceptId": "cpp:cast_static",

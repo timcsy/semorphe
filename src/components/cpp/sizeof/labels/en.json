@@ -1,0 +1,4 @@
+{
+  "C_SIZEOF_MSG0": "Size of %1",
+  "C_SIZEOF_TOOLTIP": "Get the size in bytes of a type or expression"
+}

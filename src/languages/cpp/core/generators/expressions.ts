@@ -195,11 +195,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `const_cast<${targetType}>(${val})`
   })
 
-  g.set('cpp:new', (node) => {
-    const type = node.properties.type ?? 'int'
-    const args = node.properties.args ?? ''
-    return args ? `new ${type}(${args})` : `new ${type}`
-  })
+
 
   g.set('cpp:malloc', (node, ctx) => {
     const type = node.properties.type ?? 'int*'

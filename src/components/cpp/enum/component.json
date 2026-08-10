@@ -1,0 +1,28 @@
+{
+  "conceptId": "cpp:enum",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "MyEnum"
+    },
+    {
+      "name": "values",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cpp:new",
+    "conceptId": "cpp:new",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_new",
+      "message0": "%{BKY_CPP_NEW_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TYPE",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_NEW_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "new ${TYPE}(${ARGS})",
+      "imports": [],
+      "order": 8
+    },
+    "renderMapping": {
+      "fields": {
+        "ARGS": "args",
+        "TYPE": "type"
+      }
+    }
+  }
+]

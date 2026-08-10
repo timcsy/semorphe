@@ -1,0 +1,9 @@
+{
+  "id": "cpp_try_statement",
+  "astNodeType": "try_statement",
+  "concept": {
+    "conceptId": "cpp:try_catch"
+  },
+  "liftStrategy": "cpp:liftTryCatch",
+  "fieldMappings": []
+}

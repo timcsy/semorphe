@@ -1,0 +1,4 @@
+{
+  "C_ENUM_MSG0": "Define enumeration %1 with values %2 (enum)",
+  "C_ENUM_TOOLTIP": "Define an enumeration: a set of named integer constants"
+}

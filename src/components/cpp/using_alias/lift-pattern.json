@@ -1,0 +1,9 @@
+{
+  "id": "cpp_alias_declaration",
+  "astNodeType": "alias_declaration",
+  "concept": {
+    "conceptId": "cpp:using_alias"
+  },
+  "liftStrategy": "cpp:liftAliasDeclaration",
+  "priority": 15
+}

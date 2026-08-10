@@ -1,0 +1,34 @@
+{
+  "conceptId": "cpp:typedef",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "orig_type",
+      "kind": "type_expr",
+      "default": "int"
+    },
+    {
+      "name": "alias",
+      "kind": "literal",
+      "default": "myint"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

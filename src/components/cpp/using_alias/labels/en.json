@@ -1,0 +1,4 @@
+{
+  "C_USING_ALIAS_MSG0": "Alias %1 = %2",
+  "C_USING_ALIAS_TOOLTIP": "Create a type alias using modern C++ syntax"
+}

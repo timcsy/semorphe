@@ -1,0 +1,5 @@
+{
+  "C_TRY_CATCH_MSG0": "Try executing %1 (try)",
+  "C_TRY_CATCH_MSG1": "If %1 error %2 occurs, handle: %3 (catch)",
+  "C_TRY_CATCH_TOOLTIP": "Try to execute code, and if an error is thrown, handle it in the catch block"
+}

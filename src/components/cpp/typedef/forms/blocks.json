@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cpp_typedef",
+    "conceptId": "cpp:typedef",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_typedef",
+      "message0": "%{BKY_C_TYPEDEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "ORIG_TYPE",
+          "text": "int"
+        },
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": "myint"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_TYPEDEF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "typedef ${ORIG_TYPE} ${ALIAS};",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "ALIAS": "alias",
+        "ORIG_TYPE": "orig_type"
+      }
+    }
+  }
+]

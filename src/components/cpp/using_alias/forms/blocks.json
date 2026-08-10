@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cpp_using_alias",
+    "conceptId": "cpp:using_alias",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_using_alias",
+      "message0": "%{BKY_C_USING_ALIAS_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": "ll"
+        },
+        {
+          "type": "field_input",
+          "name": "ORIG_TYPE",
+          "text": "long long"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_USING_ALIAS_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "using ${ALIAS} = ${ORIG_TYPE};",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "ALIAS": "alias",
+        "ORIG_TYPE": "orig_type"
+      }
+    }
+  }
+]

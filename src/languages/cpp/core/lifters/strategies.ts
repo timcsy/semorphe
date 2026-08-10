@@ -457,20 +457,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('cpp:lambda', { capture, return_type: returnType }, { params, body })
   })
 
-  // namespace_definition: namespace N { body }
-  registry.register('cpp:liftNamespace', (node, ctx) => {
-    const nameNode = node.namedChildren.find(c => c.type === 'namespace_identifier')
-    const name = nameNode?.text ?? 'ns'
-    const bodyNode = node.namedChildren.find(c => c.type === 'declaration_list')
-    const body: SemanticNode[] = []
-    if (bodyNode) {
-      for (const child of bodyNode.namedChildren) {
-        const lifted = ctx.lift(child)
-        if (lifted) body.push(lifted)
-      }
-    }
-    return createNode('cpp:namespace_def', { name }, { body })
-  })
+
 
   // doc comment: /** ... */ → doc_comment with structured properties
   registry.register('cpp:liftDocComment', (node) => {
@@ -540,93 +527,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('cpp:func_def', { name, return_type: returnType }, { params: paramChildren, body })
   })
 
-  // type_definition: typedef int myint; → cpp_typedef
-  registry.register('cpp:liftTypedef', (node) => {
-    const typeNode = node.namedChildren.find(c =>
-      c.type === 'primitive_type' || c.type === 'type_identifier' ||
-      c.type === 'qualified_identifier' || c.type === 'sized_type_specifier'
-    )
-    const aliasNode = node.namedChildren.find(c => c.type === 'type_identifier' &&
-      (c.startPosition.row !== typeNode?.startPosition.row || c.startPosition.column !== typeNode?.startPosition.column)
-    )
-    const origType = typeNode?.text ?? 'int'
-    const alias = aliasNode?.text ?? 'mytype'
-    return createNode('cpp:typedef', { orig_type: origType, alias })
-  })
 
-  // alias_declaration: using ll = long long; → cpp_using_alias
-  registry.register('cpp:liftAliasDeclaration', (node) => {
-    const nameNode = node.namedChildren.find(c => c.type === 'type_identifier')
-    const descriptorNode = node.namedChildren.find(c => c.type === 'type_descriptor')
-    const alias = nameNode?.text ?? 'mytype'
-    const origType = descriptorNode?.text ?? 'int'
-    return createNode('cpp:using_alias', { alias, orig_type: origType })
-  })
 
-  // sizeof_expression: sizeof(int) or sizeof(x)
-  registry.register('cpp:liftSizeof', (node) => {
-    const child = node.namedChildren[0]
-    if (child) {
-      if (child.type === 'type_descriptor') {
-        return createNode('cpp:sizeof', { target: child.text })
-      }
-      if (child.type === 'parenthesized_expression') {
-        return createNode('cpp:sizeof', { target: child.namedChildren[0]?.text ?? child.text })
-      }
-      return createNode('cpp:sizeof', { target: child.text })
-    }
-    return createNode('cpp:sizeof', { target: 'int' })
-  })
 
-  // enum_specifier: enum Color { RED, GREEN, BLUE };
-  registry.register('cpp:liftEnum', (node) => {
-    const nameNode = node.namedChildren.find(c => c.type === 'type_identifier')
-    const listNode = node.namedChildren.find(c => c.type === 'enumerator_list')
-    const name = nameNode?.text ?? 'MyEnum'
-    const values = listNode
-      ? listNode.namedChildren
-          .filter(c => c.type === 'enumerator')
-          .map(e => {
-            const eName = e.childForFieldName('name')?.text ?? ''
-            const eValue = e.childForFieldName('value')?.text
-            return eValue ? `${eName} = ${eValue}` : eName
-          })
-          .join(', ')
-      : ''
-    return createNode('cpp:enum', { name, values })
-  })
 
-  // for_range_loop: for (auto x : vec) { body }
-  registry.register('cpp:liftRangeFor', (node, ctx) => {
-    const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
-    const typeNode = node.namedChildren.find(c =>
-      c.type === 'primitive_type' || c.type === 'type_identifier' ||
-      c.type === 'placeholder_type_specifier' || c.type === 'template_type'
-    )
-    // Handle reference/pointer declarators: for (const string& w : container)
-    // In this case, the loop var `w` lives inside reference_declarator, not as a bare identifier
-    const refDeclNode = node.namedChildren.find(c =>
-      c.type === 'reference_declarator' || c.type === 'pointer_declarator'
-    )
-    let varNode: AstNode | null
-    if (refDeclNode) {
-      varNode = refDeclNode.namedChildren.find((c: AstNode) => c.type === 'identifier') ?? null
-    } else {
-      varNode = node.namedChildren.find(c => c.type === 'identifier') ?? null
-    }
-    const varName = varNode?.text ?? 'x'
-    // Build varType with const qualifier and reference sigil if present
-    const baseType = typeNode?.text ?? 'auto'
-    const qualifier = qualifierNode?.text ? qualifierNode.text + ' ' : ''
-    const refSigil = refDeclNode?.type === 'reference_declarator' ? '&' : refDeclNode?.type === 'pointer_declarator' ? '*' : ''
-    const varType = `${qualifier}${baseType}${refSigil}`
-    // The container is the "right" field
-    const rightNode = node.childForFieldName('right')
-    const container = rightNode?.text ?? 'vec'
-    const bodyNode = node.childForFieldName('body') ?? node.namedChildren.find(c => c.type === 'compound_statement') ?? null
-    const body = extractBody(bodyNode, ctx)
-    return createNode('cpp:loop_range', { var_type: varType, var_name: varName, container }, { body })
-  })
+
+
+
+
+
 
   // declaration: multi-variable + array declarations
   registry.register('cpp:liftDeclaration', (node, ctx) => {
@@ -850,32 +759,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     return createNode('cpp:var_declare', { type }, { declarators: liftedNodes })
   })
 
-  // try_statement: try { } catch (type name) { }
-  registry.register('cpp:liftTryCatch', (node, ctx) => {
-    const tryBody = extractBody(node.childForFieldName('body') ?? null, ctx)
-    const catchClause = node.namedChildren.find(c => c.type === 'catch_clause') ?? null
-    let catchType = 'exception&'
-    let catchName = 'e'
-    let catchBody: SemanticNode[] = []
-    if (catchClause) {
-      const paramList = catchClause.childForFieldName('parameters')
-        ?? catchClause.namedChildren.find(c => c.type === 'parameter_list')
-      if (paramList) {
-        const param = paramList.namedChildren.find(c => c.type === 'parameter_declaration')
-        if (param) {
-          const { type, name } = parseParamDeclaration(param)
-          catchType = type
-          catchName = name
-        }
-      }
-      const catchBodyNode = catchClause.childForFieldName('body') ?? null
-      catchBody = extractBody(catchBodyNode, ctx)
-    }
-    return createNode('cpp:try_catch', { catch_type: catchType, catch_name: catchName }, {
-      try_body: tryBody,
-      catch_body: catchBody,
-    })
-  })
+
 
   // template_declaration: template <typename T> T func(T a) { ... }
   registry.register('cpp:liftTemplateFunction', (node, ctx) => {
@@ -939,15 +823,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     })
   })
 
-  registry.register('cpp:liftNewExpression', (node) => {
-    const typeNode = node.namedChildren.find(c =>
-      c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier'
-    )
-    const type = typeNode?.text ?? 'int'
-    const argList = node.namedChildren.find(c => c.type === 'argument_list')
-    const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
-    return createNode('cpp:new', { type, args })
-  })
+
 
   // count_loop: add inclusive property based on operator (< vs <=)
   registry.register('cpp:liftCountFor', (node, ctx) => {
@@ -1005,7 +881,7 @@ const COMPOUND_TYPE_PREFIXES = [
 ]
 
 /** Parse a parameter_declaration AST node into { type, name } */
-function parseParamDeclaration(param: AstNode): { type: string; name: string } {
+export function parseParamDeclaration(param: AstNode): { type: string; name: string } {
   const qualifierNode = param.namedChildren.find(c => c.type === 'type_qualifier')
   const typeNode = param.namedChildren.find(c =>
     c.type === 'primitive_type' || c.type === 'type_identifier' ||
@@ -1083,7 +959,7 @@ function extractDeclVarName(init: AstNode): string {
   return ident?.text ?? 'i'
 }
 
-function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {
+export function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {
   if (!node) return []
   const lifted = ctx.lift(node)
   if (!lifted) return []

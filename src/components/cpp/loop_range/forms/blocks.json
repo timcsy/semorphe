@@ -1,0 +1,74 @@
+[
+  {
+    "id": "cpp_loop_range",
+    "conceptId": "cpp:loop_range",
+    "language": "cpp",
+    "category": "loops",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_loop_range",
+      "message0": "%{BKY_C_RANGE_FOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VAR_TYPE",
+          "options": [
+            [
+              "auto",
+              "auto"
+            ],
+            [
+              "int",
+              "int"
+            ],
+            [
+              "double",
+              "double"
+            ],
+            [
+              "char",
+              "char"
+            ],
+            [
+              "string",
+              "string"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "VAR_NAME",
+          "text": "x"
+        },
+        {
+          "type": "field_input",
+          "name": "CONTAINER",
+          "text": "vec"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_RANGE_FOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CONTAINER": "container",
+        "VAR_NAME": "var_name",
+        "VAR_TYPE": "var_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

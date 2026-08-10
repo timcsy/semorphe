@@ -1,0 +1,31 @@
+{
+  "conceptId": "cpp:try_catch",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "catch_type",
+      "kind": "type_expr",
+      "default": "exception&"
+    },
+    {
+      "name": "catch_name",
+      "kind": "identifier",
+      "default": "e"
+    }
+  ],
+  "children": {
+    "try_body": "statements",
+    "catch_body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

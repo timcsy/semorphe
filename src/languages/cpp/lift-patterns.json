@@ -599,51 +599,6 @@
     ]
   },
   {
-    "id": "cpp_type_definition",
-    "astNodeType": "type_definition",
-    "concept": {
-      "conceptId": "cpp:typedef"
-    },
-    "liftStrategy": "cpp:liftTypedef",
-    "priority": 15
-  },
-  {
-    "id": "cpp_alias_declaration",
-    "astNodeType": "alias_declaration",
-    "concept": {
-      "conceptId": "cpp:using_alias"
-    },
-    "liftStrategy": "cpp:liftAliasDeclaration",
-    "priority": 15
-  },
-  {
-    "id": "cpp_sizeof_expr",
-    "astNodeType": "sizeof_expression",
-    "concept": {
-      "conceptId": "cpp:sizeof"
-    },
-    "liftStrategy": "cpp:liftSizeof",
-    "priority": 5
-  },
-  {
-    "id": "cpp_enum_specifier",
-    "astNodeType": "enum_specifier",
-    "concept": {
-      "conceptId": "cpp:enum"
-    },
-    "liftStrategy": "cpp:liftEnum",
-    "priority": 15
-  },
-  {
-    "id": "cpp_for_range_loop",
-    "astNodeType": "for_range_loop",
-    "concept": {
-      "conceptId": "cpp:loop_range"
-    },
-    "liftStrategy": "cpp:liftRangeFor",
-    "priority": 15
-  },
-  {
     "id": "cpp_address_of_ptr",
     "astNodeType": "pointer_expression",
     "concept": {
@@ -686,24 +641,6 @@
     "priority": 5
   },
   {
-    "id": "cpp_new_expression",
-    "astNodeType": "new_expression",
-    "concept": {
-      "conceptId": "cpp:new"
-    },
-    "liftStrategy": "cpp:liftNewExpression",
-    "fieldMappings": []
-  },
-  {
-    "id": "cpp_try_statement",
-    "astNodeType": "try_statement",
-    "concept": {
-      "conceptId": "cpp:try_catch"
-    },
-    "liftStrategy": "cpp:liftTryCatch",
-    "fieldMappings": []
-  },
-  {
     "id": "cpp_class_specifier",
     "astNodeType": "class_specifier",
     "concept": {
@@ -720,15 +657,6 @@
       "conceptId": "cpp:lambda"
     },
     "liftStrategy": "cpp:liftLambda",
-    "fieldMappings": []
-  },
-  {
-    "id": "cpp_namespace_definition",
-    "astNodeType": "namespace_definition",
-    "concept": {
-      "conceptId": "cpp:namespace_def"
-    },
-    "liftStrategy": "cpp:liftNamespace",
     "fieldMappings": []
   }
 ]
