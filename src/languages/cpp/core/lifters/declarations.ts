@@ -1,11 +1,17 @@
 import type { Lifter } from '../../../../core/lift/lifter'
 import { createNode } from '../../../../core/semantic-tree'
+import { tryAstBranches } from '../../../../core/component/lift-branches'
 
 export function registerDeclarationLifters(lifter: Lifter): void {
   // declaration — handled by JSON pattern + liftStrategy (cpp_declaration)
   // expression_statement — handled by JSON unwrap pattern (cpp_expression_statement)
 
   lifter.register('assignment_expression', (node, ctx) => {
+    // **膠囊自己的判別先問**——「左邊長成下標時是我」是元件的知識，不是路由的。
+    // 見 `core/component/lift-branches.ts` 的 `registerAstBranch`。
+    const 認領 = tryAstBranches('assignment_expression', node, ctx)
+    if (認領) return 認領
+
     const left = node.childForFieldName('left')
     const right = node.childForFieldName('right')
     const op = node.children.find(c => !c.isNamed)?.text ?? '='

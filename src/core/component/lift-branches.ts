@@ -92,3 +92,50 @@ export function liftBranchSources(): { 種類: '函式' | '方法'; 來源: stri
     ...方法分支.map((b) => ({ 種類: '方法' as const, 來源: b.來源 })),
   ]
 }
+
+/**
+ * **AST 節點型別的分支**——最一般的一種
+ *
+ * `core/lifters/{expressions,statements,declarations}.ts` 的形狀是
+ * 「一個 AST 型別 → 一個函式 → 好幾顆身分」：
+ *
+ * ```ts
+ * lifter.register('assignment_expression', (node, ctx) => {
+ *   if (左邊是下標) return createNode('cpp:array_assign', …)
+ *   if (左邊是解參考) return createNode('cpp:pointer_assign', …)
+ *   return createNode('cpp:var_assign', …)
+ * })
+ * ```
+ *
+ * 那個 if 鏈**不是路由，是四顆元件各自的判別**——「左邊長成下標時是我」
+ * 是 `array_assign` 的知識。
+ *
+ * → 共用檔登錄一次 AST 型別，然後**依序問登錄的分支**；認不得才走它自己的退路。
+ *
+ * ⚠️ **每個分支自己重新看一次 AST。** 那是重複幾行解析的代價，
+ * 換來的是「判別跟著元件走」。共用一份解析結果會逼所有分支同意一個中間表示，
+ * 而**那個中間表示會變成第二個要維護的契約**。
+ */
+export type AstBranch = (node: AstNode, ctx: LiftContext) => SemanticNode | null
+
+const AST分支 = new Map<string, { 來源: string; fn: AstBranch }[]>()
+
+export function registerAstBranch(astType: string, 來源: string, fn: AstBranch): void {
+  const arr = AST分支.get(astType) ?? []
+  arr.push({ 來源, fn })
+  AST分支.set(astType, arr)
+}
+
+/** 依序問。**第一個認領的贏**；都不認就回 `null`，共用檔走自己的退路。 */
+export function tryAstBranches(astType: string, node: AstNode, ctx: LiftContext): SemanticNode | null {
+  for (const b of AST分支.get(astType) ?? []) {
+    const n = b.fn(node, ctx)
+    if (n) return n
+  }
+  return null
+}
+
+/** 護欄用。 */
+export function astBranchSources(): { astType: string; 來源: string }[] {
+  return [...AST分支.entries()].flatMap(([t, a]) => a.map((b) => ({ astType: t, 來源: b.來源 })))
+}
