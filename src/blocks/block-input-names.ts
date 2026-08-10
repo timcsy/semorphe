@@ -11,10 +11,21 @@
  */
 import type { BlockSpec } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
+// ⚠️ **第十個組裝點**（2026-08-11）：這裡原本只讀 `universal-blocks.json`。
+// 一顆通用元件搬進膠囊之後它就查不到了，症狀是
+// `BlockSpec not found for cpp_loop_while in universal-blocks.json`
+// ——**訊息指著一個已經不是唯一來源的檔**。
+//
+// > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
 import { universalConcepts, universalBlocks } from './universal'
+import { componentConcepts, componentBlocks } from '../core/component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../core/types'
 
 const _registry = new BlockSpecRegistry()
-_registry.loadFromSplit(universalConcepts, universalBlocks)
+_registry.loadFromSplit(
+  [...universalConcepts, ...(componentConcepts() as unknown as ConceptDefJSON[])],
+  [...universalBlocks, ...(componentBlocks() as BlockProjectionJSON[])],
+)
 const specs = _registry.getAll()
 
 interface InputNames {
@@ -44,7 +55,7 @@ function extractInputNames(blockDef: Record<string, unknown>): InputNames {
 
 function getSpec(blockType: string): BlockSpec {
   const spec = specs.find(s => (s.blockDef as Record<string, unknown>)?.type === blockType)
-  if (!spec) throw new Error(`BlockSpec not found for ${blockType} in universal-blocks.json`)
+  if (!spec) throw new Error(`BlockSpec not found for ${blockType}（找過 universal-blocks.json 與全部元件膠囊）`)
   return spec
 }
 

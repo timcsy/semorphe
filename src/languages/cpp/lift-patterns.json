@@ -155,20 +155,6 @@
     ]
   },
   {
-    "id": "cpp_break",
-    "astNodeType": "break_statement",
-    "concept": {
-      "conceptId": "cpp:break"
-    }
-  },
-  {
-    "id": "cpp_continue",
-    "astNodeType": "continue_statement",
-    "concept": {
-      "conceptId": "cpp:continue"
-    }
-  },
-  {
     "id": "cpp_unwrap_parens",
     "astNodeType": "parenthesized_expression",
     "patternType": "unwrap",
@@ -362,25 +348,6 @@
       {
         "semantic": "else_body",
         "ast": "alternative",
-        "extract": "liftBody"
-      }
-    ]
-  },
-  {
-    "id": "cpp_while_statement",
-    "astNodeType": "while_statement",
-    "concept": {
-      "conceptId": "cpp:loop_while"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "condition",
-        "ast": "condition",
-        "extract": "lift"
-      },
-      {
-        "semantic": "body",
-        "ast": "body",
         "extract": "liftBody"
       }
     ]

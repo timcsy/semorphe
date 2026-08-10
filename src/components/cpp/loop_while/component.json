@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:loop_while",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "body": "statements"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  }
+}

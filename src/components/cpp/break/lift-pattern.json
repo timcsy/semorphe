@@ -1,0 +1,7 @@
+{
+  "id": "cpp_break",
+  "astNodeType": "break_statement",
+  "concept": {
+    "conceptId": "cpp:break"
+  }
+}

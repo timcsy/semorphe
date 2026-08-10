@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { extractInputNames, getInputs } from '../../src/blocks/block-input-names'
 import type { BlockSpec, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+// ⚠️ **第十一個組裝點**：這裡原本只讀 `universal` 的兩個陣列。
+// 一顆通用元件搬進膠囊之後 `specs.find(...)` 回 undefined，
+// 而斷言訊息說的是「must use CONDITION, not COND」——**訊息與根因無關**。
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
@@ -44,8 +49,20 @@ describe('block-input-names utility', () => {
 
 describe('blockDef input name sanity checks', () => {
   const _reg = new BlockSpecRegistry()
-  const _allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  _reg.loadFromSplit(_allConcepts, universalBlocks)
+  // ⚠️ **第十一個組裝點**：`_allConcepts` 列舉了三種來源卻**漏了元件膠囊**，
+  // 而積木那一側只給 `universalBlocks`。一顆通用元件搬進膠囊之後
+  // `specs.find(...)` 回 undefined，斷言訊息卻說「must use CONDITION, not COND」
+  // ——**訊息與根因無關**，而那比沒有訊息更難查。
+  //
+  // > 每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。
+  const _allConcepts = [
+    ...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts),
+    ...(componentConcepts() as unknown as ConceptDefJSON[]),
+  ]
+  _reg.loadFromSplit(_allConcepts, [
+    ...universalBlocks,
+    ...(componentBlocks() as BlockProjectionJSON[]),
+  ])
   const specs = _reg.getAll()
 
   // Blocks where COND was historically used but should be CONDITION

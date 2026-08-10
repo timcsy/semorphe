@@ -1,0 +1,4 @@
+{
+  "U_WHILE_LOOP_MSG0": "while %1 do",
+  "U_WHILE_LOOP_TOOLTIP": "Keep executing while the condition is true"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "cpp_while_statement",
+  "astNodeType": "while_statement",
+  "concept": {
+    "conceptId": "cpp:loop_while"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "condition",
+      "ast": "condition",
+      "extract": "lift"
+    },
+    {
+      "semantic": "body",
+      "ast": "body",
+      "extract": "liftBody"
+    }
+  ]
+}

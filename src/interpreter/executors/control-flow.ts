@@ -55,26 +55,9 @@ export function registerControlFlowExecutors(register: (concept: string, executo
     await ctx.exitScope(ctx.scope, parentScope)
   })
 
-  register('cpp:loop_while', async (node, ctx) => {
-    const body = node.children.body ?? []
-    const parentScope = ctx.scope
-    while (true) {
-      ctx.scope = parentScope.createChild()
-      const condition = await ctx.evaluate(node.children.condition[0])
-      if (!ctx.toBool(condition)) break
-      try {
-        await ctx.executeBody(body)
-      } catch (signal) {
-        if (signal instanceof BreakSignal) break
-        if (signal instanceof ContinueSignal) continue
-        await ctx.exitScope(ctx.scope, parentScope)
-        throw signal
-      }
-    }
-    await ctx.exitScope(ctx.scope, parentScope)
-  })
 
-  register('cpp:break', async () => { throw new BreakSignal() })
 
-  register('cpp:continue', async () => { throw new ContinueSignal() })
+
+
+
 }

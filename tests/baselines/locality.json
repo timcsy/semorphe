@@ -48,7 +48,7 @@
     },
     "cpp:break": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:builtin_constant": {
       "files": 3,
@@ -144,7 +144,7 @@
     },
     "cpp:continue": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:cstring_append": {
       "files": 3,
@@ -320,7 +320,7 @@
     },
     "cpp:loop_while": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:malloc": {
       "files": 4,

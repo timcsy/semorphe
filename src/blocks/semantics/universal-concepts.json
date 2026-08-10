@@ -279,42 +279,6 @@
     }
   },
   {
-    "conceptId": "cpp:loop_while",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "condition": "expression",
-      "body": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp:break",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {},
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp:continue",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {},
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:func_def",
     "layer": "universal",
     "abstractConcept": null,

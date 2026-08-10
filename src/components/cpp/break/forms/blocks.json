@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cpp_break",
+    "conceptId": "cpp:break",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_break",
+      "message0": "%{BKY_U_BREAK_MSG0}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_U_BREAK_TOOLTIP}"
+    }
+  }
+]

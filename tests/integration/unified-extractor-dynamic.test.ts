@@ -10,7 +10,10 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
+// ⚠️ **第十二個組裝點**（同一個形狀，這是今天第三處）。
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON, BlockProjectionJSON, BlockSpec, RenderMapping } from '../../src/core/types'
@@ -21,9 +24,14 @@ let registry: BlockSpecRegistry
 
 beforeAll(() => {
   registry = new BlockSpecRegistry()
+  // ⚠️ **列舉了三種來源卻漏了元件膠囊**——`cpp_break`／`cpp_continue`
+  // 搬進膠囊之後這裡查不到，而失敗訊息是「ELSEIF 子節點少一個」。
+  // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
   registry.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)],
-    [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks)]
+    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts),
+     ...(componentConcepts() as unknown as ConceptDefJSON[])],
+    [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks),
+     ...(componentBlocks() as BlockProjectionJSON[])]
   )
   extractor = new PatternExtractor()
   renderer = new PatternRenderer()
