@@ -1,0 +1,56 @@
+[
+  {
+    "位置": "src/languages/cpp/std/cctype/executors.ts:78",
+    "訊號": "if (!v) → value: 0",
+    "判定": "靜默回退",
+    "理由": "取不到引數的執行期值時回 0，而 isalpha 回 0 的合法意思是「不是字母」——兩者無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/cctype/executors.ts:86",
+    "訊號": "if (!v) → value: ''",
+    "判定": "靜默回退",
+    "理由": "取不到引數時回空字元，與「轉換結果是空」無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/cstdlib/executors.ts:21",
+    "訊號": "if (!v) → value: 0",
+    "判定": "靜默回退",
+    "理由": "取不到引數時回 0，而 abs(0)／atoi(\"0\") 的合法結果也是 0"
+  },
+  {
+    "位置": "src/languages/cpp/std/cstdlib/executors.ts:30",
+    "訊號": "if (!v) → value: 0",
+    "判定": "靜默回退",
+    "理由": "同上，另一個函式"
+  },
+  {
+    "位置": "src/languages/cpp/std/cstring/executors.ts:65",
+    "訊號": "if (strNodes.length === 0) → value: 0",
+    "判定": "靜默回退",
+    "理由": "語義樹缺子節點時回 0，而 strlen(\"\") 的合法結果也是 0——樹壞了與空字串無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/string/executors.ts:114",
+    "訊號": "if (valueNodes.length === 0) → value: ''",
+    "判定": "靜默回退",
+    "理由": "語義樹缺子節點時回空字串，與「結果是空字串」無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/string/executors.ts:121",
+    "訊號": "if (valueNodes.length === 0) → value: 0",
+    "判定": "靜默回退",
+    "理由": "同上，回 0 與 stoi(\"0\") 無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/string/executors.ts:130",
+    "訊號": "if (valueNodes.length === 0) → value: 0",
+    "判定": "靜默回退",
+    "理由": "同上，回 0.0 與 stod(\"0\") 無法區分"
+  },
+  {
+    "位置": "src/languages/cpp/std/vector/executors.ts:25",
+    "訊號": "if (非陣列) → value: 0",
+    "判定": "靜默回退",
+    "理由": "**本輪的病灶**：s.size() 被辨識成 cpp:vector_size 後拿到字串，回 0 讓「空容器」與「不是容器」無法區分，於是辨識的錯躲了很久"
+  }
+]
