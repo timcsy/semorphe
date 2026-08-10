@@ -386,7 +386,20 @@ export class SemanticInterpreter implements ExecutionContext {
       case 'double': return { type: targetType as import('./types').RuntimeType, value: this.toNumber(val) }
       case 'bool': return { type: 'bool', value: this.toBool(val) }
       case 'string': return { type: 'string', value: valueToString(val) }
-      case 'char': return { type: 'char', value: valueToString(val).charAt(0) || '' }
+      // ⚠️ **不能用 `valueToString(val).charAt(0)`。** 數值來源會變成
+      // 「66 → "66" → "6"」——`char c = 66` 印出 `6` 而不是 `B`。
+      // 這與 `std/cctype/executors.ts` 的 `charOf` 是同一個坑，
+      // 那裡修過了而核心沒有：**修一條路時要問「同一個缺陷在別的路上長什麼樣」。**
+      //
+      // ⚠️⚠️ 判準必須是 `typeof value === 'number'`，**不是 `toNumber()` 有沒有值**。
+      // 第一版寫成後者，而 `toNumber({type:'string',value:'a'})` 回傳 **0**（不是 NaN）
+      // ——於是 `char s[8]="a"` 的每個字元都變成 NUL，`strcat` 當場回歸。
+      // `std/cctype/executors.ts` 的 `charOf` 用的就是前者：**照抄已驗證的形狀，
+      // 不要自己換一個判準。**
+      case 'char': {
+        if (typeof val.value === 'number') return { type: 'char', value: String.fromCharCode(val.value) }
+        return { type: 'char', value: valueToString(val).charAt(0) || '' }
+      }
       default: return val
     }
   }

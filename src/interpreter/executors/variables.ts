@@ -32,14 +32,33 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
       // 核心**不編一個假概念來分派**：第一版那樣做，而孤兒實作護欄當場抓到
       // 「一個沒有任何概念定義的執行器」。改成呼叫登記處的掛勾，怎麼跑由
       // 語言套件安裝。
-      const isCtor = arg0.conceptId === 'cpp:func_call'
-        && String(arg0.properties?.name) === type
+      //
+      // ⚠️ 而**辨識那一路實際產出的是另一個形狀**：`A a(5)` 得到
+      // `cpp:var_declare { init_style: 'constructor' }`＋初始值直接掛在
+      // `initializer` 底下，**不是**一顆 `cpp:func_call`。只認 `func_call`
+      // 的話，`A a(5)` 會走進 `evaluate(5)` 然後在讀 `a.v` 時說
+      // 「a（不是一個結構）」——宣告與消費者對不上的又一筆。
+      const isCtor =
+        String(node.properties.init_style) === 'constructor' ||
+        (arg0.conceptId === 'cpp:func_call' && String(arg0.properties?.name) === type)
+      const ctorArgs =
+        arg0.conceptId === 'cpp:func_call' && String(arg0.properties?.name) === type
+          ? (arg0.children?.args ?? [])
+          : init0
       ctx.scope.declare(
         name,
-        isCtor ? await ctx.structs.construct(type, arg0.children?.args ?? []) : await ctx.evaluate(arg0),
+        isCtor ? await ctx.structs.construct(type, ctorArgs) : await ctx.evaluate(arg0),
       )
     } else {
-      ctx.scope.declare(name, ctx.structs.instantiate(type))
+      // `A a;` —— **預設建構式也要跑**。
+      //
+      // ⚠️ 原本是 `instantiate(type)`：只建實例、不跑建構式。於是
+      // `class A { A(){ cout<<"ctor"; } };` 宣告一顆 `A a;` 什麼都不印，
+      // 而**解構子會印**（`structs.ts:151` 有呼叫 `destructorOf`）
+      // ——同一顆物件，一邊跑一邊不跑，而少的那一邊沒有任何訊號。
+      //
+      // `construct` 在沒有建構式時等同 `instantiate`，所以無建構式的型別行為不變。
+      ctx.scope.declare(name, await ctx.structs.construct(type, []))
     }
     return
   }

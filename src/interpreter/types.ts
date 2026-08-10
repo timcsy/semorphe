@@ -141,5 +141,25 @@ export function valueToString(val: RuntimeValue): string {
     }
     return '[array]'
   }
+
+  // C++ 的 `cout` 預設是**六位有效數字**並去掉尾零：
+  //   1.0/3  →  0.333333   （不是 0.3333333333333333）
+  //   1.0    →  1          （不是 1.000000）
+  // JS 的 `String(number)` 給的是完整精度，於是每一個印浮點的程式輸出都不同，
+  // 而它看起來像「只是多印了幾位」。
+  if ((val.type === 'double' || val.type === 'float') && typeof val.value === 'number') {
+    return 以預設精度顯示(val.value)
+  }
+
   return String(val.value ?? '')
+}
+
+/** C++ `cout` 的預設浮點格式：六位有效數字，去尾零。 */
+function 以預設精度顯示(n: number): string {
+  if (!Number.isFinite(n)) return String(n)
+  if (Number.isInteger(n) && Math.abs(n) < 1e6) return String(n)
+  const s = n.toPrecision(6)
+  // toPrecision 可能給科學記號；C++ 在這個量級也會用科學記號，直接沿用
+  if (s.includes('e')) return s
+  return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s
 }
