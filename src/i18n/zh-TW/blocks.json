@@ -83,8 +83,6 @@
   "U_ARRAY_ACCESS_TOOLTIP": "取得或設定陣列中指定位置的值，索引從 0 開始",
   "U_ARRAY_ASSIGN_MSG0": "設定 陣列 %1 的第 [ %2 ] 格 ← %3",
   "U_ARRAY_ASSIGN_TOOLTIP": "把值存入陣列的指定位置。就像把東西放進置物櫃的某一格",
-  "C_CHAR_LITERAL_MSG0": "字元 ' %1 '",
-  "C_CHAR_LITERAL_TOOLTIP": "輸入一個字元（單一文字），用單引號包起來",
   "C_INCREMENT_MSG0": "變數 %1 %2 %3",
   "C_INCREMENT_VAR_LABEL": "變數",
   "C_INCREMENT_TOOLTIP": "讓變數的值加 1 或減 1",

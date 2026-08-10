@@ -17,7 +17,7 @@ import { universalBlocks, UNIVERSAL_OWNER } from '../../src/blocks/universal'
 import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
-import { componentBlocks } from '../../src/core/component/registry'
+import { componentBlocks, componentBlocksNotIn } from '../../src/core/component/registry'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 
 export interface ToolboxSnapshot {
@@ -84,6 +84,11 @@ export function loadToolbox(
       ...(componentBlocks(m.header) as BlockProjectionJSON[]).map((b) => ({ type: typeOf(b), owner: m.header })),
       ...m.blocks.map((b) => ({ type: typeOf(b), owner: m.header })),
     ]),
+    // ⚠️ 其餘 owner 的膠囊積木（例如 `(core)`）——見 `componentBlocksNotIn` 的檔頭。
+    ...(componentBlocksNotIn(allStdModules.map((m) => m.header)) as BlockProjectionJSON[]).map((b) => ({
+      type: typeOf(b),
+      owner: (b as { owner?: string }).owner ?? CORE_OWNER,
+    })),
     ...extraProjections.map((b) => ({ type: typeOf(b), owner: b.owner ?? CORE_OWNER })),
   ]
 

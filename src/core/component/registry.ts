@@ -147,6 +147,12 @@ export function componentConcepts(): ComponentManifest[] {
  * ⚠️ 沒有 `requires` 就不蓋章，**不給預設值**——一顆該有 header 卻忘了宣告的
  * 元件，症狀會是「積木掉進錯的工具箱分類」，而給了預設值它會變成「掉進一個
  * 看起來合理的分類」，更難發現。
+ *
+ * ⚠️ **而核心元件本來就沒有 header**（`cpp:literal_char` 不 `#include` 任何東西），
+ * 所以它們在 `component.json` 裡**顯式寫 `owner`**。
+ * 這與上面那條是同一個立場：**拒絕猜，要求宣告。**
+ * 沒有它的症狀是積木從工具箱**整個消失**——因為 `toolbox-categories.ts`
+ * 的段落是 `{ from: '(core)' }`，查無此章就整批回傳零筆。
  */
 export function componentBlocks(owner?: string | null): unknown[] {
   const byDir = new Map(registeredComponents().map((c) => [c.sourceDir, c]))
@@ -157,10 +163,31 @@ export function componentBlocks(owner?: string | null): unknown[] {
     if (i < 0) continue
     const c = byDir.get(`${parts[i + 1]}/${parts[i + 2]}`)
     if (!c) throw new Error(`${key} 沒有對應的 component.json——forms 不得孤兒存在`)
-    const 章 = c.manifest.requires?.[0] ?? null
+    const 章 = (c.manifest as { owner?: string }).owner ?? c.manifest.requires?.[0] ?? null
     // `owner === undefined` ＝ 全要；否則只要這個 owner 的（`null` ＝ 沒有 owner 的）。
     if (owner !== undefined && 章 !== owner) continue
     for (const b of mod.default) out.push(章 ? { ...(b as object), owner: 章 } : b)
+  }
+  return out
+}
+
+/**
+ * **不屬於指定 owner 清單的膠囊積木**——給「其餘的接在最後」用。
+ *
+ * ⚠️ 為什麼要這個而不是 `componentBlocks(null)`：
+ * 呼叫端原本列舉「std 模組的 header」＋「沒有 owner 的（null）」兩類，
+ * 而 `(core)` **兩類都不是**——於是核心元件的積木**從工具箱整個消失**，
+ * 而症狀是「一顆剛搬好的元件看起來像被刪掉了」（第三顆膠囊實測）。
+ *
+ * > **列舉已知的 owner，等於保證下一個新 owner 會被漏掉。**
+ * > 改成「扣掉已處理的，其餘全要」——**新的 owner 自動被涵蓋**。
+ */
+export function componentBlocksNotIn(已處理: readonly (string | null)[]): unknown[] {
+  const 集 = new Set(已處理)
+  const out: unknown[] = []
+  for (const b of componentBlocks() as { owner?: string }[]) {
+    if (集.has(b.owner ?? null)) continue
+    out.push(b)
   }
   return out
 }

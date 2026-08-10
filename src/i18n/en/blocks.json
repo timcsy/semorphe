@@ -83,8 +83,6 @@
   "U_ARRAY_ACCESS_TOOLTIP": "Get or set the value at a specific position in the array, indexed starting from 0",
   "U_ARRAY_ASSIGN_MSG0": "set array %1 at index [ %2 ] ← %3",
   "U_ARRAY_ASSIGN_TOOLTIP": "Store a value into a specific position in the array",
-  "C_CHAR_LITERAL_MSG0": "character ' %1 '",
-  "C_CHAR_LITERAL_TOOLTIP": "Enter a single character, enclosed in single quotes",
   "C_INCREMENT_MSG0": "variable %1 %2 %3",
   "C_INCREMENT_VAR_LABEL": "variable",
   "C_INCREMENT_TOOLTIP": "Increase or decrease the variable's value by 1",

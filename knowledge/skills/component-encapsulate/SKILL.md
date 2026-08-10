@@ -36,12 +36,22 @@ user-invocable: true
 
 ```
   7 顆  已在專屬模組資料夾（std/<mod>/）    最便宜：移動而非剪裁
-109 顆  lift 住在共用判別式或路由器      ✅ **兩批已實測是同一種形狀**
-          41  core/lifters/strategies.ts    第一顆（vector_declare）驗過
-          68  lifters/io.ts（已是路由器）    第二顆（char_is_alpha）驗過
- 97 顆  產生器住在共用 statements/expressions/declarations
+109 顆  lift 住在共用判別式或路由器      ✅ 兩批已驗，同一種形狀
+          41  core/lifters/strategies.ts    第一顆（vector_declare）
+          68  lifters/io.ts（已是路由器）    第二顆（char_is_alpha）
+ 97 顆  產生器住在共用 statements/expressions/declarations  ✅ 第三顆（literal_char）驗過
  69 顆  執行器住在共用 core/executors/
 ```
+
+**三種形狀已全部驗過**（`specs/104`／`113`／`114`），而它們的差別在**lift 那一路**：
+
+| 形狀 | lift 是什麼 | 機制 |
+|---|---|---|
+| 41 顆 | 共用判別式裡的**一列資料** | 登錄呼叫 |
+| 68 顆 | 共用分派表裡的**一列資料** | 登錄呼叫 |
+| **97 顆** | **一整個 pattern 物件** | **glob 直讀** |
+
+⚠️ 其餘四路（宣告／積木／標籤／產生／執行）**三種形狀都一樣**——剪出來就好。
 
 > **170/177 至少有一路住在共用檔**——所以「搬一顆」對大多數元件是
 > **從共用檔裡剪一段出來**，不是移動一個檔案。
@@ -186,6 +196,31 @@ export function registerLift(): void {
 → **那 109 顆的估計可以合併。** 而過渡表要留一句話：
 「剩下的那幾筆是**還沒膠囊化**的，不是設計；它只減不增。」
 
+### 第三顆的實測（2026-08-10，`specs/114`）：**教訓省下了兩個坑，而冒出第三個**
+
+同一顆上次被回退，這次**六支自證測一次過**。省下的：
+
+```
+✅ lift 用 glob 直讀（不是登錄呼叫）      上次壞兩次
+✅ component.json 顯式宣告 owner          核心元件沒有 requires
+```
+
+**而仍然冒出一個新的組裝點**——第三處：
+
+```
+tests/helpers/toolbox.ts + all-declarations.ts
+  原本列舉「std 模組的 header」＋「沒有 owner 的（null）」
+  而 `(core)` **兩類都不是** → 積木從工具箱整個消失
+```
+
+> **列舉已知的 owner，等於保證下一個新 owner 會被漏掉。**
+> 修法不是再列一個，是改成「**扣掉已處理的，其餘全要**」（`componentBlocksNotIn`）
+> ——新的 owner 自動被涵蓋。
+
+⚠️ **所以步驟 4 的問法要更新**：不只問「有沒有下一個組裝點」，
+還要問「**這個組裝點是列舉式的還是扣除式的**」。
+列舉式的每加一種 owner 就漏一次；扣除式的不會。
+
 ### ⚠️ 順帶：膠囊化會**還掉別的債**
 
 `char_is_alpha` 搬完之後，第三十三條護欄的「缺子節點」少一筆
@@ -205,6 +240,8 @@ export function registerLift(): void {
 
 ## 相關
 
+- [history/045](../../history/045-第三顆膠囊三種形狀全驗過.md)——三種形狀全驗過的那一輪
+- [history/044](../../history/044-第三顆膠囊被回退而知識留下.md)——被回退但知識留下的那一輪
 - `specs/104-component-vertical-slice/slice-record.md`——第一顆的完整紀錄與八個卡點
 - [[元件]]——五槽與膠囊契約
 - [[執行機構]]——為什麼每一步都要有機械檢查

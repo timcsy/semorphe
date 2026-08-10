@@ -3,6 +3,7 @@ import type { AstNode, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
 import type { TransformRegistry } from '../registry/transform-registry'
 import type { LiftStrategyRegistry } from '../registry/lift-strategy-registry'
+import { componentLiftPatterns } from '../component/lift-patterns'
 
 interface PatternEntry {
   conceptId: string
@@ -69,6 +70,24 @@ export class PatternLifter {
     }
   }
 
+  /** 膠囊的 pattern 只併一次。 */
+  private 併過膠囊 = false
+
+  /**
+   * **惰性併入膠囊自帶的 pattern**——放在**比對的入口**，不放在任何組裝點。
+   *
+   * ⚠️ 不能在 `loadLiftPatterns` 時併：**8 個測試檔各自組裝 lifter**
+   * （對照：113 個用共用的 `createTestLifter`），它們不會呼叫任何登錄。
+   * **修 8 個呼叫點不如把呼叫點變成 0 個**——而 glob 直讀讓這件事成立。
+   *
+   * 見 `history/044`：那次把 pattern 寫成登錄呼叫，壞了兩次。
+   */
+  private 併入膠囊(): void {
+    if (this.併過膠囊) return
+    this.併過膠囊 = true
+    this.loadLiftPatterns(componentLiftPatterns() as LiftPattern[])
+  }
+
   /** Load patterns from lift-patterns.json (complex patterns: chain, composite, operatorDispatch, etc.) */
   loadLiftPatterns(patterns: LiftPattern[]): void {
     for (const lp of patterns) {
@@ -118,6 +137,7 @@ export class PatternLifter {
 
   /** Try to lift an AST node using loaded patterns. Returns null if no pattern matches. */
   tryLift(node: AstNode, ctx: LiftContext): SemanticNode | null {
+    this.併入膠囊()
     const entries = this.patterns.get(node.type)
     if (!entries) return null
 

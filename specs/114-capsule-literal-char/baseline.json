@@ -1,0 +1,27 @@
+[
+  {
+    "語料": "int main(){ char c = 'x'; cout << c; }",
+    "身分": [
+      "cpp:literal_char"
+    ],
+    "產出": "#include <iostream>\nusing namespace std;\nint main() {\n    char c = 'x';\n    cout << c;\n}",
+    "執行": "x"
+  },
+  {
+    "語料": "int main(){ cout << 'B'; }",
+    "身分": [
+      "cpp:literal_char"
+    ],
+    "產出": "#include <iostream>\nusing namespace std;\nint main() {\n    cout << 'B';\n}",
+    "執行": "B"
+  },
+  {
+    "語料": "int main(){ char c = 'a'; char d = 'b'; cout << c << d; }",
+    "身分": [
+      "cpp:literal_char",
+      "cpp:literal_char"
+    ],
+    "產出": "#include <iostream>\nusing namespace std;\nint main() {\n    char c = 'a';\n    char d = 'b';\n    cout << c << d;\n}",
+    "執行": "ab"
+  }
+]

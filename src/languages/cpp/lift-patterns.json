@@ -43,21 +43,6 @@
     ]
   },
   {
-    "id": "cpp:literal_char",
-    "astNodeType": "char_literal",
-    "concept": {
-      "conceptId": "cpp:literal_char"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "char",
-        "ast": "$text",
-        "extract": "text",
-        "transform": "stripQuotes"
-      }
-    ]
-  },
-  {
     "id": "cpp_endl",
     "astNodeType": "identifier",
     "concept": {

@@ -1,19 +1,5 @@
 [
   {
-    "conceptId": "cpp:literal_char",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "char",
-        "kind": "literal",
-        "default": "a"
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:increment",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_assign",

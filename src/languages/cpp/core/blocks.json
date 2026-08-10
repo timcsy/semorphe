@@ -1,36 +1,5 @@
 [
   {
-    "id": "c_char_literal",
-    "conceptId": "cpp:literal_char",
-    "language": "cpp",
-    "category": "values",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "c_char_literal",
-      "message0": "%{BKY_C_CHAR_LITERAL_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "CHAR",
-          "text": "a"
-        }
-      ],
-      "output": "Expression",
-      "colour": "#FF8C1A",
-      "tooltip": "%{BKY_C_CHAR_LITERAL_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "'${CHAR}'",
-      "imports": [],
-      "order": 20
-    },
-    "renderMapping": {
-      "fields": {
-        "CHAR": "char"
-      }
-    }
-  },
-  {
     "id": "c_increment",
     "conceptId": "cpp:increment",
     "language": "cpp",

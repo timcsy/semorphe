@@ -29,11 +29,15 @@ describe('Concept/BlockDef split integrity', () => {
     // 76 → 72：B 項合併四對 statement／expression 雙版本
     // 72 → 71：`var_declarator` 進墓碑——有執行器、有抽取器、有定義，
     // 而**沒有任何辨識路徑產出過它**
-    expect(coreConcepts.length).toBe(71)
+    // ⚠️ 這個數字**隨膠囊搬家下降**——每搬走一顆核心元件就少一筆。
+    // 2026-08-10：71 → 70（`cpp:literal_char` 進了 `src/components/cpp/literal_char`）。
+    // 它不是「核心少了東西」，是**核心的東西回家了**。
+    expect(coreConcepts.length).toBe(70)
     // 77 → 81：097 為 `cpp_container_push` / `cpp_container_pop` 各加了
     // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
     // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。
-    expect(coreBlocks.length).toBe(81)
+    // 同上：81 → 80。
+    expect(coreBlocks.length).toBe(80)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

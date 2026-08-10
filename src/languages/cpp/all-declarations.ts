@@ -20,7 +20,7 @@ import { coreConcepts, coreBlocks } from './core'
 import { allStdModules } from './std'
 // 元件膠囊——一顆一個資料夾，`import.meta.glob` 掃出來。
 // 加一顆元件不必編輯這個檔（那正是元件化要買的東西）。
-import { componentConcepts, componentBlocks } from '../../core/component/registry'
+import { componentConcepts, componentBlocks, componentBlocksNotIn } from '../../core/component/registry'
 // ⚠️ **副作用匯入**：這兩份模組在載入時登錄自己的身分改名表（v2 → v3）。
 // 掛在這個組裝點上，是因為它已經是「所有宣告的唯一入口」（spec 100）——
 // 忘了匯入的話存檔會靜靜地不轉換，而 `audit-identity-namespace` 的涵蓋率檢查會指名。
@@ -54,7 +54,10 @@ export function allCppProjections(): BlockProjectionJSON[] {
       ...(componentBlocks(m.header) as BlockProjectionJSON[]),
       ...m.blocks,
     ]),
-    // owner 不屬於任何 std 模組的元件（例如通用元件）接在最後。
-    ...(componentBlocks(null) as BlockProjectionJSON[]),
+    // ⚠️ **其餘的接在最後**——原本寫 `componentBlocks(null)`，只涵蓋「沒有 owner」的。
+    // 而核心元件的 owner 是 `(core)`——**不是 std 模組，也不是 null**，兩邊都漏掉，
+    // 症狀是「一顆剛搬好的元件看起來像被刪掉了」（第三顆膠囊實測）。
+    // **列舉已知的 owner，等於保證下一個新 owner 會被漏掉。**
+    ...(componentBlocksNotIn(allStdModules.map((m) => m.header)) as BlockProjectionJSON[]),
   ]
 }

@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:literal_char",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "char",
+      "kind": "literal",
+      "default": "a"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}
