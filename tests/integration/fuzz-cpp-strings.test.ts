@@ -28,10 +28,9 @@ import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
-import { execSync } from 'child_process'
-import { writeFileSync, mkdirSync } from 'fs'
 import type { StylePreset } from '../../src/core/types'
 import type { SemanticNode } from '../../src/core/semantic-tree'
+import { runCpp } from '../helpers/run-cpp'
 
 const style: StylePreset = {
   id: 'apcs', name: { 'zh-TW': 'APCS', en: 'APCS' },
@@ -69,19 +68,6 @@ function collectConcepts(node: SemanticNode | null, result: Set<string> = new Se
     }
   }
   return result
-}
-
-function runCpp(code: string): string | null {
-  try {
-    mkdirSync('/tmp/semorphe-fuzz', { recursive: true })
-    const src = `/tmp/semorphe-fuzz/rt_${Date.now()}_${Math.floor(Math.random() * 10000)}.cpp`
-    const bin = src.replace('.cpp', '')
-    writeFileSync(src, code)
-    execSync(`g++ -std=c++17 -o ${bin} ${src}`, { encoding: 'utf-8', stdio: 'pipe' })
-    return execSync(bin, { encoding: 'utf-8', timeout: 5000 })
-  } catch {
-    return null
-  }
 }
 
 // ─── fuzz_1: 迴文偵測（palindrome word check） ────────────────────────────────

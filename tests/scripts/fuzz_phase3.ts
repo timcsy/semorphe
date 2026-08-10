@@ -9,6 +9,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 import { readFileSync, writeFileSync } from 'fs'
 import { execSync } from 'child_process'
+import { runCppDetailed } from '../helpers/run-cpp'
 
 const style: StylePreset = {
   id: 'apcs',
@@ -40,19 +41,12 @@ function countNodes(node: SemanticNode): { total: number; raw: number; rawList: 
   return { total, raw, rawList }
 }
 
-function tryCompileAndRun(cppPath: string, binPath: string): { ok: boolean; stdout?: string; error?: string } {
-  try {
-    execSync(`g++ -std=c++17 -o ${binPath} ${cppPath} 2>/tmp/semorphe-fuzz/_compile_err.txt`, { timeout: 15000 })
-  } catch {
-    const err = (() => { try { return readFileSync('/tmp/semorphe-fuzz/_compile_err.txt', 'utf8'); } catch { return 'unknown'; } })()
-    return { ok: false, error: `COMPILE: ${err.substring(0, 200)}` }
-  }
-  try {
-    const stdout = execSync(binPath, { timeout: 10000 }).toString()
-    return { ok: true, stdout }
-  } catch (e: any) {
-    return { ok: false, error: `RUNTIME: ${e.message?.substring(0, 120)}` }
-  }
+function tryCompileAndRun(code: string): { ok: boolean; stdout?: string; error?: string } {
+  // 第三份私有實作已收攏到 `tests/helpers/run-cpp.ts`（spec 108）。
+  const r = runCppDetailed(code)
+  return r.ok
+    ? { ok: true, stdout: r.output }
+    : { ok: false, error: `${r.stage === 'compile' ? 'COMPILE' : 'RUNTIME'}: ${r.message}` }
 }
 
 async function main() {
@@ -110,10 +104,7 @@ async function main() {
 
       // Compile and run generated code, compare stdout
       const expected = readFileSync(`/tmp/semorphe-fuzz/${id}_expected.txt`, 'utf8')
-      const genResult = tryCompileAndRun(
-        `/tmp/semorphe-fuzz/${id}_generated.cpp`,
-        `/tmp/semorphe-fuzz/${id}_gen_bin`
-      )
+      const genResult = tryCompileAndRun(generated)
 
       const last = results[results.length - 1]
       if (!genResult.ok) {
