@@ -45,6 +45,33 @@ export class SyncController {
   private language: string
   private style: StylePreset
   private currentTree: SemanticNode | null = null
+
+  /**
+   * 被降級的節點：`nodeId → 原本的 conceptId`。
+   *
+   * ## ⚠️ 為什麼需要它——**閉環的系統裡，輸出端的損失會從輸入端回來**
+   *
+   * 2026-08-09 修過一次「降級不得就地改寫真實」：降級只作用在 `cloneTree`
+   * 出來的顯示樹上，`currentTree` 保持真實。**那個修法只顧了 code→blocks。**
+   *
+   * 而 blocks→code 那個方向的樹是**從積木抽回來的**，
+   * 而積木畫的就是降級後的樣子：
+   *
+   * ```
+   * vector<int> v;  →  cpp:vector_declare  →（初學課程看不到）→ 顯示成 cpp:var_declare
+   * 使用者拖一下任何一顆積木 → 抽回來的樹是 cpp:var_declare → 它成為真實
+   * ```
+   *
+   * > **降級的視圖被使用者動一下，就變成了真實。**
+   *
+   * 使用者不必做任何特別的事——載入一份降級過的程式、碰任何一顆積木，
+   * 原始語義就沒了，而且**存檔之後救不回來**。
+   *
+   * 這張表讓那一步可逆：`_blockIdToNodeId` 已經在來回轉換保住原 nodeId
+   * （`blockly-panel.ts` 的「Restore original nodeId」），所以抽回來的節點
+   * 認得出自己是誰。
+   */
+  private 降級前的身分 = new Map<string, string>()
   private lifter: Lifter | null = null
   private parser: CodeParser | null = null
   private syncing = false
@@ -177,6 +204,9 @@ export class SyncController {
     try {
       const blocklyState = data.blocklyState as { tree: SemanticNode; blockMappings?: BlockMapping[] }
       const tree = blocklyState.tree
+      // ⚠️ **還原被降級的身分**——否則使用者拖一下積木，真實就變成降級後的樣子。
+      // 見 `降級前的身分` 的檔頭：閉環的系統裡，輸出端的損失會從輸入端回來。
+      this.還原降級(tree)
       this.currentTree = tree
       const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
       this.codeMappings = mappings
@@ -278,6 +308,7 @@ export class SyncController {
       // 降級只作用在**顯示用的拷貝**上——`tree` 是真實，執行要拿到它。
       // （`downgradeConceptsForLevel` 是就地改寫，見 `cloneTree` 的說明）
       let 顯示樹 = tree
+      this.降級前的身分.clear()
       if (this.currentTopic) {
         const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
         顯示樹 = this.cloneTree(tree)
@@ -342,6 +373,8 @@ export class SyncController {
         if (downgrade.typePrefix && !node.properties.type) {
           node.properties.type = downgrade.typePrefix
         }
+        // ⚠️ 記下來，讓 blocks→code 那個方向還原得回去（見 `降級前的身分`）。
+        this.降級前的身分.set(node.id, node.conceptId)
         node.conceptId = downgrade.conceptId
       }
       // If no downgrade mapping or target also not visible → keep original (never raw_code)
@@ -434,6 +467,22 @@ export class SyncController {
       return true
     }
     return false
+  }
+
+  /**
+   * 把 blocks→code 抽回來的樹裡、**被降級過的節點**還原成原本的身分。
+   *
+   * 只還原「這個節點當初真的被降級過，而且它現在仍然是那個降級目標」的情況
+   * ——**使用者真的把它換成別的概念時不得還原**（那是使用者的編輯，不是投影損失）。
+   */
+  private 還原降級(node: SemanticNode): void {
+    const 原 = this.降級前的身分.get(node.id)
+    if (原 !== undefined && node.conceptId === abstractConceptOf(原)) {
+      node.conceptId = 原
+    }
+    for (const children of Object.values(node.children ?? {})) {
+      if (Array.isArray(children)) for (const c of children) this.還原降級(c)
+    }
   }
 
   getCurrentTree(): SemanticNode | null {
