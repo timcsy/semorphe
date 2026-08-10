@@ -66,10 +66,29 @@ const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.j
 type 形狀 = '型別不符' | '缺子節點' | '未分類'
 
 interface 命中 {
+  /**
+   * 識別碼。
+   *
+   * ⚠️ **第一版用 `檔:行號`，而行號會漂移**——`specs/113` 把一顆元件搬進膠囊、
+   * 從 `cctype/executors.ts` 刪掉一行，底下每一筆的行號全部 −1，
+   * 於是**所有判定同時變成孤兒，而程式碼一個字都沒改**。
+   *
+   * 這與「截斷的鍵會碰撞」是同一族：**識別碼必須識別得出那個東西**。
+   * 行號識別的是**位置**，不是東西。
+   * → 同一個處方：**顯示與識別分開**——`檔名#條件的雜湊`。
+   */
+  鍵: string
   位置: string
   條件: string
   回傳: string
   形狀: 形狀
+}
+
+/** 內容雜湊——讓識別碼不隨行號漂移。 */
+function 雜湊(s: string): string {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
+  return (h >>> 0).toString(36)
 }
 
 /** 依條件的語法形狀分類。**新的寫法會落到「未分類」而不是被默許。** */
@@ -91,6 +110,7 @@ function 分類(條件: string): 形狀 {
  * **兩份紀錄對同一批東西給出不同的說法，而沒有任何地方會叫。**
  */
 interface 判定 {
+  鍵: string
   位置: string
   訊號: string
   判定: '合法' | '靜默回退' | '防禦性'
@@ -155,7 +175,14 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
       }
       if (!條件) continue // 無條件的回傳不是回退
       const c = 條件.trim().slice(0, 80)
-      命中.push({ 位置: `${rel}:${i + 1}`, 條件: c, 回傳: l.trim().slice(0, 60), 形狀: 分類(c) })
+      const 回 = l.trim().slice(0, 60)
+      命中.push({
+        鍵: `${rel}#${雜湊(c + '|' + 回)}`,
+        位置: `${rel}:${i + 1}`,
+        條件: c,
+        回傳: 回,
+        形狀: 分類(c),
+      })
     }
   }
   return { 命中, "return 總數": total }
@@ -222,12 +249,12 @@ describe('第三十三條護欄：靜默回退', () => {
   it('每一筆判定必須有理由，且判定不得過期', () => {
     const 現 = 掃(執行器檔()).命中
     const 判定s = 讀判定()
-    const 孤兒 = 判定s.filter((d) => !現.some((h) => h.位置 === d.位置))
+    const 孤兒 = 判定s.filter((d) => !現.some((h) => h.鍵 === d.鍵))
     expect(
       判定s.filter((d) => !d.理由 || d.理由.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
-    expect(孤兒.map((d) => d.位置), '判定過期了——底下的程式碼變了，留著會讓過期的結論繼續生效').toEqual([])
+    expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了，留著會讓過期的結論繼續生效').toEqual([])
   })
 
   // ── 棘輪 ────────────────────────────────────────────────────────
@@ -237,8 +264,8 @@ describe('第三十三條護欄：靜默回退', () => {
     const 命中 = 掃果.命中
     const returnTotal = 掃果["return 總數"]
     const 判定s = 讀判定()
-    const 已判定 = new Map(判定s.map((d) => [d.位置, d]))
-    const 要看 = 命中.filter((h) => !已判定.has(h.位置))
+    const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
+    const 要看 = 命中.filter((h) => !已判定.has(h.鍵))
     const 型別不符 = 命中.filter((h) => h.形狀 === '型別不符')
     const 缺子節點 = 命中.filter((h) => h.形狀 === '缺子節點')
     const 未分類 = 命中.filter((h) => h.形狀 === '未分類')
@@ -287,7 +314,7 @@ describe('第三十三條護欄：靜默回退', () => {
     // 兩份紀錄對同一批東西給出不同的說法時，讀哪一份決定你以為有幾個缺陷
     // ——而沒有這條斷言的話，它們會安靜地各說各話。
     const 矛盾 = 命中
-      .map((h) => ({ h, d: 已判定.get(h.位置) }))
+      .map((h) => ({ h, d: 已判定.get(h.鍵) }))
       .filter(({ h, d }) => d && !相容[h.形狀].includes(d.判定))
       .map(({ h, d }) => `${h.位置}：機器判「${h.形狀}」而人判「${d!.判定}」`)
     expect(矛盾, '判定檔與護欄對同一筆的說法不一致——讀哪一份決定你以為有幾個缺陷').toEqual([])

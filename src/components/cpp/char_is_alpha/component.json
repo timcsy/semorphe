@@ -1,0 +1,26 @@
+{
+  "conceptId": "cpp:char_is_alpha",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "requires": [
+    "<cctype>"
+  ],
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}

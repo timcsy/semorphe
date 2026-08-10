@@ -52,7 +52,6 @@ function charOf(v: RuntimeValue): string {
  * 要加它們的話是**五路一起加**，那是另一個功能，不是這一刀的順手。
  */
 const CLASSIFIERS: Record<string, (c: string) => boolean> = {
-  'cpp:char_is_alpha': (c) => /[a-zA-Z]/.test(c),
   'cpp:char_is_digit': (c) => /[0-9]/.test(c),
 }
 

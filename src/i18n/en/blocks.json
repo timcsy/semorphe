@@ -309,8 +309,6 @@
   "CPP_ATOI_TOOLTIP": "Convert a C-string to an integer",
   "CPP_ATOF_MSG0": "Convert text %1 to decimal (atof)",
   "CPP_ATOF_TOOLTIP": "Convert a C-string to a double",
-  "CPP_ISALPHA_MSG0": "Is %1 a letter",
-  "CPP_ISALPHA_TOOLTIP": "Check if character is alphabetic",
   "CPP_ISDIGIT_MSG0": "Is %1 a digit",
   "CPP_ISDIGIT_TOOLTIP": "Check if character is a digit",
   "CPP_TOUPPER_MSG0": "To uppercase %1",

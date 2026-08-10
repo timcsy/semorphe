@@ -3,6 +3,7 @@ import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { tryCmathLift } from '../std/cmath/lifters'
+import { conceptForSingleArgFunction } from '../../../core/component/single-arg-functions'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -328,14 +329,19 @@ export function registerIOLifters(lifter: Lifter): void {
       return createNode('cpp:cstring_as_double', {}, { str: str ? [str] : [] })
     }
 
-    // cctype functions
+    // 單引數函式：**先查登錄表**（膠囊登錄的），再退回過渡表。
+    //
+    // ⚠️ 過渡表裡剩下的那幾筆是**還沒膠囊化**的，不是設計。
+    // 它應該只減不增——每搬走一顆就少一列，搬完就整個消失。
+    const 登錄的 = conceptForSingleArgFunction(funcName)
     const cctypeFuncs: Record<string, string> = {
-      'isalpha': 'cpp:char_is_alpha', 'isdigit': 'cpp:char_is_digit',
+      'isdigit': 'cpp:char_is_digit',
       'toupper': 'cpp:char_to_upper', 'tolower': 'cpp:char_to_lower',
     }
-    if (funcName in cctypeFuncs) {
+    const 單引數概念 = 登錄的 ?? cctypeFuncs[funcName]
+    if (單引數概念) {
       const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode(cctypeFuncs[funcName], {}, { value: value ? [value] : [] })
+      return createNode(單引數概念, {}, { value: value ? [value] : [] })
     }
 
     // swap
