@@ -30,13 +30,17 @@
  * > **把資料做成登錄呼叫，等於替它發明一個會忘記呼叫的時序。**
  * > （2026-08-10 記下，2026-08-11 又犯了一次——所以這裡不再犯第三次。）
  *
- * ## 過渡表只減不增
+ * ## ⚠️ 過渡表已經退場（2026-08-11，F 完成之後的清掃）
  *
- * `pending-node-traits.json` 裡的每一筆都是**還沒膠囊化**的元件。
- * 一顆搬進膠囊時，它的性狀跟著搬進 `component.json`，這裡刪掉一列。
+ * 原本這裡疊著一張 `pending-node-traits.json`——**還沒膠囊化的元件的性狀暫放處**。
+ * 177 顆全部搬完之後它空了，而**一個空的 JSON 被 import 進來，
+ * 讀起來像「這裡還有一批沒處理的」**。
+ *
+ * 那個形狀（靜態 import 的 JSON、glob 直讀、**沒有登錄呼叫**）本身是對的，
+ * 而它該在**下一次遷移開始時重建**，不是留一個空殼在這裡等。
+ * 形狀寫在 `knowledge/skills/component-encapsulate/SKILL.md`。
  */
 import { registeredComponents } from '../../../core/component/registry'
-import 過渡 from '../pending-node-traits.json'
 
 export interface NodeTraits {
   /** 運算子優先級（越大越緊）。沒有＝不需要括號（字面值、變數參照…）。 */
@@ -206,18 +210,14 @@ export interface NodeTraits {
   plainDeclaration?: boolean
 }
 
-const 過渡表 = 過渡.traits as Record<string, NodeTraits>
-
-/** 有性狀宣告的全部身分——膠囊的加上過渡表的。 */
+/** 有性狀宣告的全部身分。 */
 function 全部身分(): string[] {
-  const 膠囊 = registeredComponents().map((c) => c.conceptId)
-  return [...new Set([...膠囊, ...Object.keys(過渡表)])]
+  return registeredComponents().map((c) => c.conceptId)
 }
 
 function 性狀(conceptId: string): NodeTraits | undefined {
   const c = registeredComponents().find((x) => x.conceptId === conceptId)
-  const 宣告 = (c?.manifest as { traits?: NodeTraits } | undefined)?.traits
-  return 宣告 ?? 過渡表[conceptId]
+  return (c?.manifest as { traits?: NodeTraits } | undefined)?.traits
 }
 
 /**

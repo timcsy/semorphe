@@ -22,7 +22,6 @@ import type { RuntimeValue, ObjectFields } from '../../../../interpreter/types'
 import { defaultValue } from '../../../../interpreter/types'
 import type { SemanticNode } from '../../../../core/types'
 import { componentsWithMemberRole, memberRoleOf } from '../../../../core/component/registry'
-import { roles as 過渡角色 } from '../../pending-member-roles.json'
 
 /** 把一群成員敘述拆成「欄位／方法／建構式」 */
 export function 拆解成員(members: SemanticNode[]): {
@@ -50,14 +49,12 @@ export function 拆解成員(members: SemanticNode[]): {
   // > **「另一顆元件需要認得它」是真的耦合，不是碎裂。**
   // > 處置不是把消費者搬走，是把「我是什麼角色」變成元件自己的宣告。
   //
-  // 角色有兩個來源，**兩個都沒有時序**：膠囊的 `component.json`（glob eager）
-  // 與過渡表（靜態 import 的 JSON）。過渡表只減不增。
-  const 角色 = (id: string): string | undefined =>
-    memberRoleOf(id) ?? (過渡角色 as Record<string, string>)[id]
-  const 方法概念 = new Set(
-    Object.keys(過渡角色).filter((id) => (過渡角色 as Record<string, string>)[id] === 'method')
-      .concat(componentsWithMemberRole('method')),
-  )
+  // ⚠️ 角色**只有一個來源**了（2026-08-11）：膠囊的 `component.json`（glob eager，
+  // 沒有時序）。原本還疊著一張 `pending-member-roles.json` 過渡表，
+  // 而 177 顆全部膠囊化之後它空了——**一個空的過渡表讀起來像
+  // 「這裡還有一批沒處理的」**，已退場。
+  const 角色 = memberRoleOf
+  const 方法概念 = new Set(componentsWithMemberRole('method'))
   for (const m of members) {
     if (角色(m.conceptId) === 'static-field') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
