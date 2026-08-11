@@ -86,6 +86,22 @@ export interface NodeTraits {
    * 而它們原本都寫 `n.conceptId === 'cpp:include' || n.conceptId === 'cpp:include_local'`。
    */
   includeDirective?: boolean
+  /**
+   * 這顆產生的是**前綴符號**，而那個符號與同類的相接會變成另一個運算子。
+   *
+   * ```
+   * -(-x)  不能寫成 --x   （前置遞減）
+   * &(&x)  不能寫成 &&x   （邏輯與）
+   * *(*p)  不能寫成 **p
+   * ```
+   *
+   * ⚠️ `cpp:negate` 的產生器原本寫
+   * `childNode.conceptId === 'cpp:negate' || … 'cpp:pointer_deref' || … 'cpp:address_of'`
+   * ——**一顆膠囊裡列另外兩顆的身分**，就近性護欄的反向檢查會指名。
+   *
+   * `!` 與 `~` **不在此列**：`!!x`、`~~x` 都是合法且意思正確的。
+   */
+  prefixOperator?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -135,4 +151,9 @@ export function isScaffold(conceptId: string): boolean {
 /** 這顆是 `#include` 指示詞嗎。沒宣告＝不是（保守）。 */
 export function isIncludeDirective(conceptId: string): boolean {
   return 性狀(conceptId)?.includeDirective === true
+}
+
+/** 這顆產生的前綴符號會與同類相接成另一個運算子嗎。沒宣告＝不會。 */
+export function isPrefixOperator(conceptId: string): boolean {
+  return 性狀(conceptId)?.prefixOperator === true
 }

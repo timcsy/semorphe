@@ -20,11 +20,11 @@ describe('Concept/BlockDef split integrity', () => {
     // 29 → 26 → 25（2026-08-11）：break／continue／loop_while／array_declare 進膠囊。
     // ⚠️ 這個數字**隨 F 下降**——它量的是「還住在共用宣告檔的通用概念」，
     // 不是「有幾顆通用概念」。後者是 `allCppConcepts()`。
-    expect((universalConcepts).length).toBe(24)
+    expect((universalConcepts).length).toBe(22)
     // 26 → 27（100，E 項）：`cpp_input_expression` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
-    expect((universalBlocks).length).toBe(22)
+    expect((universalBlocks).length).toBe(20)
   })
 
   it('should have correct core concept and block counts', () => {
@@ -38,12 +38,12 @@ describe('Concept/BlockDef split integrity', () => {
     // 2026-08-11：70 → 67（`cpp:delete`／`cpp:loop_do_while`／`cpp:throw` 同批搬進膠囊，
     // 是第一批用批次工具搬的——lift 是一整筆 pattern，glob 直讀）。
     // 同日：67 → 59（第三批 8 顆）→ 56（第四批 3 顆）→ 55（第六批）→ 50（第九批）→ 48（第十批）→ 47（第十四批）→ 45（第十五批）→ 44（第十七批）→ 42（第十八～二十批：array_declare／forward_decl／var_declare_auto）。
-    expect(coreConcepts.length).toBe(13)
+    expect(coreConcepts.length).toBe(10)
     // 77 → 81：097 為 `cpp_container_push` / `cpp_container_pop` 各加了
     // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
     // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。
     // 同上：81 → 80。2026-08-11：80 → 77（第一批三顆）→ 69（第三批八顆）→ 66（第四批三顆）。
-    expect(coreBlocks.length).toBe(23)
+    expect(coreBlocks.length).toBe(20)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

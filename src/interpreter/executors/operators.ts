@@ -114,16 +114,7 @@ export function registerOperatorExecutors(register: (concept: string, executor: 
     return { type: 'bool', value: false }
   })
 
-  register('cpp:logic_not', async (node, ctx) => {
-    const operand = await ctx.evaluate(node.children.operand[0])
-    return { type: 'bool', value: !ctx.toBool(operand) }
-  })
 
-  register('cpp:negate', async (node, ctx) => {
-    const operand = await ctx.evaluate(node.children.value[0])
-    const val = ctx.toNumber(operand)
-    return operand.type === 'int'
-      ? { type: 'int', value: -Math.trunc(val) }
-      : { type: 'double', value: -val }
-  })
+
+
 }

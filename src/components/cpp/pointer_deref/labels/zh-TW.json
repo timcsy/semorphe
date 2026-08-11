@@ -1,0 +1,4 @@
+{
+  "C_POINTER_DEREF_MSG0": "取得 %1 指向的值 (*)",
+  "C_POINTER_DEREF_TOOLTIP": "解參照：跟著便條紙上的地址，去找到那個位置存放的值。"
+}

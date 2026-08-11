@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:bitwise_not",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "operand": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "precedence": 14
+  },
+  "_traits_why": "**優先級與「我是前綴符號」是我自己的性質**，不是共用排版表該列的身分。"
+}

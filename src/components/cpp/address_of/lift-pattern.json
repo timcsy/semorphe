@@ -1,0 +1,21 @@
+{
+  "id": "cpp_address_of_ptr",
+  "astNodeType": "pointer_expression",
+  "concept": {
+    "conceptId": "cpp:address_of"
+  },
+  "constraints": [
+    {
+      "field": "$operator",
+      "text": "&"
+    }
+  ],
+  "fieldMappings": [
+    {
+      "semantic": "var",
+      "ast": "$namedChildren[0]",
+      "extract": "lift"
+    }
+  ],
+  "priority": 5
+}

@@ -75,36 +75,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:bitwise_not",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "operand": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:pointer_deref",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "ptr": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:address_of",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "var": "expression"
-    },
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:malloc",
     "layer": "lang-core",
     "abstractConcept": null,

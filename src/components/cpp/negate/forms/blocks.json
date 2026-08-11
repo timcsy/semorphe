@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp_negate",
+    "conceptId": "cpp:negate",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_negate",
+      "message0": "%1 %2",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_U_NEGATE_OP_MINUS}",
+              "-"
+            ],
+            [
+              "%{BKY_U_NEGATE_OP_PLUS}",
+              "+"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_U_NEGATE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "U_LOGIC_NOT_MSG0": "not %1",
+  "U_LOGIC_NOT_TOOLTIP": "Invert a condition: true becomes false, false becomes true"
+}

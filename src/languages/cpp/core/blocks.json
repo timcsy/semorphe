@@ -238,54 +238,6 @@
     }
   },
   {
-    "id": "cpp_bitwise_not",
-    "conceptId": "cpp:bitwise_not",
-    "language": "cpp",
-    "category": "operators",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_bitwise_not",
-      "message0": "%{BKY_C_BITWISE_NOT_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "OPERAND",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#59C059",
-      "tooltip": "%{BKY_C_BITWISE_NOT_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "~${OPERAND}",
-      "imports": [],
-      "order": 8
-    },
-    "astPattern": {
-      "nodeType": "unary_expression",
-      "constraints": [
-        {
-          "field": "operator",
-          "text": "~"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "operand",
-          "ast": "argument",
-          "extract": "lift"
-        }
-      ]
-    },
-    "renderMapping": {
-      "inputs": {
-        "OPERAND": "operand"
-      }
-    }
-  },
-  {
     "id": "cpp_include",
     "conceptId": "cpp:include",
     "language": "cpp",
@@ -740,70 +692,6 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
-  },
-  {
-    "id": "cpp_pointer_deref",
-    "conceptId": "cpp:pointer_deref",
-    "language": "cpp",
-    "category": "pointers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_pointer_deref",
-      "message0": "%{BKY_C_POINTER_DEREF_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "PTR",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#9966FF",
-      "tooltip": "%{BKY_C_POINTER_DEREF_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "*${PTR}",
-      "imports": [],
-      "order": 8
-    },
-    "renderMapping": {
-      "inputs": {
-        "PTR": "ptr"
-      }
-    }
-  },
-  {
-    "id": "cpp_address_of",
-    "conceptId": "cpp:address_of",
-    "language": "cpp",
-    "category": "pointers",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_address_of",
-      "message0": "%{BKY_C_ADDRESS_OF_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "VAR",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#9966FF",
-      "tooltip": "%{BKY_C_ADDRESS_OF_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "&${VAR}",
-      "imports": [],
-      "order": 8
-    },
-    "renderMapping": {
-      "inputs": {
-        "VAR": "var"
-      }
     }
   },
   {

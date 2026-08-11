@@ -1,0 +1,4 @@
+{
+  "C_POINTER_DEREF_MSG0": "Get value pointed to by %1 (*)",
+  "C_POINTER_DEREF_TOOLTIP": "Dereference: follow the address on the note to find the variable's value."
+}

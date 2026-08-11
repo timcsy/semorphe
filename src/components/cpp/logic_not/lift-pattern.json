@@ -1,0 +1,19 @@
+{
+  "id": "cpp_unary_not",
+  "astNodeType": "unary_expression",
+  "patternType": "operatorDispatch",
+  "operatorDispatch": {
+    "operatorField": "$operator",
+    "routes": {
+      "!": "cpp:logic_not"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "operand",
+        "ast": "argument",
+        "extract": "lift"
+      }
+    ]
+  },
+  "priority": 5
+}

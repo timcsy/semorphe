@@ -1,0 +1,4 @@
+{
+  "C_BITWISE_NOT_MSG0": "位元反轉 %1 (~)",
+  "C_BITWISE_NOT_TOOLTIP": "把每個位元翻轉：0 變 1、1 變 0。常用於位元遮罩運算"
+}

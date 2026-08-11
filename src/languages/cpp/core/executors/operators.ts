@@ -13,11 +13,7 @@ export function registerOperatorsCoreExecutors(
 ): void {
 
 
-  register('cpp:bitwise_not', async (node, ctx) => {
-    const operand = await ctx.evaluate(node.children.operand[0])
-    const val = ctx.toNumber(operand)
-    return { type: 'int', value: ~Math.trunc(val) }
-  })
+
 
   register('cpp:ternary', async (node, ctx) => {
     const condNodes = node.children.condition ?? []

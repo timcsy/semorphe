@@ -1,0 +1,21 @@
+{
+  "id": "cpp_pointer_deref_ptr",
+  "astNodeType": "pointer_expression",
+  "concept": {
+    "conceptId": "cpp:pointer_deref"
+  },
+  "constraints": [
+    {
+      "field": "$operator",
+      "text": "*"
+    }
+  ],
+  "fieldMappings": [
+    {
+      "semantic": "ptr",
+      "ast": "$namedChildren[0]",
+      "extract": "lift"
+    }
+  ],
+  "priority": 5
+}

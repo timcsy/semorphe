@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cpp_logic_not",
+    "conceptId": "cpp:logic_not",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_logic_not",
+      "message0": "%{BKY_U_LOGIC_NOT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_U_LOGIC_NOT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "A": "operand"
+      }
+    }
+  }
+]

@@ -4,9 +4,6 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:address_of": {
-      "precedence": 14
-    },
     "cpp:arithmetic": {
       "forLoopPart": true
     },
@@ -16,9 +13,6 @@
     "cpp:array_at": {
       "precedence": 16,
       "forLoopPart": true
-    },
-    "cpp:bitwise_not": {
-      "precedence": 14
     },
     "cpp:comma_expr": {
       "precedence": 1,
@@ -45,17 +39,6 @@
     },
     "cpp:logic": {
       "forLoopPart": true
-    },
-    "cpp:logic_not": {
-      "precedence": 14,
-      "forLoopPart": true
-    },
-    "cpp:negate": {
-      "precedence": 14,
-      "forLoopPart": true
-    },
-    "cpp:pointer_deref": {
-      "precedence": 14
     },
     "cpp:ternary": {
       "precedence": 3,

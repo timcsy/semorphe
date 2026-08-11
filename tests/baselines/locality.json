@@ -8,7 +8,7 @@
   "limits": {
     "cpp:address_of": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:arithmetic": {
       "files": 5,
@@ -40,7 +40,7 @@
     },
     "cpp:bitwise_not": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:block_comment": {
       "files": 3,
@@ -300,7 +300,7 @@
     },
     "cpp:logic_not": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:loop_count": {
       "files": 5,
@@ -404,7 +404,7 @@
     },
     "cpp:negate": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:new": {
       "files": 4,
@@ -436,7 +436,7 @@
     },
     "cpp:pointer_deref": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:print": {
       "files": 6,

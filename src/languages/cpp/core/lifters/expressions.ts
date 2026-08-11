@@ -5,6 +5,11 @@ import { createNode } from '../../../../core/semantic-tree'
 import type { LiftPostProcessor } from '../../../../core/lift/post-processors'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
 import { 建字串索引 } from '../../../../components/cpp/string_at/lift'
+import { 建logic_not } from '../../../../components/cpp/logic_not/lift'
+import { 建negate } from '../../../../components/cpp/negate/lift'
+import { 建bitwise_not } from '../../../../components/cpp/bitwise_not/lift'
+import { 建address_of } from '../../../../components/cpp/address_of/lift'
+import { 建pointer_deref } from '../../../../components/cpp/pointer_deref/lift'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
@@ -153,29 +158,19 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const operand = operandNode ? ctx.lift(operandNode) : null
 
     if (op === '!') {
-      return createNode('cpp:logic_not', {}, {
-        operand: operand ? [operand] : [],
-      })
+      return 建logic_not(operand)
     }
     if (op === '-') {
-      return createNode('cpp:negate', {}, {
-        value: operand ? [operand] : [],
-      })
+      return 建negate(operand)
     }
     if (op === '~') {
-      return createNode('cpp:bitwise_not', {}, {
-        operand: operand ? [operand] : [],
-      })
+      return 建bitwise_not(operand)
     }
     if (op === '&') {
-      return createNode('cpp:address_of', {}, {
-        var: operand ? [operand] : [],
-      })
+      return 建address_of(operand)
     }
     if (op === '*') {
-      return createNode('cpp:pointer_deref', {}, {
-        ptr: operand ? [operand] : [],
-      })
+      return 建pointer_deref(operand)
     }
 
     // Fallback for other unary ops (++, --, etc.)

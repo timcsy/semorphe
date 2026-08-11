@@ -13,7 +13,7 @@ const OPERATOR_PRECEDENCE: Record<string, (op: unknown) => number> = {
 }
 
 /** C++ operator precedence (higher = binds tighter) */
-function precedence(node: SemanticNode | undefined): number {
+export function precedence(node: SemanticNode | undefined): number {
   if (!node) return 100
   const fixed = precedenceOf(node.conceptId)
   if (fixed !== undefined) return fixed
@@ -23,7 +23,7 @@ function precedence(node: SemanticNode | undefined): number {
 }
 
 /** Wrap child expression in parentheses if its precedence is lower than parent's */
-function genChild(child: SemanticNode | undefined, parentPrec: number, ctx: Parameters<NodeGenerator>[1]): string {
+export function genChild(child: SemanticNode | undefined, parentPrec: number, ctx: Parameters<NodeGenerator>[1]): string {
   if (!child) return ''
   const expr = generateExpression(child, ctx)
   const childPrec = precedence(child)
@@ -73,21 +73,9 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
     return `${left} ${op} ${right}`
   })
 
-  g.set('cpp:logic_not', (node, ctx) => {
-    const operand = genChild((node.children.operand ?? [])[0], precedence(node), ctx)
-    return `!${operand}`
-  })
 
-  g.set('cpp:negate', (node, ctx) => {
-    const op = (node.properties.operator as string) ?? '-'
-    const childNode = (node.children.value ?? node.children.operand ?? [])[0]
-    const val = genChild(childNode, precedence(node), ctx)
-    // Prevent --x (pre-decrement) or ++x when nesting unary operators
-    if (childNode && (childNode.conceptId === 'cpp:negate' || childNode.conceptId === 'cpp:pointer_deref' || childNode.conceptId === 'cpp:address_of')) {
-      return `${op}(${val})`
-    }
-    return `${op}${val}`
-  })
+
+
 
 
   g.set('cpp:ternary', (node, ctx) => {
@@ -99,20 +87,11 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
 
 
-  g.set('cpp:bitwise_not', (node, ctx) => {
-    const operand = generateExpression((node.children.operand ?? [])[0], ctx)
-    return `~${operand}`
-  })
 
-  g.set('cpp:address_of', (node, ctx) => {
-    const v = generateExpression((node.children.var ?? [])[0], ctx)
-    return `&${v}`
-  })
 
-  g.set('cpp:pointer_deref', (node, ctx) => {
-    const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
-    return `*${ptr}`
-  })
+
+
+
 
   g.set('cpp:comma_expr', (node, ctx) => {
     const exprs = (node.children.exprs ?? []).map(e => generateExpression(e, ctx))

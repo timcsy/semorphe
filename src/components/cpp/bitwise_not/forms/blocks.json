@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cpp_bitwise_not",
+    "conceptId": "cpp:bitwise_not",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_bitwise_not",
+      "message0": "%{BKY_C_BITWISE_NOT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OPERAND",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_BITWISE_NOT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "~${OPERAND}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "unary_expression",
+      "constraints": [
+        {
+          "field": "operator",
+          "text": "~"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "operand",
+          "ast": "argument",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "OPERAND": "operand"
+      }
+    }
+  }
+]

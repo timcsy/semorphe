@@ -1,0 +1,19 @@
+{
+  "id": "cpp_unary_negate",
+  "astNodeType": "unary_expression",
+  "patternType": "operatorDispatch",
+  "operatorDispatch": {
+    "operatorField": "$operator",
+    "routes": {
+      "-": "cpp:negate"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "argument",
+        "extract": "lift"
+      }
+    ]
+  },
+  "priority": 5
+}

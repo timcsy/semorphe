@@ -189,26 +189,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:logic_not",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "operand": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:negate",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:if",
     "layer": "universal",
     "abstractConcept": null,

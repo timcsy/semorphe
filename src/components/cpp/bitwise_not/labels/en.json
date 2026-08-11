@@ -1,0 +1,4 @@
+{
+  "C_BITWISE_NOT_MSG0": "Flip all bits of %1 (bitwise NOT)",
+  "C_BITWISE_NOT_TOOLTIP": "Flip every bit: 0 becomes 1 and 1 becomes 0. Commonly used in bitmask operations"
+}
