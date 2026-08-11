@@ -14,9 +14,10 @@
     "lift": "./lift-pattern.json"
   },
   "traits": {
-    "lineBreak": true
+    "lineBreak": true,
+    "ioStyle": "iostream"
   },
-  "_traits_why": "**「我是換行標記」「我放得進 for 的三格」——都是我自己的性質**，不是消費者該寫死的身分。",
+  "_traits_why": "**「我是換行標記」「我屬於 iostream 這個 I/O 風格家族」都是我自己的宣告。**\n⚠️ 我有 `ioStyle` 而**沒有 `ioRole`**——那不是漏了：`printf` 那邊沒有我的對應物\n（換行在格式字串裡是兩個字元，不是一顆節點）。**屬於一個家族，而在家族裡沒有對應物。**",
   "requires": [
     "<iostream>"
   ],

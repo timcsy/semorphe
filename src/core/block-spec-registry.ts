@@ -28,7 +28,16 @@ export class BlockSpecRegistry {
         ...proj,
         conceptMapping: {
           conceptId: proj.conceptId,
-          // 呈現層要分「通用 vs 語言專屬」時問這個欄位，不要看名字前綴（116）。
+          // ⚠️ **這個欄位今天沒有生產消費者**（2026-08-11）。
+          //
+          // 116 把「呈現層別看名字前綴，問這個欄位」寫進來；而 2026-08-11
+          // 那個唯一的消費者（工具箱的 I/O 排序）改問**等價邊**了
+          // （同 `ioRole` ＝同一個等價類、`ioStyle` ＝哪個成員），
+          // 因為 `layer` 只是碰巧對——`cpp:print` 剛好標 universal。
+          //
+          // 欄位還在，是因為它記著「這顆概念當初被認為多通用」——
+          // 那是一份**還沒被驗證過的外延主張**，而驗它需要第二個語言。
+          // 見 `concepts/等價與觀察集.md` 剪枝力②：**「通用」是外延的，不住在名字裡**。
           layer: concept?.layer,
           abstractConcept: concept?.abstractConcept ?? undefined,
           properties: paramNames(concept?.properties),

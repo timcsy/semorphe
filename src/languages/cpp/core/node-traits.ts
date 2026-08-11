@@ -315,10 +315,27 @@ export function isLineBreak(conceptId: string): boolean {
  */
 export { isNamedCall } from '../../../core/component/traits'
 
-/** 這顆在 I/O 上的角色與風格。沒宣告回 `undefined`——**不猜**。 */
+/**
+ * 這顆在 I/O 上的角色與風格。沒宣告回 `undefined`——**不猜**。
+ *
+ * ⚠️ **兩者可以獨立存在**（2026-08-11 放寬）：
+ *
+ * ```
+ * ioRole   這顆屬於哪個等價類（print／input）——它有沒有另一種風格的對應物
+ * ioStyle  這顆屬於哪個 I/O 風格家族
+ * ```
+ *
+ * `cpp:endl` **有風格沒有角色**——它是 iostream 的東西，而 `printf` 那邊
+ * 沒有對應物（換行在格式字串裡是兩個字元，不是一顆節點）。
+ * 第一版要求 `ioRole` 才回傳，於是 endl 查不到風格，
+ * 而工具箱的排序把它當成「沒有風格偏好」丟到後面。
+ *
+ * > **一顆元件可以屬於一個家族，而在那個家族裡沒有對應物。**
+ */
 export function ioTraitOf(conceptId: string): { role?: string; style?: string } | undefined {
   const t = 性狀(conceptId)
-  return t?.ioRole ? { role: t.ioRole, style: t.ioStyle } : undefined
+  if (!t?.ioRole && !t?.ioStyle) return undefined
+  return { role: t.ioRole, style: t.ioStyle }
 }
 
 /**

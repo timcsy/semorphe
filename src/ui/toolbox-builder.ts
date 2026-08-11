@@ -1,6 +1,7 @@
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { BlockSpec, ToolboxCategoryDef } from '../core/types'
 import { KNOWN_AXES } from '../core/projection/form-selection'
+import { ioTraitOf } from '../languages/cpp/core/node-traits'
 
 export type { ToolboxCategoryDef }
 
@@ -103,14 +104,35 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
     // 於是 `universalIo` 恆為空、排序偏好靜靜失效——同一個病的第二次。
     //
     // > **命名慣例不是契約。** 要判斷「這顆概念是不是通用的」，就問宣告。
-    const 是通用的 = (t: string) =>
-      blockSpecRegistry.getByBlockType(t)?.conceptMapping?.layer === 'universal'
-    const universalIo = ioTypes.filter(是通用的)
-    const langIo = ioTypes.filter(t => !是通用的(t))
-    const sorted = ioPref === 'iostream'
-      ? [...universalIo, ...langIo]
-      : [...langIo, ...universalIo]
-    return sorted.map(t => ({ kind: 'block', type: t }))
+    //
+    // ⚠️ **第三版：連「問宣告」都問錯了問題**（2026-08-11）。
+    //
+    // 第三版問的是 `layer === 'universal'`——而這裡真正要的是
+    // 「**這顆是不是使用者偏好的那個 I/O 風格**」。`layer` 只是**碰巧**對：
+    // `cpp:print` 剛好標 universal、`cpp:print_formatted` 剛好標 lang-core。
+    //
+    // > **一個代理答對了，不代表它答的是同一個問題。**
+    // > 前兩版的代理是「名字長什麼樣」，第三版是「它被分在哪一層」——
+    // > 三次都是拿一個相關的東西去回答一個它不負責的問題。
+    //
+    // 第四版問的是那條**等價邊**本身：`cpp:print` 與 `cpp:print_formatted`
+    // 宣告了同一個 `ioRole`（＝同一個等價類）與不同的 `ioStyle`（＝哪個成員）。
+    // 「先給學生看哪一顆」＝ **在教學這個情境下，等價類的代表元是誰**。
+    // 見 `concepts/等價與觀察集.md` §六與 `concepts/性狀.md`。
+    //
+    // ⚠️ **行為有一處刻意改變**：`ioPref = 'cstdio'` 時，原本是
+    // 「**全部** lang 的（含 getline、fstream）排前面」，現在是
+    // 「**cstdio 風格的那兩顆**排前面，其餘照原序」。
+    // 舊行為把「風格偏好」與「分層」混在一起，而 getline／fstream
+    // **沒有風格對立面**——它們不該因為使用者選了 printf 就往前跳。
+    const 風格 = (t: string): string | undefined => {
+      const cid = blockSpecRegistry.getByBlockType(t)?.conceptMapping?.conceptId
+      return cid ? ioTraitOf(cid)?.style : undefined
+    }
+    // 三堆而不是兩堆——**「其餘」要是扣除式的**（見上面第一版的病歷）。
+    const 合偏好 = ioTypes.filter(t => 風格(t) === ioPref)
+    const 其餘 = ioTypes.filter(t => 風格(t) !== ioPref)
+    return [...合偏好, ...其餘].map(t => ({ kind: 'block', type: t }))
   }
 
   const categories = categoryDefs.map(def => {

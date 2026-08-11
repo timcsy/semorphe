@@ -21,6 +21,7 @@ import { loadToolbox } from '../../helpers/toolbox'
 // `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { ioTraitOf } from '../../../src/languages/cpp/core/node-traits'
 
 const topic = cppBeginnerTopic as Topic
 
@@ -85,22 +86,39 @@ describe('C++ toolbox categories (language module)', () => {
   // 116 把積木型別改成從身分導出之後沒有型別以 `u_` 開頭，於是它們
   // 量到的「通用積木」是空集合——**測試與被測物同時犯同一個錯**，
   // 而那時測試不會保護任何東西。改成問宣告的 `layer`。
-  const 是通用的 = (t: string) =>
-    createRegistry().getByBlockType(t)?.conceptMapping?.layer === 'universal'
+  //
+  // ⚠️ **而「問 layer」仍然是問錯了問題**（2026-08-11，第四版）。
+  // 這裡真正要驗的是「**使用者偏好的那個 I/O 風格排在前面**」，
+  // 而 `layer` 只是碰巧對——`cpp:print` 剛好標 universal。
+  // 改成問那條**等價邊**：同 `ioRole` ＝ 同一個等價類，`ioStyle` ＝ 哪個成員。
+  const 風格 = (t: string) => {
+    const cid = createRegistry().getByBlockType(t)?.conceptMapping?.conceptId
+    return cid ? ioTraitOf(cid)?.style : undefined
+  }
 
-  it('I/O 分類：iostream 偏好時通用版排在語言版之前', () => {
+  it('I/O 分類：iostream 偏好時 iostream 風格的排在前面', () => {
     const types = ioContents('iostream')
-    const firstLang = types.findIndex(t => !是通用的(t))
-    const lastUniversal = types.length - 1 - [...types].reverse().findIndex(是通用的)
-    expect(firstLang, 'I/O 分類是空的 → 是建構壞了，不是排序對了').toBeGreaterThan(0)
-    expect(firstLang).toBeGreaterThan(lastUniversal)
+    const firstOther = types.findIndex(t => 風格(t) !== 'iostream')
+    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => 風格(t) === 'iostream')
+    expect(firstOther, 'I/O 分類是空的 → 是建構壞了，不是排序對了').toBeGreaterThan(0)
+    expect(firstOther).toBeGreaterThan(lastMatch)
   })
 
-  it('I/O 分類：cstdio 偏好時反過來', () => {
+  it('I/O 分類：cstdio 偏好時 cstdio 風格的排在前面', () => {
+    // ⚠️ **這一支的斷言換了，因為行為刻意改了。**
+    //
+    // 舊行為：`cstdio` 偏好時「**全部 lang 的**」排前面——包含 `getline`、
+    // `ifstream_declare`、`ofstream_declare`。
+    //
+    // 而那三顆**沒有風格對立面**：它們不是「printf 版的什麼」，
+    // 它們只是剛好不是 universal 層。**它們不該因為使用者選了 printf 就往前跳。**
+    //
+    // 新行為：宣告了 `ioStyle: 'cstdio'` 的排前面，其餘照原序。
     const types = ioContents('cstdio')
-    const firstUniversal = types.findIndex(是通用的)
-    const lastLang = types.length - 1 - [...types].reverse().findIndex(t => !是通用的(t))
-    expect(firstUniversal).toBeGreaterThan(lastLang)
+    const firstOther = types.findIndex(t => 風格(t) !== 'cstdio')
+    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => 風格(t) === 'cstdio')
+    expect(firstOther, '一顆 cstdio 風格的積木都沒有 → 量測壞了').toBeGreaterThan(0)
+    expect(firstOther).toBeGreaterThan(lastMatch)
   })
 
   it('★ `cpp_` 開頭的 I/O 積木不得被排序函式丟掉', () => {
