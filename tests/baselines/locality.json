@@ -99,8 +99,8 @@
       "dirs": 1
     },
     "cpp:comma_expr": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:comment": {
       "files": 2,
@@ -260,7 +260,7 @@
     },
     "cpp:increment": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:input": {
       "files": 7,
@@ -323,8 +323,8 @@
       "dirs": 1
     },
     "cpp:malloc": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:map_assign": {
       "files": 3,
@@ -635,8 +635,8 @@
       "dirs": 1
     },
     "cpp:ternary": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:throw": {
       "files": 3,
@@ -663,8 +663,8 @@
       "dirs": 3
     },
     "cpp:var_assign_compound": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:var_declare": {
       "files": 6,

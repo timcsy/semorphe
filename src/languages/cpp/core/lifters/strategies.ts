@@ -30,6 +30,7 @@ import { 建member_static } from '../../../../components/cpp/member_static/lift'
 import { typeSuffixOf } from '../node-traits'
 import { 建include_local } from '../../../../components/cpp/include_local/lift'
 import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
+import { 建malloc } from '../../../../components/cpp/malloc/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -707,7 +708,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const argsNode = valueNode.childForFieldName('arguments')
         const argChildren = argsNode?.namedChildren ?? []
         const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-        return createNode('cpp:malloc', { type: targetType }, { size: size ? [size] : [] })
+        return 建malloc(targetType, size)
       }
     }
 

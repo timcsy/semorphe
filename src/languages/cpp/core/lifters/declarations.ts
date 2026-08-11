@@ -1,6 +1,7 @@
 import type { Lifter } from '../../../../core/lift/lifter'
 import { createNode } from '../../../../core/semantic-tree'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
+import { 建var_assign_compound } from '../../../../components/cpp/var_assign_compound/lift'
 
 export function registerDeclarationLifters(lifter: Lifter): void {
   // declaration — handled by JSON pattern + liftStrategy (cpp_declaration)
@@ -26,15 +27,10 @@ export function registerDeclarationLifters(lifter: Lifter): void {
         const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
         const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
         const index = indexNode ? ctx.lift(indexNode) : null
-        return createNode('cpp:var_assign_compound', { name: arrName, operator: op }, {
-          index: index ? [index] : [],
-          value: value ? [value] : [],
-        })
+        return 建var_assign_compound(arrName, op, value, index)
       }
       const name = left?.text ?? 'x'
-      return createNode('cpp:var_assign_compound', { name, operator: op }, {
-        value: value ? [value] : [],
-      })
+      return 建var_assign_compound(name, op, value)
     }
 
     if (left?.type === 'subscript_expression') {

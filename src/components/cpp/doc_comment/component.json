@@ -27,9 +27,8 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
-    "lift": "./lift-pattern.json",
+    "lift": "./lift.ts",
     "execute": null,
-    "_execute_why": "**顯式的空，不是遺漏。**",
-    "_lift_why": "⚠️ **這一路有兩個檔**：`lift-pattern.json`（判別：comment 節點且 startsWith `/**`）與 `lift.ts`（建構子，共用的判別策略與抽取器都呼叫它）。paths 只指得出一個，指判別那個——**建構子不是一條路，是那條路的一部分**。"
+    "_execute_why": "**顯式的空，不是遺漏。**"
   }
 }

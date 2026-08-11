@@ -319,30 +319,6 @@
     ]
   },
   {
-    "id": "cpp_ternary_expr",
-    "astNodeType": "conditional_expression",
-    "concept": {
-      "conceptId": "cpp:ternary"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "condition",
-        "ast": "condition",
-        "extract": "lift"
-      },
-      {
-        "semantic": "true_expr",
-        "ast": "consequence",
-        "extract": "lift"
-      },
-      {
-        "semantic": "false_expr",
-        "ast": "alternative",
-        "extract": "lift"
-      }
-    ]
-  },
-  {
     "id": "cpp_compound_stmt",
     "astNodeType": "compound_statement",
     "concept": {

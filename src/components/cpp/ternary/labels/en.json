@@ -1,0 +1,4 @@
+{
+  "C_TERNARY_MSG0": "if %1 then %2 else %3",
+  "C_TERNARY_TOOLTIP": "Choose one of two values based on a condition. A compact version of 'if...else' that directly returns a result"
+}

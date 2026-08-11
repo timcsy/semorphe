@@ -1,0 +1,105 @@
+[
+  {
+    "id": "cpp_malloc",
+    "conceptId": "cpp:malloc",
+    "language": "cpp",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_malloc",
+      "message0": "%{BKY_C_MALLOC_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_C_MALLOC_TYPE_INT}",
+              "int*"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_FLOAT}",
+              "float*"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_DOUBLE}",
+              "double*"
+            ],
+            [
+              "%{BKY_C_MALLOC_TYPE_CHAR}",
+              "char*"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "SIZEOF_TYPE",
+          "options": [
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_MALLOC_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "(${TYPE}*)malloc(${SIZE} * sizeof(${SIZEOF_TYPE}))",
+      "imports": [
+        "stdlib.h"
+      ],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "cast_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "sizeof_type",
+          "ast": "$text",
+          "extract": "text"
+        },
+        {
+          "semantic": "size",
+          "ast": "value",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "SIZEOF_TYPE": "sizeof_type",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "SIZE": "size"
+      }
+    }
+  }
+]

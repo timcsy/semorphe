@@ -78,12 +78,6 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
 
 
-  g.set('cpp:ternary', (node, ctx) => {
-    const cond = generateExpression((node.children.condition ?? [])[0], ctx)
-    const trueExpr = generateExpression((node.children.true_expr ?? [])[0], ctx)
-    const falseExpr = generateExpression((node.children.false_expr ?? [])[0], ctx)
-    return `${cond} ? ${trueExpr} : ${falseExpr}`
-  })
 
 
 
@@ -93,10 +87,8 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
 
 
-  g.set('cpp:comma_expr', (node, ctx) => {
-    const exprs = (node.children.exprs ?? []).map(e => generateExpression(e, ctx))
-    return exprs.join(', ')
-  })
+
+
 
   // ─── Generic container expression concepts ───
 
@@ -121,17 +113,7 @@ export function registerExpressionGenerators(g: Map<string, NodeGenerator>): voi
 
 
 
-  g.set('cpp:malloc', (node, ctx) => {
-    const type = node.properties.type ?? 'int*'
-    const sizeNodes = node.children.size ?? []
-    const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : '1'
-    // If sizeof_type is explicitly set (from block), use structured formula
-    if (node.properties.sizeof_type) {
-      return `(${type})malloc(${size} * sizeof(${node.properties.sizeof_type}))`
-    }
-    // From lifter: size child is the full malloc argument expression
-    return `(${type})malloc(${size})`
-  })
+
 
 
 

@@ -1,17 +1,15 @@
 import type { StylePreset } from '../../../../core/types'
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
+// ⚠️ 問**性狀**不問身分——一份身分集合擋住那三顆搬進膠囊。
+import { needsParenInCout } from '../../core/node-traits'
 
 export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style: StylePreset): void {
-  // Concepts that need parentheses in cout << chain due to lower precedence than <<
-  const COUT_NEEDS_PARENS = new Set([
-    'cpp:ternary', 'cpp:comma_expr', 'cpp:var_assign_compound',
-  ])
   // Bitwise/comparison/logic operators have lower precedence than <<
   const LOW_PREC_OPS = new Set(['&', '|', '^', '&&', '||', '>', '<', '>=', '<=', '==', '!='])
 
   function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
-    if (COUT_NEEDS_PARENS.has(v.conceptId)) return true
+    if (needsParenInCout(v.conceptId)) return true
     if ((v.conceptId === 'cpp:arithmetic' || v.conceptId === 'cpp:compare' || v.conceptId === 'cpp:logic') &&
         LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
     return false

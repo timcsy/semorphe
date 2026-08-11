@@ -30,6 +30,7 @@ import { allStdModules } from '../../src/languages/cpp/std'
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
+import { componentGenerateRegistrars } from '../../src/core/component/paths'
 
 // Mock AST node helper
 function mockNode(
@@ -121,6 +122,14 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const generators = new Map<string, NodeGenerator>()
       const style = { indent_size: 4, io_style: 'cout', brace_style: 'K&R' } as StylePreset
       registerStatementGenerators(generators, style)
+    for (const reg of componentGenerateRegistrars())
+      (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
+      // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，
+      // 而這裡只裝共用的那一批——症狀是 `⟨unknown concept: cpp:increment⟩`，
+      // 看起來像產生器不見了。第三十七條護欄講的是宣告那一維，
+      // **產生器這一維是同一個病。**
+      for (const reg of componentGenerateRegistrars())
+        (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
       const ctx: GeneratorContext = { indent: 0, style, language: 'cpp', generators, templateGenerator: generator }
       const code = generateNode(node, ctx)
       expect(code).toBe('i++;\n')

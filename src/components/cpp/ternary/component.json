@@ -1,0 +1,26 @@
+{
+  "conceptId": "cpp:ternary",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:if_else",
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "true_expr": "expression",
+    "false_expr": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "precedence": 3,
+    "forLoopPart": true,
+    "parenInCout": true
+  },
+  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。"
+}

@@ -1,0 +1,151 @@
+[
+  {
+    "id": "cpp_increment",
+    "conceptId": "cpp:increment",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_increment",
+      "message0": "%{BKY_C_INCREMENT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "i"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_C_INCREMENT_OP_INCREMENT}",
+              "++"
+            ],
+            [
+              "%{BKY_C_INCREMENT_OP_DECREMENT}",
+              "--"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "POSITION",
+          "options": [
+            [
+              "%{BKY_C_INCREMENT_POS_POSTFIX}",
+              "postfix"
+            ],
+            [
+              "%{BKY_C_INCREMENT_POS_PREFIX}",
+              "prefix"
+            ]
+          ]
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
+    },
+    "astPattern": {
+      "nodeType": "update_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "operator",
+          "ast": "$operator",
+          "extract": "text"
+        }
+      ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "cpp_increment_expression",
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator",
+        "POSITION": "position"
+      }
+    }
+  },
+  {
+    "id": "cpp_increment_expression",
+    "conceptId": "cpp:increment",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_increment_expression",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [
+            [
+              "x",
+              "x"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "++",
+              "++"
+            ],
+            [
+              "--",
+              "--"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "POSITION",
+          "options": [
+            [
+              "後置",
+              "postfix"
+            ],
+            [
+              "前置",
+              "prefix"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator",
+        "POSITION": "position"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  }
+]

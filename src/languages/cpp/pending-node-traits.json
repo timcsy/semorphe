@@ -14,10 +14,6 @@
       "precedence": 16,
       "forLoopPart": true
     },
-    "cpp:comma_expr": {
-      "precedence": 1,
-      "forLoopPart": true
-    },
     "cpp:compare": {
       "forLoopPart": true
     },
@@ -28,9 +24,6 @@
       "scaffold": true,
       "includeDirective": true
     },
-    "cpp:increment": {
-      "forLoopPart": true
-    },
     "cpp:literal_number": {
       "forLoopPart": true
     },
@@ -40,15 +33,8 @@
     "cpp:logic": {
       "forLoopPart": true
     },
-    "cpp:ternary": {
-      "precedence": 3,
-      "forLoopPart": true
-    },
     "cpp:var_assign": {
       "precedence": 2,
-      "forLoopPart": true
-    },
-    "cpp:var_assign_compound": {
       "forLoopPart": true
     },
     "cpp:var_declare": {

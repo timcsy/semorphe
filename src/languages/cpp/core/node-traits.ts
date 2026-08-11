@@ -102,6 +102,17 @@ export interface NodeTraits {
    * `!` 與 `~` **不在此列**：`!!x`、`~~x` 都是合法且意思正確的。
    */
   prefixOperator?: boolean
+  /**
+   * 放進 `cout << …` 鏈裡時需要括號（我的優先級低於 `<<`）。
+   *
+   * ⚠️ `iostream/generators.ts` 原本有一份 `COUT_NEEDS_PARENS` 身分集合。
+   *
+   * ⚠️ **它其實可以從 `precedence` 導出**（`<<` 是 10，三顆分別是 1／2／3），
+   * 而現在不導：那會把 `cpp:var_assign`（2）也納進來，
+   * 而它**不在原本的集合裡**——`cout << (x = 5)` 該不該加括號是一個
+   * 行為決定，不是搬家該順手做的。**搬移不重寫。**
+   */
+  parenInCout?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -156,4 +167,9 @@ export function isIncludeDirective(conceptId: string): boolean {
 /** 這顆產生的前綴符號會與同類相接成另一個運算子嗎。沒宣告＝不會。 */
 export function isPrefixOperator(conceptId: string): boolean {
   return 性狀(conceptId)?.prefixOperator === true
+}
+
+/** 放進 `cout << …` 時需要括號嗎。沒宣告＝不用。 */
+export function needsParenInCout(conceptId: string): boolean {
+  return 性狀(conceptId)?.parenInCout === true
 }

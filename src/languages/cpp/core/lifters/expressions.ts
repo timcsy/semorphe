@@ -10,6 +10,8 @@ import { 建negate } from '../../../../components/cpp/negate/lift'
 import { 建bitwise_not } from '../../../../components/cpp/bitwise_not/lift'
 import { 建address_of } from '../../../../components/cpp/address_of/lift'
 import { 建pointer_deref } from '../../../../components/cpp/pointer_deref/lift'
+import { 建increment } from '../../../../components/cpp/increment/lift'
+import { 建comma_expr } from '../../../../components/cpp/comma_expr/lift'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
@@ -194,13 +196,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const indicesNode = nameNode.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? nameNode.childForFieldName('index') ?? nameNode.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
-      return createNode('cpp:increment', { name: arrName, operator: op, position }, {
-        index: index ? [index] : [],
-      })
+      return 建increment(arrName, op, position, index)
     }
 
     const name = nameNode?.text ?? 'i'
-    return createNode('cpp:increment', { name, operator: op, position })
+    return 建increment(name, op, position)
   })
 
   // parenthesized_expression — handled by JSON unwrap pattern (cpp_unwrap_parens)
@@ -209,7 +209,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
   // Comma expression: i++, j-- (used in for-loop updates)
   lifter.register('comma_expression', (node, ctx) => {
     const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
-    return createNode('cpp:comma_expr', {}, { exprs: children })
+    return 建comma_expr(children)
   })
 
   // cast_expression — handled by JSON pattern (cpp_cast_expr)

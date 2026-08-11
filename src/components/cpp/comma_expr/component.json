@@ -1,0 +1,32 @@
+{
+  "conceptId": "cpp:comma_expr",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "exprs": "expressions"
+  },
+  "role": "expression",
+  "skipPaths": [
+    "extract",
+    "render"
+  ],
+  "skipReasons": {
+    "render": "consumed-by-parent",
+    "extract": "consumed-by-parent"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "precedence": 1,
+    "forLoopPart": true,
+    "parenInCout": true
+  },
+  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。"
+}

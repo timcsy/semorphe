@@ -7,6 +7,7 @@ import { callConceptFor } from '../../../core/component/call-concepts'
 import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-concepts'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 import { namedCastConcept } from '../../../core/component/named-cast-concepts'
+import { 建malloc } from '../../../components/cpp/malloc/lift'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -280,7 +281,7 @@ export function registerIOLifters(lifter: Lifter): void {
     // malloc(size) → cpp_malloc (without cast; cast is handled in lift-patterns via cast_expression)
     if (funcName === 'malloc' && argChildren.length === 1) {
       const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode('cpp:malloc', { type: 'void' }, { size: size ? [size] : [] })
+      return 建malloc('void', size)
     }
 
     // General function call

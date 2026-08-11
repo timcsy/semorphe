@@ -1,0 +1,46 @@
+{
+  "conceptId": "cpp:increment",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_assign",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal"
+    },
+    {
+      "name": "operator",
+      "kind": "enum",
+      "values": [
+        "++",
+        "--"
+      ]
+    },
+    {
+      "name": "position",
+      "kind": "enum",
+      "values": [
+        "postfix",
+        "prefix"
+      ]
+    }
+  ],
+  "children": {
+    "index": "expression"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "forLoopPart": true
+  },
+  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。"
+}

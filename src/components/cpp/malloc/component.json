@@ -1,0 +1,40 @@
+{
+  "conceptId": "cpp:malloc",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "enum",
+      "values": [
+        "int*",
+        "float*",
+        "double*",
+        "char*"
+      ],
+      "default": "int*"
+    },
+    {
+      "name": "sizeof_type",
+      "kind": "enum",
+      "values": [
+        "int",
+        "float",
+        "double",
+        "char"
+      ]
+    }
+  ],
+  "children": {
+    "size": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

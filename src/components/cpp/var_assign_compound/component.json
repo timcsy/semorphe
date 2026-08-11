@@ -1,0 +1,42 @@
+{
+  "conceptId": "cpp:var_assign_compound",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_assign",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "x"
+    },
+    {
+      "name": "operator",
+      "kind": "enum",
+      "values": [
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%="
+      ],
+      "default": "+="
+    }
+  ],
+  "children": {
+    "value": "expression",
+    "index": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "forLoopPart": true,
+    "parenInCout": true
+  },
+  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。"
+}

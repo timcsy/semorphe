@@ -1,0 +1,167 @@
+[
+  {
+    "id": "cpp_var_assign_compound",
+    "conceptId": "cpp:var_assign_compound",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_assign_compound",
+      "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
+              "+="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
+              "-="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
+              "*="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
+              "/="
+            ],
+            [
+              "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
+              "%="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${NAME} ${OP} ${VALUE};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "assignment_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "name",
+          "ast": "left",
+          "extract": "text"
+        },
+        {
+          "semantic": "operator",
+          "ast": "$operator",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "right",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "cpp_var_assign_compound_expression",
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator"
+      }
+    }
+  },
+  {
+    "id": "cpp_var_assign_compound_expression",
+    "conceptId": "cpp:var_assign_compound",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_assign_compound_expression",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [
+            [
+              "x",
+              "x"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "+=",
+              "+="
+            ],
+            [
+              "-=",
+              "-="
+            ],
+            [
+              "*=",
+              "*="
+            ],
+            [
+              "/=",
+              "/="
+            ],
+            [
+              "%=",
+              "%="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "extraStateFlags": {
+        "hasIndex": "index"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      },
+      "fields": {
+        "NAME": "name",
+        "OP": "operator"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  }
+]

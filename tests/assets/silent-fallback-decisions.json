@@ -84,27 +84,6 @@
     "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
   },
   {
-    "鍵": "src/languages/cpp/core/executors/operators.ts#1rmzjv0",
-    "位置": "src/languages/cpp/core/executors/operators.ts:26",
-    "訊號": "condNodes.length === 0 → if (condNodes.length === 0) return { type: 'int', value: 0 }",
-    "判定": "防禦性",
-    "理由": "三元運算子缺 cond 子節點時的退路。語義樹健康時不會發生。"
-  },
-  {
-    "鍵": "src/languages/cpp/core/executors/operators.ts#1jjoice",
-    "位置": "src/languages/cpp/core/executors/operators.ts:30",
-    "訊號": "ctx.toBool(condition) → return trueNodes.length > 0 ? await ctx.evaluate(trueNodes[0",
-    "判定": "合法",
-    "理由": "三元運算子的真分支——條件成立而分支為空時回 0。**這是 if/else 的結構本身**，不是檢查失敗後的退路。"
-  },
-  {
-    "鍵": "src/languages/cpp/core/executors/operators.ts#1wv6pvl",
-    "位置": "src/languages/cpp/core/executors/operators.ts:32",
-    "訊號": "ctx.toBool(condition) → return falseNodes.length > 0 ? await ctx.evaluate(falseNodes",
-    "判定": "合法",
-    "理由": "同上，假分支。"
-  },
-  {
     "鍵": "src/interpreter/executors/io.ts#1qoepsc",
     "位置": "src/interpreter/executors/io.ts:65",
     "訊號": "raw === null → if (raw === null) return { type: 'int', value: 0 }",
@@ -138,5 +117,26 @@
     "訊號": "!v → if (!v) return { type: 'char', value: '' }",
     "判定": "防禦性",
     "理由": "語義樹缺 value 子節點時的退路——從 std/cctype/executors.ts 原封搬過來，搬移不重寫。原本三顆共用一個 for 迴圈，判定也只有兩筆（分類器一筆、轉換器一筆）；拆成三個膠囊之後每一顆各自有帳。"
+  },
+  {
+    "鍵": "src/components/cpp/ternary/execute.ts#1rmzjv0",
+    "位置": "src/components/cpp/ternary/execute.ts:9",
+    "訊號": "condNodes.length === 0 → if (condNodes.length === 0) return { type: 'int', value: 0 }",
+    "判定": "防禦性",
+    "理由": "語義樹缺 cond 子節點時的退路，從共用檔原封搬過來，搬移不重寫。"
+  },
+  {
+    "鍵": "src/components/cpp/ternary/execute.ts#1jjoice",
+    "位置": "src/components/cpp/ternary/execute.ts:13",
+    "訊號": "ctx.toBool(condition) → return trueNodes.length > 0 ? await ctx.evaluate(trueNodes[0",
+    "判定": "合法",
+    "理由": "三元運算子的分支——條件成立而該分支為空時回 0。這是 if/else 的結構本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
+  },
+  {
+    "鍵": "src/components/cpp/ternary/execute.ts#1wv6pvl",
+    "位置": "src/components/cpp/ternary/execute.ts:15",
+    "訊號": "ctx.toBool(condition) → return falseNodes.length > 0 ? await ctx.evaluate(falseNodes",
+    "判定": "合法",
+    "理由": "三元運算子的分支——條件成立而該分支為空時回 0。這是 if/else 的結構本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
   }
 ]

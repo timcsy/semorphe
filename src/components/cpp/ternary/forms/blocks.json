@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cpp_ternary",
+    "conceptId": "cpp:ternary",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_ternary",
+      "message0": "%{BKY_C_TERNARY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TRUE_EXPR",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FALSE_EXPR",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_TERNARY_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${CONDITION} ? ${TRUE_EXPR} : ${FALSE_EXPR}",
+      "imports": [],
+      "order": 3
+    },
+    "astPattern": {
+      "nodeType": "conditional_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "condition",
+          "ast": "condition",
+          "extract": "lift"
+        },
+        {
+          "semantic": "true_expr",
+          "ast": "consequence",
+          "extract": "lift"
+        },
+        {
+          "semantic": "false_expr",
+          "ast": "alternative",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition",
+        "FALSE_EXPR": "false_expr",
+        "TRUE_EXPR": "true_expr"
+      }
+    }
+  }
+]
