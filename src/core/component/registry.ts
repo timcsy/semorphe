@@ -198,3 +198,47 @@ export function componentConceptMappings(): [conceptId: string, header: string][
     (c.manifest.requires ?? []).map((h) => [c.conceptId, h] as [string, string]),
   )
 }
+
+/**
+ * **類別成員的角色** —— 元件自己宣告，消費者問角色不問身分
+ *
+ * ## 為什麼需要它
+ *
+ * `core/executors/structs.ts` 的 `拆解成員` 原本這樣分派：
+ *
+ * ```ts
+ * } else if (m.conceptId === 'cpp:constructor') { ctor = { … } }
+ * ```
+ *
+ * 那**不是實作散落，是一個合法的消費者**——`class_def` 要知道自己的成員裡
+ * 哪一個是建構式，才知道實例化時要跑什麼。而它擋住膠囊化：
+ * 只要那些身分寫在共用檔裡，就近性護欄就會指名。
+ *
+ * > **「另一顆元件需要認得它」是真的耦合，不是碎裂。**
+ * > 處置不是把消費者搬走，是**把「我是什麼角色」變成元件自己的宣告**。
+ *
+ * ## ⚠️ 這裡**沒有登錄呼叫**，而那是刻意的
+ *
+ * 第一版把過渡角色做成 `registerPendingMemberRole()`，而它**壞了 16 支測試**
+ * ——登錄發生在 `registerCppLifters` 裡，而執行器可能更早跑。
+ *
+ * > **把資料做成登錄呼叫，等於替它發明一個會忘記呼叫的時序。**
+ * > （2026-08-10 記下的教訓，而它在 2026-08-11 又被犯了一次。）
+ *
+ * 這一版全部走 **`import.meta.glob` 的 eager 讀取**（`registeredComponents()`）
+ * ——模組載入即完成，沒有「誰先呼叫」的問題。
+ */
+export type MemberRole = 'constructor' | 'destructor' | 'method' | 'operator' | 'static-field' | 'pure-virtual'
+
+/** 一顆元件在類別裡扮演什麼角色。沒宣告回 `undefined`——**不猜**。 */
+export function memberRoleOf(conceptId: string): MemberRole | undefined {
+  const c = registeredComponents().find((x) => x.conceptId === conceptId)
+  return (c?.manifest as { memberRole?: MemberRole } | undefined)?.memberRole
+}
+
+/** 宣告了這個角色的元件身分。 */
+export function componentsWithMemberRole(role: MemberRole): string[] {
+  return registeredComponents()
+    .filter((c) => (c.manifest as { memberRole?: string }).memberRole === role)
+    .map((c) => c.conceptId)
+}

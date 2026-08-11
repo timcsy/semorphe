@@ -228,7 +228,7 @@
     },
     "cpp:func_def": {
       "files": 8,
-      "dirs": 6
+      "dirs": 5
     },
     "cpp:if": {
       "files": 6,
@@ -372,7 +372,7 @@
     },
     "cpp:member_static": {
       "files": 4,
-      "dirs": 3
+      "dirs": 4
     },
     "cpp:memory_copy": {
       "files": 3,

@@ -1,0 +1,13 @@
+{
+  "_why": "**過渡表**：還沒元件化的類別成員角色。`structs.ts` 改成「問角色不問身分」之後，尚未膠囊化的元件沒有地方宣告自己的角色——這張表替它們宣告。⚠️ 它是**過渡**不是設計：每搬一顆進膠囊就從這裡刪掉一列（角色改寫進它的 component.json），歸零那天刪掉這個檔。與 pending-containers.ts 同一個處置，而那一張已於 2026-08-11 退場。⚠️ 它是 **JSON 而不是 register 呼叫**，因為第一版做成登錄呼叫壞了 16 支測試——登錄發生在 lifter 註冊時，而執行器可能更早跑。**把資料做成登錄呼叫，等於替它發明一個會忘記呼叫的時序。**",
+  "roles": {
+    "cpp:constructor": "constructor",
+    "cpp:destructor": "destructor",
+    "cpp:method_virtual": "method",
+    "cpp:method_override": "method",
+    "cpp:method_virtual_pure": "pure-virtual",
+    "cpp:operator_overload": "operator",
+    "cpp:member_static": "static-field",
+    "cpp:func_def": "method"
+  }
+}

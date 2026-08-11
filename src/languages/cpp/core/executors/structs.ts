@@ -23,6 +23,8 @@ import { ReturnSignal } from '../../../../interpreter/executors/functions'
 import type { RuntimeValue, ObjectFields } from '../../../../interpreter/types'
 import { defaultValue } from '../../../../interpreter/types'
 import type { SemanticNode } from '../../../../core/types'
+import { componentsWithMemberRole, memberRoleOf } from '../../../../core/component/registry'
+import { roles as 過渡角色 } from '../../pending-member-roles.json'
 
 /** 把一群成員敘述拆成「欄位／方法／建構式」 */
 export function 拆解成員(members: SemanticNode[]): {
@@ -42,16 +44,30 @@ export function 拆解成員(members: SemanticNode[]): {
       name: String(p.properties?.name ?? ''),
       type: String(p.properties?.type ?? 'int'),
     }))
-  /** 一般方法、虛擬、覆寫——**執行上完全相同**，差別只在覆寫解析，而那由型別鏈負責 */
-  const 方法概念 = new Set(['cpp:func_def', 'cpp:method_virtual', 'cpp:method_override'])
+  // ⚠️ **問角色，不問身分。**
+  //
+  // 這裡原本寫死三個 conceptId，而那讓那幾顆元件**永遠搬不進膠囊**
+  // ——就近性護欄會指名「身分出現在自己資料夾外」。
+  //
+  // > **「另一顆元件需要認得它」是真的耦合，不是碎裂。**
+  // > 處置不是把消費者搬走，是把「我是什麼角色」變成元件自己的宣告。
+  //
+  // 角色有兩個來源，**兩個都沒有時序**：膠囊的 `component.json`（glob eager）
+  // 與過渡表（靜態 import 的 JSON）。過渡表只減不增。
+  const 角色 = (id: string): string | undefined =>
+    memberRoleOf(id) ?? (過渡角色 as Record<string, string>)[id]
+  const 方法概念 = new Set(
+    Object.keys(過渡角色).filter((id) => (過渡角色 as Record<string, string>)[id] === 'method')
+      .concat(componentsWithMemberRole('method')),
+  )
   for (const m of members) {
-    if (m.conceptId === 'cpp:member_static') {
+    if (角色(m.conceptId) === 'static-field') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (m.conceptId === 'cpp:method_virtual_pure') {
+    } else if (角色(m.conceptId) === 'pure-virtual') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
-    } else if (m.conceptId === 'cpp:operator_overload') {
+    } else if (角色(m.conceptId) === 'operator') {
       // 存成名字是 `operator+` 的方法，讓算術執行器找得到
       methods.push({
         name: `operator${String(m.properties.operator)}`,
@@ -60,9 +76,9 @@ export function 拆解成員(members: SemanticNode[]): {
       })
     } else if (方法概念.has(m.conceptId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
-    } else if (m.conceptId === 'cpp:constructor') {
+    } else if (角色(m.conceptId) === 'constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
-    } else if (m.conceptId === 'cpp:destructor') {
+    } else if (角色(m.conceptId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
