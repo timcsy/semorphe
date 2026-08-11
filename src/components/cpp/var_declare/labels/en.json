@@ -1,0 +1,4 @@
+{
+  "U_VAR_DECLARE_MSG0": "create %1 variable %2 = %3",
+  "U_VAR_DECLARE_TOOLTIP": "Create a new variable with a chosen type and initial value. A variable is like a named box that stores data"
+}

@@ -1,10 +1,10 @@
-import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
 import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
 import { 建var_ref } from '../../../components/cpp/var_ref/lift'
 import { 建input } from '../../../components/cpp/input/lift'
 import { 建if } from '../../../components/cpp/if/lift'
+import { 建var_declare } from '../../../components/cpp/var_declare/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -28,13 +28,13 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       // （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
       // 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
       // ——它假設所有宣告子都是純名字，而系統刻意不那樣做。已進墓碑。
-      declarators.push(createNode('cpp:var_declare', { name, type }, {
+      declarators.push(建var_declare({ name, type }, {
         initializer: initNode ? [initNode] : [],
       }))
       i++
     }
     if (declarators.length > 1) {
-      return createNode('cpp:var_declare', { type }, { declarators })
+      return 建var_declare({ type }, { declarators })
     }
     const name = declarators.length === 1
       ? declarators[0].properties.name
@@ -46,7 +46,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
           return initNode ? [initNode] : []
         })()
-    return createNode('cpp:var_declare', { name, type }, { initializer: initChildren })
+    return 建var_declare({ name, type }, { initializer: initChildren })
   })
 
   // ── Control flow (if-elseif chain flattening) ──
@@ -137,7 +137,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     const name = (block.fields.NAME_0 as string) ?? 'i'
     const initInput = block.inputs.INIT_0
     const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-    return createNode('cpp:var_declare', { name, type }, {
+    return 建var_declare({ name, type }, {
       initializer: initNode ? [initNode] : [],
     })
   })

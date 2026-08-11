@@ -20,11 +20,11 @@ describe('Concept/BlockDef split integrity', () => {
     // 29 → 26 → 25（2026-08-11）：break／continue／loop_while／array_declare 進膠囊。
     // ⚠️ 這個數字**隨 F 下降**——它量的是「還住在共用宣告檔的通用概念」，
     // 不是「有幾顆通用概念」。後者是 `allCppConcepts()`。
-    expect((universalConcepts).length).toBe(3)
+    expect((universalConcepts).length).toBe(2)
     // 26 → 27（100，E 項）：`cpp_input_expression` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
-    expect((universalBlocks).length).toBe(2)
+    expect((universalBlocks).length).toBe(1)
   })
 
   it('should have correct core concept and block counts', () => {
@@ -43,7 +43,7 @@ describe('Concept/BlockDef split integrity', () => {
     // **兩個形態**（堆疊／佇列）。**概念數不變**——那正是「一個身分、多個形態」：
     // 積木變多而元件沒有變多。若哪天概念數也跟著跳，那才是身分被拆了。
     // 同上：81 → 80。2026-08-11：80 → 77（第一批三顆）→ 69（第三批八顆）→ 66（第四批三顆）。
-    expect(coreBlocks.length).toBe(1)
+    expect(coreBlocks.length).toBe(0)
   })
 
   it('should have valid concepts and blocks arrays for each std module', () => {

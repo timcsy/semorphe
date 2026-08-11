@@ -1,26 +1,5 @@
 [
   {
-    "id": "cpp_var_declare",
-    "conceptId": "cpp:var_declare",
-    "language": "universal",
-    "category": "data",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_var_declare",
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FF8C1A",
-      "tooltip": "%{BKY_U_VAR_DECLARE_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {},
-      "inputs": {},
-      "statementInputs": {},
-      "strategy": "cpp:renderVarDeclare",
-      "expressionCounterpart": "cpp_var_declare_expression"
-    }
-  },
-  {
     "id": "cpp_func_def",
     "conceptId": "cpp:func_def",
     "language": "universal",

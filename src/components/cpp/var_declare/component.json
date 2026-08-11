@@ -1,0 +1,48 @@
+{
+  "conceptId": "cpp:var_declare",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "required": true,
+      "default": "x"
+    },
+    {
+      "name": "init_style",
+      "kind": "enum",
+      "values": [
+        "constructor"
+      ],
+      "required": false
+    }
+  ],
+  "children": {
+    "initializer": "expression",
+    "declarators": "expressions"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "forLoopPart": true,
+    "plainDeclaration": true
+  },
+  "_traits_why": "**「我是最單純的變數宣告」是我自己的宣告**——`ui/block-registrar` 蒐集變數名時要分辨它，而它不該認得我的名字。"
+}

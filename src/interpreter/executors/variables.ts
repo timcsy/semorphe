@@ -108,13 +108,8 @@ export function setMember(obj: RuntimeValue | undefined, member: string, val: Ru
   ;(obj!.value as Map<string, RuntimeValue>).set(member, val)
 }
 
-export function registerVariableExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-
-  register('cpp:var_declare', execVarDeclare)
-
-
-
-
-
-  // Reference: aliases the original variable (simplified: just copies value)
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件都搬進膠囊了。
+ * 檔案留著因為裡面還有**共用的執行演算法**（`execVarDeclare`／`getMember`／`setMember`），
+ * 而那些不屬於任何一顆元件。
+ */

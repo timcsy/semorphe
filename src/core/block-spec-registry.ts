@@ -46,7 +46,21 @@ export class BlockSpecRegistry {
   }
 
   loadFromJSON(specs: BlockSpec[]): void {
-    for (const spec of specs) {
+    // ⚠️ **中性形態必須先進表**（2026-08-11）。
+    //
+    // 下面好幾張表都寫著「第一個勝出——後者覆寫的話，改變 JSON 順序就會改變行為」。
+    // 那句話擋住了覆寫，**而沒有擋住「中性的那一顆排在變體後面」**：
+    // 一顆多形態元件搬進膠囊時，`forms/blocks.json` 的順序由批次工具決定，
+    // 而它把 `cpp_var_declare_expression` 排在 `cpp_var_declare` 前面
+    // ——結果類別成員的積木**渲染出來欄位是空的**，來回轉換後三個成員
+    // 全部變成同一個名字（`int x; int y; int z;` → 三個 `int x;`）。
+    //
+    // > **「第一個勝出」只在「該贏的那個排第一」時才是規則，
+    // > 否則它只是把順序偽裝成規則。**
+    //
+    // 處置：在這裡就把中性排到前面，讓輸入順序**不再有影響**。
+    const 中性優先 = [...specs].sort((a, b) => (a.form ? 1 : 0) - (b.form ? 1 : 0))
+    for (const spec of 中性優先) {
       this.specs.set(spec.id, spec)
       if (spec.conceptMapping?.conceptId) {
         const cid = spec.conceptMapping.conceptId

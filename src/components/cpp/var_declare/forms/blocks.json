@@ -1,0 +1,94 @@
+[
+  {
+    "id": "cpp_var_declare_expression",
+    "conceptId": "cpp:var_declare",
+    "language": "cpp",
+    "category": "variables",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_declare_expression",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "int",
+              "int"
+            ],
+            [
+              "double",
+              "double"
+            ],
+            [
+              "float",
+              "float"
+            ],
+            [
+              "char",
+              "char"
+            ],
+            [
+              "long long",
+              "long long"
+            ],
+            [
+              "string",
+              "string"
+            ],
+            [
+              "bool",
+              "bool"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME_0",
+          "text": "i"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT_0",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME_0": "name"
+      },
+      "inputs": {
+        "INIT_0": "initializer"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  },
+  {
+    "id": "cpp_var_declare",
+    "conceptId": "cpp:var_declare",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_declare",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_VAR_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderVarDeclare",
+      "expressionCounterpart": "cpp_var_declare_expression"
+    }
+  }
+]

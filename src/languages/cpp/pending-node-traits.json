@@ -4,9 +4,6 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:var_declare": {
-      "forLoopPart": true
-    },
     "number": {
       "forLoopPart": true
     },

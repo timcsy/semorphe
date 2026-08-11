@@ -33,6 +33,7 @@ import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
 import { 建malloc } from '../../../../components/cpp/malloc/lift'
 import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
 import { 建include } from '../../../../components/cpp/include/lift'
+import { 建var_declare } from '../../../../components/cpp/var_declare/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -128,7 +129,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // Plain identifier: int x
   if (decl.type === 'identifier') {
-    return createNode('cpp:var_declare', { name: decl.text, type })
+    return 建var_declare({ name: decl.text, type })
   }
 
   // Bare pointer declarator without init: int* ptr;
@@ -208,17 +209,17 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       if (type === 'istringstream' || type === 'std::istringstream') {
         return 建字串流宣告(name, args.length > 0 ? args[0] : null)
       }
-      return createNode('cpp:var_declare', { name, type, init_style: 'constructor' }, {
+      return 建var_declare({ name, type, init_style: 'constructor' }, {
         initializer: args,
       })
     }
     const value = ctx.lift(valueNode)
-    return createNode('cpp:var_declare', { name, type }, {
+    return 建var_declare({ name, type }, {
       initializer: value ? [value] : [],
     })
   }
 
-  return createNode('cpp:var_declare', { name, type })
+  return 建var_declare({ name, type })
 }
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
@@ -326,7 +327,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     ).filter(c => c !== typeNode) // exclude the type node itself
     if (declarators.length > 1) {
       // Multi-variable: create individual var_declare nodes wrapped in a container
-      const nodes = declarators.map(d => createNode('cpp:var_declare', { type, name: d.text }))
+      const nodes = declarators.map(d => 建var_declare({ type, name: d.text }))
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
       // collects all children. Return a compound node that generateBody will flatten.
@@ -334,7 +335,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     const declNode = node.childForFieldName('declarator')
     const name = declNode?.text ?? 'x'
-    return createNode('cpp:var_declare', { type, name })
+    return 建var_declare({ type, name })
   }
 
   // Fallback: try generic lift
@@ -649,14 +650,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
 
     if (declarators.length === 0) {
-      return createNode('cpp:var_declare', { name: 'x', type })
+      return 建var_declare({ name: 'x', type })
     }
 
     const liftedNodes = declarators.map(decl => liftSingleDeclarator(decl, type, ctx))
 
     if (liftedNodes.length === 1) return liftedNodes[0]
 
-    return createNode('cpp:var_declare', { type }, { declarators: liftedNodes })
+    return 建var_declare({ type }, { declarators: liftedNodes })
   })
 
 
@@ -686,7 +687,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       for (const p of paramList.namedChildren) {
         if (p.type === 'parameter_declaration') {
           const { type, name } = parseParamDeclaration(p)
-          params.push(createNode('cpp:var_declare', { type, name }))
+          params.push(建var_declare({ type, name }))
         }
       }
     }

@@ -55,15 +55,6 @@
     ]
   },
   {
-    "id": "cpp_declaration",
-    "astNodeType": "declaration",
-    "concept": {
-      "conceptId": "cpp:var_declare"
-    },
-    "liftStrategy": "cpp:liftDeclaration",
-    "priority": 15
-  },
-  {
     "id": "cpp_compound_stmt",
     "astNodeType": "compound_statement",
     "concept": {

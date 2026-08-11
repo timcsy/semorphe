@@ -3,7 +3,6 @@
     {
       "name": "資料",
       "blocks": [
-        "cpp_var_declare",
         "cpp_literal_number",
         "cpp_literal_string",
         "cpp_var_assign",
@@ -12,6 +11,7 @@
         "cpp_member_static",
         "cpp_typedef",
         "cpp_using_alias",
+        "cpp_var_declare",
         "cpp_var_declare_auto",
         "cpp_var_declare_const",
         "cpp_var_declare_constexpr",
@@ -37,10 +37,10 @@
         "cpp_cast_reinterpret",
         "cpp_cast_static",
         "cpp_increment",
-        "cpp_increment_expression",
         "cpp_sizeof",
         "cpp_ternary",
         "cpp_var_assign_compound",
+        "cpp_increment_expression",
         "cpp_var_assign_compound_expression",
         "cpp_math_binary",
         "cpp_math_pow",
@@ -76,15 +76,15 @@
       "blocks": [
         "cpp_func_def",
         "cpp_func_call",
-        "cpp_func_call_expression",
         "cpp_return",
+        "cpp_func_call_expression",
         "cpp_forward_decl",
         "cpp_lambda",
         "cpp_template_function",
         "cpp_istringstream_declare",
         "cpp_method_call",
-        "cpp_method_call_expression",
-        "cpp_string_at"
+        "cpp_string_at",
+        "cpp_method_call_expression"
       ]
     },
     {
@@ -92,11 +92,11 @@
       "blocks": [
         "cpp_endl",
         "cpp_input",
-        "cpp_input_expression",
         "cpp_print",
+        "cpp_input_expression",
         "cpp_input_formatted",
-        "cpp_input_formatted_expression",
         "cpp_print_formatted",
+        "cpp_input_formatted_expression",
         "cpp_input_line",
         "cpp_ifstream_declare",
         "cpp_ofstream_declare"
@@ -199,12 +199,12 @@
         "cpp_queue_front",
         "cpp_stringstream_declare",
         "cpp_container_empty",
+        "cpp_istringstream_declare",
+        "cpp_string_at",
         "cpp_container_pop_stack",
         "cpp_container_pop_queue",
         "cpp_container_push_stack",
-        "cpp_container_push_queue",
-        "cpp_istringstream_declare",
-        "cpp_string_at"
+        "cpp_container_push_queue"
       ]
     },
     {

@@ -30,9 +30,12 @@ export interface ConceptPathReport {
 export function collectFromBlockSpecs(jsonPaths: string[]): Map<string, string[]> {
   const result = new Map<string, string[]>()
   for (const p of jsonPaths) {
-    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ concept?: { conceptId?: string } }>
+    // ⚠️ **兩種形狀都要認**：舊的投影檔把身分包在 `concept.conceptId` 裡，
+    // 而拆分之後（Phase 3）它是**頂層的 `conceptId`**。只認前者的話，
+    // 這份腳本會說「這個專案只有 23 顆概念」——而那些概念的積木好端端地在。
+    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ concept?: { conceptId?: string }; conceptId?: string }>
     for (const spec of data) {
-      const id = spec.concept?.conceptId
+      const id = spec.concept?.conceptId ?? spec.conceptId
       if (!id) continue
       const sources = result.get(id) ?? []
       sources.push(path.basename(p))
@@ -186,10 +189,32 @@ export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCod
     }
   }
 
+  // ⚠️ **膠囊的積木也要掃。**
+  //
+  // 這份腳本原本只列三種來源（universal／core／std 模組）——而元件搬進
+  // `src/components/<scope>/<name>/forms/blocks.json` 之後就不在那三種裡。
+  // 症狀是「這顆概念沒有任何投影」，而它的積木好端端地在膠囊裡。
+  //
+  // 這是**第 N 份各自列來源**（第三十七條護欄只掃 `tests/`，掃不到 `src/scripts/`）。
+  const componentsDir = path.join(rootDir, 'src/components')
+  const componentBlockPaths: string[] = []
+  if (fs.existsSync(componentsDir)) {
+    for (const scope of fs.readdirSync(componentsDir, { withFileTypes: true })) {
+      if (!scope.isDirectory()) continue
+      const scopeDir = path.join(componentsDir, scope.name)
+      for (const comp of fs.readdirSync(scopeDir, { withFileTypes: true })) {
+        if (!comp.isDirectory()) continue
+        const p2 = path.join(scopeDir, comp.name, 'forms/blocks.json')
+        if (fs.existsSync(p2)) componentBlockPaths.push(p2)
+      }
+    }
+  }
+
   const blockSpecPaths = [
     path.join(rootDir, 'src/blocks/projections/blocks/universal-blocks.json'),
     path.join(rootDir, 'src/languages/cpp/core/blocks.json'),
     ...stdBlockPaths,
+    ...componentBlockPaths,
   ]
 
   const liftPatternsPath = path.join(rootDir, 'src/languages/cpp/lift-patterns.json')

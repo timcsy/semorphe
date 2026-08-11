@@ -7,6 +7,7 @@ import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../blocks/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
+import { isPlainDeclaration } from '../core/component/traits'
 import {
   C_COMPOUND_ASSIGN_INPUTS,
   C_COMPOUND_ASSIGN_EXPR_INPUTS,
@@ -79,7 +80,7 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (abstractConceptOf(block.type) === 'cpp:var_declare') {
+        } else if (isPlainDeclaration(abstractConceptOf(block.type) ?? '')) {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')

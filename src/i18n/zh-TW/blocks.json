@@ -1,6 +1,4 @@
 {
-  "U_VAR_DECLARE_MSG0": "建立 %1 變數 %2 = %3",
-  "U_VAR_DECLARE_TOOLTIP": "建立一個新的變數，可以選擇型別和初始值。變數就像一個有名字的盒子，用來存放資料",
   "U_VAR_ASSIGN_LABEL": "把變數",
   "U_VAR_ASSIGN_SET_LABEL": "設成",
   "U_IF_ELSE_IF_LABEL": "如果",
