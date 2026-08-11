@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cpp_print",
+    "conceptId": "cpp:print",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_print",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_U_PRINT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  }
+]

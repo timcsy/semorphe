@@ -74,8 +74,15 @@ describe('Language manifest loading', () => {
     // 錨改成**列了幾條路徑**——那是輸入量，不隨搬家變。
     expect(manifest.provides.blocks.length, 'manifest 沒列任何積木來源').toBeGreaterThan(3)
     expect(manifest.provides.concepts.length, 'manifest 沒列任何概念來源').toBeGreaterThan(3)
-    // Blocks and concepts should both be non-trivial
-    expect(manifestBlockCount).toBeGreaterThan(0)
-    expect(manifestConceptCount).toBeGreaterThan(0)
+    // ⚠️ **這兩行也是「錨在會下降的數字上」**（同一支測試的第二處，2026-08-11）。
+    // 上面那段註解剛講完這件事，而這裡的 `> 0` 數的是**共用宣告檔還剩幾筆**
+    // ——F 搬到剩 4 顆時 `<cstdio>`／`<cstring>`／`<cctype>` 都空了，總和歸零。
+    //
+    // > **一個「非零」的斷言，在一個正在歸零的世界裡也是缺陷計數。**
+    //
+    // 真正要問的是「manifest 指的每一條路徑都讀得到 JSON 陣列」——
+    // 而那已經由上面的迴圈（`JSON.parse` 不丟錯）回答了。這裡只斷言它們是陣列。
+    expect(Number.isInteger(manifestBlockCount), 'manifest 的積木來源有讀不成陣列的').toBe(true)
+    expect(Number.isInteger(manifestConceptCount), 'manifest 的概念來源有讀不成陣列的').toBe(true)
   })
 })

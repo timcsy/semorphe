@@ -1,0 +1,37 @@
+{
+  "conceptId": "cpp:input",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal"
+    }
+  ],
+  "children": {
+    "values": "expressions"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(universal)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "ioRole": "input",
+    "ioStyle": "iostream",
+    "streamInput": true
+  },
+  "_traits_why": "**I/O 角色與風格、我是不是 include 指示詞、我是不是串流輸入——都是我自己的宣告。**",
+  "requires": [
+    "<iostream>"
+  ],
+  "_requires_why": "⚠️ 原本是 `std/index.ts` 裡一句手寫的 `registerConceptMapping`——**一個例外**，因為這顆的宣告不在 iostream 模組裡。搬進膠囊之後它就是這顆元件自己的 `requires`。",
+  "_owner_why": "⚠️ **`owner` 是工具箱段落的鍵，不是「這顆屬於哪一層」。**\nio 分類的來源寫著 `{ from: '(universal)' }`——`cout`／`cin` 的積木列在那裡。\n而 `requires` 是**另一件事**（`#include` 解析），兩者剛好都在這個檔裡。\n蓋成 `<iostream>` 的話積木從工具箱消失，而 `#include` 仍然正確——\n**兩個問題各自答對一半，症狀只出現在使用者那一側。**"
+}

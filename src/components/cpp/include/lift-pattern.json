@@ -1,0 +1,17 @@
+{
+  "id": "cpp_preproc_include",
+  "astNodeType": "preproc_include",
+  "concept": {
+    "conceptId": "cpp:include"
+  },
+  "liftStrategy": "cpp:liftPreprocInclude",
+  "fieldMappings": [
+    {
+      "semantic": "header",
+      "ast": "path",
+      "extract": "text",
+      "transform": "stripAngleBrackets"
+    }
+  ],
+  "priority": 15
+}

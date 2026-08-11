@@ -90,10 +90,10 @@
     {
       "name": "輸入/輸出",
       "blocks": [
-        "cpp_print",
+        "cpp_endl",
         "cpp_input",
         "cpp_input_expression",
-        "cpp_endl",
+        "cpp_print",
         "cpp_input_formatted",
         "cpp_input_formatted_expression",
         "cpp_print_formatted",
@@ -240,10 +240,10 @@
     {
       "name": "程式設定",
       "blocks": [
-        "cpp_include",
         "cpp_define",
         "cpp_ifdef",
         "cpp_ifndef",
+        "cpp_include",
         "cpp_include_local",
         "cpp_using_namespace",
         "cpp_block_comment",

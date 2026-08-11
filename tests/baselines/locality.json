@@ -251,8 +251,8 @@
       "dirs": 1
     },
     "cpp:include": {
-      "files": 5,
-      "dirs": 3
+      "files": 3,
+      "dirs": 1
     },
     "cpp:include_local": {
       "files": 2,
@@ -263,8 +263,8 @@
       "dirs": 1
     },
     "cpp:input": {
-      "files": 7,
-      "dirs": 6
+      "files": 4,
+      "dirs": 1
     },
     "cpp:input_formatted": {
       "files": 3,
@@ -439,8 +439,8 @@
       "dirs": 1
     },
     "cpp:print": {
-      "files": 6,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:print_formatted": {
       "files": 3,

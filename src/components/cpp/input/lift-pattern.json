@@ -1,0 +1,17 @@
+{
+  "id": "cpp_cin_chain",
+  "astNodeType": "binary_expression",
+  "patternType": "chain",
+  "concept": {
+    "conceptId": "cpp:input"
+  },
+  "chain": {
+    "operator": ">>",
+    "direction": "left",
+    "rootMatch": {
+      "text": "cin"
+    },
+    "collectField": "right"
+  },
+  "priority": 15
+}

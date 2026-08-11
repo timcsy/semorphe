@@ -12,7 +12,6 @@ import { ConceptExecutorRegistry, type ExecutionContext } from './executor-regis
 import { registerVariableExecutors } from './executors/variables'
 import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
-import { registerIoExecutors } from './executors/io'
 import { registerMutationExecutors } from './executors/mutations'
 
 interface InterpreterOptions {
@@ -77,7 +76,6 @@ export class SemanticInterpreter implements ExecutionContext {
     registerVariableExecutors(reg)
     registerControlFlowExecutors(reg)
     registerFunctionExecutors(reg)
-    registerIoExecutors(reg)
     registerMutationExecutors(reg)
 
 

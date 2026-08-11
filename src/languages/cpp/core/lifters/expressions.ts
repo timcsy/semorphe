@@ -18,6 +18,9 @@ import { 建endl } from '../../../../components/cpp/endl/lift'
 import { 建array_at } from '../../../../components/cpp/array_at/lift'
 import { 建var_ref } from '../../../../components/cpp/var_ref/lift'
 import { isVariableRef } from '../node-traits'
+import { 建print } from '../../../../components/cpp/print/lift'
+import { 建input } from '../../../../components/cpp/input/lift'
+import { isStreamInput } from '../node-traits'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
 // `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
@@ -131,7 +134,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (op === '<<') {
       const coutValues = extractCoutChain(node, ctx)
       if (coutValues) {
-        return createNode('cpp:print', {}, { values: coutValues })
+        return 建print(coutValues)
       }
     }
     if (op === '>>') {
@@ -146,11 +149,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
         // 分得出來的唯一依據是**根變數的型別**，而那要查辨識脈絡（076 接上的）。
         // 查不到型別就**不當串流**——保守方向，位移是遠比串流常見的寫法。
         if (cin.from === 'cin') {
-          return createNode('cpp:input', {}, { values: cin.values })
+          return 建input(cin.values)
         }
         const rootType = ctx.data.getType(cin.from)
         if (rootType === 'istringstream' || rootType === 'stringstream') {
-          return createNode('cpp:input', { from: cin.from }, { values: cin.values })
+          return 建input(cin.values, { from: String(cin.from) })
         }
         // 不是串流 → 落到下面的一般二元運算（位移）
       }
@@ -357,7 +360,7 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   let rootName: string | null = null
 
   while (cur) {
-    if (cur.conceptId === 'cpp:input' && cur.properties?.from !== undefined) {
+    if (isStreamInput(cur.conceptId) && cur.properties?.from !== undefined) {
       // 內層已經改判過——接續它收集到的目標
       targets.unshift(...(cur.children?.values ?? []))
       rootName = String(cur.properties.from)
@@ -385,5 +388,5 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
 
   // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
   const cloned = targets.map((v) => 建var_ref(String(v.properties.name ?? '')))
-  return createNode('cpp:input', { from: rootName }, { values: cloned })
+  return 建input(cloned, { from: rootName })
 }

@@ -1,0 +1,61 @@
+{
+  "conceptId": "cpp:include",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "header",
+      "kind": "enum",
+      "values": [
+        "stdio.h",
+        "stdlib.h",
+        "string.h",
+        "math.h",
+        "stdbool.h",
+        "iostream",
+        "vector",
+        "string",
+        "algorithm",
+        "map",
+        "set",
+        "stack",
+        "queue",
+        "cmath",
+        "cstring",
+        "climits",
+        "cstdio",
+        "cstdlib",
+        "cctype",
+        "cfloat"
+      ],
+      "default": "iostream"
+    },
+    {
+      "name": "local",
+      "kind": "literal",
+      "default": "false"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。**"
+  },
+  "traits": {
+    "scaffold": true,
+    "includeDirective": true
+  },
+  "_traits_why": "**I/O 角色與風格、我是不是 include 指示詞、我是不是串流輸入——都是我自己的宣告。**"
+}

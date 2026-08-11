@@ -12,40 +12,6 @@
     "unwrapChild": 0
   },
   {
-    "id": "cpp_cout_chain",
-    "astNodeType": "binary_expression",
-    "patternType": "chain",
-    "concept": {
-      "conceptId": "cpp:print"
-    },
-    "chain": {
-      "operator": "<<",
-      "direction": "left",
-      "rootMatch": {
-        "text": "cout"
-      },
-      "collectField": "right"
-    },
-    "priority": 15
-  },
-  {
-    "id": "cpp_cin_chain",
-    "astNodeType": "binary_expression",
-    "patternType": "chain",
-    "concept": {
-      "conceptId": "cpp:input"
-    },
-    "chain": {
-      "operator": ">>",
-      "direction": "left",
-      "rootMatch": {
-        "text": "cin"
-      },
-      "collectField": "right"
-    },
-    "priority": 15
-  },
-  {
     "id": "cpp_if_statement",
     "astNodeType": "if_statement",
     "concept": {
@@ -111,23 +77,6 @@
         "extract": "liftBody"
       }
     ]
-  },
-  {
-    "id": "cpp_preproc_include",
-    "astNodeType": "preproc_include",
-    "concept": {
-      "conceptId": "cpp:include"
-    },
-    "liftStrategy": "cpp:liftPreprocInclude",
-    "fieldMappings": [
-      {
-        "semantic": "header",
-        "ast": "path",
-        "extract": "text",
-        "transform": "stripAngleBrackets"
-      }
-    ],
-    "priority": 15
   },
   {
     "id": "cpp_declaration",

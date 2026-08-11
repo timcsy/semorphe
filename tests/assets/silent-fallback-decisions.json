@@ -84,13 +84,6 @@
     "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
   },
   {
-    "鍵": "src/interpreter/executors/io.ts#1qoepsc",
-    "位置": "src/interpreter/executors/io.ts:65",
-    "訊號": "raw === null → if (raw === null) return { type: 'int', value: 0 }",
-    "判定": "合法",
-    "理由": "輸入耗盡（EOF）時回 0——C++ 的 cin 失敗語義就是不改變目標值。不是檢查失敗的退路。"
-  },
-  {
     "鍵": "src/components/cpp/char_is_digit/execute.ts#a4cbw",
     "位置": "src/components/cpp/char_is_digit/execute.ts:16",
     "訊號": "!v → if (!v) return { type: 'int', value: 0 }",
@@ -138,5 +131,12 @@
     "訊號": "!ctx.toBool(left) → if (!ctx.toBool(left)) return { type: 'bool', value: false }",
     "判定": "合法",
     "理由": "**&& 的短路求值**——左邊為假就是 false，這是運算子的語義本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
+  },
+  {
+    "鍵": "src/components/cpp/input/execute.ts#1qoepsc",
+    "位置": "src/components/cpp/input/execute.ts:55",
+    "訊號": "raw === null → if (raw === null) return { type: 'int', value: 0 }",
+    "判定": "合法",
+    "理由": "輸入耗盡（EOF）時回 0——C++ 的 cin 失敗語義就是不改變目標值。不是檢查失敗後的退路。從共用檔原封搬過來。"
   }
 ]

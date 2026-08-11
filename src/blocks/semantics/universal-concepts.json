@@ -104,36 +104,5 @@
       "introduces_scope": true,
       "debug_step": true
     }
-  },
-  {
-    "conceptId": "cpp:print",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "values": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp:input",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal"
-      }
-    ],
-    "children": {
-      "values": "expressions"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
   }
 ]

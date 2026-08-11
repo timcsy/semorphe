@@ -7,13 +7,16 @@
  */
 import type { SemanticNode } from '../../core/types'
 import type { CodingStyle } from '../style'
-import { createNode } from '../../core/semantic-tree'
 import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
 import { isLineBreak } from './core/node-traits'
 import { ioTraitOf } from './core/node-traits'
 import { 建print_formatted } from '../../components/cpp/print_formatted/lift'
 import { 建input_formatted } from '../../components/cpp/input_formatted/lift'
+import { 建print } from '../../components/cpp/print/lift'
+import { 建input } from '../../components/cpp/input/lift'
+import { 建include } from '../../components/cpp/include/lift'
+import { isIncludeDirective } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -55,7 +58,7 @@ function 是這個角色與風格(node: SemanticNode, role: string, style: strin
 /** Header: bits/stdc++.h in non-competitive styles */
 const bitsHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:include' &&
+    isIncludeDirective(node.conceptId) &&
     node.properties.header === 'bits/stdc++.h' &&
     style.headerStyle !== 'bits',
   label: () => '#include <bits/stdc++.h>',
@@ -68,33 +71,33 @@ const bitsHeaderRule: StyleExceptionRule = {
     const headers = style.ioPreference === 'iostream'
       ? ['iostream']
       : ['cstdio']
-    return headers.map(h => createNode('cpp:include', { header: h, local: false }))
+    return headers.map(h => 建include(h))
   },
 }
 
 /** Header: cstdio in iostream-preferred styles */
 const cstdioHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:include' &&
+    isIncludeDirective(node.conceptId) &&
     node.properties.header === 'cstdio' &&
     style.ioPreference === 'iostream',
   label: () => '#include <cstdio>',
   suggestion: () => '#include <iostream>',
   convert: () => {
-    return [createNode('cpp:include', { header: 'iostream', local: false })]
+    return [建include('iostream')]
   },
 }
 
 /** Header: iostream in cstdio-preferred styles */
 const iostreamHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:include' &&
+    isIncludeDirective(node.conceptId) &&
     node.properties.header === 'iostream' &&
     style.ioPreference === 'cstdio',
   label: () => '#include <iostream>',
   suggestion: () => '#include <cstdio>',
   convert: () => {
-    return [createNode('cpp:include', { header: 'cstdio', local: false })]
+    return [建include('cstdio')]
   },
 }
 
@@ -108,7 +111,7 @@ const cppPrintfRule: StyleExceptionRule = {
     // Convert cpp_printf to universal print
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [createNode('cpp:print', {}, { values })]
+    return [建print(values)]
   },
 }
 
@@ -121,7 +124,7 @@ const cppScanfRule: StyleExceptionRule = {
   convert: (node) => {
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [createNode('cpp:input', {}, { values })]
+    return [建input(values)]
   },
 }
 

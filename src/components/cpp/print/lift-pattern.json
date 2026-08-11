@@ -1,0 +1,17 @@
+{
+  "id": "cpp_cout_chain",
+  "astNodeType": "binary_expression",
+  "patternType": "chain",
+  "concept": {
+    "conceptId": "cpp:print"
+  },
+  "chain": {
+    "operator": "<<",
+    "direction": "left",
+    "rootMatch": {
+      "text": "cout"
+    },
+    "collectField": "right"
+  },
+  "priority": 15
+}

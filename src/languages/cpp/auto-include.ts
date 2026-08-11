@@ -5,10 +5,11 @@
  * DependencyResolver to determine which #include headers are required.
  * Merges with manually placed #include blocks (deduplication).
  */
-import { createNode } from '../../core/semantic-tree'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
+import { 建include } from '../../components/cpp/include/lift'
+import { isIncludeDirective } from './core/node-traits'
 
 /**
  * Collect all concept IDs from a semantic tree (recursive).
@@ -28,7 +29,7 @@ export function collectConcepts(node: SemanticNode, out: Set<string>): void {
 function collectManualIncludes(body: SemanticNode[]): Set<string> {
   const manual = new Set<string>()
   for (const node of body) {
-    if (node.conceptId === 'cpp:include' && typeof node.properties.header === 'string') {
+    if (isIncludeDirective(node.conceptId) && typeof node.properties.header === 'string') {
       manual.add(`<${node.properties.header}>`)
     }
   }
@@ -119,7 +120,7 @@ export function createCppCodePatcher(
 /**
  * 把自動推導出的引入邊轉成語義節點。
  *
- * **這一步原本在介面層做**（`src/ui/app.ts` 直接 `createNode('cpp:include', …)`）。
+ * **這一步原本在介面層做**（`src/ui/app.ts` 直接建 include 節點）。
  * 那讓介面層認得一個 C++ 專屬的概念身分——換一種語言，引入指令的概念叫別的
  * 名字，而介面層寫死了這一個。
  *
@@ -128,6 +129,6 @@ export function createCppCodePatcher(
  */
 export function autoIncludeNodes(edges: DependencyEdge[]): SemanticNode[] {
   return edges.map((edge) =>
-    createNode('cpp:include', { header: edge.header.replace(/^<|>$/g, '') }, {}),
+    建include(edge.header.replace(/^<|>$/g, '')),
   )
 }

@@ -3,6 +3,7 @@ import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
 import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
 import { 建var_ref } from '../../../components/cpp/var_ref/lift'
+import { 建input } from '../../../components/cpp/input/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -96,9 +97,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       valueNodes.push(建var_ref(singleVar))
     }
     const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
-    return createNode('cpp:input', { variable: firstVarName }, {
-      values: valueNodes,
-    })
+    return 建input(valueNodes, { variable: firstVarName })
   }
   extractor.registerExtractStrategy('cpp_input', extractInput)
   extractor.registerExtractStrategy('cpp_input_expression', extractInput)

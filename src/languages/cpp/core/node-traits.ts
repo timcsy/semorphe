@@ -195,6 +195,13 @@ export interface NodeTraits {
    * 讀進來的值要寫回**陣列的某一格**，而不是一個變數。
    */
   indexedAccess?: boolean
+  /**
+   * 這顆是**串流輸入**（`cin >> a >> b` 那種，可以串接）。
+   *
+   * ⚠️ `expressions.ts` 在還原 `cin >> a >> b` 的鏈時要認出「已經是輸入的那顆」，
+   * 原本寫死 `cur.conceptId === 'cpp:input'`。
+   */
+  streamInput?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -329,4 +336,9 @@ export function ioConceptFor(role: string, style: string): string | undefined {
 /** 這顆是帶索引的存取嗎（讀進來的值要寫回某一格）。沒宣告＝不是。 */
 export function isIndexedAccess(conceptId: string): boolean {
   return 性狀(conceptId)?.indexedAccess === true
+}
+
+/** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
+export function isStreamInput(conceptId: string): boolean {
+  return 性狀(conceptId)?.streamInput === true
 }

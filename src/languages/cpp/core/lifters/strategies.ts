@@ -32,6 +32,7 @@ import { 建include_local } from '../../../../components/cpp/include_local/lift'
 import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
 import { 建malloc } from '../../../../components/cpp/malloc/lift'
 import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
+import { 建include } from '../../../../components/cpp/include/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -380,7 +381,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const rawPath = pathNode.text
     if (rawPath.startsWith('<') && rawPath.endsWith('>')) {
       const header = rawPath.slice(1, -1)
-      return createNode('cpp:include', { header, local: false })
+      return 建include(header)
     }
     if (rawPath.startsWith('"') && rawPath.endsWith('"')) {
       const header = rawPath.slice(1, -1)

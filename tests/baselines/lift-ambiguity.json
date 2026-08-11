@@ -5,7 +5,7 @@
     "rule": "從實際載入後的規則表量測。判定保守：只有能證明互斥才判「不會撞」，判不出來一律「無法確定」。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 這條護欄的健康檢查是下面那兩支「★ 合成注入」，**不是報表上的數字**。「確定會撞 0」與「判定邏輯整個沒接上」產出完全一樣——注入測試是唯一分得出來的東西。"
   },
-  "samePriorityGroups": 3,
+  "samePriorityGroups": 2,
   "definitelyCollide": 0,
   "unknown": 2,
   "duplicateRegistrations": 0,
@@ -25,14 +25,6 @@
       "rules": [
         "cpp:struct_at_member",
         "cpp:struct_at_ptr"
-      ]
-    },
-    {
-      "nodeType": "binary_expression",
-      "priority": 105,
-      "rules": [
-        "cpp:print",
-        "cpp:input"
       ]
     }
   ]

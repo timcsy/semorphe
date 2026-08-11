@@ -4,18 +4,6 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:include": {
-      "scaffold": true,
-      "includeDirective": true
-    },
-    "cpp:input": {
-      "ioRole": "input",
-      "ioStyle": "iostream"
-    },
-    "cpp:print": {
-      "ioRole": "print",
-      "ioStyle": "iostream"
-    },
     "cpp:var_declare": {
       "forLoopPart": true
     },
