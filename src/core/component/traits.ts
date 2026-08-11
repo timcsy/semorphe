@@ -3,8 +3,18 @@
  *
  * ## 為什麼要與語言套件那一份分開
  *
- * `languages/cpp/core/node-traits.ts` 除了讀膠囊宣告，還疊了一張**過渡表**
- * （還沒膠囊化的元件的性狀暫放處）。那張表是 C++ 的，所以那個模組屬於語言套件。
+ * ⚠️ **這一段的理由在 2026-08-11 過期了，留著是因為它解釋了這個檔為什麼存在。**
+ *
+ * 原文：「`languages/cpp/core/node-traits.ts` 除了讀膠囊宣告，還疊了一張**過渡表**
+ * （還沒膠囊化的元件的性狀暫放處）。那張表是 C++ 的，所以那個模組屬於語言套件。」
+ *
+ * **F 完成之後（177/177 膠囊化）過渡表退場了**，於是那邊的 `性狀()` 與這裡的
+ * `componentTraits()` **實作逐字相同**——兩份真相，而第三十八條護欄抓不到它，
+ * 因為兩個函式**名字不同**。
+ *
+ * > **一份重複只要換個名字，就從「重複」變成「兩個模組各自的實作細節」。**
+ *
+ * 處置：那邊改成 delegate 到這裡。而這個檔仍然該存在——見下一段。
  *
  * 而**核心層也有消費者**：`interpreter/executors/variables.ts` 要分辨
  * `A a(5)` 是建構還是求值，判斷條件是「初值是不是一個名字等於型別的呼叫」。
@@ -15,8 +25,9 @@
  *
  * > **把耦合從「身分」換成「性狀」是對的方向，而換的過程可能換出一條反向依賴。**
  *
- * 處置：核心讀核心讀得到的（膠囊的 `component.json`，`import.meta.glob` 直讀），
- * 語言套件在上面疊自己的過渡表。**已膠囊化的元件兩邊答案相同。**
+ * 處置：核心讀核心讀得到的（膠囊的 `component.json`，`import.meta.glob` 直讀）。
+ * 語言套件那個模組留下的是**真的需要語言知識的那些**
+ * （運算子優先級、tree-sitter 節點形狀的判斷）。
  */
 import { registeredComponents } from './registry'
 
@@ -87,4 +98,40 @@ export function programRootConcept(): string | undefined {
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
 export function isFunctionDefinition(conceptId: string): boolean {
   return componentTraits(conceptId)?.functionDefinition === true
+}
+
+/**
+ * 這顆元件的 I/O 角色與風格。
+ *
+ * ⚠️ **它住在核心，是因為它一個 C++ 的字都不認識**——只是把膠囊宣告的
+ * `ioRole`／`ioStyle` 讀出來。它原本住在 `languages/cpp/core/node-traits.ts`，
+ * 而它的消費者是 `ui/toolbox-builder.ts`（決定 I/O 積木的排序偏好），
+ * 於是**視圖層為了問一句「這顆是哪種 I/O」而 import 了整個 C++ 語言套件**
+ * ——P9 語言獨立性的字面違反（第三十九條護欄抓到）。
+ *
+ * `ioRole` ＝ 等價類、`ioStyle` ＝ 哪個成員，那是**一條被宣告出來的等價邊**
+ * （見 `concepts/等價與觀察集.md`）。等價邊不屬於任何一個語言。
+ */
+export function ioTraitOf(conceptId: string): { role?: string; style?: string } | undefined {
+  const t = componentTraits(conceptId)
+  const role = t?.ioRole as string | undefined
+  const style = t?.ioStyle as string | undefined
+  if (!role && !style) return undefined
+  return { role, style }
+}
+
+/**
+ * 這顆是**沒有初值的宣告**嗎。
+ *
+ * ⚠️ 這個函式在 2026-08-11 之前的一輪才從核心**搬下去**到語言套件，
+ * 而現在搬回來——理由變了，所以記一下：
+ *
+ * - 搬下去的理由：「它是 C++ 的性狀」
+ * - **搬回來的理由**：它讀的是**膠囊自己宣告的一個布林**，
+ *   而任何語言的膠囊都可以宣告它。**函式裡沒有一個 C++ 的字。**
+ *
+ * > **判斷一個函式屬於哪一層，看它認識什麼，不看它今天被誰用。**
+ */
+export function isPlainDeclaration(conceptId: string): boolean {
+  return componentTraits(conceptId)?.plainDeclaration === true
 }

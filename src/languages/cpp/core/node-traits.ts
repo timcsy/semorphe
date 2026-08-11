@@ -40,6 +40,7 @@
  * 而它該在**下一次遷移開始時重建**，不是留一個空殼在這裡等。
  * 形狀寫在 `knowledge/skills/component-encapsulate/SKILL.md`。
  */
+import { componentTraits } from '../../../core/component/traits'
 import { registeredComponents } from '../../../core/component/registry'
 
 export interface NodeTraits {
@@ -215,9 +216,15 @@ function 全部身分(): string[] {
   return registeredComponents().map((c) => c.conceptId)
 }
 
+/**
+ * ⚠️ **這裡曾經有一份與 `core/component/traits.ts` 逐字相同的實作。**
+ *
+ * 它當初分成兩份是對的——那時這邊還疊著一張還沒膠囊化元件的過渡表。
+ * **F 完成之後過渡表退場，兩份就變成同一件事**，而第三十八條護欄抓不到，
+ * 因為兩個函式名字不同（`性狀` vs `componentTraits`）。
+ */
 function 性狀(conceptId: string): NodeTraits | undefined {
-  const c = registeredComponents().find((x) => x.conceptId === conceptId)
-  return (c?.manifest as { traits?: NodeTraits } | undefined)?.traits
+  return componentTraits(conceptId) as NodeTraits | undefined
 }
 
 /**
@@ -332,11 +339,10 @@ export { isNamedCall } from '../../../core/component/traits'
  *
  * > **一顆元件可以屬於一個家族，而在那個家族裡沒有對應物。**
  */
-export function ioTraitOf(conceptId: string): { role?: string; style?: string } | undefined {
-  const t = 性狀(conceptId)
-  if (!t?.ioRole && !t?.ioStyle) return undefined
-  return { role: t.ioRole, style: t.ioStyle }
-}
+// ⚠️ `ioTraitOf` 與 `isPlainDeclaration` **搬到核心了**——它們一個 C++ 的字都不認識，
+// 而視圖層為了問它們而 import 整個語言套件（P9 語言獨立性的字面違反）。
+// 這裡 re-export 給既有的語言套件內部消費者（`style-exceptions.ts`）。
+export { ioTraitOf, isPlainDeclaration } from '../../../core/component/traits'
 
 /**
  * 找「同一個角色、指定風格」的那顆元件。
@@ -385,6 +391,3 @@ export function isStreamInput(conceptId: string): boolean {
  * 唯一的消費者是 `ui/block-registrar.ts`，而 `ui` 本來就 import 語言套件
  * （25 處），所以下沉沒有代價。
  */
-export function isPlainDeclaration(conceptId: string): boolean {
-  return 性狀(conceptId)?.plainDeclaration === true
-}

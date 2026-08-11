@@ -1,7 +1,7 @@
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { BlockSpec, ToolboxCategoryDef } from '../core/types'
 import { KNOWN_AXES } from '../core/projection/form-selection'
-import { ioTraitOf } from '../languages/cpp/core/node-traits'
+import { ioTraitOf } from '../core/component/traits'
 
 export type { ToolboxCategoryDef }
 

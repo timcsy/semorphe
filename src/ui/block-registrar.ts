@@ -7,7 +7,7 @@ import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../blocks/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
-import { isPlainDeclaration } from '../languages/cpp/core/node-traits'
+import { isPlainDeclaration } from '../core/component/traits'
 import {
   C_COMPOUND_ASSIGN_INPUTS,
   C_COMPOUND_ASSIGN_EXPR_INPUTS,
