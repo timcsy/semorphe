@@ -10,7 +10,6 @@ import { Scope } from './scope'
 import { IOSystem } from './io'
 import { ConceptExecutorRegistry, type ExecutionContext } from './executor-registry'
 import { registerVariableExecutors } from './executors/variables'
-import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
 import { registerMutationExecutors } from './executors/mutations'
 
@@ -74,7 +73,6 @@ export class SemanticInterpreter implements ExecutionContext {
     const reg = (concept: string, executor: import('./executor-registry').ConceptExecutor) =>
       this.executorRegistry.register(concept, executor)
     registerVariableExecutors(reg)
-    registerControlFlowExecutors(reg)
     registerFunctionExecutors(reg)
     registerMutationExecutors(reg)
 

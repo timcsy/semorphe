@@ -53,13 +53,13 @@
     {
       "name": "控制",
       "blocks": [
-        "cpp_if",
-        "cpp_if",
-        "cpp_if",
         "cpp_break",
         "cpp_continue",
         "cpp_loop_count",
         "cpp_loop_while",
+        "cpp_if",
+        "cpp_if",
+        "cpp_if",
         "cpp_throw",
         "cpp_try_catch",
         "cpp_loop_do_while",

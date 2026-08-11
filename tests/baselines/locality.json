@@ -231,8 +231,8 @@
       "dirs": 5
     },
     "cpp:if": {
-      "files": 6,
-      "dirs": 6
+      "files": 4,
+      "dirs": 1
     },
     "cpp:if_else": {
       "files": 2,

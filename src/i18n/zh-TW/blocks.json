@@ -3,8 +3,6 @@
   "U_VAR_DECLARE_TOOLTIP": "建立一個新的變數，可以選擇型別和初始值。變數就像一個有名字的盒子，用來存放資料",
   "U_VAR_ASSIGN_LABEL": "把變數",
   "U_VAR_ASSIGN_SET_LABEL": "設成",
-  "U_IF_MSG0": "如果 %1 就",
-  "U_IF_TOOLTIP": "如果條件成立，就執行裡面的積木",
   "U_IF_ELSE_IF_LABEL": "如果",
   "U_IF_ELSE_ELSEIF_MSG": "否則，如果",
   "U_FUNC_DEF_MSG0": "定義函式 %1（%2）回傳 %3",

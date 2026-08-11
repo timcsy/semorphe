@@ -53,22 +53,6 @@
     }
   },
   {
-    "conceptId": "cpp:if",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "condition": "expression",
-      "then_body": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "control_flow": "branch",
-      "introduces_scope": true,
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:func_def",
     "layer": "universal",
     "abstractConcept": null,

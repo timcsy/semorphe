@@ -1,4 +1,3 @@
-import type { ConceptExecutor } from '../executor-registry'
 
 /** Break/Continue signals (non-error, used for flow control) */
 export class BreakSignal { readonly _brand = 'break' }
@@ -9,23 +8,8 @@ export class ThrownSignal {
   constructor(value: unknown) { this.value = value }
 }
 
-export function registerControlFlowExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('cpp:if', async (node, ctx) => {
-    const condition = await ctx.evaluate(node.children.condition[0])
-    if (ctx.toBool(condition)) {
-      await ctx.executeBody(node.children.then_body ?? [])
-    } else {
-      await ctx.executeBody(node.children.else_body ?? [])
-    }
-  })
-
-
-
-
-
-
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件都搬進膠囊了。
+ * 檔案留著因為裡面還有**訊號類別**（`BreakSignal`／`ContinueSignal`／`ThrownSignal`），
+ * 而那些不屬於任何一顆元件——**訊號必須是同一個，複製一份 `instanceof` 就失敗。**
+ */

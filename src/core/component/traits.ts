@@ -59,3 +59,13 @@ export function conceptWithTrait(trait: string): string | undefined {
   }
   return undefined
 }
+
+/**
+ * 這顆能接成 `else if` 鏈嗎（`else { if … }` 摺成 `else if …`）。
+ *
+ * ⚠️ 三個消費者要問它——產生器、渲染器、**以及核心的 `pattern-lifter`**。
+ * 核心不得 import 語言套件（P9），所以這一份在這裡。
+ */
+export function isElseIfChainable(conceptId: string): boolean {
+  return componentTraits(conceptId)?.elseIfChainable === true
+}

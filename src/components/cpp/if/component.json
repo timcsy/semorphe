@@ -1,0 +1,28 @@
+{
+  "conceptId": "cpp:if",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "then_body": "statements"
+  },
+  "role": "statement",
+  "annotations": {
+    "control_flow": "branch",
+    "introduces_scope": true,
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "elseIfChainable": true
+  },
+  "_traits_why": "**「我能接成 else if 鏈」是我自己的宣告**——三個消費者（產生器、渲染器、核心的 pattern-lifter）原本各寫一次同樣的身分比對。"
+}

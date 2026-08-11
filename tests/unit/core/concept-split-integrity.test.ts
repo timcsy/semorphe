@@ -20,11 +20,11 @@ describe('Concept/BlockDef split integrity', () => {
     // 29 → 26 → 25（2026-08-11）：break／continue／loop_while／array_declare 進膠囊。
     // ⚠️ 這個數字**隨 F 下降**——它量的是「還住在共用宣告檔的通用概念」，
     // 不是「有幾顆通用概念」。後者是 `allCppConcepts()`。
-    expect((universalConcepts).length).toBe(4)
+    expect((universalConcepts).length).toBe(3)
     // 26 → 27（100，E 項）：`cpp_input_expression` 補上它缺的 JSON 投影。
     // 五顆 `_expr` 積木裡只有它沒有——它活在 `block-registrar.ts` 的命令式
     // 註冊裡，**登錄表看不見它**，於是導出導不到它。那不是設計，是漏掉。
-    expect((universalBlocks).length).toBe(3)
+    expect((universalBlocks).length).toBe(2)
   })
 
   it('should have correct core concept and block counts', () => {

@@ -4,6 +4,7 @@ import type { PatternExtractor, BlockState, ExtractContext } from '../../../core
 import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
 import { 建var_ref } from '../../../components/cpp/var_ref/lift'
 import { 建input } from '../../../components/cpp/input/lift'
+import { 建if } from '../../../components/cpp/if/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -64,7 +65,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       elseBody = elseInput?.block ? ctx.extractStatementChain(elseInput.block) : []
     }
 
-    return createNode('cpp:if', {}, {
+    return 建if({
       condition: cond ? [cond] : [],
       then_body: thenBody,
       else_body: elseBody,
@@ -163,9 +164,9 @@ function buildElseIfChain(block: BlockState, index: number, ctx: ExtractContext)
   const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
   const elseBody = buildElseIfChain(block, index + 1, ctx)
 
-  return [createNode('cpp:if', { isElseIf: 'true' }, {
+  return [建if({
     condition: cond ? [cond] : [],
     then_body: thenBody,
     else_body: elseBody,
-  })]
+  }, true)]
 }

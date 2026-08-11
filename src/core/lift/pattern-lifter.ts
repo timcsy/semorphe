@@ -4,6 +4,7 @@ import { createNode } from '../semantic-tree'
 import type { TransformRegistry } from '../registry/transform-registry'
 import type { LiftStrategyRegistry } from '../registry/lift-strategy-registry'
 import { componentLiftPatterns } from '../component/lift-patterns'
+import { isElseIfChainable } from '../component/traits'
 
 interface PatternEntry {
   conceptId: string
@@ -568,7 +569,7 @@ export class PatternLifter {
             // can distinguish from "else { if (...) {} }"
             if (child.type === 'else_clause' && child.namedChildren.length === 1
                 && child.namedChildren[0].type === 'if_statement'
-                && liftedChildren.length === 1 && liftedChildren[0].conceptId === 'cpp:if') {
+                && liftedChildren.length === 1 && isElseIfChainable(liftedChildren[0].conceptId)) {
               liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
             }
             children[fm.semantic] = liftedChildren

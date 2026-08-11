@@ -3,8 +3,6 @@
   "U_VAR_DECLARE_TOOLTIP": "Create a new variable with a chosen type and initial value. A variable is like a named box that stores data",
   "U_VAR_ASSIGN_LABEL": "set variable",
   "U_VAR_ASSIGN_SET_LABEL": "to",
-  "U_IF_MSG0": "if %1 then",
-  "U_IF_TOOLTIP": "If the condition is true, execute the blocks inside",
   "U_IF_ELSE_IF_LABEL": "if",
   "U_IF_ELSE_ELSEIF_MSG": "else if",
   "U_FUNC_DEF_MSG0": "Define function %1(%2) returns %3",

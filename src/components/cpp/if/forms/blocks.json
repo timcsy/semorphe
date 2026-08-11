@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp_if",
+    "conceptId": "cpp:if",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_if",
+      "message0": "%{BKY_U_IF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "THEN",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_U_IF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "THEN": "then_body"
+      },
+      "strategy": "cpp:renderIf"
+    }
+  }
+]
