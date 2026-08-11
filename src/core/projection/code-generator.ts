@@ -194,6 +194,20 @@ function wireTemplateFallbacks(ctx: GeneratorContext): void {
   })
 }
 
+/**
+ * 把節點攜帶的文字摘出來，附在未知概念的標記裡。
+ *
+ * **只取字串屬性**——數字與布林在標記裡讀不出意義，而字串通常就是使用者
+ * 打進去的東西（註解的內容、原始碼片段、字面值）。
+ *
+ * 沒有字串屬性就什麼都不加，標記維持原樣。
+ */
+function 內容摘要(node: SemanticNode): string {
+  const 值 = Object.values(node.properties ?? {})
+    .filter((v): v is string => typeof v === 'string' && v.length > 0)
+  return 值.length > 0 ? ` | ${值.join(' | ')}` : ''
+}
+
 export function generateNode(node: SemanticNode, ctx: GeneratorContext): string {
   const nodeId = node.id
   const tracking = ctx._mappings && nodeId
@@ -219,8 +233,22 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     if (generator) {
       result = generator(node, ctx)
     } else {
-      // 用語言中立的形式，不用 `/* *​/`——核心不知道任何語言怎麼寫註解
-      result = `⟨unknown concept: ${node.conceptId}⟩\n`
+      // 用語言中立的形式，不用 `/* *​/`——核心不知道任何語言怎麼寫註解。
+      //
+      // ⚠️ **標記必須帶著內容一起出來**（2026-08-11）。
+      //
+      // 原本只印身分，於是一個認不得的節點**它攜帶的文字整段消失**——
+      // 而那正是 FR-014 要擋的事（「註解憑空消失，使用者不會收到任何訊號，
+      // 下一次來回轉換它就永遠不見了」）。
+      //
+      // 那條契約原本靠「核心自己留一份註解產生器」來滿足，而那讓
+      // `cpp:comment` 那三顆**永遠搬不進膠囊**——核心必須認得它們。
+      //
+      // > **不要讓核心認得某一類節點，讓核心不要弄丟任何節點。**
+      //
+      // 註解是每個語言各自的機制（`//`／`#`／`;`），所以它的產生器屬於語言；
+      // 而「沒有語言時不要弄丟內容」是**核心對所有節點的責任**，與註解無關。
+      result = `⟨unknown concept: ${node.conceptId}${內容摘要(node)}⟩\n`
     }
   }
 
