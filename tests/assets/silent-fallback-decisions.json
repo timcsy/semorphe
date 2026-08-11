@@ -1,19 +1,5 @@
 [
   {
-    "鍵": "src/languages/cpp/std/cctype/executors.ts#a4cbw",
-    "位置": "src/languages/cpp/std/cctype/executors.ts:77",
-    "訊號": "!v → if (!v) return { type: 'int', value: 0 }",
-    "判定": "防禦性",
-    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
-  },
-  {
-    "鍵": "src/languages/cpp/std/cctype/executors.ts#8ysipl",
-    "位置": "src/languages/cpp/std/cctype/executors.ts:85",
-    "訊號": "!v → if (!v) return { type: 'char', value: ''",
-    "判定": "防禦性",
-    "理由": "語義樹缺子節點時的退路，實測 415 段語料未觸發。**顯式判定，不是漏看。**"
-  },
-  {
     "鍵": "src/components/cpp/cstring_as_int/execute.ts#1r70e0t",
     "位置": "src/components/cpp/cstring_as_int/execute.ts:7",
     "訊號": "!v → if (!v) return { type: 'int' as const, v",
@@ -131,5 +117,26 @@
     "訊號": "!ctx.toBool(left) → if (!ctx.toBool(left)) return { type: 'bool', value: false }",
     "判定": "合法",
     "理由": "**&& 的短路求值**——左邊為假就是 false，這是運算子的語義本身。"
+  },
+  {
+    "鍵": "src/components/cpp/char_is_digit/execute.ts#a4cbw",
+    "位置": "src/components/cpp/char_is_digit/execute.ts:16",
+    "訊號": "!v → if (!v) return { type: 'int', value: 0 }",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從 std/cctype/executors.ts 原封搬過來，搬移不重寫。原本三顆共用一個 for 迴圈，判定也只有兩筆（分類器一筆、轉換器一筆）；拆成三個膠囊之後每一顆各自有帳。"
+  },
+  {
+    "鍵": "src/components/cpp/char_to_lower/execute.ts#8ysipl",
+    "位置": "src/components/cpp/char_to_lower/execute.ts:16",
+    "訊號": "!v → if (!v) return { type: 'char', value: '' }",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從 std/cctype/executors.ts 原封搬過來，搬移不重寫。原本三顆共用一個 for 迴圈，判定也只有兩筆（分類器一筆、轉換器一筆）；拆成三個膠囊之後每一顆各自有帳。"
+  },
+  {
+    "鍵": "src/components/cpp/char_to_upper/execute.ts#8ysipl",
+    "位置": "src/components/cpp/char_to_upper/execute.ts:16",
+    "訊號": "!v → if (!v) return { type: 'char', value: '' }",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從 std/cctype/executors.ts 原封搬過來，搬移不重寫。原本三顆共用一個 for 迴圈，判定也只有兩筆（分類器一筆、轉換器一筆）；拆成三個膠囊之後每一顆各自有帳。"
   }
 ]

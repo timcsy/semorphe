@@ -20,12 +20,6 @@ import { registerCstdioGenerators } from './cstdio/generators'
 import { registerCstdioLifters } from './cstdio/lifters'
 import { registerExecutors as registerCstdioExecutors } from './cstdio/executors'
 
-// cstring
-import cstringConcepts from './cstring/concepts.json'
-import cstringBlocks from './cstring/blocks.json'
-import { registerGenerators as registerCstringGenerators } from './cstring/generators'
-import { registerLifters as registerCstringLifters } from './cstring/lifters'
-import { registerExecutors as registerCstringExecutors } from './cstring/executors'
 
 // vector
 import vectorConcepts from './vector/concepts.json'
@@ -90,12 +84,6 @@ import { registerGenerators as registerCstdlibGenerators } from './cstdlib/gener
 import { registerLifters as registerCstdlibLifters } from './cstdlib/lifters'
 import { registerExecutors as registerCstdlibExecutors } from './cstdlib/executors'
 
-// cctype
-import cctypeConcepts from './cctype/concepts.json'
-import cctypeBlocks from './cctype/blocks.json'
-import { registerGenerators as registerCctypeGenerators } from './cctype/generators'
-import { registerLifters as registerCctypeLifters } from './cctype/lifters'
-import { registerCctypeExecutors } from './cctype/executors'
 
 // numeric
 import numericConcepts from './numeric/concepts.json'
@@ -131,6 +119,10 @@ import { registerExecutors as registerUtilityExecutors } from './utility/executo
  */
 const executorsStillInCore: StdModule['registerExecutors'] = () => {}
 
+/** 五路全部在膠囊裡了——**顯式的空，不是遺漏**。 */
+const noGenerators: StdModule['registerGenerators'] = () => {}
+const noLifters: StdModule['registerLifters'] = () => {}
+
 function makeModule(
   header: string,
   concepts: unknown[],
@@ -151,10 +143,27 @@ function makeModule(
   }
 }
 
+/**
+ * ⚠️ **`<cstring>` 與 `<cctype>` 只剩「一個段落名」**（2026-08-11）。
+ *
+ * 它們的元件全部搬進膠囊之後，兩個模組資料夾**整個空掉**了——
+ * `concepts.json` 是 `[]`、產生器是空函式、辨識器是空函式。資料夾已刪。
+ *
+ * 而**模組項目本身不能刪**：`owner` 是工具箱段落比對的鍵，
+ * 刪掉的話那五顆積木**對任何分類都不存在**——可拿性護欄當場報了 5 顆
+ * 「使用者拿不到」。
+ *
+ * > **模組是搬家的中途站，不是終點**（`history/047`）——
+ * > 而**中途站的最後一塊石頭是它的名字**：實作全部搬走之後，
+ * > 剩下的那個 `<cctype>` 不是殼，是**工具箱的一個段落**。
+ *
+ * 這是「清單 vs 實作」在模組層的同一刀：**策展留下，實作搬走。**
+ */
+const 已全部膠囊化: [unknown[], unknown[]] = [[], []]
 export const allStdModules: StdModule[] = [
   makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters, executorsStillInCore),
+  makeModule('<cstring>', ...已全部膠囊化, noGenerators, noLifters, executorsStillInCore),
   makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, registerCstdioExecutors),
-  makeModule('<cstring>', cstringConcepts, cstringBlocks, registerCstringGenerators, registerCstringLifters, registerCstringExecutors),
   makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, registerVectorExecutors),
   makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, registerAlgorithmExecutors),
   makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, registerStringExecutors),
@@ -164,7 +173,7 @@ export const allStdModules: StdModule[] = [
   makeModule('<set>', setConcepts, setBlocks, registerSetGenerators, registerSetLifters, registerSetExecutors),
   makeModule('<cmath>', cmathConcepts, cmathBlocks, registerCmathGenerators, registerCmathLifters, registerCmathExecutors),
   makeModule('<cstdlib>', cstdlibConcepts, cstdlibBlocks, registerCstdlibGenerators, registerCstdlibLifters, registerCstdlibExecutors),
-  makeModule('<cctype>', cctypeConcepts, cctypeBlocks, registerCctypeGenerators, registerCctypeLifters, registerCctypeExecutors),
+  makeModule('<cctype>', ...已全部膠囊化, noGenerators, noLifters, executorsStillInCore),
   makeModule('<numeric>', numericConcepts, numericBlocks, registerNumericGenerators, registerNumericLifters, registerNumericExecutors),
   makeModule('<sstream>', sstreamConcepts, sstreamBlocks, registerSstreamGenerators, registerSstreamLifters, registerSstreamExecutors),
   makeModule('<fstream>', fstreamConcepts, fstreamBlocks, registerFstreamGenerators, registerFstreamLifters, executorsStillInCore),

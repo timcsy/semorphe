@@ -10,7 +10,6 @@
     "concepts": [
       "./core/concepts.json",
       "./std/cstdio/concepts.json",
-      "./std/cstring/concepts.json",
       "./std/vector/concepts.json",
       "./std/algorithm/concepts.json",
       "./std/string/concepts.json",
@@ -23,7 +22,6 @@
       "./core/blocks.json",
       "./std/iostream/blocks.json",
       "./std/cstdio/blocks.json",
-      "./std/cstring/blocks.json",
       "./std/vector/blocks.json",
       "./std/algorithm/blocks.json",
       "./std/string/blocks.json",

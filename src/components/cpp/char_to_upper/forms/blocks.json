@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cpp:char_to_upper",
+    "conceptId": "cpp:char_to_upper",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_char_to_upper",
+      "message0": "%{BKY_CPP_TOUPPER_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_TOUPPER_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    }
+  }
+]

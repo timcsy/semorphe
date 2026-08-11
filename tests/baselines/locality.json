@@ -84,15 +84,15 @@
     },
     "cpp:char_is_digit": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:char_to_lower": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:char_to_upper": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:class_def": {
       "files": 4,
@@ -176,11 +176,11 @@
     },
     "cpp:cstring_find": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_find_char": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cstring_size": {
       "files": 3,

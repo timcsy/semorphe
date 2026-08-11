@@ -1,0 +1,4 @@
+{
+  "C_STRSTR_MSG0": "find substring %2 in %1",
+  "C_STRSTR_TOOLTIP": "Find the first occurrence of a substring within a string (returns pointer)"
+}

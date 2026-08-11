@@ -1,0 +1,4 @@
+{
+  "C_STRCHR_MSG0": "find char %2 in %1",
+  "C_STRCHR_TOOLTIP": "Find the first occurrence of a character in a string (returns pointer)"
+}

@@ -1,13 +1,15 @@
 /**
- * `<cstring>` 的執行路——膠囊的第五面牆。
+ * **C 字串的執行期表示** —— 與身分無關的演算法
  *
- * 在此之前它住在 `src/interpreter/executors/strings.ts`，讓核心層認識了 10 個 C++ 專屬的概念身分。
+ * 從 `std/cstring/executors.ts` 提出來。那個模組的元件全部搬進膠囊之後，
+ * 模組資料夾整個刪掉了（`history/047`：**模組是中途站，不是終點**），
+ * 而 `writableArray`／`readCString`／`writeCString` 是**五顆膠囊共用的知識**
+ * ——不屬於其中任何一顆。
  *
- * 見 specs/054-execute-into-capsules/
+ * > **共用的是演算法，不是身分。**
  */
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import type { SemanticNode } from '../../../../core/types'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 import type { RuntimeValue } from '../../../../interpreter/types'
 
 
@@ -57,43 +59,3 @@ export function writeCString(arr: RuntimeValue[], s: string, from = 0): void {
   if (from + s.length < arr.length) arr[from + s.length] = { type: 'char', value: '\0' }
 }
 
-export function registerExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-
-
-
-
-
-
-
-
-
-
-
-
-  /**
-   * `strchr` / `strstr` 回傳**指向陣列中間的指標**。
-   *
-   * 這個直譯器的指標存的是「被指變數的名字」，表示不了「指向 s 的第 3 個
-   * 字元」——那需要 (基底, 位移) 的表示法，是一個真的功能。
-   *
-   * ⚠️ **但原本的做法是靜默回傳 0**，於是 `strchr(s, 'l') != 0` 對一個
-   * 找得到的字元也是假：`while ((p = strchr(...)) != 0)` **一次都不跑**，
-   * 而程式照樣跑完、印出後面的東西。
-   *
-   * **出聲。** 使用者可以選擇跳過或中止，但不會拿到一個安靜的錯答案。
-   * 這是「靜默降級是 bug 的藏身之處」的直接應用。
-   */
-  for (const c of ['cpp:cstring_find_char', 'cpp:cstring_find']) {
-    register(c, async () => {
-      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
-        '%1': `${c.replace('cpp_', '')} 回傳指向陣列中間的指標，這個直譯器還表示不了`,
-      })
-    })
-  }
-
-
-
-
-}

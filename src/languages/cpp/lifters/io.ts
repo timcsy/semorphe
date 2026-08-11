@@ -256,20 +256,6 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // cstdlib functions
 
-    // 單引數函式的**過渡表**——膠囊登錄的那些在上面就被接走了（`callConceptFor`）。
-    //
-    // ⚠️ 這裡剩下的那幾筆是**還沒膠囊化**的，不是設計。
-    // 它應該只減不增——每搬走一顆就少一列，搬完就整個消失。
-    const cctypeFuncs: Record<string, string> = {
-      'isdigit': 'cpp:char_is_digit',
-      'toupper': 'cpp:char_to_upper', 'tolower': 'cpp:char_to_lower',
-    }
-    const 單引數概念 = cctypeFuncs[funcName]
-    if (單引數概念) {
-      const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return createNode(單引數概念, {}, { value: value ? [value] : [] })
-    }
-
     // swap
 
     // sort, reverse, fill (iterator-range algorithms)
@@ -295,18 +281,6 @@ export function registerIOLifters(lifter: Lifter): void {
     if (funcName === 'malloc' && argChildren.length === 1) {
       const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
       return createNode('cpp:malloc', { type: 'void' }, { size: size ? [size] : [] })
-    }
-
-    // cstring functions
-    if (funcName === 'strchr' && argChildren.length === 2) {
-      const str = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const ch = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:cstring_find_char', {}, { str: str ? [str] : [], ch: ch ? [ch] : [] })
-    }
-    if (funcName === 'strstr' && argChildren.length === 2) {
-      const haystack = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      const needle = argChildren[1] ? ctx.lift(argChildren[1]) : null
-      return createNode('cpp:cstring_find', {}, { haystack: haystack ? [haystack] : [], needle: needle ? [needle] : [] })
     }
 
     // General function call

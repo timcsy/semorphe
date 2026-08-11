@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:char_to_upper",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "lift": "./lift.ts",
+    "_lift_why": "**顯式的空，不是遺漏。**",
+    "generate": null,
+    "_generate_why": "**顯式的空，不是遺漏。**",
+    "execute": "./execute.ts"
+  },
+  "requires": [
+    "<cctype>"
+  ]
+}

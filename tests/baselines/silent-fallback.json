@@ -1,16 +1,16 @@
 {
   "_meta": {
-    "note": "靜默回退：執行器遇到處理不了的輸入時回傳一個與合法結果無法區分的預設值。\n⚠️ 它的危害不只是自己錯，是**讓別的缺陷看不見**——觸發本護欄的實例是\n`s.size()` 被辨識成 cpp:vector_size（身分錯），而 vector_size 對非陣列回 0，\n於是 `for (i=0; i<s.size(); i++)` 一次都不跑而沒有任何訊號。辨識的錯躲在執行的回退後面。\n⚠️ 棘輪盯的是**判為「靜默回退」的筆數**，不是命中總數——命中裡有合法的\n（strcmp 相等回 0 是語義）。只盯總數的話，把一筆改判成「合法」就能讓數字下降。\n⚠️ 判準刻意寬：寧可多報讓人判，也不要發明一個分得出合法與回退的規則——它們語法上相同。\n\n【2026-08-11】兩欄總和 14 → 19，**掃描範圍擴大，不是多了五處回退**。\n  舊規則按**檔名**認執行器（/^(executors?|execute)\\.ts$/），而\n  `src/languages/cpp/core/executors/` 底下 14 個檔叫 operators.ts／arrays.ts／…\n  ——**一個都不叫 executors.ts，整個目錄從落地起沒被掃過**。\n  > **一個「按檔名認人」的規則會漏掉所有沒照那個命名的地方，\n  > 而它報零的樣子與健康的完全一樣。**\n  發現方式是搬家：五顆轉型元件的執行器一個字沒改地搬進膠囊，護欄立刻多報 5 筆。\n  同一次補了兩個判準缺陷：\n  ① 新增第三種形狀「**值判斷**」——ctx.toBool(x) 是三元的分支與 && 的短路，\n     **是運算子的語義本身**，塞進既有兩欄會與 `相容` 表矛盾。\n  ② 往上找 `if (` 時**跳過單行 `if (…) return …`**——它是完整敘述不是外層條件，\n     當條件會抓出語法不成立的字串，讓一個**無條件的尾端 return** 被誤報。\n  ⚠️ 那個誤報蓋住了一個**真的缺陷**：`cpp:pointer_deref` 對非指標值\n     **無條件回 0 而不出聲**。它是尾端 return，本護欄看不見（只抓有條件的）\n     ——另案修，見下一個 commit。",
+    "note": "靜默回退：執行器遇到處理不了的輸入時回傳一個與合法結果無法區分的預設值。\n⚠️ 它的危害不只是自己錯，是**讓別的缺陷看不見**——觸發本護欄的實例是\n`s.size()` 被辨識成 cpp:vector_size（身分錯），而 vector_size 對非陣列回 0，\n於是 `for (i=0; i<s.size(); i++)` 一次都不跑而沒有任何訊號。辨識的錯躲在執行的回退後面。\n⚠️ 棘輪盯的是**判為「靜默回退」的筆數**，不是命中總數——命中裡有合法的\n（strcmp 相等回 0 是語義）。只盯總數的話，把一筆改判成「合法」就能讓數字下降。\n⚠️ 判準刻意寬：寧可多報讓人判，也不要發明一個分得出合法與回退的規則——它們語法上相同。\n\n【2026-08-11 之二】兩欄總和 19 → 20，**是一個 for 迴圈被拆成三個檔**，\n  不是多了一處回退。`std/cctype/executors.ts` 用兩個迴圈註冊三顆元件\n  （分類器一個、轉換器兩個），於是三顆共用**兩筆**帳；\n  搬進膠囊後每一顆各自有帳 → 3 筆。程式碼一個字沒改。\n  > **一個迴圈註冊出來的 N 個實作，在任何「按位置記帳」的護欄裡都只算一筆。**\n  這一天第二次遇到同一件事（第一次是四顆命名轉型的參數規格）。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "掃描": {
-    "檔數": 147,
-    "return 總數": 96
+    "檔數": 150,
+    "return 總數": 99
   },
   "型別不符": 0,
-  "缺子節點": 19,
+  "缺子節點": 20,
   "命中": {
-    "筆數": 21,
+    "筆數": 22,
     "明細": [
       {
         "鍵": "src/languages/cpp/core/executors/operators.ts#1rmzjv0",
@@ -32,20 +32,6 @@
         "條件": "ctx.toBool(condition)",
         "回傳": "return falseNodes.length > 0 ? await ctx.evaluate(falseNodes",
         "形狀": "值判斷"
-      },
-      {
-        "鍵": "src/languages/cpp/std/cctype/executors.ts#a4cbw",
-        "位置": "src/languages/cpp/std/cctype/executors.ts:77",
-        "條件": "!v",
-        "回傳": "if (!v) return { type: 'int', value: 0 }",
-        "形狀": "缺子節點"
-      },
-      {
-        "鍵": "src/languages/cpp/std/cctype/executors.ts#8ysipl",
-        "位置": "src/languages/cpp/std/cctype/executors.ts:85",
-        "條件": "!v",
-        "回傳": "if (!v) return { type: 'char', value: '' }",
-        "形狀": "缺子節點"
       },
       {
         "鍵": "src/interpreter/executors/io.ts#1qoepsc",
@@ -108,6 +94,27 @@
         "位置": "src/components/cpp/cast_static/execute.ts:14",
         "條件": "valueNodes.length === 0",
         "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/char_is_digit/execute.ts#a4cbw",
+        "位置": "src/components/cpp/char_is_digit/execute.ts:16",
+        "條件": "!v",
+        "回傳": "if (!v) return { type: 'int', value: 0 }",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/char_to_lower/execute.ts#8ysipl",
+        "位置": "src/components/cpp/char_to_lower/execute.ts:16",
+        "條件": "!v",
+        "回傳": "if (!v) return { type: 'char', value: '' }",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/char_to_upper/execute.ts#8ysipl",
+        "位置": "src/components/cpp/char_to_upper/execute.ts:16",
+        "條件": "!v",
+        "回傳": "if (!v) return { type: 'char', value: '' }",
         "形狀": "缺子節點"
       },
       {

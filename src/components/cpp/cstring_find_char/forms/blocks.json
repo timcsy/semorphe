@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_cstring_find_char",
+    "conceptId": "cpp:cstring_find_char",
+    "language": "cpp",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cstring_find_char",
+      "message0": "%{BKY_C_STRCHR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STR",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "CH",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_C_STRCHR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "STR": "str",
+        "CH": "ch"
+      },
+      "statementInputs": {}
+    },
+    "toolboxCategory": "text"
+  }
+]

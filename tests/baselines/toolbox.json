@@ -141,11 +141,11 @@
         "cpp_cstring_compare_bounded",
         "cpp_cstring_copy",
         "cpp_cstring_copy_bounded",
+        "cpp_cstring_find",
+        "cpp_cstring_find_char",
         "cpp_cstring_size",
         "cpp_memory_copy",
         "cpp_memory_fill",
-        "cpp_cstring_find_char",
-        "cpp_cstring_find",
         "cpp_string_append",
         "cpp_string_append_char",
         "cpp_string_as_cstring",
@@ -165,8 +165,8 @@
         "cpp_string_substr",
         "cpp_char_is_alpha",
         "cpp_char_is_digit",
-        "cpp_char_to_upper",
         "cpp_char_to_lower",
+        "cpp_char_to_upper",
         "cpp_cstring_as_double",
         "cpp_cstring_as_int"
       ]

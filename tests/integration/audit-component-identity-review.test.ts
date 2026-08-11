@@ -51,6 +51,7 @@ import 已判定 from '../assets/identity-review-decisions.json'
 import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
+import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 
 interface ConceptDef {
   conceptId: string
@@ -287,7 +288,20 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     // 改成：真實資料只驗「不是全部可疑」（那是信號太寬的訊號，不隨修復而變），
     // 偵測是否活著由下面那幾支**合成注入**負責。
     expect(ALL.length - suspectIds.size, '全部可疑 → 信號太寬').toBeGreaterThan(0)
-    expect(ALL.length, '一顆元件都沒載入 → 每個數字都是假的').toBeGreaterThan(50)
+    // ⚠️ **第二次錨錯，同一支測試**（2026-08-11）。
+    // 上面那段註解說「錨點不要挑真實世界的狀態」，而這一行錨的
+    // `ALL.length` 正是**這條護欄要推向零的數字**——它只數
+    // **還沒膠囊化**的元件（膠囊的宣告不在 `allStdModules` 裡）。
+    // F 項搬到第 50 顆的那天它就變紅了，而系統是變好了。
+    //
+    // > **簽名：斷言的那個數字，是不是這條護欄想推向零的？**
+    // > 是 → 它會在成功的那天變紅。
+    //
+    // 改錨在**宣告總量**上：那是「工具吃到輸入沒有」，不隨膠囊化而變。
+    expect(
+      allCppConcepts().length,
+      '一顆元件都沒載入 → 每個數字都是假的',
+    ).toBeGreaterThan(150)
   })
 
   it('★ 每一筆判定都要有理由，且不得是孤兒（信號已消失）', () => {
