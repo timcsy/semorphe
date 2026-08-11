@@ -1,7 +1,7 @@
 import type { SemanticNode } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
 // ⚠️ 問**性狀**不問身分——一條 if 一顆元件的話，那幾顆永遠搬不進膠囊。
-import { isScaffold } from './core/node-traits'
+import { isScaffold, isScaffoldInMain } from './core/node-traits'
 
 /**
  * Strip scaffold nodes (include, using_namespace, func_def main wrapper, return)
@@ -19,7 +19,9 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
     if (node.conceptId === 'cpp:func_def' && node.properties.name === 'main') {
       const funcBody = node.children.body ?? []
       for (const stmt of funcBody) {
-        if (stmt.conceptId === 'cpp:return') continue
+        // ⚠️ 問**性狀**不問身分。而它是 `scaffoldInMain` 不是 `scaffold`：
+        // `return` 只有在 main 裡才是鷹架，在別的函式裡是使用者寫的東西。
+        if (isScaffoldInMain(stmt.conceptId)) continue
         userBody.push(stmt)
       }
       continue

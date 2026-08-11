@@ -1,0 +1,19 @@
+{
+  "id": "cpp_preproc_def",
+  "astNodeType": "preproc_def",
+  "concept": {
+    "conceptId": "cpp:define"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "name",
+      "ast": "name",
+      "extract": "text"
+    },
+    {
+      "semantic": "value",
+      "ast": "value",
+      "extract": "text"
+    }
+  ]
+}

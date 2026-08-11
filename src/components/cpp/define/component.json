@@ -1,0 +1,27 @@
+{
+  "conceptId": "cpp:define",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "required": true
+    },
+    {
+      "name": "value",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

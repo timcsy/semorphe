@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:return",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "scaffoldInMain": true
+  },
+  "_traits_why": "**「我在 main 裡時算鷹架」是我自己的宣告**，不是過濾器該寫死的身分。"
+}

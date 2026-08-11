@@ -87,6 +87,20 @@ export interface NodeTraits {
    */
   includeDirective?: boolean
   /**
+   * 在 `main` 裡出現時屬於鷹架（L0 的積木視圖不顯示）。
+   *
+   * ⚠️ 與 `scaffold` **不是同一件事**：`#include` 在哪裡都是鷹架，
+   * 而 `return` 只有**在 main 裡**才是——條件在上下文，不在元件。
+   * 共用一個旗標的話，`return` 在任何函式裡都會消失。
+   *
+   * 這條說的是「**我是那個會被 main 的鷹架吃掉的東西**」，
+   * 而「在不在 main 裡」仍然由 `cpp-scaffold-filter` 判斷。
+   *
+   * > **可以宣告的是「我是什麼」，不是「我在哪裡時算什麼」——
+   * > 所以這條性狀只講一半，另一半留在消費者手上。**
+   */
+  scaffoldInMain?: boolean
+  /**
    * 這顆產生的是**前綴符號**，而那個符號與同類的相接會變成另一個運算子。
    *
    * ```
@@ -172,4 +186,9 @@ export function isPrefixOperator(conceptId: string): boolean {
 /** 放進 `cout << …` 時需要括號嗎。沒宣告＝不用。 */
 export function needsParenInCout(conceptId: string): boolean {
   return 性狀(conceptId)?.parenInCout === true
+}
+
+/** 這顆在 `main` 裡時算鷹架嗎。沒宣告＝不算（保守）。 */
+export function isScaffoldInMain(conceptId: string): boolean {
+  return 性狀(conceptId)?.scaffoldInMain === true
 }

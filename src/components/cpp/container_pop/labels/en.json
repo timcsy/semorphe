@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_POP_MSG0": "Remove the top of %1",
+  "CPP_STACK_POP_TOOLTIP": "Remove the top element from the stack",
+  "CPP_QUEUE_POP_MSG0": "Remove the front of %1",
+  "CPP_QUEUE_POP_TOOLTIP": "Remove the frontmost element of the queue (the one added earliest)",
+  "CPP_CONTAINER_POP_MSG0": "Pop from %1",
+  "CPP_CONTAINER_POP_TOOLTIP": "Pop the next element: removes top from stack, front from queue"
+}

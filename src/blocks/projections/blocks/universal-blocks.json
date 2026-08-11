@@ -604,33 +604,6 @@
     }
   },
   {
-    "id": "cpp_return",
-    "conceptId": "cpp:return",
-    "language": "universal",
-    "category": "functions",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_return",
-      "message0": "%{BKY_U_RETURN_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FF6680",
-      "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
-    },
-    "renderMapping": {
-      "inputs": {
-        "VALUE": "value"
-      }
-    }
-  },
-  {
     "id": "cpp_print",
     "conceptId": "cpp:print",
     "language": "universal",

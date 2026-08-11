@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_PUSH_MSG0": "Push %2 onto the top of %1",
+  "CPP_STACK_PUSH_TOOLTIP": "Push an element onto the top of the stack",
+  "CPP_QUEUE_PUSH_MSG0": "Add %2 to the back of %1",
+  "CPP_QUEUE_PUSH_TOOLTIP": "Add an element to the back of the queue",
+  "CPP_CONTAINER_PUSH_MSG0": "Add %2 to %1",
+  "CPP_CONTAINER_PUSH_TOOLTIP": "Add an element: to the top for a stack, to the back for a queue"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "cpp_return_statement",
+  "astNodeType": "return_statement",
+  "concept": {
+    "conceptId": "cpp:return"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "value",
+      "ast": "$namedChildren[0]",
+      "extract": "lift"
+    }
+  ]
+}

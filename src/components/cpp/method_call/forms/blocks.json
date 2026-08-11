@@ -1,0 +1,149 @@
+[
+  {
+    "id": "cpp:method_call",
+    "conceptId": "cpp:method_call",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call",
+      "message0": "%{BKY_CPP_METHOD_CALL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": "push_back"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS});",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
+      ]
+    },
+    "renderMapping": {
+      "expressionCounterpart": "cpp_method_call_expression",
+      "fields": {
+        "ARGS": "args",
+        "METHOD": "method",
+        "OBJ": "obj"
+      }
+    },
+    "toolboxCategory": "functions"
+  },
+  {
+    "id": "cpp_method_call_expression",
+    "conceptId": "cpp:method_call",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_call_expression",
+      "message0": "%{BKY_CPP_METHOD_CALL_EXPR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": "size"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_METHOD_CALL_EXPR_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.${METHOD}(${ARGS})",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        },
+        {
+          "semantic": "method",
+          "ast": "function.field",
+          "extract": "text"
+        },
+        {
+          "semantic": "args",
+          "ast": "arguments",
+          "extract": "text"
+        }
+      ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "toolboxCategory": "functions",
+    "renderMapping": {
+      "fields": {
+        "ARGS": "args",
+        "METHOD": "method",
+        "OBJ": "obj"
+      }
+    }
+  }
+]

@@ -211,9 +211,12 @@ describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉�
 describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
   it('★ getFormsByConceptId 回傳全部三顆，而不是最後註冊的那顆', async () => {
     const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
-    const { coreConcepts, coreBlocks } = await import('../../../src/languages/cpp/core')
+    // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本讀 `core`，
+    // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀會是「三個形態只剩零個」，
+    // 看起來像形態機制壞了。同一支測試下面那一段早就改對了，**這一段沒跟上**。
+    const { allCppConcepts, allCppProjections } = await import('../../../src/languages/cpp/all-declarations')
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(coreConcepts, coreBlocks)
+    reg.loadFromSplit(allCppConcepts(), allCppProjections())
     const forms = reg.getFormsByConceptId('cpp:container_push')
     expect(
       forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort(),

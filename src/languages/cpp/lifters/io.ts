@@ -8,6 +8,7 @@ import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '..
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 import { namedCastConcept } from '../../../core/component/named-cast-concepts'
 import { 建malloc } from '../../../components/cpp/malloc/lift'
+import { 建method_call } from '../../../components/cpp/method_call/lift'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -77,10 +78,9 @@ function tryStringMethodLift(
  * **查不到就留在通用版**——猜一個錯的專屬身分比誠實降級更糟。
  */
 const METHOD_TO_CONCEPT: Record<string, string> = {
-  // container-specific (unique method names)
-  // generic container concepts (shared methods across containers)
-  push: 'cpp:container_push',
-  pop: 'cpp:container_pop',
+  // ⚠️ **空的，而那是進度不是設計。** 這張表原本列 `push`／`pop`，
+  // 而那兩顆已經搬進膠囊、改用 `registerMethodConcept` 自己認領方法名。
+  // 剩下的（今天是零筆）是**還沒膠囊化**的，它只減不增。
 }
 
 /**
@@ -196,7 +196,7 @@ export function registerIOLifters(lifter: Lifter): void {
       // 都要在五路上各維護一份，而 `saveExtraState` 的格式契約要人工同步。
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return createNode('cpp:method_call', { obj: objText, method: methodName }, { args: liftedArgs })
+      return 建method_call(objText, methodName, liftedArgs)
     }
 
     // printf("...", args) → cstdio module

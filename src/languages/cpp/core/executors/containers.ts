@@ -5,9 +5,7 @@
  *
  * 見 specs/054-execute-into-capsules/
  */
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../../interpreter/types'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 import { valueToString } from '../../../../interpreter/types'
 
 /**
@@ -27,43 +25,11 @@ export function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
   return -1
 }
 
-export function registerContainerCoreExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-
-
-  register('cpp:container_push', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return
-    const val = await ctx.evaluate(valueNodes[0])
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    arr.value.push(val)
-  })
-
-  register('cpp:container_pop', async (node, ctx) => {
-    const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
-    if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    if (arr.value.length > 0) {
-      if (arr.tag === 'queue') {
-        arr.value.shift()
-      } else {
-        arr.value.pop()
-      }
-    }
-  })
-
-
-
-
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件全部搬進膠囊了。
+ *
+ * 檔案留著是因為裡面還有**共用的演算法**（見上面的匯出），
+ * 而那些不屬於任何一顆元件。
+ *
+ * > **模組是搬家的中途站，不是終點——而中途站的最後一塊石頭是它共用的東西。**
+ */

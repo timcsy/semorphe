@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cpp_define",
+    "conceptId": "cpp:define",
+    "language": "cpp",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_define",
+      "message0": "%{BKY_C_DEFINE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "MAX"
+        },
+        {
+          "type": "field_input",
+          "name": "VALUE",
+          "text": "100"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_DEFINE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "#define ${NAME} ${VALUE}",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "VALUE": "value"
+      }
+    }
+  }
+]

@@ -1,4 +1,3 @@
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 
 /**
  * 條件編譯的執行路。
@@ -23,18 +22,14 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 /** 這次執行中被 `#define` 過的名字。每次執行重新開始 */
 export const defined = new Set<string>()
 
-export function registerPreprocessorExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-  register('cpp:define', async (node) => {
-    const name = String(node.properties.name ?? '')
-    if (name) defined.add(name)
-  })
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件全部搬進膠囊了。
+ *
+ * 檔案留著是因為裡面還有**共用的演算法**（見上面的匯出），
+ * 而那些不屬於任何一顆元件。
+ *
+ * > **模組是搬家的中途站，不是終點——而中途站的最後一塊石頭是它共用的東西。**
+ */
 
 /** 測試用：清空已定義的名字 */
 export function resetDefinedMacros(): void {

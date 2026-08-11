@@ -217,20 +217,6 @@
     ]
   },
   {
-    "id": "cpp_return_statement",
-    "astNodeType": "return_statement",
-    "concept": {
-      "conceptId": "cpp:return"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$namedChildren[0]",
-        "extract": "lift"
-      }
-    ]
-  },
-  {
     "id": "cpp_expression_statement",
     "astNodeType": "expression_statement",
     "patternType": "unwrap",
@@ -298,25 +284,6 @@
     },
     "liftStrategy": "cpp:liftDeclaration",
     "priority": 15
-  },
-  {
-    "id": "cpp_preproc_def",
-    "astNodeType": "preproc_def",
-    "concept": {
-      "conceptId": "cpp:define"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "name",
-        "ast": "name",
-        "extract": "text"
-      },
-      {
-        "semantic": "value",
-        "ast": "value",
-        "extract": "text"
-      }
-    ]
   },
   {
     "id": "cpp_compound_stmt",

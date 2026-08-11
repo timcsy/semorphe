@@ -120,12 +120,5 @@ export function registerFunctionExecutors(register: (concept: string, executor: 
   register('cpp:func_call', execFuncCall)
 
 
-  register('cpp:return', async (node, ctx) => {
-    const valueNodes = node.children.value
-    if (valueNodes && valueNodes.length > 0) {
-      const val = await ctx.evaluate(valueNodes[0])
-      throw new ReturnSignal(val)
-    }
-    throw new ReturnSignal(defaultValue('void'))
-  })
+
 }

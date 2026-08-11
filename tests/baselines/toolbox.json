@@ -77,13 +77,13 @@
         "cpp_func_def",
         "cpp_func_call",
         "cpp_func_call_expression",
-        "cpp_return",
         "cpp_forward_decl",
         "cpp_lambda",
+        "cpp_return",
         "cpp_template_function",
+        "cpp_istringstream_declare",
         "cpp_method_call",
         "cpp_method_call_expression",
-        "cpp_istringstream_declare",
         "cpp_string_at"
       ]
     },
@@ -198,11 +198,11 @@
         "cpp_queue_declare",
         "cpp_queue_front",
         "cpp_stringstream_declare",
-        "cpp_container_push_stack",
-        "cpp_container_pop_stack",
-        "cpp_container_push_queue",
-        "cpp_container_pop_queue",
         "cpp_container_empty",
+        "cpp_container_pop_stack",
+        "cpp_container_pop_queue",
+        "cpp_container_push_stack",
+        "cpp_container_push_queue",
         "cpp_istringstream_declare",
         "cpp_string_at"
       ]

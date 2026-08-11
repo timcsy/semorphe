@@ -292,19 +292,6 @@
     }
   },
   {
-    "conceptId": "cpp:return",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:print",
     "layer": "universal",
     "abstractConcept": null,

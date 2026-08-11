@@ -1,0 +1,6 @@
+{
+  "CPP_METHOD_CALL_MSG0": "On %1 call %2 with %3",
+  "CPP_METHOD_CALL_TOOLTIP": "Call a method on an object, optionally passing arguments",
+  "CPP_METHOD_CALL_EXPR_MSG0": "Result of %1.%2(%3)",
+  "CPP_METHOD_CALL_EXPR_TOOLTIP": "Call a method on an object and get the result"
+}

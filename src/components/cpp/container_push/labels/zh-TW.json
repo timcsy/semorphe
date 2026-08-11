@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_PUSH_MSG0": "推 %2 到 %1 的頂端",
+  "CPP_STACK_PUSH_TOOLTIP": "把元素放到堆疊頂端",
+  "CPP_QUEUE_PUSH_MSG0": "加 %2 到 %1 的尾端",
+  "CPP_QUEUE_PUSH_TOOLTIP": "把元素加到佇列尾端",
+  "CPP_CONTAINER_PUSH_MSG0": "加入 %2 到 %1",
+  "CPP_CONTAINER_PUSH_TOOLTIP": "加入一個元素：堆疊放到頂端，佇列加到尾端"
+}

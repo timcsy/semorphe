@@ -1,56 +1,5 @@
 [
   {
-    "conceptId": "cpp:container_push",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:container_pop",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "obj"
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:method_call",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:func_call",
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "literal",
-        "default": "obj"
-      },
-      {
-        "name": "method",
-        "kind": "literal",
-        "default": "method"
-      }
-    ],
-    "children": {
-      "args": "expressions"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:include",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -96,24 +45,5 @@
     "skipReasons": {
       "execute": "declarative"
     }
-  },
-  {
-    "conceptId": "cpp:define",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal",
-        "required": true
-      },
-      {
-        "name": "value",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "statement"
   }
 ]

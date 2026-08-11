@@ -1,0 +1,108 @@
+[
+  {
+    "id": "cpp_container_pop",
+    "conceptId": "cpp:container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_pop",
+      "message0": "%{BKY_CPP_CONTAINER_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "obj"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  },
+  {
+    "id": "cpp_container_pop_stack",
+    "conceptId": "cpp:container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_pop_stack",
+      "message0": "%{BKY_CPP_STACK_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "stk"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "stack"
+    },
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  },
+  {
+    "id": "cpp_container_pop_queue",
+    "conceptId": "cpp:container_pop",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_pop_queue",
+      "message0": "%{BKY_CPP_QUEUE_POP_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "que"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_QUEUE_POP_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.pop();",
+      "imports": [],
+      "order": 0
+    },
+    "form": {
+      "axis": "container_kind",
+      "value": "queue"
+    },
+    "toolboxCategory": "stacks_queues",
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      }
+    }
+  }
+]

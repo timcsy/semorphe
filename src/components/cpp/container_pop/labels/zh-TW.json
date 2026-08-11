@@ -1,0 +1,8 @@
+{
+  "CPP_STACK_POP_MSG0": "從 %1 的頂端移除",
+  "CPP_STACK_POP_TOOLTIP": "移除堆疊頂端的元素",
+  "CPP_QUEUE_POP_MSG0": "從 %1 的前端移除",
+  "CPP_QUEUE_POP_TOOLTIP": "移除佇列最前面的元素（最先加入的那個）",
+  "CPP_CONTAINER_POP_MSG0": "從 %1 移出元素",
+  "CPP_CONTAINER_POP_TOOLTIP": "對堆疊移出頂端；對佇列移出前端"
+}

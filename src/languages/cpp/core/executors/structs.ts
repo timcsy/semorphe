@@ -14,10 +14,8 @@
  *
  * 見 specs/071-struct-execute/
  */
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import type { FieldDecl, MethodDecl } from '../../../../interpreter/struct-types'
 import { Scope } from '../../../../interpreter/scope'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 // 從定義它的地方導入——**不要再建一份**，見該處的說明
 import { ReturnSignal } from '../../../../interpreter/executors/functions'
 import type { RuntimeValue, ObjectFields } from '../../../../interpreter/types'
@@ -95,7 +93,13 @@ export function 拆解成員(members: SemanticNode[]): {
  *
  * 本體跑在那之上的**子作用域**裡，否則方法的區域變數會落進物件變成欄位。
  */
-async function 在實例上執行(
+/**
+ * 在一個實例上執行一個方法。
+ *
+ * ⚠️ **匯出它，因為 `cpp:method_call` 搬進膠囊了。** 這不是那顆元件的實作
+ * ——`class_def` 的建構、解構、方法執行器都走它。**共用的是演算法，不是身分。**
+ */
+export async function 在實例上執行(
   obj: RuntimeValue,
   m: MethodDecl,
   argNodes: SemanticNode[],
@@ -169,46 +173,11 @@ export const 安裝方法執行器 = (ctx: import('../../../../interpreter/execu
   }
 }
 
-export function registerStructExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-
-
-
-
-
-
-  /** `c.bump()` 與 `c.get()` —— 敘述與運算式兩個位置同一個實作 */
-  const 呼叫方法: ConceptExecutor = async (node, ctx) => {
-    const objName = String(node.properties.obj)
-    const methodName = String(node.properties.method)
-    const obj = ctx.scope.get(objName)
-    if (obj.type !== 'object') {
-      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個物件）` })
-    }
-    const m = ctx.structs.method(obj.structName ?? '', methodName)
-    if (!m) {
-      // 出聲，不靜默略過——打錯方法名的程式會跑完而什麼都沒做
-      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
-        '%1': `${obj.structName ?? '?'}::${methodName}`,
-      })
-    }
-    if (m.pure) {
-      // 純虛擬沒有本體。靜默回傳的話，忘了覆寫的程式會跑完而什麼都沒做。
-      throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
-        '%1': `${obj.structName ?? '?'}::${methodName}（純虛擬，沒有實作）`,
-      })
-    }
-    return 在實例上執行(obj, m, node.children.args ?? [], ctx)
-  }
-
-  register('cpp:method_call', 呼叫方法)
-
-
-
-
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件全部搬進膠囊了。
+ *
+ * 檔案留著是因為裡面還有**共用的演算法**（見上面的匯出），
+ * 而那些不屬於任何一顆元件。
+ *
+ * > **模組是搬家的中途站，不是終點——而中途站的最後一塊石頭是它共用的東西。**
+ */

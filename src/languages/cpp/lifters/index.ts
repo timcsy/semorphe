@@ -15,6 +15,7 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
 import { qualifierConcept } from '../../../core/component/qualifier-concepts'
 import { 建using_namespace } from '../../../components/cpp/using_namespace/lift'
+import { 建define } from '../../../components/cpp/define/lift'
 
 export interface CppRegistries {
   transformRegistry?: TransformRegistry
@@ -84,7 +85,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const valueNode = node.childForFieldName('value')
     const name = nameNode?.text ?? 'MACRO'
     const value = valueNode?.text ?? ''
-    return createNode('cpp:define', { name, value })
+    return 建define(name, value)
   })
 
   // #ifdef NAME / #ifndef NAME

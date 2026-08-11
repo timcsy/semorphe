@@ -1,0 +1,4 @@
+{
+  "U_RETURN_MSG0": "return %1",
+  "U_RETURN_TOOLTIP": "End the function and send the result back to the caller"
+}

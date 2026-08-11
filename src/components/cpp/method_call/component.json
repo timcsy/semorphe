@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:method_call",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:func_call",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "literal",
+      "default": "obj"
+    },
+    {
+      "name": "method",
+      "kind": "literal",
+      "default": "method"
+    }
+  ],
+  "children": {
+    "args": "expressions"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

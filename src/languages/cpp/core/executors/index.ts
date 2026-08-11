@@ -1,9 +1,6 @@
 import { registerLambdaExecutors } from './lambda'
-import { registerStructExecutors } from './structs'
 import { registerUnimplementedExecutors } from './unimplemented'
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
-import { registerContainerCoreExecutors } from './containers'
-import { registerPreprocessorExecutors } from './preprocessor'
 import { registerFunctionsCoreExecutors } from './functions'
 import { registerArraysCoreExecutors } from './arrays'
 
@@ -16,10 +13,7 @@ import { registerArraysCoreExecutors } from './arrays'
 export function registerCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  registerContainerCoreExecutors(register)
-  registerPreprocessorExecutors(register)
   registerFunctionsCoreExecutors(register)
-  registerStructExecutors(register)
   registerLambdaExecutors(register)
   registerUnimplementedExecutors(register)
   registerArraysCoreExecutors(register)

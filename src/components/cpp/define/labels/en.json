@@ -1,0 +1,4 @@
+{
+  "C_DEFINE_MSG0": "define constant %1 as %2",
+  "C_DEFINE_TOOLTIP": "Define a constant name; wherever this name appears in the code, it will be replaced with the given value"
+}

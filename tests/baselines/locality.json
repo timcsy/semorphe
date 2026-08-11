@@ -136,11 +136,11 @@
     },
     "cpp:container_pop": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:container_push": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:continue": {
       "files": 3,
@@ -192,7 +192,7 @@
     },
     "cpp:define": {
       "files": 4,
-      "dirs": 4
+      "dirs": 1
     },
     "cpp:delete": {
       "files": 3,
@@ -384,7 +384,7 @@
     },
     "cpp:method_call": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:method_override": {
       "files": 2,
@@ -515,8 +515,8 @@
       "dirs": 1
     },
     "cpp:return": {
-      "files": 4,
-      "dirs": 3
+      "files": 3,
+      "dirs": 1
     },
     "cpp:set_declare": {
       "files": 3,
