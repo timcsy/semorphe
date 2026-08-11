@@ -1,0 +1,4 @@
+{
+  "C_DYNAMIC_CAST_MSG0": "動態轉型為 %1（%2）",
+  "C_DYNAMIC_CAST_TOOLTIP": "在執行時安全地將指標或參考轉型為衍生型別"
+}

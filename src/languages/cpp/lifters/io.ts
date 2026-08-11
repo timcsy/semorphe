@@ -6,6 +6,7 @@ import { extractPrintf, extractScanf } from '../std/cstdio/lifters'
 import { callConceptFor } from '../../../core/component/call-concepts'
 import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-concepts'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
+import { namedCastConcept } from '../../../core/component/named-cast-concepts'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -232,16 +233,11 @@ export function registerIOLifters(lifter: Lifter): void {
       const castName = funcNode.namedChildren.find(c => c.type === 'identifier')?.text
       const templateArgs = funcNode.namedChildren.find(c => c.type === 'template_argument_list')
       const targetType = templateArgs ? templateArgs.text.slice(1, -1) : 'int' // strip < >
-      const castConcepts: Record<string, string> = {
-        'static_cast': 'cpp:cast_static',
-        'dynamic_cast': 'cpp:cast_dynamic',
-        'reinterpret_cast': 'cpp:cast_reinterpret',
-        'const_cast': 'cpp:cast_const',
-      }
-      if (castName && castConcepts[castName]) {
+      const castConcept = castName ? namedCastConcept(castName) : undefined
+      if (castConcept) {
         const argNodes = argsNode?.namedChildren ?? []
         const value = argNodes.length > 0 ? ctx.lift(argNodes[0]) : null
-        return createNode(castConcepts[castName], { target_type: targetType }, {
+        return createNode(castConcept, { target_type: targetType }, {
           value: value ? [value] : [],
         })
       }

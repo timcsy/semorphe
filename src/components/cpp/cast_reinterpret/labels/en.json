@@ -1,0 +1,4 @@
+{
+  "C_REINTERPRET_CAST_MSG0": "Reinterpret %2 as type %1 (reinterpret_cast)",
+  "C_REINTERPRET_CAST_TOOLTIP": "Convert between unrelated pointer types (low-level, use with caution)"
+}

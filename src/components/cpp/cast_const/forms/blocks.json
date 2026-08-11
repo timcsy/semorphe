@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp_cast_const",
+    "conceptId": "cpp:cast_const",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cast_const",
+      "message0": "%{BKY_C_CONST_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TARGET_TYPE",
+          "text": "int*"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5BA58C",
+      "tooltip": "%{BKY_C_CONST_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "const_cast<${TARGET_TYPE}>(${VALUE})",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

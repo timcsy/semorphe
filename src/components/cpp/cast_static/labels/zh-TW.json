@@ -1,0 +1,4 @@
+{
+  "C_STATIC_CAST_MSG0": "靜態轉型為 %1（%2）",
+  "C_STATIC_CAST_TOOLTIP": "在編譯時安全地將值轉換為另一個型別"
+}

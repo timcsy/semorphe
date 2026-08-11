@@ -1,0 +1,79 @@
+[
+  {
+    "id": "cpp_cast",
+    "conceptId": "cpp:cast",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_cast",
+      "message0": "%{BKY_C_CAST_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TARGET_TYPE",
+          "options": [
+            [
+              "%{BKY_C_CAST_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_CAST_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_CAST_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_CAST_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_C_CAST_TYPE_LONG_LONG}",
+              "long long"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_C_CAST_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "(${TARGET_TYPE})${VALUE}",
+      "imports": [],
+      "order": 8
+    },
+    "astPattern": {
+      "nodeType": "cast_expression",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "target_type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "value",
+          "ast": "value",
+          "extract": "lift"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

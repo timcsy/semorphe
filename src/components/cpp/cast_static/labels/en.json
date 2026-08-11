@@ -1,0 +1,4 @@
+{
+  "C_STATIC_CAST_MSG0": "Convert %2 to type %1 (static_cast)",
+  "C_STATIC_CAST_TOOLTIP": "Safely convert a value to a different type at compile time"
+}

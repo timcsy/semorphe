@@ -1,0 +1,4 @@
+{
+  "C_REINTERPRET_CAST_MSG0": "重新解讀為 %1（%2）",
+  "C_REINTERPRET_CAST_TOOLTIP": "在不相關的指標型別之間轉換（低階操作，請謹慎使用）"
+}

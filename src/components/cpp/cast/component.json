@@ -1,0 +1,35 @@
+{
+  "conceptId": "cpp:cast",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "target_type",
+      "kind": "enum",
+      "values": [
+        "int",
+        "float",
+        "double",
+        "char",
+        "long long"
+      ],
+      "default": "int"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "precedence": 14,
+    "forLoopPart": true
+  }
+}

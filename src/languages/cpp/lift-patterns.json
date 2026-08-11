@@ -508,26 +508,6 @@
     ]
   },
   {
-    "id": "cpp_cast_expr",
-    "astNodeType": "cast_expression",
-    "concept": {
-      "conceptId": "cpp:cast"
-    },
-    "liftStrategy": "cpp:liftCastExpression",
-    "fieldMappings": [
-      {
-        "semantic": "target_type",
-        "ast": "type",
-        "extract": "text"
-      },
-      {
-        "semantic": "value",
-        "ast": "value",
-        "extract": "lift"
-      }
-    ]
-  },
-  {
     "id": "cpp_ternary_expr",
     "astNodeType": "conditional_expression",
     "concept": {

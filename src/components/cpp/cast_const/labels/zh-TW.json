@@ -1,0 +1,4 @@
+{
+  "C_CONST_CAST_MSG0": "去除唯讀限制 轉型為 %1（%2）",
+  "C_CONST_CAST_TOOLTIP": "從指標或參考中移除或加上 const 修飾"
+}

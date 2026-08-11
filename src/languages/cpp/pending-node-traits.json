@@ -20,10 +20,6 @@
     "cpp:bitwise_not": {
       "precedence": 14
     },
-    "cpp:cast": {
-      "precedence": 14,
-      "forLoopPart": true
-    },
     "cpp:comma_expr": {
       "precedence": 1,
       "forLoopPart": true

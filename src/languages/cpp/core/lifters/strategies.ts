@@ -23,6 +23,7 @@ import { 建method_virtual } from '../../../../components/cpp/method_virtual/lif
 import { 建method_override } from '../../../../components/cpp/method_override/lift'
 import { 建method_virtual_pure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { 建operator_overload } from '../../../../components/cpp/operator_overload/lift'
+import { 建cast } from '../../../../components/cpp/cast/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -708,9 +709,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // Default: regular cast
     const value = valueNode ? ctx.lift(valueNode) : null
-    return createNode('cpp:cast', { target_type: targetType }, {
-      value: value ? [value] : [],
-    })
+    return 建cast(targetType, value)
   })
 
 

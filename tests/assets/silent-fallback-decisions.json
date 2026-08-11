@@ -61,5 +61,40 @@
     "訊號": "keyNodes.length === 0 → if (keyNodes.length === 0) return { type",
     "判定": "防禦性",
     "理由": "語義樹缺 key 子節點時回 0——`count` 沒有鍵可查，0 是正確答案。"
+  },
+  {
+    "鍵": "src/components/cpp/cast/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/cast/execute.ts:14",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
+  },
+  {
+    "鍵": "src/components/cpp/cast_static/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/cast_static/execute.ts:14",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
+  },
+  {
+    "鍵": "src/components/cpp/cast_const/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/cast_const/execute.ts:18",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
+  },
+  {
+    "鍵": "src/components/cpp/cast_dynamic/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/cast_dynamic/execute.ts:18",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
+  },
+  {
+    "鍵": "src/components/cpp/cast_reinterpret/execute.ts#a0uoa9",
+    "位置": "src/components/cpp/cast_reinterpret/execute.ts:18",
+    "訊號": "valueNodes.length === 0 → if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+    "判定": "防禦性",
+    "理由": "語義樹缺 value 子節點時的退路——從共用檔原封搬過來，**搬移不重寫**。與同批的九筆同形（cctype、string_as_int…）。⚠️ 它在共用檔裡時這條護欄看不見：掃描只認**檔名** executors.ts／execute.ts，而共用執行器叫 operators.ts。**膠囊化把它照進了視野。**"
   }
 ]

@@ -1,0 +1,9 @@
+{
+  "C_CAST_MSG0": "cast to %1 ← %2",
+  "C_CAST_TOOLTIP": "Force a value to become another type. For example, cast to double before dividing integers to get a precise result",
+  "C_CAST_TYPE_INT": "int (integer)",
+  "C_CAST_TYPE_FLOAT": "float (decimal)",
+  "C_CAST_TYPE_DOUBLE": "double (precise decimal)",
+  "C_CAST_TYPE_CHAR": "char (character)",
+  "C_CAST_TYPE_LONG_LONG": "long long (large integer)"
+}

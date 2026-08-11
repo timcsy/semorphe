@@ -107,29 +107,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:cast",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target_type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "double",
-          "char",
-          "long long"
-        ],
-        "default": "int"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:bitwise_not",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -475,70 +452,6 @@
     "skipReasons": {
       "execute": "consumed-by-parent"
     }
-  },
-  {
-    "conceptId": "cpp:cast_static",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target_type",
-        "kind": "type_expr",
-        "default": "int"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:cast_dynamic",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target_type",
-        "kind": "type_expr",
-        "default": "Derived*"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:cast_reinterpret",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target_type",
-        "kind": "type_expr",
-        "default": "int*"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
-  },
-  {
-    "conceptId": "cpp:cast_const",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "target_type",
-        "kind": "type_expr",
-        "default": "int*"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "expression"
   },
   {
     "conceptId": "cpp:comma_expr",

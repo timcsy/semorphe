@@ -1,0 +1,4 @@
+{
+  "C_DYNAMIC_CAST_MSG0": "Safe convert %2 to type %1 (dynamic_cast)",
+  "C_DYNAMIC_CAST_TOOLTIP": "Safely cast a pointer or reference to a derived type at runtime"
+}

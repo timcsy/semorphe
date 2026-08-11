@@ -1,0 +1,9 @@
+{
+  "C_CAST_MSG0": "轉型為 %1 ← %2",
+  "C_CAST_TOOLTIP": "把值強制轉換成另一種型別。例如整數除法要轉成小數才能得到精確結果",
+  "C_CAST_TYPE_INT": "int（整數）",
+  "C_CAST_TYPE_FLOAT": "float（小數）",
+  "C_CAST_TYPE_DOUBLE": "double（精確小數）",
+  "C_CAST_TYPE_CHAR": "char（字元）",
+  "C_CAST_TYPE_LONG_LONG": "long long（大整數）"
+}

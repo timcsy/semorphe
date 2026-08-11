@@ -33,42 +33,7 @@ export function registerOperatorsCoreExecutors(
     }
   })
 
-  register('cpp:cast', async (node, ctx) => {
-    const targetType = String(node.properties.target_type ?? 'int')
-    const valueNodes = node.children.value ?? []
-    if (valueNodes.length === 0) return { type: 'int', value: 0 }
-    const val = await ctx.evaluate(valueNodes[0])
-    const num = ctx.toNumber(val)
-    // `(char)66` 要變成**字元**，不是整數 66——回 int 的話 `cout` 印出 66。
-    if (targetType === 'char') {
-      return { type: 'char', value: String.fromCharCode(Math.trunc(num)) }
-    }
-    if (targetType === 'int' || targetType === 'long' || targetType === 'short') {
-      return { type: 'int', value: Math.trunc(num) }
-    }
-    if (targetType === 'double' || targetType === 'float') {
-      return { type: 'double', value: num }
-    }
-    return val
-  })
 
-  // C++ named casts behave the same as C-style cast at runtime
-  for (const castConcept of ['cpp:cast_static', 'cpp:cast_dynamic', 'cpp:cast_reinterpret', 'cpp:cast_const']) {
-    register(castConcept, async (node, ctx) => {
-      const targetType = String(node.properties.target_type ?? 'int')
-      const valueNodes = node.children.value ?? []
-      if (valueNodes.length === 0) return { type: 'int', value: 0 }
-      const val = await ctx.evaluate(valueNodes[0])
-      const num = ctx.toNumber(val)
-      if (targetType === 'int' || targetType === 'long' || targetType === 'short' || targetType === 'char') {
-        return { type: 'int', value: Math.trunc(num) }
-      }
-      if (targetType === 'double' || targetType === 'float') {
-        return { type: 'double', value: num }
-      }
-      return val
-    })
-  }
 
   register('cpp:comma_expr', async (node, ctx) => {
     const exprs = node.children.exprs ?? []

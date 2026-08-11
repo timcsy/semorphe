@@ -1,0 +1,4 @@
+{
+  "C_CONST_CAST_MSG0": "Remove const: cast %2 to %1",
+  "C_CONST_CAST_TOOLTIP": "Remove or add const qualifier from a pointer or reference"
+}

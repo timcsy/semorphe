@@ -4,13 +4,13 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "掃描": {
-    "檔數": 94,
-    "return 總數": 59
+    "檔數": 126,
+    "return 總數": 64
   },
   "型別不符": 0,
-  "缺子節點": 9,
+  "缺子節點": 14,
   "命中": {
-    "筆數": 9,
+    "筆數": 14,
     "明細": [
       {
         "鍵": "src/languages/cpp/std/cctype/executors.ts#a4cbw",
@@ -24,6 +24,41 @@
         "位置": "src/languages/cpp/std/cctype/executors.ts:85",
         "條件": "!v",
         "回傳": "if (!v) return { type: 'char', value: '' }",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/cast/execute.ts#a0uoa9",
+        "位置": "src/components/cpp/cast/execute.ts:14",
+        "條件": "valueNodes.length === 0",
+        "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/cast_const/execute.ts#a0uoa9",
+        "位置": "src/components/cpp/cast_const/execute.ts:18",
+        "條件": "valueNodes.length === 0",
+        "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/cast_dynamic/execute.ts#a0uoa9",
+        "位置": "src/components/cpp/cast_dynamic/execute.ts:18",
+        "條件": "valueNodes.length === 0",
+        "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/cast_reinterpret/execute.ts#a0uoa9",
+        "位置": "src/components/cpp/cast_reinterpret/execute.ts:18",
+        "條件": "valueNodes.length === 0",
+        "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
+        "形狀": "缺子節點"
+      },
+      {
+        "鍵": "src/components/cpp/cast_static/execute.ts#a0uoa9",
+        "位置": "src/components/cpp/cast_static/execute.ts:14",
+        "條件": "valueNodes.length === 0",
+        "回傳": "if (valueNodes.length === 0) return { type: 'int', value: 0 ",
         "形狀": "缺子節點"
       },
       {
