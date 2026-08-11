@@ -7,6 +7,7 @@
  * 見 specs/054-execute-into-capsules/
  */
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 
 export function registerPointerExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:address_of', async (node, ctx) => {
@@ -31,7 +32,18 @@ export function registerPointerExecutors(register: (concept: string, executor: C
         if (targetScope) return targetScope.get(targetName)
         return ctx.scope.get(targetName)
       }
+      // ⚠️ **不是指標卻被解參考——出聲，不要回 0。**
+      //
+      // 這裡原本 `return { type: 'int', value: 0 }`，與 spec 109 的 `s.size()`
+      // 同一族：**辨識的錯躲在執行的回退後面**。`*x` 在 `x` 不是指標時
+      // 印出 0，與「指向的值真的是 0」在畫面上一模一樣。
+      //
+      // ⚠️ 第三十三條護欄**看不見它**——它是尾端的**無條件** return，
+      // 而那條護欄只抓「檢查失敗後」的回退。
+      // > **一條護欄的能力邊界，就是它抓不到的缺陷活下來的地方。**
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'pointer' })
     }
+    // ptr 子節點缺失＝語義樹壞掉，與別處的缺子節點退路同形（防禦性）。
     return { type: 'int', value: 0 }
   })
 
