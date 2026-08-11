@@ -1,6 +1,7 @@
 import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
+import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -114,7 +115,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     }
     const returnDesc = block.fields.RETURN as string | undefined
     if (returnDesc) props.return_desc = returnDesc
-    return createNode('cpp:doc_comment', props)
+    return 建doc_comment(props)
   })
 
   // ── 運算式位的變數宣告 ──

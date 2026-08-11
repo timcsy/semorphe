@@ -29,6 +29,7 @@ import { 建var_declare_ref } from '../../../../components/cpp/var_declare_ref/l
 import { 建member_static } from '../../../../components/cpp/member_static/lift'
 import { typeSuffixOf } from '../node-traits'
 import { 建include_local } from '../../../../components/cpp/include_local/lift'
+import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -363,7 +364,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
   // doc comment: /** ... */ → doc_comment with structured properties
   registry.register('cpp:liftDocComment', (node) => {
     const props = parseDocComment(node.text)
-    return createNode('cpp:doc_comment', props)
+    return 建doc_comment(props)
   })
 
   // preproc_include: system vs local include distinction

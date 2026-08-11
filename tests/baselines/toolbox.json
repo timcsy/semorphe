@@ -246,9 +246,9 @@
         "cpp_ifndef",
         "cpp_include_local",
         "cpp_using_namespace",
+        "cpp_block_comment",
         "cpp_comment",
         "cpp_doc_comment",
-        "cpp_block_comment",
         "cpp_raw_code",
         "cpp_raw_expression",
         "cpp_namespace_def"

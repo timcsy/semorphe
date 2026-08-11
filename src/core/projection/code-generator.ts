@@ -85,22 +85,6 @@ export function registerMetaConceptGenerators(generators: Map<string, NodeGenera
     return raw.endsWith('\n') ? raw : raw + '\n'
   })
 
-  // ── 註解那三個概念的**語法**已搬進語言套件（`src/core/comment-syntax.ts`）
-  //
-  // 核心層原本自己寫死 `//`、`/** *​/`、`/* *​/`。那違反 P9（拔掉 C++，
-  // 核心仍能運作——Python 要 `#`），而**中立性護欄看不見它**：那條護欄找的
-  // 是元件身分字串，這裡寫死的是語法符號。
-  //
-  // 概念身分留在核心（註解是所有語言共有的），語法下沉到語言套件。
-  generators.set('cpp:comment', (node, ctx) =>
-    commentSyntax().line(String(node.properties.text ?? ''), indent(ctx)),
-  )
-
-  generators.set('cpp:doc_comment', (node, ctx) => commentSyntax().doc(node.properties, indent(ctx)))
-
-  generators.set('cpp:block_comment', (node, ctx) =>
-    commentSyntax().block(String(node.properties.text ?? ''), indent(ctx)),
-  )
 }
 
 

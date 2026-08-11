@@ -274,59 +274,6 @@
     ]
   },
   {
-    "id": "cpp_doc_comment",
-    "astNodeType": "comment",
-    "concept": {
-      "conceptId": "cpp:doc_comment"
-    },
-    "constraints": [
-      {
-        "field": "$text",
-        "match": "startsWith",
-        "text": "/**"
-      }
-    ],
-    "liftStrategy": "cpp:liftDocComment",
-    "fieldMappings": []
-  },
-  {
-    "id": "cpp_block_comment",
-    "astNodeType": "comment",
-    "concept": {
-      "conceptId": "cpp:block_comment"
-    },
-    "constraints": [
-      {
-        "field": "$text",
-        "match": "startsWith",
-        "text": "/*"
-      }
-    ],
-    "fieldMappings": [
-      {
-        "semantic": "text",
-        "ast": "$text",
-        "extract": "text",
-        "transform": "cpp:stripBlockComment"
-      }
-    ]
-  },
-  {
-    "id": "cpp_comment",
-    "astNodeType": "comment",
-    "concept": {
-      "conceptId": "cpp:comment"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "text",
-        "ast": "$text",
-        "extract": "text",
-        "transform": "cpp:stripComment"
-      }
-    ]
-  },
-  {
     "id": "cpp_preproc_include",
     "astNodeType": "preproc_include",
     "concept": {

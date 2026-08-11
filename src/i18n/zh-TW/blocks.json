@@ -144,8 +144,6 @@
   "C_INCLUDE_HEADER_CFLOAT": "cfloat（浮點數範圍常數）",
   "C_DEFINE_MSG0": "定義常數 %1 為 %2",
   "C_DEFINE_TOOLTIP": "定義一個常數名稱，程式中用到這個名稱時會自動替換成設定的值",
-  "C_COMMENT_LINE_MSG0": "備註：%1",
-  "C_COMMENT_LINE_TOOLTIP": "寫一段備註說明，不會影響程式執行",
   "U_PRINT_LABEL": "輸出",
   "U_FUNC_DEF_LABEL": "定義函式",
   "U_FUNC_DEF_RETURN_LABEL": "回傳型別",
@@ -327,9 +325,5 @@
   "CATEGORY_STACKS_QUEUES": "堆疊與佇列",
   "CATEGORY_POINTERS_MEMORY": "指標與記憶體",
   "CATEGORY_STRUCTS_CLASSES": "結構與類別",
-  "CATEGORY_PROGRAM_CONFIG": "程式設定",
-  "C_COMMENT_DOC_MSG0": "文件註解 %1",
-  "C_COMMENT_DOC_TOOLTIP": "產生 /** ... */ 形式的文件註解",
-  "C_COMMENT_BLOCK_MSG0": "區塊註解 %1",
-  "C_COMMENT_BLOCK_TOOLTIP": "產生 /* ... */ 形式的多行註解"
+  "CATEGORY_PROGRAM_CONFIG": "程式設定"
 }

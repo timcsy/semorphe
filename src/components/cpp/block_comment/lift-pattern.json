@@ -1,0 +1,22 @@
+{
+  "id": "cpp_block_comment",
+  "astNodeType": "comment",
+  "concept": {
+    "conceptId": "cpp:block_comment"
+  },
+  "constraints": [
+    {
+      "field": "$text",
+      "match": "startsWith",
+      "text": "/*"
+    }
+  ],
+  "fieldMappings": [
+    {
+      "semantic": "text",
+      "ast": "$text",
+      "extract": "text",
+      "transform": "cpp:stripBlockComment"
+    }
+  ]
+}

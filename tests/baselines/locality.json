@@ -43,8 +43,8 @@
       "dirs": 1
     },
     "cpp:block_comment": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:break": {
       "files": 3,
@@ -103,8 +103,8 @@
       "dirs": 4
     },
     "cpp:comment": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:compare": {
       "files": 5,
@@ -203,8 +203,8 @@
       "dirs": 1
     },
     "cpp:doc_comment": {
-      "files": 5,
-      "dirs": 5
+      "files": 3,
+      "dirs": 1
     },
     "cpp:endl": {
       "files": 6,

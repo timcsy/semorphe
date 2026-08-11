@@ -1,0 +1,15 @@
+{
+  "id": "cpp_comment",
+  "astNodeType": "comment",
+  "concept": {
+    "conceptId": "cpp:comment"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "text",
+      "ast": "$text",
+      "extract": "text",
+      "transform": "cpp:stripComment"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cpp_comment",
+    "conceptId": "cpp:comment",
+    "language": "cpp",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_comment",
+      "message0": "%{BKY_C_COMMENT_LINE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TEXT",
+          "text": "comment"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_COMMENT_LINE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "// ${TEXT}",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "text"
+      }
+    }
+  }
+]

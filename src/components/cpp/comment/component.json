@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:comment",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "text",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。**"
+  }
+}

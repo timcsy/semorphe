@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp_doc_comment",
+    "conceptId": "cpp:doc_comment",
+    "language": "cpp",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_doc_comment",
+      "message0": "%{BKY_C_COMMENT_DOC_MSG0}",
+      "args0": [
+        {
+          "type": "field_multilinetext",
+          "name": "BRIEF",
+          "text": "description"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_COMMENT_DOC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "BRIEF": "brief"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "strategy": "cpp:renderDocComment"
+    }
+  }
+]

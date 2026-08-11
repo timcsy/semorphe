@@ -1,0 +1,18 @@
+{
+  "id": "cpp_doc_comment",
+  "astNodeType": "comment",
+  "concept": {
+    "conceptId": "cpp:doc_comment"
+  },
+  "constraints": [
+    {
+      "field": "$text",
+      "match": "startsWith",
+      "text": "/**"
+    }
+  ],
+  "liftStrategy": "cpp:liftDocComment",
+  "fieldMappings": [],
+  "priority": 5,
+  "_priority_why": "⚠️ **`/**` 也 startsWith `/*`。** doc_comment 與 block_comment 的自動優先權相同（simple 10 ＋ 1 條約束 ×5 = 15），於是誰先誰後**由陣列順序決定**——而在共用的 lift-patterns.json 裡 doc_comment 恰好排在前面。搬進膠囊之後順序改由 glob 的**字母序**決定（block_comment < doc_comment），`/** … */` 於是被認成區塊註解。**順序是一個沒有被宣告的判別**，這裡把它變成宣告。"
+}
