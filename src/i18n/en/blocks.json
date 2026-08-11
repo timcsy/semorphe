@@ -156,8 +156,6 @@
   "CPP_TOUPPER_TOOLTIP": "Convert character to uppercase",
   "CPP_TOLOWER_MSG0": "To lowercase %1",
   "CPP_TOLOWER_TOOLTIP": "Convert character to lowercase",
-  "CPP_TEMPLATE_FUNCTION_MSG0": "template: let %1 represent any type",
-  "CPP_TEMPLATE_FUNCTION_TOOLTIP": "Create a template function that can handle different types without writing multiple versions",
   "CPP_METHOD_CALL_MSG0": "On %1 call %2 with %3",
   "CPP_METHOD_CALL_TOOLTIP": "Call a method on an object, optionally passing arguments",
   "CPP_METHOD_CALL_EXPR_MSG0": "Result of %1.%2(%3)",
@@ -409,7 +407,5 @@
   "C_COMMENT_DOC_MSG0": "doc comment %1",
   "C_COMMENT_DOC_TOOLTIP": "Emit a /** ... */ documentation comment",
   "C_COMMENT_BLOCK_MSG0": "block comment %1",
-  "C_COMMENT_BLOCK_TOOLTIP": "Emit a /* ... */ multi-line comment",
-  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "create string input stream %1 reading %2",
-  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "Treat a string as an input source; read from it with >> like cin"
+  "C_COMMENT_BLOCK_TOOLTIP": "Emit a /* ... */ multi-line comment"
 }

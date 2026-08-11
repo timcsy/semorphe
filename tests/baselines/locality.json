@@ -276,7 +276,7 @@
     },
     "cpp:istringstream_declare": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:lambda": {
       "files": 4,
@@ -632,7 +632,7 @@
     },
     "cpp:template_function": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:ternary": {
       "files": 5,

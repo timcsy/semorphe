@@ -15,6 +15,8 @@ import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
 import { 建自動宣告 } from '../../../../components/cpp/var_declare_auto/lift'
 import { 建靜態變數 } from '../../../../components/cpp/var_declare_static/lift'
 import { qualifierConcept } from '../../../../core/component/qualifier-concepts'
+import { 建字串流宣告 } from '../../../../components/cpp/istringstream_declare/lift'
+import { 建樣板函式 } from '../../../../components/cpp/template_function/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -192,9 +194,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 落到通用的話它就只是一個「型別叫 istringstream 的變數」，
       // 而 `in >> a` 沒有東西可讀。
       if (type === 'istringstream' || type === 'std::istringstream') {
-        return createNode('cpp:istringstream_declare', { name }, {
-          source: args.length > 0 ? [args[0]] : [],
-        })
+        return 建字串流宣告(name, args.length > 0 ? args[0] : null)
       }
       return createNode('cpp:var_declare', { name, type, init_style: 'constructor' }, {
         initializer: args,
@@ -680,9 +680,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const bodyNode = funcDef.childForFieldName('body')
     const body = extractBody(bodyNode ?? null, ctx)
 
-    return createNode('cpp:template_function', {
-      t, return_type: returnType, func_name: funcName,
-    }, { params, body })
+    return 建樣板函式(t, returnType, funcName, params, body)
   })
 
   // cast_expression: (Type*)malloc(size) → cpp_malloc; fallback → cpp_cast

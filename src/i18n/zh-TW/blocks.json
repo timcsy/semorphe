@@ -156,8 +156,6 @@
   "CPP_TOUPPER_TOOLTIP": "轉換為大寫",
   "CPP_TOLOWER_MSG0": "轉小寫 %1",
   "CPP_TOLOWER_TOOLTIP": "轉換為小寫",
-  "CPP_TEMPLATE_FUNCTION_MSG0": "樣板：讓 %1 代表任意型別",
-  "CPP_TEMPLATE_FUNCTION_TOOLTIP": "建立一個樣板函式，可以處理不同型別的資料，不用重複寫很多版本",
   "CPP_METHOD_CALL_MSG0": "對 %1 執行 %2（ %3 ）",
   "CPP_METHOD_CALL_TOOLTIP": "對物件執行一個操作（方法），可以傳入參數",
   "CPP_METHOD_CALL_EXPR_MSG0": "對 %1 執行 %2（ %3 ）的結果",
@@ -409,7 +407,5 @@
   "C_COMMENT_DOC_MSG0": "文件註解 %1",
   "C_COMMENT_DOC_TOOLTIP": "產生 /** ... */ 形式的文件註解",
   "C_COMMENT_BLOCK_MSG0": "區塊註解 %1",
-  "C_COMMENT_BLOCK_TOOLTIP": "產生 /* ... */ 形式的多行註解",
-  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "建立字串輸入流 %1 讀取 %2",
-  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "把一段字串當成輸入來源，之後可以像 cin 一樣用 >> 逐項讀出"
+  "C_COMMENT_BLOCK_TOOLTIP": "產生 /* ... */ 形式的多行註解"
 }

@@ -1,0 +1,4 @@
+{
+  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "create string input stream %1 reading %2",
+  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "Treat a string as an input source; read from it with >> like cin"
+}

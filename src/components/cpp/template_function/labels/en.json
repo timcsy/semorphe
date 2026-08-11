@@ -1,0 +1,4 @@
+{
+  "CPP_TEMPLATE_FUNCTION_MSG0": "template: let %1 represent any type",
+  "CPP_TEMPLATE_FUNCTION_TOOLTIP": "Create a template function that can handle different types without writing multiple versions"
+}

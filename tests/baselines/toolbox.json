@@ -83,6 +83,7 @@
         "cpp_template_function",
         "cpp_method_call",
         "cpp_method_call_expression",
+        "cpp_istringstream_declare",
         "cpp_string_at"
       ]
     },
@@ -128,6 +129,7 @@
         "cpp_container_append",
         "cpp_container_clear",
         "cpp_container_empty",
+        "cpp_istringstream_declare",
         "cpp_string_at"
       ]
     },
@@ -181,6 +183,7 @@
         "cpp_pair_make",
         "cpp_container_count",
         "cpp_container_erase",
+        "cpp_istringstream_declare",
         "cpp_string_at"
       ]
     },
@@ -195,12 +198,12 @@
         "cpp_queue_declare",
         "cpp_queue_front",
         "cpp_stringstream_declare",
-        "cpp_istringstream_declare",
         "cpp_container_push_stack",
         "cpp_container_pop_stack",
         "cpp_container_push_queue",
         "cpp_container_pop_queue",
         "cpp_container_empty",
+        "cpp_istringstream_declare",
         "cpp_string_at"
       ]
     },

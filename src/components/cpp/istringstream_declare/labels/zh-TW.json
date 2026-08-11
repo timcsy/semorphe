@@ -1,0 +1,4 @@
+{
+  "CPP_ISTRINGSTREAM_DECLARE_MSG0": "建立字串輸入流 %1 讀取 %2",
+  "CPP_ISTRINGSTREAM_DECLARE_TOOLTIP": "把一段字串當成輸入來源，之後可以像 cin 一樣用 >> 逐項讀出"
+}

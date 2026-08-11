@@ -1,0 +1,4 @@
+{
+  "CPP_TEMPLATE_FUNCTION_MSG0": "樣板：讓 %1 代表任意型別",
+  "CPP_TEMPLATE_FUNCTION_TOOLTIP": "建立一個樣板函式，可以處理不同型別的資料，不用重複寫很多版本"
+}

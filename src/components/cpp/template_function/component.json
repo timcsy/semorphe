@@ -1,0 +1,36 @@
+{
+  "conceptId": "cpp:template_function",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "t",
+      "kind": "type_expr",
+      "default": "T"
+    },
+    {
+      "name": "return_type",
+      "kind": "type_expr",
+      "default": "T"
+    },
+    {
+      "name": "func_name",
+      "kind": "literal",
+      "default": "myFunc"
+    }
+  ],
+  "children": {
+    "params": "expressions",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建樣板函式`）——判別留在共用檔。"
+  }
+}

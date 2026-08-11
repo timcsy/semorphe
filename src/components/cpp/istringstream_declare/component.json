@@ -1,0 +1,31 @@
+{
+  "conceptId": "cpp:istringstream_declare",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "in"
+    }
+  ],
+  "children": {
+    "source": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建字串流宣告`）——判別留在共用檔。"
+  },
+  "owner": "(core)"
+}

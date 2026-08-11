@@ -215,33 +215,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:template_function",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "t",
-        "kind": "type_expr",
-        "default": "T"
-      },
-      {
-        "name": "return_type",
-        "kind": "type_expr",
-        "default": "T"
-      },
-      {
-        "name": "func_name",
-        "kind": "literal",
-        "default": "myFunc"
-      }
-    ],
-    "children": {
-      "params": "expressions",
-      "body": "statements"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:container_push",
     "layer": "lang-core",
     "abstractConcept": null,

@@ -190,18 +190,7 @@ export function registerStructExecutors(
 
 
 
-  /** `template<typename T> R f(…)` —— 執行上與一般函式相同，型別參數不影響求值 */
-  register('cpp:template_function', async (node, ctx) => {
-    ctx.functions.set(String(node.properties.func_name), {
-      name: String(node.properties.func_name),
-      params: (node.children.params ?? []).map((p) => ({
-        type: String(p.properties?.type ?? 'int'),
-        name: String(p.properties?.name ?? ''),
-      })),
-      returnType: String(node.properties.return_type ?? 'T'),
-      body: node.children.body ?? [],
-    })
-  })
+
 
 
 

@@ -1,0 +1,80 @@
+[
+  {
+    "id": "cpp:template_function",
+    "conceptId": "cpp:template_function",
+    "language": "cpp",
+    "category": "templates",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_template_function",
+      "message0": "%{BKY_CPP_TEMPLATE_FUNCTION_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "T",
+          "text": "T"
+        }
+      ],
+      "message1": "%1 %2 ( %3 )",
+      "args1": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "T"
+        },
+        {
+          "type": "field_input",
+          "name": "FUNC_NAME",
+          "text": "myFunc"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": "T a, T b"
+        }
+      ],
+      "message2": "%1",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAMS}) {\n${BODY}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "template_declaration",
+      "constraints": [],
+      "liftStrategy": "cpp:liftTemplateFunction",
+      "fieldMappings": []
+    },
+    "renderMapping": {
+      "fields": {
+        "FUNC_NAME": "func_name",
+        "RETURN_TYPE": "return_type",
+        "T": "t"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+]

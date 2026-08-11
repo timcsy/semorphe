@@ -1,5 +1,5 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { indent, generateExpression, generateBody, indented } from '../../../../core/projection/code-generator'
+import { indent, generateExpression, generateBody } from '../../../../core/projection/code-generator'
 
 export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): void {
   g.set('cpp:var_declare', (node, ctx) => {
@@ -89,25 +89,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
 
-  g.set('cpp:template_function', (node, ctx) => {
-    const t = node.properties.t ?? 'T'
-    const returnType = node.properties.return_type ?? 'T'
-    const funcName = node.properties.func_name ?? 'myFunc'
-    const paramChildren = node.children.params ?? []
-    const paramStr = paramChildren.map(p => {
-      const pt = String(p.properties.type ?? 'T')
-      const pn = String(p.properties.name ?? '')
-      if (pt.endsWith('[]')) {
-        const baseType = pt.slice(0, -2)
-        return pn ? `${baseType} ${pn}[]` : `${baseType}[]`
-      }
-      return pn ? `${pt} ${pn}` : pt
-    }).join(', ')
-    const bodyNodes = node.children.body ?? []
-    const bodyCode = generateBody(bodyNodes, indented(ctx))
-    const ind = indent(ctx)
-    return `${ind}template <typename ${t}>\n${ind}${returnType} ${funcName}(${paramStr}) {\n${bodyCode}${ind}}\n`
-  })
+
 
 
 
