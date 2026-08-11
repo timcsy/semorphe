@@ -3,6 +3,7 @@ import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 // ⚠️ 問**性狀**不問身分——一份身分集合擋住那三顆搬進膠囊。
 import { needsParenInCout, isBinaryOperator, isStringLiteral } from '../../core/node-traits'
+import { isLineBreak } from '../../core/node-traits'
 
 export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style: StylePreset): void {
   // Bitwise/comparison/logic operators have lower precedence than <<
@@ -27,11 +28,11 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
       return `${indent(ctx)}cout << ${parts.join(' << ')};\n`
     }
     // printf mode: embed string_literal values into format, use %d for expressions
-    const hasEndl = values.some(v => v.conceptId === 'cpp:endl')
+    const hasEndl = values.some(v => isLineBreak(v.conceptId))
     const fmtParts: string[] = []
     const argParts: string[] = []
     for (const v of values) {
-      if (v.conceptId === 'cpp:endl') continue
+      if (isLineBreak(v.conceptId)) continue
       if (isStringLiteral(v.conceptId)) {
         fmtParts.push((v.properties.value as string) ?? '')
       } else {
@@ -69,8 +70,5 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
     return vars.map(v => `${indent(ctx)}scanf("%d", &${v});\n`).join('')
   })
 
-  // ⚠️ 第一個 `'lang:endl'` 是**元件身分**，第二個是**產出的 C++ 程式碼**。
-  // 命名空間遷移把兩個都改了——症狀是產出 `cout << x << lang:endl;`。
-  // 同一個字串，兩種意義，而位置分得出來：註冊鍵 vs 回傳值。
-  g.set('cpp:endl', (_node, _ctx) => 'endl')
+
 }

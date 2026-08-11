@@ -13,7 +13,7 @@
   "role": "expression",
   "owner": "(core)",
   "paths": {
-    "lift": "./lift.ts",
+    "lift": "./lift-pattern.json",
     "generate": "./generate.ts",
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",

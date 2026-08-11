@@ -31,6 +31,7 @@ import { typeSuffixOf } from '../node-traits'
 import { 建include_local } from '../../../../components/cpp/include_local/lift'
 import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
 import { 建malloc } from '../../../../components/cpp/malloc/lift'
+import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -760,7 +761,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const to = toNode ? ctx.lift(toNode) : null
     const body = extractBody(bodyNode, ctx)
 
-    return createNode('cpp:loop_count', { var_name: varName, inclusive }, {
+    return 建loop_count(varName, inclusive, {
       from: from ? [from] : [],
       to: to ? [to] : [],
       body,

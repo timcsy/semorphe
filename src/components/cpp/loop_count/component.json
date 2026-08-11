@@ -1,0 +1,39 @@
+{
+  "conceptId": "cpp:loop_count",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "var_name",
+      "kind": "identifier",
+      "default": "i"
+    },
+    {
+      "name": "inclusive",
+      "kind": "enum",
+      "values": [
+        "FALSE",
+        "TRUE"
+      ]
+    }
+  ],
+  "children": {
+    "from": "expression",
+    "to": "expression",
+    "body": "statements"
+  },
+  "role": "statement",
+  "annotations": {
+    "control_flow": "loop",
+    "introduces_scope": true,
+    "debug_step": true
+  },
+  "owner": "(universal)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  }
+}

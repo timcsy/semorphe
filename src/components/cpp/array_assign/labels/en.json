@@ -1,0 +1,4 @@
+{
+  "U_ARRAY_ASSIGN_MSG0": "set array %1 at index [ %2 ] ← %3",
+  "U_ARRAY_ASSIGN_TOOLTIP": "Store a value into a specific position in the array"
+}

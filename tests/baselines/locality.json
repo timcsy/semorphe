@@ -28,7 +28,7 @@
     },
     "cpp:array_assign": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:array_at": {
       "files": 5,
@@ -207,8 +207,8 @@
       "dirs": 1
     },
     "cpp:endl": {
-      "files": 6,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:enum": {
       "files": 4,
@@ -223,8 +223,8 @@
       "dirs": 1
     },
     "cpp:func_call": {
-      "files": 4,
-      "dirs": 3
+      "files": 3,
+      "dirs": 1
     },
     "cpp:func_def": {
       "files": 7,
@@ -303,8 +303,8 @@
       "dirs": 1
     },
     "cpp:loop_count": {
-      "files": 5,
-      "dirs": 4
+      "files": 4,
+      "dirs": 1
     },
     "cpp:loop_do_while": {
       "files": 3,
@@ -660,7 +660,7 @@
     },
     "cpp:var_assign": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:var_assign_compound": {
       "files": 3,

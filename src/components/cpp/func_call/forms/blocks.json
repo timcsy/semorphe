@@ -1,0 +1,71 @@
+[
+  {
+    "id": "cpp_func_call",
+    "conceptId": "cpp:func_call",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_func_call",
+      "message0": "%{BKY_U_FUNC_CALL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "func"
+        },
+        {
+          "type": "field_input",
+          "name": "ARGS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_func_call_expression",
+    "conceptId": "cpp:func_call",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_func_call_expression"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  }
+]

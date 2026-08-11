@@ -1,0 +1,32 @@
+{
+  "conceptId": "cpp:func_call",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "f"
+    }
+  ],
+  "children": {
+    "args": "expressions"
+  },
+  "role": "expression",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(universal)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "forLoopPart": true,
+    "namedCall": true
+  },
+  "_traits_why": "**「我是具名呼叫」是我自己的宣告**——核心層的執行器要分辨 `A a(5)` 是建構還是求值，而它不該認得一顆 C++ 元件的身分。"
+}

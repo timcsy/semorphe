@@ -14,20 +14,6 @@
     ]
   },
   {
-    "id": "cpp_endl",
-    "astNodeType": "identifier",
-    "concept": {
-      "conceptId": "cpp:endl"
-    },
-    "constraints": [
-      {
-        "field": "$text",
-        "text": "endl"
-      }
-    ],
-    "priority": 5
-  },
-  {
     "id": "cpp_unwrap_parens",
     "astNodeType": "parenthesized_expression",
     "patternType": "unwrap",
@@ -72,50 +58,6 @@
       "collectField": "right"
     },
     "priority": 15
-  },
-  {
-    "id": "cpp_count_for",
-    "astNodeType": "for_statement",
-    "patternType": "composite",
-    "concept": {
-      "conceptId": "cpp:loop_count"
-    },
-    "liftStrategy": "cpp:liftCountFor",
-    "composite": {
-      "checks": [
-        {
-          "field": "initializer",
-          "typeIs": "declaration"
-        },
-        {
-          "field": "condition",
-          "typeIs": "binary_expression"
-        },
-        {
-          "field": "update",
-          "typeIs": "update_expression"
-        }
-      ],
-      "extract": {
-        "var_name": {
-          "source": "path",
-          "path": "initializer.init_declarator.declarator"
-        },
-        "from": {
-          "source": "lift",
-          "path": "initializer.init_declarator.value"
-        },
-        "to": {
-          "source": "lift",
-          "path": "condition.right"
-        },
-        "body": {
-          "source": "liftBody",
-          "path": "body"
-        }
-      }
-    },
-    "priority": 10
   },
   {
     "id": "cpp_if_statement",

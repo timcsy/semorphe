@@ -53,25 +53,6 @@
     }
   },
   {
-    "conceptId": "cpp:var_assign",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "x"
-      }
-    ],
-    "children": {
-      "value": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:var_ref",
     "layer": "universal",
     "abstractConcept": null,
@@ -97,37 +78,6 @@
     "role": "statement",
     "annotations": {
       "control_flow": "branch",
-      "introduces_scope": true,
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp:loop_count",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "var_name",
-        "kind": "identifier",
-        "default": "i"
-      },
-      {
-        "name": "inclusive",
-        "kind": "enum",
-        "values": [
-          "FALSE",
-          "TRUE"
-        ]
-      }
-    ],
-    "children": {
-      "from": "expression",
-      "to": "expression",
-      "body": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "control_flow": "loop",
       "introduces_scope": true,
       "debug_step": true
     }
@@ -170,25 +120,6 @@
     }
   },
   {
-    "conceptId": "cpp:func_call",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "name",
-        "kind": "literal",
-        "default": "f"
-      }
-    ],
-    "children": {
-      "args": "expressions"
-    },
-    "role": "expression",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
     "conceptId": "cpp:print",
     "layer": "universal",
     "abstractConcept": null,
@@ -200,14 +131,6 @@
     "annotations": {
       "debug_step": true
     }
-  },
-  {
-    "conceptId": "cpp:endl",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {},
-    "role": "expression"
   },
   {
     "conceptId": "cpp:input",
@@ -242,25 +165,5 @@
       "index": "expression"
     },
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:array_assign",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "arr"
-      }
-    ],
-    "children": {
-      "index": "expression",
-      "value": "expression"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
   }
 ]

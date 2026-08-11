@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_var_assign",
+    "conceptId": "cpp:var_assign",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_assign",
+      "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

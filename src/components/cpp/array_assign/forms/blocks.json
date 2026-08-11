@@ -1,0 +1,49 @@
+[
+  {
+    "id": "cpp_array_assign",
+    "conceptId": "cpp:array_assign",
+    "language": "universal",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_array_assign",
+      "message0": "%{BKY_U_ARRAY_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [
+            [
+              "arr",
+              "arr"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "INDEX",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_U_ARRAY_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "INDEX": "index",
+        "VALUE": "value"
+      }
+    }
+  }
+]

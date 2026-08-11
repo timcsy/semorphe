@@ -1,0 +1,4 @@
+{
+  "U_ARRAY_ASSIGN_MSG0": "設定 陣列 %1 的第 [ %2 ] 格 ← %3",
+  "U_ARRAY_ASSIGN_TOOLTIP": "把值存入陣列的指定位置。就像把東西放進置物櫃的某一格"
+}

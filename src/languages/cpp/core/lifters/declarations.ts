@@ -1,7 +1,8 @@
 import type { Lifter } from '../../../../core/lift/lifter'
-import { createNode } from '../../../../core/semantic-tree'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
 import { 建var_assign_compound } from '../../../../components/cpp/var_assign_compound/lift'
+import { 建var_assign } from '../../../../components/cpp/var_assign/lift'
+import { 建array_assign } from '../../../../components/cpp/array_assign/lift'
 
 export function registerDeclarationLifters(lifter: Lifter): void {
   // declaration — handled by JSON pattern + liftStrategy (cpp_declaration)
@@ -41,7 +42,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
       // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
-      return createNode('cpp:array_assign', { obj: name }, {
+      return 建array_assign(name, {
         index: index ? [index] : [],
         value: value ? [value] : [],
       })
@@ -49,7 +50,7 @@ export function registerDeclarationLifters(lifter: Lifter): void {
 
     // Simple variable assignment: x = value
     const name = left?.text ?? 'x'
-    return createNode('cpp:var_assign', { obj: name }, {
+    return 建var_assign(name, {
       value: value ? [value] : [],
     })
   })

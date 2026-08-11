@@ -4,23 +4,13 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:array_assign": {
-      "forLoopPart": true
-    },
     "cpp:array_at": {
       "precedence": 16,
-      "forLoopPart": true
-    },
-    "cpp:func_call": {
       "forLoopPart": true
     },
     "cpp:include": {
       "scaffold": true,
       "includeDirective": true
-    },
-    "cpp:var_assign": {
-      "precedence": 2,
-      "forLoopPart": true
     },
     "cpp:var_declare": {
       "forLoopPart": true

@@ -13,7 +13,7 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift.ts"
+    "lift": "./lift-pattern.json"
   },
   "traits": {
     "precedence": 14,

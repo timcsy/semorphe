@@ -27,7 +27,7 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
-    "lift": "./lift.ts",
+    "lift": "./lift-pattern.json",
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
   },

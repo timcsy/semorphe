@@ -9,6 +9,7 @@ import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift
 import { namedCastConcept } from '../../../core/component/named-cast-concepts'
 import { 建malloc } from '../../../components/cpp/malloc/lift'
 import { 建method_call } from '../../../components/cpp/method_call/lift'
+import { 建func_call } from '../../../components/cpp/func_call/lift'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -288,6 +289,6 @@ export function registerIOLifters(lifter: Lifter): void {
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
       : []
-    return createNode('cpp:func_call', { name: funcName }, { args })
+    return 建func_call(funcName, args)
   })
 }

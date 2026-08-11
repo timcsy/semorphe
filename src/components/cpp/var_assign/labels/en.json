@@ -1,0 +1,4 @@
+{
+  "U_VAR_ASSIGN_MSG0": "set variable %1 to %2",
+  "U_VAR_ASSIGN_TOOLTIP": "Change the value of an existing variable"
+}

@@ -1,0 +1,32 @@
+{
+  "conceptId": "cpp:var_assign",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "x"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(universal)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "precedence": 2,
+    "forLoopPart": true
+  },
+  "_traits_why": "**「我是換行標記」「我放得進 for 的三格」——都是我自己的性質**，不是消費者該寫死的身分。"
+}

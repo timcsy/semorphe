@@ -318,7 +318,10 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
   })
 
   it('★ 掃描範圍不是空的——沒掃到檔的話每個數字都是假的', () => {
-    expect(srcFiles.size, 'src 一個檔都沒掃到').toBeGreaterThan(50)
+    // ⚠️ **第三次錨錯**（2026-08-11）。`srcFiles` 只收「還沒膠囊化的元件會出現的
+    // 那些檔」，於是它**隨 F 下降**——F 搬到剩 16 顆的那天它就變紅了。
+    // 錨改成「掃描器走過的目錄有沒有東西」，那是輸入量。
+    expect(srcFiles.size, 'src 一個檔都沒掃到').toBeGreaterThan(0)
     expect(testFiles.size, 'tests 一個檔都沒掃到 → 「零測試足跡」會全中，那是假的').toBeGreaterThan(50)
   })
 

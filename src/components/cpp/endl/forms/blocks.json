@@ -1,0 +1,16 @@
+[
+  {
+    "id": "cpp_endl",
+    "conceptId": "cpp:endl",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_endl",
+      "message0": "%{BKY_U_ENDL_MSG0}",
+      "output": "Expression",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_U_ENDL_TOOLTIP}"
+    }
+  }
+]

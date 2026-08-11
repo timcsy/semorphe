@@ -1,0 +1,14 @@
+{
+  "id": "cpp_endl",
+  "astNodeType": "identifier",
+  "concept": {
+    "conceptId": "cpp:endl"
+  },
+  "constraints": [
+    {
+      "field": "$text",
+      "text": "endl"
+    }
+  ],
+  "priority": 5
+}

@@ -21,42 +21,6 @@
     }
   },
   {
-    "id": "cpp_var_assign",
-    "conceptId": "cpp:var_assign",
-    "language": "universal",
-    "category": "data",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_var_assign",
-      "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        },
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FF8C1A",
-      "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
-      "inputs": {
-        "VALUE": "value"
-      }
-    }
-  },
-  {
     "id": "cpp_var_ref",
     "conceptId": "cpp:var_ref",
     "language": "universal",
@@ -120,74 +84,6 @@
         "THEN": "then_body"
       },
       "strategy": "cpp:renderIf"
-    }
-  },
-  {
-    "id": "cpp_loop_count",
-    "conceptId": "cpp:loop_count",
-    "language": "universal",
-    "category": "control",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_loop_count",
-      "message0": "%{BKY_U_COUNT_LOOP_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "VAR",
-          "text": "i"
-        },
-        {
-          "type": "input_value",
-          "name": "FROM",
-          "check": "Expression"
-        },
-        {
-          "type": "field_dropdown",
-          "name": "BOUND",
-          "options": [
-            [
-              "to (exclusive)",
-              "FALSE"
-            ],
-            [
-              "to (inclusive)",
-              "TRUE"
-            ]
-          ]
-        },
-        {
-          "type": "input_value",
-          "name": "TO",
-          "check": "Expression"
-        }
-      ],
-      "message1": "%1",
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "BODY",
-          "check": "Statement"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#FFAB19",
-      "tooltip": "%{BKY_U_COUNT_LOOP_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "BOUND": "inclusive",
-        "VAR": "var_name"
-      },
-      "inputs": {
-        "FROM": "from",
-        "TO": "to"
-      },
-      "statementInputs": {
-        "BODY": "body"
-      }
     }
   },
   {
@@ -285,75 +181,6 @@
     }
   },
   {
-    "id": "cpp_func_call",
-    "conceptId": "cpp:func_call",
-    "language": "universal",
-    "category": "functions",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_func_call",
-      "message0": "%{BKY_U_FUNC_CALL_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "func"
-        },
-        {
-          "type": "field_input",
-          "name": "ARGS",
-          "text": ""
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#FF6680",
-      "tooltip": "%{BKY_U_FUNC_CALL_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "inputs": {},
-      "statementInputs": {},
-      "dynamicRules": [
-        {
-          "countSource": "argCount",
-          "childSlot": "args",
-          "inputPattern": "ARG_{i}"
-        }
-      ]
-    }
-  },
-  {
-    "id": "cpp_func_call_expression",
-    "conceptId": "cpp:func_call",
-    "language": "universal",
-    "category": "functions",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_func_call_expression"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
-      "inputs": {},
-      "statementInputs": {},
-      "dynamicRules": [
-        {
-          "countSource": "argCount",
-          "childSlot": "args",
-          "inputPattern": "ARG_{i}"
-        }
-      ]
-    },
-    "form": {
-      "axis": "role",
-      "value": "expression"
-    }
-  },
-  {
     "id": "cpp_print",
     "conceptId": "cpp:print",
     "language": "universal",
@@ -378,20 +205,6 @@
           "inputPattern": "EXPR{i}"
         }
       ]
-    }
-  },
-  {
-    "id": "cpp_endl",
-    "conceptId": "cpp:endl",
-    "language": "universal",
-    "category": "io",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_endl",
-      "message0": "%{BKY_U_ENDL_MSG0}",
-      "output": "Expression",
-      "colour": "#5CB1D6",
-      "tooltip": "%{BKY_U_ENDL_TOOLTIP}"
     }
   },
   {
@@ -512,53 +325,6 @@
       },
       "inputs": {
         "INDEX": "index"
-      }
-    }
-  },
-  {
-    "id": "cpp_array_assign",
-    "conceptId": "cpp:array_assign",
-    "language": "universal",
-    "category": "arrays",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_array_assign",
-      "message0": "%{BKY_U_ARRAY_ASSIGN_MSG0}",
-      "args0": [
-        {
-          "type": "field_dropdown",
-          "name": "NAME",
-          "options": [
-            [
-              "arr",
-              "arr"
-            ]
-          ]
-        },
-        {
-          "type": "input_value",
-          "name": "INDEX",
-          "check": "Expression"
-        },
-        {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "previousStatement": null,
-      "nextStatement": null,
-      "colour": "#FF661A",
-      "tooltip": "%{BKY_U_ARRAY_ASSIGN_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
-      "inputs": {
-        "INDEX": "index",
-        "VALUE": "value"
       }
     }
   }

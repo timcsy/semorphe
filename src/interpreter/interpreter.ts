@@ -9,7 +9,6 @@ import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
 import { IOSystem } from './io'
 import { ConceptExecutorRegistry, type ExecutionContext } from './executor-registry'
-import { registerLiteralExecutors } from './executors/literals'
 import { registerVariableExecutors } from './executors/variables'
 import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
@@ -76,7 +75,6 @@ export class SemanticInterpreter implements ExecutionContext {
     this.executorRegistry = new ConceptExecutorRegistry()
     const reg = (concept: string, executor: import('./executor-registry').ConceptExecutor) =>
       this.executorRegistry.register(concept, executor)
-    registerLiteralExecutors(reg)
     registerVariableExecutors(reg)
     registerControlFlowExecutors(reg)
     registerFunctionExecutors(reg)

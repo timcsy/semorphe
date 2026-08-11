@@ -10,6 +10,7 @@ import type { CodingStyle } from '../style'
 import { createNode } from '../../core/semantic-tree'
 import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
+import { isLineBreak } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -118,12 +119,12 @@ const printToCstdioRule: StyleExceptionRule = {
   suggestion: () => 'printf(...)',
   convert: (node) => {
     const values = node.children.values ?? []
-    const hasEndl = values.some(v => v.conceptId === 'cpp:endl')
+    const hasEndl = values.some(v => isLineBreak(v.conceptId))
     // Build format string: embed string_literal values directly, use %d for expressions
     const formatParts: string[] = []
     const args: typeof values = []
     for (const v of values) {
-      if (v.conceptId === 'cpp:endl') continue
+      if (isLineBreak(v.conceptId)) continue
       if (isStringLiteral(v.conceptId)) {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''

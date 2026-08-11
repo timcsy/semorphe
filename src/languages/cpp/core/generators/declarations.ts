@@ -43,15 +43,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
 
-  g.set('cpp:var_assign', (node, ctx) => {
-    const name = node.properties.obj ?? 'x'
-    const vals = node.children.value ?? []
-    if (vals.length > 0) {
-      const val = generateExpression(vals[0], ctx)
-      return `${indent(ctx)}${name} = ${val};\n`
-    }
-    return `${indent(ctx)}${name};\n`
-  })
+
 
 
 
@@ -84,14 +76,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
 
-  g.set('cpp:array_assign', (node, ctx) => {
-    const name = node.properties.obj ?? 'arr'
-    const indexNodes = node.children.index ?? []
-    const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
-    const vals = node.children.value ?? []
-    const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
-    return `${indent(ctx)}${name}[${idx}] = ${val};\n`
-  })
+
 
 
 

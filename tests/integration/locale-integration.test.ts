@@ -4,6 +4,7 @@ import zhTWBlocks from '../../src/i18n/zh-TW/blocks.json'
 import zhTWTypes from '../../src/i18n/zh-TW/types.json'
 import enBlocks from '../../src/i18n/en/blocks.json'
 import enTypes from '../../src/i18n/en/types.json'
+import { componentLabels } from '../../src/core/component/labels'
 
 describe('T031: Locale Integration', () => {
   let loader: LocaleLoader
@@ -17,7 +18,10 @@ describe('T031: Locale Integration', () => {
 
   describe('zh-TW locale completeness', () => {
     it('should have all block keys after loading zh-TW', () => {
-      loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
+      // ⚠️ **膠囊自帶的標籤也要載。** `U_COUNT_LOOP_MSG0` 2026-08-11 隨
+      // `cpp:loop_count` 進了膠囊——只載共用 i18n 檔的話這裡讀到 undefined，
+      // 而症狀看起來像「翻譯漏了一條」。
+      loader.loadFromData('zh-TW', { ...zhTWBlocks, ...componentLabels('zh-TW') }, zhTWTypes)
 
       // Check critical block keys exist
       expect(msg['U_VAR_DECLARE_MSG0']).toBeTruthy()
@@ -76,7 +80,7 @@ describe('T031: Locale Integration', () => {
 
   describe('en locale completeness', () => {
     it('should have all block keys after loading en', () => {
-      loader.loadFromData('en', enBlocks, enTypes)
+      loader.loadFromData('en', { ...enBlocks, ...componentLabels('en') }, enTypes)
 
       expect(msg['U_VAR_DECLARE_MSG0']).toBeTruthy()
       expect(msg['U_PRINT_TOOLTIP']).toBeTruthy()

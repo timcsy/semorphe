@@ -155,6 +155,22 @@ export interface NodeTraits {
    * （`cout << "x"` → `printf("x")`）。那不是任何一顆的實作，是風格轉換的知識。
    */
   stringLiteral?: boolean
+  /**
+   * 這顆是**換行標記**（`endl`／`'\n'`）。
+   *
+   * ⚠️ 三個消費者要認得它，而它們做的是同一件事：把 `cout << … << endl`
+   * 轉成 `printf("…\n")`——**換行從一個節點變成格式字串裡的兩個字元**。
+   * 那不是這顆元件的實作，是風格轉換的知識。
+   */
+  lineBreak?: boolean
+  /**
+   * 這顆是**具名呼叫**（`properties.name` 是被呼叫的名字）。
+   *
+   * ⚠️ `interpreter/executors/variables.ts` 要分辨 `A a(5)` 是建構還是求值，
+   * 判斷條件是「初值是不是一個名字等於型別的呼叫」。它原本寫死
+   * `arg0.conceptId === 'cpp:func_call'`——**核心層的執行器認得一顆 C++ 元件**。
+   */
+  namedCall?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -245,3 +261,17 @@ export function precedenceOfNode(node: { conceptId: string; properties?: Record<
   for (const r of 依運算子.rules) if (r.ops.includes(op)) return r.p
   return 依運算子.default
 }
+
+/** 這顆是換行標記嗎。沒宣告＝不是。 */
+export function isLineBreak(conceptId: string): boolean {
+  return 性狀(conceptId)?.lineBreak === true
+}
+
+/**
+ * 這顆是具名呼叫嗎。
+ *
+ * ⚠️ **核心層有自己的一份**（`core/component/traits.ts`）——
+ * 核心不得 import 語言套件（P9），而這個模組疊了 C++ 的過渡表。
+ * 兩份的差別只有過渡表：已膠囊化的元件答案相同。
+ */
+export { isNamedCall } from '../../../core/component/traits'

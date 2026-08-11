@@ -1,0 +1,4 @@
+{
+  "U_FUNC_CALL_MSG0": "call function %1(%2)",
+  "U_FUNC_CALL_TOOLTIP": "Execute the specified function, optionally passing arguments"
+}

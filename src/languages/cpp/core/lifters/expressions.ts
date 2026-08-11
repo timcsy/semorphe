@@ -14,6 +14,7 @@ import { 建increment } from '../../../../components/cpp/increment/lift'
 import { 建comma_expr } from '../../../../components/cpp/comma_expr/lift'
 import { binaryOperatorConcept } from '../../../../core/component/binary-operators'
 import { isBinaryOperator } from '../node-traits'
+import { 建endl } from '../../../../components/cpp/endl/lift'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
 // `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
@@ -276,7 +277,7 @@ function extractCoutChain(node: AstNode, ctx: LiftContext): SemanticNode[] | nul
     if (rightNode) {
       // Check for endl
       if (rightNode.text === 'endl') {
-        values.unshift(createNode('cpp:endl', {}))
+        values.unshift(建endl())
       } else {
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
