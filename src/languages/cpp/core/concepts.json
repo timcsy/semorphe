@@ -463,38 +463,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:ifdef",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "condition",
-        "kind": "literal",
-        "required": true
-      }
-    ],
-    "children": {
-      "body": "statements"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:ifndef",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "condition",
-        "kind": "literal",
-        "required": true
-      }
-    ],
-    "children": {
-      "body": "statements"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:using_namespace",
     "layer": "lang-core",
     "abstractConcept": null,

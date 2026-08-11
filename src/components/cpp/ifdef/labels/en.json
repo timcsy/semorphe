@@ -1,0 +1,5 @@
+{
+  "C_IFDEF_MSG0": "if %1 is defined then",
+  "C_IFDEF_MSG2": "end",
+  "C_IFDEF_TOOLTIP": "If this name has been defined, execute the code inside"
+}

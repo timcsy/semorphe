@@ -13,6 +13,7 @@ import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
+import { qualifierConcept } from '../../../core/component/qualifier-concepts'
 
 export interface CppRegistries {
   transformRegistry?: TransformRegistry
@@ -103,7 +104,11 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
         (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
       ),
     )
-    const concept = node.text.trimStart().startsWith('#ifndef') ? 'cpp:ifndef' : 'cpp:ifdef'
+    // 指令 → 身分由膠囊登錄（`core/component/qualifier-concepts.ts`）。
+    // 這裡只認語法：開頭是不是 `#ifndef`。
+    const 指令 = node.text.trimStart().startsWith('#ifndef') ? 'ifndef' : 'ifdef'
+    const concept = qualifierConcept(指令)
+    if (!concept) return null
     // ⚠️ 原本寫 `{ condition: name, name }`——**同一個值兩個名字**，
     // 而執行器對應地寫著 `properties.condition ?? properties.name`。
     // 兩個名字不是相容層，是重複：沒有任何情境只有其中一個。已收斂成 `condition`。
@@ -123,6 +128,10 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
         (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
       ),
     )
-    return createNode('cpp:ifndef', { condition: name, name }, { body })
+    // ⚠️ 上面那段的註解寫著「兩個名字已收斂成 `condition`」，**而這一處沒收**
+    // ——同一個修法只套用在發現它的那一處。一併收了。
+    const concept2 = qualifierConcept('ifndef')
+    if (!concept2) return null
+    return createNode(concept2, { condition: name }, { body })
   })
 }

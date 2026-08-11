@@ -1,0 +1,24 @@
+{
+  "conceptId": "cpp:ifndef",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "condition",
+      "kind": "literal",
+      "required": true
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

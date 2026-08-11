@@ -1,0 +1,5 @@
+{
+  "C_IFNDEF_MSG0": "if %1 is not defined then",
+  "C_IFNDEF_MSG2": "end",
+  "C_IFNDEF_TOOLTIP": "If this name has not been defined, execute the code inside"
+}

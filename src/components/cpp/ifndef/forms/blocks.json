@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cpp_ifndef",
+    "conceptId": "cpp:ifndef",
+    "language": "cpp",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_ifndef",
+      "message0": "%{BKY_C_IFNDEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CONDITION",
+          "text": "HEADER_H"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "message2": "%{BKY_C_IFNDEF_MSG2}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_IFNDEF_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "#ifndef ${CONDITION}\n${BODY}\n#endif",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "preproc_ifndef",
+      "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

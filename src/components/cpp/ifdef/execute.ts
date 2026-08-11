@@ -1,0 +1,10 @@
+/** `cpp:ifdef` 的 **execute** 路——從共用檔原封剪過來（批次第二十三批：前置處理指令 → 身分）。 */
+import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import { defined } from '../../../languages/cpp/core/executors/preprocessor'
+
+export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+  register('cpp:ifdef', async (node, ctx) => {
+      const name = String(node.properties.condition ?? '')
+      if (defined.has(name)) await ctx.executeBody(node.children.body ?? [])
+    })
+}

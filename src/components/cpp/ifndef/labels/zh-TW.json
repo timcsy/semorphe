@@ -1,0 +1,5 @@
+{
+  "C_IFNDEF_MSG0": "如果沒定義 %1 就執行",
+  "C_IFNDEF_MSG2": "結束",
+  "C_IFNDEF_TOOLTIP": "如果這個名稱還沒被定義，就執行裡面的程式"
+}

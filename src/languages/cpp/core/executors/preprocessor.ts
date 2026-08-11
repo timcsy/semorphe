@@ -21,7 +21,7 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
  */
 
 /** 這次執行中被 `#define` 過的名字。每次執行重新開始 */
-const defined = new Set<string>()
+export const defined = new Set<string>()
 
 export function registerPreprocessorExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
@@ -31,15 +31,9 @@ export function registerPreprocessorExecutors(
     if (name) defined.add(name)
   })
 
-  register('cpp:ifdef', async (node, ctx) => {
-    const name = String(node.properties.condition ?? '')
-    if (defined.has(name)) await ctx.executeBody(node.children.body ?? [])
-  })
 
-  register('cpp:ifndef', async (node, ctx) => {
-    const name = String(node.properties.condition ?? '')
-    if (!defined.has(name)) await ctx.executeBody(node.children.body ?? [])
-  })
+
+
 }
 
 /** 測試用：清空已定義的名字 */

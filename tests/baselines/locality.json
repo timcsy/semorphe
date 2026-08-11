@@ -240,11 +240,11 @@
     },
     "cpp:ifdef": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:ifndef": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:ifstream_declare": {
       "files": 2,
