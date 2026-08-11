@@ -1,25 +1,18 @@
 import type { SemanticNode } from './types'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
-import type { ExecutionReason } from './view-host'
+import type { ExecutionReason, ExecutionAtNodeEvent, SemanticUpdateEvent } from './view-host'
 import type { Diagnostic } from './diagnostics'
-import type { CodeMapping } from './projection/code-generator'
-import type { ScaffoldResult } from './program-scaffold'
 
 // ─── Event Type Maps ───
 
 /** Core → View: push events */
 export interface SemanticEvents {
-  'semantic:update': {
-    tree: SemanticNode
-    code?: string
-    blockState?: unknown
-    source: 'blocks' | 'code' | 'resync'
-    mappings?: CodeMapping[]
-    scaffoldResult?: ScaffoldResult
-  }
+  // ⚠️ 引用契約，不再自己宣告一份——見 `view-host.ts` 的 `SemanticUpdateEvent`。
+  'semantic:update': SemanticUpdateEvent
   'semantic:full-sync': { tree: SemanticNode; language: string; style: Record<string, unknown> }
   'execution:state': { status: ExecutionStatus; step?: StepInfo; reason?: ExecutionReason }
   'execution:output': { text: string; stream: 'stdout' | 'stderr' }
+  'execution:at-node': ExecutionAtNodeEvent
   'diagnostics:update': { items: Diagnostic[] }
 }
 

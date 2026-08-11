@@ -7,7 +7,7 @@ import { createNode } from '../../core/semantic-tree'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
 import type { BlockStylePreset } from '../../languages/style'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
@@ -81,7 +81,7 @@ export class BlocklyPanel implements ViewHost {
     // ViewHost lifecycle — actual init handled by init() method
   }
 
-  onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; blockState?: unknown }): void {
+  onSemanticUpdate(event: SemanticUpdateEvent): void {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
       this.busUpdateInProgress = true
       try {
@@ -407,6 +407,27 @@ export class BlocklyPanel implements ViewHost {
   }
 
   /** Highlight block by nodeId (decoupled API — resolves nodeId → blockId internally) */
+  /**
+   * 執行走到某個節點時，**這個視圖的投影是「高亮那顆積木」**。
+   *
+   * ⚠️ 在此之前這段住在 `execution-controller`，而且是繞路走的：
+   * 執行器先跟中央對映表要 `blockId`，再呼叫 `highlightBlock(blockId)`
+   * ——**而 `highlightByNodeId` 早就存在了**，它自己就會反查。
+   *
+   * > **一段繞路的程式碼不會報錯，它只是讓中間那一站看起來是必要的。**
+   */
+  onExecutionAtNode(event: ExecutionAtNodeEvent): void {
+    if (!event.nodeId) {
+      this.clearHighlight()
+      return
+    }
+    this.highlightByNodeId(event.nodeId, 'execution')
+    if (event.follow) {
+      const blockId = this.getBlockIdForNodeId(event.nodeId)
+      if (blockId) this.workspace?.centerOnBlock(blockId)
+    }
+  }
+
   highlightByNodeId(nodeId: string | null, variant: 'block-to-code' | 'code-to-block' | 'execution' = 'block-to-code'): void {
     if (!nodeId) { this.clearHighlight(); return }
     // Reverse lookup: nodeId → blockId

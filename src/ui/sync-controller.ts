@@ -284,7 +284,7 @@ export class SyncController {
             const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
-            this.bus.emit('semantic:update', { tree: converted, blockState: convRender, source: 'code' })
+            this.bus.emit('semantic:update', { tree: converted, blockState: convRender, source: 'code', mappings: this.codeMappings })
           }
         }
       }
@@ -321,7 +321,12 @@ export class SyncController {
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
-      this.bus.emit('semantic:update', { tree, blockState: renderResult, source: 'code' })
+      // ⚠️ `mappings` 不可漏。`code` 方向的兩處 emit 原本沒帶它，
+      // 因為在此之前**沒有人接**——`codeMappings` 只有這個檔自己在用。
+      // 而視圖自己接手「執行到哪一行」之後，漏掉它的症狀是
+      // **打程式碼之後執行，程式碼那邊不會高亮，而積木那邊會**
+      // ——一個只在單一方向出現的不對稱。
+      this.bus.emit('semantic:update', { tree, blockState: renderResult, source: 'code', mappings: this.codeMappings })
     } finally {
       this.syncing = false
     }

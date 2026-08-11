@@ -252,6 +252,9 @@ function 量(): 基線 {
         '\n' +
         '**已記錄的下降**（`build-guardrail`：下降的原因要註明，而且要分「實作了」與「宣告了」）：\n' +
         '- 跨層直接呼叫 125 → 95：**實作了**。32 處狀態與輸出改成廣播（`38fe24f`）。\n' +
+        '- 跨層直接呼叫 95 → 76：**實作了**。`execution:at-node` 廣播取代了三段\n' +
+        '  「查中央對映表 → 高亮積木 ＋ 捲程式碼」。`highlightBlock`／`revealLine`／\n' +
+        '  `addHighlight`／`clearHighlight`／`centerOnBlock` 全數歸零。\n' +
         '- 其餘UI檔import語言 4 → 2：**實作了**。`ioTraitOf`／`isPlainDeclaration` 上移到\n' +
         '  `core/component/traits.ts`——它們一個 C++ 的字都不認識，而視圖層為了問它們\n' +
         '  而 import 整個語言套件。順帶消掉一份與核心逐字相同的 `性狀()` 實作\n' +

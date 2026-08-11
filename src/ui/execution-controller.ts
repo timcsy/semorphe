@@ -66,10 +66,21 @@ export class ExecutionController {
    * 那正是「軟體的執行方式與軟體的 UI 攪在一起」的樣子，而硬體視圖進來時
    * 它會擋路——2D 接線圖不該需要 `ExecutionController` 認識它。
    *
-   * ⚠️ **這次只搬一處**（`displayStep` 的變數快照），理由是它是唯一一處
-   * **純粹的狀態廣播**：其餘 80 處是命令（`highlightBlock`／`revealLine`／
-   * `showTab`／`promptInput`），而**命令與廣播不是同一種東西**，
-   * 把它們一起丟上匯流排會做出一個假的解耦。
+   * ## 進度（每一步都讓護欄第三十九條的數字下降）
+   *
+   * | | 搬了什麼 | 跨層直接呼叫 |
+   * |---|---|---|
+   * | 2026-08-11 | 變數快照 | 125 |
+   * | 2026-08-11 | 狀態與輸出（32 處） | → 95 |
+   * | 2026-08-12 | **執行位置**（`execution:at-node`） | → 見基線 |
+   *
+   * ⚠️ **命令與廣播不是同一種東西**，把它們一起丟上匯流排會做出一個假的解耦。
+   * 而「執行到哪個節點」原本被寫成**兩個命令**（高亮積木、捲程式碼），
+   * 它其實是**一個廣播的兩個投影**——那是這一步的全部內容。
+   *
+   * 還沒搬的：`promptInput()`（要回覆，匯流排單向）、
+   * `getBreakpoints()`（方向是反的，見 draft §二之二）、
+   * `clear()`（重置，不是廣播）。
    */
   constructor(
     panels: ExecutionPanels,
@@ -113,6 +124,36 @@ export class ExecutionController {
     if (this.bus) this.bus.emit('execution:output', { text, stream })
     else if (stream === 'stderr') this.panels.consolePanel?.error(text)
     else this.panels.consolePanel?.write(text)
+  }
+
+
+  /**
+   * 廣播「執行走到了這個節點」。**不呼叫任何面板。**
+   *
+   * ⚠️ 它取代的是三段逐字相似的程式碼，每一段都長這樣：
+   *
+   * ```ts
+   * const mapping = syncController.getMappingForNode(nodeId)   // { blockId, startLine, endLine }
+   * if (mapping.blockId)   blocklyPanel.highlightBlock(...)  + centerOnBlock(...)
+   * if (mapping.startLine) monacoPanel.revealLine(...)       + addHighlight(...)
+   * ```
+   *
+   * **執行器同時說了兩遍，因為它知道有兩個視圖。** 而那兩遍說的是同一件事
+   * ——「執行到這裡了」。積木高亮一顆積木、程式碼捲到一行、
+   * 2D 接線圖讓一顆元件發光，那是**三個投影，不是三個命令**。
+   *
+   * `nodeId === null` ＝ 清除高亮（原本是 `blocklyPanel?.clearHighlight()`，
+   * ⚠️ 而它**只清了積木那一邊**——程式碼那邊的高亮沒被清，
+   * 那個不對稱在收攏之前看不出來）。
+   */
+  private 走到(nodeId: string | null, follow: boolean): void {
+    if (this.bus) {
+      this.bus.emit('execution:at-node', { nodeId, follow })
+      return
+    }
+    for (const p of [this.panels.blocklyPanel, this.panels.monacoPanel]) {
+      p?.onExecutionAtNode?.({ nodeId, follow })
+    }
   }
 
   getDebugToolbar(): DebugToolbar {
@@ -249,23 +290,11 @@ export class ExecutionController {
       this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
-      this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
       this.廣播({ status: 'running', reason: 'awaiting-input' })
-      if (nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(nodeId)
-        if (mapping) {
-          if (mapping.blockId && this.panels.blocklyPanel?.getWorkspace()) {
-            this.panels.blocklyPanel.highlightBlock(mapping.blockId, 'execution')
-            this.panels.blocklyPanel.getWorkspace()!.centerOnBlock(mapping.blockId)
-          }
-          if (mapping.startLine !== null && mapping.endLine !== null && this.panels.monacoPanel) {
-            this.panels.monacoPanel.revealLine(mapping.startLine + 1)
-            this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
-          }
-        }
-      }
+      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
+      this.走到(nodeId, true)
     })
 
     // Breakpoint support in run mode: pause on breakpoint, then allow stepping
@@ -363,23 +392,11 @@ export class ExecutionController {
       this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
-      this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
       this.廣播({ status: 'running', reason: 'awaiting-input' })
-      if (nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(nodeId)
-        if (mapping) {
-          if (mapping.blockId && this.panels.blocklyPanel?.getWorkspace()) {
-            this.panels.blocklyPanel.highlightBlock(mapping.blockId, 'execution')
-            this.panels.blocklyPanel.getWorkspace()!.centerOnBlock(mapping.blockId)
-          }
-          if (mapping.startLine !== null && mapping.endLine !== null && this.panels.monacoPanel) {
-            this.panels.monacoPanel.revealLine(mapping.startLine + 1)
-            this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
-          }
-        }
-      }
+      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
+      this.走到(nodeId, true)
     })
     this.panels.consolePanel?.clear()
     this.panels.bottomPanel?.showTab('variables')
@@ -586,26 +603,7 @@ export class ExecutionController {
     this.廣播({ status: 'paused', step })
     this.panels.bottomPanel?.showTab('variables')
 
-    this.panels.blocklyPanel?.clearHighlight()
-    const autoScroll = this.debugToolbar.isAutoScrollEnabled() ?? false
-    if (step.nodeId) {
-      const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
-      if (mapping) {
-        if (mapping.blockId && this.panels.blocklyPanel?.getWorkspace()) {
-          this.panels.blocklyPanel.highlightBlock(mapping.blockId, 'execution')
-          if (autoScroll) {
-            this.panels.blocklyPanel.getWorkspace()!.centerOnBlock(mapping.blockId)
-          }
-        }
-        if (mapping.startLine !== null && mapping.endLine !== null && this.panels.monacoPanel) {
-          // revealLine BEFORE addHighlight — revealLine triggers onCursorChange which clears highlights
-          if (autoScroll) {
-            this.panels.monacoPanel.revealLine(mapping.startLine + 1)
-          }
-          this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
-        }
-      }
-    }
+    this.走到(step.nodeId ?? null, this.debugToolbar.isAutoScrollEnabled() ?? false)
 
     if (this.stepController?.getStatus() === 'completed') {
       this.廣播({ status: 'completed' })
@@ -690,23 +688,11 @@ export class ExecutionController {
       this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
-      this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
       this.廣播({ status: 'running', reason: 'awaiting-input' })
-      if (nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(nodeId)
-        if (mapping) {
-          if (mapping.blockId && this.panels.blocklyPanel?.getWorkspace()) {
-            this.panels.blocklyPanel.highlightBlock(mapping.blockId, 'execution')
-            this.panels.blocklyPanel.getWorkspace()!.centerOnBlock(mapping.blockId)
-          }
-          if (mapping.startLine !== null && mapping.endLine !== null && this.panels.monacoPanel) {
-            this.panels.monacoPanel.revealLine(mapping.startLine + 1)
-            this.highlightMonacoLines(mapping.startLine + 1, mapping.endLine + 1)
-          }
-        }
-      }
+      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
+      this.走到(nodeId, true)
     })
 
     this.stepRecords = []
@@ -799,12 +785,9 @@ export class ExecutionController {
     })
   }
 
-  private highlightMonacoLines(startLine: number, endLine: number): void {
-    this.panels.monacoPanel?.addHighlight(startLine, endLine)
-  }
-
+  /** ⚠️ 原本只清積木那一邊，改成廣播之後**兩個視圖都會清**——見 `走到` 的註解。 */
   private clearHighlights(): void {
-    this.panels.blocklyPanel?.clearHighlight()
+    this.走到(null, false)
   }
 
   dispose(): void {

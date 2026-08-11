@@ -1,5 +1,16 @@
 import * as monaco from 'monaco-editor'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
+import type { CodeMapping } from '../../core/projection/code-generator'
+import type { SemanticNode } from '../../core/types'
+
+/** 這棵子樹裡有沒有這個 id。 */
+function containsNodeId(node: SemanticNode, targetId: string): boolean {
+  if (node.id === targetId) return true
+  for (const children of Object.values(node.children)) {
+    for (const child of children) if (containsNodeId(child, targetId)) return true
+  }
+  return false
+}
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 
 export class MonacoPanel implements ViewHost {
@@ -18,6 +29,8 @@ export class MonacoPanel implements ViewHost {
   private suppressChange = false
   private highlightCollection: monaco.editor.IEditorDecorationsCollection | null = null
   private pendingHighlight: { startLine: number; endLine: number; variant: 'block-to-code' | 'code-to-block' } | null = null
+  private codeMappings: CodeMapping[] = []
+  private currentTree: SemanticNode | null = null
   private breakpoints: Set<number> = new Set()
   private breakpointCollection: monaco.editor.IEditorDecorationsCollection | null = null
   private onBreakpointChangeCallback: ((breakpoints: number[]) => void) | null = null
@@ -36,7 +49,7 @@ export class MonacoPanel implements ViewHost {
     // ViewHost lifecycle — actual init handled by init() method
   }
 
-  onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; code?: string; scaffoldResult?: ScaffoldResult }): void {
+  onSemanticUpdate(event: SemanticUpdateEvent): void {
     // ⚠️ `resync` 不可漏——它原本由 `app.ts` 的第二條線補。
     // 兩條線的條件不一樣，而那種不一致只會在其中一條被刪掉時才現形。
     if ((event.source === 'blocks' || event.source === 'resync') && event.code !== undefined) {
@@ -45,6 +58,59 @@ export class MonacoPanel implements ViewHost {
         this.applyScaffoldDecorations(event.code, event.scaffoldResult)
       }
     }
+    // ⚠️ **`mappings` 這個欄位在事件上宣告了很久，而零接收者。**
+    // `sync-controller` 兩處在發它（`blocks` 與 `resync`），沒有人接
+    // ——「機制有了沒人接上」的又一筆。這個視圖需要它才能把
+    // 「執行到哪個節點」翻譯成自己的座標（行號）。
+    if (event.mappings) this.codeMappings = event.mappings
+    if (event.tree) this.currentTree = event.tree
+  }
+
+  /**
+   * 執行走到某個節點時，**這個視圖的投影是「捲到那幾行並highlight」**。
+   *
+   * ⚠️ 兩件屬於這個視圖的知識跟著搬進來了，它們原本住在執行器與中央對映表：
+   *
+   * **① `revealLine` 必須在 `addHighlight` 之前**——`revealLine` 會觸發
+   * `onCursorChange`，而那會清掉 highlight。那是 Monaco 的行為，
+   * 執行器不該知道它。
+   *
+   * **② 表達式節點沒有自己的 `codeMapping`，要往上找最近的祖先**
+   * （`while (scanf(...))` 裡的 `scanf` 節點）。
+   * ⚠️ **積木那側沒有這個問題**，因為每個節點都有積木。
+   *
+   * > **一個只有某一種投影才會遇到的問題，它的解法就該住在那種投影裡。**
+   */
+  onExecutionAtNode(event: ExecutionAtNodeEvent): void {
+    if (!event.nodeId) {
+      this.clearHighlight()
+      return
+    }
+    const m = this.mappingFor(event.nodeId)
+    if (!m) return
+    // ⚠️ 順序不可調換，見上方 ①。
+    if (event.follow) this.revealLine(m.startLine + 1)
+    this.addHighlight(m.startLine + 1, m.endLine + 1)
+  }
+
+  /** nodeId → 行區間。表達式節點往上找最近有對映的祖先（見 `onExecutionAtNode` ②）。 */
+  private mappingFor(nodeId: string): CodeMapping | undefined {
+    const direct = this.codeMappings.find((x) => x.nodeId === nodeId)
+    if (direct) return direct
+    if (!this.currentTree) return undefined
+    const ancestorId = this.findAncestorWithCodeMapping(this.currentTree, nodeId)
+    return ancestorId ? this.codeMappings.find((x) => x.nodeId === ancestorId) : undefined
+  }
+
+  private findAncestorWithCodeMapping(node: SemanticNode, targetId: string): string | null {
+    if (!containsNodeId(node, targetId)) return null
+    for (const children of Object.values(node.children)) {
+      for (const child of children) {
+        const found = this.findAncestorWithCodeMapping(child, targetId)
+        if (found) return found
+      }
+    }
+    return this.codeMappings.some((m) => m.nodeId === node.id) ? node.id : null
   }
 
   onExecutionState(_event: ExecutionStateEvent): void {

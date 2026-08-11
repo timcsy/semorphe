@@ -140,6 +140,11 @@ export function connectViews(bus: SemanticBus): void {
   bus.on('execution:state', (d) => {
     for (const v of registeredViews()) v.onExecutionState(d)
   })
+  // ⚠️ `onExecutionAtNode` 是**可選**的——沒有它就是明確地不接（主控台、變數面板）。
+  // 這裡的 `?.` 是契約的一部分，不是防禦。
+  bus.on('execution:at-node', (d) => {
+    for (const v of registeredViews()) v.onExecutionAtNode?.(d)
+  })
 }
 
 /** 測試用：清空登錄表。⚠️ 產品路徑不該呼叫它。 */
