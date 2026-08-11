@@ -22,7 +22,8 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 // ⚠️ **第十六個「自己列舉來源」的地方**（今天第六處）。
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
-import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
@@ -55,13 +56,14 @@ beforeAll(async () => {
 
   // Wire up JSON-driven PatternLifter with block specs (overrides the one from createTestLifter)
   const specRegistry = new BlockSpecRegistry()
-  const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-  const allProjections = [
-    ...universalBlocks,
-    ...coreBlocks,
-    ...(componentBlocks() as BlockProjectionJSON[]),
-    ...allStdModules.flatMap(m => m.blocks),
-  ]
+  // ⚠️ **不要自己列宣告來源。** 這裡原本手列
+  // `universalConcepts ＋ coreConcepts ＋ allStdModules`（積木那邊還記得加
+  // `componentBlocks()`，概念這邊**忘了**）——於是膠囊的概念一筆都不在，
+  // 而症狀是「`x += 5` 辨識不出來」，看起來像 lifter 壞了。
+  //
+  // > **一份少一半的組裝，錯誤訊息會指向被害者，不是兇手。**
+  const allConcepts = allCppConcepts()
+  const allProjections = allCppProjections()
   specRegistry.loadFromSplit(allConcepts, allProjections)
   const allSpecs = specRegistry.getAll()
 
@@ -76,7 +78,11 @@ beforeAll(async () => {
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
   const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
   pl.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
-  pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
+  // ⚠️ 膠囊自帶的 pattern 也要載——少了它，搬進膠囊的元件辨識不出來。
+  pl.loadLiftPatterns([
+    ...(liftPatternsJson as unknown as LiftPattern[]),
+    ...(componentLiftPatterns() as LiftPattern[]),
+  ])
   lifter.setPatternLifter(pl)
 
   registerCppLanguage()

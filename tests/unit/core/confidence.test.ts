@@ -16,6 +16,12 @@ import { universalConcepts, universalBlocks } from '../../../src/blocks/universa
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
+// ⚠️ **不要自己列宣告來源。**
+// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
+// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
+import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
 function mockNode(
   type: string,
@@ -52,12 +58,8 @@ describe('Confidence & DegradationCause', () => {
     registry = new ConceptRegistry()
 
     const specRegistry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-    const allProjections = [
-      ...universalBlocks,
-      ...coreBlocks,
-      ...allStdModules.flatMap(m => m.blocks),
-    ]
+    const allConcepts = allCppConcepts()
+    const allProjections = allCppProjections()
     specRegistry.loadFromSplit(allConcepts, allProjections)
     const allSpecs = specRegistry.getAll()
 

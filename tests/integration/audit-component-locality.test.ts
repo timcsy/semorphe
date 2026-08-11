@@ -51,6 +51,7 @@ import { scanText } from '../helpers/component-scan'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { registeredComponents } from '../../src/core/component/registry'
 import { componentOwnedLabelKeys, labelKeysOf } from '../../src/core/component/labels'
+import { componentBlocks } from '../../src/core/component/registry'
 import { idToDir } from '../../src/core/component/types'
 
 const GUARD = 'component-locality'
@@ -64,6 +65,10 @@ interface Baseline {
 }
 
 const 全部身分 = (): string[] => allCppConcepts().map((c) => c.conceptId)
+
+/** 這顆元件有沒有積木——`componentBlocks()` 是已蓋章的全部膠囊積木。 */
+const 有積木 = (id: string): boolean =>
+  (componentBlocks() as { conceptId?: string }[]).some((b) => b.conceptId === id)
 
 /** 一個膠囊資料夾的絕對前綴（相對 repo）。 */
 const 膠囊目錄 = (id: string): string => `src/components/${idToDir(id)}/`
@@ -204,9 +209,19 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     expect(殘留, `標籤搬進膠囊之後共用檔要刪乾淨（兩份會漂移）：\n  ${殘留.join('\n  ')}`).toEqual([])
   })
 
-  it('標籤：每顆膠囊都要有標籤檔（沒有標籤的元件在 UI 上是空白的）', () => {
-    const 沒有 = registeredComponents().filter((c) => labelKeysOf(c).length === 0).map((c) => c.conceptId)
-    expect(沒有, `這些膠囊沒有任何標籤：${沒有.join('、')}`).toEqual([])
+  it('標籤：**有積木的**膠囊都要有標籤檔（沒有標籤的元件在 UI 上是空白的）', () => {
+    // ⚠️ **條件是「有積木」，不是「是膠囊」**（2026-08-11 修正）。
+    //
+    // `cpp:comma_expr` 有身分、有 lift、有產生、有執行，而**沒有積木**
+    // ——`for (i = 0, j = 1; …)` 的逗號運算式是辨識出來的，
+    // 使用者沒有一顆積木可以拖。沒有積木就沒有東西要標籤。
+    //
+    // 原本的寫法會逼一顆這樣的元件生出一份**沒有人讀的標籤**，
+    // 而那正是這個專案在追的殼。
+    const 沒有 = registeredComponents()
+      .filter((c) => 有積木(c.conceptId) && labelKeysOf(c).length === 0)
+      .map((c) => c.conceptId)
+    expect(沒有, `這些膠囊有積木卻沒有任何標籤：${沒有.join('、')}`).toEqual([])
   })
 
   // ── 注入：兩個方向都要釘（build-guardrail 第 9 步） ─────────

@@ -23,6 +23,13 @@ import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'
+// ⚠️ **不要自己列宣告來源。**
+// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
+// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 
 // Mock AST node helper
 function mockNode(
@@ -62,15 +69,19 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-    registry.loadFromSplit(allConcepts, [...coreBlocks, ...allStdModules.flatMap(m => m.blocks)])
+    const allConcepts = allCppConcepts()
+    registry.loadFromSplit(allConcepts, allCppProjections())
     const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)
     // `lift-patterns.json` **也是 JSON**——這支測試驗的是「不寫程式碼就能加
     // 積木」，而辨識規則從 blockSpec.astPattern 搬到 lift-patterns.json 之後
     // 前提沒有變，只是來源換了一份檔案。不載入的話，這裡測的是一個生產環境
     // 不存在的組態。
-    lifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
+    lifter.loadLiftPatterns([
+    ...(liftPatternsJson as unknown as LiftPattern[]),
+    // ⚠️ 膠囊自帶的 pattern 也要載——少了它，搬進膠囊的元件辨識不出來。
+    ...(componentLiftPatterns() as LiftPattern[]),
+  ])
     renderer.loadBlockSpecs(specs)
     extractor.loadBlockSpecs(specs)
 

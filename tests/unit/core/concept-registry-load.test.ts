@@ -6,13 +6,15 @@ import type { ConceptDefJSON } from '../../../src/core/types'
 import { universalConcepts } from '../../../src/blocks/universal'
 import { coreConcepts } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
+// ⚠️ **不要自己列宣告來源。**
+// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
+// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
+import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
 function loadConcepts(): ConceptDefJSON[] {
-  return [
-    ...universalConcepts,
-    ...coreConcepts,
-    ...allStdModules.flatMap(m => m.concepts),
-  ]
+  return allCppConcepts()
 }
 
 describe('ConceptRegistry.loadFromJSON', () => {

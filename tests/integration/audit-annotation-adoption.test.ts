@@ -46,6 +46,12 @@ import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON } from '../../src/core/types'
+// ⚠️ **不要自己列宣告來源。**
+// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
+// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 const RULE =
   '宣告者 = 概念定義的 annotations 裡有這個鍵。讀取點 = 原始碼呼叫 ' +
@@ -104,11 +110,7 @@ function allSource(): string {
 function measure(): { name: string; declarers: number; readers: number }[] {
   const src = allSource()
   const counts = new Map<string, number>()
-  const all = [
-    ...(universalConcepts),
-    ...coreConcepts,
-    ...allStdModules.flatMap((m) => m.concepts),
-  ]
+  const all = allCppConcepts()
   for (const c of all) {
     const ann = (c as { annotations?: Record<string, unknown> }).annotations
     if (!ann) continue

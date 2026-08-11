@@ -37,7 +37,7 @@ import type { SemanticNode } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -62,21 +62,24 @@ const 已合併的 = [
   'cpp_scanf_expr',
 ] as const
 
+/**
+ * ⚠️ **不要自己列宣告來源。**
+ *
+ * 這裡原本手列 `universalConcepts ＋ coreConcepts ＋ allStdModules`
+ * ——**膠囊的宣告一筆都不在**。一顆元件搬進膠囊之後，這支測試會說
+ * 「它的積木不見了」，而生產環境好好的。
+ *
+ * > **一個各自組裝的地方，會在別人搬家時變紅——而它的錯誤訊息與真的壞掉一模一樣。**
+ *
+ * `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+ */
 function 全部概念(): ConceptDefJSON[] {
-  return [
-    ...(universalConcepts),
-    ...coreConcepts,
-    ...allStdModules.flatMap((m) => m.concepts),
-  ]
+  return allCppConcepts()
 }
 
 function 登錄表(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(全部概念(), [
-    ...(universalBlocks),
-    ...coreBlocks,
-    ...allStdModules.flatMap((m) => m.blocks),
-  ])
+  reg.loadFromSplit(全部概念(), allCppProjections())
   return reg
 }
 

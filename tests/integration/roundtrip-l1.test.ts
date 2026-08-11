@@ -22,6 +22,13 @@ import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+// ⚠️ **不要自己列宣告來源。**
+// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
+// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
+import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 
 function mockNode(
   type: string,
@@ -59,18 +66,18 @@ describe('L1 Block Roundtrip', () => {
     extractor = new PatternExtractor()
 
     const registry = new BlockSpecRegistry()
-    const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
-    const allProjections = [
-      ...universalBlocks,
-      ...coreBlocks,
-      ...allStdModules.flatMap(m => m.blocks),
-    ]
+    const allConcepts = allCppConcepts()
+    const allProjections = allCppProjections()
     registry.loadFromSplit(allConcepts, allProjections)
     const allSpecs = registry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
     lifter.loadBlockSpecs(allSpecs, liftSkipNodeTypes)
-    lifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
+    lifter.loadLiftPatterns([
+    ...(liftPatternsJson as unknown as LiftPattern[]),
+    // ⚠️ 膠囊自帶的 pattern 也要載——少了它，搬進膠囊的元件辨識不出來。
+    ...(componentLiftPatterns() as LiftPattern[]),
+  ])
     renderer.loadBlockSpecs(allSpecs)
     extractor.loadBlockSpecs(allSpecs)
 
