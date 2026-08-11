@@ -13,6 +13,7 @@ import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
 import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
 import { 建自動宣告 } from '../../../../components/cpp/var_declare_auto/lift'
+import { 建靜態變數 } from '../../../../components/cpp/var_declare_static/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -593,18 +594,16 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       if (decl) {
         if (decl.type === 'identifier') {
-          return createNode('cpp:var_declare_static', { name: decl.text, type })
+          return 建靜態變數(type, decl.text, null)
         }
         const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode('cpp:var_declare_static', { name, type }, {
-            initializer: value ? [value] : [],
-          })
+          return 建靜態變數(type, name, value)
         }
-        return createNode('cpp:var_declare_static', { name, type })
+        return 建靜態變數(type, name, null)
       }
       return createNode('cpp:member_static', { name: 'x', type })
     }

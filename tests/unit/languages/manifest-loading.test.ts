@@ -60,8 +60,14 @@ describe('Language manifest loading', () => {
       manifestConceptCount += concepts.length
     }
 
-    // core(42) blocks + std module blocks (16+) = 58+
-    expect(manifestBlockCount).toBeGreaterThanOrEqual(58)
+    // ⚠️ **這個下限隨 F（膠囊搬家）下降**——manifest 列的是**共用宣告檔**，
+    // 而膠囊的積木不在那些檔裡。它量的是「manifest 指的路徑讀得到東西」，
+    // 不是「這個語言有幾顆積木」。
+    //
+    // > 一個入口條件錨在「還沒被搬走的有幾顆」上，會在搬家成功的路上變紅。
+    //
+    // 2026-08-11：58 → 30（保守下限，留給後續搬家空間）。
+    expect(manifestBlockCount).toBeGreaterThanOrEqual(30)
     // core(42) concepts + std module concepts (19+) = 61+
     expect(manifestConceptCount).toBeGreaterThanOrEqual(42)
     // Blocks and concepts should both be non-trivial

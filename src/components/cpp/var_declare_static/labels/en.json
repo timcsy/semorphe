@@ -1,0 +1,7 @@
+{
+  "U_VAR_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "U_VAR_DECLARE_TYPE_STRING": "string (text)",
+  "U_VAR_DECLARE_TYPE_BOOL": "bool (true/false)",
+  "C_STATIC_DECLARE_MSG0": "Declare persistent %1 variable %2 = %3 (static)",
+  "C_STATIC_DECLARE_TOOLTIP": "Declare a static variable that persists across function calls, keeping its value between invocations."
+}

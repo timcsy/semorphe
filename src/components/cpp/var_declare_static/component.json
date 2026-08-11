@@ -1,0 +1,32 @@
+{
+  "conceptId": "cpp:var_declare_static",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "required": true,
+      "default": "count"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建靜態變數`）——判別（storage_class 是不是 static、在函式裡還是類別裡）是 C++ 語法的知識，留在共用檔。"
+  }
+}

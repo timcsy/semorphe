@@ -29,12 +29,6 @@
       "signal": "宣告與另外 N 顆完全相同",
       "decision": "保留",
       "reason": "**行為不同，而且原本是壞的**：`int& r = a; r = 9;` 印 59 而 g++ 印 99。099d 接上 `Scope.declareRef`（機制早就在）。"
-    },
-    {
-      "conceptId": "cpp:var_declare_static",
-      "signal": "宣告與另外 N 顆完全相同",
-      "decision": "保留",
-      "reason": "**行為不同，而且原本是壞的**：區域 static 不跨呼叫保存，印 111 而 g++ 印 123。099d 改存在根作用域、用宣告節點 id 當鍵。"
     }
   ]
 }

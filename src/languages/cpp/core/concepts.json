@@ -584,29 +584,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:var_declare_static",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "required": true,
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "required": true,
-        "default": "count"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:member_static",
     "layer": "lang-core",
     "abstractConcept": null,

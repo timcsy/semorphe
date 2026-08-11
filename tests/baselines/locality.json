@@ -688,7 +688,7 @@
     },
     "cpp:var_declare_static": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:var_ref": {
       "files": 9,

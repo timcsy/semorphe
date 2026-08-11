@@ -1,0 +1,7 @@
+{
+  "U_VAR_DECLARE_TYPE_FLOAT": "float（小數）",
+  "U_VAR_DECLARE_TYPE_STRING": "string（文字）",
+  "U_VAR_DECLARE_TYPE_BOOL": "bool（是/否）",
+  "C_STATIC_DECLARE_MSG0": "宣告靜態 %1 變數 %2 = %3",
+  "C_STATIC_DECLARE_TOOLTIP": "宣告一個靜態變數，它在函式呼叫之間保持值不變。"
+}

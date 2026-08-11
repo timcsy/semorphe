@@ -35,6 +35,7 @@ import {
   assertRatchet,
 } from '../helpers/guardrail'
 import { universalConcepts } from '../../src/blocks/universal'
+import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON } from '../../src/core/types'
@@ -128,7 +129,15 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
   })
 
   it('★ 概念清單不是空的——空的話什麼都沒掃', () => {
-    expect(coreConcepts.length + allStdModules.flatMap((m) => m.concepts).length).toBeGreaterThan(50)
+    // ⚠️ **錨點要涵蓋膠囊。** 原本只算 `coreConcepts ＋ std 模組`，
+    // 而 F（膠囊搬家）會把概念一顆顆搬出那兩個來源——這個下限因此
+    // **隨進度被推穿**（2026-08-11 跌到 50）。
+    //
+    // > 一個入口條件錨在「還沒被搬走的有幾顆」上，
+    // > 會在搬家成功的路上變紅——與第三十五條護欄踩的是同一個坑。
+    //
+    // 改成問**全部**宣告（`allCppConcepts()` 含膠囊），那個數字不隨搬家改變。
+    expect(allCppConcepts().length).toBeGreaterThan(150)
   })
 
   it('棘輪：不得上升', () => {
