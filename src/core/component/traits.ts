@@ -35,3 +35,27 @@ export function componentTraits(conceptId: string): Record<string, unknown> | un
 export function isNamedCall(conceptId: string): boolean {
   return componentTraits(conceptId)?.namedCall === true
 }
+
+/**
+ * 這顆是**帶索引的存取**嗎（`properties.obj` 是容器名、`children.index` 是索引）。
+ *
+ * ⚠️ 核心的 `interpreter/executors/io.ts` 要認得它——`cin >> arr[i]` 讀進來的值
+ * 要寫回陣列的某一格。核心不得 import 語言套件（P9），所以這一份在這裡。
+ */
+export function isIndexedAccess(conceptId: string): boolean {
+  return componentTraits(conceptId)?.indexedAccess === true
+}
+
+/**
+ * 找**宣告了這個性狀**的那顆元件身分。
+ *
+ * ⚠️ 找不到回 `undefined`——**不猜**。投影宣告寫 `wrapTrait: 'variableRef'`
+ * 而沒有元件宣告該性狀時，正確的反應是「這條規則不生效」，
+ * 不是「包成一顆猜出來的元件」。
+ */
+export function conceptWithTrait(trait: string): string | undefined {
+  for (const c of registeredComponents()) {
+    if ((c.manifest as { traits?: Record<string, unknown> }).traits?.[trait] === true) return c.conceptId
+  }
+  return undefined
+}

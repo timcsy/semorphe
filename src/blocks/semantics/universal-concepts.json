@@ -53,20 +53,6 @@
     }
   },
   {
-    "conceptId": "cpp:var_ref",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "name",
-        "kind": "identifier",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "expression"
-  },
-  {
     "conceptId": "cpp:if",
     "layer": "universal",
     "abstractConcept": null,
@@ -149,21 +135,5 @@
     "annotations": {
       "debug_step": true
     }
-  },
-  {
-    "conceptId": "cpp:array_at",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "obj",
-        "kind": "identifier",
-        "default": "arr"
-      }
-    ],
-    "children": {
-      "index": "expression"
-    },
-    "role": "expression"
   }
 ]

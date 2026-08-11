@@ -13,7 +13,6 @@ import { registerVariableExecutors } from './executors/variables'
 import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
 import { registerIoExecutors } from './executors/io'
-import { registerArrayExecutors } from './executors/arrays'
 import { registerMutationExecutors } from './executors/mutations'
 
 interface InterpreterOptions {
@@ -79,7 +78,6 @@ export class SemanticInterpreter implements ExecutionContext {
     registerControlFlowExecutors(reg)
     registerFunctionExecutors(reg)
     registerIoExecutors(reg)
-    registerArrayExecutors(reg)
     registerMutationExecutors(reg)
 
 

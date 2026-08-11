@@ -1,6 +1,8 @@
-import { createNode } from '../../../../core/semantic-tree'
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { Lifter } from '../../../../core/lift/lifter'
+import { 建print_formatted } from '../../../../components/cpp/print_formatted/lift'
+import { 建input_formatted } from '../../../../components/cpp/input_formatted/lift'
+import { 建var_ref } from '../../../../components/cpp/var_ref/lift'
 
 export function registerCstdioLifters(_lifter: Lifter): void {
   // call_expression dispatching is handled by the IO lifter dispatcher
@@ -10,15 +12,15 @@ export function registerCstdioLifters(_lifter: Lifter): void {
 }
 
 export function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('cpp:print_formatted', { format: '' }, { args: [] })
+  if (!argsNode) return 建print_formatted('', [])
   const args = argsNode.namedChildren
   const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d\\n'
   const values = args.slice(1).map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-  return createNode('cpp:print_formatted', { format: formatStr }, { args: values })
+  return 建print_formatted(formatStr, values)
 }
 
 export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
-  if (!argsNode) return createNode('cpp:input_formatted', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'x' })] })
+  if (!argsNode) return 建input_formatted('%d', [建var_ref('x')])
   const args = argsNode.namedChildren
   const formatStr = args[0]?.text?.replace(/^"|"$/g, '') ?? '%d'
   const values = args.slice(1).map(varArg => {
@@ -29,11 +31,11 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
         if (lifted) return lifted
       }
       const varName = inner?.text ?? 'x'
-      return createNode('cpp:var_ref', { name: varName })
+      return 建var_ref(varName)
     }
     const rawText = varArg.text
     const varName = rawText.startsWith('&') ? rawText.slice(1) : rawText
-    return createNode('cpp:var_ref', { name: varName })
+    return 建var_ref(varName)
   })
-  return createNode('cpp:input_formatted', { format: formatStr }, { args: values })
+  return 建input_formatted(formatStr, values)
 }

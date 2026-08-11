@@ -1,0 +1,27 @@
+{
+  "conceptId": "cpp:var_ref",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "forLoopPart": true,
+    "variableRef": true
+  },
+  "_traits_why": "**「我是一個變數參照」是我自己的宣告**——投影宣告的 `wrapTrait` 與 `var_declare_ref` 的執行器都靠它，而它們不必知道我的名字。"
+}

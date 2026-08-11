@@ -40,7 +40,11 @@ describe('Std module structure consistency', () => {
         seen.set(concept.conceptId, mod.header)
       }
     }
-    expect(seen.size).toBeGreaterThan(0)
+    // ⚠️ **不要錨在「std 模組裡還有幾顆」上**——那個數字隨膠囊搬家下降，
+    // 而 `<cstdio>`／`<cstring>`／`<cctype>` 已經全空了。
+    // 這支測試要問的是「有沒有重複的身分」，而那個檢查在上面的迴圈裡；
+    // 錨改成「模組清單不是空的」，那是輸入量。
+    expect(allStdModules.length, '一個 std 模組都沒有 → 量測壞了').toBeGreaterThan(3)
   })
 
   it('all block IDs should be unique across modules', () => {
@@ -56,7 +60,11 @@ describe('Std module structure consistency', () => {
         seen.set(id, mod.header)
       }
     }
-    expect(seen.size).toBeGreaterThan(0)
+    // ⚠️ **不要錨在「std 模組裡還有幾顆」上**——那個數字隨膠囊搬家下降，
+    // 而 `<cstdio>`／`<cstring>`／`<cctype>` 已經全空了。
+    // 這支測試要問的是「有沒有重複的身分」，而那個檢查在上面的迴圈裡；
+    // 錨改成「模組清單不是空的」，那是輸入量。
+    expect(allStdModules.length, '一個 std 模組都沒有 → 量測壞了').toBeGreaterThan(3)
   })
 
   it('populated registry should have all module concepts mapped', () => {

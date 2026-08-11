@@ -15,6 +15,9 @@ import { 建comma_expr } from '../../../../components/cpp/comma_expr/lift'
 import { binaryOperatorConcept } from '../../../../core/component/binary-operators'
 import { isBinaryOperator } from '../node-traits'
 import { 建endl } from '../../../../components/cpp/endl/lift'
+import { 建array_at } from '../../../../components/cpp/array_at/lift'
+import { 建var_ref } from '../../../../components/cpp/var_ref/lift'
+import { isVariableRef } from '../node-traits'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
 // `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
@@ -244,7 +247,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (isStringVar(name, node)) {
       return 建字串索引(name, index)
     }
-    return createNode('cpp:array_at', { obj: name }, {
+    return 建array_at(name, {
       index: index ? [index] : [],
     })
   })
@@ -308,7 +311,7 @@ function extractCinChain(node: AstNode, ctx: LiftContext): { values: SemanticNod
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
       } else {
-        values.unshift(createNode('cpp:var_ref', { name: rightNode.text }))
+        values.unshift(建var_ref(rightNode.text))
       }
     }
     current = current.childForFieldName('left')
@@ -362,11 +365,11 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
     }
     if (!isShiftLike(cur)) return null
     const right = (cur.children?.right ?? [])[0]
-    if (!right || right.conceptId !== 'cpp:var_ref') return null
+    if (!right || !isVariableRef(right.conceptId)) return null
     targets.unshift(right)
     const left: SemanticNode | undefined = (cur.children?.left ?? [])[0]
     if (!left) return null
-    if (left.conceptId === 'cpp:var_ref') {
+    if (isVariableRef(left.conceptId)) {
       rootName = String(left.properties?.name ?? '')
       break
     }
@@ -381,6 +384,6 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   if (rootType === null || !READ_STREAM_TYPES.has(rootType)) return null
 
   // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
-  const cloned = targets.map((v) => createNode('cpp:var_ref', { ...v.properties }, {}))
+  const cloned = targets.map((v) => 建var_ref(String(v.properties.name ?? '')))
   return createNode('cpp:input', { from: rootName }, { values: cloned })
 }

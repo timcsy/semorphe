@@ -114,10 +114,7 @@ export function registerVariableExecutors(register: (concept: string, executor: 
 
 
 
-  register('cpp:var_ref', async (node, ctx) => {
-    const name = String(node.properties.name)
-    return ctx.scope.get(name)
-  })
+
 
   // Reference: aliases the original variable (simplified: just copies value)
 }

@@ -12,6 +12,8 @@ import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
 import { isLineBreak } from './core/node-traits'
 import { ioTraitOf } from './core/node-traits'
+import { 建print_formatted } from '../../components/cpp/print_formatted/lift'
+import { 建input_formatted } from '../../components/cpp/input_formatted/lift'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -147,7 +149,7 @@ const printToCstdioRule: StyleExceptionRule = {
       }
     }
     const format = formatParts.join('') + (hasEndl ? '\\n' : '')
-    return [createNode('cpp:print_formatted', { format }, { args })]
+    return [建print_formatted(format, args)]
   },
 }
 
@@ -160,7 +162,7 @@ const inputToCstdioRule: StyleExceptionRule = {
   convert: (node) => {
     const values = node.children.values ?? []
     const format = values.map(() => '%d').join(' ')
-    return [createNode('cpp:input_formatted', { format }, { args: values })]
+    return [建input_formatted(format, values)]
   },
 }
 

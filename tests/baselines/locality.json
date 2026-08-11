@@ -31,8 +31,8 @@
       "dirs": 1
     },
     "cpp:array_at": {
-      "files": 5,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:array_declare": {
       "files": 3,
@@ -267,8 +267,8 @@
       "dirs": 6
     },
     "cpp:input_formatted": {
-      "files": 4,
-      "dirs": 2
+      "files": 3,
+      "dirs": 1
     },
     "cpp:input_line": {
       "files": 3,
@@ -443,8 +443,8 @@
       "dirs": 5
     },
     "cpp:print_formatted": {
-      "files": 4,
-      "dirs": 2
+      "files": 3,
+      "dirs": 1
     },
     "cpp:priority_queue_declare": {
       "files": 3,
@@ -691,8 +691,8 @@
       "dirs": 1
     },
     "cpp:var_ref": {
-      "files": 7,
-      "dirs": 6
+      "files": 4,
+      "dirs": 1
     },
     "cpp:var_swap": {
       "files": 3,

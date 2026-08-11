@@ -1,0 +1,34 @@
+{
+  "conceptId": "cpp:input_formatted",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:input",
+  "properties": [
+    {
+      "name": "format",
+      "kind": "literal"
+    }
+  ],
+  "children": {
+    "args": "expressions"
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "ioRole": "input",
+    "ioStyle": "cstdio"
+  },
+  "_traits_why": "**I/O 角色與風格、以及「我是帶索引的存取」——都是我自己的宣告**，不是消費者該寫死的身分。",
+  "requires": [
+    "<cstdio>"
+  ],
+  "_requires_why": "⚠️ `owner` 章由 `requires[0]` 蓋，而工具箱的 io 段落寫著 `{ from: '<cstdio>' }`。沒有它整個段落回傳零筆。"
+}

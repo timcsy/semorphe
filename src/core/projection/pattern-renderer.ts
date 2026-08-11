@@ -20,6 +20,7 @@ interface RenderSpec {
 
 import { serializeChildren } from './children-as-field'
 import { nextBlockId as _nextBlockId, resetBlockIdCounter } from './common-mappings'
+import { conceptWithTrait } from '../component/traits'
 
 function nextBlockId(): string {
   return _nextBlockId('pblock_')
@@ -250,7 +251,8 @@ export class PatternRenderer {
           // Otherwise use compose mode
           let matched = false
           for (const [modeName, modeRule] of Object.entries(rule.modes)) {
-            if (modeRule.wrap && child.conceptId === modeRule.wrap) {
+            const 包成 = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            if (包成 && child.conceptId === 包成) {
               // Select mode: store value in extraState
               const nameValue = (child.properties.name as string) ?? ''
               argsExtraState.push({ mode: modeName, text: nameValue })

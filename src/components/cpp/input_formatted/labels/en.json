@@ -1,0 +1,4 @@
+{
+  "C_SCANF_MSG0": "Formatted input \" %1 \" %2 (scanf)",
+  "C_SCANF_TOOLTIP": "Read input using a format string. Variables need & (address-of operator), e.g. &x"
+}

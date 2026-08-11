@@ -4,7 +4,6 @@
       "name": "資料",
       "blocks": [
         "cpp_var_declare",
-        "cpp_var_ref",
         "cpp_literal_number",
         "cpp_literal_string",
         "cpp_var_assign",
@@ -18,6 +17,7 @@
         "cpp_var_declare_constexpr",
         "cpp_var_declare_ref",
         "cpp_var_declare_static",
+        "cpp_var_ref",
         "cpp_literal_char",
         "cpp_var_declare_expression"
       ]
@@ -94,9 +94,9 @@
         "cpp_input",
         "cpp_input_expression",
         "cpp_endl",
-        "cpp_print_formatted",
         "cpp_input_formatted",
         "cpp_input_formatted_expression",
+        "cpp_print_formatted",
         "cpp_input_line",
         "cpp_ifstream_declare",
         "cpp_ofstream_declare"
@@ -105,12 +105,12 @@
     {
       "name": "陣列與列表",
       "blocks": [
-        "cpp_array_at",
         "cpp_array_assign",
         "cpp_array_declare",
         "cpp_array_2d_assign",
         "cpp_array_2d_at",
         "cpp_array_2d_declare",
+        "cpp_array_at",
         "cpp_math_max",
         "cpp_math_min",
         "cpp_range_fill",

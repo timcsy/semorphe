@@ -21,68 +21,8 @@ export function genChild(child: SemanticNode | undefined, parentPrec: number, ct
   return childPrec < parentPrec ? `(${expr})` : expr
 }
 
-export function registerExpressionGenerators(g: Map<string, NodeGenerator>): void {
-  g.set('cpp:var_ref', (node, _ctx) => {
-    return String(node.properties.name ?? '')
-  })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // ─── Generic container expression concepts ───
-
-
-
-
-
-  // Expression versions of statement-only blocks (no indent, no semicolons)
-
-
-  // cpp_scanf_expr moved to std/cstdio/generators.ts
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何產生器**——運算式那一批全部搬進膠囊了。
+ * 檔案留著因為 `precedence`／`genChild` 是**共用的排版演算法**（見上面的匯出），
+ * 而那不屬於任何一顆元件。
+ */

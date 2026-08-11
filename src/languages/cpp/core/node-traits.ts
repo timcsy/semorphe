@@ -188,6 +188,13 @@ export interface NodeTraits {
    */
   ioRole?: 'print' | 'input'
   ioStyle?: 'iostream' | 'cstdio'
+  /**
+   * 這顆是**帶索引的存取**（`properties.obj` 是容器名、`children.index` 是索引）。
+   *
+   * ⚠️ 兩個 I/O 執行器要認得它：`scanf("%d", &arr[i])` 與 `cin >> arr[i]`
+   * 讀進來的值要寫回**陣列的某一格**，而不是一個變數。
+   */
+  indexedAccess?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -317,4 +324,9 @@ export function ioConceptFor(role: string, style: string): string | undefined {
     if (t?.ioRole === role && t?.ioStyle === style) return id
   }
   return undefined
+}
+
+/** 這顆是帶索引的存取嗎（讀進來的值要寫回某一格）。沒宣告＝不是。 */
+export function isIndexedAccess(conceptId: string): boolean {
+  return 性狀(conceptId)?.indexedAccess === true
 }

@@ -357,7 +357,22 @@ export interface ModeExtractRule {
   /** Path in extraState to read the value (for select/input modes) */
   field?: string
   /** Wrap the value as this concept (e.g., "var_ref", "number_literal") */
+  /**
+   * ⚠️ **已由 `wrapTrait` 取代**（2026-08-11）。留著是為了不打破外部的自訂積木。
+   *
+   * 它的值是一個**元件身分**，而那讓宣告這條規則的那顆元件永遠搬不進膠囊
+   * ——就近性護欄的反向檢查會說「膠囊裡出現別顆元件的身分」。
+   */
   wrap?: string
+  /**
+   * 把選到的文字包成「有這個性狀的那顆元件」。
+   *
+   * > **一個宣告要指涉另一顆元件時，指它的性質而不是它的名字。**
+   *
+   * `wrapTrait: 'variableRef'` 讀作「包成一個變數參照」——
+   * 哪一顆元件是變數參照由它自己宣告，這裡不必知道。
+   */
+  wrapTrait?: string
   /** Read from block input (for expression/compose modes) */
   input?: string
 }

@@ -1,0 +1,4 @@
+{
+  "C_PRINTF_MSG0": "Formatted output \" %1 \" %2 (printf)",
+  "C_PRINTF_TOOLTIP": "Print output using a format string. Common formats: %d integer, %f decimal, %s text, \\n newline"
+}

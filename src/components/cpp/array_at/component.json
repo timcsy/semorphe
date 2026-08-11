@@ -1,0 +1,30 @@
+{
+  "conceptId": "cpp:array_at",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "arr"
+    }
+  ],
+  "children": {
+    "index": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "precedence": 16,
+    "forLoopPart": true,
+    "indexedAccess": true
+  },
+  "_traits_why": "**I/O 角色與風格、以及「我是帶索引的存取」——都是我自己的宣告**，不是消費者該寫死的身分。"
+}

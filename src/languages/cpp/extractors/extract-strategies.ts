@@ -2,6 +2,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
 import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
+import { 建var_ref } from '../../../components/cpp/var_ref/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -49,7 +50,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   // ── Control flow (if-elseif chain flattening) ──
   const extractIf = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
     const condInput = block.inputs.CONDITION
-    const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('cpp:var_ref', { name: 'true' })
+    const cond = condInput?.block ? ctx.extract(condInput.block) : 建var_ref('true')
     const thenInput = block.inputs.THEN
     const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
 
@@ -80,7 +81,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       const a = args[i]
       if (a.mode === 'select') {
         const name = a.text ?? a.selectedVar
-        if (name) valueNodes.push(createNode('cpp:var_ref', { name }))
+        if (name) valueNodes.push(建var_ref(name))
       } else if (a.mode === 'compose') {
         const inputData = block.inputs[`ARG_${i}`]
         if (inputData?.block) {
@@ -92,7 +93,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (valueNodes.length === 0) {
       // Fallback: try SEL_0 field (dynamic dropdown), then NAME field (JSON blockDef)
       const singleVar = (block.fields.SEL_0 as string) ?? (block.fields.NAME as string) ?? 'x'
-      valueNodes.push(createNode('cpp:var_ref', { name: singleVar }))
+      valueNodes.push(建var_ref(singleVar))
     }
     const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
     return createNode('cpp:input', { variable: firstVarName }, {
@@ -158,7 +159,7 @@ function buildElseIfChain(block: BlockState, index: number, ctx: ExtractContext)
   }
 
   const condInput = block.inputs[`ELSEIF_CONDITION_${index}`]
-  const cond = condInput?.block ? ctx.extract(condInput.block) : createNode('cpp:var_ref', { name: 'true' })
+  const cond = condInput?.block ? ctx.extract(condInput.block) : 建var_ref('true')
   const thenInput = block.inputs[`ELSEIF_THEN_${index}`]
   const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
   const elseBody = buildElseIfChain(block, index + 1, ctx)

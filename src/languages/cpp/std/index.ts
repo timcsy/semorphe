@@ -16,9 +16,7 @@ import { registerIostreamLifters } from './iostream/lifters'
 // cstdio
 import cstdioConcepts from './cstdio/concepts.json'
 import cstdioBlocks from './cstdio/blocks.json'
-import { registerCstdioGenerators } from './cstdio/generators'
 import { registerCstdioLifters } from './cstdio/lifters'
-import { registerExecutors as registerCstdioExecutors } from './cstdio/executors'
 
 
 // vector
@@ -163,7 +161,7 @@ const 已全部膠囊化: [unknown[], unknown[]] = [[], []]
 export const allStdModules: StdModule[] = [
   makeModule('<iostream>', iostreamConcepts, iostreamBlocks, registerIostreamGenerators, registerIostreamLifters, executorsStillInCore),
   makeModule('<cstring>', ...已全部膠囊化, noGenerators, noLifters, executorsStillInCore),
-  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, registerCstdioGenerators, registerCstdioLifters, registerCstdioExecutors),
+  makeModule('<cstdio>', cstdioConcepts, cstdioBlocks, noGenerators, registerCstdioLifters, executorsStillInCore),
   makeModule('<vector>', vectorConcepts, vectorBlocks, registerVectorGenerators, registerVectorLifters, registerVectorExecutors),
   makeModule('<algorithm>', algorithmConcepts, algorithmBlocks, registerAlgorithmGenerators, registerAlgorithmLifters, registerAlgorithmExecutors),
   makeModule('<string>', stringConcepts, stringBlocks, registerStringGenerators, registerStringLifters, registerStringExecutors),

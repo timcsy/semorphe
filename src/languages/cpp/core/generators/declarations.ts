@@ -55,12 +55,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `{${values.map(v => generateExpression(v, ctx)).join(', ')}}`
   })
 
-  g.set('cpp:array_at', (node, ctx) => {
-    const name = node.properties.obj ?? 'arr'
-    const indexNodes = node.children.index ?? []
-    const idx = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
-    return `${name}[${idx}]`
-  })
+
 
 
 

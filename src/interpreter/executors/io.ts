@@ -2,6 +2,7 @@ import type { ConceptExecutor } from '../executor-registry'
 import type { RuntimeValue } from '../types'
 import { defaultValue, parseInputValue, valueToString } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
+import { isIndexedAccess } from '../../core/component/traits'
 
 export function registerIoExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:print', async (node, ctx) => {
@@ -44,7 +45,7 @@ export function registerIoExecutors(register: (concept: string, executor: Concep
       let lastVal: RuntimeValue = { type: 'int', value: 0 }
       let itemsRead = 0
       for (const varRefNode of valueNodes) {
-        if (varRefNode.conceptId === 'cpp:array_at') {
+        if (isIndexedAccess(varRefNode.conceptId)) {
           const arrName = String(varRefNode.properties.obj)
           const arr = ctx.scope.get(arrName)
           if (arr.type !== 'array' || !Array.isArray(arr.value)) {

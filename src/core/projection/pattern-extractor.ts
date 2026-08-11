@@ -2,6 +2,7 @@ import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../typ
 import { parseToChildren } from './children-as-field'
 import { createNode } from '../semantic-tree'
 import { resolvePath, resolvePattern } from './common-mappings'
+import { conceptWithTrait } from '../component/traits'
 
 export interface BlockState {
   type: string
@@ -170,12 +171,13 @@ export class PatternExtractor {
           const mode = resolvePath(extraState, modePathResolved) as string | undefined
           if (mode && rule.modes[mode]) {
             const modeRule = rule.modes[mode]
-            if (modeRule.field && modeRule.wrap) {
+            const 包成 = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            if (modeRule.field && 包成) {
               // Select mode: read value from extraState, wrap as concept node
               const fieldPathResolved = resolvePattern(modeRule.field, i)
               const value = resolvePath(extraState, fieldPathResolved) as string | undefined
               if (value !== undefined) {
-                childNodes.push(createNode(modeRule.wrap, { name: value }))
+                childNodes.push(createNode(包成, { name: value }))
               }
             } else if (modeRule.input) {
               // Compose mode: read from block input

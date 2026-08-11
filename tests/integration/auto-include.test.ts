@@ -3,11 +3,10 @@ import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
 import { registerStatementGenerators } from '../../src/languages/cpp/core/generators/statements'
 import { registerDeclarationGenerators } from '../../src/languages/cpp/core/generators/declarations'
-import { registerExpressionGenerators } from '../../src/languages/cpp/core/generators/expressions'
 import { registerIostreamGenerators } from '../../src/languages/cpp/std/iostream/generators'
-import { registerCstdioGenerators } from '../../src/languages/cpp/std/cstdio/generators'
 import { createPopulatedRegistry } from '../../src/languages/cpp/std'
 import type { StylePreset } from '../../src/core/types'
+import { createCppGenerators } from '../../src/languages/cpp/generators'
 
 const apcsStyle: StylePreset = {
   id: 'apcs',
@@ -31,14 +30,13 @@ const competitiveStyle: StylePreset = {
   header_style: 'bits',
 }
 
+/**
+ * ⚠️ **不要自己組裝產生器 map**（`scaffold-codegen` 已經改過同一件事）。
+ * 手列 registrar 會漏掉 `componentGenerateRegistrars()`，症狀是
+ * `⟨unknown concept: cpp:print_formatted⟩`——看起來像產生器不見了。
+ */
 function makeGenerators(style: StylePreset): Map<string, NodeGenerator> {
-  const g = new Map<string, NodeGenerator>()
-  registerStatementGenerators(g, style)
-  registerDeclarationGenerators(g, style)
-  registerExpressionGenerators(g)
-  registerIostreamGenerators(g, style)
-  registerCstdioGenerators(g, style)
-  return g
+  return createCppGenerators(style)
 }
 
 function makeCtx(style: StylePreset, withRegistry = false): GeneratorContext {

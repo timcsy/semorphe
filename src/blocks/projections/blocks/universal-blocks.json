@@ -21,32 +21,6 @@
     }
   },
   {
-    "id": "cpp_var_ref",
-    "conceptId": "cpp:var_ref",
-    "language": "universal",
-    "category": "data",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_var_ref",
-      "message0": "%1",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        }
-      ],
-      "output": "Expression",
-      "colour": "#FF8C1A",
-      "tooltip": "%{BKY_U_VAR_REF_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      }
-    }
-  },
-  {
     "id": "cpp_if",
     "conceptId": "cpp:if",
     "language": "universal",
@@ -243,7 +217,7 @@
           "modes": {
             "select": {
               "field": "args[{i}].text",
-              "wrap": "cpp:var_ref"
+              "wrapTrait": "variableRef"
             },
             "compose": {
               "input": "ARG_{i}"
@@ -274,7 +248,7 @@
           "modes": {
             "select": {
               "field": "args[{i}].text",
-              "wrap": "cpp:var_ref"
+              "wrapTrait": "variableRef"
             },
             "compose": {
               "input": "ARG_{i}"
@@ -286,46 +260,6 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
-  },
-  {
-    "id": "cpp_array_at",
-    "conceptId": "cpp:array_at",
-    "language": "universal",
-    "category": "arrays",
-    "version": "1.0.0",
-    "blockDef": {
-      "type": "cpp_array_at",
-      "message0": "%{BKY_U_ARRAY_ACCESS_MSG0}",
-      "args0": [
-        {
-          "type": "field_dropdown",
-          "name": "NAME",
-          "options": [
-            [
-              "arr",
-              "arr"
-            ]
-          ]
-        },
-        {
-          "type": "input_value",
-          "name": "INDEX",
-          "check": "Expression"
-        }
-      ],
-      "inputsInline": true,
-      "output": "Expression",
-      "colour": "#FF661A",
-      "tooltip": "%{BKY_U_ARRAY_ACCESS_TOOLTIP}"
-    },
-    "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
-      "inputs": {
-        "INDEX": "index"
-      }
     }
   }
 ]

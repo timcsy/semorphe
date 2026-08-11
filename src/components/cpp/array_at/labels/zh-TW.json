@@ -1,0 +1,4 @@
+{
+  "U_ARRAY_ACCESS_MSG0": "陣列 %1 的第 [ %2 ] 格",
+  "U_ARRAY_ACCESS_TOOLTIP": "取得或設定陣列中指定位置的值，索引從 0 開始"
+}

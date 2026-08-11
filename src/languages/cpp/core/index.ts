@@ -15,5 +15,5 @@ export const coreBlocks: BlockProjectionJSON[] = (_coreBlocks as unknown as Bloc
 )
 
 // Core generators & lifters
-export { registerStatementGenerators, registerDeclarationGenerators, registerExpressionGenerators } from './generators'
+export { registerStatementGenerators, registerDeclarationGenerators } from './generators'
 export { registerStatementLifters, registerDeclarationLifters, registerExpressionLifters, registerCppLiftStrategies, registerCppTransforms } from './lifters'

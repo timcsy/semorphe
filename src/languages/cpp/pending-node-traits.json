@@ -4,10 +4,6 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:array_at": {
-      "precedence": 16,
-      "forLoopPart": true
-    },
     "cpp:include": {
       "scaffold": true,
       "includeDirective": true
@@ -16,24 +12,12 @@
       "ioRole": "input",
       "ioStyle": "iostream"
     },
-    "cpp:input_formatted": {
-      "ioRole": "input",
-      "ioStyle": "cstdio"
-    },
     "cpp:print": {
       "ioRole": "print",
       "ioStyle": "iostream"
     },
-    "cpp:print_formatted": {
-      "ioRole": "print",
-      "ioStyle": "cstdio"
-    },
     "cpp:var_declare": {
       "forLoopPart": true
-    },
-    "cpp:var_ref": {
-      "forLoopPart": true,
-      "variableRef": true
     },
     "number": {
       "forLoopPart": true

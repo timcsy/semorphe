@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cpp_var_ref",
+    "conceptId": "cpp:var_ref",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_ref",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_VAR_REF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      }
+    }
+  }
+]

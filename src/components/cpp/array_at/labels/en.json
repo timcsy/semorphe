@@ -1,0 +1,4 @@
+{
+  "U_ARRAY_ACCESS_MSG0": "array %1 at index [ %2 ]",
+  "U_ARRAY_ACCESS_TOOLTIP": "Get or set the value at a specific position in the array, indexed starting from 0"
+}
