@@ -1,0 +1,5 @@
+{
+  "U_IF_ELSE_MSG0": "if %1 then",
+  "U_IF_ELSE_MSG2": "else",
+  "U_IF_ELSE_TOOLTIP": "If the condition is true, execute the 'then' part; otherwise execute the 'else' part"
+}

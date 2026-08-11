@@ -1,0 +1,32 @@
+{
+  "conceptId": "cpp:if_else",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "then": "statements",
+    "else": "statements"
+  },
+  "role": "statement",
+  "annotations": {
+    "control_flow": "branch",
+    "introduces_scope": true,
+    "debug_step": true
+  },
+  "skipPaths": [
+    "lift"
+  ],
+  "skipReasons": {
+    "lift": "degradation-target"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": null,
+    "_lift_why": "**顯式的空，不是遺漏。**"
+  }
+}

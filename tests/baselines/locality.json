@@ -52,7 +52,7 @@
     },
     "cpp:builtin_constant": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:case": {
       "files": 2,
@@ -236,7 +236,7 @@
     },
     "cpp:if_else": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:ifdef": {
       "files": 3,
@@ -372,7 +372,7 @@
     },
     "cpp:member_static": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:memory_copy": {
       "files": 3,
@@ -432,7 +432,7 @@
     },
     "cpp:pointer_declare": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:pointer_deref": {
       "files": 4,
@@ -684,15 +684,15 @@
     },
     "cpp:var_declare_ref": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:var_declare_static": {
       "files": 3,
       "dirs": 1
     },
     "cpp:var_ref": {
-      "files": 8,
-      "dirs": 7
+      "files": 7,
+      "dirs": 6
     },
     "cpp:var_swap": {
       "files": 3,

@@ -68,7 +68,8 @@
       "forLoopPart": true
     },
     "cpp:var_ref": {
-      "forLoopPart": true
+      "forLoopPart": true,
+      "variableRef": true
     },
     "number": {
       "forLoopPart": true

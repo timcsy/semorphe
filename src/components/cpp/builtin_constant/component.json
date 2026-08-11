@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:builtin_constant",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "value",
+      "kind": "enum",
+      "values": [
+        "true",
+        "false",
+        "EOF",
+        "NULL",
+        "nullptr"
+      ],
+      "default": "NULL"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  }
+}

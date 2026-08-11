@@ -1,0 +1,4 @@
+{
+  "C_STATIC_MEMBER_MSG0": "宣告靜態成員 %1 %2",
+  "C_STATIC_MEMBER_TOOLTIP": "宣告一個靜態成員變數，所有類別實體共用。"
+}

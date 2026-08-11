@@ -24,6 +24,10 @@ import { 建method_override } from '../../../../components/cpp/method_override/l
 import { 建method_virtual_pure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { 建operator_overload } from '../../../../components/cpp/operator_overload/lift'
 import { 建cast } from '../../../../components/cpp/cast/lift'
+import { 建pointer_declare } from '../../../../components/cpp/pointer_declare/lift'
+import { 建var_declare_ref } from '../../../../components/cpp/var_declare_ref/lift'
+import { 建member_static } from '../../../../components/cpp/member_static/lift'
+import { typeSuffixOf } from '../node-traits'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -134,14 +138,14 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     }
     const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = ptrIdent?.text ?? 'ptr'
-    return createNode('cpp:pointer_declare', { name, type })
+    return 建pointer_declare(name, type)
   }
 
   // Bare reference declarator without init: int& ref; (rare, usually has init)
   if (decl.type === 'reference_declarator') {
     const refIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = refIdent?.text ?? 'ref'
-    return createNode('cpp:var_declare_ref', { name, type })
+    return 建var_declare_ref(name, type)
   }
 
   // init_declarator: name = value
@@ -155,11 +159,9 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return createNode('cpp:var_declare_ref', { name, type }, {
-        initializer: value ? [value] : [],
-      })
+      return 建var_declare_ref(name, type, value)
     }
-    return createNode('cpp:var_declare_ref', { name, type })
+    return 建var_declare_ref(name, type)
   }
 
   // Pointer declarator: int* ptr = &x
@@ -177,11 +179,9 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return createNode('cpp:pointer_declare', { name, type }, {
-        initializer: value ? [value] : [],
-      })
+      return 建pointer_declare(name, type, value)
     }
-    return createNode('cpp:pointer_declare', { name, type })
+    return 建pointer_declare(name, type)
   }
 
   // Array init_declarator: int arr[10] = {...}
@@ -308,7 +308,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
       const name = declNode?.text ?? 'member'
-      return createNode('cpp:member_static', { type, name })
+      return 建member_static(type, name)
     }
 
     // Regular field declaration: type name; or type x, y;
@@ -585,7 +585,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
-        if (lifted.conceptId === 'cpp:pointer_declare') liftedType += '*'
+        // ⚠️ 問**性狀**不問身分：「我的型別要接一個 `*`」是那顆元件的性質。
+        // 寫死 `'cpp:pointer_declare'` 的話它永遠搬不進膠囊。
+        liftedType += typeSuffixOf(lifted.conceptId)
         return createNode(conceptId, {
           type: liftedType,
           name: lifted.properties.name as string ?? 'x',
@@ -615,7 +617,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         }
         return 建靜態變數(type, name, null)
       }
-      return createNode('cpp:member_static', { name: 'x', type })
+      return 建member_static(type, 'x')
     }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl

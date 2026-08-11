@@ -9,14 +9,14 @@
         "cpp_literal_number",
         "cpp_literal_string",
         "cpp_builtin_constant",
-        "cpp_var_declare_ref",
-        "cpp_member_static",
         "cpp_enum",
+        "cpp_member_static",
         "cpp_typedef",
         "cpp_using_alias",
         "cpp_var_declare_auto",
         "cpp_var_declare_const",
         "cpp_var_declare_constexpr",
+        "cpp_var_declare_ref",
         "cpp_var_declare_static",
         "cpp_literal_char",
         "cpp_var_declare_expression"
@@ -210,12 +210,12 @@
     {
       "name": "指標與記憶體",
       "blocks": [
-        "cpp_pointer_declare",
         "cpp_pointer_deref",
         "cpp_address_of",
         "cpp_malloc",
         "cpp_free",
         "cpp_pointer_assign",
+        "cpp_pointer_declare",
         "cpp_memory_copy",
         "cpp_memory_fill"
       ]

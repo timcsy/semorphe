@@ -225,29 +225,6 @@
     }
   },
   {
-    "conceptId": "cpp:if_else",
-    "layer": "universal",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "condition": "expression",
-      "then": "statements",
-      "else": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "control_flow": "branch",
-      "introduces_scope": true,
-      "debug_step": true
-    },
-    "skipPaths": [
-      "lift"
-    ],
-    "skipReasons": {
-      "lift": "degradation-target"
-    }
-  },
-  {
     "conceptId": "cpp:loop_count",
     "layer": "universal",
     "abstractConcept": null,

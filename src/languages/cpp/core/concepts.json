@@ -85,29 +85,6 @@
     "role": "expression"
   },
   {
-    "conceptId": "cpp:pointer_declare",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "required": true,
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "required": true,
-        "default": "ptr"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:pointer_deref",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -209,27 +186,6 @@
       "args": "expressions"
     },
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp:builtin_constant",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "value",
-        "kind": "enum",
-        "values": [
-          "true",
-          "false",
-          "EOF",
-          "NULL",
-          "nullptr"
-        ],
-        "default": "NULL"
-      }
-    ],
-    "children": {},
-    "role": "expression"
   },
   {
     "conceptId": "cpp:include",
@@ -335,62 +291,6 @@
     ],
     "skipReasons": {
       "execute": "declarative"
-    }
-  },
-  {
-    "conceptId": "cpp:var_declare_ref",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "required": true,
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "required": true,
-        "default": "ref"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:member_static",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "type",
-        "kind": "enum",
-        "values": [
-          "int",
-          "float",
-          "double",
-          "char",
-          "bool",
-          "string"
-        ],
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "literal",
-        "default": "count"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "consumed-by-parent"
     }
   },
   {

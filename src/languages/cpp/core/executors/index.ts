@@ -5,10 +5,8 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import { registerPointerExecutors } from './pointers'
 import { registerContainerCoreExecutors } from './containers'
 import { registerPreprocessorExecutors } from './preprocessor'
-import { registerVariablesCoreExecutors } from './variables'
 import { registerOperatorsCoreExecutors } from './operators'
 import { registerMutationsCoreExecutors } from './mutations'
-import { registerLiteralsCoreExecutors } from './literals'
 import { registerFunctionsCoreExecutors } from './functions'
 import { registerArraysCoreExecutors } from './arrays'
 
@@ -24,10 +22,8 @@ export function registerCoreExecutors(
   registerPointerExecutors(register)
   registerContainerCoreExecutors(register)
   registerPreprocessorExecutors(register)
-  registerVariablesCoreExecutors(register)
   registerOperatorsCoreExecutors(register)
   registerMutationsCoreExecutors(register)
-  registerLiteralsCoreExecutors(register)
   registerFunctionsCoreExecutors(register)
   registerStructExecutors(register)
   registerLambdaExecutors(register)

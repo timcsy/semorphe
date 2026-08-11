@@ -1,0 +1,4 @@
+{
+  "C_REF_DECLARE_MSG0": "Create %1 alias %2 bound to %3 (&)",
+  "C_REF_DECLARE_TOOLTIP": "A reference is an alias (another name) for a variable. Changing the reference changes the original. Unlike pointers, references cannot be rebound."
+}

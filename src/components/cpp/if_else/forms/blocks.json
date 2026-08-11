@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cpp_if_else",
+    "conceptId": "cpp:if_else",
+    "language": "universal",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_if_else",
+      "message0": "%{BKY_U_IF_ELSE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "THEN",
+          "check": "Statement"
+        }
+      ],
+      "message2": "%{BKY_U_IF_ELSE_MSG2}",
+      "message3": "%1",
+      "args3": [
+        {
+          "type": "input_statement",
+          "name": "ELSE",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_U_IF_ELSE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "ELSE": "else",
+        "THEN": "then"
+      }
+    }
+  }
+]

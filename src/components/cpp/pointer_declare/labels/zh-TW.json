@@ -1,0 +1,9 @@
+{
+  "C_POINTER_DECLARE_MSG0": "建立 %1 指標變數 %2 初始值 %3 (*)",
+  "C_POINTER_DECLARE_TOOLTIP": "指標像是寫著地址的便條紙——它記錄另一個變數在記憶體中的位置。留空初始值會產生未初始化指標，可能導致程式崩潰。",
+  "C_POINTER_DECLARE_TYPE_INT": "int（整數）",
+  "C_POINTER_DECLARE_TYPE_FLOAT": "float（小數）",
+  "C_POINTER_DECLARE_TYPE_DOUBLE": "double（精確小數）",
+  "C_POINTER_DECLARE_TYPE_CHAR": "char（字元）",
+  "C_POINTER_DECLARE_TYPE_VOID": "void（無回傳）"
+}

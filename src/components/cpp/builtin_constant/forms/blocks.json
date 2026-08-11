@@ -1,0 +1,51 @@
+[
+  {
+    "id": "cpp_builtin_constant",
+    "conceptId": "cpp:builtin_constant",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_builtin_constant",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VALUE",
+          "options": [
+            [
+              "true",
+              "true"
+            ],
+            [
+              "false",
+              "false"
+            ],
+            [
+              "EOF",
+              "EOF"
+            ],
+            [
+              "NULL",
+              "NULL"
+            ],
+            [
+              "nullptr",
+              "nullptr"
+            ]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": "#8B5CF6",
+      "tooltip": "%{BKY_C_BUILTIN_CONSTANT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "VALUE": "value"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

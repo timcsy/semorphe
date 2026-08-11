@@ -47,16 +47,7 @@ export function registerPointerExecutors(register: (concept: string, executor: C
     return { type: 'int', value: 0 }
   })
 
-  register('cpp:pointer_declare', async (node, ctx) => {
-    const name = String(node.properties.name ?? 'ptr')
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = await ctx.evaluate(inits[0])
-      ctx.scope.declare(name, val)
-    } else {
-      ctx.scope.declare(name, { type: 'pointer' as any, value: null })
-    }
-  })
+
 
 
 

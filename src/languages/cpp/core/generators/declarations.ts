@@ -37,24 +37,11 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return 收尾(`${type} ${name}`)
   })
 
-  g.set('cpp:var_declare_ref', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'ref'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}${type}& ${name} = ${val};\n`
-    }
-    return `${indent(ctx)}${type}& ${name};\n`
-  })
 
 
 
-  g.set('cpp:member_static', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'count'
-    return `${indent(ctx)}static ${type} ${name};\n`
-  })
+
+
 
   g.set('cpp:var_assign', (node, ctx) => {
     const name = node.properties.obj ?? 'x'
@@ -106,16 +93,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${name}[${idx}] = ${val};\n`
   })
 
-  g.set('cpp:pointer_declare', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'ptr'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}${type}* ${name} = ${val};\n`
-    }
-    return `${indent(ctx)}${type}* ${name};\n`
-  })
+
 
 
 

@@ -37,15 +37,31 @@ const 檔 = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: t
   { default?: unknown }
 >
 
-/** 膠囊自帶的 lift pattern。**glob 直讀，沒有時序問題，也沒有組裝點。** */
+/**
+ * 膠囊自帶的 lift pattern。**glob 直讀，沒有時序問題，也沒有組裝點。**
+ *
+ * ⚠️ **一顆膠囊可以帶不只一筆。** 第一版寫 `.map(m => m.default ?? m)`
+ * ——**一個檔一筆**，因為當時每顆都只有一筆。
+ * `cpp:builtin_constant` 帶 6 筆（`true`／`false`／`nullptr`／`NULL`／`EOF`／`null`），
+ * 於是整個陣列被當成**一筆** pattern 餵進去，`conceptId` 讀成 `undefined`
+ * ——**`true` 這個字從此辨識不出來**，而症狀是 13 段語料在執行期
+ * 報 `UNKNOWN_CONCEPT: raw_code`（辨識失敗後降級的落點）。
+ *
+ * > **「每個檔案一筆」是一個沒有被寫下來的假設，
+ * > 而它在第 N 顆元件身上才會被否證。**
+ */
 export function componentLiftPatterns(): unknown[] {
-  return Object.values(檔).map((m) => m.default ?? m)
+  return Object.values(檔).flatMap((m) => {
+    const o = m.default ?? m
+    return Array.isArray(o) ? o : [o]
+  })
 }
 
 /** 護欄用：每一筆是哪顆膠囊帶的。 */
 export function componentLiftPatternSources(): [路徑: string, id: string][] {
-  return Object.entries(檔).map(([p, m]) => {
-    const o = (m.default ?? m) as { id?: string }
-    return [p, String(o.id ?? '(無 id)')]
+  return Object.entries(檔).flatMap(([p, m]) => {
+    const o = m.default ?? m
+    const 們 = (Array.isArray(o) ? o : [o]) as { id?: string }[]
+    return 們.map((x) => [p, String(x.id ?? '(無 id)')] as [string, string])
   })
 }

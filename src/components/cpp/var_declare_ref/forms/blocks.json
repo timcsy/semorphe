@@ -1,0 +1,87 @@
+[
+  {
+    "id": "cpp_var_declare_ref",
+    "conceptId": "cpp:var_declare_ref",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_declare_ref",
+      "message0": "%{BKY_C_REF_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_STRING}",
+              "string"
+            ],
+            [
+              "%{BKY_U_VAR_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "ref"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_C_REF_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME": "name"
+      },
+      "inputs": {
+        "INIT": "initializer"
+      }
+    },
+    "codeTemplate": {
+      "pattern": "${TYPE}& ${NAME} = ${INIT};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "declaration",
+      "constraints": [
+        {
+          "field": "declarator",
+          "nodeType": "reference_declarator"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "type",
+          "ast": "type",
+          "extract": "text"
+        },
+        {
+          "semantic": "name",
+          "ast": "declarator",
+          "extract": "text"
+        }
+      ]
+    }
+  }
+]

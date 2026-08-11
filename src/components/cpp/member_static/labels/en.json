@@ -1,0 +1,4 @@
+{
+  "C_STATIC_MEMBER_MSG0": "Declare static member %1 %2",
+  "C_STATIC_MEMBER_TOOLTIP": "Declare a static member variable shared by all instances of a class."
+}

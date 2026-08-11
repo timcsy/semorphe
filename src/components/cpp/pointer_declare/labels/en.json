@@ -1,0 +1,9 @@
+{
+  "C_POINTER_DECLARE_MSG0": "Create %1 pointer %2 init %3 (*)",
+  "C_POINTER_DECLARE_TOOLTIP": "A pointer is like a note with an address — it records where another variable lives in memory. Leaving init empty creates an uninitialized pointer, which may cause crashes.",
+  "C_POINTER_DECLARE_TYPE_INT": "int (integer)",
+  "C_POINTER_DECLARE_TYPE_FLOAT": "float (decimal)",
+  "C_POINTER_DECLARE_TYPE_DOUBLE": "double (precise decimal)",
+  "C_POINTER_DECLARE_TYPE_CHAR": "char (character)",
+  "C_POINTER_DECLARE_TYPE_VOID": "void (no type)"
+}

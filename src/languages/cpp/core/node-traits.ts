@@ -51,6 +51,21 @@ export interface NodeTraits {
    * 搬進膠囊。與 `memberRoleOf` 同一個處置：**消費者問性狀，不問身分。**
    */
   defaultCase?: boolean
+  /**
+   * 這顆元件的宣告要在型別後面接什麼（`int` → `int*`）。
+   *
+   * ⚠️ `strategies.ts` 原本寫 `if (lifted.conceptId === 'cpp:pointer_declare')
+   * liftedType += '*'`——**消費者依身分分派**，而它擋住那顆搬進膠囊。
+   */
+  typeSuffix?: string
+  /**
+   * 這顆節點**就是一個具名變數的參照**（`properties.name` 是那個變數名）。
+   *
+   * ⚠️ `cpp:var_declare_ref` 的執行器要知道「初值是不是一個變數」才決定
+   * 做別名還是一般宣告，而它原本寫 `目標.conceptId === 'cpp:var_ref'`
+   * ——**一顆膠囊裡提到另一顆的身分**，就近性護欄的反向檢查會指名。
+   */
+  variableRef?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -80,4 +95,14 @@ export function canBeForLoopPart(conceptId: string): boolean {
 /** 這顆元件是 `switch` 裡兜底的那一支嗎。沒宣告＝不是（保守）。 */
 export function isDefaultCase(conceptId: string): boolean {
   return 性狀(conceptId)?.defaultCase === true
+}
+
+/** 這顆元件的宣告在型別後面接什麼。沒宣告＝什麼都不接。 */
+export function typeSuffixOf(conceptId: string): string {
+  return 性狀(conceptId)?.typeSuffix ?? ''
+}
+
+/** 這顆節點就是一個具名變數的參照嗎。沒宣告＝不是（保守）。 */
+export function isVariableRef(conceptId: string): boolean {
+  return 性狀(conceptId)?.variableRef === true
 }

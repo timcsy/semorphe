@@ -1,0 +1,43 @@
+{
+  "conceptId": "cpp:member_static",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "enum",
+      "values": [
+        "int",
+        "float",
+        "double",
+        "char",
+        "bool",
+        "string"
+      ],
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "count"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "consumed-by-parent"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "memberRole": "static-field",
+  "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）"
+}

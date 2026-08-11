@@ -1,0 +1,35 @@
+{
+  "conceptId": "cpp:pointer_declare",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "required": true,
+      "default": "ptr"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "typeSuffix": "*"
+  },
+  "_traits_why": "**「我的型別要接一個 `*`」是我自己的性質**，不是 const/constexpr 那條路該寫死的身分判斷。"
+}

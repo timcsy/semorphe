@@ -60,17 +60,20 @@ describe('Language manifest loading', () => {
       manifestConceptCount += concepts.length
     }
 
-    // ⚠️ **這個下限隨 F（膠囊搬家）下降**——manifest 列的是**共用宣告檔**，
-    // 而膠囊的積木不在那些檔裡。它量的是「manifest 指的路徑讀得到東西」，
-    // 不是「這個語言有幾顆積木」。
+    // ⚠️ **這裡不准錨在「還有幾顆沒被搬走」上。**
     //
-    // > 一個入口條件錨在「還沒被搬走的有幾顆」上，會在搬家成功的路上變紅。
+    // 前兩版都錨在那個數字上（58 → 30、42 → 20），而它**隨 F 下降**——
+    // 於是每搬一批就要下調一次，而下調的動作與「護欄壞了」長得一模一樣。
+    // 2026-08-11 第三次撞到（28 < 30）之後改掉。
     //
-    // 2026-08-11：58 → 30（保守下限，留給後續搬家空間）。
-    expect(manifestBlockCount).toBeGreaterThanOrEqual(30)
-    // core(42) concepts + std module concepts (19+) = 61+
-    // ⚠️ 同上：這個下限也隨 F 下降（manifest 列的是共用宣告檔）。2026-08-11：42 → 20。
-    expect(manifestConceptCount).toBeGreaterThanOrEqual(20)
+    // > **簽名：斷言的那個數字，是不是這條規範想推向零的？**
+    // > 是 → 它會在成功的那天變紅。
+    //
+    // 這支測試真正要問的是「**manifest 指的每一條路徑都讀得到東西嗎**」，
+    // 而那已經由上面的迴圈（`JSON.parse` 不丟錯）與下面的 `> 0` 回答了。
+    // 錨改成**列了幾條路徑**——那是輸入量，不隨搬家變。
+    expect(manifest.provides.blocks.length, 'manifest 沒列任何積木來源').toBeGreaterThan(3)
+    expect(manifest.provides.concepts.length, 'manifest 沒列任何概念來源').toBeGreaterThan(3)
     // Blocks and concepts should both be non-trivial
     expect(manifestBlockCount).toBeGreaterThan(0)
     expect(manifestConceptCount).toBeGreaterThan(0)
