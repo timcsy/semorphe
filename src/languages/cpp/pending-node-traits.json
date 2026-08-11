@@ -4,17 +4,11 @@
     "boolean": {
       "forLoopPart": true
     },
-    "cpp:arithmetic": {
-      "forLoopPart": true
-    },
     "cpp:array_assign": {
       "forLoopPart": true
     },
     "cpp:array_at": {
       "precedence": 16,
-      "forLoopPart": true
-    },
-    "cpp:compare": {
       "forLoopPart": true
     },
     "cpp:func_call": {
@@ -23,15 +17,6 @@
     "cpp:include": {
       "scaffold": true,
       "includeDirective": true
-    },
-    "cpp:literal_number": {
-      "forLoopPart": true
-    },
-    "cpp:literal_string": {
-      "forLoopPart": true
-    },
-    "cpp:logic": {
-      "forLoopPart": true
     },
     "cpp:var_assign": {
       "precedence": 2,

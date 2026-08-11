@@ -2,7 +2,7 @@ import type { StylePreset } from '../../../../core/types'
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../../core/projection/code-generator'
 // ⚠️ 問**性狀**不問身分——一份身分集合擋住那三顆搬進膠囊。
-import { needsParenInCout } from '../../core/node-traits'
+import { needsParenInCout, isBinaryOperator, isStringLiteral } from '../../core/node-traits'
 
 export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style: StylePreset): void {
   // Bitwise/comparison/logic operators have lower precedence than <<
@@ -10,8 +10,9 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
 
   function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
     if (needsParenInCout(v.conceptId)) return true
-    if ((v.conceptId === 'cpp:arithmetic' || v.conceptId === 'cpp:compare' || v.conceptId === 'cpp:logic') &&
-        LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
+    // ⚠️ 只換掉身分那一半——**清單留著**，那是 `<<` 的排版知識，
+    // 不是任何一顆元件的性質。
+    if (isBinaryOperator(v.conceptId) && LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
     return false
   }
 
@@ -31,7 +32,7 @@ export function registerIostreamGenerators(g: Map<string, NodeGenerator>, style:
     const argParts: string[] = []
     for (const v of values) {
       if (v.conceptId === 'cpp:endl') continue
-      if (v.conceptId === 'cpp:literal_string') {
+      if (isStringLiteral(v.conceptId)) {
         fmtParts.push((v.properties.value as string) ?? '')
       } else {
         fmtParts.push('%d')

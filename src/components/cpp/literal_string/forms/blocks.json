@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cpp_literal_string",
+    "conceptId": "cpp:literal_string",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_literal_string",
+      "message0": "\" %1 \"",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TEXT",
+          "text": "hello"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_STRING_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "value"
+      }
+    }
+  }
+]

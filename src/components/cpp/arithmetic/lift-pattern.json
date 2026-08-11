@@ -1,0 +1,39 @@
+{
+  "id": "cpp_binary_arithmetic",
+  "astNodeType": "binary_expression",
+  "patternType": "operatorDispatch",
+  "operatorDispatch": {
+    "operatorField": "$operator",
+    "routes": {
+      "+": "cpp:arithmetic",
+      "-": "cpp:arithmetic",
+      "*": "cpp:arithmetic",
+      "/": "cpp:arithmetic",
+      "%": "cpp:arithmetic",
+      "&": "cpp:arithmetic",
+      "|": "cpp:arithmetic",
+      "^": "cpp:arithmetic",
+      "<<": "cpp:arithmetic",
+      ">>": "cpp:arithmetic"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "operator",
+        "ast": "$operator",
+        "extract": "text"
+      },
+      {
+        "semantic": "left",
+        "ast": "left",
+        "extract": "lift"
+      },
+      {
+        "semantic": "right",
+        "ast": "right",
+        "extract": "lift"
+      }
+    ]
+  },
+  "priority": 5,
+  "_why": "⚠️ 這一筆原本是共用的 `cpp_binary_dispatch`——**一筆 pattern 路由三顆元件**。\n三顆搬進膠囊之後它就是一個跨元件的共用檔，於是按 routes 拆成三筆。\n拆得開是因為 operatorDispatch 的 routes 本來就是「符號 → 身分」，\n**每一列都只屬於一顆元件**。"
+}

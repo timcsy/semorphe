@@ -11,8 +11,8 @@
       "dirs": 1
     },
     "cpp:arithmetic": {
-      "files": 5,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:array_2d_assign": {
       "files": 3,
@@ -107,8 +107,8 @@
       "dirs": 1
     },
     "cpp:compare": {
-      "files": 5,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:constructor": {
       "files": 2,
@@ -288,15 +288,15 @@
     },
     "cpp:literal_number": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:literal_string": {
-      "files": 5,
-      "dirs": 4
+      "files": 3,
+      "dirs": 1
     },
     "cpp:logic": {
-      "files": 5,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:logic_not": {
       "files": 4,

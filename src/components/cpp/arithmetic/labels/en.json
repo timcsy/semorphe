@@ -1,0 +1,9 @@
+{
+  "U_ARITHMETIC_TOOLTIP": "Perform addition, subtraction, multiplication, division, or remainder on two numbers",
+  "U_ARITHMETIC_OP_REMAINDER": "remainder",
+  "U_ARITHMETIC_OP_BITAND": "bitwise AND (&)",
+  "U_ARITHMETIC_OP_BITOR": "bitwise OR (|)",
+  "U_ARITHMETIC_OP_BITXOR": "bitwise XOR (^)",
+  "U_ARITHMETIC_OP_LSHIFT": "left shift (<<)",
+  "U_ARITHMETIC_OP_RSHIFT": "right shift (>>)"
+}

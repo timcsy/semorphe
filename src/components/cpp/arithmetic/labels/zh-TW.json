@@ -1,0 +1,9 @@
+{
+  "U_ARITHMETIC_TOOLTIP": "把兩個數字做加、減、乘、除或取餘數的計算",
+  "U_ARITHMETIC_OP_REMAINDER": "餘數",
+  "U_ARITHMETIC_OP_BITAND": "位元 AND（&）",
+  "U_ARITHMETIC_OP_BITOR": "位元 OR（|）",
+  "U_ARITHMETIC_OP_BITXOR": "位元 XOR（^）",
+  "U_ARITHMETIC_OP_LSHIFT": "左移（<<）",
+  "U_ARITHMETIC_OP_RSHIFT": "右移（>>）"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "cpp_number_literal",
+  "astNodeType": "number_literal",
+  "concept": {
+    "conceptId": "cpp:literal_number"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "value",
+      "ast": "$text",
+      "extract": "text"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "U_COMPARE_TOOLTIP": "比較兩個值的大小或是否相等，結果是「是」或「否」",
+  "U_COMPARE_OP_GT": ">",
+  "U_COMPARE_OP_LT": "<",
+  "U_COMPARE_OP_GE": "≥",
+  "U_COMPARE_OP_LE": "≤",
+  "U_COMPARE_OP_EQ": "＝",
+  "U_COMPARE_OP_NE": "≠"
+}

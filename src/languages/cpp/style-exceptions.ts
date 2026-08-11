@@ -9,6 +9,7 @@ import type { SemanticNode } from '../../core/types'
 import type { CodingStyle } from '../style'
 import { createNode } from '../../core/semantic-tree'
 import type { ModuleRegistry } from './std/module-registry'
+import { isStringLiteral } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -123,7 +124,7 @@ const printToCstdioRule: StyleExceptionRule = {
     const args: typeof values = []
     for (const v of values) {
       if (v.conceptId === 'cpp:endl') continue
-      if (v.conceptId === 'cpp:literal_string') {
+      if (isStringLiteral(v.conceptId)) {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''
         formatParts.push(text)

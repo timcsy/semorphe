@@ -91,13 +91,6 @@
     "理由": "輸入耗盡（EOF）時回 0——C++ 的 cin 失敗語義就是不改變目標值。不是檢查失敗的退路。"
   },
   {
-    "鍵": "src/interpreter/executors/operators.ts#1t4y9k4",
-    "位置": "src/interpreter/executors/operators.ts:105",
-    "訊號": "!ctx.toBool(left) → if (!ctx.toBool(left)) return { type: 'bool', value: false }",
-    "判定": "合法",
-    "理由": "**&& 的短路求值**——左邊為假就是 false，這是運算子的語義本身。"
-  },
-  {
     "鍵": "src/components/cpp/char_is_digit/execute.ts#a4cbw",
     "位置": "src/components/cpp/char_is_digit/execute.ts:16",
     "訊號": "!v → if (!v) return { type: 'int', value: 0 }",
@@ -138,5 +131,12 @@
     "訊號": "ctx.toBool(condition) → return falseNodes.length > 0 ? await ctx.evaluate(falseNodes",
     "判定": "合法",
     "理由": "三元運算子的分支——條件成立而該分支為空時回 0。這是 if/else 的結構本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
+  },
+  {
+    "鍵": "src/components/cpp/logic/execute.ts#1t4y9k4",
+    "位置": "src/components/cpp/logic/execute.ts:10",
+    "訊號": "!ctx.toBool(left) → if (!ctx.toBool(left)) return { type: 'bool', value: false }",
+    "判定": "合法",
+    "理由": "**&& 的短路求值**——左邊為假就是 false，這是運算子的語義本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
   }
 ]

@@ -127,6 +127,34 @@ export interface NodeTraits {
    * 行為決定，不是搬家該順手做的。**搬移不重寫。**
    */
   parenInCout?: boolean
+  /**
+   * 這是一個**二元運算子節點**——`properties.operator` 是那個符號。
+   *
+   * ⚠️ `iostream/generators.ts` 原本寫
+   * `v.conceptId === 'cpp:arithmetic' || … 'cpp:compare' || … 'cpp:logic'`
+   * 再去比對一份低優先權運算子清單。**清單留著**（那是 `<<` 的排版知識），
+   * 換掉的只有身分那一半。
+   */
+  binaryOperator?: boolean
+  /**
+   * 優先級**隨運算子而變**時的宣告。
+   *
+   * ```json
+   * { "default": 5, "rules": [{ "ops": ["||"], "p": 4 }] }
+   * ```
+   *
+   * ⚠️ 與 `precedence` 互斥：一顆元件的優先級要嘛是常數，要嘛看運算子。
+   * 原本是 `generators/expressions.ts` 裡的三個函式（`OPERATOR_PRECEDENCE`），
+   * 而**函式寫不進 JSON**——所以改成規則表。
+   */
+  precedenceByOperator?: { default: number; rules: { ops: string[]; p: number }[] }
+  /**
+   * 這顆是**字串字面值**（`properties.value` 是那串文字）。
+   *
+   * ⚠️ 兩個消費者要認得它，而它們做的是同一件事：把字串**內嵌進格式字串**
+   * （`cout << "x"` → `printf("x")`）。那不是任何一顆的實作，是風格轉換的知識。
+   */
+  stringLiteral?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -191,4 +219,29 @@ export function needsParenInCout(conceptId: string): boolean {
 /** 這顆在 `main` 裡時算鷹架嗎。沒宣告＝不算（保守）。 */
 export function isScaffoldInMain(conceptId: string): boolean {
   return 性狀(conceptId)?.scaffoldInMain === true
+}
+
+/** 這是二元運算子節點嗎（`properties.operator` 是符號）。沒宣告＝不是。 */
+export function isBinaryOperator(conceptId: string): boolean {
+  return 性狀(conceptId)?.binaryOperator === true
+}
+
+/** 這是字串字面值嗎（`properties.value` 是那串文字）。沒宣告＝不是。 */
+export function isStringLiteral(conceptId: string): boolean {
+  return 性狀(conceptId)?.stringLiteral === true
+}
+
+/**
+ * 這個節點的優先級——固定的或隨運算子而變的。
+ *
+ * 回 `undefined` 的意思是「**不需要括號**」，不是「不知道」。
+ */
+export function precedenceOfNode(node: { conceptId: string; properties?: Record<string, unknown> }): number | undefined {
+  const t = 性狀(node.conceptId)
+  if (t?.precedence !== undefined) return t.precedence
+  const 依運算子 = t?.precedenceByOperator
+  if (!依運算子) return undefined
+  const op = String(node.properties?.operator ?? '')
+  for (const r of 依運算子.rules) if (r.ops.includes(op)) return r.p
+  return 依運算子.default
 }

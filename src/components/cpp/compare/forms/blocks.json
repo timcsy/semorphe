@@ -1,0 +1,68 @@
+[
+  {
+    "id": "cpp_compare",
+    "conceptId": "cpp:compare",
+    "language": "universal",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_compare",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_U_COMPARE_OP_GT}",
+              ">"
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_LT}",
+              "<"
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_GE}",
+              ">="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_LE}",
+              "<="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_EQ}",
+              "=="
+            ],
+            [
+              "%{BKY_U_COMPARE_OP_NE}",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_U_COMPARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
+    }
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "U_LOGIC_TOOLTIP": "Combine two conditions: 'and' requires both to be true; 'or' requires at least one to be true",
+  "U_LOGIC_OP_AND": "and",
+  "U_LOGIC_OP_OR": "or"
+}

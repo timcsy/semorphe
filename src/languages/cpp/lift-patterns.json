@@ -1,19 +1,5 @@
 [
   {
-    "id": "cpp_number_literal",
-    "astNodeType": "number_literal",
-    "concept": {
-      "conceptId": "cpp:literal_number"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text"
-      }
-    ]
-  },
-  {
     "id": "cpp_identifier",
     "astNodeType": "identifier",
     "concept": {
@@ -24,21 +10,6 @@
         "semantic": "name",
         "ast": "$text",
         "extract": "text"
-      }
-    ]
-  },
-  {
-    "id": "cpp_string_literal",
-    "astNodeType": "string_literal",
-    "concept": {
-      "conceptId": "cpp:literal_string"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text",
-        "transform": "stripQuotes"
       }
     ]
   },
@@ -67,52 +38,6 @@
     "astNodeType": "condition_clause",
     "patternType": "unwrap",
     "unwrapChild": 0
-  },
-  {
-    "id": "cpp_binary_dispatch",
-    "astNodeType": "binary_expression",
-    "patternType": "operatorDispatch",
-    "operatorDispatch": {
-      "operatorField": "$operator",
-      "routes": {
-        "+": "cpp:arithmetic",
-        "-": "cpp:arithmetic",
-        "*": "cpp:arithmetic",
-        "/": "cpp:arithmetic",
-        "%": "cpp:arithmetic",
-        "&": "cpp:arithmetic",
-        "|": "cpp:arithmetic",
-        "^": "cpp:arithmetic",
-        "<<": "cpp:arithmetic",
-        ">>": "cpp:arithmetic",
-        ">": "cpp:compare",
-        "<": "cpp:compare",
-        ">=": "cpp:compare",
-        "<=": "cpp:compare",
-        "==": "cpp:compare",
-        "!=": "cpp:compare",
-        "&&": "cpp:logic",
-        "||": "cpp:logic"
-      },
-      "fieldMappings": [
-        {
-          "semantic": "operator",
-          "ast": "$operator",
-          "extract": "text"
-        },
-        {
-          "semantic": "left",
-          "ast": "left",
-          "extract": "lift"
-        },
-        {
-          "semantic": "right",
-          "ast": "right",
-          "extract": "lift"
-        }
-      ]
-    },
-    "priority": 5
   },
   {
     "id": "cpp_cout_chain",

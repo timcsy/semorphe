@@ -11,7 +11,6 @@ import { IOSystem } from './io'
 import { ConceptExecutorRegistry, type ExecutionContext } from './executor-registry'
 import { registerLiteralExecutors } from './executors/literals'
 import { registerVariableExecutors } from './executors/variables'
-import { registerOperatorExecutors } from './executors/operators'
 import { registerControlFlowExecutors } from './executors/control-flow'
 import { registerFunctionExecutors } from './executors/functions'
 import { registerIoExecutors } from './executors/io'
@@ -79,7 +78,6 @@ export class SemanticInterpreter implements ExecutionContext {
       this.executorRegistry.register(concept, executor)
     registerLiteralExecutors(reg)
     registerVariableExecutors(reg)
-    registerOperatorExecutors(reg)
     registerControlFlowExecutors(reg)
     registerFunctionExecutors(reg)
     registerIoExecutors(reg)
