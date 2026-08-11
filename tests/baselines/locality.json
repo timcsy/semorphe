@@ -3,7 +3,7 @@
     "guard": "locality",
     "measuredAt": "2026-08-11",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）\n\n【2026-08-11】20 顆元件的擴散度下降，**是因為實作了，不是因為重新分類**：\n  `generators/expressions.ts` 的 `PRECEDENCE_MAP` 與 `lifters/statements.ts` 的\n  `FOR_LOOP_CONCEPTS` 是**兩張以身分為鍵的共用表**，共 25 顆元件被列名。\n  它們換成 `node-traits.ts`：**消費者問性狀，不問身分**。\n  > **共用的是演算法（括號怎麼加、for 的文法），不是那張表。**\n  ⚠️ 同一次改動加了一條分類規則（`pending-*.json` = 宣告）。那**不是**\n  這 20 筆下降的來源——沒有它，同一個改動反而會讓這 10 顆**上升**\n  （`cpp:array_at` 6 檔、`cpp:address_of` 5 檔…，而它們一行實作都沒動）。\n  過渡表裝的是本來就該在 `component.json` 裡的宣告，只是還沒搬進膠囊。"
   },
   "limits": {
     "cpp:address_of": {
@@ -11,7 +11,7 @@
       "dirs": 4
     },
     "cpp:arithmetic": {
-      "files": 6,
+      "files": 5,
       "dirs": 5
     },
     "cpp:array_2d_assign": {
@@ -27,11 +27,11 @@
       "dirs": 1
     },
     "cpp:array_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 3
     },
     "cpp:array_at": {
-      "files": 7,
+      "files": 5,
       "dirs": 4
     },
     "cpp:array_declare": {
@@ -59,7 +59,7 @@
       "dirs": 1
     },
     "cpp:cast": {
-      "files": 5,
+      "files": 4,
       "dirs": 4
     },
     "cpp:cast_const": {
@@ -99,7 +99,7 @@
       "dirs": 1
     },
     "cpp:comma_expr": {
-      "files": 5,
+      "files": 4,
       "dirs": 4
     },
     "cpp:comment": {
@@ -107,7 +107,7 @@
       "dirs": 3
     },
     "cpp:compare": {
-      "files": 6,
+      "files": 5,
       "dirs": 5
     },
     "cpp:constructor": {
@@ -223,11 +223,11 @@
       "dirs": 1
     },
     "cpp:func_call": {
-      "files": 5,
-      "dirs": 4
+      "files": 4,
+      "dirs": 3
     },
     "cpp:func_def": {
-      "files": 8,
+      "files": 7,
       "dirs": 5
     },
     "cpp:if": {
@@ -259,7 +259,7 @@
       "dirs": 3
     },
     "cpp:increment": {
-      "files": 4,
+      "files": 3,
       "dirs": 3
     },
     "cpp:input": {
@@ -287,19 +287,19 @@
       "dirs": 1
     },
     "cpp:literal_number": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 3
     },
     "cpp:literal_string": {
-      "files": 6,
-      "dirs": 5
+      "files": 5,
+      "dirs": 4
     },
     "cpp:logic": {
-      "files": 6,
+      "files": 5,
       "dirs": 5
     },
     "cpp:logic_not": {
-      "files": 5,
+      "files": 4,
       "dirs": 4
     },
     "cpp:loop_count": {
@@ -371,8 +371,8 @@
       "dirs": 1
     },
     "cpp:member_static": {
-      "files": 4,
-      "dirs": 4
+      "files": 3,
+      "dirs": 3
     },
     "cpp:memory_copy": {
       "files": 3,
@@ -403,7 +403,7 @@
       "dirs": 1
     },
     "cpp:negate": {
-      "files": 5,
+      "files": 4,
       "dirs": 4
     },
     "cpp:new": {
@@ -635,8 +635,8 @@
       "dirs": 1
     },
     "cpp:ternary": {
-      "files": 5,
-      "dirs": 5
+      "files": 4,
+      "dirs": 4
     },
     "cpp:throw": {
       "files": 3,
@@ -659,15 +659,15 @@
       "dirs": 3
     },
     "cpp:var_assign": {
-      "files": 5,
+      "files": 3,
       "dirs": 3
     },
     "cpp:var_assign_compound": {
-      "files": 5,
+      "files": 4,
       "dirs": 4
     },
     "cpp:var_declare": {
-      "files": 7,
+      "files": 6,
       "dirs": 6
     },
     "cpp:var_declare_auto": {
@@ -691,7 +691,7 @@
       "dirs": 1
     },
     "cpp:var_ref": {
-      "files": 9,
+      "files": 8,
       "dirs": 7
     },
     "cpp:var_swap": {

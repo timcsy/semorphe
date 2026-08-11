@@ -1,20 +1,9 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import { generateExpression } from '../../../../core/projection/code-generator'
 import type { SemanticNode } from '../../../../core/types'
-
-/** C++ operator precedence data (higher = binds tighter). */
-const PRECEDENCE_MAP = new Map<string, number>([
-  ['cpp:comma_expr', 1],
-  ['cpp:var_assign', 2],
-  ['cpp:ternary', 3],
-  ['cpp:negate', 14],
-  ['cpp:logic_not', 14],
-  ['cpp:bitwise_not', 14],
-  ['cpp:address_of', 14],
-  ['cpp:pointer_deref', 14],
-  ['cpp:cast', 14],
-  ['cpp:array_at', 16],
-])
+// ⚠️ 這裡問的是**性狀**不是身分：括號怎麼加是排版演算法（共用），
+// 「我的優先級是 14」是那一顆元件的性質（自己宣告）。
+import { precedenceOf } from '../node-traits'
 
 /** Operator-dependent precedence for concepts with varying operators. */
 const OPERATOR_PRECEDENCE: Record<string, (op: unknown) => number> = {
@@ -26,7 +15,7 @@ const OPERATOR_PRECEDENCE: Record<string, (op: unknown) => number> = {
 /** C++ operator precedence (higher = binds tighter) */
 function precedence(node: SemanticNode | undefined): number {
   if (!node) return 100
-  const fixed = PRECEDENCE_MAP.get(node.conceptId)
+  const fixed = precedenceOf(node.conceptId)
   if (fixed !== undefined) return fixed
   const opFn = OPERATOR_PRECEDENCE[node.conceptId]
   if (opFn) return opFn(node.properties.operator)

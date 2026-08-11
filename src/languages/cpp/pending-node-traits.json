@@ -1,0 +1,87 @@
+{
+  "_why": "**還沒膠囊化的元件的節點性狀。只減不增。**\n一顆搬進膠囊時，這裡刪一列、`component.json` 的 `traits` 加一筆。\n⚠️ 三個不帶 `cpp:` 前綴的鍵（`number`／`string`／`boolean`）是**通用層的舊身分**，不是漏了前綴——原本的 `FOR_LOOP_CONCEPTS` 就同時列著兩套，照搬。",
+  "traits": {
+    "boolean": {
+      "forLoopPart": true
+    },
+    "cpp:address_of": {
+      "precedence": 14
+    },
+    "cpp:arithmetic": {
+      "forLoopPart": true
+    },
+    "cpp:array_assign": {
+      "forLoopPart": true
+    },
+    "cpp:array_at": {
+      "precedence": 16,
+      "forLoopPart": true
+    },
+    "cpp:bitwise_not": {
+      "precedence": 14
+    },
+    "cpp:cast": {
+      "precedence": 14,
+      "forLoopPart": true
+    },
+    "cpp:comma_expr": {
+      "precedence": 1,
+      "forLoopPart": true
+    },
+    "cpp:compare": {
+      "forLoopPart": true
+    },
+    "cpp:func_call": {
+      "forLoopPart": true
+    },
+    "cpp:increment": {
+      "forLoopPart": true
+    },
+    "cpp:literal_number": {
+      "forLoopPart": true
+    },
+    "cpp:literal_string": {
+      "forLoopPart": true
+    },
+    "cpp:logic": {
+      "forLoopPart": true
+    },
+    "cpp:logic_not": {
+      "precedence": 14,
+      "forLoopPart": true
+    },
+    "cpp:negate": {
+      "precedence": 14,
+      "forLoopPart": true
+    },
+    "cpp:pointer_deref": {
+      "precedence": 14
+    },
+    "cpp:raw_expression": {
+      "forLoopPart": true
+    },
+    "cpp:ternary": {
+      "precedence": 3,
+      "forLoopPart": true
+    },
+    "cpp:var_assign": {
+      "precedence": 2,
+      "forLoopPart": true
+    },
+    "cpp:var_assign_compound": {
+      "forLoopPart": true
+    },
+    "cpp:var_declare": {
+      "forLoopPart": true
+    },
+    "cpp:var_ref": {
+      "forLoopPart": true
+    },
+    "number": {
+      "forLoopPart": true
+    },
+    "string": {
+      "forLoopPart": true
+    }
+  }
+}

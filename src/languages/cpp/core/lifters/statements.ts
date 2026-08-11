@@ -2,6 +2,8 @@ import type { Lifter } from '../../../../core/lift/lifter'
 import { createNode } from '../../../../core/semantic-tree'
 import { 建case } from '../../../../components/cpp/case/lift'
 import { 建for迴圈 } from '../../../../components/cpp/loop_for/lift'
+// ⚠️ for 的文法是共用知識；「我放得進那三格」是元件自己的性狀。
+import { canBeForLoopPart } from '../node-traits'
 
 export function registerStatementLifters(lifter: Lifter): void {
   // translation_unit — handled by JSON pattern (cpp_translation_unit)
@@ -190,16 +192,6 @@ function extractUpdateVar(update: import('../../../../core/lift/types').AstNode 
   return undefined
 }
 
-// Concepts that can be used in for-loop init/cond/update positions
-const FOR_LOOP_CONCEPTS = new Set([
-  // expressions
-  'number', 'cpp:literal_number', 'string', 'cpp:literal_string', 'boolean', 'cpp:var_ref', 'cpp:raw_expression',
-  'cpp:arithmetic', 'cpp:compare', 'cpp:logic', 'cpp:logic_not', 'cpp:negate',
-  'cpp:func_call', 'cpp:array_at', 'cpp:ternary',
-  // statements valid in for-loop parts
-  'cpp:var_declare', 'cpp:var_assign', 'cpp:var_assign_compound', 'cpp:increment', 'cpp:array_assign',
-  'cpp:comma_expr', 'cpp:cast',
-])
 
 /** Lift a for-loop part (init/cond/update) and wrap non-expression concepts as cpp_raw_expression */
 function wrapForExpr(
@@ -210,7 +202,7 @@ function wrapForExpr(
   const lifted = ctx.lift(node)
   if (!lifted) return null
   // If the lifted concept is a known expression, keep it
-  if (FOR_LOOP_CONCEPTS.has(lifted.conceptId)) return lifted
+  if (canBeForLoopPart(lifted.conceptId)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
   // Strip trailing semicolons — for-loop parts don't need them
   return createNode('cpp:raw_expression', { code: node.text.replace(/;\s*$/, '').trim() })
