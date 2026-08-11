@@ -26,15 +26,19 @@ const apcsStyle: StylePreset = {
 const resolver = createPopulatedRegistry()
 const scaffold = new CppScaffold(resolver)
 
+/**
+ * ⚠️ **不要自己組裝產生器 map。**
+ *
+ * 這裡原本手列六個 `registerXxxGenerators`，於是**膠囊自帶的產生器一個都不在**
+ * ——`componentGenerateRegistrars()` 沒被呼叫。一顆元件搬進膠囊之後，
+ * 這支測試就會說它的積木「產不出來」，而生產環境好好的。
+ *
+ * > **卡點 6 的第 N 次重演：一個各自組裝的地方，會在別人搬家時變紅。**
+ *
+ * 改用生產路徑的組裝函式。
+ */
 function makeGenerators(style: StylePreset): Map<string, NodeGenerator> {
-  const g = new Map<string, NodeGenerator>()
-  registerStatementGenerators(g, style)
-  registerDeclarationGenerators(g, style)
-  registerExpressionGenerators(g)
-  registerIostreamGenerators(g, style)
-  registerCstdioGenerators(g, style)
-  registerVectorGenerators(g, style)
-  return g
+  return createCppGenerators(style)
 }
 
 function makeCtx(style: StylePreset): GeneratorContext {
@@ -49,7 +53,7 @@ function makeCtx(style: StylePreset): GeneratorContext {
   }
 }
 
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { registerCppLanguage, createCppGenerators } from '../../src/languages/cpp/generators'
 
 import { generateCodeWithMapping } from '../../src/core/projection/code-generator'
 

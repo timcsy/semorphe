@@ -31,10 +31,12 @@
       "forLoopPart": true
     },
     "cpp:include": {
-      "scaffold": true
+      "scaffold": true,
+      "includeDirective": true
     },
     "cpp:include_local": {
-      "scaffold": true
+      "scaffold": true,
+      "includeDirective": true
     },
     "cpp:increment": {
       "forLoopPart": true

@@ -78,6 +78,14 @@ export interface NodeTraits {
    * 硬塞成同一個旗標會讓 `return` 在任何地方都消失。
    */
   scaffold?: boolean
+  /**
+   * 這顆是 `#include` 指示詞（`properties.header` 是標頭名）。
+   *
+   * ⚠️ 與 `scaffold` **不是同一件事**：`using_namespace` 也是鷹架，
+   * 但它**沒有標頭可以去重**。`cpp:program` 的產生器有三處要「這是不是 include」，
+   * 而它們原本都寫 `n.conceptId === 'cpp:include' || n.conceptId === 'cpp:include_local'`。
+   */
+  includeDirective?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -122,4 +130,9 @@ export function isVariableRef(conceptId: string): boolean {
 /** 這顆是鷹架嗎（L0 的積木視圖不顯示）。沒宣告＝不是（保守）。 */
 export function isScaffold(conceptId: string): boolean {
   return 性狀(conceptId)?.scaffold === true
+}
+
+/** 這顆是 `#include` 指示詞嗎。沒宣告＝不是（保守）。 */
+export function isIncludeDirective(conceptId: string): boolean {
+  return 性狀(conceptId)?.includeDirective === true
 }

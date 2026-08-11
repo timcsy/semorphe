@@ -18,7 +18,14 @@ import { registerCoreExecutors } from '../core/executors'
 import { coreConcepts } from '../core'
 import type { PathName, SkipReason } from '../../../core/types'
 
-function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
+/**
+ * 生產路徑的產生器組裝。
+ *
+ * ⚠️ **匯出它，是為了讓測試不要各自組裝。** 手列 registrar 的測試會漏掉
+ * `componentGenerateRegistrars()`——於是一顆元件搬進膠囊之後，
+ * 那支測試說它「產不出來」，而生產環境好好的。**卡點 6 的又一次重演。**
+ */
+export function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
   const g = new Map<string, NodeGenerator>()
   // Core generators (no #include needed)
   registerStatementGenerators(g, style)
