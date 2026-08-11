@@ -9,7 +9,7 @@
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 // 訊號類別必須是**同一個**——複製一份的話 instanceof 會失敗，
 // 而失敗的樣子是「break 逃出迴圈」，不是編譯錯誤。
-import { BreakSignal, ContinueSignal } from '../../../../interpreter/executors/control-flow'
+import { BreakSignal } from '../../../../interpreter/executors/control-flow'
 
 /** Break/Continue signals (non-error, used for flow control) */
 export class ThrownSignal {
@@ -21,42 +21,7 @@ export class ThrownSignal {
 export function registerControlFlowCoreExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  register('cpp:loop_for', async (node, ctx) => {
-    const body = node.children.body ?? []
-    const parentScope = ctx.scope
-    const forScope = parentScope.createChild()
-    ctx.scope = forScope
 
-    if (node.children.init && node.children.init.length > 0) {
-      await ctx.executeNode(node.children.init[0])
-    }
-
-    while (true) {
-      if (node.children.cond && node.children.cond.length > 0) {
-        const condition = await ctx.evaluate(node.children.cond[0])
-        if (!ctx.toBool(condition)) break
-      }
-
-      ctx.scope = forScope.createChild()
-      try {
-        await ctx.executeBody(body)
-      } catch (signal) {
-        if (signal instanceof BreakSignal) { ctx.scope = forScope; break }
-        if (signal instanceof ContinueSignal) {
-          // fall through to update
-        } else {
-          ctx.scope = parentScope
-          throw signal
-        }
-      }
-      ctx.scope = forScope
-
-      if (node.children.update && node.children.update.length > 0) {
-        await ctx.executeNode(node.children.update[0])
-      }
-    }
-    ctx.scope = parentScope
-  })
 
 
 

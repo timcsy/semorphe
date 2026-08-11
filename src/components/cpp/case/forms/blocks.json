@@ -1,0 +1,49 @@
+[
+  {
+    "id": "cpp_case",
+    "conceptId": "cpp:case",
+    "language": "cpp",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_case",
+      "message0": "%{BKY_C_CASE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_CASE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "case ${VALUE}:\n${BODY}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "case_statement",
+      "constraints": []
+    },
+    "renderMapping": {
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

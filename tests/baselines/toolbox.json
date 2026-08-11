@@ -62,12 +62,12 @@
         "cpp_loop_while",
         "cpp_throw",
         "cpp_try_catch",
-        "cpp_loop_for",
         "cpp_loop_do_while",
+        "cpp_loop_for",
         "cpp_loop_range",
         "cpp_switch",
-        "cpp_case",
         "cpp_default",
+        "cpp_case",
         "cpp_program_exit"
       ]
     },
@@ -82,7 +82,8 @@
         "cpp_lambda",
         "cpp_template_function",
         "cpp_method_call",
-        "cpp_method_call_expression"
+        "cpp_method_call_expression",
+        "cpp_string_at"
       ]
     },
     {
@@ -126,7 +127,8 @@
         "cpp_vector_size",
         "cpp_container_append",
         "cpp_container_clear",
-        "cpp_container_empty"
+        "cpp_container_empty",
+        "cpp_string_at"
       ]
     },
     {
@@ -159,7 +161,6 @@
         "cpp_string_replace",
         "cpp_string_size",
         "cpp_string_substr",
-        "cpp_string_at",
         "cpp_char_is_alpha",
         "cpp_char_is_digit",
         "cpp_char_to_upper",
@@ -179,7 +180,8 @@
         "cpp_pair_declare",
         "cpp_pair_make",
         "cpp_container_count",
-        "cpp_container_erase"
+        "cpp_container_erase",
+        "cpp_string_at"
       ]
     },
     {
@@ -198,7 +200,8 @@
         "cpp_container_pop_stack",
         "cpp_container_push_queue",
         "cpp_container_pop_queue",
-        "cpp_container_empty"
+        "cpp_container_empty",
+        "cpp_string_at"
       ]
     },
     {

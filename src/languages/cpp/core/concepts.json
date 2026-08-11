@@ -77,25 +77,6 @@
     }
   },
   {
-    "conceptId": "cpp:case",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "value": "expression",
-      "body": "statements"
-    },
-    "role": "statement",
-    "skipPaths": [
-      "execute",
-      "lift"
-    ],
-    "skipReasons": {
-      "execute": "consumed-by-parent",
-      "lift": "consumed-by-parent"
-    }
-  },
-  {
     "conceptId": "cpp:default",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -157,22 +138,6 @@
       "operand": "expression"
     },
     "role": "expression"
-  },
-  {
-    "conceptId": "cpp:loop_for",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:loop_count",
-    "properties": [],
-    "children": {
-      "init": "expression",
-      "cond": "expression",
-      "update": "expression",
-      "body": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
   },
   {
     "conceptId": "cpp:pointer_declare",

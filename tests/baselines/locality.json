@@ -56,7 +56,7 @@
     },
     "cpp:case": {
       "files": 2,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:cast": {
       "files": 5,
@@ -312,7 +312,7 @@
     },
     "cpp:loop_for": {
       "files": 3,
-      "dirs": 3
+      "dirs": 1
     },
     "cpp:loop_range": {
       "files": 4,
@@ -560,7 +560,7 @@
     },
     "cpp:string_at": {
       "files": 3,
-      "dirs": 2
+      "dirs": 1
     },
     "cpp:string_clear": {
       "files": 3,

@@ -1,5 +1,7 @@
 import type { Lifter } from '../../../../core/lift/lifter'
 import { createNode } from '../../../../core/semantic-tree'
+import { 建case } from '../../../../components/cpp/case/lift'
+import { 建for迴圈 } from '../../../../components/cpp/loop_for/lift'
 
 export function registerStatementLifters(lifter: Lifter): void {
   // translation_unit — handled by JSON pattern (cpp_translation_unit)
@@ -39,12 +41,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     const condSem = wrapForExpr(condNode, ctx)
     const updateSem = wrapForExpr(updateNode, ctx)
 
-    return createNode('cpp:loop_for', {}, {
-      init: initSem ? [initSem] : [],
-      cond: condSem ? [condSem] : [],
-      update: updateSem ? [updateSem] : [],
-      body,
-    })
+    return 建for迴圈(initSem, condSem, updateSem, body)
   })
 
   // function_definition now handled by liftStrategy "cpp:liftFunctionDef"
@@ -110,10 +107,7 @@ function liftCaseStatement(
   }
 
   const value = ctx.lift(valueNode!)
-  return createNode('cpp:case', {}, {
-    value: value ? [value] : [],
-    body,
-  })
+  return 建case(value, body)
 }
 
 function isCountingFor(

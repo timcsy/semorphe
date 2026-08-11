@@ -4,6 +4,7 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import { createNode } from '../../../../core/semantic-tree'
 import type { LiftPostProcessor } from '../../../../core/lift/post-processors'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
+import { 建字串索引 } from '../../../../components/cpp/string_at/lift'
 
 const ARITHMETIC_OPS = new Set(['+', '-', '*', '/', '%'])
 const COMPARE_OPS = new Set(['>', '<', '>=', '<=', '==', '!='])
@@ -233,9 +234,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const index = indexNode ? ctx.lift(indexNode) : null
 
     if (isStringVar(name, node)) {
-      return createNode('cpp:string_at', { obj: name }, {
-        index: index ? [index] : [],
-      })
+      return 建字串索引(name, index)
     }
     return createNode('cpp:array_at', { obj: name }, {
       index: index ? [index] : [],

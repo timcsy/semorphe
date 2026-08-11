@@ -69,7 +69,8 @@ describe('Language manifest loading', () => {
     // 2026-08-11：58 → 30（保守下限，留給後續搬家空間）。
     expect(manifestBlockCount).toBeGreaterThanOrEqual(30)
     // core(42) concepts + std module concepts (19+) = 61+
-    expect(manifestConceptCount).toBeGreaterThanOrEqual(42)
+    // ⚠️ 同上：這個下限也隨 F 下降（manifest 列的是共用宣告檔）。2026-08-11：42 → 20。
+    expect(manifestConceptCount).toBeGreaterThanOrEqual(20)
     // Blocks and concepts should both be non-trivial
     expect(manifestBlockCount).toBeGreaterThan(0)
     expect(manifestConceptCount).toBeGreaterThan(0)

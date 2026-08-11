@@ -20,7 +20,10 @@ import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/
 import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
+// ⚠️ **第十六個「自己列舉來源」的地方**（今天第六處）。
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
@@ -56,6 +59,7 @@ beforeAll(async () => {
   const allProjections = [
     ...universalBlocks,
     ...coreBlocks,
+    ...(componentBlocks() as BlockProjectionJSON[]),
     ...allStdModules.flatMap(m => m.blocks),
   ]
   specRegistry.loadFromSplit(allConcepts, allProjections)

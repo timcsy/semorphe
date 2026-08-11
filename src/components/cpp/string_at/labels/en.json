@@ -1,0 +1,4 @@
+{
+  "CPP_STRING_AT_MSG0": "Get character at index %2 of string %1",
+  "CPP_STRING_AT_TOOLTIP": "Get the character at the given index in the string (0-based), equivalent to str[i]"
+}
