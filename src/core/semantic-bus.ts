@@ -1,5 +1,6 @@
 import type { SemanticNode } from './types'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
+import type { ExecutionReason } from './view-host'
 import type { Diagnostic } from './diagnostics'
 import type { CodeMapping } from './projection/code-generator'
 import type { ScaffoldResult } from './program-scaffold'
@@ -17,7 +18,7 @@ export interface SemanticEvents {
     scaffoldResult?: ScaffoldResult
   }
   'semantic:full-sync': { tree: SemanticNode; language: string; style: Record<string, unknown> }
-  'execution:state': { status: ExecutionStatus; step?: StepInfo }
+  'execution:state': { status: ExecutionStatus; step?: StepInfo; reason?: ExecutionReason }
   'execution:output': { text: string; stream: 'stdout' | 'stderr' }
   'diagnostics:update': { items: Diagnostic[] }
 }

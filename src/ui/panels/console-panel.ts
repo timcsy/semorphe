@@ -1,3 +1,4 @@
+import * as Blockly from 'blockly'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 
@@ -63,13 +64,65 @@ export class ConsolePanel implements ViewHost {
     // ConsolePanel doesn't handle semantic updates
   }
 
-  onExecutionState(_event: ExecutionStateEvent): void {
-    // Handled via execution:state bus event if needed
+  /**
+   * ⚠️ 這裡原本是一個空樁。而在它是空樁的期間，**執行器替它做了這件事**
+   * ——`consolePanel.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')`，
+   * 在 `execution-controller.ts` 裡出現 **24 次**。
+   *
+   * > **一個知道對方要顯示什麼字的發送端，換不掉那個接收端。**
+   *
+   * 現在執行器只說「狀態是什麼、為什麼」（`status` ＋ `reason`），
+   * **文案、i18n 鍵、CSS class 全部是這個視圖自己的事**。
+   *
+   * ⚠️ `EXEC_STATUS_WAITING` 與 `EXEC_STATUS_ABORTED` **兩個 i18n 鍵不存在**
+   * ——所以中文介面下它們一直顯示英文 fallback。那是搬家前就有的缺陷，
+   * 這裡**照原樣搬**（`component-encapsulate`：搬移不重寫，要重寫在另一個 commit）。
+   */
+  onExecutionState(event: ExecutionStateEvent): void {
+    const msg = (鍵: string, 退路: string): string =>
+      (Blockly.Msg[鍵] as string | undefined) || 退路
+
+    if (event.reason === 'awaiting-input') {
+      this.setStatus(msg('EXEC_STATUS_WAITING', 'Waiting for input...'), 'running')
+      return
+    }
+    if (event.reason === 'aborted') {
+      this.setStatus(msg('EXEC_STATUS_ABORTED', 'Interrupted'), '')
+      return
+    }
+    switch (event.status) {
+      case 'running':
+        this.setStatus(msg('EXEC_STATUS_RUNNING', 'Running'), 'running')
+        break
+      case 'paused':
+        this.setStatus(
+          event.reason === 'breakpoint'
+            ? msg('EXEC_STATUS_PAUSED_BREAKPOINT', 'Paused (breakpoint)')
+            : msg('EXEC_STATUS_PAUSED', 'Paused'),
+          'running',
+        )
+        break
+      case 'completed':
+        this.setStatus(msg('EXEC_STATUS_COMPLETED', 'Completed'), 'completed')
+        break
+      case 'error':
+        this.setStatus(msg('EXEC_STATUS_ERROR', 'Error'), 'error')
+        break
+      case 'idle':
+        this.setStatus(msg('EXEC_STATUS_IDLE', 'Ready'), '')
+        break
+    }
   }
 
+  /**
+   * ⚠️ `execution:output` **不在 `ViewHost` 契約上**，所以這個視圖自己接。
+   * 那是刻意的：契約只放**每個視圖都該回答**的兩件事
+   * （語義更新、執行狀態），輸出串流只有主控台在意。
+   */
   connectBus(bus: SemanticBus): void {
     bus.on('execution:output', (data) => {
-      this.write(data.text)
+      if (data.stream === 'stderr') this.error(data.text)
+      else this.write(data.text)
     })
   }
 

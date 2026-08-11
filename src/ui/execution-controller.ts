@@ -13,6 +13,8 @@ import type { VariablePanel } from './panels/variable-panel'
 import type { BottomPanel } from './layout/bottom-panel'
 import type { SyncController } from './sync-controller'
 import type { SemanticBus } from '../core/semantic-bus'
+import type { ExecutionReason } from '../core/view-host'
+import type { ExecutionStatus } from '../interpreter/types'
 
 export interface ExecutionPanels {
   blocklyPanel: BlocklyPanel | null
@@ -84,6 +86,35 @@ export class ExecutionController {
     this.debugToolbar = new DebugToolbar()
   }
 
+
+  /**
+   * 廣播執行狀態。**不呼叫任何面板。**
+   *
+   * ⚠️ 在此之前這是 `this.panels.consolePanel?.setStatus(Blockly.Msg[…] || '…', '…')`
+   * ——**24 處**，而執行器在替視圖決定文案、i18n 鍵與 CSS class。
+   * 現在它只說「狀態是什麼、為什麼」，剩下的是視圖的事。
+   *
+   * ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
+   * 而**讓狀態列在某些情境安靜地不更新**比多留一條退路糟得多。
+   */
+  private 廣播(e: { status: ExecutionStatus; reason?: ExecutionReason; step?: StepInfo }): void {
+    if (this.bus) {
+      this.bus.emit('execution:state', e)
+      return
+    }
+    // ⚠️ 退路要涵蓋**每一個實作了這個契約方法的面板**，不只主控台。
+    // 第一版只寫了 console，而變數面板的更新就在那條退路上安靜地掉了
+    // ——那正是這整輪在治的病：**一條看起來有接的線，其實少接了一個接收者。**
+    for (const p of [this.panels.consolePanel, this.panels.variablePanel]) p?.onExecutionState(e)
+  }
+
+  /** 廣播輸出。⚠️ `stderr` 由視圖決定怎麼顯示——執行器不知道它會變紅。 */
+  private 輸出(text: string, stream: 'stdout' | 'stderr'): void {
+    if (this.bus) this.bus.emit('execution:output', { text, stream })
+    else if (stream === 'stderr') this.panels.consolePanel?.error(text)
+    else this.panels.consolePanel?.write(text)
+  }
+
   getDebugToolbar(): DebugToolbar {
     return this.debugToolbar
   }
@@ -148,12 +179,12 @@ export class ExecutionController {
           if (this.animatePaused && this.animateResolve) {
             this.animatePaused = false
             this.debugToolbar.setMode('running')
-            this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+            this.廣播({ status: 'running' })
             this.animateResolve()
           } else if (this.stepController) {
             this.stepController.resume()
             this.debugToolbar.setMode('running')
-            this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+            this.廣播({ status: 'running' })
           }
           // If interpreter is running but no animateResolve (e.g., waiting for input), ignore
           break
@@ -215,13 +246,13 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.panels.consolePanel?.write(text)
+      this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_WAITING'] || 'Waiting for input...', 'running')
+      this.廣播({ status: 'running', reason: 'awaiting-input' })
       if (nodeId) {
         const mapping = this.panels.syncController?.getMappingForNode(nodeId)
         if (mapping) {
@@ -259,7 +290,7 @@ export class ExecutionController {
             const hit = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
             if (hit) {
               shouldPause = true
-              this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
+              this.廣播({ status: 'paused', reason: 'breakpoint' })
             }
           }
         }
@@ -277,26 +308,26 @@ export class ExecutionController {
 
     this.showExecButtons(true, 'running')
     this.panels.consolePanel?.clear()
-    this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+    this.廣播({ status: 'running' })
     this.panels.bottomPanel?.showTab('console')
 
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
       this.clearHighlights()
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_COMPLETED'] || 'Completed', 'completed')
+      this.廣播({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {
       if (e instanceof RuntimeError) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ABORTED'] || 'Interrupted', '')
+          this.廣播({ status: 'idle', reason: 'aborted' })
         } else {
-          this.panels.consolePanel?.error(e.message)
-          this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+          this.輸出(e.message, 'stderr')
+          this.廣播({ status: 'error' })
           showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
         }
       } else {
-        this.panels.consolePanel?.error(String(e))
-        this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+        this.輸出(String(e), 'stderr')
+        this.廣播({ status: 'error' })
       }
     } finally {
       this.showExecButtons(false)
@@ -329,13 +360,13 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.panels.consolePanel?.write(text)
+      this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_WAITING'] || 'Waiting for input...', 'running')
+      this.廣播({ status: 'running', reason: 'awaiting-input' })
       if (nodeId) {
         const mapping = this.panels.syncController?.getMappingForNode(nodeId)
         if (mapping) {
@@ -358,8 +389,8 @@ export class ExecutionController {
       this.stepRecords = await this.interpreter.executeWithSteps(tree as unknown as InterpreterNode)
     } catch (e) {
       if (e instanceof RuntimeError) {
-        this.panels.consolePanel?.error(e.message)
-        this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+        this.輸出(e.message, 'stderr')
+        this.廣播({ status: 'error' })
         this.showExecButtons(false)
         return
       }
@@ -389,7 +420,7 @@ export class ExecutionController {
           const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
           if (hitBreakpoint && this.stepController?.getStatus() === 'running') {
             this.stepController.pause()
-            this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
+            this.廣播({ status: 'paused', reason: 'breakpoint' })
             this.debugToolbar.setMode('paused')
           }
         }
@@ -402,14 +433,14 @@ export class ExecutionController {
       this.showExecButtons(false)
     })
 
-    this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+    this.廣播({ status: 'running' })
     this.stepController.step()
   }
 
   private handlePause(): void {
     if (this.stepController?.getStatus() === 'running') {
       this.stepController.pause()
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused', 'running')
+      this.廣播({ status: 'paused' })
       this.debugToolbar.setMode('paused')
     }
   }
@@ -541,7 +572,7 @@ export class ExecutionController {
     this.stepController?.stop()
     this.clearHighlights()
     this.panels.variablePanel?.clear()
-    this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_IDLE'] || 'Ready', '')
+    this.廣播({ status: 'idle' })
     this.showExecButtons(false)
   }
 
@@ -552,8 +583,7 @@ export class ExecutionController {
     // 廣播，不是命令——誰想看變數，自己登錄成視圖（`core/view-registry.ts`）。
     // ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
     // 而**讓變數面板在某些情境安靜地不更新**比多留一行退路糟得多。
-    if (this.bus) this.bus.emit('execution:state', { status: 'paused', step })
-    else this.panels.variablePanel?.updateFromSnapshot(step.scopeSnapshot)
+    this.廣播({ status: 'paused', step })
     this.panels.bottomPanel?.showTab('variables')
 
     this.panels.blocklyPanel?.clearHighlight()
@@ -578,7 +608,7 @@ export class ExecutionController {
     }
 
     if (this.stepController?.getStatus() === 'completed') {
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_COMPLETED'] || 'Completed', 'completed')
+      this.廣播({ status: 'completed' })
       this.showExecButtons(false)
     }
   }
@@ -627,7 +657,7 @@ export class ExecutionController {
       this.animatePaused = false
       this.animateSpeed = speed
       this.debugToolbar.setMode('running')
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+      this.廣播({ status: 'running' })
       this.animateResolve()
       return
     }
@@ -657,13 +687,13 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.panels.consolePanel?.write(text)
+      this.輸出(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       this.panels.blocklyPanel?.clearHighlight()
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_WAITING'] || 'Waiting for input...', 'running')
+      this.廣播({ status: 'running', reason: 'awaiting-input' })
       if (nodeId) {
         const mapping = this.panels.syncController?.getMappingForNode(nodeId)
         if (mapping) {
@@ -701,7 +731,7 @@ export class ExecutionController {
           const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
           if (hitBreakpoint) {
             shouldPause = true
-            this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_PAUSED'] || 'Paused (breakpoint)', 'running')
+            this.廣播({ status: 'paused', reason: 'breakpoint' })
           }
         }
       }
@@ -723,22 +753,22 @@ export class ExecutionController {
     this.panels.consolePanel?.clear()
     this.panels.bottomPanel?.showTab('variables')
     this.showExecButtons(true, 'running')
-    this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')
+    this.廣播({ status: 'running' })
 
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
-      this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_COMPLETED'] || 'Completed', 'completed')
+      this.廣播({ status: 'completed' })
     } catch (e) {
       if (e instanceof RuntimeError) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ABORTED'] || 'Interrupted', '')
+          this.廣播({ status: 'idle', reason: 'aborted' })
         } else {
-          this.panels.consolePanel?.error(e.message)
-          this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+          this.輸出(e.message, 'stderr')
+          this.廣播({ status: 'error' })
         }
       } else {
-        this.panels.consolePanel?.error(String(e))
-        this.panels.consolePanel?.setStatus(Blockly.Msg['EXEC_STATUS_ERROR'] || 'Error', 'error')
+        this.輸出(String(e), 'stderr')
+        this.廣播({ status: 'error' })
       }
     } finally {
       this.clearHighlights()

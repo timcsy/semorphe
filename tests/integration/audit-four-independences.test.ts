@@ -16,7 +16,7 @@
  * ## ⚠️ 自我否證聲明（寫在量測之前）
  *
  * > **如果「掃到的 `src/ui` 檔數」、「掃到的 import 行數」或
- * > 「掃到的視圖方法呼叫數（含合法的生命週期）」是 0，
+ * > 「掃到的方法呼叫數」是 0，
  * > 代表工具壞了，不是世界長這樣。**
  *
  * 三個錨全部是**掃描的輸入量**，不是這條護欄想推向零的東西
@@ -108,7 +108,28 @@ const 生命週期 = ['init', 'initialize', 'dispose', 'connectBus']
 
 interface 基線 {
   _meta: { note: string; ratchet: string }
-  掃描: { 檔數: number; import行數: number; 視圖呼叫含生命週期: number }
+  掃描: {
+    檔數: number
+    import行數: number
+    /**
+     * ⚠️ **這個欄位換過一次，而換掉的理由是一條新的教訓。**
+     *
+     * 第一版錨在「視圖方法呼叫數（含合法的生命週期）」上，看起來是輸入量
+     * ——它包含 `init`／`dispose` 這些永遠不會被清掉的呼叫。
+     *
+     * 而把 32 處搬上匯流排之後它從 130 掉到 100，**入口條件當場變紅**。
+     *
+     * > **一個「包含缺陷的更大集合」不是輸入量，它只是一個比較慢爛的錨。**
+     *
+     * `build-guardrail` 第 2 步的兩個語法簽名（缺陷計數、合取）**都抓不到它**
+     * ——它既不是缺陷計數，也不是合取。判準要再補一條：
+     * **這個量會不會因為違規被修好而變小？** 會 → 錨錯了。
+     *
+     * 現在錨的是 `src/ui` 裡**任意**的方法呼叫數。把面板呼叫換成
+     * `this.廣播(...)` 之後它不會變小——**換掉一個呼叫仍然是一個呼叫。**
+     */
+    任意方法呼叫: number
+  }
   視圖import語言: number
   其餘UI檔import語言: number
   視圖間import: number
@@ -150,11 +171,11 @@ export function 是視圖間import(行: string): boolean {
  * ⚠️ 只認四個**已登錄**的視圖名，而且排除生命週期
  * ——第一版沒有這兩道，量出 139 筆，其中 26 筆是 `div.appendChild`。
  */
-export function 數跨層呼叫(行: string): number {
+export function 數跨層呼叫(行: string): string[] {
   const re = new RegExp(`\\b(${視圖們.join('|')})[?!]?\\.([a-zA-Z_]\\w*)\\(`, 'g')
-  let n = 0
-  for (const m of 行.matchAll(re)) if (!生命週期.includes(m[2])) n++
-  return n
+  const out: string[] = []
+  for (const m of 行.matchAll(re)) if (!生命週期.includes(m[2])) out.push(`${m[1]}.${m[2]}`)
+  return out
 }
 
 function ui檔(): string[] {
@@ -178,7 +199,7 @@ function 量(): 基線 {
   const 跨層直接呼叫視圖: string[] = []
   let 組裝點import語言 = 0
   let import行數 = 0
-  let 視圖呼叫含生命週期 = 0
+  let 任意方法呼叫 = 0
 
   for (const f of 檔s) {
     const rel = path.relative(REPO_ROOT, f)
@@ -187,7 +208,9 @@ function 量(): 基線 {
     const lines = fs.readFileSync(f, 'utf8').split('\n')
 
     lines.forEach((行, i) => {
-      const 位置 = `${rel}:${i + 1}`
+      // ⚠️ import 那幾欄同理不用行號——用「檔案 → 被 import 的路徑」。
+      const 來源 = 行.match(/from\s+'([^']+)'/)?.[1] ?? ''
+      const 位置 = `${rel} → ${來源}`
       if (/^\s*(import|}\s*from)/.test(行) || /from\s+'/.test(行)) {
         if (/from\s+'/.test(行)) import行數++
         if (是語言專屬import(行)) {
@@ -199,9 +222,19 @@ function 量(): 基線 {
       }
       // 跨層通訊：面板自己的檔案不算（那是視圖內部）
       if (!是視圖) {
-        視圖呼叫含生命週期 += (行.match(new RegExp(`\\b(${視圖們.join('|')})[?!]?\\.`, 'g')) ?? []).length
-        const n = 數跨層呼叫(行)
-        for (let k = 0; k < n; k++) 跨層直接呼叫視圖.push(位置)
+      }
+      // ⚠️ 見 `基線.掃描.任意方法呼叫` 的註解：錨必須與違規**無關**，不是它的超集。
+      任意方法呼叫 += (行.match(/\b\w+[?!]?\.\w+\(/g) ?? []).length
+      if (!是視圖) {
+        // ⚠️ 鍵是「檔案 → 視圖.方法」，**不是行號**。
+        // 第一版用行號，於是把 32 處搬上匯流排之後**剩下的每一行都被判成「新增」**
+        // ——一次正確的清償讓護欄整片變紅。
+        //
+        // > **一個會因為程式碼往下移了幾行就報「新增違規」的鍵，
+        // > 報的不是違規，是 diff。**
+        //
+        // 行號留在報表裡給人看，識別用不到它。
+        for (const 方法 of 數跨層呼叫(行)) 跨層直接呼叫視圖.push(`${rel} → ${方法}`)
       }
     })
   }
@@ -218,7 +251,7 @@ function 量(): 基線 {
         '⚠️ 下降必須是「真的拆掉了」，不是「把檔案排除在掃描外」或「改了判準」。',
       ratchet: RATCHET_NOTE,
     },
-    掃描: { 檔數: 檔s.length, import行數, 視圖呼叫含生命週期 },
+    掃描: { 檔數: 檔s.length, import行數, 任意方法呼叫 },
     視圖import語言: 視圖import語言.length,
     其餘UI檔import語言: 其餘UI檔import語言.length,
     視圖間import: 視圖間import.length,
@@ -234,7 +267,7 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
     const r = 量()
     expect(r.掃描.檔數, '一個 ui 檔都沒掃到 → 量測壞了').toBeGreaterThan(20)
     expect(r.掃描.import行數, '一行 import 都沒看到 → 掃描器沒吃到內容').toBeGreaterThan(100)
-    expect(r.掃描.視圖呼叫含生命週期, '一次視圖方法呼叫都沒看到 → 正則沒對上').toBeGreaterThan(100)
+    expect(r.掃描.任意方法呼叫, '一次方法呼叫都沒看到 → 正則沒對上').toBeGreaterThan(500)
   })
 
   it('★ 注入①：語言專屬 import 會被報', () => {
@@ -259,14 +292,17 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
   })
 
   it('★ 注入④：跨層呼叫只算已登錄的視圖，且排除生命週期', () => {
-    expect(數跨層呼叫('this.monacoPanel?.setCode(x)')).toBe(1)
-    expect(數跨層呼叫('a.blocklyPanel.foo(); b.consolePanel!.bar()')).toBe(2)
+    expect(數跨層呼叫('this.monacoPanel?.setCode(x)')).toEqual(['monacoPanel.setCode'])
+    expect(數跨層呼叫('a.blocklyPanel.foo(); b.consolePanel!.bar()')).toEqual([
+      'blocklyPanel.foo',
+      'consolePanel.bar',
+    ])
     // ⚠️ 這兩條是第一版量出 139 筆的原因——名字裡有 Panel 不代表它是視圖
-    expect(數跨層呼叫('leftPanel.appendChild(el)')).toBe(0)
-    expect(數跨層呼叫('bottomPanel.addTab(t)')).toBe(0)
+    expect(數跨層呼叫('leftPanel.appendChild(el)')).toEqual([])
+    expect(數跨層呼叫('bottomPanel.addTab(t)')).toEqual([])
     // 生命週期由呼叫端直接管，不是「通訊」
-    expect(數跨層呼叫('this.monacoPanel.init(el)')).toBe(0)
-    expect(數跨層呼叫('this.blocklyPanel?.dispose()')).toBe(0)
+    expect(數跨層呼叫('this.monacoPanel.init(el)')).toEqual([])
+    expect(數跨層呼叫('this.blocklyPanel?.dispose()')).toEqual([])
   })
 
   it('★ 硬性零：視圖之間不得互相 import', () => {
@@ -305,8 +341,8 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
       `② 視圖獨立性          ${r.視圖間import}（硬性零）`,
       `④ 跨層通訊只走 Bus`,
       `   直接呼叫視圖        ${r.跨層直接呼叫視圖}（基線 ${基線值('跨層直接呼叫視圖')}）`,
-      ...[...new Set(r.明細.跨層直接呼叫視圖.map((x) => x.split(':')[0]))].map(
-        (f) => `     ✘ ${f}：${r.明細.跨層直接呼叫視圖.filter((x) => x.startsWith(f + ':')).length} 處`,
+      ...[...new Set(r.明細.跨層直接呼叫視圖.map((x) => x.split(' → ')[0]))].map(
+        (f) => `     ✘ ${f}：${r.明細.跨層直接呼叫視圖.filter((x) => x.startsWith(f + ' → ')).length} 處`,
       ),
     ])
 
