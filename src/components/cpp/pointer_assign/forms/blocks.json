@@ -33,7 +33,12 @@
     },
     "astPattern": {
       "nodeType": "assignment_expression",
-      "constraints": [],
+      "constraints": [
+        {
+          "field": "left",
+          "nodeType": "pointer_expression"
+        }
+      ],
       "fieldMappings": [
         {
           "semantic": "ptr_name",
@@ -45,7 +50,8 @@
           "ast": "right",
           "extract": "lift"
         }
-      ]
+      ],
+      "_constraints_why": "⚠️ 這裡原本是 `[]`——**而它是假的**。這顆元件的手寫分支寫著\n`if (op !== '=' || left?.type !== 'pointer_expression') return null`，\n也就是它其實有條件，只是**宣告裡沒說**。\n後果：另一顆同樣認 `assignment_expression` 的元件也宣告 0 條約束\n→ **兩者優先權相同，誰贏由陣列順序決定**。\n在共用檔裡 core 排在膠囊前面所以沒事；那顆一搬進膠囊，\nglob 的字母序就會把它翻掉。\n> **一個少報約束的宣告，會讓一顆比它一般的元件搶走它的語法。**"
     },
     "renderMapping": {
       "fields": {
