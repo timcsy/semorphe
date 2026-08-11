@@ -13,6 +13,28 @@ export interface SemanticEvents {
   'execution:state': { status: ExecutionStatus; step?: StepInfo; reason?: ExecutionReason }
   'execution:output': { text: string; stream: 'stdout' | 'stderr' }
   'execution:at-node': ExecutionAtNodeEvent
+  /**
+   * ⚠️ **這條線的方向是刻意反過來的。**
+   *
+   * 斷點原本是這樣判的：
+   *
+   * ```ts
+   * const breakpoints = monacoPanel.getBreakpoints()          // 行號
+   * const hit = breakpoints.some(bp => bp >= mapping.startLine + 1 && bp <= mapping.endLine + 1)
+   * ```
+   *
+   * 執行器跟程式碼視圖要**行號**，然後自己做區間比對——於是
+   * **執行器知道有「行」這個東西**，而那是文字投影才有的概念。
+   *
+   * 改成視圖**推**一份 nodeId 集合：斷點落在哪幾個節點上，由懂行號的那一方算。
+   * 執行器只問「現在這個節點在不在集合裡」。
+   *
+   * > **翻譯要發生在懂那個語彙的一端。**
+   *
+   * 而這讓 2D 接線圖也能推它自己的斷點（「這顆元件被觸發時停」），
+   * 不必先有「行」。
+   */
+  'execution:breakpoints': { nodeIds: string[] }
   'diagnostics:update': { items: Diagnostic[] }
 }
 

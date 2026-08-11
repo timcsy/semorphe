@@ -1,7 +1,10 @@
 import * as monaco from 'monaco-editor'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
+import { 斷點對應的節點 } from '../../core/projection/code-mapping'
+import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticNode } from '../../core/types'
+
 
 /** 這棵子樹裡有沒有這個 id。 */
 function containsNodeId(node: SemanticNode, targetId: string): boolean {
@@ -29,6 +32,7 @@ export class MonacoPanel implements ViewHost {
   private suppressChange = false
   private highlightCollection: monaco.editor.IEditorDecorationsCollection | null = null
   private pendingHighlight: { startLine: number; endLine: number; variant: 'block-to-code' | 'code-to-block' } | null = null
+  private bus: SemanticBus | null = null
   private codeMappings: CodeMapping[] = []
   private currentTree: SemanticNode | null = null
   private breakpoints: Set<number> = new Set()
@@ -62,8 +66,32 @@ export class MonacoPanel implements ViewHost {
     // `sync-controller` 兩處在發它（`blocks` 與 `resync`），沒有人接
     // ——「機制有了沒人接上」的又一筆。這個視圖需要它才能把
     // 「執行到哪個節點」翻譯成自己的座標（行號）。
-    if (event.mappings) this.codeMappings = event.mappings
+    if (event.mappings) {
+      this.codeMappings = event.mappings
+      // ⚠️ 對映變了，同一批斷點會落在不同的節點上——要重推。
+      this.推送斷點()
+    }
     if (event.tree) this.currentTree = event.tree
+  }
+
+  /**
+   * 把「哪幾行有斷點」翻譯成「哪些語義節點有斷點」，推上匯流排。
+   *
+   * ⚠️ **翻譯發生在這裡，而不是執行器裡**——「行」是這個視圖的語彙。
+   * 判準與原本執行器裡那行等價：斷點行落在某個節點的 `[start, end]` 區間內。
+   *
+   * 兩個觸發點都要推，缺一個就會出現「設了斷點但不會停」：
+   * ① 使用者切換斷點　② 對映更新（樹變了，同一行對到不同節點）
+   */
+  private 推送斷點(): void {
+    if (!this.bus) return
+    this.bus.emit('execution:breakpoints', { nodeIds: 斷點對應的節點(this.codeMappings, this.breakpoints) })
+  }
+
+  /** ⚠️ 這個視圖用匯流排**發**（斷點翻譯），不只收。 */
+  connectBus(bus: SemanticBus): void {
+    this.bus = bus
+    this.推送斷點()
   }
 
   /**
@@ -312,6 +340,7 @@ export class MonacoPanel implements ViewHost {
       this.breakpoints.add(line)
     }
     this.renderBreakpoints()
+    this.推送斷點()
     this.onBreakpointChangeCallback?.(this.getBreakpoints())
   }
 

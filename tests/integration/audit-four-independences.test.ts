@@ -255,6 +255,9 @@ function 量(): 基線 {
         '- 跨層直接呼叫 95 → 76：**實作了**。`execution:at-node` 廣播取代了三段\n' +
         '  「查中央對映表 → 高亮積木 ＋ 捲程式碼」。`highlightBlock`／`revealLine`／\n' +
         '  `addHighlight`／`clearHighlight`／`centerOnBlock` 全數歸零。\n' +
+        '- 跨層直接呼叫 76 → 74：**實作了**。斷點反轉——程式碼視圖把「哪幾行有斷點」\n' +
+        '  翻譯成「哪些節點有斷點」推上匯流排（`execution:breakpoints`），\n' +
+        '  執行器不再知道有「行」這個東西。\n' +
         '- 其餘UI檔import語言 4 → 2：**實作了**。`ioTraitOf`／`isPlainDeclaration` 上移到\n' +
         '  `core/component/traits.ts`——它們一個 C++ 的字都不認識，而視圖層為了問它們\n' +
         '  而 import 整個語言套件。順帶消掉一份與核心逐字相同的 `性狀()` 實作\n' +

@@ -183,8 +183,11 @@ export class App {
       if (v) registerView(v)
     }
     connectViews(this.bus)
-    // `console-panel` 還聽一個契約外的事件（`execution:output`），自己接。
+    // 兩個面板還用匯流排做契約外的事，自己接：
+    // - `console-panel` **收** `execution:output`
+    // - `monaco-panel` **發** `execution:breakpoints`（把行號翻成 nodeId）
     elements.consolePanel?.connectBus(this.bus)
+    this.monacoPanel?.connectBus(this.bus)
 
     // 8. Setup code→blocks pipeline
     await this.setupCodeToBlocksPipeline()

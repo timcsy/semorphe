@@ -28,6 +28,8 @@ export interface ExecutionPanels {
 export class ExecutionController {
   private panels: ExecutionPanels
   private bus: SemanticBus | undefined
+  /** 有斷點的節點。由程式碼視圖翻譯後推來——見 `semantic-bus.ts` 的 `execution:breakpoints`。 */
+  private 斷點節點 = new Set<string>()
   private interpreter: SemanticInterpreter | null = null
   private stepController: StepController | null = null
   private debugToolbar: DebugToolbar
@@ -78,9 +80,7 @@ export class ExecutionController {
    * 而「執行到哪個節點」原本被寫成**兩個命令**（高亮積木、捲程式碼），
    * 它其實是**一個廣播的兩個投影**——那是這一步的全部內容。
    *
-   * 還沒搬的：`promptInput()`（要回覆，匯流排單向）、
-   * `getBreakpoints()`（方向是反的，見 draft §二之二）、
-   * `clear()`（重置，不是廣播）。
+   * 還沒搬的：`promptInput()`（要回覆，匯流排單向）、`clear()`（重置，不是廣播）。
    */
   constructor(
     panels: ExecutionPanels,
@@ -94,6 +94,11 @@ export class ExecutionController {
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
     this.bus = opts.bus
+    // ⚠️ 收一份「哪些節點有斷點」——**不再跟程式碼視圖要行號**。
+    // 翻譯發生在懂「行」的那一端（`monaco-panel.推送斷點`）。
+    this.bus?.on('execution:breakpoints', (d) => {
+      this.斷點節點 = new Set(d.nodeIds)
+    })
     this.debugToolbar = new DebugToolbar()
   }
 
@@ -311,18 +316,9 @@ export class ExecutionController {
       let shouldPause = this.animatePaused
 
       // Check breakpoints
-      if (!shouldPause && step.nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
-        if (mapping && mapping.startLine !== null && mapping.endLine !== null) {
-          const breakpoints = this.panels.monacoPanel?.getBreakpoints() ?? []
-          if (breakpoints.length > 0) {
-            const hit = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
-            if (hit) {
-              shouldPause = true
-              this.廣播({ status: 'paused', reason: 'breakpoint' })
-            }
-          }
-        }
+      if (!shouldPause && step.nodeId && this.斷點節點.has(step.nodeId)) {
+        shouldPause = true
+        this.廣播({ status: 'paused', reason: 'breakpoint' })
       }
 
       if (shouldPause) {
@@ -431,15 +427,10 @@ export class ExecutionController {
 
       const step = this.stepRecords[this.currentStepIndex]
       if (step?.nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
-        if (mapping && mapping.startLine !== null && mapping.endLine !== null) {
-          const breakpoints = this.panels.monacoPanel?.getBreakpoints() ?? []
-          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
-          if (hitBreakpoint && this.stepController?.getStatus() === 'running') {
-            this.stepController.pause()
-            this.廣播({ status: 'paused', reason: 'breakpoint' })
-            this.debugToolbar.setMode('paused')
-          }
+        if (this.斷點節點.has(step.nodeId) && this.stepController?.getStatus() === 'running') {
+          this.stepController.pause()
+          this.廣播({ status: 'paused', reason: 'breakpoint' })
+          this.debugToolbar.setMode('paused')
         }
       }
     })
@@ -711,14 +702,9 @@ export class ExecutionController {
 
       let shouldPause = this.animatePaused
       if (!shouldPause && step.nodeId) {
-        const mapping = this.panels.syncController?.getMappingForNode(step.nodeId)
-        if (mapping && mapping.startLine !== null && mapping.endLine !== null) {
-          const breakpoints = this.panels.monacoPanel?.getBreakpoints() ?? []
-          const hitBreakpoint = breakpoints.some(bp => bp >= mapping.startLine! + 1 && bp <= mapping.endLine! + 1)
-          if (hitBreakpoint) {
-            shouldPause = true
-            this.廣播({ status: 'paused', reason: 'breakpoint' })
-          }
+        if (this.斷點節點.has(step.nodeId)) {
+          shouldPause = true
+          this.廣播({ status: 'paused', reason: 'breakpoint' })
         }
       }
 
