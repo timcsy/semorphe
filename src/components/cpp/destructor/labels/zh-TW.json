@@ -1,0 +1,4 @@
+{
+  "C_DESTRUCTOR_MSG0": "解構子 %1 %2",
+  "C_DESTRUCTOR_TOOLTIP": "定義解構子，在物件銷毀時清理資源"
+}

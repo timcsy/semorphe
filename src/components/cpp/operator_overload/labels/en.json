@@ -1,0 +1,4 @@
+{
+  "C_OPERATOR_OVERLOAD_MSG0": "Overload operator %2 returning %1(%3 %4)",
+  "C_OPERATOR_OVERLOAD_TOOLTIP": "Define a custom operator implementation for this class"
+}

@@ -1,0 +1,4 @@
+{
+  "C_VIRTUAL_METHOD_MSG0": "虛擬方法 %1 %2（%3）",
+  "C_VIRTUAL_METHOD_TOOLTIP": "定義虛擬方法，可被衍生類別覆寫"
+}

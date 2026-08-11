@@ -1,0 +1,4 @@
+{
+  "C_VIRTUAL_METHOD_MSG0": "Overridable method %1 %2 (%3) (virtual)",
+  "C_VIRTUAL_METHOD_TOOLTIP": "Define a virtual method that can be overridden by derived classes"
+}

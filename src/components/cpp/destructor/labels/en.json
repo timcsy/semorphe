@@ -1,0 +1,4 @@
+{
+  "C_DESTRUCTOR_MSG0": "Cleanup %1 %2 (destructor)",
+  "C_DESTRUCTOR_TOOLTIP": "Define a destructor that cleans up when the object is destroyed"
+}

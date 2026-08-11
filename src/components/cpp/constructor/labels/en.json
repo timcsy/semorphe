@@ -1,0 +1,6 @@
+{
+  "C_CONSTRUCTOR_MSG0": "Initialize %1 (%2) (constructor)",
+  "C_CONSTRUCTOR_MSG1": "init: %1",
+  "C_CONSTRUCTOR_MSG2": "%1",
+  "C_CONSTRUCTOR_TOOLTIP": "Define a constructor that initializes the object when created"
+}

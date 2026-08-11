@@ -1,0 +1,96 @@
+[
+  {
+    "id": "cpp_operator_overload",
+    "conceptId": "cpp:operator_overload",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_operator_overload",
+      "message0": "%{BKY_C_OPERATOR_OVERLOAD_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "+",
+              "+"
+            ],
+            [
+              "-",
+              "-"
+            ],
+            [
+              "*",
+              "*"
+            ],
+            [
+              "==",
+              "=="
+            ],
+            [
+              "!=",
+              "!="
+            ],
+            [
+              "<",
+              "<"
+            ],
+            [
+              ">",
+              ">"
+            ],
+            [
+              "<<",
+              "<<"
+            ],
+            [
+              ">>",
+              ">>"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "PARAM_TYPE",
+          "text": "const MyClass&"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAM_NAME",
+          "text": "other"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_OPERATOR_OVERLOAD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator",
+        "PARAM_NAME": "param_name",
+        "PARAM_TYPE": "param_type",
+        "RETURN_TYPE": "return_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

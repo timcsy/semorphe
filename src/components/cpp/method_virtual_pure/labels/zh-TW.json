@@ -1,0 +1,4 @@
+{
+  "C_PURE_VIRTUAL_MSG0": "純虛擬方法 %1 %2（%3）",
+  "C_PURE_VIRTUAL_TOOLTIP": "宣告純虛擬方法（抽象），衍生類別必須實作"
+}

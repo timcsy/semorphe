@@ -1,0 +1,6 @@
+{
+  "C_CONSTRUCTOR_MSG0": "建構子 %1（%2）",
+  "C_CONSTRUCTOR_MSG1": "初始化: %1",
+  "C_CONSTRUCTOR_MSG2": "%1",
+  "C_CONSTRUCTOR_TOOLTIP": "定義建構子，在物件建立時初始化"
+}

@@ -1,0 +1,4 @@
+{
+  "C_PURE_VIRTUAL_MSG0": "Must-override method %1 %2 (%3) (pure virtual)",
+  "C_PURE_VIRTUAL_TOOLTIP": "Declare a pure virtual method (abstract) that must be overridden by derived classes"
+}

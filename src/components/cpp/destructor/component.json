@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:destructor",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "class_name",
+      "kind": "literal",
+      "default": "MyClass"
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "consumed-by-parent"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。**"
+  },
+  "memberRole": "destructor",
+  "_memberRole_why": "⚠️ **這顆在類別裡扮演什麼角色，由它自己宣告。** `structs.ts` 的 `拆解成員` 原本寫死 `m.conceptId === '…'` 來分派，而那讓這顆永遠搬不進膠囊。**「另一顆元件需要認得它」是真的耦合，不是碎裂**——處置不是把消費者搬走，是把「我是什麼角色」變成元件自己的宣告。"
+}

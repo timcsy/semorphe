@@ -1,0 +1,4 @@
+{
+  "C_OVERRIDE_METHOD_MSG0": "覆寫方法 %1 %2（%3）",
+  "C_OVERRIDE_METHOD_TOOLTIP": "定義覆寫基底類別虛擬方法的方法"
+}

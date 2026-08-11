@@ -1,0 +1,57 @@
+[
+  {
+    "id": "cpp_method_virtual_pure",
+    "conceptId": "cpp:method_virtual_pure",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_virtual_pure",
+      "message0": "%{BKY_C_PURE_VIRTUAL_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "void"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "method"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_PURE_VIRTUAL_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "virtual ${RETURN_TYPE} ${NAME}(${PARAMS}) = 0;",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      },
+      "childrenAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+]

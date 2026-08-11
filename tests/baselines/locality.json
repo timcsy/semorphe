@@ -111,8 +111,8 @@
       "dirs": 5
     },
     "cpp:constructor": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:container_append": {
       "files": 3,
@@ -199,8 +199,8 @@
       "dirs": 1
     },
     "cpp:destructor": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:doc_comment": {
       "files": 5,
@@ -387,16 +387,16 @@
       "dirs": 3
     },
     "cpp:method_override": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:method_virtual": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:method_virtual_pure": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:namespace_def": {
       "files": 4,
@@ -415,8 +415,8 @@
       "dirs": 1
     },
     "cpp:operator_overload": {
-      "files": 3,
-      "dirs": 3
+      "files": 2,
+      "dirs": 1
     },
     "cpp:pair_declare": {
       "files": 2,

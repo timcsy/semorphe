@@ -17,6 +17,12 @@ import { 建靜態變數 } from '../../../../components/cpp/var_declare_static/l
 import { qualifierConcept } from '../../../../core/component/qualifier-concepts'
 import { 建字串流宣告 } from '../../../../components/cpp/istringstream_declare/lift'
 import { 建樣板函式 } from '../../../../components/cpp/template_function/lift'
+import { 建constructor } from '../../../../components/cpp/constructor/lift'
+import { 建destructor } from '../../../../components/cpp/destructor/lift'
+import { 建method_virtual } from '../../../../components/cpp/method_virtual/lift'
+import { 建method_override } from '../../../../components/cpp/method_override/lift'
+import { 建method_virtual_pure } from '../../../../components/cpp/method_virtual_pure/lift'
+import { 建operator_overload } from '../../../../components/cpp/operator_overload/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -225,13 +231,13 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
       const initList = initListNode ? initListNode.text.replace(/^:\s*/, '') : ''
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:constructor', { class_name: className, init_list: initList }, { params, body })
+      return 建constructor({ class_name: className, init_list: initList }, { params, body })
     }
 
     // Destructor: function_definition where declarator is destructor_name
     if (nameNode?.type === 'destructor_name') {
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:destructor', { class_name: className }, { body })
+      return 建destructor({ class_name: className }, { body })
     }
 
     // Operator overload: function_definition where declarator is operator_name
@@ -250,7 +256,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         }
       }
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:operator_overload', { return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
+      return 建operator_overload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
     }
 
     // Check for override keyword (via virtual_specifier node in declarator)
@@ -263,7 +269,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:method_override', { return_type: returnType, name: methodName }, { params, body })
+      return 建method_override({ return_type: returnType, name: methodName }, { params, body })
     }
 
     // Virtual method with body
@@ -273,7 +279,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:method_virtual', { return_type: returnType, name: methodName }, { params, body })
+      return 建method_virtual({ return_type: returnType, name: methodName }, { params, body })
     }
 
     // Regular member function → lift as func_def
@@ -291,7 +297,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const returnType = typeNode?.text ?? 'void'
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      return createNode('cpp:method_virtual_pure', { return_type: returnType, name: methodName }, { params })
+      return 建method_virtual_pure({ return_type: returnType, name: methodName }, { params })
     }
 
     // Static member: static int count;

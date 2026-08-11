@@ -1,0 +1,4 @@
+{
+  "C_OVERRIDE_METHOD_MSG0": "Override method %1 %2(%3)",
+  "C_OVERRIDE_METHOD_TOOLTIP": "Define a method that overrides a virtual method from a base class"
+}
