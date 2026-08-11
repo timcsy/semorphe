@@ -227,8 +227,8 @@
       "dirs": 1
     },
     "cpp:func_def": {
-      "files": 7,
-      "dirs": 5
+      "files": 4,
+      "dirs": 1
     },
     "cpp:if": {
       "files": 4,
@@ -455,8 +455,8 @@
       "dirs": 1
     },
     "cpp:program": {
-      "files": 8,
-      "dirs": 7
+      "files": 4,
+      "dirs": 1
     },
     "cpp:program_exit": {
       "files": 3,

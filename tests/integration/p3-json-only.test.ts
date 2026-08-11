@@ -13,7 +13,6 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
-import { registerStatementGenerators } from '../../src/languages/cpp/core/generators/statements'
 import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
@@ -121,7 +120,6 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const node = createNode('cpp:increment', { NAME: 'i', OP: '++' })
       const generators = new Map<string, NodeGenerator>()
       const style = { indent_size: 4, io_style: 'cout', brace_style: 'K&R' } as StylePreset
-      registerStatementGenerators(generators, style)
     for (const reg of componentGenerateRegistrars())
       (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
       // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，

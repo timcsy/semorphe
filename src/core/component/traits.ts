@@ -79,3 +79,21 @@ export function isElseIfChainable(conceptId: string): boolean {
 export function isPlainDeclaration(conceptId: string): boolean {
   return componentTraits(conceptId)?.plainDeclaration === true
 }
+
+/**
+ * 這顆是**整棵語義樹的根**（`children.body` 是整個程式）。
+ *
+ * ⚠️ `core/semantic-tree.ts` 的 `createEmptyProgram()` 原本寫死 `'cpp:program'`
+ * ——**核心知道一顆 C++ 元件的名字**。而「哪一顆是樹根」是那顆元件的宣告：
+ * 換一個語言就換一顆，核心只要問「誰是根」。
+ *
+ * > **核心可以知道「有一個根」，不該知道那個根叫什麼。**
+ */
+export function programRootConcept(): string | undefined {
+  return conceptWithTrait('programRoot')
+}
+
+/** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
+export function isFunctionDefinition(conceptId: string): boolean {
+  return componentTraits(conceptId)?.functionDefinition === true
+}

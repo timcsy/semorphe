@@ -1,0 +1,30 @@
+{
+  "conceptId": "cpp:program",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "skipPaths": [
+    "extract",
+    "render"
+  ],
+  "skipReasons": {
+    "render": "consumed-by-parent",
+    "extract": "consumed-by-parent"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "programRoot": true
+  },
+  "_traits_why": "**「我是樹根」「我是函式定義」是我自己的宣告。**\n⚠️ 而「哪一個函式是進入點」**不在這裡**——`main` 這個名字是消費者的知識（介面層要找進入點、鷹架過濾器要拆 main 的外殼）。同一條性狀只講一半，另一半留在消費者手上。"
+}

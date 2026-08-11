@@ -1,0 +1,12 @@
+{
+  "U_FUNC_DEF_MSG0": "Define function %1(%2) returns %3",
+  "U_FUNC_DEF_TOOLTIP": "Define a function (a reusable block of code). Choose void (no return) if no result is needed",
+  "U_FUNC_DEF_RETURN_TYPE_VOID": "void (no return)",
+  "U_FUNC_DEF_RETURN_TYPE_INT": "int (integer)",
+  "U_FUNC_DEF_RETURN_TYPE_FLOAT": "float (decimal)",
+  "U_FUNC_DEF_RETURN_TYPE_DOUBLE": "double (precise decimal)",
+  "U_FUNC_DEF_RETURN_TYPE_CHAR": "char (character)",
+  "U_FUNC_DEF_RETURN_TYPE_LONG_LONG": "long long (large integer)",
+  "U_FUNC_DEF_RETURN_TYPE_STRING": "string (text)",
+  "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool (true/false)"
+}

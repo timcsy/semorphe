@@ -74,11 +74,11 @@
     {
       "name": "函式",
       "blocks": [
-        "cpp_func_def",
         "cpp_func_call",
         "cpp_return",
         "cpp_func_call_expression",
         "cpp_forward_decl",
+        "cpp_func_def",
         "cpp_lambda",
         "cpp_template_function",
         "cpp_istringstream_declare",

@@ -1,4 +1,5 @@
 import type { SemanticNode, PropertyValue, SemanticModel } from './types'
+import { programRootConcept } from './component/traits'
 
 let idCounter = 0
 
@@ -10,13 +11,21 @@ export function resetIdCounter(): void {
   idCounter = 0
 }
 
+/**
+ * 一棵空的語義樹。
+ *
+ * ⚠️ 這裡原本寫死 `'cpp:program'`——**核心知道一顆 C++ 元件的名字**。
+ * 「哪一顆是樹根」由那顆元件宣告（`traits.programRoot`），核心只問「誰是根」。
+ *
+ * > **核心可以知道「有一個根」，不該知道那個根叫什麼。**
+ *
+ * 沒有任何元件宣告自己是根時丟錯——**不猜**。猜一個名字的話，
+ * 整個編輯器會拿到一棵沒有人認得的樹，而症狀出現在很遠的地方。
+ */
 export function createEmptyProgram(): SemanticNode {
-  return {
-    id: generateId(),
-    conceptId: 'cpp:program',
-    properties: {},
-    children: { body: [] },
-  }
+  const root = programRootConcept()
+  if (!root) throw new Error('沒有任何元件宣告 `traits.programRoot` —— 建不出空的語義樹')
+  return { id: generateId(), conceptId: root, properties: {}, children: { body: [] } }
 }
 
 export function createNode(

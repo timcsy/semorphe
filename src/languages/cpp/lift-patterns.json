@@ -26,35 +26,6 @@
     "priority": 1
   },
   {
-    "id": "cpp_translation_unit",
-    "astNodeType": "translation_unit",
-    "concept": {
-      "conceptId": "cpp:program"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "body",
-        "ast": "$text",
-        "extract": "liftChildren"
-      }
-    ]
-  },
-  {
-    "id": "cpp_function_definition",
-    "astNodeType": "function_definition",
-    "concept": {
-      "conceptId": "cpp:func_def"
-    },
-    "liftStrategy": "cpp:liftFunctionDef",
-    "fieldMappings": [
-      {
-        "semantic": "body",
-        "ast": "body",
-        "extract": "liftBody"
-      }
-    ]
-  },
-  {
     "id": "cpp_compound_stmt",
     "astNodeType": "compound_statement",
     "concept": {

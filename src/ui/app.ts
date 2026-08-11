@@ -43,6 +43,7 @@ import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements } from './app-shell'
+import { isFunctionDefinition } from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
 import { allCppConcepts, allCppProjections } from '../languages/cpp/all-declarations'
@@ -472,7 +473,7 @@ export class App {
     const depth = this.getScaffoldDepth()
     const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
       (n: { conceptId: string; properties: Record<string, unknown> }) =>
-        n.conceptId === 'cpp:func_def' && n.properties.name === 'main'
+        isFunctionDefinition(n.conceptId) && n.properties.name === 'main'
     )
     if (needsRelift && this.cppParser && code.trim()) {
       this.cppParser.parse(code).then(parsed => {

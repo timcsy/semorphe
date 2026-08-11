@@ -1,0 +1,15 @@
+{
+  "id": "cpp_function_definition",
+  "astNodeType": "function_definition",
+  "concept": {
+    "conceptId": "cpp:func_def"
+  },
+  "liftStrategy": "cpp:liftFunctionDef",
+  "fieldMappings": [
+    {
+      "semantic": "body",
+      "ast": "body",
+      "extract": "liftBody"
+    }
+  ]
+}

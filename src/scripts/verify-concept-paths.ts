@@ -9,6 +9,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { programRootConcept } from '../core/component/traits'
 
 // ─── Types ───
 
@@ -171,7 +172,9 @@ const INTERNAL_CONCEPTS = new Set([
   '_compound',     // 內部展開用
   'raw_code',      // 降級概念，不需要 lift pattern
   'unresolved',    // 內部降級概念
-  'cpp:program',       // 根節點，不需要 render/extract
+  // ⚠️ **樹根**。它不需要 render／extract，而它現在是一顆膠囊
+  // ——身分寫在這裡會被就近性護欄指名，所以問性狀。
+  ...(programRootConcept() ? [programRootConcept() as string] : []),
 ])
 
 // ─── Main Verification ───

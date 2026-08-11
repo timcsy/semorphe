@@ -13,6 +13,7 @@ import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
 import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
 import type { BlockMapping } from '../../core/projection/code-generator'
+import { 建program } from '../../components/cpp/program/lift'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -172,7 +173,7 @@ export class BlocklyPanel implements ViewHost {
 
   /** Extract semantic tree from workspace blocks, plus blockMappings for nodeId↔blockId */
   extractSemanticTree(): SemanticNode {
-    if (!this.workspace) return createNode('cpp:program', {}, { body: [] })
+    if (!this.workspace) return 建program()
     this._blockMappings = []
     const topBlocks = this.workspace.getTopBlocks(true)
     const body: SemanticNode[] = []
@@ -180,7 +181,7 @@ export class BlocklyPanel implements ViewHost {
       const nodes = this.extractBlockChain(block)
       body.push(...nodes)
     }
-    return createNode('cpp:program', {}, { body })
+    return 建program(body)
   }
 
   /** Get block mappings from the last extraction */

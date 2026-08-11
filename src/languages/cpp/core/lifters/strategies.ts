@@ -34,6 +34,7 @@ import { 建malloc } from '../../../../components/cpp/malloc/lift'
 import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
 import { 建include } from '../../../../components/cpp/include/lift'
 import { 建var_declare } from '../../../../components/cpp/var_declare/lift'
+import { 建func_def } from '../../../../components/cpp/func_def/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -430,7 +431,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
 
     const body = extractBody(bodyNode, ctx)
-    return createNode('cpp:func_def', { name, return_type: returnType }, { params: paramChildren, body })
+    return 建func_def(name, returnType, { params: paramChildren, body })
   })
 
 

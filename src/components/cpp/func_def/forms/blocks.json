@@ -1,0 +1,96 @@
+[
+  {
+    "id": "cpp_func_def",
+    "conceptId": "cpp:func_def",
+    "language": "universal",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_func_def",
+      "message0": "%{BKY_U_FUNC_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "myFunc"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "RETURN_TYPE",
+          "options": [
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_VOID}",
+              "void"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_LONG_LONG}",
+              "long long"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_STRING}",
+              "string"
+            ],
+            [
+              "%{BKY_U_FUNC_DEF_RETURN_TYPE_BOOL}",
+              "bool"
+            ]
+          ]
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      },
+      "inputs": {},
+      "statementInputs": {
+        "BODY": "body"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "params",
+          "childConcept": "param_decl",
+          "childFields": {
+            "TYPE_{i}": "type",
+            "PARAM_{i}": "name"
+          }
+        }
+      ]
+    }
+  }
+]

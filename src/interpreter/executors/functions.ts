@@ -1,6 +1,4 @@
-import type { ConceptExecutor } from '../executor-registry'
 import type { RuntimeValue } from '../types'
-import { 建func_call } from '../../components/cpp/func_call/lift'
 
 /**
  * ⚠️ **導出，而且只能有這一份。**
@@ -16,38 +14,8 @@ export class ReturnSignal {
 }
 
 
-export function registerFunctionExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
-  register('cpp:program', async (node, ctx) => {
-    const body = node.children.body ?? []
-    await ctx.executeBody(body)
-    if (ctx.functions.has('main')) {
-      const execFuncCall = async (callNode: import('../../core/types').SemanticNode) => {
-        await ctx.executeNode(callNode)
-      }
-      await execFuncCall(建func_call('main', []))
-    }
-  })
-
-  register('cpp:func_def', async (node, ctx) => {
-    const name = String(node.properties.name)
-    const returnType = String(node.properties.return_type || 'void')
-    const paramChildren = node.children.params ?? []
-    const params = paramChildren.map(p => ({
-      type: String(p.properties.type ?? 'int'),
-      name: String(p.properties.name ?? ''),
-    }))
-    ctx.functions.set(name, {
-      name,
-      params,
-      returnType,
-      body: node.children.body ?? [],
-    })
-  })
-
-
-
-
-
-
-
-}
+/**
+ * ⚠️ **這個模組不再註冊任何執行器**——它的元件都搬進膠囊了。
+ * 檔案留著因為 `ReturnSignal` 在這裡——**訊號必須是同一個，複製一份
+ * `instanceof` 就失敗，而失敗的樣子是「return 沒有被接住」不是編譯錯誤。**
+ */

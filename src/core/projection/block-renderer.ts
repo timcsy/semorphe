@@ -3,6 +3,7 @@ import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
 import type { RenderContext } from '../registry/render-strategy-registry'
 import { nextBlockId, resetBlockIdCounter } from './common-mappings'
+import { programRootConcept } from '../component/traits'
 
 interface BlockState {
   type: string
@@ -36,7 +37,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.conceptId !== 'cpp:program') {
+  if (tree.conceptId !== programRootConcept()) {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 

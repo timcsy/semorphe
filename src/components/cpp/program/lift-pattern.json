@@ -1,0 +1,14 @@
+{
+  "id": "cpp_translation_unit",
+  "astNodeType": "translation_unit",
+  "concept": {
+    "conceptId": "cpp:program"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "body",
+      "ast": "$text",
+      "extract": "liftChildren"
+    }
+  ]
+}

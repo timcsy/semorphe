@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateCode, generateNode, type GeneratorContext, type NodeGenerator, setDependencyResolver, setProgramScaffold, setScaffoldConfig } from '../../src/core/projection/code-generator'
-import { registerStatementGenerators } from '../../src/languages/cpp/core/generators/statements'
 import { registerDeclarationGenerators } from '../../src/languages/cpp/core/generators/declarations'
 import { registerIostreamGenerators } from '../../src/languages/cpp/std/iostream/generators'
 import { registerGenerators as registerVectorGenerators } from '../../src/languages/cpp/std/vector/generators'

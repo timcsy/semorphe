@@ -5,7 +5,6 @@ import { cppCommentSyntax } from '../core/comment-syntax'
 import type { StylePreset } from '../../../core/types'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { registerLanguage } from '../../../core/projection/code-generator'
-import { registerStatementGenerators } from '../core/generators/statements'
 import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { allStdModules } from '../std'
 import { componentConcepts } from '../../../core/component/registry'
@@ -27,7 +26,6 @@ import type { PathName, SkipReason } from '../../../core/types'
 export function createCppGenerators(style: StylePreset): Map<string, NodeGenerator> {
   const g = new Map<string, NodeGenerator>()
   // Core generators (no #include needed)
-  registerStatementGenerators(g, style)
   registerDeclarationGenerators(g)
   // Std module generators (each header's generators)
   for (const mod of allStdModules) {
@@ -35,7 +33,6 @@ export function createCppGenerators(style: StylePreset): Map<string, NodeGenerat
   }
   // 元件膠囊的產生路
   // ⚠️ **`style` 一定要傳。** 共用產生器裡有一批 helper 是**捕獲 `style` 的閉包**
-  // （`registerStatementGenerators` 的 `openBrace` 依 `brace_style` 決定換不換行）。
   // 剪出去的膠囊拿不到那個閉包，只能自己從 `style` 算。
   // ⚠️ 少傳不會紅——**排版差異多數測試不比**，症狀是「膠囊化之後大括號位置變了」。
   for (const reg of componentGenerateRegistrars())

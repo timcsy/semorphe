@@ -1,0 +1,51 @@
+{
+  "conceptId": "cpp:func_def",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "f"
+    },
+    {
+      "name": "return_type",
+      "kind": "enum",
+      "values": [
+        "void",
+        "int",
+        "float",
+        "double",
+        "char",
+        "long long",
+        "string",
+        "bool"
+      ],
+      "default": "void"
+    }
+  ],
+  "children": {
+    "body": "statements",
+    "params": "param_decl"
+  },
+  "role": "statement",
+  "annotations": {
+    "control_flow": "sequence",
+    "introduces_scope": true,
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "functionDefinition": true
+  },
+  "_traits_why": "**「我是樹根」「我是函式定義」是我自己的宣告。**\n⚠️ 而「哪一個函式是進入點」**不在這裡**——`main` 這個名字是消費者的知識（介面層要找進入點、鷹架過濾器要拆 main 的外殼）。同一條性狀只講一半，另一半留在消費者手上。",
+  "memberRole": "method",
+  "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）"
+}
