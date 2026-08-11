@@ -24,12 +24,9 @@ export function registerVariablesCoreExecutors(
 
   // const/constexpr/auto declarations behave like var_declare in the interpreter
 
-  // const/constexpr 的**執行期**行為確實與 var_declare 相同——不可變是編譯期
-  // 的約束，這個直譯器不強制它。身分保留：碼形態不同（`const int` vs `int`），
-  // 而修飾詞要不要變成參數，取決於參數規格化（C 項）。
-  register('cpp:var_declare_const', execVarDeclare)
 
-  register('cpp:var_declare_constexpr', execVarDeclare)
+
+
 
 
 

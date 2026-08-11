@@ -8,7 +8,10 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+// ⚠️ **第十五個「自己列舉來源」的地方**（今天的同一個形狀）。
 import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -18,8 +21,8 @@ let extractor: PatternExtractor
 beforeAll(() => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)],
-    [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks)]
+    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ConceptDefJSON[])],
+    [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks), ...(componentBlocks() as BlockProjectionJSON[])]
   )
   extractor = new PatternExtractor()
   extractor.loadBlockSpecs(reg.getAll())

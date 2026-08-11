@@ -1,7 +1,6 @@
 {
   "U_VAR_DECLARE_MSG0": "建立 %1 變數 %2 = %3",
   "U_VAR_DECLARE_TOOLTIP": "建立一個新的變數，可以選擇型別和初始值。變數就像一個有名字的盒子，用來存放資料",
-  "U_VAR_DECLARE_TYPE_LONG_LONG": "long long（大整數）",
   "U_VAR_ASSIGN_MSG0": "把變數 %1 設成 %2",
   "U_VAR_ASSIGN_LABEL": "把變數",
   "U_VAR_ASSIGN_SET_LABEL": "設成",
@@ -210,10 +209,6 @@
   "C_COMMENT_LINE_TOOLTIP": "寫一段備註說明，不會影響程式執行",
   "C_USING_NAMESPACE_MSG0": "使用命名空間 %1",
   "C_USING_NAMESPACE_TOOLTIP": "讓這個命名空間裡的功能可以直接使用，不用加前綴。例如用 cout 代替 std::cout",
-  "C_CONST_DECLARE_MSG0": "宣告常數 %1 %2 = %3",
-  "C_CONST_DECLARE_TOOLTIP": "宣告一個常數變數，初始化後其值不可更改",
-  "C_CONSTEXPR_DECLARE_MSG0": "編譯期常數 %1 %2 = %3",
-  "C_CONSTEXPR_DECLARE_TOOLTIP": "宣告一個編譯期常數，其值在編譯時就已確定",
   "U_PRINT_LABEL": "輸出",
   "U_FUNC_DEF_LABEL": "定義函式",
   "U_FUNC_DEF_RETURN_LABEL": "回傳型別",

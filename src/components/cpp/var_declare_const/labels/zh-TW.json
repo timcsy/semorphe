@@ -1,0 +1,5 @@
+{
+  "U_VAR_DECLARE_TYPE_LONG_LONG": "long long（大整數）",
+  "C_CONST_DECLARE_MSG0": "宣告常數 %1 %2 = %3",
+  "C_CONST_DECLARE_TOOLTIP": "宣告一個常數變數，初始化後其值不可更改"
+}

@@ -1,0 +1,4 @@
+{
+  "C_CONSTEXPR_DECLARE_MSG0": "Compile-time constant %1 %2 = %3",
+  "C_CONSTEXPR_DECLARE_TOOLTIP": "Declare a compile-time constant whose value is determined during compilation"
+}

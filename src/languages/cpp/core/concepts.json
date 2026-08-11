@@ -515,29 +515,6 @@
     }
   },
   {
-    "conceptId": "cpp:var_declare_const",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "required": true,
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "required": true,
-        "default": "MAX"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
     "conceptId": "cpp:var_declare_ref",
     "layer": "lang-core",
     "abstractConcept": "cpp:var_declare",
@@ -553,29 +530,6 @@
         "kind": "identifier",
         "required": true,
         "default": "ref"
-      }
-    ],
-    "children": {
-      "initializer": "expression"
-    },
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:var_declare_constexpr",
-    "layer": "lang-core",
-    "abstractConcept": "cpp:var_declare",
-    "properties": [
-      {
-        "name": "type",
-        "kind": "type_expr",
-        "required": true,
-        "default": "int"
-      },
-      {
-        "name": "name",
-        "kind": "identifier",
-        "required": true,
-        "default": "SIZE"
       }
     ],
     "children": {

@@ -1,0 +1,31 @@
+{
+  "conceptId": "cpp:var_declare_const",
+  "layer": "lang-core",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "int"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "required": true,
+      "default": "MAX"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

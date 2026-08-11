@@ -1,0 +1,4 @@
+{
+  "C_CONSTEXPR_DECLARE_MSG0": "編譯期常數 %1 %2 = %3",
+  "C_CONSTEXPR_DECLARE_TOOLTIP": "宣告一個編譯期常數，其值在編譯時就已確定"
+}

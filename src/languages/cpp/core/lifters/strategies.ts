@@ -14,6 +14,7 @@ import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
 import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
 import { 建自動宣告 } from '../../../../components/cpp/var_declare_auto/lift'
 import { 建靜態變數 } from '../../../../components/cpp/var_declare_static/lift'
+import { qualifierConcept } from '../../../../core/component/qualifier-concepts'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -573,7 +574,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
       if (decl) {
         const lifted = liftSingleDeclarator(decl, type, ctx)
-        const conceptId = qualifier === 'const' ? 'cpp:var_declare_const' : 'cpp:var_declare_constexpr'
+        const conceptId = qualifierConcept(qualifier)
+        if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
         if (lifted.conceptId === 'cpp:pointer_declare') liftedType += '*'
@@ -584,7 +586,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           initializer: lifted.children.initializer ?? [],
         })
       }
-      const conceptId = qualifier === 'const' ? 'cpp:var_declare_const' : 'cpp:var_declare_constexpr'
+      const conceptId = qualifierConcept(qualifier)
+      if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
       return createNode(conceptId, { type, name: 'x' })
     }
 

@@ -135,27 +135,9 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
     return `${indent(ctx)}${type}* ${name};\n`
   })
 
-  g.set('cpp:var_declare_const', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'MAX'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}const ${type} ${name} = ${val};\n`
-    }
-    return `${indent(ctx)}const ${type} ${name};\n`
-  })
 
-  g.set('cpp:var_declare_constexpr', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'SIZE'
-    const inits = node.children.initializer ?? []
-    if (inits.length > 0) {
-      const val = generateExpression(inits[0], ctx)
-      return `${indent(ctx)}constexpr ${type} ${name} = ${val};\n`
-    }
-    return `${indent(ctx)}constexpr ${type} ${name};\n`
-  })
+
+
 
 
 

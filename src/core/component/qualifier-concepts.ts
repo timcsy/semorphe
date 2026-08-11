@@ -1,0 +1,35 @@
+/**
+ * 「C++ 修飾詞 → 元件身分」的登錄表
+ *
+ * `const int x = 1;` 與 `constexpr int x = 1;` 是**兩顆元件**，
+ * 而它們的差別只有一個關鍵字。原本那個對應寫在一個三元運算子裡：
+ *
+ * ```ts
+ * const conceptId = qualifier === 'const' ? 'cpp:var_declare_const'
+ *                                         : 'cpp:var_declare_constexpr'
+ * ```
+ *
+ * > **一顆元件可以只以「一個三元運算子的其中一支」存在。**
+ * > 而那種形式**不會出現在任何「建立點」的統計裡**——它不是建立，是選名字。
+ * > 找可搬元件時只數 `createNode` 會漏掉這一類。
+ *
+ * ⚠️ 表是空的：核心給機制、套件給資料。
+ */
+
+const 表 = new Map<string, { conceptId: string; 來源: string }>()
+
+export function registerQualifierConcept(修飾詞: string, conceptId: string, 來源: string): void {
+  const 先來的 = 表.get(修飾詞)
+  if (先來的 && 先來的.conceptId !== conceptId) {
+    throw new Error(
+      `修飾詞「${修飾詞}」被登錄兩次且指向不同身分：` +
+        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+    )
+  }
+  表.set(修飾詞, { conceptId, 來源 })
+}
+
+/** 修飾詞 → 元件身分。認不得回 `undefined`。 */
+export function qualifierConcept(修飾詞: string): string | undefined {
+  return 表.get(修飾詞)?.conceptId
+}

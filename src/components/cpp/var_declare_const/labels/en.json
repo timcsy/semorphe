@@ -1,0 +1,5 @@
+{
+  "U_VAR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
+  "C_CONST_DECLARE_MSG0": "Declare constant %1 %2 = %3",
+  "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization"
+}

@@ -1,7 +1,6 @@
 {
   "U_VAR_DECLARE_MSG0": "create %1 variable %2 = %3",
   "U_VAR_DECLARE_TOOLTIP": "Create a new variable with a chosen type and initial value. A variable is like a named box that stores data",
-  "U_VAR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
   "U_VAR_ASSIGN_MSG0": "set variable %1 to %2",
   "U_VAR_ASSIGN_LABEL": "set variable",
   "U_VAR_ASSIGN_SET_LABEL": "to",
@@ -210,10 +209,6 @@
   "C_COMMENT_LINE_TOOLTIP": "Write a comment note; it does not affect program execution",
   "C_USING_NAMESPACE_MSG0": "using namespace %1",
   "C_USING_NAMESPACE_TOOLTIP": "Allow direct use of features in this namespace without a prefix. For example, use cout instead of std::cout",
-  "C_CONST_DECLARE_MSG0": "Declare constant %1 %2 = %3",
-  "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization",
-  "C_CONSTEXPR_DECLARE_MSG0": "Compile-time constant %1 %2 = %3",
-  "C_CONSTEXPR_DECLARE_TOOLTIP": "Declare a compile-time constant whose value is determined during compilation",
   "U_PRINT_LABEL": "Print",
   "U_FUNC_DEF_LABEL": "Define function",
   "U_FUNC_DEF_RETURN_LABEL": "return type",
