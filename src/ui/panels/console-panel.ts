@@ -310,7 +310,11 @@ export class ConsolePanel implements ViewHost {
       this.inlineInput = input
 
       // Show a hint in the status bar
-      this.setStatus('等待輸入...', 'running')
+      // ⚠️ 這裡原本硬編中文 `'等待輸入...'`——而執行器那邊查的是
+      // `Blockly.Msg['EXEC_STATUS_WAITING']`（一個**不存在的鍵**，永遠落到英文退路）。
+      // 於是同一個狀態有兩份文案，而它們**連語言都不一樣**，
+      // 只因為這一份後執行所以看起來是對的。
+      this.setStatus((Blockly.Msg['EXEC_STATUS_WAITING'] as string | undefined) || 'Waiting for input...', 'running')
 
       this.scrollToBottom()
       // Notify virtual keyboard integration before focusing
