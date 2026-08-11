@@ -63,7 +63,7 @@ const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.j
  * ⚠️ 分不出來的歸 `未分類` 並**計入要看**——不得靜靜歸進防禦欄
  * （`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全）。
  */
-type 形狀 = '型別不符' | '缺子節點' | '未分類'
+type 形狀 = '型別不符' | '缺子節點' | '值判斷' | '未分類'
 
 interface 命中 {
   /**
@@ -89,6 +89,14 @@ interface 命中 {
 function 分類(條件: string): 形狀 {
   if (/\.type\s*[!=]==|typeof\s|instanceof\s|!Array\.isArray|Array\.isArray/.test(條件)) return '型別不符'
   if (/^!\w|\.length\s*===\s*0|\.length\s*<\s*1|=== undefined|== null|!\w+\?\./.test(條件)) return '缺子節點'
+  // ⚠️ **第三種形狀**（2026-08-11，掃描範圍擴大到共用執行器之後才出現）：
+  // 分支條件是**執行期的值**，不是「東西在不在」。`ctx.toBool(condition)`
+  // 是三元運算子的兩個分支、`!ctx.toBool(left)` 是 `&&` 的短路——
+  // **那是運算子的語義本身，不是檢查失敗後的退路。**
+  //
+  // 它需要自己一欄而不是塞進既有兩欄：`相容` 表讓「值判斷」判成
+  // 「缺子節點」時會矛盾出聲。
+  if (/ctx\.toBool\(|\.toBool\(/.test(條件)) return '值判斷'
   return '未分類'
 }
 
@@ -115,6 +123,8 @@ interface 判定 {
 const 相容: Record<形狀, 判定['判定'][]> = {
   型別不符: ['靜默回退', '合法'],
   缺子節點: ['防禦性', '合法'],
+  // 值判斷不會是「防禦性」——它不是在防什麼，它就是那個運算子在做的事。
+  值判斷: ['合法', '靜默回退'],
   未分類: ['靜默回退', '合法', '防禦性'],
 }
 
@@ -135,7 +145,22 @@ function 執行器檔(): string[] {
       // ——只認前者的話，搬進膠囊的執行器**整批從掃描裡消失**，
       // 而「掃到的 return 數」會安靜地掉下去。這是「掃描範圍沒跟著走」的第二面：
       // **目錄跟上了，檔名沒跟上。**
-      else if (/^(executors?|execute)\.ts$/.test(e.name)) out.push(p)
+      // ⚠️ **檔名規則漏掉了共用執行器**（2026-08-11 補）。
+      //
+      // `src/languages/cpp/core/executors/` 底下 14 個檔叫 `operators.ts`、
+      // `arrays.ts`、`containers.ts`……**一個都不叫 `executors.ts`**
+      // ——於是這條護欄從落地起就沒掃過它們。
+      //
+      // 發現的方式是搬家：五顆轉型元件的執行器**一個字都沒改**地從
+      // `operators.ts` 搬進膠囊，護欄立刻多報 5 筆。
+      //
+      // > **一個「按檔名認人」的規則，會漏掉所有沒照那個命名的地方——
+      // > 而它報零的樣子與健康的完全一樣。**
+      //
+      // 改成：**住在 `executors/` 目錄裡的都算**，加上檔名規則（膠囊沒有那個目錄）。
+      else if (/^(executors?|execute)\.ts$/.test(e.name) || /[/\\]executors[/\\][^/\\]+\.ts$/.test(p)) {
+        if (!/[/\\]index\.ts$/.test(p)) out.push(p)
+      }
     }
   }
   走(path.join(REPO_ROOT, 'src/languages'))
@@ -176,6 +201,12 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
       if (同行) 條件 = 同行[1]
       else {
         for (let j = i - 1; j >= Math.max(0, i - 4); j--) {
+          // ⚠️ **跳過「單行 `if (…) return …`」**。它是一個完整的敘述，
+          // **不是包住這一行的條件**——把它當條件會抓出一段語法上不成立的字串
+          // （`targetScope) return targetScope.get(targetName)`），
+          // 然後那段字串分類不了，於是一個**無條件的尾端 return**
+          // 被誤報成有條件的回退。
+          if (/if\s*\(.*\)\s*return\b/.test(lines[j])) continue
           const m = /if\s*\((.+?)\)\s*\{?\s*$/.exec(lines[j])
           if (m) { 條件 = m[1]; break }
         }
