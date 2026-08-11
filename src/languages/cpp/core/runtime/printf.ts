@@ -1,15 +1,15 @@
+/**
+ * **printf／scanf 的格式字串解析** —— 與身分無關的演算法
+ *
+ * 原本住在 `core/runtime/printf.ts`，而那個檔的 `registerCstdioLifters`
+ * 在兩顆元件搬進膠囊之後空了。
+ */
 import type { AstNode, LiftContext } from '../../../../core/lift/types'
-import type { Lifter } from '../../../../core/lift/lifter'
 import { 建print_formatted } from '../../../../components/cpp/print_formatted/lift'
 import { 建input_formatted } from '../../../../components/cpp/input_formatted/lift'
 import { 建var_ref } from '../../../../components/cpp/var_ref/lift'
 
-export function registerCstdioLifters(_lifter: Lifter): void {
-  // call_expression dispatching is handled by the IO lifter dispatcher
-  // (lifters/io.ts) because lifter.register overwrites — cannot split
-  // printf/scanf/general func_call into separate registrations.
-  // This module exports the extraction functions instead.
-}
+
 
 export function extractPrintf(argsNode: AstNode | null, ctx: LiftContext) {
   if (!argsNode) return 建print_formatted('', [])
@@ -39,3 +39,4 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
   })
   return 建input_formatted(formatStr, values)
 }
+

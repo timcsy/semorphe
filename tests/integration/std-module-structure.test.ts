@@ -10,15 +10,22 @@ describe('Std module structure consistency', () => {
     }
   })
 
-  it('every std module should export registerGenerators function', () => {
+  it('★ 模組**不再有註冊路**——那三個欄位是 F 完成之後刪掉的', () => {
+    // ⚠️ 這兩支原本斷言 `typeof mod.registerGenerators === 'function'`，
+    // 而那條紀律的前提在 2026-08-11 消失了：177 顆元件全部搬進膠囊之後，
+    // **43 個註冊函式全部是空的**，其中 38 個檔除了那個空殼什麼都沒有。
+    //
+    // > **一條「必填」的紀律，在它要防的東西消失之後，就只剩下 43 個殼。**
+    //
+    // 那條紀律搬到了膠囊：`component.json` 的 `paths` 五路缺一不可，
+    // 沒有那一路要寫 `null` ＋ `_why`。
+    //
+    // 這裡改成**釘住它們不得回來**——否則下一個人會「順手」把它們加回去。
     for (const mod of allStdModules) {
-      expect(typeof mod.registerGenerators).toBe('function')
-    }
-  })
-
-  it('every std module should export registerLifters function', () => {
-    for (const mod of allStdModules) {
-      expect(typeof mod.registerLifters).toBe('function')
+      expect(mod, `${mod.header} 又長出註冊路了——五路的紀律在膠囊那邊`)
+        .not.toHaveProperty('registerGenerators')
+      expect(mod).not.toHaveProperty('registerLifters')
+      expect(mod).not.toHaveProperty('registerExecutors')
     }
   })
 

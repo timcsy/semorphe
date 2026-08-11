@@ -8,7 +8,6 @@ import { registerCppLiftStrategies } from '../core/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
-import { allStdModules } from '../std'
 import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../../core/component/paths'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
@@ -55,9 +54,6 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   registerIOLifters(lifter)
 
   // Std module lifters
-  for (const mod of allStdModules) {
-    mod.registerLifters(lifter)
-  }
 
   // 元件膠囊的 lift 路
   for (const reg of componentLiftRegistrars()) (reg as (l: typeof lifter) => void)(lifter)

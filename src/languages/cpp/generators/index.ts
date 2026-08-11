@@ -28,9 +28,6 @@ export function createCppGenerators(style: StylePreset): Map<string, NodeGenerat
   // Core generators (no #include needed)
   registerDeclarationGenerators(g)
   // Std module generators (each header's generators)
-  for (const mod of allStdModules) {
-    mod.registerGenerators(g, style)
-  }
   // 元件膠囊的產生路
   // ⚠️ **`style` 一定要傳。** 共用產生器裡有一批 helper 是**捕獲 `style` 的閉包**
   // 剪出去的膠囊拿不到那個閉包，只能自己從 `style` 算。
@@ -71,7 +68,6 @@ export function registerCppExecutors(): void {
     declareExecutor(concept, executor as never)
   declareBuiltinConstants(CPP_BUILTIN_CONSTANTS)
   registerCoreExecutors(push as never)
-  for (const mod of allStdModules) mod.registerExecutors(push as never)
   for (const reg of componentExecuteRegistrars()) (reg as (p: typeof push) => void)(push)
 }
 

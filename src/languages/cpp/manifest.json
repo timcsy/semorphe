@@ -8,28 +8,10 @@
   },
   "provides": {
     "concepts": [
-      "./core/concepts.json",
-      "./std/cstdio/concepts.json",
-      "./std/vector/concepts.json",
-      "./std/algorithm/concepts.json",
-      "./std/string/concepts.json",
-      "./std/map/concepts.json",
-      "./std/stack/concepts.json",
-      "./std/queue/concepts.json",
-      "./std/set/concepts.json"
+      "./core/concepts.json"
     ],
     "blocks": [
-      "./core/blocks.json",
-      "./std/iostream/blocks.json",
-      "./std/cstdio/blocks.json",
-      "./std/vector/blocks.json",
-      "./std/algorithm/blocks.json",
-      "./std/string/blocks.json",
-      "./std/map/blocks.json",
-      "./std/stack/blocks.json",
-      "./std/queue/blocks.json",
-      "./std/set/blocks.json",
-      "./std/cmath/blocks.json"
+      "./core/blocks.json"
     ],
     "templates": [
       "./templates/universal-templates.json"

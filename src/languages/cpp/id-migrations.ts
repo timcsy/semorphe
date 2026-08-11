@@ -13,7 +13,20 @@
  */
 import { registerIdMigration, registerPropertyMigration } from '../../core/storage-version'
 
-export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
+/**
+ * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
+ *
+ * 這個檔與 `src/blocks/id-migrations.ts` **各有一張同名的凍結名冊**
+ * （`CPP_ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
+ * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
+ *
+ * spec 116 的改名腳本正是被這種東西咬過——「一個字串在描述現在的世界，
+ * 還是在描述一個已經過去的世界？**而它們往往長得一模一樣**」。
+ *
+ * 兩張同名的凍結名冊住在同一個 codebase 裡，是一個等著發生的誤傷。
+ * 第三十八條護欄（共用檔的殼與重複）把它報出來了。
+ */
+export const CPP_ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   cpp_abs: 'cpp:abs',
   cpp_accumulate: 'cpp:accumulate',
   cpp_address_of: 'cpp:address_of',
@@ -158,7 +171,7 @@ export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   cpp_virtual_method: 'cpp:virtual_method',
 }
 
-registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
+registerIdMigration(CPP_ID_MIGRATIONS_V2_TO_V3)
 
 /**
  * 參數改名（v3 → v4，G 項第 1 步）：**接收者統一叫 `obj`**。
@@ -167,7 +180,20 @@ registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
  * 而 `lifters/io.ts` 有一張 `METHOD_OBJ_PROP` 對應表專門在容納這件事——
  * 統一之後那張表整個消失。
  */
-export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
+/**
+ * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
+ *
+ * 這個檔與 `src/blocks/id-migrations.ts` **各有一張同名的凍結名冊**
+ * （`ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
+ * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
+ *
+ * spec 116 的改名腳本正是被這種東西咬過——「一個字串在描述現在的世界，
+ * 還是在描述一個已經過去的世界？**而它們往往長得一模一樣**」。
+ *
+ * 兩張同名的凍結名冊住在同一個 codebase 裡，是一個等著發生的誤傷。
+ * 第三十八條護欄（共用檔的殼與重複）把它報出來了。
+ */
+export const CPP_PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
   'cpp:array_2d_access': { name: 'obj' },
   'cpp:array_2d_assign': { name: 'obj' },
   'cpp:pointer_assign': { ptr_name: 'obj' },
@@ -177,7 +203,7 @@ export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>
   'cpp:vector_size': { vector: 'obj' },
 }
 
-registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)
+registerPropertyMigration(CPP_PROPERTY_MIGRATIONS_V3_TO_V4)
 
 /**
  * v5 → v6（G 項第 3 步）：**主體移到前面**。

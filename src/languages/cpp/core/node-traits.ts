@@ -352,10 +352,17 @@ export function ioConceptFor(role: string, style: string): string | undefined {
   return undefined
 }
 
-/** 這顆是帶索引的存取嗎（讀進來的值要寫回某一格）。沒宣告＝不是。 */
-export function isIndexedAccess(conceptId: string): boolean {
-  return 性狀(conceptId)?.indexedAccess === true
-}
+/**
+ * 這顆是帶索引的存取嗎。
+ *
+ * ⚠️ **核心層有自己的一份**（`core/component/traits.ts`）——
+ * `interpreter/executors/io.ts` 也要問它，而核心不得 import 語言套件（P9）。
+ *
+ * 兩份原本是各自實作，差別只在這一份會再查 C++ 的過渡表。
+ * **而過渡表 2026-08-11 空了**，於是兩份行為完全相同——
+ * 第三十八條護欄（共用檔的殼與重複）當場指名。改成再匯出。
+ */
+export { isIndexedAccess } from '../../../core/component/traits' 
 
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
 export function isStreamInput(conceptId: string): boolean {

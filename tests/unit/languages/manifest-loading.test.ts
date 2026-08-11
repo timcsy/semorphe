@@ -72,8 +72,14 @@ describe('Language manifest loading', () => {
     // 這支測試真正要問的是「**manifest 指的每一條路徑都讀得到東西嗎**」，
     // 而那已經由上面的迴圈（`JSON.parse` 不丟錯）與下面的 `> 0` 回答了。
     // 錨改成**列了幾條路徑**——那是輸入量，不隨搬家變。
-    expect(manifest.provides.blocks.length, 'manifest 沒列任何積木來源').toBeGreaterThan(3)
-    expect(manifest.provides.concepts.length, 'manifest 沒列任何概念來源').toBeGreaterThan(3)
+    // ⚠️ 門檻從 3 降到 0（2026-08-11 的清掃）：17 個 std 模組的
+    // `concepts.json`／`blocks.json` **全部是空陣列**，已刪除，manifest 也不再列它們。
+    // 今天各剩一條（`core/`）。
+    //
+    // ⚠️ 而這一行**仍然不准錨在「還剩幾條」上**——它問的是
+    // 「manifest 有沒有 `provides` 這個結構」，那是輸入量。
+    expect(Array.isArray(manifest.provides.blocks), 'manifest 沒有 blocks 來源清單').toBe(true)
+    expect(Array.isArray(manifest.provides.concepts), 'manifest 沒有 concepts 來源清單').toBe(true)
     // ⚠️ **這兩行也是「錨在會下降的數字上」**（同一支測試的第二處，2026-08-11）。
     // 上面那段註解剛講完這件事，而這裡的 `> 0` 數的是**共用宣告檔還剩幾筆**
     // ——F 搬到剩 4 顆時 `<cstdio>`／`<cstring>`／`<cctype>` 都空了，總和歸零。

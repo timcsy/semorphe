@@ -1,29 +1,9 @@
 /**
- * lambda 的執行——閉包。
+ * **Lambda 的執行期支援** —— 與身分無關的機制
  *
- * ## 為什麼是新機制
- *
- * lambda 求值出來的是一個**可以晚點再呼叫的東西**，而執行期的值模型原本
- * 沒有「可呼叫」。而且它要記得**定義時的那個作用域**，否則捕捉來的變數在
- * 呼叫時已經不在了。
- *
- * ## 捕捉語意
- *
- * | 寫法 | 做法 |
- * |---|---|
- * | `[&]` | 記住定義時的作用域物件本身——之後外層改了，讀得到新值 |
- * | `[=]` | **定義當下**把外層看得到的變數拍一份快照 |
- *
- * 兩者只實作一種、或把兩種當成同一件事的話，**單看一支測試分不出來**——
- * `lambda-execute.test.ts` 那兩支要成對讀。
- *
- * ## 這一片不做
- *
- * 具名捕捉（`[x, &y]`）——那需要解析捕捉清單裡的每一個名字。`[&]`／`[=]`
- * 是兩個極端，先把機制立起來。具名捕捉落在 `capture` 屬性的其他值上，
- * 目前**視為無捕捉**，而下面的錯誤訊息會說得出來。
+ * 原本住在 `core/executors/lambda.ts`，而那個檔的 `registerLambdaExecutors`
+ * 在 `cpp:lambda` 搬進膠囊之後就空了。**留一個空的註冊函式就是殼。**
  */
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 import type { RuntimeValue, Callable } from '../../../../interpreter/types'
 import { Scope } from '../../../../interpreter/scope'
 // 從定義它的地方導入——**不要再建一份**，`instanceof` 會失效
@@ -61,15 +41,7 @@ export const 安裝Lambda = (ctx: import('../../../../interpreter/executor-regis
   }
 }
 
-export function registerLambdaExecutors(
-  _register: (concept: string, executor: ConceptExecutor) => void,
-): void {
-  // 告訴核心「什麼算可呼叫」與「怎麼呼叫它」。裝在執行器裡而不是模組載入時，
-  // 因為掛勾掛在**每一個直譯器實例**上（與結構的方法執行器同一個理由）。
 
-
-
-}
 
 /** 這個值是不是可呼叫的？呼叫端用它決定要不要走 lambda 路徑 */
 export function asCallable(v: RuntimeValue | undefined): Callable | null {
@@ -92,3 +64,4 @@ export function lambdaScope(c: Callable): Scope {
   // 而讀不到時會丟「未宣告變數」，訊息指得出是哪一個。
   return new Scope(null)
 }
+

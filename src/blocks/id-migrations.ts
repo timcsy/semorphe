@@ -14,7 +14,20 @@
  */
 import { registerIdMigration, registerPropertyMigration } from '../core/storage-version'
 
-export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
+/**
+ * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
+ *
+ * 這個檔與 `src/languages/cpp/id-migrations.ts` **各有一張同名的凍結名冊**
+ * （`UNIVERSAL_ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
+ * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
+ *
+ * spec 116 的改名腳本正是被這種東西咬過——「一個字串在描述現在的世界，
+ * 還是在描述一個已經過去的世界？**而它們往往長得一模一樣**」。
+ *
+ * 兩張同名的凍結名冊住在同一個 codebase 裡，是一個等著發生的誤傷。
+ * 第三十八條護欄（共用檔的殼與重複）把它報出來了。
+ */
+export const UNIVERSAL_ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   arithmetic: 'lang:arithmetic',
   array_access: 'lang:array_access',
   array_assign: 'lang:array_assign',
@@ -49,7 +62,7 @@ export const ID_MIGRATIONS_V2_TO_V3: Record<string, string> = {
   while_loop: 'lang:while_loop',
 }
 
-registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
+registerIdMigration(UNIVERSAL_ID_MIGRATIONS_V2_TO_V3)
 
 /**
  * 參數改名（v3 → v4）：通用元件的接收者統一叫 `obj`
@@ -59,13 +72,26 @@ registerIdMigration(ID_MIGRATIONS_V2_TO_V3)
  * 我一度把鍵「順手」更新成 `cpp:*`，那會讓 v3 的樹完全對不上，
  * 結果是 id 改了而參數沒改。**遷移表的鍵屬於它那個版本，不屬於現在。**
  */
-export const PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
+/**
+ * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
+ *
+ * 這個檔與 `src/languages/cpp/id-migrations.ts` **各有一張同名的凍結名冊**
+ * （`ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
+ * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
+ *
+ * spec 116 的改名腳本正是被這種東西咬過——「一個字串在描述現在的世界，
+ * 還是在描述一個已經過去的世界？**而它們往往長得一模一樣**」。
+ *
+ * 兩張同名的凍結名冊住在同一個 codebase 裡，是一個等著發生的誤傷。
+ * 第三十八條護欄（共用檔的殼與重複）把它報出來了。
+ */
+export const UNIVERSAL_PROPERTY_MIGRATIONS_V3_TO_V4: Record<string, Record<string, string>> = {
   'lang:array_access': { name: 'obj' },
   'lang:array_assign': { name: 'obj' },
   'lang:var_assign': { name: 'obj' },
 }
 
-registerPropertyMigration(PROPERTY_MIGRATIONS_V3_TO_V4)
+registerPropertyMigration(UNIVERSAL_PROPERTY_MIGRATIONS_V3_TO_V4)
 
 /**
  * v4 → v5（**D1**，G 項第 2 步，2026-08-09）：`lang:` 這個 scope 退場。

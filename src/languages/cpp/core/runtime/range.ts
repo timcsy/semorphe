@@ -1,14 +1,18 @@
 /**
- * `<numeric>` 的執行路——膠囊的第五面牆。
+ * **範圍演算法的執行期輔助** —— 與身分無關的演算法
  *
- * 在此之前這 5 個執行器**內嵌在核心執行引擎的建構式裡**，讓核心層認識了
- * 5 個 C++ 專屬的概念身分。
+ * ⚠️ **這一份原本有兩個逐字相同的複本**：`std/algorithm/executors.ts` 與
+ * `std/numeric/executors.ts`。不同的膠囊各 import 一份
+ * （`range_reverse` 用前者、`range_sum_partial` 用後者）。
  *
- * 見 specs/055-finish-executor-move/
+ * > **兩份真相會漂移**——而它們在 F 之前看不出來：
+ * > 那時它們是各自模組的內部實作，只有自己的註冊函式在用。
+ * > 膠囊化把它們變成**跨膠囊的 import**，「同一個東西有兩個進入點」才現形。
+ *
+ * 第三十八條護欄（共用檔的殼與重複）第一次跑就抓到這一組。
  */
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
-
 import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
+
 
 /**
  * 把 `begin`／`end` 這種**字串**屬性解析回「哪個陣列、從哪到哪」。
@@ -48,16 +52,5 @@ export function resolveRange(
 
 export const numOf = (x: unknown): number => Number((x as { value?: unknown })?.value ?? x) || 0
 
-export function registerExecutors(
-  _register: (concept: string, executor: ConceptExecutor) => void,
-): void {
 
 
- // statement, modifies container in-place
-
- // statement, modifies destination container
-
-
-
-
-}

@@ -2,7 +2,7 @@
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defaultValue } from '../../../interpreter/types'
-import { mapFind } from '../../../languages/cpp/std/map/executors'
+import { mapFind } from '../../../languages/cpp/core/runtime/map'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:map_at', async (node, ctx) => {

@@ -1,6 +1,6 @@
 /** `cpp:map_assign` 的 **execute** 路——從共用檔原封剪過來（批次第十批：assignment_expression 的分支）。 */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { mapFind } from '../../../languages/cpp/std/map/executors'
+import { mapFind } from '../../../languages/cpp/core/runtime/map'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   /**
