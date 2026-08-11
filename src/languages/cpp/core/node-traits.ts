@@ -202,6 +202,8 @@ export interface NodeTraits {
    * 原本寫死 `cur.conceptId === 'cpp:input'`。
    */
   streamInput?: boolean
+  /** 是最單純的變數宣告嗎（`int x;`）——動態積木蒐集變數名時要分辨它。 */
+  plainDeclaration?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -341,4 +343,24 @@ export function isIndexedAccess(conceptId: string): boolean {
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
 export function isStreamInput(conceptId: string): boolean {
   return 性狀(conceptId)?.streamInput === true
+}
+
+/**
+ * 這顆是**最單純的變數宣告**（`int x;`）——動態積木蒐集變數名時要分辨它。
+ *
+ * ⚠️ **這一條原本住在 `core/component/traits.ts`（最內層），而它是 C 家族的。**
+ *
+ * 判準是「**換一個語言，會不會有另一顆元件宣告它**」：
+ * Python 沒有宣告（`x = 1` 是賦值），所以不會有 `py:*` 宣告 `plainDeclaration`
+ * ——它只是 `cpp:var_declare` 的名字換了個寫法，是**假抽象**。
+ *
+ * > **依賴方向反轉了，不代表抽象被抽乾淨了。**
+ * > 一個只有本語言會宣告的性狀，放在核心就是把耦合藏到更深一層——
+ * > 而中立性護欄看不到它（它找身分字串，不找範疇名）。
+ *
+ * 唯一的消費者是 `ui/block-registrar.ts`，而 `ui` 本來就 import 語言套件
+ * （25 處），所以下沉沒有代價。
+ */
+export function isPlainDeclaration(conceptId: string): boolean {
+  return 性狀(conceptId)?.plainDeclaration === true
 }

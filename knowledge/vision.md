@@ -256,7 +256,7 @@ languages/{lang}/
 > [history/049](history/049-F完成-把身分換成性狀.md)。
 >
 > **解開它的機制是「性狀」**——消費者問「這顆是什麼」而不問「這顆叫什麼」。
-> 19 條性狀、36 顆膠囊宣告、8 個查詢函式。詞彙地基見
+> **23 條**性狀、36 顆膠囊宣告。詞彙地基見
 > [concepts/性狀](concepts/性狀.md)。
 >
 > ✅ ~~大規模身分改名的 skill 候選~~ 已兌現：[`skills/component-rename`](skills/component-rename/SKILL.md)（2026-08-09）；

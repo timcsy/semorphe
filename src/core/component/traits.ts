@@ -70,15 +70,6 @@ export function isElseIfChainable(conceptId: string): boolean {
   return componentTraits(conceptId)?.elseIfChainable === true
 }
 
-/**
- * 這顆是**最單純的變數宣告**（`int x;`）——動態積木的變數名蒐集要分辨它。
- *
- * ⚠️ `ui/block-registrar.ts` 那一行原本是 16 個概念名的寫死清單，
- * 後來收斂成「抽象概念等於 `cpp:var_declare`」，現在是一條性狀。
- */
-export function isPlainDeclaration(conceptId: string): boolean {
-  return componentTraits(conceptId)?.plainDeclaration === true
-}
 
 /**
  * 這顆是**整棵語義樹的根**（`children.body` 是整個程式）。
