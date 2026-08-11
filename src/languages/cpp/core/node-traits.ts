@@ -66,6 +66,18 @@ export interface NodeTraits {
    * ——**一顆膠囊裡提到另一顆的身分**，就近性護欄的反向檢查會指名。
    */
   variableRef?: boolean
+  /**
+   * 這顆是**鷹架**——L0 的積木視圖裡不該出現它。
+   *
+   * ⚠️ `cpp-scaffold-filter.ts` 原本逐條寫身分：
+   * `node.conceptId === 'cpp:include' || … === 'cpp:include_local'` …
+   * **一條 if 一顆元件**，而它擋住那幾顆搬進膠囊。
+   *
+   * ⚠️ 這不含 `func_def(main)` 與它的 `return`：那兩個不是「這顆是鷹架」，
+   * 是「**這顆在 main 裡的時候**是鷹架」——條件在上下文，不在元件。
+   * 硬塞成同一個旗標會讓 `return` 在任何地方都消失。
+   */
+  scaffold?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -105,4 +117,9 @@ export function typeSuffixOf(conceptId: string): string {
 /** 這顆節點就是一個具名變數的參照嗎。沒宣告＝不是（保守）。 */
 export function isVariableRef(conceptId: string): boolean {
   return 性狀(conceptId)?.variableRef === true
+}
+
+/** 這顆是鷹架嗎（L0 的積木視圖不顯示）。沒宣告＝不是（保守）。 */
+export function isScaffold(conceptId: string): boolean {
+  return 性狀(conceptId)?.scaffold === true
 }

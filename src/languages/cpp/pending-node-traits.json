@@ -30,6 +30,12 @@
     "cpp:func_call": {
       "forLoopPart": true
     },
+    "cpp:include": {
+      "scaffold": true
+    },
+    "cpp:include_local": {
+      "scaffold": true
+    },
     "cpp:increment": {
       "forLoopPart": true
     },
@@ -56,6 +62,9 @@
     "cpp:ternary": {
       "precedence": 3,
       "forLoopPart": true
+    },
+    "cpp:using_namespace": {
+      "scaffold": true
     },
     "cpp:var_assign": {
       "precedence": 2,
