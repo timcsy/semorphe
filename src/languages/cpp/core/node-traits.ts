@@ -171,9 +171,32 @@ export interface NodeTraits {
    * `arg0.conceptId === 'cpp:func_call'`——**核心層的執行器認得一顆 C++ 元件**。
    */
   namedCall?: boolean
+  /**
+   * 這顆在 I/O 上扮演什麼角色，以及它屬於哪一種風格。
+   *
+   * ```
+   * cpp:print            { ioRole: 'print', ioStyle: 'iostream' }
+   * cpp:print_formatted  { ioRole: 'print', ioStyle: 'cstdio'   }
+   * ```
+   *
+   * ⚠️ `style-exceptions.ts` 是**風格轉換的規則集**，而規則天生要講出兩端
+   * （「cout 風格的印 → printf 風格的印」）。原本兩端都寫死身分。
+   * 拆成 `ioRole ＋ ioStyle` 之後，規則講的是
+   * 「**角色相同、風格不是使用者偏好的那顆**」——兩端都由元件自己宣告。
+   *
+   * > **一條規則要講出兩端時，該被抽掉的不是「兩端」，是「端點的名字」。**
+   */
+  ioRole?: 'print' | 'input'
+  ioStyle?: 'iostream' | 'cstdio'
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
+
+/** 有性狀宣告的全部身分——膠囊的加上過渡表的。 */
+function 全部身分(): string[] {
+  const 膠囊 = registeredComponents().map((c) => c.conceptId)
+  return [...new Set([...膠囊, ...Object.keys(過渡表)])]
+}
 
 function 性狀(conceptId: string): NodeTraits | undefined {
   const c = registeredComponents().find((x) => x.conceptId === conceptId)
@@ -275,3 +298,23 @@ export function isLineBreak(conceptId: string): boolean {
  * 兩份的差別只有過渡表：已膠囊化的元件答案相同。
  */
 export { isNamedCall } from '../../../core/component/traits'
+
+/** 這顆在 I/O 上的角色與風格。沒宣告回 `undefined`——**不猜**。 */
+export function ioTraitOf(conceptId: string): { role?: string; style?: string } | undefined {
+  const t = 性狀(conceptId)
+  return t?.ioRole ? { role: t.ioRole, style: t.ioStyle } : undefined
+}
+
+/**
+ * 找「同一個角色、指定風格」的那顆元件。
+ *
+ * ⚠️ 找不到回 `undefined`——**不猜**。找不到的意思是那個風格還沒有人實作，
+ * 而猜一個會讓風格轉換產出一顆不存在的元件。
+ */
+export function ioConceptFor(role: string, style: string): string | undefined {
+  for (const id of 全部身分()) {
+    const t = 性狀(id)
+    if (t?.ioRole === role && t?.ioStyle === style) return id
+  }
+  return undefined
+}

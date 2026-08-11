@@ -11,6 +11,7 @@ import { createNode } from '../../core/semantic-tree'
 import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
 import { isLineBreak } from './core/node-traits'
+import { ioTraitOf } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
 export interface StyleException {
@@ -34,6 +35,17 @@ interface StyleExceptionRule {
   suggestion: (node: SemanticNode, style: CodingStyle) => string
   /** Convert the node — returns replacement nodes, or null to remove */
   convert: (node: SemanticNode, style: CodingStyle) => SemanticNode[] | null
+}
+
+/**
+ * 這個節點是不是「某個角色、某個風格」的 I/O 元件。
+ *
+ * ⚠️ 問**性狀**不問身分——規則要講出兩端，而該被抽掉的是端點的**名字**，
+ * 不是「兩端」本身。
+ */
+function 是這個角色與風格(node: SemanticNode, role: string, style: string): boolean {
+  const t = ioTraitOf(node.conceptId)
+  return t?.role === role && t?.style === style
 }
 
 // ─── Exception Rules ───
@@ -87,7 +99,7 @@ const iostreamHeaderRule: StyleExceptionRule = {
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:print_formatted' && style.ioPreference === 'iostream',
+    是這個角色與風格(node, 'print', 'cstdio') && style.ioPreference === 'iostream',
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
   convert: (node) => {
@@ -101,7 +113,7 @@ const cppPrintfRule: StyleExceptionRule = {
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:input_formatted' && style.ioPreference === 'iostream',
+    是這個角色與風格(node, 'input', 'cstdio') && style.ioPreference === 'iostream',
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
@@ -114,7 +126,7 @@ const cppScanfRule: StyleExceptionRule = {
 /** print block (cout-origin) in cstdio-preferred styles */
 const printToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:print' && style.ioPreference === 'cstdio',
+    是這個角色與風格(node, 'print', 'iostream') && style.ioPreference === 'cstdio',
   label: () => 'cout << ...',
   suggestion: () => 'printf(...)',
   convert: (node) => {
@@ -142,7 +154,7 @@ const printToCstdioRule: StyleExceptionRule = {
 /** input block (cin-origin) in cstdio-preferred styles */
 const inputToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    node.conceptId === 'cpp:input' && style.ioPreference === 'cstdio',
+    是這個角色與風格(node, 'input', 'iostream') && style.ioPreference === 'cstdio',
   label: () => 'cin >> ...',
   suggestion: () => 'scanf(...)',
   convert: (node) => {

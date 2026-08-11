@@ -12,6 +12,22 @@
       "scaffold": true,
       "includeDirective": true
     },
+    "cpp:input": {
+      "ioRole": "input",
+      "ioStyle": "iostream"
+    },
+    "cpp:input_formatted": {
+      "ioRole": "input",
+      "ioStyle": "cstdio"
+    },
+    "cpp:print": {
+      "ioRole": "print",
+      "ioStyle": "iostream"
+    },
+    "cpp:print_formatted": {
+      "ioRole": "print",
+      "ioStyle": "cstdio"
+    },
     "cpp:var_declare": {
       "forLoopPart": true
     },
