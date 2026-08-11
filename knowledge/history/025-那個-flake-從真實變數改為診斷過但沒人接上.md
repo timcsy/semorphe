@@ -9,7 +9,7 @@
 
 ## 這一則記的不是那個數字，是那個延後
 
-**成因四天前就診斷對了。** `draft/2026-08-05-元件膠囊重構.md` 坑 ⑥ 逐字寫著：
+**成因四天前就診斷對了。** `draft/retired/2026-08-05-元件膠囊重構.md` 坑 ⑥ 逐字寫著：
 
 > 「成因：`fuzz-cpp-stacks-queues`、`fuzz-cpp-strings` 等會**實際呼叫編譯器**的測試沒有自訂 timeout，吃 vitest 預設的 5000ms（`vitest.config.ts` 未設 `testTimeout`）。編譯器呼叫在平行執行＋機器負載下會超過 5 秒。」
 >
