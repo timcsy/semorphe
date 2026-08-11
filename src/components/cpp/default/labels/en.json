@@ -1,0 +1,4 @@
+{
+  "C_DEFAULT_MSG0": "default:",
+  "C_DEFAULT_TOOLTIP": "When none of the case values match, execute this code. Like 'none of the above' in a multiple-choice question"
+}

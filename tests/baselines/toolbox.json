@@ -65,9 +65,9 @@
         "cpp_loop_do_while",
         "cpp_loop_for",
         "cpp_loop_range",
-        "cpp_switch",
-        "cpp_default",
         "cpp_case",
+        "cpp_default",
+        "cpp_switch",
         "cpp_program_exit"
       ]
     },
@@ -246,11 +246,11 @@
         "cpp_using_namespace",
         "cpp_ifdef",
         "cpp_ifndef",
-        "cpp_raw_code",
-        "cpp_raw_expression",
         "cpp_comment",
         "cpp_doc_comment",
         "cpp_block_comment",
+        "cpp_raw_code",
+        "cpp_raw_expression",
         "cpp_namespace_def"
       ]
     }

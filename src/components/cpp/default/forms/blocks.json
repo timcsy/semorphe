@@ -1,0 +1,39 @@
+[
+  {
+    "id": "cpp_default",
+    "conceptId": "cpp:default",
+    "language": "cpp",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_default",
+      "message0": "%{BKY_C_DEFAULT_MSG0}",
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_DEFAULT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "default:\n${BODY}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "case_statement",
+      "constraints": []
+    },
+    "renderMapping": {
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

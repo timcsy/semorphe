@@ -63,38 +63,6 @@
     "role": "statement"
   },
   {
-    "conceptId": "cpp:switch",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "expr": "expression",
-      "cases": "statements"
-    },
-    "role": "statement",
-    "annotations": {
-      "debug_step": true
-    }
-  },
-  {
-    "conceptId": "cpp:default",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [],
-    "children": {
-      "body": "statements"
-    },
-    "role": "statement",
-    "skipPaths": [
-      "execute",
-      "lift"
-    ],
-    "skipReasons": {
-      "execute": "consumed-by-parent",
-      "lift": "consumed-by-parent"
-    }
-  },
-  {
     "conceptId": "cpp:ternary",
     "layer": "lang-core",
     "abstractConcept": "cpp:if_else",
@@ -241,34 +209,6 @@
       "args": "expressions"
     },
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp:raw_code",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "code",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "statement"
-  },
-  {
-    "conceptId": "cpp:raw_expression",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "code",
-        "kind": "literal",
-        "default": ""
-      }
-    ],
-    "children": {},
-    "role": "expression"
   },
   {
     "conceptId": "cpp:builtin_constant",

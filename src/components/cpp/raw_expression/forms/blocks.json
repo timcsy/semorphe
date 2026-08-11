@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cpp_raw_expression",
+    "conceptId": "cpp:raw_expression",
+    "language": "cpp",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_raw_expression",
+      "message0": "%{BKY_C_RAW_EXPRESSION_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CODE",
+          "text": "0"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_RAW_EXPRESSION_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${CODE}",
+      "imports": [],
+      "order": 20
+    },
+    "astPattern": {
+      "nodeType": "_raw_expression",
+      "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CODE": "code"
+      }
+    }
+  }
+]

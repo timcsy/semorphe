@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_raw_code",
+    "conceptId": "cpp:raw_code",
+    "language": "cpp",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_raw_code",
+      "message0": "%{BKY_C_RAW_CODE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CODE",
+          "text": "// raw code"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_RAW_CODE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${CODE}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "_raw_code",
+      "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "CODE": "code"
+      }
+    }
+  }
+]

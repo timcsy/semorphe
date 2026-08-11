@@ -1,0 +1,4 @@
+{
+  "C_SWITCH_MSG0": "check value of %1",
+  "C_SWITCH_TOOLTIP": "Choose which code to execute based on a value, like a shortcut for multiple 'if' checks"
+}

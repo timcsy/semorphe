@@ -1,0 +1,61 @@
+[
+  {
+    "id": "cpp_switch",
+    "conceptId": "cpp:switch",
+    "language": "cpp",
+    "category": "conditions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_switch",
+      "message0": "%{BKY_C_SWITCH_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "EXPR",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "CASES",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_C_SWITCH_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "switch (${EXPR}) {\n${CASES}\n}",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "switch_statement",
+      "constraints": [],
+      "fieldMappings": [
+        {
+          "semantic": "expr",
+          "ast": "condition",
+          "extract": "lift"
+        },
+        {
+          "semantic": "cases",
+          "ast": "body",
+          "extract": "liftChildren"
+        }
+      ]
+    },
+    "renderMapping": {
+      "inputs": {
+        "EXPR": "expr"
+      },
+      "statementInputs": {
+        "CASES": "cases"
+      }
+    }
+  }
+]

@@ -10,7 +10,6 @@ import { registerOperatorsCoreExecutors } from './operators'
 import { registerMutationsCoreExecutors } from './mutations'
 import { registerLiteralsCoreExecutors } from './literals'
 import { registerFunctionsCoreExecutors } from './functions'
-import { registerControlFlowCoreExecutors } from './control-flow'
 import { registerArraysCoreExecutors } from './arrays'
 
 /**
@@ -30,7 +29,6 @@ export function registerCoreExecutors(
   registerMutationsCoreExecutors(register)
   registerLiteralsCoreExecutors(register)
   registerFunctionsCoreExecutors(register)
-  registerControlFlowCoreExecutors(register)
   registerStructExecutors(register)
   registerLambdaExecutors(register)
   registerUnimplementedExecutors(register)

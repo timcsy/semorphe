@@ -27,9 +27,6 @@
     "cpp:compare": {
       "forLoopPart": true
     },
-    "cpp:default": {
-      "defaultCase": true
-    },
     "cpp:func_call": {
       "forLoopPart": true
     },
@@ -55,9 +52,6 @@
     },
     "cpp:pointer_deref": {
       "precedence": 14
-    },
-    "cpp:raw_expression": {
-      "forLoopPart": true
     },
     "cpp:ternary": {
       "precedence": 3,

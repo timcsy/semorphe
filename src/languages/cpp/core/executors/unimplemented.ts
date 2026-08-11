@@ -19,19 +19,7 @@
  * **等 OOP 真的實作了再處理它們。**
  */
 import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../../interpreter/errors'
 
-/**
- * 「我們看不懂這段」的兜底容器。
- *
- * 原本註冊成空操作，於是使用者寫的一段程式**什麼都沒發生而且沒有任何提示**
- * ——那正是「靜默降級是 bug 的藏身之處」講的形狀，而這裡藏的是使用者自己的
- * 程式碼。
- *
- * 出聲的形式是可被 `unknownConceptHandler` 接管的錯誤，與未知概念同一條路徑：
- * 使用者可以選擇跳過或中止，**但不會不知道**。
- */
-const RAW_CODE_CONTAINERS = ['cpp:raw_code', 'cpp:raw_expression'] as const
 
 /**
  * 直譯器不支援物件導向。這十個是**殼**，不是宣告——見檔頭。
@@ -63,13 +51,6 @@ const OOP_NOT_IMPLEMENTED = [
 export function registerUnimplementedExecutors(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
-  for (const c of RAW_CODE_CONTAINERS) {
-    register(c, async (node) => {
-      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
-        '%1': String(node.properties?.code ?? '(不明)').slice(0, 60),
-      })
-    })
-  }
 
   const noop: ConceptExecutor = async () => {}
   for (const c of OOP_NOT_IMPLEMENTED) register(c, noop)
