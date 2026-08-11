@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_using_namespace",
+    "conceptId": "cpp:using_namespace",
+    "language": "cpp",
+    "category": "preprocessor",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_using_namespace",
+      "message0": "%{BKY_C_USING_NAMESPACE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NS",
+          "text": "std"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_C_USING_NAMESPACE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "using namespace ${NS};",
+      "imports": [],
+      "order": 0
+    },
+    "astPattern": {
+      "nodeType": "using_declaration",
+      "constraints": []
+    },
+    "renderMapping": {
+      "fields": {
+        "NS": "ns"
+      }
+    }
+  }
+]

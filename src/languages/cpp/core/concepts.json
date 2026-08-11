@@ -235,26 +235,6 @@
     }
   },
   {
-    "conceptId": "cpp:include_local",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "header",
-        "kind": "literal",
-        "default": "myheader.h"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
-  },
-  {
     "conceptId": "cpp:define",
     "layer": "lang-core",
     "abstractConcept": null,
@@ -272,26 +252,6 @@
     ],
     "children": {},
     "role": "statement"
-  },
-  {
-    "conceptId": "cpp:using_namespace",
-    "layer": "lang-core",
-    "abstractConcept": null,
-    "properties": [
-      {
-        "name": "ns",
-        "kind": "literal",
-        "default": "std"
-      }
-    ],
-    "children": {},
-    "role": "statement",
-    "skipPaths": [
-      "execute"
-    ],
-    "skipReasons": {
-      "execute": "declarative"
-    }
   },
   {
     "conceptId": "cpp:comma_expr",

@@ -1,0 +1,4 @@
+{
+  "C_USING_NAMESPACE_MSG0": "using namespace %1",
+  "C_USING_NAMESPACE_TOOLTIP": "Allow direct use of features in this namespace without a prefix. For example, use cout instead of std::cout"
+}

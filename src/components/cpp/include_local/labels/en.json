@@ -1,0 +1,4 @@
+{
+  "C_INCLUDE_LOCAL_MSG0": "include local file \" %1 \"",
+  "C_INCLUDE_LOCAL_TOOLTIP": "Include a local header file you wrote"
+}

@@ -241,11 +241,11 @@
       "name": "程式設定",
       "blocks": [
         "cpp_include",
-        "cpp_include_local",
         "cpp_define",
-        "cpp_using_namespace",
         "cpp_ifdef",
         "cpp_ifndef",
+        "cpp_include_local",
+        "cpp_using_namespace",
         "cpp_comment",
         "cpp_doc_comment",
         "cpp_block_comment",

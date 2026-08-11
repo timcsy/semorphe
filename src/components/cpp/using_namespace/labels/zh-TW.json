@@ -1,0 +1,4 @@
+{
+  "C_USING_NAMESPACE_MSG0": "使用命名空間 %1",
+  "C_USING_NAMESPACE_TOOLTIP": "讓這個命名空間裡的功能可以直接使用，不用加前綴。例如用 cout 代替 std::cout"
+}

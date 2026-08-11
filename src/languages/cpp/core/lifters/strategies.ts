@@ -28,6 +28,7 @@ import { 建pointer_declare } from '../../../../components/cpp/pointer_declare/l
 import { 建var_declare_ref } from '../../../../components/cpp/var_declare_ref/lift'
 import { 建member_static } from '../../../../components/cpp/member_static/lift'
 import { typeSuffixOf } from '../node-traits'
+import { 建include_local } from '../../../../components/cpp/include_local/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -380,7 +381,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
     if (rawPath.startsWith('"') && rawPath.endsWith('"')) {
       const header = rawPath.slice(1, -1)
-      return createNode('cpp:include_local', { header })
+      return 建include_local(header)
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: node.text }

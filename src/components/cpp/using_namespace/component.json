@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:using_namespace",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "ns",
+      "kind": "literal",
+      "default": "std"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。**"
+  },
+  "traits": {
+    "scaffold": true
+  },
+  "_traits_why": "**「我是鷹架」「我是 #include 指示詞」是我自己的宣告**，不是消費者該逐條寫的身分判斷。"
+}

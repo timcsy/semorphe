@@ -14,6 +14,7 @@ import type { TransformRegistry } from '../../../core/registry/transform-registr
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
 import { qualifierConcept } from '../../../core/component/qualifier-concepts'
+import { 建using_namespace } from '../../../components/cpp/using_namespace/lift'
 
 export interface CppRegistries {
   transformRegistry?: TransformRegistry
@@ -70,7 +71,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const text = node.text
     const match = text.match(/using\s+namespace\s+(\w+)\s*;?/)
     if (match) {
-      return createNode('cpp:using_namespace', { ns: match[1] })
+      return 建using_namespace(match[1])
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: text }
