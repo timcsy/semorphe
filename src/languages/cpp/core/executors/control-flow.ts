@@ -10,6 +10,8 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
 // 訊號類別必須是**同一個**——複製一份的話 instanceof 會失敗，
 // 而失敗的樣子是「break 逃出迴圈」，不是編譯錯誤。
 import { BreakSignal } from '../../../../interpreter/executors/control-flow'
+// ⚠️ 問**性狀**不問身分——寫死 `'cpp:default'` 的話那顆元件永遠搬不進膠囊。
+import { isDefaultCase } from '../node-traits'
 
 /** Break/Continue signals (non-error, used for flow control) */
 export class ThrownSignal {
@@ -35,7 +37,7 @@ export function registerControlFlowCoreExecutors(
 
     for (const caseNode of cases) {
       if (!matched) {
-        const isDefault = caseNode.conceptId === 'cpp:default'
+        const isDefault = isDefaultCase(caseNode.conceptId)
         if (!isDefault) {
           const caseValNodes = caseNode.children.value ?? []
           if (caseValNodes.length > 0) {

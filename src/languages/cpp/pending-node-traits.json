@@ -27,6 +27,9 @@
     "cpp:compare": {
       "forLoopPart": true
     },
+    "cpp:default": {
+      "defaultCase": true
+    },
     "cpp:func_call": {
       "forLoopPart": true
     },

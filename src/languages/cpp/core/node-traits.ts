@@ -43,6 +43,14 @@ export interface NodeTraits {
   precedence?: number
   /** 放得進 `for(…;…;…)` 的三個位置嗎。 */
   forLoopPart?: boolean
+  /**
+   * 在 `switch` 裡是**兜底的那一支**嗎（`default:`）。
+   *
+   * ⚠️ `cpp:switch` 的執行器原本寫 `caseNode.conceptId === 'cpp:default'`
+   * ——**那是真的耦合**（switch 要知道哪一支不比對值），而它擋住 `default`
+   * 搬進膠囊。與 `memberRoleOf` 同一個處置：**消費者問性狀，不問身分。**
+   */
+  defaultCase?: boolean
 }
 
 const 過渡表 = 過渡.traits as Record<string, NodeTraits>
@@ -67,4 +75,9 @@ export function precedenceOf(conceptId: string): number | undefined {
 /** 這顆元件放得進 for 迴圈的三個位置嗎。沒宣告＝不行（保守）。 */
 export function canBeForLoopPart(conceptId: string): boolean {
   return 性狀(conceptId)?.forLoopPart === true
+}
+
+/** 這顆元件是 `switch` 裡兜底的那一支嗎。沒宣告＝不是（保守）。 */
+export function isDefaultCase(conceptId: string): boolean {
+  return 性狀(conceptId)?.defaultCase === true
 }
