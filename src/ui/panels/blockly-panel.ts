@@ -114,9 +114,7 @@ export class BlocklyPanel implements ViewHost {
     // BlocklyPanel doesn't handle execution state
   }
 
-  connectBus(bus: SemanticBus): void {
-    bus.on('semantic:update', (data) => this.onSemanticUpdate(data))
-  }
+  // ⚠️ 沒有 `connectBus` 了——`semantic:update` 由視圖登錄表統一派送。
 
   init(toolboxDef: object, blockStylePreset?: BlockStylePreset): void {
     const renderer = blockStylePreset?.renderer ?? 'zelos'

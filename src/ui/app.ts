@@ -38,6 +38,7 @@ import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
+import { registerView, connectViews } from '../core/view-registry'
 import { buildToolbox } from './toolbox-builder'
 import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
@@ -164,19 +165,26 @@ export class App {
     })
 
     this.syncController.setTopic(this.currentTopic, this.enabledBranches)
-    this.bus.on('semantic:update', (data) => {
-      // Update Monaco: blocks→code and resync both produce code
-      if ((data.source === 'blocks' || data.source === 'resync') && data.code !== undefined) {
-        this.monacoPanel?.setCode(data.code)
-        if (data.scaffoldResult) {
-          this.monacoPanel?.applyScaffoldDecorations(data.code, data.scaffoldResult)
-        }
-      }
-      // Update Blockly: code→blocks, blocks→code (include injection), and resync all produce blockState
-      if ((data.source === 'code' || data.source === 'resync' || data.source === 'blocks') && data.blockState) {
-        this.blocklyPanel?.onSemanticUpdate(data)
-      }
-    })
+    // ── 視圖：登錄，而不是硬編 ────────────────────────────────
+    //
+    // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.monacoPanel?.setCode(…)`，
+    // 而**同時**四個面板各自有一個 `connectBus()` 在訂閱同樣的事件。
+    //
+    // 查證結果：**`connectBus` 從來沒有人呼叫過**——那一層整個是死的，
+    // 真正的線一直是這裡的硬編。
+    //
+    // > **兩份實作裡有一份是死的時，活的那份會慢慢長出只有它才有的條件**
+    // > ——monaco 的自訂閱漏掉 `resync`，而沒有人發現，因為它沒在跑。
+    //
+    // 改成登錄之後：**加一個視圖 = `registerView(它)`**，這個檔不用動。
+    // 那是硬體域的 2D／3D 組裝面板要接進來的地方
+    // （見 `draft/2026-08-05-硬體域併入計畫.md`「視圖：地基已經在了」）。
+    for (const v of [this.blocklyPanel, this.monacoPanel, elements.consolePanel, elements.variablePanel]) {
+      if (v) registerView(v)
+    }
+    connectViews(this.bus)
+    // `console-panel` 還聽一個契約外的事件（`execution:output`），自己接。
+    elements.consolePanel?.connectBus(this.bus)
 
     // 8. Setup code→blocks pipeline
     await this.setupCodeToBlocksPipeline()
@@ -201,6 +209,7 @@ export class App {
         syncController: this.syncController,
       },
       {
+        bus: this.bus,
         getBlocksDirty: () => this.blocksDirty,
         syncBeforeRun: () => {
           this.syncBlocksToCodeWithMappings()

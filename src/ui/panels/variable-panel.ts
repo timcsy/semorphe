@@ -1,5 +1,4 @@
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
-import type { SemanticBus } from '../../core/semantic-bus'
 
 export interface VariableEntry {
   name: string
@@ -47,17 +46,19 @@ export class VariablePanel implements ViewHost {
     // VariablePanel doesn't handle semantic updates
   }
 
-  onExecutionState(_event: ExecutionStateEvent): void {
-    // Handled via execution:state bus event
-  }
-
-  connectBus(bus: SemanticBus): void {
-    bus.on('execution:state', (data) => {
-      const step = data.step
-      if (step?.scopeSnapshot) {
-        this.updateFromSnapshot(step.scopeSnapshot as VariableEntry[])
-      }
-    })
+  /**
+   * ⚠️ 這裡原本是一個空樁，註解寫著「Handled via execution:state bus event」
+   * ——真正的工作在 `connectBus` 裡。**契約在，而實作繞過它。**
+   *
+   * > **一個契約如果沒有人透過它呼叫，那些方法就只是註解。**
+   *
+   * 現在由視圖登錄表統一派送（`core/view-registry.ts` 的 `connectViews`）。
+   */
+  onExecutionState(event: ExecutionStateEvent): void {
+    const step = event.step
+    if (step?.scopeSnapshot) {
+      this.updateFromSnapshot(step.scopeSnapshot as VariableEntry[])
+    }
   }
 
   update(variables: VariableEntry[]): void {

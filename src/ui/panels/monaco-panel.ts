@@ -1,6 +1,5 @@
 import * as monaco from 'monaco-editor'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
-import type { SemanticBus } from '../../core/semantic-bus'
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 
 export class MonacoPanel implements ViewHost {
@@ -38,7 +37,9 @@ export class MonacoPanel implements ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent & { source?: string; code?: string; scaffoldResult?: ScaffoldResult }): void {
-    if (event.source === 'blocks' && event.code !== undefined) {
+    // ⚠️ `resync` 不可漏——它原本由 `app.ts` 的第二條線補。
+    // 兩條線的條件不一樣，而那種不一致只會在其中一條被刪掉時才現形。
+    if ((event.source === 'blocks' || event.source === 'resync') && event.code !== undefined) {
       this.setCode(event.code)
       if (event.scaffoldResult) {
         this.applyScaffoldDecorations(event.code, event.scaffoldResult)
@@ -50,9 +51,8 @@ export class MonacoPanel implements ViewHost {
     // MonacoPanel doesn't handle execution state directly
   }
 
-  connectBus(bus: SemanticBus): void {
-    bus.on('semantic:update', (data) => this.onSemanticUpdate(data))
-  }
+  // ⚠️ 沒有 `connectBus` 了——`semantic:update` 由視圖登錄表統一派送
+  // （`core/view-registry.ts` 的 `connectViews`）。
 
   init(readOnly = true): void {
     this.editor = monaco.editor.create(this.container, {

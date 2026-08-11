@@ -12,6 +12,7 @@ import type { ConsolePanel } from './panels/console-panel'
 import type { VariablePanel } from './panels/variable-panel'
 import type { BottomPanel } from './layout/bottom-panel'
 import type { SyncController } from './sync-controller'
+import type { SemanticBus } from '../core/semantic-bus'
 
 export interface ExecutionPanels {
   blocklyPanel: BlocklyPanel | null
@@ -24,6 +25,7 @@ export interface ExecutionPanels {
 
 export class ExecutionController {
   private panels: ExecutionPanels
+  private bus: SemanticBus | undefined
   private interpreter: SemanticInterpreter | null = null
   private stepController: StepController | null = null
   private debugToolbar: DebugToolbar
@@ -43,16 +45,42 @@ export class ExecutionController {
     fast: 50,
   }
 
+  /**
+   * ⚠️ `bus` 是**可選**的，而那不是為了方便——是為了讓這個轉換可以一處一處做。
+   *
+   * ## 這裡的現況（2026-08-11 量的）
+   *
+   * ```
+   * this.panels.<某個>Panel  在這個檔裡出現   81 次
+   * emit('execution:state')  在整個 src/ 裡    0 次
+   * ```
+   *
+   * `SemanticBus` 宣告了 `execution:state`／`execution:output`／`execution:run`，
+   * `ViewHost` 宣告了 `onExecutionState`——**而發送端一個都沒接**。
+   * 執行器直接持有五個面板的引用。
+   *
+   * > **一個視圖要能被換掉，發號施令的那一端就不能知道它叫什麼名字。**
+   *
+   * 那正是「軟體的執行方式與軟體的 UI 攪在一起」的樣子，而硬體視圖進來時
+   * 它會擋路——2D 接線圖不該需要 `ExecutionController` 認識它。
+   *
+   * ⚠️ **這次只搬一處**（`displayStep` 的變數快照），理由是它是唯一一處
+   * **純粹的狀態廣播**：其餘 80 處是命令（`highlightBlock`／`revealLine`／
+   * `showTab`／`promptInput`），而**命令與廣播不是同一種東西**，
+   * 把它們一起丟上匯流排會做出一個假的解耦。
+   */
   constructor(
     panels: ExecutionPanels,
     opts: {
       getBlocksDirty: () => boolean
       syncBeforeRun: () => void
+      bus?: SemanticBus
     },
   ) {
     this.panels = panels
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
+    this.bus = opts.bus
     this.debugToolbar = new DebugToolbar()
   }
 
@@ -521,7 +549,11 @@ export class ExecutionController {
     if (index < 0 || index >= this.stepRecords.length) return
     const step = this.stepRecords[index]
 
-    this.panels.variablePanel?.updateFromSnapshot(step.scopeSnapshot)
+    // 廣播，不是命令——誰想看變數，自己登錄成視圖（`core/view-registry.ts`）。
+    // ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
+    // 而**讓變數面板在某些情境安靜地不更新**比多留一行退路糟得多。
+    if (this.bus) this.bus.emit('execution:state', { status: 'paused', step })
+    else this.panels.variablePanel?.updateFromSnapshot(step.scopeSnapshot)
     this.panels.bottomPanel?.showTab('variables')
 
     this.panels.blocklyPanel?.clearHighlight()
