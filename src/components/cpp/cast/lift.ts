@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建cast(targetType: string, value: SemanticNode | null): SemanticNode {
+export function buildCast(targetType: string, value: SemanticNode | null): SemanticNode {
   return createNode('cpp:cast', { target_type: targetType }, { value: value ? [value] : [] })
 }
 

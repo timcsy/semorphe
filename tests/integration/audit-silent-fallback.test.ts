@@ -44,10 +44,10 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 
-const 護欄名 = 'silent-fallback'
-const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.json')
+const GUARD_NAME = 'silent-fallback'
+const decisionFile = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.json')
 
 /**
  * 回退的**兩種形狀**——而它們的發生時機根本不同（`specs/111` 實測）。
@@ -63,7 +63,7 @@ const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.j
  * ⚠️ 分不出來的歸 `未分類` 並**計入要看**——不得靜靜歸進防禦欄
  * （`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全）。
  */
-type 形狀 = '型別不符' | '缺子節點' | '值判斷' | '未分類'
+type shape = '型別不符' | '缺子節點' | '值判斷' | '未分類'
 
 interface hits {
   /**
@@ -77,18 +77,18 @@ interface hits {
    * 行號識別的是**位置**，不是東西。
    * → 同一個處方：**顯示與識別分開**——`檔名#條件的雜湊`。
    */
-  鍵: string
-  位置: string
-  條件: string
-  回傳: string
-  形狀: 形狀
+  key: string
+  position: string
+  condition: string
+  returns: string
+  shape: shape
 }
 
 
 /** 依條件的語法形狀分類。**新的寫法會落到「未分類」而不是被默許。** */
-function 分類(條件: string): 形狀 {
-  if (/\.type\s*[!=]==|typeof\s|instanceof\s|!Array\.isArray|Array\.isArray/.test(條件)) return '型別不符'
-  if (/^!\w|\.length\s*===\s*0|\.length\s*<\s*1|=== undefined|== null|!\w+\?\./.test(條件)) return '缺子節點'
+function classify(condition: string): shape {
+  if (/\.type\s*[!=]==|typeof\s|instanceof\s|!Array\.isArray|Array\.isArray/.test(condition)) return '型別不符'
+  if (/^!\w|\.length\s*===\s*0|\.length\s*<\s*1|=== undefined|== null|!\w+\?\./.test(condition)) return '缺子節點'
   // ⚠️ **第三種形狀**（2026-08-11，掃描範圍擴大到共用執行器之後才出現）：
   // 分支條件是**執行期的值**，不是「東西在不在」。`ctx.toBool(condition)`
   // 是三元運算子的兩個分支、`!ctx.toBool(left)` 是 `&&` 的短路——
@@ -96,7 +96,7 @@ function 分類(條件: string): 形狀 {
   //
   // 它需要自己一欄而不是塞進既有兩欄：`相容` 表讓「值判斷」判成
   // 「缺子節點」時會矛盾出聲。
-  if (/ctx\.toBool\(|\.toBool\(/.test(條件)) return '值判斷'
+  if (/ctx\.toBool\(|\.toBool\(/.test(condition)) return '值判斷'
   return '未分類'
 }
 
@@ -111,36 +111,41 @@ function 分類(條件: string): 形狀 {
  * 讀起來是 8 個缺陷，而護欄刻意把它們排除在棘輪外。
  * **兩份紀錄對同一批東西給出不同的說法，而沒有任何地方會叫。**
  */
-interface 判定 {
-  鍵: string
-  位置: string
-  訊號: string
-  判定: '合法' | '靜默回退' | '防禦性'
+interface decision {
+  key: string
+  position: string
+  signal: string
+  decision: '合法' | '靜默回退' | '防禦性'
   reason: string
 }
 
 /** 判定與機器分類的對應關係——**兩者不得互相矛盾**。 */
-const 相容: Record<形狀, 判定['判定'][]> = {
-  型別不符: ['靜默回退', '合法'],
-  缺子節點: ['防禦性', '合法'],
+// ⚠️ **鍵要寫成字串字面值。** 這些中文是 `shape` 這個型別的**值**
+// （領域詞彙），不是識別字——寫成 `型別不符: [...]` 的話 TS 把它當
+// identifier，於是改名工具會改它，而 `shape` 那一側的字串不會跟著改。
+//
+// > **同一個詞在型別的值與物件的鍵上，只有寫法決定它是不是識別字。**
+const compatible: Record<shape, decision['decision'][]> = {
+  '型別不符': ['靜默回退', '合法'],
+  '缺子節點': ['防禦性', '合法'],
   // 值判斷不會是「防禦性」——它不是在防什麼，它就是那個運算子在做的事。
-  值判斷: ['合法', '靜默回退'],
-  未分類: ['靜默回退', '合法', '防禦性'],
+  '值判斷': ['合法', '靜默回退'],
+  '未分類': ['靜默回退', '合法', '防禦性'],
 }
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  掃描: { 檔數: number; "return 總數": number }
-  hits: { 筆數: number; 明細: hits[] }
+  scanned: { fileCount: number; "return 總數": number }
+  hits: { entryCount: number; details: hits[] }
 }
 
 /** 執行器檔案——語言套件與核心的執行那一路。 */
-function 執行器檔(): string[] {
+function executorFiles(): string[] {
   const out: string[] = []
-  const 走 = (d: string): void => {
+  const walk = (d: string): void => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
-      if (e.isDirectory()) 走(p)
+      if (e.isDirectory()) walk(p)
       // ⚠️ **檔名也要跟著膠囊走。** 共用檔叫 `executors.ts`，膠囊的叫 `execute.ts`
       // ——只認前者的話，搬進膠囊的執行器**整批從掃描裡消失**，
       // 而「掃到的 return 數」會安靜地掉下去。這是「掃描範圍沒跟著走」的第二面：
@@ -163,8 +168,8 @@ function 執行器檔(): string[] {
       }
     }
   }
-  走(path.join(REPO_ROOT, 'src/languages'))
-  走(path.join(REPO_ROOT, 'src/interpreter'))
+  walk(path.join(REPO_ROOT, 'src/languages'))
+  walk(path.join(REPO_ROOT, 'src/interpreter'))
   // ⚠️ **膠囊也要掃。**
   //
   // 2026-08-11 發現：這條護欄只掃 `src/languages` 與 `src/interpreter`，
@@ -173,7 +178,7 @@ function 執行器檔(): string[] {
   //
   // > **膠囊化會讓元件離開所有「按舊目錄結構」寫死的護欄。**
   // > 每搬一批就要問一次：**哪條護欄的掃描範圍沒跟著走？**
-  走(path.join(REPO_ROOT, 'src/components'))
+  walk(path.join(REPO_ROOT, 'src/components'))
   return out
 }
 
@@ -183,22 +188,22 @@ function 執行器檔(): string[] {
  * ⚠️ **判準刻意寬**——寧可多報讓人判，也不要自己發明一個分得出合法與回退的
  * 規則。`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全。
  */
-function 掃(檔s: readonly string[]): { hits: hits[]; "return 總數": number } {
+function scan(files: readonly string[]): { hits: hits[]; "return 總數": number } {
   const hits: hits[] = []
   let total = 0
-  const 預設值 = /value:\s*(0|''|""|false|null|\[\]|\{\})\s*[,}]/
-  for (const f of 檔s) {
+  const defaultValue = /value:\s*(0|''|""|false|null|\[\]|\{\})\s*[,}]/
+  for (const f of files) {
     const lines = fs.readFileSync(f, 'utf8').split('\n')
     const rel = path.relative(REPO_ROOT, f)
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i]
       if (!/\breturn\b/.test(l) || !/value:/.test(l)) continue
       total++
-      if (!預設值.test(l)) continue
+      if (!defaultValue.test(l)) continue
       // 條件：同一行的 `if (…) return`，或往上找最近的 `if (`
-      let 條件 = ''
-      const 同行 = /if\s*\((.+?)\)\s*return/.exec(l)
-      if (同行) 條件 = 同行[1]
+      let condition = ''
+      const sameLine = /if\s*\((.+?)\)\s*return/.exec(l)
+      if (sameLine) condition = sameLine[1]
       else {
         for (let j = i - 1; j >= Math.max(0, i - 4); j--) {
           // ⚠️ **跳過「單行 `if (…) return …`」**。它是一個完整的敘述，
@@ -208,33 +213,33 @@ function 掃(檔s: readonly string[]): { hits: hits[]; "return 總數": number }
           // 被誤報成有條件的回退。
           if (/if\s*\(.*\)\s*return\b/.test(lines[j])) continue
           const m = /if\s*\((.+?)\)\s*\{?\s*$/.exec(lines[j])
-          if (m) { 條件 = m[1]; break }
+          if (m) { condition = m[1]; break }
         }
       }
-      if (!條件) continue // 無條件的回傳不是回退
-      const c = 條件.trim().slice(0, 80)
-      const 回 = l.trim().slice(0, 60)
+      if (!condition) continue // 無條件的回傳不是回退
+      const c = condition.trim().slice(0, 80)
+      const ret = l.trim().slice(0, 60)
       hits.push({
-        鍵: 判定鍵(rel, c + '|' + 回),
-        位置: `${rel}:${i + 1}`,
-        條件: c,
-        回傳: 回,
-        形狀: 分類(c),
+        key: decisionKey(rel, c + '|' + ret),
+        position: `${rel}:${i + 1}`,
+        condition: c,
+        returns: ret,
+        shape: classify(c),
       })
     }
   }
   return { hits, "return 總數": total }
 }
 
-const 讀判定 = (): 判定[] =>
-  fs.existsSync(判定檔) ? (JSON.parse(fs.readFileSync(判定檔, 'utf8')) as 判定[]) : []
+const readDecisions = (): decision[] =>
+  fs.existsSync(decisionFile) ? (JSON.parse(fs.readFileSync(decisionFile, 'utf8')) as decision[]) : []
 
 describe('第三十三條護欄：靜默回退', () => {
   // ── 健康檢查：錨在掃描的輸入量（合成量），不錨在命中數 ─────────────
   it('★ 健康檢查：掃描真的吃到東西', () => {
-    const 檔s = 執行器檔()
-    expect(檔s.length, '一個執行器檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(10)
-    const returnTotal = 掃(檔s)["return 總數"]
+    const files = executorFiles()
+    expect(files.length, '一個執行器檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(10)
+    const returnTotal = scan(files)["return 總數"]
     expect(returnTotal, '一個帶 value 的 return 都沒有 → 掃描器沒吃到內容').toBeGreaterThan(20)
   })
 
@@ -243,9 +248,9 @@ describe('第三十三條護欄：靜默回退', () => {
     const tmp = path.join(REPO_ROOT, 'tests/assets/_inject-fallback-executors.ts')
     fs.writeFileSync(tmp, `export const x = () => {\n  if (v.type !== 'array') return { type: 'int', value: 0 }\n  return { type: 'int', value: v.length }\n}\n`)
     try {
-      const { hits } = 掃([tmp])
+      const { hits } = scan([tmp])
       expect(hits, '故意寫的回退沒被報 → 這條護欄什麼都抓不到').toHaveLength(1)
-      expect(hits[0].條件).toContain("!== 'array'")
+      expect(hits[0].condition).toContain("!== 'array'")
     } finally {
       fs.rmSync(tmp, { force: true })
     }
@@ -256,7 +261,7 @@ describe('第三十三條護欄：靜默回退', () => {
     const tmp = path.join(REPO_ROOT, 'tests/assets/_inject-clean-executors.ts')
     fs.writeFileSync(tmp, `export const x = () => {\n  return { type: 'int', value: 0 }\n}\n`)
     try {
-      expect(掃([tmp]).hits, '無條件回 0 是正常的初始值，報它會讓這條護欄失去意義').toHaveLength(0)
+      expect(scan([tmp]).hits, '無條件回 0 是正常的初始值，報它會讓這條護欄失去意義').toHaveLength(0)
     } finally {
       fs.rmSync(tmp, { force: true })
     }
@@ -264,66 +269,66 @@ describe('第三十三條護欄：靜默回退', () => {
 
   it('★ 注入③：兩種形狀要分得開，而認不得的條件要落到「未分類」', () => {
     // 沒有這一支，一個「什麼都歸缺子節點」的分類器也會讓棘輪永遠是 0。
-    expect(分類("arr.type !== 'array'")).toBe('型別不符')
-    expect(分類('!Array.isArray(v.value)')).toBe('型別不符')
-    expect(分類('!v')).toBe('缺子節點')
-    expect(分類('valueNodes.length === 0')).toBe('缺子節點')
+    expect(classify("arr.type !== 'array'")).toBe('型別不符')
+    expect(classify('!Array.isArray(v.value)')).toBe('型別不符')
+    expect(classify('!v')).toBe('缺子節點')
+    expect(classify('valueNodes.length === 0')).toBe('缺子節點')
     // ⚠️ 認不得的**不得**被默許歸進防禦欄——那會讓一個會發生的回退靜靜消失
-    expect(分類('someWeirdPredicate(x)')).toBe('未分類')
+    expect(classify('someWeirdPredicate(x)')).toBe('未分類')
   })
 
   it('★ 注入④：人的判定與機器分類矛盾時必須被抓到', () => {
     // 沒有這一支，那條矛盾斷言可能永遠是空陣列而沒有人知道它有沒有在看。
     // ⚠️ 用**合成的**組合，不用真實的判定檔——真實的今天是相容的，
     // 錨在它上面等於錨在「現況剛好沒事」上（第 2 步）。
-    expect(相容['缺子節點'].includes('靜默回退'), '缺子節點判成靜默回退應該是矛盾').toBe(false)
-    expect(相容['型別不符'].includes('防禦性'), '型別不符判成防禦性應該是矛盾').toBe(false)
+    expect(compatible['缺子節點'].includes('靜默回退'), '缺子節點判成靜默回退應該是矛盾').toBe(false)
+    expect(compatible['型別不符'].includes('防禦性'), '型別不符判成防禦性應該是矛盾').toBe(false)
     // 而合法在哪一欄都成立——strcmp 相等回 0 可能出現在任何形狀底下
-    expect(相容['缺子節點'].includes('合法')).toBe(true)
-    expect(相容['型別不符'].includes('合法')).toBe(true)
+    expect(compatible['缺子節點'].includes('合法')).toBe(true)
+    expect(compatible['型別不符'].includes('合法')).toBe(true)
   })
 
   // ── 判定落點（第 11 步） ────────────────────────────────────────
   it('每一筆判定必須有理由，且判定不得過期', () => {
-    const 現 = 掃(執行器檔()).hits
-    const 判定s = 讀判定()
-    const 孤兒 = 判定s.filter((d) => !現.some((h) => h.鍵 === d.鍵))
+    const now = scan(executorFiles()).hits
+    const decisions = readDecisions()
+    const orphans = decisions.filter((d) => !now.some((h) => h.key === d.key))
     expect(
-      判定s.filter((d) => !d.reason || d.reason.length < 4),
+      decisions.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
-    expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了，留著會讓過期的結論繼續生效').toEqual([])
+    expect(orphans.map((d) => d.key), '判定過期了——底下的程式碼變了，留著會讓過期的結論繼續生效').toEqual([])
   })
 
   // ── 棘輪 ────────────────────────────────────────────────────────
   it('靜默回退只准下降', () => {
-    const 檔s = 執行器檔()
-    const 掃果 = 掃(檔s)
-    const hits = 掃果.hits
-    const returnTotal = 掃果["return 總數"]
-    const 判定s = 讀判定()
-    const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
-    const 要看 = hits.filter((h) => !已判定.has(h.鍵))
-    const 型別不符 = hits.filter((h) => h.形狀 === '型別不符')
-    const 缺子節點 = hits.filter((h) => h.形狀 === '缺子節點')
-    const 未分類 = hits.filter((h) => h.形狀 === '未分類')
+    const files = executorFiles()
+    const scanResult = scan(files)
+    const hits = scanResult.hits
+    const returnTotal = scanResult["return 總數"]
+    const decisions = readDecisions()
+    const decided = new Map(decisions.map((d) => [d.key, d]))
+    const toReview = hits.filter((h) => !decided.has(h.key))
+    const typeMismatch = hits.filter((h) => h.shape === '型別不符')
+    const missingChild = hits.filter((h) => h.shape === '缺子節點')
+    const unclassified = hits.filter((h) => h.shape === '未分類')
 
     printReport('靜默回退（執行器遇到處理不了的輸入時有沒有出聲）', [
-      `掃描   ${檔s.length} 個執行器檔｜${returnTotal} 個帶 value 的 return`,
-      `命中   ${hits.length}（已判定 ${hits.length - 要看.length}，要看 ${要看.length}）`,
+      `掃描   ${files.length} 個執行器檔｜${returnTotal} 個帶 value 的 return`,
+      `命中   ${hits.length}（已判定 ${hits.length - toReview.length}，要看 ${toReview.length}）`,
       '',
-      `  **型別不符** ${型別不符.length} 筆 ← 棘輪盯這一欄（上游辨識判錯時**會**走到）`,
-      `  缺子節點   ${缺子節點.length} 筆   防禦性；415 段語料實測走到 **0** 次`,
-      `  未分類     ${未分類.length} 筆   ⚠️ 新的條件寫法，要人看`,
+      `  **型別不符** ${typeMismatch.length} 筆 ← 棘輪盯這一欄（上游辨識判錯時**會**走到）`,
+      `  缺子節點   ${missingChild.length} 筆   防禦性；415 段語料實測走到 **0** 次`,
+      `  未分類     ${unclassified.length} 筆   ⚠️ 新的條件寫法，要人看`,
       '',
-      ...要看.map((h, i) => `  ${i + 1}. ${h.位置}\n       if (${h.條件})\n       ${h.回傳}`),
+      ...toReview.map((h, i) => `  ${i + 1}. ${h.position}\n       if (${h.condition})\n       ${h.returns}`),
       '',
       '⚠️ 合法與回退在語法上一模一樣（strcmp 相等回 0 是語義不是回退）——',
       '   本護欄只排順序，判定在 tests/assets/silent-fallback-decisions.json。',
     ])
 
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, {
+      writeBaseline(GUARD_NAME, {
         _meta: {
           note:
             '靜默回退：執行器遇到處理不了的輸入時回傳一個與合法結果無法區分的預設值。\n' +
@@ -335,31 +340,31 @@ describe('第三十三條護欄：靜默回退', () => {
             '⚠️ 判準刻意寬：寧可多報讓人判，也不要發明一個分得出合法與回退的規則——它們語法上相同。',
           ratchet: RATCHET_NOTE,
         },
-        掃描: { 檔數: 檔s.length, 'return 總數': returnTotal },
-        型別不符: 型別不符.length,
-        缺子節點: 缺子節點.length,
-        hits: { 筆數: hits.length, 明細: hits },
+        scanned: { fileCount: files.length, 'return 總數': returnTotal },
+        typeMismatch: typeMismatch.length,
+        missingChild: missingChild.length,
+        hits: { entryCount: hits.length, details: hits },
       })
       return
     }
 
-    const base = loadBaseline<基線>(護欄名)
-    const b = base as unknown as { 型別不符?: number; 缺子節點?: number }
-    expect(要看, '有未判定的命中——護欄只排順序，判定要人做').toHaveLength(0)
-    expect(未分類.map((h) => `${h.位置} if(${h.條件})`), '出現了分類器認不得的條件寫法——不得靜靜歸進防禦欄').toEqual([])
+    const base = loadBaseline<Baseline>(GUARD_NAME)
+    const b = base as unknown as { typeMismatch?: number; missingChild?: number }
+    expect(toReview, '有未判定的命中——護欄只排順序，判定要人做').toHaveLength(0)
+    expect(unclassified.map((h) => `${h.position} if(${h.condition})`), '出現了分類器認不得的條件寫法——不得靜靜歸進防禦欄').toEqual([])
 
     // ⚠️ **人的判定與機器的分類不得互相矛盾。**
     // 兩份紀錄對同一批東西給出不同的說法時，讀哪一份決定你以為有幾個缺陷
     // ——而沒有這條斷言的話，它們會安靜地各說各話。
-    const 矛盾 = hits
-      .map((h) => ({ h, d: 已判定.get(h.鍵) }))
-      .filter(({ h, d }) => d && !相容[h.形狀].includes(d.判定))
-      .map(({ h, d }) => `${h.位置}：機器判「${h.形狀}」而人判「${d!.判定}」`)
-    expect(矛盾, '判定檔與護欄對同一筆的說法不一致——讀哪一份決定你以為有幾個缺陷').toEqual([])
+    const contradictions = hits
+      .map((h) => ({ h, d: decided.get(h.key) }))
+      .filter(({ h, d }) => d && !compatible[h.shape].includes(d.decision))
+      .map(({ h, d }) => `${h.position}：機器判「${h.shape}」而人判「${d!.decision}」`)
+    expect(contradictions, '判定檔與護欄對同一筆的說法不一致——讀哪一份決定你以為有幾個缺陷').toEqual([])
     expect(
-      型別不符.length + 缺子節點.length,
+      typeMismatch.length + missingChild.length,
       '兩欄總和變了。只做重新分類時總和必須不變——變了代表真的多了或少了一處回退。',
-    ).toBe((b.型別不符 ?? 0) + (b.缺子節點 ?? 0))
-    assertRatchet([['型別不符', 型別不符.length, b.型別不符 ?? 0]])
+    ).toBe((b.typeMismatch ?? 0) + (b.missingChild ?? 0))
+    assertRatchet([['型別不符', typeMismatch.length, b.typeMismatch ?? 0]])
   })
 })

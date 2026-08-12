@@ -125,10 +125,10 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         expect(block, `Failed to render concept '${conceptId}'`).not.toBeNull()
         if (form?.axis === 'role') {
           // 只驗「渲染得出來、而且是這個身分宣告過的某個形態」
-          const 全部形態 = allSpecs
+          const allForms = allSpecs
             .filter((s) => s.conceptMapping?.conceptId === conceptId)
             .map((s) => (s.blockDef as any).type)
-          expect(全部形態).toContain(block!.type)
+          expect(allForms).toContain(block!.type)
         } else {
           expect(block!.type).toBe(blockType)
         }

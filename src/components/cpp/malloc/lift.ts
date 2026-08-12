@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建malloc(type: string, size: SemanticNode | null): SemanticNode {
+export function buildMalloc(type: string, size: SemanticNode | null): SemanticNode {
   return createNode('cpp:malloc', { type }, { size: size ? [size] : [] })
 }
 

@@ -4,22 +4,22 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import { createNode } from '../../../../core/semantic-tree'
 import type { LiftPostProcessor } from '../../../../core/lift/post-processors'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
-import { 建字串索引 } from '../../../../components/cpp/string_at/lift'
-import { 建logic_not } from '../../../../components/cpp/logic_not/lift'
-import { 建negate } from '../../../../components/cpp/negate/lift'
-import { 建bitwise_not } from '../../../../components/cpp/bitwise_not/lift'
-import { 建address_of } from '../../../../components/cpp/address_of/lift'
-import { 建pointer_deref } from '../../../../components/cpp/pointer_deref/lift'
-import { 建increment } from '../../../../components/cpp/increment/lift'
-import { 建comma_expr } from '../../../../components/cpp/comma_expr/lift'
+import { buildStringIndex } from '../../../../components/cpp/string_at/lift'
+import { buildLogicNot } from '../../../../components/cpp/logic_not/lift'
+import { buildNegate } from '../../../../components/cpp/negate/lift'
+import { buildBitwiseNot } from '../../../../components/cpp/bitwise_not/lift'
+import { buildAddressOf } from '../../../../components/cpp/address_of/lift'
+import { buildPointerDeref } from '../../../../components/cpp/pointer_deref/lift'
+import { buildIncrement } from '../../../../components/cpp/increment/lift'
+import { buildCommaExpr } from '../../../../components/cpp/comma_expr/lift'
 import { binaryOperatorConcept } from '../../../../core/component/binary-operators'
 import { isBinaryOperator } from '../node-traits'
-import { 建endl } from '../../../../components/cpp/endl/lift'
-import { 建array_at } from '../../../../components/cpp/array_at/lift'
-import { 建var_ref } from '../../../../components/cpp/var_ref/lift'
+import { buildEndl } from '../../../../components/cpp/endl/lift'
+import { buildArrayAt } from '../../../../components/cpp/array_at/lift'
+import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { isVariableRef } from '../node-traits'
-import { 建print } from '../../../../components/cpp/print/lift'
-import { 建input } from '../../../../components/cpp/input/lift'
+import { buildPrint } from '../../../../components/cpp/print/lift'
+import { buildInput } from '../../../../components/cpp/input/lift'
 import { isStreamInput } from '../node-traits'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
@@ -134,7 +134,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (op === '<<') {
       const coutValues = extractCoutChain(node, ctx)
       if (coutValues) {
-        return 建print(coutValues)
+        return buildPrint(coutValues)
       }
     }
     if (op === '>>') {
@@ -149,11 +149,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
         // 分得出來的唯一依據是**根變數的型別**，而那要查辨識脈絡（076 接上的）。
         // 查不到型別就**不當串流**——保守方向，位移是遠比串流常見的寫法。
         if (cin.from === 'cin') {
-          return 建input(cin.values)
+          return buildInput(cin.values)
         }
         const rootType = ctx.data.getType(cin.from)
         if (rootType === 'istringstream' || rootType === 'stringstream') {
-          return 建input(cin.values, { from: String(cin.from) })
+          return buildInput(cin.values, { from: String(cin.from) })
         }
         // 不是串流 → 落到下面的一般二元運算（位移）
       }
@@ -179,19 +179,19 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const operand = operandNode ? ctx.lift(operandNode) : null
 
     if (op === '!') {
-      return 建logic_not(operand)
+      return buildLogicNot(operand)
     }
     if (op === '-') {
-      return 建negate(operand)
+      return buildNegate(operand)
     }
     if (op === '~') {
-      return 建bitwise_not(operand)
+      return buildBitwiseNot(operand)
     }
     if (op === '&') {
-      return 建address_of(operand)
+      return buildAddressOf(operand)
     }
     if (op === '*') {
-      return 建pointer_deref(operand)
+      return buildPointerDeref(operand)
     }
 
     // Fallback for other unary ops (++, --, etc.)
@@ -215,11 +215,11 @@ export function registerExpressionLifters(lifter: Lifter): void {
       const indicesNode = nameNode.namedChildren.find(c => c.type === 'subscript_argument_list')
       const indexNode = indicesNode?.namedChildren[0] ?? nameNode.childForFieldName('index') ?? nameNode.namedChildren[1]
       const index = indexNode ? ctx.lift(indexNode) : null
-      return 建increment(arrName, op, position, index)
+      return buildIncrement(arrName, op, position, index)
     }
 
     const name = nameNode?.text ?? 'i'
-    return 建increment(name, op, position)
+    return buildIncrement(name, op, position)
   })
 
   // parenthesized_expression — handled by JSON unwrap pattern (cpp_unwrap_parens)
@@ -228,7 +228,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
   // Comma expression: i++, j-- (used in for-loop updates)
   lifter.register('comma_expression', (node, ctx) => {
     const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
-    return 建comma_expr(children)
+    return buildCommaExpr(children)
   })
 
   // cast_expression — handled by JSON pattern (cpp_cast_expr)
@@ -236,8 +236,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
 
   lifter.register('subscript_expression', (node, ctx) => {
     // **膠囊自己的判別先問**——「外層下標裡面還是下標時是我」是元件的知識。
-    const 認領 = tryAstBranches('subscript_expression', node, ctx)
-    if (認領) return 認領
+    const claim = tryAstBranches('subscript_expression', node, ctx)
+    if (claim) return claim
 
     const arrayNode = node.childForFieldName('argument') ?? node.namedChildren[0]
 
@@ -248,9 +248,9 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const index = indexNode ? ctx.lift(indexNode) : null
 
     if (isStringVar(name, node)) {
-      return 建字串索引(name, index)
+      return buildStringIndex(name, index)
     }
-    return 建array_at(name, {
+    return buildArrayAt(name, {
       index: index ? [index] : [],
     })
   })
@@ -283,7 +283,7 @@ function extractCoutChain(node: AstNode, ctx: LiftContext): SemanticNode[] | nul
     if (rightNode) {
       // Check for endl
       if (rightNode.text === 'endl') {
-        values.unshift(建endl())
+        values.unshift(buildEndl())
       } else {
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
@@ -314,7 +314,7 @@ function extractCinChain(node: AstNode, ctx: LiftContext): { values: SemanticNod
         const lifted = ctx.lift(rightNode)
         if (lifted) values.unshift(lifted)
       } else {
-        values.unshift(建var_ref(rightNode.text))
+        values.unshift(buildVarRef(rightNode.text))
       }
     }
     current = current.childForFieldName('left')
@@ -387,6 +387,6 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   if (rootType === null || !READ_STREAM_TYPES.has(rootType)) return null
 
   // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
-  const cloned = targets.map((v) => 建var_ref(String(v.properties.name ?? '')))
-  return 建input(cloned, { from: rootName })
+  const cloned = targets.map((v) => buildVarRef(String(v.properties.name ?? '')))
+  return buildInput(cloned, { from: rootName })
 }

@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建if(children: Record<string, SemanticNode[]>, isElseIf = false): SemanticNode {
+export function buildIf(children: Record<string, SemanticNode[]>, isElseIf = false): SemanticNode {
   return isElseIf
     ? createNode('cpp:if', { isElseIf: 'true' }, children)
     : createNode('cpp:if', {}, children)

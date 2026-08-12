@@ -27,26 +27,26 @@ const REASONS = new Set(['declarative', 'consumed-by-parent', 'degradation-targe
 
 describe('宣告的門檻：說不出理由的不准宣告', () => {
   it('有 skipPaths 就必須有對應的 skipReasons', () => {
-    const 缺理由: string[] = []
+    const missingReason: string[] = []
     for (const def of allComponentDefs()) {
       for (const p of def.skipPaths ?? []) {
-        if (!def.skipReasons?.[p as PathName]) 缺理由.push(`${def.conceptId} 的 ${p}`)
+        if (!def.skipReasons?.[p as PathName]) missingReason.push(`${def.conceptId} 的 ${p}`)
       }
     }
     expect(
-      缺理由,
-      '以下宣告說不出理由——沒有理由的宣告是把缺陷洗成設計：\n  ' + 缺理由.join('\n  '),
+      missingReason,
+      '以下宣告說不出理由——沒有理由的宣告是把缺陷洗成設計：\n  ' + missingReason.join('\n  '),
     ).toEqual([])
   })
 
   it('理由只能是那兩個值——第三個值是在替「還沒做」找體面的名字', () => {
-    const 壞理由: string[] = []
+    const badReason: string[] = []
     for (const def of allComponentDefs()) {
       for (const [p, r] of Object.entries(def.skipReasons ?? {})) {
-        if (!REASONS.has(String(r))) 壞理由.push(`${def.conceptId} 的 ${p}：「${r}」`)
+        if (!REASONS.has(String(r))) badReason.push(`${def.conceptId} 的 ${p}：「${r}」`)
       }
     }
-    expect(壞理由, `不認得的理由：${壞理由.join('、')}`).toEqual([])
+    expect(badReason, `不認得的理由：${badReason.join('、')}`).toEqual([])
   })
 
   /**
@@ -62,16 +62,16 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
    */
   it('★ degradation-target 的兩個事實依據，逐一查證', async () => {
     const defs = allComponentDefs()
-    const 降級目標 = defs.filter((d) =>
+    const downgradeTarget = defs.filter((d) =>
       Object.values(d.skipReasons ?? {}).includes('degradation-target' as never),
     )
-    const 被指向 = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
+    const pointedTo = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
     const toolbox = readFileSync(join(REPO_ROOT, 'src/languages/cpp/toolbox-categories.ts'), 'utf8')
 
-    const 站不住: string[] = []
-    for (const d of 降級目標) {
-      if (!被指向.has(d.conceptId)) {
-        站不住.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
+    const unsupported: string[] = []
+    for (const d of downgradeTarget) {
+      if (!pointedTo.has(d.conceptId)) {
+        unsupported.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
       }
       // 工具箱排除的形式是 `excludeTypes: ['cpp_xxx']`
       //
@@ -85,12 +85,12 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       // 改成呼叫導出規則——那是這個問題今天唯一的正確答案。
       const blockType = deriveBlockType(d.conceptId)
       if (!toolbox.includes(`'${blockType}'`)) {
-        站不住.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
+        unsupported.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
       }
     }
     expect(
-      站不住,
-      '以下 degradation-target 宣告的事實依據站不住：\n  ' + 站不住.join('\n  ') +
+      unsupported,
+      '以下 degradation-target 宣告的事實依據站不住：\n  ' + unsupported.join('\n  ') +
         '\n**第三個理由的門檻比前兩個更硬**——它的依據要能機械查證，不能只寫一句話。',
     ).toEqual([])
   })
@@ -98,8 +98,8 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
   it('★ 反面：一個普通概念不得偷用 degradation-target', () => {
     // 沒有這支的話，上面那支對「零個宣告者」也會通過
     const defs = allComponentDefs()
-    const 被指向 = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
-    expect(被指向.size, '沒有任何概念宣告 abstractConcept → 上面那支什麼都沒驗到').toBeGreaterThan(5)
+    const pointedTo = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
+    expect(pointedTo.size, '沒有任何概念宣告 abstractConcept → 上面那支什麼都沒驗到').toBeGreaterThan(5)
   })
 
   /**
@@ -119,16 +119,16 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
   it('★ 宣告 generate 由父概念消費，就不得自己註冊模板（矛盾偵測）', async () => {
     const { initCppModule } = await import('../../src/languages/cpp/module')
     const m = initCppModule() as unknown as { templateGenerator: { templates: Map<string, unknown> } }
-    const 矛盾: string[] = []
+    const contradictions: string[] = []
     for (const def of allComponentDefs()) {
       if (!(def.skipPaths ?? []).includes('generate' as never)) continue
       if (m.templateGenerator.templates.has(def.conceptId)) {
-        矛盾.push(`${def.conceptId}（宣告不產生，卻註冊了模板）`)
+        contradictions.push(`${def.conceptId}（宣告不產生，卻註冊了模板）`)
       }
     }
     expect(
-      矛盾,
-      '以下宣告與實作矛盾：\n  ' + 矛盾.join('\n  ') +
+      contradictions,
+      '以下宣告與實作矛盾：\n  ' + contradictions.join('\n  ') +
         '\n**先確認是不是量測假象**——這四筆的來源正是完備性 harness 把它們的產出當成鷹架剝掉了。',
     ).toEqual([])
   })
@@ -138,27 +138,27 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const n = allComponentDefs().filter((d) => (d.skipPaths ?? []).includes('generate' as never)).length
     // 目前預期是 0（四筆假宣告已撤）——所以這裡改成釘住**機制**：
     // 合成一個宣告 skip generate 又有模板的假元件，必須被判為矛盾
-    const 假元件 = { conceptId: 'synth_fake', skipPaths: ['generate'] }
-    const 假模板 = new Map<string, unknown>([['synth_fake', {}]])
-    const 會叫 = (假元件.skipPaths ?? []).includes('generate') && 假模板.has(假元件.conceptId)
-    expect(會叫, '合成的矛盾沒被判出來 → 上面那支是死的').toBe(true)
+    const fakeComponent = { conceptId: 'synth_fake', skipPaths: ['generate'] }
+    const fakeTemplate = new Map<string, unknown>([['synth_fake', {}]])
+    const willCall = (fakeComponent.skipPaths ?? []).includes('generate') && fakeTemplate.has(fakeComponent.conceptId)
+    expect(willCall, '合成的矛盾沒被判出來 → 上面那支是死的').toBe(true)
     expect(n, '真實資料目前應為 0（四筆假宣告已撤）').toBe(0)
   })
 
   it('沒有 skipPaths 卻寫了 skipReasons —— 孤兒理由', () => {
-    const 孤兒: string[] = []
+    const orphans: string[] = []
     for (const def of allComponentDefs()) {
       const declared = new Set(def.skipPaths ?? [])
       for (const p of Object.keys(def.skipReasons ?? {})) {
-        if (!declared.has(p as PathName)) 孤兒.push(`${def.conceptId} 的 ${p}`)
+        if (!declared.has(p as PathName)) orphans.push(`${def.conceptId} 的 ${p}`)
       }
     }
-    expect(孤兒).toEqual([])
+    expect(orphans).toEqual([])
   })
 
   it('★ 宣告不執行的概念，不得同時註冊「會做事」的執行器（矛盾偵測）', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
-    const 矛盾: string[] = []
+    const contradictions: string[] = []
     for (const def of allComponentDefs()) {
       if (!(def.skipPaths ?? []).includes('execute')) continue
       const ex = interp.getExecutor(def.conceptId)
@@ -166,15 +166,15 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       // 空操作的函式原始碼很短且沒有 body 內容；會做事的不是
       const src = ex.toString().replace(/\s+/g, '')
       const isNoop = /^async\(?\)?=>\{\}$/.test(src) || /=>\{\}$/.test(src)
-      if (!isNoop) 矛盾.push(`${def.conceptId}（宣告不執行，卻註冊了會做事的執行器）`)
+      if (!isNoop) contradictions.push(`${def.conceptId}（宣告不執行，卻註冊了會做事的執行器）`)
     }
-    expect(矛盾, 矛盾.join('\n  ')).toEqual([])
+    expect(contradictions, contradictions.join('\n  ')).toEqual([])
   })
 
   it('★ 判為「還沒實作」的概念沒有偷偷拿到宣告', () => {
     // classification.md 判定不得宣告的那些。這支測試是那份判定的釘子——
     // 有人日後想讓數字好看，最省事的做法就是給它們一個 skipPaths。
-    const 不得宣告 = [
+    const mustNotDeclare = [
       // cpp_destructor（080）與 cpp_lambda（079）已真的實作／被父概念消費，
       // 從這份「不得宣告」的清單移除。依據見
       // tests/unit/interpreter/consumed-by-parent-evidence.test.ts
@@ -201,19 +201,19 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       //     建的。四路都由父概念消費。053 當時判「判不出來」是證據不足。
       //   cpp_include_local：與 `cpp_include` 是同一件事，後者早已宣告 declarative。
     ]
-    const 偷渡 = allComponentDefs()
-      .filter((d) => 不得宣告.includes(d.conceptId) && (d.skipPaths ?? []).includes('execute'))
+    const smuggled = allComponentDefs()
+      .filter((d) => mustNotDeclare.includes(d.conceptId) && (d.skipPaths ?? []).includes('execute'))
       .map((d) => d.conceptId)
     expect(
-      偷渡,
+      smuggled,
       '以下概念實測會產生錯誤的執行結果（或根本測不到），不得宣告成「刻意不執行」：\n  ' +
-        偷渡.join('、') +
+        smuggled.join('、') +
         '\n見 specs/053-declare-noop-execute/classification.md',
     ).toEqual([])
   })
 
   it('★ 對照組：該宣告的 12 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
-    const 應宣告 = [
+    const shouldDeclare = [
       'cpp:comment', 'cpp:block_comment', 'cpp:doc_comment', 'cpp:include', 'cpp:using_namespace',
       // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
       //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
@@ -222,10 +222,10 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       'cpp:stringstream_declare', 'cpp:ifstream_declare',
       'cpp:ofstream_declare', 'cpp:pair_declare', 'cpp:case', 'cpp:default',
     ]
-    const 漏掉 = 應宣告.filter((id) => {
+    const omitted = shouldDeclare.filter((id) => {
       const d = allComponentDefs().find((x) => x.conceptId === id)
       return !d || !(d.skipPaths ?? []).includes('execute')
     })
-    expect(漏掉, `這些通過了實測卻沒拿到宣告：${漏掉.join('、')}`).toEqual([])
+    expect(omitted, `這些通過了實測卻沒拿到宣告：${omitted.join('、')}`).toEqual([])
   })
 })

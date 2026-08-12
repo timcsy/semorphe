@@ -93,18 +93,18 @@ import type { SemanticNode } from '../../src/core/types'
 
 const GUARD = 'conformance'
 
-interface 判定 {
+interface decision {
   conceptId: string
-  桶: '確定違規' | '無法確定' | '安全'
-  缺: string[]
+  bucket: '確定違規' | '無法確定' | '安全'
+  missing: string[]
   reason: string
 }
 
 interface Baseline {
   _meta: { guard: string; measuredAt: string; rule: string; note: string }
-  確定違規: number
-  無法確定: number
-  違規清單: string[]
+  certainViolations: number
+  undetermined: number
+  violationList: string[]
 }
 
 interface BlockState {
@@ -120,50 +120,50 @@ interface BlockState {
  * 分出來的理由與 `scanText` 從 `scanFile` 分出來的相同：錨在真實資料上的
  * 注入測試，會在那些資料被修好的那天失效。
  */
-export function 判定符合性(
+export function judgeConformance(
   conceptId: string,
-  放進去的接點: readonly string[],
-  回來的接點: readonly string[] | null,
-): 判定 {
-  if (!放進去的接點.length) return { conceptId, 桶: '安全', 缺: [], reason: '沒有宣告接點，或合成不出子節點' }
-  if (回來的接點 === null) {
+  slotsPutIn: readonly string[],
+  slotsGotBack: readonly string[] | null,
+): decision {
+  if (!slotsPutIn.length) return { conceptId, bucket: '安全', missing: [], reason: '沒有宣告接點，或合成不出子節點' }
+  if (slotsGotBack === null) {
     return {
       conceptId,
-      桶: '無法確定',
-      缺: [...放進去的接點],
+      bucket: '無法確定',
+      missing: [...slotsPutIn],
       reason: '走不完 render → extract（可能只能當運算式，也可能是漏了）；判不出來不計入安全',
     }
   }
-  const 缺 = 放進去的接點.filter((k) => !回來的接點.includes(k))
-  if (!缺.length) return { conceptId, 桶: '安全', 缺: [], reason: '每個放得進去的接點都回得來' }
+  const missing = slotsPutIn.filter((k) => !slotsGotBack.includes(k))
+  if (!missing.length) return { conceptId, bucket: '安全', missing: [], reason: '每個放得進去的接點都回得來' }
   return {
     conceptId,
-    桶: '確定違規',
-    缺,
-    reason: `接點 [${缺.join('、')}] 放得進語義樹，走完 render → extract 之後不見了（回來的：${回來的接點.join('、') || '無'}）`,
+    bucket: '確定違規',
+    missing,
+    reason: `接點 [${missing.join('、')}] 放得進語義樹，走完 render → extract 之後不見了（回來的：${slotsGotBack.join('、') || '無'}）`,
   }
 }
 
 
-interface 形態 { conceptId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
-const formsOf = (id: string): 形態[] =>
-  (allCppProjections() as never as 形態[]).filter((f) => f.conceptId === id)
+interface form { conceptId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
+const formsOf = (id: string): form[] =>
+  (allCppProjections() as never as form[]).filter((f) => f.conceptId === id)
 
 let extractor: PatternExtractor
-let 快取: 判定[] | null = null
+let cache: decision[] | null = null
 
-function 量一次(): 判定[] {
-  if (快取) return 快取
-  const out: 判定[] = []
+function measureOnce(): decision[] {
+  if (cache) return cache
+  const out: decision[] = []
   for (const c of allCppConcepts() as never as { conceptId: string; children?: Record<string, unknown> }[]) {
-    const 接點宣告 = Object.keys(c.children ?? {})
-    if (!接點宣告.length) continue
+    const slotDecl = Object.keys(c.children ?? {})
+    if (!slotDecl.length) continue
     let node: SemanticNode
     try {
       const s = synthMinimalNode(c as never) as { node?: SemanticNode }
       node = (s.node ?? (s as unknown as SemanticNode))
     } catch {
-      out.push({ conceptId: c.conceptId, 桶: '無法確定', 缺: 接點宣告, reason: '合成不出最小節點' })
+      out.push({ conceptId: c.conceptId, bucket: '無法確定', missing: slotDecl, reason: '合成不出最小節點' })
       continue
     }
     // ⚠️ **合成器不知道某個接點該放什麼型別的子節點**——它按 `allowed`
@@ -185,33 +185,33 @@ function 量一次(): 判定[] {
     // 而 render 走了不該走的路，於是連本來好好的 `initializer` 也被報成掉了。
     //
     // 每個接點各自跑一次，它就只會為自己的失敗負責。
-    const 全部接點 = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
-    const 缺: string[] = []
-    let 有一次渲染得出來 = false
-    for (const 這個接點 of 全部接點) {
-      const 單槽 = { ...node, children: { [這個接點]: node.children[這個接點] } }
-      let 回來: string[] | null = null
+    const allSlots = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
+    const missing: string[] = []
+    let renderedOnce = false
+    for (const thisSlot of allSlots) {
+      const singleSlot = { ...node, children: { [thisSlot]: node.children[thisSlot] } }
+      let back: string[] | null = null
       try {
-        const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [單槽 as SemanticNode] }))
-        const 抽回 = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
-        const 找 = (n: SemanticNode | null): SemanticNode | null => {
+        const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [singleSlot as SemanticNode] }))
+        const extractBack = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
+        const find = (n: SemanticNode | null): SemanticNode | null => {
           if (!n) return null
           if (n.conceptId === c.conceptId) return n
-          for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = 找(k); if (r) return r }
+          for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
           return null
         }
-        const 它 = 抽回.map((x) => 找(x as SemanticNode)).find(Boolean) ?? null
-        回來 = 它 ? Object.keys(它.children ?? {}).filter((k) => (它.children[k] ?? []).length > 0) : null
-      } catch { 回來 = null }
-      if (回來 !== null) { 有一次渲染得出來 = true; if (!回來.includes(這個接點)) 缺.push(這個接點) }
+        const it = extractBack.map((x) => find(x as SemanticNode)).find(Boolean) ?? null
+        back = it ? Object.keys(it.children ?? {}).filter((k) => (it.children[k] ?? []).length > 0) : null
+      } catch { back = null }
+      if (back !== null) { renderedOnce = true; if (!back.includes(thisSlot)) missing.push(thisSlot) }
     }
     out.push(
-      有一次渲染得出來
-        ? 判定符合性(c.conceptId, 全部接點, 全部接點.filter((k) => !缺.includes(k)))
-        : 判定符合性(c.conceptId, 全部接點, null),
+      renderedOnce
+        ? judgeConformance(c.conceptId, allSlots, allSlots.filter((k) => !missing.includes(k)))
+        : judgeConformance(c.conceptId, allSlots, null),
     )
   }
-  快取 = out
+  cache = out
   return out
 }
 
@@ -229,7 +229,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
 
   // ── 健康檢查：錨在輸入量，不在違規數 ────────────────────
   it('★ 健康檢查：掃到的元件數不得為零', () => {
-    expect(量一次().length, '一顆有接點的元件都沒掃到 → 下面的數字是假的').toBeGreaterThan(100)
+    expect(measureOnce().length, '一顆有接點的元件都沒掃到 → 下面的數字是假的').toBeGreaterThan(100)
   })
 
   it('★ 健康檢查：動態積木的那個接點必須被判為走得過', () => {
@@ -246,23 +246,23 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     // **錨在「整顆乾淨」上，等於錨在「這顆元件的每一個接點都沒問題」**，
     // 而那是一個會隨世界變動的合取。正確的錨是**單一接點**——
     // 「`INIT_0` 那條動態插槽的路走得通」在補宣告前後都成立。
-    const d = new Map(量一次().map((x) => [x.conceptId, x]))
-    for (const [id, 接點] of [['cpp:print', 'values'], ['cpp:var_declare', 'initializer'], ['cpp:if', 'then_body']] as const) {
+    const d = new Map(measureOnce().map((x) => [x.conceptId, x]))
+    for (const [id, slots] of [['cpp:print', 'values'], ['cpp:var_declare', 'initializer'], ['cpp:if', 'then_body']] as const) {
       expect(
-        d.get(id)?.缺 ?? [],
-        `${id} 的 ${接點} 是動態積木的插槽，實測走得過投影——被判成掉了代表判準退回靜態了`,
-      ).not.toContain(接點)
+        d.get(id)?.missing ?? [],
+        `${id} 的 ${slots} 是動態積木的插槽，實測走得過投影——被判成掉了代表判準退回靜態了`,
+      ).not.toContain(slots)
     }
   })
 
   // ── 棘輪 ────────────────────────────────────────────────
   it('棘輪：確定違規與無法確定都只准下降', () => {
-    const 全部 = 量一次()
-    const 違規 = 全部.filter((d) => d.桶 === '確定違規')
-    const 待查 = 全部.filter((d) => d.桶 === '無法確定')
+    const all = measureOnce()
+    const violations = all.filter((d) => d.bucket === '確定違規')
+    const pending = all.filter((d) => d.bucket === '無法確定')
 
-    printReport('符合性：確定違規', 違規.map((d) => `  ✘ ${d.conceptId} — ${d.reason}`))
-    printReport('符合性：無法確定（不計入安全）', 待查.map((d) => `  ？ ${d.conceptId} — ${d.reason}`))
+    printReport('符合性：確定違規', violations.map((d) => `  ✘ ${d.conceptId} — ${d.reason}`))
+    printReport('符合性：無法確定（不計入安全）', pending.map((d) => `  ？ ${d.conceptId} — ${d.reason}`))
 
     if (process.env.GENERATE_BASELINE) {
       writeBaseline(GUARD, {
@@ -276,25 +276,25 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
             '判不出來的（合成不出、渲染不出）歸「無法確定」，**不計入安全**。',
           note: RATCHET_NOTE,
         },
-        確定違規: 違規.length,
-        無法確定: 待查.length,
-        違規清單: 違規.map((d) => `${d.conceptId}: ${d.缺.join('、')}`).sort(),
+        certainViolations: violations.length,
+        undetermined: pending.length,
+        violationList: violations.map((d) => `${d.conceptId}: ${d.missing.join('、')}`).sort(),
       } satisfies Baseline)
     }
 
     const base = loadBaseline<Baseline>(GUARD)
     assertRatchet([
-      ['確定違規', 違規.length, base.確定違規],
-      ['無法確定', 待查.length, base.無法確定],
+      ['確定違規', violations.length, base.certainViolations],
+      ['無法確定', pending.length, base.undetermined],
     ])
   })
 
   // ── 注入：三個方向（build-guardrail 第 8、9 步）─────────
   describe('注入', () => {
     it('(a) 壞的輸入會報：接點放進去了、來回之後沒回來 → 確定違規', () => {
-      const d = 判定符合性('cpp:fake', ['values', 'source'], [])
-      expect(d.桶).toBe('確定違規')
-      expect(d.缺.sort()).toEqual(['source', 'values'])
+      const d = judgeConformance('cpp:fake', ['values', 'source'], [])
+      expect(d.bucket).toBe('確定違規')
+      expect(d.missing.sort()).toEqual(['source', 'values'])
       // 釘**理由**不只釘結果（第 8 步）——一個因為錯誤理由而給出正確結果的
       // 護欄，看起來與健康的完全一樣。
       expect(d.reason).toContain('走完 render → extract 之後不見了')
@@ -303,8 +303,8 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
 
     it('(b) 好的輸入不亂報：接點完整出來 → 安全', () => {
       // 不可省。沒有它，一個「什麼都報」的判定器也能通過 (a)。
-      const d = 判定符合性('cpp:fake', ['values'], ['values'])
-      expect(d.桶).toBe('安全')
+      const d = judgeConformance('cpp:fake', ['values'], ['values'])
+      expect(d.bucket).toBe('安全')
       expect(d.reason).toBe('每個放得進去的接點都回得來')
     })
 
@@ -312,23 +312,23 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
       // `EXPR0` ↔ `values`、`A`/`B` ↔ `left`/`right` 都是這種。
       // **走完來回之後回來的是接點名**，所以名字問題根本不會出現在這一層
       // ——那正是第一、二版死掉的地方。
-      const d = 判定符合性('cpp:fake', ['values'], ['values'])
-      expect(d.桶).toBe('安全')
+      const d = judgeConformance('cpp:fake', ['values'], ['values'])
+      expect(d.bucket).toBe('安全')
     })
 
     it('(c) 判不出來的不計入安全：渲染不出來 → 無法確定', () => {
-      const d = 判定符合性('cpp:fake', ['values'], null)
-      expect(d.桶).toBe('無法確定')
+      const d = judgeConformance('cpp:fake', ['values'], null)
+      expect(d.bucket).toBe('無法確定')
       expect(d.reason).toContain('不計入安全')
     })
 
     it('★ 部分缺只報缺的那幾個，不報全部', () => {
-      const d = 判定符合性('cpp:fake', ['params', 'body'], ['body'])
-      expect(d.缺).toEqual(['params'])
+      const d = judgeConformance('cpp:fake', ['params', 'body'], ['body'])
+      expect(d.missing).toEqual(['params'])
     })
 
     it('★ 沒有接點的元件不得被判成違規', () => {
-      expect(判定符合性('cpp:fake', [], []).桶).toBe('安全')
+      expect(judgeConformance('cpp:fake', [], []).bucket).toBe('安全')
     })
 
     // ── FR-003：第七顆忘了寫宣告，必須被抓到 ─────────────────
@@ -339,18 +339,18 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     it('★ 有 params 接點但沒宣告 childrenAsField 的元件必須被報為違規', () => {
       // 合成一顆「有接點、沒宣告」的元件：它的參數走不過投影，
       // 而**沉默不得等於通過**。
-      const 沒宣告 = 判定符合性('cpp:seventh', ['params'], ['body'])
-      expect(沒宣告.桶).toBe('確定違規')
-      expect(沒宣告.缺).toEqual(['params'])
+      const notDeclared = judgeConformance('cpp:seventh', ['params'], ['body'])
+      expect(notDeclared.bucket).toBe('確定違規')
+      expect(notDeclared.missing).toEqual(['params'])
     })
 
     it('★ 已宣告的六顆，宣告確實存在（不是靠測試放水）', () => {
       // 釘住宣告本身——有人刪掉某一顆的 `childrenAsField`，這裡先紅，
       // 而不是等到來回轉換的樣本紅。兩者都會紅，但這一條**指得出是哪一顆**。
-      const 應有 = ['cpp:lambda', 'cpp:constructor', 'cpp:method_virtual',
+      const shouldHave = ['cpp:lambda', 'cpp:constructor', 'cpp:method_virtual',
         'cpp:method_virtual_pure', 'cpp:method_override', 'cpp:template_function']
-      const 缺宣告 = 應有.filter((id) => !formsOf(id).some((f) => (f.renderMapping?.childrenAsField ?? []).length))
-      expect(缺宣告, '這些元件的 params 沒有形態映射，參數會靜默消失').toEqual([])
+      const missingDeclaration = shouldHave.filter((id) => !formsOf(id).some((f) => (f.renderMapping?.childrenAsField ?? []).length))
+      expect(missingDeclaration, '這些元件的 params 沒有形態映射，參數會靜默消失').toEqual([])
     })
   })
 })

@@ -1,84 +1,84 @@
 {
   "guard": "param-spec",
-  "讀了沒宣告": [
+  "readButUndeclared": [
     {
       "componentId": "cpp:array_declare",
       "param": "size",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/interpreter/executors/arrays.ts:16"
     },
     {
       "componentId": "cpp:class_def",
       "param": "base",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/executors/structs.ts:192"
     },
     {
       "componentId": "cpp:increment",
       "param": "NAME",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/statements.ts:318"
     },
     {
       "componentId": "cpp:increment",
       "param": "OP",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/statements.ts:319"
     },
     {
       "componentId": "cpp:increment",
       "param": "POSITION",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/statements.ts:320"
     },
     {
       "componentId": "cpp:input",
       "param": "from",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/interpreter/executors/io.ts:25"
     },
     {
       "componentId": "cpp:input",
       "param": "type",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/interpreter/executors/io.ts:95"
     },
     {
       "componentId": "cpp:input",
       "param": "variable",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/std/iostream/generators.ts:57"
     },
     {
       "componentId": "cpp:negate",
       "param": "operator",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/expressions.ts:100"
     },
     {
       "componentId": "cpp:var_assign",
       "param": "member",
-      "方向": "讀了沒宣告",
+      "direction": "讀了沒宣告",
       "where": "src/interpreter/executors/variables.ts:129"
     }
   ],
-  "退路自相矛盾": [
+  "fallbackContradicts": [
     {
       "componentId": "cpp:define",
       "param": "name",
-      "方向": "退路自相矛盾",
+      "direction": "退路自相矛盾",
       "where": "src/languages/cpp/core/executors/preprocessor.ts:30→\"\"  src/languages/cpp/core/generators/statements.ts:250→\"MACRO\""
     },
     {
       "componentId": "cpp:ifdef",
       "param": "condition",
-      "方向": "退路自相矛盾",
+      "direction": "退路自相矛盾",
       "where": "src/languages/cpp/core/executors/preprocessor.ts:35→\"\"  src/languages/cpp/core/generators/statements.ts:263→\"MACRO\""
     },
     {
       "componentId": "cpp:ifndef",
       "param": "condition",
-      "方向": "退路自相矛盾",
+      "direction": "退路自相矛盾",
       "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:268→\"MACRO\""
     }
   ],

@@ -43,7 +43,7 @@ import { paramNames, paramSpecs, isSpecified } from '../../src/core/param-spec'
 import type { ParamSpec } from '../../src/core/types'
 
 /** componentId → 宣告的參數名 */
-const 宣告 = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramNames(c.properties))]))
+const declare = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramNames(c.properties))]))
 
 /**
  * componentId → 規格（只含**已規格化**的元件）。
@@ -51,7 +51,7 @@ const 宣告 = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramNa
  * ⚠️ 只收 `isSpecified` 的。純名字清單經 `paramSpecs` 會變成
  * `kind: 'literal'` 的假規格——拿假規格去比對預設值，會對著 124 顆亂叫。
  */
-const 規格 = new Map<string, ParamSpec[]>(
+const spec = new Map<string, ParamSpec[]>(
   allCppConcepts()
     .filter((c) => isSpecified(c.properties))
     .map((c) => [c.conceptId, paramSpecs(c.properties)]),
@@ -60,7 +60,7 @@ const 規格 = new Map<string, ParamSpec[]>(
 interface Finding {
   componentId: string
   param: string
-  方向: '讀了沒宣告' | '宣告了沒人讀' | '預設值說謊' | '退路自相矛盾'
+  direction: '讀了沒宣告' | '宣告了沒人讀' | '預設值說謊' | '退路自相矛盾'
   where: string
 }
 
@@ -69,10 +69,10 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
   const out: Finding[] = []
 
   for (const [cid, params] of reads) {
-    const decl = 宣告.get(cid)
+    const decl = declare.get(cid)
     if (!decl) continue // 不是登錄表裡的元件——那是 audit-component-id-integrity 的事
     for (const [p, wheres] of params) {
-      if (!decl.has(p)) out.push({ componentId: cid, param: p, 方向: '讀了沒宣告', where: wheres[0] })
+      if (!decl.has(p)) out.push({ componentId: cid, param: p, direction: '讀了沒宣告', where: wheres[0] })
     }
   }
 
@@ -80,12 +80,12 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
   // `cpp_string_find_first_not_of.obj` 就是這樣：它沒有 TS 產生器，
   // 產出走 `"${OBJ}.find_first_not_of(${ARG})"`。
   const fromTemplate = templateReads()
-  for (const [cid, decl] of 宣告) {
+  for (const [cid, decl] of declare) {
     const read = reads.get(cid)
     const tpl = fromTemplate.get(cid)
     for (const p of decl) {
       if (read?.has(p) || tpl?.has(p)) continue
-      out.push({ componentId: cid, param: p, 方向: '宣告了沒人讀', where: '（無）' })
+      out.push({ componentId: cid, param: p, direction: '宣告了沒人讀', where: '（無）' })
     }
   }
 
@@ -95,7 +95,7 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
   // 它就是 SC-004 要的「消費者會叫」：規格不是寫給人看的裝飾，
   // 寫錯一個字，這裡會指名。
   const fallbacks = fallbacksByComponent(extra)
-  for (const [cid, specs] of 規格) {
+  for (const [cid, specs] of spec) {
     const fb = fallbacks.get(cid)
     if (!fb) continue
     for (const sp of specs) {
@@ -115,7 +115,7 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
           out.push({
             componentId: cid,
             param: sp.name,
-            方向: '退路自相矛盾',
+            direction: '退路自相矛盾',
             where: actual.map((a) => `${a.where}→${JSON.stringify(a.value)}`).join('  '),
           })
           continue
@@ -126,7 +126,7 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
         out.push({
           componentId: cid,
           param: sp.name,
-          方向: '預設值說謊',
+          direction: '預設值說謊',
           where: `宣告 default=${JSON.stringify(sp.default)}，而 ${a.where} 退路是 ${JSON.stringify(a.value)}`,
         })
       }
@@ -140,7 +140,7 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
 
 describe('自我驗證：這條護欄的判準是準的', () => {
   const reads = paramReadsByComponent()
-  const 讀了 = (c: string, p: string): boolean => reads.get(c)?.has(p) ?? false
+  const read2 = (c: string, p: string): boolean => reads.get(c)?.has(p) ?? false
 
   it('★ 已知答案的樣本——**答案是查過的，不是記得的**', () => {
     // ⚠️ 這一支是整條護欄的錨點。判準改過三次，三種不同的錯法，
@@ -153,15 +153,15 @@ describe('自我驗證：這條護欄的判準是準的', () => {
     // 而 `cpp_include.local` 那一筆是**我的期望答案錯了**（我以為有人讀它，
     // 查了之後沒有）——`build-guardrail` 第 6 步說「先在已知答案上驗」，
     // 這一輪補上它沒說出來的前提：**那個答案必須是查過的**。
-    const 樣本: [string, string, boolean, string][] = [
+    const samples: [string, string, boolean, string][] = [
       ['cpp:var_declare', 'init_style', true, 'core/generators/declarations.ts:30 用它分支'],
       ['cpp:array_declare', 'size', true, 'interpreter/executors/arrays.ts:16 讀它'],
       ['cpp:define', 'value', true, 'core/generators/statements.ts:248，真的是自己的'],
       ['cpp:print', 'value', false, '那一行是子節點的 value（values.map(v => v.properties.value)）'],
       ['cpp:include', 'local', false, '沒有任何程式碼讀它——實例帶著它，而它是死資料'],
     ]
-    for (const [cid, p, exp, why] of 樣本) {
-      expect(讀了(cid, p), `${cid}.${p} 應為「${exp ? '讀了' : '沒讀'}」——${why}`).toBe(exp)
+    for (const [cid, p, exp, why] of samples) {
+      expect(read2(cid, p), `${cid}.${p} 應為「${exp ? '讀了' : '沒讀'}」——${why}`).toBe(exp)
     }
   })
 
@@ -173,7 +173,7 @@ describe('自我驗證：這條護欄的判準是準的', () => {
       },
     ]).filter((f) => f.param === '__合成_沒宣告__')
     expect(hit, '合成的違規沒有被報出來 → **護欄壞了**').toHaveLength(1)
-    expect(hit[0].方向).toBe('讀了沒宣告')
+    expect(hit[0].direction).toBe('讀了沒宣告')
     expect(hit[0].where, 'FR-002：只說有幾筆修不了，要指名檔案行號').toContain('合成/讀了沒宣告.ts:1')
   })
 
@@ -181,7 +181,7 @@ describe('自我驗證：這條護欄的判準是準的', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     const hit = measure([
       { file: '合成/正確.ts', source: "g.set('cpp:var_declare', (node, ctx) => node.properties.name)\n" },
-    ]).filter((f) => f.componentId === 'cpp:var_declare' && f.param === 'name' && f.方向 === '讀了沒宣告')
+    ]).filter((f) => f.componentId === 'cpp:var_declare' && f.param === 'name' && f.direction === '讀了沒宣告')
     expect(hit, '一個已宣告的參數被報成違規 → 這條護欄會亂叫').toEqual([])
   })
 
@@ -199,23 +199,23 @@ describe('自我驗證：這條護欄的判準是準的', () => {
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     expect(scanParamReads().length, '零筆讀取 → 是掃描壞了，不是沒有人讀參數').toBeGreaterThan(100)
-    expect(宣告.size, '登錄表是空的 → 每一顆都會被誤報').toBeGreaterThan(150)
+    expect(declare.size, '登錄表是空的 → 每一顆都會被誤報').toBeGreaterThan(150)
   })
 })
 
 // ─── 規格自身的自洽（規格化之後才可能檢查的三件事）─────────────────
 
-interface 規格問題 { conceptId: string; 問題: string }
+interface specIssues { conceptId: string; issue: string }
 
 /**
- * @param 注入 合成的元件宣告，用來自我否證。
+ * @param inject 合成的元件宣告，用來自我否證。
  */
-function 檢規格(注入: { conceptId: string; properties: ParamSpec[]; blockDef?: unknown }[] = []): 規格問題[] {
-  const out: 規格問題[] = []
-  const concepts = [...(allCppConcepts() as unknown as { conceptId: string; properties?: unknown }[]), ...注入]
+function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDef?: unknown }[] = []): specIssues[] {
+  const out: specIssues[] = []
+  const concepts = [...(allCppConcepts() as unknown as { conceptId: string; properties?: unknown }[]), ...inject]
 
   // 積木下拉的選項——`values` 的來源真相
-  const 下拉 = new Map<string, Map<string, string[]>>()
+  const dropdown = new Map<string, Map<string, string[]>>()
   for (const proj of allCppProjections() as unknown as Record<string, any>[]) {
     const bd = proj.blockDef as Record<string, unknown> | undefined
     const rm = (proj.renderMapping as { fields?: Record<string, string> } | undefined)?.fields ?? {}
@@ -225,9 +225,9 @@ function 檢規格(注入: { conceptId: string; properties: ParamSpec[]; blockDe
       if (a.type !== 'field_dropdown' || !Array.isArray(a.options)) continue
       const param = rm[String(a.name)]
       if (!param) continue
-      const m = 下拉.get(proj.conceptId as string) ?? new Map<string, string[]>()
+      const m = dropdown.get(proj.conceptId as string) ?? new Map<string, string[]>()
       m.set(param, (a.options as unknown[][]).map((o) => String(o[1])))
-      下拉.set(proj.conceptId as string, m)
+      dropdown.set(proj.conceptId as string, m)
     }
   }
 
@@ -237,7 +237,7 @@ function 檢規格(注入: { conceptId: string; properties: ParamSpec[]; blockDe
 
     // ① 有參數就要規格化——否則新元件會靜靜地退回純名字清單
     if (!isSpecified(raw)) {
-      out.push({ conceptId: c.conceptId, 問題: `參數未規格化（仍是純名字：${paramNames(raw).join('、')}）` })
+      out.push({ conceptId: c.conceptId, issue: `參數未規格化（仍是純名字：${paramNames(raw).join('、')}）` })
       continue
     }
 
@@ -245,20 +245,20 @@ function 檢規格(注入: { conceptId: string; properties: ParamSpec[]; blockDe
       // ② enum 必須有 values，且 default 必須在 values 裡
       if (sp.kind === 'enum') {
         if (!sp.values || sp.values.length === 0) {
-          out.push({ conceptId: c.conceptId, 問題: `${sp.name} 是 enum 卻沒有 values` })
+          out.push({ conceptId: c.conceptId, issue: `${sp.name} 是 enum 卻沒有 values` })
         } else if (sp.default !== undefined && !sp.values.includes(sp.default)) {
           out.push({
             conceptId: c.conceptId,
-            問題: `${sp.name} 的 default ${JSON.stringify(sp.default)} 不在自己的 values（${sp.values.join('|')}）裡`,
+            issue: `${sp.name} 的 default ${JSON.stringify(sp.default)} 不在自己的 values（${sp.values.join('|')}）裡`,
           })
         }
       }
       // ③ enum 的 values 必須與積木下拉的選項一致——**雙重真相的老病**
-      const opts = 下拉.get(c.conceptId)?.get(sp.name)
+      const opts = dropdown.get(c.conceptId)?.get(sp.name)
       if (sp.kind === 'enum' && opts && JSON.stringify(opts) !== JSON.stringify(sp.values ?? [])) {
         out.push({
           conceptId: c.conceptId,
-          問題: `${sp.name} 的 values（${(sp.values ?? []).join('|')}）與積木下拉（${opts.join('|')}）不一致`,
+          issue: `${sp.name} 的 values（${(sp.values ?? []).join('|')}）與積木下拉（${opts.join('|')}）不一致`,
         })
       }
     }
@@ -267,7 +267,7 @@ function 檢規格(注入: { conceptId: string; properties: ParamSpec[]; blockDe
 }
 
 describe('規格自身要自洽', () => {
-  const 合成 = (properties: ParamSpec[]): { conceptId: string; properties: ParamSpec[] } => ({
+  const synthetic = (properties: ParamSpec[]): { conceptId: string; properties: ParamSpec[] } => ({
     conceptId: '__合成__',
     properties,
   })
@@ -276,16 +276,16 @@ describe('規格自身要自洽', () => {
     // 這不是假想的錯法。`cpp_malloc` 真的長這樣：下拉給 `int|float|double|char`，
     // 而產生器的退路是 `int*`——因為 `type` 在那顆元件裡是**轉型型別**（指標）。
     // 結果使用者從積木選 `int`，產出 `(int)malloc(…)`，不合法的 C++。
-    const hit = 檢規格([合成([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'c' }])])
+    const hit = checkSpec([synthetic([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'c' }])])
     expect(hit.filter((x) => x.conceptId === '__合成__')).toHaveLength(1)
   })
 
   it('★ 注入：enum 沒有 values → **必須被報出**', () => {
-    expect(檢規格([合成([{ name: 'k', kind: 'enum' }])]).filter((x) => x.conceptId === '__合成__')).toHaveLength(1)
+    expect(checkSpec([synthetic([{ name: 'k', kind: 'enum' }])]).filter((x) => x.conceptId === '__合成__')).toHaveLength(1)
   })
 
   it('★ 注入：參數沒規格化（純名字） → **必須被報出**', () => {
-    const hit = 檢規格([{ conceptId: '__合成2__', properties: ['just_a_name'] as unknown as ParamSpec[] }])
+    const hit = checkSpec([{ conceptId: '__合成2__', properties: ['just_a_name'] as unknown as ParamSpec[] }])
     expect(hit.filter((x) => x.conceptId === '__合成2__')).toHaveLength(1)
   })
 
@@ -296,21 +296,21 @@ describe('規格自身要自洽', () => {
     //
     // 用一顆**真的有下拉的元件**（`arithmetic` 的 `operator`）宣告錯的值域，
     // 才證明得了這條有接上。
-    const hit = 檢規格([
+    const hit = checkSpec([
       { conceptId: 'cpp:arithmetic', properties: [{ name: 'operator', kind: 'enum', values: ['+'], default: '+' }] },
     ]).filter((x) => x.conceptId === 'cpp:arithmetic')
     expect(hit, '值域與積木下拉不一致沒被報出 → 第 ③ 條沒有接上').toHaveLength(1)
-    expect(hit[0].問題).toContain('與積木下拉')
+    expect(hit[0].issue).toContain('與積木下拉')
   })
 
   it('★ 反向：一筆完全正確的規格 → **必須不被報出**', () => {
-    const ok = 檢規格([合成([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'a' }])])
+    const ok = checkSpec([synthetic([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'a' }])])
     expect(ok.filter((x) => x.conceptId === '__合成__'), '正確的規格被報成問題 → 這條會亂叫').toEqual([])
   })
 
   it('★ 規格自洽 = 0', () => {
     // 硬性零：規格是這一輪自己寫的，寫錯就改——修法便宜（第 6.8 步）。
-    expect(檢規格().map((x) => `${x.conceptId}：${x.問題}`)).toEqual([])
+    expect(checkSpec().map((x) => `${x.conceptId}：${x.issue}`)).toEqual([])
   })
 })
 
@@ -318,29 +318,29 @@ describe('規格自身要自洽', () => {
 
 describe('參數規格與實際使用的一致性', () => {
   const findings = measure()
-  const 讀了沒宣告 = findings.filter((f) => f.方向 === '讀了沒宣告')
-  const 宣告了沒人讀 = findings.filter((f) => f.方向 === '宣告了沒人讀')
-  const 預設值說謊 = findings.filter((f) => f.方向 === '預設值說謊')
-  const 退路自相矛盾 = findings.filter((f) => f.方向 === '退路自相矛盾')
+  const readButUndeclared = findings.filter((f) => f.direction === '讀了沒宣告')
+  const declaredUnread = findings.filter((f) => f.direction === '宣告了沒人讀')
+  const defaultLies = findings.filter((f) => f.direction === '預設值說謊')
+  const fallbackContradicts = findings.filter((f) => f.direction === '退路自相矛盾')
 
   it('報表', () => {
     printReport('參數規格一致性', [
-      `元件 ${宣告.size}（已規格化 ${規格.size}）｜讀了沒宣告 ${讀了沒宣告.length}｜` +
-        `宣告了沒人讀 ${宣告了沒人讀.length}｜預設值說謊 ${預設值說謊.length}｜` +
-        `退路自相矛盾 ${退路自相矛盾.length}`,
+      `元件 ${declare.size}（已規格化 ${spec.size}）｜讀了沒宣告 ${readButUndeclared.length}｜` +
+        `宣告了沒人讀 ${declaredUnread.length}｜預設值說謊 ${defaultLies.length}｜` +
+        `退路自相矛盾 ${fallbackContradicts.length}`,
       '',
-      ...(退路自相矛盾.length
-        ? ['**退路自相矛盾**（程式碼自己有兩個缺省——已宣告 required，處置要逐條看）：', ...退路自相矛盾.map((f) => `     ${f.componentId}.${f.param}  ${f.where}`), '']
+      ...(fallbackContradicts.length
+        ? ['**退路自相矛盾**（程式碼自己有兩個缺省——已宣告 required，處置要逐條看）：', ...fallbackContradicts.map((f) => `     ${f.componentId}.${f.param}  ${f.where}`), '']
         : []),
-      ...(預設值說謊.length
-        ? ['**預設值說謊**（規格與產生器退路不符——改其中一邊）：', ...預設值說謊.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`), '']
+      ...(defaultLies.length
+        ? ['**預設值說謊**（規格與產生器退路不符——改其中一邊）：', ...defaultLies.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`), '']
         : []),
       '**讀了沒宣告**（規格不完整——補宣告）：',
-      ...讀了沒宣告.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`),
+      ...readButUndeclared.map((f) => `  ⚠️ ${f.componentId}.${f.param}  ${f.where}`),
       '',
       '**宣告了沒人讀**（殘骸或機制沒接上——刪，或說明它為誰而存在）：',
-      ...宣告了沒人讀.slice(0, 30).map((f) => `     ${f.componentId}.${f.param}`),
-      宣告了沒人讀.length > 30 ? `     …還有 ${宣告了沒人讀.length - 30} 筆` : '',
+      ...declaredUnread.slice(0, 30).map((f) => `     ${f.componentId}.${f.param}`),
+      declaredUnread.length > 30 ? `     …還有 ${declaredUnread.length - 30} 筆` : '',
     ])
     expect(true).toBe(true)
   })
@@ -359,25 +359,25 @@ describe('參數規格與實際使用的一致性', () => {
     // → 這是 `build-guardrail` 第 6.8 步的判準在真實情境下的第二種答案：
     //   **「留一筆還成立嗎」要問的是規範，而「用棘輪還是硬性零」要看修法的代價。**
     //   大量既有違規 ＋ 每一筆修法都要驗行為 = 棘輪，慢慢還。
-    const current = { guard: 'param-spec', 讀了沒宣告, 退路自相矛盾 }
+    const current = { guard: 'param-spec', readButUndeclared, fallbackContradicts }
     if (process.env.GENERATE_BASELINE) {
       writeBaseline('param-spec', current)
       return
     }
     const base = loadBaseline<typeof current>('param-spec')
-    const added = newItems(讀了沒宣告, base.讀了沒宣告, (f) => `${f.componentId}.${f.param}`)
+    const added = newItems(readButUndeclared, base.readButUndeclared, (f) => `${f.componentId}.${f.param}`)
     expect(
       added.map((f) => `${f.componentId}.${f.param}  ${f.where}`),
       '新增了「程式碼讀了規格裡沒有的參數」——規格更不完整了。',
     ).toEqual([])
-    const added2 = newItems(退路自相矛盾, base.退路自相矛盾 ?? [], (f) => `${f.componentId}.${f.param}`)
+    const added2 = newItems(fallbackContradicts, base.fallbackContradicts ?? [], (f) => `${f.componentId}.${f.param}`)
     expect(
       added2.map((f) => `${f.componentId}.${f.param}  ${f.where}`),
       '新增了「同一個參數在兩處有不同退路」——產生與解讀對缺省的看法不一致。',
     ).toEqual([])
     assertRatchet([
-      ['讀了沒宣告', 讀了沒宣告.length, base.讀了沒宣告.length],
-      ['退路自相矛盾', 退路自相矛盾.length, (base.退路自相矛盾 ?? []).length],
+      ['讀了沒宣告', readButUndeclared.length, base.readButUndeclared.length],
+      ['退路自相矛盾', fallbackContradicts.length, (base.fallbackContradicts ?? []).length],
     ])
   })
 
@@ -389,7 +389,7 @@ describe('參數規格與實際使用的一致性', () => {
     // 範圍限定讓它可以是硬性零：124 顆未規格化的不在裡面，不會逼出棘輪。
     // 規格化推進到哪，這條就守到哪。
     expect(
-      預設值說謊.map((f) => `${f.componentId}.${f.param}｜${f.where}`),
+      defaultLies.map((f) => `${f.componentId}.${f.param}｜${f.where}`),
       '規格宣告的預設值與程式碼實際的退路不一樣——規格在說謊。',
     ).toEqual([])
   })

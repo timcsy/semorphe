@@ -28,8 +28,8 @@ beforeAll(async () => {
 })
 
 const H = '#include <iostream>\n#include <string>\n#include <vector>\nusing namespace std;\n'
-async function 跑(本體: string): Promise<string> {
-  const tree = parser.parse(H + 本體)
+async function run(bodyText: string): Promise<string> {
+  const tree = parser.parse(H + bodyText)
   const t = createTestLifter().lift(tree!.rootNode as never) as SemanticNode
   const i = new SemanticInterpreter({ maxSteps: 100000 })
   await i.execute(t)
@@ -38,25 +38,25 @@ async function 跑(本體: string): Promise<string> {
 
 describe('`.size()` 在字串上要與 `.length()` 同義', () => {
   it('★ s.size() 回字元數', async () => {
-    expect(await 跑(`int main(){ string s="abc"; cout << s.size(); }`)).toBe('3')
+    expect(await run(`int main(){ string s="abc"; cout << s.size(); }`)).toBe('3')
   })
 
   it('★ 對照組：s.length() 本來就對，不得回歸', async () => {
-    expect(await 跑(`int main(){ string s="abc"; cout << s.length(); }`)).toBe('3')
+    expect(await run(`int main(){ string s="abc"; cout << s.length(); }`)).toBe('3')
   })
 
   it('★ 用 size() 當迴圈條件要跑滿（這是那 5 筆的形狀）', async () => {
     expect(
-      await 跑(`int main(){ string s="abc"; for(int i=0;i<s.size();i++) cout<<s[i]; }`),
+      await run(`int main(){ string s="abc"; for(int i=0;i<s.size();i++) cout<<s[i]; }`),
     ).toBe('abc')
   })
 
   it('★ 對照組：真的容器的 size() 不得回歸', async () => {
-    expect(await 跑(`int main(){ vector<int> v={1,2,3}; cout << v.size(); }`)).toBe('3')
+    expect(await run(`int main(){ vector<int> v={1,2,3}; cout << v.size(); }`)).toBe('3')
   })
 
   it('★ 對照組：空容器的 size() 仍然是 0（FR-004，反向不可省）', async () => {
     // 沒有這一支，「一律丟錯」也會通過「非容器要出聲」那一條。
-    expect(await 跑(`int main(){ vector<int> v; cout << v.size(); }`)).toBe('0')
+    expect(await run(`int main(){ vector<int> v; cout << v.size(); }`)).toBe('0')
   })
 })

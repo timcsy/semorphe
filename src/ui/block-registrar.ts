@@ -1183,31 +1183,31 @@ export class BlockRegistrar {
      *
      * **它們全綠不代表這裡是對的。改這一段必須開瀏覽器。**
      */
-    const 定義參數列 = (
-      目標: any,
-      設定: {
+    const defParamList = (
+      target: any,
+      config: {
         /** 每個參數要不要一個名字輸入框 */
-        帶名字欄位: boolean
+        withNameField: boolean
         /** 開括號的 i18n 鍵與 fallback。⚠️ fallback 必須是原本顯示的字元 */
-        開括號: [鍵: string, 原字元: string]
-        閉括號: [鍵: string, 原字元: string]
+        openParen: [key: string, rawChar: string]
+        closeParen: [key: string, rawChar: string]
         /** `PARAMS_END` 要移到哪個 input 之前；`null` = 不移 */
-        尾端移到: string | null
+        moveTailTo: string | null
       },
     ): void => {
-      const 訊息 = ([鍵, 原]: [string, string]): string => Blockly.Msg[鍵] || 原
+      const message = ([key, original]: [string, string]): string => Blockly.Msg[key] || original
 
-      目標.paramCount_ = 0
+      target.paramCount_ = 0
 
-      目標.rebuildParamLabels_ = function (this: any): void {
+      target.rebuildParamLabels_ = function (this: any): void {
         const wasAtMin = this.paramCount_ <= 0
         if (this.getInput('PARAMS_LABEL')) this.removeInput('PARAMS_LABEL')
         if (this.getInput('PARAMS_END')) this.removeInput('PARAMS_END')
         if (this.paramCount_ > 0) {
-          this.appendDummyInput('PARAMS_LABEL').appendField(訊息(設定.開括號))
+          this.appendDummyInput('PARAMS_LABEL').appendField(message(config.openParen))
           this.moveInputBefore('PARAMS_LABEL', 'PARAM_0')
           this.appendDummyInput('PARAMS_END')
-            .appendField(訊息(設定.閉括號))
+            .appendField(message(config.closeParen))
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
             .appendField(
               new Blockly.FieldImage(wasAtMin ? MINUS_DISABLED_IMG : MINUS_IMG, 20, 20, '-', () => this.minusParam_()),
@@ -1222,15 +1222,15 @@ export class BlockRegistrar {
               'MINUS_BTN',
             )
         }
-        if (設定.尾端移到) this.moveInputBefore('PARAMS_END', 設定.尾端移到)
+        if (config.moveTailTo) this.moveInputBefore('PARAMS_END', config.moveTailTo)
       }
 
-      目標.plusParam_ = function (this: any): void {
+      target.plusParam_ = function (this: any): void {
         const idx = this.paramCount_
         const input = this.appendDummyInput(`PARAM_${idx}`)
         if (idx > 0) input.appendField(',')
         input.appendField(self.createOpenDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
-        if (設定.帶名字欄位) {
+        if (config.withNameField) {
           input.appendField(new Blockly.FieldTextInput(`p${idx}`) as Blockly.Field, `PARAM_${idx}`)
         }
         this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
@@ -1239,7 +1239,7 @@ export class BlockRegistrar {
         setMinusState(this, false)
       }
 
-      目標.minusParam_ = function (this: any): void {
+      target.minusParam_ = function (this: any): void {
         if (this.paramCount_ <= 0) return
         this.paramCount_--
         this.removeInput(`PARAM_${this.paramCount_}`)
@@ -1247,13 +1247,13 @@ export class BlockRegistrar {
         setMinusState(this, this.paramCount_ <= 0)
       }
 
-      目標.saveExtraState = function (this: any): { paramCount: number } | null {
+      target.saveExtraState = function (this: any): { paramCount: number } | null {
         return this.paramCount_ > 0 ? { paramCount: this.paramCount_ } : null
       }
 
       // ⚠️ **靠反覆呼叫 `plusParam_` 重建，不要改成直接設 `paramCount_`。**
       // 舊存檔只存了數字，插槽是這裡長出來的——改掉這個機制，舊存檔就載不回來。
-      目標.loadExtraState = function (this: any, state: { paramCount?: number }): void {
+      target.loadExtraState = function (this: any, state: { paramCount?: number }): void {
         const count = state?.paramCount ?? 0
         while (this.paramCount_ < count) this.plusParam_()
       }
@@ -1295,11 +1295,11 @@ export class BlockRegistrar {
         },
       }
       // 參數列（型別 ＋ 名字）由工廠提供——與 `cpp_forward_decl` 共用同一份。
-      定義參數列(Blockly.Blocks['cpp_func_def'], {
-        帶名字欄位: true,
-        開括號: ['U_FUNC_DEF_PARAMS_OPEN', '（參數'],
-        閉括號: ['U_FUNC_DEF_PARAMS_CLOSE', '）'],
-        尾端移到: 'BODY',
+      defParamList(Blockly.Blocks['cpp_func_def'], {
+        withNameField: true,
+        openParen: ['U_FUNC_DEF_PARAMS_OPEN', '（參數'],
+        closeParen: ['U_FUNC_DEF_PARAMS_CLOSE', '）'],
+        moveTailTo: 'BODY',
       })
     }
 
@@ -1811,11 +1811,11 @@ export class BlockRegistrar {
       // 參數列（只有型別，沒有名字——前向宣告不需要）由同一個工廠提供。
       // ⚠️ 括號改走 `Blockly.Msg`，**fallback 是原本的 `(`／`)`**——
       // 翻譯鍵補上之前顯示完全不變。原本沒走 i18n 是抄過去時漏掉的。
-      定義參數列(Blockly.Blocks['cpp_forward_decl'], {
-        帶名字欄位: false,
-        開括號: ['C_FORWARD_DECL_PARAMS_OPEN', '('],
-        閉括號: ['C_FORWARD_DECL_PARAMS_CLOSE', ')'],
-        尾端移到: null,
+      defParamList(Blockly.Blocks['cpp_forward_decl'], {
+        withNameField: false,
+        openParen: ['C_FORWARD_DECL_PARAMS_OPEN', '('],
+        closeParen: ['C_FORWARD_DECL_PARAMS_CLOSE', ')'],
+        moveTailTo: null,
       })
     }
 

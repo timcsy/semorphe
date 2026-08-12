@@ -9,10 +9,10 @@
  */
 import { registerCallConcept } from '../../../core/component/call-concepts'
 
-const 二元函式 = ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']
+const binaryFuncs = ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']
 
 export function registerLift(): void {
-  registerCallConcept(二元函式, {
+  registerCallConcept(binaryFuncs, {
     conceptId: 'cpp:math_binary',
     argSlots: ['arg1', 'arg2'],
     funcProp: 'func',

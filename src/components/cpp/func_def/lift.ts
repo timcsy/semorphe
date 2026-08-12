@@ -6,7 +6,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建func_def(
+export function buildFuncDef(
   name: string,
   returnType: string,
   children: Record<string, SemanticNode[]>,

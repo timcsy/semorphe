@@ -43,7 +43,7 @@ beforeAll(async () => {
 })
 
 /** 渲染出來的積木型別——**形態**驗在這裡，不在身分上 */
-function 積木型別(code: string): string[] {
+function blockType(code: string): string[] {
   const sem = lifter.lift(tp.parse(code)!.rootNode as never)
   const state = renderToBlocklyState(sem as never) as { blocks?: { blocks?: unknown[] } }
   const out: string[] = []
@@ -88,15 +88,15 @@ describe('方法呼叫：位置決定形態，不決定身分', () => {
   })
 
   it('★ 敘述位置渲染成敘述積木', () => {
-    const 型別 = 積木型別('int main(){ MyObj x; x.doThing(); }')
+    const type = blockType('int main(){ MyObj x; x.doThing(); }')
     // 積木型別，不是身分——遷移不動它
-    expect(型別).toContain('cpp_method_call')
+    expect(type).toContain('cpp_method_call')
   })
 
   it('★ 運算式位置渲染成**運算式積木**（只釘一個方向的話，「永遠回敘述版」也會過）', () => {
-    const 型別 = 積木型別('int main(){ MyObj x; int a = x.getThing(); }')
+    const type = blockType('int main(){ MyObj x; int a = x.getThing(); }')
     expect(
-      型別,
+      type,
       '運算式位置沒拿到運算式形態——那會讓賦值的右邊掉進 raw_expression',
     ).toContain('cpp_method_call_expression')
   })

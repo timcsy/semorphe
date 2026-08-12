@@ -59,11 +59,11 @@ export function loadBaseline<T>(guard: string): T {
 export function writeBaseline(guard: string, data: object): void {
   const file = path.join(BASELINE_DIR, `${guard}.json`)
   fs.mkdirSync(BASELINE_DIR, { recursive: true })
-  const 舊 = fs.existsSync(file)
+  const old = fs.existsSync(file)
     ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: unknown })
     : {}
-  const 帶著 = 舊._meta !== undefined ? { _meta: 舊._meta, ...data } : data
-  fs.writeFileSync(file, JSON.stringify(帶著, null, 2) + '\n', 'utf8')
+  const carrying = old._meta !== undefined ? { _meta: old._meta, ...data } : data
+  fs.writeFileSync(file, JSON.stringify(carrying, null, 2) + '\n', 'utf8')
 }
 
 /**
@@ -173,11 +173,11 @@ export function assertRatchet(rows: readonly [string, number, number][]): void {
  * ⚠️ **介面刻意要兩個參數**——逼呼叫者分開想「人要看到什麼」與
  * 「什麼東西變了才算變了」。只給一個字串的話，下一個人還是會傳行號。
  *
- * @param 顯示 報表上給人看的（檔名、語料開頭）——**可以重複**
- * @param 識別內容 決定「是不是同一筆」的內容——**變了就該是新的一筆**
+ * @param display 報表上給人看的（檔名、語料開頭）——**可以重複**
+ * @param identityContent 決定「是不是同一筆」的內容——**變了就該是新的一筆**
  */
-export function 判定鍵(顯示: string, 識別內容: string): string {
+export function decisionKey(display: string, identityContent: string): string {
   let h = 0
-  for (let i = 0; i < 識別內容.length; i++) h = ((h << 5) - h + 識別內容.charCodeAt(i)) | 0
-  return `${顯示}#${(h >>> 0).toString(36)}`
+  for (let i = 0; i < identityContent.length; i++) h = ((h << 5) - h + identityContent.charCodeAt(i)) | 0
+  return `${display}#${(h >>> 0).toString(36)}`
 }

@@ -12,9 +12,9 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建自動宣告(name: string, 初始值: SemanticNode | null): SemanticNode {
-  return 初始值
-    ? createNode('cpp:var_declare_auto', { name: name }, { initializer: [初始值] })
+export function buildAutoDeclare(name: string, initial: SemanticNode | null): SemanticNode {
+  return initial
+    ? createNode('cpp:var_declare_auto', { name: name }, { initializer: [initial] })
     : createNode('cpp:var_declare_auto', { name: name })
 }
 

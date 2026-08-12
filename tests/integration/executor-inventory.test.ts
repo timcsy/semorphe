@@ -96,18 +96,18 @@ describe('執行器清冊：搬移前後認得的概念必須完全相同', () =
     const now = currentConcepts()
     const base = (JSON.parse(fs.readFileSync(ASSET, 'utf8')) as Inventory).concepts
 
-    const 少了 = base.filter((c) => !now.includes(c))
-    const 多了 = now.filter((c) => !base.includes(c))
+    const lost = base.filter((c) => !now.includes(c))
+    const extra = now.filter((c) => !base.includes(c))
 
     expect(
-      少了,
-      `搬移途中掉了 ${少了.length} 個概念的執行器：\n  ${少了.join('\n  ')}\n` +
+      lost,
+      `搬移途中掉了 ${lost.length} 個概念的執行器：\n  ${lost.join('\n  ')}\n` +
         '**這正是這支測試存在的理由**——輸出比對漏掉它們不會現形。',
     ).toEqual([])
 
     expect(
-      多了,
-      `多出 ${多了.length} 個概念：\n  ${多了.join('\n  ')}\n` +
+      extra,
+      `多出 ${extra.length} 個概念：\n  ${extra.join('\n  ')}\n` +
         '多出來通常代表同一個概念被註冊了兩次（另有護欄在看），或是這次刻意新增——' +
         '若是刻意的，重新產生清冊並在 commit 訊息說明。',
     ).toEqual([])
@@ -120,17 +120,17 @@ describe('執行器清冊：搬移前後認得的概念必須完全相同', () =
 
 describe('落點與宣告一致——清冊比對抓漏失，這條抓錯置', () => {
   it('★ 每個執行器檔裡的概念，都必須宣告在同一個模組', () => {
-    const 錯置: string[] = []
+    const misplaced: string[] = []
     for (const f of listExecutorFiles()) {
-      const 宣告在此 = conceptsDeclaredIn(f.moduleDir)
+      const declaredHere = conceptsDeclaredIn(f.moduleDir)
       for (const cid of registeredIn(f.file)) {
-        if (!宣告在此.has(cid)) 錯置.push(`${cid} 的執行器在 ${f.moduleDir}，但它宣告在別處`)
+        if (!declaredHere.has(cid)) misplaced.push(`${cid} 的執行器在 ${f.moduleDir}，但它宣告在別處`)
       }
     }
     expect(
-      錯置,
+      misplaced,
       '搬到不符宣告的模組——**集合比對抓不到這種錯**（概念還在，只是跑錯地方）：\n  ' +
-        錯置.join('\n  '),
+        misplaced.join('\n  '),
     ).toEqual([])
   })
 })

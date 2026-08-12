@@ -11,11 +11,11 @@ import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
 import { isLineBreak } from './core/node-traits'
 import { ioTraitOf } from './core/node-traits'
-import { 建print_formatted } from '../../components/cpp/print_formatted/lift'
-import { 建input_formatted } from '../../components/cpp/input_formatted/lift'
-import { 建print } from '../../components/cpp/print/lift'
-import { 建input } from '../../components/cpp/input/lift'
-import { 建include } from '../../components/cpp/include/lift'
+import { buildPrintFormatted } from '../../components/cpp/print_formatted/lift'
+import { buildInputFormatted } from '../../components/cpp/input_formatted/lift'
+import { buildPrint } from '../../components/cpp/print/lift'
+import { buildInput } from '../../components/cpp/input/lift'
+import { buildInclude } from '../../components/cpp/include/lift'
 import { isIncludeDirective } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
@@ -48,7 +48,7 @@ interface StyleExceptionRule {
  * ⚠️ 問**性狀**不問身分——規則要講出兩端，而該被抽掉的是端點的**名字**，
  * 不是「兩端」本身。
  */
-function 是這個角色與風格(node: SemanticNode, role: string, style: string): boolean {
+function matchesRoleAndStyle(node: SemanticNode, role: string, style: string): boolean {
   const t = ioTraitOf(node.conceptId)
   return t?.role === role && t?.style === style
 }
@@ -71,7 +71,7 @@ const bitsHeaderRule: StyleExceptionRule = {
     const headers = style.ioPreference === 'iostream'
       ? ['iostream']
       : ['cstdio']
-    return headers.map(h => 建include(h))
+    return headers.map(h => buildInclude(h))
   },
 }
 
@@ -84,7 +84,7 @@ const cstdioHeaderRule: StyleExceptionRule = {
   label: () => '#include <cstdio>',
   suggestion: () => '#include <iostream>',
   convert: () => {
-    return [建include('iostream')]
+    return [buildInclude('iostream')]
   },
 }
 
@@ -97,41 +97,41 @@ const iostreamHeaderRule: StyleExceptionRule = {
   label: () => '#include <iostream>',
   suggestion: () => '#include <cstdio>',
   convert: () => {
-    return [建include('cstdio')]
+    return [buildInclude('cstdio')]
   },
 }
 
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
   match: (node, style) =>
-    是這個角色與風格(node, 'print', 'cstdio') && style.ioPreference === 'iostream',
+    matchesRoleAndStyle(node, 'print', 'cstdio') && style.ioPreference === 'iostream',
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
   convert: (node) => {
     // Convert cpp_printf to universal print
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [建print(values)]
+    return [buildPrint(values)]
   },
 }
 
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
   match: (node, style) =>
-    是這個角色與風格(node, 'input', 'cstdio') && style.ioPreference === 'iostream',
+    matchesRoleAndStyle(node, 'input', 'cstdio') && style.ioPreference === 'iostream',
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
     const args = node.children.args ?? []
     const values = args.length > 0 ? args : []
-    return [建input(values)]
+    return [buildInput(values)]
   },
 }
 
 /** print block (cout-origin) in cstdio-preferred styles */
 const printToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    是這個角色與風格(node, 'print', 'iostream') && style.ioPreference === 'cstdio',
+    matchesRoleAndStyle(node, 'print', 'iostream') && style.ioPreference === 'cstdio',
   label: () => 'cout << ...',
   suggestion: () => 'printf(...)',
   convert: (node) => {
@@ -152,20 +152,20 @@ const printToCstdioRule: StyleExceptionRule = {
       }
     }
     const format = formatParts.join('') + (hasEndl ? '\\n' : '')
-    return [建print_formatted(format, args)]
+    return [buildPrintFormatted(format, args)]
   },
 }
 
 /** input block (cin-origin) in cstdio-preferred styles */
 const inputToCstdioRule: StyleExceptionRule = {
   match: (node, style) =>
-    是這個角色與風格(node, 'input', 'iostream') && style.ioPreference === 'cstdio',
+    matchesRoleAndStyle(node, 'input', 'iostream') && style.ioPreference === 'cstdio',
   label: () => 'cin >> ...',
   suggestion: () => 'scanf(...)',
   convert: (node) => {
     const values = node.children.values ?? []
     const format = values.map(() => '%d').join(' ')
-    return [建input_formatted(format, values)]
+    return [buildInputFormatted(format, values)]
   },
 }
 

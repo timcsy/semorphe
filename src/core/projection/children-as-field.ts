@@ -52,7 +52,7 @@ export interface ChildrenAsField {
   itemSeparator?: string
 }
 
-const 預設項目分隔 = ', '
+const defaultItemSep = ', '
 
 /**
  * 深度感知的分割：`<>`／`()`／`[]` 裡面的分隔符不算數。
@@ -67,19 +67,19 @@ const 預設項目分隔 = ', '
  */
 export function splitTopLevel(text: string, sep: string): string[] {
   const out: string[] = []
-  let 深度 = 0
-  let 目前 = ''
+  let depth = 0
+  let current2 = ''
   for (const ch of text) {
-    if (ch === '<' || ch === '(' || ch === '[') 深度++
-    else if (ch === '>' || ch === ')' || ch === ']') 深度 = Math.max(0, 深度 - 1)
-    if (ch === sep && 深度 === 0) {
-      out.push(目前)
-      目前 = ''
+    if (ch === '<' || ch === '(' || ch === '[') depth++
+    else if (ch === '>' || ch === ')' || ch === ']') depth = Math.max(0, depth - 1)
+    if (ch === sep && depth === 0) {
+      out.push(current2)
+      current2 = ''
       continue
     }
-    目前 += ch
+    current2 += ch
   }
-  out.push(目前)
+  out.push(current2)
   return out.map((s) => s.trim()).filter((s) => s.length > 0)
 }
 
@@ -94,7 +94,7 @@ export function serializeChildren(children: readonly SemanticNode[], spec: Child
   if (!children.length) return null
   return children
     .map((c) => spec.parts.map((p) => String(c.properties[p] ?? '')).filter((s) => s.length > 0).join(' '))
-    .join(spec.itemSeparator ?? 預設項目分隔)
+    .join(spec.itemSeparator ?? defaultItemSep)
 }
 
 /**
@@ -108,7 +108,7 @@ export function serializeChildren(children: readonly SemanticNode[], spec: Child
  * 讓來回轉換抓到——猜出來的東西會安靜地變成使用者沒寫過的程式。
  */
 export function parseToChildren(text: string, spec: ChildrenAsField): SemanticNode[] {
-  const items = splitTopLevel(text ?? '', (spec.itemSeparator ?? 預設項目分隔).trim() || ',')
+  const items = splitTopLevel(text ?? '', (spec.itemSeparator ?? defaultItemSep).trim() || ',')
   return items.map((item) => {
     const words = item.split(/\s+/).filter(Boolean)
     const props: Record<string, string> = {}
@@ -117,9 +117,9 @@ export function parseToChildren(text: string, spec: ChildrenAsField): SemanticNo
       props[spec.parts[0]] = item
     } else if (words.length >= n) {
       // 最後 n-1 個詞各對一個 part，剩下的全部給第一個。
-      const 尾 = words.slice(words.length - (n - 1))
+      const tail = words.slice(words.length - (n - 1))
       props[spec.parts[0]] = words.slice(0, words.length - (n - 1)).join(' ')
-      尾.forEach((w, i) => { props[spec.parts[i + 1]] = w })
+      tail.forEach((w, i) => { props[spec.parts[i + 1]] = w })
     } else {
       // 詞不夠——**不補**。第一個 part 拿到全部，其餘空著。
       props[spec.parts[0]] = item

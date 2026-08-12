@@ -15,7 +15,7 @@ import { ReturnSignal } from '../../../../interpreter/executors/functions'
  * ⚠️ 一個閉包 helper 會把它所在的整個函式變成不可分割的單位，
  * 而那個單位是「一個檔案」不是「一顆元件」——擋住膠囊化。
  */
-export const 安裝Lambda = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
+export const installLambda = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
   if (ctx.callableOf) return
   ctx.callableOf = (v) => asCallable(v)
   ctx.invokeCallable = async (c, argNodes) => {

@@ -114,11 +114,11 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   // 而它掃的是原始碼。串接之後那串路徑不再連續出現，於是**排除清單維持在零**。
   //
   // 用「把自己加進排除清單」來解會比較快，但那會在唯一一個負責看門的檔上開一個口。
-  const 禁用路徑 = '../../blocks/projections/blocks/universal-' + 'blocks.json'
+  const forbiddenPaths = '../../blocks/projections/blocks/universal-' + 'blocks.json'
 
   it('★ 注入一行繞過唯一入口的 import → **必須被報出**', () => {
     const hit = scan([
-      { file: '合成/繞過.ts', source: `import x from '${禁用路徑}'\n` },
+      { file: '合成/繞過.ts', source: `import x from '${forbiddenPaths}'\n` },
     ]).filter((v) => v.file === '合成/繞過.ts')
     expect(hit, '合成的繞過沒有被報出來 → **護欄壞了，不是入口乾淨**').toHaveLength(1)
     expect(hit[0].entrance, '報出來了但指錯入口——修的人會去改錯的地方').toBe('src/blocks/universal.ts')
@@ -136,15 +136,15 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // 檔頭寫明只擋 import。`verify-concept-paths` 與「concepts.json 不得含 blockDef」
     // 那類工具要的就是原始檔——把它們也擋掉會逼人繞過護欄。
     const hit = scan([
-      { file: '合成/讀檔.ts', source: `const p = path.join(root, '${禁用路徑}')\n` },
+      { file: '合成/讀檔.ts', source: `const p = path.join(root, '${forbiddenPaths}')\n` },
     ]).filter((v) => v.file === '合成/讀檔.ts')
     expect(hit, '字串路徑被當成 import 擋下 → 檔案檢查工具會無法運作').toEqual([])
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     // 零違規與「一個檔都沒讀到」產出一模一樣。
-    const 讀到 = ['src', 'tests'].reduce((n, d) => n + listSourceFiles(d, ['.ts']).length, 0)
-    expect(讀到, '零個原始檔 → 是掃描壞了，不是專案空了').toBeGreaterThan(200)
+    const readValue = ['src', 'tests'].reduce((n, d) => n + listSourceFiles(d, ['.ts']).length, 0)
+    expect(readValue, '零個原始檔 → 是掃描壞了，不是專案空了').toBeGreaterThan(200)
   })
 
   it('★ 入口檔本身存在——它不存在的話這條規則整條是空的', () => {

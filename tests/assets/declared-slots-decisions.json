@@ -1,42 +1,42 @@
 [
   {
     "conceptId": "cpp:if_else",
-    "原因": "宣告過的降級目標",
+    "cause": "宣告過的降級目標",
     "reason": "concepts.json 明文 skipPaths:['lift']、skipReasons.lift='degradation-target'，由 cpp:ternary 降級抵達。**它本來就不該從語料 lift 出來**——不是缺口。"
   },
   {
     "conceptId": "cpp:raw_code",
-    "原因": "元概念",
+    "cause": "元概念",
     "reason": "辨識不出來時的誠實標記，由 lifter 的 Level 4 產生而非由 pattern 匹配。語料若碰得到它，反而代表模型有缺口。"
   },
   {
     "conceptId": "cpp:raw_expression",
-    "原因": "元概念",
+    "cause": "元概念",
     "reason": "同 cpp:raw_code，運算式位置的版本。"
   },
   {
     "conceptId": "cpp:queue_back",
-    "原因": "辨識到不了",
+    "cause": "辨識到不了",
     "reason": "**真的缺口**：`.back()` 在辨識層不看容器型別，六種容器一律判成 cpp:vector_back。這顆身分從程式碼永遠得不到，只能從積木拖。⚠️ **補再多語料也碰不到。** 見 draft/2026-08-11-容器方法的辨識不看型別.md"
   },
   {
     "conceptId": "cpp:string_empty",
-    "原因": "辨識到不了",
+    "cause": "辨識到不了",
     "reason": "**真的缺口**：`.empty()` 一律判成中性的 cpp:container_empty。同上，補語料無效。"
   },
   {
     "conceptId": "cpp:include_local",
-    "原因": "語料沒覆蓋",
+    "cause": "語料沒覆蓋",
     "reason": "`#include \"my.h\"`（雙引號的本地標頭）——測試檔裡的片段幾乎都用角括號的系統標頭。加一段語料就會動。"
   },
   {
     "conceptId": "cpp:priority_queue_peek",
-    "原因": "語料沒覆蓋",
+    "cause": "語料沒覆蓋",
     "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
   },
   {
     "conceptId": "cpp:istringstream_declare",
-    "原因": "語料沒覆蓋",
+    "cause": "語料沒覆蓋",
     "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"
   }
 ]

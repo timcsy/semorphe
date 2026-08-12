@@ -50,13 +50,13 @@ function load(): BlockSpec[] {
 }
 
 /** 兩邊都用 private 的推導——由公開行為反推：渲染出什麼欄位、抽取讀回什麼 */
-function 對照(specs: BlockSpec[]): { blockType: string; 渲染認得: string[]; 抽取認得: string[] }[] {
+function mapping(specs: BlockSpec[]): { blockType: string; renderKnows: string[]; extractKnows: string[] }[] {
   const r = new PatternRenderer()
   const e = new PatternExtractor()
   r.loadBlockSpecs(specs)
   e.loadBlockSpecs(specs)
 
-  const out: { blockType: string; 渲染認得: string[]; 抽取認得: string[] }[] = []
+  const out: { blockType: string; renderKnows: string[]; extractKnows: string[] }[] = []
   for (const spec of specs) {
     const bd = spec.blockDef as Record<string, unknown>
     const blockType = bd?.type as string | undefined
@@ -83,17 +83,17 @@ function 對照(specs: BlockSpec[]): { blockType: string; 渲染認得: string[]
     }
     const state = r.render(node as never)
     if (!state) continue
-    const 渲染認得 = Object.keys(state.fields ?? {}).filter((k) =>
+    const renderKnows = Object.keys(state.fields ?? {}).filter((k) =>
       fieldArgs.some((a) => a.name === k),
     )
     const back = e.extract(state as never)
-    const 抽取認得 = Object.entries(back?.properties ?? {})
+    const extractKnows = Object.entries(back?.properties ?? {})
       .filter(([, v]) => typeof v === 'string' && v.startsWith('«'))
       .map(([k]) => k)
 
     // 比對「渲染落了幾個欄位」與「抽取讀回幾個參數」——數量對不上就是分歧
-    if (渲染認得.length !== 抽取認得.length) {
-      out.push({ blockType, 渲染認得, 抽取認得 })
+    if (renderKnows.length !== extractKnows.length) {
+      out.push({ blockType, renderKnows, extractKnows })
     }
   }
   return out.sort((a, b) => a.blockType.localeCompare(b.blockType))
@@ -117,23 +117,23 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     const e = new PatternExtractor()
     r.loadBlockSpecs(specs)
     e.loadBlockSpecs(specs)
-    const 走一圈 = (cid: string, prop: string): unknown => {
+    const walkAll = (cid: string, prop: string): unknown => {
       const s = r.render({ id: 'p', conceptId: cid, properties: { [prop]: '«v»' }, children: {} } as never)
       return s ? e.extract(s as never)?.properties?.[prop] : undefined
     }
-    expect(走一圈('cpp:doc_comment', 'brief'), 'doc_comment 有顯式 fields，本來就該保住').toBe('«v»')
+    expect(walkAll('cpp:doc_comment', 'brief'), 'doc_comment 有顯式 fields，本來就該保住').toBe('«v»')
   })
 })
 
 describe('渲染與抽取的推導一致性', () => {
-  const 分歧 = 對照(load())
+  const divergence = mapping(load())
 
   it('報表', () => {
     printReport('推導一致性', [
-      `渲染／抽取對不上的積木：${分歧.length}`,
+      `渲染／抽取對不上的積木：${divergence.length}`,
       '',
-      ...分歧.map(
-        (d) => `  ⚠️ ${d.blockType.padEnd(24)} 渲染落了 [${d.渲染認得}] ／ 抽取讀回 [${d.抽取認得}]`,
+      ...divergence.map(
+        (d) => `  ⚠️ ${d.blockType.padEnd(24)} 渲染落了 [${d.renderKnows}] ／ 抽取讀回 [${d.extractKnows}]`,
       ),
     ])
     expect(true).toBe(true)
@@ -143,7 +143,7 @@ describe('渲染與抽取的推導一致性', () => {
     // ⚠️ **硬性零**：留一筆＝有一顆積木的內容在積木→語義樹的方向會掉，
     // 而它的唯一症狀是「切換積木風格之後東西不見了」——使用者不會知道為什麼。
     expect(
-      分歧.map((d) => `${d.blockType}: 渲染 [${d.渲染認得}] ≠ 抽取 [${d.抽取認得}]`),
+      divergence.map((d) => `${d.blockType}: 渲染 [${d.renderKnows}] ≠ 抽取 [${d.extractKnows}]`),
       '渲染與抽取用不同的規則推導欄位對應——渲染得出去、抽取不回來的東西會靜靜地消失。',
     ).toEqual([])
   })

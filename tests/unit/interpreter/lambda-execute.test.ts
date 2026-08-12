@@ -80,8 +80,8 @@ describe('lambda 的基本呼叫', () => {
   })
 
   it('★ 呼叫一個不是 lambda 的變數要出聲', async () => {
-    const 訊息 = await errOf(prog(decl('x', num(1)), show(call('x'))))
-    expect(訊息, '把一個整數當函式呼叫靜默成功了').not.toBe('')
+    const message = await errOf(prog(decl('x', num(1)), show(call('x'))))
+    expect(message, '把一個整數當函式呼叫靜默成功了').not.toBe('')
   })
 })
 
@@ -113,14 +113,14 @@ describe('捕捉語意——兩支要成對讀', () => {
 
 describe('作用域', () => {
   it('★ lambda 的參數不得洩漏到外層', async () => {
-    const 訊息 = await errOf(
+    const message = await errOf(
       prog(
         n('cpp:var_declare', { name: 'f', type: 'auto' }, { initializer: [lambda('', ['內部參數'], num(1))] }),
         show(call('f', num(1))),
         show(ref('內部參數')),
       ),
     )
-    expect(訊息, 'lambda 的參數變成了外層的變數').not.toBe('')
+    expect(message, 'lambda 的參數變成了外層的變數').not.toBe('')
   })
 
   it('★ 同一個 lambda 可以呼叫多次，彼此不互相汙染', async () => {

@@ -128,7 +128,7 @@ export function scanDisabledInFile(relPath: string): DisabledEntry[] {
  */
 export function findMultilineDisabled(dirs: readonly string[]): { file: string; line: number }[] {
   const out: { file: string; line: number }[] = []
-  const 開頭沒有標題 = /\b(it|test|describe)\s*\.\s*(todo|skip)\s*\(\s*$/
+  const noLeadingTitle = /\b(it|test|describe)\s*\.\s*(todo|skip)\s*\(\s*$/
   const walk = (d: string): void => {
     if (!fs.existsSync(d)) return
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -139,7 +139,7 @@ export function findMultilineDisabled(dirs: readonly string[]): { file: string; 
       }
       if (!e.name.endsWith('.test.ts')) continue
       fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
-        if (開頭沒有標題.test(line)) out.push({ file: path.relative(REPO_ROOT, f), line: i + 1 })
+        if (noLeadingTitle.test(line)) out.push({ file: path.relative(REPO_ROOT, f), line: i + 1 })
       })
     }
   }
@@ -167,8 +167,8 @@ export function scanAllDisabled(): DisabledEntry[] {
   // 只掃 `tests/` 的話，一個寫在膠囊裡的 `[BLOCKED:]` 對缺陷帳是**隱形的**
   // ——而缺陷帳存在的唯一理由就是讓優先序看得見。
   // 一筆看不見的缺陷，與一筆不存在的缺陷，在報表上長得一模一樣。
-  const 膠囊根 = path.join(REPO_ROOT, 'src/components')
-  if (fs.existsSync(膠囊根)) walk(膠囊根)
+  const capsuleRoot = path.join(REPO_ROOT, 'src/components')
+  if (fs.existsSync(capsuleRoot)) walk(capsuleRoot)
   return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
 }
 

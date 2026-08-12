@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建define(name: string, value: string): SemanticNode {
+export function buildDefine(name: string, value: string): SemanticNode {
   return createNode('cpp:define', { name, value })
 }
 

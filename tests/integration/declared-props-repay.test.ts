@@ -25,12 +25,12 @@ beforeAll(async () => {
 })
 
 const lift = (c: string): SemanticNode => createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
-const 找 = (n: SemanticNode, id: string): SemanticNode | null => {
+const find = (n: SemanticNode, id: string): SemanticNode | null => {
   if (n.conceptId === id) return n
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = 找(k, id); if (r) return r }
+  for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k, id); if (r) return r }
   return null
 }
-async function 跑(c: string): Promise<string> {
+async function run(c: string): Promise<string> {
   const i = new SemanticInterpreter({ maxSteps: 100000 })
   await i.execute(lift(c))
   return i.getOutput().join('')
@@ -43,18 +43,18 @@ describe('屬性宣告清償', () => {
     //    ——`String(node.properties.obj)` 拿到 undefined，變成字串 "undefined" 去查變數。
     // 家族慣例是 `obj`（`cpp:struct_at_member` 用的就是它，執行器也讀它），
     // 所以**修 lifter**而不是改宣告——改宣告會讓同族兩顆用不同的名字。
-    expect(await 跑(`${IO}struct P { int x; };\nint main(){ P a; a.x=7; P* p=&a; cout << p->x; }`)).toBe('7')
+    expect(await run(`${IO}struct P { int x; };\nint main(){ P a; a.x=7; P* p=&a; cout << p->x; }`)).toBe('7')
   })
 
   it('★ 而 p.x 的既有行為不得回歸（同族的另一顆）', async () => {
-    expect(await 跑(`${IO}struct P { int x; };\nint main(){ P a; a.x=7; cout << a.x; }`)).toBe('7')
+    expect(await run(`${IO}struct P { int x; };\nint main(){ P a; a.x=7; cout << a.x; }`)).toBe('7')
   })
 
   it('★ struct_at_ptr 產出的屬性名要與宣告一致', () => {
     // ⚠️ 用**讀取**位置，不是賦值位置——`p->x = 1` 會被 lift 成別的概念
     // （賦值那一路自己處理成員），於是這支測試什麼都測不到。
     // 那個對照斷言（`not.toBeNull()`）第一版就抓到了它。
-    const n = 找(lift('#include <iostream>\nstruct P { int x; };\nint main(){ P a; P* p=&a; std::cout << p->x; }'), 'cpp:struct_at_ptr')
+    const n = find(lift('#include <iostream>\nstruct P { int x; };\nint main(){ P a; P* p=&a; std::cout << p->x; }'), 'cpp:struct_at_ptr')
     expect(n, '語料要真的產出這顆，否則這支測試什麼都沒測到').not.toBeNull()
     expect(Object.keys(n!.properties)).toContain('obj')
     expect(Object.keys(n!.properties)).not.toContain('ptr')
@@ -69,7 +69,7 @@ describe('屬性宣告清償', () => {
     //
     // 專案自己的教訓：**「需要 parse 回結構才能用的字串，就不該是字串」**。
     // 修它要動 lifter 的 pair 規則，不在 `specs/112` 的範圍。
-    const n = 找(lift('#include <utility>\nusing namespace std;\nint main(){ pair<int,string> pr; }'), 'cpp:pair_declare')
+    const n = find(lift('#include <utility>\nusing namespace std;\nint main(){ pair<int,string> pr; }'), 'cpp:pair_declare')
     expect(n).not.toBeNull()
     expect(Object.keys(n!.properties)).toContain('type1')
   })

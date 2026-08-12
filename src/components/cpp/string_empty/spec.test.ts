@@ -25,23 +25,23 @@ beforeAll(async () => {
 
 describe('膠囊自證：cpp:string_empty', () => {
   it('★ generate：產回 s.empty()', () => {
-    const 樹 = createNode('cpp:program', {}, { body: [createNode('cpp:string_empty', { obj: 's' })] })
-    expect(generateCode(樹, 'cpp', apcs as unknown as StylePreset)).toContain('s.empty()')
+    const tree = createNode('cpp:program', {}, { body: [createNode('cpp:string_empty', { obj: 's' })] })
+    expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('s.empty()')
   })
 
   it('★ execute：空字串回 1、非空回 0', async () => {
-    const 跑 = async (值: string): Promise<string> => {
+    const run = async (value: string): Promise<string> => {
       const i = new SemanticInterpreter({ maxSteps: 100000 })
       await i.execute(createNode('cpp:program', {}, {
         body: [
-          createNode('cpp:string_declare', { name: 's' }, { value: [createNode('cpp:literal_string', { value: 值 })] }),
+          createNode('cpp:string_declare', { name: 's' }, { value: [createNode('cpp:literal_string', { value: value })] }),
           createNode('cpp:print', {}, { values: [createNode('cpp:string_empty', { obj: 's' })] }),
         ],
       }))
       return i.getOutput().join('')
     }
     // ⚠️ C++ 的 cout 印 bool 是 1／0，不是 true／false
-    expect(await 跑(''), '空字串').toBe('1')
-    expect(await 跑('hi'), '非空字串').toBe('0')
+    expect(await run(''), '空字串').toBe('1')
+    expect(await run('hi'), '非空字串').toBe('0')
   })
 })

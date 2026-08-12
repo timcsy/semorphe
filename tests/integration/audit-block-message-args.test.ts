@@ -77,7 +77,7 @@ interface Violation {
   file: string
 }
 
-function 檢查(bd: BlockDef, file: string): Violation[] {
+function check(bd: BlockDef, file: string): Violation[] {
   const out: Violation[] = []
   for (let i = 0; i < 5; i++) {
     const raw = bd[`message${i}`] as string | undefined
@@ -119,10 +119,10 @@ function scan(extra: BlockDef[] = []): Violation[] {
     if (!Array.isArray(arr)) continue
     for (const entry of arr) {
       const bd = (entry as { blockDef?: BlockDef })?.blockDef
-      if (bd && typeof bd === 'object') out.push(...檢查(bd, rel))
+      if (bd && typeof bd === 'object') out.push(...check(bd, rel))
     }
   }
-  for (const bd of extra) out.push(...檢查(bd, '（合成）'))
+  for (const bd of extra) out.push(...check(bd, '（合成）'))
   return out.sort((a, b) => a.type.localeCompare(b.type))
 }
 

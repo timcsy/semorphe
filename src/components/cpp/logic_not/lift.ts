@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建logic_not(operand: SemanticNode | null): SemanticNode {
+export function buildLogicNot(operand: SemanticNode | null): SemanticNode {
   return createNode('cpp:logic_not', {}, { operand: operand ? [operand] : [] })
 }
 

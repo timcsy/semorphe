@@ -36,7 +36,7 @@ beforeAll(() => {
 })
 
 /** 建一個只含這個成員的類別，跑一次，回傳直譯器好讓呼叫端查登記處 */
-async function 宣告類別(member: SemanticNode, className = 'K'): Promise<SemanticInterpreter> {
+async function declKind(member: SemanticNode, className = 'K'): Promise<SemanticInterpreter> {
   const interp = new SemanticInterpreter({ maxSteps: 5000 })
   await interp.execute(
     n('cpp:program', {}, {
@@ -47,16 +47,16 @@ async function 宣告類別(member: SemanticNode, className = 'K'): Promise<Sema
 }
 
 describe('cpp_class_def 真的消費這六種成員', () => {
-  const 方法類: [string, string][] = [
+  const methodKind: [string, string][] = [
     ['cpp:method_virtual', 'v'],
     ['cpp:method_override', 'o'],
     ['cpp:method_virtual_pure', 'pv'],
   ]
 
-  for (const [concept, name] of 方法類) {
+  for (const [concept, name] of methodKind) {
     it(`★ ${concept} 被收進型別的方法表`, async () => {
       const body = concept === 'cpp:method_virtual_pure' ? {} : { body: [ret(num(1))] }
-      const interp = await 宣告類別(n(concept, { name, return_type: 'int' }, { params: [], ...body }))
+      const interp = await declKind(n(concept, { name, return_type: 'int' }, { params: [], ...body }))
       expect(
         interp.structs.method('K', name),
         `${concept} 沒有被 cpp_class_def 收進去 → 「由父概念消費」是假的，` +
@@ -66,14 +66,14 @@ describe('cpp_class_def 真的消費這六種成員', () => {
   }
 
   it('★ cpp_operator_overload 被收成 `operator+`', async () => {
-    const interp = await 宣告類別(
+    const interp = await declKind(
       n('cpp:operator_overload', { operator: '+', param_type: 'K', param_name: 'r' }, { body: [ret(num(1))] }),
     )
     expect(interp.structs.method('K', 'operator+')).toBeDefined()
   })
 
   it('★ cpp_static_member 被收進型別的靜態表', async () => {
-    const interp = await 宣告類別(n('cpp:member_static', { name: 's', type: 'int' }))
+    const interp = await declKind(n('cpp:member_static', { name: 's', type: 'int' }))
     expect(
       interp.structs.staticsOf('K')?.has('s'),
       'cpp_static_member 沒有被收進靜態表',
@@ -81,12 +81,12 @@ describe('cpp_class_def 真的消費這六種成員', () => {
   })
 
   it('★ cpp_destructor 被收成型別的解構式', async () => {
-    const interp = await 宣告類別(n('cpp:destructor', { class_name: 'K' }, { body: [] }))
+    const interp = await declKind(n('cpp:destructor', { class_name: 'K' }, { body: [] }))
     expect(interp.structs.destructorOf('K'), 'cpp_destructor 沒有被收進去').toBeDefined()
   })
 
   it('★ cpp_constructor 被收成型別的建構式', async () => {
-    const interp = await 宣告類別(
+    const interp = await declKind(
       n('cpp:constructor', { class_name: 'K' }, { params: [], body: [] }),
     )
     expect(interp.structs.constructorOf('K')).toBeDefined()
@@ -98,7 +98,7 @@ describe('cpp_class_def 真的消費這六種成員', () => {
     //
     // 改用**合成的**概念名：它按定義永遠不會被任何實作認得。
     // 沒有這支的話，一個「什麼都收」的實作會通過上面每一支。
-    const interp = await 宣告類別(n('__不存在的成員概念__', { name: 'zz' }, { body: [] }))
+    const interp = await declKind(n('__不存在的成員概念__', { name: 'zz' }, { body: [] }))
     expect(
       interp.structs.method('K', 'zz'),
       '一個不存在的概念被當成方法收進去了 → 「什麼都收」的實作也會通過上面每一支',
@@ -125,42 +125,42 @@ describe('宣告的依據必須存在——反過來查一次', () => {
     //
     // 其他父概念的消費關係要各自有各自的證據測試——本檔不涵蓋，
     // 而這一行就是那個邊界。
-    const 類別成員 = new Set([
+    const classMembers = new Set([
       'cpp:method_virtual', 'cpp:method_override', 'cpp:method_virtual_pure',
       'cpp:operator_overload', 'cpp:member_static', 'cpp:constructor', 'cpp:destructor',
     ])
-    const 宣告者 = allComponentDefs()
+    const declarers = allComponentDefs()
       .filter(
         (d) =>
-          類別成員.has(d.conceptId) &&
+          classMembers.has(d.conceptId) &&
           (d.skipReasons as Record<string, string> | undefined)?.execute === 'consumed-by-parent',
       )
       .map((d) => d.conceptId)
 
     expect(
-      宣告者.length,
-      `類別成員裡宣告了 consumed-by-parent 的只有 ${宣告者.length} 個 → ` +
+      declarers.length,
+      `類別成員裡宣告了 consumed-by-parent 的只有 ${declarers.length} 個 → ` +
         '少於預期，這支可能什麼都沒驗到',
-    ).toBe(類別成員.size)
+    ).toBe(classMembers.size)
 
-    const 站不住: string[] = []
-    for (const id of 宣告者) {
+    const unsupported: string[] = []
+    for (const id of declarers) {
       // 每一種成員各建一個類別，看它有沒有被收進型別的任何一張表
-      const interp = await 宣告類別(
+      const interp = await declKind(
         n(id, { name: 'probe', class_name: 'K', operator: '+', type: 'int', return_type: 'int' }, { params: [], body: [] }),
       )
-      const 被收了 =
+      const wasCollected =
         interp.structs.method('K', 'probe') !== undefined ||
         interp.structs.method('K', 'operator+') !== undefined ||
         interp.structs.staticsOf('K')?.has('probe') === true ||
         interp.structs.constructorOf('K') !== undefined ||
         interp.structs.destructorOf('K') !== undefined
-      if (!被收了) 站不住.push(id)
+      if (!wasCollected) unsupported.push(id)
     }
     expect(
-      站不住,
+      unsupported,
       '以下概念宣告了「由父概念消費」，而父概念**根本沒有收它**——' +
-        `那個宣告就是在把一個空操作洗成設計：\n  ${站不住.join('\n  ')}`,
+        `那個宣告就是在把一個空操作洗成設計：\n  ${unsupported.join('\n  ')}`,
     ).toEqual([])
   })
 })

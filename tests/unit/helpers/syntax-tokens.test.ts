@@ -62,9 +62,9 @@ describe('合成注入（正向）：含語法記號的字串必須被報出', (
     // 這是我在 `src/core/lift/lifter.ts` 裡實際寫過的判準，一字不改。
     // 中立性護欄看不見它（沒有元件身分），語法耦合當時也看不見（清單裡
     // 沒有型別名）。這一支存在的理由就是讓它下次會叫。
-    const 當時寫的 = `if (rootType !== 'istringstream' && rootType !== 'stringstream') return null`
+    const writtenThen = `if (rootType !== 'istringstream' && rootType !== 'stringstream') return null`
     expect(
-      scan(當時寫的).definite.map((h) => h.token),
+      scan(writtenThen).definite.map((h) => h.token),
       '核心層寫死 C++ 型別名而這條護欄沒叫 → 耦合的第三種形式又回到看不見的狀態',
     ).toEqual(expect.arrayContaining(['istringstream', 'stringstream']))
   })
@@ -123,11 +123,11 @@ describe('合成注入（反向）：乾淨的程式碼不得被報出', () => {
 })
 
 describe('已知答案的樣本：059 之前的核心程式碼（第 6 步要求）', () => {
-  const at059之前 = (path: string): string =>
+  const before059 = (path: string): string =>
     execFileSync('git', ['show', `35e96d8:${path}`], { cwd: REPO_ROOT, encoding: 'utf8' })
 
   it('★ 抓得到當時 code-generator 產生的註解語法', () => {
-    const r = scan(at059之前('src/core/projection/code-generator.ts'))
+    const r = scan(before059('src/core/projection/code-generator.ts'))
     expect(
       r.definite.map((h) => h.token),
       '這條護欄在**當時確實有問題的真實程式碼**上什麼都沒抓到 → 它沒有存在的價值。' +
@@ -136,7 +136,7 @@ describe('已知答案的樣本：059 之前的核心程式碼（第 6 步要求
   })
 
   it('★ 抓得到當時 lifter 剝除的註解語法', () => {
-    const r = scan(at059之前('src/core/lift/lifter.ts'))
+    const r = scan(before059('src/core/lift/lifter.ts'))
     expect(r.definite.length, '當時 lifter.ts:152 在剝 `//` 與 `/* */`').toBeGreaterThan(0)
   })
 
@@ -161,7 +161,7 @@ describe('清單本身的健康', () => {
 
   it('★ 兩份清單不得重疊——同一個記號不能既確定又不確定', () => {
     const d = new Set(DEFINITE_TOKENS.map((t) => t.token))
-    const 重疊 = AMBIGUOUS_TOKENS.filter((t) => d.has(t.token)).map((t) => t.token)
-    expect(重疊).toEqual([])
+    const overlap = AMBIGUOUS_TOKENS.filter((t) => d.has(t.token)).map((t) => t.token)
+    expect(overlap).toEqual([])
   })
 })

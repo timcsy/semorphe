@@ -93,15 +93,15 @@ describe('cpp:vector_declare 自證測', () => {
 
   // ── 負向（不可省）────────────────────────────────────────
   it('負向：其他容器不得被認領成 vector', () => {
-    for (const [碼, 應為] of [
+    for (const [code, shouldBe] of [
       ['stack<int> s;', 'cpp:stack_declare'],
       ['queue<int> q;', 'cpp:queue_declare'],
       ['set<int> s;', 'cpp:set_declare'],
       ['pair<int, int> p;', 'cpp:pair_declare'],
     ] as const) {
-      const got = ids(lift(`int main() { ${碼} }`))
-      expect(got, `${碼}：lift 失敗的話下一條會空過`).toContain(應為)
-      expect(got, `${碼} 被誤認成 vector`).not.toContain('cpp:vector_declare')
+      const got = ids(lift(`int main() { ${code} }`))
+      expect(got, `${code}：lift 失敗的話下一條會空過`).toContain(shouldBe)
+      expect(got, `${code} 被誤認成 vector`).not.toContain('cpp:vector_declare')
     }
   })
 

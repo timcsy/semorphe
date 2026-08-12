@@ -92,30 +92,30 @@ function msg0(blockType: string): string {
   const raw = (spec?.blockDef as Record<string, unknown> | undefined)?.message0 as string | undefined
   if (!raw) return ''
   const key = /^%\{BKY_(\w+)\}$/.exec(raw)?.[1]
-  const 全部標籤 = { ...(zhTW as Record<string, string>), ...componentLabels('zh-TW') }
-  return key ? (全部標籤[key] ?? '') : raw
+  const allLabels = { ...(zhTW as Record<string, string>), ...componentLabels('zh-TW') }
+  return key ? (allLabels[key] ?? '') : raw
 }
 
-const 堆疊程式 = 'stack<int> st; st.push(1); st.pop();'
-const 佇列程式 = 'queue<int> q; q.push(1); q.pop();'
+const stackProgram = 'stack<int> st; st.push(1); st.pop();'
+const queueProgram = 'queue<int> q; q.push(1); q.pop();'
 
 // ─── 辨識側：容器種類寫進節點（CK-1）────────────────────────────────
 
 describe('辨識：容器種類寫進節點', () => {
   it('★ 堆疊上的 push 帶 container_kind: stack', () => {
-    const pushes = collect(lift(堆疊程式), (n) => n.conceptId === 'cpp:container_push')
+    const pushes = collect(lift(stackProgram), (n) => n.conceptId === 'cpp:container_push')
     expect(pushes).toHaveLength(1)
     expect(pushes[0].properties?.container_kind).toBe('stack')
   })
 
   it('★ 佇列上的 push 帶 container_kind: queue', () => {
-    const pushes = collect(lift(佇列程式), (n) => n.conceptId === 'cpp:container_push')
+    const pushes = collect(lift(queueProgram), (n) => n.conceptId === 'cpp:container_push')
     expect(pushes[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ pop 同樣帶容器種類', () => {
-    expect(collect(lift(堆疊程式), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('stack')
-    expect(collect(lift(佇列程式), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('queue')
+    expect(collect(lift(stackProgram), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('stack')
+    expect(collect(lift(queueProgram), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ 負向（CK-1）：查不到型別時**不寫**該屬性，不猜', () => {
@@ -133,29 +133,29 @@ describe('辨識：容器種類寫進節點', () => {
 
 describe('投影：積木文字說出元素跑到哪裡', () => {
   it('★ 堆疊的 push 積木文字提到「頂端」', () => {
-    const types = blockTypes(lift(堆疊程式))
+    const types = blockTypes(lift(stackProgram))
     const pushType = types.find((t) => t.includes('push'))
     expect(pushType, `渲染出來的積木型別：${types.join('、')}`).toBeDefined()
     expect(msg0(pushType!), '學生讀的是 MSG0，不是 tooltip').toContain('頂端')
   })
 
   it('★ 佇列的 push 積木文字提到「尾端」', () => {
-    const types = blockTypes(lift(佇列程式))
+    const types = blockTypes(lift(queueProgram))
     const pushType = types.find((t) => t.includes('push'))
     expect(msg0(pushType!)).toContain('尾端')
   })
 
   it('★ 兩者是**不同的積木型別**', () => {
-    const s = blockTypes(lift(堆疊程式)).find((t) => t.includes('push'))
-    const q = blockTypes(lift(佇列程式)).find((t) => t.includes('push'))
+    const s = blockTypes(lift(stackProgram)).find((t) => t.includes('push'))
+    const q = blockTypes(lift(queueProgram)).find((t) => t.includes('push'))
     expect(s).not.toBe(q)
   })
 
   it('★ 負向（FR-007）：容器種類未知時用中性形態，且**不宣稱位置**', () => {
     const t = blockTypes(lift('unknownThing.push(1);')).find((x) => x.includes('push'))
-    const 文字 = msg0(t!)
-    expect(文字).not.toContain('頂端')
-    expect(文字).not.toContain('尾端')
+    const text = msg0(t!)
+    expect(text).not.toContain('頂端')
+    expect(text).not.toContain('尾端')
   })
 })
 
@@ -163,8 +163,8 @@ describe('投影：積木文字說出元素跑到哪裡', () => {
 
 describe('C-3 兩個形態產出相同、行為相同', () => {
   it('★ 產出的 C++ 都是 .push(...)', () => {
-    expect(generateCode(lift(堆疊程式), 'cpp', apcs as never)).toContain('st.push(1);')
-    expect(generateCode(lift(佇列程式), 'cpp', apcs as never)).toContain('q.push(1);')
+    expect(generateCode(lift(stackProgram), 'cpp', apcs as never)).toContain('st.push(1);')
+    expect(generateCode(lift(queueProgram), 'cpp', apcs as never)).toContain('q.push(1);')
   })
 
   it('★ 執行結果由容器決定，不由形態決定', async () => {
@@ -174,11 +174,11 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
       return i.getOutput().join('')
     }
     // 堆疊 LIFO：推 1、2 之後 top 是 2
-    const 堆疊 = lift('stack<int> st; st.push(1); st.push(2); cout << st.top();')
+    const stack = lift('stack<int> st; st.push(1); st.push(2); cout << st.top();')
     // 佇列 FIFO：推 1、2 之後 front 是 1
-    const 佇列 = lift('queue<int> q; q.push(1); q.push(2); cout << q.front();')
-    expect(await run(堆疊)).toBe('2')
-    expect(await run(佇列)).toBe('1')
+    const queue = lift('queue<int> q; q.push(1); q.push(2); cout << q.front();')
+    expect(await run(stack)).toBe('2')
+    expect(await run(queue)).toBe('1')
   })
 
   it('★ CK-3：執行器 MUST NOT 讀 container_kind——改成錯的值，行為不變', async () => {
@@ -197,9 +197,9 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
       await i.execute(tree)
       return i.getOutput().join('')
     }
-    const 正確 = await run('stack')
-    expect(await run('queue'), '執行器讀了 container_kind → 形態污染了行為').toBe(正確)
-    expect(await run(undefined)).toBe(正確)
+    const correct = await run('stack')
+    expect(await run('queue'), '執行器讀了 container_kind → 形態污染了行為').toBe(correct)
+    expect(await run(undefined)).toBe(correct)
   })
 })
 
@@ -218,18 +218,18 @@ describe('加法式：舊存檔不會壞', () => {
   it('★ 舊積木型別反推得到同一個 conceptId（C-4）', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppConcepts(), allCppProjections())
-    const 中性 = reg.getByBlockType('cpp_container_push')?.conceptMapping?.conceptId
-    const 堆疊 = reg.getByBlockType('cpp_container_push_stack')?.conceptMapping?.conceptId
-    const 佇列 = reg.getByBlockType('cpp_container_push_queue')?.conceptMapping?.conceptId
-    expect(中性).toBe('cpp:container_push')
-    expect(堆疊).toBe('cpp:container_push')
-    expect(佇列).toBe('cpp:container_push')
+    const neutral = reg.getByBlockType('cpp_container_push')?.conceptMapping?.conceptId
+    const stack = reg.getByBlockType('cpp_container_push_stack')?.conceptMapping?.conceptId
+    const queue = reg.getByBlockType('cpp_container_push_queue')?.conceptMapping?.conceptId
+    expect(neutral).toBe('cpp:container_push')
+    expect(stack).toBe('cpp:container_push')
+    expect(queue).toBe('cpp:container_push')
   })
 
   it('★ 自癒：舊存檔重新渲染後升級成新形態', () => {
     // `sync-controller.ts` 的任何編輯都會走 `renderToBlocklyState`。
     // 所以帶著中性積木的舊專案，第一次編輯就會拿到說得清楚的那顆。
-    const types = blockTypes(lift(堆疊程式))
+    const types = blockTypes(lift(stackProgram))
     expect(types.some((t) => t === 'cpp_container_push_stack'), '重新渲染沒有升級 → 自癒那條路斷了').toBe(true)
   })
 })

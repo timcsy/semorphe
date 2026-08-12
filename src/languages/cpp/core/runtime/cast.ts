@@ -12,7 +12,7 @@
  */
 import type { RuntimeValue } from '../../../../interpreter/types'
 
-export function 數值轉型(
+export function numericCast(
   targetType: string,
   val: RuntimeValue,
   num: number,

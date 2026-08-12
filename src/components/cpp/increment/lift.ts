@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建increment(
+export function buildIncrement(
   name: string,
   operator: string,
   position: string,

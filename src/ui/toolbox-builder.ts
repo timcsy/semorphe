@@ -125,14 +125,14 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
     // 「**cstdio 風格的那兩顆**排前面，其餘照原序」。
     // 舊行為把「風格偏好」與「分層」混在一起，而 getline／fstream
     // **沒有風格對立面**——它們不該因為使用者選了 printf 就往前跳。
-    const 風格 = (t: string): string | undefined => {
+    const style = (t: string): string | undefined => {
       const cid = blockSpecRegistry.getByBlockType(t)?.conceptMapping?.conceptId
       return cid ? ioTraitOf(cid)?.style : undefined
     }
     // 三堆而不是兩堆——**「其餘」要是扣除式的**（見上面第一版的病歷）。
-    const 合偏好 = ioTypes.filter(t => 風格(t) === ioPref)
-    const 其餘 = ioTypes.filter(t => 風格(t) !== ioPref)
-    return [...合偏好, ...其餘].map(t => ({ kind: 'block', type: t }))
+    const matchesPref = ioTypes.filter(t => style(t) === ioPref)
+    const rest = ioTypes.filter(t => style(t) !== ioPref)
+    return [...matchesPref, ...rest].map(t => ({ kind: 'block', type: t }))
   }
 
   const categories = categoryDefs.map(def => {

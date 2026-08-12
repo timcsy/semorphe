@@ -14,7 +14,7 @@
 import { registerCallConcept } from '../../../core/component/call-concepts'
 
 /** ⚠️ 這張名單就是「哪些寫法會被辨識」——少一個名字＝那個函式掉進 raw_code。 */
-const 一元函式 = [
+const unaryFuncs = [
   'fabs', 'sqrt', 'cbrt',
   'ceil', 'floor', 'round', 'trunc',
   'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
@@ -22,7 +22,7 @@ const 一元函式 = [
 ]
 
 export function registerLift(): void {
-  registerCallConcept(一元函式, {
+  registerCallConcept(unaryFuncs, {
     conceptId: 'cpp:math_unary',
     argSlots: ['value'],
     funcProp: 'func',

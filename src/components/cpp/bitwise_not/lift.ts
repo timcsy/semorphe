@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建bitwise_not(operand: SemanticNode | null): SemanticNode {
+export function buildBitwiseNot(operand: SemanticNode | null): SemanticNode {
   return createNode('cpp:bitwise_not', {}, { operand: operand ? [operand] : [] })
 }
 

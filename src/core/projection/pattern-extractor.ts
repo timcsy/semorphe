@@ -171,13 +171,13 @@ export class PatternExtractor {
           const mode = resolvePath(extraState, modePathResolved) as string | undefined
           if (mode && rule.modes[mode]) {
             const modeRule = rule.modes[mode]
-            const 包成 = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
-            if (modeRule.field && 包成) {
+            const wrap = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            if (modeRule.field && wrap) {
               // Select mode: read value from extraState, wrap as concept node
               const fieldPathResolved = resolvePattern(modeRule.field, i)
               const value = resolvePath(extraState, fieldPathResolved) as string | undefined
               if (value !== undefined) {
-                childNodes.push(createNode(包成, { name: value }))
+                childNodes.push(createNode(wrap, { name: value }))
               }
             } else if (modeRule.input) {
               // Compose mode: read from block input

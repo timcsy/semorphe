@@ -50,16 +50,16 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { runCppDetailed, runCppBatch, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
-const 護欄名 = 'behavior-error'
-const 判定檔 = path.join(REPO_ROOT, 'tests/assets/behavior-error-decisions.json')
+const GUARD_NAME = 'behavior-error'
+const decisionFile = path.join(REPO_ROOT, 'tests/assets/behavior-error-decisions.json')
 
-interface 判定 {
-  語料鍵: string
-  訊號: string
+interface decision {
+  corpusKey: string
+  signal: string
   /**
    * ⚠️ **值域縮過一次**（2026-08-10）：原本還有
    * `'語料需要標準輸入'` 與 `'語料是故意錯的示範'`，而 `不可判定()`
@@ -71,23 +71,23 @@ interface 判定 {
    * - `#33` 機器長出新類別、人的詞彙沒跟上 → 舊詞被硬套
    * - 這裡 機器**接管**了一個類別、人的詞彙沒縮回 → **死值留著**
    */
-  判定: '真誤差' | '其他'
+  decision: '真誤差' | '其他'
   reason: string
   /** 這一筆的成因。「一筆 ≠ 一個工作」——同一個根因下的筆數會一起消失。 */
-  根因?: string
+  rootCause?: string
 }
 
-interface 明細 {
-  語料鍵: string
-  語料: string
-  直譯器: string
-  參照: string
+interface details {
+  corpusKey: string
+  corpus: string
+  interpreter: string
+  reference: string
 }
 
-interface 基線 {
-  _meta: { 參照編譯器: string; 旗標: string; note: string; ratchet: string }
-  語料: { 不可判定: number; 兩邊都跑得動: number; 只有參照跑得動: number; 只有直譯器跑得動: number; 兩邊都不成: number }
-  誤差: { 不一致筆數: number; 明細: 明細[] }
+interface Baseline {
+  _meta: { referenceCompiler: string; flag: string; note: string; ratchet: string }
+  corpus: { undecidable: number; bothRun: number; onlyReferenceRuns: number; onlyInterpreterRuns: number; neitherRuns: number }
+  mismatch: { mismatchCount: number; details: details[] }
 }
 
 let parser: Parser
@@ -102,7 +102,7 @@ beforeAll(async () => {
 })
 
 /** 撈**完整程式**（帶 `int main`）。片段不能執行，與殘差那條的分欄規則不同。 */
-function 撈語料(): string[] {
+function fetchCorpus(): string[] {
   const dir = path.join(REPO_ROOT, 'tests/integration')
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
@@ -132,19 +132,19 @@ function 撈語料(): string[] {
  * 這與「**以名字為基礎的比對忘了詞界**」是同一族：**識別碼必須識別得出那個東西。**
  * 所以補上全文的雜湊。
  */
-const 鍵 = (c: string): string => {
-  const 正規 = c.replace(/\s+/g, ' ').trim()
-  return 判定鍵(正規.slice(0, 60), 正規)
+const key = (c: string): string => {
+  const normalize = c.replace(/\s+/g, ' ').trim()
+  return decisionKey(normalize.slice(0, 60), normalize)
 }
 
-async function 跑直譯器(code: string): Promise<string | null> {
+async function runInterpreter(code: string): Promise<string | null> {
   try {
     const tree = parser.parse(code)
     if (!tree) return null
-    const 語義樹 = lifter.lift(tree.rootNode as never) as SemanticNode
-    if (!語義樹) return null
+    const semanticTree = lifter.lift(tree.rootNode as never) as SemanticNode
+    if (!semanticTree) return null
     const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(語義樹)
+    await i.execute(semanticTree)
     // ⚠️ 是 getOutput()，不是 getState().output——後者只回 { status }。
     // 先前有一次基線把執行結果錄成空字串就是踩這個（build-guardrail 第 10 步）。
     return i.getOutput().join('')
@@ -153,13 +153,13 @@ async function 跑直譯器(code: string): Promise<string | null> {
   }
 }
 
-interface 結果 {
-  不可判定: number
-  兩邊都跑得動: number
-  只有參照跑得動: number
-  只有直譯器跑得動: number
-  兩邊都不成: number
-  明細: 明細[]
+interface result {
+  undecidable: number
+  bothRun: number
+  onlyReferenceRuns: number
+  onlyInterpreterRuns: number
+  neitherRuns: number
+  details: details[]
 }
 
 /**
@@ -174,41 +174,41 @@ interface 結果 {
  * 而處置也必須相同——**另立一欄，不是靜默排除**。靜默排除的話，
  * 「加一段讀 cin 的語料」就能讓誤差率下降。
  */
-const 不可判定 = (c: string): boolean => /\bcin\s*>>|\bscanf\s*\(|getline\s*\(|\brand\s*\(/.test(c)
+const undecidable = (c: string): boolean => /\bcin\s*>>|\bscanf\s*\(|getline\s*\(|\brand\s*\(/.test(c)
 
 /** 參照那一側可以被替換——注入測試靠它，而正式量測用真的編譯器。 */
-type 參照執行 = (code: string) => string | null
+type referenceRun = (code: string) => string | null
 
-async function 量(語料: readonly string[], 參照?: 參照執行): Promise<結果> {
-  const r: 結果 = { 不可判定: 0, 兩邊都跑得動: 0, 只有參照跑得動: 0, 只有直譯器跑得動: 0, 兩邊都不成: 0, 明細: [] }
-  const 可判定 = 語料.filter((c) => !不可判定(c))
-  r.不可判定 = 語料.length - 可判定.length
+async function measure(corpus: readonly string[], reference?: referenceRun): Promise<result> {
+  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [] }
+  const decidable = corpus.filter((c) => !undecidable(c))
+  r.undecidable = corpus.length - decidable.length
   // 參照那一側**並行**跑（8 路）。序列跑 300 段約 8 分鐘，而
   // 一條沒有人跑的護欄等於沒有護欄。
-  const 參輸出s = 參照 ? 可判定.map(參照) : await runCppBatch(可判定)
-  for (let i = 0; i < 可判定.length; i++) {
-    const c = 可判定[i]
-    const 參輸出 = 參輸出s[i]
-    const 直輸出 = await 跑直譯器(c)
-    if (參輸出 !== null && 直輸出 !== null) {
-      r.兩邊都跑得動++
-      if (參輸出.trim() !== 直輸出.trim()) {
-        r.明細.push({
-          語料鍵: 鍵(c),
-          語料: c.slice(0, 200).replace(/\n/g, '⏎'),
-          直譯器: 直輸出.slice(0, 100).replace(/\n/g, '⏎'),
-          參照: 參輸出.slice(0, 100).replace(/\n/g, '⏎'),
+  const refOutputs = reference ? decidable.map(reference) : await runCppBatch(decidable)
+  for (let i = 0; i < decidable.length; i++) {
+    const c = decidable[i]
+    const refOutput = refOutputs[i]
+    const directOutput = await runInterpreter(c)
+    if (refOutput !== null && directOutput !== null) {
+      r.bothRun++
+      if (refOutput.trim() !== directOutput.trim()) {
+        r.details.push({
+          corpusKey: key(c),
+          corpus: c.slice(0, 200).replace(/\n/g, '⏎'),
+          interpreter: directOutput.slice(0, 100).replace(/\n/g, '⏎'),
+          reference: refOutput.slice(0, 100).replace(/\n/g, '⏎'),
         })
       }
-    } else if (參輸出 !== null) r.只有參照跑得動++
-    else if (直輸出 !== null) r.只有直譯器跑得動++
-    else r.兩邊都不成++
+    } else if (refOutput !== null) r.onlyReferenceRuns++
+    else if (directOutput !== null) r.onlyInterpreterRuns++
+    else r.neitherRuns++
   }
   return r
 }
 
-function 讀判定(): 判定[] {
-  return fs.existsSync(判定檔) ? (JSON.parse(fs.readFileSync(判定檔, 'utf8')) as 判定[]) : []
+function readDecisions(): decision[] {
+  return fs.existsSync(decisionFile) ? (JSON.parse(fs.readFileSync(decisionFile, 'utf8')) as decision[]) : []
 }
 
 describe('第三十二條護欄：行為的誤差', () => {
@@ -222,10 +222,10 @@ describe('第三十二條護欄：行為的誤差', () => {
 
   // ── 健康檢查：錨在分母（輸入量），不錨在不一致筆數 ──────────────────
   it('★ 健康檢查：語料真的載入且兩邊都跑得動', async () => {
-    const 語料 = 撈語料()
-    expect(語料.length, '一段完整程式都沒撈到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
-    const r = await 量(語料.slice(0, 20))
-    expect(r.兩邊都跑得動, '前 20 段沒有一段兩邊都跑得動 → 量測機構壞了').toBeGreaterThan(0)
+    const corpus = fetchCorpus()
+    expect(corpus.length, '一段完整程式都沒撈到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
+    const r = await measure(corpus.slice(0, 20))
+    expect(r.bothRun, '前 20 段沒有一段兩邊都跑得動 → 量測機構壞了').toBeGreaterThan(0)
   }, 300000)
 
   // ── 雙向注入 ────────────────────────────────────────────────────
@@ -233,63 +233,63 @@ describe('第三十二條護欄：行為的誤差', () => {
     // 真正的注入：**替換參照那一側**，讓它回一個確定不同的答案。
     // 不依賴「直譯器現在剛好有某個 bug」——那種錨會在修好的那天失效
     // （`build-guardrail` 第 2 步）。
-    const 程式 = '#include <iostream>\nusing namespace std;\nint main(){ cout << 42; return 0; }'
-    const r = await 量([程式], () => '這不是 42')
-    expect(r.兩邊都跑得動, '兩邊都有輸出，必須進分母').toBe(1)
-    expect(r.明細, '參照與直譯器答案不同卻沒被報 → 這條護欄看不見系統在騙人').toHaveLength(1)
-    expect(r.明細[0].參照).toContain('這不是 42')
-    expect(r.明細[0].直譯器).toContain('42')
+    const program = '#include <iostream>\nusing namespace std;\nint main(){ cout << 42; return 0; }'
+    const r = await measure([program], () => '這不是 42')
+    expect(r.bothRun, '兩邊都有輸出，必須進分母').toBe(1)
+    expect(r.details, '參照與直譯器答案不同卻沒被報 → 這條護欄看不見系統在騙人').toHaveLength(1)
+    expect(r.details[0].reference).toContain('這不是 42')
+    expect(r.details[0].interpreter).toContain('42')
   }, 60000)
 
   it('★ 注入②：兩邊一致的程式不得被誤報', async () => {
-    const r = await 量(['#include <iostream>\nusing namespace std;\nint main(){ cout << 42; return 0; }'])
-    expect(r.兩邊都跑得動, '這一段兩邊都該跑得動').toBe(1)
-    expect(r.明細, '兩邊輸出相同卻被報成誤差 → 這條護欄會謊報系統在騙人').toHaveLength(0)
+    const r = await measure(['#include <iostream>\nusing namespace std;\nint main(){ cout << 42; return 0; }'])
+    expect(r.bothRun, '這一段兩邊都該跑得動').toBe(1)
+    expect(r.details, '兩邊輸出相同卻被報成誤差 → 這條護欄會謊報系統在騙人').toHaveLength(0)
   }, 60000)
 
   it('★ 注入③：只有一邊跑得動的不得算成「一致」', async () => {
     // 模板：參照編譯得過，直譯器不理解 → 必須進「只有參照跑得動」欄，
     // 不得從分母消失也不得算成一致。
-    const r = await 量(['#include <iostream>\ntemplate<typename T> T f(T x){ return x; }\nint main(){ std::cout << f(1); }'])
-    expect(r.不可判定 + r.兩邊都跑得動 + r.只有參照跑得動 + r.只有直譯器跑得動 + r.兩邊都不成, '每一段都必須落進某一欄').toBe(1)
+    const r = await measure(['#include <iostream>\ntemplate<typename T> T f(T x){ return x; }\nint main(){ std::cout << f(1); }'])
+    expect(r.undecidable + r.bothRun + r.onlyReferenceRuns + r.onlyInterpreterRuns + r.neitherRuns, '每一段都必須落進某一欄').toBe(1)
   }, 60000)
 
   it('★ 注入④：不可判定的語料必須進自己那一欄，不得算成誤差', async () => {
     // 讀 cin 的程式在無輸入下沒有唯一答案——參照讀到未初始化記憶體、
     // 直譯器回 0，**兩邊都不算錯**。把它算成誤差，等於謊報系統在騙人。
-    const r = await 量(['#include <iostream>\nusing namespace std;\nint main(){ int n; cin >> n; cout << n; }'])
-    expect(r.不可判定, '讀標準輸入的語料必須進不可判定那一欄').toBe(1)
-    expect(r.兩邊都跑得動, '它不得進分母').toBe(0)
-    expect(r.明細, '它不得被算成誤差').toHaveLength(0)
+    const r = await measure(['#include <iostream>\nusing namespace std;\nint main(){ int n; cin >> n; cout << n; }'])
+    expect(r.undecidable, '讀標準輸入的語料必須進不可判定那一欄').toBe(1)
+    expect(r.bothRun, '它不得進分母').toBe(0)
+    expect(r.details, '它不得被算成誤差').toHaveLength(0)
   }, 60000)
 
   // ── 棘輪 ────────────────────────────────────────────────────────
   it('不一致筆數只准下降', async () => {
-    const 語料 = 撈語料()
-    const r = await 量(語料)
-    const 判定s = 讀判定()
-    const 已判定 = new Map(判定s.map((d) => [d.語料鍵, d]))
-    const 要看 = r.明細.filter((d) => !已判定.has(d.語料鍵))
-    const 孤兒 = 判定s.filter((d) => !r.明細.some((m) => m.語料鍵 === d.語料鍵))
+    const corpus = fetchCorpus()
+    const r = await measure(corpus)
+    const decisions = readDecisions()
+    const decided = new Map(decisions.map((d) => [d.corpusKey, d]))
+    const toReview = r.details.filter((d) => !decided.has(d.corpusKey))
+    const orphans = decisions.filter((d) => !r.details.some((m) => m.corpusKey === d.corpusKey))
 
     printReport('行為的誤差（直譯器 vs 參照編譯器）', [
       `參照   ${referenceCompilerInfo().version}  ${referenceCompilerInfo().flags}`,
       '',
-      `語料   不可判定（讀輸入／亂數）${r.不可判定}｜兩邊都跑得動 ${r.兩邊都跑得動}｜只有參照 ${r.只有參照跑得動}｜只有直譯器 ${r.只有直譯器跑得動}｜兩邊都不成 ${r.兩邊都不成}`,
+      `語料   不可判定（讀輸入／亂數）${r.undecidable}｜兩邊都跑得動 ${r.bothRun}｜只有參照 ${r.onlyReferenceRuns}｜只有直譯器 ${r.onlyInterpreterRuns}｜兩邊都不成 ${r.neitherRuns}`,
       `       ⚠️ 五欄都要看——縮分母比修分子容易，而「加一段讀 cin 的語料」就能縮分母`,
-      `誤差   ${r.明細.length} 筆不一致（已判定 ${r.明細.length - 要看.length}，要看 ${要看.length}）`,
+      `誤差   ${r.details.length} 筆不一致（已判定 ${r.details.length - toReview.length}，要看 ${toReview.length}）`,
       '',
-      ...要看.slice(0, 30).map((d, i) => `  ${i + 1}. ${d.語料鍵}\n       直譯器「${d.直譯器}」 參照「${d.參照}」`),
-      ...(孤兒.length ? ['', `⚠️ 孤兒判定 ${孤兒.length} 筆（訊號已消失，判定可能不再成立）：`, ...孤兒.map((d) => `  - ${d.語料鍵}`)] : []),
+      ...toReview.slice(0, 30).map((d, i) => `  ${i + 1}. ${d.corpusKey}\n       直譯器「${d.interpreter}」 參照「${d.reference}」`),
+      ...(orphans.length ? ['', `⚠️ 孤兒判定 ${orphans.length} 筆（訊號已消失，判定可能不再成立）：`, ...orphans.map((d) => `  - ${d.corpusKey}`)] : []),
     ])
 
     // ⚠️ 斷言放在產基線**之後**。放在之前會死結：孤兒判定要靠新基線才知道
     // 哪些消失了，而新基線又產不出來。**產基線是維護模式，不是一次量測。**
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, {
+      writeBaseline(GUARD_NAME, {
         _meta: {
-          參照編譯器: referenceCompilerInfo().version,
-          旗標: referenceCompilerInfo().flags,
+          referenceCompiler: referenceCompilerInfo().version,
+          flag: referenceCompilerInfo().flags,
           note:
             '行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n' +
             '⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n' +
@@ -300,29 +300,29 @@ describe('第三十二條護欄：行為的誤差', () => {
             '哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。',
           ratchet: RATCHET_NOTE,
         },
-        語料: {
-          不可判定: r.不可判定,
-          兩邊都跑得動: r.兩邊都跑得動,
-          只有參照跑得動: r.只有參照跑得動,
-          只有直譯器跑得動: r.只有直譯器跑得動,
-          兩邊都不成: r.兩邊都不成,
+        corpus: {
+          undecidable: r.undecidable,
+          bothRun: r.bothRun,
+          onlyReferenceRuns: r.onlyReferenceRuns,
+          onlyInterpreterRuns: r.onlyInterpreterRuns,
+          neitherRuns: r.neitherRuns,
         },
-        誤差: { 不一致筆數: r.明細.length, 明細: r.明細 },
+        mismatch: { mismatchCount: r.details.length, details: r.details },
       })
       return
     }
 
-    expect(孤兒, '判定過期了。底下的事實變了，留著會讓一個過期的結論繼續生效。').toHaveLength(0)
+    expect(orphans, '判定過期了。底下的事實變了，留著會讓一個過期的結論繼續生效。').toHaveLength(0)
     expect(
-      判定s.filter((d) => !d.reason || d.reason.length < 4),
+      decisions.filter((d) => !d.reason || d.reason.length < 4),
       '每一筆判定必須有理由——沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     expect(
-      判定s.filter((d) => !d.根因),
+      decisions.filter((d) => !d.rootCause),
       '每一筆判定必須有根因——「一筆 ≠ 一個工作」，沒有根因就看不出哪些會一起消失',
     ).toHaveLength(0)
 
-    const base = loadBaseline<基線>(護欄名)
-    assertRatchet([['不一致筆數', r.明細.length, base.誤差.不一致筆數]])
+    const base = loadBaseline<Baseline>(GUARD_NAME)
+    assertRatchet([['不一致筆數', r.details.length, base.mismatch.mismatchCount]])
   }, 900000)
 })

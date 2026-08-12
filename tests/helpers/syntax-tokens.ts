@@ -146,8 +146,8 @@ export interface SyntaxScanResult {
  */
 function inStringLiteral(token: string): RegExp {
   const esc = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const 詞形 = /^[A-Za-z_][A-Za-z0-9_ ]*$/.test(token)
-  const body = 詞形 ? `(?<![A-Za-z0-9_])${esc}(?![A-Za-z0-9_])` : esc
+  const wordForm = /^[A-Za-z_][A-Za-z0-9_ ]*$/.test(token)
+  const body = wordForm ? `(?<![A-Za-z0-9_])${esc}(?![A-Za-z0-9_])` : esc
   return new RegExp(`(['"\`])[^'"\`\\n]*${body}[^'"\`\\n]*\\1`)
 }
 

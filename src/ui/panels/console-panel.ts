@@ -79,8 +79,8 @@ export class ConsolePanel implements ViewHost {
    * 這裡**照原樣搬**（`component-encapsulate`：搬移不重寫，要重寫在另一個 commit）。
    */
   onExecutionState(event: ExecutionStateEvent): void {
-    const msg = (鍵: string, 退路: string): string =>
-      (Blockly.Msg[鍵] as string | undefined) || 退路
+    const msg = (key: string, fallback2: string): string =>
+      (Blockly.Msg[key] as string | undefined) || fallback2
 
     if (event.reason === 'awaiting-input') {
       this.setStatus(msg('EXEC_STATUS_WAITING', 'Waiting for input...'), 'running')

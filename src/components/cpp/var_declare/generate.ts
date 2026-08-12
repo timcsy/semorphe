@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:var_declare', (node, ctx) => {
       // ⚠️ **位置感知**：`for (int i = 0; …)` 的初始化位置不要分號與縮排。
       // 那是**形態**不是身分——B 項把 `var_declare_expr` 合併進來。
-      const 收尾 = (expr: string): string => (ctx.isExpression ? expr : `${indent(ctx)}${expr};\n`)
+      const finish = (expr: string): string => (ctx.isExpression ? expr : `${indent(ctx)}${expr};\n`)
       const type = node.properties.type ?? 'int'
       const declarators = node.children.declarators ?? []
 
@@ -20,7 +20,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
           }
           return name
         })
-        return 收尾(`${type} ${parts.join(', ')}`)
+        return finish(`${type} ${parts.join(', ')}`)
       }
 
       // Single variable
@@ -30,11 +30,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         // Constructor-style initialization: Type name(args)
         if (node.properties.init_style === 'constructor') {
           const args = inits.map(a => generateExpression(a, ctx))
-          return 收尾(`${type} ${name}(${args.join(', ')})`)
+          return finish(`${type} ${name}(${args.join(', ')})`)
         }
         const val = generateExpression(inits[0], ctx)
-        return 收尾(`${type} ${name} = ${val}`)
+        return finish(`${type} ${name} = ${val}`)
       }
-      return 收尾(`${type} ${name}`)
+      return finish(`${type} ${name}`)
     })
 }

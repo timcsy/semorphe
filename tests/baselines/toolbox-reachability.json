@@ -1,6 +1,6 @@
 {
   "guard": "toolbox-reachability",
-  "缺陷": [],
+  "defects": [],
   "imperativeOnly": [],
   "findings": [
     {

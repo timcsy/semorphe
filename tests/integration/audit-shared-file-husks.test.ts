@@ -52,14 +52,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
 
-const 護欄名 = 'shared-file-husks'
+const GUARD_NAME = 'shared-file-husks'
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  掃描: { 檔數: number; export總數: number }
-  空殼: number
-  重複: number
-  明細: { 空殼: string[]; 重複: string[] }
+  scanned: { fileCount: number; exportCount: number }
+  husks: number
+  duplicates: number
+  details: { husks: string[]; duplicates: string[] }
 }
 
 /**
@@ -67,24 +67,24 @@ interface 基線 {
  *
  * ⚠️ 膠囊排除掉，理由見檔頭：膠囊的空 `registerLift()` 是顯式的空。
  */
-function 共用檔(): string[] {
+function sharedFiles(): string[] {
   const out: string[] = []
-  const 走 = (d: string): void => {
+  const walk = (d: string): void => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
       if (e.isDirectory()) {
-        if (e.name !== 'components') 走(p)
+        if (e.name !== 'components') walk(p)
       } else if (e.name.endsWith('.ts') && !e.name.endsWith('.d.ts')) out.push(p)
     }
   }
-  走(path.join(REPO_ROOT, 'src'))
+  walk(path.join(REPO_ROOT, 'src'))
   return out
 }
 
 /** 一個函式的本體去掉註解與空行之後還剩什麼。 */
-function 本體是空的(src: string, 開頭: number): boolean {
+function bodyIsEmpty(src: string, head: number): boolean {
   let d = 0
-  let i = src.indexOf('{', 開頭)
+  let i = src.indexOf('{', head)
   const start = i
   while (i < src.length) {
     if (src[i] === '{') d++
@@ -102,70 +102,70 @@ function 本體是空的(src: string, 開頭: number): boolean {
 }
 
 /** 空掉的註冊函式。**純函式**——注入才餵得進合成輸入。 */
-export function 偵測空殼(內容: string): string[] {
+export function detectHusks(content: string): string[] {
   const out: string[] = []
-  for (const m of 內容.matchAll(/export (?:async )?function (register\w+)\s*\(/g)) {
-    if (本體是空的(內容, m.index ?? 0)) out.push(m[1])
+  for (const m of content.matchAll(/export (?:async )?function (register\w+)\s*\(/g)) {
+    if (bodyIsEmpty(content, m.index ?? 0)) out.push(m[1])
   }
   return out
 }
 
 /** 一個檔匯出的非登錄符號（演算法、常數、類別）。 */
-export function 匯出的演算法(內容: string): string[] {
-  return [...內容.matchAll(/export (?:async )?(?:function|const|class) (\w+)/g)]
+export function exportedAlgorithms(content: string): string[] {
+  return [...content.matchAll(/export (?:async )?(?:function|const|class) (\w+)/g)]
     .map((m) => m[1])
     .filter((n) => !n.startsWith('register'))
 }
 
 describe('第三十八條護欄：共用檔的殼與重複', () => {
   it('★ 健康檢查：掃描真的吃到東西', () => {
-    const 檔s = 共用檔()
-    expect(檔s.length, '一個共用檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(50)
-    const 總數 = 檔s.reduce((n, f) => n + 匯出的演算法(fs.readFileSync(f, 'utf8')).length, 0)
-    expect(總數, '一個 export 都沒看到 → 掃描器沒吃到內容').toBeGreaterThan(50)
+    const files = sharedFiles()
+    expect(files.length, '一個共用檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(50)
+    const total = files.reduce((n, f) => n + exportedAlgorithms(fs.readFileSync(f, 'utf8')).length, 0)
+    expect(total, '一個 export 都沒看到 → 掃描器沒吃到內容').toBeGreaterThan(50)
   })
 
   it('★ 注入①：空掉的註冊函式必須被報出', () => {
-    expect(偵測空殼('export function registerFoo(): void {\n}\n')).toEqual(['registerFoo'])
-    expect(偵測空殼('export function registerBar(r: X): void {\n  // 只剩註解\n\n}\n')).toEqual(['registerBar'])
+    expect(detectHusks('export function registerFoo(): void {\n}\n')).toEqual(['registerFoo'])
+    expect(detectHusks('export function registerBar(r: X): void {\n  // 只剩註解\n\n}\n')).toEqual(['registerBar'])
   })
 
   it('★ 注入②：有內容的、以及不叫 register 的，都不得被報', () => {
     // 這一條不可省。沒有它，一個「什麼都報」的掃描器也能通過注入①。
-    expect(偵測空殼('export function registerFoo(): void {\n  r("a", f)\n}\n')).toEqual([])
-    expect(偵測空殼('export function computeFoo(): void {\n}\n')).toEqual([])
-    expect(偵測空殼('沒有任何函式的一份檔')).toEqual([])
+    expect(detectHusks('export function registerFoo(): void {\n  r("a", f)\n}\n')).toEqual([])
+    expect(detectHusks('export function computeFoo(): void {\n}\n')).toEqual([])
+    expect(detectHusks('沒有任何函式的一份檔')).toEqual([])
   })
 
   it('★ 注入③：同名的 export 出現在兩個檔要被判為重複', () => {
-    const a = 匯出的演算法('export function mapFind(x) { return 1 }')
-    const b = 匯出的演算法('export function mapFind(x) { return 1 }')
+    const a = exportedAlgorithms('export function mapFind(x) { return 1 }')
+    const b = exportedAlgorithms('export function mapFind(x) { return 1 }')
     expect(a).toEqual(['mapFind'])
     expect(a[0]).toBe(b[0])
   })
 
   it('棘輪：空殼與重複都只准下降', () => {
-    const 檔s = 共用檔()
-    const 空殼: string[] = []
-    const 出處 = new Map<string, string[]>()
+    const files = sharedFiles()
+    const husks: string[] = []
+    const origin = new Map<string, string[]>()
 
-    for (const f of 檔s) {
+    for (const f of files) {
       const rel = path.relative(REPO_ROOT, f)
       const s = fs.readFileSync(f, 'utf8')
-      for (const fn of 偵測空殼(s)) 空殼.push(`${rel} → ${fn}()`)
-      for (const e of 匯出的演算法(s)) {
-        if (!出處.has(e)) 出處.set(e, [])
-        出處.get(e)!.push(rel)
+      for (const fn of detectHusks(s)) husks.push(`${rel} → ${fn}()`)
+      for (const e of exportedAlgorithms(s)) {
+        if (!origin.has(e)) origin.set(e, [])
+        origin.get(e)!.push(rel)
       }
     }
-    const 重複 = [...出處]
+    const duplicates = [...origin]
       .filter(([, ps]) => ps.length > 1)
       .map(([e, ps]) => `${e}：${ps.join(' 與 ')}`)
       .sort()
-    空殼.sort()
+    husks.sort()
 
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, {
+      writeBaseline(GUARD_NAME, {
         _meta: {
           note:
             '共用檔（`src/` 扣掉膠囊）裡的**空掉的註冊函式**與**同名的 export**。\n' +
@@ -174,32 +174,32 @@ describe('第三十八條護欄：共用檔的殼與重複', () => {
             '⚠️ 下降必須是「刪掉了殼／合併了兩份」，不是「把檔案排除在掃描外」。',
           ratchet: RATCHET_NOTE,
         },
-        掃描: {
-          檔數: 檔s.length,
-          export總數: 檔s.reduce((n, f) => n + 匯出的演算法(fs.readFileSync(f, 'utf8')).length, 0),
+        scanned: {
+          fileCount: files.length,
+          exportCount: files.reduce((n, f) => n + exportedAlgorithms(fs.readFileSync(f, 'utf8')).length, 0),
         },
-        空殼: 空殼.length,
-        重複: 重複.length,
-        明細: { 空殼, 重複 },
-      } satisfies 基線)
+        husks: husks.length,
+        duplicates: duplicates.length,
+        details: { husks, duplicates },
+      } satisfies Baseline)
       return
     }
 
-    const base = loadBaseline<基線>(護欄名)
+    const base = loadBaseline<Baseline>(GUARD_NAME)
     printReport('共用檔的殼與重複', [
-      `掃描   ${檔s.length} 個共用檔`,
-      `空殼   ${空殼.length}（基線 ${base.空殼}）`,
-      ...空殼.map((x) => `  ✘ ${x}`),
-      `重複   ${重複.length}（基線 ${base.重複}）`,
-      ...重複.map((x) => `  ✘ ${x}`),
+      `掃描   ${files.length} 個共用檔`,
+      `空殼   ${husks.length}（基線 ${base.husks}）`,
+      ...husks.map((x) => `  ✘ ${x}`),
+      `重複   ${duplicates.length}（基線 ${base.duplicates}）`,
+      ...duplicates.map((x) => `  ✘ ${x}`),
     ])
-    const 新空殼 = 空殼.filter((x) => !base.明細.空殼.includes(x))
-    const 新重複 = 重複.filter((x) => !base.明細.重複.includes(x))
-    expect(新空殼, `新增了空掉的註冊函式：\n  ${新空殼.join('\n  ')}`).toEqual([])
-    expect(新重複, `新增了兩份同名的 export（會漂移）：\n  ${新重複.join('\n  ')}`).toEqual([])
+    const newHusks = husks.filter((x) => !base.details.husks.includes(x))
+    const newDuplicates = duplicates.filter((x) => !base.details.duplicates.includes(x))
+    expect(newHusks, `新增了空掉的註冊函式：\n  ${newHusks.join('\n  ')}`).toEqual([])
+    expect(newDuplicates, `新增了兩份同名的 export（會漂移）：\n  ${newDuplicates.join('\n  ')}`).toEqual([])
     assertRatchet([
-      ['空殼', 空殼.length, base.空殼],
-      ['重複', 重複.length, base.重複],
+      ['空殼', husks.length, base.husks],
+      ['重複', duplicates.length, base.duplicates],
     ])
   })
 })

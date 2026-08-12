@@ -25,21 +25,21 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-function 樹(src: string): SemanticNode {
+function tree(src: string): SemanticNode {
   return createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
 }
-function 身分們(n: SemanticNode): string[] {
+function identities(n: SemanticNode): string[] {
   const out: string[] = [n.conceptId]
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...身分們(k as SemanticNode))
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
-function 程式(expr: string): string {
+function program(expr: string): string {
   return `#include <iostream>\n#include <cmath>\nusing namespace std;\nint main() { cout << ${expr}; }`
 }
 
 describe('膠囊自證：cpp:math_pow', () => {
   it('★ lift：`pow(2, 10)` 得到這顆身分', () => {
-    expect(身分們(樹(程式('pow(2, 10)')))).toContain('cpp:math_pow')
+    expect(identities(tree(program('pow(2, 10)')))).toContain('cpp:math_pow')
   })
 
   it('★ generate：產回 pow(2, 10)', () => {
@@ -51,7 +51,7 @@ describe('膠囊自證：cpp:math_pow', () => {
   })
 
   it('★ execute：`pow(2, 10)` 印出 1024', async () => {
-    const t = 樹(程式('pow(2, 10)'))
+    const t = tree(program('pow(2, 10)'))
     expect(JSON.stringify(t)).toContain('cpp:math_pow')   // ← 先證明它進了樹
     const i = new SemanticInterpreter({ maxSteps: 100000 })
     await i.execute(t)
@@ -59,15 +59,15 @@ describe('膠囊自證：cpp:math_pow', () => {
   })
 
   it('★ lift：引數依序進 base / exponent 兩個槽——**槽名是契約**', () => {
-    const n = 樹(程式('pow(2, 10)'))
-    const 找 = (x: SemanticNode): SemanticNode | null => {
+    const n = tree(program('pow(2, 10)'))
+    const find = (x: SemanticNode): SemanticNode | null => {
       if (x.conceptId === 'cpp:math_pow') return x
       for (const kids of Object.values(x.children ?? {})) for (const k of kids) {
-        const r = 找(k as SemanticNode); if (r) return r
+        const r = find(k as SemanticNode); if (r) return r
       }
       return null
     }
-    const p = 找(n)!
+    const p = find(n)!
     expect(p, 'pow(2,10) 必須產生 cpp:math_pow').not.toBeNull()
     // ⚠️ 槽名錯了不會爆，只會是空陣列——所以要指名地驗兩個槽都非空。
     expect(p.children.base?.length, 'base 槽必須有東西').toBe(1)

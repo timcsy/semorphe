@@ -12,7 +12,7 @@
  */
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../blocks/block-type-migrations'
-import { 合併掉的身分 } from '../blocks/merged-identities'
+import { mergedIdentities } from '../blocks/merged-identities'
 
 /** 目前的存檔格式世代 */
 export const CURRENT_VERSION = 10
@@ -71,17 +71,17 @@ export type Upgrade = (raw: Record<string, unknown>) => Record<string, unknown>
  *
  * 對已是新格式的身分是**冪等**的：表裡沒有 `cpp:math_pow`，於是它原樣通過。
  */
-function 改寫身分(node: unknown, 表: Record<string, string>): unknown {
+function rewriteIdentity(node: unknown, table: Record<string, string>): unknown {
   if (!node || typeof node !== 'object') return node
-  if (Array.isArray(node)) return node.map((n) => 改寫身分(n, 表))
+  if (Array.isArray(node)) return node.map((n) => rewriteIdentity(n, table))
   const n = node as Record<string, unknown>
   const out: Record<string, unknown> = { ...n }
   const cid = out.conceptId
-  if (typeof cid === 'string' && 表[cid]) out.conceptId = 表[cid]
+  if (typeof cid === 'string' && table[cid]) out.conceptId = table[cid]
   const children = out.children
   if (children && typeof children === 'object' && !Array.isArray(children)) {
     const c: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = 改寫身分(v, 表)
+    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = rewriteIdentity(v, table)
     out.children = c
   }
   return out
@@ -141,9 +141,9 @@ export function registeredPropertyMigrations(): Record<string, Record<string, st
 }
 
 /** 就地改寫語義樹裡的參數名。**只改認得的，其餘原樣通過。** */
-function 改寫參數(node: unknown): unknown {
+function rewriteParams(node: unknown): unknown {
   if (!node || typeof node !== 'object') return node
-  if (Array.isArray(node)) return node.map(改寫參數)
+  if (Array.isArray(node)) return node.map(rewriteParams)
   const n = node as Record<string, unknown>
   const out: Record<string, unknown> = { ...n }
   const cid = out.conceptId
@@ -156,7 +156,7 @@ function 改寫參數(node: unknown): unknown {
   const children = out.children
   if (children && typeof children === 'object' && !Array.isArray(children)) {
     const c: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = 改寫參數(v)
+    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = rewriteParams(v)
     out.children = c
   }
   return out
@@ -175,18 +175,18 @@ export function registeredIdMigrations(): Record<string, string> {
  * 理由：積木型別是**投影**，而投影的命名規則是核心定的（`deriveBlockType`）；
  * 身分是**真實**，而真實屬於套件。兩者的歸屬不同，機制就不該長一樣。
  */
-const 積木型別改名 = () => BLOCK_TYPE_MIGRATIONS_V9_TO_V10
+const blockTypeRenames = () => BLOCK_TYPE_MIGRATIONS_V9_TO_V10
 
 /** 轉換遇到表上沒有的型別時，怎麼處理。 */
-export class 未知積木型別 extends Error {
-  readonly 型別們: readonly string[]
-  constructor(型別們: readonly string[]) {
+export class unknownBlockTypes extends Error {
+  readonly types: readonly string[]
+  constructor(types: readonly string[]) {
     super(
-      `存檔裡有 ${型別們.length} 種積木型別不在 v9→v10 的改名表上：` +
-        `${型別們.join('、')}。**不靜默丟棄**——一顆被吞掉的積木，` +
+      `存檔裡有 ${types.length} 種積木型別不在 v9→v10 的改名表上：` +
+        `${types.join('、')}。**不靜默丟棄**——一顆被吞掉的積木，` +
         `使用者感覺到的是「我的程式少了一段」而沒有任何錯誤訊息。`,
     )
-    this.型別們 = 型別們
+    this.types = types
     this.name = '未知積木型別'
   }
 }
@@ -202,34 +202,34 @@ export class 未知積木型別 extends Error {
  * 判別方式：只在**已知是積木節點**的位置遞迴（`blocks.blocks[]`、`inputs.*.block`
  * ／`.shadow`、`next.block`／`.shadow`）。認不得的結構原樣通過。
  */
-function 改寫積木型別(blocklyState: unknown, 表: Record<string, string>, 未知: Set<string>): unknown {
+function rewriteBlockType(blocklyState: unknown, table: Record<string, string>, unknown: Set<string>): unknown {
   // ⚠️ **已經是新名的不算未知**——否則轉換就不冪等，而不冪等會咬人：
   // 匯出那條路曾經把每一份檔案標成 `version: 1`（2026-08-11 修掉），
   // 於是一份已經轉換過的內容會再被餵進這一步一次。
   // **一個「只跑一次才對」的轉換，遲早會被跑第二次。**
-  const 新名們 = new Set(Object.values(表))
-  const 一顆積木 = (b: unknown): unknown => {
+  const newNames = new Set(Object.values(table))
+  const oneBlock = (b: unknown): unknown => {
     if (!b || typeof b !== 'object' || Array.isArray(b)) return b
     const n = { ...(b as Record<string, unknown>) }
     if (typeof n.type === 'string') {
-      const 新 = 表[n.type]
-      if (新 !== undefined) n.type = 新
-      else if (!新名們.has(n.type)) 未知.add(n.type)
+      const fresh = table[n.type]
+      if (fresh !== undefined) n.type = fresh
+      else if (!newNames.has(n.type)) unknown.add(n.type)
     }
     if (n.inputs && typeof n.inputs === 'object') {
       const ins: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(n.inputs as Record<string, unknown>)) {
         const slot = { ...(v as Record<string, unknown>) }
-        if (slot.block) slot.block = 一顆積木(slot.block)
-        if (slot.shadow) slot.shadow = 一顆積木(slot.shadow)
+        if (slot.block) slot.block = oneBlock(slot.block)
+        if (slot.shadow) slot.shadow = oneBlock(slot.shadow)
         ins[k] = slot
       }
       n.inputs = ins
     }
     if (n.next && typeof n.next === 'object') {
       const nx = { ...(n.next as Record<string, unknown>) }
-      if (nx.block) nx.block = 一顆積木(nx.block)
-      if (nx.shadow) nx.shadow = 一顆積木(nx.shadow)
+      if (nx.block) nx.block = oneBlock(nx.block)
+      if (nx.shadow) nx.shadow = oneBlock(nx.shadow)
       n.next = nx
     }
     return n
@@ -239,44 +239,44 @@ function 改寫積木型別(blocklyState: unknown, 表: Record<string, string>, 
   const s = { ...(blocklyState as Record<string, unknown>) }
   const blocks = s.blocks as Record<string, unknown> | undefined
   if (blocks && Array.isArray(blocks.blocks)) {
-    s.blocks = { ...blocks, blocks: (blocks.blocks as unknown[]).map(一顆積木) }
+    s.blocks = { ...blocks, blocks: (blocks.blocks as unknown[]).map(oneBlock) }
   }
   return s
 }
 
 export const UPGRADES: Record<number, Upgrade> = {
-  1: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, 合併掉的身分), version: 2 }),
-  2: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 3 }),
+  1: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, mergedIdentities), version: 2 }),
+  2: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 3 }),
   // 3 → 4：**接收者參數統一叫 `obj`**（G 項第 1 步，2026-08-09）。
   // 10 顆元件的接收者原本叫 `name`／`vector`／`ptr_name`／`ptr`——
   // 同一個角色四個名字。統一之後，`lifters/io.ts` 裡那張只為了容納不一致
   // 而存在的 `METHOD_OBJ_PROP` 對應表整個消失了。
-  3: (raw) => ({ ...raw, tree: 改寫參數(raw.tree), version: 4 }),
+  3: (raw) => ({ ...raw, tree: rewriteParams(raw.tree), version: 4 }),
   // 4 → 5：**D1**——`lang:` scope 退場，32 顆歸 `cpp:`。
   // 沿用同一張 `idMigrations`（套件登錄的表是累積的）。
-  4: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 5 }),
+  4: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 5 }),
   // 5 → 6：G 項第 3 步——主體移到前面（`count_loop` → `loop_count`）
-  5: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 6 }),
+  5: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 6 }),
   // 6 → 7：G 項第 4 步——同義操作詞合併（`length` → `size` 等）
-  6: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 7 }),
+  6: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 7 }),
   // 7 → 8：G 項第 5 步——抄來的函式庫名拆成「主體 ＋ 操作」
-  7: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 8 }),
+  7: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 8 }),
   // 8 → 9：G 項第 6 步——修飾詞從主體位置移到種差位置
-  8: (raw) => ({ ...raw, tree: 改寫身分(raw.tree, idMigrations), version: 9 }),
+  8: (raw) => ({ ...raw, tree: rewriteIdentity(raw.tree, idMigrations), version: 9 }),
   // 9 → 10：**積木型別從概念身分導出**（spec 116）。
   //
   // ⚠️ **這是第一個改寫 `blocklyState` 的升級步驟**——上面八個都只碰 `tree`。
   // 理由見 `blocks/block-type-migrations.ts` 的檔頭：積木狀態是載入時的
   // **主要還原來源**，所以它行為上是真實，適用 P8 的例外條款。
   9: (raw) => {
-    const 未知 = new Set<string>()
-    const 新狀態 = 改寫積木型別(raw.blocklyState, 積木型別改名(), 未知)
+    const unknown = new Set<string>()
+    const newState = rewriteBlockType(raw.blocklyState, blockTypeRenames(), unknown)
     // 表是空的時候（改名還沒開始）不該把每一顆都當成未知——那會讓
     // 一個還沒做的遷移把所有舊檔擋在門外。
-    if (Object.keys(積木型別改名()).length > 0 && 未知.size > 0) {
-      throw new 未知積木型別([...未知].sort())
+    if (Object.keys(blockTypeRenames()).length > 0 && unknown.size > 0) {
+      throw new unknownBlockTypes([...unknown].sort())
     }
-    return { ...raw, blocklyState: 新狀態, version: 10 }
+    return { ...raw, blocklyState: newState, version: 10 }
   },
 }
 

@@ -179,9 +179,9 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
   it('★ 有 JSON 對應的插槽名不得**新增**寫死', () => {
     const b = loadBaseline<DualBaseline>('dual-truth')
     const known = b.hardcodedList ?? []
-    const 新增 = hardcoded.filter((h) => !known.includes(h))
+    const added = hardcoded.filter((h) => !known.includes(h))
     expect(
-      新增,
+      added,
       '這些插槽名在 JSON 裡有對應物，卻在動態註冊裡寫死。兩邊不一致時**只在切換' +
         '積木外觀（存檔再讀回）時才炸**，平常測試全綠。改用 block-input-names 導出的常數。',
     ).toEqual([])
@@ -196,10 +196,10 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
 
   it('棘輪：兩處都有定義的數量不得上升', () => {
     const b = loadBaseline<DualBaseline>('dual-truth')
-    const 新增 = both.filter((x) => !b.blocks.includes(x))
+    const added = both.filter((x) => !b.blocks.includes(x))
     expect(
-      新增,
-      `新增的雙重定義：${新增.join('、')}\n` +
+      added,
+      `新增的雙重定義：${added.join('、')}\n` +
         '同一顆積木不該有兩處定義——JSON 是消費者（PatternRenderer）讀的那一份。',
     ).toEqual([])
     assertRatchet([['兩處都有定義', both.length, b.bothDefined]])

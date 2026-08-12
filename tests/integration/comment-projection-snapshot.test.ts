@@ -96,7 +96,7 @@ describe('核心層零註解語法（FR-012）', () => {
    * 中立性護欄找的是概念身分，**它看不見這個**——`lifter.ts` 剝 `//` 的那一行
    * 一個概念身分都沒有。身分只是耦合的一種形式，語法是另一種。
    */
-  const 註解語法 = [
+  const commentSyntax = [
     { name: '行註解', re: /['"`/]\\?\/\\?\/|\/\\\// },
     { name: '區塊註解開頭', re: /\/\\\*|'\/\*|`\/\*|"\/\*/ },
     { name: '文件註解開頭', re: /'\/\*\*|`\/\*\*|"\/\*\*|\/\*\*['"`]/ },
@@ -106,7 +106,7 @@ describe('核心層零註解語法（FR-012）', () => {
     const hits: string[] = []
     for (const rel of listSourceFiles('src/core')) {
       const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'))
-      for (const { name, re } of 註解語法) {
+      for (const { name, re } of commentSyntax) {
         if (re.test(code)) hits.push(`${rel} → ${name}`)
       }
     }

@@ -24,7 +24,7 @@ import type { SemanticNode } from '../../../../core/types'
 import { componentsWithMemberRole, memberRoleOf } from '../../../../core/component/registry'
 
 /** 把一群成員敘述拆成「欄位／方法／建構式」 */
-export function 拆解成員(members: SemanticNode[]): {
+export function splitMember(members: SemanticNode[]): {
   fields: FieldDecl[]
   methods: MethodDecl[]
   ctor?: MethodDecl
@@ -53,27 +53,27 @@ export function 拆解成員(members: SemanticNode[]): {
   // 沒有時序）。原本還疊著一張 `pending-member-roles.json` 過渡表，
   // 而 177 顆全部膠囊化之後它空了——**一個空的過渡表讀起來像
   // 「這裡還有一批沒處理的」**，已退場。
-  const 角色 = memberRoleOf
-  const 方法概念 = new Set(componentsWithMemberRole('method'))
+  const role = memberRoleOf
+  const methodConcepts = new Set(componentsWithMemberRole('method'))
   for (const m of members) {
-    if (角色(m.conceptId) === 'static-field') {
+    if (role(m.conceptId) === 'static-field') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (角色(m.conceptId) === 'pure-virtual') {
+    } else if (role(m.conceptId) === 'pure-virtual') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
-    } else if (角色(m.conceptId) === 'operator') {
+    } else if (role(m.conceptId) === 'operator') {
       // 存成名字是 `operator+` 的方法，讓算術執行器找得到
       methods.push({
         name: `operator${String(m.properties.operator)}`,
         params: [{ name: String(m.properties.param_name ?? 'rhs'), type: String(m.properties.param_type ?? 'int') }],
         body: m.children.body ?? [],
       })
-    } else if (方法概念.has(m.conceptId)) {
+    } else if (methodConcepts.has(m.conceptId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
-    } else if (角色(m.conceptId) === 'constructor') {
+    } else if (role(m.conceptId) === 'constructor') {
       ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
-    } else if (角色(m.conceptId) === 'destructor') {
+    } else if (role(m.conceptId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
@@ -96,7 +96,7 @@ export function 拆解成員(members: SemanticNode[]): {
  * ⚠️ **匯出它，因為 `cpp:method_call` 搬進膠囊了。** 這不是那顆元件的實作
  * ——`class_def` 的建構、解構、方法執行器都走它。**共用的是演算法，不是身分。**
  */
-export async function 在實例上執行(
+export async function runOnInstance(
   obj: RuntimeValue,
   m: MethodDecl,
   argNodes: SemanticNode[],
@@ -109,15 +109,15 @@ export async function 在實例上執行(
   // 型別層在最外——靜態成員由**所有實例共用**，所以它住在型別上不在實例上。
   // 順序：外層 → 型別層（靜態） → 欄位層（實例） → 本體層（區域變數）。
   // 實例欄位擋在靜態前面，與 C++ 的遮蔽一致。
-  const 靜態表 = ctx.structs.staticsOf(obj.structName ?? '')
-  const 型別層 = 靜態表 ? Scope.overFields(靜態表, outer) : outer
-  const 欄位層 = Scope.overFields(obj.value as ObjectFields, 型別層)
-  const 本體層 = 欄位層.createChild()
-  m.params.forEach((p, i) => 本體層.declare(p.name, argValues[i] ?? defaultValue(p.type)))
+  const staticTable = ctx.structs.staticsOf(obj.structName ?? '')
+  const typeLevel = staticTable ? Scope.overFields(staticTable, outer) : outer
+  const fieldLevel = Scope.overFields(obj.value as ObjectFields, typeLevel)
+  const bodyLevel = fieldLevel.createChild()
+  m.params.forEach((p, i) => bodyLevel.declare(p.name, argValues[i] ?? defaultValue(p.type)))
   // `this` 指向自己，讓 `this.x` 與 `this->method()` 也能用
-  本體層.declare('this', obj)
+  bodyLevel.declare('this', obj)
 
-  ctx.scope = 本體層
+  ctx.scope = bodyLevel
   try {
     await ctx.executeBody(m.body)
     return defaultValue('void')
@@ -138,8 +138,8 @@ export async function 在實例上執行(
  *
  * 提升之後行為一字未變（它本來就只用 `ctx`，沒有捕獲別的東西）。
  */
-export const 安裝方法執行器 = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
-  ctx.structs.installMethodRunner((obj, m, args) => 在實例上執行(obj, m, args, ctx) as Promise<unknown>)
+export const installMethodExecutors = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
+  ctx.structs.installMethodRunner((obj, m, args) => runOnInstance(obj, m, args, ctx) as Promise<unknown>)
 
   // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**
   // 是這裡的知識——別的語言可能什麼都不做。
@@ -149,21 +149,21 @@ export const 安裝方法執行器 = (ctx: import('../../../../interpreter/execu
     // 解構式的本體跑在一個作用域裡，而那個作用域宣告了 `this`（指向這個
     // 物件自己）。離開它時又對同一個物件跑一次解構式 → 堆疊爆掉。
     // 第一版就是這樣，症狀是 **OOM 而不是一則錯誤訊息**。
-    const 解構中 = new Set<unknown>()
+    const destructuring = new Set<unknown>()
 
     ctx.onScopeExit = async (own) => {
       // **反序**：C++ 保證後宣告的先解構。順序錯的實作在單一物件時看不出來。
       for (const [name, v] of [...own.entries()].reverse()) {
         if (v.type !== 'object') continue  // 非物件不觸發任何收尾
         if (name === 'this') continue      // `this` 不是這個作用域擁有的
-        if (解構中.has(v.value)) continue
+        if (destructuring.has(v.value)) continue
         const dtor = ctx.structs.destructorOf(v.structName ?? '')
         if (!dtor) continue
-        解構中.add(v.value)
+        destructuring.add(v.value)
         try {
-          await 在實例上執行(v, dtor, [], ctx)
+          await runOnInstance(v, dtor, [], ctx)
         } finally {
-          解構中.delete(v.value)
+          destructuring.delete(v.value)
         }
       }
     }

@@ -7,7 +7,7 @@
 import type { SemanticNode, PropertyValue } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建destructor(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
+export function buildDestructor(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:destructor', props, children)
 }
 

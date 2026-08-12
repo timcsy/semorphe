@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建comma_expr(exprs: SemanticNode[]): SemanticNode {
+export function buildCommaExpr(exprs: SemanticNode[]): SemanticNode {
   return createNode('cpp:comma_expr', {}, { exprs })
 }
 

@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建program(body: SemanticNode[] = []): SemanticNode {
+export function buildProgram(body: SemanticNode[] = []): SemanticNode {
   return createNode('cpp:program', {}, { body })
 }
 

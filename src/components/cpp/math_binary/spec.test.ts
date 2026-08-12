@@ -25,21 +25,21 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-function 樹(src: string): SemanticNode {
+function tree(src: string): SemanticNode {
   return createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
 }
-function 身分們(n: SemanticNode): string[] {
+function identities(n: SemanticNode): string[] {
   const out: string[] = [n.conceptId]
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...身分們(k as SemanticNode))
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
-function 程式(expr: string): string {
+function program(expr: string): string {
   return `#include <iostream>\n#include <cmath>\nusing namespace std;\nint main() { cout << ${expr}; }`
 }
 
 describe('膠囊自證：cpp:math_binary', () => {
   it('★ lift：`fmax(3.0, 7.0)` 得到這顆身分', () => {
-    expect(身分們(樹(程式('fmax(3.0, 7.0)')))).toContain('cpp:math_binary')
+    expect(identities(tree(program('fmax(3.0, 7.0)')))).toContain('cpp:math_binary')
   })
 
   it('★ generate：產回 fmax(3.0, 7.0)', () => {
@@ -51,7 +51,7 @@ describe('膠囊自證：cpp:math_binary', () => {
   })
 
   it('★ execute：`fmax(3.0, 7.0)` 印出 7', async () => {
-    const t = 樹(程式('fmax(3.0, 7.0)'))
+    const t = tree(program('fmax(3.0, 7.0)'))
     expect(JSON.stringify(t)).toContain('cpp:math_binary')   // ← 先證明它進了樹
     const i = new SemanticInterpreter({ maxSteps: 100000 })
     await i.execute(t)
@@ -60,7 +60,7 @@ describe('膠囊自證：cpp:math_binary', () => {
 
   it('★ 5 個函式名共用一顆身分', () => {
     for (const f of ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']) {
-      const ids = 身分們(樹(程式(`${f}(3.0, 4.0)`)))
+      const ids = identities(tree(program(`${f}(3.0, 4.0)`)))
       expect(ids, `${f}() 必須被辨識成 cpp:math_binary`).toContain('cpp:math_binary')
     }
   })

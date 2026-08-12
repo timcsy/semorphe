@@ -58,7 +58,7 @@ import { registeredComponents } from '../../src/core/component/registry'
 import { idToDir } from '../../src/core/component/types'
 
 /** 本切片搬的那一顆。 */
-const 切片元件 = 'cpp:vector_declare'
+const sliceComponent = 'cpp:vector_declare'
 
 const BASELINE = path.join(REPO_ROOT, 'tests/baselines/component-parity-vector-declare.json')
 
@@ -79,31 +79,31 @@ const style: StylePreset = {
  * ⚠️ **含兄弟元件那一支**（`research.md` 的未驗項）：`vector_size`／`vector_pop`／
  * `vector_back` 與 `vector_declare` 是否共用執行期狀態，沒有實測過。
  */
-const 樣本: { name: string; 碼: string }[] = [
-  { name: '最小宣告', 碼: 'int main() { vector<int> v; }' },
-  { name: '初始化列表', 碼: 'int main() { vector<int> v = {3, 1, 4}; }' },
-  { name: '型別變化', 碼: 'int main() { vector<double> d; vector<std::string> s; }' },
+const samples: { name: string; code: string }[] = [
+  { name: '最小宣告', code: 'int main() { vector<int> v; }' },
+  { name: '初始化列表', code: 'int main() { vector<int> v = {3, 1, 4}; }' },
+  { name: '型別變化', code: 'int main() { vector<double> d; vector<std::string> s; }' },
   {
     name: '兄弟元件同場',
-    碼: 'int main() { vector<int> v = {3, 1, 4}; cout << v.size() << " " << v.back() << endl; v.pop_back(); cout << v.size() << endl; }',
+    code: 'int main() { vector<int> v = {3, 1, 4}; cout << v.size() << " " << v.back() << endl; v.pop_back(); cout << v.size() << endl; }',
   },
   // 負向樣本：這些**不得**被認成切片元件。留在基準裡，是因為
   // 「lift 塌成路由器」那一步最容易把別的容器一起吃掉。
-  { name: '負向-stack', 碼: 'int main() { stack<int> s; }' },
-  { name: '負向-map', 碼: 'int main() { map<int, int> m; }' },
-  { name: '負向-其餘容器', 碼: 'int main() { queue<int> q; set<int> st; pair<int,int> p; priority_queue<int> pq; }' },
+  { name: '負向-stack', code: 'int main() { stack<int> s; }' },
+  { name: '負向-map', code: 'int main() { map<int, int> m; }' },
+  { name: '負向-其餘容器', code: 'int main() { queue<int> q; set<int> st; pair<int,int> p; priority_queue<int> pq; }' },
 ]
 
-interface 基準 {
+interface baseline {
   _meta: { guard: string; measuredAt: string; note: string }
   /** 系統認得的全部元件身分（排序後） */
-  身分集合: string[]
+  identitySet: string[]
   /** 每個樣本的：來回轉換結果 ＋ 樹上出現的身分 */
-  樣本: Record<string, { 產出: string; 身分: string[] }>
+  samples: Record<string, { output: string; identity: string[] }>
   /** 執行那一路的輸出 */
-  執行輸出: Record<string, string>
+  execOutput: Record<string, string>
   /** 切片元件的標籤（全部語言） */
-  標籤: Record<string, Record<string, string>>
+  labels: Record<string, Record<string, string>>
 }
 
 let tsParser: Parser
@@ -153,47 +153,47 @@ async function runProgram(code: string): Promise<string> {
 }
 
 /** 標籤的來源——搬家過程中它會從共用 i18n 檔移進膠囊，而**值必須不變**。 */
-function 讀標籤(): Record<string, Record<string, string>> {
+function readLabels(): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {}
   for (const locale of ['zh-TW', 'en']) {
-    const 共用 = path.join(REPO_ROOT, `src/i18n/${locale}/blocks.json`)
-    const dict: Record<string, string> = JSON.parse(fs.readFileSync(共用, 'utf8'))
-    const 膠囊檔 = path.join(REPO_ROOT, 'src/components', idToDir(切片元件), `labels/${locale}.json`)
-    if (fs.existsSync(膠囊檔)) Object.assign(dict, JSON.parse(fs.readFileSync(膠囊檔, 'utf8')))
-    const 前綴 = 切片元件.replace(':', '_').toUpperCase() // CPP_VECTOR_DECLARE
+    const shared = path.join(REPO_ROOT, `src/i18n/${locale}/blocks.json`)
+    const dict: Record<string, string> = JSON.parse(fs.readFileSync(shared, 'utf8'))
+    const capsuleFiles = path.join(REPO_ROOT, 'src/components', idToDir(sliceComponent), `labels/${locale}.json`)
+    if (fs.existsSync(capsuleFiles)) Object.assign(dict, JSON.parse(fs.readFileSync(capsuleFiles, 'utf8')))
+    const prefix = sliceComponent.replace(':', '_').toUpperCase() // CPP_VECTOR_DECLARE
     out[locale] = Object.fromEntries(
       Object.entries(dict)
-        .filter(([k]) => k.startsWith(前綴))
+        .filter(([k]) => k.startsWith(prefix))
         .sort(([a], [b]) => a.localeCompare(b)),
     )
   }
   return out
 }
 
-async function 量一次(): Promise<Omit<基準, '_meta'>> {
-  const 樣本結果: 基準['樣本'] = {}
-  const 執行輸出: 基準['執行輸出'] = {}
-  for (const s of 樣本) {
-    const tree = liftCode(s.碼)
-    樣本結果[s.name] = {
-      產出: tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>',
-      身分: [...collectIds(tree)].sort(),
+async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
+  const sampleResult: baseline['samples'] = {}
+  const execOutput: baseline['execOutput'] = {}
+  for (const s of samples) {
+    const tree = liftCode(s.code)
+    sampleResult[s.name] = {
+      output: tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>',
+      identity: [...collectIds(tree)].sort(),
     }
-    執行輸出[s.name] = await runProgram(s.碼)
+    execOutput[s.name] = await runProgram(s.code)
   }
   return {
-    身分集合: allCppConcepts().map((c) => c.conceptId).sort(),
-    樣本: 樣本結果,
-    執行輸出,
-    標籤: 讀標籤(),
+    identitySet: allCppConcepts().map((c) => c.conceptId).sort(),
+    samples: sampleResult,
+    execOutput,
+    labels: readLabels(),
   }
 }
 
 describe('膠囊搬家：兩條防線', () => {
   it('基準：錄下搬家前的五路輸出、身分集合與標籤', async () => {
-    const 現況 = await 量一次()
+    const currentState = await measureOnce()
     if (process.env.GENERATE_BASELINE) {
-      const out: 基準 = {
+      const out: baseline = {
         _meta: {
           guard: 'component-parity',
           measuredAt: new Date().toISOString().slice(0, 10),
@@ -201,7 +201,7 @@ describe('膠囊搬家：兩條防線', () => {
             '搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。' +
             '要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。',
         },
-        ...現況,
+        ...currentState,
       }
       fs.writeFileSync(BASELINE, JSON.stringify(out, null, 2) + '\n', 'utf8')
     }
@@ -210,34 +210,34 @@ describe('膠囊搬家：兩條防線', () => {
 
   // ── 防線一：漏失 ────────────────────────────────────────────
   it('防線一：搬家前後，系統認得的身分集合完全相同', async () => {
-    const base: 基準 = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+    const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
     const now = allCppConcepts().map((c) => c.conceptId).sort()
-    const 少了 = base.身分集合.filter((id) => !now.includes(id))
-    const 多了 = now.filter((id) => !base.身分集合.includes(id))
-    expect(少了, `搬家搬丟了身分：${少了.join('、')}`).toEqual([])
-    expect(多了, `搬家多出了身分（複製沒刪乾淨？）：${多了.join('、')}`).toEqual([])
+    const lost = base.identitySet.filter((id) => !now.includes(id))
+    const extra = now.filter((id) => !base.identitySet.includes(id))
+    expect(lost, `搬家搬丟了身分：${lost.join('、')}`).toEqual([])
+    expect(extra, `搬家多出了身分（複製沒刪乾淨？）：${extra.join('、')}`).toEqual([])
   })
 
   it('防線一：每個樣本的來回轉換與執行輸出逐字相同', async () => {
-    const base: 基準 = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
-    const now = await 量一次()
-    for (const s of 樣本) {
-      expect(now.樣本[s.name], `樣本「${s.name}」的產出變了`).toEqual(base.樣本[s.name])
-      expect(now.執行輸出[s.name], `樣本「${s.name}」的執行輸出變了`).toBe(base.執行輸出[s.name])
+    const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+    const now = await measureOnce()
+    for (const s of samples) {
+      expect(now.samples[s.name], `樣本「${s.name}」的產出變了`).toEqual(base.samples[s.name])
+      expect(now.execOutput[s.name], `樣本「${s.name}」的執行輸出變了`).toBe(base.execOutput[s.name])
     }
   })
 
   it('防線一：切片元件的標籤逐字相同（搬進膠囊之後值不得變）', () => {
-    const base: 基準 = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
-    expect(讀標籤()).toEqual(base.標籤)
+    const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+    expect(readLabels()).toEqual(base.labels)
   })
 
   // ── 防線二：錯置 ────────────────────────────────────────────
   it('防線二：每顆膠囊宣告的身分，與它的資料夾路徑一致', () => {
-    const 不一致 = registeredComponents()
+    const inconsistent = registeredComponents()
       .filter((c) => idToDir(c.conceptId) !== c.sourceDir)
       .map((c) => `${c.conceptId} 宣告在 ${c.sourceDir}（應為 ${idToDir(c.conceptId)}）`)
-    expect(不一致, '膠囊的身分與位置對不上——複製膠囊時忘了改 conceptId？').toEqual([])
+    expect(inconsistent, '膠囊的身分與位置對不上——複製膠囊時忘了改 conceptId？').toEqual([])
   })
 
   it('防線二：同一個身分不得由兩顆膠囊登錄', () => {
@@ -245,21 +245,21 @@ describe('膠囊搬家：兩條防線', () => {
     for (const c of registeredComponents()) {
       seen.set(c.conceptId, [...(seen.get(c.conceptId) ?? []), c.sourceDir])
     }
-    const 重複 = [...seen.entries()].filter(([, dirs]) => dirs.length > 1)
-    expect(重複.map(([id, d]) => `${id}: ${d.join('、')}`)).toEqual([])
+    const duplicates = [...seen.entries()].filter(([, dirs]) => dirs.length > 1)
+    expect(duplicates.map(([id, d]) => `${id}: ${d.join('、')}`)).toEqual([])
   })
 
   // ── 注入：證明兩條防線真的會叫（build-guardrail 第 9 步，兩個方向） ──
   describe('注入', () => {
     it('壞的輸入會報：身分集合少一筆時，防線一必須發現', () => {
       const base = ['cpp:a', 'cpp:b', 'cpp:c']
-      const 壞掉 = ['cpp:a', 'cpp:c']
-      expect(base.filter((id) => !壞掉.includes(id))).toEqual(['cpp:b'])
+      const broke = ['cpp:a', 'cpp:c']
+      expect(base.filter((id) => !broke.includes(id))).toEqual(['cpp:b'])
     })
 
     it('壞的輸入會報：身分與路徑對不上時，防線二必須發現', () => {
-      const 假膠囊 = { conceptId: 'cpp:vector_declare', sourceDir: 'cpp:wrong_place' }
-      expect(idToDir(假膠囊.conceptId)).not.toBe(假膠囊.sourceDir)
+      const fakeCapsule = { conceptId: 'cpp:vector_declare', sourceDir: 'cpp:wrong_place' }
+      expect(idToDir(fakeCapsule.conceptId)).not.toBe(fakeCapsule.sourceDir)
     })
 
     it('好的輸入不亂報：身分與路徑一致時，防線二必須沉默', () => {
@@ -270,9 +270,9 @@ describe('膠囊搬家：兩條防線', () => {
     it('⚠️ 集合比對抓不到錯置——這一則證明那個盲區是真的', () => {
       // 兩個實作被互換，但**集合完全相同**。防線一在這裡是綠的，
       // 這正是 054 那次併錯模組的形狀。
-      const 搬前 = new Set(['cpp:vector_declare', 'cpp:vector_size'])
-      const 搬後錯置 = new Set(['cpp:vector_size', 'cpp:vector_declare'])
-      expect([...搬前].sort()).toEqual([...搬後錯置].sort()) // ← 綠的，而東西放錯了
+      const beforeMove = new Set(['cpp:vector_declare', 'cpp:vector_size'])
+      const misplacedAfterMove = new Set(['cpp:vector_size', 'cpp:vector_declare'])
+      expect([...beforeMove].sort()).toEqual([...misplacedAfterMove].sort()) // ← 綠的，而東西放錯了
       // 所以才需要防線二：它問的是「誰註冊的」，不是「有沒有」。
     })
   })

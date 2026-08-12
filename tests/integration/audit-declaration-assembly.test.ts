@@ -48,26 +48,26 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
 
-const 護欄名 = 'declaration-assembly'
+const GUARD_NAME = 'declaration-assembly'
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  掃描: { 測試檔數: number }
-  各自組裝: number
-  明細: string[]
+  scanned: { testFileCount: number }
+  adHocAssembly: number
+  details: string[]
 }
 
 /** 遞迴找 `tests/` 底下所有測試檔。 */
-function 測試檔(): string[] {
+function testFiles(): string[] {
   const out: string[] = []
-  const 走 = (d: string): void => {
+  const walk = (d: string): void => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
-      if (e.isDirectory()) 走(p)
+      if (e.isDirectory()) walk(p)
       else if (e.name.endsWith('.test.ts')) out.push(p)
     }
   }
-  走(path.join(REPO_ROOT, 'tests'))
+  walk(path.join(REPO_ROOT, 'tests'))
   return out
 }
 
@@ -77,40 +77,40 @@ function 測試檔(): string[] {
  * ⚠️ 分成純函式，理由與別條護欄相同：**錨在真實檔案上的注入測試，
  * 會在那些檔案被修好的那天失效**。
  */
-export function 偵測各自組裝(內容: string): boolean {
-  const 自己列 = /\.\.\.\s*universalConcepts|m\.concepts\b/.test(內容)
-  if (!自己列) return false
-  const 有膠囊 = /componentConcepts\(\)|allCppConcepts\(\)/.test(內容)
-  return !有膠囊
+export function detectAdHocAssembly(content: string): boolean {
+  const ownList = /\.\.\.\s*universalConcepts|m\.concepts\b/.test(content)
+  if (!ownList) return false
+  const hasCapsule = /componentConcepts\(\)|allCppConcepts\(\)/.test(content)
+  return !hasCapsule
 }
 
 describe('第三十七條護欄：宣告來源的組裝點', () => {
   it('★ 健康檢查：掃描真的吃到東西', () => {
     // ⚠️ 錨在**輸入量**上。不錨在「還有幾份各自組裝」——那是要推向零的數字。
-    expect(測試檔().length, '一個測試檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
+    expect(testFiles().length, '一個測試檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
   })
 
   it('★ 注入①：自己列來源而沒算膠囊，必須被報出', () => {
-    expect(偵測各自組裝('const all = [...universalConcepts, ...coreConcepts]')).toBe(true)
-    expect(偵測各自組裝('allStdModules.flatMap(m => m.concepts)')).toBe(true)
+    expect(detectAdHocAssembly('const all = [...universalConcepts, ...coreConcepts]')).toBe(true)
+    expect(detectAdHocAssembly('allStdModules.flatMap(m => m.concepts)')).toBe(true)
   })
 
   it('★ 注入②：算了膠囊的、以及根本沒列來源的，都不得被報', () => {
     // 這一條不可省。沒有它，一個「什麼都報」的掃描器也能通過注入①。
-    expect(偵測各自組裝('const all = [...universalConcepts, ...componentConcepts()]')).toBe(false)
-    expect(偵測各自組裝('const all = allCppConcepts()')).toBe(false)
-    expect(偵測各自組裝('沒有任何宣告來源的一支測試')).toBe(false)
+    expect(detectAdHocAssembly('const all = [...universalConcepts, ...componentConcepts()]')).toBe(false)
+    expect(detectAdHocAssembly('const all = allCppConcepts()')).toBe(false)
+    expect(detectAdHocAssembly('沒有任何宣告來源的一支測試')).toBe(false)
   })
 
   it('棘輪：各自組裝的測試檔只准下降', () => {
-    const 檔s = 測試檔()
-    const 明細 = 檔s
-      .filter((f) => 偵測各自組裝(fs.readFileSync(f, 'utf8')))
+    const files = testFiles()
+    const details = files
+      .filter((f) => detectAdHocAssembly(fs.readFileSync(f, 'utf8')))
       .map((f) => path.relative(REPO_ROOT, f))
       .sort()
 
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, {
+      writeBaseline(GUARD_NAME, {
         _meta: {
           note:
             '各自列宣告來源、而沒把膠囊算進去的測試檔數。\n' +
@@ -119,21 +119,21 @@ describe('第三十七條護欄：宣告來源的組裝點', () => {
             '不是因為那支測試被刪掉了。',
           ratchet: RATCHET_NOTE,
         },
-        掃描: { 測試檔數: 檔s.length },
-        各自組裝: 明細.length,
-        明細,
-      } satisfies 基線)
+        scanned: { testFileCount: files.length },
+        adHocAssembly: details.length,
+        details,
+      } satisfies Baseline)
       return
     }
 
-    const base = loadBaseline<基線>(護欄名)
+    const base = loadBaseline<Baseline>(GUARD_NAME)
     printReport('宣告來源的組裝點', [
-      `掃描   ${檔s.length} 個測試檔`,
-      `各自組裝 ${明細.length}（基線 ${base.各自組裝}）`,
-      ...明細.map((m) => `  ✘ ${m}`),
+      `掃描   ${files.length} 個測試檔`,
+      `各自組裝 ${details.length}（基線 ${base.adHocAssembly}）`,
+      ...details.map((m) => `  ✘ ${m}`),
     ])
-    const 新增 = 明細.filter((m) => !base.明細.includes(m))
-    expect(新增, `新增了各自組裝的地方——請改用 allCppConcepts()：\n  ${新增.join('\n  ')}`).toEqual([])
-    assertRatchet([['各自組裝', 明細.length, base.各自組裝]])
+    const added = details.filter((m) => !base.details.includes(m))
+    expect(added, `新增了各自組裝的地方——請改用 allCppConcepts()：\n  ${added.join('\n  ')}`).toEqual([])
+    assertRatchet([['各自組裝', details.length, base.adHocAssembly]])
   })
 })

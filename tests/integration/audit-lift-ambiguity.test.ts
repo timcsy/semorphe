@@ -193,12 +193,12 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
     // **判準**：斷言的那個數字，是不是這條護欄想推向零的？
     // 是 → 錨錯了，它會在成功的那天變紅。
     // 錨在**規則載入了幾條**上——那個數字不會因為修好而歸零。
-    const 規則總數 = [...loadRules().values()].reduce((n, l) => n + l.length, 0)
+    const ruleCount = [...loadRules().values()].reduce((n, l) => n + l.length, 0)
     // ⚠️ 門檻從 20 降到 10（2026-08-11）：**規則從共用檔搬進膠囊之後，
     // 這裡數到的是「共用檔還剩幾條」**——那個數字隨 F 下降。
     // `createTestLifter` 已經載入膠囊的 pattern，所以總數是對的；
     // 而門檻本身仍然是「有沒有載到東西」的錨，不是缺陷計數。
-    expect(規則總數, '一條辨識規則都沒載入 → 報表上的每個數字都是假的').toBeGreaterThan(10)
+    expect(ruleCount, '一條辨識規則都沒載入 → 報表上的每個數字都是假的').toBeGreaterThan(10)
   })
 
   // 這兩支原本錨在 `declaration` 那一群的真實狀態上（「8 條同時盯著宣告語法，
@@ -207,13 +207,13 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
   //
   // **build-guardrail 第 2 步明文警告過這件事，而這是它第二次發生。**
   // 錨點改成合成規則：它不隨真實世界的修復而失效。
-  const 合成 = (conceptId: string, constraints?: RuleLike['constraints']): RuleLike => ({
+  const synthetic = (conceptId: string, constraints?: RuleLike['constraints']): RuleLike => ({
     conceptId, patternType: 'simple', priority: 10, constraints,
   })
 
   it('★ 合成注入：兩條約束一字不差的規則必須判「確定會撞」', () => {
-    const 同約束 = [{ field: 'type', nodeType: 'template_type' }]
-    const v = classifyPair(合成('__probe_a__', 同約束), 合成('__probe_b__', [...同約束]))
+    const sameConstraint = [{ field: 'type', nodeType: 'template_type' }]
+    const v = classifyPair(synthetic('__probe_a__', sameConstraint), synthetic('__probe_b__', [...sameConstraint]))
     expect(
       v.verdict,
       `約束完全相同卻沒被判為確定會撞 → 判定邏輯壞了，報表上的「0」一律不可信。理由：${v.reason}`,
@@ -222,8 +222,8 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
 
   it('★ 合成注入：判別式互斥的兩條不得被誤判為會撞', () => {
     const v = classifyPair(
-      合成('__probe_c__', [{ field: 'type', text: 'string' }]),
-      合成('__probe_d__', [{ field: 'type', text: 'vector' }]),
+      synthetic('__probe_c__', [{ field: 'type', text: 'string' }]),
+      synthetic('__probe_d__', [{ field: 'type', text: 'vector' }]),
     )
     expect(
       v.verdict,

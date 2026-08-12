@@ -84,7 +84,7 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
       UNSUPPORTED: entries.filter((e) => e.tag?.type === 'UNSUPPORTED').length,
       TOMBSTONE: entries.filter((e) => e.tag?.type === 'TOMBSTONE').length,
       DEADSKIP: entries.filter((e) => e.tag?.type === 'DEADSKIP').length,
-      未分類: unclassified.length,
+      unclassified: unclassified.length,
     }
 
     const lines: string[] = []
@@ -162,8 +162,8 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
     //
     // 判準：斷言的那個數字，是不是這條護欄想推向零的？是 → 錨錯了。
     // 改錨在**掃描規模**上——測試檔的數量不會因為清償而歸零。
-    const 掃到的測試檔數 = listSourceFiles('tests').filter((f) => f.endsWith('.test.ts')).length
-    expect(掃到的測試檔數, '一個測試檔都沒掃到 → 報表上的每個數字都是假的').toBeGreaterThan(50)
+    const scannedTestFiles = listSourceFiles('tests').filter((f) => f.endsWith('.test.ts')).length
+    expect(scannedTestFiles, '一個測試檔都沒掃到 → 報表上的每個數字都是假的').toBeGreaterThan(50)
   })
 
   it('棘輪：三個數字皆不得上升（FR-003、FR-023）', () => {
@@ -207,9 +207,9 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
     //
     // （2026-08-10：寫元件膠囊的自證測時真的踩到——那筆 `[BLOCKED:]` 一開始
     // 寫成跨行，帳上完全沒有出現，而全套是綠的。）
-    const 隱形 = findMultilineDisabled(['tests', 'src/components'])
+    const invisible = findMultilineDisabled(['tests', 'src/components'])
     expect(
-      隱形.map((x) => `${x.file}:${x.line}`),
+      invisible.map((x) => `${x.file}:${x.line}`),
       '停用宣告的標題與 callback 要寫回同一行——不然這筆缺陷對缺陷帳是隱形的',
     ).toEqual([])
   })

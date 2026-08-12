@@ -8,7 +8,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建var_declare(
+export function buildVarDeclare(
   props: { name?: unknown; type?: unknown; init_style?: unknown },
   children?: Record<string, SemanticNode[]>,
 ): SemanticNode {

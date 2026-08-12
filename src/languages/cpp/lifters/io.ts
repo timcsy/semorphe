@@ -7,9 +7,9 @@ import { callConceptFor } from '../../../core/component/call-concepts'
 import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-concepts'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 import { namedCastConcept } from '../../../core/component/named-cast-concepts'
-import { 建malloc } from '../../../components/cpp/malloc/lift'
-import { 建method_call } from '../../../components/cpp/method_call/lift'
-import { 建func_call } from '../../../components/cpp/func_call/lift'
+import { buildMalloc } from '../../../components/cpp/malloc/lift'
+import { buildMethodCall } from '../../../components/cpp/method_call/lift'
+import { buildFuncCall } from '../../../components/cpp/func_call/lift'
 
 /** Try to lift a method call (field_expression) into a string-specific concept.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
@@ -43,16 +43,16 @@ function tryStringMethodLift(
   }
   // **方法名 → 身分**由膠囊登錄（`core/component/method-concepts.ts`）。
   {
-    const 認領 = tryMethodBranches(obj, method, argChildren, ctx)
-    if (認領) return 認領
-    const 形狀 = methodConceptFor(method)
-    if (形狀) {
+    const claim = tryMethodBranches(obj, method, argChildren, ctx)
+    if (claim) return claim
+    const shape = methodConceptFor(method)
+    if (shape) {
       const children: Record<string, SemanticNode[]> = {}
-      形狀.argSlots.forEach((slot, i) => {
+      shape.argSlots.forEach((slot, i) => {
         const n = argChildren[i] ? ctx.lift(argChildren[i]) : null
         children[slot] = n ? [n] : []
       })
-      return createNode(形狀.conceptId, { obj }, children)
+      return createNode(shape.conceptId, { obj }, children)
     }
   }
   switch (method) {
@@ -197,7 +197,7 @@ export function registerIOLifters(lifter: Lifter): void {
       // 都要在五路上各維護一份，而 `saveExtraState` 的格式契約要人工同步。
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return 建method_call(objText, methodName, liftedArgs)
+      return buildMethodCall(objText, methodName, liftedArgs)
     }
 
     // printf("...", args) → cstdio module
@@ -216,17 +216,17 @@ export function registerIOLifters(lifter: Lifter): void {
     // 拆開看只是三筆「名字 → 身分 ＋ 引數槽名」的資料配上共用判別。
     // 資料回膠囊，判別留這裡。
     {
-      const 形狀 = callConceptFor(funcName)
-      if (形狀 && 形狀.argSlots.length > 0) {
+      const shape = callConceptFor(funcName)
+      if (shape && shape.argSlots.length > 0) {
         const args = argsNode
           ? argsNode.namedChildren.map((a) => ctx.lift(a)).filter((n): n is SemanticNode => n !== null)
           : []
         const children: Record<string, SemanticNode[]> = {}
-        形狀.argSlots.forEach((slot, i) => {
+        shape.argSlots.forEach((slot, i) => {
           children[slot] = args[i] ? [args[i]] : []
         })
-        const props = 形狀.funcProp ? { [形狀.funcProp]: funcName } : {}
-        return createNode(形狀.conceptId, props, children)
+        const props = shape.funcProp ? { [shape.funcProp]: funcName } : {}
+        return createNode(shape.conceptId, props, children)
       }
     }
 
@@ -251,8 +251,8 @@ export function registerIOLifters(lifter: Lifter): void {
     // **膠囊自己的辨識分支**（帶真邏輯的那一種）——見 `core/component/lift-branches.ts`。
     // 路由器該知道的是「去問誰」，不是「答案是什麼」。
     {
-      const 認領 = tryCallBranches(funcName, argChildren, ctx, argsNode)
-      if (認領) return 認領
+      const claim = tryCallBranches(funcName, argChildren, ctx, argsNode)
+      if (claim) return claim
     }
 
 
@@ -282,13 +282,13 @@ export function registerIOLifters(lifter: Lifter): void {
     // malloc(size) → cpp_malloc (without cast; cast is handled in lift-patterns via cast_expression)
     if (funcName === 'malloc' && argChildren.length === 1) {
       const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return 建malloc('void', size)
+      return buildMalloc('void', size)
     }
 
     // General function call
     const args = argsNode
       ? argsNode.namedChildren.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
       : []
-    return 建func_call(funcName, args)
+    return buildFuncCall(funcName, args)
   })
 }

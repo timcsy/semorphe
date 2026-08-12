@@ -12,7 +12,7 @@ import type { LoadOutcome } from '../core/storage'
  */
 export function describeRefusal(outcome: Extract<LoadOutcome, { kind: 'refused' }>): string {
   const r = outcome.reason
-  const 原因 =
+  const cause =
     r.code === 'too-new'
       ? `這份存檔來自較新的版本（${r.found}，目前是 ${r.current}）`
       : r.code === 'no-upgrade-path'
@@ -21,9 +21,9 @@ export function describeRefusal(outcome: Extract<LoadOutcome, { kind: 'refused' 
           ? `升級這份存檔時失敗（版本 ${r.found}）`
           : `這份資料不是可用的存檔（${r.detail}）`
 
-  const 去向 = outcome.backedUpTo
+  const destination = outcome.backedUpTo
     ? '原檔已保留，未被覆蓋。'
     : '⚠️ 原檔無法備份，請先手動匯出再繼續操作。'
 
-  return `上次的存檔沒有載入：${原因}。${去向}`
+  return `上次的存檔沒有載入：${cause}。${destination}`
 }

@@ -148,14 +148,14 @@ export function valueToString(val: RuntimeValue): string {
   // JS 的 `String(number)` 給的是完整精度，於是每一個印浮點的程式輸出都不同，
   // 而它看起來像「只是多印了幾位」。
   if ((val.type === 'double' || val.type === 'float') && typeof val.value === 'number') {
-    return 以預設精度顯示(val.value)
+    return formatDefaultPrecision(val.value)
   }
 
   return String(val.value ?? '')
 }
 
 /** C++ `cout` 的預設浮點格式：六位有效數字，去尾零。 */
-function 以預設精度顯示(n: number): string {
+function formatDefaultPrecision(n: number): string {
   if (!Number.isFinite(n)) return String(n)
   if (Number.isInteger(n) && Math.abs(n) < 1e6) return String(n)
   const s = n.toPrecision(6)

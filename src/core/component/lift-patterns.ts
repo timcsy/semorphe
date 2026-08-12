@@ -32,7 +32,7 @@
  * 而**這一顆不是同一類東西**。**照抄之前要先問「它是不是同一類」。**
  */
 
-const 檔 = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: true }) as Record<
+const file = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: true }) as Record<
   string,
   { default?: unknown }
 >
@@ -51,17 +51,17 @@ const 檔 = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: t
  * > 而它在第 N 顆元件身上才會被否證。**
  */
 export function componentLiftPatterns(): unknown[] {
-  return Object.values(檔).flatMap((m) => {
+  return Object.values(file).flatMap((m) => {
     const o = m.default ?? m
     return Array.isArray(o) ? o : [o]
   })
 }
 
 /** 護欄用：每一筆是哪顆膠囊帶的。 */
-export function componentLiftPatternSources(): [路徑: string, id: string][] {
-  return Object.entries(檔).flatMap(([p, m]) => {
+export function componentLiftPatternSources(): [path: string, id: string][] {
+  return Object.entries(file).flatMap(([p, m]) => {
     const o = m.default ?? m
-    const 們 = (Array.isArray(o) ? o : [o]) as { id?: string }[]
-    return 們.map((x) => [p, String(x.id ?? '(無 id)')] as [string, string])
+    const items = (Array.isArray(o) ? o : [o]) as { id?: string }[]
+    return items.map((x) => [p, String(x.id ?? '(無 id)')] as [string, string])
   })
 }

@@ -6,7 +6,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建字串流宣告(name: string, source: SemanticNode | null): SemanticNode {
+export function buildStringStreamDecl(name: string, source: SemanticNode | null): SemanticNode {
   return createNode('cpp:istringstream_declare', { name }, { source: source ? [source] : [] })
 }
 

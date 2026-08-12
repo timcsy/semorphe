@@ -10,31 +10,31 @@ import { componentConcepts } from '../../../../core/component/registry'
 import { plainTypeConcept } from '../../../../core/component/container-templates'
 import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
-import { 建陣列宣告 } from '../../../../components/cpp/array_declare/lift'
-import { 建前置宣告 } from '../../../../components/cpp/forward_decl/lift'
-import { 建自動宣告 } from '../../../../components/cpp/var_declare_auto/lift'
-import { 建靜態變數 } from '../../../../components/cpp/var_declare_static/lift'
+import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift'
+import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
+import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
+import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
 import { qualifierConcept } from '../../../../core/component/qualifier-concepts'
-import { 建字串流宣告 } from '../../../../components/cpp/istringstream_declare/lift'
-import { 建樣板函式 } from '../../../../components/cpp/template_function/lift'
-import { 建constructor } from '../../../../components/cpp/constructor/lift'
-import { 建destructor } from '../../../../components/cpp/destructor/lift'
-import { 建method_virtual } from '../../../../components/cpp/method_virtual/lift'
-import { 建method_override } from '../../../../components/cpp/method_override/lift'
-import { 建method_virtual_pure } from '../../../../components/cpp/method_virtual_pure/lift'
-import { 建operator_overload } from '../../../../components/cpp/operator_overload/lift'
-import { 建cast } from '../../../../components/cpp/cast/lift'
-import { 建pointer_declare } from '../../../../components/cpp/pointer_declare/lift'
-import { 建var_declare_ref } from '../../../../components/cpp/var_declare_ref/lift'
-import { 建member_static } from '../../../../components/cpp/member_static/lift'
+import { buildStringStreamDecl } from '../../../../components/cpp/istringstream_declare/lift'
+import { buildTemplateFunc } from '../../../../components/cpp/template_function/lift'
+import { buildConstructor } from '../../../../components/cpp/constructor/lift'
+import { buildDestructor } from '../../../../components/cpp/destructor/lift'
+import { buildMethodVirtual } from '../../../../components/cpp/method_virtual/lift'
+import { buildMethodOverride } from '../../../../components/cpp/method_override/lift'
+import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
+import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
+import { buildCast } from '../../../../components/cpp/cast/lift'
+import { buildPointerDeclare } from '../../../../components/cpp/pointer_declare/lift'
+import { buildVarDeclareRef } from '../../../../components/cpp/var_declare_ref/lift'
+import { buildMemberStatic } from '../../../../components/cpp/member_static/lift'
 import { typeSuffixOf } from '../node-traits'
-import { 建include_local } from '../../../../components/cpp/include_local/lift'
-import { 建doc_comment } from '../../../../components/cpp/doc_comment/lift'
-import { 建malloc } from '../../../../components/cpp/malloc/lift'
-import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
-import { 建include } from '../../../../components/cpp/include/lift'
-import { 建var_declare } from '../../../../components/cpp/var_declare/lift'
-import { 建func_def } from '../../../../components/cpp/func_def/lift'
+import { buildIncludeLocal } from '../../../../components/cpp/include_local/lift'
+import { buildDocComment } from '../../../../components/cpp/doc_comment/lift'
+import { buildMalloc } from '../../../../components/cpp/malloc/lift'
+import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
+import { buildInclude } from '../../../../components/cpp/include/lift'
+import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
+import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -47,7 +47,7 @@ import { 建func_def } from '../../../../components/cpp/func_def/lift'
  * 的初始值本來就掉了，只是掉得**對稱**（辨識掉、產生也掉），所以來回轉換
  * 比對一直是綠的。記在缺陷帳，不在這裡順手擴大範圍。
  */
-const 有宣告初始值來源 = new Set(
+const hasInitSourceDecl = new Set(
   [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
     .map((c) => (c as { conceptId: string }).conceptId),
@@ -122,15 +122,15 @@ function degrade(node: SemanticNode, reason: string): SemanticNode {
 
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
   // **膠囊自己的判別先問**——「宣告子長成這樣時是我」是元件的知識。
-  const 認領 = tryDeclaratorBranches(decl, type, ctx)
-  if (認領) return 認領
+  const claim = tryDeclaratorBranches(decl, type, ctx)
+  if (claim) return claim
 
   // Array declarator: int arr[10]
-  if (decl.type === 'array_declarator') return 建陣列宣告(type, decl, ctx)
+  if (decl.type === 'array_declarator') return buildArrayDeclare(type, decl, ctx)
 
   // Plain identifier: int x
   if (decl.type === 'identifier') {
-    return 建var_declare({ name: decl.text, type })
+    return buildVarDeclare({ name: decl.text, type })
   }
 
   // Bare pointer declarator without init: int* ptr;
@@ -141,18 +141,18 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const inner = decl.namedChildren.find(c => c.type === 'array_declarator')
     if (inner) {
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return 建陣列宣告(`${type}*`, inner, ctx)
+      return buildArrayDeclare(`${type}*`, inner, ctx)
     }
     const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = ptrIdent?.text ?? 'ptr'
-    return 建pointer_declare(name, type)
+    return buildPointerDeclare(name, type)
   }
 
   // Bare reference declarator without init: int& ref; (rare, usually has init)
   if (decl.type === 'reference_declarator') {
     const refIdent = decl.namedChildren.find(c => c.type === 'identifier')
     const name = refIdent?.text ?? 'ref'
-    return 建var_declare_ref(name, type)
+    return buildVarDeclareRef(name, type)
   }
 
   // init_declarator: name = value
@@ -166,9 +166,9 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return 建var_declare_ref(name, type, value)
+      return buildVarDeclareRef(name, type, value)
     }
-    return 建var_declare_ref(name, type)
+    return buildVarDeclareRef(name, type)
   }
 
   // Pointer declarator: int* ptr = &x
@@ -179,21 +179,21 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     const inner = nameNode.namedChildren.find(c => c.type === 'array_declarator')
     if (inner) {
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return attachInitializer(建陣列宣告(`${type}*`, inner, ctx), decl.childForFieldName('value'), ctx)
+      return attachInitializer(buildArrayDeclare(`${type}*`, inner, ctx), decl.childForFieldName('value'), ctx)
     }
     const ptrIdent = nameNode.namedChildren.find(c => c.type === 'identifier')
     name = ptrIdent?.text ?? 'ptr'
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return 建pointer_declare(name, type, value)
+      return buildPointerDeclare(name, type, value)
     }
-    return 建pointer_declare(name, type)
+    return buildPointerDeclare(name, type)
   }
 
   // Array init_declarator: int arr[10] = {...}
   if (nameNode?.type === 'array_declarator') {
-    return attachInitializer(建陣列宣告(type, nameNode, ctx), decl.childForFieldName('value'), ctx)
+    return attachInitializer(buildArrayDeclare(type, nameNode, ctx), decl.childForFieldName('value'), ctx)
   }
 
   const valueNode = decl.childForFieldName('value')
@@ -208,19 +208,19 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 落到通用的話它就只是一個「型別叫 istringstream 的變數」，
       // 而 `in >> a` 沒有東西可讀。
       if (type === 'istringstream' || type === 'std::istringstream') {
-        return 建字串流宣告(name, args.length > 0 ? args[0] : null)
+        return buildStringStreamDecl(name, args.length > 0 ? args[0] : null)
       }
-      return 建var_declare({ name, type, init_style: 'constructor' }, {
+      return buildVarDeclare({ name, type, init_style: 'constructor' }, {
         initializer: args,
       })
     }
     const value = ctx.lift(valueNode)
-    return 建var_declare({ name, type }, {
+    return buildVarDeclare({ name, type }, {
       initializer: value ? [value] : [],
     })
   }
 
-  return 建var_declare({ name, type })
+  return buildVarDeclare({ name, type })
 }
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
@@ -239,13 +239,13 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
       const initList = initListNode ? initListNode.text.replace(/^:\s*/, '') : ''
       const body = extractBody(bodyNode, ctx)
-      return 建constructor({ class_name: className, init_list: initList }, { params, body })
+      return buildConstructor({ class_name: className, init_list: initList }, { params, body })
     }
 
     // Destructor: function_definition where declarator is destructor_name
     if (nameNode?.type === 'destructor_name') {
       const body = extractBody(bodyNode, ctx)
-      return 建destructor({ class_name: className }, { body })
+      return buildDestructor({ class_name: className }, { body })
     }
 
     // Operator overload: function_definition where declarator is operator_name
@@ -264,7 +264,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         }
       }
       const body = extractBody(bodyNode, ctx)
-      return 建operator_overload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
+      return buildOperatorOverload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
     }
 
     // Check for override keyword (via virtual_specifier node in declarator)
@@ -277,7 +277,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return 建method_override({ return_type: returnType, name: methodName }, { params, body })
+      return buildMethodOverride({ return_type: returnType, name: methodName }, { params, body })
     }
 
     // Virtual method with body
@@ -287,7 +287,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return 建method_virtual({ return_type: returnType, name: methodName }, { params, body })
+      return buildMethodVirtual({ return_type: returnType, name: methodName }, { params, body })
     }
 
     // Regular member function → lift as func_def
@@ -305,7 +305,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const returnType = typeNode?.text ?? 'void'
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      return 建method_virtual_pure({ return_type: returnType, name: methodName }, { params })
+      return buildMethodVirtualPure({ return_type: returnType, name: methodName }, { params })
     }
 
     // Static member: static int count;
@@ -315,7 +315,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
       const name = declNode?.text ?? 'member'
-      return 建member_static(type, name)
+      return buildMemberStatic(type, name)
     }
 
     // Regular field declaration: type name; or type x, y;
@@ -328,7 +328,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     ).filter(c => c !== typeNode) // exclude the type node itself
     if (declarators.length > 1) {
       // Multi-variable: create individual var_declare nodes wrapped in a container
-      const nodes = declarators.map(d => 建var_declare({ type, name: d.text }))
+      const nodes = declarators.map(d => buildVarDeclare({ type, name: d.text }))
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
       // collects all children. Return a compound node that generateBody will flatten.
@@ -336,7 +336,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     const declNode = node.childForFieldName('declarator')
     const name = declNode?.text ?? 'x'
-    return 建var_declare({ type, name })
+    return buildVarDeclare({ type, name })
   }
 
   // Fallback: try generic lift
@@ -369,7 +369,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
   // doc comment: /** ... */ → doc_comment with structured properties
   registry.register('cpp:liftDocComment', (node) => {
     const props = parseDocComment(node.text)
-    return 建doc_comment(props)
+    return buildDocComment(props)
   })
 
   // preproc_include: system vs local include distinction
@@ -383,11 +383,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const rawPath = pathNode.text
     if (rawPath.startsWith('<') && rawPath.endsWith('>')) {
       const header = rawPath.slice(1, -1)
-      return 建include(header)
+      return buildInclude(header)
     }
     if (rawPath.startsWith('"') && rawPath.endsWith('"')) {
       const header = rawPath.slice(1, -1)
-      return 建include_local(header)
+      return buildIncludeLocal(header)
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: node.text }
@@ -431,7 +431,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
 
     const body = extractBody(bodyNode, ctx)
-    return 建func_def(name, returnType, { params: paramChildren, body })
+    return buildFuncDef(name, returnType, { params: paramChildren, body })
   })
 
 
@@ -512,7 +512,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         if (values.length > 0) {
           return createNode(conceptId, { type: innerType, name }, { values })
         }
-        if (source && 有宣告初始值來源.has(conceptId)) {
+        if (source && hasInitSourceDecl.has(conceptId)) {
           return createNode(conceptId, { type: innerType, name }, { source: [source] })
         }
         return createNode(conceptId, { type: innerType, name })
@@ -578,9 +578,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         const value = valueNode ? ctx.lift(valueNode) : null
-        return 建自動宣告(name, value)
+        return buildAutoDeclare(name, value)
       }
-      return 建自動宣告('x', null)
+      return buildAutoDeclare('x', null)
     }
 
     // const/constexpr declaration
@@ -613,18 +613,18 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       if (decl) {
         if (decl.type === 'identifier') {
-          return 建靜態變數(type, decl.text, null)
+          return buildStaticVar(type, decl.text, null)
         }
         const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
         const name = nameNode?.text ?? 'x'
         const valueNode = decl.childForFieldName('value')
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return 建靜態變數(type, name, value)
+          return buildStaticVar(type, name, value)
         }
-        return 建靜態變數(type, name, null)
+        return buildStaticVar(type, name, null)
       }
-      return 建member_static(type, 'x')
+      return buildMemberStatic(type, 'x')
     }
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl
@@ -642,7 +642,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           }
         }
       }
-      return 建前置宣告(type, nameNode?.text ?? 'f', paramChildren)
+      return buildForwardDecl(type, nameNode?.text ?? 'f', paramChildren)
     }
 
     const declarators = node.namedChildren.filter(c =>
@@ -651,14 +651,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
 
     if (declarators.length === 0) {
-      return 建var_declare({ name: 'x', type })
+      return buildVarDeclare({ name: 'x', type })
     }
 
     const liftedNodes = declarators.map(decl => liftSingleDeclarator(decl, type, ctx))
 
     if (liftedNodes.length === 1) return liftedNodes[0]
 
-    return 建var_declare({ type }, { declarators: liftedNodes })
+    return buildVarDeclare({ type }, { declarators: liftedNodes })
   })
 
 
@@ -688,7 +688,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       for (const p of paramList.namedChildren) {
         if (p.type === 'parameter_declaration') {
           const { type, name } = parseParamDeclaration(p)
-          params.push(建var_declare({ type, name }))
+          params.push(buildVarDeclare({ type, name }))
         }
       }
     }
@@ -696,7 +696,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const bodyNode = funcDef.childForFieldName('body')
     const body = extractBody(bodyNode ?? null, ctx)
 
-    return 建樣板函式(t, returnType, funcName, params, body)
+    return buildTemplateFunc(t, returnType, funcName, params, body)
   })
 
   // cast_expression: (Type*)malloc(size) → cpp_malloc; fallback → cpp_cast
@@ -712,13 +712,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const argsNode = valueNode.childForFieldName('arguments')
         const argChildren = argsNode?.namedChildren ?? []
         const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-        return 建malloc(targetType, size)
+        return buildMalloc(targetType, size)
       }
     }
 
     // Default: regular cast
     const value = valueNode ? ctx.lift(valueNode) : null
-    return 建cast(targetType, value)
+    return buildCast(targetType, value)
   })
 
 
@@ -764,7 +764,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const to = toNode ? ctx.lift(toNode) : null
     const body = extractBody(bodyNode, ctx)
 
-    return 建loop_count(varName, inclusive, {
+    return buildLoopCount(varName, inclusive, {
       from: from ? [from] : [],
       to: to ? [to] : [],
       body,

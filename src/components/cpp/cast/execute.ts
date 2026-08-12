@@ -5,7 +5,7 @@
  * 四種命名轉型是 `false`（既有差別，見 `core/runtime/cast.ts` 的檔頭）。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { 數值轉型 } from '../../../languages/cpp/core/runtime/cast'
+import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:cast', async (node, ctx) => {
@@ -13,6 +13,6 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
-    return 數值轉型(targetType, val, ctx.toNumber(val), { charIsChar: true })
+    return numericCast(targetType, val, ctx.toNumber(val), { charIsChar: true })
   })
 }

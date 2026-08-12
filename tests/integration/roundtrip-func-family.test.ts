@@ -59,7 +59,7 @@ beforeAll(async () => {
 })
 
 /** 原始碼 → 語義樹 → Blockly state → 語義樹 → 原始碼。 */
-function 走一圈(code: string): string {
+function walkAll(code: string): string {
   const tree = lifter.lift(tsParser.parse(code)!.rootNode as never)
   if (!tree) return '<lift 失敗>'
   const st = renderToBlocklyState(tree)
@@ -71,61 +71,61 @@ function 走一圈(code: string): string {
 }
 
 /** 直接產生（不走積木）——對照組，用來分辨「投影掉了」與「lift 或 generate 本來就掉」。 */
-function 直接產生(code: string): string {
+function directGenerate(code: string): string {
   const tree = lifter.lift(tsParser.parse(code)!.rootNode as never)
   return tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>'
 }
 
-interface 樣本 { name: string; 碼: string; 期望含: string[] }
+interface samples { name: string; code: string; expectContains: string[] }
 
 /** 六顆元件 × （有參數／無參數）。 */
-const 樣本群: 樣本[] = [
+const sampleGroup: samples[] = [
   // ── cpp:lambda ──
-  { name: 'lambda 有參數', 碼: 'int main() { auto f = [](int a, int b) { return a + b; }; }', 期望含: ['int a', 'int b'] },
-  { name: 'lambda 無參數', 碼: 'int main() { auto f = []() { return 1; }; }', 期望含: ['[]()'] },
+  { name: 'lambda 有參數', code: 'int main() { auto f = [](int a, int b) { return a + b; }; }', expectContains: ['int a', 'int b'] },
+  { name: 'lambda 無參數', code: 'int main() { auto f = []() { return 1; }; }', expectContains: ['[]()'] },
   // ── cpp:constructor ──
-  { name: 'constructor 有參數', 碼: 'class C { public: C(int a) {} };', 期望含: ['int a'] },
-  { name: 'constructor 無參數', 碼: 'class C { public: C() {} };', 期望含: ['C()'] },
+  { name: 'constructor 有參數', code: 'class C { public: C(int a) {} };', expectContains: ['int a'] },
+  { name: 'constructor 無參數', code: 'class C { public: C() {} };', expectContains: ['C()'] },
   // ── cpp:method_virtual ──
-  { name: 'method_virtual 有參數', 碼: 'class C { public: virtual int f(int a) { return a; } };', 期望含: ['int a'] },
+  { name: 'method_virtual 有參數', code: 'class C { public: virtual int f(int a) { return a; } };', expectContains: ['int a'] },
   // ── cpp:method_override ──
-  { name: 'method_override 有參數', 碼: 'class C : public B { public: int f(int a) override { return a; } };', 期望含: ['int a'] },
+  { name: 'method_override 有參數', code: 'class C : public B { public: int f(int a) override { return a; } };', expectContains: ['int a'] },
   // ── cpp:method_virtual_pure ──
   // ⚠️ 它**沒有 body 接點**（research 的未驗項）——缺 body 會不會影響渲染。
-  { name: 'method_virtual_pure 有參數', 碼: 'class C { public: virtual int f(int a) = 0; };', 期望含: ['int a'] },
+  { name: 'method_virtual_pure 有參數', code: 'class C { public: virtual int f(int a) = 0; };', expectContains: ['int a'] },
   // ── cpp:template_function ──
-  { name: 'template_function 有參數', 碼: 'template<typename T> T f(T a) { return a; }', 期望含: ['T a'] },
+  { name: 'template_function 有參數', code: 'template<typename T> T f(T a) { return a; }', expectContains: ['T a'] },
   // ── 邊界：型別自己含分隔符（research R2，SC-003）──
-  { name: '型別含逗號', 碼: 'int main() { auto f = [](map<int,int> m, int k) { return k; }; }', 期望含: ['map<int,int> m', 'int k'] },
+  { name: '型別含逗號', code: 'int main() { auto f = [](map<int,int> m, int k) { return k; }; }', expectContains: ['map<int,int> m', 'int k'] },
   // ── 邊界：型別含空白 ──
-  { name: '型別含空白', 碼: 'int main() { auto f = [](long long n) { return n; }; }', 期望含: ['long long n'] },
+  { name: '型別含空白', code: 'int main() { auto f = [](long long n) { return n; }; }', expectContains: ['long long n'] },
 ]
 
 describe('函式族的參數走得過投影嗎', () => {
   it('★ 對照組：直接產生（不走積木）必須保住參數——否則紅的是 lift 或 generate，不是投影', () => {
     // 沒有這一則的話，下面每一支紅燈都可能是 lift 沒抓到參數，
     // 而修錯地方的成本比修對高得多。
-    for (const s of 樣本群) {
-      const 直接 = 直接產生(s.碼)
-      for (const 期望 of s.期望含) {
-        expect(直接, `${s.name}：直接產生就掉了 → 紅的不是投影`).toContain(期望)
+    for (const s of sampleGroup) {
+      const direct = directGenerate(s.code)
+      for (const expect2 of s.expectContains) {
+        expect(direct, `${s.name}：直接產生就掉了 → 紅的不是投影`).toContain(expect2)
       }
     }
   })
 
-  for (const s of 樣本群) {
+  for (const s of sampleGroup) {
     it(`${s.name}：走完投影來回，參數還在`, () => {
-      const 出來 = 走一圈(s.碼)
-      for (const 期望 of s.期望含) {
-        expect(出來, `走完來回之後「${期望}」不見了`).toContain(期望)
+      const produced = walkAll(s.code)
+      for (const expect2 of s.expectContains) {
+        expect(produced, `走完來回之後「${expect2}」不見了`).toContain(expect2)
       }
     })
   }
 
   it('★ 零參數不得長出空的參數表示', () => {
-    const 出來 = 走一圈('int main() { auto f = []() { return 1; }; }')
-    expect(出來).not.toContain('[]( )')
-    expect(出來).not.toContain('[](void)')
-    expect(出來).not.toContain('[](,')
+    const produced = walkAll('int main() { auto f = []() { return 1; }; }')
+    expect(produced).not.toContain('[]( )')
+    expect(produced).not.toContain('[](void)')
+    expect(produced).not.toContain('[](,')
   })
 })

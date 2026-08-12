@@ -8,7 +8,7 @@
 import type { SemanticNode, PropertyValue } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建doc_comment(props: Record<string, PropertyValue>): SemanticNode {
+export function buildDocComment(props: Record<string, PropertyValue>): SemanticNode {
   return createNode('cpp:doc_comment', props)
 }
 

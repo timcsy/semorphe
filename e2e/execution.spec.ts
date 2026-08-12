@@ -28,11 +28,11 @@ async function typeCode(page: Page, code: string): Promise<void> {
   await expect(page.locator('.blocklyDraggable').first()).toBeVisible({ timeout: 15_000 })
 }
 
-const 迴圈程式 = 'int main() { int total = 0; for (int i = 1; i <= 3; i++) { total = total + i; } cout << total << endl; return 0; }'
+const loopProgram = 'int main() { int total = 0; for (int i = 1; i <= 3; i++) { total = total + i; } cout << total << endl; return 0; }'
 
 test('程式碼 → 積木 → 執行輸出', async ({ page }) => {
   await freshApp(page)
-  await typeCode(page, 迴圈程式)
+  await typeCode(page, loopProgram)
 
   await page.locator('#run-btn').click()
 
@@ -45,7 +45,7 @@ test('狀態列的文字由視圖決定——執行器不再知道要顯示什�
   // 執行器只廣播 `{ status, reason }`，文案／i18n 鍵／CSS class 全在視圖裡。
   // 若有人把文案搬回執行器，這支不會紅——但若 i18n 鍵漏了，它會。
   await freshApp(page)
-  await typeCode(page, 迴圈程式)
+  await typeCode(page, loopProgram)
 
   await page.locator('#run-btn').click()
 

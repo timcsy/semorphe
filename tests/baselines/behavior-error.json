@@ -1,103 +1,103 @@
 {
   "_meta": {
-    "參照編譯器": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
-    "旗標": "-std=c++17",
+    "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
+    "flag": "-std=c++17",
     "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。\n\n【2026-08-11】不一致 17 → 14，**是分母縮了，不是修好了**——這條護欄自己的警語。\n  `cpp:pointer_deref` 對非指標值原本**無條件回 0 而不出聲**；改成丟\n  `RUNTIME_ERR_TYPE_MISMATCH` 之後，三段語料從「兩邊都跑得動」\n  移到「只有參照」（228 → 225 ／ 15 → 18）。\n  ⚠️ **那三筆的直譯器輸出全是 `0`**：\n    直「0⏎0⏎0⏎」參「2⏎6⏎10⏎」 ／ 直「0」參「7」 ／ 直「0⏎10⏎」參「10⏎15⏎」\n  ——證實它們正是被這個回退悄悄吃掉的。\n  > **從「悄悄印錯的數字」變成「明講不支援」不是修好，是把缺陷從\n  > 看不見的欄搬到看得見的欄。** 三筆的判定隨訊號消失而移除，記在這裡。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "語料": {
-    "不可判定": 61,
-    "兩邊都跑得動": 225,
-    "只有參照跑得動": 18,
-    "只有直譯器跑得動": 16,
-    "兩邊都不成": 4
+  "corpus": {
+    "undecidable": 61,
+    "bothRun": 225,
+    "onlyReferenceRuns": 18,
+    "onlyInterpreterRuns": 16,
+    "neitherRuns": 4
   },
-  "誤差": {
-    "不一致筆數": 14,
-    "明細": [
+  "mismatch": {
+    "mismatchCount": 14,
+    "details": [
       {
-        "語料鍵": "#include <iostream> using namespace std; int main() { int* a#a3lmo",
-        "語料": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int* a = new int;⏎    int* b = new int;⏎    *a = 15;⏎    *b = 25;⏎    int sum = *a + *b;⏎    cout << sum << endl;⏎    *a = sum;⏎    cout << *a",
-        "直譯器": "50⏎50⏎",
-        "參照": "40⏎40⏎"
+        "corpusKey": "#include <iostream> using namespace std; int main() { int* a#a3lmo",
+        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int* a = new int;⏎    int* b = new int;⏎    *a = 15;⏎    *b = 25;⏎    int sum = *a + *b;⏎    cout << sum << endl;⏎    *a = sum;⏎    cout << *a",
+        "interpreter": "50⏎50⏎",
+        "reference": "40⏎40⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
-        "語料": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string text = \"H3llo W0rld! 2025\";⏎    int alphaCount = 0, digitCount = 0, otherCount = 0;⏎    for (int i ",
-        "直譯器": "Alpha: 8⏎Digit: 0⏎Other: 9⏎",
-        "參照": "Alpha: 8⏎Digit: 6⏎Other: 3⏎"
+        "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
+        "corpus": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string text = \"H3llo W0rld! 2025\";⏎    int alphaCount = 0, digitCount = 0, otherCount = 0;⏎    for (int i ",
+        "interpreter": "Alpha: 8⏎Digit: 0⏎Other: 9⏎",
+        "reference": "Alpha: 8⏎Digit: 6⏎Other: 3⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#15fugmd",
-        "語料": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎string toggleCase(string s) {⏎    for (int i = 0; i < s.size(); i++) {⏎        if (isalpha(s[i])) {⏎            if (s[i] >=",
-        "直譯器": "hello world!⏎",
-        "參照": "hEllO wOrlD!⏎"
+        "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#15fugmd",
+        "corpus": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎string toggleCase(string s) {⏎    for (int i = 0; i < s.size(); i++) {⏎        if (isalpha(s[i])) {⏎            if (s[i] >=",
+        "interpreter": "hello world!⏎",
+        "reference": "hEllO wOrlD!⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
-        "語料": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string input = \"abc12de3fg45\";⏎    string digits = \"\";⏎    int sum = 0;⏎    for (int i = 0; i < input.size",
-        "直譯器": "Digits: 15⏎Sum: -225⏎",
-        "參照": "Digits: 12345⏎Sum: 15⏎"
+        "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
+        "corpus": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string input = \"abc12de3fg45\";⏎    string digits = \"\";⏎    int sum = 0;⏎    for (int i = 0; i < input.size",
+        "interpreter": "Digits: 15⏎Sum: -225⏎",
+        "reference": "Digits: 12345⏎Sum: 15⏎"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
-        "語料": "#include <iostream>⏎using namespace std;⏎class NumberHolder {⏎public:⏎    int num;⏎    NumberHolder() {⏎        num = 0;⏎    }⏎    bool operator==(NumberHolder other) {⏎        return num == other.num",
-        "直譯器": "equal⏎also equal⏎",
-        "參照": "equal⏎not equal⏎"
+        "corpusKey": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
+        "corpus": "#include <iostream>⏎using namespace std;⏎class NumberHolder {⏎public:⏎    int num;⏎    NumberHolder() {⏎        num = 0;⏎    }⏎    bool operator==(NumberHolder other) {⏎        return num == other.num",
+        "interpreter": "equal⏎also equal⏎",
+        "reference": "equal⏎not equal⏎"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; class Scope { publi#142pep4",
-        "語料": "#include <iostream>⏎using namespace std;⏎class Scope {⏎public:⏎    Scope() {⏎        cout << \"enter\" << endl;⏎    }⏎    ~Scope() {⏎        cout << \"exit\" << endl;⏎    }⏎};⏎int main() {⏎    cout << \"ma",
-        "直譯器": "main start⏎enter⏎inner⏎main end⏎exit⏎",
-        "參照": "main start⏎enter⏎inner⏎exit⏎main end⏎"
+        "corpusKey": "#include <iostream> using namespace std; class Scope { publi#142pep4",
+        "corpus": "#include <iostream>⏎using namespace std;⏎class Scope {⏎public:⏎    Scope() {⏎        cout << \"enter\" << endl;⏎    }⏎    ~Scope() {⏎        cout << \"exit\" << endl;⏎    }⏎};⏎int main() {⏎    cout << \"ma",
+        "interpreter": "main start⏎enter⏎inner⏎main end⏎exit⏎",
+        "reference": "main start⏎enter⏎inner⏎exit⏎main end⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <string> #include <vector> usin#gy8xq3",
-        "語料": "#include <iostream>⏎#include <string>⏎#include <vector>⏎using namespace std;⏎⏎string reverseStr(const string& s, int idx) {⏎    if (idx == (int)s.size()) return \"\";⏎    return reverseStr(s, idx + 1) +",
-        "直譯器": "racecar -> no⏎hello -> no⏎abba -> no⏎world -> no⏎noon -> no⏎",
-        "參照": "racecar -> yes⏎hello -> no⏎abba -> yes⏎world -> no⏎noon -> yes⏎"
+        "corpusKey": "#include <iostream> #include <string> #include <vector> usin#gy8xq3",
+        "corpus": "#include <iostream>⏎#include <string>⏎#include <vector>⏎using namespace std;⏎⏎string reverseStr(const string& s, int idx) {⏎    if (idx == (int)s.size()) return \"\";⏎    return reverseStr(s, idx + 1) +",
+        "interpreter": "racecar -> no⏎hello -> no⏎abba -> no⏎world -> no⏎noon -> no⏎",
+        "reference": "racecar -> yes⏎hello -> no⏎abba -> yes⏎world -> no⏎noon -> yes⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <string> using namespace std; s#8cx34x",
-        "語料": "#include <iostream>⏎#include <string>⏎using namespace std;⏎⏎string replaceAll(string s, const string& from, const string& to) {⏎    if (from.empty()) return s;⏎    size_t pos = 0;⏎    while ((pos = s.",
-        "直譯器": "hello world⏎aaa⏎abcabcabc⏎no match here⏎",
-        "參照": "hello there⏎ba⏎XXX⏎no match here⏎"
+        "corpusKey": "#include <iostream> #include <string> using namespace std; s#8cx34x",
+        "corpus": "#include <iostream>⏎#include <string>⏎using namespace std;⏎⏎string replaceAll(string s, const string& from, const string& to) {⏎    if (from.empty()) return s;⏎    size_t pos = 0;⏎    while ((pos = s.",
+        "interpreter": "hello world⏎aaa⏎abcabcabc⏎no match here⏎",
+        "reference": "hello there⏎ba⏎XXX⏎no match here⏎"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; int main() { int a #1qwxvi9",
-        "語料": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int a = 5;⏎    double b = 2.0;⏎    cout << a / 2 << endl;⏎    cout << a / b << endl;⏎    char c = 'A';⏎    int d = c + 1;⏎    cout << d << en",
-        "直譯器": "2⏎2.5⏎66⏎66⏎0⏎0.333333⏎",
-        "參照": "2⏎2.5⏎66⏎B⏎0⏎0.333333⏎"
+        "corpusKey": "#include <iostream> using namespace std; int main() { int a #1qwxvi9",
+        "corpus": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int a = 5;⏎    double b = 2.0;⏎    cout << a / 2 << endl;⏎    cout << a / b << endl;⏎    char c = 'A';⏎    int d = c + 1;⏎    cout << d << en",
+        "interpreter": "2⏎2.5⏎66⏎66⏎0⏎0.333333⏎",
+        "reference": "2⏎2.5⏎66⏎B⏎0⏎0.333333⏎"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; int main() { cout <#ye3m8s",
-        "語料": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    cout << sizeof(char) << endl;⏎    cout << sizeof(int) << endl;⏎    cout << sizeof(double) << endl;⏎    cout << sizeof(long long) << endl;⏎   ",
-        "直譯器": "1⏎4⏎8⏎8⏎1⏎4⏎4⏎4⏎1⏎4⏎",
-        "參照": "1⏎4⏎8⏎8⏎1⏎4⏎4⏎8⏎1⏎4⏎"
+        "corpusKey": "#include <iostream> using namespace std; int main() { cout <#ye3m8s",
+        "corpus": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    cout << sizeof(char) << endl;⏎    cout << sizeof(int) << endl;⏎    cout << sizeof(double) << endl;⏎    cout << sizeof(long long) << endl;⏎   ",
+        "interpreter": "1⏎4⏎8⏎8⏎1⏎4⏎4⏎4⏎1⏎4⏎",
+        "reference": "1⏎4⏎8⏎8⏎1⏎4⏎4⏎8⏎1⏎4⏎"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; int main() { int a #4f4o9q",
-        "語料": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int a = 0b1010;⏎    int b = 0b1100;⏎    cout << (a & b) << endl;⏎    cout << (a | b) << endl;⏎    cout << (a ^ b) << endl;⏎    cout << (~0 & ",
-        "直譯器": "8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎",
-        "參照": "8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎"
+        "corpusKey": "#include <iostream> using namespace std; int main() { int a #4f4o9q",
+        "corpus": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int a = 0b1010;⏎    int b = 0b1100;⏎    cout << (a & b) << endl;⏎    cout << (a | b) << endl;⏎    cout << (a ^ b) << endl;⏎    cout << (~0 & ",
+        "interpreter": "8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎",
+        "reference": "8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎"
       },
       {
-        "語料鍵": "#include <iostream> #include <string> using namespace std; i#lti6mm",
-        "語料": "#include <iostream>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string name = \"Alice\";⏎    if (name[0] == 'A') {⏎        cout << \"starts with A\";⏎    }⏎    return 0;⏎}",
-        "直譯器": "",
-        "參照": "starts with A"
+        "corpusKey": "#include <iostream> #include <string> using namespace std; i#lti6mm",
+        "corpus": "#include <iostream>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string name = \"Alice\";⏎    if (name[0] == 'A') {⏎        cout << \"starts with A\";⏎    }⏎    return 0;⏎}",
+        "interpreter": "",
+        "reference": "starts with A"
       },
       {
-        "語料鍵": "#include <iostream> #include <string> using namespace std; i#15t2v9g",
-        "語料": "#include <iostream>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string s = \"banana\";⏎    int count = 0;⏎    int i = 0;⏎    while (i < 6) {⏎        if (s[i] == 'a') {⏎            count = co",
-        "直譯器": "0",
-        "參照": "3"
+        "corpusKey": "#include <iostream> #include <string> using namespace std; i#15t2v9g",
+        "corpus": "#include <iostream>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string s = \"banana\";⏎    int count = 0;⏎    int i = 0;⏎    while (i < 6) {⏎        if (s[i] == 'a') {⏎            count = co",
+        "interpreter": "0",
+        "reference": "3"
       },
       {
-        "語料鍵": "#include <iostream> using namespace std; int main() { int x;#v9325h",
-        "語料": "⏎      #include <iostream>⏎      using namespace std;⏎      int main() {⏎        int x;⏎        cout << x << endl;⏎        return 0;⏎      }⏎    ",
-        "直譯器": "0⏎",
-        "參照": "38518960⏎"
+        "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",
+        "corpus": "⏎      #include <iostream>⏎      using namespace std;⏎      int main() {⏎        int x;⏎        cout << x << endl;⏎        return 0;⏎      }⏎    ",
+        "interpreter": "0⏎",
+        "reference": "38518960⏎"
       }
     ]
   }

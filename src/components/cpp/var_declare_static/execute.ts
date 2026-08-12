@@ -1,7 +1,7 @@
 /** `cpp:var_declare_static` 的 **execute** 路——從共用檔原封剪過來（批次第二十一批：建構子）。 */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
-import { 根作用域 } from '../../../languages/cpp/core/runtime/scope'
+import { rootScope } from '../../../languages/cpp/core/runtime/scope'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   /**
@@ -20,15 +20,15 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     register('cpp:var_declare_static', async (node, ctx) => {
       const name = String(node.properties.name)
       const type = String(node.properties.type || 'int')
-      const 儲存名 = `__static__${node.id}__${name}`
-      const root = 根作用域(ctx.scope)
+      const storedName = `__static__${node.id}__${name}`
+      const root = rootScope(ctx.scope)
 
-      if (!root.has(儲存名)) {
+      if (!root.has(storedName)) {
         const inits = node.children.initializer ?? []
-        const 初值 = inits.length > 0 ? await ctx.evaluate(inits[0]) : defaultValue(type)
-        root.declare(儲存名, ctx.coerceType ? ctx.coerceType(初值, type) : 初值)
+        const initValue = inits.length > 0 ? await ctx.evaluate(inits[0]) : defaultValue(type)
+        root.declare(storedName, ctx.coerceType ? ctx.coerceType(initValue, type) : initValue)
       }
       // 本次呼叫的區域名字指向那一格
-      ctx.scope.declareRef(name, root, 儲存名)
+      ctx.scope.declareRef(name, root, storedName)
     })
 }

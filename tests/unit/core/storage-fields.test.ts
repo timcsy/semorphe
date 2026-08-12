@@ -42,7 +42,7 @@ const localStorageMock = (() => {
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
 /** 每個欄位一個**可辨識**的值——用預設值的話，「丟了」與「存對了」會長得一樣 */
-const 填滿的狀態: SavedState = {
+const filledState: SavedState = {
   version: CURRENT_VERSION,
   tree: null,
   blocklyState: { blocks: { languageVersion: 0, blocks: [] } },
@@ -57,7 +57,7 @@ const 填滿的狀態: SavedState = {
 }
 
 /** 這些欄位由存檔層自己決定，不該與存入值相同 */
-const 由系統改寫的欄位 = new Set(['lastModified'])
+const systemRewrittenFields = new Set(['lastModified'])
 
 describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () => {
   let storage: StorageService
@@ -69,33 +69,33 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
   })
 
   it('填滿所有欄位存進去，每一個都載得回來', () => {
-    storage.save(填滿的狀態)
+    storage.save(filledState)
     const loaded = storage.load()
     expect(loaded, '存進去之後載不回來——連存檔本身都不見了').not.toBeNull()
 
     // 失敗訊息必須說得出**是哪個欄位**（FR-003）——只說「不相等」的話，
     // 讀的人還得自己去查是哪一個。
-    const 丟失的: string[] = []
+    const lostOnes: string[] = []
     for (const field of Object.keys(SAVED_STATE_FIELDS) as (keyof SavedState)[]) {
-      if (由系統改寫的欄位.has(field)) continue
-      const 存入 = 填滿的狀態[field]
-      const 載回 = loaded![field]
-      if (JSON.stringify(載回) !== JSON.stringify(存入)) {
-        丟失的.push(`${field}（存入 ${JSON.stringify(存入)}，載回 ${JSON.stringify(載回)}）`)
+      if (systemRewrittenFields.has(field)) continue
+      const store = filledState[field]
+      const loadBack = loaded![field]
+      if (JSON.stringify(loadBack) !== JSON.stringify(store)) {
+        lostOnes.push(`${field}（存入 ${JSON.stringify(store)}，載回 ${JSON.stringify(loadBack)}）`)
       }
     }
 
-    expect(丟失的, `以下欄位沒有守恆：\n  - ${丟失的.join('\n  - ')}`).toEqual([])
+    expect(lostOnes, `以下欄位沒有守恆：\n  - ${lostOnes.join('\n  - ')}`).toEqual([])
   })
 
   it('清單本身是完整的——不是只測了幾個好測的欄位', () => {
     // 這支守的是「有人把 SAVED_STATE_FIELDS 縮水好讓上面那支通過」
     expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(11)
-    expect(Object.keys(填滿的狀態).length).toBe(Object.keys(SAVED_STATE_FIELDS).length)
+    expect(Object.keys(filledState).length).toBe(Object.keys(SAVED_STATE_FIELDS).length)
   })
 
   it('選填欄位：「未提供」與「提供了但為空」可區分（FR-004）', () => {
-    storage.save({ ...填滿的狀態, blockStyleId: 'zelos' })
+    storage.save({ ...filledState, blockStyleId: 'zelos' })
     storage.save({ code: 'x' }) // 沒提供 blockStyleId
     expect(
       storage.load()!.blockStyleId,
@@ -107,12 +107,12 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
   })
 
   it('存檔中不認得的額外欄位會被保留（FR-017）', () => {
-    storage.save(填滿的狀態)
+    storage.save(filledState)
     const raw = JSON.parse(localStorage.getItem('semorphe-state')!)
-    localStorage.setItem('semorphe-state', JSON.stringify({ ...raw, 來自未來的欄位: 42 }))
+    localStorage.setItem('semorphe-state', JSON.stringify({ ...raw, futureFields: 42 }))
 
     storage.save({ code: '又改了一次' })
     const after = JSON.parse(localStorage.getItem('semorphe-state')!)
-    expect(after.來自未來的欄位, '未知欄位在下一次存檔後被抹掉了').toBe(42)
+    expect(after.futureFields, '未知欄位在下一次存檔後被抹掉了').toBe(42)
   })
 })

@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建input(values: SemanticNode[], props: Record<string, string> = {}): SemanticNode {
+export function buildInput(values: SemanticNode[], props: Record<string, string> = {}): SemanticNode {
   return createNode('cpp:input', props, { values })
 }
 

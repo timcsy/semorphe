@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建loop_count(
+export function buildLoopCount(
   varName: string,
   inclusive: string | boolean,
   children: Record<string, SemanticNode[]>,

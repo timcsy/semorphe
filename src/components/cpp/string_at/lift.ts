@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建字串索引(obj: string, index: SemanticNode | null): SemanticNode {
+export function buildStringIndex(obj: string, index: SemanticNode | null): SemanticNode {
   return createNode('cpp:string_at', { obj }, { index: index ? [index] : [] })
 }
 

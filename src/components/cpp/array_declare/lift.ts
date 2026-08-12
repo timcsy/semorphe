@@ -21,17 +21,17 @@ import { createNode } from '../../../core/semantic-tree'
 /**
  * 從一個 `array_declarator` 造出這顆元件。
  *
- * @param 型別 元素型別。指標陣列傳 `int*` 這種**已經帶星號**的
- * @param 陣列宣告子 tree-sitter 的 `array_declarator` 節點
+ * @param type 元素型別。指標陣列傳 `int*` 這種**已經帶星號**的
+ * @param arrayDeclarator tree-sitter 的 `array_declarator` 節點
  */
-export function 建陣列宣告(型別: string, 陣列宣告子: AstNode, ctx: LiftContext): SemanticNode {
-  const 大小節點 = 陣列宣告子.namedChildren[1]
+export function buildArrayDeclare(type: string, arrayDeclarator: AstNode, ctx: LiftContext): SemanticNode {
+  const sizeNode = arrayDeclarator.namedChildren[1]
   // 大小 lift 成子節點而不是屬性——投影要把它畫成一個可以放運算式的插槽
-  const 大小 = 大小節點 ? ctx.lift(大小節點) : null
+  const size = sizeNode ? ctx.lift(sizeNode) : null
   return createNode('cpp:array_declare', {
-    type: 型別,
-    name: 陣列宣告子.namedChildren[0]?.text ?? 'arr',
-  }, { size: 大小 ? [大小] : [] })
+    type: type,
+    name: arrayDeclarator.namedChildren[0]?.text ?? 'arr',
+  }, { size: size ? [size] : [] })
 }
 
 /** 這顆沒有要登錄的判別——它由共用檔的四個位置**呼叫**，不是被問。 */

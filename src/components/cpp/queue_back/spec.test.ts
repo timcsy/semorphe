@@ -32,17 +32,17 @@ beforeAll(async () => {
 
 describe('膠囊自證：cpp:queue_back', () => {
   it('★ generate：產回 q.back()', () => {
-    const 樹 = createNode('cpp:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [createNode('cpp:queue_back', { obj: 'que' })],
     })
-    expect(generateCode(樹, 'cpp', apcs as unknown as StylePreset)).toContain('que.back()')
+    expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('que.back()')
   })
 
   it('★ execute：回傳最後一個元素', async () => {
     const src = '#include <iostream>\n#include <queue>\nusing namespace std;\nint main(){ queue<int> q; q.push(1); q.push(2); cout << q.back(); }'
-    const 樹 = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
+    const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
     const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(樹)
+    await i.execute(tree)
     // ⚠️ 這一支走的是 `cpp:vector_back` 的執行器（見檔頭），而基準值相同。
     // 它證明的是**搬家沒有改變行為**，不是「這顆元件被執行了」。
     expect(i.getOutput().join(''), '基準：q.back() 印出 2').toBe('2')

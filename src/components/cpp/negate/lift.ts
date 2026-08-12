@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建negate(operand: SemanticNode | null): SemanticNode {
+export function buildNegate(operand: SemanticNode | null): SemanticNode {
   return createNode('cpp:negate', {}, { value: operand ? [operand] : [] })
 }
 

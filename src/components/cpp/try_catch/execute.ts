@@ -25,12 +25,12 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
           // ⚠️ **不能 `String(signal.value)`。** `signal.value` 是 RuntimeValue
           // 物件，字串化之後 `catch (int e) { cout << e; }` 印出 `[object Object]`
           // ——程式跑完、印出東西、而那是一個不存在的值。
-          const 丟出的 = signal.value as unknown
-          const 值 =
-            丟出的 !== null && typeof 丟出的 === 'object' && 'type' in (丟出的 as object)
-              ? (丟出的 as { type: string; value: unknown })
-              : { type: 'string', value: String(丟出的) }
-          ctx.scope.declare(catchName, 值 as never)
+          const thrown = signal.value as unknown
+          const value =
+            thrown !== null && typeof thrown === 'object' && 'type' in (thrown as object)
+              ? (thrown as { type: string; value: unknown })
+              : { type: 'string', value: String(thrown) }
+          ctx.scope.declare(catchName, value as never)
           await ctx.executeBody(catchBody)
           ctx.scope = parentScope
         } else {

@@ -32,7 +32,7 @@ if (!'/'.concat(COMPONENT_ROOT).startsWith('/src/components')) {
   throw new Error(`COMPONENT_ROOT 與 glob 樣式不一致：${COMPONENT_ROOT}`)
 }
 
-let 快取: ComponentRegistration[] | null = null
+let cache: ComponentRegistration[] | null = null
 
 /**
  * 從檔案路徑推出 `<scope>/<name>`。
@@ -55,7 +55,7 @@ function pathToDir(globKey: string): string {
 }
 
 /** C1–C4 的驗證。**違反就 throw**——載不起來要當場知道，不是安靜地少一顆。 */
-function 驗契約(manifest: ComponentManifest, sourceDir: string): void {
+function verifyContract(manifest: ComponentManifest, sourceDir: string): void {
   const where = `膠囊 ${sourceDir}`
 
   // C1：身分格式
@@ -91,21 +91,21 @@ function 驗契約(manifest: ComponentManifest, sourceDir: string): void {
 
 /** 全部膠囊。第一次呼叫時掃描並驗證。 */
 export function registeredComponents(): ComponentRegistration[] {
-  if (快取) return 快取
+  if (cache) return cache
   const out: ComponentRegistration[] = []
   for (const [key, mod] of Object.entries(MANIFESTS)) {
     const sourceDir = pathToDir(key)
     const manifest = mod.default
-    驗契約(manifest, sourceDir)
+    verifyContract(manifest, sourceDir)
     out.push({ conceptId: manifest.conceptId, sourceDir, manifest })
   }
-  快取 = out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
-  return 快取
+  cache = out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+  return cache
 }
 
 /** 測試用：丟掉快取。production 路徑不該需要它。 */
 export function resetComponentCache(): void {
-  快取 = null
+  cache = null
 }
 
 /** 膠囊宣告的概念定義（形狀與 `concepts.json` 的一筆相同，因為它就是那一筆）。 */
@@ -163,10 +163,10 @@ export function componentBlocks(owner?: string | null): unknown[] {
     if (i < 0) continue
     const c = byDir.get(`${parts[i + 1]}/${parts[i + 2]}`)
     if (!c) throw new Error(`${key} 沒有對應的 component.json——forms 不得孤兒存在`)
-    const 章 = (c.manifest as { owner?: string }).owner ?? c.manifest.requires?.[0] ?? null
+    const section = (c.manifest as { owner?: string }).owner ?? c.manifest.requires?.[0] ?? null
     // `owner === undefined` ＝ 全要；否則只要這個 owner 的（`null` ＝ 沒有 owner 的）。
-    if (owner !== undefined && 章 !== owner) continue
-    for (const b of mod.default) out.push(章 ? { ...(b as object), owner: 章 } : b)
+    if (owner !== undefined && section !== owner) continue
+    for (const b of mod.default) out.push(section ? { ...(b as object), owner: section } : b)
   }
   return out
 }
@@ -182,11 +182,11 @@ export function componentBlocks(owner?: string | null): unknown[] {
  * > **列舉已知的 owner，等於保證下一個新 owner 會被漏掉。**
  * > 改成「扣掉已處理的，其餘全要」——**新的 owner 自動被涵蓋**。
  */
-export function componentBlocksNotIn(已處理: readonly (string | null)[]): unknown[] {
-  const 集 = new Set(已處理)
+export function componentBlocksNotIn(handled: readonly (string | null)[]): unknown[] {
+  const set2 = new Set(handled)
   const out: unknown[] = []
   for (const b of componentBlocks() as { owner?: string }[]) {
-    if (集.has(b.owner ?? null)) continue
+    if (set2.has(b.owner ?? null)) continue
     out.push(b)
   }
   return out

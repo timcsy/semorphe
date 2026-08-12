@@ -109,14 +109,14 @@ describe('parseToChildren：文字 → 子節點', () => {
 })
 
 describe('★ 來回是不動點——這是唯一真正要緊的性質', () => {
-  const 樣本 = [
+  const samples = [
     [p('int', 'a'), p('int', 'b')],
     [p('long long', 'n')],
     [p('map<int,int>', 'm'), p('int', 'k')],
     [p('const std::string&', 's')],
     [p('pair<int, pair<int,int>>', 'p')],
   ]
-  for (const [i, kids] of 樣本.entries()) {
+  for (const [i, kids] of samples.entries()) {
     it(`樣本 ${i + 1}：serialize → parse → 屬性完全相同`, () => {
       const text = serializeChildren(kids, spec)!
       expect(parseToChildren(text, spec).map((n) => n.properties)).toEqual(kids.map((n) => n.properties))

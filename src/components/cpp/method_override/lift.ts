@@ -7,7 +7,7 @@
 import type { SemanticNode, PropertyValue } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建method_override(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
+export function buildMethodOverride(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:method_override', props, children)
 }
 

@@ -43,11 +43,11 @@ function baseline<T>(name: string, current: T): T {
     // ⚠️ **重產不得吃掉 `_meta`。** 基準檔的 `note` 是「下一個看到這個數字的人
     // 一定會打開」的地方（build-guardrail 第 7 步），而一個會靜默清掉它的寫入器
     // 等於把那個約定變成謊話——寫的人以為留下了理由，下一次重產就沒了。
-    const 舊 = fs.existsSync(file)
+    const old = fs.existsSync(file)
       ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: unknown })
       : {}
-    const 帶著 = 舊._meta ? { ...(current as object), _meta: 舊._meta } : current
-    fs.writeFileSync(file, JSON.stringify(帶著, null, 2) + '\n', 'utf8')
+    const carrying = old._meta ? { ...(current as object), _meta: old._meta } : current
+    fs.writeFileSync(file, JSON.stringify(carrying, null, 2) + '\n', 'utf8')
     return current
   }
   if (!fs.existsSync(file)) {
@@ -102,7 +102,7 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
   reg.loadFromSplit(allCppConcepts(), allCppProjections())
 
   /** 一門課的**起始關卡**——使用者第一次打開看到的就是這個 */
-  function 起始關卡(topic: unknown): { 分類: string[]; 積木: string[] } {
+  function startLevel(topic: unknown): { classify: string[]; blocks: string[] } {
     const tb = buildToolbox({
       blockSpecRegistry: reg,
       visibleConcepts: getVisibleConcepts(topic as never, new Set(['L0'])),
@@ -112,42 +112,42 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
       categoryDefs: cppCategoryDefs,
     }) as { contents: { name: string; contents: { type: string }[] }[] }
     return {
-      分類: tb.contents.map((c) => c.name),
-      積木: tb.contents.flatMap((c) => c.contents.map((b) => b.type)),
+      classify: tb.contents.map((c) => c.name),
+      blocks: tb.contents.flatMap((c) => c.contents.map((b) => b.type)),
     }
   }
 
   // ⚠️ **兩門課都要釘。** 只釘一門的話，另一門的起始關卡壞掉不會有人知道——
   // 而「只有其中一門壞了」正是這一類 bug 最可能的形狀（可見度是逐課算的）。
-  const 課程 = [
+  const course = [
     ['初學 C++', cppBeginner],
     ['競程 C++', cppCompetitive],
   ] as const
 
-  for (const [name, topic] of 課程) {
+  for (const [name, topic] of course) {
     describe(name, () => {
-      const { 分類, 積木 } = 起始關卡(topic)
+      const { classify, blocks } = startLevel(topic)
 
       it('★ 起始關卡至少有五個分類——只剩兩個代表整批來源查無此章', () => {
-        expect(分類.length, `學生第一眼只看到 ${分類.length} 個分類（${分類.join('、')}）→ 有整批來源消失了`)
+        expect(classify.length, `學生第一眼只看到 ${classify.length} 個分類（${classify.join('、')}）→ 有整批來源消失了`)
           .toBeGreaterThanOrEqual(5)
       })
 
       it('★ 有 statement 積木——沒有的話學生連第一行都寫不出來', () => {
         for (const t of ['cpp_var_declare', 'cpp_var_assign', 'cpp_print', 'cpp_if']) {
-          expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+          expect(blocks, `${t} 不在起始關卡的工具箱裡`).toContain(t)
         }
       })
 
       it('★ 有基本資料積木——整數與字串是「基本資料」', () => {
         for (const t of ['cpp_literal_number', 'cpp_literal_string', 'cpp_var_ref']) {
-          expect(積木, `${t} 不在起始關卡的工具箱裡`).toContain(t)
+          expect(blocks, `${t} 不在起始關卡的工具箱裡`).toContain(t)
         }
       })
 
       it('★ 每個出現的分類都不是空的', () => {
         // 空分類會被 buildToolbox 濾掉，所以這一支釘的是「濾掉之後還有東西」
-        expect(積木.length, '起始關卡一顆積木都沒有').toBeGreaterThan(10)
+        expect(blocks.length, '起始關卡一顆積木都沒有').toBeGreaterThan(10)
       })
     })
   }

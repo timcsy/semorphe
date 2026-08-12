@@ -118,26 +118,26 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
   }
 
   // FS-3——用**軸值形態**數，中性形態不計
-  const 軸值數 = Object.keys(formSet.forms).filter((k) => k !== NEUTRAL_KEY).length
-  if (formSet.axis === null && 軸值數 > 0) {
+  const axisValueCount = Object.keys(formSet.forms).filter((k) => k !== NEUTRAL_KEY).length
+  if (formSet.axis === null && axisValueCount > 0) {
     return { ok: false, reason: '沒有選擇軸卻宣告了軸值形態' }
   }
-  if (formSet.axis !== null && 軸值數 === 0) {
+  if (formSet.axis !== null && axisValueCount === 0) {
     return { ok: false, reason: '宣告了選擇軸卻沒有任何軸值形態——軸沒有作用' }
   }
   // 兩個**軸值**指向同一顆積木 = 那不是兩個形態，是宣告錯了（C-3）。
   //
   // ⚠️ 保留鍵 `_`（中性形態）不算：`_` 與某個軸值指向同一顆是**合法的**
   // ——位置軸那組就是這樣（中性形態剛好就是敘述版）。
-  const 軸值形態 = Object.entries(formSet.forms).filter(([k]) => k !== NEUTRAL_KEY).map(([, v]) => v)
-  if (new Set(軸值形態).size !== 軸值形態.length) {
+  const axisValueForm = Object.entries(formSet.forms).filter(([k]) => k !== NEUTRAL_KEY).map(([, v]) => v)
+  if (new Set(axisValueForm).size !== axisValueForm.length) {
     return { ok: false, reason: '兩個軸值指向同一個積木型別——那不是兩個形態' }
   }
 
   // FS-4
-  const 別人的 = new Set(others.flatMap((o) => (o.conceptId === formSet.conceptId ? [] : Object.values(o.forms))))
+  const othersOwn = new Set(others.flatMap((o) => (o.conceptId === formSet.conceptId ? [] : Object.values(o.forms))))
   for (const v of values) {
-    if (別人的.has(v)) {
+    if (othersOwn.has(v)) {
       return { ok: false, reason: `積木型別「${v}」已經屬於另一個元件身分——反推不出 conceptId` }
     }
   }
@@ -184,23 +184,23 @@ export interface FormDeclaration {
  * 那正是這個功能存在之前的實際行為（`Map.set` 直接覆寫）。
  */
 export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, FormSet> {
-  const 中性 = new Map<string, string>()
-  const 變體 = new Map<string, { axis: string; values: Record<string, string> }>()
+  const neutral = new Map<string, string>()
+  const variant = new Map<string, { axis: string; values: Record<string, string> }>()
 
   for (const d of decls) {
     if (!d.form) {
       // 第一個中性宣告勝出——後來的不覆寫，否則載入順序會決定行為
-      if (!中性.has(d.conceptId)) 中性.set(d.conceptId, d.blockType)
+      if (!neutral.has(d.conceptId)) neutral.set(d.conceptId, d.blockType)
       continue
     }
-    const cur = 變體.get(d.conceptId) ?? { axis: d.form.axis, values: {} }
+    const cur = variant.get(d.conceptId) ?? { axis: d.form.axis, values: {} }
     cur.values[d.form.value] = d.blockType
-    變體.set(d.conceptId, cur)
+    variant.set(d.conceptId, cur)
   }
 
   const out = new Map<string, FormSet>()
-  for (const [conceptId, blockType] of 中性) {
-    const v = 變體.get(conceptId)
+  for (const [conceptId, blockType] of neutral) {
+    const v = variant.get(conceptId)
     if (!v) {
       out.set(conceptId, singleForm(conceptId, blockType))
       continue
@@ -215,7 +215,7 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
 
   // 只有變體、沒有中性宣告 → 拿第一個變體當中性，並且**出聲**不了（這裡沒有報表）
   // ——所以改成不接受：沒有中性形態的元件在 validateFormSet 會被擋下。
-  for (const [conceptId, v] of 變體) {
+  for (const [conceptId, v] of variant) {
     if (out.has(conceptId)) continue
     const first = Object.values(v.values)[0]
     out.set(conceptId, {

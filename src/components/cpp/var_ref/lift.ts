@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建var_ref(name: string): SemanticNode {
+export function buildVarRef(name: string): SemanticNode {
   return createNode('cpp:var_ref', { name })
 }
 

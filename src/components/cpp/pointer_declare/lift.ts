@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建pointer_declare(
+export function buildPointerDeclare(
   name: string,
   type: string,
   initializer?: SemanticNode | null,

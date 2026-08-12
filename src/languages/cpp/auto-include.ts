@@ -8,7 +8,7 @@
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
-import { 建include } from '../../components/cpp/include/lift'
+import { buildInclude } from '../../components/cpp/include/lift'
 import { isIncludeDirective } from './core/node-traits'
 
 /**
@@ -129,6 +129,6 @@ export function createCppCodePatcher(
  */
 export function autoIncludeNodes(edges: DependencyEdge[]): SemanticNode[] {
   return edges.map((edge) =>
-    建include(edge.header.replace(/^<|>$/g, '')),
+    buildInclude(edge.header.replace(/^<|>$/g, '')),
   )
 }

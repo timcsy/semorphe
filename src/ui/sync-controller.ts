@@ -72,7 +72,7 @@ export class SyncController {
    * （`blockly-panel.ts` 的「Restore original nodeId」），所以抽回來的節點
    * 認得出自己是誰。
    */
-  private 降級前的身分 = new Map<string, string>()
+  private identityBeforeDowngrade = new Map<string, string>()
   private lifter: Lifter | null = null
   private parser: CodeParser | null = null
   private syncing = false
@@ -207,7 +207,7 @@ export class SyncController {
       const tree = blocklyState.tree
       // ⚠️ **還原被降級的身分**——否則使用者拖一下積木，真實就變成降級後的樣子。
       // 見 `降級前的身分` 的檔頭：閉環的系統裡，輸出端的損失會從輸入端回來。
-      this.還原降級(tree)
+      this.restoreDowngrade(tree)
       this.currentTree = tree
       const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
       this.codeMappings = mappings
@@ -308,16 +308,19 @@ export class SyncController {
 
       // 降級只作用在**顯示用的拷貝**上——`tree` 是真實，執行要拿到它。
       // （`downgradeConceptsForLevel` 是就地改寫，見 `cloneTree` 的說明）
-      let 顯示樹 = tree
-      this.降級前的身分.clear()
+      // ⚠️ 這個變數原本叫「顯示樹」，而下面還有一個英文的 `displayTree`
+      // ——改名時**兩個撞在一起**。它是**降級後**的樹，`displayTree` 是
+      // 再濾掉鷹架之後的；名字要分得出這一層差別。
+      let downgradedTree = tree
+      this.identityBeforeDowngrade.clear()
       if (this.currentTopic) {
         const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
-        顯示樹 = this.cloneTree(tree)
-        this.downgradeConceptsForLevel(顯示樹, visible)
+        downgradedTree = this.cloneTree(tree)
+        this.downgradeConceptsForLevel(downgradedTree, visible)
       }
 
       // For L0: strip scaffold nodes so blocks only show user's logic
-      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(顯示樹) : 顯示樹
+      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(downgradedTree) : downgradedTree
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
@@ -380,7 +383,7 @@ export class SyncController {
           node.properties.type = downgrade.typePrefix
         }
         // ⚠️ 記下來，讓 blocks→code 那個方向還原得回去（見 `降級前的身分`）。
-        this.降級前的身分.set(node.id, node.conceptId)
+        this.identityBeforeDowngrade.set(node.id, node.conceptId)
         node.conceptId = downgrade.conceptId
       }
       // If no downgrade mapping or target also not visible → keep original (never raw_code)
@@ -444,15 +447,15 @@ export class SyncController {
       }
 
       // 同上：降級只作用在顯示用的拷貝上，`fullTree` 保持真實
-      let 顯示樹 = fullTree
+      let downgradedTree = fullTree
       if (this.currentTopic) {
         const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
-        顯示樹 = this.cloneTree(fullTree)
-        this.downgradeConceptsForLevel(顯示樹, visible)
+        downgradedTree = this.cloneTree(fullTree)
+        this.downgradeConceptsForLevel(downgradedTree, visible)
       }
 
       // For blocks: strip scaffold if L0
-      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(顯示樹) : 顯示樹
+      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(downgradedTree) : downgradedTree
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
       this.blockMappings = renderResult.blockMappings
 
@@ -481,13 +484,13 @@ export class SyncController {
    * 只還原「這個節點當初真的被降級過，而且它現在仍然是那個降級目標」的情況
    * ——**使用者真的把它換成別的概念時不得還原**（那是使用者的編輯，不是投影損失）。
    */
-  private 還原降級(node: SemanticNode): void {
-    const 原 = this.降級前的身分.get(node.id)
-    if (原 !== undefined && node.conceptId === abstractConceptOf(原)) {
-      node.conceptId = 原
+  private restoreDowngrade(node: SemanticNode): void {
+    const original = this.identityBeforeDowngrade.get(node.id)
+    if (original !== undefined && node.conceptId === abstractConceptOf(original)) {
+      node.conceptId = original
     }
     for (const children of Object.values(node.children ?? {})) {
-      if (Array.isArray(children)) for (const c of children) this.還原降級(c)
+      if (Array.isArray(children)) for (const c of children) this.restoreDowngrade(c)
     }
   }
 

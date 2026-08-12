@@ -105,8 +105,8 @@ describe('解構式在離開作用域時執行', () => {
         }),
       ),
     )
-    const 次數 = (out.match(/~/g) ?? []).length
-    expect(次數, `三個物件應該跑三次解構式，實際 ${次數} 次`).toBe(3)
+    const count = (out.match(/~/g) ?? []).length
+    expect(count, `三個物件應該跑三次解構式，實際 ${count} 次`).toBe(3)
   })
 
   it('★ 函式回傳時跑', async () => {

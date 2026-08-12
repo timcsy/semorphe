@@ -13,7 +13,7 @@ import { createNode } from '../../../core/semantic-tree'
  * ⚠️ 這顆是 **for 迴圈三格的兜底**：`canBeForLoopPart` 說不行的東西，
  * 就被包成一段原始字串。它不是使用者選的積木，是**辨識失敗的落點**。
  */
-export function 建raw_expression(code: string): SemanticNode {
+export function buildRawExpression(code: string): SemanticNode {
   return createNode('cpp:raw_expression', { code })
 }
 

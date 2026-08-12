@@ -25,21 +25,21 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-function 樹(src: string): SemanticNode {
+function tree(src: string): SemanticNode {
   return createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
 }
-function 身分們(n: SemanticNode): string[] {
+function identities(n: SemanticNode): string[] {
   const out: string[] = [n.conceptId]
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...身分們(k as SemanticNode))
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
-function 程式(expr: string): string {
+function program(expr: string): string {
   return `#include <iostream>\n#include <cmath>\nusing namespace std;\nint main() { cout << ${expr}; }`
 }
 
 describe('膠囊自證：cpp:math_unary', () => {
   it('★ lift：`sqrt(16.0)` 得到這顆身分', () => {
-    expect(身分們(樹(程式('sqrt(16.0)')))).toContain('cpp:math_unary')
+    expect(identities(tree(program('sqrt(16.0)')))).toContain('cpp:math_unary')
   })
 
   it('★ generate：產回 sqrt(16.0)', () => {
@@ -50,7 +50,7 @@ describe('膠囊自證：cpp:math_unary', () => {
   })
 
   it('★ execute：`sqrt(16.0)` 印出 4', async () => {
-    const t = 樹(程式('sqrt(16.0)'))
+    const t = tree(program('sqrt(16.0)'))
     expect(JSON.stringify(t)).toContain('cpp:math_unary')   // ← 先證明它進了樹
     const i = new SemanticInterpreter({ maxSteps: 100000 })
     await i.execute(t)
@@ -59,13 +59,13 @@ describe('膠囊自證：cpp:math_unary', () => {
 
   it('★ 18 個函式名共用一顆身分，靠 func 屬性區分', () => {
     for (const f of ['sqrt', 'sin', 'log10', 'cbrt', 'trunc']) {
-      const ids = 身分們(樹(程式(`${f}(1.0)`)))
+      const ids = identities(tree(program(`${f}(1.0)`)))
       expect(ids, `${f}() 必須被辨識成 cpp:math_unary`).toContain('cpp:math_unary')
     }
   })
 
   it('★ 不亂報：沒登錄的函式名不該變成這顆身分', () => {
-    const ids = 身分們(樹(程式('foo(1.0)')))
+    const ids = identities(tree(program('foo(1.0)')))
     expect(ids).toContain('cpp:program')            // ← 先證明量到了東西
     expect(ids).not.toContain('cpp:math_unary')
   })

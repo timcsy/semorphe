@@ -110,7 +110,7 @@ describe('cpp_ref_declare — 參照是別名', () => {
 // ─── 身分判定：六顆不合併，而理由是量出來的 ─────────────────────────
 
 describe('六顆宣告概念的身分', () => {
-  const 樣本: [string, string][] = [
+  const samples: [string, string][] = [
     ['int a = 1;', 'cpp:var_declare'],
     ['const int b = 2;', 'cpp:var_declare_const'],
     ['constexpr int c = 3;', 'cpp:var_declare_constexpr'],
@@ -119,16 +119,16 @@ describe('六顆宣告概念的身分', () => {
     ['int& r = a;', 'cpp:var_declare_ref'],
   ]
 
-  for (const [程式, 身分] of 樣本) {
-    it(`★ ${程式} → ${身分}`, () => {
+  for (const [program, identity] of samples) {
+    it(`★ ${program} → ${identity}`, () => {
       const ids: string[] = []
       const walk = (n: SemanticNode): void => {
         if (!n) return
         ids.push(n.conceptId)
         for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
       }
-      walk(lift(`${P}int main(){ int a = 0; ${程式} return 0; }`))
-      expect(ids, '六顆都是活的、都到得了——合併之前先確認這件事').toContain(身分)
+      walk(lift(`${P}int main(){ int a = 0; ${program} return 0; }`))
+      expect(ids, '六顆都是活的、都到得了——合併之前先確認這件事').toContain(identity)
     })
   }
 })

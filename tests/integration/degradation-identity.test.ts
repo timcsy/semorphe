@@ -70,31 +70,31 @@ beforeAll(() => {
 })
 
 /** 走一次 render → extract，回傳頂層節點的身分。 */
-function 走一圈的身分(node: SemanticNode): string | null {
+function walkedIdentities(node: SemanticNode): string | null {
   const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [node] }))
   const back = (st.blocks.blocks as never[]).map((b) => extractor.extract(b as never)).filter(Boolean) as SemanticNode[]
   return back[0]?.conceptId ?? null
 }
 
-const 條件 = (): SemanticNode => createNode('cpp:literal_number', { value: '1' })
-const 一句 = (n: string): SemanticNode => createNode('cpp:var_declare', { name: n, type: 'int' })
+const condition = (): SemanticNode => createNode('cpp:literal_number', { value: '1' })
+const oneLine = (n: string): SemanticNode => createNode('cpp:var_declare', { name: n, type: 'int' })
 
 describe('走一次投影，身分不得改變', () => {
   // ── 對照組：正常的元件不會換身分 ─────────────────────────
   //
   // 不可省。沒有它，一個「什麼都回 null」的量測也會讓下面那條 `it.fails` 綠。
   it('★ 對照組：cpp:if 走一圈之後還是 cpp:if', () => {
-    const 身分 = 走一圈的身分(
-      createNode('cpp:if', {}, { condition: [條件()], then_body: [一句('a')] }),
+    const identity = walkedIdentities(
+      createNode('cpp:if', {}, { condition: [condition()], then_body: [oneLine('a')] }),
     )
-    expect(身分, '連 cpp:if 都換身分 → 量測壞了，不是缺陷').toBe('cpp:if')
+    expect(identity, '連 cpp:if 都換身分 → 量測壞了，不是缺陷').toBe('cpp:if')
   })
 
   it('★ 對照組：cpp:loop_while 走一圈之後還是 cpp:loop_while', () => {
-    const 身分 = 走一圈的身分(
-      createNode('cpp:loop_while', {}, { condition: [條件()], body: [一句('a')] }),
+    const identity = walkedIdentities(
+      createNode('cpp:loop_while', {}, { condition: [condition()], body: [oneLine('a')] }),
     )
-    expect(身分).toBe('cpp:loop_while')
+    expect(identity).toBe('cpp:loop_while')
   })
 
   // ── 已釘住的缺陷 ────────────────────────────────────────
@@ -113,23 +113,23 @@ describe('走一次投影，身分不得改變', () => {
     //
     // ⚠️ ② 要先答一個問題：**降級成 `cpp:if_else` 的節點，需要與 `cpp:if`
     //    在畫面上分得出來嗎？** 那是教學決定，不是技術決定。
-    const 身分 = 走一圈的身分(
+    const identity = walkedIdentities(
       createNode('cpp:if_else', {}, {
-        condition: [條件()],
-        then: [一句('a')],
-        else: [一句('b')],
+        condition: [condition()],
+        then: [oneLine('a')],
+        else: [oneLine('b')],
       }),
     )
-    expect(身分).toBe('cpp:if_else')
+    expect(identity).toBe('cpp:if_else')
   })
 
   it('★ 釘住現況：它現在變成什麼（缺陷修好時這一條也要一起拔）', () => {
     // 上面那條 `it.fails` 只說「不是 if_else」。這一條說**是什麼**——
     // 沒有它，任何一種錯誤身分都會讓那條保持綠色，包括「回傳 null」。
-    const 身分 = 走一圈的身分(
-      createNode('cpp:if_else', {}, { condition: [條件()], then: [一句('a')], else: [一句('b')] }),
+    const identity = walkedIdentities(
+      createNode('cpp:if_else', {}, { condition: [condition()], then: [oneLine('a')], else: [oneLine('b')] }),
     )
-    expect(身分, '現況變了 → 去看那條 it.fails 是不是可以拔釘子了').toBe('cpp:if')
+    expect(identity, '現況變了 → 去看那條 it.fails 是不是可以拔釘子了').toBe('cpp:if')
   })
 
   it('★ 內容沒有跟著掉——身分換了，而子節點是完整的', () => {
@@ -137,17 +137,17 @@ describe('走一次投影，身分不得改變', () => {
     // 沒有這條的話，未來有人修身分時不會知道內容本來就是好的。
     const st = renderToBlocklyState(
       createNode('cpp:program', {}, {
-        body: [createNode('cpp:if_else', {}, { condition: [條件()], then: [一句('a')], else: [一句('b')] })],
+        body: [createNode('cpp:if_else', {}, { condition: [condition()], then: [oneLine('a')], else: [oneLine('b')] })],
       }),
     )
     const back = (st.blocks.blocks as never[]).map((b) => extractor.extract(b as never)).filter(Boolean) as SemanticNode[]
-    const 收集 = (n: SemanticNode, out: string[] = []): string[] => {
+    const collect = (n: SemanticNode, out: string[] = []): string[] => {
       out.push(n.conceptId)
-      for (const ks of Object.values(n.children ?? {})) for (const k of ks) 收集(k, out)
+      for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
       return out
     }
-    const 全部 = back.flatMap((b) => 收集(b))
-    expect(全部.filter((x) => x === 'cpp:var_declare'), 'then 與 else 兩句都要在').toHaveLength(2)
-    expect(全部).toContain('cpp:literal_number')
+    const all = back.flatMap((b) => collect(b))
+    expect(all.filter((x) => x === 'cpp:var_declare'), 'then 與 else 兩句都要在').toHaveLength(2)
+    expect(all).toContain('cpp:literal_number')
   })
 })

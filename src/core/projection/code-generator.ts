@@ -186,10 +186,10 @@ function wireTemplateFallbacks(ctx: GeneratorContext): void {
  *
  * 沒有字串屬性就什麼都不加，標記維持原樣。
  */
-function 內容摘要(node: SemanticNode): string {
-  const 值 = Object.values(node.properties ?? {})
+function contentDigest(node: SemanticNode): string {
+  const value = Object.values(node.properties ?? {})
     .filter((v): v is string => typeof v === 'string' && v.length > 0)
-  return 值.length > 0 ? ` | ${值.join(' | ')}` : ''
+  return value.length > 0 ? ` | ${value.join(' | ')}` : ''
 }
 
 export function generateNode(node: SemanticNode, ctx: GeneratorContext): string {
@@ -232,7 +232,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
       //
       // 註解是每個語言各自的機制（`//`／`#`／`;`），所以它的產生器屬於語言；
       // 而「沒有語言時不要弄丟內容」是**核心對所有節點的責任**，與註解無關。
-      result = `⟨unknown concept: ${node.conceptId}${內容摘要(node)}⟩\n`
+      result = `⟨unknown concept: ${node.conceptId}${contentDigest(node)}⟩\n`
     }
   }
 

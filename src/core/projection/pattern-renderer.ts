@@ -156,18 +156,18 @@ export class PatternRenderer {
     if (chosen?.degraded) {
       console.warn(`[PatternRenderer] ${node.conceptId}：${chosen.degraded.reason}`)
     }
-    const 形態型別 = chosen?.blockType ?? spec.blockType
-    const 形態映射 = this.mappingByBlockType.get(形態型別) ?? spec.mapping
+    const formType = chosen?.blockType ?? spec.blockType
+    const formMapping = this.mappingByBlockType.get(formType) ?? spec.mapping
 
     const block: BlockState = {
-      type: 形態型別,
+      type: formType,
       id: nextBlockId(),
       fields: {},
       inputs: {},
     }
 
     // Map fields: blockField → semanticProperty
-    for (const [blockField, semProp] of Object.entries(形態映射.fields)) {
+    for (const [blockField, semProp] of Object.entries(formMapping.fields)) {
       const value = node.properties[semProp]
       if (value !== undefined) {
         block.fields[blockField] = value
@@ -176,7 +176,7 @@ export class PatternRenderer {
 
     // Map inputs: blockInput → semanticChild (expression)
     // Use ctx.renderExpression() for expression slots to handle statement-only blocks safely
-    for (const [blockInput, semChild] of Object.entries(形態映射.inputs)) {
+    for (const [blockInput, semChild] of Object.entries(formMapping.inputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
         const childBlock = ctx?.renderExpression
@@ -189,7 +189,7 @@ export class PatternRenderer {
     }
 
     // Map statementInputs: blockInput → semanticChild (statement chain)
-    for (const [blockInput, semChild] of Object.entries(形態映射.statementInputs)) {
+    for (const [blockInput, semChild] of Object.entries(formMapping.statementInputs)) {
       const children = node.children[semChild]
       if (children && children.length > 0) {
         const chain = ctx?.renderStatementChain
@@ -202,21 +202,21 @@ export class PatternRenderer {
     }
 
     // Process dynamicRules: render dynamic children into extraState + inputs/fields
-    if (形態映射.dynamicRules) {
-      this.renderDynamicRules(node, 形態映射.dynamicRules, block, ctx)
+    if (formMapping.dynamicRules) {
+      this.renderDynamicRules(node, formMapping.dynamicRules, block, ctx)
     }
 
     // childrenAsField：把一個接點的子節點序列化進一個文字欄位。
     // ⚠️ 零個子節點時**不寫欄位**（`serializeChildren` 回傳 null）——
     // 寫一個空欄位與不寫，在來回比對上是不同的東西。
-    for (const spec of 形態映射.childrenAsField ?? []) {
+    for (const spec of formMapping.childrenAsField ?? []) {
       const text = serializeChildren(node.children[spec.childSlot] ?? [], spec)
       if (text !== null) block.fields[spec.field] = text
     }
 
     // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty
-    if (形態映射.extraStateFlags) {
-      for (const [extraKey, childSlot] of Object.entries(形態映射.extraStateFlags)) {
+    if (formMapping.extraStateFlags) {
+      for (const [extraKey, childSlot] of Object.entries(formMapping.extraStateFlags)) {
         const children = node.children[childSlot]
         if (children && children.length > 0) {
           if (!block.extraState) block.extraState = {}
@@ -251,8 +251,8 @@ export class PatternRenderer {
           // Otherwise use compose mode
           let matched = false
           for (const [modeName, modeRule] of Object.entries(rule.modes)) {
-            const 包成 = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
-            if (包成 && child.conceptId === 包成) {
+            const wrap = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            if (wrap && child.conceptId === wrap) {
               // Select mode: store value in extraState
               const nameValue = (child.properties.name as string) ?? ''
               argsExtraState.push({ mode: modeName, text: nameValue })

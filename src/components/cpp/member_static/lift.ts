@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建member_static(type: string, name: string): SemanticNode {
+export function buildMemberStatic(type: string, name: string): SemanticNode {
   return createNode('cpp:member_static', { type, name })
 }
 

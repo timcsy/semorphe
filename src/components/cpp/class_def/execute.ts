@@ -1,6 +1,6 @@
 /** `cpp:class_def` 的 **execute** 路——從共用檔原封剪過來（批次第四批：閉包提升之後才搬得動的三顆）。 */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { 拆解成員, 安裝方法執行器 } from '../../../languages/cpp/core/executors/structs'
+import { splitMember, installMethodExecutors } from '../../../languages/cpp/core/executors/structs'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   /**
@@ -11,9 +11,9 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
      * 存取控制、繼承、虛擬函式仍然是殼，完備性報表照樣數它們。
      */
     register('cpp:class_def', async (node, ctx) => {
-      安裝方法執行器(ctx)
+      installMethodExecutors(ctx)
       const name = String(node.properties.name)
-      const { fields, methods, ctor, dtor, statics } = 拆解成員([
+      const { fields, methods, ctor, dtor, statics } = splitMember([
         ...(node.children.public ?? []),
         ...(node.children.private ?? []),
       ])

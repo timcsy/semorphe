@@ -69,12 +69,12 @@ export interface BlockForm {
  * @param form 非中性形態才傳
  */
 export function deriveBlockType(conceptId: string, form?: BlockForm | null): string {
-  const 主體 = conceptId.replace(':', '_')
-  return form ? `${主體}_${form.value}` : 主體
+  const body = conceptId.replace(':', '_')
+  return form ? `${body}_${form.value}` : body
 }
 
 /** 一筆待檢查的積木宣告。 */
-export interface 積木宣告 {
+export interface blockDecl {
   conceptId: string
   form?: BlockForm | null
   blockType: string
@@ -91,24 +91,24 @@ export interface 積木宣告 {
  * 後登錄的蓋掉先登錄的，於是「一顆積木從工具箱消失」而沒有任何錯誤。
  * 這個專案已經被「後註冊的贏」咬過三次。
  */
-export function assertDerivedNamesUnique(宣告們: readonly 積木宣告[]): void {
-  const 見過 = new Map<string, string>()
-  for (const b of 宣告們) {
-    const 名 = deriveBlockType(b.conceptId, b.form)
-    const existing = 見過.get(名)
+export function assertDerivedNamesUnique(declarations: readonly blockDecl[]): void {
+  const seen = new Map<string, string>()
+  for (const b of declarations) {
+    const name = deriveBlockType(b.conceptId, b.form)
+    const existing = seen.get(name)
     if (existing !== undefined && existing !== b.conceptId) {
       throw new Error(
-        `兩顆積木導出同一個型別「${名}」：${existing} 與 ${b.conceptId}。` +
+        `兩顆積木導出同一個型別「${name}」：${existing} 與 ${b.conceptId}。` +
           `Blockly 的 registry 以型別為鍵，後登錄的會安靜地蓋掉先登錄的。`,
       )
     }
     if (existing !== undefined) {
       throw new Error(
-        `同一顆身分「${b.conceptId}」的兩個形態導出同名「${名}」——` +
+        `同一顆身分「${b.conceptId}」的兩個形態導出同名「${name}」——` +
           `form.value 撞名了。導出規則不編入 axis（見本檔頭），` +
           `所以不同軸上的同名值會撞。`,
       )
     }
-    見過.set(名, b.conceptId)
+    seen.set(name, b.conceptId)
   }
 }

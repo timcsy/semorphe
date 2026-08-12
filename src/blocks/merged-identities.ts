@@ -40,7 +40,7 @@
  * 積木型別是**加法式**保留的（`cpp_increment_expression` 仍然有效，只是現在對應到
  * `cpp_increment`）。轉積木型別是不必要的，而不必要的轉換是額外的風險面。
  */
-export const 合併掉的身分: Record<string, string> = {
+export const mergedIdentities: Record<string, string> = {
   func_call_expr: 'func_call',
   cpp_method_call_expression: 'cpp:method_call',
   cpp_increment_expr: 'cpp:increment',

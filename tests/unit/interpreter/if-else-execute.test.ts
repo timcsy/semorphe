@@ -69,7 +69,7 @@ describe('if_else：兩個分支都要能跑', () => {
     //
     // ⚠️ 哪天作用域修好了，這支會**因為兩者仍然一致而繼續通過**——
     // 所以它不是那個缺陷的釘子。缺陷本身另記。
-    const 分支 = (concept: string, thenKey: string): SemanticNode =>
+    const branches = (concept: string, thenKey: string): SemanticNode =>
       n('cpp:program', {}, {
         body: [
           n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:literal_number', { value: 1 })] }),
@@ -80,20 +80,23 @@ describe('if_else：兩個分支都要能跑', () => {
         ],
       })
     // 比對**結果**，包含丟出來的錯誤——重宣告在兩者都是錯誤，那也算一致
-    const 跑 = async (c: string, k: string): Promise<string> => {
+    // ⚠️ 這個內層函式原本叫「跑」。改名時它與外層的 `run` 撞在一起，
+    // **內層遮蔽外層 → 無限遞迴**，而 `tsc` 完全不報（型別相容）。
+    // 那正是 `experience.md` 記過的那一類：**型別檢查看不到的改名錯誤**。
+    const runBoth = async (c: string, k: string): Promise<string> => {
       try {
-        return 'OUT:' + (await run(分支(c, k)))
+        return 'OUT:' + (await run(branches(c, k)))
       } catch (e) {
         return 'ERR:' + (e as Error).message
       }
     }
-    const if結果 = await 跑('cpp:if', 'then_body')
-    const ifElse結果 = await 跑('cpp:if_else', 'then')
+    const ifResult = await runBoth('cpp:if', 'then_body')
+    const ifElseResult = await runBoth('cpp:if_else', 'then')
     expect(
-      ifElse結果,
-      `\`if\` → ${if結果}\n\`if_else\` → ${ifElse結果}\n` +
+      ifElseResult,
+      `\`if\` → ${ifResult}\n\`if_else\` → ${ifElseResult}\n` +
         '同一件事的兩個概念，語義必須一樣',
-    ).toBe(if結果)
+    ).toBe(ifResult)
   })
 
   it('★ 空的 else 不得炸', async () => {
@@ -153,7 +156,8 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
    * 核心讀宣告，語言套件推宣告——與 skip、executor、註解語法同一個形狀。
    */
   it('★ 分支裡宣告的變數，外層讀不到', async () => {
-    const 跑 = async (): Promise<string> => {
+    // ⚠️ 同上：這個內層函式原本叫「跑」，改名後遮蔽外層的 `run` → 無限遞迴。
+    const runOnce = async (): Promise<string> => {
       try {
         return 'OUT:' + (await run(
           prog(
@@ -169,7 +173,7 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
         return 'ERR:' + (e as Error).message
       }
     }
-    const r = await 跑()
+    const r = await runOnce()
     expect(r, '外層讀得到分支內的變數 → 作用域沒有隔開').toContain('UNDECLARED_VAR')
   })
 

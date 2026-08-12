@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建var_assign_compound(
+export function buildVarAssignCompound(
   name: string,
   operator: string,
   value: SemanticNode | null,

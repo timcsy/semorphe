@@ -143,8 +143,8 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
   it('棘輪：不得上升', () => {
     const b = loadBaseline<ChildrenBaseline>('declared-children')
     const now = orphans.map((o) => `${o.conceptId}::${o.name}`)
-    const 新增 = now.filter((k) => !b.list.includes(k))
-    expect(新增, `新增了沒有人讀的子節點宣告：\n  ${新增.join('\n  ')}`).toEqual([])
+    const added = now.filter((k) => !b.list.includes(k))
+    expect(added, `新增了沒有人讀的子節點宣告：\n  ${added.join('\n  ')}`).toEqual([])
     assertRatchet([['沒有人讀的子節點宣告', orphans.length, b.orphans]])
   })
 })

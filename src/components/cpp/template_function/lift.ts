@@ -6,7 +6,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建樣板函式(t: string, returnType: string, funcName: string, params: SemanticNode[], body: SemanticNode[]): SemanticNode {
+export function buildTemplateFunc(t: string, returnType: string, funcName: string, params: SemanticNode[], body: SemanticNode[]): SemanticNode {
   return createNode('cpp:template_function', { t, return_type: returnType, func_name: funcName }, { params, body })
 }
 

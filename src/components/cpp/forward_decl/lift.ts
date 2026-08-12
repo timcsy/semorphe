@@ -13,8 +13,8 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建前置宣告(回傳型別: string, name: string, 參數: SemanticNode[]): SemanticNode {
-  return createNode('cpp:forward_decl', { return_type: 回傳型別, name: name }, { params: 參數 })
+export function buildForwardDecl(returnType: string, name: string, params: SemanticNode[]): SemanticNode {
+  return createNode('cpp:forward_decl', { return_type: returnType, name: name }, { params: params })
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

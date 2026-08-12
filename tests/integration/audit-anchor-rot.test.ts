@@ -63,10 +63,10 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, 判定鍵 } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 
 const GUARD = 'anchor-rot'
-const 判定檔 = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
+const decisionFile = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
 
 interface hits {
   /**
@@ -82,34 +82,34 @@ interface hits {
    * > **識別碼必須識別得出那個東西**——行號識別的是位置，不是東西。
    * → 同一個處方第三次：**顯示與識別分開**。
    */
-  鍵: string
-  位置: string
-  區塊: string
-  身分: string
-  程式碼: string
+  key: string
+  position: string
+  block: string
+  identity: string
+  sourceCode: string
 }
 
 
-interface 判定 {
-  鍵: string
-  位置: string
-  判定: '已知答案樣本' | '錨錯了'
+interface decision {
+  key: string
+  position: string
+  decision: '已知答案樣本' | '錨錯了'
   reason: string
 }
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  掃描: { audit檔數: number; 真實身分數: number }
-  錨錯了: number
+  scanned: { auditFileCount: number; trueIdentityCount: number }
+  badAnchor: number
 }
 
 /** 從概念宣告撈真實身分——**這是入口條件的一半**。 */
-function 真實身分(): Set<string> {
+function trueIdentity(): Set<string> {
   const ids = new Set<string>()
-  const 走 = (d: string): void => {
+  const walk = (d: string): void => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
-      if (e.isDirectory()) 走(p)
+      if (e.isDirectory()) walk(p)
       // ⚠️ **膠囊的宣告檔叫 `component.json`，不叫 `concepts.json`。**
       //
       // 這條護欄的入口條件錨在「載入幾顆真實身分」上，而 F（膠囊搬家）
@@ -134,7 +134,7 @@ function 真實身分(): Set<string> {
       }
     }
   }
-  走(path.join(REPO_ROOT, 'src'))
+  walk(path.join(REPO_ROOT, 'src'))
   return ids
 }
 
@@ -144,30 +144,30 @@ function 真實身分(): Set<string> {
  * ⚠️ 只看 matcher **之後**的文字——身分出現在「查表的鍵」上是正常的
  * （`實際.get('cpp:func_def')`），出現在**期望值**裡才是錨在缺陷上。
  */
-export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<string>): hits[] {
+export function scan(fileText: string, fileName2: string, ids: ReadonlySet<string>): hits[] {
   const out: hits[] = []
-  const lines = 檔案文字.split('\n')
-  let 區塊 = ''
-  let 在註解 = false
+  const lines = fileText.split('\n')
+  let block = ''
+  let inComment = false
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i]
     // ⚠️ **註解裡的範例不是斷言。** 第一版沒剝註解，於是本檔檔頭那段
     // 「錯的錨長這樣」的示範程式碼自己被報了出來。
     // 而這正是既有教訓的第三次：**以文字為基礎的掃描要先問「註解算不算」**。
-    if (/^\s*\/\*/.test(l)) 在註解 = true
-    if (在註解) { if (l.includes('*/')) 在註解 = false; continue }
+    if (/^\s*\/\*/.test(l)) inComment = true
+    if (inComment) { if (l.includes('*/')) inComment = false; continue }
     if (/^\s*\/\//.test(l)) continue
     const m = /it(?:\.\w+)?\(\s*['"]([^'"]*(?:注入|健康檢查)[^'"]*)/.exec(l)
-    if (m) 區塊 = m[1].slice(0, 40)
-    else if (/^\s*(it|describe)\(/.test(l)) 區塊 = ''
-    if (!區塊) continue
+    if (m) block = m[1].slice(0, 40)
+    else if (/^\s*(it|describe)\(/.test(l)) block = ''
+    if (!block) continue
     const mm = /\.(toContain|toEqual|toStrictEqual|toMatchObject)\((.*)$/.exec(l)
     if (!mm) continue
-    const 期望值 = mm[2]
+    const expectedValue = mm[2]
     for (const id of ids) {
-      if (期望值.includes(`'${id}'`) || 期望值.includes(`"${id}"`)) {
-        const 碼 = l.trim().slice(0, 90)
-        out.push({ 鍵: 判定鍵(檔名, 碼), 位置: `${檔名}:${i + 1}`, 區塊, 身分: id, 程式碼: 碼 })
+      if (expectedValue.includes(`'${id}'`) || expectedValue.includes(`"${id}"`)) {
+        const code = l.trim().slice(0, 90)
+        out.push({ key: decisionKey(fileName2, code), position: `${fileName2}:${i + 1}`, block, identity: id, sourceCode: code })
         break
       }
     }
@@ -175,70 +175,70 @@ export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<strin
   return out
 }
 
-const audit檔 = (): string[] =>
+const auditFiles = (): string[] =>
   fs
     .readdirSync(path.join(REPO_ROOT, 'tests/integration'))
     .filter((f) => /^audit-.*\.test\.ts$/.test(f))
     .map((f) => path.join(REPO_ROOT, 'tests/integration', f))
 
-const 讀判定 = (): 判定[] =>
-  fs.existsSync(判定檔) ? (JSON.parse(fs.readFileSync(判定檔, 'utf8')) as 判定[]) : []
+const readDecisions = (): decision[] =>
+  fs.existsSync(decisionFile) ? (JSON.parse(fs.readFileSync(decisionFile, 'utf8')) as decision[]) : []
 
 describe('第三十五條護欄：錨點會爛', () => {
   // ── 入口條件（history/042 補的那一步） ────────────────────────────
   it('★ 入口條件：真的掃到 audit 檔、真的載入身分', () => {
-    expect(audit檔().length, '一個 audit 檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(20)
-    expect(真實身分().size, '一個真實身分都沒載入 → 這條護欄什麼都比不出來').toBeGreaterThan(100)
+    expect(auditFiles().length, '一個 audit 檔都沒掃到 → 量測壞了，不是世界長這樣').toBeGreaterThan(20)
+    expect(trueIdentity().size, '一個真實身分都沒載入 → 這條護欄什麼都比不出來').toBeGreaterThan(100)
   })
 
   // ── 雙向注入 ────────────────────────────────────────────────────
   it('★ 注入①：錨在真實身分上的期望值必須被報出', () => {
     // ⚠️ 素材用**合成身分**，不用真實的——用真實身分當注入素材，
     // 正是這條護欄要抓的那個味道（而第一版就這樣寫，被自己抓到了）。
-    const 合成 = new Set(['zz:合成的假身分'])
-    const 假檔 = [
+    const synthetic = new Set(['zz:合成的假身分'])
+    const fakeFile = [
       `it('★ 注入：壞的會報', () => {`,
       `  expect(違規清單).toContain('zz:合成的假身分')`,
       `})`,
     ].join('\n')
-    const h = 掃(假檔, 'fake.test.ts', 合成)
+    const h = scan(fakeFile, 'fake.test.ts', synthetic)
     expect(h, '故意錨在身分上的期望值沒被報 → 這條護欄抓不到東西').toHaveLength(1)
-    expect(h[0].身分).toBe('zz:合成的假身分')
+    expect(h[0].identity).toBe('zz:合成的假身分')
   })
 
   it('★ 注入②：身分出現在**查表的鍵**上不得被誤報', () => {
     // 這是合法且常見的寫法——`build-guardrail` 第 6 步要的已知答案樣本
     // 通常長這樣。沒有這一支，一個「凡是提到身分都報」的掃描器也會通過①。
-    const 假檔 = [
+    const fakeFile = [
       `it('★ 健康檢查：量測看得到 lift 的實際產出', () => {`,
       `  expect(實際.get('zz:合成的假身分')).toContain('params')`,
       `})`,
     ].join('\n')
-    expect(掃(假檔, 'fake.test.ts', new Set(['zz:合成的假身分'])), '查表的鍵被誤報 → 合法的已知答案樣本會被逼著改掉').toHaveLength(0)
+    expect(scan(fakeFile, 'fake.test.ts', new Set(['zz:合成的假身分'])), '查表的鍵被誤報 → 合法的已知答案樣本會被逼著改掉').toHaveLength(0)
   })
 
   it('★ 注入③：注入／健康檢查以外的區塊不看', () => {
-    const 假檔 = [`it('棘輪：不得上升', () => {`, `  expect(x).toContain('zz:合成的假身分')`, `})`].join('\n')
-    expect(掃(假檔, 'fake.test.ts', new Set(['zz:合成的假身分'])), '棘輪那種區塊本來就會提到真實身分').toHaveLength(0)
+    const fakeFile = [`it('棘輪：不得上升', () => {`, `  expect(x).toContain('zz:合成的假身分')`, `})`].join('\n')
+    expect(scan(fakeFile, 'fake.test.ts', new Set(['zz:合成的假身分'])), '棘輪那種區塊本來就會提到真實身分').toHaveLength(0)
   })
 
   // ── 棘輪：硬性零 ────────────────────────────────────────────────
   it('錨錯了必須是 0（硬性零——留一筆，它就會在成功的那天變紅）', () => {
-    const ids = 真實身分()
-    const 檔s = audit檔()
-    const hits = 檔s.flatMap((f) => 掃(fs.readFileSync(f, 'utf8'), path.basename(f), ids))
-    const 判定s = 讀判定()
-    const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
-    const 要看 = hits.filter((h) => !已判定.has(h.鍵))
-    const 錨錯了 = hits.filter((h) => 已判定.get(h.鍵)?.判定 === '錨錯了')
-    const 孤兒 = 判定s.filter((d) => !hits.some((h) => h.鍵 === d.鍵))
+    const ids = trueIdentity()
+    const files = auditFiles()
+    const hits = files.flatMap((f) => scan(fs.readFileSync(f, 'utf8'), path.basename(f), ids))
+    const decisions = readDecisions()
+    const decided = new Map(decisions.map((d) => [d.key, d]))
+    const toReview = hits.filter((h) => !decided.has(h.key))
+    const badAnchor = hits.filter((h) => decided.get(h.key)?.decision === '錨錯了')
+    const orphans = decisions.filter((d) => !hits.some((h) => h.key === d.key))
 
     printReport('錨點會爛（注入／健康檢查錨在缺陷還在不在上）', [
-      `掃描   ${檔s.length} 個 audit 檔｜${ids.size} 個真實身分`,
-      `命中   ${hits.length}（已判定 ${hits.length - 要看.length}，要看 ${要看.length}）`,
-      `其中判為**錨錯了** ${錨錯了.length} 筆 ← 硬性零`,
+      `掃描   ${files.length} 個 audit 檔｜${ids.size} 個真實身分`,
+      `命中   ${hits.length}（已判定 ${hits.length - toReview.length}，要看 ${toReview.length}）`,
+      `其中判為**錨錯了** ${badAnchor.length} 筆 ← 硬性零`,
       '',
-      ...要看.map((h, i) => `  ${i + 1}. ${h.位置}  [${h.區塊}]\n       ${h.程式碼}`),
+      ...toReview.map((h, i) => `  ${i + 1}. ${h.position}  [${h.block}]\n       ${h.sourceCode}`),
       '',
       '⚠️ 命中不等於錯——`build-guardrail` 第 6 步**要求**用已知答案的樣本驗判準，',
       '   而那種樣本就是真實身分。判定在 tests/assets/anchor-rot-decisions.json。',
@@ -260,19 +260,19 @@ describe('第三十五條護欄：錨點會爛', () => {
             '  本護欄把那個訊號提前到寫的時候。',
           ratchet: RATCHET_NOTE,
         },
-        掃描: { audit檔數: 檔s.length, 真實身分數: ids.size },
-        錨錯了: 錨錯了.length,
+        scanned: { auditFileCount: files.length, trueIdentityCount: ids.size },
+        badAnchor: badAnchor.length,
       })
       return
     }
 
-    const base = loadBaseline<基線>(GUARD)
-    expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了').toEqual([])
+    const base = loadBaseline<Baseline>(GUARD)
+    expect(orphans.map((d) => d.key), '判定過期了——底下的程式碼變了').toEqual([])
     expect(
-      判定s.filter((d) => !d.reason || d.reason.length < 4),
+      decisions.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
-    expect(要看.map((h) => `${h.位置} ${h.程式碼}`), '有未判定的命中——護欄只排順序，判定要人做').toEqual([])
-    assertRatchet([['錨錯了', 錨錯了.length, base.錨錯了]])
+    expect(toReview.map((h) => `${h.position} ${h.sourceCode}`), '有未判定的命中——護欄只排順序，判定要人做').toEqual([])
+    assertRatchet([['錨錯了', badAnchor.length, base.badAnchor]])
   })
 })

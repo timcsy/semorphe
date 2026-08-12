@@ -25,19 +25,19 @@ beforeAll(async () => {
 const H = '#include <iostream>\n#include <cctype>\nusing namespace std;\n'
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(H + c)!.rootNode as never) as SemanticNode
-const 收集 = (n: SemanticNode, out: string[] = []): string[] => {
+const collect = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.conceptId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) 收集(k, out)
+  for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
   return out
 }
 
 describe('膠囊自證：cpp:char_is_alpha', () => {
   it('★ lift：isalpha(c) 產出這顆身分', () => {
-    expect(收集(lift(`int main(){ char c='a'; cout << isalpha(c); }`))).toContain('cpp:char_is_alpha')
+    expect(collect(lift(`int main(){ char c='a'; cout << isalpha(c); }`))).toContain('cpp:char_is_alpha')
   })
 
   it('★ 而它不搶別的名字（負向——前面先釘正向錨點）', () => {
-    const ids = 收集(lift(`int main(){ char c='a'; cout << isdigit(c); }`))
+    const ids = collect(lift(`int main(){ char c='a'; cout << isdigit(c); }`))
     // 正向錨點：沒有它，`lift` 回 null 時下面那句也會過
     expect(ids, '這段碼必須產出 isdigit 那顆——否則量測沒跑到').toContain('cpp:char_is_digit')
     expect(ids).not.toContain('cpp:char_is_alpha')
@@ -49,13 +49,13 @@ describe('膠囊自證：cpp:char_is_alpha', () => {
   })
 
   it('★ execute：字母回 1、非字母回 0', async () => {
-    const 跑 = async (c: string): Promise<string> => {
+    const run = async (c: string): Promise<string> => {
       const i = new SemanticInterpreter({ maxSteps: 100000 })
       await i.execute(lift(c))
       return i.getOutput().join('')
     }
-    expect(await 跑(`int main(){ cout << isalpha('a'); }`)).toBe('1')
-    expect(await 跑(`int main(){ cout << isalpha('1'); }`)).toBe('0')
+    expect(await run(`int main(){ cout << isalpha('a'); }`)).toBe('1')
+    expect(await run(`int main(){ cout << isalpha('1'); }`)).toBe('0')
   })
 
   it('★ execute：字元以數字碼存放時也要對（核心的轉型踩過這個坑）', async () => {

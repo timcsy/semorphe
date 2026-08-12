@@ -71,7 +71,7 @@ interface IntegrityBaseline {
 }
 
 /** 每個欄位一個可辨識的值——用預設值的話，「丟了」與「存對了」會長得一樣 */
-const 探針: SavedState = {
+const probe: SavedState = {
   version: CURRENT_VERSION,
   tree: null,
   blocklyState: { probe: 'blockly' },
@@ -86,7 +86,7 @@ const 探針: SavedState = {
 }
 
 /** 由存檔層自己決定的欄位，不參與守恆比對 */
-const 由系統改寫 = new Set(['lastModified'])
+const systemRewritten = new Set(['lastModified'])
 
 interface NotConserved {
   field: string
@@ -104,19 +104,19 @@ function measureFieldConservation(storage: {
   load(): SavedState | null
 }): NotConserved[] {
   localStorageMock.clear()
-  storage.save(探針)
+  storage.save(probe)
   const loaded = storage.load()
   if (!loaded) return [{ field: '(整份存檔)', reason: '存入後完全載不回來' }]
 
   const out: NotConserved[] = []
   for (const field of Object.keys(SAVED_STATE_FIELDS) as (keyof SavedState)[]) {
-    if (由系統改寫.has(field)) continue
-    const 存入 = JSON.stringify(探針[field])
-    const 載回 = JSON.stringify(loaded[field])
-    if (載回 === 存入) continue
+    if (systemRewritten.has(field)) continue
+    const store = JSON.stringify(probe[field])
+    const loadBack = JSON.stringify(loaded[field])
+    if (loadBack === store) continue
     out.push({
       field,
-      reason: 載回 === undefined ? '存入後讀回為 undefined' : `存入後讀回變成 ${載回}`,
+      reason: loadBack === undefined ? '存入後讀回為 undefined' : `存入後讀回變成 ${loadBack}`,
     })
   }
   return out
@@ -125,18 +125,18 @@ function measureFieldConservation(storage: {
 /** 量兩條讀取路徑的判定是否一致 */
 function measureVerdictAgreement(): { input: string; auto: string; imported: string }[] {
   const storage = new StorageService()
-  const 合法 = { ...探針 }
-  const 樣本: [string, unknown][] = [
-    ['合法、版本相同', 合法],
-    ['版本較高', { ...合法, version: CURRENT_VERSION + 98 }],
-    ['版本較低', { ...合法, version: 0 }],
+  const valid = { ...probe }
+  const samples: [string, unknown][] = [
+    ['合法、版本相同', valid],
+    ['版本較高', { ...valid, version: CURRENT_VERSION + 98 }],
+    ['版本較低', { ...valid, version: 0 }],
     ['不是存檔', { hello: 'world' }],
     ['缺必填欄位', { version: CURRENT_VERSION, code: 'x' }],
-    ['多帶未知欄位', { ...合法, 來自未來: 1 }],
+    ['多帶未知欄位', { ...valid, fromFuture: 1 }],
   ]
 
   const out: { input: string; auto: string; imported: string }[] = []
-  for (const [name, value] of 樣本) {
+  for (const [name, value] of samples) {
     localStorageMock.clear()
     const json = JSON.stringify(value)
     localStorage.setItem(STORAGE_KEY, json)
@@ -172,7 +172,7 @@ describe('護欄：存檔完整性', () => {
     lines.push(`判定規則：${RULE}`)
     lines.push('')
     lines.push(
-      `欄位不守恆：${notConserved.length}／${Object.keys(SAVED_STATE_FIELDS).length - 由系統改寫.size} 個受檢欄位` +
+      `欄位不守恆：${notConserved.length}／${Object.keys(SAVED_STATE_FIELDS).length - systemRewritten.size} 個受檢欄位` +
         `｜判定不一致：${disagreements.length}／6 種輸入` +
         `｜缺升級路徑：${missingSteps.length}／${Math.max(0, CURRENT_VERSION - 1)} 步`,
     )
@@ -207,7 +207,7 @@ describe('護欄：存檔完整性', () => {
 
   it('★ 注入：會丟欄位的存檔實作，必須被報出來', () => {
     // 一個故意丟掉 locale 的實作——就是修好之前的那個 bug
-    const 壞掉的實作 = {
+    const brokenImpl = {
       save(s: Partial<SavedState>): boolean {
         const { locale: _drop, ...rest } = s as SavedState
         void _drop
@@ -220,7 +220,7 @@ describe('護欄：存檔完整性', () => {
       },
     }
 
-    const found = measureFieldConservation(壞掉的實作)
+    const found = measureFieldConservation(brokenImpl)
     const localeItem = found.find((x) => x.field === 'locale')
 
     expect(
@@ -238,7 +238,7 @@ describe('護欄：存檔完整性', () => {
   })
 
   it('★ 注入：值被改掉（不是丟掉）的實作，理由必須是「變成了什麼」而不是「undefined」', () => {
-    const 竄改的實作 = {
+    const tamperedImpl = {
       save(s: Partial<SavedState>): boolean {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...s, locale: '被改掉了' }))
         return true
@@ -249,7 +249,7 @@ describe('護欄：存檔完整性', () => {
       },
     }
 
-    const found = measureFieldConservation(竄改的實作)
+    const found = measureFieldConservation(tamperedImpl)
     const localeItem = found.find((x) => x.field === 'locale')
     expect(localeItem).toBeDefined()
     expect(
@@ -273,10 +273,10 @@ describe('護欄：存檔完整性', () => {
     const worsened = rows.filter(([, now, base]) => now > base)
 
     if (worsened.length > 0) {
-      const 新增的欄位 = notConserved.filter((x) => !b.notConservedFields.includes(x.field))
+      const addedFields = notConserved.filter((x) => !b.notConservedFields.includes(x.field))
       printReport('存檔完整性：數字上升', [
         ...worsened.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`),
-        ...新增的欄位.map((x) => `  ✘ 新的不守恆欄位：${x.field}（${x.reason}）`),
+        ...addedFields.map((x) => `  ✘ 新的不守恆欄位：${x.field}（${x.reason}）`),
         ...disagreements.map((d) => `  ✘ 判定不一致：${d.input}（自動=${d.auto}，匯入=${d.imported}）`),
       ])
     }

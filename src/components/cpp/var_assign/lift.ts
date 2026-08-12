@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建var_assign(obj: string, children: Record<string, SemanticNode[]>): SemanticNode {
+export function buildVarAssign(obj: string, children: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:var_assign', { obj }, children)
 }
 

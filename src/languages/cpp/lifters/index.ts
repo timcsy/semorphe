@@ -13,8 +13,8 @@ import type { TransformRegistry } from '../../../core/registry/transform-registr
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
 import { qualifierConcept } from '../../../core/component/qualifier-concepts'
-import { 建using_namespace } from '../../../components/cpp/using_namespace/lift'
-import { 建define } from '../../../components/cpp/define/lift'
+import { buildUsingNamespace } from '../../../components/cpp/using_namespace/lift'
+import { buildDefine } from '../../../components/cpp/define/lift'
 
 export interface CppRegistries {
   transformRegistry?: TransformRegistry
@@ -29,12 +29,12 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
   }
 
   // Register C++ lift strategies (Layer 3)
-  const 策略表 = registries?.liftStrategyRegistry
-  if (策略表) {
-    registerCppLiftStrategies(策略表)
+  const strategyTable = registries?.liftStrategyRegistry
+  if (strategyTable) {
+    registerCppLiftStrategies(strategyTable)
     // 膠囊的具名辨識策略（`lift-strategy.ts`）——與 `lift.ts` 是不同的登錄表
     for (const reg of componentLiftStrategyRegistrars())
-      (reg as (r: typeof 策略表) => void)(策略表)
+      (reg as (r: typeof strategyTable) => void)(strategyTable)
   }
 
   // Register C++ render strategies (Layer 3)
@@ -68,7 +68,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const text = node.text
     const match = text.match(/using\s+namespace\s+(\w+)\s*;?/)
     if (match) {
-      return 建using_namespace(match[1])
+      return buildUsingNamespace(match[1])
     }
     const raw = createNode('raw_code', {})
     raw.metadata = { rawCode: text }
@@ -81,7 +81,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     const valueNode = node.childForFieldName('value')
     const name = nameNode?.text ?? 'MACRO'
     const value = valueNode?.text ?? ''
-    return 建define(name, value)
+    return buildDefine(name, value)
   })
 
   // #ifdef NAME / #ifndef NAME
@@ -104,8 +104,8 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     )
     // 指令 → 身分由膠囊登錄（`core/component/qualifier-concepts.ts`）。
     // 這裡只認語法：開頭是不是 `#ifndef`。
-    const 指令 = node.text.trimStart().startsWith('#ifndef') ? 'ifndef' : 'ifdef'
-    const concept = qualifierConcept(指令)
+    const command = node.text.trimStart().startsWith('#ifndef') ? 'ifndef' : 'ifdef'
+    const concept = qualifierConcept(command)
     if (!concept) return null
     // ⚠️ 原本寫 `{ condition: name, name }`——**同一個值兩個名字**，
     // 而執行器對應地寫著 `properties.condition ?? properties.name`。

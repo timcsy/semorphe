@@ -34,12 +34,12 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 registerCppLanguage()
 
 /** 複製 sync-controller 的降級規則，用來證明「就地改寫」這件事本身是危險的 */
-function 就地降級(node: SemanticNode, visible: Set<string>): void {
+function downgradeInPlace(node: SemanticNode, visible: Set<string>): void {
   if (!visible.has(node.conceptId)) {
     const parent = abstractConceptOf(node.conceptId)
     if (parent && visible.has(parent)) node.conceptId = parent
   }
-  for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => 就地降級(c, visible))
+  for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => downgradeInPlace(c, visible))
 }
 
 function clone(node: SemanticNode): SemanticNode {
@@ -49,7 +49,7 @@ function clone(node: SemanticNode): SemanticNode {
 }
 
 describe('降級是投影，不得寫回真實', () => {
-  const 真實 = (): SemanticNode =>
+  const truth = (): SemanticNode =>
     createNode('cpp:program', {}, {
       body: [createNode('cpp:vector_declare', { name: 'v', type: 'int' }, {})],
     })
@@ -60,15 +60,15 @@ describe('降級是投影，不得寫回真實', () => {
     const parent = abstractConceptOf('cpp:vector_declare')
     expect(parent, '這顆元件沒宣告父概念 → 這支測試釘不到東西').toBeTruthy()
 
-    const 顯示 = clone(真實())
-    就地降級(顯示, new Set(['cpp:program', parent!]))
-    expect(顯示.children.body![0].conceptId, '降級沒有發生 → 這支測試沒有在測降級').toBe(parent)
+    const display = clone(truth())
+    downgradeInPlace(display, new Set(['cpp:program', parent!]))
+    expect(display.children.body![0].conceptId, '降級沒有發生 → 這支測試沒有在測降級').toBe(parent)
   })
 
   it('★ 降級作用在拷貝上時，真實不變', () => {
-    const t = 真實()
+    const t = truth()
     const parent = abstractConceptOf('cpp:vector_declare')!
-    就地降級(clone(t), new Set(['cpp:program', parent]))
+    downgradeInPlace(clone(t), new Set(['cpp:program', parent]))
     expect(
       t.children.body![0].conceptId,
       '真實被降級改掉了——執行會拿到 `int v;`，而 `v[0]` 會炸',
@@ -78,9 +78,9 @@ describe('降級是投影，不得寫回真實', () => {
   it('★ 反向：直接對真實降級**會**破壞它（證明拷貝不是多餘的）', () => {
     // 這一支刻意示範 bug 本身。沒有它，讀的人看不出上一支在防什麼，
     // 而「拷貝」會在某次重構中被當成多餘的開銷刪掉。
-    const t = 真實()
+    const t = truth()
     const parent = abstractConceptOf('cpp:vector_declare')!
-    就地降級(t, new Set(['cpp:program', parent]))
+    downgradeInPlace(t, new Set(['cpp:program', parent]))
     expect(t.children.body![0].conceptId, '就地降級沒有改到真實 → 那前一支就沒有在防什麼').toBe(parent)
   })
 })
@@ -102,55 +102,55 @@ describe('降級是投影，不得寫回真實', () => {
  */
 describe('降級的反方向：抽回來的樹不得把降級當成真實', () => {
   /** 模擬 sync-controller 的兩張表：降級時記、抽回來時還原 */
-  function 降級並記錄(node: SemanticNode, visible: Set<string>, 記: Map<string, string>): void {
+  function downgradeAndRecord(node: SemanticNode, visible: Set<string>, record: Map<string, string>): void {
     if (!visible.has(node.conceptId)) {
       const parent = abstractConceptOf(node.conceptId)
       if (parent && visible.has(parent)) {
-        記.set(node.id, node.conceptId)
+        record.set(node.id, node.conceptId)
         node.conceptId = parent
       }
     }
-    for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => 降級並記錄(c, visible, 記))
+    for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => downgradeAndRecord(c, visible, record))
   }
-  function 還原(node: SemanticNode, 記: Map<string, string>): void {
-    const 原 = 記.get(node.id)
-    if (原 !== undefined && node.conceptId === abstractConceptOf(原)) node.conceptId = 原
-    for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => 還原(c, 記))
+  function restore(node: SemanticNode, record: Map<string, string>): void {
+    const original = record.get(node.id)
+    if (original !== undefined && node.conceptId === abstractConceptOf(original)) node.conceptId = original
+    for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => restore(c, record))
   }
 
-  function 樹(): SemanticNode {
+  function tree(): SemanticNode {
     return createNode('cpp:program', {}, {
       body: [createNode('cpp:vector_declare', { type: 'int', name: 'v' })],
     })
   }
-  const 只看得到基礎 = new Set(['cpp:program', 'cpp:var_declare'])
+  const onlySeesBasics = new Set(['cpp:program', 'cpp:var_declare'])
 
   it('★ 前提：這個設定真的會降級——否則下面兩支都是空過', () => {
-    const t = 樹()
-    const 記 = new Map<string, string>()
-    降級並記錄(t, 只看得到基礎, 記)
+    const t = tree()
+    const record = new Map<string, string>()
+    downgradeAndRecord(t, onlySeesBasics, record)
     expect(t.children.body[0].conceptId, '沒有降級發生 → 這支測試什麼都沒測到').toBe('cpp:var_declare')
-    expect(記.size).toBe(1)
+    expect(record.size).toBe(1)
   })
 
   it('★ 抽回來的樹被還原成原本的身分——使用者拖一下積木不該弄丟 vector', () => {
-    const 顯示樹 = 樹()
-    const 記 = new Map<string, string>()
-    降級並記錄(顯示樹, 只看得到基礎, 記)
+    const displayTree = tree()
+    const record = new Map<string, string>()
+    downgradeAndRecord(displayTree, onlySeesBasics, record)
     // 使用者拖了一下 → 抽回來的就是顯示樹（nodeId 由 _blockIdToNodeId 保住）
-    還原(顯示樹, 記)
-    expect(顯示樹.children.body[0].conceptId).toBe('cpp:vector_declare')
+    restore(displayTree, record)
+    expect(displayTree.children.body[0].conceptId).toBe('cpp:vector_declare')
   })
 
   it('★ 反向：使用者**真的**把它換成別的概念時，不得還原', () => {
     // 這一條把「投影損失」與「使用者的編輯」分開。少了它，還原會把
     // 使用者的修改吃掉——那比原本的缺陷更糟。
-    const 顯示樹 = 樹()
-    const 記 = new Map<string, string>()
-    降級並記錄(顯示樹, 只看得到基礎, 記)
-    顯示樹.children.body[0].conceptId = 'cpp:string_declare' // 使用者換掉了
-    還原(顯示樹, 記)
-    expect(顯示樹.children.body[0].conceptId, '使用者的編輯被還原吃掉了').toBe('cpp:string_declare')
+    const displayTree = tree()
+    const record = new Map<string, string>()
+    downgradeAndRecord(displayTree, onlySeesBasics, record)
+    displayTree.children.body[0].conceptId = 'cpp:string_declare' // 使用者換掉了
+    restore(displayTree, record)
+    expect(displayTree.children.body[0].conceptId, '使用者的編輯被還原吃掉了').toBe('cpp:string_declare')
   })
 })
 

@@ -135,10 +135,10 @@ function measure(
 
 // ─── 合成注入：兩個方向都要釘（第 9 步）─────────────────────────────
 
-const 合成概念 = (id: string): ConceptDefJSON =>
+const syntheticConcept = (id: string): ConceptDefJSON =>
   ({ conceptId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ConceptDefJSON
 
-const 合成積木 = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
+const syntheticBlock = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
   ({
     conceptId: id,
     category,
@@ -150,8 +150,8 @@ const 合成積木 = (id: string, type: string, category: string, owner = '(core
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆沒有任何分類收它的積木 → **必須被報成缺陷**', () => {
     const { findings } = measure(
-      [合成概念('__合成_拿不到__')],
-      [合成積木('__合成_拿不到__', '__合成_拿不到__', '__不存在的分類__')],
+      [syntheticConcept('__合成_拿不到__')],
+      [syntheticBlock('__合成_拿不到__', '__合成_拿不到__', '__不存在的分類__')],
     )
     const hit = findings.find((f) => f.type === '__合成_拿不到__')
     expect(hit, '合成的不可拿積木沒有被報出來 → **護欄壞了，不是工具箱完整**').toBeDefined()
@@ -164,8 +164,8 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     // `(core)/pointers` 是「指標與記憶體」分類的段落之一。
     const { findings } = measure(
-      [合成概念('__合成_拿得到__')],
-      [合成積木('__合成_拿得到__', '__合成_拿得到__', 'pointers')],
+      [syntheticConcept('__合成_拿得到__')],
+      [syntheticBlock('__合成_拿得到__', '__合成_拿得到__', 'pointers')],
     )
     expect(
       findings.find((f) => f.type === '__合成_拿得到__'),
@@ -198,8 +198,8 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ R-3：加一顆元件到既有模組，**不編輯任何清單**，它自己出現', () => {
     // 這是「導出」與「把手寫換個地方」的分界線（FR-003 / P3）。
     const { categoriesOf } = measure(
-      [合成概念('__合成_新元件__')],
-      [合成積木('__合成_新元件__', '__合成_新元件__', 'containers', '<stack>')],
+      [syntheticConcept('__合成_新元件__')],
+      [syntheticBlock('__合成_新元件__', '__合成_新元件__', 'containers', '<stack>')],
     )
     expect(
       categoriesOf.get('__合成_新元件__'),
@@ -218,26 +218,26 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // 因為它不會產生違規——它產生的是**空的段落**，而空段落與「這個分類就是這麼小」
     // 長得一模一樣。
     const { allProjections, registry } = loadToolbox()
-    const 沒蓋章 = allProjections
+    const unstamped = allProjections
       .filter((p) => !p.owner)
       .map((p) => (p.blockDef as unknown as { type: string }).type)
-    expect(沒蓋章, 'owner 是段落比對的鍵，缺了它那顆積木對任何分類都不存在').toEqual([])
+    expect(unstamped, 'owner 是段落比對的鍵，缺了它那顆積木對任何分類都不存在').toEqual([])
 
     // 反向：登錄表裡的 spec 也要帶著章（`loadFromSplit` 用展開合併，不得再吃掉欄位）
-    const specs沒章 = registry.getAll().filter((s) => !s.owner).length
-    expect(specs沒章, '投影有章而 spec 沒有 → 又一次逐欄位建構吃掉欄位（experience.md:232）').toBe(0)
+    const specsUnstamped = registry.getAll().filter((s) => !s.owner).length
+    expect(specsUnstamped, '投影有章而 spec 沒有 → 又一次逐欄位建構吃掉欄位（experience.md:232）').toBe(0)
   })
 
   it('★ 每個宣告的來源段落都必須真的對得到積木', () => {
     // 一個 `{ from, category }` 打錯字（`'<cstring>'` 寫成 `'<string>'`）不會有人叫，
     // 它只是回傳空陣列。這一支讓打錯字**當場變紅**。
     const { registry } = loadToolbox()
-    const 空段落 = cppCategoryDefs.flatMap((d) =>
+    const emptySections = cppCategoryDefs.flatMap((d) =>
       d.sources
         .filter((src) => registry.listBySource(src.from, src.category).length === 0)
         .map((src) => `${d.key}: ${src.from}/${src.category}`),
     )
-    expect(空段落, '宣告了一個對不到任何積木的來源段落——多半是打錯字或來源被改名').toEqual([])
+    expect(emptySections, '宣告了一個對不到任何積木的來源段落——多半是打錯字或來源被改名').toEqual([])
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
@@ -250,7 +250,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
 describe('可拿性護欄', () => {
   const { findings, ghosts, imperativeOnly, total } = measure()
-  const 缺陷 = findings.filter((f) => f.bucket === '缺陷')
+  const defects = findings.filter((f) => f.bucket === '缺陷')
 
   it('報表', () => {
     const byBucket = (b: Bucket): Finding[] => findings.filter((f) => f.bucket === b)
@@ -274,20 +274,20 @@ describe('可拿性護欄', () => {
   })
 
   it('★ 棘輪：缺陷與命令式死角只准下降，上升時指名', () => {
-    const current = { guard: 'toolbox-reachability', 缺陷, imperativeOnly, findings }
+    const current = { guard: 'toolbox-reachability', defects, imperativeOnly, findings }
     if (GENERATE) {
       writeBaseline('toolbox-reachability', current)
       return
     }
     const base = loadBaseline<typeof current>('toolbox-reachability')
-    const added = newItems(缺陷, base.缺陷, (f) => f.type)
+    const added = newItems(defects, base.defects, (f) => f.type)
     expect(added.map((f) => `${f.owner} ${f.type}`), '新增了拿不到的積木').toEqual([])
     expect(
       newItems(imperativeOnly, base.imperativeOnly ?? [], (t) => t),
       '新增了只在命令式註冊器裡的積木——登錄表看不見它，導出也導不到它',
     ).toEqual([])
     assertRatchet([
-      ['缺陷', 缺陷.length, base.缺陷.length],
+      ['缺陷', defects.length, base.defects.length],
       ['命令式死角', imperativeOnly.length, (base.imperativeOnly ?? []).length],
     ])
   })

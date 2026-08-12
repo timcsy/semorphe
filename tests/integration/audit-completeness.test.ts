@@ -206,7 +206,7 @@ for (const id of ['cpp:map_at', 'cpp:map_assign']) {
 const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expression', 'cpp:lambda'])
 
 /** 合成節點裡「那個變數叫什麼」——脈絡宣告要用同一個名字 */
-function 接收者名(node: SemanticNode | null): string {
+function receiverName(node: SemanticNode | null): string {
   for (const k of ['obj', 'name', 'container', 'vector', 'ptr']) {
     const v = node?.properties?.[k]
     if (typeof v === 'string' && v !== '') return v
@@ -215,12 +215,12 @@ function 接收者名(node: SemanticNode | null): string {
 }
 
 /**
- * @param 脈絡節點 前置宣告要對齊的節點。差分基準（`node === null`）**必須傳它**
+ * @param contextNode 前置宣告要對齊的節點。差分基準（`node === null`）**必須傳它**
  *   ——否則基準會宣告 `string x;` 而本體宣告 `string str;`，那一行就漏進差分，
  *   讓每一顆有脈絡的概念都看起來「有產出」，真殼會被判成實作。
  */
-function wrap(node: SemanticNode | null, id?: string, 脈絡節點?: SemanticNode | null): SemanticNode {
-  const prelude = id ? (SAMPLE_CONTEXT[id]?.(接收者名(脈絡節點 ?? node)) ?? []) : []
+function wrap(node: SemanticNode | null, id?: string, contextNode?: SemanticNode | null): SemanticNode {
+  const prelude = id ? (SAMPLE_CONTEXT[id]?.(receiverName(contextNode ?? node)) ?? []) : []
   // `node` 為 null＝**只有鷹架**（差分的基準，見 generate 那一段）
   if (!node) return createNode('cpp:program', {}, { body: [...prelude] })
   const stmt =
@@ -269,11 +269,11 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
         // 證明它們自己就會產出，父概念沒有消費它們。
         //
         // 差分不需要知道哪些行是鷹架：**沒有這個節點時也會出現的，就不是它產的。**
-        const 鷹架 = generateCode(wrap(null, id, node), 'cpp', STYLE)
-        const 鷹架行 = new Set(鷹架.split('\n').map((l) => l.trim()))
+        const scaffold = generateCode(wrap(null, id, node), 'cpp', STYLE)
+        const scaffoldLines = new Set(scaffold.split('\n').map((l) => l.trim()))
         const own = generated
           .split('\n')
-          .filter((l) => !鷹架行.has(l.trim()))
+          .filter((l) => !scaffoldLines.has(l.trim()))
           .join('\n')
         if (isPlaceholderOutput(own)) return { verdict: 'shell', reason: '輸出為空或佔位' } as PathResult
         if (/\braw_code\b|\bunresolved\b/.test(own))
@@ -579,17 +579,17 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
   // 合成輸入不隨真實世界的修復而失效。
   // ─────────────────────────────────────────────────────────────
   it('★ 合成注入：一個不存在的概念必須被判為缺（零才可信）', () => {
-    const 假概念 = {
+    const fakeConcept = {
       conceptId: '__zz_never_implemented__',
       layer: 'lang-core',
       properties: [],
       children: {},
       role: 'statement',
     } as unknown as ConceptDefJSON
-    const { row } = classify(假概念)
-    const 判定 = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
+    const { row } = classify(fakeConcept)
+    const decision = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
     expect(
-      判定.some((v) => v === 'missing' || v === 'shell'),
+      decision.some((v) => v === 'missing' || v === 'shell'),
       '一個**完全不存在**的概念被判為五路俱全 → **量測根本沒有在跑**，' +
         '而它與健康的量測產出一模一樣。這支是唯一分得出來的地方。',
     ).toBe(true)

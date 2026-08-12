@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建include(header: string, local = false): SemanticNode {
+export function buildInclude(header: string, local = false): SemanticNode {
   return createNode('cpp:include', { header, local })
 }
 

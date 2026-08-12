@@ -10,7 +10,7 @@
 import type { RuntimeValue } from '../../../interpreter/types'
 import type { SemanticNode } from '../../../core/types'
 
-const 從尾找 = false
+const findFromTail = false
 
 export function registerExecute(
   register: (id: string, fn: (node: SemanticNode, ctx: any) => Promise<RuntimeValue | void>) => void,
@@ -21,6 +21,6 @@ export function registerExecute(
     if (argNodes.length === 0) return { type: 'int', value: -1 }
     const set = new Set(String((await ctx.evaluate(argNodes[0])).value))
     const idxs = [...str].map((c, i) => (set.has(c) ? -1 : i)).filter((i) => i >= 0)
-    return { type: 'int', value: idxs.length === 0 ? -1 : 從尾找 ? idxs[idxs.length - 1] : idxs[0] }
+    return { type: 'int', value: idxs.length === 0 ? -1 : findFromTail ? idxs[idxs.length - 1] : idxs[0] }
   })
 }

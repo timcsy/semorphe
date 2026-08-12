@@ -76,10 +76,10 @@ import type { SemanticNode } from '../../src/core/types'
 
 const GUARD = 'declared-slots'
 
-interface 判定 {
+interface decision {
   conceptId: string
-  桶: '確定違規' | '無法確定' | '安全'
-  未宣告: string[]
+  bucket: '確定違規' | '無法確定' | '安全'
+  undeclared: string[]
   reason: string
 }
 
@@ -109,44 +109,44 @@ interface 判定 {
  * `conceptId` 是**穩定身分**——它天生沒有那兩個坑
  * （`specs/110` 的截斷碰撞、`specs/113` 的行號漂移）。
  */
-interface 無法確定判定 {
+interface undeterminedDecision {
   conceptId: string
-  原因: '宣告過的降級目標' | '元概念' | '辨識到不了' | '語料沒覆蓋'
+  cause: '宣告過的降級目標' | '元概念' | '辨識到不了' | '語料沒覆蓋'
   reason: string
 }
 
 interface Baseline {
   _meta: { guard: string; measuredAt: string; rule: string; note: string }
-  確定違規: number
-  無法確定: number
-  違規清單: string[]
+  certainViolations: number
+  undetermined: number
+  violationList: string[]
 }
 
 /**
  * 判定一顆元件。**純函式**——注入才餵得進合成輸入。
  *
- * @param 宣告的 `concepts.json` 裡 `children` 的鍵
- * @param 產出的 語料裡實際出現過的、非空的接點名；`null` = 語料沒碰到這顆
+ * @param declaredOnes `concepts.json` 裡 `children` 的鍵
+ * @param producedOnes 語料裡實際出現過的、非空的接點名；`null` = 語料沒碰到這顆
  */
-export function 判定宣告完整性(conceptId: string, 宣告的: readonly string[], 產出的: readonly string[] | null): 判定 {
-  if (產出的 === null) {
+export function judgeDeclCompleteness(conceptId: string, declaredOnes: readonly string[], producedOnes: readonly string[] | null): decision {
+  if (producedOnes === null) {
     return {
       conceptId,
-      桶: '無法確定',
-      未宣告: [],
+      bucket: '無法確定',
+      undeclared: [],
       reason: '語料沒有碰到這顆元件——不知道它會產出什麼接點；判不出來不計入安全',
     }
   }
-  const 未宣告 = 產出的.filter((k) => !宣告的.includes(k))
-  if (!未宣告.length) {
-    return { conceptId, 桶: '安全', 未宣告: [], reason: '產出的接點宣告裡都有' }
+  const undeclared = producedOnes.filter((k) => !declaredOnes.includes(k))
+  if (!undeclared.length) {
+    return { conceptId, bucket: '安全', undeclared: [], reason: '產出的接點宣告裡都有' }
   }
   return {
     conceptId,
-    桶: '確定違規',
-    未宣告,
+    bucket: '確定違規',
+    undeclared,
     reason:
-      `lift 產出了接點 [${未宣告.join('、')}]，而宣告裡只有 [${宣告的.join('、') || '（空）'}]` +
+      `lift 產出了接點 [${undeclared.join('、')}]，而宣告裡只有 [${declaredOnes.join('、') || '（空）'}]` +
       `——**宣告是三個消費者的輸入**（#29 的合成、完備性的合成、未來的共同測 harness），少一個接點它們會一起變瞎`,
   }
 }
@@ -157,7 +157,7 @@ export function 判定宣告完整性(conceptId: string, 宣告的: readonly str
  * **自我維護**——測試長，語料就跟著長。手寫一份語料清單的話，
  * 新增的測試不會自動進來，而覆蓋率會安靜地退化。
  */
-function 取語料(): string[] {
+function takeCorpus(): string[] {
   const dir = path.join(REPO_ROOT, 'tests/integration')
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
@@ -175,50 +175,50 @@ function 取語料(): string[] {
 }
 
 /** 跑一段程式碼，回傳「每顆元件實際產出的非空接點」。健康檢查用。 */
-export function 取實際產出(l: Lifter, p: Parser, code: string): Map<string, string[]> {
+export function takeActual(l: Lifter, p: Parser, code: string): Map<string, string[]> {
   const out = new Map<string, string[]>()
-  const 走 = (n: SemanticNode): void => {
-    const 有值 = Object.keys(n.children ?? {}).filter((k) => (n.children[k] ?? []).length > 0)
-    out.set(n.conceptId, [...new Set([...(out.get(n.conceptId) ?? []), ...有值])])
-    for (const kids of Object.values(n.children ?? {})) for (const c of kids) 走(c)
+  const walk = (n: SemanticNode): void => {
+    const hasValue = Object.keys(n.children ?? {}).filter((k) => (n.children[k] ?? []).length > 0)
+    out.set(n.conceptId, [...new Set([...(out.get(n.conceptId) ?? []), ...hasValue])])
+    for (const kids of Object.values(n.children ?? {})) for (const c of kids) walk(c)
   }
   const t = l.lift(p.parse(code)!.rootNode as never)
-  if (t) 走(t)
+  if (t) walk(t)
   return out
 }
 
-let 快取: { 判定: 判定[]; 語料數: number; 碰到數: number } | null = null
+let cache: { decision: decision[]; corpusCount: number; hitCount: number } | null = null
 
-function 量一次(lifter: Lifter, p: Parser): NonNullable<typeof 快取> {
-  if (快取) return 快取
-  const 宣告 = new Map(
+function measureOnce(lifter: Lifter, p: Parser): NonNullable<typeof cache> {
+  if (cache) return cache
+  const declare = new Map(
     (allCppConcepts() as never as { conceptId: string; children?: Record<string, unknown> }[]).map((c) => [
       c.conceptId,
       Object.keys(c.children ?? {}),
     ]),
   )
-  const 實際 = new Map<string, Set<string>>()
-  const 走 = (n: SemanticNode): void => {
-    if (!實際.has(n.conceptId)) 實際.set(n.conceptId, new Set())
-    const s = 實際.get(n.conceptId)!
+  const actual = new Map<string, Set<string>>()
+  const walk = (n: SemanticNode): void => {
+    if (!actual.has(n.conceptId)) actual.set(n.conceptId, new Set())
+    const s = actual.get(n.conceptId)!
     for (const [k, kids] of Object.entries(n.children ?? {})) {
       if ((kids ?? []).length > 0) s.add(k)
     }
-    for (const kids of Object.values(n.children ?? {})) for (const c of kids) 走(c)
+    for (const kids of Object.values(n.children ?? {})) for (const c of kids) walk(c)
   }
-  const 語料 = 取語料()
-  let 成功 = 0
-  for (const code of 語料) {
+  const corpus = takeCorpus()
+  let ok = 0
+  for (const code of corpus) {
     try {
       const t = lifter.lift(p.parse(code)!.rootNode as never)
-      if (t) { 走(t); 成功++ }
+      if (t) { walk(t); ok++ }
     } catch { /* 解析不了的片段直接跳過——它們不是 C++ */ }
   }
-  const 判定 = [...宣告.entries()].map(([id, decl]) =>
-    判定宣告完整性(id, decl, 實際.has(id) ? [...實際.get(id)!] : null),
+  const decision = [...declare.entries()].map(([id, decl]) =>
+    judgeDeclCompleteness(id, decl, actual.has(id) ? [...actual.get(id)!] : null),
   )
-  快取 = { 判定, 語料數: 成功, 碰到數: 實際.size }
-  return 快取
+  cache = { decision, corpusCount: ok, hitCount: actual.size }
+  return cache
 }
 
 let lifter: Lifter
@@ -235,9 +235,9 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
 
   // ── 健康檢查：錨在語料量，不在違規數 ────────────────────
   it('★ 健康檢查：語料與碰到的元件數不得為零', () => {
-    const { 語料數, 碰到數 } = 量一次(lifter, tsParser)
-    expect(語料數, '語料一段都沒 lift 成功 → 下面的「零違規」是假的').toBeGreaterThan(100)
-    expect(碰到數, '一顆元件都沒碰到 → 同上').toBeGreaterThan(30)
+    const { corpusCount, hitCount } = measureOnce(lifter, tsParser)
+    expect(corpusCount, '語料一段都沒 lift 成功 → 下面的「零違規」是假的').toBeGreaterThan(100)
+    expect(hitCount, '一顆元件都沒碰到 → 同上').toBeGreaterThan(30)
   })
 
   it('★ 健康檢查：量測看得到 lift 的實際產出（不是只讀宣告）', () => {
@@ -252,42 +252,42 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     // 產出的樹上，`cpp:func_def` 底下有一個非空的 `params` 接點。
     // 那句話在修好宣告之前與之後都成立——它證明的是「量測跑到了 lift 的
     // 實際產出」，而不是「缺陷還在」。
-    const 實際 = 取實際產出(lifter, tsParser, 'int f(int a) { return a; }')
-    expect(實際.get('cpp:func_def'), '量測沒看到 func_def 的 params 接點 → 它沒跑到 lift 的實際產出').toContain('params')
+    const actual = takeActual(lifter, tsParser, 'int f(int a) { return a; }')
+    expect(actual.get('cpp:func_def'), '量測沒看到 func_def 的 params 接點 → 它沒跑到 lift 的實際產出').toContain('params')
   })
 
   // ── 棘輪 ────────────────────────────────────────────────
   it('棘輪：確定違規與無法確定都只准下降', () => {
-    const { 判定: 全部, 語料數, 碰到數 } = 量一次(lifter, tsParser)
-    const 違規 = 全部.filter((d) => d.桶 === '確定違規')
-    const 待查 = 全部.filter((d) => d.桶 === '無法確定')
+    const { decision: all, corpusCount, hitCount } = measureOnce(lifter, tsParser)
+    const violations = all.filter((d) => d.bucket === '確定違規')
+    const pending = all.filter((d) => d.bucket === '無法確定')
 
     printReport(
-      `宣告完整性：確定違規（語料 ${語料數} 段，碰到 ${碰到數} 顆）`,
-      違規.map((d) => `  ✘ ${d.conceptId} — 產出 [${d.未宣告.join('、')}] 而宣告裡沒有`),
+      `宣告完整性：確定違規（語料 ${corpusCount} 段，碰到 ${hitCount} 顆）`,
+      violations.map((d) => `  ✘ ${d.conceptId} — 產出 [${d.undeclared.join('、')}] 而宣告裡沒有`),
     )
     printReport(
-      `宣告完整性：語料沒碰到（${待查.length} 顆，不計入安全）`,
-      [`  ？ ${待查.slice(0, 10).map((d) => d.conceptId).join('、')}${待查.length > 10 ? ' …' : ''}`],
+      `宣告完整性：語料沒碰到（${pending.length} 顆，不計入安全）`,
+      [`  ？ ${pending.slice(0, 10).map((d) => d.conceptId).join('、')}${pending.length > 10 ? ' …' : ''}`],
     )
 
     // ── 判定落點：逐筆說出「為什麼無法確定」 ────────────────
-    const 判定檔 = path.join(REPO_ROOT, 'tests/assets/declared-slots-decisions.json')
-    const 判定s: 無法確定判定[] = fs.existsSync(判定檔)
-      ? (JSON.parse(fs.readFileSync(判定檔, 'utf8')) as 無法確定判定[])
+    const decisionFile = path.join(REPO_ROOT, 'tests/assets/declared-slots-decisions.json')
+    const decisions: undeterminedDecision[] = fs.existsSync(decisionFile)
+      ? (JSON.parse(fs.readFileSync(decisionFile, 'utf8')) as undeterminedDecision[])
       : []
-    const 已判定 = new Map(判定s.map((d) => [d.conceptId, d]))
-    const 要看 = 待查.filter((d) => !已判定.has(d.conceptId))
-    const 孤兒 = 判定s.filter((d) => !待查.some((x) => x.conceptId === d.conceptId))
-    const 依原因 = (r: 無法確定判定['原因']): number =>
-      待查.filter((d) => 已判定.get(d.conceptId)?.原因 === r).length
+    const decided = new Map(decisions.map((d) => [d.conceptId, d]))
+    const toReview = pending.filter((d) => !decided.has(d.conceptId))
+    const orphans = decisions.filter((d) => !pending.some((x) => x.conceptId === d.conceptId))
+    const byReason = (r: undeterminedDecision['cause']): number =>
+      pending.filter((d) => decided.get(d.conceptId)?.cause === r).length
 
     printReport('宣告完整性：「無法確定」的原因分佈', [
-      `  辨識到不了     ${依原因('辨識到不了')} 顆 ← **真的缺口**（補語料也碰不到）`,
-      `  宣告過的降級目標 ${依原因('宣告過的降級目標')} 顆   正確`,
-      `  元概念         ${依原因('元概念')} 顆   正確`,
-      `  語料沒覆蓋     ${依原因('語料沒覆蓋')} 顆   補語料就會動`,
-      `  要看           ${要看.length} 顆`,
+      `  辨識到不了     ${byReason('辨識到不了')} 顆 ← **真的缺口**（補語料也碰不到）`,
+      `  宣告過的降級目標 ${byReason('宣告過的降級目標')} 顆   正確`,
+      `  元概念         ${byReason('元概念')} 顆   正確`,
+      `  語料沒覆蓋     ${byReason('語料沒覆蓋')} 顆   補語料就會動`,
+      `  要看           ${toReview.length} 顆`,
       '',
       '⚠️ 只看總數的話，「辨識到不了」與「語料沒覆蓋」讀起來一樣',
       '   ——而前者補再多語料也永遠碰不到。',
@@ -305,31 +305,31 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
             '語料沒碰到的元件歸「無法確定」，**不計入安全**——那個數字是這條護欄的誠實度指標。',
           note: RATCHET_NOTE,
         },
-        確定違規: 違規.length,
-        無法確定: 待查.length,
-        違規清單: 違規.map((d) => `${d.conceptId}: ${d.未宣告.join('、')}`).sort(),
+        certainViolations: violations.length,
+        undetermined: pending.length,
+        violationList: violations.map((d) => `${d.conceptId}: ${d.undeclared.join('、')}`).sort(),
       } satisfies Baseline)
     }
 
     const base = loadBaseline<Baseline>(GUARD)
-    expect(要看.map((d) => d.conceptId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
-    expect(孤兒.map((d) => d.conceptId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
+    expect(toReview.map((d) => d.conceptId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
+    expect(orphans.map((d) => d.conceptId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
     expect(
-      判定s.filter((d) => !d.reason || d.reason.length < 4),
+      decisions.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     assertRatchet([
-      ['確定違規', 違規.length, base.確定違規],
-      ['無法確定', 待查.length, base.無法確定],
+      ['確定違規', violations.length, base.certainViolations],
+      ['無法確定', pending.length, base.undetermined],
     ])
   })
 
   // ── 注入：三個方向（第 8、9 步）─────────────────────────
   describe('注入', () => {
     it('(a) 壞的輸入會報：產出了宣告裡沒有的接點 → 確定違規', () => {
-      const d = 判定宣告完整性('cpp:fake', ['condition'], ['condition', 'else_body'])
-      expect(d.桶).toBe('確定違規')
-      expect(d.未宣告).toEqual(['else_body'])
+      const d = judgeDeclCompleteness('cpp:fake', ['condition'], ['condition', 'else_body'])
+      expect(d.bucket).toBe('確定違規')
+      expect(d.undeclared).toEqual(['else_body'])
       // 釘**理由**不只釘結果（第 8 步）。
       expect(d.reason).toContain('lift 產出了接點')
       expect(d.reason).toContain('else_body')
@@ -339,37 +339,37 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     it('(a2) 宣告是空的時候，理由要說得出「（空）」而不是空白', () => {
       // `cpp:func_call` 就是這種——宣告零個接點卻有 `args`。
       // 理由印成 `宣告裡只有 []` 的話，讀的人分不出「沒宣告」與「渲染壞了」。
-      const d = 判定宣告完整性('cpp:fake', [], ['args'])
+      const d = judgeDeclCompleteness('cpp:fake', [], ['args'])
       expect(d.reason).toContain('（空）')
     })
 
     it('(b) 好的輸入不亂報：產出的接點宣告裡都有 → 安全', () => {
       // 不可省。沒有它，一個「什麼都報」的判定器也能通過 (a)。
-      const d = 判定宣告完整性('cpp:fake', ['condition', 'then_body'], ['condition', 'then_body'])
-      expect(d.桶).toBe('安全')
+      const d = judgeDeclCompleteness('cpp:fake', ['condition', 'then_body'], ['condition', 'then_body'])
+      expect(d.bucket).toBe('安全')
       expect(d.reason).toBe('產出的接點宣告裡都有')
     })
 
     it('(b2) 好的輸入不亂報：宣告比產出多不算違規', () => {
       // 宣告了但語料沒觸發的接點**不是**這條護欄的事（見「不檢測什麼」）。
-      const d = 判定宣告完整性('cpp:fake', ['a', 'b', 'c'], ['a'])
-      expect(d.桶).toBe('安全')
+      const d = judgeDeclCompleteness('cpp:fake', ['a', 'b', 'c'], ['a'])
+      expect(d.bucket).toBe('安全')
     })
 
     it('(c) 判不出來的不計入安全：語料沒碰到 → 無法確定', () => {
-      const d = 判定宣告完整性('cpp:fake', ['a'], null)
-      expect(d.桶).toBe('無法確定')
+      const d = judgeDeclCompleteness('cpp:fake', ['a'], null)
+      expect(d.bucket).toBe('無法確定')
       expect(d.reason).toContain('不計入安全')
       // ⚠️ 特別釘：**沒碰到不得被判成安全**。這是最容易寫錯的一格
       // ——`[]` 與 `null` 差一個字元，而前者會讓沒測到的元件全部變綠。
-      expect(判定宣告完整性('cpp:fake', ['a'], []).桶).toBe('安全')
+      expect(judgeDeclCompleteness('cpp:fake', ['a'], []).bucket).toBe('安全')
     })
 
     it('★ 語料抓得到真的 C++ 片段，而不是抓到一堆雜訊', () => {
       // 第 10 步：測試通過之前，先證明它真的測到了東西。
-      const 語料 = 取語料()
-      expect(語料.length).toBeGreaterThan(100)
-      expect(語料.some((c) => /\bint\s+\w+\s*\(/.test(c)), '語料裡一個函式定義都沒有').toBe(true)
+      const corpus = takeCorpus()
+      expect(corpus.length).toBeGreaterThan(100)
+      expect(corpus.some((c) => /\bint\s+\w+\s*\(/.test(c)), '語料裡一個函式定義都沒有').toBe(true)
     })
   })
 })

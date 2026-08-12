@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建print_formatted(format: string, args: SemanticNode[]): SemanticNode {
+export function buildPrintFormatted(format: string, args: SemanticNode[]): SemanticNode {
   return createNode('cpp:print_formatted', { format }, { args })
 }
 

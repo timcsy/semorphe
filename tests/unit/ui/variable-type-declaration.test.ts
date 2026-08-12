@@ -50,10 +50,10 @@ describe('變數型別宣告：語言套件推、核心讀', () => {
   it('★ 加一個同類概念時，兩個消費者都要自動涵蓋它', () => {
     // 這一支是本功能的重點：宣告是**開放**的，不是一份寫死的清單。
     // 它證明「再多一個字串宣告概念」不需要改任何消費者的程式碼。
-    const 現有 = conceptsDeclaringVariableType('string')
-    expect(現有.length).toBeGreaterThan(0)
+    const existing2 = conceptsDeclaringVariableType('string')
+    expect(existing2.length).toBeGreaterThan(0)
     expect(
-      現有.every((c) => variableTypeOf(c) === 'string'),
+      existing2.every((c) => variableTypeOf(c) === 'string'),
       '反查與正查不一致——兩個消費者會看到不同的答案',
     ).toBe(true)
   })

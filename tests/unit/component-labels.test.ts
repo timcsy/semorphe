@@ -25,13 +25,13 @@ describe('膠囊標籤', () => {
   it('相同鍵在兩顆膠囊裡必須 throw——這一則釘的是「不得後者覆蓋前者」', () => {
     // 合併邏輯的核心：先來的存進 Map，後來的撞上就爆。
     const source = new Map<string, string>()
-    const 合併 = (dir: string, dict: Record<string, string>): void => {
+    const merge = (dir: string, dict: Record<string, string>): void => {
       for (const k of Object.keys(dict)) {
         if (source.has(k)) throw new Error(`標籤鍵「${k}」被兩顆膠囊同時宣告：${source.get(k)} 與 ${dir}`)
         source.set(k, dir)
       }
     }
-    合併('cpp/a', { K: '甲' })
-    expect(() => 合併('cpp/b', { K: '乙' })).toThrow(/同時宣告/)
+    merge('cpp/a', { K: '甲' })
+    expect(() => merge('cpp/b', { K: '乙' })).toThrow(/同時宣告/)
   })
 })

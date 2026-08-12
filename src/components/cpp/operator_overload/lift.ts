@@ -7,7 +7,7 @@
 import type { SemanticNode, PropertyValue } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建operator_overload(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
+export function buildOperatorOverload(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:operator_overload', props, children)
 }
 

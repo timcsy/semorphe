@@ -16,10 +16,10 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     register('cpp:var_declare_ref', async (node, ctx) => {
       const name = String(node.properties.name)
       const inits = node.children.initializer ?? []
-      const 目標 = inits[0]
-      if (目標 && isVariableRef(目標.conceptId) && 目標.properties?.name !== undefined) {
+      const target = inits[0]
+      if (target && isVariableRef(target.conceptId) && target.properties?.name !== undefined) {
         // `get`／`set` 會沿 parent 往上找，所以目標作用域傳當前的就夠
-        ctx.scope.declareRef(name, ctx.scope, String(目標.properties.name))
+        ctx.scope.declareRef(name, ctx.scope, String(target.properties.name))
         return
       }
       // 綁到非變數（例如 `int& r = f();`）——**不是別名做得到的事**。

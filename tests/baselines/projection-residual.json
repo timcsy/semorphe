@@ -3,26 +3,26 @@
     "note": "形態的殘差：有多少原始碼掉進 raw_code 殘差通道，也就是模型**還沒長到**哪裡。\n⚠️ 這不是誤差。殘差高＝模型沒長到那裡（系統仍然正確）；誤差高＝模型是錯的（系統會騙人）。\n誤差在 behavior-error.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 語料分兩欄。第一版量成 48.83%（正確值 0.23%，差 200 倍），錯的不是程式是語料——\n820 段裡 353 段是測試檔裡的片段（語法本來就不完整），被當成模型缺口。只記完整那一欄的話，濾掉語料會像改善。\n下降的兩種原因要分清：因為**實作**了新元件（模型長大了）／因為**語料**變了（世界變了，模型沒變）。\n\n【2026-08-10 / specs/109】0.23% → 0.22%，而**這不是改善**——殘差字元數完全沒變（169），變的是分母：新增 tests/integration/interpreter-value-fidelity.test.ts 讓語料從 467 段/74855 字元變成 479 段/75527 字元。**下降是「因為語料變了」，不是「因為實作了」。**這正是本檔開頭那句話要分的兩種下降——記在這裡，否則下一個人會讀成模型長大了。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "語料": {
-    "語法完整": 479,
-    "語法有錯片段": 358,
-    "總字元": 75527
+  "corpus": {
+    "syntaxComplete": 479,
+    "syntaxErrorFragments": 358,
+    "totalChars": 75527
   },
-  "殘差": {
-    "字元數": 169,
-    "節點數": 2,
-    "率百分比": 0.22,
-    "明細": [
+  "residual2": {
+    "charCount": 169,
+    "nodeCount": 2,
+    "ratePercent": 0.22,
+    "details": [
       {
-        "原文": "template<typename T>⏎class Container {⏎public:⏎    vector<T> data;⏎    void add(T item) { data.push_back(item); }⏎    T ",
-        "降級原因": "(無)"
+        "raw": "template<typename T>⏎class Container {⏎public:⏎    vector<T> data;⏎    void add(T item) { data.push_back(item); }⏎    T ",
+        "downgradeReason": "(無)"
       },
       {
-        "原文": "<typename T>",
-        "降級原因": "nonstandard_but_valid"
+        "raw": "<typename T>",
+        "downgradeReason": "nonstandard_but_valid"
       }
     ],
-    "降級原因": {
+    "downgradeReason": {
       "(無)": 1,
       "nonstandard_but_valid": 1
     }

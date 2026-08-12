@@ -9,10 +9,10 @@
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { 在實例上執行 } from '../../../languages/cpp/core/executors/structs'
+import { runOnInstance } from '../../../languages/cpp/core/executors/structs'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
-  const 呼叫方法: ConceptExecutor = async (node, ctx) => {
+  const callMethod: ConceptExecutor = async (node, ctx) => {
     const objName = String(node.properties.obj)
     const methodName = String(node.properties.method)
     const obj = ctx.scope.get(objName)
@@ -32,8 +32,8 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
         '%1': `${obj.structName ?? '?'}::${methodName}（純虛擬，沒有實作）`,
       })
     }
-    return 在實例上執行(obj, m, node.children.args ?? [], ctx)
+    return runOnInstance(obj, m, node.children.args ?? [], ctx)
   }
 
-  register('cpp:method_call', 呼叫方法)
+  register('cpp:method_call', callMethod)
 }

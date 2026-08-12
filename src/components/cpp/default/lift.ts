@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建default(body: SemanticNode[]): SemanticNode {
+export function buildDefault(body: SemanticNode[]): SemanticNode {
   return createNode('cpp:default', {}, { body })
 }
 

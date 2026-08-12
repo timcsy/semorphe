@@ -46,7 +46,7 @@ const localStorageMock = (() => {
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
 /** 一份合法的存檔，版本可覆寫 */
-function 存檔(version = CURRENT_VERSION, extra: Record<string, unknown> = {}) {
+function savedState(version = CURRENT_VERSION, extra: Record<string, unknown> = {}) {
   return {
     version,
     tree: null,
@@ -73,34 +73,34 @@ describe('欄位清單由編譯器釘住', () => {
 
 describe('版本判定：三種情況三種結果', () => {
   it('版本相同 → ok', () => {
-    expect(judge(存檔(CURRENT_VERSION)).kind).toBe('ok')
+    expect(judge(savedState(CURRENT_VERSION)).kind).toBe('ok')
   })
 
   it('版本較高 → too-new（不是靜默接受）', () => {
-    const v = judge(存檔(99))
+    const v = judge(savedState(99))
     expect(v.kind).toBe('too-new')
     expect(v.kind === 'too-new' && v.from).toBe(99)
   })
 
   it('版本較低 → needs-upgrade', () => {
-    const v = judge(存檔(0))
+    const v = judge(savedState(0))
     expect(v.kind).toBe('needs-upgrade')
   })
 })
 
 describe('形狀驗證：不是存檔的東西不得被當成存檔', () => {
-  const 不是存檔: [string, unknown][] = [
+  const notASave: [string, unknown][] = [
     ['隨便一個物件', { hello: 'world' }],
     ['null', null],
     ['陣列', [1, 2, 3]],
     ['數字', 42],
-    ['版本號是字串', 存檔(1 as number, { version: 'abc' })],
-    ['版本號是 NaN', 存檔(NaN)],
-    ['缺 code', (() => { const s = 存檔() as Record<string, unknown>; delete s.code; return s })()],
-    ['缺 version', (() => { const s = 存檔() as Record<string, unknown>; delete s.version; return s })()],
+    ['版本號是字串', savedState(1 as number, { version: 'abc' })],
+    ['版本號是 NaN', savedState(NaN)],
+    ['缺 code', (() => { const s = savedState() as Record<string, unknown>; delete s.code; return s })()],
+    ['缺 version', (() => { const s = savedState() as Record<string, unknown>; delete s.version; return s })()],
   ]
 
-  for (const [name, value] of 不是存檔) {
+  for (const [name, value] of notASave) {
     it(`${name} → not-a-save`, () => {
       const v = judge(value)
       expect(v.kind, `判定結果：${JSON.stringify(v)}`).toBe('not-a-save')
@@ -114,23 +114,23 @@ describe('形狀驗證：不是存檔的東西不得被當成存檔', () => {
   })
 
   it('合法存檔多帶不認得的欄位 → 仍然通過（FR-017）', () => {
-    expect(judge(存檔(CURRENT_VERSION, { 來自未來的欄位: 42 })).kind).toBe('ok')
+    expect(judge(savedState(CURRENT_VERSION, { futureFields: 42 })).kind).toBe('ok')
   })
 })
 
 describe('升級路徑', () => {
   it('CURRENT_VERSION 需要的每一步都有註冊（FR-016）', () => {
-    const 缺的: number[] = []
-    for (let v = 1; v < CURRENT_VERSION; v++) if (!UPGRADES[v]) 缺的.push(v)
+    const missingOnes: number[] = []
+    for (let v = 1; v < CURRENT_VERSION; v++) if (!UPGRADES[v]) missingOnes.push(v)
     expect(
-      缺的,
+      missingOnes,
       `把 CURRENT_VERSION 調高卻沒註冊升級路徑，會讓每一位既有使用者的存檔被拒絕。` +
-        `缺少：${缺的.map((v) => `${v}→${v + 1}`).join('、')}`,
+        `缺少：${missingOnes.map((v) => `${v}→${v + 1}`).join('、')}`,
     ).toEqual([])
   })
 
   it('沒有升級路徑時明確失敗，而不是產出半升級的狀態', () => {
-    const r = upgrade(存檔(0) as Record<string, unknown>, 0)
+    const r = upgrade(savedState(0) as Record<string, unknown>, 0)
     expect(r.ok).toBe(false)
     expect(r.ok === false && r.reason).toContain('升級路徑')
   })
@@ -145,26 +145,26 @@ describe('兩條讀取路徑判定一致（FR-010）', () => {
     storage = new StorageService()
   })
 
-  const 樣本: [string, unknown][] = [
-    ['合法、版本相同', 存檔(CURRENT_VERSION)],
-    ['版本較高', 存檔(99)],
+  const samples: [string, unknown][] = [
+    ['合法、版本相同', savedState(CURRENT_VERSION)],
+    ['版本較高', savedState(99)],
     ['不是存檔', { hello: 'world' }],
     ['缺必填欄位', { version: 1, code: 'x' }],
   ]
 
-  for (const [name, value] of 樣本) {
+  for (const [name, value] of samples) {
     it(`${name}：自動載入與匯入檔案得到相同結論`, () => {
       const json = JSON.stringify(value)
       localStorage.setItem(STORAGE_KEY, json)
 
-      const 自動載入 = storage.load()
-      const 匯入 = storage.importFromJSON(json)
+      const autoLoad = storage.load()
+      const imports = storage.importFromJSON(json)
 
       expect(
-        自動載入 === null,
-        `自動載入 ${自動載入 === null ? '拒絕' : '接受'}，` +
-          `匯入 ${匯入 === null ? '拒絕' : '接受'}——兩條路徑鬆緊度不同`,
-      ).toBe(匯入 === null)
+        autoLoad === null,
+        `自動載入 ${autoLoad === null ? '拒絕' : '接受'}，` +
+          `匯入 ${imports === null ? '拒絕' : '接受'}——兩條路徑鬆緊度不同`,
+      ).toBe(imports === null)
     })
   }
 })
@@ -179,12 +179,12 @@ describe('自動載入的行為', () => {
   })
 
   it('版本相同 → 正常載入，與現況完全相同（FR-013／FR-042）', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(存檔(CURRENT_VERSION)))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(CURRENT_VERSION)))
     expect(storage.load()?.code).toBe('使用者的作品')
   })
 
   it('版本較高 → 不載入', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(存檔(99)))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(99)))
     expect(storage.load()).toBeNull()
   })
 
@@ -194,7 +194,7 @@ describe('自動載入的行為', () => {
   })
 
   it('loadOutcome() 說得出為什麼——不只是 null', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(存檔(99)))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(99)))
     const r = storage.loadOutcome()
     expect(r.kind).toBe('refused')
     expect(r.kind === 'refused' && r.reason.code).toBe('too-new')
@@ -206,11 +206,11 @@ describe('自動載入的行為', () => {
 })
 
 describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Acceptance Scenario）', () => {
-  const 升 = (tree: unknown): unknown =>
+  const rise = (tree: unknown): unknown =>
     (UPGRADES[2]({ version: 2, tree } as Record<string, unknown>) as { tree: unknown }).tree
 
   it('① 舊身分（cpp_ 與裸名）都轉得動，含巢狀子節點', () => {
-    const out = 升({
+    const out = rise({
       conceptId: 'cpp:if',
       children: {
         body: [{ conceptId: 'cpp:vector_declare', children: {} }],
@@ -224,12 +224,12 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
 
   it('② 已是新格式的身分**原樣通過**（冪等）', () => {
     // 樹裡本來就有三顆 `cpp:math_*`——它們不得被加成 `cpp:cpp:math_pow`。
-    const out = 升({ conceptId: 'cpp:math_pow', children: {} }) as { conceptId: string }
+    const out = rise({ conceptId: 'cpp:math_pow', children: {} }) as { conceptId: string }
     expect(out.conceptId).toBe('cpp:math_pow')
   })
 
   it('③ 表裡認不得的身分**原樣保留**，該節點不丟棄', () => {
-    const out = 升({
+    const out = rise({
       conceptId: '__某個未來的身分__',
       properties: { keep: 'me' },
       children: { body: [{ conceptId: 'cpp:print', children: {} }] },
@@ -257,28 +257,28 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     // ⚠️ 原本檢查「每一筆的目標在白名單內」——**D1 之後那是錯的**。
     // v2→v3 把裸名帶到 `lang:*`，而 v4→v5 又把 `lang:*` 帶到 `cpp:*`。
     // 中間那一站**本來就不該是合法的現存 scope**，它是歷史的中繼點。
-    const 表 = registeredIdMigrations()
+    const table = registeredIdMigrations()
     // ⚠️ 這個數字會隨每一次 G 的改名增加——**它不該是硬編的**。
     // 它要驗的是「表非空且每一筆都走得通」，不是「剛好幾筆」。
-    expect(Object.keys(表).length, '改名表是空的 → 沒有任何套件登錄').toBeGreaterThan(200)
-    const 解析 = (id: string): string => {
+    expect(Object.keys(table).length, '改名表是空的 → 沒有任何套件登錄').toBeGreaterThan(200)
+    const parse = (id: string): string => {
       let cur = id
-      for (let i = 0; i < 10 && 表[cur]; i++) cur = 表[cur]
+      for (let i = 0; i < 10 && table[cur]; i++) cur = table[cur]
       return cur
     }
-    for (const old of Object.keys(表)) {
-      expect(isValidComponentId(解析(old)), `${old} → … → ${解析(old)} 走完鏈仍不合法`).toBe(true)
+    for (const old of Object.keys(table)) {
+      expect(isValidComponentId(parse(old)), `${old} → … → ${parse(old)} 走完鏈仍不合法`).toBe(true)
     }
     void isNamespaced
   })
 })
 
 describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
-  const 升 = (tree: unknown): unknown =>
+  const rise = (tree: unknown): unknown =>
     (UPGRADES[3]({ version: 3, tree } as Record<string, unknown>) as { tree: unknown }).tree
 
   it('★ 舊參數名轉得動，含巢狀', () => {
-    const out = 升({
+    const out = rise({
       conceptId: 'lang:program',
       properties: {},
       children: {
@@ -297,7 +297,7 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
   })
 
   it('★ 不在表裡的屬性原樣保留', () => {
-    const out = 升({
+    const out = rise({
       conceptId: 'lang:var_declare',
       properties: { name: 'x', type: 'int' },
       children: {},
@@ -309,17 +309,17 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
 
   it('★ 反向：不升級的話，產生器會拿不到接收者', () => {
     // 沒有這一支，前兩支綠可能只是因為「舊屬性名本來也讀得到」。
-    const 舊 = { conceptId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} }
+    const old = { conceptId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} }
     expect(
-      (舊.properties as Record<string, string>).obj,
+      (old.properties as Record<string, string>).obj,
       '舊格式本來就有 obj → 那這個遷移沒有存在的必要',
     ).toBeUndefined()
   })
 
   it('★ 兩個套件的參數改名表都登錄了（機制有沒有接上）', () => {
-    const 表 = registeredPropertyMigrations()
-    expect(Object.keys(表).length, '沒有任何套件登錄參數改名——機制有了沒人接上').toBe(10)
-    for (const map of Object.values(表)) {
+    const table = registeredPropertyMigrations()
+    expect(Object.keys(table).length, '沒有任何套件登錄參數改名——機制有了沒人接上').toBe(10)
+    for (const map of Object.values(table)) {
       expect(Object.values(map), '接收者統一叫 obj').toEqual(['obj'])
     }
   })

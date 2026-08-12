@@ -63,20 +63,20 @@ export interface CallConceptShape {
   source: string
 }
 
-const 表 = new Map<string, CallConceptShape>()
+const table = new Map<string, CallConceptShape>()
 
 /** 登錄一組函式名共用的一個形狀。 */
-export function registerCallConcept(函式名們: string | string[], 形狀: CallConceptShape): void {
-  for (const 名 of typeof 函式名們 === 'string' ? [函式名們] : 函式名們) {
-    const existing = 表.get(名)
-    if (existing && existing.conceptId !== 形狀.conceptId) {
+export function registerCallConcept(funcNames: string | string[], shape: CallConceptShape): void {
+  for (const name of typeof funcNames === 'string' ? [funcNames] : funcNames) {
+    const existing = table.get(name)
+    if (existing && existing.conceptId !== shape.conceptId) {
       throw new Error(
-        `函式名「${名}」被登錄兩次且指向不同身分：` +
-          `${existing.conceptId}（${existing.source}）與 ${形狀.conceptId}（${形狀.source}）。` +
+        `函式名「${name}」被登錄兩次且指向不同身分：` +
+          `${existing.conceptId}（${existing.source}）與 ${shape.conceptId}（${shape.source}）。` +
           `不自動取其一——靜默覆蓋的症狀是「某個函式被辨識成另一個」。`,
       )
     }
-    表.set(名, 形狀)
+    table.set(name, shape)
   }
 }
 
@@ -86,21 +86,21 @@ export function registerCallConcept(函式名們: string | string[], 形狀: Cal
  * 保留它不是為了相容，是因為那個形狀已經被第二顆膠囊驗證過，
  * 而**把已驗證的形狀換掉需要理由**。
  */
-export function registerSingleArgFunction(函式名: string, conceptId: string, source: string): void {
-  registerCallConcept(函式名, { conceptId, argSlots: ['value'], source })
+export function registerSingleArgFunction(funcName: string, conceptId: string, source: string): void {
+  registerCallConcept(funcName, { conceptId, argSlots: ['value'], source })
 }
 
 /** 函式名 → 形狀。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
-export function callConceptFor(函式名: string): CallConceptShape | undefined {
-  return 表.get(函式名)
+export function callConceptFor(funcName: string): CallConceptShape | undefined {
+  return table.get(funcName)
 }
 
 /** 函式名 → 元件身分。 */
-export function conceptForSingleArgFunction(函式名: string): string | undefined {
-  return 表.get(函式名)?.conceptId
+export function conceptForSingleArgFunction(funcName: string): string | undefined {
+  return table.get(funcName)?.conceptId
 }
 
 /** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */
-export function singleArgFunctionSources(): [函式名: string, 來源: string][] {
-  return [...表.entries()].map(([k, v]) => [k, v.source])
+export function singleArgFunctionSources(): [funcName: string, source: string][] {
+  return [...table.entries()].map(([k, v]) => [k, v.source])
 }

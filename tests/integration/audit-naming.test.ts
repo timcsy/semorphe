@@ -30,10 +30,10 @@ import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
 import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
 
-type 違規類 = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
-interface Finding { 類: 違規類; id: string; 說明: string }
+type violationKind = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
+interface Finding { kind: violationKind; id: string; note: string }
 
-interface 概念 { conceptId: string; properties?: unknown }
+interface concept { conceptId: string; properties?: unknown }
 
 /**
  * 接收者 = **操作作用在它身上的那個既有物件**。
@@ -48,11 +48,11 @@ interface 概念 { conceptId: string; properties?: unknown }
  * **已知盲點**：單字名的元件（`increment`／`input`）拆不出操作，這裡看不到。
  * 那類會**低報**，不會誤報。
  */
-function 接收者參數名(concepts: 概念[]): Map<string, string> {
+function receiverParamName(concepts: concept[]): Map<string, string> {
   // ⚠️ **第二段是「種類」的元件沒有接收者**——它是一個東西，不是一個動作。
   // `loop_count` 的 `var_name` 是被創造的迴圈變數，不是被操作的物件。
   // 第一版只排除 `SELF_NAMING_OPERATIONS`，於是 loop 家族改名後全被誤報。
-  const 自名 = new Set<string>([...SELF_NAMING_OPERATIONS, ...KINDS])
+  const ownName = new Set<string>([...SELF_NAMING_OPERATIONS, ...KINDS])
   const out = new Map<string, string>()
   for (const c of concepts) {
     const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
@@ -60,20 +60,20 @@ function 接收者參數名(concepts: 概念[]): Map<string, string> {
     // ⚠️ 複合的第二段要看**開頭的操作**——`var_declare_auto` 的操作是 `declare`
     // （創造，不是操作既有物件），而整段 `declare_auto` 不在自名清單裡。
     // 少了這一層，第 6 步一改名，`var_declare_*` 全族會被誤報成接收者不一致。
-    const 主操作 = op && !自名.has(op)
+    const mainOp = op && !ownName.has(op)
       ? [...SELF_NAMING_OPERATIONS].find((o) => op.startsWith(o + SEPARATOR))
       : undefined
-    if (!op || 自名.has(op) || 主操作) continue
+    if (!op || ownName.has(op) || mainOp) continue
     const first = paramSpecs(c.properties as never)[0]
     if (first?.kind === 'identifier') out.set(c.conceptId, first.name)
   }
   return out
 }
 
-function measure(注入: 概念[] = []): Finding[] {
+function measure(inject: concept[] = []): Finding[] {
   const out: Finding[] = []
-  const 概念們 = [...(allCppConcepts() as unknown as 概念[]), ...注入]
-  const recv = 接收者參數名(概念們)
+  const concepts = [...(allCppConcepts() as unknown as concept[]), ...inject]
+  const recv = receiverParamName(concepts)
   // 第二段可以是**操作**、**種類**、或**操作＋種類**的複合。
   //
   // ⚠️ 複合這一層是必要的：`string_append_char`（加一個字元）與
@@ -81,7 +81,7 @@ function measure(注入: 概念[] = []): Finding[] {
   // 「append」這個操作又必須是同一個字。**種差可以再細分。**
   const opSet = new Set<string>(OPERATIONS)
   const kindSet = new Set<string>(KINDS)
-  const 合法第二段 = (d: string): boolean => {
+  const validSecondPart = (d: string): boolean => {
     if (opSet.has(d) || kindSet.has(d)) return true
     for (const o of opSet) {
       if (d.startsWith(o + SEPARATOR) && kindSet.has(d.slice(o.length + 1))) return true
@@ -94,23 +94,23 @@ function measure(注入: 概念[] = []): Finding[] {
   // ① 接收者角色只准有一個名字，而那個名字是**宣告出來的**，不是多數決
   for (const [id, name] of recv) {
     if (name !== RECEIVER_PARAM) {
-      out.push({ 類: '接收者參數名', id, 說明: `接收者叫 \`${name}\`，而宣告的名字是 \`${RECEIVER_PARAM}\`` })
+      out.push({ kind: '接收者參數名', id, note: `接收者叫 \`${name}\`，而宣告的名字是 \`${RECEIVER_PARAM}\`` })
     }
   }
 
-  for (const c of 概念們) {
+  for (const c of concepts) {
     const scope = c.conceptId.slice(0, c.conceptId.indexOf(':'))
     const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
 
     // ⑤ D1：`lang:` 這個 scope 已經沒有工作了
     if (scope === 'lang') {
-      out.push({ 類: '殘留 lang: scope', id: c.conceptId, 說明: '各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱' })
+      out.push({ kind: '殘留 lang: scope', id: c.conceptId, note: '各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱' })
     }
 
     // ④ 修飾詞不得站在主體位置
-    const 首段 = bare.split(SEPARATOR)[0]
-    if (mods.has(首段)) {
-      out.push({ 類: '修飾詞站主體位', id: c.conceptId, 說明: `\`${首段}\` 是修飾詞，該是參數或形態` })
+    const firstSection = bare.split(SEPARATOR)[0]
+    if (mods.has(firstSection)) {
+      out.push({ kind: '修飾詞站主體位', id: c.conceptId, note: `\`${firstSection}\` 是修飾詞，該是參數或形態` })
       continue
     }
 
@@ -125,12 +125,12 @@ function measure(注入: 概念[] = []): Finding[] {
     // 它的主體是 `literal`，而結尾的 `string` 是**種類**。
     // 一個字可以同時是某處的主體與另一處的種類，位置才決定它扮演什麼。
     const parsedFirst = parseName(bare, SUBJECTS)
-    const 後綴 = parsedFirst.subject
+    const suffix = parsedFirst.subject
       ? undefined
       : [...SUBJECTS].sort((a, b) => b.length - a.length)
           .find((sub) => bare !== sub && bare.endsWith(SEPARATOR + sub))
-    if (後綴) {
-      out.push({ 類: '主體不在前', id: c.conceptId, 說明: `主體 \`${後綴}\` 在後面——排序即分群，同族要排得在一起` })
+    if (suffix) {
+      out.push({ kind: '主體不在前', id: c.conceptId, note: `主體 \`${suffix}\` 在後面——排序即分群，同族要排得在一起` })
       continue
     }
 
@@ -138,53 +138,53 @@ function measure(注入: 概念[] = []): Finding[] {
     if (parsed.atomic) {
       // ③ 不可分解的名字必須是被允許的單字名
       if (!atomics.has(bare)) {
-        out.push({ 類: '裸的函式庫名', id: c.conceptId, 說明: '不可分解，且不在允許的單字名清單裡（多半是抄來的函式庫名）' })
+        out.push({ kind: '裸的函式庫名', id: c.conceptId, note: '不可分解，且不在允許的單字名清單裡（多半是抄來的函式庫名）' })
       }
       continue
     }
     // ② 操作詞必須在封閉詞彙裡
-    if (parsed.operation && !合法第二段(parsed.operation)) {
-      out.push({ 類: '操作詞不在詞彙', id: c.conceptId, 說明: `操作 \`${parsed.operation}\` 不在詞彙表（同義詞請合併）` })
+    if (parsed.operation && !validSecondPart(parsed.operation)) {
+      out.push({ kind: '操作詞不在詞彙', id: c.conceptId, note: `操作 \`${parsed.operation}\` 不在詞彙表（同義詞請合併）` })
     }
   }
-  return out.sort((a, b) => a.類.localeCompare(b.類) || a.id.localeCompare(b.id))
+  return out.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id))
 }
 
-const 合成 = (id: string): 概念 => ({ conceptId: id, properties: [] })
+const synthetic = (id: string): concept => ({ conceptId: id, properties: [] })
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一個抄來的函式庫名 → **必須被報出**', () => {
-    const hit = measure([合成('cpp:__合成_strlen__')]).find((f) => f.id === 'cpp:__合成_strlen__')
-    expect(hit?.類, '不可分解又不在單字名清單裡的名字沒被報出 → **護欄壞了**').toBe('裸的函式庫名')
+    const hit = measure([synthetic('cpp:__合成_strlen__')]).find((f) => f.id === 'cpp:__合成_strlen__')
+    expect(hit?.kind, '不可分解又不在單字名清單裡的名字沒被報出 → **護欄壞了**').toBe('裸的函式庫名')
   })
 
   it('★ 注入一個不在詞彙裡的操作詞 → **必須被報出**', () => {
-    const hit = measure([合成('cpp:string_lengthy')]).find((f) => f.id === 'cpp:string_lengthy')
-    expect(hit?.類).toBe('操作詞不在詞彙')
+    const hit = measure([synthetic('cpp:string_lengthy')]).find((f) => f.id === 'cpp:string_lengthy')
+    expect(hit?.kind).toBe('操作詞不在詞彙')
   })
 
   it('★ 注入一個修飾詞站主體位的名字 → **必須被報出**', () => {
-    const hit = measure([合成('cpp:static_thing')]).find((f) => f.id === 'cpp:static_thing')
-    expect(hit?.類).toBe('修飾詞站主體位')
+    const hit = measure([synthetic('cpp:static_thing')]).find((f) => f.id === 'cpp:static_thing')
+    expect(hit?.kind).toBe('修飾詞站主體位')
   })
 
   it('★ 反向：一個完全合格的名字 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上面三支。
     expect(
-      measure([合成('cpp:string_size')]).find((f) => f.id === 'cpp:string_size'),
+      measure([synthetic('cpp:string_size')]).find((f) => f.id === 'cpp:string_size'),
       '一個由宣告詞彙組成的名字被報成違規 → 這條會亂叫',
     ).toBeUndefined()
   })
 
   it('★ 反向：允許的單字名 → **必須不被報出**', () => {
-    expect(measure([合成('cpp:if')]).find((f) => f.id === 'cpp:if')).toBeUndefined()
+    expect(measure([synthetic('cpp:if')]).find((f) => f.id === 'cpp:if')).toBeUndefined()
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     expect(allCppConcepts().length, '登錄表是空的 → 每一項都會是假的零').toBeGreaterThan(150)
-    expect(接收者參數名(allCppConcepts() as unknown as 概念[]).size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
+    expect(receiverParamName(allCppConcepts() as unknown as concept[]).size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
   })
 })
 
@@ -192,16 +192,16 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
 describe('詞彙表不得長出沒人用的字', () => {
   it('報表：每個宣告的操作詞被幾顆元件用', () => {
-    const 用量 = new Map<string, number>(OPERATIONS.map((o) => [o, 0]))
-    for (const c of allCppConcepts() as unknown as 概念[]) {
+    const usage = new Map<string, number>(OPERATIONS.map((o) => [o, 0]))
+    for (const c of allCppConcepts() as unknown as concept[]) {
       const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
       const op = parseName(bare, SUBJECTS).operation
-      if (op && 用量.has(op)) 用量.set(op, 用量.get(op)! + 1)
+      if (op && usage.has(op)) usage.set(op, usage.get(op)! + 1)
     }
     printReport('操作詞彙的用量', [
       `詞彙 ${OPERATIONS.length} 個｜主體 ${SUBJECTS.length} 個｜單字名 ${ATOMIC_NAMES.length} 個`,
       '',
-      ...[...用量].sort((a, b) => b[1] - a[1]).map(([o, n]) => `  ${o.padEnd(12)} ${n}${n === 0 ? '   ⚠️ 零使用——是還沒改到，還是這個字不該存在？' : ''}`),
+      ...[...usage].sort((a, b) => b[1] - a[1]).map(([o, n]) => `  ${o.padEnd(12)} ${n}${n === 0 ? '   ⚠️ 零使用——是還沒改到，還是這個字不該存在？' : ''}`),
     ])
     expect(true).toBe(true)
   })
@@ -211,19 +211,19 @@ describe('詞彙表不得長出沒人用的字', () => {
 
 describe('命名一致性（G 項的驗收）', () => {
   const findings = measure()
-  const 依類 = (k: 違規類): Finding[] => findings.filter((f) => f.類 === k)
-  const 類別 = ['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as 違規類[]
+  const byKind = (k: violationKind): Finding[] => findings.filter((f) => f.kind === k)
+  const category = ['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as violationKind[]
 
   it('報表', () => {
     printReport('命名一致性', [
-      類別.map((k) => `${k} ${依類(k).length}`).join('｜'),
+      category.map((k) => `${k} ${byKind(k).length}`).join('｜'),
       '',
-      ...類別.flatMap((k) => {
-        const l = 依類(k)
+      ...category.flatMap((k) => {
+        const l = byKind(k)
         if (l.length === 0) return []
         return [
           `**${k}**（${l.length}）：`,
-          ...l.slice(0, 12).map((f) => `  ⚠️ ${f.id.padEnd(34)} ${f.說明}`),
+          ...l.slice(0, 12).map((f) => `  ⚠️ ${f.id.padEnd(34)} ${f.note}`),
           l.length > 12 ? `     …還有 ${l.length - 12} 顆` : '',
           '',
         ]
@@ -240,8 +240,8 @@ describe('命名一致性（G 項的驗收）', () => {
     //
     // 而收硬性零是有時效的：**G 完成而不收，下一個人加元件時沒有東西擋他**，
     // 於是名字慢慢漂回去，而那時已經有版本，改起來要發版＋遷移＋立墓碑。
-    for (const k of 類別) {
-      expect(依類(k).map((f) => `${f.id}：${f.說明}`), `【${k}】命名退步了`).toEqual([])
+    for (const k of category) {
+      expect(byKind(k).map((f) => `${f.id}：${f.note}`), `【${k}】命名退步了`).toEqual([])
     }
   })
 
@@ -250,22 +250,22 @@ describe('命名一致性（G 項的驗收）', () => {
     // 「留一筆還成立嗎」→ 不成立，命名一致是全有全無的。
     // 「修法貴不貴」→ **貴**，每一筆都是改名，而改名要動遍全樹（D 花了十輪）。
     // → 大量既有違規 ＋ 修法昂貴 = 棘輪，慢慢還。**G 完成時再收硬性零。**
-    const 分項 = Object.fromEntries(
-      (['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as 違規類[])
-        .map((k) => [k, 依類(k)]),
-    ) as Record<違規類, Finding[]>
-    const current = { guard: 'naming', 分項 }
+    const breakdown = Object.fromEntries(
+      (['接收者參數名', '操作詞不在詞彙', '裸的函式庫名', '修飾詞站主體位', '主體不在前', '殘留 lang: scope'] as violationKind[])
+        .map((k) => [k, byKind(k)]),
+    ) as Record<violationKind, Finding[]>
+    const current = { guard: 'naming', breakdown }
     if (process.env.GENERATE_BASELINE) {
       writeBaseline('naming', current)
       return
     }
     const base = loadBaseline<typeof current>('naming')
-    for (const [k, list] of Object.entries(分項) as [違規類, Finding[]][]) {
-      const added = newItems(list, base.分項[k] ?? [], (f) => f.id)
-      expect(added.map((f) => `${f.id}：${f.說明}`), `【${k}】新增了違規——命名退步了。`).toEqual([])
+    for (const [k, list] of Object.entries(breakdown) as [violationKind, Finding[]][]) {
+      const added = newItems(list, base.breakdown[k] ?? [], (f) => f.id)
+      expect(added.map((f) => `${f.id}：${f.note}`), `【${k}】新增了違規——命名退步了。`).toEqual([])
     }
     assertRatchet(
-      (Object.keys(分項) as 違規類[]).map((k) => [k, 分項[k].length, (base.分項[k] ?? []).length] as [string, number, number]),
+      (Object.keys(breakdown) as violationKind[]).map((k) => [k, breakdown[k].length, (base.breakdown[k] ?? []).length] as [string, number, number]),
     )
   })
 })

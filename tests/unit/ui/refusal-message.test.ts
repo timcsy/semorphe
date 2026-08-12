@@ -10,31 +10,31 @@ import type { LoadOutcome } from '../../../src/core/storage'
 
 type Refused = Extract<LoadOutcome, { kind: 'refused' }>
 
-const 有備份 = (reason: Refused['reason']): Refused => ({
+const hasBackup = (reason: Refused['reason']): Refused => ({
   kind: 'refused',
   reason,
   backedUpTo: 'semorphe-state.rejected',
 })
 
 describe('拒絕訊息說得出為什麼、也說得出原檔還在不在', () => {
-  const 四種理由: [string, Refused['reason'], string][] = [
+  const fourReasons: [string, Refused['reason'], string][] = [
     ['版本較高', { code: 'too-new', found: 99, current: 1 }, '較新'],
     ['格式太舊', { code: 'no-upgrade-path', found: 0, current: 1 }, '太舊'],
     ['升級失敗', { code: 'upgrade-failed', found: 0, detail: 'x' }, '失敗'],
     ['不是存檔', { code: 'not-a-save', detail: '缺少必填欄位：code' }, '不是可用的存檔'],
   ]
 
-  for (const [name, reason, 關鍵字] of 四種理由) {
+  for (const [name, reason, keyword] of fourReasons) {
     it(`${name}：訊息說得出原因`, () => {
-      const msg = describeRefusal(有備份(reason))
-      expect(msg).toContain(關鍵字)
+      const msg = describeRefusal(hasBackup(reason))
+      expect(msg).toContain(keyword)
       expect(msg, '沒有說原檔還在不在').toContain('原檔已保留')
     })
   }
 
   it('四種理由給出四種不同的訊息——不是同一句話', () => {
-    const 全部 = 四種理由.map(([, r]) => describeRefusal(有備份(r)))
-    expect(new Set(全部).size).toBe(4)
+    const all = fourReasons.map(([, r]) => describeRefusal(hasBackup(r)))
+    expect(new Set(all).size).toBe(4)
   })
 
   it('備份失敗時，訊息必須明確要求使用者先手動匯出', () => {
@@ -49,7 +49,7 @@ describe('拒絕訊息說得出為什麼、也說得出原檔還在不在', () =
   })
 
   it('不是存檔時，把技術細節一併帶出來——使用者可能看得懂，開發者一定看得懂', () => {
-    const msg = describeRefusal(有備份({ code: 'not-a-save', detail: '缺少必填欄位：code' }))
+    const msg = describeRefusal(hasBackup({ code: 'not-a-save', detail: '缺少必填欄位：code' }))
     expect(msg).toContain('缺少必填欄位：code')
   })
 })

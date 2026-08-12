@@ -125,11 +125,11 @@ export const execCompoundAssign: ConceptExecutor = async (node, ctx) => {
   // 運算式位置拿到 0——而**測試沒有碰過那個位置**，因為敘述位置不用回傳值。
   // 這個缺陷在合併 statement／expression 雙版本時才現形（兩個身分共用同一個
   // 執行器，所以兩邊一樣壞）。與 095 讓 `var_assign` 回傳指定值同一個形狀。
-  const 新值 = current.type === 'int' && rhs.type === 'int'
+  const newValue = current.type === 'int' && rhs.type === 'int'
     ? { type: 'int' as const, value: Math.trunc(result) }
     : { type: 'double' as const, value: result }
-  ctx.scope.set(name, 新值)
-  return 新值
+  ctx.scope.set(name, newValue)
+  return newValue
 }
 
 export function registerMutationExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {

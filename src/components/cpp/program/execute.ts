@@ -6,7 +6,7 @@
  * 一個叫 `main` 的函式在別的語言裡可能什麼都不是。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { 建func_call } from '../func_call/lift'
+import { buildFuncCall } from '../func_call/lift'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {
@@ -15,7 +15,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       if (ctx.functions.has('main')) {
         // ⚠️ 這裡原本包了一層叫 `execFuncCall` 的 local——**而同一個檔案裡
         // 二十行外還有一個同名的執行器**。名字一樣、意思不同，剪錯一個不會報錯。
-        await ctx.executeNode(建func_call('main', []))
+        await ctx.executeNode(buildFuncCall('main', []))
       }
     })
 }

@@ -16,15 +16,15 @@ import { execSync, exec } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
-const 旗標 = '-std=c++17'
-const 工作目錄 = '/tmp/semorphe-refcc'
-const 執行時限毫秒 = 5000
+const flag = '-std=c++17'
+const cwd = '/tmp/semorphe-refcc'
+const timeoutMs = 5000
 
-let 序號 = 0
+let seq = 0
 
 /** 參照編譯器的識別——**記原文**，見檔頭。 */
 export function referenceCompilerInfo(): { version: string; flags: string } {
-  return { version: execSync('g++ --version', { encoding: 'utf-8' }).split('\n')[0].trim(), flags: 旗標 }
+  return { version: execSync('g++ --version', { encoding: 'utf-8' }).split('\n')[0].trim(), flags: flag }
 }
 
 /** 參照編譯器在不在。**false 時護欄要紅，不是 skip。** */
@@ -37,7 +37,7 @@ export function hasReferenceCompiler(): boolean {
   }
 }
 
-export type 執行結果 =
+export type execResult =
   | { ok: true; output: string }
   | { ok: false; stage: 'compile' | 'run'; message: string }
 
@@ -47,25 +47,25 @@ export type 執行結果 =
  * 分得出**編譯失敗**與**執行失敗**——誤差護欄需要這個區分，因為
  * 「參照跑不動」與「參照跑出別的答案」是兩種不同的東西。
  */
-export function runCppDetailed(code: string): 執行結果 {
+export function runCppDetailed(code: string): execResult {
   if (!hasReferenceCompiler()) {
     // 沒有編譯器**不是**「這一段跑不動」，是量測機構壞了。丟出去，別混進統計。
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
-  mkdirSync(工作目錄, { recursive: true })
-  const 名 = `r${process.pid}_${序號++}`
-  const src = path.join(工作目錄, `${名}.cpp`)
-  const bin = path.join(工作目錄, 名)
+  mkdirSync(cwd, { recursive: true })
+  const name = `r${process.pid}_${seq++}`
+  const src = path.join(cwd, `${name}.cpp`)
+  const bin = path.join(cwd, name)
   try {
     writeFileSync(src, code)
     try {
-      execSync(`g++ ${旗標} -o ${bin} ${src}`, { encoding: 'utf-8', stdio: 'pipe' })
+      execSync(`g++ ${flag} -o ${bin} ${src}`, { encoding: 'utf-8', stdio: 'pipe' })
     } catch (e) {
       return { ok: false, stage: 'compile', message: String((e as Error).message).slice(0, 200) }
     }
     try {
       // stdin 給 /dev/null：需要輸入的程式不得卡住整批量測。
-      return { ok: true, output: execSync(bin, { encoding: 'utf-8', timeout: 執行時限毫秒, stdio: ['ignore', 'pipe', 'pipe'] }) }
+      return { ok: true, output: execSync(bin, { encoding: 'utf-8', timeout: timeoutMs, stdio: ['ignore', 'pipe', 'pipe'] }) }
     } catch (e) {
       return { ok: false, stage: 'run', message: String((e as Error).message).slice(0, 200) }
     }
@@ -84,17 +84,17 @@ export function runCppDetailed(code: string): 執行結果 {
  * ⚠️ 不抽樣。抽樣的護欄不能當棘輪，而且靜默的抽樣會讓「涵蓋了全部」
  * 這句話變成假的。要縮短時間就並行，不是少跑。
  */
-export async function runCppBatch(codes: readonly string[], 並行度 = 8): Promise<(string | null)[]> {
+export async function runCppBatch(codes: readonly string[], concurrency = 8): Promise<(string | null)[]> {
   const out: (string | null)[] = new Array(codes.length).fill(null)
-  let 下一個 = 0
+  let next = 0
   const worker = async (): Promise<void> => {
     for (;;) {
-      const i = 下一個++
+      const i = next++
       if (i >= codes.length) return
       out[i] = await runCppAsync(codes[i])
     }
   }
-  await Promise.all(Array.from({ length: Math.min(並行度, codes.length) }, worker))
+  await Promise.all(Array.from({ length: Math.min(concurrency, codes.length) }, worker))
   return out
 }
 
@@ -108,16 +108,16 @@ async function runCppAsync(code: string): Promise<string | null> {
   if (!hasReferenceCompiler()) {
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
-  mkdirSync(工作目錄, { recursive: true })
-  const 名 = `a${process.pid}_${序號++}`
-  const src = path.join(工作目錄, `${名}.cpp`)
-  const bin = path.join(工作目錄, 名)
-  const 跑 = (cmd: string, timeout: number): Promise<string | null> =>
+  mkdirSync(cwd, { recursive: true })
+  const name = `a${process.pid}_${seq++}`
+  const src = path.join(cwd, `${name}.cpp`)
+  const bin = path.join(cwd, name)
+  const run = (cmd: string, timeout: number): Promise<string | null> =>
     new Promise((res) => exec(cmd, { encoding: 'utf-8', timeout }, (err, stdout) => res(err ? null : stdout)))
   try {
     writeFileSync(src, code)
-    if ((await 跑(`g++ ${旗標} -o ${bin} ${src}`, 30000)) === null) return null
-    return await 跑(`${bin} < /dev/null`, 執行時限毫秒)
+    if ((await run(`g++ ${flag} -o ${bin} ${src}`, 30000)) === null) return null
+    return await run(`${bin} < /dev/null`, timeoutMs)
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })

@@ -38,29 +38,29 @@ import { registeredIdMigrations } from '../../src/core/storage-version'
 import { isValidComponentId, isNamespaced, SCOPES } from '../../src/core/identity'
 import type { ConceptDefJSON } from '../../src/core/types'
 
-const 全部身分 = new Set(allCppConcepts().map((c) => c.conceptId))
+const allIdentities = new Set(allCppConcepts().map((c) => c.conceptId))
 
-interface 格式違規 { conceptId: string; 為何: string }
+interface formatViolations { conceptId: string; why: string }
 
-function 檢格式(注入: ConceptDefJSON[] = []): 格式違規[] {
-  const out: 格式違規[] = []
-  for (const c of [...allCppConcepts(), ...注入]) {
+function checkFormat(inject: ConceptDefJSON[] = []): formatViolations[] {
+  const out: formatViolations[] = []
+  for (const c of [...allCppConcepts(), ...inject]) {
     if (!isNamespaced(c.conceptId)) {
-      out.push({ conceptId: c.conceptId, 為何: '沒有命名空間（裸名或缺 scope）' })
+      out.push({ conceptId: c.conceptId, why: '沒有命名空間（裸名或缺 scope）' })
     } else if (!isValidComponentId(c.conceptId)) {
-      out.push({ conceptId: c.conceptId, 為何: `scope 不在白名單（${SCOPES.join('｜')}）` })
+      out.push({ conceptId: c.conceptId, why: `scope 不在白名單（${SCOPES.join('｜')}）` })
     }
   }
   return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
 }
 
 /** 舊格式（沒有命名空間）的身分引用——**只算角色分類得出的** */
-function 舊格式引用(extra: { file: string; source: string }[] = []): { ts: number; json: number } {
-  const 舊 = new Set([...全部身分].filter((id) => !isNamespaced(id)))
-  if (舊.size === 0) return { ts: 0, json: 0 }
+function legacyRefs(extra: { file: string; source: string }[] = []): { ts: number; json: number } {
+  const old = new Set([...allIdentities].filter((id) => !isNamespaced(id)))
+  if (old.size === 0) return { ts: 0, json: 0 }
   return {
-    ts: scanTsRefs(舊, extra).filter((r) => r.role === 'conceptId').length,
-    json: scanJsonRefs(舊).filter((r) => r.role === 'conceptId').length,
+    ts: scanTsRefs(old, extra).filter((r) => r.role === 'conceptId').length,
+    json: scanJsonRefs(old).filter((r) => r.role === 'conceptId').length,
   }
 }
 
@@ -76,7 +76,7 @@ function 舊格式引用(extra: { file: string; source: string }[] = []): { ts: 
  * 改成直接釘積木型別集合本身。66 顆與身分同名的積木型別是這個集合的一部分，
  * 改到它們的話指紋會變。
  */
-function 積木型別指紋(): string {
+function blockTypeFingerprint(): string {
   const types: string[] = []
   for (const rel of listSourceFiles('src', ['.json'])) {
     if (rel.includes('/i18n/')) continue
@@ -96,35 +96,35 @@ function 積木型別指紋(): string {
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
-const 合成概念 = (id: string): ConceptDefJSON =>
+const syntheticConcept = (id: string): ConceptDefJSON =>
   ({ conceptId: id, layer: 'universal', properties: [], children: {} }) as unknown as ConceptDefJSON
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆裸名身分 → **必須被報出**', () => {
-    const hit = 檢格式([合成概念('__合成_裸名__')])
+    const hit = checkFormat([syntheticConcept('__合成_裸名__')])
     expect(hit.find((f) => f.conceptId === '__合成_裸名__'), '裸名沒被報出 → **護欄壞了**').toBeDefined()
   })
 
   it('★ 注入一顆 scope 不在白名單的身分 → **必須被報出**', () => {
     // 沒有這一支，`cop:foo`（打錯的 `cpp`）會被當成一個合法的新命名空間。
-    const hit = 檢格式([合成概念('cop:foo')])
-    expect(hit.find((f) => f.conceptId === 'cop:foo')?.為何).toContain('白名單')
+    const hit = checkFormat([syntheticConcept('cop:foo')])
+    expect(hit.find((f) => f.conceptId === 'cop:foo')?.why).toContain('白名單')
   })
 
   it('★ 反向：注入一顆格式正確的身分 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上面兩支。
     expect(
-      檢格式([合成概念('cpp:__合成_正確__')]).find((f) => f.conceptId === 'cpp:__合成_正確__'),
+      checkFormat([syntheticConcept('cpp:__合成_正確__')]).find((f) => f.conceptId === 'cpp:__合成_正確__'),
       '一顆格式正確的身分被報成違規 → 這條會亂叫',
     ).toBeUndefined()
   })
 
   it('★ 注入一處舊格式引用 → **必須被計入**', () => {
-    const 舊 = [...全部身分].filter((id) => !isNamespaced(id))
-    if (舊.length === 0) return // 遷移完成後這一支自然不適用
-    const before = 舊格式引用().ts
-    const after = 舊格式引用([
-      { file: '合成/舊引用.ts', source: `createNode('${舊[0]}', {})\n` },
+    const old = [...allIdentities].filter((id) => !isNamespaced(id))
+    if (old.length === 0) return // 遷移完成後這一支自然不適用
+    const before = legacyRefs().ts
+    const after = legacyRefs([
+      { file: '合成/舊引用.ts', source: `createNode('${old[0]}', {})\n` },
     ]).ts
     expect(after - before, '合成的舊格式引用沒被計入 → 計數器沒接上').toBe(1)
   })
@@ -132,18 +132,18 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 反向：非身分位置的同名字串 **不得**被計入', () => {
     // 這是整條護欄最重要的一支。`document.createElement('input')` 裡的 `'input'`
     // 與元件身分 `input` 是同一個字串，而它們毫無關係。
-    const 舊 = [...全部身分].filter((id) => !isNamespaced(id))
-    if (舊.length === 0) return
-    const before = 舊格式引用().ts
-    const after = 舊格式引用([
-      { file: '合成/非身分.ts', source: `document.createElement('${舊[0]}')\nconst x = { type: '${舊[0]}' }\n` },
+    const old = [...allIdentities].filter((id) => !isNamespaced(id))
+    if (old.length === 0) return
+    const before = legacyRefs().ts
+    const after = legacyRefs([
+      { file: '合成/非身分.ts', source: `document.createElement('${old[0]}')\nconst x = { type: '${old[0]}' }\n` },
     ]).ts
     expect(after, 'DOM 呼叫與 blockType 屬性被算成身分引用 → 這條護欄永遠收不到零').toBe(before)
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
-    expect(全部身分.size, '登錄表是空的 → 每一個量測都會是假的零').toBeGreaterThan(150)
-    expect(scanTsRefs(全部身分).length, '零筆引用 → 是掃描壞了').toBeGreaterThan(1000)
+    expect(allIdentities.size, '登錄表是空的 → 每一個量測都會是假的零').toBeGreaterThan(150)
+    expect(scanTsRefs(allIdentities).length, '零筆引用 → 是掃描壞了').toBeGreaterThan(1000)
   })
 })
 
@@ -161,9 +161,9 @@ describe('身分改名表的涵蓋率', () => {
     // 存檔就靜靜地不轉換**，而症狀要等到使用者打開舊檔才出現。
     //
     // > 建一個機制時，同時交付一條量採用率的檢查。
-    const 表 = registeredIdMigrations()
-    const 漏 = [...全部身分].filter((id) => !isNamespaced(id) && !表[id])
-    expect(漏, '這些身分沒有任何套件登錄改名——舊存檔打開後它們會留在舊格式').toEqual([])
+    const table = registeredIdMigrations()
+    const missed = [...allIdentities].filter((id) => !isNamespaced(id) && !table[id])
+    expect(missed, '這些身分沒有任何套件登錄改名——舊存檔打開後它們會留在舊格式').toEqual([])
   })
 
   it('★ 任何舊 id 都要能被帶到一個合法的現存身分（**組合**，不是單張表）', () => {
@@ -172,46 +172,46 @@ describe('身分改名表的涵蓋率', () => {
     // 中間那一站**本來就不該是合法的現存身分**，它是歷史的一個中繼點。
     //
     // 要檢查的是**組合的終點**：反覆套用改名表，最後必須落在登錄表裡。
-    const 表 = registeredIdMigrations()
-    const 解析 = (id: string): string => {
+    const table = registeredIdMigrations()
+    const parse = (id: string): string => {
       let cur = id
-      for (let i = 0; i < 10 && 表[cur]; i++) cur = 表[cur]
+      for (let i = 0; i < 10 && table[cur]; i++) cur = table[cur]
       return cur
     }
-    const 壞 = Object.keys(表)
-      .map((old) => [old, 解析(old)] as const)
-      .filter(([, fin]) => !isValidComponentId(fin) || !全部身分.has(fin))
+    const bad = Object.keys(table)
+      .map((old) => [old, parse(old)] as const)
+      .filter(([, fin]) => !isValidComponentId(fin) || !allIdentities.has(fin))
       .map(([old, fin]) => `${old} → … → ${fin}`)
-    expect(壞, '這些舊 id 走完改名鏈之後，落在一個不存在或格式不合法的身分上').toEqual([])
+    expect(bad, '這些舊 id 走完改名鏈之後，落在一個不存在或格式不合法的身分上').toEqual([])
   })
 })
 
 // ─── 本體 ──────────────────────────────────────────────────────────
 
 describe('元件身分命名空間', () => {
-  const 違規 = 檢格式()
-  const 引用 = 舊格式引用()
-  const 同名 = 積木型別指紋()
-  const 殘留 = residualRefs(new Set([...全部身分].filter((id) => !isNamespaced(id))))
+  const violations = checkFormat()
+  const references = legacyRefs()
+  const sameName = blockTypeFingerprint()
+  const residual = residualRefs(new Set([...allIdentities].filter((id) => !isNamespaced(id))))
 
   it('報表', () => {
-    const scope分佈 = new Map<string, number>()
+    const scopeDistribution = new Map<string, number>()
     for (const c of allCppConcepts()) {
       const s = isNamespaced(c.conceptId) ? c.conceptId.slice(0, c.conceptId.indexOf(':')) : '（裸名）'
-      scope分佈.set(s, (scope分佈.get(s) ?? 0) + 1)
+      scopeDistribution.set(s, (scopeDistribution.get(s) ?? 0) + 1)
     }
     printReport('身分命名空間', [
-      `元件 ${全部身分.size}｜格式違規 ${違規.length}｜舊格式引用 ts ${引用.ts} ／ json ${引用.json}`,
-      `積木型別 ${同名.split('|').length} 顆（指紋不得變動）｜殘留待人看 ${殘留.length}`,
+      `元件 ${allIdentities.size}｜格式違規 ${violations.length}｜舊格式引用 ts ${references.ts} ／ json ${references.json}`,
+      `積木型別 ${sameName.split('|').length} 顆（指紋不得變動）｜殘留待人看 ${residual.length}`,
       '',
-      'scope 分佈：' + [...scope分佈].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join('｜'),
+      'scope 分佈：' + [...scopeDistribution].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join('｜'),
       '',
-      ...違規.slice(0, 12).map((f) => `  ⚠️ ${f.conceptId.padEnd(30)} ${f.為何}`),
-      違規.length > 12 ? `     …還有 ${違規.length - 12} 顆` : '',
+      ...violations.slice(0, 12).map((f) => `  ⚠️ ${f.conceptId.padEnd(30)} ${f.why}`),
+      violations.length > 12 ? `     …還有 ${violations.length - 12} 顆` : '',
       '',
       '**殘留**（角色分類不到、看起來與概念有關——收硬性零前要逐筆看）：',
-      ...殘留.slice(0, 10).map((r) => `     ${r.file}:${r.line}  ${r.text.slice(0, 80)}`),
-      殘留.length > 10 ? `     …還有 ${殘留.length - 10} 處` : '',
+      ...residual.slice(0, 10).map((r) => `     ${r.file}:${r.line}  ${r.text.slice(0, 80)}`),
+      residual.length > 10 ? `     …還有 ${residual.length - 10} 處` : '',
     ])
     expect(true).toBe(true)
   })
@@ -221,14 +221,14 @@ describe('元件身分命名空間', () => {
     // 而積木型別**必須原地不動**（B 項已定加法式保留）。
     // 這個數字動了 = 改名改到了不該改的那一邊，而症狀（積木消失）
     // 有十幾種成因，等到有人回報時已經無從歸因。
-    const base = loadBaseline<{ 積木型別指紋: string }>('identity-namespace')
-    const 現 = new Set(同名.split('|'))
-    const 舊 = new Set(base.積木型別指紋.split('|'))
+    const base = loadBaseline<{ blockTypeFingerprint: string }>('identity-namespace')
+    const now = new Set(sameName.split('|'))
+    const old = new Set(base.blockTypeFingerprint.split('|'))
     expect(
-      [...舊].filter((t) => !現.has(t)),
+      [...old].filter((t) => !now.has(t)),
       '積木型別消失了——改名動到了不該改的那一邊。立刻回退，不要就地修補',
     ).toEqual([])
-    expect([...現].filter((t) => !舊.has(t)), '積木型別憑空多出來了').toEqual([])
+    expect([...now].filter((t) => !old.has(t)), '積木型別憑空多出來了').toEqual([])
   })
 
   it('★ 硬性零：沒有任何身分是舊格式', () => {
@@ -237,27 +237,27 @@ describe('元件身分命名空間', () => {
     // 「留一筆還成立嗎」→ 不成立：一顆沒有命名空間的身分就是一顆沒有擁有者的
     // 身分，第三方套件與硬體域都建立在「身分有主」這件事上。
     // 「修法貴不貴」→ 遷移已經做完了，維持它是免費的。
-    expect(違規.map((f) => `${f.conceptId}：${f.為何}`), '身分格式退回舊樣了').toEqual([])
-    expect(引用.ts, '程式碼裡還有舊格式的身分引用').toBe(0)
-    expect(引用.json, '宣告裡還有舊格式的身分引用').toBe(0)
+    expect(violations.map((f) => `${f.conceptId}：${f.why}`), '身分格式退回舊樣了').toEqual([])
+    expect(references.ts, '程式碼裡還有舊格式的身分引用').toBe(0)
+    expect(references.json, '宣告裡還有舊格式的身分引用').toBe(0)
   })
 
   it('★ 棘輪：格式違規與舊格式引用只准下降', () => {
-    const current = { guard: 'identity-namespace', 違規, 引用, 積木型別指紋: 同名 }
+    const current = { guard: 'identity-namespace', violations, references, blockTypeFingerprint: sameName }
     if (process.env.GENERATE_BASELINE) {
       writeBaseline('identity-namespace', current)
       return
     }
     const base = loadBaseline<typeof current>('identity-namespace')
-    const added = newItems(違規, base.違規, (f) => f.conceptId)
+    const added = newItems(violations, base.violations, (f) => f.conceptId)
     expect(
-      added.map((f) => `${f.conceptId}  ${f.為何}`),
+      added.map((f) => `${f.conceptId}  ${f.why}`),
       '新增了一顆沒有命名空間的身分——格式退回去了。',
     ).toEqual([])
     assertRatchet([
-      ['格式違規', 違規.length, base.違規.length],
-      ['舊格式引用(ts)', 引用.ts, base.引用.ts],
-      ['舊格式引用(json)', 引用.json, base.引用.json],
+      ['格式違規', violations.length, base.violations.length],
+      ['舊格式引用(ts)', references.ts, base.references.ts],
+      ['舊格式引用(json)', references.json, base.references.json],
     ])
   })
 })

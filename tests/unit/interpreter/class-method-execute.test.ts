@@ -121,12 +121,12 @@ describe('類別與方法', () => {
   })
 
   it('★ 呼叫不存在的方法要出聲', async () => {
-    let 訊息 = ''
+    let message = ''
     try {
       await run(prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
         n('cpp:method_call', { obj: 'c', method: '沒有這個方法' }, { args: [] })))
-    } catch (e) { 訊息 = (e as Error).message }
-    expect(訊息, '呼叫不存在的方法靜默成功了').not.toBe('')
+    } catch (e) { message = (e as Error).message }
+    expect(message, '呼叫不存在的方法靜默成功了').not.toBe('')
   })
 
   it('★ 方法裡的區域變數不得洩漏成欄位', async () => {
@@ -140,13 +140,13 @@ describe('類別與方法', () => {
       ],
       private: [],
     })
-    let 訊息 = ''
+    let message = ''
     try {
       await run(prog(withLocal, n('cpp:var_declare', { name: 'o', type: 'L' }),
         n('cpp:method_call', { obj: 'o', method: 'run' }, { args: [] }),
         show(n('cpp:struct_at_member', { obj: 'o', member: '區域' }))))
-    } catch (e) { 訊息 = (e as Error).message }
-    expect(訊息, '方法裡宣告的區域變數變成了物件的欄位').not.toBe('')
+    } catch (e) { message = (e as Error).message }
+    expect(message, '方法裡宣告的區域變數變成了物件的欄位').not.toBe('')
   })
 })
 

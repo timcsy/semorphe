@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建address_of(operand: SemanticNode | null): SemanticNode {
+export function buildAddressOf(operand: SemanticNode | null): SemanticNode {
   return createNode('cpp:address_of', {}, { var: operand ? [operand] : [] })
 }
 

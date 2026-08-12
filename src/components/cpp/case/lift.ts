@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建case(value: SemanticNode | null, body: SemanticNode[]): SemanticNode {
+export function buildCase(value: SemanticNode | null, body: SemanticNode[]): SemanticNode {
   return createNode('cpp:case', {}, { value: value ? [value] : [], body })
 }
 

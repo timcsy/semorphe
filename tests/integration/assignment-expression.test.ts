@@ -80,9 +80,9 @@ describe('指標的真假值', () => {
 
 describe('做不到的事要出聲，不得靜默回 0', () => {
   it('★ strchr 回傳指向陣列中間的指標——這個直譯器表示不了，所以它要說', async () => {
-    const 訊息 = await errOf("char s[6] = \"hello\"; char* p = strchr(s, 'l'); cout << (p != 0);")
+    const message = await errOf("char s[6] = \"hello\"; char* p = strchr(s, 'l'); cout << (p != 0);")
     expect(
-      訊息,
+      message,
       'strchr 靜默回 0 → `strchr(...) != 0` 對找得到的字元也是假，' +
         '而程式跑完印出後面的東西。**安靜的錯答案比報錯更糟。**',
     ).toContain('cstring_find_char')

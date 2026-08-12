@@ -96,10 +96,10 @@ describe('護欄：有實作卻沒有宣告', () => {
 
   it('棘輪：不得上升', () => {
     const b = loadBaseline<OrphanBaseline>('orphan-implementations')
-    const 新增 = found.filter((c) => !b.concepts.includes(c))
+    const added = found.filter((c) => !b.concepts.includes(c))
     expect(
-      新增,
-      `新增的孤兒實作：${新增.join('、')}\n` +
+      added,
+      `新增的孤兒實作：${added.join('、')}\n` +
         '加執行器之前要先宣告概念——否則它的其餘四條路有沒有缺口，沒有人看得到。',
     ).toEqual([])
     assertRatchet([['孤兒實作', found.length, b.orphans]])

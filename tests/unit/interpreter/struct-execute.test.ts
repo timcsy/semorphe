@@ -116,16 +116,16 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
   it('★ 讀一個不存在的欄位要出聲，不得靜默回 0', async () => {
     // 「靜默降級是 bug 的藏身之處」——回 0 的話，打錯欄位名的程式會跑完、
     // 印出東西、而它是錯的。
-    let 訊息 = ''
+    let message = ''
     try {
       await run(
         prog(point(), n('cpp:var_declare', { name: 'p', type: 'Point' }),
           show(n('cpp:struct_at_member', { obj: 'p', member: '沒有這個欄位' }))),
       )
     } catch (e) {
-      訊息 = (e as Error).message
+      message = (e as Error).message
     }
-    expect(訊息, '讀不存在的欄位靜默成功了').not.toBe('')
+    expect(message, '讀不存在的欄位靜默成功了').not.toBe('')
   })
 
   it('★ 巢狀結構', async () => {

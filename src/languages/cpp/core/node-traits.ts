@@ -212,7 +212,7 @@ export interface NodeTraits {
 }
 
 /** 有性狀宣告的全部身分。 */
-function 全部身分(): string[] {
+function allIdentities(): string[] {
   return registeredComponents().map((c) => c.conceptId)
 }
 
@@ -223,7 +223,7 @@ function 全部身分(): string[] {
  * **F 完成之後過渡表退場，兩份就變成同一件事**，而第三十八條護欄抓不到，
  * 因為兩個函式名字不同（`性狀` vs `componentTraits`）。
  */
-function 性狀(conceptId: string): NodeTraits | undefined {
+function traits(conceptId: string): NodeTraits | undefined {
   return componentTraits(conceptId) as NodeTraits | undefined
 }
 
@@ -235,62 +235,62 @@ function 性狀(conceptId: string): NodeTraits | undefined {
  * 不在這裡：那是**同一顆元件的不同實例有不同答案**，不是一個宣告得出來的常數。
  */
 export function precedenceOf(conceptId: string): number | undefined {
-  return 性狀(conceptId)?.precedence
+  return traits(conceptId)?.precedence
 }
 
 /** 這顆元件放得進 for 迴圈的三個位置嗎。沒宣告＝不行（保守）。 */
 export function canBeForLoopPart(conceptId: string): boolean {
-  return 性狀(conceptId)?.forLoopPart === true
+  return traits(conceptId)?.forLoopPart === true
 }
 
 /** 這顆元件是 `switch` 裡兜底的那一支嗎。沒宣告＝不是（保守）。 */
 export function isDefaultCase(conceptId: string): boolean {
-  return 性狀(conceptId)?.defaultCase === true
+  return traits(conceptId)?.defaultCase === true
 }
 
 /** 這顆元件的宣告在型別後面接什麼。沒宣告＝什麼都不接。 */
 export function typeSuffixOf(conceptId: string): string {
-  return 性狀(conceptId)?.typeSuffix ?? ''
+  return traits(conceptId)?.typeSuffix ?? ''
 }
 
 /** 這顆節點就是一個具名變數的參照嗎。沒宣告＝不是（保守）。 */
 export function isVariableRef(conceptId: string): boolean {
-  return 性狀(conceptId)?.variableRef === true
+  return traits(conceptId)?.variableRef === true
 }
 
 /** 這顆是鷹架嗎（L0 的積木視圖不顯示）。沒宣告＝不是（保守）。 */
 export function isScaffold(conceptId: string): boolean {
-  return 性狀(conceptId)?.scaffold === true
+  return traits(conceptId)?.scaffold === true
 }
 
 /** 這顆是 `#include` 指示詞嗎。沒宣告＝不是（保守）。 */
 export function isIncludeDirective(conceptId: string): boolean {
-  return 性狀(conceptId)?.includeDirective === true
+  return traits(conceptId)?.includeDirective === true
 }
 
 /** 這顆產生的前綴符號會與同類相接成另一個運算子嗎。沒宣告＝不會。 */
 export function isPrefixOperator(conceptId: string): boolean {
-  return 性狀(conceptId)?.prefixOperator === true
+  return traits(conceptId)?.prefixOperator === true
 }
 
 /** 放進 `cout << …` 時需要括號嗎。沒宣告＝不用。 */
 export function needsParenInCout(conceptId: string): boolean {
-  return 性狀(conceptId)?.parenInCout === true
+  return traits(conceptId)?.parenInCout === true
 }
 
 /** 這顆在 `main` 裡時算鷹架嗎。沒宣告＝不算（保守）。 */
 export function isScaffoldInMain(conceptId: string): boolean {
-  return 性狀(conceptId)?.scaffoldInMain === true
+  return traits(conceptId)?.scaffoldInMain === true
 }
 
 /** 這是二元運算子節點嗎（`properties.operator` 是符號）。沒宣告＝不是。 */
 export function isBinaryOperator(conceptId: string): boolean {
-  return 性狀(conceptId)?.binaryOperator === true
+  return traits(conceptId)?.binaryOperator === true
 }
 
 /** 這是字串字面值嗎（`properties.value` 是那串文字）。沒宣告＝不是。 */
 export function isStringLiteral(conceptId: string): boolean {
-  return 性狀(conceptId)?.stringLiteral === true
+  return traits(conceptId)?.stringLiteral === true
 }
 
 /**
@@ -299,18 +299,18 @@ export function isStringLiteral(conceptId: string): boolean {
  * 回 `undefined` 的意思是「**不需要括號**」，不是「不知道」。
  */
 export function precedenceOfNode(node: { conceptId: string; properties?: Record<string, unknown> }): number | undefined {
-  const t = 性狀(node.conceptId)
+  const t = traits(node.conceptId)
   if (t?.precedence !== undefined) return t.precedence
-  const 依運算子 = t?.precedenceByOperator
-  if (!依運算子) return undefined
+  const byOperator = t?.precedenceByOperator
+  if (!byOperator) return undefined
   const op = String(node.properties?.operator ?? '')
-  for (const r of 依運算子.rules) if (r.ops.includes(op)) return r.p
-  return 依運算子.default
+  for (const r of byOperator.rules) if (r.ops.includes(op)) return r.p
+  return byOperator.default
 }
 
 /** 這顆是換行標記嗎。沒宣告＝不是。 */
 export function isLineBreak(conceptId: string): boolean {
-  return 性狀(conceptId)?.lineBreak === true
+  return traits(conceptId)?.lineBreak === true
 }
 
 /**
@@ -351,8 +351,8 @@ export { ioTraitOf, isPlainDeclaration } from '../../../core/component/traits'
  * 而猜一個會讓風格轉換產出一顆不存在的元件。
  */
 export function ioConceptFor(role: string, style: string): string | undefined {
-  for (const id of 全部身分()) {
-    const t = 性狀(id)
+  for (const id of allIdentities()) {
+    const t = traits(id)
     if (t?.ioRole === role && t?.ioStyle === style) return id
   }
   return undefined
@@ -372,7 +372,7 @@ export { isIndexedAccess } from '../../../core/component/traits'
 
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
 export function isStreamInput(conceptId: string): boolean {
-  return 性狀(conceptId)?.streamInput === true
+  return traits(conceptId)?.streamInput === true
 }
 
 /**

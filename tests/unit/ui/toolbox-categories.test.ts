@@ -91,15 +91,15 @@ describe('C++ toolbox categories (language module)', () => {
   // 這裡真正要驗的是「**使用者偏好的那個 I/O 風格排在前面**」，
   // 而 `layer` 只是碰巧對——`cpp:print` 剛好標 universal。
   // 改成問那條**等價邊**：同 `ioRole` ＝ 同一個等價類，`ioStyle` ＝ 哪個成員。
-  const 風格 = (t: string) => {
+  const style = (t: string) => {
     const cid = createRegistry().getByBlockType(t)?.conceptMapping?.conceptId
     return cid ? ioTraitOf(cid)?.style : undefined
   }
 
   it('I/O 分類：iostream 偏好時 iostream 風格的排在前面', () => {
     const types = ioContents('iostream')
-    const firstOther = types.findIndex(t => 風格(t) !== 'iostream')
-    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => 風格(t) === 'iostream')
+    const firstOther = types.findIndex(t => style(t) !== 'iostream')
+    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => style(t) === 'iostream')
     expect(firstOther, 'I/O 分類是空的 → 是建構壞了，不是排序對了').toBeGreaterThan(0)
     expect(firstOther).toBeGreaterThan(lastMatch)
   })
@@ -115,8 +115,8 @@ describe('C++ toolbox categories (language module)', () => {
     //
     // 新行為：宣告了 `ioStyle: 'cstdio'` 的排前面，其餘照原序。
     const types = ioContents('cstdio')
-    const firstOther = types.findIndex(t => 風格(t) !== 'cstdio')
-    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => 風格(t) === 'cstdio')
+    const firstOther = types.findIndex(t => style(t) !== 'cstdio')
+    const lastMatch = types.length - 1 - [...types].reverse().findIndex(t => style(t) === 'cstdio')
     expect(firstOther, '一顆 cstdio 風格的積木都沒有 → 量測壞了').toBeGreaterThan(0)
     expect(firstOther).toBeGreaterThan(lastMatch)
   })

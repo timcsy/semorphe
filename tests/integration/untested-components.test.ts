@@ -73,21 +73,21 @@ function collect(node: SemanticNode, id: string): SemanticNode[] {
 // ─── cpp_comma_expr ───────────────────────────────────────────────────
 
 describe('cpp_comma_expr — 逗號運算子', () => {
-  const 程式 = 'for (int i = 0, j = 10; i < 3; i++, j--) cout << i << j;'
+  const program = 'for (int i = 0, j = 10; i < 3; i++, j--) cout << i << j;'
 
   it('身分：辨識得出 cpp_comma_expr', () => {
     expect(
-      collect(lift(程式), 'cpp:comma_expr').length,
+      collect(lift(program), 'cpp:comma_expr').length,
       '零個 → 這個概念沒有辨識路徑到得了，那它是死的',
     ).toBeGreaterThan(0)
   })
 
   it('執行：g++ 說是 0101928', async () => {
-    expect(await run(程式)).toBe('0101928')
+    expect(await run(program)).toBe('0101928')
   })
 
   it('產生：逗號產得回去', () => {
-    const code = generateCode(lift(程式), 'cpp', apcs as never)
+    const code = generateCode(lift(program), 'cpp', apcs as never)
     expect(code).toContain('i++, j--')
     expect(code).not.toContain('⟨')
   })
@@ -96,7 +96,7 @@ describe('cpp_comma_expr — 逗號運算子', () => {
 // ─── var_declarator ───────────────────────────────────────────────────
 
 describe('var_declarator — 多變數宣告', () => {
-  const 程式 = 'int a = 1, b = 2, c; c = a + b; cout << a << b << c;'
+  const program = 'int a = 1, b = 2, c; c = a + b; cout << a << b << c;'
 
   it('身分：三個宣告子都在樹裡，而且各自是完整的宣告概念', () => {
     // ⚠️ **具名斷言**——只驗輸出的話，這個概念可以完全不存在而測試照樣綠。
@@ -106,24 +106,24 @@ describe('var_declarator — 多變數宣告', () => {
     // 有執行器、有抽取器、有定義，而**沒有任何辨識路徑產出過它**。
     // 它假設所有宣告子都是純名字，但 `int a, *p, arr[3];` 的三個宣告子是
     // 三個**不同**的概念。系統做對了，模型錯了。已進墓碑。
-    const 外層 = collect(lift(程式), 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)
-    expect(外層).toHaveLength(1)
-    expect(外層[0].children!.declarators).toHaveLength(3)
+    const outer = collect(lift(program), 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)
+    expect(outer).toHaveLength(1)
+    expect(outer[0].children!.declarators).toHaveLength(3)
   })
 
   it('負向：不同形狀的宣告子拿到**不同**的概念', () => {
-    const 樹 = lift('int a = 1, *p = nullptr, arr[3];')
-    const 外層 = collect(樹, 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)[0]
-    const ids = (外層.children!.declarators as SemanticNode[]).map((d) => d.conceptId)
+    const tree = lift('int a = 1, *p = nullptr, arr[3];')
+    const outer = collect(tree, 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)[0]
+    const ids = (outer.children!.declarators as SemanticNode[]).map((d) => d.conceptId)
     expect(new Set(ids).size, '全部同一個概念 → 指標與陣列的形狀資訊掉了').toBeGreaterThan(1)
   })
 
   it('執行：g++ 說是 123', async () => {
-    expect(await run(程式)).toBe('123')
+    expect(await run(program)).toBe('123')
   })
 
   it('產生：三個變數都在', () => {
-    const code = generateCode(lift(程式), 'cpp', apcs as never)
+    const code = generateCode(lift(program), 'cpp', apcs as never)
     for (const v of ['a', 'b', 'c']) {
       expect(code, `變數 ${v} 掉了——多變數宣告只產出第一個是既有的已知缺陷形狀`).toContain(v)
     }
@@ -141,21 +141,21 @@ describe('var_declarator — 多變數宣告', () => {
 // ─── cpp_map_at ───────────────────────────────────────────────────
 
 describe('cpp_map_at — map 的鍵存取', () => {
-  const 程式 = 'map<string, int> m; m["x"] = 7; m["y"] = m["x"] + 1; cout << m["x"] << m["y"];'
+  const program = 'map<string, int> m; m["x"] = 7; m["y"] = m["x"] + 1; cout << m["x"] << m["y"];'
 
   it('身分：讀取位置辨識得出 cpp_map_at', () => {
     expect(
-      collect(lift(程式), 'cpp:map_at').length,
+      collect(lift(program), 'cpp:map_at').length,
       '零個 → 這顆元件五路齊備、進了工具箱與兩份課程清單，卻沒有任何路徑到得了它',
     ).toBeGreaterThan(0)
   })
 
   it('執行：g++ 說是 78', async () => {
-    expect(await run(程式)).toBe('78')
+    expect(await run(program)).toBe('78')
   })
 
   it('產生：`m["x"]` 產得回去', () => {
-    const code = generateCode(lift(程式), 'cpp', apcs as never)
+    const code = generateCode(lift(program), 'cpp', apcs as never)
     expect(code).toContain('m["x"]')
     expect(code).not.toContain('⟨')
   })

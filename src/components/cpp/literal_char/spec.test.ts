@@ -24,13 +24,13 @@ beforeAll(async () => {
 const H = '#include <iostream>\nusing namespace std;\n'
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(H + c)!.rootNode as never) as SemanticNode
-const 收集 = (n: SemanticNode, out: string[] = []): string[] => {
+const collect = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.conceptId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) 收集(k, out)
+  for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const 產 = (c: string): string => generateCode(lift(c), 'cpp', apcs as unknown as StylePreset)
-async function 跑(c: string): Promise<string> {
+const produce = (c: string): string => generateCode(lift(c), 'cpp', apcs as unknown as StylePreset)
+async function run(c: string): Promise<string> {
   const i = new SemanticInterpreter({ maxSteps: 100000 })
   await i.execute(lift(c))
   return i.getOutput().join('')
@@ -39,30 +39,30 @@ async function 跑(c: string): Promise<string> {
 describe('膠囊自證：cpp:literal_char', () => {
   // ── 基準的三個樣本（specs/114/baseline.json）逐字對 ──────────────
   it('★ 基準①：char c = \'x\'; cout << c;', async () => {
-    expect(收集(lift(`int main(){ char c = 'x'; cout << c; }`))).toContain('cpp:literal_char')
-    expect(產(`int main(){ char c = 'x'; cout << c; }`)).toContain("char c = 'x'")
-    expect(await 跑(`int main(){ char c = 'x'; cout << c; }`)).toBe('x')
+    expect(collect(lift(`int main(){ char c = 'x'; cout << c; }`))).toContain('cpp:literal_char')
+    expect(produce(`int main(){ char c = 'x'; cout << c; }`)).toContain("char c = 'x'")
+    expect(await run(`int main(){ char c = 'x'; cout << c; }`)).toBe('x')
   })
 
   it('★ 基準②：直接印字面', async () => {
-    expect(await 跑(`int main(){ cout << 'B'; }`)).toBe('B')
+    expect(await run(`int main(){ cout << 'B'; }`)).toBe('B')
   })
 
   it('★ 基準③：兩顆字元', async () => {
-    const ids = 收集(lift(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`))
+    const ids = collect(lift(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`))
     expect(ids.filter((x) => x === 'cpp:literal_char'), '兩顆都要在').toHaveLength(2)
-    expect(await 跑(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`)).toBe('ab')
+    expect(await run(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`)).toBe('ab')
   })
 
   // ── 負向：前面都有正向錨點 ────────────────────────────────────
   it('★ 它不搶字串字面（負向——前面先釘正向）', () => {
-    const ids = 收集(lift(`int main(){ cout << "hi"; }`))
+    const ids = collect(lift(`int main(){ cout << "hi"; }`))
     expect(ids, '這段碼必須產出字串字面——否則量測沒跑到').toContain('cpp:literal_string')
     expect(ids).not.toContain('cpp:literal_char')
   })
 
   it('★ 它不搶整數字面（負向——前面先釘正向）', () => {
-    const ids = 收集(lift(`int main(){ cout << 5; }`))
+    const ids = collect(lift(`int main(){ cout << 5; }`))
     expect(ids, '這段碼必須產出數字字面——否則量測沒跑到').toContain('cpp:literal_number')
     expect(ids).not.toContain('cpp:literal_char')
   })

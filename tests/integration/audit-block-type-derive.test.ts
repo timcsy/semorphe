@@ -30,78 +30,78 @@
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
-import { deriveBlockType, assertDerivedNamesUnique, type 積木宣告 } from '../../src/core/component/derive-block-type'
+import { deriveBlockType, assertDerivedNamesUnique, type blockDecl } from '../../src/core/component/derive-block-type'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
 registerCppLanguage()
 
-interface 不符 {
+interface nonMatching {
   conceptId: string
-  實際: string
-  應該: string
-  種類: '只差前綴' | '主體不同'
+  actual: string
+  expected: string
+  kind2: '只差前綴' | '主體不同'
 }
 
-function 量(): { 全部: 積木宣告[]; 不符們: 不符[] } {
-  const 全部: 積木宣告[] = []
-  const 不符們: 不符[] = []
+function measure(): { all: blockDecl[]; mismatches: nonMatching[] } {
+  const all: blockDecl[] = []
+  const mismatches: nonMatching[] = []
   for (const p of allCppProjections()) {
     const t = (p.blockDef as { type?: string } | undefined)?.type
     if (!p.conceptId || !t) continue
-    全部.push({ conceptId: p.conceptId, form: p.form ?? null, blockType: t })
-    const 應該 = deriveBlockType(p.conceptId, p.form ?? null)
-    if (t === 應該) continue
+    all.push({ conceptId: p.conceptId, form: p.form ?? null, blockType: t })
+    const expected = deriveBlockType(p.conceptId, p.form ?? null)
+    if (t === expected) continue
     // 去掉前綴之後主體還一樣的，是「只差前綴」那一批——它們便宜。
-    const 去前綴 = (x: string) => x.replace(/^(u_|c_|cpp_)/, '')
-    不符們.push({
+    const stripPrefix = (x: string) => x.replace(/^(u_|c_|cpp_)/, '')
+    mismatches.push({
       conceptId: p.conceptId,
-      實際: t,
-      應該,
-      種類: 去前綴(t) === 去前綴(應該) ? '只差前綴' : '主體不同',
+      actual: t,
+      expected,
+      kind2: stripPrefix(t) === stripPrefix(expected) ? '只差前綴' : '主體不同',
     })
   }
-  return { 全部, 不符們 }
+  return { all, mismatches }
 }
 
 describe('護欄：積木型別必須從概念身分導出', () => {
-  const { 全部, 不符們 } = 量()
+  const { all, mismatches } = measure()
 
   it('自我否證：掃到的積木數不得少於 150——少於就是沒真的載入（SC-001 的前提）', () => {
     // ⚠️ 這一句錨在「工具吃到輸入沒有」上。它**不會**因為不符數歸零而變紅。
-    expect(全部.length, '掃到的積木太少，代表 allCppProjections() 沒被載入').toBeGreaterThanOrEqual(150)
+    expect(all.length, '掃到的積木太少，代表 allCppProjections() 沒被載入').toBeGreaterThanOrEqual(150)
   })
 
   it('產出可讀報表：不符的每一筆都指名', () => {
-    const 前綴 = 不符們.filter((x) => x.種類 === '只差前綴')
-    const 主體 = 不符們.filter((x) => x.種類 === '主體不同')
+    const prefix = mismatches.filter((x) => x.kind2 === '只差前綴')
+    const body = mismatches.filter((x) => x.kind2 === '主體不同')
     const lines = [
       `判定規則：blockDef.type 必須等於 conceptId 把 ':' 換成 '_'；` +
         `非中性形態再接 '_' + form.value。`,
       '',
-      `專案宣告的積木 ${全部.length} 顆｜不符 ${不符們.length}` +
-        `（只差前綴 ${前綴.length}、主體不同 ${主體.length}）`,
+      `專案宣告的積木 ${all.length} 顆｜不符 ${mismatches.length}` +
+        `（只差前綴 ${prefix.length}、主體不同 ${body.length}）`,
       '',
       '⚠️ 兩批的性質不同：只差前綴是機械的；主體不同的是**化石**' +
         '（用了命名整理已經換掉的詞，例如 top → peek）。',
       '',
-      ...不符們.slice(0, 20).map((x) => `  ${x.種類}  ${x.實際}  應該是  ${x.應該}`),
-      不符們.length > 20 ? `  …其餘 ${不符們.length - 20} 筆` : '',
+      ...mismatches.slice(0, 20).map((x) => `  ${x.kind2}  ${x.actual}  應該是  ${x.expected}`),
+      mismatches.length > 20 ? `  …其餘 ${mismatches.length - 20} 筆` : '',
     ].filter(Boolean)
     printReport('積木型別導出', lines)
-    expect(全部.length).toBeGreaterThan(0)
+    expect(all.length).toBeGreaterThan(0)
   })
 
   it('★ 導出名唯一——兩顆積木不得導出同一個型別（不變式 I1／I2）', () => {
     // 撞名的症狀是**安靜的**：Blockly registry 以 type 為鍵，後登錄的蓋掉先登錄的。
     // 這個專案已經被「後註冊的贏」咬過三次。
-    expect(() => assertDerivedNamesUnique(全部)).not.toThrow()
+    expect(() => assertDerivedNamesUnique(all)).not.toThrow()
   })
 
   it('★ 不符數 = 0（硬性零）', () => {
     // 硬性零而不是棘輪：留一筆在那裡，「一個名字」那句話就是假的
     // ——護欄會變成在替第二份命名背書。
     expect(
-      不符們.map((x) => `${x.conceptId}｜宣告 ${x.實際}，導出應是 ${x.應該}（${x.種類}）`),
+      mismatches.map((x) => `${x.conceptId}｜宣告 ${x.actual}，導出應是 ${x.expected}（${x.kind2}）`),
       '積木型別不等於身分的導出名——這顆元件有兩個名字。',
     ).toEqual([])
   })
@@ -116,16 +116,16 @@ describe('護欄自我驗證：兩個方向都要釘', () => {
     // 第一版用了真的舊名 `cpp_stack_top`——而改名腳本把它一起改掉了，
     // 於是**壞的輸入變成對的，注入測試靜靜地失去意義**。
     // build-guardrail 第 2 步：**錨點要挑合成的，不要挑真實世界的狀態。**
-    const 壞的: 積木宣告[] = [
+    const broken: blockDecl[] = [
       { conceptId: 'cpp:stack_peek', form: null, blockType: '__不導出的名字__' },
     ]
-    const 報出 = 壞的.filter((b) => b.blockType !== deriveBlockType(b.conceptId, b.form))
-    expect(報出).toHaveLength(1)
-    expect(報出[0].conceptId, '報出來的必須指名是哪一顆').toBe('cpp:stack_peek')
+    const reported = broken.filter((b) => b.blockType !== deriveBlockType(b.conceptId, b.form))
+    expect(reported).toHaveLength(1)
+    expect(reported[0].conceptId, '報出來的必須指名是哪一顆').toBe('cpp:stack_peek')
   })
 
   it('注入②：正確的輸入**不亂報**——三種形狀各一', () => {
-    const 好的: 積木宣告[] = [
+    const good: blockDecl[] = [
       { conceptId: 'cpp:stack_peek', form: null, blockType: 'cpp_stack_peek' },
       {
         conceptId: 'cpp:var_declare',
@@ -138,7 +138,7 @@ describe('護欄自我驗證：兩個方向都要釘', () => {
         blockType: 'cpp_container_push_stack',
       },
     ]
-    expect(好的.filter((b) => b.blockType !== deriveBlockType(b.conceptId, b.form))).toEqual([])
+    expect(good.filter((b) => b.blockType !== deriveBlockType(b.conceptId, b.form))).toEqual([])
   })
 
   it('注入③：兩個形態導出同名時，唯一性檢查**會丟錯**', () => {

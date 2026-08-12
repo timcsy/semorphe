@@ -129,11 +129,11 @@ describe('護欄：語法耦合（核心不得寫死特定語言的語法記號�
   it('棘輪：不得上升', () => {
     const b = loadBaseline<SyntaxBaseline>('syntax-coupling')
     const known = Object.entries(b.files).flatMap(([file, tokens]) => tokens.map((t) => `${file}::${t}`))
-    const 新增 = definite.map(key).filter((k) => !known.includes(k))
+    const added = definite.map(key).filter((k) => !known.includes(k))
     expect(
-      新增,
+      added,
       '核心層新增了語言專屬的語法記號。**中立性護欄看不見這種耦合**——' +
-        `它找的是元件身分，而這些一個身分都沒有：\n  ${新增.join('\n  ')}`,
+        `它找的是元件身分，而這些一個身分都沒有：\n  ${added.join('\n  ')}`,
     ).toEqual([])
     assertRatchet([['確定的語法耦合', definite.length, b.definite]])
   })

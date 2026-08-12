@@ -67,7 +67,7 @@ interface DupBaseline {
 let interp: SemanticInterpreter
 let dups: ReturnType<SemanticInterpreter['duplicateRegistrations']>
 let extra = 0
-let 註冊的概念數 = 0
+let registeredConceptCount = 0
 
 beforeAll(async () => {
   await Parser.init({ locateFile: (s2: string) => `${process.cwd()}/public/${s2}` })
@@ -75,7 +75,7 @@ beforeAll(async () => {
   interp = new SemanticInterpreter({ maxSteps: 1 })
   dups = interp.duplicateRegistrations()
   extra = dups.reduce((n, d) => n + d.count - 1, 0)
-  註冊的概念數 = (interp as unknown as {
+  registeredConceptCount = (interp as unknown as {
     executorRegistry: { list(): string[] }
   }).executorRegistry.list().length
 })
@@ -85,7 +85,7 @@ describe('護欄：執行器重複註冊', () => {
     // ⚠️ 錨在**註冊了幾個概念**（合成量），不錨在重複數——後者正是這條護欄
     // 要推向零的東西。而這一支正是本護欄缺了四天的那一道：
     // 它的注入證明計數器會數，而**沒有任何東西證明註冊表被填過**。
-    expect(註冊的概念數, '執行器註冊表是空的 → 這條護欄什麼都沒量到，數字一律不可信').toBeGreaterThan(50)
+    expect(registeredConceptCount, '執行器註冊表是空的 → 這條護欄什麼都沒量到，數字一律不可信').toBeGreaterThan(50)
   })
 
   it('產出可讀報表', () => {
@@ -138,8 +138,8 @@ describe('護欄：執行器重複註冊', () => {
 
   it('棘輪：不得上升', () => {
     const b = loadBaseline<DupBaseline>('executor-duplicates')
-    const 新增 = dups.map((d) => d.concept).filter((c) => !b.concepts.includes(c))
-    expect(新增, `新增的重複註冊：${新增.join('、')}`).toEqual([])
+    const added = dups.map((d) => d.concept).filter((c) => !b.concepts.includes(c))
+    expect(added, `新增的重複註冊：${added.join('、')}`).toEqual([])
     assertRatchet([['重複註冊的概念', dups.length, b.duplicateConcepts]])
   })
 })

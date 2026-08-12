@@ -39,7 +39,7 @@ beforeAll(() => {
  * 逐一對照 `blockly-panel.ts` 切換前的 `simpleExpressionToCode`——
  * 漏一個 case，那個 case 的漂移就不會被抓到。
  */
-const 切換前的產出: [string, SemanticNode, string][] = [
+const outputBeforeSwitch: [string, SemanticNode, string][] = [
   ['cpp:literal_number', n('cpp:literal_number', { value: 5 }), '5'],
   ['cpp:literal_string', n('cpp:literal_string', { value: 'hi' }), '"hi"'],
   ['cpp:var_ref', n('cpp:var_ref', { name: 'x' }), 'x'],
@@ -109,7 +109,7 @@ const 切換前的產出: [string, SemanticNode, string][] = [
 ]
 
 describe('面板的運算式產生：切換前後一字不差', () => {
-  for (const [name, node, expected] of 切換前的產出) {
+  for (const [name, node, expected] of outputBeforeSwitch) {
     it(`${name} → ${expected}`, () => {
       expect(
         generateExpressionCode(node, 'cpp', 'apcs' as never),
@@ -120,7 +120,7 @@ describe('面板的運算式產生：切換前後一字不差', () => {
   }
 
   it('★ 這份清單不是空的——空的話後面的比對什麼都沒驗到', () => {
-    expect(切換前的產出.length).toBeGreaterThan(12)
+    expect(outputBeforeSwitch.length).toBeGreaterThan(12)
   })
 })
 

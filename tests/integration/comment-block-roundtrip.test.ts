@@ -36,12 +36,12 @@ function pipeline(): { render: PatternRenderer; extract: PatternExtractor } {
 }
 
 describe('多行文字欄位走一圈不掉內容', () => {
-  const 樣本: [string, string, string][] = [
+  const samples: [string, string, string][] = [
     ['cpp:block_comment', 'text', '第一行\n第二行\n第三行'],
     ['cpp:doc_comment', 'brief', '這個函式做什麼'],
   ]
 
-  for (const [conceptId, prop, value] of 樣本) {
+  for (const [conceptId, prop, value] of samples) {
     it(`★ ${conceptId}.${prop} 渲染後抽得回來`, () => {
       const { render, extract } = pipeline()
       const state = render.render(createNode(conceptId, { [prop]: value }) as never)

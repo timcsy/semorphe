@@ -13,17 +13,17 @@ import { registerView, registeredViews, viewsWith, viewsConsuming, connectViews,
 import { SemanticBus } from '../../../src/core/semantic-bus'
 import type { ViewHost, ViewCapabilities } from '../../../src/core/view-host'
 
-function 假視圖(viewId: string, caps: Partial<ViewCapabilities> = {}): ViewHost & { 收到: string[] } {
-  const 收到: string[] = []
+function fakeView(viewId: string, caps: Partial<ViewCapabilities> = {}): ViewHost & { received: string[] } {
+  const received: string[] = []
   return {
     viewId,
     viewType: viewId,
     capabilities: { editable: false, needsLanguageProjection: false, consumedAnnotations: [], ...caps },
-    收到,
+    received,
     initialize: async () => {},
     dispose: () => {},
-    onSemanticUpdate: (e) => 收到.push(`semantic:${e.source}`),
-    onExecutionState: () => 收到.push('execution'),
+    onSemanticUpdate: (e) => received.push(`semantic:${e.source}`),
+    onExecutionState: () => received.push('execution'),
   }
 }
 
@@ -31,27 +31,27 @@ describe('視圖登錄表', () => {
   beforeEach(() => resetViews())
 
   it('登錄之後查得到', () => {
-    const a = 假視圖('a')
+    const a = fakeView('a')
     registerView(a)
     expect(registeredViews()).toEqual([a])
   })
 
   it('★ 同一個實例登錄兩次是冪等的（不是錯誤）', () => {
-    const a = 假視圖('a')
+    const a = fakeView('a')
     registerView(a)
     registerView(a)
     expect(registeredViews()).toHaveLength(1)
   })
 
   it('★ id 撞名必須爆——靜默覆蓋的症狀是「某個面板不再更新」', () => {
-    registerView(假視圖('a'))
-    expect(() => registerView(假視圖('a'))).toThrow(/登錄兩次/)
+    registerView(fakeView('a'))
+    expect(() => registerView(fakeView('a'))).toThrow(/登錄兩次/)
   })
 
   it('capabilities 查得到——這是那份宣告的第一個讀取者', () => {
-    registerView(假視圖('可編輯', { editable: true }))
-    registerView(假視圖('唯讀'))
-    registerView(假視圖('讀標註', { consumedAnnotations: ['control_flow'] }))
+    registerView(fakeView('可編輯', { editable: true }))
+    registerView(fakeView('唯讀'))
+    registerView(fakeView('讀標註', { consumedAnnotations: ['control_flow'] }))
 
     expect(viewsWith('editable').map((v) => v.viewId)).toEqual(['可編輯'])
     expect(viewsWith('needsLanguageProjection')).toEqual([])
@@ -60,8 +60,8 @@ describe('視圖登錄表', () => {
   })
 
   it('★ connectViews：兩個契約事件都要派送到每一個視圖', () => {
-    const a = 假視圖('a')
-    const b = 假視圖('b')
+    const a = fakeView('a')
+    const b = fakeView('b')
     registerView(a)
     registerView(b)
     const bus = new SemanticBus()
@@ -70,24 +70,24 @@ describe('視圖登錄表', () => {
     bus.emit('semantic:update', { source: 'blocks', code: 'int x;' })
     bus.emit('execution:state', { state: 'running' })
 
-    expect(a.收到).toEqual(['semantic:blocks', 'execution'])
-    expect(b.收到).toEqual(a.收到)
+    expect(a.received).toEqual(['semantic:blocks', 'execution'])
+    expect(b.received).toEqual(a.received)
   })
 
   it('★ 反向：沒登錄的視圖收不到——證明它派的是登錄表，不是「全部」', () => {
-    const 沒登錄 = 假視圖('沒登錄')
+    const unregistered = fakeView('沒登錄')
     const bus = new SemanticBus()
     connectViews(bus)
     bus.emit('semantic:update', { source: 'blocks' })
-    expect(沒登錄.收到).toEqual([])
+    expect(unregistered.received).toEqual([])
   })
 
   it('★ 接線之後才登錄的視圖也收得到——派送讀的是當下的表', () => {
     const bus = new SemanticBus()
     connectViews(bus)
-    const 遲到 = 假視圖('遲到')
-    registerView(遲到)
+    const late = fakeView('遲到')
+    registerView(late)
     bus.emit('semantic:update', { source: 'code' })
-    expect(遲到.收到).toEqual(['semantic:code'])
+    expect(late.received).toEqual(['semantic:code'])
   })
 })

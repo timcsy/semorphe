@@ -201,13 +201,13 @@ export const BLOCK_TYPE_MIGRATIONS_V9_TO_V10: Record<string, string> = {
  *   「某個舊存檔裡的積木被還原成另一種積木」**，而那不會有任何錯誤訊息。
  */
 export function registerBlockTypeMigration(m: Record<string, string>): void {
-  for (const [舊, 新] of Object.entries(m)) {
-    const existing = BLOCK_TYPE_MIGRATIONS_V9_TO_V10[舊]
-    if (existing !== undefined && existing !== 新) {
+  for (const [old, fresh] of Object.entries(m)) {
+    const existing = BLOCK_TYPE_MIGRATIONS_V9_TO_V10[old]
+    if (existing !== undefined && existing !== fresh) {
       throw new Error(
-        `積木型別「${舊}」被登錄兩次且指向不同新名：${existing} 與 ${新}。`,
+        `積木型別「${old}」被登錄兩次且指向不同新名：${existing} 與 ${fresh}。`,
       )
     }
-    BLOCK_TYPE_MIGRATIONS_V9_TO_V10[舊] = 新
+    BLOCK_TYPE_MIGRATIONS_V9_TO_V10[old] = fresh
   }
 }

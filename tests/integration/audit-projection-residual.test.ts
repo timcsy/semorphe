@@ -56,12 +56,12 @@ import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RAT
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
-const 護欄名 = 'projection-residual'
+const GUARD_NAME = 'projection-residual'
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  語料: { 語法完整: number; 語法有錯片段: number; 總字元: number }
-  殘差: { 字元數: number; 節點數: number; 率百分比: number; 降級原因: Record<string, number>; 明細: 殘差明細[] }
+  corpus: { syntaxComplete: number; syntaxErrorFragments: number; totalChars: number }
+  residual2: { charCount: number; nodeCount: number; ratePercent: number; downgradeReason: Record<string, number>; details: residualDetails[] }
 }
 
 let parser: Parser
@@ -76,7 +76,7 @@ beforeAll(async () => {
 })
 
 /** 從既有測試資產撈 C++ 片段。與誤差那條共用同一批來源，但**分欄規則不同**。 */
-function 撈語料(): string[] {
+function fetchCorpus(): string[] {
   const dir = path.join(REPO_ROOT, 'tests/integration')
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
@@ -91,38 +91,38 @@ function 撈語料(): string[] {
   return out
 }
 
-const 是殘差 = (id: string) => id === 'raw_code' || id === 'unresolved'
+const isResidual = (id: string) => id === 'raw_code' || id === 'unresolved'
 
-interface 殘差明細 {
-  原文: string
-  降級原因: string
+interface residualDetails {
+  raw: string
+  downgradeReason: string
 }
 
-interface 統計 {
-  語法完整: number
-  語法有錯片段: number
-  總字元: number
-  殘差字元: number
-  殘差節點: number
-  降級原因: Map<string, number>
+interface stats {
+  syntaxComplete: number
+  syntaxErrorFragments: number
+  totalChars: number
+  residualChars: number
+  residualNodes: number
+  downgradeReason: Map<string, number>
   /** 逐項指名——只有數字的話，沒有人知道模型缺在哪裡（`build-guardrail` 6.5）。 */
-  明細: 殘差明細[]
+  details: residualDetails[]
 }
 
-function 量(語料: readonly string[]): 統計 {
-  const s: 統計 = { 語法完整: 0, 語法有錯片段: 0, 總字元: 0, 殘差字元: 0, 殘差節點: 0, 降級原因: new Map(), 明細: [] }
-  const 走 = (n: SemanticNode) => {
-    if (是殘差(n.conceptId)) {
-      s.殘差節點++
-      const 原文 = String(n.metadata?.rawCode ?? '')
-      s.殘差字元 += 原文.length
-      const 因 = String(n.metadata?.degradationCause ?? '(無)')
-      s.降級原因.set(因, (s.降級原因.get(因) ?? 0) + 1)
-      s.明細.push({ 原文: 原文.slice(0, 120).replace(/\n/g, '⏎'), 降級原因: 因 })
+function measure(corpus: readonly string[]): stats {
+  const s: stats = { syntaxComplete: 0, syntaxErrorFragments: 0, totalChars: 0, residualChars: 0, residualNodes: 0, downgradeReason: new Map(), details: [] }
+  const walk = (n: SemanticNode) => {
+    if (isResidual(n.conceptId)) {
+      s.residualNodes++
+      const raw = String(n.metadata?.rawCode ?? '')
+      s.residualChars += raw.length
+      const because = String(n.metadata?.degradationCause ?? '(無)')
+      s.downgradeReason.set(because, (s.downgradeReason.get(because) ?? 0) + 1)
+      s.details.push({ raw: raw.slice(0, 120).replace(/\n/g, '⏎'), downgradeReason: because })
     }
-    for (const ks of Object.values(n.children ?? {})) for (const k of ks) 走(k)
+    for (const ks of Object.values(n.children ?? {})) for (const k of ks) walk(k)
   }
-  for (const c of 語料) {
+  for (const c of corpus) {
     let tree
     try {
       tree = parser.parse(c)
@@ -133,7 +133,7 @@ function 量(語料: readonly string[]): 統計 {
     // ⚠️ 分欄靠解析器自己的判定，不靠我們的啟發式。
     // 語法有錯 = 測試檔裡的片段，**不是模型缺口**。
     if ((tree.rootNode as unknown as { hasError: boolean }).hasError) {
-      s.語法有錯片段++
+      s.syntaxErrorFragments++
       continue
     }
     let lifted: SemanticNode | null = null
@@ -143,9 +143,9 @@ function 量(語料: readonly string[]): 統計 {
       continue
     }
     if (!lifted) continue
-    s.語法完整++
-    s.總字元 += c.length
-    走(lifted)
+    s.syntaxComplete++
+    s.totalChars += c.length
+    walk(lifted)
   }
   return s
 }
@@ -153,11 +153,11 @@ function 量(語料: readonly string[]): 統計 {
 describe('第三十一條護欄：形態的殘差', () => {
   // ── 健康檢查：錨在語料載入量（合成量），不錨在殘差計數 ───────────────
   it('★ 健康檢查：語料真的載入了', () => {
-    const 語料 = 撈語料()
-    expect(語料.length, '一段語料都沒撈到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
-    const s = 量(語料)
-    expect(s.語法完整, '語法完整的語料為 0 → 解析器或分欄壞了').toBeGreaterThan(100)
-    expect(s.總字元, '總字元為 0 → 量測沒有吃到內容').toBeGreaterThan(1000)
+    const corpus = fetchCorpus()
+    expect(corpus.length, '一段語料都沒撈到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
+    const s = measure(corpus)
+    expect(s.syntaxComplete, '語法完整的語料為 0 → 解析器或分欄壞了').toBeGreaterThan(100)
+    expect(s.totalChars, '總字元為 0 → 量測沒有吃到內容').toBeGreaterThan(1000)
   })
 
   // ── 雙向注入：會報 ＋ 不亂報 ──────────────────────────────────────
@@ -166,42 +166,42 @@ describe('第三十一條護欄：形態的殘差', () => {
   // 健康的護欄產出完全相同。
   it('★ 注入①：含殘差的輸入必須被計入', () => {
     // `asm` 區塊：語法完整，而模型不理解它。
-    const s = 量(['int main(){ __asm__("nop"); return 0; }'])
-    expect(s.語法完整, '這一段必須被判為語法完整').toBe(1)
-    expect(s.殘差節點, '模型不理解的東西必須進殘差通道').toBeGreaterThan(0)
-    expect(s.殘差字元, '殘差要帶著原文，否則還原不回來').toBeGreaterThan(0)
+    const s = measure(['int main(){ __asm__("nop"); return 0; }'])
+    expect(s.syntaxComplete, '這一段必須被判為語法完整').toBe(1)
+    expect(s.residualNodes, '模型不理解的東西必須進殘差通道').toBeGreaterThan(0)
+    expect(s.residualChars, '殘差要帶著原文，否則還原不回來').toBeGreaterThan(0)
   })
 
   it('★ 注入②：完全認得的輸入不得被誤報', () => {
-    const s = 量(['int main(){ int a = 1; return 0; }'])
-    expect(s.語法完整).toBe(1)
-    expect(s.殘差節點, '認得的東西被算成殘差 → 這條護欄會謊報模型缺口').toBe(0)
+    const s = measure(['int main(){ int a = 1; return 0; }'])
+    expect(s.syntaxComplete).toBe(1)
+    expect(s.residualNodes, '認得的東西被算成殘差 → 這條護欄會謊報模型缺口').toBe(0)
   })
 
   it('★ 注入③：語法有錯的片段不得計入殘差', () => {
     // 這是第一版量錯 200 倍的那個形狀——片段被當成模型缺口。
-    const s = 量(['int a = ', 'if (x) {'])
-    expect(s.語法有錯片段, '片段必須進另一欄').toBeGreaterThan(0)
-    expect(s.總字元, '片段不得計入分母').toBe(0)
+    const s = measure(['int a = ', 'if (x) {'])
+    expect(s.syntaxErrorFragments, '片段必須進另一欄').toBeGreaterThan(0)
+    expect(s.totalChars, '片段不得計入分母').toBe(0)
   })
 
   // ── 棘輪 ────────────────────────────────────────────────────────
   it('殘差率只准下降', () => {
-    const s = 量(撈語料())
-    const 率 = Number(((s.殘差字元 / s.總字元) * 100).toFixed(2))
+    const s = measure(fetchCorpus())
+    const rate = Number(((s.residualChars / s.totalChars) * 100).toFixed(2))
 
     printReport('形態的殘差', [
-      `語料   語法完整 ${s.語法完整} 段 ／ 語法有錯（片段）${s.語法有錯片段} 段`,
+      `語料   語法完整 ${s.syntaxComplete} 段 ／ 語法有錯（片段）${s.syntaxErrorFragments} 段`,
       `       ⚠️ 兩欄都要看——只看完整那欄的話，濾掉語料會像改善`,
-      `殘差   ${s.殘差字元} 字元 / ${s.總字元} = ${率}%（${s.殘差節點} 個節點）`,
-      `降級原因   ${JSON.stringify(Object.fromEntries(s.降級原因))}`,
+      `殘差   ${s.residualChars} 字元 / ${s.totalChars} = ${rate}%（${s.residualNodes} 個節點）`,
+      `降級原因   ${JSON.stringify(Object.fromEntries(s.downgradeReason))}`,
       '',
       '模型還沒長到的地方（逐項）：',
-      ...s.明細.map((d, i) => `  ${i + 1}. [${d.降級原因}] ${d.原文}`),
+      ...s.details.map((d, i) => `  ${i + 1}. [${d.downgradeReason}] ${d.raw}`),
     ])
 
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, {
+      writeBaseline(GUARD_NAME, {
         _meta: {
           note:
             '形態的殘差：有多少原始碼掉進 raw_code 殘差通道，也就是模型**還沒長到**哪裡。\n' +
@@ -212,19 +212,19 @@ describe('第三十一條護欄：形態的殘差', () => {
             '下降的兩種原因要分清：因為**實作**了新元件（模型長大了）／因為**語料**變了（世界變了，模型沒變）。',
           ratchet: RATCHET_NOTE,
         },
-        語料: { 語法完整: s.語法完整, 語法有錯片段: s.語法有錯片段, 總字元: s.總字元 },
-        殘差: {
-          字元數: s.殘差字元,
-          節點數: s.殘差節點,
-          率百分比: 率,
-          明細: s.明細,
-          降級原因: Object.fromEntries(s.降級原因),
+        corpus: { syntaxComplete: s.syntaxComplete, syntaxErrorFragments: s.syntaxErrorFragments, totalChars: s.totalChars },
+        residual2: {
+          charCount: s.residualChars,
+          nodeCount: s.residualNodes,
+          ratePercent: rate,
+          details: s.details,
+          downgradeReason: Object.fromEntries(s.downgradeReason),
         },
       })
       return
     }
 
-    const base = loadBaseline<基線>(護欄名)
-    assertRatchet([['殘差率(%)', 率, base.殘差.率百分比]])
+    const base = loadBaseline<Baseline>(GUARD_NAME)
+    assertRatchet([['殘差率(%)', rate, base.residual2.ratePercent]])
   })
 })

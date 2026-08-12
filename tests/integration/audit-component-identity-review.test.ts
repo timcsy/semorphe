@@ -47,7 +47,7 @@ import { SUBJECTS } from '../../src/languages/cpp/naming'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
-import 已判定 from '../assets/identity-review-decisions.json'
+import decided from '../assets/identity-review-decisions.json'
 import { universalConcepts } from '../../src/blocks/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
@@ -240,12 +240,12 @@ const withUntypedParams = ALL.filter((c) => (c.properties ?? []).length > 0)
  * 而判定會過期：底下的事實變了，判定可能不再成立——所以下面有一支測試
  * 專門抓「信號已經不出現、判定卻還留著」的孤兒。
  */
-const 判定 = 已判定.decisions as { conceptId: string; signal: string; decision: string; reason: string }[]
-const 判定鍵 = new Set(判定.map((d) => `${d.conceptId}::${d.signal}`))
-const 已判定過 = (f: Finding): boolean => 判定鍵.has(`${f.id}::${f.signal.replace(/\d+/g, 'N')}`)
+const decision = decided.decisions as { conceptId: string; signal: string; decision: string; reason: string }[]
+const decisionKey = new Set(decision.map((d) => `${d.conceptId}::${d.signal}`))
+const alreadyDecided = (f: Finding): boolean => decisionKey.has(`${f.id}::${f.signal.replace(/\d+/g, 'N')}`)
 
 const byBucket = (b: Bucket): Finding[] =>
-  findings.filter((f) => f.bucket === b && !已判定過(f))
+  findings.filter((f) => f.bucket === b && !alreadyDecided(f))
 const suspectIds = new Set(findings.map((f) => f.id))
 
 describe('護欄：元件身分健檢（膠囊化之前）', () => {
@@ -255,7 +255,7 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
       '本護欄只看**宣告**與**名字的形狀**，不看實作品質、不看語義對錯。',
       '',
       `元件 ${ALL.length} 顆｜可疑 ${suspectIds.size} 顆｜確定 ${byBucket('確定').length} 筆｜` +
-        `要看 ${byBucket('要看').length} 筆｜**已判定 ${findings.filter(已判定過).length} 筆**（判定見 tests/assets/identity-review-decisions.json）`,
+        `要看 ${byBucket('要看').length} 筆｜**已判定 ${findings.filter(alreadyDecided).length} 筆**（判定見 tests/assets/identity-review-decisions.json）`,
       `參數欠規格：${withUntypedParams.length} 顆宣告了 properties，而型別側是 string[]（無型別／範圍／預設值）`,
       '',
     ]
@@ -318,15 +318,15 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
   })
 
   it('★ 每一筆判定都要有理由，且不得是孤兒（信號已消失）', () => {
-    const 沒理由 = 判定.filter((d) => !d.reason || d.reason.length < 10).map((d) => d.conceptId)
-    expect(沒理由, '判定說不出理由 → 那是把「懶得看」寫成「看過了」').toEqual([])
+    const noReason = decision.filter((d) => !d.reason || d.reason.length < 10).map((d) => d.conceptId)
+    expect(noReason, '判定說不出理由 → 那是把「懶得看」寫成「看過了」').toEqual([])
 
-    const 現有信號 = new Set(findings.map((f) => `${f.id}::${f.signal.replace(/\d+/g, 'N')}`))
-    const 孤兒 = 判定.filter((d) => !現有信號.has(`${d.conceptId}::${d.signal}`)).map((d) => d.conceptId)
+    const existingSignals = new Set(findings.map((f) => `${f.id}::${f.signal.replace(/\d+/g, 'N')}`))
+    const orphans = decision.filter((d) => !existingSignals.has(`${d.conceptId}::${d.signal}`)).map((d) => d.conceptId)
     expect(
-      孤兒,
+      orphans,
       '以下判定的信號已經不再出現——**底下的事實變了，判定可能不再成立**，' +
-        '留著會讓一個過期的結論繼續生效：\n  ' + 孤兒.join('\n  '),
+        '留著會讓一個過期的結論繼續生效：\n  ' + orphans.join('\n  '),
     ).toEqual([])
   })
 

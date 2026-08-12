@@ -95,11 +95,11 @@ describe('指標取成員 `p->x`', () => {
   })
 
   it('★ 空指標取成員要出聲', async () => {
-    const 訊息 = await errOf(
+    const message = await errOf(
       prog(point(), n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }),
         show(n('cpp:struct_at_ptr', { obj: 'ptr', member: 'x' }))),
     )
-    expect(訊息, '對空指標取成員靜默成功了——那在真的 C++ 會當掉').not.toBe('')
+    expect(message, '對空指標取成員靜默成功了——那在真的 C++ 會當掉').not.toBe('')
   })
 })
 
@@ -168,11 +168,11 @@ describe('繼承與虛擬方法', () => {
       public: [n('cpp:method_virtual_pure', { name: 'f', return_type: 'int' }, { params: [] })],
       private: [],
     })
-    const 訊息 = await errOf(
+    const message = await errOf(
       prog(abs, n('cpp:var_declare', { name: 'a', type: 'A' }),
         show(n('cpp:method_call', { obj: 'a', method: 'f' }, { args: [] }))),
     )
-    expect(訊息, '呼叫一個沒有本體的純虛擬方法靜默回傳了').not.toBe('')
+    expect(message, '呼叫一個沒有本體的純虛擬方法靜默回傳了').not.toBe('')
   })
 })
 

@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建endl(): SemanticNode {
+export function buildEndl(): SemanticNode {
   return createNode('cpp:endl', {})
 }
 

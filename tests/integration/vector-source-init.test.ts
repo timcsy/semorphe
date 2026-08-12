@@ -66,13 +66,13 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   return found
 }
 
-const 函式回傳 =
+const funcReturn =
   'vector<int> f() { vector<int> r = {7, 8}; return r; }\n' +
   'int main() { vector<int> v = f(); cout << v[0] << v.size() << endl; return 0; }'
 
 describe('vector 的運算式初始值（期望值來自 g++ -std=c++17）', () => {
   it('函式回傳值當初始值', async () => {
-    expect(await run(lift(函式回傳))).toBe('72\n')
+    expect(await run(lift(funcReturn))).toBe('72\n')
   })
 
   it('另一個 vector 當初始值，且是**複製**不是共用', async () => {

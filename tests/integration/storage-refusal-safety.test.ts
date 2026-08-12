@@ -29,11 +29,11 @@ const BACKUP_KEY = 'semorphe-state.rejected'
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
-  let 讓寫入失敗的鍵: string | null = null
+  let keyThatFailsWrite: string | null = null
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
     setItem: vi.fn((key: string, value: string) => {
-      if (key === 讓寫入失敗的鍵) throw new Error('QuotaExceededError')
+      if (key === keyThatFailsWrite) throw new Error('QuotaExceededError')
       store[key] = value
     }),
     removeItem: vi.fn((key: string) => {
@@ -41,10 +41,10 @@ const localStorageMock = (() => {
     }),
     clear: vi.fn(() => {
       store = {}
-      讓寫入失敗的鍵 = null
+      keyThatFailsWrite = null
     }),
-    失敗於: (key: string | null) => {
-      讓寫入失敗的鍵 = key
+    failedAt: (key: string | null) => {
+      keyThatFailsWrite = key
     },
     raw: () => store,
   }
@@ -53,7 +53,7 @@ const localStorageMock = (() => {
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
 /** 一份版本高於當前、因此會被拒絕的存檔 */
-const 來自未來的存檔 = JSON.stringify({
+const futureSave = JSON.stringify({
   version: 99,
   tree: null,
   blocklyState: {},
@@ -73,7 +73,7 @@ describe('拒絕不等於丟掉', () => {
   })
 
   it('拒絕之後再自動存檔，原始內容仍完整存在於備份鍵（T025）', () => {
-    localStorage.setItem(STORAGE_KEY, 來自未來的存檔)
+    localStorage.setItem(STORAGE_KEY, futureSave)
 
     // 第 1–2 步：載入被拒絕，而且呼叫端**問得出來**為什麼
     const r = storage.loadOutcome()
@@ -87,13 +87,13 @@ describe('拒絕不等於丟掉', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toContain('int main(){}')
 
     // 但原始內容沒有消失
-    expect(localStorage.getItem(BACKUP_KEY)).toBe(來自未來的存檔)
+    expect(localStorage.getItem(BACKUP_KEY)).toBe(futureSave)
     expect(localStorage.getItem(BACKUP_KEY)).toContain('使用者在另一台裝置寫的作品')
   })
 
   it('備份寫不進去時，仍然回報拒絕，且說得出沒有備份成功（T026）', () => {
-    localStorage.setItem(STORAGE_KEY, 來自未來的存檔)
-    localStorageMock.失敗於(BACKUP_KEY)
+    localStorage.setItem(STORAGE_KEY, futureSave)
+    localStorageMock.failedAt(BACKUP_KEY)
 
     const r = storage.loadOutcome()
 
@@ -104,12 +104,12 @@ describe('拒絕不等於丟掉', () => {
     ).toBe('')
 
     // 這條路徑上主鍵完全不動
-    expect(localStorage.getItem(STORAGE_KEY)).toBe(來自未來的存檔)
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(futureSave)
   })
 
   it('拒絕的理由分得出四種，不是一句「載入失敗」', () => {
-    const 情形: [string, string, string][] = [
-      ['版本較高', 來自未來的存檔, 'too-new'],
+    const cases: [string, string, string][] = [
+      ['版本較高', futureSave, 'too-new'],
       ['不是存檔', JSON.stringify({ hello: 'world' }), 'not-a-save'],
       ['壞掉的 JSON', '{"version":1,"code":"截斷了', 'not-a-save'],
       [
@@ -122,12 +122,12 @@ describe('拒絕不等於丟掉', () => {
       ],
     ]
 
-    for (const [name, raw, 期望] of 情形) {
+    for (const [name, raw, expect2] of cases) {
       localStorageMock.clear()
       localStorage.setItem(STORAGE_KEY, raw)
       const r = storage.loadOutcome()
       expect(r.kind, `${name}：應被拒絕`).toBe('refused')
-      expect(r.kind === 'refused' && r.reason.code, `${name} 的理由判錯`).toBe(期望)
+      expect(r.kind === 'refused' && r.reason.code, `${name} 的理由判錯`).toBe(expect2)
     }
   })
 

@@ -16,7 +16,7 @@ import '../../src/languages/cpp/all-declarations'
 const STYLE = apcs as unknown as StylePreset
 
 /** 一份 v2 存檔的語義樹——**全部是舊格式身分**，逐字保留當時的樣子 */
-const v2樹 = {
+const v2Tree = {
   conceptId: 'program',
   properties: {},
   children: {
@@ -55,7 +55,7 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
   // ⚠️ 走**完整的升級鏈**，不是只呼叫 `UPGRADES[2]`。
   // D1 之後 v2 的目標（`lang:*`）又被 v4→v5 帶到 `cpp:*`——
   // 只跑一段會停在中繼點上，而那個 id 不存在。
-  const 升 = (tree: unknown): SemanticNode => {
+  const rise = (tree: unknown): SemanticNode => {
     // ⚠️ `upgrade()` 走完鏈之後會用 `judge()` 驗形狀，所以必填欄位要齊——
     // 只給 `{ version, tree }` 會以「升級後仍然不是可用的存檔」失敗，
     // 而那個訊息與「遷移壞了」長得不一樣，值得一眼看得出來。
@@ -77,12 +77,12 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
       ids.push(n.conceptId)
       for (const arr of Object.values(n.children ?? {})) arr.forEach(walk)
     }
-    walk(升(v2樹))
+    walk(rise(v2Tree))
     expect(ids.filter((i) => !i.includes(':')), '升級後仍有舊格式身分').toEqual([])
   })
 
   it('★ 產出的程式碼是完整可讀的 C++（不是一串 ⟨unknown⟩）', () => {
-    const code = generateCode(升(v2樹), 'cpp', STYLE)
+    const code = generateCode(rise(v2Tree), 'cpp', STYLE)
     expect(code).toContain('int x = 42;')
     expect(code).toContain('vector<int> v;')
     expect(code).toContain('cout << x')
@@ -92,7 +92,7 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
   it('★ 反向：不升級直接產出 → **必須**是壞的', () => {
     // 沒有這一支的話，上一支綠可能只是因為「舊身分本來也產得出來」——
     // 那樣的話整個轉換就是白做的。
-    const code = generateCode(v2樹 as unknown as SemanticNode, 'cpp', STYLE)
+    const code = generateCode(v2Tree as unknown as SemanticNode, 'cpp', STYLE)
     expect(code, '舊身分不升級也產得出正確程式碼 → 那這個轉換沒有存在的必要').toContain('⟨')
   })
 })

@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建pointer_deref(operand: SemanticNode | null): SemanticNode {
+export function buildPointerDeref(operand: SemanticNode | null): SemanticNode {
   return createNode('cpp:pointer_deref', {}, { ptr: operand ? [operand] : [] })
 }
 

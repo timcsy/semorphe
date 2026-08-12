@@ -1,10 +1,10 @@
 import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
-import { 建doc_comment } from '../../../components/cpp/doc_comment/lift'
-import { 建var_ref } from '../../../components/cpp/var_ref/lift'
-import { 建input } from '../../../components/cpp/input/lift'
-import { 建if } from '../../../components/cpp/if/lift'
-import { 建var_declare } from '../../../components/cpp/var_declare/lift'
+import { buildDocComment } from '../../../components/cpp/doc_comment/lift'
+import { buildVarRef } from '../../../components/cpp/var_ref/lift'
+import { buildInput } from '../../../components/cpp/input/lift'
+import { buildIf } from '../../../components/cpp/if/lift'
+import { buildVarDeclare } from '../../../components/cpp/var_declare/lift'
 
 /**
  * Register hand-written extraction strategies on a PatternExtractor instance.
@@ -28,13 +28,13 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       // （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
       // 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
       // ——它假設所有宣告子都是純名字，而系統刻意不那樣做。已進墓碑。
-      declarators.push(建var_declare({ name, type }, {
+      declarators.push(buildVarDeclare({ name, type }, {
         initializer: initNode ? [initNode] : [],
       }))
       i++
     }
     if (declarators.length > 1) {
-      return 建var_declare({ type }, { declarators })
+      return buildVarDeclare({ type }, { declarators })
     }
     const name = declarators.length === 1
       ? declarators[0].properties.name
@@ -46,13 +46,13 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
           return initNode ? [initNode] : []
         })()
-    return 建var_declare({ name, type }, { initializer: initChildren })
+    return buildVarDeclare({ name, type }, { initializer: initChildren })
   })
 
   // ── Control flow (if-elseif chain flattening) ──
   const extractIf = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
     const condInput = block.inputs.CONDITION
-    const cond = condInput?.block ? ctx.extract(condInput.block) : 建var_ref('true')
+    const cond = condInput?.block ? ctx.extract(condInput.block) : buildVarRef('true')
     const thenInput = block.inputs.THEN
     const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
 
@@ -65,7 +65,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       elseBody = elseInput?.block ? ctx.extractStatementChain(elseInput.block) : []
     }
 
-    return 建if({
+    return buildIf({
       condition: cond ? [cond] : [],
       then_body: thenBody,
       else_body: elseBody,
@@ -83,7 +83,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       const a = args[i]
       if (a.mode === 'select') {
         const name = a.text ?? a.selectedVar
-        if (name) valueNodes.push(建var_ref(name))
+        if (name) valueNodes.push(buildVarRef(name))
       } else if (a.mode === 'compose') {
         const inputData = block.inputs[`ARG_${i}`]
         if (inputData?.block) {
@@ -95,10 +95,10 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (valueNodes.length === 0) {
       // Fallback: try SEL_0 field (dynamic dropdown), then NAME field (JSON blockDef)
       const singleVar = (block.fields.SEL_0 as string) ?? (block.fields.NAME as string) ?? 'x'
-      valueNodes.push(建var_ref(singleVar))
+      valueNodes.push(buildVarRef(singleVar))
     }
     const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
-    return 建input(valueNodes, { variable: firstVarName })
+    return buildInput(valueNodes, { variable: firstVarName })
   }
   extractor.registerExtractStrategy('cpp_input', extractInput)
   extractor.registerExtractStrategy('cpp_input_expression', extractInput)
@@ -116,7 +116,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     }
     const returnDesc = block.fields.RETURN as string | undefined
     if (returnDesc) props.return_desc = returnDesc
-    return 建doc_comment(props)
+    return buildDocComment(props)
   })
 
   // ── 運算式位的變數宣告 ──
@@ -137,7 +137,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     const name = (block.fields.NAME_0 as string) ?? 'i'
     const initInput = block.inputs.INIT_0
     const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-    return 建var_declare({ name, type }, {
+    return buildVarDeclare({ name, type }, {
       initializer: initNode ? [initNode] : [],
     })
   })
@@ -159,12 +159,12 @@ function buildElseIfChain(block: BlockState, index: number, ctx: ExtractContext)
   }
 
   const condInput = block.inputs[`ELSEIF_CONDITION_${index}`]
-  const cond = condInput?.block ? ctx.extract(condInput.block) : 建var_ref('true')
+  const cond = condInput?.block ? ctx.extract(condInput.block) : buildVarRef('true')
   const thenInput = block.inputs[`ELSEIF_THEN_${index}`]
   const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
   const elseBody = buildElseIfChain(block, index + 1, ctx)
 
-  return [建if({
+  return [buildIf({
     condition: cond ? [cond] : [],
     then_body: thenBody,
     else_body: elseBody,

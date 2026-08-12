@@ -30,58 +30,58 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-function 身分們(src: string): string[] {
-  const 樹 = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
+function identities(src: string): string[] {
+  const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
   const out: string[] = []
-  const 走 = (n: SemanticNode) => {
+  const walk = (n: SemanticNode) => {
     out.push(n.conceptId)
-    for (const kids of Object.values(n.children ?? {})) for (const k of kids) 走(k as SemanticNode)
+    for (const kids of Object.values(n.children ?? {})) for (const k of kids) walk(k as SemanticNode)
   }
-  走(樹)
+  walk(tree)
   return out
 }
 
-const 程式 = `#include <iostream>
+const program = `#include <iostream>
 #include <string>
 using namespace std;
 int main() { string s = "  hi"; cout << s.find_first_not_of(" "); }`
 
 describe('膠囊自證：cpp:string_find_first_not_of', () => {
   it('★ lift：身分由膠囊登錄，而且是字面字串', () => {
-    expect(身分們(程式)).toContain('cpp:string_find_first_not_of')
+    expect(identities(program)).toContain('cpp:string_find_first_not_of')
   })
 
   it('★ lift 不亂報：沒有這個方法的程式不該產出它', () => {
-    const 別的 = 身分們('int main() { int x = 1; }')
-    expect(別的).toContain('cpp:var_declare')          // ← 先證明量到了東西
-    expect(別的).not.toContain('cpp:string_find_first_not_of')
+    const other = identities('int main() { int x = 1; }')
+    expect(other).toContain('cpp:var_declare')          // ← 先證明量到了東西
+    expect(other).not.toContain('cpp:string_find_first_not_of')
   })
 
   // ⚠️ 這一支在搬家前是**紅的**：這顆身分沒有產生器（實測過），
   // 而它看不見的原因是身分由樣板字串組出來。見 `generate.ts` 檔頭。
   it('★ generate：產回 s.find_first_not_of(...)', () => {
-    const 樹 = createNode('cpp:program', {}, {
+    const tree = createNode('cpp:program', {}, {
       body: [createNode('cpp:string_find_first_not_of', { obj: 's' }, {
         arg: [createNode('cpp:literal_string', { value: ' ' })],
       })],
     })
-    expect(generateCode(樹, 'cpp', apcs as unknown as StylePreset)).toContain('s.find_first_not_of(')
+    expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('s.find_first_not_of(')
   })
 
   it('★ execute："  hi" 去空白的位置是 2', async () => {
-    const 樹 = createTestLifter().lift(parser.parse(程式)!.rootNode as never) as SemanticNode
-    expect(JSON.stringify(樹)).toContain('cpp:string_find_first_not_of')  // ← 先證明它進了樹
+    const tree = createTestLifter().lift(parser.parse(program)!.rootNode as never) as SemanticNode
+    expect(JSON.stringify(tree)).toContain('cpp:string_find_first_not_of')  // ← 先證明它進了樹
     const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(樹)
+    await i.execute(tree)
     expect(i.getOutput().join('').trim()).toBe('2')
   })
 
   it('★ execute：全部都在集合裡時回 -1（不是 npos）', async () => {
-    const 樹 = createTestLifter().lift(parser.parse(
+    const tree = createTestLifter().lift(parser.parse(
       `#include <iostream>\n#include <string>\nusing namespace std;\nint main() { string s = "   "; cout << s.find_first_not_of(" "); }`,
     )!.rootNode as never) as SemanticNode
     const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(樹)
+    await i.execute(tree)
     expect(i.getOutput().join('').trim()).toBe('-1')
   })
 })

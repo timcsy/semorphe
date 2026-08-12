@@ -72,7 +72,7 @@ export class PatternLifter {
   }
 
   /** 膠囊的 pattern 只併一次。 */
-  private 併過膠囊 = false
+  private mergedCapsules = false
 
   /**
    * **惰性併入膠囊自帶的 pattern**——放在**比對的入口**，不放在任何組裝點。
@@ -83,9 +83,9 @@ export class PatternLifter {
    *
    * 見 `history/044`：那次把 pattern 寫成登錄呼叫，壞了兩次。
    */
-  private 併入膠囊(): void {
-    if (this.併過膠囊) return
-    this.併過膠囊 = true
+  private mergeIntoCapsule(): void {
+    if (this.mergedCapsules) return
+    this.mergedCapsules = true
     this.loadLiftPatterns(componentLiftPatterns() as LiftPattern[])
   }
 
@@ -138,7 +138,7 @@ export class PatternLifter {
 
   /** Try to lift an AST node using loaded patterns. Returns null if no pattern matches. */
   tryLift(node: AstNode, ctx: LiftContext): SemanticNode | null {
-    this.併入膠囊()
+    this.mergeIntoCapsule()
     const entries = this.patterns.get(node.type)
     if (!entries) return null
 

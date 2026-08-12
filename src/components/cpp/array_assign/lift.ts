@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建array_assign(obj: string, children: Record<string, SemanticNode[]>): SemanticNode {
+export function buildArrayAssign(obj: string, children: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:array_assign', { obj }, children)
 }
 

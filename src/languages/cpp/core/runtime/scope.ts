@@ -10,7 +10,7 @@
 import type { Scope } from '../../../../interpreter/scope'
 
 /** 走到最外層的作用域——區域靜態變數的儲存位置（它比函式活得久） */
-export function 根作用域(s: Scope): Scope {
+export function rootScope(s: Scope): Scope {
   let cur = s
   while (cur.parent) cur = cur.parent
   return cur

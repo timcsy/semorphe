@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建using_namespace(ns: string): SemanticNode {
+export function buildUsingNamespace(ns: string): SemanticNode {
   return createNode('cpp:using_namespace', { ns })
 }
 

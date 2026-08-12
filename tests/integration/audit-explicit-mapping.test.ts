@@ -36,7 +36,7 @@ import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-d
 import type { BlockProjectionJSON, BlockSpec } from '../../src/core/types'
 
 /** 手寫抽取策略的積木——它們的欄位由程式碼讀，不走宣告式對應 */
-const 手寫策略 = new Set([
+const handwrittenStrategies = new Set([
   'cpp_var_declare', 'cpp_var_assign', 'cpp_var_ref', 'cpp_print', 'cpp_input', 'cpp_input_expression',
   'cpp_if', 'cpp_if_else', 'cpp_func_call', 'cpp_func_call_expression', 'cpp_func_def',
   'cpp_var_declare_expression', 'cpp_increment_expression', 'cpp_var_assign_compound_expression',
@@ -45,7 +45,7 @@ const 手寫策略 = new Set([
 
 interface Finding {
   blockType: string
-  缺: string[]
+  missing: string[]
 }
 
 function measure(extra: BlockProjectionJSON[] = []): Finding[] {
@@ -56,7 +56,7 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
   for (const spec of reg.getAll() as BlockSpec[]) {
     const bd = spec.blockDef as Record<string, unknown>
     const blockType = bd?.type as string | undefined
-    if (!blockType || 手寫策略.has(blockType)) continue
+    if (!blockType || handwrittenStrategies.has(blockType)) continue
 
     const args: Record<string, unknown>[] = []
     for (let i = 0; i <= 9; i++) {
@@ -67,30 +67,30 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
       args.some((a) => pred(String(a.type ?? '')))
 
     const rm = spec.renderMapping
-    const 缺: string[] = []
+    const missing: string[] = []
     // 只在「這顆積木確實有這類參數」而且「概念確實有對應的槽」時才要求宣告
     const props = spec.conceptMapping?.properties ?? []
     const children = Object.keys(spec.conceptMapping?.children ?? {})
 
     if (props.length > 0 && has((t) => t.startsWith('field_')) && !(rm?.fields && Object.keys(rm.fields).length)) {
-      缺.push('fields')
+      missing.push('fields')
     }
     if (children.length > 0 && has((t) => t === 'input_value') && !(rm?.inputs && Object.keys(rm.inputs).length)) {
-      缺.push('inputs')
+      missing.push('inputs')
     }
     if (
       children.length > 0 &&
       has((t) => t === 'input_statement') &&
       !(rm?.statementInputs && Object.keys(rm.statementInputs).length)
     ) {
-      缺.push('statementInputs')
+      missing.push('statementInputs')
     }
-    if (缺.length) out.push({ blockType, 缺 })
+    if (missing.length) out.push({ blockType, missing })
   }
   return out.sort((a, b) => a.blockType.localeCompare(b.blockType))
 }
 
-const 合成 = (type: string): BlockProjectionJSON =>
+const synthetic = (type: string): BlockProjectionJSON =>
   ({
     id: type,
     conceptId: 'cpp:var_declare', // 有 properties 的真概念
@@ -102,14 +102,14 @@ const 合成 = (type: string): BlockProjectionJSON =>
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入「有欄位卻沒宣告對應」的積木 → **必須被報出**', () => {
-    const hit = measure([合成('__合成_沒宣告對應__')]).find((f) => f.blockType === '__合成_沒宣告對應__')
+    const hit = measure([synthetic('__合成_沒宣告對應__')]).find((f) => f.blockType === '__合成_沒宣告對應__')
     expect(hit, '合成的違規沒有被報出來 → **護欄壞了**').toBeDefined()
-    expect(hit!.缺).toContain('fields')
+    expect(hit!.missing).toContain('fields')
   })
 
   it('★ 反向：注入一個**有宣告**的積木 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
-    const p = 合成('__合成_有宣告__') as unknown as { renderMapping?: unknown }
+    const p = synthetic('__合成_有宣告__') as unknown as { renderMapping?: unknown }
     p.renderMapping = { fields: { NAME: 'name' }, inputs: {}, statementInputs: {} }
     expect(
       measure([p as BlockProjectionJSON]).find((f) => f.blockType === '__合成_有宣告__'),
@@ -131,7 +131,7 @@ describe('欄位對應必須是顯式宣告', () => {
     printReport('顯式欄位對應', [
       `缺宣告的積木：${findings.length}`,
       '',
-      ...findings.map((f) => `  ⚠️ ${f.blockType.padEnd(28)} 缺 ${f.缺.join('、')}`),
+      ...findings.map((f) => `  ⚠️ ${f.blockType.padEnd(28)} 缺 ${f.missing.join('、')}`),
     ])
     expect(true).toBe(true)
   })
@@ -140,7 +140,7 @@ describe('欄位對應必須是顯式宣告', () => {
     // ⚠️ **硬性零**：推導已經刪除，所以「缺宣告」不再有退路——
     // 那顆積木的欄位會**靜靜地讀不回來**，症狀與 `cpp_block_comment` 一模一樣。
     expect(
-      findings.map((f) => `${f.blockType} 缺 ${f.缺.join('、')}`),
+      findings.map((f) => `${f.blockType} 缺 ${f.missing.join('、')}`),
       '這顆積木有欄位／輸入，而沒有宣告對應。推導已退場，沒有東西會替它補上——' +
         '它的內容會在 積木 → 語義樹 的方向靜靜消失。',
     ).toEqual([])

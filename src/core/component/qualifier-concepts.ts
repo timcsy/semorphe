@@ -16,20 +16,20 @@
  * ⚠️ 表是空的：核心給機制、套件給資料。
  */
 
-const 表 = new Map<string, { conceptId: string; source: string }>()
+const table = new Map<string, { conceptId: string; source: string }>()
 
-export function registerQualifierConcept(修飾詞: string, conceptId: string, source: string): void {
-  const existing = 表.get(修飾詞)
+export function registerQualifierConcept(qualifier: string, conceptId: string, source: string): void {
+  const existing = table.get(qualifier)
   if (existing && existing.conceptId !== conceptId) {
     throw new Error(
-      `修飾詞「${修飾詞}」被登錄兩次且指向不同身分：` +
+      `修飾詞「${qualifier}」被登錄兩次且指向不同身分：` +
         `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
     )
   }
-  表.set(修飾詞, { conceptId, source })
+  table.set(qualifier, { conceptId, source })
 }
 
 /** 修飾詞 → 元件身分。認不得回 `undefined`。 */
-export function qualifierConcept(修飾詞: string): string | undefined {
-  return 表.get(修飾詞)?.conceptId
+export function qualifierConcept(qualifier: string): string | undefined {
+  return table.get(qualifier)?.conceptId
 }

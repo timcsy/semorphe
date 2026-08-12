@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建switch(expr: SemanticNode | null, cases: SemanticNode[]): SemanticNode {
+export function buildSwitch(expr: SemanticNode | null, cases: SemanticNode[]): SemanticNode {
   return createNode('cpp:switch', {}, { expr: expr ? [expr] : [], cases })
 }
 

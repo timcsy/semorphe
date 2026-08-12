@@ -189,11 +189,11 @@ describe('護欄：標註採用率（機制有沒有人用）', () => {
 
   it('棘輪：零讀取點的標註不得增加', () => {
     const b = loadBaseline<AdoptionBaseline>('annotation-adoption')
-    const 新增 = zeroReaders.map((r) => r.name).filter((n) => !(r_in(b, n)))
+    const added = zeroReaders.map((r) => r.name).filter((n) => !(r_in(b, n)))
     expect(
-      新增,
+      added,
       '新增了「有人宣告、沒有人讀」的標註。**建一個機制不等於它在運作**——' +
-        `建它的時候要同時交付讀取端：\n  ${新增.join('\n  ')}`,
+        `建它的時候要同時交付讀取端：\n  ${added.join('\n  ')}`,
     ).toEqual([])
     assertRatchet([['零讀取點的標註', zeroReaders.length, Object.keys(b.zeroReaders).length]])
   })

@@ -9,7 +9,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建for迴圈(init: SemanticNode | null, cond: SemanticNode | null, update: SemanticNode | null, body: SemanticNode[]): SemanticNode {
+export function buildForLoop(init: SemanticNode | null, cond: SemanticNode | null, update: SemanticNode | null, body: SemanticNode[]): SemanticNode {
   return createNode('cpp:loop_for', {}, { init: init ? [init] : [], cond: cond ? [cond] : [], update: update ? [update] : [], body })
 }
 

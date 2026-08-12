@@ -95,10 +95,10 @@ describe('護欄：抽象層完整性', () => {
   it('棘輪：懸空數不得上升', () => {
     const b = loadBaseline<AbstractBaseline>('abstract-integrity')
     const now = dangling.map((d) => `${d.conceptId}→${d.abstractConcept}`)
-    const 新增 = now.filter((x) => !b.targets.includes(x))
+    const added = now.filter((x) => !b.targets.includes(x))
     expect(
-      新增,
-      `新增的懸空宣告：${新增.join('、')}\n` +
+      added,
+      `新增的懸空宣告：${added.join('、')}\n` +
         '宣告父概念之前先確認那個概念存在——指不到的宣告與沒有宣告產出一樣。',
     ).toEqual([])
     assertRatchet([['懸空的父概念宣告', dangling.length, b.dangling]])

@@ -91,7 +91,7 @@ const key = (v: Violation): string => `${v.file}::${v.componentId}`
  * 那份快照——它在動任何東西之前拍下，是全程唯一的歸因依據。
  * 名單寫死在這裡，因為它記錄的是**一次歷史事件**，不是會漂移的狀態。
  */
-const 誤報名單 = [
+const falsePositiveList = [
   'src/core/types.ts::comment',            // Annotation 介面的聯集成員
   'src/ui/block-registrar.ts::comment',    // Blockly 欄位的預設值（使用者看到的提示文字）
 ] as const
@@ -139,13 +139,13 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   const files = [...new Set(violations.map((v) => v.file))]
 
   // 兩欄歸因：拿 059 動工前拍的 29 筆快照當基準，逐筆判斷它為什麼不見了
-  const 動工前 = readFileSync(join(REPO_ROOT, 'specs/059-concept-id-vs-lookalike/baseline-29.txt'), 'utf8')
+  const beforeWork = readFileSync(join(REPO_ROOT, 'specs/059-concept-id-vs-lookalike/baseline-29.txt'), 'utf8')
     .split('\n')
     .filter((l) => l.includes('::') && !l.startsWith('#'))
-  const 現存 = new Set(violations.map(key))
-  const 已消失 = 動工前.filter((k) => !現存.has(k))
-  const 誤報修掉的 = 已消失.filter((k) => (誤報名單 as readonly string[]).includes(k))
-  const 真的搬走的 = 已消失.filter((k) => !(誤報名單 as readonly string[]).includes(k))
+  const present = new Set(violations.map(key))
+  const gone = beforeWork.filter((k) => !present.has(k))
+  const fixedFalsePositives = gone.filter((k) => (falsePositiveList as readonly string[]).includes(k))
+  const actuallyMoved = gone.filter((k) => !(falsePositiveList as readonly string[]).includes(k))
 
   it('產出可讀報表：違規檔案 × 元件身分 × 行號', () => {
     const lines: string[] = []
@@ -164,10 +164,10 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
     // 混在一起的話，修量測會看起來像進步——而護欄會替它背書。
     // 這是 knowledge/history/018 的直接處方。
     lines.push('下降的歸因（本護欄的數字下降有兩種來源，意義完全不同）：')
-    lines.push(`  誤報修掉的：${誤報修掉的.length} 筆 ← **系統沒有變**，只是量測不再把撞名字串當身分`)
-    for (const k of 誤報修掉的) lines.push(`      · ${k}`)
-    lines.push(`  真的搬走的：${真的搬走的.length} 筆 ← **系統變了**，那段語言知識離開了核心層`)
-    for (const k of 真的搬走的) lines.push(`      · ${k}`)
+    lines.push(`  誤報修掉的：${fixedFalsePositives.length} 筆 ← **系統沒有變**，只是量測不再把撞名字串當身分`)
+    for (const k of fixedFalsePositives) lines.push(`      · ${k}`)
+    lines.push(`  真的搬走的：${actuallyMoved.length} 筆 ← **系統變了**，那段語言知識離開了核心層`)
+    for (const k of actuallyMoved) lines.push(`      · ${k}`)
     lines.push('')
 
     for (const f of files) {

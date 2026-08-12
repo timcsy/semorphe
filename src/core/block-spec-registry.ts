@@ -68,8 +68,8 @@ export class BlockSpecRegistry {
     // > 否則它只是把順序偽裝成規則。**
     //
     // 處置：在這裡就把中性排到前面，讓輸入順序**不再有影響**。
-    const 中性優先 = [...specs].sort((a, b) => (a.form ? 1 : 0) - (b.form ? 1 : 0))
-    for (const spec of 中性優先) {
+    const neutralFirst = [...specs].sort((a, b) => (a.form ? 1 : 0) - (b.form ? 1 : 0))
+    for (const spec of neutralFirst) {
       this.specs.set(spec.id, spec)
       if (spec.conceptMapping?.conceptId) {
         const cid = spec.conceptMapping.conceptId

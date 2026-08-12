@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建func_call(name: string, args: SemanticNode[]): SemanticNode {
+export function buildFuncCall(name: string, args: SemanticNode[]): SemanticNode {
   return createNode('cpp:func_call', { name }, { args })
 }
 

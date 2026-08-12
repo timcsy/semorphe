@@ -1,12 +1,12 @@
 import type { Lifter } from '../../../../core/lift/lifter'
-import { 建case } from '../../../../components/cpp/case/lift'
-import { 建for迴圈 } from '../../../../components/cpp/loop_for/lift'
+import { buildCase } from '../../../../components/cpp/case/lift'
+import { buildForLoop } from '../../../../components/cpp/loop_for/lift'
 // ⚠️ for 的文法是共用知識；「我放得進那三格」是元件自己的性狀。
 import { canBeForLoopPart } from '../node-traits'
-import { 建switch } from '../../../../components/cpp/switch/lift'
-import { 建default } from '../../../../components/cpp/default/lift'
-import { 建raw_expression } from '../../../../components/cpp/raw_expression/lift'
-import { 建loop_count } from '../../../../components/cpp/loop_count/lift'
+import { buildSwitch } from '../../../../components/cpp/switch/lift'
+import { buildDefault } from '../../../../components/cpp/default/lift'
+import { buildRawExpression } from '../../../../components/cpp/raw_expression/lift'
+import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
 
 export function registerStatementLifters(lifter: Lifter): void {
   // translation_unit — handled by JSON pattern (cpp_translation_unit)
@@ -29,7 +29,7 @@ export function registerStatementLifters(lifter: Lifter): void {
       const inclusive = extractForInclusive(condNode)
       const body = extractBody(bodyNode, ctx)
 
-      return 建loop_count(varName, inclusive, {
+      return buildLoopCount(varName, inclusive, {
         from: fromNode ? [fromNode] : [],
         to: toNode ? [toNode] : [],
         body,
@@ -46,7 +46,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     const condSem = wrapForExpr(condNode, ctx)
     const updateSem = wrapForExpr(updateNode, ctx)
 
-    return 建for迴圈(initSem, condSem, updateSem, body)
+    return buildForLoop(initSem, condSem, updateSem, body)
   })
 
   // function_definition now handled by liftStrategy "cpp:liftFunctionDef"
@@ -65,7 +65,7 @@ export function registerStatementLifters(lifter: Lifter): void {
     ) ?? []
     const cases = caseNodes.map(c => liftCaseStatement(c, ctx)).filter(Boolean) as import('../../../../core/types').SemanticNode[]
 
-    return 建switch(cond, cases)
+    return buildSwitch(cond, cases)
   })
 
   // do_statement — handled by JSON pattern (cpp_do_while)
@@ -105,11 +105,11 @@ function liftCaseStatement(
   const body = ctx.liftChildren(bodyChildren)
 
   if (isDefault) {
-    return 建default(body)
+    return buildDefault(body)
   }
 
   const value = ctx.lift(valueNode!)
-  return 建case(value, body)
+  return buildCase(value, body)
 }
 
 function isCountingFor(
@@ -205,5 +205,5 @@ function wrapForExpr(
   if (canBeForLoopPart(lifted.conceptId)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
   // Strip trailing semicolons — for-loop parts don't need them
-  return 建raw_expression(node.text.replace(/;\s*$/, '').trim())
+  return buildRawExpression(node.text.replace(/;\s*$/, '').trim())
 }

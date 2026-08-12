@@ -1,7 +1,7 @@
 import type { SemanticNode } from '../../core/types'
 // ⚠️ 問**性狀**不問身分——一條 if 一顆元件的話，那幾顆永遠搬不進膠囊。
 import { isScaffold, isScaffoldInMain } from './core/node-traits'
-import { 建program } from '../../components/cpp/program/lift'
+import { buildProgram } from '../../components/cpp/program/lift'
 import { isFunctionDefinition } from '../../core/component/traits'
 
 /**
@@ -31,5 +31,5 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
     userBody.push(node)
   }
 
-  return 建program(userBody)
+  return buildProgram(userBody)
 }
