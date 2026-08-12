@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('strlen', {
     conceptId: 'cpp:cstring_size',
     argSlots: ["str"],
-    來源: 'cpp/cstring_size',
+    source: 'cpp/cstring_size',
   })
 }

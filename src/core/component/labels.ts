@@ -43,21 +43,21 @@ function parseKey(globKey: string): { sourceDir: string; locale: string } | null
  */
 export function componentLabels(locale: string): Record<string, string> {
   const out: Record<string, string> = {}
-  const 來源 = new Map<string, string>()
+  const source = new Map<string, string>()
 
   for (const [key, mod] of Object.entries(LABEL_FILES)) {
     const parsed = parseKey(key)
     if (!parsed || parsed.locale !== locale) continue
     for (const [k, v] of Object.entries(mod.default)) {
-      const 先來的 = 來源.get(k)
-      if (先來的 !== undefined) {
+      const existing = source.get(k)
+      if (existing !== undefined) {
         throw new Error(
-          `標籤鍵「${k}」被兩顆膠囊同時宣告：${先來的} 與 ${parsed.sourceDir}。\n` +
+          `標籤鍵「${k}」被兩顆膠囊同時宣告：${existing} 與 ${parsed.sourceDir}。\n` +
             `不自動取其一，是因為靜默覆蓋的症狀是「某顆積木顯示別人的字」——` +
             `使用者看得到，護欄看不到。`,
         )
       }
-      來源.set(k, parsed.sourceDir)
+      source.set(k, parsed.sourceDir)
       out[k] = v
     }
   }

@@ -45,10 +45,10 @@ export type Role = 'conceptId' | 'blockType' | '非身分'
  * ⚠️ 具名列出、附理由，而不是靠某個路徑規則順便放過——
  * `history/018` 的教訓是「用宣告刷數字」，防它的辦法是**每一筆豁免都要說得出理由**。
  */
-export const 豁免: { pattern: RegExp; 理由: string }[] = [
+export const 豁免: { pattern: RegExp; reason: string }[] = [
   {
     pattern: /storage-version\.test\.ts$/,
-    理由: '存檔轉換的測試必須指名它轉換的東西——舊身分是它的輸入樣本，不是待清的引用',
+    reason: '存檔轉換的測試必須指名它轉換的東西——舊身分是它的輸入樣本，不是待清的引用',
   },
 ]
 

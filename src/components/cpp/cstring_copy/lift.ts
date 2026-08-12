@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('strcpy', {
     conceptId: 'cpp:cstring_copy',
     argSlots: ["dest", "src"],
-    來源: 'cpp/cstring_copy',
+    source: 'cpp/cstring_copy',
   })
 }

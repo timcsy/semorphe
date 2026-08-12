@@ -202,10 +202,10 @@ export const BLOCK_TYPE_MIGRATIONS_V9_TO_V10: Record<string, string> = {
  */
 export function registerBlockTypeMigration(m: Record<string, string>): void {
   for (const [舊, 新] of Object.entries(m)) {
-    const 先來的 = BLOCK_TYPE_MIGRATIONS_V9_TO_V10[舊]
-    if (先來的 !== undefined && 先來的 !== 新) {
+    const existing = BLOCK_TYPE_MIGRATIONS_V9_TO_V10[舊]
+    if (existing !== undefined && existing !== 新) {
       throw new Error(
-        `積木型別「${舊}」被登錄兩次且指向不同新名：${先來的} 與 ${新}。`,
+        `積木型別「${舊}」被登錄兩次且指向不同新名：${existing} 與 ${新}。`,
       )
     }
     BLOCK_TYPE_MIGRATIONS_V9_TO_V10[舊] = 新

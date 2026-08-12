@@ -11,6 +11,6 @@ export function registerLift(): void {
   registerCallConcept('strstr', {
     conceptId: 'cpp:cstring_find',
     argSlots: ['haystack', 'needle'],
-    來源: 'cpp/cstring_find',
+    source: 'cpp/cstring_find',
   })
 }

@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('exit', {
     conceptId: 'cpp:program_exit',
     argSlots: ["code"],
-    來源: 'cpp/program_exit',
+    source: 'cpp/program_exit',
   })
 }

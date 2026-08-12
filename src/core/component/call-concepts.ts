@@ -60,7 +60,7 @@ export interface CallConceptShape {
    * 靠 `func` 屬性區分。不填代表身分本身就唯一（`isalpha`）。
    */
   funcProp?: string
-  來源: string
+  source: string
 }
 
 const 表 = new Map<string, CallConceptShape>()
@@ -68,11 +68,11 @@ const 表 = new Map<string, CallConceptShape>()
 /** 登錄一組函式名共用的一個形狀。 */
 export function registerCallConcept(函式名們: string | string[], 形狀: CallConceptShape): void {
   for (const 名 of typeof 函式名們 === 'string' ? [函式名們] : 函式名們) {
-    const 先來的 = 表.get(名)
-    if (先來的 && 先來的.conceptId !== 形狀.conceptId) {
+    const existing = 表.get(名)
+    if (existing && existing.conceptId !== 形狀.conceptId) {
       throw new Error(
         `函式名「${名}」被登錄兩次且指向不同身分：` +
-          `${先來的.conceptId}（${先來的.來源}）與 ${形狀.conceptId}（${形狀.來源}）。` +
+          `${existing.conceptId}（${existing.source}）與 ${形狀.conceptId}（${形狀.source}）。` +
           `不自動取其一——靜默覆蓋的症狀是「某個函式被辨識成另一個」。`,
       )
     }
@@ -86,8 +86,8 @@ export function registerCallConcept(函式名們: string | string[], 形狀: Cal
  * 保留它不是為了相容，是因為那個形狀已經被第二顆膠囊驗證過，
  * 而**把已驗證的形狀換掉需要理由**。
  */
-export function registerSingleArgFunction(函式名: string, conceptId: string, 來源: string): void {
-  registerCallConcept(函式名, { conceptId, argSlots: ['value'], 來源 })
+export function registerSingleArgFunction(函式名: string, conceptId: string, source: string): void {
+  registerCallConcept(函式名, { conceptId, argSlots: ['value'], source })
 }
 
 /** 函式名 → 形狀。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
@@ -102,5 +102,5 @@ export function conceptForSingleArgFunction(函式名: string): string | undefin
 
 /** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */
 export function singleArgFunctionSources(): [函式名: string, 來源: string][] {
-  return [...表.entries()].map(([k, v]) => [k, v.來源])
+  return [...表.entries()].map(([k, v]) => [k, v.source])
 }

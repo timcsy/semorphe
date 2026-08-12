@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('atof', {
     conceptId: 'cpp:cstring_as_double',
     argSlots: ["str"],
-    來源: 'cpp/cstring_as_double',
+    source: 'cpp/cstring_as_double',
   })
 }

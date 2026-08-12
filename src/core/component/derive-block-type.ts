@@ -95,14 +95,14 @@ export function assertDerivedNamesUnique(宣告們: readonly 積木宣告[]): vo
   const 見過 = new Map<string, string>()
   for (const b of 宣告們) {
     const 名 = deriveBlockType(b.conceptId, b.form)
-    const 先來的 = 見過.get(名)
-    if (先來的 !== undefined && 先來的 !== b.conceptId) {
+    const existing = 見過.get(名)
+    if (existing !== undefined && existing !== b.conceptId) {
       throw new Error(
-        `兩顆積木導出同一個型別「${名}」：${先來的} 與 ${b.conceptId}。` +
+        `兩顆積木導出同一個型別「${名}」：${existing} 與 ${b.conceptId}。` +
           `Blockly 的 registry 以型別為鍵，後登錄的會安靜地蓋掉先登錄的。`,
       )
     }
-    if (先來的 !== undefined) {
+    if (existing !== undefined) {
       throw new Error(
         `同一顆身分「${b.conceptId}」的兩個形態導出同名「${名}」——` +
           `form.value 撞名了。導出規則不編入 axis（見本檔頭），` +

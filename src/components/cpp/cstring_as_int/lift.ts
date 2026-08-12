@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('atoi', {
     conceptId: 'cpp:cstring_as_int',
     argSlots: ["str"],
-    來源: 'cpp/cstring_as_int',
+    source: 'cpp/cstring_as_int',
   })
 }

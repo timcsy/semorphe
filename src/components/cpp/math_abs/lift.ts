@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('abs', {
     conceptId: 'cpp:math_abs',
     argSlots: ["value"],
-    來源: 'cpp/math_abs',
+    source: 'cpp/math_abs',
   })
 }

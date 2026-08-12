@@ -65,7 +65,7 @@ const 判定檔 = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.j
  */
 type 形狀 = '型別不符' | '缺子節點' | '值判斷' | '未分類'
 
-interface 命中 {
+interface hits {
   /**
    * 識別碼。
    *
@@ -116,7 +116,7 @@ interface 判定 {
   位置: string
   訊號: string
   判定: '合法' | '靜默回退' | '防禦性'
-  理由: string
+  reason: string
 }
 
 /** 判定與機器分類的對應關係——**兩者不得互相矛盾**。 */
@@ -131,7 +131,7 @@ const 相容: Record<形狀, 判定['判定'][]> = {
 interface 基線 {
   _meta: { note: string; ratchet: string }
   掃描: { 檔數: number; "return 總數": number }
-  命中: { 筆數: number; 明細: 命中[] }
+  hits: { 筆數: number; 明細: hits[] }
 }
 
 /** 執行器檔案——語言套件與核心的執行那一路。 */
@@ -183,8 +183,8 @@ function 執行器檔(): string[] {
  * ⚠️ **判準刻意寬**——寧可多報讓人判，也不要自己發明一個分得出合法與回退的
  * 規則。`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全。
  */
-function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": number } {
-  const 命中: 命中[] = []
+function 掃(檔s: readonly string[]): { hits: hits[]; "return 總數": number } {
+  const hits: hits[] = []
   let total = 0
   const 預設值 = /value:\s*(0|''|""|false|null|\[\]|\{\})\s*[,}]/
   for (const f of 檔s) {
@@ -214,7 +214,7 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
       if (!條件) continue // 無條件的回傳不是回退
       const c = 條件.trim().slice(0, 80)
       const 回 = l.trim().slice(0, 60)
-      命中.push({
+      hits.push({
         鍵: 判定鍵(rel, c + '|' + 回),
         位置: `${rel}:${i + 1}`,
         條件: c,
@@ -223,7 +223,7 @@ function 掃(檔s: readonly string[]): { 命中: 命中[]; "return 總數": numb
       })
     }
   }
-  return { 命中, "return 總數": total }
+  return { hits, "return 總數": total }
 }
 
 const 讀判定 = (): 判定[] =>
@@ -243,9 +243,9 @@ describe('第三十三條護欄：靜默回退', () => {
     const tmp = path.join(REPO_ROOT, 'tests/assets/_inject-fallback-executors.ts')
     fs.writeFileSync(tmp, `export const x = () => {\n  if (v.type !== 'array') return { type: 'int', value: 0 }\n  return { type: 'int', value: v.length }\n}\n`)
     try {
-      const { 命中 } = 掃([tmp])
-      expect(命中, '故意寫的回退沒被報 → 這條護欄什麼都抓不到').toHaveLength(1)
-      expect(命中[0].條件).toContain("!== 'array'")
+      const { hits } = 掃([tmp])
+      expect(hits, '故意寫的回退沒被報 → 這條護欄什麼都抓不到').toHaveLength(1)
+      expect(hits[0].條件).toContain("!== 'array'")
     } finally {
       fs.rmSync(tmp, { force: true })
     }
@@ -256,7 +256,7 @@ describe('第三十三條護欄：靜默回退', () => {
     const tmp = path.join(REPO_ROOT, 'tests/assets/_inject-clean-executors.ts')
     fs.writeFileSync(tmp, `export const x = () => {\n  return { type: 'int', value: 0 }\n}\n`)
     try {
-      expect(掃([tmp]).命中, '無條件回 0 是正常的初始值，報它會讓這條護欄失去意義').toHaveLength(0)
+      expect(掃([tmp]).hits, '無條件回 0 是正常的初始值，報它會讓這條護欄失去意義').toHaveLength(0)
     } finally {
       fs.rmSync(tmp, { force: true })
     }
@@ -285,11 +285,11 @@ describe('第三十三條護欄：靜默回退', () => {
 
   // ── 判定落點（第 11 步） ────────────────────────────────────────
   it('每一筆判定必須有理由，且判定不得過期', () => {
-    const 現 = 掃(執行器檔()).命中
+    const 現 = 掃(執行器檔()).hits
     const 判定s = 讀判定()
     const 孤兒 = 判定s.filter((d) => !現.some((h) => h.鍵 === d.鍵))
     expect(
-      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      判定s.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了，留著會讓過期的結論繼續生效').toEqual([])
@@ -299,18 +299,18 @@ describe('第三十三條護欄：靜默回退', () => {
   it('靜默回退只准下降', () => {
     const 檔s = 執行器檔()
     const 掃果 = 掃(檔s)
-    const 命中 = 掃果.命中
+    const hits = 掃果.hits
     const returnTotal = 掃果["return 總數"]
     const 判定s = 讀判定()
     const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
-    const 要看 = 命中.filter((h) => !已判定.has(h.鍵))
-    const 型別不符 = 命中.filter((h) => h.形狀 === '型別不符')
-    const 缺子節點 = 命中.filter((h) => h.形狀 === '缺子節點')
-    const 未分類 = 命中.filter((h) => h.形狀 === '未分類')
+    const 要看 = hits.filter((h) => !已判定.has(h.鍵))
+    const 型別不符 = hits.filter((h) => h.形狀 === '型別不符')
+    const 缺子節點 = hits.filter((h) => h.形狀 === '缺子節點')
+    const 未分類 = hits.filter((h) => h.形狀 === '未分類')
 
     printReport('靜默回退（執行器遇到處理不了的輸入時有沒有出聲）', [
       `掃描   ${檔s.length} 個執行器檔｜${returnTotal} 個帶 value 的 return`,
-      `命中   ${命中.length}（已判定 ${命中.length - 要看.length}，要看 ${要看.length}）`,
+      `命中   ${hits.length}（已判定 ${hits.length - 要看.length}，要看 ${要看.length}）`,
       '',
       `  **型別不符** ${型別不符.length} 筆 ← 棘輪盯這一欄（上游辨識判錯時**會**走到）`,
       `  缺子節點   ${缺子節點.length} 筆   防禦性；415 段語料實測走到 **0** 次`,
@@ -338,7 +338,7 @@ describe('第三十三條護欄：靜默回退', () => {
         掃描: { 檔數: 檔s.length, 'return 總數': returnTotal },
         型別不符: 型別不符.length,
         缺子節點: 缺子節點.length,
-        命中: { 筆數: 命中.length, 明細: 命中 },
+        hits: { 筆數: hits.length, 明細: hits },
       })
       return
     }
@@ -351,7 +351,7 @@ describe('第三十三條護欄：靜默回退', () => {
     // ⚠️ **人的判定與機器的分類不得互相矛盾。**
     // 兩份紀錄對同一批東西給出不同的說法時，讀哪一份決定你以為有幾個缺陷
     // ——而沒有這條斷言的話，它們會安靜地各說各話。
-    const 矛盾 = 命中
+    const 矛盾 = hits
       .map((h) => ({ h, d: 已判定.get(h.鍵) }))
       .filter(({ h, d }) => d && !相容[h.形狀].includes(d.判定))
       .map(({ h, d }) => `${h.位置}：機器判「${h.形狀}」而人判「${d!.判定}」`)

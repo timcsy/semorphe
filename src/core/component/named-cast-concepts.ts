@@ -9,20 +9,20 @@
  * > 有 → 登錄表。沒有（一整筆資料）→ glob 直讀。
  * > 這裡是查——共用檔拿到一個關鍵字要問「誰認領」。
  */
-const 表 = new Map<string, { conceptId: string; 來源: string }>()
+const 表 = new Map<string, { conceptId: string; source: string }>()
 
 /**
  * @throws 同一個關鍵字被兩顆元件認領——**靜默覆蓋的症狀是「有一顆元件的
  *   lift 永遠不會被呼叫」**，而那不會有任何錯誤訊息。
  */
-export function registerNamedCast(關鍵字: string, conceptId: string, 來源: string): void {
-  const 先來的 = 表.get(關鍵字)
-  if (先來的 && 先來的.conceptId !== conceptId) {
+export function registerNamedCast(關鍵字: string, conceptId: string, source: string): void {
+  const existing = 表.get(關鍵字)
+  if (existing && existing.conceptId !== conceptId) {
     throw new Error(
-      `命名轉型「${關鍵字}」被兩顆元件認領：${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+      `命名轉型「${關鍵字}」被兩顆元件認領：${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
     )
   }
-  表.set(關鍵字, { conceptId, 來源 })
+  表.set(關鍵字, { conceptId, source })
 }
 
 /** 這個關鍵字屬於誰。不認得回 `undefined`——**不猜**。 */

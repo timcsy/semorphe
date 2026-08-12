@@ -76,29 +76,29 @@ function 直接產生(code: string): string {
   return tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>'
 }
 
-interface 樣本 { 名稱: string; 碼: string; 期望含: string[] }
+interface 樣本 { name: string; 碼: string; 期望含: string[] }
 
 /** 六顆元件 × （有參數／無參數）。 */
 const 樣本群: 樣本[] = [
   // ── cpp:lambda ──
-  { 名稱: 'lambda 有參數', 碼: 'int main() { auto f = [](int a, int b) { return a + b; }; }', 期望含: ['int a', 'int b'] },
-  { 名稱: 'lambda 無參數', 碼: 'int main() { auto f = []() { return 1; }; }', 期望含: ['[]()'] },
+  { name: 'lambda 有參數', 碼: 'int main() { auto f = [](int a, int b) { return a + b; }; }', 期望含: ['int a', 'int b'] },
+  { name: 'lambda 無參數', 碼: 'int main() { auto f = []() { return 1; }; }', 期望含: ['[]()'] },
   // ── cpp:constructor ──
-  { 名稱: 'constructor 有參數', 碼: 'class C { public: C(int a) {} };', 期望含: ['int a'] },
-  { 名稱: 'constructor 無參數', 碼: 'class C { public: C() {} };', 期望含: ['C()'] },
+  { name: 'constructor 有參數', 碼: 'class C { public: C(int a) {} };', 期望含: ['int a'] },
+  { name: 'constructor 無參數', 碼: 'class C { public: C() {} };', 期望含: ['C()'] },
   // ── cpp:method_virtual ──
-  { 名稱: 'method_virtual 有參數', 碼: 'class C { public: virtual int f(int a) { return a; } };', 期望含: ['int a'] },
+  { name: 'method_virtual 有參數', 碼: 'class C { public: virtual int f(int a) { return a; } };', 期望含: ['int a'] },
   // ── cpp:method_override ──
-  { 名稱: 'method_override 有參數', 碼: 'class C : public B { public: int f(int a) override { return a; } };', 期望含: ['int a'] },
+  { name: 'method_override 有參數', 碼: 'class C : public B { public: int f(int a) override { return a; } };', 期望含: ['int a'] },
   // ── cpp:method_virtual_pure ──
   // ⚠️ 它**沒有 body 接點**（research 的未驗項）——缺 body 會不會影響渲染。
-  { 名稱: 'method_virtual_pure 有參數', 碼: 'class C { public: virtual int f(int a) = 0; };', 期望含: ['int a'] },
+  { name: 'method_virtual_pure 有參數', 碼: 'class C { public: virtual int f(int a) = 0; };', 期望含: ['int a'] },
   // ── cpp:template_function ──
-  { 名稱: 'template_function 有參數', 碼: 'template<typename T> T f(T a) { return a; }', 期望含: ['T a'] },
+  { name: 'template_function 有參數', 碼: 'template<typename T> T f(T a) { return a; }', 期望含: ['T a'] },
   // ── 邊界：型別自己含分隔符（research R2，SC-003）──
-  { 名稱: '型別含逗號', 碼: 'int main() { auto f = [](map<int,int> m, int k) { return k; }; }', 期望含: ['map<int,int> m', 'int k'] },
+  { name: '型別含逗號', 碼: 'int main() { auto f = [](map<int,int> m, int k) { return k; }; }', 期望含: ['map<int,int> m', 'int k'] },
   // ── 邊界：型別含空白 ──
-  { 名稱: '型別含空白', 碼: 'int main() { auto f = [](long long n) { return n; }; }', 期望含: ['long long n'] },
+  { name: '型別含空白', 碼: 'int main() { auto f = [](long long n) { return n; }; }', 期望含: ['long long n'] },
 ]
 
 describe('函式族的參數走得過投影嗎', () => {
@@ -108,13 +108,13 @@ describe('函式族的參數走得過投影嗎', () => {
     for (const s of 樣本群) {
       const 直接 = 直接產生(s.碼)
       for (const 期望 of s.期望含) {
-        expect(直接, `${s.名稱}：直接產生就掉了 → 紅的不是投影`).toContain(期望)
+        expect(直接, `${s.name}：直接產生就掉了 → 紅的不是投影`).toContain(期望)
       }
     }
   })
 
   for (const s of 樣本群) {
-    it(`${s.名稱}：走完投影來回，參數還在`, () => {
+    it(`${s.name}：走完投影來回，參數還在`, () => {
       const 出來 = 走一圈(s.碼)
       for (const 期望 of s.期望含) {
         expect(出來, `走完來回之後「${期望}」不見了`).toContain(期望)

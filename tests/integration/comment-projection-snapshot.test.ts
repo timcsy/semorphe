@@ -103,18 +103,18 @@ describe('核心層零註解語法（FR-012）', () => {
   ]
 
   it('★ src/core 的程式碼裡不得出現註解的語法符號', () => {
-    const 命中: string[] = []
+    const hits: string[] = []
     for (const rel of listSourceFiles('src/core')) {
       const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'))
       for (const { name, re } of 註解語法) {
-        if (re.test(code)) 命中.push(`${rel} → ${name}`)
+        if (re.test(code)) hits.push(`${rel} → ${name}`)
       }
     }
     expect(
-      命中,
+      hits,
       '核心層在產生或剝除 C 家族的註解符號。Python 要的是 `#`——' +
         '這是中立性護欄看不見的那種耦合（它只找概念身分，不找語法）：\n  ' +
-        命中.join('\n  '),
+        hits.join('\n  '),
     ).toEqual([])
   })
 })

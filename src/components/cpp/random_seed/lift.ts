@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('srand', {
     conceptId: 'cpp:random_seed',
     argSlots: ["seed"],
-    來源: 'cpp/random_seed',
+    source: 'cpp/random_seed',
   })
 }

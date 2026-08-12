@@ -39,7 +39,7 @@ export interface MethodConceptShape {
    * 否則產生器讀不到——而那是安靜的（子節點是空陣列，不是錯誤）。
    */
   argSlots: string[]
-  來源: string
+  source: string
 }
 
 const 表 = new Map<string, MethodConceptShape>()
@@ -49,23 +49,23 @@ const 表 = new Map<string, MethodConceptShape>()
  *
  * @param 方法名 C++ 的方法名（`find_first_not_of`…）
  * @param conceptId 對應的元件身分——**寫成字面字串**，別用樣板組
- * @param 來源 誰登錄的——膠囊填自己的資料夾
+ * @param source 誰登錄的——膠囊填自己的資料夾
  */
 export function registerMethodConcept(
   方法名: string,
   conceptId: string,
-  來源: string,
+  source: string,
   argSlots: string[] = ['arg'],
 ): void {
-  const 先來的 = 表.get(方法名)
-  if (先來的 && 先來的.conceptId !== conceptId) {
+  const existing = 表.get(方法名)
+  if (existing && existing.conceptId !== conceptId) {
     throw new Error(
       `方法名「${方法名}」被登錄兩次且指向不同身分：` +
-        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。` +
+        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。` +
         `不自動取其一——靜默覆蓋的症狀是「某個方法被辨識成另一個概念」。`,
     )
   }
-  表.set(方法名, { conceptId, argSlots, 來源 })
+  表.set(方法名, { conceptId, argSlots, source })
 }
 
 /** 方法名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
@@ -81,7 +81,7 @@ export function methodConceptFor(方法名: string): MethodConceptShape | undefi
 
 /** 護欄用：每一筆是誰登錄的。 */
 export function methodConceptSources(): [方法名: string, 來源: string][] {
-  return [...表.entries()].map(([k, v]) => [k, v.來源])
+  return [...表.entries()].map(([k, v]) => [k, v.source])
 }
 
 /**
@@ -99,17 +99,17 @@ export function methodConceptSources(): [方法名: string, 來源: string][] {
  *
  * > **兩個查詢點就是兩張表。**
  */
-const 容器方法表 = new Map<string, { conceptId: string; 來源: string }>()
+const 容器方法表 = new Map<string, { conceptId: string; source: string }>()
 
-export function registerContainerMethodConcept(方法名: string, conceptId: string, 來源: string): void {
-  const 先來的 = 容器方法表.get(方法名)
-  if (先來的 && 先來的.conceptId !== conceptId) {
+export function registerContainerMethodConcept(方法名: string, conceptId: string, source: string): void {
+  const existing = 容器方法表.get(方法名)
+  if (existing && existing.conceptId !== conceptId) {
     throw new Error(
       `容器方法「${方法名}」被登錄兩次且指向不同身分：` +
-        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
     )
   }
-  容器方法表.set(方法名, { conceptId, 來源 })
+  容器方法表.set(方法名, { conceptId, source })
 }
 
 /** 容器方法名 → 元件身分。認不得回傳 `undefined`。 */
@@ -126,18 +126,18 @@ export function containerMethodConcept(方法名: string): string | undefined {
  * ⚠️ 型別查不到時**不猜**——留在通用版。
  * **猜一個錯的專屬身分比誠實降級更糟**（原註解的原話）。
  */
-const 型別方法表 = new Map<string, Map<string, { conceptId: string; 來源: string }>>()
+const 型別方法表 = new Map<string, Map<string, { conceptId: string; source: string }>>()
 
-export function registerTypedMethodConcept(型別: string, 方法名: string, conceptId: string, 來源: string): void {
+export function registerTypedMethodConcept(型別: string, 方法名: string, conceptId: string, source: string): void {
   const m = 型別方法表.get(型別) ?? new Map()
-  const 先來的 = m.get(方法名)
-  if (先來的 && 先來的.conceptId !== conceptId) {
+  const existing = m.get(方法名)
+  if (existing && existing.conceptId !== conceptId) {
     throw new Error(
       `「${型別}.${方法名}」被登錄兩次且指向不同身分：` +
-        `${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+        `${existing.conceptId}（${existing.來源}）與 ${conceptId}（${source}）。`,
     )
   }
-  m.set(方法名, { conceptId, 來源 })
+  m.set(方法名, { conceptId, source })
   型別方法表.set(型別, m)
 }
 

@@ -16,6 +16,6 @@ export function registerLift(): void {
     conceptId: 'cpp:math_binary',
     argSlots: ['arg1', 'arg2'],
     funcProp: 'func',
-    來源: 'cpp/math_binary',
+    source: 'cpp/math_binary',
   })
 }

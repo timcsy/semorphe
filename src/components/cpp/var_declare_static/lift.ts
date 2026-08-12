@@ -10,11 +10,11 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function 建靜態變數(型別: string, 名稱: string, 初始值: SemanticNode | null): SemanticNode {
+export function 建靜態變數(型別: string, name: string, 初始值: SemanticNode | null): SemanticNode {
   // 三態：沒有初始值時**不設**欄位，不是設成空陣列（見 `var_declare_auto`）
   return 初始值
-    ? createNode('cpp:var_declare_static', { name: 名稱, type: 型別 }, { initializer: [初始值] })
-    : createNode('cpp:var_declare_static', { name: 名稱, type: 型別 })
+    ? createNode('cpp:var_declare_static', { name: name, type: 型別 }, { initializer: [初始值] })
+    : createNode('cpp:var_declare_static', { name: name, type: 型別 })
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

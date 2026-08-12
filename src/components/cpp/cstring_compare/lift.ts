@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('strcmp', {
     conceptId: 'cpp:cstring_compare',
     argSlots: ["s1", "s2"],
-    來源: 'cpp/cstring_compare',
+    source: 'cpp/cstring_compare',
   })
 }

@@ -124,8 +124,8 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
     ['競程 C++', cppCompetitive],
   ] as const
 
-  for (const [名稱, topic] of 課程) {
-    describe(名稱, () => {
+  for (const [name, topic] of 課程) {
+    describe(name, () => {
       const { 分類, 積木 } = 起始關卡(topic)
 
       it('★ 起始關卡至少有五個分類——只剩兩個代表整批來源查無此章', () => {

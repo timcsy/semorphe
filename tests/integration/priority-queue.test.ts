@@ -139,7 +139,7 @@ describe('工具箱（E 項的第一次回報）', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppConcepts(), allCppProjections())
 
-    for (const [名稱, topic, levels] of [
+    for (const [name, topic, levels] of [
       ['初學 C++', beginner, ['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c', 'L3a']],
       ['競程 C++', competitive, ['L0', 'L1a', 'L2a']],
     ] as const) {
@@ -154,7 +154,7 @@ describe('工具箱（E 項的第一次回報）', () => {
       const 全部 = tb.contents.flatMap((c) => c.contents.map((b) => b.type))
       // ⚠️ `b.type` 是**積木型別**，遷移不動它（B 項加法式保留）
       for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_peek']) {
-        expect(全部, `${名稱}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
+        expect(全部, `${name}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
       }
     }
   })

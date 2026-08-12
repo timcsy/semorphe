@@ -17,31 +17,31 @@
  * 「認不得的二元運算子當算術處理」。那是一個**決定**，所以要有元件顯式宣告
  * 自己是那個兜底，不能靠共用檔記得。
  */
-const 表 = new Map<string, { conceptId: string; 來源: string }>()
-let 兜底: { conceptId: string; 來源: string } | null = null
+const 表 = new Map<string, { conceptId: string; source: string }>()
+let 兜底: { conceptId: string; source: string } | null = null
 
 /**
  * @throws 同一個運算子被兩顆元件認領——**靜默覆蓋的症狀是「某個運算子
  *   突然變成另一種概念」**，而那不會有任何錯誤訊息。
  */
-export function registerBinaryOperator(運算子們: string[], conceptId: string, 來源: string): void {
+export function registerBinaryOperator(運算子們: string[], conceptId: string, source: string): void {
   for (const op of 運算子們) {
-    const 先來的 = 表.get(op)
-    if (先來的 && 先來的.conceptId !== conceptId) {
+    const existing = 表.get(op)
+    if (existing && existing.conceptId !== conceptId) {
       throw new Error(
-        `二元運算子「${op}」被兩顆元件認領：${先來的.conceptId}（${先來的.來源}）與 ${conceptId}（${來源}）。`,
+        `二元運算子「${op}」被兩顆元件認領：${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
       )
     }
-    表.set(op, { conceptId, 來源 })
+    表.set(op, { conceptId, source })
   }
 }
 
 /** 認不得的二元運算子由誰兜底。**顯式宣告，不是共用檔的預設值。** */
-export function registerBinaryOperatorFallback(conceptId: string, 來源: string): void {
+export function registerBinaryOperatorFallback(conceptId: string, source: string): void {
   if (兜底 && 兜底.conceptId !== conceptId) {
-    throw new Error(`二元運算子的兜底被兩顆元件認領：${兜底.conceptId} 與 ${conceptId}（${來源}）。`)
+    throw new Error(`二元運算子的兜底被兩顆元件認領：${兜底.conceptId} 與 ${conceptId}（${source}）。`)
   }
-  兜底 = { conceptId, 來源 }
+  兜底 = { conceptId, source }
 }
 
 /** 這個運算子屬於誰。認不得就回兜底；連兜底都沒登錄回 `undefined`——**不猜**。 */

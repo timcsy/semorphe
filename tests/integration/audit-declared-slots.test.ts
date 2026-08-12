@@ -80,7 +80,7 @@ interface 判定 {
   conceptId: string
   桶: '確定違規' | '無法確定' | '安全'
   未宣告: string[]
-  理由: string
+  reason: string
 }
 
 /**
@@ -112,7 +112,7 @@ interface 判定 {
 interface 無法確定判定 {
   conceptId: string
   原因: '宣告過的降級目標' | '元概念' | '辨識到不了' | '語料沒覆蓋'
-  理由: string
+  reason: string
 }
 
 interface Baseline {
@@ -134,18 +134,18 @@ export function 判定宣告完整性(conceptId: string, 宣告的: readonly str
       conceptId,
       桶: '無法確定',
       未宣告: [],
-      理由: '語料沒有碰到這顆元件——不知道它會產出什麼接點；判不出來不計入安全',
+      reason: '語料沒有碰到這顆元件——不知道它會產出什麼接點；判不出來不計入安全',
     }
   }
   const 未宣告 = 產出的.filter((k) => !宣告的.includes(k))
   if (!未宣告.length) {
-    return { conceptId, 桶: '安全', 未宣告: [], 理由: '產出的接點宣告裡都有' }
+    return { conceptId, 桶: '安全', 未宣告: [], reason: '產出的接點宣告裡都有' }
   }
   return {
     conceptId,
     桶: '確定違規',
     未宣告,
-    理由:
+    reason:
       `lift 產出了接點 [${未宣告.join('、')}]，而宣告裡只有 [${宣告的.join('、') || '（空）'}]` +
       `——**宣告是三個消費者的輸入**（#29 的合成、完備性的合成、未來的共同測 harness），少一個接點它們會一起變瞎`,
   }
@@ -315,7 +315,7 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     expect(要看.map((d) => d.conceptId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
     expect(孤兒.map((d) => d.conceptId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
     expect(
-      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      判定s.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     assertRatchet([
@@ -331,23 +331,23 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
       expect(d.桶).toBe('確定違規')
       expect(d.未宣告).toEqual(['else_body'])
       // 釘**理由**不只釘結果（第 8 步）。
-      expect(d.理由).toContain('lift 產出了接點')
-      expect(d.理由).toContain('else_body')
-      expect(d.理由).toContain('condition') // 理由要說得出「宣告裡有什麼」
+      expect(d.reason).toContain('lift 產出了接點')
+      expect(d.reason).toContain('else_body')
+      expect(d.reason).toContain('condition') // 理由要說得出「宣告裡有什麼」
     })
 
     it('(a2) 宣告是空的時候，理由要說得出「（空）」而不是空白', () => {
       // `cpp:func_call` 就是這種——宣告零個接點卻有 `args`。
       // 理由印成 `宣告裡只有 []` 的話，讀的人分不出「沒宣告」與「渲染壞了」。
       const d = 判定宣告完整性('cpp:fake', [], ['args'])
-      expect(d.理由).toContain('（空）')
+      expect(d.reason).toContain('（空）')
     })
 
     it('(b) 好的輸入不亂報：產出的接點宣告裡都有 → 安全', () => {
       // 不可省。沒有它，一個「什麼都報」的判定器也能通過 (a)。
       const d = 判定宣告完整性('cpp:fake', ['condition', 'then_body'], ['condition', 'then_body'])
       expect(d.桶).toBe('安全')
-      expect(d.理由).toBe('產出的接點宣告裡都有')
+      expect(d.reason).toBe('產出的接點宣告裡都有')
     })
 
     it('(b2) 好的輸入不亂報：宣告比產出多不算違規', () => {
@@ -359,7 +359,7 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     it('(c) 判不出來的不計入安全：語料沒碰到 → 無法確定', () => {
       const d = 判定宣告完整性('cpp:fake', ['a'], null)
       expect(d.桶).toBe('無法確定')
-      expect(d.理由).toContain('不計入安全')
+      expect(d.reason).toContain('不計入安全')
       // ⚠️ 特別釘：**沒碰到不得被判成安全**。這是最容易寫錯的一格
       // ——`[]` 與 `null` 差一個字元，而前者會讓沒測到的元件全部變綠。
       expect(判定宣告完整性('cpp:fake', ['a'], []).桶).toBe('安全')

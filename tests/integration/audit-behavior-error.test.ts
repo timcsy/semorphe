@@ -72,7 +72,7 @@ interface 判定 {
    * - 這裡 機器**接管**了一個類別、人的詞彙沒縮回 → **死值留著**
    */
   判定: '真誤差' | '其他'
-  理由: string
+  reason: string
   /** 這一筆的成因。「一筆 ≠ 一個工作」——同一個根因下的筆數會一起消失。 */
   根因?: string
 }
@@ -314,7 +314,7 @@ describe('第三十二條護欄：行為的誤差', () => {
 
     expect(孤兒, '判定過期了。底下的事實變了，留著會讓一個過期的結論繼續生效。').toHaveLength(0)
     expect(
-      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      判定s.filter((d) => !d.reason || d.reason.length < 4),
       '每一筆判定必須有理由——沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     expect(

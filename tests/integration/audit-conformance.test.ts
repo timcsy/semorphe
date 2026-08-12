@@ -97,7 +97,7 @@ interface 判定 {
   conceptId: string
   桶: '確定違規' | '無法確定' | '安全'
   缺: string[]
-  理由: string
+  reason: string
 }
 
 interface Baseline {
@@ -125,22 +125,22 @@ export function 判定符合性(
   放進去的接點: readonly string[],
   回來的接點: readonly string[] | null,
 ): 判定 {
-  if (!放進去的接點.length) return { conceptId, 桶: '安全', 缺: [], 理由: '沒有宣告接點，或合成不出子節點' }
+  if (!放進去的接點.length) return { conceptId, 桶: '安全', 缺: [], reason: '沒有宣告接點，或合成不出子節點' }
   if (回來的接點 === null) {
     return {
       conceptId,
       桶: '無法確定',
       缺: [...放進去的接點],
-      理由: '走不完 render → extract（可能只能當運算式，也可能是漏了）；判不出來不計入安全',
+      reason: '走不完 render → extract（可能只能當運算式，也可能是漏了）；判不出來不計入安全',
     }
   }
   const 缺 = 放進去的接點.filter((k) => !回來的接點.includes(k))
-  if (!缺.length) return { conceptId, 桶: '安全', 缺: [], 理由: '每個放得進去的接點都回得來' }
+  if (!缺.length) return { conceptId, 桶: '安全', 缺: [], reason: '每個放得進去的接點都回得來' }
   return {
     conceptId,
     桶: '確定違規',
     缺,
-    理由: `接點 [${缺.join('、')}] 放得進語義樹，走完 render → extract 之後不見了（回來的：${回來的接點.join('、') || '無'}）`,
+    reason: `接點 [${缺.join('、')}] 放得進語義樹，走完 render → extract 之後不見了（回來的：${回來的接點.join('、') || '無'}）`,
   }
 }
 
@@ -163,7 +163,7 @@ function 量一次(): 判定[] {
       const s = synthMinimalNode(c as never) as { node?: SemanticNode }
       node = (s.node ?? (s as unknown as SemanticNode))
     } catch {
-      out.push({ conceptId: c.conceptId, 桶: '無法確定', 缺: 接點宣告, 理由: '合成不出最小節點' })
+      out.push({ conceptId: c.conceptId, 桶: '無法確定', 缺: 接點宣告, reason: '合成不出最小節點' })
       continue
     }
     // ⚠️ **合成器不知道某個接點該放什麼型別的子節點**——它按 `allowed`
@@ -261,8 +261,8 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     const 違規 = 全部.filter((d) => d.桶 === '確定違規')
     const 待查 = 全部.filter((d) => d.桶 === '無法確定')
 
-    printReport('符合性：確定違規', 違規.map((d) => `  ✘ ${d.conceptId} — ${d.理由}`))
-    printReport('符合性：無法確定（不計入安全）', 待查.map((d) => `  ？ ${d.conceptId} — ${d.理由}`))
+    printReport('符合性：確定違規', 違規.map((d) => `  ✘ ${d.conceptId} — ${d.reason}`))
+    printReport('符合性：無法確定（不計入安全）', 待查.map((d) => `  ？ ${d.conceptId} — ${d.reason}`))
 
     if (process.env.GENERATE_BASELINE) {
       writeBaseline(GUARD, {
@@ -297,15 +297,15 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
       expect(d.缺.sort()).toEqual(['source', 'values'])
       // 釘**理由**不只釘結果（第 8 步）——一個因為錯誤理由而給出正確結果的
       // 護欄，看起來與健康的完全一樣。
-      expect(d.理由).toContain('走完 render → extract 之後不見了')
-      expect(d.理由).toContain('無')
+      expect(d.reason).toContain('走完 render → extract 之後不見了')
+      expect(d.reason).toContain('無')
     })
 
     it('(b) 好的輸入不亂報：接點完整出來 → 安全', () => {
       // 不可省。沒有它，一個「什麼都報」的判定器也能通過 (a)。
       const d = 判定符合性('cpp:fake', ['values'], ['values'])
       expect(d.桶).toBe('安全')
-      expect(d.理由).toBe('每個放得進去的接點都回得來')
+      expect(d.reason).toBe('每個放得進去的接點都回得來')
     })
 
     it('(b2) 好的輸入不亂報：插槽名與接點名不同詞也不影響 → 安全', () => {
@@ -319,7 +319,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     it('(c) 判不出來的不計入安全：渲染不出來 → 無法確定', () => {
       const d = 判定符合性('cpp:fake', ['values'], null)
       expect(d.桶).toBe('無法確定')
-      expect(d.理由).toContain('不計入安全')
+      expect(d.reason).toContain('不計入安全')
     })
 
     it('★ 部分缺只報缺的那幾個，不報全部', () => {

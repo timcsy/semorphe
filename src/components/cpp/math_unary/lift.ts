@@ -26,6 +26,6 @@ export function registerLift(): void {
     conceptId: 'cpp:math_unary',
     argSlots: ['value'],
     funcProp: 'func',
-    來源: 'cpp/math_unary',
+    source: 'cpp/math_unary',
   })
 }

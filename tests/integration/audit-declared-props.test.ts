@@ -56,7 +56,7 @@ const GUARD = 'declared-props'
 
 type 形狀 = '漏宣告' | '投影提示' | '動態編號'
 
-interface 命中 {
+interface hits {
   鍵: string
   概念: string
   屬性: string
@@ -124,13 +124,13 @@ interface 結果 {
   段數: number
   節點: number
   有宣告表的節點: number
-  命中: 命中[]
+  hits: hits[]
 }
 
 function 量(語料: readonly string[]): 結果 {
   const 宣告 = 宣告表()
-  const acc = new Map<string, 命中>()
-  const r: 結果 = { 段數: 0, 節點: 0, 有宣告表的節點: 0, 命中: [] }
+  const acc = new Map<string, hits>()
+  const r: 結果 = { 段數: 0, 節點: 0, 有宣告表的節點: 0, hits: [] }
   const 走 = (n: SemanticNode): void => {
     r.節點++
     const d = 宣告.get(n.conceptId)
@@ -158,7 +158,7 @@ function 量(語料: readonly string[]): 結果 {
       /* 解析或 lift 失敗的段落不計入——它們是語料問題，不是屬性問題 */
     }
   }
-  r.命中 = [...acc.values()].sort((a, b) => b.次數 - a.次數)
+  r.hits = [...acc.values()].sort((a, b) => b.次數 - a.次數)
   return r
 }
 
@@ -207,18 +207,18 @@ describe('第三十四條護欄：屬性方向的宣告完整性', () => {
   it('★ 注入④：宣告齊全的輸入不得被誤報', () => {
     // 基線非零時這一支仍不可省——它釘住的是「不亂報」，而那與「會報」是兩件事。
     const r = 量(['int main(){ int a = 1; return 0; }'])
-    const 漏 = r.命中.filter((h) => h.形狀 === '漏宣告')
+    const 漏 = r.hits.filter((h) => h.形狀 === '漏宣告')
     expect(漏.map((h) => h.鍵), '一段最單純的程式不該有任何未宣告屬性').toEqual([])
   })
 
   // ── 棘輪 ────────────────────────────────────────────────────────
   it('漏宣告只准下降；動態編號不進棘輪', () => {
     const r = 量(取語料())
-    const 依形狀 = (s: 形狀): 命中[] => r.命中.filter((h) => h.形狀 === s)
+    const 依形狀 = (s: 形狀): hits[] => r.hits.filter((h) => h.形狀 === s)
     const 漏 = 依形狀('漏宣告')
     const 提示 = 依形狀('投影提示')
     const 動態 = 依形狀('動態編號')
-    const 次 = (hs: 命中[]): number => hs.reduce((a, b) => a + b.次數, 0)
+    const 次 = (hs: hits[]): number => hs.reduce((a, b) => a + b.次數, 0)
 
     printReport('屬性方向的宣告完整性（lift 產出的屬性，宣告裡有嗎）', [
       `語料   ${r.段數} 段｜語義節點 ${r.節點}｜其中有宣告表的 ${r.有宣告表的節點}`,

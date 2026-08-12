@@ -46,16 +46,16 @@ export type MethodBranch = (
   ctx: LiftContext,
 ) => SemanticNode | null
 
-const 函式分支: { 來源: string; fn: CallBranch }[] = []
-const 方法分支: { 來源: string; fn: MethodBranch }[] = []
+const 函式分支: { source: string; fn: CallBranch }[] = []
+const 方法分支: { source: string; fn: MethodBranch }[] = []
 
-/** @param 來源 誰登錄的——膠囊填自己的資料夾，讓護欄指得出名字 */
-export function registerCallBranch(來源: string, fn: CallBranch): void {
-  函式分支.push({ 來源, fn })
+/** @param source 誰登錄的——膠囊填自己的資料夾，讓護欄指得出名字 */
+export function registerCallBranch(source: string, fn: CallBranch): void {
+  函式分支.push({ source, fn })
 }
 
-export function registerMethodBranch(來源: string, fn: MethodBranch): void {
-  方法分支.push({ 來源, fn })
+export function registerMethodBranch(source: string, fn: MethodBranch): void {
+  方法分支.push({ source, fn })
 }
 
 /** 依序問每一個分支。**第一個認領的贏**，其餘不再問。 */
@@ -86,10 +86,10 @@ export function tryMethodBranches(
 }
 
 /** 護欄用：登錄了哪些分支、各是誰。 */
-export function liftBranchSources(): { 種類: '函式' | '方法'; 來源: string }[] {
+export function liftBranchSources(): { 種類: '函式' | '方法'; source: string }[] {
   return [
-    ...函式分支.map((b) => ({ 種類: '函式' as const, 來源: b.來源 })),
-    ...方法分支.map((b) => ({ 種類: '方法' as const, 來源: b.來源 })),
+    ...函式分支.map((b) => ({ 種類: '函式' as const, source: b.source })),
+    ...方法分支.map((b) => ({ 種類: '方法' as const, source: b.source })),
   ]
 }
 
@@ -118,11 +118,11 @@ export function liftBranchSources(): { 種類: '函式' | '方法'; 來源: stri
  */
 export type AstBranch = (node: AstNode, ctx: LiftContext) => SemanticNode | null
 
-const AST分支 = new Map<string, { 來源: string; fn: AstBranch }[]>()
+const AST分支 = new Map<string, { source: string; fn: AstBranch }[]>()
 
-export function registerAstBranch(astType: string, 來源: string, fn: AstBranch): void {
+export function registerAstBranch(astType: string, source: string, fn: AstBranch): void {
   const arr = AST分支.get(astType) ?? []
-  arr.push({ 來源, fn })
+  arr.push({ source, fn })
   AST分支.set(astType, arr)
 }
 
@@ -136,8 +136,8 @@ export function tryAstBranches(astType: string, node: AstNode, ctx: LiftContext)
 }
 
 /** 護欄用。 */
-export function astBranchSources(): { astType: string; 來源: string }[] {
-  return [...AST分支.entries()].flatMap(([t, a]) => a.map((b) => ({ astType: t, 來源: b.來源 })))
+export function astBranchSources(): { astType: string; source: string }[] {
+  return [...AST分支.entries()].flatMap(([t, a]) => a.map((b) => ({ astType: t, source: b.source })))
 }
 
 /**
@@ -152,10 +152,10 @@ export function astBranchSources(): { astType: string; 來源: string }[] {
  */
 export type DeclaratorBranch = (decl: AstNode, type: string, ctx: LiftContext) => SemanticNode | null
 
-const 宣告子分支: { 來源: string; fn: DeclaratorBranch }[] = []
+const 宣告子分支: { source: string; fn: DeclaratorBranch }[] = []
 
-export function registerDeclaratorBranch(來源: string, fn: DeclaratorBranch): void {
-  宣告子分支.push({ 來源, fn })
+export function registerDeclaratorBranch(source: string, fn: DeclaratorBranch): void {
+  宣告子分支.push({ source, fn })
 }
 
 export function tryDeclaratorBranches(decl: AstNode, type: string, ctx: LiftContext): SemanticNode | null {

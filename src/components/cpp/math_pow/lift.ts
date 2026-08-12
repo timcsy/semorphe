@@ -24,6 +24,6 @@ export function registerLift(): void {
   registerCallConcept('pow', {
     conceptId: 'cpp:math_pow',
     argSlots: ['base', 'exponent'],
-    來源: 'cpp/math_pow',
+    source: 'cpp/math_pow',
   })
 }

@@ -19,6 +19,6 @@ export function registerLift(): void {
   registerCallConcept('strcat', {
     conceptId: 'cpp:cstring_append',
     argSlots: ["dest", "src"],
-    來源: 'cpp/cstring_append',
+    source: 'cpp/cstring_append',
   })
 }

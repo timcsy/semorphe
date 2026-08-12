@@ -11,6 +11,6 @@ export function registerLift(): void {
   registerCallConcept('strchr', {
     conceptId: 'cpp:cstring_find_char',
     argSlots: ['str', 'ch'],
-    來源: 'cpp/cstring_find_char',
+    source: 'cpp/cstring_find_char',
   })
 }

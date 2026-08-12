@@ -59,20 +59,20 @@ beforeAll(async () => {
 })
 
 /** 涵蓋這一輪要動的 15 顆元件。每一段都用到至少一顆。 */
-const 樣本: { 名稱: string; 碼: string; 執行?: boolean }[] = [
-  { 名稱: 'func_def + func_call', 碼: 'int add(int a, int b) { return a + b; }\nint main() { cout << add(1, 2) << endl; }', 執行: true },
-  { 名稱: 'method_call', 碼: 'int main() { string s = "hello"; cout << s.substr(1, 2) << endl; }', 執行: true },
-  { 名稱: 'print_formatted', 碼: 'int main() { printf("%d %d\\n", 1, 2); }', 執行: true },
-  { 名稱: 'input_formatted', 碼: 'int main() { int a; scanf("%d", &a); }' },
-  { 名稱: 'forward_decl', 碼: 'int f(int a);\nint main() { return 0; }' },
-  { 名稱: 'array_declare + values', 碼: 'int main() { int a[3] = {1, 2, 3}; cout << a[1] << endl; }', 執行: true },
-  { 名稱: 'var_declare 多變數', 碼: 'int main() { int a = 1, b = 2; cout << a + b << endl; }', 執行: true },
-  { 名稱: 'class_def', 碼: 'class C { public: int x; private: int y; protected: int z; };' },
-  { 名稱: 'input', 碼: 'int main() { int a; cin >> a; }' },
-  { 名稱: 'string_declare', 碼: 'int main() { string s = "abc"; cout << s << endl; }', 執行: true },
-  { 名稱: 'string_find', 碼: 'int main() { string s = "abcabc"; cout << s.find("b", 2) << endl; }', 執行: true },
-  { 名稱: 'string_append_char', 碼: 'int main() { string s = "ab"; s += \'c\'; cout << s << endl; }', 執行: true },
-  { 名稱: 'fstream', 碼: 'int main() { ifstream fin("in.txt"); ofstream fout("out.txt"); }' },
+const 樣本: { name: string; 碼: string; 執行?: boolean }[] = [
+  { name: 'func_def + func_call', 碼: 'int add(int a, int b) { return a + b; }\nint main() { cout << add(1, 2) << endl; }', 執行: true },
+  { name: 'method_call', 碼: 'int main() { string s = "hello"; cout << s.substr(1, 2) << endl; }', 執行: true },
+  { name: 'print_formatted', 碼: 'int main() { printf("%d %d\\n", 1, 2); }', 執行: true },
+  { name: 'input_formatted', 碼: 'int main() { int a; scanf("%d", &a); }' },
+  { name: 'forward_decl', 碼: 'int f(int a);\nint main() { return 0; }' },
+  { name: 'array_declare + values', 碼: 'int main() { int a[3] = {1, 2, 3}; cout << a[1] << endl; }', 執行: true },
+  { name: 'var_declare 多變數', 碼: 'int main() { int a = 1, b = 2; cout << a + b << endl; }', 執行: true },
+  { name: 'class_def', 碼: 'class C { public: int x; private: int y; protected: int z; };' },
+  { name: 'input', 碼: 'int main() { int a; cin >> a; }' },
+  { name: 'string_declare', 碼: 'int main() { string s = "abc"; cout << s << endl; }', 執行: true },
+  { name: 'string_find', 碼: 'int main() { string s = "abcabc"; cout << s.find("b", 2) << endl; }', 執行: true },
+  { name: 'string_append_char', 碼: 'int main() { string s = "ab"; s += \'c\'; cout << s << endl; }', 執行: true },
+  { name: 'fstream', 碼: 'int main() { ifstream fin("in.txt"); ofstream fout("out.txt"); }' },
 ]
 
 interface 基準 {
@@ -110,9 +110,9 @@ async function 量一次(): Promise<Omit<基準, '_meta'>> {
   const 執行: Record<string, string> = {}
   for (const s of 樣本) {
     const tree = lift(s.碼)
-    產生碼[s.名稱] = tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>'
-    來回[s.名稱] = 來回一圈(s.碼)
-    if (s.執行) 執行[s.名稱] = await 跑(s.碼)
+    產生碼[s.name] = tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>'
+    來回[s.name] = 來回一圈(s.碼)
+    if (s.執行) 執行[s.name] = await 跑(s.碼)
   }
   return { 產生碼, 來回, 執行 }
 }

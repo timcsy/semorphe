@@ -79,19 +79,19 @@ const style: StylePreset = {
  * ⚠️ **含兄弟元件那一支**（`research.md` 的未驗項）：`vector_size`／`vector_pop`／
  * `vector_back` 與 `vector_declare` 是否共用執行期狀態，沒有實測過。
  */
-const 樣本: { 名稱: string; 碼: string }[] = [
-  { 名稱: '最小宣告', 碼: 'int main() { vector<int> v; }' },
-  { 名稱: '初始化列表', 碼: 'int main() { vector<int> v = {3, 1, 4}; }' },
-  { 名稱: '型別變化', 碼: 'int main() { vector<double> d; vector<std::string> s; }' },
+const 樣本: { name: string; 碼: string }[] = [
+  { name: '最小宣告', 碼: 'int main() { vector<int> v; }' },
+  { name: '初始化列表', 碼: 'int main() { vector<int> v = {3, 1, 4}; }' },
+  { name: '型別變化', 碼: 'int main() { vector<double> d; vector<std::string> s; }' },
   {
-    名稱: '兄弟元件同場',
+    name: '兄弟元件同場',
     碼: 'int main() { vector<int> v = {3, 1, 4}; cout << v.size() << " " << v.back() << endl; v.pop_back(); cout << v.size() << endl; }',
   },
   // 負向樣本：這些**不得**被認成切片元件。留在基準裡，是因為
   // 「lift 塌成路由器」那一步最容易把別的容器一起吃掉。
-  { 名稱: '負向-stack', 碼: 'int main() { stack<int> s; }' },
-  { 名稱: '負向-map', 碼: 'int main() { map<int, int> m; }' },
-  { 名稱: '負向-其餘容器', 碼: 'int main() { queue<int> q; set<int> st; pair<int,int> p; priority_queue<int> pq; }' },
+  { name: '負向-stack', 碼: 'int main() { stack<int> s; }' },
+  { name: '負向-map', 碼: 'int main() { map<int, int> m; }' },
+  { name: '負向-其餘容器', 碼: 'int main() { queue<int> q; set<int> st; pair<int,int> p; priority_queue<int> pq; }' },
 ]
 
 interface 基準 {
@@ -175,11 +175,11 @@ async function 量一次(): Promise<Omit<基準, '_meta'>> {
   const 執行輸出: 基準['執行輸出'] = {}
   for (const s of 樣本) {
     const tree = liftCode(s.碼)
-    樣本結果[s.名稱] = {
+    樣本結果[s.name] = {
       產出: tree ? generateCode(tree, 'cpp', style) : '<lift 失敗>',
       身分: [...collectIds(tree)].sort(),
     }
-    執行輸出[s.名稱] = await runProgram(s.碼)
+    執行輸出[s.name] = await runProgram(s.碼)
   }
   return {
     身分集合: allCppConcepts().map((c) => c.conceptId).sort(),
@@ -222,8 +222,8 @@ describe('膠囊搬家：兩條防線', () => {
     const base: 基準 = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
     const now = await 量一次()
     for (const s of 樣本) {
-      expect(now.樣本[s.名稱], `樣本「${s.名稱}」的產出變了`).toEqual(base.樣本[s.名稱])
-      expect(now.執行輸出[s.名稱], `樣本「${s.名稱}」的執行輸出變了`).toBe(base.執行輸出[s.名稱])
+      expect(now.樣本[s.name], `樣本「${s.name}」的產出變了`).toEqual(base.樣本[s.name])
+      expect(now.執行輸出[s.name], `樣本「${s.name}」的執行輸出變了`).toBe(base.執行輸出[s.name])
     }
   })
 

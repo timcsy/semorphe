@@ -231,17 +231,17 @@ describe('走流程掃樹（硬關卡）', () => {
 
   it('★ 自我驗證：樣本真的辨識出東西了（第 10 步）', () => {
     // 一個 parse 失敗的樣本會產出空樹，而空樹的「幽靈為 0」與健康的一模一樣。
-    for (const [名稱, body] of 樣本) {
-      expect(樹裡的身分(body).length, `樣本「${名稱}」辨識不出任何節點 → 是樣本壞了，不是它乾淨`).toBeGreaterThan(2)
+    for (const [name, body] of 樣本) {
+      expect(樹裡的身分(body).length, `樣本「${name}」辨識不出任何節點 → 是樣本壞了，不是它乾淨`).toBeGreaterThan(2)
     }
   })
 
   it('★ 每個樣本產出的身分，都在登錄表或非元件宣告裡', () => {
     const 幽靈: string[] = []
-    for (const [名稱, body] of 樣本) {
+    for (const [name, body] of 樣本) {
       for (const id of new Set(樹裡的身分(body))) {
         if (已宣告.has(id) || nonComponentDecl(id)) continue
-        幽靈.push(`${名稱}: ${id}`)
+        幽靈.push(`${name}: ${id}`)
       }
     }
     expect(

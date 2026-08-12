@@ -68,7 +68,7 @@ import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RAT
 const GUARD = 'anchor-rot'
 const 判定檔 = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
 
-interface 命中 {
+interface hits {
   /**
    * 識別碼。
    *
@@ -94,7 +94,7 @@ interface 判定 {
   鍵: string
   位置: string
   判定: '已知答案樣本' | '錨錯了'
-  理由: string
+  reason: string
 }
 
 interface 基線 {
@@ -144,8 +144,8 @@ function 真實身分(): Set<string> {
  * ⚠️ 只看 matcher **之後**的文字——身分出現在「查表的鍵」上是正常的
  * （`實際.get('cpp:func_def')`），出現在**期望值**裡才是錨在缺陷上。
  */
-export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<string>): 命中[] {
-  const out: 命中[] = []
+export function 掃(檔案文字: string, 檔名: string, ids: ReadonlySet<string>): hits[] {
+  const out: hits[] = []
   const lines = 檔案文字.split('\n')
   let 區塊 = ''
   let 在註解 = false
@@ -226,16 +226,16 @@ describe('第三十五條護欄：錨點會爛', () => {
   it('錨錯了必須是 0（硬性零——留一筆，它就會在成功的那天變紅）', () => {
     const ids = 真實身分()
     const 檔s = audit檔()
-    const 命中 = 檔s.flatMap((f) => 掃(fs.readFileSync(f, 'utf8'), path.basename(f), ids))
+    const hits = 檔s.flatMap((f) => 掃(fs.readFileSync(f, 'utf8'), path.basename(f), ids))
     const 判定s = 讀判定()
     const 已判定 = new Map(判定s.map((d) => [d.鍵, d]))
-    const 要看 = 命中.filter((h) => !已判定.has(h.鍵))
-    const 錨錯了 = 命中.filter((h) => 已判定.get(h.鍵)?.判定 === '錨錯了')
-    const 孤兒 = 判定s.filter((d) => !命中.some((h) => h.鍵 === d.鍵))
+    const 要看 = hits.filter((h) => !已判定.has(h.鍵))
+    const 錨錯了 = hits.filter((h) => 已判定.get(h.鍵)?.判定 === '錨錯了')
+    const 孤兒 = 判定s.filter((d) => !hits.some((h) => h.鍵 === d.鍵))
 
     printReport('錨點會爛（注入／健康檢查錨在缺陷還在不在上）', [
       `掃描   ${檔s.length} 個 audit 檔｜${ids.size} 個真實身分`,
-      `命中   ${命中.length}（已判定 ${命中.length - 要看.length}，要看 ${要看.length}）`,
+      `命中   ${hits.length}（已判定 ${hits.length - 要看.length}，要看 ${要看.length}）`,
       `其中判為**錨錯了** ${錨錯了.length} 筆 ← 硬性零`,
       '',
       ...要看.map((h, i) => `  ${i + 1}. ${h.位置}  [${h.區塊}]\n       ${h.程式碼}`),
@@ -269,7 +269,7 @@ describe('第三十五條護欄：錨點會爛', () => {
     const base = loadBaseline<基線>(GUARD)
     expect(孤兒.map((d) => d.鍵), '判定過期了——底下的程式碼變了').toEqual([])
     expect(
-      判定s.filter((d) => !d.理由 || d.理由.length < 4),
+      判定s.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     expect(要看.map((h) => `${h.位置} ${h.程式碼}`), '有未判定的命中——護欄只排順序，判定要人做').toEqual([])
