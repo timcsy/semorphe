@@ -9,9 +9,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts"
+    "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "happy-dom": "^20.7.0",
     "tree-sitter-c": "^0.24.1",
     "tree-sitter-cli": "^0.26.6",

@@ -67,8 +67,40 @@ jobs:
             exit 1
           fi
 
+  # ⚠️ **這個 job 補的是「沒有任何自動化在看渲染出來的結果」那一格**
+  # （`knowledge/vision.md`「執行機構自己接上」那一節的未承諾項）。
+  #
+  # 它的代價在 2026-08-12 被量了出來：`execution:at-node` 與斷點反轉做完之後，
+  # **有兩件事驗不到**——斷點「命中時會停」與加速功能。那不是懶得測，
+  # 是**用截圖與座標點擊去驗 UI 本來就會這樣**：同一個座標時中時不中，
+  # 而 toggle 兩次等於沒設，**畫面上看不出差別**。
+  #
+  # 接上之後第一件事就是抓到一個錯誤假設：我以為「停住 ＝ 還沒印出 6」，
+  # 而除錯模式是**先跑完再回放**——輸出與執行位置是兩個時間軸。
+  # 那個假設在單元測試裡永遠不會被否證，因為那裡沒有「主控台」。
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # ⚠️ 只裝 chromium。裝全部瀏覽器要多幾分鐘，而這批測試量的是
+      # 「渲染出來對不對」，不是跨瀏覽器相容性——那是另一個問題，
+      # 要問的時候再加，不要因為「順便」而讓每次 CI 都變慢。
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   build:
-    needs: test
+    needs: [test, e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
