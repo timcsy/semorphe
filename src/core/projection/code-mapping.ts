@@ -28,8 +28,8 @@ import type { CodeMapping } from './code-generator'
  * ⚠️ **一個節點的祖先通常也會命中**（`main` 的區間涵蓋所有行）。那不是 bug，
  * 是原本就有的語義——執行走到祖先節點時本來就會停。
  */
-export function 斷點對應的節點(mappings: CodeMapping[], 斷點行: Iterable<number>): string[] {
-  const bps = [...斷點行]
+export function nodesAtBreakpoints(mappings: CodeMapping[], breakpointLines: Iterable<number>): string[] {
+  const bps = [...breakpointLines]
   const ids = mappings
     .filter((m) => bps.some((bp) => bp >= m.startLine + 1 && bp <= m.endLine + 1))
     .map((m) => m.nodeId)

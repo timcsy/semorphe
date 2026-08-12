@@ -15,7 +15,7 @@
  *
  * ## ⚠️ 自我否證聲明（寫在量測之前）
  *
- * > **如果「掃到的 `src/ui` 檔數」、「掃到的 import 行數」或
+ * > **如果「掃到的 `src/ui` files」、「掃到的 import 行數」或
  * > 「掃到的方法呼叫數」是 0，
  * > 代表工具壞了，不是世界長這樣。**
  *
@@ -98,19 +98,19 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
 
-const 護欄名 = 'four-independences'
+const GUARD_NAME = 'four-independences'
 
 /** 已登錄成 `ViewHost` 的四個視圖。⚠️ `leftPanel`／`bottomPanel` 不在其中——它們是 DOM。 */
-const 視圖們 = ['blocklyPanel', 'monacoPanel', 'consolePanel', 'variablePanel']
+const VIEW_HOSTS = ['blocklyPanel', 'monacoPanel', 'consolePanel', 'variablePanel']
 
 /** 生命週期不是通訊——`view-registry.ts` 的檔頭寫明它由呼叫端直接管。 */
-const 生命週期 = ['init', 'initialize', 'dispose', 'connectBus']
+const LIFECYCLE_METHODS = ['init', 'initialize', 'dispose', 'connectBus']
 
-interface 基線 {
+interface Baseline {
   _meta: { note: string; ratchet: string }
-  掃描: {
-    檔數: number
-    import行數: number
+  scanned: {
+    files: number
+    importLines: number
     /**
      * ⚠️ **這個欄位換過一次，而換掉的理由是一條新的教訓。**
      *
@@ -128,18 +128,18 @@ interface 基線 {
      * 現在錨的是 `src/ui` 裡**任意**的方法呼叫數。把面板呼叫換成
      * `this.廣播(...)` 之後它不會變小——**換掉一個呼叫仍然是一個呼叫。**
      */
-    任意方法呼叫: number
+    anyMethodCalls: number
   }
-  視圖import語言: number
-  其餘UI檔import語言: number
-  視圖間import: number
-  跨層直接呼叫視圖: number
-  可見不入棘輪: { 組裝點import語言: number }
-  明細: {
-    視圖import語言: string[]
-    其餘UI檔import語言: string[]
-    視圖間import: string[]
-    跨層直接呼叫視圖: string[]
+  viewImportsLanguage: number
+  otherUiImportsLanguage: number
+  crossViewImports: number
+  directViewCalls: number
+  visibleNotRatcheted: { compositionRootImportsLanguage: number }
+  details: {
+    viewImportsLanguage: string[]
+    otherUiImportsLanguage: string[]
+    crossViewImports: string[]
+    directViewCalls: string[]
   }
 }
 
@@ -150,8 +150,8 @@ interface 基線 {
  *
  * ⚠️ `languages/style` 是語言中立的介面，**不算**。
  */
-export function 是語言專屬import(行: string): boolean {
-  const m = 行.match(/from\s+'([^']+)'/)
+export function isLanguageSpecificImport(line: string): boolean {
+  const m = line.match(/from\s+'([^']+)'/)
   if (!m) return false
   const p = m[1]
   if (/\/languages\/style(\/|'|$)/.test(p) || p.endsWith('languages/style')) return false
@@ -159,8 +159,8 @@ export function 是語言專屬import(行: string): boolean {
 }
 
 /** 這一行是不是 import 了另一個面板（視圖獨立性）。 */
-export function 是視圖間import(行: string): boolean {
-  const m = 行.match(/from\s+'([^']+)'/)
+export function isCrossViewImport(line: string): boolean {
+  const m = line.match(/from\s+'([^']+)'/)
   if (!m) return false
   return /(^|\/)[\w-]*panel[\w-]*$/i.test(m[1].replace(/\.[jt]s$/, ''))
 }
@@ -171,70 +171,70 @@ export function 是視圖間import(行: string): boolean {
  * ⚠️ 只認四個**已登錄**的視圖名，而且排除生命週期
  * ——第一版沒有這兩道，量出 139 筆，其中 26 筆是 `div.appendChild`。
  */
-export function 數跨層呼叫(行: string): string[] {
-  const re = new RegExp(`\\b(${視圖們.join('|')})[?!]?\\.([a-zA-Z_]\\w*)\\(`, 'g')
+export function crossLayerCalls(line: string): string[] {
+  const re = new RegExp(`\\b(${VIEW_HOSTS.join('|')})[?!]?\\.([a-zA-Z_]\\w*)\\(`, 'g')
   const out: string[] = []
-  for (const m of 行.matchAll(re)) if (!生命週期.includes(m[2])) out.push(`${m[1]}.${m[2]}`)
+  for (const m of line.matchAll(re)) if (!LIFECYCLE_METHODS.includes(m[2])) out.push(`${m[1]}.${m[2]}`)
   return out
 }
 
-function ui檔(): string[] {
+function uiFiles(): string[] {
   const out: string[] = []
-  const 走 = (d: string): void => {
+  const walk = (d: string): void => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
-      if (e.isDirectory()) 走(p)
+      if (e.isDirectory()) walk(p)
       else if (e.name.endsWith('.ts') && !e.name.endsWith('.d.ts')) out.push(p)
     }
   }
-  走(path.join(REPO_ROOT, 'src/ui'))
+  walk(path.join(REPO_ROOT, 'src/ui'))
   return out
 }
 
-function 量(): 基線 {
-  const 檔s = ui檔()
-  const 視圖import語言: string[] = []
-  const 其餘UI檔import語言: string[] = []
-  const 視圖間import: string[] = []
-  const 跨層直接呼叫視圖: string[] = []
-  let 組裝點import語言 = 0
-  let import行數 = 0
-  let 任意方法呼叫 = 0
+function measure(): Baseline {
+  const files = uiFiles()
+  const viewImportsLanguage: string[] = []
+  const otherUiImportsLanguage: string[] = []
+  const crossViewImports: string[] = []
+  const directViewCalls: string[] = []
+  let compositionRootImportsLanguage = 0
+  let importLines = 0
+  let anyMethodCalls = 0
 
-  for (const f of 檔s) {
+  for (const f of files) {
     const rel = path.relative(REPO_ROOT, f)
-    const 是視圖 = rel.includes('/panels/')
-    const 是組裝點 = rel.endsWith('ui/app.ts')
+    const isView = rel.includes('/panels/')
+    const isCompositionRoot = rel.endsWith('ui/app.ts')
     const lines = fs.readFileSync(f, 'utf8').split('\n')
 
-    lines.forEach((行, i) => {
+    lines.forEach((line, i) => {
       // ⚠️ import 那幾欄同理不用行號——用「檔案 → 被 import 的路徑」。
-      const 來源 = 行.match(/from\s+'([^']+)'/)?.[1] ?? ''
-      const 位置 = `${rel} → ${來源}`
-      if (/^\s*(import|}\s*from)/.test(行) || /from\s+'/.test(行)) {
-        if (/from\s+'/.test(行)) import行數++
-        if (是語言專屬import(行)) {
-          if (是組裝點) 組裝點import語言++
-          else if (是視圖) 視圖import語言.push(位置)
-          else 其餘UI檔import語言.push(位置)
+      const source = line.match(/from\s+'([^']+)'/)?.[1] ?? ''
+      const key = `${rel} → ${source}`
+      if (/^\s*(import|}\s*from)/.test(line) || /from\s+'/.test(line)) {
+        if (/from\s+'/.test(line)) importLines++
+        if (isLanguageSpecificImport(line)) {
+          if (isCompositionRoot) compositionRootImportsLanguage++
+          else if (isView) viewImportsLanguage.push(key)
+          else otherUiImportsLanguage.push(key)
         }
-        if (是視圖 && 是視圖間import(行)) 視圖間import.push(位置)
+        if (isView && isCrossViewImport(line)) crossViewImports.push(key)
       }
       // 跨層通訊：面板自己的檔案不算（那是視圖內部）
-      if (!是視圖) {
+      if (!isView) {
       }
-      // ⚠️ 見 `基線.掃描.任意方法呼叫` 的註解：錨必須與違規**無關**，不是它的超集。
-      任意方法呼叫 += (行.match(/\b\w+[?!]?\.\w+\(/g) ?? []).length
-      if (!是視圖) {
-        // ⚠️ 鍵是「檔案 → 視圖.方法」，**不是行號**。
-        // 第一版用行號，於是把 32 處搬上匯流排之後**剩下的每一行都被判成「新增」**
+      // ⚠️ 見 `Baseline.scanned.anyMethodCalls` 的註解：錨必須與違規**無關**，不是它的超集。
+      anyMethodCalls += (line.match(/\b\w+[?!]?\.\w+\(/g) ?? []).length
+      if (!isView) {
+        // ⚠️ 鍵是「檔案 → 視圖.method」，**不是行號**。
+        // 第一版用行號，於是把 32 處搬上匯流排之後**剩下的每一行都被判成「added」**
         // ——一次正確的清償讓護欄整片變紅。
         //
         // > **一個會因為程式碼往下移了幾行就報「新增違規」的鍵，
         // > 報的不是違規，是 diff。**
         //
         // 行號留在報表裡給人看，識別用不到它。
-        for (const 方法 of 數跨層呼叫(行)) 跨層直接呼叫視圖.push(`${rel} → ${方法}`)
+        for (const method of crossLayerCalls(line)) directViewCalls.push(`${rel} → ${method}`)
       }
     })
   }
@@ -246,7 +246,7 @@ function 量(): 基線 {
         '⚠️ 四個數字意義不同：**視圖 import 語言**＝拔掉 C++ 視圖起不來；\n' +
         '**視圖間 import**＝硬性零，開一個口「視圖可抽換」就是假的；\n' +
         '**跨層直接呼叫**＝發號施令的一端知道接收端叫什麼名字。\n' +
-        '⚠️ `組裝點import語言` 可見但不入棘輪——composition root 知道自己裝了什麼是正常的。\n' +
+        '⚠️ `compositionRootImportsLanguage` 可見但不入棘輪——composition root 知道自己裝了什麼是正常的。\n' +
         '而它必須可見：視圖那欄歸零、這欄長大，代表耦合搬家不是消失。\n' +
         '⚠️ 下降必須是「真的拆掉了」，不是「把檔案排除在掃描外」或「改了判準」。\n' +
         '\n' +
@@ -262,78 +262,78 @@ function 量(): 基線 {
         '  而它的**新增項檢查**抓到了（方法名變了），那正是它該做的。\n' +
         '- 跨層直接呼叫 76 → 74：**實作了**。斷點反轉——程式碼視圖把「哪幾行有斷點」\n' +
         '  翻譯成「哪些節點有斷點」推上匯流排（`execution:breakpoints`），\n' +
-        '  執行器不再知道有「行」這個東西。\n' +
-        '- 其餘UI檔import語言 4 → 2：**實作了**。`ioTraitOf`／`isPlainDeclaration` 上移到\n' +
+        '  執行器不再知道有「line」這個東西。\n' +
+        '- otherUiImportsLanguage 4 → 2：**實作了**。`ioTraitOf`／`isPlainDeclaration` 上移到\n' +
         '  `core/component/traits.ts`——它們一個 C++ 的字都不認識，而視圖層為了問它們\n' +
         '  而 import 整個語言套件。順帶消掉一份與核心逐字相同的 `性狀()` 實作\n' +
         '  （F 之後過渡表退場，兩份就變成同一件事，而第三十八條護欄因為函式名不同抓不到）。',
       ratchet: RATCHET_NOTE,
     },
-    掃描: { 檔數: 檔s.length, import行數, 任意方法呼叫 },
-    視圖import語言: 視圖import語言.length,
-    其餘UI檔import語言: 其餘UI檔import語言.length,
-    視圖間import: 視圖間import.length,
-    跨層直接呼叫視圖: 跨層直接呼叫視圖.length,
-    可見不入棘輪: { 組裝點import語言 },
-    明細: { 視圖import語言, 其餘UI檔import語言, 視圖間import, 跨層直接呼叫視圖 },
+    scanned: { files: files.length, importLines, anyMethodCalls },
+    viewImportsLanguage: viewImportsLanguage.length,
+    otherUiImportsLanguage: otherUiImportsLanguage.length,
+    crossViewImports: crossViewImports.length,
+    directViewCalls: directViewCalls.length,
+    visibleNotRatcheted: { compositionRootImportsLanguage },
+    details: { viewImportsLanguage, otherUiImportsLanguage, crossViewImports, directViewCalls },
   }
 }
 
 describe('第三十九條護欄：P9 四項獨立性', () => {
   it('★ 入口條件：掃描真的吃到東西', () => {
     // 三個錨全部是掃描的**輸入量**。它們不會因為違規被修好而變動。
-    const r = 量()
-    expect(r.掃描.檔數, '一個 ui 檔都沒掃到 → 量測壞了').toBeGreaterThan(20)
-    expect(r.掃描.import行數, '一行 import 都沒看到 → 掃描器沒吃到內容').toBeGreaterThan(100)
-    expect(r.掃描.任意方法呼叫, '一次方法呼叫都沒看到 → 正則沒對上').toBeGreaterThan(500)
+    const r = measure()
+    expect(r.scanned.files, '一個 ui 檔都沒掃到 → 量測壞了').toBeGreaterThan(20)
+    expect(r.scanned.importLines, '一行 import 都沒看到 → 掃描器沒吃到內容').toBeGreaterThan(100)
+    expect(r.scanned.anyMethodCalls, '一次方法呼叫都沒看到 → 正則沒對上').toBeGreaterThan(500)
   })
 
   it('★ 注入①：語言專屬 import 會被報', () => {
-    expect(是語言專屬import("import { x } from '../../languages/foo/bar'")).toBe(true)
-    expect(是語言專屬import("import { y } from '../components/foo/baz/lift'")).toBe(true)
-    expect(是語言專屬import("} from '../languages/foo/quux'")).toBe(true)
+    expect(isLanguageSpecificImport("import { x } from '../../languages/foo/bar'")).toBe(true)
+    expect(isLanguageSpecificImport("import { y } from '../components/foo/baz/lift'")).toBe(true)
+    expect(isLanguageSpecificImport("} from '../languages/foo/quux'")).toBe(true)
   })
 
   it('★ 注入②：語言中立的 import 不得被報', () => {
     // 這一條不可省。沒有它，一個「什麼都報」的掃描器也能通過注入①。
-    expect(是語言專屬import("import type { A } from '../languages/style'")).toBe(false)
-    expect(是語言專屬import("import { B } from '../../core/semantic-bus'")).toBe(false)
-    expect(是語言專屬import("import * as Blockly from 'blockly'")).toBe(false)
-    expect(是語言專屬import('一行沒有 import 的字')).toBe(false)
+    expect(isLanguageSpecificImport("import type { A } from '../languages/style'")).toBe(false)
+    expect(isLanguageSpecificImport("import { B } from '../../core/semantic-bus'")).toBe(false)
+    expect(isLanguageSpecificImport("import * as Blockly from 'blockly'")).toBe(false)
+    expect(isLanguageSpecificImport('一行沒有 import 的字')).toBe(false)
   })
 
   it('★ 注入③：視圖間 import 會被報，非視圖的不會', () => {
-    expect(是視圖間import("import { Foo } from './foo-panel'")).toBe(true)
-    expect(是視圖間import("import { Bar } from '../panels/bar-panel.ts'")).toBe(true)
-    expect(是視圖間import("import { Baz } from '../../core/view-host'")).toBe(false)
-    expect(是視圖間import("import { Qux } from './panel-helpers/util'")).toBe(false)
+    expect(isCrossViewImport("import { Foo } from './foo-panel'")).toBe(true)
+    expect(isCrossViewImport("import { Bar } from '../panels/bar-panel.ts'")).toBe(true)
+    expect(isCrossViewImport("import { Baz } from '../../core/view-host'")).toBe(false)
+    expect(isCrossViewImport("import { Qux } from './panel-helpers/util'")).toBe(false)
   })
 
   it('★ 注入④：跨層呼叫只算已登錄的視圖，且排除生命週期', () => {
-    expect(數跨層呼叫('this.monacoPanel?.setCode(x)')).toEqual(['monacoPanel.setCode'])
-    expect(數跨層呼叫('a.blocklyPanel.foo(); b.consolePanel!.bar()')).toEqual([
+    expect(crossLayerCalls('this.monacoPanel?.setCode(x)')).toEqual(['monacoPanel.setCode'])
+    expect(crossLayerCalls('a.blocklyPanel.foo(); b.consolePanel!.bar()')).toEqual([
       'blocklyPanel.foo',
       'consolePanel.bar',
     ])
     // ⚠️ 這兩條是第一版量出 139 筆的原因——名字裡有 Panel 不代表它是視圖
-    expect(數跨層呼叫('leftPanel.appendChild(el)')).toEqual([])
-    expect(數跨層呼叫('bottomPanel.addTab(t)')).toEqual([])
+    expect(crossLayerCalls('leftPanel.appendChild(el)')).toEqual([])
+    expect(crossLayerCalls('bottomPanel.addTab(t)')).toEqual([])
     // 生命週期由呼叫端直接管，不是「通訊」
-    expect(數跨層呼叫('this.monacoPanel.init(el)')).toEqual([])
-    expect(數跨層呼叫('this.blocklyPanel?.dispose()')).toEqual([])
+    expect(crossLayerCalls('this.monacoPanel.init(el)')).toEqual([])
+    expect(crossLayerCalls('this.blocklyPanel?.dispose()')).toEqual([])
   })
 
   it('★ 硬性零：視圖之間不得互相 import', () => {
-    const r = 量()
+    const r = measure()
     // 開一個口，「拔掉任一視圖，其他不受影響」這句話就是假的。
-    expect(r.明細.視圖間import, `視圖之間出現 import：\n  ${r.明細.視圖間import.join('\n  ')}`).toEqual([])
+    expect(r.details.crossViewImports, `視圖之間出現 import：\n  ${r.details.crossViewImports.join('\n  ')}`).toEqual([])
   })
 
   it('棘輪：三個耦合數字只准下降', () => {
-    const r = 量()
+    const r = measure()
 
     if (process.env.GENERATE_BASELINE) {
-      writeBaseline(護欄名, r satisfies 基線)
+      writeBaseline(GUARD_NAME, r satisfies Baseline)
       return
     }
 
@@ -341,39 +341,39 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
     // 拋出的是「基線檔不存在」，而**看不到它抓到了什麼**。
     // `build-guardrail` 6.5 要的是「先跑、確認紅、**逐項指名**」，
     // 而一個在指名之前就拋出的護欄，指不了名。
-    const 基線值 = (k: keyof 基線): string => {
+    const baselineOf = (k: keyof Baseline): string => {
       try {
-        return String(loadBaseline<基線>(護欄名)[k])
+        return String(loadBaseline<Baseline>(GUARD_NAME)[k])
       } catch {
         return '尚無'
       }
     }
     printReport('P9 四項獨立性', [
-      `掃描       ${r.掃描.檔數} 個 ui 檔／${r.掃描.import行數} 行 import`,
+      `scanned       ${r.scanned.files} 個 ui 檔／${r.scanned.importLines} line import`,
       `① 語言獨立性`,
-      `   視圖 import 語言    ${r.視圖import語言}（基線 ${基線值('視圖import語言')}）`,
-      ...r.明細.視圖import語言.map((x) => `     ✘ ${x}`),
-      `   其餘 UI 檔          ${r.其餘UI檔import語言}（基線 ${基線值('其餘UI檔import語言')}）⚠️ 無法確定，保守計入`,
-      ...r.明細.其餘UI檔import語言.map((x) => `     ? ${x}`),
-      `   組裝點 app.ts       ${r.可見不入棘輪.組裝點import語言}（可見，不入棘輪）`,
-      `② 視圖獨立性          ${r.視圖間import}（硬性零）`,
+      `   視圖 import 語言    ${r.viewImportsLanguage}（Baseline ${baselineOf('viewImportsLanguage')}）`,
+      ...r.details.viewImportsLanguage.map((x) => `     ✘ ${x}`),
+      `   其餘 UI 檔          ${r.otherUiImportsLanguage}（Baseline ${baselineOf('otherUiImportsLanguage')}）⚠️ 無法確定，保守計入`,
+      ...r.details.otherUiImportsLanguage.map((x) => `     ? ${x}`),
+      `   組裝點 app.ts       ${r.visibleNotRatcheted.compositionRootImportsLanguage}（可見，不入棘輪）`,
+      `② 視圖獨立性          ${r.crossViewImports}（硬性零）`,
       `④ 跨層通訊只走 Bus`,
-      `   直接呼叫視圖        ${r.跨層直接呼叫視圖}（基線 ${基線值('跨層直接呼叫視圖')}）`,
-      ...[...new Set(r.明細.跨層直接呼叫視圖.map((x) => x.split(' → ')[0]))].map(
-        (f) => `     ✘ ${f}：${r.明細.跨層直接呼叫視圖.filter((x) => x.startsWith(f + ' → ')).length} 處`,
+      `   直接呼叫視圖        ${r.directViewCalls}（Baseline ${baselineOf('directViewCalls')}）`,
+      ...[...new Set(r.details.directViewCalls.map((x) => x.split(' → ')[0]))].map(
+        (f) => `     ✘ ${f}：${r.details.directViewCalls.filter((x) => x.startsWith(f + ' → ')).length} 處`,
       ),
     ])
 
-    const base = loadBaseline<基線>(護欄名)
+    const base = loadBaseline<Baseline>(GUARD_NAME)
 
-    for (const 欄 of ['視圖import語言', '其餘UI檔import語言', '跨層直接呼叫視圖'] as const) {
-      const 新增 = r.明細[欄].filter((x) => !base.明細[欄].includes(x))
-      expect(新增, `${欄} 新增了：\n  ${新增.join('\n  ')}`).toEqual([])
+    for (const col of ['viewImportsLanguage', 'otherUiImportsLanguage', 'directViewCalls'] as const) {
+      const added = r.details[col].filter((x) => !base.details[col].includes(x))
+      expect(added, `${col} 新增了：\n  ${added.join('\n  ')}`).toEqual([])
     }
     assertRatchet([
-      ['視圖import語言', r.視圖import語言, base.視圖import語言],
-      ['其餘UI檔import語言', r.其餘UI檔import語言, base.其餘UI檔import語言],
-      ['跨層直接呼叫視圖', r.跨層直接呼叫視圖, base.跨層直接呼叫視圖],
+      ['viewImportsLanguage', r.viewImportsLanguage, base.viewImportsLanguage],
+      ['otherUiImportsLanguage', r.otherUiImportsLanguage, base.otherUiImportsLanguage],
+      ['directViewCalls', r.directViewCalls, base.directViewCalls],
     ])
   })
 })

@@ -21,52 +21,52 @@
  * （實測：同一個座標點兩次會 toggle 回去，而畫面上看不出差別）。
  */
 import { describe, it, expect } from 'vitest'
-import { 斷點對應的節點 } from '../../../src/core/projection/code-mapping'
+import { nodesAtBreakpoints } from '../../../src/core/projection/code-mapping'
 import type { CodeMapping } from '../../../src/core/projection/code-generator'
 
 /** ⚠️ `startLine`／`endLine` 是 **0-based**，而使用者點的斷點行是 **1-based**。 */
-const 對映: CodeMapping[] = [
+const MAPPINGS: CodeMapping[] = [
   { nodeId: 'main', startLine: 3, endLine: 8 }, // 第 4–9 行
   { nodeId: 'decl', startLine: 4, endLine: 4 }, // 第 5 行
   { nodeId: 'loop', startLine: 5, endLine: 7 }, // 第 6–8 行
   { nodeId: 'body', startLine: 6, endLine: 6 }, // 第 7 行
 ]
 
-describe('斷點對應的節點', () => {
+describe('nodesAtBreakpoints', () => {
   it('沒有斷點就沒有節點', () => {
-    expect(斷點對應的節點(對映, [])).toEqual([])
+    expect(nodesAtBreakpoints(MAPPINGS, [])).toEqual([])
   })
 
-  it('★ 0-based 對映 vs 1-based 行號——差一就全錯', () => {
+  it('★ 0-based MAPPINGS vs 1-based 行號——差一就全錯', () => {
     // 第 5 行 → decl（startLine 4）。若少了 +1，會變成命中 loop。
-    expect(斷點對應的節點(對映, [5])).toContain('decl')
-    expect(斷點對應的節點(對映, [5])).not.toContain('body')
+    expect(nodesAtBreakpoints(MAPPINGS, [5])).toContain('decl')
+    expect(nodesAtBreakpoints(MAPPINGS, [5])).not.toContain('body')
   })
 
   it('★ 是區間包含，不是相等', () => {
     // 第 7 行落在 loop 的 [6,8] 之內，即使 loop 不是從第 7 行開始
-    expect(斷點對應的節點(對映, [7])).toContain('loop')
+    expect(nodesAtBreakpoints(MAPPINGS, [7])).toContain('loop')
   })
 
   it('★ 祖先也會命中——那不是 bug，是原本就有的語義', () => {
     // `main` 涵蓋第 4–9 行，所以任何一個裡面的斷點都會讓它命中。
     // 執行走到 `main` 節點時本來就會停，改成推送之後行為不變。
-    expect(斷點對應的節點(對映, [7])).toContain('main')
+    expect(nodesAtBreakpoints(MAPPINGS, [7])).toContain('main')
   })
 
   it('★ 去重——同一個節點不得出現兩次', () => {
-    const r = 斷點對應的節點(對映, [6, 7, 8])
+    const r = nodesAtBreakpoints(MAPPINGS, [6, 7, 8])
     expect(r.filter((x) => x === 'loop')).toHaveLength(1)
   })
 
   it('★ 反向：區間外的斷點不得命中', () => {
     // 這一條不可省。沒有它，一個「全部回傳」的實作也能通過上面每一條。
-    expect(斷點對應的節點(對映, [1])).toEqual([])
-    expect(斷點對應的節點(對映, [99])).toEqual([])
-    expect(斷點對應的節點(對映, [5])).not.toContain('loop')
+    expect(nodesAtBreakpoints(MAPPINGS, [1])).toEqual([])
+    expect(nodesAtBreakpoints(MAPPINGS, [99])).toEqual([])
+    expect(nodesAtBreakpoints(MAPPINGS, [5])).not.toContain('loop')
   })
 
   it('★ 沒有對映時不得亂猜', () => {
-    expect(斷點對應的節點([], [5, 6, 7])).toEqual([])
+    expect(nodesAtBreakpoints([], [5, 6, 7])).toEqual([])
   })
 })

@@ -49,7 +49,7 @@
 import type { ViewHost } from './view-host'
 import type { SemanticBus } from './semantic-bus'
 
-const 視圖 = new Map<string, ViewHost>()
+const views = new Map<string, ViewHost>()
 
 /**
  * 登錄一個視圖。
@@ -58,19 +58,19 @@ const 視圖 = new Map<string, ViewHost>()
  *   而那不會有任何錯誤訊息。
  */
 export function registerView(view: ViewHost): void {
-  const 先來的 = 視圖.get(view.viewId)
-  if (先來的 && 先來的 !== view) {
+  const existing = views.get(view.viewId)
+  if (existing && existing !== view) {
     throw new Error(
-      `視圖 id「${view.viewId}」被登錄兩次（${先來的.viewType} 與 ${view.viewType}）。` +
+      `視圖 id「${view.viewId}」被登錄兩次（${existing.viewType} 與 ${view.viewType}）。` +
         'id 是這張表的鍵，重複會讓其中一個安靜地收不到更新。',
     )
   }
-  視圖.set(view.viewId, view)
+  views.set(view.viewId, view)
 }
 
 /** 全部已登錄的視圖。 */
 export function registeredViews(): ViewHost[] {
-  return [...視圖.values()]
+  return [...views.values()]
 }
 
 /**
@@ -83,8 +83,8 @@ export function registeredViews(): ViewHost[] {
  * viewsWith('needsLanguageProjection')  // 哪些視圖需要語言投影（硬體視圖不需要）
  * ```
  */
-export function viewsWith(能力: 'editable' | 'needsLanguageProjection'): ViewHost[] {
-  return registeredViews().filter((v) => v.capabilities[能力])
+export function viewsWith(capability: 'editable' | 'needsLanguageProjection'): ViewHost[] {
+  return registeredViews().filter((v) => v.capabilities[capability])
 }
 
 /**
@@ -94,8 +94,8 @@ export function viewsWith(能力: 'editable' | 'needsLanguageProjection'): ViewH
  * 它存在的理由是「一棵語義樹上掛的標註，該只算給真的有人讀的那些」
  * ——而在有登錄表之前，那個「有人讀」是查不到的。
  */
-export function viewsConsuming(標註: string): ViewHost[] {
-  return registeredViews().filter((v) => v.capabilities.consumedAnnotations.includes(標註))
+export function viewsConsuming(annotation: string): ViewHost[] {
+  return registeredViews().filter((v) => v.capabilities.consumedAnnotations.includes(annotation))
 }
 
 /**
@@ -149,5 +149,5 @@ export function connectViews(bus: SemanticBus): void {
 
 /** 測試用：清空登錄表。⚠️ 產品路徑不該呼叫它。 */
 export function resetViews(): void {
-  視圖.clear()
+  views.clear()
 }

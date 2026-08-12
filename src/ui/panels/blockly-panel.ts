@@ -219,11 +219,11 @@ export class BlocklyPanel implements ViewHost {
     if (!target) return [nodeId]
 
     const blockIds = new Set<string>()
-    const 收集 = (b: Blockly.Block): void => {
+    const collect = (b: Blockly.Block): void => {
       blockIds.add(b.id)
-      for (const child of b.getChildren(false)) 收集(child)
+      for (const child of b.getChildren(false)) collect(child)
     }
-    收集(target)
+    collect(target)
     return this._blockMappings.filter((m) => blockIds.has(m.blockId)).map((m) => m.nodeId)
   }
 

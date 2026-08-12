@@ -1,7 +1,7 @@
 import * as monaco from 'monaco-editor'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
-import { 斷點對應的節點 } from '../../core/projection/code-mapping'
+import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticNode } from '../../core/types'
 
@@ -69,7 +69,7 @@ export class MonacoPanel implements ViewHost {
     if (event.mappings) {
       this.codeMappings = event.mappings
       // ⚠️ 對映變了，同一批斷點會落在不同的節點上——要重推。
-      this.推送斷點()
+      this.publishBreakpoints()
     }
     if (event.tree) this.currentTree = event.tree
   }
@@ -83,15 +83,15 @@ export class MonacoPanel implements ViewHost {
    * 兩個觸發點都要推，缺一個就會出現「設了斷點但不會停」：
    * ① 使用者切換斷點　② 對映更新（樹變了，同一行對到不同節點）
    */
-  private 推送斷點(): void {
+  private publishBreakpoints(): void {
     if (!this.bus) return
-    this.bus.emit('execution:breakpoints', { nodeIds: 斷點對應的節點(this.codeMappings, this.breakpoints) })
+    this.bus.emit('execution:breakpoints', { nodeIds: nodesAtBreakpoints(this.codeMappings, this.breakpoints) })
   }
 
   /** ⚠️ 這個視圖用匯流排**發**（斷點翻譯），不只收。 */
   connectBus(bus: SemanticBus): void {
     this.bus = bus
-    this.推送斷點()
+    this.publishBreakpoints()
   }
 
   /**
@@ -340,7 +340,7 @@ export class MonacoPanel implements ViewHost {
       this.breakpoints.add(line)
     }
     this.renderBreakpoints()
-    this.推送斷點()
+    this.publishBreakpoints()
     this.onBreakpointChangeCallback?.(this.getBreakpoints())
   }
 

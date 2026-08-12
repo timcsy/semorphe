@@ -29,7 +29,7 @@ export class ExecutionController {
   private panels: ExecutionPanels
   private bus: SemanticBus | undefined
   /** 有斷點的節點。由程式碼視圖翻譯後推來——見 `semantic-bus.ts` 的 `execution:breakpoints`。 */
-  private 斷點節點 = new Set<string>()
+  private breakpointNodes = new Set<string>()
   private interpreter: SemanticInterpreter | null = null
   private stepController: StepController | null = null
   private debugToolbar: DebugToolbar
@@ -97,7 +97,7 @@ export class ExecutionController {
     // ⚠️ 收一份「哪些節點有斷點」——**不再跟程式碼視圖要行號**。
     // 翻譯發生在懂「行」的那一端（`monaco-panel.推送斷點`）。
     this.bus?.on('execution:breakpoints', (d) => {
-      this.斷點節點 = new Set(d.nodeIds)
+      this.breakpointNodes = new Set(d.nodeIds)
     })
     this.debugToolbar = new DebugToolbar()
   }
@@ -113,7 +113,7 @@ export class ExecutionController {
    * ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
    * 而**讓狀態列在某些情境安靜地不更新**比多留一條退路糟得多。
    */
-  private 廣播(e: { status: ExecutionStatus; reason?: ExecutionReason; step?: StepInfo }): void {
+  private broadcastState(e: { status: ExecutionStatus; reason?: ExecutionReason; step?: StepInfo }): void {
     if (this.bus) {
       this.bus.emit('execution:state', e)
       return
@@ -125,7 +125,7 @@ export class ExecutionController {
   }
 
   /** 廣播輸出。⚠️ `stderr` 由視圖決定怎麼顯示——執行器不知道它會變紅。 */
-  private 輸出(text: string, stream: 'stdout' | 'stderr'): void {
+  private broadcastOutput(text: string, stream: 'stdout' | 'stderr'): void {
     if (this.bus) this.bus.emit('execution:output', { text, stream })
     else if (stream === 'stderr') this.panels.consolePanel?.error(text)
     else this.panels.consolePanel?.write(text)
@@ -133,7 +133,7 @@ export class ExecutionController {
 
 
   /**
-   * 廣播「執行走到了這個節點」。**不呼叫任何面板。**
+   * broadcastState「執行走到了這個節點」。**不呼叫任何面板。**
    *
    * ⚠️ 它取代的是三段逐字相似的程式碼，每一段都長這樣：
    *
@@ -151,7 +151,7 @@ export class ExecutionController {
    * ⚠️ 而它**只清了積木那一邊**——程式碼那邊的高亮沒被清，
    * 那個不對稱在收攏之前看不出來）。
    */
-  private 走到(nodeId: string | null, follow: boolean): void {
+  private broadcastAtNode(nodeId: string | null, follow: boolean): void {
     if (this.bus) {
       this.bus.emit('execution:at-node', { nodeId, follow })
       return
@@ -225,12 +225,12 @@ export class ExecutionController {
           if (this.animatePaused && this.animateResolve) {
             this.animatePaused = false
             this.debugToolbar.setMode('running')
-            this.廣播({ status: 'running' })
+            this.broadcastState({ status: 'running' })
             this.animateResolve()
           } else if (this.stepController) {
             this.stepController.resume()
             this.debugToolbar.setMode('running')
-            this.廣播({ status: 'running' })
+            this.broadcastState({ status: 'running' })
           }
           // If interpreter is running but no animateResolve (e.g., waiting for input), ignore
           break
@@ -292,14 +292,14 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.輸出(text, 'stdout')
+      this.broadcastOutput(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.廣播({ status: 'running', reason: 'awaiting-input' })
+      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
       // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.走到(nodeId, true)
+      this.broadcastAtNode(nodeId, true)
     })
 
     // Breakpoint support in run mode: pause on breakpoint, then allow stepping
@@ -316,9 +316,9 @@ export class ExecutionController {
       let shouldPause = this.animatePaused
 
       // Check breakpoints
-      if (!shouldPause && step.nodeId && this.斷點節點.has(step.nodeId)) {
+      if (!shouldPause && step.nodeId && this.breakpointNodes.has(step.nodeId)) {
         shouldPause = true
-        this.廣播({ status: 'paused', reason: 'breakpoint' })
+        this.broadcastState({ status: 'paused', reason: 'breakpoint' })
       }
 
       if (shouldPause) {
@@ -333,26 +333,26 @@ export class ExecutionController {
 
     this.showExecButtons(true, 'running')
     this.panels.consolePanel?.clear()
-    this.廣播({ status: 'running' })
+    this.broadcastState({ status: 'running' })
     this.panels.bottomPanel?.showTab('console')
 
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
       this.clearHighlights()
-      this.廣播({ status: 'completed' })
+      this.broadcastState({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {
       if (e instanceof RuntimeError) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.廣播({ status: 'idle', reason: 'aborted' })
+          this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
-          this.輸出(e.message, 'stderr')
-          this.廣播({ status: 'error' })
+          this.broadcastOutput(e.message, 'stderr')
+          this.broadcastState({ status: 'error' })
           showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
         }
       } else {
-        this.輸出(String(e), 'stderr')
-        this.廣播({ status: 'error' })
+        this.broadcastOutput(String(e), 'stderr')
+        this.broadcastState({ status: 'error' })
       }
     } finally {
       this.showExecButtons(false)
@@ -385,14 +385,14 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.輸出(text, 'stdout')
+      this.broadcastOutput(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.廣播({ status: 'running', reason: 'awaiting-input' })
+      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
       // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.走到(nodeId, true)
+      this.broadcastAtNode(nodeId, true)
     })
     this.panels.consolePanel?.clear()
     this.panels.bottomPanel?.showTab('variables')
@@ -402,8 +402,8 @@ export class ExecutionController {
       this.stepRecords = await this.interpreter.executeWithSteps(tree as unknown as InterpreterNode)
     } catch (e) {
       if (e instanceof RuntimeError) {
-        this.輸出(e.message, 'stderr')
-        this.廣播({ status: 'error' })
+        this.broadcastOutput(e.message, 'stderr')
+        this.broadcastState({ status: 'error' })
         this.showExecButtons(false)
         return
       }
@@ -427,9 +427,9 @@ export class ExecutionController {
 
       const step = this.stepRecords[this.currentStepIndex]
       if (step?.nodeId) {
-        if (this.斷點節點.has(step.nodeId) && this.stepController?.getStatus() === 'running') {
+        if (this.breakpointNodes.has(step.nodeId) && this.stepController?.getStatus() === 'running') {
           this.stepController.pause()
-          this.廣播({ status: 'paused', reason: 'breakpoint' })
+          this.broadcastState({ status: 'paused', reason: 'breakpoint' })
           this.debugToolbar.setMode('paused')
         }
       }
@@ -441,14 +441,14 @@ export class ExecutionController {
       this.showExecButtons(false)
     })
 
-    this.廣播({ status: 'running' })
+    this.broadcastState({ status: 'running' })
     this.stepController.step()
   }
 
   private handlePause(): void {
     if (this.stepController?.getStatus() === 'running') {
       this.stepController.pause()
-      this.廣播({ status: 'paused' })
+      this.broadcastState({ status: 'paused' })
       this.debugToolbar.setMode('paused')
     }
   }
@@ -528,7 +528,7 @@ export class ExecutionController {
     this.stepController?.stop()
     this.clearHighlights()
     this.panels.variablePanel?.clear()
-    this.廣播({ status: 'idle' })
+    this.broadcastState({ status: 'idle' })
     this.showExecButtons(false)
   }
 
@@ -536,16 +536,16 @@ export class ExecutionController {
     if (index < 0 || index >= this.stepRecords.length) return
     const step = this.stepRecords[index]
 
-    // 廣播，不是命令——誰想看變數，自己登錄成視圖（`core/view-registry.ts`）。
+    // broadcastState，不是命令——誰想看變數，自己登錄成視圖（`core/view-registry.ts`）。
     // ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
     // 而**讓變數面板在某些情境安靜地不更新**比多留一行退路糟得多。
-    this.廣播({ status: 'paused', step })
+    this.broadcastState({ status: 'paused', step })
     this.panels.bottomPanel?.showTab('variables')
 
-    this.走到(step.nodeId ?? null, this.debugToolbar.isAutoScrollEnabled() ?? false)
+    this.broadcastAtNode(step.nodeId ?? null, this.debugToolbar.isAutoScrollEnabled() ?? false)
 
     if (this.stepController?.getStatus() === 'completed') {
-      this.廣播({ status: 'completed' })
+      this.broadcastState({ status: 'completed' })
       this.showExecButtons(false)
     }
   }
@@ -594,7 +594,7 @@ export class ExecutionController {
       this.animatePaused = false
       this.animateSpeed = speed
       this.debugToolbar.setMode('running')
-      this.廣播({ status: 'running' })
+      this.broadcastState({ status: 'running' })
       this.animateResolve()
       return
     }
@@ -624,14 +624,14 @@ export class ExecutionController {
     })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
-      this.輸出(text, 'stdout')
+      this.broadcastOutput(text, 'stdout')
     })
     this.interpreter.setWaitingCallback((nodeId) => {
       // Switch to console tab so the input field is visible
       this.panels.bottomPanel?.showTab('console')
-      this.廣播({ status: 'running', reason: 'awaiting-input' })
+      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
       // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.走到(nodeId, true)
+      this.broadcastAtNode(nodeId, true)
     })
 
     this.stepRecords = []
@@ -650,9 +650,9 @@ export class ExecutionController {
 
       let shouldPause = this.animatePaused
       if (!shouldPause && step.nodeId) {
-        if (this.斷點節點.has(step.nodeId)) {
+        if (this.breakpointNodes.has(step.nodeId)) {
           shouldPause = true
-          this.廣播({ status: 'paused', reason: 'breakpoint' })
+          this.broadcastState({ status: 'paused', reason: 'breakpoint' })
         }
       }
 
@@ -673,22 +673,22 @@ export class ExecutionController {
     this.panels.consolePanel?.clear()
     this.panels.bottomPanel?.showTab('variables')
     this.showExecButtons(true, 'running')
-    this.廣播({ status: 'running' })
+    this.broadcastState({ status: 'running' })
 
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
-      this.廣播({ status: 'completed' })
+      this.broadcastState({ status: 'completed' })
     } catch (e) {
       if (e instanceof RuntimeError) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.廣播({ status: 'idle', reason: 'aborted' })
+          this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
-          this.輸出(e.message, 'stderr')
-          this.廣播({ status: 'error' })
+          this.broadcastOutput(e.message, 'stderr')
+          this.broadcastState({ status: 'error' })
         }
       } else {
-        this.輸出(String(e), 'stderr')
-        this.廣播({ status: 'error' })
+        this.broadcastOutput(String(e), 'stderr')
+        this.broadcastState({ status: 'error' })
       }
     } finally {
       this.clearHighlights()
@@ -719,9 +719,9 @@ export class ExecutionController {
     })
   }
 
-  /** ⚠️ 原本只清積木那一邊，改成廣播之後**兩個視圖都會清**——見 `走到` 的註解。 */
+  /** ⚠️ 原本只清積木那一邊，改成廣播之後**兩個視圖都會清**——見 `broadcastAtNode` 的註解。 */
   private clearHighlights(): void {
-    this.走到(null, false)
+    this.broadcastAtNode(null, false)
   }
 
   dispose(): void {
