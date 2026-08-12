@@ -125,7 +125,20 @@ $ARGUMENTS
 檢查 `src/core/types.ts` 中現有名稱以避免衝突。
 
 **概念分層目錄對應**：概念所屬層級決定檔案存放位置：
-- **universal**（跨語言共通）→ `src/blocks/semantics/`
+⚠️ **這張表在 2026-08-12 過時了兩層**，而它是一份**會被照著做**的指示：
+
+- 路徑變了：`src/blocks/semantics/` → `src/core/`（`specs/117`）
+- **而更重要的是：那一層已經沒有東西了**。F 完成（177/177 膠囊化）之後
+  `universal-concepts.json` 與 `universal-blocks.json` 都是 `[]`。
+
+> **一顆新元件今天的家是膠囊**：`src/components/<scope>/<name>/`
+> ——宣告、形態、標籤、五路實作全在裡面。見 [[元件]] 的五槽與
+> `component-encapsulate` skill。
+
+舊的分層對應留在下面當**歷史參考**（讀舊程式碼時用得上），
+⚠️ **但不要照著它放新東西**：
+
+- ~~**universal**（跨語言共通）→ `src/blocks/semantics/`~~ → 今天是 `src/core/`，而且是空的
 - **lang-core**（語言核心語法）→ `src/languages/{lang}/core/`（`blocks.json`、`concepts.json`）
 - **lang-library**（語言標準庫）→ `src/languages/{lang}/std/{module}/`（`blocks.json`、`concepts.json`）
 
