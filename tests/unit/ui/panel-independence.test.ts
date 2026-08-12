@@ -71,13 +71,31 @@ describe('Panel independence', () => {
     }
   })
 
-  it('semantic-tree-view should not import blockly', () => {
-    const filePath = path.resolve(__dirname, '../../../src/views/semantic-tree-view.ts')
-    const imports = getImports(filePath)
-    for (const imp of imports) {
-      expect(imp).not.toContain('blockly')
-      expect(imp).not.toContain('projections/')
-      expect(imp).not.toContain('panels/')
+  /**
+   * ⚠️ **掃描對象換過（2026-08-12，spec 117）。**
+   *
+   * 原本掃 `src/views/semantic-tree-view.ts`——一個**假的視圖**，
+   * 用來證明「只依賴 core 的視圖是可能的」。那個假視圖已完成任務並
+   * 併進它唯一的測試（`tests/unit/views/`），而**契約接手了那個證明**。
+   *
+   * > **原本守的是「有一個假實作沒 import Blockly」，
+   * > 現在守的是「所有視圖都必須實作的那份契約沒 import Blockly」。**
+   *
+   * ⚠️ 而這一支是**第二個**掃那個路徑的地方——第一個在
+   * `tests/unit/views/semantic-tree-view.test.ts`。搬檔案時我 grep 的是
+   * 類別名 `SemanticTreeView`，**看不到用路徑字串掃的這一支**。
+   * 同族教訓：`experience.md`「身分不只以字串字面出現」。
+   */
+  it('★ 視圖契約不得 import blockly／投影／面板', () => {
+    for (const f of ['view-host.ts', 'view-registry.ts']) {
+      const filePath = path.resolve(__dirname, '../../../src/core', f)
+      const imports = getImports(filePath)
+      expect(imports.length, `${f} 一個 import 都沒讀到 → 掃描壞了`).toBeGreaterThan(0)
+      for (const imp of imports) {
+        expect(imp, `${f} import 了 ${imp}`).not.toContain('blockly')
+        expect(imp).not.toContain('projections/')
+        expect(imp).not.toContain('panels/')
+      }
     }
   })
 })
