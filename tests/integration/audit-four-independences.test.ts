@@ -255,6 +255,11 @@ function 量(): 基線 {
         '- 跨層直接呼叫 95 → 76：**實作了**。`execution:at-node` 廣播取代了三段\n' +
         '  「查中央對映表 → 高亮積木 ＋ 捲程式碼」。`highlightBlock`／`revealLine`／\n' +
         '  `addHighlight`／`clearHighlight`／`centerOnBlock` 全數歸零。\n' +
+        '- ⚠️ 跨層直接呼叫 73 → 73（**數字沒動，而耦合實質減少了**）：加速功能原本走\n' +
+        '  四步積木 API（`getBlockById`／`getSurroundParent`／`getChildren`／`getBlockMappings`），\n' +
+        '  換成問一句 `nodesInAncestorScope(nodeId, level)`。1:1 取代，所以總數不變\n' +
+        '  ——**這條護欄量的是「有幾處跨層」，量不到「那一處有多深」**。\n' +
+        '  而它的**新增項檢查**抓到了（方法名變了），那正是它該做的。\n' +
         '- 跨層直接呼叫 76 → 74：**實作了**。斷點反轉——程式碼視圖把「哪幾行有斷點」\n' +
         '  翻譯成「哪些節點有斷點」推上匯流排（`execution:breakpoints`），\n' +
         '  執行器不再知道有「行」這個東西。\n' +

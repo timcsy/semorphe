@@ -183,6 +183,50 @@ export class BlocklyPanel implements ViewHost {
   }
 
   /** Get block mappings from the last extraction */
+  /**
+   * **從這個節點往上 `level` 層，那個範圍涵蓋哪些語義節點。**
+   *
+   * 「加速」用它：使用者說「跳過這一層」，執行器就要知道**跳過哪些節點**。
+   *
+   * ⚠️ 在此之前這段住在 `execution-controller`，而它整段是積木的知識：
+   *
+   * ```ts
+   * workspace.getBlockById(blockId)      // 積木
+   * targetBlock.getSurroundParent()      // 積木的「包住我的那一顆」
+   * block.getChildren(false)             // 積木的子樹
+   * syncController.getBlockMappings()    // 再翻回 nodeId
+   * ```
+   *
+   * **執行器為了回答一個語義問題（跳過哪些節點），走了四步積木 API。**
+   *
+   * > **一個用別人的座標系繞一圈才回得了家的問題，本來就該在別人家裡問。**
+   *
+   * ⚠️ 而「層」這個概念**在積木裡與在語義樹裡不一樣**：`getSurroundParent()`
+   * 跳過表達式（value inputs），只算語句包含。所以這不是「語義樹往上 N 層」
+   * ——它是**積木視圖對「層」的定義**，而使用者看到的正是積木。
+   * 那是它該住在這裡的第二個理由。
+   *
+   * 找不到對應積木時回傳 `[該節點自己]`——與原本的行為一致（保守：只跳自己）。
+   */
+  nodesInAncestorScope(nodeId: string, level: number): string[] {
+    const blockId = this.getBlockIdForNodeId(nodeId)
+    let target = blockId ? this.workspace?.getBlockById(blockId) ?? null : null
+    for (let i = 1; i < level && target; i++) {
+      const parent = target.getSurroundParent()
+      if (!parent) break
+      target = parent
+    }
+    if (!target) return [nodeId]
+
+    const blockIds = new Set<string>()
+    const 收集 = (b: Blockly.Block): void => {
+      blockIds.add(b.id)
+      for (const child of b.getChildren(false)) 收集(child)
+    }
+    收集(target)
+    return this._blockMappings.filter((m) => blockIds.has(m.blockId)).map((m) => m.nodeId)
+  }
+
   getBlockMappings(): BlockMapping[] {
     return this._blockMappings
   }

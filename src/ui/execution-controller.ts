@@ -472,49 +472,16 @@ export class ExecutionController {
     this.stepController.step()
   }
 
-  private nodeIdToBlockId(nodeId: string): string | null {
-    const mapping = this.panels.syncController?.getMappingForNode(nodeId)
-    return mapping?.blockId ?? null
-  }
-
   private handleAccelerate(): void {
     const currentNodeId = this.stepRecords[this.currentStepIndex]?.nodeId
     if (!currentNodeId) return
-    const currentBlockId = this.nodeIdToBlockId(currentNodeId)
-
     if (this.interpreter && !this.stepController) {
       const level = this.debugToolbar.getAccelerateLevel() ?? 1
-      const workspace = this.panels.blocklyPanel?.getWorkspace()
-      let targetBlock = currentBlockId ? workspace?.getBlockById(currentBlockId) ?? null : null
-
-      if (level > 1 && targetBlock) {
-        for (let i = 1; i < level && targetBlock; i++) {
-          const parent = targetBlock.getSurroundParent()
-          if (!parent) break
-          targetBlock = parent
-        }
-      }
-
-      const skipNodeIds = new Set<string>()
-      if (targetBlock) {
-        // Collect all block IDs under target, then map to nodeIds for skipping
-        const blockIds = new Set<string>()
-        const collectBlockIds = (block: Blockly.Block) => {
-          blockIds.add(block.id)
-          for (const child of block.getChildren(false)) {
-            collectBlockIds(child)
-          }
-        }
-        collectBlockIds(targetBlock)
-        // Map blockIds → nodeIds via blockMappings
-        const blockMappings = this.panels.syncController?.getBlockMappings() ?? []
-        for (const bm of blockMappings) {
-          if (blockIds.has(bm.blockId)) skipNodeIds.add(bm.nodeId)
-        }
-      } else {
-        skipNodeIds.add(currentNodeId)
-      }
-      this.animateAccelerateSkipIds = skipNodeIds
+      // ⚠️ 這一句取代了四步積木 API（`getBlockById`／`getSurroundParent`／
+      // `getChildren`／`getBlockMappings`）。執行器問的是一個**語義問題**
+      // ——「跳過哪些節點」——而它原本得走進積木的座標系才問得出來。
+      const skip = this.panels.blocklyPanel?.nodesInAncestorScope(currentNodeId, level) ?? [currentNodeId]
+      this.animateAccelerateSkipIds = new Set(skip)
 
       if (this.animatePaused && this.animateResolve) {
         this.animatePaused = false
@@ -532,7 +499,6 @@ export class ExecutionController {
     if (wasRunning) this.stepController.pause()
 
     const level = this.debugToolbar.getAccelerateLevel() ?? 1
-    const workspace = this.panels.blocklyPanel?.getWorkspace()
 
     if (level <= 1) {
       while (this.currentStepIndex < this.stepRecords.length - 1) {
@@ -541,27 +507,9 @@ export class ExecutionController {
         this.currentStepIndex++
       }
     } else {
-      let targetBlock = currentBlockId ? workspace?.getBlockById(currentBlockId) ?? null : null
-      for (let i = 1; i < level && targetBlock; i++) {
-        const parent = targetBlock.getSurroundParent()
-        if (!parent) break
-        targetBlock = parent
-      }
-      const skipNodeIds = new Set<string>()
-      if (targetBlock) {
-        const blockIds = new Set<string>()
-        const collectBlockIds = (block: Blockly.Block) => {
-          blockIds.add(block.id)
-          for (const child of block.getChildren(false)) {
-            collectBlockIds(child)
-          }
-        }
-        collectBlockIds(targetBlock)
-        const blockMappings = this.panels.syncController?.getBlockMappings() ?? []
-        for (const bm of blockMappings) {
-          if (blockIds.has(bm.blockId)) skipNodeIds.add(bm.nodeId)
-        }
-      }
+      // ⚠️ 這是上面那段的**第二份逐字拷貝**（動畫路徑一份、逐步路徑一份）。
+      // 兩份一起換掉——而它們是同一段積木知識，換完之後這裡不再有第二份。
+      const skipNodeIds = new Set(this.panels.blocklyPanel?.nodesInAncestorScope(currentNodeId, level) ?? [])
       while (this.currentStepIndex < this.stepRecords.length - 1) {
         const nextStep = this.stepRecords[this.currentStepIndex + 1]
         if (!nextStep?.nodeId || !skipNodeIds.has(nextStep.nodeId)) break
