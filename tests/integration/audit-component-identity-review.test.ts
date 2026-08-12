@@ -48,7 +48,7 @@ import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
 import decided from '../assets/identity-review-decisions.json'
-import { universalConcepts } from '../../src/blocks/universal'
+import { universalConcepts } from '../../src/core/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
@@ -358,7 +358,7 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     expect(classify('tests/integration/sstream-input.test.ts'), '真正的測試不得被當成清冊排除掉').toBe('測試')
     expect(classify('src/components/cpp/vector_declare/spec.test.ts'), '膠囊裡的自證測也要算測試足跡').toBe('測試')
     expect(classify('src/languages/cpp/std/vector/concepts.json'), '元件自己的定義不是它的實作').toBe('宣告')
-    expect(classify('src/blocks/semantics/universal-concepts.json')).toBe('宣告')
+    expect(classify('src/core/universal-concepts.json')).toBe('宣告')
     expect(classify('src/languages/cpp/topics/cpp-beginner.json'), '課程清單是登錄表的視圖，不是實作').toBe('清單')
     expect(classify('src/languages/cpp/std/vector/executors.ts'), '執行器是實作').toBe('實作')
   })

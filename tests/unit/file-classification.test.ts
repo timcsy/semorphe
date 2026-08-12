@@ -23,8 +23,8 @@ describe('檔案分類', () => {
   it('★ 宣告：元件自己的定義', () => {
     expect(classifyFile('src/languages/cpp/std/vector/concepts.json')).toBe('宣告')
     expect(classifyFile('src/languages/cpp/std/vector/blocks.json')).toBe('宣告')
-    expect(classifyFile('src/blocks/semantics/universal-concepts.json')).toBe('宣告')
-    expect(classifyFile('src/blocks/projections/blocks/universal-blocks.json')).toBe('宣告')
+    expect(classifyFile('src/core/universal-concepts.json')).toBe('宣告')
+    expect(classifyFile('src/core/universal-blocks.json')).toBe('宣告')
   })
 
   it('★ 清冊：產生出來的紀錄', () => {

@@ -21,7 +21,7 @@ import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjecti
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 // ⚠️ **第十六個「自己列舉來源」的地方**（今天第六處）。
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'

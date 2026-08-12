@@ -58,9 +58,13 @@ interface Entrance {
 const ENTRANCES: Entrance[] = [
   {
     name: '通用概念與積木投影',
-    entrance: 'src/blocks/universal.ts',
+    // ⚠️ 路徑在 2026-08-12（spec 117）搬過：`src/blocks/` → `src/languages/`。
+    // **檔頭那段敘述沒有跟著改**——它描述的是 2026-08-07 當時的世界，
+    // 而那個世界裡入口確實在 `src/blocks/`。
+    // （`experience.md`「一次改名要問兩件事：哪些要改，以及**哪些因為描述過去而不能改**」）
+    entrance: 'src/core/universal.ts',
     // 同樣串接寫——這個常數本身若寫成完整字面，護欄會報自己（見下方合成注入的註解）
-    forbidden: ['blocks/semantics/universal-' + 'concepts.json', 'blocks/projections/blocks/universal-' + 'blocks.json'],
+    forbidden: ['core/universal-' + 'concepts.json', 'core/universal-' + 'blocks.json'],
     why:
       '`owner` 是在這個入口蓋的章，而工具箱靠它比對來源段落。繞過去拿到的是**沒蓋章**的資料，' +
       '於是每個 `(universal)` 段落回傳零筆——**不會有錯誤，只會有空的分類**。',
@@ -114,20 +118,23 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   // 而它掃的是原始碼。串接之後那串路徑不再連續出現，於是**排除清單維持在零**。
   //
   // 用「把自己加進排除清單」來解會比較快，但那會在唯一一個負責看門的檔上開一個口。
-  const forbiddenPaths = '../../blocks/projections/blocks/universal-' + 'blocks.json'
+  // ⚠️ 這個合成路徑要跟著 `ENTRANCES[0].forbidden` 走（2026-08-12 搬過家）。
+  // 它與那個常數**不是同一份**，所以搬家時會落單——而落單的症狀是
+  // 「注入沒被報出」，看起來像護欄壞了。
+  const forbiddenPaths = '../../core/universal-' + 'blocks.json'
 
   it('★ 注入一行繞過唯一入口的 import → **必須被報出**', () => {
     const hit = scan([
       { file: '合成/繞過.ts', source: `import x from '${forbiddenPaths}'\n` },
     ]).filter((v) => v.file === '合成/繞過.ts')
     expect(hit, '合成的繞過沒有被報出來 → **護欄壞了，不是入口乾淨**').toHaveLength(1)
-    expect(hit[0].entrance, '報出來了但指錯入口——修的人會去改錯的地方').toBe('src/blocks/universal.ts')
+    expect(hit[0].entrance, '報出來了但指錯入口——修的人會去改錯的地方').toBe('src/core/universal.ts')
   })
 
   it('★ 注入一行**走唯一入口**的 import → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     const hit = scan([
-      { file: '合成/正確.ts', source: "import { universalBlocks } from '../../blocks/universal'\n" },
+      { file: '合成/正確.ts', source: "import { universalBlocks } from '../../src/core/universal'\n" },
     ]).filter((v) => v.file === '合成/正確.ts')
     expect(hit, '走正門的 import 被報成違規 → 這條護欄會亂叫，而亂叫的護欄很快就被忽略').toEqual([])
   })

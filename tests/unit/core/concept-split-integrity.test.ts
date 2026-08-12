@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
-import { universalConcepts, universalBlocks } from '../../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 

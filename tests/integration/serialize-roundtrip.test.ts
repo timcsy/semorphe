@@ -3,7 +3,7 @@ import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
 import { setupTestRenderer } from '../helpers/setup-renderer'
-import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../../src/blocks/block-input-names'
+import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../../src/core/block-input-names'
 
 /**
  * Simulate Block Style switching: render semantic tree → block state → verify

@@ -14,7 +14,7 @@ import { PatternRenderer } from '../../core/projection/pattern-renderer'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
 // Semantic layer: concept definitions
-import { universalConcepts } from '../../blocks/universal'
+import { universalConcepts } from '../../core/universal'
 import { declareNonComponent } from '../../core/non-components'
 import { allCppProjections } from './all-declarations'
 import { coreConcepts } from './core'

@@ -4,7 +4,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 

@@ -16,7 +16,7 @@ import { createNode } from '../../src/core/semantic-tree'
 import type { BlockSpec, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'

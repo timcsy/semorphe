@@ -9,8 +9,8 @@
  * If a blockDef input name changes in JSON, the dynamic registration
  * automatically picks up the change — no dual maintenance.
  */
-import type { BlockSpec } from '../core/types'
-import { BlockSpecRegistry } from '../core/block-spec-registry'
+import type { BlockSpec } from './types'
+import { BlockSpecRegistry } from './block-spec-registry'
 // ⚠️ **第十個組裝點**（2026-08-11）：這裡原本只讀 `universal-blocks.json`。
 // 一顆通用元件搬進膠囊之後它就查不到了，症狀是
 // `BlockSpec not found for cpp_loop_while in universal-blocks.json`
@@ -18,8 +18,8 @@ import { BlockSpecRegistry } from '../core/block-spec-registry'
 //
 // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
 import { universalConcepts, universalBlocks } from './universal'
-import { componentConcepts, componentBlocks } from '../core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../core/types'
+import { componentConcepts, componentBlocks } from './component/registry'
+import type { ConceptDefJSON, BlockProjectionJSON } from './types'
 
 const _registry = new BlockSpecRegistry()
 _registry.loadFromSplit(

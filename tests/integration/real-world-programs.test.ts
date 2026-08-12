@@ -17,7 +17,7 @@ import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'

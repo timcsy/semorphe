@@ -15,7 +15,7 @@
  *   （「與其偵測錯誤，不如換一個讓錯誤無法被表達的形式」）。
  */
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../core/types'
-import { universalConcepts, universalBlocks } from '../../blocks/universal'
+import { universalConcepts, universalBlocks } from '../../core/universal'
 import { coreConcepts, coreBlocks } from './core'
 import { allStdModules } from './std'
 // 元件膠囊——一顆一個資料夾，`import.meta.glob` 掃出來。

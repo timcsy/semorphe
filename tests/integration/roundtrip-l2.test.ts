@@ -18,7 +18,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { StylePreset } from '../../src/core/types'
 
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'

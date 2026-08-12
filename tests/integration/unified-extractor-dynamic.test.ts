@@ -11,7 +11,7 @@ import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十二個組裝點**（同一個形狀，這是今天第三處）。
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'

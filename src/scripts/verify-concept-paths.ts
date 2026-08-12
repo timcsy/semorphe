@@ -214,7 +214,7 @@ export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCod
   }
 
   const blockSpecPaths = [
-    path.join(rootDir, 'src/blocks/projections/blocks/universal-blocks.json'),
+    path.join(rootDir, 'src/core/universal-blocks.json'),
     path.join(rootDir, 'src/languages/cpp/core/blocks.json'),
     ...stdBlockPaths,
     ...componentBlockPaths,

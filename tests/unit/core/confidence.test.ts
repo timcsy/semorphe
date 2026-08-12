@@ -12,7 +12,7 @@ import { registerExpressionLifters } from '../../../src/languages/cpp/core/lifte
 import type { BlockSpec, LiftPattern, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
-import { universalConcepts, universalBlocks } from '../../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'

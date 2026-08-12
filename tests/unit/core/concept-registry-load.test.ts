@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { ConceptRegistry } from '../../../src/core/concept-registry'
 import type { ConceptDefJSON } from '../../../src/core/types'
-import { universalConcepts } from '../../../src/blocks/universal'
+import { universalConcepts } from '../../../src/core/universal'
 import { coreConcepts } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 // ⚠️ **不要自己列宣告來源。**

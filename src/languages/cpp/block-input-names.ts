@@ -1,7 +1,7 @@
 /**
  * C++ 積木插槽名的唯一真相。
  *
- * 與 `src/blocks/block-input-names.ts` 同一個形狀，只是涵蓋**語言專屬**的積木。
+ * 與 `src/core/block-input-names.ts` 同一個形狀，只是涵蓋**語言專屬**的積木。
  *
  * ## 為什麼要分兩個模組
  *

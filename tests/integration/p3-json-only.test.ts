@@ -18,7 +18,7 @@ import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
 // Import split concept/projection JSON files
-import { universalConcepts } from '../../src/blocks/universal'
+import { universalConcepts } from '../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'

@@ -9,7 +9,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 // ⚠️ **第十五個「自己列舉來源」的地方**（今天的同一個形狀）。
-import { universalConcepts, universalBlocks } from '../../src/blocks/universal'
+import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'

@@ -34,7 +34,7 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import { universalConcepts } from '../../src/blocks/universal'
+import { universalConcepts } from '../../src/core/universal'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
