@@ -16,7 +16,7 @@ import { registerIdMigration, registerPropertyMigration } from '../../core/stora
 /**
  * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
  *
- * 這個檔與 `src/blocks/id-migrations.ts` **各有一張同名的凍結名冊**
+ * 這個檔與 `src/migrations/id-migrations.ts` **各有一張同名的凍結名冊**
  * （`CPP_ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
  * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
  *
@@ -183,7 +183,7 @@ registerIdMigration(CPP_ID_MIGRATIONS_V2_TO_V3)
 /**
  * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。
  *
- * 這個檔與 `src/blocks/id-migrations.ts` **各有一張同名的凍結名冊**
+ * 這個檔與 `src/migrations/id-migrations.ts` **各有一張同名的凍結名冊**
  * （`ID_MIGRATIONS_V2_TO_V3`），而兩張的內容完全不同：一張是通用層的身分、
  * 一張是 C++ 的。它們的鍵**長得幾乎一樣**。
  *

@@ -20,7 +20,7 @@ import { UPGRADES, CURRENT_VERSION, upgrade, unknownBlockTypes } from '../../src
 import {
   BLOCK_TYPE_MIGRATIONS_V9_TO_V10,
   registerBlockTypeMigration,
-} from '../../src/blocks/block-type-migrations'
+} from '../../src/migrations/block-type-migrations'
 import '../../src/languages/cpp/all-declarations'
 
 const samplePath = path.join(process.cwd(), 'tests/assets/v9-savedstate.json')

@@ -11,8 +11,8 @@
  * 見 specs/052-storage-integrity-gate/research.md F2、contracts/storage.md
  */
 import type { SavedState } from './storage'
-import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../blocks/block-type-migrations'
-import { mergedIdentities } from '../blocks/merged-identities'
+import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
+import { mergedIdentities } from '../migrations/merged-identities'
 
 /** 目前的存檔格式世代 */
 export const CURRENT_VERSION = 10
@@ -266,7 +266,7 @@ export const UPGRADES: Record<number, Upgrade> = {
   // 9 → 10：**積木型別從概念身分導出**（spec 116）。
   //
   // ⚠️ **這是第一個改寫 `blocklyState` 的升級步驟**——上面八個都只碰 `tree`。
-  // 理由見 `blocks/block-type-migrations.ts` 的檔頭：積木狀態是載入時的
+  // 理由見 `migrations/block-type-migrations.ts` 的檔頭：積木狀態是載入時的
   // **主要還原來源**，所以它行為上是真實，適用 P8 的例外條款。
   9: (raw) => {
     const unknown = new Set<string>()
