@@ -1,11 +1,31 @@
 ---
 name: component-encapsulate
+status: superseded
+superseded-by: component-generate
 description: >
-  把一顆元件從共用檔搬進它自己的資料夾（膠囊化）——階段 6.5 的 F 步，
-  要重複 176 次。只收「每一顆都會再遇到」的步驟與陷阱，
-  一次性的機制成本不進來。
-user-invocable: true
+  ⚠️ 已退休（2026-08-13）。把一顆元件從共用檔搬進它自己的資料夾（膠囊化）——
+  階段 6.5 的 F 步。**那 177 顆已經全部搬完**（`notEncapsulated: 0`），
+  這份文件保留為紀錄，不再調用。新元件請用 `component-generate`。
+user-invocable: false
 ---
+
+# ⚠️ 已退休：任務完成，本文件保留為紀錄
+
+> **退休日**：2026-08-13 ｜ **接手的是**：[`component-generate`](../component-generate/SKILL.md)
+> **原因**：F 步的 177 顆**全部搬完**——`tests/baselines/component-locality.json`
+> 的 `notEncapsulated` 是 `0`。**這個 skill 沒有對象了。**
+>
+> **為什麼不刪**：它被 20 處引用（`vision.md:360`、`experience.md:514`／`:1549`、
+> 5 份 `history/`、`specs/104`），而其中多數是**歷史記載**——刪掉會製造死連結，
+> 改掉會竄改歷史。knowie 的 invariant 逐字：
+> 「**mark the old one `superseded` and link to the new — don't delete.**」
+>
+> **它學到的東西去了哪**：見 [history/054](../../history/054-元件skill的世界觀落後了一個階段.md)
+> 的 dispatch 表——正向錨點、glob 直讀、lift 的三種形狀、`skipPaths` 不寫 noop
+> 都已進 `component-generate`。
+>
+> ⚠️ **下面的內容描述的是「從共用檔剪出來」的世界**。今天一顆新元件**直接生在膠囊裡**，
+> 沒有東西要剪。讀它是為了理解那 177 次搬家怎麼進行的，**不是為了照著做**。
 
 # 把一顆元件搬進膠囊（component-encapsulate）
 

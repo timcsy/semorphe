@@ -357,7 +357,11 @@ languages/{lang}/
 > [concepts/性狀](concepts/性狀.md)。
 >
 > ✅ ~~大規模身分改名的 skill 候選~~ 已兌現：[`skills/component-rename`](skills/component-rename/SKILL.md)（2026-08-09）；
-> 搬家的步驟已 skill 化：[`skills/component-encapsulate`](skills/component-encapsulate/SKILL.md)。
+> 搬家的步驟已 skill 化：[`skills/component-encapsulate`](skills/component-encapsulate/SKILL.md)
+> ——⚠️ **而它已於 2026-08-13 退休**（177 顆全搬完，`notEncapsulated: 0`），
+> 接手的是 [`skills/component-generate`](skills/component-generate/SKILL.md)。
+> 同一輪查出四份元件 skill 的世界觀落後一個階段，見
+> [history/054](history/054-元件skill的世界觀落後了一個階段.md)。
 >
 > ⚠️ **這一項原本寫著「＝ P9 語言獨立性第一次真的成立」，而那個等號是錯的。**
 >

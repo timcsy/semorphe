@@ -155,8 +155,13 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
    ```
    Skill tool: skill="component-generate", args="{lang} {concept_name}"
    ```
-2. **關卡**：6 個產出物都存在（含 interpreter executor）
+2. **關卡**：膠囊 `src/components/<scope>/<name>/` 存在，五路齊全
+   （`FIVE_PATHS` ＝ lift／generate／render／extract／execute，刻意不做的須在
+   `component.json` 宣告 `skipPaths` ＋ `skipReasons`）＋ `spec.test.ts`
 3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
+   ⚠️ **膠囊化驗收交給護欄**（`audit-component-locality`／`audit-locality`），
+   **不要用「grep 身分期望是空的」**——已驗證它有三類合法命中，見
+   `component-generate` 步驟六之二
 4. **完成標記**：`🏁 SKILL_COMPLETE: component-generate | ...`
 
 如果 TypeScript 失敗，在處理下一個概念之前先修復錯誤。

@@ -1,9 +1,9 @@
 ---
 name: component-generate
 description: >
-  為概念探索報告中定義的概念產生 BlockSpec JSON、程式碼產生器、提升器和渲染映射。
-  產生在 Semorphe 語義樹管線中支援新概念所需的所有產出物。
-  在 /component-discover 之後使用，用於建立實作產出物。支援任何語言。
+  為概念探索報告中定義的概念產生一顆**元件膠囊**——`component.json` 宣告
+  ＋ 五路實作 ＋ 積木形態 ＋ 標籤 ＋ 測試，全部住在
+  `src/components/<scope>/<name>/`。在 /component-discover 之後使用。支援任何語言。
 user-invocable: true
 ---
 
@@ -25,84 +25,163 @@ $ARGUMENTS
 
 參數應為概念探索報告的路徑（來自 `/component-discover`），或 `{lang} {concept_name}` 格式（例如 `cpp do_while`、`python list_comprehension`）。
 
-## 背景
+## 背景——⚠️ 一顆新元件今天的家是**膠囊**，不是共用檔
 
-你正在為新的 Semorphe 概念產生完整的實作產出物。每個概念需要 6 個產出物才能端到端運作：
+階段 6.5 的 F 步（177 顆）已經完成，`component-locality` 基線的 `notEncapsulated` 是 **0**。
+`src/core/component/registry.ts` 的檔頭逐字說明了為什麼：
 
-1. **BlockSpec JSON** — 定義概念如何渲染為 Blockly 積木（含 renderMapping）
-2. **程式碼產生器** — 將 SemanticNode → 目標語言原始碼
-3. **提升器（Lifter）** — 將語言 AST → SemanticNode（透過 tree-sitter）
-4. **渲染映射** — 將 SemanticNode 屬性 → 積木欄位/輸入。**Extract 路徑由 PatternExtractor 自動從 blockDef args + concept children 推導（auto-derive），無需手寫 extractor。** 若概念有動態結構，須在 renderMapping 加入 `dynamicRules`
-5. **Interpreter Executor** — 將 SemanticNode → 執行行為（在 `src/interpreter/executors/` 中註冊）。可執行概念需實作計算邏輯，宣告性概念（如 `#include`）需註冊 noop executor。見 `knowledge/history/011-四路完備性擴充為五層.md`
-6. **測試** — 基本的 round-trip 測試（含執行測試）
+> 「手寫清單的話『加一顆元件』＝編輯一個既有的共用檔，而那正是這整個階段要治的病：
+> **碎裂的痛不在「碰幾個檔」，在碰幾個既有的共用檔。**
+> 掃描之後，加一顆元件＝**新增一個資料夾，零編輯**。」
+
+所以本 skill 的產出是**一個資料夾**：
+
+```
+src/components/<scope>/<name>/
+  component.json      宣告（身分／屬性／接點／角色／五路位置）
+  lift.ts             AST → 語義樹      ⎫
+  generate.ts         語義樹 → 原始碼    ⎬ 五路（render／extract 由 forms/ 提供）
+  execute.ts          語義樹 → 執行行為  ⎭
+  forms/blocks.json   積木形態（可多個——見 form 軸）
+  labels/{zh-TW,en}.json   i18n 標籤
+  spec.test.ts        這顆自己的測試
+```
+
+⚠️ **`<scope>` 不是語言，是套件擁有者**。今天只有 `cpp`（177 顆），
+而 `hw` 已在白名單裡——硬體元件用同一個形狀。
 
 ## 前置作業
 
-產生前，請先閱讀這些檔案以理解現有模式：
-
-- `src/core/types.ts` — SemanticNode 結構、現有概念
+- `src/core/component/types.ts` — `ComponentManifest` 契約與 `FIVE_PATHS`
+- `src/core/component/registry.ts` — 膠囊怎麼被找到（**檔頭寫了為什麼是掃描**）
+- `src/core/component/paths.ts` — 五路的組裝點，**匯出函式名是契約**
+- `knowledge/concepts/元件.md` — 五槽（身分／接點／參數＝真實；形態／行為＝投影）
 - `knowledge/concepts/概念代數.md` — P2 的屬性結構化邊界規則
 
-然後閱讀目標語言的既有實作：
-- 核心概念：`src/languages/{lang}/core/blocks.json` — 現有 BlockSpec 範例
-- STD 模組：`src/languages/{lang}/std/{module}/blocks.json` — 標準庫 BlockSpec
-- `src/languages/{lang}/core/generators/` — 現有 generator 模式
-- `src/languages/{lang}/core/lifters/` — 現有 lifter 模式
-- `src/core/projection/pattern-renderer.ts` — 渲染映射如何運作
+**照抄一顆既有的**，而挑選有講究：
 
-如果是全新語言（`src/languages/{lang}/` 不存在），先參考現有語言模組（如 `src/languages/cpp/`）的目錄結構來建立骨架。
+| 你要做的 | 抄這顆 | 它示範什麼 |
+|---|---|---|
+| 一般語句／運算式 | `cpp/vector_declare/` | 最完整的五路 |
+| lift 是純資料 | 任一有 `lift-pattern.json` 的（44 顆） | **不寫程式的 lift** |
+| 一個身分多種形態 | `cpp/increment/` | `form: {axis, value}` |
+| 少一路 | 任一有 `skipPaths` 的（28 顆） | **顯式的空** |
 
 ## 工作流程
 
-### 步驟一：解析概念定義
+### 步驟零：建資料夾與 `component.json`
 
-從探索報告或使用者輸入中，為每個概念提取（命名慣例見 `/component-discover` 階段四）：
-- 概念名稱
-- 概念類型：通用（universal）還是語言特定（`{lang}:concept`）
-- 建議歸屬的 Topic 層級樹節點
-- 目標語言的語法模式
-- 屬性（積木上的欄位）
-- 子節點（子表達式/語句的輸入槽）
-- 工具箱分類
-
-### 步驟二：產生 BlockSpec JSON
-
-概念所屬層級決定檔案存放位置：核心概念放 `src/languages/{lang}/core/blocks.json`，STD 模組概念放 `src/languages/{lang}/std/{module}/blocks.json`。
-
-```json
+```jsonc
 {
-  "type": "{prefix}_{concept_name}",
-  "conceptId": "{concept_name}",
-  "category": "{category}",
-  "message0": "{帶 %1 %2 佔位符的積木標籤}",
-  "args0": [
-    { "type": "field_input", "name": "FIELD_NAME", "text": "default" },
-    { "type": "input_value", "name": "INPUT_NAME" }
+  "conceptId": "cpp:vector_declare",       // 必要：身分
+  "layer": "lang-library",                 // 必要：lang-core / lang-library / universal
+  "properties": [                          // 必要：參數（積木上的欄位）
+    { "name": "type", "kind": "enum", "values": ["int", "double"], "default": "int" },
+    { "name": "name", "kind": "identifier", "default": "vec" }
   ],
-  "output": null,
-  "previousStatement": null,
-  "nextStatement": null,
-  "colour": "{category_colour}",
-  "renderMapping": {
-    "fields": { "FIELD_NAME": "property_name" },
-    "inputs": { "INPUT_NAME": "child_slot" }
-  }
-  // 如果概念有動態結構（repeat inputs、repeat field groups、multi-mode slots、if-elseif chains），
-  // 在 renderMapping 中加入 dynamicRules：
-  // "renderMapping": {
-  //   "fields": { ... },
-  //   "inputs": { ... },
-  //   "dynamicRules": [ { "type": "repeat", ... } ]
-  // }
+  "children": {                            // 必要：接點
+    "values": { "allowed": ["expression"], "min": 0 }
+  },
+  "role": "statement",                     // 必要：statement / expression / …
+  "paths": {                               // 必要：五路各自在哪
+    "lift": "./lift.ts", "generate": "./generate.ts", "execute": "./execute.ts",
+    "render": "./forms/blocks.json", "extract": "./forms/blocks.json"
+  },
+
+  "abstractConcept": "cpp:var_declare",    // 選用：抽象概念（159/177 有）
+  "owner": "<vector>",                     // 選用：所屬模組（102 顆）
+  "requires": ["<vector>"],                // 選用：相依標頭（78 顆）
+  "traits": { "precedence": 14 },          // 選用：這顆自己的性質（36 顆）
+  "skipPaths": ["execute"],                // 選用：顯式宣告沒有這一路（28 顆）
+  "skipReasons": { "execute": "declarative" }
 }
 ```
 
+**`kind` 的值**決定參數怎麼被驗與怎麼被渲染：`enum`（要 `values`）／`identifier`／
+`number`／`string`／`type`。`required: true` 表示沒有預設值。
+
+#### ⚠️ 非顯然的宣告要附 `_why`——這是慣例，不是裝飾
+
+真實統計：`_traits_why` 35 筆、`_lift_why` 22、`_execute_why` 20、`_owner_why` 18、
+`_memberRole_why` 8、`_requires_why` 5、`_generate_why` 5、`_default_why` 2。
+
+實例（`cpp:address_of`）：
+
+```jsonc
+"traits": { "precedence": 14, "prefixOperator": true },
+"_traits_why": "**優先級與「我是前綴符號」是我自己的性質**，不是共用排版表該列的身分。"
+```
+
+判準：**如果一個宣告會讓下一個讀到它的人問「為什麼是這個值」，就附 `_why`。**
+`skipPaths` **一律要附 `skipReasons`**——否則「顯式的空」與「忘了寫」分不出來。
+
+### 步驟一：解析概念定義
+
+從探索報告或使用者輸入中提取（命名慣例見 `/component-discover` 階段四）：
+概念名稱、`layer`、建議歸屬的 Topic 層級樹節點、目標語言的語法模式、
+屬性、接點、工具箱分類。
+
+### 步驟二：產生積木形態（`forms/blocks.json`）
+
+```json
+[{
+  "id": "cpp:vector_declare",
+  "conceptId": "cpp:vector_declare",
+  "language": "cpp",
+  "category": "containers",
+  "version": "1.0.0",
+  "blockDef": {
+    "type": "cpp_vector_declare",
+    "message0": "%{BKY_CPP_VECTOR_DECLARE_MSG0}",
+    "args0": [
+      { "type": "field_dropdown", "name": "TYPE", "options": [["%{BKY_..._INT}", "int"]] },
+      { "type": "input_value", "name": "VALUES" }
+    ],
+    "previousStatement": null, "nextStatement": null, "colour": 260
+  },
+  "renderMapping": {
+    "fields": { "TYPE": "type" },
+    "inputs": { "VALUES": "values" }
+  }
+}]
+```
+
+⚠️ **這是一個陣列**——同一個身分可以有多個形態。
+
+#### 一個身分多種形態：`form: {axis, value}`
+
+`cpp/increment/forms/blocks.json` 有兩筆：
+
+```
+cpp_increment              form 未標 → 該軸的預設形態
+cpp_increment_expression   form: { "axis": "role", "value": "expression" }
+```
+
+> **位置不是身分，是形態**（`history` 的 B 項結論）。
+> 同概念的 statement／expression 版本 **extraState 格式必須完全相同**——
+> `STATEMENT_TO_EXPRESSION` 直接搬移 extraState。
+
+⚠️ expression 形態**必須有完整的 `blockDef`（含 `args0`）**，不可只寫 `{type: "…"}`，
+否則 PatternExtractor 的 auto-derive 會失敗。
+
+#### Render／Extract 兩路都由這個檔提供
+
+`extract` 由 PatternExtractor **從 `blockDef.args0` ＋ `children` 自動推導**，無需手寫。
+若概念有動態結構（repeat inputs、multi-mode slots、if-elseif chains），
+在 `renderMapping` 加 `dynamicRules`。
+
 規則：
-- `type` 是**投影層**的積木類型名稱，前綴：`u_` 為通用積木，語言特定用語言縮寫（如 `c_` for C++、`py_` for Python、`j_` for Java）
-- `conceptId` 是**語義層**的概念識別碼，格式為 `snake_case`（通用）或 `{lang}:snake_case`（語言特定）
-- **注意兩者的區別**：`conceptId: "cpp:vector_push"` 對應 `type: "c_vector_push"`；`conceptId: "sort_range"` 對應 `type: "u_sort_range"`。conceptId 用於語義樹，type 用於 Blockly 積木
-- **i18n 必須使用 `%{BKY_...}` key**：`message0`、`tooltip`、以及 `field_dropdown` 的 options 顯示文字，一律使用 `%{BKY_KEY_NAME}` 格式引用，不可硬編碼任何語言的文字。同時在 `src/i18n/zh-TW/blocks.json` 和 `src/i18n/en/blocks.json` 中新增對應的翻譯條目。參考現有 STD 模組（如 vector、cstring）的 i18n 模式。
-- `message0` 在目標語系中應盡可能易讀
+- `blockDef.type` 由身分**導出**（`cpp:vector_declare` → `cpp_vector_declare`），
+  見 `src/core/component/derive-block-type.ts`——**不要自己編一個**
+- 最小化 args 數量 — 認知負載原則
+- 語句積木設 `previousStatement`/`nextStatement`；運算式積木設 `output`
+- 如果此概念在不同 Topic 下需不同積木形狀，在 Topic JSON 加 `blockOverrides`（§2.4）
+
+### 步驟二之二：i18n 標籤（`labels/zh-TW.json`、`labels/en.json`）
+
+**i18n 必須使用 `%{BKY_...}` key**：`message0`、`tooltip`、以及 `field_dropdown` 的
+options 顯示文字，一律使用 `%{BKY_KEY_NAME}` 格式引用，不可硬編碼任何語言的文字。
+標籤住在**膠囊自己的 `labels/`**，由 `src/core/component/labels.ts` glob 直讀。
 
 **i18n 標籤風格規範（強制遵守）**：
 
@@ -136,57 +215,72 @@ $ARGUMENTS
 | 泛型語法 | `%1<%2>` | `%1（型別 %2）` |
 
 **產生 i18n 條目時的檢查清單**：
-1. 讀取同 category 的現有標籤（`grep` i18n JSON），確保新標籤與既有風格一致
+1. 讀取同 category 的現有標籤，確保新標籤與既有風格一致
 2. 中文標籤是否為描述式？（動詞 + 名詞，如「排序範圍」「取得長度」「插入元素」）
 3. 英文標籤是否為動詞短語？（如「Sort range」「Get length」「Insert element」）
 4. tooltip 是否提供了 message0 以外的額外資訊？（參數說明、行為細節、注意事項）
 5. 同一批次產生的多個概念之間，標籤句式是否一致？
 6. 標籤中是否殘留任何目標語言的關鍵字、語法符號或方法呼叫語法？（對照上方速查表逐一檢查）
-- 最小化 args 數量 — 認知負載原則
-- 語句積木：設定 `previousStatement`/`nextStatement`
-- 表達式積木：設定 `output`（型別或 null 代表任意）
-- 如果概念同時有語句和表達式形式，用 `expressionCounterpart` 產生兩者。對應 P2 概念角色語境依賴（§2.2）——statement/expression 版本的 extraState 格式必須完全相同。**注意：expression counterpart 積木必須有完整的 blockDef（含 args0 定義），不可只寫 `{type: "..."}`，否則 PatternExtractor auto-derive 會失敗**
-- 如果此概念在不同 Topic 下需不同積木形狀，在 Topic JSON 加 `blockOverrides`（§2.4）
 
-### 步驟三：產生程式碼產生器
-
-在 `src/languages/{lang}/core/generators/` 的適當檔案中加入 generator 函式。
+### 步驟三：`generate.ts`
 
 ```typescript
-generators.set('{concept_name}', (node, ctx) => {
-  // 提取屬性
-  const prop = node.properties.prop_name
-  // 產生子節點
-  const child = generateExpression(node.children.child_slot?.[0], ctx)
-  // 回傳格式化的目標語言程式碼
-  return `${indent(ctx)}${formatted_code}\n`
-})
-```
+import type { NodeGenerator } from '../../../core/projection/code-generator'
+import { indent, generateExpression } from '../../../core/projection/code-generator'
 
-規則：
-- 語句層級輸出使用 `indent(ctx)`
-- 子表達式使用 `generateExpression()`
-- 子語句列表使用 `generateBody()`
-- 妥善處理缺失的子節點（空字串或預設值）
-- 遵循 `ctx.style` 的格式偏好
-- 注意語言特有的語法（如 Python 的縮排、Java 的分號）
-
-### 步驟四：產生提升器
-
-在 `src/languages/{lang}/core/lifters/` 的適當檔案中加入 lifter 註冊。
-
-```typescript
-lifter.register('{tree_sitter_node_type}', (node, context) => {
-  // 從 AST 節點提取
-  const prop = node.childForFieldName('field')?.text ?? ''
-  // 建構語義節點
-  return createNode('{concept_name}', { prop }, {
-    child_slot: context.liftChildren(node, 'body_field'),
+export function registerGenerate(g: Map<string, NodeGenerator>): void {
+  g.set('cpp:vector_declare', (node, ctx) => {
+    const type = node.properties.type ?? 'int'
+    const values = node.children.values ?? []
+    if (values.length > 0) {
+      const items = values.map((v) => generateExpression(v, ctx)).join(', ')
+      return `${indent(ctx)}vector<${type}> ${name} = {${items}};\n`
+    }
+    return `${indent(ctx)}vector<${type}> ${name};\n`
   })
-})
+}
 ```
 
-**Layer 引導**：Layer 1 純 JSON（astPattern）、Layer 2 JSON + transform（TransformRegistry）、Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
+⚠️ **匯出的函式名是契約**：`registerGenerate`。名字不對就 throw
+——`paths.ts` 的檔頭逐字：「**不是安靜地少一路**」。
+
+規則：語句層級輸出用 `indent(ctx)`；子運算式用 `generateExpression()`；
+子語句列表用 `generateBody()`；缺失的子節點要有處置；遵循 `ctx.style`。
+
+### 步驟四：`lift.ts`——⚠️ 先問「這一路是程式還是資料」
+
+**三種形狀，選錯會多寫一個檔**：
+
+| 形狀 | 檔案 | 幾顆在用 | 什麼時候 |
+|---|---|---|---|
+| **純資料** | `lift-pattern.json` | 44 | AST 樣式對得上就成——**不寫程式** |
+| **登錄一筆到共用分派表** | `lift.ts` | 多數 | 判別邏輯共用，回家的是「這個名字屬於我」 |
+| **具名策略** | `lift-strategy.ts` | 11 | 判別要跑真邏輯，而由 lift-pattern 以名字引用 |
+
+第二種的樣子（`cpp/vector_declare/lift.ts` 全文）：
+
+```typescript
+import { registerContainerTemplate } from '../../../core/component/container-templates'
+
+export function registerLift(): void {
+  registerContainerTemplate('vector', 'cpp:vector_declare', 'cpp/vector_declare')
+}
+```
+
+> ⚠️ **判別邏輯留在共用檔是對的**（找 `template_type`、拆樣板引數本來就共用）；
+> **要回家的是宣告**——「`vector` 這個樣板名屬於我」。
+
+#### ⚠️ 資料不需要被登錄，它需要被找到
+
+`lift-pattern.json` 由 `import.meta.glob` **直讀**，沒有登錄呼叫。
+這條是付過學費的（2026-08-10，第三顆膠囊整批回退兩次）：
+
+> **把資料做成登錄呼叫，等於替它發明一個會忘記呼叫的時序。**
+> 判準：**這個東西有沒有人要「查」它？**
+> 有（「`vector` 這個名字屬於我」）→ 登錄。沒有（一整筆資料）→ **glob 直讀**。
+
+**Layer 引導**：Layer 1 純 JSON（astPattern）、Layer 2 JSON + transform（TransformRegistry）、
+Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
 
 **信心等級設定規則**（P1 §2.1，強制遵守）：
 
@@ -198,157 +292,154 @@ lifter.register('{tree_sitter_node_type}', (node, context) => {
 | `raw_code` | 無法結構化的降級 | 不支援的語法 |
 
 **關鍵規則**：
-- **composite pattern 不可直接設 `high`**——必須先通過語義驗證（至少驗證子節點概念是否合理）
-- **一對多 AST 映射必須設 `warning`**——例如 `call_expression` 可能映射到 `func_call`、`cpp:cout`、`cpp:sort` 等多個概念，在確定具體概念前應設 `warning`
-- **每個 lifter 必須有降級路徑**——當 AST 節點無法識別時，應降級為 `raw_code` 而非靜默丟棄
+- **composite pattern 不可直接設 `high`**——必須先通過語義驗證
+- **一對多 AST 映射必須設 `warning`**
+- **每個 lifter 必須有降級路徑**——無法識別時降級為 `raw_code` 而非靜默丟棄
 
-規則：
-- 第一個參數是 **tree-sitter 節點類型**（不是概念名稱）— 每個語言的 tree-sitter grammar 不同
-- 子節點使用 `context.liftChildren()`
-- 具名欄位使用 `node.childForFieldName()`
-- 可選欄位使用 `?? defaultValue` 處理
-- 多個 tree-sitter 類型可映射到同一個概念
-- 通用概念在不同語言中會有不同的 tree-sitter 映射
+### 步驟五：`execute.ts`
 
-### 步驟五：產生 Interpreter Executor
-
-在 `src/interpreter/executors/` 的適當檔案中加入 executor 註冊。
-
-**可執行概念**（如數學運算、I/O、控制流程）：
 ```typescript
-register('{concept_name}', async (node, ctx) => {
-  // 評估子節點
-  const arg = await ctx.evaluate((node.children.arg ?? [])[0])
-  // 執行計算
-  const result = someComputation(ctx.toNumber(arg))
-  // 回傳結果
-  return { type: 'double', value: result }
+import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+
+export function registerExecute(
+  register: (concept: string, executor: ConceptExecutor) => void,
+): void {
+  register('cpp:vector_declare', async (node, ctx) => { /* … */ })
+}
+```
+
+**宣告性概念**（`#include`、`using namespace`、註解）**不要寫 noop**——
+在 `component.json` 宣告 `"skipPaths": ["execute"]` ＋ `"skipReasons": {"execute": "declarative"}`。
+
+> **顯式的空與遺漏的空要分得出來**，而一個 noop 函式兩者長得一樣。
+
+規則：子節點求值用 `ctx.evaluate()`；轉換用 `ctx.toNumber()`/`ctx.toBool()`；
+回傳 `RuntimeValue`（`{ type, value }`）；語句型不回傳值。
+⚠️ **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`。
+
+⚠️ **不要靜默回退**：多層 fallback 都用同一預設值會掩蓋真正的資料遺失
+（第三十三條護欄在看這個）。判不出來就丟錯，不要回 0。
+
+### 步驟六：`spec.test.ts`——⚠️ 每條負向前面先釘一個正向
+
+```typescript
+it('lift', () => {
+  const ids = conceptsIn(lift('vector<int> v = {3,1,4};'))
+  expect(ids).toContain('cpp:vector_declare')      // ← 正向錨點，先證明量到了東西
+  expect(ids).not.toContain('cpp:raw_code')        // ← 負向才有意義
 })
 ```
 
-**宣告性概念**（如 `#include`、`using namespace`、註解）：
-```typescript
-register('{concept_name}', async () => {})  // noop
-```
+> `lift` 回傳 `null` 時集合是空的，**負向斷言會空過**——
+> 而一支空過的測試與健康的長得一模一樣。
 
-規則：
-- 參考 `src/interpreter/executors/` 中的現有 executor 模式
-- 子節點評估使用 `ctx.evaluate()`，值轉換使用 `ctx.toNumber()`/`ctx.toBool()`
-- 執行結果回傳 `RuntimeValue`（`{ type, value }`）
-- 語句型概念不需回傳值（`return` 或 `void`）
-- 在 `src/interpreter/interpreter.ts` 的建構函式中 import 並呼叫 `registerXxxExecutors(reg)`
-- **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`（見 `knowledge/history/011-四路完備性擴充為五層.md`）
+至少三支：lift、generate、round-trip。**執行那一路也要有實際輸出的斷言**
+（第一顆膠囊的基準把執行全錄成空字串，等於完全沒被覆蓋）。
 
-### 步驟六：產生測試
+### 步驟六之二：五路完備性驗證（強制阻擋）
 
-依照 `tests/` 中的模式建立測試檔案：
-
-```typescript
-// tests/unit/languages/{lang}/{concept_name}.test.ts
-describe('{concept_name}', () => {
-  it('should lift {描述}', () => {
-    const code = `{最小範例}`
-    // ... 提升並驗證語義樹
-  })
-
-  it('should generate {描述}', () => {
-    const node = createNode('{concept_name}', { ... }, { ... })
-    // ... 產生並驗證目標語言輸出
-  })
-
-  it('should round-trip {描述}', () => {
-    const code = `{程式碼}`
-    // ... lift → generate → 比較
-  })
-})
-```
-
-### 步驟六之二：四路完備性驗證（強制阻擋）
-
-產生所有產出物後，**必須**執行四路完備性驗證。這是阻擋性關卡——缺少任何一路就不可繼續。
-
-對目標概念逐一確認以下 6 條路徑全部存在：
+`FIVE_PATHS = ['lift', 'generate', 'render', 'extract', 'execute']`。
+逐一確認，缺任何一路就不可繼續：
 
 | # | 路徑 | 驗證方式 | 缺失後果 |
 |---|------|---------|---------|
-| 1 | **Lift** | lifter 檔案中有 `register('{nodeType}', ...)` 或 `lift-patterns.json` 有條目 | ❌ 阻擋 |
-| 2 | **Render** | blocks.json 中有 BlockSpec 條目，且 `renderMapping` 完整（fields + inputs 覆蓋所有語義屬性） | ❌ 阻擋 |
-| 3 | **Extract** | BlockSpec 的 `renderMapping` 可被 PatternExtractor 自動反向提取（auto-derive from blockDef args + concept children）；若概念有動態結構，renderMapping 須包含 `dynamicRules` | ❌ 阻擋 |
-| 4 | **Generate** | generator 檔案中有 `generators.set('{concept}', ...)` | ❌ 阻擋 |
-| 5 | **Execute** | executor 檔案中有 `register('{concept}', ...)` | ❌ 阻擋 |
-| 6 | **Test** | 測試檔存在且包含 lift、generate、round-trip 三種測試 | ❌ 阻擋 |
+| 1 | **Lift** | `lift.ts` 匯出 `registerLift`，或 `lift-pattern.json` 存在 | ❌ 阻擋 |
+| 2 | **Render** | `forms/blocks.json` 有條目，`renderMapping` 覆蓋所有屬性與接點 | ❌ 阻擋 |
+| 3 | **Extract** | PatternExtractor 能 auto-derive；動態結構須有 `dynamicRules` | ❌ 阻擋 |
+| 4 | **Generate** | `generate.ts` 匯出 `registerGenerate` | ❌ 阻擋 |
+| 5 | **Execute** | `execute.ts` 匯出 `registerExecute` | ❌ 阻擋 |
+| 6 | **Test** | `spec.test.ts` 含 lift／generate／round-trip | ❌ 阻擋 |
+
+**一路刻意不做時**：在 `skipPaths` 宣告 ＋ `skipReasons` 寫理由。
+**那算通過，但理由必須是理由**——「還沒做」不是理由。
+
+**驗證用護欄，不要自己 grep**：
 
 ```bash
-# 驗證方式：在各路徑的檔案中搜尋概念名稱
-grep -rn "'{concept_name}'" src/languages/{lang}/ src/interpreter/executors/ tests/
+npx vitest run tests/integration/audit-component-locality.test.ts \
+             tests/integration/audit-locality.test.ts \
+             tests/integration/audit-completeness.test.ts
 ```
 
-**如果任何路徑缺失**：
-1. 報告缺失的路徑清單
-2. 立即補全缺失的產出物
-3. 重新驗證直到 6/6 通過
+⚠️ **不要用「grep 身分、期望是空的」當驗收**（2026-08-13 實測，這條指令被寫進來過又拿掉）。
+它有**三類合法命中**，而一個看到非零就緊張的人會去改不該改的東西：
 
-完成標記中的 `產出物：{N}/6` 必須反映此驗證結果。**N < 6 時不可輸出 SKILL_COMPLETE 標記。**
+| 合法命中 | 例 |
+|---|---|
+| **凍結的歷史明表** | `src/migrations/id-migrations.ts:130` `'lang:if': 'cpp:if'`——**一個字都不准改** |
+| **課程清單** | `topics/*.json` 的 `concepts[]`——本 skill 步驟八**自己叫你加的** |
+| **註解裡的提及** | `generators/statements.ts:54` 的 `* g.set('cpp:if', ifGenerator)` |
 
-### 步驟七：通用概念跨語言產生
+`cpp:if` 這樣一顆**已經正確膠囊化**的元件，那條 grep 給出 **21 筆**。
 
-**僅適用於通用概念**（conceptId 為 `snake_case`，無語言前綴）：
+⚠️ 而在 zsh 裡 `--include=*.ts` **不加引號會被 glob 吃掉**，指令直接不執行
+——而輸出看起來就是「0 筆，乾淨」。**一個失敗的檢查與一個通過的檢查長得一樣。**
 
-通用概念必須在所有已支援的語言模組中都有對應實作。檢查 `src/languages/` 下有哪些語言模組，對每個已存在的語言模組：
+### 步驟七：`layer: "universal"` 的概念
 
-1. 產生該語言的 generator 函式（語法不同，語義相同）
-2. 產生該語言的 lifter 註冊（tree-sitter 節點類型因語言而異）
-3. 在該語言的 block spec JSON 中加入對應的積木定義
-4. 產生該語言的測試
+29 顆是 `universal`。⚠️ **而 `layer` 今天沒有生產消費者**
+（`draft/2026-08-11-universal是一份還沒被驗證的外延主張.md` 查證過，
+工具箱排序已改問等價邊）——它是一份**還沒被驗證的外延主張**。
 
-例如，新增通用概念 `sort_range` 時，若已有 `cpp` 和 `python` 模組，則需同時在兩個語言中產生 generator/lifter/block/test。
+所以：**照實填 `layer`，但不要因為它是 universal 就自動去別的語言產一份**。
+今天只有一個語言（`scope` 全是 `cpp`），跨語言等價要等第二個語言進來才驗得了。
 
-### 步驟八：更新註冊
+### 步驟八：更新註冊——**幾乎沒有**
 
-確認新概念需要在哪些地方註冊：
-- `src/languages/{lang}/toolbox-categories.ts` 中的工具箱分類
-- 適當的 Topic JSON 檔案（`src/languages/{lang}/topics/*.json`）中的 `levelTree` 節點，將概念 ID 加入對應節點的 `concepts[]`
-- concept registry 中的概念定義
-- 如果是通用概念，更新 `src/core/types.ts` 的 `UniversalConcept` 型別
-- STD 模組概念需更新 DependencyResolver 映射（§2.3）
+膠囊被 `import.meta.glob` 掃到，所以：
 
-**STD 模組結構**：STD 模組使用扁平結構——每個模組目錄下直接放 `generators.ts`、`lifters.ts`、`blocks.json`、`concepts.json`，不再有子目錄。
+| 要做的 | 在哪 |
+|---|---|
+| ✅ **加進課程清單** | `src/languages/{lang}/topics/*.json` 的 `levelTree` 節點 `concepts[]` |
+| ❌ ~~工具箱分類~~ | **不用**——`toolbox-categories.ts` 已改成 45 段**有序來源**自動導出 |
+| ❌ ~~concept registry~~ | **不用**——`registry.ts` 掃 `component.json` |
+| ❌ ~~`UniversalConcept` 型別~~ | **該型別已刪**（`58d64eb`，只剩墓碑註解） |
+| ❌ ~~五路的 import~~ | **不用**——`paths.ts` glob 直讀 |
+
+⚠️ **加進課程清單是唯一的手動步驟，而它有兩個護欄在看**：
+「可拿性」（宣告了卻拿不到 → 紅）與課程快照（成員或順序變動 → 紅，要一起改基線）。
+
+⚠️ **放進哪一關要看前置**：一顆概念的前置若在更後面的關卡，學生拿得到它卻用不了
+（`array_assign` 曾經就是，2026-08-13 修）。**先問「它需要的東西在同關或更前面嗎」。**
+
+`toolbox-categories.ts` 的 `extraTypes` 只剩 1 筆，而它有明確理由
+（同一顆 `cpp_if` 用三個預設狀態出現＝教學設計，登錄表推不出來）。
+**除非你的概念也是這種「同身分多預設狀態」，否則不要碰它。**
 
 ### 步驟九：輸出摘要
 
-報告產生了什麼：
-
 ```
-## {concept_name} 的產出物（{language}）
+## {concept_name} 的膠囊（{scope}）
 
-- [ ] BlockSpec：核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json`
-- [ ] Generator：核心 `src/languages/{lang}/core/generators/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/generators.ts`
-- [ ] Lifter：核心 `src/languages/{lang}/core/lifters/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/lifters.ts`
-- [ ] 渲染映射：嵌入在 BlockSpec 中
-- [ ] Executor：`src/interpreter/executors/{file}.ts`（可執行概念需實作邏輯，宣告性概念需 noop）
-- [ ] 測試：`tests/unit/languages/{lang}/{concept_name}.test.ts`（含執行測試）
-- [ ] 註冊：{加在哪裡}
+src/components/{scope}/{name}/
+- [ ] component.json（六個必要鍵 ＋ 非顯然宣告附 _why）
+- [ ] lift.ts / lift-pattern.json / lift-strategy.ts（三選一）
+- [ ] generate.ts
+- [ ] execute.ts（或 skipPaths 宣告 ＋ 理由）
+- [ ] forms/blocks.json
+- [ ] labels/zh-TW.json、labels/en.json
+- [ ] spec.test.ts（每條負向前有正向錨點）
+- [ ] 課程清單：{哪個 Topic 的哪一關}
 
 ### 驗證
-執行 `npm test` 確認所有測試通過。
-執行 `npx tsc --noEmit` 確認無型別錯誤。
+npx tsc --noEmit
+npm test          # 40 條護欄在裡面——就近性、可拿性、課程快照都會說話
 ```
+
+⚠️ **不要自己 grep 身分當驗收**——見步驟六之二，它有三類合法命中。
 
 ## 準則
 
-- **一次一個概念** — 先為一個概念產生所有產出物，再處理下一個
-- **遵循現有模式** — 匹配該語言模組中鄰近檔案的程式碼風格
+- **一次一顆** — 先做完一顆再做下一顆
+- **照抄一顆既有的** — 而按上面那張表挑，不要隨便挑
 - **最小變更** — 產生新概念時不要重構現有程式碼
-- **測試優先** — 盡可能在實作之前先寫測試
 - **積木 UX** — 在腦中預覽積木：學生第一眼能看懂嗎？
-- **通用概念共用** — 如果產生的是通用概念，確保它在已支援的所有語言中都能運作
+- ⚠️ **搬移不重寫** — 如果這顆是從共用檔搬來的，**重寫另開 commit**，否則對不出基準
 
 ## 完成標記（強制）
 
-此 skill 完成後，**必須**輸出以下格式的完成標記：
-
 ```
-🏁 SKILL_COMPLETE: component-generate | {lang} | {concept_name} | 產出物：{N}/6 | tsc: PASS/FAIL
+🏁 SKILL_COMPLETE: component-generate | {scope} | {concept_name} | 五路：{N}/5（skip {M}）| tsc: PASS/FAIL
 ```
 
 如果未輸出此標記，pipeline 不會繼續下一階段。

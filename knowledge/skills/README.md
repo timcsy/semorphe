@@ -19,14 +19,41 @@
 一個操作值不值得固化，看的不是它重複幾次，而是**重做時會不會漏掉上次學到的東西**
 （見 [history/033](../history/033-draft退場與改名固化成skill.md)）。
 
-⏳ **候選：`component-encapsulate`**（搬一顆元件進膠囊）——九個步驟已寫在
-`specs/104-component-vertical-slice/slice-record.md`，每一步都指得回真的發生過的
-一次操作或卡點。**等第二顆驗證過再固化**：目前只有一個樣本，而那個樣本是我挑的
-（五路齊全 ＋ 已在模組資料夾），不代表其餘 176 顆。
-見 [history/034](../history/034-F第一顆膠囊-只存在於正式路徑的宣告來源.md)。
+今天沒有排隊中的候選。
+
+## ⚠️ 而 skill 也會**過時**——而且比知識危險
+
+`knowie-judge` §5 逐字：「**a stale skill acts, a stale doc just misleads**」。
+2026-08-13 一次對帳查出**四份**指著一個已經不存在的世界
+（見 [history/054](../history/054-元件skill的世界觀落後了一個階段.md)）。
+
+> **路徑活著不代表做法還對**——那一次「skill 裡的檔案路徑還在不在」九支全綠，
+> 而四份是壞的。有效的判準是**「它對今天的結構特徵提及幾次」**。
+
+退休的做法是 **`status: superseded` ＋ `user-invocable: false` ＋ 移除投影**，
+**不是刪除**——引用它的 `history/` 是歷史記載。
 
 （只是想讀懂專案？這層可忽略——它是能力庫，不是 why。）
 
+## 清單
+
+**通用**
+
 - `build-guardrail`——把一條規範變成會變紅的機械檢查（緣起：一天七條護欄、四次翻車）
-- `component-rename`——大規模改元件身分／參數名，上千處引用 ＋ 必附存檔遷移（緣起：同一支工具重建八次，重建時漏欄位；固化的理由見 [history/033](../history/033-draft退場與改名固化成skill.md)）
+- `over-justify`——上游的價值判斷：這條規範賺不賺得起位置
 - `diagnose-in-browser`——測試綠但使用者看到的是錯的，在瀏覽器裡定位
+
+**元件管線**（`component-pipeline` 串起前五個）
+
+- `component-discover`——研究函式庫／語言特性，提出概念與命名
+- `component-generate`——產一顆**膠囊**：`component.json` ＋ 五路 ＋ 形態 ＋ 標籤 ＋ 測試
+- `component-roundtrip`——原始碼 → lift → generate → 執行，比對 stdout
+- `component-fuzz`——雙代理資訊隔離的模糊測試
+- `component-integrate`——最終關卡：全部驗證跑完才算數
+- `component-refactor`——審計與修復既有膠囊（⚠️ 審計主力是 40 條護欄，它讀報表）
+- `component-rename`——大規模改元件身分／參數名，上千處引用 ＋ **必附存檔遷移**（緣起：同一支工具重建八次，重建時漏欄位；見 [history/033](../history/033-draft退場與改名固化成skill.md)）
+
+**已退休**
+
+- ~~`component-encapsulate`~~——把元件從共用檔搬進膠囊。**177 顆全部搬完**
+  （`notEncapsulated: 0`），檔案保留為紀錄，投影已移除。接手的是 `component-generate`
