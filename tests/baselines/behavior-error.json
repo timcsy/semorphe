@@ -2,25 +2,19 @@
   "_meta": {
     "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
     "flag": "-std=c++17",
-    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。",
+    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
     "undecidable": 61,
-    "bothRun": 233,
-    "onlyReferenceRuns": 10,
+    "bothRun": 238,
+    "onlyReferenceRuns": 5,
     "onlyInterpreterRuns": 16,
     "neitherRuns": 4
   },
   "mismatch": {
-    "mismatchCount": 14,
+    "mismatchCount": 13,
     "details": [
-      {
-        "corpusKey": "#include <iostream> using namespace std; int main() { int* a#a3lmo",
-        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int* a = new int;⏎    int* b = new int;⏎    *a = 15;⏎    *b = 25;⏎    int sum = *a + *b;⏎    cout << sum << endl;⏎    *a = sum;⏎    cout << *a",
-        "interpreter": "50⏎50⏎",
-        "reference": "40⏎40⏎"
-      },
       {
         "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
         "corpus": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string text = \"H3llo W0rld! 2025\";⏎    int alphaCount = 0, digitCount = 0, otherCount = 0;⏎    for (int i ",
@@ -102,9 +96,9 @@
     ]
   },
   "gaps": {
-    "gapCount": 10,
+    "gapCount": 5,
     "byStage": {
-      "execute": 10
+      "execute": 5
     },
     "details": [
       {
@@ -114,40 +108,10 @@
         "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
       },
       {
-        "corpusKey": "#include <iostream> #include <cstdlib> using namespace std; #dtdaiz",
-        "corpus": "#include <iostream>⏎#include <cstdlib>⏎using namespace std;⏎int main() {⏎    int* arr = (int*)malloc(3 * sizeof(int));⏎    arr[0] = 100;⏎    arr[1] = 200;⏎    arr[2] = 300;⏎    int total = arr[0] + ar",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
-      },
-      {
         "corpusKey": "#include <iostream> #include <vector> using namespace std; t#jnvckg",
         "corpus": "⏎#include <iostream>⏎#include <vector>⏎using namespace std;⏎⏎template<typename T>⏎class Container {⏎public:⏎    vector<T> data;⏎    void add(T item) { data.push_back(item); }⏎    T get(int idx) { retu",
         "stage": "execute",
         "message": "RUNTIME_ERR_UNKNOWN_CONCEPT: {\"concept\":\"unresolved\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; int* firstPositive(#9n014o",
-        "corpus": "#include <iostream>⏎using namespace std;⏎int* firstPositive(int* arr, int n) {⏎    for (int i = 0; i < n; i++) {⏎        if (arr[i] > 0) { return &arr[i]; }⏎    }⏎    return 0;⏎}⏎int main() {⏎    int ",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; int main() { int ar#b62aof",
-        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int arr[3];⏎    arr[0] = 10;⏎    arr[1] = 20;⏎    arr[2] = 30;⏎    int* ptr = &arr[0];⏎    cout << *ptr << endl;⏎    *ptr = *ptr + 5;⏎    cout",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; int main() { int n #q5t9d7",
-        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int n = 5;⏎    int* arr = new int[n];⏎    for (int i = 0; i < n; i++) {⏎        arr[i] = i * 10;⏎    }⏎    for (int i = 0; i < n; i++) {⏎     ",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> #include <cstdlib> using namespace std; #ajln72",
-        "corpus": "#include <iostream>⏎#include <cstdlib>⏎using namespace std;⏎int main() {⏎    int* arr = (int*)malloc(3 * sizeof(int));⏎    arr[0] = 100;⏎    arr[1] = 200;⏎    arr[2] = 300;⏎    cout << arr[0] << \" \" <",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
       },
       {
         "corpusKey": "#include <iostream> #include <stdexcept> using namespace std#rwgw5y",

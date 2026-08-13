@@ -56,6 +56,19 @@ describe('writeBaseline 的 _meta 保存', () => {
     expect(after.count, '數字本身仍然要更新').toBe(11)
   })
 
+  it('🔴 護欄自組的長 note 也不得洗掉追加——第一版的判準漏掉這一種', () => {
+    // ⚠️ 14 條護欄裡只有一部分傳純樣板；其餘各自組一段更長的固定說明。
+    // 第一版判準寫「等於 RATCHET_NOTE 才保留」，於是這一類照樣被覆蓋
+    // ——同一輪內三個基線的理由當場又被吃掉一次。
+    //
+    // > 一個判準如果是照著手上那個實例寫的，它只會涵蓋那個實例。
+    const guardOwn = '靜默回退：執行器遇到處理不了的輸入時有沒有出聲。⚠️ 只有型別不符進棘輪。'
+    writeBaseline(GUARD, { _meta: { guard: GUARD, note: `${guardOwn} ⚠️ 2026-08-13 +1（上升，指名）：…` }, count: 20 })
+    writeBaseline(GUARD, { _meta: { guard: GUARD, note: guardOwn }, count: 21 })
+    expect(loadBaseline<Shape>(GUARD)._meta.note).toContain('2026-08-13')
+    expect(loadBaseline<Shape>(GUARD).count).toBe(21)
+  })
+
   it('★ 反向：呼叫端給的**具體**說明照樣會贏', () => {
     // 沒有這一支的話，一個「note 永遠不准變」的實作也會通過上一支——
     // 而那會讓基線的理由永遠停在第一版。

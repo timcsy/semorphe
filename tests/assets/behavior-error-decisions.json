@@ -1,12 +1,5 @@
 [
   {
-    "corpusKey": "#include <iostream> using namespace std; int main() { int* a#a3lmo",
-    "signal": "直「50⏎50⏎」 參「40⏎40⏎」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
     "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
     "signal": "直「Alpha: 8⏎Digit: 0⏎Other: 9⏎」 參「Alpha: 8⏎Digit: 6⏎Other: 3⏎」",
     "decision": "真誤差",

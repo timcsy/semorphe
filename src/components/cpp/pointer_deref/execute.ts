@@ -13,6 +13,21 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
           if (targetScope) return targetScope.get(targetName)
           return ctx.scope.get(targetName)
         }
+        // `int* a = new int;` —— `cpp:new` 配的是**一塊真的儲存體**，
+        // 而在這個直譯器裡一塊連續的儲存體就是 `array`（見 `cpp:new` 的執行器）。
+        // `*a` 就是它的第 0 格。
+        //
+        // ⚠️ 兩種指標並存是刻意的：`&x` 那種是**符號式**的（指向一個變數名，
+        // 走 `pointerTargets`），`new`／`malloc` 那種是**實體式**的（有自己的格子）。
+        // 合成一種要一個真的堆與位址模型，而那是另一個題目。
+        if (ptrVal.type === 'array' && Array.isArray(ptrVal.value)) {
+          // ⚠️ `offset` 是 `&arr[i]` 留下的位置（見 `cpp:address_of`）。未設 = 0。
+          const at = ptrVal.offset ?? 0
+          if (at < 0 || at >= ptrVal.value.length) {
+            throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
+          }
+          return ptrVal.value[at]
+        }
         // ⚠️ **不是指標卻被解參考——出聲，不要回 0。**
         //
         // 這裡原本 `return { type: 'int', value: 0 }`，與 spec 109 的 `s.size()`

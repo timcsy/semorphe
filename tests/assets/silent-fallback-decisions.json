@@ -138,5 +138,13 @@
     "signal": "raw === null → if (raw === null) return { type: 'int', value: 0 }",
     "decision": "合法",
     "reason": "輸入耗盡（EOF）時回 0——C++ 的 cin 失敗語義就是不改變目標值。不是檢查失敗後的退路。從共用檔原封搬過來。"
+  },
+  {
+    "key": "src/components/cpp/address_of/execute.ts#b5q594",
+    "position": "src/components/cpp/address_of/execute.ts:29",
+    "signal": "varNodes.length === 0",
+    "decision": "防禦性",
+    "reason": "`&` 的 var 接點缺失＝語義樹壞掉，與別處的缺子節點退路同形。⚠️ 而尾端那個「取不到位址的東西回 0」**是可疑的**，已在該檔標註：回 0 與「位址剛好是 0」在畫面上相同。改它要先知道哪些語料會走到那裡。",
+    "rootCause": "缺子節點的防禦性退路"
   }
 ]

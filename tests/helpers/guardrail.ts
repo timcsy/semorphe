@@ -67,9 +67,20 @@ export function loadBaseline<T>(guard: string): T {
  *
  * > **一個機制修好了，而繞過它的那條路仍然是預設的走法。**
  *
- * → 判準很窄，所以安全：**通用樣板不得覆蓋具體理由**。
- * 呼叫端寫的若是 `RATCHET_NOTE` 本身（＝「我沒有要說什麼」），而舊的不是，
- * 就保留舊的。呼叫端真的要換一份具體說明時，寫進去的不會等於樣板，照樣會贏。
+ * ## ⚠️ 而第一版的判準只涵蓋了一部分——這是同一輪內的第二次
+ *
+ * 第一版寫的是「新 note 若**等於** `RATCHET_NOTE` 就保留舊的」。而 14 條護欄裡
+ * 只有一部分傳純樣板，其餘（`silent-fallback`／`locality`／`behavior-error`…）
+ * **各自組一段更長的固定說明**——它們不等於樣板，於是照樣覆蓋，
+ * 三個基線裡剛加上去的理由當場又被吃掉一次。
+ *
+ * > **一個判準如果是照著手上那個實例寫的，它只會涵蓋那個實例。**
+ *
+ * → 真正的判準是**追加關係**：護欄組的 note 是固定前綴，人手寫的理由接在後面。
+ * **舊 note 以新 note 開頭 ⇒ 舊的是「新的 ＋ 追加」，保留舊的。**
+ * 這同時涵蓋純樣板那一種（`RATCHET_NOTE` 也是前綴），所以不必特例。
+ *
+ * 護欄真的改寫了自己那段固定說明時，前綴關係就不成立，新的照樣會贏。
  */
 export function writeBaseline(guard: string, data: object): void {
   const file = path.join(BASELINE_DIR, `${guard}.json`)
@@ -79,10 +90,15 @@ export function writeBaseline(guard: string, data: object): void {
     : {}
   const carrying = old._meta !== undefined ? { _meta: old._meta, ...data } : data
 
-  // ⚠️ 見上：通用樣板不得覆蓋具體理由。
+  // ⚠️ 見上：舊 note 若是「新 note ＋ 追加」，保留舊的。
   const incoming = (data as { _meta?: { note?: string } })._meta
   const previous = old._meta?.note
-  if (incoming?.note === RATCHET_NOTE && previous !== undefined && previous !== RATCHET_NOTE) {
+  if (
+    incoming?.note !== undefined &&
+    previous !== undefined &&
+    previous !== incoming.note &&
+    previous.startsWith(incoming.note)
+  ) {
     ;(carrying as { _meta: { note: string } })._meta = { ...incoming, note: previous }
   }
 

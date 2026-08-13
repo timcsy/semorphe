@@ -35,6 +35,17 @@ export interface RuntimeValue {
   value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable
   /** `type === 'object'` 時，它是哪一個結構／類別 */
   structName?: string
+  /**
+   * `type === 'array'` 當作**指標**用時，指向第幾格。
+   *
+   * `int* p = &arr[2]` 讓 `p` 與 `arr` **共用同一個 `value` 陣列**（所以寫得回去），
+   * 而 `*p` 要讀第 2 格。⚠️ 不能用 `slice` 代替——那是複製，寫回去不會反映。
+   *
+   * 未設 = 0。⚠️ 這個直譯器有**兩種**指標：符號式（`&x`，value 是變數名字串，
+   * 走 `pointerTargets`）與實體式（`new`／`malloc`／陣列退化，value 是格子）。
+   * 這個欄位只屬於後者。
+   */
+  offset?: number
   tag?: string
 }
 
