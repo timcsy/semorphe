@@ -38,7 +38,7 @@ import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
-import { registerView, connectViews } from '../core/view-registry'
+import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from './toolbox-builder'
 import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
@@ -176,11 +176,21 @@ export class App {
     // > **兩份實作裡有一份是死的時，活的那份會慢慢長出只有它才有的條件**
     // > ——monaco 的自訂閱漏掉 `resync`，而沒有人發現，因為它沒在跑。
     //
-    // 改成登錄之後：**加一個視圖 = `registerView(它)`**，這個檔不用動。
-    // 那是硬體域的 2D／3D 組裝面板要接進來的地方
+    // ⚠️ 這裡曾經寫著「加一個視圖 = registerView(它)，**這個檔不用動**」，
+    // 而它下面就是一份手寫的四元素陣列——加第五個視圖一定要改它。
+    //
+    // > **一個註解宣稱「這個檔不用動」，而它下一行就是要動的地方。**
+    //
+    // 改成掃描之後那句話才是真的：面板只要實作 `ViewHost` 就會被收。
+    // 那是硬體域的 2D／3D 組裝面板、以及板子視圖要接進來的地方
     // （見 `draft/2026-08-05-硬體域併入計畫.md`「視圖：地基已經在了」）。
-    for (const v of [this.blocklyPanel, this.monacoPanel, elements.consolePanel, elements.variablePanel]) {
-      if (v) registerView(v)
+    const registeredHosts = registerViewsIn(elements)
+    // 入口條件（`build-guardrail` 第 9 步）：**掃描器會掃 ≠ 真的掃到東西**。
+    // ⚠️ 錨在「有沒有」而不是「有幾個」——後者會在加第五個視圖的那天變紅。
+    if (registeredHosts.length === 0) {
+      throw new Error(
+        'app-shell 沒有回傳任何 ViewHost——視圖登錄表是空的，而症狀是整個畫面都不更新。',
+      )
     }
     connectViews(this.bus)
     // 兩個面板還用匯流排做契約外的事，自己接：

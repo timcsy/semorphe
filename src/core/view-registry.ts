@@ -73,6 +73,61 @@ export function registeredViews(): ViewHost[] {
   return [...views.values()]
 }
 
+/** `ViewHost` 契約上**必要**的成員。`onExecutionAtNode` 是可選的，不在此列。 */
+const REQUIRED_MEMBERS = ['onSemanticUpdate', 'onExecutionState'] as const
+
+/**
+ * 這個東西是不是一個 `ViewHost`。
+ *
+ * ## ⚠️ 為什麼判準是 `viewId` 而不是「有沒有那兩個方法」
+ *
+ * 一個**部分實作**契約的面板（有 `viewId`、卻漏了 `onExecutionState`）用後者
+ * 會被**靜默排除**——它不會被登錄，而畫面上的症狀是「那個面板不再更新」，
+ * 沒有任何錯誤。這個專案已經被同一種靜默咬過很多次。
+ *
+ * 所以：**`viewId` 是自稱，而自稱了契約就必須完整**。不完整 → throw。
+ *
+ * > **讓「我不是視圖」與「我是視圖但漏了東西」分得出來。**
+ */
+export function isViewHost(x: unknown): x is ViewHost {
+  if (typeof x !== 'object' || x === null) return false
+  const v = x as Partial<ViewHost>
+  if (typeof v.viewId !== 'string') return false // 不自稱是視圖——正常，不是錯誤
+
+  const missing = REQUIRED_MEMBERS.filter((m) => typeof v[m] !== 'function')
+  if (typeof v.capabilities !== 'object' || v.capabilities === null) missing.push('capabilities' as never)
+  if (missing.length > 0) {
+    throw new Error(
+      `「${v.viewId}」有 viewId 卻沒有實作 ViewHost 的 ${missing.join('／')}。` +
+        '它會被排除在視圖登錄表之外，而症狀是「這個面板不再更新」且沒有任何錯誤。',
+    )
+  }
+  return true
+}
+
+/**
+ * 掃一個容器，把裡面**所有** `ViewHost` 登錄進來。
+ *
+ * ## ⚠️ 這個函式存在的理由是一句曾經為假的註解
+ *
+ * 本檔檔頭寫著「加一個視圖 ＝ 登錄一個 `ViewHost`，不是改 `app.ts`」，
+ * 而 `app.ts` 當時是**一份手寫的四元素陣列**——加第五個視圖一定要改它。
+ *
+ * > **一個註解宣稱「這個檔不用動」，而它下一行就是要動的地方。**
+ *
+ * 改成掃描之後那句話才是真的：面板只要實作契約就會被收，**呼叫端不用列名**。
+ * 與 `registry.ts` 掃 `component.json` 是同一個形狀——
+ * **手寫清單的維護成本，會在有人忘記的那天一次付清。**
+ *
+ * @returns 找到並登錄的視圖。回傳它是為了讓呼叫端能斷言數量
+ *   （`build-guardrail` 第 9 步的入口條件：**計數器會數 ≠ 真的收到東西**）。
+ */
+export function registerViewsIn(container: object): ViewHost[] {
+  const found = Object.values(container).filter(isViewHost)
+  for (const v of found) registerView(v)
+  return found
+}
+
 /**
  * 有某個能力的視圖。
  *

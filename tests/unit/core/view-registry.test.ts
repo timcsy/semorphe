@@ -9,7 +9,7 @@
  * > 在一套沒有測到它的測試裡看起來一樣。**
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { registerView, registeredViews, viewsWith, viewsConsuming, connectViews, resetViews } from '../../../src/core/view-registry'
+import { registerView, registeredViews, viewsWith, viewsConsuming, connectViews, resetViews, isViewHost, registerViewsIn } from '../../../src/core/view-registry'
 import { SemanticBus } from '../../../src/core/semantic-bus'
 import type { ViewHost, ViewCapabilities } from '../../../src/core/view-host'
 
@@ -89,5 +89,64 @@ describe('視圖登錄表', () => {
     registerView(late)
     bus.emit('semantic:update', { source: 'code' })
     expect(late.received).toEqual(['semantic:code'])
+  })
+})
+
+/**
+ * 自動收集——取代 `app.ts` 裡那份手寫的四元素陣列。
+ *
+ * ⚠️ 那個陣列上方的註解逐字寫著「加一個視圖 = registerView(它)，**這個檔不用動**」，
+ * 而加第五個視圖一定要改它。**這一組測試釘的就是那句話現在為真。**
+ */
+describe('registerViewsIn：掃容器，不列名', () => {
+  beforeEach(() => resetViews())
+
+  it('★ 從容器裡把視圖挑出來——而非視圖的欄位原封不動', () => {
+    const container = {
+      blocklyPanel: fakeView('blocks'),
+      monacoPanel: fakeView('code'),
+      bottomPanel: { show: () => {}, hide: () => {} }, // 不是視圖
+      mobileMenu: null,
+      someNumber: 42,
+    }
+    const found = registerViewsIn(container)
+    expect(found.map((v) => v.viewId).sort()).toEqual(['blocks', 'code'])
+    expect(registeredViews()).toHaveLength(2)
+  })
+
+  it('★ 反向：不自稱是視圖的東西一律不報——證明它不是「什麼都收」', () => {
+    // ⚠️ 沒有這一支的話，一個「把所有東西都當視圖」的實作也會通過上一支。
+    for (const notAView of [null, undefined, 42, 'blocks', [], {}, { show: () => {} }, new Date(0)]) {
+      expect(isViewHost(notAView), `${String(notAView)} 被誤判成視圖`).toBe(false)
+    }
+    expect(registerViewsIn({ a: 1, b: 'x', c: {} })).toEqual([])
+  })
+
+  it('🔴 有 viewId 卻契約不完整 → 爆，不是靜默排除', () => {
+    // 這是這個 guard 存在的理由：部分實作的面板若被靜默略過，
+    // 症狀是「那個面板不再更新」而完全沒有錯誤訊息。
+    const partialView = {
+      viewId: '板子',
+      capabilities: { editable: false, needsLanguageProjection: false, consumedAnnotations: [] },
+      onSemanticUpdate: () => {},
+      // ⚠️ 少了 onExecutionState
+    }
+    expect(() => isViewHost(partialView)).toThrow(/板子/)
+    expect(() => isViewHost(partialView)).toThrow(/onExecutionState/)
+  })
+
+  it('🔴 有 viewId 卻沒有 capabilities → 也要爆', () => {
+    const noCapabilities = {
+      viewId: '圖鑑',
+      onSemanticUpdate: () => {},
+      onExecutionState: () => {},
+    }
+    expect(() => isViewHost(noCapabilities)).toThrow(/capabilities/)
+  })
+
+  it('★ 入口條件：空容器回空陣列——而呼叫端據此判斷掃描壞了', () => {
+    // `app.ts` 用 `length === 0` 當入口條件（build-guardrail 第 9 步）。
+    // ⚠️ 錨在「有沒有」而不是「有幾個」——後者會在加第五個視圖那天變紅。
+    expect(registerViewsIn({})).toEqual([])
   })
 })
