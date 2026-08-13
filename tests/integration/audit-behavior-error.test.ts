@@ -75,6 +75,31 @@ interface decision {
   reason: string
   /** 這一筆的成因。「一筆 ≠ 一個工作」——同一個根因下的筆數會一起消失。 */
   rootCause?: string
+  /**
+   * 🔴 **這一筆的信號是環境相依的**——換一台機器它可能不出現。
+   *
+   * ## 為什麼需要這個欄位（2026-08-14，CI 抓到）
+   *
+   * 唯一那筆判定是 **UB（讀未初始化變數）**，而兩台機器給出兩種結果：
+   *
+   * ```
+   * macOS / clang   印堆疊垃圾 38518960  → 與直譯器的 0 不一致 → 判定命中
+   * CI     / gcc    印 0                 → 一致 → **那筆判定變成孤兒**
+   * ```
+   *
+   * **本機全綠、CI 紅，而兩邊都正確地執行了同一條規則。**
+   *
+   * > **孤兒檢查假設「信號消失＝底下的事實變了」。
+   * > 而對一段沒有唯一答案的程式，信號消失也可能只代表【換了一台機器】。**
+   *
+   * ⚠️ 這不是把孤兒檢查放寬——它只對**已經寫明理由是 UB** 的那幾筆豁免，
+   * 而那個理由本身就說了「參照那一側才不可靠」。其餘的判定照樣會過期。
+   *
+   * ⚠️ 而 `unstableReference` 抓不到這一類：同一台機器上的垃圾值是**穩定的**
+   * （同樣的堆疊佈局，跑兩次一樣）。那個能力邊界寫在下方的注入測試裡，
+   * **而它今天被證實了一次，用的是最貴的方式：CI 紅**。
+   */
+  environmentDependent?: boolean
 }
 
 interface details {
@@ -88,6 +113,8 @@ interface Baseline {
   _meta: { referenceCompiler: string; flag: string; note: string; ratchet: string }
   corpus: { undecidable: number; bothRun: number; onlyReferenceRuns: number; onlyInterpreterRuns: number; neitherRuns: number }
   mismatch: { mismatchCount: number; details: details[] }
+  /** 環境相依（UB）——移出分子的那些，見 `不一致筆數只准下降` 裡的說明 */
+  environmentDependent?: { count: number; details: details[] }
   /** 參照跑得動而直譯器跑不動的那些——**功能缺口**，與 `mismatch`（誤差）意義相反。 */
   gaps: { gapCount: number; byStage: Record<string, number>; details: gapDetail[] }
   /**
@@ -382,15 +409,39 @@ describe('第三十二條護欄：行為的誤差', () => {
     const r = await measure(corpus)
     const decisions = readDecisions()
     const decided = new Map(decisions.map((d) => [d.corpusKey, d]))
-    const toReview = r.details.filter((d) => !decided.has(d.corpusKey))
-    const orphans = decisions.filter((d) => !r.details.some((m) => m.corpusKey === d.corpusKey))
+
+    // 🔴 **環境相依的判定要移出分子，不能只在報表上註記。**
+    //
+    // 那一筆是 UB（讀未初始化變數），而兩台機器給出兩種結果：
+    // macOS 的 clang 印堆疊垃圾 → 算一筆不一致；CI 的 gcc 印 0 → 一致。
+    //
+    // 只把它「判定過」而留在 `details` 裡的話，**這個數字本身就是環境相依的**：
+    //
+    // ```
+    // 基線記 1  →  CI 實測 0  →  「棘輪有改善，請下調基線」  → CI 紅
+    // 基線記 0  →  本機實測 1 →  「棘輪退步」                → 本機紅
+    // ```
+    //
+    // **兩邊都無解**——因為分子裡混了一個沒有唯一答案的樣本。
+    // 處置與 `undecidable`（讀 cin／rand）同一條：**它不該在分子裡**。
+    //
+    // ⚠️ 而它另立一欄而不是靜靜消失——`build-guardrail` 第 11 步：
+    // 「已判定的移出『要看』，**另立一欄**」。縮分母比修分子容易，所以縮掉的要看得見。
+    const envDependent = r.details.filter((d) => decided.get(d.corpusKey)?.environmentDependent)
+    const mismatches = r.details.filter((d) => !decided.get(d.corpusKey)?.environmentDependent)
+    const toReview = mismatches.filter((d) => !decided.has(d.corpusKey))
+    // ⚠️ **環境相依的判定不算孤兒**：它的信號本來就可能在別的環境不出現。
+    const orphans = decisions.filter(
+      (d) => !d.environmentDependent && !r.details.some((m) => m.corpusKey === d.corpusKey),
+    )
 
     printReport('行為的誤差（直譯器 vs 參照編譯器）', [
       `參照   ${referenceCompilerInfo().version}  ${referenceCompilerInfo().flags}`,
       '',
       `語料   不可判定（讀輸入／亂數）${r.undecidable}｜兩邊都跑得動 ${r.bothRun}｜只有參照 ${r.onlyReferenceRuns}｜只有直譯器 ${r.onlyInterpreterRuns}｜兩邊都不成 ${r.neitherRuns}`,
       `       ⚠️ 五欄都要看——縮分母比修分子容易，而「加一段讀 cin 的語料」就能縮分母`,
-      `誤差   ${r.details.length} 筆不一致（已判定 ${r.details.length - toReview.length}，要看 ${toReview.length}）`,
+      `誤差   ${mismatches.length} 筆不一致（已判定 ${mismatches.length - toReview.length}，要看 ${toReview.length}）`,
+      `環境   ${envDependent.length} 筆**移出分子**（UB——參照那一側沒有唯一答案，換台機器結果就不同）`,
       '',
       ...toReview.slice(0, 30).map((d, i) => `  ${i + 1}. ${d.corpusKey}\n       直譯器「${d.interpreter}」 參照「${d.reference}」`),
       '',
@@ -427,7 +478,8 @@ describe('第三十二條護欄：行為的誤差', () => {
           onlyInterpreterRuns: r.onlyInterpreterRuns,
           neitherRuns: r.neitherRuns,
         },
-        mismatch: { mismatchCount: r.details.length, details: r.details },
+        mismatch: { mismatchCount: mismatches.length, details: mismatches },
+        environmentDependent: { count: envDependent.length, details: envDependent },
         gaps: { gapCount: r.gaps.length, byStage: gapsByStage(r.gaps), details: r.gaps },
         unstableReference: { count: r.unstableReference.length, details: r.unstableReference },
       })
@@ -445,6 +497,6 @@ describe('第三十二條護欄：行為的誤差', () => {
     ).toHaveLength(0)
 
     const base = loadBaseline<Baseline>(GUARD_NAME)
-    assertRatchet([['不一致筆數', r.details.length, base.mismatch.mismatchCount]])
+    assertRatchet([['不一致筆數', mismatches.length, base.mismatch.mismatchCount]])
   }, 900000)
 })
