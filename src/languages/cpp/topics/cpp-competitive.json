@@ -40,6 +40,7 @@
         "label": "L1a: 陣列與排序",
         "concepts": [
           "cpp:array_declare",
+          "cpp:initializer_list",
           "cpp:array_at",
           "cpp:array_assign",
           "cpp:loop_count",

@@ -63,6 +63,7 @@
     "cpp:ifdef",
     "cpp:ifndef",
     "cpp:increment",
+    "cpp:initializer_list",
     "cpp:input",
     "cpp:input_formatted",
     "cpp:input_line",

@@ -156,6 +156,10 @@ export const ATOMIC_NAMES = [
   // C／C++ 家族的**語言構造**
   'switch', 'case', 'default', 'ternary', 'throw', 'try_catch', 'lambda',
   'new', 'delete', 'malloc', 'free', 'sizeof',
+  // ⚠️ `initializer_list` 加入日 2026-08-14——`{1, 2, 3}` 這個**語法本身**。
+  // 它是語言構造（聚合初始化列），不是抄來的函式庫名：`std::initializer_list`
+  // 是那個語法的**型別**，而這顆元件是那個語法。與 `lambda`／`ternary` 同類。
+  'initializer_list',
   'comma_expr', 'address_of', 'cast', 'constructor', 'destructor',
   'operator_overload', 'typedef', 'using_alias', 'using_namespace',
   'include', 'include_local', 'define', 'ifdef', 'ifndef',

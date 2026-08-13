@@ -1,0 +1,4 @@
+{
+  "CPP_INITIALIZER_LIST_MSG": "初始值",
+  "CPP_INITIALIZER_LIST_TOOLTIP": "一組依序排列的初始值。可以巢狀——把一組放進另一組，就是二維陣列的一列。"
+}

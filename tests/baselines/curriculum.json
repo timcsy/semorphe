@@ -58,6 +58,7 @@
         "label": "L2a: 陣列與字串",
         "concepts": [
           "cpp:array_declare",
+          "cpp:initializer_list",
           "cpp:array_at",
           "cpp:array_assign",
           "cpp:string_declare",
@@ -279,6 +280,7 @@
         "label": "L1a: 陣列與排序",
         "concepts": [
           "cpp:array_declare",
+          "cpp:initializer_list",
           "cpp:array_at",
           "cpp:array_assign",
           "cpp:loop_count",

@@ -21,7 +21,8 @@ import { isVariableRef } from '../node-traits'
 import { buildPrint } from '../../../../components/cpp/print/lift'
 import { buildInput } from '../../../../components/cpp/input/lift'
 import { isStreamInput } from '../node-traits'
-import { declareAggregateList, declareAggregateShape } from '../../../../core/component/aggregate-nodes'
+import { declareAggregateShape } from '../../../../core/component/aggregate-nodes'
+import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
 // `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
@@ -248,7 +249,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
    */
   // 「這個節點是一層 `{…}`」——**由套件宣告，核心不比對名字**。
   // 消費它的 `interpreter/aggregate.ts` 住在核心，而那個名字是 C++ 的知識。
-  declareAggregateList('cpp_initializer_list')
+  // ⚠️ `cpp:initializer_list` 自己宣告「我是一層 `{…}`」（在它的膠囊裡）。
   // `pair` 不是使用者宣告的結構，而 `{2,1}` 放進 `vector<pair<int,int>>` 時
   // 必須變成有 `first`／`second` 的東西——**那個對應是 C++ 的知識**。
   declareAggregateShape('pair', ['first', 'second'])
@@ -257,7 +258,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const values = node.namedChildren
       .map(c => ctx.lift(c))
       .filter((n): n is SemanticNode => n !== null)
-    return createNode('cpp_initializer_list', {}, { values })
+    return buildInitializerList(values)
   })
 
   // cast_expression — handled by JSON pattern (cpp_cast_expr)

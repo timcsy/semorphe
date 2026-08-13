@@ -1,0 +1,28 @@
+{
+  "conceptId": "cpp:initializer_list",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "values": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0
+    }
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "traits": {
+    "precedence": 1
+  },
+  "_traits_why": "`{…}` 自帶括號，外層永遠不必為它加括號——與字面值同級。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "⚠️ **它原本是 `non-components` 裡的 structural 節點**（`cpp_initializer_list`），\n理由逐字是「它是宣告的子節點、不獨立存在」。而那句話**只對辨識那一路成立**：\n積木那一路需要它獨立存在，否則**多維初始值在積木上表達不出來**\n——`{{1,2},{3,4}}` 需要巢狀，而插槽群沒有巢狀。\n\n🔴 使用者開瀏覽器實測撞到：`int a[3] = {1,2,3}` 的積木上沒有初始值，\n一動積木重生成就變成 `int a[3];`。而 `audit-conformance` 兩天前就在報它\n（「接點 [values] 走完 render → extract 之後不見了」），**而沒有人讀那一行**。"
+}

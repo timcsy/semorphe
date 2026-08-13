@@ -52,12 +52,11 @@ declareNonComponent(
   '函式參數的結構化節點（`{type, name}`）。它是 `func_def` 的子節點，不會單獨成為一顆積木；' +
     '把它做成元件會多出一顆只有一路的殼。⚠️ C1（參數規格化）可能把它升級成 ParamSpec 的一部分。',
 )
-declareNonComponent(
-  'cpp_initializer_list',
-  'structural',
-  '陣列初始值列表 `{1,2,3}` 的容器節點，巢狀時遞迴。它是宣告的子節點、不獨立存在；' +
-    '有產生器（`generators/declarations.ts`）但沒有身分——本身不是一個學生會選的概念。',
-)
+// ⚠️ ~~`cpp_initializer_list` 曾在這裡宣告成 structural~~
+// **2026-08-14 升格成元件** `cpp:initializer_list`。原本的理由逐字是
+// 「它是宣告的子節點、不獨立存在」，而那句話**只對辨識那一路成立**：
+// 積木那一路需要它獨立存在，否則多維初始值表達不出來（`{{1,2},{3,4}}` 要巢狀）。
+// 🔴 症狀是使用者開瀏覽器才發現的——積木上沒有初始值，一動就掉。
 declareNonComponent(
   '_compound',
   'sentinel',

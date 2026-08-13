@@ -496,6 +496,52 @@ export class BlockRegistrar {
         },
       }
 
+    // cpp_initializer_list —— `{1, 2, 3}`
+    //
+    // ⚠️ **動態插槽必須是命令式的**：`+`／`-` 按鈕要在 `init` 裡建，
+    // 而宣告式的 `args0` 只描述固定的欄位。與 `cpp_print` 同一個形狀。
+    //
+    // 🔴 而它讓**多維初始值在積木上表達得出來**：外層的插槽接一顆同型別的積木，
+    // 巢狀天然支援——插槽群沒有巢狀，所以 `{{1,2},{3,4}}` 用插槽群裝不下。
+    {
+      Blockly.Blocks['cpp_initializer_list'] = {
+        itemCount_: 1,
+        init: function (this: any) {
+          this.itemCount_ = 1
+          this.appendValueInput('EXPR0')
+            .appendField(Blockly.Msg['CPP_INITIALIZER_LIST_MSG'] || '初始值')
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setOutput(true, 'Expression')
+          this.setColour(CATEGORY_COLORS.arrays)
+          this.setTooltip(Blockly.Msg['CPP_INITIALIZER_LIST_TOOLTIP'] || '一組依序排列的初始值')
+        },
+        plus_: function (this: any) {
+          this.appendValueInput('EXPR' + this.itemCount_)
+          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          this.itemCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.itemCount_ <= 1) return
+          this.itemCount_--
+          this.removeInput('EXPR' + this.itemCount_)
+          setMinusState(this, this.itemCount_ <= 1)
+        },
+        saveExtraState: function (this: any) {
+          return { itemCount: this.itemCount_ }
+        },
+        loadExtraState: function (this: any, state: { itemCount?: number }) {
+          const count = state?.itemCount ?? 1
+          while (this.itemCount_ < count) {
+            this.plus_()
+          }
+        },
+      }
+    }
+
     // cpp_print
     {
       Blockly.Blocks['cpp_print'] = {

@@ -73,6 +73,7 @@
     "cpp:include",
     "cpp:include_local",
     "cpp:increment",
+    "cpp:initializer_list",
     "cpp:input",
     "cpp:input_formatted",
     "cpp:input_line",

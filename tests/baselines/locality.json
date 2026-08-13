@@ -278,6 +278,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:initializer_list": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:input": {
       "files": 4,
       "dirs": 1

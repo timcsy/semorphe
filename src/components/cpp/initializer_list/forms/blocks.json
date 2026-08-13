@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cpp:initializer_list",
+    "conceptId": "cpp:initializer_list",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_initializer_list",
+      "output": "Expression",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_CPP_INITIALIZER_LIST_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  }
+]

@@ -63,6 +63,7 @@
             "label": "L2a: 陣列與字串",
             "concepts": [
               "cpp:array_declare",
+              "cpp:initializer_list",
               "cpp:array_at",
               "cpp:array_assign",
               "cpp:string_declare",

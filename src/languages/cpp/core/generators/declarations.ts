@@ -1,5 +1,5 @@
 import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { generateExpression, generateBody } from '../../../../core/projection/code-generator'
+import { generateBody } from '../../../../core/projection/code-generator'
 
 export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): void {
 
@@ -16,11 +16,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
 
-  // 巢狀初始值列表（多維陣列的一層）——只在 array_declare 的 values 下出現
-  g.set('cpp_initializer_list', (node, ctx) => {
-    const values = node.children.values ?? []
-    return `{${values.map(v => generateExpression(v, ctx)).join(', ')}}`
-  })
+  // ⚠️ `cpp:initializer_list` 的產生器**已搬進膠囊**（2026-08-14 升格成元件）。
 
 
 

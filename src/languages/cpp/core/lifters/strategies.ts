@@ -36,6 +36,7 @@ import { buildInclude } from '../../../../components/cpp/include/lift'
 import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
+import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -103,7 +104,7 @@ function attachInitializer(
   for (const el of elements) {
     // 巢狀列表（多維）：遞迴，層次不壓平
     if (el.type === 'initializer_list') {
-      const inner = createNode('cpp_initializer_list', {})
+      const inner = buildInitializerList([])
       const withValues = attachInitializer(inner, el, ctx)
       lifted.push(withValues)
       continue

@@ -1,0 +1,4 @@
+{
+  "CPP_INITIALIZER_LIST_MSG": "initial values",
+  "CPP_INITIALIZER_LIST_TOOLTIP": "An ordered group of initial values. Groups can nest — a group inside a group is one row of a 2-D array."
+}
