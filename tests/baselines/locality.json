@@ -746,6 +746,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:vector_make": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:vector_pop": {
       "files": 3,
       "dirs": 1

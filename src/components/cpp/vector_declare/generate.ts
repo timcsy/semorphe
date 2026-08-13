@@ -27,7 +27,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     // `vector<int> v(5)` —— 建構子引數。⚠️ 原本產不回來（lift 也接不住，**兩邊對稱**）。
     const size = (node.children.size ?? [])[0]
     if (size) {
-      return `${indent(ctx)}vector<${type}> ${name}(${generateExpression(size, ctx)});\n`
+      // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
+      // ⚠️ 少了它的話產出 `v(5)`，那**編得過而且看起來很像**，只是每一格變成 0。
+      const fill = (node.children.fill ?? [])[0]
+      const args = fill
+        ? `${generateExpression(size, ctx)}, ${generateExpression(fill, ctx)}`
+        : generateExpression(size, ctx)
+      return `${indent(ctx)}vector<${type}> ${name}(${args});\n`
     }
     return `${indent(ctx)}vector<${type}> ${name};\n`
   })

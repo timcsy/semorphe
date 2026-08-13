@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp:vector_make",
+    "conceptId": "cpp:vector_make",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_vector_make",
+      "message0": "%{BKY_CPP_VECTOR_MAKE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "TYPE",
+          "text": "int"
+        },
+        {
+          "type": "input_value",
+          "name": "FILL",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4A90A4",
+      "tooltip": "%{BKY_CPP_VECTOR_MAKE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type"
+      },
+      "inputs": {
+        "SIZE": "size",
+        "FILL": "fill"
+      }
+    }
+  }
+]

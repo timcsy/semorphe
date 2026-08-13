@@ -5,6 +5,20 @@
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import { evalInitializer } from '../../../interpreter/aggregate'
+import type { RuntimeValue } from '../../../interpreter/types'
+
+/** 深拷貝——每一格獨立，見下方 `fill` 的註解 */
+function cloneValue(v: RuntimeValue): RuntimeValue {
+  if (v.type === 'array' && Array.isArray(v.value)) {
+    return { ...v, value: v.value.map((x) => cloneValue(x as RuntimeValue)) }
+  }
+  if (v.type === 'object' && v.value instanceof Map) {
+    const m = new Map<string, RuntimeValue>()
+    for (const [k, x] of v.value) m.set(k, cloneValue(x))
+    return { ...v, value: m }
+  }
+  return { ...v }
+}
 
 export function registerExecute(
   register: (concept: string, executor: ConceptExecutor) => void,
@@ -34,11 +48,16 @@ export function registerExecute(
     const sizeNode = (node.children.size ?? [])[0]
     if (sizeNode) {
       const n = Number((await ctx.evaluate(sizeNode)).value)
+      // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
+      // ⚠️ **每一格都要獨立的複本**：`vector<vector<int>> g(2, vector<int>(3))`
+      // 共用同一個列物件的話，`g[0][0] = 9` 會同時改到 `g[1][0]`。
+      const fillNode = (node.children.fill ?? [])[0]
+      const fill = fillNode ? await ctx.evaluate(fillNode) : null
       const cells = []
       for (let i = 0; i < (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0); i++) {
-        cells.push({ type: 'int' as const, value: 0 })
+        cells.push(fill ? cloneValue(fill) : { type: 'int' as const, value: 0 })
       }
-      ctx.scope.declare(name, { type: 'array', value: cells })
+      ctx.scope.declare(name, { type: 'array', value: cells, elemType })
       return
     }
 

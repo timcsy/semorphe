@@ -1,0 +1,4 @@
+{
+  "CPP_VECTOR_MAKE_MSG0": "new %2 vector of %1 elements, each %3",
+  "CPP_VECTOR_MAKE_TOOLTIP": "Builds an unnamed vector, typically one row of a 2-D vector. Every cell is an independent copy."
+}

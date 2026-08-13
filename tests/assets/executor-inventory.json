@@ -171,6 +171,7 @@
     "cpp:var_swap",
     "cpp:vector_back",
     "cpp:vector_declare",
+    "cpp:vector_make",
     "cpp:vector_pop",
     "cpp:vector_size"
   ]

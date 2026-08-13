@@ -317,6 +317,7 @@
           "cpp:container_erase",
           "cpp:container_count",
           "cpp:vector_declare",
+          "cpp:vector_make",
           "cpp:vector_size",
           "cpp:vector_pop",
           "cpp:vector_back",

@@ -42,6 +42,13 @@
       ],
       "min": 0,
       "max": 1
+    },
+    "fill": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
     }
   },
   "role": "statement",
@@ -54,5 +61,6 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "execute": "./execute.ts"
-  }
+  },
+  "_children_why": "`fill` 是 `vector<int> v(5, 7)` 的第二個建構引數（「5 個 7」）。\n⚠️ 它原本不存在，而 lift 的註解寫著「兩個引數的形式必須被丟到 raw_code」——**實際上它 fall through 成一個空向量**。註解與行為不符，而空向量不會出聲。"
 }

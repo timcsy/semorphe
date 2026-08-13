@@ -525,6 +525,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         // > **「這不屬於那個接點」與「這不需要接點」是兩件事，
         // > 而一個 `else if` 排除法把它們寫成了同一件。**
         let size: SemanticNode | null = null
+        let fill: SemanticNode | null = null
         if (decl && decl.type === 'init_declarator') {
           const v = decl.childForFieldName('value')
           // `{3,1,4}` 是 initializer_list；`vector<int> v(5)` 是 argument_list（不是列表初始化）
@@ -534,10 +535,21 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               if (lifted) values.push(lifted)
             }
           } else if (v && v.type === 'argument_list') {
-            // 單一引數才是「幾個元素」。`vector<int> v(5, 7)` 是「5 個 7」——
-            // ⚠️ **兩個引數的形式今天不支援，而它必須繼續被丟到 raw_code 那條路**，
-            // 不能在這裡猜成「大小 5」，那會靜靜地產出一個內容全錯的向量。
+            // 單一引數是「幾個元素」（`vector<int> v(5)`）；
+            // 兩個引數是「幾個、每個是什麼」（`vector<int> v(5, 7)`）。
+            //
+            // ⚠️ 🔴 **兩個引數的形式原本這裡寫著「今天不支援，它必須繼續被丟到
+            // raw_code 那條路」——而實際行為不是那樣**：它 fall through 到
+            // 「沒有任何接點」的分支，於是向量建成**空的**。
+            // 註解說的是一件事，程式做的是另一件，而**空的向量不會出聲**。
+            //
+            // > **一句「這裡不支援」的註解，如果沒有人檢查它，
+            // > 描述的就只是寫它的人當時的打算。**
             if (v.namedChildren.length === 1) size = ctx.lift(v.namedChildren[0])
+            else if (v.namedChildren.length === 2) {
+              size = ctx.lift(v.namedChildren[0])
+              fill = ctx.lift(v.namedChildren[1])
+            }
           } else if (v) {
             source = ctx.lift(v)
           }
@@ -572,7 +584,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         //（那正是 `hasInitSourceDecl` 的檔頭記過的翻車：一個未宣告的子節點
         // 讓產生器不認得，來回轉換就掉了那一段）。
         if (size && hasSizeDecl.has(conceptId)) {
-          return createNode(conceptId, props, { size: [size] })
+          return fill
+            ? createNode(conceptId, props, { size: [size], fill: [fill] })
+            : createNode(conceptId, props, { size: [size] })
         }
         return createNode(conceptId, props)
       }

@@ -1,0 +1,41 @@
+{
+  "conceptId": "cpp:vector_make",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "int"
+    }
+  ],
+  "children": {
+    "size": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    },
+    "fill": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "requires": [
+    "<vector>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "⚠️ **與「向量宣告」那顆是兩顆，而那不是重複**：宣告是敘述（它建立一個名字），\n這顆是**運算式**（它產生一個值）。`vector<vector<int>> g(2, vector<int>(3, 7))`\n的內層就是這顆——一個沒有名字的暫時向量。"
+}

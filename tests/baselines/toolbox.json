@@ -133,6 +133,7 @@
         "cpp_range_sum_partial",
         "cpp_vector_back",
         "cpp_vector_declare",
+        "cpp_vector_make",
         "cpp_vector_pop",
         "cpp_vector_size",
         "cpp_container_append",
