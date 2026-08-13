@@ -2,7 +2,7 @@
   "_meta": {
     "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
     "flag": "-std=c++17",
-    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。",
+    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。 ⚠️ 2026-08-13（第五輪）誤差 9 → 8：`string += char` 改成串接。**這一筆在 string_at 改回碼位之後症狀變了但沒變好**——原本是 `Number(\"a\")||0` 也錯，改後是「把碼位當數字加」。同一個缺陷的兩種面貌，而兩次都不報錯。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
@@ -13,14 +13,8 @@
     "neitherRuns": 3
   },
   "mismatch": {
-    "mismatchCount": 9,
+    "mismatchCount": 8,
     "details": [
-      {
-        "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
-        "corpus": "#include <iostream>⏎#include <cctype>⏎#include <string>⏎using namespace std;⏎int main() {⏎    string input = \"abc12de3fg45\";⏎    string digits = \"\";⏎    int sum = 0;⏎    for (int i = 0; i < input.size",
-        "interpreter": "Digits: 255⏎Sum: 15⏎",
-        "reference": "Digits: 12345⏎Sum: 15⏎"
-      },
       {
         "corpusKey": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
         "corpus": "#include <iostream>⏎using namespace std;⏎class NumberHolder {⏎public:⏎    int num;⏎    NumberHolder() {⏎        num = 0;⏎    }⏎    bool operator==(NumberHolder other) {⏎        return num == other.num",

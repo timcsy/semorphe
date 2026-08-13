@@ -1,12 +1,5 @@
 [
   {
-    "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
-    "signal": "直「Digits: 15⏎Sum: -225⏎」 參「Digits: 12345⏎Sum: 15⏎」",
-    "decision": "真誤差",
-    "reason": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
-    "rootCause": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
-  },
-  {
     "corpusKey": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
     "signal": "直「equal⏎also equal⏎」 參「equal⏎not equal⏎」",
     "decision": "真誤差",

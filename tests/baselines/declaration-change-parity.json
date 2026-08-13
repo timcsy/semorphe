@@ -1,8 +1,8 @@
 {
   "_meta": {
     "guard": "declaration-change-parity",
-    "measuredAt": "2026-08-10",
-    "note": "**這不是棘輪，是對照組**——它不准變。任何一筆差異都代表「宣告改動」改變了行為，而 specs/106 的前提是它不會。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
+    "measuredAt": "2026-08-13",
+    "note": "**這不是棘輪，是對照組**——它不准變。任何一筆差異都代表「宣告改動」改變了行為，而 specs/106 的前提是它不會。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。 ⚠️ 2026-08-13 `execute.string_append_char` 由 \"completed|99\" 改為 \"completed|abc\"。🔴 **`99` 是 `'c'` 的碼位——這個基線把一個錯的行為凍結成了正確答案**：`s = \"ab\"; s += 'c'` 應該是 `abc`。根因是 `execCompoundAssign` 對 string 的 `+=` 走數值路徑（`toNumber(\"\")` 是 0，加上碼位）。**一個對照組基線只保證「行為沒變」，不保證「行為是對的」**——它第一次錄的時候錄到什麼，就把什麼當成正確。"
   },
   "generated": {
     "func_def + func_call": "int add(int a, int b) {\n    return a + b;\n}\nint main() {\n    cout << add(1, 2) << endl;\n}",
@@ -42,6 +42,6 @@
     "var_declare 多變數": "completed|3\n",
     "string_declare": "completed|abc\n",
     "string_find": "completed|4\n",
-    "string_append_char": "completed|99\n"
+    "string_append_char": "completed|abc\n"
   }
 }

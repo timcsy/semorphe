@@ -117,6 +117,28 @@ export const execCompoundAssign: ConceptExecutor = async (node, ctx) => {
   }
 
   const current = ctx.scope.get(name)
+
+  // `digits += input[i]` —— **字串的 `+=` 是串接，不是數值相加**。
+  //
+  // 🔴 走數值路徑的話 `toNumber("")` 是 0、右邊是碼位，於是
+  // `"" += 'a'` 變成 **97**——而它看起來像一個合理的數字。
+  // ⚠️ 這一筆在 `cpp:string_at` 改成回碼位（2026-08-13）之後**症狀變了但沒變好**：
+  // 原本是 `Number('a')||0` 也錯，現在是「把碼位當數字加」。
+  // **同一個缺陷的兩種面貌，而兩次都不會報錯。**
+  if (current.type === 'string' && op === '+=') {
+    // char 在這個直譯器裡是碼位（見 `cpp:literal_char`／`cpp:string_at`），
+    // 串接時要還原成字元；string 直接接；其餘照它的字面。
+    const piece =
+      rhs.type === 'char'
+        ? String.fromCharCode(ctx.toNumber(rhs))
+        : typeof rhs.value === 'string'
+          ? rhs.value
+          : String(rhs.value)
+    const appended = { type: 'string' as const, value: String(current.value) + piece }
+    ctx.scope.set(name, appended)
+    return appended
+  }
+
   const lv = ctx.toNumber(current)
   const result = computeCompound(op, lv, rv)
   // ⚠️ **複合指定是一個運算式，它產出指定後的值。**
