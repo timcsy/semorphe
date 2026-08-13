@@ -35,13 +35,6 @@
     "rootCause": "浮點顯示：預設精度已修，這一筆的根因不同"
   },
   {
-    "corpusKey": "#include <iostream> using namespace std; int main() { cout <#ye3m8s",
-    "signal": "直「1⏎4⏎8⏎8⏎1⏎4⏎4⏎4⏎1⏎4⏎」 參「1⏎4⏎8⏎8⏎1⏎4⏎4⏎8⏎1⏎4⏎」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
     "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",
     "signal": "直「0⏎」 參「38518960⏎」",
     "decision": "真誤差",

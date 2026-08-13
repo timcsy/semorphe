@@ -11,6 +11,23 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       }
       if (target in sizes) return { type: 'int', value: sizes[target] }
 
+      // `sizeof(3.14)` —— 目標是一個**字面值**。
+      //
+      // ⚠️ `sizeof(3.14f)` 之所以「已經對了」是**巧合**：float 是 4，
+      // 而查不到時的退路也是 4。`sizeof(3.14)` 就露餡了——double 是 8。
+      //
+      // > **一個退路值若剛好等於某些正確答案，那些案例會看起來像通過的。**
+      //
+      // ⚠️ 這裡在 parse 一個字串，而那是既有的形狀（`target` 就是字串屬性）。
+      // 正確的做法是讓 `target` 成為一個接點——與 `pair`／`new`／`vector` 同族，
+      // 而那要一次改 lift／generate／render／extract 四路，不在這一刀的範圍。
+      const literal = target.trim()
+      if (/^[+-]?\d*\.\d+([eE][+-]?\d+)?$/.test(literal)) return { type: 'int', value: 8 }
+      if (/^[+-]?\d*\.\d+([eE][+-]?\d+)?[fF]$/.test(literal)) return { type: 'int', value: 4 }
+      if (/^[+-]?\d+[lL]{2}$/.test(literal)) return { type: 'int', value: 8 }
+      if (/^[+-]?\d+$/.test(literal)) return { type: 'int', value: 4 }
+      if (/^'.'$/.test(literal)) return { type: 'int', value: 1 }
+
       // `sizeof(a)` 的目標是一個**變數**時，回它佔的位元組數。
       // 原本一律回預設的 4——於是 `sizeof(a)/sizeof(a[0])` 這個算陣列長度的
       // 慣用寫法**永遠回 1**，而那個 1 看起來像一個合理的數字。
