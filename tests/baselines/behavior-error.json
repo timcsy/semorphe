@@ -7,8 +7,8 @@
   },
   "corpus": {
     "undecidable": 61,
-    "bothRun": 225,
-    "onlyReferenceRuns": 18,
+    "bothRun": 233,
+    "onlyReferenceRuns": 10,
     "onlyInterpreterRuns": 16,
     "neitherRuns": 4
   },
@@ -102,17 +102,11 @@
     ]
   },
   "gaps": {
-    "gapCount": 18,
+    "gapCount": 10,
     "byStage": {
-      "execute": 18
+      "execute": 10
     },
     "details": [
-      {
-        "corpusKey": "#include <iostream> using namespace std; namespace Math { in#8sw6t4",
-        "corpus": "#include <iostream>⏎using namespace std;⏎namespace Math {⏎    int square(int x) {⏎        return x * x;⏎    }⏎}⏎int main() {⏎    cout << Math::square(5) << endl;⏎    return 0;⏎}",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"Math::square\"}"
-      },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int ar#ztq1mz",
         "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int arr[5] = {2, 4, 6, 8, 10};⏎    int* p = arr;⏎    cout << *p << endl;⏎    p = p + 2;⏎    cout << *p << endl;⏎    p = p + 2;⏎    cout << *p ",
@@ -124,12 +118,6 @@
         "corpus": "#include <iostream>⏎#include <cstdlib>⏎using namespace std;⏎int main() {⏎    int* arr = (int*)malloc(3 * sizeof(int));⏎    arr[0] = 100;⏎    arr[1] = 200;⏎    arr[2] = 300;⏎    int total = arr[0] + ar",
         "stage": "execute",
         "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; #define LIMIT 100 i#11f1pz3",
-        "corpus": "#include <iostream>⏎using namespace std;⏎#define LIMIT 100⏎int collatzSteps(int n) {⏎    int steps = 0;⏎    while (n != 1) {⏎        if (n % 2 == 0) {⏎            n = n / 2;⏎        } else {⏎         ",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"LIMIT\"}"
       },
       {
         "corpusKey": "#include <iostream> #include <vector> using namespace std; t#jnvckg",
@@ -168,52 +156,16 @@
         "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"runtime_error\"}"
       },
       {
-        "corpusKey": "#include <iostream> using namespace std; namespace Math { in#r9y96e",
-        "corpus": "#include <iostream>⏎using namespace std;⏎namespace Math {⏎    int add(int a, int b) {⏎        return a + b;⏎    }⏎    int multiply(int a, int b) {⏎        return a * b;⏎    }⏎}⏎int main() {⏎    cout <",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"Math::add\"}"
-      },
-      {
         "corpusKey": "#include <iostream> #include <numeric> #include <vector> usi#1lno0y9",
         "corpus": "#include <iostream>⏎#include <numeric>⏎#include <vector>⏎using namespace std;⏎int main() {⏎    vector<int> v(5);⏎    iota(v.begin(), v.end(), 1);⏎    for (int i = 0; i < 5; i++) {⏎        cout << v[i]",
         "stage": "execute",
         "message": "RUNTIME_ERR_INDEX_OUT_OF_RANGE: {\"%1\":\"0\"}"
       },
       {
-        "corpusKey": "#include <iostream> #include <utility> using namespace std; #16z3a4k",
-        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<int, int> p;⏎    p.first = 1;⏎    p.second = 2;⏎    cout << p.first << \" \" << p.second << endl;⏎    return 0;⏎}",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"p\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> #include <utility> using namespace std; #1b7c93e",
-        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<int, string> p = make_pair(42, \"hello\");⏎    cout << p.first << \" \" << p.second << endl;⏎    return 0;⏎}",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"p\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> #include <utility> using namespace std; #1fhk6px",
-        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎pair<int, int> minmax(int a, int b) {⏎    if (a < b) return make_pair(a, b);⏎    return make_pair(b, a);⏎}⏎int main() {⏎    pair<int, int> r",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"result\"}"
-      },
-      {
         "corpusKey": "#include <iostream> #include <vector> #include <utility> usi#1yymrr9",
         "corpus": "#include <iostream>⏎#include <vector>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    vector<pair<int, int>> v;⏎    v.push_back(make_pair(1, 10));⏎    v.push_back(make_pair(2, 20));⏎    for (",
         "stage": "execute",
         "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"v[i]\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> #include <utility> using namespace std; #4bzkq6",
-        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<string, double> item;⏎    item.first = \"apple\";⏎    item.second = 3.5;⏎    cout << item.first << \" costs \" << item.sec",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"item\"}"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; #define MAX_SIZE 10#4634o6",
-        "corpus": "#include <iostream>⏎using namespace std;⏎#define MAX_SIZE 100⏎#define PI 3⏎int main() {⏎    cout << MAX_SIZE << endl;⏎    cout << PI << endl;⏎    return 0;⏎}",
-        "stage": "execute",
-        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"MAX_SIZE\"}"
       }
     ]
   }

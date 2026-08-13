@@ -509,13 +509,33 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             source = ctx.lift(v)
           }
         }
+        // `pair<int, string> p` —— **兩個型別參數要拆成兩個具名屬性**。
+        //
+        // 🔴 這一顆的 lift 是三路裡唯一錯的那一路：`generate.ts` 讀 `type1`／`type2`、
+        // `forms/blocks.json` 的 renderMapping 也是 `TYPE1→type1`／`TYPE2→type2`，
+        // **而 lift 產出 `type: "int,string"`**——一個要 parse 回結構才能用的字串。
+        //
+        // 缺陷帳（`tests/baselines/defect-ledger.json` 的 `_meta`）逐字：
+        // 「宣告寫的 type1/type2 才是對的設計，所以**刻意不改宣告**
+        // （改了會讓護欄變綠而缺陷還在）」——所以改的是這裡。
+        //
+        // ⚠️ 這是**第二個**「兩個型別參數」的特例（`map` 是第一個）。第三個出現時
+        // 該收斂成「從 `component.json` 的 properties 宣告推導」，而不是再加一個 `if`。
+        const props: Record<string, string> =
+          templateName === 'pair'
+            ? (() => {
+                const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
+                return { type1: args[0]?.text ?? 'int', type2: args[1]?.text ?? 'int', name }
+              })()
+            : { type: innerType, name }
+
         if (values.length > 0) {
-          return createNode(conceptId, { type: innerType, name }, { values })
+          return createNode(conceptId, props, { values })
         }
         if (source && hasInitSourceDecl.has(conceptId)) {
-          return createNode(conceptId, { type: innerType, name }, { source: [source] })
+          return createNode(conceptId, props, { source: [source] })
         }
-        return createNode(conceptId, { type: innerType, name })
+        return createNode(conceptId, props)
       }
 
       // Unknown template type — fall through to var_declare with full template text

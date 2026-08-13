@@ -1,11 +1,11 @@
 {
   "_meta": {
     "guard": "conformance",
-    "measuredAt": "2026-08-10",
+    "measuredAt": "2026-08-13",
     "rule": "合成一個帶子節點的最小節點 → 走生產入口 `renderToBlocklyState` → 每個放得進去的接點都要出現在產出的插槽裡。⚠️ **是實測不是靜態比對**——靜態版報 9 筆而實測只有 1 筆，差額全是動態積木（插槽名與接點名是不同的詞）。判不出來的（合成不出、渲染不出）歸「無法確定」，**不計入安全**。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 2026-08-10 確定違規 1 → 10（spec 106）：**上升是揭露不是退步**——`declared-slots.json` 那條把 15 顆元件漏掉的接點宣告補上了（16 → 1），而符合性護欄**只檢查宣告過的接點**，所以那些接點是今天才第一次被檢查。它們的形態表達不出來是**既有的**問題，在此之前沒有任何訊號。⚠️ 同時把合成改成**一個接點一棵樹**：合成器不知道哪些接點互斥（`cpp:var_declare` 的 `initializer` 與 `declarators` 在真實程式碼裡從不同時出現），一次全放會造出真實世界不存在的樹，連本來好好的接點也會被誤報。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 2026-08-10 確定違規 1 → 10（spec 106）：**上升是揭露不是退步**——`declared-slots.json` 那條把 15 顆元件漏掉的接點宣告補上了（16 → 1），而符合性護欄**只檢查宣告過的接點**，所以那些接點是今天才第一次被檢查。它們的形態表達不出來是**既有的**問題，在此之前沒有任何訊號。⚠️ 同時把合成改成**一個接點一棵樹**：合成器不知道哪些接點互斥（`cpp:var_declare` 的 `initializer` 與 `declarators` 在真實程式碼裡從不同時出現），一次全放會造出真實世界不存在的樹，連本來好好的接點也會被誤報。 ⚠️ 2026-08-13 確定違規 10 → 11（**上升，指名**）：新增 `cpp:pair_declare: source`。那顆元件補上了 `source` 接點（`pair<int,string> p = make_pair(…)` 的初始值原本**辨識與產生兩邊對稱地掉**，所以來回轉換比對一直是綠的），而它的積木沒有對應插槽——**與既有 10 筆同一種狀態**（`vector_declare`／`string_declare`… 全都如此）。不是新的一類問題，是既有那一類多了一筆。⚠️ 單修 pair 的 forms 而不修其餘 10 顆是不一致的，那要一起做，不在這一刀的範圍。"
   },
-  "certainViolations": 10,
+  "certainViolations": 11,
   "undetermined": 3,
   "violationList": [
     "cpp:array_declare: values",
@@ -13,6 +13,7 @@
     "cpp:ifstream_declare: initializer",
     "cpp:method_call: args",
     "cpp:ofstream_declare: initializer",
+    "cpp:pair_declare: source",
     "cpp:string_append_char: value",
     "cpp:string_declare: initializer",
     "cpp:string_find: from",

@@ -35,7 +35,20 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       })
     }
 
-    const funcDef = ctx.functions.get(name)
+    // `Math::square(5)` —— 限定名退回裸名再查一次。
+    //
+    // ⚠️ 這不是猜，是**跟隨一個已經寫下的設計**：`cpp:namespace_def` 的執行器
+    // 註解逐字「這個直譯器**沒有名稱隔離**，本體直接跑」——`namespace Math`
+    // 裡的 `square` 就是登記成 `square`。而呼叫端拿到的是完整的 `Math::square`，
+    // 於是兩端對不起來，症狀是 `UNDEFINED_FUNC`（第三十二條護欄的 2 段缺口）。
+    //
+    // 順序是刻意的：**先查完整名**。有人真的用完整名登記時，那一份優先。
+    //
+    // ⚠️ 已知代價：使用者自己定義的 `max` 會被 `std::max` 撞上。那是
+    // 「沒有名稱隔離」這個設計本來就有的代價，不是這一行新增的——
+    // 真要隔離就得讓 `namespace_def` 開一個命名空間，而那是另一個題目。
+    const bareName = name.includes('::') ? name.slice(name.lastIndexOf('::') + 2) : null
+    const funcDef = ctx.functions.get(name) ?? (bareName ? ctx.functions.get(bareName) : undefined)
     if (!funcDef) {
       const { RuntimeError, RUNTIME_ERRORS } = await import('../../../interpreter/errors')
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': name })

@@ -116,19 +116,15 @@ describe('概念身分與五路', () => {
     expect(decls[0].children?.values ?? []).toHaveLength(0)
   })
 
-  it.fails('[BLOCKED:cpp:pair_declare] pair 的初始值仍然掉——**掉得對稱，所以來回轉換是綠的**', () => {
-    // `pair<int,string> p = make_pair(42, "hello")` 的初始值辨識時就掉了。
+  it('pair 的初始值接得住了（2026-08-13 修，釘子已拔）', () => {
+    // ✅ **這支曾經是 `it.fails`**，而那個機制照設計運作了一次：
+    // 缺陷還在時它綠且出聲；修好的那一刻它變紅，逼人來拔釘子。
     //
-    // ⚠️ 這是**被這次改動照出來的既有缺陷**，不是新的：辨識掉、產生也掉，
-    // 兩邊對稱，於是 `roundtrip-cpp-utility` 一直是綠的。第一版的修法對所有
-    // 容器都掛 `source`，pair 立刻變紅——那條紅才是它真實的狀態。
-    //
-    // 沒有一起修：`cpp_pair_declare` 的 `children` 是空的且
+    // 當時沒一起修的理由逐字：「`cpp_pair_declare` 的 `children` 是空的且
     // `skipPaths: ['execute']`（理由「declarative」）。要接上初始值就得把
-    // 執行那一路也做出來，那是另一個功能，不是這次的範圍。
-    //
-    // 釘成 `it.fails` 而不是 `it.todo`：缺陷還在＝綠且出聲，修好了＝紅並
-    // 提醒拔釘子。`it.todo` 只會留下一個沒有人會讀的名字。
+    // 執行那一路也做出來，那是另一個功能」——**而那正是 2026-08-13 做的事**：
+    // 🔴 那個 `skipPaths` 是一個**假的「顯式的空」**（`pair<int,int> p;` 當然有
+    // 執行語義），它讓完備性護欄綠著而 5 段語料跑不動。
     const decls = collect(
       liftMain('pair<int, string> p = make_pair(42, "hello");'),
       (n) => n.conceptId === 'cpp:pair_declare',

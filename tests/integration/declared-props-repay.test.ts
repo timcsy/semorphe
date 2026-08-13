@@ -60,17 +60,20 @@ describe('屬性宣告清償', () => {
     expect(Object.keys(n!.properties)).not.toContain('ptr')
   })
 
-  it.fails('[BLOCKED:cpp:pair_declare] 兩個型別要是兩個屬性，不是一個逗號字串', () => {
-    // 🔴 實測 `pair<int,string> pr;` 產出 `{ type: "int,string" }`。
+  it('兩個型別是兩個屬性，不是一個逗號字串（2026-08-13 修，釘子已拔）', () => {
+    // ✅ **這支曾經是 `it.fails`**。當時的判斷逐字：「**這一筆刻意不用『改宣告』
+    // 來消掉**。宣告寫的是 `type1`／`type2`，而那是**對的設計**——把它改成 `type`
+    // 會讓護欄變綠而缺陷還在，那正是『把缺陷洗成設計，然後讓護欄替它背書』。」
     //
-    // ⚠️ **這一筆刻意不用「改宣告」來消掉。** 宣告寫的是 `type1`／`type2`，
-    // 而那是**對的設計**——把它改成 `type` 會讓護欄變綠而缺陷還在，
-    // 那正是「把缺陷洗成設計，然後讓護欄替它背書」。
+    // 🔴 **那個判斷完全正確，而它在十一天後省下了一次誤修**：修的是 lifter
+    // （`strategies.ts` 為 pair 拆樣板引數），三路裡另外兩路一個字都不用動。
     //
-    // 專案自己的教訓：**「需要 parse 回結構才能用的字串，就不該是字串」**。
-    // 修它要動 lifter 的 pair 規則，不在 `specs/112` 的範圍。
+    // > **忍住不改宣告，是為了讓將來的人還找得到真正該改的那一路。**
     const n = find(lift('#include <utility>\nusing namespace std;\nint main(){ pair<int,string> pr; }'), 'cpp:pair_declare')
     expect(n).not.toBeNull()
     expect(Object.keys(n!.properties)).toContain('type1')
+    expect(Object.keys(n!.properties)).toContain('type2')
+    // ⚠️ 負向：那個逗號字串不得回來
+    expect(Object.keys(n!.properties)).not.toContain('type')
   })
 })

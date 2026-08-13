@@ -55,14 +55,37 @@ export function loadBaseline<T>(guard: string): T {
  * 而程式碼仍然帶著那個病」的又一次。
  *
  * 呼叫端要**顯式覆寫** `_meta` 的話，把它放進 `data` 就好——傳進來的贏。
+ *
+ * ## 🔴 而 2026-08-13 發現那句話就是第三次的漏洞
+ *
+ * 前兩次修的是「整份 `_meta` 被覆寫」。而**14 條護欄的呼叫端全都傳
+ * `note: RATCHET_NOTE`**（那個通用樣板），於是「傳進來的贏」讓保存機制
+ * 對它們**全部失效**——20 個基線裡累積的上調理由，每次重產都被靜默清掉一次。
+ *
+ * 當場的實例：`conformance` 的 note 記著 2026-08-10「上升是揭露不是退步」
+ * 的完整說明，重產一次就沒了。
+ *
+ * > **一個機制修好了，而繞過它的那條路仍然是預設的走法。**
+ *
+ * → 判準很窄，所以安全：**通用樣板不得覆蓋具體理由**。
+ * 呼叫端寫的若是 `RATCHET_NOTE` 本身（＝「我沒有要說什麼」），而舊的不是，
+ * 就保留舊的。呼叫端真的要換一份具體說明時，寫進去的不會等於樣板，照樣會贏。
  */
 export function writeBaseline(guard: string, data: object): void {
   const file = path.join(BASELINE_DIR, `${guard}.json`)
   fs.mkdirSync(BASELINE_DIR, { recursive: true })
   const old = fs.existsSync(file)
-    ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: unknown })
+    ? (JSON.parse(fs.readFileSync(file, 'utf8')) as { _meta?: { note?: string } })
     : {}
   const carrying = old._meta !== undefined ? { _meta: old._meta, ...data } : data
+
+  // ⚠️ 見上：通用樣板不得覆蓋具體理由。
+  const incoming = (data as { _meta?: { note?: string } })._meta
+  const previous = old._meta?.note
+  if (incoming?.note === RATCHET_NOTE && previous !== undefined && previous !== RATCHET_NOTE) {
+    ;(carrying as { _meta: { note: string } })._meta = { ...incoming, note: previous }
+  }
+
   fs.writeFileSync(file, JSON.stringify(carrying, null, 2) + '\n', 'utf8')
 }
 

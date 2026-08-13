@@ -212,15 +212,24 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     ).toEqual([])
   })
 
-  it('★ 對照組：該宣告的 12 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
+  it('★ 對照組：該宣告的 11 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
     const shouldDeclare = [
       'cpp:comment', 'cpp:block_comment', 'cpp:doc_comment', 'cpp:include', 'cpp:using_namespace',
       // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
       //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
       // 宣告會隨系統長出新能力而過期，classification.md 的「複查觸發條件」
       // 列的就是這種情形。
+      //
+      // ⚠️ **`cpp:pair_declare` 也已移除（2026-08-13），而它是同一個形狀的第二次。**
+      // 差別在於：`define` 那次是「系統長出新能力所以宣告過期」，
+      // 🔴 **這一次是那個宣告從一開始就是錯的**——`pair<int,int> p;` 一直都有
+      // 執行語義（要宣告一個變數），而 `skipReasons: "declarative"` 讓
+      // 完備性護欄綠著，代價是第三十二條護欄的 5 段語料跑不動。
+      //
+      // > **一個假的「顯式的空」不會隨時間過期——它從第一天就是假的，
+      // > 而正因為它長得像一個決定，沒有人會回頭質疑它。**
       'cpp:stringstream_declare', 'cpp:ifstream_declare',
-      'cpp:ofstream_declare', 'cpp:pair_declare', 'cpp:case', 'cpp:default',
+      'cpp:ofstream_declare', 'cpp:case', 'cpp:default',
     ]
     const omitted = shouldDeclare.filter((id) => {
       const d = allComponentDefs().find((x) => x.conceptId === id)
