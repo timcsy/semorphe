@@ -151,18 +151,29 @@ describe('三情境覆蓋探測', () => {
       // ★ 入口條件——錨在**語料段數**上（合成量），見檔頭的自我否證
       expect(Object.keys(corpus).length).toBeGreaterThan(5)
       const rows: string[] = []
-      let residual = 0, execMismatch = 0, projMismatch = 0
+      let residual = 0, execMismatch = 0, projMismatch = 0, refCannotRun = 0
       for (const [name, src] of Object.entries(corpus)) {
         const r = await probe(src, runnable)
         const flags: string[] = []
         if (r.residual > 0) { residual++; flags.push(`辨識${r.residual}:${r.kinds.join('|')}`) }
         if (runnable) {
-          if (r.ours !== r.ref) { execMismatch++; flags.push(`執行 ours=${JSON.stringify(r.ours)} ref=${JSON.stringify(r.ref)}`) }
-          if (r.regen !== r.ref) { projMismatch++; flags.push(`投影 regen=${JSON.stringify(r.regen)}`) }
+          // 🔴 **「參照編不過」與「我們算錯」是兩件事**，而它們原本混在同一欄。
+          //
+          // `__gcd` 是 libstdc++ 的擴充，macOS 的 clang 用 libc++ 沒有它
+          // ——那一筆是**我們比參照寬容**，不是我們算錯。混在一起的話，
+          // 缺口的數字會被一批「參照跑不動」灌水，而那個方向是**看不出來的**：
+          // 兩者的症狀都是「這一段紅了」。
+          if (r.ref.startsWith('✘compile')) {
+            refCannotRun++
+            flags.push(`參照編不過（我們算出 ${JSON.stringify(r.ours)}）——不是我們的缺陷`)
+          } else {
+            if (r.ours !== r.ref) { execMismatch++; flags.push(`執行 ours=${JSON.stringify(r.ours)} ref=${JSON.stringify(r.ref)}`) }
+            if (r.regen !== r.ref) { projMismatch++; flags.push(`投影 regen=${JSON.stringify(r.regen)}`) }
+          }
         }
         if (flags.length) rows.push(`  ✘ ${name}\n      ${flags.join('\n      ')}`)
       }
-      console.log(`\n═══ ${label}：${Object.keys(corpus).length} 段｜辨識缺 ${residual}｜執行不符 ${execMismatch}｜投影不符 ${projMismatch}\n${rows.join('\n')}`)
+      console.log(`\n═══ ${label}：${Object.keys(corpus).length} 段｜辨識缺 ${residual}｜執行不符 ${execMismatch}｜投影不符 ${projMismatch}｜參照編不過 ${refCannotRun}\n${rows.join('\n')}`)
     }, 300000)
   }
 })
