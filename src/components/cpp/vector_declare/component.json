@@ -35,6 +35,13 @@
       ],
       "min": 0,
       "max": 1
+    },
+    "size": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
     }
   },
   "role": "statement",

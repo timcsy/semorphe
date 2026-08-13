@@ -26,6 +26,23 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       }
 
       const right = await ctx.evaluate(node.children.right[0])
+
+      // **指標算術**：`p = p + 2`、`p - 1`。
+      //
+      // 實體式指標（`new`／`malloc`／陣列退化）在這個直譯器裡是
+      // 「一個陣列 ＋ 一個 `offset`」（見 `cpp:address_of`）。所以移動指標
+      // 就是**移動 offset**，而底下那個陣列**不複製**——`*(p+2) = 9` 要寫得回去。
+      //
+      // ⚠️ 走一般的數值路徑會讓 `p + 2` 變成 `toNumber(陣列) + 2 = 2`，
+      // 而那是一個看起來像數字的東西，後面每次解參考都報 `TYPE_MISMATCH`。
+      if ((op === '+' || op === '-') && left.type === 'array' && Array.isArray(left.value) && right.type !== 'array') {
+        const step = ctx.toNumber(right)
+        const moved = (left.offset ?? 0) + (op === '+' ? step : -step)
+        // ⚠️ **不在這裡檢查越界**：C++ 允許指標指到「尾端之後一格」（`end()` 的慣例），
+        // 只有**解參考**才是錯的。而 `pointer_deref`／`pointer_assign` 已經在檢查。
+        return { type: 'array', value: left.value, offset: moved }
+      }
+
       const lv = ctx.toNumber(left)
       const rv = ctx.toNumber(right)
 

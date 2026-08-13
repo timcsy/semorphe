@@ -24,6 +24,21 @@ export function registerExecute(
       ctx.scope.declare(name, { type: 'array', value: copied })
       return
     }
+    // `vector<int> v(5)` —— **建構子引數：5 個預設值**。
+    // ⚠️ 這個接點在 2026-08-13 之前不存在：lift 只把 `argument_list`「排除在
+    // source 之外」（那是對的），**而排除之後沒有人接住它**，於是 `v` 建成空的，
+    // `iota(v.begin(), v.end(), 1)` 立刻索引越界。
+    const sizeNode = (node.children.size ?? [])[0]
+    if (sizeNode) {
+      const n = Number((await ctx.evaluate(sizeNode)).value)
+      const cells = []
+      for (let i = 0; i < (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0); i++) {
+        cells.push({ type: 'int' as const, value: 0 })
+      }
+      ctx.scope.declare(name, { type: 'array', value: cells })
+      return
+    }
+
     const init = node.children.values ?? []
     const elems = []
     for (const n of init) elems.push(await ctx.evaluate(n))

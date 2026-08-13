@@ -54,6 +54,18 @@ const hasInitSourceDecl = new Set(
 )
 
 /**
+ * 哪些容器宣告概念**有宣告 `size` 子節點**（`vector<int> v(5)` 的建構子引數）。
+ *
+ * ⚠️ 與上面同一條理由：**從 JSON 讀，不寫死**。而它要解決的是一個
+ * 「被正確地排除、然後沒有人接住」的缺陷——見下方 `argument_list` 那一段。
+ */
+const hasSizeDecl = new Set(
+  [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
+    .filter((c) => (c as { children?: Record<string, unknown> }).children?.size !== undefined)
+    .map((c) => (c as { conceptId: string }).conceptId),
+)
+
+/**
  * 把陣列宣告的初始值列表掛上 `values` 子槽。
  *
  * 三態（見 specs/050-repay-top-blockers/data-model.md 契約 1）：
@@ -497,6 +509,16 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         // 標記寫的是「初始化列表尚無對應概念」——**方向指錯了**：列表早就
         // 支援了，掉的是函式呼叫。照標記走會去改一段已經正確的程式碼。
         let source: SemanticNode | null = null
+        // `vector<int> v(5)` —— **建構子引數，不是初始值**。
+        //
+        // ⚠️ 它原本只被「排除在 source 之外」（那是對的，當成 source 會產出
+        // `vector<int> v = 5;`，不合法），**而排除之後就沒有人接住它**：
+        // 大小整個掉了，`v` 建成空的，於是 `iota(v.begin(), v.end(), 1)`
+        // 立刻索引越界。第三十二條護欄的 1 段缺口。
+        //
+        // > **「這不屬於那個接點」與「這不需要接點」是兩件事，
+        // > 而一個 `else if` 排除法把它們寫成了同一件。**
+        let size: SemanticNode | null = null
         if (decl && decl.type === 'init_declarator') {
           const v = decl.childForFieldName('value')
           // `{3,1,4}` 是 initializer_list；`vector<int> v(5)` 是 argument_list（不是列表初始化）
@@ -505,7 +527,12 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               const lifted = ctx.lift(item)
               if (lifted) values.push(lifted)
             }
-          } else if (v && v.type !== 'argument_list') {
+          } else if (v && v.type === 'argument_list') {
+            // 單一引數才是「幾個元素」。`vector<int> v(5, 7)` 是「5 個 7」——
+            // ⚠️ **兩個引數的形式今天不支援，而它必須繼續被丟到 raw_code 那條路**，
+            // 不能在這裡猜成「大小 5」，那會靜靜地產出一個內容全錯的向量。
+            if (v.namedChildren.length === 1) size = ctx.lift(v.namedChildren[0])
+          } else if (v) {
             source = ctx.lift(v)
           }
         }
@@ -534,6 +561,12 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         }
         if (source && hasInitSourceDecl.has(conceptId)) {
           return createNode(conceptId, props, { source: [source] })
+        }
+        // ⚠️ 同樣從 JSON 讀，不寫死——沒有宣告 `size` 接點的容器不得收到它
+        //（那正是 `hasInitSourceDecl` 的檔頭記過的翻車：一個未宣告的子節點
+        // 讓產生器不認得，來回轉換就掉了那一段）。
+        if (size && hasSizeDecl.has(conceptId)) {
+          return createNode(conceptId, props, { size: [size] })
         }
         return createNode(conceptId, props)
       }

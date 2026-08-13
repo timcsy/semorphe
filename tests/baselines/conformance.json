@@ -19,6 +19,6 @@
     "cpp:string_declare: initializer",
     "cpp:string_find: from",
     "cpp:var_declare: declarators",
-    "cpp:vector_declare: values、source"
+    "cpp:vector_declare: values、source、size"
   ]
 }

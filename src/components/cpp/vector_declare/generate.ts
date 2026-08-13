@@ -24,6 +24,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     if (source) {
       return `${indent(ctx)}vector<${type}> ${name} = ${generateExpression(source, ctx)};\n`
     }
+    // `vector<int> v(5)` —— 建構子引數。⚠️ 原本產不回來（lift 也接不住，**兩邊對稱**）。
+    const size = (node.children.size ?? [])[0]
+    if (size) {
+      return `${indent(ctx)}vector<${type}> ${name}(${generateExpression(size, ctx)});\n`
+    }
     return `${indent(ctx)}vector<${type}> ${name};\n`
   })
 }
