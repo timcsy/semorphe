@@ -88,7 +88,18 @@ export function defaultValue(type: string): RuntimeValue {
     case 'string': return { type: 'string', value: '' }
     case 'bool': return { type: 'bool', value: false }
     case 'void': return { type: 'void', value: null }
-    default: return { type: 'int', value: 0 }
+    default:
+      // **樣板型別的預設值是空容器**，不是 0。
+      //
+      // 🔴 `class C { vector<int> data; };` 的成員 `data` 原本被建成 `int 0`，
+      // 於是 `data.push_back(x)` 丟 `TYPE_MISMATCH: array`——**而那是在
+      // 建構之後才炸的，訊息指向 push 而不是宣告**。
+      //
+      // ⚠️ 判準是「型別名帶尖括號」，不是「型別名叫 vector」——後者會讓
+      // 核心認得一個特定語言的容器名（中立性護欄在看）。任何語言的樣板容器
+      // 都吃這條。
+      if (type.includes('<')) return { type: 'array', value: [] }
+      return { type: 'int', value: 0 }
   }
 }
 
