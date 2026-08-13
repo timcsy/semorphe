@@ -1,0 +1,10 @@
+{
+  "id": "c",
+  "name": { "zh-TW": "C 風格", "en": "C Style" },
+  "io_style": "printf",
+  "naming_convention": "snake_case",
+  "indent_size": 4,
+  "brace_style": "K&R",
+  "namespace_style": "explicit",
+  "header_style": "individual"
+}
