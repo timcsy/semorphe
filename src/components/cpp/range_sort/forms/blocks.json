@@ -13,6 +13,11 @@
           "type": "field_input",
           "name": "CONTAINER",
           "text": "v"
+        },
+        {
+          "type": "input_value",
+          "name": "COMPARATOR",
+          "check": "Expression"
         }
       ],
       "inputsInline": true,
@@ -25,7 +30,9 @@
       "fields": {
         "CONTAINER": "begin"
       },
-      "inputs": {},
+      "inputs": {
+        "COMPARATOR": "comparator"
+      },
       "statementInputs": {}
     }
   }

@@ -4,12 +4,15 @@
  * 從 `src/languages/cpp/std/vector/executors.ts` **原封搬過來**——搬移不重寫。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import { evalInitializer } from '../../../interpreter/aggregate'
 
 export function registerExecute(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   register('cpp:vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)
+    // 元素型別——`vector<pair<int,int>>` 的 `pair<int,int>`。
+    const elemType = String(node.properties.type ?? 'int')
     // ⚠️ **初始化列表原本被完全忽略**——`vector<int> v = {3,1,4}` 建出一個
     // 空的向量，於是 `v[1]` 索引越界、`v.size()` 是 0。而**產出的程式碼也
     // 少了那段初始值**，所以來回轉換看起來「成功」了。
@@ -41,7 +44,11 @@ export function registerExecute(
 
     const init = node.children.values ?? []
     const elems = []
-    for (const n of init) elems.push(await ctx.evaluate(n))
-    ctx.scope.declare(name, { type: 'array', value: elems })
+    // ⚠️ `evalInitializer` 而不是 `evaluate`：`vector<S> v = {{3},{1}}` 的元素
+    // 本身是一層 `{…}`，而那是**聚合初始化**——要按 `S` 的成員順序填。
+    for (const n of init) elems.push(await evalInitializer(n, elemType, ctx))
+    // **元素型別跟著值走**——`push_back({2,1})` 時手上只有變數名，
+    // 而 `{2,1}` 要變成什麼取決於容器裝的是什麼。
+    ctx.scope.declare(name, { type: 'array', value: elems, elemType })
   })
 }

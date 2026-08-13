@@ -23,7 +23,7 @@
 import type { RuntimeValue } from './types'
 import type { SemanticNode } from '../core/types'
 import type { ExecutionContext } from './executor-registry'
-import { isAggregateList } from '../core/component/aggregate-nodes'
+import { isAggregateList, aggregateShapeOf } from '../core/component/aggregate-nodes'
 
 /**
  * 這個節點是不是一層 `{…}`。
@@ -61,6 +61,18 @@ export async function evalInitializer(
       }
     }
     return obj
+  }
+
+  // 語言套件宣告過形狀的內建型別（`pair`）→ 依宣告的欄位順序填。
+  // ⚠️ 它們不在 `structs` 裡，因為使用者沒有宣告過它們。
+  const shape = aggregateShapeOf(type)
+  if (shape) {
+    const fields = new Map<string, RuntimeValue>()
+    for (let i = 0; i < shape.length; i++) {
+      const el = elements[i]
+      fields.set(shape[i], el ? await evalInitializer(el, 'int', ctx) : { type: 'int', value: 0 })
+    }
+    return { type: 'object', value: fields, structName: type.includes('<') ? type.slice(0, type.indexOf('<')) : type }
   }
 
   // 其他 → 一個陣列值（多維陣列的內層走這條）

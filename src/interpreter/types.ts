@@ -56,6 +56,14 @@ export interface RuntimeValue {
    * ——所以那個資訊必須跟著**值**走，不是跟著呼叫端走。
    */
   heapOrder?: 'min' | 'max'
+  /**
+   * 容器的**元素型別**——`vector<pair<int,int>>` 的 `pair<int,int>`。
+   *
+   * ⚠️ 為什麼跟著值走：`v.push_back({2,1})` 的 `{2,1}` 要變成什麼，
+   * **取決於容器裝的是什麼**，而那個資訊只在宣告那一行。執行 `push_back`
+   * 時手上只有變數名——所以型別必須跟著容器的值一起帶。
+   */
+  elemType?: string
 }
 
 /** 函式定義 */

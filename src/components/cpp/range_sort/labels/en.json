@@ -1,4 +1,4 @@
 {
-  "CPP_SORT_MSG0": "Sort %1",
-  "CPP_SORT_TOOLTIP": "Sort the elements in the specified range in ascending order"
+  "CPP_SORT_MSG0": "sort %1 by %2",
+  "CPP_SORT_TOOLTIP": "Sorts the elements in the range. Leaving the order empty means ascending; connect a comparison function to use a different order."
 }

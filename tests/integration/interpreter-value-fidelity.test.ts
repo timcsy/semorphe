@@ -214,6 +214,48 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('3')
   })
 
+  // ── 排序：比較器是使用者的程式碼 ────────────────────────────────────
+  const ALG = '#include <iostream>\n#include <vector>\n#include <algorithm>\n#include <string>\nusing namespace std;\n'
+
+  it('★ sort 帶具名比較函式', async () => {
+    // 修之前：`sort` 只認兩個引數，三個引數的整個掉進 UNDEFINED_FUNC
+    expect(
+      await run(ALG, `bool cmp(int a, int b){ return a > b; }\nint main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), cmp); cout << v[0] << v[2]; }`),
+    ).toBe('31')
+  })
+
+  it('★ sort 帶 lambda', async () => {
+    expect(
+      await run(ALG, `int main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), [](int a, int b){ return a > b; }); cout << v[0]; }`),
+    ).toBe('3')
+  })
+
+  it('★ 沒有比較器時仍是升序（不得因為修上面而壞掉）', async () => {
+    expect(await run(ALG, `int main(){ vector<int> v={3,1,2}; sort(v.begin(),v.end()); cout << v[0] << v[2]; }`)).toBe('13')
+  })
+
+  it('★ pair 的預設順序是字典序', async () => {
+    // 🔴 修之前走數值路徑——`Number(物件)` 是 NaN，於是每次比較都是 false，
+    // **順序原封不動，而那看起來像「本來就排好了」**
+    expect(
+      await run(ALG, `int main(){ vector<pair<int,int>> v; v.push_back({2,1}); v.push_back({1,5}); sort(v.begin(),v.end()); cout << v[0].first << v[0].second; }`),
+    ).toBe('15')
+  })
+
+  it('★ 結構陣列用比較器排序', async () => {
+    expect(
+      await run(ALG, `struct S { int a; };\nbool cmp(S x, S y){ return x.a < y.a; }\nint main(){ vector<S> v = {{3},{1}}; sort(v.begin(), v.end(), cmp); cout << v[0].a << v[1].a; }`),
+    ).toBe('13')
+  })
+
+  it('★ 排序是穩定的——與參照對得起來', async () => {
+    // C++ 的 sort 不保證穩定，而**不穩定的實作會讓同一段程式在兩邊印出不同順序**，
+    // 那筆差異查起來很貴而它不是缺陷。選穩定的那一邊。
+    expect(
+      await run(ALG, `int main(){ vector<pair<int,int>> v; v.push_back({1,1}); v.push_back({1,2}); v.push_back({0,9}); sort(v.begin(),v.end(),[](pair<int,int> a, pair<int,int> b){ return a.first < b.first; }); cout << v[1].second << v[2].second; }`),
+    ).toBe('12')
+  })
+
   // ── `char` 在算術情境是字元碼（同一輪修的另一個根因）───────────────
   it('★ 明確轉型讀得到 char 的字元碼', async () => {
     // 🔴 修之前 `toNumber` 走 `Number('A') || 0` 給 **0**，於是印出 `'\0'`

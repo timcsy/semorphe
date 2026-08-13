@@ -28,6 +28,32 @@ export function isAggregateList(conceptId: string): boolean {
   return aggregateLists.has(conceptId)
 }
 
+/**
+ * 語言套件宣告：「這個**型別**的聚合初始化按這些欄位依序填」。
+ *
+ * ⚠️ 為什麼需要它：`pair` 不是使用者宣告的結構，所以它不在 `structs` 登記處裡
+ * ——而 `vector<pair<int,int>> v; v.push_back({2,1})` 的 `{2,1}` 必須變成
+ * 一個有 `first`／`second` 的東西，否則 `v[0].first` 說「不是一個結構」。
+ *
+ * 核心不寫死 `pair` 這個名字：**它是 C++ 的知識**。
+ */
+const aggregateShapes = new Map<string, string[]>()
+
+export function declareAggregateShape(typeName: string, fields: string[]): void {
+  aggregateShapes.set(typeName, fields)
+}
+
+/**
+ * 這個型別的聚合欄位。認不得回 `undefined`——不猜。
+ *
+ * ⚠️ **剝掉樣板引數**：登記的是 `pair`，而型別字串是 `pair<int,int>`。
+ * 那與 `execVarDeclare` 查結構型別時做的是同一件事。
+ */
+export function aggregateShapeOf(typeName: string): string[] | undefined {
+  const bare = typeName.includes('<') ? typeName.slice(0, typeName.indexOf('<')) : typeName
+  return aggregateShapes.get(bare.trim())
+}
+
 /** 護欄用：誰被宣告過。 */
 export function declaredAggregateLists(): string[] {
   return [...aggregateLists]

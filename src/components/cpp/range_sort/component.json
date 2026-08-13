@@ -14,7 +14,15 @@
       "default": "v.end()"
     }
   ],
-  "children": {},
+  "children": {
+    "comparator": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
   "role": "statement",
   "paths": {
     "render": "./forms/blocks.json",
@@ -25,5 +33,6 @@
   },
   "requires": [
     "<algorithm>"
-  ]
+  ],
+  "_children_why": "`comparator` 是**接點不是屬性**，因為它是一個運算式（lambda 或函式名）。\n⚠️ 而 `begin`／`end` 今天是文字屬性——那不是設計上的不一致，是**迭代器範圍還沒結構化**。兩者該一起收，見 `draft/2026-08-13-三情境補齊的續作清單.md` 的 A 類。"
 }
