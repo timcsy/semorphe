@@ -88,6 +88,8 @@ interface Baseline {
   _meta: { referenceCompiler: string; flag: string; note: string; ratchet: string }
   corpus: { undecidable: number; bothRun: number; onlyReferenceRuns: number; onlyInterpreterRuns: number; neitherRuns: number }
   mismatch: { mismatchCount: number; details: details[] }
+  /** 參照跑得動而直譯器跑不動的那些——**功能缺口**，與 `mismatch`（誤差）意義相反。 */
+  gaps: { gapCount: number; byStage: Record<string, number>; details: gapDetail[] }
 }
 
 let parser: Parser
@@ -137,20 +139,64 @@ const key = (c: string): string => {
   return decisionKey(normalize.slice(0, 60), normalize)
 }
 
-async function runInterpreter(code: string): Promise<string | null> {
+/**
+ * 直譯器**在哪一階段**失敗——`parse`／`lift`／`execute` 意義完全不同。
+ *
+ * ⚠️ 這裡原本是 `try { … } catch { return null }`：**失敗原因被完全吞掉**，
+ * 於是「只有參照跑得動」那 18 段在基線上只是一個數字，
+ * **而數字不會告訴你缺的是哪個功能。**
+ *
+ * > **誤差存了 details，缺口沒存——而它們同樣是「這個模型還差什麼」的答案。**
+ */
+type failStage = 'parse' | 'lift' | 'execute'
+interface runOutcome {
+  output: string | null
+  stage?: failStage
+  message?: string
+}
+
+const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+
+async function runInterpreter(code: string): Promise<runOutcome> {
+  let tree
   try {
-    const tree = parser.parse(code)
-    if (!tree) return null
-    const semanticTree = lifter.lift(tree.rootNode as never) as SemanticNode
-    if (!semanticTree) return null
+    tree = parser.parse(code)
+  } catch (e) {
+    return { output: null, stage: 'parse', message: errText(e) }
+  }
+  if (!tree) return { output: null, stage: 'parse', message: 'parser 回 null' }
+
+  let semanticTree: SemanticNode
+  try {
+    semanticTree = lifter.lift(tree.rootNode as never) as SemanticNode
+  } catch (e) {
+    return { output: null, stage: 'lift', message: errText(e) }
+  }
+  if (!semanticTree) return { output: null, stage: 'lift', message: 'lift 回 null' }
+
+  try {
     const i = new SemanticInterpreter({ maxSteps: 100000 })
     await i.execute(semanticTree)
     // ⚠️ 是 getOutput()，不是 getState().output——後者只回 { status }。
     // 先前有一次基線把執行結果錄成空字串就是踩這個（build-guardrail 第 10 步）。
-    return i.getOutput().join('')
-  } catch {
-    return null
+    return { output: i.getOutput().join('') }
+  } catch (e) {
+    return { output: null, stage: 'execute', message: errText(e) }
   }
+}
+
+/**
+ * 一段**參照跑得動而直譯器跑不動**的語料——也就是一個功能缺口。
+ *
+ * ⚠️ 與 `details`（誤差）分開存，因為它們的意義相反：
+ * **誤差＝模型是錯的（會騙人）；缺口＝模型還沒長到那裡（仍然誠實）。**
+ * 而 `concepts/等價與觀察集` 那條「兩者不可合併」在這裡同樣成立。
+ */
+interface gapDetail {
+  corpusKey: string
+  corpus: string
+  stage: failStage
+  message: string
 }
 
 interface result {
@@ -160,6 +206,7 @@ interface result {
   onlyInterpreterRuns: number
   neitherRuns: number
   details: details[]
+  gaps: gapDetail[]
 }
 
 /**
@@ -180,7 +227,7 @@ const undecidable = (c: string): boolean => /\bcin\s*>>|\bscanf\s*\(|getline\s*\
 type referenceRun = (code: string) => string | null
 
 async function measure(corpus: readonly string[], reference?: referenceRun): Promise<result> {
-  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [] }
+  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [], gaps: [] }
   const decidable = corpus.filter((c) => !undecidable(c))
   r.undecidable = corpus.length - decidable.length
   // 參照那一側**並行**跑（8 路）。序列跑 300 段約 8 分鐘，而
@@ -189,7 +236,8 @@ async function measure(corpus: readonly string[], reference?: referenceRun): Pro
   for (let i = 0; i < decidable.length; i++) {
     const c = decidable[i]
     const refOutput = refOutputs[i]
-    const directOutput = await runInterpreter(c)
+    const outcome = await runInterpreter(c)
+    const directOutput = outcome.output
     if (refOutput !== null && directOutput !== null) {
       r.bothRun++
       if (refOutput.trim() !== directOutput.trim()) {
@@ -200,11 +248,26 @@ async function measure(corpus: readonly string[], reference?: referenceRun): Pro
           reference: refOutput.slice(0, 100).replace(/\n/g, '⏎'),
         })
       }
-    } else if (refOutput !== null) r.onlyReferenceRuns++
-    else if (directOutput !== null) r.onlyInterpreterRuns++
+    } else if (refOutput !== null) {
+      // 參照跑得動而我們跑不動 = **一個功能缺口**，而它以前只是一個數字
+      r.onlyReferenceRuns++
+      r.gaps.push({
+        corpusKey: key(c),
+        corpus: c.slice(0, 200).replace(/\n/g, '⏎'),
+        stage: outcome.stage ?? 'execute',
+        message: (outcome.message ?? '').slice(0, 160).replace(/\n/g, '⏎'),
+      })
+    } else if (directOutput !== null) r.onlyInterpreterRuns++
     else r.neitherRuns++
   }
   return r
+}
+
+/** 缺口按失敗階段分組——`parse`／`lift`／`execute` 對應完全不同的工作。 */
+function gapsByStage(gaps: readonly gapDetail[]): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const g of gaps) out[g.stage] = (out[g.stage] ?? 0) + 1
+  return out
 }
 
 function readDecisions(): decision[] {
@@ -280,6 +343,10 @@ describe('第三十二條護欄：行為的誤差', () => {
       `誤差   ${r.details.length} 筆不一致（已判定 ${r.details.length - toReview.length}，要看 ${toReview.length}）`,
       '',
       ...toReview.slice(0, 30).map((d, i) => `  ${i + 1}. ${d.corpusKey}\n       直譯器「${d.interpreter}」 參照「${d.reference}」`),
+      '',
+      `缺口   ${r.gaps.length} 段參照跑得動而直譯器跑不動——**模型還沒長到那裡，不是它在騙人**`,
+      `       階段分布：${Object.entries(gapsByStage(r.gaps)).map(([s, n]) => `${s}=${n}`).join('｜') || '（無）'}`,
+      ...r.gaps.slice(0, 20).map((g, i) => `  ${i + 1}. [${g.stage}] ${g.message || '（無訊息）'}\n       ${g.corpus.slice(0, 90)}`),
       ...(orphans.length ? ['', `⚠️ 孤兒判定 ${orphans.length} 筆（訊號已消失，判定可能不再成立）：`, ...orphans.map((d) => `  - ${d.corpusKey}`)] : []),
     ])
 
@@ -308,6 +375,7 @@ describe('第三十二條護欄：行為的誤差', () => {
           neitherRuns: r.neitherRuns,
         },
         mismatch: { mismatchCount: r.details.length, details: r.details },
+        gaps: { gapCount: r.gaps.length, byStage: gapsByStage(r.gaps), details: r.gaps },
       })
       return
     }

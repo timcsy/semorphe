@@ -2,7 +2,7 @@
   "_meta": {
     "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
     "flag": "-std=c++17",
-    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。\n\n【2026-08-11】不一致 17 → 14，**是分母縮了，不是修好了**——這條護欄自己的警語。\n  `cpp:pointer_deref` 對非指標值原本**無條件回 0 而不出聲**；改成丟\n  `RUNTIME_ERR_TYPE_MISMATCH` 之後，三段語料從「兩邊都跑得動」\n  移到「只有參照」（228 → 225 ／ 15 → 18）。\n  ⚠️ **那三筆的直譯器輸出全是 `0`**：\n    直「0⏎0⏎0⏎」參「2⏎6⏎10⏎」 ／ 直「0」參「7」 ／ 直「0⏎10⏎」參「10⏎15⏎」\n  ——證實它們正是被這個回退悄悄吃掉的。\n  > **從「悄悄印錯的數字」變成「明講不支援」不是修好，是把缺陷從\n  > 看不見的欄搬到看得見的欄。** 三筆的判定隨訊號消失而移除，記在這裡。",
+    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
@@ -98,6 +98,122 @@
         "corpus": "⏎      #include <iostream>⏎      using namespace std;⏎      int main() {⏎        int x;⏎        cout << x << endl;⏎        return 0;⏎      }⏎    ",
         "interpreter": "0⏎",
         "reference": "38518960⏎"
+      }
+    ]
+  },
+  "gaps": {
+    "gapCount": 18,
+    "byStage": {
+      "execute": 18
+    },
+    "details": [
+      {
+        "corpusKey": "#include <iostream> using namespace std; namespace Math { in#8sw6t4",
+        "corpus": "#include <iostream>⏎using namespace std;⏎namespace Math {⏎    int square(int x) {⏎        return x * x;⏎    }⏎}⏎int main() {⏎    cout << Math::square(5) << endl;⏎    return 0;⏎}",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"Math::square\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; int main() { int ar#ztq1mz",
+        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int arr[5] = {2, 4, 6, 8, 10};⏎    int* p = arr;⏎    cout << *p << endl;⏎    p = p + 2;⏎    cout << *p << endl;⏎    p = p + 2;⏎    cout << *p ",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <cstdlib> using namespace std; #dtdaiz",
+        "corpus": "#include <iostream>⏎#include <cstdlib>⏎using namespace std;⏎int main() {⏎    int* arr = (int*)malloc(3 * sizeof(int));⏎    arr[0] = 100;⏎    arr[1] = 200;⏎    arr[2] = 300;⏎    int total = arr[0] + ar",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; #define LIMIT 100 i#11f1pz3",
+        "corpus": "#include <iostream>⏎using namespace std;⏎#define LIMIT 100⏎int collatzSteps(int n) {⏎    int steps = 0;⏎    while (n != 1) {⏎        if (n % 2 == 0) {⏎            n = n / 2;⏎        } else {⏎         ",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"LIMIT\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <vector> using namespace std; t#jnvckg",
+        "corpus": "⏎#include <iostream>⏎#include <vector>⏎using namespace std;⏎⏎template<typename T>⏎class Container {⏎public:⏎    vector<T> data;⏎    void add(T item) { data.push_back(item); }⏎    T get(int idx) { retu",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNKNOWN_CONCEPT: {\"concept\":\"unresolved\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; int* firstPositive(#9n014o",
+        "corpus": "#include <iostream>⏎using namespace std;⏎int* firstPositive(int* arr, int n) {⏎    for (int i = 0; i < n; i++) {⏎        if (arr[i] > 0) { return &arr[i]; }⏎    }⏎    return 0;⏎}⏎int main() {⏎    int ",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; int main() { int ar#b62aof",
+        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int arr[3];⏎    arr[0] = 10;⏎    arr[1] = 20;⏎    arr[2] = 30;⏎    int* ptr = &arr[0];⏎    cout << *ptr << endl;⏎    *ptr = *ptr + 5;⏎    cout",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"pointer\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; int main() { int n #q5t9d7",
+        "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int n = 5;⏎    int* arr = new int[n];⏎    for (int i = 0; i < n; i++) {⏎        arr[i] = i * 10;⏎    }⏎    for (int i = 0; i < n; i++) {⏎     ",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <cstdlib> using namespace std; #ajln72",
+        "corpus": "#include <iostream>⏎#include <cstdlib>⏎using namespace std;⏎int main() {⏎    int* arr = (int*)malloc(3 * sizeof(int));⏎    arr[0] = 100;⏎    arr[1] = 200;⏎    arr[2] = 300;⏎    cout << arr[0] << \" \" <",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_TYPE_MISMATCH: {\"%1\":\"array\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <stdexcept> using namespace std#rwgw5y",
+        "corpus": "#include <iostream>⏎#include <stdexcept>⏎using namespace std;⏎int main() {⏎    try {⏎        int x = 10;⏎        cout << \"before throw\" << endl;⏎        throw runtime_error(\"test error\");⏎        cout",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"runtime_error\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; namespace Math { in#r9y96e",
+        "corpus": "#include <iostream>⏎using namespace std;⏎namespace Math {⏎    int add(int a, int b) {⏎        return a + b;⏎    }⏎    int multiply(int a, int b) {⏎        return a * b;⏎    }⏎}⏎int main() {⏎    cout <",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDEFINED_FUNC: {\"%1\":\"Math::add\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <numeric> #include <vector> usi#1lno0y9",
+        "corpus": "#include <iostream>⏎#include <numeric>⏎#include <vector>⏎using namespace std;⏎int main() {⏎    vector<int> v(5);⏎    iota(v.begin(), v.end(), 1);⏎    for (int i = 0; i < 5; i++) {⏎        cout << v[i]",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_INDEX_OUT_OF_RANGE: {\"%1\":\"0\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <utility> using namespace std; #16z3a4k",
+        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<int, int> p;⏎    p.first = 1;⏎    p.second = 2;⏎    cout << p.first << \" \" << p.second << endl;⏎    return 0;⏎}",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"p\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <utility> using namespace std; #1b7c93e",
+        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<int, string> p = make_pair(42, \"hello\");⏎    cout << p.first << \" \" << p.second << endl;⏎    return 0;⏎}",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"p\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <utility> using namespace std; #1fhk6px",
+        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎pair<int, int> minmax(int a, int b) {⏎    if (a < b) return make_pair(a, b);⏎    return make_pair(b, a);⏎}⏎int main() {⏎    pair<int, int> r",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"result\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <vector> #include <utility> usi#1yymrr9",
+        "corpus": "#include <iostream>⏎#include <vector>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    vector<pair<int, int>> v;⏎    v.push_back(make_pair(1, 10));⏎    v.push_back(make_pair(2, 20));⏎    for (",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"v[i]\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> #include <utility> using namespace std; #4bzkq6",
+        "corpus": "#include <iostream>⏎#include <utility>⏎using namespace std;⏎int main() {⏎    pair<string, double> item;⏎    item.first = \"apple\";⏎    item.second = 3.5;⏎    cout << item.first << \" costs \" << item.sec",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"item\"}"
+      },
+      {
+        "corpusKey": "#include <iostream> using namespace std; #define MAX_SIZE 10#4634o6",
+        "corpus": "#include <iostream>⏎using namespace std;⏎#define MAX_SIZE 100⏎#define PI 3⏎int main() {⏎    cout << MAX_SIZE << endl;⏎    cout << PI << endl;⏎    return 0;⏎}",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"MAX_SIZE\"}"
       }
     ]
   }
