@@ -42,13 +42,6 @@
     "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
   },
   {
-    "corpusKey": "#include <iostream> using namespace std; int main() { int a #4f4o9q",
-    "signal": "直「8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎」 參「8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
     "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",
     "signal": "直「0⏎」 參「38518960⏎」",
     "decision": "真誤差",

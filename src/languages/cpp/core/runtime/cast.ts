@@ -18,6 +18,26 @@ export function numericCast(
   num: number,
   opts: { charIsChar: boolean },
 ): RuntimeValue {
+  // **無號型別要截斷**。`static_cast<unsigned char>(~0)` 是 255，不是 -1。
+  //
+  // ⚠️ 原本這些型別**一個都沒有被認出來**，於是落到尾端的 `return val`
+  // ——原封不動回傳，而 `-1` 看起來就像一個成功的轉型結果。
+  // 那與這個專案追的靜默降級同形：**沒做事與做對了在畫面上相同。**
+  const UNSIGNED_BITS: Record<string, number> = {
+    'unsigned char': 8,
+    'unsigned short': 16,
+    'unsigned': 32,
+    'unsigned int': 32,
+    'unsigned long': 32,
+    'unsigned long long': 32,
+  }
+  const bits = UNSIGNED_BITS[targetType.trim()]
+  if (bits !== undefined) {
+    // ⚠️ 32 位用 `>>> 0`（JS 的位元運算就是 32 位）；更窄的用遮罩。
+    const truncated = bits === 32 ? Math.trunc(num) >>> 0 : Math.trunc(num) & ((1 << bits) - 1)
+    return { type: 'int', value: truncated }
+  }
+
   if (targetType === 'char') {
     return opts.charIsChar
       ? { type: 'char', value: String.fromCharCode(Math.trunc(num)) }
