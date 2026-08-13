@@ -46,7 +46,6 @@
           "cpp:literal_char",
           "cpp:increment",
           "cpp:var_assign_compound",
-          "cpp:array_assign",
           "cpp:math_pow",
           "cpp:math_unary",
           "cpp:random_next",
@@ -65,6 +64,7 @@
             "concepts": [
               "cpp:array_declare",
               "cpp:array_at",
+              "cpp:array_assign",
               "cpp:string_declare",
               "cpp:cstring_size",
               "cpp:cstring_compare",
