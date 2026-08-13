@@ -47,6 +47,15 @@ export interface RuntimeValue {
    */
   offset?: number
   tag?: string
+  /**
+   * 優先佇列的**堆序**：`greater<T>` 宣告的是小根堆，預設是大根堆。
+   *
+   * ⚠️ 沒有這個欄位的話，`priority_queue<int, vector<int>, greater<int>>`
+   * 的 `top()` 回傳最大值——**程式跑完、印出一個數字、而它是錯的**。
+   * 而比較器寫在宣告上，讀它的 `top()`／`pop()` 只拿得到變數名
+   * ——所以那個資訊必須跟著**值**走，不是跟著呼叫端走。
+   */
+  heapOrder?: 'min' | 'max'
 }
 
 /** 函式定義 */

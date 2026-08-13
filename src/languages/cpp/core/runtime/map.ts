@@ -9,18 +9,50 @@ import type { RuntimeValue } from '../../../../interpreter/types'
 import { valueToString } from '../../../../interpreter/types'
 
 /**
- * Map is stored as { type: 'array', value: [ [keyRV, valRV], [keyRV, valRV], ... ] }
- * where each pair is a 2-element RuntimeValue[].
- * We wrap pairs as RuntimeValue with type='array'.
+ * 對應表存成 `{ type: 'array', value: [ pair, pair, … ] }`，
+ * 而**每一個 pair 就是 `cpp:pair_make` 產出的那種物件**
+ * （`{ type: 'object', structName: 'pair', value: Map{first, second} }`）。
+ *
+ * ## ⚠️ 這裡原本是二元陣列，而那是**同一個東西的第二種表示**
+ *
+ * `make_pair(3,4)` 產出物件、`m["a"]=1` 產出二元陣列——兩者都是「一對值」。
+ * 於是 `for (auto& kv : m) cout << kv.first` **執行不了**：`kv` 是陣列，
+ * 而讀 `.first` 走的是結構欄位那條路，訊息是「kv（不是一個結構）」。
+ *
+ * > **同一個概念有兩種執行期表示，症狀不會出現在建立它的那一邊，
+ * > 而是出現在第一個同時看到兩邊的消費者身上。**
+ *
+ * 統一成物件而不是統一成陣列，理由是**消費者已經站在物件那一邊**：
+ * `.first`／`.second` 是結構欄位存取，而那條路只認物件。
  */
+
+/** 建一個對應表項目——與 `cpp:pair_make` 產出的形狀相同。 */
+export function makePair(key: RuntimeValue, value: RuntimeValue): RuntimeValue {
+  return {
+    type: 'object',
+    value: new Map<string, RuntimeValue>([['first', key], ['second', value]]),
+    structName: 'pair',
+  }
+}
+
+/** 讀一個對應表項目的鍵／值。不是 pair 形狀就回 `undefined`——不猜。 */
+export function pairParts(pair: RuntimeValue): { key: RuntimeValue; value: RuntimeValue } | undefined {
+  if (pair.type !== 'object' || !(pair.value instanceof Map)) return undefined
+  const key = pair.value.get('first')
+  const value = pair.value.get('second')
+  return key && value ? { key, value } : undefined
+}
+
+/** 設一個對應表項目的值。 */
+export function setPairValue(pair: RuntimeValue, value: RuntimeValue): void {
+  if (pair.type === 'object' && pair.value instanceof Map) pair.value.set('second', value)
+}
 
 export function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
   const keyStr = valueToString(keyVal)
   for (let i = 0; i < pairs.length; i++) {
-    const pair = pairs[i]
-    if (pair.type === 'array' && Array.isArray(pair.value) && pair.value.length >= 1) {
-      if (valueToString(pair.value[0]) === keyStr) return i
-    }
+    const parts = pairParts(pairs[i])
+    if (parts && valueToString(parts.key) === keyStr) return i
   }
   return -1
 }

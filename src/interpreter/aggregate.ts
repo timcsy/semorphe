@@ -1,13 +1,14 @@
 /**
  * **聚合初始化的執行語義** —— 一個與身分無關的演算法
  *
- * `{…}` 在辨識那一路是 `cpp_initializer_list`（結構節點，不是元件），
+ * `{…}` 在辨識那一路是一個結構節點（不是元件），
  * 而**執行那一路從來沒有人認得它**：`S arr[2] = {{"a",90},{"b",80}};`
  * 直接丟 `UNKNOWN_CONCEPT`，`int a[2][3] = {{1,2,3},{4,5,6}}` 也一樣。
  *
- * 三種消費者（陣列宣告、變數宣告、未來的回傳值）看到的是同一件事，
- * 所以它與 `cast.ts` 同形：**共用的是演算法，不是身分**——演算法住在這裡，
- * 各元件各自宣告自己用它。
+ * 三種消費者（陣列宣告、變數宣告、未來的回傳值）看到的是同一件事。
+ *
+ * ⚠️ **這段演算法是中立的**：它用得到的只有 `ctx.structs`，沒有一個字是 C++ 的
+ * ——所以它住在核心，而「哪個節點是一層 `{…}`」由語言套件宣告。
  *
  * ## 它決定「這一層 `{}` 是什麼」的規則
  *
@@ -19,13 +20,19 @@
  * ⚠️ **不做的**：narrowing 檢查、指名初始化（`.x = 1`）、
  * 少於欄位數時的零值補齊以外的規則。少寫比寫錯好。
  */
-import type { RuntimeValue } from '../../../../interpreter/types'
-import type { SemanticNode } from '../../../../core/types'
-import type { ExecutionContext } from '../../../../interpreter/executor-registry'
+import type { RuntimeValue } from './types'
+import type { SemanticNode } from '../core/types'
+import type { ExecutionContext } from './executor-registry'
+import { isAggregateList } from '../core/component/aggregate-nodes'
 
-/** 這個節點是不是一層 `{…}` */
+/**
+ * 這個節點是不是一層 `{…}`。
+ *
+ * ⚠️ **問登記處，不比對名字**——`cpp_initializer_list` 是 C++ 的知識，
+ * 而這個檔住在核心。語言套件在註冊 lifter 時宣告（`declareAggregateList`）。
+ */
 export function isBraceList(node: SemanticNode): boolean {
-  return node.conceptId === 'cpp_initializer_list'
+  return isAggregateList(node.conceptId)
 }
 
 /**

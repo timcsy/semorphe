@@ -24,6 +24,14 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
      */
     register('cpp:priority_queue_declare', async (node, ctx) => {
       const name = String(node.properties.name)
-      ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue' })
+      // `priority_queue<int, vector<int>, greater<int>>` —— **第三個樣板引數是比較器**，
+      // 而 `greater` 宣告的是**小根堆**（競賽最常見的寫法之一）。
+      //
+      // ⚠️ 這個資訊必須跟著**值**走：比較器寫在宣告上，而讀它的 `top()`／`pop()`
+      // 只拿得到變數名。跟著呼叫端走的話，`top()` 會安靜地回傳最大值
+      // ——程式跑完、印出一個數字、而它是錯的。
+      const declared = String(node.properties.type ?? 'int')
+      const heapOrder = declared.includes('greater') ? ('min' as const) : ('max' as const)
+      ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue', heapOrder })
     })
 }

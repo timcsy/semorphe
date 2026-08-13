@@ -165,6 +165,55 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('79')
   })
 
+  it('★ 表達式位置的 `{…}` 也是聚合初始化', async () => {
+    // 修之前落進 `unresolved` → 執行期 UNKNOWN_CONCEPT，整段停在宣告那一行
+    expect(await run(IO, `struct P { int x; }; int main(){ P a{3}; cout << a.x; }`)).toBe('3')
+  })
+
+  // ── 對應表的項目與 pair 是同一種東西 ────────────────────────────────
+  //
+  // 🔴 修之前有**兩種執行期表示**：`make_pair` 產物件、`m["a"]=1` 產二元陣列。
+  // 症狀不在建立它的那一邊，而在第一個同時看到兩邊的消費者身上——
+  // `for (auto& kv : m) cout << kv.first` 說「kv（不是一個結構）」。
+  it('★ map 的 range-for 讀得到 first／second', async () => {
+    expect(
+      await run(
+        `#include <iostream>\n#include <map>\n#include <string>\nusing namespace std;\n`,
+        `int main(){ map<string,int> m; m["a"]=1; m["b"]=2; for(auto& kv : m) cout << kv.first << kv.second; }`,
+      ),
+    ).toBe('a1b2')
+  })
+
+  // ── 優先佇列的堆序跟著值走 ──────────────────────────────────────────
+  const PQ = '#include <iostream>\n#include <queue>\n#include <vector>\nusing namespace std;\n'
+
+  it('★ greater<T> 宣告的是小根堆', async () => {
+    // 修之前 top() 一律回最大值——**程式跑完、印出一個數字、而它是錯的**
+    expect(
+      await run(PQ, `int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.push(3); pq.push(1); pq.push(5); cout << pq.top(); }`),
+    ).toBe('1')
+  })
+
+  it('★ 預設仍是大根堆（不得因為修上面而壞掉）', async () => {
+    expect(
+      await run(PQ, `int main(){ priority_queue<int> pq; pq.push(3); pq.push(1); pq.push(5); cout << pq.top(); }`),
+    ).toBe('5')
+  })
+
+  it('★ pop 拿掉的必須是 top 剛給的那一顆', async () => {
+    // 🔴 修之前 pop 走陣列末端——「看一眼再拿掉」會拿掉另一顆，
+    // 而堆裡還剩幾個元素看起來完全正常
+    expect(
+      await run(PQ, `int main(){ priority_queue<int> pq; pq.push(3); pq.push(5); pq.push(1); pq.pop(); cout << pq.top(); }`),
+    ).toBe('3')
+  })
+
+  it('★ 小根堆的 pop 同樣拿掉堆頂', async () => {
+    expect(
+      await run(PQ, `int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.push(3); pq.push(1); pq.push(5); pq.pop(); cout << pq.top(); }`),
+    ).toBe('3')
+  })
+
   // ── `char` 在算術情境是字元碼（同一輪修的另一個根因）───────────────
   it('★ 明確轉型讀得到 char 的字元碼', async () => {
     // 🔴 修之前 `toNumber` 走 `Number('A') || 0` 給 **0**，於是印出 `'\0'`

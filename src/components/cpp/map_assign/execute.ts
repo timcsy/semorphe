@@ -1,6 +1,6 @@
 /** `cpp:map_assign` 的 **execute** 路——從共用檔原封剪過來（批次第十批：assignment_expression 的分支）。 */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { mapFind } from '../../../languages/cpp/core/runtime/map'
+import { mapFind, makePair, setPairValue } from '../../../languages/cpp/core/runtime/map'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   /**
@@ -25,10 +25,9 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       if (map.type !== 'array' || !Array.isArray(map.value)) return
       const idx = mapFind(map.value, keyVal)
       if (idx === -1) {
-        map.value.push({ type: 'array', value: [keyVal, val] })
+        map.value.push(makePair(keyVal, val))
         return
       }
-      const pair = map.value[idx]
-      if (pair.type === 'array' && Array.isArray(pair.value)) pair.value[1] = val
+      setPairValue(map.value[idx], val)
     })
 }

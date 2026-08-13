@@ -21,6 +21,7 @@ import { isVariableRef } from '../node-traits'
 import { buildPrint } from '../../../../components/cpp/print/lift'
 import { buildInput } from '../../../../components/cpp/input/lift'
 import { isStreamInput } from '../node-traits'
+import { declareAggregateList } from '../../../../core/component/aggregate-nodes'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
 // `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
@@ -229,6 +230,31 @@ export function registerExpressionLifters(lifter: Lifter): void {
   lifter.register('comma_expression', (node, ctx) => {
     const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
     return buildCommaExpr(children)
+  })
+
+  /**
+   * `{3}`／`{2,1}` 出現在**表達式位置**——聚合初始化。
+   *
+   * ⚠️ 陣列宣告那一路（`int a[3] = {1,2,3}`）不走這裡：它由
+   * `attachInitializer` 直接從 AST 拆，比這條早。這條補的是**其他所有位置**：
+   * `P a{3};`、`v.push_back({2,1})`、`vector<S> v = {{3},{1}}`。
+   *
+   * 少了它，那些 `{…}` 落進 `unresolved`——而 `unresolved` 在執行期是
+   * `UNKNOWN_CONCEPT`，整段程式停在那裡。
+   *
+   * 產出的是**結構節點**（`cpp_initializer_list`，`non-components` 裡宣告過），
+   * 不是元件：`{3}` 是什麼要看**誰在消費它**——目標型別是結構就是聚合初始化，
+   * 否則是一串值。那個決定在 `core/runtime/aggregate.ts`，不在這裡。
+   */
+  // 「這個節點是一層 `{…}`」——**由套件宣告，核心不比對名字**。
+  // 消費它的 `interpreter/aggregate.ts` 住在核心，而那個名字是 C++ 的知識。
+  declareAggregateList('cpp_initializer_list')
+
+  lifter.register('initializer_list', (node, ctx) => {
+    const values = node.namedChildren
+      .map(c => ctx.lift(c))
+      .filter((n): n is SemanticNode => n !== null)
+    return createNode('cpp_initializer_list', {}, { values })
   })
 
   // cast_expression — handled by JSON pattern (cpp_cast_expr)

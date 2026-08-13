@@ -3,6 +3,7 @@ import type { RuntimeValue } from '../types'
 import type { ConceptExecutor } from '../executor-registry'
 import { defaultValue } from '../types'
 import { isNamedCall } from '../../core/component/traits'
+import { evalInitializer } from '../aggregate'
 
 export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
   // Multi-variable declaration: int a, b, c;
@@ -62,9 +63,13 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
         isNamedCall(arg0.conceptId) && String(arg0.properties?.name) === type
           ? (arg0.children?.args ?? [])
           : init0
+      // ⚠️ `evalInitializer` 而不是 `evaluate`：`P a{3};` 的初始值是一層 `{…}`，
+      // 而那是**聚合初始化**——要按成員宣告順序填，不是求一個值出來。
+      // `evaluate` 對它會丟 `UNKNOWN_CONCEPT`。哪個節點算一層 `{…}`
+      // 由語言套件宣告（`core/component/aggregate-nodes.ts`），這裡不比對名字。
       ctx.scope.declare(
         name,
-        isCtor ? await ctx.structs.construct(type, ctorArgs) : await ctx.evaluate(arg0),
+        isCtor ? await ctx.structs.construct(type, ctorArgs) : await evalInitializer(arg0, type, ctx),
       )
     } else {
       // `A a;` —— **預設建構式也要跑**。
