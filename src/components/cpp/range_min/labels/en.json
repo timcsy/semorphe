@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_MIN_MSG0": "position of the smallest in %1 to %2",
+  "CPP_RANGE_MIN_TOOLTIP": "Returns a position, not a value — dereference it to read the element."
+}

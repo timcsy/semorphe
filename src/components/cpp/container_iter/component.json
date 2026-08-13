@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:container_iter",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "v"
+    },
+    {
+      "name": "which",
+      "kind": "enum",
+      "values": [
+        "begin",
+        "end"
+      ],
+      "default": "begin"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_owner_why": "⚠️ **沒有 `requires`**——`begin()`／`end()` 是容器自己的成員，不需要任何標頭。\n工具箱歸在核心的容器那一格，與其他容器方法同段。",
+  "_default_why": "`which` 的預設是 `begin`——`end()` 幾乎只在成對出現時使用，而單獨拖一顆積木時「開頭」是唯一合理的起手。"
+}

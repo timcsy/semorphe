@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cpp:container_iter",
+    "conceptId": "cpp:container_iter",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_iter",
+      "message0": "%{BKY_CPP_CONTAINER_ITER_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "v"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "WHICH",
+          "options": [
+            [
+              "%{BKY_CPP_CONTAINER_ITER_BEGIN}",
+              "begin"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_ITER_END}",
+              "end"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4A90A4",
+      "tooltip": "%{BKY_CPP_CONTAINER_ITER_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj",
+        "WHICH": "which"
+      },
+      "inputs": {}
+    }
+  }
+]

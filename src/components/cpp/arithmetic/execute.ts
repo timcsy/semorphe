@@ -35,6 +35,21 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       //
       // ⚠️ 走一般的數值路徑會讓 `p + 2` 變成 `toNumber(陣列) + 2 = 2`，
       // 而那是一個看起來像數字的東西，後面每次解參考都報 `TYPE_MISMATCH`。
+      // **兩個指標相減 ＝ 中間隔幾格**（`it - v.begin()` 是最常見的用法：
+      // 把一個位置換算成索引）。
+      //
+      // ⚠️ 這一條必須在下面那條之前：下面那條要求右邊**不是**陣列，
+      // 所以兩個指標相減會落到數值路徑，變成 `toNumber(陣列) - toNumber(陣列) = 0`
+      // ——**一個看起來很合理的索引 0**，而每一次二分搜都會回報「找到第 0 個」。
+      if (op === '-' && left.type === 'array' && right.type === 'array') {
+        if (left.value !== right.value) {
+          throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+            '%1': '兩個位置不在同一個容器裡，相減沒有意義',
+          })
+        }
+        return { type: 'int', value: (left.offset ?? 0) - (right.offset ?? 0) }
+      }
+
       if ((op === '+' || op === '-') && left.type === 'array' && Array.isArray(left.value) && right.type !== 'array') {
         const step = ctx.toNumber(right)
         const moved = (left.offset ?? 0) + (op === '+' ? step : -step)

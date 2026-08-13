@@ -30,6 +30,7 @@
         "cpp_logic",
         "cpp_logic_not",
         "cpp_negate",
+        "cpp_bits_count",
         "cpp_bitwise_not",
         "cpp_cast",
         "cpp_cast_const",
@@ -82,6 +83,7 @@
         "cpp_func_def",
         "cpp_lambda",
         "cpp_template_function",
+        "cpp_container_iter",
         "cpp_istringstream_declare",
         "cpp_method_call",
         "cpp_string_at",
@@ -117,6 +119,10 @@
         "cpp_math_max",
         "cpp_math_min",
         "cpp_range_fill",
+        "cpp_range_find_lower",
+        "cpp_range_find_upper",
+        "cpp_range_max",
+        "cpp_range_min",
         "cpp_range_reverse",
         "cpp_range_sort",
         "cpp_var_swap",
@@ -132,6 +138,7 @@
         "cpp_container_append",
         "cpp_container_clear",
         "cpp_container_empty",
+        "cpp_container_iter",
         "cpp_istringstream_declare",
         "cpp_string_at"
       ]
@@ -186,6 +193,7 @@
         "cpp_pair_make",
         "cpp_container_count",
         "cpp_container_erase",
+        "cpp_container_iter",
         "cpp_istringstream_declare",
         "cpp_string_at"
       ]
@@ -202,6 +210,7 @@
         "cpp_queue_front",
         "cpp_stringstream_declare",
         "cpp_container_empty",
+        "cpp_container_iter",
         "cpp_istringstream_declare",
         "cpp_string_at",
         "cpp_container_pop_stack",

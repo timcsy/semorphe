@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_FIND_UPPER_MSG0": "在 %1 到 %2 中找大於 %3 的第一個位置",
+  "CPP_RANGE_FIND_UPPER_TOOLTIP": "範圍必須先排序過。與「不小於」差在相等的元素算不算。"
+}

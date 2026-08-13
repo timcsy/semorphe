@@ -38,6 +38,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:bits_count": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:bitwise_not": {
       "files": 3,
       "dirs": 1
@@ -135,6 +139,10 @@
       "dirs": 1
     },
     "cpp:container_erase": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:container_iter": {
       "files": 3,
       "dirs": 1
     },
@@ -503,6 +511,22 @@
       "dirs": 1
     },
     "cpp:range_fill_sequence": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_find_lower": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_find_upper": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_max": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_min": {
       "files": 3,
       "dirs": 1
     },

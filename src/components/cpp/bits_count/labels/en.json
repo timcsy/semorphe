@@ -1,0 +1,4 @@
+{
+  "CPP_BITS_COUNT_MSG0": "number of 1 bits in %1",
+  "CPP_BITS_COUNT_TOOLTIP": "Counts the 1 bits in the binary form of this integer. Common in bitmask problems; negatives are read as 32-bit unsigned."
+}

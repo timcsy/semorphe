@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_FIND_LOWER_MSG0": "在 %1 到 %2 中找不小於 %3 的第一個位置",
+  "CPP_RANGE_FIND_LOWER_TOOLTIP": "範圍必須先排序過。找不到時回傳結尾之後的位置。"
+}

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp:range_find_upper",
+    "conceptId": "cpp:range_find_upper",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_find_upper",
+      "message0": "%{BKY_CPP_RANGE_FIND_UPPER_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "BEGIN",
+          "text": "v.begin()"
+        },
+        {
+          "type": "field_input",
+          "name": "END",
+          "text": "v.end()"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_RANGE_FIND_UPPER_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "BEGIN": "begin",
+        "END": "end"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_FIND_LOWER_MSG0": "first position in %1 to %2 not less than %3",
+  "CPP_RANGE_FIND_LOWER_TOOLTIP": "The range must be sorted. Returns the past-the-end position when nothing qualifies."
+}

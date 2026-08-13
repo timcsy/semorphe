@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_MAX_MSG0": "position of the largest in %1 to %2",
+  "CPP_RANGE_MAX_TOOLTIP": "Returns a position, not a value — dereference it to read the element."
+}

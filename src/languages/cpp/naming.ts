@@ -36,6 +36,11 @@ export const SUBJECTS = [
   // 與 `container_push` 把容器種類當參數同一個形狀。
   'exception',
   'func', 'ifstream',
+  // ⚠️ `bits` 加入日 2026-08-13——`cpp:bits_count`（`__builtin_popcount`）。
+  // 主體是「一個整數的二進位表示」，而**不是**那個整數本身：
+  // `bits_count` 數的是位元，`math_*` 算的是值。競賽會用到一整族
+  // （`popcount`／`clz`／`ctz`），它們共用這個主體。
+  'bits',
   // ⚠️ `io` 加入日 2026-08-13——`cpp:io_sync`／`cpp:io_tie`（競賽的加速框架）。
   // 主體是**輸入輸出流本身**，不是流上的一次讀寫：`print`／`input` 作用在
   // 「一筆資料」上，而這兩顆作用在「這條流怎麼運作」上。
@@ -80,6 +85,10 @@ export const OPERATIONS = [
   // 這裡取的是「連動」這個語義；如果哪天要收 `std::tie`，它的主體是 `pair`／
   // `tuple`，操作不會是 `tie`——先在這裡把話講明，免得將來有人以為是同一族。
   'sync', 'tie',
+  // ⚠️ `iter` 加入日 2026-08-13——`cpp:container_iter`（`v.begin()`／`v.end()`）。
+  // 「取得一個指向某一端的位置」。**哪一端是參數**，與 `peek` 那條同一個規則
+  // （`stack_top`／`queue_front` 的差別是紀律，而紀律已經在主體裡）。
+  'iter',
 ] as const
 
 /**

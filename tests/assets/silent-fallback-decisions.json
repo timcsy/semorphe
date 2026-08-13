@@ -146,5 +146,12 @@
     "decision": "防禦性",
     "reason": "`&` 的 var 接點缺失＝語義樹壞掉，與別處的缺子節點退路同形。⚠️ 而尾端那個「取不到位址的東西回 0」**是可疑的**，已在該檔標註：回 0 與「位址剛好是 0」在畫面上相同。改它要先知道哪些語料會走到那裡。",
     "rootCause": "缺子節點的防禦性退路"
+  },
+  {
+    "key": "src/components/cpp/bits_count/execute.ts#3hr3dp",
+    "position": "src/components/cpp/bits_count/execute.ts:7",
+    "signal": "!value → if (!value) return { type: 'int' as const, value: 0 }",
+    "decision": "防禦性",
+    "reason": "引數在 `component.json` 宣告 `min: 1`，所以缺席只發生在**壞掉的語義樹**上。⚠️ 而不丟錯是刻意的：積木剛從工具箱拖出來、還沒接引數時，執行不該炸掉。回 0 在這裡也不說謊——沒有數字就沒有 1 這個位元。**顯式判定，不是漏看。**"
   }
 ]

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cpp:range_min",
+    "conceptId": "cpp:range_min",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_min",
+      "message0": "%{BKY_CPP_RANGE_MIN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "BEGIN",
+          "text": "v.begin()"
+        },
+        {
+          "type": "field_input",
+          "name": "END",
+          "text": "v.end()"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_RANGE_MIN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "BEGIN": "begin",
+        "END": "end"
+      },
+      "inputs": {}
+    }
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "conceptId": "cpp:range_find_upper",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "begin",
+      "kind": "literal"
+    },
+    {
+      "name": "end",
+      "kind": "literal"
+    }
+  ],
+  "children": {
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "requires": [
+    "<algorithm>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "回傳的是**位置**（實體式指標：一個陣列 ＋ 一個 `offset`），不是值——與 C++ 一致，而且解參考／相減／位移在那個表示上都已經能跑。回傳值的話 `*max_element(...)` 會變成解參考一個整數。"
+}

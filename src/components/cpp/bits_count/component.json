@@ -1,0 +1,29 @@
+{
+  "conceptId": "cpp:bits_count",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "traits": {
+    "precedence": 2
+  },
+  "_traits_why": "函式呼叫的優先級——它的引數永遠在括號裡，所以外層不必為它加括號。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_owner_why": "⚠️ **不是某個標頭**——`__builtin_popcount` 是編譯器內建，不需要 `#include`。\n所以它沒有 `requires`，而工具箱歸在核心的運算那一格。"
+}
