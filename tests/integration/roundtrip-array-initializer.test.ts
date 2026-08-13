@@ -104,7 +104,11 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
   })
 
   it('多維初始值的層次不被壓平', () => {
-    const n = arrayOf('int m[2][2] = {{1,2},{3,4}};')
+    // ⚠️ 2026-08-13：帶初始值的多維陣列改由 `cpp:array_2d_declare` 接住。
+    // 在那之前它落到一維的 `cpp:array_declare`，而**維度被塞進名字**
+    // （`name: "m[2]"`）——產出的碼是對的，而執行時變數就叫 `m[2]`。
+    const n = find(lift('int main(){ int m[2][2] = {{1,2},{3,4}}; }'), 'cpp:array_2d_declare')
+    expect(n, '多維陣列該由二維那顆接住').not.toBeNull()
     const values = n!.children.values ?? []
     expect(values.length, '外層應該是 2 個群組，不是壓平的 4 個值').toBe(2)
     const innerCount = values.reduce((sum, v) => sum + (v.children.values ?? []).length, 0)

@@ -209,8 +209,11 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findConcept(tree, 'cpp:var_swap')
       expect(node).not.toBeNull()
-      expect(node!.properties.a).toBe('a')
-      expect(node!.properties.b).toBe('b')
+      // ⚠️ 2026-08-13：兩個運算元從**字串屬性**升格成接點。
+      // 舊形狀（`properties.a`／`properties.b`）讓 `swap(a[j], a[j+1])` 的
+      // `a[j]` 整個被當成一個變數名去查——**看起來像使用者打錯字**。
+      expect(node!.children.left?.[0]?.properties.name).toBe('a')
+      expect(node!.children.right?.[0]?.properties.name).toBe('b')
     })
 
     it('should generate code containing swap()', () => {

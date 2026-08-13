@@ -2,19 +2,23 @@
   "conceptId": "cpp:var_swap",
   "layer": "lang-library",
   "abstractConcept": null,
-  "properties": [
-    {
-      "name": "a",
-      "kind": "identifier",
-      "default": "a"
+  "properties": [],
+  "children": {
+    "left": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
     },
-    {
-      "name": "b",
-      "kind": "identifier",
-      "default": "b"
+    "right": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
     }
-  ],
-  "children": {},
+  },
   "role": "statement",
   "paths": {
     "render": "./forms/blocks.json",
@@ -25,5 +29,6 @@
   },
   "requires": [
     "<algorithm>"
-  ]
+  ],
+  "_children_why": "兩個運算元是**接點不是屬性**。原本是兩個字串（`a`／`b`），於是 `swap(a[j], a[j+1])` 的 `a[j]` 整個被當成一個變數名去查，訊息是「a[j] 未宣告」——**看起來像使用者打錯字**，而排序是 APCS 的必考題。\n⚠️ 這是 P8 允許的不相容改動（投影的存檔格式），見 `history/026`。"
 }

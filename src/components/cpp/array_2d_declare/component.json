@@ -29,7 +29,14 @@
       "default": "4"
     }
   ],
-  "children": {},
+  "children": {
+    "values": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0
+    }
+  },
   "role": "statement",
   "owner": "(core)",
   "paths": {
@@ -38,5 +45,6 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
-  }
+  },
+  "_children_why": "`values` 是初始值列（`int a[2][3] = {{1,2,3},{4,5,6}}`），每一項是一層 `{…}`。\n⚠️ 它原本不存在，因為**帶初始值的多維陣列根本走不到這顆元件**——判別只掛在「沒有初始值」那條路上。"
 }

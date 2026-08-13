@@ -19,9 +19,12 @@
  */
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
+import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { registerAstBranch } from '../../../core/component/lift-branches'
 
 export function registerLift(): void {
+  // **這種節點可以被寫回**——物件的一個欄位（`p.x`）。
+  declareLvalue('cpp:struct_at_member', 'field')
   registerAstBranch('field_expression', 'cpp/struct_at_member', (node, ctx): SemanticNode | null => {
     // `s.member`——**沒有 `->` 時是我**（判別寫成具體的，不是「其餘」）
     if (node.children.find((c) => c.type === '->')) return null

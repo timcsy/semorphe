@@ -6,10 +6,15 @@
  */
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
+import { declareLvalue } from '../../../core/component/lvalue-nodes'
 
 export function buildVarRef(name: string): SemanticNode {
   return createNode('cpp:var_ref', { name })
 }
 
 /** 判別走 pattern；這裡只提供建構子。 */
-export function registerLift(): void {}
+export function registerLift(): void {
+  // **這種節點可以被寫回**——一個名字（`x`）——寫回作用域。
+  // 宣告在這裡而不是寫進共用檔，否則這顆元件永遠搬不動。
+  declareLvalue('cpp:var_ref', 'name')
+}

@@ -14,10 +14,13 @@ import { registerCallBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
 
 export function registerLift(): void {
-  registerCallBranch('cpp/var_swap', (funcName, argChildren, _ctx, _argsNode): SemanticNode | null => {
+  registerCallBranch('cpp/var_swap', (funcName, argChildren, ctx, _argsNode): SemanticNode | null => {
     if (!(funcName === 'swap' || funcName === 'std::swap')) return null
-    const a = argChildren[0]?.text ?? 'a'
-    const b = argChildren[1]?.text ?? 'b'
-    return createNode('cpp:var_swap', { a, b })
+    // ⚠️ **兩個運算元是運算式，不是名字**：`swap(a[j], a[j+1])` 的
+    // `a[j]` 原本被當成一個變數名記進屬性，於是執行時查一個叫 `a[j]` 的變數。
+    const left = argChildren[0] ? ctx.lift(argChildren[0]) : null
+    const right = argChildren[1] ? ctx.lift(argChildren[1]) : null
+    if (!left || !right) return null
+    return createNode('cpp:var_swap', {}, { left: [left], right: [right] })
   })
 }

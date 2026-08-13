@@ -214,6 +214,51 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('3')
   })
 
+  // ── 二維陣列：維度原本藏在名字裡 ────────────────────────────────────
+  //
+  // 🔴 `int a[2][3] = {…}` 原本落到一維的 `cpp:array_declare`，
+  // 而維度被塞進**名字**（`name: "a[2]"`、`size: 3`）。
+  // 產出的碼是對的（名字原樣印出），**而執行時變數就叫 `a[2]`**
+  // ——`a[1][2]` 說「a 未宣告」。那是 APCS 第一週的語法。
+  it('★ 二維陣列的初始值讀得到', async () => {
+    expect(await run(IO, `int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }`)).toBe('6')
+  })
+
+  it('★ 二維陣列走訪加總', async () => {
+    expect(
+      await run(IO, `int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i<2;i++) for(int j=0;j<3;j++) s+=a[i][j]; cout << s; }`),
+    ).toBe('21')
+  })
+
+  it('★ 沒有初始值的二維陣列仍然是零（不得因為修上面而壞掉）', async () => {
+    expect(await run(IO, `int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }`)).toBe('80')
+  })
+
+  // ── swap 的運算元是位置，不是名字 ───────────────────────────────────
+  //
+  // 🔴 `swap(a[j], a[j+1])` 原本把 `a[j]` 整個當成一個**變數名**記進屬性，
+  // 執行時去查一個叫 `a[j]` 的變數——訊息是「a[j] 未宣告」，
+  // **看起來像使用者打錯字**，而氣泡排序是 APCS 的必考題。
+  it('★ swap 對陣列元素', async () => {
+    expect(await run(IO, `#include <algorithm>\nint main(){ int a[4]={4,2,3,1}; swap(a[0],a[3]); cout << a[0] << a[3]; }`)).toBe('14')
+  })
+
+  it('★ 氣泡排序跑得完', async () => {
+    expect(
+      await run(IO, `#include <algorithm>\nint main(){ int a[4]={4,2,3,1}; for(int i=0;i<4;i++) for(int j=0;j<3;j++) if(a[j]>a[j+1]) swap(a[j],a[j+1]); cout << a[0] << a[1] << a[2] << a[3]; }`),
+    ).toBe('1234')
+  })
+
+  it('★ swap 對結構欄位', async () => {
+    expect(
+      await run(IO, `#include <algorithm>\nstruct P{int x;int y;}; int main(){ P p; p.x=1; p.y=2; swap(p.x,p.y); cout << p.x << p.y; }`),
+    ).toBe('21')
+  })
+
+  it('★ swap 對變數仍然對（不得因為修上面而壞掉）', async () => {
+    expect(await run(IO, `#include <algorithm>\nint main(){ int x=1,y=2; swap(x,y); cout << x << y; }`)).toBe('21')
+  })
+
   // ── 成員初始化列：投影對、執行錯的那一種 ───────────────────────────
   //
   // 🔴 `: v(x)` 原本被記成一個**字串屬性**（`init_list`），而執行那一路

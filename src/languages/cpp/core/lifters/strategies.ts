@@ -206,6 +206,17 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
   // Array init_declarator: int arr[10] = {...}
   if (nameNode?.type === 'array_declarator') {
+    // 🔴 **帶初始值的多維陣列原本走不到 `cpp:array_2d_declare`**。
+    //
+    // 那顆元件的判別登錄在**宣告子分支**上，而分支只在「沒有初始值」那條路
+    // 被問——`int a[2][3] = {{1,2,3},{4,5,6}}` 走的是這裡。
+    // 於是它落到一維的 `cpp:array_declare`，而維度被塞進**名字**：
+    // `name: "a[2]"`、`size: 3`。產出的碼是對的（名字原樣印出），
+    // **而執行時變數就叫 `a[2]`**——`a[1][2]` 說「a 未宣告」。
+    //
+    // > **一個判別如果只掛在一條路上，另一條路會安靜地走到別的地方去。**
+    const claim2d = tryDeclaratorBranches(nameNode, type, ctx)
+    if (claim2d) return attachInitializer(claim2d, decl.childForFieldName('value'), ctx)
     return attachInitializer(buildArrayDeclare(type, nameNode, ctx), decl.childForFieldName('value'), ctx)
   }
 
