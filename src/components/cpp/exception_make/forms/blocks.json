@@ -1,0 +1,59 @@
+[
+  {
+    "id": "cpp:exception_make",
+    "conceptId": "cpp:exception_make",
+    "language": "cpp",
+    "category": "advanced",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_exception_make",
+      "message0": "%{BKY_CPP_EXCEPTION_MAKE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "KIND",
+          "options": [
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_RUNTIME_ERROR}",
+              "runtime_error"
+            ],
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_LOGIC_ERROR}",
+              "logic_error"
+            ],
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_OUT_OF_RANGE}",
+              "out_of_range"
+            ],
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_INVALID_ARGUMENT}",
+              "invalid_argument"
+            ],
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_OVERFLOW_ERROR}",
+              "overflow_error"
+            ],
+            [
+              "%{BKY_CPP_EXCEPTION_MAKE_LENGTH_ERROR}",
+              "length_error"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "MESSAGE"
+        }
+      ],
+      "output": null,
+      "colour": 290
+    },
+    "renderMapping": {
+      "fields": {
+        "KIND": "kind"
+      },
+      "inputs": {
+        "MESSAGE": "message"
+      }
+    }
+  }
+]

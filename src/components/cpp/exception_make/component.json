@@ -1,0 +1,42 @@
+{
+  "conceptId": "cpp:exception_make",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "kind",
+      "kind": "enum",
+      "values": [
+        "runtime_error",
+        "logic_error",
+        "out_of_range",
+        "invalid_argument",
+        "overflow_error",
+        "length_error"
+      ],
+      "default": "runtime_error"
+    }
+  ],
+  "children": {
+    "message": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "owner": "<stdexcept>",
+  "requires": [
+    "<stdexcept>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  }
+}

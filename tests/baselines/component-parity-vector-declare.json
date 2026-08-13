@@ -58,6 +58,7 @@
     "cpp:doc_comment",
     "cpp:endl",
     "cpp:enum",
+    "cpp:exception_make",
     "cpp:forward_decl",
     "cpp:free",
     "cpp:func_call",

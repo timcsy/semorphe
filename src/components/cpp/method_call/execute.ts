@@ -21,6 +21,22 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     }
     const m = ctx.structs.method(obj.structName ?? '', methodName)
     if (!m) {
+      // **無參數的取值方法，而值就存在同名欄位裡** —— `e.what()`。
+      //
+      // 標準例外（`cpp:exception_make`）把訊息存成一個叫 `what` 的欄位，
+      // 因為**替它造一個方法本體要在膠囊裡寫死別顆元件的身分**
+      // （`cpp:return` ＋ `cpp:struct_at_member` 的節點），而就近性護欄會報。
+      //
+      // ⚠️ 範圍很窄，所以它不會掩蓋「方法打錯字」：
+      // **必須無引數、且必須真的有那個同名欄位**——兩者有一個不成立就照樣丟錯。
+      //
+      // > **一個退路的安全性不在它退到哪裡，在它的入口條件有多窄。**
+      const args = node.children.args ?? []
+      if (args.length === 0 && obj.value instanceof Map && obj.value.has(methodName)) {
+        return obj.value.get(methodName)!
+      }
+    }
+    if (!m) {
       // 出聲，不靜默略過——打錯方法名的程式會跑完而什麼都沒做
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
         '%1': `${obj.structName ?? '?'}::${methodName}`,

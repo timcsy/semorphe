@@ -1,0 +1,10 @@
+{
+  "CPP_EXCEPTION_MAKE_MSG0": "Exception %1 message %2",
+  "CPP_EXCEPTION_MAKE_TOOLTIP": "Create a standard exception object, usually used with throw",
+  "CPP_EXCEPTION_MAKE_RUNTIME_ERROR": "Runtime error",
+  "CPP_EXCEPTION_MAKE_LOGIC_ERROR": "Logic error",
+  "CPP_EXCEPTION_MAKE_OUT_OF_RANGE": "Out of range",
+  "CPP_EXCEPTION_MAKE_INVALID_ARGUMENT": "Invalid argument",
+  "CPP_EXCEPTION_MAKE_OVERFLOW_ERROR": "Overflow",
+  "CPP_EXCEPTION_MAKE_LENGTH_ERROR": "Length error"
+}

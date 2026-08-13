@@ -1,0 +1,98 @@
+[
+  {
+    "id": "cpp_runtime_error",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "runtime_error"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  },
+  {
+    "id": "cpp_logic_error",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "logic_error"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  },
+  {
+    "id": "cpp_out_of_range",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "out_of_range"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  },
+  {
+    "id": "cpp_invalid_argument",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "invalid_argument"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  },
+  {
+    "id": "cpp_overflow_error",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "overflow_error"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  },
+  {
+    "id": "cpp_length_error",
+    "astNodeType": "call_expression",
+    "concept": {
+      "conceptId": "cpp:exception_make"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "length_error"
+      }
+    ],
+    "liftStrategy": "cpp:liftExceptionMake",
+    "fieldMappings": [],
+    "priority": 8
+  }
+]

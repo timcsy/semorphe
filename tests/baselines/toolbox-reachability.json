@@ -1,6 +1,12 @@
 {
   "guard": "toolbox-reachability",
-  "defects": [],
+  "defects": [
+    {
+      "type": "cpp_exception_make",
+      "owner": "<stdexcept>",
+      "bucket": "缺陷"
+    }
+  ],
   "imperativeOnly": [],
   "findings": [
     {
@@ -12,6 +18,11 @@
       "type": "cpp_container_push",
       "owner": "(core)",
       "bucket": "中性形態"
+    },
+    {
+      "type": "cpp_exception_make",
+      "owner": "<stdexcept>",
+      "bucket": "缺陷"
     },
     {
       "type": "cpp_if_else",

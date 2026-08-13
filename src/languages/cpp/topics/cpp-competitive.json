@@ -214,7 +214,8 @@
               "cpp:stringstream_declare",
               "cpp:istringstream_declare",
               "cpp:ifstream_declare",
-              "cpp:ofstream_declare"
+              "cpp:ofstream_declare",
+              "cpp:exception_make"
             ],
             "children": []
           }

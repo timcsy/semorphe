@@ -30,7 +30,12 @@ import type { NamingVocabulary } from '../../core/naming'
  * 而「排序即分群」要求它排在 `loop_*` 那一族裡。
  */
 export const SUBJECTS = [
-  'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum', 'func', 'ifstream',
+  'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum',
+  // ⚠️ `exception` 加入日 2026-08-13——`cpp:exception_make`（`runtime_error("…")`）。
+  // 主體是「例外」，種類（runtime／logic／out_of_range…）是**參數**不是身分，
+  // 與 `container_push` 把容器種類當參數同一個形狀。
+  'exception',
+  'func', 'ifstream',
   'member',
   'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
