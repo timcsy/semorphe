@@ -1,12 +1,5 @@
 [
   {
-    "corpusKey": "#include <iostream> using namespace std; class NumberHolder #1lurhm8",
-    "signal": "直「equal⏎also equal⏎」 參「equal⏎not equal⏎」",
-    "decision": "真誤差",
-    "reason": "物件導向：建構式路徑已修一部分，這一筆的根因不同",
-    "rootCause": "物件導向：建構式路徑已修一部分，這一筆的根因不同"
-  },
-  {
     "corpusKey": "#include <iostream> using namespace std; class Scope { publi#142pep4",
     "signal": "直「main start⏎enter⏎inner⏎main end⏎exit⏎」 參「main start⏎enter⏎inner⏎exit⏎main end⏎」",
     "decision": "真誤差",
