@@ -27,6 +27,13 @@ export interface MethodDecl {
   name: string
   params: FieldDecl[]
   body: SemanticNode[]
+  /**
+   * 建構式的**成員初始化列**（`Node(int x) : v(x) {}` 的 `v(x)`），一串賦值。
+   *
+   * ⚠️ 它與 `body` 分開，因為**順序有語義**：初始化列先跑，本體後跑
+   * ——本體裡的 `v = 9` 蓋得掉初始化列，反過來不行。
+   */
+  inits?: SemanticNode[]
   /** 純虛擬沒有本體——呼叫時要出聲，不得靜默回傳 */
   pure?: boolean
 }

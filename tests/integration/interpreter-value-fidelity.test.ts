@@ -214,6 +214,31 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('3')
   })
 
+  // ── 成員初始化列：投影對、執行錯的那一種 ───────────────────────────
+  //
+  // 🔴 `: v(x)` 原本被記成一個**字串屬性**（`init_list`），而執行那一路
+  // **從未讀它**——`struct Node { int v; Node(int x) : v(x) {} };` 建出來的
+  // 物件 `v` 是 0，**而產生的程式碼完全正確**。
+  it('★ struct 的成員初始化列要生效', async () => {
+    expect(
+      await run(IO, `struct Node { int v; Node(int x) : v(x) {} }; int main(){ Node n(5); cout << n.v; }`),
+    ).toBe('5')
+  })
+
+  it('★ 多個成員、多個初始化項', async () => {
+    // ⚠️ 順帶釘住 `int x, y;`——它在辨識那一路是一顆 `_multi_field`，
+    // 不展開的話那兩個欄位整個消失，而症狀是「P 沒有這個欄位」
+    expect(
+      await run(IO, `class P { public: int x, y; P(int a, int b) : x(a), y(b) {} }; int main(){ P p(3,4); cout << p.x << p.y; }`),
+    ).toBe('34')
+  })
+
+  it('★ 本體蓋得掉初始化列——順序是「初始化列先，本體後」', async () => {
+    expect(
+      await run(IO, `class A { public: int v; A(int n) : v(n) { v = 9; } }; int main(){ A a(1); cout << a.v; }`),
+    ).toBe('9')
+  })
+
   // ── 排序：比較器是使用者的程式碼 ────────────────────────────────────
   const ALG = '#include <iostream>\n#include <vector>\n#include <algorithm>\n#include <string>\nusing namespace std;\n'
 

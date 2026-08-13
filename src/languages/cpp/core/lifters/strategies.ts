@@ -35,6 +35,7 @@ import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
 import { buildInclude } from '../../../../components/cpp/include/lift'
 import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
+import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 
 /**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
@@ -248,10 +249,25 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     if (nameNode?.type === 'identifier' && nameNode.text === className) {
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
+      // **成員初始化列 → 一串賦值**（`: v(x), w(y)` → `v = x; w = y;`）。
+      //
+      // 🔴 它原本被記成一個字串屬性，而**執行那一路從未讀它**：
+      // `Node(int x) : v(x) {}` 建出來的物件 `v` 是 0，而產生的程式碼完全正確。
+      // **投影對、執行錯**——一個要 parse 回結構才能用的字串，就不該是字串。
       const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
-      const initList = initListNode ? initListNode.text.replace(/^:\s*/, '') : ''
+      const inits: SemanticNode[] = []
+      for (const fi of initListNode?.namedChildren ?? []) {
+        if (fi.type !== 'field_initializer') continue
+        const field = fi.namedChildren[0]?.text
+        // 值的形式是 `(x)` 或 `{x}`——兩種都取第一個實際的運算式
+        const valueHolder = fi.namedChildren[1]
+        const valueNode = valueHolder?.namedChildren[0] ?? valueHolder
+        const value = valueNode ? ctx.lift(valueNode) : null
+        if (!field || !value) continue
+        inits.push(buildVarAssign(field, { value: [value] }))
+      }
       const body = extractBody(bodyNode, ctx)
-      return buildConstructor({ class_name: className, init_list: initList }, { params, body })
+      return buildConstructor({ class_name: className }, { params, inits, body })
     }
 
     // Destructor: function_definition where declarator is destructor_name

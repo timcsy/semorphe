@@ -55,7 +55,15 @@ export function splitMember(members: SemanticNode[]): {
   // 「這裡還有一批沒處理的」**，已退場。
   const role = memberRoleOf
   const methodConcepts = new Set(componentsWithMemberRole('method'))
+  // `int x, y;` 的成員宣告在辨識那一路是一顆 `_multi_field`（辨識過程的中間產物）。
+  // ⚠️ **不展開的話那兩個欄位整個消失**，而症狀是「P 沒有這個欄位」
+  // ——看起來像使用者打錯欄位名。
+  const flat: SemanticNode[] = []
   for (const m of members) {
+    if (m.conceptId === '_multi_field') flat.push(...(m.children.fields ?? []))
+    else flat.push(m)
+  }
+  for (const m of flat) {
     if (role(m.conceptId) === 'static-field') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
     } else if (role(m.conceptId) === 'pure-virtual') {
@@ -72,7 +80,12 @@ export function splitMember(members: SemanticNode[]): {
     } else if (methodConcepts.has(m.conceptId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
     } else if (role(m.conceptId) === 'constructor') {
-      ctor = { name: String(m.properties.class_name ?? ''), params: params(m), body: m.children.body ?? [] }
+      ctor = {
+        name: String(m.properties.class_name ?? ''),
+        params: params(m),
+        inits: m.children.inits ?? [],
+        body: m.children.body ?? [],
+      }
     } else if (role(m.conceptId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
@@ -125,6 +138,9 @@ export async function runOnInstance(
 
   ctx.scope = bodyLevel
   try {
+    // **成員初始化列先於本體**——C++ 的順序就是這樣，而它有語義：
+    // 本體裡的 `v = 9` 蓋得掉初始化列的 `: v(x)`，反過來不行。
+    if (m.inits?.length) await ctx.executeBody(m.inits)
     await ctx.executeBody(m.body)
     return defaultValue('void')
   } catch (e) {

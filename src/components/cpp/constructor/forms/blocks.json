@@ -23,9 +23,9 @@
       "message1": "%{BKY_C_CONSTRUCTOR_MSG1}",
       "args1": [
         {
-          "type": "field_input",
-          "name": "INIT_LIST",
-          "text": ""
+          "type": "input_statement",
+          "name": "INITS",
+          "check": "Statement"
         }
       ],
       "message2": "%{BKY_C_CONSTRUCTOR_MSG2}",
@@ -44,11 +44,11 @@
     },
     "renderMapping": {
       "fields": {
-        "CLASS_NAME": "class_name",
-        "INIT_LIST": "init_list"
+        "CLASS_NAME": "class_name"
       },
       "statementInputs": {
-        "BODY": "body"
+        "BODY": "body",
+        "INITS": "inits"
       },
       "childrenAsField": [
         {
