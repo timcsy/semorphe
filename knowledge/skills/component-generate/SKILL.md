@@ -396,7 +396,27 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 | ❌ ~~`UniversalConcept` 型別~~ | **該型別已刪**（`58d64eb`，只剩墓碑註解） |
 | ❌ ~~五路的 import~~ | **不用**——`paths.ts` glob 直讀 |
 
-⚠️ **加進課程清單是唯一的手動步驟，而它有兩個護欄在看**：
+### 🔴 而「加一顆元件」有一張固定的清單——它今天散在七條護欄的失敗訊息裡
+
+2026-08-13 新增 `cpp:block` 與 `cpp:exception_make` 各觸發一次，**兩次一模一樣**：
+
+| 要動什麼 | 不動的話哪條護欄會紅 |
+|---|---|
+| **主體詞彙表**（`SUBJECTS`）或**單字名清單**（`ATOMIC_NAMES`） | `audit-naming`（硬性零） |
+| **課程清單**（Topic 的 `levelTree`） | `audit-curriculum-coverage`（「未收錄 MUST 不得是忘了」） |
+| 積木型別集合基線 | `audit-identity-namespace` |
+| 工具箱與課程快照 | `toolbox-snapshot` |
+| 執行器清冊（`GENERATE_INVENTORY=1`） | `executor-inventory` |
+| 膠囊搬家防線 | `component-move-parity` |
+| 就近性／符合性／完備性基線 | 各自的棘輪 |
+
+⚠️ **共用檔要用膠囊的東西時，呼叫它匯出的建構子**（`buildXxx`）——
+身分字串只留在膠囊裡一處，否則就近性護欄會**兩個方向都報**。
+
+> **一張「加一顆元件要做什麼」的清單，如果只存在於七條護欄的失敗訊息裡，
+> 那麼每一個新來的人都要把那七條各撞一次才學得會。**
+
+⚠️ **加進課程清單是唯一真正需要判斷的一步，而它有兩個護欄在看**：
 「可拿性」（宣告了卻拿不到 → 紅）與課程快照（成員或順序變動 → 紅，要一起改基線）。
 
 ⚠️ **放進哪一關要看前置**：一顆概念的前置若在更後面的關卡，學生拿得到它卻用不了
