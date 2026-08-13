@@ -95,6 +95,8 @@
         "cpp_input",
         "cpp_print",
         "cpp_input_expression",
+        "cpp_io_sync",
+        "cpp_io_tie",
         "cpp_input_formatted",
         "cpp_print_formatted",
         "cpp_input_formatted_expression",

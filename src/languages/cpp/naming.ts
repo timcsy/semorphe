@@ -36,6 +36,10 @@ export const SUBJECTS = [
   // 與 `container_push` 把容器種類當參數同一個形狀。
   'exception',
   'func', 'ifstream',
+  // ⚠️ `io` 加入日 2026-08-13——`cpp:io_sync`／`cpp:io_tie`（競賽的加速框架）。
+  // 主體是**輸入輸出流本身**，不是流上的一次讀寫：`print`／`input` 作用在
+  // 「一筆資料」上，而這兩顆作用在「這條流怎麼運作」上。
+  'io',
   'member',
   'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
@@ -67,6 +71,15 @@ export const OPERATIONS = [
   'seed', 'sort', 'substr', 'sum', 'to',
   'def', 'empty', 'erase', 'find', 'insert', 'make', 'peek',
   'pop', 'push', 'ref', 'size', 'swap',
+  // ⚠️ 兩個都是 2026-08-13 加的，各對一顆競賽加速元件。
+  //
+  // `sync`  ——「兩邊保持一致」。`ios::sync_with_stdio(false)` 關掉的正是這件事。
+  // `tie`   ——「一邊動另一邊跟著動」。`cin.tie(nullptr)` 解除的正是這個連動。
+  //
+  // 🔴 `tie` 與 `std::tie`（拆解 tuple）撞名，而**那是兩件無關的事**。
+  // 這裡取的是「連動」這個語義；如果哪天要收 `std::tie`，它的主體是 `pair`／
+  // `tuple`，操作不會是 `tie`——先在這裡把話講明，免得將來有人以為是同一族。
+  'sync', 'tie',
 ] as const
 
 /**

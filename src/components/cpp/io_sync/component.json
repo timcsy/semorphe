@@ -1,0 +1,35 @@
+{
+  "conceptId": "cpp:io_sync",
+  "layer": "universal",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "role": "statement",
+  "owner": "(universal)",
+  "requires": [
+    "<iostream>"
+  ],
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空。**\n\n`ios::sync_with_stdio(false)` 在真編譯器上有真的副作用：解除 C 的 `stdio` 與 C++ 的 `iostream` 之間的緩衝區同步。而**我們的輸出是一個字串陣列，沒有緩衝區這回事**——兩種緩衝策略在這個執行模型裡投影到同一個結果。\n\n⚠️ 這不是「還沒做」，也不是「懶得實作所以回傳空」。判準是 `knowledge/concepts/等價與觀察集.md`：在我們的觀察集（輸出字串序列）底下，它與 no-op **量出來相同**。`history/018`「拿判準當藉口，把缺陷洗成設計」擋的是說不出理由的那種——而這裡說得出來，說法是可否證的：**如果哪天執行模型有了真的緩衝區與交錯輸出，這個宣告就必須撤回**。\n\n⚠️ **為什麼理由是 `declarative` 而不是一個新的值**：它長得像函式呼叫，所以第一版寫了第三個理由。而 `skip-declaration-gate` 的立場是對的（`history/018`：「第三個值就是在替『還沒做』找一個體面的名字」）——而且想清楚之後不需要第三個值：**它不計算任何東西、不改變任何變數，它宣告的是「這段程式的輸入輸出策略」**，與 `#include`／`using namespace` 同類。宣告性不是看語法長相，是看**它有沒有在描述環境而不是在做事**。"
+  },
+  "_owner_why": "⚠️ **不是 `<iostream>`**——工具箱的 45 段有序來源裡沒有 `<iostream>`，而輸入輸出那一格收的是 `(universal) io`。`print`／`input`／`endl` 全在那裡，這兩顆與它們同族（都是輸入輸出流本身的事），所以同格。\n為兩顆加速元件單開一段的話，學生會看到一個只有兩顆積木的分類。\n而它們**只出現在競程課程清單**，初學者的工具箱不受影響——過濾是關卡做的，不是分類做的。"
+}

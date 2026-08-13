@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cpp:io_sync",
+    "conceptId": "cpp:io_sync",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_io_sync",
+      "message0": "%{BKY_CPP_IO_SYNC_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_CPP_IO_SYNC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

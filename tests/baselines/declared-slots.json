@@ -3,10 +3,10 @@
     "guard": "declared-slots",
     "measuredAt": "2026-08-10",
     "rule": "跑 lift 在真實語料上（掃測試檔裡的 C++ 片段），比對「實際產出的非空接點」與「concepts.json 宣告的 children 鍵」。⚠️ **是實測不是靜態掃描**——靜態掃 `createNode(` 看得到產生了什麼概念，看不到它被掛在**哪個接點**下，而後者才是這條護欄要問的。語料沒碰到的元件歸「無法確定」，**不計入安全**——那個數字是這條護欄的誠實度指標。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n【2026-08-11 補判定落點】「無法確定 8」逐筆判定，而它**混了四種原因**：\n  辨識到不了 2（queue_back／string_empty——**補再多語料也碰不到**）\n  宣告過的降級目標 1（if_else，正確）｜元概念 2（raw_code／raw_expression，正確）\n  語料沒覆蓋 3（加一段語料就會動）\n⚠️ 只看總數的話，「辨識到不了」與「語料沒覆蓋」讀起來一樣——而前者是真的缺口。\n判定在 tests/assets/declared-slots-decisions.json，鍵是 conceptId（穩定身分，沒有截斷／行號的坑）。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n【2026-08-11 補判定落點】「無法確定 8」逐筆判定，而它**混了四種原因**：\n  辨識到不了 2（queue_back／string_empty——**補再多語料也碰不到**）\n  宣告過的降級目標 1（if_else，正確）｜元概念 2（raw_code／raw_expression，正確）\n  語料沒覆蓋 3（加一段語料就會動）\n⚠️ 只看總數的話，「辨識到不了」與「語料沒覆蓋」讀起來一樣——而前者是真的缺口。\n判定在 tests/assets/declared-slots-decisions.json，鍵是 conceptId（穩定身分，沒有截斷／行號的坑）。\n\n⚠️ 2026-08-13 **上調 8 → 10**，兩筆都指名：`cpp:io_sync`／`cpp:io_tie`（競賽加速框架的兩顆新元件）。原因是**第五種**：lift 那一路是登錄表裡的一筆資料（「這個名字屬於我」），掃描器讀不到執行期才組起來的表。\n🔴 上調不是常態——這裡上調的理由是「量測方法碰不到」，不是「宣告與實際不符」：兩顆的 `children.value` 都對上 `argSlots: ['value']`，而膠囊自證測從真語料 lift 出它們並斷言接點在原地。判定與理由見 `tests/assets/declared-slots-decisions.json`。"
   },
   "certainViolations": 1,
-  "undetermined": 8,
+  "undetermined": 10,
   "violationList": [
     "cpp:if: else_body"
   ]

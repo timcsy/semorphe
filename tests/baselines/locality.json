@@ -282,6 +282,14 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:io_sync": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:io_tie": {
+      "files": 2,
+      "dirs": 1
+    },
     "cpp:istringstream_declare": {
       "files": 3,
       "dirs": 1

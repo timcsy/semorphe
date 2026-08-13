@@ -269,7 +269,9 @@
           "cpp:loop_while",
           "cpp:builtin_constant",
           "cpp:include",
-          "cpp:using_namespace"
+          "cpp:using_namespace",
+          "cpp:io_sync",
+          "cpp:io_tie"
         ]
       },
       {

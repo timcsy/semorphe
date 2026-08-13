@@ -1,0 +1,4 @@
+{
+  "CPP_IO_SYNC_MSG0": "Set I/O sync with C streams %1",
+  "CPP_IO_SYNC_TOOLTIP": "Turning sync off makes bulk I/O much faster — a common first line in contests. Do not mix C-style I/O after turning it off."
+}

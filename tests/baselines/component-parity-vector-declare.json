@@ -74,6 +74,8 @@
     "cpp:input",
     "cpp:input_formatted",
     "cpp:input_line",
+    "cpp:io_sync",
+    "cpp:io_tie",
     "cpp:istringstream_declare",
     "cpp:lambda",
     "cpp:literal_char",

@@ -1,0 +1,4 @@
+{
+  "CPP_IO_TIE_MSG0": "Set %1 flush partner to %2",
+  "CPP_IO_TIE_TOOLTIP": "By default every read flushes the output first; setting it to null removes that link and speeds up bulk input. Usually paired with turning sync off."
+}

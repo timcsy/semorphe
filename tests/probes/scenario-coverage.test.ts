@@ -49,6 +49,10 @@ const H = '#include <iostream>\n#include <vector>\n#include <string>\n#include <
 
 /** 競賽：可執行的完整程式 */
 const COMPETITIVE: Record<string, string> = {
+  // ⚠️ 真實的競賽第一行是 `#include <bits/stdc++.h>`，而 macOS 的 clang 沒有那個標頭
+  // ——用它的話這一段會落進「參照跑不動」而不是「我們跑錯」，**缺口會消失在分母裡**。
+  '加速框架': `${H}int main(){ ios::sync_with_stdio(false); cin.tie(nullptr); cout << 42; return 0; }`,
+  '加速框架的 ios_base 寫法': `${H}int main(){ ios_base::sync_with_stdio(false); cin.tie(0); cout << 7; return 0; }`,
   'typedef long long': `${H}typedef long long ll;\nint main(){ ll a = 3000000000; cout << a; }`,
   'using 型別別名': `${H}using ll = long long;\nint main(){ ll a = 5; cout << a; }`,
   'pair 與 make_pair': `${H}int main(){ pair<int,int> p = make_pair(3,4); cout << p.first << p.second; }`,

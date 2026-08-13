@@ -38,5 +38,15 @@
     "conceptId": "cpp:istringstream_declare",
     "cause": "語料沒覆蓋",
     "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"
+  },
+  {
+    "conceptId": "cpp:io_sync",
+    "cause": "lift 是登錄表裡的資料，靜態掃不到",
+    "reason": "這一路搬回膠囊的是**一筆資料**（`ios::sync_with_stdio` 這個名字屬於我），判別邏輯留在共用路由器。掃描器讀不到執行期才組起來的登錄表，所以歸「無法確定」——**而宣告與實際是一致的**：`children.value` 對上 `argSlots: ['value']`，膠囊自證測從真語料 lift 出這顆並斷言接點在原地。⚠️ 這與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+  },
+  {
+    "conceptId": "cpp:io_tie",
+    "cause": "lift 是登錄表裡的資料，靜態掃不到",
+    "reason": "這一路搬回膠囊的是**一筆資料**（`tie` 這個方法名屬於我），判別邏輯留在共用路由器。掃描器讀不到執行期才組起來的登錄表，所以歸「無法確定」——**而宣告與實際是一致的**：`children.value` 對上 `argSlots: ['value']`，膠囊自證測從真語料 lift 出這顆並斷言接點在原地。⚠️ 這與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
   }
 ]
