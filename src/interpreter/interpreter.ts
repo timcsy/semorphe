@@ -353,6 +353,14 @@ export class SemanticInterpreter implements ExecutionContext {
     if (val.type === 'pointer') return val.value === null || val.value === undefined ? 0 : 1
     if (typeof val.value === 'number') return val.value
     if (typeof val.value === 'boolean') return val.value ? 1 : 0
+    // **`char` 在算術情境下是它的字元碼**——C++ 就是這樣（`'a' + 1` 是 98）。
+    //
+    // 少了這一行，`Number('A') || 0` 給 **0**，於是 `(char)toupper(c)` 產出
+    // `'\0'`：程式跑完、印出東西、而印的是一個看不見的字元。
+    // ⚠️ 與根因 1（char 持有數值時印成字元）是同一條路的**另一個方向**。
+    if (val.type === 'char' && typeof val.value === 'string') {
+      return val.value.length > 0 ? val.value.charCodeAt(0) : 0
+    }
     if (typeof val.value === 'string') return Number(val.value) || 0
     return 0
   }

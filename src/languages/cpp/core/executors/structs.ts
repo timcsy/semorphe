@@ -76,7 +76,13 @@ export function splitMember(members: SemanticNode[]): {
     } else if (role(m.conceptId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
-      fields.push({ name: String(m.properties.name), type: String(m.properties?.type ?? 'int') })
+      fields.push({
+        name: String(m.properties.name),
+        type: String(m.properties?.type ?? 'int'),
+        // 成員預設值——`initializer` 是 `cpp:var_declare` 既有的接點，
+        // 類別成員與一般宣告用的是同一顆元件，所以這裡不需要新的形狀
+        init: m.children.initializer?.[0],
+      })
     }
   }
   return { fields, methods, ctor, dtor, statics }
@@ -140,6 +146,7 @@ export async function runOnInstance(
  */
 export const installMethodExecutors = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
   ctx.structs.installMethodRunner((obj, m, args) => runOnInstance(obj, m, args, ctx) as Promise<unknown>)
+  ctx.structs.installExprEvaluator((node) => ctx.evaluate(node))
 
   // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**
   // 是這裡的知識——別的語言可能什麼都不做。

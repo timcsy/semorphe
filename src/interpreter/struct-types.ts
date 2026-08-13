@@ -13,6 +13,13 @@ import { defaultValue } from './types'
 export interface FieldDecl {
   name: string
   type: string
+  /**
+   * 成員預設值的**表達式**（`class A { int v = 7; };` 的 `7`）。
+   *
+   * ⚠️ 存的是節點不是值——預設值可以是任意表達式（`int n = f();`），
+   * 而它要在**建立實例時**才求值，不是宣告類別時。
+   */
+  init?: SemanticNode
 }
 
 /** 一個方法／建構式 */
@@ -113,6 +120,18 @@ export class StructRegistry {
     this.runner = fn
   }
 
+  /**
+   * 「怎麼求一個表達式的值」——同樣由語言套件安裝，理由與 `runner` 相同。
+   *
+   * 沒有安裝時成員預設值**不套用**（欄位停在型別預設值）。⚠️ 那是刻意的：
+   * 核心不會自己編一個求值器，寧可少做也不要做出一個與語言套件不一致的值。
+   */
+  private evaluator: ((node: SemanticNode) => Promise<RuntimeValue>) | null = null
+
+  installExprEvaluator(fn: (node: SemanticNode) => Promise<RuntimeValue>): void {
+    this.evaluator = fn
+  }
+
   /** 在一個實例上跑一個方法——給運算子多載那類「核心需要回呼」的路徑用 */
   async invoke(obj: RuntimeValue, m: MethodDecl, args: SemanticNode[]): Promise<RuntimeValue | undefined> {
     if (!this.runner) return undefined
@@ -122,9 +141,36 @@ export class StructRegistry {
   /** 建一個實例並跑它的建構式（若有）。沒有語言套件安裝 runner 時，只建不跑 */
   async construct(name: string, args: SemanticNode[]): Promise<RuntimeValue> {
     const obj = this.instantiate(name)
+    // **成員預設值先於建構式**——C++ 的順序就是這樣（預設值屬於成員初始化列，
+    // 建構式本體在它之後跑），所以建構式指定的值蓋得掉預設值。
+    await this.applyFieldInits(obj, name)
     const ctor = this.ctors.get(name)
     if (ctor && this.runner) await this.runner(obj, ctor, args)
     return obj
+  }
+
+  /**
+   * 套用成員預設值（`class A { int v = 7; };`）。
+   *
+   * ⚠️ **與 `instantiate` 分開，因為求值是非同步的**——`instantiate` 被巢狀
+   * 欄位同步遞迴呼叫，把 `await` 放進去會讓那條路徑全部要改成 async。
+   * 這裡走同一條型別鏈再補一次，巢狀物件欄位遞迴。
+   */
+  private async applyFieldInits(obj: RuntimeValue, name: string, seen: Set<string> = new Set()): Promise<void> {
+    if (obj.type !== 'object' || seen.has(name)) return
+    const next = new Set(seen).add(name)
+    const map = obj.value as ObjectFields
+    // 基底先——與 `instantiate` 同序，衍生的同名欄位蓋掉基底的
+    for (const t of [...this.chain(name)].reverse()) {
+      for (const f of this.types.get(t) ?? []) {
+        if (this.has(f.type)) {
+          const nested = map.get(f.name)
+          if (nested) await this.applyFieldInits(nested, f.type, next)
+        }
+        if (!f.init || !this.evaluator) continue
+        map.set(f.name, await this.evaluator(f.init))
+      }
+    }
   }
 
   has(name: string): boolean {

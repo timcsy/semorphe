@@ -348,7 +348,13 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     const declNode = node.childForFieldName('declarator')
     const name = declNode?.text ?? 'x'
-    return buildVarDeclare({ type, name })
+    // 成員預設值：class A { int v = 7; };
+    // ⚠️ `= 0` 的純虛擬已在上面被攔截，走到這裡的 default_value 一律是初始值
+    const defaultValueNode = node.childForFieldName('default_value')
+    const init = defaultValueNode ? ctx.lift(defaultValueNode) : null
+    return init
+      ? buildVarDeclare({ type, name }, { initializer: [init] })
+      : buildVarDeclare({ type, name })
   }
 
   // Fallback: try generic lift

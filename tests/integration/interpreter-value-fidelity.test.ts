@@ -117,19 +117,39 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('5')
   })
 
-  it.fails('[BLOCKED:cpp:class_def] 成員預設值要讀得到', async () => {
-    // 🔴 實測拿到 `0`，而**缺陷不在執行那一路**——是辨識掉了初始值：
-    //
-    //   class A { public: int v = 7; };
-    //   → cpp:class_def[public] → cpp:var_declare { type:'int', name:'v' }
-    //                                              ↑ **沒有 initializer 子節點**
-    //
-    // 執行器拿到的樹裡本來就沒有 7。`specs/109` 的範圍是執行那一路，
-    // 所以這裡只釘住，不修——修它要動辨識層的類別成員規則。
-    //
-    // 用 `it.fails` 而不是 `it.skip`：缺陷還在時它綠且這段註解在原地出聲，
-    // 修好的那天它**變紅並提醒拔釘子**。
+  // ── 成員預設值（2026-08-13 修好，釘子已拔）─────────────────────────
+  //
+  // 曾經是一根釘在 `cpp:class_def` 上的釘子，症狀是拿到 `0`。
+  //
+  // ⚠️ 這一行原本把那根釘子的**原始寫法**照抄在註解裡，而缺陷帳的掃描器
+  // 照樣把它數成一筆停用測試（`titleOnly` 12 → 13）——**一個講缺陷的註解
+  // 變成了一筆缺陷**。掃描器不分辨程式與註解是刻意的（否則有人用註解藏），
+  // 所以這裡改成敘述而不是照抄。
+  // **缺陷跨兩路**：辨識沒讀 `field_declaration` 的 `default_value`，
+  // 而執行那一路連接點都沒有。修法是兩邊各接一段：
+  //   lift    → `cpp:var_declare` 既有的 `initializer` 接點（不需要新形狀）
+  //   execute → `FieldDecl.init` ＋ `StructRegistry.applyFieldInits`
+  //
+  // ⚠️ 求值必須在**建立實例時**，不是宣告類別時——預設值可以是任意表達式。
+  it('★ 類別成員預設值要讀得到', async () => {
     expect(await run(IO, `class A { public: int v = 7; }; int main(){ A a; cout << a.v; }`)).toBe('7')
+  })
+
+  it('★ struct 的成員預設值同樣要讀得到（C++11）', async () => {
+    expect(await run(IO, `struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << p.y; }`)).toBe('34')
+  })
+
+  it('★ 建構式蓋得掉成員預設值——順序是「預設值先，建構式後」', async () => {
+    expect(
+      await run(IO, `class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9); cout << a.v; }`),
+    ).toBe('9')
+  })
+
+  // ── `char` 在算術情境是字元碼（同一輪修的另一個根因）───────────────
+  it('★ 明確轉型讀得到 char 的字元碼', async () => {
+    // 🔴 修之前 `toNumber` 走 `Number('A') || 0` 給 **0**，於是印出 `'\0'`
+    // ——一個看不見的字元，而程式看起來跑完了。
+    expect(await run(IO, `#include <cctype>\n${IO}int main(){ char c='a'; cout << (char)toupper(c); }`)).toBe('A')
   })
 
   it('★ 解構子的既有行為不得回歸', async () => {
