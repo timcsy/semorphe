@@ -1,24 +1,10 @@
 [
   {
-    "corpusKey": "#include <iostream> #include <string> #include <vector> usin#gy8xq3",
-    "signal": "直「racecar -> no⏎hello -> no⏎abba -> no⏎wor」 參「racecar -> yes⏎hello -> no⏎abba -> yes⏎w」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
     "corpusKey": "#include <iostream> #include <string> using namespace std; s#8cx34x",
     "signal": "直「hello world⏎aaa⏎abcabcabc⏎no match here⏎」 參「hello there⏎ba⏎XXX⏎no match here⏎」",
     "decision": "真誤差",
     "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
     "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
-    "corpusKey": "#include <iostream> using namespace std; int main() { int a #1qwxvi9",
-    "signal": "直「2⏎2.5⏎66⏎66⏎0⏎0.333333⏎」 參「2⏎2.5⏎66⏎B⏎0⏎0.333333⏎」",
-    "decision": "真誤差",
-    "reason": "浮點顯示：預設精度已修，這一筆的根因不同",
-    "rootCause": "浮點顯示：預設精度已修，這一筆的根因不同"
   },
   {
     "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",

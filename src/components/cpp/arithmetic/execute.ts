@@ -43,6 +43,23 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
         return { type: 'array', value: left.value, offset: moved }
       }
 
+      // **字串的 `+` 是串接**。`s + s[i]`、`s1 + s2`、`"x" + s`。
+      //
+      // 🔴 走數值路徑的話 `toNumber("ab")` 是 0、右邊是碼位，於是
+      // `"ab" + 'a'` 變成 **97**——與 `+=` 那一筆（第五輪修的）是同一個根因的
+      // 另一半，而**當時只修了 `+=`**。
+      //
+      // > **一個運算子有複合形式與二元形式時，修一個不會修到另一個
+      // > ——而它們錯的是同一件事。**
+      //
+      // ⚠️ 判準是「**任一邊是 string**」：`char + int` 仍然是數值（C++ 的整數提升），
+      // 只有真的有字串參與時才串接。
+      if (op === '+' && (left.type === 'string' || right.type === 'string')) {
+        const piece = (v: typeof left): string =>
+          v.type === 'char' ? String.fromCharCode(ctx.toNumber(v)) : String(v.value)
+        return { type: 'string', value: piece(left) + piece(right) }
+      }
+
       const lv = ctx.toNumber(left)
       const rv = ctx.toNumber(right)
 

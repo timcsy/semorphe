@@ -13,8 +13,8 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     const valueNodes = node.children.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
-    // ⚠️ `charIsChar: false`——命名轉型的 `char` 回整數。這是既有行為，
+    // ⚠️ `charIsChar: true`——命名轉型的 `char` 回整數。這是既有行為，
     // 與 C 風格轉型不同；**搬家不重寫**（要改就另開一個 commit）。
-    return numericCast(targetType, val, ctx.toNumber(val), { charIsChar: false })
+    return numericCast(targetType, val, ctx.toNumber(val), { charIsChar: true })
   })
 }

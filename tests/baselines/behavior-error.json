@@ -2,7 +2,7 @@
   "_meta": {
     "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
     "flag": "-std=c++17",
-    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。 ⚠️ 2026-08-13（第五輪）誤差 9 → 8：`string += char` 改成串接。**這一筆在 string_at 改回碼位之後症狀變了但沒變好**——原本是 `Number(\"a\")||0` 也錯，改後是「把碼位當數字加」。同一個缺陷的兩種面貌，而兩次都不報錯。 ⚠️ 2026-08-13（第六輪）誤差 8 → 7：無號型別的轉型截斷（ 是 255 不是 -1）。**原本那些型別一個都沒被認出來**，落到 numericCast 尾端的  原封回傳，而 -1 看起來就像一個成功的轉型結果。 ⚠️ 2026-08-13（第七輪）誤差 7 → 6：`sizeof(3.14)` 給 4。**`sizeof(3.14f)` 之所以「已經對了」是巧合**——float 是 4，而查不到時的退路也是 4。一個退路值若剛好等於某些正確答案，那些案例會看起來像通過的。 ⚠️ 2026-08-13（第八輪）新增 `unstableReference` 一欄：不一致時**先確認參照那一側自己是穩定的**（重跑一次比對）。讀未初始化變數是 UB，真編譯器印垃圾值而直譯器回 0——把它算成誤差是**指控一個沒有唯一答案的問題有唯一答案**，而受指控的還是比較誠實的那一邊。🔴 **而今天這一欄是 0**：那筆 UB 的垃圾值在同一台機器上是穩定的，跑兩次一樣。所以這個機制擋的是「真的每次不同」那一種（時間／位址／未初始化的堆），**能力邊界寫在那支注入裡**——沒有它，一個 0 與「什麼都沒量到」產出相同。 ⚠️ 2026-08-13（第九輪）誤差 6 → 5：`cpp:compare` 沒有問運算子多載，而 `cpp:arithmetic` 早就在做。兩個物件比較於是走 `toNumber` 都變 NaN，`==` 恆假、`!=` 恆真——**`operator==` 寫了也沒用**，而輸出是「not equal 印成 also equal」這種看起來像業務邏輯的錯。**機制本來就齊了（memberRole:\"operator\" ＋ splitMember），缺的只是這一顆去問。一個機制的消費者少一個，那個機制就對那條路徑不存在。** ⚠️ 2026-08-13（第十輪）誤差 5 → 4：**獨立的 `{ … }` 被展平了**，於是裡面宣告的物件掛到外層作用域，解構子印在 `main end` 之後。新增 `cpp:block` 膠囊 ＋ 讓 `lifter.ts` 只展平「結構的 body」（判準看父節點）。⚠️ 影響不只解構子——`int main(){ { int x=1; } cout << x; }` 在真編譯器是編譯錯誤，而展平之後會印出 1。**一個作用域少了，症狀不是「變數不見」而是「變數活太久」——而活太久不會報錯。**",
+    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。 ⚠️ 2026-08-13（第五輪）誤差 9 → 8：`string += char` 改成串接。**這一筆在 string_at 改回碼位之後症狀變了但沒變好**——原本是 `Number(\"a\")||0` 也錯，改後是「把碼位當數字加」。同一個缺陷的兩種面貌，而兩次都不報錯。 ⚠️ 2026-08-13（第六輪）誤差 8 → 7：無號型別的轉型截斷（ 是 255 不是 -1）。**原本那些型別一個都沒被認出來**，落到 numericCast 尾端的  原封回傳，而 -1 看起來就像一個成功的轉型結果。 ⚠️ 2026-08-13（第七輪）誤差 7 → 6：`sizeof(3.14)` 給 4。**`sizeof(3.14f)` 之所以「已經對了」是巧合**——float 是 4，而查不到時的退路也是 4。一個退路值若剛好等於某些正確答案，那些案例會看起來像通過的。 ⚠️ 2026-08-13（第八輪）新增 `unstableReference` 一欄：不一致時**先確認參照那一側自己是穩定的**（重跑一次比對）。讀未初始化變數是 UB，真編譯器印垃圾值而直譯器回 0——把它算成誤差是**指控一個沒有唯一答案的問題有唯一答案**，而受指控的還是比較誠實的那一邊。🔴 **而今天這一欄是 0**：那筆 UB 的垃圾值在同一台機器上是穩定的，跑兩次一樣。所以這個機制擋的是「真的每次不同」那一種（時間／位址／未初始化的堆），**能力邊界寫在那支注入裡**——沒有它，一個 0 與「什麼都沒量到」產出相同。 ⚠️ 2026-08-13（第九輪）誤差 6 → 5：`cpp:compare` 沒有問運算子多載，而 `cpp:arithmetic` 早就在做。兩個物件比較於是走 `toNumber` 都變 NaN，`==` 恆假、`!=` 恆真——**`operator==` 寫了也沒用**，而輸出是「not equal 印成 also equal」這種看起來像業務邏輯的錯。**機制本來就齊了（memberRole:\"operator\" ＋ splitMember），缺的只是這一顆去問。一個機制的消費者少一個，那個機制就對那條路徑不存在。** ⚠️ 2026-08-13（第十輪）誤差 5 → 4：**獨立的 `{ … }` 被展平了**，於是裡面宣告的物件掛到外層作用域，解構子印在 `main end` 之後。新增 `cpp:block` 膠囊 ＋ 讓 `lifter.ts` 只展平「結構的 body」（判準看父節點）。⚠️ 影響不只解構子——`int main(){ { int x=1; } cout << x; }` 在真編譯器是編譯錯誤，而展平之後會印出 1。**一個作用域少了，症狀不是「變數不見」而是「變數活太久」——而活太久不會報錯。** ⚠️ 2026-08-13（第十一輪）誤差 4 → 3：`cpp:arithmetic` 的 `+` 對字串也要串接。**與第五輪修的 `+=` 是同一個根因的另一半，而當時只修了複合形式。一個運算子有複合形式與二元形式時，修一個不會修到另一個——而它們錯的是同一件事。** ⚠️ 2026-08-13（第十二輪）誤差 3 → 2：四種命名轉型的 `char` 改回字元。`cast.ts` 的檔頭逐字說那是「**既有行為，未經檢驗是否正確**——保留，不在搬家的 diff 裡改」，而今天檢驗了：真編譯器對 `static_cast<char>(66)` 也印 `B`。**「未經檢驗是否正確」的東西被原樣保留了五個月——而保留它的那句話本身就是它可以被檢驗的證據。**",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
@@ -13,25 +13,13 @@
     "neitherRuns": 3
   },
   "mismatch": {
-    "mismatchCount": 4,
+    "mismatchCount": 2,
     "details": [
-      {
-        "corpusKey": "#include <iostream> #include <string> #include <vector> usin#gy8xq3",
-        "corpus": "#include <iostream>⏎#include <string>⏎#include <vector>⏎using namespace std;⏎⏎string reverseStr(const string& s, int idx) {⏎    if (idx == (int)s.size()) return \"\";⏎    return reverseStr(s, idx + 1) +",
-        "interpreter": "racecar -> no⏎hello -> no⏎abba -> no⏎world -> no⏎noon -> no⏎",
-        "reference": "racecar -> yes⏎hello -> no⏎abba -> yes⏎world -> no⏎noon -> yes⏎"
-      },
       {
         "corpusKey": "#include <iostream> #include <string> using namespace std; s#8cx34x",
         "corpus": "#include <iostream>⏎#include <string>⏎using namespace std;⏎⏎string replaceAll(string s, const string& from, const string& to) {⏎    if (from.empty()) return s;⏎    size_t pos = 0;⏎    while ((pos = s.",
         "interpreter": "hello world⏎aaa⏎abcabcabc⏎no match here⏎",
         "reference": "hello there⏎ba⏎XXX⏎no match here⏎"
-      },
-      {
-        "corpusKey": "#include <iostream> using namespace std; int main() { int a #1qwxvi9",
-        "corpus": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int a = 5;⏎    double b = 2.0;⏎    cout << a / 2 << endl;⏎    cout << a / b << endl;⏎    char c = 'A';⏎    int d = c + 1;⏎    cout << d << en",
-        "interpreter": "2⏎2.5⏎66⏎66⏎0⏎0.333333⏎",
-        "reference": "2⏎2.5⏎66⏎B⏎0⏎0.333333⏎"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",
