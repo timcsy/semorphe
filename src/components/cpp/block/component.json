@@ -1,0 +1,21 @@
+{
+  "conceptId": "cpp:block",
+  "layer": "lang-core",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "body": {
+      "allowed": ["statement"],
+      "min": 0
+    }
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

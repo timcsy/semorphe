@@ -14,6 +14,7 @@
     "cpp:array_at",
     "cpp:array_declare",
     "cpp:bitwise_not",
+    "cpp:block",
     "cpp:break",
     "cpp:builtin_constant",
     "cpp:cast",

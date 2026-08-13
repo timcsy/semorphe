@@ -4,17 +4,17 @@
   "imperativeOnly": [],
   "findings": [
     {
-      "type": "c_container_pop",
+      "type": "cpp_container_pop",
       "owner": "(core)",
       "bucket": "中性形態"
     },
     {
-      "type": "c_container_push",
+      "type": "cpp_container_push",
       "owner": "(core)",
       "bucket": "中性形態"
     },
     {
-      "type": "u_if_else",
+      "type": "cpp_if_else",
       "owner": "(universal)",
       "bucket": "分類排除"
     }

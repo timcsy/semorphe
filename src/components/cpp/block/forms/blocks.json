@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cpp:block",
+    "conceptId": "cpp:block",
+    "language": "cpp",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_block",
+      "message0": "%{BKY_CPP_BLOCK_MSG0}",
+      "args0": [
+        {
+          "type": "input_statement",
+          "name": "BODY"
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 210
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

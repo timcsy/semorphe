@@ -5,6 +5,8 @@ import { createNode } from '../semantic-tree'
 import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
 import { liftPostProcessors } from './post-processors'
+// ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
+import { buildBlock } from '../../components/cpp/block/lift'
 
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
@@ -225,8 +227,28 @@ export class Lifter {
       // This is handled in the comment branch above when we process the comment node
 
       // Flatten _compound nodes (one AST node → multiple semantic nodes)
+      //
+      // ⚠️ **但獨立的 `{ … }` 不能展平——它自己就是一個作用域。**
+      //
+      // `if (c) { a; b; }` 的 compound 是那個結構的 body，展平是對的。
+      // 而 `int main(){ { int x=1; } }` 裡那一對大括號**是一個作用域**：
+      // 展平之後 `x` 掛到外層，於是它活太久。
+      //
+      // ```cpp
+      // int main() { { int x = 1; } cout << x; }   // 真編譯器：編譯錯誤
+      //                                            // 展平之後：印出 1
+      // ```
+      //
+      // > **一個作用域少了，症狀不是「變數不見」而是「變數活太久」
+      // > ——而活太久不會報錯。**
+      //
+      // 判準看**父節點**：獨立區塊的父也是 compound_statement；
+      // 結構的 body 的父是 `if_statement`／`while_statement`／
+      // `function_definition`… 而那正是該展平的那些。
       if (lifted.conceptId === '_compound') {
-        results.push(...(lifted.children.body ?? []))
+        const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
+        if (standalone) results.push(buildBlock(lifted.children.body ?? []))
+        else results.push(...(lifted.children.body ?? []))
       } else {
         results.push(lifted)
       }

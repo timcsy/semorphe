@@ -163,7 +163,8 @@
           "cpp:char_is_digit",
           "cpp:char_to_upper",
           "cpp:char_to_lower",
-          "cpp:program_exit"
+          "cpp:program_exit",
+          "cpp:block"
         ],
         "children": [
           {

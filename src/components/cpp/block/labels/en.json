@@ -1,0 +1,4 @@
+{
+  "CPP_BLOCK_MSG0": "Block %1",
+  "CPP_BLOCK_TOOLTIP": "A standalone braced block — variables declared inside disappear on exit"
+}

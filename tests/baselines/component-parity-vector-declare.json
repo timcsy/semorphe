@@ -1,7 +1,7 @@
 {
   "_meta": {
     "guard": "component-parity",
-    "measuredAt": "2026-08-09",
+    "measuredAt": "2026-08-13",
     "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
   },
   "identitySet": [
@@ -14,6 +14,7 @@
     "cpp:array_at",
     "cpp:array_declare",
     "cpp:bitwise_not",
+    "cpp:block",
     "cpp:block_comment",
     "cpp:break",
     "cpp:builtin_constant",

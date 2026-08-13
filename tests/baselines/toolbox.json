@@ -57,6 +57,7 @@
         "cpp_continue",
         "cpp_loop_count",
         "cpp_loop_while",
+        "cpp_block",
         "cpp_if",
         "cpp_if",
         "cpp_if",

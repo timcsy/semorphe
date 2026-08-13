@@ -42,6 +42,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:block": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:block_comment": {
       "files": 2,
       "dirs": 1
