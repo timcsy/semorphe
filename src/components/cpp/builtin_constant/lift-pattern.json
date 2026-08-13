@@ -96,5 +96,26 @@
         "extract": "text"
       }
     ]
+  },
+  {
+    "id": "cpp_npos_qualified",
+    "astNodeType": "qualified_identifier",
+    "concept": {
+      "conceptId": "cpp:builtin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "string::npos"
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 5
   }
 ]
