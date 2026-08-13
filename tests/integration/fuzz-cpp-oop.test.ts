@@ -288,10 +288,22 @@ int main() {
 
 // --- oop_007: scoped destructor call in inner block (SEMANTIC_DIFF) ---
 
-describe.skip('[BLOCKED:cpp:destructor] fuzz: scoped destructor call in inner block (SEMANTIC_DIFF)', () => {
-  // Inner block scope { Scope s; } is flattened during lift,
-  // causing destructor to fire at end of main instead of end of block.
-  // Roundtrip is stable (gen1 == gen2), but output order differs.
+/**
+ * ⚠️ **這一組曾經是 `describe.skip` ＋ 一支 `it.todo`**，理由逐字：
+ * 「Inner block scope `{ Scope s; }` is flattened during lift, causing destructor
+ * to fire at end of main instead of end of block.」
+ *
+ * 2026-08-13 修掉了（`cpp:block` 膠囊 ＋ `lifter.ts` 只展平「結構的 body」）。
+ *
+ * 🔴 **而那筆 `it.todo` 一聲都沒出**——它沒有測試本體，所以缺陷被修好時
+ * 什麼都不會發生。是人去梳理「還有什麼沒做」時才發現它已經不是問題。
+ *
+ * > **`it.todo` 本身就是一種殼：它宣告了一個缺陷，
+ * > 而沒有任何機構在看那個缺陷還在不在。**
+ *
+ * 見 `experience.md` 的「量測工具自己量錯」那條（第三個實例的另一半）。
+ */
+describe('fuzz: scoped destructor call in inner block', () => {
   const code = `#include <iostream>
 using namespace std;
 class Scope {
@@ -313,7 +325,27 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp:destructor] should preserve inner block scope for correct destructor ordering')
+  it('★ 獨立區塊有自己的作用域——解構子在區塊結束時跑，不是 main 結束', async () => {
+    const i = new SemanticInterpreter({ maxSteps: 100000 })
+    await i.execute(lifter.lift(tsParser.parse(code).rootNode as never) as never)
+    // ⚠️ 順序是重點：`exit` 必須在 `main end` **之前**。
+    // 展平之後兩者都會印，只是順序反了——**而「都印了」看起來像通過**。
+    expect(i.getOutput().join('')).toBe('main start\nenter\ninner\nexit\nmain end\n')
+  })
+
+  it('★ 反向：`if` 的 body 不得多一層作用域', async () => {
+    // 沒有這一支的話，一個「所有 compound 都不展平」的實作也會通過上一支
+    // ——而那會讓 `if (c) { int x=1; x++; }` 的 x 在每一輪重新宣告。
+    const i = new SemanticInterpreter({ maxSteps: 100000 })
+    const src = `#include <iostream>\nusing namespace std;\nint main(){ int n=0; for(int i=0;i<3;i++){ n+=i; } cout << n; return 0; }`
+    await i.execute(lifter.lift(tsParser.parse(src).rootNode as never) as never)
+    expect(i.getOutput().join('')).toBe('3')
+  })
+
+  it('roundtrip is stable', () => {
+    const g1 = roundTrip(code)
+    expect(roundTrip(g1)).toBe(g1)
+  })
 })
 
 // --- oop_008: class with standalone function using member access ---
