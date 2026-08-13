@@ -1,19 +1,5 @@
 [
   {
-    "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#13z6sss",
-    "signal": "直「Alpha: 8⏎Digit: 0⏎Other: 9⏎」 參「Alpha: 8⏎Digit: 6⏎Other: 3⏎」",
-    "decision": "真誤差",
-    "reason": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
-    "rootCause": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
-  },
-  {
-    "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#15fugmd",
-    "signal": "直「hello world!⏎」 參「hEllO wOrlD!⏎」",
-    "decision": "真誤差",
-    "reason": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）",
-    "rootCause": "cctype 相關：s.size() 已修，這一筆的根因不同（可能是 islower 未定義或字元轉型）"
-  },
-  {
     "corpusKey": "#include <iostream> #include <cctype> #include <string> usin#1hz1snc",
     "signal": "直「Digits: 15⏎Sum: -225⏎」 參「Digits: 12345⏎Sum: 15⏎」",
     "decision": "真誤差",
@@ -65,20 +51,6 @@
   {
     "corpusKey": "#include <iostream> using namespace std; int main() { int a #4f4o9q",
     "signal": "直「8⏎14⏎6⏎255⏎5⏎1⏎4⏎-1⏎」 參「8⏎14⏎6⏎255⏎5⏎1⏎4⏎255⏎」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
-    "corpusKey": "#include <iostream> #include <string> using namespace std; i#lti6mm",
-    "signal": "直「」 參「starts with A」",
-    "decision": "真誤差",
-    "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
-    "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
-  },
-  {
-    "corpusKey": "#include <iostream> #include <string> using namespace std; i#15t2v9g",
-    "signal": "直「0」 參「3」",
     "decision": "真誤差",
     "reason": "未定位——單獨測通過，組合才壞（條件性正確）",
     "rootCause": "未定位——單獨測通過，組合才壞（條件性正確）"
