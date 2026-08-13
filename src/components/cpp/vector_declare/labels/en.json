@@ -6,5 +6,8 @@
   "CPP_VECTOR_DECLARE_TYPE_DOUBLE": "double (precise decimal)",
   "CPP_VECTOR_DECLARE_TYPE_CHAR": "char (character)",
   "CPP_VECTOR_DECLARE_TYPE_STRING": "string (text)",
-  "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long (large integer)"
+  "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
+  "CPP_VECTOR_DECLARE_CREATE": "create",
+  "CPP_VECTOR_DECLARE_LIST": "list",
+  "CPP_VECTOR_DECLARE_INIT": "initial values"
 }

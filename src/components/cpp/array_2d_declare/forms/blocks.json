@@ -7,42 +7,6 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_array_2d_declare",
-      "message0": "%{BKY_C_ARRAY_2D_DECLARE_MSG0}",
-      "args0": [
-        {
-          "type": "field_dropdown",
-          "name": "TYPE",
-          "options": [
-            [
-              "%{BKY_U_VAR_DECLARE_TYPE_INT}",
-              "int"
-            ],
-            [
-              "%{BKY_U_VAR_DECLARE_TYPE_DOUBLE}",
-              "double"
-            ],
-            [
-              "%{BKY_U_VAR_DECLARE_TYPE_CHAR}",
-              "char"
-            ]
-          ]
-        },
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "arr"
-        },
-        {
-          "type": "field_input",
-          "name": "ROWS",
-          "text": "3"
-        },
-        {
-          "type": "field_input",
-          "name": "COLS",
-          "text": "4"
-        }
-      ],
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -60,7 +24,15 @@
         "NAME": "name",
         "ROWS": "rows",
         "TYPE": "type"
-      }
-    }
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "⚠️ **命令式註冊**（`ui/block-registrar.ts`）——初始值需要動態插槽，而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。"
   }
 ]

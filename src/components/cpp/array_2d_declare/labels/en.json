@@ -3,5 +3,10 @@
   "U_VAR_DECLARE_TYPE_DOUBLE": "double (precise decimal)",
   "U_VAR_DECLARE_TYPE_CHAR": "char (character)",
   "C_ARRAY_2D_DECLARE_MSG0": "create %1 2D array %2 [ %3 ][ %4 ]",
-  "C_ARRAY_2D_DECLARE_TOOLTIP": "Create a two-dimensional array (a grid of values)"
+  "C_ARRAY_2D_DECLARE_TOOLTIP": "Create a two-dimensional array (a grid of values)",
+  "C_ARRAY_2D_DECLARE_CREATE": "create",
+  "C_ARRAY_2D_DECLARE_ARRAY": "2-D array",
+  "C_ARRAY_2D_DECLARE_ROWS": "rows",
+  "C_ARRAY_2D_DECLARE_COLS": "cols",
+  "C_ARRAY_2D_DECLARE_INIT": "initial values"
 }

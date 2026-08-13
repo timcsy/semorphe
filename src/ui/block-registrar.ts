@@ -496,6 +496,161 @@ export class BlockRegistrar {
         },
       }
 
+    // cpp_array_2d_declare —— `int a[2][3] = {{1,2,3},{4,5,6}}`
+    // ⚠️ 命令式，理由與 `cpp_array_declare` 相同（初始值要動態插槽）。
+    // 🔴 而它的插槽接的是**一顆 `cpp_initializer_list` 積木**——那就是巢狀。
+    {
+      Blockly.Blocks['cpp_array_2d_declare'] = {
+        itemCount_: 0,
+        init: function (this: any) {
+          this.itemCount_ = 0
+          this.appendDummyInput('HEAD')
+            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_CREATE'] || '建立')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['_VAR_DECLARE_TYPE_INT'] || 'int', 'int'],
+              [Blockly.Msg['_VAR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
+              [Blockly.Msg['_VAR_DECLARE_TYPE_CHAR'] || 'char', 'char']
+            ]), 'TYPE')
+            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_ARRAY'] || '二維陣列')
+            .appendField(new Blockly.FieldTextInput('arr'), 'NAME')
+            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_ROWS'] || '列數')
+            .appendField(new Blockly.FieldTextInput('3'), 'ROWS')
+            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_COLS'] || '行數')
+            .appendField(new Blockly.FieldTextInput('4'), 'COLS')
+          this.appendDummyInput('TAIL')
+            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_INIT'] || '初始值')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.arrays)
+          this.setTooltip(Blockly.Msg['C_ARRAY_2D_DECLARE_TOOLTIP'] || '建立一個二維陣列')
+        },
+        plus_: function (this: any) {
+          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
+          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          this.itemCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.itemCount_ <= 0) return
+          this.itemCount_--
+          this.removeInput('EXPR' + this.itemCount_)
+          setMinusState(this, this.itemCount_ <= 0)
+        },
+        saveExtraState: function (this: any) { return { itemCount: this.itemCount_ } },
+        loadExtraState: function (this: any, state: { itemCount?: number }) {
+          const count = state?.itemCount ?? 0
+          while (this.itemCount_ < count) this.plus_()
+        },
+      }
+    }
+
+    // cpp_vector_declare —— `vector<int> v = {1,2,3}`
+    {
+      Blockly.Blocks['cpp_vector_declare'] = {
+        itemCount_: 0,
+        init: function (this: any) {
+          this.itemCount_ = 0
+          this.appendDummyInput('HEAD')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_CREATE'] || '建立')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_INT'] || 'int', 'int'],
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_CHAR'] || 'char', 'char'],
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_STRING'] || 'std::string', 'std::string'],
+              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long']
+            ]), 'TYPE')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_LIST'] || '列表')
+            .appendField(new Blockly.FieldTextInput('vec'), 'NAME')
+          this.appendDummyInput('TAIL')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_INIT'] || '初始值')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.containers)
+          this.setTooltip(Blockly.Msg['CPP_VECTOR_DECLARE_TOOLTIP'] || '建立一個列表')
+        },
+        plus_: function (this: any) {
+          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
+          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          this.itemCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.itemCount_ <= 0) return
+          this.itemCount_--
+          this.removeInput('EXPR' + this.itemCount_)
+          setMinusState(this, this.itemCount_ <= 0)
+        },
+        saveExtraState: function (this: any) { return { itemCount: this.itemCount_ } },
+        loadExtraState: function (this: any, state: { itemCount?: number }) {
+          const count = state?.itemCount ?? 0
+          while (this.itemCount_ < count) this.plus_()
+        },
+      }
+    }
+
+    // cpp_array_declare —— `int a[3] = {1,2,3}`
+    //
+    // ⚠️ **從宣告式改成命令式**（2026-08-14），理由是初始值需要**動態插槽**。
+    // 🔴 不改的話 `= {1,2,3}` 在積木上不存在，而**一動積木重生成就掉了**
+    // ——使用者開瀏覽器實測撞到的正是這個。
+    {
+      Blockly.Blocks['cpp_array_declare'] = {
+        itemCount_: 0,
+        init: function (this: any) {
+          this.itemCount_ = 0
+          this.appendDummyInput('HEAD')
+            .appendField(Blockly.Msg['U_ARRAY_DECLARE_CREATE'] || '建立')
+            .appendField(new Blockly.FieldDropdown([
+              [Blockly.Msg['_ARRAY_DECLARE_TYPE_INT'] || 'int', 'int'],
+              [Blockly.Msg['_ARRAY_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
+              [Blockly.Msg['_ARRAY_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
+              [Blockly.Msg['_ARRAY_DECLARE_TYPE_CHAR'] || 'char', 'char'],
+              [Blockly.Msg['_ARRAY_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long']
+            ]), 'TYPE')
+            .appendField(Blockly.Msg['U_ARRAY_DECLARE_ARRAY'] || '陣列')
+            .appendField(new Blockly.FieldTextInput('arr'), 'NAME')
+          this.appendValueInput('SIZE')
+            .setCheck('Expression')
+            .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE'] || '大小')
+          this.appendDummyInput('TAIL')
+            .appendField(Blockly.Msg['U_ARRAY_DECLARE_INIT'] || '初始值')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour(CATEGORY_COLORS.arrays)
+          this.setTooltip(Blockly.Msg['U_ARRAY_DECLARE_TOOLTIP'] || '建立一個固定大小的陣列')
+        },
+        plus_: function (this: any) {
+          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
+          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          this.itemCount_++
+          setMinusState(this, false)
+        },
+        minus_: function (this: any) {
+          if (this.itemCount_ <= 0) return
+          this.itemCount_--
+          this.removeInput('EXPR' + this.itemCount_)
+          setMinusState(this, this.itemCount_ <= 0)
+        },
+        saveExtraState: function (this: any) {
+          return { itemCount: this.itemCount_ }
+        },
+        loadExtraState: function (this: any, state: { itemCount?: number }) {
+          const count = state?.itemCount ?? 0
+          while (this.itemCount_ < count) this.plus_()
+        },
+      }
+    }
+
     // cpp_initializer_list —— `{1, 2, 3}`
     //
     // ⚠️ **動態插槽必須是命令式的**：`+`／`-` 按鈕要在 `init` 裡建，

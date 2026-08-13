@@ -7,45 +7,6 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_array_declare",
-      "message0": "%{BKY_U_ARRAY_DECLARE_MSG0}",
-      "args0": [
-        {
-          "type": "field_dropdown",
-          "name": "TYPE",
-          "options": [
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_INT}",
-              "int"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_FLOAT}",
-              "float"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_DOUBLE}",
-              "double"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_CHAR}",
-              "char"
-            ],
-            [
-              "%{BKY_U_ARRAY_DECLARE_TYPE_LONG_LONG}",
-              "long long"
-            ]
-          ]
-        },
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "arr"
-        },
-        {
-          "type": "input_value",
-          "name": "SIZE",
-          "check": "Expression"
-        }
-      ],
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
@@ -59,7 +20,15 @@
       },
       "inputs": {
         "SIZE": "size"
-      }
-    }
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "⚠️ **改成命令式註冊**（`ui/block-registrar.ts`），因為初始值需要**動態插槽**（`+`／`-` 按鈕），而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。\n🔴 不改的話 `= {1,2,3}` 在積木上不存在——**一動積木重生成就掉了**。"
   }
 ]

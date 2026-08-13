@@ -5,5 +5,9 @@
   "U_ARRAY_DECLARE_TYPE_FLOAT": "float (decimal)",
   "U_ARRAY_DECLARE_TYPE_DOUBLE": "double (precise decimal)",
   "U_ARRAY_DECLARE_TYPE_CHAR": "char (character)",
-  "U_ARRAY_DECLARE_TYPE_LONG_LONG": "long long (large integer)"
+  "U_ARRAY_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
+  "U_ARRAY_DECLARE_CREATE": "create",
+  "U_ARRAY_DECLARE_ARRAY": "array",
+  "U_ARRAY_DECLARE_SIZE": "size",
+  "U_ARRAY_DECLARE_INIT": "initial values"
 }

@@ -5,5 +5,9 @@
   "U_ARRAY_DECLARE_TYPE_FLOAT": "float（小數）",
   "U_ARRAY_DECLARE_TYPE_DOUBLE": "double（精確小數）",
   "U_ARRAY_DECLARE_TYPE_CHAR": "char（字元）",
-  "U_ARRAY_DECLARE_TYPE_LONG_LONG": "long long（大整數）"
+  "U_ARRAY_DECLARE_TYPE_LONG_LONG": "long long（大整數）",
+  "U_ARRAY_DECLARE_CREATE": "建立",
+  "U_ARRAY_DECLARE_ARRAY": "陣列",
+  "U_ARRAY_DECLARE_SIZE": "大小",
+  "U_ARRAY_DECLARE_INIT": "初始值"
 }

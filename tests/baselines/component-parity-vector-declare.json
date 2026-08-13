@@ -275,6 +275,9 @@
   },
   "labels": {
     "zh-TW": {
+      "CPP_VECTOR_DECLARE_CREATE": "建立",
+      "CPP_VECTOR_DECLARE_INIT": "初始值",
+      "CPP_VECTOR_DECLARE_LIST": "列表",
       "CPP_VECTOR_DECLARE_MSG0": "建立 %1 列表 %2",
       "CPP_VECTOR_DECLARE_TOOLTIP": "建立一個列表（可變長度的陣列），可以隨時加入或移除元素",
       "CPP_VECTOR_DECLARE_TYPE_CHAR": "char（字元）",
@@ -285,6 +288,9 @@
       "CPP_VECTOR_DECLARE_TYPE_STRING": "string（文字）"
     },
     "en": {
+      "CPP_VECTOR_DECLARE_CREATE": "create",
+      "CPP_VECTOR_DECLARE_INIT": "initial values",
+      "CPP_VECTOR_DECLARE_LIST": "list",
       "CPP_VECTOR_DECLARE_MSG0": "Create %1 dynamic list %2 (vector)",
       "CPP_VECTOR_DECLARE_TOOLTIP": "Create a vector (a resizable array) that can grow and shrink as elements are added or removed",
       "CPP_VECTOR_DECLARE_TYPE_CHAR": "char (character)",
