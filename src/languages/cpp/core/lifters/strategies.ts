@@ -724,6 +724,21 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     )
     const t = typeParam?.namedChildren.find(c => c.type === 'type_identifier')?.text ?? 'T'
 
+    // `template<typename T> class C { … };` —— **樣板類別**。
+    //
+    // 🔴 這裡原本 `return null`，於是整段降級成 `unresolved`
+    // （第三十二條護欄的最後 1 段缺口）。
+    //
+    // 處置：**把類別本體交給既有的 class 路徑**。樣板參數 `T` 在這個直譯器裡
+    // 是**裝飾**——型別不參與求值，`vector<T> data` 與 `vector<int> data`
+    // 執行起來一樣（見 `defaultValue` 對帶尖括號型別的處置）。
+    //
+    // ⚠️ 所以這不是「支援泛型」，是**讓它跑得動**。真的泛型要做型別替換與
+    // 實例化，而那在一個型別是裝飾的直譯器裡沒有可觀察的差別——
+    // 有差別的那天（型別檢查、多載解析）再說。
+    const classSpec = node.namedChildren.find(c => c.type === 'class_specifier' || c.type === 'struct_specifier')
+    if (classSpec) return ctx.lift(classSpec)
+
     const funcDef = node.namedChildren.find(c => c.type === 'function_definition')
     if (!funcDef) return null
 

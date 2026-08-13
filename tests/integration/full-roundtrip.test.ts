@@ -193,8 +193,15 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
 
   describe('Degradation', () => {
     it('unknown construct degrades to raw_code', () => {
-      const code = roundTripCode('template<typename T> class Foo {};')
-      expect(code).toContain('template')
+      // ⚠️ **這裡原本用 `template<typename T> class Foo {};`**，而 2026-08-13
+      // 樣板類別被辨識出來了（第三十二條護欄的最後一段缺口）。
+      //
+      // > **一支「未知構造要降級」的測試，會在那個構造被支援的那天變紅
+      // > ——而那是好消息。它需要的是一個新的未知例子，不是把支援拿掉。**
+      //
+      // 換成 C++20 的 concept——今天真的不支援，而它的語法夠獨特。
+      const code = roundTripCode('template<typename T> concept Addable = requires(T a) { a + a; };')
+      expect(code).toContain('concept')
     })
   })
 

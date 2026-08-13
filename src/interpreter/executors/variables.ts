@@ -18,7 +18,23 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
   }
 
   const name = String(node.properties.name)
-  const type = String(node.properties.type || 'int')
+  const declaredType = String(node.properties.type || 'int')
+
+  // `Container<int> c;` —— **樣板實例化：查型別時剝掉樣板引數**。
+  //
+  // 🔴 `Container<int>` 這個字串在 `structs` 裡查不到（登記的名字是
+  // `Container`），於是它落到下面的 `defaultValue` 變成 `int 0`，
+  // 而症狀要等到 `c.add(42)` 才出現：「c（不是一個物件）」。
+  //
+  // ⚠️ 剝掉引數是**在這個直譯器裡**才成立的簡化——型別不參與求值，
+  // `Container<int>` 與 `Container<string>` 執行起來是同一個型別。
+  // 真的泛型要為每組引數各實例化一份，而那要等到型別有可觀察的差別
+  // （型別檢查、多載解析）才有意義。
+  const type = ctx.structs.has(declaredType)
+    ? declaredType
+    : declaredType.includes('<') && ctx.structs.has(declaredType.slice(0, declaredType.indexOf('<')))
+      ? declaredType.slice(0, declaredType.indexOf('<'))
+      : declaredType
 
   // 結構型別的變數——欄位遞迴取得預設值。
   // 放在 initializer 判斷**之前**，因為 `Point p;`（無初始化）正是最常見的寫法，
