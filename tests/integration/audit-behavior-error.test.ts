@@ -90,6 +90,14 @@ interface Baseline {
   mismatch: { mismatchCount: number; details: details[] }
   /** 參照跑得動而直譯器跑不動的那些——**功能缺口**，與 `mismatch`（誤差）意義相反。 */
   gaps: { gapCount: number; byStage: Record<string, number>; details: gapDetail[] }
+  /**
+   * 參照自己每次跑都不同的那幾段——UB（讀未初始化變數之類）。
+   *
+   * ⚠️ **必須進基線**：不記的話「加一段 UB 語料」就能悄悄把一筆誤差
+   * 轉成不可判定，而報表上看起來像修好了一個 bug。
+   * 與「分母必須進基線」同一條理由。
+   */
+  unstableReference: { count: number; details: { corpusKey: string; corpus: string; first: string; second: string }[] }
 }
 
 let parser: Parser
@@ -207,6 +215,8 @@ interface result {
   neitherRuns: number
   details: details[]
   gaps: gapDetail[]
+  /** 參照自己每次跑都不同的那幾段——UB，不是誤差。 */
+  unstableReference: { corpusKey: string; corpus: string; first: string; second: string }[]
 }
 
 /**
@@ -227,7 +237,7 @@ const undecidable = (c: string): boolean => /\bcin\s*>>|\bscanf\s*\(|getline\s*\
 type referenceRun = (code: string) => string | null
 
 async function measure(corpus: readonly string[], reference?: referenceRun): Promise<result> {
-  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [], gaps: [] }
+  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [], gaps: [], unstableReference: [] }
   const decidable = corpus.filter((c) => !undecidable(c))
   r.undecidable = corpus.length - decidable.length
   // 參照那一側**並行**跑（8 路）。序列跑 300 段約 8 分鐘，而
@@ -239,6 +249,25 @@ async function measure(corpus: readonly string[], reference?: referenceRun): Pro
     const outcome = await runInterpreter(c)
     const directOutput = outcome.output
     if (refOutput !== null && directOutput !== null) {
+      // ⚠️ **不一致時，先確認參照那一側自己是穩定的。**
+      //
+      // 讀未初始化變數是 UB：真編譯器每次跑印出的垃圾值不同，而直譯器
+      // 老老實實回 0。把它算成「誤差」是**指控一個沒有唯一答案的問題有唯一答案**
+      // ——而受指控的還是比較誠實的那一邊。
+      //
+      // 只對不一致的那幾筆重跑（今天 6 筆），所以成本可以忽略。
+      // ⚠️ 這一步**不能對全部語料做**：那會讓分母也跟著抖，而分母抖動會
+      // 讓「加一段不穩定的語料」變成一種改善（`build-guardrail`：縮分母比修分子容易）。
+      if (refOutput.trim() !== directOutput.trim()) {
+        // ⚠️ 注入那一側也要走同一條路——否則這個機制只有正式量測跑得到，
+        // 而正式量測今天是 0 段（見那支注入的檔頭）。**沒有注入的機制等於沒有機制。**
+        const again = reference ? reference(c) : (await runCppBatch([c]))[0]
+        if (again !== null && again.trim() !== refOutput.trim()) {
+          r.undecidable++
+          r.unstableReference.push({ corpusKey: key(c), corpus: c.slice(0, 200).replace(/\n/g, '⏎'), first: refOutput.slice(0, 60), second: again.slice(0, 60) })
+          continue
+        }
+      }
       r.bothRun++
       if (refOutput.trim() !== directOutput.trim()) {
         r.details.push({
@@ -284,6 +313,27 @@ describe('第三十二條護欄：行為的誤差', () => {
   })
 
   // ── 健康檢查：錨在分母（輸入量），不錨在不一致筆數 ──────────────────
+  it('★ 注入：參照自己每次跑都不同 → 歸「不可判定」，不得算成誤差', async () => {
+    // ⚠️ **今天真實語料上這一欄是 0**，所以只有這支注入證明機制會動。
+    //
+    // 那筆讀未初始化變數的 UB（直譯器 0、參照 38518960）**沒有被抓到**，
+    // 因為同一台機器上的垃圾值是穩定的——跑兩次一樣。
+    //
+    // > **一個第一次跑就是 0 的檢查，與一個什麼都沒量到的檢查產出相同
+    // > ——除非有注入證明它會動。**
+    //
+    // 所以這個機制擋的是**真的每次不同**的那一種（時間、位址、未初始化的堆），
+    // 而不是所有 UB。能力邊界寫在這裡。
+    const program = '#include <iostream>\nusing namespace std;\nint main(){ int x; cout << x << endl; }'
+    let n = 0
+    const drifting = (): string => `${(n += 1000)}\n`
+    const r = await measure([program], drifting)
+    expect(r.details, 'UB 被算成誤差了——那是指控一個沒有唯一答案的問題有唯一答案').toHaveLength(0)
+    expect(r.unstableReference, '參照不穩定卻沒有被記下來').toHaveLength(1)
+    expect(r.undecidable, '它必須落進不可判定那一欄').toBe(1)
+    expect(r.bothRun, '不可判定的不得同時算進分母').toBe(0)
+  })
+
   it('★ 健康檢查：語料真的載入且兩邊都跑得動', async () => {
     const corpus = fetchCorpus()
     expect(corpus.length, '一段完整程式都沒撈到 → 量測壞了，不是世界長這樣').toBeGreaterThan(100)
@@ -344,6 +394,9 @@ describe('第三十二條護欄：行為的誤差', () => {
       '',
       ...toReview.slice(0, 30).map((d, i) => `  ${i + 1}. ${d.corpusKey}\n       直譯器「${d.interpreter}」 參照「${d.reference}」`),
       '',
+      `不穩   ${r.unstableReference.length} 段**參照自己每次跑都不同**（UB）——那不是誤差，是那段程式沒有唯一答案`,
+      ...r.unstableReference.map((u) => `  • ${u.corpusKey}\n       第一次「${u.first}」 第二次「${u.second}」`),
+      '',
       `缺口   ${r.gaps.length} 段參照跑得動而直譯器跑不動——**模型還沒長到那裡，不是它在騙人**`,
       `       階段分布：${Object.entries(gapsByStage(r.gaps)).map(([s, n]) => `${s}=${n}`).join('｜') || '（無）'}`,
       ...r.gaps.slice(0, 20).map((g, i) => `  ${i + 1}. [${g.stage}] ${g.message || '（無訊息）'}\n       ${g.corpus.slice(0, 90)}`),
@@ -376,6 +429,7 @@ describe('第三十二條護欄：行為的誤差', () => {
         },
         mismatch: { mismatchCount: r.details.length, details: r.details },
         gaps: { gapCount: r.gaps.length, byStage: gapsByStage(r.gaps), details: r.gaps },
+        unstableReference: { count: r.unstableReference.length, details: r.unstableReference },
       })
       return
     }
