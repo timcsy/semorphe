@@ -16,6 +16,10 @@ import { LiftContextData } from '../../src/core/lift/lift-context'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { tryAstBranches } from '../../src/core/component/lift-branches'
+// ⚠️ 觸發膠囊的 lift 註冊——`registerAstBranch` 的分支住在膠囊裡，
+// 不載入的話 `tryAstBranches` 永遠回 null（而那與「判別寫錯了」長得一樣）。
+import { createTestLifter } from '../helpers/setup-lifter'
 import type { StylePreset } from '../../src/core/types'
 
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
@@ -62,6 +66,7 @@ describe('L2 Block Roundtrip', () => {
   }
 
   beforeAll(() => {
+    createTestLifter() // ⚠️ 只為了觸發膠囊的 lift 註冊（見檔頭 import）
     lifter = new PatternLifter()
     generator = new TemplateGenerator()
     renderer = new PatternRenderer()
@@ -246,7 +251,17 @@ describe('L2 Block Roundtrip', () => {
       expect(code).toBe('point.y')
     })
 
-    it('should lift field_expression with . operator', () => {
+    it('should lift field_expression with . operator（走分支，不走 astPattern）', () => {
+      // ⚠️ **這支原本測的是 `blocks.json` 的 `astPattern`，而那份宣告在
+      // 2026-08-13 被移除了**——同一顆元件有**兩份 lift 宣告**
+      //（`astPattern` ＋ `registerAstBranch`），而 astPattern 優先，
+      // 於是 `lift.ts` 那一份**從來沒有被呼叫過**（實測：加 console.log 零輸出）。
+      //
+      // 代價很具體：astPattern 的 `extract: "text"` 把 `v[0].first` 的 obj 抽成
+      // 字串 `"v[0]"`，執行器拿去查 scope 查不到 → `UNDECLARED_VAR`
+      // （第三十二條護欄的 1 段缺口）。
+      //
+      // > **兩份宣告同時存在時，輸的那一份不會報錯——它只是安靜地沒有作用。**
       const obj = mockNode('identifier', 'p')
       const member = mockNode('field_identifier', 'x')
       const ast = mockNode('field_expression', 'p.x', [obj, unnamed('.', '.'), member], {
@@ -254,9 +269,13 @@ describe('L2 Block Roundtrip', () => {
         field: member,
         operator: unnamed('.', '.'),
       })
-      const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem).not.toBeNull()
+      const sem = tryAstBranches('field_expression', ast, liftCtx())
+      expect(sem, 'field_expression 的分支沒有認領它').not.toBeNull()
       expect(sem!.conceptId).toBe('cpp:struct_at_member')
+      expect(sem!.properties.obj).toBe('p')
+      // ★ 反向：單純的識別字仍然走**字串屬性**，不掛接點
+      // ——掛了的話 `p.first` 這種最常見的寫法會多一層而產生器讀不到。
+      expect(sem!.children?.obj).toBeUndefined()
     })
   })
 

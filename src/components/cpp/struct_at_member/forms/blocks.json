@@ -30,27 +30,6 @@
       "imports": [],
       "order": 20
     },
-    "astPattern": {
-      "nodeType": "field_expression",
-      "constraints": [
-        {
-          "field": "operator",
-          "text": "."
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "obj",
-          "ast": "argument",
-          "extract": "text"
-        },
-        {
-          "semantic": "member",
-          "ast": "field",
-          "extract": "text"
-        }
-      ]
-    },
     "renderMapping": {
       "fields": {
         "MEMBER": "member",
