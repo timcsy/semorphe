@@ -178,6 +178,18 @@ export class StructRegistry {
   }
 
   /**
+   * 這個型別（含基底鏈）的欄位，**按宣告順序**。
+   *
+   * 聚合初始化（`S s = {"a", 90};`）要的就是這個順序——C++ 的規則是
+   * 「按成員宣告順序」，基底在前。
+   */
+  fieldsOf(name: string): FieldDecl[] {
+    const out: FieldDecl[] = []
+    for (const t of [...this.chain(name)].reverse()) out.push(...(this.types.get(t) ?? []))
+    return out
+  }
+
+  /**
    * 建一個實例，欄位取得預設值。
    *
    * 巢狀結構遞迴建立。`seen` 擋住自我參照（`struct A { A a; }`）——

@@ -1,6 +1,7 @@
 /** `cpp:array_declare` 的 **execute** 路——從共用檔原封剪過來（批次第十八批：四個重複建立點收成一個建構子）。 */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
+import { evalInitializer } from '../../../languages/cpp/core/runtime/aggregate'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:array_declare', async (node, ctx) => {
@@ -57,11 +58,15 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
         // 而不是 `a`，`isdigit(s[0])` 也會因為看到 `'9'` 而回傳真。
         //
         // **程式跑完、印出東西、而它是錯的**——這正是「靜默降級」的形狀。
-        elements[i] = ctx.coerceType(await ctx.evaluate(init[i]), type)
+        //
+        // ⚠️ `evalInitializer` 而不是 `evaluate`：元素本身可能是一層 `{…}`
+        // （`S arr[2] = {{"a",90},{"b",80}}`、多維陣列的內層），
+        // 而 `{…}` 在執行那一路**沒有任何人認得**——直接丟 UNKNOWN_CONCEPT。
+        elements[i] = await evalInitializer(init[i], type, ctx)
       }
       // 宣告時沒寫大小（`int a[] = {1,2,3}`）→ 長度由初始值決定
       if (size === 0 && init.length > 0) {
-        for (const n of init) elements.push(await ctx.evaluate(n))
+        for (const n of init) elements.push(await evalInitializer(n, type, ctx))
       }
 
       ctx.scope.declare(name, { type: 'array', value: elements })

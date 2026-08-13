@@ -145,6 +145,26 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('9')
   })
 
+  // ── 聚合初始化：`{…}` 在執行那一路本來沒有人認得 ────────────────────
+  //
+  // 辨識那一路產出 `cpp_initializer_list`（結構節點），而執行器只認元件
+  // ——於是巢狀的 `{…}` 直接丟 `UNKNOWN_CONCEPT`。三種形狀共用一支
+  // `evalInitializer`（`core/runtime/aggregate.ts`）。
+  it('★ 結構體陣列的聚合初始化', async () => {
+    expect(
+      await run(
+        `#include <iostream>\n#include <string>\nusing namespace std;\n`,
+        `struct S { string n; int s; }; int main(){ S arr[2] = {{"a",90},{"b",80}}; cout << arr[0].n << arr[1].s; }`,
+      ),
+    ).toBe('a80')
+  })
+
+  it('★ 聚合初始化按成員宣告順序填，不是按名字', async () => {
+    expect(
+      await run(IO, `struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a[0].x << a[0].y; }`),
+    ).toBe('79')
+  })
+
   // ── `char` 在算術情境是字元碼（同一輪修的另一個根因）───────────────
   it('★ 明確轉型讀得到 char 的字元碼', async () => {
     // 🔴 修之前 `toNumber` 走 `Number('A') || 0` 給 **0**，於是印出 `'\0'`
