@@ -129,3 +129,65 @@ test('同一則診斷在兩個面板產出不同的訊息', async ({ page }) => 
       `實際上兩邊都是「${r.block}」。`,
   ).not.toBe(r.block)
 })
+
+/**
+ * **少一個分號要是【錯誤】，不是一條灰色的提示。**（階段 6.6 驗收 4.5）
+ *
+ * ## 為什麼這一支比前兩支重要
+ *
+ * 前兩支測的是「空插槽」——而**空插槽是積木側才存在的狀態**，
+ * 學生要拖錯積木才會遇到。少一個分號是**每個人第一週都會撞**的。
+ *
+ * 而它今天走的是**殘差通道**：`MarkerSeverity.Info` ＋ owner `semorphe-residual`，
+ * 訊息說「這一段的語法不完整」。**上一輪做好的整套診斷機制，一點都沒套到它身上。**
+ *
+ * ## 用 DOM 的 class 驗，而不是問 API
+ *
+ * Monaco 依 severity 給不同的 class：`squiggly-error` / `squiggly-warning` /
+ * `squiggly-info`。**那正是使用者眼睛看到的東西**，而 `window.monaco` 不存在
+ * （這個專案沒有把它掛上全域）。
+ */
+test('少一個分號 → 程式碼面板出現【錯誤級】波浪', async ({ page }) => {
+  await freshApp(page)
+
+  await page.evaluate(() => {
+    const app = (window as never as { __app: any }).__app
+    // ⚠️ 少了 `int x = 1` 後面那個分號——第一週最常見的那個錯
+    // ⚠️ **樣本是挑過的，而挑的理由要留下來。**
+    // 實測三種「少分號」的形狀，只有這一種今天會被 lift 標記：
+    // ```
+    // int x = 1 ⏎ return 0;     → 樹上【沒有】 degradationCause  ❌
+    // int x = 1 ⏎ cout << x;    → cpp:var_declare/syntax_error   ✅ 用這個
+    // int x = 1 ⏎ int y = 2;    → 樹上【沒有】 degradationCause  ❌
+    // ```
+    // 那是**辨識那一層的涵蓋缺口**（驗收③ 的範圍），不是本支要測的東西
+    // ——本支測的是「已經被標記的語法錯誤，有沒有走診斷通道」。
+    // 🔴 而那個缺口本身要另外追，見 `knowledge/history/063`。
+    app.monacoPanel?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
+  })
+  await page.getByText('程式碼→積木').click()
+  await page.waitForFunction(
+    () => ((window as never as { __app: any }).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0) > 0,
+    undefined, { timeout: 30_000 },
+  )
+  await page.waitForTimeout(800)
+
+  const seen = await page.evaluate(() => ({
+    any: document.querySelectorAll('[class*=squiggly]').length,
+    error: document.querySelectorAll('.squiggly-error').length,
+    info: document.querySelectorAll('.squiggly-info').length,
+  }))
+
+  // ★ 入口條件：錨在**有沒有標記**（合成量），不錨在 severity
+  //   ——severity 正是這支要推動的東西，拿它當入口條件會讓測試自我實現。
+  expect(seen.any, '程式碼面板一個標記都沒有 → 這支測不到任何東西').toBeGreaterThan(0)
+
+  expect(
+    seen.error,
+    '🔴 **少一個分號沒有被當成錯誤**——這是驗收 4.5：\n' +
+      '它今天走殘差通道（Info 級、灰色），而那條通道的主詞是「我還不認得」。\n' +
+      '⚠️ 語法錯誤是【使用者寫壞了】，不是【我們沒長到】。\n' +
+      `實際上：error ${seen.error} 個、info ${seen.info} 個。`,
+  ).toBeGreaterThan(0)
+})
+

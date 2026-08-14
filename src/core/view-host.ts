@@ -158,5 +158,11 @@ export interface DiagnosticsEvent {
     severity: 'warning' | 'error'
     rule: string
     params: Record<string, string | number>
+    /**
+     * 判定來源。⚠️ **這一格 2026-08-14 加上時 tsc 一聲不吭**——
+     * 這個內嵌型別是**另一份宣告**，結構上寬鬆地接受了多出來的欄位。
+     * 少了它視圖就讀不到來源，而編譯器不會說。
+     */
+    source: 'component' | 'parser'
   }[]
 }

@@ -6,7 +6,8 @@ import type { SyncError } from './sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar } from './toolbar/style-action-bar'
-import { runDiagnostics } from '../core/diagnostics'
+import { runDiagnostics, diagnosticsFromTree } from '../core/diagnostics'
+import type { SemanticNode } from '../core/types'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
@@ -74,6 +75,7 @@ export class App {
   private storageService: StorageService
   private topicRegistry: TopicRegistry
   private executionController: ExecutionController | null = null
+  private currentTree: SemanticNode | null = null
   private blocksDirty = false
   private codeDirty = false
   private autoSync = true
@@ -199,6 +201,19 @@ export class App {
     // - `monaco-panel` **發** `execution:breakpoints`（把行號翻成 nodeId）
     elements.consolePanel?.connectBus(this.bus)
     this.monacoPanel?.connectBus(this.bus)
+
+    // 🔴 **診斷的第二個產出端在樹上，而樹只從匯流排來。**
+    //
+    // 語法錯誤（少一個分號）的資料標在語義節點上，而 `runDiagnostics` 吃積木
+    // ——積木上看不出少了分號（tree-sitter 復原之後那顆積木是完整的）。
+    //
+    // ⚠️ 而這順帶補上一個既有缺口：診斷原本**只掛在 Blockly 的變更上**
+    // （`wireBlocklyChangeHandler`），所以程式碼改動不會直接觸發診斷。
+    // `e2e/diagnostics.spec.ts` 的檔頭記過「那是另一條線，今天沒有防線」。
+    this.bus.on('semantic:update', (e) => {
+      if (e.tree) this.currentTree = e.tree
+      this.runAllDiagnostics()
+    })
 
     // 8. Setup code→blocks pipeline
     await this.setupCodeToBlocksPipeline()
@@ -531,7 +546,7 @@ export class App {
         this.syncController!.syncBlocksToCode(tree, blockMappings)
         this.blocksDirty = false; this.updateSyncHints()
       }
-      this.runBlockDiagnostics(); this.autoSave()
+      this.runAllDiagnostics(); this.autoSave()
     })
   }
 
@@ -672,7 +687,18 @@ export class App {
    * ⚠️ **空陣列也要廣播**：那是「沒有問題」，不是「沒有跑」——
    * 不廣播的話舊的波浪與警告不會被清掉。
    */
-  private runBlockDiagnostics(): void {
+  /**
+   * **兩個產出端，一次廣播。**
+   *
+   * ```
+   * 規則吃積木   空插槽、欄位值           source: 'component'
+   * 樹的性質     語法錯誤（少分號等）      source: 'parser'
+   * ```
+   *
+   * 🔴 **不可以分兩次廣播**：`setModelMarkers` 與 `setWarningText(null)` 的語義
+   * 都是**全集取代**——第二次會把第一次清掉。
+   */
+  private runAllDiagnostics(): void {
     const workspace = this.blocklyPanel?.getWorkspace()
     if (!workspace) return
     const allBlocks = workspace.getAllBlocks(false)
@@ -694,7 +720,10 @@ export class App {
       getInput: (n: string) => block.getInput(n),
     })
 
-    const diagnostics = runDiagnostics(allBlocks.map(adapt), cppDiagnosticRules)
+    const diagnostics = [
+      ...runDiagnostics(allBlocks.map(adapt), cppDiagnosticRules),
+      ...(this.currentTree ? diagnosticsFromTree(this.currentTree) : []),
+    ]
     for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics })
   }
 

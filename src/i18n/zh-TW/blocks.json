@@ -212,5 +212,7 @@
   "DIAG_MISSING_VALUE_CODE": "輸出敘述缺少運算元（{inputName}）",
   "DIAG_MISSING_VAR_NAME_BLOCK": "第 {position} 個變數還沒有名字",
   "DIAG_MISSING_VAR_NAME_CODE": "第 {position} 個宣告子沒有名稱",
-  "DIAG_UNKNOWN": "這裡有一個問題"
+  "DIAG_UNKNOWN": "這裡有一個問題",
+  "DIAG_SYNTAX_ERROR_BLOCK": "這一段程式我看不懂，積木上這塊是照抄原文的：{snippet}",
+  "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整"
 }

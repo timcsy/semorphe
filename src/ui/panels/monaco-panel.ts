@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
+import { isResidualCause } from '../../core/diagnostics'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticNode } from '../../core/types'
 import { formatMessage } from '../../i18n/messages'
@@ -103,13 +104,17 @@ export class MonacoPanel implements ViewHost {
     const markers: monaco.editor.IMarkerData[] = []
     const walk = (n: SemanticNode): void => {
       const cause = n.metadata?.degradationCause
-      if (cause) {
+      // 🔴 **`syntax_error` 已經搬去診斷通道了**（Error 級、owner `semorphe`）。
+      // 不濾的話同一件事顯示兩次——一條紅波浪疊一條灰提示。
+      // ⚠️ 而另外兩種**一行不動**：它們真的是「我們還沒長到」，
+      // 刻意不長得像錯誤。判準的不變式由 `diagnostics-from-tree.test.ts` 釘住。
+      if (isResidualCause(cause)) {
         const m = this.mappingFor(n.id)
         if (m) {
           const endLine = m.endLine + 1
           markers.push({
             severity: monaco.MarkerSeverity.Info,
-            message: this.residualMessage(cause, String(n.metadata?.rawCode ?? '')),
+            message: this.residualMessage(cause ?? '', String(n.metadata?.rawCode ?? '')),
             startLineNumber: m.startLine + 1,
             startColumn: 1,
             endLineNumber: endLine,
