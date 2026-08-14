@@ -106,8 +106,62 @@ export class Lifter {
       }
     }
 
+    /**
+     * 標上信心——**而語法錯誤要先出聲**。
+     *
+     * ## 🔴 它原本無條件標 `high`（2026-08-14 修）
+     *
+     * `int x = @@@;` 的 AST 長這樣：
+     *
+     * ```
+     * declaration [hasError]
+     *   primitive_type ⟪int⟫
+     *   identifier ⟪x⟫
+     *   ERROR ⟪= @@@⟫        ← 沒有人看它
+     * ```
+     *
+     * lift 只走它認得的子節點，於是產出一顆**乾淨的 `cpp:var_declare`，
+     * 信心 `high`**——那個 `@@@` 整個消失，而且沒有任何訊號。
+     *
+     * > **一段語法錯誤的程式碼被 lift 成一棵看起來完全健康的樹
+     * > ——那正是這個專案追了一整年的靜默降級，發生在辨識的入口。**
+     *
+     * ⚠️ **標最內層那一顆，不標祖先**：`translation_unit` 也 `hasError`，
+     * 每一層都標的話整棵樹都是壞的，而**「哪裡壞了」這個資訊就沒了**
+     * ——那正是這個標記存在的理由。
+     *
+     * 判準是「子樹裡有 ERROR，**而還沒有任何被 lift 出來的子節點認領它**」。
+     * lift 是**子先於父**的，所以走到父層時子層的標記已經在了。
+     *
+     * ⚠️ 第一版判「**直接**子節點是不是 ERROR」，而 `int x = 1`（少分號）的
+     * ERROR 掛在 `init_declarator` 上——**那不是一個被 lift 的節點**，
+     * 於是最常見的語法錯誤剛好漏掉。**判準要對著「被 lift 的那一層」，
+     * 不是對著 AST 的任意一層。**
+     */
     const setConfidenceHigh = (r: SemanticNode): void => {
       if (!r.metadata) r.metadata = {}
+      if (this.hasErrorDescendant(node)) {
+        // ⚠️ **遞迴查子孫，不只直接子節點**：`var_declare` 掛在
+        // `program → func_def → body` 底下三層，只看直接子節點的話
+        // `cpp:program` 會被重複標上——而那讓「哪裡壞了」又變成「整棵樹壞了」。
+        const claimedBy = (n: SemanticNode): boolean =>
+          n.metadata?.degradationCause === 'syntax_error' ||
+          Object.values(n.children ?? {}).flat().some((c) => c && claimedBy(c))
+        const claimed = Object.values(r.children ?? {}).flat().some((c) => c && claimedBy(c))
+        if (!claimed) {
+          r.metadata.confidence = 'inferred'
+          r.metadata.degradationCause = 'syntax_error'
+          // 記下**壞掉的那一段原文**——投影要靠它告訴使用者是哪裡
+          const errs: string[] = []
+          const collect = (n: AstNode): void => {
+            if (n.type === 'ERROR') { errs.push(n.text); return }
+            for (const c of n.namedChildren) collect(c)
+          }
+          collect(node)
+          r.metadata.rawCode = errs.join(' ') || node.text
+          return
+        }
+      }
       if (!r.metadata.confidence) r.metadata.confidence = 'high'
     }
 

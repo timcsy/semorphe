@@ -71,7 +71,69 @@ export class MonacoPanel implements ViewHost {
       // ⚠️ 對映變了，同一批斷點會落在不同的節點上——要重推。
       this.publishBreakpoints()
     }
-    if (event.tree) this.currentTree = event.tree
+    if (event.tree) {
+      this.currentTree = event.tree
+      this.renderResidual(event.tree)
+    }
+  }
+
+  /**
+   * **殘差在程式碼側現形**——而它刻意不長得像錯誤。
+   *
+   * ## 為什麼殘差與診斷不能共用一個通道
+   *
+   * `audit-behavior-error` 的檔頭逐字：
+   * 「**殘差高＝模型還沒長到那裡（系統仍然正確）**；**誤差高＝模型是錯的**」。
+   *
+   * ```
+   * 殘差   我還不認得這一段     ← 我們的問題
+   * 誤差   你寫錯了             ← 使用者的問題
+   * ```
+   *
+   * > **把殘差併進診斷，學生會看到「你的程式有 12 個錯誤」，
+   * > 而其中 11 個是我們的問題。**
+   *
+   * ⚠️ 所以它用 **`Info`** 而不是 `Error`／`Warning`，而且用**另一個 owner**
+   * ——診斷變了不會清掉殘差，反過來也是。兩個數字要能分開看。
+   */
+  private renderResidual(tree: SemanticNode): void {
+    const model = this.editor?.getModel()
+    if (!model) return
+    const markers: monaco.editor.IMarkerData[] = []
+    const walk = (n: SemanticNode): void => {
+      const cause = n.metadata?.degradationCause
+      if (cause) {
+        const m = this.mappingFor(n.id)
+        if (m) {
+          const endLine = m.endLine + 1
+          markers.push({
+            severity: monaco.MarkerSeverity.Info,
+            message: this.residualMessage(cause, String(n.metadata?.rawCode ?? '')),
+            startLineNumber: m.startLine + 1,
+            startColumn: 1,
+            endLineNumber: endLine,
+            endColumn: model.getLineMaxColumn(endLine),
+          })
+        }
+      }
+      for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
+    }
+    walk(tree)
+    monaco.editor.setModelMarkers(model, 'semorphe-residual', markers)
+  }
+
+  /**
+   * 殘差的訊息——**主詞是「我」，不是「你」**。
+   *
+   * ⚠️ 那不是修辭：`syntax_error` 是使用者寫壞了，而 `unsupported` 是我們沒長到。
+   * 兩者用同一個 severity（都不是錯誤），**而句子要說得出是誰的問題**。
+   */
+  private residualMessage(cause: string, raw: string): string {
+    const snippet = raw.trim().replace(/\s+/g, ' ').slice(0, 40)
+    const tail = snippet ? `：${snippet}` : ''
+    if (cause === 'syntax_error') return `這一段的語法不完整，積木上會少一塊${tail}`
+    if (cause === 'unsupported') return `這個寫法我還不認得，它會原樣保留${tail}`
+    return `這個寫法不是標準語法，它會原樣保留${tail}`
   }
 
   /**
