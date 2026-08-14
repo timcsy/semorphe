@@ -517,8 +517,11 @@ export class BlockRegistrar {
             .appendField(new Blockly.FieldTextInput('3'), 'ROWS')
             .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_COLS'] || '行數')
             .appendField(new Blockly.FieldTextInput('4'), 'COLS')
+          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
+          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
+          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
+          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
           this.appendDummyInput('TAIL')
-            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_INIT'] || '初始值')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
           this.setInputsInline(true)
@@ -528,8 +531,11 @@ export class BlockRegistrar {
           this.setTooltip(Blockly.Msg['C_ARRAY_2D_DECLARE_TOOLTIP'] || '建立一個二維陣列')
         },
         plus_: function (this: any) {
-          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
-          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          const idx = this.itemCount_
+          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
+          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
+          if (idx === 0) inp.appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_INIT'] || '初始值')
+          this.moveInputBefore('EXPR' + idx, 'TAIL')
           this.itemCount_++
           setMinusState(this, false)
         },
@@ -565,8 +571,11 @@ export class BlockRegistrar {
             ]), 'TYPE')
             .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_LIST'] || '列表')
             .appendField(new Blockly.FieldTextInput('vec'), 'NAME')
+          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
+          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
+          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
+          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
           this.appendDummyInput('TAIL')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_INIT'] || '初始值')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
           this.setInputsInline(true)
@@ -576,8 +585,11 @@ export class BlockRegistrar {
           this.setTooltip(Blockly.Msg['CPP_VECTOR_DECLARE_TOOLTIP'] || '建立一個列表')
         },
         plus_: function (this: any) {
-          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
-          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          const idx = this.itemCount_
+          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
+          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
+          if (idx === 0) inp.appendField(Blockly.Msg['CPP_VECTOR_DECLARE_INIT'] || '初始值')
+          this.moveInputBefore('EXPR' + idx, 'TAIL')
           this.itemCount_++
           setMinusState(this, false)
         },
@@ -619,8 +631,11 @@ export class BlockRegistrar {
           this.appendValueInput('SIZE')
             .setCheck('Expression')
             .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE'] || '大小')
+          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
+          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
+          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
+          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
           this.appendDummyInput('TAIL')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_INIT'] || '初始值')
             .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
             .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
           this.setInputsInline(true)
@@ -630,8 +645,11 @@ export class BlockRegistrar {
           this.setTooltip(Blockly.Msg['U_ARRAY_DECLARE_TOOLTIP'] || '建立一個固定大小的陣列')
         },
         plus_: function (this: any) {
-          this.appendValueInput('EXPR' + this.itemCount_).setCheck('Expression')
-          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
+          const idx = this.itemCount_
+          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
+          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
+          if (idx === 0) inp.appendField(Blockly.Msg['U_ARRAY_DECLARE_INIT'] || '初始值')
+          this.moveInputBefore('EXPR' + idx, 'TAIL')
           this.itemCount_++
           setMinusState(this, false)
         },
