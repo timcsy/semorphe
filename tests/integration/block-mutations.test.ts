@@ -5,6 +5,8 @@ import { cppDiagnosticRules } from '../../src/languages/cpp/diagnostics'
 
 function makeBlock(overrides: Partial<DiagnosticBlock> & { id: string; type: string }): DiagnosticBlock {
   return {
+    // ⚠️ `nodeId` 故意與 `id` 不同——見 `tests/unit/core/diagnostics.test.ts` 的說明
+    nodeId: `n_${overrides.id}`,
     getFieldValue: () => null,
     getInputTargetBlock: () => null,
     getInput: () => null,
@@ -102,7 +104,7 @@ describe('Block mutations integration', () => {
       ]
       const result = runDiagnostics(blocks, cppDiagnosticRules)
       expect(result).toHaveLength(3)
-      expect(result.map(d => d.blockId).sort()).toEqual(['b1', 'b2', 'b4'])
+      expect(result.map(d => d.nodeId).sort()).toEqual(['n_b1', 'n_b2', 'n_b4'])
     })
   })
 })

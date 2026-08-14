@@ -3,8 +3,16 @@ import { runDiagnostics } from '../../../src/core/diagnostics'
 import type { DiagnosticBlock } from '../../../src/core/diagnostics'
 import { cppDiagnosticRules } from '../../../src/languages/cpp/diagnostics'
 
+/**
+ * ⚠️ **`nodeId` 預設與 `id` 不同**（`n_b1` 而不是 `b1`）。
+ *
+ * 讓它們相同的話，這批測試在「錨點還是 blockId」的實作上**也會通過**
+ * ——而那正是 2026-08-14 換掉的東西。**兩個 id 故意長得不一樣，
+ * 斷言才分得出診斷指的是語義節點還是積木。**
+ */
 function makeBlock(overrides: Partial<DiagnosticBlock> & { id: string; type: string }): DiagnosticBlock {
   return {
+    nodeId: `n_${overrides.id}`,
     getFieldValue: () => null,
     getInputTargetBlock: () => null,
     getInput: () => null,
@@ -21,7 +29,7 @@ describe('runDiagnostics', () => {
     const block = makeBlock({ id: 'b1', type: 'cpp_if' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ blockId: 'b1', severity: 'warning', message: 'DIAG_MISSING_CONDITION' })
+    expect(result[0]).toEqual({ nodeId: 'n_b1', severity: 'warning', message: 'DIAG_MISSING_CONDITION' })
   })
 
   it('should not warn when cpp_if has condition', () => {
@@ -101,6 +109,6 @@ describe('runDiagnostics', () => {
     ]
     const result = runDiagnostics(blocks, cppDiagnosticRules)
     expect(result).toHaveLength(2)
-    expect(result.map(d => d.blockId)).toEqual(['b1', 'b3'])
+    expect(result.map(d => d.nodeId)).toEqual(['n_b1', 'n_b3'])
   })
 })

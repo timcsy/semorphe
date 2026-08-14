@@ -40,6 +40,7 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from './theme/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from './toolbox-builder'
+import { registeredViews } from '../core/view-registry'
 import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
@@ -659,24 +660,42 @@ export class App {
     if (this.codeDirty) this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
   }
 
+  /**
+   * 跑診斷並**廣播**。
+   *
+   * ## 🔴 廣播，不是命令（2026-08-14 換的）
+   *
+   * 這裡原本直接 `block.setWarningText(...)`——**執行端知道每個視圖該畫什麼**，
+   * 而那正是 `execution:at-node` 那次收攏掉的東西（`history/051`）。
+   * 現在它只說「診斷變了」，各視圖自己決定怎麼呈現。
+   *
+   * ⚠️ **空陣列也要廣播**：那是「沒有問題」，不是「沒有跑」——
+   * 不廣播的話舊的波浪與警告不會被清掉。
+   */
   private runBlockDiagnostics(): void {
     const workspace = this.blocklyPanel?.getWorkspace()
     if (!workspace) return
     const allBlocks = workspace.getAllBlocks(false)
-    for (const block of allBlocks) block.setWarningText(null)
+
+    // blockId → nodeId。**規則吃積木，而錨點是語義的**——轉換在這裡。
+    const toNodeId = this.syncController?.getBlockIdToNodeIdMap() ?? new Map<string, string>()
+
     const adapt = (block: Blockly.Block): DiagnosticBlock => ({
       id: block.id, type: block.type,
+      // ⚠️ 查不到對映時**退回 blockId**：那顆積木還沒被抽成語義節點
+      // （剛拖出來、還沒同步）。用 blockId 當錨點的話積木視圖仍找得到它，
+      // 而程式碼視圖找不到——**那是誠實的：那顆積木在程式碼裡本來就還不存在。**
+      nodeId: toNodeId.get(block.id) ?? block.id,
       getFieldValue: (n: string) => block.getFieldValue(n),
       getInputTargetBlock: (n: string) => {
         const t = block.getInputTargetBlock(n)
-        return t ? { id: t.id, type: t.type, getFieldValue: (x: string) => t.getFieldValue(x), getInputTargetBlock: () => null, getInput: (x: string) => t.getInput(x) } : null
+        return t ? { id: t.id, nodeId: toNodeId.get(t.id) ?? t.id, type: t.type, getFieldValue: (x: string) => t.getFieldValue(x), getInputTargetBlock: () => null, getInput: (x: string) => t.getInput(x) } : null
       },
       getInput: (n: string) => block.getInput(n),
     })
-    for (const d of runDiagnostics(allBlocks.map(adapt), cppDiagnosticRules)) {
-      const block = workspace.getBlockById(d.blockId)
-      if (block) block.setWarningText(Blockly.Msg[d.message] || d.message)
-    }
+
+    const diagnostics = runDiagnostics(allBlocks.map(adapt), cppDiagnosticRules)
+    for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics })
   }
 
   dispose(): void {

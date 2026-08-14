@@ -133,4 +133,19 @@ export interface ViewHost {
    * 而在意圖上完全相反。** 沒有這個方法 ＝ 明確地不接。
    */
   onExecutionAtNode?(event: ExecutionAtNodeEvent): void
+
+  /**
+   * 診斷變了。**可選**——理由與 `onExecutionAtNode` 同一條：
+   * 沒有這個方法 ＝ 明確地不接（主控台、變數面板不需要）。
+   *
+   * ⚠️ 它是**廣播**不是命令：狀態變了，誰想知道誰聽。
+   * 所以**不該**是 `monacoPanel.showSquiggle(...)`——那會讓執行端知道
+   * 每個視圖該畫什麼，而那正是 `execution:at-node` 那次收攏掉的東西。
+   */
+  onDiagnostics?(event: DiagnosticsEvent): void
+}
+
+/** 一次診斷的結果。空陣列 ＝ 沒有問題（**不是**「沒有跑」）。 */
+export interface DiagnosticsEvent {
+  diagnostics: readonly { nodeId: string; severity: 'warning' | 'error'; message: string }[]
 }

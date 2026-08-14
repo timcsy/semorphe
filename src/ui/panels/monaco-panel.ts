@@ -1,5 +1,5 @@
 import * as monaco from 'monaco-editor'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import type { SemanticBus } from '../../core/semantic-bus'
@@ -119,6 +119,54 @@ export class MonacoPanel implements ViewHost {
     // ⚠️ 順序不可調換，見上方 ①。
     if (event.follow) this.revealLine(m.startLine + 1)
     this.addHighlight(m.startLine + 1, m.endLine + 1)
+  }
+
+  /**
+   * 診斷的**程式碼側投影**：紅／黃波浪底線。
+   *
+   * ## 這是驗收②，而它是①的可否證版本
+   *
+   * 錨點還是 `blockId` 的話**這一條做不到**——Monaco 不認識 blockId。
+   * 所以「波浪出得來」就是「錨點真的換成 nodeId 了」的證據。
+   *
+   * ⚠️ 用 `setModelMarkers` 而不是 decoration：marker 是 Monaco 給**診斷**用的
+   * 通道（滑鼠移上去有訊息、可以被 problems 面板收），
+   * decoration 是給高亮用的。**兩者不要混**——執行高亮已經用掉 decoration 了。
+   */
+  onDiagnostics(event: DiagnosticsEvent): void {
+    const model = this.editor?.getModel()
+    if (!model) return
+    const markers: monaco.editor.IMarkerData[] = []
+    for (const d of event.diagnostics) {
+      // ⚠️ 對映不到就**跳過**，不要退回第 1 行——一個指錯地方的波浪
+      // 比沒有波浪更糟：它會讓學生去看一段沒有問題的程式碼。
+      const m = this.mappingFor(d.nodeId)
+      if (!m) continue
+      const startLine = m.startLine + 1
+      const endLine = m.endLine + 1
+      markers.push({
+        severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+        message: this.diagnosticMessage(d.message),
+        startLineNumber: startLine,
+        startColumn: 1,
+        endLineNumber: endLine,
+        endColumn: model.getLineMaxColumn(endLine),
+      })
+    }
+    // **一次設完整集合**——`setModelMarkers` 的語義就是取代，
+    // 所以「診斷變少了」會自動反映，不需要另外清。
+    monaco.editor.setModelMarkers(model, 'semorphe', markers)
+  }
+
+  /**
+   * 訊息今天只有一種深度。
+   *
+   * ⚠️ **而它該是兩條軸的函數**（學生程度 × 面板）——積木側好讀、
+   * 程式碼側像編譯器。那是驗收④，不在這一輪：現在兩邊拿到同一個字串。
+   * 見 `draft/2026-08-05-語義診斷系統.md` 的「訊息的軸有兩條」。
+   */
+  private diagnosticMessage(key: string): string {
+    return (window as unknown as { Blockly?: { Msg?: Record<string, string> } }).Blockly?.Msg?.[key] ?? key
   }
 
   /** nodeId → 行區間。表達式節點往上找最近有對映的祖先（見 `onExecutionAtNode` ②）。 */

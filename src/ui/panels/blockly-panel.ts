@@ -7,7 +7,7 @@ import { createNode } from '../../core/semantic-tree'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
 import type { BlockStylePreset } from '../../languages/style'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
@@ -460,6 +460,34 @@ export class BlocklyPanel implements ViewHost {
    *
    * > **一段繞路的程式碼不會報錯，它只是讓中間那一站看起來是必要的。**
    */
+  /**
+   * 診斷的**積木側投影**：黃色驚嘆號。
+   *
+   * ⚠️ **先全部清掉再畫**——診斷是「當前的全集」，不是增量。
+   * 只加不清的話，修好的問題會留在畫面上，而那比沒有警告更糟。
+   */
+  onDiagnostics(event: DiagnosticsEvent): void {
+    if (!this.workspace) return
+    for (const b of this.workspace.getAllBlocks(false)) b.setWarningText(null)
+    for (const d of event.diagnostics) {
+      // nodeId → blockId。⚠️ 診斷可能指向**沒有積木的節點**（未來會有：
+      // 來自編譯器的診斷），那時這裡什麼都不做——**而程式碼視圖仍然畫得出來**。
+      const blockId = this.nodeIdToBlockId(d.nodeId)
+      const block = blockId ? this.workspace.getBlockById(blockId) : null
+      block?.setWarningText(Blockly.Msg[d.message] || d.message)
+    }
+  }
+
+  /** nodeId → blockId。找不到回 `null`——**不猜**。 */
+  private nodeIdToBlockId(nodeId: string): string | null {
+    if (!this.workspace) return null
+    // ⚠️ 兩條路都要走，而順序有意義：
+    // ① 未同步的積木用自己的 blockId 當錨點（見 `app.ts` 的 `adapt`）——直接查得到
+    if (this.workspace.getBlockById(nodeId)) return nodeId
+    // ② 已同步的走 blockMappings（渲染時建的 nodeId ↔ blockId 對照）
+    return this._blockMappings.find((m) => m.nodeId === nodeId)?.blockId ?? null
+  }
+
   onExecutionAtNode(event: ExecutionAtNodeEvent): void {
     if (!event.nodeId) {
       this.clearHighlight()
