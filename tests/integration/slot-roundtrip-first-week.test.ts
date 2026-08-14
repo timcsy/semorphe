@@ -83,7 +83,21 @@ describe('第一週語法的接點走得完來回', () => {
     expect(r.ok, `初始值走完來回不見了（回來的：${r.back?.join('、') ?? '(整顆都沒回來)'}）`).toBe(true)
   })
 
-  it('🔴 US3：`vector<int> v(10)` 的大小不得消失', () => {
+  /**
+   * 🔴 **釘子：這一格今天是壞的，而修法很貴。**
+   *
+   * `cpp_vector_declare` 的積木**在 `block-registrar.ts:558` 命令式產生**，
+   * 而 `forms/blocks.json` 的 `args0` 是空的——那是 `CLAUDE.md` 記的**雙重真相**：
+   * 「修改任一方時**必須同步另一方**」。
+   *
+   * 所以補這個插槽要**兩邊都改** ＋ 同步抽取端，而它與 `string_declare`
+   * （JSON 就是唯一真相，改一個檔）是**完全不同的成本**。
+   *
+   * ⚠️ 用 `it.fails` 而不是 `it.todo`：**修好的那天它會紅**，逼人來拔釘子。
+   * （`experience`：`it.todo` 本身就是一種殼——它宣告了一個缺陷，
+   * 而沒有任何機構在看那個缺陷還在不在。）
+   */
+  it.fails('🔴 US3（釘子）：`vector<int> v(10)` 的大小今天會消失', () => {
     // ⚠️ 前兩個是「字不見了」，**這一個是程式跑起來不一樣**：10 個元素變 0 個。
     const n = createNode('cpp:vector_declare', { name: 'v', type: 'int' }, { size: [num('10')] })
     const r = roundTrip(n, 'size')
