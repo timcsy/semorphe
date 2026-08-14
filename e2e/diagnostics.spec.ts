@@ -189,5 +189,18 @@ test('少一個分號 → 程式碼面板出現【錯誤級】波浪', async ({ 
       '⚠️ 語法錯誤是【使用者寫壞了】，不是【我們沒長到】。\n' +
       `實際上：error ${seen.error} 個、info ${seen.info} 個。`,
   ).toBeGreaterThan(0)
+
+  // 🔴 **而它不可以【同時】還留在殘差通道裡。**
+  //
+  // `renderResidual` 對任何 `degradationCause` 都畫一條 Info 級的灰提示。
+  // 濾網拿掉的話，同一行會有【一條紅波浪疊一條灰提示】——而兩者說的是同一件事。
+  //
+  // ⚠️ 這條斷言是注入驗過的：把 `monaco-panel` 的 `isResidualCause(cause)`
+  // 改回 `cause`，它就會紅。
+  expect(
+    seen.info,
+    '🔴 同一個語法錯誤【同時】走了診斷通道與殘差通道——一條紅波浪疊一條灰提示。\n' +
+      '`renderResidual` 的濾網掉了：`syntax_error` 已經搬去診斷了，它不該再被畫成殘差。',
+  ).toBe(0)
 })
 
