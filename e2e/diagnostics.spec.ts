@@ -293,3 +293,50 @@ test('同一段程式：只編輯不按執行 → 不出現任何拒絕', async 
   ).not.toContain('還不能執行')
 })
 
+/**
+ * **三種漏分號的形狀，按執行都不跑。**（spec `121`）
+ *
+ * 上一輪（`120`）交付時附了一句限定：「只能說**被辨識出來的**語法錯誤不能跑了」
+ * ——因為當時三種形狀只認得一種。**這一支就是去掉那個限定。**
+ *
+ * ⚠️ 而「下一行是什麼」曾經決定會不會被抓到——**而那對學生毫無意義**。
+ */
+for (const [name, code] of Object.entries({
+  '下一行是 return': '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    return 0;\n}\n',
+  '下一行是輸出': '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n',
+  '下一行是另一個宣告': '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    int y = 2;\n    return 0;\n}\n',
+})) {
+  test(`漏分號（${name}）：按執行 → 不執行`, async ({ page }) => {
+    await freshApp(page)
+    await page.evaluate((c) => {
+      const app = (window as never as { __app: any }).__app
+      app.monacoPanel?.setCode(c)
+    }, code)
+    await page.getByText('程式碼→積木').click()
+    await page.waitForTimeout(900)
+
+    // ★ 入口條件：這段程式真的被標記了（合成量）。沒標記的話這支測的是辨識層，
+    //   而那時失敗訊息會把人推去改閘門——**指錯方向的失敗訊息比失敗本身更貴**。
+    const marked = await page.evaluate(() => {
+      const app = (window as never as { __app: any }).__app
+      const t = app.currentTree
+      let n = 0
+      const walk = (x: any): void => {
+        if (x?.metadata?.degradationCause === 'syntax_error') n++
+        for (const b of Object.values(x?.children ?? {})) for (const c of (b as any[]) ?? []) walk(c)
+      }
+      if (t) walk(t)
+      return n
+    })
+    expect(marked, '這段程式沒有被標成語法錯誤 → 這支測的是辨識層不是閘門').toBeGreaterThan(0)
+
+    await page.getByText('執行').first().click()
+    await page.waitForTimeout(1500)
+    const text = await page.evaluate(() => document.body.innerText)
+    expect(
+      text,
+      `🔴 **漏分號（${name}）照樣跑起來了**——而「下一行是什麼」不該決定它會不會被擋。`,
+    ).toContain('還不能執行')
+  })
+}
+

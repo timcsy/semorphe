@@ -151,14 +151,15 @@ export class Lifter {
         if (!claimed) {
           r.metadata.confidence = 'inferred'
           r.metadata.degradationCause = 'syntax_error'
-          // 記下**壞掉的那一段原文**——投影要靠它告訴使用者是哪裡
-          const errs: string[] = []
-          const collect = (n: AstNode): void => {
-            if (n.type === 'ERROR') { errs.push(n.text); return }
-            for (const c of n.namedChildren) collect(c)
-          }
-          collect(node)
-          r.metadata.rawCode = errs.join(' ') || node.text
+          // 記下**壞掉的那一段原文**——投影要靠它告訴使用者是哪裡。
+          //
+          // ⚠️ **用這個節點的完整原文，不是解析器切出來的 ERROR 片段。**
+          // 以前優先用 ERROR 的文字，而 `int x = 1` 少分號時那個片段是「1」
+          // ——積木上顯示「照抄原文的：1」，技術上正確而**教學上沒用**。
+          //
+          // 而沒有 ERROR 節點的那兩種形狀本來就會落到 `node.text`
+          // ——這裡是**把有 ERROR 節點的那種統一過去**，不是新規則。
+          r.metadata.rawCode = node.text
           return
         }
       }
@@ -326,8 +327,34 @@ export class Lifter {
     return 'nonstandard_but_valid'
   }
 
+  /**
+   * 這個節點底下有沒有語法錯誤。
+   *
+   * ## ⚠️ 兩種表示，而我們曾經只認得一種
+   *
+   * ```
+   * 實體節點   int x = 1 ⏎ cout << x;   → … → ERROR ⟪1⟫      ✅ 一直認得
+   * 傳播旗標   int x = 1 ⏎ return 0;    → declaration [hasError]  🔴 2026-08-14 才補
+   * ```
+   *
+   * **A 與 C 那兩種形狀（下一行是 return／另一個宣告）在解析器眼裡沒有
+   * ERROR 節點**——只有旗標。而它們是**更常見**的形狀：在兩行之間漏掉分號。
+   *
+   * > **「下一行是什麼」決定了漏分號會不會被抓到——而那對學生毫無意義。**
+   *
+   * ## ⚠️ 旗標會往上傳播，而擋住它的不是這裡
+   *
+   * 最外層節點永遠帶著旗標。**擋住「整棵樹被標記」的是 `setConfidenceHigh`
+   * 裡的 `claimed` 判斷**——它找的是「最深的**已 lift** 節點」，
+   * 而旗標傳播多深都沒關係：第一個 lift 得出來的那一層就會認領它。
+   *
+   * 🔴 **所以那段落點邏輯不可以動。** 而合法程式不被誤標由
+   * `tests/integration/audit-false-syntax-error.test.ts`（第四十三條）守著。
+   */
   private hasErrorDescendant(node: AstNode): boolean {
     if (node.type === 'ERROR') return true
+    // 解析器算好的傳播旗標——比遞迴找 ERROR 更快，而且認得沒有 ERROR 節點的那一種
+    if (node.hasError) return true
     for (const child of node.children) {
       if (this.hasErrorDescendant(child)) return true
     }
