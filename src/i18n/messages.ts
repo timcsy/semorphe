@@ -48,6 +48,21 @@ export function hasMessage(key: string): boolean {
  * 佔位符是 `{name}`，刻意與 Blockly 的 `%1` 不同：
  * 診斷訊息的參數**有名字**（`inputName`／`index`），
  * 而位置參數會讓「第二個是什麼」變成一個要去對照的問題。
+ *
+ * ## ⚠️ 而它同時吃 `%N`，那不是改變主張，是讓路
+ *
+ * 2026-08-15 查證：216 個鍵裡含 `%` 的有 17 個，**其中 11 個是
+ * `CPP_*_MSG0`——餵給 Blockly 的積木文案，`%1` 是【Blockly 的格式】**。
+ * 把它們改成 `{name}` 積木就長不出來。
+ *
+ * ```
+ * 選擇權   一半在我們手上（診斷文案）   → {name}
+ *          一半在 Blockly 手上（積木）  → %N，改不了
+ * ```
+ *
+ * 所以「統一」在全域上不可能，而執行期文案（`RUNTIME_ERR_*`）歷史上跟了
+ * Blockly 那一套。**這裡吃兩套，代價是一個 regex；而新文案一律用 `{name}`**
+ * ——`%N` 只是為既有文案讓路，兩套**不等價**。
  */
 export function formatMessage(
   key: string,
@@ -55,9 +70,13 @@ export function formatMessage(
 ): string | null {
   const template = current[key]
   if (template === undefined) return null
-  return template.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    name in params ? String(params[name]) : whole,
-  )
+  return template
+    .replace(/\{(\w+)\}/g, (whole, name: string) =>
+      name in params ? String(params[name]) : whole,
+    )
+    .replace(/%(\d+)/g, (whole, n: string) =>
+      `%${n}` in params ? String(params[`%${n}`]) : whole,
+    )
 }
 
 /** 測試用：清空。產品程式碼不該呼叫它。 */
