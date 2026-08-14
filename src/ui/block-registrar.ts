@@ -572,7 +572,7 @@ export class BlockRegistrar {
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.containers)
+          this.setColour(CATEGORY_COLORS.cpp_containers)
           this.setTooltip(Blockly.Msg['CPP_VECTOR_DECLARE_TOOLTIP'] || '建立一個列表')
         },
         plus_: function (this: any) {

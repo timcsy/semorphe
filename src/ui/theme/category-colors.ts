@@ -2,7 +2,21 @@ import type { DegradationCause, ConfidenceLevel } from '../../core/types'
 
 // ─── 集中的類別顏色映射 ───
 
-export const CATEGORY_COLORS: Record<string, string> = {
+/**
+ * ⚠️ **不要標成 `Record<string, string>`**——那讓**任何字串**都是合法的鍵，
+ * 於是 `CATEGORY_COLORS.containers`（正確的鍵是 `cpp_containers`）
+ * **tsc 一聲不吭**，而執行期是 `undefined` → `setColour(undefined)` 拋錯
+ * → **整個 flyout 渲染到那一顆就中斷**。
+ *
+ * 2026-08-14 實測：使用者打開「陣列與列表」只看到一顆積木，
+ * 而全套測試與 e2e 都是綠的——**e2e 沒有打開工具箱分類**。
+ *
+ * > **一個索引簽名把「打錯字」變成「執行期才知道」，
+ * > 而那正是型別系統本來要擋的東西。**
+ *
+ * `as const` 讓每個鍵成為字面型別，打錯就是編譯錯誤。
+ */
+export const CATEGORY_COLORS = {
   data: '#FF8C1A',
   operators: '#59C059',
   control: '#FFAB19',
@@ -19,7 +33,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   cpp_algorithms: '#4C97FF',
   cpp_math: '#5C81A6',
   cpp_special: '#888888',
-}
+} as const
 
 // ─── 降級視覺映射 ───
 
