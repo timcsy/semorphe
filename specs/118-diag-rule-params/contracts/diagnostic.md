@@ -103,3 +103,11 @@ onDiagnostics?(event: DiagnosticsEvent): void
 | `Diagnostic.message` **刪除** | 所有產出端與消費端 | 🔴 **這正是目的**——讓 tsc 當機械檢查，把「漏改一處」變成編譯錯誤而非執行期靜默 |
 | `DiagnosticRule.message` → `rule` | 4 條規則定義 | 它本來就是身分，名字叫 `message` 誤導了每一個讀它的人 |
 | `DIAG_MISSING_VALUE` 拆成兩個身分 | i18n 檔 | `cpp_print` 與 `cpp_var_declare` 是**不同的問題**，共用身分等於承諾它們永遠說同一句話 |
+
+⚠️ 🔴 **而那個機械檢查有一個邊界，實作時才撞到**：`tsconfig.json` 的
+`include: ['src']`——**測試不在型別檢查範圍內**。
+`tests/integration/block-mutations.test.ts` 的兩處 `result[0].message`
+tsc 一聲不吭，是**全套測試**抓到的。
+
+> **一個「讓型別檢查去找」的策略，只涵蓋型別檢查看得到的地方
+> ——而那個範圍寫在設定檔裡，不寫在策略裡。**
