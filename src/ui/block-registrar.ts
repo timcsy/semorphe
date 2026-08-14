@@ -4,7 +4,7 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
-import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, ARRAY_DECLARE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../core/block-input-names'
+import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../core/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
@@ -1685,34 +1685,19 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_array_declare
-    {
-      Blockly.Blocks['cpp_array_declare'] = {
-        init: function (this: Blockly.Block) {
-          const getArrayTypeOptions = (): Array<[string, string]> => [
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_INT'] || 'int', 'int'],
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_CHAR'] || 'char', 'char'],
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_BOOL'] || 'bool', 'bool'],
-            [Blockly.Msg['U_ARRAY_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long'],
-          ]
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_CREATE_LABEL'] || '建立')
-            .appendField(self.createOpenDropdown(getArrayTypeOptions) as Blockly.Field, 'TYPE')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_ARRAY_LABEL'] || '陣列')
-            .appendField(new Blockly.FieldTextInput('arr') as Blockly.Field, 'NAME')
-          this.appendValueInput(ARRAY_DECLARE_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE_LABEL'] || '長度')
-            .setCheck('Expression')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['U_ARRAY_DECLARE_TOOLTIP'] || '宣告陣列')
-        },
-      }
-    }
+    // ⚠️ ~~`cpp_array_declare` 的舊定義原本在這裡~~ —— **2026-08-14 刪除**。
+    //
+    // 🔴 它與上面那個新定義（動態插槽）**是同一個鍵**，而**後定義的贏**
+    // ——於是新的那個從來沒有生效過。而舊的用
+    // `ARRAY_DECLARE_INPUTS.value[0]`，那個常數是**從 `blocks.json` 的
+    // `args0` 導出的**（`core/block-input-names.ts`）：把 `args0` 移除之後
+    // 它變成**空字串**，`appendValueInput('')` 拋錯。
+    //
+    // 症狀是**整個 flyout 停在那一顆**——使用者打開「陣列與列表」只看到一顆積木，
+    // 而 console 是乾淨的（Blockly 把它吞在 flyout 的建構裡）。
+    //
+    // > **同一個鍵被賦值兩次，第二次是靜默的覆蓋
+    // > ——而雙重真相護欄看的是「JSON 與命令式」，看不到「命令式與命令式」。**
 
     // cpp_raw_code
     {

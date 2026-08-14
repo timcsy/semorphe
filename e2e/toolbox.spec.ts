@@ -45,8 +45,21 @@
  *
  * > **一支測試綠，不是它有效的證據——它可能量的是另一個世界。**
  *
- * → 調查與線索見 `knowledge/draft/2026-08-14-工具箱flyout只渲染一顆.md`。
- * **在那個 draft 關掉之前，不要把這支的綠當成工具箱是好的。**
+ * → 根因已找到並修好（2026-08-14）：`cpp_array_declare` 在
+ * `block-registrar.ts` 裡被**定義了兩次**，而舊的那個用
+ * `ARRAY_DECLARE_INPUTS.value[0]`——那個常數從 `blocks.json` 的 `args0` 導出，
+ * 而 `args0` 被移除之後它是**空字串**，`appendValueInput('')` 拋錯。
+ *
+ * ## ⚠️ 而這支仍然抓不到那個 bug——試過了，走不通
+ *
+ * 要抓到它得進「開了關卡」的世界（缺陷在第 6 個分類）。試過兩條路：
+ *
+ * 1. `addInitScript` 塞存檔 → **它在每次載入都跑**，`reload()` 時又清一次
+ * 2. 先載入再改 `localStorage` → **應用不會主動存檔**，
+ *    `getItem` 拿到 `null`，寫回去的是殘缺 state，應用照樣忽略
+ *
+ * → 正確的路是**用 UI 切關卡**（使用者真的走的那條），而那是另一件事。
+ * **在那之前，這支只擋得住初學者工具箱裡的五個分類。**
  */
 import { test, expect, type Page } from '@playwright/test'
 
