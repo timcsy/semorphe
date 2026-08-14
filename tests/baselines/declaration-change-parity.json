@@ -1,8 +1,8 @@
 {
   "_meta": {
     "guard": "declaration-change-parity",
-    "measuredAt": "2026-08-13",
-    "note": "**這不是棘輪，是對照組**——它不准變。任何一筆差異都代表「宣告改動」改變了行為，而 specs/106 的前提是它不會。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
+    "measuredAt": "2026-08-14",
+    "note": "**這不是棘輪，是對照組**——它不准變。任何一筆差異都代表「宣告改動」改變了行為，而 specs/106 的前提是它不會。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。\n\n【2026-08-14 / specs/122】🟢 **`string_declare` 與 `string_find` 的來回結果變了，而那是【修復】不是退步**：\n  舊  string s;              ← 初始值走完投影來回【掉了】\n  新  string s = \"abc\";      ← ✅ 保住了\n積木本來只有「建立文字 <名字>」，初始值無處可去（`conformance` 的 12 筆之一）。\n⚠️ 這條護欄記的是【改動前的行為】，而本次是**刻意改變行為**——所以它紅得是對的，而基線要跟著更新。\n而 `string_find` 一起變是**連帶的**：它的樣本裡有一個字串宣告。"
   },
   "generated": {
     "func_def + func_call": "int add(int a, int b) {\n    return a + b;\n}\nint main() {\n    cout << add(1, 2) << endl;\n}",
@@ -21,7 +21,7 @@
   },
   "roundtrip": {
     "func_def + func_call": "int add(int a, int b) {\n    return a + b;\n}",
-    "method_call": "int main() {\n    string s;\n    cout << s.substr(1, 2) << endl;\n}",
+    "method_call": "int main() {\n    string s = \"hello\";\n    cout << s.substr(1, 2) << endl;\n}",
     "print_formatted": "int main() {\n    printf(\"%d %d\\n\", 1, 2);\n}",
     "input_formatted": "int main() {\n    int a;\n    scanf(\"%d\", &a);\n}",
     "forward_decl": "int f(int);",
@@ -29,9 +29,9 @@
     "var_declare 多變數": "int main() {\n    int a = 1, b = 2;\n    cout << a + b << endl;\n}",
     "class_def": "class C {\npublic:\n    int x;\nprivate:\n    int y;\n};",
     "input": "int main() {\n    int a;\n    cin >> a;\n}",
-    "string_declare": "int main() {\n    string s;\n    cout << s << endl;\n}",
-    "string_find": "int main() {\n    string s;\n    cout << s.find(\"b\") << endl;\n}",
-    "string_append_char": "int main() {\n    string s;\n    s += 'c';\n    cout << s << endl;\n}",
+    "string_declare": "int main() {\n    string s = \"abc\";\n    cout << s << endl;\n}",
+    "string_find": "int main() {\n    string s = \"abcabc\";\n    cout << s.find(\"b\") << endl;\n}",
+    "string_append_char": "int main() {\n    string s = \"ab\";\n    s += 'c';\n    cout << s << endl;\n}",
     "fstream": "int main() {\n    ifstream fin(\"input.txt\");\n    ofstream fout(\"output.txt\");\n}"
   },
   "execute": {
