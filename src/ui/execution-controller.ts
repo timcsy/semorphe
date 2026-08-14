@@ -11,6 +11,10 @@ import type { MonacoPanel } from './panels/monaco-panel'
 import type { ConsolePanel } from './panels/console-panel'
 import { canExecute } from '../core/diagnostics'
 import { describeExecutionRefusal } from './refusal-message'
+// 🔴 **不得直接推 `e.message`**——那是給開發者看的湊合字串（身分 ＋ JSON）。
+// 三個顯示點各查一次表就是三個會忘記的地方，所以收成一個具名函式，
+// 而第四十四條護欄的第二支測試正是「不得有人繞過它」。
+import { describeRuntimeStop } from './runtime-message'
 import type { SemanticNode } from '../core/types'
 import type { VariablePanel } from './panels/variable-panel'
 import type { BottomPanel } from './layout/bottom-panel'
@@ -350,7 +354,7 @@ export class ExecutionController {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
           this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
-          this.broadcastOutput(e.message, 'stderr')
+          this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
           this.broadcastState({ status: 'error' })
           showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
         }
@@ -407,7 +411,7 @@ export class ExecutionController {
       this.stepRecords = await this.interpreter.executeWithSteps(tree as unknown as InterpreterNode)
     } catch (e) {
       if (e instanceof RuntimeError) {
-        this.broadcastOutput(e.message, 'stderr')
+        this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
         this.broadcastState({ status: 'error' })
         this.showExecButtons(false)
         return
@@ -689,7 +693,7 @@ export class ExecutionController {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
           this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
-          this.broadcastOutput(e.message, 'stderr')
+          this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
           this.broadcastState({ status: 'error' })
         }
       } else {
