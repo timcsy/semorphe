@@ -1,4 +1,5 @@
 import { componentLabels } from '../core/component/labels'
+import { setMessages } from './messages'
 
 /** LocaleBundle — 一個語言環境的完整翻譯資料 */
 export interface LocaleBundle {
@@ -110,8 +111,18 @@ export class LocaleLoader implements LocaleLoaderInterface {
     }
   }
 
-  /** Inject all keys from bundle into Blockly.Msg */
+  /**
+   * Inject all keys from bundle into Blockly.Msg
+   *
+   * ⚠️ **同時寫進面板中立的查表**（`./messages`）——程式碼面板不 import Blockly，
+   * 而它也要看得到這些文案。缺這一行的後果實測過：程式碼面板把
+   * `DIAG_MISSING_CONDITION` 這串代號當訊息顯示給使用者。
+   *
+   * 這裡**不受 `blocklyMsg` 是否設定的影響**：兩個消費者互相獨立，
+   * 少了一個不該讓另一個也拿不到。
+   */
   private injectToBlocklyMsg(bundle: LocaleBundle): void {
+    setMessages({ ...bundle.blocks, ...bundle.types })
     if (!this.blocklyMsg) return
     for (const [key, value] of Object.entries(bundle.blocks)) {
       this.blocklyMsg[key] = value

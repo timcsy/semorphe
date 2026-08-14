@@ -29,7 +29,7 @@ describe('runDiagnostics', () => {
     const block = makeBlock({ id: 'b1', type: 'cpp_if' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ nodeId: 'n_b1', severity: 'warning', message: 'DIAG_MISSING_CONDITION' })
+    expect(result[0]).toEqual({ nodeId: 'n_b1', severity: 'warning', rule: 'MISSING_CONDITION', params: { inputName: 'CONDITION' } })
   })
 
   it('should not warn when cpp_if has condition', () => {
@@ -45,21 +45,21 @@ describe('runDiagnostics', () => {
     const block = makeBlock({ id: 'b2', type: 'cpp_if_else' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0].message).toBe('DIAG_MISSING_CONDITION')
+    expect(result[0].rule).toBe('MISSING_CONDITION')
   })
 
   it('should warn when cpp_loop_while is missing condition', () => {
     const block = makeBlock({ id: 'b3', type: 'cpp_loop_while' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0].message).toBe('DIAG_MISSING_CONDITION')
+    expect(result[0].rule).toBe('MISSING_CONDITION')
   })
 
   it('should warn when cpp_print is missing expression', () => {
     const block = makeBlock({ id: 'b4', type: 'cpp_print' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0].message).toBe('DIAG_MISSING_VALUE')
+    expect(result[0].rule).toBe('MISSING_VALUE')
   })
 
   it('should not warn when cpp_print has expression', () => {
@@ -79,7 +79,7 @@ describe('runDiagnostics', () => {
     })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0].message).toBe('DIAG_MISSING_VALUE')
+    expect(result[0].rule).toBe('MISSING_VAR_NAME')
   })
 
   it('should warn for indexed var_declare with empty name', () => {
@@ -94,7 +94,31 @@ describe('runDiagnostics', () => {
     })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0].message).toBe('DIAG_MISSING_VALUE')
+    expect(result[0].rule).toBe('MISSING_VAR_NAME')
+  })
+
+  /**
+   * 🔴 **`int , , ;` 產出三則，而它們以前完全無法區分。**
+   *
+   * 2026-08-14 之前三則的 `nodeId` 與 `message` 一模一樣，於是積木側
+   * `setWarningText` 後蓋前——**三個問題只看得到一個**。
+   *
+   * ⚠️ **則數不變（仍是三則）**，改變的是它們從此帶著各自的位置。
+   */
+  it('三個空名字產出三則，而每一則的 position 都不同', () => {
+    const block = makeBlock({
+      id: 'b9',
+      type: 'cpp_var_declare',
+      getFieldValue: (name: string) => (['NAME_0', 'NAME_1', 'NAME_2'].includes(name) ? '' : null),
+    })
+    const result = runDiagnostics([block], cppDiagnosticRules)
+    expect(result, '則數變了 → 本輪不該改變診斷的觸發').toHaveLength(3)
+    expect(result.map((d) => d.rule)).toEqual(['MISSING_VAR_NAME', 'MISSING_VAR_NAME', 'MISSING_VAR_NAME'])
+    // ⚠️ 這一行就是修正本身：以前這三個值不存在，三則長得一模一樣。
+    expect(
+      result.map((d) => d.params.position),
+      '三則的位置相同 → 它們仍然無法區分，畫面上還是只會顯示一個',
+    ).toEqual([1, 2, 3])
   })
 
   it('should handle multiple blocks with mixed diagnostics', () => {

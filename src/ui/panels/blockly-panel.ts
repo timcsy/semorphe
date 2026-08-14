@@ -6,6 +6,7 @@ import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annota
 import { createNode } from '../../core/semantic-tree'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
+import { formatMessage } from '../../i18n/messages'
 import type { BlockStylePreset } from '../../languages/style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
@@ -469,13 +470,39 @@ export class BlocklyPanel implements ViewHost {
   onDiagnostics(event: DiagnosticsEvent): void {
     if (!this.workspace) return
     for (const b of this.workspace.getAllBlocks(false)) b.setWarningText(null)
+
+    // 🔴 **同一顆積木的多則要先併起來再寫。**
+    // `setWarningText` 是**後蓋前**的：`int , , ;` 產生三則診斷，
+    // 逐則寫的話畫面上只剩最後一則——**三個問題只看得到一個**。
+    const byBlock = new Map<string, string[]>()
     for (const d of event.diagnostics) {
       // nodeId → blockId。⚠️ 診斷可能指向**沒有積木的節點**（未來會有：
       // 來自編譯器的診斷），那時這裡什麼都不做——**而程式碼視圖仍然畫得出來**。
       const blockId = this.nodeIdToBlockId(d.nodeId)
-      const block = blockId ? this.workspace.getBlockById(blockId) : null
-      block?.setWarningText(Blockly.Msg[d.message] || d.message)
+      if (!blockId) continue
+      const lines = byBlock.get(blockId)
+      if (lines) lines.push(this.diagnosticMessage(d))
+      else byBlock.set(blockId, [this.diagnosticMessage(d)])
     }
+    for (const [blockId, lines] of byBlock) {
+      this.workspace.getBlockById(blockId)?.setWarningText(lines.join('\n'))
+    }
+  }
+
+  /**
+   * **積木側自己把一則診斷組成訊息。**
+   *
+   * 積木側的收件人是初學者，所以措辭是教學的——而程式碼側刻意不一樣
+   * （使用者逐字：「越像實際編譯器吐出的訊息越好……**不過積木側可以不一樣**」）。
+   *
+   * ⚠️ **公開是刻意的**——e2e 要能拿同一則診斷問兩個面板，
+   * 確認它們給出**不同**的話。私有的話那條防線只能改測內部實作。
+   *
+   * ⚠️ 查不到文案時**不回規則代號**。完備性由第四十二條護欄在開發期保證，
+   * 執行期需要的是一句看得懂的話，不是一個看起來像訊息的代號。
+   */
+  diagnosticMessage(d: DiagnosticsEvent['diagnostics'][number]): string {
+    return formatMessage(`DIAG_${d.rule}_BLOCK`, d.params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
   }
 
   /** nodeId → blockId。找不到回 `null`——**不猜**。 */

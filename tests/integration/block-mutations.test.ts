@@ -20,7 +20,7 @@ describe('Block mutations integration', () => {
       const block = makeBlock({ id: 'if1', type: 'cpp_if_else' })
       const result = runDiagnostics([block], cppDiagnosticRules)
       expect(result).toHaveLength(1)
-      expect(result[0].message).toBe('DIAG_MISSING_CONDITION')
+      expect(result[0].rule).toBe('MISSING_CONDITION')
     })
 
     it('should pass when condition is present', () => {
@@ -46,7 +46,7 @@ describe('Block mutations integration', () => {
       })
       const result = runDiagnostics([block], cppDiagnosticRules)
       expect(result).toHaveLength(1)
-      expect(result[0].message).toBe('DIAG_MISSING_VALUE')
+      expect(result[0].rule).toBe('MISSING_VAR_NAME')
     })
 
     it('should pass when all variables have names', () => {

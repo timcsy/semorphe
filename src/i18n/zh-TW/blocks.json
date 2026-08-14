@@ -167,8 +167,6 @@
   "PANEL_VARIABLES": "變數",
   "PANEL_CLEAR": "清除",
   "PANEL_SCOPE_GLOBAL": "全域",
-  "DIAG_MISSING_CONDITION": "缺少條件",
-  "DIAG_MISSING_VALUE": "缺少數值",
   "DIAG_EMPTY_BODY": "空的區塊主體",
   "TOAST_EXPORT_SUCCESS": "匯出成功",
   "TOAST_IMPORT_SUCCESS": "匯入成功",
@@ -207,5 +205,12 @@
   "CATEGORY_STACKS_QUEUES": "堆疊與佇列",
   "CATEGORY_POINTERS_MEMORY": "指標與記憶體",
   "CATEGORY_STRUCTS_CLASSES": "結構與類別",
-  "CATEGORY_PROGRAM_CONFIG": "程式設定"
+  "CATEGORY_PROGRAM_CONFIG": "程式設定",
+  "DIAG_MISSING_CONDITION_BLOCK": "缺少條件",
+  "DIAG_MISSING_CONDITION_CODE": "條件運算式缺漏（{inputName}）",
+  "DIAG_MISSING_VALUE_BLOCK": "缺少要輸出的內容",
+  "DIAG_MISSING_VALUE_CODE": "輸出敘述缺少運算元（{inputName}）",
+  "DIAG_MISSING_VAR_NAME_BLOCK": "第 {position} 個變數還沒有名字",
+  "DIAG_MISSING_VAR_NAME_CODE": "第 {position} 個宣告子沒有名稱",
+  "DIAG_UNKNOWN": "這裡有一個問題"
 }

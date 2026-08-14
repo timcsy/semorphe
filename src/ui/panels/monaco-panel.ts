@@ -4,6 +4,7 @@ import type { CodeMapping } from '../../core/projection/code-generator'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticNode } from '../../core/types'
+import { formatMessage } from '../../i18n/messages'
 
 
 /** 這棵子樹裡有沒有這個 id。 */
@@ -208,7 +209,7 @@ export class MonacoPanel implements ViewHost {
       const endLine = m.endLine + 1
       markers.push({
         severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
-        message: this.diagnosticMessage(d.message),
+        message: this.diagnosticMessage(d),
         startLineNumber: startLine,
         startColumn: 1,
         endLineNumber: endLine,
@@ -221,14 +222,29 @@ export class MonacoPanel implements ViewHost {
   }
 
   /**
-   * 訊息今天只有一種深度。
+   * **程式碼側自己把一則診斷組成訊息。**
    *
-   * ⚠️ **而它該是兩條軸的函數**（學生程度 × 面板）——積木側好讀、
-   * 程式碼側像編譯器。那是驗收④，不在這一輪：現在兩邊拿到同一個字串。
-   * 見 `draft/2026-08-05-語義診斷系統.md` 的「訊息的軸有兩條」。
+   * 這裡的收件人正在看原始碼，所以措辭偏編譯器——而積木側刻意不一樣
+   * （使用者 2026-08-12 逐字：「越像實際編譯器吐出的訊息越好……
+   * **不過積木側可以不一樣**」）。**那就是第二條軸，而它只有面板這一條。**
+   *
+   * ⚠️ 2026-08-14 之前這裡寫的是「兩條軸（**學生程度** × 面板）」，
+   * 而「學生程度」已經被否決：一個學生走過的是概念的**集合**，
+   * 樹上的等級描述不了他（`knowledge/experience.md`
+   * 「一個座標可以描述節點，不代表它描述得了走到這裡的人」）。
+   *
+   * ## 🔴 而這個函式以前查的是一個不存在的東西
+   *
+   * 舊寫法是 `window.Blockly?.Msg?.[key] ?? key`——而 `Blockly.Msg` 是
+   * **Blockly 模組上的物件**，`window.Blockly` 在打包後的 app 裡不存在。
+   * 於是這裡**一直走 fallback**，把 `DIAG_MISSING_CONDITION` 這串代號
+   * 當訊息顯示給使用者（2026-08-14 由 e2e 抓到）。
+   *
+   * 現在查的是**面板中立的 `i18n/messages`**，程式碼視圖因此
+   * **不需要認識 Blockly**。
    */
-  private diagnosticMessage(key: string): string {
-    return (window as unknown as { Blockly?: { Msg?: Record<string, string> } }).Blockly?.Msg?.[key] ?? key
+  diagnosticMessage(d: DiagnosticsEvent['diagnostics'][number]): string {
+    return formatMessage(`DIAG_${d.rule}_CODE`, d.params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
   }
 
   /** nodeId → 行區間。表達式節點往上找最近有對映的祖先（見 `onExecutionAtNode` ②）。 */

@@ -62,7 +62,7 @@ test('一則診斷同時出現在積木側與程式碼側', async ({ page }) => 
     const mp = app.monacoPanel
     const first = bp.workspace.getAllBlocks(false)[0]
     const nodeId = bp._blockMappings.find((m: { blockId: string }) => m.blockId === first.id)?.nodeId
-    const ev = { diagnostics: [{ nodeId, severity: 'warning' as const, message: 'DIAG_MISSING_CONDITION' }] }
+    const ev = { diagnostics: [{ nodeId, severity: 'warning' as const, rule: 'MISSING_CONDITION', params: { inputName: 'CONDITION' } }] }
     bp.onDiagnostics?.(ev)
     mp.onDiagnostics?.(ev)
     await new Promise((r) => setTimeout(r, 600))
@@ -82,4 +82,50 @@ test('一則診斷同時出現在積木側與程式碼側', async ({ page }) => 
     '🔴 **程式碼側沒有波浪**——這是驗收②，而它是①的可否證版本：\n' +
       '錨點退回 `blockId` 的話 Monaco 收不到（它不認識 blockId），這一條就會紅。',
   ).toBeGreaterThan(0)
+})
+
+/**
+ * **同一則診斷，兩個面板必須說不一樣的話。**（階段 6.6 驗收④）
+ *
+ * ⚠️ 上一支測的是「兩邊都收得到」——而**兩邊收到之後說同一句話，它照樣綠**。
+ * 這一支就是為了讓那個狀態紅。
+ *
+ * 使用者 2026-08-12 逐字：「越像實際編譯器吐出的訊息越好……**不過積木側可以不一樣**」。
+ *
+ * ## 為什麼問 `diagnosticMessage()` 而不是讀畫面
+ *
+ * Monaco 的 marker 訊息只在**滑鼠移上去**時才進 DOM，而 Blockly 12 沒有
+ * `getWarningText()`（上一支的註解記過這個坑）。
+ * `diagnosticMessage()` **就是渲染路徑上的那一步**——`onDiagnostics` 自己呼叫它，
+ * 所以問它不是問一個旁路。
+ */
+test('同一則診斷在兩個面板產出不同的訊息', async ({ page }) => {
+  await freshApp(page)
+
+  const r = await page.evaluate(() => {
+    const app = (window as never as { __app: any }).__app
+    const bp = app.blocklyPanel
+    const mp = app.monacoPanel
+    const d = { nodeId: 'n-does-not-matter', severity: 'warning' as const, rule: 'MISSING_CONDITION', params: { inputName: 'CONDITION' } }
+    return {
+      hasBoth: Boolean(bp?.diagnosticMessage && mp?.diagnosticMessage),
+      block: bp?.diagnosticMessage?.(d),
+      code: mp?.diagnosticMessage?.(d),
+    }
+  })
+
+  // ★ 入口條件：錨在**兩個面板都答得出話**（合成量），不錨在「不同」
+  //   ——「不同」正是這支要推動的東西，拿它當入口條件會讓測試自我實現。
+  expect(r.hasBoth, '有面板沒有 diagnosticMessage → 這支測不到任何東西').toBe(true)
+  expect(r.block, '積木側組不出訊息').toBeTruthy()
+  expect(r.code, '程式碼側組不出訊息').toBeTruthy()
+  expect(r.block, '積木側把原始規則代號當訊息顯示了').not.toContain('MISSING_CONDITION')
+  expect(r.code, '程式碼側把原始規則代號當訊息顯示了').not.toContain('MISSING_CONDITION')
+
+  expect(
+    r.code,
+    '🔴 **兩個面板說了同一句話**——這是驗收④：\n' +
+      '積木側該給初學者看得懂的說法，程式碼側該像編譯器。\n' +
+      `實際上兩邊都是「${r.block}」。`,
+  ).not.toBe(r.block)
 })
