@@ -145,7 +145,18 @@ export interface ViewHost {
   onDiagnostics?(event: DiagnosticsEvent): void
 }
 
-/** 一次診斷的結果。空陣列 ＝ 沒有問題（**不是**「沒有跑」）。 */
+/**
+ * 一次診斷的結果。空陣列 ＝ 沒有問題（**不是**「沒有跑」）。
+ *
+ * ⚠️ **不帶組好的訊息**（2026-08-14 起）：帶的是規則身分與參數，
+ * 由各視圖自己組裝。一個組好的字串等於把投影的結果當真實傳下去，
+ * 而那讓兩個視圖只能說同一句話。
+ */
 export interface DiagnosticsEvent {
-  diagnostics: readonly { nodeId: string; severity: 'warning' | 'error'; message: string }[]
+  diagnostics: readonly {
+    nodeId: string
+    severity: 'warning' | 'error'
+    rule: string
+    params: Record<string, string | number>
+  }[]
 }

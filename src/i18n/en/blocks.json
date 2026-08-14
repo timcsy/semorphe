@@ -167,8 +167,6 @@
   "PANEL_VARIABLES": "Variables",
   "PANEL_CLEAR": "Clear",
   "PANEL_SCOPE_GLOBAL": "Global",
-  "DIAG_MISSING_CONDITION": "Missing condition",
-  "DIAG_MISSING_VALUE": "Missing value",
   "DIAG_EMPTY_BODY": "Empty block body",
   "TOAST_EXPORT_SUCCESS": "Exported successfully",
   "TOAST_IMPORT_SUCCESS": "Imported successfully",
@@ -207,5 +205,12 @@
   "CATEGORY_STACKS_QUEUES": "Stacks & Queues",
   "CATEGORY_POINTERS_MEMORY": "Pointers & Memory",
   "CATEGORY_STRUCTS_CLASSES": "Structs & Classes",
-  "CATEGORY_PROGRAM_CONFIG": "Program Config"
+  "CATEGORY_PROGRAM_CONFIG": "Program Config",
+  "DIAG_MISSING_CONDITION_BLOCK": "Missing condition",
+  "DIAG_MISSING_CONDITION_CODE": "expected expression for '{inputName}'",
+  "DIAG_MISSING_VALUE_BLOCK": "Missing value to print",
+  "DIAG_MISSING_VALUE_CODE": "output statement has no operand ('{inputName}')",
+  "DIAG_MISSING_VAR_NAME_BLOCK": "Variable {position} has no name yet",
+  "DIAG_MISSING_VAR_NAME_CODE": "declarator {position} has no name",
+  "DIAG_UNKNOWN": "There is a problem here"
 }
