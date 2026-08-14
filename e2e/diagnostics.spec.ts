@@ -204,3 +204,92 @@ test('少一個分號 → 程式碼面板出現【錯誤級】波浪', async ({ 
   ).toBe(0)
 })
 
+/**
+ * **語法錯誤的程式，按執行時被擋下來。**（spec `120`）
+ *
+ * ⚠️ 而它的孿生兄弟在下一支：**編輯的時候不可以擋**。
+ * 那兩支必須成對讀——只有前者的話，一個「每次按鍵就說無法執行」的
+ * 編輯器也會通過。
+ */
+test('少分號的程式：按執行 → 不執行', async ({ page }) => {
+  await freshApp(page)
+
+  const before = await page.evaluate(async () => {
+    const app = (window as never as { __app: any }).__app
+    // ★ 入口條件：先證明**乾淨版本按執行會有輸出**（合成量）
+    //   ——不然「沒有輸出」可能只是因為執行根本沒接上。
+    app.monacoPanel?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1;\n    cout << x;\n    return 0;\n}\n')
+    return true
+  })
+  expect(before).toBe(true)
+  await page.getByText('程式碼→積木').click()
+  await page.waitForTimeout(800)
+  await page.getByText('執行').first().click()
+  await page.waitForTimeout(1500)
+  const cleanOut = await page.evaluate(() => document.body.innerText)
+  expect(cleanOut, '★ 入口條件：乾淨的程式按執行沒有輸出 → 這支測不到任何東西').toContain('1')
+
+  // 現在把分號拿掉——同一段程式，少一個字元
+  await page.evaluate(() => {
+    const app = (window as never as { __app: any }).__app
+    app.monacoPanel?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
+  })
+  await page.getByText('程式碼→積木').click()
+  await page.waitForTimeout(800)
+
+  const r = await page.evaluate(async () => {
+    const app = (window as never as { __app: any }).__app
+    const tree = app.syncController?.getCurrentTree?.() ?? app.currentTree
+    const marked: string[] = []
+    const walk = (n: any): void => {
+      if (n?.metadata?.degradationCause === 'syntax_error') marked.push(n.id)
+      for (const b of Object.values(n?.children ?? {})) for (const c of (b as any[]) ?? []) walk(c)
+    }
+    if (tree) walk(tree)
+    return { marked: marked.length }
+  })
+  // ★ 入口條件二：這段程式真的被標記了。沒標記的話這支測的不是閘門，
+  //   是辨識層——而那是 `history/063` 的事，不是本支的。
+  expect(r.marked, '這段程式沒有被標成語法錯誤 → 閘門測不到，見 history/063').toBeGreaterThan(0)
+
+  await page.getByText('執行').first().click()
+  await page.waitForTimeout(1500)
+  const text = await page.evaluate(() => document.body.innerText)
+
+  expect(
+    text,
+    '🔴 **語法錯誤的程式照樣跑起來了**——而那教學生「這裡沒有錯」。\n' +
+      '⚠️ 注意：這支只擋得住【有標記的】。四種寫錯的程式只有兩種有標記，\n' +
+      '瓶頸在辨識層（history/063），不在閘門。',
+  ).toContain('還不能執行')
+})
+
+/**
+ * 🔴 **而編輯的時候不可以擋。**
+ *
+ * 編輯中的程式**大部分時間都是不合法的**——一個每次按鍵就跳
+ * 「語法錯誤、無法執行」的工具沒有人用得下去。
+ *
+ * ⚠️ 這支**今天是綠的**（今天什麼都不擋），所以它靠**注入**證明會紅：
+ * 把閘門掛到編輯的事件上，它必須紅。
+ */
+test('同一段程式：只編輯不按執行 → 不出現任何拒絕', async ({ page }) => {
+  await freshApp(page)
+  await page.evaluate(() => {
+    const app = (window as never as { __app: any }).__app
+    app.monacoPanel?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
+  })
+  await page.getByText('程式碼→積木').click()
+  await page.waitForTimeout(1200)
+
+  const text = await page.evaluate(() => document.body.innerText)
+  // ★ 入口條件：畫面真的活著（不是整頁空白）
+  expect(text.length, '畫面是空的 → 這支測不到任何東西').toBeGreaterThan(50)
+
+  expect(
+    text,
+    '🔴 **還沒按執行就跳出拒絕**——編輯中的程式大部分時間都是不合法的，\n' +
+      '這樣的工具沒有人用得下去。拒絕只該發生在【按執行】的那一刻。',
+  ).not.toContain('還不能執行')
+})
+

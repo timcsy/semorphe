@@ -85,17 +85,46 @@ export function runCppDetailed(code: string): execResult {
  * 這句話變成假的。要縮短時間就並行，不是少跑。
  */
 export async function runCppBatch(codes: readonly string[], concurrency = 8): Promise<(string | null)[]> {
-  const out: (string | null)[] = new Array(codes.length).fill(null)
+  return (await runCppBatchDetailed(codes, concurrency)).map((r) => (r.ok ? r.output : null))
+}
+
+/**
+ * 並行執行，**而保留失敗的理由**。
+ *
+ * ## 為什麼需要它
+ *
+ * `runCppBatch` 把失敗壓成 `null`——於是「編譯器**跑不動**」與
+ * 「編譯器**看懂了而且拒絕**」變成同一件事。
+ *
+ * > **一個把「工具跑不動」與「程式不合法」算在同一欄的量測，
+ * > 正好看不見我們最該擔心的那一格。**
+ *
+ * ⚠️ 而 `stderr` 一定要留：分類判準靠的是**編譯器說了什麼**，
+ * 不是「它有沒有回 0」。
+ */
+export async function runCppBatchDetailed(
+  codes: readonly string[],
+  concurrency = 8,
+): Promise<asyncOutcome[]> {
+  const out: asyncOutcome[] = new Array(codes.length).fill(null).map(() => ({ ok: false, output: null }))
   let next = 0
   const worker = async (): Promise<void> => {
     for (;;) {
       const i = next++
       if (i >= codes.length) return
-      out[i] = await runCppAsync(codes[i])
+      out[i] = await runCppAsyncDetailed(codes[i])
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, codes.length) }, worker))
   return out
+}
+
+/** 一次非同步執行的結果。失敗時**帶著階段與編譯器原話**。 */
+export interface asyncOutcome {
+  ok: boolean
+  output: string | null
+  stage?: 'compile' | 'run'
+  message?: string
 }
 
 /**
@@ -105,6 +134,12 @@ export async function runCppBatch(codes: readonly string[], concurrency = 8): Pr
  * 用它寫出來的「並行」是零並行——而它看起來與真的並行一模一樣。
  */
 async function runCppAsync(code: string): Promise<string | null> {
+  const r = await runCppAsyncDetailed(code)
+  return r.ok ? r.output : null
+}
+
+/** 見 `runCppBatchDetailed`——同一件事，而**不丟掉 stderr**。 */
+async function runCppAsyncDetailed(code: string): Promise<asyncOutcome> {
   if (!hasReferenceCompiler()) {
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
@@ -112,12 +147,21 @@ async function runCppAsync(code: string): Promise<string | null> {
   const name = `a${process.pid}_${seq++}`
   const src = path.join(cwd, `${name}.cpp`)
   const bin = path.join(cwd, name)
-  const run = (cmd: string, timeout: number): Promise<string | null> =>
-    new Promise((res) => exec(cmd, { encoding: 'utf-8', timeout }, (err, stdout) => res(err ? null : stdout)))
+  const run = (cmd: string, timeout: number): Promise<{ out: string | null; err: string }> =>
+    new Promise((res) =>
+      exec(cmd, { encoding: 'utf-8', timeout }, (e, stdout, stderr) =>
+        res({ out: e ? null : stdout, err: String(stderr ?? (e as Error | null)?.message ?? '') }),
+      ),
+    )
   try {
     writeFileSync(src, code)
-    if ((await run(`g++ ${flag} -o ${bin} ${src}`, 30000)) === null) return null
-    return await run(`${bin} < /dev/null`, timeoutMs)
+    const compiled = await run(`g++ ${flag} -o ${bin} ${src}`, 30000)
+    if (compiled.out === null) {
+      return { ok: false, output: null, stage: 'compile', message: compiled.err.slice(0, 400) }
+    }
+    const ran = await run(`${bin} < /dev/null`, timeoutMs)
+    if (ran.out === null) return { ok: false, output: null, stage: 'run', message: ran.err.slice(0, 400) }
+    return { ok: true, output: ran.out }
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })

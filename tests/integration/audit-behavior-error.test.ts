@@ -49,7 +49,8 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { runCppDetailed, runCppBatch, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
+import { runCppDetailed, runCppBatch, runCppBatchDetailed, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
+import { classifyRefFailure, type refFailClass } from '../helpers/ref-failure'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
@@ -117,6 +118,21 @@ interface Baseline {
   environmentDependent?: { count: number; details: details[] }
   /** 參照跑得動而直譯器跑不動的那些——**功能缺口**，與 `mismatch`（誤差）意義相反。 */
   gaps: { gapCount: number; byStage: Record<string, number>; details: gapDetail[] }
+  /**
+   * 🔴 **只有直譯器跑得動的那些——而這【不是】一種缺口，是一個警訊。**
+   *
+   * 以前它只有一個數字，而那個數字把兩件事算在同一欄：
+   *
+   * ```
+   * toolCannotRun     編譯器【跑不動】（缺標頭…）  → 我們量測機構的極限
+   * programIsIllegal   編譯器【拒絕】它            → 🔴 我們接受了 C++ 拒絕的程式
+   * unclassified       判不出來                    → 不計入任一邊
+   * ```
+   *
+   * > **一個把「工具跑不動」與「程式不合法」算在同一欄的量測，
+   * > 正好看不見我們最該擔心的那一格。**
+   */
+  onlyOurs: { count: number; byClass: Record<string, number>; details: oursDetail[] }
   /**
    * 參照自己每次跑都不同的那幾段——UB（讀未初始化變數之類）。
    *
@@ -227,6 +243,15 @@ async function runInterpreter(code: string): Promise<runOutcome> {
  * **誤差＝模型是錯的（會騙人）；缺口＝模型還沒長到那裡（仍然誠實）。**
  * 而 `concepts/等價與觀察集` 那條「兩者不可合併」在這裡同樣成立。
  */
+/** 只有直譯器跑得動的一段——**帶著參照為什麼拒絕**。 */
+interface oursDetail {
+  corpusKey: string
+  corpus: string
+  refClass: refFailClass
+  stage: string
+  message: string
+}
+
 interface gapDetail {
   corpusKey: string
   corpus: string
@@ -242,6 +267,7 @@ interface result {
   neitherRuns: number
   details: details[]
   gaps: gapDetail[]
+  ours: oursDetail[]
   /** 參照自己每次跑都不同的那幾段——UB，不是誤差。 */
   unstableReference: { corpusKey: string; corpus: string; first: string; second: string }[]
 }
@@ -264,12 +290,15 @@ const undecidable = (c: string): boolean => /\bcin\s*>>|\bscanf\s*\(|getline\s*\
 type referenceRun = (code: string) => string | null
 
 async function measure(corpus: readonly string[], reference?: referenceRun): Promise<result> {
-  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [], gaps: [], unstableReference: [] }
+  const r: result = { undecidable: 0, bothRun: 0, onlyReferenceRuns: 0, onlyInterpreterRuns: 0, neitherRuns: 0, details: [], gaps: [], ours: [], unstableReference: [] }
   const decidable = corpus.filter((c) => !undecidable(c))
   r.undecidable = corpus.length - decidable.length
   // 參照那一側**並行**跑（8 路）。序列跑 300 段約 8 分鐘，而
   // 一條沒有人跑的護欄等於沒有護欄。
-  const refOutputs = reference ? decidable.map(reference) : await runCppBatch(decidable)
+  // ⚠️ **保留失敗理由**——`runCppBatch` 把失敗壓成 `null`，
+  // 於是「編譯器跑不動」與「編譯器拒絕」變成同一件事。
+  const refDetailed = reference ? null : await runCppBatchDetailed(decidable)
+  const refOutputs = reference ? decidable.map(reference) : refDetailed!.map((d) => (d.ok ? d.output : null))
   for (let i = 0; i < decidable.length; i++) {
     const c = decidable[i]
     const refOutput = refOutputs[i]
@@ -313,10 +342,30 @@ async function measure(corpus: readonly string[], reference?: referenceRun): Pro
         stage: outcome.stage ?? 'execute',
         message: (outcome.message ?? '').slice(0, 160).replace(/\n/g, '⏎'),
       })
-    } else if (directOutput !== null) r.onlyInterpreterRuns++
+    } else if (directOutput !== null) {
+      // 🔴 只有我們跑得動——而**為什麼參照跑不動**決定了這是誰的問題。
+      r.onlyInterpreterRuns++
+      const d = refDetailed?.[i]
+      const stage = d?.stage ?? 'unknown'
+      const message = d?.message ?? ''
+      r.ours.push({
+        corpusKey: key(c),
+        corpus: c.slice(0, 160).replace(/\n/g, '⏎'),
+        refClass: classifyRefFailure(d?.stage, message),
+        stage,
+        message: message.slice(0, 160).replace(/\n/g, '⏎'),
+      })
+    }
     else r.neitherRuns++
   }
   return r
+}
+
+/** 只有我們跑得動的那些，按「參照為什麼拒絕」分組。 */
+function oursByClass(ours: readonly { refClass: refFailClass }[]): Record<string, number> {
+  const out: Record<string, number> = { toolCannotRun: 0, programIsIllegal: 0, unclassified: 0 }
+  for (const o of ours) out[o.refClass]++
+  return out
 }
 
 /** 缺口按失敗階段分組——`parse`／`lift`／`execute` 對應完全不同的工作。 */
@@ -481,6 +530,8 @@ describe('第三十二條護欄：行為的誤差', () => {
         mismatch: { mismatchCount: mismatches.length, details: mismatches },
         environmentDependent: { count: envDependent.length, details: envDependent },
         gaps: { gapCount: r.gaps.length, byStage: gapsByStage(r.gaps), details: r.gaps },
+        // 🔴 只有我們跑得動的那些——**按「參照為什麼拒絕」分類**，見型別上的說明
+        onlyOurs: { count: r.ours.length, byClass: oursByClass(r.ours), details: r.ours },
         unstableReference: { count: r.unstableReference.length, details: r.unstableReference },
       })
       return
