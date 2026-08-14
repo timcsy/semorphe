@@ -212,5 +212,7 @@
   "DIAG_MISSING_VALUE_CODE": "output statement has no operand ('{inputName}')",
   "DIAG_MISSING_VAR_NAME_BLOCK": "Variable {position} has no name yet",
   "DIAG_MISSING_VAR_NAME_CODE": "declarator {position} has no name",
-  "DIAG_UNKNOWN": "There is a problem here"
+  "DIAG_UNKNOWN": "There is a problem here",
+  "DIAG_SYNTAX_ERROR_BLOCK": "I could not read this part; the block keeps the original text: {snippet}",
+  "DIAG_SYNTAX_ERROR_CODE": "incomplete syntax on this line"
 }

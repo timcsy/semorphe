@@ -29,7 +29,7 @@ describe('runDiagnostics', () => {
     const block = makeBlock({ id: 'b1', type: 'cpp_if' })
     const result = runDiagnostics([block], cppDiagnosticRules)
     expect(result).toHaveLength(1)
-    expect(result[0]).toEqual({ nodeId: 'n_b1', severity: 'warning', rule: 'MISSING_CONDITION', params: { inputName: 'CONDITION' } })
+    expect(result[0]).toEqual({ nodeId: 'n_b1', severity: 'warning', rule: 'MISSING_CONDITION', params: { inputName: 'CONDITION' }, source: 'component' })
   })
 
   it('should not warn when cpp_if has condition', () => {

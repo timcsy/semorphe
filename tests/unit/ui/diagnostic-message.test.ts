@@ -14,14 +14,22 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { formatMessage, resetMessages, setMessages } from '../../../src/i18n/messages'
-import { cppDiagnosticRules } from '../../../src/languages/cpp/diagnostics'
+import { cppDiagnosticRules, } from '../../../src/languages/cpp/diagnostics'
+import { DIAGNOSTIC_CAUSES } from '../../../src/core/diagnostics'
 import zhTW from '../../../src/i18n/zh-TW/blocks.json'
 import en from '../../../src/i18n/en/blocks.json'
 
-const IDENTITIES = [...new Set(cppDiagnosticRules.map((r) => r.rule))].sort()
+/**
+ * ⚠️ **兩個產出端**：規則吃積木（`cppDiagnosticRules`），
+ * 而樹的性質吃樹（`diagnosticsFromTree` → `SYNTAX_ERROR`）。
+ * 只列前者的話，第一週最常見的那個錯誤的文案不會被檢查。
+ */
+const IDENTITIES = [
+  ...new Set([...cppDiagnosticRules.map((r) => r.rule), ...DIAGNOSTIC_CAUSES.map((c) => c.toUpperCase())]),
+].sort()
 
 /** 一則診斷可能帶的參數。兩個面板各自決定用不用。 */
-const SAMPLE_PARAMS = { inputName: 'CONDITION', position: 2 }
+const SAMPLE_PARAMS = { inputName: 'CONDITION', position: 2, snippet: 'int x = 1' }
 
 describe('診斷訊息：兩個面板各自組裝', () => {
   beforeEach(() => {

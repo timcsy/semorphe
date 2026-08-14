@@ -38,6 +38,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { cppDiagnosticRules } from '../../src/languages/cpp/diagnostics'
+import { DIAGNOSTIC_CAUSES } from '../../src/core/diagnostics'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 import en from '../../src/i18n/en/blocks.json'
 
@@ -57,8 +58,22 @@ const LOCALES: Record<string, Record<string, string>> = {
  * ——照條目算會多要 2 份不存在的文案。
  */
 function ruleIdentities(): string[] {
-  return [...new Set(cppDiagnosticRules.map((r) => r.rule))].sort()
+  return [...new Set([...cppDiagnosticRules.map((r) => r.rule), ...TREE_IDENTITIES])].sort()
 }
+
+/**
+ * 🔴 **診斷有兩個產出端，而這條護欄原本只看得到一個。**
+ *
+ * `SYNTAX_ERROR` **不在 `cppDiagnosticRules` 裡**——它不是一條規則，
+ * 它是「樹上有 `degradationCause`」這件事的投影（`diagnosticsFromTree`）。
+ *
+ * > **一條護欄如果只看得到一個產出端，第二個產出端的文案缺漏它就看不到。**
+ *
+ * ⚠️ 錨在 `DIAGNOSTIC_CAUSES` 上而不是硬寫 `['SYNTAX_ERROR']`：
+ * 那個常數是「哪些降級原因走診斷通道」的**唯一來源**，
+ * 而它一旦多一種，這裡就會跟著要求新的文案。
+ */
+const TREE_IDENTITIES: string[] = DIAGNOSTIC_CAUSES.map((c) => c.toUpperCase())
 
 interface Missing {
   rule: string
@@ -90,6 +105,9 @@ describe('第四十二條護欄：診斷文案在每個面板、每種語言都�
       ruleIdentities().length,
       '掃到的規則身分數是 0 → 規則表沒讀到或 `rule` 欄位改名了，這條護欄不算數（見檔頭的自我否證）',
     ).toBeGreaterThan(0)
+    // ⚠️ **兩個產出端都要有身分**——只剩一個的話這條護欄只守住一半。
+    expect(cppDiagnosticRules.length, '規則表是空的').toBeGreaterThan(0)
+    expect(TREE_IDENTITIES.length, '樹產出端一個身分都沒有 → 語法錯誤的文案不會被檢查').toBeGreaterThan(0)
   })
 
   it('★ 入口條件：兩種語言的文案表都不是空的', () => {
