@@ -13,12 +13,17 @@
           "type": "field_input",
           "name": "NAME",
           "text": "str"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "std::string ${NAME};",
@@ -46,6 +51,9 @@
     "renderMapping": {
       "fields": {
         "NAME": "name"
+      },
+      "inputs": {
+        "INIT": "initializer"
       }
     }
   }
