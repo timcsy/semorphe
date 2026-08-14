@@ -25,8 +25,7 @@
     }
   ],
   "children": {
-    "initializer": "expression",
-    "declarators": "expressions"
+    "initializer": "expression"
   },
   "role": "statement",
   "annotations": {
@@ -44,5 +43,6 @@
     "forLoopPart": true,
     "plainDeclaration": true
   },
-  "_traits_why": "**「我是最單純的變數宣告」是我自己的宣告**——`ui/block-registrar` 蒐集變數名時要分辨它，而它不該認得我的名字。"
+  "_traits_why": "**「我是最單純的變數宣告」是我自己的宣告**——`ui/block-registrar` 蒐集變數名時要分辨它，而它不該認得我的名字。",
+  "_children_why": "🔴 **移除了 `declarators` 接點宣告**（2026-08-14，spec `123`）——它與現實不符。多變數宣告（`int a, b;`）在 lift 時產出的是 `_multi_field` 包一組**獨立的 `var_declare`**（`src/languages/cpp/core/lifters/strategies.ts:365-372`）——**這個接點從來不會被產生**。而符合性量測照宣告合成，於是造出 `int a, 5;` 再回報它走不通。⚠️ **而 `generate.ts:11` 還讀著它**——那個分支現在是死程式碼，刻意留著（刪它是另一件事，混進來會讓「移除宣告是否改變行為」失去對照）。"
 }

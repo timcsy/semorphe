@@ -14,15 +14,6 @@
       "default": "field"
     }
   ],
-  "children": {
-    "obj": {
-      "allowed": [
-        "expression"
-      ],
-      "min": 0,
-      "max": 1
-    }
-  },
   "role": "expression",
   "owner": "(core)",
   "paths": {
@@ -31,5 +22,6 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
-  }
+  },
+  "_children_why": "🔴 **移除了 `obj` 接點宣告**（2026-08-14，spec `123`）——它與現實不符。`generate.ts:6` 用的是 `node.properties.obj`，**它是【參數】不是接點**。而符合性量測照宣告合成一棵樹，於是造出 `5.field`（真實世界不存在）再回報它走不通。⚠️ 這【不是】用宣告刷數字——差別在有出處：產生端明擺著讀的是 properties。"
 }
