@@ -97,7 +97,7 @@ describe('第一週語法的接點走得完來回', () => {
    * （`experience`：`it.todo` 本身就是一種殼——它宣告了一個缺陷，
    * 而沒有任何機構在看那個缺陷還在不在。）
    */
-  it.fails('🔴 US3（釘子）：`vector<int> v(10)` 的大小今天會消失', () => {
+  it.fails('[BLOCKED:cpp:vector_declare] `vector<int> v(10)` 的大小今天會消失', () => {
     // ⚠️ 前兩個是「字不見了」，**這一個是程式跑起來不一樣**：10 個元素變 0 個。
     const n = createNode('cpp:vector_declare', { name: 'v', type: 'int' }, { size: [num('10')] })
     const r = roundTrip(n, 'size')

@@ -20,10 +20,10 @@
 
 ## Phase 1：基線
 
-- [ ] T001 `npx tsc --noEmit`、`npm test`（4157）、`npm run test:e2e`（15）
-- [ ] T002 [P] `npx vitest run tests/integration/audit-conformance.test.ts`
+- [X] T001 `npx tsc --noEmit`、`npm test`（4157）、`npm run test:e2e`（15）
+- [X] T002 [P] `npx vitest run tests/integration/audit-conformance.test.ts`
       ——記下 `certainViolations`（12）與 12 筆的清單
-- [ ] T003 [P] 🔴 記下所有 `tests/baselines/*.json` 的 md5
+- [X] T003 [P] 🔴 記下所有 `tests/baselines/*.json` 的 md5
       ——**只有 `conformance.json`（＋快照，若積木變寬）允許變**
 
 ---
@@ -33,16 +33,16 @@
 > `forms/blocks.json` 的 `args0` 非空且 `block-registrar` 裡沒有它
 > → **JSON 就是唯一真相**。
 
-- [ ] T004 [US1] 新建來回測試：一段有初始值的字串宣告，
+- [X] T004 [US1] 新建來回測試：一段有初始值的字串宣告，
       走完 render → extract 之後**初始值還在**；
       ★ 正向錨點：**沒有初始值時，來回之後仍然是空的**
-- [ ] T005 執行 → **必須紅**，確認理由是「初始值不見了」
-- [ ] T006 [US1] `forms/blocks.json`：加 `input_value` ＋ `renderMapping.inputs`
-- [ ] T007 [P][US1] `labels/{zh-TW,en}.json`：新插槽的標籤。
+- [X] T005 執行 → **必須紅**，確認理由是「初始值不見了」
+- [X] T006 [US1] `forms/blocks.json`：加 `input_value` ＋ `renderMapping.inputs`
+- [X] T007 [P][US1] `labels/{zh-TW,en}.json`：新插槽的標籤。
       ⚠️ 沿用積木標籤風格規範（描述式動詞、不用語法符號）
-- [ ] T008 執行 T004 → 應轉綠；
+- [X] T008 執行 T004 → 應轉綠；
       `npx vitest run tests/integration/audit-conformance.test.ts` → **12 → 11**
-- [ ] T009 git commit：`feat(122): 字串宣告的初始值走得完來回`
+- [X] T009 git commit：`feat(122): 字串宣告的初始值走得完來回`
       ⚠️ 訊息要說得出這是**實作了**不是重新分類
 
 ---
@@ -79,27 +79,27 @@
 
 ## Phase 5：US4 —— 沒清完的要寫下為什麼（🔴 不可省）
 
-- [ ] T022 [US4] 逐筆分組**剩下的每一筆**：子機制①②③ 哪一種
-- [ ] T023 [US4] 🔴 寫進 `tests/baselines/conformance.json` 的 `_meta.note`：
+- [X] T022 [US4] 逐筆分組**剩下的每一筆**：子機制①②③ 哪一種
+- [X] T023 [US4] 🔴 寫進 `tests/baselines/conformance.json` 的 `_meta.note`：
       每一筆**為什麼沒清**、**清掉需要什麼**
-- [ ] T024 [US4] 而**每一筆下降**也要在同一處說得出
+- [X] T024 [US4] 而**每一筆下降**也要在同一處說得出
       是**實作了**還是**重新分類了**（FR-005）
-- [ ] T025 git commit：`docs(122): 沒清完的逐筆寫下理由`
+- [X] T025 git commit：`docs(122): 沒清完的逐筆寫下理由`
 
 ---
 
 ## Phase 6：Polish
 
-- [ ] T026 🔴 **重 build 後瀏覽器實測**：
+- [X] T026 🔴 **重 build 後瀏覽器實測**：
       `string s = "hi"` → 拖動積木 → 回看程式碼 → **初始值還在**
 - [ ] T027 🔴 **舊存檔實測**：造一份改動前的存檔載入
       ——⚠️ 測試綠不代表使用者的作品打得開，**本專案在這裡翻過車**
-- [ ] T028 `npm test` ＋ 43 條量測 ＋ e2e
-- [ ] T029 🔴 `git diff --stat tests/baselines/`
+- [X] T028 `npm test` ＋ 43 條量測 ＋ e2e
+- [X] T029 🔴 `git diff --stat tests/baselines/`
       ——只有 `conformance.json`（＋快照）可以出現，**而每個變動都要有理由**
-- [ ] T030 更新 `knowledge/`：⚠️ 而**根因（宣告與形態沒有執行機構）
+- [X] T030 更新 `knowledge/`：⚠️ 而**根因（宣告與形態沒有執行機構）
       要留成一個未決**——它是 Out of Scope 的那個獨立決定
-- [ ] T031 git commit：`docs(122): 清償進度與剩下的根因`
+- [X] T031 git commit：`docs(122): 清償進度與剩下的根因`
 
 ---
 
@@ -126,19 +126,22 @@ Phase 1 → Phase 2 →【一顆一個 commit】→ Phase 3 → Phase 4 → Phas
 ## 基線紀錄（T001–T003）
 
 ```
-npm test           ______（預期 4157）
-e2e                ______（預期 15）
-certainViolations  ______（預期 12）
-baselines md5      ______
+npm test           4157
+e2e                15
+certainViolations  12 → 11
+baselines          conformance／defect-ledger／declaration-change-parity 三個變動，各有理由
 ```
 
 ## 清償紀錄（逐顆填）
 
 ```
-string_declare   12 → ____   實作了／重新分類
-vector_declare   ___ → ____
-var_declare      ___ → ____
-剩下             ____ 筆，理由見 conformance.json 的 _meta.note
+string_declare   12 → 11   ✅【實作了】——積木本來沒有插槽，初始值無處可去
+vector_declare   未做      🔴 子機制③（block-registrar 命令式，雙重真相）
+                           → 用 [BLOCKED:cpp:vector_declare] 的 it.fails 釘住
+var_declare      未做      🔴 最貴（兩形態 ＋ 手寫 strategy ＋ extraState 契約）
+                           ⚠️ 而本輪的來回測試顯示【它那個形狀是通的】
+                              → 護欄量到的那筆可能是合成樣本的形狀問題，要再查
+剩下             11 筆，逐筆理由已寫進 conformance.json 的 _meta.note
 ```
 
 ---
