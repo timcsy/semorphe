@@ -9,6 +9,9 @@ import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { MonacoPanel } from './panels/monaco-panel'
 import type { ConsolePanel } from './panels/console-panel'
+import { canExecute } from '../core/diagnostics'
+import { describeExecutionRefusal } from './refusal-message'
+import type { SemanticNode } from '../core/types'
 import type { VariablePanel } from './panels/variable-panel'
 import type { BottomPanel } from './layout/bottom-panel'
 import type { SyncController } from './sync-controller'
@@ -280,6 +283,7 @@ export class ExecutionController {
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
+    if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
@@ -373,6 +377,7 @@ export class ExecutionController {
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
+    if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
@@ -607,6 +612,7 @@ export class ExecutionController {
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
+    if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
     this.animatePaused = false
@@ -720,6 +726,42 @@ export class ExecutionController {
   }
 
   /** ⚠️ 原本只清積木那一邊，改成廣播之後**兩個視圖都會清**——見 `broadcastAtNode` 的註解。 */
+  /**
+   * **語法錯誤的程式不該跑得起來。**
+   *
+   * ⚠️ **閘門在這一層，不在直譯器裡**，而那是刻意的：
+   *
+   * ```
+   * ExecutionController  知道【使用者按了執行】   → 閘門在這裡
+   * Interpreter          只知道有人給了它一棵樹   → 不在這裡
+   * ```
+   *
+   * 兩個理由：① 要求的是**時機**（按執行才判，編輯中的程式大部分時間都不合法）；
+   * ② **既有測試直接呼叫 `interpreter.execute(tree)`**，放那一層會擋掉一大片
+   * 與本功能無關的測試。
+   *
+   * ## 🔴 而它只擋得住【有標記的】
+   *
+   * 實測四種寫錯的程式只有兩種有標記——**不得宣稱「寫錯的程式不能跑了」**，
+   * 瓶頸在辨識層（`knowledge/history/063`），不在這裡。
+   *
+   * ⚠️ 而 `unsupported`（我們還不認得的寫法）**必須放行**：那是我們的問題，
+   * 程式本身是對的。判準沿用 `canExecute`，**不在這裡另立一份**。
+   *
+   * @returns 有沒有被擋下來
+   */
+  private refuseIfBroken(tree: unknown): boolean {
+    const verdict = canExecute(tree as SemanticNode)
+    if (verdict.ok) return false
+    // `history/017`：一道會拒絕的檢查必須同時回答「被拒絕的東西去哪了」。
+    const msg = describeExecutionRefusal(verdict.nodeIds.length)
+    this.broadcastOutput(msg + '\n', 'stderr')
+    this.panels.bottomPanel?.showTab('console')
+    showToast(msg, 'error')
+    this.broadcastState({ status: 'idle', reason: 'refused' })
+    return true
+  }
+
   private clearHighlights(): void {
     this.broadcastAtNode(null, false)
   }

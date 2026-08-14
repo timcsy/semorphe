@@ -230,3 +230,53 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
   walk(tree)
   return out
 }
+
+/**
+ * **這棵樹可不可以執行。**
+ *
+ * ## 為什麼需要一個閘門
+ *
+ * `degradationCause` 一直是 **metadata，不是閘門**——沒有任何東西讀它決定
+ * 「要不要跑」。於是（2026-08-14 實測）：
+ *
+ * ```
+ * 少分號（下一行 cout）    標記 1  →  丟錯，而訊息是「變數 x 未宣告」🔴 誤導
+ * 少分號（下一行 return）  標記 0  →  跑完，輸出 ""
+ * 大括號沒關               標記 0  →  跑完，輸出 "1"
+ * 亂碼 @@@                 標記 1  →  跑完，輸出 "1"
+ * ```
+ *
+ * 使用者逐字：「**寫錯還能順利執行就是不合理的**」。
+ *
+ * > **一個會執行的錯誤程式，教的不是「這裡有錯」，是「這裡沒有錯」。**
+ *
+ * ## 🔴 而它只擋得住【有標記的】
+ *
+ * 上表四種裡只有兩種有標記。**不得宣稱「寫錯的程式不能跑了」**——
+ * 瓶頸在辨識層（`knowledge/history/063`），不在這裡。
+ *
+ * ## ⚠️ 判準沿用 `DIAGNOSTIC_CAUSES`，不另立清單
+ *
+ * 「哪些降級原因是使用者的錯」只能有一處定義——兩處的話，
+ * **顯示與執行遲早會說不同的話**。
+ *
+ * ⚠️ 而 `unsupported`／`nonstandard_but_valid` **必須放行**：
+ * 那是我們的問題，程式本身是對的（P1「殘差補得齊」）。
+ * 擋掉它們等於把我們的極限變成使用者的錯誤。
+ *
+ * ## ⚠️ 它不在直譯器裡，理由見呼叫端
+ *
+ * 這個判定回答的是「**使用者現在要求執行**」，而直譯器不知道時機
+ * ——它只知道有人給了它一棵樹。而既有測試直接呼叫 `execute(tree)`。
+ */
+export function canExecute(tree: SemanticNode): { ok: true } | { ok: false; nodeIds: string[] } {
+  const bad: string[] = []
+  const walk = (n: SemanticNode): void => {
+    const cause = n.metadata?.degradationCause
+    if (cause && DIAGNOSTIC_CAUSES.includes(cause)) bad.push(n.id)
+    for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
+  }
+  walk(tree)
+  return bad.length === 0 ? { ok: true } : { ok: false, nodeIds: bad }
+}
+

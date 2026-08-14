@@ -75,7 +75,15 @@ export interface SemanticUpdateEvent {
  * 而不是順手加進來（`concepts/執行機構.md:263` 的同一條：
  * 「宣告需要門檻……第三個值就是在替『還沒做』找一個體面的名字」）。
  */
-export type ExecutionReason = 'awaiting-input' | 'breakpoint' | 'aborted'
+/**
+ * 執行為什麼停下來。
+ *
+ * ⚠️ `refused` 與其他三個**性質不同**：那三個是「跑到一半停下來」，
+ * 而 `refused` 是**根本沒有開始**——語法錯誤的程式被攔在執行之前
+ * （2026-08-14，spec `120`）。視圖若把它們一視同仁，
+ * 使用者會看到「程式中止」而不是「程式還不能執行」。
+ */
+export type ExecutionReason = 'awaiting-input' | 'breakpoint' | 'aborted' | 'refused'
 
 export interface ExecutionStateEvent {
   status: ExecutionStatus
