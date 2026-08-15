@@ -33,8 +33,13 @@ const STEP2 = 'int main() {\n    int score = 90;\n    cout << "分數是 " << sc
 const STEP3_TYPO = 'int main() {\n    int score = 90;\n    cout << "分數是 " << Score << endl;\n    return 0;\n}\n'
 const FINAL = 'int main() {\n    int score = 90;\n    score = score + 5;\n    cout << "分數是 " << score << endl;\n    return 0;\n}\n'
 
-/** 🔴 課文第三步逐字引用的那一句。改了它，課文就在說謊。 */
+/** 🔴 課文第三步／第五步逐字引用的那兩句。改了它們，課文就在說謊。 */
 const STEP3_MESSAGE = "變數 'Score' 尚未宣告"
+const STEP5_MESSAGE = "變數 'bonus' 尚未宣告"
+
+/** 第五步：開一個全新的名字而【故意忘記 int】。 */
+const STEP5_FORGOT = 'int main() {\n    int score = 90;\n    bonus = 5;\n    score = score + bonus;\n    cout << "分數是 " << score << endl;\n    return 0;\n}\n'
+const STEP5_FIXED = 'int main() {\n    int score = 90;\n    int bonus = 5;\n    score = score + bonus;\n    cout << "分數是 " << score << endl;\n    return 0;\n}\n'
 
 async function fresh(page: Page): Promise<void> {
   await page.goto('/')
@@ -89,4 +94,27 @@ test('🔴 第二課第三步：課文引用的錯誤訊息，必須逐字還是
   // 因為「訊息換了一句更好的話」與「訊息壞回代號」是兩件事，
   // 而只有後者是缺陷。
   expect(text, '🔴 代號又跑到畫面上了——第四十四條護欄漏掉了這條路徑').not.toMatch(/RUNTIME_ERR_/)
+})
+
+test('🔴 第二課第五步：忘了 int 開新名字，必須停下來並說出是哪個名字', async ({ page }) => {
+  await fresh(page)
+
+  // ⚠️ 課文說「和第三步同一句話」——那是這一段的教學重點，所以逐字釘住
+  const forgot = await run(page, STEP5_FORGOT)
+  expect(
+    forgot,
+    `🔴 課文第五步逐字引用了「${STEP5_MESSAGE}」，而畫面上現在不是這句。\n` +
+      '⚠️ 若這是刻意的改動，**課文要一起改**——而課文比程式碼難改（學生會記住它）。',
+  ).toContain(STEP5_MESSAGE)
+
+  // 🔴 而更重要的：它【不得】跑完。2026-08-15 之前它會跑完並輸出「分數是 95」，
+  // 而課文那時寫了一句系統做不到的提醒（specs/127 findings 坑一）。
+  expect(
+    forgot,
+    '🔴 忘了 int 而程式跑完了——這一課花兩段講「int 不能省」，而系統又允許省了',
+  ).not.toContain('分數是 95')
+
+  // 加回 int → 課文說會看到「分數是 95」
+  const fixed = await run(page, STEP5_FIXED)
+  expect(fixed, '🔴 加回 int 之後應該跑得完（課文：「再跑一次 → 分數是 95」）').toContain('分數是 95')
 })

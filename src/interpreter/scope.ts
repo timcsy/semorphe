@@ -34,6 +34,43 @@ export class Scope {
     throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': name })
   }
 
+  /**
+   * 寫入一個名字。**找不到就拋，不建立。**
+   *
+   * ## 為什麼（2026-08-15，spec `127`）
+   *
+   * 這裡原本的收尾是 `this.variables.set(name, value)`——**找不到就默默創出來**。
+   * 於是 `score = 90;`（忘了寫 `int`）**跑得完並印出 90**，而 C++ 拒絕它。
+   *
+   * ```
+   * 之前   get 找不到 → 拋      set 找不到 → 建立   🔴 同一件事兩種行為
+   * 之後   get 找不到 → 拋      set 找不到 → 拋     ✅ 同一則訊息
+   * ```
+   *
+   * 使用者逐字：「**寫錯還能順利執行就是不合理的**」。
+   * 而它有一個教學上的受害者——第二課花兩段講「`int` 不能省」，
+   * 而系統本身允許省，所以課文**繞了路**，甚至寫了一句系統做不到的提醒。
+   *
+   * ## 🔴 限定：這是執行期，不是編輯期（2/3）
+   *
+   * C++ 在**編譯時**拒絕；這裡在**跑到那一行時**才停。
+   * **一段有這個錯誤而永遠跑不到那一行的程式，仍然會「成功」。**
+   * ⚠️ **不得宣稱兩者等價。**（另兩處：`spec.md` FR-008、第二課課文）
+   *
+   * ## ⚠️ 為什麼是遞迴，而不是「只把最後一行改成拋」
+   *
+   * 舊寫法用 `try { this.parent.get(name) } catch {}` 當「看看有沒有」。
+   * 改成拒絕之後 `parent.set()` 也會拋，而**那個 catch 會把它吃掉**
+   * ——控制流照樣掉到最後一行，**行為完全沒變，而它看起來像修好了**。
+   *
+   * > **一個為了「看看有沒有」而存在的 try/catch，
+   * > 在被查的那件事本身開始拋錯的那天，會靜靜地把新行為吃掉。**
+   *
+   * 遞迴讓「拋」自然從最外層傳上來，而中間每一層都不必知道找不到會怎樣。
+   *
+   * ⚠️ **不得改用 `findOwner()`**：它**只看 `variables` 不看 `refs`**，
+   * 用它會讓父層宣告的**引用別名**寫入被靜默判成未宣告。
+   */
   set(name: string, value: RuntimeValue): void {
     const ref = this.refs.get(name)
     if (ref) { ref.scope.set(ref.name, value); return }
@@ -41,16 +78,8 @@ export class Scope {
       this.variables.set(name, value)
       return
     }
-    if (this.parent) {
-      try {
-        this.parent.get(name)
-        this.parent.set(name, value)
-        return
-      } catch {
-        // not found in parent, fall through
-      }
-    }
-    this.variables.set(name, value)
+    if (this.parent) { this.parent.set(name, value); return }
+    throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': name })
   }
 
   /** Find the scope that owns a variable (for reference binding) */

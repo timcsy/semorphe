@@ -61,9 +61,48 @@ describe('Scope', () => {
     expect(all.get('b')).toEqual({ type: 'string', value: 'hi' })
   })
 
-  it('should set variable in current scope if not found anywhere', () => {
+  /**
+   * 🔴 **這支測試在 2026-08-15 被反轉了**（spec `127`）。
+   *
+   * ## 它原本斷言什麼
+   *
+   * `should set variable in current scope if not found anywhere`
+   * ——寫一個從沒宣告過的名字，**會在當前作用域把它建立出來**。
+   * 來自 `8887e4d`「Phase 2 foundational … TDD」，最早的地基階段，
+   * **而它沒有寫任何理由**。
+   *
+   * ## 為什麼反轉
+   *
+   * 那個行為讓 `score = 90;`（忘了寫 `int`）跑得完並印出 90，而 C++ 拒絕它。
+   * 使用者逐字：「**寫錯還能順利執行就是不合理的**」。
+   * 而同一個類別的 `get()` 對**同一件事**早就會拋
+   * ——**讀會拋，寫不會**，那個不對稱沒有任何理由支持它。
+   *
+   * 🔴 **而這支測試是唯一擋著的東西**：注入嚴格版跑全套，
+   * 4167/4168 綠，**只有它失敗**。
+   *
+   * > **一支沒有寫理由的測試，記的是「當時的實作」而不是「當時的意圖」
+   * > ——而後來的人分不出這兩者，於是它變成一道看起來像決定的擋牆。**
+   *
+   * ## ⚠️ 推翻這一條需要什麼
+   *
+   * 需要一個**真的需要隱式建立**的呼叫端，而它說得出
+   * 「為什麼那個名字不能先宣告」。2026-08-15 查過三個候選——
+   * 指標寫入、外層作用域、引用別名——**三個都不需要**
+   * （它們的名字都宣告過，走的是 `refs` 或往上遞迴那兩條路）。
+   *
+   * 找到那樣一個呼叫端 → 這一條該讓路。**找不到就不要改回去。**
+   */
+  it('should refuse to write a name that was never declared', () => {
     const scope = new Scope()
-    scope.set('y', { type: 'int', value: 7 })
-    expect(scope.get('y')).toEqual({ type: 'int', value: 7 })
+    expect(() => scope.set('y', { type: 'int', value: 7 })).toThrow(/RUNTIME_ERR_UNDECLARED_VAR/)
+  })
+
+  it('still writes through to an outer scope that declared the name', () => {
+    const parent = new Scope()
+    parent.declare('n', { type: 'int', value: 1 })
+    const child = parent.createChild()
+    child.set('n', { type: 'int', value: 2 })
+    expect(parent.get('n'), '往外找那條路不得被一起關掉').toEqual({ type: 'int', value: 2 })
   })
 })
