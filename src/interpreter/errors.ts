@@ -23,6 +23,14 @@ export const RUNTIME_ERRORS = {
    * 參數裡，而**第四十四條護欄量的是 (身分, 參數) 組合**，看不見它。
    */
   UNDECLARED_VAR_SUGGEST: 'RUNTIME_ERR_UNDECLARED_VAR_SUGGEST',
+  /**
+   * **它根本不是一個變數**——例如 C++ 的 `cout`（2026-08-17）。
+   * ⚠️ 身分在核心，而**判斷「哪些名字是串流」在語言套件裡**
+   * （中立性護欄：`src/interpreter` 不得硬編特定語言的名字）。
+   */
+  STREAM_NOT_VARIABLE: 'RUNTIME_ERR_STREAM_NOT_VARIABLE',
+  /** 同上，而**名字本身也打錯了**（`Cout`）。 */
+  STREAM_NOT_VARIABLE_SUGGEST: 'RUNTIME_ERR_STREAM_NOT_VARIABLE_SUGGEST',
   DIVISION_BY_ZERO: 'RUNTIME_ERR_DIVISION_BY_ZERO',
   MAX_STEPS_EXCEEDED: 'RUNTIME_ERR_MAX_STEPS',
   TYPE_MISMATCH: 'RUNTIME_ERR_TYPE_MISMATCH',
