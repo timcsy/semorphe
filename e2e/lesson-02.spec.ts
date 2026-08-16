@@ -34,7 +34,7 @@ const STEP3_TYPO = 'int main() {\n    int score = 90;\n    cout << "分數是 " 
 const FINAL = 'int main() {\n    int score = 90;\n    score = score + 5;\n    cout << "分數是 " << score << endl;\n    return 0;\n}\n'
 
 /** 🔴 課文第三步／第五步逐字引用的那兩句。改了它們，課文就在說謊。 */
-const STEP3_MESSAGE = "變數 'Score' 尚未宣告"
+const STEP3_MESSAGE = "變數 'Score' 尚未宣告——你是不是要打 'score'？"
 const STEP5_MESSAGE = "變數 'bonus' 尚未宣告"
 
 /** 第五步：開一個全新的名字而【故意忘記 int】。 */

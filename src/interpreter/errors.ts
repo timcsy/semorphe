@@ -17,6 +17,12 @@ export class RuntimeError extends Error {
 /** i18n key 常數 */
 export const RUNTIME_ERRORS = {
   UNDECLARED_VAR: 'RUNTIME_ERR_UNDECLARED_VAR',
+  /**
+   * 同一件事，而**可見範圍裡有一個長得很像的名字**（2026-08-17）。
+   * ⚠️ 分成兩個身分而不是加一個可選參數——那樣「有沒有建議」會藏在
+   * 參數裡，而**第四十四條護欄量的是 (身分, 參數) 組合**，看不見它。
+   */
+  UNDECLARED_VAR_SUGGEST: 'RUNTIME_ERR_UNDECLARED_VAR_SUGGEST',
   DIVISION_BY_ZERO: 'RUNTIME_ERR_DIVISION_BY_ZERO',
   MAX_STEPS_EXCEEDED: 'RUNTIME_ERR_MAX_STEPS',
   TYPE_MISMATCH: 'RUNTIME_ERR_TYPE_MISMATCH',

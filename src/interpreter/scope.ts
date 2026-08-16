@@ -1,5 +1,6 @@
 import type { RuntimeValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
+import { findNearMiss } from './near-miss'
 
 export class Scope {
   private variables = new Map<string, RuntimeValue>()
@@ -28,10 +29,36 @@ export class Scope {
     if (this.variables.has(name)) {
       return this.variables.get(name)!
     }
-    if (this.parent) {
-      return this.parent.get(name)
+    // 🔴 **不能寫成 `return this.parent.get(name)`**——那樣拋錯的是【最外層】，
+    // 而 `getAll()` 只往上攤平，**最外層看不到我們這一層的名字**。
+    // 於是 `int score` 在 main 裡、而建議在 global 拋出 → 永遠找不到近似名。
+    //
+    // > **遞迴到最外層才拋錯，錯誤訊息就只看得到最外層的世界。**
+    //
+    // ⚠️ 2026-08-17 實測撞到：單元測試（直接對一個 Scope 呼叫）全綠，
+    // 而跑真的程式一句建議都沒有。**驗證必須在行為端。**
+    for (let s: Scope | null = this.parent; s; s = s.parent) {
+      const r = s.refs.get(name)
+      if (r) return r.scope.get(r.name)
+      if (s.variables.has(name)) return s.variables.get(name)!
     }
-    throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': name })
+    throw this.undeclared(name)
+  }
+
+  /**
+   * **未宣告的名字——而如果可見範圍裡有一個長得很像的，說出來。**
+   *
+   * ⚠️ 這裡是最外層才會走到（`get` 一路往上遞迴），所以 `getAll()`
+   * 拿到的**就是完整的可見集合**。
+   *
+   * 🔴 而找不到近似名時**回傳與今天逐字相同的那一則**——
+   * 「不亂猜」比「會猜」重要（見 `near-miss.ts` 檔頭）。
+   */
+  private undeclared(name: string): RuntimeError {
+    const near = findNearMiss(name, this.getAll().keys())
+    return near === undefined
+      ? new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': name })
+      : new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR_SUGGEST, { '%1': name, '%2': near })
   }
 
   /**
@@ -78,8 +105,13 @@ export class Scope {
       this.variables.set(name, value)
       return
     }
-    if (this.parent) { this.parent.set(name, value); return }
-    throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': name })
+    // 同上——拋錯的必須是**發起查找的這一層**，它才看得到完整的可見集合。
+    for (let s: Scope | null = this.parent; s; s = s.parent) {
+      const r = s.refs.get(name)
+      if (r) { r.scope.set(r.name, value); return }
+      if (s.variables.has(name)) { s.variables.set(name, value); return }
+    }
+    throw this.undeclared(name)
   }
 
   /** Find the scope that owns a variable (for reference binding) */

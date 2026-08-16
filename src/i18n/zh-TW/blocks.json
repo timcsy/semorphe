@@ -132,6 +132,7 @@
   "ERROR_PARSE_FAILED": "無法解析程式碼",
   "TOAST_SYNC_SUCCESS": "同步完成",
   "RUNTIME_ERR_UNDECLARED_VAR": "變數 '%1' 尚未宣告",
+  "RUNTIME_ERR_UNDECLARED_VAR_SUGGEST": "變數 '%1' 尚未宣告——你是不是要打 '%2'？",
   "RUNTIME_ERR_DIVISION_BY_ZERO": "除以零",
   "RUNTIME_ERR_MAX_STEPS": "已超過最大執行步數（可能是無窮迴圈或過深的遞迴）",
   "RUNTIME_ERR_TYPE_MISMATCH": "型別不符：%1",
