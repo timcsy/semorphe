@@ -114,6 +114,12 @@ languages/{lang}/
 - **語義標註（Annotations）**：語言套件與視圖套件之間的開放契約（`control_flow`、`body_execution`、`introduces_scope`、`side_effects`、`hardware_binding` 等）。缺少 annotation 時用 generic fallback，不報錯——任何語言 × 視圖組合都能工作。
 - **視圖套件規格**：按與語義樹的互動方式分類（可編輯 / 唯讀-執行 / 唯讀-分析 / 唯讀-硬體），結構為 `views/{name}/manifest.json` + `src/view.ts`（實作 ViewHost）。
 - **WebView 隔離模型**：瀏覽器每視圖 = `<div>`/`<iframe>` + EventEmitter；VSCode 中 blocks = WebviewPanel、code = 原生 TextEditor、console = Terminal + postMessage。**Core 跑在 Extension Host，不跑在 WebView。**
+  > 🔴 **而這一條有兩個 2026-08-16 才被量出來的前提**（[history/069](history/069-vscode原型退休而它的兩個教訓被撈出來.md)）：
+  > ① 膠囊登錄表用 `import.meta.glob`（**Vite 的轉換**），所以**那個宿主也必須用 Vite 建置**（已實測可行）；
+  > ② `src/ui/app.ts` 有**六個單例**寫死了「只有一個文件」，而編輯器有 N 個
+  > ——**那是這條路真正的成本，而它不在任何介面上**。
+  > ⚠️ 而 `code = 原生 TextEditor` 有一個順帶的好處：**宿主的診斷本來就在**
+  > （見 [draft/語義診斷系統](draft/2026-08-05-語義診斷系統.md) 的委派宿主分工）。
 - **外部套件與硬體擴充**：`packages/{name}/` 含 semantics / projections / hardware。依賴規則：擴充可引用基礎套件概念，**不可引用其他擴充**（避免菱形依賴）。
 
 ### 長期方向
@@ -199,7 +205,7 @@ languages/{lang}/
   交付：ViewHost + SemanticBus + Annotations (014) → SyncController 解耦 (015)
        → app.ts 拆分為 ToolboxBuilder/BlockRegistrar/AppShell (016)
        → concept/blockDef 分離、std 按 header 重組 (019)
-       → VSCode Extension 原型 (018)
+       → VSCode Extension 原型 (018)  ⚠️ 2026-08-16 退休，見 history/069
        → DependencyResolver + ProgramScaffold + Ghost Line (020)
        → Semantic Node Identity：CodeMapping + BlockMapping 雙表 (021)
   前置條件：無

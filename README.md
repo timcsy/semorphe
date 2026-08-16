@@ -149,14 +149,21 @@ Semorphe 提供一套 Claude Code skill，用於系統化地新增語言概念�
 
 ## VSCode 延伸模組
 
-```bash
-cd vscode-ext
-npm install
-node esbuild.mjs
-# 按 F5 啟動 Extension Development Host
+**2026-08-16 退休。** 原型（2026-03）停在 90 個錯誤、158 天沒動、零自動化，
+而其中 19 個說的是一個**架構限制**：膠囊登錄表用 `import.meta.glob`，
+那是 **Vite 的轉換** —— esbuild 建得出來而執行期才炸。
+
+```
+Vite     CJS 269 KB  → node 跑得動 → 189 顆膠囊全部載入   🟢 已實測
+esbuild  CJS 4.6 KB  → 🔴 import_meta.glob is not a function
 ```
 
-詳見 [vscode-ext/README.md](vscode-ext/README.md)。
+要重做的話：**那個宿主也用 Vite 建置**（已驗過），
+而真正的成本不是 glue code，是 `src/ui/app.ts` 的**六個單例**
+——它們寫死了「只有一個文件」，而編輯器有 N 個。
+
+程式碼完整保留在版控裡（`git log -- vscode-ext/`），
+教訓見 [knowledge/history/069](knowledge/history/069-vscode原型退休而它的兩個教訓被撈出來.md)。
 
 ## 授權
 
