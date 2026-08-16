@@ -14,3 +14,6 @@ vscode-ext/node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Blockly 的圖示與音效——由 vite.config.ts 從 node_modules 複製（產物，不是原始碼）
+public/blockly-media/
