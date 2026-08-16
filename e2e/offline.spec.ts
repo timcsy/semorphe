@@ -94,3 +94,40 @@ test('★ 跑起來之後，不得向任何外部主機要東西', async ({ page
       '所以沒有人會回報它。**把資源搬進 public/。**',
   ).toEqual([])
 })
+
+/**
+ * ★ 反方向：**零外部請求 ≠ 東西還在**。
+ *
+ * 🔴 一個「把 media 設成一個不存在的路徑」的實作**也會通過上面那條**
+ * ——它一個外部請求都不發，而圖示全部消失。
+ *
+ * > **一條只斷言「沒有向外要」的護欄，對「根本沒要到」是瞎的。**
+ */
+test('★ 而圖示與音效真的要到了——不是靜靜地不見', async ({ page }) => {
+  const failed: string[] = []
+  const media: string[] = []
+  page.on('response', (res) => {
+    const u = res.url()
+    if (!/blockly-media\//.test(u)) return
+    media.push(`${res.status()}  ${u.split('/').pop()}`)
+    if (res.status() >= 400) failed.push(`${res.status()}  ${u}`)
+  })
+
+  await page.goto('/')
+  await page.waitForFunction(
+    () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
+    undefined, { timeout: 30_000 },
+  )
+  await page.waitForTimeout(2500)
+
+  // ★ 入口條件——錨在**要到幾個 media 檔**（合成量）。
+  // ⚠️ 它不隨修復下降：搬進來之後仍然是同樣數量的請求。
+  expect(
+    media.length,
+    `只要到 ${media.length} 個自託管的 media 檔 → media 路徑沒有生效，\n` +
+      '🔴 而上面那條「零外部請求」會【照樣綠】——它對「根本沒要到」是瞎的。',
+  ).toBeGreaterThanOrEqual(4)
+
+  expect(failed, '🔴 自託管的 media 檔要不到——圖示會靜靜地不見').toEqual([])
+})
+
