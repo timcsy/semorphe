@@ -15,9 +15,37 @@
  * `fs` 在瀏覽器不存在，而 `import.meta.glob` 由 Vite 在建置時展開成靜態 import
  * ——瀏覽器與 Vitest 兩邊同一份程式碼。
  *
- * ⚠️ 代價：glob 的樣式必須是**字面常數**，不能用變數組出來。所以
+ * ⚠️ 代價一：glob 的樣式必須是**字面常數**，不能用變數組出來。所以
  * `COMPONENT_ROOT` 在這裡是寫死的字串——這是工具的限制，不是雙重真相；
  * 下面有一支斷言把兩者釘在一起。
+ *
+ * ## 🔴 代價二：**這個架構只跑得起來在 Vite 打包的宿主裡**（2026-08-16 實測）
+ *
+ * `import.meta.glob` 是 **Vite 的轉換**，不是語言特性。實測同一份入口：
+ *
+ * ```
+ * Vite    → CJS 269 KB → node 跑得動 → 189 顆膠囊全部載入   🟢
+ * esbuild → CJS 4.6 KB → 🔴 import_meta.glob is not a function
+ * ```
+ *
+ * ⚠️ **而 4.6 KB 這個數字才是重點**：esbuild **建得出來**，
+ * 只是 189 顆膠囊**一顆都沒被打包進去**——它只發一則 warning
+ * （`"import.meta" is not available with the "cjs" output format and will be empty`），
+ * **然後在執行期才炸**。
+ *
+ * > **一個在建置期只發警告、在執行期才炸的相依，
+ * > 會讓「它建得起來」被讀成「它能用」。**
+ *
+ * **後果**：任何非 Vite 的宿主（VSCode 擴充用 esbuild、Node CLI、
+ * 其他打包器）**載不到任何元件**。而那是 2026-03 的 `vscode-ext` 原型
+ * 停在半路的根本原因之一——它有 19 個 `import.meta` 錯誤。
+ *
+ * **處置（若哪天要進非 Vite 宿主）**：
+ * ```
+ * A. 那個宿主也改用 Vite 建置    🟢 已實測可行（ssr + lib + formats:['cjs']）
+ * B. 登錄表長出第二種載入方式     ❌ 那會變成第二個真相來源，14 個檔要各寫兩套
+ * ```
+ * → **A**。而它已經驗過，不是推測。
  */
 import { COMPONENT_ROOT, FIVE_PATHS, idToDir } from './types'
 import type { ComponentManifest, ComponentRegistration } from './types'
