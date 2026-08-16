@@ -133,6 +133,8 @@
   "TOAST_SYNC_SUCCESS": "Sync complete",
   "RUNTIME_ERR_UNDECLARED_VAR": "Variable '%1' is not declared",
   "RUNTIME_ERR_UNDECLARED_VAR_SUGGEST": "Variable '%1' is not declared — did you mean '%2'?",
+  "RUNTIME_ERR_STREAM_NOT_VARIABLE": "'%1' is not a variable — it's a C++ stream, and it needs '%2' to connect to anything",
+  "RUNTIME_ERR_STREAM_NOT_VARIABLE_SUGGEST": "'%1' is not a variable — did you mean '%2'? It's a C++ stream and needs '%3'",
   "RUNTIME_ERR_DIVISION_BY_ZERO": "Division by zero",
   "RUNTIME_ERR_MAX_STEPS": "Maximum execution steps exceeded (possible infinite loop or deep recursion)",
   "RUNTIME_ERR_TYPE_MISMATCH": "Type mismatch: %1",

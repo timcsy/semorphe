@@ -133,6 +133,8 @@
   "TOAST_SYNC_SUCCESS": "同步完成",
   "RUNTIME_ERR_UNDECLARED_VAR": "變數 '%1' 尚未宣告",
   "RUNTIME_ERR_UNDECLARED_VAR_SUGGEST": "變數 '%1' 尚未宣告——你是不是要打 '%2'？",
+  "RUNTIME_ERR_STREAM_NOT_VARIABLE": "'%1' 不是一個變數——它是 C++ 的輸入／輸出串流，要用 '%2' 才接得上東西",
+  "RUNTIME_ERR_STREAM_NOT_VARIABLE_SUGGEST": "'%1' 不是一個變數——你是不是要打 '%2'？它是 C++ 的輸入／輸出串流，要用 '%3' 接東西",
   "RUNTIME_ERR_DIVISION_BY_ZERO": "除以零",
   "RUNTIME_ERR_MAX_STEPS": "已超過最大執行步數（可能是無窮迴圈或過深的遞迴）",
   "RUNTIME_ERR_TYPE_MISMATCH": "型別不符：%1",

@@ -68,20 +68,34 @@ const joined = rows.map((c) => {
   const errs = c.errs ?? []
   const noise = noiseOf(c.group, errs)
   const clang = (c.threw || !c.done) ? '無法確定' : noise ? '無法確定' : errs.length ? '不合法' : '合法'
-  return { group: c.group, name: c.name, clang, reason: noise ?? '', weRefuse: !!o?.weRefuse, codes: [...new Set(errs.map((e) => e.code))] }
+  return { group: c.group, name: c.name, clang, reason: noise ?? '',
+           weRefuse: !!o?.weRefuse, outcome: o?.outcome ?? 'ran',
+           codes: [...new Set(errs.map((e) => e.code))] }
 })
 
 const ill = joined.filter((r) => r.clang === '不合法')
 const leg = joined.filter((r) => r.clang === '合法')
 const unk = joined.filter((r) => r.clang === '無法確定')
-const caught = ill.filter((r) => r.weRefuse)
+// 🔴 **兩個涵蓋率，而它們回答不同的問題**（2026-08-17 更正）
+//
+// spec 120 的設計【刻意】只把**語法錯誤**擋在執行前；語義錯誤
+// 跑到那一行才停——而那是 `history/017`「被拒絕的東西去哪了」的答案。
+//
+// ⚠️ 第一版只有一個數字，於是**偵測得到但不預先擋**的被算成缺口。
+const detected = ill.filter((r) => r.outcome !== 'ran')      // 發現了（擋下 or 停下來）
+const gated = ill.filter((r) => r.outcome === 'gated')       // 執行前就擋下
+const missed = ill.filter((r) => r.outcome === 'ran')        // 🔴 真的漏掉：跑完了
 const fp = leg.filter((r) => r.weRefuse)
 
 console.log(`\n樣本 ${joined.length}｜不合法 ${ill.length}／合法 ${leg.length}／無法確定 ${unk.length}`)
-console.log(`\n  涵蓋率  ${caught.length}/${ill.length} = ${(caught.length / ill.length * 100).toFixed(0)}%`)
-console.log(`  假警報  ${fp.length}/${leg.length} = ${(fp.length / leg.length * 100).toFixed(1)}%`)
-console.log('\n=== 缺口（clang 說不合法而我們放行）===')
-for (const r of ill) if (!r.weRefuse) console.log(`  🔴 [${r.group}] ${r.name}  ${r.codes.join(',')}`)
+console.log(`\n  偵測率    ${detected.length}/${ill.length} = ${(detected.length / ill.length * 100).toFixed(0)}%   （擋下 or 跑到那一行才停）`)
+console.log(`  執行前擋下 ${gated.length}/${ill.length} = ${(gated.length / ill.length * 100).toFixed(0)}%   （只有語法錯誤——那是刻意的）`)
+console.log(`  假警報    ${fp.length}/${leg.length} = ${(fp.length / leg.length * 100).toFixed(1)}%`)
+console.log('\n=== 🔴 真的漏掉（clang 說不合法而我們【跑完了】）===')
+for (const r of missed) console.log(`  🔴 [${r.group}] ${r.name}  ${r.codes.join(',')}`)
+if (!missed.length) console.log('  （0 筆）')
+console.log('\n=== ⚠️ 跑到那一行才停（偵測得到，而不預先擋——刻意的）===')
+for (const r of ill) if (r.outcome === 'stopped') console.log(`  ⚠️ [${r.group}] ${r.name}  ${r.codes.join(',')}`)
 console.log('\n=== 假警報（我們擋下而 clang 說合法）===')
 for (const r of fp) console.log(`  ⚠️ [${r.group}] ${r.name}`)
 if (!fp.length) console.log('  （0 筆）')

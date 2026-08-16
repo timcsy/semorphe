@@ -23,6 +23,7 @@ import { writeFileSync } from 'node:fs'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { canExecute } from '../../src/core/diagnostics'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { H, COMPETITIVE, APCS_CORPUS, ARDUINO } from './scenario-corpus'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -50,7 +51,7 @@ beforeAll(async () => {
 }, 30000)
 
 describe('導出我們的判定（給 clangd 裁判當左半邊）', () => {
-  it('全部樣本 → /tmp/ours.json', () => {
+  it('全部樣本 → /tmp/ours.json', async () => {
     const samples: Array<{ group: string; name: string; code: string }> = []
     for (const [k, v] of Object.entries(COMPETITIVE)) samples.push({ group: '競賽', name: k, code: H + v })
     for (const [k, v] of Object.entries(APCS_CORPUS)) samples.push({ group: 'APCS', name: k, code: H + v })
@@ -60,11 +61,28 @@ describe('導出我們的判定（給 clangd 裁判當左半邊）', () => {
     // ★ 入口條件——錨在**樣本數**（合成量）。不錨在「擋下幾筆」：那是會變的。
     expect(samples.length, '語料沒進來，這份導出不算數').toBeGreaterThan(40)
 
-    const rows = samples.map((s) => {
+    // 🔴 **「發現了嗎」與「執行前擋下了嗎」是兩件事**（2026-08-17 更正）。
+    //
+    // spec 120 的設計【刻意】只讓**語法錯誤**擋在執行前；語義錯誤
+    // （`Cout` 沒宣告、`cout <` 用錯運算子）**跑到那一行才停**——
+    // 而那不是缺陷，是 `history/017`「被拒絕的東西去哪了」的答案：
+    // 已經印出來的輸出保留，錯誤指在那一行。
+    //
+    // ⚠️ 第一版把兩者算成一件，於是「涵蓋率 78%」把
+    // **偵測得到但不預先擋**的那些算成缺口。
+    const rows = []
+    for (const s of samples) {
       const tree = createTestLifter().lift(parser.parse(s.code)!.rootNode as never) as SemanticNode
-      return { ...s, weRefuse: !canExecute(tree).ok }
-    })
+      const gated = !canExecute(tree).ok
+      let outcome: 'gated' | 'stopped' | 'ran' = 'gated'
+      if (!gated) {
+        const i = new SemanticInterpreter({ maxSteps: 100000 })
+        try { await i.execute(tree); outcome = 'ran' } catch { outcome = 'stopped' }
+      }
+      rows.push({ ...s, weRefuse: gated, outcome })
+    }
     writeFileSync('/tmp/ours.json', JSON.stringify(rows))
-    console.log(`\n樣本 ${rows.length}｜我們擋下 ${rows.filter((r) => r.weRefuse).length}\n`)
+    const n = (o: string) => rows.filter((r) => r.outcome === o).length
+    console.log(`\n樣本 ${rows.length}｜執行前擋下 ${n('gated')}｜跑到那一行才停 ${n('stopped')}｜跑完 ${n('ran')}\n`)
   }, 180000)
 })
