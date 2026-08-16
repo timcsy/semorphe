@@ -1,0 +1,8 @@
+<!doctype html><meta charset=utf-8><body><script type="module">
+const samples = await (await fetch('./samples.json')).json()
+const w = new Worker('./oracle-worker.js', { type:'module' })
+w.onmessage = (e) => { if (e.data.type==='log') { console.log('[P]'+e.data.s); return }
+  window.__resolve({ crossOriginIsolated, rows: e.data.rows }) }
+w.onerror = (e) => window.__resolve({ 錯誤: 'worker: '+(e.message||e.type) })
+w.postMessage(samples)
+</script>
