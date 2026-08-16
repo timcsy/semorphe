@@ -116,7 +116,16 @@ export function createAppLayout(
   blocklyContainer.style.overflow = 'hidden'
   leftPanel.appendChild(blocklyContainer)
 
-  const blocklyPanel = new BlocklyPanel({ container: blocklyContainer, blockSpecRegistry })
+  // 🔴 **`media` 不傳的話，Blockly 會去 `blockly-demo.appspot.com` 抓圖示與音效**
+  // ——而離線時那些圖示會壞掉，壞得很安靜（只是變破圖，功能還在）。
+  // ⚠️ 這個選項**本來就接好了**（`BlocklyPanel` 的 `media?`），只是從來沒有人傳。
+  // 檔案由 `vite.config.ts` 從 `node_modules/blockly/media` 複製，
+  // 由第四十五條護欄（`e2e/offline.spec.ts`）守著。
+  const blocklyPanel = new BlocklyPanel({
+    container: blocklyContainer,
+    blockSpecRegistry,
+    media: `${import.meta.env.BASE_URL}blockly-media/`,
+  })
   blocklyPanel.init(toolbox)
 
   // Right panel: Monaco + BottomPanel
