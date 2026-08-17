@@ -970,9 +970,11 @@ languages/{lang}/
 
 ### 階段 6.13：擴充（VSCode ／ Arduino IDE）——讓它有使用者
 
-- [ ] **已升格，未開工**（2026-08-17）——設計脈絡
+- [x] **第一刀完成**（2026-08-17，spec 138）——⚠️ **而它的 Arduino IDE 那一段等使用者**
+- [ ] 其餘未開工。設計脈絡
   [draft/擴充的形狀](draft/2026-08-17-擴充的形狀.md)**仍 in-flight**。
-  上游見 [history/080](history/080-ArduinoIDE吃VSCode擴充而那不是一個平台是一個位置.md)。
+  上游見 [history/080](history/080-ArduinoIDE吃VSCode擴充而那不是一個平台是一個位置.md)，
+  第一刀的收穫見 [history/081](history/081-第一刀畫得出積木而三個坑都不會拋錯.md)。
 
 > **為什麼是它**：Arduino IDE 2.x 是 Theia 做的，**吃 VSCode 擴充**
 > ——而使用者**已經用這條路出貨過兩個擴充**（`~/.arduinoIDE/plugins`）。
@@ -1009,24 +1011,41 @@ per-document  18    面板／樹／target／topic／style ＋【同步狀態與�
 
 **第一刀＝否證最快的那一刀**
 
+> **第一刀要選【否證最快的那一刀】，不是【最像成品的那一刀】。**
+
+🟢 **2026-08-17 做完了**（spec 138）。在 Chromium 裡：
+
 ```
-打得開一個面板，畫得出【一顆積木】
-⚠️ 不接語義樹、不雙向同步
-→ 畫布在 Arduino IDE 裡卡的話，後面全部不必談
+膠囊 200 顆全部載入   🔴 這個數字就是「核搬得過去嗎」——esbuild 那次它是 0
+畫布上 cpp:break      標籤「跳出迴圈」（i18n 也接上了）
+拖曳 62 幀            中位 16.7 ms · p95 16.8 ms → 順
+console 錯誤 0        資源請求失敗 0
 ```
 
-> **第一刀要選【否證最快的那一刀】，不是【最像成品的那一刀】。**
+🔴 **而真正的產出是三個「不會拋錯」的坑**（[history/081](history/081-第一刀畫得出積木而三個坑都不會拋錯.md)）：
+media 少一個尾端斜線、CSP 漏 `img-src data:`、**CSP 漏 `connect-src`**。
+第三個是實測撞出來的，PoC 沒遇過。
+
+> **`media-src` 擋不住 Blockly 的音效——那條管 `<audio>` 元素，
+> 而 Blockly 走 `fetch`。兩條看起來管同一件事的指令，管的是兩條不同的路。**
 
 **驗收**
 
-- [ ] `.vsix` 丟進 `~/.arduinoIDE/plugins` 重開 → **積木面板打得開、畫布跑得順**
+- [x] ~~未決~~ ✅ **目錄拍板 `src/vscode/`**（護欄掃得到——實測是 **6 條 ＋ 1 helper**，
+      draft 原本寫的「3 支」是低估的）
+- [x] `.vsix` 產得出來（24 檔 455 KB）
+- [x] 積木**來自登錄表**，而 `src/vscode/` 裡零個 conceptId 字串（第二十八條護欄在看）
+- [x] 網頁版不得退步：4304 全綠、47 條基線零變動、中立性 0、探針 0.07%／0 漂移
+- [ ] 🔴 **`.vsix` 在真的 Arduino IDE 裡打得開、畫布跑得順** ——
+      ⚠️ **我驗不了**（Electron 桌面應用裡的拖曳）。處置**不是換一個弱的驗收**，
+      是把量測做進畫面裡。已裝好：`~/.vscode/extensions/`、`~/.arduinoIDE/plugins/`
 - [ ] 開一個真的 `.ino`，改一顆積木 → **檔案變了，而 Arduino IDE 編得過**
 - [ ] 🔴 per-document／per-app 的分類**落在程式碼裡**，不只在 draft 裡
 - [ ] `monacoPanel` 那 21 處有處置（VSCode 裡它是**零份**——被原生 TextEditor 取代）
-- [ ] 網頁版不得退步（`npm test` 全綠、探針殘差 0.07%／漂移 0）
 
-⚠️ **未決**：放 `src/vscode/`（護欄掃得到）還是根目錄 `vscode/`（掃不到）
-——draft 第四節末有證據與建議。
+⚠️ **而 esbuild／CJS 那個坑本輪是【繞開】不是【解決】**：畫布住在 Webview
+（瀏覽器環境），所以碰不到。**雙向同步那一刀要在主行程跑 lift／generate，
+它會原封不動地回來**（`core/component/registry.ts:22-48` 有處置，已實測）。
 
 ### 階段 7：Python 語言套件
 
