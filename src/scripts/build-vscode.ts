@@ -16,7 +16,7 @@
  * 🔴 **而 Chromium 的數字不是 Arduino IDE 的結論**——
  * 那正是 `history/076` 那個錯的形狀（在 A 環境驗、宣稱 B 環境成立）。
  */
-import { cpSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { cpSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 import { buildManifest } from '../vscode/manifest'
@@ -45,12 +45,12 @@ function main(): void {
   mkdirSync(join(OUT, 'assets'), { recursive: true })
   cpSync('public/logo.svg', join(OUT, 'assets', 'logo.svg'))
 
-  // 3. 擴充的宣告。版本號從根 package.json 帶進來——⚠️ 兩份一定會漂移。
-  const rootPkg = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
-  writeFileSync(
-    join(OUT, 'package.json'),
-    JSON.stringify(buildManifest(rootPkg.version), null, 2) + '\n',
-  )
+  // 3. 擴充的宣告。
+  //
+  // 🔴 版本號來自 `manifest.ts` 自己的 `EXTENSION_VERSION`，**不是根 package.json**。
+  //    第一版用了根的，而那讓「改了 contributes 卻沒換版本」變成可能
+  //    ——後果是 VSCode 上的活動列圖示**沒有更新而且不報錯**。理由寫在那個檔裡。
+  writeFileSync(join(OUT, 'package.json'), JSON.stringify(buildManifest(), null, 2) + '\n')
   // vsce 沒有 README 會擋下來（不是警告，是錯誤）。
   writeFileSync(
     join(OUT, 'README.md'),
