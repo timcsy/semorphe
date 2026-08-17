@@ -52,7 +52,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.1.1'
+export const EXTENSION_VERSION = '0.1.2'
 
 export interface ExtensionManifest {
   name: string
@@ -91,14 +91,15 @@ export function buildManifest(): ExtensionManifest {
           {
             id: 'semorphe',
             title: DISPLAY_NAME,
-            // 專案自己的 `<Σ>`——由建置腳本從 `public/logo.svg` 複製過來。
+            // 專案自己的 `<Σ>`——由建置腳本從 `assets/logo/semorphe-mono.svg` 複製。
             //
-            // ⚠️ **一個已知的外觀風險**：VSCode 的活動列圖示慣例是**單色**的
-            //    （宿主會依主題／選取狀態重新上色），而 `logo.svg` 是彩色的
-            //    （深藍底 ＋ 天藍與白的筆畫）。它**畫得出來**，
-            //    但在某些主題下可能不如單色版清楚。
-            //    → 真的不好看的話，換成 `favicon.svg` 或做一個單色版即可，
-            //      而那是一行的事。**先照使用者指定的用。**
+            // 🔴 **必須是 mono 那張，而理由是渲染機制不是美感**：
+            //    VSCode 把這個檔當 **CSS 遮罩**用（`mask: url(...)`），
+            //    **顏色全部丟掉、只有 alpha 有意義**。理由與逐字出處寫在
+            //    `src/scripts/build-vscode.ts` 的第 2b 步。
+            //
+            // ⚠️ 換成任何**有底色方塊**的版本（dark／sakura），
+            //    活動列上會變成**一坨實心方塊**——而它**不會報錯**。
             icon: 'assets/logo.svg',
           },
         ],

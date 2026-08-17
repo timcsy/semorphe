@@ -40,10 +40,34 @@ function main(): void {
   cpSync('node_modules/blockly/media', join(OUT, 'dist', 'media'), { recursive: true })
 
   // 2b. 活動列的圖示。⚠️ 與上面那行**理由不同**：Blockly 的 media 是
-  //     相依套件的資產（所以要複製而不是簽進版控），而 `logo.svg` 是
+  //     相依套件的資產（所以要複製而不是簽進版控），而 logo 是
   //     **我們自己的原始資產**——複製只是把它送進封包。
+  //
+  // 🔴 **必須是 mono 那張**，而理由不是美感，是**渲染機制**。
+  //
+  // VSCode 1.129.0 的 bundle 裡逐字（`workbench.desktop.main.js`）：
+  //
+  // ```
+  // mask: ${c} no-repeat 50% 50%;
+  // mask-size: var(--activity-bar-icon-size, ${this.options.iconSize}px);
+  // -webkit-mask: ${c} no-repeat 50% 50%;
+  // mask-origin: padding;
+  // ```
+  //
+  // ⚠️ 它是 **CSS 遮罩**——**顏色全部丟掉，只有 alpha 有意義**，
+  //    而宿主用 `activityBar.foreground` 自己上色。
+  //
+  // 於是：
+  // ```
+  // semorphe-dark.svg    有一個 90×90 的實心圓角矩形 → 遮罩是【一坨實心方塊】🔴
+  // semorphe-sakura.svg  有外框矩形                  → 多一個框              ⚠️
+  // semorphe-mono.svg    fill="none"，只有筆畫        → 遮罩就是 <Σ> 本身      🟢
+  // ```
+  //
+  // 🔴 而第一版用了 `public/logo.svg`（＝ dark 那張的複本）——**那必定是壞的**，
+  //    而它**不會報錯**：一個實心方塊也是一個合法的圖示。
   mkdirSync(join(OUT, 'assets'), { recursive: true })
-  cpSync('public/logo.svg', join(OUT, 'assets', 'logo.svg'))
+  cpSync('assets/logo/semorphe-mono.svg', join(OUT, 'assets', 'logo.svg'))
 
   // 3. 擴充的宣告。
   //
