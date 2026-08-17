@@ -44,6 +44,13 @@ export interface SavedState {
   language: string
   styleId: string
   topicId?: string
+  /**
+   * 目標 ID（spec 136 起）。
+   *
+   * ⚠️ **舊存檔沒有這一格**——還原時以 `targetId` 優先、沒有就回退到 `topicId`。
+   * P8「不做向後相容」管的是投影與程式碼，**不管存檔**（見 `history/026`）。
+   */
+  targetId?: string
   enabledBranches?: string[]
   lastModified: string
   blockStyleId?: string

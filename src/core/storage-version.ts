@@ -40,6 +40,7 @@ export const SAVED_STATE_FIELDS = {
   language: 1,
   styleId: 1,
   topicId: 1,
+  targetId: 1,
   enabledBranches: 1,
   lastModified: 1,
   blockStyleId: 1,

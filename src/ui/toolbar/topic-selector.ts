@@ -1,24 +1,49 @@
-import type { Topic, LevelNode } from '../../core/types'
+import type { Target, Topic, LevelNode } from '../../core/types'
 import { flattenLevelTree, resolveEnabledBranches } from '../../core/level-tree'
 
 /**
- * Topic selector: compact dropdown + popover level tree for branch control.
- * Layout: [Topic ▼] [🌳] — clicking the tree icon opens a popover with checkboxes.
+ * 目標選擇器：下拉選**目標** ＋ 彈出層級樹控制分支。
+ * Layout: [目標 ▼] [🌳]
+ *
+ * ## 🔴 為什麼下拉的是目標，而不是課程清單（2026-08-17，spec 136）
+ *
+ * 使用者想的是「**我要教 C**」，而不是「課程清單選 X、風格選 Y，
+ * 而且要記得那兩個必須配對」。目標就是那個具名的配對。
+ *
+ * ⚠️ **而風格選擇器【留著】**——否則 `google`／`competitive` 這兩個
+ * 沒有對應目標的風格會**拿不到**（第十九條護欄「可拿性」）。
+ * 目標設定的是**起點**，風格選擇器是**微調**。
+ *
+ * ## ⚠️ 而這個類別的名字沒有改
+ *
+ * 它管的仍然是「哪些概念可見」這件事，只是**入口從課程清單換成目標**。
+ * 改名會動到 `app.ts`／`app-shell.ts`／CSS 類名／`level-selector-mount`
+ * 一整串，而**那串改動一個字都不會讓使用者看到不同的東西**。
  */
 export class TopicSelector {
   private container: HTMLElement
-  private topics: Topic[]
+  private targets: Target[]
+  private topicOf: (target: Target) => Topic
+  private currentTarget: Target
   private currentTopic: Topic
   private enabledBranches: Set<string>
-  private onTopicChangeCallback: ((topic: Topic, branches: Set<string>) => void) | null = null
+  private onTargetChangeCallback: ((target: Target, topic: Topic, branches: Set<string>) => void) | null = null
   private onBranchesChangeCallback: ((branches: Set<string>) => void) | null = null
   private popover: HTMLElement | null = null
   private popoverOpen = false
   private outsideClickHandler: ((e: MouseEvent) => void) | null = null
 
-  constructor(parent: HTMLElement, topics: Topic[], currentTopic: Topic, enabledBranches: Set<string>) {
-    this.topics = topics
-    this.currentTopic = currentTopic
+  constructor(
+    parent: HTMLElement,
+    targets: Target[],
+    topicOf: (target: Target) => Topic,
+    currentTarget: Target,
+    enabledBranches: Set<string>,
+  ) {
+    this.targets = targets
+    this.topicOf = topicOf
+    this.currentTarget = currentTarget
+    this.currentTopic = topicOf(currentTarget)
     this.enabledBranches = new Set(enabledBranches)
 
     this.container = document.createElement('div')
@@ -28,16 +53,17 @@ export class TopicSelector {
     parent.appendChild(this.container)
   }
 
-  onTopicChange(callback: (topic: Topic, branches: Set<string>) => void): void {
-    this.onTopicChangeCallback = callback
+  onTargetChange(callback: (target: Target, topic: Topic, branches: Set<string>) => void): void {
+    this.onTargetChangeCallback = callback
   }
 
   onBranchesChange(callback: (branches: Set<string>) => void): void {
     this.onBranchesChangeCallback = callback
   }
 
-  setTopic(topic: Topic, branches: Set<string>): void {
-    this.currentTopic = topic
+  setTarget(target: Target, branches: Set<string>): void {
+    this.currentTarget = target
+    this.currentTopic = this.topicOf(target)
     this.enabledBranches = new Set(branches)
     this.closePopover()
     this.render()
@@ -46,24 +72,25 @@ export class TopicSelector {
   private render(): void {
     this.container.innerHTML = ''
 
-    // Topic dropdown
+    // Target dropdown
     const select = document.createElement('select')
     select.className = 'topic-dropdown toolbar-select'
-    for (const topic of this.topics) {
+    for (const target of this.targets) {
       const option = document.createElement('option')
-      option.value = topic.id
-      option.textContent = topic.name
-      option.selected = topic.id === this.currentTopic.id
+      option.value = target.id
+      option.textContent = target.name
+      option.selected = target.id === this.currentTarget.id
       select.appendChild(option)
     }
     select.addEventListener('change', () => {
-      const topic = this.topics.find(t => t.id === select.value)
-      if (topic && topic.id !== this.currentTopic.id) {
-        this.currentTopic = topic
-        this.enabledBranches = new Set(flattenLevelTree(topic.levelTree).map(n => n.id))
+      const target = this.targets.find(t => t.id === select.value)
+      if (target && target.id !== this.currentTarget.id) {
+        this.currentTarget = target
+        this.currentTopic = this.topicOf(target)
+        this.enabledBranches = new Set(flattenLevelTree(this.currentTopic.levelTree).map(n => n.id))
         this.closePopover()
         this.render()
-        this.onTopicChangeCallback?.(topic, this.enabledBranches)
+        this.onTargetChangeCallback?.(target, this.currentTopic, this.enabledBranches)
       }
     })
     this.container.appendChild(select)

@@ -1,0 +1,158 @@
+{
+  "id": "c-beginner",
+  "language": "cpp",
+  "name": "初學 C",
+  "default": false,
+  "description": "C 語言的漸進式概念層級樹——由「初學 C++」扣掉 C 裡不存在的概念推導而來（判準見 tests/unit/c-topic-derivation.test.ts）",
+  "levelTree": {
+    "id": "L0",
+    "level": 0,
+    "label": "L0: 基礎",
+    "concepts": [
+      "cpp:print",
+      "cpp:input",
+      "cpp:var_declare",
+      "cpp:var_assign",
+      "cpp:var_ref",
+      "cpp:literal_number",
+      "cpp:literal_string",
+      "cpp:arithmetic",
+      "cpp:compare",
+      "cpp:logic",
+      "cpp:logic_not",
+      "cpp:negate",
+      "cpp:if",
+      "cpp:if_else",
+      "cpp:loop_while",
+      "cpp:builtin_constant",
+      "cpp:include"
+    ],
+    "children": [
+      {
+        "id": "L1a",
+        "level": 1,
+        "label": "L1a: 函式與迴圈",
+        "concepts": [
+          "cpp:func_def",
+          "cpp:func_call",
+          "cpp:return",
+          "cpp:loop_count",
+          "cpp:loop_for",
+          "cpp:comma_expr",
+          "cpp:break",
+          "cpp:continue",
+          "cpp:literal_char",
+          "cpp:increment",
+          "cpp:var_assign_compound",
+          "cpp:math_pow",
+          "cpp:math_unary",
+          "cpp:random_next",
+          "cpp:random_seed",
+          "cpp:math_abs"
+        ],
+        "children": [
+          {
+            "id": "L2a",
+            "level": 2,
+            "label": "L2a: 陣列與字串",
+            "concepts": [
+              "cpp:array_declare",
+              "cpp:initializer_list",
+              "cpp:array_at",
+              "cpp:array_assign",
+              "cpp:cstring_size",
+              "cpp:cstring_compare",
+              "cpp:cstring_copy",
+              "cpp:cstring_append",
+              "cpp:cstring_copy_bounded",
+              "cpp:cstring_compare_bounded",
+              "cpp:cstring_find_char",
+              "cpp:cstring_find",
+              "cpp:cstring_as_int",
+              "cpp:cstring_as_double",
+              "cpp:array_2d_declare",
+              "cpp:array_2d_at",
+              "cpp:array_2d_assign",
+              "cpp:comment",
+              "cpp:doc_comment",
+              "cpp:block_comment",
+              "cpp:raw_code",
+              "cpp:raw_expression"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "L1b",
+        "level": 1,
+        "label": "L1b: 控制流進階",
+        "concepts": [
+          "cpp:switch",
+          "cpp:case",
+          "cpp:default",
+          "cpp:loop_do_while",
+          "cpp:ternary",
+          "cpp:cast",
+          "cpp:bitwise_not",
+          "cpp:sizeof",
+          "cpp:print_formatted",
+          "cpp:input_formatted",
+          "cpp:enum",
+          "cpp:char_is_alpha",
+          "cpp:char_is_digit",
+          "cpp:char_to_upper",
+          "cpp:char_to_lower",
+          "cpp:program_exit",
+          "cpp:block"
+        ],
+        "children": [
+          {
+            "id": "L2b",
+            "level": 2,
+            "label": "L2b: 指標與記憶體",
+            "concepts": [
+              "cpp:pointer_declare",
+              "cpp:pointer_deref",
+              "cpp:pointer_assign",
+              "cpp:address_of",
+              "cpp:malloc",
+              "cpp:free",
+              "cpp:var_declare_static",
+              "cpp:memory_fill",
+              "cpp:memory_copy",
+              "cpp:include_local",
+              "cpp:define",
+              "cpp:ifdef",
+              "cpp:ifndef",
+              "cpp:forward_decl"
+            ],
+            "children": []
+          },
+          {
+            "id": "L2c",
+            "level": 2,
+            "label": "L2c: 結構與類別",
+            "concepts": [
+              "cpp:struct_declare",
+              "cpp:struct_at_member",
+              "cpp:struct_at_ptr",
+              "cpp:math_binary"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "L1c",
+        "level": 1,
+        "label": "L1c: 型別系統",
+        "concepts": [
+          "cpp:var_declare_const",
+          "cpp:typedef"
+        ],
+        "children": []
+      }
+    ]
+  }
+}
