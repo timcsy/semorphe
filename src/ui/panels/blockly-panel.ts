@@ -15,6 +15,7 @@ import type { BlockState as ExtractorBlockState } from '../../core/projection/pa
 import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { buildProgram } from '../../components/cpp/program/lift'
+import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -127,7 +128,7 @@ export class BlocklyPanel implements ViewHost {
       grid: { spacing: 20, length: 3, colour: '#555', snap: true },
       zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
       trashcan: true,
-      theme: this.createDarkTheme(),
+      theme: createDarkWorkspaceTheme(),
     }
     if (this.media) {
       injectOptions.media = this.media
@@ -761,22 +762,4 @@ export class BlocklyPanel implements ViewHost {
     this.workspace = null
   }
 
-  private createDarkTheme(): Blockly.Theme {
-    return Blockly.Theme.defineTheme('dark_scratch', {
-      name: 'dark_scratch',
-      base: Blockly.Themes.Classic,
-      componentStyles: {
-        workspaceBackgroundColour: '#1e1e1e',
-        toolboxBackgroundColour: '#252526',
-        toolboxForegroundColour: '#cccccc',
-        flyoutBackgroundColour: '#2d2d2d',
-        flyoutForegroundColour: '#cccccc',
-        flyoutOpacity: 0.9,
-        scrollbarColour: '#4a4a4a',
-        scrollbarOpacity: 0.7,
-        insertionMarkerColour: '#fff',
-        insertionMarkerOpacity: 0.3,
-      },
-    })
-  }
 }
