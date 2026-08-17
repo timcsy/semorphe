@@ -52,7 +52,16 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.2.0'
+export const EXTENSION_VERSION = '0.2.1'
+
+/**
+ * 哪些副檔名要出現入口。
+ *
+ * ⚠️ `resourceExtname` **帶前面那個點**（`.cpp`，不是 `cpp`）。
+ */
+const EDITOR_WHEN = ['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp']
+  .map((ext) => `resourceExtname == ${ext}`)
+  .join(' || ')
 
 export interface ExtensionManifest {
   name: string
@@ -106,19 +115,41 @@ export function buildManifest(): ExtensionManifest {
         },
       ],
       menus: {
-        // 編輯器右上角的按鈕——只在看得懂的檔案上出現。
+        // ⚠️ **`when` 用等號列舉，不用 `=~` 正則。**
+        //
+        // 第一版寫 `resourceExtname =~ /\.(ino|cpp|...)$/`，而使用者回報
+        // 「指令看得到，按鈕與右鍵選單都沒有」。
+        // 檢查過的：manifest 正確、圖示檔在、擴充 19:59:59 啟動成功、零錯誤
+        // ——**所以問題不在載入**。
+        //
+        // 正則沒有被證明是錯的，⚠️ **而它是這裡唯一沒被證明是對的東西**。
+        // 換成等號列舉是**把變因拿掉**，不是「修好了」。
+        //
+        // > **當一個東西不會出聲，先拆掉沒被驗過的那一塊，
+        // > 不是先替沒被驗過的那一塊辯護。**
         'editor/title': [
           {
             command: 'semorphe.openBlocks',
-            when: 'resourceExtname =~ /\\.(ino|cpp|cc|cxx|c|h|hpp)$/',
+            when: EDITOR_WHEN,
             group: 'navigation',
           },
         ],
         'editor/context': [
           {
             command: 'semorphe.openBlocks',
-            when: 'resourceExtname =~ /\\.(ino|cpp|cc|cxx|c|h|hpp)$/',
-            group: 'semorphe',
+            when: EDITOR_WHEN,
+            // ⚠️ 用標準群組名。自訂群組（原本寫 `semorphe`）排序未定義，
+            //    而那是另一個沒被驗過的東西。
+            group: 'navigation',
+          },
+        ],
+        // 檔案總管的右鍵——⚠️ 這裡的變數是 `resourceExtname` 沒錯，
+        //    但它作用在**被點的那個檔**，不是編輯器裡的那個。
+        'explorer/context': [
+          {
+            command: 'semorphe.openBlocks',
+            when: EDITOR_WHEN,
+            group: 'navigation',
           },
         ],
       },
