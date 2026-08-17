@@ -128,9 +128,38 @@
 
 ---
 
+## 🟢 驗證順序（2026-08-17 使用者補充，**放寬了一步**）
+
+使用者逐字：
+
+> 「**ArduinoIDE 可以先用 VSCode Extension 測試就可以**」
+
+```
+第一段   VSCode          門檻低、裝得上、CSP 與 Webview 是 VSCode 的原生行為
+第二段   Arduino IDE     🔴 而它才是這一刀的目的地（Theia，不是 VSCode）
+```
+
+⚠️ **這不是把 SC-002 換掉，是把它拆成兩段。**
+第一段過了而第二段沒過，那本身就是一個發現
+——`history/080`§五 逐字：「Theia 的 Webview 與 VSCode 的差異**沒有逐項比對過**」。
+
+> **兩段都要記。因為「VSCode 好、Arduino IDE 壞」會決定
+> 「宿主獨立性」這個閘門到底要驗幾個宿主。**
+
+**查證的環境**（2026-08-17）：
+
+```
+/Applications/Visual Studio Code.app   ✅
+~/.vscode/extensions/                  ✅
+~/.arduinoIDE/                         ✅
+```
+
+---
+
 ## Assumptions
 
 - Arduino IDE 已安裝在驗證的機器上（`~/.arduinoIDE/` 存在 —— 2026-08-17 查證過）。
+- VSCode 也已安裝（同日查證）——🟢 **而它是第一段的驗證目標**。
 - 擴充的安裝方式是「把封包放進 `plugins` 資料夾後重開」——
   使用者**已經用這條路出貨過兩個擴充**。
 - 「一顆積木」用哪一顆不重要，**而它必須來自登錄表**。

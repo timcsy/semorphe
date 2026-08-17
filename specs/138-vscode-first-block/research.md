@@ -205,10 +205,16 @@ build/vscode/
 @vscode/vsce     打包 .vsix
 ```
 
-⚠️ **未驗**：`tsconfig` 有 `"types": ["vite/client"]`，而 `@types/vscode` 靠
-**模組解析**（`import * as vscode from 'vscode'` → `node_modules/@types/vscode`）
-而不是 `types` 陣列。**理論上會通，實作時第一件事就是驗它**——
-不通的話就把 `"vscode"` 加進 `types`。
+~~⚠️ **未驗**~~ → 🟢 **已驗，2026-08-17**：`tsconfig` 的 `"types": ["vite/client"]`
+**不影響模組解析**。裝上 `@types/vscode` 之後，只寫
+`import * as vscode from 'vscode'` 的 `src/vscode/extension.ts` 跑
+`npx tsc --noEmit` **乾淨**（唯一的錯是刻意還沒寫的 `./panel`）。
+
+> **`types` 陣列管的是「自動載入哪些全域型別」，
+> 而 `import 'vscode'` 走的是模組解析——兩條不同的路。**
+
+**所以 `tsconfig.json` 一個字都不用改。**
+⚠️ 而這一步刻意排在最前面：不通的話前面全部要重做，而它花了兩分鐘。
 
 ---
 

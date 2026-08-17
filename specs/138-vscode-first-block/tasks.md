@@ -100,7 +100,8 @@ T016 的三條在 Chromium 裡成立（SC-003 的一半）。
 - [ ] T024 [US2] 建立 `src/vscode/webview/fps.ts`：Blockly 拖曳期間以 `requestAnimationFrame` 記幀間隔，輸出幀數／中位數／p95／最大
 - [ ] T025 [US2] 🔴 於 `src/vscode/webview/fps.ts` 由數字算出 `verdict`：中位數 ≤ 20 ms 且 p95 ≤ 33 ms → 順；中位數 > 33 ms 或 p95 > 100 ms → 不順；之間 → 勉強。⚠️ **`verdict` 不得由人填**
 - [ ] T026 [US2] 於 `src/vscode/webview/main.ts` 把 T024/T025 的讀數接上畫面，並在 Chromium 裡拖一次拿到基準數字
-- [ ] T027 [US2] 🔴 **交棒**：把安裝指令與「要念的三個數字」寫進 [quickstart.md](./quickstart.md) 第四節（已有骨架，補上實際的 `.vsix` 檔名與截圖位置）——⚠️ **這一項的產出是給使用者的指令，不是一個我打勾的驗收**
+- [ ] T027 [US2] 🔴 **交棒（兩段）**：把安裝指令與「要念的三個數字」寫進 [quickstart.md](./quickstart.md) 第四節——**第一段 VSCode、第二段 Arduino IDE**（使用者 2026-08-17：「ArduinoIDE 可以先用 VSCode Extension 測試就可以」）。⚠️ **這一項的產出是給使用者的指令，不是一個我打勾的驗收**
+- [ ] T027a [US2] 把 `.vsix` 裝進 VSCode（`/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code --install-extension`），確認 `~/.vscode/extensions/` 底下出現該目錄 —— 🟢 **這一步我做得到**（裝得上去 ≠ 畫布順，兩者要分開講）
 
 **故事關卡**：判準寫得出來、Chromium 有一組數字、交棒文件可照著做。
 
