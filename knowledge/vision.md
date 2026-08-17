@@ -788,10 +788,26 @@ languages/{lang}/
       （今天 `split-pane.ts` 只有左右兩個位置、`mobile-tab-bar.ts` 的 `TabId` 型別寫死）
 - [ ] C++／C 兩個目標**不得退步**，46+ 條護欄基線不動
 
+**兩個已拍板的決定（2026-08-17）**
+
+```
+✅ 時鐘      模擬為主，而【可以切成真實時間】
+             ⚠️ 硬性要求：兩條路都要有測試，或【明說】哪一條沒被測到
+             ——一條沒有人跑的路與一條不存在的路長得一樣，而學生會跑到它
+✅ Serial    語言套件的 `ioStyle` trait（node-traits.ts:195 加第三個成員）
+             🔴 【不是】核心的 io_style（core/types.ts:596）——P9：核心不認識 Arduino
+```
+
+⚠️ **仍然開著**：`arduino:` 該不該是自己的 scope（draft §六 未決②）
+——而 draft 說**第 5 項才會逼出答案**。
+
 **前置**
 
 ```
 🟢 target 機制        spec 134／136 做完——而 Arduino 是它的第三個目標
+🟢 provides           【不是前置】——Arduino sketch 一行 #include 都沒有（十段語料逐段確認）
+🔴 執行路不知道目標    `ExecutionContext`（executor-registry.ts:9-48）沒有 style／target
+                       ——那是第 1 項真正的閘門
 🔴 provides／reference  完整設計的另外兩格【還沒做】，而 Arduino 是它們的消費者
                         provides  → pinMode／digitalWrite 的 requires 對它求解
                         reference → arduino-cli，而不是 clangd
