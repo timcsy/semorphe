@@ -82,7 +82,7 @@
 - [x] T028 `findings.md`：坑逐條記下，**含「因為知道答案而跳過的」**
   - 必記：T001 的節點形狀、T014 的簡化、T015 沒有判準的理由、
     T022 被測到幾條、`arduino:` scope 仍沿用既有的（draft §六 未決②**仍然開著**）
-- [ ] T029 knowie 反流：`history/` 轉變 ＋ `experience` 教訓 ＋ vision 階段 6.11 收成
+- [x] T029 knowie 反流：`history/` 轉變 ＋ `experience` 教訓 ＋ vision 階段 6.11 收成
 
 ---
 
