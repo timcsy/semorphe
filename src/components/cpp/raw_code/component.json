@@ -16,8 +16,7 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
-    "lift": null,
-    "_lift_why": "**顯式的空，不是遺漏。**",
+    "lift": "./lift.ts",
     "execute": "./execute.ts",
     "_execute_why": "**顯式的空，不是遺漏。**"
   }

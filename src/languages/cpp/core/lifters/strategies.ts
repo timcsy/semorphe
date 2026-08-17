@@ -14,6 +14,7 @@ import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift
 import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
+import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
 import { qualifierConcept } from '../../../../core/component/qualifier-concepts'
 import { buildStringStreamDecl } from '../../../../components/cpp/istringstream_declare/lift'
 import { buildTemplateFunc } from '../../../../components/cpp/template_function/lift'
@@ -684,10 +685,38 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       return buildAutoDeclare('x', null)
     }
 
+    // 🔴 **`const`／`static` ＋ 陣列：誠實降級，而不是假裝看懂了。**
+    //
+    // 2026-08-17 盲測（`component-fuzz`）抓到，而**症狀比「不支援」更糟**：
+    //
+    // ```
+    // int t[2] = {7,8};           🟢 好的
+    // const int t[2] = {7,8};     🔴 initializer 整個【不見了】→ 之後 t[1] 是 TYPE_MISMATCH
+    // static int t[2] = {7,8};    🔴 名字變成 `t[2]` → 之後查 t 是 UNDECLARED_VAR
+    // ```
+    //
+    // ⚠️ **而兩者的 lift 殘差都是 0**——辨識層說它看懂了。
+    //
+    // > **兩顆宣告概念都把「陣列」這件事吃掉了，而各自吃掉的方式不同
+    // > ——一個丟掉初始值，一個把 `[2]` 當成名字的一部分。**
+    //
+    // **這裡只做誠實降級**（P6）：把一個**安靜的錯樹**換成一個**看得見的缺口**。
+    // 🔴 完整支援（`const`／`static` 修飾詞 ＋ 陣列宣告）**是另一輪的事**——
+    // 它要一顆概念帶得動修飾詞，而那是概念代數的問題不是 lift 的問題。
+    const arrayDeclarator = (d: { type: string; childForFieldName(n: string): { type: string } | null }): boolean =>
+      d.type === 'array_declarator' || d.childForFieldName('declarator')?.type === 'array_declarator'
+
     // const/constexpr declaration
     if (qualifier === 'const' || qualifier === 'constexpr') {
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
       if (decl) {
+        if (arrayDeclarator(decl)) {
+          // ⚠️ 用 `cpp:raw_code`（**有五路的使用者面概念**）而不是裸的 `raw_code`
+          //（那是核心 Level 4 的降級標記，原文放 `metadata.rawCode`）。
+          // 差別在**產出**：`cpp:raw_code` 的 generate 讀 `properties.code`，
+          // 所以**原文原樣回得去**，round-trip 不漂移。
+          return degrade(buildRawCode(node.text), `${qualifier} ＋ 陣列宣告尚未支援`)
+        }
         const lifted = liftSingleDeclarator(decl, type, ctx)
         const conceptId = qualifierConcept(qualifier)
         if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
@@ -713,6 +742,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     if (storageSpec?.text === 'static') {
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       if (decl) {
+        if (arrayDeclarator(decl)) {
+          return degrade(buildRawCode(node.text), 'static ＋ 陣列宣告尚未支援')
+        }
         if (decl.type === 'identifier') {
           return buildStaticVar(type, decl.text, null)
         }

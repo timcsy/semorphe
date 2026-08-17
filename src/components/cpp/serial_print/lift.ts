@@ -14,11 +14,20 @@ import { createNode } from '../../../core/semantic-tree'
 export function registerLift(): void {
   registerMethodBranch('cpp/serial_print', (obj, method, argChildren, ctx): SemanticNode | null => {
     if (obj !== 'Serial' || (method !== 'print' && method !== 'println')) return null
+    // 🔴 **第二個引數不能靜默丟掉。**
+    //
+    // `Serial.print(v, 3)` 的 `3` 是**小數位數**（`Serial.print(v, HEX)` 是進位）。
+    // 2026-08-17 盲測抓到：第一版 `argSlots` 只有一格，於是 `3` **不見了**
+    // ——輸出是 `-50` 而不是 `-50.000`，**而沒有任何地方出聲**。
+    //
+    // > **一個被靜默丟掉的引數，症狀是「輸出格式不對」，
+    // > 而那看起來像格式化的 bug，不像「我根本沒收到那個參數」。**
     const value = argChildren[0] ? ctx.lift(argChildren[0]) : null
+    const format = argChildren[1] ? ctx.lift(argChildren[1]) : null
     return createNode(
       'cpp:serial_print',
       { obj, newline: method === 'println' ? 'true' : 'false' },
-      { value: value ? [value] : [] },
+      { value: value ? [value] : [], format: format ? [format] : [] },
     )
   })
 }

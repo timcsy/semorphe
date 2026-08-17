@@ -11,6 +11,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const obj = String(node.properties.obj ?? 'Serial')
     const method = String(node.properties.newline ?? 'true') === 'true' ? 'println' : 'print'
     const value = generateExpression((node.children.value ?? [])[0], ctx)
-    return `${indent(ctx)}${obj}.${method}(${value});\n`
+    // ⚠️ 第二個引數（小數位數／進位）**有才產**——沒有的話不能產出一個空的逗號
+    const formatNode = (node.children.format ?? [])[0]
+    const args = formatNode ? `${value}, ${generateExpression(formatNode, ctx)}` : value
+    return `${indent(ctx)}${obj}.${method}(${args});\n`
   })
 }

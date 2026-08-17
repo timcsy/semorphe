@@ -15,6 +15,11 @@
           "check": "Expression"
         },
         {
+          "type": "input_value",
+          "name": "FORMAT",
+          "check": "Expression"
+        },
+        {
           "type": "field_dropdown",
           "name": "NEWLINE",
           "options": [
@@ -40,7 +45,8 @@
         "NEWLINE": "newline"
       },
       "inputs": {
-        "VALUE": "value"
+        "VALUE": "value",
+        "FORMAT": "format"
       },
       "statementInputs": {}
     }

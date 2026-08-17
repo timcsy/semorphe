@@ -70,11 +70,6 @@
     "reason": "它是 `lift-pattern.json` 的純資料樣式（六個識別字 → 一顆身分），**沒有接點**——`children` 是空的。與 `builtin_constant` 同一個形狀。"
   },
   {
-    "conceptId": "cpp:pin_mode",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
-  },
-  {
     "conceptId": "cpp:priority_queue_peek",
     "cause": "語料沒覆蓋",
     "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
@@ -110,24 +105,9 @@
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
   },
   {
-    "conceptId": "cpp:raw_code",
-    "cause": "元概念",
-    "reason": "辨識不出來時的誠實標記，由 lifter 的 Level 4 產生而非由 pattern 匹配。語料若碰得到它，反而代表模型有缺口。"
-  },
-  {
     "conceptId": "cpp:raw_expression",
     "cause": "元概念",
     "reason": "同 cpp:raw_code，運算式位置的版本。"
-  },
-  {
-    "conceptId": "cpp:serial_open",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerMethodBranch` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
-  },
-  {
-    "conceptId": "cpp:serial_print",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerMethodBranch` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
   },
   {
     "conceptId": "cpp:string_empty",
