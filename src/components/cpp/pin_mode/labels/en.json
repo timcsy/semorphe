@@ -1,0 +1,4 @@
+{
+  "C_PIN_MODE_MSG0": "Set pin %1 to %2",
+  "C_PIN_MODE_TOOLTIP": "pinMode(pin, mode) — OUTPUT drives the pin, INPUT/INPUT_PULLUP reads it"
+}

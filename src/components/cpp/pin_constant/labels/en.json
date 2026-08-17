@@ -1,0 +1,3 @@
+{
+  "C_PIN_CONSTANT_TOOLTIP": "Arduino pin constants: HIGH/LOW are voltage levels, OUTPUT/INPUT/INPUT_PULLUP are pin modes, A0 is the first analog pin"
+}

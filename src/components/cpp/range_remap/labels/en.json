@@ -1,0 +1,4 @@
+{
+  "C_RANGE_REMAP_MSG0": "Remap %1 from %2-%3 to %4-%5",
+  "C_RANGE_REMAP_TOOLTIP": "map(value, fromLow, fromHigh, toLow, toHigh) — integer arithmetic, so it truncates"
+}

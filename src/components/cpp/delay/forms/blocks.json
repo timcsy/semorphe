@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp_delay",
+    "conceptId": "cpp:delay",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_delay",
+      "message0": "%{BKY_C_DELAY_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "MS",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_DELAY_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "MS": "ms"
+      },
+      "statementInputs": {}
+    }
+  }
+]

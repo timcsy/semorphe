@@ -1,0 +1,55 @@
+[
+  {
+    "id": "cpp_range_remap",
+    "conceptId": "cpp:range_remap",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_remap",
+      "message0": "%{BKY_C_RANGE_REMAP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM_LOW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM_HIGH",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TO_LOW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TO_HIGH",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_RANGE_REMAP_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value",
+        "FROM_LOW": "from_low",
+        "FROM_HIGH": "from_high",
+        "TO_LOW": "to_low",
+        "TO_HIGH": "to_high"
+      },
+      "statementInputs": {}
+    }
+  }
+]

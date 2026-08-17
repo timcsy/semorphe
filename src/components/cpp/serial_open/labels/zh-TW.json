@@ -1,0 +1,4 @@
+{
+  "C_SERIAL_OPEN_MSG0": "開啟序列埠 傳輸速率 %1",
+  "C_SERIAL_OPEN_TOOLTIP": "Serial.begin(速率)——開啟序列埠通訊，常用 9600。⚠️ 沒開就輸出，真板子上看不到任何東西"
+}

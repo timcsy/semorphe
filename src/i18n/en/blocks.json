@@ -140,6 +140,7 @@
   "RUNTIME_ERR_TYPE_MISMATCH": "Type mismatch: %1",
   "RUNTIME_ERR_INDEX_OUT_OF_RANGE": "Array index out of range",
   "RUNTIME_ERR_UNDEFINED_FUNC": "Function '%1' is not defined",
+  "RUNTIME_ERR_NO_ENTRY_POINT": "No entry point found — there is no main, and no setup/loop. (Defined here: %1)",
   "RUNTIME_ERR_ABORTED": "Execution aborted",
   "RUNTIME_ERR_UNKNOWN_CONCEPT": "I don't know how to run this piece yet — that's a gap in the system, not a mistake of yours",
   "RUNTIME_ERR_UNRECOGNIZED_CODE": "I can't read this piece of code, so I can't run it",
@@ -221,5 +222,7 @@
   "DIAG_MISSING_VAR_NAME_CODE": "declarator {position} has no name",
   "DIAG_UNKNOWN": "There is a problem here",
   "DIAG_SYNTAX_ERROR_BLOCK": "I could not read this part; the block keeps the original text: {snippet}",
-  "DIAG_SYNTAX_ERROR_CODE": "incomplete syntax on this line"
+  "DIAG_SYNTAX_ERROR_CODE": "incomplete syntax on this line",
+  "CATEGORY_HARDWARE_PINS": "Pins & Timing",
+  "CATEGORY_HARDWARE_SERIAL": "Serial"
 }

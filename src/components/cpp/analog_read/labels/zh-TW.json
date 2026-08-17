@@ -1,0 +1,4 @@
+{
+  "C_ANALOG_READ_MSG0": "讀取類比腳位 %1",
+  "C_ANALOG_READ_TOOLTIP": "analogRead(腳位)——回傳 0～1023 的類比值"
+}

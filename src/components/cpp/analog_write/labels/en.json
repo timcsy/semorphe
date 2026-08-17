@@ -1,0 +1,4 @@
+{
+  "C_ANALOG_WRITE_MSG0": "Write %2 to analog pin %1",
+  "C_ANALOG_WRITE_TOOLTIP": "analogWrite(pin, 0-255) — this simulator stores the value only; it does not model the PWM waveform"
+}

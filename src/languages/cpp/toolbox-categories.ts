@@ -35,6 +35,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'data' },
       { from: '(core)', category: 'values' },
       { from: '(core)', category: 'variables' },
+      // HIGH／OUTPUT／A0 是【值】，與 true／false／NULL 同一格——不是硬體操作
+      { from: '(arduino)', category: 'data' },
     ],
   },
   {
@@ -44,6 +46,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'operators' },
       { from: '<cmath>', category: 'math' },
       { from: '<cstdlib>', category: 'stdlib' },
+      // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
+      { from: '(arduino)', category: 'math' },
     ],
   },
   {
@@ -60,6 +64,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'loops' },
       { from: '(core)', category: 'conditions' },
       { from: '<cstdlib>', category: 'stdlib' },
+      // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
+      { from: '(arduino)', category: 'math' },
     ],
     // 同一顆 `cpp_if` 用三個不同的預設狀態出現——那是教學設計
     // （讓學生直接拖到「有 else 的 if」），**登錄表推不出來**，所以留著。
@@ -110,6 +116,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '<string>', category: 'containers' },
       { from: '<cctype>', category: 'stdlib' },
       { from: '<cstdlib>', category: 'stdlib' },
+      // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
+      { from: '(arduino)', category: 'math' },
     ],
   },
   {
@@ -157,6 +165,30 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     sources: [
       { from: '(core)', category: 'structures' },
       { from: '(core)', category: 'oop' },
+    ],
+  },
+
+  // ── 硬體（Arduino）──
+  //
+  // ⚠️ **加這一段是必要的，而它不是「登記積木」**：`toolbox-categories` 早就改成
+  // 從**有序來源**導出（`{ from: 擁有者, category: 分類 }`），
+  // 而 `(arduino)` 是 2026-08-17 出現的**新擁有者**——
+  // 沒有這一段的話，那 11 顆積木宣告了、產得出來、**而使用者拿不到**
+  // （第十九條護欄「可拿性」會報，它報過了）。
+  //
+  // 🔴 **腳位與序列埠分成兩段**，理由與 `pointers_memory` 那段相同：
+  // 學生找「怎麼印東西到序列埠」時，不該在一堆腳位積木裡翻。
+
+  {
+    key: 'hardware_pins', nameKey: 'CATEGORY_HARDWARE_PINS', fallback: '腳位與時間', colorKey: 'cpp_special',
+    sources: [
+      { from: '(arduino)', category: 'hardware' },
+    ],
+  },
+  {
+    key: 'hardware_serial', nameKey: 'CATEGORY_HARDWARE_SERIAL', fallback: '序列埠', colorKey: 'io',
+    sources: [
+      { from: '(arduino)', category: 'io' },
     ],
   },
 

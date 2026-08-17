@@ -1,0 +1,4 @@
+{
+  "C_ANALOG_WRITE_MSG0": "把類比腳位 %1 輸出成 %2",
+  "C_ANALOG_WRITE_TOOLTIP": "analogWrite(腳位, 0～255)——⚠️ 本模擬器只記住那個數值，不模擬 PWM 波形"
+}

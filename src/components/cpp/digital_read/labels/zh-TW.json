@@ -1,0 +1,4 @@
+{
+  "C_DIGITAL_READ_MSG0": "讀取腳位 %1",
+  "C_DIGITAL_READ_TOOLTIP": "digitalRead(腳位)——讀回 HIGH(1) 或 LOW(0)"
+}

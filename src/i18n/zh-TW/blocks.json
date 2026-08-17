@@ -140,6 +140,7 @@
   "RUNTIME_ERR_TYPE_MISMATCH": "型別不符：%1",
   "RUNTIME_ERR_INDEX_OUT_OF_RANGE": "陣列索引超出範圍",
   "RUNTIME_ERR_UNDEFINED_FUNC": "函式 '%1' 尚未定義",
+  "RUNTIME_ERR_NO_ENTRY_POINT": "找不到程式的進入點——沒有 main、也沒有 setup／loop。（這個程式定義了：%1）",
   "RUNTIME_ERR_ABORTED": "執行已中止",
   "RUNTIME_ERR_UNKNOWN_CONCEPT": "這一塊我還不會執行——這是系統還沒長到的地方，不是你寫錯了",
   "RUNTIME_ERR_UNRECOGNIZED_CODE": "這一段程式我看不懂，所以沒有辦法執行它",
@@ -221,5 +222,7 @@
   "DIAG_MISSING_VAR_NAME_CODE": "第 {position} 個宣告子沒有名稱",
   "DIAG_UNKNOWN": "這裡有一個問題",
   "DIAG_SYNTAX_ERROR_BLOCK": "這一段程式我看不懂，積木上這塊是照抄原文的：{snippet}",
-  "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整"
+  "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整",
+  "CATEGORY_HARDWARE_PINS": "腳位與時間",
+  "CATEGORY_HARDWARE_SERIAL": "序列埠"
 }

@@ -1,0 +1,20 @@
+{
+  "conceptId": "cpp:delay",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "ms": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "接**既有的**模擬時鐘（`core/runtime/arduino-clock.ts`），不自己記時間——兩顆各記一份的話「`delay` 推進了而 `millis` 讀得到」就不成立。"
+}

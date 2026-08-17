@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cpp_serial_open",
+    "conceptId": "cpp:serial_open",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_serial_open",
+      "message0": "%{BKY_C_SERIAL_OPEN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BAUD",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERIAL_OPEN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "BAUD": "baud"
+      },
+      "statementInputs": {}
+    }
+  }
+]

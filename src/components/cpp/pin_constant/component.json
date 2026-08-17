@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:pin_constant",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "value",
+      "kind": "enum",
+      "values": [
+        "HIGH",
+        "LOW",
+        "OUTPUT",
+        "INPUT",
+        "INPUT_PULLUP",
+        "A0"
+      ],
+      "default": "HIGH"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有，而這些名字由 Arduino 的建置系統提供。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": null,
+    "_lift_why": "🔴 **第一版有一個 `lift-pattern.json`，靠識別字的名字認人——而它把使用者宣告的名字搶走了。**\n\n第三十二條護欄（行為的誤差）當場抓到：語料裡有 `enum Level { LOW = -1, MEDIUM = 0, HIGH = 1 };`，而 `cout << LOW` 印出 **0**（樣式把它認成腳位常數）而不是 **-1**。\n\n> **一個靠「識別字的名字」認人的樣式，會把使用者自己宣告的名字搶走。**\n> 而 `HIGH`／`LOW`／`INPUT`／`OUTPUT` 正是**最常見的列舉成員名**。\n\n⚠️ 既有的 `builtin_constant` 用同一個做法（`EOF`／`NULL` 靠名字 lift），而**那些名字幾乎沒有人會重新宣告**——差別在這裡，不在做法。\n\n**處置**：拿掉 lift 樣式。`HIGH` 從程式碼進來時仍然是 `var_ref`，而執行時**查不到宣告才**去問腳位常數表（見 `arduino-pins.ts` 的 `pinConstantValue`）——那正是正確的語義：**沒有人宣告它，它才是環境提供的**。\n\n🔴 **代價**：積木 → 程式碼 → 積木時，這顆會變回「變數參照」積木。**correctness 贏 round-trip**——一個印錯數字的程式，比一顆換了形狀的積木糟。"
+  },
+  "_why": "🔴 **刻意【不】併進既有的 `builtin_constant`**，雖然語義上它就是「環境提供的具名常數」。理由是目標機制的粒度：**課程清單（`levelTree`）過濾得了一顆概念，過濾不了一顆概念裡的一個列舉值**。併進去的話，學 C++ 的學生會在下拉選單裡看到 `HIGH`／`INPUT_PULLUP`，而沒有任何機制擋得住。與 spec 136 的 C 課程清單同一條理由。 ⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 檔頭。"
+}

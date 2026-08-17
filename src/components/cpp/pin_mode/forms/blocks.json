@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_pin_mode",
+    "conceptId": "cpp:pin_mode",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pin_mode",
+      "message0": "%{BKY_C_PIN_MODE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "MODE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PIN_MODE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "PIN": "pin",
+        "MODE": "mode"
+      },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "C_PIN_MODE_MSG0": "設定腳位 %1 為 %2",
+  "C_PIN_MODE_TOOLTIP": "pinMode(腳位, 模式)——OUTPUT 讓腳位輸出電位，INPUT／INPUT_PULLUP 讓它讀取外界"
+}

@@ -1,0 +1,4 @@
+{
+  "C_DIGITAL_READ_MSG0": "Read pin %1",
+  "C_DIGITAL_READ_TOOLTIP": "digitalRead(pin) — returns HIGH(1) or LOW(0)"
+}

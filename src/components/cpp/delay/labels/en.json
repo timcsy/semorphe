@@ -1,0 +1,4 @@
+{
+  "C_DELAY_MSG0": "Wait %1 milliseconds",
+  "C_DELAY_TOOLTIP": "delay(ms) — under the simulated clock it does not really wait; it advances time (switchable to real time)"
+}

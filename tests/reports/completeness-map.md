@@ -6,13 +6,15 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：189｜✅ 實作 892｜📄 已宣告不提供 33｜❔ 判不出來 20｜🈳 殼 0｜❌ 缺 0（以路徑數計）
+元件：200｜✅ 實作 946｜📄 已宣告不提供 33｜❔ 判不出來 21｜🈳 殼 0｜❌ 缺 0（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
 | 元件 | generate | lift | render | extract | execute |
 |---|---|---|---|---|---|
 | `cpp:address_of` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:arithmetic` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:array_2d_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:array_2d_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -62,8 +64,11 @@
 | `cpp:cstring_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:default` | ✅ | 📄 | ✅ | ✅ | 📄 |
 | `cpp:define` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:delay` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:destructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `cpp:digital_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:digital_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:enum` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -117,6 +122,7 @@
 | `cpp:method_override` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:method_virtual` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:method_virtual_pure` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `cpp:millis` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:new` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -124,6 +130,8 @@
 | `cpp:operator_overload` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:pair_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pair_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pin_constant` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `cpp:pin_mode` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pointer_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pointer_deref` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -144,6 +152,7 @@
 | `cpp:range_find_upper` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_remap` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_reverse` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_sort` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_sum` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -151,6 +160,8 @@
 | `cpp:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:return` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |

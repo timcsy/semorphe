@@ -1,0 +1,4 @@
+{
+  "C_MILLIS_MSG0": "Milliseconds since start",
+  "C_MILLIS_TOOLTIP": "millis() — milliseconds since the sketch started; often used instead of delay for non-blocking timing"
+}
