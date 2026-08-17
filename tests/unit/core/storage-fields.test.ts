@@ -50,6 +50,7 @@ const filledState: SavedState = {
   language: 'cpp',
   styleId: 'google',
   topicId: 'apcs-basic',
+  targetId: 'c',
   enabledBranches: ['a', 'b'],
   lastModified: '2026-08-06T00:00:00.000Z',
   blockStyleId: 'zelos',
@@ -90,7 +91,8 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
 
   it('清單本身是完整的——不是只測了幾個好測的欄位', () => {
     // 這支守的是「有人把 SAVED_STATE_FIELDS 縮水好讓上面那支通過」
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(11)
+    // ⚠️ 11 → 12（2026-08-17，spec 136）：新增 `targetId`，見 storage-version.test.ts 的說明。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
     expect(Object.keys(filledState).length).toBe(Object.keys(SAVED_STATE_FIELDS).length)
   })
 

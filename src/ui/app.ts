@@ -13,10 +13,15 @@ import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig } from '../core/projection/code-generator'
 import { TopicRegistry } from '../core/topic-registry'
+import { TargetRegistry } from '../core/target-registry'
 import { getVisibleConcepts, flattenLevelTree } from '../core/level-tree'
-import type { Topic } from '../core/types'
+import type { Target, Topic } from '../core/types'
 import cppBeginnerTopic from '../languages/cpp/topics/cpp-beginner.json'
 import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
+import cBeginnerTopic from '../languages/cpp/topics/c-beginner.json'
+import cppTargetDef from '../languages/cpp/targets/cpp.json'
+import cTargetDef from '../languages/cpp/targets/c.json'
+import cppCompetitiveTargetDef from '../languages/cpp/targets/cpp-competitive.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
@@ -80,6 +85,8 @@ export class App {
   private localeLoader: LocaleLoader
   private storageService: StorageService
   private topicRegistry: TopicRegistry
+  private targetRegistry: TargetRegistry
+  private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
   private blocksDirty = false
@@ -108,13 +115,22 @@ export class App {
     this.localeLoader = new LocaleLoader()
     this.storageService = new StorageService()
     this.topicRegistry = new TopicRegistry()
+    this.targetRegistry = new TargetRegistry()
 
     // Register topics
     this.topicRegistry.register(cppBeginnerTopic as Topic)
     this.topicRegistry.register(cppCompetitiveTopic as Topic)
+    this.topicRegistry.register(cBeginnerTopic as Topic)
 
-    // Default topic and branches (only root level enabled for simplest starting point)
-    this.currentTopic = this.topicRegistry.getDefault('cpp')!
+    // ⚠️ **注入而不是 import**——核心的登錄表不認識任何具體目標（P9／中立性護欄）。
+    // 目標是「課程清單 ＋ 風格」的具名組合，讓使用者選一次而不是三次。
+    this.targetRegistry.register(cppTargetDef as Target)
+    this.targetRegistry.register(cTargetDef as Target)
+    this.targetRegistry.register(cppCompetitiveTargetDef as Target)
+
+    // Default target → topic and branches (only root level enabled for simplest starting point)
+    this.currentTarget = this.targetRegistry.get('cpp')!
+    this.currentTopic = this.topicRegistry.get(this.currentTarget.topic)!
     this.enabledBranches = new Set([this.currentTopic.levelTree.id])
   }
 
@@ -282,11 +298,19 @@ export class App {
       },
     })
 
-    const selectors = setupSelectors(STYLE_PRESETS, this.topicRegistry, this.currentTopic, this.enabledBranches, {
-      onTopicChange: (topic, branches) => {
+    const selectors = setupSelectors(STYLE_PRESETS, this.targetRegistry, this.topicRegistry, this.currentTarget, this.enabledBranches, {
+      // 🔴 **選一次而不是三次**：一個目標同時決定課程清單與風格。
+      // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
+      //（課程清單那條在這裡、風格那條是 `applyStyle`），
+      // 新寫一條會讓「切換之後畫面長什麼樣」有兩個真相來源。
+      onTargetChange: (target, topic, branches) => {
         const prevDepth = this.getScaffoldDepth()
+        this.currentTarget = target
         this.currentTopic = topic
         this.enabledBranches = branches
+        // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
+        const style = STYLE_PRESETS.find(p => p.id === target.style)
+        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
         const newDepth = this.getScaffoldDepth()
         setScaffoldConfig({ scaffoldDepth: newDepth })
         this.syncController?.setTopic(topic, branches)
@@ -303,6 +327,10 @@ export class App {
           }
         }
         this.refreshStatusBar()
+        // ⚠️ **選擇本身要存**——`autoSave` 只掛在積木變動上（`blocklyPanel.onChange`），
+        // 所以在空白工作區換目標，重新整理之後就跑掉了。
+        // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
+        if (!this._restoringState) this.autoSave()
       },
       onBranchesChange: (branches) => {
         const prevDepth = this.getScaffoldDepth()
@@ -601,7 +629,7 @@ export class App {
     return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
       blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.monacoPanel?.getCode() ?? '',
       language: 'cpp', styleId: this.currentStylePreset.id,
-      topicId: this.currentTopic.id, enabledBranches: [...this.enabledBranches],
+      topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
   }
 
@@ -630,8 +658,13 @@ export class App {
 
     // 2. Restore topic and branches WITHOUT triggering resyncAfterTopicChange
     this._restoringState = true
-    if (state.topicId) {
-      const topic = this.topicRegistry.get(state.topicId)
+    // ⚠️ `targetId` 優先，回退到 `topicId`——舊存檔（spec 136 之前）只有後者。
+    // 🔴 而**認不得的 ID 一律回退到預設**，不得崩潰或留下一片空白。
+    const savedTarget = state.targetId ? this.targetRegistry.get(state.targetId) : undefined
+    if (savedTarget) this.currentTarget = savedTarget
+    const topicId = savedTarget?.topic ?? state.topicId
+    if (topicId) {
+      const topic = this.topicRegistry.get(topicId)
       if (topic) {
         this.currentTopic = topic
         this.enabledBranches = state.enabledBranches
@@ -639,9 +672,14 @@ export class App {
           : new Set([topic.levelTree.id])
       }
     }
+    // 舊存檔沒有 `targetId`，而它的 `styleId` 仍然照舊生效（下面既有的還原路徑）。
+    if (savedTarget) {
+      const style = STYLE_PRESETS.find(p => p.id === savedTarget.style)
+      if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
+    }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.syncController?.setTopic(this.currentTopic, this.enabledBranches)
-    this.topicSelector?.setTopic(this.currentTopic, this.enabledBranches)
+    this.topicSelector?.setTarget(this.currentTarget, this.enabledBranches)
     this.updateToolbox()
     this._restoringState = false
 

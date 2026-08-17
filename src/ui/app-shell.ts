@@ -17,8 +17,9 @@ import { CodeKeyboard } from './panels/code-keyboard'
 import { StorageService } from '../core/storage'
 import type { SavedState } from '../core/storage'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
-import type { StylePreset, Topic } from '../core/types'
+import type { StylePreset, Target, Topic } from '../core/types'
 import type { TopicRegistry } from '../core/topic-registry'
+import type { TargetRegistry } from '../core/target-registry'
 import type { BlockStylePreset } from '../languages/style'
 import { showToast } from './toolbar/toast'
 
@@ -36,7 +37,7 @@ export interface AppShellElements {
 }
 
 export interface AppShellCallbacks {
-  onTopicChange: (topic: Topic, enabledBranches: Set<string>) => void
+  onTargetChange: (target: Target, topic: Topic, enabledBranches: Set<string>) => void
   onBranchesChange: (enabledBranches: Set<string>) => void
   onStyleChange: (style: StylePreset) => void
   onBlockStyleChange: (preset: BlockStylePreset, toolbox: object) => void
@@ -553,19 +554,21 @@ export function createAppLayout(
 
 export function setupSelectors(
   stylePresets: StylePreset[],
+  targetRegistry: TargetRegistry,
   topicRegistry: TopicRegistry,
-  currentTopic: Topic,
+  currentTarget: Target,
   currentBranches: Set<string>,
-  callbacks: Pick<AppShellCallbacks, 'onTopicChange' | 'onBranchesChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'>,
+  callbacks: Pick<AppShellCallbacks, 'onTargetChange' | 'onBranchesChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'>,
 ): { topicSelector: TopicSelector | null; styleSelector: StyleSelector | null } {
   let topicSelector: TopicSelector | null = null
   let styleSelector: StyleSelector | null = null
 
   const topicMount = document.getElementById('level-selector-mount')
   if (topicMount) {
-    const topics = topicRegistry.listForLanguage(currentTopic.language)
-    topicSelector = new TopicSelector(topicMount, topics, currentTopic, currentBranches)
-    topicSelector.onTopicChange((topic, branches) => callbacks.onTopicChange(topic, branches))
+    // ⚠️ 課程清單由目標**查出來**，不再由使用者直接選——目標就是那個具名的配對。
+    const topicOf = (t: Target): Topic => topicRegistry.get(t.topic)!
+    topicSelector = new TopicSelector(topicMount, targetRegistry.all(), topicOf, currentTarget, currentBranches)
+    topicSelector.onTargetChange((target, topic, branches) => callbacks.onTargetChange(target, topic, branches))
     topicSelector.onBranchesChange((branches) => callbacks.onBranchesChange(branches))
   }
 

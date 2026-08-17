@@ -13,12 +13,16 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { TargetRegistry } from '../../src/core/target-registry'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
+import competitiveTarget from '../../src/languages/cpp/targets/cpp-competitive.json'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
+import cBeginner from '../../src/languages/cpp/topics/c-beginner.json'
+import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
 import cStyle from '../../src/languages/cpp/styles/c.json'
+import competitiveStyle from '../../src/languages/cpp/styles/competitive.json'
 import type { Target } from '../../src/core/types'
 
-const TARGETS = [cppTarget, cTarget] as Target[]
+const TARGETS = [cppTarget, cTarget, competitiveTarget] as Target[]
 
 describe('目標', () => {
   let reg: TargetRegistry
@@ -27,7 +31,7 @@ describe('目標', () => {
   it('★ 登錄與查找', () => {
     for (const t of TARGETS) reg.register(t)
     expect(reg.get('c')?.style).toBe('c')
-    expect(reg.all()).toHaveLength(2)
+    expect(reg.all()).toHaveLength(3)
   })
 
   it('★ 重複的 id 要出聲，不得靜默覆蓋', () => {
@@ -55,15 +59,32 @@ describe('目標', () => {
   })
 
   it('★ 而那兩個引用要指得到【真的存在】的東西', () => {
-    const topics = new Set([(cppBeginner as { id: string }).id])
-    const styles = new Set([(apcsStyle as { id: string }).id, (cStyle as { id: string }).id])
+    const topics = new Set([cppBeginner, cBeginner, cppCompetitive].map((t) => (t as { id: string }).id))
+    const styles = new Set([apcsStyle, cStyle, competitiveStyle].map((s) => (s as { id: string }).id))
     for (const t of TARGETS) {
       expect(topics.has(t.topic), `🔴 目標 ${t.id} 指向不存在的課程清單 ${t.topic}`).toBe(true)
       expect(styles.has(t.style), `🔴 目標 ${t.id} 指向不存在的風格 ${t.style}`).toBe(true)
     }
   })
 
-  it('★ 兩個目標要指向【不同的】風格——否則它什麼都沒綁', () => {
-    expect(cppTarget.style).not.toBe(cTarget.style)
+  it('★ 每個目標指向【不同的】風格——否則它什麼都沒綁', () => {
+    const styles = TARGETS.map((t) => t.style)
+    expect(new Set(styles).size, '🔴 有兩個目標綁到同一個風格').toBe(styles.length)
+  })
+
+  /**
+   * 🔴 **本輪（spec 136）新增的一支：課程清單也要不同。**
+   *
+   * spec 134 的第一刀兩筆目標**綁到同一個課程清單**，於是 SC-001
+   * （「選一次而不是三次」）**只兌現了三分之一**——資料上成立，效果上是零。
+   *
+   * > **一個「綁定」如果兩邊綁的是同一個值，它在資料上成立，而在效果上是零。**
+   */
+  it('★ 每個目標指向【不同的】課程清單——否則「選一次」只兌現三分之一', () => {
+    const topics = TARGETS.map((t) => t.topic)
+    expect(
+      new Set(topics).size,
+      '🔴 有兩個目標綁到同一個課程清單——那是 spec 134 沒兌現 SC-001 的原因。',
+    ).toBe(topics.length)
   })
 })
