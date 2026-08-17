@@ -68,7 +68,19 @@
 export function csp(source: string): string {
   return [
     `default-src 'none'`,
-    `script-src ${source}`,
+    // 🔴 `'wasm-unsafe-eval'` —— `code → blocks` 要在 Webview 裡跑 tree-sitter，
+    // 而 `WebAssembly.compile` 沒有它會丟 **可被 catch 的 `CompileError`**
+    // （2026-08-17 實測兩個方向：不加 → CompileError；加了 → 152 項匯出）。
+    //
+    // ⚠️ 它**嚴格窄於** `'unsafe-eval'`：只放行 WebAssembly 編譯。
+    //
+    // ## 為什麼是【現在】才加
+    //
+    // spec 138 撿到這個坑時刻意沒加，理由逐字：
+    // 「**加一個還沒有人要用的權限，等於把它從『下一刀要處理的事』
+    //   變成『已經在那裡、沒有人記得為什麼』**」。
+    // 🟢 現在用到了，所以觸發條件成立。
+    `script-src ${source} 'wasm-unsafe-eval'`,
     `style-src ${source} 'unsafe-inline'`,
     `img-src ${source} data:`,
     `media-src ${source}`,

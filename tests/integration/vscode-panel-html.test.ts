@@ -69,6 +69,23 @@ describe('CSP', () => {
     expect(directives.some((d) => d.startsWith('media-src'))).toBe(true)
   })
 
+  it("🔴 `script-src` 有 'wasm-unsafe-eval' 而【沒有】'unsafe-eval'", () => {
+    // ⚠️ 這一條是**護欄式**的，不只是「功能對不對」：
+    // `'wasm-unsafe-eval'` 嚴格窄於 `'unsafe-eval'`，而順手放寬是最容易發生的事
+    // ——**而放寬之後沒有任何東西會壞掉，所以沒有人會發現**。
+    const scriptSrc = csp(SOURCE)
+      .split(';')
+      .map((s) => s.trim())
+      .find((s) => s.startsWith('script-src'))!
+    expect(scriptSrc).toContain(`'wasm-unsafe-eval'`)
+    expect(scriptSrc, "🔴 不得順手加 'unsafe-eval'").not.toMatch(/(^|[^-])'unsafe-eval'/)
+  })
+
+  it('🔴 `default-src` 沒有被放寬', () => {
+    // 加 wasm 權限時最容易順手做的第二件事，就是把 default-src 打開。
+    expect(csp(SOURCE)).toContain(`default-src 'none'`)
+  })
+
   it('`default-src` 是 none——白名單而不是黑名單', () => {
     // ⚠️ 而這一條正是上面三個坑的**共同成因**：白名單漏一項就靜默失敗。
     // 換成寬鬆的 default-src 會讓它們消失，**而那是把尺改短**。

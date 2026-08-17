@@ -118,13 +118,13 @@
 
 **故事目標**：貼一段程式積木重畫，**而且停下來**。
 
-- [ ] T035 [US2] 🔴 於 `src/vscode/webview-html.ts` 的 CSP **只加 `'wasm-unsafe-eval'` 一項**——⚠️ **不得**順手加 `'unsafe-eval'`、**不得**放寬 `default-src`、既有五條一個字不動
-- [ ] T036 [US2] 於 `tests/integration/vscode-panel-html.test.ts` 加一條護欄式斷言：CSP 含 `'wasm-unsafe-eval'` **且不含** `'unsafe-eval'`
-- [ ] T037 [US2] 於 `src/scripts/build-vscode.ts` 把 tree-sitter 的兩個 wasm 複製進封包
-- [ ] T038 [US2] 建立 `src/vscode/webview/lift.ts`：初始化 tree-sitter（wasm 路徑走與 media 同一套 URI）＋ parse ＋ lift
-- [ ] T039 [US2] 於 `src/vscode/panel.ts` 接上回音守衛：文件變更事件 → 是回音就停、不是就送 `document`
-- [ ] T040 [US2] 於 `src/vscode/webview/main.ts` 收到 `document` 時重繪積木，🔴 **並對 Blockly `setRecordUndo(false)`**（重繪不是使用者的操作）
-- [ ] T041 [US2] 讀數新增「**是不是回音**」與「膠囊／tree-sitter 載入狀態」
+- [x] T035 [US2] 🔴 於 `src/vscode/webview-html.ts` 的 CSP **只加 `'wasm-unsafe-eval'` 一項**——⚠️ **不得**順手加 `'unsafe-eval'`、**不得**放寬 `default-src`、既有五條一個字不動
+- [x] T036 [US2] 於 `tests/integration/vscode-panel-html.test.ts` 加一條護欄式斷言：CSP 含 `'wasm-unsafe-eval'` **且不含** `'unsafe-eval'`
+- [x] T037 [US2] 於 `src/scripts/build-vscode.ts` 把 tree-sitter 的兩個 wasm 複製進封包
+- [x] T038 [US2] 建立 `src/vscode/webview/lift.ts`：初始化 tree-sitter（wasm 路徑走與 media 同一套 URI）＋ parse ＋ lift
+- [x] T039 [US2] 於 `src/vscode/panel.ts` 接上回音守衛：文件變更事件 → 是回音就停、不是就送 `document`
+- [x] T040 [US2] 於 `src/vscode/webview/main.ts` 收到 `document` 時重繪積木，🔴 **並對 Blockly `setRecordUndo(false)`**（重繪不是使用者的操作）
+- [x] T041 [US2] 讀數新增「**是不是回音**」與「膠囊／tree-sitter 載入狀態」
 
 **關卡（SC-004／005）**：🔴 `grep -rn "setTimeout" src/vscode/` → **零筆**。
 

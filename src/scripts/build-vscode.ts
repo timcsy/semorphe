@@ -68,6 +68,18 @@ function main(): void {
   cpSync('assets/logo/semorphe-mono.svg', join(OUT, 'assets', 'logo-light-theme.svg'))
   cpSync('assets/logo/semorphe-mono-light.svg', join(OUT, 'assets', 'logo-dark-theme.svg'))
 
+  // 2c. tree-sitter 的 wasm —— `code → blocks` 要用它。
+  //
+  // ⚠️ **不從 CDN 抓**：第四十五條護欄守的是「執行期零外部請求」，
+  //    而 Webview 的 CSP 也會擋掉。封包因此從約 470 KB 長到約 4 MB
+  //    ——**那是預期之內的代價**，寫在 spec 139 的 Complexity Tracking。
+  //
+  // 🔴 而它需要 CSP 的 `'wasm-unsafe-eval'`（見 `webview-html.ts`）：
+  //    沒有它 `WebAssembly.compile` 會丟一個**可被 catch 的 CompileError**。
+  for (const w of ['tree-sitter-cpp.wasm', 'web-tree-sitter.wasm']) {
+    cpSync(join('public', w), join(OUT, 'dist', w))
+  }
+
   // 3. 擴充的宣告。
   //
   // 🔴 版本號來自 `manifest.ts` 自己的 `EXTENSION_VERSION`，**不是根 package.json**。

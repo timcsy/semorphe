@@ -40,9 +40,11 @@ import { BlocklyPanel } from '../../ui/panels/blockly-panel'
 import { LocaleLoader } from '../../i18n/loader'
 import { generateCode } from '../../core/projection/code-generator'
 import { rewriteSpan } from '../../core/projection/rewrite-span'
+import { renderToBlocklyState } from '../../core/projection/block-renderer'
 import { DEFAULT_CONFIG } from '../sync/settings'
 import type { PanelConfig } from '../sync/settings'
 import { setupWorkspace } from './workspace-setup'
+import { createCodeLifter, type CodeLifter } from './lift'
 import { attachDragMeter } from './fps'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
 
@@ -95,6 +97,18 @@ export async function boot(): Promise<void> {
   })
   panelRef.panel = panel
   panel.init(setup.toolbox)
+
+  // 5b. code → blocks 的管線。⚠️ wasm 與 Blockly 的 media 同一個目錄。
+  //     🔴 **失敗要看得見**：載不起來的話積木永遠不會跟著程式碼變，
+  //        而那**不會拋錯到任何人看得到的地方**。
+  let lifter: CodeLifter | null = null
+  let lifterError: string | null = null
+  createCodeLifter(registry, setup.topic, media.replace(/media\/$/, ''))
+    .then((l) => { lifter = l; render(); applyDocument() })
+    .catch((e: unknown) => {
+      lifterError = e instanceof Error ? e.message : String(e)
+      render()
+    })
 
   // ── 狀態：一次只服務一份文件 ──
   let docText: string | null = null
@@ -150,9 +164,48 @@ export async function boot(): Promise<void> {
       // FR-003：拖動位置不該產生檔案變更——這一格讓「沒變更」看得見，
       // ⚠️ 而不是靠「什麼都沒發生」去推論。
       row('無變更的積木事件', String(noopEvents)) +
+      // 🔴 lift 載不起來的話「積木永遠不跟著程式碼變」，而那不會拋錯到
+      //    任何人看得到的地方——所以它必須是讀數上的一格。
+      row('程式碼→積木',
+        lifterError !== null ? `🔴 ${lifterError}` : lifter ? '就緒' : '載入中…',
+        lifterError !== null) +
       meter
   }
   render()
+
+  /**
+   * 把目前的文件畫成積木。
+   *
+   * 🔴 `applyingFromDocument` 期間積木事件**不得回寫**——那是回音的另一半：
+   * 主行程用 `version` 擋住「我們寫的文字回來了」，而這裡擋住
+   * 「我們畫的積木觸發了回寫」。**兩邊都要，缺一個就是迴圈。**
+   *
+   * ⚠️ 而重繪**不進 Blockly 的 undo 堆疊**——它不是使用者的操作。
+   */
+  function applyDocument(): void {
+    if (!lifter || docText === null) return
+    const text = docText
+    void lifter.lift(text).then((tree) => {
+      if (!tree || docText !== text) return   // 期間又換文件了 → 這次的結果過期
+      applyingFromDocument = true
+      Blockly.Events.setRecordUndo(false)
+      try {
+        // ⚠️ 走**與網頁版同一個** `renderToBlocklyState`
+        //    （`ui/sync-controller.ts:324`）——不自己再組一份。
+        panel.onSemanticUpdate({
+          source: 'code',
+          tree,
+          blockState: renderToBlocklyState(tree),
+        } as never)
+      } catch (e) {
+        console.error('[semorphe] 畫積木失敗', e)
+      } finally {
+        Blockly.Events.setRecordUndo(true)
+        applyingFromDocument = false
+      }
+      render()
+    })
+  }
 
   // 8. 宿主送東西進來
   window.addEventListener('message', (e: MessageEvent<HostMessage>) => {
@@ -161,13 +214,7 @@ export async function boot(): Promise<void> {
       docText = msg.text
       docVersion = msg.version
       docUri = msg.uri
-      applyingFromDocument = true
-      try {
-        // ⚠️ Phase 5 會在這裡接上 lift；本階段只更新文字基準。
-        //    🔴 而旗標現在就要有——不然 Phase 5 接上時它會是一個【新的】迴圈。
-      } finally {
-        applyingFromDocument = false
-      }
+      applyDocument()
       render()
     } else if (msg.type === 'noDocument') {
       docText = null
