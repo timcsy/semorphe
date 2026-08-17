@@ -134,11 +134,11 @@
 
 ## Phase 6：User Story 3 —— 點一邊，另一邊亮起來（P1）
 
-- [ ] T042 [US3] 建立 `src/vscode/webview/highlight.ts`：行 → nodeId、nodeId → 行 的雙向反查（⚠️ 純函式，可單元測）
-- [ ] T043 [P] [US3] 撰寫 `tests/integration/vscode-highlight.test.ts`：兩個方向各一組正向；🔴 **並含「節點沒有 sourceRange」的退路**（實測 1.5%）
-- [ ] T044 [US3] 於 `src/vscode/panel.ts` 實作程式碼側高亮 ＋ 捲到可見；並訂閱游標變更送 `selection`
-- [ ] T045 [US3] 於 `src/vscode/webview/main.ts` 收到 `selection` 時選取對應積木；🔴 **值相等就不再傳播**（選取是冪等的，見契約第三節②）
-- [ ] T046 [US3] 讀數新增「**目前選取的 nodeId**」
+- [x] T042 [US3] 建立 `src/vscode/webview/highlight.ts`：行 → nodeId、nodeId → 行 的雙向反查（⚠️ 純函式，可單元測）
+- [x] T043 [P] [US3] 撰寫 `tests/integration/vscode-highlight.test.ts`：兩個方向各一組正向；🔴 **並含「節點沒有 sourceRange」的退路**（實測 1.5%）
+- [x] T044 [US3] 於 `src/vscode/panel.ts` 實作程式碼側高亮 ＋ 捲到可見；並訂閱游標變更送 `selection`
+- [x] T045 [US3] 於 `src/vscode/webview/main.ts` 收到 `selection` 時選取對應積木；🔴 **值相等就不再傳播**（選取是冪等的，見契約第三節②）
+- [x] T046 [US3] 讀數新增「**目前選取的 nodeId**」
 
 **關卡（SC-006）**：雙向都成立且不進迴圈。
 

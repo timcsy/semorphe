@@ -32,6 +32,17 @@ import { EchoGuard } from './sync/echo-guard'
 import { applySpan } from '../core/projection/rewrite-span'
 import type { HostMessage, WebviewMessage } from './sync/messages'
 
+/**
+ * 積木 → 程式碼的高亮。
+ *
+ * ⚠️ 用**主題色**而不是寫死的顏色——寫死的話在淺色主題上會看不見，
+ * 而那是「不會報錯的壞」那一族。
+ */
+const HIGHLIGHT = vscode.window.createTextEditorDecorationType({
+  backgroundColor: new vscode.ThemeColor('editor.selectionHighlightBackground'),
+  isWholeLine: true,
+})
+
 const VIEW_TYPE = 'semorphe.blocks'
 const TITLE = 'Semorphe 積木'
 const DIST = ['dist']
@@ -63,6 +74,8 @@ class SemorpheSession {
   private readonly echo = new EchoGuard()
   /** 目前服務的文件。⚠️ 沒有支援的編輯器時是 `undefined`。 */
   private doc: vscode.TextDocument | undefined
+  /** 🔴 選取的防迴圈：值相等就不再傳播（選取是冪等的）。 */
+  private lastSentLine = -1
 
   constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this.panel = panel
@@ -75,6 +88,11 @@ class SemorpheSession {
     // 跟著 active editor 走
     vscode.window.onDidChangeActiveTextEditor(() => this.follow(), null, this.disposables)
     vscode.workspace.onDidChangeTextDocument((e) => this.onDocumentChanged(e), null, this.disposables)
+    // ⚠️ 這個事件**很吵**（每次移動游標都發）——而反查是一趟 76～131 個節點的
+    //    樹走訪（量過，微秒級），所以吵不是問題。
+    //    🔴 真正的問題是**迴圈**：照亮程式碼會移動游標 → 又反查 → 又選積木。
+    //    處置是**值相等就不傳**。
+    vscode.window.onDidChangeTextEditorSelection((e) => this.onSelection(e), null, this.disposables)
 
     this.follow()
   }
@@ -117,8 +135,45 @@ class SemorpheSession {
     this.sendDocument(e.document)
   }
 
+  private onSelection(e: vscode.TextEditorSelectionChangeEvent): void {
+    if (e.textEditor.document.uri.toString() !== this.doc?.uri.toString()) return
+    const line = e.selections[0]?.active.line ?? 0
+    if (line === this.lastSentLine) return
+    this.lastSentLine = line
+    this.send({ type: 'selection', line })
+  }
+
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
-    if (m.type === 'applyEdit') await this.applyEdit(m.span, m.baseVersion)
+    if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
+    if (m.type === 'revealNode') { this.revealNode(m.range); return }
+  }
+
+  /**
+   * 積木 → 程式碼：照亮那幾行並捲到看得見。
+   *
+   * ⚠️ 程式碼那一側**不是我們的**，所以只能用 decoration 疊上去
+   * ——而它會與其他擴充的 decoration 競爭優先序。本輪用一個低調的背景色。
+   *
+   * 🔴 `range` 是 `null` 代表那顆積木**指不到程式碼**（實測 1.5%）
+   * ——**清掉高亮而不是靜默保留上一個**，否則使用者會以為它指到那裡。
+   */
+  private revealNode(range: { startLine: number; endLine: number } | null): void {
+    const editor = this.editorForDoc()
+    if (!editor) return
+    if (range === null) { editor.setDecorations(HIGHLIGHT, []); return }
+    const end = Math.min(range.endLine, editor.document.lineCount - 1)
+    const r = new vscode.Range(
+      new vscode.Position(range.startLine, 0),
+      editor.document.lineAt(Math.max(range.startLine, end)).range.end,
+    )
+    editor.setDecorations(HIGHLIGHT, [r])
+    // ⚠️ 只在看不見時才捲——每次都捲會讓畫面一直跳。
+    editor.revealRange(r, vscode.TextEditorRevealType.InCenterIfOutsideViewport)
+  }
+
+  private editorForDoc(): vscode.TextEditor | undefined {
+    const uri = this.doc?.uri.toString()
+    return vscode.window.visibleTextEditors.find((ed) => ed.document.uri.toString() === uri)
   }
 
   /**
@@ -177,6 +232,7 @@ class SemorpheSession {
   }
 
   dispose(): void {
+    this.editorForDoc()?.setDecorations(HIGHLIGHT, [])
     for (const d of this.disposables) d.dispose()
     current = undefined
   }

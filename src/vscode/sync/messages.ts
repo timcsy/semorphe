@@ -37,6 +37,8 @@ export type HostMessage =
       version: number
     }
   | { type: 'noDocument' }
+  /** 使用者把游標移到某一行——⚠️ **這個事件很吵**（每次移動都發）。 */
+  | { type: 'selection'; line: number }
 
 // ─── Webview → 主行程 ───
 
@@ -53,3 +55,10 @@ export type WebviewMessage =
       baseVersion: number
     }
   | { type: 'ready'; capsules: number; specs: number }
+  /**
+   * 使用者點了一顆積木 → 請宿主照亮這幾行。
+   *
+   * ⚠️ `range` 是 `null` 代表**那顆積木指不到程式碼**（實測 1.5% 的節點沒有範圍）
+   * ——🔴 而那要**說得出來**，不是靜默什麼都不做（FR-007）。
+   */
+  | { type: 'revealNode'; nodeId: string | null; range: { startLine: number; endLine: number } | null }

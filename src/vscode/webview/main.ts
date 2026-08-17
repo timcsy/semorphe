@@ -45,8 +45,10 @@ import { DEFAULT_CONFIG } from '../sync/settings'
 import type { PanelConfig } from '../sync/settings'
 import { setupWorkspace } from './workspace-setup'
 import { createCodeLifter, type CodeLifter } from './lift'
+import { nodeIdAtLine, rangeOfNodeId } from './highlight'
 import { attachDragMeter } from './fps'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
+import type { SemanticNode } from '../../core/types'
 
 declare function acquireVsCodeApi(): { postMessage(m: unknown): void }
 
@@ -121,6 +123,11 @@ export async function boot(): Promise<void> {
   let lastSpanLines = -1
   /** 沒有造成程式碼變化的積木事件（拖動位置、選取…）。FR-003 靠它看得見。 */
   let noopEvents = 0
+  /** 目前這份文件的語義樹——高亮的兩個方向都查它。 */
+  let currentTree: SemanticNode | null = null
+  /** 🔴 選取的防迴圈：**值相等就不再傳播**。選取是冪等的，所以值比對就夠。 */
+  let selectedNodeId: string | null = null
+  let unmappedSelections = 0
 
   // 6. 積木改了 → 只重寫改到的那一段
   panel.onChange(() => {
@@ -166,6 +173,8 @@ export async function boot(): Promise<void> {
       row('無變更的積木事件', String(noopEvents)) +
       // 🔴 lift 載不起來的話「積木永遠不跟著程式碼變」，而那不會拋錯到
       //    任何人看得到的地方——所以它必須是讀數上的一格。
+      row('目前選取', selectedNodeId === null ? '（無）' : selectedNodeId.slice(0, 12)) +
+      row('指不到程式碼的選取', String(unmappedSelections), unmappedSelections > 0) +
       row('程式碼→積木',
         lifterError !== null ? `🔴 ${lifterError}` : lifter ? '就緒' : '載入中…',
         lifterError !== null) +
@@ -187,6 +196,7 @@ export async function boot(): Promise<void> {
     const text = docText
     void lifter.lift(text).then((tree) => {
       if (!tree || docText !== text) return   // 期間又換文件了 → 這次的結果過期
+      currentTree = tree
       applyingFromDocument = true
       Blockly.Events.setRecordUndo(false)
       try {
@@ -207,6 +217,20 @@ export async function boot(): Promise<void> {
     })
   }
 
+  // 7b. 積木 → 程式碼的高亮
+  //
+  // 🔴 **值相等就不再傳播**：選取是冪等的（「選同一個」與「不選」效果一樣），
+  //    所以值比對就夠——⚠️ 而它**不可以**套用文字編輯那套身分機制，
+  //    因為文字編輯不是冪等的。**兩個問題長得像，而它們的性質不同。**
+  panel.onNodeSelect((nodeId) => {
+    if (nodeId === selectedNodeId) return
+    selectedNodeId = nodeId
+    const range = nodeId && currentTree ? rangeOfNodeId(currentTree, nodeId) : null
+    if (nodeId && range === null) unmappedSelections++
+    post({ type: 'revealNode', nodeId, range })
+    render()
+  })
+
   // 8. 宿主送東西進來
   window.addEventListener('message', (e: MessageEvent<HostMessage>) => {
     const msg = e.data
@@ -215,6 +239,15 @@ export async function boot(): Promise<void> {
       docVersion = msg.version
       docUri = msg.uri
       applyDocument()
+      render()
+    } else if (msg.type === 'selection') {
+      // 程式碼 → 積木。⚠️ 同一個防迴圈：值相等就不動。
+      if (!currentTree) return
+      const nodeId = nodeIdAtLine(currentTree, msg.line)
+      if (nodeId === selectedNodeId) return
+      selectedNodeId = nodeId
+      // ⚠️ 用面板既有的 highlightByNodeId——**不自己再做一份反查**。
+      panel.highlightByNodeId(nodeId, 'code-to-block')
       render()
     } else if (msg.type === 'noDocument') {
       docText = null
