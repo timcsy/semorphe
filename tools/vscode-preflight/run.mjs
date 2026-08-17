@@ -68,6 +68,12 @@ await page.waitForTimeout(2000)
 const read = async () => (await page.locator('#readout').innerText()).replace(/\n(?=[^\n])/g, ' ')
 console.log('── 載入後 ──\n' + (await read()))
 
+// 🔴 工具箱分類數——SC-009 要求它與網頁版相同。
+// ⚠️ 而它從【畫面上】數，不是從設定物件數：一個「建出來了但沒渲染」
+//    的工具箱，在設定物件上看起來一模一樣。
+const categories = await page.locator('.blocklyToolboxCategory').count()
+console.log(`工具箱分類（畫面上）：${categories}`)
+
 const blocks = await page.locator('#canvas .blocklyDraggable').count()
 const labels = await page.locator('#canvas svg text').evaluateAll((ns) => ns.map((n) => n.textContent))
 console.log(`\n積木數：${blocks}　標籤：${JSON.stringify(labels)}`)
@@ -94,4 +100,8 @@ if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}
 
 await browser.close()
 stop()
-process.exit(errors.length === 0 && failures.length === 0 && blocks >= 1 ? 0 : 1)
+// ⚠️ 入口條件錨在【合成量】：分類數與積木數都要 > 0，
+//    否則「零錯誤」只是因為什麼都沒渲染。
+const ok = errors.length === 0 && failures.length === 0 && blocks >= 1 && categories >= 1
+if (!ok) console.log(`🔴 不通過：錯誤 ${errors.length}｜請求失敗 ${failures.length}｜積木 ${blocks}｜分類 ${categories}`)
+process.exit(ok ? 0 : 1)

@@ -83,12 +83,12 @@
 **故事目標**：面板有工具箱、深色、與網頁版一致。
 **獨立測試**：打開面板 → 看得到分類 → 拉一顆積木出來。
 
-- [ ] T023 🔴 **單獨一個 commit**：把 `createDarkTheme()` 從 `src/ui/panels/blockly-panel.ts:764` 的 private 抽成共用（⚠️ **這是本輪唯一動到網頁版程式碼的一步**）
-- [ ] T024 🔴 **T023 之後立刻**跑 `npm test` ＋ 探針，確認網頁版零變化 —— **不與其他改動混在一起**（`history/072`）
-- [ ] T025 [US6] 於 `src/vscode/webview/main.ts` 把 `Blockly.inject` 補齊七項：`renderer: 'zelos'`／`theme`／`grid`／完整的 `zoom`／`trashcan`／`media`／`toolbox`
-- [ ] T026 [US6] 於 `src/vscode/webview/main.ts` 接上 `buildToolbox()`（`ui/toolbox-builder.ts:45`），組態暫時用內建預設
-- [ ] T027 [US6] 更新 `tools/vscode-preflight/run.mjs`：新增斷言「工具箱分類數 > 0 且與網頁版相同」
-- [ ] T028 [US6] 建置 ＋ 跑預檢，確認畫布深色、有工具箱、console 錯誤仍為 0
+- [x] T023 🔴 **單獨一個 commit**：把 `createDarkTheme()` 從 `src/ui/panels/blockly-panel.ts:764` 的 private 抽成共用（⚠️ **這是本輪唯一動到網頁版程式碼的一步**）
+- [x] T024 🔴 **T023 之後立刻**跑 `npm test` ＋ 探針，確認網頁版零變化 —— **不與其他改動混在一起**（`history/072`）
+- [x] T025 [US6] 於 `src/vscode/webview/main.ts` 把 `Blockly.inject` 補齊七項：`renderer: 'zelos'`／`theme`／`grid`／完整的 `zoom`／`trashcan`／`media`／`toolbox`
+- [x] T026 [US6] 於 `src/vscode/webview/main.ts` 接上 `buildToolbox()`（`ui/toolbox-builder.ts:45`），組態暫時用內建預設
+- [x] T027 [US6] 更新 `tools/vscode-preflight/run.mjs`：新增斷言「工具箱分類數 > 0 且與網頁版相同」
+- [x] T028 [US6] 建置 ＋ 跑預檢，確認畫布深色、有工具箱、console 錯誤仍為 0
 
 **關卡（SC-009）**：工具箱分類數與網頁版相同。
 
