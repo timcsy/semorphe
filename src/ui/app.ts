@@ -54,12 +54,18 @@ import { allCppConcepts, allCppProjections } from '../languages/cpp/all-declarat
 import apcsPreset from '../languages/cpp/styles/apcs.json'
 import competitivePreset from '../languages/cpp/styles/competitive.json'
 import googlePreset from '../languages/cpp/styles/google.json'
+import cPreset from '../languages/cpp/styles/c.json'
 import { CURRENT_VERSION } from '../core/storage-version'
 
 const STYLE_PRESETS: StylePreset[] = [
   apcsPreset as StylePreset,
   competitivePreset as StylePreset,
   googlePreset as StylePreset,
+  // 🔴 **C 風格 2026-08-17 才接上選單**（階段 6.10）——在那之前它
+  // 只活在測試裡（`c-style-parity`），**而使用者選不到**。
+  // ⚠️ 那正是「機制有了沒人接上」的第六次，而它差一點發生：
+  // 本輪把 C 的產出從 6/10 修到 10/10，**而沒有人拿得到那個成果**。
+  cPreset as StylePreset,
 ]
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]

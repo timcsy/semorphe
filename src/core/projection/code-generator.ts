@@ -30,6 +30,11 @@ export interface GeneratorContext {
   _lineCount?: number
   /** Shared mutable line counter — survives indented(ctx) spread copies */
   _lineBox?: { value: number }
+  /**
+   * 這棵樹裡宣告的 struct 名字——**C 目標的型別名要加 `struct` 標籤**。
+   * ⚠️ 由語言套件填，核心只是傳遞（中立性：核心不認識 `cpp:struct_declare`）。
+   */
+  _structNames?: ReadonlySet<string>
   /** Optional dependency resolver for auto-include resolution */
   dependencyResolver?: DependencyResolver
   /** Optional program scaffold for boilerplate management */

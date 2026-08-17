@@ -693,6 +693,49 @@ export interface ToolboxCategoryDef {
   buildContents?: (registry: import('./block-spec-registry').BlockSpecRegistry, visibleConcepts: Set<string>, ioPreference: 'iostream' | 'cstdio') => { kind: string; type: string }[]
 }
 
+// ─── Target（目標）───
+
+/**
+ * **目標**——把「哪些概念看得到」與「產出什麼形狀」綁成一個具名的組合。
+ *
+ * ## 它從哪來
+ *
+ * 使用者今天要**分三個地方各選一次**（課程清單／風格／心裡記著用什麼編譯器驗），
+ * 而**沒有任何東西保證那三次一致**。
+ *
+ * > **三個機制各自都對，而沒有東西保證它們指向同一個世界。**
+ *
+ * ## 🔴 它不擁有任何資料
+ *
+ * `topic` 與 `style` 是**指向既有東西的引用**，`id`／`name` 是標籤。
+ * **四個欄位，兩個引用兩個標籤——零新機制。**
+ * ⚠️ 加一個「只有目標才有」的欄位，它就從**組合**變成**新的抽象層**了
+ * ——而那正是 `draft/2026-08-13-C和C++難分難捨.md`§三 明確排除的。
+ *
+ * ## ⚠️ 而「具名」不是便利，是那個組合【本身就是一個身分】
+ *
+ * 2026-08-17 動手時發現：**沒有任何既有 style 欄位標得出「這是 C」**
+ * ——`printf` 競賽也是（而它是 C++），`explicit` google 也是。
+ * 靠合取推出來的「這是 C」，只是今天剛好沒有別人命中。
+ *
+ * > **一個靠既有欄位合取推出來的身分，不是一個身分。**
+ *
+ * ## ⚠️ 本輪只做兩格
+ *
+ * 完整設計有四格（`visible`／`io`／`provides`／`reference`）。
+ * **本輪只做前兩格**——`provides`（這個世界提供什麼能力）與
+ * `reference`（用什麼驗證）**沒有做**。
+ * 🔴 **不得因為這個型別存在就以為目標已經完整。**
+ */
+export interface Target {
+  id: string
+  name: string
+  /** 指向一個**既有的**課程清單 id——決定哪些概念看得到 */
+  topic: string
+  /** 指向一個**既有的**風格 id——決定產出什麼形狀 */
+  style: string
+}
+
 // ─── Topic System ───
 
 /** Topic 代表一個使用情境的投影組態 */
