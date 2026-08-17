@@ -98,13 +98,64 @@ VSCode 原型 2026-08-16 退休時撈出來的兩條，逐字：
 
 🟢 ① 已實測可行。🔴 ② **一個字都沒變**，而 Arduino IDE 也開多個 sketch。
 
-## 五、仍然不知道的
+## 五、~~仍然不知道的~~ → 🟢 **PoC 就在旁邊，而三個未知全部有答案**
+
+使用者：「**事實上，你看到的 textblockly 就是我之前測試的 PoC 了**」
+——`../TextBlockly/`，**11008 行 TypeScript**，五個版本的 `.vsix`。
 
 ```
-Theia 的 API 子集到哪裡     🟡 `views`／`viewsContainers` 已證實可用，
-                            而【Webview 跑不跑得動 Blockly 畫布】沒驗過
-TextDocument 編輯行為        ❌ 沒驗——而它正是雙向轉換的另一半
-Open VSX                    ⚪ 不是阻斷——手動丟 .vsix 就會動
+🟢 Webview 載得動 Blockly     BlocklyViewProvider.ts:54
+                              localResourceRoots → node_modules/blockly ＋ resources
+🟢 TextDocument 寫得回去      兩條路都寫了：
+                              editor.edit(editBuilder)（:577）
+                              WorkspaceEdit ＋ workspace.applyEdit（:586）備援
+⚪ Open VSX                   不是阻斷——手動丟 .vsix 就會動
+```
+
+### 🔴 而它同時示範了三個【已知成本】，一個都沒解掉
+
+**① 整份重寫 ⟹ 使用者的排版每次都被換掉**
+
+```ts
+// BlocklyViewProvider.ts:571
+const fullRange = new vscode.Range(
+  document.positionAt(0),
+  document.positionAt(document.getText().length))
+editBuilder.replace(fullRange, code)
+```
+
+🔴 **那正是第三節預測的失敗樣態，而 PoC 證實了它**：
+不是「貼回去一次」，是**每動一顆積木就把他整個檔案換掉**。
+
+**② 防同步迴圈用的是布林旗標**（`CodeSyncManager.ts:5` `isUpdating`）
+
+而 [history/069](069-vscode原型退休而它的兩個教訓被撈出來.md)§三① 逐字：
+
+> 「**同步宿主用布林旗標就夠，非同步宿主要加時間**」
+
+⚠️ **VSCode 的 `applyEdit` 是非同步的。** 而 PoC 用布林 ＋ 四處散落的
+`setTimeout`（:72／:283／:535／:560）——**那些 `setTimeout` 就是症狀**。
+🟢 **那條教訓因此有了一個具體的實例**，它原本只是一句話。
+
+**③「只有一個文件」的假設 PoC 也有**
+
+`vscode.window.activeTextEditor` 散在 `CodeSyncManager` 與 `BlocklyViewProvider`
+——與 `history/069`§三② 記的 `app.ts` 六個單例**是同一個形狀**。
+
+### ⚠️ 而 PoC 自己重寫了一個解析器
+
+`src/ast/ArduinoParser.ts`／`ArduinoTokenizer.ts`／`ArduinoAST.ts`
+——**因為它沒有 Semorphe 的核**。
+
+> **合流的形狀因此很清楚：PoC 的【殼】＋ Semorphe 的【核】。**
+> 而 PoC 那 11008 行裡，**解析與產生那一半是要丟掉的**。
+
+### 仍然沒驗的
+
+```
+❌ Webview 在【Arduino IDE 裡】畫布跑得順不順
+   —— `.vsix` 被 deployedPlugins 解開只證明它【載入了】，不證明畫布好用
+❌ 而 Theia 的 Webview 與 VSCode 的差異沒有逐項比對過
 ```
 
 ## 相關
@@ -114,3 +165,4 @@ Open VSX                    ⚪ 不是阻斷——手動丟 .vsix 就會動
 - [history/079](079-補量執行之後下一步又換了一次.md)——執行的缺口，⚠️ **而本檔讓「不做執行」變成合理**
 - [concepts/投影](../concepts/投影.md)「資訊分類學」——🔴 第三節說的那條要重看
 - [principles](../principles.md)「四項獨立性」——宿主獨立性
+- `../TextBlockly/`——PoC 本體（⚠️ 不在這個 repo 裡，而它是第五節每一條的出處）
