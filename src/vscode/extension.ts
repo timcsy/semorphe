@@ -13,6 +13,9 @@
  * 所以 **`src/vscode/` 底下不得出現任何 conceptId 字串**。
  * 於是「畫布上那顆積木必須從登錄表挑」從一句規格變成一條會紅的檢查。
  *
+ * 🟢 而它當場付過一次回報：`erasableSyntaxOnly` 抓到一個建構子參數屬性，
+ * 而 `npm test`（esbuild）與 `npm run build:vscode`（Vite）**兩個都放行**。
+ *
  * ## 這一層認識具體的宿主，而那是對的
  *
  * `src/vscode/` **不在** `NEUTRAL_DIRS`（`src/core`／`src/ui`／
@@ -20,17 +23,13 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { SemorphePanelProvider } from './panel'
+import { openBlocksPanel } from './panel'
+
+export const OPEN_COMMAND = 'semorphe.openBlocks'
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      SemorphePanelProvider.viewType,
-      new SemorphePanelProvider(context.extensionUri),
-      // ⚠️ 面板被收合再展開時**不要**重建 —— 重建等於重新載入 200 顆膠囊
-      //    ＋ 重新 inject 畫布，而那會讓「順不順」量到的是啟動成本。
-      { webviewOptions: { retainContextWhenHidden: true } },
-    ),
+    vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
   )
 }
 
@@ -38,6 +37,6 @@ export function deactivate(): void {
   // 沒有要清理的東西——本輪不持有任何跨面板狀態。
   //
   // ⚠️ 這是**顯式的空**，不是忘了寫：面板的生命週期由 `context.subscriptions`
-  // 管，而擴充本身不存檔、不開連線、不註冊計時器。
+  // 與 `onDidDispose` 管，而擴充本身不存檔、不開連線、不註冊計時器。
   // 下一刀（雙向同步）會讓這裡長出東西。
 }

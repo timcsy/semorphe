@@ -52,7 +52,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.1.2'
+export const EXTENSION_VERSION = '0.2.0'
 
 export interface ExtensionManifest {
   name: string
@@ -85,31 +85,40 @@ export function buildManifest(): ExtensionManifest {
     //    本輪要驗的是「面板打不打得開」，**啟動條件愈少變因愈少**。
     //    `history/080`§一：textbricks 用的就是 onStartupFinished，而它載得起來。
     activationEvents: ['onStartupFinished'],
+    // 🔴 **不是側邊欄的視圖，是編輯器區域的一個分頁。**
+    //
+    // 使用者 2026-08-17（在側邊欄版本跑起來之後）：
+    // 「我希望的**不是**像這種在 TreeView 上呈現，我是希望**放在一個 WebView**」
+    //
+    // 於是 `viewsContainers` ＋ `views` 整組拿掉，換成一個指令
+    // ——面板由 `vscode.window.createWebviewPanel` 建（見 `panel.ts`）。
+    //
+    // ⚠️ 而那讓活動列圖示（CSS 遮罩）那條**不再適用**：
+    //    指令圖示是**當圖片**渲染的，並且依主題在 light/dark 之間切換。
+    //    **兩種機制，兩種需求**——所以下面是兩個檔，不是一個。
     contributes: {
-      viewsContainers: {
-        activitybar: [
+      commands: [
+        {
+          command: 'semorphe.openBlocks',
+          title: '開啟積木面板',
+          category: DISPLAY_NAME,
+          icon: { light: 'assets/logo-light-theme.svg', dark: 'assets/logo-dark-theme.svg' },
+        },
+      ],
+      menus: {
+        // 編輯器右上角的按鈕——只在看得懂的檔案上出現。
+        'editor/title': [
           {
-            id: 'semorphe',
-            title: DISPLAY_NAME,
-            // 專案自己的 `<Σ>`——由建置腳本從 `assets/logo/semorphe-mono.svg` 複製。
-            //
-            // 🔴 **必須是 mono 那張，而理由是渲染機制不是美感**：
-            //    VSCode 把這個檔當 **CSS 遮罩**用（`mask: url(...)`），
-            //    **顏色全部丟掉、只有 alpha 有意義**。理由與逐字出處寫在
-            //    `src/scripts/build-vscode.ts` 的第 2b 步。
-            //
-            // ⚠️ 換成任何**有底色方塊**的版本（dark／sakura），
-            //    活動列上會變成**一坨實心方塊**——而它**不會報錯**。
-            icon: 'assets/logo.svg',
+            command: 'semorphe.openBlocks',
+            when: 'resourceExtname =~ /\\.(ino|cpp|cc|cxx|c|h|hpp)$/',
+            group: 'navigation',
           },
         ],
-      },
-      views: {
-        semorphe: [
+        'editor/context': [
           {
-            id: 'semorphe.blocks',
-            name: '積木',
-            type: 'webview',
+            command: 'semorphe.openBlocks',
+            when: 'resourceExtname =~ /\\.(ino|cpp|cc|cxx|c|h|hpp)$/',
+            group: 'semorphe',
           },
         ],
       },

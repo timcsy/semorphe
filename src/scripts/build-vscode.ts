@@ -39,35 +39,34 @@ function main(): void {
   // 2. Blockly 的圖示與音效——見檔頭。
   cpSync('node_modules/blockly/media', join(OUT, 'dist', 'media'), { recursive: true })
 
-  // 2b. 活動列的圖示。⚠️ 與上面那行**理由不同**：Blockly 的 media 是
+  // 2b. 指令的圖示。⚠️ 與上面那行**理由不同**：Blockly 的 media 是
   //     相依套件的資產（所以要複製而不是簽進版控），而 logo 是
   //     **我們自己的原始資產**——複製只是把它送進封包。
   //
-  // 🔴 **必須是 mono 那張**，而理由不是美感，是**渲染機制**。
-  //
-  // VSCode 1.129.0 的 bundle 裡逐字（`workbench.desktop.main.js`）：
+  // 🔴 **兩個檔，因為 VSCode 有兩種截然不同的圖示機制**：
   //
   // ```
-  // mask: ${c} no-repeat 50% 50%;
-  // mask-size: var(--activity-bar-icon-size, ${this.options.iconSize}px);
-  // -webkit-mask: ${c} no-repeat 50% 50%;
-  // mask-origin: padding;
+  // 活動列的容器圖示   CSS 遮罩 → 顏色【全部丟掉】，宿主自己上色 → 一個檔就夠
+  // 指令的圖示         當【圖片】渲染 → 依主題在 light/dark 兩個檔之間切換
   // ```
   //
-  // ⚠️ 它是 **CSS 遮罩**——**顏色全部丟掉，只有 alpha 有意義**，
-  //    而宿主用 `activityBar.foreground` 自己上色。
+  // 遮罩那條的逐字出處（VSCode 1.129.0 `workbench.desktop.main.js`）：
+  // `mask: <url> no-repeat 50% 50%; mask-size: var(--activity-bar-icon-size, …)`
   //
-  // 於是：
+  // ⚠️ 本輪用的是**後者**（面板改成編輯器分頁之後就沒有活動列容器了），
+  //    所以**顏色會真的顯示出來**：
+  //
   // ```
-  // semorphe-dark.svg    有一個 90×90 的實心圓角矩形 → 遮罩是【一坨實心方塊】🔴
-  // semorphe-sakura.svg  有外框矩形                  → 多一個框              ⚠️
-  // semorphe-mono.svg    fill="none"，只有筆畫        → 遮罩就是 <Σ> 本身      🟢
+  // light 主題 → semorphe-mono.svg        (#334155 深板岩)
+  // dark  主題 → semorphe-mono-light.svg  (#c5c5c5 淺灰)
   // ```
   //
-  // 🔴 而第一版用了 `public/logo.svg`（＝ dark 那張的複本）——**那必定是壞的**，
-  //    而它**不會報錯**：一個實心方塊也是一個合法的圖示。
+  // 🔴 而更早的一版用了 `public/logo.svg`（＝ `semorphe-dark.svg` 的複本，
+  //    有一個 90×90 的實心圓角矩形）。在遮罩機制下它是**一坨實心方塊**
+  //    ——而它**不會報錯**：一個實心方塊也是一個合法的圖示。
   mkdirSync(join(OUT, 'assets'), { recursive: true })
-  cpSync('assets/logo/semorphe-mono.svg', join(OUT, 'assets', 'logo.svg'))
+  cpSync('assets/logo/semorphe-mono.svg', join(OUT, 'assets', 'logo-light-theme.svg'))
+  cpSync('assets/logo/semorphe-mono-light.svg', join(OUT, 'assets', 'logo-dark-theme.svg'))
 
   // 3. 擴充的宣告。
   //
