@@ -48,6 +48,26 @@ export function isNamedCall(conceptId: string): boolean {
 }
 
 /**
+ * 這顆的**角色**是什麼——`'statement'`／`'expression'`／…
+ *
+ * 🔴 **它讀的是膠囊的宣告（`component.json` 的 `role`），不是猜的。**
+ *
+ * ⚠️ 2026-08-17 補：產生器需要知道「一個節點出現在語句位置時要不要補分號」。
+ * 第一版的判準是「**產出沒有以換行結尾 ⟹ 它是運算式**」——**而那是猜的，而且錯**：
+ * `cpp:loop_do_while` 是語句，而它的產出以 `} while (…);` 收尾**沒有換行**，
+ * 於是被補了第二個分號。
+ *
+ * > **一個「從產出的形狀反推它是什麼」的判準，
+ * > 會在那個形狀有例外的時候安靜地做錯事——而宣告不會。**
+ *
+ * 認不得的回 `undefined`（不是猜一個看起來合理的）。
+ */
+export function roleOf(conceptId: string): string | undefined {
+  const c = registeredComponents().find((x) => x.conceptId === conceptId)
+  return (c?.manifest as { role?: string } | undefined)?.role
+}
+
+/**
  * 這顆是**帶索引的存取**嗎（`properties.obj` 是容器名、`children.index` 是索引）。
  *
  * ⚠️ 核心的 `interpreter/executors/io.ts` 要認得它——`cin >> arr[i]` 讀進來的值

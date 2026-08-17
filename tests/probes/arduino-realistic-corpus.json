@@ -1,0 +1,148 @@
+{
+ "real_1": {
+  "board": "uno",
+  "topic": "led-blink",
+  "libraries": [],
+  "code": "// 基礎範例：LED 閃爍\n// 使用 Arduino Uno 內建的 LED（腳位 13）\n\nconst int ledPin = 13;   // 內建 LED 接在 13 腳\n\nvoid setup() {\n  // 把 LED 腳位設定成輸出\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(ledPin, HIGH);  // 點亮 LED\n  delay(1000);                 // 等待 1 秒\n  digitalWrite(ledPin, LOW);   // 熄滅 LED\n  delay(1000);                 // 等待 1 秒\n}\n"
+ },
+ "real_2": {
+  "board": "uno",
+  "topic": "led-fade-pwm",
+  "libraries": [],
+  "code": "// LED 呼吸燈\n// LED 接在支援 PWM 的腳位（Uno 上是 3, 5, 6, 9, 10, 11）\n\nconst int ledPin = 9;\nint brightness = 0;    // 目前亮度\nint fadeAmount = 5;    // 每次變化的量\n\nvoid setup() {\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  // 輸出目前亮度\n  analogWrite(ledPin, brightness);\n\n  // 改變亮度\n  brightness = brightness + fadeAmount;\n\n  // 到達兩端時反向\n  if (brightness <= 0 || brightness >= 255) {\n    fadeAmount = -fadeAmount;\n  }\n\n  delay(30);\n}\n"
+ },
+ "real_3": {
+  "board": "uno",
+  "topic": "button-debounce",
+  "libraries": [],
+  "code": "// 按鈕去彈跳（debounce）範例\n// 按一下切換 LED 的亮／滅\n\nconst int buttonPin = 2;\nconst int ledPin = 13;\n\nint ledState = LOW;           // LED 目前狀態\nint buttonState;              // 目前讀到的按鈕狀態\nint lastButtonState = HIGH;   // 上一次讀到的狀態\n\nunsigned long lastDebounceTime = 0;   // 上次狀態變化的時間\nunsigned long debounceDelay = 50;     // 去彈跳時間（毫秒）\n\nvoid setup() {\n  pinMode(buttonPin, INPUT_PULLUP);   // 使用內部上拉電阻\n  pinMode(ledPin, OUTPUT);\n  digitalWrite(ledPin, ledState);\n}\n\nvoid loop() {\n  int reading = digitalRead(buttonPin);\n\n  // 只要讀值有變化就重新計時\n  if (reading != lastButtonState) {\n    lastDebounceTime = millis();\n  }\n\n  // 狀態穩定超過 debounceDelay 才算數\n  if ((millis() - lastDebounceTime) > debounceDelay) {\n    if (reading != buttonState) {\n      buttonState = reading;\n\n      // 使用上拉電阻，按下時是 LOW\n      if (buttonState == LOW) {\n        ledState = !ledState;\n        digitalWrite(ledPin, ledState);\n      }\n    }\n  }\n\n  lastButtonState = reading;\n}\n"
+ },
+ "real_4": {
+  "board": "uno",
+  "topic": "potentiometer-serial",
+  "libraries": [],
+  "code": "// 讀取可變電阻並輸出到序列埠監控視窗\n// 可變電阻中間腳接 A0\n\nconst int potPin = A0;\n\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(\"Potentiometer Reader\");\n}\n\nvoid loop() {\n  int sensorValue = analogRead(potPin);          // 0 ~ 1023\n\n  // 換算成電壓（0 ~ 5V）\n  float voltage = sensorValue * (5.0 / 1023.0);\n\n  Serial.print(\"ADC: \");\n  Serial.print(sensorValue);\n  Serial.print(\"   Voltage: \");\n  Serial.print(voltage);\n  Serial.println(\" V\");\n\n  delay(200);\n}\n"
+ },
+ "real_5": {
+  "board": "uno",
+  "topic": "servo-sweep",
+  "libraries": [
+   "Servo.h"
+  ],
+  "code": "#include <Servo.h>\n\n// 伺服馬達來回擺動\n// 訊號線接在腳位 9\n\nServo myServo;\nint angle = 0;\n\nvoid setup() {\n  myServo.attach(9);\n}\n\nvoid loop() {\n  // 從 0 度轉到 180 度\n  for (angle = 0; angle <= 180; angle++) {\n    myServo.write(angle);\n    delay(15);\n  }\n\n  // 從 180 度轉回 0 度\n  for (angle = 180; angle >= 0; angle--) {\n    myServo.write(angle);\n    delay(15);\n  }\n}\n"
+ },
+ "real_6": {
+  "board": "uno",
+  "topic": "hcsr04-distance",
+  "libraries": [],
+  "code": "// HC-SR04 超音波測距 + 蜂鳴器警示\n// Trig 接 9，Echo 接 10，蜂鳴器接 11\n\nconst int trigPin = 9;\nconst int echoPin = 10;\nconst int buzzerPin = 11;\n\nvoid setup() {\n  pinMode(trigPin, OUTPUT);\n  pinMode(echoPin, INPUT);\n  pinMode(buzzerPin, OUTPUT);\n  Serial.begin(9600);\n}\n\n// 量測距離，回傳公分\nfloat readDistance() {\n  // 送出 10 微秒的觸發脈衝\n  digitalWrite(trigPin, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trigPin, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trigPin, LOW);\n\n  // 讀取回波時間（微秒）\n  long duration = pulseIn(echoPin, HIGH);\n\n  // 聲速 340 m/s，來回除以 2\n  float distance = duration * 0.034 / 2;\n  return distance;\n}\n\nvoid loop() {\n  float distance = readDistance();\n\n  Serial.print(\"Distance: \");\n  Serial.print(distance);\n  Serial.println(\" cm\");\n\n  if (distance > 0 && distance < 10) {\n    tone(buzzerPin, 1000);   // 太近了，發出警告聲\n  } else {\n    noTone(buzzerPin);\n  }\n\n  delay(100);\n}\n"
+ },
+ "real_7": {
+  "board": "uno",
+  "topic": "dht11-serial",
+  "libraries": [
+   "DHT.h"
+  ],
+  "code": "#include <DHT.h>\n\n// DHT11 溫溼度感測器\n// 資料腳接在腳位 2\n\n#define DHTPIN 2\n#define DHTTYPE DHT11\n\nDHT dht(DHTPIN, DHTTYPE);\n\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(\"DHT11 test!\");\n  dht.begin();\n}\n\nvoid loop() {\n  // DHT11 讀取速度慢，兩次之間至少間隔 2 秒\n  delay(2000);\n\n  float humidity = dht.readHumidity();\n  float temperature = dht.readTemperature();\n\n  // 檢查是否讀取失敗\n  if (isnan(humidity) || isnan(temperature)) {\n    Serial.println(\"Failed to read from DHT sensor!\");\n    return;\n  }\n\n  Serial.print(\"Humidity: \");\n  Serial.print(humidity);\n  Serial.print(\" %  Temperature: \");\n  Serial.print(temperature);\n  Serial.println(\" *C\");\n}\n"
+ },
+ "real_8": {
+  "board": "uno",
+  "topic": "dht22-lcd-i2c",
+  "libraries": [
+   "Wire.h",
+   "LiquidCrystal_I2C.h",
+   "DHT.h"
+  ],
+  "code": "#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n#include <DHT.h>\n\n// DHT22 溫溼度顯示在 I2C LCD 1602 上\n// LCD 位址常見為 0x27 或 0x3F\n\n#define DHTPIN 7\n#define DHTTYPE DHT22\n\nDHT dht(DHTPIN, DHTTYPE);\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n\n  lcd.init();\n  lcd.backlight();\n  lcd.setCursor(0, 0);\n  lcd.print(\"DHT22 Monitor\");\n  delay(2000);\n  lcd.clear();\n}\n\nvoid loop() {\n  float h = dht.readHumidity();\n  float t = dht.readTemperature();\n\n  if (isnan(h) || isnan(t)) {\n    lcd.clear();\n    lcd.setCursor(0, 0);\n    lcd.print(\"Sensor Error\");\n    delay(2000);\n    return;\n  }\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Temp: \");\n  lcd.print(t, 1);\n  lcd.print(\" C   \");\n\n  lcd.setCursor(0, 1);\n  lcd.print(\"Humi: \");\n  lcd.print(h, 1);\n  lcd.print(\" %   \");\n\n  delay(2000);\n}\n"
+ },
+ "real_9": {
+  "board": "uno",
+  "topic": "lcd1602-parallel",
+  "libraries": [
+   "LiquidCrystal.h"
+  ],
+  "code": "#include <LiquidCrystal.h>\n\n// 1602 LCD（並列接法）\n// RS, E, D4, D5, D6, D7 依序接到 12, 11, 5, 4, 3, 2\n\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\n\nvoid setup() {\n  // 設定 LCD 的行列數\n  lcd.begin(16, 2);\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Hello, World!\");\n}\n\nvoid loop() {\n  // 游標移到第二行第一格\n  lcd.setCursor(0, 1);\n\n  // 顯示開機後經過的秒數\n  lcd.print(\"Uptime: \");\n  lcd.print(millis() / 1000);\n  lcd.print(\"s\");\n\n  delay(1000);\n}\n"
+ },
+ "real_10": {
+  "board": "uno",
+  "topic": "rgb-led-colors",
+  "libraries": [],
+  "code": "// RGB LED 顏色循環（共陰極）\n// R, G, B 分別接到 PWM 腳位 9, 10, 11\n\nconst int redPin = 9;\nconst int greenPin = 10;\nconst int bluePin = 11;\n\nvoid setup() {\n  pinMode(redPin, OUTPUT);\n  pinMode(greenPin, OUTPUT);\n  pinMode(bluePin, OUTPUT);\n}\n\n// 設定 RGB 顏色\nvoid setColor(int red, int green, int blue) {\n  analogWrite(redPin, red);\n  analogWrite(greenPin, green);\n  analogWrite(bluePin, blue);\n}\n\nvoid loop() {\n  setColor(255, 0, 0);      // 紅\n  delay(1000);\n\n  setColor(0, 255, 0);      // 綠\n  delay(1000);\n\n  setColor(0, 0, 255);      // 藍\n  delay(1000);\n\n  setColor(255, 255, 0);    // 黃\n  delay(1000);\n\n  setColor(128, 0, 128);    // 紫\n  delay(1000);\n\n  // 從紅色漸變到綠色\n  for (int i = 0; i <= 255; i++) {\n    setColor(255 - i, i, 0);\n    delay(10);\n  }\n}\n"
+ },
+ "real_11": {
+  "board": "uno",
+  "topic": "millis-nonblocking",
+  "libraries": [],
+  "code": "// 用 millis() 做非阻塞計時\n// 兩顆 LED 用不同的頻率同時閃爍\n\nconst int led1Pin = 12;\nconst int led2Pin = 13;\n\nconst unsigned long interval1 = 500;    // LED1 每 500ms 切換\nconst unsigned long interval2 = 1200;   // LED2 每 1200ms 切換\n\nunsigned long previousMillis1 = 0;\nunsigned long previousMillis2 = 0;\n\nint led1State = LOW;\nint led2State = LOW;\n\nvoid setup() {\n  pinMode(led1Pin, OUTPUT);\n  pinMode(led2Pin, OUTPUT);\n}\n\nvoid loop() {\n  unsigned long currentMillis = millis();\n\n  // 處理第一顆 LED\n  if (currentMillis - previousMillis1 >= interval1) {\n    previousMillis1 = currentMillis;\n    led1State = !led1State;\n    digitalWrite(led1Pin, led1State);\n  }\n\n  // 處理第二顆 LED\n  if (currentMillis - previousMillis2 >= interval2) {\n    previousMillis2 = currentMillis;\n    led2State = !led2State;\n    digitalWrite(led2Pin, led2State);\n  }\n\n  // loop 不被卡住，還可以做其他事情\n}\n"
+ },
+ "real_12": {
+  "board": "uno",
+  "topic": "traffic-light-fsm",
+  "libraries": [],
+  "code": "// 紅綠燈狀態機\n// 綠燈 -> 黃燈 -> 紅燈 循環，行人按鈕可以提早要求變燈\n\nconst int redPin = 11;\nconst int yellowPin = 12;\nconst int greenPin = 13;\nconst int buttonPin = 2;\n\n// 定義三個狀態\nenum TrafficState {\n  STATE_GREEN,\n  STATE_YELLOW,\n  STATE_RED\n};\n\nTrafficState currentState = STATE_GREEN;\nunsigned long stateStartTime = 0;\nbool requestPending = false;\n\nconst unsigned long GREEN_TIME = 5000;\nconst unsigned long YELLOW_TIME = 2000;\nconst unsigned long RED_TIME = 5000;\n\nvoid setup() {\n  pinMode(redPin, OUTPUT);\n  pinMode(yellowPin, OUTPUT);\n  pinMode(greenPin, OUTPUT);\n  pinMode(buttonPin, INPUT_PULLUP);\n\n  Serial.begin(9600);\n  stateStartTime = millis();\n}\n\n// 只點亮指定的燈\nvoid setLights(bool red, bool yellow, bool green) {\n  digitalWrite(redPin, red);\n  digitalWrite(yellowPin, yellow);\n  digitalWrite(greenPin, green);\n}\n\nvoid loop() {\n  unsigned long elapsed = millis() - stateStartTime;\n\n  // 檢查行人按鈕\n  if (digitalRead(buttonPin) == LOW) {\n    requestPending = true;\n  }\n\n  switch (currentState) {\n    case STATE_GREEN:\n      setLights(false, false, true);\n      // 有人按鈕的話提早切換\n      if (elapsed >= GREEN_TIME || (requestPending && elapsed >= 1000)) {\n        currentState = STATE_YELLOW;\n        stateStartTime = millis();\n        Serial.println(\"-> YELLOW\");\n      }\n      break;\n\n    case STATE_YELLOW:\n      setLights(false, true, false);\n      if (elapsed >= YELLOW_TIME) {\n        currentState = STATE_RED;\n        stateStartTime = millis();\n        Serial.println(\"-> RED\");\n      }\n      break;\n\n    case STATE_RED:\n      setLights(true, false, false);\n      if (elapsed >= RED_TIME) {\n        currentState = STATE_GREEN;\n        stateStartTime = millis();\n        requestPending = false;\n        Serial.println(\"-> GREEN\");\n      }\n      break;\n  }\n}\n"
+ },
+ "real_13": {
+  "board": "nano",
+  "topic": "eeprom-settings",
+  "libraries": [
+   "EEPROM.h"
+  ],
+  "code": "#include <EEPROM.h>\n\n// 把設定值存到 EEPROM，重開機後不會消失\n// 從序列埠輸入 0~255 可以改變 LED 亮度\n\nconst int ledPin = 9;\nconst int addrBrightness = 0;    // EEPROM 位址\nconst int addrMagic = 1;         // 判斷是否曾經寫入過\nconst byte MAGIC_VALUE = 42;\n\nint brightness = 128;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(ledPin, OUTPUT);\n\n  // 讀取魔術數字判斷 EEPROM 是不是空的\n  byte magic = EEPROM.read(addrMagic);\n\n  if (magic == MAGIC_VALUE) {\n    brightness = EEPROM.read(addrBrightness);\n    Serial.print(\"Loaded brightness: \");\n    Serial.println(brightness);\n  } else {\n    // 第一次使用，寫入預設值\n    EEPROM.write(addrMagic, MAGIC_VALUE);\n    EEPROM.write(addrBrightness, brightness);\n    Serial.println(\"First run, using default brightness\");\n  }\n\n  analogWrite(ledPin, brightness);\n  Serial.println(\"Enter a value 0-255 to change brightness:\");\n}\n\nvoid loop() {\n  if (Serial.available() > 0) {\n    int value = Serial.parseInt();\n\n    if (value >= 0 && value <= 255) {\n      brightness = value;\n      analogWrite(ledPin, brightness);\n\n      // 只在數值不同時才寫入，減少 EEPROM 磨損\n      if (EEPROM.read(addrBrightness) != brightness) {\n        EEPROM.write(addrBrightness, brightness);\n      }\n\n      Serial.print(\"Brightness set to \");\n      Serial.println(brightness);\n    }\n  }\n}\n"
+ },
+ "real_14": {
+  "board": "nano",
+  "topic": "relay-motor-control",
+  "libraries": [],
+  "code": "// L298N 馬達驅動模組 + 繼電器控制\n// ENA 接 PWM 腳位，IN1/IN2 控制轉向\n\nconst int enA = 5;    // PWM 控制轉速\nconst int in1 = 6;\nconst int in2 = 7;\nconst int relayPin = 8;\n\nint motorSpeed = 200;\n\nvoid setup() {\n  pinMode(enA, OUTPUT);\n  pinMode(in1, OUTPUT);\n  pinMode(in2, OUTPUT);\n  pinMode(relayPin, OUTPUT);\n\n  Serial.begin(9600);\n\n  // 開啟繼電器供電\n  digitalWrite(relayPin, HIGH);\n  Serial.println(\"Motor control ready\");\n}\n\n// 正轉\nvoid forward(int speed) {\n  digitalWrite(in1, HIGH);\n  digitalWrite(in2, LOW);\n  analogWrite(enA, speed);\n}\n\n// 反轉\nvoid backward(int speed) {\n  digitalWrite(in1, LOW);\n  digitalWrite(in2, HIGH);\n  analogWrite(enA, speed);\n}\n\n// 停止\nvoid stopMotor() {\n  digitalWrite(in1, LOW);\n  digitalWrite(in2, LOW);\n  analogWrite(enA, 0);\n}\n\nvoid loop() {\n  Serial.println(\"Forward\");\n  forward(motorSpeed);\n  delay(3000);\n\n  Serial.println(\"Stop\");\n  stopMotor();\n  delay(1000);\n\n  Serial.println(\"Backward\");\n  backward(motorSpeed);\n  delay(3000);\n\n  Serial.println(\"Stop\");\n  stopMotor();\n  delay(1000);\n\n  // 加速測試\n  for (int speed = 100; speed <= 255; speed += 5) {\n    forward(speed);\n    delay(50);\n  }\n  stopMotor();\n  delay(1000);\n}\n"
+ },
+ "real_15": {
+  "board": "esp32",
+  "topic": "oled-ssd1306-display",
+  "libraries": [
+   "Wire.h",
+   "Adafruit_GFX.h",
+   "Adafruit_SSD1306.h"
+  ],
+  "code": "#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n\n// ESP32 + 0.96 吋 OLED（128x64，I2C 位址 0x3C）\n// SDA 接 GPIO21，SCL 接 GPIO22\n\n#define SCREEN_WIDTH 128\n#define SCREEN_HEIGHT 64\n#define OLED_RESET -1\n\nAdafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);\n\nconst int sensorPin = 34;   // ESP32 的類比輸入腳\n\nvoid setup() {\n  Serial.begin(115200);\n\n  // 初始化 OLED\n  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {\n    Serial.println(F(\"SSD1306 allocation failed\"));\n    for (;;);   // 失敗就停在這裡\n  }\n\n  display.clearDisplay();\n  display.setTextSize(1);\n  display.setTextColor(SSD1306_WHITE);\n  display.setCursor(0, 0);\n  display.println(F(\"Starting...\"));\n  display.display();\n  delay(2000);\n}\n\nvoid loop() {\n  int sensorValue = analogRead(sensorPin);\n  int barWidth = map(sensorValue, 0, 4095, 0, SCREEN_WIDTH - 4);   // ESP32 是 12 位元 ADC\n\n  display.clearDisplay();\n\n  // 標題\n  display.setTextSize(1);\n  display.setCursor(0, 0);\n  display.println(F(\"Sensor Monitor\"));\n\n  // 數值\n  display.setTextSize(2);\n  display.setCursor(0, 16);\n  display.print(sensorValue);\n\n  // 長條圖\n  display.drawRect(0, 45, SCREEN_WIDTH, 12, SSD1306_WHITE);\n  display.fillRect(2, 47, barWidth, 8, SSD1306_WHITE);\n\n  display.display();\n  delay(100);\n}\n"
+ },
+ "real_16": {
+  "board": "uno",
+  "topic": "ir-remote-control",
+  "libraries": [
+   "IRremote.h"
+  ],
+  "code": "#include <IRremote.h>\n\n// 紅外線遙控接收器\n// 接收模組的訊號腳接在腳位 11\n\nconst int IR_RECEIVE_PIN = 11;\nconst int led1 = 5;\nconst int led2 = 6;\n\nvoid setup() {\n  Serial.begin(9600);\n\n  pinMode(led1, OUTPUT);\n  pinMode(led2, OUTPUT);\n\n  // 啟動接收，並開啟收到訊號時閃爍內建 LED\n  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);\n  Serial.println(\"IR Receiver ready\");\n}\n\nvoid loop() {\n  if (IrReceiver.decode()) {\n    unsigned long code = IrReceiver.decodedIRData.command;\n\n    Serial.print(\"Received code: 0x\");\n    Serial.println(code, HEX);\n\n    // 依照按鍵做不同動作\n    switch (code) {\n      case 0x45:\n        digitalWrite(led1, HIGH);\n        Serial.println(\"LED1 ON\");\n        break;\n      case 0x46:\n        digitalWrite(led1, LOW);\n        Serial.println(\"LED1 OFF\");\n        break;\n      case 0x47:\n        digitalWrite(led2, HIGH);\n        Serial.println(\"LED2 ON\");\n        break;\n      case 0x44:\n        digitalWrite(led2, LOW);\n        Serial.println(\"LED2 OFF\");\n        break;\n      default:\n        Serial.println(\"Unknown button\");\n        break;\n    }\n\n    // 準備接收下一個訊號\n    IrReceiver.resume();\n  }\n}\n"
+ },
+ "real_17": {
+  "board": "esp32",
+  "topic": "esp32-wifi-http",
+  "libraries": [
+   "WiFi.h",
+   "HTTPClient.h"
+  ],
+  "code": "#include <WiFi.h>\n#include <HTTPClient.h>\n\n// ESP32 連上 WiFi 並定時上傳感測器數值\n\nconst char* ssid = \"YOUR_WIFI_SSID\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\nconst char* serverUrl = \"http://example.com/api/data\";\n\nconst int sensorPin = 34;              // ESP32 的類比輸入腳\nunsigned long lastUploadTime = 0;\nconst unsigned long uploadInterval = 30000;   // 每 30 秒上傳一次\n\nvoid connectWiFi() {\n  Serial.print(\"Connecting to \");\n  Serial.println(ssid);\n\n  WiFi.begin(ssid, password);\n\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n\n  Serial.println(\"\");\n  Serial.println(\"WiFi connected\");\n  Serial.print(\"IP address: \");\n  Serial.println(WiFi.localIP());\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(1000);\n\n  connectWiFi();\n}\n\nvoid loop() {\n  // 斷線的話重連\n  if (WiFi.status() != WL_CONNECTED) {\n    Serial.println(\"WiFi lost, reconnecting...\");\n    connectWiFi();\n  }\n\n  if (millis() - lastUploadTime >= uploadInterval) {\n    lastUploadTime = millis();\n\n    int sensorValue = analogRead(sensorPin);\n\n    HTTPClient http;\n    http.begin(serverUrl);\n    http.addHeader(\"Content-Type\", \"application/json\");\n\n    // 組出 JSON 字串\n    String payload = \"{\\\"sensor\\\":\";\n    payload += sensorValue;\n    payload += \"}\";\n\n    int httpCode = http.POST(payload);\n\n    if (httpCode > 0) {\n      Serial.print(\"HTTP response code: \");\n      Serial.println(httpCode);\n\n      String response = http.getString();\n      Serial.println(response);\n    } else {\n      Serial.print(\"POST failed, error: \");\n      Serial.println(http.errorToString(httpCode));\n    }\n\n    http.end();\n  }\n\n  delay(100);\n}\n"
+ },
+ "real_18": {
+  "board": "esp32",
+  "topic": "esp32-webserver-led",
+  "libraries": [
+   "WiFi.h"
+  ],
+  "code": "#include <WiFi.h>\n\n// ESP32 網頁伺服器：用瀏覽器控制 LED\n\nconst char* ssid = \"YOUR_WIFI_SSID\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\n\nWiFiServer server(80);\n\nconst int ledPin = 2;    // ESP32 開發板上的內建 LED\nString ledState = \"off\";\n\nvoid setup() {\n  Serial.begin(115200);\n\n  pinMode(ledPin, OUTPUT);\n  digitalWrite(ledPin, LOW);\n\n  Serial.print(\"Connecting to WiFi\");\n  WiFi.begin(ssid, password);\n\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n\n  Serial.println(\"\");\n  Serial.print(\"IP address: \");\n  Serial.println(WiFi.localIP());\n\n  server.begin();\n}\n\nvoid loop() {\n  WiFiClient client = server.available();\n\n  if (client) {\n    Serial.println(\"New client connected\");\n    String currentLine = \"\";\n    String header = \"\";\n\n    while (client.connected()) {\n      if (client.available()) {\n        char c = client.read();\n        header += c;\n\n        if (c == '\\n') {\n          // 連續兩個換行代表 HTTP 請求結束\n          if (currentLine.length() == 0) {\n            // 判斷要開燈還是關燈\n            if (header.indexOf(\"GET /led/on\") >= 0) {\n              ledState = \"on\";\n              digitalWrite(ledPin, HIGH);\n            } else if (header.indexOf(\"GET /led/off\") >= 0) {\n              ledState = \"off\";\n              digitalWrite(ledPin, LOW);\n            }\n\n            // 回傳 HTTP 標頭\n            client.println(\"HTTP/1.1 200 OK\");\n            client.println(\"Content-type:text/html\");\n            client.println(\"Connection: close\");\n            client.println();\n\n            // 回傳網頁內容\n            client.println(\"<!DOCTYPE html><html>\");\n            client.println(\"<head><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\"></head>\");\n            client.println(\"<body><h1>ESP32 LED Control</h1>\");\n            client.print(\"<p>LED is \");\n            client.print(ledState);\n            client.println(\"</p>\");\n            client.println(\"<p><a href=\\\"/led/on\\\"><button>ON</button></a></p>\");\n            client.println(\"<p><a href=\\\"/led/off\\\"><button>OFF</button></a></p>\");\n            client.println(\"</body></html>\");\n            client.println();\n            break;\n          } else {\n            currentLine = \"\";\n          }\n        } else if (c != '\\r') {\n          currentLine += c;\n        }\n      }\n    }\n\n    client.stop();\n    Serial.println(\"Client disconnected\");\n  }\n}\n"
+ },
+ "real_19": {
+  "board": "uno",
+  "topic": "rfid-rc522-access",
+  "libraries": [
+   "SPI.h",
+   "MFRC522.h"
+  ],
+  "code": "#include <SPI.h>\n#include <MFRC522.h>\n\n// RC522 RFID 門禁系統\n// SDA(SS) 接 10，RST 接 9，其餘走 SPI\n\n#define SS_PIN 10\n#define RST_PIN 9\n\nMFRC522 mfrc522(SS_PIN, RST_PIN);\n\nconst int relayPin = 7;\nconst int greenLed = 5;\nconst int redLed = 6;\n\n// 授權卡片的 UID\nString authorizedUID = \"A1 B2 C3 D4\";\n\nvoid setup() {\n  Serial.begin(9600);\n\n  SPI.begin();\n  mfrc522.PCD_Init();\n\n  pinMode(relayPin, OUTPUT);\n  pinMode(greenLed, OUTPUT);\n  pinMode(redLed, OUTPUT);\n\n  digitalWrite(relayPin, LOW);\n  Serial.println(\"Scan your card...\");\n}\n\n// 把卡片 UID 轉成字串\nString getUID() {\n  String content = \"\";\n\n  for (byte i = 0; i < mfrc522.uid.size; i++) {\n    if (mfrc522.uid.uidByte[i] < 0x10) {\n      content += \" 0\";\n    } else {\n      content += \" \";\n    }\n    content += String(mfrc522.uid.uidByte[i], HEX);\n  }\n\n  content.toUpperCase();\n  content.trim();\n  return content;\n}\n\nvoid loop() {\n  // 沒有新卡片就直接返回\n  if (!mfrc522.PICC_IsNewCardPresent()) {\n    return;\n  }\n\n  if (!mfrc522.PICC_ReadCardSerial()) {\n    return;\n  }\n\n  String uid = getUID();\n  Serial.print(\"Card UID: \");\n  Serial.println(uid);\n\n  if (uid == authorizedUID) {\n    Serial.println(\"Access granted\");\n    digitalWrite(greenLed, HIGH);\n    digitalWrite(relayPin, HIGH);\n    delay(3000);\n    digitalWrite(relayPin, LOW);\n    digitalWrite(greenLed, LOW);\n  } else {\n    Serial.println(\"Access denied\");\n    digitalWrite(redLed, HIGH);\n    delay(2000);\n    digitalWrite(redLed, LOW);\n  }\n\n  mfrc522.PICC_HaltA();\n}\n"
+ },
+ "real_20": {
+  "board": "nano",
+  "topic": "serial-command-parser",
+  "libraries": [],
+  "code": "// 序列埠指令控制\n// 輸入 \"on\"、\"off\"、\"blink\"、\"status\" 來控制 LED\n\nconst int ledPin = 13;\nString inputString = \"\";\nbool stringComplete = false;\nbool blinkMode = false;\n\nunsigned long previousMillis = 0;\nconst unsigned long blinkInterval = 300;\nint ledState = LOW;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(ledPin, OUTPUT);\n\n  inputString.reserve(50);\n\n  Serial.println(\"Commands: on / off / blink / status\");\n}\n\nvoid handleCommand(String cmd) {\n  cmd.trim();\n  cmd.toLowerCase();\n\n  if (cmd == \"on\") {\n    blinkMode = false;\n    digitalWrite(ledPin, HIGH);\n    ledState = HIGH;\n    Serial.println(\"LED turned ON\");\n  } else if (cmd == \"off\") {\n    blinkMode = false;\n    digitalWrite(ledPin, LOW);\n    ledState = LOW;\n    Serial.println(\"LED turned OFF\");\n  } else if (cmd == \"blink\") {\n    blinkMode = true;\n    Serial.println(\"Blink mode enabled\");\n  } else if (cmd == \"status\") {\n    Serial.print(\"LED: \");\n    Serial.print(ledState == HIGH ? \"ON\" : \"OFF\");\n    Serial.print(\", blink: \");\n    Serial.println(blinkMode ? \"yes\" : \"no\");\n  } else {\n    Serial.print(\"Unknown command: \");\n    Serial.println(cmd);\n  }\n}\n\nvoid loop() {\n  // 逐字讀取序列埠資料\n  while (Serial.available()) {\n    char inChar = (char)Serial.read();\n\n    if (inChar == '\\n') {\n      stringComplete = true;\n    } else {\n      inputString += inChar;\n    }\n  }\n\n  if (stringComplete) {\n    handleCommand(inputString);\n    inputString = \"\";\n    stringComplete = false;\n  }\n\n  // 閃爍模式用 millis 處理，不阻塞指令讀取\n  if (blinkMode) {\n    unsigned long currentMillis = millis();\n    if (currentMillis - previousMillis >= blinkInterval) {\n      previousMillis = currentMillis;\n      ledState = !ledState;\n      digitalWrite(ledPin, ledState);\n    }\n  }\n}\n"
+ }
+}

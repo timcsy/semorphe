@@ -1,4 +1,5 @@
 import { commentSyntax } from '../comment-syntax'
+import { roleOf } from '../component/traits'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig } from '../program-scaffold'
@@ -323,5 +324,56 @@ export function indented(ctx: GeneratorContext): GeneratorContext {
 }
 
 export function generateBody(nodes: SemanticNode[], ctx: GeneratorContext): string {
-  return nodes.map(n => generateNode(n, ctx)).join('')
+  return nodes.map(n => asStatement(n, generateNode(n, ctx), ctx)).join('')
+}
+
+/**
+ * 🔴 **一個運算式出現在語句位置時，要補上分號與換行。**
+ *
+ * ## 為什麼（2026-08-17，盲測抓到）
+ *
+ * `dht.begin();` 的 `begin` 零引數，被 `cpp:container_iter`（迭代器取得）認走
+ * ——而那是一顆**運算式**概念，產出是 `dht.begin()`：**沒有分號、沒有換行**。
+ * 於是下一句直接黏上來：
+ *
+ * ```
+ * 原始     dht.begin();  lcd.init();
+ * 一次產出  "dht.begin()    lcd.init();"      🔴 兩句黏在一起
+ * 二次產出  "    dht.begin().init();"         🔴 而第二次把它們合併成方法鏈
+ * ```
+ *
+ * > **一次誤判本來只是「身分不對」，而少了這一層它會變成【產出無效程式碼】
+ * > ——而無效的程式碼在下一次 lift 時會被讀成【另一個意思】。**
+ *
+ * ⚠️ **這不是在掩蓋誤判**：C++ 本來就有**運算式語句**，
+ * 一個運算式出現在語句位置**是合法的**，它只是需要一個分號。
+ * 誤判本身另外記（`cpp:container_iter` 認走了所有零引數的 `.begin()`）。
+ *
+ * ## 🔴 而判準是【問宣告】，不是看產出的形狀
+ *
+ * 第一版寫成「產出沒有以換行結尾 ⟹ 它是運算式」——**而那是猜的，而且錯**：
+ * `cpp:loop_do_while` 是**語句**，而它的產出以 `} while (…);` 收尾**沒有換行**，
+ * 於是被補了第二個分號（5 支既有測試當場紅）。
+ *
+ * > **一個「從產出的形狀反推它是什麼」的判準，
+ * > 會在那個形狀有例外的時候安靜地做錯事——而宣告不會。**
+ *
+ * 現在問 `component.json` 的 `role`。⚠️ 認不得的（沒膠囊化、或核心自己的元概念）
+ * **原樣放行**——保守的方向是「少補一個分號」，不是「多補一個」。
+ *
+ * ## ⚠️ 而它只在【縮排大於零】時作用——也就是**函式體裡面**
+ *
+ * 第二版在最外層也補，於是完備性護欄的 9 筆判定翻掉了：那條護欄把合成節點包進
+ * 一個**沒有 `int main` 的** `cpp:program`，所以它的「語句」在**編譯單元層級**
+ * ——而在那裡，`-5` 與 `-5;` **都不合法**，補分號救不了它，只是換一條錯誤復原路徑。
+ *
+ * > **兩種都是壞的合成環境；改動只是換了它壞的方式。**
+ *
+ * 而那條護欄的檔頭記著「**量測工具的改動也會讓量測變差，而那一樣要被發現**」
+ * ——所以**不動它**，改成只在真正需要分號的地方作用。
+ * 🔴 判準：**函式體裡的裸運算式是合法的運算式語句，而編譯單元層級的不是。**
+ */
+function asStatement(node: SemanticNode, text: string, ctx: GeneratorContext): string {
+  if (text === '' || text.endsWith('\n') || ctx.indent === 0) return text
+  return roleOf(node.conceptId) === 'expression' ? `${indent(ctx)}${text};\n` : text
 }
