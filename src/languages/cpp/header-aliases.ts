@@ -76,3 +76,19 @@ export function expandHeaderAliases(headers: Set<string>): Set<string> {
   }
   return expanded
 }
+
+/**
+ * **C++ 名字 → C 名字。**（2026-08-17，階段 6.10）
+ *
+ * 🔴 **`CPP_TO_C` 那張反向表【本來就在】**（上面 :31）——它是為了辨識等價
+ * 而建的，而 C 目標**產出**時要的正是同一份資料。
+ * **所以本功能新增的資料是零。**
+ *
+ * ⚠️ 而 `<iostream>`／`<vector>` 那些**不在這張表裡**，因為它們
+ * **在 C 裡根本不存在**——那不是對映問題，是「那個概念在那個世界沒有」，
+ * 由**可見範圍**負責（`draft/2026-08-13-C和C++難分難捨.md`§三 的 `visible`）。
+ */
+export function toCHeader(header: string): string {
+  const bare = header.replace(/^<|>$/g, '')
+  return CPP_TO_C[bare] ?? bare
+}

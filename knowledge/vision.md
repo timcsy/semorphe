@@ -587,9 +587,38 @@ languages/{lang}/
 
 ### 階段 6.10：目標（`target`）——把三個既有機制綁成一個具名組合
 
-- [ ] **未開始**（2026-08-17 升格）——設計脈絡見
-  [draft/C 和 C++ 難分難捨](draft/2026-08-13-C和C++難分難捨.md)§三
-  （**in-flight rationale，做完才退休**）
+- [x] **第一刀完成**（2026-08-17，spec `134`）——`Target` 型別 ＋ 登錄表 ＋
+  兩筆資料，而 **C 的產出 6/10 → 10/10**（`c-style-parity`）。
+  坑清單在 `specs/134-target-named-combination/findings.md`。
+  ⚠️ 設計脈絡 [draft/C 和 C++ 難分難捨](draft/2026-08-13-C和C++難分難捨.md)
+  **仍是 in-flight**（`provides`／`reference` 兩格沒做），不退休。
+
+> 🔴 **而實作時兩個假設被推翻，兩個都值得記**：
+> ```
+> plan 說「修 6/10 不需要 target」   ❌ 沒有任何既有欄位標得出「這是 C」
+>                                    printf 競賽也是、explicit google 也是
+>                                    → 而那【反而證明了 target 的必要性】
+> spec 說「對映表今天不存在」        ❌ 它是 19 筆，而且【反向表也已經建好】
+>                                    → 本功能新增的資料 = 0
+> ```
+>
+> 🔴 **而最貴的坑是「兩條產出路徑」**：`c-style-parity` 10/10 全綠，
+> **而瀏覽器上仍然產出 `<iostream>` ＋ `using namespace std;`**
+> ——`cpp:program` 的鷹架路徑（UI 走）與 legacy 路徑（測試走）是分開的。
+> 已收成 `e2e/c-target.spec.ts`。
+>
+> ⚠️ **而 `c.json` 從來沒進過選單**——本輪修好的 10/10，
+> **在接上選單之前沒有任何人拿得到**。那是「機制有了沒人接上」的第六次，
+> 而它差一點發生。
+>
+> ### 還沒做的（而它們有明確的家）
+>
+> ```
+> Target 的 UI          本輪接的是 C【風格】，target 的選單是下一輪
+> provides／reference    完整設計的另外兩格
+> 🔴 requires 缺一維     `cpp:print` 宣告 <iostream>，而 printf 產出要 <stdio.h>
+>                        —— 那正是 `provides` 要解的
+> ```
 
 > **為什麼是現在**：那份 draft 的出口條件逐字寫著
 > 「**`target` 有第一個真實需求** → §三的最後一段升格成 roadmap」，
