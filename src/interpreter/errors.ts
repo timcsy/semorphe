@@ -43,4 +43,12 @@ export const RUNTIME_ERRORS = {
   UNKNOWN_CONCEPT: 'RUNTIME_ERR_UNKNOWN_CONCEPT',
   /** 辨識不出來的原始程式碼被執行到——**不能靜靜略過** */
   UNRECOGNIZED_CODE: 'RUNTIME_ERR_UNRECOGNIZED_CODE',
+  /**
+   * 整個程式沒有任何進入點。
+   *
+   * 🔴 **在此之前這個情況是【安靜結束】的**，而那讓「找不到進入點」
+   * 與「跑完了什麼都沒印」在報表上長得一模一樣
+   * ——十段 Arduino 語料因此被誤報成「跑完了」。
+   */
+  NO_ENTRY_POINT: 'RUNTIME_ERR_NO_ENTRY_POINT',
 } as const
