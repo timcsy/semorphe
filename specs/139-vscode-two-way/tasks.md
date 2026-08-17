@@ -178,14 +178,14 @@
 
 ## Phase 9：User Story 8 —— 回歸（P1）
 
-- [ ] T059 [P] [US8] `npm test` 全綠
-- [ ] T060 [P] [US8] 🔴 `git diff --stat -- 'tests/**/baselines/*'` **是空的**（⚠️ 基線被改了就不是「沒退步」，是把尺改短）
-- [ ] T061 [P] [US8] `npx vitest run tests/integration/audit-neutrality.test.ts` → `total` 仍是 **0**
-- [ ] T062 [P] [US8] `npx vitest run tests/probes/arduino-realistic.test.ts` → 殘差 **0.07%**、漂移 **0/20**
-- [ ] T063 [US8] `npx tsc --noEmit` 過，且**沒有動 `tsconfig` 的 `exclude`**
-- [ ] T064 [US8] 🔴 驗證 **VSCode 這一側不呼叫 `core/storage.ts`**：`grep -rn "storage" src/vscode/` → 零筆（它在這裡是**消失**不是搬家）
-- [ ] T065 [US8] 🔴 `grep -rn "setTimeout" src/vscode/` → **零筆**（FR-005）
-- [ ] T066 [US8] 檢查 CSP 的 diff：**只多了 `'wasm-unsafe-eval'`**
+- [x] T059 [P] [US8] `npm test` 全綠
+- [x] T060 [P] [US8] 🔴 `git diff --stat -- 'tests/**/baselines/*'` **是空的**（⚠️ 基線被改了就不是「沒退步」，是把尺改短）
+- [x] T061 [P] [US8] `npx vitest run tests/integration/audit-neutrality.test.ts` → `total` 仍是 **0**
+- [x] T062 [P] [US8] `npx vitest run tests/probes/arduino-realistic.test.ts` → 殘差 **0.07%**、漂移 **0/20**
+- [x] T063 [US8] `npx tsc --noEmit` 過，且**沒有動 `tsconfig` 的 `exclude`**
+- [x] T064 [US8] 🔴 驗證 **VSCode 這一側不呼叫 `core/storage.ts`**：`grep -rn "storage" src/vscode/` → 零筆（它在這裡是**消失**不是搬家）
+- [x] T065 [US8] 🔴 `grep -rn "setTimeout" src/vscode/` → **零筆**（FR-005）
+- [x] T066 [US8] 檢查 CSP 的 diff：**只多了 `'wasm-unsafe-eval'`**
 
 **關卡（SC-011）**：八條全過。
 
@@ -193,11 +193,11 @@
 
 ## Phase 10：Polish ＋ 交棒
 
-- [ ] T067 建置 ＋ 裝進 VSCode 與 Arduino IDE（版本號要動——🔴 改了 `contributes` 就要動，見 `manifest.ts` 檔頭）
-- [ ] T068 跑 `node tools/vscode-preflight/run.mjs`，確認 console 錯誤 0、資源請求失敗 0
-- [ ] T069 🔴 **交棒**：把 [quickstart.md](./quickstart.md) 第三節那張**七件事的表**補上實際的版本號與讀數欄位名 —— ⚠️ **這一項的產出是給使用者的指令，不是我打勾的驗收**
-- [ ] T070 把撞到的坑逐條寫進 `knowledge/history/`，**含「因為知道答案而跳過的」**
-- [ ] T071 更新 `knowledge/draft/2026-08-17-擴充要怎麼重做.md` 的出口條件；🔴 **若「防迴圈用身分」真的跑通了，才去改 `experience.md:2866`**（`research` 記著：在被實作之前它只是一個更好的猜測）
+- [x] T067 建置 ＋ 裝進 VSCode 與 Arduino IDE（版本號要動——🔴 改了 `contributes` 就要動，見 `manifest.ts` 檔頭）
+- [x] T068 跑 `node tools/vscode-preflight/run.mjs`，確認 console 錯誤 0、資源請求失敗 0
+- [x] T069 🔴 **交棒**：把 [quickstart.md](./quickstart.md) 第三節那張**七件事的表**補上實際的版本號與讀數欄位名 —— ⚠️ **這一項的產出是給使用者的指令，不是我打勾的驗收**
+- [x] T070 把撞到的坑逐條寫進 `knowledge/history/`，**含「因為知道答案而跳過的」**
+- [x] T071 更新 `knowledge/draft/2026-08-17-擴充要怎麼重做.md` 的出口條件；🔴 **若「防迴圈用身分」真的跑通了，才去改 `experience.md:2866`**（`research` 記著：在被實作之前它只是一個更好的猜測）
 - [ ] T072 🔴 **使用者回報之後**：SC-001/002/003/004/006/007/010 的實測結果如實記錄——⚠️ **不得為了讓這一刀「完成」而換一個更弱的驗收**
 
 ---

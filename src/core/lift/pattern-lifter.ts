@@ -27,6 +27,34 @@ interface PatternEntry {
  * Lifts AST nodes to SemanticNodes using patterns loaded from JSON definitions.
  */
 export class PatternLifter {
+  /**
+   * 鏈的根對不對得上——**而限定名稱算同一個**。
+   *
+   * `std::cout` 與 `cout` **是同一個實體**，差別只是命名空間風格
+   * （而這個專案的 `StylePreset` 本來就有 `namespace_style` 這一格）。
+   *
+   * 🔴 第一版是精確比對，於是：
+   *
+   * ```
+   * cout << 1;        🟢 clean
+   * std::cout << 1;   🔴 unresolved ＋ raw_code
+   * std::string s;    🟢 clean      ← 所以不是「限定名稱」全壞
+   * ```
+   *
+   * ⚠️ 而它**不是新的**：`std::cout` 一直投影不了，只是既有語料
+   * 幾乎都寫 `using namespace std;`，所以它從來沒有現形
+   * ——直到 2026-08-17 有人在測試裡寫了一段帶 `std::` 的程式。
+   *
+   * > **一個缺口如果只在「大家都不那樣寫」的地方，
+   * > 它會一直在，而且沒有人會發現。**
+   *
+   * 只比對**最後一段**：`std::cout` ✅、`foo::cout` ✅、`mycout` ❌。
+   */
+  private matchesChainRoot(text: string | undefined, want: string): boolean {
+    if (text === undefined) return false
+    return text === want || text.endsWith(`::${want}`)
+  }
+
   private patterns = new Map<string, PatternEntry[]>()
   private transformRegistry: TransformRegistry | null = null
   private liftStrategyRegistry: LiftStrategyRegistry | null = null
@@ -270,7 +298,7 @@ export class PatternLifter {
         current = leftChild
       } else {
         // Check if this is the root
-        if (chainDef.rootMatch?.text && leftChild.text === chainDef.rootMatch.text) {
+        if (chainDef.rootMatch?.text && this.matchesChainRoot(leftChild.text, chainDef.rootMatch.text)) {
           // Found the root, done
           break
         }
@@ -283,7 +311,7 @@ export class PatternLifter {
 
     // Check root match
     const leftMost = current.childForFieldName('left')
-    if (chainDef.rootMatch?.text && leftMost?.text !== chainDef.rootMatch.text) {
+    if (chainDef.rootMatch?.text && !this.matchesChainRoot(leftMost?.text, chainDef.rootMatch.text)) {
       return null
     }
 
