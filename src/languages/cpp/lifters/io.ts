@@ -217,7 +217,17 @@ export function registerIOLifters(lifter: Lifter): void {
     // 資料回膠囊，判別留這裡。
     {
       const shape = callConceptFor(funcName)
-      if (shape && shape.argSlots.length > 0) {
+      // 🔴 **不要加回 `argSlots.length > 0` 這個條件。**
+      //
+      // 它原本在這裡，而它是一個**沒有說出口的假設**：「登錄的概念都至少有一個引數」。
+      // 那句話在 `cpp:millis`（`millis()`，零引數）出現之前一直是真的
+      // ——而它失效時的症狀是**靜默落到下一條分支**：`millis()` 被 lift 成
+      // 通用的 `cpp:func_call`，**不報錯、不留痕跡**。
+      //
+      // > **一個看起來像防護的條件，常常是一句沒有被寫下來的假設。**
+      //
+      // 空的 `argSlots` 讓下面的迴圈產出 `children = {}`，那正是零引數該有的樣子。
+      if (shape) {
         const args = argsNode
           ? argsNode.namedChildren.map((a) => ctx.lift(a)).filter((n): n is SemanticNode => n !== null)
           : []

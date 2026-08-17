@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cpp_serial_print",
+    "conceptId": "cpp:serial_print",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_serial_print",
+      "message0": "%{BKY_C_SERIAL_PRINT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "NEWLINE",
+          "options": [
+            [
+              "%{BKY_C_SERIAL_PRINT_NL_YES}",
+              "true"
+            ],
+            [
+              "%{BKY_C_SERIAL_PRINT_NL_NO}",
+              "false"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERIAL_PRINT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NEWLINE": "newline"
+      },
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    }
+  }
+]

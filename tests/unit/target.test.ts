@@ -14,15 +14,18 @@ import { TargetRegistry } from '../../src/core/target-registry'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
 import competitiveTarget from '../../src/languages/cpp/targets/cpp-competitive.json'
+import arduinoTarget from '../../src/languages/cpp/targets/arduino.json'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
 import cBeginner from '../../src/languages/cpp/topics/c-beginner.json'
 import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
+import arduinoTopic from '../../src/languages/cpp/topics/arduino.json'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import competitiveStyle from '../../src/languages/cpp/styles/competitive.json'
+import googleStyle from '../../src/languages/cpp/styles/google.json'
 import type { Target } from '../../src/core/types'
 
-const TARGETS = [cppTarget, cTarget, competitiveTarget] as Target[]
+const TARGETS = [cppTarget, cTarget, competitiveTarget, arduinoTarget] as Target[]
 
 describe('目標', () => {
   let reg: TargetRegistry
@@ -31,7 +34,7 @@ describe('目標', () => {
   it('★ 登錄與查找', () => {
     for (const t of TARGETS) reg.register(t)
     expect(reg.get('c')?.style).toBe('c')
-    expect(reg.all()).toHaveLength(3)
+    expect(reg.all()).toHaveLength(4)
   })
 
   it('★ 重複的 id 要出聲，不得靜默覆蓋', () => {
@@ -59,8 +62,8 @@ describe('目標', () => {
   })
 
   it('★ 而那兩個引用要指得到【真的存在】的東西', () => {
-    const topics = new Set([cppBeginner, cBeginner, cppCompetitive].map((t) => (t as { id: string }).id))
-    const styles = new Set([apcsStyle, cStyle, competitiveStyle].map((s) => (s as { id: string }).id))
+    const topics = new Set([cppBeginner, cBeginner, cppCompetitive, arduinoTopic].map((t) => (t as { id: string }).id))
+    const styles = new Set([apcsStyle, cStyle, competitiveStyle, googleStyle].map((s) => (s as { id: string }).id))
     for (const t of TARGETS) {
       expect(topics.has(t.topic), `🔴 目標 ${t.id} 指向不存在的課程清單 ${t.topic}`).toBe(true)
       expect(styles.has(t.style), `🔴 目標 ${t.id} 指向不存在的風格 ${t.style}`).toBe(true)

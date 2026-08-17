@@ -19,7 +19,8 @@
         "cpp_var_declare_static",
         "cpp_var_ref",
         "cpp_literal_char",
-        "cpp_var_declare_expression"
+        "cpp_var_declare_expression",
+        "cpp_pin_constant"
       ]
     },
     {
@@ -48,7 +49,8 @@
         "cpp_math_unary",
         "cpp_math_abs",
         "cpp_random_next",
-        "cpp_random_seed"
+        "cpp_random_seed",
+        "cpp_range_remap"
       ]
     },
     {
@@ -70,7 +72,8 @@
         "cpp_case",
         "cpp_default",
         "cpp_switch",
-        "cpp_program_exit"
+        "cpp_program_exit",
+        "cpp_range_remap"
       ]
     },
     {
@@ -180,7 +183,8 @@
         "cpp_char_to_lower",
         "cpp_char_to_upper",
         "cpp_cstring_as_double",
-        "cpp_cstring_as_int"
+        "cpp_cstring_as_int",
+        "cpp_range_remap"
       ]
     },
     {
@@ -249,6 +253,25 @@
         "cpp_method_virtual_pure",
         "cpp_new",
         "cpp_operator_overload"
+      ]
+    },
+    {
+      "name": "腳位與時間",
+      "blocks": [
+        "cpp_analog_read",
+        "cpp_analog_write",
+        "cpp_delay",
+        "cpp_digital_read",
+        "cpp_digital_write",
+        "cpp_millis",
+        "cpp_pin_mode"
+      ]
+    },
+    {
+      "name": "序列埠",
+      "blocks": [
+        "cpp_serial_open",
+        "cpp_serial_print"
       ]
     },
     {

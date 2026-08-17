@@ -1,0 +1,4 @@
+{
+  "C_DIGITAL_WRITE_MSG0": "把腳位 %1 設成 %2",
+  "C_DIGITAL_WRITE_TOOLTIP": "digitalWrite(腳位, HIGH／LOW)——把腳位拉到高電位或低電位"
+}

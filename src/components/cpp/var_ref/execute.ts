@@ -2,6 +2,7 @@
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { pinConstantValue } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 /**
  * **C++ 的標準串流——它們是名字，而不是變數。**
@@ -53,6 +54,18 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
           // 正常的 `cout << x`（走 `cpp:print`）一行都沒有被影響。
           const op = STREAMS[name]
           if (op) throw new RuntimeError(RUNTIME_ERRORS.STREAM_NOT_VARIABLE, { '%1': name, '%2': op })
+
+          // 🔴 **腳位常數也在這裡，而【只能】在這裡。**
+          //
+          // 第一版把 `HIGH`／`LOW`／`OUTPUT` 做成一個 lift 樣式（靠識別字的名字認），
+          // 而第三十二條護欄當場抓到：語料裡的 `enum Level { LOW = -1 };`
+          // 讓 `cout << LOW` 印成 **0** 而不是 **-1**——**樣式把使用者宣告的名字搶走了**。
+          //
+          // > **一個名字的意思由誰宣告它決定，而樣式比對看不到宣告。**
+          //
+          // ⚠️ 接在這裡就沒有那個問題：**走到這一行代表查過了，沒有人宣告它**。
+          const pin = pinConstantValue(name)
+          if (pin !== undefined) return { type: 'int', value: pin }
 
           // 🔴 **而串流的名字也要進近似名的候選**——`Cout` 大小寫打錯時，
           // 作用域裡沒有 `cout`（它不是變數），所以 `Scope` 那一側找不到。

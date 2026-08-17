@@ -222,5 +222,7 @@
   "DIAG_MISSING_VAR_NAME_CODE": "第 {position} 個宣告子沒有名稱",
   "DIAG_UNKNOWN": "這裡有一個問題",
   "DIAG_SYNTAX_ERROR_BLOCK": "這一段程式我看不懂，積木上這塊是照抄原文的：{snippet}",
-  "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整"
+  "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整",
+  "CATEGORY_HARDWARE_PINS": "腳位與時間",
+  "CATEGORY_HARDWARE_SERIAL": "序列埠"
 }

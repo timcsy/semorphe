@@ -37,9 +37,25 @@
 export interface LoopBudget {
   /** 語義的界：模擬時間走到這裡就停（毫秒） */
   millis: number
-  /** 防卡死的網：沒有 `delay` 的 `loop()` 推不動時間，所以還要數圈 */
+  /** 防卡死的網——⚠️ 正常情況下【不會】觸發，見 `MIN_LOOP_COST` */
   maxIterations: number
 }
+
+/**
+ * 🔴 **每一圈至少花掉 1 毫秒的模擬時間。**
+ *
+ * ⚠️ 這一行是實測換來的：十段語料裡有四段的 `loop()` **沒有 `delay`**
+ * （例如 `void loop(){ digitalWrite(LED, HIGH); }`），
+ * 於是模擬時間**永遠推不動**，語義的界永遠到不了，
+ * 而使用者看到的是 `RUNTIME_ERR_MAX_STEPS`——**一個與他的程式無關的訊息**。
+ *
+ * > **一個「永遠到不了」的界，與一個不存在的界，效果一樣。**
+ *
+ * 修法**不是把圈數上限調小**（那又是一個說不出理由的數字），
+ * 是承認**一圈總是花了一點時間**——真板子上一圈空迴圈約 60 微秒，
+ * 這裡進位到 1 毫秒。於是**只剩一個界，而它有一個理由**。
+ */
+const MIN_LOOP_COST = 1
 
 /**
  * 預設 5 秒。
@@ -105,6 +121,8 @@ export function tickLoop(): boolean {
   if (iterations >= budget.maxIterations) return false
   if (nowMillis() - (realTime ? realStart : 0) >= budget.millis) return false
   iterations++
+  // 🔴 沒有 `delay` 的 `loop()` 也要推得動時間，否則語義的界永遠到不了
+  if (!realTime) simulatedNow += MIN_LOOP_COST
   return true
 }
 

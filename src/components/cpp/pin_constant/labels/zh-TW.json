@@ -1,0 +1,3 @@
+{
+  "C_PIN_CONSTANT_TOOLTIP": "Arduino 的腳位常數：HIGH／LOW 是電位，OUTPUT／INPUT／INPUT_PULLUP 是腳位模式，A0 是第一個類比腳"
+}

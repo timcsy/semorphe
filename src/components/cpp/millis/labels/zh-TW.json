@@ -1,0 +1,4 @@
+{
+  "C_MILLIS_MSG0": "開機到現在的毫秒數",
+  "C_MILLIS_TOOLTIP": "millis()——回傳程式開始跑到現在經過幾毫秒，常用來取代 delay 做非阻塞計時"
+}

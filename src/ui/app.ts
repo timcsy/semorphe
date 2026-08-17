@@ -19,9 +19,11 @@ import type { Target, Topic } from '../core/types'
 import cppBeginnerTopic from '../languages/cpp/topics/cpp-beginner.json'
 import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
 import cBeginnerTopic from '../languages/cpp/topics/c-beginner.json'
+import arduinoTopic from '../languages/cpp/topics/arduino.json'
 import cppTargetDef from '../languages/cpp/targets/cpp.json'
 import cTargetDef from '../languages/cpp/targets/c.json'
 import cppCompetitiveTargetDef from '../languages/cpp/targets/cpp-competitive.json'
+import arduinoTargetDef from '../languages/cpp/targets/arduino.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
@@ -121,12 +123,14 @@ export class App {
     this.topicRegistry.register(cppBeginnerTopic as Topic)
     this.topicRegistry.register(cppCompetitiveTopic as Topic)
     this.topicRegistry.register(cBeginnerTopic as Topic)
+    this.topicRegistry.register(arduinoTopic as Topic)
 
     // ⚠️ **注入而不是 import**——核心的登錄表不認識任何具體目標（P9／中立性護欄）。
     // 目標是「課程清單 ＋ 風格」的具名組合，讓使用者選一次而不是三次。
     this.targetRegistry.register(cppTargetDef as Target)
     this.targetRegistry.register(cTargetDef as Target)
     this.targetRegistry.register(cppCompetitiveTargetDef as Target)
+    this.targetRegistry.register(arduinoTargetDef as Target)
 
     // Default target → topic and branches (only root level enabled for simplest starting point)
     this.currentTarget = this.targetRegistry.get('cpp')!

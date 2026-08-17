@@ -41,6 +41,16 @@ export const SUBJECTS = [
   // `bits_count` 數的是位元，`math_*` 算的是值。競賽會用到一整族
   // （`popcount`／`clz`／`ctz`），它們共用這個主體。
   'bits',
+  // ⚠️ 以下四個加入日 2026-08-17——Arduino 執行期表面（spec 137）。
+  //
+  // `pin`     ——一個接點。`pin_mode`／`pin_constant` 共用它。
+  // `digital` / `analog` ——🔴 **它們是【訊號的種類】而站在主體位**，
+  //   而那是刻意的：`digitalWrite` 與 `analogWrite` 對**同一個腳位**做的是
+  //   **兩件不同的事**（一個是高低，一個是 0–255），
+  //   合成 `pin_write(kind)` 會讓「哪些值合法」變成執行期才知道的事。
+  // `serial`  ——序列埠。⚠️ 它與 `io` 並存：`io_sync`／`io_tie` 講的是
+  //   **標準輸入輸出的加速**，而 `serial` 是**另一個裝置**。
+  'pin', 'digital', 'analog', 'serial',
   // ⚠️ `io` 加入日 2026-08-13——`cpp:io_sync`／`cpp:io_tie`（競賽的加速框架）。
   // 主體是**輸入輸出流本身**，不是流上的一次讀寫：`print`／`input` 作用在
   // 「一筆資料」上，而這兩顆作用在「這條流怎麼運作」上。
@@ -89,6 +99,27 @@ export const OPERATIONS = [
   // 「取得一個指向某一端的位置」。**哪一端是參數**，與 `peek` 那條同一個規則
   // （`stack_top`／`queue_front` 的差別是紀律，而紀律已經在主體裡）。
   'iter',
+  // ⚠️ 以下四個加入日 2026-08-17——Arduino 執行期表面（spec 137）。
+  //
+  // `remap` ——「把一個值從一個區間換算到另一個區間」（`map(v,0,1023,0,255)`）。
+  //   🔴 而身分**刻意不叫 `map`**：既有的 `cpp:map_declare` 是 `std::map`，
+  //   **兩者語義毫無關係，而它們會出現在同一個工具箱裡**。
+  // `mode`  ——「設定一個接點的工作方式」（`pinMode`）。它不是讀也不是寫，
+  //   是**在讀寫之前決定方向**——所以它不併進 `read`／`write`。
+  // `read` / `write` ——對**外界**的讀寫。⚠️ 與 `at`（讀容器的一格）刻意分開：
+  //   `at` 的對象在程式裡，而這兩個的對象**在程式外面**，讀兩次可以不一樣。
+  'remap', 'mode', 'read', 'write',
+  // `constant` ——「一個由環境提供的具名常數」（`cpp:pin_constant`）。
+  //   ⚠️ 與既有的 `cpp:builtin_constant` 是同一個形狀——**而那顆逃過了這條檢查**，
+  //   因為 `builtin` 不在主體詞彙表裡。這裡把話講明。
+  // `open`    ——「開啟一個裝置」（`Serial.begin(9600)`）。
+  //   🔴 **身分刻意不叫 `serial_begin`**：`begin` 在這張表裡已經被
+  //   `iter` 那一族用掉了（「取得一端」，`v.begin()`），
+  //   而**兩個無關的意思壓在同一個字上**正是 `tie` 那段警告的事。
+  //   ⚠️ 語法仍然是 `Serial.begin(...)`——**名字是給人看的，不是給 parser 看的**。
+  // `print`   ——它同時是單字名（`cpp:print`）與操作（`cpp:serial_print`）。
+  //   那不是矛盾：「輸出」既可以自己成立，也可以是**對某個裝置**做的事。
+  'constant', 'open', 'print',
 ] as const
 
 /**
@@ -156,6 +187,10 @@ export const ATOMIC_NAMES = [
   // C／C++ 家族的**語言構造**
   'switch', 'case', 'default', 'ternary', 'throw', 'try_catch', 'lambda',
   'new', 'delete', 'malloc', 'free', 'sizeof',
+  // ⚠️ 兩個加入日 2026-08-17——Arduino 的時間（spec 137）。
+  // `delay`／`millis` 是**單字名**：它們沒有主體可拆
+  //（「等待」與「開機到現在」都不是作用在某個東西上），與 `sizeof` 同一類。
+  'delay', 'millis',
   // ⚠️ `initializer_list` 加入日 2026-08-14——`{1, 2, 3}` 這個**語法本身**。
   // 它是語言構造（聚合初始化列），不是抄來的函式庫名：`std::initializer_list`
   // 是那個語法的**型別**，而這顆元件是那個語法。與 `lambda`／`ternary` 同類。

@@ -1,0 +1,6 @@
+{
+  "C_SERIAL_PRINT_MSG0": "Send %1 to serial %2",
+  "C_SERIAL_PRINT_NL_YES": "with newline",
+  "C_SERIAL_PRINT_NL_NO": "no newline",
+  "C_SERIAL_PRINT_TOOLTIP": "Sends a value to the serial port. It is the same act as printing — just over serial instead of the screen"
+}

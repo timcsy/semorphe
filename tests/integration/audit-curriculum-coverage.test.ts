@@ -42,14 +42,28 @@
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
 import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
-import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
-import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
+/**
+ * 🔴 **課程清單是【掃】出來的，不是手寫的兩個 import。**
+ *
+ * ⚠️ 2026-08-17 發現：這裡原本硬寫著 `cpp-beginner` 與 `cpp-competitive` 兩個
+ * import，而 spec 136 加的 `c-beginner.json` **它從來沒看到過**——
+ * 於是「這顆概念有沒有被收錄」這個問題，答案取決於**它被收進哪一份清單**。
+ *
+ * > **一條檢查如果自己維護一份「要看哪些檔」的清單，
+ * > 那份清單就是它的盲點，而盲點不會出聲。**
+ *
+ * 與 `component/registry.ts` 同一個處置：**加一份課程清單＝新增一個檔，零編輯。**
+ */
+const topicModules = import.meta.glob('../../src/languages/cpp/topics/*.json', { eager: true }) as
+  Record<string, { default: { id: string; levelTree: Level } }>
 
 interface Level {
   id: string
   label: string
   concepts: string[]
 }
+
+const ALL_TOPICS = Object.values(topicModules).map((m) => m.default)
 
 const { allConcepts } = loadToolbox()
 const knownComponents = new Set(allConcepts.map((c) => c.conceptId))
@@ -66,7 +80,7 @@ const deliberatelyExcluded: Record<string, string> = {
     '收進課程等於在工具箱裡放一顆「整個程式」。',
 }
 
-const course = [curriculumSnapshot(cppBeginner as never), curriculumSnapshot(cppCompetitive as never)]
+const course = ALL_TOPICS.map((t) => curriculumSnapshot(t as never))
 
 /** 懸空引用：課程指向一顆不存在的元件 */
 function dangling(levels: Level[], known: Set<string> = knownComponents): { level: string; concept: string }[] {

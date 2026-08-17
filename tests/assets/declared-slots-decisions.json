@@ -1,43 +1,48 @@
 [
   {
+    "conceptId": "cpp:analog_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:analog_write",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:bits_count",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "這一路回家的是**判別**（`__builtin_popcount` 這個名字是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+  },
+  {
+    "conceptId": "cpp:container_iter",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "這一路回家的是**判別**（`begin`／`end` 這兩個方法名是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+  },
+  {
+    "conceptId": "cpp:delay",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:digital_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:digital_write",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
     "conceptId": "cpp:if_else",
     "cause": "宣告過的降級目標",
     "reason": "concepts.json 明文 skipPaths:['lift']、skipReasons.lift='degradation-target'，由 cpp:ternary 降級抵達。**它本來就不該從語料 lift 出來**——不是缺口。"
   },
   {
-    "conceptId": "cpp:raw_code",
-    "cause": "元概念",
-    "reason": "辨識不出來時的誠實標記，由 lifter 的 Level 4 產生而非由 pattern 匹配。語料若碰得到它，反而代表模型有缺口。"
-  },
-  {
-    "conceptId": "cpp:raw_expression",
-    "cause": "元概念",
-    "reason": "同 cpp:raw_code，運算式位置的版本。"
-  },
-  {
-    "conceptId": "cpp:queue_back",
-    "cause": "辨識到不了",
-    "reason": "**真的缺口**：`.back()` 在辨識層不看容器型別，六種容器一律判成 cpp:vector_back。這顆身分從程式碼永遠得不到，只能從積木拖。⚠️ **補再多語料也碰不到。** 見 draft/2026-08-11-容器方法的辨識不看型別.md"
-  },
-  {
-    "conceptId": "cpp:string_empty",
-    "cause": "辨識到不了",
-    "reason": "**真的缺口**：`.empty()` 一律判成中性的 cpp:container_empty。同上，補語料無效。"
-  },
-  {
     "conceptId": "cpp:include_local",
     "cause": "語料沒覆蓋",
     "reason": "`#include \"my.h\"`（雙引號的本地標頭）——測試檔裡的片段幾乎都用角括號的系統標頭。加一段語料就會動。"
-  },
-  {
-    "conceptId": "cpp:priority_queue_peek",
-    "cause": "語料沒覆蓋",
-    "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
-  },
-  {
-    "conceptId": "cpp:istringstream_declare",
-    "cause": "語料沒覆蓋",
-    "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"
   },
   {
     "conceptId": "cpp:io_sync",
@@ -50,14 +55,34 @@
     "reason": "這一路搬回膠囊的是**一筆資料**（`tie` 這個方法名屬於我），判別邏輯留在共用路由器。掃描器讀不到執行期才組起來的登錄表，所以歸「無法確定」——**而宣告與實際是一致的**：`children.value` 對上 `argSlots: ['value']`，膠囊自證測從真語料 lift 出這顆並斷言接點在原地。⚠️ 這與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
   },
   {
-    "conceptId": "cpp:bits_count",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "這一路回家的是**判別**（`__builtin_popcount` 這個名字是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+    "conceptId": "cpp:istringstream_declare",
+    "cause": "語料沒覆蓋",
+    "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"
   },
   {
-    "conceptId": "cpp:container_iter",
+    "conceptId": "cpp:millis",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "這一路回家的是**判別**（`begin`／`end` 這兩個方法名是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:pin_constant",
+    "cause": "元概念",
+    "reason": "它是 `lift-pattern.json` 的純資料樣式（六個識別字 → 一顆身分），**沒有接點**——`children` 是空的。與 `builtin_constant` 同一個形狀。"
+  },
+  {
+    "conceptId": "cpp:pin_mode",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:priority_queue_peek",
+    "cause": "語料沒覆蓋",
+    "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
+  },
+  {
+    "conceptId": "cpp:queue_back",
+    "cause": "辨識到不了",
+    "reason": "**真的缺口**：`.back()` 在辨識層不看容器型別，六種容器一律判成 cpp:vector_back。這顆身分從程式碼永遠得不到，只能從積木拖。⚠️ **補再多語料也碰不到。** 見 draft/2026-08-11-容器方法的辨識不看型別.md"
   },
   {
     "conceptId": "cpp:range_find_lower",
@@ -78,6 +103,36 @@
     "conceptId": "cpp:range_min",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "這一路回家的是**判別**（`min_element` 帶兩個引數時是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+  },
+  {
+    "conceptId": "cpp:range_remap",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:raw_code",
+    "cause": "元概念",
+    "reason": "辨識不出來時的誠實標記，由 lifter 的 Level 4 產生而非由 pattern 匹配。語料若碰得到它，反而代表模型有缺口。"
+  },
+  {
+    "conceptId": "cpp:raw_expression",
+    "cause": "元概念",
+    "reason": "同 cpp:raw_code，運算式位置的版本。"
+  },
+  {
+    "conceptId": "cpp:serial_open",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:serial_print",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:string_empty",
+    "cause": "辨識到不了",
+    "reason": "**真的缺口**：`.empty()` 一律判成中性的 cpp:container_empty。同上，補語料無效。"
   },
   {
     "conceptId": "cpp:vector_make",

@@ -62,7 +62,22 @@ function residualOf(n: SemanticNode, acc: { count: number; kinds: Set<string> })
   for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) residualOf(c, acc)
 }
 
-async function probe(src: string, runnable: boolean) {
+/**
+ * ⚠️ **`'ours-only'` 是 2026-08-17 加的第三態，而它不是偷懶。**
+ *
+ * Arduino 原本是 `false`（＝**完全不執行**）。spec 137 讓它跑得動之後，
+ * 直覺是翻成 `true`——**而那是錯的**：`true` 會拿 `g++` 當裁判，
+ * 而 **`g++` 編不動 Arduino sketch**（沒有 `Arduino.h`、沒有 `setup/loop` 進入點）。
+ *
+ * > **`history/071`：裁判的能力邊界不是固定的——它是【目標】的函數。**
+ *
+ * Arduino 的裁判是 `arduino-cli`，而那是第 6 項的事。
+ * → 在那之前，**跑我們自己的、而不與任何參照比對**——
+ * 🔴 **並且把「沒有參照」記成一欄**，不要讓它看起來像「比對過了」。
+ */
+type RunMode = boolean | 'ours-only'
+
+async function probe(src: string, runnable: RunMode) {
   const tree = parser.parse(src)!
   const st = createTestLifter().lift(tree.rootNode as never) as SemanticNode
   const acc = { count: 0, kinds: new Set<string>() }
@@ -71,7 +86,10 @@ async function probe(src: string, runnable: boolean) {
   try { code = generateCode(st, 'cpp', style) } catch (e) { code = `GENTHROW ${(e as Error).message}` }
 
   let ours = '', ref = '', regen = ''
-  if (runnable) {
+  if (runnable === 'ours-only') {
+    const i = new SemanticInterpreter({ maxSteps: 200000 })
+    try { await i.execute(st); ours = i.getOutput().join('') } catch (e) { ours = `✘${(e as Error).message}`.slice(0, 90) }
+  } else if (runnable) {
     const r = runCppDetailed(src)
     ref = r.ok ? r.output : `✘${r.stage}:${r.message.split('\n').find(l => l.includes('error')) ?? ''}`.slice(0, 90)
     const rg = runCppDetailed(code)
@@ -83,7 +101,12 @@ async function probe(src: string, runnable: boolean) {
 }
 
 describe('三情境覆蓋探測', () => {
-  for (const [label, corpus, runnable] of [['競賽', COMPETITIVE, true], ['APCS', APCS_CORPUS, true], ['Arduino', ARDUINO, false]] as const) {
+  for (const [label, corpus, runnable] of [
+    ['競賽', COMPETITIVE, true],
+    ['APCS', APCS_CORPUS, true],
+    // 🔴 2026-08-17：`false`（完全不跑）→ `'ours-only'`（跑我們的，而沒有參照可比）
+    ['Arduino', ARDUINO, 'ours-only'],
+  ] as const) {
     it(`${label}`, async () => {
       // ★ 入口條件——錨在**語料段數**上（合成量），見檔頭的自我否證
       expect(Object.keys(corpus).length).toBeGreaterThan(5)
@@ -93,7 +116,11 @@ describe('三情境覆蓋探測', () => {
         const r = await probe(src, runnable)
         const flags: string[] = []
         if (r.residual > 0) { residual++; flags.push(`辨識${r.residual}:${r.kinds.join('|')}`) }
-        if (runnable) {
+        if (runnable === 'ours-only') {
+          // 🔴 **只跑我們自己的**——「跑得完」與「跑對了」是兩件事，
+          // 而後者要等 `arduino-cli` 當裁判（第 6 項）。
+          if (r.ours.startsWith('✘')) { execMismatch++; flags.push(`執行拋錯 ${r.ours}`) }
+        } else if (runnable) {
           // 🔴 **「參照編不過」與「我們算錯」是兩件事**，而它們原本混在同一欄。
           //
           // `__gcd` 是 libstdc++ 的擴充，macOS 的 clang 用 libc++ 沒有它
@@ -110,7 +137,8 @@ describe('三情境覆蓋探測', () => {
         }
         if (flags.length) rows.push(`  ✘ ${name}\n      ${flags.join('\n      ')}`)
       }
-      console.log(`\n═══ ${label}：${Object.keys(corpus).length} 段｜辨識缺 ${residual}｜執行不符 ${execMismatch}｜投影不符 ${projMismatch}｜參照編不過 ${refCannotRun}\n${rows.join('\n')}`)
+      const judged = runnable === 'ours-only' ? '｜⚠️ 無參照可比（裁判是 arduino-cli，第 6 項）' : ''
+      console.log(`\n═══ ${label}：${Object.keys(corpus).length} 段｜辨識缺 ${residual}｜執行不符 ${execMismatch}｜投影不符 ${projMismatch}｜參照編不過 ${refCannotRun}${judged}\n${rows.join('\n')}`)
       // ⚠️ **上限是用來偵測【卡死】，不是用來強制速度。**
       //
       // 實測（2026-08-14）：

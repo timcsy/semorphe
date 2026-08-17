@@ -1,0 +1,4 @@
+{
+  "C_DIGITAL_WRITE_MSG0": "Write %2 to pin %1",
+  "C_DIGITAL_WRITE_TOOLTIP": "digitalWrite(pin, HIGH/LOW) — drive the pin high or low"
+}

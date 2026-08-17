@@ -1,0 +1,6 @@
+{
+  "C_SERIAL_PRINT_MSG0": "序列埠輸出 %1 %2",
+  "C_SERIAL_PRINT_NL_YES": "並換行",
+  "C_SERIAL_PRINT_NL_NO": "不換行",
+  "C_SERIAL_PRINT_TOOLTIP": "把值送到序列埠。⚠️ 它與「輸出」是同一件事的兩種寫法——只是走序列埠而不是螢幕"
+}

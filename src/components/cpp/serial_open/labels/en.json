@@ -1,0 +1,4 @@
+{
+  "C_SERIAL_OPEN_MSG0": "Open serial port at %1 baud",
+  "C_SERIAL_OPEN_TOOLTIP": "Serial.begin(baud) — opens serial communication, commonly 9600. Without it, a real board shows nothing"
+}

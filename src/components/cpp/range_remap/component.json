@@ -1,0 +1,24 @@
+{
+  "conceptId": "cpp:range_remap",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression",
+    "from_low": "expression",
+    "from_high": "expression",
+    "to_low": "expression",
+    "to_high": "expression"
+  },
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_why": "🔴 **身分刻意【不】叫 `cpp:map`**。既有的 `map_declare`／`map_at`／`map_assign` 是 `std::map`（關聯容器），而 Arduino 的 `map()` 是數值區間重映射——**兩者語義毫無關係，而它們會出現在同一個工具箱裡**。> 一個與既有概念同名而語義無關的新概念，會讓兩邊的搜尋都變不準。⚠️ 而 lift 那一路**仍然認 `map(` 這個語法**——名字是給人看的，不是給 parser 看的。 ⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 檔頭。"
+}
