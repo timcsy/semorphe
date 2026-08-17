@@ -112,7 +112,7 @@ languages/{lang}/
 ### 尚未實作但已有設計的規格
 
 - **語義標註（Annotations）**：語言套件與視圖套件之間的開放契約（`control_flow`、`body_execution`、`introduces_scope`、`side_effects`、`hardware_binding` 等）。缺少 annotation 時用 generic fallback，不報錯——任何語言 × 視圖組合都能工作。
-- **視圖套件規格**：按與語義樹的互動方式分類（可編輯 / 唯讀-執行 / 唯讀-分析 / 唯讀-硬體），結構為 `views/{name}/manifest.json` + `src/view.ts`（實作 ViewHost）。
+- **視圖套件規格**：按與語義樹的互動方式分類（可編輯 / 唯讀-執行 / 唯讀-分析 / 唯讀-硬體），結構為 `views/{name}/manifest.json` + `src/view.ts`⟨規劃⟩（實作 ViewHost）。
 - **WebView 隔離模型**：瀏覽器每視圖 = `<div>`/`<iframe>` + EventEmitter；VSCode 中 blocks = WebviewPanel、code = 原生 TextEditor、console = Terminal + postMessage。**Core 跑在 Extension Host，不跑在 WebView。**
   > 🔴 **而這一條有兩個 2026-08-16 才被量出來的前提**（[history/069](history/069-vscode原型退休而它的兩個教訓被撈出來.md)）：
   > ① 膠囊登錄表用 `import.meta.glob`（**Vite 的轉換**），所以**那個宿主也必須用 Vite 建置**（已實測可行）；
@@ -589,7 +589,8 @@ languages/{lang}/
 
 - [x] **第一刀完成**（2026-08-17，spec `134`）——`Target` 型別 ＋ 登錄表 ＋
   兩筆資料，而 **C 的產出 6/10 → 10/10**（`c-style-parity`）。
-  坑清單在 `specs/134-target-named-combination/findings.md`。
+  坑清單在 `specs/134-target-named-combination/findings.md`，
+  轉變見 [history/072](history/072-target的兩個假設都倒了而它反而證明了target.md)。
   ⚠️ 設計脈絡 [draft/C 和 C++ 難分難捨](draft/2026-08-13-C和C++難分難捨.md)
   **仍是 in-flight**（`provides`／`reference` 兩格沒做），不退休。
 
@@ -616,6 +617,7 @@ languages/{lang}/
 > ```
 > 兩邊都跑得動  9 / 10      🔴 輸出不一致 0      ⚠️ 不可判定 1
 > ```
+> 轉變見 [history/073](history/073-投影之間的一致性第一次被驗.md)（spec `135`）。
 >
 > 🔴 **那是根公理「唯一真實，各式投影」沒有被驗過的那一半**——
 > 之前只驗「兩種投影**各自**合法」，而**投影之間的一致性**沒有任何東西在看。
