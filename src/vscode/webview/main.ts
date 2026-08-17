@@ -97,6 +97,13 @@ export async function boot(): Promise<void> {
 
   // 7. 拖曳量測（SC-004）。判準寫在 `fps.ts`，⚠️ 結論由數字算出，不由人填。
   attachDragMeter(ws, (html) => render(html))
+
+  // 8. 除錯把手——照網頁版 `src/main.ts:11` 的 `window.__app` 慣例。
+  //
+  // 🟢 它讓「在真的宿主裡量一件事」不必每次改程式碼重打包。
+  //    第一個用途：量 Blockly 畫 N 顆積木要多久（切分頁的成本）。
+  // ⚠️ 而它**不是 API**：欄位名隨時會變，沒有人可以依賴它。
+  ;(window as unknown as { __semorphe?: unknown }).__semorphe = { Blockly, ws, registry }
 }
 
 boot().catch((err: unknown) => {
