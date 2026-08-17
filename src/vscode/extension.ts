@@ -20,9 +20,18 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
+import { SemorphePanelProvider } from './panel'
 
-export function activate(_context: vscode.ExtensionContext): void {
-  // 面板在 T020 接上——本階段只證明 `tsc` 認得 `vscode`。
+export function activate(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SemorphePanelProvider.viewType,
+      new SemorphePanelProvider(context.extensionUri),
+      // ⚠️ 面板被收合再展開時**不要**重建 —— 重建等於重新載入 200 顆膠囊
+      //    ＋ 重新 inject 畫布，而那會讓「順不順」量到的是啟動成本。
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ),
+  )
 }
 
 export function deactivate(): void {
