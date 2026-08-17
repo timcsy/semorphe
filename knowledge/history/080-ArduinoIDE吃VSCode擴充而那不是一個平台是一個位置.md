@@ -142,6 +142,24 @@ editBuilder.replace(fullRange, code)
 `vscode.window.activeTextEditor` 散在 `CodeSyncManager` 與 `BlocklyViewProvider`
 ——與 `history/069`§三② 記的 `app.ts` 六個單例**是同一個形狀**。
 
+### 🔴 而使用者劃了一條比「殼留核丟」更嚴格的線（2026-08-17）
+
+> 「**TextBlockly 基本上就不用再理他了，設計等等還是都以原本的 Semorphe 為主，
+> 除非遇到什麼不可行的地方**」
+
+```
+我原本的說法   把 PoC 的殼搬過來，換掉它的核
+使用者的意思   🔴 設計【全部】照 Semorphe。TextBlockly 只回答一種問題：
+               「這件事在 VSCode／Theia 裡【做得到嗎】」
+```
+
+**它是一本可行性字典，不是一份藍圖。**
+
+> **一個能跑的原型最危險的地方，是它會讓「它怎麼做的」變成「應該怎麼做」。**
+
+⚠️ 而那正是本檔上一節（`history/069`§四）那句話的另一面：
+「一個原型……**它會偽裝成『已經有基礎』**」。
+
 ### ⚠️ 而 PoC 自己重寫了一個解析器
 
 `src/ast/ArduinoParser.ts`／`ArduinoTokenizer.ts`／`ArduinoAST.ts`
@@ -222,3 +240,5 @@ metadata.sourceRange                          core/types.ts:49
 - [concepts/投影](../concepts/投影.md)「資訊分類學」——🔴 第三節說的那條要重看
 - [principles](../principles.md)「四項獨立性」——宿主獨立性
 - `../TextBlockly/`——PoC 本體（⚠️ 不在這個 repo 裡，而它是第五節每一條的出處）
+- [draft/擴充的形狀](../draft/2026-08-17-擴充的形狀.md)——本檔開出來的設計題，
+  🔴 而它把「六個單例」更正為**十八個**
