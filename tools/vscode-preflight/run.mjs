@@ -65,35 +65,66 @@ page.on('requestfailed', (r) => failures.push(`${r.url()} :: ${r.failure()?.erro
 await page.goto(`http://localhost:${PORT}/preview.html`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(2000)
 
-const read = async () => (await page.locator('#readout').innerText()).replace(/\n(?=[^\n])/g, ' ')
-console.log('── 載入後 ──\n' + (await read()))
+const readout = async () => (await page.locator('#readout').innerText()).replace(/\n(?=[^\n])/g, ' ')
+console.log('── 載入後 ──\n' + (await readout()))
 
 // 🔴 工具箱分類數——SC-009 要求它與網頁版相同。
 // ⚠️ 而它從【畫面上】數，不是從設定物件數：一個「建出來了但沒渲染」
 //    的工具箱，在設定物件上看起來一模一樣。
 const categories = await page.locator('.blocklyToolboxCategory').count()
-console.log(`工具箱分類（畫面上）：${categories}`)
+console.log(`\n工具箱分類（畫面上）：${categories}`)
+
+// ── 模擬宿主送一份文件進來 ──
+// ⚠️ 預檢裡沒有真的宿主，所以這裡【扮演】它。
+//    🔴 而扮演的是【同一個訊息形狀】，不是另一條路徑。
+const PROGRAM = 'int main() {\n    int x = 1;\n    return 0;\n}\n'
+await page.evaluate((text) => {
+  window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text, version: 1 }, '*')
+}, PROGRAM)
+await page.waitForTimeout(300)
+console.log('\n── 送入文件後 ──\n' + (await readout()))
+
+// ── 在畫布上放一顆積木 → 應該算得出「改了幾行」 ──
+const placed = await page.evaluate(() => {
+  const S = window.__semorphe
+  const ws = S.panel.getWorkspace()
+  const spec = S.registry.getAll().find((x) => {
+    const d = x.blockDef ?? {}
+    return !x.form && d.type && d.message0 && ('previousStatement' in d || 'nextStatement' in d)
+  })
+  const b = ws.newBlock(spec.blockDef.type)
+  b.initSvg(); b.moveBy(220, 60); ws.render()
+  // Blockly 的變更事件是非同步派送的
+  return spec.blockDef.type
+})
+await page.waitForTimeout(500)
+const afterEdit = await readout()
+console.log(`\n── 放一顆 ${placed} 之後 ──\n` + afterEdit)
 
 const blocks = await page.locator('#canvas .blocklyDraggable').count()
 const labels = await page.locator('#canvas svg text').evaluateAll((ns) => ns.map((n) => n.textContent))
-console.log(`\n積木數：${blocks}　標籤：${JSON.stringify(labels)}`)
-// ⚠️ 標籤若長得像 `%{BKY_…}`，代表 i18n 沒載進來——而積木仍然畫得出來。
-//    又是一個「壞了但看起來還在」。
+console.log(`\n積木數：${blocks}　標籤：${JSON.stringify(labels.slice(0, 4))}`)
 const raw = labels.filter((t) => typeof t === 'string' && t.includes('%{BKY_'))
 if (raw.length > 0) console.log(`🔴 i18n 沒載：${JSON.stringify(raw)}`)
 
-// 拖曳：往左上拖，⚠️ 往右下會把積木拖出畫布（第一版踩過，症狀是「畫布空白」）
-const box = await page.locator('#canvas .blocklyDraggable').first().boundingBox()
-await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-await page.mouse.down()
-for (let i = 1; i <= 60; i++) {
-  await page.mouse.move(box.x + box.width / 2 - i * 3.5, box.y + box.height / 2 - i * 4 + Math.sin(i / 6) * 30)
-  await page.waitForTimeout(12)
-}
-await page.mouse.up()
-await page.waitForTimeout(500)
+// 🔴 US1 的管線在 Chromium 裡通了嗎——「這次改了幾行」要是一個數字且 > 0
+const spanLines = /上次編輯改了幾行\s+(\d+)/.exec(afterEdit)
+console.log(`\n重寫跨距：${spanLines ? spanLines[1] + ' 行' : '🔴 沒算出來'}`)
 
-console.log('\n── 拖曳後 ──\n' + (await read()))
+// 拖曳：往左上拖，⚠️ 往右下會把積木拖出畫布（第一版踩過，症狀是「畫布空白」）
+if (blocks > 0) {
+  const box = await page.locator('#canvas .blocklyDraggable').first().boundingBox()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  for (let i = 1; i <= 60; i++) {
+    await page.mouse.move(box.x + box.width / 2 - i * 2, box.y + box.height / 2 - i * 0.6 + Math.sin(i / 6) * 20)
+    await page.waitForTimeout(12)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+  console.log('\n── 拖曳後 ──\n' + (await readout()))
+}
+
 console.log(`\n資源請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
@@ -102,6 +133,6 @@ await browser.close()
 stop()
 // ⚠️ 入口條件錨在【合成量】：分類數與積木數都要 > 0，
 //    否則「零錯誤」只是因為什麼都沒渲染。
-const ok = errors.length === 0 && failures.length === 0 && blocks >= 1 && categories >= 1
-if (!ok) console.log(`🔴 不通過：錯誤 ${errors.length}｜請求失敗 ${failures.length}｜積木 ${blocks}｜分類 ${categories}`)
+const ok = errors.length === 0 && failures.length === 0 && blocks >= 1 && categories >= 1 && spanLines !== null && Number(spanLines[1]) > 0
+if (!ok) console.log(`🔴 不通過：錯誤 ${errors.length}｜請求失敗 ${failures.length}｜積木 ${blocks}｜分類 ${categories}｜跨距 ${spanLines ? spanLines[1] : '無'}`)
 process.exit(ok ? 0 : 1)

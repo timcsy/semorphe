@@ -101,12 +101,12 @@
 **故事目標**：只重寫改到的那一段；一次修改一個復原步驟；拖位置不動檔案。
 **獨立測試**：改一個欄位 → 看變更行數 → 按一次 Cmd+Z。
 
-- [ ] T029 [US1] 於 `src/vscode/panel.ts` 建立訊息通道，並把 `document`（全文＋版本＋uri＋語言）送進 Webview
-- [ ] T030 [US1] 於 `src/vscode/webview/main.ts` 判斷積木事件**有沒有改變語義**：🔴 純移動 → 只更新視圖狀態、**不送 `applyEdit`**
-- [ ] T031 [US1] 於 `src/vscode/webview/main.ts` 用 `generateCode` 產新全文，與**文件文字**算出 `RewriteSpan` 並送出
-- [ ] T032 [US1] 於 `src/vscode/panel.ts` 套用編輯：一次修改 = **一個復原步驟**；並把產生的 version 記進回音守衛
-- [ ] T033 [US1] 於 `src/vscode/webview/main.ts` 讀數新增「**這次改了幾行**」與「**第幾次編輯**」（🔴 交棒要看它）
-- [ ] T034 [US1] 建置 ＋ 裝進 VSCode
+- [x] T029 [US1] 於 `src/vscode/panel.ts` 建立訊息通道，並把 `document`（全文＋版本＋uri＋語言）送進 Webview
+- [x] T030 [US1] 於 `src/vscode/webview/main.ts` 判斷積木事件**有沒有改變語義**：🔴 純移動 → 只更新視圖狀態、**不送 `applyEdit`**
+- [x] T031 [US1] 於 `src/vscode/webview/main.ts` 用 `generateCode` 產新全文，與**文件文字**算出 `RewriteSpan` 並送出
+- [x] T032 [US1] 於 `src/vscode/panel.ts` 套用編輯：一次修改 = **一個復原步驟**；並把產生的 version 記進回音守衛
+- [x] T033 [US1] 於 `src/vscode/webview/main.ts` 讀數新增「**這次改了幾行**」與「**第幾次編輯**」（🔴 交棒要看它）
+- [x] T034 [US1] 建置 ＋ 裝進 VSCode
 
 **關卡（SC-001／002／003）**：⚠️ **這三條的最終判定在 T042**，本 Phase 只確保**做得出來**。
 

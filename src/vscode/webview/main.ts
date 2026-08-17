@@ -13,11 +13,18 @@
  * ⚠️ 而那 4.6 KB 才是重點——**esbuild 建得出來，只是膠囊一顆都沒被打包進去**，
  * 只發一則 warning，執行期才炸。
  *
- * 本檔是 **Vite 的 browser build（ESM）**，`import.meta.glob` 由 Vite 在建置時
- * 展開成靜態 import——與網頁版同一條路。
- *
  * 🔴 **而 lift／generate／執行【全部】住在這一側也是同一個理由**：
  * 它們都要膠囊登錄表。主行程只負責文件的讀寫與宿主整合。
+ *
+ * ## 🔴 用 `BlocklyPanel` 本身，不自己 inject
+ *
+ * 第一版在這裡手抄了 `Blockly.inject` 的七項設定。而 `BlocklyPanel.init()`
+ * **本來就傳齊那七項**——手抄一份等於製造第二個真相。
+ *
+ * > **這個專案付過那個學費**（`history/072`：兩條產出路徑，一條綠一條錯）。
+ *
+ * 🟢 而用面板本身還順便拿到 `extractSemanticTree()` 與 `setState()`
+ * ——**雙向同步的兩個方向都是它既有的能力**。
  *
  * ## 這個檔刻意不碰 `App`
  *
@@ -29,12 +36,21 @@ import * as Blockly from 'blockly'
 import { initCppModule } from '../../languages/cpp/module'
 import { registeredComponents } from '../../core/component/registry'
 import { BlockRegistrar } from '../../ui/block-registrar'
+import { BlocklyPanel } from '../../ui/panels/blockly-panel'
 import { LocaleLoader } from '../../i18n/loader'
-import { createDarkWorkspaceTheme } from '../../ui/theme/dark-workspace-theme'
+import { generateCode } from '../../core/projection/code-generator'
+import { rewriteSpan } from '../../core/projection/rewrite-span'
 import { DEFAULT_CONFIG } from '../sync/settings'
+import type { PanelConfig } from '../sync/settings'
 import { setupWorkspace } from './workspace-setup'
-import { pickSimplestBlock, placeableSpecs } from '../pick-block'
 import { attachDragMeter } from './fps'
+import type { HostMessage, WebviewMessage } from '../sync/messages'
+
+declare function acquireVsCodeApi(): { postMessage(m: unknown): void }
+
+/** 沒有宿主時（Chromium 預檢）也要跑得起來——⚠️ 而**要看得出是哪一種**。 */
+const vscode = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null
+const post = (m: WebviewMessage): void => vscode?.postMessage(m)
 
 function row(label: string, value: string, warn = false): string {
   return `<div class="row"><span class="k">${label}</span><span class="v${warn ? ' warn' : ''}">${value}</span></div>`
@@ -47,7 +63,6 @@ export async function boot(): Promise<void> {
   // 1. 膠囊登錄表 ＋ 六個引擎。⚠️ 這一行就是「核搬得過去嗎」的答案。
   const { registry } = initCppModule()
   const capsules = registeredComponents().length
-  const specs = registry.getAll()
 
   // 2. i18n——⚠️ 不載的話積木上顯示的是 `%{BKY_U_BREAK_MSG0}` 這種原文。
   //    🔴 而它要在 buildToolbox 之前：工具箱的分類名也走 `Blockly.Msg`。
@@ -56,63 +71,124 @@ export async function boot(): Promise<void> {
   await locale.load(DEFAULT_CONFIG.locale)
 
   // 3. 積木定義：登錄表 → Blockly.Blocks
-  const workspaceRef: { ws: Blockly.WorkspaceSvg | null } = { ws: null }
-  new BlockRegistrar(registry).registerAll({ getWorkspace: () => workspaceRef.ws })
+  const panelRef: { panel: BlocklyPanel | null } = { panel: null }
+  new BlockRegistrar(registry).registerAll({
+    getWorkspace: () => panelRef.panel?.getWorkspace() ?? null,
+  })
 
   // 4. 組態 → 工作區（目標／課程清單／風格／工具箱）
-  //    ⚠️ 本階段用內建預設；設定接上是 Phase 8 的事。
-  const setup = setupWorkspace(registry, DEFAULT_CONFIG)
+  let config: PanelConfig = DEFAULT_CONFIG
+  let setup = setupWorkspace(registry, config)
 
-  // 5. 畫布——**七項全給**，與網頁版 `ui/panels/blockly-panel.ts:122-131` 一致。
+  // 5. 畫布——🔴 **用面板本身**，七項設定住在它裡面（見檔頭）。
   //
   // ⚠️ `media` 少一個尾端斜線的話會變成 `.../mediasprites.png`
   //    ——Blockly 直接把它當前綴接檔名。而症狀是**破圖但功能還在**。
-  //
-  // 🔴 走 **data 屬性**而不是行內 `<script>` 注入的全域變數：
-  //    行內腳本要 CSP 的 nonce，而多一個 nonce 就多一個會漏掉的東西。
   const mediaRaw = canvas.dataset.blocklyMedia ?? ''
   const media = mediaRaw && !mediaRaw.endsWith('/') ? `${mediaRaw}/` : mediaRaw
-  const ws = Blockly.inject(canvas, {
-    toolbox: setup.toolbox as Blockly.utils.toolbox.ToolboxDefinition,
-    renderer: 'zelos',
-    theme: createDarkWorkspaceTheme(),
-    grid: { spacing: 20, length: 3, colour: '#555', snap: true },
-    zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
-    trashcan: true,
+  const panel = new BlocklyPanel({
+    container: canvas,
+    blockSpecRegistry: registry,
     media: media || undefined,
+    language: 'cpp',
+    style: setup.style,
   })
-  workspaceRef.ws = ws
+  panelRef.panel = panel
+  panel.init(setup.toolbox)
 
-  // 6. 放一顆積木——**而它是從登錄表挑的**（FR-004）。
-  //    ⚠️ 這是第一刀的產物，Phase 4 接上文件之後它會被真的樹取代。
-  const chosen = pickSimplestBlock(specs)
-  const blockType = (chosen.blockDef as { type: string }).type
-  const conceptId = chosen.conceptMapping?.conceptId ?? '(無)'
-  const block = ws.newBlock(blockType)
-  block.initSvg()
-  block.moveBy(220, 60)   // ⚠️ 避開工具箱的寬度——第一版放 (40,40) 被工具箱蓋住了
-  ws.render()
+  // ── 狀態：一次只服務一份文件 ──
+  let docText: string | null = null
+  let docVersion = -1
+  let docUri: string | null = null
+  /** 🔴 收到文件而正在重繪積木時，積木事件不得回寫——那是回音的另一半。 */
+  let applyingFromDocument = false
+  let editCount = 0
+  /** 🔴 **只在真的產生編輯時更新** —— 見下面那段註解。 */
+  let lastSpanLines = -1
+  /** 沒有造成程式碼變化的積木事件（拖動位置、選取…）。FR-003 靠它看得見。 */
+  let noopEvents = 0
+
+  // 6. 積木改了 → 只重寫改到的那一段
+  panel.onChange(() => {
+    if (applyingFromDocument || docText === null) return
+    const tree = panel.extractSemanticTree()
+    const next = generateCode(tree, 'cpp', setup.style)
+    // 🔴 拿【文件的實際文字】比，不是拿 generate(原樹) 比。
+    //    理由與那次量錯寫在 `core/projection/rewrite-span.ts` 的檔頭。
+    const span = rewriteSpan(docText, next)
+    if (span === null) {
+      // ⚠️ 純移動積木不改變程式碼 → **不產生檔案變更**（FR-003）。
+      //
+      // 🔴 **這裡刻意【不】覆寫 `lastSpanLines`。**
+      // Blockly 一次操作會派送多個事件（create／move／…），而第二個事件
+      // 重算時 `docText` 已經樂觀更新過 → 算出 `null`。
+      // 覆寫的話讀數會變成「第幾次編輯 1，這次改了幾行 0」
+      // ——**一個自相矛盾而且會誤導交棒的讀數**。
+      noopEvents++
+      render()
+      return
+    }
+    editCount++
+    lastSpanLines = Math.max(span.endLine - span.startLine, span.lines.length)
+    // ⚠️ 樂觀更新：主行程套用之後會回一個新版本，而那時 `docText` 會被覆蓋。
+    docText = next
+    post({ type: 'applyEdit', span, baseVersion: docVersion })
+    render()
+  })
 
   // 7. 讀數——🔴 交棒要看它（見 `specs/139/quickstart.md` 第三節）。
-  const categories = (setup.toolbox as { contents?: unknown[] }).contents?.length ?? 0
   const render = (meter = ''): void => {
+    const cats = (setup.toolbox as { contents?: unknown[] }).contents?.length ?? 0
     readout.innerHTML =
       row('膠囊', String(capsules), capsules < 200) +
-      row('積木規格', String(specs.length)) +
-      row('可放置候選', String(placeableSpecs(specs).length)) +
-      row('工具箱分類', String(categories), categories === 0) +
+      row('工具箱分類', String(cats), cats === 0) +
       row('目標', `${setup.target.id}／${setup.topic.id}／${setup.style.id}`) +
-      row('畫布上', `${blockType}（${conceptId}）`) +
+      row('文件', docUri === null ? '（未連接）' : `${docUri.split('/').pop()}　v${docVersion}`,
+        docUri === null) +
+      row('第幾次編輯', String(editCount)) +
+      row('上次編輯改了幾行', lastSpanLines < 0 ? '—' : String(lastSpanLines)) +
+      // FR-003：拖動位置不該產生檔案變更——這一格讓「沒變更」看得見，
+      // ⚠️ 而不是靠「什麼都沒發生」去推論。
+      row('無變更的積木事件', String(noopEvents)) +
       meter
   }
   render()
 
-  // 8. 拖曳量測。判準寫在 `fps.ts`，⚠️ 結論由數字算出，不由人填。
-  attachDragMeter(ws, (html) => render(html))
+  // 8. 宿主送東西進來
+  window.addEventListener('message', (e: MessageEvent<HostMessage>) => {
+    const msg = e.data
+    if (msg.type === 'document') {
+      docText = msg.text
+      docVersion = msg.version
+      docUri = msg.uri
+      applyingFromDocument = true
+      try {
+        // ⚠️ Phase 5 會在這裡接上 lift；本階段只更新文字基準。
+        //    🔴 而旗標現在就要有——不然 Phase 5 接上時它會是一個【新的】迴圈。
+      } finally {
+        applyingFromDocument = false
+      }
+      render()
+    } else if (msg.type === 'noDocument') {
+      docText = null
+      docUri = null
+      docVersion = -1
+      render()
+    }
+  })
 
-  // 9. 除錯把手——照網頁版 `src/main.ts:11` 的 `window.__app` 慣例。
-  //    ⚠️ 它**不是 API**：欄位名隨時會變，沒有人可以依賴它。
-  ;(window as unknown as { __semorphe?: unknown }).__semorphe = { Blockly, ws, registry, setup }
+  post({ type: 'ready', capsules, specs: registry.getAll().length })
+
+  // 9. 拖曳量測。判準寫在 `fps.ts`，⚠️ 結論由數字算出，不由人填。
+  const ws = panel.getWorkspace()
+  if (ws) attachDragMeter(ws, (html) => render(html))
+
+  // 10. 除錯把手——照網頁版 `src/main.ts:11` 的 `window.__app` 慣例。
+  //     ⚠️ 它**不是 API**：欄位名隨時會變，沒有人可以依賴它。
+  ;(window as unknown as { __semorphe?: unknown }).__semorphe = {
+    Blockly, panel, registry, get setup() { return setup }, get config() { return config },
+    setConfig: (c: PanelConfig) => { config = c; setup = setupWorkspace(registry, c) },
+  }
 }
 
 boot().catch((err: unknown) => {
