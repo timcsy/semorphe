@@ -82,7 +82,7 @@
 - [x] T026 `npx playwright test`
 - [x] T027 🔴 **開真的瀏覽器走一遍 `quickstart.md` ⑤**——測試綠不代表使用者看到的是對的
 - [x] T028 `findings.md`：坑逐條記下，**含「因為知道答案而跳過的」**
-- [ ] T029 knowie 反流：`history/` 轉變 ＋ `experience` 教訓 ＋ vision 階段 6.10 收成
+- [x] T029 knowie 反流：`history/` 轉變 ＋ `experience` 教訓 ＋ vision 階段 6.10 收成
 
 ---
 
