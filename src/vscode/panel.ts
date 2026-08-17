@@ -29,6 +29,8 @@
 import * as vscode from 'vscode'
 import { csp, renderHtml } from './webview-html'
 import { EchoGuard } from './sync/echo-guard'
+import { resolveConfig, type RawSettings } from './sync/settings'
+import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
 import { applySpan } from '../core/projection/rewrite-span'
 import type { HostMessage, WebviewMessage } from './sync/messages'
 
@@ -40,6 +42,17 @@ import type { HostMessage, WebviewMessage } from './sync/messages'
  */
 const HIGHLIGHT = vscode.window.createTextEditorDecorationType({
   backgroundColor: new vscode.ThemeColor('editor.selectionHighlightBackground'),
+  isWholeLine: true,
+})
+
+/**
+ * **執行到哪一行** —— ⚠️ 與選取高亮**分開**。
+ *
+ * 🔴 共用一個 decoration 的話，清掉其中一個會把另一個也清掉
+ * ——而症狀是「單步時選取的高亮忽然不見了」，看起來像閃爍。
+ */
+const EXECUTING = vscode.window.createTextEditorDecorationType({
+  backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
   isWholeLine: true,
 })
 
@@ -76,10 +89,14 @@ class SemorpheSession {
   private doc: vscode.TextDocument | undefined
   /** 🔴 選取的防迴圈：值相等就不再傳播（選取是冪等的）。 */
   private lastSentLine = -1
+  private readonly viewStates: ViewStateStore
+  /** ⚠️ 上一份文件的 uri——存檔那一刻要靠它做身分搬遷。 */
+  private lastUri: string | undefined
 
-  constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, memento: vscode.Memento) {
     this.panel = panel
     this.extensionUri = extensionUri
+    this.viewStates = new ViewStateStore(mementoStore(memento))
     this.panel.webview.html = this.html()
 
     this.panel.webview.onDidReceiveMessage(
@@ -93,6 +110,13 @@ class SemorpheSession {
     //    🔴 真正的問題是**迴圈**：照亮程式碼會移動游標 → 又反查 → 又選積木。
     //    處置是**值相等就不傳**。
     vscode.window.onDidChangeTextEditorSelection((e) => this.onSelection(e), null, this.disposables)
+    // 🔴 老師改了 settings.json，學生的面板要【自己更新】，不是重開才生效。
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('semorphe')) this.sendConfig()
+    }, null, this.disposables)
+    // ⚠️ **存檔那一刻身分會變**（`untitled:` → `file://`），而視圖狀態要跟著搬。
+    //    🔴 `onDidRenameFiles` 管不到它（那是檔案改名，不是暫存分頁落地）。
+    vscode.workspace.onDidSaveTextDocument((doc) => this.onSaved(doc), null, this.disposables)
 
     this.follow()
   }
@@ -110,7 +134,53 @@ class SemorpheSession {
     // ⚠️ 換文件就清空回音——上一份文件的版本號與這一份無關。
     this.echo.reset()
     if (!doc) { this.send({ type: 'noDocument' }); return }
+    this.lastUri = doc.uri.toString()
+    this.sendConfig()
     this.sendDocument(doc)
+    const vs = this.viewStates.get(doc.uri.toString())
+    if (vs) this.send({ type: 'viewState', state: vs })
+  }
+
+  /**
+   * 讀設定並解析。
+   *
+   * 🔴 以 `{ uri, languageId }` 為範圍 ⟹ 語言覆寫（`"[arduino]": {...}`）解得出來。
+   * ⚠️ 而它要求宣告時寫了 `scope: "language-overridable"`——見 `manifest.ts`。
+   */
+  private sendConfig(): void {
+    const doc = this.doc
+    const scope = doc ? { uri: doc.uri, languageId: doc.languageId } : undefined
+    const c = vscode.workspace.getConfiguration('semorphe', scope)
+    const layered = <T>(key: string): { language?: T; workspace?: T; user?: T } => {
+      const i = c.inspect<T>(key)
+      return {
+        language: i?.workspaceLanguageValue ?? i?.globalLanguageValue ?? undefined,
+        workspace: i?.workspaceValue ?? undefined,
+        user: i?.globalValue ?? undefined,
+      }
+    }
+    const raw: RawSettings = {
+      target: layered<string>('target'),
+      topic: layered<string>('topic'),
+      style: layered<string>('style'),
+      blockStyle: layered<string>('blockStyle'),
+      locale: layered<string>('locale'),
+    }
+    this.send({ type: 'config', config: resolveConfig(raw) })
+  }
+
+  /**
+   * 暫存分頁存檔了 → 身分從 `untitled:` 變成 `file://`。
+   *
+   * 🔴 而**那正是主場景**（「AI 給的 Code 貼上來」的第一站就是暫存分頁）。
+   * ⚠️ 搬完舊 key 要清掉——留著是一個不會被發現的洩漏。
+   */
+  private onSaved(doc: vscode.TextDocument): void {
+    const from = this.lastUri
+    const to = doc.uri.toString()
+    if (!from || from === to || !from.startsWith('untitled:')) return
+    this.viewStates.migrate(from, to)
+    this.lastUri = to
   }
 
   private sendDocument(doc: vscode.TextDocument): void {
@@ -146,6 +216,23 @@ class SemorpheSession {
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
     if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }
+    if (m.type === 'executionAt') {
+      // 🔴 **同一個機制**：執行高亮與選取高亮都是「照亮這幾行」。
+      //    ⚠️ 而它用不同的 decoration，否則兩者會互相清掉。
+      this.showExecution(m.range)
+      return
+    }
+    if (m.type === 'viewStateChanged') {
+      if (this.doc) this.viewStates.set(this.doc.uri.toString(), m.state)
+      return
+    }
+    if (m.type === 'configChanged') {
+      // 🔴 寫 **workspace** 層級——使用者拍板「面板內的選單直接改 workspace 設定」。
+      // ⚠️ 而 UI 上要看得出「這會影響整個專案」（Webview 那側的責任）。
+      await vscode.workspace.getConfiguration('semorphe')
+        .update(m.key, m.value, vscode.ConfigurationTarget.Workspace)
+      return
+    }
   }
 
   /**
@@ -168,6 +255,20 @@ class SemorpheSession {
     )
     editor.setDecorations(HIGHLIGHT, [r])
     // ⚠️ 只在看不見時才捲——每次都捲會讓畫面一直跳。
+    editor.revealRange(r, vscode.TextEditorRevealType.InCenterIfOutsideViewport)
+  }
+
+  /** 執行走到哪一行。⚠️ 與選取高亮**分開的 decoration**，否則兩者互相清掉。 */
+  private showExecution(range: { startLine: number; endLine: number } | null): void {
+    const editor = this.editorForDoc()
+    if (!editor) return
+    if (range === null) { editor.setDecorations(EXECUTING, []); return }
+    const end = Math.min(range.endLine, editor.document.lineCount - 1)
+    const r = new vscode.Range(
+      new vscode.Position(range.startLine, 0),
+      editor.document.lineAt(Math.max(range.startLine, end)).range.end,
+    )
+    editor.setDecorations(EXECUTING, [r])
     editor.revealRange(r, vscode.TextEditorRevealType.InCenterIfOutsideViewport)
   }
 
@@ -232,7 +333,9 @@ class SemorpheSession {
   }
 
   dispose(): void {
-    this.editorForDoc()?.setDecorations(HIGHLIGHT, [])
+    const ed = this.editorForDoc()
+    ed?.setDecorations(HIGHLIGHT, [])
+    ed?.setDecorations(EXECUTING, [])
     for (const d of this.disposables) d.dispose()
     current = undefined
   }
@@ -251,9 +354,23 @@ export function openBlocksPanel(context: vscode.ExtensionContext): void {
     retainContextWhenHidden: true,
     localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, ...DIST)],
   })
-  const session = new SemorpheSession(panel, context.extensionUri)
+  const session = new SemorpheSession(panel, context.extensionUri, context.workspaceState)
   current = session
   panel.onDidDispose(() => session.dispose(), null, context.subscriptions)
+}
+
+/**
+ * 把宿主的 `Memento` 包成注入用的介面。
+ *
+ * ⚠️ **`ViewStateStore` 刻意不認識 `vscode`**——那個模組在測試環境不存在，
+ * 而身分搬遷的邏輯必須測得到。
+ */
+function mementoStore(memento: vscode.Memento): KeyValueStore {
+  return {
+    get: (k) => memento.get<ViewState>(k),
+    set: (k, v) => void memento.update(k, v),
+    keys: () => memento.keys(),
+  }
 }
 
 /** ⚠️ 匯出給測試用——套用語義必須與 `applySpan` 一致，否則測試綠而檔案壞。 */

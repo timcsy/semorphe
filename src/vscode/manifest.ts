@@ -52,7 +52,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.2.2'
+export const EXTENSION_VERSION = '0.3.0'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -103,6 +103,37 @@ export interface ExtensionManifest {
   contributes: Record<string, unknown>
 }
 
+/**
+ * 組態的宣告。
+ *
+ * 🔴 **每一項都要 `scope: "language-overridable"`** ——
+ * 不宣告的話 `"[arduino]": { ... }` 那種語言覆寫**安靜地不生效**。
+ *
+ * ⚠️ 而那正是這個專案最常見的那一族缺陷：**改了、看起來沒改、而且不會報錯**。
+ *
+ * 教學場景是這一條的理由：一個班的目標該是**老師設一次進 workspace、
+ * 進版控、學生可覆寫**，而 `.ino` 與 `.cpp` 可以不一樣。
+ */
+function configProperties(): Record<string, unknown> {
+  const prop = (
+    description: string,
+    def: string | null,
+  ): Record<string, unknown> => ({
+    type: def === null ? ['string', 'null'] : 'string',
+    default: def,
+    description,
+    // 🔴 少了這一行，語言覆寫不生效而且不出聲。
+    scope: 'language-overridable',
+  })
+  return {
+    'semorphe.target': prop('目標——課程清單與風格的具名組合（如 cpp／arduino）', 'cpp-beginner'),
+    'semorphe.topic': prop('課程清單。留空則跟著目標', null),
+    'semorphe.style': prop('程式碼風格。留空則跟著目標', null),
+    'semorphe.blockStyle': prop('積木外觀', 'default'),
+    'semorphe.locale': prop('積木的語言', 'zh-TW'),
+  }
+}
+
 export function buildManifest(): ExtensionManifest {
   return {
     name: EXTENSION_NAME,
@@ -140,6 +171,10 @@ export function buildManifest(): ExtensionManifest {
           icon: { light: 'assets/logo-light-theme.svg', dark: 'assets/logo-dark-theme.svg' },
         },
       ],
+      configuration: {
+        title: DISPLAY_NAME,
+        properties: configProperties(),
+      },
       menus: {
         // ⚠️ **`when` 用等號列舉，不用 `=~` 正則。**
         //

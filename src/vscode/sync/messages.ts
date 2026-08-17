@@ -23,6 +23,8 @@
  * 記的那個坑會回來（esbuild 建得出來，而膠囊一顆都沒打包進去）。
  */
 import type { RewriteSpan } from '../../core/projection/rewrite-span'
+import type { PanelConfig } from './settings'
+import type { ViewState } from './view-state'
 
 // ─── 主行程 → Webview ───
 
@@ -39,6 +41,8 @@ export type HostMessage =
   | { type: 'noDocument' }
   /** 使用者把游標移到某一行——⚠️ **這個事件很吵**（每次移動都發）。 */
   | { type: 'selection'; line: number }
+  | { type: 'config'; config: PanelConfig }
+  | { type: 'viewState'; state: ViewState }
 
 // ─── Webview → 主行程 ───
 
@@ -62,3 +66,14 @@ export type WebviewMessage =
    * ——🔴 而那要**說得出來**，不是靜默什麼都不做（FR-007）。
    */
   | { type: 'revealNode'; nodeId: string | null; range: { startLine: number; endLine: number } | null }
+  | { type: 'viewStateChanged'; state: ViewState }
+  /** 面板上的選單被改了。⚠️ 主行程寫進 **workspace** 層級（使用者拍板）。 */
+  | { type: 'configChanged'; key: string; value: string }
+  /**
+   * 執行走到某個節點——🔴 **唯一真實**。
+   *
+   * ⚠️ 主行程收到它只做一件事：把程式碼那一側照亮。
+   * **原生編輯器只是第三個視圖**（`core/view-host.ts:94`），
+   * 不要為它另外發明訊息。
+   */
+  | { type: 'executionAt'; range: { startLine: number; endLine: number } | null }

@@ -34,6 +34,7 @@
  */
 import * as Blockly from 'blockly'
 import { initCppModule } from '../../languages/cpp/module'
+import { registerCppLanguage } from '../../languages/cpp/generators'
 import { registeredComponents } from '../../core/component/registry'
 import { BlockRegistrar } from '../../ui/block-registrar'
 import { BlocklyPanel } from '../../ui/panels/blockly-panel'
@@ -46,6 +47,7 @@ import type { PanelConfig } from '../sync/settings'
 import { setupWorkspace } from './workspace-setup'
 import { createCodeLifter, type CodeLifter } from './lift'
 import { nodeIdAtLine, rangeOfNodeId } from './highlight'
+import { createRunner, type Runner } from './run'
 import { attachDragMeter } from './fps'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
 import type { SemanticNode } from '../../core/types'
@@ -63,6 +65,12 @@ function row(label: string, value: string, warn = false): string {
 export async function boot(): Promise<void> {
   const readout = document.getElementById('readout')!
   const canvas = document.getElementById('canvas')!
+
+  // 0. 語言套件的產生器、執行器、註解語法…
+  //    🔴 **漏掉它的症狀是「單步一按就 RUNTIME_ERR_UNKNOWN_CONCEPT: cpp:program」**
+  //       ——而積木與程式碼那兩個方向【看起來完全正常】。
+  //       ⚠️ 一個只在第三個功能上現形的缺失。
+  registerCppLanguage()
 
   // 1. 膠囊登錄表 ＋ 六個引擎。⚠️ 這一行就是「核搬得過去嗎」的答案。
   const { registry } = initCppModule()
@@ -128,6 +136,15 @@ export async function boot(): Promise<void> {
   /** 🔴 選取的防迴圈：**值相等就不再傳播**。選取是冪等的，所以值比對就夠。 */
   let selectedNodeId: string | null = null
   let unmappedSelections = 0
+  /**
+   * ⚠️ **宣告要在 `render()` 第一次被呼叫之前** ——
+   * 第一版宣告在下面的 7c，而 `render()` 讀它 → `Cannot access 'runner'
+   * before initialization`，畫布整片空白。
+   *
+   * 🟢 而它**看得見**，因為 `boot()` 的 catch 把錯誤印在讀數上。
+   * **一個空白的畫布與一個載壞的畫布長得一樣——除非有人把它印出來。**
+   */
+  let runner: Runner | null = null
 
   // 6. 積木改了 → 只重寫改到的那一段
   panel.onChange(() => {
@@ -175,6 +192,7 @@ export async function boot(): Promise<void> {
       //    任何人看得到的地方——所以它必須是讀數上的一格。
       row('目前選取', selectedNodeId === null ? '（無）' : selectedNodeId.slice(0, 12)) +
       row('指不到程式碼的選取', String(unmappedSelections), unmappedSelections > 0) +
+      row('執行步數', runner === null ? '—' : String(runner.steps)) +
       row('程式碼→積木',
         lifterError !== null ? `🔴 ${lifterError}` : lifter ? '就緒' : '載入中…',
         lifterError !== null) +
@@ -240,6 +258,22 @@ export async function boot(): Promise<void> {
       docUri = msg.uri
       applyDocument()
       render()
+    } else if (msg.type === 'config') {
+      // 🔴 組態變了 → 工具箱與風格要跟著換，而積木要用新風格重畫。
+      //    ⚠️ 而 `applyDocument()` 走的是同一條路——不另外寫一份重建邏輯。
+      config = msg.config
+      setup = setupWorkspace(registry, config)
+      panel.setCodeContext('cpp', setup.style)
+      panel.init(setup.toolbox)
+      applyDocument()
+      render()
+    } else if (msg.type === 'viewState') {
+      const ws2 = panel.getWorkspace()
+      if (ws2) {
+        // ⚠️ 縮放與捲動要在積木畫完之後才套——順序反了會被重繪蓋掉。
+        ws2.setScale(msg.state.scale)
+        ws2.scroll(msg.state.scrollX, msg.state.scrollY)
+      }
     } else if (msg.type === 'selection') {
       // 程式碼 → 積木。⚠️ 同一個防迴圈：值相等就不動。
       if (!currentTree) return
@@ -259,8 +293,54 @@ export async function boot(): Promise<void> {
 
   post({ type: 'ready', capsules, specs: registry.getAll().length })
 
-  // 9. 拖曳量測。判準寫在 `fps.ts`，⚠️ 結論由數字算出，不由人填。
+  // 7c. 單步執行 —— 🔴 目的是【看見程式在積木上走過去】，不是跑完。
+  const outEl = document.getElementById('out')!
+  const stepBtn = document.getElementById('step') as HTMLButtonElement
+  const stopBtn = document.getElementById('stop') as HTMLButtonElement
+  const stateEl = document.getElementById('runstate')!
+
+  const runnerHooks = {
+    // 🔴 唯一真實：執行到哪個節點。兩個視圖各自投影它。
+    atNode(nodeId: string | null): void {
+      panel.highlightByNodeId(nodeId, 'execution')
+      const range = nodeId && currentTree ? rangeOfNodeId(currentTree, nodeId) : null
+      post({ type: 'executionAt', range })
+    },
+    output(text: string): void { outEl.textContent += text },
+    stateChanged(s: string): void {
+      stateEl.textContent = s === 'idle' ? '閒置' : s === 'paused' ? `暫停（第 ${runner?.steps ?? 0} 步）` : '執行中'
+      render()
+    },
+  }
+
+  stepBtn.addEventListener('click', () => {
+    if (!currentTree) return
+    if (!runner || runner.state === 'idle') {
+      outEl.textContent = ''
+      runner = createRunner(currentTree, runnerHooks)
+    }
+    void runner.step()
+  })
+  stopBtn.addEventListener('click', () => {
+    runner?.stop()
+    runner = null
+  })
+
+  // 8b. 視圖狀態——⚠️ 它是**外觀**不是真相（程式碼才是），
+  //     所以它不進文件，只進 per-uri 的儲存。
   const ws = panel.getWorkspace()
+  if (ws) {
+    ws.addChangeListener((e: Blockly.Events.Abstract) => {
+      // 只在捲動／縮放這類純外觀的事件上存——⚠️ 而積木位置由 Blockly 自己管。
+      if (e.type !== 'viewport_change') return
+      post({
+        type: 'viewStateChanged',
+        state: { scrollX: ws.scrollX, scrollY: ws.scrollY, scale: ws.getScale(), blockPositions: {} },
+      })
+    })
+  }
+
+  // 9. 拖曳量測。判準寫在 `fps.ts`，⚠️ 結論由數字算出，不由人填。
   if (ws) attachDragMeter(ws, (html) => render(html))
 
   // 10. 除錯把手——照網頁版 `src/main.ts:11` 的 `window.__app` 慣例。

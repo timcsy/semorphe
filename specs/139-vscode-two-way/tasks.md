@@ -148,11 +148,11 @@
 
 ## Phase 7：User Story 4 —— 單步執行，看著程式在積木上走（P2）
 
-- [ ] T047 [US4] 於 `src/vscode/webview/main.ts` 接上既有的 `StepController`（`ui/step-controller.ts:11`）與執行路徑
-- [ ] T048 [US4] 於 Webview 面板加單步／執行／停止的控制，並在**積木側**高亮當前節點
-- [ ] T049 [US4] 🔴 把 `ExecutionAtNodeEvent` 送到主行程，由 `src/vscode/panel.ts` 在**程式碼側**畫出來——⚠️ **原生編輯器只是第三個視圖，不要另外發明機制**（`core/view-host.ts:94`）
-- [ ] T050 [US4] 執行結束時**清除兩側的高亮**
-- [ ] T051 [US4] 在 Webview 面板加一小塊輸出區（⚠️ 它不是重點——使用者定調「執行的用意是高亮」）
+- [x] T047 [US4] 於 `src/vscode/webview/main.ts` 接上既有的 `StepController`（`ui/step-controller.ts:11`）與執行路徑
+- [x] T048 [US4] 於 Webview 面板加單步／執行／停止的控制，並在**積木側**高亮當前節點
+- [x] T049 [US4] 🔴 把 `ExecutionAtNodeEvent` 送到主行程，由 `src/vscode/panel.ts` 在**程式碼側**畫出來——⚠️ **原生編輯器只是第三個視圖，不要另外發明機制**（`core/view-host.ts:94`）
+- [x] T050 [US4] 執行結束時**清除兩側的高亮**
+- [x] T051 [US4] 在 Webview 面板加一小塊輸出區（⚠️ 它不是重點——使用者定調「執行的用意是高亮」）
 
 **關卡（SC-007）**：單步 N 次，積木高亮換 N 次且程式碼側同步。
 
@@ -162,13 +162,13 @@
 
 ## Phase 8：User Story 5 ＋ 7 —— 設定與視圖狀態（P2／P3）
 
-- [ ] T052 [US5] 於 `src/vscode/manifest.ts` 宣告 `configuration`：target／topic／style／blockStyle／locale，🔴 **每一項都要 `scope: "language-overridable"`**（不宣告的話語言覆寫**安靜地不生效**）
-- [ ] T053 [US5] 於 `src/vscode/panel.ts` 以 `{ uri, languageId }` 為範圍讀設定，交給 T019 的純函式解析後送 `config`
-- [ ] T054 [US5] 訂閱設定變更 → 重新送 `config`（🔴 **老師改了，學生不用重開**）
-- [ ] T055 [US5] 於 Webview 加組態選單，改它時送 `configChanged`；由主行程寫入 **workspace** 層級，⚠️ **而 UI 上要看得出「這會影響整個專案」**
-- [ ] T056 [US7] 於 `src/vscode/panel.ts` 接上 T022 的視圖狀態：切換文件時存舊的、送新的
-- [ ] T057 [US7] 🔴 處理**存檔那一刻的身分搬遷**（`untitled:` → `file://`）——⚠️ `onDidRenameFiles` 管不到它
-- [ ] T058 [US5] 更新 `tools/vscode-preflight/run.mjs`：斷言組態有被套用（工具箱隨 target 改變）
+- [x] T052 [US5] 於 `src/vscode/manifest.ts` 宣告 `configuration`：target／topic／style／blockStyle／locale，🔴 **每一項都要 `scope: "language-overridable"`**（不宣告的話語言覆寫**安靜地不生效**）
+- [x] T053 [US5] 於 `src/vscode/panel.ts` 以 `{ uri, languageId }` 為範圍讀設定，交給 T019 的純函式解析後送 `config`
+- [x] T054 [US5] 訂閱設定變更 → 重新送 `config`（🔴 **老師改了，學生不用重開**）
+- [x] T055 [US5] 於 Webview 加組態選單，改它時送 `configChanged`；由主行程寫入 **workspace** 層級，⚠️ **而 UI 上要看得出「這會影響整個專案」**
+- [x] T056 [US7] 於 `src/vscode/panel.ts` 接上 T022 的視圖狀態：切換文件時存舊的、送新的
+- [x] T057 [US7] 🔴 處理**存檔那一刻的身分搬遷**（`untitled:` → `file://`）——⚠️ `onDidRenameFiles` 管不到它
+- [x] T058 [US5] 更新 `tools/vscode-preflight/run.mjs`：斷言組態有被套用（工具箱隨 target 改變）
 
 **關卡（SC-008／010）**：語言覆寫生效；切走再回來原位。
 

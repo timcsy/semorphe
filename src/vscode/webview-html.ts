@@ -127,6 +127,17 @@ export function renderHtml(parts: HtmlParts): string {
   .verdict { margin-top: 4px; border-top: 1px dashed var(--vscode-panel-border, #333); padding-top: 4px; }
   .criterion { margin-top: 4px; opacity: .5; font-size: 11px; }
   .fatal { color: #ef5350; white-space: pre-wrap; font-size: 11px; }
+  #bar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+         padding: 5px 10px; border-top: 1px solid var(--vscode-panel-border, #333); }
+  #bar button { font: inherit; font-size: 12px; padding: 2px 10px; cursor: pointer;
+                color: var(--vscode-button-foreground, #fff);
+                background: var(--vscode-button-background, #0e639c);
+                border: none; border-radius: 3px; }
+  #bar button:disabled { opacity: .45; cursor: default; }
+  #runstate { font-size: 12px; opacity: .7; }
+  #out { flex: 0 0 auto; margin: 0; padding: 6px 10px; max-height: 22%; overflow: auto;
+         font-size: 11px; white-space: pre-wrap;
+         border-top: 1px solid var(--vscode-panel-border, #333); }
 </style>
 </head>
 <body>
@@ -134,6 +145,14 @@ export function renderHtml(parts: HtmlParts): string {
      script-src 沒有 nonce 也沒有 unsafe-inline，所以行內腳本不會執行
      ——而症狀是「畫布一片空白」，沒有任何錯誤指向這裡。 -->
 <div id="canvas" data-blockly-media="${escapeAttr(parts.mediaSrc)}"></div>
+<div id="bar">
+  <button id="step" title="走一步，看積木亮到哪">▶| 單步</button>
+  <button id="stop" title="停止並清除高亮">■ 停止</button>
+  <span id="runstate">閒置</span>
+</div>
+<!-- ⚠️ 輸出區【不是重點】——使用者定調「執行的用意是高亮」。
+     真的要看輸出，他自己在 IDE 裡編譯／燒錄，那才準。 -->
+<pre id="out"></pre>
 <div id="readout">載入中…</div>
 <script type="module" src="${escapeAttr(parts.scriptSrc)}"></script>
 </body>

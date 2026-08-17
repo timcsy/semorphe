@@ -111,6 +111,23 @@ if (raw.length > 0) console.log(`🔴 i18n 沒載：${JSON.stringify(raw)}`)
 const spanLines = /上次編輯改了幾行\s+(\d+)/.exec(afterEdit)
 console.log(`\n重寫跨距：${spanLines ? spanLines[1] + ' 行' : '🔴 沒算出來'}`)
 
+// ── 單步執行：積木要一顆一顆亮 ──
+// 🔴 US4 的重點是【看見程式在積木上走過去】，所以驗的是「高亮換了幾次」。
+const execResult = await page.evaluate(async () => {
+  const seen = []
+  const btn = document.getElementById('step')
+  for (let i = 0; i < 4; i++) {
+    btn.click()
+    await new Promise((r) => setTimeout(r, 250))
+    const hl = document.querySelectorAll('.blocklyPath.semorphe-highlight-execution, .semorphe-highlight-execution')
+    seen.push(document.getElementById('runstate').textContent)
+  }
+  document.getElementById('stop').click()
+  return { states: seen, out: document.getElementById('out').textContent.slice(0, 120) }
+})
+console.log(`\n單步：${JSON.stringify(execResult.states)}`)
+if (execResult.out) console.log(`輸出：${JSON.stringify(execResult.out)}`)
+
 // 拖曳：往左上拖，⚠️ 往右下會把積木拖出畫布（第一版踩過，症狀是「畫布空白」）
 if (blocks > 0) {
   const box = await page.locator('#canvas .blocklyDraggable').first().boundingBox()
