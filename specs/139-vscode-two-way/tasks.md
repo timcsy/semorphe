@@ -26,8 +26,8 @@
 
 ## Phase 1：Setup
 
-- [ ] T001 確認 spec 138 的成果可建可裝：`npm run build:vscode` 產得出 `.vsix`
-- [ ] T002 記下本輪的回歸基準：全套測試數、`.vsix` 大小（約 456 KB）、探針數字
+- [x] T001 確認 spec 138 的成果可建可裝：`npm run build:vscode` 產得出 `.vsix`
+- [x] T002 記下本輪的回歸基準：全套測試數、`.vsix` 大小（約 456 KB）、探針數字
 
 **關卡**：基準記下來了 —— ⚠️ **沒有基準的「沒退步」是講不出來的**。
 
@@ -41,35 +41,35 @@
 
 ### ① 範圍計算（US1 的核心）
 
-- [ ] T003 撰寫 `tests/integration/vscode-rewrite-span.test.ts`：🔴 **主斷言是「把回傳的範圍套用到 before，逐字元等於 after」**——⚠️ **不是**「跨距看起來合理」
-- [ ] T004 於同檔加：`before === after` → 回傳 `null`（不產生空編輯）
-- [ ] T005 於同檔加：只差一行的輸入 → 跨距 **1**
-- [ ] T006 於同檔加：🔴 **`before` 是「文件的實際文字」而不是 `generate(原樹)`**——用一段**排版不同但語義相同**的輸入，斷言套用結果仍然逐字元正確（`research.md` 第一節記的那個錯）
-- [ ] T007 於同檔加：純函式性質——同輸入同輸出、無狀態
-- [ ] T008 確認 T003–T007 全部 **Red**
-- [ ] T009 實作 `src/core/projection/rewrite-span.ts`（🟢 放中立目錄：它不認識任何宿主）
-- [ ] T010 確認 T003–T007 全部 **Green**
-- [ ] T011 🔴 把 `tests/probes/edit-blast-radius.test.ts` 改成 **import `src/core/projection/rewrite-span`**，刪掉它本地那份，並確認**數字一個都沒變**（中位 1 行、≤1 行 99.5%、跨距>半檔 0 筆）
+- [x] T003 撰寫 `tests/integration/vscode-rewrite-span.test.ts`：🔴 **主斷言是「把回傳的範圍套用到 before，逐字元等於 after」**——⚠️ **不是**「跨距看起來合理」
+- [x] T004 於同檔加：`before === after` → 回傳 `null`（不產生空編輯）
+- [x] T005 於同檔加：只差一行的輸入 → 跨距 **1**
+- [x] T006 於同檔加：🔴 **`before` 是「文件的實際文字」而不是 `generate(原樹)`**——用一段**排版不同但語義相同**的輸入，斷言套用結果仍然逐字元正確（`research.md` 第一節記的那個錯）
+- [x] T007 於同檔加：純函式性質——同輸入同輸出、無狀態
+- [x] T008 確認 T003–T007 全部 **Red**
+- [x] T009 實作 `src/core/projection/rewrite-span.ts`（🟢 放中立目錄：它不認識任何宿主）
+- [x] T010 確認 T003–T007 全部 **Green**
+- [x] T011 🔴 把 `tests/probes/edit-blast-radius.test.ts` 改成 **import `src/core/projection/rewrite-span`**，刪掉它本地那份，並確認**數字一個都沒變**（中位 1 行、≤1 行 99.5%、跨距>半檔 0 筆）
 
 ### ② 回音守衛（US2 的核心）
 
-- [ ] T012 [P] 撰寫 `tests/integration/vscode-echo-guard.test.ts`：記下的 version 回來 → 判為回音並移除
-- [ ] T013 [P] 於同檔加：🔴 **連續兩次編輯**產生兩個 version，**先回來的那個仍判為回音**（⚠️ 這一條是「集合 vs 單一變數」的分水嶺）
-- [ ] T014 [P] 於同檔加：沒記過的 version → 判為外來變更
-- [ ] T015 [P] 於同檔加：上界用**數量**——🔴 **測試裡不得出現任何計時**
-- [ ] T016 實作 `src/vscode/sync/echo-guard.ts`
+- [x] T012 [P] 撰寫 `tests/integration/vscode-echo-guard.test.ts`：記下的 version 回來 → 判為回音並移除
+- [x] T013 [P] 於同檔加：🔴 **連續兩次編輯**產生兩個 version，**先回來的那個仍判為回音**（⚠️ 這一條是「集合 vs 單一變數」的分水嶺）
+- [x] T014 [P] 於同檔加：沒記過的 version → 判為外來變更
+- [x] T015 [P] 於同檔加：上界用**數量**——🔴 **測試裡不得出現任何計時**
+- [x] T016 實作 `src/vscode/sync/echo-guard.ts`
 
 ### ③ 設定解析（US5 的核心）
 
-- [ ] T017 [P] 撰寫 `tests/integration/vscode-settings.test.ts`：優先序 語言覆寫 > 專案 > 使用者 > 內建預設
-- [ ] T018 [P] 於同檔加：沒有任何設定時回傳完整的預設組態（不得有 `undefined` 漏出去）
-- [ ] T019 實作 `src/vscode/sync/settings.ts`（⚠️ 純函式：吃「各層級的值」回傳組態，**不 import `vscode`**）
+- [x] T017 [P] 撰寫 `tests/integration/vscode-settings.test.ts`：優先序 語言覆寫 > 專案 > 使用者 > 內建預設
+- [x] T018 [P] 於同檔加：沒有任何設定時回傳完整的預設組態（不得有 `undefined` 漏出去）
+- [x] T019 實作 `src/vscode/sync/settings.ts`（⚠️ 純函式：吃「各層級的值」回傳組態，**不 import `vscode`**）
 
 ### ④ 視圖狀態（US7 的核心）
 
-- [ ] T020 [P] 撰寫 `tests/integration/vscode-view-state.test.ts`：存了再取得回同一份
-- [ ] T021 [P] 於同檔加：🔴 **身分搬遷**——`untitled:` 的狀態搬到 `file://` 之後，舊 key 不再存在、新 key 拿得到
-- [ ] T022 實作 `src/vscode/sync/view-state.ts`（⚠️ 純函式 ＋ 一個可注入的儲存介面，**不 import `vscode`**）
+- [x] T020 [P] 撰寫 `tests/integration/vscode-view-state.test.ts`：存了再取得回同一份
+- [x] T021 [P] 於同檔加：🔴 **身分搬遷**——`untitled:` 的狀態搬到 `file://` 之後，舊 key 不再存在、新 key 拿得到
+- [x] T022 實作 `src/vscode/sync/view-state.ts`（⚠️ 純函式 ＋ 一個可注入的儲存介面，**不 import `vscode`**）
 
 **關卡**：四塊全綠；`npx tsc --noEmit` 過；🔴 **T011 的數字沒變**。
 

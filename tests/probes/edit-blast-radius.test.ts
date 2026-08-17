@@ -46,6 +46,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
+import { rewriteSpan } from '../../src/core/projection/rewrite-span'
 
 const S = apcs as unknown as StylePreset
 const CORPUS = JSON.parse(
@@ -55,18 +56,18 @@ const CORPUS = JSON.parse(
 /**
  * 範圍編輯**真的會寫**的那一段有幾行。
  *
- * 去頭去尾之後剩下的行數 —— ⚠️ 取 `max(舊段, 新段)`，因為要寫的範圍
- * 是舊的那一段，而寫進去的內容是新的那一段，**成本看兩者較大的**。
+ * 🔴 **這個演算法 2026-08-17 升格進 `src/core/projection/rewrite-span.ts`**
+ * ——它從「探針裡的一段量測程式」變成了**生產路徑**。
+ *
+ * > **一個生產演算法住在測試裡，就是兩份會漂移的東西。**
+ *
+ * 🟢 而升格之後，**下面那 400 多筆量測變成它的回歸測試**。
+ * ⚠️ 升格的驗收是「數字一個都沒變」。
  */
-function rewriteSpan(before: string, after: string): number {
-  const a = before.split('\n')
-  const b = after.split('\n')
-  let head = 0
-  while (head < a.length && head < b.length && a[head] === b[head]) head++
-  let tail = 0
-  while (tail < a.length - head && tail < b.length - head &&
-         a[a.length - 1 - tail] === b[b.length - 1 - tail]) tail++
-  return Math.max(a.length - head - tail, b.length - head - tail)
+function rewriteSpanLines(before: string, after: string): number {
+  const span = rewriteSpan(before, after)
+  if (span === null) return 0
+  return Math.max(span.endLine - span.startLine, span.lines.length)
 }
 
 /** 深拷貝——突變不能污染原樹。 */
@@ -163,7 +164,7 @@ describe('探測：改一顆積木要重寫幾行', () => {
         let out: string
         try { out = generateCode(c, 'cpp', S) } catch { continue }
         if (out === base) { noop++; continue }
-        const span = rewriteSpan(base, out)
+        const span = rewriteSpanLines(base, out)
         fieldSpans.push(span); fieldTotals.push(baseLines)
         if (span > baseLines * 0.5) {
           whole++
@@ -178,7 +179,7 @@ describe('探測：改一顆積木要重寫幾行', () => {
         let out: string
         try { out = generateCode(c, 'cpp', S) } catch { continue }
         if (out === base) { noop++; continue }
-        const span = rewriteSpan(base, out)
+        const span = rewriteSpanLines(base, out)
         structSpans.push(span); structTotals.push(baseLines)
         if (span > baseLines * 0.5 && worst.length < 6) {
           worst.push(`  ✘ ${id} 結構編輯 → 跨距 ${span}/${baseLines} 行`)
