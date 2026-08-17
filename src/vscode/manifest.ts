@@ -52,16 +52,42 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.2.1'
+export const EXTENSION_VERSION = '0.2.2'
 
 /**
- * 哪些副檔名要出現入口。
+ * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
  *
- * ⚠️ `resourceExtname` **帶前面那個點**（`.cpp`，不是 `cpp`）。
+ * ## 🔴 為什麼不能只看副檔名（2026-08-17 使用者實測撞到）
+ *
+ * 使用者開了一個 `Untitled-1`、語言選 C++，而按鈕**沒出現**。
+ * 那不是缺陷，是**條件寫窄了**：
+ *
+ * ```
+ * URI              untitled:Untitled-1
+ * resourceExtname  ""          ← 沒有副檔名
+ * resourceLangId   "cpp"       ← 而語言是對的
+ * ```
+ *
+ * ⚠️ 而 untitled buffer **正是主要場景之一**。使用者逐字（2026-08-17）：
+ *
+ * > 「甚至 **AI 給的 Code 他們貼上來**也是可以順利雙向轉換」
+ *
+ * **貼進來的第一站就是一個沒有副檔名的暫存分頁。**
+ *
+ * > **一個只認副檔名的條件，會漏掉「還沒存檔」這個最常見的起點。**
+ *
+ * ⚠️ `resourceExtname` **帶前面那個點**（`.cpp`，不是 `cpp`）；
+ * 而 `resourceLangId` **不帶**（`cpp`）。兩者格式不同是 VSCode 的既定，
+ * 不是筆誤。
  */
-const EDITOR_WHEN = ['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp']
-  .map((ext) => `resourceExtname == ${ext}`)
-  .join(' || ')
+const EDITOR_WHEN = [
+  ...['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp'].map(
+    (ext) => `resourceExtname == ${ext}`,
+  ),
+  // `arduino` 是 Arduino IDE 認得的語言 id（`history/080`§一 查證過）；
+  // 在純 VSCode 裡 `.ino` 多半被歸成 `cpp` 或 `plaintext`。
+  ...['cpp', 'c', 'arduino'].map((lang) => `resourceLangId == ${lang}`),
+].join(' || ')
 
 export interface ExtensionManifest {
   name: string
