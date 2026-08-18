@@ -225,5 +225,7 @@
   "DIAG_SYNTAX_ERROR_CODE": "incomplete syntax on this line",
   "CATEGORY_HARDWARE_PINS": "Pins & Timing",
   "CATEGORY_HARDWARE_MODULES": "Parts & Modules",
-  "CATEGORY_HARDWARE_SERIAL": "Serial"
+  "CATEGORY_HARDWARE_SERIAL": "Serial",
+  "CPP_METHOD_CALL_ON": "On",
+  "CPP_METHOD_CALL_DO": "call"
 }
