@@ -30,6 +30,13 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors/extract-strategies'
 import { allCppProjections, allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { Parser, Language } from 'web-tree-sitter'
+import { createTestLifter } from '../helpers/setup-lifter'
+
+let parser: Parser
+/** 從**真實程式碼**產出語義樹——⚠️ 形狀由 lift 決定，不由我決定。 */
+const liftCode = (c: string): SemanticNode =>
+  createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -37,6 +44,9 @@ interface BlockState { type?: string; [k: string]: unknown }
 let extractor: PatternExtractor
 
 beforeAll(async () => {
+  await Parser.init({ locateFile: (f: string) => `${process.cwd()}/public/${f}` })
+  parser = new Parser()
+  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   await setupTestRenderer()
   registerCppLanguage()
   const reg = new BlockSpecRegistry()
@@ -118,10 +128,45 @@ describe('第一週語法的接點走得完來回', () => {
   })
 
   it('🔴 US2：`int a, b, c` 的其餘變數不得消失', () => {
+    // ⚠️ **2026-08-19 更正了餵進去的形狀。**
+    //
+    // 原本餵的是 `cpp:var_ref`——**型別是錯的**（lift 真的產出的是
+    // `cpp:var_declare` 自己），而它**碰巧有 `.name`**，於是渲染策略讀得到、
+    // 這支測試就過了。
+    //
+    // > **一個餵錯型別而碰巧通過的測試，
+    // > 與一個真的在守著那件事的測試長得一模一樣。**
+    //
+    // 🔴 而同一個說謊的宣告（`declarators: 'expressions'`）讓**另外兩條護欄**
+    // 各自報了一次假違規——見 `components/cpp/var_declare/component.json`。
     const n = createNode('cpp:var_declare', { type: 'int', name: 'a' }, {
-      declarators: [createNode('cpp:var_ref', { name: 'b' }, {}), createNode('cpp:var_ref', { name: 'c' }, {})],
+      declarators: [
+        createNode('cpp:var_declare', { name: 'b', type: 'int' }, {}),
+        createNode('cpp:var_declare', { name: 'c', type: 'int' }, {}),
+      ],
     })
     const r = roundTrip(n, 'declarators')
     expect(r.ok, `其餘變數走完來回不見了（回來的：${r.back?.join('、') ?? '(整顆都沒回來)'}）`).toBe(true)
+  })
+
+  it('🟢 US2 補強：從【真實程式碼】走完 lift → render → extract', () => {
+    // 🔴 上面那些餵的是**合成節點**，而 2026-08-19 的教訓是
+    //    「餵錯型別而碰巧通過」——合成節點永遠有這個風險。
+    //
+    // > **一條從真實程式碼出發的斷言，不會餵錯形狀
+    // > ——因為形狀是 lift 決定的，不是我決定的。**
+    const src = 'int main() { int a, b, c; return 0; }\n'
+    const t = liftCode(src)
+    const st = renderToBlocklyState(t)
+    const back = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
+    const find = (n: SemanticNode | null): SemanticNode | null => {
+      if (!n) return null
+      if (n.conceptId === 'cpp:var_declare' && (n.children.declarators ?? []).length > 0) return n
+      for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
+      return null
+    }
+    const d = (back as SemanticNode[]).map(find).find(Boolean)
+    expect(d, '多變數宣告沒有回來').toBeDefined()          // ← 正向錨點
+    expect((d?.children.declarators ?? []).map((x) => x.properties.name)).toEqual(['a', 'b', 'c'])
   })
 })

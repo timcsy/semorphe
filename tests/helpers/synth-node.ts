@@ -83,8 +83,35 @@ function defaultFor(prop: string, conceptId?: string): PropertyValue {
 }
 
 /** 子槽宣告的型別 → 一個最小的填充節點 */
+/** 這個接點放得下多個嗎——⚠️ **由宣告說了算**，不是猜的。 */
+function isVariadicSlot(slotType: unknown): boolean {
+  if (typeof slotType === 'object' && slotType !== null) {
+    const o = slotType as { max?: number }
+    return o.max === undefined || o.max > 1
+  }
+  const t = String(slotType).toLowerCase()
+  // 複數形（`expressions`／`statements`）、`param_decl`、以及直接指名概念的
+  return t.endsWith('s') || t === 'param_decl' || t.includes(':')
+}
+
 function fillerFor(slotType: string): SemanticNode {
   const t = (slotType || '').toLowerCase()
+  // 🔴 **接點型別直接指名一顆概念時，就合成那一顆。**
+  //
+  // `cpp:var_declare` 的 `declarators` 裝的是 **`cpp:var_declare` 自己**
+  //（`int a, b, c;` 的三個宣告子是三顆各自完整的宣告）。而第一版只認得
+  // `param_decl` 這個特例，其餘一律退回 `cpp:literal_number`——於是渲染策略
+  // 讀不到 `.name`，**三個消費者各自錯了一次**（符合性報「接點不見了」、
+  // 投影遺失歸進「判不出來」、而 US2 自己餵 `cpp:var_ref` 碰巧有 `.name` 而過關）。
+  //
+  // > **一個說謊的宣告會讓三個消費者各自錯一次，
+  // > 而它們錯的方向不同——所以看起來像三個不同的問題。**
+  //
+  // ⚠️ 而這裡**只放一層**：自我巢狀（`declarators` 裝自己）會無限遞迴，
+  // 而合成一顆「有名字的空宣告」已經足夠讓策略跑得完。
+  if (slotType.includes(':')) {
+    return createNode(slotType, { name: 'd', type: 'int' })
+  }
   // ⚠️ **宣告指名了子節點型別時，就合成那個型別**——不要退回猜測。
   //
   // `params` 的子節點是 `param_decl`（結構節點，帶 `{type, name}`）。
@@ -120,7 +147,20 @@ export function synthMinimalNode(def: ConceptDefJSON): SynthResult {
   const children: Record<string, SemanticNode[]> = {}
   for (const [slot, slotType] of Object.entries(def.children ?? {})) {
     try {
-      children[slot] = [fillerFor(String(slotType))]
+      // 🔴 **可變數量的接點填【兩個】，不是一個。**
+      //
+      // 填一個會從**兩個方向**出錯，而它們的症狀相反：
+      //
+      // ```
+      // 假陰性   積木上只放得下第一個 → 兩邊都是 1，看起來健康（液晶的建構參數）
+      // 假陽性   一個宣告子本來就塌回普通宣告 → 報「declarators 不見了」
+      //          （`int d;` 不是多變數宣告——而那是【對的】行為）
+      // ```
+      //
+      // > **一個「可以有很多個」的接點，用一個去驗它，
+      // > 驗的是它退化成單數時的行為——而那常常是另一條路。**
+      const n = isVariadicSlot(slotType) ? 2 : 1
+      children[slot] = Array.from({ length: n }, () => fillerFor(String(slotType)))
     } catch {
       notes.push(`子槽 ${slot} 無法合成填充節點`)
     }

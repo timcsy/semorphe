@@ -26,7 +26,7 @@
   ],
   "children": {
     "initializer": "expression",
-    "declarators": "expressions"
+    "declarators": "cpp:var_declare"
   },
   "role": "statement",
   "annotations": {
@@ -44,5 +44,6 @@
     "forLoopPart": true,
     "plainDeclaration": true
   },
-  "_traits_why": "**「我是最單純的變數宣告」是我自己的宣告**——`ui/block-registrar` 蒐集變數名時要分辨它，而它不該認得我的名字。"
+  "_traits_why": "**「我是最單純的變數宣告」是我自己的宣告**——`ui/block-registrar` 蒐集變數名時要分辨它，而它不該認得我的名字。",
+  "_children_why": "🔴 **`declarators` 裝的是 `cpp:var_declare` 自己**——`int a, b, c;` 的三個宣告子\n是三顆各自完整的宣告概念（`int a, *p, arr[3];` 的三個甚至是**不同**的概念）。\n\n⚠️ 第一版宣告 `'expressions'`，而那讓兩條護欄各自量錯：\n\n```\n符合性       合成器照 'expressions' 填一顆 literal_number → 渲染策略讀不到 .name\n             → 報「declarators 走完 render → extract 之後不見了」\n投影遺失      同一個原因 → 被歸進「判不出來」\nUS2 那支測試  自己餵 cpp:var_ref{name} → 型別也錯，只是【碰巧有 .name】而過關\n```\n\n🟢 **而真實路徑是好的**：`int a, b, c;` 走完 lift → render → extract，三個名字全部回得來（2026-08-19 實測）。\n\n> **一個說謊的宣告會讓三個消費者各自錯一次，\n> 而它們錯的方向不同——所以看起來像三個不同的問題。**"
 }
