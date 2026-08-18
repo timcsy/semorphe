@@ -30,6 +30,7 @@ import * as vscode from 'vscode'
 import { csp, renderHtml } from './webview-html'
 import { EchoGuard } from './sync/echo-guard'
 import { resolveConfig, type RawSettings } from './sync/settings'
+import { textFingerprint } from './sync/fingerprint'
 import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
 import { applySpan } from '../core/projection/rewrite-span'
 import type { HostMessage, WebviewMessage } from './sync/messages'
@@ -176,7 +177,11 @@ class SemorpheSession {
    * 看不到就**保持現狀**，不解除綁定。解除只發生在文件關掉時。
    */
   private follow(): void {
+    // 🔴 **焦點在面板上時 `activeTextEditor` 是 `undefined`**——而使用者的
+    //    sketch 就開在旁邊。退而求其次去找**看得見的**那一份。
+    //    ⚠️ 這正是「開面板 → 前兩次操作怪怪的 → 點回編輯器才正常」的成因。
     const editor = vscode.window.activeTextEditor
+      ?? vscode.window.visibleTextEditors.find((ed) => isSupported(ed.document))
     if (editor && isSupported(editor.document)) {
       const doc = editor.document
       if (doc.uri.toString() === this.doc?.uri.toString()) return
@@ -211,6 +216,15 @@ class SemorpheSession {
     // ⚠️ `setTextDocumentLanguage` 會換掉 document 物件的身分，所以要重新跟。
     this.doc = undefined
     this.follow()
+  }
+
+  /** 重送目前的狀態——**不重新決定綁哪一份**（見 `ready` 的處理）。 */
+  private resend(): void {
+    if (!this.doc) { this.follow(); return }
+    this.sendConfig()
+    this.sendDocument(this.doc)
+    const vs = this.viewStates.get(this.doc.uri.toString())
+    if (vs) this.send({ type: 'viewState', state: vs })
   }
 
   /** 解除綁定——**只有文件關掉時**。 */
@@ -295,9 +309,19 @@ class SemorpheSession {
 
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
     // 🔴 Webview 起來了 → **重送目前的狀態**。建面板時送的那一份可能沒有人接。
-    if (m.type === 'ready') {
-      this.doc = undefined   // 讓 follow() 一定會重送，而不是「同一份就跳過」
-      this.follow()
+    //
+    // ⚠️ 這裡曾經寫 `this.doc = undefined; this.follow()`，而那是錯的：
+    //    **面板剛開時焦點就在面板上**，所以 `activeTextEditor` 是 `undefined`
+    //    → `follow()` 找不到編輯器、而我又剛把 `this.doc` 清掉
+    //    → 送出 `noDocument`，**把綁定解除了**。
+    //    使用者要點回編輯器（第三次操作）才會恢復。
+    //
+    // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
+    // > ——而後者在焦點不在編輯器上時，答案是錯的。**
+    if (m.type === 'ready') { this.resend(); return }
+    if (m.type === 'requestDocument') {
+      // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
+      if (this.doc) this.sendDocument(this.doc)
       return
     }
     if (m.type === 'setLanguageCpp') { await this.setLanguageCpp(); return }
@@ -430,7 +454,8 @@ class SemorpheSession {
       // 🔴 **回報新的版本號。** 回音守衛擋掉了文件回送（擋得對），
       //    而如果只擋不報，Webview 的版本會永遠停在編輯前——見 `messages.ts`
       //    的 `applied`：症狀是「第一筆成功，之後每一筆都無效」。
-      this.send({ type: 'applied', version: doc.version })
+      // 🔴 指紋讓積木那側**對得了帳**——鏡像錯位一次，之後每一段範圍都是錯的。
+      this.send({ type: 'applied', version: doc.version, fingerprint: textFingerprint(doc.getText()) })
     } else {
       this.sendDocument(doc)   // ⚠️ 套用失敗要讓兩邊回到一致，不能靜默
     }

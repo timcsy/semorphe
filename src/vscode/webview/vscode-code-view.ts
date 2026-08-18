@@ -40,6 +40,7 @@
  */
 import { rewriteSpan } from '../../core/projection/rewrite-span'
 import { postToHost } from './host-bridge'
+import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/view-host'
@@ -98,6 +99,8 @@ export class VscodeCodeView implements CodeView, ViewHost {
    * > ——而被丟掉的那一筆在使用者眼裡是「我的修改不見了」。**
    */
   private inFlight = false
+  /** 對帳對不上的次數——🔴 診斷指令要顯示它（見 `webview/main.ts`）。 */
+  private divergences = 0
   /** ⚠️ 在路上時最後一次想要的內容——只留最新的，中間狀態沒有意義。 */
   private queued: string | null = null
   private changeCb: ((code: string) => void) | null = null
@@ -130,6 +133,21 @@ export class VscodeCodeView implements CodeView, ViewHost {
       // 🔴 宿主套用了，版本前進——**沒有這一則，下一筆必然過期**。
       this.version = m.version
       this.inFlight = false
+      // 🔴 **對帳。** 樂觀更新的鏡像只要錯一次，之後每一段範圍都是錯位的
+      //    ——而第一次分歧不會出聲（使用者看到的是檔案被寫爛）。
+      //    ⚠️ 對不上時**丟掉手上的東西**：宿主是權威，我們手上的已經證明是錯的。
+      if (textFingerprint(this.mirror) !== m.fingerprint) {
+        this.divergences += 1
+        // ⚠️ **自癒要出聲。** 一個安靜自癒的機制會把「還有一個真的 bug」
+        //    藏起來——而我們正是靠這個計數才知道它有沒有再發生。
+        //
+        // > **一個沒有人看得到的復原，與一個沒有發生過的錯誤，
+        // > 在紀錄上長得一樣。**
+        console.warn(`[semorphe] 鏡像與文件對不上（第 ${this.divergences} 次）——丟掉手上的，向宿主要一份`)
+        this.queued = null
+        this.post({ type: 'requestDocument', reason: '積木側的鏡像與文件對不上' })
+        return
+      }
       const q = this.queued
       this.queued = null
       if (q !== null) this.setCode(q)
@@ -207,6 +225,11 @@ export class VscodeCodeView implements CodeView, ViewHost {
     // ⚠️ 網頁版用它取消「還沒送出的那一次高亮」（它有防抖）。
     //    這裡沒有防抖——高亮是一則訊息，送了就送了。
     //    🔴 而它是**必要能力**所以不能缺席；這裡的正確行為就是「什麼都不用做」。
+  }
+
+  /** 對帳對不上過幾次。⚠️ 0 以外的任何數字都代表**還有一個真的 bug**。 */
+  get divergenceCount(): number {
+    return this.divergences
   }
 
   onCursorChange(callback: (line: number) => void): void {

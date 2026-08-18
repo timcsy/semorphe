@@ -65,7 +65,17 @@ export type HostMessage =
    * > **樂觀更新要能收斂，必須有一條回報新狀態的路；
    * > 只擋回音而不回報，會讓兩邊的版本永遠差一。**
    */
-  | { type: 'applied'; version: number }
+  | {
+      type: 'applied'
+      version: number
+      /**
+       * 🔴 **套用之後宿主那份文字的指紋**——見 `fingerprint.ts`。
+       *
+       * 樂觀更新的鏡像只要錯一次，之後每一段範圍都是錯位的，
+       * ⚠️ 而**第一次分歧不會出聲**。有指紋才對得了帳。
+       */
+      fingerprint: number
+    }
   /** 使用者把游標移到某一行——⚠️ **這個事件很吵**（每次移動都發）。 */
   | { type: 'selection'; line: number }
   /** 宿主要求回報診斷——⚠️ 由指令觸發，**不佔面板的版面**（FR-009）。 */
@@ -98,6 +108,15 @@ export type WebviewMessage =
    * > **替使用者做決定與讓使用者一鍵做決定，差別在他知不知道發生了什麼。**
    */
   | { type: 'setLanguageCpp' }
+  /**
+   * 🔴 **我的鏡像跟你對不上，請重送一份。**
+   *
+   * ⚠️ 這不是「防禦性程式設計」——它是**分歧發生時唯一正確的動作**：
+   * 宿主是權威，而積木那側手上的東西已經證明是錯的。
+   *
+   * > **偵測得到而不能回復的檢查，只會把安靜的壞換成吵鬧的壞。**
+   */
+  | { type: 'requestDocument'; reason: string }
   /** 診斷報告。🔴 它去宿主的輸出頻道，不去面板。 */
   | { type: 'diagnostics'; lines: string[] }
   /**

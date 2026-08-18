@@ -35,7 +35,7 @@
  */
 ;(function () {
   var text = '', version = 0, config = null
-  var log = { sent: [], accepted: 0, rejected: 0 }
+  var log = { sent: [], accepted: 0, rejected: 0, resent: 0 }
   window.__HOST__ = log
   function sendDoc() {
     window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text: text, version: version }, '*')
@@ -44,6 +44,17 @@
   window.__setConfig__ = function (c) {
     config = c
     window.postMessage({ type: 'config', config: config }, '*')
+  }
+  // ⚠️ 與 `src/vscode/sync/fingerprint.ts` **必須是同一個演算法**
+  //    ——這裡是純 JS 的複本（這個檔不經過打包）。
+  //    🔴 兩份不一致的話，預檢會看到「永遠對不上」而真環境沒事，或者反過來。
+  function fingerprint(t) {
+    var h = 0x811c9dc5
+    for (var i = 0; i < t.length; i++) {
+      h ^= t.charCodeAt(i)
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0
+    }
+    return h >>> 0
   }
   function applySpan(span) {
     var lines = text.split('\n')
@@ -63,6 +74,8 @@
           sendDoc()
           return
         }
+        // 積木那側說鏡像對不上 → 宿主是權威，重送。
+        if (m.type === 'requestDocument') { log.resent += 1; sendDoc(); return }
         if (m.type !== 'applyEdit') return
         // 🔴 與 panel.ts 同一條判準：版本對不上就丟掉並重送文件。
         if (m.baseVersion !== version) {
@@ -73,7 +86,7 @@
         applySpan(m.span)
         version += 1
         log.accepted += 1
-        window.postMessage({ type: 'applied', version: version }, '*')
+        window.postMessage({ type: 'applied', version: version, fingerprint: fingerprint(text) }, '*')
       },
     }
   }

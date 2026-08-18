@@ -156,10 +156,13 @@ const host = await page.evaluate(() => ({
   types: window.__HOST__.sent.map((m) => m.type),
   accepted: window.__HOST__.accepted,
   rejected: window.__HOST__.rejected,
+  // 🔴 積木那側要求重送＝**它的鏡像與文件對不上**。正常情況下是 0。
+  resent: window.__HOST__.resent,
 }))
-const twoWay = host.accepted >= 2 && host.rejected === 0
+const twoWay = host.accepted >= 2 && host.rejected === 0 && host.resent === 0
 console.log(`\n積木 → 程式碼：宿主收下 ${host.accepted} 筆、丟掉 ${host.rejected} 筆 ` +
-  `${twoWay ? '🟢' : '🔴 ' + (host.rejected > 0 ? '版本對不上 → 第二筆之後全被丟掉' : '沒送出去')}` +
+  `${twoWay ? '🟢' : '🔴 ' + (host.rejected > 0 ? '版本對不上 → 第二筆之後全被丟掉'
+    : host.resent > 0 ? `鏡像對不上（要求重送 ${host.resent} 次）→ 範圍編輯會錯位` : '沒送出去')}` +
   `（訊息：${host.types.join(', ') || '無'}）`)
 
 // ④ 🔴 **開面板不得動到使用者的檔案**（Arduino sketch 的形狀）
@@ -198,8 +201,10 @@ const sketchAfter = await page2.evaluate((src) => {
   return t
 }, SKETCH)
 const sketchBlocks = await page2.locator('#app .blocklyDraggable').count()
-const untouched = sketchAfter === SKETCH
-console.log(`\n開 .ino 面板：檔案${untouched ? '一個字都沒改 🟢' : '被改了 🔴'}｜自動出現 ${sketchBlocks} 顆積木 ${sketchBlocks > 0 ? '🟢' : '🔴 要手動按才會同步'}`)
+const sketchResent = await page2.evaluate(() => window.__HOST__.resent)
+const untouched = sketchAfter === SKETCH && sketchResent === 0
+console.log(`\n開 .ino 面板：檔案${sketchAfter === SKETCH ? '一個字都沒改 🟢' : '被改了 🔴'}` +
+  `｜鏡像對帳 ${sketchResent === 0 ? '一致 🟢' : `對不上 ${sketchResent} 次 🔴`}｜自動出現 ${sketchBlocks} 顆積木 ${sketchBlocks > 0 ? '🟢' : '🔴 要手動按才會同步'}`)
 if (!untouched) console.log('  變成：\n' + sketchAfter.split('\n').map((l) => '    ' + l).join('\n'))
 errors.push(...errors2)
 await page2.close()
