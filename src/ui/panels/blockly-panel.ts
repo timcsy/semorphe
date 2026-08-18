@@ -45,6 +45,13 @@ export class BlocklyPanel implements ViewHost {
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
   private busUpdateInProgress = false
+  /**
+   * 🔴 上一次從語義樹載入積木**失敗**了。
+   *
+   * ⚠️ 為真時工作區可能只載了一半——**不得拿它去覆蓋程式碼**。
+   * 下一次成功載入會清掉它（使用者按「程式碼→積木」也會）。
+   */
+  private stateLoadFailed = false
   private _blockMappings: BlockMapping[] = []
   private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
@@ -88,8 +95,19 @@ export class BlocklyPanel implements ViewHost {
       this.busUpdateInProgress = true
       try {
         this.setState(event.blockState as object)
-      } catch {
-        // Block state may have invalid connections when code has syntax errors — safe to ignore
+        this.stateLoadFailed = false
+      } catch (err) {
+        // 🔴 **這裡曾經是一個空的 `catch {}`**，註解寫「safe to ignore」。
+        //
+        // ⚠️ 而它一點都不安全：載到一半拋錯 → **工作區是殘的**，
+        //    而下一次積木變動會把那個殘的工作區**寫回使用者的檔案**。
+        //    使用者實測到 `setup()`／`loop()` 整個消失，就是這個形狀。
+        //
+        // > **一個被吞掉的例外，會把「失敗了」變成「成功了，只是內容比較少」。**
+        //
+        // 處置有兩半，缺一不可：**說出來**，以及**記住這份工作區不可信**。
+        this.stateLoadFailed = true
+        console.error('[semorphe] 積木狀態載入失敗——工作區可能是殘的，暫停「積木→程式碼」', err)
       } finally {
         this.busUpdateInProgress = false
       }
@@ -152,6 +170,11 @@ export class BlocklyPanel implements ViewHost {
         this.onChangeCallback?.()
       }
     })
+  }
+
+  /** 工作區是不是殘的。🔴 為真時「積木→程式碼」必須停手。 */
+  get isStateStale(): boolean {
+    return this.stateLoadFailed
   }
 
   onChange(callback: () => void): void {

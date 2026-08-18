@@ -425,6 +425,21 @@ class SemorpheSession {
     if (!editor) { this.sendDocument(doc); return }
 
     const lineCount = doc.lineCount
+    // 🔴 **鏡像比文件長 → 那是分歧，不是「夾一下就好」。**
+    //
+    // ⚠️ 原本這裡只有 `Math.min(span.endLine, lineCount)`——而夾住之後
+    //    產出的範圍**指的是別的地方**，症狀是兩行被接成一行：
+    //
+    // ```cpp
+    // }Serial.println();      ← 使用者 2026-08-18 在 Arduino IDE 看到的
+    // ```
+    //
+    // > **把一個超出範圍的座標夾進範圍裡，不會讓它變成對的座標
+    // > ——只會讓錯誤從「拋出來」變成「寫進檔案」。**
+    if (span.startLine > lineCount || span.endLine > lineCount) {
+      this.sendDocument(doc)   // 讓積木那側重新對齊
+      return
+    }
     const endLine = Math.min(span.endLine, lineCount)
     const range = endLine >= lineCount
       // 覆蓋到檔尾——用文件的實際結尾，避免造出不存在的位置

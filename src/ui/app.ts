@@ -639,6 +639,18 @@ export class App {
   }
 
   private syncBlocksToCodeWithMappings(): void {
+    // 🔴 **殘的工作區不得覆蓋程式碼。**
+    //
+    // `BlocklyPanel` 從語義樹載入積木失敗時只載了一半，而把那半份產生成程式碼
+    // 寫回去，等於**把使用者的檔案刪掉一半**。
+    //
+    // > **兩邊不一致時，不能拿「已知是壞的那一邊」當來源。**
+    //
+    // ⚠️ 恢復的辦法是按「程式碼→積木」重載一次（成功就會解除）。
+    if (this.blocklyPanel?.isStateStale) {
+      showToast('積木沒有完整載入，暫停同步到程式碼——請按「程式碼→積木」重載', 'error')
+      return
+    }
     const tree = this.blocklyPanel?.extractSemanticTree()
     const blockMappings = this.blocklyPanel?.getBlockMappings()
     this.syncController?.syncBlocksToCode(tree, blockMappings)
@@ -653,6 +665,9 @@ export class App {
   private wireBlocklyChangeHandler(): void {
     this.blocklyPanel?.onChange(() => {
       if (this._codeToBlocksInProgress) return
+      // 🔴 同 `syncBlocksToCodeWithMappings`：殘的工作區不得覆蓋程式碼。
+      //    ⚠️ 自動同步這條路才是真正危險的——它不需要使用者按任何東西。
+      if (this.blocklyPanel?.isStateStale) return
       this.blocksDirty = true; this.updateSyncHints()
       if (this.autoSync) {
         const tree = this.blocklyPanel?.extractSemanticTree()
