@@ -38,6 +38,26 @@
  * 一個永遠不回來的版本不該讓集合長到無限。
  * 🔴 而上界**不可以是時間**——那會把被趕出去的猜測偷渡回來。
  * 用容量：超過就丟最舊的。
+ *
+ * ## 🔴 而「記下產生的版本」有一個時序陷阱——2026-08-18 付過學費
+ *
+ * ```ts
+ * const ok = await editor.edit(...)     // ← 文件變更事件在【這裡面】就發了
+ * if (ok) this.echo.remember(doc.version)   // ← 太晚：那時 pending 還是空的
+ * ```
+ *
+ * `onDidChangeTextDocument` 在 `edit()` 的 Promise 解析**之前**觸發，
+ * 於是 `isEcho` 回 `false` → 宿主把自己造成的變更當成外來的 → **重送文件**
+ * → code→blocks → **使用者剛改的積木被回捲**。
+ *
+ * ⚠️ 使用者實測的症狀是「改了 mutation 之後直接跳回純宣告」
+ * ——而那看起來像是積木的錯，其實是這裡的時序。
+ *
+ * > **「記下我做了什麼」如果發生在「做」之後，
+ * > 那麼在「做」的當下問「這是我做的嗎」，答案永遠是否。**
+ *
+ * 處置：`beginApply()` / `endApply()` 把整段編輯圈起來——
+ * **圈內收到的任何版本都算我們的**，不必等到知道版本號才記。
  */
 export class EchoGuard {
   /** 我們送出的編輯所產生的文件版本。**插入順序 ＝ 最舊在前**。 */
@@ -48,8 +68,27 @@ export class EchoGuard {
    * @param capacity 最多記幾個未回收的版本。
    *   ⚠️ 預設值大得足以涵蓋任何合理的連續編輯，而**它不是時間**。
    */
+  /** 🔴 一次 `editor.edit` 正在進行中——見檔頭的時序陷阱。 */
+  private applying = false
+
   constructor(capacity = 64) {
     this.capacity = Math.max(1, capacity)
+  }
+
+  /**
+   * 🔴 **一次編輯開始了。** 圈內收到的版本一律算我們的。
+   *
+   * ⚠️ 這不是「布林旗標取代版本身分」——版本身分仍然在管**圈外**的回音
+   * （事件比 Promise 晚到的那些）。這一層管的是**圈內**，而那是版本號
+   * 還不知道的那一段。
+   */
+  beginApply(): void {
+    this.applying = true
+  }
+
+  /** 編輯結束。⚠️ **必須在 `finally` 裡呼叫**——否則一次例外會讓守衛永遠開著。 */
+  endApply(): void {
+    this.applying = false
   }
 
   /** 我們剛送出的編輯產生了這個版本。 */
@@ -70,12 +109,16 @@ export class EchoGuard {
    * 那讓「回音已經處理完了」與「還在等」分得出來。
    */
   isEcho(version: number): boolean {
+    // 🔴 編輯進行中 → **一定是我們造成的**，而且順手記下版本
+    //    （圈外可能還會有一則同版本的事件晚到）。
+    if (this.applying) { this.pending.add(version); return true }
     return this.pending.delete(version)
   }
 
   /** 切換文件時清空——上一份文件的版本號與這一份無關。 */
   reset(): void {
     this.pending.clear()
+    this.applying = false
   }
 
   /** 還在等幾個回音。🔴 交棒時讀數要顯示它（見 `quickstart.md` 第三節）。 */

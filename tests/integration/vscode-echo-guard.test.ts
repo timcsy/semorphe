@@ -84,6 +84,54 @@ describe('EchoGuard —— 用身分認回音，不用時間', () => {
     expect(g.pendingCount).toBe(1)
   })
 
+  // ─────────────────────────────────────────────────────────────
+  // 🔴 時序：**事件比版本號早到**
+  //
+  // 2026-08-18 使用者實測「改了 mutation 之後直接跳回純宣告」，
+  // 而根因在這裡：`onDidChangeTextDocument` 在 `editor.edit()` 的 Promise
+  // 解析【之前】就觸發，所以「事後 `remember(doc.version)`」認不出圈內那一則
+  // → 宿主把自己造成的變更當成外來的 → 重送文件 → code→blocks → 積木被回捲。
+  //
+  // > **「記下我做了什麼」如果發生在「做」之後，
+  // > 那麼在「做」的當下問「這是我做的嗎」，答案永遠是否。**
+  // ─────────────────────────────────────────────────────────────
+
+  it('🔴 正向錨點：沒有圈起來時，編輯進行中的事件【認不出來】（這就是那個 bug）', () => {
+    const g = new EchoGuard()
+    // 模擬：edit() 內部就發了事件，而 remember 還沒被呼叫
+    expect(g.isEcho(7), '⚠️ 這條若變成 true，下面那條就空過了').toBe(false)
+  })
+
+  it('圈起來之後，編輯進行中收到的版本算我們的', () => {
+    const g = new EchoGuard()
+    g.beginApply()
+    expect(g.isEcho(7)).toBe(true)
+    g.endApply()
+  })
+
+  it('⚠️ 圈外晚到的同一個版本也要認得——事件可能發兩次', () => {
+    const g = new EchoGuard()
+    g.beginApply()
+    g.isEcho(7)      // 圈內：認出並記下
+    g.endApply()
+    expect(g.isEcho(7), '🔴 晚到的那一則被當成外來變更 → 重送文件 → 回捲').toBe(true)
+  })
+
+  it('🔴 圈結束之後，使用者自己打的字【不得】被當成回音吞掉', () => {
+    const g = new EchoGuard()
+    g.beginApply()
+    g.isEcho(7)
+    g.endApply()
+    expect(g.isEcho(8)).toBe(false)
+  })
+
+  it('reset 要把圈也解開——否則一次切換文件會讓守衛永遠開著', () => {
+    const g = new EchoGuard()
+    g.beginApply()
+    g.reset()
+    expect(g.isEcho(1)).toBe(false)
+  })
+
   it('⚠️ 自我否證：這個模組的原始碼裡零個計時', async () => {
     // 一個「用身分不用時間」的宣稱，要有一條機械檢查頂著
     // ——否則它只是註解。

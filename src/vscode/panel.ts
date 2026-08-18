@@ -403,11 +403,21 @@ class SemorpheSession {
       ? span.lines.join('\n')
       : span.lines.map((l) => `${l}\n`).join('')
 
-    const ok = await editor.edit(
-      (b) => b.replace(range, text),
-      // 🔴 前後都下停止點 ⟹ 這一次編輯自己是一個復原步驟。
-      { undoStopBefore: true, undoStopAfter: true },
-    )
+    // 🔴 **把整段編輯圈起來**——文件變更事件在 `edit()` 解析【之前】就發了，
+    //    所以「事後記下版本」認不出圈內那一則。見 `echo-guard.ts` 的時序陷阱。
+    this.echo.beginApply()
+    let ok: boolean
+    try {
+      ok = await editor.edit(
+        (b) => b.replace(range, text),
+        // 🔴 前後都下停止點 ⟹ 這一次編輯自己是一個復原步驟。
+        { undoStopBefore: true, undoStopAfter: true },
+      )
+    } finally {
+      // ⚠️ 一定要在 `finally`：一次例外讓守衛永遠開著的話，
+      //    使用者之後在編輯器裡打的字**全部會被當成回音吞掉**。
+      this.echo.endApply()
+    }
     if (ok) {
       this.echo.remember(doc.version)
       // 🔴 **回報新的版本號。** 回音守衛擋掉了文件回送（擋得對），
