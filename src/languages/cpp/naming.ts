@@ -31,6 +31,22 @@ import type { NamingVocabulary } from '../../core/naming'
  */
 export const SUBJECTS = [
   'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum',
+  // ⚠️ `pwm`／`touch` 加入日 2026-08-18——ESP32 的 LEDC 與觸摸感應。
+  //    🔴 而**操作詞一個都沒新增**：`attach`／`open`／`tie`／`write`／`read`
+  //    全都已經在表裡。**能用既有詞就不要新增。**
+  'pwm', 'touch',
+  // ⚠️ 第 2 批的套件物件（2026-08-18）。🔴 **操作詞仍然一個都沒新增**——
+  //    第一版用了 turn／angle／start／save／cursor／humidity／temperature 七個新詞，
+  //    而命名護欄當場擋下。改用既有的 write／read／open／at 之後全部歸零。
+  //
+  //    🟢 而其中一個改名順帶改好了設計：`dht_humidity` ＋ `dht_temperature`
+  //    合併成一顆 `dht_read`＋`quantity` 參數——**量什麼不是身分，是參數**
+  //    （與零件那一批同一條）。
+  'servo', 'dht', 'lcd', 'eeprom', 'wifi',
+  // ⚠️ `ultrasonic` 加入日 2026-08-18——`cpp:ultrasonic_trigger`。
+  //    主體是「超音波模組」，🔴 而它**不叫 `hcsr04`**：型號是一個廠牌，
+  //    不是一個概念。換一顆同樣接法的模組，這顆積木一個字都不必改。
+  'ultrasonic',
   // ⚠️ `exception` 加入日 2026-08-13——`cpp:exception_make`（`runtime_error("…")`）。
   // 主體是「例外」，種類（runtime／logic／out_of_range…）是**參數**不是身分，
   // 與 `container_push` 把容器種類當參數同一個形狀。
@@ -60,6 +76,10 @@ export const SUBJECTS = [
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
   'ofstream', 'pair', 'pointer', 'priority_queue', 'queue', 'set', 'stack',
   'string', 'stringstream', 'struct', 'template', 'var', 'vector',
+  // ⚠️ 兩個加入日 2026-08-18——第 0 批。
+  // `tone` 也在 ATOMIC_NAMES（先例：`print` 同時是單字名與主體）；
+  // `pulse` 只當主體（`pulse_read` ＝ 讀一段脈衝有多長）。
+  'tone', 'pulse',
 ] as const
 
 /**
@@ -81,6 +101,14 @@ export const SUBJECTS = [
  */
 export const OPERATIONS = [
   'append', 'assign', 'at', 'call', 'cast', 'clear', 'count', 'declare',
+  // ⚠️ `attach` ——「把一個零件接到一根腳位上」。**不與 `assign` 合併**：
+  //    指派是「把值放進一個位置」，接線是「宣告一個名字代表這根腳位」，
+  //    而學生手上真的有一條線要插。🔴 同義詞合併的判準是語義，不是詞形。
+  'attach',
+  // ⚠️ `trigger` ——「送出觸發脈衝」。**不與 `push`／`write` 合併**：
+  //    它送的不是一個值，是一個【有時序的訊號】（拉低 2 µs、拉高 10 µs、再拉低），
+  //    而那個時序就是它的全部語義。
+  'trigger',
   'abs', 'append', 'as', 'back', 'compare', 'copy', 'deref', 'exit', 'fill',
   'front', 'gcd', 'is', 'lcm', 'max', 'min', 'next', 'replace', 'reverse',
   'seed', 'sort', 'substr', 'sum', 'to',
@@ -120,6 +148,11 @@ export const OPERATIONS = [
   // `print`   ——它同時是單字名（`cpp:print`）與操作（`cpp:serial_print`）。
   //   那不是矛盾：「輸出」既可以自己成立，也可以是**對某個裝置**做的事。
   'constant', 'open', 'print',
+  // ⚠️ 三個加入日 2026-08-18——第 0 批（階段 6.16 的地基）。
+  // `stop`（`tone_stop`）· `resolution`（`analog_resolution`）· `constrain`（`math_constrain`）
+  // 🔴 而 `constrain` 進**操作**不進單字名，是為了讓它與既有的 `math_min`／`math_max`
+  //    同族——同一種東西用同一種形狀。
+  'stop', 'resolution', 'constrain',
 ] as const
 
 /**
@@ -130,6 +163,11 @@ export const OPERATIONS = [
  * 排不在一起，`loop_*` 排得在一起——而登錄表、工具箱、目錄都吃這個順序。
  */
 export const KINDS = [
+  // ⚠️ `nan` 加入日 2026-08-18——`cpp:math_is_nan`（`isnan`）。
+  //    🔴 它是第 2 批溫濕度那顆能夠誠實的**前提**：那顆讀不到感測器時回 NaN
+  //    （真板子的行為），而理由是「學生的程式本來就會檢查它」——
+  //    **沒有檢查函式的話，那句話是空的**（程式會在檢查那一行中止）。
+  'nan',
   'char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while',
   // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
   'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',
@@ -191,6 +229,13 @@ export const ATOMIC_NAMES = [
   // `delay`／`millis` 是**單字名**：它們沒有主體可拆
   //（「等待」與「開機到現在」都不是作用在某個東西上），與 `sizeof` 同一類。
   'delay', 'millis',
+  // ⚠️ 三個加入日 2026-08-18——第 0 批（階段 6.16 的地基）。
+  // `micros`／`delay_microseconds` 與上面兩個同一類（沒有主體可拆）；
+  // 🔴 而 `delay_microseconds` 是**多字單字名**，先例是 `if_else`／`initializer_list`
+  //（那個「多字」不是主體＋操作，是一個不可分的東西）。
+  // `tone` 同理：「發出一個頻率」沒有可拆的主體——而它的**停止**有
+  //（`tone_stop`，`tone` 同時進 SUBJECTS，先例是 `print`）。
+  'micros', 'delay_microseconds', 'tone',
   // ⚠️ `initializer_list` 加入日 2026-08-14——`{1, 2, 3}` 這個**語法本身**。
   // 它是語言構造（聚合初始化列），不是抄來的函式庫名：`std::initializer_list`
   // 是那個語法的**型別**，而這顆元件是那個語法。與 `lambda`／`ternary` 同類。

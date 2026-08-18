@@ -35,6 +35,7 @@ import { buildMalloc } from '../../../../components/cpp/malloc/lift'
 import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
 import { buildInclude } from '../../../../components/cpp/include/lift'
 import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
+import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
@@ -644,10 +645,69 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
     if (simpleTypeName && (streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName))) {
       const conceptId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
+      // 🔴 **一個身分可能被多個型別名登錄**（同一片液晶的並列版與 I2C 版）。
+      //    那個差別在程式碼裡是真的，而**它不得被改寫**——所以要帶著。
+      //
+      // ⚠️ 而只在**概念自己宣告了這一格**時才寫：絕大多數具體型別只有一個名字，
+      //    替它們憑空多一個屬性會讓宣告與產出對不上（參數規格護欄在看）。
+      //
+      // > **共用層要不要記一件事，由那顆元件的宣告說了算。**
+      const wantsDeclType = componentConcepts().some(
+        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+          ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'decl_type'),
+      )
+      const extraProps: Record<string, string> = wantsDeclType ? { decl_type: simpleTypeName } : {}
+      // 🔴 **建構參數的個數要記在節點上**——投影那一側靠它決定開幾個插槽。
+      //
+      // ⚠️ 少了它的症狀**只在積木那一側**：語義樹三個接點都在、產生器也對，
+      //    而積木上只放得下第一個 → 積木→程式碼時第 2 個之後**安靜地不見**。
+      //
+      // > **一個只在投影那一側丟資料的 bug，
+      // > lift 與 generate 各自的測試都看不到它。**
+      //
+      // 同上：只在**概念自己宣告了這一格**時才寫。
+      const wantsCtorCount = componentConcepts().some(
+        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+          ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'ctorCount'),
+      )
+      const withCount = (args: unknown[]): Record<string, string> =>
+        wantsCtorCount ? { ...extraProps, ctorCount: String(args.length) } : extraProps
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       const name = decl?.type === 'identifier'
         ? decl.text
         : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+      // 🔴 **最令人困惑的解析**（most vexing parse）——而它在 Arduino 教學裡是常態。
+      //
+      // ```cpp
+      // #define DHTPIN 2
+      // DHT dht(DHTPIN, DHT11);     ← tree-sitter 解析成【函式宣告】
+      // DHT dht(2, DHT11);          ← 引數是字面量時才解析成變數定義
+      // ```
+      //
+      // ⚠️ **真編譯器沒有這個問題**：前置處理器先把 `DHTPIN` 換成 `2`，
+      // 所以它看到的一直是後者。而 tree-sitter **不做前置處理**。
+      //
+      // > **一個解析器如果少了一個階段，它會在那個階段本來會消掉的地方看到歧義。**
+      //
+      // 🟢 而這裡分得出來：**型別是一個登錄過的具體型別**（`DHT`／`Servo`／
+      // `LiquidCrystal`／`string`…），而那種型別在 sketch 裡**不會**被當成
+      // 函式的回傳型別。⚠️ 走到這一行代表 `plainTypeConcept` 已經認領了它。
+      const fnDecl = node.namedChildren.find(c => c.type === 'function_declarator')
+      if (!decl && fnDecl) {
+        const nameNode = fnDecl.namedChildren.find(c => c.type === 'identifier')
+        const params = fnDecl.namedChildren.find(c => c.type === 'parameter_list')
+        const args = (params?.namedChildren ?? [])
+          .map(pd => {
+            // `parameter_declaration :: DHTPIN` 底下是一個 `type_identifier`
+            // ——它其實是一個**識別字**（巨集名或常數名）。
+            const inner = pd.namedChildren[0]
+            if (!inner) return null
+            return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
+          })
+          .filter((n): n is NonNullable<typeof n> => n !== null)
+        return createNode(conceptId, { name: nameNode?.text ?? name, ...withCount(args) }, { initializer: args })
+      }
+
       // For stream types with constructor args (e.g., ifstream fin("input.txt"))
       if (decl?.type === 'init_declarator') {
         const valueNode = decl.childForFieldName('value')
@@ -655,14 +715,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = valueNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(conceptId, { name }, { initializer: args })
+          return createNode(conceptId, { name, ...withCount(args) }, { initializer: args })
         }
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode(conceptId, { name }, { initializer: value ? [value] : [] })
+          return createNode(conceptId, { name, ...withCount(value ? [value] : []) }, { initializer: value ? [value] : [] })
         }
       }
-      return createNode(conceptId, { name })
+      return createNode(conceptId, { name, ...withCount([]) })
     }
 
     const typeNode = node.namedChildren.find(c =>

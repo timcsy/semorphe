@@ -1,0 +1,4 @@
+{
+  "C_SERIAL_READ_MSG0": "Read one byte from the serial port",
+  "C_SERIAL_READ_TOOLTIP": "Serial.read() — takes the next byte from the buffer. Returns -1 (not 0) when nothing is waiting, so check Bytes-waiting first"
+}

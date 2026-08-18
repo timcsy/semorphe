@@ -1,0 +1,4 @@
+{
+  "C_DHT_OPEN_MSG0": "啟動溫濕度感測器 %1",
+  "C_DHT_OPEN_TOOLTIP": "通常寫在 setup 裡，只要做一次。"
+}

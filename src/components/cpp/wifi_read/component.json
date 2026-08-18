@@ -1,0 +1,36 @@
+{
+  "conceptId": "cpp:wifi_read",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "WiFi"
+    },
+    {
+      "name": "quantity",
+      "kind": "enum",
+      "values": [
+        "status",
+        "address"
+      ],
+      "default": "status"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",
+  "_lift_why": "🔴 **「連線狀態」與「本機位址」是同一顆概念的兩個參數**——兩者都是「讀無線網路的某個屬性」，零引數、形狀相同。與溫濕度那顆同一條：**讀什麼不是身分，是參數。**\n\n⚠️ 而綁 `obj === 'WiFi'`：`status` 是一個非常普通的方法名，一張只放得下方法名的表會讓任何物件的 `.status()` 都變成這一顆。",
+  "requires": [
+    "<WiFi.h>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

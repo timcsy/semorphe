@@ -1,0 +1,4 @@
+{
+  "C_TOUCH_READ_MSG0": "Read the touch value on pin %1",
+  "C_TOUCH_READ_TOOLTIP": "ESP32 capacitive touch pins. The reading is high when untouched and drops noticeably when a finger touches it, so the usual test is \"below some threshold means touched\"."
+}

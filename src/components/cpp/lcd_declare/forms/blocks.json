@@ -1,0 +1,54 @@
+[
+  {
+    "id": "cpp_lcd_declare",
+    "conceptId": "cpp:lcd_declare",
+    "language": "cpp",
+    "category": "modules",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_lcd_declare",
+      "message0": "%{BKY_C_LCD_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "lcd"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "DECL_TYPE",
+          "options": [
+            [
+              "%{BKY_C_LCD_DECLARE_T_PAR}",
+              "LiquidCrystal"
+            ],
+            [
+              "%{BKY_C_LCD_DECLARE_T_I2C}",
+              "LiquidCrystal_I2C"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_LCD_DECLARE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "DECL_TYPE": "decl_type"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "ctorCount",
+          "childSlot": "initializer",
+          "inputPattern": "CTOR_{i}"
+        }
+      ]
+    }
+  }
+]

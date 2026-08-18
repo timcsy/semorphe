@@ -1,0 +1,4 @@
+{
+  "C_EEPROM_READ_MSG0": "Read a byte from EEPROM address %1",
+  "C_EEPROM_READ_TOOLTIP": "This memory survives power-off. An Uno has 1024 addresses (0 to 1023), each holding one byte from 0 to 255."
+}

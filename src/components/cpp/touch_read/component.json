@@ -1,0 +1,20 @@
+{
+  "conceptId": "cpp:touch_read",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "pin": "expression"
+  },
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino／ESP32 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "🔴 **這是一個【取捨】，不是一個模擬。**\n\n沒有真的觸摸感應器，而 ESP32 未觸碰時的典型讀數約 70–80——**取固定值 75**。\n\n⚠️ 而它比同批的溫濕度那顆**弱**：那一顆回 `NaN` 是**官方文件寫明的失敗值**，而學生的程式本來就會檢查它。這一顆沒有那種依據，**回的是一個代表性的數字**。\n\n判準是 `digital_read` 檔頭那句：**可重現比擬真重要**——一個每次讀到不同值的模擬器，測不出任何東西。而**固定值讓「碰到了」這條分支永遠走不到**，那是已知的後果，屬於板子視圖（已推遲）要補的。"
+}

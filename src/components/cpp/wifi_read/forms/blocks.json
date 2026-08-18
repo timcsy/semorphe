@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cpp_wifi_read",
+    "conceptId": "cpp:wifi_read",
+    "language": "cpp",
+    "category": "modules",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_wifi_read",
+      "message0": "%{BKY_C_WIFI_READ_MSG0}",
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_WIFI_READ_TOOLTIP}",
+      "output": "Expression",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "QUANTITY",
+          "options": [
+            [
+              "%{BKY_C_WIFI_READ_Q_STATUS}",
+              "status"
+            ],
+            [
+              "%{BKY_C_WIFI_READ_Q_ADDRESS}",
+              "address"
+            ]
+          ]
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "QUANTITY": "quantity"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

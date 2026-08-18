@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:ultrasonic_trigger",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "_properties_why": "🔴 **2 微秒與 10 微秒【不是】欄位。**\n\n語料 14 段用到超音波，`delayMicroseconds` 的引數分佈是 `{2: 14, 10: 14}`——**零變異**。那兩個數字是 HC-SR04 的規格（先拉低淨空、再送一個 10 µs 的觸發脈衝），不是使用者的選擇。\n\n> **一個從來沒有人改過的欄位，不是彈性，是認知負載。**\n\n⚠️ 而辨識那一路**要求它們就是 2 與 10**：學生若寫了別的數字，這顆不認，讓它留成一般積木——否則就是安靜地改掉他的程式。",
+  "children": {
+    "pin": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "照同批的腳位元件：**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  },
+  "_lift_why": "🔴 **這顆認的是【一串連續語句】，而那個資格是數出來的。**\n\n預組的判準（`draft/2026-08-17-套件積木的粒度與預組.md`）逐字：\n\n> **一組總是一起出現的呼叫，才有資格被預先組好；而「總是」是一個可以數的東西。**\n\n100 段語料裡有 14 段用到超音波：\n\n```\n觸發序列（LOW → 2µs → HIGH → 10µs → LOW，同一根腳）   14/14 = 100%   🟢 有資格\n觸發 ＋ 距離換算【緊鄰】                                9/14 =  64%   🔴 沒資格\n```\n\n⚠️ **探索報告當初寫 7/7，而它量錯了問題**——它問的是「這支程式裡兩者**都有**嗎」，而預組要問的是「它們**緊鄰**嗎」。5 段的換算被 `if (duration == 0)` 這個守衛隔開，一段直接 `return pulseIn(...)`。\n\n> **「都齊」與「緊鄰」是兩個不同的問題，而只有後者決定摺不摺得起來。**\n\n所以摺起來的**只有觸發序列**；`pulseIn` 與換算留給既有的積木（那顆讀脈衝寬度的元件已在上一批完成）。🟢 而那讓 14 段**全部**都轉得動——變的部分留成一般積木，不變的部分才摺。"
+}

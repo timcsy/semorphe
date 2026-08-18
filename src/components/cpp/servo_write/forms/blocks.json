@@ -1,0 +1,39 @@
+[
+  {
+    "id": "cpp_servo_write",
+    "conceptId": "cpp:servo_write",
+    "language": "cpp",
+    "category": "modules",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_servo_write",
+      "message0": "%{BKY_C_SERVO_WRITE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "myServo"
+        },
+        {
+          "type": "input_value",
+          "name": "ANGLE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERVO_WRITE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "ANGLE": "angle"
+      },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,0 +1,10 @@
+/** `cpp:touch_read` 的 **lift** 路——**一筆資料，不是函式**。 */
+import { registerCallConcept } from '../../../core/component/call-concepts'
+
+export function registerLift(): void {
+  registerCallConcept('touchRead', {
+    conceptId: 'cpp:touch_read',
+    argSlots: ['pin'],
+    source: 'cpp/touch_read',
+  })
+}

@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:serial_read",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "Serial"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "走 `registerMethodBranch` 而不是自由函式表：`read` 是 `Serial` 上的方法（形狀與 「開啟序列埠」那一顆 相同）。⚠️ 而 `read` 這個方法名在別的物件上也有，所以**判別必須看 `obj`**。",
+  "_execute_why": "🔴 **沒有資料時回 `-1`，不是 0**——那是真板子的行為，也是 Arduino 初學者最常見的陷阱之一（`if (Serial.read())` 對 -1 永遠為真）。⚠️ 模擬環境沒有序列埠輸入來源，所以它一律回 -1，而那與真板子在沒有資料時一致，不是編出來的數字。接上真的輸入時，這裡改成從 `ctx.awaitInput()` 或一個緩衝區讀一個位元組。"
+}

@@ -734,6 +734,25 @@ export interface Target {
   topic: string
   /** 指向一個**既有的**風格 id——決定產出什麼形狀 */
   style: string
+  /**
+   * 這個目標的程式**外殼**長什麼樣。
+   *
+   * ```
+   * 'main'（預設）  using namespace std; ＋ int main() { … return 0; }
+   * 'none'          沒有外殼——函式就是頂層（Arduino 的 setup()／loop()）
+   * ```
+   *
+   * 🔴 **為什麼是宣告在目標上，不是由程式碼去認名字。** 使用者在 Arduino IDE
+   * 開 `.ino`，而鷹架把 `setup()`／`loop()` **包進了 `int main()`**
+   * ——⚠️ 那不是顯示問題，它寫進了使用者的檔案。
+   *
+   * 而修法不可以是「`src/ui` 認得 `arduino` 這個名字」：那一層不該認識
+   * 任何具體的目標（中立性護欄在看）。**讓目標自己說。**
+   *
+   * > **要讓一個通用的層知道特例，辦法是讓特例自己帶著宣告來，
+   * > 不是讓通用的層去記住特例的名字。**
+   */
+  entryShell?: 'main' | 'none'
 }
 
 // ─── Topic System ───

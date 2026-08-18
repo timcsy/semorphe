@@ -1,0 +1,4 @@
+{
+  "C_DELAY_MICROSECONDS_MSG0": "Wait %1 microseconds",
+  "C_DELAY_MICROSECONDS_TOOLTIP": "delayMicroseconds(us) — a shorter wait than delay, typically used to trigger an ultrasonic sensor. Note: the simulated clock only resolves to milliseconds"
+}

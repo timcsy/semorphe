@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cpp_lcd_at",
+    "conceptId": "cpp:lcd_at",
+    "language": "cpp",
+    "category": "modules",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_lcd_at",
+      "message0": "%{BKY_C_LCD_AT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "lcd"
+        },
+        {
+          "type": "input_value",
+          "name": "COL",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ROW",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_LCD_AT_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "COL": "col",
+        "ROW": "row"
+      },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,13 +1,16 @@
 node_modules/
 dist/
+build/
 *.log
 .DS_Store
 Thumbs.db
 *.tmp
 *.swp
 *.vsix
-vscode-ext/dist/
-vscode-ext/node_modules/
+# ⚠️ `vscode-ext/` 的兩行在 2026-08-17 移除——那個目錄是 2026-03 原型退休
+# （`3d6768b`）之後留在硬碟上的產物殘骸，零追蹤檔、26 MB。
+# 留著只有誤導價值：`history/069`§四 逐字「一個原型……**它會偽裝成
+# 『已經有基礎』**」。新的擴充在 `src/vscode/`，產物在 `build/`。
 
 # Playwright
 /test-results/

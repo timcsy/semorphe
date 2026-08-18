@@ -1,0 +1,4 @@
+{
+  "C_PWM_OPEN_MSG0": "Set up PWM channel %1 at %2 Hz with %3-bit resolution",
+  "C_PWM_OPEN_TOOLTIP": "The older ESP32 (core 2.x) way: configure a channel first, then tie it to a pin. Newer cores do both in one step."
+}

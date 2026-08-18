@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:math_constrain",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression",
+    "low": "expression",
+    "high": "expression"
+  },
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "⚠️ 與同族的 `math_min`／`math_max` **不一樣**：那兩顆來自 `<algorithm>`，而 `constrain` 是 **Arduino 自己的巨集**，sketch 一行 `#include` 都不用。所以 `owner` 是 `(arduino)` 而 `requires` 是空的。 🟢 而工具箱分類跟著 （）走——它們在教學上就是一起用的（先對應範圍、再夾住），而學生會在同一格找。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "夾值 `min(max(v, lo), hi)`。⚠️ 而真的 `constrain` 是**巨集**——參數會被求值**多次**（`constrain(i++, 0, 10)` 在真板子上會讓 `i` 加好幾次）。**本輪不模那個副作用**：這裡每個參數只求值一次。那是一個已知的差異，不是疏漏。",
+  "_lift_why": "身分進 `math_` 家族（與 `math_min`／`math_max`／`math_abs` 同族）而不叫 `cpp:constrain`——**同一種東西用同一種形狀**。"
+}

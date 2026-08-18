@@ -1,0 +1,4 @@
+{
+  "C_SERIAL_COUNT_MSG0": "序列埠可讀的位元組數",
+  "C_SERIAL_COUNT_TOOLTIP": "Serial.available()——緩衝區裡還有幾個位元組沒讀。⚠️ 通常寫成「當可讀位元組數 > 0 就讀一個」；模擬時沒有輸入來源，一律是 0"
+}

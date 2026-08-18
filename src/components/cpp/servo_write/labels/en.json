@@ -1,0 +1,4 @@
+{
+  "C_SERVO_WRITE_MSG0": "Turn servo %1 to %2 degrees",
+  "C_SERVO_WRITE_TOOLTIP": "The angle ranges from 0 to 180. A servo needs time to move, so a short delay usually follows."
+}

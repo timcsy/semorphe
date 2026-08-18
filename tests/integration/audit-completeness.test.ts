@@ -186,6 +186,49 @@ for (const id of ['cpp:map_at', 'cpp:map_assign']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
 }
 
+// **第五個實例**（2026-08-18）：接線積木。
+//
+// 它產出的是 `const int ledPin = 13;`——而**孤立的那一行不足以判斷它是一根腳位**。
+// 辨識判準刻意是「這個名字在整支程式裡有沒有被當腳位用」，因為靠名字認人會把
+// 使用者自己宣告的常數搶走（同一批的腳位常數那顆付過這筆學費）。
+//
+// 🔴 所以合成樣本判成「殼」是**量測的問題，不是實作的問題**——
+// 而把它記進基線當成殼，會讓「還欠幾條路」這個數字**指錯方向**。
+//
+// > **一個保守到需要上下文才敢認的辨識器，用孤立樣本去量，
+// > 量到的一定是「它不認得」——而那正是它對的地方。**
+//
+// ⚠️ 順序不重要：辨識掃的是整棵樹，不是「宣告之前」還是「之後」。
+// **第六個實例**（2026-08-18）：第 2 批的套件物件。
+//
+// `myServo.write(90)` 的辨識**綁接收者的宣告型別**——而合成樣本裡沒有那個宣告，
+// 於是型別查不到、辨識**正確地**不認（猜一個錯的專屬身分比誠實降級更糟）。
+//
+// 🔴 與接線積木同一個形狀：**用孤立樣本去量一個需要上下文的辨識器，
+// 量到的一定是「它不認得」——而那正是它對的地方。**
+//
+// ⚠️ 而變數名**從合成節點自己讀**（`v`）——這一段的第四個實例記過那個坑。
+for (const [id, decl] of [
+  ['cpp:servo_attach', 'cpp:servo_declare'],
+  ['cpp:servo_write', 'cpp:servo_declare'],
+  ['cpp:servo_read', 'cpp:servo_declare'],
+  ['cpp:dht_read', 'cpp:dht_declare'],
+  ['cpp:dht_open', 'cpp:dht_declare'],
+  ['cpp:lcd_open', 'cpp:lcd_declare'],
+  ['cpp:lcd_print', 'cpp:lcd_declare'],
+  ['cpp:lcd_at', 'cpp:lcd_declare'],
+  ['cpp:lcd_clear', 'cpp:lcd_declare'],
+] as [string, string][]) {
+  SAMPLE_CONTEXT[id] = (v) => [createNode(decl, { name: v }, {})]
+}
+
+SAMPLE_CONTEXT['cpp:pin_attach'] = (v) => [
+  createNode('cpp:pin_mode', {}, {
+    pin: [createNode('cpp:var_ref', { name: v }, {})],
+    mode: [createNode('cpp:pin_constant', { value: 'OUTPUT' }, {})],
+  }),
+]
+
 /**
  * ⚠️ **試過、失敗、還原：** 把角色是「運算式」的概念一律包進
  * `auto __probe = …` 再量。

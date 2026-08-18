@@ -1,0 +1,4 @@
+{
+  "C_LCD_PRINT_MSG0": "Show %2 on LCD %1",
+  "C_LCD_PRINT_TOOLTIP": "Writes from the current cursor position. Old characters are not erased, so clear or move the cursor first."
+}

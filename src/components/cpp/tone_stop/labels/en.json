@@ -1,0 +1,4 @@
+{
+  "C_TONE_STOP_MSG0": "Stop the sound on pin %1",
+  "C_TONE_STOP_TOOLTIP": "noTone(pin) — stop the buzzer. Only needed when the Play block was given no duration"
+}

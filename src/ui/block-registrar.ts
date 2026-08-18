@@ -1674,6 +1674,104 @@ export class BlockRegistrar {
         },
       }
     }
+
+    // cpp_method_call / cpp_method_call_expression
+    //
+    // 🔴 **它們原本【沒有】動態引數插槽，而症狀是引數安靜地不見。**
+    //
+    // 2026-08-18 使用者在 Arduino IDE 實測到：`Serial.write(cmd)` 的積木上
+    // 是「對 Serial 執行 write（ ▯ ）」——**括號裡是空的**。
+    //
+    // ⚠️ 而語義樹是對的（`children.args` 有那顆 `cmd`）、產生器也是對的
+    // （`Serial.write(cmd);`）。壞的只有**投影**那一側：
+    // `renderMapping` 把 `ARGS` 當成一個**欄位**對到 `args` 這個**接點**
+    // ——而接點是節點陣列，一個文字欄位裝不下它。
+    //
+    // > **一個只在投影那一側丟資料的 bug，
+    // > lift 與 generate 各自的測試都看不到它。**
+    //
+    // 🔴 而修 `renderMapping` 只做完一半：這裡**沒有** `ARG_{i}` 這個輸入，
+    // 於是產出的 `ARG_0` 沒有插槽可接。那正是專案記過的「雙重真相來源」
+    // ——`cpp_func_call` 兩邊都有，而 `cpp_method_call` 只有 JSON 那一邊。
+    for (const [type, isExpr] of [
+      ['cpp_method_call', false],
+      ['cpp_method_call_expression', true],
+    ] as [string, boolean][]) {
+      const msgKey = isExpr ? 'CPP_METHOD_CALL_EXPR' : 'CPP_METHOD_CALL'
+      Blockly.Blocks[type] = {
+        argCount_: 0,
+        init: function (this: any) {
+          this.argCount_ = 0
+          this.buildHead_()
+          this.appendDummyInput('TAIL')
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
+            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
+          this.setInputsInline(true)
+          if (isExpr) {
+            this.setOutput(true, 'Expression')
+          } else {
+            this.setPreviousStatement(true, 'Statement')
+            this.setNextStatement(true, 'Statement')
+          }
+          // ⚠️ 顏色與 JSON 那一份一致——**兩份定義的差異就是那個病本身**。
+          this.setColour('#4C97FF')
+          this.setTooltip(Blockly.Msg[`${msgKey}_TOOLTIP`] || '')
+        },
+        /** 「對 <物件> 執行 <方法>」——⚠️ 欄位值要保住，重建時再塞回去。 */
+        buildHead_: function (this: any) {
+          const obj = this.getFieldValue('OBJ') ?? 'obj'
+          const method = this.getFieldValue('METHOD') ?? 'method'
+          if (this.getInput('LABEL')) this.removeInput('LABEL')
+          const input = this.appendDummyInput('LABEL')
+            .appendField(Blockly.Msg['CPP_METHOD_CALL_ON'] || '對')
+            .appendField(new Blockly.FieldTextInput(obj), 'OBJ')
+            .appendField(Blockly.Msg['CPP_METHOD_CALL_DO'] || '執行')
+            .appendField(new Blockly.FieldTextInput(method), 'METHOD')
+          if (this.argCount_ > 0) input.appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
+        },
+        rebuildArgLabels_: function (this: any) {
+          if (this.getInput('TAIL')) this.removeInput('TAIL')
+          this.buildHead_()
+          this.appendDummyInput('TAIL')
+          const tail = this.getInput('TAIL')
+          if (this.argCount_ > 0) tail.appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
+          tail
+            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
+            .appendField(
+              new Blockly.FieldImage(
+                this.argCount_ > 0 ? MINUS_IMG : MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_(),
+              ),
+              'MINUS_BTN',
+            )
+          if (this.argCount_ > 0) this.moveInputBefore('LABEL', 'ARG_0')
+        },
+        plusArg_: function (this: any) {
+          const idx = this.argCount_
+          this.appendValueInput(`ARG_${idx}`).appendField(idx > 0 ? ',' : '')
+          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
+          this.argCount_++
+          if (this.argCount_ === 1) this.rebuildArgLabels_()
+          setMinusState(this, false)
+        },
+        minusArg_: function (this: any) {
+          if (this.argCount_ <= 0) return
+          this.argCount_--
+          this.removeInput(`ARG_${this.argCount_}`)
+          if (this.argCount_ === 0) this.rebuildArgLabels_()
+          setMinusState(this, this.argCount_ <= 0)
+        },
+        // ⚠️ **與 `cpp_func_call` 的格式必須完全相同**——
+        //    `STATEMENT_TO_EXPRESSION` 直接搬移 extraState（專案記過的契約）。
+        saveExtraState: function (this: any) {
+          if (this.argCount_ > 0) return { argCount: this.argCount_ }
+          return null
+        },
+        loadExtraState: function (this: any, state: { argCount?: number }) {
+          const count = state?.argCount ?? 0
+          while (this.argCount_ < count) this.plusArg_()
+        },
+      }
+    }
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // cpp_return

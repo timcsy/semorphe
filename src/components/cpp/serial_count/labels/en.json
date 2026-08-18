@@ -1,0 +1,4 @@
+{
+  "C_SERIAL_COUNT_MSG0": "Bytes waiting on the serial port",
+  "C_SERIAL_COUNT_TOOLTIP": "Serial.available() — how many bytes are still unread. Usually paired with Read-one-byte in a loop. The simulator has no serial input, so this is always 0"
+}

@@ -1,0 +1,30 @@
+{
+  "conceptId": "cpp:eeprom_write",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "EEPROM"
+    }
+  ],
+  "children": {
+    "address": "expression",
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",
+  "_lift_why": "🔴 **綁 `obj` 不只是保險。** `read`／`write`／`begin`／`status` 全都是**非常普通的方法名**，而一張只放得下方法名的表會讓**任何物件**的 `.read()` 都變成這一顆。\n\n> **一個靠方法名認人的樣式，會把別人的方法搶走。**\n\n⚠️ 這與序列埠那顆用同一個做法（它綁 `obj === 'Serial'`），而理由完全相同。",
+  "requires": [
+    "<EEPROM.h>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

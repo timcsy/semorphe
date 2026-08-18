@@ -264,6 +264,17 @@ html, body {
   background: #007acc;
 }
 
+/* 直向分割（沒有程式碼那一格的宿主）——見 `split-pane.ts` 的檔頭。 */
+#editors.split-vertical {
+  flex-direction: column;
+}
+
+#editors.split-vertical > .split-divider {
+  width: auto;
+  height: 4px;
+  cursor: row-resize;
+}
+
 /* ─── Blockly panel ─── */
 
 #blockly-panel {
@@ -1433,68 +1444,79 @@ html, body {
 
 /* ─── Responsive: Mobile (≤768px) ─── */
 
+/* ⚠️ 這一整段的每一條選擇器都掛在 `body:not(.host-no-mobile-layout)` 底下。
+   🔴 因為版面有【兩半】：CSS 這一半（絕對定位、藏掉分隔線與狀態列）與
+   JS 那一半（`LayoutManager` 切換哪一格看得見）。
+
+   2026-08-18 我把 JS 那一半照宿主能力關掉，而**忘了 CSS 這一半**——
+   於是 VSCode 面板變成「半套行動版」：`.split-left` 被絕對定位蓋掉，
+   而沒有人來切換它的可見性，**積木畫布在 DOM 裡存在卻看不見**。
+   ⚠️ 而預檢當時是綠的（它查的是 `document.querySelector`，不是看得見）。
+
+   > **關掉一個功能，要把它的每一半都關掉；
+   > 只關一半留下的不是「沒有那個功能」，是一個沒有人設計過的狀態。** */
 @media (max-width: 768px) {
   /* Hide desktop split pane elements */
-  .split-divider {
+  body:not(.host-no-mobile-layout) .split-divider {
     display: none !important;
   }
 
-  #status-bar {
+  body:not(.host-no-mobile-layout) #status-bar {
     display: none !important;
   }
 
   /* Hide quick-access-bar sync buttons and selectors on mobile */
-  .quick-access-bar #auto-sync-btn,
-  .quick-access-bar #sync-blocks-btn,
-  .quick-access-bar #sync-code-btn,
-  .quick-access-bar #level-selector-mount,
-  .quick-access-bar #block-style-selector-mount,
-  .quick-access-bar .file-menu-group {
+  body:not(.host-no-mobile-layout) .quick-access-bar #auto-sync-btn,
+  body:not(.host-no-mobile-layout) .quick-access-bar #sync-blocks-btn,
+  body:not(.host-no-mobile-layout) .quick-access-bar #sync-code-btn,
+  body:not(.host-no-mobile-layout) .quick-access-bar #level-selector-mount,
+  body:not(.host-no-mobile-layout) .quick-access-bar #block-style-selector-mount,
+  body:not(.host-no-mobile-layout) .quick-access-bar .file-menu-group {
     display: none !important;
   }
 
   /* Simplify quick-access-bar: only undo/redo/clear */
-  .quick-access-bar .toolbar-separator {
+  body:not(.host-no-mobile-layout) .quick-access-bar .toolbar-separator {
     display: none !important;
   }
 
   /* Toolbar: show hamburger, hide secondary controls */
-  .hamburger-btn {
+  body:not(.host-no-mobile-layout) .hamburger-btn {
     display: inline-flex;
   }
 
-  .toolbar-actions #style-selector-mount,
-  .toolbar-actions #locale-selector-mount,
-  .toolbar-actions .toolbar-separator {
+  body:not(.host-no-mobile-layout) .toolbar-actions #style-selector-mount,
+  body:not(.host-no-mobile-layout) .toolbar-actions #locale-selector-mount,
+  body:not(.host-no-mobile-layout) .toolbar-actions .toolbar-separator {
     display: none !important;
   }
 
   /* Main editor area: stack vertically for mobile panels */
-  #editors {
+  body:not(.host-no-mobile-layout) #editors {
     flex-direction: column;
     position: relative;
   }
 
   /* Hide desktop panels in mobile mode — LayoutManager controls visibility */
-  .split-left,
-  .split-right {
+  body:not(.host-no-mobile-layout) .split-left,
+  body:not(.host-no-mobile-layout) .split-right {
     position: absolute !important;
     width: 100% !important;
   }
 
   /* Shrink Blockly panel slightly so trash/zoom controls aren't clipped */
-  #mobile-blocks #blockly-panel {
+  body:not(.host-no-mobile-layout) #mobile-blocks #blockly-panel {
     flex: 1;
     max-height: calc(100% - 10px);
   }
 
-  .blocklyToolbox {
+  body:not(.host-no-mobile-layout) .blocklyToolbox {
     max-height: calc(100vh - 36px - 48px - 27px) !important;
     overflow-y: auto !important;
   }
 
   /* Toolbox collapse button for mobile */
-  .toolbox-collapse-btn {
+  body:not(.host-no-mobile-layout) .toolbox-collapse-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -1514,7 +1536,7 @@ html, body {
     touch-action: manipulation;
   }
 
-  .toolbox-collapse-btn:active {
+  body:not(.host-no-mobile-layout) .toolbox-collapse-btn:active {
     background: #444;
   }
 
@@ -1522,12 +1544,12 @@ html, body {
      flex flow, so #editors automatically gets the correct height */
 
   /* Fixed toasts (not anchored) above tab bar + virtual keyboard */
-  body > .toast {
+  body:not(.host-no-mobile-layout) > .toast {
     bottom: calc(var(--kb-height, 0px) + 60px);
   }
 
   /* Debug toolbar adjustments */
-  .debug-toolbar {
+  body:not(.host-no-mobile-layout) .debug-toolbar {
     top: 38px;
     font-size: 11px;
   }

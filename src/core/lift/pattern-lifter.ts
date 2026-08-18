@@ -27,6 +27,34 @@ interface PatternEntry {
  * Lifts AST nodes to SemanticNodes using patterns loaded from JSON definitions.
  */
 export class PatternLifter {
+  /**
+   * 鏈的根對不對得上——**而限定名稱算同一個**。
+   *
+   * `std::cout` 與 `cout` **是同一個實體**，差別只是命名空間風格
+   * （而這個專案的 `StylePreset` 本來就有 `namespace_style` 這一格）。
+   *
+   * 🔴 第一版是精確比對，於是：
+   *
+   * ```
+   * cout << 1;        🟢 clean
+   * std::cout << 1;   🔴 unresolved ＋ raw_code
+   * std::string s;    🟢 clean      ← 所以不是「限定名稱」全壞
+   * ```
+   *
+   * ⚠️ 而它**不是新的**：`std::cout` 一直投影不了，只是既有語料
+   * 幾乎都寫 `using namespace std;`，所以它從來沒有現形
+   * ——直到 2026-08-17 有人在測試裡寫了一段帶 `std::` 的程式。
+   *
+   * > **一個缺口如果只在「大家都不那樣寫」的地方，
+   * > 它會一直在，而且沒有人會發現。**
+   *
+   * 只比對**最後一段**：`std::cout` ✅、`foo::cout` ✅、`mycout` ❌。
+   */
+  private matchesChainRoot(text: string | undefined, want: string): boolean {
+    if (text === undefined) return false
+    return text === want || text.endsWith(`::${want}`)
+  }
+
   private patterns = new Map<string, PatternEntry[]>()
   private transformRegistry: TransformRegistry | null = null
   private liftStrategyRegistry: LiftStrategyRegistry | null = null
@@ -168,9 +196,23 @@ export class PatternLifter {
           // Strategy threw — skip this pattern
           return null
         }
-      } else {
-        console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
       }
+      // 🔴 **宣告了策略卻找不到它 → 這一筆樣式【整個不算】，不往下走。**
+      //
+      // 原本這裡只 `console.warn` 然後落到下面的 `matchSimple`——而那會
+      // **無條件**建出這個身分的節點，也就是做出與策略意圖**相反**的事：
+      // 策略的存在本來就是因為「要跑真邏輯才判得出來」。
+      //
+      // 2026-08-18 被一顆掛在 `translation_unit` 上的策略引爆：某支測試沒有
+      // 登錄膠囊的策略表，於是**每一支程式的根節點**都被判成那顆概念，
+      // 31 支測試一起紅。⚠️ 而在此之前它已經無聲地錯了很久——既有的 11 顆
+      // 膠囊策略在同一支測試裡也都落到 `matchSimple`，只是它們的節點型別
+      // （`enum_specifier`／`lambda_expression`…）剛好沒在那些程式裡出現。
+      //
+      // > **一個警告完卻做出相反行為的分支，比沒有警告更糟——
+      // > 它讓「壞了」看起來像「注意一下」。**
+      console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
+      return null
     }
 
     switch (entry.patternType) {
@@ -270,7 +312,7 @@ export class PatternLifter {
         current = leftChild
       } else {
         // Check if this is the root
-        if (chainDef.rootMatch?.text && leftChild.text === chainDef.rootMatch.text) {
+        if (chainDef.rootMatch?.text && this.matchesChainRoot(leftChild.text, chainDef.rootMatch.text)) {
           // Found the root, done
           break
         }
@@ -283,7 +325,7 @@ export class PatternLifter {
 
     // Check root match
     const leftMost = current.childForFieldName('left')
-    if (chainDef.rootMatch?.text && leftMost?.text !== chainDef.rootMatch.text) {
+    if (chainDef.rootMatch?.text && !this.matchesChainRoot(leftMost?.text, chainDef.rootMatch.text)) {
       return null
     }
 

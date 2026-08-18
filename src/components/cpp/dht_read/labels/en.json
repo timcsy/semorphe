@@ -1,0 +1,8 @@
+{
+  "C_DHT_HUMIDITY_MSG0": "Humidity read by %1 (percent)",
+  "C_DHT_HUMIDITY_TOOLTIP": "Returns not-a-number when the sensor cannot be read, which is why tutorials always check before using it.",
+  "C_DHT_READ_MSG0": "%2 read by %1",
+  "C_DHT_READ_TOOLTIP": "Returns not-a-number when the sensor cannot be read, which is why tutorials always check before using it. Humidity is a percentage; temperature is in Celsius.",
+  "C_DHT_READ_Q_HUMIDITY": "humidity (%)",
+  "C_DHT_READ_Q_TEMPERATURE": "temperature (°C)"
+}

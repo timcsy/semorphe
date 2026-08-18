@@ -1,0 +1,22 @@
+{
+  "conceptId": "cpp:math_is_nan",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "<cmath>",
+  "requires": [
+    "<cmath>"
+  ],
+  "_why": "🔴 **它是第 2 批的溫濕度那顆能夠誠實的前提。**\n\n那顆讀不到感測器時回 `NaN`（真板子的行為），而理由是「學生的程式**本來就會檢查它**，而檢查會成功」——⚠️ **如果 `isnan` 不存在，那句話是空的**：程式會在檢查那一行就中止。\n\n> **一個「誠實的失敗值」如果沒有配套的檢查函式，它與一個當機沒有差別。**\n\n⚠️ 而它本來就該有：`isnan` 是 `<cmath>` 的標準函式，與同批的 Arduino 無關。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

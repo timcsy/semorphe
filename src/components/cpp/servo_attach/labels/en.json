@@ -1,0 +1,4 @@
+{
+  "C_SERVO_ATTACH_MSG0": "Attach servo %1 to pin %2",
+  "C_SERVO_ATTACH_TOOLTIP": "A servo only moves after it is attached to a pin. An Uno supports at most two (pins 9 and 10)."
+}

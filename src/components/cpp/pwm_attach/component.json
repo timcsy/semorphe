@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:pwm_attach",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "pin": "expression",
+    "freq": "expression",
+    "bits": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino／ESP32 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "ESP32 core **3.x** 的一步到位版本。⚠️ 與舊版的兩顆（設定通道 ＋ 接腳位）是**不同的身分**：引數個數與語義都不同，而學生手上的板子決定他該用哪一顆。**兩版都要認得**——語料（AI 生成的）用舊版，而今天的板子是新版。",
+  "_execute_why": "記下通道設定並直接繫上腳位（新版把兩件事合成一步）。⚠️ 而它**用腳位號當通道號**——新版的 API 就是這個語義（通道由系統自動配置）。"
+}

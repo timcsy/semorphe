@@ -1,0 +1,25 @@
+{
+  "conceptId": "cpp:serial_count",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "Serial"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "身分不叫 `serial_available`：`available` 是 API 名，而它回傳的是**可讀的位元組數**——`count` 是詞彙表裡既有的操作。⚠️ 而 lift 走 `registerMethodBranch` 不是自由函式表，因為它是 `Serial` 上的方法（形狀與 「開啟序列埠」那一顆 相同）。",
+  "_execute_why": "模擬環境**沒有序列埠輸入來源** → 一律回 0（＝緩衝區是空的）。🔴 而那與真板子在沒有資料時的行為一致，不是編出來的數字。接上真的輸入時，這裡改成讀一個緩衝區的長度。"
+}

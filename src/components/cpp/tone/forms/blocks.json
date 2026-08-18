@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cpp_tone",
+    "conceptId": "cpp:tone",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_tone",
+      "message0": "%{BKY_C_TONE_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "PIN", "check": "Expression" },
+        { "type": "input_value", "name": "FREQUENCY", "check": "Expression" },
+        { "type": "input_value", "name": "DURATION", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_TONE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "PIN": "pin", "FREQUENCY": "frequency", "DURATION": "duration" },
+      "statementInputs": {}
+    }
+  }
+]

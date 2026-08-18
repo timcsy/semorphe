@@ -1,0 +1,6 @@
+{
+  "C_LCD_DECLARE_MSG0": "Declare character LCD %1 (%2)",
+  "C_LCD_DECLARE_TOOLTIP": "The arguments are the pins it is wired to. Call the size block before printing.",
+  "C_LCD_DECLARE_T_PAR": "parallel",
+  "C_LCD_DECLARE_T_I2C": "I2C"
+}

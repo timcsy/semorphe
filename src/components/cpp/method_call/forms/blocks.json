@@ -64,10 +64,18 @@
     "renderMapping": {
       "expressionCounterpart": "cpp_method_call_expression",
       "fields": {
-        "ARGS": "args",
         "METHOD": "method",
         "OBJ": "obj"
-      }
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
     },
     "toolboxCategory": "functions"
   },
@@ -140,10 +148,18 @@
     "toolboxCategory": "functions",
     "renderMapping": {
       "fields": {
-        "ARGS": "args",
         "METHOD": "method",
         "OBJ": "obj"
-      }
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
     }
   }
 ]

@@ -2,5 +2,6 @@
   "id": "arduino",
   "name": "Arduino",
   "topic": "arduino",
-  "style": "google"
+  "style": "google",
+  "entryShell": "none"
 }

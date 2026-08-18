@@ -1,0 +1,4 @@
+{
+  "C_DELAY_MICROSECONDS_MSG0": "等待 %1 微秒",
+  "C_DELAY_MICROSECONDS_TOOLTIP": "delayMicroseconds(微秒)——比 delay 更短的等待，常用在觸發超音波。⚠️ 模擬時鐘的精度只到毫秒，小於一毫秒的等待 millis() 看不見"
+}

@@ -1,0 +1,4 @@
+{
+  "C_EEPROM_WRITE_MSG0": "Write %2 to EEPROM address %1",
+  "C_EEPROM_WRITE_TOOLTIP": "This memory wears out after roughly 100,000 writes, so avoid writing on every pass through the loop."
+}

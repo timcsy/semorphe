@@ -4,6 +4,7 @@ import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
+import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
 import { formatMessage } from '../../i18n/messages'
@@ -13,8 +14,10 @@ import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
 import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
+import { showToast } from '../toolbar/toast'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { buildProgram } from '../../components/cpp/program/lift'
+import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -44,6 +47,27 @@ export class BlocklyPanel implements ViewHost {
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
   private busUpdateInProgress = false
+  /**
+   * 🔴 上一次從語義樹載入積木**失敗**了。
+   *
+   * ⚠️ 為真時工作區可能只載了一半——**不得拿它去覆蓋程式碼**。
+   * 下一次成功載入會清掉它（使用者按「程式碼→積木」也會）。
+   */
+  private stateLoadFailed = false
+  /** 上一次載入失敗的訊息——🔴 診斷指令與畫面上的提示都要用它。 */
+  private lastStateError: string | null = null
+  /**
+   * 失敗時的呼叫堆疊。
+   *
+   * 🔴 **訊息說得出「什麼壞了」，說不出「在哪裡壞的」。**
+   * 而這個錯誤（`Cannot read properties of undefined (reading 'indexOf')`）
+   * 只在 Arduino IDE（Theia）裡發生——Chromium 用同一份檔案內容重現不出來。
+   * ⚠️ 沒有堆疊就只能猜，而這一輪已經猜錯過三次。
+   *
+   * 🟢 webview 的 bundle **刻意不壓縮**（`vite.vscode.config.ts` 的 `minify: false`），
+   * 所以這裡的函式名是讀得懂的。
+   */
+  private lastStateStack: string | null = null
   private _blockMappings: BlockMapping[] = []
   private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
@@ -85,10 +109,60 @@ export class BlocklyPanel implements ViewHost {
   onSemanticUpdate(event: SemanticUpdateEvent): void {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
       this.busUpdateInProgress = true
+      // 🔴 **先存一份，失敗就還原。**
+      //
+      // ⚠️ `setState` 拋錯時工作區是**載到一半**的——使用者看到的是一堆
+      //    灰色的空積木（2026-08-18 實測），而那個畫面說不出任何原因。
+      //
+      // > **一個失敗的操作如果留下它做到一半的結果，
+      // > 使用者看到的不是「失敗」，是「一個他不認得的狀態」。**
+      const snapshot = this.workspace
+        ? Blockly.serialization.workspaces.save(this.workspace)
+        : null
       try {
         this.setState(event.blockState as object)
-      } catch {
-        // Block state may have invalid connections when code has syntax errors — safe to ignore
+        this.stateLoadFailed = false
+        this.lastStateError = null
+        this.lastStateStack = null
+      } catch (err) {
+        // 🔴 **這裡曾經是一個空的 `catch {}`**，註解寫「safe to ignore」。
+        //
+        // ⚠️ 而它一點都不安全：載到一半拋錯 → **工作區是殘的**，
+        //    而下一次積木變動會把那個殘的工作區**寫回使用者的檔案**。
+        //    使用者實測到 `setup()`／`loop()` 整個消失，就是這個形狀。
+        //
+        // > **一個被吞掉的例外，會把「失敗了」變成「成功了，只是內容比較少」。**
+        //
+        // 處置有兩半，缺一不可：**說出來**，以及**記住這份工作區不可信**。
+        this.stateLoadFailed = true
+        const culprit = this.isolateFailingBlock(event.blockState as object)
+        this.lastStateError = (err instanceof Error ? `${err.name}: ${err.message}` : String(err))
+          + `　｜出事的積木：${culprit}`
+        this.lastStateStack = err instanceof Error && err.stack
+          // 只留前 8 層——再深就是 Blockly 內部的細節，而診斷輸出要看得完。
+          ? err.stack.split('\n').slice(1, 9).map((l) => l.trim()).join('\n')
+          : null
+        console.error('[semorphe] 積木狀態載入失敗——工作區可能是殘的，暫停「積木→程式碼」', err)
+        // 🔴 **要讓使用者看得到，而不是只留在開發者工具裡。**
+        //
+        // ⚠️ 這個宿主（IDE 面板）裡沒有人會去開 DevTools，而症狀
+        //    （灰色的空積木）本身說不出原因。
+        //
+        // > **一則只有開發者看得到的錯誤訊息，
+        // > 在使用者那裡等於沒有訊息——他只會說「卡住了」。**
+        showToast(`積木載入失敗：${this.lastStateError}`, 'error')
+        // 還原到上一個好的狀態——⚠️ 還原本身也可能失敗，那就清空，
+        //    因為**一片空白至少說得出「這裡沒有東西」，殘骸說不出任何事**。
+        try {
+          if (snapshot && this.workspace) {
+            Blockly.serialization.workspaces.load(snapshot, this.workspace)
+          } else {
+            this.workspace?.clear()
+          }
+        } catch (restoreErr) {
+          console.error('[semorphe] 還原上一個積木狀態也失敗了', restoreErr)
+          this.workspace?.clear()
+        }
       } finally {
         this.busUpdateInProgress = false
       }
@@ -127,7 +201,7 @@ export class BlocklyPanel implements ViewHost {
       grid: { spacing: 20, length: 3, colour: '#555', snap: true },
       zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
       trashcan: true,
-      theme: this.createDarkTheme(),
+      theme: createDarkWorkspaceTheme(),
     }
     if (this.media) {
       injectOptions.media = this.media
@@ -147,10 +221,105 @@ export class BlocklyPanel implements ViewHost {
         }
         return
       }
+      // 🔴 **使用者親手拉出一顆積木時，順帶長出它宣告的伴生積木。**
+      //
+      // ⚠️ `busUpdateInProgress` 為真代表這是**反序列化**（程式碼→積木、
+      //    還原、載入存檔）——那些來源的伴生積木本來就在原文裡，
+      //    再長一顆就是憑空多出來的一行。漏掉這個判斷的症狀是：
+      //    **貼一次程式碼，`setup` 裡就多一份 `pinMode`。**
+      if (!this.busUpdateInProgress && event.type === Blockly.Events.CREATE) {
+        this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
+      }
       if (!this.busUpdateInProgress) {
         this.onChangeCallback?.()
       }
     })
+  }
+
+  /**
+   * 長出伴生積木。
+   *
+   * ⚠️ **核心不認得任何積木型別**——宣告從膠囊來（`companion-blocks.ts`）。
+   *
+   * 🔴 三種情況**什麼都不做**，而它們都是刻意的：
+   *
+   * ```
+   * 沒有宣告        絕大多數積木——這條路對它們是零成本
+   * 找不到目標函式   空白畫布上沒有 setup。⚠️ 硬長一顆 setup 出來會蓋掉
+   *                 使用者正在組的東西——**寧可不長，不要亂長**
+   * 已經有一顆了     使用者自己拉過 pinMode 了，不重複
+   * ```
+   */
+  private growCompanion(blockId: string | undefined): void {
+    if (!blockId || !this.workspace) return
+    const trigger = this.workspace.getBlockById(blockId)
+    if (!trigger) return
+    const spec = companionFor(trigger.type)
+    if (!spec) return
+
+    const name = trigger.getFieldValue(spec.bind.fromField)
+    if (!name) return
+
+    // 目標函式的主體。找不到就不長——見上面的第二種情況。
+    const target = this.workspace
+      .getTopBlocks(false)
+      .find(
+        (b) =>
+          b.type === spec.intoFunction.blockType &&
+          b.getFieldValue(spec.intoFunction.nameField) === spec.intoFunction.name,
+      )
+    const body = target?.getInput(spec.intoFunction.bodyInput)?.connection
+    if (!body) return
+
+    // 已經有一顆綁同一個名字的伴生積木了嗎
+    const already = this.workspace
+      .getAllBlocks(false)
+      .some(
+        (b) =>
+          b.type === spec.companion &&
+          b.getInputTargetBlock(spec.bind.toInput)?.getFieldValue(spec.bind.refField) === name,
+      )
+    if (already) return
+
+    try {
+      const companion = this.workspace.newBlock(spec.companion)
+      companion.initSvg()
+      const ref = this.workspace.newBlock(spec.bind.refBlock)
+      ref.initSvg()
+      ref.setFieldValue(name, spec.bind.refField)
+      companion.getInput(spec.bind.toInput)?.connection?.connect(ref.outputConnection)
+      for (const [input, k] of Object.entries(spec.constants)) {
+        const konst = this.workspace.newBlock(k.blockType)
+        konst.initSvg()
+        konst.setFieldValue(k.value, k.field)
+        companion.getInput(input)?.connection?.connect(konst.outputConnection)
+      }
+      // 接在主體的**最後**——⚠️ 接在最前面會插到使用者已經寫好的東西前面
+      let tail = body.targetBlock()
+      while (tail?.getNextBlock()) tail = tail.getNextBlock()
+      if (tail) tail.nextConnection?.connect(companion.previousConnection)
+      else body.connect(companion.previousConnection)
+      companion.render()
+      this.workspace.render()
+    } catch (err) {
+      // ⚠️ **不吞掉**——一個安靜失敗的自動化，使用者只會看到「它有時候不長」。
+      console.error('[semorphe] 伴生積木長不出來', err)
+    }
+  }
+
+  /** 工作區是不是殘的。🔴 為真時「積木→程式碼」必須停手。 */
+  get isStateStale(): boolean {
+    return this.stateLoadFailed
+  }
+
+  /** 上一次載入失敗的訊息，`null` 代表沒失敗過。 */
+  get stateError(): string | null {
+    return this.lastStateError
+  }
+
+  /** 失敗時的呼叫堆疊（前 8 層）。🔴 診斷指令要印它——沒有它就只能猜。 */
+  get stateErrorStack(): string | null {
+    return this.lastStateStack
   }
 
   onChange(callback: () => void): void {
@@ -615,6 +784,70 @@ export class BlocklyPanel implements ViewHost {
     return Blockly.serialization.workspaces.save(this.workspace)
   }
 
+  /**
+   * 🔴 **失敗時，把「狀態裡的某處」縮小成「這一顆積木」。**
+   *
+   * ## 為什麼需要它
+   *
+   * `Blockly.serialization.workspaces.load` 拋錯時只給一個訊息
+   * （實測：`TypeError: Cannot read properties of undefined (reading 'indexOf')`），
+   * ⚠️ **而那句話對「是哪一顆積木害的」一個字都沒說**。
+   *
+   * 2026-08-18 這個缺陷**只在 Arduino IDE（Theia）出現**，Chromium 用相同的
+   * 檔案內容重現不到——於是我連續猜了三個假設，三個都錯。
+   *
+   * > **推理的替代品不是更好的推理，是把失敗的輸入縮到最小。**
+   *
+   * ## 做法
+   *
+   * 拿一個**沒有畫布的 `Blockly.Workspace`**（序列化不需要 SVG），
+   * 對狀態做遞迴下降：整棵失敗 → 試每個子樹 → 回報**仍然會失敗的最深那一顆**。
+   *
+   * ⚠️ 回傳 `null` 有兩種意思，而它們要分得出來：
+   * **逐顆都載得起來**（＝問題在組合，不在單顆）與 **隔離本身失敗了**。
+   */
+  private isolateFailingBlock(state: object): string {
+    interface B { type?: string; extraState?: unknown; next?: { block?: B }; inputs?: Record<string, { block?: B }> }
+    const root = (state as { blocks?: { blocks?: B[] } }).blocks?.blocks
+    if (!Array.isArray(root) || root.length === 0) return '（狀態裡沒有積木——問題不在單顆積木上）'
+
+    let scratch: Blockly.Workspace
+    try {
+      scratch = new Blockly.Workspace()
+    } catch {
+      return '（隔離失敗：連一個空工作區都建不起來）'
+    }
+
+    const fails = (b: B): Error | null => {
+      try {
+        scratch.clear()
+        Blockly.serialization.workspaces.load({ blocks: { languageVersion: 0, blocks: [b] } }, scratch)
+        return null
+      } catch (e) {
+        return e instanceof Error ? e : new Error(String(e))
+      }
+    }
+
+    /** 往下縮：只要某個孩子自己也會失敗，答案就在孩子那裡。 */
+    const narrow = (b: B): B => {
+      const kids: B[] = []
+      if (b.next?.block) kids.push(b.next.block)
+      for (const inp of Object.values(b.inputs ?? {})) if (inp?.block) kids.push(inp.block)
+      for (const k of kids) if (fails(k)) return narrow(k)
+      return b
+    }
+
+    for (const top of root) {
+      const err = fails(top)
+      if (!err) continue
+      const culprit = narrow(top)
+      const extra = culprit.extraState === undefined ? '' : `　extraState=${JSON.stringify(culprit.extraState)}`
+      return `${culprit.type ?? '(沒有 type)'}${extra}　→ ${err.name}: ${err.message}`
+    }
+    // 🔴 每一顆單獨都載得起來 —— 那代表問題在【組合】，不在單顆。
+    return '（逐顆都載得起來——問題在積木的組合，不在單一積木）'
+  }
+
   setState(state: object): void {
     if (!this.workspace) return
     Blockly.Events.disable()
@@ -761,22 +994,4 @@ export class BlocklyPanel implements ViewHost {
     this.workspace = null
   }
 
-  private createDarkTheme(): Blockly.Theme {
-    return Blockly.Theme.defineTheme('dark_scratch', {
-      name: 'dark_scratch',
-      base: Blockly.Themes.Classic,
-      componentStyles: {
-        workspaceBackgroundColour: '#1e1e1e',
-        toolboxBackgroundColour: '#252526',
-        toolboxForegroundColour: '#cccccc',
-        flyoutBackgroundColour: '#2d2d2d',
-        flyoutForegroundColour: '#cccccc',
-        flyoutOpacity: 0.9,
-        scrollbarColour: '#4a4a4a',
-        scrollbarOpacity: 0.7,
-        insertionMarkerColour: '#fff',
-        insertionMarkerOpacity: 0.3,
-      },
-    })
-  }
 }

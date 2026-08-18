@@ -5,6 +5,11 @@
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
   },
   {
+    "conceptId": "cpp:analog_resolution",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／執行都有實際斷言）。"
+  },
+  {
     "conceptId": "cpp:analog_write",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
@@ -15,14 +20,24 @@
     "reason": "這一路回家的是**判別**（`__builtin_popcount` 這個名字是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
   },
   {
-    "conceptId": "cpp:container_iter",
+    "conceptId": "cpp:delay_microseconds",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "這一路回家的是**判別**（`begin`／`end` 這兩個方法名是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/micros/spec.test.ts` 釘住（lift／generate／round-trip／執行都有實際斷言，含「同一個時鐘」那條）。"
   },
   {
-    "conceptId": "cpp:delay",
+    "conceptId": "cpp:dht_declare",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+    "reason": "lift 那一路是 `registerPlainTypeConcept` 的一筆登錄——判別邏輯留在共用檔，膠囊裡只有一筆資料。⚠️ 而 `declaresVariableType` 那一格才是關鍵：它讓作用域記住型別，之後那個變數上的方法才查得到主人。接點由同批的 `spec.test.ts` 釘住。"
+  },
+  {
+    "conceptId": "cpp:dht_open",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:dht_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
   },
   {
     "conceptId": "cpp:digital_read",
@@ -33,6 +48,16 @@
     "conceptId": "cpp:digital_write",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:eeprom_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:eeprom_write",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
   },
   {
     "conceptId": "cpp:if_else",
@@ -60,9 +85,54 @@
     "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"
   },
   {
+    "conceptId": "cpp:lcd_at",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:lcd_clear",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:lcd_declare",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerPlainTypeConcept` 的一筆登錄——判別邏輯留在共用檔，膠囊裡只有一筆資料。⚠️ 而 `declaresVariableType` 那一格才是關鍵：它讓作用域記住型別，之後那個變數上的方法才查得到主人。接點由同批的 `spec.test.ts` 釘住。"
+  },
+  {
+    "conceptId": "cpp:lcd_open",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:lcd_print",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:math_constrain",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／執行都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:math_is_nan",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄——判別邏輯留在共用檔，膠囊裡只有一筆資料。"
+  },
+  {
+    "conceptId": "cpp:micros",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/micros/spec.test.ts` 釘住（lift／generate／round-trip／執行都有實際斷言，含「同一個時鐘」那條）。"
+  },
+  {
     "conceptId": "cpp:millis",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
+  },
+  {
+    "conceptId": "cpp:pin_attach",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是一支**具名策略**（`lift-strategy.ts` ＋ `lift-pattern.json`）——判別要跑真邏輯（結構比對 ＋ 走整棵樹查「這個名字有沒有被當腳位用」），所以靜態掃描看不到接點。⚠️ 而這顆**沒有子接點**（`children` 是空的），三個參數全是積木上的欄位。接點的正確性由這顆自己的 `spec.test.ts` 釘住（含「沒被當腳位用的常數不准被搶走」那條負向）。"
   },
   {
     "conceptId": "cpp:pin_constant",
@@ -73,6 +143,31 @@
     "conceptId": "cpp:priority_queue_peek",
     "cause": "語料沒覆蓋",
     "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
+  },
+  {
+    "conceptId": "cpp:pulse_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pulse_read/spec.test.ts` 釘住（含「可選的第三格不得產出空逗號」與「它是運算式，回傳值進得了算術」兩條）。"
+  },
+  {
+    "conceptId": "cpp:pwm_attach",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（ESP32 的 LEDC 與觸摸感應，第 3 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pwm_write/spec.test.ts` 釘住（五顆寫在一起，因為**它們共用同一份通道狀態**——分開測的話「舊版三件套湊起來會不會通」沒有任何一支測得到）。"
+  },
+  {
+    "conceptId": "cpp:pwm_open",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（ESP32 的 LEDC 與觸摸感應，第 3 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pwm_write/spec.test.ts` 釘住（五顆寫在一起，因為**它們共用同一份通道狀態**——分開測的話「舊版三件套湊起來會不會通」沒有任何一支測得到）。"
+  },
+  {
+    "conceptId": "cpp:pwm_tie",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（ESP32 的 LEDC 與觸摸感應，第 3 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pwm_write/spec.test.ts` 釘住（五顆寫在一起，因為**它們共用同一份通道狀態**——分開測的話「舊版三件套湊起來會不會通」沒有任何一支測得到）。"
+  },
+  {
+    "conceptId": "cpp:pwm_write",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（ESP32 的 LEDC 與觸摸感應，第 3 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pwm_write/spec.test.ts` 釘住（五顆寫在一起，因為**它們共用同一份通道狀態**——分開測的話「舊版三件套湊起來會不會通」沒有任何一支測得到）。"
   },
   {
     "conceptId": "cpp:queue_back",
@@ -110,13 +205,63 @@
     "reason": "同 cpp:raw_code，運算式位置的版本。"
   },
   {
+    "conceptId": "cpp:serial_count",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（`Serial` 上的方法，第 0 批／階段 6.16）——判別邏輯要看 `obj`，而分支住在執行期組起來的登錄表裡，靜態掃描看不到接點。⚠️ 這兩顆的接點是空的（零引數），而正確性由 `src/components/cpp/serial_count/spec.test.ts` 釘住（含「別的物件的 read 不得被搶走」與「沒有資料時回 -1 而 -1 是真」兩條）。"
+  },
+  {
+    "conceptId": "cpp:serial_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（`Serial` 上的方法，第 0 批／階段 6.16）——判別邏輯要看 `obj`，而分支住在執行期組起來的登錄表裡，靜態掃描看不到接點。⚠️ 這兩顆的接點是空的（零引數），而正確性由 `src/components/cpp/serial_count/spec.test.ts` 釘住（含「別的物件的 read 不得被搶走」與「沒有資料時回 -1 而 -1 是真」兩條）。"
+  },
+  {
+    "conceptId": "cpp:servo_attach",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:servo_declare",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerPlainTypeConcept` 的一筆登錄——判別邏輯留在共用檔，膠囊裡只有一筆資料。⚠️ 而 `declaresVariableType` 那一格才是關鍵：它讓作用域記住型別，之後那個變數上的方法才查得到主人。接點由同批的 `spec.test.ts` 釘住。"
+  },
+  {
+    "conceptId": "cpp:servo_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:servo_write",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
     "conceptId": "cpp:string_empty",
     "cause": "辨識到不了",
     "reason": "**真的缺口**：`.empty()` 一律判成中性的 cpp:container_empty。同上，補語料無效。"
   },
   {
+    "conceptId": "cpp:touch_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（ESP32 的 LEDC 與觸摸感應，第 3 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pwm_write/spec.test.ts` 釘住（五顆寫在一起，因為**它們共用同一份通道狀態**——分開測的話「舊版三件套湊起來會不會通」沒有任何一支測得到）。"
+  },
+  {
+    "conceptId": "cpp:ultrasonic_trigger",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是一支**具名策略**，而它比別顆更特別：它認的是**一串連續語句**，掛在 `compound_statement` 與 `translation_unit` 上、自己走訪子節點。靜態掃描看不到它產出的 `pin` 接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住，而那支測試的重點是**四條「不該摺時不摺」**（中間插句／微秒數不對／不同腳／換算不摺）——那才是這顆的主要風險。"
+  },
+  {
     "conceptId": "cpp:vector_make",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "這一路回家的是**判別**（`vector<T>(…)` 這個呼叫形狀是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：`children.size`／`children.fill` 對上分支產出的兩個接點，膠囊自證測從真語料 lift 出這顆。"
+  },
+  {
+    "conceptId": "cpp:wifi_open",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
+  },
+  {
+    "conceptId": "cpp:wifi_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerMethodBranch` 的一個分支（第 2 批套件物件／階段 6.16）——判別要跑真邏輯（查接收者的**宣告型別**），所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/servo_write/spec.test.ts` 釘住（十九顆寫在一起，因為**它們共用同一個辨識機制**——而那支測試的重點是「型別查不到就不猜」那條負向）。"
   }
 ]

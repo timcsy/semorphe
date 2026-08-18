@@ -1,0 +1,8 @@
+{
+  "C_DHT_HUMIDITY_MSG0": "%1 讀到的濕度（百分比）",
+  "C_DHT_HUMIDITY_TOOLTIP": "讀不到感測器時回傳「不是數字」——教材都教學生先檢查一次再用。",
+  "C_DHT_READ_MSG0": "%1 讀到的 %2",
+  "C_DHT_READ_TOOLTIP": "讀不到感測器時回傳「不是數字」——教材都教學生先檢查一次再用。濕度是百分比，溫度是攝氏。",
+  "C_DHT_READ_Q_HUMIDITY": "濕度（%）",
+  "C_DHT_READ_Q_TEMPERATURE": "溫度（°C）"
+}

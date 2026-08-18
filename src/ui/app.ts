@@ -1,6 +1,7 @@
 import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
-import type { MonacoPanel } from './panels/monaco-panel'
+import type { CodeView } from '../core/host/code-view'
+import type { HostProfile } from '../core/host/host-profile'
 import { SyncController } from './sync-controller'
 import type { SyncError } from './sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
@@ -38,7 +39,7 @@ import { CppParser } from '../languages/cpp/parser'
 import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
-import { StorageService } from '../core/storage'
+
 import type { SavedState } from '../core/storage'
 import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
@@ -80,14 +81,27 @@ const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 export class App {
   private bus: SemanticBus
   private blocklyPanel: BlocklyPanel | null = null
-  private monacoPanel: MonacoPanel | null = null
+  private codeView: CodeView | null = null
   private syncController: SyncController | null = null
   private blockSpecRegistry: BlockSpecRegistry
   private blockRegistrar: BlockRegistrar
   private localeLoader: LocaleLoader
-  private storageService: StorageService
+  /**
+   * 🔴 這個宿主有什麼、沒有什麼——**一份看得完的宣告**。
+   *
+   * ⚠️ **不要問「現在是哪一個宿主」**，問 `features` 或 `codeView` 的可選方法。
+   * 一旦有人寫 `this.profile.id === '…'`，這份宣告就退化成一個標籤
+   * ——而真相就散回各處的 `if` 裡了。
+   */
+  private readonly profile: HostProfile
+  private storageService: ReturnType<HostProfile['createStorage']>
   private topicRegistry: TopicRegistry
   private targetRegistry: TargetRegistry
+  /**
+   * 🔴 **一個實例，兩個持有者**（`code-generator` 的模組層 ＋ `syncController`）。
+   * 換目標時要改的是「它的外殼設定」，不是換掉物件——否則會有一個沒被換到。
+   */
+  private scaffold: CppScaffold | null = null
   private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
@@ -110,12 +124,13 @@ export class App {
   private patternRenderer: PatternRenderer | null = null
   private mobileMenu: import('./toolbar/mobile-menu').MobileMenu | null = null
 
-  constructor() {
+  constructor(profile: HostProfile) {
+    this.profile = profile
     this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
     this.localeLoader = new LocaleLoader()
-    this.storageService = new StorageService()
+    this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()
 
@@ -143,7 +158,8 @@ export class App {
     registerCppLanguage()
     const registry = createPopulatedRegistry()
     setDependencyResolver(registry)
-    setProgramScaffold(new CppScaffold(registry))
+    this.scaffold = new CppScaffold(registry)
+    setProgramScaffold(this.scaffold)
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
@@ -162,9 +178,9 @@ export class App {
     const appEl = document.getElementById('app')
     if (!appEl) throw new Error('#app element not found')
 
-    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox())
+    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox(), this.profile)
     this.blocklyPanel = elements.blocklyPanel
-    this.monacoPanel = elements.monacoPanel
+    this.codeView = elements.codeView
     this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
@@ -172,10 +188,14 @@ export class App {
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
     this.blocklyPanel?.setCodeContext('cpp', DEFAULT_STYLE)
-    this.syncController.setProgramScaffold(new CppScaffold(registry))
+    this.syncController.setProgramScaffold(this.scaffold!)
     this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
-    this.syncController.setCodePatcher((code, tree) => cppPatcher(code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth()))
+    this.syncController.setCodePatcher((code, tree) => cppPatcher(
+      code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
+      // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
+      this.currentTarget.entryShell ?? 'main',
+    ))
 
     // Inject auto-include nodes into the display tree when scaffold is visible (depth > 0).
     // Auto-includes are generated transiently by computeAutoIncludes() during code generation
@@ -196,7 +216,7 @@ export class App {
     this.syncController.setTopic(this.currentTopic, this.enabledBranches)
     // ── 視圖：登錄，而不是硬編 ────────────────────────────────
     //
-    // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.monacoPanel?.setCode(…)`，
+    // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.codeView?.setCode(…)`，
     // 而**同時**四個面板各自有一個 `connectBus()` 在訂閱同樣的事件。
     //
     // 查證結果：**`connectBus` 從來沒有人呼叫過**——那一層整個是死的，
@@ -226,7 +246,7 @@ export class App {
     // - `console-panel` **收** `execution:output`
     // - `monaco-panel` **發** `execution:breakpoints`（把行號翻成 nodeId）
     elements.consolePanel?.connectBus(this.bus)
-    this.monacoPanel?.connectBus(this.bus)
+    this.codeView?.connectBus(this.bus)
 
     // 🔴 **診斷的第二個產出端在樹上，而樹只從匯流排來。**
     //
@@ -246,7 +266,7 @@ export class App {
 
     // 9. Wire panel change events
     this.wireBlocklyChangeHandler()
-    this.monacoPanel.onChange(() => {
+    this.codeView.onChange(() => {
       if (this._codeToBlocksInProgress) return
       this.codeDirty = true
       this.updateSyncHints()
@@ -257,7 +277,7 @@ export class App {
     this.executionController = new ExecutionController(
       {
         blocklyPanel: this.blocklyPanel,
-        monacoPanel: this.monacoPanel,
+        codeView: this.codeView,
         consolePanel: elements.consolePanel,
         variablePanel: elements.variablePanel,
         bottomPanel: elements.bottomPanel,
@@ -281,7 +301,7 @@ export class App {
         this.updateSyncHints()
       },
       onSyncCode: () => {
-        this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+        this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
       },
       onToggleAutoSync: () => this.toggleAutoSync(),
       onUndo: () => this.blocklyPanel?.undo(),
@@ -289,11 +309,12 @@ export class App {
       onClear: () => this.blocklyPanel?.clear(),
     })
 
-    setupFileButtons(this.storageService, {
+    // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
+    if (this.profile.features.fileButtons) setupFileButtons(this.storageService, {
       getExportState: () => this.buildSaveState(),
       importState: (state: SavedState) => {
         if (state.blocklyState && Object.keys(state.blocklyState).length > 0) this.blocklyPanel?.setState(state.blocklyState)
-        if (state.code) this.monacoPanel?.setCode(state.code)
+        if (state.code) this.codeView?.setCode(state.code)
       },
       onUploadCustomBlocks: (blocks: object[]) => {
         for (const blockDef of blocks) Blockly.common.defineBlocksWithJsonArray([blockDef])
@@ -307,35 +328,7 @@ export class App {
       // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
       //（課程清單那條在這裡、風格那條是 `applyStyle`），
       // 新寫一條會讓「切換之後畫面長什麼樣」有兩個真相來源。
-      onTargetChange: (target, topic, branches) => {
-        const prevDepth = this.getScaffoldDepth()
-        this.currentTarget = target
-        this.currentTopic = topic
-        this.enabledBranches = branches
-        // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
-        const style = STYLE_PRESETS.find(p => p.id === target.style)
-        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
-        const newDepth = this.getScaffoldDepth()
-        setScaffoldConfig({ scaffoldDepth: newDepth })
-        this.syncController?.setTopic(topic, branches)
-        this.reloadBlockSpecsForTopic()
-        this.updateToolbox()
-        this.markOutOfScopeBlocks()
-        if (!this._restoringState) {
-          // Full resync only when scaffold depth crosses the 0 boundary
-          // (blocks need scaffold wrapping/unwrapping). Otherwise just regen code.
-          if ((prevDepth === 0) !== (newDepth === 0)) {
-            this.resyncAfterTopicChange()
-          } else {
-            this.syncBlocksToCodeWithMappings()
-          }
-        }
-        this.refreshStatusBar()
-        // ⚠️ **選擇本身要存**——`autoSave` 只掛在積木變動上（`blocklyPanel.onChange`），
-        // 所以在空白工作區換目標，重新整理之後就跑掉了。
-        // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
-        if (!this._restoringState) this.autoSave()
-      },
+      onTargetChange: (target, topic, branches) => this.handleTargetChange(target, topic, branches),
       onBranchesChange: (branches) => {
         const prevDepth = this.getScaffoldDepth()
         this.enabledBranches = branches
@@ -394,10 +387,10 @@ export class App {
     elements.mobileTabBar?.onTabChange((tab) => {
       if (tab === 'code') {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => this.monacoPanel?.relayout())
+          requestAnimationFrame(() => this.codeView?.relayout?.())
         })
         // Fallback for devices where rAF fires before paint
-        setTimeout(() => this.monacoPanel?.relayout(), 100)
+        setTimeout(() => this.codeView?.relayout?.(), 100)
       }
     })
 
@@ -432,10 +425,10 @@ export class App {
     this.codeParserCache = codeParser
     this.syncController!.setCodeToBlocksPipeline(lifter, codeParser)
     const originalSync = this.syncController!.syncCodeToBlocks.bind(this.syncController!)
-    const monacoPanel = this.monacoPanel!
+    const codeView = this.codeView!
 
     this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
-      const code = codeArg ?? monacoPanel.getCode()
+      const code = codeArg ?? codeView.getCode()
       this._codeToBlocksInProgress = true
       parser.parse(code).then(tree => {
         codeParser._lastTree = tree.rootNode
@@ -443,7 +436,7 @@ export class App {
         const patched = this.syncController?.patchMissingDependencies(code)
         if (patched) {
           const linesDelta = patched.split('\n').length - code.split('\n').length
-          this.monacoPanel?.setCodePreserveCursor(patched, linesDelta)
+          this.codeView?.setCodePreserveCursor(patched, linesDelta)
         }
         this.codeDirty = false
         this.blocksDirty = false
@@ -545,7 +538,7 @@ export class App {
   private resyncAfterTopicChange(): void {
     const tree = this.blocklyPanel?.extractSemanticTree()
     if (!tree) return
-    const code = this.monacoPanel?.getCode() ?? ''
+    const code = this.codeView?.getCode() ?? ''
     const depth = this.getScaffoldDepth()
     const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
       (n: { conceptId: string; properties: Record<string, unknown> }) =>
@@ -562,7 +555,102 @@ export class App {
   }
 
   /** Extract tree + blockMappings and sync to code */
+  /**
+   * 換目標——課程清單、風格、鷹架深度一起換。
+   *
+   * 🔴 這段是從選擇器的 closure **搬**出來的（不是複製），因為現在有**兩個**
+   * 呼叫端：使用者在選擇器上選，以及**宿主用組態指定**（`applyHostConfig`）。
+   *
+   * > **同一件事有兩個入口時，要嘛共用一個實作，
+   * > 要嘛就會有兩個「換目標之後畫面長什麼樣」的真相。**
+   */
+  private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
+    // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
+    this.scaffold?.setEntryShell(target.entryShell ?? 'main')
+        const prevDepth = this.getScaffoldDepth()
+        this.currentTarget = target
+        this.currentTopic = topic
+        this.enabledBranches = branches
+        // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
+        const style = STYLE_PRESETS.find(p => p.id === target.style)
+        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
+        const newDepth = this.getScaffoldDepth()
+        setScaffoldConfig({ scaffoldDepth: newDepth })
+        this.syncController?.setTopic(topic, branches)
+        this.reloadBlockSpecsForTopic()
+        this.updateToolbox()
+        this.markOutOfScopeBlocks()
+        if (!this._restoringState) {
+          // Full resync only when scaffold depth crosses the 0 boundary
+          // (blocks need scaffold wrapping/unwrapping). Otherwise just regen code.
+          if ((prevDepth === 0) !== (newDepth === 0)) {
+            this.resyncAfterTopicChange()
+          } else {
+            this.syncBlocksToCodeWithMappings()
+          }
+        }
+        this.refreshStatusBar()
+        // ⚠️ **選擇本身要存**——`autoSave` 只掛在積木變動上（`blocklyPanel.onChange`），
+        // 所以在空白工作區換目標，重新整理之後就跑掉了。
+        // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
+        if (!this._restoringState) this.autoSave()
+  }
+
+  /**
+   * 照宿主給的組態選目標。
+   *
+   * ## 🔴 為什麼非有不可
+   *
+   * 使用者在 Arduino IDE 裡開 `.ino`，而面板用的是 `C++（預設）` 這個目標
+   * ——於是**鷹架把 `setup()`／`loop()` 包進了 `int main()`**，
+   * 並且加上 `using namespace std;`。⚠️ 那不是顯示問題，**它寫進了使用者的檔案**。
+   *
+   * `semorphe.target` 這個設定**早就宣告了**（`manifest.ts`），
+   * 而 spec 140 把 webview 縮成薄殼時，消費它的那一段掉了
+   * ——於是它變成一個**宣告了而沒有人讀**的設定。
+   *
+   * > **一個沒有人讀的設定，與一個不存在的設定，
+   * > 差別只在前者讓人以為已經處理過了。**
+   *
+   * ⚠️ 認不得的 ID **回退到現況**，不崩潰也不留空白（與 `restoreState` 同一條規矩）。
+   */
+  applyHostConfig(cfg: { targetId?: string }): void {
+    if (!cfg.targetId) return
+    const target = this.targetRegistry.get(cfg.targetId)
+    if (!target || target.id === this.currentTarget.id) return
+    const topic = this.topicRegistry.get(target.topic)
+    if (!topic) return
+    // 🔴 **不得由此寫回文件。** `handleTargetChange` 在正常路徑上會
+    //    `syncBlocksToCodeWithMappings()`——而套用組態發生在**開機時**，
+    //    那時工作區是空的，寫回去就是**把使用者的檔案清空**。
+    //
+    // > **一個「換設定」的動作如果順手寫了檔案，
+    // > 那麼在還沒讀到檔案之前換設定，就會把檔案寫成還沒讀到的樣子。**
+    //
+    // ⚠️ 借用既有的 `_restoringState`（它正是「現在不要寫回去」的意思），
+    //    不新開一個旗標——兩個意思一樣的旗標會各自漂移。
+    this._restoringState = true
+    try {
+      this.handleTargetChange(target, topic, new Set([topic.levelTree.id]))
+    } finally {
+      this._restoringState = false
+    }
+    this.topicSelector?.setTarget(target, this.enabledBranches)
+  }
+
   private syncBlocksToCodeWithMappings(): void {
+    // 🔴 **殘的工作區不得覆蓋程式碼。**
+    //
+    // `BlocklyPanel` 從語義樹載入積木失敗時只載了一半，而把那半份產生成程式碼
+    // 寫回去，等於**把使用者的檔案刪掉一半**。
+    //
+    // > **兩邊不一致時，不能拿「已知是壞的那一邊」當來源。**
+    //
+    // ⚠️ 恢復的辦法是按「程式碼→積木」重載一次（成功就會解除）。
+    if (this.blocklyPanel?.isStateStale) {
+      showToast('積木沒有完整載入，暫停同步到程式碼——請按「程式碼→積木」重載', 'error')
+      return
+    }
     const tree = this.blocklyPanel?.extractSemanticTree()
     const blockMappings = this.blocklyPanel?.getBlockMappings()
     this.syncController?.syncBlocksToCode(tree, blockMappings)
@@ -577,6 +665,9 @@ export class App {
   private wireBlocklyChangeHandler(): void {
     this.blocklyPanel?.onChange(() => {
       if (this._codeToBlocksInProgress) return
+      // 🔴 同 `syncBlocksToCodeWithMappings`：殘的工作區不得覆蓋程式碼。
+      //    ⚠️ 自動同步這條路才是真正危險的——它不需要使用者按任何東西。
+      if (this.blocklyPanel?.isStateStale) return
       this.blocksDirty = true; this.updateSyncHints()
       if (this.autoSync) {
         const tree = this.blocklyPanel?.extractSemanticTree()
@@ -595,21 +686,21 @@ export class App {
   private setupBidirectionalHighlight(): void {
     // Block → Code: unified via nodeId
     this.blocklyPanel?.onNodeSelect((nodeId) => {
-      this.monacoPanel?.clearHighlight(); this.blocklyPanel?.clearHighlight()
+      this.codeView?.clearHighlight(); this.blocklyPanel?.clearHighlight()
       if (!nodeId) return
       this.blocklyPanel?.highlightByNodeId(nodeId, 'block-to-code')
       const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
+      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
     })
     // Code → Block: unified via nodeId
-    this.monacoPanel?.onCursorChange((line) => {
-      this.blocklyPanel?.clearHighlight(); this.monacoPanel?.clearHighlight(); this.monacoPanel?.dismissPendingHighlight()
+    this.codeView?.onCursorChange((line: number) => {
+      this.blocklyPanel?.clearHighlight(); this.codeView?.clearHighlight(); this.codeView?.dismissPendingHighlight()
       try { if (Blockly.getSelected()) Blockly.common.setSelected(null as unknown as Blockly.ISelectable) } catch { /* ignore */ }
       const nodeId = this.syncController?.nodeIdForLine(line - 1)
       if (!nodeId) return
       this.blocklyPanel?.highlightByNodeId(nodeId, 'code-to-block')
       const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
+      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
     })
   }
 
@@ -631,7 +722,7 @@ export class App {
    */
   private buildSaveState(): SavedState {
     return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
-      blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.monacoPanel?.getCode() ?? '',
+      blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.codeView?.getCode() ?? '',
       language: 'cpp', styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
@@ -666,6 +757,8 @@ export class App {
     // 🔴 而**認不得的 ID 一律回退到預設**，不得崩潰或留下一片空白。
     const savedTarget = state.targetId ? this.targetRegistry.get(state.targetId) : undefined
     if (savedTarget) this.currentTarget = savedTarget
+    // ⚠️ 還原也要跟著換外殼——否則存檔存的是 Arduino，開起來卻套 `main()`。
+    this.scaffold?.setEntryShell(this.currentTarget.entryShell ?? 'main')
     const topicId = savedTarget?.topic ?? state.topicId
     if (topicId) {
       const topic = this.topicRegistry.get(topicId)
@@ -701,7 +794,7 @@ export class App {
     if (this.codeToBlocksTimer) clearTimeout(this.codeToBlocksTimer)
     this.codeToBlocksTimer = setTimeout(() => {
       this.codeToBlocksTimer = null
-      this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+      this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
     }, 800)
   }
 
@@ -720,7 +813,7 @@ export class App {
       this.syncBlocksToCodeWithMappings()
       this.blocksDirty = false; this.updateSyncHints()
     }
-    if (this.codeDirty) this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+    if (this.codeDirty) this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
   }
 
   /**
@@ -777,7 +870,7 @@ export class App {
 
   dispose(): void {
     this.blocklyPanel?.dispose()
-    this.monacoPanel?.dispose()
+    this.codeView?.dispose()
     this.executionController?.dispose()
   }
 }

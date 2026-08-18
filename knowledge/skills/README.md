@@ -42,6 +42,7 @@
 - `build-guardrail`——把一條規範變成會變紅的機械檢查（緣起：一天七條護欄、四次翻車）
 - `over-justify`——上游的價值判斷：這條規範賺不賺得起位置
 - `diagnose-in-browser`——測試綠但使用者看到的是錯的，在瀏覽器裡定位
+- `ship-extension`——把擴充的一次改動交到兩個 IDE 手上（這條流程跑了九次才被固化，而三次災難是流程本身的洞造成的）
 
 **元件管線**（`component-pipeline` 串起前五個）
 

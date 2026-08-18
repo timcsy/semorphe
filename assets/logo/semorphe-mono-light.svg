@@ -1,0 +1,14 @@
+<!-- semorphe-mono 的淺色孿生。幾何與 semorphe-mono.svg 完全相同，只換 stroke。
+
+     為什麼需要兩張：VSCode 的【指令圖示】（editor/title 等）是當
+     **圖片**渲染的，並且依主題在 light/dark 兩個檔之間切換
+     ——與【活動列圖示】不同，後者是 CSS 遮罩（顏色會被丟掉）。
+
+     mono（#334155 深板岩）在淺色主題上讀得到，在深色主題上幾乎看不見。 -->
+<svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#c5c5c5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 32 L16 50 L29 68" stroke-width="7.5"/>
+    <path d="M63 32 H37 L50 50 L37 68 H63" stroke-width="10"/>
+    <path d="M71 32 L84 50 L71 68" stroke-width="7.5"/>
+  </g>
+</svg>

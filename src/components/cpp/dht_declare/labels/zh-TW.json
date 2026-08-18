@@ -1,0 +1,4 @@
+{
+  "C_DHT_DECLARE_MSG0": "宣告溫濕度感測器 %1",
+  "C_DHT_DECLARE_TOOLTIP": "括號裡是它接的腳位與型號（DHT11 或 DHT22）。宣告之後要用「啟動溫濕度感測器」。"
+}

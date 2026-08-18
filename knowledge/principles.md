@@ -219,3 +219,4 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | 積木定義、generator、extractor、欄位同步、動態積木、extraState | `concepts/積木投影管線.md` |
 | 元件、命名、詞彙、埠、參數、形態、跨域、合流、ArduinoCAD、薄協定 | `concepts/元件.md` |
 | 新增原則／契約／「不准」、殼、做一半、護欄、audit 測試、零容忍、完備性檢查 | `concepts/執行機構.md` |
+| **執行、模擬、直譯器回什麼值、硬體、感測器、板子、虛擬硬體** | `concepts/模擬的誠實.md` |

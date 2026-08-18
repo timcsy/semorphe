@@ -64,7 +64,8 @@
           "cpp:math_max",
           "cpp:math_gcd",
           "cpp:math_lcm",
-          "cpp:block"
+          "cpp:block",
+          "cpp:math_is_nan"
         ],
         "children": [
           {

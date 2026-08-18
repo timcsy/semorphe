@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cpp_eeprom_read",
+    "conceptId": "cpp:eeprom_read",
+    "language": "cpp",
+    "category": "modules",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_eeprom_read",
+      "message0": "%{BKY_C_EEPROM_READ_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "ADDRESS",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_EEPROM_READ_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "ADDRESS": "address"
+      },
+      "statementInputs": {}
+    }
+  }
+]

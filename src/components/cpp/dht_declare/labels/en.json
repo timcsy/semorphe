@@ -1,0 +1,4 @@
+{
+  "C_DHT_DECLARE_MSG0": "Declare temperature and humidity sensor %1",
+  "C_DHT_DECLARE_TOOLTIP": "The arguments are the pin and the model (DHT11 or DHT22). Call the start block before reading."
+}

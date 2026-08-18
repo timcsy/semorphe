@@ -48,7 +48,8 @@
           "cpp:math_unary",
           "cpp:random_next",
           "cpp:random_seed",
-          "cpp:math_abs"
+          "cpp:math_abs",
+          "cpp:math_is_nan"
         ],
         "children": [
           {

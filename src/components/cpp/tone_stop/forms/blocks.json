@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cpp_tone_stop",
+    "conceptId": "cpp:tone_stop",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_tone_stop",
+      "message0": "%{BKY_C_TONE_STOP_MSG0}",
+      "args0": [ { "type": "input_value", "name": "PIN", "check": "Expression" } ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_TONE_STOP_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": { "fields": {}, "inputs": { "PIN": "pin" }, "statementInputs": {} }
+  }
+]

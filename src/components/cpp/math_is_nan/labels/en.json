@@ -1,0 +1,4 @@
+{
+  "C_MATH_IS_NAN_MSG0": "%1 is not a number",
+  "C_MATH_IS_NAN_TOOLTIP": "Some operations and failed sensor reads produce a special not-a-number value. It compares unequal to everything, even to itself, so this block is the only way to test for it."
+}

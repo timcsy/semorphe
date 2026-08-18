@@ -1,0 +1,4 @@
+{
+  "C_PULSE_READ_MSG0": "Measure %2 pulse on pin %1, timeout %3 us",
+  "C_PULSE_READ_TOOLTIP": "pulseIn(pin, state[, timeout]) — returns the pulse length in microseconds, or 0 if nothing arrived. For an ultrasonic sensor, send a trigger with Wait-microseconds first, then measure the echo"
+}

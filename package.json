@@ -10,10 +10,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:vscode": "npx tsx src/scripts/build-vscode.ts",
+    "install:ide": "node tools/install-ide.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@types/vscode": "^1.125.0",
+    "@vscode/vsce": "^3.9.2",
     "happy-dom": "^20.7.0",
     "tree-sitter-cli": "^0.26.6",
     "tree-sitter-cpp": "^0.23.4",

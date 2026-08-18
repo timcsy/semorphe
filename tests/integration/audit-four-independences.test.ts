@@ -101,7 +101,24 @@ import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RAT
 const GUARD_NAME = 'four-independences'
 
 /** 已登錄成 `ViewHost` 的四個視圖。⚠️ `leftPanel`／`bottomPanel` 不在其中——它們是 DOM。 */
-const VIEW_HOSTS = ['blocklyPanel', 'monacoPanel', 'consolePanel', 'variablePanel']
+/**
+ * 視圖那一端在呼叫端叫什麼名字。
+ *
+ * 🔴 **2026-08-18 補上 `codeView`，而那是一次【假改善】的直接產物。**
+ *
+ * spec 140 把 `monacoPanel` 抽成一個角色並改名為 `codeView`，
+ * 而這個清單認不得新名字 → 22 處耦合**憑空消失**，棘輪報「改善了，請下調基線」。
+ *
+ * ⚠️ **但耦合一處都沒少**：`app.ts` 仍然呼叫 `codeView.setCode()`，
+ * 仍然知道方法名。
+ *
+ * > **抽介面讓一個相依【可抽換】，不是讓它【消失】——
+ * > 而一條用名字認耦合的檢查，會把前者報成後者。**
+ *
+ * 🔴 而基線的註記早就寫著：「下降必須是『真的拆掉了』，
+ * 不是『把檔案排除在掃描外』或『改了判準』」——**改名有一樣的效果**。
+ */
+const VIEW_HOSTS = ['blocklyPanel', 'monacoPanel', 'codeView', 'consolePanel', 'variablePanel']
 
 /** 生命週期不是通訊——`view-registry.ts` 的檔頭寫明它由呼叫端直接管。 */
 const LIFECYCLE_METHODS = ['init', 'initialize', 'dispose', 'connectBus']

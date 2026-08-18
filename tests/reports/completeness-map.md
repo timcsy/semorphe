@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：200｜✅ 實作 946｜📄 已宣告不提供 33｜❔ 判不出來 21｜🈳 殼 0｜❌ 缺 0（以路徑數計）
+元件：233｜✅ 實作 1110｜📄 已宣告不提供 34｜❔ 判不出來 21｜🈳 殼 0｜❌ 缺 0（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -14,6 +14,7 @@
 |---|---|---|---|---|---|
 | `cpp:address_of` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:analog_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_resolution` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:analog_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:arithmetic` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:array_2d_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -65,11 +66,17 @@
 | `cpp:default` | ✅ | 📄 | ✅ | ✅ | 📄 |
 | `cpp:define` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:delay` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:delay_microseconds` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:destructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `cpp:dht_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:dht_open` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp:dht_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:digital_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:digital_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp:eeprom_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:eeprom_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:enum` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:exception_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -93,6 +100,11 @@
 | `cpp:io_tie` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:istringstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:lambda` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_char` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_number` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_string` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -109,7 +121,9 @@
 | `cpp:map_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_abs` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_binary` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_constrain` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_gcd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_is_nan` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_lcm` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -122,6 +136,7 @@
 | `cpp:method_override` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:method_virtual` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:method_virtual_pure` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `cpp:micros` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:millis` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
@@ -130,6 +145,7 @@
 | `cpp:operator_overload` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `cpp:pair_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pair_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pin_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pin_constant` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:pin_mode` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -141,6 +157,11 @@
 | `cpp:priority_queue_peek` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:program` | ✅ | ✅ | 📄 | 📄 | ✅ |
 | `cpp:program_exit` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pulse_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_tie` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:queue_back` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:queue_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:queue_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -160,8 +181,14 @@
 | `cpp:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:return` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -193,8 +220,12 @@
 | `cpp:template_function` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:ternary` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:throw` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:tone` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:tone_stop` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:touch_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:try_catch` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:typedef` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp:ultrasonic_trigger` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:using_alias` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:using_namespace` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:var_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -212,3 +243,5 @@
 | `cpp:vector_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:vector_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:vector_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_read` | ✅ | ✅ | ✅ | ✅ | ✅ |

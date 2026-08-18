@@ -1,0 +1,4 @@
+{
+  "C_MICROS_MSG0": "Microseconds since start",
+  "C_MICROS_TOOLTIP": "micros() — microseconds since the sketch started. Note: the simulated clock only resolves to milliseconds, so the last three digits are always 0"
+}
