@@ -101,6 +101,24 @@ export class VscodeCodeView implements CodeView, ViewHost {
   private inFlight = false
   /** 對帳對不上的次數——🔴 診斷指令要顯示它（見 `webview/main.ts`）。 */
   private divergences = 0
+  /**
+   * 最近幾次寫入的流水帳。
+   *
+   * 🔴 **為什麼要留帳**：使用者連續回報「檔案被寫壞了」，而我三次靠推理去修，
+   * 兩次修出新的問題。⚠️ 螢幕截圖說得出**結果**，說不出**是哪一次寫入造成的**。
+   *
+   * > **一個沒有紀錄的系統，只能被推理；
+   * > 而推理出來的修法，要靠下一次災難來驗證對不對。**
+   */
+  private readonly writeLog: string[] = []
+  /** 被安全網擋下來的寫入次數。⚠️ 非 0 代表**上游還有一個真的 bug**。 */
+  private blocked = 0
+
+  /** 只留最近 20 筆——這是診斷用的，不是稽核用的。 */
+  private note(line: string): void {
+    this.writeLog.push(line)
+    if (this.writeLog.length > 20) this.writeLog.shift()
+  }
   /** ⚠️ 在路上時最後一次想要的內容——只留最新的，中間狀態沒有意義。 */
   private queued: string | null = null
   private changeCb: ((code: string) => void) | null = null
@@ -195,6 +213,35 @@ export class VscodeCodeView implements CodeView, ViewHost {
     if (this.inFlight) { this.queued = code; return }
     const span = rewriteSpan(this.mirror, code)
     if (span === null) return   // ⚠️ 沒有差異 → **不產生檔案變更**
+
+    // ─────────────────────────────────────────────────────────────
+    // 🔴 **安全網：一次同步不得刪掉大半個檔案。**
+    //
+    // ⚠️ 這**不是修好了根因**，是把後果從「檔案沒了」降成「這一次沒同步」。
+    //    使用者實測連續遇到：整份 sketch 變成 `int x;`、`setup()`／`loop()` 消失。
+    //    兩者的共同形狀都是**積木那側的內容比檔案少很多，然後寫了回去**。
+    //
+    // > **兩邊不一致的時候，「以少的為準」會刪掉資料，
+    // > 「以多的為準」只會多一次同步——而這兩件事的代價差了一個量級。**
+    //
+    // 判準用**非空白行**，因為排版差異不該算進來。
+    // 🔴 而它必須**出聲**：一個安靜擋下來的寫入，與一個沒有發生的 bug 長得一樣。
+    // ─────────────────────────────────────────────────────────────
+    const solid = (t: string): number => t.split('\n').filter((l) => l.trim() !== '').length
+    const before = solid(this.mirror)
+    const after = solid(code)
+    if (before >= 4 && after * 2 < before) {
+      this.blocked += 1
+      this.note(`⛔ 擋下：${before} → ${after} 行（少了 ${before - after}）`)
+      console.warn(
+        `[semorphe] 擋下一次會刪掉大半檔案的同步：非空白行 ${before} → ${after}。` +
+        `檔案沒有被改。若這是你要的，請用工具列的「積木→程式碼」再按一次。`,
+      )
+      // ⚠️ 讓兩邊回到一致——我們手上的東西已經證明可疑。
+      this.post({ type: 'requestDocument', reason: '擋下一次大量刪除，重新取一份文件' })
+      return
+    }
+    this.note(`✏️ ${span.startLine}–${span.endLine} → ${span.lines.length} 行｜${before} → ${after} 行`)
     this.mirror = code          // 樂觀更新；宿主套用後回報新版本（`applied`）
     this.inFlight = true
     this.post({ type: 'applyEdit', span, baseVersion: this.version })
@@ -230,6 +277,16 @@ export class VscodeCodeView implements CodeView, ViewHost {
   /** 對帳對不上過幾次。⚠️ 0 以外的任何數字都代表**還有一個真的 bug**。 */
   get divergenceCount(): number {
     return this.divergences
+  }
+
+  /** 被安全網擋下來幾次。⚠️ 同上——非 0 代表上游還有問題。 */
+  get blockedCount(): number {
+    return this.blocked
+  }
+
+  /** 最近幾次寫入的流水帳，給診斷指令用。 */
+  get writeHistory(): readonly string[] {
+    return this.writeLog
   }
 
   onCursorChange(callback: (line: number) => void): void {

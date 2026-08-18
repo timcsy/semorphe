@@ -93,9 +93,11 @@ async function boot(): Promise<void> {
 /** 把量測掛上去，並回應宿主的查詢。 */
 function attachDiagnostics(app: App): void {
   /** ⚠️ 走既有的除錯把手，理由同下——診斷不該擴大產品的介面。 */
-  const divergences = (): number =>
-    (app as unknown as { codeView?: { divergenceCount?: number } })
-      .codeView?.divergenceCount ?? 0
+  const view = (): {
+    divergenceCount?: number
+    blockedCount?: number
+    writeHistory?: readonly string[]
+  } => (app as unknown as { codeView?: Record<string, never> }).codeView ?? {}
   let last: DragMeasurement | null = null
   // ⚠️ 走既有的除錯把手（網頁版 `src/main.ts:11` 也掛同一個），
   //    而不是替 `App` 開一個新的公開方法——診斷不該擴大產品的介面。
@@ -111,7 +113,13 @@ function attachDiagnostics(app: App): void {
         `畫布拖曳：${last ? `${last.frames} 幀｜中位 ${last.medianMs.toFixed(1)} ms｜p95 ${last.p95Ms.toFixed(1)} ms → ${last.verdict}` : '（還沒有拖過）'}`,
         `判準：中位數 ≤ 20 且 p95 ≤ 33 → 順；中位數 > 33 或 p95 > 100 → 不順`,
         // 🔴 0 以外的任何數字都代表**還有一個真的 bug**——自癒過不等於沒壞過。
-        `鏡像對帳：對不上 ${divergences()} 次`,
+        `鏡像對帳：對不上 ${view().divergenceCount ?? 0} 次`,
+        `安全網：擋下 ${view().blockedCount ?? 0} 次大量刪除`,
+        '',
+        '最近的寫入（新的在最後）：',
+        ...((view().writeHistory ?? []).length > 0
+          ? (view().writeHistory ?? []).map((l) => `  ${l}`)
+          : ['  （還沒有寫過）']),
       ],
     })
   })
