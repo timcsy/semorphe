@@ -1,0 +1,14 @@
+{
+  "C_PIN_ATTACH_MSG0": "Attach %1 to pin %2 as %3",
+  "C_PIN_ATTACH_TOOLTIP": "Declares a pin constant. The device kind only changes the block label, never the code — the code is one integer constant. Going from code to blocks, the device is guessed from the variable name; when it can't be guessed it shows as \"part\".",
+  "C_PIN_ATTACH_DEV_LED": "an LED",
+  "C_PIN_ATTACH_DEV_BUTTON": "a button",
+  "C_PIN_ATTACH_DEV_BUZZER": "a buzzer",
+  "C_PIN_ATTACH_DEV_TRIG": "an ultrasonic trigger",
+  "C_PIN_ATTACH_DEV_ECHO": "an ultrasonic echo",
+  "C_PIN_ATTACH_DEV_SERVO": "a servo",
+  "C_PIN_ATTACH_DEV_SENSOR": "an analog sensor",
+  "C_PIN_ATTACH_DEV_RELAY": "a relay",
+  "C_PIN_ATTACH_DEV_MOTOR": "a motor",
+  "C_PIN_ATTACH_DEV_UNKNOWN": "a part"
+}

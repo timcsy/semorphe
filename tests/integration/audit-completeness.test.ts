@@ -186,6 +186,26 @@ for (const id of ['cpp:map_at', 'cpp:map_assign']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:map_declare', { name: v, key_type: 'int', value_type: 'int' }, {})]
 }
 
+// **第五個實例**（2026-08-18）：接線積木。
+//
+// 它產出的是 `const int ledPin = 13;`——而**孤立的那一行不足以判斷它是一根腳位**。
+// 辨識判準刻意是「這個名字在整支程式裡有沒有被當腳位用」，因為靠名字認人會把
+// 使用者自己宣告的常數搶走（同一批的腳位常數那顆付過這筆學費）。
+//
+// 🔴 所以合成樣本判成「殼」是**量測的問題，不是實作的問題**——
+// 而把它記進基線當成殼，會讓「還欠幾條路」這個數字**指錯方向**。
+//
+// > **一個保守到需要上下文才敢認的辨識器，用孤立樣本去量，
+// > 量到的一定是「它不認得」——而那正是它對的地方。**
+//
+// ⚠️ 順序不重要：辨識掃的是整棵樹，不是「宣告之前」還是「之後」。
+SAMPLE_CONTEXT['cpp:pin_attach'] = (v) => [
+  createNode('cpp:pin_mode', {}, {
+    pin: [createNode('cpp:var_ref', { name: v }, {})],
+    mode: [createNode('cpp:pin_constant', { value: 'OUTPUT' }, {})],
+  }),
+]
+
 /**
  * ⚠️ **試過、失敗、還原：** 把角色是「運算式」的概念一律包進
  * `auto __probe = …` 再量。

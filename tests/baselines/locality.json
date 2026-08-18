@@ -494,6 +494,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:pin_attach": {
+      "files": 4,
+      "dirs": 1
+    },
     "cpp:pin_constant": {
       "files": 2,
       "dirs": 1
@@ -771,6 +775,10 @@
       "dirs": 1
     },
     "cpp:typedef": {
+      "files": 4,
+      "dirs": 1
+    },
+    "cpp:ultrasonic_trigger": {
       "files": 4,
       "dirs": 1
     },

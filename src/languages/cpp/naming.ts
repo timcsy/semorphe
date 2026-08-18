@@ -31,6 +31,10 @@ import type { NamingVocabulary } from '../../core/naming'
  */
 export const SUBJECTS = [
   'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum',
+  // ⚠️ `ultrasonic` 加入日 2026-08-18——`cpp:ultrasonic_trigger`。
+  //    主體是「超音波模組」，🔴 而它**不叫 `hcsr04`**：型號是一個廠牌，
+  //    不是一個概念。換一顆同樣接法的模組，這顆積木一個字都不必改。
+  'ultrasonic',
   // ⚠️ `exception` 加入日 2026-08-13——`cpp:exception_make`（`runtime_error("…")`）。
   // 主體是「例外」，種類（runtime／logic／out_of_range…）是**參數**不是身分，
   // 與 `container_push` 把容器種類當參數同一個形狀。
@@ -85,6 +89,14 @@ export const SUBJECTS = [
  */
 export const OPERATIONS = [
   'append', 'assign', 'at', 'call', 'cast', 'clear', 'count', 'declare',
+  // ⚠️ `attach` ——「把一個零件接到一根腳位上」。**不與 `assign` 合併**：
+  //    指派是「把值放進一個位置」，接線是「宣告一個名字代表這根腳位」，
+  //    而學生手上真的有一條線要插。🔴 同義詞合併的判準是語義，不是詞形。
+  'attach',
+  // ⚠️ `trigger` ——「送出觸發脈衝」。**不與 `push`／`write` 合併**：
+  //    它送的不是一個值，是一個【有時序的訊號】（拉低 2 µs、拉高 10 µs、再拉低），
+  //    而那個時序就是它的全部語義。
+  'trigger',
   'abs', 'append', 'as', 'back', 'compare', 'copy', 'deref', 'exit', 'fill',
   'front', 'gcd', 'is', 'lcm', 'max', 'min', 'next', 'replace', 'reverse',
   'seed', 'sort', 'substr', 'sum', 'to',

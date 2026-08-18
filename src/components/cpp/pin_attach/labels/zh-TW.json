@@ -1,0 +1,14 @@
+{
+  "C_PIN_ATTACH_MSG0": "接上 %1 到腳位 %2，叫它 %3",
+  "C_PIN_ATTACH_TOOLTIP": "宣告一個腳位常數。零件種類只影響積木上的標籤，不影響程式碼——程式碼裡就是一行整數常數。程式碼轉積木時，零件從變數名猜；猜不出來就顯示「零件」。",
+  "C_PIN_ATTACH_DEV_LED": "LED",
+  "C_PIN_ATTACH_DEV_BUTTON": "按鈕",
+  "C_PIN_ATTACH_DEV_BUZZER": "蜂鳴器",
+  "C_PIN_ATTACH_DEV_TRIG": "超音波觸發腳",
+  "C_PIN_ATTACH_DEV_ECHO": "超音波回音腳",
+  "C_PIN_ATTACH_DEV_SERVO": "伺服馬達",
+  "C_PIN_ATTACH_DEV_SENSOR": "類比感測器",
+  "C_PIN_ATTACH_DEV_RELAY": "繼電器",
+  "C_PIN_ATTACH_DEV_MOTOR": "馬達",
+  "C_PIN_ATTACH_DEV_UNKNOWN": "零件"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "cpp_pin_attach",
+  "astNodeType": "declaration",
+  "concept": { "conceptId": "cpp:pin_attach" },
+  "liftStrategy": "cpp:liftPinAttach",
+  "priority": 25
+}

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp_pin_attach",
+    "conceptId": "cpp:pin_attach",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pin_attach",
+      "message0": "%{BKY_C_PIN_ATTACH_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "DEVICE",
+          "options": [
+            ["%{BKY_C_PIN_ATTACH_DEV_LED}", "led"],
+            ["%{BKY_C_PIN_ATTACH_DEV_BUTTON}", "button"],
+            ["%{BKY_C_PIN_ATTACH_DEV_BUZZER}", "buzzer"],
+            ["%{BKY_C_PIN_ATTACH_DEV_TRIG}", "ultrasonic_trig"],
+            ["%{BKY_C_PIN_ATTACH_DEV_ECHO}", "ultrasonic_echo"],
+            ["%{BKY_C_PIN_ATTACH_DEV_SERVO}", "servo"],
+            ["%{BKY_C_PIN_ATTACH_DEV_SENSOR}", "analog_sensor"],
+            ["%{BKY_C_PIN_ATTACH_DEV_RELAY}", "relay"],
+            ["%{BKY_C_PIN_ATTACH_DEV_MOTOR}", "motor"],
+            ["%{BKY_C_PIN_ATTACH_DEV_UNKNOWN}", "unknown"]
+          ]
+        },
+        { "type": "field_number", "name": "PIN", "value": 13, "min": 0, "precision": 1 },
+        { "type": "field_input", "name": "NAME", "text": "ledPin" }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PIN_ATTACH_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": { "DEVICE": "device", "PIN": "pin", "NAME": "name" },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

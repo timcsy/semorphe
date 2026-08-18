@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cpp_ultrasonic_trigger",
+    "astNodeType": "compound_statement",
+    "concept": {
+      "conceptId": "cpp:ultrasonic_trigger"
+    },
+    "liftStrategy": "cpp:liftUltrasonicTrigger",
+    "priority": 30
+  },
+  {
+    "id": "cpp_ultrasonic_trigger_toplevel",
+    "astNodeType": "translation_unit",
+    "concept": {
+      "conceptId": "cpp:ultrasonic_trigger"
+    },
+    "liftStrategy": "cpp:liftUltrasonicTrigger",
+    "priority": 30
+  }
+]

@@ -196,9 +196,23 @@ export class PatternLifter {
           // Strategy threw — skip this pattern
           return null
         }
-      } else {
-        console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
       }
+      // 🔴 **宣告了策略卻找不到它 → 這一筆樣式【整個不算】，不往下走。**
+      //
+      // 原本這裡只 `console.warn` 然後落到下面的 `matchSimple`——而那會
+      // **無條件**建出這個身分的節點，也就是做出與策略意圖**相反**的事：
+      // 策略的存在本來就是因為「要跑真邏輯才判得出來」。
+      //
+      // 2026-08-18 被一顆掛在 `translation_unit` 上的策略引爆：某支測試沒有
+      // 登錄膠囊的策略表，於是**每一支程式的根節點**都被判成那顆概念，
+      // 31 支測試一起紅。⚠️ 而在此之前它已經無聲地錯了很久——既有的 11 顆
+      // 膠囊策略在同一支測試裡也都落到 `matchSimple`，只是它們的節點型別
+      // （`enum_specifier`／`lambda_expression`…）剛好沒在那些程式裡出現。
+      //
+      // > **一個警告完卻做出相反行為的分支，比沒有警告更糟——
+      // > 它讓「壞了」看起來像「注意一下」。**
+      console.warn(`[PatternLifter] liftStrategy "${entry.liftStrategy}" not found in registry`)
+      return null
     }
 
     switch (entry.patternType) {

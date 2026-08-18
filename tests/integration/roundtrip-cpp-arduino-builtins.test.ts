@@ -131,6 +131,28 @@ void loop() {
 }
 `
 
+/**
+ * ⑤ **軟體 PWM**——`delayMicroseconds` 在超音波以外的真實用法。
+ *
+ * 🔴 加入日 2026-08-18：第 1 批把觸發序列摺成一顆之後，②不再覆蓋
+ * `delay_microseconds`。而本檔的標題斷言是「九顆全部被覆蓋到」——
+ * ⚠️ **不補的話那句話會變成假的，而它仍然是綠的。**
+ *
+ * 這段刻意**不是**觸發序列的形狀（HIGH → 等 → LOW → 等，而觸發是
+ * LOW → 2µs → HIGH → 10µs → LOW），所以它不會被摺。
+ */
+const SOFT_PWM = `void setup() {
+  pinMode(9, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(9, HIGH);
+  delayMicroseconds(500);
+  digitalWrite(9, LOW);
+  delayMicroseconds(1500);
+}
+`
+
 const MIXED = `void setup() {
   Serial.begin(9600);
   analogReadResolution(12);
@@ -155,16 +177,27 @@ describe('第 0 批九顆湊在一起（Arduino 內建函式）', () => {
     expect(a.filter((c) => c === 'cpp:tone')).toHaveLength(2)
   })
 
-  it('② 🔴 超音波：delayMicroseconds ＋ pulseIn ＋ map ＋ constrain（主場景）', () => {
+  it('② 🔴 超音波：觸發序列【已被第 1 批摺成一顆】，而換算沒有', () => {
     const { once, twice, a, b } = roundTrip(ULTRASONIC)
     expectOwn(a, [
-      'cpp:delay_microseconds', 'cpp:pulse_read', 'cpp:math_constrain',
-      'cpp:digital_write', 'cpp:pin_mode', 'cpp:serial_open', 'cpp:serial_print', 'cpp:delay',
+      'cpp:ultrasonic_trigger', 'cpp:pulse_read', 'cpp:math_constrain',
+      'cpp:pin_mode', 'cpp:serial_open', 'cpp:serial_print', 'cpp:delay',
     ])
     expect(twice).toBe(once)
     expect(b).toEqual(a)
-    // 三次 delayMicroseconds（2 / 10 / …）——⚠️ 這裡是兩次
-    expect(a.filter((c) => c === 'cpp:delay_microseconds')).toHaveLength(2)
+    // 🔴 **這一條在 2026-08-18 從「兩次 delayMicroseconds」改成「零次」。**
+    //
+    // 第 1 批把那五句觸發序列摺成一顆積木——資格是數出來的（100 段語料裡
+    // 用到超音波的 14 段，觸發序列 14/14 完全一致）。⚠️ 而摺進去之後，
+    // 這一段就**不再覆蓋** `delay_microseconds` 與 `digital_write` 了。
+    //
+    // > **一顆預組積木把它摺掉的那些概念，從別人的覆蓋清單裡一起帶走。**
+    //
+    // 覆蓋補在下面的⑤（軟體 PWM——`delayMicroseconds` 真實的另一種用法）。
+    expect(a.filter((c) => c === 'cpp:delay_microseconds')).toHaveLength(0)
+    expect(a.filter((c) => c === 'cpp:ultrasonic_trigger')).toHaveLength(1)
+    // ⚠️ 而換算那兩句**必須還在**——摺的只有觸發（觸發＋換算緊鄰只有 9/14）
+    expect(a).toContain('cpp:pulse_read')
   })
 
   it('③ 序列埠輸入：available ＋ read 的成對寫法', () => {
@@ -194,8 +227,21 @@ describe('第 0 批九顆湊在一起（Arduino 內建函式）', () => {
     expect(bad, `殘差 ${bad.length}/${all.length}`).toHaveLength(0)
   })
 
-  it('🔴 九顆【全部】在這四段裡被覆蓋到——沒有一顆是靠單顆測試自證的', () => {
-    const all = new Set([BUZZER, ULTRASONIC, SERIAL_IN, MIXED].flatMap((s) => ids(lift(s))))
+  it('⑤ 軟體 PWM：delayMicroseconds 的另一種真實用法（不得被摺）', () => {
+    const { once, twice, a, b } = roundTrip(SOFT_PWM)
+    expectOwn(a, ['cpp:delay_microseconds', 'cpp:digital_write', 'cpp:pin_mode'])
+    expect(twice).toBe(once)
+    expect(b).toEqual(a)
+    // 🔴 這段不是觸發序列的形狀——摺了就是誤認
+    expect(a).not.toContain('cpp:ultrasonic_trigger')
+    expect(a.filter((c) => c === 'cpp:delay_microseconds')).toHaveLength(2)
+  })
+
+  it('🔴 九顆【全部】在這五段裡被覆蓋到——沒有一顆是靠單顆測試自證的', () => {
+    // ⚠️ **從四段變五段**（2026-08-18）：第 1 批把超音波的觸發序列摺成一顆，
+    //    ②因此不再產出 `delay_microseconds`——而這一條當場變紅。
+    //    🟢 **那正是它存在的理由**：覆蓋被別人帶走時要有人叫。
+    const all = new Set([BUZZER, ULTRASONIC, SERIAL_IN, MIXED, SOFT_PWM].flatMap((s) => ids(lift(s))))
     const BATCH0 = [
       'cpp:micros', 'cpp:delay_microseconds', 'cpp:tone', 'cpp:tone_stop', 'cpp:pulse_read',
       'cpp:math_constrain', 'cpp:analog_resolution', 'cpp:serial_count', 'cpp:serial_read',

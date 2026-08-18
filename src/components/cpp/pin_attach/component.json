@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:pin_attach",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:var_declare",
+  "_abstractConcept_why": "它**產出的就是一個常數宣告**（`const int ledPin = 13;`）。抽象概念記的是「拆開之後我是什麼」，而那正是這顆的降級路徑：D1 預組 → D2 展開成既有的**常數宣告元件**，⚠️ **不是 raw_code**。\n\n⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 裡。",
+  "properties": [
+    {
+      "name": "device",
+      "kind": "enum",
+      "values": [
+        "led", "button", "buzzer", "ultrasonic_trig", "ultrasonic_echo",
+        "servo", "analog_sensor", "relay", "motor", "unknown"
+      ],
+      "default": "unknown",
+      "_default_why": "🔴 預設是 `unknown`（顯示成「零件」）而不是 `led`。**認不出來要看起來像認不出來**——一個預設成 LED 的欄位會讓「猜錯」與「沒猜」長得一樣，而那是第三十三條護欄在看的靜默回退。"
+    },
+    { "name": "pin", "kind": "number", "default": "13" },
+    { "name": "name", "kind": "identifier", "default": "ledPin" }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "照 `pin_constant`／`pin_mode`：**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
+  },
+  "_lift_why": "🔴 **身分由【結構】決定，名字只決定【標籤】。**\n\n這一條是同資料夾層級的鄰居付過學費的（見那顆腳位常數元件的 `_lift_why`：第三十二條護欄抓到 `enum Level { LOW = -1 }` 被搶走）：\n\n> **一個靠「識別字的名字」認人的樣式，會把使用者自己宣告的名字搶走。**\n\n所以判準**不是**「名字裡有沒有 pin」，而是：\n\n```\nconst <整數型別> X = <整數字面量>;        ← 結構\n  ＋ X 在【整支程式】某處出現在腳位函式的第一個引數\n  → 是這顆\n否則 → 回 null，落回既有的常數宣告元件（不搶）\n```\n\n🟢 **走得到整支程式**：`AstNode` 有 `parent`，從節點往上走到根就掃得到。⚠️ 核心的逐節點後處理掛點（`post-processors.ts`）合併不了東西，**而這顆不需要合併，它只需要查詢**。\n\n**device 從名字讀**，用 100 段語料量出來的詞根表（`runtime/device-names.ts`，命中率 90.2%）。🔴 **認不出來回 `unknown`，而那不是失敗**——結構仍然是這顆，只有標籤退成通用的「零件」。那正是「辨識不出來 → 退回原始積木打底」的精確版本：**退的是標籤，不是結構**。"
+}

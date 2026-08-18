@@ -15,6 +15,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../../src/core/registry'
+import { componentLiftStrategyRegistrars } from '../../src/core/component/paths'
 import { registerCppTransforms } from '../../src/languages/cpp/core/lifters/transforms'
 import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/strategies'
 import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -72,6 +73,14 @@ beforeAll(async () => {
   registerCppTransforms(transformRegistry)
   const liftStrategyRegistry = new LiftStrategyRegistry()
   registerCppLiftStrategies(liftStrategyRegistry)
+  // ⚠️ **膠囊自帶的策略是【另一半】**——與上面那行是不同的登錄表。
+  //
+  // 少了這一行，`componentLiftPatterns()` 載進來的樣式會宣告一個查不到的
+  // 策略名。🔴 而在 2026-08-18 修掉 `PatternLifter` 的落空分支之前，那些樣式
+  // 會**無條件**建出概念節點——同一個病 `loadLiftPatterns` 上面那段註解
+  // 也記過：「一份少一半的組裝，錯誤訊息會指向被害者，不是兇手。」
+  for (const reg of componentLiftStrategyRegistrars())
+    (reg as (r: LiftStrategyRegistry) => void)(liftStrategyRegistry)
 
   const pl = new PatternLifter()
   pl.setTransformRegistry(transformRegistry)

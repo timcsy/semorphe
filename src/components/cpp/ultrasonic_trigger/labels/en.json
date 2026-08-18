@@ -1,0 +1,4 @@
+{
+  "C_ULTRASONIC_TRIGGER_MSG0": "Send an ultrasonic trigger pulse on pin %1",
+  "C_ULTRASONIC_TRIGGER_TOOLTIP": "An ultrasonic module fires only after it receives a 10 microsecond HIGH pulse. This block stands for five lines: pull LOW for 2 microseconds to settle, HIGH for 10, then LOW again. Then use \"read pulse width\" for the echo time; multiply by 0.034 and divide by 2 for centimetres."
+}
