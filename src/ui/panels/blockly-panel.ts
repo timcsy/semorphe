@@ -134,7 +134,9 @@ export class BlocklyPanel implements ViewHost {
         //
         // 處置有兩半，缺一不可：**說出來**，以及**記住這份工作區不可信**。
         this.stateLoadFailed = true
-        this.lastStateError = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+        const culprit = this.isolateFailingBlock(event.blockState as object)
+        this.lastStateError = (err instanceof Error ? `${err.name}: ${err.message}` : String(err))
+          + `　｜出事的積木：${culprit}`
         this.lastStateStack = err instanceof Error && err.stack
           // 只留前 8 層——再深就是 Blockly 內部的細節，而診斷輸出要看得完。
           ? err.stack.split('\n').slice(1, 9).map((l) => l.trim()).join('\n')
@@ -699,6 +701,70 @@ export class BlocklyPanel implements ViewHost {
   getState(): object {
     if (!this.workspace) return {}
     return Blockly.serialization.workspaces.save(this.workspace)
+  }
+
+  /**
+   * 🔴 **失敗時，把「狀態裡的某處」縮小成「這一顆積木」。**
+   *
+   * ## 為什麼需要它
+   *
+   * `Blockly.serialization.workspaces.load` 拋錯時只給一個訊息
+   * （實測：`TypeError: Cannot read properties of undefined (reading 'indexOf')`），
+   * ⚠️ **而那句話對「是哪一顆積木害的」一個字都沒說**。
+   *
+   * 2026-08-18 這個缺陷**只在 Arduino IDE（Theia）出現**，Chromium 用相同的
+   * 檔案內容重現不到——於是我連續猜了三個假設，三個都錯。
+   *
+   * > **推理的替代品不是更好的推理，是把失敗的輸入縮到最小。**
+   *
+   * ## 做法
+   *
+   * 拿一個**沒有畫布的 `Blockly.Workspace`**（序列化不需要 SVG），
+   * 對狀態做遞迴下降：整棵失敗 → 試每個子樹 → 回報**仍然會失敗的最深那一顆**。
+   *
+   * ⚠️ 回傳 `null` 有兩種意思，而它們要分得出來：
+   * **逐顆都載得起來**（＝問題在組合，不在單顆）與 **隔離本身失敗了**。
+   */
+  private isolateFailingBlock(state: object): string {
+    interface B { type?: string; extraState?: unknown; next?: { block?: B }; inputs?: Record<string, { block?: B }> }
+    const root = (state as { blocks?: { blocks?: B[] } }).blocks?.blocks
+    if (!Array.isArray(root) || root.length === 0) return '（狀態裡沒有積木——問題不在單顆積木上）'
+
+    let scratch: Blockly.Workspace
+    try {
+      scratch = new Blockly.Workspace()
+    } catch {
+      return '（隔離失敗：連一個空工作區都建不起來）'
+    }
+
+    const fails = (b: B): Error | null => {
+      try {
+        scratch.clear()
+        Blockly.serialization.workspaces.load({ blocks: { languageVersion: 0, blocks: [b] } }, scratch)
+        return null
+      } catch (e) {
+        return e instanceof Error ? e : new Error(String(e))
+      }
+    }
+
+    /** 往下縮：只要某個孩子自己也會失敗，答案就在孩子那裡。 */
+    const narrow = (b: B): B => {
+      const kids: B[] = []
+      if (b.next?.block) kids.push(b.next.block)
+      for (const inp of Object.values(b.inputs ?? {})) if (inp?.block) kids.push(inp.block)
+      for (const k of kids) if (fails(k)) return narrow(k)
+      return b
+    }
+
+    for (const top of root) {
+      const err = fails(top)
+      if (!err) continue
+      const culprit = narrow(top)
+      const extra = culprit.extraState === undefined ? '' : `　extraState=${JSON.stringify(culprit.extraState)}`
+      return `${culprit.type ?? '(沒有 type)'}${extra}　→ ${err.name}: ${err.message}`
+    }
+    // 🔴 每一顆單獨都載得起來 —— 那代表問題在【組合】，不在單顆。
+    return '（逐顆都載得起來——問題在積木的組合，不在單一積木）'
   }
 
   setState(state: object): void {
