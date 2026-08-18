@@ -26,7 +26,7 @@
     }
   ],
   "children": {
-    "initializer": "expression"
+    "initializer": "expressions"
   },
   "role": "statement",
   "declaresVariableType": "LiquidCrystal",
@@ -42,5 +42,6 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
-  }
+  },
+  "_children_why": "🔴 **複數**——建構參數的個數真的會變（伺服 0、溫濕度 2、並列液晶 6、I2C 液晶 3）。\n\n⚠️ 第一版寫 `'expression'`（單數），而它**裝的是三個**。那讓「投影遺失」那條護欄只填一個去驗——**兩邊都是 1，看起來完全健康**。\n\n> **一個說謊的宣告會讓信任它的護欄一起說謊。**"
 }

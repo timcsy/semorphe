@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "guard": "projection-loss",
+    "measuredAt": "2026-08-18",
+    "rule": "一顆元件宣告的接點，填滿之後渲染成積木狀態，每一個子節點都要找得到落點。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 掃描 170 顆。⚠️ 變動數量的接點填 3 個——填一個會蓋住「只放得下第一個」這個病（液晶那顆的症狀就是它）。 🔴 而本護欄只量【渲染】那一半：綠不代表積木沒問題，只代表宣告的接點沒有在渲染時被丟掉。"
+  },
+  "items": [
+    "cpp:class_def::protected",
+    "cpp:forward_decl::params",
+    "cpp:ifstream_declare::initializer",
+    "cpp:new::size",
+    "cpp:ofstream_declare::initializer",
+    "cpp:pair_declare::source",
+    "cpp:string_append_char::value",
+    "cpp:string_find::from",
+    "cpp:struct_at_member::obj",
+    "cpp:template_function::params",
+    "cpp:vector_declare::source",
+    "cpp:vector_declare::size",
+    "cpp:vector_declare::fill"
+  ],
+  "undecidable": [
+    "cpp:var_declare::initializer",
+    "cpp:var_declare::declarators"
+  ]
+}
