@@ -738,6 +738,14 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:tone": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:tone_stop": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:try_catch": {
       "files": 4,
       "dirs": 1

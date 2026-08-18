@@ -188,6 +188,8 @@
     "cpp:template_function",
     "cpp:ternary",
     "cpp:throw",
+    "cpp:tone",
+    "cpp:tone_stop",
     "cpp:try_catch",
     "cpp:typedef",
     "cpp:using_alias",

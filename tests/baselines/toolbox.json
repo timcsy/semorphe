@@ -266,7 +266,9 @@
         "cpp_digital_write",
         "cpp_micros",
         "cpp_millis",
-        "cpp_pin_mode"
+        "cpp_pin_mode",
+        "cpp_tone",
+        "cpp_tone_stop"
       ]
     },
     {

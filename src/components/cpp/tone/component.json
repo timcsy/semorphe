@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:tone",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "pin": "expression",
+    "frequency": "expression",
+    "duration": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "🔴 **蜂鳴器在模擬裡是【狀態】不是【輸出】**——寫進腳位狀態（`core/runtime/arduino-pins.ts` 的 `toneHz`／`toneMs`），照 `analog_write` 的先例，**零輸出**。⚠️ 因為 `ctx.io` 是**程式的輸出**（學生的序列埠走同一條），把模擬器的旁白寫進那裡會讓程式的輸出變成錯的。已知後果：按執行時蜂鳴器什麼都不會發生——那是視圖層的缺口（板子視圖已推遲），不是用汙染輸出去補的。",
+  "_generate_why": "第三個引數（毫秒）**可選**——沒有時不得產出空的逗號（`tone(8, 440,)` 編不過）。"
+}

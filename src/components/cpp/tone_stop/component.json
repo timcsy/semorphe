@@ -1,0 +1,19 @@
+{
+  "conceptId": "cpp:tone_stop",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": { "pin": "expression" },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "清掉腳位狀態上的頻率——與發聲那一顆共用同一份狀態，否則「停了沒有」問不出來。",
+  "_lift_why": "程式碼裡的名字是 `noTone`，而**身分不叫 `no_tone`**：`no_` 是語法的否定前綴，不是語義。這顆做的事是**停止**，而 `stop` 是詞彙表裡的操作。"
+}
