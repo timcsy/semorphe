@@ -57,6 +57,14 @@ export interface HostFeatures {
   mobileLayout: boolean
   /** 輔助輸入鍵盤（它需要底層編輯器） */
   codeKeyboard: boolean
+  /**
+   * 面板裡要不要留一格給程式碼編輯器。
+   *
+   * 🔴 **`false` 的意思不是「藏起來」，是「那一格不存在」** ——
+   * 一個把文字編輯交給宿主的面板，留一塊空白給不存在的編輯器
+   * 就是把版面浪費掉。
+   */
+  codeEditorPane: boolean
 }
 
 export type HostFeatureName = keyof HostFeatures

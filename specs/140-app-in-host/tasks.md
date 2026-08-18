@@ -92,13 +92,13 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 ## Phase 5：User Story 1＋2 —— 面板就是網頁版（P1）
 
 - [x] T021 [US1] 建立 `src/vscode/webview/vscode-code-view.ts`：實作 A/B/D；C 類不實作而在 `absentReasons` 寫理由
-- [ ] T022 [US1] 把 spec 139 的**文字鏡像 ＋ 樂觀更新 ＋ `baseVersion` 比對**從 `webview/main.ts` 搬進 T021（🔴 **搬不是重寫**）
-- [ ] T023 [US1] 把 spec 139 的**高亮轉送**（`revealNode` / `executionAt`）搬進 T021 的 `addHighlight` / `onExecutionAtNode`
-- [ ] T024 [US1] 把 spec 139 的**游標轉送**搬進 T021 的 `onCursorChange`
-- [ ] T025 [US1] 於 `src/vscode/webview-html.ts` 把 `#canvas`／`#readout`／`#bar`／`#out` 換成單一個 `#app`
-- [ ] T026 [US1] 把 `src/vscode/webview/main.ts` 縮成薄殼：建 profile → `new App(profile)` → `init()`
-- [ ] T027 [US2] 於 `src/vscode/panel.ts` 確認組態訊息接到 profile 的設定路徑（沿用 139 的 `config`）
-- [ ] T028 [US1] 建置 ＋ 預檢：確認**工具列／畫布／下方分頁／狀態列**都在，而**沒有程式碼編輯區**
+- [x] T022 [US1] 把 spec 139 的**文字鏡像 ＋ 樂觀更新 ＋ `baseVersion` 比對**從 `webview/main.ts` 搬進 T021（🔴 **搬不是重寫**）
+- [x] T023 [US1] 把 spec 139 的**高亮轉送**（`revealNode` / `executionAt`）搬進 T021 的 `addHighlight` / `onExecutionAtNode`
+- [x] T024 [US1] 把 spec 139 的**游標轉送**搬進 T021 的 `onCursorChange`
+- [x] T025 [US1] 於 `src/vscode/webview-html.ts` 把 `#canvas`／`#readout`／`#bar`／`#out` 換成單一個 `#app`
+- [x] T026 [US1] 把 `src/vscode/webview/main.ts` 縮成薄殼：建 profile → `new App(profile)` → `init()`
+- [x] T027 [US2] 於 `src/vscode/panel.ts` 確認組態訊息接到 profile 的設定路徑（沿用 139 的 `config`）
+- [x] T028 [US1] 建置 ＋ 預檢：確認**工具列／畫布／下方分頁／狀態列**都在，而**沒有程式碼編輯區**
 
 **關卡（SC-002）**：預檢數得出四個區塊；console 錯誤 0。
 

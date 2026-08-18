@@ -91,6 +91,8 @@ export function csp(source: string): string {
 
 export interface HtmlParts {
   scriptSrc: string
+  /** 應用的樣式表——🔴 **與網頁版同一份**，這裡不另外做一套。 */
+  styleSrc: string
   /** ⚠️ **必須以 `/` 結尾**——Blockly 直接把它當前綴接檔名。 */
   mediaSrc: string
   csp: string
@@ -107,53 +109,26 @@ export function renderHtml(parts: HtmlParts): string {
 <meta http-equiv="Content-Security-Policy" content="${parts.csp}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Semorphe</title>
+<link rel="stylesheet" href="${escapeAttr(parts.styleSrc)}">
 <style>
-  html, body { height: 100%; margin: 0; padding: 0; }
-  body { display: flex; flex-direction: column;
-         font-family: var(--vscode-font-family, sans-serif);
-         color: var(--vscode-foreground, #ccc);
-         background: var(--vscode-editor-background, #1e1e1e); }
-  #canvas { flex: 1 1 auto; min-height: 240px; }
-  #readout { flex: 0 0 auto; padding: 8px 10px; font-size: 12px; line-height: 1.6;
-             border-top: 1px solid var(--vscode-panel-border, #333);
-             max-height: 45%; overflow: auto; }
-  .row { display: flex; justify-content: space-between; gap: 12px; }
-  .k { opacity: .7; }
-  .v { font-variant-numeric: tabular-nums; }
-  .v.ok { color: #4caf50; font-weight: 600; }
-  .v.mid { color: #ffb300; font-weight: 600; }
-  .v.warn { color: #ef5350; font-weight: 600; }
-  .v.hint { opacity: .55; }
-  .verdict { margin-top: 4px; border-top: 1px dashed var(--vscode-panel-border, #333); padding-top: 4px; }
-  .criterion { margin-top: 4px; opacity: .5; font-size: 11px; }
-  .fatal { color: #ef5350; white-space: pre-wrap; font-size: 11px; }
-  #bar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
-         padding: 5px 10px; border-top: 1px solid var(--vscode-panel-border, #333); }
-  #bar button { font: inherit; font-size: 12px; padding: 2px 10px; cursor: pointer;
-                color: var(--vscode-button-foreground, #fff);
-                background: var(--vscode-button-background, #0e639c);
-                border: none; border-radius: 3px; }
-  #bar button:disabled { opacity: .45; cursor: default; }
-  #runstate { font-size: 12px; opacity: .7; }
-  #out { flex: 0 0 auto; margin: 0; padding: 6px 10px; max-height: 22%; overflow: auto;
-         font-size: 11px; white-space: pre-wrap;
-         border-top: 1px solid var(--vscode-panel-border, #333); }
+  /* ⚠️ 只有【面板與整頁的差別】住在這裡——其餘的樣式與網頁版共用同一份。
+     🔴 而這裡刻意【不】改任何顏色或間距：目標是「一樣」，不是「更好」。 */
+  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+  #app { height: 100%; }
 </style>
 </head>
 <body>
-<!-- media 根走 data 屬性，不走行內 script。
+<!-- 🔴 **一個容器，其餘交給應用本身。**
+     spec 139 這裡有 #canvas / #readout / #bar / #out ——那是一個【另做的東西】。
+     而使用者要的是「像網頁版，只是文字編輯交給 IDE」，所以這裡與
+     網頁版的 index.html 一樣：一個 #app。
+     ⚠️ 註解裡不要用反引號——這整段住在一個樣板字串裡，
+        反引號會把它切斷（2026-08-18 第二次踩到）。
+
+     media 根走 data 屬性，不走行內 script：
      script-src 沒有 nonce 也沒有 unsafe-inline，所以行內腳本不會執行
-     ——而症狀是「畫布一片空白」，沒有任何錯誤指向這裡。 -->
-<div id="canvas" data-blockly-media="${escapeAttr(parts.mediaSrc)}"></div>
-<div id="bar">
-  <button id="step" title="走一步，看積木亮到哪">▶| 單步</button>
-  <button id="stop" title="停止並清除高亮">■ 停止</button>
-  <span id="runstate">閒置</span>
-</div>
-<!-- ⚠️ 輸出區【不是重點】——使用者定調「執行的用意是高亮」。
-     真的要看輸出，他自己在 IDE 裡編譯／燒錄，那才準。 -->
-<pre id="out"></pre>
-<div id="readout">載入中…</div>
+     ——而症狀是「面板一片空白」，沒有任何錯誤指向這裡。 -->
+<div id="app" data-blockly-media="${escapeAttr(parts.mediaSrc)}"></div>
 <script type="module" src="${escapeAttr(parts.scriptSrc)}"></script>
 </body>
 </html>`

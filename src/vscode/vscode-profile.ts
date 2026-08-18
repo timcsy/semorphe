@@ -71,10 +71,12 @@ export const vscodeProfile: HostProfile = {
     fileButtons: false,
     mobileLayout: false,
     codeKeyboard: false,
+    codeEditorPane: false,
   },
   featureReasons: {
     fileButtons: '開檔／存檔／匯入匯出由 IDE 擔任——面板再放一份會有兩個「目前的檔案」',
     mobileLayout: '這個宿主是桌面應用，沒有行動版',
     codeKeyboard: '輔助輸入鍵盤要操作底層編輯器，而這裡的編輯器不歸我們管',
+    codeEditorPane: '程式碼在 IDE 的編輯器裡——面板留一格空白給它只是浪費版面',
   },
 }

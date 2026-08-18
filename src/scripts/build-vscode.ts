@@ -80,6 +80,15 @@ function main(): void {
     cpSync(join('public', w), join(OUT, 'dist', w))
   }
 
+  // 2d. 工具列的 logo。
+  //
+  // ⚠️ `ui/app-shell.ts` 的工具列寫的是**相對路徑** `logo.svg`——網頁版靠
+  //    頁面的 base URL 解析。而在這裡頁面的位置是 `dist/`，所以檔案要在那裡。
+  //
+  // 🔴 **刻意不改 app-shell** ——那會動到網頁版，而這一刀的硬條件是
+  //    「網頁版一個像素都不能變」。**把檔案放到它找得到的地方，比改它去找檔案安全。**
+  cpSync('public/logo.svg', join(OUT, 'dist', 'logo.svg'))
+
   // 3. 擴充的宣告。
   //
   // 🔴 版本號來自 `manifest.ts` 自己的 `EXTENSION_VERSION`，**不是根 package.json**。
@@ -99,6 +108,7 @@ function main(): void {
     join(OUT, 'dist', 'preview.html'),
     renderHtml({
       scriptSrc: './webview.js',
+      styleSrc: './webview.css',
       mediaSrc: './media/',
       // 🔴 **用同一個 `csp()` 函式**，只把來源換成 `'self'`。
       //

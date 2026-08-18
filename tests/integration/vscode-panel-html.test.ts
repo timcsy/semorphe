@@ -96,15 +96,18 @@ describe('CSP', () => {
 describe('renderHtml', () => {
   const parts = {
     scriptSrc: 'vscode-resource://x/dist/webview.js',
+    styleSrc: 'vscode-resource://x/dist/webview.css',
     mediaSrc: 'vscode-resource://x/dist/media/',
     csp: csp(SOURCE),
   }
 
-  it('正向錨點：畫布、讀數、腳本都在', () => {
+  it('正向錨點：容器、樣式、腳本都在', () => {
+    // 🔴 spec 140 起這裡只有**一個容器**——其餘由應用自己建。
+    //    ⚠️ spec 139 有 #canvas / #readout / #bar / #out，而那是一個【另做的東西】。
     const html = renderHtml(parts)
-    expect(html).toContain('id="canvas"')
-    expect(html).toContain('id="readout"')
+    expect(html).toContain('id="app"')
     expect(html).toContain(parts.scriptSrc)
+    expect(html, '🔴 樣式要與網頁版同一份').toContain(parts.styleSrc)
   })
 
   it('🔴 零個行內 `<script>`——行內腳本會被 CSP 擋掉', () => {

@@ -299,7 +299,8 @@ export class App {
       onClear: () => this.blocklyPanel?.clear(),
     })
 
-    setupFileButtons(this.storageService, {
+    // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
+    if (this.profile.features.fileButtons) setupFileButtons(this.storageService, {
       getExportState: () => this.buildSaveState(),
       importState: (state: SavedState) => {
         if (state.blocklyState && Object.keys(state.blocklyState).length > 0) this.blocklyPanel?.setState(state.blocklyState)

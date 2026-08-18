@@ -322,6 +322,8 @@ class SemorpheSession {
       webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, ...parts)).toString()
     return renderHtml({
       scriptSrc: uri(...DIST, 'webview.js'),
+      // 🔴 與網頁版同一份樣式——Vite 把 `ui/style.css` 打包成這個檔。
+      styleSrc: uri(...DIST, 'webview.css'),
       // ⚠️ **尾端斜線**：Blockly 直接把 `media` 當前綴接檔名。
       mediaSrc: `${uri(...MEDIA)}/`,
       csp: csp(webview.cspSource),

@@ -79,7 +79,16 @@ export default defineConfig(
           // Rollup 切出額外的 chunk。切出來的話**每一塊都要各自過 CSP 與
           // `localResourceRoots`**，而少算一塊的症狀是「積木顯示 `%{BKY_…}`」
           // ——又是一個安靜的壞。一個檔案就沒有這個問題。
-          rollupOptions: { external: [], output: { inlineDynamicImports: true } },
+          rollupOptions: {
+            external: [],
+            output: {
+              inlineDynamicImports: true,
+              // ⚠️ Vite 用 lib 的名字命名 CSS（`semorphe.css`），而 HTML 那側
+              //    寫的是 `webview.css`——🔴 **對不上的症狀是 404，而面板【還是會出來】，
+              //    只是沒有樣式**。又是一個「不會拋錯的壞」。
+              assetFileNames: 'webview[extname]',
+            },
+          },
           minify: false,
           // Blockly 很大；這個門檻只是不要每次都噴警告。
           chunkSizeWarningLimit: 4096,

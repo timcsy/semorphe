@@ -124,7 +124,7 @@ export function createAppLayout(
   leftPanel.style.display = 'flex'
   leftPanel.style.flexDirection = 'column'
 
-  const quickAccessBar = new QuickAccessBar(leftPanel)
+  const quickAccessBar = new QuickAccessBar(leftPanel, { fileButtons: profile.features.fileButtons })
 
   const blocklyContainer = document.createElement('div')
   blocklyContainer.id = 'blockly-panel'
@@ -140,7 +140,10 @@ export function createAppLayout(
   const blocklyPanel = new BlocklyPanel({
     container: blocklyContainer,
     blockSpecRegistry,
-    media: `${import.meta.env.BASE_URL}blockly-media/`,
+    // ⚠️ **環境差異**：網頁版從 base URL 取，而把應用嵌進別的宿主時
+    //    檔案在別的地方。🔴 而它不是「要不要有」——兩邊都要有。
+    media: (window as unknown as { __SEMORPHE_BLOCKLY_MEDIA__?: string })
+      .__SEMORPHE_BLOCKLY_MEDIA__ ?? `${import.meta.env.BASE_URL}blockly-media/`,
   })
   blocklyPanel.init(toolbox)
 
@@ -151,6 +154,14 @@ export function createAppLayout(
   const monacoWrapper = document.createElement('div')
   monacoWrapper.className = 'monaco-wrapper'
   monacoWrapper.id = 'monaco-panel'
+  // 🔴 這一格若不存在，就**不佔版面**——不是藏起來，是不撐開。
+  //    ⚠️ 而容器本身仍然要建：程式碼視圖的建構子收得到它
+  //       （即使那個實作不在上面畫任何東西）。
+  if (!profile.features.codeEditorPane) {
+    monacoWrapper.style.flex = '0 0 0'
+    monacoWrapper.style.height = '0'
+    monacoWrapper.style.overflow = 'hidden'
+  }
   rightColumn.appendChild(monacoWrapper)
 
   // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器。
