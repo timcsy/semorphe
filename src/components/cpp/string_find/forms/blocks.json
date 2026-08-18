@@ -23,7 +23,15 @@
       "inputsInline": true,
       "output": "Expression",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STRING_FIND_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STRING_FIND_TOOLTIP}",
+      "message1": "%{BKY_CPP_STRING_FIND_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "FROM",
+          "check": "Expression"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "${OBJ}.find(${ARG})",
@@ -37,7 +45,8 @@
         "OBJ": "obj"
       },
       "inputs": {
-        "ARG": "arg"
+        "ARG": "arg",
+        "FROM": "from"
       }
     }
   }

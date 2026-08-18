@@ -1,4 +1,5 @@
 {
   "CPP_STRING_PUSH_BACK_MSG0": "在 %1 末端加入字元 %2",
-  "CPP_STRING_PUSH_BACK_TOOLTIP": "在字串尾端加上一個字元"
+  "CPP_STRING_PUSH_BACK_TOOLTIP": "在字串尾端加上一個字元",
+  "CPP_STRING_APPEND_CHAR_MSG1": "（%1）"
 }

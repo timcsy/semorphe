@@ -1,4 +1,5 @@
 {
   "CPP_STRING_FIND_MSG0": "Find %2 in %1",
-  "CPP_STRING_FIND_TOOLTIP": "Find the position of a substring (returns string::npos if not found)"
+  "CPP_STRING_FIND_TOOLTIP": "Find the position of a substring (returns string::npos if not found)",
+  "CPP_STRING_FIND_MSG1": "starting at %1"
 }

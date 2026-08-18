@@ -1,4 +1,5 @@
 {
   "CPP_STRING_FIND_MSG0": "在 %1 中尋找 %2",
-  "CPP_STRING_FIND_TOOLTIP": "尋找子字串的位置（找不到則回傳 string::npos）"
+  "CPP_STRING_FIND_TOOLTIP": "尋找子字串的位置（找不到則回傳 string::npos）",
+  "CPP_STRING_FIND_MSG1": "從第 %1 個字元開始"
 }

@@ -23,7 +23,15 @@
       "inputsInline": true,
       "output": "Expression",
       "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
+      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}",
+      "message1": "%{BKY_CPP_STRUCT_AT_MEMBER_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "OBJ_EXPR",
+          "check": "Expression"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "${OBJ}.${MEMBER}",
@@ -34,6 +42,9 @@
       "fields": {
         "MEMBER": "member",
         "OBJ": "obj"
+      },
+      "inputs": {
+        "OBJ_EXPR": "obj"
       }
     }
   }

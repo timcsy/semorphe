@@ -1,4 +1,5 @@
 {
   "C_STRUCT_MEMBER_ACCESS_MSG0": "struct %1 field %2",
-  "C_STRUCT_MEMBER_ACCESS_TOOLTIP": "Get or set the value of a specific field in a struct"
+  "C_STRUCT_MEMBER_ACCESS_TOOLTIP": "Get or set the value of a specific field in a struct",
+  "CPP_STRUCT_AT_MEMBER_MSG1": "(%1)"
 }

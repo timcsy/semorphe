@@ -63,7 +63,15 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#D67D3E",
-      "tooltip": "%{BKY_CPP_PAIR_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_PAIR_DECLARE_TOOLTIP}",
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ]
     },
     "renderMapping": {
       "fields": {
@@ -71,7 +79,9 @@
         "TYPE2": "type2",
         "NAME": "name"
       },
-      "inputs": {},
+      "inputs": {
+        "SOURCE": "source"
+      },
       "statementInputs": {}
     }
   }

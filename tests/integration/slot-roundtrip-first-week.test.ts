@@ -96,8 +96,21 @@ describe('第一週語法的接點走得完來回', () => {
    * ⚠️ 用 `it.fails` 而不是 `it.todo`：**修好的那天它會紅**，逼人來拔釘子。
    * （`experience`：`it.todo` 本身就是一種殼——它宣告了一個缺陷，
    * 而沒有任何機構在看那個缺陷還在不在。）
+   *
+   * ## 🟢 2026-08-18：**釘子按設計運作了**
+   *
+   * 「投影遺失」護欄（第四十六條）掃出 `cpp:vector_declare` 的 `source`／
+   * `size`／`fill` 三個接點在積木上沒有落點——補上插槽之後，**這支測試變紅**，
+   * 逼我來拔它。
+   *
+   * > **一個會在缺陷被修好時變紅的釘子，
+   * > 是唯一一種不會被遺忘的待辦。**
+   *
+   * ⚠️ 而上面那段「要兩邊都改」的成本分析**仍然成立**——這次補的是
+   * `forms/blocks.json` 那一邊，而命令式那一份由 `dynamicRules` 之外的
+   * `inputs` 對應接手。
    */
-  it.fails('[BLOCKED:cpp:vector_declare] `vector<int> v(10)` 的大小今天會消失', () => {
+  it('🟢 US3：`vector<int> v(10)` 的大小走完來回還在（2026-08-18 修好，釘子已拔）', () => {
     // ⚠️ 前兩個是「字不見了」，**這一個是程式跑起來不一樣**：10 個元素變 0 個。
     const n = createNode('cpp:vector_declare', { name: 'v', type: 'int' }, { size: [num('10')] })
     const r = roundTrip(n, 'size')

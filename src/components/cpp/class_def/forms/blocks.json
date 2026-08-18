@@ -32,7 +32,15 @@
         }
       ],
       "colour": "#9966FF",
-      "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}",
+      "message3": "%{BKY_CPP_CLASS_DEF_MSG3}",
+      "args3": [
+        {
+          "type": "input_statement",
+          "name": "PROTECTED",
+          "check": "Statement"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
@@ -45,7 +53,8 @@
       },
       "statementInputs": {
         "PRIVATE": "private",
-        "PUBLIC": "public"
+        "PUBLIC": "public",
+        "PROTECTED": "protected"
       }
     }
   }

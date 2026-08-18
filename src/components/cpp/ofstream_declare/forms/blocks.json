@@ -24,14 +24,24 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#D67D3E",
-      "tooltip": "%{BKY_CPP_OFSTREAM_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_OFSTREAM_DECLARE_TOOLTIP}",
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ]
     },
     "renderMapping": {
       "fields": {
         "NAME": "name",
         "FILE": "file"
       },
-      "inputs": {},
+      "inputs": {
+        "INIT": "initializer"
+      },
       "statementInputs": {}
     }
   }

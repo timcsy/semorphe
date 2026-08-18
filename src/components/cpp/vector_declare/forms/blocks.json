@@ -10,7 +10,25 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}",
+      "message1": "%1 %2 %3",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FILL",
+          "check": "Expression"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "std::vector<${TYPE}> ${NAME};",
@@ -30,7 +48,12 @@
           "childSlot": "values",
           "inputPattern": "EXPR{i}"
         }
-      ]
+      ],
+      "inputs": {
+        "SOURCE": "source",
+        "SIZE": "size",
+        "FILL": "fill"
+      }
     },
     "_why": "⚠️ **命令式註冊**（`ui/block-registrar.ts`）——初始值需要動態插槽，而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。"
   }

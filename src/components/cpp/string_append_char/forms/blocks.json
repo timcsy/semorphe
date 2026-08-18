@@ -23,7 +23,15 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STRING_PUSH_BACK_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STRING_PUSH_BACK_TOOLTIP}",
+      "message1": "%{BKY_CPP_STRING_APPEND_CHAR_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "${OBJ}.push_back(${CHAR});",
@@ -37,7 +45,8 @@
         "OBJ": "obj"
       },
       "inputs": {
-        "CHAR": "char"
+        "CHAR": "char",
+        "VALUE": "value"
       }
     }
   }

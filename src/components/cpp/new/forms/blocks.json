@@ -23,7 +23,15 @@
       "inputsInline": true,
       "output": "Expression",
       "colour": "#9966FF",
-      "tooltip": "%{BKY_CPP_NEW_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_NEW_TOOLTIP}",
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ]
     },
     "codeTemplate": {
       "pattern": "new ${TYPE}(${ARGS})",
@@ -34,6 +42,9 @@
       "fields": {
         "ARGS": "args",
         "TYPE": "type"
+      },
+      "inputs": {
+        "SIZE": "size"
       }
     }
   }

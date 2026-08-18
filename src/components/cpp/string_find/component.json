@@ -28,5 +28,6 @@
   },
   "requires": [
     "<string>"
-  ]
+  ],
+  "_children_why": "⚠️ `from` 是 `str.find(x, pos)` 的第二個引數（起始位置），由 lift 產出——`registerMethodConcept('find', …, [\"arg\", \"from\"])`。\n\n🔴 而**產生器沒有讀它**：`str.find(x, 5)` 會被產成 `str.find(x)`——**起始位置安靜地不見**。\n\n2026-08-18 我一度把它當成死接點刪掉（只查了產生器），而宣告完整性護欄糾正了。"
 }
