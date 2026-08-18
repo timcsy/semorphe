@@ -113,6 +113,22 @@ const PIN_CONSTANT_VALUES: Record<string, number> = {
   HIGH: 1, LOW: 0,
   INPUT: 0, OUTPUT: 1, INPUT_PULLUP: 2,
   A0: 14, A1: 15, A2: 16, A3: 17, A4: 18, A5: 19,
+
+  // ── 🔴 套件提供的常數（2026-08-18，第 2／3 批）──────────────────
+  //
+  // ⚠️ 這張表的名字說「腳位常數」，而它從一開始就不只是腳位
+  //（`HIGH`／`OUTPUT` 是模式與電位）。**它真正是「環境提供的具名常數」**
+  // ——沒有人在程式裡宣告它們，而它們由建置系統或套件的標頭提供。
+  //
+  // 🟢 而套件常數落在**完全相同**的判準底下：只在「查不到宣告」之後才問，
+  // 所以學生自己 `#define DHT11 99` 的話，他的宣告仍然贏。
+  //
+  // > **一個名字的意思由誰宣告它決定**——而這張表是「沒有人宣告時」的那一格。
+  DHT11: 11, DHT21: 21, DHT22: 22, AM2301: 21,
+  // WiFi 的連線狀態碼（Arduino 的 `wl_status_t`）
+  WL_IDLE_STATUS: 0, WL_NO_SSID_AVAIL: 1, WL_SCAN_COMPLETED: 2,
+  WL_CONNECTED: 3, WL_CONNECT_FAILED: 4, WL_CONNECTION_LOST: 5, WL_DISCONNECTED: 6,
+  // ESP32 的 LEDC 解析度上限提示值不放——**沒有人用名字寫它**。
 }
 
 /** 認不得回 `undefined`（不是猜一個看起來合理的數）。 */

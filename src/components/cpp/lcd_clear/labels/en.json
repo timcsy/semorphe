@@ -1,0 +1,4 @@
+{
+  "C_LCD_CLEAR_MSG0": "Clear LCD %1",
+  "C_LCD_CLEAR_TOOLTIP": "Erases the screen and moves the cursor back to the top-left corner."
+}

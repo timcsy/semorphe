@@ -1,0 +1,4 @@
+{
+  "C_DHT_OPEN_MSG0": "Start temperature and humidity sensor %1",
+  "C_DHT_OPEN_TOOLTIP": "Usually called once inside setup."
+}

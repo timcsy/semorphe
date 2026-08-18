@@ -1,0 +1,46 @@
+[
+  {
+    "id": "cpp_dht_read",
+    "conceptId": "cpp:dht_read",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_dht_read",
+      "message0": "%{BKY_C_DHT_READ_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "dht"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "QUANTITY",
+          "options": [
+            [
+              "%{BKY_C_DHT_READ_Q_HUMIDITY}",
+              "humidity"
+            ],
+            [
+              "%{BKY_C_DHT_READ_Q_TEMPERATURE}",
+              "temperature"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_DHT_READ_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj",
+        "QUANTITY": "quantity"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

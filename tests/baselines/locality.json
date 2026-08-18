@@ -234,6 +234,18 @@
       "files": 2,
       "dirs": 1
     },
+    "cpp:dht_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:dht_open": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:dht_read": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:digital_read": {
       "files": 3,
       "dirs": 1
@@ -243,6 +255,14 @@
       "dirs": 1
     },
     "cpp:doc_comment": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:eeprom_read": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:eeprom_write": {
       "files": 3,
       "dirs": 1
     },
@@ -338,6 +358,26 @@
       "files": 4,
       "dirs": 1
     },
+    "cpp:lcd_at": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:lcd_clear": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:lcd_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:lcd_open": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:lcd_print": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:literal_char": {
       "files": 3,
       "dirs": 1
@@ -407,6 +447,10 @@
       "dirs": 1
     },
     "cpp:math_gcd": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:math_is_nan": {
       "files": 3,
       "dirs": 1
     },
@@ -654,6 +698,22 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:servo_attach": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_read": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_write": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:set_declare": {
       "files": 3,
       "dirs": 1
@@ -867,6 +927,14 @@
       "dirs": 1
     },
     "cpp:vector_size": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:wifi_open": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:wifi_read": {
       "files": 3,
       "dirs": 1
     }

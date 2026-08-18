@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cpp_math_is_nan",
+    "conceptId": "cpp:math_is_nan",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_math_is_nan",
+      "message0": "%{BKY_C_MATH_IS_NAN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#5B67A5",
+      "output": "Expression",
+      "tooltip": "%{BKY_C_MATH_IS_NAN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    }
+  }
+]

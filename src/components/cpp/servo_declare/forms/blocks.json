@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp_servo_declare",
+    "conceptId": "cpp:servo_declare",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_servo_declare",
+      "message0": "%{BKY_C_SERVO_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "myServo"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "ARGS",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERVO_DECLARE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "ARGS": "initializer"
+      },
+      "statementInputs": {}
+    }
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "C_WIFI_READ_MSG0": "無線網路的 %1",
+  "C_WIFI_READ_TOOLTIP": "連上時「連線狀態」等於 WL_CONNECTED，常見寫法是用一個迴圈等到它變成連上為止。「本機位址」要連上之後才有意義，通常印出來給使用者在瀏覽器輸入。",
+  "C_WIFI_READ_Q_STATUS": "連線狀態",
+  "C_WIFI_READ_Q_ADDRESS": "本機位址"
+}

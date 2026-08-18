@@ -1,0 +1,4 @@
+{
+  "C_LCD_CLEAR_MSG0": "清空液晶 %1",
+  "C_LCD_CLEAR_TOOLTIP": "清掉螢幕上所有字，並把游標移回左上角。"
+}

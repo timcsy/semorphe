@@ -1,0 +1,6 @@
+{
+  "C_WIFI_READ_MSG0": "Wi-Fi %1",
+  "C_WIFI_READ_TOOLTIP": "Once connected the status equals WL_CONNECTED; the usual pattern is a loop that waits for it. The address is only meaningful after connecting and is usually printed so the user can type it into a browser.",
+  "C_WIFI_READ_Q_STATUS": "connection status",
+  "C_WIFI_READ_Q_ADDRESS": "IP address"
+}

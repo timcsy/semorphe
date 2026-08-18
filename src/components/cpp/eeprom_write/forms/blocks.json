@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_eeprom_write",
+    "conceptId": "cpp:eeprom_write",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_eeprom_write",
+      "message0": "%{BKY_C_EEPROM_WRITE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "ADDRESS",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_EEPROM_WRITE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "ADDRESS": "address",
+        "VALUE": "value"
+      },
+      "statementInputs": {}
+    }
+  }
+]

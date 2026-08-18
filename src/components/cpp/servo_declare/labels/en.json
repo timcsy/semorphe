@@ -1,0 +1,4 @@
+{
+  "C_SERVO_DECLARE_MSG0": "Declare servo %1",
+  "C_SERVO_DECLARE_TOOLTIP": "A servo can turn to any angle from 0 to 180 degrees. After declaring it, use the attach block before it will move."
+}

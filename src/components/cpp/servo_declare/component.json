@@ -1,0 +1,30 @@
+{
+  "conceptId": "cpp:servo_declare",
+  "layer": "lang-library",
+  "abstractConcept": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "myServo"
+    }
+  ],
+  "children": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "declaresVariableType": "Servo",
+  "_declaresVariableType_why": "🟢 **這一格是這一批的關鍵**：它讓作用域記住 `myServo` 的型別是 `Servo`，之後那個變數上的方法才查得到主人。⚠️ 沒有它的話，`myServo.someMethod()` 會落回通用的方法呼叫——而那正是這一批要治的病。",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",
+  "requires": [
+    "<Servo.h>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

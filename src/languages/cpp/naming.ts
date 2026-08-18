@@ -35,6 +35,14 @@ export const SUBJECTS = [
   //    🔴 而**操作詞一個都沒新增**：`attach`／`open`／`tie`／`write`／`read`
   //    全都已經在表裡。**能用既有詞就不要新增。**
   'pwm', 'touch',
+  // ⚠️ 第 2 批的套件物件（2026-08-18）。🔴 **操作詞仍然一個都沒新增**——
+  //    第一版用了 turn／angle／start／save／cursor／humidity／temperature 七個新詞，
+  //    而命名護欄當場擋下。改用既有的 write／read／open／at 之後全部歸零。
+  //
+  //    🟢 而其中一個改名順帶改好了設計：`dht_humidity` ＋ `dht_temperature`
+  //    合併成一顆 `dht_read`＋`quantity` 參數——**量什麼不是身分，是參數**
+  //    （與零件那一批同一條）。
+  'servo', 'dht', 'lcd', 'eeprom', 'wifi',
   // ⚠️ `ultrasonic` 加入日 2026-08-18——`cpp:ultrasonic_trigger`。
   //    主體是「超音波模組」，🔴 而它**不叫 `hcsr04`**：型號是一個廠牌，
   //    不是一個概念。換一顆同樣接法的模組，這顆積木一個字都不必改。
@@ -155,6 +163,11 @@ export const OPERATIONS = [
  * 排不在一起，`loop_*` 排得在一起——而登錄表、工具箱、目錄都吃這個順序。
  */
 export const KINDS = [
+  // ⚠️ `nan` 加入日 2026-08-18——`cpp:math_is_nan`（`isnan`）。
+  //    🔴 它是第 2 批溫濕度那顆能夠誠實的**前提**：那顆讀不到感測器時回 NaN
+  //    （真板子的行為），而理由是「學生的程式本來就會檢查它」——
+  //    **沒有檢查函式的話，那句話是空的**（程式會在檢查那一行中止）。
+  'nan',
   'char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while',
   // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
   'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',

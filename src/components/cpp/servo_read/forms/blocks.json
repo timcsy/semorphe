@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cpp_servo_read",
+    "conceptId": "cpp:servo_read",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_servo_read",
+      "message0": "%{BKY_C_SERVO_READ_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "myServo"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERVO_READ_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

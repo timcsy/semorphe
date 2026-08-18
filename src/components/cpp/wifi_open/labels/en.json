@@ -1,0 +1,4 @@
+{
+  "C_WIFI_OPEN_MSG0": "Connect to Wi-Fi %1 with password %2",
+  "C_WIFI_OPEN_TOOLTIP": "Connecting takes a few seconds, so this is usually followed by a loop that waits."
+}

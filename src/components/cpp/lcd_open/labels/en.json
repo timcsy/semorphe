@@ -1,0 +1,4 @@
+{
+  "C_LCD_OPEN_MSG0": "Set LCD %1 to %2 columns and %3 rows",
+  "C_LCD_OPEN_TOOLTIP": "The most common size is 16 by 2. Usually called inside setup."
+}

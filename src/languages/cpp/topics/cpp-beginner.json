@@ -54,7 +54,8 @@
           "cpp:math_min",
           "cpp:math_max",
           "cpp:math_gcd",
-          "cpp:math_lcm"
+          "cpp:math_lcm",
+          "cpp:math_is_nan"
         ],
         "children": [
           {

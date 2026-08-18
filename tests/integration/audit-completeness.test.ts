@@ -199,6 +199,29 @@ for (const id of ['cpp:map_at', 'cpp:map_assign']) {
 // > 量到的一定是「它不認得」——而那正是它對的地方。**
 //
 // ⚠️ 順序不重要：辨識掃的是整棵樹，不是「宣告之前」還是「之後」。
+// **第六個實例**（2026-08-18）：第 2 批的套件物件。
+//
+// `myServo.write(90)` 的辨識**綁接收者的宣告型別**——而合成樣本裡沒有那個宣告，
+// 於是型別查不到、辨識**正確地**不認（猜一個錯的專屬身分比誠實降級更糟）。
+//
+// 🔴 與接線積木同一個形狀：**用孤立樣本去量一個需要上下文的辨識器，
+// 量到的一定是「它不認得」——而那正是它對的地方。**
+//
+// ⚠️ 而變數名**從合成節點自己讀**（`v`）——這一段的第四個實例記過那個坑。
+for (const [id, decl] of [
+  ['cpp:servo_attach', 'cpp:servo_declare'],
+  ['cpp:servo_write', 'cpp:servo_declare'],
+  ['cpp:servo_read', 'cpp:servo_declare'],
+  ['cpp:dht_read', 'cpp:dht_declare'],
+  ['cpp:dht_open', 'cpp:dht_declare'],
+  ['cpp:lcd_open', 'cpp:lcd_declare'],
+  ['cpp:lcd_print', 'cpp:lcd_declare'],
+  ['cpp:lcd_at', 'cpp:lcd_declare'],
+  ['cpp:lcd_clear', 'cpp:lcd_declare'],
+] as [string, string][]) {
+  SAMPLE_CONTEXT[id] = (v) => [createNode(decl, { name: v }, {})]
+}
+
 SAMPLE_CONTEXT['cpp:pin_attach'] = (v) => [
   createNode('cpp:pin_mode', {}, {
     pin: [createNode('cpp:var_ref', { name: v }, {})],

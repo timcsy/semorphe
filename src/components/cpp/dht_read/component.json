@@ -1,0 +1,33 @@
+{
+  "conceptId": "cpp:dht_read",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "dht"
+    },
+    {
+      "name": "quantity",
+      "kind": "enum",
+      "values": [
+        "humidity",
+        "temperature"
+      ],
+      "default": "humidity"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",
+  "_lift_why": "🔴 **濕度與溫度是【同一顆】概念的兩個參數，不是兩顆身分。**\n\n`dht.readHumidity()` 與 `dht.readTemperature()` 的形狀完全相同——差別只有「量什麼」。與零件那一批的結論同一條：\n\n> **量什麼不是身分，是參數。**\n\n⚠️ 第一版做成兩顆，而命名護欄當場擋下（`humidity`／`temperature` 都不是操作詞）——🟢 **那條護欄擋的是名字，而它逼出來的是設計。**\n\n而分支綁**接收者的宣告型別**（`DHT`）：`read*` 是很普通的方法名前綴，而型別是宣告出來的，不是猜的。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  }
+}

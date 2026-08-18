@@ -1,0 +1,4 @@
+{
+  "C_LCD_OPEN_MSG0": "設定液晶 %1 為 %2 行 %3 列",
+  "C_LCD_OPEN_TOOLTIP": "最常見的是 16 行 2 列。通常寫在 setup 裡。"
+}

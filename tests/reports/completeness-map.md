@@ -6,7 +6,7 @@
 
 判定規則：從 ConceptDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：216｜✅ 實作 1026｜📄 已宣告不提供 33｜❔ 判不出來 21｜🈳 殼 0｜❌ 缺 0（以路徑數計）
+元件：233｜✅ 實作 1110｜📄 已宣告不提供 34｜❔ 判不出來 21｜🈳 殼 0｜❌ 缺 0（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -69,9 +69,14 @@
 | `cpp:delay_microseconds` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:destructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `cpp:dht_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:dht_open` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp:dht_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:digital_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:digital_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
+| `cpp:eeprom_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:eeprom_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:enum` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:exception_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -95,6 +100,11 @@
 | `cpp:io_tie` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:istringstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:lambda` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_char` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_number` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:literal_string` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -113,6 +123,7 @@
 | `cpp:math_binary` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_constrain` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_gcd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_is_nan` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_lcm` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:math_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -174,6 +185,10 @@
 | `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -228,3 +243,5 @@
 | `cpp:vector_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:vector_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:vector_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_read` | ✅ | ✅ | ✅ | ✅ | ✅ |

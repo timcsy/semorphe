@@ -1,0 +1,4 @@
+{
+  "C_LCD_AT_MSG0": "Move the cursor of LCD %1 to column %2 row %3",
+  "C_LCD_AT_TOOLTIP": "Columns and rows count from zero: the top-left corner is column 0, row 0."
+}

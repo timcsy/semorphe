@@ -1,0 +1,4 @@
+{
+  "C_LCD_DECLARE_MSG0": "Declare character LCD %1",
+  "C_LCD_DECLARE_TOOLTIP": "The arguments are the pins it is wired to. Call the size block before printing."
+}

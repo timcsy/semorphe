@@ -24,7 +24,7 @@
       "cpp:loop_while",
       "cpp:builtin_constant",
       "cpp:pin_constant",
-        "cpp:pin_attach",
+      "cpp:pin_attach",
       "cpp:pin_mode",
       "cpp:digital_write",
       "cpp:digital_read",
@@ -67,16 +67,21 @@
           "cpp:analog_write",
           "cpp:range_remap",
           "cpp:pulse_read",
-        "cpp:ultrasonic_trigger",
-        "cpp:pwm_attach",
-        "cpp:pwm_open",
-        "cpp:pwm_tie",
-        "cpp:pwm_write",
-        "cpp:touch_read",
+          "cpp:ultrasonic_trigger",
+          "cpp:pwm_attach",
+          "cpp:pwm_open",
+          "cpp:pwm_tie",
+          "cpp:pwm_write",
+          "cpp:touch_read",
+          "cpp:eeprom_read",
+          "cpp:eeprom_write",
+          "cpp:wifi_open",
+          "cpp:wifi_read",
           "cpp:math_constrain",
           "cpp:analog_resolution",
           "cpp:serial_count",
-          "cpp:serial_read"
+          "cpp:serial_read",
+          "cpp:math_is_nan"
         ],
         "children": [
           {
@@ -122,7 +127,19 @@
               "cpp:doc_comment",
               "cpp:block_comment",
               "cpp:raw_code",
-              "cpp:raw_expression"
+              "cpp:raw_expression",
+              "cpp:servo_declare",
+              "cpp:servo_attach",
+              "cpp:servo_write",
+              "cpp:servo_read",
+              "cpp:dht_declare",
+              "cpp:dht_open",
+              "cpp:dht_read",
+              "cpp:lcd_declare",
+              "cpp:lcd_open",
+              "cpp:lcd_print",
+              "cpp:lcd_at",
+              "cpp:lcd_clear"
             ],
             "children": [
               {

@@ -23,6 +23,8 @@
  * **核心給機制、套件給資料**（那個錯犯過兩次，隔一天各一次）。
  */
 
+import { registeredComponents } from './registry'
+
 const table = new Map<string, { conceptId: string; source: string }>()
 
 /**
@@ -79,4 +81,35 @@ export function registerPlainTypeConcept(typeName: string, conceptId: string, so
 /** 型別名 → 元件身分。認不得回 `undefined`。 */
 export function plainTypeConcept(typeName: string): string | undefined {
   return typeNameTable.get(typeName)?.conceptId
+}
+
+/**
+ * **這個型別是硬體裝置嗎**——由它自己的宣告說。
+ *
+ * ## 🔴 為什麼需要它：`begin()` 在兩個世界裡是兩件事
+ *
+ * ```
+ * v.begin()      容器 → 取得迭代器
+ * dht.begin()    裝置 → 啟動它
+ * lcd.begin(16,2)
+ * ```
+ *
+ * ⚠️ 而**不能用「有沒有登錄成純型別」來分**：`string` 也是純型別，
+ * 而 `str.begin()` **確實是**迭代器。第一版就是這樣寫的，它會把字串弄壞。
+ *
+ * 🟢 判準改成問**擁有者**：硬體元件的 `owner` 是 `'(arduino)'`，
+ * 而容器與標準庫型別不是。**「我是不是硬體」是那顆元件自己宣告的事實。**
+ *
+ * ⚠️ 參數是**辨識期記下來的型別**，而那是從概念身分推導的
+ * （`cpp:dht_declare` → `'dht'`，見 `core/lift/lifter.ts` 的 `recordDeclaration`）
+ * ——**不是** C++ 的型別名。
+ */
+export function recordedTypeIsDevice(recordedType: string): boolean {
+  const suffix = `:${recordedType}_declare`
+  for (const c of registeredComponents()) {
+    if (c.conceptId.endsWith(suffix)) {
+      return (c.manifest as { owner?: string }).owner === '(arduino)'
+    }
+  }
+  return false
 }

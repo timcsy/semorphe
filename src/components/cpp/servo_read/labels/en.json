@@ -1,0 +1,4 @@
+{
+  "C_SERVO_READ_MSG0": "Current angle of servo %1",
+  "C_SERVO_READ_TOOLTIP": "Returns the last angle written to the servo. It is remembered, not measured."
+}
