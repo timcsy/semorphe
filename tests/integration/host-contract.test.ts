@@ -105,3 +105,32 @@ describe('🔴 宿主的 id 不得拿來做行為分支', () => {
     expect(offenders, '🔴 能力清單退化成標籤了').toEqual([])
   })
 })
+
+describe('🔴 與宿主的接觸點只能有一個', () => {
+  it('`acquireVsCodeApi` 只在 host-bridge.ts 裡被呼叫', () => {
+    // ⚠️ 這個限制**預檢抓不到**：Chromium 裡那個函式根本不存在，
+    //    所以呼叫兩次也只是兩次都回 null，什麼事都不會發生。
+    //
+    // > **一個「只有在真環境裡才存在的東西」，
+    // > 它的誤用也只有在真環境裡才會現形
+    // > ——而模擬環境會把那個誤用【顯示成正常】。**
+    //
+    // 2026-08-18 就是這樣壞的：VscodeCodeView 的建構子叫了一次、
+    // 診斷那段又叫了一次 → `An instance of the VS Code API has already been acquired`。
+    const offenders: string[] = []
+    const walk = (dir: string): void => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = `${dir}/${e.name}`
+        if (e.isDirectory()) { walk(p); continue }
+        if (!p.endsWith('.ts')) continue
+        if (p.endsWith('host-bridge.ts')) continue
+        for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
+          if (/^\s*(\*|\/\/)/.test(line)) continue   // 註解裡提到它不算
+          if (/acquireVsCodeApi\s*\(/.test(line)) offenders.push(`${p}: ${line.trim()}`)
+        }
+      }
+    }
+    walk('src/vscode')
+    expect(offenders, '🔴 一個 Webview 只能取得一次宿主 API').toEqual([])
+  })
+})

@@ -32,6 +32,7 @@ import '../../ui/style.css'
 import { App } from '../../ui/app'
 import { vscodeProfile } from '../vscode-profile'
 import { attachDragMeter, type DragMeasurement } from './fps'
+import { postToHost } from './host-bridge'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -72,7 +73,6 @@ async function boot(): Promise<void> {
 
 /** 把量測掛上去，並回應宿主的查詢。 */
 function attachDiagnostics(app: App): void {
-  const host = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null
   let last: DragMeasurement | null = null
   // ⚠️ 走既有的除錯把手（網頁版 `src/main.ts:11` 也掛同一個），
   //    而不是替 `App` 開一個新的公開方法——診斷不該擴大產品的介面。
@@ -82,7 +82,7 @@ function attachDiagnostics(app: App): void {
 
   window.addEventListener('message', (e: MessageEvent<{ type?: string }>) => {
     if (e.data?.type !== 'requestDiagnostics') return
-    host?.postMessage({
+    postToHost({
       type: 'diagnostics',
       lines: [
         `畫布拖曳：${last ? `${last.frames} 幀｜中位 ${last.medianMs.toFixed(1)} ms｜p95 ${last.p95Ms.toFixed(1)} ms → ${last.verdict}` : '（還沒有拖過）'}`,
@@ -91,8 +91,6 @@ function attachDiagnostics(app: App): void {
     })
   })
 }
-
-declare function acquireVsCodeApi(): { postMessage(m: unknown): void }
 
 boot().catch((err: unknown) => {
   // ⚠️ **失敗要看得見。** 一個空白的面板與一個載壞的面板長得一樣

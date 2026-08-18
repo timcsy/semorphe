@@ -39,12 +39,11 @@
  * 🔴 **而它是一個已知的重複，不是一個沒有人知道的重複。**
  */
 import { rewriteSpan } from '../../core/projection/rewrite-span'
+import { postToHost } from './host-bridge'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticUpdateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
-
-declare function acquireVsCodeApi(): { postMessage(m: unknown): void }
 
 export class VscodeCodeView implements CodeView {
   /**
@@ -60,7 +59,6 @@ export class VscodeCodeView implements CodeView {
     getEditor: '底層編輯器在另一個行程，交不出來',
   } as const
 
-  private readonly host = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null
   /** 🔴 文字的本地鏡像——`getCode()` 是同步的，而真相在另一個行程。 */
   private mirror = ''
   private version = -1
@@ -75,7 +73,9 @@ export class VscodeCodeView implements CodeView {
   }
 
   private post(m: WebviewMessage): void {
-    this.host?.postMessage(m)
+    // 🔴 走**唯一接觸點**——`acquireVsCodeApi()` 一個 Webview 只能叫一次，
+    //    而那個限制在 Chromium 預檢裡看不見（見 `host-bridge.ts` 的檔頭）。
+    postToHost(m)
   }
 
   private receive(m: HostMessage): void {
