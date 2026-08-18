@@ -4,6 +4,7 @@ import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
+import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
 import { formatMessage } from '../../i18n/messages'
@@ -220,10 +221,90 @@ export class BlocklyPanel implements ViewHost {
         }
         return
       }
+      // 🔴 **使用者親手拉出一顆積木時，順帶長出它宣告的伴生積木。**
+      //
+      // ⚠️ `busUpdateInProgress` 為真代表這是**反序列化**（程式碼→積木、
+      //    還原、載入存檔）——那些來源的伴生積木本來就在原文裡，
+      //    再長一顆就是憑空多出來的一行。漏掉這個判斷的症狀是：
+      //    **貼一次程式碼，`setup` 裡就多一份 `pinMode`。**
+      if (!this.busUpdateInProgress && event.type === Blockly.Events.CREATE) {
+        this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
+      }
       if (!this.busUpdateInProgress) {
         this.onChangeCallback?.()
       }
     })
+  }
+
+  /**
+   * 長出伴生積木。
+   *
+   * ⚠️ **核心不認得任何積木型別**——宣告從膠囊來（`companion-blocks.ts`）。
+   *
+   * 🔴 三種情況**什麼都不做**，而它們都是刻意的：
+   *
+   * ```
+   * 沒有宣告        絕大多數積木——這條路對它們是零成本
+   * 找不到目標函式   空白畫布上沒有 setup。⚠️ 硬長一顆 setup 出來會蓋掉
+   *                 使用者正在組的東西——**寧可不長，不要亂長**
+   * 已經有一顆了     使用者自己拉過 pinMode 了，不重複
+   * ```
+   */
+  private growCompanion(blockId: string | undefined): void {
+    if (!blockId || !this.workspace) return
+    const trigger = this.workspace.getBlockById(blockId)
+    if (!trigger) return
+    const spec = companionFor(trigger.type)
+    if (!spec) return
+
+    const name = trigger.getFieldValue(spec.bind.fromField)
+    if (!name) return
+
+    // 目標函式的主體。找不到就不長——見上面的第二種情況。
+    const target = this.workspace
+      .getTopBlocks(false)
+      .find(
+        (b) =>
+          b.type === spec.intoFunction.blockType &&
+          b.getFieldValue(spec.intoFunction.nameField) === spec.intoFunction.name,
+      )
+    const body = target?.getInput(spec.intoFunction.bodyInput)?.connection
+    if (!body) return
+
+    // 已經有一顆綁同一個名字的伴生積木了嗎
+    const already = this.workspace
+      .getAllBlocks(false)
+      .some(
+        (b) =>
+          b.type === spec.companion &&
+          b.getInputTargetBlock(spec.bind.toInput)?.getFieldValue(spec.bind.refField) === name,
+      )
+    if (already) return
+
+    try {
+      const companion = this.workspace.newBlock(spec.companion)
+      companion.initSvg()
+      const ref = this.workspace.newBlock(spec.bind.refBlock)
+      ref.initSvg()
+      ref.setFieldValue(name, spec.bind.refField)
+      companion.getInput(spec.bind.toInput)?.connection?.connect(ref.outputConnection)
+      for (const [input, k] of Object.entries(spec.constants)) {
+        const konst = this.workspace.newBlock(k.blockType)
+        konst.initSvg()
+        konst.setFieldValue(k.value, k.field)
+        companion.getInput(input)?.connection?.connect(konst.outputConnection)
+      }
+      // 接在主體的**最後**——⚠️ 接在最前面會插到使用者已經寫好的東西前面
+      let tail = body.targetBlock()
+      while (tail?.getNextBlock()) tail = tail.getNextBlock()
+      if (tail) tail.nextConnection?.connect(companion.previousConnection)
+      else body.connect(companion.previousConnection)
+      companion.render()
+      this.workspace.render()
+    } catch (err) {
+      // ⚠️ **不吞掉**——一個安靜失敗的自動化，使用者只會看到「它有時候不長」。
+      console.error('[semorphe] 伴生積木長不出來', err)
+    }
   }
 
   /** 工作區是不是殘的。🔴 為真時「積木→程式碼」必須停手。 */
