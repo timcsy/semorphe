@@ -55,6 +55,18 @@ export class BlocklyPanel implements ViewHost {
   private stateLoadFailed = false
   /** 上一次載入失敗的訊息——🔴 診斷指令與畫面上的提示都要用它。 */
   private lastStateError: string | null = null
+  /**
+   * 失敗時的呼叫堆疊。
+   *
+   * 🔴 **訊息說得出「什麼壞了」，說不出「在哪裡壞的」。**
+   * 而這個錯誤（`Cannot read properties of undefined (reading 'indexOf')`）
+   * 只在 Arduino IDE（Theia）裡發生——Chromium 用同一份檔案內容重現不出來。
+   * ⚠️ 沒有堆疊就只能猜，而這一輪已經猜錯過三次。
+   *
+   * 🟢 webview 的 bundle **刻意不壓縮**（`vite.vscode.config.ts` 的 `minify: false`），
+   * 所以這裡的函式名是讀得懂的。
+   */
+  private lastStateStack: string | null = null
   private _blockMappings: BlockMapping[] = []
   private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
@@ -110,6 +122,7 @@ export class BlocklyPanel implements ViewHost {
         this.setState(event.blockState as object)
         this.stateLoadFailed = false
         this.lastStateError = null
+        this.lastStateStack = null
       } catch (err) {
         // 🔴 **這裡曾經是一個空的 `catch {}`**，註解寫「safe to ignore」。
         //
@@ -122,6 +135,10 @@ export class BlocklyPanel implements ViewHost {
         // 處置有兩半，缺一不可：**說出來**，以及**記住這份工作區不可信**。
         this.stateLoadFailed = true
         this.lastStateError = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+        this.lastStateStack = err instanceof Error && err.stack
+          // 只留前 8 層——再深就是 Blockly 內部的細節，而診斷輸出要看得完。
+          ? err.stack.split('\n').slice(1, 9).map((l) => l.trim()).join('\n')
+          : null
         console.error('[semorphe] 積木狀態載入失敗——工作區可能是殘的，暫停「積木→程式碼」', err)
         // 🔴 **要讓使用者看得到，而不是只留在開發者工具裡。**
         //
@@ -215,6 +232,11 @@ export class BlocklyPanel implements ViewHost {
   /** 上一次載入失敗的訊息，`null` 代表沒失敗過。 */
   get stateError(): string | null {
     return this.lastStateError
+  }
+
+  /** 失敗時的呼叫堆疊（前 8 層）。🔴 診斷指令要印它——沒有它就只能猜。 */
+  get stateErrorStack(): string | null {
+    return this.lastStateStack
   }
 
   onChange(callback: () => void): void {

@@ -93,9 +93,9 @@ async function boot(): Promise<void> {
 /** 把量測掛上去，並回應宿主的查詢。 */
 function attachDiagnostics(app: App): void {
   /** ⚠️ 走既有的除錯把手，理由同下——診斷不該擴大產品的介面。 */
-  const panelError = (): string | null =>
-    (app as unknown as { blocklyPanel?: { stateError?: string | null } })
-      .blocklyPanel?.stateError ?? null
+  const panel = (): { stateError?: string | null; stateErrorStack?: string | null } =>
+    (app as unknown as { blocklyPanel?: Record<string, never> }).blocklyPanel ?? {}
+  const panelError = (): string | null => panel().stateError ?? null
 
   const view = (): {
     divergenceCount?: number
@@ -122,6 +122,10 @@ function attachDiagnostics(app: App): void {
         // 🔴 這一行是 2026-08-18 唯一還沒抓到的那個 bug 的證據
         //    ——它只在 Theia（Arduino IDE）裡發生，Chromium 重現不出來。
         `積木載入：${panelError() ?? '正常'}`,
+        // 🔴 沒有堆疊就只能猜——而這一輪已經猜錯過三次。
+        ...(panel().stateErrorStack
+          ? ['  堆疊：', ...(panel().stateErrorStack ?? '').split('\n').map((l) => `    ${l}`)]
+          : []),
         '',
         '最近的寫入（新的在最後）：',
         ...((view().writeHistory ?? []).length > 0
