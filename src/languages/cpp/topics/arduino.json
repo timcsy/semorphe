@@ -64,7 +64,8 @@
           "cpp:math_lcm",
           "cpp:analog_read",
           "cpp:analog_write",
-          "cpp:range_remap"
+          "cpp:range_remap",
+          "cpp:pulse_read"
         ],
         "children": [
           {

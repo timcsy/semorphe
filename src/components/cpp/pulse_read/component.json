@@ -1,0 +1,24 @@
+{
+  "conceptId": "cpp:pulse_read",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "pin": "expression",
+    "state": "expression",
+    "timeout": "expression"
+  },
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "🔴 **回 0，而那不是靜默降級**——真的 `pulseIn` 在**超時沒有回音**時就回 0，所以「沒接超音波 → 0」是**正確的模型行為**，與真板子一致。⚠️ 而它**不能**走 `skipPaths`：那條路安靜 return `undefined`，對語句安全，對**運算式**是未爆彈（`distance = pulseIn(...) * 0.034` 會把 undefined 餵給 `toNumber`）。虛擬硬體接上來時，這裡改成從腳位狀態讀真的脈衝長度。",
+  "_lift_why": "程式碼裡的名字是 `pulseIn`，而**身分不叫 `pulse_in`**：`in` 不是操作。這顆做的事是**讀一段脈衝有多長**，與 `digital_read`／`analog_read` 同族。",
+  "_generate_why": "第三個引數（逾時微秒）**可選**——沒有時不得產出空的逗號（`pulseIn(7, HIGH,)` 編不過）。"
+}

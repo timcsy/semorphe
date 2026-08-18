@@ -530,6 +530,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:pulse_read": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:queue_back": {
       "files": 2,
       "dirs": 1

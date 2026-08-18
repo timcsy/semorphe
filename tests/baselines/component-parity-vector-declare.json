@@ -136,6 +136,7 @@
     "cpp:priority_queue_peek",
     "cpp:program",
     "cpp:program_exit",
+    "cpp:pulse_read",
     "cpp:queue_back",
     "cpp:queue_declare",
     "cpp:queue_front",

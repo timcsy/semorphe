@@ -85,6 +85,11 @@
     "reason": "priority_queue 的 top()。語料裡有 priority_queue 但沒有取頂端的片段。加一段就會動。"
   },
   {
+    "conceptId": "cpp:pulse_read",
+    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
+    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/pulse_read/spec.test.ts` 釘住（含「可選的第三格不得產出空逗號」與「它是運算式，回傳值進得了算術」兩條）。"
+  },
+  {
     "conceptId": "cpp:queue_back",
     "cause": "辨識到不了",
     "reason": "**真的缺口**：`.back()` 在辨識層不看容器型別，六種容器一律判成 cpp:vector_back。這顆身分從程式碼永遠得不到，只能從積木拖。⚠️ **補再多語料也碰不到。** 見 draft/2026-08-11-容器方法的辨識不看型別.md"

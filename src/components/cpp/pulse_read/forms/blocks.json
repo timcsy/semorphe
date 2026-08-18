@@ -1,0 +1,27 @@
+[
+  {
+    "id": "cpp_pulse_read",
+    "conceptId": "cpp:pulse_read",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pulse_read",
+      "message0": "%{BKY_C_PULSE_READ_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "PIN", "check": "Expression" },
+        { "type": "input_value", "name": "STATE", "check": "Expression" },
+        { "type": "input_value", "name": "TIMEOUT", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PULSE_READ_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "PIN": "pin", "STATE": "state", "TIMEOUT": "timeout" },
+      "statementInputs": {}
+    }
+  }
+]
