@@ -278,6 +278,8 @@ languages/{lang}/
    工具箱／深色主題／zelos 與網頁版一致 · untitled buffer 全程可用
    網頁版不得退步（三次截圖 MD5 逐位元組相同）
    Arduino IDE 裡打得開、`.ino` 改積木檔案跟著變
+   🟢 **`.ino` 改完之後 Arduino IDE 編得過**（2026-08-18 使用者回報）
+      ——這是階段 6.13 掛了一天的最後一條，它證明產出的不只是「看起來對的文字」
 
 🟠 還沒驗
    一次積木編輯 ＝ 一個 document undo 項；拖動位置不進 undo
@@ -285,7 +287,6 @@ languages/{lang}/
    單步執行時積木依序高亮
    切分頁再切回來，捲動位置與縮放還在
    `settings.json` 設得動 target，且 `[arduino]` 的語言覆寫生效
-   🔴 `.ino` 改完之後 **Arduino IDE 編得過**（從來沒有編譯過）
 ```
 
 ### ✅ 已完成的里程碑（一行一筆 ＋ 指標）
