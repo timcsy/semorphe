@@ -244,10 +244,19 @@ languages/{lang}/
          **參數**，動作走既有的 digital_write／digital_read／analog_read。
          > 位置不是身分，是形態（既有）　而**零件不是身分，是參數**（本輪）
          ⚠️ 蜂鳴器在第 0 批就做完了（tone／tone_stop）；伺服要物件機制 → 第 2 批
-第 2 批  要物件機制            DHT · LCD · OLED · EEPROM · 伺服
-         🔴 **它被一份未拍板的設計擋著**：`draft/2026-08-17-套件的物件在執行期
-         是什麼.md`。照專案自己的閘門（design → roadmap 要人拍板），
-         **這一批要先有一個決定才動得了**。
+✅ 第 2 批（2026-08-18 完成）—— 🔴 **而「被 draft 擋著」那句是錯的**
+         身分：servo_declare/attach/write/read · dht_declare/open/read
+               lcd_declare/open/print/at/clear · eeprom_read/write
+               wifi_open/read ＋ math_is_nan（DHT 回 NaN 的**前提**）
+         ⚠️ 重讀那份 draft 之後發現：它自己寫著「執行不再是缺口，而是由真板子
+         提供……本檔等的是**虛擬硬體**」，而第一節寫著「**沒有一個新概念需要被加**
+         ……問題只在 execute」。**它卡的是執行，不是積木。**
+         > **殘差為零，不代表學生看得懂。**
+✅ 第 3 批（2026-08-18 完成）—— ESP32
+         身分：pwm_attach（core 3.x）· pwm_open ＋ pwm_tie（core 2.x）
+               · pwm_write（兩版同形）· touch_read
+         🔴 `ledcWrite` 的第一格在兩版是**不同的東西**，而程式碼裡看不出來
+         ——一顆身分吃兩版，執行時**查程式自己說過的話**
 ```
 
 **驗收**

@@ -3,7 +3,7 @@
     "id": "cpp_eeprom_read",
     "conceptId": "cpp:eeprom_read",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_eeprom_read",

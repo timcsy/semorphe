@@ -18,6 +18,8 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
+import { renderToBlocklyState } from '../../../core/projection/block-renderer'
+import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
@@ -27,6 +29,7 @@ beforeAll(async () => {
   parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
+  setupTestRenderer()
 })
 
 const lift = (c: string): SemanticNode =>
@@ -247,5 +250,40 @@ void loop() {}
     expect(decl, '宣告要在').toBeDefined()                // ← 正向錨點
     expect(decl?.properties.decl_type).toBe('LiquidCrystal')
     expect(gen(tree)).toContain('LiquidCrystal lcd(12, 11, 5, 4, 3, 2);')
+  })
+
+  it('🔴 建構參數的【個數會變】，而積木上的插槽要跟著開', () => {
+    // ⚠️ 第一版用一個固定的插槽，於是積木上**只放得下第一個引數**
+    //    ——而語義樹是對的、產生器也是對的，所以 lift 與 generate 的測試**全綠**。
+    //
+    // > **一個只在投影那一側丟資料的 bug，
+    // > lift 與 generate 各自的測試都看不到它。**
+    //
+    // 而它是在瀏覽器實測時看見的：積木上寫著「宣告字元液晶 lcd（I2C）39」，
+    // 只有一個 `39`（＝0x27），後面的 16 與 2 不在積木上。
+    const cases: [string, number][] = [
+      ['Servo doorServo;', 0],
+      ['DHT dht(2, DHT11);', 2],
+      ['LiquidCrystal_I2C lcd(0x27, 16, 2);', 3],
+      ['LiquidCrystal lcd(12, 11, 5, 4, 3, 2);', 6],
+    ]
+    for (const [decl, want] of cases) {
+      const tree = lift(`${decl}\nvoid setup() {}\nvoid loop() {}\n`)
+      const d = nodes(tree).find((x) => /^cpp:(servo|dht|lcd)_declare$/.test(x.conceptId))
+      expect(d, `${decl}：宣告沒認出來`).toBeDefined()      // ← 正向錨點
+      expect(d?.children.initializer ?? [], `${decl}：語義樹的接點數`).toHaveLength(want)
+      expect(Number(d?.properties.ctorCount), `${decl}：ctorCount`).toBe(want)
+
+      // 🔴 而**積木上的插槽數要一樣**——這一條才是那個 bug 的所在
+      const state = renderToBlocklyState(tree) as unknown as {
+        blocks: { blocks: { type?: string; inputs?: Record<string, unknown> }[] }
+      }
+      const blk = state.blocks.blocks.find((b) => /^cpp_(servo|dht|lcd)_declare$/.test(b.type ?? ''))
+      expect(blk, `${decl}：積木沒渲染出來`).toBeDefined()
+      expect(
+        Object.keys(blk?.inputs ?? {}).filter((k) => k.startsWith('CTOR_')),
+        `${decl}：積木上的插槽數與語義樹對不上——引數會在積木→程式碼時不見`,
+      ).toHaveLength(want)
+    }
   })
 })

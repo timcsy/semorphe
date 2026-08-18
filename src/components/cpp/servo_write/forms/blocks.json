@@ -3,7 +3,7 @@
     "id": "cpp_servo_write",
     "conceptId": "cpp:servo_write",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_servo_write",

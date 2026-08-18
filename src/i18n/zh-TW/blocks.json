@@ -224,5 +224,6 @@
   "DIAG_SYNTAX_ERROR_BLOCK": "這一段程式我看不懂，積木上這塊是照抄原文的：{snippet}",
   "DIAG_SYNTAX_ERROR_CODE": "這一行的語法不完整",
   "CATEGORY_HARDWARE_PINS": "腳位與時間",
+  "CATEGORY_HARDWARE_MODULES": "零件與模組",
   "CATEGORY_HARDWARE_SERIAL": "序列埠"
 }

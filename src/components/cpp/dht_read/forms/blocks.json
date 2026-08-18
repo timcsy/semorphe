@@ -3,7 +3,7 @@
     "id": "cpp_dht_read",
     "conceptId": "cpp:dht_read",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_dht_read",

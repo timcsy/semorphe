@@ -185,6 +185,27 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(arduino)', category: 'hardware' },
     ],
   },
+
+  // 🔴 **零件與模組分成第三段**（2026-08-18，第 2 批）。
+  //
+  // 觸發它的不是「積木變多了」，是**那一格的名字不成立了**：
+  // 第 2 批把伺服／溫濕度／液晶／內建記憶體／無線網路放進「腳位與時間」之後，
+  // 那一格有 36 顆——而其中一半**既不是腳位也不是時間**。
+  //
+  // > **一個分類的名字如果不再描述它的內容，
+  // > 那它就不是分類了，它只是一個放不下的地方。**
+  //
+  // ⚠️ 而第 1 批的報告當時說「不新開分類」是對的——那時候只有兩顆，
+  // 而它預留的觸發條件是「零件多到裝不下」。**今天到了，只是形狀不同**：
+  // 不是裝不下，是名字對不上。
+  //
+  // 判準與上面那兩段相同：**學生找「怎麼讓伺服轉」時，不該在一堆腳位積木裡翻。**
+  {
+    key: 'hardware_modules', nameKey: 'CATEGORY_HARDWARE_MODULES', fallback: '零件與模組', colorKey: 'cpp_special',
+    sources: [
+      { from: '(arduino)', category: 'modules' },
+    ],
+  },
   {
     key: 'hardware_serial', nameKey: 'CATEGORY_HARDWARE_SERIAL', fallback: '序列埠', colorKey: 'io',
     sources: [

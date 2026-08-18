@@ -3,7 +3,7 @@
     "id": "cpp_wifi_read",
     "conceptId": "cpp:wifi_read",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_wifi_read",

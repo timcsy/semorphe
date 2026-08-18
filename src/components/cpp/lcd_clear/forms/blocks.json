@@ -3,7 +3,7 @@
     "id": "cpp_lcd_clear",
     "conceptId": "cpp:lcd_clear",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_lcd_clear",

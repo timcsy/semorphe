@@ -657,6 +657,21 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'decl_type'),
       )
       const extraProps: Record<string, string> = wantsDeclType ? { decl_type: simpleTypeName } : {}
+      // 🔴 **建構參數的個數要記在節點上**——投影那一側靠它決定開幾個插槽。
+      //
+      // ⚠️ 少了它的症狀**只在積木那一側**：語義樹三個接點都在、產生器也對，
+      //    而積木上只放得下第一個 → 積木→程式碼時第 2 個之後**安靜地不見**。
+      //
+      // > **一個只在投影那一側丟資料的 bug，
+      // > lift 與 generate 各自的測試都看不到它。**
+      //
+      // 同上：只在**概念自己宣告了這一格**時才寫。
+      const wantsCtorCount = componentConcepts().some(
+        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+          ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'ctorCount'),
+      )
+      const withCount = (args: unknown[]): Record<string, string> =>
+        wantsCtorCount ? { ...extraProps, ctorCount: String(args.length) } : extraProps
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       const name = decl?.type === 'identifier'
         ? decl.text
@@ -690,7 +705,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
           })
           .filter((n): n is NonNullable<typeof n> => n !== null)
-        return createNode(conceptId, { name: nameNode?.text ?? name, ...extraProps }, { initializer: args })
+        return createNode(conceptId, { name: nameNode?.text ?? name, ...withCount(args) }, { initializer: args })
       }
 
       // For stream types with constructor args (e.g., ifstream fin("input.txt"))
@@ -700,14 +715,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = valueNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(conceptId, { name, ...extraProps }, { initializer: args })
+          return createNode(conceptId, { name, ...withCount(args) }, { initializer: args })
         }
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode(conceptId, { name, ...extraProps }, { initializer: value ? [value] : [] })
+          return createNode(conceptId, { name, ...withCount(value ? [value] : []) }, { initializer: value ? [value] : [] })
         }
       }
-      return createNode(conceptId, { name, ...extraProps })
+      return createNode(conceptId, { name, ...withCount([]) })
     }
 
     const typeNode = node.namedChildren.find(c =>

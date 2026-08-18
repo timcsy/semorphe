@@ -3,7 +3,7 @@
     "id": "cpp_lcd_declare",
     "conceptId": "cpp:lcd_declare",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_lcd_declare",
@@ -29,14 +29,6 @@
           ]
         }
       ],
-      "message1": "%1",
-      "args1": [
-        {
-          "type": "input_value",
-          "name": "ARGS",
-          "check": "Expression"
-        }
-      ],
       "inputsInline": true,
       "colour": "#E67E22",
       "tooltip": "%{BKY_C_LCD_DECLARE_TOOLTIP}",
@@ -48,10 +40,15 @@
         "NAME": "name",
         "DECL_TYPE": "decl_type"
       },
-      "inputs": {
-        "ARGS": "initializer"
-      },
-      "statementInputs": {}
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "ctorCount",
+          "childSlot": "initializer",
+          "inputPattern": "CTOR_{i}"
+        }
+      ]
     }
   }
 ]

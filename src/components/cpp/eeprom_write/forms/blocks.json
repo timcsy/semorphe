@@ -3,7 +3,7 @@
     "id": "cpp_eeprom_write",
     "conceptId": "cpp:eeprom_write",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_eeprom_write",

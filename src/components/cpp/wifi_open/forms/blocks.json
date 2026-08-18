@@ -3,7 +3,7 @@
     "id": "cpp_wifi_open",
     "conceptId": "cpp:wifi_open",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_wifi_open",

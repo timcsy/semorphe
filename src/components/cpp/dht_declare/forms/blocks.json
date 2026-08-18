@@ -3,7 +3,7 @@
     "id": "cpp_dht_declare",
     "conceptId": "cpp:dht_declare",
     "language": "cpp",
-    "category": "hardware",
+    "category": "modules",
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_dht_declare",
@@ -13,14 +13,6 @@
           "type": "field_input",
           "name": "NAME",
           "text": "dht"
-        }
-      ],
-      "message1": "%1",
-      "args1": [
-        {
-          "type": "input_value",
-          "name": "ARGS",
-          "check": "Expression"
         }
       ],
       "inputsInline": true,
@@ -33,10 +25,15 @@
       "fields": {
         "NAME": "name"
       },
-      "inputs": {
-        "ARGS": "initializer"
-      },
-      "statementInputs": {}
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "ctorCount",
+          "childSlot": "initializer",
+          "inputPattern": "CTOR_{i}"
+        }
+      ]
     }
   }
 ]
