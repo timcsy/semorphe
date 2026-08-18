@@ -81,6 +81,23 @@ function isSupported(doc: vscode.TextDocument): boolean {
 }
 
 /**
+ * **為什麼現在沒有文件可以同步**——一句給人看的話。
+ *
+ * 🔴 這個函式存在的理由：判斷「支不支援」與「說得出為什麼不支援」是兩件事，
+ * 而只做前者的系統在條件沒滿足時，看起來與壞掉一模一樣。
+ */
+function noDocumentReason(editor: vscode.TextEditor | undefined): string {
+  if (!editor) return '沒有開啟任何程式碼編輯器。開一個 .ino 或 .cpp 檔。'
+  const doc = editor.document
+  const untitled = doc.isUntitled
+  return (
+    `目前的編輯器是「${doc.languageId}」${untitled ? '（未命名的暫存分頁）' : ''}，` +
+    `而 Semorphe 只跟 ${[...SUPPORTED_EXTS].join('／')} 同步。` +
+    (untitled ? ' → 存成 .ino／.cpp，或用 ⌘K M 選 C++。' : ' → 用 ⌘K M 切換語言。')
+  )
+}
+
+/**
  * ⚠️ **單例。** 一個工作區只有一個積木面板。
  *
  * 🔴 那是**本輪刻意的簡化**：面板跟著 active editor 走，所以一次只需要一個。
@@ -141,7 +158,7 @@ class SemorpheSession {
     this.doc = doc
     // ⚠️ 換文件就清空回音——上一份文件的版本號與這一份無關。
     this.echo.reset()
-    if (!doc) { this.send({ type: 'noDocument' }); return }
+    if (!doc) { this.send({ type: 'noDocument', reason: noDocumentReason(editor) }); return }
     this.lastUri = doc.uri.toString()
     this.sendConfig()
     this.sendDocument(doc)

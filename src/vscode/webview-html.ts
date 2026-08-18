@@ -96,6 +96,19 @@ export interface HtmlParts {
   /** ⚠️ **必須以 `/` 結尾**——Blockly 直接把它當前綴接檔名。 */
   mediaSrc: string
   csp: string
+  /**
+   * 在主程式之前載入的腳本（**只有預檢頁在用**）。
+   *
+   * 🔴 為什麼需要它：`postToHost` 在沒有宿主時**靜靜地不做事**，
+   * 於是預檢**驗不到「積木 → 程式碼」有沒有真的送出去**
+   * ——而 2026-08-18 使用者回報的「沒同步」正是那個方向。
+   *
+   * > **一個把「沒送出去」顯示成正常的模擬環境，
+   * > 驗得了畫面，驗不了接線。**
+   *
+   * ⚠️ 必須是**外部檔案**：CSP 沒有 nonce 也沒有 `unsafe-inline`，行內腳本不會執行。
+   */
+  preScripts?: string[]
 }
 
 const escapeAttr = (s: string): string =>
@@ -129,6 +142,7 @@ export function renderHtml(parts: HtmlParts): string {
      script-src 沒有 nonce 也沒有 unsafe-inline，所以行內腳本不會執行
      ——而症狀是「面板一片空白」，沒有任何錯誤指向這裡。 -->
 <div id="app" data-blockly-media="${escapeAttr(parts.mediaSrc)}"></div>
+${(parts.preScripts ?? []).map((s) => `<script src="${escapeAttr(s)}"></script>`).join('\n')}
 <script type="module" src="${escapeAttr(parts.scriptSrc)}"></script>
 </body>
 </html>`

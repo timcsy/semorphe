@@ -33,6 +33,7 @@ import { App } from '../../ui/app'
 import { vscodeProfile } from '../vscode-profile'
 import { attachDragMeter, type DragMeasurement } from './fps'
 import { postToHost } from './host-bridge'
+import { attachNoDocumentBanner } from './no-document-banner'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -68,6 +69,7 @@ async function boot(): Promise<void> {
   // ⚠️ 量測沒有被丟掉：它搬去宿主的輸出頻道。
   //
   // > **一個儀器如果佔著產品的版面，它就不只是儀器了。**
+  attachNoDocumentBanner()
   attachDiagnostics(app)
 }
 

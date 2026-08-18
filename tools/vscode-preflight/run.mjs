@@ -140,13 +140,32 @@ await page.waitForTimeout(2500)
 const lifted = await page.locator('#app .blocklyDraggable').count()
 console.log(`\n程式碼 → 積木：畫布上 ${lifted} 顆積木 ${lifted > 0 ? '🟢' : '🔴 lift 沒通'}`)
 
+// ③ 🔴 **積木 → 程式碼真的送得出去嗎**
+//
+// ⚠️ 使用者 2026-08-18 兩次回報「沒同步」，而預檢兩次都是綠的
+//    ——因為沒有宿主時 `postToHost` **靜靜地不做事**。
+//    現在預檢頁載入 `host-stub.js` 提供假的 `acquireVsCodeApi()`，
+//    送出去的訊息記在 `window.__SENT__`。
+//
+// > **一個把「沒送出去」顯示成正常的模擬環境，驗得了畫面，驗不了接線。**
+//
+// 觸發用**真的控制項**（清空），因為它保證讓程式碼與鏡像不同
+// ——`setCode` 在沒有差異時本來就不發訊息，那不是壞掉。
+await page.evaluate(() => { window.__SENT__.length = 0 })
+await page.locator('#clear-btn').click()
+await page.waitForTimeout(1500)
+const sent = await page.evaluate(() => (window.__SENT__ ?? []).map((m) => m.type))
+const edits = sent.filter((t) => t === 'applyEdit').length
+console.log(`\n積木 → 程式碼：送出 ${edits} 則 applyEdit ${edits > 0 ? '🟢' : '🔴 沒同步'}` +
+  (sent.length ? `（全部訊息：${sent.join(', ')}）` : '（一則訊息都沒送）'))
+
 console.log(`\n請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.工具列 && blocks.狀態列 && blocks.積木畫布
-  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1
+  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && edits > 0
   && !blocks.程式碼編輯區 && !blocks.檔案按鈕
   && lifted > 0 && !!assetBase.media && !!assetBase.assets
 if (!ok) console.log('🔴 預檢不通過')

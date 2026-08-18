@@ -104,9 +104,24 @@ function main(): void {
   )
 
   // 4. Chromium 預檢頁——同一份 HTML 產生器，相對路徑。
+  //
+  // 🔴 **假宿主**：讓 `acquireVsCodeApi()` 在 Chromium 裡也存在，
+  //    把送出去的訊息記在 `window.__SENT__`。
+  //    沒有它的話 `postToHost` 靜靜地不做事，而預檢會把
+  //    **「積木 → 程式碼 完全沒送出去」顯示成一切正常**。
+  //    ⚠️ 這個檔【只寫進預檢頁】——真面板的 HTML 不含它。
+  writeFileSync(
+    join(OUT, 'dist', 'host-stub.js'),
+    `// 只有 Chromium 預檢在用——真面板由 VSCode 自己提供這個函式。\n` +
+      `window.__SENT__ = []\n` +
+      `window.acquireVsCodeApi = function () {\n` +
+      `  return { postMessage: function (m) { window.__SENT__.push(m) } }\n` +
+      `}\n`,
+  )
   writeFileSync(
     join(OUT, 'dist', 'preview.html'),
     renderHtml({
+      preScripts: ['./host-stub.js'],
       scriptSrc: './webview.js',
       styleSrc: './webview.css',
       mediaSrc: './media/',

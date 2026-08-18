@@ -112,7 +112,9 @@ export class VscodeCodeView implements CodeView, ViewHost {
     } else if (m.type === 'noDocument') {
       this.mirror = ''
       this.version = -1
-      this.changeCb?.('')
+      // ⚠️ **刻意不通知應用。** 通知它「程式碼變成空的」會把使用者的積木清掉
+      //    ——而他只是點到了一個 markdown 檔。
+      //    🔴 為什麼不同步這件事由宿主層的橫幅說（`no-document-banner.ts`）。
     } else if (m.type === 'selection') {
       this.cursorCb?.(m.line)
     }
