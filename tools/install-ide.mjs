@@ -81,11 +81,27 @@ if (existsSync(arduino)) {
     }
   }
   copyFileSync(VSIX, join(plugins, `${name}-${version}.vsix`))
-  // 🔴 **這一步是重點**：目錄名不含版本，不刪的話 Theia 不會重新解。
-  const deployed = join(arduino, 'deployedPlugins', name)
-  if (existsSync(deployed)) {
-    rmSync(deployed, { recursive: true, force: true })
-    console.log(`  🗑  清掉 Theia 的解壓快取（否則它會繼續用舊的）`)
+  // 🔴 **這一步是重點**：不刪的話 Theia 不會重新解。
+  //
+  // ⚠️ 而目錄名有**兩種形狀**，而第一版只認得其中一種：
+  //
+  // ```
+  // deployedPlugins/semorphe-vscode/          ← 不帶版本（第一版只刪這個）
+  // deployedPlugins/semorphe-vscode-0.7.1/    ← 帶版本（實測看到的是這種）
+  // ```
+  //
+  // 🔴 **同版本重裝時，帶版本的那個目錄不會被刪**，於是 Theia 繼續用舊的解壓內容
+  // ——而 vsix 已經換掉了。**症狀與檔頭那一段一模一樣，只是換了個形狀。**
+  //
+  // > **一個以「名字」為鍵的快取，被清乾淨的前提是【你認得出它所有的名字】。**
+  const deployRoot = join(arduino, 'deployedPlugins')
+  if (existsSync(deployRoot)) {
+    for (const entry of readdirSync(deployRoot)) {
+      if (entry === name || entry.startsWith(`${name}-`)) {
+        rmSync(join(deployRoot, entry), { recursive: true, force: true })
+        console.log(`  🗑  清掉 Theia 的解壓快取 ${entry}`)
+      }
+    }
   }
   console.log(`  ✅ Arduino IDE → ${plugins}/${name}-${version}.vsix`)
 } else {
