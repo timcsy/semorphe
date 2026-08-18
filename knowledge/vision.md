@@ -234,9 +234,25 @@ languages/{lang}/
 
 #### 階段 9+：進階擴充
 
+```
+9.1 DataFlow 視圖（消費 control_flow annotations）
+9.2 SemanticDiff 增量更新（前置：階段 5b nodeId 穩定性）
+9.3 接線視圖 ＋ 模擬視圖（硬體教育）
+9.4 跨語言映射視圖（abstractConcept 驅動）
+9.5 語義套件市場
+```
+
 - [ ] 唯讀視圖可從 annotations 自動生成，不需改語言套件
 - [ ] style 變更的語義 diff 為零
-- [ ] SemanticDiff 算法原型（從階段 0-5b 延後至此）
+
+> 🔴 **這五行不是裝飾——它們是被引用的**。
+> `tests/baselines/annotation-adoption.json` 用 `pending-consumer:9.1 DataFlow 視圖`
+> 替一個零讀取點的標註背書，而第 X 條護欄會**逐字**在本檔搜那個字串。
+>
+> ⚠️ 2026-08-18 的路線圖收斂把這一段刪成三行，護欄當場變紅：
+>
+> > **一個路線圖項目不只是計畫，它還是別人引用的【指涉】——
+> > 收斂它的時候，被引用的那個名字要留下來。**
 
 ### 🧾 未清的債（跨階段，不屬於任何一刀）
 
