@@ -60,6 +60,10 @@ export const SUBJECTS = [
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
   'ofstream', 'pair', 'pointer', 'priority_queue', 'queue', 'set', 'stack',
   'string', 'stringstream', 'struct', 'template', 'var', 'vector',
+  // ⚠️ 兩個加入日 2026-08-18——第 0 批。
+  // `tone` 也在 ATOMIC_NAMES（先例：`print` 同時是單字名與主體）；
+  // `pulse` 只當主體（`pulse_read` ＝ 讀一段脈衝有多長）。
+  'tone', 'pulse',
 ] as const
 
 /**
@@ -120,6 +124,11 @@ export const OPERATIONS = [
   // `print`   ——它同時是單字名（`cpp:print`）與操作（`cpp:serial_print`）。
   //   那不是矛盾：「輸出」既可以自己成立，也可以是**對某個裝置**做的事。
   'constant', 'open', 'print',
+  // ⚠️ 三個加入日 2026-08-18——第 0 批（階段 6.16 的地基）。
+  // `stop`（`tone_stop`）· `resolution`（`analog_resolution`）· `constrain`（`math_constrain`）
+  // 🔴 而 `constrain` 進**操作**不進單字名，是為了讓它與既有的 `math_min`／`math_max`
+  //    同族——同一種東西用同一種形狀。
+  'stop', 'resolution', 'constrain',
 ] as const
 
 /**
@@ -191,6 +200,13 @@ export const ATOMIC_NAMES = [
   // `delay`／`millis` 是**單字名**：它們沒有主體可拆
   //（「等待」與「開機到現在」都不是作用在某個東西上），與 `sizeof` 同一類。
   'delay', 'millis',
+  // ⚠️ 三個加入日 2026-08-18——第 0 批（階段 6.16 的地基）。
+  // `micros`／`delay_microseconds` 與上面兩個同一類（沒有主體可拆）；
+  // 🔴 而 `delay_microseconds` 是**多字單字名**，先例是 `if_else`／`initializer_list`
+  //（那個「多字」不是主體＋操作，是一個不可分的東西）。
+  // `tone` 同理：「發出一個頻率」沒有可拆的主體——而它的**停止**有
+  //（`tone_stop`，`tone` 同時進 SUBJECTS，先例是 `print`）。
+  'micros', 'delay_microseconds', 'tone',
   // ⚠️ `initializer_list` 加入日 2026-08-14——`{1, 2, 3}` 這個**語法本身**。
   // 它是語言構造（聚合初始化列），不是抄來的函式庫名：`std::initializer_list`
   // 是那個語法的**型別**，而這顆元件是那個語法。與 `lambda`／`ternary` 同類。

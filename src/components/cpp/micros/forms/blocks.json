@@ -1,0 +1,19 @@
+[
+  {
+    "id": "cpp_micros",
+    "conceptId": "cpp:micros",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_micros",
+      "message0": "%{BKY_C_MICROS_MSG0}",
+      "args0": [],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_MICROS_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": { "fields": {}, "inputs": {}, "statementInputs": {} }
+  }
+]

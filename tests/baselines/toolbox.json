@@ -261,8 +261,10 @@
         "cpp_analog_read",
         "cpp_analog_write",
         "cpp_delay",
+        "cpp_delay_microseconds",
         "cpp_digital_read",
         "cpp_digital_write",
+        "cpp_micros",
         "cpp_millis",
         "cpp_pin_mode"
       ]

@@ -1,0 +1,18 @@
+{
+  "conceptId": "cpp:delay_microseconds",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": { "us": "expression" },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "推**同一個**模擬時鐘（`core/runtime/arduino-clock.ts` 的 `sleepMillis`），不自己記時間。⚠️ 而時鐘的解析度是**毫秒**：`delayMicroseconds(500)` 推進 0.5 ms，`delayMicroseconds(10)` 推進 0.01 ms——小於一毫秒的等待在模擬裡**不會被 `millis()` 看見**。那與真板子不同，判準見 `digital_read` 檔頭「可重現比擬真重要」。"
+}

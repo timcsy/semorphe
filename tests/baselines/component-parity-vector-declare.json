@@ -1,7 +1,7 @@
 {
   "_meta": {
     "guard": "component-parity",
-    "measuredAt": "2026-08-17",
+    "measuredAt": "2026-08-18",
     "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
   },
   "identitySet": [
@@ -58,6 +58,7 @@
     "cpp:default",
     "cpp:define",
     "cpp:delay",
+    "cpp:delay_microseconds",
     "cpp:delete",
     "cpp:destructor",
     "cpp:digital_read",
@@ -115,6 +116,7 @@
     "cpp:method_override",
     "cpp:method_virtual",
     "cpp:method_virtual_pure",
+    "cpp:micros",
     "cpp:millis",
     "cpp:namespace_def",
     "cpp:negate",

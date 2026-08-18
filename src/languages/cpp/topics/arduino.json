@@ -29,6 +29,8 @@
       "cpp:digital_read",
       "cpp:delay",
       "cpp:millis",
+      "cpp:micros",
+      "cpp:delay_microseconds",
       "cpp:serial_open",
       "cpp:serial_print"
     ],
