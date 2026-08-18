@@ -43,10 +43,18 @@ async function boot(): Promise<void> {
   const raw = appEl.dataset.blocklyMedia ?? ''
   const media = raw && !raw.endsWith('/') ? `${raw}/` : raw
   if (media) {
-    // 🔴 走全域而不是參數，因為 `App` 沒有「media 在哪」這個概念
+    // 🔴 走全域而不是參數，因為 `App` 沒有「檔案在哪」這個概念
     //    ——那是**環境**，不是應用的組態。
-    const w = window as unknown as { __SEMORPHE_BLOCKLY_MEDIA__?: string }
+    const w = window as unknown as {
+      __SEMORPHE_BLOCKLY_MEDIA__?: string
+      __SEMORPHE_ASSET_BASE__?: string
+    }
     w.__SEMORPHE_BLOCKLY_MEDIA__ = media
+    // ⚠️ tree-sitter 的 wasm 與 Blockly 的 media 是**同一個資源根**的兩個子路徑。
+    //    🔴 漏掉這一行的症狀是
+    //       `Aborted(both async and sync fetching of the wasm failed)`
+    //       ——而它**只在真的去載的時候才炸**，建置與畫面都看不出來。
+    w.__SEMORPHE_ASSET_BASE__ = media.replace(/media\/$/, '')
   }
 
   const app = new App(vscodeProfile)

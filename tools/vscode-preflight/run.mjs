@@ -63,93 +63,69 @@ page.on('pageerror', (e) => errors.push(`PAGEERROR ${e.message}`))
 page.on('requestfailed', (r) => failures.push(`${r.url()} :: ${r.failure()?.errorText ?? ''}`))
 
 await page.goto(`http://localhost:${PORT}/preview.html`, { waitUntil: 'networkidle' })
-await page.waitForTimeout(2000)
+await page.waitForTimeout(4500)
 
-const readout = async () => (await page.locator('#readout').innerText()).replace(/\n(?=[^\n])/g, ' ')
-console.log('── 載入後 ──\n' + (await readout()))
+const fatal = await page.evaluate(() => (document.querySelector('#app > pre')?.textContent || '').slice(0, 400))
+if (fatal) console.log('🔴 啟動失敗：\n' + fatal)
 
-// 🔴 工具箱分類數——SC-009 要求它與網頁版相同。
-// ⚠️ 而它從【畫面上】數，不是從設定物件數：一個「建出來了但沒渲染」
-//    的工具箱，在設定物件上看起來一模一樣。
-const categories = await page.locator('.blocklyToolboxCategory').count()
-console.log(`\n工具箱分類（畫面上）：${categories}`)
+// ① 介面的區塊——SC-002
+const blocks = await page.evaluate(() => ({
+  工具列: !!document.querySelector('header'),
+  狀態列: !!document.querySelector('footer'),
+  積木畫布: !!document.querySelector('.injectionDiv'),
+  工具箱分類: document.querySelectorAll('.blocklyToolboxCategory').length,
+  快速列按鈕: document.querySelectorAll('.quick-access-bar button').length,
+  下方分頁: document.querySelectorAll('.bottom-panel .tab, [id*=tab]').length,
+  程式碼編輯區: !!document.querySelector('.monaco-editor'),
+  檔案按鈕: !!document.getElementById('file-menu-btn'),
+}))
+console.log(JSON.stringify(blocks, null, 1))
 
-// ── 模擬宿主送一份文件進來 ──
-// ⚠️ 預檢裡沒有真的宿主，所以這裡【扮演】它。
-//    🔴 而扮演的是【同一個訊息形狀】，不是另一條路徑。
+// ①b 🔴 資源根有沒有被注入
+//
+// ⚠️ **這一條與②不重疊，而重疊的假象很容易騙過人**：
+//    預檢的頁面是一般的 HTTP server，**相對路徑在那裡本來就通**
+//    ——所以②在「注入被拿掉」的情況下【仍然會綠】。
+//    而在真的 Webview 裡文件有一個合成的網址，相對路徑不成立。
+//
+// > **一個在寬鬆環境裡跑的檢查，測不到只在嚴格環境裡出現的失敗。
+// > 所以要另外驗那個【前提】本身。**
+const assetBase = await page.evaluate(() => ({
+  media: window.__SEMORPHE_BLOCKLY_MEDIA__ ?? null,
+  assets: window.__SEMORPHE_ASSET_BASE__ ?? null,
+}))
+console.log(`\n資源根：media=${assetBase.media} assets=${assetBase.assets}` +
+  (assetBase.media && assetBase.assets ? ' 🟢' : ' 🔴 沒注入 → 真的 Webview 裡會載不到 wasm'))
+
+// ② 🔴 **程式碼 → 積木真的通了嗎**
+//
+// ⚠️ 這一條 2026-08-18 曾經【消失過】：spec 139 用一個讀數顯示「lift 就緒」，
+//    而 spec 140 把那個讀數刪掉之後，預檢就不再檢查 lift 了
+//    ——於是 wasm 路徑在真的宿主裡壞掉，而預檢全綠。
+//
+// > **一個檢查如果依附在某個顯示上，那個顯示被刪掉時它會一起消失
+// > ——而沒有人會發現少了一條檢查。**
+//
+// 所以它現在錨在**行為**上：送一段程式進去，數畫布上有幾顆積木。
 const PROGRAM = 'int main() {\n    int x = 1;\n    return 0;\n}\n'
 await page.evaluate((text) => {
   window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text, version: 1 }, '*')
 }, PROGRAM)
-await page.waitForTimeout(300)
-console.log('\n── 送入文件後 ──\n' + (await readout()))
+await page.waitForTimeout(2500)
+const lifted = await page.locator('#app .blocklyDraggable').count()
+console.log(`\n程式碼 → 積木：畫布上 ${lifted} 顆積木 ${lifted > 0 ? '🟢' : '🔴 lift 沒通'}`)
 
-// ── 在畫布上放一顆積木 → 應該算得出「改了幾行」 ──
-const placed = await page.evaluate(() => {
-  const S = window.__semorphe
-  const ws = S.panel.getWorkspace()
-  const spec = S.registry.getAll().find((x) => {
-    const d = x.blockDef ?? {}
-    return !x.form && d.type && d.message0 && ('previousStatement' in d || 'nextStatement' in d)
-  })
-  const b = ws.newBlock(spec.blockDef.type)
-  b.initSvg(); b.moveBy(220, 60); ws.render()
-  // Blockly 的變更事件是非同步派送的
-  return spec.blockDef.type
-})
-await page.waitForTimeout(500)
-const afterEdit = await readout()
-console.log(`\n── 放一顆 ${placed} 之後 ──\n` + afterEdit)
-
-const blocks = await page.locator('#canvas .blocklyDraggable').count()
-const labels = await page.locator('#canvas svg text').evaluateAll((ns) => ns.map((n) => n.textContent))
-console.log(`\n積木數：${blocks}　標籤：${JSON.stringify(labels.slice(0, 4))}`)
-const raw = labels.filter((t) => typeof t === 'string' && t.includes('%{BKY_'))
-if (raw.length > 0) console.log(`🔴 i18n 沒載：${JSON.stringify(raw)}`)
-
-// 🔴 US1 的管線在 Chromium 裡通了嗎——「這次改了幾行」要是一個數字且 > 0
-const spanLines = /上次編輯改了幾行\s+(\d+)/.exec(afterEdit)
-console.log(`\n重寫跨距：${spanLines ? spanLines[1] + ' 行' : '🔴 沒算出來'}`)
-
-// ── 單步執行：積木要一顆一顆亮 ──
-// 🔴 US4 的重點是【看見程式在積木上走過去】，所以驗的是「高亮換了幾次」。
-const execResult = await page.evaluate(async () => {
-  const seen = []
-  const btn = document.getElementById('step')
-  for (let i = 0; i < 4; i++) {
-    btn.click()
-    await new Promise((r) => setTimeout(r, 250))
-    const hl = document.querySelectorAll('.blocklyPath.semorphe-highlight-execution, .semorphe-highlight-execution')
-    seen.push(document.getElementById('runstate').textContent)
-  }
-  document.getElementById('stop').click()
-  return { states: seen, out: document.getElementById('out').textContent.slice(0, 120) }
-})
-console.log(`\n單步：${JSON.stringify(execResult.states)}`)
-if (execResult.out) console.log(`輸出：${JSON.stringify(execResult.out)}`)
-
-// 拖曳：往左上拖，⚠️ 往右下會把積木拖出畫布（第一版踩過，症狀是「畫布空白」）
-if (blocks > 0) {
-  const box = await page.locator('#canvas .blocklyDraggable').first().boundingBox()
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-  await page.mouse.down()
-  for (let i = 1; i <= 60; i++) {
-    await page.mouse.move(box.x + box.width / 2 - i * 2, box.y + box.height / 2 - i * 0.6 + Math.sin(i / 6) * 20)
-    await page.waitForTimeout(12)
-  }
-  await page.mouse.up()
-  await page.waitForTimeout(500)
-  console.log('\n── 拖曳後 ──\n' + (await readout()))
-}
-
-console.log(`\n資源請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
+console.log(`\n請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
+const ok = !fatal && errors.length === 0 && failures.length === 0
+  && blocks.工具列 && blocks.狀態列 && blocks.積木畫布
+  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1
+  && !blocks.程式碼編輯區 && !blocks.檔案按鈕
+  && lifted > 0 && !!assetBase.media && !!assetBase.assets
+if (!ok) console.log('🔴 預檢不通過')
+
 await browser.close()
 stop()
-// ⚠️ 入口條件錨在【合成量】：分類數與積木數都要 > 0，
-//    否則「零錯誤」只是因為什麼都沒渲染。
-const ok = errors.length === 0 && failures.length === 0 && blocks >= 1 && categories >= 1 && spanLines !== null && Number(spanLines[1]) > 0
-if (!ok) console.log(`🔴 不通過：錯誤 ${errors.length}｜請求失敗 ${failures.length}｜積木 ${blocks}｜分類 ${categories}｜跨距 ${spanLines ? spanLines[1] : '無'}`)
 process.exit(ok ? 0 : 1)
