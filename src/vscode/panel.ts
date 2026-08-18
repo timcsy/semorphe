@@ -87,8 +87,11 @@ function isSupported(doc: vscode.TextDocument): boolean {
  * 而只做前者的系統在條件沒滿足時，看起來與壞掉一模一樣。
  */
 function noDocumentReason(editor: vscode.TextEditor | undefined): string {
-  if (!editor) return '沒有開啟任何程式碼編輯器。開一個 .ino 或 .cpp 檔。'
-  const doc = editor.document
+  // ⚠️ 焦點在面板上時 `activeTextEditor` 是 `undefined`——**而編輯器就開在旁邊**。
+  //    只看 active 會講出「沒有開啟任何編輯器」這種與畫面矛盾的話。
+  const target = editor ?? vscode.window.visibleTextEditors[0]
+  if (!target) return '沒有開啟任何程式碼編輯器。開一個 .ino 或 .cpp 檔。'
+  const doc = target.document
   const untitled = doc.isUntitled
   return (
     `目前的編輯器是「${doc.languageId}」${untitled ? '（未命名的暫存分頁）' : ''}，` +
@@ -142,6 +145,12 @@ class SemorpheSession {
     // ⚠️ **存檔那一刻身分會變**（`untitled:` → `file://`），而視圖狀態要跟著搬。
     //    🔴 `onDidRenameFiles` 管不到它（那是檔案改名，不是暫存分頁落地）。
     vscode.workspace.onDidSaveTextDocument((doc) => this.onSaved(doc), null, this.disposables)
+    // 🔴 **解除綁定只發生在這裡**——見 `follow()` 的檔頭：焦點離開不算。
+    vscode.workspace.onDidCloseTextDocument((doc) => {
+      if (doc.uri.toString() === this.doc?.uri.toString()) this.unfollow()
+    }, null, this.disposables)
+    // 使用者用橫幅上的按鈕（或 ⌘K M）改了語言 → 這份文件可能【剛好變成】支援的。
+    vscode.workspace.onDidOpenTextDocument(() => this.follow(), null, this.disposables)
 
     this.follow()
   }
@@ -150,20 +159,65 @@ class SemorpheSession {
     void this.panel.webview.postMessage(m)
   }
 
-  /** 切到目前的編輯器所編輯的文件。 */
+  /**
+   * 切到目前的編輯器所編輯的文件。
+   *
+   * ## 🔴 「沒有作用中的編輯器」**不等於**「沒有文件可同步」
+   *
+   * 焦點在 Webview 面板上時 `vscode.window.activeTextEditor` 是 `undefined`，
+   * 而 `onDidChangeActiveTextEditor` **會帶著 undefined 觸發**。
+   * ⚠️ 第一版把那當成「沒有文件」→ **使用者一點進積木面板，同步就斷了**
+   * （2026-08-18 實測：面板上跳出「沒有開啟任何程式碼編輯器」而檔案就開在旁邊）。
+   *
+   * > **一個「焦點離開了」的事件，被讀成「那個東西不存在了」
+   * > ——而使用者為了操作面板，一定會讓焦點離開編輯器。**
+   *
+   * 所以規則是**只往上跟**：看到一份支援的文件就換過去；
+   * 看不到就**保持現狀**，不解除綁定。解除只發生在文件關掉時。
+   */
   private follow(): void {
     const editor = vscode.window.activeTextEditor
-    const doc = editor && isSupported(editor.document) ? editor.document : undefined
-    if (doc?.uri.toString() === this.doc?.uri.toString()) return
-    this.doc = doc
-    // ⚠️ 換文件就清空回音——上一份文件的版本號與這一份無關。
+    if (editor && isSupported(editor.document)) {
+      const doc = editor.document
+      if (doc.uri.toString() === this.doc?.uri.toString()) return
+      this.doc = doc
+      // ⚠️ 換文件就清空回音——上一份文件的版本號與這一份無關。
+      this.echo.reset()
+      this.lastUri = doc.uri.toString()
+      this.sendConfig()
+      this.sendDocument(doc)
+      const vs = this.viewStates.get(doc.uri.toString())
+      if (vs) this.send({ type: 'viewState', state: vs })
+      return
+    }
+    // 🔴 已經綁著一份文件 → **什麼都不做**（焦點只是跑到面板或別的檔上）。
+    if (this.doc) return
+    this.send({ type: 'noDocument', reason: noDocumentReason(editor) })
+  }
+
+  /**
+   * 把目前看得到的那個分頁設成 C++。
+   *
+   * 🔴 使用者要的是「支援選了 C++ 的 Untitled-1」，而新開的暫存分頁預設是純文字。
+   * ⚠️ 這裡**不自動判斷**——它由橫幅上一顆寫著自己會做什麼的按鈕觸發。
+   */
+  private async setLanguageCpp(): Promise<void> {
+    const editor = vscode.window.activeTextEditor ?? vscode.window.visibleTextEditors[0]
+    if (!editor) {
+      void vscode.window.showWarningMessage('沒有可以設定語言的編輯器——先開一個分頁。')
+      return
+    }
+    await vscode.languages.setTextDocumentLanguage(editor.document, 'cpp')
+    // ⚠️ `setTextDocumentLanguage` 會換掉 document 物件的身分，所以要重新跟。
+    this.doc = undefined
+    this.follow()
+  }
+
+  /** 解除綁定——**只有文件關掉時**。 */
+  private unfollow(): void {
+    this.doc = undefined
     this.echo.reset()
-    if (!doc) { this.send({ type: 'noDocument', reason: noDocumentReason(editor) }); return }
-    this.lastUri = doc.uri.toString()
-    this.sendConfig()
-    this.sendDocument(doc)
-    const vs = this.viewStates.get(doc.uri.toString())
-    if (vs) this.send({ type: 'viewState', state: vs })
+    this.send({ type: 'noDocument', reason: noDocumentReason(vscode.window.activeTextEditor) })
   }
 
   /**
@@ -239,6 +293,7 @@ class SemorpheSession {
   }
 
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
+    if (m.type === 'setLanguageCpp') { await this.setLanguageCpp(); return }
     if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }
     if (m.type === 'diagnostics') {

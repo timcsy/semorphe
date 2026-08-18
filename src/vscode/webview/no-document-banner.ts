@@ -19,7 +19,10 @@
  * 把它做進 `ui/` 會讓網頁版帶著一個永遠不會亮的元件。
  */
 
+import { postToHost } from './host-bridge'
+
 const ID = 'semorphe-no-document'
+const TEXT_ID = 'semorphe-no-document-text'
 
 function ensure(): HTMLElement {
   const existing = document.getElementById(ID)
@@ -33,14 +36,31 @@ function ensure(): HTMLElement {
     'background:#5a3a00', 'color:#ffd48a', 'border-bottom:1px solid #7a5100',
     'display:none',
   ].join(';')
+  const text = document.createElement('span')
+  text.id = TEXT_ID
+  el.appendChild(text)
+
+  // 🔴 **一顆寫著自己會做什麼的按鈕**，不是一個自動判斷。
+  //    使用者要的是「支援選了 C++ 的 Untitled-1」，而新分頁預設是純文字。
+  //    ⚠️ 自動改掉使用者編輯器的語言是一個沒有被要求的副作用；這顆按鈕不是。
+  const btn = document.createElement('button')
+  btn.textContent = '把目前的分頁設成 C++'
+  btn.style.cssText = [
+    'margin-left:10px', 'padding:2px 10px', 'font-size:12px', 'cursor:pointer',
+    'background:#7a5100', 'color:#ffd48a', 'border:1px solid #a06a00', 'border-radius:3px',
+  ].join(';')
+  btn.addEventListener('click', () => postToHost({ type: 'setLanguageCpp' }))
+  el.appendChild(btn)
+
   document.body.appendChild(el)
   return el
 }
 
-/** 顯示原因。空字串＝收起來。 */
+/** 顯示原因。 */
 export function showNoDocument(reason: string): void {
   const el = ensure()
-  el.textContent = `⚠️ ${reason}`
+  const text = document.getElementById(TEXT_ID)
+  if (text) text.textContent = `⚠️ ${reason}`
   el.style.display = 'block'
 }
 

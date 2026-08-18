@@ -88,6 +88,16 @@ export type WebviewMessage =
       baseVersion: number
     }
   | { type: 'ready'; capsules: number; specs: number }
+  /**
+   * 「把目前這個分頁設成 C++」——由「沒有文件可同步」的橫幅上那顆按鈕發出。
+   *
+   * 🔴 **為什麼是一顆按鈕，不是自動判斷。** 使用者要的是「支援選了 C++ 的
+   * Untitled-1」，而新開的暫存分頁預設是純文字。自動改掉使用者編輯器的語言
+   * 是一個**沒有被要求的副作用**；一顆寫著它會做什麼的按鈕不是。
+   *
+   * > **替使用者做決定與讓使用者一鍵做決定，差別在他知不知道發生了什麼。**
+   */
+  | { type: 'setLanguageCpp' }
   /** 診斷報告。🔴 它去宿主的輸出頻道，不去面板。 */
   | { type: 'diagnostics'; lines: string[] }
   /**
