@@ -245,7 +245,8 @@ class SemorpheSession {
       blockStyle: layered<string>('blockStyle'),
       locale: layered<string>('locale'),
     }
-    this.send({ type: 'config', config: resolveConfig(raw) })
+    // 🔴 傳檔名進去——`.ino` 的預設目標是 Arduino，不是 C++（見 `settings.ts`）。
+    this.send({ type: 'config', config: resolveConfig(raw, doc?.uri.path) })
   }
 
   /**
@@ -293,6 +294,12 @@ class SemorpheSession {
   }
 
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
+    // 🔴 Webview 起來了 → **重送目前的狀態**。建面板時送的那一份可能沒有人接。
+    if (m.type === 'ready') {
+      this.doc = undefined   // 讓 follow() 一定會重送，而不是「同一份就跳過」
+      this.follow()
+      return
+    }
     if (m.type === 'setLanguageCpp') { await this.setLanguageCpp(); return }
     if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }

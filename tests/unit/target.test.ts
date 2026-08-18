@@ -48,16 +48,53 @@ describe('目標', () => {
    * ⚠️ 它**不是**「檢查有四個欄位」——那樣加第五個欄位它照樣綠。
    * 它斷言的是**欄位的集合恰好等於**那四個，**而多一個就紅**。
    */
-  it('★ 它不是新的抽象層——欄位【恰好】是兩個引用兩個標籤', () => {
+  it('★ 它不是新的抽象層——欄位是一個【封閉】的集合', () => {
+    // 🔴 判準沒有變（SC-005）：**每個欄位都要說得出「它今天住在哪裡」**。
+    //
+    // ⚠️ 而斷言的形狀在 2026-08-18 改過一次：原本是「恰好等於四個」，
+    //    那讓**選用欄位**不可能存在（`cpp.json` 沒有 `entryShell`，
+    //    `arduino.json` 有 → 同一條 `toEqual` 不可能兩個都過）。
+    //
+    // 🟢 改成「必要的都在 ＋ 出現的都在白名單裡」——**多一個沒登記的仍然紅**，
+    //    所以「不得長成新的抽象層」這條力道沒有掉。
+    const REQUIRED = ['id', 'name', 'style', 'topic']
+    // 每一格後面那句話就是 SC-005 要的「它今天住在哪裡」。
+    const ALLOWED: Record<string, string> = {
+      id: '標籤',
+      name: '標籤',
+      topic: '引用——課程清單',
+      style: '引用——風格',
+      // 🔴 `entryShell` **不是新機制，是替一個既有的寫死決定命名**：
+      //    它今天住在 `languages/cpp/cpp-scaffold.ts` 的常數 `'int main() {'`
+      //    與 `languages/cpp/auto-include.ts` 補丁器的第 3 步。
+      //    ⚠️ 而那兩處**各自實作了同一個決定**，所以 Arduino 的 sketch 被包進
+      //    `int main()`——修好一處時症狀只少一半。命名它是為了讓兩處問同一份宣告。
+      entryShell: '引用——程式外殼（原本寫死在鷹架與補丁器兩處）',
+    }
     for (const t of TARGETS) {
-      expect(
-        Object.keys(t).sort(),
-        `🔴 目標多了一個欄位——而那讓它從【組合】變成【新的抽象層】。\n` +
-          `判準（SC-005）：每個欄位都要說得出「它今天住在哪裡」。\n` +
-          `  id／name → 標籤　topic → 課程清單　style → 風格\n` +
-          `⚠️ 而 provides／reference 是【完整設計的另外兩格，本輪沒做】——` +
-          `加它們之前要先讀 draft/2026-08-13-C和C++難分難捨.md§三。`,
-      ).toEqual(['id', 'name', 'style', 'topic'])
+      const keys = Object.keys(t)
+      for (const r of REQUIRED) {
+        expect(keys, `🔴 目標 ${(t as { id: string }).id} 少了必要欄位 ${r}`).toContain(r)
+      }
+      for (const k of keys) {
+        expect(
+          ALLOWED[k],
+          `🔴 目標 ${(t as { id: string }).id} 多了一個沒登記的欄位 \`${k}\`\n` +
+            `——而那讓它從【組合】變成【新的抽象層】。\n` +
+            `判準（SC-005）：每個欄位都要說得出「它今天住在哪裡」。\n` +
+            `⚠️ 要加的話，把答案寫進這支測試的 ALLOWED 裡；寫不出來就不要加。\n` +
+            `⚠️ 而 provides／reference 是【完整設計的另外兩格，本輪沒做】——` +
+            `加它們之前要先讀 draft/2026-08-13-C和C++難分難捨.md§三。`,
+        ).toBeTruthy()
+      }
+    }
+  })
+
+  it('★ 而 `entryShell` 的值必須是那兩個之一——不得是一個沒有人認得的字串', () => {
+    for (const t of TARGETS) {
+      const v = (t as { entryShell?: string }).entryShell
+      if (v === undefined) continue
+      expect(['main', 'none'], `🔴 ${(t as { id: string }).id} 的 entryShell 是 ${v}`).toContain(v)
     }
   })
 

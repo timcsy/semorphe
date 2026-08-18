@@ -65,8 +65,24 @@ export function computeAutoIncludes(
  */
 export function createCppCodePatcher(
   resolver: DependencyResolver,
-): (code: string, tree: SemanticNode, namespaceStyle: 'using' | 'explicit', cogLevel?: number) => string | null {
-  return (code, tree, namespaceStyle, cogLevel = 1) => {
+): (
+  code: string,
+  tree: SemanticNode,
+  namespaceStyle: 'using' | 'explicit',
+  cogLevel?: number,
+  /**
+   * 這個目標有沒有程式外殼——🔴 **由目標宣告**（`Target.entryShell`）。
+   *
+   * ⚠️ 少了它的話，這個補丁器會在 Arduino sketch 上補出
+   * `int main() { … }`，把 `setup()`／`loop()` 包進去
+   * ——**而鷹架那一側早就修好了，這裡是第二個入口**。
+   *
+   * > **同一個決定如果有兩個地方各自實作，
+   * > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
+   */
+  entryShell?: 'main' | 'none',
+) => string | null {
+  return (code, tree, namespaceStyle, cogLevel = 1, entryShell = 'main') => {
     const concepts = new Set<string>()
     collectConcepts(tree, concepts)
     const edges = resolver.resolve([...concepts])
@@ -98,7 +114,8 @@ export function createCppCodePatcher(
     }
 
     // 3. Patch missing int main() wrapper (L0 only — scaffold manages main)
-    if (cogLevel === 0 && !patched.includes('int main(')) {
+    // 🔴 `entryShell === 'none'` 的目標**沒有 main**——見上面的參數說明。
+    if (entryShell !== 'none' && cogLevel === 0 && !patched.includes('int main(')) {
       // Extract header lines (#include, using namespace, blank) and body
       const lines = patched.split('\n')
       const headerEnd = lines.reduce((a, l, i) => {

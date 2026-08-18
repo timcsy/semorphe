@@ -7,8 +7,26 @@ import { expandHeaderAliases } from './header-aliases'
 
 export class CppScaffold implements ProgramScaffold {
   private resolver: DependencyResolver
-  constructor(resolver: DependencyResolver) {
+  /**
+   * 有沒有程式外殼。
+   *
+   * 🔴 由**目標宣告**（`Target.entryShell`），不是由這裡認名字。
+   * `'none'` 時 preamble／entryPoint／epilogue **全部是空的**——Arduino sketch
+   * 沒有 `main()`，`setup()`／`loop()` 就是頂層。
+   *
+   * ⚠️ 而「空」在這裡是**明確的空陣列**，不是「跳過這一段」：
+   * 下游把 `ScaffoldResult` 的四段當成一份完整的答案。
+   */
+  private entryShell: 'main' | 'none' = 'main'
+
+  constructor(resolver: DependencyResolver, entryShell: 'main' | 'none' = 'main') {
     this.resolver = resolver
+    this.entryShell = entryShell
+  }
+
+  /** 換目標時呼叫——⚠️ 換的是同一個實例，因為它被兩個地方持有（見 `ui/app.ts`）。 */
+  setEntryShell(shell: 'main' | 'none'): void {
+    this.entryShell = shell
   }
 
   resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult {
@@ -36,6 +54,11 @@ export class CppScaffold implements ProgramScaffold {
         pinned: pinned || undefined,
       }
     })
+
+    // 🔴 沒有外殼 → **只留 imports**。
+    if (this.entryShell === 'none') {
+      return { imports, preamble: [], entryPoint: [], epilogue: [] }
+    }
 
     const preambleCode = 'using namespace std;'
     const preamblePinned = pinnedItems.includes(preambleCode)

@@ -97,6 +97,11 @@ export class App {
   private storageService: ReturnType<HostProfile['createStorage']>
   private topicRegistry: TopicRegistry
   private targetRegistry: TargetRegistry
+  /**
+   * 🔴 **一個實例，兩個持有者**（`code-generator` 的模組層 ＋ `syncController`）。
+   * 換目標時要改的是「它的外殼設定」，不是換掉物件——否則會有一個沒被換到。
+   */
+  private scaffold: CppScaffold | null = null
   private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
@@ -153,7 +158,8 @@ export class App {
     registerCppLanguage()
     const registry = createPopulatedRegistry()
     setDependencyResolver(registry)
-    setProgramScaffold(new CppScaffold(registry))
+    this.scaffold = new CppScaffold(registry)
+    setProgramScaffold(this.scaffold)
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
@@ -182,10 +188,14 @@ export class App {
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
     this.blocklyPanel?.setCodeContext('cpp', DEFAULT_STYLE)
-    this.syncController.setProgramScaffold(new CppScaffold(registry))
+    this.syncController.setProgramScaffold(this.scaffold!)
     this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
-    this.syncController.setCodePatcher((code, tree) => cppPatcher(code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth()))
+    this.syncController.setCodePatcher((code, tree) => cppPatcher(
+      code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
+      // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
+      this.currentTarget.entryShell ?? 'main',
+    ))
 
     // Inject auto-include nodes into the display tree when scaffold is visible (depth > 0).
     // Auto-includes are generated transiently by computeAutoIncludes() during code generation
@@ -318,35 +328,7 @@ export class App {
       // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
       //（課程清單那條在這裡、風格那條是 `applyStyle`），
       // 新寫一條會讓「切換之後畫面長什麼樣」有兩個真相來源。
-      onTargetChange: (target, topic, branches) => {
-        const prevDepth = this.getScaffoldDepth()
-        this.currentTarget = target
-        this.currentTopic = topic
-        this.enabledBranches = branches
-        // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
-        const style = STYLE_PRESETS.find(p => p.id === target.style)
-        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
-        const newDepth = this.getScaffoldDepth()
-        setScaffoldConfig({ scaffoldDepth: newDepth })
-        this.syncController?.setTopic(topic, branches)
-        this.reloadBlockSpecsForTopic()
-        this.updateToolbox()
-        this.markOutOfScopeBlocks()
-        if (!this._restoringState) {
-          // Full resync only when scaffold depth crosses the 0 boundary
-          // (blocks need scaffold wrapping/unwrapping). Otherwise just regen code.
-          if ((prevDepth === 0) !== (newDepth === 0)) {
-            this.resyncAfterTopicChange()
-          } else {
-            this.syncBlocksToCodeWithMappings()
-          }
-        }
-        this.refreshStatusBar()
-        // ⚠️ **選擇本身要存**——`autoSave` 只掛在積木變動上（`blocklyPanel.onChange`），
-        // 所以在空白工作區換目標，重新整理之後就跑掉了。
-        // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
-        if (!this._restoringState) this.autoSave()
-      },
+      onTargetChange: (target, topic, branches) => this.handleTargetChange(target, topic, branches),
       onBranchesChange: (branches) => {
         const prevDepth = this.getScaffoldDepth()
         this.enabledBranches = branches
@@ -573,6 +555,89 @@ export class App {
   }
 
   /** Extract tree + blockMappings and sync to code */
+  /**
+   * 換目標——課程清單、風格、鷹架深度一起換。
+   *
+   * 🔴 這段是從選擇器的 closure **搬**出來的（不是複製），因為現在有**兩個**
+   * 呼叫端：使用者在選擇器上選，以及**宿主用組態指定**（`applyHostConfig`）。
+   *
+   * > **同一件事有兩個入口時，要嘛共用一個實作，
+   * > 要嘛就會有兩個「換目標之後畫面長什麼樣」的真相。**
+   */
+  private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
+    // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
+    this.scaffold?.setEntryShell(target.entryShell ?? 'main')
+        const prevDepth = this.getScaffoldDepth()
+        this.currentTarget = target
+        this.currentTopic = topic
+        this.enabledBranches = branches
+        // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
+        const style = STYLE_PRESETS.find(p => p.id === target.style)
+        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
+        const newDepth = this.getScaffoldDepth()
+        setScaffoldConfig({ scaffoldDepth: newDepth })
+        this.syncController?.setTopic(topic, branches)
+        this.reloadBlockSpecsForTopic()
+        this.updateToolbox()
+        this.markOutOfScopeBlocks()
+        if (!this._restoringState) {
+          // Full resync only when scaffold depth crosses the 0 boundary
+          // (blocks need scaffold wrapping/unwrapping). Otherwise just regen code.
+          if ((prevDepth === 0) !== (newDepth === 0)) {
+            this.resyncAfterTopicChange()
+          } else {
+            this.syncBlocksToCodeWithMappings()
+          }
+        }
+        this.refreshStatusBar()
+        // ⚠️ **選擇本身要存**——`autoSave` 只掛在積木變動上（`blocklyPanel.onChange`），
+        // 所以在空白工作區換目標，重新整理之後就跑掉了。
+        // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
+        if (!this._restoringState) this.autoSave()
+  }
+
+  /**
+   * 照宿主給的組態選目標。
+   *
+   * ## 🔴 為什麼非有不可
+   *
+   * 使用者在 Arduino IDE 裡開 `.ino`，而面板用的是 `C++（預設）` 這個目標
+   * ——於是**鷹架把 `setup()`／`loop()` 包進了 `int main()`**，
+   * 並且加上 `using namespace std;`。⚠️ 那不是顯示問題，**它寫進了使用者的檔案**。
+   *
+   * `semorphe.target` 這個設定**早就宣告了**（`manifest.ts`），
+   * 而 spec 140 把 webview 縮成薄殼時，消費它的那一段掉了
+   * ——於是它變成一個**宣告了而沒有人讀**的設定。
+   *
+   * > **一個沒有人讀的設定，與一個不存在的設定，
+   * > 差別只在前者讓人以為已經處理過了。**
+   *
+   * ⚠️ 認不得的 ID **回退到現況**，不崩潰也不留空白（與 `restoreState` 同一條規矩）。
+   */
+  applyHostConfig(cfg: { targetId?: string }): void {
+    if (!cfg.targetId) return
+    const target = this.targetRegistry.get(cfg.targetId)
+    if (!target || target.id === this.currentTarget.id) return
+    const topic = this.topicRegistry.get(target.topic)
+    if (!topic) return
+    // 🔴 **不得由此寫回文件。** `handleTargetChange` 在正常路徑上會
+    //    `syncBlocksToCodeWithMappings()`——而套用組態發生在**開機時**，
+    //    那時工作區是空的，寫回去就是**把使用者的檔案清空**。
+    //
+    // > **一個「換設定」的動作如果順手寫了檔案，
+    // > 那麼在還沒讀到檔案之前換設定，就會把檔案寫成還沒讀到的樣子。**
+    //
+    // ⚠️ 借用既有的 `_restoringState`（它正是「現在不要寫回去」的意思），
+    //    不新開一個旗標——兩個意思一樣的旗標會各自漂移。
+    this._restoringState = true
+    try {
+      this.handleTargetChange(target, topic, new Set([topic.levelTree.id]))
+    } finally {
+      this._restoringState = false
+    }
+    this.topicSelector?.setTarget(target, this.enabledBranches)
+  }
+
   private syncBlocksToCodeWithMappings(): void {
     const tree = this.blocklyPanel?.extractSemanticTree()
     const blockMappings = this.blocklyPanel?.getBlockMappings()
@@ -677,6 +742,8 @@ export class App {
     // 🔴 而**認不得的 ID 一律回退到預設**，不得崩潰或留下一片空白。
     const savedTarget = state.targetId ? this.targetRegistry.get(state.targetId) : undefined
     if (savedTarget) this.currentTarget = savedTarget
+    // ⚠️ 還原也要跟著換外殼——否則存檔存的是 Arduino，開起來卻套 `main()`。
+    this.scaffold?.setEntryShell(this.currentTarget.entryShell ?? 'main')
     const topicId = savedTarget?.topic ?? state.topicId
     if (topicId) {
       const topic = this.topicRegistry.get(topicId)

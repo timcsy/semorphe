@@ -50,7 +50,11 @@ export interface LayeredValue<T> {
 }
 
 export const DEFAULT_CONFIG: PanelConfig = {
-  targetId: 'cpp-beginner',
+  // 🔴 這裡曾經寫 `'cpp-beginner'`——**而那個目標不存在**
+  //    （登錄的四個是 `cpp` / `c` / `cpp-competitive` / `arduino`）。
+  //    ⚠️ 一個認不得的 ID 在下游是「回退到現況」，所以它**不會出聲**
+  //    ——設定看起來有在運作，實際上這一格從來沒有生效過。
+  targetId: 'cpp',
   topicId: null,
   styleId: null,
   blockStyleId: 'default',
@@ -86,9 +90,35 @@ export interface RawSettings {
  * 🔴 回傳的每一格都有值——⚠️ **讓 `undefined` 漏下去的話，
  * 下游會用自己的預設值補**，而那就是第二份真相。
  */
-export function resolveConfig(raw: RawSettings): PanelConfig {
+/**
+ * 由**檔名**決定預設目標。
+ *
+ * 🔴 使用者逐字：「`.ino` 應該跟 main 架構無關」——而實測他的 sketch 被寫成
+ *
+ * ```cpp
+ * using namespace std;
+ * int main() {
+ *     void setup() { … }
+ *     void loop() { … }
+ *     return 0;
+ * }
+ * ```
+ *
+ * ⚠️ **那不是顯示問題，它寫進了使用者的檔案。**
+ *
+ * > **一個「通用的預設」在一個有明確慣例的檔案格式上，
+ * > 不是中立，是錯的。**
+ *
+ * 而這只是**預設**：`semorphe.target` 設過的話仍然照設定走（`pick` 在前）。
+ */
+export function defaultTargetForPath(path: string | undefined): string {
+  if (path && /\.(ino|pde)$/i.test(path)) return 'arduino'
+  return DEFAULT_CONFIG.targetId
+}
+
+export function resolveConfig(raw: RawSettings, documentPath?: string): PanelConfig {
   return {
-    targetId: pick(raw.target, DEFAULT_CONFIG.targetId),
+    targetId: pick(raw.target, defaultTargetForPath(documentPath)),
     topicId: pick(raw.topic, DEFAULT_CONFIG.topicId as string | null),
     styleId: pick(raw.style, DEFAULT_CONFIG.styleId as string | null),
     blockStyleId: pick(raw.blockStyle, DEFAULT_CONFIG.blockStyleId),

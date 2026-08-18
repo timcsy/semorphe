@@ -162,13 +162,55 @@ console.log(`\n積木 → 程式碼：宿主收下 ${host.accepted} 筆、丟掉
   `${twoWay ? '🟢' : '🔴 ' + (host.rejected > 0 ? '版本對不上 → 第二筆之後全被丟掉' : '沒送出去')}` +
   `（訊息：${host.types.join(', ') || '無'}）`)
 
+// ④ 🔴 **開面板不得動到使用者的檔案**（Arduino sketch 的形狀）
+//
+// ⚠️ 2026-08-18 使用者在 Arduino IDE 實測：面板一開，他的 sketch 就變成
+//
+// ```cpp
+// void setup() { … }
+// void loop() { … }
+//
+// int main() {          ← 應用在【還沒讀到文件之前】就用空工作區產出的
+//     return 0;
+// }
+// ```
+//
+// > **寫一份你還沒讀過的檔案，寫的一定不是它的內容
+// > ——而是「如果它是空的，它會長什麼樣」。**
+//
+// 這一條用**另一個分頁**跑，因為上面的檢查已經改過文件了。
+const SKETCH = 'void setup() {\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);\n  delay(1000);\n}\n'
+const page2 = await browser.newPage({ viewport: { width: 900, height: 700 } })
+const errors2 = []
+page2.on('pageerror', (e) => errors2.push(`PAGEERROR ${e.message}`))
+await page2.goto(`http://localhost:${PORT}/preview.html`)
+await page2.waitForFunction(() => typeof window.__setConfig__ === 'function')
+// 🔴 在 App 起來【之前】就設好——正是真宿主的時序（面板建好就送）。
+await page2.evaluate((t) => { window.__setConfig__({ targetId: 'arduino' }); window.__setDocument__(t) }, SKETCH)
+await page2.waitForTimeout(8000)
+const sketchAfter = await page2.evaluate((src) => {
+  let t = src
+  for (const m of window.__HOST__.sent.filter((x) => x.type === 'applyEdit')) {
+    const L = t.split('\n')
+    L.splice(m.span.startLine, m.span.endLine - m.span.startLine, ...m.span.lines)
+    t = L.join('\n')
+  }
+  return t
+}, SKETCH)
+const sketchBlocks = await page2.locator('#app .blocklyDraggable').count()
+const untouched = sketchAfter === SKETCH
+console.log(`\n開 .ino 面板：檔案${untouched ? '一個字都沒改 🟢' : '被改了 🔴'}｜自動出現 ${sketchBlocks} 顆積木 ${sketchBlocks > 0 ? '🟢' : '🔴 要手動按才會同步'}`)
+if (!untouched) console.log('  變成：\n' + sketchAfter.split('\n').map((l) => '    ' + l).join('\n'))
+errors.push(...errors2)
+await page2.close()
+
 console.log(`\n請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.工具列 && blocks.狀態列 && blocks.積木畫布
-  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay
+  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay && untouched && sketchBlocks > 0
   && !blocks.程式碼編輯區 && !blocks.檔案按鈕
   && lifted > 0 && !!assetBase.media && !!assetBase.assets
 if (!ok) console.log('🔴 預檢不通過')

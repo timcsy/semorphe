@@ -154,6 +154,26 @@ export class VscodeCodeView implements CodeView, ViewHost {
   }
 
   setCode(code: string): void {
+    // 🔴 **還沒收到文件就不准寫回去。**
+    //
+    // `version < 0` 代表我們**從來沒有讀過**這份文件。而應用在 `init()` 期間
+    // 會產生一次程式碼（空工作區 → 鷹架），如果那時就寫出去，結果是
+    // 在使用者的 sketch 後面接上
+    //
+    // ```cpp
+    // int main() {
+    //     return 0;
+    // }
+    // ```
+    //
+    // ⚠️ 2026-08-18 在 Arduino IDE 實測到的就是這個。
+    //
+    // > **寫一份你還沒讀過的檔案，寫的一定不是它的內容
+    // > ——而是「如果它是空的，它會長什麼樣」。**
+    //
+    // 🟢 這與 `host-no-overwrite.test.ts` 守的是同一條性質的另一半：
+    //    那一條擋「用舊存檔蓋掉」，這一條擋「用空狀態蓋掉」。
+    if (this.version < 0) return
     if (this.inFlight) { this.queued = code; return }
     const span = rewriteSpan(this.mirror, code)
     if (span === null) return   // ⚠️ 沒有差異 → **不產生檔案變更**

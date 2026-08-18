@@ -71,6 +71,23 @@ async function boot(): Promise<void> {
   // > **一個儀器如果佔著產品的版面，它就不只是儀器了。**
   attachNoDocumentBanner()
   attachDiagnostics(app)
+
+  // 🔴 **宿主的組態要有人讀。** `semorphe.target` 早就宣告了，而 spec 140 把這裡
+  //    縮成薄殼時消費它的那一段掉了——於是在 Arduino IDE 裡開 `.ino`，
+  //    面板仍然用 `C++（預設）`，**鷹架把 setup()／loop() 包進了 int main()**。
+  window.addEventListener('message', (e: MessageEvent<{ type?: string; config?: { targetId?: string } }>) => {
+    if (e.data?.type === 'config' && e.data.config) app.applyHostConfig(e.data.config)
+  })
+
+  // 🔴 **握手：說一聲「我起來了」。**
+  //
+  // 宿主在建面板時就送出第一份文件，⚠️ 而那時這支腳本可能還沒載完
+  // ——訊息沒有人接，**而它不會重送**。
+  // 症狀：面板開著、積木空的，要手動按「程式碼→積木」才會出現
+  // （2026-08-18 使用者在 Arduino IDE 實測；VSCode 那側只是剛好比較快）。
+  //
+  // > **一個「送出去就算數」的初始狀態，把「還沒準備好」變成「永遠沒有」。**
+  postToHost({ type: 'ready', capsules: 0, specs: 0 })
 }
 
 /** 把量測掛上去，並回應宿主的查詢。 */
