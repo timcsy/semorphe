@@ -304,7 +304,7 @@ export async function boot(): Promise<void> {
     atNode(nodeId: string | null): void {
       panel.highlightByNodeId(nodeId, 'execution')
       const range = nodeId && currentTree ? rangeOfNodeId(currentTree, nodeId) : null
-      post({ type: 'executionAt', range })
+      post({ type: 'executionAt', nodeId, range })
     },
     output(text: string): void { outEl.textContent += text },
     stateChanged(s: string): void {

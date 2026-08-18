@@ -17,8 +17,20 @@ function containsNodeId(node: SemanticNode, targetId: string): boolean {
   return false
 }
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
+import type { CodeView } from '../../core/host/code-view'
 
-export class MonacoPanel implements ViewHost {
+export class MonacoPanel implements ViewHost, CodeView {
+  /**
+   * 🔴 **網頁版的編輯器面板【什麼都不缺】。**
+   *
+   * 這一格是空的**不是因為忘了填**——它是一份宣告：
+   * 四個可選能力（重排／行動版／桌面版／取得底層編輯器）**全部都有**。
+   *
+   * ⚠️ 由 `tests/integration/host-code-view-contract.test.ts` 釘住：
+   * 沒實作的可選方法與這裡的鍵**必須一模一樣**。
+   */
+  readonly absentReasons = {}
+
   readonly viewId = 'monaco-panel'
   readonly viewType = 'monaco'
   readonly capabilities: ViewCapabilities = {

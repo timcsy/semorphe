@@ -30,8 +30,8 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 1：Setup
 
-- [ ] T001 記下基準：`npm test` 的測試數、`.vsix` 大小、`src/vscode/` 總行數（現況 2170）
-- [ ] T002 記下網頁版現況：`npm run dev` 開一次，**截圖存起來**——🔴 它是 SC-001 並排比對的左半邊
+- [x] T001 記下基準：`npm test` 的測試數、`.vsix` 大小、`src/vscode/` 總行數（現況 2170）
+- [x] T002 記下網頁版現況：`npm run dev` 開一次，**截圖存起來**——🔴 它是 SC-001 並排比對的左半邊
 
 **關卡**：兩份基準都在。⚠️ **沒有「之前」的截圖，「之後像不像」就沒有比較對象。**
 
@@ -39,12 +39,12 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 2：Foundational —— 🔴 **先寫那條會毀損資料的測試**
 
-- [ ] T003 撰寫 `tests/integration/host-no-overwrite.test.ts`：宿主宣告「不還原文件內容」時，啟動流程 **一次都不呼叫 `setCode`**
-- [ ] T004 確認 T003 **紅**（宿主宣告還不存在）
-- [ ] T005 建立 `src/core/host/code-view.ts`：A/B/D 必要、C 可選 ＋ `absentReasons`（契約第一、二節）
-- [ ] T006 建立 `src/core/host/host-profile.ts`：`createCodeView` / `createStorage` / `features` / `featureReasons`（契約第四節）
-- [ ] T007 [P] 撰寫 `tests/integration/host-code-view-contract.test.ts`：🔴 **沒實作的可選方法**與 `absentReasons` 的鍵**必須一模一樣**（多一個是說謊，少一個是遺漏）
-- [ ] T008 [P] 撰寫 `tests/integration/host-profile-no-branch.test.ts`：🔴 `src/` 裡 grep `profile.id ===`／`\.id === '` → **零筆**（否則能力清單退化成標籤）
+- [x] T003 撰寫 `tests/integration/host-no-overwrite.test.ts`：宿主宣告「不還原文件內容」時，啟動流程 **一次都不呼叫 `setCode`**
+- [x] T004 確認 T003 **紅**（宿主宣告還不存在）
+- [x] T005 建立 `src/core/host/code-view.ts`：A/B/D 必要、C 可選 ＋ `absentReasons`（契約第一、二節）
+- [x] T006 建立 `src/core/host/host-profile.ts`：`createCodeView` / `createStorage` / `features` / `featureReasons`（契約第四節）
+- [x] T007 [P] 撰寫 `tests/integration/host-code-view-contract.test.ts`：🔴 **沒實作的可選方法**與 `absentReasons` 的鍵**必須一模一樣**（多一個是說謊，少一個是遺漏）
+- [x] T008 [P] 撰寫 `tests/integration/host-profile-no-branch.test.ts`：🔴 `src/` 裡 grep `profile.id ===`／`\.id === '` → **零筆**（否則能力清單退化成標籤）
 
 **關卡**：T003 紅、T007／T008 綠、`tsc` 過。
 
@@ -58,8 +58,8 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 **為什麼先做**：`history/072` 的病歷是「一條路徑全綠而另一條安靜地錯」。
 🔴 **在只有一條路徑時把它驗乾淨，之後出問題才對得出來。**
 
-- [ ] T009 [US4] 於 `src/ui/panels/monaco-panel.ts` 宣告 `implements CodeView`——🔴 **行為零改動**，只是把既有方法對上介面
-- [ ] T010 [US4] 建立 `src/ui/host/web-profile.ts`：網頁版的宣告，🔴 **必須逐字等於今天的行為**（四個可選能力全部有、三個 feature 全開）
+- [x] T009 [US4] 於 `src/ui/panels/monaco-panel.ts` 宣告 `implements CodeView`——🔴 **行為零改動**，只是把既有方法對上介面
+- [x] T010 [US4] 建立 `src/ui/host/web-profile.ts`：網頁版的宣告，🔴 **必須逐字等於今天的行為**（四個可選能力全部有、三個 feature 全開）
 - [ ] T011 [US4] 於 `src/ui/app.ts` 把 `monacoPanel` 的型別換成 `CodeView`（22 處），並改成從 profile 取得
 - [ ] T012 [US4] 於 `src/ui/app.ts:118` 把 `new StorageService()` 換成 `profile.createStorage()`
 - [ ] T013 [US4] 於 `src/ui/app-shell.ts` 接受 profile：`createCodeView` 取代直接 `new`，`features` 決定建不建行動版元件與檔案按鈕（8 處）
@@ -79,9 +79,9 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 4：User Story 3 —— 而他的檔案不能被弄壞（P1）
 
-- [ ] T018 [US3] 建立 `src/vscode/vscode-profile.ts`：`createStorage()` 回一個**不記文件內容**的實作（`save` 丟掉程式碼／樹／積木狀態；`load` 一律回空）
-- [ ] T019 [US3] 於同檔宣告 `features`：`fileButtons` / `mobileLayout` / `codeKeyboard` **全部關掉** ＋ `featureReasons` 各一句理由
-- [ ] T020 [US3] 確認 T003 **轉綠**
+- [x] T018 [US3] 建立 `src/vscode/vscode-profile.ts`：`createStorage()` 回一個**不記文件內容**的實作（`save` 丟掉程式碼／樹／積木狀態；`load` 一律回空）
+- [x] T019 [US3] 於同檔宣告 `features`：`fileButtons` / `mobileLayout` / `codeKeyboard` **全部關掉** ＋ `featureReasons` 各一句理由
+- [x] T020 [US3] 確認 T003 **轉綠**
 
 **關卡（SC-004）**：開機時 `setCode` 零次呼叫。
 
@@ -91,7 +91,7 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 5：User Story 1＋2 —— 面板就是網頁版（P1）
 
-- [ ] T021 [US1] 建立 `src/vscode/webview/vscode-code-view.ts`：實作 A/B/D；C 類不實作而在 `absentReasons` 寫理由
+- [x] T021 [US1] 建立 `src/vscode/webview/vscode-code-view.ts`：實作 A/B/D；C 類不實作而在 `absentReasons` 寫理由
 - [ ] T022 [US1] 把 spec 139 的**文字鏡像 ＋ 樂觀更新 ＋ `baseVersion` 比對**從 `webview/main.ts` 搬進 T021（🔴 **搬不是重寫**）
 - [ ] T023 [US1] 把 spec 139 的**高亮轉送**（`revealNode` / `executionAt`）搬進 T021 的 `addHighlight` / `onExecutionAtNode`
 - [ ] T024 [US1] 把 spec 139 的**游標轉送**搬進 T021 的 `onCursorChange`

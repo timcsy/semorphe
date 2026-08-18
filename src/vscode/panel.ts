@@ -219,7 +219,7 @@ class SemorpheSession {
     if (m.type === 'executionAt') {
       // 🔴 **同一個機制**：執行高亮與選取高亮都是「照亮這幾行」。
       //    ⚠️ 而它用不同的 decoration，否則兩者會互相清掉。
-      this.showExecution(m.range)
+      this.showExecution(m.range)   // ⚠️ nodeId 由 Webview 那側查成範圍
       return
     }
     if (m.type === 'viewStateChanged') {

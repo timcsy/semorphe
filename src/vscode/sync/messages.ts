@@ -76,4 +76,10 @@ export type WebviewMessage =
    * **原生編輯器只是第三個視圖**（`core/view-host.ts:94`），
    * 不要為它另外發明訊息。
    */
-  | { type: 'executionAt'; range: { startLine: number; endLine: number } | null }
+  | {
+      type: 'executionAt'
+      /** 走到哪個節點——🔴 **唯一真實**。`null` ＝ 執行結束，清掉高亮。 */
+      nodeId: string | null
+      /** 它在程式碼裡的行範圍（0-based）。⚠️ 查不到時是 `null`（實測 1.5% 的節點沒有範圍）。 */
+      range: { startLine: number; endLine: number } | null
+    }
