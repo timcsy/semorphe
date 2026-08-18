@@ -25,11 +25,6 @@
     "reason": "這一路回家的是**判別**（`begin`／`end` 這兩個方法名是我），而掃描器讀不到執行期才組起來的登錄表。歸「無法確定」——**而宣告與實際是一致的**：膠囊自證測從真語料 lift 出這顆，並斷言接點在原地、產出的碼與原文相同。⚠️ 與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
   },
   {
-    "conceptId": "cpp:delay",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 執行期表面，spec 137）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住（lift／generate／round-trip／execute 都有實際斷言）。"
-  },
-  {
     "conceptId": "cpp:delay_microseconds",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/micros/spec.test.ts` 釘住（lift／generate／round-trip／執行都有實際斷言，含「同一個時鐘」那條）。"
@@ -148,16 +143,6 @@
     "conceptId": "cpp:string_empty",
     "cause": "辨識到不了",
     "reason": "**真的缺口**：`.empty()` 一律判成中性的 cpp:container_empty。同上，補語料無效。"
-  },
-  {
-    "conceptId": "cpp:tone",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/tone/spec.test.ts` 釘住（lift／generate／round-trip 都有，而執行那一路驗的是**腳位狀態**不是輸出——這兩顆刻意零輸出）。"
-  },
-  {
-    "conceptId": "cpp:tone_stop",
-    "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
-    "reason": "lift 那一路是 `registerCallConcept` 的一筆登錄（Arduino 內建函式的覆蓋缺口，第 0 批／階段 6.16）——判別邏輯留在共用檔，膠囊裡只有一筆資料，所以靜態掃描看不到接點。⚠️ 接點的正確性由 `src/components/cpp/tone/spec.test.ts` 釘住（lift／generate／round-trip 都有，而執行那一路驗的是**腳位狀態**不是輸出——這兩顆刻意零輸出）。"
   },
   {
     "conceptId": "cpp:vector_make",
