@@ -1,0 +1,131 @@
+{
+  "parts_1": {
+    "board": "uno",
+    "topic": "Blink a single LED",
+    "libraries": [],
+    "code": "/*\n  Blink\n  Turns an LED on for one second, then off for one second, over and over.\n  LED on pin 13 through a 220 ohm resistor to GND.\n*/\n\n#define LED_PIN 13\n\nvoid setup() {\n  pinMode(LED_PIN, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(LED_PIN, HIGH);   // turn the LED on\n  delay(1000);                   // wait a second\n  digitalWrite(LED_PIN, LOW);    // turn the LED off\n  delay(1000);                   // wait a second\n}\n"
+  },
+  "parts_2": {
+    "board": "uno",
+    "topic": "Push button turns an LED on (INPUT_PULLUP)",
+    "libraries": [],
+    "code": "// Push button controls an LED\n// Button wired between pin 2 and GND - no extra resistor needed\n// because we use the internal pull-up.\n// LED on pin 8 with a 220 ohm resistor.\n\nconst int buttonPin = 2;\nconst int ledPin = 8;\n\nvoid setup() {\n  pinMode(buttonPin, INPUT_PULLUP);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  // With INPUT_PULLUP the pin reads HIGH when released, LOW when pressed\n  int buttonState = digitalRead(buttonPin);\n\n  if (buttonState == LOW) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n}\n"
+  },
+  "parts_3": {
+    "board": "uno",
+    "topic": "Blink two LEDs at different rates using millis()",
+    "libraries": [],
+    "code": "// Blink two LEDs at different speeds without using delay(),\n// so both keep their own timing.\n\nconst int redLed = 9;\nconst int greenLed = 10;\n\nunsigned long previousRed = 0;\nunsigned long previousGreen = 0;\n\nconst long redInterval = 500;     // ms\nconst long greenInterval = 1200;  // ms\n\nbool redState = false;\nbool greenState = false;\n\nvoid setup() {\n  pinMode(redLed, OUTPUT);\n  pinMode(greenLed, OUTPUT);\n}\n\nvoid loop() {\n  unsigned long now = millis();\n\n  if (now - previousRed >= redInterval) {\n    previousRed = now;\n    redState = !redState;\n    digitalWrite(redLed, redState);\n  }\n\n  if (now - previousGreen >= greenInterval) {\n    previousGreen = now;\n    greenState = !greenState;\n    digitalWrite(greenLed, greenState);\n  }\n}\n"
+  },
+  "parts_4": {
+    "board": "nano",
+    "topic": "Traffic light with three LEDs",
+    "libraries": [],
+    "code": "/*\n  Simple traffic light\n  Red    -> pin 4\n  Yellow -> pin 5\n  Green  -> pin 6\n  Each LED through its own 220 ohm resistor.\n*/\n\nint RED_PIN = 4;\nint YELLOW_PIN = 5;\nint GREEN_PIN = 6;\n\nvoid setup() {\n  pinMode(RED_PIN, OUTPUT);\n  pinMode(YELLOW_PIN, OUTPUT);\n  pinMode(GREEN_PIN, OUTPUT);\n}\n\nvoid loop() {\n  // stop\n  digitalWrite(RED_PIN, HIGH);\n  delay(5000);\n  digitalWrite(RED_PIN, LOW);\n\n  // go\n  digitalWrite(GREEN_PIN, HIGH);\n  delay(4000);\n  digitalWrite(GREEN_PIN, LOW);\n\n  // get ready to stop\n  digitalWrite(YELLOW_PIN, HIGH);\n  delay(2000);\n  digitalWrite(YELLOW_PIN, LOW);\n}\n"
+  },
+  "parts_5": {
+    "board": "uno",
+    "topic": "RGB LED colour fade",
+    "libraries": [],
+    "code": "/*\n  RGB LED colour fade\n  Common cathode RGB LED, every leg through a 220 ohm resistor,\n  the long leg to GND.\n  R -> 9, G -> 10, B -> 11 (all PWM capable pins)\n*/\n\n#define RED_PIN   9\n#define GREEN_PIN 10\n#define BLUE_PIN  11\n\nvoid setColour(int red, int green, int blue) {\n  analogWrite(RED_PIN, red);\n  analogWrite(GREEN_PIN, green);\n  analogWrite(BLUE_PIN, blue);\n}\n\nvoid setup() {\n  pinMode(RED_PIN, OUTPUT);\n  pinMode(GREEN_PIN, OUTPUT);\n  pinMode(BLUE_PIN, OUTPUT);\n}\n\nvoid loop() {\n  // red to green\n  for (int i = 0; i <= 255; i++) {\n    setColour(255 - i, i, 0);\n    delay(10);\n  }\n\n  // green to blue\n  for (int i = 0; i <= 255; i++) {\n    setColour(0, 255 - i, i);\n    delay(10);\n  }\n\n  // blue back to red\n  for (int i = 0; i <= 255; i++) {\n    setColour(i, 0, 255 - i);\n    delay(10);\n  }\n}\n"
+  },
+  "parts_6": {
+    "board": "uno",
+    "topic": "Potentiometer dims an LED",
+    "libraries": [],
+    "code": "// Read a potentiometer and use it to dim an LED.\n// Pot middle pin -> A0, the two outer pins -> 5V and GND.\n// LED on pin 6 (PWM).\n\nconst int potPin = A0;\nconst int ledPin = 6;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int potValue = analogRead(potPin);              // 0 .. 1023\n  int brightness = map(potValue, 0, 1023, 0, 255); // 0 .. 255 for analogWrite\n\n  analogWrite(ledPin, brightness);\n\n  Serial.print(\"pot = \");\n  Serial.print(potValue);\n  Serial.print(\"  brightness = \");\n  Serial.println(brightness);\n\n  delay(100);\n}\n"
+  },
+  "parts_7": {
+    "board": "nano",
+    "topic": "LDR automatic night light",
+    "libraries": [],
+    "code": "/*\n  Automatic night light\n  LDR and a 10k resistor form a voltage divider, the junction goes to A0.\n  When the room gets dark the LED on pin 3 switches on.\n*/\n\nconst int LDR_PIN = A0;\nconst int LED_PIN = 3;\nconst int THRESHOLD = 400;   // a lower reading means it is darker\n\nvoid setup() {\n  pinMode(LED_PIN, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int light = analogRead(LDR_PIN);\n  Serial.println(light);\n\n  if (light < THRESHOLD) {\n    digitalWrite(LED_PIN, HIGH);   // dark, lamp on\n  } else {\n    digitalWrite(LED_PIN, LOW);    // bright enough, lamp off\n  }\n\n  delay(200);\n}\n"
+  },
+  "parts_8": {
+    "board": "uno",
+    "topic": "Play a melody on a passive buzzer",
+    "libraries": [],
+    "code": "/*\n  Play a short scale on a passive buzzer.\n  Buzzer + -> pin 8, buzzer - -> GND\n*/\n\n#define BUZZER 8\n\n// note frequencies in Hz: C4 D4 E4 F4 G4 A4 B4 C5\nint melody[] = {262, 294, 330, 349, 392, 440, 494, 523};\nint noteCount = 8;\nint noteDuration = 300;\n\nvoid setup() {\n  pinMode(BUZZER, OUTPUT);\n}\n\nvoid loop() {\n  for (int i = 0; i < noteCount; i++) {\n    tone(BUZZER, melody[i], noteDuration);\n    delay(noteDuration + 50);   // small gap so the notes do not run together\n  }\n\n  noTone(BUZZER);\n  delay(2000);\n}\n"
+  },
+  "parts_9": {
+    "board": "uno",
+    "topic": "Button doorbell with debounce",
+    "libraries": [],
+    "code": "/*\n  Doorbell\n  Press the button and the buzzer beeps three times.\n  Button between pin 2 and GND, buzzer on pin 9.\n*/\n\nconst int BUTTON_PIN = 2;\nconst int BUZZER_PIN = 9;\n\nint lastButtonState = HIGH;\nunsigned long lastDebounceTime = 0;\nconst unsigned long debounceDelay = 50;\n\nvoid ringBell() {\n  for (int i = 0; i < 3; i++) {\n    tone(BUZZER_PIN, 1000);\n    delay(150);\n    noTone(BUZZER_PIN);\n    delay(100);\n  }\n}\n\nvoid setup() {\n  pinMode(BUTTON_PIN, INPUT_PULLUP);\n  pinMode(BUZZER_PIN, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int reading = digitalRead(BUTTON_PIN);\n\n  if (millis() - lastDebounceTime > debounceDelay) {\n    // react only on the moment the button goes down\n    if (reading == LOW && lastButtonState == HIGH) {\n      Serial.println(\"Ding dong!\");\n      ringBell();\n      lastDebounceTime = millis();\n    }\n    lastButtonState = reading;\n  }\n}\n"
+  },
+  "parts_10": {
+    "board": "uno",
+    "topic": "HC-SR04 ultrasonic distance to Serial Monitor",
+    "libraries": [],
+    "code": "/*\n  HC-SR04 ultrasonic distance sensor\n  TRIG -> pin 9, ECHO -> pin 10, VCC -> 5V, GND -> GND\n  Open the Serial Monitor at 9600 baud to see the distance.\n*/\n\nconst int trigPin = 9;\nconst int echoPin = 10;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(trigPin, OUTPUT);\n  pinMode(echoPin, INPUT);\n}\n\nvoid loop() {\n  // a 10 microsecond pulse starts a measurement\n  digitalWrite(trigPin, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trigPin, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trigPin, LOW);\n\n  // measure how long the echo pin stays HIGH\n  long duration = pulseIn(echoPin, HIGH);\n\n  // sound travels roughly 0.034 cm per microsecond, and the pulse\n  // makes the trip twice, so divide by 2\n  float distance = duration * 0.034 / 2;\n\n  Serial.print(\"Distance: \");\n  Serial.print(distance);\n  Serial.println(\" cm\");\n\n  delay(500);\n}\n"
+  },
+  "parts_11": {
+    "board": "nano",
+    "topic": "Ultrasonic parking sensor with buzzer",
+    "libraries": [],
+    "code": "/*\n  Parking sensor\n  The closer the obstacle, the faster the buzzer beeps.\n  HC-SR04: TRIG -> pin 6, ECHO -> pin 7\n  Buzzer -> pin 8\n*/\n\n#define TRIG_PIN   6\n#define ECHO_PIN   7\n#define BUZZER_PIN 8\n\nlong readDistanceCm() {\n  digitalWrite(TRIG_PIN, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG_PIN, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG_PIN, LOW);\n\n  // 30 ms timeout so we do not block forever when nothing is in range\n  long duration = pulseIn(ECHO_PIN, HIGH, 30000);\n  return duration * 0.034 / 2;\n}\n\nvoid setup() {\n  pinMode(TRIG_PIN, OUTPUT);\n  pinMode(ECHO_PIN, INPUT);\n  pinMode(BUZZER_PIN, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  long distance = readDistanceCm();\n  Serial.println(distance);\n\n  if (distance > 0 && distance < 50) {\n    // the gap between beeps shrinks as you get closer\n    int gap = map(distance, 0, 50, 50, 600);\n    tone(BUZZER_PIN, 1500, 40);\n    delay(gap);\n  } else {\n    noTone(BUZZER_PIN);\n    delay(200);\n  }\n}\n"
+  },
+  "parts_12": {
+    "board": "uno",
+    "topic": "Button toggles a relay module",
+    "libraries": [],
+    "code": "/*\n  Relay module switched by a push button.\n  Relay IN -> pin 7. Most cheap relay boards are active LOW,\n  so LOW switches the relay on.\n  Button between pin 2 and GND.\n*/\n\nconst int relayPin = 7;\nconst int buttonPin = 2;\n\nbool relayOn = false;\nint lastReading = HIGH;\n\nvoid setup() {\n  pinMode(relayPin, OUTPUT);\n  pinMode(buttonPin, INPUT_PULLUP);\n  digitalWrite(relayPin, HIGH);   // start with the relay off\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int reading = digitalRead(buttonPin);\n\n  // falling edge = the button was just pressed\n  if (lastReading == HIGH && reading == LOW) {\n    relayOn = !relayOn;\n\n    if (relayOn) {\n      digitalWrite(relayPin, LOW);\n      Serial.println(\"Relay ON\");\n    } else {\n      digitalWrite(relayPin, HIGH);\n      Serial.println(\"Relay OFF\");\n    }\n\n    delay(50);   // simple debounce\n  }\n\n  lastReading = reading;\n}\n"
+  },
+  "parts_13": {
+    "board": "uno",
+    "topic": "Servo angle follows a potentiometer",
+    "libraries": [
+      "Servo.h"
+    ],
+    "code": "/*\n  Control a servo with a potentiometer.\n  Servo signal -> pin 9, servo power from 5V and GND.\n  Potentiometer wiper -> A0.\n*/\n\n#include <Servo.h>\n\nServo myservo;\n\nint potPin = A0;\nint val = 0;\n\nvoid setup() {\n  myservo.attach(9);\n}\n\nvoid loop() {\n  val = analogRead(potPin);          // read the pot, 0 .. 1023\n  val = map(val, 0, 1023, 0, 180);   // scale it to a servo angle\n  myservo.write(val);\n  delay(15);                         // give the servo time to get there\n}\n"
+  },
+  "parts_14": {
+    "board": "uno",
+    "topic": "DC motor forward and reverse with L298N",
+    "libraries": [],
+    "code": "/*\n  L298N motor driver: run one DC motor forwards and backwards.\n  ENA -> pin 9 (PWM, speed)\n  IN1 -> pin 8\n  IN2 -> pin 7\n  Motor power goes to the L298N, not to the Arduino.\n*/\n\nconst int ENA = 9;\nconst int IN1 = 8;\nconst int IN2 = 7;\n\nvoid forward(int speed) {\n  digitalWrite(IN1, HIGH);\n  digitalWrite(IN2, LOW);\n  analogWrite(ENA, speed);\n}\n\nvoid backward(int speed) {\n  digitalWrite(IN1, LOW);\n  digitalWrite(IN2, HIGH);\n  analogWrite(ENA, speed);\n}\n\nvoid stopMotor() {\n  digitalWrite(IN1, LOW);\n  digitalWrite(IN2, LOW);\n  analogWrite(ENA, 0);\n}\n\nvoid setup() {\n  pinMode(ENA, OUTPUT);\n  pinMode(IN1, OUTPUT);\n  pinMode(IN2, OUTPUT);\n}\n\nvoid loop() {\n  // gently speed up going forwards\n  for (int speed = 100; speed <= 255; speed += 5) {\n    forward(speed);\n    delay(50);\n  }\n\n  stopMotor();\n  delay(1000);\n\n  backward(180);\n  delay(2000);\n\n  stopMotor();\n  delay(1000);\n}\n"
+  },
+  "parts_15": {
+    "board": "nano",
+    "topic": "28BYJ-48 stepper motor with ULN2003 driver",
+    "libraries": [
+      "Stepper.h"
+    ],
+    "code": "/*\n  28BYJ-48 stepper motor driven by a ULN2003 board.\n  IN1..IN4 of the driver go to pins 8, 9, 10, 11.\n  Watch the order in the constructor: IN1, IN3, IN2, IN4.\n*/\n\n#include <Stepper.h>\n\nconst int stepsPerRevolution = 2048;   // one full turn of the 28BYJ-48\n\nStepper myStepper(stepsPerRevolution, 8, 10, 9, 11);\n\nvoid setup() {\n  myStepper.setSpeed(10);   // rpm\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  Serial.println(\"clockwise\");\n  myStepper.step(stepsPerRevolution);\n  delay(1000);\n\n  Serial.println(\"counterclockwise\");\n  myStepper.step(-stepsPerRevolution);\n  delay(1000);\n}\n"
+  },
+  "parts_16": {
+    "board": "uno",
+    "topic": "Distance meter on a 16x2 LCD",
+    "libraries": [
+      "LiquidCrystal.h"
+    ],
+    "code": "/*\n  Show the distance measured by an HC-SR04 on a 16x2 LCD.\n  LCD: RS -> 12, E -> 11, D4..D7 -> 5, 4, 3, 2\n  Sensor: TRIG -> 7, ECHO -> 6\n*/\n\n#include <LiquidCrystal.h>\n\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\n\nconst int trigPin = 7;\nconst int echoPin = 6;\n\nvoid setup() {\n  lcd.begin(16, 2);\n  pinMode(trigPin, OUTPUT);\n  pinMode(echoPin, INPUT);\n\n  lcd.print(\"Distance meter\");\n  delay(1500);\n  lcd.clear();\n}\n\nvoid loop() {\n  digitalWrite(trigPin, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trigPin, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trigPin, LOW);\n\n  long duration = pulseIn(echoPin, HIGH);\n  int distance = duration * 0.034 / 2;\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Distance:\");\n  lcd.setCursor(0, 1);\n  lcd.print(distance);\n  lcd.print(\" cm    \");   // trailing spaces clear the old digits\n\n  delay(300);\n}\n"
+  },
+  "parts_17": {
+    "board": "uno",
+    "topic": "LED bar graph driven by a light sensor",
+    "libraries": [],
+    "code": "/*\n  Light level bar graph\n  Four LEDs on pins 2, 3, 4, 5 light up one by one as the room gets brighter.\n  LDR divider on A1.\n*/\n\nint ledPins[] = {2, 3, 4, 5};\nint numLeds = 4;\nint sensorPin = A1;\n\nvoid setup() {\n  for (int i = 0; i < numLeds; i++) {\n    pinMode(ledPins[i], OUTPUT);\n  }\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int sensorValue = analogRead(sensorPin);\n  int level = map(sensorValue, 0, 1023, 0, numLeds);\n\n  Serial.print(\"light: \");\n  Serial.print(sensorValue);\n  Serial.print(\" -> level \");\n  Serial.println(level);\n\n  for (int i = 0; i < numLeds; i++) {\n    if (i < level) {\n      digitalWrite(ledPins[i], HIGH);\n    } else {\n      digitalWrite(ledPins[i], LOW);\n    }\n  }\n\n  delay(150);\n}\n"
+  },
+  "parts_18": {
+    "board": "esp32",
+    "topic": "ESP32 web page that switches an LED",
+    "libraries": [
+      "WiFi.h",
+      "WebServer.h"
+    ],
+    "code": "/*\n  ESP32: turn an LED on and off from a web browser.\n  LED on GPIO 2 (the built-in LED on most dev boards).\n  Open the Serial Monitor at 115200 baud to see the IP address,\n  then type it into your browser.\n*/\n\n#include <WiFi.h>\n#include <WebServer.h>\n\nconst char* ssid = \"YOUR_WIFI_NAME\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\n\nconst int ledPin = 2;\n\nWebServer server(80);\n\nvoid handleRoot() {\n  String html = \"<h1>ESP32 LED</h1>\";\n  html += \"<p><a href=\\\"/on\\\">Turn ON</a></p>\";\n  html += \"<p><a href=\\\"/off\\\">Turn OFF</a></p>\";\n  server.send(200, \"text/html\", html);\n}\n\nvoid handleOn() {\n  digitalWrite(ledPin, HIGH);\n  handleRoot();\n}\n\nvoid handleOff() {\n  digitalWrite(ledPin, LOW);\n  handleRoot();\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(ledPin, OUTPUT);\n\n  WiFi.begin(ssid, password);\n  Serial.print(\"Connecting\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"IP address: \");\n  Serial.println(WiFi.localIP());\n\n  server.on(\"/\", handleRoot);\n  server.on(\"/on\", handleOn);\n  server.on(\"/off\", handleOff);\n  server.begin();\n}\n\nvoid loop() {\n  server.handleClient();\n}\n"
+  },
+  "parts_19": {
+    "board": "esp32",
+    "topic": "ESP32 PWM LED brightness from a potentiometer",
+    "libraries": [],
+    "code": "/*\n  ESP32: dim an LED with a potentiometer using the LEDC PWM peripheral.\n  Potentiometer wiper -> GPIO 34 (input only pin, ADC1)\n  LED -> GPIO 18 through a 220 ohm resistor\n*/\n\nconst int POT_PIN = 34;\nconst int LED_PIN = 18;\n\nconst int PWM_FREQ = 5000;\nconst int PWM_RESOLUTION = 8;   // 8 bit gives a duty of 0 .. 255\n\nvoid setup() {\n  Serial.begin(115200);\n  ledcAttach(LED_PIN, PWM_FREQ, PWM_RESOLUTION);\n}\n\nvoid loop() {\n  int raw = analogRead(POT_PIN);          // the ESP32 ADC is 12 bit: 0 .. 4095\n  int duty = map(raw, 0, 4095, 0, 255);\n\n  ledcWrite(LED_PIN, duty);\n\n  Serial.print(\"raw = \");\n  Serial.print(raw);\n  Serial.print(\"  duty = \");\n  Serial.println(duty);\n\n  delay(100);\n}\n"
+  },
+  "parts_20": {
+    "board": "esp32",
+    "topic": "ESP32 button toggles a relay",
+    "libraries": [],
+    "code": "/*\n  ESP32: a push button toggles a relay module.\n  Button between GPIO 15 and GND (internal pull-up).\n  Relay IN -> GPIO 23. This board is active HIGH.\n*/\n\n#define BUTTON_PIN 15\n#define RELAY_PIN  23\n\nbool relayState = false;\nint lastButton = HIGH;\nunsigned long lastPress = 0;\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(BUTTON_PIN, INPUT_PULLUP);\n  pinMode(RELAY_PIN, OUTPUT);\n  digitalWrite(RELAY_PIN, LOW);\n}\n\nvoid loop() {\n  int button = digitalRead(BUTTON_PIN);\n\n  // falling edge, and at least 200 ms since the last press\n  if (lastButton == HIGH && button == LOW && millis() - lastPress > 200) {\n    lastPress = millis();\n    relayState = !relayState;\n    digitalWrite(RELAY_PIN, relayState);\n\n    if (relayState) {\n      Serial.println(\"relay on\");\n    } else {\n      Serial.println(\"relay off\");\n    }\n  }\n\n  lastButton = button;\n}\n"
+  }
+}

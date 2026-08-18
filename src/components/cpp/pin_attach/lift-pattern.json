@@ -1,7 +1,20 @@
-{
-  "id": "cpp_pin_attach",
-  "astNodeType": "declaration",
-  "concept": { "conceptId": "cpp:pin_attach" },
-  "liftStrategy": "cpp:liftPinAttach",
-  "priority": 25
-}
+[
+  {
+    "id": "cpp_pin_attach",
+    "astNodeType": "declaration",
+    "concept": {
+      "conceptId": "cpp:pin_attach"
+    },
+    "liftStrategy": "cpp:liftPinAttach",
+    "priority": 25
+  },
+  {
+    "id": "cpp_pin_attach_define",
+    "astNodeType": "preproc_def",
+    "concept": {
+      "conceptId": "cpp:pin_attach"
+    },
+    "liftStrategy": "cpp:liftPinAttachDefine",
+    "priority": 25
+  }
+]

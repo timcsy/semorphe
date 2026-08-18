@@ -115,4 +115,33 @@ describe('cpp:pin_attach', () => {
     // ⚠️ 這一條就是那個 bug 本身：沿用常數宣告的執行器會印出 0
     expect(i.getOutput().join('')).toContain('13')
   })
+
+  it('🔴 ⑥ 三種宣告形式都認得，而 round-trip 回得去【原樣】', () => {
+    // 盲測（20 段隔離語料）量到的分佈：const int 19 · #define 10 · int 3
+    // ——只認 const 的話，41% 的腳位宣告轉不成接線積木。
+    const cases: [string, string, string][] = [
+      ['const', 'const int ledPin = 13;\n', 'const int ledPin = 13;'],
+      ['define', '#define ledPin 13\n', '#define ledPin 13'],
+      ['plain', 'int ledPin = 13;\n', 'int ledPin = 13;'],
+    ]
+    for (const [style, decl, expected] of cases) {
+      const src = `${decl}void setup() { pinMode(ledPin, OUTPUT); }\nvoid loop() {}\n`
+      const tree = lift(src)
+      const [a] = attachIn(tree)
+      expect(a, `${style}：沒有認出接線`).toBeDefined()          // ← 正向錨點
+      expect(a.properties.style).toBe(style)
+      expect(a.properties.pin).toBe('13')
+      expect(a.properties.device).toBe('led')
+      // 🔴 產回原樣——不記形式的話，學生的 #define 會被靜默改寫成 const int
+      const out = generateCode(tree, 'cpp', apcs as StylePreset)
+      expect(out, `${style}：形式沒有回得去`).toContain(expected)
+    }
+  })
+
+  it('⚠️ 裸 int 放寬之後，一般變數仍然不准被搶', () => {
+    // 擋住誤認的從來不是 `const`，是「它有沒有被當腳位用」——這一條證明它還在守
+    const tree = lift('int counter = 0;\nint total = 100;\nvoid setup() {}\nvoid loop() { counter = counter + 1; }\n')
+    expect(ids(tree)).toContain('cpp:var_declare')             // ← 正向錨點
+    expect(ids(tree)).not.toContain('cpp:pin_attach')
+  })
 })

@@ -85,11 +85,15 @@ function usedAsPin(root: AstNode, name: string): boolean {
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('cpp:liftPinAttach', (node) => {
-    // ── 結構：const ＋ 整數型別 ＋ 單一 init_declarator ＋ 整數字面量 ──
+    // ── 結構：整數型別 ＋ 單一 init_declarator ＋ 整數字面量 ──
+    //
+    // ⚠️ **`const` 從「必要條件」變成「一個記下來的形式」**（2026-08-18 盲測）：
+    //    20 段隔離語料裡腳位宣告有 19 筆 `const int`、3 筆裸 `int`。
+    //    只認 const 的話那 3 筆轉不成接線積木——🔴 而**擋住誤認的不是 `const`，
+    //    是「它有沒有被當腳位用」**。const 從來就不是那道防線。
     const hasConst = node.namedChildren.some(
       (c) => c.type === 'type_qualifier' && c.text === 'const',
     )
-    if (!hasConst) return null
 
     const typeNode = node.childForFieldName('type')
     if (!typeNode || !INT_TYPES.has(typeNode.text)) return null
@@ -115,6 +119,31 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 
     // 🔴 名字只到這裡才被用上，而它只決定【標籤】。
     //    認不出來是 `unknown`，而結構已經成立了。
-    return createNode('cpp:pin_attach', { device: deviceFromName(name), pin, name }, {})
+    return createNode(
+      'cpp:pin_attach',
+      { device: deviceFromName(name), pin, name, style: hasConst ? 'const' : 'plain' },
+      {},
+    )
+  })
+
+  /**
+   * `#define LED_PIN 13` —— **同一個判準，不同的 AST 節點**。
+   *
+   * 盲測語料裡它佔 10/32（31%）——⚠️ 而它是初學教學最常見的寫法之一
+   * （`#define` 不佔記憶體這句話在 Arduino 教材裡到處都是）。
+   *
+   * 🔴 判準與宣告式**完全一樣**：值是整數字面量、而這個名字在整支程式裡
+   * 被當腳位用過。**名字仍然只決定標籤。**
+   */
+  registry.register('cpp:liftPinAttachDefine', (node) => {
+    const name = node.childForFieldName('name')?.text
+    const value = node.childForFieldName('value')?.text?.trim()
+    if (!name || !value || !/^\d+$/.test(value)) return null
+    if (!usedAsPin(rootOf(node), name)) return null
+    return createNode(
+      'cpp:pin_attach',
+      { device: deviceFromName(name), pin: value, name, style: 'define' },
+      {},
+    )
   })
 }

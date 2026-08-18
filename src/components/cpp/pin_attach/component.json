@@ -8,14 +8,41 @@
       "name": "device",
       "kind": "enum",
       "values": [
-        "led", "button", "buzzer", "ultrasonic_trig", "ultrasonic_echo",
-        "servo", "analog_sensor", "relay", "motor", "unknown"
+        "led",
+        "button",
+        "buzzer",
+        "ultrasonic_trig",
+        "ultrasonic_echo",
+        "servo",
+        "analog_sensor",
+        "relay",
+        "motor",
+        "unknown"
       ],
       "default": "unknown",
       "_default_why": "🔴 預設是 `unknown`（顯示成「零件」）而不是 `led`。**認不出來要看起來像認不出來**——一個預設成 LED 的欄位會讓「猜錯」與「沒猜」長得一樣，而那是第三十三條護欄在看的靜默回退。"
     },
-    { "name": "pin", "kind": "number", "default": "13" },
-    { "name": "name", "kind": "identifier", "default": "ledPin" }
+    {
+      "name": "pin",
+      "kind": "number",
+      "default": "13"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "ledPin"
+    },
+    {
+      "name": "style",
+      "kind": "enum",
+      "values": [
+        "const",
+        "define",
+        "plain"
+      ],
+      "default": "const",
+      "_default_why": "🔴 **這一格記的是【學生原本怎麼寫的】，不是一個選項。**\n\n盲測語料（20 段隔離出題）裡腳位宣告的分佈：\n\n```\nconst int LED = 13;   19 筆\n#define LED 13        10 筆\nint LED = 13;          3 筆\n```\n\n⚠️ 不帶著它的話，學生貼進來的 `#define` 會在**開一次積木之後**被靜默改寫成 `const int`——而在 IDE 裡積木是會寫回 `.ino` 的。\n\n> **一個不記得原文形式的 round-trip，會在使用者沒有要求的時候改掉他的檔案。**"
+    }
   ],
   "children": {},
   "role": "statement",
@@ -29,5 +56,5 @@
     "lift": "./lift-pattern.json",
     "liftStrategy": "./lift-strategy.ts"
   },
-  "_lift_why": "🔴 **身分由【結構】決定，名字只決定【標籤】。**\n\n這一條是同資料夾層級的鄰居付過學費的（見那顆腳位常數元件的 `_lift_why`：第三十二條護欄抓到 `enum Level { LOW = -1 }` 被搶走）：\n\n> **一個靠「識別字的名字」認人的樣式，會把使用者自己宣告的名字搶走。**\n\n所以判準**不是**「名字裡有沒有 pin」，而是：\n\n```\nconst <整數型別> X = <整數字面量>;        ← 結構\n  ＋ X 在【整支程式】某處出現在腳位函式的第一個引數\n  → 是這顆\n否則 → 回 null，落回既有的常數宣告元件（不搶）\n```\n\n🟢 **走得到整支程式**：`AstNode` 有 `parent`，從節點往上走到根就掃得到。⚠️ 核心的逐節點後處理掛點（`post-processors.ts`）合併不了東西，**而這顆不需要合併，它只需要查詢**。\n\n**device 從名字讀**，用 100 段語料量出來的詞根表（`runtime/device-names.ts`，命中率 90.2%）。🔴 **認不出來回 `unknown`，而那不是失敗**——結構仍然是這顆，只有標籤退成通用的「零件」。那正是「辨識不出來 → 退回原始積木打底」的精確版本：**退的是標籤，不是結構**。"
+  "_lift_why": "🔴 **身分由【結構】決定，名字只決定【標籤】。**\n\n這一條是同資料夾層級的鄰居付過學費的（見那顆腳位常數元件的 `_lift_why`：第三十二條護欄抓到 `enum Level { LOW = -1 }` 被搶走）：\n\n> **一個靠「識別字的名字」認人的樣式，會把使用者自己宣告的名字搶走。**\n\n所以判準**不是**「名字裡有沒有 pin」，而是：\n\n```\nconst <整數型別> X = <整數字面量>;        ← 結構\n  ＋ X 在【整支程式】某處出現在腳位函式的第一個引數\n  → 是這顆\n否則 → 回 null，落回既有的常數宣告元件（不搶）\n```\n\n🟢 **走得到整支程式**：`AstNode` 有 `parent`，從節點往上走到根就掃得到。⚠️ 核心的逐節點後處理掛點（`post-processors.ts`）合併不了東西，**而這顆不需要合併，它只需要查詢**。\n\n**device 從名字讀**，用 100 段語料量出來的詞根表（`runtime/device-names.ts`，命中率 90.2%）。🔴 **認不出來回 `unknown`，而那不是失敗**——結構仍然是這顆，只有標籤退成通用的「零件」。那正是「辨識不出來 → 退回原始積木打底」的精確版本：**退的是標籤，不是結構**。\n\n## ⚠️ 三種宣告形式，一個身分\n\n盲測抓到：`const int`（19）／`#define`（10）／`int`（3）——**41% 的腳位宣告不是 `const int`**。三種都是同一件事（給這根腳一個名字），差別是**語法形式**，所以它是一個參數（`style`）不是三顆概念。\n\n🔴 而 `#define` 的 AST 節點型別不同（`preproc_def`），所以策略掛了**第三個點**。"
 }

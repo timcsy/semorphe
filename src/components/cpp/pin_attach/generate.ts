@@ -25,8 +25,18 @@ import { indent } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pin_attach', (node, ctx) => {
-    const name = node.properties.name ?? 'ledPin'
-    const pin = node.properties.pin ?? '13'
-    return `${indent(ctx)}const int ${String(name)} = ${String(pin)};\n`
+    const name = String(node.properties.name ?? 'ledPin')
+    const pin = String(node.properties.pin ?? '13')
+    // 🔴 **形式要回得去原樣**——`style` 記的是學生原本怎麼寫的。
+    //    ⚠️ `#define` 沒有分號也沒有縮排（前置處理指令一律頂格），
+    //    而把它縮排會讓某些編譯器與 linter 抱怨。
+    switch (node.properties.style) {
+      case 'define':
+        return `#define ${name} ${pin}\n`
+      case 'plain':
+        return `${indent(ctx)}int ${name} = ${pin};\n`
+      default:
+        return `${indent(ctx)}const int ${name} = ${pin};\n`
+    }
   })
 }
