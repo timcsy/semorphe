@@ -35,6 +35,7 @@ import { buildMalloc } from '../../../../components/cpp/malloc/lift'
 import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
 import { buildInclude } from '../../../../components/cpp/include/lift'
 import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
+import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
@@ -648,6 +649,38 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const name = decl?.type === 'identifier'
         ? decl.text
         : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+      // 🔴 **最令人困惑的解析**（most vexing parse）——而它在 Arduino 教學裡是常態。
+      //
+      // ```cpp
+      // #define DHTPIN 2
+      // DHT dht(DHTPIN, DHT11);     ← tree-sitter 解析成【函式宣告】
+      // DHT dht(2, DHT11);          ← 引數是字面量時才解析成變數定義
+      // ```
+      //
+      // ⚠️ **真編譯器沒有這個問題**：前置處理器先把 `DHTPIN` 換成 `2`，
+      // 所以它看到的一直是後者。而 tree-sitter **不做前置處理**。
+      //
+      // > **一個解析器如果少了一個階段，它會在那個階段本來會消掉的地方看到歧義。**
+      //
+      // 🟢 而這裡分得出來：**型別是一個登錄過的具體型別**（`DHT`／`Servo`／
+      // `LiquidCrystal`／`string`…），而那種型別在 sketch 裡**不會**被當成
+      // 函式的回傳型別。⚠️ 走到這一行代表 `plainTypeConcept` 已經認領了它。
+      const fnDecl = node.namedChildren.find(c => c.type === 'function_declarator')
+      if (!decl && fnDecl) {
+        const nameNode = fnDecl.namedChildren.find(c => c.type === 'identifier')
+        const params = fnDecl.namedChildren.find(c => c.type === 'parameter_list')
+        const args = (params?.namedChildren ?? [])
+          .map(pd => {
+            // `parameter_declaration :: DHTPIN` 底下是一個 `type_identifier`
+            // ——它其實是一個**識別字**（巨集名或常數名）。
+            const inner = pd.namedChildren[0]
+            if (!inner) return null
+            return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
+          })
+          .filter((n): n is NonNullable<typeof n> => n !== null)
+        return createNode(conceptId, { name: nameNode?.text ?? name }, { initializer: args })
+      }
+
       // For stream types with constructor args (e.g., ifstream fin("input.txt"))
       if (decl?.type === 'init_declarator') {
         const valueNode = decl.childForFieldName('value')
