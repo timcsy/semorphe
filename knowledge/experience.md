@@ -3681,6 +3681,8 @@ tree-sitter.wasm          0 處   ← 死的
 
 ### 一個解析器少了一個階段，會在那個階段本來會消掉的地方看到歧義
 
+> 處置的通則在 [concepts/降級與認知邊界](concepts/降級與認知邊界.md)「辨識的保守性」。
+
 **情境**：`DHT dht(DHTPIN, DHT11);` 被 tree-sitter 解析成**函式宣告**，
 而 `DHT dht(2, DHT11);` 解析成變數定義。同一個東西，兩種結果。
 
@@ -3702,6 +3704,8 @@ tree-sitter.wasm          0 處   ← 死的
 
 ### 一個「誠實的失敗值」如果沒有配套的檢查函式，它與一個當機沒有差別
 
+> 通則在 [concepts/模擬的誠實](concepts/模擬的誠實.md)——**模擬器什麼時候可以編一個數字出來**。
+
 **情境**：溫濕度感測器讀不到時回 `NaN`——那是查證過的真板子行為，而理由是
 「學生的程式**本來就會檢查它**」（`if (isnan(h))` 是所有教材的標準寫法）。
 
@@ -3716,6 +3720,8 @@ tree-sitter.wasm          0 處   ← 死的
 （那條測試現在釘在 `servo_write/spec.test.ts`：斷言 `"no sensor"` 真的被印出來。）
 
 ### 一個只在投影那一側丟資料的 bug，lift 與 generate 各自的測試都看不到它
+
+> 通則在 [concepts/投影](concepts/投影.md)「雙重真相來源」——同一顆積木兩份定義。
 
 **情境**：使用者在 Arduino IDE 看到 `Serial.write(cmd)` 的積木是
 「對 Serial 執行 write（ ▯ ）」——**括號裡是空的**。
