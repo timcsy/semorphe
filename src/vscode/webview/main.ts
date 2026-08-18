@@ -31,6 +31,7 @@
 import '../../ui/style.css'
 import { App } from '../../ui/app'
 import { vscodeProfile } from '../vscode-profile'
+import { attachDragMeter, type DragMeasurement } from './fps'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -51,7 +52,39 @@ async function boot(): Promise<void> {
   const app = new App(vscodeProfile)
   ;(window as unknown as { __app?: unknown }).__app = app
   await app.init()
+
+  // 🔴 **診斷【被動】量測，並且只在被問到時回報**（FR-009）。
+  //
+  // spec 139 把這些數字畫在面板上——而那佔掉了本來該是工具列的位置。
+  // ⚠️ 量測沒有被丟掉：它搬去宿主的輸出頻道。
+  //
+  // > **一個儀器如果佔著產品的版面，它就不只是儀器了。**
+  attachDiagnostics(app)
 }
+
+/** 把量測掛上去，並回應宿主的查詢。 */
+function attachDiagnostics(app: App): void {
+  const host = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null
+  let last: DragMeasurement | null = null
+  // ⚠️ 走既有的除錯把手（網頁版 `src/main.ts:11` 也掛同一個），
+  //    而不是替 `App` 開一個新的公開方法——診斷不該擴大產品的介面。
+  const ws = (app as unknown as { blocklyPanel?: { getWorkspace(): unknown } })
+    .blocklyPanel?.getWorkspace() as Parameters<typeof attachDragMeter>[0] | undefined
+  if (ws) attachDragMeter(ws, (m) => { last = m })
+
+  window.addEventListener('message', (e: MessageEvent<{ type?: string }>) => {
+    if (e.data?.type !== 'requestDiagnostics') return
+    host?.postMessage({
+      type: 'diagnostics',
+      lines: [
+        `畫布拖曳：${last ? `${last.frames} 幀｜中位 ${last.medianMs.toFixed(1)} ms｜p95 ${last.p95Ms.toFixed(1)} ms → ${last.verdict}` : '（還沒有拖過）'}`,
+        `判準：中位數 ≤ 20 且 p95 ≤ 33 → 順；中位數 > 33 或 p95 > 100 → 不順`,
+      ],
+    })
+  })
+}
+
+declare function acquireVsCodeApi(): { postMessage(m: unknown): void }
 
 boot().catch((err: unknown) => {
   // ⚠️ **失敗要看得見。** 一個空白的面板與一個載壞的面板長得一樣

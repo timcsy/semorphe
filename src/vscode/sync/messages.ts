@@ -41,6 +41,8 @@ export type HostMessage =
   | { type: 'noDocument' }
   /** 使用者把游標移到某一行——⚠️ **這個事件很吵**（每次移動都發）。 */
   | { type: 'selection'; line: number }
+  /** 宿主要求回報診斷——⚠️ 由指令觸發，**不佔面板的版面**（FR-009）。 */
+  | { type: 'requestDiagnostics' }
   | { type: 'config'; config: PanelConfig }
   | { type: 'viewState'; state: ViewState }
 
@@ -59,6 +61,8 @@ export type WebviewMessage =
       baseVersion: number
     }
   | { type: 'ready'; capsules: number; specs: number }
+  /** 診斷報告。🔴 它去宿主的輸出頻道，不去面板。 */
+  | { type: 'diagnostics'; lines: string[] }
   /**
    * 使用者點了一顆積木 → 請宿主照亮這幾行。
    *

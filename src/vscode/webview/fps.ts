@@ -65,27 +65,6 @@ export function summarise(intervals: number[]): DragMeasurement {
   }
 }
 
-const fmt = (n: number): string => (Math.round(n * 10) / 10).toFixed(1)
-
-export function measurementHtml(m: DragMeasurement | null): string {
-  if (!m) {
-    return '<div class="row"><span class="k">拖曳量測</span><span class="v hint">拖一顆積木橫跨畫布</span></div>'
-  }
-  if (m.frames < 10) {
-    return `<div class="row"><span class="k">拖曳量測</span><span class="v hint">只有 ${m.frames} 幀，拖久一點（≥ 10 幀）</span></div>`
-  }
-  const cls = m.verdict === '順' ? 'ok' : m.verdict === '不順' ? 'warn' : 'mid'
-  return (
-    `<div class="row"><span class="k">幀數</span><span class="v">${m.frames}</span></div>` +
-    `<div class="row"><span class="k">間隔中位數</span><span class="v">${fmt(m.medianMs)} ms</span></div>` +
-    `<div class="row"><span class="k">間隔 p95</span><span class="v">${fmt(m.p95Ms)} ms</span></div>` +
-    `<div class="row"><span class="k">最大間隔</span><span class="v">${fmt(m.maxMs)} ms</span></div>` +
-    `<div class="row verdict"><span class="k">結論</span><span class="v ${cls}">${m.verdict}</span></div>` +
-    `<div class="criterion">判準：中位數 ≤ ${SMOOTH_MEDIAN_MS} 且 p95 ≤ ${SMOOTH_P95_MS} → 順；` +
-    `中位數 &gt; ${ROUGH_MEDIAN_MS} 或 p95 &gt; ${ROUGH_P95_MS} → 不順</div>`
-  )
-}
-
 /**
  * 掛上量測：拖曳開始時開始記幀，結束時算出結論。
  *
@@ -94,7 +73,7 @@ export function measurementHtml(m: DragMeasurement | null): string {
  */
 export function attachDragMeter(
   workspace: Blockly.WorkspaceSvg,
-  onUpdate: (html: string) => void,
+  onMeasure: (m: DragMeasurement) => void,
 ): void {
   let intervals: number[] = []
   let last = 0
@@ -107,8 +86,6 @@ export function attachDragMeter(
     last = now
     raf = requestAnimationFrame(tick)
   }
-
-  onUpdate(measurementHtml(null))
 
   workspace.addChangeListener((e: Blockly.Events.Abstract) => {
     if (e.type !== 'drag') return
@@ -123,6 +100,6 @@ export function attachDragMeter(
     }
     dragging = false
     cancelAnimationFrame(raf)
-    onUpdate(measurementHtml(summarise(intervals)))
+    onMeasure(summarise(intervals))
   })
 }

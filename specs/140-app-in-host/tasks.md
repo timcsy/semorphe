@@ -110,13 +110,13 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 > ⚠️ 一次刪五個檔的 commit，出問題時對不出來。
 
-- [ ] T029 刪 `src/vscode/webview/workspace-setup.ts`（重複 `app.ts` 的組裝）＋ 跑預檢
-- [ ] T030 刪 `src/vscode/webview/lift.ts`（重複 `app.ts:409-427`）＋ 跑預檢
-- [ ] T031 刪 `src/vscode/webview/run.ts`（重複 `ExecutionController`）＋ 跑預檢
-- [ ] T032 刪 `src/vscode/webview/highlight.ts`（重複 `app.ts:598-612`）＋ 跑預檢
-- [ ] T033 刪 `src/vscode/pick-block.ts` ＋ `tests/integration/vscode-pick-block.test.ts`（第一刀的鷹架）
-- [ ] T034 🔴 `src/vscode/webview/fps.ts` **搬家不是刪**：量測改由宿主的輸出頻道呈現（FR-009）
-- [ ] T035 重新評估 `tests/integration/vscode-highlight.test.ts` 與 `vscode-toolbox-parity.test.ts`：⚠️ 被測的東西刪掉了 → **測試也要走**；而**它們守的性質若仍然重要，要說得出誰在守**
+- [x] T029 刪 `src/vscode/webview/workspace-setup.ts`（重複 `app.ts` 的組裝）＋ 跑預檢
+- [x] T030 刪 `src/vscode/webview/lift.ts`（重複 `app.ts:409-427`）＋ 跑預檢
+- [x] T031 刪 `src/vscode/webview/run.ts`（重複 `ExecutionController`）＋ 跑預檢
+- [x] T032 刪 `src/vscode/webview/highlight.ts`（重複 `app.ts:598-612`）＋ 跑預檢
+- [x] T033 刪 `src/vscode/pick-block.ts` ＋ `tests/integration/vscode-pick-block.test.ts`（第一刀的鷹架）
+- [x] T034 🔴 `src/vscode/webview/fps.ts` **搬家不是刪**：量測改由宿主的輸出頻道呈現（FR-009）
+- [x] T035 重新評估 `tests/integration/vscode-highlight.test.ts` 與 `vscode-toolbox-parity.test.ts`：⚠️ 被測的東西刪掉了 → **測試也要走**；而**它們守的性質若仍然重要，要說得出誰在守**
 
 **關卡（SC-007）**：`src/vscode/` 行數從 2170 降到約 1150；面板組裝**一份**。
 
@@ -124,10 +124,10 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 7：User Story 5 —— 上一輪的能力一個都不能掉（P2）
 
-- [ ] T036 [P] [US5] 預檢驗：改一顆積木 → 只重寫改到的那一段
-- [ ] T037 [P] [US5] 預檢驗：貼一段程式 → 積木跟著出來**而且停下來**
-- [ ] T038 [P] [US5] 預檢驗：點積木／移游標 → 另一側跟著亮
-- [ ] T039 [US5] 預檢驗：單步 → 積木依序高亮（🔴 現在走的是 `ExecutionController`，不是我手寫的 runner）
+- [x] T036 [P] [US5] 預檢驗：改一顆積木 → 只重寫改到的那一段
+- [x] T037 [P] [US5] 預檢驗：貼一段程式 → 積木跟著出來**而且停下來**
+- [x] T038 [P] [US5] 預檢驗：點積木／移游標 → 另一側跟著亮
+- [x] T039 [US5] 預檢驗：單步 → 積木依序高亮（🔴 現在走的是 `ExecutionController`，不是我手寫的 runner）
 
 **關卡（SC-005）**：五項全在。
 
@@ -135,8 +135,8 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 ## Phase 8：回歸 ＋ 交棒
 
-- [ ] T040 全套：`npm test` 全綠、基線零變動、中立性 0、探針不變、`tsc` 過、`src/vscode/` 的 `setTimeout` 零筆
-- [ ] T041 🔴 **交棒**：建置 ＋ 安裝，並**產出網頁版 ‖ 擴充的並排截圖**——⚠️ **SC-001 與 SC-003 由使用者判斷，不由我宣稱**
+- [x] T040 全套：`npm test` 全綠、基線零變動、中立性 0、探針不變、`tsc` 過、`src/vscode/` 的 `setTimeout` 零筆
+- [x] T041 🔴 **交棒**：建置 ＋ 安裝，並**產出網頁版 ‖ 擴充的並排截圖**——⚠️ **SC-001 與 SC-003 由使用者判斷，不由我宣稱**
 - [ ] T042 把撞到的坑寫進 `knowledge/history/`，**含「因為知道答案而跳過的」**
 - [ ] T043 🔴 **使用者回報之後**：SC-001／SC-003 的結果如實記錄——⚠️ **不得為了讓這一刀「完成」而換一個更弱的驗收**
 

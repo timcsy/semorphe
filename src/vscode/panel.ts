@@ -56,6 +56,14 @@ const EXECUTING = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
 })
 
+/**
+ * 診斷的輸出頻道。
+ *
+ * ⚠️ spec 139 把這些數字畫在面板上，而那佔掉了本來該是工具列的位置。
+ * 🔴 **量測沒有被丟掉，是搬家**——由 `semorphe.showDiagnostics` 指令取用。
+ */
+const OUTPUT = vscode.window.createOutputChannel('Semorphe')
+
 const VIEW_TYPE = 'semorphe.blocks'
 const TITLE = 'Semorphe 積木'
 const DIST = ['dist']
@@ -216,6 +224,15 @@ class SemorpheSession {
   private async onWebviewMessage(m: WebviewMessage): Promise<void> {
     if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }
+    if (m.type === 'diagnostics') {
+      // 🔴 診斷去**輸出頻道**，不去面板（FR-009）。
+      // > 一個儀器如果佔著產品的版面，它就不只是儀器了。
+      OUTPUT.clear()
+      OUTPUT.appendLine('Semorphe 診斷')
+      for (const line of m.lines) OUTPUT.appendLine(`  ${line}`)
+      OUTPUT.show(true)
+      return
+    }
     if (m.type === 'executionAt') {
       // 🔴 **同一個機制**：執行高亮與選取高亮都是「照亮這幾行」。
       //    ⚠️ 而它用不同的 decoration，否則兩者會互相清掉。
@@ -330,6 +347,10 @@ class SemorpheSession {
     })
   }
 
+  askDiagnostics(): void {
+    this.send({ type: 'requestDiagnostics' })
+  }
+
   reveal(column: vscode.ViewColumn): void {
     this.panel.reveal(column)
   }
@@ -341,6 +362,16 @@ class SemorpheSession {
     for (const d of this.disposables) d.dispose()
     current = undefined
   }
+}
+
+/** 讓指令問得到目前的面板。⚠️ 沒有面板時什麼都不做——**而要說得出來**。 */
+export function requestDiagnostics(): void {
+  if (!current) {
+    OUTPUT.appendLine('Semorphe 診斷：面板還沒打開')
+    OUTPUT.show(true)
+    return
+  }
+  current.askDiagnostics()
 }
 
 export function openBlocksPanel(context: vscode.ExtensionContext): void {

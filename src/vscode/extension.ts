@@ -23,13 +23,16 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel } from './panel'
+import { openBlocksPanel, requestDiagnostics } from './panel'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
+export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
+    // 🔴 診斷是一個**指令**，不是面板上的一塊——見 `panel.ts` 的 `OUTPUT`。
+    vscode.commands.registerCommand(DIAGNOSTICS_COMMAND, () => requestDiagnostics()),
   )
 }
 
