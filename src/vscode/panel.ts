@@ -31,8 +31,8 @@ import { csp, renderHtml } from './webview-html'
 import { EchoGuard } from './sync/echo-guard'
 import { resolveConfig, type RawSettings } from './sync/settings'
 import { textFingerprint } from './sync/fingerprint'
-import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
 import { applySpan } from '../core/projection/rewrite-span'
+import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
 import type { HostMessage, WebviewMessage } from './sync/messages'
 
 /**
@@ -424,30 +424,68 @@ class SemorpheSession {
       (ed) => ed.document.uri.toString() === doc.uri.toString())
     if (!editor) { this.sendDocument(doc); return }
 
-    const lineCount = doc.lineCount
+    const before = doc.getText()
+    const docLines = before.split('\n')
+
     // 🔴 **鏡像比文件長 → 那是分歧，不是「夾一下就好」。**
     //
-    // ⚠️ 原本這裡只有 `Math.min(span.endLine, lineCount)`——而夾住之後
-    //    產出的範圍**指的是別的地方**，症狀是兩行被接成一行：
+    // > **把一個超出範圍的座標夾進範圍裡，不會讓它變成對的座標
+    // > ——只會讓錯誤從「拋出來」變成「寫進檔案」。**
+    if (span.startLine > docLines.length || span.endLine > docLines.length) {
+      this.sendDocument(doc)   // 讓積木那側重新對齊
+      return
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 🔴 **兩邊用同一個函式算出結果，再由結果反推最小的編輯範圍。**
+    //
+    // ## 這裡曾經自己把「行範圍」翻譯成 `vscode.Range`，而那翻譯是錯的
+    //
+    // ```ts
+    // const range = endLine >= lineCount
+    //   ? new Range(new Position(span.startLine, 0), doc.lineAt(lineCount - 1).range.end)
+    //   : …
+    // ```
+    //
+    // ⚠️ 在檔尾追加時 `span.startLine === lineCount`，而 `Position(lineCount, 0)`
+    // **是一個不存在的位置**——VSCode 把它夾到檔尾，於是新的文字接在最後一行
+    // **後面**而不是**下面**：
     //
     // ```cpp
     // }Serial.println();      ← 使用者 2026-08-18 在 Arduino IDE 看到的
     // ```
     //
-    // > **把一個超出範圍的座標夾進範圍裡，不會讓它變成對的座標
-    // > ——只會讓錯誤從「拋出來」變成「寫進檔案」。**
-    if (span.startLine > lineCount || span.endLine > lineCount) {
-      this.sendDocument(doc)   // 讓積木那側重新對齊
+    // 🔴 而它會**自我延續**：檔案一旦沒了結尾換行，之後每一次追加都再合併一次。
+    //
+    // ## 處置：不要翻譯，直接用模型算
+    //
+    // `applySpan` 就是積木那側算鏡像用的**同一個函式**。用它算出「應該長怎樣」，
+    // 再用共同前後綴反推一次字元範圍的替換。
+    //
+    // > **兩邊各自把同一份規格翻譯一次，就會有兩份規格；
+    // > 而它們的分歧只在資料被寫壞的時候才看得見。**
+    //
+    // 🟢 而它仍然是**最小編輯**（共同前後綴都保留），所以游標與復原 granularity 不變。
+    // ─────────────────────────────────────────────────────────────
+    const after = applySpan(before, span)
+    if (before === after) {
+      // 沒有差異——⚠️ 仍然要回話，否則積木那側會一直等在 in-flight。
+      this.send({ type: 'applied', version: doc.version, fingerprint: textFingerprint(before) })
       return
     }
-    const endLine = Math.min(span.endLine, lineCount)
-    const range = endLine >= lineCount
-      // 覆蓋到檔尾——用文件的實際結尾，避免造出不存在的位置
-      ? new vscode.Range(new vscode.Position(span.startLine, 0), doc.lineAt(lineCount - 1).range.end)
-      : new vscode.Range(new vscode.Position(span.startLine, 0), new vscode.Position(endLine, 0))
-    const text = endLine >= lineCount
-      ? span.lines.join('\n')
-      : span.lines.map((l) => `${l}\n`).join('')
+    let head = 0
+    while (head < before.length && head < after.length && before[head] === after[head]) head++
+    let tail = 0
+    while (
+      tail < before.length - head &&
+      tail < after.length - head &&
+      before[before.length - 1 - tail] === after[after.length - 1 - tail]
+    ) tail++
+    const range = new vscode.Range(
+      doc.positionAt(head),
+      doc.positionAt(before.length - tail),
+    )
+    const text = after.slice(head, after.length - tail)
 
     // 🔴 **把整段編輯圈起來**——文件變更事件在 `edit()` 解析【之前】就發了，
     //    所以「事後記下版本」認不出圈內那一則。見 `echo-guard.ts` 的時序陷阱。
