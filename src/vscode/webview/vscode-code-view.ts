@@ -42,10 +42,34 @@ import { rewriteSpan } from '../../core/projection/rewrite-span'
 import { postToHost } from './host-bridge'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { SemanticBus } from '../../core/semantic-bus'
-import type { SemanticUpdateEvent, ExecutionAtNodeEvent } from '../../core/view-host'
+import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/view-host'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
 
-export class VscodeCodeView implements CodeView {
+export class VscodeCodeView implements CodeView, ViewHost {
+  /**
+   * 🔴 **它必須是一個 `ViewHost`，否則收不到 `semantic:update`。**
+   *
+   * `ui/app.ts` 用 `registerViewsIn(elements)` **掃描**出視圖，而判準是
+   * 「有沒有 `viewId` ＋ 契約上的那幾個方法」。
+   *
+   * ⚠️ 2026-08-18 少了這三行的症狀是：**面板出得來、積木畫得出來，
+   * 而改積木完全不會寫回檔案** ——因為這個視圖根本不在登錄表裡。
+   *
+   * 🟢 而 `view-registry.ts` 對「有 `viewId` 卻缺方法」會拋錯，
+   * ⚠️ 但對「**完全沒有 `viewId`**」是靜靜地略過
+   * ——那正是我踩到的那一邊。
+   *
+   * > **一個「認得出殘缺、認不出缺席」的掃描，
+   * > 會把「忘了加入」顯示成「一切正常」。**
+   */
+  readonly viewId = 'vscode-code-view'
+  readonly viewType = 'code'
+  readonly capabilities: ViewCapabilities = {
+    editable: true,
+    needsLanguageProjection: true,
+    consumedAnnotations: [],
+  }
+
   /**
    * 🔴 **四個可選能力全部沒有，而每一個都有理由。**
    *
@@ -150,8 +174,22 @@ export class VscodeCodeView implements CodeView {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
-    // ⚠️ 應用透過匯流排說「樹變了，程式碼是這個」——而寫回走 `setCode`。
-    if (event.source !== 'code' && typeof event.code === 'string') this.setCode(event.code)
+    // 應用透過匯流排說「樹變了，程式碼是這個」——而寫回走 `setCode`。
+    // ⚠️ `source === 'code'` 代表這一輪【是程式碼那側發動的】，寫回去就是迴圈。
+    if (event.source === 'code') return
+    const code = (event as { code?: unknown }).code
+    if (typeof code === 'string') this.setCode(code)
+  }
+
+  async initialize(): Promise<void> {
+    // ⚠️ **顯式的空**：這個視圖沒有要初始化的東西——它的「內容」在另一個行程，
+    //    而訊息的訂閱在建構子裡就掛好了。
+  }
+
+  /** 這個視圖不消費執行狀態（高亮走 `onExecutionAtNode`）。 */
+  onExecutionState(): void {
+    // ⚠️ **顯式的空**：執行的狀態變化（開始／暫停／結束）在程式碼那一側
+    //    沒有投影——它的投影是「執行到哪一行」，而那走 `onExecutionAtNode`。
   }
 
   onExecutionAtNode(event: ExecutionAtNodeEvent): void {

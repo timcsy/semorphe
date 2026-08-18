@@ -111,7 +111,11 @@ export function createAppLayout(
   const main = document.createElement('main')
   main.id = 'editors'
   appEl.appendChild(main)
-  const splitPane = new SplitPane(main)
+  // 🔴 **方向由「有沒有程式碼那一格」決定**，不是另一個旗標。
+  //    有：左右分（積木 ‖ 程式碼＋主控台）——網頁版。
+  //    沒有：上下分（積木在上、主控台在下）——否則主控台會霸佔右半整條，
+  //    而那不是「像網頁版」，是把空出來的位置留給了錯的東西。
+  const splitPane = new SplitPane(main, profile.features.codeEditorPane ? 'horizontal' : 'vertical')
 
   // Create status bar
   const statusBar = document.createElement('footer')
@@ -204,22 +208,45 @@ export function createAppLayout(
   mobileConsoleContainer.id = 'mobile-console'
   main.appendChild(mobileConsoleContainer)
 
-  // Create mobile tab bar (hidden in desktop via CSS)
+  // 行動版的分頁列。
+  //
+  // 🔴 **`mobileLayout: false` 的宿主【不建它】** ——而那不只是美觀問題：
+  // 網頁版靠 CSS 的寬度斷點切換版面，而**一塊面板天生就窄**
+  // ——於是桌面的 IDE 裡會冒出手機的分頁列。
+  //
+  // ⚠️ 2026-08-18 使用者實測撞到：面板下方出現「積木／程式碼／主控台」，
+  //    而 `features.mobileLayout` 明明宣告了 `false`
+  //    ——**因為那個宣告從來沒有人消費**。
+  //
+  // > **一個宣告了而沒有人讀的能力旗標，與一個不存在的旗標，效果一樣
+  // > ——差別只在前者看起來已經處理過了。**
+  // 🔴 **CSS 那一半也要關掉。** 版面有兩半：這個檔（誰看得見）與
+  // `style.css` 的 `@media (max-width: 768px)`（絕對定位、藏掉分隔線）。
+  // 只關 JS 那一半，得到的是**半套行動版**——`.split-left` 被絕對定位蓋住，
+  // 而沒有人來切換它的可見性，**積木畫布在 DOM 裡存在卻看不見**。
+  document.body.classList.toggle('host-no-mobile-layout', !profile.features.mobileLayout)
+
   let mobileTabBar: MobileTabBar | null = null
-  const tabBarContainer = document.createElement('div')
-  tabBarContainer.id = 'mobile-tab-bar-container'
-  tabBarContainer.style.display = 'none'
-  appEl.appendChild(tabBarContainer)
-  mobileTabBar = new MobileTabBar(tabBarContainer)
+  let tabBarContainer: HTMLElement | null = null
+  if (profile.features.mobileLayout) {
+    tabBarContainer = document.createElement('div')
+    tabBarContainer.id = 'mobile-tab-bar-container'
+    tabBarContainer.style.display = 'none'
+    appEl.appendChild(tabBarContainer)
+    mobileTabBar = new MobileTabBar(tabBarContainer)
+  }
 
   // ─── Virtual Keyboards (touch devices) ───
 
-  // Code keyboard: used for Monaco in both mobile and desktop-touch modes
-  const codeKeyboard = new CodeKeyboard(mobileCodeContainer)
+  // 虛擬鍵盤——⚠️ 它要操作底層編輯器，而不是每個宿主都交得出來。
+  const codeKeyboard = profile.features.codeKeyboard
+    ? new CodeKeyboard(mobileCodeContainer)
+    : null
   codeKeyboard?.setEditor(codeView.getEditor?.() as never)
 
-  // Console keyboard: used only in mobile mode
-  const consoleKeyboard = new CodeKeyboard(mobileConsoleContainer)
+  const consoleKeyboard = profile.features.codeKeyboard
+    ? new CodeKeyboard(mobileConsoleContainer)
+    : null
 
   // IME toggle buttons
   const createImeToggle = (parent: HTMLElement) => {
@@ -249,7 +276,7 @@ export function createAppLayout(
   // ── Code keyboard show/hide helpers ──
 
   const showCodeKeyboard = () => {
-    codeKeyboard.show()
+    codeKeyboard?.show()
     imeToggleBtn.style.display = 'none'
     desktopImeToggleBtn.style.display = 'none'
     suppressNativeKB(getMonacoTextarea())
@@ -257,7 +284,7 @@ export function createAppLayout(
   }
 
   const showNativeIME = () => {
-    codeKeyboard.hide()
+    codeKeyboard?.hide()
     // Show the appropriate toggle button
     if (layoutManager.getMode() === 'mobile') {
       imeToggleBtn.style.display = ''
@@ -272,8 +299,8 @@ export function createAppLayout(
     editor?.focus?.()
   }
 
-  codeKeyboard.onNativeIME(() => showNativeIME())
-  codeKeyboard.onCollapse(() => {
+  codeKeyboard?.onNativeIME(() => showNativeIME())
+  codeKeyboard?.onCollapse(() => {
     // Show IME toggle so user can bring keyboard back
     imeToggleBtn.style.display = ''
     desktopImeToggleBtn.style.display = ''
@@ -286,14 +313,14 @@ export function createAppLayout(
   const showConsoleKeyboard = () => {
     const input = consolePanel.getInlineInput()
     if (!input) return
-    consoleKeyboard.show()
+    consoleKeyboard?.show()
     consoleImeToggleBtn.style.display = 'none'
     suppressNativeKB(input)
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
 
   const showConsoleNativeIME = () => {
-    consoleKeyboard.hide()
+    consoleKeyboard?.hide()
     consoleImeToggleBtn.style.display = ''
     const input = consolePanel.getInlineInput()
     if (input) {
@@ -302,8 +329,8 @@ export function createAppLayout(
     }
   }
 
-  consoleKeyboard.onNativeIME(() => showConsoleNativeIME())
-  consoleKeyboard.onCollapse(() => {
+  consoleKeyboard?.onNativeIME(() => showConsoleNativeIME())
+  consoleKeyboard?.onCollapse(() => {
     consoleImeToggleBtn.style.display = ''
   })
   consoleImeToggleBtn.addEventListener('click', () => showConsoleKeyboard())
@@ -315,30 +342,32 @@ export function createAppLayout(
     if (layoutManager.getMode() === 'mobile') {
       // Mobile: use dedicated console keyboard
       suppressNativeKB(input)
-      consoleKeyboard.attachInput(input, () => consolePanel.submitCurrentInput())
-      consoleKeyboard.show()
+      consoleKeyboard?.attachInput(input, () => consolePanel.submitCurrentInput())
+      consoleKeyboard?.show()
     } else {
       // Desktop-touch: reuse codeKeyboard, switch to input mode
       suppressNativeKB(input)
-      codeKeyboard.attachInput(input, () => consolePanel.submitCurrentInput())
+      codeKeyboard?.attachInput(input, () => consolePanel.submitCurrentInput())
       // Keyboard is already visible; just switch target
     }
   })
   consolePanel.onInputHide(() => {
     if (layoutManager.getMode() === 'mobile') {
-      consoleKeyboard.detachInput()
-      consoleKeyboard.hide()
+      consoleKeyboard?.detachInput()
+      consoleKeyboard?.hide()
       consoleImeToggleBtn.style.display = 'none'
     } else {
       // Desktop-touch: revert codeKeyboard back to Monaco mode
-      codeKeyboard.detachInput()
+      codeKeyboard?.detachInput()
     }
   })
 
   // Create mobile menu
   const hamburgerBtn = document.getElementById('hamburger-btn')
   let mobileMenu: MobileMenu | null = null
-  if (hamburgerBtn) {
+  // 🔴 沒有行動版版面就沒有漢堡選單——**連按鈕都不該在**（FR-006）。
+  if (!profile.features.mobileLayout) hamburgerBtn?.remove()
+  else if (hamburgerBtn) {
     mobileMenu = new MobileMenu(toolbar)
     hamburgerBtn.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -359,17 +388,26 @@ export function createAppLayout(
 
   // Panel DOM references for mobile switching
   const switchToMobile = () => {
+    // 🔴 **這個宿主沒有行動版版面就【整段不跑】。**
+    //
+    // ⚠️ 網頁版靠 CSS 的寬度斷點切版面，而**一塊面板天生就窄**
+    // ——桌面 IDE 裡因此會冒出手機的分頁列（2026-08-18 使用者實測撞到）。
+    //
+    // 而處置是**提前返回**，不是逐行加 `?.`：
+    // > **一段「不該執行」的程式，讓它安全地執行完，
+    // > 與讓它不執行，是兩件事——而前者會留下半套狀態。**
+    if (!profile.features.mobileLayout) return
     // Move blockly panel elements to mobile container
     mobileBlocksContainer.appendChild(quickAccessBar.getElement())
     mobileBlocksContainer.appendChild(blocklyContainer)
     mobileBlocksContainer.classList.add('active')
 
     // Move monaco to mobile container (keyboard must stay below)
-    mobileCodeContainer.insertBefore(monacoWrapper, codeKeyboard.getElement())
+    mobileCodeContainer.insertBefore(monacoWrapper, codeKeyboard?.getElement() ?? null)
     mobileCodeContainer.classList.remove('active')
 
     // Move console/variable (bottom panel) to mobile container (keyboard must stay below)
-    mobileConsoleContainer.insertBefore(bottomContainer, consoleKeyboard.getElement())
+    mobileConsoleContainer.insertBefore(bottomContainer, consoleKeyboard?.getElement() ?? null)
     mobileConsoleContainer.classList.remove('active')
 
     // Move selectors into mobile menu
@@ -388,7 +426,7 @@ export function createAppLayout(
     }
 
     // Show tab bar
-    tabBarContainer.style.display = ''
+    if (tabBarContainer) tabBarContainer.style.display = ''
 
     // Show mobile sync button
     const mobileSyncBtn = document.getElementById('mobile-sync-btn')
@@ -447,8 +485,8 @@ export function createAppLayout(
     codeView.applyMobileOptions?.()
 
     // Move keyboards to mobile containers
-    mobileCodeContainer.insertBefore(codeKeyboard.getElement(), imeToggleBtn)
-    mobileConsoleContainer.insertBefore(consoleKeyboard.getElement(), consoleImeToggleBtn)
+    if (codeKeyboard) mobileCodeContainer.insertBefore(codeKeyboard.getElement(), imeToggleBtn)
+    if (consoleKeyboard) mobileConsoleContainer.insertBefore(consoleKeyboard.getElement(), consoleImeToggleBtn)
 
     // Show code keyboard if code tab is active
     if (mobileTabBar!.getActiveTab() === 'code') {
@@ -459,6 +497,8 @@ export function createAppLayout(
   }
 
   const switchToDesktop = () => {
+    // 同上——沒有行動版就沒有「切回桌面版」這件事。
+    if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
     leftPanel.appendChild(quickAccessBar.getElement())
     leftPanel.appendChild(blocklyContainer)
@@ -491,7 +531,7 @@ export function createAppLayout(
     mobileConsoleContainer.classList.remove('active')
 
     // Hide tab bar
-    tabBarContainer.style.display = 'none'
+    tabBarContainer!.style.display = 'none'
 
     // Hide mobile sync button
     const mobileSyncBtn = document.getElementById('mobile-sync-btn')
@@ -514,19 +554,19 @@ export function createAppLayout(
     codeView.applyDesktopOptions?.()
 
     // Clean up mobile keyboards
-    consoleKeyboard.detachInput()
-    consoleKeyboard.hide()
+    consoleKeyboard?.detachInput()
+    consoleKeyboard?.hide()
     imeToggleBtn.style.display = 'none'
     consoleImeToggleBtn.style.display = 'none'
 
     if (layoutManager.isTouchDevice()) {
       // Desktop-touch: move code keyboard to right column, show it
-      rightColumn.insertBefore(codeKeyboard.getElement(), desktopImeToggleBtn)
-      codeKeyboard.detachInput()
+      rightColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
+      codeKeyboard?.detachInput()
       showCodeKeyboard()
     } else {
       // Desktop without touch: hide everything
-      codeKeyboard.hide()
+      codeKeyboard?.hide()
       desktopImeToggleBtn.style.display = 'none'
       restoreNativeKB(getMonacoTextarea())
     }
@@ -545,13 +585,18 @@ export function createAppLayout(
   }
 
   // Connect tab bar to panel switching
-  mobileTabBar.onTabChange((tab) => {
+  //
+  // 🔴 **用守衛，不用 `!`。** 我一度為了消掉型別錯誤把這裡寫成 `mobileTabBar!`
+  // ——而預檢立刻炸：`Cannot read properties of null (reading 'onTabChange')`。
+  //
+  // > **機械地壓掉一個型別錯誤，是把它從編譯期搬到執行期。**
+  mobileTabBar?.onTabChange((tab) => {
     activateMobilePanel(tab)
     // Show/hide code keyboard based on active tab
     if (tab === 'code') {
       showCodeKeyboard()
     } else {
-      codeKeyboard.hide()
+      codeKeyboard?.hide()
       imeToggleBtn.style.display = 'none'
     }
   })
@@ -572,7 +617,7 @@ export function createAppLayout(
   } else if (layoutManager.isTouchDevice()) {
     // Desktop-touch: show code keyboard in right column on initial load
     requestAnimationFrame(() => {
-      rightColumn.insertBefore(codeKeyboard.getElement(), desktopImeToggleBtn)
+      rightColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
       showCodeKeyboard()
     })
   }

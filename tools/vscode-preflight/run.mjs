@@ -69,16 +69,41 @@ const fatal = await page.evaluate(() => (document.querySelector('#app > pre')?.t
 if (fatal) console.log('🔴 啟動失敗：\n' + fatal)
 
 // ① 介面的區塊——SC-002
-const blocks = await page.evaluate(() => ({
-  工具列: !!document.querySelector('header'),
-  狀態列: !!document.querySelector('footer'),
-  積木畫布: !!document.querySelector('.injectionDiv'),
+const blocks = await page.evaluate(() => {
+ /** 看得見＝有面積、沒被 display:none／visibility 藏掉。 */
+ const seen = (sel) => {
+   const el = document.querySelector(sel)
+   if (!el) return false
+   const r = el.getBoundingClientRect()
+   if (r.width < 1 || r.height < 1) return false
+   const cs = getComputedStyle(el)
+   return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0'
+ }
+ return ({
+  // 🔴 **問「看得見嗎」，不是「在不在 DOM」。**
+  //
+  // 2026-08-18 實測：`.injectionDiv` 在、`querySelector` 為真、預檢全綠，
+  // ⚠️ **而使用者的面板上一顆積木都沒有**——它被行動版 CSS 絕對定位蓋掉了。
+  //
+  // > **一個只問「存在嗎」的檢查，答得出「在」，
+  // > 答不出「使用者看得到嗎」——而後者才是驗收。**
+  工具列: seen('header'),
+  狀態列: seen('footer'),
+  積木畫布: seen('.injectionDiv'),
   工具箱分類: document.querySelectorAll('.blocklyToolboxCategory').length,
   快速列按鈕: document.querySelectorAll('.quick-access-bar button').length,
-  下方分頁: document.querySelectorAll('.bottom-panel .tab, [id*=tab]').length,
+  // 🔴 選擇器 2026-08-18 修正過一次：原本寫 `[id*=tab]`，而它配到的是
+  //    【行動版的分頁列】，不是主控台／變數的分頁。
+  //    ⚠️ 那個錯誤一直沒被發現，直到行動版被關掉、數字掉成 0 才暴露
+  //    ——**它從來沒有量到它宣稱要量的東西**。
+  //
+  // > **一個選擇器如果會配到別的東西，它報的數字是真的，
+  // > 而它報的【意義】是假的。**
+  下方分頁: document.querySelectorAll('.bottom-tab-btn').length,
   程式碼編輯區: !!document.querySelector('.monaco-editor'),
   檔案按鈕: !!document.getElementById('file-menu-btn'),
-}))
+ })
+})
 console.log(JSON.stringify(blocks, null, 1))
 
 // ①b 🔴 資源根有沒有被注入
