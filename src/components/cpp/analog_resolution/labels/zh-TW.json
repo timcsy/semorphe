@@ -1,0 +1,4 @@
+{
+  "C_ANALOG_RESOLUTION_MSG0": "設定類比讀取解析度為 %1 位元",
+  "C_ANALOG_RESOLUTION_TOOLTIP": "analogReadResolution(位元)——改變「讀取類比腳位」的值域上限（預設 10 位元＝0～1023）。⚠️ ESP32／SAMD 才有，Uno 沒有；模擬時沒有可觀察的效果"
+}

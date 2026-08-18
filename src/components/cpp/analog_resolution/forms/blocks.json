@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cpp_analog_resolution",
+    "conceptId": "cpp:analog_resolution",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_analog_resolution",
+      "message0": "%{BKY_C_ANALOG_RESOLUTION_MSG0}",
+      "args0": [ { "type": "input_value", "name": "BITS", "check": "Expression" } ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_ANALOG_RESOLUTION_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": { "fields": {}, "inputs": { "BITS": "bits" }, "statementInputs": {} }
+  }
+]

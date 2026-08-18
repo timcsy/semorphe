@@ -50,6 +50,7 @@
         "cpp_math_abs",
         "cpp_random_next",
         "cpp_random_seed",
+        "cpp_math_constrain",
         "cpp_range_remap"
       ]
     },
@@ -73,6 +74,7 @@
         "cpp_default",
         "cpp_switch",
         "cpp_program_exit",
+        "cpp_math_constrain",
         "cpp_range_remap"
       ]
     },
@@ -184,6 +186,7 @@
         "cpp_char_to_upper",
         "cpp_cstring_as_double",
         "cpp_cstring_as_int",
+        "cpp_math_constrain",
         "cpp_range_remap"
       ]
     },
@@ -259,6 +262,7 @@
       "name": "腳位與時間",
       "blocks": [
         "cpp_analog_read",
+        "cpp_analog_resolution",
         "cpp_analog_write",
         "cpp_delay",
         "cpp_delay_microseconds",

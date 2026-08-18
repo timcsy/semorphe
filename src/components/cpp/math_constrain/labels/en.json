@@ -1,0 +1,4 @@
+{
+  "CPP_CONSTRAIN_MSG0": "Clamp %1 between %2 and %3",
+  "CPP_CONSTRAIN_TOOLTIP": "Returns the low bound if the value is below it, the high bound if above. Often used after a range remap to keep the result inside a valid range"
+}

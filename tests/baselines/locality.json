@@ -14,6 +14,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:analog_resolution": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:analog_write": {
       "files": 3,
       "dirs": 1
@@ -395,6 +399,10 @@
       "dirs": 1
     },
     "cpp:math_binary": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:math_constrain": {
       "files": 3,
       "dirs": 1
     },

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "cpp_math_constrain",
+    "conceptId": "cpp:math_constrain",
+    "language": "cpp",
+    "category": "math",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_math_constrain",
+      "message0": "%{BKY_CPP_CONSTRAIN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "LOW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "HIGH",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_CPP_CONSTRAIN_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value",
+        "LOW": "low",
+        "HIGH": "high"
+      },
+      "statementInputs": {}
+    }
+  }
+]

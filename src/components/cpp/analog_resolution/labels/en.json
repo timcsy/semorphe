@@ -1,0 +1,4 @@
+{
+  "C_ANALOG_RESOLUTION_MSG0": "Set analog read resolution to %1 bits",
+  "C_ANALOG_RESOLUTION_TOOLTIP": "analogReadResolution(bits) — changes the upper bound of Read-analog-pin (default 10 bits = 0..1023). Available on ESP32/SAMD, not on the Uno; no observable effect in the simulator"
+}

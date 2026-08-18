@@ -7,6 +7,7 @@
   "identitySet": [
     "cpp:address_of",
     "cpp:analog_read",
+    "cpp:analog_resolution",
     "cpp:analog_write",
     "cpp:arithmetic",
     "cpp:array_2d_assign",
@@ -103,6 +104,7 @@
     "cpp:map_declare",
     "cpp:math_abs",
     "cpp:math_binary",
+    "cpp:math_constrain",
     "cpp:math_gcd",
     "cpp:math_lcm",
     "cpp:math_max",

@@ -1,0 +1,19 @@
+{
+  "conceptId": "cpp:analog_resolution",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": { "bits": "expression" },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。⚠️ 而它是 **ESP32／SAMD 才有**的函式，Uno 沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "🔴 **它今天沒有可觀察的效果，而那是誠實的**。它改的是 `analogRead` 的值域上限（預設 10 bit ＝ 0–1023），而模擬的 `analogRead` 在沒接東西時**一律回 0**——解析度改了也還是 0。⚠️ 兩個選項裡選了「記著但不消費」而**不是**「記進腳位模型」：後者會多出一格沒有人讀的狀態，那正是這個專案叫做「機制有了，沒人接上」的病。**而它不寫成 noop 函式**——那會讓「顯式的空」與「忘了寫」分不出來；這裡是真的執行器，只是它做的事是驗參數。虛擬硬體接上來時，這裡改成記進板子層級的狀態。",
+  "_lift_why": "身分不叫 `analog_read_resolution`：`analog` 是主體、`resolution` 是操作，中間再塞一個 `read` 會變成三段而第二段不是操作。"
+}
