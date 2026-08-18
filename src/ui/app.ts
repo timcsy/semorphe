@@ -1,6 +1,7 @@
 import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
-import type { MonacoPanel } from './panels/monaco-panel'
+import type { CodeView } from '../core/host/code-view'
+import type { HostProfile } from '../core/host/host-profile'
 import { SyncController } from './sync-controller'
 import type { SyncError } from './sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
@@ -38,7 +39,7 @@ import { CppParser } from '../languages/cpp/parser'
 import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
-import { StorageService } from '../core/storage'
+
 import type { SavedState } from '../core/storage'
 import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
@@ -80,12 +81,20 @@ const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 export class App {
   private bus: SemanticBus
   private blocklyPanel: BlocklyPanel | null = null
-  private monacoPanel: MonacoPanel | null = null
+  private codeView: CodeView | null = null
   private syncController: SyncController | null = null
   private blockSpecRegistry: BlockSpecRegistry
   private blockRegistrar: BlockRegistrar
   private localeLoader: LocaleLoader
-  private storageService: StorageService
+  /**
+   * 🔴 這個宿主有什麼、沒有什麼——**一份看得完的宣告**。
+   *
+   * ⚠️ **不要問「現在是哪一個宿主」**，問 `features` 或 `codeView` 的可選方法。
+   * 一旦有人寫 `this.profile.id === '…'`，這份宣告就退化成一個標籤
+   * ——而真相就散回各處的 `if` 裡了。
+   */
+  private readonly profile: HostProfile
+  private storageService: ReturnType<HostProfile['createStorage']>
   private topicRegistry: TopicRegistry
   private targetRegistry: TargetRegistry
   private currentTarget: Target
@@ -110,12 +119,13 @@ export class App {
   private patternRenderer: PatternRenderer | null = null
   private mobileMenu: import('./toolbar/mobile-menu').MobileMenu | null = null
 
-  constructor() {
+  constructor(profile: HostProfile) {
+    this.profile = profile
     this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
     this.localeLoader = new LocaleLoader()
-    this.storageService = new StorageService()
+    this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()
 
@@ -162,9 +172,9 @@ export class App {
     const appEl = document.getElementById('app')
     if (!appEl) throw new Error('#app element not found')
 
-    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox())
+    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox(), this.profile)
     this.blocklyPanel = elements.blocklyPanel
-    this.monacoPanel = elements.monacoPanel
+    this.codeView = elements.codeView
     this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
@@ -196,7 +206,7 @@ export class App {
     this.syncController.setTopic(this.currentTopic, this.enabledBranches)
     // ── 視圖：登錄，而不是硬編 ────────────────────────────────
     //
-    // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.monacoPanel?.setCode(…)`，
+    // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.codeView?.setCode(…)`，
     // 而**同時**四個面板各自有一個 `connectBus()` 在訂閱同樣的事件。
     //
     // 查證結果：**`connectBus` 從來沒有人呼叫過**——那一層整個是死的，
@@ -226,7 +236,7 @@ export class App {
     // - `console-panel` **收** `execution:output`
     // - `monaco-panel` **發** `execution:breakpoints`（把行號翻成 nodeId）
     elements.consolePanel?.connectBus(this.bus)
-    this.monacoPanel?.connectBus(this.bus)
+    this.codeView?.connectBus(this.bus)
 
     // 🔴 **診斷的第二個產出端在樹上，而樹只從匯流排來。**
     //
@@ -246,7 +256,7 @@ export class App {
 
     // 9. Wire panel change events
     this.wireBlocklyChangeHandler()
-    this.monacoPanel.onChange(() => {
+    this.codeView.onChange(() => {
       if (this._codeToBlocksInProgress) return
       this.codeDirty = true
       this.updateSyncHints()
@@ -257,7 +267,7 @@ export class App {
     this.executionController = new ExecutionController(
       {
         blocklyPanel: this.blocklyPanel,
-        monacoPanel: this.monacoPanel,
+        codeView: this.codeView,
         consolePanel: elements.consolePanel,
         variablePanel: elements.variablePanel,
         bottomPanel: elements.bottomPanel,
@@ -281,7 +291,7 @@ export class App {
         this.updateSyncHints()
       },
       onSyncCode: () => {
-        this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+        this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
       },
       onToggleAutoSync: () => this.toggleAutoSync(),
       onUndo: () => this.blocklyPanel?.undo(),
@@ -293,7 +303,7 @@ export class App {
       getExportState: () => this.buildSaveState(),
       importState: (state: SavedState) => {
         if (state.blocklyState && Object.keys(state.blocklyState).length > 0) this.blocklyPanel?.setState(state.blocklyState)
-        if (state.code) this.monacoPanel?.setCode(state.code)
+        if (state.code) this.codeView?.setCode(state.code)
       },
       onUploadCustomBlocks: (blocks: object[]) => {
         for (const blockDef of blocks) Blockly.common.defineBlocksWithJsonArray([blockDef])
@@ -394,10 +404,10 @@ export class App {
     elements.mobileTabBar?.onTabChange((tab) => {
       if (tab === 'code') {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => this.monacoPanel?.relayout())
+          requestAnimationFrame(() => this.codeView?.relayout?.())
         })
         // Fallback for devices where rAF fires before paint
-        setTimeout(() => this.monacoPanel?.relayout(), 100)
+        setTimeout(() => this.codeView?.relayout?.(), 100)
       }
     })
 
@@ -432,10 +442,10 @@ export class App {
     this.codeParserCache = codeParser
     this.syncController!.setCodeToBlocksPipeline(lifter, codeParser)
     const originalSync = this.syncController!.syncCodeToBlocks.bind(this.syncController!)
-    const monacoPanel = this.monacoPanel!
+    const codeView = this.codeView!
 
     this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
-      const code = codeArg ?? monacoPanel.getCode()
+      const code = codeArg ?? codeView.getCode()
       this._codeToBlocksInProgress = true
       parser.parse(code).then(tree => {
         codeParser._lastTree = tree.rootNode
@@ -443,7 +453,7 @@ export class App {
         const patched = this.syncController?.patchMissingDependencies(code)
         if (patched) {
           const linesDelta = patched.split('\n').length - code.split('\n').length
-          this.monacoPanel?.setCodePreserveCursor(patched, linesDelta)
+          this.codeView?.setCodePreserveCursor(patched, linesDelta)
         }
         this.codeDirty = false
         this.blocksDirty = false
@@ -545,7 +555,7 @@ export class App {
   private resyncAfterTopicChange(): void {
     const tree = this.blocklyPanel?.extractSemanticTree()
     if (!tree) return
-    const code = this.monacoPanel?.getCode() ?? ''
+    const code = this.codeView?.getCode() ?? ''
     const depth = this.getScaffoldDepth()
     const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
       (n: { conceptId: string; properties: Record<string, unknown> }) =>
@@ -595,21 +605,21 @@ export class App {
   private setupBidirectionalHighlight(): void {
     // Block → Code: unified via nodeId
     this.blocklyPanel?.onNodeSelect((nodeId) => {
-      this.monacoPanel?.clearHighlight(); this.blocklyPanel?.clearHighlight()
+      this.codeView?.clearHighlight(); this.blocklyPanel?.clearHighlight()
       if (!nodeId) return
       this.blocklyPanel?.highlightByNodeId(nodeId, 'block-to-code')
       const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
+      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
     })
     // Code → Block: unified via nodeId
-    this.monacoPanel?.onCursorChange((line) => {
-      this.blocklyPanel?.clearHighlight(); this.monacoPanel?.clearHighlight(); this.monacoPanel?.dismissPendingHighlight()
+    this.codeView?.onCursorChange((line: number) => {
+      this.blocklyPanel?.clearHighlight(); this.codeView?.clearHighlight(); this.codeView?.dismissPendingHighlight()
       try { if (Blockly.getSelected()) Blockly.common.setSelected(null as unknown as Blockly.ISelectable) } catch { /* ignore */ }
       const nodeId = this.syncController?.nodeIdForLine(line - 1)
       if (!nodeId) return
       this.blocklyPanel?.highlightByNodeId(nodeId, 'code-to-block')
       const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.monacoPanel?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
+      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
     })
   }
 
@@ -631,7 +641,7 @@ export class App {
    */
   private buildSaveState(): SavedState {
     return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
-      blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.monacoPanel?.getCode() ?? '',
+      blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.codeView?.getCode() ?? '',
       language: 'cpp', styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
@@ -701,7 +711,7 @@ export class App {
     if (this.codeToBlocksTimer) clearTimeout(this.codeToBlocksTimer)
     this.codeToBlocksTimer = setTimeout(() => {
       this.codeToBlocksTimer = null
-      this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+      this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
     }, 800)
   }
 
@@ -720,7 +730,7 @@ export class App {
       this.syncBlocksToCodeWithMappings()
       this.blocksDirty = false; this.updateSyncHints()
     }
-    if (this.codeDirty) this.syncController?.syncCodeToBlocks(this.monacoPanel?.getCode())
+    if (this.codeDirty) this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
   }
 
   /**
@@ -777,7 +787,7 @@ export class App {
 
   dispose(): void {
     this.blocklyPanel?.dispose()
-    this.monacoPanel?.dispose()
+    this.codeView?.dispose()
     this.executionController?.dispose()
   }
 }

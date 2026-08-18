@@ -6,7 +6,8 @@ import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import { ConsolePanel } from './panels/console-panel'
 import { VariablePanel } from './panels/variable-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
-import { MonacoPanel } from './panels/monaco-panel'
+import type { CodeView } from '../core/host/code-view'
+import type { HostProfile } from '../core/host/host-profile'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { TopicSelector } from './toolbar/topic-selector'
 import { StyleSelector } from './toolbar/style-selector'
@@ -14,7 +15,7 @@ import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { LocaleSelector } from './toolbar/locale-selector'
 import { MobileMenu } from './toolbar/mobile-menu'
 import { CodeKeyboard } from './panels/code-keyboard'
-import { StorageService } from '../core/storage'
+import type { StorageLike } from '../core/host/host-profile'
 import type { SavedState } from '../core/storage'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { StylePreset, Target, Topic } from '../core/types'
@@ -25,7 +26,13 @@ import { showToast } from './toolbar/toast'
 
 export interface AppShellElements {
   blocklyPanel: BlocklyPanel
-  monacoPanel: MonacoPanel
+  /**
+   * 程式碼那一側的**角色**。
+   *
+   * ⚠️ 網頁版是內建的編輯器面板；而編輯器不歸我們管的宿主會給一個**代理**
+   * ——`ui/app.ts` 與 `ui/execution-controller.ts` 只認識這個角色。
+   */
+  codeView: CodeView
   consolePanel: ConsolePanel
   variablePanel: VariablePanel
   bottomPanel: BottomPanel
@@ -57,6 +64,14 @@ export function createAppLayout(
   appEl: HTMLElement,
   blockSpecRegistry: BlockSpecRegistry,
   toolbox: object,
+  /**
+   * 🔴 這個宿主有什麼、沒有什麼。
+   *
+   * ⚠️ **不要在這個檔裡問「現在是哪一個宿主」** ——問 `profile.features`。
+   * 一旦有人寫 `profile.id === '…'`，這份宣告就退化成一個標籤
+   * （由 `tests/integration/host-contract.test.ts` 釘住）。
+   */
+  profile: HostProfile,
 ): AppShellElements {
   const layoutManager = new LayoutManager()
 
@@ -138,8 +153,8 @@ export function createAppLayout(
   monacoWrapper.id = 'monaco-panel'
   rightColumn.appendChild(monacoWrapper)
 
-  const monacoPanel = new MonacoPanel(monacoWrapper)
-  monacoPanel.init(false)
+  // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器。
+  const codeView = profile.createCodeView(monacoWrapper)
 
   const bottomContainer = document.createElement('div')
   rightColumn.appendChild(bottomContainer)
@@ -190,7 +205,7 @@ export function createAppLayout(
 
   // Code keyboard: used for Monaco in both mobile and desktop-touch modes
   const codeKeyboard = new CodeKeyboard(mobileCodeContainer)
-  codeKeyboard.setEditor(monacoPanel.getEditor()!)
+  codeKeyboard?.setEditor(codeView.getEditor?.() as never)
 
   // Console keyboard: used only in mobile mode
   const consoleKeyboard = new CodeKeyboard(mobileConsoleContainer)
@@ -241,7 +256,9 @@ export function createAppLayout(
     const textarea = getMonacoTextarea()
     restoreNativeKB(textarea)
     textarea?.focus()
-    monacoPanel.getEditor()?.focus()
+    // ⚠️ 這個宿主可能沒有底層編輯器可以聚焦——`?.` 不是防禦，是「它本來就可能不存在」。
+    const editor = codeView.getEditor?.() as { focus?: () => void } | null | undefined
+    editor?.focus?.()
   }
 
   codeKeyboard.onNativeIME(() => showNativeIME())
@@ -416,7 +433,7 @@ export function createAppLayout(
     rightColumn.style.display = 'none'
 
     // Apply mobile-friendly Monaco options (reduce IME issues)
-    monacoPanel.applyMobileOptions()
+    codeView.applyMobileOptions?.()
 
     // Move keyboards to mobile containers
     mobileCodeContainer.insertBefore(codeKeyboard.getElement(), imeToggleBtn)
@@ -483,7 +500,7 @@ export function createAppLayout(
     rightColumn.style.display = ''
 
     // Restore desktop Monaco options
-    monacoPanel.applyDesktopOptions()
+    codeView.applyDesktopOptions?.()
 
     // Clean up mobile keyboards
     consoleKeyboard.detachInput()
@@ -549,7 +566,7 @@ export function createAppLayout(
     })
   }
 
-  return { blocklyPanel, monacoPanel, consolePanel, variablePanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard }
 }
 
 export function setupSelectors(
@@ -620,7 +637,7 @@ export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onSyncBl
 }
 
 export function setupFileButtons(
-  storageService: StorageService,
+  storageService: StorageLike,
   callbacks: Pick<AppShellCallbacks, 'getExportState' | 'importState' | 'onUploadCustomBlocks'>,
 ): void {
   // File dropdown menu toggle
@@ -642,8 +659,8 @@ export function setupFileButtons(
   document.getElementById('export-btn')?.addEventListener('click', () => {
     closeMenu()
     const state = callbacks.getExportState()
-    const blob = storageService.exportToBlob(state)
-    storageService.downloadBlob(blob, `semorphe-${Date.now()}.json`)
+    const blob = storageService.exportToBlob!(state)
+    storageService.downloadBlob!(blob, `semorphe-${Date.now()}.json`)
     showToast(Blockly.Msg['TOAST_EXPORT_SUCCESS'] || '已匯出', 'success')
   })
 
@@ -657,7 +674,7 @@ export function setupFileButtons(
       if (!file) return
       const reader = new FileReader()
       reader.onload = () => {
-        const state = storageService.importFromJSON(reader.result as string)
+        const state = storageService.importFromJSON!(reader.result as string)
         if (!state) {
           showToast(Blockly.Msg['TOAST_IMPORT_ERROR'] || '匯入失敗：無效的 JSON', 'error')
           return

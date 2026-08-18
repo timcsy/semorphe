@@ -32,6 +32,19 @@ import type { SavedState, LoadOutcome } from '../storage'
 export interface StorageLike {
   save(state: Partial<SavedState>): boolean
   loadOutcome(): LoadOutcome
+
+  /**
+   * 匯入匯出——🔴 **它是 `fileButtons` 那個能力的一部分，不是「存檔」的一部分**。
+   *
+   * ⚠️ 所以它是**可選**的：一個「檔案由 IDE 管」的宿主沒有這一組，
+   * 而那不是缺陷，是它本來就不該有。
+   *
+   * 🟢 而「可選 ＋ 理由」是這一輪的統一形狀——見 `code-view.ts` 的 `absentReasons`。
+   */
+  exportToBlob?(state: SavedState): Blob
+  downloadBlob?(blob: Blob, filename: string): void
+  importFromJSON?(json: string): SavedState | null
+
   /** ⚠️ 只給測試用：看儲存體裡實際留下了什麼。 */
   dumpForTest?(): unknown
 }

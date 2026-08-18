@@ -7,7 +7,7 @@ import type { SemanticNode as InterpreterNode } from '../core/types'
 import { RuntimeError } from '../interpreter/errors'
 import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
-import type { MonacoPanel } from './panels/monaco-panel'
+import type { CodeView } from '../core/host/code-view'
 import type { ConsolePanel } from './panels/console-panel'
 import { canExecute } from '../core/diagnostics'
 import { describeExecutionRefusal } from './refusal-message'
@@ -25,7 +25,7 @@ import type { ExecutionStatus } from '../interpreter/types'
 
 export interface ExecutionPanels {
   blocklyPanel: BlocklyPanel | null
-  monacoPanel: MonacoPanel | null
+  codeView: CodeView | null
   consolePanel: ConsolePanel | null
   variablePanel: VariablePanel | null
   bottomPanel: BottomPanel | null
@@ -163,7 +163,7 @@ export class ExecutionController {
       this.bus.emit('execution:at-node', { nodeId, follow })
       return
     }
-    for (const p of [this.panels.blocklyPanel, this.panels.monacoPanel]) {
+    for (const p of [this.panels.blocklyPanel, this.panels.codeView]) {
       p?.onExecutionAtNode?.({ nodeId, follow })
     }
   }

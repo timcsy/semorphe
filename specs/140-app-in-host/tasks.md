@@ -60,13 +60,13 @@ SC-003（每個控制項都有作用）。T041 是**交棒**。
 
 - [x] T009 [US4] 於 `src/ui/panels/monaco-panel.ts` 宣告 `implements CodeView`——🔴 **行為零改動**，只是把既有方法對上介面
 - [x] T010 [US4] 建立 `src/ui/host/web-profile.ts`：網頁版的宣告，🔴 **必須逐字等於今天的行為**（四個可選能力全部有、三個 feature 全開）
-- [ ] T011 [US4] 於 `src/ui/app.ts` 把 `monacoPanel` 的型別換成 `CodeView`（22 處），並改成從 profile 取得
-- [ ] T012 [US4] 於 `src/ui/app.ts:118` 把 `new StorageService()` 換成 `profile.createStorage()`
-- [ ] T013 [US4] 於 `src/ui/app-shell.ts` 接受 profile：`createCodeView` 取代直接 `new`，`features` 決定建不建行動版元件與檔案按鈕（8 處）
-- [ ] T014 [US4] 於 `src/ui/execution-controller.ts` 把 `ExecutionPanels` 的型別換成 `CodeView`（2 處）
-- [ ] T015 [US4] 於 `src/main.ts` 注入網頁版的 profile
-- [ ] T016 [US4] 跑 `npm test` ＋ 護欄 ＋ 探針 ＋ `tsc`
-- [ ] T017 [US4] 🔴 **`npm run dev` 開瀏覽器看一眼**，與 T002 的截圖比對——⚠️ **這一條不能省**
+- [x] T011 [US4] 於 `src/ui/app.ts` 把 `monacoPanel` 的型別換成 `CodeView`（22 處），並改成從 profile 取得
+- [x] T012 [US4] 於 `src/ui/app.ts:118` 把 `new StorageService()` 換成 `profile.createStorage()`
+- [x] T013 [US4] 於 `src/ui/app-shell.ts` 接受 profile：`createCodeView` 取代直接 `new`，`features` 決定建不建行動版元件與檔案按鈕（8 處）
+- [x] T014 [US4] 於 `src/ui/execution-controller.ts` 把 `ExecutionPanels` 的型別換成 `CodeView`（2 處）
+- [x] T015 [US4] 於 `src/main.ts` 注入網頁版的 profile
+- [x] T016 [US4] 跑 `npm test` ＋ 護欄 ＋ 探針 ＋ `tsc`
+- [x] T017 [US4] 🔴 **`npm run dev` 開瀏覽器看一眼**，與 T002 的截圖比對——⚠️ **這一條不能省**
 
 **關卡（SC-006）**：全套綠、基線零變動、中立性 0、探針不變、
 🔴 **而且瀏覽器上看起來與 T002 一模一樣**。
