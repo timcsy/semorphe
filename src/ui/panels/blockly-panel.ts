@@ -13,6 +13,7 @@ import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
 import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
+import { showToast } from '../toolbar/toast'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { buildProgram } from '../../components/cpp/program/lift'
 import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
@@ -52,6 +53,8 @@ export class BlocklyPanel implements ViewHost {
    * 下一次成功載入會清掉它（使用者按「程式碼→積木」也會）。
    */
   private stateLoadFailed = false
+  /** 上一次載入失敗的訊息——🔴 診斷指令與畫面上的提示都要用它。 */
+  private lastStateError: string | null = null
   private _blockMappings: BlockMapping[] = []
   private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
@@ -93,9 +96,20 @@ export class BlocklyPanel implements ViewHost {
   onSemanticUpdate(event: SemanticUpdateEvent): void {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
       this.busUpdateInProgress = true
+      // 🔴 **先存一份，失敗就還原。**
+      //
+      // ⚠️ `setState` 拋錯時工作區是**載到一半**的——使用者看到的是一堆
+      //    灰色的空積木（2026-08-18 實測），而那個畫面說不出任何原因。
+      //
+      // > **一個失敗的操作如果留下它做到一半的結果，
+      // > 使用者看到的不是「失敗」，是「一個他不認得的狀態」。**
+      const snapshot = this.workspace
+        ? Blockly.serialization.workspaces.save(this.workspace)
+        : null
       try {
         this.setState(event.blockState as object)
         this.stateLoadFailed = false
+        this.lastStateError = null
       } catch (err) {
         // 🔴 **這裡曾經是一個空的 `catch {}`**，註解寫「safe to ignore」。
         //
@@ -107,7 +121,28 @@ export class BlocklyPanel implements ViewHost {
         //
         // 處置有兩半，缺一不可：**說出來**，以及**記住這份工作區不可信**。
         this.stateLoadFailed = true
+        this.lastStateError = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
         console.error('[semorphe] 積木狀態載入失敗——工作區可能是殘的，暫停「積木→程式碼」', err)
+        // 🔴 **要讓使用者看得到，而不是只留在開發者工具裡。**
+        //
+        // ⚠️ 這個宿主（IDE 面板）裡沒有人會去開 DevTools，而症狀
+        //    （灰色的空積木）本身說不出原因。
+        //
+        // > **一則只有開發者看得到的錯誤訊息，
+        // > 在使用者那裡等於沒有訊息——他只會說「卡住了」。**
+        showToast(`積木載入失敗：${this.lastStateError}`, 'error')
+        // 還原到上一個好的狀態——⚠️ 還原本身也可能失敗，那就清空，
+        //    因為**一片空白至少說得出「這裡沒有東西」，殘骸說不出任何事**。
+        try {
+          if (snapshot && this.workspace) {
+            Blockly.serialization.workspaces.load(snapshot, this.workspace)
+          } else {
+            this.workspace?.clear()
+          }
+        } catch (restoreErr) {
+          console.error('[semorphe] 還原上一個積木狀態也失敗了', restoreErr)
+          this.workspace?.clear()
+        }
       } finally {
         this.busUpdateInProgress = false
       }
@@ -175,6 +210,11 @@ export class BlocklyPanel implements ViewHost {
   /** 工作區是不是殘的。🔴 為真時「積木→程式碼」必須停手。 */
   get isStateStale(): boolean {
     return this.stateLoadFailed
+  }
+
+  /** 上一次載入失敗的訊息，`null` 代表沒失敗過。 */
+  get stateError(): string | null {
+    return this.lastStateError
   }
 
   onChange(callback: () => void): void {
