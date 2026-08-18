@@ -206,7 +206,13 @@ export class SyncController {
       const blocklyState = data.blocklyState as { tree: SemanticNode; blockMappings?: BlockMapping[] }
       const tree = blocklyState.tree
       // ⚠️ **還原被降級的身分**——否則使用者拖一下積木，真實就變成降級後的樣子。
-      // 見 `降級前的身分` 的檔頭：閉環的系統裡，輸出端的損失會從輸入端回來。
+      //
+      // > **閉環的系統裡，輸出端的損失會從輸入端回來。**
+      //
+      // 判準與它跟「單調遞減」的分工，見
+      // `knowledge/concepts/降級與認知邊界.md`「降級前的身分——閉環系統的回流」。
+      // ⚠️ 這裡原本寫「見 `降級前的身分` 的檔頭」，**而那個檔從來不存在**
+      // （2026-08-18 補上；機制早就在跑，缺的是那份被指名的文件）。
       this.restoreDowngrade(tree)
       this.currentTree = tree
       const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
@@ -382,7 +388,8 @@ export class SyncController {
         if (downgrade.typePrefix && !node.properties.type) {
           node.properties.type = downgrade.typePrefix
         }
-        // ⚠️ 記下來，讓 blocks→code 那個方向還原得回去（見 `降級前的身分`）。
+        // ⚠️ 記下來，讓 blocks→code 那個方向還原得回去
+        // （`knowledge/concepts/降級與認知邊界.md`「降級前的身分」）。
         this.identityBeforeDowngrade.set(node.id, node.conceptId)
         node.conceptId = downgrade.conceptId
       }
