@@ -1,0 +1,19 @@
+[
+  {
+    "id": "cpp_serial_count",
+    "conceptId": "cpp:serial_count",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_serial_count",
+      "message0": "%{BKY_C_SERIAL_COUNT_MSG0}",
+      "args0": [],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_SERIAL_COUNT_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": { "fields": {}, "inputs": {}, "statementInputs": {} }
+  }
+]

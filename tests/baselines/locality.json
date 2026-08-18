@@ -618,11 +618,19 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:serial_count": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:serial_open": {
       "files": 3,
       "dirs": 1
     },
     "cpp:serial_print": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:serial_read": {
       "files": 3,
       "dirs": 1
     },

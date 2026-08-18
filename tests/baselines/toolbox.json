@@ -279,8 +279,10 @@
     {
       "name": "序列埠",
       "blocks": [
+        "cpp_serial_count",
         "cpp_serial_open",
-        "cpp_serial_print"
+        "cpp_serial_print",
+        "cpp_serial_read"
       ]
     },
     {

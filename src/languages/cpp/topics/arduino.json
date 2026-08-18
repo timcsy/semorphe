@@ -67,7 +67,9 @@
           "cpp:range_remap",
           "cpp:pulse_read",
           "cpp:math_constrain",
-          "cpp:analog_resolution"
+          "cpp:analog_resolution",
+          "cpp:serial_count",
+          "cpp:serial_read"
         ],
         "children": [
           {
