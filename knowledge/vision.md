@@ -265,8 +265,12 @@ languages/{lang}/
 - [ ] **`provides`／`reference` 兩格**（目標的完整設計還缺的兩格）
       —— ⚠️ 而 `requires` 缺一維：`cpp:print` 宣告 `<iostream>`，**而 printf 產出要 `<stdio.h>`**。
       設計脈絡 [draft/C 和 C++ 難分難捨](draft/2026-08-13-C和C++難分難捨.md)（**in-flight**，不退休）。
-- [ ] 🔴 **`TypeError: … reading 'indexOf'`**（Blockly 載入積木時，**只在 Theia 出現**，
-      Chromium 用相同檔案內容重現不到）。🟢 它已經不會毀損檔案，而且會報出名字與堆疊。
+- [x] 🟡 **`TypeError: … reading 'indexOf'`**（Blockly 載入積木時，只在 Theia 出現）
+      —— **修好範圍翻譯之後就不再復現**（2026-08-18 使用者回報）。
+      🔴 **而「不再復現」不等於「證明修好」**：它從來沒有在 Chromium 重現過，
+      所以沒有一個會紅的檢查在守它。⚠️ 結案的是**追查**，不是**保證**。
+      🟢 留著的防線：`isolateFailingBlock`（再發生時直接指出是哪一顆積木 ＋ extraState）、
+      `isStateStale`（殘的工作區不得覆蓋程式碼）。
 
 ### ⏳ 等使用者實測才能勾的驗收
 

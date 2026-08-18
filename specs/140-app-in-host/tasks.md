@@ -159,9 +159,12 @@ SC-007 src/vscode/ 行數下降        🟢 2170 → 1624
 而其中三個是**修前一個時造成的**。因果與教訓寫在
 [knowledge/history/083](../../knowledge/history/083-面板就是網頁版本身而四次修好都是我自己上一次修出來的.md)。
 
-⚠️ **仍然開著**：`TypeError: … reading 'indexOf'`（只在 Theia 出現，
-Chromium 用相同檔案內容重現不到）。它現在**不會毀損檔案**（`isStateStale` 擋住寫回），
-而且會在面板上報出名字與堆疊。
+🟡 **`TypeError: … reading 'indexOf'`（只在 Theia 出現）——修好範圍翻譯之後不再復現**
+（2026-08-18 使用者回報）。而在那之前我為它排除過三個假設、做了一個隔離器。
+
+🔴 **不再復現 ≠ 證明修好。** 它從來沒有在 Chromium 重現過，所以**沒有一個會紅的檢查在守它**。
+最可能的解釋是它是**下游**：檔案被範圍翻譯寫成錯位的形狀 → lift 出畸形的樹 → Blockly 載不動。
+⚠️ 但那是**推論**，不是量到的。留著的防線：`isolateFailingBlock` ＋ `isStateStale`。
 
 ---
 
