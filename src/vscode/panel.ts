@@ -322,14 +322,21 @@ class SemorpheSession {
     baseVersion: number,
   ): Promise<void> {
     const doc = this.doc
-    if (!doc) return
+    // 🔴 **每一條路都要回話。** 一個「送出去而沒有任何回應」的請求，
+    //    會讓 Webview 那側的樂觀更新**永遠等在半路**（它有一個 in-flight 旗標）。
+    //
+    // > 一個不回話的失敗，與一個還沒回話的成功，在呼叫端長得一樣。
+    if (!doc) {
+      this.send({ type: 'noDocument', reason: noDocumentReason(vscode.window.activeTextEditor) })
+      return
+    }
     // ⚠️ 這次編輯是根據舊版本算的 → 期間有外來改動，**丟掉它並重送文件**。
     //    🔴 那不是防迴圈，是防止踩掉別人的修改。
     if (doc.version !== baseVersion) { this.sendDocument(doc); return }
 
     const editor = vscode.window.visibleTextEditors.find(
       (ed) => ed.document.uri.toString() === doc.uri.toString())
-    if (!editor) return
+    if (!editor) { this.sendDocument(doc); return }
 
     const lineCount = doc.lineCount
     const endLine = Math.min(span.endLine, lineCount)
@@ -346,8 +353,15 @@ class SemorpheSession {
       // 🔴 前後都下停止點 ⟹ 這一次編輯自己是一個復原步驟。
       { undoStopBefore: true, undoStopAfter: true },
     )
-    if (ok) this.echo.remember(doc.version)
-    else this.sendDocument(doc)   // ⚠️ 套用失敗要讓兩邊回到一致，不能靜默
+    if (ok) {
+      this.echo.remember(doc.version)
+      // 🔴 **回報新的版本號。** 回音守衛擋掉了文件回送（擋得對），
+      //    而如果只擋不報，Webview 的版本會永遠停在編輯前——見 `messages.ts`
+      //    的 `applied`：症狀是「第一筆成功，之後每一筆都無效」。
+      this.send({ type: 'applied', version: doc.version })
+    } else {
+      this.sendDocument(doc)   // ⚠️ 套用失敗要讓兩邊回到一致，不能靜默
+    }
   }
 
   private html(): string {

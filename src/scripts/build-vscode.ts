@@ -112,11 +112,7 @@ function main(): void {
   //    ⚠️ 這個檔【只寫進預檢頁】——真面板的 HTML 不含它。
   writeFileSync(
     join(OUT, 'dist', 'host-stub.js'),
-    `// 只有 Chromium 預檢在用——真面板由 VSCode 自己提供這個函式。\n` +
-      `window.__SENT__ = []\n` +
-      `window.acquireVsCodeApi = function () {\n` +
-      `  return { postMessage: function (m) { window.__SENT__.push(m) } }\n` +
-      `}\n`,
+    HOST_STUB,
   )
   writeFileSync(
     join(OUT, 'dist', 'preview.html'),
@@ -148,5 +144,58 @@ function main(): void {
     OUT,
   )
 }
+
+/**
+ * 預檢頁的**假宿主**——⚠️ 它不是一個「把訊息記下來」的樁，它**真的跑同步協定**。
+ *
+ * ## 🔴 為什麼要跑協定，不只是記訊息
+ *
+ * 2026-08-18 使用者連續三次回報「沒同步」，而前兩次的預檢都是綠的。
+ * 第三個原因是**版本號永遠差一**：宿主套用編輯之後版本前進，
+ * 回音守衛擋掉文件回送，於是 Webview 的 `baseVersion` 停在編輯前
+ * ——**第一筆成功，之後每一筆都被丟掉**。
+ *
+ * 一個只記訊息的樁看到的是「有送出 applyEdit」，而那正是它會綠的原因。
+ *
+ * > **要驗一個協定，模擬那一端就得【會回話】——
+ * > 只會收不會回的假宿主，驗得到「有沒有送」，驗不到「收不收得下」。**
+ *
+ * ⚠️ 這個檔**只寫進預檢頁**；真面板的 HTML 不含它。
+ */
+const HOST_STUB = `// 只有 Chromium 預檢在用——真面板由 VSCode 自己提供這個函式。
+;(function () {
+  var text = '', version = 0
+  var log = { sent: [], accepted: 0, rejected: 0 }
+  window.__HOST__ = log
+  window.__setDocument__ = function (t) {
+    text = t; version += 1
+    window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text: text, version: version }, '*')
+  }
+  function applySpan(span) {
+    var lines = text.split('\\n')
+    lines.splice(span.startLine, span.endLine - span.startLine)
+    for (var i = span.lines.length - 1; i >= 0; i--) lines.splice(span.startLine, 0, span.lines[i])
+    text = lines.join('\\n')
+  }
+  window.acquireVsCodeApi = function () {
+    return {
+      postMessage: function (m) {
+        log.sent.push(m)
+        if (m.type !== 'applyEdit') return
+        // 🔴 與 panel.ts 同一條判準：版本對不上就丟掉並重送文件。
+        if (m.baseVersion !== version) {
+          log.rejected += 1
+          window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text: text, version: version }, '*')
+          return
+        }
+        applySpan(m.span)
+        version += 1
+        log.accepted += 1
+        window.postMessage({ type: 'applied', version: version }, '*')
+      },
+    }
+  }
+})()
+`
 
 main()

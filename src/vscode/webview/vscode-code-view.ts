@@ -86,6 +86,20 @@ export class VscodeCodeView implements CodeView, ViewHost {
   /** 🔴 文字的本地鏡像——`getCode()` 是同步的，而真相在另一個行程。 */
   private mirror = ''
   private version = -1
+  /**
+   * 🔴 **有一次編輯還在路上。**
+   *
+   * `applyEdit` 是樂觀的：送出去之後宿主才套用，而套用會讓 `version` 前進。
+   * ⚠️ 在收到 `applied` 之前又送第二筆，它的 `baseVersion` 就是**過期的**
+   * ——宿主會把它當成「期間有外來改動」丟掉，並重送文件，
+   * 而重送會觸發 code→blocks，把使用者剛動的積木**回捲**。
+   *
+   * > **跨行程的樂觀更新要嘛等回覆，要嘛就會有一筆被丟掉
+   * > ——而被丟掉的那一筆在使用者眼裡是「我的修改不見了」。**
+   */
+  private inFlight = false
+  /** ⚠️ 在路上時最後一次想要的內容——只留最新的，中間狀態沒有意義。 */
+  private queued: string | null = null
   private changeCb: ((code: string) => void) | null = null
   private cursorCb: ((line: number) => void) | null = null
   private readonly onHostMessage: (e: MessageEvent<HostMessage>) => void
@@ -106,12 +120,24 @@ export class VscodeCodeView implements CodeView, ViewHost {
     if (m.type === 'document') {
       this.mirror = m.text
       this.version = m.version
+      // ⚠️ 宿主重送文件＝它是權威——在路上的那一筆已經被它丟掉了。
+      this.inFlight = false
+      this.queued = null
       // ⚠️ 通知應用「程式碼變了」——而**這是外來的變更**，
       //    我們自己造成的那些已經被宿主的回音守衛擋掉了。
       this.changeCb?.(this.mirror)
+    } else if (m.type === 'applied') {
+      // 🔴 宿主套用了，版本前進——**沒有這一則，下一筆必然過期**。
+      this.version = m.version
+      this.inFlight = false
+      const q = this.queued
+      this.queued = null
+      if (q !== null) this.setCode(q)
     } else if (m.type === 'noDocument') {
       this.mirror = ''
       this.version = -1
+      this.inFlight = false
+      this.queued = null
       // ⚠️ **刻意不通知應用。** 通知它「程式碼變成空的」會把使用者的積木清掉
       //    ——而他只是點到了一個 markdown 檔。
       //    🔴 為什麼不同步這件事由宿主層的橫幅說（`no-document-banner.ts`）。
@@ -123,13 +149,16 @@ export class VscodeCodeView implements CodeView, ViewHost {
   // ─── A：文字內容 ───
 
   getCode(): string {
-    return this.mirror
+    // ⚠️ 在路上時要回**想要的那份**，不是已送出的那份——呼叫端問的是「現在的程式碼」。
+    return this.queued ?? this.mirror
   }
 
   setCode(code: string): void {
+    if (this.inFlight) { this.queued = code; return }
     const span = rewriteSpan(this.mirror, code)
     if (span === null) return   // ⚠️ 沒有差異 → **不產生檔案變更**
-    this.mirror = code          // 樂觀更新；宿主套用後會回報新版本
+    this.mirror = code          // 樂觀更新；宿主套用後回報新版本（`applied`）
+    this.inFlight = true
     this.post({ type: 'applyEdit', span, baseVersion: this.version })
   }
 

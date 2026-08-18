@@ -133,31 +133,34 @@ console.log(`\n資源根：media=${assetBase.media} assets=${assetBase.assets}` 
 //
 // 所以它現在錨在**行為**上：送一段程式進去，數畫布上有幾顆積木。
 const PROGRAM = 'int main() {\n    int x = 1;\n    return 0;\n}\n'
-await page.evaluate((text) => {
-  window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text, version: 1 }, '*')
-}, PROGRAM)
+await page.evaluate((text) => { window.__setDocument__(text) }, PROGRAM)
 await page.waitForTimeout(2500)
 const lifted = await page.locator('#app .blocklyDraggable').count()
 console.log(`\n程式碼 → 積木：畫布上 ${lifted} 顆積木 ${lifted > 0 ? '🟢' : '🔴 lift 沒通'}`)
 
-// ③ 🔴 **積木 → 程式碼真的送得出去嗎**
+// ③ 🔴 **積木 → 程式碼真的送得出去嗎——而且【連續兩筆】都收得下嗎**
 //
-// ⚠️ 使用者 2026-08-18 兩次回報「沒同步」，而預檢兩次都是綠的
-//    ——因為沒有宿主時 `postToHost` **靜靜地不做事**。
-//    現在預檢頁載入 `host-stub.js` 提供假的 `acquireVsCodeApi()`，
-//    送出去的訊息記在 `window.__SENT__`。
+// ⚠️ 使用者 2026-08-18 連續三次回報「沒同步」，而前兩次預檢都是綠的。
+//    第三個原因是**版本號永遠差一**：第一筆成功，之後每一筆都被丟掉。
+//    🔴 只驗一筆的檢查**永遠抓不到它**。
 //
-// > **一個把「沒送出去」顯示成正常的模擬環境，驗得了畫面，驗不了接線。**
+// > **一個只跑一次的檢查，測不到「第二次才壞」的東西。**
 //
-// 觸發用**真的控制項**（清空），因為它保證讓程式碼與鏡像不同
-// ——`setCode` 在沒有差異時本來就不發訊息，那不是壞掉。
-await page.evaluate(() => { window.__SENT__.length = 0 })
+// 觸發用真的控制項：清空（第一筆）→ 復原（第二筆）。
+await page.evaluate(() => { window.__HOST__.sent.length = 0; window.__HOST__.accepted = 0; window.__HOST__.rejected = 0 })
 await page.locator('#clear-btn').click()
-await page.waitForTimeout(1500)
-const sent = await page.evaluate(() => (window.__SENT__ ?? []).map((m) => m.type))
-const edits = sent.filter((t) => t === 'applyEdit').length
-console.log(`\n積木 → 程式碼：送出 ${edits} 則 applyEdit ${edits > 0 ? '🟢' : '🔴 沒同步'}` +
-  (sent.length ? `（全部訊息：${sent.join(', ')}）` : '（一則訊息都沒送）'))
+await page.waitForTimeout(1200)
+await page.locator('#undo-btn').click()
+await page.waitForTimeout(1800)
+const host = await page.evaluate(() => ({
+  types: window.__HOST__.sent.map((m) => m.type),
+  accepted: window.__HOST__.accepted,
+  rejected: window.__HOST__.rejected,
+}))
+const twoWay = host.accepted >= 2 && host.rejected === 0
+console.log(`\n積木 → 程式碼：宿主收下 ${host.accepted} 筆、丟掉 ${host.rejected} 筆 ` +
+  `${twoWay ? '🟢' : '🔴 ' + (host.rejected > 0 ? '版本對不上 → 第二筆之後全被丟掉' : '沒送出去')}` +
+  `（訊息：${host.types.join(', ') || '無'}）`)
 
 console.log(`\n請求失敗：${failures.length ? '\n  ' + failures.join('\n  ') : 'none'}`)
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
@@ -165,7 +168,7 @@ if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.工具列 && blocks.狀態列 && blocks.積木畫布
-  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && edits > 0
+  && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay
   && !blocks.程式碼編輯區 && !blocks.檔案按鈕
   && lifted > 0 && !!assetBase.media && !!assetBase.assets
 if (!ok) console.log('🔴 預檢不通過')
