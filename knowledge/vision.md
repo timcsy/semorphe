@@ -228,18 +228,25 @@ languages/{lang}/
 [draft/零件積木與貼上的程式碼](draft/2026-08-18-零件積木與貼上的程式碼.md)（**in-flight**，做完才退休）。
 
 ```
-第 0 批  內建函式缺口（9 顆）  tone · noTone · pulseIn · delayMicroseconds · micros
-                              constrain · Serial.available/read · analogReadResolution
-         🔴 不需要任何拍板——而蜂鳴器與超音波兩個教學單元【卡在這裡】
+✅ 第 0 批（2026-08-18 完成，spec/branch `141-cpp-arduino-builtins`）
+         身分：micros · delay_microseconds · tone · tone_stop · pulse_read
+               math_constrain · analog_resolution · serial_count · serial_read
+         ⚠️ 四顆的名字與探索報告不同——報告用的是 API 名，不是語義名
+            （no_tone → tone_stop · pulse_in → pulse_read
+              serial_available → serial_count · constrain → math_constrain）
+         🔴 而 fuzz 順手抓到並修好【兩個既有的 round-trip bug】——見 experience
+            「一個『每次都多一點』的錯誤」
 第 1 批  六個零件              LED · 按鈕 · 蜂鳴器 · 超音波 · 伺服 · 類比感測
 第 2 批  要物件機制            DHT · LCD · OLED · EEPROM（等 draft/套件的物件…）
 ```
 
 **驗收**
 
-- [ ] 第 0 批 9 顆五路齊全（刻意不做的要 `skipPaths` ＋ **理由**），課程清單有位置
-- [ ] 🔴 **工具箱拿得到**——第十九條護欄；而 `tone` 該進哪一格要先決定
-- [ ] `micros`／`delayMicroseconds` 走**既有的** `arduino-clock`，不得有第二份時間
+- [x] 第 0 批 9 顆五路齊全（0 顆 skipPaths），課程清單有位置（L0 五顆／L1a 四顆）
+- [x] 🔴 **工具箱拿得到**——瀏覽器實測 9/9，標籤正確渲染。
+      `tone`／`noTone` 進「腳位與時間」而**不新開「聲音」分類**（只有兩顆，
+      而第 1 批的零件軸會把分類整個重排）
+- [x] `micros`／`delayMicroseconds` 走**既有的** `arduino-clock`，不得有第二份時間
 - [ ] 第 1 批：初學者拉一顆「LED (13) 亮」→ 程式碼是 `digitalWrite(13, HIGH)`，而 `pinMode` 在 `setup` 裡**看得見**
 - [ ] 🔴 **貼上一段有 `ledPin` 的程式碼 → 積木上的插槽是【變數】而不是數字**（同一顆積木，兩種來源）
 - [ ] 進階／腳位分類**仍在**（Sc1 認知鷹架可退場）
