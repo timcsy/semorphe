@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts",
     "test:e2e": "playwright test",
-    "build:vscode": "npx tsx src/scripts/build-vscode.ts"
+    "build:vscode": "npx tsx src/scripts/build-vscode.ts",
+    "install:ide": "node tools/install-ide.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
