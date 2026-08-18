@@ -1,0 +1,169 @@
+{
+  "lib_1": {
+    "board": "uno",
+    "topic": "servo sweeping back and forth",
+    "libraries": [
+      "Servo.h"
+    ],
+    "code": "/*\n  Servo Sweep\n  Moves a hobby servo slowly from 0 to 180 degrees and back again.\n\n  The servo signal wire goes to pin 9, red to 5V, brown/black to GND.\n*/\n\n#include <Servo.h>\n\nServo myservo;  // create a servo object to control a servo\n\nint pos = 0;    // variable to store the servo position\n\nvoid setup() {\n  myservo.attach(9);  // attaches the servo on pin 9 to the servo object\n}\n\nvoid loop() {\n  // go from 0 to 180 degrees, one degree at a time\n  for (pos = 0; pos <= 180; pos += 1) {\n    myservo.write(pos);   // tell the servo to go to position 'pos'\n    delay(15);            // wait 15ms for the servo to reach the position\n  }\n\n  // now go back from 180 to 0 degrees\n  for (pos = 180; pos >= 0; pos -= 1) {\n    myservo.write(pos);\n    delay(15);\n  }\n}\n"
+  },
+  "lib_2": {
+    "board": "uno",
+    "topic": "servo angle controlled by a potentiometer",
+    "libraries": [
+      "Servo.h"
+    ],
+    "code": "/*\n  Potentiometer controlled servo\n\n  Turn the knob and the servo follows it.\n  Potentiometer middle pin -> A0, outer pins -> 5V and GND.\n*/\n\n#include <Servo.h>\n\nServo myServo;\n\nconst int potPin = A0;     // analog pin the potentiometer is connected to\nconst int servoPin = 9;    // servo signal pin\n\nint potValue = 0;          // raw value read from the potentiometer (0-1023)\nint angle = 0;             // servo angle in degrees (0-180)\n\nvoid setup() {\n  Serial.begin(9600);\n  myServo.attach(servoPin);\n}\n\nvoid loop() {\n  potValue = analogRead(potPin);\n\n  // the analog reading is 0-1023, the servo wants 0-180\n  angle = map(potValue, 0, 1023, 0, 180);\n\n  myServo.write(angle);\n\n  Serial.print(\"pot = \");\n  Serial.print(potValue);\n  Serial.print(\"  angle = \");\n  Serial.println(angle);\n\n  delay(20);  // give the servo a little time to move\n}\n"
+  },
+  "lib_3": {
+    "board": "nano",
+    "topic": "servo positioned by typing an angle in the Serial Monitor",
+    "libraries": [
+      "Servo.h"
+    ],
+    "code": "/*\n  Serial controlled servo\n\n  Open the Serial Monitor, type a number between 0 and 180,\n  press Enter, and the servo moves there.\n*/\n\n#include <Servo.h>\n\n#define SERVO_PIN 9\n\nServo gateServo;\n\nint currentAngle = 90;\n\nvoid setup() {\n  Serial.begin(9600);\n\n  gateServo.attach(SERVO_PIN);\n  gateServo.write(currentAngle);   // start in the middle\n\n  Serial.println(\"Servo ready.\");\n  Serial.println(\"Type an angle between 0 and 180 and press Enter.\");\n}\n\nvoid loop() {\n  if (Serial.available() > 0) {\n    int angle = Serial.parseInt();\n\n    if (angle >= 0 && angle <= 180) {\n      currentAngle = angle;\n      gateServo.write(currentAngle);\n\n      Serial.print(\"Moving servo to \");\n      Serial.print(currentAngle);\n      Serial.println(\" degrees\");\n    } else {\n      Serial.println(\"Out of range! Please enter 0 to 180.\");\n    }\n  }\n}\n"
+  },
+  "lib_4": {
+    "board": "uno",
+    "topic": "DHT11 temperature and humidity printed to the Serial Monitor",
+    "libraries": [
+      "DHT.h"
+    ],
+    "code": "/*\n  DHT11 basic reading\n\n  Prints temperature and humidity to the Serial Monitor every 2 seconds.\n  Needs the \"DHT sensor library\" by Adafruit (and Adafruit Unified Sensor).\n\n  DHT11 data pin -> D2, with a 10k pull-up resistor to 5V.\n*/\n\n#include <DHT.h>\n\n#define DHTPIN 2        // digital pin the sensor is connected to\n#define DHTTYPE DHT11   // the sensor model we are using\n\nDHT dht(DHTPIN, DHTTYPE);\n\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(\"DHT11 test!\");\n\n  dht.begin();\n}\n\nvoid loop() {\n  // the DHT11 is slow, don't read it more often than every 2 seconds\n  delay(2000);\n\n  float humidity = dht.readHumidity();\n  float temperature = dht.readTemperature();          // Celsius by default\n  float fahrenheit = dht.readTemperature(true);       // pass true for Fahrenheit\n\n  // if any reading failed, skip this round and try again\n  if (isnan(humidity) || isnan(temperature)) {\n    Serial.println(\"Failed to read from DHT sensor!\");\n    return;\n  }\n\n  Serial.print(\"Humidity: \");\n  Serial.print(humidity);\n  Serial.print(\" %  Temperature: \");\n  Serial.print(temperature);\n  Serial.print(\" C / \");\n  Serial.print(fahrenheit);\n  Serial.println(\" F\");\n}\n"
+  },
+  "lib_5": {
+    "board": "nano",
+    "topic": "DHT22 logging with running min/max temperature",
+    "libraries": [
+      "DHT.h"
+    ],
+    "code": "/*\n  DHT22 min / max tracker\n\n  Reads the sensor every two seconds and remembers the lowest and\n  highest temperature seen since the board was powered up.\n*/\n\n#include <DHT.h>\n\nconst int DHT_PIN = 4;\n\nDHT dht(DHT_PIN, DHT22);\n\nfloat minTemp = 1000.0;    // start with impossible values so the\nfloat maxTemp = -1000.0;   // first reading always replaces them\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n\n  Serial.println(\"Temp(C)\\tHumidity(%)\\tMin\\tMax\");\n}\n\nvoid loop() {\n  float temperature = dht.readTemperature();\n  float humidity = dht.readHumidity();\n\n  if (isnan(temperature) || isnan(humidity)) {\n    Serial.println(\"Sensor read failed, retrying...\");\n    delay(2000);\n    return;\n  }\n\n  if (temperature < minTemp) {\n    minTemp = temperature;\n  }\n  if (temperature > maxTemp) {\n    maxTemp = temperature;\n  }\n\n  Serial.print(temperature, 1);\n  Serial.print(\"\\t\");\n  Serial.print(humidity, 1);\n  Serial.print(\"\\t\\t\");\n  Serial.print(minTemp, 1);\n  Serial.print(\"\\t\");\n  Serial.println(maxTemp, 1);\n\n  delay(2000);\n}\n"
+  },
+  "lib_6": {
+    "board": "uno",
+    "topic": "16x2 parallel LCD showing Hello World and seconds since reset",
+    "libraries": [
+      "LiquidCrystal.h"
+    ],
+    "code": "/*\n  LiquidCrystal \"Hello World\"\n\n  Classic 16x2 character LCD wired in 4-bit mode.\n\n  LCD RS -> pin 12\n  LCD E  -> pin 11\n  LCD D4 -> pin 5\n  LCD D5 -> pin 4\n  LCD D6 -> pin 3\n  LCD D7 -> pin 2\n  A 10k potentiometer sets the contrast on the V0 pin.\n*/\n\n#include <LiquidCrystal.h>\n\n// initialize the library with the numbers of the interface pins\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\n\nvoid setup() {\n  // tell the library how many columns and rows the display has\n  lcd.begin(16, 2);\n\n  // print a message on the first line\n  lcd.print(\"Hello, World!\");\n}\n\nvoid loop() {\n  // move the cursor to column 0, line 1 (the second row)\n  lcd.setCursor(0, 1);\n\n  // print the number of seconds since reset\n  lcd.print(millis() / 1000);\n  lcd.print(\" s\");\n}\n"
+  },
+  "lib_7": {
+    "board": "nano",
+    "topic": "DHT11 readings displayed on a parallel 16x2 LCD",
+    "libraries": [
+      "LiquidCrystal.h",
+      "DHT.h"
+    ],
+    "code": "/*\n  Temperature and humidity meter\n  DHT11 + 16x2 LCD (parallel, 4-bit mode)\n*/\n\n#include <LiquidCrystal.h>\n#include <DHT.h>\n\n#define RS_PIN 7\n#define EN_PIN 8\n#define D4_PIN 9\n#define D5_PIN 10\n#define D6_PIN 11\n#define D7_PIN 12\n\n#define DHT_PIN  2\n#define DHT_TYPE DHT11\n\nLiquidCrystal lcd(RS_PIN, EN_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN);\nDHT dht(DHT_PIN, DHT_TYPE);\n\nvoid setup() {\n  lcd.begin(16, 2);\n  dht.begin();\n\n  lcd.print(\"Temp & Humidity\");\n  lcd.setCursor(0, 1);\n  lcd.print(\"Starting up...\");\n  delay(2000);\n  lcd.clear();\n}\n\nvoid loop() {\n  float t = dht.readTemperature();\n  float h = dht.readHumidity();\n\n  if (isnan(t) || isnan(h)) {\n    lcd.clear();\n    lcd.print(\"Sensor error!\");\n    delay(2000);\n    return;\n  }\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Temp: \");\n  lcd.print(t, 1);\n  lcd.print((char)223);   // the degree symbol in the LCD character set\n  lcd.print(\"C  \");\n\n  lcd.setCursor(0, 1);\n  lcd.print(\"Hum : \");\n  lcd.print(h, 1);\n  lcd.print(\" %  \");\n\n  delay(2000);\n}\n"
+  },
+  "lib_8": {
+    "board": "uno",
+    "topic": "I2C 16x2 LCD greeting with a scrolling message",
+    "libraries": [
+      "Wire.h",
+      "LiquidCrystal_I2C.h"
+    ],
+    "code": "/*\n  I2C LCD hello\n\n  Only four wires: GND, VCC, SDA -> A4, SCL -> A5.\n  Most of these backpacks are at address 0x27, some are at 0x3F.\n  If nothing shows up, run an I2C scanner sketch to find the address.\n*/\n\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n\n// address, columns, rows\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  lcd.init();        // start the LCD\n  lcd.backlight();   // turn on the backlight\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Hello, World!\");\n\n  lcd.setCursor(0, 1);\n  lcd.print(\"I2C LCD is easy\");\n\n  delay(2000);\n}\n\nvoid loop() {\n  // slide the whole display one character to the left\n  lcd.scrollDisplayLeft();\n  delay(400);\n}\n"
+  },
+  "lib_9": {
+    "board": "uno",
+    "topic": "potentiometer value shown as percent and a bar on an I2C LCD",
+    "libraries": [
+      "Wire.h",
+      "LiquidCrystal_I2C.h"
+    ],
+    "code": "/*\n  Potentiometer meter on an I2C LCD\n\n  Shows the raw analog reading on the top line and a simple\n  bar graph made of '#' characters on the bottom line.\n*/\n\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nconst int POT_PIN = A0;\n\nvoid setup() {\n  lcd.init();\n  lcd.backlight();\n  lcd.print(\"Pot meter\");\n  delay(1000);\n  lcd.clear();\n}\n\nvoid loop() {\n  int raw = analogRead(POT_PIN);\n  int percent = map(raw, 0, 1023, 0, 100);\n  int bars = map(raw, 0, 1023, 0, 16);   // how many blocks to draw\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Value:\");\n  lcd.print(raw);\n  lcd.print(\"  \");        // spaces clear leftovers from longer numbers\n  lcd.setCursor(12, 0);\n  lcd.print(percent);\n  lcd.print(\"% \");\n\n  lcd.setCursor(0, 1);\n  for (int i = 0; i < 16; i++) {\n    if (i < bars) {\n      lcd.print(\"#\");\n    } else {\n      lcd.print(\" \");\n    }\n  }\n\n  delay(150);\n}\n"
+  },
+  "lib_10": {
+    "board": "uno",
+    "topic": "EEPROM boot counter that survives power loss",
+    "libraries": [
+      "EEPROM.h"
+    ],
+    "code": "/*\n  How many times has this Arduino been switched on?\n\n  The EEPROM keeps its contents when the board loses power,\n  so we can store a counter there and read it back on the next boot.\n*/\n\n#include <EEPROM.h>\n\n#define COUNTER_ADDRESS 0\n\nint bootCount = 0;\n\nvoid setup() {\n  Serial.begin(9600);\n  delay(500);   // give the Serial Monitor a moment to open\n\n  // read the value stored last time (a fresh chip reads back 255)\n  bootCount = EEPROM.read(COUNTER_ADDRESS);\n\n  if (bootCount > 250) {\n    bootCount = 0;   // treat an unwritten cell as \"never counted\"\n  }\n\n  bootCount = bootCount + 1;\n\n  // store the new value for the next power-up\n  EEPROM.write(COUNTER_ADDRESS, bootCount);\n\n  Serial.print(\"This board has started up \");\n  Serial.print(bootCount);\n  Serial.println(\" time(s).\");\n}\n\nvoid loop() {\n  // nothing to do here\n}\n"
+  },
+  "lib_11": {
+    "board": "nano",
+    "topic": "LED brightness stepped by a button and remembered in EEPROM",
+    "libraries": [
+      "EEPROM.h"
+    ],
+    "code": "/*\n  Brightness setting saved in EEPROM\n\n  Every press of the button steps the LED brightness up one notch.\n  The chosen level is written to EEPROM, so after unplugging and\n  plugging the board back in the LED comes back at the same brightness.\n*/\n\n#include <EEPROM.h>\n\nconst int buttonPin = 2;            // button to GND, uses the internal pull-up\nconst int ledPin = 9;               // LED on a PWM pin\nconst int brightnessAddress = 10;   // where in EEPROM we keep the setting\n\nint brightness = 0;\nint lastButtonState = HIGH;\n\nvoid setup() {\n  pinMode(buttonPin, INPUT_PULLUP);\n  pinMode(ledPin, OUTPUT);\n\n  Serial.begin(9600);\n\n  // restore the saved brightness\n  brightness = EEPROM.read(brightnessAddress);\n  analogWrite(ledPin, brightness);\n\n  Serial.print(\"Restored brightness: \");\n  Serial.println(brightness);\n}\n\nvoid loop() {\n  int buttonState = digitalRead(buttonPin);\n\n  // detect the moment the button goes from released to pressed\n  if (buttonState == LOW && lastButtonState == HIGH) {\n    brightness = brightness + 51;    // five steps from 0 to 255\n    if (brightness > 255) {\n      brightness = 0;\n    }\n\n    analogWrite(ledPin, brightness);\n\n    // update() only writes if the value actually changed,\n    // which saves EEPROM write cycles\n    EEPROM.update(brightnessAddress, brightness);\n\n    Serial.print(\"New brightness saved: \");\n    Serial.println(brightness);\n\n    delay(200);   // simple debounce\n  }\n\n  lastButtonState = buttonState;\n}\n"
+  },
+  "lib_12": {
+    "board": "uno",
+    "topic": "record temperature stored in EEPROM and shown on an I2C LCD",
+    "libraries": [
+      "Wire.h",
+      "LiquidCrystal_I2C.h",
+      "DHT.h",
+      "EEPROM.h"
+    ],
+    "code": "/*\n  Record temperature keeper\n\n  Reads a DHT22, shows the current temperature on an I2C LCD and\n  keeps the all-time highest reading in EEPROM so it is still there\n  after a reset. Hold the button at start-up to clear the record.\n*/\n\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n#include <DHT.h>\n#include <EEPROM.h>\n\n#define DHTPIN   3\n#define DHTTYPE  DHT22\n#define RESET_BUTTON 4\n#define RECORD_ADDRESS 0\n\nDHT dht(DHTPIN, DHTTYPE);\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nfloat recordTemp = 0.0;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(RESET_BUTTON, INPUT_PULLUP);\n\n  dht.begin();\n  lcd.init();\n  lcd.backlight();\n\n  // a float takes four bytes, so we use put/get instead of read/write\n  EEPROM.get(RECORD_ADDRESS, recordTemp);\n\n  // a blank EEPROM gives nonsense, so sanity check the value\n  if (isnan(recordTemp) || recordTemp < -40.0 || recordTemp > 100.0) {\n    recordTemp = -40.0;\n    EEPROM.put(RECORD_ADDRESS, recordTemp);\n  }\n\n  if (digitalRead(RESET_BUTTON) == LOW) {\n    recordTemp = -40.0;\n    EEPROM.put(RECORD_ADDRESS, recordTemp);\n    lcd.print(\"Record cleared\");\n    delay(1500);\n    lcd.clear();\n  }\n}\n\nvoid loop() {\n  float temperature = dht.readTemperature();\n\n  if (isnan(temperature)) {\n    Serial.println(\"DHT read failed\");\n    delay(2000);\n    return;\n  }\n\n  if (temperature > recordTemp) {\n    recordTemp = temperature;\n    EEPROM.put(RECORD_ADDRESS, recordTemp);\n    Serial.println(\"New record saved!\");\n  }\n\n  lcd.setCursor(0, 0);\n  lcd.print(\"Now:    \");\n  lcd.print(temperature, 1);\n  lcd.print(\" C \");\n\n  lcd.setCursor(0, 1);\n  lcd.print(\"Record: \");\n  lcd.print(recordTemp, 1);\n  lcd.print(\" C \");\n\n  delay(2000);\n}\n"
+  },
+  "lib_13": {
+    "board": "esp32",
+    "topic": "ESP32 joining WiFi and reporting signal strength",
+    "libraries": [
+      "WiFi.h"
+    ],
+    "code": "/*\n  ESP32 WiFi connection\n\n  Connects to your home network, prints the IP address, and then\n  reports the signal strength every five seconds. If the connection\n  drops it tries to reconnect on its own.\n*/\n\n#include <WiFi.h>\n\nconst char* ssid     = \"YOUR_WIFI_NAME\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(1000);\n\n  Serial.print(\"Connecting to \");\n  Serial.println(ssid);\n\n  WiFi.mode(WIFI_STA);\n  WiFi.begin(ssid, password);\n\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n\n  Serial.println(\"\");\n  Serial.println(\"WiFi connected!\");\n  Serial.print(\"IP address: \");\n  Serial.println(WiFi.localIP());\n}\n\nvoid loop() {\n  if (WiFi.status() != WL_CONNECTED) {\n    Serial.println(\"Connection lost, reconnecting...\");\n    WiFi.reconnect();\n    delay(2000);\n    return;\n  }\n\n  Serial.print(\"Signal strength (RSSI): \");\n  Serial.print(WiFi.RSSI());\n  Serial.println(\" dBm\");\n\n  delay(5000);\n}\n"
+  },
+  "lib_14": {
+    "board": "esp32",
+    "topic": "ESP32 web server serving DHT22 readings on a small web page",
+    "libraries": [
+      "WiFi.h",
+      "WebServer.h",
+      "DHT.h"
+    ],
+    "code": "/*\n  ESP32 weather web server\n\n  Connects to WiFi and serves a simple page with the current\n  temperature and humidity. Open the IP address printed in the\n  Serial Monitor in any browser on the same network.\n*/\n\n#include <WiFi.h>\n#include <WebServer.h>\n#include <DHT.h>\n\n#define DHTPIN 4\n#define DHTTYPE DHT22\n\nconst char* ssid     = \"YOUR_WIFI_NAME\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\n\nWebServer server(80);\nDHT dht(DHTPIN, DHTTYPE);\n\nvoid handleRoot() {\n  float temperature = dht.readTemperature();\n  float humidity = dht.readHumidity();\n\n  String page = \"<!DOCTYPE html><html><head>\";\n  page += \"<meta http-equiv='refresh' content='5'>\";\n  page += \"<meta name='viewport' content='width=device-width, initial-scale=1'>\";\n  page += \"<title>ESP32 Weather</title></head><body>\";\n  page += \"<h1>ESP32 Weather Station</h1>\";\n\n  if (isnan(temperature) || isnan(humidity)) {\n    page += \"<p>Sensor read failed.</p>\";\n  } else {\n    page += \"<p>Temperature: \" + String(temperature, 1) + \" &deg;C</p>\";\n    page += \"<p>Humidity: \" + String(humidity, 1) + \" %</p>\";\n  }\n\n  page += \"<p>Uptime: \" + String(millis() / 1000) + \" s</p>\";\n  page += \"</body></html>\";\n\n  server.send(200, \"text/html\", page);\n}\n\nvoid handleNotFound() {\n  server.send(404, \"text/plain\", \"Page not found\");\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  dht.begin();\n\n  WiFi.begin(ssid, password);\n  Serial.print(\"Connecting to WiFi\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"Open this address in your browser: http://\");\n  Serial.println(WiFi.localIP());\n\n  server.on(\"/\", handleRoot);\n  server.onNotFound(handleNotFound);\n  server.begin();\n  Serial.println(\"HTTP server started\");\n}\n\nvoid loop() {\n  server.handleClient();\n}\n"
+  },
+  "lib_15": {
+    "board": "esp32",
+    "topic": "ESP32 posting sensor readings to a web API over HTTP",
+    "libraries": [
+      "WiFi.h",
+      "HTTPClient.h",
+      "DHT.h"
+    ],
+    "code": "/*\n  Send sensor data to a server\n\n  Every 30 seconds the ESP32 reads the DHT22 and sends the values\n  to a web endpoint as JSON. Replace serverUrl with your own address.\n*/\n\n#include <WiFi.h>\n#include <HTTPClient.h>\n#include <DHT.h>\n\n#define DHT_PIN  15\n#define DHT_TYPE DHT22\n\nconst char* WIFI_SSID     = \"YOUR_WIFI_NAME\";\nconst char* WIFI_PASSWORD = \"YOUR_WIFI_PASSWORD\";\nconst char* serverUrl     = \"http://192.168.1.50:8000/api/readings\";\n\nconst unsigned long sendInterval = 30000;   // 30 seconds\nunsigned long lastSend = 0;\n\nDHT dht(DHT_PIN, DHT_TYPE);\n\nvoid connectToWiFi() {\n  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);\n  Serial.print(\"Connecting to WiFi\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"Connected, IP: \");\n  Serial.println(WiFi.localIP());\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  dht.begin();\n  connectToWiFi();\n}\n\nvoid loop() {\n  if (millis() - lastSend < sendInterval) {\n    return;\n  }\n  lastSend = millis();\n\n  float temperature = dht.readTemperature();\n  float humidity = dht.readHumidity();\n\n  if (isnan(temperature) || isnan(humidity)) {\n    Serial.println(\"Sensor read failed, skipping this upload\");\n    return;\n  }\n\n  if (WiFi.status() != WL_CONNECTED) {\n    Serial.println(\"WiFi down, reconnecting\");\n    connectToWiFi();\n  }\n\n  HTTPClient http;\n  http.begin(serverUrl);\n  http.addHeader(\"Content-Type\", \"application/json\");\n\n  String payload = \"{\\\"temperature\\\":\" + String(temperature, 1) +\n                   \",\\\"humidity\\\":\" + String(humidity, 1) + \"}\";\n\n  int responseCode = http.POST(payload);\n\n  if (responseCode > 0) {\n    Serial.print(\"Server replied with code \");\n    Serial.println(responseCode);\n    Serial.println(http.getString());\n  } else {\n    Serial.print(\"POST failed, error: \");\n    Serial.println(http.errorToString(responseCode));\n  }\n\n  http.end();\n}\n"
+  },
+  "lib_16": {
+    "board": "esp32",
+    "topic": "ESP32 LED fading with the ledc PWM peripheral",
+    "libraries": [],
+    "code": "/*\n  ESP32 LED fade with ledc\n\n  The ESP32 has no analogWrite(), it uses the LEDC hardware PWM\n  peripheral instead. This sketch fades an LED up and down.\n\n  (Written for ESP32 Arduino core 3.x, where ledcAttach() takes\n  the pin, the frequency and the resolution.)\n*/\n\n#define LED_PIN        5\n#define PWM_FREQ       5000    // 5 kHz\n#define PWM_RESOLUTION 8       // 8 bit -> duty values 0..255\n\nint dutyCycle = 0;\n\nvoid setup() {\n  Serial.begin(115200);\n\n  // set up PWM on the LED pin\n  ledcAttach(LED_PIN, PWM_FREQ, PWM_RESOLUTION);\n}\n\nvoid loop() {\n  // fade in\n  for (dutyCycle = 0; dutyCycle <= 255; dutyCycle++) {\n    ledcWrite(LED_PIN, dutyCycle);\n    delay(10);\n  }\n\n  // fade out\n  for (dutyCycle = 255; dutyCycle >= 0; dutyCycle--) {\n    ledcWrite(LED_PIN, dutyCycle);\n    delay(10);\n  }\n}\n"
+  },
+  "lib_17": {
+    "board": "esp32",
+    "topic": "ESP32 LED dimmer driven by a potentiometer using ledc channels",
+    "libraries": [],
+    "code": "/*\n  ESP32 dimmer\n\n  A potentiometer on GPIO 34 sets the brightness of an LED on GPIO 16\n  through one of the ESP32's LEDC PWM channels.\n\n  Note: the ESP32 ADC is 12 bit, so analogRead() returns 0..4095.\n*/\n\nconst int potPin = 34;      // ADC pin, input only\nconst int ledPin = 16;\n\nconst int ledChannel = 0;\nconst int freq = 5000;\nconst int resolution = 8;\n\nvoid setup() {\n  Serial.begin(115200);\n\n  // configure the PWM channel and hook the LED pin to it\n  ledcSetup(ledChannel, freq, resolution);\n  ledcAttachPin(ledPin, ledChannel);\n}\n\nvoid loop() {\n  int potValue = analogRead(potPin);\n\n  // 12 bit reading down to an 8 bit duty cycle\n  int dutyCycle = map(potValue, 0, 4095, 0, 255);\n\n  ledcWrite(ledChannel, dutyCycle);\n\n  Serial.print(\"pot: \");\n  Serial.print(potValue);\n  Serial.print(\"  duty: \");\n  Serial.println(dutyCycle);\n\n  delay(50);\n}\n"
+  },
+  "lib_18": {
+    "board": "esp32",
+    "topic": "ESP32 capacitive touch button toggling an LED",
+    "libraries": [],
+    "code": "/*\n  ESP32 touch button\n\n  The ESP32 can sense a touch on certain pins with touchRead().\n  An untouched pin gives a fairly high number; touching it makes\n  the value drop. Here a touch toggles the on-board LED.\n\n  Touch pin T0 is GPIO 4. Just solder a wire or a piece of foil to it.\n*/\n\n#define TOUCH_PIN T0\n#define LED_PIN   2\n\nconst int touchThreshold = 40;   // tune this after watching the values\n\nbool ledIsOn = false;\nbool wasTouched = false;\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(LED_PIN, OUTPUT);\n  digitalWrite(LED_PIN, LOW);\n}\n\nvoid loop() {\n  int touchValue = touchRead(TOUCH_PIN);\n  Serial.println(touchValue);\n\n  bool isTouched = (touchValue < touchThreshold);\n\n  // only react on the moment the finger lands, not the whole time\n  if (isTouched && !wasTouched) {\n    ledIsOn = !ledIsOn;\n    digitalWrite(LED_PIN, ledIsOn ? HIGH : LOW);\n\n    Serial.print(\"LED is now \");\n    Serial.println(ledIsOn ? \"ON\" : \"OFF\");\n\n    delay(300);   // rough debounce\n  }\n\n  wasTouched = isTouched;\n  delay(50);\n}\n"
+  },
+  "lib_19": {
+    "board": "esp32",
+    "topic": "servo nudged left and right by two ESP32 touch pads",
+    "libraries": [
+      "ESP32Servo.h"
+    ],
+    "code": "/*\n  Touch controlled servo (ESP32)\n\n  Two touch pads act as left / right buttons for a servo.\n  The regular Servo library does not work on the ESP32,\n  so install \"ESP32Servo\" from the Library Manager.\n*/\n\n#include <ESP32Servo.h>\n\n#define SERVO_PIN   18\n#define TOUCH_LEFT  T0    // GPIO 4\n#define TOUCH_RIGHT T3    // GPIO 15\n\nconst int TOUCH_THRESHOLD = 35;\nconst int STEP = 5;\n\nServo myServo;\nint angle = 90;\n\nvoid setup() {\n  Serial.begin(115200);\n\n  myServo.setPeriodHertz(50);            // standard 50 Hz servo\n  myServo.attach(SERVO_PIN, 500, 2400);  // min and max pulse width in us\n  myServo.write(angle);\n\n  Serial.println(\"Touch the left or right pad to move the servo.\");\n}\n\nvoid loop() {\n  int leftValue = touchRead(TOUCH_LEFT);\n  int rightValue = touchRead(TOUCH_RIGHT);\n\n  if (leftValue < TOUCH_THRESHOLD) {\n    angle = angle - STEP;\n    if (angle < 0) {\n      angle = 0;\n    }\n    myServo.write(angle);\n    Serial.print(\"angle: \");\n    Serial.println(angle);\n    delay(150);\n  }\n\n  if (rightValue < TOUCH_THRESHOLD) {\n    angle = angle + STEP;\n    if (angle > 180) {\n      angle = 180;\n    }\n    myServo.write(angle);\n    Serial.print(\"angle: \");\n    Serial.println(angle);\n    delay(150);\n  }\n\n  delay(50);\n}\n"
+  },
+  "lib_20": {
+    "board": "esp32",
+    "topic": "ESP32 internet clock: NTP time over WiFi on an I2C LCD",
+    "libraries": [
+      "WiFi.h",
+      "Wire.h",
+      "LiquidCrystal_I2C.h",
+      "time.h"
+    ],
+    "code": "/*\n  ESP32 internet clock\n\n  Gets the time from an NTP server over WiFi and shows it\n  on a 16x2 I2C LCD. No RTC module needed.\n\n  LCD SDA -> GPIO 21, SCL -> GPIO 22.\n*/\n\n#include <WiFi.h>\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n#include \"time.h\"\n\nconst char* ssid     = \"YOUR_WIFI_NAME\";\nconst char* password = \"YOUR_WIFI_PASSWORD\";\n\nconst char* ntpServer = \"pool.ntp.org\";\nconst long  gmtOffset_sec = 8 * 3600;   // change this to your time zone\nconst int   daylightOffset_sec = 0;\n\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  Serial.begin(115200);\n\n  lcd.init();\n  lcd.backlight();\n  lcd.print(\"Connecting WiFi\");\n\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"Connected, IP: \");\n  Serial.println(WiFi.localIP());\n\n  lcd.clear();\n  lcd.print(\"Getting time...\");\n\n  // ask the NTP server for the current time\n  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);\n  delay(1000);\n  lcd.clear();\n}\n\nvoid loop() {\n  struct tm timeinfo;\n\n  if (!getLocalTime(&timeinfo)) {\n    lcd.setCursor(0, 0);\n    lcd.print(\"No time yet     \");\n    delay(1000);\n    return;\n  }\n\n  char timeString[9];\n  char dateString[17];\n\n  strftime(timeString, sizeof(timeString), \"%H:%M:%S\", &timeinfo);\n  strftime(dateString, sizeof(dateString), \"%d %b %Y\", &timeinfo);\n\n  lcd.setCursor(4, 0);\n  lcd.print(timeString);\n\n  lcd.setCursor(2, 1);\n  lcd.print(dateString);\n\n  delay(1000);\n}\n"
+  }
+}

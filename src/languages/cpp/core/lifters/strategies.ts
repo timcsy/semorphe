@@ -645,6 +645,18 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
     if (simpleTypeName && (streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName))) {
       const conceptId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
+      // 🔴 **一個身分可能被多個型別名登錄**（同一片液晶的並列版與 I2C 版）。
+      //    那個差別在程式碼裡是真的，而**它不得被改寫**——所以要帶著。
+      //
+      // ⚠️ 而只在**概念自己宣告了這一格**時才寫：絕大多數具體型別只有一個名字，
+      //    替它們憑空多一個屬性會讓宣告與產出對不上（參數規格護欄在看）。
+      //
+      // > **共用層要不要記一件事，由那顆元件的宣告說了算。**
+      const wantsDeclType = componentConcepts().some(
+        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+          ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'decl_type'),
+      )
+      const extraProps: Record<string, string> = wantsDeclType ? { decl_type: simpleTypeName } : {}
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
       const name = decl?.type === 'identifier'
         ? decl.text
@@ -678,7 +690,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
           })
           .filter((n): n is NonNullable<typeof n> => n !== null)
-        return createNode(conceptId, { name: nameNode?.text ?? name }, { initializer: args })
+        return createNode(conceptId, { name: nameNode?.text ?? name, ...extraProps }, { initializer: args })
       }
 
       // For stream types with constructor args (e.g., ifstream fin("input.txt"))
@@ -688,14 +700,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = valueNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(conceptId, { name }, { initializer: args })
+          return createNode(conceptId, { name, ...extraProps }, { initializer: args })
         }
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode(conceptId, { name }, { initializer: value ? [value] : [] })
+          return createNode(conceptId, { name, ...extraProps }, { initializer: value ? [value] : [] })
         }
       }
-      return createNode(conceptId, { name })
+      return createNode(conceptId, { name, ...extraProps })
     }
 
     const typeNode = node.namedChildren.find(c =>

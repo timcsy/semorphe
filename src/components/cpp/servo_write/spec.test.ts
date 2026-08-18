@@ -219,4 +219,33 @@ void loop() {}
     // ⚠️ 沒卡在 while 裡，而且印得出位址——那是這個【取捨】的全部目的
     expect(i.getOutput().join('')).toContain('192.168.1.100')
   })
+
+  it('🔴 I2C 液晶：兩個型別名一個身分，而【哪一個函式庫不得被改寫】', () => {
+    // 盲測（20 段隔離語料）抓到 I2C 版佔 4 段＝20%，而它完全不認得。
+    // ⚠️ 而改寫的後果比接線積木那次嚴重：兩個函式庫的建構參數完全不同
+    //    ——改過去那支程式就再也編不過了。
+    const src = `#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+void setup() {
+  lcd.init();
+  lcd.print("hi");
+}
+void loop() {}
+`
+    const tree = lift(src)
+    expect(ids(tree)).toContain('cpp:lcd_declare')       // ← 正向錨點
+    expect(ids(tree)).toContain('cpp:lcd_print')
+    const decl = nodes(tree).find((x) => x.conceptId === 'cpp:lcd_declare')
+    expect(decl?.properties.decl_type).toBe('LiquidCrystal_I2C')
+    // 🔴 產回去必須還是 I2C 版
+    expect(gen(tree)).toContain('LiquidCrystal_I2C lcd(0x27, 16, 2);')
+  })
+
+  it('⚠️ 而並列版仍然是並列版——不得被 I2C 汙染', () => {
+    const tree = lift('#include <LiquidCrystal.h>\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\nvoid setup() { lcd.clear(); }\nvoid loop() {}\n')
+    const decl = nodes(tree).find((x) => x.conceptId === 'cpp:lcd_declare')
+    expect(decl, '宣告要在').toBeDefined()                // ← 正向錨點
+    expect(decl?.properties.decl_type).toBe('LiquidCrystal')
+    expect(gen(tree)).toContain('LiquidCrystal lcd(12, 11, 5, 4, 3, 2);')
+  })
 })

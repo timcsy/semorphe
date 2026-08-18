@@ -13,6 +13,20 @@
           "type": "field_input",
           "name": "NAME",
           "text": "lcd"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "DECL_TYPE",
+          "options": [
+            [
+              "%{BKY_C_LCD_DECLARE_T_PAR}",
+              "LiquidCrystal"
+            ],
+            [
+              "%{BKY_C_LCD_DECLARE_T_I2C}",
+              "LiquidCrystal_I2C"
+            ]
+          ]
         }
       ],
       "message1": "%1",
@@ -31,7 +45,8 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "name",
+        "DECL_TYPE": "decl_type"
       },
       "inputs": {
         "ARGS": "initializer"

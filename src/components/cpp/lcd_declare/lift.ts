@@ -11,5 +11,10 @@
 import { registerPlainTypeConcept } from '../../../core/component/container-templates'
 
 export function registerLift(): void {
-  registerPlainTypeConcept('LiquidCrystal', 'cpp:lcd_declare', 'cpp/lcd_declare')
+  // 🔴 **兩個型別名、一個身分。** 盲測抓到 I2C 版佔 20% 而完全不認得——
+  //    而它們是同一件事（一片字元液晶），差別只在**接線方式與函式庫**。
+  //    ⚠️ 而那個差別由 `decl_type` 參數帶著，**不得被改寫**。
+  for (const t of ['LiquidCrystal', 'LiquidCrystal_I2C']) {
+    registerPlainTypeConcept(t, 'cpp:lcd_declare', 'cpp/lcd_declare')
+  }
 }

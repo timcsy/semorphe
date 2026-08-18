@@ -1,4 +1,6 @@
 {
-  "C_LCD_DECLARE_MSG0": "宣告字元液晶 %1",
-  "C_LCD_DECLARE_TOOLTIP": "括號裡是它接的那幾根腳位。宣告之後要用「設定液晶的行列數」。"
+  "C_LCD_DECLARE_MSG0": "宣告字元液晶 %1（%2）",
+  "C_LCD_DECLARE_TOOLTIP": "括號裡是它接的那幾根腳位。宣告之後要用「設定液晶的行列數」。",
+  "C_LCD_DECLARE_T_PAR": "並列式",
+  "C_LCD_DECLARE_T_I2C": "I2C"
 }
