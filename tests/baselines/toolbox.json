@@ -273,8 +273,13 @@
         "cpp_pin_attach",
         "cpp_pin_mode",
         "cpp_pulse_read",
+        "cpp_pwm_attach",
+        "cpp_pwm_open",
+        "cpp_pwm_tie",
+        "cpp_pwm_write",
         "cpp_tone",
         "cpp_tone_stop",
+        "cpp_touch_read",
         "cpp_ultrasonic_trigger"
       ]
     },

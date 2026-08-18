@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cpp_pwm_attach",
+    "conceptId": "cpp:pwm_attach",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pwm_attach",
+      "message0": "%{BKY_C_PWM_ATTACH_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FREQ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "BITS",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PWM_ATTACH_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "PIN": "pin",
+        "FREQ": "freq",
+        "BITS": "bits"
+      },
+      "statementInputs": {}
+    }
+  }
+]

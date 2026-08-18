@@ -546,6 +546,22 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:pwm_attach": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:pwm_open": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:pwm_tie": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:pwm_write": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:queue_back": {
       "files": 2,
       "dirs": 1
@@ -767,6 +783,10 @@
       "dirs": 1
     },
     "cpp:tone_stop": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:touch_read": {
       "files": 3,
       "dirs": 1
     },

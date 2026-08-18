@@ -1,0 +1,4 @@
+{
+  "C_PWM_TIE_MSG0": "Tie pin %1 to PWM channel %2",
+  "C_PWM_TIE_TOOLTIP": "The second step on older ESP32 cores (2.x), used together with the channel setup block. Newer cores no longer need it."
+}

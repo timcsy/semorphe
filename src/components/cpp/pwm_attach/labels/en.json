@@ -1,0 +1,4 @@
+{
+  "C_PWM_ATTACH_MSG0": "Set up PWM on pin %1 at %2 Hz with %3-bit resolution",
+  "C_PWM_ATTACH_TOOLTIP": "Newer ESP32 cores (3.x) merge channel setup and pin attach into one call; older cores need two separate blocks. An 8-bit resolution means the output value ranges from 0 to 255."
+}

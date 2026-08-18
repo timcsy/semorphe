@@ -31,6 +31,10 @@ import type { NamingVocabulary } from '../../core/naming'
  */
 export const SUBJECTS = [
   'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum',
+  // ⚠️ `pwm`／`touch` 加入日 2026-08-18——ESP32 的 LEDC 與觸摸感應。
+  //    🔴 而**操作詞一個都沒新增**：`attach`／`open`／`tie`／`write`／`read`
+  //    全都已經在表裡。**能用既有詞就不要新增。**
+  'pwm', 'touch',
   // ⚠️ `ultrasonic` 加入日 2026-08-18——`cpp:ultrasonic_trigger`。
   //    主體是「超音波模組」，🔴 而它**不叫 `hcsr04`**：型號是一個廠牌，
   //    不是一個概念。換一顆同樣接法的模組，這顆積木一個字都不必改。

@@ -1,0 +1,4 @@
+{
+  "C_PWM_WRITE_MSG0": "Write %2 to PWM %1",
+  "C_PWM_WRITE_TOOLTIP": "On newer ESP32 cores the first slot is a pin; on older ones it is a channel. Both look identical in code, so it is resolved from whatever was set up earlier. The maximum value comes from the resolution (255 for 8 bits)."
+}

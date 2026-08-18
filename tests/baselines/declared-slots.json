@@ -6,7 +6,7 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n【2026-08-11 補判定落點】「無法確定 8」逐筆判定，而它**混了四種原因**：\n  辨識到不了 2（queue_back／string_empty——**補再多語料也碰不到**）\n  宣告過的降級目標 1（if_else，正確）｜元概念 2（raw_code／raw_expression，正確）\n  語料沒覆蓋 3（加一段語料就會動）\n⚠️ 只看總數的話，「辨識到不了」與「語料沒覆蓋」讀起來一樣——而前者是真的缺口。\n判定在 tests/assets/declared-slots-decisions.json，鍵是 conceptId（穩定身分，沒有截斷／行號的坑）。\n\n⚠️ 2026-08-13 **上調 8 → 10**，兩筆都指名：`cpp:io_sync`／`cpp:io_tie`（競賽加速框架的兩顆新元件）。原因是**第五種**：lift 那一路是登錄表裡的一筆資料（「這個名字屬於我」），掃描器讀不到執行期才組起來的表。\n🔴 上調不是常態——這裡上調的理由是「量測方法碰不到」，不是「宣告與實際不符」：兩顆的 `children.value` 都對上 `argSlots: ['value']`，而膠囊自證測從真語料 lift 出它們並斷言接點在原地。判定與理由見 `tests/assets/declared-slots-decisions.json`。\n\n⚠️ 2026-08-13（第二次）**上調 10 → 16**，六筆都指名：`cpp:bits_count`／`cpp:container_iter`／`cpp:range_find_lower`／`cpp:range_find_upper`／`cpp:range_max`／`cpp:range_min`（競賽的演算法與迭代器那批新元件）。原因與前一次相同：lift 那一路是**登錄表裡的資料或一個判別分支**，靜態掃不到。🔴 上調的理由是「量測方法碰不到」，不是「宣告與實際不符」——六顆的自證測都從真語料 lift 出自己。\n⚠️ 2026-08-13（第三次）16 → 17：`cpp:vector_make`，理由與前兩次相同（判別是分支，靜態掃不到）。 ⚠️ 2026-08-17（spec 137）上調：新增 11 顆 Arduino 執行期表面的元件（腳位 5 ＋ 時間 2 ＋ Serial 2 ＋ 類比重映射 1 ＋ 腳位常數 1）。**上調是因為系統多會做一件事，不是因為放寬判準**——十段 Arduino 語料從「安靜地什麼都不做」變成「10/10 跑得動、0 拋錯」。"
   },
   "certainViolations": 1,
-  "undetermined": 32,
+  "undetermined": 37,
   "violationList": [
     "cpp:if: else_body"
   ]

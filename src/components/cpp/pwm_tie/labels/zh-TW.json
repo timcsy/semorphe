@@ -1,0 +1,4 @@
+{
+  "C_PWM_TIE_MSG0": "把腳位 %1 接到 PWM 通道 %2",
+  "C_PWM_TIE_TOOLTIP": "ESP32 舊版（core 2.x）的第二步，要配合「設定 PWM 通道」使用。新版已經不需要這一步。"
+}

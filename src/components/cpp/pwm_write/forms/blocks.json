@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cpp_pwm_write",
+    "conceptId": "cpp:pwm_write",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pwm_write",
+      "message0": "%{BKY_C_PWM_WRITE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "DUTY",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PWM_WRITE_TOOLTIP}",
+      "previousStatement": null,
+      "nextStatement": null
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "TARGET": "target",
+        "DUTY": "duty"
+      },
+      "statementInputs": {}
+    }
+  }
+]

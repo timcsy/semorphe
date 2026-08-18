@@ -1,0 +1,23 @@
+{
+  "conceptId": "cpp:pwm_open",
+  "layer": "lang-library",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {
+    "channel": "expression",
+    "freq": "expression",
+    "bits": "expression"
+  },
+  "role": "statement",
+  "owner": "(arduino)",
+  "_owner_why": "**它屬於 Arduino／ESP32 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_lift_why": "ESP32 core **2.x** 的第一步。⚠️ 名字用 `open` 而不是 `setup`：`open` 已經在操作詞彙表裡（序列埠那顆用它表示「設定並啟用」），而語義完全平行。**能用既有詞就不要新增詞彙。**",
+  "_execute_why": "只記下設定，**不碰任何腳位**——舊版的通道在被 `ledcAttachPin` 接上之前不對應任何腳位。"
+}
