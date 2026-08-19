@@ -40,6 +40,7 @@
  */
 import { rewriteSpan } from '../../core/projection/rewrite-span'
 import { diagNote } from '../../core/diag-log'
+import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import { postToHost } from './host-bridge'
 import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
@@ -216,6 +217,16 @@ export class VscodeCodeView implements CodeView, ViewHost {
     //    那一條擋「用舊存檔蓋掉」，這一條擋「用空狀態蓋掉」。
     if (this.version < 0) return
     if (this.inFlight) { this.queued = code; return }
+    // 🔴 **把使用者的空行還回去**——見 `core/projection/preserve-blank-lines.ts`。
+    //
+    // 產生器不知道空行存在（實測：Arduino 樣板 10 行 → 6 行），所以只要
+    // 某一段被重寫，**沒被碰過的空行也會一起消失**：2026-08-19 使用者往
+    // `setup()` 拖一顆積木，而 `loop()` 裡的空行不見了。
+    //
+    // 🟢 而它順帶治好一件更大的事：沒有語義變動時，還原後**與原檔逐字相同**
+    //    → `rewriteSpan` 回 `null` → **整個寫入不會發生**。
+    //    在此之前，每一次同步都在重寫檔案。
+    code = preserveBlankLines(this.mirror, code)
     const span = rewriteSpan(this.mirror, code)
     if (span === null) return   // ⚠️ 沒有差異 → **不產生檔案變更**
 
