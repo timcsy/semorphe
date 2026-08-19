@@ -377,6 +377,16 @@ export class BlocklyPanel implements ViewHost {
 
     this.workspace.addChangeListener((event: Blockly.Events.Abstract) => {
       if (event.isUiEvent) {
+        // 🔴 **手勢結束的保險絲。** 正常情況下拖曳結束後還會來一則 `move`
+        //    （不在拖曳中），那一則就把累積的變動寫掉了。
+        //    ⚠️ 而「正常情況下」不是保證——放開時若沒有位移，可能一則都沒有，
+        //    於是使用者的那一步**永遠不會被寫進檔案**（比多寫一次糟得多）。
+        if (event.type === Blockly.Events.BLOCK_DRAG
+            && (event as unknown as { isStart?: boolean }).isStart === false
+            && this.pendingDragChange) {
+          this.pendingDragChange = false
+          setTimeout(() => this.onChangeCallback?.(), 0)
+        }
         // Track block selection (click events)
         if (event.type === Blockly.Events.SELECTED) {
           const selectEvent = event as Blockly.Events.Selected
@@ -424,7 +434,39 @@ export class BlocklyPanel implements ViewHost {
         this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
       }
       if (!fromBus) {
-        this.onChangeCallback?.()
+        // ─────────────────────────────────────────────────────────────
+        // 🔴 **拖曳過程中不寫檔案——放下之後才寫一次。**
+        //
+        // 2026-08-19 兩份時間軸拼起來（使用者在 Arduino IDE 實測）：
+        //
+        // ```
+        // 面板  4｜+6807ms｜create cpp_var_declare｜群組 CGnb*)｜🔴 拖曳中
+        //       5｜   +2ms｜✏️ 6 → 8 行           ← 寫入①（積木還飄在頂層）
+        //       7｜ +635ms｜move｜頂層 1 顆        ← 接上去了
+        //       8｜   +2ms｜✏️ 8 → 7 行           ← 寫入②
+        // 宿主  5｜📝 文件變了（復原，版本 4，8 行）→ 送出   ← 使用者的 Cmd+Z
+        // ```
+        //
+        // **一次拖曳產生兩次寫入，而它們各自是編輯器裡的一個復原項。**
+        // 於是 Cmd+Z 還原到的是「拖到一半」的那個中間狀態
+        // ——`int x;` 同時出現在 `loop` 裡和最外層，**而使用者從來沒看過它**。
+        //
+        // > **一個復原步驟的邊界，應該落在【使用者認為自己做完一件事】的地方。
+        // > 把過程中的每一幀都存成一步，等於逼他倒著走過自己沒有走過的路。**
+        //
+        // ⚠️ 這不是同步壞了：回音正確擋掉、復原正確送出、積木正確重畫。
+        //    壞的是**寫入的時機**。
+        //
+        // 🟢 落地：拖曳中只記「有事情要寫」，不寫；下一則不在拖曳中的事件
+        //    把它一次寫掉。⚠️ 最後一則 `move` 本來就在拖曳結束之後才到，
+        //    所以不需要另外監聽手勢結束。
+        // ─────────────────────────────────────────────────────────────
+        if (this.workspace?.isDragging()) {
+          this.pendingDragChange = true
+        } else {
+          this.pendingDragChange = false
+          this.onChangeCallback?.()
+        }
       }
     })
   }
@@ -523,6 +565,9 @@ export class BlocklyPanel implements ViewHost {
     //    蓋掉」）是同一條性質的第三半：**擋「用還沒載入的狀態蓋掉」**。
     return this.stateLoadFailed || !this.hasRendered
   }
+
+  /** 拖曳期間累積的變動——放下之後補寫一次。見上面那段。 */
+  private pendingDragChange = false
 
   /** 匯流排畫過至少一次了嗎。⚠️ 見 `isStateStale`——沒畫過的工作區不得寫回。 */
   private hasRendered = false

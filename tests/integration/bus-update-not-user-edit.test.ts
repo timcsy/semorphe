@@ -313,4 +313,37 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     //    ——而那等於把積木的復原整個關掉。
     expect(ws.getUndoStack().length, '窗口沒關 → 積木的復原被永久停用').toBeGreaterThan(0)
   })
+
+  // ── 🔴 拖曳過程不得寫檔案 ────────────────────────────────────────
+  //
+  // 2026-08-19 兩份時間軸拼起來：**一次拖曳產生兩次寫入**，
+  // 而它們各自是編輯器裡的一個復原項——於是 Cmd+Z 還原到的是
+  // 「拖到一半」的中間狀態（`int x;` 同時在 loop 裡和最外層），
+  // **而使用者從來沒看過那個狀態**。
+  it('拖曳中的變動不得觸發寫回，放下之後補一次', async () => {
+    const { panel, fired } = makePanel()
+    const ws = panel.getWorkspace()!
+    // 讓匯流排先畫過一次，否則 isStateStale 會擋住（那是另一條規範）
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    const base = fired()
+
+    // ① 拖曳中——不得寫
+    const realIsDragging = ws.isDragging.bind(ws)
+    ws.isDragging = (): boolean => true
+    ws.newBlock(PROBE)
+    await tick()
+    expect(fired(), '拖到一半就寫檔案 → Cmd+Z 會還原到使用者沒看過的狀態').toBe(base)
+
+    // ② 放下之後——**必須**補寫。
+    //    🔴 沒有這一條的話，「永遠不寫」也能讓上面那條通過，而那是更糟的 bug。
+    ws.isDragging = realIsDragging
+    ws.newBlock(PROBE)
+    await tick()
+    expect(fired(), '放下之後沒補寫 → 使用者的那一步永遠不會進檔案').toBeGreaterThan(base)
+  })
 })
