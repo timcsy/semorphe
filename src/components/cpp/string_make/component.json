@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_make",
-  "layer": "lang-library",
   "properties": [],
   "children": {
     "value": {

@@ -35,14 +35,10 @@ describe('ConceptRegistry.loadFromJSON', () => {
     expect(varDecl!.childNames).toContain('initializer')
   })
 
-  it('should list all concepts by layer', () => {
-    const registry = new ConceptRegistry()
-    registry.loadFromJSON(loadConcepts())
-    const universal = registry.listByLayer('universal')
-    const all = registry.listAll()
-    expect(universal.length).toBeGreaterThan(0)
-    expect(universal.length).toBeLessThanOrEqual(all.length)
-  })
+  // 🔄 **spec 152 移除**：這一支測的是 `listByLayer()`／`layer` 欄位本身，
+  //    而那一格已退場（233 顆元件宣告它，生產路徑零消費者）。
+  //    ⚠️ 紅掉不是「我漏了消費者」，是「被測的功能不存在了」。
+  //    🟢 而它原本順帶驗的「登錄表真的載入了東西」由 `listAll()` 那幾支涵蓋。
 
   it('concept-registry.ts should not import blockly (static analysis)', () => {
     const filePath = path.resolve(__dirname, '../../../src/core/concept-registry.ts')

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cstring_compare_bounded",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

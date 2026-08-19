@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:operator_overload",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

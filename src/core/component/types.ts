@@ -59,7 +59,6 @@ export interface ComponentManifest {
    * 不是在新檔案裡開一個孤島。⚠️ 那件事還沒做，記在切片紀錄的「後續」。
    */
   conceptId: string
-  layer?: string
   abstractConcept?: string
   /** 依賴。C++ 是標頭檔（`['<vector>']`）。⚠️ **不得從資料夾名推**——`cpp:pair_declare` 的 header 是 `<utility>`。 */
   requires?: string[]

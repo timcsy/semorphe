@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:delete",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

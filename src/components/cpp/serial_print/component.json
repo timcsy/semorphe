@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:serial_print",
-  "layer": "lang-library",
   "abstractConcept": "cpp:print",
   "properties": [
     {

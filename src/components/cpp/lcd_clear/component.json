@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:lcd_clear",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

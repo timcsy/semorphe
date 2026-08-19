@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_substr",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

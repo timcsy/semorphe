@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_find_first_not_of",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

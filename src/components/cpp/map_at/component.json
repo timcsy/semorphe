@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:map_at",
-  "layer": "lang-library",
   "abstractConcept": "cpp:array_at",
   "properties": [
     {

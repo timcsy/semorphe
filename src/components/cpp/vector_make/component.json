@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:vector_make",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

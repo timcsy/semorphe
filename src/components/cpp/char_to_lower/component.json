@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:char_to_lower",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

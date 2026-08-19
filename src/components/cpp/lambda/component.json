@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:lambda",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

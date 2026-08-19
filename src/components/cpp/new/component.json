@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:new",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

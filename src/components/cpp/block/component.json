@@ -1,11 +1,12 @@
 {
   "conceptId": "cpp:block",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {
     "body": {
-      "allowed": ["statement"],
+      "allowed": [
+        "statement"
+      ],
       "min": 0
     }
   },

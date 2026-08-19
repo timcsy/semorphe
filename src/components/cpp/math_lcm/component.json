@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:math_lcm",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

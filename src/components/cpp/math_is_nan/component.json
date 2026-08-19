@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:math_is_nan",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

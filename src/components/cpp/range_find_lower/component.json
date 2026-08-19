@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_find_lower",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

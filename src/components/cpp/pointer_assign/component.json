@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:pointer_assign",
-  "layer": "lang-core",
   "abstractConcept": "cpp:var_assign",
   "properties": [
     {

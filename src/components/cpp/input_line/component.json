@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:input_line",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "name",

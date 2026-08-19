@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_as_double",
-  "layer": "lang-library",
   "properties": [],
   "children": {
     "value": {

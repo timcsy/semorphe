@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:include_local",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

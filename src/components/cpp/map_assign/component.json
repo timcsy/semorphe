@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:map_assign",
-  "layer": "lang-library",
   "abstractConcept": "cpp:array_assign",
   "properties": [
     {

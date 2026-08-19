@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:eeprom_write",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:digital_write",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

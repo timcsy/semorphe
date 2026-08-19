@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:math_abs",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

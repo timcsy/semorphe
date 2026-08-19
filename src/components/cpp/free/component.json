@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:free",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

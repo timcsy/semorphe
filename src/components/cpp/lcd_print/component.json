@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:lcd_print",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

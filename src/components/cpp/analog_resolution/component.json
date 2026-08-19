@@ -1,9 +1,10 @@
 {
   "conceptId": "cpp:analog_resolution",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
-  "children": { "bits": "expression" },
+  "children": {
+    "bits": "expression"
+  },
   "role": "statement",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。⚠️ 而它是 **ESP32／SAMD 才有**的函式，Uno 沒有。",

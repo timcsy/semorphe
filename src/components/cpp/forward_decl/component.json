@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:forward_decl",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

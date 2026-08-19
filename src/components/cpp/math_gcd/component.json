@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:math_gcd",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

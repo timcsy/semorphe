@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:map_declare",
-  "layer": "lang-library",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

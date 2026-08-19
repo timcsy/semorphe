@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cstring_as_int",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:loop_do_while",
-  "layer": "lang-core",
   "abstractConcept": "cpp:loop_while",
   "properties": [],
   "children": {

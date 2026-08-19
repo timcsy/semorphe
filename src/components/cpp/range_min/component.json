@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_min",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

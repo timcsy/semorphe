@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:set_insert",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

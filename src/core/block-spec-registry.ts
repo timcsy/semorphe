@@ -38,7 +38,6 @@ export class BlockSpecRegistry {
           // 欄位還在，是因為它記著「這顆概念當初被認為多通用」——
           // 那是一份**還沒被驗證過的外延主張**，而驗它需要第二個語言。
           // 見 `concepts/等價與觀察集.md` 剪枝力②：**「通用」是外延的，不住在名字裡**。
-          layer: concept?.layer,
           abstractConcept: concept?.abstractConcept ?? undefined,
           properties: paramNames(concept?.properties),
           children: concept?.children,

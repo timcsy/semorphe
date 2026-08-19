@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_size",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

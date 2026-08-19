@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:throw",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:malloc",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

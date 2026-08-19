@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:wifi_read",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

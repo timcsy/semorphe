@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:pointer_deref",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

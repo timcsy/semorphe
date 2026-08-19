@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:pin_mode",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

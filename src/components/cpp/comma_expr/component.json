@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:comma_expr",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

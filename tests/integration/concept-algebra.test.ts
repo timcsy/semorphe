@@ -60,25 +60,11 @@ describe('Concept Algebra (US8)', () => {
     })
   })
 
-  describe('Three-layer queries', () => {
-    it('should list universal layer concepts', () => {
-      const universal = registry.listByLayer('universal')
-      expect(universal).toHaveLength(3)
-      expect(universal.map(c => c.id)).toContain('container_add')
-    })
+  // 🔄 **spec 152 移除**：這一組測的是 `listByLayer()`／`layer` 欄位本身，
+  //    而那一格已退場（233 顆元件宣告它，生產路徑零消費者）。
+  //    ⚠️ 它們用的是**合成資料**——紅掉不是「我漏了消費者」，
+  //    是「被測的功能不存在了」。判準見 `specs/152-retire-layer/spec.md` US1。
 
-    it('should list lang-library concepts', () => {
-      const lib = registry.listByLayer('lang-library')
-      expect(lib).toHaveLength(3)
-      expect(lib.map(c => c.id)).toContain('cpp:vector_push_back')
-    })
-
-    it('should list lang-core concepts', () => {
-      const core = registry.listByLayer('lang-core')
-      expect(core).toHaveLength(1)
-      expect(core[0].id).toBe('cpp:var_declare')
-    })
-  })
 
   describe('Abstract concept mapping', () => {
     it('should find abstract concept for cpp:vector_push_back', () => {
@@ -103,28 +89,9 @@ describe('Concept Algebra (US8)', () => {
     })
   })
 
-  describe('Layer-based filtering', () => {
-    it('should list only universal layer concepts', () => {
-      const universal = registry.listByLayer('universal')
-      expect(universal).toHaveLength(3)
-      expect(universal.map(c => c.id)).toContain('container_add')
-      expect(universal.map(c => c.id)).not.toContain('cpp:var_declare')
-    })
+  // 🔄 **spec 152 移除**：這一組測的是 `listByLayer()`／`layer` 欄位本身，
+  //    而那一格已退場（233 顆元件宣告它，生產路徑零消費者）。
+  //    ⚠️ 它們用的是**合成資料**——紅掉不是「我漏了消費者」，
+  //    是「被測的功能不存在了」。判準見 `specs/152-retire-layer/spec.md` US1。
 
-    it('should list only lang-core layer concepts', () => {
-      const core = registry.listByLayer('lang-core')
-      expect(core).toHaveLength(1)
-      expect(core.map(c => c.id)).toContain('cpp:var_declare')
-    })
-
-    it('should list all lang-library concepts', () => {
-      const lib = registry.listByLayer('lang-library')
-      expect(lib).toHaveLength(3)
-    })
-
-    it('lang-library concept should not appear in universal layer', () => {
-      const universal = registry.listByLayer('universal')
-      expect(universal.map(c => c.id)).not.toContain('cpp:vector_push_back')
-    })
-  })
 })

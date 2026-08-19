@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:loop_range",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

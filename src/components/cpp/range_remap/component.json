@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_remap",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

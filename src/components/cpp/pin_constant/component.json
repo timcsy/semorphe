@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:pin_constant",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

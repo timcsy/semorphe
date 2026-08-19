@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:negate",
-  "layer": "universal",
   "abstractConcept": null,
   "properties": [],
   "children": {

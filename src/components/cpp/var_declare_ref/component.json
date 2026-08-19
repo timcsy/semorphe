@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:var_declare_ref",
-  "layer": "lang-core",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_sum_partial",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

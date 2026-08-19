@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:method_call",
-  "layer": "lang-core",
   "abstractConcept": "cpp:func_call",
   "properties": [
     {

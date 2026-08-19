@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:bits_count",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

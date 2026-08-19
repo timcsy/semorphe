@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cstring_append",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

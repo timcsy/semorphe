@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:logic_not",
-  "layer": "universal",
   "abstractConcept": null,
   "properties": [],
   "children": {

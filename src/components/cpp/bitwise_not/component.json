@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:bitwise_not",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

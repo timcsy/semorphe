@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:container_pop",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

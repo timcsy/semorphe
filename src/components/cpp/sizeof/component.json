@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:sizeof",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

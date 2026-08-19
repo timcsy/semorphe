@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:lcd_at",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:queue_back",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

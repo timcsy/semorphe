@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:builtin_constant",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

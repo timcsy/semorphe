@@ -26,7 +26,7 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import { languageSpecificComponentIds, universalComponentIds, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
+import { allComponentIds, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
@@ -63,14 +63,13 @@ interface Violation {
 function measure(): {
   violations: Violation[]
   commentOnly: Map<string, string[]>
-  universalHits: number
 } {
-  const ids = languageSpecificComponentIds()
+  // 🔄 **spec 152：計入【全部】元件身分。**
+  //    舊版只計 lang-core／lang-library，而豁免 universal 的理由
+  //    「拔掉 C++ 後依然存在」**是假的**——233 顆元件全是 `cpp:` scope。
+  //    🟢 動它的時機是「它豁免了 0 筆」的今天：沒有數字要調。
+  const ids = allComponentIds()
   const hits = scanDirs(NEUTRAL_DIRS, ids)
-  const universalHits = [...scanDirs(NEUTRAL_DIRS, universalComponentIds()).values()].reduce(
-    (n, h) => n + h.code.length,
-    0,
-  )
 
   const violations: Violation[] = []
   const commentOnly = new Map<string, string[]>()
@@ -79,7 +78,7 @@ function measure(): {
     for (const id of h.code) violations.push({ file, componentId: id, lines: h.lines[id] ?? [] })
     if (h.commentOnly.length > 0) commentOnly.set(file, h.commentOnly)
   }
-  return { violations, commentOnly, universalHits }
+  return { violations, commentOnly }
 }
 
 const key = (v: Violation): string => `${v.file}::${v.componentId}`
@@ -135,7 +134,7 @@ describe('護欄：核心不得 import 語言套件（P9 的字面要求）', ()
 })
 
 describe('護欄：中立性（kernel／app／render 不得認得特定語言的元件身分）', () => {
-  const { violations, commentOnly, universalHits } = measure()
+  const { violations, commentOnly } = measure()
   const files = [...new Set(violations.map((v) => v.file))]
 
   // 兩欄歸因：拿 059 動工前拍的 29 筆快照當基準，逐筆判斷它為什麼不見了
@@ -178,7 +177,6 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
 
     lines.push('')
     lines.push(
-      `（參考｜不計入本護欄）universal 概念在同範圍的引用：${universalHits} 筆——` +
         `它們拔掉 C++ 後依然存在，屬碎裂而非語言耦合，由就近性護欄涵蓋。`,
     )
 
@@ -210,7 +208,7 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   //    執行期才成立的耦合，它都看不見。見 `history/021`。
   // ─────────────────────────────────────────────────────────────────
   it('★ 合成注入：一段含語言專屬身分的程式碼必須被報出（零才可信）', () => {
-    const ids = languageSpecificComponentIds()
+    const ids = allComponentIds()
     expect(ids.length, '語言專屬概念清單是空的 → 掃什麼都不會有結果').toBeGreaterThan(10)
     const probe = ids[0]
     const hits = scanText(`const x = generators.get('${probe}')`, ids)
@@ -222,7 +220,7 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   })
 
   it('★ 合成注入：不含任何身分的程式碼不得被報出', () => {
-    const hits = scanText('const x = 1 + 2', languageSpecificComponentIds())
+    const hits = scanText('const x = 1 + 2', allComponentIds())
     expect(hits.code, '什麼都報的掃描器也會通過上一支').toEqual([])
   })
 

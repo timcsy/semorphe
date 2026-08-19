@@ -26,9 +26,6 @@ export class ConceptRegistry {
    *
    * → 見 `draft/2026-08-11-universal是一份還沒被驗證的外延主張.md`
    */
-  listByLayer(layer: string): ConceptDef[] {
-    return [...this.concepts.values()].filter(c => c.layer === layer)
-  }
 
   findAbstract(concreteId: string): ConceptDef | undefined {
     const concrete = this.concepts.get(concreteId)
@@ -50,7 +47,6 @@ export class ConceptRegistry {
     for (const c of concepts) {
       this.registerOrUpdate({
         id: c.conceptId,
-        layer: c.layer,
         abstractConcept: c.abstractConcept ?? undefined,
         propertyNames: paramNames(c.properties),
         childNames: Object.keys(c.children),

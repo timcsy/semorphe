@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:var_declare_const",
-  "layer": "lang-core",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

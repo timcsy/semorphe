@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:pulse_read",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

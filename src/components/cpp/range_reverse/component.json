@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_reverse",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_replace",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

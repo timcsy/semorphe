@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:ifndef",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

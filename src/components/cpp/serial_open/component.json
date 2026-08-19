@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:serial_open",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

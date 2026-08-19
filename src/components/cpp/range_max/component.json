@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_max",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

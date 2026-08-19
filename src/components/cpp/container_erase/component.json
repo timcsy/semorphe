@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:container_erase",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

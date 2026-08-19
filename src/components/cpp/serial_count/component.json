@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:serial_count",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

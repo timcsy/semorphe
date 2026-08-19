@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:raw_expression",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

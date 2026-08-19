@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:method_virtual_pure",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

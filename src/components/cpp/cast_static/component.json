@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cast_static",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

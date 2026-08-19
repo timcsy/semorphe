@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_erase",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

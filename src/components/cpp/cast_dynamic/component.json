@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cast_dynamic",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

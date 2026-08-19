@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:func_call",
-  "layer": "universal",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:char_is_alpha",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

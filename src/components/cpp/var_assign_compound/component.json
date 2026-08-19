@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:var_assign_compound",
-  "layer": "lang-core",
   "abstractConcept": "cpp:var_assign",
   "properties": [
     {

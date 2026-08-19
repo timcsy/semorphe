@@ -37,27 +37,11 @@ describe('ConceptRegistry', () => {
     })
   })
 
-  describe('listByLayer', () => {
-    it('should list concepts by layer', () => {
-      registry.register({
-        id: 'cpp:var_declare', layer: 'universal',
-        propertyNames: [], childNames: [],
-      })
-      registry.register({
-        id: 'cpp:pointer_deref', layer: 'lang-core',
-        propertyNames: [], childNames: ['operand'],
-      })
-      registry.register({
-        id: 'cpp:stdlib:sort', layer: 'lang-library',
-        abstractConcept: 'collection_sort',
-        propertyNames: [], childNames: ['begin', 'end'],
-      })
+  // 🔄 **spec 152 移除**：這一組測的是 `listByLayer()`／`layer` 欄位本身，
+  //    而那一格已退場（233 顆元件宣告它，生產路徑零消費者）。
+  //    ⚠️ 它們用的是**合成資料**——紅掉不是「我漏了消費者」，
+  //    是「被測的功能不存在了」。判準見 `specs/152-retire-layer/spec.md` US1。
 
-      expect(registry.listByLayer('universal')).toHaveLength(1)
-      expect(registry.listByLayer('lang-core')).toHaveLength(1)
-      expect(registry.listByLayer('lang-library')).toHaveLength(1)
-    })
-  })
 
   describe('findAbstract', () => {
     it('should find the abstract concept for a concrete concept', () => {

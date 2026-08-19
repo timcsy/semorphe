@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:serial_read",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:print_formatted",
-  "layer": "lang-core",
   "abstractConcept": "cpp:print",
   "properties": [
     {

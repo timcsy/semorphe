@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:queue_front",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

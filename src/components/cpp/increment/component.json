@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:increment",
-  "layer": "lang-core",
   "abstractConcept": "cpp:var_assign",
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:switch",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

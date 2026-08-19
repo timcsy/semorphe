@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:servo_attach",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

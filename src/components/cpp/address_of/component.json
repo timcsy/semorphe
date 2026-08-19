@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:address_of",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [],
   "children": {

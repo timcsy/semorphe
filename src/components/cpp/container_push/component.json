@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:container_push",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

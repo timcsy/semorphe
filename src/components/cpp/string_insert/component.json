@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:string_insert",
-  "layer": "lang-library",
   "properties": [
     {
       "name": "obj",

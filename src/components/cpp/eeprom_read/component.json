@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:eeprom_read",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

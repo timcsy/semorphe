@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:array_2d_assign",
-  "layer": "lang-core",
   "abstractConcept": "cpp:array_assign",
   "properties": [
     {

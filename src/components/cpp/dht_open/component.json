@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:dht_open",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

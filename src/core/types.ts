@@ -85,11 +85,9 @@ export interface SemanticModel {
 
 // ─── Concept System ───
 
-export type ConceptLayer = 'universal' | 'lang-core' | 'lang-library'
 
 export interface ConceptDef {
   id: string
-  layer: ConceptLayer
   abstractConcept?: string
   propertyNames: string[]
   childNames: string[]
@@ -178,7 +176,6 @@ export interface ConceptMapping {
    *
    * > **命名慣例不是契約。** 要判斷「這顆概念是不是 X」，就宣告一個 X 標註。
    */
-  layer?: ConceptLayer
   abstractConcept?: string
   properties?: string[]
   children?: Record<string, string>
@@ -437,7 +434,6 @@ export interface ParamSpec {
 
 export interface ConceptDefJSON {
   conceptId: string
-  layer: ConceptLayer
   abstractConcept?: string | null
   /**
    * ⚠️ **過渡中**：純名字清單（124 顆）與 `ParamSpec[]`（規格化後）並存。

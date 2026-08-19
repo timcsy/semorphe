@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cstring_find",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [],
   "children": {

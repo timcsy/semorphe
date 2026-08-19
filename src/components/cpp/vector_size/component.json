@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:vector_size",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

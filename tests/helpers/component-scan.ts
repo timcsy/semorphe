@@ -46,37 +46,25 @@ export function allComponentDefs(): ConceptDefJSON[] {
   return allCppConcepts()
 }
 
+/**
+ * **全部**元件身分。
+ *
+ * 中立性護欄用這一組，因為 P9 談的是**語言獨立性**
+ * ——「拔掉 C++，只裝 Python stub → 所有視圖仍啟動」。
+ *
+ * 🔄 **spec 152 拿掉了 `universal` 豁免。**
+ *
+ * 舊的分法是「lang-core／lang-library 算違規，universal 不算」，理由逐字：
+ * 「universal 概念**拔掉 C++ 後依然存在**」。
+ *
+ * 🔴 **而那個理由是假的**——233 顆元件全是 `cpp:` scope，
+ * `cpp:if` 拔掉 C++ 之後不會依然存在。
+ *
+ * 🟢 動它的時機是「它豁免了 0 筆」的今天：**沒有數字要調**。
+ * ⚠️ 而護欄因此**變嚴**：將來任何元件身分出現在中立範圍都會被算到。
+ */
 export function allComponentIds(): string[] {
   return [...new Set(allComponentDefs().map((c) => c.conceptId))].sort()
-}
-
-/**
- * 只有**語言專屬**的元件身分（`lang-core` + `lang-library`）。
- *
- * 中立性護欄用這一組，因為 P9 談的是**語言獨立性**——「拔掉 C++，只裝
- * Python stub → 所有視圖仍啟動」。universal 概念（`print`／`if`／`count_loop`）
- * 拔掉 C++ 之後**依然存在**，kernel 認得它們不妨礙那條原則。
- *
- * （kernel 認得 universal 概念仍屬碎裂的一種，但那是**就近性護欄**的職責。）
- */
-export function languageSpecificComponentIds(): string[] {
-  return [
-    ...new Set(
-      allComponentDefs()
-        .filter((c) => c.layer !== 'universal')
-        .map((c) => c.conceptId),
-    ),
-  ].sort()
-}
-
-export function universalComponentIds(): string[] {
-  return [
-    ...new Set(
-      allComponentDefs()
-        .filter((c) => c.layer === 'universal')
-        .map((c) => c.conceptId),
-    ),
-  ].sort()
 }
 
 /**

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:cast_reinterpret",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:range_fill",
-  "layer": "lang-library",
   "abstractConcept": null,
   "properties": [
     {

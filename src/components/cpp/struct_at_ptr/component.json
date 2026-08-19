@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:struct_at_ptr",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {

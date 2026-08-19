@@ -1,6 +1,5 @@
 {
   "conceptId": "cpp:priority_queue_peek",
-  "layer": "lang-core",
   "abstractConcept": null,
   "properties": [
     {
