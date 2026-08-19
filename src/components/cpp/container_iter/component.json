@@ -11,10 +11,6 @@
     {
       "name": "which",
       "kind": "enum",
-      "values": [
-        "begin",
-        "end"
-      ],
       "default": "begin"
     }
   ],

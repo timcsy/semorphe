@@ -7,18 +7,6 @@
     {
       "name": "device",
       "kind": "enum",
-      "values": [
-        "led",
-        "button",
-        "buzzer",
-        "ultrasonic_trig",
-        "ultrasonic_echo",
-        "servo",
-        "analog_sensor",
-        "relay",
-        "motor",
-        "unknown"
-      ],
       "default": "unknown",
       "_default_why": "🔴 預設是 `unknown`（顯示成「零件」）而不是 `led`。**認不出來要看起來像認不出來**——一個預設成 LED 的欄位會讓「猜錯」與「沒猜」長得一樣，而那是第三十三條護欄在看的靜默回退。"
     },
@@ -35,11 +23,6 @@
     {
       "name": "style",
       "kind": "enum",
-      "values": [
-        "const",
-        "define",
-        "plain"
-      ],
       "default": "const",
       "_default_why": "🔴 **這一格記的是【學生原本怎麼寫的】，不是一個選項。**\n\n盲測語料（20 段隔離出題）裡腳位宣告的分佈：\n\n```\nconst int LED = 13;   19 筆\n#define LED 13        10 筆\nint LED = 13;          3 筆\n```\n\n⚠️ 不帶著它的話，學生貼進來的 `#define` 會在**開一次積木之後**被靜默改寫成 `const int`——而在 IDE 裡積木是會寫回 `.ino` 的。\n\n> **一個不記得原文形式的 round-trip，會在使用者沒有要求的時候改掉他的檔案。**"
     }

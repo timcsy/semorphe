@@ -242,25 +242,35 @@ function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDe
     }
 
     for (const sp of paramSpecs(raw)) {
-      // ② enum 必須有 values，且 default 必須在 values 裡
-      if (sp.kind === 'enum') {
-        if (!sp.values || sp.values.length === 0) {
-          out.push({ conceptId: c.conceptId, issue: `${sp.name} 是 enum 卻沒有 values` })
-        } else if (sp.default !== undefined && !sp.values.includes(sp.default)) {
-          out.push({
-            conceptId: c.conceptId,
-            issue: `${sp.name} 的 default ${JSON.stringify(sp.default)} 不在自己的 values（${sp.values.join('|')}）裡`,
-          })
-        }
-      }
-      // ③ enum 的 values 必須與積木下拉的選項一致——**雙重真相的老病**
+      // ② enum 的 default 必須是積木下拉裡**真的有**的選項
+      //
+      // 🔴 **2026-08-19（spec 144）改過一次，而改動讓它變強了。**
+      //
+      // 舊寫法比的是 `properties[].values`——而那一格是
+      // **`blockDef.args0[].options` 的投影**（options 帶 `[顯示文字, 值]`，
+      // 234 個選項裡 182 個顯示文字是 i18n key；values 只有值）。
+      // 於是舊的第 ② 條檢查的是「default 在**抄件**裡嗎」。
+      //
+      // ⚠️ 而 `values` 已經刪掉了（零消費者 ＋ 是投影），所以這裡直接問**真來源**。
+      //
+      // > **一個檢查如果比對的是抄件，它證明的是抄得對不對，
+      // > 不是那件事本身對不對。**
       const opts = dropdown.get(c.conceptId)?.get(sp.name)
-      if (sp.kind === 'enum' && opts && JSON.stringify(opts) !== JSON.stringify(sp.values ?? [])) {
+      if (sp.kind === 'enum' && opts && opts.length > 0
+          && sp.default !== undefined && !opts.includes(String(sp.default))) {
         out.push({
           conceptId: c.conceptId,
-          issue: `${sp.name} 的 values（${(sp.values ?? []).join('|')}）與積木下拉（${opts.join('|')}）不一致`,
+          issue: `${sp.name} 的 default ${JSON.stringify(sp.default)} 不在積木下拉裡（${opts.join('|')}）`,
         })
       }
+      // ⚠️ **原本的第 ③ 條（values 對得上下拉）已刪除**——它守的是一份
+      // **不該存在的抄件**，而它自己的註解就寫著那件事：
+      //
+      // > 「第 ③ 條目前在真實資料上是**由建構保證的綠**——那 29 筆 `values`
+      // > 本來就是從下拉抄出來的。**「綠」在這裡不代表檢查有效，
+      // > 只代表來源同一份。**」
+      //
+      // 抄件刪掉之後，那條檢查沒有對象了。見 `specs/144-drop-declared-enum-values/`。
     }
   }
   return out
@@ -272,35 +282,31 @@ describe('規格自身要自洽', () => {
     properties,
   })
 
-  it('★ 注入：default 不在 values 裡 → **必須被報出**', () => {
-    // 這不是假想的錯法。`cpp_malloc` 真的長這樣：下拉給 `int|float|double|char`，
-    // 而產生器的退路是 `int*`——因為 `type` 在那顆元件裡是**轉型型別**（指標）。
-    // 結果使用者從積木選 `int`，產出 `(int)malloc(…)`，不合法的 C++。
-    const hit = checkSpec([synthetic([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'c' }])])
-    expect(hit.filter((x) => x.conceptId === '__合成__')).toHaveLength(1)
-  })
-
-  it('★ 注入：enum 沒有 values → **必須被報出**', () => {
-    expect(checkSpec([synthetic([{ name: 'k', kind: 'enum' }])]).filter((x) => x.conceptId === '__合成__')).toHaveLength(1)
-  })
-
   it('★ 注入：參數沒規格化（純名字） → **必須被報出**', () => {
     const hit = checkSpec([{ conceptId: '__合成2__', properties: ['just_a_name'] as unknown as ParamSpec[] }])
     expect(hit.filter((x) => x.conceptId === '__合成2__')).toHaveLength(1)
   })
 
-  it('★ 注入：values 與積木下拉不一致 → **必須被報出**', () => {
-    // ⚠️ 這一支不能省。第 ③ 條（values 對得上下拉）目前在真實資料上是
-    // **由建構保證的綠**——那 29 筆 `values` 本來就是從下拉抄出來的。
-    // 「綠」在這裡不代表檢查有效，只代表來源同一份。
+  it('★ 注入：default 不在積木下拉裡 → **必須被報出**', () => {
+    // ⚠️ 這一支不能省。第 ② 條在真實資料上是綠的——而「綠」不代表檢查有效。
     //
-    // 用一顆**真的有下拉的元件**（`arithmetic` 的 `operator`）宣告錯的值域，
-    // 才證明得了這條有接上。
+    // 🔴 **它取代了兩支舊注入**（`default 不在 values 裡`／`enum 沒有 values`）
+    //    ——那兩條規則隨 `values` 一起刪掉了（spec 144）。而**舊的那支帶著一個
+    //    真的病歷，它不可以跟著消失**：
+    //
+    // > `cpp_malloc` 真的長這樣：下拉給 `int|float|double|char`，而產生器的
+    // > 退路是 `int*`——因為 `type` 在那顆元件裡是**轉型型別**（指標）。
+    // > 結果使用者從積木選 `int`，產出 `(int)malloc(…)`，**不合法的 C++**。
+    //
+    // 🟢 那個錯法**新規則照樣抓得到**，而且抓得更準：它比的是**真下拉**，
+    //    不是抄件。
+    //
+    // 🔴 用一顆**真的有下拉的元件**（`arithmetic` 的 `operator`）宣告一個
+    //    下拉裡沒有的 default，才證明得了它有接上。
     const hit = checkSpec([
-      { conceptId: 'cpp:arithmetic', properties: [{ name: 'operator', kind: 'enum', values: ['+'], default: '+' }] },
-    ]).filter((x) => x.conceptId === 'cpp:arithmetic')
-    expect(hit, '值域與積木下拉不一致沒被報出 → 第 ③ 條沒有接上').toHaveLength(1)
-    expect(hit[0].issue).toContain('與積木下拉')
+      { conceptId: 'cpp:arithmetic', properties: [{ name: 'operator', kind: 'enum', default: '@@@' }] },
+    ] as never).filter((x) => x.conceptId === 'cpp:arithmetic')
+    expect(hit, 'default 不在下拉裡卻沒被報出 → 第 ② 條沒有接上').toHaveLength(1)
   })
 
   it('★ 反向：一筆完全正確的規格 → **必須不被報出**', () => {

@@ -11,10 +11,6 @@
     {
       "name": "quantity",
       "kind": "enum",
-      "values": [
-        "humidity",
-        "temperature"
-      ],
       "default": "humidity"
     }
   ],

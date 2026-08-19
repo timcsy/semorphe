@@ -11,13 +11,6 @@
     {
       "name": "operator",
       "kind": "enum",
-      "values": [
-        "+=",
-        "-=",
-        "*=",
-        "/=",
-        "%="
-      ],
       "default": "+="
     }
   ],

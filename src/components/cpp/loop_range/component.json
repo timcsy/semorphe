@@ -6,13 +6,6 @@
     {
       "name": "var_type",
       "kind": "enum",
-      "values": [
-        "auto",
-        "int",
-        "double",
-        "char",
-        "string"
-      ],
       "default": "auto"
     },
     {

@@ -6,22 +6,11 @@
     {
       "name": "key_type",
       "kind": "enum",
-      "values": [
-        "int",
-        "std::string",
-        "char"
-      ],
       "default": "int"
     },
     {
       "name": "value_type",
       "kind": "enum",
-      "values": [
-        "int",
-        "float",
-        "double",
-        "std::string"
-      ],
       "default": "int"
     },
     {

@@ -6,23 +6,11 @@
     {
       "name": "type1",
       "kind": "enum",
-      "values": [
-        "int",
-        "double",
-        "string",
-        "char"
-      ],
       "default": "int"
     },
     {
       "name": "type2",
       "kind": "enum",
-      "values": [
-        "int",
-        "double",
-        "string",
-        "char"
-      ],
       "default": "int"
     },
     {

@@ -16,11 +16,6 @@
     {
       "name": "base_access",
       "kind": "enum",
-      "values": [
-        "public",
-        "protected",
-        "private"
-      ],
       "default": "public"
     }
   ],

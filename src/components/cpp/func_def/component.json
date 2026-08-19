@@ -11,16 +11,6 @@
     {
       "name": "return_type",
       "kind": "enum",
-      "values": [
-        "void",
-        "int",
-        "float",
-        "double",
-        "char",
-        "long long",
-        "string",
-        "bool"
-      ],
       "default": "void"
     }
   ],

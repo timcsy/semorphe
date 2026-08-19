@@ -6,23 +6,11 @@
     {
       "name": "type",
       "kind": "enum",
-      "values": [
-        "int*",
-        "float*",
-        "double*",
-        "char*"
-      ],
       "default": "int*"
     },
     {
       "name": "sizeof_type",
-      "kind": "enum",
-      "values": [
-        "int",
-        "float",
-        "double",
-        "char"
-      ]
+      "kind": "enum"
     }
   ],
   "children": {

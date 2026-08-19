@@ -18,9 +18,6 @@
     {
       "name": "init_style",
       "kind": "enum",
-      "values": [
-        "constructor"
-      ],
       "required": false
     }
   ],

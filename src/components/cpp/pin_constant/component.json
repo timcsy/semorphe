@@ -6,14 +6,6 @@
     {
       "name": "value",
       "kind": "enum",
-      "values": [
-        "HIGH",
-        "LOW",
-        "OUTPUT",
-        "INPUT",
-        "INPUT_PULLUP",
-        "A0"
-      ],
       "default": "HIGH"
     }
   ],

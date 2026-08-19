@@ -9,19 +9,11 @@
     },
     {
       "name": "operator",
-      "kind": "enum",
-      "values": [
-        "++",
-        "--"
-      ]
+      "kind": "enum"
     },
     {
       "name": "position",
-      "kind": "enum",
-      "values": [
-        "postfix",
-        "prefix"
-      ]
+      "kind": "enum"
     }
   ],
   "children": {

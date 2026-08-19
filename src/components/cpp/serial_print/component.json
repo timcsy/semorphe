@@ -11,10 +11,6 @@
     {
       "name": "newline",
       "kind": "enum",
-      "values": [
-        "true",
-        "false"
-      ],
       "default": "true"
     }
   ],

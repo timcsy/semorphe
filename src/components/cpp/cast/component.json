@@ -6,13 +6,6 @@
     {
       "name": "target_type",
       "kind": "enum",
-      "values": [
-        "int",
-        "float",
-        "double",
-        "char",
-        "long long"
-      ],
       "default": "int"
     }
   ],

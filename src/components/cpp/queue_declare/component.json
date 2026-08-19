@@ -6,12 +6,6 @@
     {
       "name": "type",
       "kind": "enum",
-      "values": [
-        "int",
-        "float",
-        "std::string",
-        "char"
-      ],
       "default": "int"
     },
     {

@@ -11,10 +11,6 @@
     {
       "name": "quantity",
       "kind": "enum",
-      "values": [
-        "status",
-        "address"
-      ],
       "default": "status"
     }
   ],

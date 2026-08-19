@@ -6,28 +6,6 @@
     {
       "name": "header",
       "kind": "enum",
-      "values": [
-        "stdio.h",
-        "stdlib.h",
-        "string.h",
-        "math.h",
-        "stdbool.h",
-        "iostream",
-        "vector",
-        "string",
-        "algorithm",
-        "map",
-        "set",
-        "stack",
-        "queue",
-        "cmath",
-        "cstring",
-        "climits",
-        "cstdio",
-        "cstdlib",
-        "cctype",
-        "cfloat"
-      ],
       "default": "iostream"
     },
     {

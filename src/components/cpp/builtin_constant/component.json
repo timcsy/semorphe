@@ -6,13 +6,6 @@
     {
       "name": "value",
       "kind": "enum",
-      "values": [
-        "true",
-        "false",
-        "EOF",
-        "NULL",
-        "nullptr"
-      ],
       "default": "NULL"
     }
   ],

@@ -6,13 +6,6 @@
     {
       "name": "func",
       "kind": "enum",
-      "values": [
-        "fmod",
-        "hypot",
-        "atan2",
-        "fmin",
-        "fmax"
-      ],
       "default": "fmod"
     }
   ],

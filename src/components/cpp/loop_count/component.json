@@ -10,11 +10,7 @@
     },
     {
       "name": "inclusive",
-      "kind": "enum",
-      "values": [
-        "FALSE",
-        "TRUE"
-      ]
+      "kind": "enum"
     }
   ],
   "children": {

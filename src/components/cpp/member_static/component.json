@@ -6,14 +6,6 @@
     {
       "name": "type",
       "kind": "enum",
-      "values": [
-        "int",
-        "float",
-        "double",
-        "char",
-        "bool",
-        "string"
-      ],
       "default": "int"
     },
     {
