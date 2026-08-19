@@ -1,4 +1,5 @@
 import { commentSyntax } from '../comment-syntax'
+import type { SyntaxGap } from '../diagnostics'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
@@ -160,6 +161,9 @@ export class Lifter {
           // 而沒有 ERROR 節點的那兩種形狀本來就會落到 `node.text`
           // ——這裡是**把有 ERROR 節點的那種統一過去**，不是新規則。
           r.metadata.rawCode = node.text
+          // 🔴 解析器指名的缺口——**有就帶，沒有就完全不提**（spec 143 FR-004）。
+          const gaps = this.collectSyntaxGaps(node)
+          if (gaps.length > 0) r.metadata.syntaxGaps = gaps
           return
         }
       }
@@ -238,6 +242,11 @@ export class Lifter {
       rawCode: node.text,
       confidence: 'raw_code',
       degradationCause: this.determineDegradationCause(node),
+      // 🔴 同上：有缺口才帶。⚠️ 這裡的節點**本身**就是降級的那一顆，
+      //    所以缺口一定屬於它，不會像上面那樣要先判斷「誰認領」。
+      ...(this.collectSyntaxGaps(node).length > 0
+        ? { syntaxGaps: this.collectSyntaxGaps(node) }
+        : {}),
       sourceRange: {
         startLine: node.startPosition.row,
         startColumn: node.startPosition.column,
@@ -351,6 +360,43 @@ export class Lifter {
    * 🔴 **所以那段落點邏輯不可以動。** 而合法程式不被誤標由
    * `tests/integration/audit-false-syntax-error.test.ts`（第四十三條）守著。
    */
+  /**
+   * **這個節點底下，解析器指名了哪些「該有而沒有」的東西。**
+   *
+   * ## 🔴 為什麼是 MISSING 而不是 ERROR
+   *
+   * 實測（spec 143 的出發點，而它把整個構想翻了過來）：
+   *
+   * ```
+   * whlie (x < 10) {…}   ERROR 節點【不含】"whlie"——它是合法識別字，
+   *                      解析器把它當運算式開頭，報的是後面的 MISSING「;」
+   * int x = 1            MISSING「;」@ 第 2 行第 12 欄        ← 有確定位置
+   * @@@ ###              ERROR="@@@ ### "                     ← 沒有 MISSING
+   * ```
+   *
+   * > **`ERROR` 說的是「這一段看不懂」，`MISSING` 說的是「這裡少了這個」
+   * > ——只有後者有位置，而位置正是學生要的東西。**
+   *
+   * ⚠️ 所以這裡**只收 MISSING**。看不懂的那些沒有缺口，
+   * 而它們仍然走既有的 `SYNTAX_ERROR` 診斷——**訊息一個字不變**。
+   *
+   * ## ⚠️ 回傳陣列，不合併
+   *
+   * 一個節點底下可能少好幾個東西。合併之後「哪裡」就消失了
+   * ——而「哪裡」正是這一刀加的全部。
+   */
+  private collectSyntaxGaps(node: AstNode): SyntaxGap[] {
+    const out: SyntaxGap[] = []
+    const walk = (n: AstNode): void => {
+      if (n.isMissing === true) {
+        out.push({ missing: n.type, line: n.startPosition.row, column: n.startPosition.column })
+      }
+      for (const c of n.children) walk(c)
+    }
+    walk(node)
+    return out
+  }
+
   private hasErrorDescendant(node: AstNode): boolean {
     if (node.type === 'ERROR') return true
     // 解析器算好的傳播旗標——比遞迴找 ERROR 更快，而且認得沒有 ERROR 節點的那一種

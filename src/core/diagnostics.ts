@@ -14,9 +14,41 @@ import type { SemanticNode } from './types'
  * `blockId` 傳的，改成 nodeId 廣播之後程式碼視圖才拿得到
  * （`history/051`）。**處方直接抄，不自己換一個判準。**
  */
+/**
+ * 一個**該有而沒有**的 token，以及它該出現的地方。
+ *
+ * ⚠️ `missing` **直接用解析器給的節點型別**（`;`／`)`／…），不預先列舉
+ * ——`experience.md`：「**列舉已知的，等於保證下一個會被漏掉**」。
+ */
+export interface SyntaxGap {
+  missing: string
+  line: number
+  column: number
+}
+
 export interface Diagnostic {
   /** 語義節點的 id——**唯一真實那一側**。各視圖自己把它投影成自己看得懂的位置。 */
   nodeId: string
+  /**
+   * **缺口該出現的原始碼位置**（0-based，與 tree-sitter 的 `startPosition` 一致）。
+   *
+   * 🔴 **為什麼 `nodeId` 不夠**：一個 MISSING 的 token（少掉的 `;`）
+   * **不在語義樹裡**——它是「本來該有而沒有的東西」。沒有節點，
+   * 就沒有 id 指得到它。
+   *
+   * > **一個「不存在的東西」的位置，只能用它【該出現的地方】來表達
+   * > ——而在一棵樹裡，那不是一個節點，是一個【縫】。**
+   *
+   * ⚠️ **選用**：只有「缺的東西沒有節點」時才有。其餘診斷照舊只用 `nodeId`。
+   *
+   * ⚠️ 而**兩個面板讀它的方式不一樣，那是刻意的**：
+   * 程式碼側把波浪縮到那一欄；積木側**只讀 `line`**（它沒有「欄」的概念）。
+   *
+   * 被否決的替代方案見 `specs/143-syntax-repair-hint/research.md` R1
+   * ——塞進 `params`（那是措辭用的）、用父節點的 `nodeId`
+   * （波浪會畫**整行甚至整個函式**，比不標更糟）。
+   */
+  at?: { line: number; column: number }
   severity: 'warning' | 'error'
   /**
    * **是哪一條規則**——身分，不是訊息。
@@ -215,15 +247,32 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
   const walk = (n: SemanticNode): void => {
     const cause = n.metadata?.degradationCause
     if (cause && DIAGNOSTIC_CAUSES.includes(cause)) {
-      out.push({
-        nodeId: n.id,
-        severity: 'error',
-        rule: 'SYNTAX_ERROR',
-        // ⚠️ **積木側用得到、程式碼側用不到**（波浪已經指在那一行上）
-        // ——那個不對稱正是兩個面板分開組裝的目的。
-        params: { snippet: String(n.metadata?.rawCode ?? '') },
-        source: 'parser',
-      })
+      const snippet = String(n.metadata?.rawCode ?? '')
+      const gaps = (n.metadata as { syntaxGaps?: SyntaxGap[] } | undefined)?.syntaxGaps ?? []
+      if (gaps.length === 0) {
+        out.push({
+          nodeId: n.id,
+          severity: 'error',
+          rule: 'SYNTAX_ERROR',
+          // ⚠️ **積木側用得到、程式碼側用不到**（波浪已經指在那一行上）
+          // ——那個不對稱正是兩個面板分開組裝的目的。
+          params: { snippet },
+          source: 'parser',
+        })
+      } else {
+        // 🔴 **一個缺口一則診斷，不合併。**
+        // 合併之後「哪裡」就消失了——而「哪裡」正是這一刀加的東西。
+        for (const g of gaps) {
+          out.push({
+            nodeId: n.id,
+            severity: 'error',
+            rule: 'SYNTAX_GAP',
+            params: { snippet, missing: g.missing },
+            at: { line: g.line, column: g.column },
+            source: 'parser',
+          })
+        }
+      }
     }
     for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
   }

@@ -45,6 +45,19 @@ export interface NodeMetadata {
   syntaxPreference?: string
   confidence?: ConfidenceLevel
   degradationCause?: DegradationCause
+  /**
+   * **解析器指名的「該有而沒有」**（spec 143）。
+   *
+   * ⚠️ **陣列而不是單值**：一個節點底下可能少好幾個東西，
+   * 而合併之後「哪裡」就消失了——「哪裡」正是這一格加的全部。
+   *
+   * 🔴 **有缺口才有這一格**。看不懂的那些（`@@@ ###`）沒有 MISSING 節點，
+   * 於是這一格不存在，而它們仍然走既有的 `SYNTAX_ERROR` 診斷
+   * ——**訊息一個字不變**（FR-004：找不到就完全不提）。
+   *
+   * 型別住在 `core/diagnostics.ts`（`SyntaxGap`），而這裡用結構型別避免循環相依。
+   */
+  syntaxGaps?: { missing: string; line: number; column: number }[]
   rawCode?: string
   sourceRange?: SourceRange
   /** Block ID from which this node was extracted (for block↔code highlight mapping) */

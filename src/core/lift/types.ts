@@ -39,6 +39,27 @@ export interface AstNode {
    * `include` 裡（見 `knowledge/experience.md`「刪掉欄位讓型別檢查去找」）。
    */
   hasError?: boolean
+  /**
+   * **這個節點是解析器補出來的「該有而沒有」**（tree-sitter 的 MISSING）。
+   *
+   * ```
+   * int x = 1 ⏎ int y = 2;   → MISSING「;」@ 第 2 行第 12 欄
+   * ```
+   *
+   * 🔴 **它是缺口位置的唯一來源**。ERROR 節點指的是「這一段看不懂」，
+   * 而 MISSING 指的是「**這裡少了這個東西**」——後者有確定的位置，前者沒有。
+   *
+   * ⚠️ 實測（spec 143 的出發點）：`whlie (x)` **不會**產生含 `whlie` 的 ERROR 節點
+   * ——它是合法識別字，於是報的是後面的 MISSING `;`。
+   * **所以「你是不是要打 while」拿不到那個 token，而「少了 `;`」拿得到位置。**
+   *
+   * ## ⚠️ 為什麼是選用的
+   *
+   * 理由與 `hasError` **逐字相同**：測試裡的假 AST 樹省略它，
+   * 而**它們描述的正是一棵沒有缺口的樹**——讀成 `undefined`／falsy
+   * 是語義正確的，不是靜默回退。
+   */
+  isMissing?: boolean
 }
 
 export type NodeLifter = (node: AstNode, ctx: LiftContext) => import('../types').SemanticNode | null
