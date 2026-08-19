@@ -52,7 +52,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.8.2'
+export const EXTENSION_VERSION = '0.8.3'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -169,6 +169,19 @@ export function buildManifest(): ExtensionManifest {
           title: '開啟積木面板',
           category: DISPLAY_NAME,
           icon: { light: 'assets/logo-light-theme.svg', dark: 'assets/logo-dark-theme.svg' },
+        },
+        // 🔴 **一個註冊了卻沒有宣告在這裡的指令，使用者按不到。**
+        //
+        // `semorphe.showDiagnostics` 從 spec 140 起就在 `extension.ts` 裡
+        // `registerCommand` 了，而它**不在指令面板上**——於是 2026-08-19
+        // 使用者回報同步異常時，唯一的現場紀錄（寫入歷程、鏡像對帳次數）
+        // **沒有人拿得到**。
+        //
+        // > **一個拿不到的儀器，與一個不存在的儀器，在出事的那天是同一件事。**
+        {
+          command: 'semorphe.showDiagnostics',
+          title: '顯示同步診斷',
+          category: DISPLAY_NAME,
         },
       ],
       configuration: {

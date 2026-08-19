@@ -46,7 +46,39 @@ export class BlocklyPanel implements ViewHost {
   private onNodeSelectCallback: ((nodeId: string | null) => void) | null = null
   private blockSpecRegistry: BlockSpecRegistry | null = null
   private currentRenderer: string = 'zelos'
-  private busUpdateInProgress = false
+  /**
+   * 🔴 **匯流排造成的積木變動，用【事件群組】標記——不用旗標。**
+   *
+   * ## 為什麼旗標是錯的（2026-08-19 實測）
+   *
+   * 這裡本來是 `busUpdateInProgress = true / finally = false`，而 Blockly 的
+   * 事件是**非同步**發的：
+   *
+   * ```js
+   * requestAnimationFrame(() => { setTimeout(fireNow, 0) })   // blockly_compressed.js
+   * ```
+   *
+   * 於是同步窗口結束時**一個事件都還沒到**，旗標早就關回 false 了：
+   *
+   * ```
+   * 同步窗口結束時，聽到的事件數：0
+   * 一個 tick 之後：            2   ← 兩則都看到旗標是 false
+   * ```
+   *
+   * 🔴 **那個守衛從蓋好的那天起就沒擋到過任何東西。** 症狀是每一次
+   * 「程式碼→積木」都被當成使用者編輯 → 反手寫回文件 → **多一個復原項**，
+   * 而使用者按 Cmd+Z 還原到的是一個他沒有做過的狀態。
+   *
+   * > **一個押在「事件同步送達」上的守衛，在事件非同步的系統裡
+   * > 與沒有守衛完全一樣——而它讀起來像有守衛。**
+   *
+   * ## 處置：讓守衛【跟著事件走】
+   *
+   * `Blockly.Events.setGroup()` 標在事件**建立**的當下，而群組會跟著事件
+   * 穿過佇列（實測：反序列化的兩則都帶群組，使用者手拉的那顆不帶）。
+   * 於是判斷不再問「現在是什麼時候」，而是問「**這則事件從哪來**」。
+   */
+  private static readonly BUS_GROUP = 'semorphe:bus-update'
   /**
    * 🔴 上一次從語義樹載入積木**失敗**了。
    *
@@ -108,7 +140,8 @@ export class BlocklyPanel implements ViewHost {
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
-      this.busUpdateInProgress = true
+      const prevGroup = Blockly.Events.getGroup()
+      Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)
       // 🔴 **先存一份，失敗就還原。**
       //
       // ⚠️ `setState` 拋錯時工作區是**載到一半**的——使用者看到的是一堆
@@ -164,15 +197,17 @@ export class BlocklyPanel implements ViewHost {
           this.workspace?.clear()
         }
       } finally {
-        this.busUpdateInProgress = false
+        // Sync blockMappings from render result so block→nodeId lookup works
+        const blockState = event.blockState as { blockMappings?: BlockMapping[] }
+        if (blockState.blockMappings) {
+          this._blockMappings = blockState.blockMappings
+        }
+        // Force render after setState — dynamic blocks may not auto-render
+        // ⚠️ **這一行必須在群組【裡面】**：它會 `initSvg`／`render` 每一顆積木，
+        //    而那些也會發事件。舊寫法把它放在 `finally` 之後，等於明著漏在守衛外。
+        this.forceRenderAllBlocks()
+        Blockly.Events.setGroup(prevGroup)
       }
-      // Sync blockMappings from render result so block→nodeId lookup works
-      const blockState = event.blockState as { blockMappings?: BlockMapping[] }
-      if (blockState.blockMappings) {
-        this._blockMappings = blockState.blockMappings
-      }
-      // Force render after setState — dynamic blocks may not auto-render
-      this.forceRenderAllBlocks()
     }
   }
 
@@ -223,14 +258,18 @@ export class BlocklyPanel implements ViewHost {
       }
       // 🔴 **使用者親手拉出一顆積木時，順帶長出它宣告的伴生積木。**
       //
-      // ⚠️ `busUpdateInProgress` 為真代表這是**反序列化**（程式碼→積木、
-      //    還原、載入存檔）——那些來源的伴生積木本來就在原文裡，
-      //    再長一顆就是憑空多出來的一行。漏掉這個判斷的症狀是：
-      //    **貼一次程式碼，`setup` 裡就多一份 `pinMode`。**
-      if (!this.busUpdateInProgress && event.type === Blockly.Events.CREATE) {
+      // ⚠️ 帶著匯流排群組的事件是**反序列化**（程式碼→積木、還原、載入存檔）
+      //    ——那些來源的伴生積木本來就在原文裡，再長一顆就是憑空多出來的一行。
+      //    漏掉這個判斷的症狀是：**貼一次程式碼，`setup` 裡就多一份 `pinMode`。**
+      //
+      // 🔴 這裡本來問的是一個旗標，而**那個旗標從來沒有為真過**
+      //    （Blockly 非同步發事件，見 `BUS_GROUP` 的檔頭）。
+      //    所以上面那個症狀不是假設——它一直在發生。
+      const fromBus = event.group === BlocklyPanel.BUS_GROUP
+      if (!fromBus && event.type === Blockly.Events.CREATE) {
         this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
       }
-      if (!this.busUpdateInProgress) {
+      if (!fromBus) {
         this.onChangeCallback?.()
       }
     })
