@@ -730,6 +730,24 @@ export interface ToolboxCategoryDef {
 export interface Target {
   id: string
   name: string
+  /**
+   * 這個目標提供哪些**能力**（capability）。
+   *
+   * 🔴 **省略 ＝ 提供全部**，不是「一個都不提供」。
+   *
+   * 非硬體目標（`cpp`／`c`／競程）沒有板子的概念，而它們**不得因為多了這一格
+   * 就開始少東西**——所以預設值的方向必須是「全都有」。
+   * ⚠️ 反過來設計的話，加這一格的當下三個既有目標會整批清空。
+   *
+   * 元件那一端宣告 `traits.needsCapability`（見 `component/traits.ts`）。
+   * 工具箱的可見集合 ＝ 課程清單 ∩ 這裡提供的。
+   *
+   * > **一個新的維度加進既有的宣告時，它的預設值要讓【沒宣告的人】
+   * > 保持原狀——否則加一格等於改全部。**
+   *
+   * 見 `specs/142-arduino-board-targets/data-model.md`。
+   */
+  provides?: readonly string[]
   /** 指向一個**既有的**課程清單 id——決定哪些概念看得到 */
   topic: string
   /** 指向一個**既有的**風格 id——決定產出什麼形狀 */

@@ -155,3 +155,47 @@ export function ioTraitOf(conceptId: string): { role?: string; style?: string } 
 export function isPlainDeclaration(conceptId: string): boolean {
   return componentTraits(conceptId)?.plainDeclaration === true
 }
+
+/**
+ * 這顆元件需要板子提供什麼**能力**才存在。
+ *
+ * ```
+ * cpp:touch_read   'touch'       只有有電容觸摸腳位的板子才有 touchRead
+ * cpp:pwm_write    'ledc-pwm'    只有有 LEDC 控制器的板子才有 ledcWrite
+ * cpp:digital_write  undefined   所有板子都有
+ * ```
+ *
+ * 🔴 **`undefined` ＝ 所有板子都有**——預設值的方向不可反。反過來的話，
+ * 每加一顆元件都要在三個地方登記，而那正是階段 6.5「加一顆元件 ＝
+ * 新增一個資料夾，零編輯」要治的病。
+ *
+ * ⚠️ 這與 `ioTraitOf` 是**同一個形狀**：`ioStyle` 說「我只在某個 I/O 風格的
+ * 世界裡有意義」，這裡說「我只在有某個硬體能力的板子上存在」。
+ * 兩者都是**性狀**——消費者問「這顆是什麼」，不問「這顆叫什麼」。
+ */
+export function capabilityOf(conceptId: string): string | undefined {
+  const cap = componentTraits(conceptId)?.needsCapability
+  return typeof cap === 'string' && cap !== '' ? cap : undefined
+}
+
+/**
+ * 這個目標提供得了那個能力嗎。
+ *
+ * ⚠️ **兩個「是」的來源不一樣，而它們都要通**：
+ *
+ * ```
+ * capability === undefined   這顆元件不挑板子      → 一律 true
+ * target.provides === undefined  這個目標不限縮    → 一律 true
+ * ```
+ *
+ * 🔴 消費者一律走這個函式，**不得自己讀 `provides`**——否則那兩條預設規則
+ * 會在每一個消費點各自被實作一次，而它們之中總有一個會寫反。
+ */
+export function targetProvides(
+  target: { provides?: readonly string[] },
+  capability: string | undefined,
+): boolean {
+  if (capability === undefined) return true
+  if (target.provides === undefined) return true
+  return target.provides.includes(capability)
+}

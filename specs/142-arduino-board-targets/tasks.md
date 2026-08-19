@@ -27,9 +27,9 @@ Phase 2 的 T001 護欄  →  Phase 3 的宣告  →  過濾點  →  反向測�
 
 ## Phase 2：Foundational（🔴 阻擋所有 user story）
 
-- [ ] T001 建立能力供給完備性護欄於 `tests/integration/audit-capability-supply.test.ts`——判準「每一個被宣告需要的能力，至少一個目標提供它」，硬性零；⚠️ **必須含兩支注入**：合成一顆需要不存在能力的元件 → **必須報**；合成一顆需要已提供能力的元件 → **必須不報**；★ 健康檢查錨在**掃到幾顆元件**（合成量），🔴 不可錨在違規數
-- [ ] T002 [P] 在 `src/core/types.ts` 的 `Target` 介面加 `provides?: readonly string[]`，附註解說明**省略 ＝ 提供全部**（FR-006：非硬體目標不得因此少東西）
-- [ ] T003 [P] 在 `src/core/component/traits.ts` 加 `capabilityOf(conceptId)` 與 `targetProvides(target, capability)` 兩個**唯一入口**，並在 `tests/unit/core/capability.test.ts` 各測正反兩向；🔴 消費者一律走這兩個函式，不得自己讀 `traits.needsCapability`（`concepts/性狀.md`：問性質要有唯一入口）
+- [X] T001 建立能力供給完備性護欄於 `tests/integration/audit-capability-supply.test.ts`——判準「每一個被宣告需要的能力，至少一個目標提供它」，硬性零；⚠️ **必須含兩支注入**：合成一顆需要不存在能力的元件 → **必須報**；合成一顆需要已提供能力的元件 → **必須不報**；★ 健康檢查錨在**掃到幾顆元件**（合成量），🔴 不可錨在違規數
+- [X] T002 [P] 在 `src/core/types.ts` 的 `Target` 介面加 `provides?: readonly string[]`，附註解說明**省略 ＝ 提供全部**（FR-006：非硬體目標不得因此少東西）
+- [X] T003 [P] 在 `src/core/component/traits.ts` 加 `capabilityOf(conceptId)` 與 `targetProvides(target, capability)` 兩個**唯一入口**，並在 `tests/unit/core/capability.test.ts` 各測正反兩向；🔴 消費者一律走這兩個函式，不得自己讀 `traits.needsCapability`（`concepts/性狀.md`：問性質要有唯一入口）
 
 **Checkpoint**：`npm test` 全綠，T001 的兩支注入各自紅／綠正確。
 
