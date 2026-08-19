@@ -17,8 +17,8 @@
     "constants": {
       "HIGH": 1,
       "LOW": 0,
-      "INPUT": 0,
       "OUTPUT": 1,
+      "INPUT": 0,
       "INPUT_PULLUP": 2,
       "D0": 16,
       "D1": 5,

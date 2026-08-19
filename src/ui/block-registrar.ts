@@ -1,4 +1,6 @@
 import { allVariableDropdownBlocks } from '../core/variable-dropdown-blocks'
+import { allBoardConstantDropdowns, boardConstantOptions } from '../core/board-constant-dropdown-blocks'
+import type { BoardPinModel } from '../core/types'
 import { conceptsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
@@ -256,6 +258,45 @@ export class BlockRegistrar {
 
   // ─── Private: registration methods ───
 
+  /** 目前這塊板子——⚠️ **提供者模式**，與 `execution-controller` 的 `currentBoard` 同一個形狀。 */
+  private currentBoard?: () => BoardPinModel | undefined
+
+  /** 由 `app.ts` 接上。沒接 ＝ 沒有板子 ＝ 下拉維持宣告裡那份。 */
+  setBoardProvider(provider: () => BoardPinModel | undefined): void {
+    this.currentBoard = provider
+  }
+
+  /**
+   * 讓一個**已經由 JSON 建好**的下拉，改成問目前這塊板子。
+   *
+   * 🔴 **原本那份選項留著當「沒有板子」的答案**——不是備援，是**另一種目標的真相**
+   * （`cpp`／`c`／競程／不指定板子的 `arduino`）。所以這裡**不複製**它。
+   *
+   * ⚠️ 而選項是**惰性**的（開的時候才算），所以**換目標不必重註冊積木**。
+   */
+  private bindBoardConstantDropdown(block: Blockly.Block, fieldName: string): void {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const field = block.getField(fieldName) as any
+    if (!field) return
+    const declared = field.menuGenerator_
+    const self = this
+    field.menuGenerator_ = function () {
+      const names = boardConstantOptions(self.currentBoard?.())
+      if (!names) return typeof declared === 'function' ? declared.call(this) : declared
+      return names.map((n) => [n, n])
+    }
+    // 🔴 **不認得的值要留著**——學生在 Uno 下放了 `A6`，切到 C3 之後
+    //    那顆積木【仍然是 A6】。一個會把它不認得的值換掉的下拉，
+    //    等於在使用者沒看的時候改掉他的程式。
+    field.doClassValidation_ = function (this: any, newValue: string) {
+      if (newValue === null || newValue === undefined) return null
+      const options = this.getOptions(false)
+      if (!options.some((o: string[]) => o[1] === newValue)) options.push([newValue, newValue])
+      return newValue
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+  }
+
   private createOpenDropdown(optionsGenerator: () => Array<[string, string]>): Blockly.FieldDropdown {
     const field = new Blockly.FieldDropdown(optionsGenerator)
     ;(field as any).doClassValidation_ = function (this: any, newValue: string) {
@@ -270,6 +311,7 @@ export class BlockRegistrar {
   }
 
   private registerBlocksFromSpecs(): void {
+    const self = this
     const specs = this.blockSpecRegistry.getAll()
     for (const spec of specs) {
       const blockDef = spec.blockDef
@@ -277,9 +319,16 @@ export class BlockRegistrar {
       if (!blockType) continue
       if (Blockly.Blocks[blockType]) continue
 
+      const boardFields = allBoardConstantDropdowns()
+        .filter((d) => d.blockType === blockType)
+        .map((d) => d.field)
+
       Blockly.Blocks[blockType] = {
         init: function (this: Blockly.Block) {
           this.jsonInit(blockDef)
+          // 🔴 **腳位常數的下拉列的是【目前這塊板子】的常數**（spec 148）
+          //    ——名單由語言套件宣告，這一層不認識任何具體的目標名字。
+          for (const field of boardFields) self.bindBoardConstantDropdown(this, field)
         },
       }
     }

@@ -1,4 +1,5 @@
 import { declareVariableDropdownBlock } from '../../../core/variable-dropdown-blocks'
+import { declareBoardConstantDropdown } from '../../../core/board-constant-dropdown-blocks'
 import { CPP_STRING_AT_INPUTS } from '../block-input-names'
 import { declareCommentSyntax } from '../../../core/comment-syntax'
 import { cppCommentSyntax } from '../core/comment-syntax'
@@ -53,6 +54,10 @@ export function registerCppLanguage(): void {
     valueInput: CPP_STRING_AT_INPUTS.value[0],
     colour: '#4C97FF',
   })
+
+  // 🔴 **腳位常數的下拉列的是【目前這塊板子】的具名常數**（spec 148）
+  //    ——八塊板子的 `A0` 是五個不同的值，而 D1 mini 還多九個 `D` 系名字。
+  declareBoardConstantDropdown({ blockType: 'cpp_pin_constant', field: 'VALUE' })
 }
 
 /**

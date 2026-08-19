@@ -140,6 +140,9 @@ export class App {
     this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
+    // 🔴 **與執行那側同一份來源**（`currentBoard: () => this.currentTarget.board`）
+    //    ——兩邊如果各查各的，遲早會有一邊落後。
+    this.blockRegistrar.setBoardProvider(() => this.currentTarget.board)
     this.localeLoader = new LocaleLoader()
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()

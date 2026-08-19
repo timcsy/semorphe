@@ -32,10 +32,6 @@
             [
               "INPUT_PULLUP",
               "INPUT_PULLUP"
-            ],
-            [
-              "A0",
-              "A0"
             ]
           ]
         }
