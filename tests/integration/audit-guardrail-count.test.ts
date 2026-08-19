@@ -41,17 +41,49 @@ import { join } from 'node:path'
 
 const DIR = join(process.cwd(), 'tests/integration')
 
-/** 一個測試檔算不算護欄——**看它用不用護欄的基礎設施**，不看檔名。 */
-const MARKERS = ['loadBaseline', 'assertRatchet', 'writeBaseline']
+/**
+ * 一個測試檔算不算護欄。
+ *
+ * ## 🔴 這個判準被改了【三次】，而三次都是同一個病
+ *
+ * ```
+ * 第一版  「用不用棘輪基礎設施」        漏 17 支——硬性零的護欄不需要棘輪
+ * 第二版  ＋「檔名叫 audit-*」          漏 4 支——它們用自己的基線機制且不叫 audit
+ * 第三版  ＋「有沒有 GENERATE_* 開關」  ← 本版
+ * ```
+ *
+ * > **一個「看它有沒有用 X」的判準，等於宣告「不用 X 的那些不算」
+ * > ——而那句話你並沒有想說。**
+ *
+ * ⚠️ 而第二版仍然錯，正是因為我只補了**當時看到的那一批**
+ * ——`experience.md`：「**列舉已知的，等於保證下一個會被漏掉**」。
+ *
+ * ## 所以這一版問的是【性質】不是【形式】
+ *
+ * 一條護欄的共同性質是：**它有一個被記錄下來的期望值**，
+ * 而那個期望值有辦法重新產生。三種形式各自表達它：
+ *
+ * ```
+ * 棘輪       loadBaseline／assertRatchet／writeBaseline
+ * 自建基線   GENERATE_BASELINE／GENERATE_INVENTORY／…（可重新產生的開關）
+ * 檔名慣例   audit-*（硬性零的那些，期望值就是「零」，不需要檔案）
+ * ```
+ *
+ * ⚠️ **三個都要**。而如果第四種形式出現，這裡會再漏一次
+ * ——**那時要改的是「怎麼認出護欄」這件事本身，不是再加一個 OR**。
+ */
+const RATCHET_MARKERS = ['loadBaseline', 'assertRatchet', 'writeBaseline']
+
+function isGuardrail(file: string): boolean {
+  if (file.startsWith('audit-')) return true
+  const src = readFileSync(join(DIR, file), 'utf8')
+  if (RATCHET_MARKERS.some((m) => src.includes(m))) return true
+  // 「有一個可以重新產生的期望值」——自建基線那一類的簽名
+  return /GENERATE_[A-Z_]+/.test(src)
+}
 
 function guardrailFiles(): string[] {
-  return readdirSync(DIR)
-    .filter((f) => f.endsWith('.test.ts'))
-    .filter((f) => {
-      const src = readFileSync(join(DIR, f), 'utf8')
-      return MARKERS.some((m) => src.includes(m))
-    })
-    .sort()
+  return readdirSync(DIR).filter((f) => f.endsWith('.test.ts')).filter(isGuardrail).sort()
 }
 
 function allTestFiles(): string[] {
@@ -65,19 +97,27 @@ describe('護欄：護欄的條數要有一個地方說了算', () => {
       .toBeGreaterThan(50)
   })
 
-  it('★ 注入：一個不含任何護欄標記的檔案，不得被算成護欄', () => {
+  it('★ 注入：一個不含任何護欄標記、也不叫 audit-* 的檔案，不得被算成護欄', () => {
     // 合成輸入——⚠️ 不用任何真實檔名，見自我否證聲明
     const fake = 'import { describe, it } from "vitest"\ndescribe("x", () => { it("y", () => {}) })'
-    expect(MARKERS.some((m) => fake.includes(m)), '判定會把普通測試算成護欄').toBe(false)
+    expect(RATCHET_MARKERS.some((m) => fake.includes(m)) || 'plain-thing.test.ts'.startsWith('audit-'),
+      '判定會把普通測試算成護欄').toBe(false)
+  })
+
+  it('★ 注入：一條**硬性零**的護欄（不用棘輪）必須被算進去', () => {
+    // 🔴 第一版漏的正是這一類。合成一個「叫 audit-* 而完全不含棘輪標記」的名字。
+    expect(RATCHET_MARKERS.some((m) => 'describe("x")'.includes(m)), '前提：這段不含棘輪標記').toBe(false)
+    expect('audit-synthetic-hard-zero.test.ts'.startsWith('audit-'),
+      '硬性零護欄靠檔名被認出來——判準少了這一半就漏掉 17 支').toBe(true)
   })
 
   it('報出目前的條數與清單', () => {
     const files = guardrailFiles()
     // 🔴 **這是這條護欄的產出**：一個可以被引用的數字，而它從程式碼算出來。
-    console.log(`\n護欄：${files.length} 條（依「用不用護欄基礎設施」判定，不看檔名）`)
     const odd = files.filter((f) => !f.startsWith('audit-'))
+    console.log(`\n護欄：${files.length} 條（檔名 audit-* ${files.length - odd.length} ＋ 靠期望值認出的 ${odd.length}）`)
     if (odd.length > 0) {
-      console.log(`  ⚠️ 其中 ${odd.length} 條不叫 audit-*：${odd.join('、')}`)
+      console.log(`  ⚠️ 不叫 audit-* 的：${odd.join('、')}`)
       console.log('     （命名是慣例不是規範——見檔頭「本護欄不檢測什麼」）')
     }
     expect(files.length).toBeGreaterThan(0)
