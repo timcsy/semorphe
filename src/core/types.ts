@@ -762,6 +762,23 @@ export interface Target {
    */
   provides?: readonly string[]
   /**
+   * 這個目標把某個標頭**換成別的名字**——`<WiFi.h>` → `<ESP8266WiFi.h>`。
+   *
+   * 🔴 **它與 C 目標那兩支換名字的函式是【三個不同的問題】**（spec 150）：
+   *
+   * ```
+   * toCHeader        這個標頭在 C 裡【叫什麼】        cmath → math.h
+   * cIoHeaderFor     C 裡【什麼標頭】滿足這個需求      iostream → stdio.h
+   * headerAliases    【這塊板子】上它叫什麼           WiFi.h → ESP8266WiFi.h
+   * ```
+   *
+   * ⚠️ spec 146 就是在這裡踩過一次：
+   * **兩個函式如果回傳同一種型別，很容易被合成一個——而它們答的是不同的問題。**
+   *
+   * 🟢 **省略 ＝ 不換任何標頭**，所以既有的目標一個字都不變。
+   */
+  headerAliases?: Readonly<Record<string, string>>
+  /**
    * 這個目標的**板子模型**（腳位上界 ＋ 具名常數）——spec 145。
    *
    * 🔴 **它與 `provides` 是兩件事**：`provides` 是「有沒有這個能力」（布林集合），

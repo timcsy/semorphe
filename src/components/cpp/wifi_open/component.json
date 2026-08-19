@@ -26,5 +26,9 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
+  },
+  "traits": {
+    "needsCapability": "wifi",
+    "_needsCapability_why": "🔴 **AVR 的核心裡沒有 WiFi 函式庫**——Uno／Nano 上這顆積木拿得到也跑不了（spec 150 查證：`arduino/ArduinoCore-avr` 的 `libraries/` 只有 EEPROM／HID／SPI／SoftwareSerial／Wire）。\\n\\n⚠️ 而**標頭在有 WiFi 的板子之間還會不一樣**：ESP32 是 `<WiFi.h>`，ESP8266 是 `<ESP8266WiFi.h>`——那一半由目標的 `headerAliases` 處理，不在這裡。"
   }
 }

@@ -42,6 +42,8 @@ export interface GeneratorContext {
   programScaffold?: ProgramScaffold
   /** Scaffold configuration (cognitive level, manual imports, pinned items) */
   scaffoldConfig?: ScaffoldConfig
+  /** 目前目標的標頭替換表（spec 150）——⚠️ 省略 ＝ 不換。 */
+  headerAliases?: Readonly<Record<string, string>>
 }
 
 // ─── Language module registry ───
@@ -51,6 +53,8 @@ let globalTemplateGenerator: TemplateGenerator | null = null
 let globalDependencyResolver: DependencyResolver | null = null
 let globalProgramScaffold: ProgramScaffold | null = null
 let globalScaffoldConfig: ScaffoldConfig | null = null
+/** 目前目標的標頭替換表——⚠️ `null` ＝ 不換任何標頭（既有目標的行為）。 */
+let globalHeaderAliases: Readonly<Record<string, string>> | null = null
 
 /** Set the JSON-driven template generator engine */
 export function setTemplateGenerator(tg: TemplateGenerator): void {
@@ -70,6 +74,17 @@ export function setProgramScaffold(scaffold: ProgramScaffold): void {
 /** Set the scaffold configuration (cognitive level, etc.) */
 export function setScaffoldConfig(config: ScaffoldConfig): void {
   globalScaffoldConfig = config
+}
+
+/**
+ * 目前目標的標頭替換表（spec 150）。
+ *
+ * 🔴 **`undefined` 要真的清掉**——換到一個沒有替換表的目標時，
+ * 上一塊板子的替換**不得留著**。（`setScaffoldConfig` 那一支沒有這個問題，
+ * 因為它的參數是必填。）
+ */
+export function setHeaderAliases(aliases: Readonly<Record<string, string>> | undefined): void {
+  globalHeaderAliases = aliases ?? null
 }
 
 export function registerLanguage(language: string, factory: LanguageGeneratorFactory): void {
@@ -121,6 +136,7 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
+  if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
   wireTemplateFallbacks(ctx)
   return generateNode(tree, ctx).trim()
 }
@@ -161,6 +177,7 @@ export function generateCodeWithMapping(
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
+  if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
   wireTemplateFallbacks(ctx)
   const code = generateNode(tree, ctx).trim()
   return { code, mappings }

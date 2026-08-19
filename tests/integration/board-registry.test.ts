@@ -126,10 +126,24 @@ describe('spec 147 · US3：能力逐塊查證', () => {
     expect(byId('esp32c3').provides).toContain('ledc-pwm')
   })
 
-  it('🔴 兩塊 ESP8266 兩個都沒有——`ledcWrite` 是 ESP32 的 API', () => {
+  it('🔴 兩塊 ESP8266 沒有 ESP32 才有的能力——`ledcWrite`／`touchRead` 都是 ESP32 的 API', () => {
+    // 🔄 **spec 150 改寫了這條的【判準】，而不是它的【意圖】。**
+    //
+    // 原文是 `toEqual([])`——「provides 必須是空的」。而那比意圖強：
+    // 意圖是「**不得宣告 ESP32 才有的能力**」，
+    // 而 ESP8266 **有它自己的能力**（WiFi 就是這兩塊板子的賣點）。
+    //
+    // > **一條把「今天剛好是空的」寫進判準的護欄，
+    // > 會在集合第一次合理長大的時候擋住它。**
+    //
+    // ⚠️ 判準改成逐項點名，所以它**仍然會紅**：把 `ledc-pwm` 加進去就紅。
     for (const id of ['wemos-d1-mini', 'nodemcu-esp8266'] as const) {
-      expect(byId(id).provides, `${id} 宣告了 ESP32 才有的能力`).toEqual([])
+      for (const esp32Only of ['ledc-pwm', 'touch'] as const) {
+        expect(byId(id).provides, `${id} 宣告了 ESP32 才有的 ${esp32Only}`).not.toContain(esp32Only)
+      }
     }
+    // ★ 反向錨點：而它們【有】自己的能力——否則上面可能只是整個空的
+    expect(byId('wemos-d1-mini').provides, 'ESP8266 板子少了它的賣點 WiFi').toContain('wifi')
   })
 })
 

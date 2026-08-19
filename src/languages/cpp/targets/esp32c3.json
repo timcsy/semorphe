@@ -5,7 +5,8 @@
   "style": "google",
   "entryShell": "none",
   "provides": [
-    "ledc-pwm"
+    "ledc-pwm",
+    "wifi"
   ],
   "board": {
     "name": "ESP32-C3 Supermini",

@@ -4,7 +4,9 @@
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",
-  "provides": [],
+  "provides": [
+    "wifi"
+  ],
   "board": {
     "name": "Wemos D1 mini",
     "source": "esp8266/Arduino variants/d1_mini/pins_arduino.h ＋ variants/generic/common.h",
@@ -34,5 +36,8 @@
       "SDA": 4,
       "SCL": 5
     }
+  },
+  "headerAliases": {
+    "<WiFi.h>": "<ESP8266WiFi.h>"
   }
 }

@@ -380,6 +380,30 @@ export class BlockRegistrar {
       if (!blockType) continue
       if (Blockly.Blocks[blockType]) continue
 
+      // 🔴 **JSON 的 `field_dropdown` 會【靜默丟掉】不在清單裡的值**（spec 150 實測）：
+      //    學生貼 `#include <WiFi.h>`，而 `cpp_include` 的清單只有 20 個標頭
+      //    ——Blockly 把它換成第一項 `stdio.h`，**而沒有任何訊息**。
+      //
+      // > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
+      //
+      // 🟢 `createOpenDropdown` 早就有正解（不認得就把值加進選項），
+      //    而它原本只有命令式註冊的那幾顆在用。這裡讓**所有 JSON 下拉**都拿到。
+      const preserveUnknown = (block: Blockly.Block) => {
+        for (const input of block.inputList) {
+          for (const field of input.fieldRow) {
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            const f = field as any
+            if (!f.menuGenerator_ || typeof f.doClassValidation_ !== 'function') continue
+            f.doClassValidation_ = function (this: any, newValue: string) {
+              if (newValue === null || newValue === undefined) return null
+              const options = this.getOptions(false)
+              if (!options.some((o: string[]) => o[1] === newValue)) options.push([newValue, newValue])
+              return newValue
+            }
+          }
+        }
+      }
+
       const boardFields = allBoardConstantDropdowns()
         .filter((d) => d.blockType === blockType)
         .map((d) => d.field)
@@ -387,6 +411,8 @@ export class BlockRegistrar {
       Blockly.Blocks[blockType] = {
         init: function (this: Blockly.Block) {
           this.jsonInit(blockDef)
+          // 🔴 **不認得的值要留著，不得靜默換掉**（spec 150）
+          preserveUnknown(this)
           // 🔴 **腳位常數的下拉列的是【目前這塊板子】的常數**（spec 148）
           //    ——名單由語言套件宣告，這一層不認識任何具體的目標名字。
           for (const field of boardFields) self.bindBoardConstantDropdown(this, field)

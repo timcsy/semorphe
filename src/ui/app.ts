@@ -12,7 +12,7 @@ import type { SemanticNode } from '../core/types'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
-import { setDependencyResolver, setProgramScaffold, setScaffoldConfig } from '../core/projection/code-generator'
+import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases } from '../core/projection/code-generator'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
@@ -187,6 +187,8 @@ export class App {
     this.scaffold = new CppScaffold(registry)
     setProgramScaffold(this.scaffold)
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
+    // 🔴 **標頭替換跟著目標走**（spec 150）——`<WiFi.h>` 在 ESP8266 上叫別的名字。
+    setHeaderAliases(this.currentTarget.headerAliases)
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
 
@@ -613,6 +615,8 @@ export class App {
         if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
         const newDepth = this.getScaffoldDepth()
         setScaffoldConfig({ scaffoldDepth: newDepth })
+        // ⚠️ **換到沒有替換表的目標時要真的清掉**——否則上一塊板子的替換會留著。
+        setHeaderAliases(target.headerAliases)
         this.syncController?.setTopic(topic, branches)
         this.reloadBlockSpecsForTopic()
         this.updateToolbox()

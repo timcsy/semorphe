@@ -6,7 +6,8 @@
   "entryShell": "none",
   "provides": [
     "touch",
-    "ledc-pwm"
+    "ledc-pwm",
+    "wifi"
   ],
   "board": {
     "name": "ESP32 NodeMCU",
