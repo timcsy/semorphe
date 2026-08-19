@@ -78,8 +78,8 @@ Phase 2 的 T001 護欄  →  Phase 3 的宣告  →  過濾點  →  反向測�
 
 - [X] T014 更新 `tests/baselines/` 與 `toolbox-snapshot` 基線；🔴 **快照若變動，必須逐項指名是哪一顆、為什麼**，不得只重產（`build-guardrail` 第 7 步）
 - [X] T015 [P] `npx tsc --noEmit` 過；`npm test` 全綠
-- [ ] T016 🔴 **開瀏覽器人工驗收**——照 [quickstart.md](quickstart.md) §③ 的四條（含**第 4 條保護性**：ESP32 下拉的積木在切到 Uno 之後**必須還在畫布上**）；⚠️ 用 `skills/manual-acceptance` 的三段式，**壞的長什麼樣不可省**
-- [ ] T017 知識反流：`knowledge/history/` 新增一則（能力住在 traits ＋「護欄判準不必改，要改的是我們對它在量什麼的理解」）、`knowledge/experience.md` 記蒸餾後的教訓、`knowledge/vision.md` 6.11 第 4 項打勾並在「下一步」開一筆「屬性的候選值由目標提供」（US3 的去處）
+- [X] T016 🔴 **開瀏覽器人工驗收**——照 [quickstart.md](quickstart.md) §③ 的四條（含**第 4 條保護性**：ESP32 下拉的積木在切到 Uno 之後**必須還在畫布上**）；⚠️ 用 `skills/manual-acceptance` 的三段式，**壞的長什麼樣不可省**
+- [X] T017 知識反流：`knowledge/history/` 新增一則（能力住在 traits ＋「護欄判準不必改，要改的是我們對它在量什麼的理解」）、`knowledge/experience.md` 記蒸餾後的教訓、`knowledge/vision.md` 6.11 第 4 項打勾並在「下一步」開一筆「屬性的候選值由目標提供」（US3 的去處）
 
 ---
 
