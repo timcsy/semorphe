@@ -327,7 +327,11 @@ languages/{lang}/
       —— 設計見 [draft/執行器直接持有五個面板](draft/2026-08-11-執行器直接持有五個面板.md)
 - [ ] **C2 資訊軸（邊）**——⚠️ **延後的理由（「今天沒有消費者」）已經失效兩次**。
       第一個真消費者是**語義診斷系統**，不是原本寫的 2D 面板。
-- [ ] **`provides`／`reference` 兩格**（目標的完整設計還缺的兩格）
+- [ ] **`reference` 那一格**（目標的完整設計還缺的最後一格）
+      - [x] 🟢 `provides`（spec `142`）· [x] 🟢 `board`（spec `145`）
+      - [x] 🟢 **`requires` 缺的那一維**（spec `146`）：I/O 標頭跟著 `io_style` 走
+        → [096](history/096-標頭跟著風格走而兩個問題差點被合成一個.md)
+        ⚠️ C 目標的產出從**編不過**變成 `gcc -x c` **編得過**
       —— ⚠️ 而 `requires` 缺一維：`cpp:print` 宣告 `<iostream>`，**而 printf 產出要 `<stdio.h>`**。
       設計脈絡 [draft/C 和 C++ 難分難捨](draft/2026-08-13-C和C++難分難捨.md)（**in-flight**，不退休）。
 - [x] 🟡 **`TypeError: … reading 'indexOf'`**（Blockly 載入積木時，只在 Theia 出現）
