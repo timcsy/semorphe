@@ -277,9 +277,69 @@ export class BlocklyPanel implements ViewHost {
         // ─────────────────────────────────────────────────────────────
         this.workspace?.clearUndo()
         this.hasRendered = true
-        Blockly.Events.setRecordUndo(prevRecord)
+        // ⚠️ **`recordUndo` 不在這裡還原**——見 `endRecordUndoWindow`：
+        //    有 mutator 的積木，形狀更新被 Blockly 延到下一幀才做。
+        this.endRecordUndoWindow(prevRecord)
         Blockly.Events.setGroup(prevGroup)
       }
+    }
+  }
+
+  /**
+   * 🔴 **把「不記復原」的窗口延到 Blockly 的下一幀之後才關。**
+   *
+   * ## 為什麼同步關掉不夠
+   *
+   * 2026-08-19 的時間軸（0.8.7，使用者逐字確認第 6 則是「按了 Cmd+Z」）：
+   *
+   * ```
+   * 5｜ +816ms｜🔄 重畫｜重畫前復原堆疊 0 項
+   * 6｜+2893ms｜▫️ create cpp_var_declare｜頂層 2 顆   ← Cmd+Z 按在這裡
+   * ```
+   *
+   * **重畫之後堆疊是 0，而 Cmd+Z 仍然造得出一顆積木**
+   * ——所以有東西在重畫**之後**才進了堆疊。
+   *
+   * `setRecordUndo(false)` 蓋得住**同步窗口裡建立**的事件，而
+   * `cpp_var_declare` 這種有 mutator 的積木，它的形狀更新會被 Blockly
+   * 延到下一幀才做，那時窗口早就關了。
+   *
+   * ⚠️ 而復原一個 **mutation 變更**會讓積木**重建輸入**——掛在上面的
+   * 初始值子積木就掉了。使用者看到的 `int x = 1;` 變成 `int x;`
+   * 正是這個形狀，而積木在重建的過程中脫落成頂層的孤兒。
+   *
+   * ## 為什麼是「延後關窗」而不是「延後清空」
+   *
+   * 先寫的是延後 `clearUndo()`，**而護欄當場紅了**：那一刻使用者若剛好動了
+   * 積木，他的動作會被一起清掉——**清空分不出那一項是誰放的**。
+   *
+   * > **要擋一件「稍後才發生」的事，蓋章要蓋在【它被造出來的當下】；
+   * > 事後清掃分不出哪一項是你要清的。**
+   *
+   * 🟢 `recordUndo` 正是創建時蓋的章。窗口只延一幀（約 16 ms），
+   * 而人在那之內不可能完成一個手勢。
+   *
+   * ⚠️ **重入**：期間又來一次重畫的話，**後來的那次說了算**——用 token 比對，
+   * 否則先排的那個會提早把窗口關掉。
+   */
+  private recordUndoToken = 0
+
+  private endRecordUndoWindow(prev: boolean): void {
+    this.recordUndoToken += 1
+    const mine = this.recordUndoToken
+    const close = (): void => {
+      // 期間又重畫過 → 那一次會自己關，這裡不能搶著關。
+      if (mine !== this.recordUndoToken) return
+      Blockly.Events.setRecordUndo(prev)
+      const n = this.workspace?.getUndoStack().length ?? 0
+      // 🔴 **會出聲**：真的清到東西時記進時間軸。沒有它，
+      //    「修好了」與「從來沒壞過」長得一樣。
+      if (n > 0) diagNote(`🧹 關窗時堆疊仍有 ${n} 項——那不該發生`)
+    }
+    try {
+      requestAnimationFrame(() => setTimeout(close, 0))
+    } catch {
+      setTimeout(close, 0)
     }
   }
 

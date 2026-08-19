@@ -272,4 +272,45 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     // 正向錨點：畫過之後【必須】解除，否則這個旗標等於永久停用寫回
     expect(panel.isStateStale, '畫過了還算殘 → 積木永遠寫不回程式碼').toBe(false)
   })
+
+  // ── 🔴 第三層：重畫【之後】那一幀內建立的事件也不得可復原 ────────
+  //
+  // 使用者逐字確認（2026-08-19）第 6 則是「按了 Cmd+Z」，而時間軸顯示
+  // 重畫時堆疊是 0——**所以有東西在重畫之後才進來**。
+  // 有 mutator 的積木，其形狀更新被 Blockly 延到下一幀。
+  //
+  // ⚠️ **代價寫在這裡**：這一幀（約 16 ms）內使用者若剛好動了積木，
+  //    那一步會失去復原。這是刻意的——而它比「事後清空」好，因為清空
+  //    **分不出那一項是誰放的**（第一版就是這樣寫的，這支測試當場紅）。
+  it('重畫之後那一幀內建立的事件，不得進復原堆疊', async () => {
+    const { panel } = makePanel()
+    const ws = panel.getWorkspace()!
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    // 同步窗口【之後】才動手——模擬「被延到下一幀」的那些事件。
+    ws.newBlock(PROBE)
+    await tick()
+    expect(ws.getAllBlocks(false).length, '（錨點）積木真的建出來了').toBe(2)
+    expect(ws.getUndoStack().length,
+      '重畫之後那一幀建立的事件仍可復原 → Cmd+Z 會重放一個不屬於這個世界的動作').toBe(0)
+  })
+
+  it('窗口關掉之後，使用者的動作【必須】重新可復原', async () => {
+    const { panel } = makePanel()
+    const ws = panel.getWorkspace()!
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()          // ← 讓窗口關掉
+    ws.newBlock(PROBE)
+    await tick()
+    // 🔴 沒有這一條的話，「永遠不記復原」也能讓上面那支通過
+    //    ——而那等於把積木的復原整個關掉。
+    expect(ws.getUndoStack().length, '窗口沒關 → 積木的復原被永久停用').toBeGreaterThan(0)
+  })
 })
