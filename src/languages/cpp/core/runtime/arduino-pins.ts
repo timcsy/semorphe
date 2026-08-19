@@ -31,6 +31,7 @@
  * 而**那正是最難查的那種錯**。
  */
 import type { BoardPinModel } from '../../../../core/types'
+import unoTarget from '../../targets/arduino-uno.json'
 import type { ExecutionContext } from '../../../../interpreter/executor-registry'
 
 /**
@@ -45,37 +46,23 @@ import type { ExecutionContext } from '../../../../interpreter/executor-registry
  * 見 `specs/145-board-pin-model/research.md` R1。
  */
 /** 每塊板子都有的：電位與腳位模式。⚠️ 它們不是腳位，是**環境提供的具名常數**。 */
-const COMMON_CONSTANTS = { HIGH: 1, LOW: 0, INPUT: 0, OUTPUT: 1, INPUT_PULLUP: 2 } as const
-
-/** Uno／Nano：0–13 數位、14–19 類比（A0–A5）。 */
-export type { BoardPinModel }
-
-export const UNO_BOARD: BoardPinModel = {
-  name: 'Arduino Uno',
-  maxPin: 19,
-  constants: { ...COMMON_CONSTANTS, A0: 14, A1: 15, A2: 16, A3: 17, A4: 18, A5: 19 },
-}
-
-/** Nano 與 Uno 同一顆 ATmega328P。⚠️ 而驗收**逐塊斷言**，不從 Uno 推論。 */
-export const NANO_BOARD: BoardPinModel = { ...UNO_BOARD, name: 'Arduino Nano' }
 
 /**
- * ESP32：GPIO 0–39。
+ * 🔴 **這裡不再放板子資料。**
  *
- * ⚠️ **34–39 只能輸入**（沒有輸出驅動器）——而**這一刀不做那一層**：
- * 它需要一個「方向能力」的模型，而今天沒有需求（憲法第一條）。
- * 🔴 所以如果將來要擋 34–39 的輸出，**那是一條新的需求，不是這裡的 bug**。
+ * spec 147 之前，`UNO_BOARD`／`NANO_BOARD`／`ESP32_BOARD` 住在這個模組，
+ * **而產品讀的是 `targets/*.json`**——護欄測的是一份沒有人在用的副本。
+ * 於是兩個錯誤活了下來（「ESP32 沒有 `A0`」、「Nano ＝ Uno」）。
  *
- * ⚠️ 而它**沒有 `A0`**——ESP32 的類比腳位不叫那個名字。
+ * > **一份宣告如果是另一份的投影，它就沒有資格當真相**（spec 144 同一課）。
+ *
+ * 板子資料的唯一真相：`src/languages/cpp/targets/*.json` 的 `board`。
+ * 這裡只留**機制**。
  */
-export const ESP32_BOARD: BoardPinModel = {
-  name: 'ESP32',
-  maxPin: 39,
-  constants: { ...COMMON_CONSTANTS },
-}
+export type { BoardPinModel }
 
-/** 不指定板子的 `arduino` 目標維持今天的行為（Uno）。 */
-export const DEFAULT_BOARD = UNO_BOARD
+/** 不指定板子的 `arduino` 目標維持今天的行為（Uno）——⚠️ 讀的是同一份 JSON。 */
+export const DEFAULT_BOARD = unoTarget.board as unknown as BoardPinModel
 
 /** 一個目標的板子模型——⚠️ **省略 ＝ 這個目標沒有板子**（`cpp`／`c`／競程）。 */
 export function boardOf(target: { board?: BoardPinModel } | undefined): BoardPinModel | undefined {
@@ -139,12 +126,22 @@ export function boardIn(ctx: { board?: BoardPinModel }): BoardPinModel {
   return ctx.board ?? DEFAULT_BOARD
 }
 
+/** 這塊板子有沒有這支腳——🔴 **問集合，不問上界**（見 `BoardPinModel.pins`）。 */
+export function hasPin(board: BoardPinModel, pin: number): boolean {
+  return board.pins.some((r) => pin >= r.from && pin <= r.to)
+}
+
+/** 給人看的腳位清單：`0–19, 21–23, 25–27, 32–39`。 */
+export function describePins(board: BoardPinModel): string {
+  return board.pins.map((r) => (r.from === r.to ? String(r.from) : `${r.from}–${r.to}`)).join(', ')
+}
+
 function requirePinOn(n: number, board: BoardPinModel): number {
   const pin = Math.trunc(n)
-  if (!Number.isFinite(pin) || pin < 0 || pin > board.maxPin) {
+  if (!Number.isFinite(pin) || !hasPin(board, pin)) {
     // 🔴 **訊息要說得出是哪一塊板子**——一個裸數字讓學生無從判斷
     //    「是我打錯了」還是「我選錯板子了」。
-    throw new Error(`腳位號碼 ${n} 超出範圍——${board.name} 只有 0–${board.maxPin}`)
+    throw new Error(`腳位號碼 ${n} 不在 ${board.name} 上——它有 ${describePins(board)}`)
   }
   return pin
 }
@@ -158,9 +155,6 @@ export function stateOf(ctx: ExecutionContext, pin: number): PinState {
   }
   return s
 }
-
-/** ⚠️ 保留給還沒接上板子的呼叫端——**新程式碼請用 `board.maxPin`**。 */
-export const MAX_PIN = DEFAULT_BOARD.maxPin
 
 /**
  * 腳位常數的值——🔴 **只在「這個名字沒有被宣告」時才用得上。**

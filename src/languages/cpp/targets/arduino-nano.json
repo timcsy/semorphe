@@ -7,7 +7,13 @@
   "provides": [],
   "board": {
     "name": "Arduino Nano",
-    "maxPin": 19,
+    "source": "arduino/ArduinoCore-avr variants/eightanaloginputs/pins_arduino.h（boards.txt: nano.build.variant）",
+    "pins": [
+      {
+        "from": 0,
+        "to": 21
+      }
+    ],
     "constants": {
       "HIGH": 1,
       "LOW": 0,
@@ -19,7 +25,12 @@
       "A2": 16,
       "A3": 17,
       "A4": 18,
-      "A5": 19
+      "A5": 19,
+      "A6": 20,
+      "A7": 21,
+      "LED_BUILTIN": 13,
+      "SDA": 18,
+      "SCL": 19
     }
   }
 }

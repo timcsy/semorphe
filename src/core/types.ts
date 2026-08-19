@@ -853,8 +853,28 @@ export interface BlockArgOverride {
 export interface BoardPinModel {
   /** 給人看的名字——⚠️ 錯誤訊息要說得出是哪一塊板子。 */
   name: string
-  /** 腳位號碼的上界（含）。 */
-  maxPin: number
+  /**
+   * 這塊板子**真的有哪些腳位**——閉區間的清單。
+   *
+   * 🔴 **不是一個上界。** ESP32 的號碼跑到 39，**而它沒有 GPIO 20／24／28–31**
+   * ——用上界判定的話 `digitalWrite(30, HIGH)` 會靜靜地過（30 < 39），
+   * 而那支腳在真板子上根本不存在。
+   *
+   * > **一個用「最大值」表達的集合，會把中間的洞一起收進來。**
+   *
+   * ⚠️ ESP8266 的 `A0` 是 17，而它的數位腳只到 16——所以 17 也在集合裡，
+   * 它是**類比輸入**不是數位腳（方向那一層今天沒有模型，見 spec 147 明確排除）。
+   */
+  pins: readonly { readonly from: number; readonly to: number }[]
+  /**
+   * 這份資料**抄自哪裡**——上游 variant 檔案的路徑。
+   *
+   * 🔴 **spec 147 的存在理由**：前一版的「ESP32 沒有 `A0`」與「Nano ＝ Uno」
+   * 都是**憑印象填的**，而其中一個還長出了一條護欄把它固定住。
+   *
+   * > **一個沒附來源的事實主張，長出護欄之後就變成不可質疑的。**
+   */
+  source: string
   /** 這塊板子提供的具名常數。⚠️ 沒有的名字要**查不到**，不是給別的板子的值。 */
   constants: Readonly<Record<string, number>>
 }

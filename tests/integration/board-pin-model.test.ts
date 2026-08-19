@@ -19,7 +19,20 @@
  * 先斷言那段程式**真的執行完並產出可觀察的結果**。
  */
 import { describe, it, expect } from 'vitest'
-import { requirePin, boardOf, UNO_BOARD, ESP32_BOARD } from '../../src/languages/cpp/core/runtime/arduino-pins'
+import { requirePin, boardOf } from '../../src/languages/cpp/core/runtime/arduino-pins'
+import type { BoardPinModel } from '../../src/core/types'
+import unoTarget from '../../src/languages/cpp/targets/arduino-uno.json'
+import esp32Target from '../../src/languages/cpp/targets/esp32.json'
+
+/**
+ * 🔴 **spec 147：板子資料只有一份，而這裡讀的就是那一份。**
+ *
+ * 之前這支測的是 `arduino-pins.ts` 裡的 TS 常數，**而產品讀的是這些 JSON**
+ * ——於是護欄守著一份沒有人在用的副本，兩個錯誤（「ESP32 沒有 `A0`」、
+ * 「Nano ＝ Uno」）在它眼皮底下活了下來。
+ */
+const UNO_BOARD = unoTarget.board as unknown as BoardPinModel
+const ESP32_BOARD = esp32Target.board as unknown as BoardPinModel
 
 describe('spec 145 · US2：🔴 越界仍然要出聲', () => {
   it('★ 錨點：合法的腳位【不】拋錯', () => {
@@ -52,10 +65,24 @@ describe('spec 145 · US1：ESP32 的學生用得了他板子上的腳位', () =
     expect(() => requirePin(25, UNO_BOARD), 'Uno 沒擋住它沒有的腳位').toThrow()
   })
 
-  it('🔴 具名常數由板子提供——ESP32 沒有 `A0`', () => {
+  it('🔴 具名常數由板子提供——同一個 `A0`，兩塊板子兩個值', () => {
+    // 🔴 **spec 147 更正**：這一條原本斷言「ESP32 沒有 A0」，**而那是假的**
+    //    （`variants/nodemcu-32s/pins_arduino.h`：`static const uint8_t A0 = 36;`）。
+    //    它想守的事仍然真——只是舉錯了例子，見下一支。
     expect(UNO_BOARD.constants.A0, 'Uno 的 A0 應該是 14').toBe(14)
-    expect(ESP32_BOARD.constants.A0,
-      'ESP32 給了一個 Uno 的 A0 值 → 那是「回錯的值」不是「查不到」').toBeUndefined()
+    expect(ESP32_BOARD.constants.A0, 'ESP32 的 A0 應該是 36').toBe(36)
+    expect(ESP32_BOARD.constants.A0).not.toBe(UNO_BOARD.constants.A0)
+  })
+
+  it('🔴 一塊板子【真的沒有】的名字要查不到——ESP32 沒有 `A1`／`A2`', () => {
+    // `nodemcu-32s` 定義了 A0, A3–A7, A10–A19，**而 A1／A2／A8／A9 沒有定義**。
+    // > 一個不存在的名字，最好的處置是讓它【看起來就是不存在】。
+    for (const missing of ['A1', 'A2', 'A8', 'A9'] as const) {
+      expect(ESP32_BOARD.constants[missing],
+        `ESP32 給了 ${missing} 一個值 → 那是「回錯的值」不是「查不到」`).toBeUndefined()
+    }
+    // ★ 反向錨點：Uno 上這兩個名字【存在】——否則上面可能只是常數表整個是空的
+    expect(UNO_BOARD.constants.A1, 'Uno 的 A1 應該是 15').toBe(15)
   })
 
   it('★ 反向：兩塊板子共有的常數要一樣', () => {

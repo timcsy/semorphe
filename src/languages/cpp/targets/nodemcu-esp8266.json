@@ -1,0 +1,40 @@
+{
+  "id": "nodemcu-esp8266",
+  "name": "NodeMCU (ESP8266)",
+  "topic": "arduino",
+  "style": "google",
+  "entryShell": "none",
+  "provides": [],
+  "board": {
+    "name": "NodeMCU (ESP8266)",
+    "source": "esp8266/Arduino variants/nodemcu/pins_arduino.h ＋ variants/generic/common.h",
+    "pins": [
+      {
+        "from": 0,
+        "to": 17
+      }
+    ],
+    "constants": {
+      "HIGH": 1,
+      "LOW": 0,
+      "INPUT": 0,
+      "OUTPUT": 1,
+      "INPUT_PULLUP": 2,
+      "D0": 16,
+      "D1": 5,
+      "D2": 4,
+      "D3": 0,
+      "D4": 2,
+      "D5": 14,
+      "D6": 12,
+      "D7": 13,
+      "D8": 15,
+      "D9": 3,
+      "D10": 1,
+      "A0": 17,
+      "LED_BUILTIN": 2,
+      "SDA": 4,
+      "SCL": 5
+    }
+  }
+}

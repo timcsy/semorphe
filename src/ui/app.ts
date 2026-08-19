@@ -31,6 +31,11 @@ import arduinoTargetDef from '../languages/cpp/targets/arduino.json'
 import arduinoUnoTargetDef from '../languages/cpp/targets/arduino-uno.json'
 import arduinoNanoTargetDef from '../languages/cpp/targets/arduino-nano.json'
 import esp32TargetDef from '../languages/cpp/targets/esp32.json'
+import esp32c3TargetDef from '../languages/cpp/targets/esp32c3.json'
+import esp32s3TargetDef from '../languages/cpp/targets/esp32s3.json'
+import esp32s3CamTargetDef from '../languages/cpp/targets/esp32s3-cam.json'
+import wemosD1MiniTargetDef from '../languages/cpp/targets/wemos-d1-mini.json'
+import nodemcuEsp8266TargetDef from '../languages/cpp/targets/nodemcu-esp8266.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
@@ -157,6 +162,13 @@ export class App {
     this.targetRegistry.register(arduinoUnoTargetDef as Target)
     this.targetRegistry.register(arduinoNanoTargetDef as Target)
     this.targetRegistry.register(esp32TargetDef as Target)
+    // 🔴 **順序是設計出來的**（由簡到繁），所以這裡不用 `import.meta.glob`
+    //    ——檔名排序「不是任何人設計的」（`lift-branches.ts:26` 已記過這一課）。
+    this.targetRegistry.register(esp32c3TargetDef as Target)
+    this.targetRegistry.register(esp32s3TargetDef as Target)
+    this.targetRegistry.register(esp32s3CamTargetDef as Target)
+    this.targetRegistry.register(wemosD1MiniTargetDef as Target)
+    this.targetRegistry.register(nodemcuEsp8266TargetDef as Target)
 
     // Default target → topic and branches (only root level enabled for simplest starting point)
     this.currentTarget = this.targetRegistry.get('cpp')!

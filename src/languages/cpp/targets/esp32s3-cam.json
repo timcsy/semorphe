@@ -1,0 +1,54 @@
+{
+  "id": "esp32s3-cam",
+  "name": "ESP32-S3 WROOM CAM",
+  "topic": "arduino",
+  "style": "google",
+  "entryShell": "none",
+  "provides": [
+    "touch",
+    "ledc-pwm"
+  ],
+  "board": {
+    "name": "ESP32-S3 WROOM CAM",
+    "source": "espressif/arduino-esp32 variants/esp32s3/pins_arduino.h（IDE 選 ESP32S3 Dev Module）",
+    "pins": [
+      {
+        "from": 0,
+        "to": 21
+      },
+      {
+        "from": 26,
+        "to": 48
+      }
+    ],
+    "constants": {
+      "HIGH": 1,
+      "LOW": 0,
+      "INPUT": 0,
+      "OUTPUT": 1,
+      "INPUT_PULLUP": 2,
+      "A0": 1,
+      "A1": 2,
+      "A2": 3,
+      "A3": 4,
+      "A4": 5,
+      "A5": 6,
+      "A6": 7,
+      "A7": 8,
+      "A8": 9,
+      "A9": 10,
+      "A10": 11,
+      "A11": 12,
+      "A12": 13,
+      "A13": 14,
+      "A14": 15,
+      "A15": 16,
+      "A16": 17,
+      "A17": 18,
+      "A18": 19,
+      "A19": 20,
+      "SDA": 8,
+      "SCL": 9
+    }
+  }
+}
