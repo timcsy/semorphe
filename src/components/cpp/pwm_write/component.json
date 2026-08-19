@@ -18,5 +18,9 @@
     "lift": "./lift.ts"
   },
   "_lift_why": "🔴 **`ledcWrite` 同名同形吃兩個世代**——ESP32 core 3.0 移除了 `ledcSetup`／`ledcAttachPin`，而 `ledcWrite` 的第一個參數**由通道改成腳位**（查證：Espressif 官方遷移指南）。\n\n```\n2.x   ledcWrite(0, 128)   ← 0 是通道\n3.x   ledcWrite(4, 128)   ← 4 是腳位\n```\n\n⚠️ **那個差別在程式碼裡看不出來**，所以**不做成兩顆身分**——一顆身分吃兩版。\n🟢 而執行期分得出來：查那個數字有沒有被登記成通道。**那不是猜，是查程式自己說過的話。**",
-  "_execute_why": "🟢 走**既有的**腳位狀態（`arduino-pins.ts`），與 `analogWrite` 同一條路——⚠️ **不另寫一套**（兩份會漂移，而漂移的方向不會有人注意到）。\n\n🔴 而「第一格是通道還是腳位」由 `arduino-pwm.ts` 的 `resolveTarget` 查程式自己說過的話決定。⚠️ **設定過通道卻沒接腳位時丟錯**——那是一個真的錯誤，不該安靜地寫到腳位 x。"
+  "_execute_why": "🟢 走**既有的**腳位狀態（`arduino-pins.ts`），與 `analogWrite` 同一條路——⚠️ **不另寫一套**（兩份會漂移，而漂移的方向不會有人注意到）。\n\n🔴 而「第一格是通道還是腳位」由 `arduino-pwm.ts` 的 `resolveTarget` 查程式自己說過的話決定。⚠️ **設定過通道卻沒接腳位時丟錯**——那是一個真的錯誤，不該安靜地寫到腳位 x。",
+  "traits": {
+    "needsCapability": "ledc-pwm"
+  },
+  "_traits_why": "**LEDC 是 ESP32 的硬體 PWM 控制器**，AVR 的板子沒有它。⚠️ 這一顆與 `analogWrite` 不同：`analogWrite` 是**每塊板子都有**的抽象，而 `ledc*` 直接操作那個控制器。🔴 能力用【功能】命名不用板子命名——`esp32-only` 會把「誰有」寫進能力的名字裡，而下一塊有這個控制器的板子會逼出 `esp32-or-xxx-only`。"
 }

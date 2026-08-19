@@ -10,6 +10,7 @@
  * 與「使用者有沒有入口拿到它」是兩件事，混在一起量會**低估**。
  */
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { filterByTarget } from '../../src/core/component/traits'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
 import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -55,6 +56,11 @@ function typeOf(proj: BlockProjectionJSON): string {
 export function loadToolbox(
   extraConcepts: ConceptDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
+  /**
+   * 用哪個目標的能力過濾（spec 142）。
+   * ⚠️ **省略 ＝ 不過濾**——既有的每一條護欄都不帶它，行為必須一格不變。
+   */
+  target?: { provides?: readonly string[] },
 ): LoadedToolbox {
   // ⚠️ **走 production 的同一個組裝函式。**
   //
@@ -93,7 +99,9 @@ export function loadToolbox(
   ]
 
   // ⚠️ 全部概念可見——見檔頭
-  const visibleConcepts = new Set(allConcepts.map((c) => c.conceptId))
+  const allVisible = new Set(allConcepts.map((c) => c.conceptId))
+  // 🔴 走 production 的**同一個**過濾函式，不在這裡重寫一份會漂移的判準。
+  const visibleConcepts = target ? filterByTarget(allVisible, target) : allVisible
 
   const built = buildToolbox({
     blockSpecRegistry: registry,

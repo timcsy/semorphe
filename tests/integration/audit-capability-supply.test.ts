@@ -56,21 +56,25 @@
 import { describe, it, expect } from 'vitest'
 import { componentManifests } from '../../src/core/component/registry'
 import type { Target } from '../../src/core/types'
-import cppTarget from '../../src/languages/cpp/targets/cpp.json'
-import cTarget from '../../src/languages/cpp/targets/c.json'
-import cppCompetitiveTarget from '../../src/languages/cpp/targets/cpp-competitive.json'
-import arduinoTarget from '../../src/languages/cpp/targets/arduino.json'
 
 /**
- * 產品裡註冊的所有目標。
+ * 產品裡所有的目標——**glob 直讀，不列清單**。
  *
- * ⚠️ **這份清單與 `app.ts` 的註冊是雙重真相**——而它今天沒有更好的取法：
- * 註冊發生在 `App` 的建構子裡，測試不建 `App` 就拿不到。
- * 🔴 若有人加了目標而忘了加進這裡，症狀是**這條護欄誤報**（它會說某個能力
- * 沒有人提供）——**誤報而不是漏報**，那是可接受的方向。
+ * ⚠️ 第一版在這裡手寫了四個 import，而它是**雙重真相**（`app.ts` 註冊的是另一份）。
+ * 症狀當場出現：spec 142 加了三塊板子之後，護欄仍然回報「有限縮的目標：0/4」
+ * ——**它看不到新目標，於是它守的那件事悄悄變成空的**。
+ *
+ * > **一份要跟著另一份走的清單，遲早會停在它被寫下的那一天。**
+ *
+ * 🟢 判準與 `component/registry.ts` 的檔頭同一條：
+ * **這個東西有沒有人要「查」它？** 沒有（一整批資料）→ glob 直讀。
  */
+const TARGET_FILES = import.meta.glob('../../src/languages/cpp/targets/*.json', {
+  eager: true,
+}) as Record<string, { default: Target }>
+
 function allTargets(): Target[] {
-  return [cppTarget, cTarget, cppCompetitiveTarget, arduinoTarget] as Target[]
+  return Object.values(TARGET_FILES).map((m) => m.default)
 }
 
 interface Need { conceptId: string; capability: string }

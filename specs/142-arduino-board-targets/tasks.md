@@ -42,19 +42,19 @@ Phase 2 的 T001 護欄  →  Phase 3 的宣告  →  過濾點  →  反向測�
 
 ### 測試先寫
 
-- [ ] T004 [US1] 在 `tests/integration/board-target-visibility.test.ts` 寫**會失敗**的測試：`arduino-uno` 的工具箱**不含** `cpp_touch_read`／`cpp_pwm_attach`／`cpp_pwm_setup`／`cpp_pwm_bind`／`cpp_pwm_write`；`esp32` **含**這 5 顆；⚠️ `arduino-nano` **逐顆斷言**不得從 uno 推論（`experience.md`「一叢違規不一定同一個根因」）
-- [ ] T005 [P] [US1] 在 `tests/integration/board-target-visibility.test.ts` 加**反向**測試：`cpp-beginner`／`c-beginner`／`cpp-competitive` 三個目標的可見集合**完全不變**（FR-006）；並加一支**正向錨點**——`arduino-uno` 仍看得到 `cpp_pin_mode`（證明不是整個 Arduino 分類都消失了）
+- [X] T004 [US1] 在 `tests/integration/board-target-visibility.test.ts` 寫**會失敗**的測試：`arduino-uno` 的工具箱**不含** `cpp_touch_read`／`cpp_pwm_attach`／`cpp_pwm_setup`／`cpp_pwm_bind`／`cpp_pwm_write`；`esp32` **含**這 5 顆；⚠️ `arduino-nano` **逐顆斷言**不得從 uno 推論（`experience.md`「一叢違規不一定同一個根因」）
+- [X] T005 [P] [US1] 在 `tests/integration/board-target-visibility.test.ts` 加**反向**測試：`cpp-beginner`／`c-beginner`／`cpp-competitive` 三個目標的可見集合**完全不變**（FR-006）；並加一支**正向錨點**——`arduino-uno` 仍看得到 `cpp_pin_mode`（證明不是整個 Arduino 分類都消失了）
 
 ### 宣告
 
-- [ ] T006 [P] [US1] 在 `src/components/cpp/touch_read/component.json` 加 `traits.needsCapability: "touch"` ＋ `_traits_why`（說明它是**板子的硬體能力**，不是語法性質，與 `ioStyle` 同形）
-- [ ] T007 [P] [US1] 在 `src/components/cpp/pwm_attach`／`pwm_setup`／`pwm_bind`／`pwm_write` 四顆的 `component.json` 加 `traits.needsCapability: "ledc-pwm"` ＋ `_traits_why`
-- [ ] T008 [P] [US1] 新增 `src/languages/cpp/targets/arduino-uno.json`（`provides: []`）、`arduino-nano.json`（`provides: []`）、`esp32.json`（`provides: ["touch","ledc-pwm"]`）——三者 `topic` 都是 `arduino`，🔴 **不新增三份課程清單**（research.md R1）
-- [ ] T009 [US1] 在 `src/ui/app.ts` 註冊那三個目標（既有的 `arduino` **保留**，`provides` 省略 ＝ 提供全部，它是「不指定板子」的意思）
+- [X] T006 [P] [US1] 在 `src/components/cpp/touch_read/component.json` 加 `traits.needsCapability: "touch"` ＋ `_traits_why`（說明它是**板子的硬體能力**，不是語法性質，與 `ioStyle` 同形）
+- [X] T007 [P] [US1] 在 `src/components/cpp/pwm_attach`／`pwm_setup`／`pwm_bind`／`pwm_write` 四顆的 `component.json` 加 `traits.needsCapability: "ledc-pwm"` ＋ `_traits_why`
+- [X] T008 [P] [US1] 新增 `src/languages/cpp/targets/arduino-uno.json`（`provides: []`）、`arduino-nano.json`（`provides: []`）、`esp32.json`（`provides: ["touch","ledc-pwm"]`）——三者 `topic` 都是 `arduino`，🔴 **不新增三份課程清單**（research.md R1）
+- [X] T009 [US1] 在 `src/ui/app.ts` 註冊那三個目標（既有的 `arduino` **保留**，`provides` 省略 ＝ 提供全部，它是「不指定板子」的意思）
 
 ### 過濾
 
-- [ ] T010 [US1] 在 `src/ui/app.ts` 的 `callBuildToolbox()`（:526）把 `visibleConcepts` 再過一次能力篩選；🔴 **不得改 `getVisibleConcepts()`**——它同時餵給 `markOutOfScopeBlocks`（:517），改在那裡會讓**畫布上的既有積木變灰**，而那不是本刀的需求（research.md R4）
+- [X] T010 [US1] 在 `src/ui/app.ts` 的 `callBuildToolbox()`（:526）把 `visibleConcepts` 再過一次能力篩選；🔴 **不得改 `getVisibleConcepts()`**——它同時餵給 `markOutOfScopeBlocks`（:517），改在那裡會讓**畫布上的既有積木變灰**，而那不是本刀的需求（research.md R4）
 
 **Checkpoint**：T004／T005 由紅轉綠，其餘測試不得退步。
 
@@ -66,9 +66,9 @@ Phase 2 的 T001 護欄  →  Phase 3 的宣告  →  過濾點  →  反向測�
 **獨立測試**：lift 一段程式碼，看語義樹。
 🔴 **這是這一刀最容易做錯的方向**——把「拿不到」做成「認不得」。
 
-- [ ] T011 [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 測：**在 `arduino-uno` 目標下** lift `void loop(){ int v = touchRead(T0); }`，語義樹**含** `cpp:touch_read`、**不含** `raw_code`／`raw_expression`；⚠️ **先寫正向錨點**（證明真的 lift 到東西）再寫負向
-- [ ] T012 [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 加 round-trip：generate 回去**一字不差**，且 generate 兩次文字相同
-- [ ] T013 [P] [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 加一支**守住未來**的測試：`cpp:touch_read` 的 lift **不讀任何目標／能力**——⚠️ 它守的是「有人把過濾往上游搬」，而那是本刀最自然的錯法（research.md R5、`build-guardrail` 第 9 步「正確的輸入證明它不亂報」）
+- [X] T011 [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 測：**在 `arduino-uno` 目標下** lift `void loop(){ int v = touchRead(T0); }`，語義樹**含** `cpp:touch_read`、**不含** `raw_code`／`raw_expression`；⚠️ **先寫正向錨點**（證明真的 lift 到東西）再寫負向
+- [X] T012 [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 加 round-trip：generate 回去**一字不差**，且 generate 兩次文字相同
+- [X] T013 [P] [US2] 在 `tests/integration/board-target-lift-unaffected.test.ts` 加一支**守住未來**的測試：`cpp:touch_read` 的 lift **不讀任何目標／能力**——⚠️ 它守的是「有人把過濾往上游搬」，而那是本刀最自然的錯法（research.md R5、`build-guardrail` 第 9 步「正確的輸入證明它不亂報」）
 
 **Checkpoint**：US1 ＋ US2 都綠 ⟹ **MVP 完成**。
 
@@ -76,8 +76,8 @@ Phase 2 的 T001 護欄  →  Phase 3 的宣告  →  過濾點  →  反向測�
 
 ## Phase 5：Polish
 
-- [ ] T014 更新 `tests/baselines/` 與 `toolbox-snapshot` 基線；🔴 **快照若變動，必須逐項指名是哪一顆、為什麼**，不得只重產（`build-guardrail` 第 7 步）
-- [ ] T015 [P] `npx tsc --noEmit` 過；`npm test` 全綠
+- [X] T014 更新 `tests/baselines/` 與 `toolbox-snapshot` 基線；🔴 **快照若變動，必須逐項指名是哪一顆、為什麼**，不得只重產（`build-guardrail` 第 7 步）
+- [X] T015 [P] `npx tsc --noEmit` 過；`npm test` 全綠
 - [ ] T016 🔴 **開瀏覽器人工驗收**——照 [quickstart.md](quickstart.md) §③ 的四條（含**第 4 條保護性**：ESP32 下拉的積木在切到 Uno 之後**必須還在畫布上**）；⚠️ 用 `skills/manual-acceptance` 的三段式，**壞的長什麼樣不可省**
 - [ ] T017 知識反流：`knowledge/history/` 新增一則（能力住在 traits ＋「護欄判準不必改，要改的是我們對它在量什麼的理解」）、`knowledge/experience.md` 記蒸餾後的教訓、`knowledge/vision.md` 6.11 第 4 項打勾並在「下一步」開一筆「屬性的候選值由目標提供」（US3 的去處）
 

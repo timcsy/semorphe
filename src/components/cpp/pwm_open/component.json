@@ -19,5 +19,9 @@
     "lift": "./lift.ts"
   },
   "_lift_why": "ESP32 core **2.x** 的第一步。⚠️ 名字用 `open` 而不是 `setup`：`open` 已經在操作詞彙表裡（序列埠那顆用它表示「設定並啟用」），而語義完全平行。**能用既有詞就不要新增詞彙。**",
-  "_execute_why": "只記下設定，**不碰任何腳位**——舊版的通道在被 `ledcAttachPin` 接上之前不對應任何腳位。"
+  "_execute_why": "只記下設定，**不碰任何腳位**——舊版的通道在被 `ledcAttachPin` 接上之前不對應任何腳位。",
+  "traits": {
+    "needsCapability": "ledc-pwm"
+  },
+  "_traits_why": "**LEDC 是 ESP32 的硬體 PWM 控制器**，AVR 的板子沒有它。⚠️ 這一顆與 `analogWrite` 不同：`analogWrite` 是**每塊板子都有**的抽象，而 `ledc*` 直接操作那個控制器。🔴 能力用【功能】命名不用板子命名——`esp32-only` 會把「誰有」寫進能力的名字裡，而下一塊有這個控制器的板子會逼出 `esp32-or-xxx-only`。"
 }

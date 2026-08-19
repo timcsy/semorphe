@@ -199,3 +199,27 @@ export function targetProvides(
   if (target.provides === undefined) return true
   return target.provides.includes(capability)
 }
+
+/**
+ * 從一組可見概念中，濾掉這個目標**提供不了**的。
+ *
+ * 🔴 **這是能力過濾的唯一入口**——工具箱組裝與測試都走它，
+ * 不在兩邊各寫一份會漂移的判準（`tests/helpers/toolbox.ts` 的檔頭記過
+ * 那個病：兩份看起來一樣，於是護欄全綠而正式路徑上的積木整批消失）。
+ *
+ * ⚠️ **它只該被工具箱那一條路呼叫。** `lift`／`generate`／`execute`
+ * 一律不看目標——P4 逐字：「這是**過濾**（filtering），不是**簡化**
+ * （simplification）——語義結構始終完整」。學生在 Uno 上貼一段 ESP32 的
+ * 程式碼，`touchRead` 仍要被認出來，只是他拉不出新的一顆。
+ */
+export function filterByTarget(
+  concepts: ReadonlySet<string>,
+  target: { provides?: readonly string[] },
+): Set<string> {
+  if (target.provides === undefined) return new Set(concepts)
+  const out = new Set<string>()
+  for (const id of concepts) {
+    if (targetProvides(target, capabilityOf(id))) out.add(id)
+  }
+  return out
+}

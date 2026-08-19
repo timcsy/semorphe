@@ -18,5 +18,9 @@
     "lift": "./lift.ts"
   },
   "_lift_why": "ESP32 core **2.x** 的第二步。⚠️ 名字用 `tie` 而不是 `bind`：`tie` 已經在操作詞彙表裡。⚠️ 而 `attach` 被新版那顆用掉了——**同一個詞不能指兩件不同的事**。",
-  "_execute_why": "把腳位繫到通道。⚠️ **先繫再設定也是合法的順序**——不要求設定先發生。"
+  "_execute_why": "把腳位繫到通道。⚠️ **先繫再設定也是合法的順序**——不要求設定先發生。",
+  "traits": {
+    "needsCapability": "ledc-pwm"
+  },
+  "_traits_why": "**LEDC 是 ESP32 的硬體 PWM 控制器**，AVR 的板子沒有它。⚠️ 這一顆與 `analogWrite` 不同：`analogWrite` 是**每塊板子都有**的抽象，而 `ledc*` 直接操作那個控制器。🔴 能力用【功能】命名不用板子命名——`esp32-only` 會把「誰有」寫進能力的名字裡，而下一塊有這個控制器的板子會逼出 `esp32-or-xxx-only`。"
 }

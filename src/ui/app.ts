@@ -15,6 +15,7 @@ import { registerCppLanguage } from '../languages/cpp/generators'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig } from '../core/projection/code-generator'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
+import { filterByTarget } from '../core/component/traits'
 import { getVisibleConcepts, flattenLevelTree } from '../core/level-tree'
 import type { Target, Topic } from '../core/types'
 import cppBeginnerTopic from '../languages/cpp/topics/cpp-beginner.json'
@@ -25,6 +26,11 @@ import cppTargetDef from '../languages/cpp/targets/cpp.json'
 import cTargetDef from '../languages/cpp/targets/c.json'
 import cppCompetitiveTargetDef from '../languages/cpp/targets/cpp-competitive.json'
 import arduinoTargetDef from '../languages/cpp/targets/arduino.json'
+// spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
+//（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
+import arduinoUnoTargetDef from '../languages/cpp/targets/arduino-uno.json'
+import arduinoNanoTargetDef from '../languages/cpp/targets/arduino-nano.json'
+import esp32TargetDef from '../languages/cpp/targets/esp32.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
@@ -146,6 +152,11 @@ export class App {
     this.targetRegistry.register(cTargetDef as Target)
     this.targetRegistry.register(cppCompetitiveTargetDef as Target)
     this.targetRegistry.register(arduinoTargetDef as Target)
+    // ⚠️ 既有的 `arduino` **保留**——它省略 `provides` ＝ 提供全部，
+    //    意思是「不指定板子」。移除它會讓既有使用者的設定失效。
+    this.targetRegistry.register(arduinoUnoTargetDef as Target)
+    this.targetRegistry.register(arduinoNanoTargetDef as Target)
+    this.targetRegistry.register(esp32TargetDef as Target)
 
     // Default target → topic and branches (only root level enabled for simplest starting point)
     this.currentTarget = this.targetRegistry.get('cpp')!
@@ -526,7 +537,16 @@ export class App {
   private callBuildToolbox(): object {
     return buildToolbox({
       blockSpecRegistry: this.blockSpecRegistry,
-      visibleConcepts: this.getVisibleConcepts(),
+      // 🔴 **能力過濾只加在這裡，不加進 `getVisibleConcepts()`。**
+      //
+      // 那個函式同時餵給 `markOutOfScopeBlocks()`（畫布上的灰階標記），
+      // 而把板子過濾加進去會讓**畫布上既有的積木變灰**——那不是本刀的需求，
+      // 而且它與既有行為衝突：「workspace 既有積木不受層級切換影響
+      // （只影響 toolbox 可用性）」。
+      //
+      // ⚠️ 學生在 ESP32 下拉了一顆觸摸積木、切到 Uno，**那顆積木要留在畫布上**
+      // ——切走一個目標不該吃掉他的作品。
+      visibleConcepts: filterByTarget(this.getVisibleConcepts(), this.currentTarget),
       ioPreference: this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,

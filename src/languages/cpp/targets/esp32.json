@@ -1,0 +1,11 @@
+{
+  "id": "esp32",
+  "name": "ESP32",
+  "topic": "arduino",
+  "style": "google",
+  "entryShell": "none",
+  "provides": [
+    "touch",
+    "ledc-pwm"
+  ]
+}
