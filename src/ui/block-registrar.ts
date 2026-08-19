@@ -35,6 +35,38 @@ export class BlockRegistrar {
 
   // ─── Workspace option helpers (used by dynamic block dropdowns + app.ts) ───
 
+  /**
+   * **一個名字的參照可以填什麼**——工作區的變數 ∪ 目前這塊板子的具名常數。
+   *
+   * ## 🔴 為什麼不是直接改 `getWorkspaceVarOptions()`
+   *
+   * 那一支有**十個呼叫端**，而只有 `cpp_var_ref` 是**讀**；
+   * 其餘九個是**寫入目標**（`cpp_var_assign`、遞增、複合指定），
+   * 加了常數之後學生選得到 `HIGH = 5`。
+   *
+   * > **兩個下拉長得一樣，不代表它們問的是同一個問題。**
+   *
+   * ## 而它為什麼該有兩段
+   *
+   * 執行期解析一個裸名字的順序是（`var_ref/execute.ts`）：
+   * **宣告的變數 → 串流 → 環境提供的具名常數**。
+   * 而下拉今天只畫得出第一段——於是學生貼上 `pinMode(D1, OUTPUT)` 之後
+   * 點開 `D1`，看到的是工作區裡根本沒有的 `x`。
+   *
+   * 🔴 **變數在前，而同名時變數贏**——「一個名字的意思由誰宣告它決定」。
+   *
+   * ⚠️ **串流（`cout`）與套件常數（`DHT11`／`WL_*`）不在這裡**：
+   * 前者不是值，後者不隨板子變（spec 149 明確排除）。
+   */
+  getNameRefOptions(): Array<[string, string]> {
+    const options = this.getWorkspaceVarOptions()
+    const names = boardConstantOptions(this.currentBoard?.())
+    if (!names) return options
+    const seen = new Set(options.map((o) => o[1]))
+    for (const n of names) if (!seen.has(n)) options.push([n, n])
+    return options
+  }
+
   getWorkspaceVarOptions(): Array<[string, string]> {
     const options: Array<[string, string]> = []
     const seen = new Set<string>()
@@ -82,7 +114,7 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (isPlainDeclaration(abstractConceptOf(block.type) ?? '')) {
+        } else if (isPlainDeclaration(abstractConceptOf(this.conceptIdOfBlockType(block.type) ?? '') ?? '')) {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')
@@ -196,6 +228,35 @@ export class BlockRegistrar {
    * （`concepts.json` 的 `declaresVariableType`）。同一個宣告也餵給同步
    * 控制器的降級——一個事實，兩個消費者。
    */
+  /**
+   * 積木型別 → 概念身分（`cpp_pin_attach` → `cpp:pin_attach`）。
+   *
+   * 🔴 **spec 149 修的那個 bug 就是少了這一步。**
+   * `getWorkspaceVarOptions()` 原本寫著
+   * `isPlainDeclaration(abstractConceptOf(block.type))`
+   * ——而 `abstractConceptOf` 的鍵是**概念身分**（冒號），
+   * `block.type` 是**導出的積木型別**（底線）。於是那個分支**永遠是 false**，
+   * **24 顆宣告元件一顆都沒進下拉**（`vector`／`string`／`pin_attach`…）。
+   *
+   * > **兩個字串都長得像識別字，而它們是兩個命名空間
+   * > ——型別系統擋不住，因為兩邊都是 `string`。**
+   *
+   * ⚠️ 而它靜默了很久：查不到只會讓下拉少幾個名字，**不會拋錯**。
+   */
+  private conceptIdOfBlockType(blockType: string): string | undefined {
+    if (!this.blockTypeToConcept) {
+      this.blockTypeToConcept = new Map()
+      for (const spec of this.blockSpecRegistry.getAll()) {
+        const t = (spec.blockDef as { type?: string } | undefined)?.type
+        const cid = spec.conceptMapping?.conceptId
+        if (t && cid) this.blockTypeToConcept.set(t, cid)
+      }
+    }
+    return this.blockTypeToConcept.get(blockType)
+  }
+
+  private blockTypeToConcept?: Map<string, string>
+
   private blockTypesDeclaringVariableType(type: string): Set<string> {
     const conceptIds = new Set(conceptsDeclaringVariableType(type))
     const types = new Set<string>()
@@ -1842,7 +1903,12 @@ export class BlockRegistrar {
         init: function (this: Blockly.Block) {
           this.appendDummyInput()
             .appendField(Blockly.Msg['U_VAR_REF_LABEL'] || '變數')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
+            // 🔴 **`getWorkspaceVarOptions` 有十個呼叫端，而只有這一個是【讀】**（spec 149）
+            //    ——其餘九個（`cpp_var_assign`、遞增、複合指定）都是**寫入目標**，
+            //    而 `HIGH = 5` 不合法。所以名字的範圍只補在這一顆上。
+            //
+            // > **兩個下拉長得一樣，不代表它們問的是同一個問題。**
+            .appendField(self.createOpenDropdown(() => self.getNameRefOptions()) as Blockly.Field, 'NAME')
           this.setOutput(true, 'Expression')
           this.setColour(CATEGORY_COLORS.data)
           this.setTooltip(Blockly.Msg['U_VAR_REF_TOOLTIP'] || '使用變數的值')
