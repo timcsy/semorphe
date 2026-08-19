@@ -277,6 +277,41 @@ class SemorpheSession {
     this.lastUri = to
   }
 
+  /**
+   * 🔴 **宿主這側的時間軸。**
+   *
+   * 2026-08-19 第五輪：面板那側的時間軸顯示「第 3 則到第 10 則之間一份文件
+   * 都沒收到」——⚠️ 而那有**三種可能，在面板那側完全同形**：
+   *
+   * ```
+   * ① 使用者根本沒改文件
+   * ② 改了，而 onDocumentChanged 判成【回音】吞掉了
+   * ③ 改了、送了，而訊息沒送到（webview 在背景？）
+   * ```
+   *
+   * > **一個「什麼都沒收到」的紀錄，答得出「我沒收到」，
+   * > 答不出「有沒有人送」——而那兩件事的修法完全不同。**
+   *
+   * 所以宿主這側要記：文件變了幾次、每一次判成回音還是外來的、送了沒有。
+   */
+  private readonly hostLog: string[] = []
+  private hostLogSeq = 0
+  private hostLogAt = 0
+
+  private hostNote(line: string): void {
+    const now = Date.now()
+    const gap = this.hostLogAt === 0 ? 0 : now - this.hostLogAt
+    this.hostLogAt = now
+    this.hostLogSeq += 1
+    this.hostLog.push(`${String(this.hostLogSeq).padStart(3, ' ')}｜+${String(gap).padStart(5, ' ')}ms｜${line}`)
+    while (this.hostLog.length > 40) this.hostLog.shift()
+  }
+
+  /** 宿主時間軸——診斷用。 */
+  get hostTimeline(): readonly string[] {
+    return this.hostLog
+  }
+
   private sendDocument(doc: vscode.TextDocument): void {
     this.send({
       type: 'document',
@@ -293,9 +328,20 @@ class SemorpheSession {
    * 🔴 用 `version` 比對身分，**不用時間**。理由與病歷寫在 `sync/echo-guard.ts`。
    */
   private onDocumentChanged(e: vscode.TextDocumentChangeEvent): void {
-    if (e.document.uri.toString() !== this.doc?.uri.toString()) return
+    if (e.document.uri.toString() !== this.doc?.uri.toString()) {
+      this.hostNote(`📝 文件變了，而**不是我們盯的那一份** → 忽略`)
+      return
+    }
     if (e.contentChanges.length === 0) return
-    if (this.echo.isEcho(e.document.version)) return
+    // ⚠️ 記在判定【之前】——否則被吞掉的那些一則都不會出現在紀錄裡，
+    //    而那正是這份紀錄要回答的問題。
+    const reason = e.reason === vscode.TextDocumentChangeReason.Undo ? '復原'
+      : e.reason === vscode.TextDocumentChangeReason.Redo ? '重做' : '編輯'
+    if (this.echo.isEcho(e.document.version)) {
+      this.hostNote(`🔇 文件變了（${reason}，版本 ${e.document.version}）→ 判成【回音】，不送`)
+      return
+    }
+    this.hostNote(`📝 文件變了（${reason}，版本 ${e.document.version}，${e.document.lineCount} 行）→ 送出`)
     this.sendDocument(e.document)
   }
 
@@ -333,6 +379,12 @@ class SemorpheSession {
       OUTPUT.clear()
       OUTPUT.appendLine('Semorphe 診斷')
       for (const line of m.lines) OUTPUT.appendLine(`  ${line}`)
+      // 🔴 **宿主這側的時間軸也要印**——見 `hostNote` 的檔頭：
+      //    面板那側的「什麼都沒收到」答不出「有沒有人送」。
+      OUTPUT.appendLine('')
+      OUTPUT.appendLine('  宿主時間軸（序號｜距上一則｜事件）：')
+      if (this.hostLog.length === 0) OUTPUT.appendLine('    （空——文件從頭到尾沒有變過）')
+      for (const line of this.hostLog) OUTPUT.appendLine(`    ${line}`)
       OUTPUT.show(true)
       return
     }
@@ -418,7 +470,11 @@ class SemorpheSession {
     }
     // ⚠️ 這次編輯是根據舊版本算的 → 期間有外來改動，**丟掉它並重送文件**。
     //    🔴 那不是防迴圈，是防止踩掉別人的修改。
-    if (doc.version !== baseVersion) { this.sendDocument(doc); return }
+    if (doc.version !== baseVersion) {
+      this.hostNote(`⏭ 積木要寫入，而它算的是版本 ${baseVersion}、現在是 ${doc.version} → 丟掉並重送`)
+      this.sendDocument(doc); return
+    }
+    this.hostNote(`✍️ 套用積木的寫入｜${span.startLine}–${span.endLine} → ${span.lines.length} 行｜版本 ${baseVersion}`)
 
     const editor = vscode.window.visibleTextEditors.find(
       (ed) => ed.document.uri.toString() === doc.uri.toString())

@@ -405,7 +405,17 @@ export class BlocklyPanel implements ViewHost {
         //    move 會共用一個隨機群組；程式造出來的通常沒有群組。
         //    那是「這是人做的還是程式做的」目前唯一分得出來的線索。
         const g = event.group ? event.group.slice(0, 6) : '（無）'
-        const note = `▫️ 積木事件 ${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜群組 ${g}`
+        // 🔴 **「事件自己的群組」與「現在的全域群組」是兩件事。**
+        //    使用者拖曳時 Blockly 會 `setGroup(true)`，手勢結束時 `setGroup(false)`。
+        //    ⚠️ 若手勢**沒有正常結束**（webview 裡失去指標捕捉就會），
+        //    全域群組會**卡住**，而之後每一則事件都被歸進那個手勢
+        //    ——於是一次 Cmd+Z 會把整組一起復原（Blockly 的 undo 會把
+        //    同群組的項目全部彈出來）。
+        //    這個讀數是分辨那件事的唯一線索。
+        const live = Blockly.Events.getGroup()
+        const liveNote = live ? `｜⚠️ 全域群組仍是 ${String(live).slice(0, 6)}` : ''
+        const drag = this.workspace?.isDragging() ? '｜拖曳中' : ''
+        const note = `▫️ 積木事件 ${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜群組 ${g}${liveNote}${drag}`
         this.recentEvents.push(note)
         while (this.recentEvents.length > 12) this.recentEvents.shift()
         diagNote(note)
