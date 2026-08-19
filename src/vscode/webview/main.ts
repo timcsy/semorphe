@@ -93,8 +93,11 @@ async function boot(): Promise<void> {
 /** 把量測掛上去，並回應宿主的查詢。 */
 function attachDiagnostics(app: App): void {
   /** ⚠️ 走既有的除錯把手，理由同下——診斷不該擴大產品的介面。 */
-  const panel = (): { stateError?: string | null; stateErrorStack?: string | null } =>
-    (app as unknown as { blocklyPanel?: Record<string, never> }).blocklyPanel ?? {}
+  const panel = (): {
+    stateError?: string | null
+    stateErrorStack?: string | null
+    recentUserEvents?: readonly string[]
+  } => (app as unknown as { blocklyPanel?: Record<string, never> }).blocklyPanel ?? {}
   const panelError = (): string | null => panel().stateError ?? null
 
   const view = (): {
@@ -126,6 +129,14 @@ function attachDiagnostics(app: App): void {
         ...(panel().stateErrorStack
           ? ['  堆疊：', ...(panel().stateErrorStack ?? '').split('\n').map((l) => `    ${l}`)]
           : []),
+        '',
+        // 🔴 **寫入紀錄答得出「寫了什麼」，答不出「是誰叫它寫的」。**
+        //    2026-08-19 的調查就是斷在這裡：證明了 `int x;` 是積木面板寫回去的，
+        //    而查不出是什麼讓面板進到那個狀態。
+        '最近被判成使用者編輯的積木事件（新的在最後）：',
+        ...((panel().recentUserEvents ?? []).length > 0
+          ? (panel().recentUserEvents ?? []).map((l) => `  ${l}`)
+          : ['  （沒有——那代表寫回不是積木事件觸發的）']),
         '',
         '最近的寫入（新的在最後）：',
         ...((view().writeHistory ?? []).length > 0

@@ -101,6 +101,24 @@ export class BlocklyPanel implements ViewHost {
    */
   private lastStateStack: string | null = null
   private _blockMappings: BlockMapping[] = []
+
+  /**
+   * 🔴 **最近幾則「被判成使用者編輯」的積木事件。**
+   *
+   * 2026-08-19 使用者回報：Cmd+Z 之後 `int x;` 跑到檔案最後。診斷的寫入
+   * 紀錄證明了那一行是**積木面板寫回去的**（鏡像 6 個非空白行 → 寫成 7 行），
+   * 而在那之前一筆算出來的是**空的**（被安全網擋下）。
+   *
+   * ⚠️ 但日誌只記了**寫了什麼**，沒記**是誰叫它寫的**——於是查到這裡就斷了：
+   * 三條假設（載入沒清空／Blockly 復原堆疊／反序列化觸發回呼）全部實測排除，
+   * 而症狀仍然在。
+   *
+   * > **一份只記錄「發生了什麼」而不記錄「因為什麼」的日誌，
+   * > 能證明你的假設是錯的，不能告訴你哪個假設是對的。**
+   *
+   * 保留最後 12 則就夠——問題發生時要看的是**緊接在那次寫入之前**的那幾則。
+   */
+  private readonly recentEvents: string[] = []
   private _blockIdToNodeId: Map<string, string> | null = null
   private media: string | undefined
   private patternExtractor: PatternExtractor
@@ -266,6 +284,12 @@ export class BlocklyPanel implements ViewHost {
       //    （Blockly 非同步發事件，見 `BUS_GROUP` 的檔頭）。
       //    所以上面那個症狀不是假設——它一直在發生。
       const fromBus = event.group === BlocklyPanel.BUS_GROUP
+      if (!fromBus) {
+        const id = (event as { blockId?: string }).blockId
+        const type = id ? (this.workspace?.getBlockById(id)?.type ?? '已消失') : '—'
+        this.recentEvents.push(`${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆`)
+        while (this.recentEvents.length > 12) this.recentEvents.shift()
+      }
       if (!fromBus && event.type === Blockly.Events.CREATE) {
         this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
       }
@@ -363,6 +387,11 @@ export class BlocklyPanel implements ViewHost {
 
   onChange(callback: () => void): void {
     this.onChangeCallback = callback
+  }
+
+  /** 最近幾則被判成使用者編輯的積木事件——**診斷用**，見 `recentEvents` 的檔頭。 */
+  get recentUserEvents(): readonly string[] {
+    return this.recentEvents
   }
 
   getWorkspace(): Blockly.WorkspaceSvg | null {
