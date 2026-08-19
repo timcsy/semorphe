@@ -35,6 +35,7 @@ import { attachDragMeter, type DragMeasurement } from './fps'
 import { postToHost } from './host-bridge'
 import { attachNoDocumentBanner } from './no-document-banner'
 import { EXTENSION_VERSION } from '../manifest'
+import { diagLines } from '../../core/diag-log'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -137,6 +138,11 @@ function attachDiagnostics(app: App): void {
         ...(panel().stateErrorStack
           ? ['  堆疊：', ...(panel().stateErrorStack ?? '').split('\n').map((l) => `    ${l}`)]
           : []),
+        '',
+        // 🔴 **一條軸**——見 `core/diag-log.ts`：兩份各自正確的日誌
+        //    如果沒有共同的順序，合起來講不出因果。
+        '時間軸（序號｜距上一則｜事件）：',
+        ...(diagLines().length > 0 ? diagLines().map((l) => `  ${l}`) : ['  （空）']),
         '',
         // 🔴 **寫入紀錄答得出「寫了什麼」，答不出「是誰叫它寫的」。**
         //    2026-08-19 的調查就是斷在這裡：證明了 `int x;` 是積木面板寫回去的，

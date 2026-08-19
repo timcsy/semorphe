@@ -39,6 +39,7 @@
  * 🔴 **而它是一個已知的重複，不是一個沒有人知道的重複。**
  */
 import { rewriteSpan } from '../../core/projection/rewrite-span'
+import { diagNote } from '../../core/diag-log'
 import { postToHost } from './host-bridge'
 import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
@@ -118,6 +119,9 @@ export class VscodeCodeView implements CodeView, ViewHost {
   private note(line: string): void {
     this.writeLog.push(line)
     if (this.writeLog.length > 20) this.writeLog.shift()
+    // 🔴 **同一則也進共同時間軸**——見 `core/diag-log.ts` 的檔頭：
+    //    兩份各自正確的日誌沒有共同順序時，合起來講不出因果。
+    diagNote(line)
   }
   /** ⚠️ 在路上時最後一次想要的內容——只留最新的，中間狀態沒有意義。 */
   private queued: string | null = null
@@ -146,6 +150,7 @@ export class VscodeCodeView implements CodeView, ViewHost {
       this.queued = null
       // ⚠️ 通知應用「程式碼變了」——而**這是外來的變更**，
       //    我們自己造成的那些已經被宿主的回音守衛擋掉了。
+      diagNote(`📄 宿主送來文件｜版本 ${this.version}｜${this.mirror.split('\n').length} 行`)
       this.changeCb?.(this.mirror)
     } else if (m.type === 'applied') {
       // 🔴 宿主套用了，版本前進——**沒有這一則，下一筆必然過期**。

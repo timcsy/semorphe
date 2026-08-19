@@ -15,6 +15,7 @@ import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
 import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
 import { showToast } from '../toolbar/toast'
+import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { buildProgram } from '../../components/cpp/program/lift'
 import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
@@ -158,6 +159,7 @@ export class BlocklyPanel implements ViewHost {
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
+      diagNote(`🔄 重畫 ← ${event.source}｜重畫前頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜復原堆疊 ${this.workspace?.getUndoStack().length ?? 0} 項`)
       const prevGroup = Blockly.Events.getGroup()
       Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)
       // 🔴 **重畫過程中【產生】的事件，一律不得進復原堆疊。**
@@ -338,8 +340,10 @@ export class BlocklyPanel implements ViewHost {
       if (!fromBus) {
         const id = (event as { blockId?: string }).blockId
         const type = id ? (this.workspace?.getBlockById(id)?.type ?? '已消失') : '—'
-        this.recentEvents.push(`${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆`)
+        const note = `▫️ 積木事件 ${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆`
+        this.recentEvents.push(note)
         while (this.recentEvents.length > 12) this.recentEvents.shift()
+        diagNote(note)
       }
       if (!fromBus && event.type === Blockly.Events.CREATE) {
         this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
