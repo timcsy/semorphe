@@ -384,8 +384,7 @@ export class BlocklyPanel implements ViewHost {
         if (event.type === Blockly.Events.BLOCK_DRAG
             && (event as unknown as { isStart?: boolean }).isStart === false
             && this.pendingDragChange) {
-          this.pendingDragChange = false
-          setTimeout(() => this.onChangeCallback?.(), 0)
+          setTimeout(() => this.userChanged(), 0)
         }
         // Track block selection (click events)
         if (event.type === Blockly.Events.SELECTED) {
@@ -461,12 +460,7 @@ export class BlocklyPanel implements ViewHost {
         //    把它一次寫掉。⚠️ 最後一則 `move` 本來就在拖曳結束之後才到，
         //    所以不需要另外監聽手勢結束。
         // ─────────────────────────────────────────────────────────────
-        if (this.workspace?.isDragging()) {
-          this.pendingDragChange = true
-        } else {
-          this.pendingDragChange = false
-          this.onChangeCallback?.()
-        }
+        this.userChanged()
       }
     })
   }
@@ -566,8 +560,68 @@ export class BlocklyPanel implements ViewHost {
     return this.stateLoadFailed || !this.hasRendered
   }
 
-  /** 拖曳期間累積的變動——放下之後補寫一次。見上面那段。 */
+  /** 手勢／編輯進行中累積的變動——結束之後補寫一次。見 `userChanged`。 */
   private pendingDragChange = false
+
+  /** 等「忙完」的輪詢。⚠️ 只在有待寫的東西時存在。 */
+  private flushTimer: ReturnType<typeof setInterval> | null = null
+
+  /**
+   * 🔴 **使用者正在「做一件事」的中途，不寫檔案。**
+   *
+   * ## 兩個實測到的形狀，同一個病
+   *
+   * ```
+   * 拖曳    一次拖曳產生兩次寫入 → ⌘Z 回到「拖到一半」（積木在最外層）
+   * 改欄位  把 x 改成 y 產生兩次寫入 → ⌘Z 第一次得到 `int ;`
+   * ```
+   *
+   * 第二個是 2026-08-19 使用者按第 1 條驗收時抓到的：
+   * **欄位被清空的那一瞬間也被寫進了檔案**。於是 `int y;` 要按兩次 ⌘Z
+   * 才回得去，而中間那一步是 `int ;`——**一個他從來沒有輸入過的狀態**。
+   *
+   * > **一個復原步驟的邊界，應該落在【使用者認為自己做完一件事】的地方。
+   * > 把過程中的每一幀都存成一步，等於逼他倒著走過自己沒有走過的路。**
+   *
+   * ## 判準：畫布在拖，或欄位編輯器開著
+   *
+   * `WidgetDiv` 是文字欄位的編輯器，`DropDownDiv` 是下拉
+   * ——⚠️ 兩個是**不同的容器**，只問一個會漏掉另一半。
+   *
+   * ## ⚠️ 為什麼需要輪詢，不能只等下一則事件
+   *
+   * 拖曳結束後通常還會來一則 `move`，那一則就把累積的寫掉了。
+   * **而欄位編輯沒有這個保證**：最後一次值變更可能在編輯器關閉**之前**就發出，
+   * 之後一則事件都沒有——那會讓使用者的修改**永遠不進檔案**（比多寫一次糟得多）。
+   *
+   * 🔴 所以要有人去看「忙完了沒有」。輪詢只在**有待寫的東西**時存在，忙完就自己收掉。
+   */
+  private userChanged(): void {
+    if (this.isUserBusy()) {
+      this.pendingDragChange = true
+      this.scheduleFlush()
+      return
+    }
+    this.pendingDragChange = false
+    this.onChangeCallback?.()
+  }
+
+  private isUserBusy(): boolean {
+    return this.workspace?.isDragging() === true
+      || Blockly.WidgetDiv.isVisible()
+      || Blockly.DropDownDiv.isVisible()
+  }
+
+  private scheduleFlush(): void {
+    if (this.flushTimer !== null) return
+    this.flushTimer = setInterval(() => {
+      if (this.isUserBusy()) return
+      if (this.flushTimer !== null) { clearInterval(this.flushTimer); this.flushTimer = null }
+      if (!this.pendingDragChange) return
+      this.pendingDragChange = false
+      this.onChangeCallback?.()
+    }, 120)
+  }
 
   /** 匯流排畫過至少一次了嗎。⚠️ 見 `isStateStale`——沒畫過的工作區不得寫回。 */
   private hasRendered = false

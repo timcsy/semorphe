@@ -320,6 +320,58 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
   // 而它們各自是編輯器裡的一個復原項——於是 Cmd+Z 還原到的是
   // 「拖到一半」的中間狀態（`int x;` 同時在 loop 裡和最外層），
   // **而使用者從來沒看過那個狀態**。
+  // ── 🔴 改欄位的中途也不得寫 ────────────────────────────────────
+  //
+  // 2026-08-19 使用者按第 1 條驗收時抓到：把 `x` 改成 `y`，⌘Z 要按**兩次**，
+  // 而中間那一步是 **`int ;`**——**欄位被清空的那一瞬間也被寫進了檔案**，
+  // 那是一個他從來沒有輸入過的狀態。
+  //
+  // ⚠️ 文字欄位用 `WidgetDiv`、下拉用 `DropDownDiv`——**兩個不同的容器**，
+  //    只問一個會漏掉另一半。
+  it('欄位編輯器開著時不得寫回，關掉之後補一次', async () => {
+    const { panel, fired } = makePanel()
+    const ws = panel.getWorkspace()!
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    const base = fired()
+
+    const realVisible = Blockly.WidgetDiv.isVisible
+    Blockly.WidgetDiv.isVisible = (): boolean => true
+    ws.newBlock(PROBE)
+    await tick()
+    expect(fired(), '編輯到一半就寫檔案 → ⌘Z 會停在 `int ;` 那種狀態').toBe(base)
+
+    // 🔴 關掉之後【必須】補寫——而這裡**不會再有新的積木事件**，
+    //    所以它證明的是輪詢那條路，不是「下一則事件順便寫掉」。
+    Blockly.WidgetDiv.isVisible = realVisible
+    await new Promise((r) => setTimeout(r, 300))
+    expect(fired(), '編輯器關了卻沒補寫 → 使用者的修改永遠不進檔案').toBeGreaterThan(base)
+  })
+
+  it('下拉選單開著時也一樣（兩個是不同的容器）', async () => {
+    const { panel, fired } = makePanel()
+    const ws = panel.getWorkspace()!
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    const base = fired()
+    const real = Blockly.DropDownDiv.isVisible
+    Blockly.DropDownDiv.isVisible = (): boolean => true
+    ws.newBlock(PROBE)
+    await tick()
+    expect(fired(), '只擋 WidgetDiv 會漏掉下拉').toBe(base)
+    Blockly.DropDownDiv.isVisible = real
+    await new Promise((r) => setTimeout(r, 300))
+    expect(fired()).toBeGreaterThan(base)
+  })
+
   it('拖曳中的變動不得觸發寫回，放下之後補一次', async () => {
     const { panel, fired } = makePanel()
     const ws = panel.getWorkspace()!
