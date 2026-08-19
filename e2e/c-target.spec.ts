@@ -62,7 +62,7 @@ const CPP_ONLY_BLOCK_TEXT: Array<[string, RegExp]> = [
 async function ready(page: Page): Promise<void> {
   await page.goto('/')
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { monacoPanel?: { editor?: unknown } } }).__app?.monacoPanel?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
     undefined, { timeout: 30_000 },
   )
 }
@@ -108,8 +108,8 @@ test('★ 選 C 目標 → 產出是乾淨的 C（而不是換了 printf 的 C++
   await ready(page)
 
   await page.evaluate(() =>
-    (window as never as { __app: { monacoPanel: { setCode(c: string): void } } })
-      .__app.monacoPanel.setCode('int main(){ bool b = 1 == 2; cout << b << endl; return 0; }'))
+    (window as never as { __app: { codeView: { setCode(c: string): void } } })
+      .__app.codeView.setCode('int main(){ bool b = 1 == 2; cout << b << endl; return 0; }'))
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(900)
 
@@ -120,7 +120,7 @@ test('★ 選 C 目標 → 產出是乾淨的 C（而不是換了 printf 的 C++
   ).toBe(true)
 
   const code = await page.evaluate(() =>
-    (window as never as { __app: { monacoPanel: { getCode(): string } } }).__app.monacoPanel.getCode())
+    (window as never as { __app: { codeView: { getCode(): string } } }).__app.codeView.getCode())
 
   // 🔴 C 裡【不存在】的東西——那不是「換個名字」，是那個東西沒有
   expect(code, '🔴 C 產出含 <iostream>——而 C 裡沒有這個標頭').not.toContain('iostream')
@@ -157,8 +157,8 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   await ready(page)
 
   await page.evaluate(() =>
-    (window as never as { __app: { monacoPanel: { setCode(c: string): void } } })
-      .__app.monacoPanel.setCode('#include <iostream>\nint main(){ int n = 3; cout << n << endl; return 0; }'))
+    (window as never as { __app: { codeView: { setCode(c: string): void } } })
+      .__app.codeView.setCode('#include <iostream>\nint main(){ int n = 3; cout << n << endl; return 0; }'))
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(1200)
 
@@ -167,7 +167,7 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   await page.waitForTimeout(1200)
 
   const code = await page.evaluate(() =>
-    (window as never as { __app: { monacoPanel: { getCode(): string } } }).__app.monacoPanel.getCode())
+    (window as never as { __app: { codeView: { getCode(): string } } }).__app.codeView.getCode())
 
   expect(code, '🔴 使用者寫的 <iostream> 沒有被換掉——C 裡沒有這個標頭').not.toContain('iostream')
   expect(code, 'I/O 那個等價類在 C 那一側的成員是 <stdio.h>').toContain('stdio.h')
@@ -232,7 +232,7 @@ test('★ 重新整理之後，選的目標還在', async ({ page }) => {
 
   await page.reload()
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { monacoPanel?: { editor?: unknown } } }).__app?.monacoPanel?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
     undefined, { timeout: 30_000 },
   )
   await page.waitForTimeout(1500)

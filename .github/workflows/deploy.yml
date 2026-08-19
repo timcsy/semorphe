@@ -1,7 +1,23 @@
 name: Deploy to GitHub Pages
 
+# 🔴 **PR 也要跑，而這一格 2026-08-19 才補。**
+#
+# 在那之前 CI **只在 push 到 main 時跑**，於是 PR #2 那 84 個 commit
+# **合併之前從來沒跑過 e2e**——`monacoPanel` 被改名成 `codeView`
+# （spec 140），而 e2e 五個檔、26 處還在等舊名字。
+#
+# 症狀：合併當天 e2e 19/28 紅，**而它紅了一整天沒有人看**
+# ——包括之後好幾次推送。
+#
+# > **一個只在【合併之後】才跑的檢查，擋不住任何東西
+# > ——它只負責在事後告訴你已經來不及了。**
+#
+# ⚠️ `build`／`deploy` 仍然只在 main 跑（見它們的 `if`）：
+# PR 要的是**驗證**，不是發布。
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -101,6 +117,8 @@ jobs:
 
   build:
     needs: [test, e2e]
+    # ⚠️ 只有 main 才發布——PR 跑到 `test`／`e2e` 就夠了。
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

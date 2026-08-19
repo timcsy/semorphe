@@ -218,3 +218,34 @@ G 的護欄第一版誤報 84 顆（實測 ~35）。第三個原因最值得記�
 - `knowledge/history/031`（D 命名空間遷移）、`knowledge/history/032`（G 命名整理）
 - `knowledge/episodes/2026-08-09-命名的兩次翻轉.md` — 為什麼改名的**判準**比工具難
 - `knowledge/concepts/元件.md` 的命名章節 — 名字的三層與跨域規則
+
+## 🔴 `__app` 那個除錯把手——型別檢查**完全看不到它**
+
+2026-08-19：`App.monacoPanel` 被改名成 `codeView`（spec 140），
+`npx tsc --noEmit` 全綠、`npm test` 4600 多支全綠，**而 e2e 19/28 紅**。
+
+```
+src/main.ts                 (window as any).__app = app       ← 逃逸點
+e2e/*.spec.ts × 6           __app.monacoPanel.setCode(...)    ← 26 處，全走 as any
+```
+
+⚠️ **`as any` 就是為了逃出型別檢查而寫的**——所以改名時它一定不會出聲。
+
+> **一個為了測試而開的逃生口，在改名時是一個【型別檢查看不到的引用集合】。**
+
+### 改任何 `App` 上的欄位名之前
+
+```bash
+grep -rn "__app" e2e/ src/ | grep -v "= app"
+```
+
+⚠️ 而**不要只 grep 舊名字**——有些地方是 `app.codeView?.setCode` 這種
+可選鏈，改名後**執行期靜默回傳 undefined**，測試會逾時而不是報錯。
+
+### 而更根本的：這件事的機制在哪
+
+CI 在 2026-08-19 之前**只在 push 到 main 時跑**，所以那 84 個 commit
+**合併之前從來沒跑過 e2e**。已補 `pull_request` 觸發。
+
+> **一個只在【合併之後】才跑的檢查，擋不住任何東西
+> ——它只負責在事後告訴你已經來不及了。**

@@ -79,8 +79,8 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   // 🔴 **必須逼它真的解析一次**——parser 是懶載入的，
   // 只開頁面的話 `tree-sitter-cpp.wasm` 也不會被請求。
   await page.evaluate(() =>
-    (window as never as { __app: { monacoPanel: { setCode(c: string): void } } })
-      .__app.monacoPanel.setCode('int main(){ cout << 1; }'))
+    (window as never as { __app: { codeView: { setCode(c: string): void } } })
+      .__app.codeView.setCode('int main(){ cout << 1; }'))
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(2500)
 

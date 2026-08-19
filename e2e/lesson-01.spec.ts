@@ -50,7 +50,7 @@ const STEP2 = 'int main() {\n    cout << "Hello!" << endl;\n    return 0;\n}\n'
 async function fresh(page: Page): Promise<void> {
   await page.goto('/')
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { monacoPanel?: { editor?: unknown } } }).__app?.monacoPanel?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
     undefined, { timeout: 30_000 },
   )
 }
@@ -61,12 +61,12 @@ test('第一課：照著走，最後印出 Hello!', async ({ page }) => {
   // ★ 入口條件：開場真的是空的（錨在合成量）——課文第一步假設了這件事
   const start = await page.evaluate(() => {
     const app = (window as never as { __app: any }).__app
-    return { code: app.monacoPanel.getCode?.() ?? '?', blocks: app.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? -1 }
+    return { code: app.codeView.getCode?.() ?? '?', blocks: app.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? -1 }
   })
   expect(start.blocks, '開場不是空的 → 課文第一步的前提變了').toBe(0)
 
   // 第一步：骨架。⚠️ 課文明說這一步【不會】出現積木——那是實測出來的
-  await page.evaluate(() => (window as never as { __app: any }).__app.monacoPanel.setCode('int main() {\n    return 0;\n}\n'))
+  await page.evaluate(() => (window as never as { __app: any }).__app.codeView.setCode('int main() {\n    return 0;\n}\n'))
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(800)
   const afterSkeleton = await page.evaluate(
@@ -78,7 +78,7 @@ test('第一課：照著走，最後印出 Hello!', async ({ page }) => {
   ).toBe(0)
 
   // 第二步：加 cout
-  await page.evaluate((c) => (window as never as { __app: any }).__app.monacoPanel.setCode(c), STEP2)
+  await page.evaluate((c) => (window as never as { __app: any }).__app.codeView.setCode(c), STEP2)
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(900)
   const blocks = await page.evaluate(
@@ -103,7 +103,7 @@ test('第一課：照著走，最後印出 Hello!', async ({ page }) => {
 
 test('第一課的「換你了」：換成自己的名字也要跑得起來', async ({ page }) => {
   await fresh(page)
-  await page.evaluate(() => (window as never as { __app: any }).__app.monacoPanel.setCode(
+  await page.evaluate(() => (window as never as { __app: any }).__app.codeView.setCode(
     'int main() {\n    cout << "timcsy" << endl;\n    return 0;\n}\n'))
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(800)

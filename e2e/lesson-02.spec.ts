@@ -44,13 +44,13 @@ const STEP5_FIXED = 'int main() {\n    int score = 90;\n    int bonus = 5;\n    
 async function fresh(page: Page): Promise<void> {
   await page.goto('/')
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { monacoPanel?: { editor?: unknown } } }).__app?.monacoPanel?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
     undefined, { timeout: 30_000 },
   )
 }
 
 async function run(page: Page, code: string): Promise<string> {
-  await page.evaluate((c) => (window as never as { __app: any }).__app.monacoPanel.setCode(c), code)
+  await page.evaluate((c) => (window as never as { __app: any }).__app.codeView.setCode(c), code)
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(900)
   await page.getByText('執行').first().click()
