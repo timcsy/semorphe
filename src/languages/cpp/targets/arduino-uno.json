@@ -4,5 +4,22 @@
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",
-  "provides": []
+  "provides": [],
+  "board": {
+    "name": "Arduino Uno",
+    "maxPin": 19,
+    "constants": {
+      "HIGH": 1,
+      "LOW": 0,
+      "INPUT": 0,
+      "OUTPUT": 1,
+      "INPUT_PULLUP": 2,
+      "A0": 14,
+      "A1": 15,
+      "A2": 16,
+      "A3": 17,
+      "A4": 18,
+      "A5": 19
+    }
+  }
 }

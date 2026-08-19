@@ -1,4 +1,5 @@
 import type { SemanticNode } from '../core/types'
+import type { BoardPinModel } from '../core/types'
 import type { RuntimeValue, FunctionDef } from './types'
 import type { Scope } from './scope'
 import type { IOSystem } from './io'
@@ -7,6 +8,14 @@ import type { IOSystem } from './io'
  * ExecutionContext — passed to each executor, wraps interpreter internal state.
  */
 export interface ExecutionContext {
+  /**
+   * 這一次執行是在哪一塊板子上（spec 145）。
+   *
+   * ⚠️ **省略 ＝ 這個目標沒有板子**（`cpp`／`c`／競程）——
+   * 腳位那條路本來就不會被走到，而走到時退回預設（Uno）。
+   * 🔴 消費者一律走 `boardIn(ctx)`，不自己查目標。
+   */
+  board?: BoardPinModel
   scope: Scope
   io: IOSystem
   functions: Map<string, FunctionDef>

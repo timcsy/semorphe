@@ -5,11 +5,11 @@
  * 而不是 `ExecutionContext`：`src/interpreter` 在中立性護欄的 `NEUTRAL_DIRS` 裡。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:pin_mode', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const mode = ctx.toNumber(await ctx.evaluate((node.children.mode ?? [])[0]))
     stateOf(ctx, pin).mode = mode
   })

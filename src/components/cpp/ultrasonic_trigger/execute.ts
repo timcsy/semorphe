@@ -11,14 +11,14 @@
  * 那是刻意的，判準是「可重現比擬真重要」（見腳位讀取那顆的檔頭）。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
 export function registerExecute(
   register: (concept: string, executor: ConceptExecutor) => void,
 ): void {
   register('cpp:ultrasonic_trigger', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)
     // ⚠️ 與 digitalWrite 同一條路：沒有 pinMode 就寫，**記下來但不擋**。
     if (state.mode === undefined) state.writtenBeforeMode = true

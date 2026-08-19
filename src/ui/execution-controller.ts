@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly'
+import type { BoardPinModel } from '../core/types'
 import { SemanticInterpreter } from '../interpreter/interpreter'
 import { StepController } from './step-controller'
 import { DebugToolbar } from './debug-toolbar'
@@ -39,6 +40,7 @@ export class ExecutionController {
   private breakpointNodes = new Set<string>()
   private interpreter: SemanticInterpreter | null = null
   private stepController: StepController | null = null
+  private currentBoard?: () => BoardPinModel | undefined
   private debugToolbar: DebugToolbar
   private runMode: 'run' | 'debug' | 'animate-slow' | 'animate-medium' | 'animate-fast' | 'step' = 'run'
   private stepRecords: StepInfo[] = []
@@ -95,9 +97,16 @@ export class ExecutionController {
       getBlocksDirty: () => boolean
       syncBeforeRun: () => void
       bus?: SemanticBus
+      /**
+       * 現在在哪一塊板子上（spec 145）。
+       * ⚠️ **每次執行都問一次**——目標會在執行之間被切換，
+       * 而一個開機時抓一次的值會讓「切了板子」不生效。
+       */
+      currentBoard?: () => BoardPinModel | undefined
     },
   ) {
     this.panels = panels
+    this.currentBoard = opts.currentBoard
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
     this.bus = opts.bus
@@ -290,7 +299,7 @@ export class ExecutionController {
     if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
+    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
     this.interpreter.setUnknownConceptHandler(async (concept: string) => {
       const msg = Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT']
         ? Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT'].replace('%1', concept)
@@ -384,7 +393,7 @@ export class ExecutionController {
     if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
+    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
     this.interpreter.setUnknownConceptHandler(async (concept: string) => {
       const msg = Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT']
         ? Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT'].replace('%1', concept)
@@ -624,7 +633,7 @@ export class ExecutionController {
     this.animateSpeed = speed
     this.animateAccelerateSkipIds = null
 
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000 })
+    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
     this.interpreter.setUnknownConceptHandler(async (concept: string) => {
       const msg = Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT']
         ? Blockly.Msg['EXEC_UNKNOWN_CONCEPT_PROMPT'].replace('%1', concept)

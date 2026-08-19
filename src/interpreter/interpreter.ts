@@ -1,4 +1,5 @@
 import { StructRegistry } from './struct-types'
+import type { BoardPinModel } from '../core/types'
 import type { SemanticNode } from '../core/types'
 import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
 import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
@@ -13,6 +14,8 @@ import { registerMutationExecutors } from './executors/mutations'
 
 interface InterpreterOptions {
   maxSteps?: number
+  /** 這一次執行在哪一塊板子上（spec 145）。⚠️ 省略 ＝ 沒有板子。 */
+  board?: BoardPinModel
 }
 
 /** universal 概念的宣告與標註——只載入一次 */
@@ -49,6 +52,8 @@ export class SemanticInterpreter implements ExecutionContext {
   private status: ExecutionStatus = 'idle'
   private steps = 0
   private maxSteps: number
+  /** 這一次執行在哪一塊板子上——⚠️ **公開**，因為直譯器自己就是 `ExecutionContext`。 */
+  board?: BoardPinModel
   private stepRecords: StepInfo[] = []
   private recordSteps = false
   private inputProvider: (() => Promise<string>) | null = null
@@ -64,6 +69,7 @@ export class SemanticInterpreter implements ExecutionContext {
   constructor(options: InterpreterOptions = {
 }) {
     this.maxSteps = options.maxSteps ?? 100000
+    this.board = options.board
     // universal 概念是核心自己的資料（中立性護欄明確排除 universal 層），
     // 所以核心可以自行載入它們的宣告與標註。語言專屬的那些由語言套件推進來。
     loadUniversalDeclarations()

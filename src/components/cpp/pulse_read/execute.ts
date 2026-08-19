@@ -27,12 +27,12 @@
  * 虛擬硬體接上來時，這裡改成從腳位狀態讀真的脈衝長度（`PinState` 再加一格）。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:pulse_read', async (node, ctx) => {
     // ⚠️ 腳位仍然要驗——超出範圍要出聲，而不是安靜地回 0。
-    requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])))
+    requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     return { type: 'int', value: 0 }
   })
 }

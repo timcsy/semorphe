@@ -6,11 +6,11 @@
  * （很多教學範例就是漏了 `pinMode`）。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:digital_write', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))
     const state = stateOf(ctx, pin)
     if (state.mode === undefined) state.writtenBeforeMode = true

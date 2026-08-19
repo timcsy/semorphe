@@ -295,6 +295,8 @@ export class App {
         syncController: this.syncController,
       },
       {
+        // 🔴 **每次執行都問一次**——目標會在執行之間被切換（spec 145）。
+        currentBoard: () => this.currentTarget.board as never,
         bus: this.bus,
         getBlocksDirty: () => this.blocksDirty,
         syncBeforeRun: () => {

@@ -11,11 +11,11 @@
  * 那是**視圖層**的缺口（板子視圖，階段 6.11 第 4 項，已推遲），不是這一層該補的。
  */
 import type { ConceptExecutor } from '../../../interpreter/executor-registry'
-import { requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
   register('cpp:tone', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const hz = ctx.toNumber(await ctx.evaluate((node.children.frequency ?? [])[0]))
     const state = stateOf(ctx, pin)
     if (state.mode === undefined) state.writtenBeforeMode = true

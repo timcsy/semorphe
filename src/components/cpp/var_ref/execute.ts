@@ -64,7 +64,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
           // > **一個名字的意思由誰宣告它決定，而樣式比對看不到宣告。**
           //
           // ⚠️ 接在這裡就沒有那個問題：**走到這一行代表查過了，沒有人宣告它**。
-          const pin = pinConstantValue(name)
+          const pin = pinConstantValue(name, ctx.board)
           if (pin !== undefined) return { type: 'int', value: pin }
 
           // 🔴 **而串流的名字也要進近似名的候選**——`Cout` 大小寫打錯時，

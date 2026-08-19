@@ -7,5 +7,16 @@
   "provides": [
     "touch",
     "ledc-pwm"
-  ]
+  ],
+  "board": {
+    "name": "ESP32",
+    "maxPin": 39,
+    "constants": {
+      "HIGH": 1,
+      "LOW": 0,
+      "INPUT": 0,
+      "OUTPUT": 1,
+      "INPUT_PULLUP": 2
+    }
+  }
 }

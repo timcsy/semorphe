@@ -761,6 +761,18 @@ export interface Target {
    * 見 `specs/142-arduino-board-targets/data-model.md`。
    */
   provides?: readonly string[]
+  /**
+   * 這個目標的**板子模型**（腳位上界 ＋ 具名常數）——spec 145。
+   *
+   * 🔴 **它與 `provides` 是兩件事**：`provides` 是「有沒有這個能力」（布林集合），
+   * 這裡是「**是多少**」（值）。
+   *
+   * > **一個宣告如果同時裝「有沒有」與「是多少」，讀它的每一個消費者
+   * > 都要先分辨自己拿到的是哪一種——而那個分辨會在每個消費點各寫一次。**
+   *
+   * ⚠️ **省略 ＝ 這個目標沒有板子**（`cpp`／`c`／競程）。
+   */
+  board?: BoardPinModel
   /** 指向一個**既有的**課程清單 id——決定哪些概念看得到 */
   topic: string
   /** 指向一個**既有的**風格 id——決定產出什麼形狀 */
@@ -824,4 +836,25 @@ export interface BlockArgOverride {
   _remove?: boolean
   _insert?: string
   [key: string]: unknown
+}
+
+/**
+ * **一塊板子的腳位模型**（spec 145）。
+ *
+ * ⚠️ **它住在核心，是因為它一個 C++ 的字都不認識**——只是三個數值欄位。
+ * 理由與 `component/traits.ts` 的 `ioTraitOf` 逐字相同：
+ *
+ * > 「它原本住在 `languages/cpp/…`，而它的消費者是 `ui/…`，
+ * > 於是**視圖層為了問一句話而 import 了整個 C++ 語言套件**
+ * > ——P9 語言獨立性的字面違反（第三十九條護欄抓到）。」
+ *
+ * 🔴 **這一次也是那條護欄抓到的**，在同一個位置。
+ */
+export interface BoardPinModel {
+  /** 給人看的名字——⚠️ 錯誤訊息要說得出是哪一塊板子。 */
+  name: string
+  /** 腳位號碼的上界（含）。 */
+  maxPin: number
+  /** 這塊板子提供的具名常數。⚠️ 沒有的名字要**查不到**，不是給別的板子的值。 */
+  constants: Readonly<Record<string, number>>
 }
