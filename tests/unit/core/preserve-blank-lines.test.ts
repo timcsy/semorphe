@@ -54,14 +54,13 @@ describe('preserveBlankLines', () => {
       '  // put your main code here, to run repeatedly:',
       '}',
     ].join('\n')
-    // 🔴 **空行掛在它【後面】那一行身上**（`}` 前面的那個空行仍然在 `}` 前面）
-    //    ——而不是掛在前一行後面。兩種都說得通，而**一致比直覺重要**：
-    //    掛在後面那一行，「新加的一行不給空行」才有一個乾淨的定義。
+    // 🔴 **區塊結尾的空行被新內容吃掉**——使用者逐字：「原本的空行
+    //    被新東西覆蓋感覺比較自然」。那個空行是「在這裡寫你的程式」的**位置**。
+    //    ⚠️ 而它只吃「下一行縮排更淺」的那種，見下面那支反向測試。
     expect(preserveBlankLines(TEMPLATE, withDecl)).toBe([
       'void setup() {',
       '  // put your setup code here, to run once:',
-      '  int x;',    // ← 新加的一行，⚠️ **不給空行**
-      '',            // ← 原檔那個空行仍然屬於下面的 `}`
+      '  int x;',    // ← 新加的一行，⚠️ **不給空行**，而且吃掉了下面那個
       '}',
       '',            // ← 兩個函式之間的空行
       'void loop() {',
@@ -70,6 +69,14 @@ describe('preserveBlankLines', () => {
       '}',
       '',
     ].join('\n'))
+  })
+
+  it('★ 反向：同一層的分隔空行【不得】被吃掉', () => {
+    // 🔴 這是「區塊結尾的空行被吃掉」那條規則的邊界。
+    //    `bar();` 與新加的 `baz();` **同層** → 那是分隔，不是位置。
+    const prev = '  foo();\n\n  bar();\n'
+    expect(preserveBlankLines(prev, '  foo();\n  baz();\n  bar();'))
+      .toBe('  foo();\n  baz();\n\n  bar();\n')
   })
 
   it('新加的行不得憑空長出空行', () => {

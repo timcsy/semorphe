@@ -46,6 +46,11 @@
  *   只知道它夾在哪兩行之間。段落被整段刪掉時，空行跟著消失。
  */
 
+/** 前導空白的寬度。⚠️ tab 算一格——這裡只需要**比大小**，不需要真實寬度。 */
+function indentOf(line: string): number {
+  return line.length - line.trimStart().length
+}
+
 /** 對齊時的規模上限。超過就原樣回傳——⚠️ 寧可不還原，不要讓編輯器卡住。 */
 const MAX_LINES = 4000
 
@@ -116,7 +121,28 @@ export function preserveBlankLines(previous: string, generated: string): string 
     const src = map[j]
     // ⚠️ 對不上 = 這一行是新加的 → **不給空行**。
     //    給了的話，插入一顆積木會憑空長出一個空行。
-    const blanks = src >= 0 ? p.before[src] : g.before[j]
+    let blanks = src >= 0 ? p.before[src] : g.before[j]
+    if (blanks > 0 && j > 0 && map[j - 1] < 0 && indentOf(g.text[j]) < indentOf(g.text[j - 1])) {
+      // 🔴 **區塊結尾的空行，被新塞進來的內容吃掉。**
+      //
+      // 使用者逐字（2026-08-19）：「setup 那邊原本的空行**被新東西覆蓋**
+      // 感覺比較自然」。Arduino 樣板那個空行是「在這裡寫你的程式」的
+      // **位置**，填進去了它就該消失。
+      //
+      // ⚠️ 而「新行吃掉後面的空行」這條**太寬，會壞掉另一個常見情形**：
+      //
+      // ```
+      // foo();          加了 baz() 之後，
+      //                 bar() 前面那個【分隔用】的空行
+      // bar();          不該被吃掉
+      // ```
+      //
+      // 差別在**縮排**：`}` 比新行淺（＝那是區塊的結尾），
+      // 而 `bar()` 與新行**同層**（＝那是兩段之間的分隔）。
+      //
+      // > **一個空行是「位置」還是「分隔」，看它下一行站在哪一層。**
+      blanks = 0
+    }
     for (let k = 0; k < blanks; k++) out.push('')
     out.push(g.text[j])
   }
