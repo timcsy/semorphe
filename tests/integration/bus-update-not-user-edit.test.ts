@@ -247,4 +247,29 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     ).toBe(true)
     expect(ws.getUndoStack().length, '排隊中的事件落在 clearUndo() 之後').toBe(0)
   })
+
+  // ── 🔴 啟動競態：還沒被畫過的工作區不得寫回 ──────────────────────
+  //
+  // 2026-08-19 的時間軸（Arduino IDE）：
+  //
+  // ```
+  // 1｜   +0ms｜📄 宿主送來文件｜版本 1｜10 行
+  // 2｜ +125ms｜⛔ 擋下：6 → 0 行（少了 6）    ← 拿【空的】工作區去寫檔案
+  // 5｜ +816ms｜🔄 重畫 ← code｜重畫前頂層 0 顆  ← 積木這時才第一次載入
+  // ```
+  //
+  // 安全網擋下來了，⚠️ **而它只擋「少一半以上」**——少一點的擋不住。
+  it('還沒被匯流排畫過的工作區，必須算「殘的」', async () => {
+    const { panel } = makePanel()
+    expect(panel.isStateStale, '沒畫過卻不算殘 → 啟動的那一秒可以把檔案寫空').toBe(true)
+
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    // 正向錨點：畫過之後【必須】解除，否則這個旗標等於永久停用寫回
+    expect(panel.isStateStale, '畫過了還算殘 → 積木永遠寫不回程式碼').toBe(false)
+  })
 })

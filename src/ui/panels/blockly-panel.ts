@@ -276,6 +276,7 @@ export class BlocklyPanel implements ViewHost {
         //    ——用「少一段拿不回來的積木歷史」換「檔案不會被寫壞」。
         // ─────────────────────────────────────────────────────────────
         this.workspace?.clearUndo()
+        this.hasRendered = true
         Blockly.Events.setRecordUndo(prevRecord)
         Blockly.Events.setGroup(prevGroup)
       }
@@ -340,7 +341,11 @@ export class BlocklyPanel implements ViewHost {
       if (!fromBus) {
         const id = (event as { blockId?: string }).blockId
         const type = id ? (this.workspace?.getBlockById(id)?.type ?? '已消失') : '—'
-        const note = `▫️ 積木事件 ${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆`
+        // ⚠️ **群組要印出來**：使用者從工具箱拉一顆積木，它的 create 與後續的
+        //    move 會共用一個隨機群組；程式造出來的通常沒有群組。
+        //    那是「這是人做的還是程式做的」目前唯一分得出來的線索。
+        const g = event.group ? event.group.slice(0, 6) : '（無）'
+        const note = `▫️ 積木事件 ${event.type}｜${type}｜頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜群組 ${g}`
         this.recentEvents.push(note)
         while (this.recentEvents.length > 12) this.recentEvents.shift()
         diagNote(note)
@@ -427,8 +432,30 @@ export class BlocklyPanel implements ViewHost {
 
   /** 工作區是不是殘的。🔴 為真時「積木→程式碼」必須停手。 */
   get isStateStale(): boolean {
-    return this.stateLoadFailed
+    // 🔴 **還沒被匯流排畫過一次的工作區，也是「殘的」。**
+    //
+    // 2026-08-19 的時間軸抓到（Arduino IDE，第 2 則）：
+    //
+    // ```
+    // 1｜   +0ms｜📄 宿主送來文件｜版本 1｜10 行
+    // 2｜ +125ms｜⛔ 擋下：6 → 0 行（少了 6）    ← 積木那側算出【空的】
+    // 5｜ +816ms｜🔄 重畫 ← code｜重畫前頂層 0 顆  ← 積木這時才第一次載入
+    // ```
+    //
+    // 文件在 +0ms 就到了，而第一次重畫在 +941ms。**那中間的工作區是空的**
+    // ——而自動同步在 +125ms 就拿它去寫檔案，差點把整份 sketch 清成 0 行。
+    // 是安全網擋下來的，⚠️ 而安全網只擋「少一半以上」，**少一點的擋不住**。
+    //
+    // > **一個「還沒被載入過」的視圖，與一個「內容真的是空的」視圖，
+    // > 在讀取端長得一模一樣——差別只有它自己知道。**
+    //
+    // 🟢 這與 `host-no-overwrite`（擋「用舊存檔蓋掉」）和安全網（擋「用空狀態
+    //    蓋掉」）是同一條性質的第三半：**擋「用還沒載入的狀態蓋掉」**。
+    return this.stateLoadFailed || !this.hasRendered
   }
+
+  /** 匯流排畫過至少一次了嗎。⚠️ 見 `isStateStale`——沒畫過的工作區不得寫回。 */
+  private hasRendered = false
 
   /** 上一次載入失敗的訊息，`null` 代表沒失敗過。 */
   get stateError(): string | null {
