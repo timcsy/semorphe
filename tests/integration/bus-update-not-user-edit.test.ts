@@ -207,4 +207,44 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     expect(ws.getAllBlocks(false).length, '復原重放了舊世界的事件').toBe(before)
     expect(fired(), '重放的事件被算成使用者編輯 → 自動同步把它寫進檔案').toBe(firedBefore)
   })
+
+  // ── 🔴 第二層：重畫過程中【產生】的事件不得可復原 ────────────────
+  //
+  // `clearUndo()` 是**同步**清的，而 Blockly 的事件走
+  // `requestAnimationFrame → setTimeout(0)`——排隊中的那些會落在清空【之後】，
+  // 於是復原堆疊又有東西了。2026-08-19 第二次回報時就是卡在這一層。
+  //
+  // ⚠️ 這裡要繞開 `Events.disable()`，否則重畫根本不發事件，斷言會空過。
+  // ⚠️ **這一支在 jsdom 裡兩邊都綠**（退回 `setRecordUndo` 實驗過）：
+  //    `workspaces.load` 自己的預設就是 `recordUndo: false`，所以載入那一段
+  //    本來就不可復原。`setRecordUndo` 真正在包的是 **`forceRenderAllBlocks`**
+  //    ——而它在 jsdom 裡不產生事件（沒有真的排版），**這裡量不到**。
+  //
+  // 🔴 所以它是一支**釘住不變式、而目前抓不到迴歸**的測試。留著的理由是
+  //    它會在「有人把 load 的 recordUndo 打開」時變紅；不留的話那個改動無聲。
+  it('重畫過程中產生的事件，必須在【建立的當下】就被標成不可復原', async () => {
+    const { panel } = makePanel()
+    const ws = panel.getWorkspace()!
+    const busEvents: Blockly.Events.Abstract[] = []
+    ws.addChangeListener((e) => { if (e.group === 'semorphe:bus-update') busEvents.push(e) })
+
+    const real = { disable: Blockly.Events.disable, enable: Blockly.Events.enable }
+    Blockly.Events.disable = (): void => {}
+    Blockly.Events.enable = (): void => {}
+    try {
+      panel.onSemanticUpdate({
+        tree: createNode('cpp:program', {}, {}),
+        source: 'code',
+        blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+      })
+      await tick()
+    } finally { Blockly.Events.disable = real.disable; Blockly.Events.enable = real.enable }
+
+    expect(busEvents.length, '重畫一則事件都沒發 → 下面那條空過').toBeGreaterThan(0)
+    expect(busEvents.every((e) => e.recordUndo === false),
+      `重畫的事件仍可復原 → 它們會落在 clearUndo() 之後，堆疊又有東西：` +
+      busEvents.filter((e) => e.recordUndo !== false).map((e) => e.type).join('、'),
+    ).toBe(true)
+    expect(ws.getUndoStack().length, '排隊中的事件落在 clearUndo() 之後').toBe(0)
+  })
 })

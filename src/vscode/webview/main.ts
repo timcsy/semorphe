@@ -34,6 +34,7 @@ import { vscodeProfile } from '../vscode-profile'
 import { attachDragMeter, type DragMeasurement } from './fps'
 import { postToHost } from './host-bridge'
 import { attachNoDocumentBanner } from './no-document-banner'
+import { EXTENSION_VERSION } from '../manifest'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -97,6 +98,7 @@ function attachDiagnostics(app: App): void {
     stateError?: string | null
     stateErrorStack?: string | null
     recentUserEvents?: readonly string[]
+    undoDepth?: number
   } => (app as unknown as { blocklyPanel?: Record<string, never> }).blocklyPanel ?? {}
   const panelError = (): string | null => panel().stateError ?? null
 
@@ -117,6 +119,12 @@ function attachDiagnostics(app: App): void {
     postToHost({
       type: 'diagnostics',
       lines: [
+        // 🔴 **版本要印出來。** 2026-08-19 連續三張診斷截圖長得一樣，而
+        //    「修法沒載到」與「修法沒用」在畫面上完全同形
+        //    ——⚠️ 同一族的坑 `tools/install-ide.mjs` 的檔頭記過兩次了。
+        `版本：${EXTENSION_VERSION}`,
+        // 🔴 重畫之後這個數字必須是 0，見 `history/087`。
+        `積木復原堆疊：${panel().undoDepth ?? 0} 項`,
         `畫布拖曳：${last ? `${last.frames} 幀｜中位 ${last.medianMs.toFixed(1)} ms｜p95 ${last.p95Ms.toFixed(1)} ms → ${last.verdict}` : '（還沒有拖過）'}`,
         `判準：中位數 ≤ 20 且 p95 ≤ 33 → 順；中位數 > 33 或 p95 > 100 → 不順`,
         // 🔴 0 以外的任何數字都代表**還有一個真的 bug**——自癒過不等於沒壞過。

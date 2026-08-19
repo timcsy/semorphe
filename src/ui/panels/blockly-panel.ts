@@ -160,6 +160,20 @@ export class BlocklyPanel implements ViewHost {
     if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
       const prevGroup = Blockly.Events.getGroup()
       Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)
+      // 🔴 **重畫過程中【產生】的事件，一律不得進復原堆疊。**
+      //
+      // ⚠️ 光靠底下的 `clearUndo()` 不夠——它是**同步**清的，而 Blockly 的事件
+      //    走 `requestAnimationFrame → setTimeout(0)`，排隊中的那些會落在
+      //    清空**之後**，於是復原堆疊又有東西了。這是同一個非同步陷阱的第二層。
+      //
+      // 🟢 `recordUndo` 與 `group` 一樣是在**事件建立的當下**抓住的
+      //    （`this.recordUndo = getRecordUndo()`），所以它跟著事件走，
+      //    不管那則事件多久以後才發出來。
+      //
+      // > **要擋一件「稍後才發生」的事，旗標必須蓋在【它被造出來的當下】，
+      // > 不能蓋在「現在」。**
+      const prevRecord = Blockly.Events.getRecordUndo()
+      Blockly.Events.setRecordUndo(false)
       // 🔴 **先存一份，失敗就還原。**
       //
       // ⚠️ `setState` 拋錯時工作區是**載到一半**的——使用者看到的是一堆
@@ -260,6 +274,7 @@ export class BlocklyPanel implements ViewHost {
         //    ——用「少一段拿不回來的積木歷史」換「檔案不會被寫壞」。
         // ─────────────────────────────────────────────────────────────
         this.workspace?.clearUndo()
+        Blockly.Events.setRecordUndo(prevRecord)
         Blockly.Events.setGroup(prevGroup)
       }
     }
@@ -428,6 +443,16 @@ export class BlocklyPanel implements ViewHost {
   /** 最近幾則被判成使用者編輯的積木事件——**診斷用**，見 `recentEvents` 的檔頭。 */
   get recentUserEvents(): readonly string[] {
     return this.recentEvents
+  }
+
+  /**
+   * 積木那側的復原堆疊還剩幾項。
+   *
+   * 🔴 **重畫之後它必須是 0。** 非 0 代表舊世界的歷史還在，而重放它會把
+   * 一個不存在的過去接回畫布（`history/087`）。
+   */
+  get undoDepth(): number {
+    return this.workspace?.getUndoStack().length ?? 0
   }
 
   getWorkspace(): Blockly.WorkspaceSvg | null {
