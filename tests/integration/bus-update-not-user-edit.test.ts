@@ -152,4 +152,59 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     await tick()
     expect(fired(), '群組沒還原 → 使用者的編輯從此靜默').toBeGreaterThan(0)
   })
+
+  // ── 🔴 使用者回報的那件事：舊世界的復原項活過了重畫 ──────────────
+  //
+  // 2026-08-19，Arduino IDE。診斷印出 `create｜cpp_var_declare｜頂層 2 顆`
+  // 接三則 `move`——那是 Blockly 自己的復原在重放**重畫之前**的事件。
+  //
+  // ```
+  // ① 使用者親手拉過一顆積木  → 復原堆疊 1 項
+  // ② 從程式碼重畫            → 復原堆疊【仍然 1 項】  ← 修法前
+  // ③ 按一次復原              → create 憑空長回來 → 自動同步寫進檔案
+  // ```
+  it('重畫之後，積木那側的復原歷史必須被清掉', async () => {
+    const { panel } = makePanel()
+    const ws = panel.getWorkspace()!
+
+    // ① 正向錨點：使用者親手拉一顆，復原堆疊【必須】長出東西
+    //    ——否則下面那個「必須是 0」只是因為它一直都是 0。
+    ws.newBlock(PROBE)
+    await tick()
+    expect(ws.getUndoStack().length, '拉了一顆卻沒進復原堆疊 → 下面那條空過').toBeGreaterThan(0)
+
+    // ② 從程式碼重畫
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    expect(ws.getUndoStack().length,
+      '舊世界的復原項活過了重畫 → Cmd+Z 會把一個不存在的過去接回畫布').toBe(0)
+  })
+
+  // ⚠️ 這一支**單獨抓不到那個 bug**——修法退回去時它仍然是綠的（jsdom 裡
+  //    重放沒有把積木加回來）。真正會變紅的是上面那條「復原堆疊必須是 0」。
+  //    留著它是因為它釘的是**使用者看得到的那一面**，而那是這條規範的目的。
+  it('重畫之後按復原，不得憑空長出積木', async () => {
+    const { panel, fired } = makePanel()
+    const ws = panel.getWorkspace()!
+    ws.newBlock(PROBE)
+    await tick()
+    panel.onSemanticUpdate({
+      tree: createNode('cpp:program', {}, {}),
+      source: 'code',
+      blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
+    })
+    await tick()
+    const before = ws.getAllBlocks(false).length
+    expect(before, '重畫沒把積木放上去 → 這一條空過').toBe(1)
+    const firedBefore = fired()
+
+    ws.undo(false)          // ← 焦點在面板上時，Cmd+Z 走的就是這條
+    await tick()
+    expect(ws.getAllBlocks(false).length, '復原重放了舊世界的事件').toBe(before)
+    expect(fired(), '重放的事件被算成使用者編輯 → 自動同步把它寫進檔案').toBe(firedBefore)
+  })
 })
