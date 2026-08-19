@@ -223,6 +223,8 @@
   "DIAG_UNKNOWN": "There is a problem here",
   "DIAG_SYNTAX_ERROR_BLOCK": "I could not read this part; the block keeps the original text: {snippet}",
   "DIAG_SYNTAX_ERROR_CODE": "incomplete syntax on this line",
+  "DIAG_SYNTAX_GAP_CODE": "a `{missing}` is missing here",
+  "DIAG_SYNTAX_GAP_BLOCK": "missing a `{missing}` (line {humanLine})",
   "CATEGORY_HARDWARE_PINS": "Pins & Timing",
   "CATEGORY_HARDWARE_MODULES": "Parts & Modules",
   "CATEGORY_HARDWARE_SERIAL": "Serial",

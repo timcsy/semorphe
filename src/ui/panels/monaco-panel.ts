@@ -224,14 +224,32 @@ export class MonacoPanel implements ViewHost, CodeView {
       if (!m) continue
       const startLine = m.startLine + 1
       const endLine = m.endLine + 1
-      markers.push({
-        severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
-        message: this.diagnosticMessage(d),
-        startLineNumber: startLine,
-        startColumn: 1,
-        endLineNumber: endLine,
-        endColumn: model.getLineMaxColumn(endLine),
-      })
+      // 🔴 **缺口有確定的位置——波浪就該縮到那裡**（spec 143）。
+      //
+      // 沒有 `at` 的診斷照舊畫**整行**：那是誠實的，因為 `nodeId` 只指得到
+      // 「哪一顆節點」，指不到「哪一欄」。
+      //
+      // ⚠️ 而縮的時候**寬度至少 1 欄**：一個缺掉的 token **佔零個字元**，
+      // `start === end` 的 marker 在 Monaco 上**畫不出來**
+      // ——那會讓「修好了」與「畫不出來」長得一樣。
+      const at = d.at
+      markers.push(at
+        ? {
+            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+            message: this.diagnosticMessage(d),
+            startLineNumber: at.line + 1,
+            startColumn: at.column + 1,
+            endLineNumber: at.line + 1,
+            endColumn: Math.max(at.column + 2, model.getLineMaxColumn(at.line + 1)),
+          }
+        : {
+            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+            message: this.diagnosticMessage(d),
+            startLineNumber: startLine,
+            startColumn: 1,
+            endLineNumber: endLine,
+            endColumn: model.getLineMaxColumn(endLine),
+          })
     }
     // **一次設完整集合**——`setModelMarkers` 的語義就是取代，
     // 所以「診斷變少了」會自動反映，不需要另外清。

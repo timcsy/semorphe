@@ -1000,7 +1000,16 @@ export class BlocklyPanel implements ViewHost {
    * 執行期需要的是一句看得懂的話，不是一個看起來像訊息的代號。
    */
   diagnosticMessage(d: DiagnosticsEvent['diagnostics'][number]): string {
-    return formatMessage(`DIAG_${d.rule}_BLOCK`, d.params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+    // 🔴 **積木側只用 `line`，不用 `column`**——它沒有「欄」這個概念。
+    //
+    // ⚠️ 而那個不對稱是**刻意的**，不是還沒做完：程式碼側的波浪本來就指得到
+    // 確切位置，積木側能給的最有用的東西是「在第幾行」——它讓學生知道
+    // 要往程式碼那一格的哪裡看。
+    //
+    // `humanLine` 是 1-based：`at.line` 與 tree-sitter 一致是 0-based，
+    // **而換算屬於呈現，不屬於事實**。
+    const params = d.at ? { ...d.params, humanLine: d.at.line + 1 } : d.params
+    return formatMessage(`DIAG_${d.rule}_BLOCK`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
   }
 
   /** nodeId → blockId。找不到回 `null`——**不猜**。 */

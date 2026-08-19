@@ -1,4 +1,5 @@
 import type { SemanticNode } from './types'
+import type { Diagnostic } from './diagnostics'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
 import type { CodeMapping } from './projection/code-generator'
 import type { ScaffoldResult } from './program-scaffold'
@@ -161,16 +162,22 @@ export interface ViewHost {
  * 而那讓兩個視圖只能說同一句話。
  */
 export interface DiagnosticsEvent {
-  diagnostics: readonly {
-    nodeId: string
-    severity: 'warning' | 'error'
-    rule: string
-    params: Record<string, string | number>
-    /**
-     * 判定來源。⚠️ **這一格 2026-08-14 加上時 tsc 一聲不吭**——
-     * 這個內嵌型別是**另一份宣告**，結構上寬鬆地接受了多出來的欄位。
-     * 少了它視圖就讀不到來源，而編譯器不會說。
-     */
-    source: 'component' | 'parser'
-  }[]
+  /**
+   * 🔴 **直接用 `Diagnostic`，不再內嵌一份結構型別。**
+   *
+   * ⚠️ 這裡原本手寫了一份**逐欄相同**的內嵌型別，而它的註解自己記著那個病：
+   *
+   * > 「判定來源。⚠️ **這一格 2026-08-14 加上時 tsc 一聲不吭**——
+   * > 這個內嵌型別是**另一份宣告**，結構上寬鬆地接受了多出來的欄位。
+   * > 少了它視圖就讀不到來源，而編譯器不會說。」
+   *
+   * 2026-08-19（spec 143）加 `at` 時**撞到同一件事**：`diagnostics.ts` 加了，
+   * 而視圖讀不到——**tsc 這次出聲了，因為讀的那一端型別對不上**。
+   *
+   * > **一份「逐欄抄過來」的型別，它的第一個症狀不是型別錯誤，
+   * > 是【加一格的人以為自己加完了】。**
+   *
+   * 引用而不是抄一份之後，下一次加欄位就只有一個地方。
+   */
+  diagnostics: readonly Diagnostic[]
 }

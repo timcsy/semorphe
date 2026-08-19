@@ -38,12 +38,12 @@ Phase 2 的反向測試  →  Phase 3 的實作  →  Phase 4 的正向  →  Ph
 
 ## Phase 5：面板 ＋ 收工
 
-- [ ] T010 `src/ui/panels/monaco-panel.ts`：有 `at` → 波浪縮到那一欄；🔴 **沒有 `at` 照舊畫整行**（既有行為不得動）
-- [ ] T011 [P] `src/ui/panels/blockly-panel.ts`：有 `at` → tooltip 多說一句，⚠️ **只用 `line`**（積木沒有「欄」）
-- [ ] T012 i18n 兩語各加訊息鍵；⚠️ 值不得是代號
-- [ ] T013 `npm test` 全綠 ＋ `npx tsc --noEmit` 過
-- [ ] T014 🔴 **開瀏覽器**照 [quickstart.md](quickstart.md) §③ 四條（用 `verify-in-browser`）
-- [ ] T015 知識反流：`knowledge/history/` 記轉變（實測把構想翻過來那一段）、`knowledge/experience.md` 記教訓、`knowledge/vision.md` 6.7 打勾
+- [X] T010 `src/ui/panels/monaco-panel.ts`：有 `at` → 波浪縮到那一欄；🔴 **沒有 `at` 照舊畫整行**（既有行為不得動）
+- [X] T011 [P] `src/ui/panels/blockly-panel.ts`：有 `at` → tooltip 多說一句，⚠️ **只用 `line`**（積木沒有「欄」）
+- [X] T012 i18n 兩語各加訊息鍵；⚠️ 值不得是代號
+- [X] T013 `npm test` 全綠 ＋ `npx tsc --noEmit` 過
+- [X] T014 🔴 **開瀏覽器**照 [quickstart.md](quickstart.md) §③ 四條（用 `verify-in-browser`）
+- [X] T015 知識反流：`knowledge/history/` 記轉變（實測把構想翻過來那一段）、`knowledge/experience.md` 記教訓、`knowledge/vision.md` 6.7 打勾
 
 ## MVP
 
