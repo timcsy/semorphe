@@ -5340,3 +5340,72 @@ select2: C++（預設） | … | Python 入門     ← 想要的是這個
 expect(switched).toBe(true)                          // 只說「按到了一個東西」
 expect(app.currentTopic.language).toBe('python')     // 🟢 說「真的切過去了」
 ```
+
+### 一段「為了穩定順序」而寫的程式碼，可能一行效果都沒有——而它看起來很合理
+
+spec 161 的語言載入器：
+
+```ts
+const PACK_MODULES = import.meta.glob('/src/languages/*/pack.ts', { eager: true })
+export function loadAllLanguagePacks(): void {
+  void Object.keys(PACK_MODULES).sort()   // ← 🔴 一行效果都沒有
+}
+```
+
+⚠️ **`eager: true` 的 glob 被 Vite 提升成靜態 import**——那些模組在
+`Object.keys()` 被呼叫**之前**就執行完了，登錄早就發生。排序的是一份副本。
+
+症狀不是報錯，是**預設目標變成 Python**（原本是 C++），而全套測試綠。
+
+**判準**：寫下一段「為了 X 而做的處理」時，問**「X 在這一行執行之前就已經定了嗎？」**
+副作用（import、登錄、訂閱）多半在你拿到資料之前就發生了。
+
+**正解不是修那一行，是換問法**：順序由各套件**明說**（`order: 0`／`order: 1`），
+預設目標**問宣告**（`default: true` 早就在 topic 上）——而不是靠陣列位置。
+> 這與 [[問宣告，不要跟一個全域單值比]] 是同一條：**位置與順序都不是宣告。**
+
+### 一個登記表不能自己 glob 自己的宣告者
+
+同一刀，`declareLanguagePack` 撞 `ReferenceError: Cannot access 'PACKS' before initialization`：
+
+```
+language-packs.ts  const PACKS = new Map()        ← 還沒跑到
+       ↑ 同一個檔裡的 eager glob 先 import 了 pack.ts
+pack.ts            declareLanguagePack({...})     ← 💥
+```
+
+**這是循環初始化，不是設定問題**——`eager` glob 就是靜態 import。
+**做法**：登記表與載入器**分成兩個檔**。登記表先完成初始化，載入器才去 glob。
+
+### 一個把兩種債加總的數字，會讓還完的那一半看起來沒還
+
+spec 161 第一版量「`app.ts` 裡指名語言的行」＝ **47**，而它混了兩種東西：
+
+```
+選單接線   topic／target／style／分類／解析器   ← spec 160 弄壞的，當天還得完
+語言管線   產生器／lifters／鷹架／診斷           ← 既有的債，要搬整個 bootstrap
+```
+
+把它們加在一起之後，「做完了沒」**問不出答案**：還完前一半仍然是 12，看起來像沒做完。
+
+**判準**：一個護欄的數字，要問**「這裡面的每一筆，還法一樣嗎？」**
+不一樣就是**兩個數字**——各自的基線、各自的硬性零或棘輪。
+
+⚠️ **而拆數字不等於搬目標**：兩個數字都要印出來，且合計要等於全部
+（本刀為此加了一支「兩個維度加起來要等於全部」的反向斷言，它當場抓到分類器漏了一種形狀）。
+
+### 一條靠檔案文字判斷的護欄，在那段程式碼搬家的那天會說錯話
+
+`board-registry` 守的是「加了板子而忘了註冊」，做法是掃 `app.ts` 的文字：
+
+```ts
+expect(app.includes(`${camel(b.id)}TargetDef as Target`))
+```
+
+註冊搬進 `languages/cpp/pack.ts` 之後它當場紅——**而它說的是「板子沒註冊」**，
+聽起來像我弄丟了板子。
+
+**正解與 `component-rename` 第 6 步同一條：問登記表，不要拿名字的形狀做判斷。**
+換完之後這條護欄**不在乎註冊寫在哪個檔**，只在乎「拿不拿得到」。
+
+> **一條護欄若綁在程式碼的【位置】上，重構會讓它說謊；綁在【行為】上就不會。**

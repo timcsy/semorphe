@@ -295,8 +295,11 @@ languages/{lang}/
       ```
       —— ⚠️ **而 160 刻意沒有重寫它**（「由 Python 逼出來，不是憑空重寫」）。
       現在有了第二個消費者，**介面不必用猜的**。
-- [ ] `app.ts` 的 35 處（組裝點，護欄明寫「可見，不入棘輪」）
-      —— 要它歸零得走 **manifest 驅動的外掛載入**，那在階段 7 的驗收清單裡
+- [ ] 🟡 **`app.ts` 的語言管線 12 處**（產生器／lifters／鷹架／診斷）
+      —— 🟢 **不再是「可見而不入棘輪」**：spec `161` 給了它基線與棘輪
+      （`tests/baselines/language-plugin.json`）。
+      —— ⚠️ 要它歸零得把整個 bootstrap 搬進**安裝鉤**，而那些呼叫與 `app.ts`
+      自己的物件（`this.scaffold`／`this.syncController`／閉包）**深度交織**。
 
 #### 階段 7：Python 語言套件
 
@@ -339,8 +342,14 @@ languages/{lang}/
       ```
 - [x] 🟢 C++ 既有測試不受影響（4777 綠，C++ 測試檔零改動）
 - [x] 🟢 語言切換時 toolbox 自動更新（`app.ts:640` 依 `currentTopic.language` 選分類）
-- [ ] manifest.json 加入 `topics` 欄位（manifest-driven plugin system 在這一刀統一做）
-      —— ⚠️ 它同時是 `app.ts` 那 35 處組裝點歸零的路徑
+- [x] 🟢 **manifest 驅動的語言載入**（spec `161`，2026-08-20）
+      → [112](history/112-加一個語言的代價第一次有數字.md)
+      **加一個語言＝加一個資料夾**（實測：建一個 `pack.ts` 之後 `app.ts` 一個 byte 都沒動）。
+      🎯 而「加一個語言的代價」**第一次有數字**，且它是**兩個**：
+      ```
+      選單接線（topic/target/style/分類/解析器）   🟢 硬性零
+      語言管線（產生器/lifters/鷹架/診斷）          🟡 12，棘輪 → 下面那一格
+      ```
 
 #### 階段 8：外部套件生態
 
