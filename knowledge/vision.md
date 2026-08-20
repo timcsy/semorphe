@@ -294,9 +294,14 @@ languages/{lang}/
                  cpp_array_at、cpp_continue、cpp_endl、cpp_literal_string（163）
                  cpp_break、cpp_return、cpp_var_ref（164）
                  array_assign、block_comment、comment、loop_count、var_assign、loop_while（165）
+                 var_assign_compound（166）
       🔴 還有 10 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
-      ⚠️ 另有 1 顆（`cpp_raw_code`）**比對說可刪而刻意沒刪**：它的 `loadExtraState`
-      依降級原因換視覺，而**比對只比「剛建好的樣子」**（→ [116](history/116-比對器四次指控宣告而四次都是它自己缺東西.md)）
+      🟢 **而護欄現在有五維**：spec `166` 補上「載入時的狀態」
+      （→ [117](history/117-一次靠運氣攔下的迴歸.md)），
+      `cpp_raw_code` 因此從「可刪」變成「有差異」——**它原本是靠 tsc 抱怨未用的 import
+      才沒被誤刪的**。
+      —— 🔴 剩下的四顆（`doc_comment`／`if`／`if_else`／`raw_code`）需要一個
+      **「依 extraState 換視覺」的宣告機制**，而它還沒被設計。
       ```
       —— 🛠 **這個操作已 skill 化**：`retire-imperative-block`
       （先比對、判哪一邊對、補齊對的那份、才刪、然後開瀏覽器看）
