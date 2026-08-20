@@ -56,6 +56,10 @@ import { loadToolbox } from '../helpers/toolbox'
 import { isTypeLookupFallback } from '../../src/ui/toolbox-builder'
 import { loadBaseline, writeBaseline, printReport, newItems, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
+import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/toolbox-categories'
+// ⚠️ **副作用匯入**：讓 Python 宣告自己的分類（與身分改名表同一個形狀）。
+// 少了它，`python_print` 會被報成「拿不到」——**而它其實有分類，只是沒人載入宣告**。
+import '../../src/languages/python/toolbox-categories'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 type Bucket = '缺陷' | '中性形態' | '分類排除'
@@ -90,6 +94,22 @@ function measure(
   extraProjections: BlockProjectionJSON[] = [],
 ): { findings: Finding[]; ghosts: string[]; imperativeOnly: string[]; total: number; categoriesOf: Map<string, string[]> } {
   const { registry, origins, categoriesOf } = loadToolbox(extraComponents, extraProjections)
+
+  // 🔴 **逐語言建工具箱，把「拿得到」聯集起來**——不是把分類聯集起來。
+  //
+  // 可拿性問的是「**有沒有某個工具箱給得出這顆積木**」。
+  // ⚠️ 而第一版把**分類**聯集進同一個工具箱，工具箱快照當場紅：
+  // cpp 使用者多出一個空的「輸入輸出」分類（那是 Python 的）。
+  // > **一個沒有積木的分類是一個空段落，而空段落與「這個分類就是這麼小」長得一樣。**
+  //
+  // 🟢 正解：production 一次只建一個語言的工具箱，所以這裡也一次一個。
+  for (const lang of declaredToolboxLanguages()) {
+    if (lang === 'cpp') continue
+    const other = loadToolbox(extraComponents, extraProjections, undefined, toolboxCategoriesOf(lang))
+    for (const [type, cats] of other.categoriesOf) {
+      if (!categoriesOf.has(type)) categoriesOf.set(type, cats)
+    }
+  }
 
   const findings: Finding[] = []
   for (const { type, owner } of origins) {

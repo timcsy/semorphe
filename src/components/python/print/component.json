@@ -3,15 +3,17 @@
   "_why": "spec 156：第一顆 Python 元件。它此刻【只是一個有性狀的身分】——沒有積木、沒有執行期。",
   "abstractComponent": null,
   "properties": [],
-  "children": {},
-  "_children_why": "🔴 刻意是空的：宣告一個【形態表達不出來】的接點會讓符合性與投影遺失兩條護欄同時紅——而那是真的違規，不是誤報。這一刀不做積木，所以也不宣告接點。",
+  "children": {
+    "values": "expression"
+  },
+  "_children_why": "🔴 **spec 156 寫成 `{}`，而 lift-pattern 一直在產出 `values`**——宣告與實際不符，卻沒有任何東西說話：宣告完整性護欄的語料是 **C++ 的**，這顆躲在「無法確定」裡（`declared-slots-decisions.json`，cause=語料沒覆蓋）。\n\n> **一個量不到的地方，宣告錯了與宣告對了長得一模一樣。**\n\n🟢 spec 160 補上：接點與 C++ 那顆輸出元件同形（`{\"values\": \"expression\"}`；⚠️ 刻意不寫完整身分——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出引用與說明），因為它們在觀察集 `{ioRole}` 下本來就同一類。",
   "role": "statement",
   "owner": "(python)",
   "paths": {
-    "render": null,
-    "_render_why": "🔴 **真的缺，不是刻意跳過**（spec 156）。\n\n第一版寫了 `skipPaths`，而 `skip-declaration-gate` 當場擋下：理由只能是`declarative`／`consumed-by-parent`／`degradation-target` 三個之一，**而沒有一個是「還沒做」——那是刻意的**（`history/018`：「第三個值就是在替『還沒做』找一個體面的名字」）。\n\n> **膠囊契約沒有【一個語言正在建構中】這個狀態**——而那是這一刀掀出來的結構缺口。\n\n🟢 所以它記在完備性基線的「缺」裡，附理由。**不洗成設計。**",
-    "extract": null,
-    "_extract_why": "同 `render`——真的缺。沒有積木就沒有抽取，而它們必須成對。",
+    "render": "./forms/blocks.json",
+    "_render_why": "🟢 **spec 160 補實。** 宣告式——與 C++ 那顆輸出元件同一條路徑（`forms/blocks.json` 同時是 render 與 extract 的來源，因為它們必須成對）。\n\n⚠️ 這裡值得記的是**它有多便宜**：加一顆 Python 積木**沒有動 `block-registrar` 一行**，因為 `import.meta.glob('/src/components/*/*/forms/blocks.json')` 本來就是語言中立的。\n\n> **P3（不修改既有程式碼就能加新語言）在這一顆上是真的。**\n而 `vision` 那 33 筆命令式積木**不在這條路上**——它們是另一批東西，清單見 spec 160。",
+    "extract": "./forms/blocks.json",
+    "_extract_why": "同 `render`——同一份 `forms/blocks.json`，兩路成對。",
     "generate": "./generate.ts",
     "execute": null,
     "_execute_why": "真的缺。spec 156 明確排除 Python 的執行期。⚠️ 而這裡刻意【不】寫一個空的執行器——顯式的空與遺漏的空要分得出來，而一個 noop 函式兩者長得一樣。",

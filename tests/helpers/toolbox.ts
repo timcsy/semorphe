@@ -12,7 +12,13 @@
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { filterByTarget } from '../../src/core/component/traits'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
+import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/toolbox-categories'
+// ⚠️ **副作用匯入**：讓 Python 的分類宣告自己（與 `all-declarations.ts` 的
+// 身分改名表同一個形狀）。少了它，`declaredToolboxLanguages()` 看不到 python，
+// 而可拿性護欄會說 `python_print` 拿不到——**而它其實有分類，只是沒人載入宣告**。
+import '../../src/languages/python/toolbox-categories'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
+import type { ToolboxCategoryDef } from '../../src/core/types'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalBlocks, UNIVERSAL_OWNER } from '../../src/core/universal'
 import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
@@ -61,6 +67,22 @@ export function loadToolbox(
    * ⚠️ **省略 ＝ 不過濾**——既有的每一條護欄都不帶它，行為必須一格不變。
    */
   target?: { provides?: readonly string[] },
+  /**
+   * 用哪一份分類建工具箱。
+   *
+   * 🔴 **省略 ＝ 只有 cpp 的，行為一格不變。**
+   *
+   * ⚠️ 第一版讓這裡吃**所有語言的聯集**，而工具箱快照當場紅：
+   * cpp 使用者的工具箱**多出一個空的「輸入輸出」分類**——那是 Python 的。
+   *
+   * > **一個沒有積木的分類是一個空段落，而空段落與「這個分類就是這麼小」
+   * > 長得一模一樣**（可拿性護欄的檔頭早就寫著這句話）。
+   *
+   * 🟢 正解：**production 一次只建一個語言的工具箱**，所以這裡也一次一個；
+   * 要問「有沒有【某個】工具箱給得出這顆積木」的是可拿性護欄，
+   * 而它該做的是**逐語言量、把【發現】聯集起來**，不是把【分類】聯集起來。
+   */
+  categoryDefs: ToolboxCategoryDef[] = cppCategoryDefs,
 ): LoadedToolbox {
   // ⚠️ **走 production 的同一個組裝函式。**
   //
@@ -109,7 +131,7 @@ export function loadToolbox(
     ioPreference: 'iostream',
     msgs: {},
     categoryColors: CATEGORY_COLORS,
-    categoryDefs: cppCategoryDefs,
+    categoryDefs,
   }) as { contents: { name: string; contents: { type: string }[] }[] }
 
   const snapshot: ToolboxSnapshot = {

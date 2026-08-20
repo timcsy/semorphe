@@ -42,7 +42,7 @@ beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
   pyParser = new Parser()
   // ⚠️ 從 `tests/assets/` 讀——**不是 `public/`**（見檔頭）。
-  pyParser.setLanguage(await Language.load(`${process.cwd()}/tests/assets/tree-sitter-python.wasm`))
+  pyParser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-python.wasm`))
   lifter = createTestLifter()
 
   // 🟢 Python 的產生器——**組裝點在測試裡**，因為產品還沒有 Python target。

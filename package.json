@@ -13,7 +13,7 @@
     "test:e2e": "playwright test",
     "build:vscode": "npx tsx src/scripts/build-vscode.ts",
     "install:ide": "node tools/install-ide.mjs",
-    "build:wasm:python": "tree-sitter build --wasm node_modules/tree-sitter-python -o tests/assets/tree-sitter-python.wasm"
+    "build:wasm:python": "tree-sitter build --wasm node_modules/tree-sitter-python -o public/tree-sitter-python.wasm"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
