@@ -290,9 +290,13 @@ languages/{lang}/
       —— 🎯 **33 → 32：這個數字第一次下降**（spec `162`，2026-08-20）
       → [113](history/113-中立性第二維第一次下降.md)
       ```
-      🟢 已宣告式化   cpp_print、python_print（builder: "variadic"）
-      🔴 還沒         其餘的形狀【還沒有被宣告表達出來】——多半另有欄位
+      🟢 已退場   cpp_print、python_print（162）
+                 cpp_array_at、cpp_continue、cpp_endl、cpp_literal_string（163）
+      🔴 還有 19 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
       ```
+      —— 🎯 **落差第一次被量出來**（spec `163`）→ [114](history/114-兩份定義的落差第一次被量出來.md)
+      ⚠️ 那 19 筆**要逐筆判**「哪一邊才是對的」，
+      **不准用「把宣告改成跟命令式一樣」刷數字**——`cpp_break` 那筆命令式才是錯的。
       —— ⚠️ **一次只還一種形狀**：判準是「這一顆的形狀，宣告表達得完嗎」。
       `cpp_vector_declare` 也宣告了 `dynamicRules`，而它另有型別下拉與名稱欄位
       ——**符合這個形狀不等於只有這個形狀**。
