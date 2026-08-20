@@ -72,6 +72,14 @@ export function createAppLayout(
    * （由 `tests/integration/host-contract.test.ts` 釘住）。
    */
   profile: HostProfile,
+  /**
+   * 🔴 **語言相關的東西一律從這裡透傳**（spec 153）——這個檔**不認得**它們。
+   * 組裝點是 `app.ts`（護欄明寫「可見，不入棘輪」）。
+   */
+  languageWiring?: {
+    buildProgramRoot?: (body: never[]) => never
+    installExtractStrategies?: (extractor: never) => void
+  }
 ): AppShellElements {
   const layoutManager = new LayoutManager()
 
@@ -144,6 +152,9 @@ export function createAppLayout(
   const blocklyPanel = new BlocklyPanel({
     container: blocklyContainer,
     blockSpecRegistry,
+    // 🔴 **透傳，不知道它是誰**（spec 153）——組裝點（`app.ts`）給的。
+    buildProgramRoot: languageWiring?.buildProgramRoot as never,
+    installExtractStrategies: languageWiring?.installExtractStrategies as never,
     // ⚠️ **環境差異**：網頁版從 base URL 取，而把應用嵌進別的宿主時
     //    檔案在別的地方。🔴 而它不是「要不要有」——兩邊都要有。
     media: (window as unknown as { __SEMORPHE_BLOCKLY_MEDIA__?: string })

@@ -26,7 +26,8 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import { allComponentIds, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
+import neutralityBaseline from '../baselines/neutrality.json'
+import { allComponentIds, allComponentBlockTypes, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
@@ -34,8 +35,9 @@ const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as c
 const RULE =
   '只匹配完整的引號字串字面（\'id\' / "id" / `id`），但**先遮掉拼法像身分、實際不是**的位置' +
   '（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。' +
-  '僅計語言專屬概念（lang-core／lang-library）；' +
-  'universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。'
+  '計入【全部】元件身分——spec 152 拿掉了舊的 `universal` 豁免（它的理由' +
+  '「拔掉 C++ 後依然存在」是假的：元件全是 `cpp:` scope）。註解中的引用另計、不入基線。' +
+  '\n⚠️ 而這一維只掃【概念身分】（`cpp:print`）——【積木型別】（`cpp_print`）另一維，見下。'
 
 const NOT_DETECTED =
   '本護欄**不檢測「語法層級」的語言耦合**——它找的是元件身分字串，不是語法。' +
@@ -63,6 +65,8 @@ interface Violation {
 function measure(): {
   violations: Violation[]
   commentOnly: Map<string, string[]>
+  /** 🔴 spec 153 新增的第二維：中立範圍裡硬編的【積木型別】。 */
+  blockTypeHits: { file: string; count: number }[]
 } {
   // 🔄 **spec 152：計入【全部】元件身分。**
   //    舊版只計 lang-core／lang-library，而豁免 universal 的理由
@@ -71,6 +75,16 @@ function measure(): {
   const ids = allComponentIds()
   const hits = scanDirs(NEUTRAL_DIRS, ids)
 
+  // 🔴 **第二維：積木型別**（spec 153）。
+  //    第一維掃的是概念身分（`cpp:print`），而中立範圍裡硬編的是
+  //    積木型別（`cpp_print`）——於是 44 筆耦合對第一維【不存在】。
+  //    ⚠️ **兩個數字必須一起看**：把 `block-registrar` 的常數搬進 `core/`
+  //    會讓第一維降、第二維升，而只看第一維會把它當成進步。
+  const blockTypeHits = [...scanDirs(NEUTRAL_DIRS, allComponentBlockTypes())]
+    .map(([file, h]) => ({ file, count: h.code.length }))
+    .filter((x) => x.count > 0)
+    .sort((a, b) => a.file.localeCompare(b.file))
+
   const violations: Violation[] = []
   const commentOnly = new Map<string, string[]>()
 
@@ -78,7 +92,7 @@ function measure(): {
     for (const id of h.code) violations.push({ file, componentId: id, lines: h.lines[id] ?? [] })
     if (h.commentOnly.length > 0) commentOnly.set(file, h.commentOnly)
   }
-  return { violations, commentOnly }
+  return { violations, commentOnly, blockTypeHits }
 }
 
 const key = (v: Violation): string => `${v.file}::${v.componentId}`
@@ -134,7 +148,7 @@ describe('護欄：核心不得 import 語言套件（P9 的字面要求）', ()
 })
 
 describe('護欄：中立性（kernel／app／render 不得認得特定語言的元件身分）', () => {
-  const { violations, commentOnly } = measure()
+  const { violations, commentOnly, blockTypeHits } = measure()
   const files = [...new Set(violations.map((v) => v.file))]
 
   // 兩欄歸因：拿 059 動工前拍的 29 筆快照當基準，逐筆判斷它為什麼不見了
@@ -146,6 +160,17 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   const fixedFalsePositives = gone.filter((k) => (falsePositiveList as readonly string[]).includes(k))
   const actuallyMoved = gone.filter((k) => !(falsePositiveList as readonly string[]).includes(k))
 
+  it('🔴 第二維（積木型別）只准下降', () => {
+    // 🟢 **它不是紅燈，是基線**：44 筆在 2026-08-20 之前對這條護欄不存在。
+    // ⚠️ 而它與①**必須一起看**——把 `block-registrar` 的常數搬進 `core/`
+    //    會讓①降、②升，只看①會把搬家當成清償。
+    const btTotal = blockTypeHits.reduce((n, x) => n + x.count, 0)
+    const base = neutralityBaseline.blockTypes.total
+    expect(btTotal,
+      `積木型別耦合從 ${base} 升到 ${btTotal}——中立層【多】認得了語言專屬的積木型別`)
+      .toBeLessThanOrEqual(base)
+  })
+
   it('產出可讀報表：違規檔案 × 元件身分 × 行號', () => {
     const lines: string[] = []
     lines.push(SELF_FALSIFICATION)
@@ -154,7 +179,14 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
     lines.push(`判定規則：${RULE}`)
     lines.push(`掃描範圍：${NEUTRAL_DIRS.join('、')}`)
     lines.push('')
-    lines.push(`違規檔案：${files.length} 個｜違規項目：${violations.length} 筆`)
+    lines.push(`① 概念身分（\`cpp:print\`）：違規檔案 ${files.length} 個｜違規項目 ${violations.length} 筆`)
+    lines.push('')
+    // 🔴 **第二維（spec 153）——兩個數字必須一起印。**
+    //    只印第一個的話，「把常數搬進 core」會顯示成進步。
+    const btTotal = blockTypeHits.reduce((n, x) => n + x.count, 0)
+    lines.push(`② 積木型別（\`cpp_print\`）：${btTotal} 筆（Baseline ${neutralityBaseline.blockTypes.total}）`)
+    lines.push('   ⚠️ **這一維在 2026-08-20 之前對護欄【不存在】**——它只掃了①。')
+    for (const x of blockTypeHits) lines.push(`     ✘ ${x.file}：${x.count} 筆`)
     lines.push('')
 
     // ── 兩欄歸因（FR-005）

@@ -1,6 +1,5 @@
 import { generateExpressionCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
 import type { StylePreset } from '../../core/types'
-import apcsStyle from '../../languages/cpp/styles/apcs.json'
 import * as Blockly from 'blockly'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
@@ -13,11 +12,9 @@ import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, Execu
 import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
-import { registerCppExtractStrategies } from '../../languages/cpp/extractors/extract-strategies'
 import { showToast } from '../toolbar/toast'
 import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
-import { buildProgram } from '../../components/cpp/program/lift'
 import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
 
 export interface BlocklyPanelOptions {
@@ -29,6 +26,22 @@ export interface BlocklyPanelOptions {
   /** 產生降級用的程式碼文字時，用哪一種語言與風格。**不得寫死**（FR-003） */
   language?: string
   style?: StylePreset
+  /**
+   * 怎麼建「程式」這個根節點——🔴 **由組裝點提供**（spec 153）。
+   *
+   * 原本是視圖層直接 import `components/cpp/program/lift` 的 `buildProgram`
+   * ——而**根節點長什麼樣是語言的知識**。
+   */
+  buildProgramRoot?: (body: SemanticNode[]) => SemanticNode
+  /**
+   * 裝上抽取策略——🔴 **建構時就執行**（spec 153）。
+   *
+   * 原本是面板自己 `registerCppExtractStrategies(...)`；改成選項之後
+   * **哪些策略要裝不再是視圖層的知識**，而**時機沒有變**
+   * ——⚠️ 那很重要：這個專案撞過「機制有了沒人接上」四次，
+   * 而改成事後呼叫會開一個「還沒裝」的窗口。
+   */
+  installExtractStrategies?: (extractor: PatternExtractor) => void
 }
 
 export class BlocklyPanel implements ViewHost {
@@ -131,8 +144,31 @@ export class BlocklyPanel implements ViewHost {
    * `setCodeContext` 會覆蓋它，而應用層在建立時就會傳進來。
    */
   private codeLanguage = 'cpp'
-  private codeStyle: StylePreset = apcsStyle as StylePreset
+  /**
+   * 🔴 **沒有預設值**（spec 153）——原本是 `apcsStyle`，
+   * 而那讓視圖層 import 了一個語言套件的檔案（P9 第一項）。
+   *
+   * ⚠️ 而它從來不是真的預設：`app.ts:218` 在建好之後**立刻**
+   * `setCodeContext('cpp', DEFAULT_STYLE)`。那個「預設」只活了幾行。
+   *
+   * > **一個立刻被覆蓋的預設值，買到的是耦合，不是安全。**
+   */
+  private codeStyle: StylePreset | null = null
 
+  /**
+   * 建程式根節點——⚠️ **省略時退回一個空殼**，而那會讓抽取回來的樹沒有根。
+   * 🟢 組裝點一定會傳（`app.ts`），這個退路只是為了讓面板單獨建得起來。
+   */
+  private buildProgramRoot: (body: SemanticNode[]) => SemanticNode =
+    (body) => ({ id: 'program', conceptId: 'program', properties: {}, children: { body } } as SemanticNode)
+
+  /**
+   * 抽取策略由**組裝點**裝上（spec 153）。
+   *
+   * 🔴 原本是面板自己 `registerCppExtractStrategies(...)`——**哪些策略要裝
+   * 不是視圖層的知識**（P9）。⚠️ 而時機從「面板建構時」變成
+   * 「app 初始化時」，所以它必須在第一次 `extract` 之前被呼叫。
+   */
   /** 應用層推進來——與同步控制器持有的是同一組值 */
   setCodeContext(language: string, style: StylePreset): void {
     this.codeLanguage = language
@@ -147,10 +183,11 @@ export class BlocklyPanel implements ViewHost {
     if (this.blockSpecRegistry) {
       this.patternExtractor.loadBlockSpecs(this.blockSpecRegistry.getAll())
     }
-    registerCppExtractStrategies(this.patternExtractor)
+    options.installExtractStrategies?.(this.patternExtractor)
     this.media = options.media
     if (options.language !== undefined) this.codeLanguage = options.language
     if (options.style !== undefined) this.codeStyle = options.style
+    if (options.buildProgramRoot) this.buildProgramRoot = options.buildProgramRoot
   }
 
   async initialize(_config: ViewConfig): Promise<void> {
@@ -670,7 +707,7 @@ export class BlocklyPanel implements ViewHost {
 
   /** Extract semantic tree from workspace blocks, plus blockMappings for nodeId↔blockId */
   extractSemanticTree(): SemanticNode {
-    if (!this.workspace) return buildProgram()
+    if (!this.workspace) return this.buildProgramRoot([])
     this._blockMappings = []
     const topBlocks = this.workspace.getTopBlocks(true)
     const body: SemanticNode[] = []
@@ -678,7 +715,7 @@ export class BlocklyPanel implements ViewHost {
       const nodes = this.extractBlockChain(block)
       body.push(...nodes)
     }
-    return buildProgram(body)
+    return this.buildProgramRoot(body)
   }
 
   /** Get block mappings from the last extraction */
@@ -931,6 +968,14 @@ export class BlocklyPanel implements ViewHost {
   private simpleExpressionToCode(node: SemanticNode): string {
     // ⚠️ **運算式位置**——不是格式偏好，是位置（見 `generateExpressionCode` 的說明）。
     // B 項合併掉 `*_expr` 雙重身分之後，位置由呼叫端說，不再由身分編碼。
+    // 🔴 **沒有風格就說不出程式碼**——而這是降級路徑，
+    //    honest degradation：回一個看得出「這裡沒能產出」的記號，
+    //    不要猜一個風格（P6：禁止給出一個看起來合理的結構）。
+    // ⚠️ **用專案既有的「產不出來」標記**，不要自己寫註解語法
+    //    ——第一版寫的是 `/* … */`，而**語法耦合護欄當場抓到**：
+    //    那是 C 的註解記號，出現在視圖層。
+    //    > **連「說不出來」都要用中立的說法。**
+    if (!this.codeStyle) return `${UNGENERATABLE_PREFIX}尚未設定程式碼風格⟩`
     return generateExpressionCode(node, this.codeLanguage, this.codeStyle)
   }
 

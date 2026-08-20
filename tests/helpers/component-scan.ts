@@ -23,6 +23,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
+import { deriveBlockType } from '../../src/core/component/derive-block-type'
 import type { ConceptDefJSON } from '../../src/core/types'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 
@@ -63,6 +64,23 @@ export function allComponentDefs(): ConceptDefJSON[] {
  * 🟢 動它的時機是「它豁免了 0 筆」的今天：**沒有數字要調**。
  * ⚠️ 而護欄因此**變嚴**：將來任何元件身分出現在中立範圍都會被算到。
  */
+/**
+ * 全部元件的**積木型別**（`cpp:print` → `cpp_print`）。
+ *
+ * 🔴 **spec 153 新增的那一維。**
+ *
+ * 中立性護欄原本只掃**概念身分**，而中立範圍裡硬編的是**積木型別**
+ * ——於是 44 筆耦合對它**不存在**，護欄報 0。
+ *
+ * > **一條護欄如果只掃一種拼法，另一種拼法的耦合就對它不存在。**
+ *
+ * ⚠️ 而這與 `history/015`（「語言無關性從尚未驗證到已知是破的」）
+ * 是**同一個病的第二次**：那次也是「因為第一次真的去量了」。
+ */
+export function allComponentBlockTypes(): string[] {
+  return [...new Set(allComponentDefs().map((c) => deriveBlockType(c.conceptId)))].sort()
+}
+
 export function allComponentIds(): string[] {
   return [...new Set(allComponentDefs().map((c) => c.conceptId))].sort()
 }

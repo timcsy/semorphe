@@ -891,3 +891,37 @@ export interface BoardPinModel {
   /** 這塊板子提供的具名常數。⚠️ 沒有的名字要**查不到**，不是給別的板子的值。 */
   constants: Readonly<Record<string, number>>
 }
+
+/**
+ * 一個「風格例外」——某個節點不符合目前的風格偏好，而它**轉得過去**。
+ *
+ * 🔴 **spec 153 從 `languages/cpp/style-exceptions.ts` 搬進來**：
+ * 它的四個欄位**一個語言專屬的東西都沒有**（節點／說明／建議／怎麼轉），
+ * 而視圖層（`sync-controller`）需要它的型別。
+ *
+ * > **中立的形狀住在核心，語言專屬的規則住在語言套件。**
+ * ⚠️ 而**規則**（哪些算例外、怎麼轉）仍然由語言套件推進來——那不是這裡的事。
+ */
+export interface StyleException {
+  /** 那個節點 */
+  node: SemanticNode
+  /** 給人看的說明 */
+  label: string
+  /** 轉過去會變成什麼（描述） */
+  suggestion: string
+  /** 執行轉換——回替代節點，或 `null` 代表移除 */
+  convert: () => SemanticNode[] | null
+}
+
+/**
+ * 一段程式碼**符不符合目前的風格偏好**——中立的那一半。
+ *
+ * 🔴 **spec 153**：視圖層（`sync-controller`）只讀 `verdict`，其餘欄位它只是轉交。
+ * 而語言專屬的細節（C++ 的 `iostreamCount`／`cstdioCount`）**留在語言套件**
+ * ——把它們搬進核心等於把語言知識搬進核心。
+ *
+ * > **視圖需要的是【判決】，不是【證據】。**
+ */
+export interface StyleConformance {
+  verdict: 'conforming' | 'minor_exception' | 'bulk_deviation'
+}

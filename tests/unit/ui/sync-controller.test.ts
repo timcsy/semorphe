@@ -6,6 +6,12 @@ import type { StylePreset } from '../../../src/core/types'
 import type { CodeMapping, BlockMapping } from '../../../src/core/projection/code-generator'
 import { createNode } from '../../../src/core/semantic-tree'
 import { SemanticBus } from '../../../src/core/semantic-bus'
+// 🔴 **spec 153：風格分析改成由組裝點推進來**，所以測試也要裝
+//    ——⚠️ 這三支測的是**同步控制器怎麼用分析器**（真行為），
+//    不是被刪掉的功能，所以它們**留著並裝上分析器**，而不是退場。
+import {
+  detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
+} from '../../../src/languages/cpp/style-exceptions'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { renderToBlocklyState } from '../../../src/core/projection/block-renderer'
@@ -32,12 +38,22 @@ describe('SyncController (bus-based)', () => {
   beforeEach(() => {
     bus = new SemanticBus()
     controller = new SyncController(bus, 'cpp', mockStyle)
+    controller.setStyleAnalyzer({
+      detectStyleExceptions,
+      applyStyleConversions,
+      analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
+    })
   })
 
   describe('constructor', () => {
     it('should accept (bus, language, style) without panel references', () => {
       const b = new SemanticBus()
       const c = new SyncController(b, 'cpp', mockStyle)
+      c.setStyleAnalyzer({
+        detectStyleExceptions,
+        applyStyleConversions,
+        analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
+      })
       expect(c.isSyncing()).toBe(false)
       expect(c.getCurrentTree()).toBeNull()
     })

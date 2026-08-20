@@ -1,10 +1,20 @@
 {
   "_meta": {
     "guard": "neutrality",
-    "measuredAt": "2026-08-10",
-    "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），但**先遮掉拼法像身分、實際不是**的位置（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。僅計語言專屬概念（lang-core／lang-library）；universal 概念拔掉 C++ 後依然存在，不妨礙 P9，改由就近性護欄涵蓋。註解中的引用另計、不入基線。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "measuredAt": "2026-08-20",
+    "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），但**先遮掉拼法像身分、實際不是**的位置（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。計入【全部】元件身分（spec 152 拿掉了 universal 豁免，它的理由是假的）。註解中的引用另計、不入基線。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。",
+    "二維": "🔴 spec 153：這條護欄有【兩個】數字。`total` 掃**概念身分**（`cpp:print`），`blockTypes` 掃**積木型別**（`cpp_print`）。⚠️ 只看任一個都會誤判——把 `block-registrar` 的常數搬進 `core/` 會讓前者降、後者升。"
   },
   "total": 0,
-  "files": {}
+  "files": {},
+  "blockTypes": {
+    "total": 44,
+    "_why": "2026-08-20 第一次量。護欄在此之前只掃概念身分，於是這 44 筆對它【不存在】。⚠️ 這個數字**不是違規紅燈**，它是一個原本看不見的東西第一次有了基線。",
+    "files": {
+      "src/core/block-input-names.ts": 9,
+      "src/core/projection/block-renderer.ts": 2,
+      "src/ui/block-registrar.ts": 33
+    }
+  }
 }

@@ -19,16 +19,10 @@ import { buildInclude } from '../../components/cpp/include/lift'
 import { isIncludeDirective } from './core/node-traits'
 
 /** A single style exception found in the semantic tree */
-export interface StyleException {
-  /** The offending node */
-  node: SemanticNode
-  /** Human-readable description of the exception */
-  label: string
-  /** What the conversion would produce (description) */
-  suggestion: string
-  /** Apply conversion — returns replacement node(s), or null to remove */
-  convert: () => SemanticNode[] | null
-}
+// 🔴 **型別搬到核心了**（spec 153）——它的四個欄位一個語言專屬的東西都沒有，
+//    而視圖層需要它。**規則**（哪些算例外、怎麼轉）仍然住在這裡。
+export type { StyleException } from '../../core/types'
+import type { StyleException } from '../../core/types'
 
 /** Rule definition for matching style exceptions */
 interface StyleExceptionRule {

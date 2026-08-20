@@ -2,11 +2,31 @@ import type { SemanticNode, StylePreset, Topic } from '../core/types'
 import { flattenLevelTree, getVisibleConcepts } from '../core/level-tree'
 import type { ProgramScaffold, ScaffoldResult } from '../core/program-scaffold'
 import type { CodingStyle } from '../languages/style'
-import {
-  detectStyleExceptions, applyStyleConversions,
-  analyzeIoConformance,
-  type StyleException, type IoConformanceResult,
-} from '../languages/cpp/style-exceptions'
+// 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
+//
+// ⚠️ 兩種做法都論證過：
+//   ① 抽成核心的通用機制 → 🔴 否決：「這段程式碼的風格例外是什麼」
+//      是**語言的知識**（`cout` vs `printf`），核心抽象不出來
+//   ② 讓語言套件推一組函式進來 → 🟢 選這個，與
+//      `skip-declarations`／`comment-syntax`／`language-executors` 同一個形狀
+//
+// > **機制跨不過分層時，讓特例自己帶著宣告來**（`experience`）。
+import type { StyleException, StyleConformance } from '../core/types'
+// 🔴 **一個語言套件的匯入都不剩**（spec 153）。
+//    原本連 `StyleConformance` 的型別都從語言套件來——而這一層
+//    **只讀 `verdict`**，其餘欄位只是轉交。
+//
+//    > **視圖需要的是【判決】，不是【證據】。**
+//
+//    ⚠️ 而語言專屬的細節（`iostreamCount`／`cstdioCount`）留在語言套件，
+//    由組裝點與消費端自己收窄——**不要為了拿掉一個 import 就把欄位搬進核心**。
+
+/** 風格分析——由組裝點推進來（spec 153）。 */
+export interface StyleAnalyzer {
+  detectStyleExceptions: (tree: SemanticNode, style: CodingStyle) => StyleException[]
+  applyStyleConversions: (tree: SemanticNode, exceptions: StyleException[]) => SemanticNode
+  analyzeIoConformance: (code: string, pref: string) => StyleConformance
+}
 import { generateCodeWithMapping } from '../core/projection/code-generator'
 
 /** Convert StylePreset (core/types) → CodingStyle (languages/style) for style exception detection */
@@ -42,6 +62,18 @@ export interface CodeParser {
 }
 
 export class SyncController {
+  /**
+   * 風格分析——⚠️ **省略時整段跳過**（不是猜一個結果）。
+   * 🟢 組裝點一定會裝（`app.ts`）；沒裝時的行為是「不做風格轉換」，
+   *    而那是**誠實的降級**：沒有規則就說不出例外。
+   */
+  private styleAnalyzer: StyleAnalyzer | null = null
+
+  /** 組裝點推進來。⚠️ 必須在第一次同步之前。 */
+  setStyleAnalyzer(analyzer: StyleAnalyzer): void {
+    this.styleAnalyzer = analyzer
+  }
+
   private bus: SemanticBus
   private language: string
   private style: StylePreset
@@ -80,7 +112,7 @@ export class SyncController {
   private blockMappings: BlockMapping[] = []
   private onErrorCallback: ((errors: SyncError[]) => void) | null = null
   private onStyleExceptionsCallback: ((exceptions: StyleException[], apply: () => void) => void) | null = null
-  private onIoConformanceCallback: ((result: IoConformanceResult) => void) | null = null
+  private onIoConformanceCallback: ((result: StyleConformance) => void) | null = null
   private codingStyle: CodingStyle | null = null
   private programScaffold: ProgramScaffold | null = null
   private currentTopic: Topic | null = null
@@ -118,7 +150,7 @@ export class SyncController {
   }
 
   /** Called when code→blocks detects I/O style non-conformance (借音 or 轉調) */
-  onIoConformance(callback: (result: IoConformanceResult) => void): void {
+  onIoConformance(callback: (result: StyleConformance) => void): void {
     this.onIoConformanceCallback = callback
   }
 
@@ -262,9 +294,9 @@ export class SyncController {
       }
 
       // Code-level I/O conformance check (before lift — 借音/轉調 detection)
-      let ioResult: IoConformanceResult | null = null
+      let ioResult: StyleConformance | null = null
       if (this.codingStyle) {
-        const result = analyzeIoConformance(code, this.codingStyle.ioPreference)
+        const result = this.styleAnalyzer!.analyzeIoConformance(code, this.codingStyle.ioPreference)
         if (result.verdict !== 'conforming') {
           ioResult = result
         }
@@ -277,12 +309,12 @@ export class SyncController {
       let semanticExceptions: StyleException[] = []
       let applySemanticConversions: (() => void) | null = null
       if (this.codingStyle) {
-        const exceptions = detectStyleExceptions(tree, this.codingStyle)
+        const exceptions = this.styleAnalyzer!.detectStyleExceptions(tree, this.codingStyle)
         if (exceptions.length > 0) {
           semanticExceptions = exceptions
           const currentTree = tree
           applySemanticConversions = () => {
-            const converted = applyStyleConversions(currentTree, exceptions)
+            const converted = this.styleAnalyzer!.applyStyleConversions(currentTree, exceptions)
             this.currentTree = converted
             const { mappings: convMappings } = generateCodeWithMapping(converted, this.language, this.style)
             this.codeMappings = convMappings

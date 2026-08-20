@@ -13,6 +13,19 @@ import type { DiagnosticBlock } from '../core/diagnostics'
 import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
 import { registerCppLanguage } from '../languages/cpp/generators'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases } from '../core/projection/code-generator'
+// 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
+//    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
+//    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
+//    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
+import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
+import { buildProgram } from '../components/cpp/program/lift'
+import {
+  C_COMPOUND_ASSIGN_INPUTS, C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
+} from '../languages/cpp/block-input-names'
+import {
+  detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
+} from '../languages/cpp/style-exceptions'
+import { setLanguageInputNames } from './block-registrar'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
@@ -139,6 +152,12 @@ export class App {
     this.profile = profile
     this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
+    // ⚠️ **必須在 `registerAll` 之前**——註冊時就會讀這些名字。
+    setLanguageInputNames({
+      compoundAssign: C_COMPOUND_ASSIGN_INPUTS,
+      compoundAssignExpr: C_COMPOUND_ASSIGN_EXPR_INPUTS,
+      varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
+    })
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
     // 🔴 **與執行那側同一份來源**（`currentBoard: () => this.currentTarget.board`）
     //    ——兩邊如果各查各的，遲早會有一邊落後。
@@ -206,13 +225,27 @@ export class App {
     const appEl = document.getElementById('app')
     if (!appEl) throw new Error('#app element not found')
 
-    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox(), this.profile)
+    const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox(), this.profile,
+      {
+        buildProgramRoot: buildProgram as never,
+        // 🔴 **用建構選項而不是事後呼叫**（spec 153）：
+        //    ① 不新增一筆「直接呼叫視圖」（第四項獨立性的棘輪）
+        //    ② 時機回到面板建構時——**沒有「裝了沒人接上」的窗口**
+        installExtractStrategies: registerCppExtractStrategies as never,
+      })
     this.blocklyPanel = elements.blocklyPanel
     this.codeView = elements.codeView
     this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, 'cpp', DEFAULT_STYLE)
+    this.syncController.setStyleAnalyzer({
+      detectStyleExceptions,
+      applyStyleConversions,
+      // ⚠️ **收窄發生在組裝點**——`IoPreferenceKey` 是語言專屬的型別，
+      //    而視圖層那一側的簽章是中立的 `string`。
+      analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
+    })
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
     this.blocklyPanel?.setCodeContext('cpp', DEFAULT_STYLE)

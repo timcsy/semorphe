@@ -10,11 +10,27 @@ import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INP
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
-import {
-  C_COMPOUND_ASSIGN_INPUTS,
-  C_COMPOUND_ASSIGN_EXPR_INPUTS,
-  C_VAR_DECLARE_EXPR_INPUTS,
-} from '../languages/cpp/block-input-names'
+// 🔴 **不再 import 語言套件**（spec 153）——三個 C 專屬的 input 名由組裝點注入。
+//
+// ⚠️ 而「把它們搬進 `core/block-input-names`」是**錯的修法**：
+//    那個檔已經硬編了 9 個 `cpp_*` 積木型別，搬過去會讓
+//    中立性護欄的**第一維降、第二維升**——把搬家當成清償。
+//    （第二維就是 spec 153 為此加的。）
+type InputNames = { value: string[] }
+let C_COMPOUND_ASSIGN_INPUTS: InputNames = { value: ['VALUE'] }
+let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'] }
+let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'] }
+
+/** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
+export function setLanguageInputNames(names: {
+  compoundAssign: InputNames
+  compoundAssignExpr: InputNames
+  varDeclareExpr: InputNames
+}): void {
+  C_COMPOUND_ASSIGN_INPUTS = names.compoundAssign
+  C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
+  C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
+}
 
 export interface WorkspaceAccessors {
   getWorkspace: () => Blockly.Workspace | null
