@@ -60,7 +60,7 @@ tree-sitter 產生的 AST 是 parser 的中間產物，**接近但不等於**語
 
 ### 3. P3 開放擴充
 
-推導自：根公理（投影種類是開放集合）+ P2（概念可分層）
+推導自：根公理（投影種類是開放集合）+ P2（元件可分層）
 
 系統可以在**不修改既有程式碼**的前提下加入新概念、新語言、新套件。核心引擎只有一條管線。
 
@@ -184,7 +184,7 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | 兩種視圖不一致了 | **根公理**：所有視圖都是同一棵語義樹的投影 |
 | 要不要支援某種投影 | **P1**：確定可逆性等級（R0-R4）和參數空間 |
 | 轉不了怎麼辦 | **P1**：不存在轉不了——只有降級程度 |
-| 積木該歸哪類 | **P2**：它映射到哪個抽象概念？ |
+| 積木該歸哪類 | **P2**：它映射到哪個抽象元件？ |
 | 測試夠不夠完整 | **P2**：ComponentRegistry 每個條目的五條路徑都通過嗎？ |
 | 加新套件要改哪些檔案 | **P3**：只加 JSON，不改既有程式碼 |
 | 新 pattern 會不會影響既有行為 | **P3**：constraints 偏序可比較嗎？不可比較就強制手寫 |
@@ -213,7 +213,7 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | **i18n** | P1：Locale 是投影參數。message/tooltip 是呈現資訊，分離到 locale 檔案 |
 | **coding style** | P1：Code Style 是 `code` viewType 的 viewParams，切換 = 重新投影 |
 | **block style** | P1：Block Style 是 `blocks` viewType 的 viewParams。Sc4：預設值符合學習者閱讀習慣 |
-| **多語言支援** | P2：區分概念分層。跨語言走 abstract concept 映射（R2-R3 投影） |
+| **多語言支援** | P2：區分元件分層。跨語言走 抽象元件映射（R2-R3 投影） |
 | **R0-R1 投影** | 根公理：建立顯式語義樹。P1：roundtrip 是判定標準。P3：Pattern Engine 是唯一管線 |
 | **R2-R4 投影** | P1：唯讀視圖無需 roundtrip，但需保證投影完整性（不遺漏節點） |
 | **外部套件** | P2：辨識語義角色。P3：只加 JSON + 可選註冊。P4：決定認知層級 |
@@ -225,7 +225,7 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | 觸發關鍵字 | MUST 讀 |
 |---|---|
 | 投影、roundtrip、可逆性、R0-R4、viewType、viewParams、語義 diff、Code/Block Style、執行後端 | `concepts/投影.md` |
-| 概念、registry、四路完備性、抽象概念、跨語言、語義阻抗、statement/expression | `concepts/元件代數.md` |
+| 概念、registry、四路完備性、抽象元件、跨語言、語義阻抗、statement/expression | `concepts/元件代數.md` |
 | 新增語言、新增套件、pattern、astPattern、歧義、lifter、strategy、依賴解析 | `concepts/開放擴充.md` |
 | 認知層級、Level、Topic、toolbox、scaffold、ghost line、表面形態 | `concepts/漸進揭露.md` |
 | 積木文字、message、tooltip、mutator label、i18n、CLT、ZPD | `concepts/認知鷹架.md` |

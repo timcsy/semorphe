@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:program",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "body": "statements"

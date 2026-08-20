@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:doc_comment",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "brief",

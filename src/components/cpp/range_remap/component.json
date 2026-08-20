@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:range_remap",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:include",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "header",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cast_reinterpret",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "target_type",

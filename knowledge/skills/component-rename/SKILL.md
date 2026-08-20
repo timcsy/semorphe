@@ -61,7 +61,7 @@ argument-hint: "[要改什麼名字；空＝從當前 spec 的驗收數字推]"
 
 ```
 componentId, concept, id, type, blockType, componentId,
-abstractConcept, extends, requires, provides, blocks[], concepts[]
+abstractComponent, extends, requires, provides, blocks[], concepts[]
 ```
 
 ⚠️ **`id` 是漏過四輪的那一個。** `blocks.json` 用 `id` 而不是 `blockType`，

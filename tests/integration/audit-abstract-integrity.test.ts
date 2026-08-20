@@ -8,8 +8,8 @@
  *
  * ```
  * findAbstract(id) {
- *   if (!concrete?.abstractConcept) return undefined   // 沒有宣告
- *   return this.concepts.get(concrete.abstractConcept) // 指不到 → 也是 undefined
+ *   if (!concrete?.abstractComponent) return undefined   // 沒有宣告
+ *   return this.concepts.get(concrete.abstractComponent) // 指不到 → 也是 undefined
  * }
  * ```
  *
@@ -25,7 +25,7 @@ import { describe, it, expect } from 'vitest'
 import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { allComponentDefs } from '../helpers/component-scan'
 
-const RULE = '每個 abstractConcept 的目標，必須是一個真的存在的概念。'
+const RULE = '每個 abstractComponent 的目標，必須是一個真的存在的元件。'
 
 const SELF_FALSIFICATION =
   '⚠️ 這個數字若是 0 而「宣告了父概念的概念數」也接近 0，那是清單沒取到，' +
@@ -44,8 +44,8 @@ interface AbstractBaseline {
 
 const defs = allComponentDefs()
 const ids = new Set(defs.map((d) => d.componentId))
-const declared = defs.filter((d) => d.abstractConcept)
-const dangling = declared.filter((d) => !ids.has(d.abstractConcept as string))
+const declared = defs.filter((d) => d.abstractComponent)
+const dangling = declared.filter((d) => !ids.has(d.abstractComponent as string))
 /**
  * 指向自己的父概念。
  *
@@ -53,7 +53,7 @@ const dangling = declared.filter((d) => !ids.has(d.abstractConcept as string))
  * 回傳它自己，對跨語言映射毫無意義。**通用概念本身就是抽象層**，不該再宣告
  * 父概念。第一版的懸空檢查抓不到它（自己當然「存在」）。
  */
-const selfLoops = declared.filter((d) => d.abstractConcept === d.componentId)
+const selfLoops = declared.filter((d) => d.abstractComponent === d.componentId)
 
 describe('護欄：抽象層完整性', () => {
   it('產出可讀報表', () => {
@@ -65,7 +65,7 @@ describe('護欄：抽象層完整性', () => {
       '',
       `宣告了父概念：${declared.length}｜**指向不存在的：${dangling.length}**｜**指向自己的：${selfLoops.length}**`,
       '',
-      ...dangling.slice(0, 12).map((d) => `  ${d.componentId} → ${d.abstractConcept}（不存在）`),
+      ...dangling.slice(0, 12).map((d) => `  ${d.componentId} → ${d.abstractComponent}（不存在）`),
       ...(dangling.length > 12 ? [`  … 另外 ${dangling.length - 12} 個`] : []),
       '',
       '查詢父概念的函式對這些**靜默回傳「沒有」**——所以它壞掉的樣子',
@@ -75,12 +75,12 @@ describe('護欄：抽象層完整性', () => {
   })
 
   it('★ 注入：指向一個不存在的概念，必須被抓到', () => {
-    const fake = { componentId: '__probe__', abstractConcept: '__does_not_exist__' }
-    expect(ids.has(fake.abstractConcept)).toBe(false)
+    const fake = { componentId: '__probe__', abstractComponent: '__does_not_exist__' }
+    expect(ids.has(fake.abstractComponent)).toBe(false)
   })
 
   it('★ 注入：指向存在的概念不得被誤報', () => {
-    const ok = declared.filter((d) => ids.has(d.abstractConcept as string))
+    const ok = declared.filter((d) => ids.has(d.abstractComponent as string))
     expect(ok.every((d) => !dangling.includes(d))).toBe(true)
   })
 
@@ -94,7 +94,7 @@ describe('護欄：抽象層完整性', () => {
 
   it('棘輪：懸空數不得上升', () => {
     const b = loadBaseline<AbstractBaseline>('abstract-integrity')
-    const now = dangling.map((d) => `${d.componentId}→${d.abstractConcept}`)
+    const now = dangling.map((d) => `${d.componentId}→${d.abstractComponent}`)
     const added = now.filter((x) => !b.targets.includes(x))
     expect(
       added,
@@ -116,6 +116,6 @@ if (process.env.GENERATE_BASELINE) {
     },
     declared: declared.length,
     dangling: dangling.length,
-    targets: dangling.map((d) => `${d.componentId}→${d.abstractConcept}`).sort(),
+    targets: dangling.map((d) => `${d.componentId}→${d.abstractComponent}`).sort(),
   })
 }

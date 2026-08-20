@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pin_mode",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "pin": "expression",

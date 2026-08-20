@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:input_formatted",
-  "abstractConcept": "cpp:input",
+  "abstractComponent": "cpp:input",
   "properties": [
     {
       "name": "format",

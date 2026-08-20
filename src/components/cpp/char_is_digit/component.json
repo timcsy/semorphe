@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:char_is_digit",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression"

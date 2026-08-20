@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:throw",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression"

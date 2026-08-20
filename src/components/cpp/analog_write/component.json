@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:analog_write",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "pin": "expression",

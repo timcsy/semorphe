@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:lcd_print",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

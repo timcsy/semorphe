@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:arithmetic",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "operator",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:using_namespace",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "ns",

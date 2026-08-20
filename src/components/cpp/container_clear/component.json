@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:container_clear",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

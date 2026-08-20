@@ -2,7 +2,7 @@
   "_meta": {
     "guard": "abstract-integrity",
     "measuredAt": "2026-08-06",
-    "rule": "每個 abstractConcept 的目標，必須是一個真的存在的概念。",
+    "rule": "每個 abstractComponent 的目標，必須是一個真的存在的元件。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 這個數字若是 0 而「宣告了父概念的概念數」也接近 0，那是清單沒取到，不是抽象層健康。兩個數字要一起看。"
   },
   "declared": 34,

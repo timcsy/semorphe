@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:random_seed",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "seed": "expression"

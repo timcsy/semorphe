@@ -88,7 +88,7 @@ export interface SemanticModel {
 
 export interface ComponentDef {
   id: string
-  abstractConcept?: string
+  abstractComponent?: string
   propertyNames: string[]
   childNames: string[]
   semanticContract?: SemanticContract
@@ -176,7 +176,7 @@ export interface ComponentMapping {
    *
    * > **命名慣例不是契約。** 要判斷「這顆概念是不是 X」，就宣告一個 X 標註。
    */
-  abstractConcept?: string
+  abstractComponent?: string
   properties?: string[]
   children?: Record<string, string>
   role?: 'statement' | 'expression' | 'both'
@@ -452,7 +452,7 @@ export interface ParamSpec {
 
 export interface ComponentDefJSON {
   componentId: string
-  abstractConcept?: string | null
+  abstractComponent?: string | null
   /**
    * ⚠️ **過渡中**：純名字清單（124 顆）與 `ParamSpec[]`（規格化後）並存。
    * 見 `specs/102-param-spec`。全部遷完之後這裡只留 `ParamSpec[]`。
@@ -508,7 +508,7 @@ export type SkipReason =
    * 目標**不成立**。
    *
    * 門檻（`skip-declaration-gate` 會驗）：
-   *   ① 必須真的有概念宣告它為 `abstractConcept`
+   *   ① 必須真的有概念宣告它為 `abstractComponent`
    *   ② 必須不在工具箱裡——使用者拖得到的話它就該辨識得回來
    */
   | 'degradation-target'

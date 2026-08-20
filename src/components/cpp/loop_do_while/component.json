@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:loop_do_while",
-  "abstractConcept": "cpp:loop_while",
+  "abstractComponent": "cpp:loop_while",
   "properties": [],
   "children": {
     "body": "statements",

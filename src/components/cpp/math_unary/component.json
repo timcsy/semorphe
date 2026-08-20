@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_unary",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "func",

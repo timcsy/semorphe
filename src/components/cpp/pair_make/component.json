@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pair_make",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "first": "expression",

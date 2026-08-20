@@ -32,7 +32,7 @@
  * - **不檢測用檔案路徑讀取的程式碼**（`fs.readFileSync(...json)`）。那類多半是
  *   **檢查檔案本身**的工具（`verify-concept-paths`、「concepts.json 不得含 blockDef」），
  *   它們要的就是原始檔，不是載入後的狀態。**只擋 `import`。**
- * - **不檢測其他唯一真相機制的採用率**（`block-input-names`、`abstractConcept`…）
+ * - **不檢測其他唯一真相機制的採用率**（`block-input-names`、`abstractComponent`…）
  *   ——那是 `audit-annotation-adoption` 與就近性的事。
  */
 import { describe, it, expect } from 'vitest'

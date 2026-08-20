@@ -20,7 +20,7 @@ describe('PatternRenderer', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:increment',
-          abstractConcept: 'increment',
+          abstractComponent: 'increment',
           properties: ['name', 'operator'],
           role: 'both',
         },

@@ -90,7 +90,7 @@ export function allComponentIds(): string[] {
  * 逐字元處理並追蹤字串狀態，避免把 `'http://x'` 裡的 `//` 誤判為註解。
  */
 /**
- * 把 `"abstractConcept": "x"` 的**值**遮掉。
+ * 把 `"abstractComponent": "x"` 的**值**遮掉。
  *
  * 那不是 `x` 的實作足跡，而是**別人在指向 x**——把它算進 `x` 的擴散度，
  * 等於「越多概念認 var_declare 當父概念，var_declare 就越碎裂」，那是反的。
@@ -99,7 +99,7 @@ export function allComponentIds(): string[] {
  * 見 specs/056-abstract-concept-integrity
  */
 export function maskAbstractTargets(src: string): string {
-  return src.replace(/("abstractConcept"\s*:\s*)"[^"]*"/g, '$1""')
+  return src.replace(/("abstractComponent"\s*:\s*)"[^"]*"/g, '$1""')
 }
 
 /**

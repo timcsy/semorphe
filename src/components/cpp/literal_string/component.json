@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:literal_string",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "value",

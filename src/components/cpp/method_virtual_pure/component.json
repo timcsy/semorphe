@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:method_virtual_pure",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "return_type",

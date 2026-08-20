@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:range_min",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "begin",

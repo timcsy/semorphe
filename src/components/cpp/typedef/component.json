@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:typedef",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "orig_type",

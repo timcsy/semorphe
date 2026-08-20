@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:memory_fill",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "ptr": "expression",

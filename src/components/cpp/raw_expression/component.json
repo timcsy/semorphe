@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:raw_expression",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "code",

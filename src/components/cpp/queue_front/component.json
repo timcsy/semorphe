@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:queue_front",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

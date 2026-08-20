@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_min",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "a": "expression",

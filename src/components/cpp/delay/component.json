@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:delay",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "ms": "expression"

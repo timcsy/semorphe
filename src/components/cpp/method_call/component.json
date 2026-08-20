@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:method_call",
-  "abstractConcept": "cpp:func_call",
+  "abstractComponent": "cpp:func_call",
   "properties": [
     {
       "name": "obj",

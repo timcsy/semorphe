@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:dht_read",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

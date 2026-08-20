@@ -1,7 +1,7 @@
 {
   "componentId": "python:print",
   "_why": "spec 156：第一顆 Python 元件。它此刻【只是一個有性狀的身分】——沒有積木、沒有執行期。",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {},
   "_children_why": "🔴 刻意是空的：宣告一個【形態表達不出來】的接點會讓符合性與投影遺失兩條護欄同時紅——而那是真的違規，不是誤報。這一刀不做積木，所以也不宣告接點。",

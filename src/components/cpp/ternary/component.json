@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:ternary",
-  "abstractConcept": "cpp:if_else",
+  "abstractComponent": "cpp:if_else",
   "properties": [],
   "children": {
     "condition": "expression",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:func_def",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "name",

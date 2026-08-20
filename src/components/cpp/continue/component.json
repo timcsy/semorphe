@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:continue",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {},
   "role": "statement",

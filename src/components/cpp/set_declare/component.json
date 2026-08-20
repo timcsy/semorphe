@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:set_declare",
-  "abstractConcept": "cpp:var_declare",
+  "abstractComponent": "cpp:var_declare",
   "properties": [
     {
       "name": "type",

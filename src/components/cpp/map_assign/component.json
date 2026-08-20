@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:map_assign",
-  "abstractConcept": "cpp:array_assign",
+  "abstractComponent": "cpp:array_assign",
   "properties": [
     {
       "name": "obj",

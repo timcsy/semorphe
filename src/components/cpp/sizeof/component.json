@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:sizeof",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "target",

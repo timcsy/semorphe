@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:serial_print",
-  "abstractConcept": "cpp:print",
+  "abstractComponent": "cpp:print",
   "properties": [
     {
       "name": "obj",

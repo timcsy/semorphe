@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:exception_make",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "kind",

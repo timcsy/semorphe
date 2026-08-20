@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cast_const",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "target_type",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:vector_back",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

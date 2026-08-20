@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:using_alias",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "alias",

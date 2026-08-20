@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:input",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "name",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:priority_queue_peek",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:queue_back",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

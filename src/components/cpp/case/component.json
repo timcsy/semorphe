@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:case",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression",

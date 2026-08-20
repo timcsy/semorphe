@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pointer_assign",
-  "abstractConcept": "cpp:var_assign",
+  "abstractComponent": "cpp:var_assign",
   "properties": [
     {
       "name": "obj",

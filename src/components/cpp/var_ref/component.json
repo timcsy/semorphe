@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:var_ref",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "name",

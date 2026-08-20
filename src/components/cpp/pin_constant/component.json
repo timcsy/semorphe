@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pin_constant",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "value",

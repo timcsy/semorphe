@@ -27,7 +27,7 @@
 import { describe, it, expect } from 'vitest'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
-import { abstractConceptOf } from '../../src/core/language-executors'
+import { abstractComponentOf } from '../../src/core/language-executors'
 import '../../src/languages/cpp/all-declarations'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
@@ -36,7 +36,7 @@ registerCppLanguage()
 /** 複製 sync-controller 的降級規則，用來證明「就地改寫」這件事本身是危險的 */
 function downgradeInPlace(node: SemanticNode, visible: Set<string>): void {
   if (!visible.has(node.componentId)) {
-    const parent = abstractConceptOf(node.componentId)
+    const parent = abstractComponentOf(node.componentId)
     if (parent && visible.has(parent)) node.componentId = parent
   }
   for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => downgradeInPlace(c, visible))
@@ -57,7 +57,7 @@ describe('降級是投影，不得寫回真實', () => {
   it('★ 前提：`cpp:vector_declare` 確實有父概念，而且會被降級', () => {
     // 沒有這一支的話，下面兩支可能只是因為「根本沒有降級發生」而綠——
     // 那會是一個由建構保證的綠。
-    const parent = abstractConceptOf('cpp:vector_declare')
+    const parent = abstractComponentOf('cpp:vector_declare')
     expect(parent, '這顆元件沒宣告父概念 → 這支測試釘不到東西').toBeTruthy()
 
     const display = clone(truth())
@@ -67,7 +67,7 @@ describe('降級是投影，不得寫回真實', () => {
 
   it('★ 降級作用在拷貝上時，真實不變', () => {
     const t = truth()
-    const parent = abstractConceptOf('cpp:vector_declare')!
+    const parent = abstractComponentOf('cpp:vector_declare')!
     downgradeInPlace(clone(t), new Set(['cpp:program', parent]))
     expect(
       t.children.body![0].componentId,
@@ -79,7 +79,7 @@ describe('降級是投影，不得寫回真實', () => {
     // 這一支刻意示範 bug 本身。沒有它，讀的人看不出上一支在防什麼，
     // 而「拷貝」會在某次重構中被當成多餘的開銷刪掉。
     const t = truth()
-    const parent = abstractConceptOf('cpp:vector_declare')!
+    const parent = abstractComponentOf('cpp:vector_declare')!
     downgradeInPlace(t, new Set(['cpp:program', parent]))
     expect(t.children.body![0].componentId, '就地降級沒有改到真實 → 那前一支就沒有在防什麼').toBe(parent)
   })
@@ -104,7 +104,7 @@ describe('降級的反方向：抽回來的樹不得把降級當成真實', () =
   /** 模擬 sync-controller 的兩張表：降級時記、抽回來時還原 */
   function downgradeAndRecord(node: SemanticNode, visible: Set<string>, record: Map<string, string>): void {
     if (!visible.has(node.componentId)) {
-      const parent = abstractConceptOf(node.componentId)
+      const parent = abstractComponentOf(node.componentId)
       if (parent && visible.has(parent)) {
         record.set(node.id, node.componentId)
         node.componentId = parent
@@ -114,7 +114,7 @@ describe('降級的反方向：抽回來的樹不得把降級當成真實', () =
   }
   function restore(node: SemanticNode, record: Map<string, string>): void {
     const original = record.get(node.id)
-    if (original !== undefined && node.componentId === abstractConceptOf(original)) node.componentId = original
+    if (original !== undefined && node.componentId === abstractComponentOf(original)) node.componentId = original
     for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => restore(c, record))
   }
 

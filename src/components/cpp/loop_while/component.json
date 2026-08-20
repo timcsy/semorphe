@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:loop_while",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "condition": "expression",

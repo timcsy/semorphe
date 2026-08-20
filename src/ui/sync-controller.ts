@@ -46,7 +46,7 @@ import type { CodeMapping, BlockMapping } from '../core/projection/code-generato
 import { renderToBlocklyState } from '../core/projection/block-renderer'
 import { Lifter } from '../core/lift/lifter'
 import { SemanticBus } from '../core/semantic-bus'
-import { abstractConceptOf, variableTypeOf } from '../core/language-executors'
+import { abstractComponentOf, variableTypeOf } from '../core/language-executors'
 import { isFunctionDefinition } from '../core/component/traits'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
@@ -406,13 +406,13 @@ export class SyncController {
     // 降級目標由**概念自己宣告的父概念**決定，不再寫死在這裡。
     //
     // 這份清單原本有 16 行，全部在講同一件事：「這些概念是變數宣告的一種」。
-    // 而概念定義裡本來就有 `abstractConcept` 這個欄位在表達它——只是那時
+    // 而概念定義裡本來就有 `abstractComponent` 這個欄位在表達它——只是那時
     // 98 個父概念指向的東西**根本不存在**，所以介面層只好自己寫一份。
     // 見 specs/056-abstract-concept-integrity
     // 來源是概念自己的宣告，由語言套件在載入時推進核心
 
     if (!visible.has(node.componentId)) {
-      const parent = abstractConceptOf(node.componentId)
+      const parent = abstractComponentOf(node.componentId)
       // 型別前綴由概念自己宣告——介面層不該認得哪個概念宣告的是字串
       const downgrade = parent ? { componentId: parent, typePrefix: variableTypeOf(node.componentId) } : undefined
       if (downgrade && visible.has(downgrade.componentId)) {
@@ -525,7 +525,7 @@ export class SyncController {
    */
   private restoreDowngrade(node: SemanticNode): void {
     const original = this.identityBeforeDowngrade.get(node.id)
-    if (original !== undefined && node.componentId === abstractConceptOf(original)) {
+    if (original !== undefined && node.componentId === abstractComponentOf(original)) {
       node.componentId = original
     }
     for (const children of Object.values(node.children ?? {})) {

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:ifndef",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "condition",

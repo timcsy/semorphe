@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:servo_write",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

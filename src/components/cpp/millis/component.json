@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:millis",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {},
   "role": "expression",

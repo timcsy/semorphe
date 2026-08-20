@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:var_declare",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "type",

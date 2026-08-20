@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cast_dynamic",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "target_type",

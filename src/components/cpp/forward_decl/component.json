@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:forward_decl",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "return_type",

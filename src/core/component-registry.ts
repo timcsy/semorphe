@@ -29,8 +29,8 @@ export class ComponentRegistry {
 
   findAbstract(concreteId: string): ComponentDef | undefined {
     const concrete = this.concepts.get(concreteId)
-    if (!concrete?.abstractConcept) return undefined
-    return this.concepts.get(concrete.abstractConcept)
+    if (!concrete?.abstractComponent) return undefined
+    return this.concepts.get(concrete.abstractComponent)
   }
 
   listAll(): ComponentDef[] {
@@ -47,7 +47,7 @@ export class ComponentRegistry {
     for (const c of concepts) {
       this.registerOrUpdate({
         id: c.componentId,
-        abstractConcept: c.abstractConcept ?? undefined,
+        abstractComponent: c.abstractComponent ?? undefined,
         propertyNames: paramNames(c.properties),
         childNames: Object.keys(c.children),
         annotations: c.annotations,

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_binary",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "func",

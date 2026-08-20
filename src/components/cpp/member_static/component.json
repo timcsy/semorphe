@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:member_static",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "type",

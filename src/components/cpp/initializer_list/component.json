@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:initializer_list",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "values": {

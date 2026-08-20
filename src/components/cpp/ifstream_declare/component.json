@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:ifstream_declare",
-  "abstractConcept": "cpp:var_declare",
+  "abstractComponent": "cpp:var_declare",
   "properties": [
     {
       "name": "name",

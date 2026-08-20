@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:vector_size",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

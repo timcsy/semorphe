@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:free",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "ptr": "expression"

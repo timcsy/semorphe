@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:loop_count",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "var_name",

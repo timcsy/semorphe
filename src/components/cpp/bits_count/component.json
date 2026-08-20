@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:bits_count",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": {

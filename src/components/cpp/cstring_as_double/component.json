@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cstring_as_double",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "str": "expression"

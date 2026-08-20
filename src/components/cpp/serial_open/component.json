@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:serial_open",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

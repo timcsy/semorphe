@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_abs",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression"

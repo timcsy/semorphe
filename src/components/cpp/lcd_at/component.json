@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:lcd_at",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

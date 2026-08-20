@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pointer_deref",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "ptr": "expression"

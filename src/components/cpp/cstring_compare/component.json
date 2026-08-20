@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cstring_compare",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "s1": "expression",

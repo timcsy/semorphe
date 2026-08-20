@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:new",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "type",

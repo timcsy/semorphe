@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:analog_read",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "pin": "expression"

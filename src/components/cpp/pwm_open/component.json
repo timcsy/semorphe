@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:pwm_open",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "channel": "expression",

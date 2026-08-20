@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:array_2d_at",
-  "abstractConcept": "cpp:array_at",
+  "abstractComponent": "cpp:array_at",
   "properties": [
     {
       "name": "obj",

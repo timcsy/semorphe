@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:switch",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "expr": "expression",

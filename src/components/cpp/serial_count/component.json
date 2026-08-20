@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:serial_count",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

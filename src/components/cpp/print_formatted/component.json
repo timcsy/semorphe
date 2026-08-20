@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:print_formatted",
-  "abstractConcept": "cpp:print",
+  "abstractComponent": "cpp:print",
   "properties": [
     {
       "name": "format",

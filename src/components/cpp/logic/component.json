@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:logic",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "operator",

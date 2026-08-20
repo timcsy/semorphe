@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:comma_expr",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "exprs": "expressions"

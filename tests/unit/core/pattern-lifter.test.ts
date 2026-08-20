@@ -54,7 +54,7 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:literal_char',
-          abstractConcept: 'char_literal',
+          abstractComponent: 'char_literal',
           properties: ['char'],
           role: 'expression',
         },
@@ -88,7 +88,7 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:increment',
-          abstractConcept: 'increment',
+          abstractComponent: 'increment',
           properties: ['name', 'operator'],
           role: 'both',
         },
@@ -130,7 +130,7 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:print_formatted',
-          abstractConcept: 'printf',
+          abstractComponent: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
         },
@@ -163,7 +163,7 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:print_formatted',
-          abstractConcept: 'printf',
+          abstractComponent: 'printf',
           properties: ['format', 'args'],
           role: 'statement',
         },
@@ -235,7 +235,7 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:var_assign_compound',
-          abstractConcept: 'compound_assign',
+          abstractComponent: 'compound_assign',
           properties: ['name', 'operator'],
           children: { value: 'expression' },
           role: 'statement',

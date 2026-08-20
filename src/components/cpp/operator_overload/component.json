@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:operator_overload",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "return_type",

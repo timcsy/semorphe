@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:default",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "body": "statements"

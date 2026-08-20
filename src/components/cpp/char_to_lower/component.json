@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:char_to_lower",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression"

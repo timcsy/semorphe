@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_is_nan",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "value": "expression"

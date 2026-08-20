@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:block_comment",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "text",

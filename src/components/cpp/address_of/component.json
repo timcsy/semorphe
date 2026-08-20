@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:address_of",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "var": "expression"

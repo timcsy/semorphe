@@ -42,7 +42,31 @@ const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
   { pattern: /\bConceptRegistry\b/, replacedBy: 'ComponentRegistry' },
   { pattern: /\bConceptDefJSON\b/, replacedBy: 'ComponentDefJSON' },
   { pattern: /\bConceptExecutor\b/, replacedBy: 'ComponentExecutor' },
+  { pattern: /\babstractConcept\b/, replacedBy: 'abstractComponent' },
 ]
+
+/**
+ * 🔴 **知識庫也要守——而只守【現況型】的檔。**
+ *
+ * 判準不是資料夾，是**這份文件描述的是「現在」還是「當時」**：
+ * `concepts/` 與 `principles.md`／`vision.md` 說的是現在 → 舊名是**過期**；
+ * `history/`／`experience.md`／`specs/` 說的是當時 → 舊名是**病歷**，改它等於竄改記錄。
+ *
+ * ⚠️ 不擋中文的「概念」——[名詞表](../../knowledge/concepts/元件.md)已經定：
+ * **概念是元件在語言域的樣子**，談語言時它仍然讀得通。擋的是**識別字**。
+ */
+const KNOWLEDGE_ROOTS = ['knowledge/concepts', 'knowledge/principles.md', 'knowledge/vision.md']
+
+/**
+ * 🟢 **名詞表的表格列豁免**——與這個測試檔自己豁免是**同一個理由**：
+ * 宣告「X 退場、改用 Y」的地方**必須寫得出 X**，否則它無從宣告。
+ * `concepts/元件.md` 的「名詞表」與「現況落差」兩張表就是那個地方。
+ */
+const GLOSSARY = 'knowledge/concepts/元件.md'
+function scannableLines(rel: string, text: string): string {
+  if (rel !== GLOSSARY) return text
+  return text.split('\n').filter((l) => !l.trimStart().startsWith('|')).join('\n')
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   const abs = path.join(REPO_ROOT, dir)
@@ -57,6 +81,19 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const files = ROOTS.flatMap((r) => walk(r)).filter((f) => f !== SELF)
 
+function walkMd(target: string, out: string[] = []): string[] {
+  const abs = path.join(REPO_ROOT, target)
+  if (!fs.existsSync(abs)) return out
+  if (fs.statSync(abs).isFile()) { out.push(target); return out }
+  for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
+    const rel = path.join(target, e.name)
+    if (e.isDirectory()) walkMd(rel, out)
+    else if (e.name.endsWith('.md')) out.push(rel)
+  }
+  return out
+}
+const knowledgeFiles = KNOWLEDGE_ROOTS.flatMap((r) => walkMd(r))
+
 describe('spec 158 · 舊詞彙不准回來', () => {
   it('★ 錨點：真的掃到檔案了（否則下面在驗空集合）', () => {
     expect(files.length, '一個檔都沒掃到 → 是掃描壞了，不是沒有檔').toBeGreaterThan(500)
@@ -69,6 +106,22 @@ describe('spec 158 · 舊詞彙不准回來', () => {
       expect(hits,
         `舊詞彙回來了。名詞表（\`concepts/元件.md\`）定案 → \`${replacedBy}\`。`
         + '⚠️ 而它回來的方式多半是**照抄現況**——那正是這條護欄存在的理由。').toEqual([])
+    })
+  }
+
+  it('★ 錨點：知識庫的現況型檔案真的掃到了', () => {
+    expect(knowledgeFiles.length, '一個 .md 都沒掃到 → 掃描壞了').toBeGreaterThan(10)
+    expect(knowledgeFiles).toContain('knowledge/principles.md')
+  })
+
+  for (const { pattern, replacedBy } of RETIRED) {
+    it(`🔴 知識庫（現況型）不得留 \`${pattern.source.replace(/\\b/g, '')}\``, () => {
+      const hits = knowledgeFiles
+        .filter((f) => new RegExp(pattern.source + '|' + pattern.source.replace(/\\b$/, '') + 's\\b')
+          .test(scannableLines(f, fs.readFileSync(path.join(REPO_ROOT, f), 'utf8'))))
+      expect(hits,
+        `⚠️ 這是 spec 158 大改名的殘留。\`${replacedBy}\` 才是現在的名字。`
+        + '（`history/`／`experience.md` 不在此列——那裡的舊名是**病歷**，必須留。）').toEqual([])
     })
   }
 

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:constructor",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "class_name",

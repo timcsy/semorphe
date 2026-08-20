@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:array_assign",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

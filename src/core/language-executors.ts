@@ -70,7 +70,7 @@ export function isBuiltinName(name: string): boolean {
 // 概念的語言中立父概念
 //
 // 介面層需要知道「這個語言專屬概念，在低層級時該退回哪個通用概念」。那件事
-// 概念自己就宣告了（`abstractConcept`），但介面層拿不到概念註冊表，於是原本
+// 概念自己就宣告了（`abstractComponent`），但介面層拿不到概念註冊表，於是原本
 // 各自寫死了一份 16 行的對照表。
 // 見 specs/056-abstract-concept-integrity
 // ─────────────────────────────────────────────────────────────────────────
@@ -114,6 +114,6 @@ export function conceptsDeclaringVariableType(type: string): string[] {
 }
 
 /** 這個概念的語言中立父概念（沒有就回 undefined） */
-export function abstractConceptOf(componentId: string): string | undefined {
+export function abstractComponentOf(componentId: string): string | undefined {
   return abstractOf.get(componentId)
 }

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:set_insert",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

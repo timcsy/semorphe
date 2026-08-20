@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:container_erase",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "obj",

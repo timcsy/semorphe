@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:delay_microseconds",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "us": "expression"

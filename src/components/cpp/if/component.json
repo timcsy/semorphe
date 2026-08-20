@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:if",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "condition": "expression",

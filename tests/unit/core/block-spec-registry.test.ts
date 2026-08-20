@@ -18,7 +18,7 @@ const sortSpec: BlockSpec = {
   language: 'cpp',
   category: 'algorithms',
   version: '1.0.0',
-  componentMapping: { componentId: 'cpp:stdlib:sort', abstractConcept: 'collection_sort' },
+  componentMapping: { componentId: 'cpp:stdlib:sort', abstractComponent: 'collection_sort' },
   blockDef: { type: 'cpp_range_sort', message0: 'sort %1 to %2', colour: '#4C97FF' },
   codeTemplate: { pattern: 'sort(${BEGIN}, ${END});', imports: ['algorithm'], order: 0 },
   astPattern: {

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:program_exit",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "code": "expression"

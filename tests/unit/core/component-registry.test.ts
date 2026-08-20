@@ -51,7 +51,7 @@ describe('ComponentRegistry', () => {
       })
       registry.register({
         id: 'cpp:stdlib:sort', layer: 'lang-library',
-        abstractConcept: 'collection_sort',
+        abstractComponent: 'collection_sort',
         propertyNames: [], childNames: [],
       })
 

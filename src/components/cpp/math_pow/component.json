@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:math_pow",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "base": "expression",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:block",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "body": {

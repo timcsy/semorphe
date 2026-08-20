@@ -357,7 +357,7 @@ languages/{lang}/
 9.1 DataFlow 視圖（消費 control_flow annotations）
 9.2 SemanticDiff 增量更新（前置：階段 5b nodeId 穩定性）
 9.3 接線視圖 ＋ 模擬視圖（硬體教育）
-9.4 跨語言映射視圖（abstractConcept 驅動）
+9.4 跨語言映射視圖（abstractComponent 驅動）
 9.5 語義套件市場
 ```
 
@@ -395,7 +395,7 @@ languages/{lang}/
       「`speed`（學生自己的）＋ 板子的 `D0 D1 D2…`」。
       🔄 **這條原本寫成身分問題——查了執行期之後改寫成投影問題**，於是從一場規格辯論
       變成一次小改動。
-      🔴 **而 US2 的錨點掀出第二個缺口**：`abstractConceptOf(block.type)` 傳錯了命名空間
+      🔴 **而 US2 的錨點掀出第二個缺口**：`abstractComponentOf(block.type)` 傳錯了命名空間
       （積木型別 vs 元件身分），**24 顆宣告元件一顆都沒進下拉**，而它不會拋錯。
 - [ ] **`execution:at-node`：拆掉那張中央對映表**（2026-08-12 升格）
       —— 設計見 [draft/執行器直接持有五個面板](draft/2026-08-11-執行器直接持有五個面板.md)

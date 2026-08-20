@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:func_call",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "name",

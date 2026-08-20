@@ -57,7 +57,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
    * **它的事實依據要能機械查證**，不能只寫一句話。
    *
    * `degradation-target` 的兩個依據：
-   *   ① 真的有概念宣告它為 abstractConcept（否則它不是任何人的降級目標）
+   *   ① 真的有概念宣告它為 abstractComponent（否則它不是任何人的降級目標）
    *   ② 不在工具箱裡（使用者拖得到的話，它就該辨識得回來）
    */
   it('★ degradation-target 的兩個事實依據，逐一查證', async () => {
@@ -65,13 +65,13 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const downgradeTarget = defs.filter((d) =>
       Object.values(d.skipReasons ?? {}).includes('degradation-target' as never),
     )
-    const pointedTo = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
+    const pointedTo = new Set(defs.map((d) => (d as { abstractComponent?: string }).abstractComponent).filter(Boolean))
     const toolbox = readFileSync(join(REPO_ROOT, 'src/languages/cpp/toolbox-categories.ts'), 'utf8')
 
     const unsupported: string[] = []
     for (const d of downgradeTarget) {
       if (!pointedTo.has(d.componentId)) {
-        unsupported.push(`${d.componentId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
+        unsupported.push(`${d.componentId}：沒有任何概念宣告它為 abstractComponent —— 它不是誰的降級目標`)
       }
       // 工具箱排除的形式是 `excludeTypes: ['cpp_xxx']`
       //
@@ -98,8 +98,8 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
   it('★ 反面：一個普通概念不得偷用 degradation-target', () => {
     // 沒有這支的話，上面那支對「零個宣告者」也會通過
     const defs = allComponentDefs()
-    const pointedTo = new Set(defs.map((d) => (d as { abstractConcept?: string }).abstractConcept).filter(Boolean))
-    expect(pointedTo.size, '沒有任何概念宣告 abstractConcept → 上面那支什麼都沒驗到').toBeGreaterThan(5)
+    const pointedTo = new Set(defs.map((d) => (d as { abstractComponent?: string }).abstractComponent).filter(Boolean))
+    expect(pointedTo.size, '沒有任何概念宣告 abstractComponent → 上面那支什麼都沒驗到').toBeGreaterThan(5)
   })
 
   /**

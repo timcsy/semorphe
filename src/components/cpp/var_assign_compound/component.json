@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:var_assign_compound",
-  "abstractConcept": "cpp:var_assign",
+  "abstractComponent": "cpp:var_assign",
   "properties": [
     {
       "name": "name",

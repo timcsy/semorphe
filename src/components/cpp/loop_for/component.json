@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:loop_for",
-  "abstractConcept": "cpp:loop_count",
+  "abstractComponent": "cpp:loop_count",
   "properties": [],
   "children": {
     "init": "expression",

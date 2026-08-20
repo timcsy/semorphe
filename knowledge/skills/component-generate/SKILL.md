@@ -88,7 +88,7 @@ src/components/<scope>/<name>/
     "render": "./forms/blocks.json", "extract": "./forms/blocks.json"
   },
 
-  "abstractConcept": "cpp:var_declare",    // 選用：抽象概念（159/177 有）
+  "abstractComponent": "cpp:var_declare",    // 選用：抽象元件（159/177 有）
   "owner": "<vector>",                     // 選用：所屬模組（102 顆）
   "requires": ["<vector>"],                // 選用：相依標頭（78 顆）
   "traits": { "precedence": 14 },          // 選用：這顆自己的性質（36 顆）

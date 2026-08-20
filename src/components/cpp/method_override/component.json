@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:method_override",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "return_type",

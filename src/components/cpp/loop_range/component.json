@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:loop_range",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "var_type",

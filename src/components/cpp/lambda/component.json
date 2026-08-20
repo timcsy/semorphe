@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:lambda",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "capture",

@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:cstring_as_int",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [],
   "children": {
     "str": "expression"

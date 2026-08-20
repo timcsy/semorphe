@@ -1,6 +1,6 @@
 {
   "componentId": "cpp:define",
-  "abstractConcept": null,
+  "abstractComponent": null,
   "properties": [
     {
       "name": "name",

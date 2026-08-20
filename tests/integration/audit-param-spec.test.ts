@@ -12,7 +12,7 @@
  * ## 為什麼這條護欄要**先於** 124 顆宣告
  *
  * `concepts/執行機構.md`「機制有了，沒人接上」目前有**七個實例**——
- * `skipPaths` 0/175、`abstractConcept` 33/131、`introduces_scope` 0/4、
+ * `skipPaths` 0/175、`abstractComponent` 33/131、`introduces_scope` 0/4、
  * 型別追蹤 0 呼叫者、`buildIoCategoryContents` 只有測試在叫、**CI 沒跑測試**。
  *
  * > **把 124 顆宣告寫得漂漂亮亮而沒有任何程式碼讀它，就是第八個。**

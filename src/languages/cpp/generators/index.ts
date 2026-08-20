@@ -95,7 +95,7 @@ export function registerCppSkipDeclarations(): void {
   for (const c of all) {
     const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
     if (reasons && Object.keys(reasons).length > 0) declareSkips(c.componentId, reasons)
-    const parent = (c as { abstractConcept?: string | null }).abstractConcept
+    const parent = (c as { abstractComponent?: string | null }).abstractComponent
     if (parent) declareAbstract(c.componentId, parent)
     const varType = (c as { declaresVariableType?: string }).declaresVariableType
     if (varType) declareVariableType(c.componentId, varType)

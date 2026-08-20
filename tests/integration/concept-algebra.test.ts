@@ -40,21 +40,21 @@ describe('Concept Algebra (US8)', () => {
     registry.register({
       id: 'cpp:vector_push_back',
       layer: 'lang-library',
-      abstractConcept: 'container_add',
+      abstractComponent: 'container_add',
       propertyNames: ['name'],
       childNames: ['value'],
     })
     registry.register({
       id: 'cpp:range_sort',
       layer: 'lang-library',
-      abstractConcept: 'container_sort',
+      abstractComponent: 'container_sort',
       propertyNames: ['array'],
       childNames: ['from', 'to'],
     })
     registry.register({
       id: 'cpp:vector_size',
       layer: 'lang-library',
-      abstractConcept: 'container_size',
+      abstractComponent: 'container_size',
       propertyNames: ['name'],
       childNames: [],
     })

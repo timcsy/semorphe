@@ -85,7 +85,7 @@ const BLOCKTYPE_CALLS = new Set([
 ])
 
 /** 值是 componentId 的屬性名 */
-const CONCEPT_PROPS = /^(componentId|abstractConcept)$/
+const CONCEPT_PROPS = /^(componentId|abstractComponent)$/
 /** 值是 blockType 的屬性名 */
 const BLOCKTYPE_PROPS = /^(type|blockType)$/
 
@@ -167,7 +167,7 @@ export function scanTsRefs(ids: Set<string>, extra: { file: string; source: stri
 /**
  * 掃 JSON：**靠欄位位置**，零曖昧。
  *
- * `componentId` / `abstractConcept` / 課程清單的身分陣列 → 改寫
+ * `componentId` / `abstractComponent` / 課程清單的身分陣列 → 改寫
  * `blockDef.type` → **不得改寫**（66 處與身分同名）
  */
 export function scanJsonRefs(ids: Set<string>, extraFiles: { file: string; data: unknown }[] = []): IdRef[] {

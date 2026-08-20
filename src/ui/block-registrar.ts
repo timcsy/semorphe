@@ -6,7 +6,7 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
-import { abstractConceptOf } from '../core/language-executors'
+import { abstractComponentOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
 // 🔴 **不再 import 語言套件**（spec 153）——三個 C 專屬的 input 名由組裝點注入。
@@ -172,7 +172,7 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (isPlainDeclaration(abstractConceptOf(this.componentIdOfBlockType(block.type) ?? '') ?? '')) {
+        } else if (isPlainDeclaration(abstractComponentOf(this.componentIdOfBlockType(block.type) ?? '') ?? '')) {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')
@@ -291,8 +291,8 @@ export class BlockRegistrar {
    *
    * 🔴 **spec 149 修的那個 bug 就是少了這一步。**
    * `getWorkspaceVarOptions()` 原本寫著
-   * `isPlainDeclaration(abstractConceptOf(block.type))`
-   * ——而 `abstractConceptOf` 的鍵是**概念身分**（冒號），
+   * `isPlainDeclaration(abstractComponentOf(block.type))`
+   * ——而 `abstractComponentOf` 的鍵是**概念身分**（冒號），
    * `block.type` 是**導出的積木型別**（底線）。於是那個分支**永遠是 false**，
    * **24 顆宣告元件一顆都沒進下拉**（`vector`／`string`／`pin_attach`…）。
    *

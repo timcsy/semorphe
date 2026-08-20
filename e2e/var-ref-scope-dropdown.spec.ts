@@ -105,7 +105,7 @@ test.describe('spec 149 · 名字的範圍', () => {
   })
 
   test('🔴 24 顆宣告元件的名字要進得來——那個分支曾經【永遠是 false】', async ({ page }) => {
-    // `getWorkspaceVarOptions` 原本寫 `abstractConceptOf(block.type)`，
+    // `getWorkspaceVarOptions` 原本寫 `abstractComponentOf(block.type)`，
     // 而那支函式的鍵是**概念身分**（冒號），`block.type` 是**積木型別**（底線）
     // ——於是 `vector`／`string`／`pin_attach`… 一顆都沒進下拉，而且**不會拋錯**。
     await freshApp(page)
