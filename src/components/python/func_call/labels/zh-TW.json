@@ -1,0 +1,4 @@
+{
+  "PYTHON_FUNC_CALL_MSG0": "呼叫 %1",
+  "PYTHON_FUNC_CALL_TOOLTIP": "執行一個函式，並把引數交給它"
+}

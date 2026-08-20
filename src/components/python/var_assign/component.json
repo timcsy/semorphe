@@ -14,7 +14,7 @@
     "value": "expression"
   },
   "role": "statement",
-  "owner": "(core)",
+  "owner": "(python)",
   "annotations": {
     "debug_step": true
   },
@@ -28,5 +28,6 @@
   "traits": {
     "declaresVariable": true
   },
-  "_traits_why": "**「我讓一個名字存在」是我自己的宣告**——變數下拉靠它收集名字，而它不必知道我叫什麼。"
+  "_traits_why": "**「我讓一個名字存在」是我自己的宣告**——變數下拉靠它收集名字，而它不必知道我叫什麼。",
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
 }

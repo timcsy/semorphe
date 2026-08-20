@@ -15,7 +15,7 @@
     "right": "expression"
   },
   "role": "expression",
-  "owner": "(core)",
+  "owner": "(python)",
   "paths": {
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
@@ -27,5 +27,6 @@
     "binaryOperator": true,
     "precedence": 8
   },
-  "_traits_why": "Python 的比較優先級（8）低於算術（11–14）而高於 `not`（7）——**這是這顆自己的性質**。"
+  "_traits_why": "Python 的比較優先級（8）低於算術（11–14）而高於 `not`（7）——**這是這顆自己的性質**。",
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
 }

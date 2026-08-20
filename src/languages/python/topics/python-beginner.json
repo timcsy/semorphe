@@ -10,6 +10,7 @@
     "label": "L0: 輸出與資料",
     "components": [
       "python:print",
+      "python:input",
       "python:literal_string",
       "python:literal_number",
       "python:literal_bool",
@@ -34,7 +35,20 @@
           "python:if_else",
           "python:loop_while"
         ],
-        "children": []
+        "children": [
+          {
+            "id": "L2",
+            "level": 2,
+            "label": "L2: 函式與迴圈",
+            "components": [
+              "python:loop_for",
+              "python:func_def",
+              "python:func_call",
+              "python:return"
+            ],
+            "children": []
+          }
+        ]
       }
     ]
   }

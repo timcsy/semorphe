@@ -1,0 +1,22 @@
+{
+  "componentId": "python:input",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——C++ 的 `cin >> x` **同時讀取並寫進一個變數**，而 Python 的 `input()` 只回傳一個字串。一顆是語句、一顆是運算式。",
+  "properties": [],
+  "children": {
+    "prompt": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**。",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  }
+}

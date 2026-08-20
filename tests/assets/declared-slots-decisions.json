@@ -348,5 +348,30 @@
     "componentId": "python:if_else",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。\n🟢 **判準沒有被收窄**——只是誠實地說「還沒量到」。\n🔴 `else_body` 特別容易假通過：`alternative` 指到的是 `else_clause` 這個殼，不拆的話接點在、長度是 1、而裡面是 `unresolved`。\n> **「接點空了」與「接點裡是垃圾」，在斷言 `length === 1` 時完全相同。**"
+  },
+  {
+    "componentId": "python:func_call",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 而它的 `args` 接點是**可變的**（mutation），自證測釘了零引數與多引數兩端。"
+  },
+  {
+    "componentId": "python:return",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `value` 接點**可以是空的**（裸的 `return`），而自證測有一支專測「不得被補成 `return None`」——**空接點與「忘了接」在這裡是兩件事**。"
+  },
+  {
+    "componentId": "python:func_def",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n⚠️ 它的參數列**是一個字串**（已知的權宜，理由寫在 component.json 的 `_why`），所以只有 `body` 一個接點。"
+  },
+  {
+    "componentId": "python:loop_for",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `iterable` 是一個**插槽**不是次數欄位——Python 的 for 是 for-each。自證測釘了「走訪的不是 range 時也產得回去」。"
+  },
+  {
+    "componentId": "python:input",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `prompt` 接點**可以是空的**，而自證測釘了「不得被補成 `input(\"\")`」。"
   }
 ]

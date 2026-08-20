@@ -29,7 +29,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#5C81A6",
+      "colour": "#8B5CF6",
       "tooltip": "%{BKY_PYTHON_LITERAL_BOOL_TOOLTIP}"
     },
     "renderMapping": {

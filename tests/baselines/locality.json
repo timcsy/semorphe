@@ -950,11 +950,23 @@
       "files": 3,
       "dirs": 1
     },
+    "python:func_call": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:func_def": {
+      "files": 3,
+      "dirs": 1
+    },
     "python:if": {
       "files": 3,
       "dirs": 1
     },
     "python:if_else": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:input": {
       "files": 3,
       "dirs": 1
     },
@@ -975,6 +987,10 @@
       "dirs": 1
     },
     "python:logic_not": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:loop_for": {
       "files": 3,
       "dirs": 1
     },
@@ -1000,6 +1016,10 @@
     },
     "python:raw_expression": {
       "files": 2,
+      "dirs": 1
+    },
+    "python:return": {
+      "files": 3,
       "dirs": 1
     },
     "python:var_assign": {

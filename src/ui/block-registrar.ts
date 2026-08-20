@@ -474,6 +474,7 @@ export class BlockRegistrar {
           previousStatement: bd.previousStatement as string | undefined,
           nextStatement: bd.nextStatement as string | undefined,
           output: bd.output as string | undefined,
+          leadingField: bd.leadingField as { type: string; name: string } | undefined,
         })
         continue
       }

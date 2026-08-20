@@ -56,7 +56,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#5B67A5",
+      "colour": "#59C059",
       "tooltip": "%{BKY_PYTHON_ARITHMETIC_TOOLTIP}"
     },
     "renderMapping": {

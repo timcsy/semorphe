@@ -11,4 +11,6 @@ export function registerPythonTransforms(
   registry: { register(name: string, fn: (text: string) => string): void },
 ): void {
   registry.register('python:stripComment', (text) => commentSyntax().strip(text))
+  // `(a, b)` → `a, b`。⚠️ 只剝最外面那一層括號，裡面的預設值（`f(a=(1,2))`）不動。
+  registry.register('python:stripParens', (text) => text.replace(/^\(/, '').replace(/\)$/, '').trim())
 }

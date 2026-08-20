@@ -1,0 +1,4 @@
+{
+  "PYTHON_RETURN_MSG0": "return %1",
+  "PYTHON_RETURN_TOOLTIP": "End this function and hand the value back to the caller"
+}

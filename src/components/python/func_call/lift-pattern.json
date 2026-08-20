@@ -1,0 +1,24 @@
+[
+  {
+    "id": "python_call",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:func_call"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "name",
+        "ast": "function",
+        "extract": "text"
+      },
+      {
+        "semantic": "args",
+        "ast": "arguments",
+        "extract": "liftChildren"
+      }
+    ],
+    "priority": 3,
+    "_why": "⚠️ **優先級 3，最低**——輸出與讀取輸入各有自己的元件（優先級 15），它們要先被認走。這一筆是**其餘所有呼叫**的兜底。\n\n⚠️ 而 `obj.method()` 的 `function` 是一個 `attribute` 節點，`text` 會拿到 `obj.method`——🔴 **那是一個已知的邊界**，方法呼叫要等自己的元件。"
+  }
+]

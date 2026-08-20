@@ -1,0 +1,83 @@
+[
+  {
+    "id": "python_func_call",
+    "componentId": "python:func_call",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_func_call",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PYTHON_FUNC_CALL_TOOLTIP}",
+      "labelKey": "PYTHON_FUNC_CALL_MSG",
+      "labelFallback": "呼叫",
+      "slotCheck": "Expression",
+      "builder": "variadic",
+      "leadingField": {
+        "type": "field_dynamic_dropdown",
+        "name": "NAME",
+        "source": "funcs"
+      }
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "args",
+          "inputPattern": "ARG{i}"
+        }
+      ],
+      "expressionCounterpart": "python_func_call_expression"
+    },
+    "_why": "⚠️ **兩個形態，一個身分**（`form: {axis:'role'}`）——`add(1,2)` 單獨一行是語句，放進 `x = add(1,2)` 是運算式。**位置不是身分，是形態。**\n\n🔴 **`builder: variadic`**：引數個數不定，所以要 mutation（±）——與輸出那顆同一個建構子（spec 162）。而它比那顆多一個**前置欄位**（函式名的下拉）。\n\n⚠️ 兩個形態的 **extraState 格式必須完全相同**——`STATEMENT_TO_EXPRESSION` 直接搬移它。\n\n🔴 **`expressionCounterpart` 是【語句那一份】要宣告的**——`block-renderer` 在「運算式插槽裡收到一顆語句積木」時問它（`getExpressionCounterpart`）。\n⚠️ 少了它的症狀是 **`x = fib(3)` 產出一顆灰色的 `raw_expression`**：lift 是對的、樹裡有這顆元件，而**渲染時挑不到運算式那個形態**。\n> **`form: {axis:'role'}` 說了「有兩種形態」，而【什麼時候用哪一種】要另外一個宣告。**"
+  },
+  {
+    "id": "python_func_call_expression",
+    "componentId": "python:func_call",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_func_call_expression",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PYTHON_FUNC_CALL_TOOLTIP}",
+      "labelKey": "PYTHON_FUNC_CALL_MSG",
+      "labelFallback": "呼叫",
+      "slotCheck": "Expression",
+      "builder": "variadic",
+      "leadingField": {
+        "type": "field_dynamic_dropdown",
+        "name": "NAME",
+        "source": "funcs"
+      }
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "args",
+          "inputPattern": "ARG{i}"
+        }
+      ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  }
+]

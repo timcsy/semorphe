@@ -1,0 +1,25 @@
+[
+  {
+    "id": "python_input",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:input"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "input"
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "prompt",
+        "ast": "arguments",
+        "extract": "liftChildren"
+      }
+    ],
+    "priority": 15,
+    "_why": "⚠️ **優先級 15，高於兜底的呼叫（3）**——不然它會被那一筆接走。與輸出那顆同一個形狀。"
+  }
+]

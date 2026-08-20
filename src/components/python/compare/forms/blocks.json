@@ -52,7 +52,7 @@
       ],
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#5B80A5",
+      "colour": "#59C059",
       "tooltip": "%{BKY_PYTHON_COMPARE_TOOLTIP}"
     },
     "renderMapping": {

@@ -66,6 +66,19 @@ export interface VariadicSpec {
   nextStatement?: string | null
   /** 這顆是運算式（有 output）而不是語句 */
   output?: string
+  /**
+   * 第一個插槽**前面**的一個欄位（spec 168）。
+   *
+   * 🔴 `python:func_call` 需要它：`呼叫 [名字下拉] (引數…)` ——
+   * 標籤、下拉、然後才是可變的插槽。
+   *
+   * ⚠️ 在此之前這個建構子只做得出「標籤 ＋ 插槽」，於是任何
+   * **帶前置欄位的可變參數積木**都只能回去寫命令式定義
+   * ——而那正是 vision 那 19 筆的來源。
+   *
+   * > **一個建構子表達不出來的形狀，會變成一筆新的雙重真相。**
+   */
+  leadingField?: { type: string; name: string; source?: string; options?: unknown }
 }
 
 /** `EXPR{i}` → `EXPR3` */
@@ -89,6 +102,12 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
       if (spec.check) first.setCheck(spec.check)
       const label = spec.labelKey ? (msg[spec.labelKey] || spec.labelFallback) : spec.labelFallback
       if (label) first.appendField(label)
+      if (spec.leadingField) {
+        // 用 Blockly 的 JSON 欄位工廠——**不要自己 new 一個具體的欄位類別**，
+        // 那樣自訂欄位（`field_dynamic_dropdown`）就接不進來。
+        const f = Blockly.fieldRegistry.fromJson(spec.leadingField as never)
+        if (f) first.appendField(f, spec.leadingField.name)
+      }
       this.appendDummyInput('TAIL')
         .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
         .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')

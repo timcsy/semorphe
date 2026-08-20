@@ -1,0 +1,4 @@
+{
+  "PYTHON_INPUT_MSG0": "讀一行輸入，提示 %1",
+  "PYTHON_INPUT_TOOLTIP": "等使用者打一行字並按 Enter，結果永遠是文字——要當數字用要先轉換"
+}

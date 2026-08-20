@@ -1,0 +1,50 @@
+[
+  {
+    "id": "python_loop_for",
+    "componentId": "python:loop_for",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_loop_for",
+      "message0": "%{BKY_PYTHON_FOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "i"
+        },
+        {
+          "type": "input_value",
+          "name": "ITERABLE",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PYTHON_FOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "ITERABLE": "iterable"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    },
+    "_why": "⚠️ **`ITERABLE` 是一個插槽而不是一個「次數」欄位**——`range(3)` 只是**其中一種**可以走訪的東西。做成次數欄位就把 for-each 偷偷變回了三格式的 for。"
+  }
+]

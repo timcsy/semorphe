@@ -1,0 +1,33 @@
+{
+  "componentId": "python:func_call",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的呼叫可以有關鍵字引數、`*args`、`**kwargs`，而這一顆只收位置引數。邊界與 C++ 那顆不同。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": ""
+    }
+  ],
+  "children": {
+    "args": "expression"
+  },
+  "role": "both",
+  "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "namedCall": true,
+    "builder": "variadic"
+  },
+  "_traits_why": "**`namedCall`**：`properties.name` 是被呼叫的名字（別的機制靠它，而不必知道我是誰）。**`builder: variadic`**：引數個數不定，積木由 `ui/variadic-block.ts` 依 `dynamicRules` 建（spec 162 的機制）。",
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
+}

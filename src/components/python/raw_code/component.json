@@ -11,7 +11,7 @@
   ],
   "children": {},
   "role": "statement",
-  "owner": "(core)",
+  "owner": "(python)",
   "paths": {
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
@@ -19,5 +19,6 @@
     "lift": "./lift.ts",
     "_lift_why": "🔴 **這顆不認領任何 AST 節點。** 它是降級的【落點】：核心判定「這段我看不懂」時建一顆裸的 `raw_code`，而積木型別由降級登記處決定。所以 `registerLift` 是空的——**判別屬於核心，形態屬於膠囊**。",
     "execute": "./execute.ts"
-  }
+  },
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
 }

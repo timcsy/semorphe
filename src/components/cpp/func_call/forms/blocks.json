@@ -38,9 +38,10 @@
           "childSlot": "args",
           "inputPattern": "ARG_{i}"
         }
-      ]
+      ],
+      "expressionCounterpart": "cpp_func_call_expression"
     },
-    "_why": "🔴 **spec 164 修正：這兩顆的宣告原本【完全對調】。**\n\n```\ncpp_func_call             form 無（敘述版）        宣告 output: Expression   ← 錯\ncpp_func_call_expression  form={role:expression}   宣告【什麼都沒有】         ← 錯\n```\n\n⚠️ **而使用者看不到這個錯**——`block-registrar` 的命令式定義蓋住了它。\n🔴 但這一系列刀正在做的事就是**刪掉那些命令式定義**，\n  任何一天輪到這一顆，函式呼叫積木就會**變成運算式**（接不上語句串）。\n\n> **一個被覆蓋著的錯誤宣告，是一顆等著下一次清理踩上去的地雷。**\n\n🟢 它是被 `audit-block-def-parity`（spec 163）**逐項比對**時掉出來的——比對報表寫著「output null vs Expression ｜ statement true/true vs false/false」。"
+    "_why": "🔴 **spec 168 補上 `expressionCounterpart`**——這顆宣告了兩個形態（`form: {axis:'role'}`）而**沒有宣告什麼時候用哪一個**，於是運算式位置的呼叫（`x = f(1)`）渲染時挑不到運算式那份。\n⚠️ **這是既有缺陷，由 Python 那顆同族的元件逼出來的**——兩邊的宣告一比就看見了。"
   },
   {
     "id": "cpp_func_call_expression",

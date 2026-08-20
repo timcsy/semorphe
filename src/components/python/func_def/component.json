@@ -1,0 +1,34 @@
+{
+  "componentId": "python:func_def",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的函式沒有回傳型別、沒有多載，而參數可以有預設值與關鍵字。邊界與 C++ 那顆不同。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "f"
+    },
+    {
+      "name": "params",
+      "kind": "literal",
+      "default": "",
+      "_why": "⚠️ **參數列存成一個字串**（`\"a, b\"`）而不是結構化的清單。🔴 **這是一個已知的權宜**——`knowledge` 記著「需要 parse 回結構才能用的字串，就不該是字串」。而做成結構化的接點需要一顆 `param` 元件與可變插槽，那是獨立的一刀。**記在這裡，不要讓它變成看不見的。**"
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**。",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  }
+}

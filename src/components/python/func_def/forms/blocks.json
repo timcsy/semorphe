@@ -1,0 +1,46 @@
+[
+  {
+    "id": "python_func_def",
+    "componentId": "python:func_def",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_func_def",
+      "message0": "%{BKY_PYTHON_FUNC_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "f"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PYTHON_FUNC_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "PARAMS": "params"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

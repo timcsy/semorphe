@@ -1,0 +1,4 @@
+{
+  "PYTHON_INPUT_MSG0": "read a line, prompt %1",
+  "PYTHON_INPUT_TOOLTIP": "Wait for the user to type a line. The result is always text; convert it before using it as a number"
+}

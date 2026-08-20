@@ -1,0 +1,29 @@
+[
+  {
+    "id": "python_func_def",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "function_definition",
+    "component": {
+      "componentId": "python:func_def"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "name",
+        "ast": "name",
+        "extract": "text"
+      },
+      {
+        "semantic": "params",
+        "ast": "parameters",
+        "extract": "text",
+        "transform": "python:stripParens"
+      },
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      }
+    ],
+    "priority": 10
+  }
+]

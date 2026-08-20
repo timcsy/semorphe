@@ -1,0 +1,29 @@
+[
+  {
+    "id": "python_for",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "for_statement",
+    "component": {
+      "componentId": "python:loop_for"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "obj",
+        "ast": "left",
+        "extract": "text"
+      },
+      {
+        "semantic": "iterable",
+        "ast": "right",
+        "extract": "lift"
+      },
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      }
+    ],
+    "priority": 10,
+    "_why": "⚠️ **`left` 用 `text`**——它是**被綁定的名字**，不是一個要求值的運算式（與 `assignment` 同一個道理）。而 `for a, b in …` 的解構 `left` 是 `pattern_list`，`text` 會拿到 `a, b`：🔴 **那是一個已知的邊界。**"
+  }
+]

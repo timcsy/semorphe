@@ -8,7 +8,7 @@
     "body": "statements"
   },
   "role": "statement",
-  "owner": "(core)",
+  "owner": "(python)",
   "annotations": {
     "debug_step": true
   },
@@ -18,5 +18,6 @@
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
     "execute": "./execute.ts"
-  }
+  },
+  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
 }

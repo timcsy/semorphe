@@ -1,0 +1,4 @@
+{
+  "PYTHON_RETURN_MSG0": "回傳 %1",
+  "PYTHON_RETURN_TOOLTIP": "結束這個函式，把值交回給呼叫它的地方"
+}

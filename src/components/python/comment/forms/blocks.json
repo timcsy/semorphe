@@ -17,7 +17,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#7D8A99",
+      "colour": "#888888",
       "tooltip": "%{BKY_PYTHON_COMMENT_TOOLTIP}"
     },
     "renderMapping": {

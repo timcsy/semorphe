@@ -1,0 +1,30 @@
+[
+  {
+    "id": "python_input",
+    "componentId": "python:input",
+    "language": "python",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_input",
+      "message0": "%{BKY_PYTHON_INPUT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PROMPT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_PYTHON_INPUT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "PROMPT": "prompt"
+      }
+    },
+    "_why": "⚠️ **它是運算式不是語句**（`output` 而不是 `previousStatement`）——`input()` 回傳一個值，要接進 `x = …` 才有意義。C++ 那顆是語句，因為 `cin >> x` 自己寫進變數。"
+  }
+]

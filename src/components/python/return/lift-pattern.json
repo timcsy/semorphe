@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_return",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "return_statement",
+    "component": {
+      "componentId": "python:return"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$namedChildren[0]",
+        "extract": "lift"
+      }
+    ],
+    "priority": 10,
+    "_why": "⚠️ **`return_statement` 沒有具名欄位**——回傳值是第一個具名子節點，而**裸的 `return` 一個都沒有**（實測：`[]`）。`$namedChildren[0]` 在沒有子節點時回 null，`value` 接點因此是空的，而 generate 那側據此產裸的 `return`。"
+  }
+]
