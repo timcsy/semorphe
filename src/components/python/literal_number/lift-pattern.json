@@ -1,0 +1,31 @@
+[
+  {
+    "id": "python_integer_literal",
+    "astNodeType": "integer",
+    "component": {
+      "componentId": "python:literal_number"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  },
+  {
+    "id": "python_float_literal",
+    "astNodeType": "float",
+    "component": {
+      "componentId": "python:literal_number"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "_why": "🔴 **Python 把整數與浮點數分成【兩種 AST 節點】**（`integer`／`float`），而 C++ 只有一種 `number_literal`。\n\n🟢 **兩條樣式對同一顆元件**——那是對的：`42` 與 `3.14` 在**語義上是同一種東西**（一個數字），差別只在語法。\n⚠️ 而這正是「語法之散、形態之模」：**AST 的分法不必是語義的分法**。\n（一顆元件用多條樣式**有前例**：C++ 的內建常數那顆用了七條。⚠️ 刻意不寫完整身分。）"
+  }
+]

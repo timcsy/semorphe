@@ -1,0 +1,27 @@
+{
+  "componentId": "python:literal_number",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **真的沒有**——理由與旁邊那顆字串字面值同一條：C++ 的數字字面值帶著靜態型別（`int`／`double`／`long long`），Python 的 `int` 是任意精度、`float` 是 IEEE 754。**在型別系統裡不是同一種東西。**\n⚠️ 這裡刻意不寫完整身分——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出引用與說明。",
+  "properties": [
+    {
+      "name": "value",
+      "kind": "literal",
+      "default": "0"
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": null,
+    "_execute_why": "真的缺。Python 的執行期整個還沒做（spec 156 明確排除）——⚠️ 刻意【不】寫空的執行器：顯式的空與遺漏的空要分得出來。",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "forLoopPart": true
+  },
+  "_traits_why": "**「我可以出現在 for 迴圈的三段裡」是我自己的性質**——與 C++ 那顆同一個宣告。"
+}

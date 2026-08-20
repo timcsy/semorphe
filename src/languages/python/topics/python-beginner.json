@@ -10,7 +10,8 @@
     "label": "L0: 輸出",
     "components": [
       "python:print",
-      "python:literal_string"
+      "python:literal_string",
+      "python:literal_number"
     ],
     "children": []
   }
