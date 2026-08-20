@@ -10,14 +10,9 @@
       "message0": "%{BKY_U_ARRAY_ASSIGN_MSG0}",
       "args0": [
         {
-          "type": "field_dropdown",
+          "type": "field_dynamic_dropdown",
           "name": "NAME",
-          "options": [
-            [
-              "arr",
-              "arr"
-            ]
-          ]
+          "source": "arrays"
         },
         {
           "type": "input_value",
@@ -44,6 +39,7 @@
         "INDEX": "index",
         "VALUE": "value"
       }
-    }
+    },
+    "_why": "🔴 **spec 165：這裡本來是一個【假的下拉】。**\n\n```json\n\"options\": [[\"arr\", \"arr\"]]      ← 寫死的單一選項\n```\n\n命令式那份是 `getWorkspaceArrayOptions()`——**列出工作區裡真的陣列**。\n> 學生宣告了 `nums[10]`，這個下拉**只選得到 `arr`**。\n\n⚠️ **而比對護欄看不出這件事**：兩邊當時都只有一個 `arr`，\n於是報表印成「格,← vs 格 ←」，**看起來只是空白差異**。\n> **一個比「當下的樣子」的比對，看不出「這個下拉是死的」。**"
   }
 ]

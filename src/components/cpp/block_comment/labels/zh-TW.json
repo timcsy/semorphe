@@ -1,4 +1,4 @@
 {
-  "C_COMMENT_BLOCK_MSG0": "區塊註解 %1",
+  "C_COMMENT_BLOCK_MSG0": "多行註解：%1",
   "C_COMMENT_BLOCK_TOOLTIP": "產生 /* ... */ 形式的多行註解"
 }

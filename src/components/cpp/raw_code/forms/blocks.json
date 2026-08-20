@@ -12,7 +12,7 @@
         {
           "type": "field_input",
           "name": "CODE",
-          "text": "// raw code"
+          "text": ""
         }
       ],
       "previousStatement": "Statement",
@@ -33,6 +33,7 @@
       "fields": {
         "CODE": "code"
       }
-    }
+    },
+    "_why": "🟡 **spec 165：預設值拿掉**（人拍板 2026-08-20）。\n\n原本是 `// raw code`——**英文，而且學生不知道要不要刪掉它**。\n命令式那份從來就沒有預設值。"
   }
 ]

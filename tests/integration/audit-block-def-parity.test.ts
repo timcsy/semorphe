@@ -27,6 +27,12 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
+// 🔴 **選用欄位要另外註冊**——`field_multilinetext` 不在 Blockly 主套件裡。
+// ⚠️ 少了它，`cpp_block_comment` 的欄位**整個建不出來**（`getField('TEXT')` 回 null），
+// 而比對報表印成「一邊有 comment，一邊沒有」——**看起來像宣告漏了預設值**。
+// > **一個沒有把「產品註冊過的欄位型別」註冊齊的比對，會把它建不出來的當成「宣告寫錯」。**
+import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -46,7 +52,27 @@ interface Shape {
 function shapeOf(b: Blockly.Block): Shape {
   return {
     inputs: b.inputList.map((i) => i.name).filter(Boolean),
-    fields: b.inputList.flatMap((i) => i.fieldRow.map((f) => (f.getText?.() ?? ''))).filter(Boolean),
+    // ⚠️ **`getText()` 對某些欄位回空**（`field_multilinetext` 就是），
+    // 於是「兩邊預設值都是 comment」被印成「一邊有一邊沒有」。
+    // > **一個用單一存取器讀所有欄位的比對，會把它讀不到的當成「沒有」。**
+    // 🟢 退到 `getValue()`——它對每一種欄位都有值。
+    // 🔴 **動態下拉比「它是不是活的」，不比當下的值。**
+    //
+    // ⚠️ spec 165 實測撞到兩次（`cpp_array_assign`／`cpp_var_assign`）：
+    // 命令式那份查工作區（空的 → 回 `(自訂)` 或空），
+    // 宣告那份可能寫死一個選項（→ 停在 `arr`）——
+    // **兩邊的字面永遠對不上，而那不代表它們不等價。**
+    //
+    // > **一個比「當下的樣子」的比對，看不出「這個下拉是死的」；
+    // > 而硬要比字面，會把「兩個都是活的」也判成不一樣。**
+    //
+    // 🟢 判準改成**它是不是一個會查外部的下拉**：是 → 記成 `⟨活下拉⟩`。
+    // ⚠️ 而「死的下拉」（`field_dropdown` 寫死選項）記成它的值——**兩者因此分得出來**。
+    fields: b.inputList.flatMap((i) => i.fieldRow.map((f) => {
+      const any = f as unknown as { getOptions?: (b: boolean) => unknown[]; isOptionListDynamic?: () => boolean }
+      if (typeof any.isOptionListDynamic === 'function' && any.isOptionListDynamic()) return '⟨活下拉⟩'
+      return String(f.getText?.() || f.getValue?.() || '')
+    })).filter(Boolean),
     output: b.outputConnection ? (b.outputConnection.getCheck() ?? true) : null,
     prev: Boolean(b.previousConnection),
     next: Boolean(b.nextConnection),
@@ -66,6 +92,17 @@ beforeAll(() => {
   // ⚠️ 第一版只載膠囊那份，於是 `cpp_var_ref` 的 `%{BKY_U_VAR_REF_LABEL}` 展不開，
   // 比對報表寫著「欄位 變數,(自訂) vs %{BKY_U_VAR_REF_LABEL}」
   // ——**看起來像宣告寫錯了，其實是訊息沒到齊**（與載入膠囊標籤那次同一種病）。
+  registerFieldMultilineInput()
+  // 🔴 **自訂欄位型別也要註冊**——`field_dynamic_dropdown`（spec 164）。
+  // ⚠️ 這是**同一種病的第三次**：訊息沒到齊（163）、選用欄位沒註冊（165）、
+  // 自訂欄位沒註冊（這裡）——三次的症狀都長得像「宣告寫錯了」。
+  // > **比對之前，要先把【產品那側需要的每一樣東西】都備齊；
+  // > 少一樣，比對就會指控宣告。**
+  registerDynamicDropdownField()
+  declareDropdownSource('names', () => [])
+  declareDropdownSource('vars', () => [])
+  declareDropdownSource('funcs', () => [])
+  declareDropdownSource('arrays', () => [])
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
@@ -106,7 +143,10 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       countLoop: n.COUNT_LOOP_INPUTS, funcDef: n.FUNDEF_INPUTS, returnBlock: n.RETURN_INPUTS,
       arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
     })
-    // 🔴 先把宣告式的都建起來（`registerAll` 會先跑 `registerBlocksFromSpecs`）
+
+
+    // 🔴 **順序要對**：欄位在 `init` 的當下就抓住選項產生器，
+    // 所以合成來源要在**建積木之前**設好，兩邊都是。
     const declared = new Map<string, Shape>()
     for (const s of reg.getAll() as { blockDef?: { type?: string } }[]) {
       const t = s.blockDef?.type
@@ -115,6 +155,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     }
 
     new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
+    // registerAll 把來源覆蓋回真的那些（查空工作區）——再蓋回合成的，然後才建命令式那批
 
     // 🔴 **只比【真的有命令式定義】的那群。**
     //
@@ -141,7 +182,16 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       try { const b = ws.newBlock(t); imp = shapeOf(b); b.dispose(false) } catch { continue }
       const diffs: string[] = []
       if (imp.inputs.join(',') !== d.inputs.join(',')) diffs.push(`插槽 ${imp.inputs.join(',')} vs ${d.inputs.join(',')}`)
-      if (imp.fields.join(',') !== d.fields.join(',')) diffs.push(`欄位 ${imp.fields.join(',')} vs ${d.fields.join(',')}`)
+      // 🔴 **比【串起來的字】，不比【欄位怎麼切】。**
+      //
+      // ⚠️ `cpp_array_assign` 兩邊的字一模一樣（「設定 陣列 ⟨活下拉⟩ 的第 [ ] 格 ←」），
+      // 而命令式把「格」與「←」放在兩個 `appendField`、宣告放在一個訊息裡
+      // ——**那是排版，不是內容**。
+      // > **一個比「欄位怎麼切」的比對，會把同一句話判成兩句。**
+      //
+      // 🟢 而空白要正規化：訊息裡的 `%1` 前後有空白，`appendField` 沒有。
+      const norm = (xs: string[]): string => xs.join('').replace(/\s+/g, '')
+      if (norm(imp.fields) !== norm(d.fields)) diffs.push(`欄位 ${imp.fields.join(',')} vs ${d.fields.join(',')}`)
       if (String(imp.output) !== String(d.output)) diffs.push(`output ${imp.output} vs ${d.output}`)
       if (imp.prev !== d.prev || imp.next !== d.next) diffs.push(`statement ${imp.prev}/${imp.next} vs ${d.prev}/${d.next}`)
       if (imp.colour !== d.colour) diffs.push(`顏色 ${imp.colour} vs ${d.colour}`)

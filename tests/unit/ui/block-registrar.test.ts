@@ -24,11 +24,12 @@ describe('BlockRegistrar', () => {
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
        'cpp_input', 'cpp_var_declare', 'cpp_if',
-      'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_while', 'cpp_loop_count',
-      'cpp_raw_code', 'cpp_doc_comment',
+      'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_count',
+      'cpp_raw_code',
     ]
     // ⚠️ 🪦 `cpp_print`（162）、`cpp_array_at`／`cpp_continue`／`cpp_endl`／
-    //    `cpp_literal_string`（163）從這份清單移除——它不再是命令式的，
+    //    `cpp_literal_string`（163）、cpp_break／cpp_return／cpp_var_ref（164）、
+    //    cpp_loop_while 等七顆（165）從這份清單移除——它不再是命令式的，
     //    改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
     //    **一顆退場就要從這裡拿掉**，否則這條會在退場那天說「積木不見了」。
     for (const t of expectedTypes) {

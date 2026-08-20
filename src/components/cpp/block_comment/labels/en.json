@@ -1,4 +1,4 @@
 {
-  "C_COMMENT_BLOCK_MSG0": "block comment %1",
+  "C_COMMENT_BLOCK_MSG0": "multi-line comment: %1",
   "C_COMMENT_BLOCK_TOOLTIP": "Emit a /* ... */ multi-line comment"
 }

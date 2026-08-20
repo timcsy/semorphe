@@ -61,6 +61,17 @@ export function registerDynamicDropdownField(): void {
         return opts.length > 0 ? opts : [['(自訂)', '']]
       })
     }
+    /**
+     * 🔴 **它是一個會查外部的下拉**。
+     *
+     * Blockly 用這個方法區分「寫死選項」與「每次現查」，
+     * 而**護欄也用它**：一個死的下拉與一個活的下拉，
+     * 在空工作區裡看起來一樣（都沒有選項），**只有這個方法分得出來**。
+     */
+    override isOptionListDynamic(): boolean {
+      return true
+    }
+
     /** 認不得的值**加進選項**，不換掉它（見檔頭）。 */
     protected override doClassValidation_(newValue?: string): string | null {
       if (newValue === null || newValue === undefined) return null

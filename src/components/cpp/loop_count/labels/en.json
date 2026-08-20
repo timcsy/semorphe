@@ -1,4 +1,5 @@
 {
-  "U_COUNT_LOOP_MSG0": "count: %1 from %2 %3 %4",
-  "U_COUNT_LOOP_TOOLTIP": "Repeat execution: the variable counts from the start value to the end value, incrementing by 1 each time"
+  "U_COUNT_LOOP_MSG0": "count %1 from %2 %3 %4",
+  "U_COUNT_LOOP_TOOLTIP": "Repeat execution: the variable counts from the start value to the end value, incrementing by 1 each time",
+  "U_COUNT_LOOP_MSG1": "repeat %1"
 }

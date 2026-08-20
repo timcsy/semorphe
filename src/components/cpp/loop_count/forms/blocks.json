@@ -24,11 +24,11 @@
           "name": "BOUND",
           "options": [
             [
-              "to (exclusive)",
+              "%{BKY_U_COUNT_LOOP_TO_EXCL}",
               "FALSE"
             ],
             [
-              "to (inclusive)",
+              "%{BKY_U_COUNT_LOOP_TO_INCL}",
               "TRUE"
             ]
           ]
@@ -39,7 +39,7 @@
           "check": "Expression"
         }
       ],
-      "message1": "%1",
+      "message1": "%{BKY_U_COUNT_LOOP_MSG1}",
       "args1": [
         {
           "type": "input_statement",
@@ -65,6 +65,7 @@
       "statementInputs": {
         "BODY": "body"
       }
-    }
+    },
+    "_why": "🔴 **spec 165：下拉選項本來寫死英文**（`\"to (exclusive)\"`），**永遠不會被翻譯**。\n命令式那份用的是 `Blockly.Msg['U_COUNT_LOOP_TO_EXCL']`。\n> 學生把介面切成中文，這個下拉還是英文。\n\n🟡 **spec 165 同時對齊了結構**：宣告的 `message1` 原本是裸的 `%1`，**少了「重複」那個語句標籤**——命令式有它。\n而首句從「重複：」改成「計數」，理由是**「重複」要留給語句列**（一顆積木裡出現兩個「重複」會讓學生分不出哪個是哪個）。"
   }
 ]

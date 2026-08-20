@@ -31,19 +31,15 @@ let C_COMPOUND_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
 let IF_INPUTS: InputNames = { value: ['CONDITION'], statement: ['THEN', 'ELSE'] }
-let WHILE_INPUTS: InputNames = { value: ['CONDITION'], statement: ['BODY'] }
-let COUNT_LOOP_INPUTS: InputNames = { value: ['FROM', 'TO'], statement: ['BODY'] }
 let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-let ARRAY_ASSIGN_INPUTS: InputNames = { value: ['INDEX', 'VALUE'], statement: [] }
-let VAR_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 
 let inputNamesInjected = false
 
 /** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
 /**
- * 🪦 **`arrayAccess`（163）與 `returnBlock`（164）已從契約移除**——它的唯一消費者
+ * 🪦 **`arrayAccess`（163）·`returnBlock`（164）·`whileBlock`／`countLoop`／`arrayAssign`／`varAssign`（165）已從契約移除**——它的唯一消費者
  * （`cpp_array_at` 的命令式定義）退場了。
  *
  * ⚠️ **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料**
@@ -54,21 +50,13 @@ export function setLanguageInputNames(names: {
   compoundAssignExpr: InputNames
   varDeclareExpr: InputNames
   ifBlock: InputNames
-  whileBlock: InputNames
-  countLoop: InputNames
   funcDef: InputNames
-  arrayAssign: InputNames
-  varAssign: InputNames
 }): void {
   C_COMPOUND_ASSIGN_INPUTS = names.compoundAssign
   C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
   C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
   IF_INPUTS = names.ifBlock
-  WHILE_INPUTS = names.whileBlock
-  COUNT_LOOP_INPUTS = names.countLoop
   FUNDEF_INPUTS = names.funcDef
-  ARRAY_ASSIGN_INPUTS = names.arrayAssign
-  VAR_ASSIGN_INPUTS = names.varAssign
   inputNamesInjected = true
 }
 
@@ -99,6 +87,7 @@ export class BlockRegistrar {
     declareDropdownSource('names', () => this.getNameRefOptions())
     declareDropdownSource('vars', () => this.getWorkspaceVarOptions())
     declareDropdownSource('funcs', () => this.getWorkspaceFuncOptions())
+    declareDropdownSource('arrays', () => this.getWorkspaceArrayOptions())
     this.registerBlocksFromSpecs()
   }
 
@@ -1475,46 +1464,12 @@ export class BlockRegistrar {
       Blockly.Blocks['cpp_if_else'] = Blockly.Blocks['cpp_if']
     }
 
-    // cpp_loop_while
-    {
-      Blockly.Blocks['cpp_loop_while'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(WHILE_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_WHILE_MSG'] || '當')
-          this.appendStatementInput(WHILE_INPUTS.statement[0])
-            .appendField(Blockly.Msg['U_WHILE_DO'] || '重複')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.control)
-          this.setTooltip(Blockly.Msg['U_WHILE_TOOLTIP'] || '當條件成立時持續執行')
-        },
-      }
-    }
+    // 🪦 **`cpp_loop_while` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
+    //    ⚠️ **用語改成宣告的「持續執行」**（人拍板 2026-08-20）：與它自己的 tooltip 一致，
+    //    而「重複」和 `for` 的「重複」撞名，學生分不出兩個迴圈。
 
-    // cpp_loop_count
-    {
-      Blockly.Blocks['cpp_loop_count'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['U_COUNT_LOOP_MSG'] || '計數')
-            .appendField(new Blockly.FieldTextInput('i') as Blockly.Field, 'VAR')
-          this.appendValueInput(COUNT_LOOP_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_COUNT_LOOP_FROM'] || '從')
-          this.appendValueInput(COUNT_LOOP_INPUTS.value[1])
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['U_COUNT_LOOP_TO_EXCL'] || '到（不含）', 'FALSE'],
-              [Blockly.Msg['U_COUNT_LOOP_TO_INCL'] || '到（含）', 'TRUE'],
-            ]) as Blockly.Field, 'BOUND')
-          this.appendStatementInput(COUNT_LOOP_INPUTS.statement[0])
-            .appendField(Blockly.Msg['U_COUNT_LOOP_DO'] || '重複')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.control)
-          this.setTooltip(Blockly.Msg['U_COUNT_LOOP_TOOLTIP'] || '讓程式重複執行：變數會從起始值一直數到結束值，每次加 1')
-        },
-      }
-    }
+    // 🪦 **`cpp_loop_count` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
+    //    ⚠️ 宣告的下拉本來寫死英文（已修），且少了「重複」那個語句標籤（已補）。
 
     // cpp_break, cpp_continue
     // 🪦 **`cpp_break` 的命令式定義已於 spec 164 刪除。**
@@ -1969,6 +1924,18 @@ export class BlockRegistrar {
     // > **同一個鍵被賦值兩次，第二次是靜默的覆蓋
     // > ——而雙重真相護欄看的是「JSON 與命令式」，看不到「命令式與命令式」。**
 
+    // 🔴 **`cpp_raw_code` 【還不能刪】——比對護欄看不到它真正做的事。**
+    //
+    // 它的 `loadExtraState` 會依 `degradationCause` **換顏色與 tooltip**
+    // （`DEGRADATION_VISUALS`），並在 `unresolved` 時改成特別的提示。
+    // 而**宣告只有一個固定的灰色**。
+    //
+    // ⚠️ 比對護欄比的是「**剛建好的樣子**」——而這段邏輯只在
+    // **載入既有積木時**才跑，所以它報「一模一樣」。
+    //
+    // > **一個只比「剛建好的樣子」的比對，看不到「載入時才長出來的東西」。**
+    //
+    // 🟢 重開條件：宣告表達得出「依 extraState 換視覺」（那是另一個機制）。
     // cpp_raw_code
     {
       Blockly.Blocks['cpp_raw_code'] = {
@@ -2008,6 +1975,7 @@ export class BlockRegistrar {
       }
     }
 
+
     // 🪦 **`cpp_array_at` 的命令式定義已於 spec 163 刪除。**
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
@@ -2043,42 +2011,11 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_array_assign
-    {
-      Blockly.Blocks['cpp_array_assign'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(ARRAY_ASSIGN_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_ARRAY_ASSIGN_SET_LABEL'] || '設定 陣列')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
-            .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
-          this.appendValueInput(ARRAY_ASSIGN_INPUTS.value[1])
-            .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
-            .appendField('←')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['U_ARRAY_ASSIGN_TOOLTIP'] || '陣列元素賦值')
-        },
-      }
-    }
+    // 🪦 **`cpp_array_assign` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
+    //    ⚠️ 宣告本來是一個**假的下拉**（寫死 `arr` 一個選項，已改成 `field_dynamic_dropdown`）。
 
-    // cpp_var_assign
-    {
-      Blockly.Blocks['cpp_var_assign'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(VAR_ASSIGN_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_VAR_ASSIGN_LABEL'] || '把變數')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-            .appendField(Blockly.Msg['U_VAR_ASSIGN_SET_LABEL'] || '設成')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.data)
-          this.setTooltip(Blockly.Msg['U_VAR_ASSIGN_TOOLTIP'] || '變數賦值')
-        },
-      }
-    }
+    // 🪦 **`cpp_var_assign` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
+    //    ⚠️ 宣告本來是靜態 `field_input`，已改成 `field_dynamic_dropdown`。
 
     // cpp_increment
     {
@@ -2261,35 +2198,9 @@ export class BlockRegistrar {
       })
     }
 
-    // cpp_comment
-    {
-      Blockly.Blocks['cpp_comment'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['C_COMMENT_LINE_LABEL'] || '註解：')
-            .appendField(new Blockly.FieldTextInput('comment') as Blockly.Field, 'TEXT')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.cpp_special)
-          this.setTooltip(Blockly.Msg['C_COMMENT_LINE_TOOLTIP'] || '註解說明')
-        },
-      }
-    }
+    // 🪦 **`cpp_comment` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
 
-    // cpp_block_comment
-    {
-      Blockly.Blocks['cpp_block_comment'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['C_COMMENT_BLOCK_LABEL'] || '多行註解：')
-            .appendField(new FieldMultilineInput('comment') as Blockly.Field, 'TEXT')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.cpp_special)
-          this.setTooltip(Blockly.Msg['C_COMMENT_BLOCK_TOOLTIP'] || '多行註解說明')
-        },
-      }
-    }
+    // 🪦 **`cpp_block_comment` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
 
     // cpp_doc_comment
     {
