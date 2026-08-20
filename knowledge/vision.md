@@ -11,7 +11,7 @@
 - **學生**（主要）：從零基礎到進階，涵蓋 APCS 考試準備、競程訓練、學校課程
 - **教師**：設計教學路徑（Topic）、指定練習、追蹤學習軌跡
 - **語言開發者**：透過模組化語言套件擴充新程式語言
-- **課程設計者**：透過 Topic 系統定制不同教學情境的概念可見性和積木形態
+- **課程設計者**：透過 Topic 系統定制不同教學情境的元件可見性和積木形態
 
 ## 核心想法
 
@@ -107,7 +107,7 @@ C++ 單語言可用，程式碼 ↔ 積木雙向 round-trip 成立，語義直�
   ↕ ViewHost 介面
 多個獨立視圖（積木 / 程式碼 / 主控台 / 變數 / 資料流 / 接線 / 模擬）
   ↕ SemanticBus（瀏覽器=EventEmitter / VSCode=postMessage）
-SemanticCore（語義樹 + 概念註冊 + 投影引擎 + 直譯器，零 DOM 依賴）
+SemanticCore（語義樹 + 元件註冊 + 投影引擎 + 直譯器，零 DOM 依賴）
   ↕ 語言套件介面
 多個語言套件（C++ / Python / Arduino）+ 外部擴充套件
 ```
@@ -123,7 +123,7 @@ SemanticCore（語義樹 + 概念註冊 + 投影引擎 + 直譯器，零 DOM 依
 ```
 languages/{lang}/
   ├─ manifest.json          ← 套件中繼資料
-  ├─ core/                  ← 語言核心概念（concepts.json / blocks.json / generators/ / lifters/）
+  ├─ core/                  ← 語言核心元件（concepts.json / blocks.json / generators/ / lifters/）
   ├─ std/                   ← 標準函式庫（目錄名即 header 名）
   ├─ lift-patterns.json     ← AST → 語義 pattern 規則
   └─ auto-include.ts / style-exceptions.ts / renderers/ / styles/
@@ -140,12 +140,12 @@ languages/{lang}/
   > ——**那是這條路真正的成本，而它不在任何介面上**。
   > ⚠️ 而 `code = 原生 TextEditor` 有一個順帶的好處：**宿主的診斷本來就在**
   > （見 [draft/語義診斷系統](draft/2026-08-05-語義診斷系統.md) 的委派宿主分工）。
-- **外部套件與硬體擴充**：`packages/{name}/` 含 semantics / projections / hardware。依賴規則：擴充可引用基礎套件概念，**不可引用其他擴充**（避免菱形依賴）。
+- **外部套件與硬體擴充**：`packages/{name}/` 含 semantics / projections / hardware。依賴規則：擴充可引用基礎套件元件，**不可引用其他擴充**（避免菱形依賴）。
 
 ### 長期方向
 
 1. **多語言**：C++ → Python → Java → Go → Rust……同一語義結構，切換語言即切換投影
-2. **語義套件市場**：語義契約 + 投影定義 + 多後端執行體。同一概念可有多個執行體（wasm / js / webgpu / remote），自動基準測試 + 自動後端選擇。教學價值：讓學習者直觀感受演算法複雜度
+2. **語義套件市場**：語義契約 + 投影定義 + 多後端執行體。同一元件可有多個執行體（wasm / js / webgpu / remote），自動基準測試 + 自動後端選擇。教學價值：讓學習者直觀感受演算法複雜度
 3. **可插拔執行與時空旅行除錯**：執行即投影；直譯器每步產生語義狀態快照，回溯 = 用歷史快照重新投影（viewParams 多一個 `timeStep`）
 4. **硬體教育**：Arduino 接線視圖 + 模擬視圖，從軟體延伸到嵌入式
 5. **AI 輔助**：LLM 作為語用分析師，在確定性 guardrails 內提供提示投影——建議下一步，但不自動修改語義結構
@@ -288,7 +288,7 @@ languages/{lang}/
 
 - [ ] 🔴 **剩下的 33 筆**：`block-registrar` 裡 **40 顆命令式的 cpp 積木定義**
       —— ⚠️ **spec 156 沒有逼到它**（那一刀不做積木）。它等的是
-      **Python 的第一顆【積木】**，不是第一顆概念。
+      **Python 的第一顆【積木】**，不是第一顆元件。
       —— ⚠️ **應該由 Python 逼出來，而不是憑空重寫**：
       重寫一個沒有第二個消費者的抽象，等於用猜的決定介面。
 - [ ] `app.ts` 的 35 處（組裝點，護欄明寫「可見，不入棘輪」）
@@ -333,7 +333,7 @@ languages/{lang}/
       ⚠️ **wasm 仍不出貨**（`tests/assets/`）——沒有 Python target 就沒有人去要它。
 - [ ] Python code ↔ **blocks** roundtrip 成功
       —— ⚠️ 這一格要的是**積木**，而 spec 157 只走到程式碼那一側
-- [ ] 🔴 **在觀察集 O 底下，哪些 cpp 概念與 python 概念落在同一類**
+- [ ] 🔴 **在觀察集 O 底下，哪些 cpp 元件與 python 元件落在同一類**
       —— ⚠️ 這一條才是這個階段的目的，roundtrip 只是它的前置
 - [ ] 🔴 **第一個【不】落在同一類的地方在哪**
       —— **它比上一條更有價值：它是鄰域的邊界**
@@ -345,7 +345,7 @@ languages/{lang}/
 
 #### 階段 8：外部套件生態
 
-- [ ] 安裝／移除套件後概念自動出現／降級
+- [ ] 安裝／移除套件後元件自動出現／降級
 - [ ] 依賴鏈正確解析
 
 設計脈絡：[draft/套件積木的粒度與預組](draft/2026-08-17-套件積木的粒度與預組.md)、
