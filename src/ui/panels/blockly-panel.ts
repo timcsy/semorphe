@@ -213,6 +213,7 @@ export class BlocklyPanel implements ViewHost {
       // > 不能蓋在「現在」。**
       const prevRecord = Blockly.Events.getRecordUndo()
       Blockly.Events.setRecordUndo(false)
+      this.recordUndoWindowOpen = true
       // 🔴 **先存一份，失敗就還原。**
       //
       // ⚠️ `setState` 拋錯時工作區是**載到一半**的——使用者看到的是一堆
@@ -360,6 +361,26 @@ export class BlocklyPanel implements ViewHost {
    * 否則先排的那個會提早把窗口關掉。
    */
   private recordUndoToken = 0
+  private recordUndoWindowOpen = false
+
+  /**
+   * 重畫的「不記復原」窗口現在開著嗎。
+   *
+   * 🔴 **這是為了讓護欄【問狀態】而不是【等時間】**（2026-08-20）。
+   *
+   * 那支護欄原本靠 `await tick()`（固定 60ms）推論窗口開了沒——
+   * 而窗口是 `requestAnimationFrame → setTimeout(0)` 關的，
+   * **機器一忙 60ms 就不夠**，於是它一個 session 裡紅了四次。
+   *
+   * > **一支看不見它要測的狀態的測試，只能靠猜時間——而猜會在忙的時候猜錯。**
+   *
+   * ⚠️ 這**不是**為了測試而加的後門：它是一個**真的存在的狀態**，
+   * 而在此之前它只活在兩個區域變數裡。把它變成可讀的，
+   * 產品端一行行為都沒變。
+   */
+  isRedrawWindowOpen(): boolean {
+    return this.recordUndoWindowOpen
+  }
 
   private endRecordUndoWindow(prev: boolean): void {
     this.recordUndoToken += 1
@@ -368,6 +389,7 @@ export class BlocklyPanel implements ViewHost {
       // 期間又重畫過 → 那一次會自己關，這裡不能搶著關。
       if (mine !== this.recordUndoToken) return
       Blockly.Events.setRecordUndo(prev)
+      this.recordUndoWindowOpen = false
       const n = this.workspace?.getUndoStack().length ?? 0
       // 🔴 **會出聲**：真的清到東西時記進時間軸。沒有它，
       //    「修好了」與「從來沒壞過」長得一樣。

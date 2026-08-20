@@ -62,7 +62,43 @@ function makePanel(): { panel: BlocklyPanel; fired: () => number } {
   return { panel, fired: () => n }
 }
 
+/**
+ * 讓 Blockly 排隊中的事件流乾。
+ *
+ * ⚠️ **它只是「讓佇列跑一輪」，不是「等某件事發生」**——需要等某件事的地方
+ * 用下面的 `until()`。
+ */
 const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 60))
+
+/**
+ * 🔴 **等條件，不等時間。**
+ *
+ * ## 為什麼有這一支
+ *
+ * 這個檔原本每一處都 `await tick()`（固定 60ms）然後直接斷言。
+ * 單獨跑 3/3 全過，而**全套跑的時候紅過四次**（2026-08-20 一個 session 裡）：
+ * 幾百支測試同時搶 CPU，60ms 不夠讓 `requestAnimationFrame → setTimeout(0)` 跑完。
+ *
+ * > **一支靠固定時間等的測試，在機器忙的時候會說謊——而它說的是「產品壞了」。**
+ *
+ * ⚠️ 而它的代價比「偶爾要重跑」大得多：這個檔是**護欄**，
+ * 而專案自己的判準是「**亂叫的護欄很快就會被忽略**」
+ * （`audit-toolbox-reachability.test.ts:192` 逐字）。
+ *
+ * 🟢 輪詢到條件成立為止，逾時才失敗——**快的機器上更快，慢的機器上不會說謊**。
+ */
+async function until(
+  pred: () => boolean,
+  why: string,
+  timeoutMs = 3000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    if (pred()) return
+    if (Date.now() > deadline) throw new Error(`等了 ${timeoutMs}ms 條件仍不成立：${why}`)
+    await new Promise((r) => setTimeout(r, 10))
+  }
+}
 
 beforeAll(() => {
   Blockly.defineBlocksWithJsonArray([
@@ -149,8 +185,7 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     // 🔴 群組必須被還原——否則之後每一次使用者編輯都被吃掉，
     //    症狀是「積木拉了半天程式碼不動」。
     panel.getWorkspace()!.newBlock(PROBE)
-    await tick()
-    expect(fired(), '群組沒還原 → 使用者的編輯從此靜默').toBeGreaterThan(0)
+    await until(() => fired() > 0, '群組沒還原 → 使用者的編輯從此靜默')
   })
 
   // ── 🔴 使用者回報的那件事：舊世界的復原項活過了重畫 ──────────────
@@ -170,8 +205,7 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     // ① 正向錨點：使用者親手拉一顆，復原堆疊【必須】長出東西
     //    ——否則下面那個「必須是 0」只是因為它一直都是 0。
     ws.newBlock(PROBE)
-    await tick()
-    expect(ws.getUndoStack().length, '拉了一顆卻沒進復原堆疊 → 下面那條空過').toBeGreaterThan(0)
+    await until(() => ws.getUndoStack().length > 0, '拉了一顆卻沒進復原堆疊 → 下面那條空過')
 
     // ② 從程式碼重畫
     panel.onSemanticUpdate({
@@ -197,9 +231,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
+    await until(() => ws.getAllBlocks(false).length === 1, '重畫沒把積木放上去 → 這一條空過')
     const before = ws.getAllBlocks(false).length
-    expect(before, '重畫沒把積木放上去 → 這一條空過').toBe(1)
     const firedBefore = fired()
 
     ws.undo(false)          // ← 焦點在面板上時，Cmd+Z 走的就是這條
@@ -290,9 +323,13 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
+    // ★ 錨點：**窗口真的開著**——在此之前這件事只能靠時間推論。
+    expect(panel.isRedrawWindowOpen(), '窗口沒開 → 這一條在測一個不存在的情況').toBe(true)
     // 同步窗口【之後】才動手——模擬「被延到下一幀」的那些事件。
     ws.newBlock(PROBE)
-    await tick()
+    // 🔴 **缺席斷言不能等固定時間**——要等到窗口**真的關了**（一個正向訊號），
+    // 那時候「還沒進堆疊」才是結論，而不是「還沒來得及進」。
+    await until(() => !panel.isRedrawWindowOpen(), '窗口一直沒關')
     expect(ws.getAllBlocks(false).length, '（錨點）積木真的建出來了').toBe(2)
     expect(ws.getUndoStack().length,
       '重畫之後那一幀建立的事件仍可復原 → Cmd+Z 會重放一個不屬於這個世界的動作').toBe(0)
@@ -306,12 +343,11 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()          // ← 讓窗口關掉
+    await until(() => !panel.isRedrawWindowOpen(), '窗口一直沒關 → 下面那條會測到窗口內的行為')
     ws.newBlock(PROBE)
-    await tick()
     // 🔴 沒有這一條的話，「永遠不記復原」也能讓上面那支通過
     //    ——而那等於把積木的復原整個關掉。
-    expect(ws.getUndoStack().length, '窗口沒關 → 積木的復原被永久停用').toBeGreaterThan(0)
+    await until(() => ws.getUndoStack().length > 0, '窗口沒關 → 積木的復原被永久停用')
   })
 
   // ── 🔴 拖曳過程不得寫檔案 ────────────────────────────────────────
@@ -348,8 +384,9 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     // 🔴 關掉之後【必須】補寫——而這裡**不會再有新的積木事件**，
     //    所以它證明的是輪詢那條路，不是「下一則事件順便寫掉」。
     Blockly.WidgetDiv.isVisible = realVisible
-    await new Promise((r) => setTimeout(r, 300))
-    expect(fired(), '編輯器關了卻沒補寫 → 使用者的修改永遠不進檔案').toBeGreaterThan(base)
+    // ⚠️ 這裡等的是**輪詢那條路**補寫——原本寫死 300ms，而輪詢的間隔一旦
+    // 因為機器忙而落在 300ms 之外，這一支就會說「產品沒補寫」。
+    await until(() => fired() > base, '編輯器關了卻沒補寫 → 使用者的修改永遠不進檔案')
   })
 
   it('下拉選單開著時也一樣（兩個是不同的容器）', async () => {
