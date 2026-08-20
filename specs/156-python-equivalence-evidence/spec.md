@@ -24,7 +24,7 @@
                               cpp:print 與 cpp:print_formatted 宣告了同一個 ioRole（＝同一個等價類）
                               與不同的 ioStyle（＝哪個成員）」
 🟢 觀察集的候選維度也在       traits：ioRole 5 顆 · ioStyle 6 · precedence 12 · forLoopPart 19
-🟢 tree-sitter-python.wasm   已建好（460 KB，`tree-sitter build --wasm`）
+🟢 tree-sitter-python.wasm   建得出來（460 KB），⚠️ **而這一刀不出貨**——見 FR-001
 🟢 三個中立性維度已清         0 / 33 / 0（specs 153／154／155）
 🔴 233 顆元件全是 cpp: scope  Python 是【新增資料夾】，不動既有的
 ```
@@ -76,7 +76,13 @@
 
 ### Functional Requirements
 
-- **FR-001**：系統 MUST 能載入 Python 的語法解析器（`tree-sitter-python.wasm`）
+- **FR-001**：Python 的語法解析器 MUST **建得出來**，而**建置步驟要留下**
+      （`npm run build:wasm:python`）。
+      🔴 **而它此刻【不出貨】**——`e2e/shipped-assets.spec.ts` 的判準是
+      「出貨的每一個 wasm，都要有人真的去要它」，而這一刀**明確排除**
+      接上 Python 的 lift 路徑，所以**沒有人會去要它**。
+      > **一個沒有人載入的 460 KB 資產，不是「準備好了」，是死重。**
+      🟢 重開條件：Python 的 lift 路徑接上（那時它才有人要）。
 - **FR-002**：MUST 存在一顆 `python:print`，宣告與 `cpp:print` 相同的 `ioRole`
 - **FR-003**：MUST 有一支量測，在指定的觀察集下**列出等價類**
 - **FR-004**：該量測 MUST 指出**第一個不落在同一類的地方**
@@ -119,3 +125,6 @@
 2. **兩種修法都要先論證**（支援多語言 vs 收窄判準）——不得默默選一個
 3. **走使用者那條路**——`experience`「一個修好的投影，可能不在使用者走的那條路上」
 4. ⚠️ **注入要編得過**，且要分辨「真的綠／真的紅／沒跑起來」（`build-guardrail` 第四種結局）
+5. 🔴 **出貨的資產要有人要**——第一版把 wasm 放進 `public/` 就推了，
+   而 `shipped-assets` 那支 e2e 當場紅（**我在它紅著的時候說了「已推送」**）。
+   ⚠️ 判準不是「將來會用到」，是**現在有沒有人去要它**。
