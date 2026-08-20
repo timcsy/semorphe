@@ -4,6 +4,10 @@
  * 驗證行尾註解、獨立註解、表達式內部註解在 lift → generate roundtrip 後保留
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { setCommentLanguage } from '../../../src/core/comment-syntax'
+// ⚠️ 這支測試自己組 lifter／直接叫產生器，所以要明說語言——
+//    走 `generateCode` 的那些不用（它從 `language` 參數自己設）。
+setCommentLanguage('cpp')
 import { Lifter } from '../../../src/core/lift/lifter'
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
@@ -78,6 +82,7 @@ describe('Annotation Roundtrip', () => {
   function setup() {
     lifter = new Lifter()
     const patternLifter = new PatternLifter()
+patternLifter.setGrammar('tree-sitter-cpp')
 
     const specRegistry = new BlockSpecRegistry()
     const allComponents = allCppComponents()

@@ -1,0 +1,4 @@
+{
+  "PYTHON_VAR_ASSIGN_MSG0": "set %1 to %2",
+  "PYTHON_VAR_ASSIGN_TOOLTIP": "Store a value under a name. Python needs no declaration: the first assignment creates it"
+}

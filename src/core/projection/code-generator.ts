@@ -1,4 +1,5 @@
-import { commentSyntax } from '../comment-syntax'
+import { setDegradationLanguage } from '../degradation-blocks'
+import { commentSyntax, setCommentLanguage } from '../comment-syntax'
 import { roleOf } from '../component/traits'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
@@ -142,6 +143,17 @@ export function isUngeneratable(code: string): boolean {
 // ─── Public API ───
 
 export function generateCode(tree: SemanticNode, language: string, style: StylePreset): string {
+  // 🔴 **語言在這裡已經是一個參數了**（spec 168）——所以依語言的登記處由這裡設，
+  // 而不是要求每一個呼叫端記得先設一次。
+  //
+  // ⚠️ 第一版把 `comment-syntax` 改成依語言之後**沒有做這件事**，
+  // 於是 43 支 C++ 測試當場紅：它們沒有人叫 `setCommentLanguage('cpp')`，
+  // 而核心誠實地回退到語言中立的 `⟨comment: …⟩`。
+  //
+  // > **一個「要記得先呼叫」的前置，就是一個等著被忘記的地方——
+  // > 而如果那個資訊已經在參數裡，它根本不該是前置。**
+  setCommentLanguage(language)
+  setDegradationLanguage(language)
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
   registerMetaComponentGenerators(generators)

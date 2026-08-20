@@ -46,6 +46,7 @@ import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { allLanguagePacks, languagePack, defaultTarget } from '../core/language-packs'
 import { setDegradationLanguage } from '../core/degradation-blocks'
+import { setCommentLanguage } from '../core/comment-syntax'
 import { loadAllLanguagePacks } from '../core/load-language-packs'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -453,6 +454,9 @@ export class App {
     const liftStrategyRegistry = new LiftStrategyRegistry()
     const renderStrategyRegistry = new RenderStrategyRegistry()
     const allSpecs = this.blockSpecRegistry.getAll()
+    // 🔴 **各語言的 transform 也要註冊**——C++ 那批由 `registerCppLifters` 順手做，
+    // 而那是一個沒有被指名的組裝點。這裡問宣告。
+    for (const lp of allLanguagePacks()) lp.liftTransforms?.(transformRegistry)
     const pl = new PatternLifter()
     pl.setTransformRegistry(transformRegistry)
     pl.setLiftStrategyRegistry(liftStrategyRegistry)
@@ -475,6 +479,7 @@ export class App {
       if (!g) throw new Error(`沒有語言套件：${language}——辨識不得用猜的文法繼續`)
       pl.setGrammar(g)
       setDegradationLanguage(language)
+      setCommentLanguage(language)
       // ⚠️ **兩邊都要切**：pattern 那條路與手寫 lifter 那條路是分開的，
       // 而只切一邊的症狀是「大部分對，少數幾顆仍然是別的語言的」。
       lifter.setGrammar(g)

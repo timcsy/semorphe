@@ -58,6 +58,13 @@ export interface LanguagePack {
    */
   liftPatterns?: readonly unknown[]
   /**
+   * 這個語言的 lift transform（`fieldMappings` 的 `transform` 以名字引用的那些）。
+   *
+   * ⚠️ C++ 那批是由 `registerCppLifters` 順手註冊的，而 Python 沒有那個入口
+   * ——**「順手註冊」就是一個沒有被指名的組裝點**。
+   */
+  liftTransforms?: (registry: { register(name: string, fn: (text: string) => string): void }) => void
+  /**
    * 選單順序——**明說的，不是檔名排出來的**。
    *
    * 🔴 `import.meta.glob` 的鍵順序不保證，而**選單順序是設計出來的**

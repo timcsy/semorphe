@@ -83,6 +83,7 @@ beforeAll(async () => {
     (reg as (r: LiftStrategyRegistry) => void)(liftStrategyRegistry)
 
   const pl = new PatternLifter()
+pl.setGrammar('tree-sitter-cpp')
   pl.setTransformRegistry(transformRegistry)
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
   const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])

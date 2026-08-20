@@ -1,0 +1,23 @@
+{
+  "componentId": "python:if_else",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——見同批 `if` 的理由。",
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "body": "statements",
+    "else_body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  }
+}

@@ -5,6 +5,10 @@
  * should be registered as regular generators, not handled by if-else chain.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { setCommentLanguage } from '../../../src/core/comment-syntax'
+// ⚠️ 這支測試自己組 lifter／直接叫產生器，所以要明說語言——
+//    走 `generateCode` 的那些不用（它從 `language` 參數自己設）。
+setCommentLanguage('cpp')
 import { generateNode, type GeneratorContext, registerMetaComponentGenerators } from '../../../src/core/projection/code-generator'
 import type { SemanticNode } from '../../../src/core/types'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'

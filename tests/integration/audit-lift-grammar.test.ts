@@ -134,7 +134,7 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
     const PATTERN_KEYS = new Set(['id', 'grammar', 'astNodeType', 'component', 'patternType',
       'constraints', 'fieldMappings', 'operatorDispatch', 'chain', 'composite', 'unwrapChild',
       'contextTransform', 'multiResult', 'extract', 'priority', 'liftStrategy'])
-    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match'])
+    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent'])
     const MAPPING_KEYS = new Set(['semantic', 'ast', 'extract', 'transform'])
     const bad: string[] = []
     const check = (obj: Record<string, unknown>, allowed: Set<string>, where: string) => {

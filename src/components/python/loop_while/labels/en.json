@@ -1,0 +1,4 @@
+{
+  "PYTHON_WHILE_MSG0": "while %1 repeat",
+  "PYTHON_WHILE_TOOLTIP": "Keep going while the condition holds. A condition that never fails never stops"
+}

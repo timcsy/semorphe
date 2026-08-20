@@ -1,0 +1,24 @@
+[
+  {
+    "id": "python_while",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "while_statement",
+    "component": {
+      "componentId": "python:loop_while"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "condition",
+        "ast": "condition",
+        "extract": "lift"
+      },
+      {
+        "semantic": "body",
+        "ast": "body",
+        "extract": "liftBody"
+      }
+    ],
+    "priority": 10,
+    "_why": "⚠️ **`while ... else` 沒有收**：帶 `alternative` 的 `while_statement` 仍然會匹配這一筆，而那個 else 分支**會被靜靜丟掉**。🔴 那是一個已知的邊界，記在這裡以免它被當成「已支援」。"
+  }
+]

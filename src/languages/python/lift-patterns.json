@@ -7,5 +7,22 @@
     "unwrapChild": 0,
     "priority": 1,
     "_why": "🔴 **spec 167 掀出來的**。Python 把 `print(...)` 包在 `expression_statement` 裡，而在此之前**是 C++ 的同名 pattern 幫它拆的**——文法過濾一裝上，這個洞就現形了。\n\n> **一段靠別的語言的規則才走得通的路，在它們被分開的那天才會被發現。**"
+  },
+  {
+    "id": "python_block",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "block",
+    "component": {
+      "componentId": "_compound"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "body",
+        "ast": "$text",
+        "extract": "liftChildren"
+      }
+    ],
+    "priority": 1,
+    "_why": "🔴 **Python 的 `block` 對應 C++ 的 `compound_statement`**——縮排劃出來的那一段。\n\n`liftBody` 認得 `_compound` 這個特殊身分並把它攤平成語句列（`pattern-lifter.ts` 的 `case 'liftBody'`），**所以拆殼不必自己寫**。\n\n⚠️ 沒有這一筆的症狀是 **`else_body: [unresolved]`**——接點在、長度是 1、而裡面是一顆認不出來的節點。\n> **「接點空了」與「接點裡是垃圾」，在斷言 `length === 1` 時完全相同。**\n\n⚠️ 而 `if`／`while` 的 `body` 之所以**本來就對**，是因為它們的 `consequence`／`body` 欄位直接指到 block，而 `liftBody` 的第一步 `ctx.lift(child)` 現在拿得到 `_compound` 了。在此之前它們是靠**兜底路徑**（`liftChildren(namedChildren)`）碰巧走通的。"
   }
 ]

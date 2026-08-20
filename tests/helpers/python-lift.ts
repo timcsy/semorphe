@@ -17,7 +17,9 @@ import { registerCppLifters } from '../../src/languages/cpp/lifters'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { componentGenerateRegistrars } from '../../src/core/component/paths'
 import { registerLanguage, generateCode } from '../../src/core/projection/code-generator'
-import googleStyle from '../../src/languages/cpp/styles/google.json'
+import pythonStyle from '../../src/languages/python/styles/python.json'
+import { setCommentLanguage } from '../../src/core/comment-syntax'
+import { setDegradationLanguage } from '../../src/core/degradation-blocks'
 import type { LiftPattern, SemanticNode, NodeGenerator, StylePreset } from '../../src/core/types'
 
 /**
@@ -53,6 +55,9 @@ def add(a, b):
  */
 export function createPythonLifter(): Lifter {
   loadAllLanguagePacks()
+  // ⚠️ **lift 那一側也要設**——剝註解的 transform 問的是同一個登記處。
+  // 少了它的症狀是 round-trip 每次多一個 `#`（剝不掉，然後產生時又加一個）。
+  setCommentLanguage('python')
   const pack = allLanguagePacks().find((p) => p.id === 'python')
   if (!pack) throw new Error('沒有 python 語言套件——這支測試在驗一個不存在的東西')
   const lifter = new Lifter()
@@ -61,6 +66,9 @@ export function createPythonLifter(): Lifter {
   const ls = new LiftStrategyRegistry()
   const bs = new BlockSpecRegistry()
   bs.loadFromSplit(componentComponents() as never, componentBlocks() as never)
+  // 🔴 **各語言的 transform 也要註冊**——C++ 那批由 `registerCppLifters` 順手做，
+  // 而那是一個沒有被指名的組裝點。這裡問宣告。
+  for (const lp of allLanguagePacks()) lp.liftTransforms?.(tr)
   const pl = new PatternLifter()
   pl.setTransformRegistry(tr)
   pl.setLiftStrategyRegistry(ls)
@@ -122,12 +130,17 @@ export function componentIdsOf(n: SemanticNode | null, out: string[] = []): stri
 let pythonGeneratorsReady = false
 
 export function generatePython(tree: SemanticNode | null): string {
+  // ⚠️ **每次都設**——這兩個登記處是依語言的全域狀態，而別的測試會改它。
+  // 🔴 少了這兩行的症狀是 `⟨comment: # 你好⟩`：核心回退到語言中立的形狀，
+  //    而那**不是錯誤，是設計**（`comment-syntax.ts` 的 NEUTRAL 註解逐字說明了）。
+  setCommentLanguage('python')
+  setDegradationLanguage('python')
   if (!pythonGeneratorsReady) {
     const g = new Map<string, NodeGenerator>()
     // ⚠️ **`style` 一定要傳**——共用產生器裡有一批 helper 是捕獲 `style` 的閉包，
     // 剪出去的膠囊拿不到那個閉包，只能自己從 `style` 算。
     // 少傳的症狀不是「排版怪」，是 `cpp/class_def` 當場 `Cannot read 'brace_style'`。
-    const style = googleStyle as unknown as StylePreset
+    const style = pythonStyle as unknown as StylePreset
     for (const reg of componentGenerateRegistrars())
       (reg as (m: typeof g, s: StylePreset) => void)(g, style)
     // ⚠️ `registerLanguage` 收的是**工廠**（`(style) => Map`），不是 Map。
@@ -135,5 +148,5 @@ export function generatePython(tree: SemanticNode | null): string {
     registerLanguage('python', () => g)
     pythonGeneratorsReady = true
   }
-  return generateCode(tree as SemanticNode, 'python', googleStyle as unknown as StylePreset).trim()
+  return generateCode(tree as SemanticNode, 'python', pythonStyle as unknown as StylePreset).trim()
 }

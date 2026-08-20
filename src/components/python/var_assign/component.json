@@ -1,0 +1,32 @@
+{
+  "componentId": "python:var_assign",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `x = 5` **同時是宣告與指派**（沒有型別、沒有先宣告這件事），而 C++ 把那兩件事分成兩顆元件。**一顆對兩顆，掛不上去。**",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "x",
+      "_why": "⚠️ **叫 `obj` 不叫 `name`**——「被指派的那個東西」這個角色在詞彙表裡只有一個名字（`RECEIVER_PARAM`）。\n\n🔴 而 Python 的指派**同時創造了那個名字**（沒有宣告這件事），所以它讀起來像 `declare` 的自我命名。**那個差別屬於這一段註解，不屬於一個不同的參數名**——同一個角色兩種寫法，讀的人要記兩次。"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "declaresVariable": true
+  },
+  "_traits_why": "**「我讓一個名字存在」是我自己的宣告**——變數下拉靠它收集名字，而它不必知道我叫什麼。"
+}

@@ -1,0 +1,22 @@
+{
+  "componentId": "python:if",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `if` 用縮排劃範圍、而且 `elif` 是一個獨立的語法結構。邊界與 C++ 那顆不同。",
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  }
+}

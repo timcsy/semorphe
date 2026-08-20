@@ -1,0 +1,4 @@
+{
+  "PYTHON_WHILE_MSG0": "當 %1 成立時，重複",
+  "PYTHON_WHILE_TOOLTIP": "條件成立就一直做下去。條件永遠成立的話會停不下來"
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "python_assignment",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "assignment",
+    "component": {
+      "componentId": "python:var_assign"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "obj",
+        "ast": "left",
+        "extract": "text"
+      },
+      {
+        "semantic": "value",
+        "ast": "right",
+        "extract": "lift"
+      }
+    ],
+    "priority": 10,
+    "_why": "⚠️ **`left` 用 `text` 而不是 `lift`**：左邊是**被指派的名字**，不是一個要被求值的運算式。用 `lift` 會把它變成一顆 `var_ref` 積木掛在插槽上——而那讀起來像「把 x 的值設成…」。\n\n⚠️ 而這也表示 `a[0] = 5`／`a.b = 5` 這種**左邊不是單純名字**的指派會被誤收。它們的 `left` 是 `subscript`／`attribute`，`text` 會拿到 `a[0]`——🔴 **那是一個已知的邊界**，等 `python:array_assign` 那批來收。"
+  }
+]

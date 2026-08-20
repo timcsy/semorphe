@@ -1,0 +1,29 @@
+{
+  "componentId": "python:comment",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——註解的語法差異是投影層的事，而「兩個語言的註解是不是同一個概念」要靠觀察集驗。",
+  "properties": [
+    {
+      "name": "text",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。** 註解是宣告性的——執行它沒有任何行為，而寫一個 noop 函式會讓「刻意沒有」與「忘了寫」長得一模一樣。"
+  },
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "declarative"
+  }
+}

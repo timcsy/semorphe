@@ -61,6 +61,7 @@ describe('L1 Block Roundtrip', () => {
 
   beforeAll(() => {
     lifter = new PatternLifter()
+    lifter.setGrammar('tree-sitter-cpp')
     generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()

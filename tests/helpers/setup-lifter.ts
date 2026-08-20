@@ -1,4 +1,5 @@
 import { Lifter } from '../../src/core/lift/lifter'
+import { setCommentLanguage } from '../../src/core/comment-syntax'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppLifters } from '../../src/languages/cpp/lifters'
@@ -41,6 +42,9 @@ export function createTestLifter(): Lifter {
   // > **一個「大家都知道」的前提，如果沒有寫成宣告，第二個語言進來的那天它就會出事。**
   pl.setGrammar('tree-sitter-cpp')
   lifter.setGrammar('tree-sitter-cpp')
+  // ⚠️ 剝註解的 transform 問的是依語言的登記處——lift 那一側沒有 `language` 參數，
+  // 所以這裡要明說。（產生那一側由 `generateCode` 自己設，見它的註解。）
+  setCommentLanguage('cpp')
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)
 

@@ -44,16 +44,31 @@ export interface CommentSyntax {
   strip(raw: string): string
 }
 
-let declared: CommentSyntax | null = null
+/**
+ * 🔴 **依語言存**（spec 168）。
+ *
+ * ⚠️ 第一版是**一個全域槽**，於是「這個語言怎麼寫註解」的答案取決於
+ * **哪個套件最後載入**。與 `degradation-blocks` 是同一個病，同一天收的。
+ *
+ * > **一個「全域只有一份」的登記處，等於宣告了「這個系統只有一個語言」。**
+ */
+const byLanguage = new Map<string, CommentSyntax>()
+let active: string | null = null
 
 /** 語言套件載入時呼叫 */
-export function declareCommentSyntax(syntax: CommentSyntax): void {
-  declared = syntax
+export function declareCommentSyntax(language: string, syntax: CommentSyntax): void {
+  byLanguage.set(language, syntax)
+}
+
+/** 切語言時呼叫 */
+export function setCommentLanguage(language: string): void {
+  active = language
 }
 
 /** 測試用——還原成「沒有語言套件」的狀態 */
 export function resetCommentSyntax(): void {
-  declared = null
+  byLanguage.clear()
+  active = null
 }
 
 /**
@@ -77,10 +92,10 @@ const NEUTRAL: CommentSyntax = {
 
 /** 核心層讀它。沒有語言套件時回傳語言中立的退路，**不回傳 null**——見 NEUTRAL 的說明 */
 export function commentSyntax(): CommentSyntax {
-  return declared ?? NEUTRAL
+  return (active !== null ? byLanguage.get(active) : undefined) ?? NEUTRAL
 }
 
 /** 有沒有語言套件宣告過（護欄與診斷用） */
 export function hasCommentSyntax(): boolean {
-  return declared !== null
+  return active !== null && byLanguage.has(active)
 }

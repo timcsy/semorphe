@@ -1,0 +1,22 @@
+{
+  "componentId": "python:loop_while",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `while` 可以帶 `else`（迴圈**沒有被 break** 時執行），C++ 沒有。邊界不同。",
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  }
+}

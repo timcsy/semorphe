@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_comment",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "comment",
+    "component": {
+      "componentId": "python:comment"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "text",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "python:stripComment"
+      }
+    ],
+    "priority": 10
+  }
+]

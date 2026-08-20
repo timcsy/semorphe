@@ -1,0 +1,4 @@
+{
+  "PYTHON_IF_MSG0": "if %1",
+  "PYTHON_IF_TOOLTIP": "Do the inner steps only when the condition holds"
+}

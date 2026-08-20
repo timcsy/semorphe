@@ -1,0 +1,5 @@
+{
+  "PYTHON_IF_ELSE_MSG0": "如果 %1",
+  "PYTHON_IF_ELSE_MSG2": "否則",
+  "PYTHON_IF_ELSE_TOOLTIP": "條件成立時做上面那組，不成立時做下面那組"
+}

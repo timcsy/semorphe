@@ -1,0 +1,40 @@
+[
+  {
+    "id": "python_loop_while",
+    "componentId": "python:loop_while",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_loop_while",
+      "message0": "%{BKY_PYTHON_WHILE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PYTHON_WHILE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "inputs": {
+        "CONDITION": "condition"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

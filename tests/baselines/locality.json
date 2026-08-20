@@ -942,7 +942,19 @@
       "files": 3,
       "dirs": 1
     },
+    "python:comment": {
+      "files": 2,
+      "dirs": 1
+    },
     "python:compare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:if": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:if_else": {
       "files": 3,
       "dirs": 1
     },
@@ -966,6 +978,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:loop_while": {
+      "files": 3,
+      "dirs": 1
+    },
     "python:negate": {
       "files": 3,
       "dirs": 1
@@ -984,6 +1000,10 @@
     },
     "python:raw_expression": {
       "files": 2,
+      "dirs": 1
+    },
+    "python:var_assign": {
+      "files": 3,
       "dirs": 1
     },
     "python:var_ref": {

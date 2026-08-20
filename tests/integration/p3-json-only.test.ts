@@ -65,6 +65,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
   beforeAll(() => {
     registry = new BlockSpecRegistry()
     lifter = new PatternLifter()
+    lifter.setGrammar('tree-sitter-cpp')
     generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()

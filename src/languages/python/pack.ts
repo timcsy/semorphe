@@ -9,6 +9,9 @@ import { pythonCategoryDefs } from './toolbox-categories'
 import { PythonParser } from './parser'
 import pythonLiftPatterns from './lift-patterns.json'
 import { declareDegradationBlocks } from '../../core/degradation-blocks'
+import { declareCommentSyntax } from '../../core/comment-syntax'
+import { pythonCommentSyntax } from './comment-syntax'
+import { registerPythonTransforms } from './transforms'
 
 // 🔴 **Python 自己的降級積木**（spec 168）。
 //
@@ -19,6 +22,7 @@ declareDegradationBlocks('python', {
   statement: 'python_raw_code',
   expression: 'python_raw_expression',
 })
+declareCommentSyntax('python', pythonCommentSyntax)
 import pythonBeginnerTopic from './topics/python-beginner.json'
 import pythonTargetDef from './targets/python.json'
 import pythonPreset from './styles/python.json'
@@ -28,6 +32,7 @@ declareLanguagePack({
   name: 'Python',
   grammar: 'tree-sitter-python',
   liftPatterns: pythonLiftPatterns,
+  liftTransforms: registerPythonTransforms,
   /**
    * ⚠️ **空的，而它是【顯式的空】不是忘了寫。**
    * Python 今天沒有任何手寫 lifter——所有辨識都走 pattern。

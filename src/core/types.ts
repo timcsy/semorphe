@@ -228,6 +228,21 @@ export interface AstConstraint {
   text?: string
   nodeType?: string
   match?: 'exact' | 'startsWith'
+  /**
+   * 🔴 **要求這個欄位【不存在】**（spec 168）。
+   *
+   * 在此之前，缺欄位一律讓 constraint 失敗（`if (!child) return false`），
+   * 於是「這個欄位必須沒有」**表達不出來**。
+   *
+   * 而它不是一個罕見的需求：Python 的 `if_statement` 帶不帶 `alternative`
+   * 是**兩顆不同的元件**（`if` vs `if_else`），而 `elif` 是第三種——
+   * 沒有這個欄位的話，不帶 else 的那一筆只能寫成「沒有 constraint」，
+   * 於是**帶 elif 的 if 會被它接走，而那兩個分支被靜靜丟掉**。
+   *
+   * > **一個語言表達不出「必須沒有」，就只能用「沒有限制」代替——
+   * > 而那兩件事在執行時完全不同。**
+   */
+  absent?: boolean
 }
 
 export interface FieldMapping {

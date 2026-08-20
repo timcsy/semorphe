@@ -104,8 +104,23 @@ export class PatternLifter {
    */
   private entriesFor(nodeType: string): PatternEntry[] {
     const all = this.patterns.get(nodeType) ?? []
-    if (this.activeGrammar === null) return all
-    return all.filter((e) => e.grammar === this.activeGrammar)
+    if (this.activeGrammar !== null) return all.filter((e) => e.grammar === this.activeGrammar)
+    // 🔴 **沒設文法而候選來自兩個以上的文法 → 拋錯，不猜。**
+    //
+    // ⚠️ 第一版是「沒設就不過濾」，理由是「不要讓既有測試變成這一刀的範圍」。
+    // 而實測撞到：`python:comment` 與 `cpp:comment` 都掛在 `comment` 上，
+    // 於是**一段 C++ 的 `// 註解` 被認成 Python 的**，而它照樣產得出東西
+    // （`// set x` 的 `//` 沒被剝掉，因為 Python 剝的是 `#`）。
+    //
+    // > **一個「暫時寬鬆」的預設，會在第二個語言進來的那天變成一個錯的答案。**
+    const grammars = new Set(all.map((e) => e.grammar))
+    if (grammars.size > 1) {
+      throw new Error(
+        `辨識 \`${nodeType}\` 時有 ${grammars.size} 個文法的候選（${[...grammars].join('／')}），` +
+        '而沒有人說現在是哪一個。請先呼叫 `setGrammar()`——**不得用猜的繼續**。',
+      )
+    }
+    return all
   }
 
   /** Load patterns from BlockSpec JSON definitions (simple/constrained patterns).
@@ -538,6 +553,9 @@ export class PatternLifter {
         value = op?.text ?? null
       } else {
         const child = node.childForFieldName(c.field)
+        // 🔴 `absent: true` ＝ **要求這個欄位不存在**（spec 168）。
+        // 在此之前缺欄位一律失敗，於是「必須沒有」表達不出來。
+        if (c.absent) { if (child) return false; continue }
         if (!child) return false
         if (c.nodeType && child.type !== c.nodeType) return false
         value = child.text

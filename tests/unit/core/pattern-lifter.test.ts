@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { setCommentLanguage } from '../../../src/core/comment-syntax'
+// ⚠️ 這支測試自己組 lifter／直接叫產生器，所以要明說語言——
+//    走 `generateCode` 的那些不用（它從 `language` 參數自己設）。
+setCommentLanguage('cpp')
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
 import type { BlockSpec, LiftPattern } from '../../../src/core/types'
@@ -42,6 +46,7 @@ describe('PatternLifter', () => {
 
   beforeEach(() => {
     lifter = new PatternLifter()
+    lifter.setGrammar('tree-sitter-cpp')
   })
 
   describe('simple pattern (from BlockSpec astPattern)', () => {
@@ -61,6 +66,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_literal_char' },
         codeTemplate: { pattern: "'${CHAR}'", imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'char_literal',
           constraints: [],
           fieldMappings: [
@@ -95,6 +101,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_increment' },
         codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'update_expression',
           constraints: [],
           fieldMappings: [
@@ -137,6 +144,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: ['stdio.h'], order: 0 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
           constraints: [{ field: 'function', text: 'printf' }],
         },
@@ -170,6 +178,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
           constraints: [{ field: 'function', text: 'printf' }],
         },
@@ -207,6 +216,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_print_formatted' },
         codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
           constraints: [{ field: 'function', text: 'printf' }],
         },
@@ -243,6 +253,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_var_assign_compound' },
         codeTemplate: { pattern: '${NAME} ${OP} ${VALUE};', imports: [], order: 0 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'assignment_expression',
           constraints: [],
           fieldMappings: [
@@ -263,6 +274,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
           constraints: [],
           fieldMappings: [
@@ -294,6 +306,7 @@ describe('PatternLifter', () => {
     it('should dispatch binary_expression to different components by operator', () => {
       const pattern: LiftPattern = {
         id: 'binary_dispatch',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'binary_expression',
         patternType: 'operatorDispatch',
         operatorDispatch: {
@@ -332,6 +345,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
           constraints: [],
           fieldMappings: [{ semantic: 'value', ast: '$text', extract: 'text' }],
@@ -380,6 +394,7 @@ describe('PatternLifter', () => {
     it('should detect cout << chain and produce print component', () => {
       const pattern: LiftPattern = {
         id: 'cout_chain',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'binary_expression',
         patternType: 'chain',
         component: { componentId: 'cpp:print' },
@@ -404,6 +419,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_var_ref' },
         codeTemplate: { pattern: '${NAME}', imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'identifier',
           constraints: [],
           fieldMappings: [{ semantic: 'name', ast: '$text', extract: 'text' }],
@@ -441,6 +457,7 @@ describe('PatternLifter', () => {
     it('should detect counting for-loop pattern', () => {
       const pattern: LiftPattern = {
         id: 'count_for',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'for_statement',
         patternType: 'composite',
         component: { componentId: 'cpp:loop_count' },
@@ -471,6 +488,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
           constraints: [],
           fieldMappings: [{ semantic: 'value', ast: '$text', extract: 'text' }],
@@ -525,6 +543,7 @@ describe('PatternLifter', () => {
     it('should NOT match when composite checks fail', () => {
       const pattern: LiftPattern = {
         id: 'count_for',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'for_statement',
         patternType: 'composite',
         component: { componentId: 'cpp:loop_count' },
@@ -561,6 +580,7 @@ describe('PatternLifter', () => {
     it('should unwrap parenthesized_expression transparently', () => {
       const pattern: LiftPattern = {
         id: 'unwrap_parens',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'parenthesized_expression',
         patternType: 'unwrap',
         unwrapChild: 0,
@@ -576,6 +596,7 @@ describe('PatternLifter', () => {
         blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
+          grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
           constraints: [],
           fieldMappings: [{ semantic: 'value', ast: '$text', extract: 'text' }],
@@ -614,6 +635,7 @@ describe('PatternLifter', () => {
       // Lift pattern: composite for count_loop
       const compositePattern: LiftPattern = {
         id: 'count_for',
+        grammar: 'tree-sitter-cpp',
         astNodeType: 'for_statement',
         patternType: 'composite',
         component: { componentId: 'cpp:loop_count' },

@@ -220,12 +220,16 @@
     "cpp:wifi_read",
     "python:arithmetic",
     "python:compare",
+    "python:if",
+    "python:if_else",
     "python:literal_bool",
     "python:logic",
     "python:logic_not",
+    "python:loop_while",
     "python:negate",
     "python:raw_code",
     "python:raw_expression",
+    "python:var_assign",
     "python:var_ref"
   ]
 }

@@ -55,6 +55,7 @@ describe('Confidence & DegradationCause', () => {
   function setup() {
     lifter = new Lifter()
     patternLifter = new PatternLifter()
+    patternLifter.setGrammar('tree-sitter-cpp')
     registry = new ComponentRegistry()
 
     const specRegistry = new BlockSpecRegistry()

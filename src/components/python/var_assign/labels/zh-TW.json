@@ -1,0 +1,4 @@
+{
+  "PYTHON_VAR_ASSIGN_MSG0": "設定 %1 為 %2",
+  "PYTHON_VAR_ASSIGN_TOOLTIP": "把一個值存進名字裡。Python 不需要先宣告——第一次設定就建立了它"
+}

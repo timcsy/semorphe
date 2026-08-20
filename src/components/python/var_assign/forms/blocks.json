@@ -1,0 +1,39 @@
+[
+  {
+    "id": "python_var_assign",
+    "componentId": "python:var_assign",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_var_assign",
+      "message0": "%{BKY_PYTHON_VAR_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PYTHON_VAR_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    },
+    "_why": "⚠️ **`field_input` 而不是動態下拉**（與 `var_ref` 相反）：這顆是**取名字的地方**，而下拉只能選已經存在的名字。取名字必須打得出新的。"
+  }
+]

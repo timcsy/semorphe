@@ -3,7 +3,7 @@
   "language": "python",
   "name": "Python 入門",
   "default": false,
-  "description": "第一個非 C++ 的語言。輸出、資料、變數、運算與判斷——貼一段 Python 進來，認得的變積木，認不得的變灰色方塊（而不是變成 C++）。",
+  "description": "第一個非 C++ 的語言。輸出、資料、變數、運算、判斷與迴圈——貼一段 Python 進來，認得的變積木，認不得的變【Python 的】灰色方塊。",
   "levelTree": {
     "id": "L0",
     "level": 0,
@@ -13,7 +13,9 @@
       "python:literal_string",
       "python:literal_number",
       "python:literal_bool",
+      "python:var_assign",
       "python:var_ref",
+      "python:comment",
       "python:raw_code",
       "python:raw_expression"
     ],
@@ -27,7 +29,10 @@
           "python:compare",
           "python:logic",
           "python:logic_not",
-          "python:negate"
+          "python:negate",
+          "python:if",
+          "python:if_else",
+          "python:loop_while"
         ],
         "children": []
       }

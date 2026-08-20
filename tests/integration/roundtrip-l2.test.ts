@@ -68,6 +68,7 @@ describe('L2 Block Roundtrip', () => {
   beforeAll(() => {
     createTestLifter() // ⚠️ 只為了觸發膠囊的 lift 註冊（見檔頭 import）
     lifter = new PatternLifter()
+    lifter.setGrammar('tree-sitter-cpp')
     generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()

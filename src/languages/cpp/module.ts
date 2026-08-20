@@ -72,6 +72,7 @@ export function initCppModule(): CppModuleEngines {
   const registry = new BlockSpecRegistry()
   const componentRegistry = new ComponentRegistry()
   const patternLifter = new PatternLifter()
+patternLifter.setGrammar('tree-sitter-cpp')
   const templateGenerator = new TemplateGenerator()
   const patternRenderer = new PatternRenderer()
   const patternExtractor = new PatternExtractor()

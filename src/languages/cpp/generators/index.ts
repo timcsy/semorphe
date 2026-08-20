@@ -45,7 +45,7 @@ export function registerCppLanguage(): void {
   registerCppExecutors()
   // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）
   // 原本寫死在核心層。概念身分留在核心，語法住在這裡。
-  declareCommentSyntax(cppCommentSyntax)
+
   // 取字串某個位置的字元——它的「哪個字串」欄位是一個列出工作區字串變數的
   // 下拉選單，沒辦法用純 JSON 定義。**介面層提供機制，這裡提供名單。**
   declareVariableDropdownBlock({
@@ -71,6 +71,9 @@ export function registerCppLanguage(): void {
 // > **一個登記處如果各語言宣告的【時機】不同，那它的內容就依賴呼叫順序
 // > ——而呼叫順序不是任何人設計的。**
 declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
+
+// ⚠️ 與上面同一個理由搬到頂層：宣告的**時機**在各語言之間要一致。
+declareCommentSyntax('cpp', cppCommentSyntax)
 
 /**
  * 把各模組的執行器推進直譯器。

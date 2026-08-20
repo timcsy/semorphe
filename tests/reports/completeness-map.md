@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：246｜✅ 實作 1155｜📄 已宣告不提供 34｜❔ 判不出來 35｜🈳 殼 0｜❌ 缺 6（以路徑數計）
+元件：251｜✅ 實作 1174｜📄 已宣告不提供 35｜❔ 判不出來 40｜🈳 殼 0｜❌ 缺 6（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -246,15 +246,20 @@
 | `cpp:wifi_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:wifi_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `python:arithmetic` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:comment` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `python:compare` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:if` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:if_else` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:literal_bool` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:literal_number` | ✅ | ❔ | ✅ | ✅ | ❌ |
 | `python:literal_string` | ✅ | ❔ | ✅ | ✅ | ❌ |
 | `python:logic` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:logic_not` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:loop_while` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:print` | ✅ | ❔ | ✅ | ✅ | ❌ |
 | `python:program` | ✅ | ❔ | ❌ | ❌ | ❌ |
 | `python:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:var_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_ref` | ✅ | ❔ | ✅ | ✅ | ✅ |
