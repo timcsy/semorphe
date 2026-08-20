@@ -270,10 +270,11 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
         source: 'code',
         blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
       })
-      await tick()
+      // ⚠️ 等**事件真的到**，不是等 60ms——這一支是第 0 步漏掉的最後一個
+      // 固定時間等（spec 162 選入宣告式建構器之後，重畫多做了一點事就不夠了）。
+      await until(() => busEvents.length > 0, '重畫一則事件都沒發 → 下面那條空過')
     } finally { Blockly.Events.disable = real.disable; Blockly.Events.enable = real.enable }
 
-    expect(busEvents.length, '重畫一則事件都沒發 → 下面那條空過').toBeGreaterThan(0)
     expect(busEvents.every((e) => e.recordUndo === false),
       `重畫的事件仍可復原 → 它們會落在 clearUndo() 之後，堆疊又有東西：` +
       busEvents.filter((e) => e.recordUndo !== false).map((e) => e.type).join('、'),

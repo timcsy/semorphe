@@ -23,11 +23,14 @@ describe('BlockRegistrar', () => {
     const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
-      'cpp_print', 'cpp_input', 'cpp_var_declare', 'cpp_if',
+       'cpp_input', 'cpp_var_declare', 'cpp_if',
       'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted',
       'cpp_literal_string', 'cpp_endl', 'cpp_loop_while', 'cpp_loop_count',
       'cpp_raw_code', 'cpp_doc_comment',
     ]
+    // ⚠️ 🪦 `cpp_print` 於 spec 162 從這份清單移除——它不再是命令式的，
+    //    改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
+    //    **一顆退場就要從這裡拿掉**，否則這條會在退場那天說「積木不見了」。
     for (const t of expectedTypes) {
       expect(content).toContain(`'${t}'`)
     }

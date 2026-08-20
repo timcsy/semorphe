@@ -12,22 +12,23 @@
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
       "tooltip": "%{BKY_PY_PRINT_TOOLTIP}",
-      "message0": "%{BKY_PY_PRINT_MSG0}",
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "EXPR0",
-          "check": "Expression"
-        }
-      ]
+      "labelKey": "PY_PRINT_MSG",
+      "labelFallback": "輸出",
+      "slotCheck": "Expression",
+      "builder": "variadic"
     },
     "renderMapping": {
       "fields": {},
-      "inputs": {
-        "EXPR0": "values"
-      },
-      "statementInputs": {}
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     },
-    "_why": "🔴 **固定單參數，而 C++ 那顆是可變參數**——這是 spec 160 逼出來的第一個實作分歧。\n\n第一版照抄了 `dynamicRules`（`inputPattern: EXPR{i}`），瀏覽器當場報：\n`The block \"python_print\" is missing a(n) EXPR0 connection`。\n原因是**產生那些輸入的機制是命令式的、寫死在 `src/ui/block-registrar.ts` 裡**\n（`appendValueInput('EXPR' + idx)`）——那正是 vision 記著的**那 33 筆**。\n\n> **vision 逐字：「它等的是 Python 的第一顆【積木】」——而它等到了。**\n\n🟢 而這一刀**不重寫那 33 筆**（vision 同一句話的下半：「應該由 Python 逼出來，\n而不是憑空重寫」）。固定單參數是**誠實的第一步**：`print(x)` 走得完兩條路徑，\n`print(a, b)` 走不完——而那個界線現在**看得見、量得到**，不是一句猜測。"
+    "_why": "🟢 **spec 162 換回可變參數**——`print(a, b)` 走得完了。\n\nspec 160 當時只能用固定單參數，因為**產生那些 input 的機制是命令式的、寫死在 `src/ui/block-registrar.ts` 裡**（`appendValueInput('EXPR' + idx)`）。\n那是 vision 記著的那 33 筆，而 160 刻意沒重寫它：\n> **「應該由 Python 逼出來，而不是憑空重寫」**——現在逼出來了，介面也不必猜（16 顆 cpp 膠囊早就宣告著同一個 `dynamicRules`）。"
   }
 ]

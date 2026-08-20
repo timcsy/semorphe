@@ -6,6 +6,7 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
+import { defineVariadicBlock } from './variadic-block'
 import { abstractComponentOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
@@ -437,6 +438,49 @@ export class BlockRegistrar {
       const blockType = blockDef?.type as string | undefined
       if (!blockType) continue
       if (Blockly.Blocks[blockType]) continue
+
+      // 🔴 **宣告了可變參數的，走宣告式的建構器**（spec 162）。
+      //
+      // `renderMapping.dynamicRules` **早就宣告在膠囊裡**（16 顆），而讀它的
+      // 只有投影那一半。積木型別的**定義**那一半一直是命令式的
+      // ——一顆一段、只認 `cpp_*`，於是第二個語言的第一顆積木在瀏覽器報
+      // `missing a(n) EXPR0 connection`：**宣告有了，沒有人照著它建那些 input**。
+      //
+      // ⚠️ 只吃**單一插槽序列**的那種（`EXPR{i}`）。每項一組多個欄位的
+      // （`cpp_func_def` 的 `TYPE_{i}`＋`PARAM_{i}`）是同一個宣告的另一種形狀，
+      // 不在這一版——**一次只還一種形狀**。
+      // 🔴 **顯式選入，不從 `dynamicRules` 推論。**
+      //
+      // ⚠️ 第一版的判準是「有單一 `inputPattern` 且沒有 `message0`」，而它**太鬆**：
+      // `cpp_vector_declare` 也符合，然而它的 init 還有型別下拉與名稱欄位
+      // ——宣告式建構器會**把它們全部弄丟**，而**沒有任何測試在看標籤與欄位**
+      // （工具箱快照只比 id 與順序）。
+      //
+      // > **「符合這個形狀」不等於「只有這個形狀」。**
+      //
+      // 🟢 所以要顯式：`blockDef.builder === 'variadic'` 才接管。
+      // 一顆一顆選入，而每一顆選入時都要開瀏覽器看它長對了沒。
+      const rules = (spec.renderMapping as { dynamicRules?: { inputPattern?: string; childSlot?: string }[] } | undefined)?.dynamicRules
+      const soleRule = rules?.length === 1 ? rules[0] : undefined
+      if (soleRule?.inputPattern && (blockDef as { builder?: string }).builder === 'variadic') {
+        const bd = blockDef as unknown as Record<string, unknown>
+        defineVariadicBlock(blockType, {
+          inputPattern: soleRule.inputPattern,
+          labelKey: (bd.labelKey as string) ?? undefined,
+          labelFallback: (bd.labelFallback as string) ?? undefined,
+          check: (bd.slotCheck as string) ?? 'Expression',
+          colour: (bd.colour as string) ?? '#5CB1D6',
+          tooltipKey: typeof bd.tooltip === 'string' && bd.tooltip.startsWith('%{BKY_')
+            ? bd.tooltip.slice(6, -1) : undefined,
+          tooltipFallback: typeof bd.tooltip === 'string' && !bd.tooltip.startsWith('%{BKY_')
+            ? bd.tooltip : undefined,
+          inputsInline: bd.inputsInline as boolean | undefined,
+          previousStatement: bd.previousStatement as string | undefined,
+          nextStatement: bd.nextStatement as string | undefined,
+          output: bd.output as string | undefined,
+        })
+        continue
+      }
 
       // 🔴 **JSON 的 `field_dropdown` 會【靜默丟掉】不在清單裡的值**（spec 150 實測）：
       //    學生貼 `#include <WiFi.h>`，而 `cpp_include` 的清單只有 20 個標頭
@@ -909,46 +953,10 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_print
-    {
-      Blockly.Blocks['cpp_print'] = {
-        itemCount_: 1,
-        init: function (this: any) {
-          this.itemCount_ = 1
-          this.appendValueInput('EXPR0')
-            .appendField(Blockly.Msg['U_PRINT_MSG'] || '輸出')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.io)
-          this.setTooltip(Blockly.Msg['U_PRINT_TOOLTIP'] || '輸出值')
-        },
-        plus_: function (this: any) {
-          this.appendValueInput('EXPR' + this.itemCount_)
-          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
-          this.itemCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.itemCount_ <= 1) return
-          this.itemCount_--
-          this.removeInput('EXPR' + this.itemCount_)
-          setMinusState(this, this.itemCount_ <= 1)
-        },
-        saveExtraState: function (this: any) {
-          return { itemCount: this.itemCount_ }
-        },
-        loadExtraState: function (this: any, state: { itemCount?: number }) {
-          const count = state?.itemCount ?? 1
-          while (this.itemCount_ < count) {
-            this.plus_()
-          }
-        },
-      }
-    }
+    // 🪦 **`cpp_print` 的命令式定義已於 spec 162 刪除**——它改由
+    //    `variadic-block.ts` 依膠囊的 `builder: "variadic"` ＋ `dynamicRules` 建。
+    //    ⚠️ 刪掉而不是留著：`registerBlocksFromSpecs` 先跑，留著的那段
+    //    **永遠不會被執行**，而死碼與活碼在中立性報表上一樣算一筆。
 
     // ─── Three-mode argument helpers ───
     const BACK_IMG = 'data:image/svg+xml,' + encodeURIComponent(

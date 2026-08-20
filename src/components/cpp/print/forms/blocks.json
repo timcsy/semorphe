@@ -11,7 +11,11 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
-      "tooltip": "%{BKY_U_PRINT_TOOLTIP}"
+      "tooltip": "%{BKY_U_PRINT_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "U_PRINT_MSG",
+      "labelFallback": "輸出",
+      "slotCheck": "Expression"
     },
     "renderMapping": {
       "fields": {},
@@ -24,6 +28,7 @@
           "inputPattern": "EXPR{i}"
         }
       ]
-    }
+    },
+    "_why": "🟢 **spec 162 選入宣告式的可變參數建構器**——它在 `block-registrar` 裡的那段命令式定義因此不再被執行。\n\n⚠️ **`builder: \"variadic\"` 是【顯式】的**：第一版從 `dynamicRules` 推論，而 `cpp_vector_declare` 也符合那個形狀、卻另有型別下拉與名稱欄位——推論會把它們弄丟，而**沒有任何測試在看標籤與欄位**（工具箱快照只比 id 與順序）。\n> **「符合這個形狀」不等於「只有這個形狀」。**"
   }
 ]

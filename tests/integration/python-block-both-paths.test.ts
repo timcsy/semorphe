@@ -36,6 +36,11 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode, BlockState } from '../../src/core/types'
 import { PythonParser } from '../../src/languages/python/parser'
+// ⚠️ **副作用匯入**：宣告降級積木（`raw_code` 要靠它才渲得出來）。
+// 少了它，`print("a", "b")` 的兩個降級引數會**靜靜地渲不出來**，
+// 而症狀看起來像「可變參數壞了」——那正是這一支第一次紅的原因。
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
 
 let renderer: PatternRenderer
 let extractor: PatternExtractor
@@ -43,6 +48,7 @@ let lifter: Lifter
 let pyParser: PythonParser
 
 beforeAll(async () => {
+  registerCppLanguage()
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   const specs = reg.getAll()
@@ -119,6 +125,51 @@ describe('spec 160 · 兩條到達路徑', () => {
     expect(found[0]!.componentId, 'print 這顆本身走了降級路徑').toBe('python:print')
   })
 
+  /**
+   * 🎯 **spec 162 的驅動案例**：`print(a, b)` ——**多於一個引數**。
+   *
+   * spec 160 只做得到 `print(x)`，因為產生 `EXPR0..EXPRn` 的機制是命令式的、
+   * 寫死在 `block-registrar` 裡（vision 記著的那 33 筆）。
+   *
+   * > **一個「只能一個引數」的 print，不是 print。**
+   */
+  it('🎯 `print(a, b)`：兩個引數都要走得完（spec 162 的驅動案例）', async () => {
+    const tree = await pyParser.parse('print("a", "b")')
+    const sem = lifter.lift(tree.rootNode as never)
+    const print = collect(sem!).find((n) => n.componentId === 'python:print')!
+    expect(print.children.values?.length, 'lift 只收到一個引數 → 可變參數在 lift 那一側就斷了').toBe(2)
+
+    // 🔴 **走產品的入口**（`renderToBlocklyState`），不自己叫 `PatternRenderer.render`。
+    //
+    // ⚠️ 第一版直接叫後者，而**降級節點的渲染住在 `RenderContext` 裡**
+    // （`renderDynamicRules` 的 `ctx?.renderExpression ?? this.render(...)`）——
+    // 於是兩個 `raw_code` 引數靜靜地渲不出來，`inputs` 是空的，
+    // 而症狀看起來像「可變參數壞了」。
+    // > **繞過產品入口的測試，量到的是另一條路——而它會怪錯人。**
+    setPatternRenderer(renderer)
+    const ws = renderToBlocklyState(sem!)
+    const block = ws.blocks.blocks[0] as BlockState | undefined
+    expect(block?.type, '程式根渲不出積木').toBe('python_print')
+    expect(Object.keys(block?.inputs ?? {}).sort(),
+      '⚠️ 只長出 EXPR0 → 積木型別的【定義】沒有照著 `dynamicRules` 建那些 input')
+      .toEqual(['EXPR0', 'EXPR1'])
+    expect((block as { extraState?: { itemCount?: number } })?.extraState?.itemCount,
+      'extraState 沒帶 itemCount → 存檔之後會塌回一個引數').toBe(2)
+
+    const back = extractor.extract(block!)
+    expect(back?.children.values?.length, '抽回來少了一個引數').toBe(2)
+    expect(back?.componentId).toBe('python:print')
+  })
+
+  /**
+   * 🔴 **存檔重開那條路**——`loadExtraState` 要把插槽長回來。
+   *
+   * ⚠️ 這一支是**注射逼出來的**：把 `loadExtraState` 裡長插槽的那一行拿掉之後，
+   * 上面七支**一支都沒紅**。而它是使用者**關掉分頁隔天再打開**會走的路
+   * ——渲染那條路不經過它。
+   *
+   * > **一條只有「載入舊檔」才會走的路，用「現在畫一次」是量不到的。**
+   */
   /**
    * 🔴 **宣告的接點必須是 lift 真的產出的那些。**
    *
