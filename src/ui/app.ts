@@ -21,7 +21,7 @@ import { registerCppExtractStrategies } from '../languages/cpp/extractors/extrac
 import { buildProgram } from '../components/cpp/program/lift'
 import {
   C_COMPOUND_ASSIGN_INPUTS, C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
-  IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, RETURN_INPUTS,
+  IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS,
   ARRAY_ASSIGN_INPUTS, VAR_ASSIGN_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
@@ -148,7 +148,6 @@ export class App {
       whileBlock: WHILE_INPUTS,
       countLoop: COUNT_LOOP_INPUTS,
       funcDef: FUNDEF_INPUTS,
-      returnBlock: RETURN_INPUTS,
       arrayAssign: ARRAY_ASSIGN_INPUTS,
       varAssign: VAR_ASSIGN_INPUTS,
     })

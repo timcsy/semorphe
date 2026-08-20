@@ -7,12 +7,12 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_var_ref",
-      "message0": "%1",
+      "message0": "%{BKY_U_VAR_REF_LABEL} %1",
       "args0": [
         {
-          "type": "field_input",
+          "type": "field_dynamic_dropdown",
           "name": "NAME",
-          "text": "x"
+          "source": "names"
         }
       ],
       "output": "Expression",
@@ -23,6 +23,7 @@
       "fields": {
         "NAME": "name"
       }
-    }
+    },
+    "_why": "🔴 **spec 164：靜態 `field_input` → 宣告式的動態下拉。**\n\n命令式那份是 `createOpenDropdown(() => getNameRefOptions())`——**跟著工作區長的下拉**。而宣告只能退成一個死的文字框，\n比對護欄（spec 163）把它印了出來：`欄位 變數,(自訂) vs x`。\n\n🟢 `field_dynamic_dropdown`（spec 164 新增）讓宣告表達得出這件事，`source` 由組裝點注入——**這個欄位一個 C++ 的字都不認識**。"
   }
 ]

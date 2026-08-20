@@ -16,7 +16,6 @@
         }
       ],
       "previousStatement": "Statement",
-      "nextStatement": "Statement",
       "colour": "#FF6680",
       "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
     },
@@ -24,6 +23,7 @@
       "inputs": {
         "VALUE": "value"
       }
-    }
+    },
+    "_why": "🔴 **spec 164：宣告拿掉了 `nextStatement`。**\n\n`return` 之後接東西是**不可達的程式碼**——命令式那份從來就沒有它，而**宣告多了**。\n\n⚠️ 而這個錯**使用者看不到**（命令式蓋住了它），直到有人刪掉命令式的那一天。\n\n> 由 `audit-block-def-parity`（spec 163）逐項比對掉出來：「statement true/false vs true/true」。\n⚠️ **而我第一次判它時判反了**——寫成「命令式才是錯的」。判準必須是**這一顆的語義**，不是「哪一份比較新」。"
   }
 ]

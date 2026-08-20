@@ -31,6 +31,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
 import { componentLabels } from '../../src/core/component/labels'
+import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
 
 /** 一顆積木「長什麼樣」的可比對摘要。 */
 interface Shape {
@@ -61,7 +62,11 @@ beforeAll(() => {
   // 而**訊息沒載入時它展不開**，於是「訊息裡沒有 %1」→ 一堆假的失敗。
   // ⚠️ 第一版沒載，11 顆裡有 8 顆報 `Message does not reference all N args`
   // ——**看起來像宣告不完整，其實是測試環境少了一步**。
-  Object.assign(Blockly.Msg as Record<string, string>, componentLabels('zh-TW'))
+  // 🔴 **兩個來源都要載**——膠囊的 `labels/` 與共用的 `src/i18n/`。
+  // ⚠️ 第一版只載膠囊那份，於是 `cpp_var_ref` 的 `%{BKY_U_VAR_REF_LABEL}` 展不開，
+  // 比對報表寫著「欄位 變數,(自訂) vs %{BKY_U_VAR_REF_LABEL}」
+  // ——**看起來像宣告寫錯了，其實是訊息沒到齊**（與載入膠囊標籤那次同一種病）。
+  Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   ws = new Blockly.Workspace()

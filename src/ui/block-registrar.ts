@@ -7,6 +7,7 @@ import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { defineVariadicBlock } from './variadic-block'
+import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { abstractComponentOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
@@ -33,7 +34,6 @@ let IF_INPUTS: InputNames = { value: ['CONDITION'], statement: ['THEN', 'ELSE'] 
 let WHILE_INPUTS: InputNames = { value: ['CONDITION'], statement: ['BODY'] }
 let COUNT_LOOP_INPUTS: InputNames = { value: ['FROM', 'TO'], statement: ['BODY'] }
 let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
-let RETURN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 let ARRAY_ASSIGN_INPUTS: InputNames = { value: ['INDEX', 'VALUE'], statement: [] }
@@ -43,7 +43,7 @@ let inputNamesInjected = false
 
 /** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
 /**
- * 🪦 **`arrayAccess` 已於 spec 163 從契約移除**——它的唯一消費者
+ * 🪦 **`arrayAccess`（163）與 `returnBlock`（164）已從契約移除**——它的唯一消費者
  * （`cpp_array_at` 的命令式定義）退場了。
  *
  * ⚠️ **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料**
@@ -57,7 +57,6 @@ export function setLanguageInputNames(names: {
   whileBlock: InputNames
   countLoop: InputNames
   funcDef: InputNames
-  returnBlock: InputNames
   arrayAssign: InputNames
   varAssign: InputNames
 }): void {
@@ -68,7 +67,6 @@ export function setLanguageInputNames(names: {
   WHILE_INPUTS = names.whileBlock
   COUNT_LOOP_INPUTS = names.countLoop
   FUNDEF_INPUTS = names.funcDef
-  RETURN_INPUTS = names.returnBlock
   ARRAY_ASSIGN_INPUTS = names.arrayAssign
   VAR_ASSIGN_INPUTS = names.varAssign
   inputNamesInjected = true
@@ -95,6 +93,12 @@ export class BlockRegistrar {
       )
     }
     this.accessors = accessors
+    // 🔴 **先註冊欄位型別與選項來源，再建積木**——`jsonInit` 遇到
+    // `field_dynamic_dropdown` 時要查得到它，否則那顆積木**整個建不起來**。
+    registerDynamicDropdownField()
+    declareDropdownSource('names', () => this.getNameRefOptions())
+    declareDropdownSource('vars', () => this.getWorkspaceVarOptions())
+    declareDropdownSource('funcs', () => this.getWorkspaceFuncOptions())
     this.registerBlocksFromSpecs()
   }
 
@@ -1513,16 +1517,10 @@ export class BlockRegistrar {
     }
 
     // cpp_break, cpp_continue
-    {
-      Blockly.Blocks['cpp_break'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_BREAK_MSG'] || '跳出迴圈')
-          this.setPreviousStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.control)
-          this.setTooltip(Blockly.Msg['U_BREAK_TOOLTIP'] || '立刻停止迴圈，不再重複')
-        },
-      }
-    }
+    // 🪦 **`cpp_break` 的命令式定義已於 spec 164 刪除。**
+    //    ⚠️ 而刪之前先**修了宣告**：它多了 `nextStatement`，
+    //    而 `cpp_break` 之後接東西是**不可達的程式碼**——命令式那份才是對的。
+    //    比對護欄確認兩份一模一樣之後才刪。
     // 🪦 **`cpp_continue` 的命令式定義已於 spec 163 刪除。**
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
@@ -1949,37 +1947,13 @@ export class BlockRegistrar {
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    // cpp_return
-    {
-      Blockly.Blocks['cpp_return'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(RETURN_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_RETURN_MSG'] || '回傳')
-          this.setPreviousStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.functions)
-          this.setTooltip(Blockly.Msg['U_RETURN_TOOLTIP'] || '回傳值')
-        },
-      }
-    }
+    // 🪦 **`cpp_return` 的命令式定義已於 spec 164 刪除。**
+    //    ⚠️ 而刪之前先**修了宣告**：它多了 `nextStatement`，
+    //    而 `cpp_return` 之後接東西是**不可達的程式碼**——命令式那份才是對的。
+    //    比對護欄確認兩份一模一樣之後才刪。
 
-    // cpp_var_ref
-    {
-      Blockly.Blocks['cpp_var_ref'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['U_VAR_REF_LABEL'] || '變數')
-            // 🔴 **`getWorkspaceVarOptions` 有十個呼叫端，而只有這一個是【讀】**（spec 149）
-            //    ——其餘九個（`cpp_var_assign`、遞增、複合指定）都是**寫入目標**，
-            //    而 `HIGH = 5` 不合法。所以名字的範圍只補在這一顆上。
-            //
-            // > **兩個下拉長得一樣，不代表它們問的是同一個問題。**
-            .appendField(self.createOpenDropdown(() => self.getNameRefOptions()) as Blockly.Field, 'NAME')
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.data)
-          this.setTooltip(Blockly.Msg['U_VAR_REF_TOOLTIP'] || '使用變數的值')
-        },
-      }
-    }
+    // 🪦 **`cpp_var_ref` 的命令式定義已於 spec 164 刪除。**
+    //    它的活下拉改由宣告表達（`field_dynamic_dropdown` ＋ `source: "names"`）。
 
     // ⚠️ ~~`cpp_array_declare` 的舊定義原本在這裡~~ —— **2026-08-14 刪除**。
     //
