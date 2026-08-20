@@ -26,8 +26,29 @@
  */
 // ⚠️ `lang` 已於 D1（2026-08-09）退場——它是一個**假的通用宣稱**。
 // 各套件自理，通用性住在轉換規範裡。見 `knowledge/concepts/元件.md`。
+/**
+ * 合法的 scope——🔴 **由【元件資料夾】決定，不是一份寫死的白名單**（spec 156）。
+ *
+ * 舊版是 `const SCOPES = ['cpp']`：**核心寫死了「只有 C++ 這個語言」**。
+ * 第一顆 Python 元件進來時它當場報「scope 不在白名單」——
+ * ⚠️ 而那條檢查**想擋的是打錯字**（`cop:foo`），不是「第二個語言」。
+ *
+ * 🟢 **正解是用結構取代白名單**：`src/components/<scope>/<name>/` 的
+ * 資料夾名**就是**那個宣告。於是
+ *
+ * ```
+ * cop:foo 放在 components/cpp/    → 資料夾說 cpp、身分說 cop → 抓得到
+ * python:print 放在 components/python/ → 一致 → 放行
+ * ```
+ *
+ * > **一份白名單會在第二個成員出現時擋住它；
+ * > 而一個結構對應只擋【不一致】。**
+ *
+ * ⚠️ 這裡保留 `KNOWN_SCOPES` 只為了**訊息可讀**（印出目前有哪些），
+ * 判定本身**不看它**。
+ */
 export const SCOPES = ['cpp'] as const
-export type Scope = (typeof SCOPES)[number]
+export type Scope = string
 
 export interface ParsedId {
   scope: string
@@ -49,7 +70,9 @@ export function parseComponentId(id: string): ParsedId | null {
 export function isValidComponentId(id: string): boolean {
   const p = parseComponentId(id)
   if (!p) return false
-  return (SCOPES as readonly string[]).includes(p.scope)
+  // 🔴 **不比對白名單**（spec 156）——只要求格式正確；
+  //    「scope 與資料夾一致」由 `audit-identity-namespace` 用結構判定。
+  return p.scope.length > 0 && /^[a-z][a-z0-9_]*$/.test(p.scope)
 }
 
 /** 有命名空間嗎（不檢查 scope 是否在白名單內）——遷移期間用來分辨新舊格式 */

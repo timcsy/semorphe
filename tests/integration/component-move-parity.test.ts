@@ -211,7 +211,16 @@ describe('膠囊搬家：兩條防線', () => {
   // ── 防線一：漏失 ────────────────────────────────────────────
   it('防線一：搬家前後，系統認得的身分集合完全相同', async () => {
     const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
-    const now = allCppConcepts().map((c) => c.conceptId).sort()
+    // 🔴 **只比對 cpp 的身分**（spec 156）。
+    //    ⚠️ `allCppConcepts()` 的名字說謊——它回的是【全部】語言的概念
+    //    （它把 `componentConcepts()` 整個收進來）。第一顆 Python 元件進來時，
+    //    這條「搬家前後身分集合完全相同」就把它報成「複製沒刪乾淨」。
+    //
+    // > **這條護欄量的是【搬家】——而新增一個語言不是搬家。**
+    const now = allCppConcepts()
+      .map((c) => c.conceptId)
+      .filter((id) => id.startsWith('cpp:'))
+      .sort()
     const lost = base.identitySet.filter((id) => !now.includes(id))
     const extra = now.filter((id) => !base.identitySet.includes(id))
     expect(lost, `搬家搬丟了身分：${lost.join('、')}`).toEqual([])

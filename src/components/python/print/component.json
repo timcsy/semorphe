@@ -1,0 +1,24 @@
+{
+  "conceptId": "python:print",
+  "_why": "spec 156：第一顆 Python 元件。它此刻【只是一個有性狀的身分】——沒有積木、沒有執行期。",
+  "abstractConcept": null,
+  "properties": [],
+  "children": {},
+  "_children_why": "🔴 刻意是空的：宣告一個【形態表達不出來】的接點會讓符合性與投影遺失兩條護欄同時紅——而那是真的違規，不是誤報。這一刀不做積木，所以也不宣告接點。",
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "render": null,
+    "_render_why": "🔴 **真的缺，不是刻意跳過**（spec 156）。\n\n第一版寫了 `skipPaths`，而 `skip-declaration-gate` 當場擋下：理由只能是`declarative`／`consumed-by-parent`／`degradation-target` 三個之一，**而沒有一個是「還沒做」——那是刻意的**（`history/018`：「第三個值就是在替『還沒做』找一個體面的名字」）。\n\n> **膠囊契約沒有【一個語言正在建構中】這個狀態**——而那是這一刀掀出來的結構缺口。\n\n🟢 所以它記在完備性基線的「缺」裡，附理由。**不洗成設計。**",
+    "extract": null,
+    "_extract_why": "同 `render`——真的缺。沒有積木就沒有抽取，而它們必須成對。",
+    "generate": "./generate.ts",
+    "execute": null,
+    "_execute_why": "真的缺。spec 156 明確排除 Python 的執行期。⚠️ 而這裡刻意【不】寫一個空的執行器——顯式的空與遺漏的空要分得出來，而一個 noop 函式兩者長得一樣。",
+    "lift": "./lift-pattern.json"
+  },
+  "traits": {
+    "ioRole": "print",
+    "_ioRole_why": "與 C++ 那顆輸出概念同一個等價類——這是第一條【跨語言】的等價邊。⚠️ 這裡刻意不寫完整身分：就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出引用與說明。"
+  }
+}

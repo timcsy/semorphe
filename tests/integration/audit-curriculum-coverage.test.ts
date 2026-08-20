@@ -78,6 +78,14 @@ const deliberatelyExcluded: Record<string, string> = {
   'cpp:program':
     '程式的根鷹架。它不是學生選得出來的積木——每個程式都有一個，由系統自動建立，' +
     '收進課程等於在工具箱裡放一顆「整個程式」。',
+  // 🔴 **spec 156：第一顆 Python 元件**——而它不收錄的理由與上面那顆完全不同。
+  'python:print':
+    'Python 【還沒有課程】。所有 topic（`cpp-beginner`／`c-beginner`／`arduino`／' +
+    '`cpp-competitive`）都是 C++ 的課，把一顆 Python 概念收進去會讓學 C++ 的學生' +
+    '在工具箱裡看到 `print(...)`。' +
+    '⚠️ 而這【不是】「忘了收錄」：spec 156 明確排除工具箱切換與 Python 課程' +
+    '——它此刻只是一個【有性狀的身分】，用來產生第一條跨語言的等價邊。' +
+    '🟢 重開條件是「Python 有了自己的 topic」，不是「又想到它了」。',
 }
 
 const course = ALL_TOPICS.map((t) => curriculumSnapshot(t as never))

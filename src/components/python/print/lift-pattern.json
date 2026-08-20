@@ -1,0 +1,9 @@
+{
+  "id": "python_print_call",
+  "astNodeType": "call",
+  "patternType": "named-call",
+  "concept": { "conceptId": "python:print" },
+  "namedCall": { "name": "print", "argsField": "arguments", "collectInto": "values" },
+  "priority": 15,
+  "_why": "spec 156 的第一個 Python lift 樣式。⚠️ 它【還沒有接上 Python 的解析器】——這一刀交付的是【等價的證據】，不是完整的 lift 路徑（見 spec 的明確排除）。"
+}

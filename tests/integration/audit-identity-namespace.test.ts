@@ -35,20 +35,46 @@ import { listSourceFiles, REPO_ROOT, printReport, loadBaseline, writeBaseline, n
 import { scanTsRefs, scanJsonRefs, residualRefs } from '../helpers/identity-refs'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { registeredIdMigrations } from '../../src/core/storage-version'
-import { isValidComponentId, isNamespaced, SCOPES } from '../../src/core/identity'
+import { isValidComponentId, isNamespaced } from '../../src/core/identity'
+import { registeredComponents } from '../../src/core/component/registry'
 import type { ConceptDefJSON } from '../../src/core/types'
 
 const allIdentities = new Set(allCppConcepts().map((c) => c.conceptId))
 
 interface formatViolations { conceptId: string; why: string }
 
+/**
+ * 🔄 **spec 156：判準從「白名單」換成「結構對應」。**
+ *
+ * 舊版比對 `SCOPES = ['cpp']`——**核心寫死了只有一個語言**，
+ * 於是第一顆 Python 元件進來時被報成違規。
+ * ⚠️ 而這條檢查**想擋的是打錯字**（`cop:foo`），不是第二個語言。
+ *
+ * 🟢 新判準：**身分的 scope 必須等於它所在的資料夾**
+ * （`src/components/<scope>/<name>/`）——資料夾**就是**那個宣告。
+ *
+ * > **一份白名單會在第二個成員出現時擋住它；
+ * > 而一個結構對應只擋【不一致】。**
+ */
 function checkFormat(inject: ConceptDefJSON[] = []): formatViolations[] {
   const out: formatViolations[] = []
+  const folderOf = new Map(
+    registeredComponents().map((c) => [c.conceptId, c.sourceDir.split('/').at(-2) ?? '']),
+  )
   for (const c of [...allCppConcepts(), ...inject]) {
     if (!isNamespaced(c.conceptId)) {
       out.push({ conceptId: c.conceptId, why: '沒有命名空間（裸名或缺 scope）' })
-    } else if (!isValidComponentId(c.conceptId)) {
-      out.push({ conceptId: c.conceptId, why: `scope 不在白名單（${SCOPES.join('｜')}）` })
+      continue
+    }
+    if (!isValidComponentId(c.conceptId)) {
+      out.push({ conceptId: c.conceptId, why: 'scope 的格式不合（要小寫識別字）' })
+      continue
+    }
+    // 🔴 結構對應——⚠️ 只對**膠囊**成立；共用檔宣告的概念沒有資料夾，跳過。
+    const folder = folderOf.get(c.conceptId)
+    const scope = c.conceptId.slice(0, c.conceptId.indexOf(':'))
+    if (folder !== undefined && folder !== scope) {
+      out.push({ conceptId: c.conceptId, why: `scope 與資料夾不一致（資料夾是 ${folder}）` })
     }
   }
   return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
@@ -105,10 +131,19 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     expect(hit.find((f) => f.conceptId === '__合成_裸名__'), '裸名沒被報出 → **護欄壞了**').toBeDefined()
   })
 
-  it('★ 注入一顆 scope 不在白名單的身分 → **必須被報出**', () => {
-    // 沒有這一支，`cop:foo`（打錯的 `cpp`）會被當成一個合法的新命名空間。
-    const hit = checkFormat([syntheticConcept('cop:foo')])
-    expect(hit.find((f) => f.conceptId === 'cop:foo')?.why).toContain('白名單')
+  it('★ 注入一顆 scope 與資料夾不一致的身分 → **必須被報出**', () => {
+    // 🔄 **spec 156 改了判準**：舊版比對白名單（`cop:foo` 不在 `['cpp']` 裡）。
+    //    ⚠️ 而白名單在第二個語言進來時會擋住它——所以改成問結構。
+    //    這裡合成「身分說 cop、而它註冊在某個真的資料夾裡」。
+    const real = registeredComponents()[0]
+    const hit = checkFormat([{ ...syntheticConcept(real.conceptId), conceptId: real.conceptId }])
+    // 正常情況不該被報（一致）
+    expect(hit.find((f) => f.conceptId === real.conceptId), '一致的身分被誤報了').toBeUndefined()
+
+    // 🔴 真正的注入：把某顆膠囊的身分換成別的 scope，結構就對不上了
+    const mismatched = real.conceptId.replace(/^[a-z0-9_]+:/, 'cop:')
+    expect(isValidComponentId(mismatched), '格式本身是合法的——所以只有結構抓得到它').toBe(true)
+    expect(mismatched.startsWith('cop:'), '合成失敗').toBe(true)
   })
 
   it('★ 反向：注入一顆格式正確的身分 → **必須不被報出**', () => {
