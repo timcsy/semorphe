@@ -23,7 +23,7 @@
  * `tryCmathLift`——而拆開看，它只是三筆「名字 → 身分 ＋ 引數槽名」的資料
  * 配上共用的判別。**同一種形狀，只是引數槽不是固定的 `value`。**
  *
- * → 所以表從 `名字 → conceptId` 擴成 `名字 → 形狀`。
+ * → 所以表從 `名字 → componentId` 擴成 `名字 → 形狀`。
  *   `registerSingleArgFunction` 留著，是這張表的一個**特例入口**
  *   （槽名固定 `value`、不記函式名），因為那個形狀已經被第二顆驗證過。
  *
@@ -46,7 +46,7 @@
 
 /** 一個函式名對應的節點形狀。 */
 export interface CallConceptShape {
-  conceptId: string
+  componentId: string
   /**
    * 引數依序放進哪些子節點槽。`['base','exponent']` → 第一引數進 `base`。
    * ⚠️ **槽名是契約**，與 `component.json` 的 `children` 必須一致，
@@ -69,10 +69,10 @@ const table = new Map<string, CallConceptShape>()
 export function registerCallConcept(funcNames: string | string[], shape: CallConceptShape): void {
   for (const name of typeof funcNames === 'string' ? [funcNames] : funcNames) {
     const existing = table.get(name)
-    if (existing && existing.conceptId !== shape.conceptId) {
+    if (existing && existing.componentId !== shape.componentId) {
       throw new Error(
         `函式名「${name}」被登錄兩次且指向不同身分：` +
-          `${existing.conceptId}（${existing.source}）與 ${shape.conceptId}（${shape.source}）。` +
+          `${existing.componentId}（${existing.source}）與 ${shape.componentId}（${shape.source}）。` +
           `不自動取其一——靜默覆蓋的症狀是「某個函式被辨識成另一個」。`,
       )
     }
@@ -86,8 +86,8 @@ export function registerCallConcept(funcNames: string | string[], shape: CallCon
  * 保留它不是為了相容，是因為那個形狀已經被第二顆膠囊驗證過，
  * 而**把已驗證的形狀換掉需要理由**。
  */
-export function registerSingleArgFunction(funcName: string, conceptId: string, source: string): void {
-  registerCallConcept(funcName, { conceptId, argSlots: ['value'], source })
+export function registerSingleArgFunction(funcName: string, componentId: string, source: string): void {
+  registerCallConcept(funcName, { componentId, argSlots: ['value'], source })
 }
 
 /** 函式名 → 形狀。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
@@ -97,7 +97,7 @@ export function callConceptFor(funcName: string): CallConceptShape | undefined {
 
 /** 函式名 → 元件身分。 */
 export function conceptForSingleArgFunction(funcName: string): string | undefined {
-  return table.get(funcName)?.conceptId
+  return table.get(funcName)?.componentId
 }
 
 /** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */

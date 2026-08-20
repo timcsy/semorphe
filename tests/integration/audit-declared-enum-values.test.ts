@@ -40,19 +40,19 @@ const FILES = import.meta.glob('../../src/components/*/*/component.json', {
   eager: true, query: '?raw', import: 'default',
 }) as Record<string, string>
 
-interface Hit { conceptId: string; prop: string; count: number }
+interface Hit { componentId: string; prop: string; count: number }
 
 function measure(extra: Record<string, string> = {}): Hit[] {
   const out: Hit[] = []
   for (const [path, raw] of Object.entries({ ...FILES, ...extra })) {
-    const d = JSON.parse(raw) as { conceptId?: string; properties?: { name?: string; values?: unknown[] }[] }
+    const d = JSON.parse(raw) as { componentId?: string; properties?: { name?: string; values?: unknown[] }[] }
     for (const p of d.properties ?? []) {
       if (Array.isArray(p.values)) {
-        out.push({ conceptId: d.conceptId ?? path, prop: p.name ?? '?', count: p.values.length })
+        out.push({ componentId: d.componentId ?? path, prop: p.name ?? '?', count: p.values.length })
       }
     }
   }
-  return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+  return out.sort((a, b) => a.componentId.localeCompare(b.componentId))
 }
 
 describe('護欄：`properties[].values` 不得存在', () => {
@@ -65,24 +65,24 @@ describe('護欄：`properties[].values` 不得存在', () => {
   it('★ 注入：一個宣告了 values 的元件 → **必須被報出**', () => {
     // ⚠️ 合成輸入——不用任何真實身分（它們被修好的那天注入就爛了）
     const fake = { 'synthetic.json': JSON.stringify({
-      conceptId: 'test:synthetic', properties: [{ name: 'x', kind: 'enum', values: ['a', 'b'] }],
+      componentId: 'test:synthetic', properties: [{ name: 'x', kind: 'enum', values: ['a', 'b'] }],
     }) }
-    expect(measure(fake).map((h) => h.conceptId), '合成的違規沒被報出來 → 護欄壞了')
+    expect(measure(fake).map((h) => h.componentId), '合成的違規沒被報出來 → 護欄壞了')
       .toContain('test:synthetic')
   })
 
   it('★ 注入：一個沒有 values 的元件 → **必須不被報出**', () => {
     // 🔴 第二支不可省：沒有它，一個「什麼都報」的掃描器也能通過上面那支。
     const fake = { 'clean.json': JSON.stringify({
-      conceptId: 'test:clean', properties: [{ name: 'x', kind: 'enum', default: 'a' }],
+      componentId: 'test:clean', properties: [{ name: 'x', kind: 'enum', default: 'a' }],
     }) }
-    expect(measure(fake).map((h) => h.conceptId), '沒有 values 卻被報 → 護欄會亂報')
+    expect(measure(fake).map((h) => h.componentId), '沒有 values 卻被報 → 護欄會亂報')
       .not.toContain('test:clean')
   })
 
   it('🔴 沒有任何元件宣告 `properties[].values`', () => {
     const hits = measure()
-    const report = hits.map((h) => `  ${h.conceptId}.${h.prop}（${h.count} 個值）`)
+    const report = hits.map((h) => `  ${h.componentId}.${h.prop}（${h.count} 個值）`)
     expect(hits, `\n宣告了 values 而沒有人讀它的元件：\n${report.join('\n')}\n`).toEqual([])
   })
 })

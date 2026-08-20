@@ -39,8 +39,8 @@ class SemanticTreeView {
       .join('')
 
     return (
-      `${indent}<div class="node" data-concept="${node.conceptId}">` +
-      `<span class="concept">${node.conceptId}</span>` +
+      `${indent}<div class="node" data-concept="${node.componentId}">` +
+      `<span class="concept">${node.componentId}</span>` +
       (props ? ` ${props}` : '') +
       (childrenHtml ? `\n${childrenHtml}\n${indent}` : '') +
       `</div>\n`
@@ -52,18 +52,18 @@ describe('SemanticTreeView', () => {
   it('should render a tree with concept names and properties', () => {
     const tree: SemanticNode = {
       id: 'root',
-      conceptId: 'cpp:program',
+      componentId: 'cpp:program',
       properties: {},
       children: {
         body: [
           {
             id: 'n1',
-            conceptId: 'cpp:var_declare',
+            componentId: 'cpp:var_declare',
             properties: { type: 'int', name: 'x' },
             children: {
               init: [{
                 id: 'n2',
-                conceptId: 'cpp:literal_number',
+                componentId: 'cpp:literal_number',
                 properties: { value: '5' },
                 children: {},
               }],
@@ -71,12 +71,12 @@ describe('SemanticTreeView', () => {
           },
           {
             id: 'n3',
-            conceptId: 'cpp:print',
+            componentId: 'cpp:print',
             properties: {},
             children: {
               values: [{
                 id: 'n4',
-                conceptId: 'cpp:var_ref',
+                componentId: 'cpp:var_ref',
                 properties: { name: 'x' },
                 children: {},
               }],
@@ -101,7 +101,7 @@ describe('SemanticTreeView', () => {
   it('should handle empty tree without error', () => {
     const emptyTree: SemanticNode = {
       id: 'root',
-      conceptId: 'cpp:program',
+      componentId: 'cpp:program',
       properties: {},
       children: {},
     }

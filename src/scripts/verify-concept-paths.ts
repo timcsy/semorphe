@@ -1,5 +1,5 @@
 /**
- * ConceptRegistry 完備性驗證腳本
+ * ComponentRegistry 完備性驗證腳本
  *
  * 掃描所有概念來源，檢查每個概念的四條路徑：
  * lift（AST→Semantic）、render（Semantic→Block）、extract（Block→Semantic）、generate（Semantic→Code）
@@ -14,7 +14,7 @@ import { programRootConcept } from '../core/component/traits'
 // ─── Types ───
 
 export interface ConceptPathReport {
-  conceptId: string
+  componentId: string
   sources: string[]
   paths: {
     lift: boolean
@@ -27,16 +27,16 @@ export interface ConceptPathReport {
 
 // ─── Concept Collection ───
 
-/** 從 BlockSpec JSON 檔案收集 conceptId */
+/** 從 BlockSpec JSON 檔案收集 componentId */
 export function collectFromBlockSpecs(jsonPaths: string[]): Map<string, string[]> {
   const result = new Map<string, string[]>()
   for (const p of jsonPaths) {
-    // ⚠️ **兩種形狀都要認**：舊的投影檔把身分包在 `concept.conceptId` 裡，
-    // 而拆分之後（Phase 3）它是**頂層的 `conceptId`**。只認前者的話，
+    // ⚠️ **兩種形狀都要認**：舊的投影檔把身分包在 `concept.componentId` 裡，
+    // 而拆分之後（Phase 3）它是**頂層的 `componentId`**。只認前者的話，
     // 這份腳本會說「這個專案只有 23 顆概念」——而那些概念的積木好端端地在。
-    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ concept?: { conceptId?: string }; conceptId?: string }>
+    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ concept?: { componentId?: string }; componentId?: string }>
     for (const spec of data) {
-      const id = spec.concept?.conceptId ?? spec.conceptId
+      const id = spec.concept?.componentId ?? spec.componentId
       if (!id) continue
       const sources = result.get(id) ?? []
       sources.push(path.basename(p))
@@ -46,12 +46,12 @@ export function collectFromBlockSpecs(jsonPaths: string[]): Map<string, string[]
   return result
 }
 
-/** 從 LiftPattern JSON 收集 conceptId */
+/** 從 LiftPattern JSON 收集 componentId */
 export function collectFromLiftPatterns(jsonPath: string): Map<string, string[]> {
   const result = new Map<string, string[]>()
-  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ concept?: { conceptId?: string } }>
+  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ concept?: { componentId?: string } }>
   for (const pattern of data) {
-    const id = pattern.concept?.conceptId
+    const id = pattern.concept?.componentId
     if (!id) continue
     const sources = result.get(id) ?? []
     sources.push('lift-patterns.json')
@@ -60,30 +60,30 @@ export function collectFromLiftPatterns(jsonPath: string): Map<string, string[]>
   return result
 }
 
-/** 從 UniversalTemplate JSON 收集 conceptId */
+/** 從 UniversalTemplate JSON 收集 componentId */
 export function collectFromUniversalTemplates(jsonPath: string): Map<string, string[]> {
   const result = new Map<string, string[]>()
-  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ conceptId?: string }>
+  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ componentId?: string }>
   for (const tmpl of data) {
-    if (!tmpl.conceptId) continue
-    const sources = result.get(tmpl.conceptId) ?? []
+    if (!tmpl.componentId) continue
+    const sources = result.get(tmpl.componentId) ?? []
     sources.push('universal-templates.json')
-    result.set(tmpl.conceptId, sources)
+    result.set(tmpl.componentId, sources)
   }
   return result
 }
 
-/** 從手寫 lifter/generator TS 檔案中提取 conceptId（via regex） */
+/** 從手寫 lifter/generator TS 檔案中提取 componentId（via regex） */
 export function collectFromHandWritten(tsFiles: string[], type: 'lifter' | 'generator'): Set<string> {
   const concepts = new Set<string>()
   for (const f of tsFiles) {
     const code = fs.readFileSync(f, 'utf8')
     if (type === 'lifter') {
-      // Match createNode('conceptId', ...) patterns
+      // Match createNode('componentId', ...) patterns
       const matches = code.matchAll(/createNode\(\s*['"]([^'"]+)['"]/g)
       for (const m of matches) concepts.add(m[1])
     } else {
-      // Match g.set('conceptId', ...) or .register('conceptId', ...) patterns
+      // Match g.set('componentId', ...) or .register('componentId', ...) patterns
       const setMatches = code.matchAll(/\.set\(\s*['"]([^'"]+)['"]/g)
       for (const m of setMatches) concepts.add(m[1])
       const regMatches = code.matchAll(/\.register\(\s*['"]([^'"]+)['"]/g)
@@ -141,11 +141,11 @@ export function collectBlockSpecsWithTemplate(jsonPaths: string[]): Set<string> 
   const result = new Set<string>()
   for (const p of jsonPaths) {
     const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{
-      concept?: { conceptId?: string }
+      concept?: { componentId?: string }
       codeTemplate?: { pattern?: string }
     }>
     for (const spec of data) {
-      const id = spec.concept?.conceptId
+      const id = spec.concept?.componentId
       if (id && spec.codeTemplate?.pattern) result.add(id)
     }
   }
@@ -275,12 +275,12 @@ export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCod
   const strategyToConcept = new Map<string, string>()
   for (const p of blockSpecPaths) {
     const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{
-      concept?: { conceptId?: string }
+      concept?: { componentId?: string }
       renderMapping?: { strategy?: string }
     }>
     for (const spec of data) {
-      if (spec.concept?.conceptId && spec.renderMapping?.strategy) {
-        strategyToConcept.set(spec.renderMapping.strategy, spec.concept.conceptId)
+      if (spec.concept?.componentId && spec.renderMapping?.strategy) {
+        strategyToConcept.set(spec.renderMapping.strategy, spec.concept.componentId)
       }
     }
   }
@@ -298,23 +298,23 @@ export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCod
   const reports: ConceptPathReport[] = []
   let hasMissing = false
 
-  for (const [conceptId, sources] of [...allConcepts.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    if (INTERNAL_CONCEPTS.has(conceptId)) continue
+  for (const [componentId, sources] of [...allConcepts.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    if (INTERNAL_CONCEPTS.has(componentId)) continue
 
     const missing: string[] = []
-    if (!liftCovered.has(conceptId)) missing.push('lift')
-    if (!renderCovered.has(conceptId)) missing.push('render')
-    if (!extractCovered.has(conceptId)) missing.push('extract')
-    if (!generateCovered.has(conceptId)) missing.push('generate')
+    if (!liftCovered.has(componentId)) missing.push('lift')
+    if (!renderCovered.has(componentId)) missing.push('render')
+    if (!extractCovered.has(componentId)) missing.push('extract')
+    if (!generateCovered.has(componentId)) missing.push('generate')
 
     reports.push({
-      conceptId,
+      componentId,
       sources: [...new Set(sources)],
       paths: {
-        lift: liftCovered.has(conceptId),
-        render: renderCovered.has(conceptId),
-        extract: extractCovered.has(conceptId),
-        generate: generateCovered.has(conceptId),
+        lift: liftCovered.has(componentId),
+        render: renderCovered.has(componentId),
+        extract: extractCovered.has(componentId),
+        generate: generateCovered.has(componentId),
       },
       missing,
     })
@@ -344,7 +344,7 @@ function main(): void {
     const pathStatus = ['lift', 'render', 'extract', 'generate']
       .map(p => `${p} ${(r.paths as Record<string, boolean>)[p] ? '✓' : '✗'}`)
       .join(' ')
-    console.log(`${mark} ${r.conceptId}: ${pathStatus}`)
+    console.log(`${mark} ${r.componentId}: ${pathStatus}`)
 
     if (r.missing.length > 0) {
       missingCount++

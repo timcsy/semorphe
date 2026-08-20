@@ -111,8 +111,8 @@ function isStringVar(varName: string, fromNode: AstNode): boolean {
  * 判斷條件是「**它是二元運算子節點，而運算子是 `>>`**」——
  * 問性狀不問身分，那顆元件才搬得動。
  */
-function isShiftLike(node: { conceptId: string; properties?: Record<string, unknown> }): boolean {
-  return isBinaryOperator(node.conceptId) && node.properties?.operator === '>>'
+function isShiftLike(node: { componentId: string; properties?: Record<string, unknown> }): boolean {
+  return isBinaryOperator(node.componentId) && node.properties?.operator === '>>'
 }
 
 export function registerExpressionLifters(lifter: Lifter): void {
@@ -390,7 +390,7 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   let rootName: string | null = null
 
   while (cur) {
-    if (isStreamInput(cur.conceptId) && cur.properties?.from !== undefined) {
+    if (isStreamInput(cur.componentId) && cur.properties?.from !== undefined) {
       // 內層已經改判過——接續它收集到的目標
       targets.unshift(...(cur.children?.values ?? []))
       rootName = String(cur.properties.from)
@@ -398,11 +398,11 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
     }
     if (!isShiftLike(cur)) return null
     const right = (cur.children?.right ?? [])[0]
-    if (!right || !isVariableRef(right.conceptId)) return null
+    if (!right || !isVariableRef(right.componentId)) return null
     targets.unshift(right)
     const left: SemanticNode | undefined = (cur.children?.left ?? [])[0]
     if (!left) return null
-    if (isVariableRef(left.conceptId)) {
+    if (isVariableRef(left.componentId)) {
       rootName = String(left.properties?.name ?? '')
       break
     }

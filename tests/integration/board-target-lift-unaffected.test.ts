@@ -64,7 +64,7 @@ beforeAll(async () => {
 function conceptsIn(n: SemanticNode | null): Set<string> {
   const out = new Set<string>()
   const walk = (x: SemanticNode): void => {
-    out.add(x.conceptId)
+    out.add(x.componentId)
     for (const kids of Object.values(x.children)) for (const k of kids) walk(k)
   }
   if (n) walk(n)

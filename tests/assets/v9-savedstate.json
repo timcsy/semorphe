@@ -2,13 +2,13 @@
   "version": 9,
   "tree": {
     "id": "node_154_msniwd0d",
-    "conceptId": "cpp:program",
+    "componentId": "cpp:program",
     "properties": {},
     "children": {
       "body": [
         {
           "id": "node_112_msniwd0c",
-          "conceptId": "cpp:var_declare",
+          "componentId": "cpp:var_declare",
           "properties": {
             "name": "n",
             "type": "int"
@@ -17,7 +17,7 @@
             "initializer": [
               {
                 "id": "node_110_msniwd0c",
-                "conceptId": "cpp:literal_number",
+                "componentId": "cpp:literal_number",
                 "properties": {
                   "value": "0"
                 },
@@ -34,7 +34,7 @@
         },
         {
           "id": "node_114_msniwd0c",
-          "conceptId": "cpp:var_declare",
+          "componentId": "cpp:var_declare",
           "properties": {
             "name": "v",
             "type": "int"
@@ -48,7 +48,7 @@
         },
         {
           "id": "node_116_msniwd0d",
-          "conceptId": "cpp:container_append",
+          "componentId": "cpp:container_append",
           "properties": {
             "obj": "v"
           },
@@ -56,7 +56,7 @@
             "value": [
               {
                 "id": "node_115_msniwd0d",
-                "conceptId": "cpp:literal_number",
+                "componentId": "cpp:literal_number",
                 "properties": {
                   "value": "3"
                 },
@@ -73,7 +73,7 @@
         },
         {
           "id": "node_118_msniwd0d",
-          "conceptId": "cpp:container_append",
+          "componentId": "cpp:container_append",
           "properties": {
             "obj": "v"
           },
@@ -81,7 +81,7 @@
             "value": [
               {
                 "id": "node_117_msniwd0d",
-                "conceptId": "cpp:literal_number",
+                "componentId": "cpp:literal_number",
                 "properties": {
                   "value": "4"
                 },
@@ -98,7 +98,7 @@
         },
         {
           "id": "node_124_msniwd0d",
-          "conceptId": "cpp:var_assign",
+          "componentId": "cpp:var_assign",
           "properties": {
             "obj": "n"
           },
@@ -106,7 +106,7 @@
             "value": [
               {
                 "id": "node_123_msniwd0d",
-                "conceptId": "cpp:arithmetic",
+                "componentId": "cpp:arithmetic",
                 "properties": {
                   "operator": "+"
                 },
@@ -114,7 +114,7 @@
                   "left": [
                     {
                       "id": "node_120_msniwd0d",
-                      "conceptId": "cpp:array_at",
+                      "componentId": "cpp:array_at",
                       "properties": {
                         "obj": "v"
                       },
@@ -122,7 +122,7 @@
                         "index": [
                           {
                             "id": "node_119_msniwd0d",
-                            "conceptId": "cpp:literal_number",
+                            "componentId": "cpp:literal_number",
                             "properties": {
                               "value": "0"
                             },
@@ -141,7 +141,7 @@
                   "right": [
                     {
                       "id": "node_122_msniwd0d",
-                      "conceptId": "cpp:array_at",
+                      "componentId": "cpp:array_at",
                       "properties": {
                         "obj": "v"
                       },
@@ -149,7 +149,7 @@
                         "index": [
                           {
                             "id": "node_121_msniwd0d",
-                            "conceptId": "cpp:literal_number",
+                            "componentId": "cpp:literal_number",
                             "properties": {
                               "value": "1"
                             },
@@ -178,13 +178,13 @@
         },
         {
           "id": "node_135_msniwd0d",
-          "conceptId": "cpp:if",
+          "componentId": "cpp:if",
           "properties": {},
           "children": {
             "condition": [
               {
                 "id": "node_127_msniwd0d",
-                "conceptId": "cpp:compare",
+                "componentId": "cpp:compare",
                 "properties": {
                   "operator": ">"
                 },
@@ -192,7 +192,7 @@
                   "left": [
                     {
                       "id": "node_125_msniwd0d",
-                      "conceptId": "cpp:var_ref",
+                      "componentId": "cpp:var_ref",
                       "properties": {
                         "name": "n"
                       },
@@ -205,7 +205,7 @@
                   "right": [
                     {
                       "id": "node_126_msniwd0d",
-                      "conceptId": "cpp:literal_number",
+                      "componentId": "cpp:literal_number",
                       "properties": {
                         "value": "5"
                       },
@@ -224,13 +224,13 @@
             "then_body": [
               {
                 "id": "node_131_msniwd0d",
-                "conceptId": "cpp:print",
+                "componentId": "cpp:print",
                 "properties": {},
                 "children": {
                   "values": [
                     {
                       "id": "node_128_msniwd0d",
-                      "conceptId": "cpp:literal_string",
+                      "componentId": "cpp:literal_string",
                       "properties": {
                         "value": "big "
                       },
@@ -241,7 +241,7 @@
                     },
                     {
                       "id": "node_129_msniwd0d",
-                      "conceptId": "cpp:var_ref",
+                      "componentId": "cpp:var_ref",
                       "properties": {
                         "name": "n"
                       },
@@ -252,7 +252,7 @@
                     },
                     {
                       "id": "node_130_msniwd0d",
-                      "conceptId": "cpp:endl",
+                      "componentId": "cpp:endl",
                       "properties": {},
                       "children": {},
                       "metadata": {
@@ -269,13 +269,13 @@
             "else_body": [
               {
                 "id": "node_134_msniwd0d",
-                "conceptId": "cpp:print",
+                "componentId": "cpp:print",
                 "properties": {},
                 "children": {
                   "values": [
                     {
                       "id": "node_132_msniwd0d",
-                      "conceptId": "cpp:literal_string",
+                      "componentId": "cpp:literal_string",
                       "properties": {
                         "value": "small"
                       },
@@ -286,7 +286,7 @@
                     },
                     {
                       "id": "node_133_msniwd0d",
-                      "conceptId": "cpp:endl",
+                      "componentId": "cpp:endl",
                       "properties": {},
                       "children": {},
                       "metadata": {
@@ -307,13 +307,13 @@
         },
         {
           "id": "node_146_msniwd0d",
-          "conceptId": "cpp:loop_for",
+          "componentId": "cpp:loop_for",
           "properties": {},
           "children": {
             "cond": [
               {
                 "id": "node_138_msniwd0d",
-                "conceptId": "cpp:compare",
+                "componentId": "cpp:compare",
                 "properties": {
                   "operator": "<"
                 },
@@ -321,7 +321,7 @@
                   "left": [
                     {
                       "id": "node_136_msniwd0d",
-                      "conceptId": "cpp:var_ref",
+                      "componentId": "cpp:var_ref",
                       "properties": {
                         "name": "i"
                       },
@@ -334,7 +334,7 @@
                   "right": [
                     {
                       "id": "node_137_msniwd0d",
-                      "conceptId": "cpp:literal_number",
+                      "componentId": "cpp:literal_number",
                       "properties": {
                         "value": "2"
                       },
@@ -353,7 +353,7 @@
             "init": [
               {
                 "id": "node_140_msniwd0d",
-                "conceptId": "cpp:var_declare",
+                "componentId": "cpp:var_declare",
                 "properties": {
                   "name": "i",
                   "type": "int"
@@ -362,7 +362,7 @@
                   "initializer": [
                     {
                       "id": "node_139_msniwd0d",
-                      "conceptId": "cpp:literal_number",
+                      "componentId": "cpp:literal_number",
                       "properties": {
                         "value": "0"
                       },
@@ -381,7 +381,7 @@
             "update": [
               {
                 "id": "node_141_msniwd0d",
-                "conceptId": "cpp:raw_expression",
+                "componentId": "cpp:raw_expression",
                 "properties": {
                   "code": "i = i + 1"
                 },
@@ -394,13 +394,13 @@
             "body": [
               {
                 "id": "node_145_msniwd0d",
-                "conceptId": "cpp:print",
+                "componentId": "cpp:print",
                 "properties": {},
                 "children": {
                   "values": [
                     {
                       "id": "node_143_msniwd0d",
-                      "conceptId": "cpp:array_at",
+                      "componentId": "cpp:array_at",
                       "properties": {
                         "obj": "v"
                       },
@@ -408,7 +408,7 @@
                         "index": [
                           {
                             "id": "node_142_msniwd0d",
-                            "conceptId": "cpp:var_ref",
+                            "componentId": "cpp:var_ref",
                             "properties": {
                               "name": "i"
                             },
@@ -425,7 +425,7 @@
                     },
                     {
                       "id": "node_144_msniwd0d",
-                      "conceptId": "cpp:endl",
+                      "componentId": "cpp:endl",
                       "properties": {},
                       "children": {},
                       "metadata": {
@@ -446,7 +446,7 @@
         },
         {
           "id": "node_148_msniwd0d",
-          "conceptId": "cpp:var_declare",
+          "componentId": "cpp:var_declare",
           "properties": {
             "name": "st",
             "type": "int"
@@ -460,7 +460,7 @@
         },
         {
           "id": "node_150_msniwd0d",
-          "conceptId": "cpp:container_push",
+          "componentId": "cpp:container_push",
           "properties": {
             "obj": "st"
           },
@@ -468,7 +468,7 @@
             "value": [
               {
                 "id": "node_149_msniwd0d",
-                "conceptId": "cpp:literal_number",
+                "componentId": "cpp:literal_number",
                 "properties": {
                   "value": "7"
                 },
@@ -485,13 +485,13 @@
         },
         {
           "id": "node_153_msniwd0d",
-          "conceptId": "cpp:print",
+          "componentId": "cpp:print",
           "properties": {},
           "children": {
             "values": [
               {
                 "id": "node_151_msniwd0d",
-                "conceptId": "cpp:stack_peek",
+                "componentId": "cpp:stack_peek",
                 "properties": {
                   "obj": "st"
                 },
@@ -502,7 +502,7 @@
               },
               {
                 "id": "node_152_msniwd0d",
-                "conceptId": "cpp:endl",
+                "componentId": "cpp:endl",
                 "properties": {},
                 "children": {},
                 "metadata": {

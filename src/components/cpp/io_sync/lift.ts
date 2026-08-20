@@ -10,6 +10,6 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 export function registerLift(): void {
   registerCallConcept(
     ['ios::sync_with_stdio', 'ios_base::sync_with_stdio', 'std::ios::sync_with_stdio', 'std::ios_base::sync_with_stdio'],
-    { conceptId: 'cpp:io_sync', argSlots: ['value'], source: 'cpp/io_sync' },
+    { componentId: 'cpp:io_sync', argSlots: ['value'], source: 'cpp/io_sync' },
   )
 }

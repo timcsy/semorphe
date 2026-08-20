@@ -27,10 +27,10 @@
  * > **沿用一支執行器之前，要問的不是「語義像不像」，
  * > 是「它從哪裡讀值，而我把值放在哪裡」。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:pin_attach', async (node, ctx) => {
     // ⚠️ **這裡刻意沒有 `?? 預設值`**——參數規格一致性護欄在看：

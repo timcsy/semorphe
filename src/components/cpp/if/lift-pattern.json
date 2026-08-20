@@ -2,7 +2,7 @@
   "id": "cpp_if_statement",
   "astNodeType": "if_statement",
   "concept": {
-    "conceptId": "cpp:if"
+    "componentId": "cpp:if"
   },
   "fieldMappings": [
     {

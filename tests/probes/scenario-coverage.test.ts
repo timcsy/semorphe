@@ -54,7 +54,7 @@ beforeAll(async () => {
 /** Arduino：沒有 main，參照編譯器編不過——只量辨識與投影 */
 
 function residualOf(n: SemanticNode, acc: { count: number; kinds: Set<string> }): void {
-  if (n.conceptId === 'raw_code' || n.conceptId === 'unresolved') {
+  if (n.componentId === 'raw_code' || n.componentId === 'unresolved') {
     acc.count++
     acc.kinds.add(String(n.metadata?.rawCode ?? '').slice(0, 40).replace(/\n/g, '⏎'))
     return

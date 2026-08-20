@@ -17,30 +17,30 @@ const STYLE = apcs as unknown as StylePreset
 
 /** 一份 v2 存檔的語義樹——**全部是舊格式身分**，逐字保留當時的樣子 */
 const v2Tree = {
-  conceptId: 'program',
+  componentId: 'program',
   properties: {},
   children: {
     body: [
       {
-        conceptId: 'func_def',
+        componentId: 'func_def',
         properties: { name: 'main', return_type: 'int' },
         children: {
           params: [],
           body: [
             {
-              conceptId: 'var_declare',
+              componentId: 'var_declare',
               properties: { name: 'x', type: 'int' },
-              children: { initializer: [{ conceptId: 'number_literal', properties: { value: '42' }, children: {} }] },
+              children: { initializer: [{ componentId: 'number_literal', properties: { value: '42' }, children: {} }] },
             },
             {
-              conceptId: 'cpp_vector_declare',
+              componentId: 'cpp_vector_declare',
               properties: { name: 'v', type: 'int' },
               children: {},
             },
             {
-              conceptId: 'print',
+              componentId: 'print',
               properties: {},
-              children: { values: [{ conceptId: 'var_ref', properties: { name: 'x' }, children: {} }] },
+              children: { values: [{ componentId: 'var_ref', properties: { name: 'x' }, children: {} }] },
             },
           ],
         },
@@ -74,7 +74,7 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
     void UPGRADES
     const ids: string[] = []
     const walk = (n: SemanticNode): void => {
-      ids.push(n.conceptId)
+      ids.push(n.componentId)
       for (const arr of Object.values(n.children ?? {})) arr.forEach(walk)
     }
     walk(rise(v2Tree))

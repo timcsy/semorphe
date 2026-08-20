@@ -1,8 +1,8 @@
 /** `cpp:lcd_clear` 的 **execute** 路——清空並把游標移回左上角。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_clear', async (node, ctx) => {
     const s = lcdOf(ctx, String(node.properties.obj ?? 'lcd'))
     s.lines = s.lines.map(() => '')

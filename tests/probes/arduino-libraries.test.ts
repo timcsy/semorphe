@@ -52,7 +52,7 @@ const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) nodes(k, out)
   return out
 }
-const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.conceptId)
+const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
 const RESIDUE = new Set(['cpp:raw_code', 'cpp:raw_expression', 'raw_code', 'unresolved'])
 const isWhole = (code: string): boolean => !parser.parse(code)!.rootNode.hasError
 
@@ -78,7 +78,7 @@ describe('探針：函式庫語料（第 2／3 批盲測）', () => {
       if (!t) { worst.push(`${id}: lift 回 null`); continue }
       const list = nodes(t)
       col.n += list.length
-      const r = list.filter((x) => RESIDUE.has(x.conceptId)).length
+      const r = list.filter((x) => RESIDUE.has(x.componentId)).length
       col.res += r
       if (r > 0) worst.push(`${id}: ${r}/${list.length}`)
     }

@@ -61,7 +61,7 @@ export function openBraceFor(style: StylePreset): (ctx: Parameters<NodeGenerator
  * ⚠️ **同一個檔案裡的第三個**（`openBrace`、`formatParams` 是前兩個）。
  * 三次都是同一個病：**一個閉包 helper 會把它所在的整個函式變成不可分割的單位。**
  *
- * ⚠️ 內部的 `elseBody[0].conceptId === 'cpp:if'` 是 else-if 鏈的判別。
+ * ⚠️ 內部的 `elseBody[0].componentId === 'cpp:if'` 是 else-if 鏈的判別。
  * 它今天還寫在這裡；`cpp:if` 要搬進膠囊時，那一句得先變成一條性狀宣告。
  */
 export function ifGeneratorFor(style: StylePreset): NodeGenerator {
@@ -75,7 +75,7 @@ export function ifGeneratorFor(style: StylePreset): NodeGenerator {
     let code = header
     code += generateBody(thenBody, indented(ctx))
     code += `${indent(ctx)}}`
-    if (elseBody.length === 1 && isElseIfChainable(elseBody[0].conceptId) && elseBody[0].properties.isElseIf === 'true') {
+    if (elseBody.length === 1 && isElseIfChainable(elseBody[0].componentId) && elseBody[0].properties.isElseIf === 'true') {
       // else-if chain: produce "} else if (...) {" instead of nested "} else { if ... }"
       const elseIfSep = style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '
       trackOwnText(ctx, `${indent(ctx)}}` + elseIfSep + 'else ')

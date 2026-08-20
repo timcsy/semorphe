@@ -12,10 +12,10 @@ import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十三個組裝點**（今天第四處同一個形狀）。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 let extractor: PatternExtractor
 let renderer: PatternRenderer
@@ -23,7 +23,7 @@ let renderer: PatternRenderer
 beforeAll(() => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ConceptDefJSON[])],
+    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ComponentDefJSON[])],
     [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks), ...(componentBlocks() as BlockProjectionJSON[])]
   )
   extractor = new PatternExtractor()
@@ -47,11 +47,11 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:func_call')
+    expect(result!.componentId).toBe('cpp:func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('cpp:literal_number')
-    expect(result!.children.args[1].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.args[0].componentId).toBe('cpp:literal_number')
+    expect(result!.children.args[1].componentId).toBe('cpp:var_ref')
   })
 
   it('render → extract roundtrip for func_call', () => {
@@ -67,7 +67,7 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     expect(block!.type).toBe('cpp_func_call')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:func_call')
+    expect(reExtracted!.componentId).toBe('cpp:func_call')
     expect(reExtracted!.properties.name).toBe('sum')
     expect(reExtracted!.children.args).toHaveLength(2)
   })
@@ -88,11 +88,11 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:func_def')
+    expect(result!.componentId).toBe('cpp:func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].conceptId).toBe('param_decl')
+    expect(result!.children.params[0].componentId).toBe('param_decl')
     expect(result!.children.params[0].properties.type).toBe('int')
     expect(result!.children.params[0].properties.name).toBe('a')
     expect(result!.children.params[1].properties.type).toBe('double')
@@ -112,7 +112,7 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     expect(block!.type).toBe('cpp_func_def')
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:func_def')
+    expect(reExtracted!.componentId).toBe('cpp:func_def')
     expect(reExtracted!.children.params).toHaveLength(1)
     expect(reExtracted!.children.params[0].properties.name).toBe('name')
   })
@@ -132,7 +132,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:print')
+    expect(result!.componentId).toBe('cpp:print')
     expect(result!.children.values).toHaveLength(2)
   })
 
@@ -149,7 +149,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:print')
+    expect(reExtracted!.componentId).toBe('cpp:print')
     expect(reExtracted!.children.values).toHaveLength(3)
   })
 })
@@ -170,9 +170,9 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:input')
+    expect(result!.componentId).toBe('cpp:input')
     expect(result!.children.values).toHaveLength(2)
-    expect(result!.children.values[0].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.values[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.values[0].properties.name).toBe('x')
   })
 
@@ -188,7 +188,7 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:input')
+    expect(reExtracted!.componentId).toBe('cpp:input')
     expect(reExtracted!.children.values).toHaveLength(2)
   })
 })
@@ -214,11 +214,11 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:input_formatted')
+    expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %f')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
-    expect(result!.children.args[1].conceptId).toBe('cpp:arithmetic')
+    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
+    expect(result!.children.args[1].componentId).toBe('cpp:arithmetic')
   })
 
   it('render → extract roundtrip for printf', () => {
@@ -230,7 +230,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     expect(block).not.toBeNull()
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('cpp:print_formatted')
+    expect(reExtracted!.componentId).toBe('cpp:print_formatted')
     expect(reExtracted!.children.args).toHaveLength(1)
   })
 })
@@ -252,7 +252,7 @@ describe('Migration roundtrip: if with elseif chain', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:if')
+    expect(result!.componentId).toBe('cpp:if')
     expect(result!.children.condition).toHaveLength(1)
     expect(result!.children.then_body).toHaveLength(1)
   })
@@ -269,7 +269,7 @@ describe('Migration roundtrip: forward_decl with dynamicRules', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:forward_decl')
+    expect(result!.componentId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.params).toHaveLength(2)
@@ -290,7 +290,7 @@ describe('Migration roundtrip: doc_comment', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:doc_comment')
+    expect(result!.componentId).toBe('cpp:doc_comment')
     expect(result!.properties.brief).toBe('Add two numbers')
   })
 })

@@ -13,7 +13,7 @@ const binaryFuncs = ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']
 
 export function registerLift(): void {
   registerCallConcept(binaryFuncs, {
-    conceptId: 'cpp:math_binary',
+    componentId: 'cpp:math_binary',
     argSlots: ['arg1', 'arg2'],
     funcProp: 'func',
     source: 'cpp/math_binary',

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_var_assign",
-    "conceptId": "cpp:var_assign",
+    "componentId": "cpp:var_assign",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",

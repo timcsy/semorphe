@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_find",
-    "conceptId": "cpp:cstring_find",
+    "componentId": "cpp:cstring_find",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

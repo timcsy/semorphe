@@ -39,7 +39,7 @@ function roundTrip(code: string): string {
 
 function findConcepts(node: SemanticNode, target: string): SemanticNode[] {
   const results: SemanticNode[] = []
-  if (node.conceptId === target) results.push(node)
+  if (node.componentId === target) results.push(node)
   for (const children of Object.values(node.children || {})) {
     for (const child of children as SemanticNode[]) {
       results.push(...findConcepts(child, target))
@@ -49,7 +49,7 @@ function findConcepts(node: SemanticNode, target: string): SemanticNode[] {
 }
 
 function findAllConcepts(node: SemanticNode): string[] {
-  const results: string[] = [node.conceptId]
+  const results: string[] = [node.componentId]
   for (const children of Object.values(node.children || {})) {
     for (const child of children as SemanticNode[]) {
       results.push(...findAllConcepts(child))

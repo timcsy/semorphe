@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:stack_peek",
+  "componentId": "cpp:stack_peek",
   "abstractConcept": null,
   "properties": [
     {

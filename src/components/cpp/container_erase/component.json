@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:container_erase",
+  "componentId": "cpp:container_erase",
   "abstractConcept": null,
   "properties": [
     {

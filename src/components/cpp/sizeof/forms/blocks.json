@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_sizeof",
-    "conceptId": "cpp:sizeof",
+    "componentId": "cpp:sizeof",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

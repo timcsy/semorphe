@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:input_line",
+  "componentId": "cpp:input_line",
   "properties": [
     {
       "name": "name",

@@ -1,9 +1,9 @@
 /** `cpp:memory_fill` 的 **execute** 路——從共用檔原封剪過來（批次第六批：lift 是 io.ts 的一個帶真邏輯的分支）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { writableArray } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:memory_fill', async (node, ctx) => {
       const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')
       const v = await ctx.evaluate((node.children.value ?? [])[0])

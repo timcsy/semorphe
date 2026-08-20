@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:touch_read",
+  "componentId": "cpp:touch_read",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:char_to_lower",
-    "conceptId": "cpp:char_to_lower",
+    "componentId": "cpp:char_to_lower",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

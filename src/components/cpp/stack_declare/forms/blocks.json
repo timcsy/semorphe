@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:stack_declare",
-    "conceptId": "cpp:stack_declare",
+    "componentId": "cpp:stack_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

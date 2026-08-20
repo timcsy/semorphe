@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('pinMode', {
-    conceptId: 'cpp:pin_mode',
+    componentId: 'cpp:pin_mode',
     argSlots: ["pin", "mode"],
     source: 'cpp/pin_mode',
   })

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_container_push",
-    "conceptId": "cpp:container_push",
+    "componentId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -41,7 +41,7 @@
   },
   {
     "id": "cpp_container_push_stack",
-    "conceptId": "cpp:container_push",
+    "componentId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -86,7 +86,7 @@
   },
   {
     "id": "cpp_container_push_queue",
-    "conceptId": "cpp:container_push",
+    "componentId": "cpp:container_push",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

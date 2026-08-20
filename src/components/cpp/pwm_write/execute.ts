@@ -6,11 +6,11 @@
  *
  * 🟢 值本身走**既有的**腳位狀態，與 `analogWrite` 同一條路——不另寫一套。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 import { resolveTarget } from '../../../languages/cpp/core/runtime/arduino-pwm'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_write', async (node, ctx) => {
     const x = ctx.toNumber(await ctx.evaluate((node.children.target ?? [])[0]))
     const duty = ctx.toNumber(await ctx.evaluate((node.children.duty ?? [])[0]))

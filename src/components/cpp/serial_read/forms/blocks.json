@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_serial_read",
-    "conceptId": "cpp:serial_read",
+    "componentId": "cpp:serial_read",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

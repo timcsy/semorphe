@@ -54,7 +54,7 @@ import { buildInitializerList } from '../../../../components/cpp/initializer_lis
 const hasInitSourceDecl = new Set(
   [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
-    .map((c) => (c as { conceptId: string }).conceptId),
+    .map((c) => (c as { componentId: string }).componentId),
 )
 
 /**
@@ -66,7 +66,7 @@ const hasInitSourceDecl = new Set(
 const hasSizeDecl = new Set(
   [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.size !== undefined)
-    .map((c) => (c as { conceptId: string }).conceptId),
+    .map((c) => (c as { componentId: string }).componentId),
 )
 
 /**
@@ -517,8 +517,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
       // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
       // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
-      const conceptId = conceptForContainerTemplate(templateName)
-      if (conceptId) {
+      const componentId = conceptForContainerTemplate(templateName)
+      if (componentId) {
         const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
         const name = decl?.type === 'identifier'
           ? decl.text
@@ -529,7 +529,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
           const keyType = args[0]?.text ?? 'int'
           const valueType = args[1]?.text ?? 'int'
-          return createNode(conceptId, { key_type: keyType, value_type: valueType, name })
+          return createNode(componentId, { key_type: keyType, value_type: valueType, name })
         }
 
         // `vector<int> v = {3,1,4}` —— 初始化列表。
@@ -605,20 +605,20 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             : { type: innerType, name }
 
         if (values.length > 0) {
-          return createNode(conceptId, props, { values })
+          return createNode(componentId, props, { values })
         }
-        if (source && hasInitSourceDecl.has(conceptId)) {
-          return createNode(conceptId, props, { source: [source] })
+        if (source && hasInitSourceDecl.has(componentId)) {
+          return createNode(componentId, props, { source: [source] })
         }
         // ⚠️ 同樣從 JSON 讀，不寫死——沒有宣告 `size` 接點的容器不得收到它
         //（那正是 `hasInitSourceDecl` 的檔頭記過的翻車：一個未宣告的子節點
         // 讓產生器不認得，來回轉換就掉了那一段）。
-        if (size && hasSizeDecl.has(conceptId)) {
+        if (size && hasSizeDecl.has(componentId)) {
           return fill
-            ? createNode(conceptId, props, { size: [size], fill: [fill] })
-            : createNode(conceptId, props, { size: [size] })
+            ? createNode(componentId, props, { size: [size], fill: [fill] })
+            : createNode(componentId, props, { size: [size] })
         }
-        return createNode(conceptId, props)
+        return createNode(componentId, props)
       }
 
       // Unknown template type — fall through to var_declare with full template text
@@ -644,7 +644,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       }
     }
     if (simpleTypeName && (streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName))) {
-      const conceptId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
+      const componentId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
       // 🔴 **一個身分可能被多個型別名登錄**（同一片液晶的並列版與 I2C 版）。
       //    那個差別在程式碼裡是真的，而**它不得被改寫**——所以要帶著。
       //
@@ -653,7 +653,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //
       // > **共用層要不要記一件事，由那顆元件的宣告說了算。**
       const wantsDeclType = componentConcepts().some(
-        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+        (c) => (c as { componentId?: string }).componentId === componentId &&
           ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'decl_type'),
       )
       const extraProps: Record<string, string> = wantsDeclType ? { decl_type: simpleTypeName } : {}
@@ -667,7 +667,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //
       // 同上：只在**概念自己宣告了這一格**時才寫。
       const wantsCtorCount = componentConcepts().some(
-        (c) => (c as { conceptId?: string }).conceptId === conceptId &&
+        (c) => (c as { componentId?: string }).componentId === componentId &&
           ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'ctorCount'),
       )
       const withCount = (args: unknown[]): Record<string, string> =>
@@ -705,7 +705,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
           })
           .filter((n): n is NonNullable<typeof n> => n !== null)
-        return createNode(conceptId, { name: nameNode?.text ?? name, ...withCount(args) }, { initializer: args })
+        return createNode(componentId, { name: nameNode?.text ?? name, ...withCount(args) }, { initializer: args })
       }
 
       // For stream types with constructor args (e.g., ifstream fin("input.txt"))
@@ -715,14 +715,14 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = valueNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(conceptId, { name, ...withCount(args) }, { initializer: args })
+          return createNode(componentId, { name, ...withCount(args) }, { initializer: args })
         }
         if (valueNode) {
           const value = ctx.lift(valueNode)
-          return createNode(conceptId, { name, ...withCount(value ? [value] : []) }, { initializer: value ? [value] : [] })
+          return createNode(componentId, { name, ...withCount(value ? [value] : []) }, { initializer: value ? [value] : [] })
         }
       }
-      return createNode(conceptId, { name, ...withCount([]) })
+      return createNode(componentId, { name, ...withCount([]) })
     }
 
     const typeNode = node.namedChildren.find(c =>
@@ -778,23 +778,23 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return degrade(buildRawCode(node.text), `${qualifier} ＋ 陣列宣告尚未支援`)
         }
         const lifted = liftSingleDeclarator(decl, type, ctx)
-        const conceptId = qualifierConcept(qualifier)
-        if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
+        const componentId = qualifierConcept(qualifier)
+        if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
         // Use type from lifted node; append * for pointer concepts
         let liftedType = (lifted.properties.type as string) ?? type
         // ⚠️ 問**性狀**不問身分：「我的型別要接一個 `*`」是那顆元件的性質。
         // 寫死 `'cpp:pointer_declare'` 的話它永遠搬不進膠囊。
-        liftedType += typeSuffixOf(lifted.conceptId)
-        return createNode(conceptId, {
+        liftedType += typeSuffixOf(lifted.componentId)
+        return createNode(componentId, {
           type: liftedType,
           name: lifted.properties.name as string ?? 'x',
         }, {
           initializer: lifted.children.initializer ?? [],
         })
       }
-      const conceptId = qualifierConcept(qualifier)
-      if (!conceptId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
-      return createNode(conceptId, { type, name: 'x' })
+      const componentId = qualifierConcept(qualifier)
+      if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
+      return createNode(componentId, { type, name: 'x' })
     }
 
     // Static declarations: static int count = 0;
@@ -1069,7 +1069,7 @@ export function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNod
   if (!node) return []
   const lifted = ctx.lift(node)
   if (!lifted) return []
-  if (lifted.conceptId === '_compound') {
+  if (lifted.componentId === '_compound') {
     return lifted.children.body ?? []
   }
   return [lifted]

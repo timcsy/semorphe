@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_ultrasonic_trigger",
-    "conceptId": "cpp:ultrasonic_trigger",
+    "componentId": "cpp:ultrasonic_trigger",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

@@ -18,8 +18,8 @@ describe('PatternRenderer', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:increment',
+        componentMapping: {
+          componentId: 'cpp:increment',
           abstractConcept: 'increment',
           properties: ['name', 'operator'],
           role: 'both',
@@ -55,8 +55,8 @@ describe('PatternRenderer', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:increment',
+        componentMapping: {
+          componentId: 'cpp:increment',
           properties: ['name', 'operator'],
           role: 'both',
         },
@@ -88,8 +88,8 @@ describe('PatternRenderer', () => {
         category: 'functions',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:return',
+        componentMapping: {
+          componentId: 'cpp:return',
           children: { value: 'expression' },
           role: 'statement',
         },
@@ -110,8 +110,8 @@ describe('PatternRenderer', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:literal_number',
+        componentMapping: {
+          componentId: 'cpp:literal_number',
           properties: ['value'],
           role: 'expression',
         },
@@ -146,8 +146,8 @@ describe('PatternRenderer', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:loop_while',
+        componentMapping: {
+          componentId: 'cpp:loop_while',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -167,7 +167,7 @@ describe('PatternRenderer', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:break', role: 'statement' },
+        componentMapping: { componentId: 'cpp:break', role: 'statement' },
         blockDef: { type: 'cpp_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },

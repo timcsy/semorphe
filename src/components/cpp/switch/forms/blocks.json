@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_switch",
-    "conceptId": "cpp:switch",
+    "componentId": "cpp:switch",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",

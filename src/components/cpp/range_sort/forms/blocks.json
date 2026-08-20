@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_sort",
-    "conceptId": "cpp:range_sort",
+    "componentId": "cpp:range_sort",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

@@ -5,10 +5,10 @@
  * 「佇列是空的」與「這根本不是佇列」都回同一個值。
  * **搬移不重寫**——原封搬過來，重寫要另一個 commit（見 `component-encapsulate`）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, e: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, e: ComponentExecutor) => void): void {
   register('cpp:queue_back', async (node, ctx) => {
     const name = String(node.properties.obj)
     const arr = ctx.scope.get(name)

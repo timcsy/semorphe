@@ -30,7 +30,7 @@ interface BlockDefLike {
 
 const specs = (): { owner: string; spec: CompanionSpec }[] =>
   registeredComponents()
-    .map((c) => ({ owner: c.conceptId, spec: (c.manifest as { companion?: CompanionSpec }).companion }))
+    .map((c) => ({ owner: c.componentId, spec: (c.manifest as { companion?: CompanionSpec }).companion }))
     .filter((x): x is { owner: string; spec: CompanionSpec } => x.spec !== undefined)
 
 const defs = (): Map<string, BlockDefLike> =>

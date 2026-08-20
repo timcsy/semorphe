@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pointer_deref",
+  "componentId": "cpp:pointer_deref",
   "abstractConcept": null,
   "properties": [],
   "children": {

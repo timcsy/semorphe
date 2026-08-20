@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:class_def",
-    "conceptId": "cpp:class_def",
+    "componentId": "cpp:class_def",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",

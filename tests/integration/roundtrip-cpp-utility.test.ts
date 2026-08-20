@@ -42,7 +42,7 @@ beforeAll(async () => {
 
 function countRawCode(node: SemanticNode): number {
   let count = 0
-  if (node.conceptId === 'raw_code' || node.conceptId === 'cpp:raw_code') count++
+  if (node.componentId === 'raw_code' || node.componentId === 'cpp:raw_code') count++
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) count += countRawCode(child)
   }
@@ -50,7 +50,7 @@ function countRawCode(node: SemanticNode): number {
 }
 
 function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
-  if (a.conceptId !== b.conceptId) return false
+  if (a.componentId !== b.componentId) return false
   const aKeys = Object.keys(a.children ?? {}).sort()
   const bKeys = Object.keys(b.children ?? {}).sort()
   if (aKeys.length !== bKeys.length) return false

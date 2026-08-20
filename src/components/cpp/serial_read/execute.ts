@@ -17,8 +17,8 @@
  *
  * 接上真的輸入時（`ctx.awaitInput()` 或一個緩衝區），這裡改成讀一個位元組。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_read', async () => ({ type: 'int', value: -1 }))
 }

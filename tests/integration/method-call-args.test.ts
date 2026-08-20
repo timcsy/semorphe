@@ -68,7 +68,7 @@ const allBlocks = (tree: SemanticNode): BlockState[] => {
 describe('護欄：通用方法呼叫的引數不得在積木那一側消失', () => {
   it('🔴 使用者實測的那一段：Serial.write(cmd) 的引數要在積木上', () => {
     const tree = lift('void noteOn(int cmd) {\n  Serial.write(cmd);\n}\n')
-    const call = nodes(tree).find((n) => n.conceptId === 'cpp:method_call')
+    const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
     expect(call, '沒有認出方法呼叫——下面全部空過').toBeDefined()   // ← 正向錨點
     expect(call?.children.args ?? [], '語義樹那一側').toHaveLength(1)
 
@@ -81,7 +81,7 @@ describe('護欄：通用方法呼叫的引數不得在積木那一側消失', (
 
   it('🔴 多引數也要全部在——一個都不准掉', () => {
     const tree = lift('void f() {\n  obj.doThing(1, 2, 3);\n}\n')
-    const call = nodes(tree).find((n) => n.conceptId === 'cpp:method_call')
+    const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
     expect(call?.children.args ?? []).toHaveLength(3)               // ← 正向錨點
     const blk = allBlocks(tree).find((b) => b.type === 'cpp_method_call')
     expect(Object.keys(blk?.inputs ?? {}).filter((k) => k.startsWith('ARG_'))).toHaveLength(3)
@@ -106,7 +106,7 @@ describe('護欄：通用方法呼叫的引數不得在積木那一側消失', (
   it('🔴 而運算式版也要有——它與敘述版的 extraState 格式必須相同', () => {
     // ⚠️ `STATEMENT_TO_EXPRESSION` 直接搬移 extraState（專案記過的契約）。
     const tree = lift('void f() {\n  int n = obj.getValue(7);\n}\n')
-    const call = nodes(tree).find((n) => n.conceptId === 'cpp:method_call')
+    const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
     expect(call?.children.args ?? []).toHaveLength(1)                // ← 正向錨點
     const blk = allBlocks(tree).find((b) => (b.type ?? '').startsWith('cpp_method_call'))
     expect(blk?.extraState?.argCount).toBe(1)

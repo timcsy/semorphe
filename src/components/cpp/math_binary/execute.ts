@@ -6,9 +6,9 @@
  * **「算出來是 0」與「不認得這個函式」長得一模一樣**——靜默回退。
  * 搬移不重寫，記在這裡讓它有名字。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_binary', async (node, ctx) => {
     const func = String(node.properties.func ?? 'fmod')
     const v1 = ctx.toNumber(await ctx.evaluate((node.children.arg1 ?? [])[0]))

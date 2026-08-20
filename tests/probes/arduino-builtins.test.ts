@@ -53,7 +53,7 @@ const CORPUS = JSON.parse(
 ) as Record<string, { board: string; topic: string; libraries: string[]; code: string }>
 
 const shape = (n: SemanticNode): string =>
-  `${n.conceptId}(${Object.entries(n.children ?? {}).map(([k, v]) =>
+  `${n.componentId}(${Object.entries(n.children ?? {}).map(([k, v]) =>
     `${k}:[${(v as SemanticNode[]).map(shape).join(',')}]`).join(' ')})`
 
 const RESIDUAL = /^(raw_code|cpp:raw_code|raw_expression|cpp:raw_expression|unresolved)$/
@@ -65,9 +65,9 @@ function tally(
   a = { resid: 0, generic: 0, total: 0, kinds: new Set<string>(), seen: new Set<string>() },
 ): typeof a {
   a.total++
-  a.seen.add(n.conceptId)
-  if (RESIDUAL.test(n.conceptId)) { a.resid++; a.kinds.add(n.conceptId) }
-  if (GENERIC.test(n.conceptId)) a.generic++
+  a.seen.add(n.componentId)
+  if (RESIDUAL.test(n.componentId)) { a.resid++; a.kinds.add(n.componentId) }
+  if (GENERIC.test(n.componentId)) a.generic++
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) tally(k, a)
   return a
 }

@@ -8,10 +8,10 @@
  * ⚠️ 它原本與另一顆共用 `unimplemented.ts` 的**一個 `for` 迴圈**，
  * 於是兩顆的執行器**來源位置是同一行**——任何按位置記帳的護欄都只算一筆。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:raw_code', async (node) => {
     // ⚠️ 退路是 `''`，與宣告的 `default` 一致（第二十三條護欄，硬性零）。
     // 原本寫 `?? '(不明)'`——**那是在讀屬性的地方發明第二個缺省**，

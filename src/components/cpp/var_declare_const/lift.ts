@@ -4,7 +4,7 @@
  * 它原本連 `createNode` 都沒有——只是一個三元運算子裡的字串：
  *
  * ```ts
- * const conceptId = qualifier === 'const' ? 'cpp:var_declare_const'
+ * const componentId = qualifier === 'const' ? 'cpp:var_declare_const'
  *                                         : 'cpp:var_declare_constexpr'
  * ```
  *

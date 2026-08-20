@@ -7,9 +7,9 @@
  * 🔴 而「連上了沒」由 `wifi_state` 回答，**而那一顆的答案是一個取捨**——
  * 見它自己的檔頭。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:wifi_open', async (node, ctx) => {
     await ctx.evaluate((node.children.ssid ?? [])[0])
     await ctx.evaluate((node.children.password ?? [])[0])

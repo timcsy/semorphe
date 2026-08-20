@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_case",
-    "conceptId": "cpp:case",
+    "componentId": "cpp:case",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",

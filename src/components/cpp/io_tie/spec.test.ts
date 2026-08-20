@@ -23,7 +23,7 @@ const H = '#include <iostream>\nusing namespace std;\n'
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(H + c)!.rootNode as never) as SemanticNode
 const collect = (n: SemanticNode, out: string[] = []): string[] => {
-  out.push(n.conceptId)
+  out.push(n.componentId)
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
   return out
 }

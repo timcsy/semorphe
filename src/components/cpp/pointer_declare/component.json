@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pointer_declare",
+  "componentId": "cpp:pointer_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

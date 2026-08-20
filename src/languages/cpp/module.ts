@@ -5,9 +5,9 @@
  * Loads concept definitions (semantic layer) and block projections (projection layer)
  * directly into registries, then wires into the four generic engines.
  */
-import type { LiftPattern, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../core/types'
+import type { LiftPattern, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
 import { BlockSpecRegistry } from '../../core/block-spec-registry'
-import { ConceptRegistry } from '../../core/concept-registry'
+import { ComponentRegistry } from '../../core/component-registry'
 import { PatternLifter } from '../../core/lift/pattern-lifter'
 import { TemplateGenerator } from '../../core/projection/template-generator'
 import { PatternRenderer } from '../../core/projection/pattern-renderer'
@@ -29,7 +29,7 @@ import universalTemplatesJson from './templates/universal-templates.json'
 
 export interface CppModuleEngines {
   registry: BlockSpecRegistry
-  conceptRegistry: ConceptRegistry
+  componentRegistry: ComponentRegistry
   patternLifter: PatternLifter
   templateGenerator: TemplateGenerator
   patternRenderer: PatternRenderer
@@ -70,20 +70,20 @@ declareNonComponent(
 
 export function initCppModule(): CppModuleEngines {
   const registry = new BlockSpecRegistry()
-  const conceptRegistry = new ConceptRegistry()
+  const componentRegistry = new ComponentRegistry()
   const patternLifter = new PatternLifter()
   const templateGenerator = new TemplateGenerator()
   const patternRenderer = new PatternRenderer()
   const patternExtractor = new PatternExtractor()
 
-  // 1. Load concepts into ConceptRegistry (semantic layer, independent of Blockly)
-  const allConcepts: ConceptDefJSON[] = [
-    ...universalConcepts as unknown as ConceptDefJSON[],
+  // 1. Load concepts into ComponentRegistry (semantic layer, independent of Blockly)
+  const allConcepts: ComponentDefJSON[] = [
+    ...universalConcepts as unknown as ComponentDefJSON[],
     ...coreConcepts,
     ...allStdModules.flatMap(m => m.concepts),
-    ...(componentConcepts() as unknown as ConceptDefJSON[]),
+    ...(componentConcepts() as unknown as ComponentDefJSON[]),
   ]
-  conceptRegistry.loadFromJSON(allConcepts)
+  componentRegistry.loadFromJSON(allConcepts)
 
   // 2. Load split JSON directly into registry
   const allProjections: BlockProjectionJSON[] = allCppProjections()
@@ -104,21 +104,21 @@ export function initCppModule(): CppModuleEngines {
 
   // 6. Register code templates from block specs
   for (const spec of allSpecs) {
-    if (spec.codeTemplate && spec.conceptMapping?.conceptId) {
+    if (spec.codeTemplate && spec.componentMapping?.componentId) {
       // ⚠️ **只註冊中性形態的模板。**
       //
       // 一個元件身分現在可以有多個積木形態（097），而模板索引是
-      // `conceptId → 模板` 的一對一。變體也註冊的話，後來的會蓋掉中性版
+      // `componentId → 模板` 的一對一。變體也註冊的話，後來的會蓋掉中性版
       // ——實測後果是 `v.push_back(5);` 少了分號（拿到運算式版的模板）。
       //
       // 位置的差別由產生器的 `ctx.isExpression` 表達，不由模板分岔。
       templateGenerator.registerTemplate(
-        spec.conceptMapping.conceptId,
+        spec.componentMapping.componentId,
         spec.codeTemplate,
         (spec as { form?: { axis: string; value: string } }).form,
       )
     }
   }
 
-  return { registry, conceptRegistry, patternLifter, templateGenerator, patternRenderer, patternExtractor }
+  return { registry, componentRegistry, patternLifter, templateGenerator, patternRenderer, patternExtractor }
 }

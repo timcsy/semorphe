@@ -16,5 +16,5 @@ export interface DependencyResolver {
    * Resolve concept IDs to dependency edges.
    * Returns deduplicated, sorted edges.
    */
-  resolve(conceptIds: string[]): DependencyEdge[]
+  resolve(componentIds: string[]): DependencyEdge[]
 }

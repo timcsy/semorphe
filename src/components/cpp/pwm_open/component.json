@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pwm_open",
+  "componentId": "cpp:pwm_open",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:ifstream_declare",
+  "componentId": "cpp:ifstream_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

@@ -4,7 +4,7 @@
  * ⚠️ **不能用 `Array.prototype.sort`**：比較器是使用者的程式碼，跑它要 `await`
  * ——而 `sort` 的 comparator 不接受 Promise（見 `runtime/order.ts` 的檔頭）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { resolveRange } from '../../../languages/cpp/core/runtime/range'
 import { defaultLess, asyncSort } from '../../../languages/cpp/core/runtime/order'
@@ -12,7 +12,7 @@ import { callWithValues } from '../../../languages/cpp/core/runtime/lambda'
 
 export function registerGenerateUnused(): void {}
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_sort', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
       const cells = r.arr as RuntimeValue[]

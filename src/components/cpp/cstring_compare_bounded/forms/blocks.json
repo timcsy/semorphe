@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_compare_bounded",
-    "conceptId": "cpp:cstring_compare_bounded",
+    "componentId": "cpp:cstring_compare_bounded",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

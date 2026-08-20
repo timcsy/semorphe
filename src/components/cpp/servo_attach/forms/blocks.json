@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_servo_attach",
-    "conceptId": "cpp:servo_attach",
+    "componentId": "cpp:servo_attach",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

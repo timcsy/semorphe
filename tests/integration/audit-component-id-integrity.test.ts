@@ -54,7 +54,7 @@ import { nonComponentDecl, allNonComponents } from '../../src/core/non-component
 import '../../src/languages/cpp/module'
 
 /** 登錄表認得的身分 */
-const declared = new Set(allCppConcepts().map((c) => c.conceptId))
+const declared = new Set(allCppConcepts().map((c) => c.componentId))
 
 // ─── 靜態掃描：只認 `createNode(` ────────────────────────────────
 //
@@ -77,8 +77,8 @@ function staticScan(extra: { file: string; source: string }[] = []): Site[] {
   ]
   const out: Site[] = []
   for (const { file, source } of files) {
-    // ⚠️ **先剝掉註解。** 第一次跑報了 `verify-concept-paths.ts:78` 的 `conceptId`
-    // ——那是一行**註解裡的範例**（`// Match createNode('conceptId', ...) patterns`）。
+    // ⚠️ **先剝掉註解。** 第一次跑報了 `verify-concept-paths.ts:78` 的 `componentId`
+    // ——那是一行**註解裡的範例**（`// Match createNode('componentId', ...) patterns`）。
     //
     // 而剝離註解的處方**專案早就有了**（`splitCodeAndComments`，中立性護欄在用），
     // 只是沒有被套到這裡。這是 `experience.md`「修好一個 bug 之後去掃同形的地方」
@@ -180,7 +180,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 // ⚠️ **這一半不是補強，是主力。**
 //
 // 靜態掃描只認 `createNode('字面')`。而 `cpp_priority_queue_declare` 走的是
-// **對照表**：`containerConcepts[templateName]` 算出身分再 `createNode(conceptId, …)`。
+// **對照表**：`containerConcepts[templateName]` 算出身分再 `createNode(componentId, …)`。
 // 靜態掃描**完全看不到它**——它在前一版護欄裡是綠的，而它是這個功能的起因之一。
 //
 // 走流程掃樹看的是**系統真的產出了什麼**，算出來的身分躲不掉。
@@ -222,7 +222,7 @@ describe('走流程掃樹（硬關卡）', () => {
     const out: string[] = []
     const walk = (n: SemanticNode): void => {
       if (!n) return
-      out.push(n.conceptId)
+      out.push(n.componentId)
       for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
     }
     walk(root)
@@ -253,8 +253,8 @@ describe('走流程掃樹（硬關卡）', () => {
 
   it('★ 反向：合成一個算出來的幽靈身分**必須被抓到**', () => {
     // 沒有這一支的話，上一支綠可能只代表樣本沒踩到問題。
-    const fakeTree = { conceptId: '__合成_算出來的幽靈__', properties: {}, children: {} } as unknown as SemanticNode
-    const ids = [fakeTree.conceptId]
+    const fakeTree = { componentId: '__合成_算出來的幽靈__', properties: {}, children: {} } as unknown as SemanticNode
+    const ids = [fakeTree.componentId]
     const ghosts = ids.filter((id) => !declared.has(id) && !nonComponentDecl(id))
     expect(ghosts, '判定函式放過了一個不存在的身分').toEqual(['__合成_算出來的幽靈__'])
   })

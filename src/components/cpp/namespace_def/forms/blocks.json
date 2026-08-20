@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_namespace_def",
-    "conceptId": "cpp:namespace_def",
+    "componentId": "cpp:namespace_def",
     "language": "cpp",
     "category": "cpp_basic",
     "version": "1.0.0",

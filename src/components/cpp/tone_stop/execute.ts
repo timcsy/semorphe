@@ -3,10 +3,10 @@
  *
  * ⚠️ 與發聲那一顆**共用同一份腳位狀態**，否則「停了沒有」問不出來。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone_stop', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)

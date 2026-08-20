@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_as_double",
-    "conceptId": "cpp:string_as_double",
+    "componentId": "cpp:string_as_double",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

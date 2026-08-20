@@ -1,12 +1,12 @@
 {
   "id": "test_program",
-  "conceptId": "cpp:program",
+  "componentId": "cpp:program",
   "properties": {},
   "children": {
     "body": [
       {
         "id": "test_var_declare",
-        "conceptId": "cpp:var_declare",
+        "componentId": "cpp:var_declare",
         "properties": {
           "name": "x",
           "type": "int"
@@ -15,7 +15,7 @@
           "initializer": [
             {
               "id": "test_number",
-              "conceptId": "cpp:literal_number",
+              "componentId": "cpp:literal_number",
               "properties": {
                 "value": "5"
               },

@@ -99,7 +99,7 @@
 ## 反流到哪裡
 
 - **模擬的誠實** → [concepts/模擬的誠實.md](../concepts/模擬的誠實.md)（新，而它被 12 個檔頭引用著卻沒有家）
-- **X 不是身分，是參數** → [concepts/概念代數.md](../concepts/概念代數.md)
+- **X 不是身分，是參數** → [concepts/元件代數.md](../concepts/元件代數.md)
 - **辨識的保守性** → [concepts/降級與認知邊界.md](../concepts/降級與認知邊界.md)
 - **雙重真相來源** → [concepts/投影.md](../concepts/投影.md)
 - **六條教訓** → [experience.md](../experience.md)

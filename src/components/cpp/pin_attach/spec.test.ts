@@ -40,9 +40,9 @@ const collect = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const ids = (n: SemanticNode): string[] => collect(n).map((x) => x.conceptId)
+const ids = (n: SemanticNode): string[] => collect(n).map((x) => x.componentId)
 const attachIn = (n: SemanticNode): SemanticNode[] =>
-  collect(n).filter((x) => x.conceptId === 'cpp:pin_attach')
+  collect(n).filter((x) => x.componentId === 'cpp:pin_attach')
 
 describe('cpp:pin_attach', () => {
   it('① lift —— 被當腳位用的常數變成接線，而零件從名字讀', () => {

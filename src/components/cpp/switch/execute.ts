@@ -1,9 +1,9 @@
 /** `cpp:switch` 的 **execute** 路——從共用檔原封剪過來（批次第二十九批：switch 族與原始碼容器）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal } from '../../../interpreter/executors/control-flow'
 import { isDefaultCase } from '../../../languages/cpp/core/node-traits'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:switch', async (node, ctx) => {
       const exprNodes = node.children.expr ?? []
       if (exprNodes.length === 0) return
@@ -14,7 +14,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
 
       for (const caseNode of cases) {
         if (!matched) {
-          const isDefault = isDefaultCase(caseNode.conceptId)
+          const isDefault = isDefaultCase(caseNode.componentId)
           if (!isDefault) {
             const caseValNodes = caseNode.children.value ?? []
             if (caseValNodes.length > 0) {

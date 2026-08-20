@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_reverse",
-    "conceptId": "cpp:range_reverse",
+    "componentId": "cpp:range_reverse",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

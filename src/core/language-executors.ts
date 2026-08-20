@@ -78,8 +78,8 @@ export function isBuiltinName(name: string): boolean {
 const abstractOf = new Map<string, string>()
 
 /** 語言套件載入時推進來 */
-export function declareAbstract(conceptId: string, parent: string): void {
-  abstractOf.set(conceptId, parent)
+export function declareAbstract(componentId: string, parent: string): void {
+  abstractOf.set(componentId, parent)
 }
 
 /**
@@ -99,13 +99,13 @@ export function declareAbstract(conceptId: string, parent: string): void {
  */
 const variableType = new Map<string, string>()
 
-export function declareVariableType(conceptId: string, type: string): void {
-  variableType.set(conceptId, type)
+export function declareVariableType(componentId: string, type: string): void {
+  variableType.set(componentId, type)
 }
 
 /** 這個概念宣告的變數是什麼型別（沒宣告就回 undefined） */
-export function variableTypeOf(conceptId: string): string | undefined {
-  return variableType.get(conceptId)
+export function variableTypeOf(componentId: string): string | undefined {
+  return variableType.get(componentId)
 }
 
 /** 哪些概念宣告了這個型別的變數——反查，給下拉選單那類消費者用 */
@@ -114,6 +114,6 @@ export function conceptsDeclaringVariableType(type: string): string[] {
 }
 
 /** 這個概念的語言中立父概念（沒有就回 undefined） */
-export function abstractConceptOf(conceptId: string): string | undefined {
-  return abstractOf.get(conceptId)
+export function abstractConceptOf(componentId: string): string | undefined {
+  return abstractOf.get(componentId)
 }

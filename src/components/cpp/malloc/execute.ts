@@ -20,7 +20,7 @@
  * ⚠️ **除不盡時不猜**：`malloc(7)` 對 `int` 除不盡，那多半是使用者算錯了，
  * 而靜默無條件捨去會讓那個錯往後延到某次索引越界才現形。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
@@ -38,7 +38,7 @@ function elementType(node: { properties: Record<string, unknown> }): string {
   return cast.replace(/\s*\*+\s*$/, '').trim() || 'int'
 }
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:malloc', async (node, ctx) => {
     const elem = elementType(node)
     const unit = SIZES[elem] ?? 4

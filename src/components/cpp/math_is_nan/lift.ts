@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept(['isnan', 'std::isnan'], {
-    conceptId: 'cpp:math_is_nan',
+    componentId: 'cpp:math_is_nan',
     argSlots: ['value'],
     source: 'cpp/math_is_nan',
   })

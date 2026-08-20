@@ -65,7 +65,7 @@ let cache: ComponentRegistration[] | null = null
 /**
  * 從檔案路徑推出 `<scope>/<name>`。
  *
- * **這不是「從檔名推歸屬」**——歸屬的唯一真相仍是 manifest 裡的 `conceptId`。
+ * **這不是「從檔名推歸屬」**——歸屬的唯一真相仍是 manifest 裡的 `componentId`。
  * 這個值只有一個用途：**與宣告核對**。兩個來源不一致就代表有人複製膠囊
  * 忘了改 id，而那是只信宣告抓不到的（見 `component-move-parity.test.ts`）。
  */
@@ -87,16 +87,16 @@ function verifyContract(manifest: ComponentManifest, sourceDir: string): void {
   const where = `膠囊 ${sourceDir}`
 
   // C1：身分格式
-  if (typeof manifest.conceptId !== 'string' || !manifest.conceptId.includes(':')) {
-    throw new Error(`${where}：conceptId 必須是 <scope>:<name> 格式，收到 ${String(manifest.conceptId)}`)
+  if (typeof manifest.componentId !== 'string' || !manifest.componentId.includes(':')) {
+    throw new Error(`${where}：componentId 必須是 <scope>:<name> 格式，收到 ${String(manifest.componentId)}`)
   }
 
   // C2：身分與路徑一致
-  if (idToDir(manifest.conceptId) !== sourceDir) {
+  if (idToDir(manifest.componentId) !== sourceDir) {
     throw new Error(
-      `${where}：conceptId「${manifest.conceptId}」對應的資料夾應是 ` +
-        `${idToDir(manifest.conceptId)}，但它住在 ${sourceDir}。` +
-        `（複製膠囊時忘了改 conceptId？）`,
+      `${where}：componentId「${manifest.componentId}」對應的資料夾應是 ` +
+        `${idToDir(manifest.componentId)}，但它住在 ${sourceDir}。` +
+        `（複製膠囊時忘了改 componentId？）`,
     )
   }
 
@@ -125,9 +125,9 @@ export function registeredComponents(): ComponentRegistration[] {
     const sourceDir = pathToDir(key)
     const manifest = mod.default
     verifyContract(manifest, sourceDir)
-    out.push({ conceptId: manifest.conceptId, sourceDir, manifest })
+    out.push({ componentId: manifest.componentId, sourceDir, manifest })
   }
-  cache = out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+  cache = out.sort((a, b) => a.componentId.localeCompare(b.componentId))
   return cache
 }
 
@@ -141,9 +141,9 @@ export function componentManifests(): ComponentManifest[] {
   return registeredComponents().map((c) => c.manifest)
 }
 
-/** `conceptId` → 它宣告的依賴（C++ 是標頭檔）。給 `#include` 解析與工具箱 owner 章用。 */
-export function componentRequires(): [conceptId: string, header: string][] {
-  return registeredComponents().flatMap((c) => (c.manifest.requires ?? []).map((h) => [c.conceptId, h] as [string, string]))
+/** `componentId` → 它宣告的依賴（C++ 是標頭檔）。給 `#include` 解析與工具箱 owner 章用。 */
+export function componentRequires(): [componentId: string, header: string][] {
+  return registeredComponents().flatMap((c) => (c.manifest.requires ?? []).map((h) => [c.componentId, h] as [string, string]))
 }
 
 // ── 接回既有的載入路徑 ─────────────────────────────────────────
@@ -220,10 +220,10 @@ export function componentBlocksNotIn(handled: readonly (string | null)[]): unkno
   return out
 }
 
-/** `conceptId` → 依賴（C++ 是標頭檔）。給 `#include` 解析用。 */
-export function componentConceptMappings(): [conceptId: string, header: string][] {
+/** `componentId` → 依賴（C++ 是標頭檔）。給 `#include` 解析用。 */
+export function componentConceptMappings(): [componentId: string, header: string][] {
   return registeredComponents().flatMap((c) =>
-    (c.manifest.requires ?? []).map((h) => [c.conceptId, h] as [string, string]),
+    (c.manifest.requires ?? []).map((h) => [c.componentId, h] as [string, string]),
   )
 }
 
@@ -235,7 +235,7 @@ export function componentConceptMappings(): [conceptId: string, header: string][
  * `core/executors/structs.ts` 的 `拆解成員` 原本這樣分派：
  *
  * ```ts
- * } else if (m.conceptId === 'cpp:constructor') { ctor = { … } }
+ * } else if (m.componentId === 'cpp:constructor') { ctor = { … } }
  * ```
  *
  * 那**不是實作散落，是一個合法的消費者**——`class_def` 要知道自己的成員裡
@@ -259,8 +259,8 @@ export function componentConceptMappings(): [conceptId: string, header: string][
 export type MemberRole = 'constructor' | 'destructor' | 'method' | 'operator' | 'static-field' | 'pure-virtual'
 
 /** 一顆元件在類別裡扮演什麼角色。沒宣告回 `undefined`——**不猜**。 */
-export function memberRoleOf(conceptId: string): MemberRole | undefined {
-  const c = registeredComponents().find((x) => x.conceptId === conceptId)
+export function memberRoleOf(componentId: string): MemberRole | undefined {
+  const c = registeredComponents().find((x) => x.componentId === componentId)
   return (c?.manifest as { memberRole?: MemberRole } | undefined)?.memberRole
 }
 
@@ -268,5 +268,5 @@ export function memberRoleOf(conceptId: string): MemberRole | undefined {
 export function componentsWithMemberRole(role: MemberRole): string[] {
   return registeredComponents()
     .filter((c) => (c.manifest as { memberRole?: string }).memberRole === role)
-    .map((c) => c.conceptId)
+    .map((c) => c.componentId)
 }

@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('delay', {
-    conceptId: 'cpp:delay',
+    componentId: 'cpp:delay',
     argSlots: ["ms"],
     source: 'cpp/delay',
   })

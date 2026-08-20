@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_serial_print",
-    "conceptId": "cpp:serial_print",
+    "componentId": "cpp:serial_print",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

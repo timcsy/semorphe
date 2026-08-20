@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:method_call",
-    "conceptId": "cpp:method_call",
+    "componentId": "cpp:method_call",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -81,7 +81,7 @@
   },
   {
     "id": "cpp_method_call_expression",
-    "conceptId": "cpp:method_call",
+    "componentId": "cpp:method_call",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

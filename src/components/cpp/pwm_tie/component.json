@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pwm_tie",
+  "componentId": "cpp:pwm_tie",
   "abstractConcept": null,
   "properties": [],
   "children": {

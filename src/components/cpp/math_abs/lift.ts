@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('abs', {
-    conceptId: 'cpp:math_abs',
+    componentId: 'cpp:math_abs',
     argSlots: ["value"],
     source: 'cpp/math_abs',
   })

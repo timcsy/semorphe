@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('strcat', {
-    conceptId: 'cpp:cstring_append',
+    componentId: 'cpp:cstring_append',
     argSlots: ["dest", "src"],
     source: 'cpp/cstring_append',
   })

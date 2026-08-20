@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:priority_queue_peek",
-    "conceptId": "cpp:priority_queue_peek",
+    "componentId": "cpp:priority_queue_peek",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -4,12 +4,12 @@
 import { describe, it, expect } from 'vitest'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
-import { ConceptRegistry } from '../../../src/core/concept-registry'
+import { ComponentRegistry } from '../../../src/core/component-registry'
 import { createNode } from '../../../src/core/semantic-tree'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
 import { registerExpressionLifters } from '../../../src/languages/cpp/core/lifters/expressions'
-import type { BlockSpec, LiftPattern, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
+import type { BlockSpec, LiftPattern, ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
 import { universalConcepts, universalBlocks } from '../../../src/core/universal'
@@ -50,12 +50,12 @@ function unnamed(type: string, text: string): AstNode {
 describe('Confidence & DegradationCause', () => {
   let lifter: Lifter
   let patternLifter: PatternLifter
-  let registry: ConceptRegistry
+  let registry: ComponentRegistry
 
   function setup() {
     lifter = new Lifter()
     patternLifter = new PatternLifter()
-    registry = new ConceptRegistry()
+    registry = new ComponentRegistry()
 
     const specRegistry = new BlockSpecRegistry()
     const allConcepts = allCppConcepts()
@@ -68,12 +68,12 @@ describe('Confidence & DegradationCause', () => {
     patternLifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(patternLifter)
 
-    // Register known concept IDs in ConceptRegistry
+    // Register known concept IDs in ComponentRegistry
     for (const spec of allSpecs) {
-      const conceptId = (spec as BlockSpec).conceptId?.conceptId
-      if (conceptId && !registry.get(conceptId)) {
+      const componentId = (spec as BlockSpec).componentId?.componentId
+      if (componentId && !registry.get(componentId)) {
         registry.register({
-          id: conceptId,
+          id: componentId,
           layer: 'universal',
           level: 0,
           propertyNames: [],
@@ -123,7 +123,7 @@ describe('Confidence & DegradationCause', () => {
       const ast = mockNode('ERROR', 'int x = ;', [], {}, true)
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('raw_code')
+      expect(sem!.componentId).toBe('raw_code')
       expect(sem!.metadata?.confidence).toBe('raw_code')
       expect(sem!.metadata?.degradationCause).toBe('syntax_error')
     })
@@ -164,7 +164,7 @@ describe('Confidence & DegradationCause', () => {
       const ast = mockNode('co_await_expression', 'co_await foo()')
       const sem = lifter.liftWithContext(ast, new LiftContextData())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('raw_code')
+      expect(sem!.componentId).toBe('raw_code')
       expect(sem!.metadata?.confidence).toBe('raw_code')
       expect(sem!.metadata?.degradationCause).toBe('nonstandard_but_valid')
     })
@@ -197,7 +197,7 @@ describe('Confidence & DegradationCause', () => {
       expect(sem!.metadata?.confidence).toBe('high')
       // The right child should be raw_code
       const rightChild = sem!.children.right?.[0]
-      expect(rightChild?.conceptId).toBe('raw_code')
+      expect(rightChild?.componentId).toBe('raw_code')
       expect(rightChild?.metadata?.confidence).toBe('raw_code')
     })
   })

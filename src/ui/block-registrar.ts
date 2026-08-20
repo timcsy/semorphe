@@ -172,7 +172,7 @@ export class BlockRegistrar {
             if (name === null || name === undefined) break
             addOption(name)
           }
-        } else if (isPlainDeclaration(abstractConceptOf(this.conceptIdOfBlockType(block.type) ?? '') ?? '')) {
+        } else if (isPlainDeclaration(abstractConceptOf(this.componentIdOfBlockType(block.type) ?? '') ?? '')) {
           // 這一行原本是 16 個概念名的寫死清單，全部在講「這些是變數宣告的
           // 一種」——而概念自己就宣告了父概念。見 specs/056-abstract-concept-integrity
           addOption(block.getFieldValue('NAME') ?? '')
@@ -301,12 +301,12 @@ export class BlockRegistrar {
    *
    * ⚠️ 而它靜默了很久：查不到只會讓下拉少幾個名字，**不會拋錯**。
    */
-  private conceptIdOfBlockType(blockType: string): string | undefined {
+  private componentIdOfBlockType(blockType: string): string | undefined {
     if (!this.blockTypeToConcept) {
       this.blockTypeToConcept = new Map()
       for (const spec of this.blockSpecRegistry.getAll()) {
         const t = (spec.blockDef as { type?: string } | undefined)?.type
-        const cid = spec.conceptMapping?.conceptId
+        const cid = spec.componentMapping?.componentId
         if (t && cid) this.blockTypeToConcept.set(t, cid)
       }
     }
@@ -316,12 +316,12 @@ export class BlockRegistrar {
   private blockTypeToConcept?: Map<string, string>
 
   private blockTypesDeclaringVariableType(type: string): Set<string> {
-    const conceptIds = new Set(conceptsDeclaringVariableType(type))
+    const componentIds = new Set(conceptsDeclaringVariableType(type))
     const types = new Set<string>()
     for (const spec of this.blockSpecRegistry.getAll()) {
-      const cid = spec.conceptMapping?.conceptId
+      const cid = spec.componentMapping?.componentId
       const blockType = (spec.blockDef as { type?: string } | undefined)?.type
-      if (cid && conceptIds.has(cid) && blockType) types.add(blockType)
+      if (cid && componentIds.has(cid) && blockType) types.add(blockType)
     }
     return types
   }

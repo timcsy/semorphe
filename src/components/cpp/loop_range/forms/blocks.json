@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_loop_range",
-    "conceptId": "cpp:loop_range",
+    "componentId": "cpp:loop_range",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",

@@ -10,10 +10,10 @@
  * ⚠️ 超音波的 `delayMicroseconds(10)` 觸發脈衝正是這種尺度——它在模擬裡
  * **不會推進可見的時間**，而那不影響 `pulse_read` 的結果（它讀的是腳位狀態）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:delay_microseconds', async (node, ctx) => {
     const us = ctx.toNumber(await ctx.evaluate((node.children.us ?? [])[0]))
     await sleepMillis(us / 1000)

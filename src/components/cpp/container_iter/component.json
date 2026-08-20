@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:container_iter",
+  "componentId": "cpp:container_iter",
   "abstractConcept": null,
   "properties": [
     {

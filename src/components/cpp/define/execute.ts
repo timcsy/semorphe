@@ -28,7 +28,7 @@
  * 那時 `SQR` 仍然是未宣告，`UNDECLARED_VAR` 照樣丟出來——
  * **一個沒被支援的東西要繼續報錯，不能因為「我們處理了一半」就變安靜。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defined } from '../../../languages/cpp/core/executors/preprocessor'
 
@@ -54,7 +54,7 @@ function literalValue(raw: string): RuntimeValue | null {
   return null
 }
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:define', async (node, ctx) => {
     const name = String(node.properties.name ?? '')
     if (!name) return

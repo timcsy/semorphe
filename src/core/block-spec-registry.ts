@@ -1,4 +1,4 @@
-import type { BlockSpec, AstConstraint, ConceptDefJSON, BlockProjectionJSON, Topic } from './types'
+import type { BlockSpec, AstConstraint, ComponentDefJSON, BlockProjectionJSON, Topic } from './types'
 import { applyBlockOverride } from './block-override'
 import { paramNames } from './param-spec'
 
@@ -11,11 +11,11 @@ export class BlockSpecRegistry {
   private conceptToBlockType = new Map<string, string>()
 
   /** Load from split concept + projection JSON (Phase 3 architecture) */
-  loadFromSplit(concepts: ConceptDefJSON[], projections: BlockProjectionJSON[]): void {
-    const conceptMap = new Map<string, ConceptDefJSON>()
-    for (const c of concepts) conceptMap.set(c.conceptId, c)
+  loadFromSplit(concepts: ComponentDefJSON[], projections: BlockProjectionJSON[]): void {
+    const conceptMap = new Map<string, ComponentDefJSON>()
+    for (const c of concepts) conceptMap.set(c.componentId, c)
     const specs: BlockSpec[] = projections.map(proj => {
-      const concept = conceptMap.get(proj.conceptId)
+      const concept = conceptMap.get(proj.componentId)
       return {
         // ⚠️ **展開合併，不要逐欄位列舉。**
         //
@@ -26,8 +26,8 @@ export class BlockSpecRegistry {
         // **只是當時只套用在發現它的那一處（存檔），沒有掃同形的地方。**
         // 一個教訓被記下來、處方也被記下來，而程式碼仍然帶著那個病。
         ...proj,
-        conceptMapping: {
-          conceptId: proj.conceptId,
+        componentMapping: {
+          componentId: proj.componentId,
           // ⚠️ **這個欄位今天沒有生產消費者**（2026-08-11）。
           //
           // 116 把「呈現層別看名字前綴，問這個欄位」寫進來；而 2026-08-11
@@ -70,8 +70,8 @@ export class BlockSpecRegistry {
     const neutralFirst = [...specs].sort((a, b) => (a.form ? 1 : 0) - (b.form ? 1 : 0))
     for (const spec of neutralFirst) {
       this.specs.set(spec.id, spec)
-      if (spec.conceptMapping?.conceptId) {
-        const cid = spec.conceptMapping.conceptId
+      if (spec.componentMapping?.componentId) {
+        const cid = spec.componentMapping.componentId
         // ⚠️ **一個元件身分可以有多個形態**（097）。
         //
         // 在此之前這裡是直接 `set`，於是第二顆積木會蓋掉第一顆——
@@ -90,8 +90,8 @@ export class BlockSpecRegistry {
       if (blockType) {
         this.byBlockType.set(blockType, spec)
         // 只記中性形態——這張表的消費者要的是「這個概念預設長什麼樣」
-        if (spec.conceptMapping?.conceptId && !spec.form) {
-          const cid = spec.conceptMapping.conceptId
+        if (spec.componentMapping?.componentId && !spec.form) {
+          const cid = spec.componentMapping.componentId
           if (!this.conceptToBlockType.has(cid)) this.conceptToBlockType.set(cid, blockType)
         }
       }
@@ -99,13 +99,13 @@ export class BlockSpecRegistry {
   }
 
   /** 中性形態（沒有宣告 `form` 的那一顆）。要全部請用 `getFormsByConceptId` */
-  getByConceptId(conceptId: string): BlockSpec | undefined {
-    return this.byConceptId.get(conceptId)
+  getByConceptId(componentId: string): BlockSpec | undefined {
+    return this.byConceptId.get(componentId)
   }
 
   /** 一個元件身分的**所有**積木形態 */
-  getFormsByConceptId(conceptId: string): BlockSpec[] {
-    return this.formsByConceptId.get(conceptId) ?? []
+  getFormsByConceptId(componentId: string): BlockSpec[] {
+    return this.formsByConceptId.get(componentId) ?? []
   }
 
   getByBlockType(blockType: string): BlockSpec | undefined {
@@ -113,8 +113,8 @@ export class BlockSpecRegistry {
   }
 
   /** Get the block type string for a given concept ID */
-  getBlockTypeForConcept(conceptId: string): string | undefined {
-    return this.conceptToBlockType.get(conceptId)
+  getBlockTypeForConcept(componentId: string): string | undefined {
+    return this.conceptToBlockType.get(componentId)
   }
 
   /** Get the auto-built concept→blockType map (replaces hardcoded CONCEPT_TO_BLOCK) */
@@ -147,8 +147,8 @@ export class BlockSpecRegistry {
     return [...this.specs.values()].filter(spec => {
       if (spec.category !== category) return false
       if (!visibleConcepts) return true
-      if (!spec.conceptMapping?.conceptId) return true
-      return visibleConcepts.has(spec.conceptMapping.conceptId)
+      if (!spec.componentMapping?.componentId) return true
+      return visibleConcepts.has(spec.componentMapping.componentId)
     })
   }
 
@@ -163,8 +163,8 @@ export class BlockSpecRegistry {
     return [...this.specs.values()].filter(spec => {
       if (spec.owner !== owner || spec.category !== category) return false
       if (!visibleConcepts) return true
-      if (!spec.conceptMapping?.conceptId) return true
-      return visibleConcepts.has(spec.conceptMapping.conceptId)
+      if (!spec.componentMapping?.componentId) return true
+      return visibleConcepts.has(spec.componentMapping.componentId)
     })
   }
 
@@ -177,16 +177,16 @@ export class BlockSpecRegistry {
     if (!visibleConcepts) return true
     const spec = this.byBlockType.get(blockType)
     if (!spec) return true
-    if (!spec.conceptMapping?.conceptId) return true
-    return visibleConcepts.has(spec.conceptMapping.conceptId)
+    if (!spec.componentMapping?.componentId) return true
+    return visibleConcepts.has(spec.componentMapping.componentId)
   }
 
   /** Get a BlockSpec with Topic override applied (if any) */
-  getWithOverride(conceptId: string, topic?: Topic): BlockSpec | undefined {
-    const spec = this.byConceptId.get(conceptId)
+  getWithOverride(componentId: string, topic?: Topic): BlockSpec | undefined {
+    const spec = this.byConceptId.get(componentId)
     if (!spec) return undefined
     if (!topic?.blockOverrides) return spec
-    const override = topic.blockOverrides[conceptId]
+    const override = topic.blockOverrides[componentId]
     if (!override) return spec
     return applyBlockOverride(spec, override)
   }

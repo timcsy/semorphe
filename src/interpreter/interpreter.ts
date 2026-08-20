@@ -9,7 +9,7 @@ import { defaultValue, valueToString } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
 import { IOSystem } from './io'
-import { ConceptExecutorRegistry, type ExecutionContext } from './executor-registry'
+import { ComponentExecutorRegistry, type ExecutionContext } from './executor-registry'
 import { registerMutationExecutors } from './executors/mutations'
 
 interface InterpreterOptions {
@@ -24,15 +24,15 @@ function loadUniversalDeclarations(): void {
   if (universalLoaded) return
   universalLoaded = true
   for (const c of universalConcepts as unknown as {
-    conceptId: string
+    componentId: string
     skipReasons?: Record<string, string>
     annotations?: Record<string, unknown>
   }[]) {
     if (c.skipReasons && Object.keys(c.skipReasons).length > 0) {
-      declareSkips(c.conceptId, c.skipReasons as never)
+      declareSkips(c.componentId, c.skipReasons as never)
     }
     if (c.annotations && Object.keys(c.annotations).length > 0) {
-      declareAnnotations(c.conceptId, c.annotations)
+      declareAnnotations(c.componentId, c.annotations)
     }
   }
 }
@@ -64,7 +64,7 @@ export class SemanticInterpreter implements ExecutionContext {
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
   private unknownConceptHandler: ((concept: string) => Promise<'skip' | 'abort'>) | null = null
   private currentNode: SemanticNode | null = null
-  private executorRegistry: ConceptExecutorRegistry
+  private executorRegistry: ComponentExecutorRegistry
 
   constructor(options: InterpreterOptions = {
 }) {
@@ -73,8 +73,8 @@ export class SemanticInterpreter implements ExecutionContext {
     // universal 概念是核心自己的資料（中立性護欄明確排除 universal 層），
     // 所以核心可以自行載入它們的宣告與標註。語言專屬的那些由語言套件推進來。
     loadUniversalDeclarations()
-    this.executorRegistry = new ConceptExecutorRegistry()
-    const reg = (concept: string, executor: import('./executor-registry').ConceptExecutor) =>
+    this.executorRegistry = new ComponentExecutorRegistry()
+    const reg = (concept: string, executor: import('./executor-registry').ComponentExecutor) =>
       this.executorRegistry.register(concept, executor)
     registerMutationExecutors(reg)
 
@@ -258,7 +258,7 @@ export class SemanticInterpreter implements ExecutionContext {
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
     await this.countStep()
     this.currentNode = node
-    const concept = node.conceptId
+    const concept = node.componentId
 
     const executor = this.executorRegistry.get(concept)
     if (executor) {
@@ -438,7 +438,7 @@ export class SemanticInterpreter implements ExecutionContext {
 
   private async recordStepInfo(node: SemanticNode): Promise<void> {
     if (!this.recordSteps) return
-    const concept = node.conceptId
+    const concept = node.componentId
     // ⚠️ 這裡原本有一行 `if (concept.includes(':')) return`——用「有沒有冒號」
     // 當「是不是語言專屬」的判準。命名空間遷移（103）之後**每一顆身分都有冒號**，
     // 那一行變成「什麼都不記錄」，症狀是單步除錯完全失效。

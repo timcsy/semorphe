@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_copy",
-    "conceptId": "cpp:cstring_copy",
+    "componentId": "cpp:cstring_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

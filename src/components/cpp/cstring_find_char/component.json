@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cstring_find_char",
+  "componentId": "cpp:cstring_find_char",
   "abstractConcept": null,
   "properties": [],
   "children": {

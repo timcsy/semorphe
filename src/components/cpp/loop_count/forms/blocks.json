@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_loop_count",
-    "conceptId": "cpp:loop_count",
+    "componentId": "cpp:loop_count",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",

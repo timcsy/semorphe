@@ -57,9 +57,9 @@ const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) nodes(k, out)
   return out
 }
-const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.conceptId)
+const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
 const attaches = (n: SemanticNode): SemanticNode[] =>
-  nodes(n).filter((x) => x.conceptId === 'cpp:pin_attach')
+  nodes(n).filter((x) => x.componentId === 'cpp:pin_attach')
 
 function roundTrip(src: string): { once: string; twice: string; a: string[]; b: string[]; t1: SemanticNode; t2: SemanticNode } {
   const t1 = lift(src)

@@ -29,7 +29,7 @@
     "id": "cpp_compound_stmt",
     "astNodeType": "compound_statement",
     "concept": {
-      "conceptId": "_compound"
+      "componentId": "_compound"
     },
     "fieldMappings": [
       {

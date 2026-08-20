@@ -73,7 +73,7 @@ describe('探針：零件接線語料（第 1 批盲測）', () => {
       if (!t) { worst.push(`${id}: lift 回 null`); continue }
       const list = nodes(t)
       col.n += list.length
-      const r = list.filter((x) => RESIDUE.has(x.conceptId)).length
+      const r = list.filter((x) => RESIDUE.has(x.componentId)).length
       col.res += r
       if (r > 0) worst.push(`${id}: ${r}/${list.length}`)
     }
@@ -98,8 +98,8 @@ describe('探針：零件接線語料（第 1 批盲測）', () => {
       if (!t2) { drift.push(`${id}: 二次 lift 回 null`); continue }
       checked++
       if (gen(t2) !== once) drift.push(`${id}: 文字漂移`)
-      const a = nodes(t1).map((x) => x.conceptId).sort().join(',')
-      const b = nodes(t2).map((x) => x.conceptId).sort().join(',')
+      const a = nodes(t1).map((x) => x.componentId).sort().join(',')
+      const b = nodes(t2).map((x) => x.componentId).sort().join(',')
       if (a !== b) drift.push(`${id}: 結構漂移`)
     }
     expect(checked, '一段都沒驗到——負向斷言會空過').toBeGreaterThanOrEqual(18)  // ← 正向錨點
@@ -115,10 +115,10 @@ describe('探針：零件接線語料（第 1 批盲測）', () => {
       if (!t) continue
       const list = nodes(t)
       const attached = new Set(
-        list.filter((x) => x.conceptId === 'cpp:pin_attach').map((x) => String(x.properties.name)),
+        list.filter((x) => x.componentId === 'cpp:pin_attach').map((x) => String(x.properties.name)),
       )
       attachTotal += attached.size
-      for (const n of list.filter((x) => x.conceptId === 'cpp:pin_attach')) {
+      for (const n of list.filter((x) => x.componentId === 'cpp:pin_attach')) {
         table.push(`${String(n.properties.name)} → ${String(n.properties.device)}`)
       }
       // 🔴 **該認沒認**：一個 `const <int> X = <數字>;` 若 X 被當腳位用，就該是接線。
@@ -141,7 +141,7 @@ describe('探針：零件接線語料（第 1 批盲測）', () => {
     for (const [id, s] of corpus()) {
       const t = lift(s.code)
       if (!t) continue
-      const n = nodes(t).filter((x) => x.conceptId === 'cpp:ultrasonic_trigger').length
+      const n = nodes(t).filter((x) => x.componentId === 'cpp:ultrasonic_trigger').length
       folded += n
       // 原始碼裡有幾組真的觸發序列？（同一根腳、2 與 10）
       const real = [

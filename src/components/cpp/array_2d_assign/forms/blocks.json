@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_array_2d_assign",
-    "conceptId": "cpp:array_2d_assign",
+    "componentId": "cpp:array_2d_assign",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",

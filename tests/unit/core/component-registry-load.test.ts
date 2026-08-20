@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import { ConceptRegistry } from '../../../src/core/concept-registry'
-import type { ConceptDefJSON } from '../../../src/core/types'
+import { ComponentRegistry } from '../../../src/core/component-registry'
+import type { ComponentDefJSON } from '../../../src/core/types'
 import { universalConcepts } from '../../../src/core/universal'
 import { coreConcepts } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
@@ -13,20 +13,20 @@ import { allStdModules } from '../../../src/languages/cpp/std'
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
-function loadConcepts(): ConceptDefJSON[] {
+function loadConcepts(): ComponentDefJSON[] {
   return allCppConcepts()
 }
 
-describe('ConceptRegistry.loadFromJSON', () => {
+describe('ComponentRegistry.loadFromJSON', () => {
   it('should load correct number of concepts', () => {
-    const registry = new ConceptRegistry()
+    const registry = new ComponentRegistry()
     const concepts = loadConcepts()
     registry.loadFromJSON(concepts)
     expect(registry.listAll().length).toBe(concepts.length)
   })
 
   it('should load var_declare with correct properties and children', () => {
-    const registry = new ConceptRegistry()
+    const registry = new ComponentRegistry()
     registry.loadFromJSON(loadConcepts())
     const varDecl = registry.get('cpp:var_declare')
     expect(varDecl).toBeDefined()
@@ -40,8 +40,8 @@ describe('ConceptRegistry.loadFromJSON', () => {
   //    ⚠️ 紅掉不是「我漏了消費者」，是「被測的功能不存在了」。
   //    🟢 而它原本順帶驗的「登錄表真的載入了東西」由 `listAll()` 那幾支涵蓋。
 
-  it('concept-registry.ts should not import blockly (static analysis)', () => {
-    const filePath = path.resolve(__dirname, '../../../src/core/concept-registry.ts')
+  it('component-registry.ts should not import blockly (static analysis)', () => {
+    const filePath = path.resolve(__dirname, '../../../src/core/component-registry.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     expect(content).not.toContain("from 'blockly'")
     expect(content).not.toContain('from "blockly"')

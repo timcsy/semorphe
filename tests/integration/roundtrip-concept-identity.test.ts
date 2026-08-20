@@ -64,7 +64,7 @@ beforeAll(async () => {
 /** 蒐集樹中所有出現過的概念身分 */
 function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
-  acc.add(node.conceptId)
+  acc.add(node.componentId)
   for (const arr of Object.values(node.children ?? {})) for (const c of arr) conceptsIn(c, acc)
   return acc
 }
@@ -75,15 +75,15 @@ function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<str
  * 失敗訊息必須說得出**身分從哪個變成哪個**（FR-011）——只說「不相等」的話，
  * 讀的人還得自己去查是變成了什麼。
  */
-function roundTripIdentity(conceptId: string): { kept: boolean; became: string[]; code: string } {
-  const def = allComponentDefs().find((d) => d.conceptId === conceptId)
-  if (!def) throw new Error(`註冊表中沒有 ${conceptId}`)
+function roundTripIdentity(componentId: string): { kept: boolean; became: string[]; code: string } {
+  const def = allComponentDefs().find((d) => d.componentId === componentId)
+  if (!def) throw new Error(`註冊表中沒有 ${componentId}`)
   const { node } = synthMinimalNode(def)
   const code = generateCode(createNode('cpp:program', {}, { body: [node] }), 'cpp', STYLE)
   const back = lifter.lift(tsParser.parse(code).rootNode as never)
   const found = conceptsIn(back)
   return {
-    kept: found.has(conceptId),
+    kept: found.has(componentId),
     // 回來的樹裡出現、但不是結構性外殼的概念——就是「它變成了什麼」
     became: [...found].filter((c) => !['cpp:program', 'cpp:func_def', 'cpp:literal_number', 'cpp:literal_string'].includes(c)),
     code: code.trim(),

@@ -10,7 +10,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const childNode = (node.children.value ?? node.children.operand ?? [])[0]
       const val = genChild(childNode, precedence(node), ctx)
       // Prevent --x (pre-decrement) or ++x when nesting unary operators
-      if (childNode && isPrefixOperator(childNode.conceptId)) {
+      if (childNode && isPrefixOperator(childNode.componentId)) {
         return `${op}(${val})`
       }
       return `${op}${val}`

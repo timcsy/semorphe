@@ -58,7 +58,7 @@ const CORPUS = JSON.parse(
 
 /** 結構指紋——比對兩次 lift 的樹是否等價 */
 const shape = (n: SemanticNode): string =>
-  `${n.conceptId}(${Object.entries(n.children ?? {}).map(([k, v]) =>
+  `${n.componentId}(${Object.entries(n.children ?? {}).map(([k, v]) =>
     `${k}:[${(v as SemanticNode[]).map(shape).join(',')}]`).join(' ')})`
 
 /** ⚠️ 殘差通道有兩個身分：核心 Level 4 的裸 `raw_code`／`unresolved`，與膠囊的 `cpp:raw_code`。 */
@@ -66,7 +66,7 @@ const RESIDUAL = /^(raw_code|cpp:raw_code|raw_expression|cpp:raw_expression|unre
 
 function tally(n: SemanticNode, a = { resid: 0, total: 0, kinds: new Set<string>() }): typeof a {
   a.total++
-  if (RESIDUAL.test(n.conceptId)) { a.resid++; a.kinds.add(n.conceptId) }
+  if (RESIDUAL.test(n.componentId)) { a.resid++; a.kinds.add(n.componentId) }
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) tally(k, a)
   return a
 }

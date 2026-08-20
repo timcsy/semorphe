@@ -101,7 +101,7 @@ function libraryLevelExclusions(): Set<string> {
     // 有等價邊（同 ioRole 的另一個成員）→ C 的風格家族裡有對應物 → 不排除
     const traits = (def as { traits?: Record<string, unknown> }).traits
     if (traits?.ioRole) continue
-    out.add(def.conceptId)
+    out.add(def.componentId)
   }
   return out
 }
@@ -170,7 +170,7 @@ describe('C 課程清單的推導', () => {
   })
 
   it('★ 交叉驗證①：具名清單裡不得有幽靈（指向不存在的概念）', () => {
-    const known = new Set(allComponentDefs().map((d) => d.conceptId))
+    const known = new Set(allComponentDefs().map((d) => d.componentId))
     const ghosts = [...CPP_ONLY_LANGUAGE].filter((c) => !known.has(c))
     expect(ghosts, '🔴 清單裡有不存在的概念——它可能被改名或刪掉了，而清單沒跟上').toEqual([])
   })

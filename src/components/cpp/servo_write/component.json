@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:servo_write",
+  "componentId": "cpp:servo_write",
   "abstractConcept": null,
   "properties": [
     {

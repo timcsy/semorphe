@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:input_line",
-    "conceptId": "cpp:input_line",
+    "componentId": "cpp:input_line",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

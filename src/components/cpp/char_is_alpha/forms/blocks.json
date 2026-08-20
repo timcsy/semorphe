@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:char_is_alpha",
-    "conceptId": "cpp:char_is_alpha",
+    "componentId": "cpp:char_is_alpha",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

@@ -56,7 +56,7 @@ import { loadToolbox } from '../helpers/toolbox'
 import { isTypeLookupFallback } from '../../src/ui/toolbox-builder'
 import { loadBaseline, writeBaseline, printReport, newItems, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 type Bucket = '缺陷' | '中性形態' | '分類排除'
 interface Finding {
@@ -86,7 +86,7 @@ const imperativelyRegistered = new Set(
 )
 
 function measure(
-  extraConcepts: ConceptDefJSON[] = [],
+  extraConcepts: ComponentDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
 ): { findings: Finding[]; ghosts: string[]; imperativeOnly: string[]; total: number; categoriesOf: Map<string, string[]> } {
   const { registry, origins, categoriesOf } = loadToolbox(extraConcepts, extraProjections)
@@ -135,16 +135,16 @@ function measure(
 
 // ─── 合成注入：兩個方向都要釘（第 9 步）─────────────────────────────
 
-const syntheticConcept = (id: string): ConceptDefJSON =>
-  ({ conceptId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ConceptDefJSON
+const syntheticConcept = (id: string): ComponentDefJSON =>
+  ({ componentId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ComponentDefJSON
 
 const syntheticBlock = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
   ({
-    conceptId: id,
+    componentId: id,
     category,
     owner,
     blockDef: { type, message0: '合成 %1', args0: [{ type: 'input_value', name: 'A' }] },
-    conceptMapping: { conceptId: id },
+    componentMapping: { componentId: id },
   }) as unknown as BlockProjectionJSON
 
 describe('自我驗證：這條護欄真的量得到東西', () => {

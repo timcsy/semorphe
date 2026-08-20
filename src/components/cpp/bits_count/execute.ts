@@ -1,7 +1,7 @@
 /** `cpp:bits_count` 的 **execute** 路 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:bits_count', async (node, ctx) => {
     const value = node.children.value?.[0]
     if (!value) return { type: 'int' as const, value: 0 }

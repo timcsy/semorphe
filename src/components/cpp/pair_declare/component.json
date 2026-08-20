@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pair_declare",
+  "componentId": "cpp:pair_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

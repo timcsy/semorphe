@@ -21,7 +21,7 @@ export interface ExtractContext {
 export type ExtractStrategyFn = (block: BlockState, ctx: ExtractContext) => SemanticNode | null
 
 interface ExtractSpec {
-  conceptId: string
+  componentId: string
   mapping: RenderMapping
 }
 
@@ -37,8 +37,8 @@ export class PatternExtractor {
   /** Load block specs and build blockType → ExtractSpec index */
   loadBlockSpecs(specs: BlockSpec[]): void {
     for (const spec of specs) {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId) continue
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId) continue
 
       const blockType = (spec.blockDef as Record<string, unknown>).type as string
       if (!blockType) continue
@@ -68,7 +68,7 @@ export class PatternExtractor {
             childrenAsField: explicit.childrenAsField,
           }
         : derived
-      this.extractSpecs.set(blockType, { conceptId, mapping })
+      this.extractSpecs.set(blockType, { componentId, mapping })
     }
   }
 
@@ -143,7 +143,7 @@ export class PatternExtractor {
       this.extractDynamicRules(block, spec.mapping.dynamicRules, children)
     }
 
-    const node = createNode(spec.conceptId, props, children)
+    const node = createNode(spec.componentId, props, children)
     // Store the source block ID as metadata (not as node.id — node ID is the unique truth)
     if (block.id) node.metadata = { ...node.metadata, sourceBlockId: block.id }
     return node

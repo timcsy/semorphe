@@ -34,7 +34,7 @@ $ARGUMENTS
 你正在研究某個程式語言的函式庫或語言特性，準備將其整合進 **Semorphe** — 一個以語義樹驅動的程式教育工具。你的任務是探索有哪些概念存在、它們通常如何被使用，以及如何為學習者分類。
 
 **關鍵**：開始前請先閱讀專案的第一性原理：
-- `knowledge/principles.md` — 特別是 P2（概念代數）和 P4（漸進揭露）；細節見 `knowledge/concepts/概念代數.md`、`knowledge/concepts/漸進揭露.md`
+- `knowledge/principles.md` — 特別是 P2（元件代數）和 P4（漸進揭露）；細節見 `knowledge/concepts/元件代數.md`、`knowledge/concepts/漸進揭露.md`
 - `src/core/types.ts` — 現有的 UniversalConcept 和 LanguageSpecificConcept 型別
 
 然後確認目標語言的現有支援：

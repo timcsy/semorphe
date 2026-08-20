@@ -1,7 +1,7 @@
 /** `cpp:sizeof` 的 **execute** 路——從共用檔原封剪過來（批次第三批：lift 是只產一種身分的具名策略）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:sizeof', async (node, ctx) => {
       const target = String(node.properties.target ?? 'int')
       const sizes: Record<string, number> = {

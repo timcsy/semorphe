@@ -40,11 +40,11 @@ describe('Std module structure consistency', () => {
     const seen = new Map<string, string>()
     for (const mod of allStdModules) {
       for (const concept of mod.concepts) {
-        const existing = seen.get(concept.conceptId)
+        const existing = seen.get(concept.componentId)
         if (existing) {
-          throw new Error(`Duplicate concept "${concept.conceptId}" in ${mod.header} and ${existing}`)
+          throw new Error(`Duplicate concept "${concept.componentId}" in ${mod.header} and ${existing}`)
         }
-        seen.set(concept.conceptId, mod.header)
+        seen.set(concept.componentId, mod.header)
       }
     }
     // ⚠️ **不要錨在「std 模組裡還有幾顆」上**——那個數字隨膠囊搬家下降，
@@ -78,7 +78,7 @@ describe('Std module structure consistency', () => {
     const registry = createPopulatedRegistry()
     for (const mod of allStdModules) {
       for (const concept of mod.concepts) {
-        const header = registry.getHeaderForConcept(concept.conceptId)
+        const header = registry.getHeaderForConcept(concept.componentId)
         expect(header).toBe(mod.header)
       }
     }

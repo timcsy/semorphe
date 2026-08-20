@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_replace",
+  "componentId": "cpp:string_replace",
   "properties": [
     {
       "name": "obj",

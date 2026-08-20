@@ -16,7 +16,7 @@
  *
  * Note on cpp_queue_back lift: q.back() lifts to cpp_vector_back (shared
  * method name). The generate path from cpp_vector_back still emits .back(),
- * so round-trip output is correct even though the conceptId differs.
+ * so round-trip output is correct even though the componentId differs.
  * fuzz_2, fuzz_6, fuzz_9 document this expected degradation.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -57,12 +57,12 @@ function liftCode(code: string): SemanticNode | null {
   return lifter.lift(tree.rootNode as any)
 }
 
-function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode | null {
+function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
-  if (node.conceptId === conceptId) return node
+  if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, conceptId)
+      const found = findConcept(child, componentId)
       if (found) return found
     }
   }
@@ -71,7 +71,7 @@ function findConcept(node: SemanticNode | null, conceptId: string): SemanticNode
 
 function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
-  result.add(node.conceptId)
+  result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
       collectConcepts(child, result)

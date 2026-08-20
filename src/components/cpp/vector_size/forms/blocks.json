@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:vector_size",
-    "conceptId": "cpp:vector_size",
+    "componentId": "cpp:vector_size",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

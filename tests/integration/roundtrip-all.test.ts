@@ -13,7 +13,7 @@ import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
@@ -47,8 +47,8 @@ beforeAll(() => {
   extractor.loadBlockSpecs(allSpecs)
 
   for (const spec of allSpecs) {
-    if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
-      generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+    if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
+      generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
     }
   }
   generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
@@ -59,7 +59,7 @@ beforeAll(() => {
  * based on the block's concept definition.
  */
 function buildDummyNode(spec: BlockSpec) {
-  const concept = spec.conceptMapping!
+  const concept = spec.componentMapping!
   const props: Record<string, string> = {}
   const children: Record<string, any[]> = {}
 
@@ -89,7 +89,7 @@ function buildDummyNode(spec: BlockSpec) {
     }
   }
 
-  return createNode(concept.conceptId, props, children)
+  return createNode(concept.componentId, props, children)
 }
 
 describe('Full Roundtrip — All 68 Blocks', () => {
@@ -98,13 +98,13 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
   describe('Render coverage: every concept renders to correct block type', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId || skipConcepts.has(conceptId)) continue
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId || skipConcepts.has(componentId)) continue
 
       const blockType = (spec.blockDef as any).type
       const form = (spec as { form?: { axis: string; value: string } }).form
 
-      it(`${conceptId} → ${blockType}`, () => {
+      it(`${componentId} → ${blockType}`, () => {
         const sem = buildDummyNode(spec)
         // ⚠️ **多形態之後這個不變式要改**（097）。
         //
@@ -122,11 +122,11 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         // 位置由呼叫端說，運算式位置走 `renderExpression`（另有測試驗）。
         if (form && form.axis !== 'role') sem.properties[form.axis] = form.value
         const block = renderer.render(sem)
-        expect(block, `Failed to render concept '${conceptId}'`).not.toBeNull()
+        expect(block, `Failed to render concept '${componentId}'`).not.toBeNull()
         if (form?.axis === 'role') {
           // 只驗「渲染得出來、而且是這個身分宣告過的某個形態」
           const allForms = allSpecs
-            .filter((s) => s.conceptMapping?.conceptId === conceptId)
+            .filter((s) => s.componentMapping?.componentId === componentId)
             .map((s) => (s.blockDef as any).type)
           expect(allForms).toContain(block!.type)
         } else {
@@ -138,33 +138,33 @@ describe('Full Roundtrip — All 68 Blocks', () => {
 
   describe('Extract coverage: every block extracts to correct concept', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId || skipConcepts.has(conceptId)) continue
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId || skipConcepts.has(componentId)) continue
 
       const blockType = (spec.blockDef as any).type
 
-      it(`${blockType} → ${conceptId}`, () => {
+      it(`${blockType} → ${componentId}`, () => {
         const sem = buildDummyNode(spec)
         const block = renderer.render(sem)
         expect(block).not.toBeNull()
 
         const extracted = extractor.extract(block!)
         expect(extracted, `Failed to extract block '${blockType}'`).not.toBeNull()
-        expect(extracted!.conceptId).toBe(conceptId)
+        expect(extracted!.componentId).toBe(componentId)
       })
     }
   })
 
   describe('Code generation coverage: every concept generates code', () => {
     for (const spec of allSpecs) {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId || skipConcepts.has(conceptId)) continue
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId || skipConcepts.has(componentId)) continue
       if (!spec.codeTemplate?.pattern) continue // skip blocks without templates
 
-      it(`${conceptId} generates code`, () => {
+      it(`${componentId} generates code`, () => {
         const sem = buildDummyNode(spec)
         const code = generator.generate(sem, { indent: 0, style: { indent_size: 4 } as any })
-        expect(code, `Failed to generate code for '${conceptId}'`).not.toBeNull()
+        expect(code, `Failed to generate code for '${componentId}'`).not.toBeNull()
         expect(typeof code).toBe('string')
       })
     }

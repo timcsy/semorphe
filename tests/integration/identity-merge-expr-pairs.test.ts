@@ -38,7 +38,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
 let treeParser: Parser
@@ -73,7 +73,7 @@ const mergedOnes = [
  *
  * `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
  */
-function allConcepts(): ConceptDefJSON[] {
+function allConcepts(): ComponentDefJSON[] {
   return allCppConcepts()
 }
 
@@ -119,7 +119,7 @@ function blockTypes(tree: SemanticNode): string[] {
 
 describe('六對雙版本已合併成六個身分', () => {
   it('★ 六個 `_expr` 概念都不在登錄表裡', () => {
-    const ids = new Set(allConcepts().map((c) => c.conceptId))
+    const ids = new Set(allConcepts().map((c) => c.componentId))
     for (const id of mergedOnes) {
       expect(ids.has(id), `${id} 還在——雙重身分沒有消掉`).toBe(false)
     }
@@ -134,8 +134,8 @@ describe('六對雙版本已合併成六個身分', () => {
 
   it('★ 運算式版的積木反推得到**合併後**的身分（C-4）', () => {
     const reg = registry()
-    expect(reg.getByBlockType('cpp_increment_expression')?.conceptMapping?.conceptId).toBe('cpp:increment')
-    expect(reg.getByBlockType('cpp_increment')?.conceptMapping?.conceptId).toBe('cpp:increment')
+    expect(reg.getByBlockType('cpp_increment_expression')?.componentMapping?.componentId).toBe('cpp:increment')
+    expect(reg.getByBlockType('cpp_increment')?.componentMapping?.componentId).toBe('cpp:increment')
   })
 
   it('★ 一個身分查得到兩個形態', () => {
@@ -184,8 +184,8 @@ describe('同一個身分，兩個位置選到不同積木', () => {
   })
 
   it('★ 而語義樹裡**兩者都是同一個身分**', () => {
-    const description = collect(lift('int i = 0; i++;'), (n) => n.conceptId === 'cpp:increment')
-    const expression = collect(lift('int i = 0; int j = i++;'), (n) => n.conceptId === 'cpp:increment')
+    const description = collect(lift('int i = 0; i++;'), (n) => n.componentId === 'cpp:increment')
+    const expression = collect(lift('int i = 0; int j = i++;'), (n) => n.componentId === 'cpp:increment')
     expect(description.length).toBeGreaterThan(0)
     expect(expression.length, '運算式位置沒有拿到合併後的身分 → 合併只做了一半').toBeGreaterThan(0)
   })
@@ -216,26 +216,26 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     const oldSave = {
       version: 1,
       tree: {
-        id: 'n1', conceptId: 'cpp:program', properties: {}, children: {
-          body: [{ id: 'n2', conceptId: 'cpp_increment_expr', properties: { name: 'i', operator: '++', position: 'postfix' }, children: {} }],
+        id: 'n1', componentId: 'cpp:program', properties: {}, children: {
+          body: [{ id: 'n2', componentId: 'cpp_increment_expr', properties: { name: 'i', operator: '++', position: 'postfix' }, children: {} }],
         },
       },
       blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const upgraded = UPGRADES[1](oldSave as unknown as Record<string, unknown>)
-    const body = (upgraded.tree as { children: { body: { conceptId: string }[] } }).children.body
-    expect(body[0].conceptId, '舊身分沒被轉換 → 那棵樹裡有一個不存在的概念').toBe('cpp:increment')
+    const body = (upgraded.tree as { children: { body: { componentId: string }[] } }).children.body
+    expect(body[0].componentId, '舊身分沒被轉換 → 那棵樹裡有一個不存在的概念').toBe('cpp:increment')
   })
 
   it('★ 負向：沒有 `_expr` 的樹**原樣通過**，不得被亂改', async () => {
     const { UPGRADES } = await import('../../src/core/storage-version')
     const savedState = {
       version: 1,
-      tree: { id: 'n1', conceptId: 'cpp:var_declare', properties: { name: 'x', type: 'int' }, children: {} },
+      tree: { id: 'n1', componentId: 'cpp:var_declare', properties: { name: 'x', type: 'int' }, children: {} },
       blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const after = UPGRADES[1](savedState as unknown as Record<string, unknown>)
-    expect((after.tree as { conceptId: string }).conceptId).toBe('cpp:var_declare')
+    expect((after.tree as { componentId: string }).componentId).toBe('cpp:var_declare')
   })
 
   it('★ 積木型別**不轉**——加法式，`cpp_increment_expression` 仍然有效', async () => {

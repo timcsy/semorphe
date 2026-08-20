@@ -94,12 +94,12 @@ export function registerCppSkipDeclarations(): void {
   const all = [...coreConcepts, ...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
   for (const c of all) {
     const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
-    if (reasons && Object.keys(reasons).length > 0) declareSkips(c.conceptId, reasons)
+    if (reasons && Object.keys(reasons).length > 0) declareSkips(c.componentId, reasons)
     const parent = (c as { abstractConcept?: string | null }).abstractConcept
-    if (parent) declareAbstract(c.conceptId, parent)
+    if (parent) declareAbstract(c.componentId, parent)
     const varType = (c as { declaresVariableType?: string }).declaresVariableType
-    if (varType) declareVariableType(c.conceptId, varType)
+    if (varType) declareVariableType(c.componentId, varType)
     const ann = (c as { annotations?: Record<string, unknown> }).annotations
-    if (ann && Object.keys(ann).length > 0) declareAnnotations(c.conceptId, ann)
+    if (ann && Object.keys(ann).length > 0) declareAnnotations(c.componentId, ann)
   }
 }

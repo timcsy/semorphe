@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:servo_read",
+  "componentId": "cpp:servo_read",
   "abstractConcept": null,
   "properties": [
     {

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:program_exit",
-    "conceptId": "cpp:program_exit",
+    "componentId": "cpp:program_exit",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

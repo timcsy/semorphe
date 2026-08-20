@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:set_declare",
+  "componentId": "cpp:set_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

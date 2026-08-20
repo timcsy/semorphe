@@ -17,7 +17,7 @@ import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../../src/languages/
  */
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body } }
+  return { id: 'root', componentId: 'cpp:program', properties: {}, children: { body } }
 }
 
 describe('serialize roundtrip: rendered block state matches runtime input names', () => {

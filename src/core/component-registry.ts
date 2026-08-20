@@ -1,17 +1,17 @@
-import type { ConceptDef, ConceptDefJSON } from './types'
+import type { ComponentDef, ComponentDefJSON } from './types'
 import { paramNames } from './param-spec'
 
-export class ConceptRegistry {
-  private concepts = new Map<string, ConceptDef>()
+export class ComponentRegistry {
+  private concepts = new Map<string, ComponentDef>()
 
-  register(def: ConceptDef): void {
+  register(def: ComponentDef): void {
     if (this.concepts.has(def.id)) {
       throw new Error(`Concept '${def.id}' is already registered`)
     }
     this.concepts.set(def.id, def)
   }
 
-  get(id: string): ConceptDef | undefined {
+  get(id: string): ComponentDef | undefined {
     return this.concepts.get(id)
   }
 
@@ -27,26 +27,26 @@ export class ConceptRegistry {
    * → 見 `draft/2026-08-11-universal是一份還沒被驗證的外延主張.md`
    */
 
-  findAbstract(concreteId: string): ConceptDef | undefined {
+  findAbstract(concreteId: string): ComponentDef | undefined {
     const concrete = this.concepts.get(concreteId)
     if (!concrete?.abstractConcept) return undefined
     return this.concepts.get(concrete.abstractConcept)
   }
 
-  listAll(): ConceptDef[] {
+  listAll(): ComponentDef[] {
     return [...this.concepts.values()]
   }
 
   /** Register or update a concept (overwrites if already exists) */
-  registerOrUpdate(def: ConceptDef): void {
+  registerOrUpdate(def: ComponentDef): void {
     this.concepts.set(def.id, def)
   }
 
   /** Batch load from concepts.json format */
-  loadFromJSON(concepts: ConceptDefJSON[]): void {
+  loadFromJSON(concepts: ComponentDefJSON[]): void {
     for (const c of concepts) {
       this.registerOrUpdate({
-        id: c.conceptId,
+        id: c.componentId,
         abstractConcept: c.abstractConcept ?? undefined,
         propertyNames: paramNames(c.properties),
         childNames: Object.keys(c.children),
@@ -56,8 +56,8 @@ export class ConceptRegistry {
   }
 
   /** Query an annotation value for a concept */
-  getAnnotation(conceptId: string, key: string): unknown {
-    const def = this.concepts.get(conceptId)
+  getAnnotation(componentId: string, key: string): unknown {
+    const def = this.concepts.get(componentId)
     return def?.annotations?.[key]
   }
 }

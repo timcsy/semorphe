@@ -7,7 +7,7 @@ const sampleSpec: BlockSpec = {
   language: 'universal',
   category: 'variables',
   version: '1.0.0',
-  conceptMapping: { conceptId: 'cpp:var_declare' },
+  componentMapping: { componentId: 'cpp:var_declare' },
   blockDef: { type: 'cpp_var_declare', message0: 'declare %1 %2', colour: '#FF8C1A' },
   codeTemplate: { pattern: '${TYPE} ${NAME};', imports: [], order: 0 },
   astPattern: { nodeType: 'declaration', constraints: [] },
@@ -18,7 +18,7 @@ const sortSpec: BlockSpec = {
   language: 'cpp',
   category: 'algorithms',
   version: '1.0.0',
-  conceptMapping: { conceptId: 'cpp:stdlib:sort', abstractConcept: 'collection_sort' },
+  componentMapping: { componentId: 'cpp:stdlib:sort', abstractConcept: 'collection_sort' },
   blockDef: { type: 'cpp_range_sort', message0: 'sort %1 to %2', colour: '#4C97FF' },
   codeTemplate: { pattern: 'sort(${BEGIN}, ${END});', imports: ['algorithm'], order: 0 },
   astPattern: {

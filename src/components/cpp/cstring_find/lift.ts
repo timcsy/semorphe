@@ -9,7 +9,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('strstr', {
-    conceptId: 'cpp:cstring_find',
+    componentId: 'cpp:cstring_find',
     argSlots: ['haystack', 'needle'],
     source: 'cpp/cstring_find',
   })

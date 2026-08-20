@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pwm_attach",
-    "conceptId": "cpp:pwm_attach",
+    "componentId": "cpp:pwm_attach",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

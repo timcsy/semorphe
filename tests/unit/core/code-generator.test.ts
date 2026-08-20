@@ -22,7 +22,7 @@ const defaultStyle: StylePreset = {
 function makeProgram(...body: SemanticNode[]): SemanticNode {
   return {
     id: 'test_root',
-    conceptId: 'cpp:program',
+    componentId: 'cpp:program',
     properties: {},
     children: { body },
   }
@@ -128,7 +128,7 @@ describe('generateCode', () => {
   it('should generate raw_code node', () => {
     const raw: SemanticNode = {
       id: 'test_raw',
-      conceptId: 'raw_code',
+      componentId: 'raw_code',
       properties: {},
       children: {},
       metadata: { rawCode: 'template<typename T> class Foo {};' },

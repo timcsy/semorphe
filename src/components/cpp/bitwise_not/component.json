@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:bitwise_not",
+  "componentId": "cpp:bitwise_not",
   "abstractConcept": null,
   "properties": [],
   "children": {

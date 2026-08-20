@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_include",
-    "conceptId": "cpp:include",
+    "componentId": "cpp:include",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",

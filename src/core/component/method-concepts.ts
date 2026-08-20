@@ -31,7 +31,7 @@
 
 /** 一個方法名對應的節點形狀。 */
 export interface MethodConceptShape {
-  conceptId: string
+  componentId: string
   /**
    * 引數依序放進哪些子節點槽。空陣列 = 這個方法不吃引數（`s.length()`）。
    *
@@ -48,29 +48,29 @@ const table = new Map<string, MethodConceptShape>()
  * 登錄一個方法名。
  *
  * @param methodName C++ 的方法名（`find_first_not_of`…）
- * @param conceptId 對應的元件身分——**寫成字面字串**，別用樣板組
+ * @param componentId 對應的元件身分——**寫成字面字串**，別用樣板組
  * @param source 誰登錄的——膠囊填自己的資料夾
  */
 export function registerMethodConcept(
   methodName: string,
-  conceptId: string,
+  componentId: string,
   source: string,
   argSlots: string[] = ['arg'],
 ): void {
   const existing = table.get(methodName)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `方法名「${methodName}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。` +
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。` +
         `不自動取其一——靜默覆蓋的症狀是「某個方法被辨識成另一個概念」。`,
     )
   }
-  table.set(methodName, { conceptId, argSlots, source })
+  table.set(methodName, { componentId, argSlots, source })
 }
 
 /** 方法名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
 export function conceptForMethod(methodName: string): string | undefined {
-  return table.get(methodName)?.conceptId
+  return table.get(methodName)?.componentId
 }
 
 
@@ -99,22 +99,22 @@ export function methodConceptSources(): [methodName: string, source: string][] {
  *
  * > **兩個查詢點就是兩張表。**
  */
-const containerMethodTable = new Map<string, { conceptId: string; source: string }>()
+const containerMethodTable = new Map<string, { componentId: string; source: string }>()
 
-export function registerContainerMethodConcept(methodName: string, conceptId: string, source: string): void {
+export function registerContainerMethodConcept(methodName: string, componentId: string, source: string): void {
   const existing = containerMethodTable.get(methodName)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `容器方法「${methodName}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。`,
     )
   }
-  containerMethodTable.set(methodName, { conceptId, source })
+  containerMethodTable.set(methodName, { componentId, source })
 }
 
 /** 容器方法名 → 元件身分。認不得回傳 `undefined`。 */
 export function containerMethodConcept(methodName: string): string | undefined {
-  return containerMethodTable.get(methodName)?.conceptId
+  return containerMethodTable.get(methodName)?.componentId
 }
 
 /**
@@ -126,22 +126,22 @@ export function containerMethodConcept(methodName: string): string | undefined {
  * ⚠️ 型別查不到時**不猜**——留在通用版。
  * **猜一個錯的專屬身分比誠實降級更糟**（原註解的原話）。
  */
-const typeMethodTable = new Map<string, Map<string, { conceptId: string; source: string }>>()
+const typeMethodTable = new Map<string, Map<string, { componentId: string; source: string }>>()
 
-export function registerTypedMethodConcept(type: string, methodName: string, conceptId: string, source: string): void {
+export function registerTypedMethodConcept(type: string, methodName: string, componentId: string, source: string): void {
   const m = typeMethodTable.get(type) ?? new Map()
   const existing = m.get(methodName)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `「${type}.${methodName}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。`,
     )
   }
-  m.set(methodName, { conceptId, source })
+  m.set(methodName, { componentId, source })
   typeMethodTable.set(type, m)
 }
 
 /** 型別 ＋ 方法名 → 元件身分。查不到回 `undefined`——**不猜**。 */
 export function typedMethodConcept(type: string, methodName: string): string | undefined {
-  return typeMethodTable.get(type)?.get(methodName)?.conceptId
+  return typeMethodTable.get(type)?.get(methodName)?.componentId
 }

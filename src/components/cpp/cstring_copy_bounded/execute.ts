@@ -1,8 +1,8 @@
 /** `cpp:cstring_copy_bounded` 的 **execute** 路——從共用檔原封剪過來（批次第六批：lift 是 io.ts 的一個帶真邏輯的分支）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { writableArray, readCString } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_copy_bounded', async (node, ctx) => {
       const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')
       const n = ctx.toNumber(await ctx.evaluate((node.children.n ?? [])[0]))

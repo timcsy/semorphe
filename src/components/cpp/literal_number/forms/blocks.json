@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_literal_number",
-    "conceptId": "cpp:literal_number",
+    "componentId": "cpp:literal_number",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",

@@ -51,7 +51,7 @@ export interface NodeTraits {
   /**
    * 在 `switch` 裡是**兜底的那一支**嗎（`default:`）。
    *
-   * ⚠️ `cpp:switch` 的執行器原本寫 `caseNode.conceptId === 'cpp:default'`
+   * ⚠️ `cpp:switch` 的執行器原本寫 `caseNode.componentId === 'cpp:default'`
    * ——**那是真的耦合**（switch 要知道哪一支不比對值），而它擋住 `default`
    * 搬進膠囊。與 `memberRoleOf` 同一個處置：**消費者問性狀，不問身分。**
    */
@@ -59,7 +59,7 @@ export interface NodeTraits {
   /**
    * 這顆元件的宣告要在型別後面接什麼（`int` → `int*`）。
    *
-   * ⚠️ `strategies.ts` 原本寫 `if (lifted.conceptId === 'cpp:pointer_declare')
+   * ⚠️ `strategies.ts` 原本寫 `if (lifted.componentId === 'cpp:pointer_declare')
    * liftedType += '*'`——**消費者依身分分派**，而它擋住那顆搬進膠囊。
    */
   typeSuffix?: string
@@ -67,7 +67,7 @@ export interface NodeTraits {
    * 這顆節點**就是一個具名變數的參照**（`properties.name` 是那個變數名）。
    *
    * ⚠️ `cpp:var_declare_ref` 的執行器要知道「初值是不是一個變數」才決定
-   * 做別名還是一般宣告，而它原本寫 `目標.conceptId === 'cpp:var_ref'`
+   * 做別名還是一般宣告，而它原本寫 `目標.componentId === 'cpp:var_ref'`
    * ——**一顆膠囊裡提到另一顆的身分**，就近性護欄的反向檢查會指名。
    */
   variableRef?: boolean
@@ -75,7 +75,7 @@ export interface NodeTraits {
    * 這顆是**鷹架**——L0 的積木視圖裡不該出現它。
    *
    * ⚠️ `cpp-scaffold-filter.ts` 原本逐條寫身分：
-   * `node.conceptId === 'cpp:include' || … === 'cpp:include_local'` …
+   * `node.componentId === 'cpp:include' || … === 'cpp:include_local'` …
    * **一條 if 一顆元件**，而它擋住那幾顆搬進膠囊。
    *
    * ⚠️ 這不含 `func_def(main)` 與它的 `return`：那兩個不是「這顆是鷹架」，
@@ -88,7 +88,7 @@ export interface NodeTraits {
    *
    * ⚠️ 與 `scaffold` **不是同一件事**：`using_namespace` 也是鷹架，
    * 但它**沒有標頭可以去重**。`cpp:program` 的產生器有三處要「這是不是 include」，
-   * 而它們原本都寫 `n.conceptId === 'cpp:include' || n.conceptId === 'cpp:include_local'`。
+   * 而它們原本都寫 `n.componentId === 'cpp:include' || n.componentId === 'cpp:include_local'`。
    */
   includeDirective?: boolean
   /**
@@ -115,7 +115,7 @@ export interface NodeTraits {
    * ```
    *
    * ⚠️ `cpp:negate` 的產生器原本寫
-   * `childNode.conceptId === 'cpp:negate' || … 'cpp:pointer_deref' || … 'cpp:address_of'`
+   * `childNode.componentId === 'cpp:negate' || … 'cpp:pointer_deref' || … 'cpp:address_of'`
    * ——**一顆膠囊裡列另外兩顆的身分**，就近性護欄的反向檢查會指名。
    *
    * `!` 與 `~` **不在此列**：`!!x`、`~~x` 都是合法且意思正確的。
@@ -136,7 +136,7 @@ export interface NodeTraits {
    * 這是一個**二元運算子節點**——`properties.operator` 是那個符號。
    *
    * ⚠️ `iostream/generators.ts` 原本寫
-   * `v.conceptId === 'cpp:arithmetic' || … 'cpp:compare' || … 'cpp:logic'`
+   * `v.componentId === 'cpp:arithmetic' || … 'cpp:compare' || … 'cpp:logic'`
    * 再去比對一份低優先權運算子清單。**清單留著**（那是 `<<` 的排版知識），
    * 換掉的只有身分那一半。
    */
@@ -173,7 +173,7 @@ export interface NodeTraits {
    *
    * ⚠️ `interpreter/executors/variables.ts` 要分辨 `A a(5)` 是建構還是求值，
    * 判斷條件是「初值是不是一個名字等於型別的呼叫」。它原本寫死
-   * `arg0.conceptId === 'cpp:func_call'`——**核心層的執行器認得一顆 C++ 元件**。
+   * `arg0.componentId === 'cpp:func_call'`——**核心層的執行器認得一顆 C++ 元件**。
    */
   namedCall?: boolean
   /**
@@ -204,7 +204,7 @@ export interface NodeTraits {
    * 這顆是**串流輸入**（`cin >> a >> b` 那種，可以串接）。
    *
    * ⚠️ `expressions.ts` 在還原 `cin >> a >> b` 的鏈時要認出「已經是輸入的那顆」，
-   * 原本寫死 `cur.conceptId === 'cpp:input'`。
+   * 原本寫死 `cur.componentId === 'cpp:input'`。
    */
   streamInput?: boolean
   /** 是最單純的變數宣告嗎（`int x;`）——動態積木蒐集變數名時要分辨它。 */
@@ -213,7 +213,7 @@ export interface NodeTraits {
 
 /** 有性狀宣告的全部身分。 */
 function allIdentities(): string[] {
-  return registeredComponents().map((c) => c.conceptId)
+  return registeredComponents().map((c) => c.componentId)
 }
 
 /**
@@ -223,8 +223,8 @@ function allIdentities(): string[] {
  * **F 完成之後過渡表退場，兩份就變成同一件事**，而第三十八條護欄抓不到，
  * 因為兩個函式名字不同（`性狀` vs `componentTraits`）。
  */
-function traits(conceptId: string): NodeTraits | undefined {
-  return componentTraits(conceptId) as NodeTraits | undefined
+function traits(componentId: string): NodeTraits | undefined {
+  return componentTraits(componentId) as NodeTraits | undefined
 }
 
 /**
@@ -234,63 +234,63 @@ function traits(conceptId: string): NodeTraits | undefined {
  * 呼叫端把它當 100（比誰都緊）。運算子相依的優先級（`cpp:logic` 看 `||` 還是 `&&`）
  * 不在這裡：那是**同一顆元件的不同實例有不同答案**，不是一個宣告得出來的常數。
  */
-export function precedenceOf(conceptId: string): number | undefined {
-  return traits(conceptId)?.precedence
+export function precedenceOf(componentId: string): number | undefined {
+  return traits(componentId)?.precedence
 }
 
 /** 這顆元件放得進 for 迴圈的三個位置嗎。沒宣告＝不行（保守）。 */
-export function canBeForLoopPart(conceptId: string): boolean {
-  return traits(conceptId)?.forLoopPart === true
+export function canBeForLoopPart(componentId: string): boolean {
+  return traits(componentId)?.forLoopPart === true
 }
 
 /** 這顆元件是 `switch` 裡兜底的那一支嗎。沒宣告＝不是（保守）。 */
-export function isDefaultCase(conceptId: string): boolean {
-  return traits(conceptId)?.defaultCase === true
+export function isDefaultCase(componentId: string): boolean {
+  return traits(componentId)?.defaultCase === true
 }
 
 /** 這顆元件的宣告在型別後面接什麼。沒宣告＝什麼都不接。 */
-export function typeSuffixOf(conceptId: string): string {
-  return traits(conceptId)?.typeSuffix ?? ''
+export function typeSuffixOf(componentId: string): string {
+  return traits(componentId)?.typeSuffix ?? ''
 }
 
 /** 這顆節點就是一個具名變數的參照嗎。沒宣告＝不是（保守）。 */
-export function isVariableRef(conceptId: string): boolean {
-  return traits(conceptId)?.variableRef === true
+export function isVariableRef(componentId: string): boolean {
+  return traits(componentId)?.variableRef === true
 }
 
 /** 這顆是鷹架嗎（L0 的積木視圖不顯示）。沒宣告＝不是（保守）。 */
-export function isScaffold(conceptId: string): boolean {
-  return traits(conceptId)?.scaffold === true
+export function isScaffold(componentId: string): boolean {
+  return traits(componentId)?.scaffold === true
 }
 
 /** 這顆是 `#include` 指示詞嗎。沒宣告＝不是（保守）。 */
-export function isIncludeDirective(conceptId: string): boolean {
-  return traits(conceptId)?.includeDirective === true
+export function isIncludeDirective(componentId: string): boolean {
+  return traits(componentId)?.includeDirective === true
 }
 
 /** 這顆產生的前綴符號會與同類相接成另一個運算子嗎。沒宣告＝不會。 */
-export function isPrefixOperator(conceptId: string): boolean {
-  return traits(conceptId)?.prefixOperator === true
+export function isPrefixOperator(componentId: string): boolean {
+  return traits(componentId)?.prefixOperator === true
 }
 
 /** 放進 `cout << …` 時需要括號嗎。沒宣告＝不用。 */
-export function needsParenInCout(conceptId: string): boolean {
-  return traits(conceptId)?.parenInCout === true
+export function needsParenInCout(componentId: string): boolean {
+  return traits(componentId)?.parenInCout === true
 }
 
 /** 這顆在 `main` 裡時算鷹架嗎。沒宣告＝不算（保守）。 */
-export function isScaffoldInMain(conceptId: string): boolean {
-  return traits(conceptId)?.scaffoldInMain === true
+export function isScaffoldInMain(componentId: string): boolean {
+  return traits(componentId)?.scaffoldInMain === true
 }
 
 /** 這是二元運算子節點嗎（`properties.operator` 是符號）。沒宣告＝不是。 */
-export function isBinaryOperator(conceptId: string): boolean {
-  return traits(conceptId)?.binaryOperator === true
+export function isBinaryOperator(componentId: string): boolean {
+  return traits(componentId)?.binaryOperator === true
 }
 
 /** 這是字串字面值嗎（`properties.value` 是那串文字）。沒宣告＝不是。 */
-export function isStringLiteral(conceptId: string): boolean {
-  return traits(conceptId)?.stringLiteral === true
+export function isStringLiteral(componentId: string): boolean {
+  return traits(componentId)?.stringLiteral === true
 }
 
 /**
@@ -298,8 +298,8 @@ export function isStringLiteral(conceptId: string): boolean {
  *
  * 回 `undefined` 的意思是「**不需要括號**」，不是「不知道」。
  */
-export function precedenceOfNode(node: { conceptId: string; properties?: Record<string, unknown> }): number | undefined {
-  const t = traits(node.conceptId)
+export function precedenceOfNode(node: { componentId: string; properties?: Record<string, unknown> }): number | undefined {
+  const t = traits(node.componentId)
   if (t?.precedence !== undefined) return t.precedence
   const byOperator = t?.precedenceByOperator
   if (!byOperator) return undefined
@@ -309,8 +309,8 @@ export function precedenceOfNode(node: { conceptId: string; properties?: Record<
 }
 
 /** 這顆是換行標記嗎。沒宣告＝不是。 */
-export function isLineBreak(conceptId: string): boolean {
-  return traits(conceptId)?.lineBreak === true
+export function isLineBreak(componentId: string): boolean {
+  return traits(componentId)?.lineBreak === true
 }
 
 /**
@@ -371,8 +371,8 @@ export function ioConceptFor(role: string, style: string): string | undefined {
 export { isIndexedAccess } from '../../../core/component/traits' 
 
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
-export function isStreamInput(conceptId: string): boolean {
-  return traits(conceptId)?.streamInput === true
+export function isStreamInput(componentId: string): boolean {
+  return traits(componentId)?.streamInput === true
 }
 
 /**

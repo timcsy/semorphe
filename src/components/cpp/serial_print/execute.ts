@@ -8,10 +8,10 @@
  * ⚠️ 而三顆概念宣告了同一個 `ioRole: 'print'`：那是**一條等價邊**，
  * 不是「剛好都會輸出」。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { valueToString } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_print', async (node, ctx) => {
     const value = (node.children.value ?? [])[0]
     const formatNode = (node.children.format ?? [])[0]

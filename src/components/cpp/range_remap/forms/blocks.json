@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_range_remap",
-    "conceptId": "cpp:range_remap",
+    "componentId": "cpp:range_remap",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",

@@ -124,10 +124,10 @@ function trueIdentity(): Set<string> {
           const j = JSON.parse(fs.readFileSync(p, 'utf8')) as unknown
           const arr = Array.isArray(j)
             ? j
-            : (j as { concepts?: unknown[]; conceptId?: string }).conceptId
+            : (j as { concepts?: unknown[]; componentId?: string }).componentId
               ? [j]                                   // 膠囊的 component.json 是單一物件
               : ((j as { concepts?: unknown[] }).concepts ?? [])
-          for (const c of arr as { conceptId?: string }[]) if (c?.conceptId) ids.add(c.conceptId)
+          for (const c of arr as { componentId?: string }[]) if (c?.componentId) ids.add(c.componentId)
         } catch {
           /* 壞掉的 JSON 由別條護欄管 */
         }

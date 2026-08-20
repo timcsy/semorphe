@@ -54,14 +54,14 @@ beforeAll(async () => {
 })
 
 function conceptsIn(n: SemanticNode, out: string[] = []): string[] {
-  out.push(n.conceptId)
+  out.push(n.componentId)
   for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) conceptsIn(k, out)
   return out
 }
 
 /** 找出那顆 `python:print`——⚠️ **不要拿整棵樹去產出**，見下一段。 */
 function findConcept(n: SemanticNode, id: string): SemanticNode | null {
-  if (n.conceptId === id) return n
+  if (n.componentId === id) return n
   for (const kids of Object.values(n.children ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findConcept(k, id)

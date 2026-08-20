@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:map_at",
+  "componentId": "cpp:map_at",
   "abstractConcept": "cpp:array_at",
   "properties": [
     {

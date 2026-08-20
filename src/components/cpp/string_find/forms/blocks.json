@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_find",
-    "conceptId": "cpp:string_find",
+    "componentId": "cpp:string_find",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -9,9 +9,9 @@
  *
  * ⚠️ **真板子約 70 分鐘會溢位回 0，模擬不模它**——需要教溢位時要另外處理。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { nowMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:micros', async () => ({ type: 'int', value: nowMillis() * 1000 }))
 }

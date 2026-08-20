@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_memory_fill",
-    "conceptId": "cpp:memory_fill",
+    "componentId": "cpp:memory_fill",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

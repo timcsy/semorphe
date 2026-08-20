@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:vector_declare",
-    "conceptId": "cpp:vector_declare",
+    "componentId": "cpp:vector_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -3,7 +3,7 @@
  *
  * Verifies that every concept defined in the Semorphe C++ language support
  * is correctly identified by the lifter — i.e. when we write C++ code that
- * uses a specific concept, the lifter produces the correct conceptId in the
+ * uses a specific concept, the lifter produces the correct componentId in the
  * semantic tree (not a generic fallback like var_declare).
  *
  * Motivation: we discovered that `int* p = &x;` was being lifted as
@@ -40,34 +40,34 @@ function liftCode(code: string): SemanticNode | null {
   return lifter.lift(tree.rootNode as any)
 }
 
-/** Recursively find all nodes with the given conceptId */
-function findConcepts(node: SemanticNode, conceptId: string): SemanticNode[] {
+/** Recursively find all nodes with the given componentId */
+function findConcepts(node: SemanticNode, componentId: string): SemanticNode[] {
   const found: SemanticNode[] = []
-  if (node.conceptId === conceptId) {
+  if (node.componentId === componentId) {
     found.push(node)
   }
   for (const children of Object.values(node.children || {})) {
     for (const child of children) {
-      found.push(...findConcepts(child, conceptId))
+      found.push(...findConcepts(child, componentId))
     }
   }
   return found
 }
 
-/** Assert that lifting the given code produces at least one node with the given conceptId */
-function assertConceptPresent(code: string, conceptId: string) {
+/** Assert that lifting the given code produces at least one node with the given componentId */
+function assertConceptPresent(code: string, componentId: string) {
   const sem = liftCode(code)
-  expect(sem, `Failed to lift code for concept ${conceptId}`).not.toBeNull()
-  const matches = findConcepts(sem!, conceptId)
+  expect(sem, `Failed to lift code for concept ${componentId}`).not.toBeNull()
+  const matches = findConcepts(sem!, componentId)
   expect(
     matches.length,
-    `Expected concept '${conceptId}' in semantic tree but found none. Top-level concepts: ${JSON.stringify(collectConceptIds(sem!).slice(0, 20))}`
+    `Expected concept '${componentId}' in semantic tree but found none. Top-level concepts: ${JSON.stringify(collectConceptIds(sem!).slice(0, 20))}`
   ).toBeGreaterThan(0)
 }
 
 /** Collect all concept IDs in the tree (for diagnostics) */
 function collectConceptIds(node: SemanticNode): string[] {
-  const ids: string[] = [node.conceptId]
+  const ids: string[] = [node.componentId]
   for (const children of Object.values(node.children || {})) {
     for (const child of children) {
       ids.push(...collectConceptIds(child))

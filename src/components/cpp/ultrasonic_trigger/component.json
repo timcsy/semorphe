@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:ultrasonic_trigger",
+  "componentId": "cpp:ultrasonic_trigger",
   "abstractConcept": null,
   "properties": [],
   "_properties_why": "🔴 **2 微秒與 10 微秒【不是】欄位。**\n\n語料 14 段用到超音波，`delayMicroseconds` 的引數分佈是 `{2: 14, 10: 14}`——**零變異**。那兩個數字是 HC-SR04 的規格（先拉低淨空、再送一個 10 µs 的觸發脈衝），不是使用者的選擇。\n\n> **一個從來沒有人改過的欄位，不是彈性，是認知負載。**\n\n⚠️ 而辨識那一路**要求它們就是 2 與 10**：學生若寫了別的數字，這顆不認，讓它留成一般積木——否則就是安靜地改掉他的程式。",

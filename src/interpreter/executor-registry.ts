@@ -59,17 +59,17 @@ export interface ExecutionContext {
 /**
  * Unified executor signature.
  */
-export type ConceptExecutor = (node: SemanticNode, ctx: ExecutionContext) => Promise<RuntimeValue | void>
+export type ComponentExecutor = (node: SemanticNode, ctx: ExecutionContext) => Promise<RuntimeValue | void>
 
 /**
  * Registry for concept executors.
  */
-export class ConceptExecutorRegistry {
-  private executors = new Map<string, ConceptExecutor>()
+export class ComponentExecutorRegistry {
+  private executors = new Map<string, ComponentExecutor>()
   /** 同一概念被註冊幾次。>1 代表勝負由載入順序決定，而那個順序不是任何人設計的 */
   private registrationCount = new Map<string, number>()
 
-  register(concept: string, executor: ConceptExecutor): void {
+  register(concept: string, executor: ComponentExecutor): void {
     this.registrationCount.set(concept, (this.registrationCount.get(concept) ?? 0) + 1)
     this.executors.set(concept, executor)
   }
@@ -88,13 +88,13 @@ export class ConceptExecutorRegistry {
       .sort((a, b) => b.count - a.count || a.concept.localeCompare(b.concept))
   }
 
-  registerAll(map: Record<string, ConceptExecutor>): void {
+  registerAll(map: Record<string, ComponentExecutor>): void {
     for (const [concept, executor] of Object.entries(map)) {
       this.executors.set(concept, executor)
     }
   }
 
-  get(concept: string): ConceptExecutor | undefined {
+  get(concept: string): ComponentExecutor | undefined {
     return this.executors.get(concept)
   }
 

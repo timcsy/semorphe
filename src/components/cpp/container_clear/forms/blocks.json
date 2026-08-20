@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_container_clear",
-    "conceptId": "cpp:container_clear",
+    "componentId": "cpp:container_clear",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

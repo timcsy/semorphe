@@ -41,11 +41,11 @@ describe('多行文字欄位走一圈不掉內容', () => {
     ['cpp:doc_comment', 'brief', '這個函式做什麼'],
   ]
 
-  for (const [conceptId, prop, value] of samples) {
-    it(`★ ${conceptId}.${prop} 渲染後抽得回來`, () => {
+  for (const [componentId, prop, value] of samples) {
+    it(`★ ${componentId}.${prop} 渲染後抽得回來`, () => {
       const { render, extract } = pipeline()
-      const state = render.render(createNode(conceptId, { [prop]: value }) as never)
-      expect(state, `${conceptId} 渲染不出積木`).not.toBeNull()
+      const state = render.render(createNode(componentId, { [prop]: value }) as never)
+      expect(state, `${componentId} 渲染不出積木`).not.toBeNull()
 
       const back = extract.extract(state as never)
       expect(

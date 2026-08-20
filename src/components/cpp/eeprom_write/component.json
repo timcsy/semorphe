@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:eeprom_write",
+  "componentId": "cpp:eeprom_write",
   "abstractConcept": null,
   "properties": [
     {

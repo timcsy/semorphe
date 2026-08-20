@@ -25,13 +25,13 @@
  * `main` 優先**不是偏袒 C++**——是「一個宣告了 `main` 的程式，作者的意圖是明確的」。
  * 兩者都有時去猜，猜錯的代價比出聲高。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { isFunctionDefinition } from '../../../core/component/traits'
 import { buildFuncCall } from '../func_call/lift'
 import { loopBudget, tickLoop } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {
       const body = node.children.body ?? []
       await ctx.executeBody(body)
@@ -66,9 +66,9 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       // > **「沒有進入點」與「進入點不是一個函式」是兩件事，
       // > 而只問 `functions` 的話，第二種會被誤判成第一種。**
       //
-      // 判準用**宣告**（`traits.functionDefinition`）而不是猜 conceptId——
+      // 判準用**宣告**（`traits.functionDefinition`）而不是猜 componentId——
       // 那是 `isFunctionDefinition` 存在的理由。
-      if (body.some((n) => !isFunctionDefinition(n.conceptId))) return
+      if (body.some((n) => !isFunctionDefinition(n.componentId))) return
 
       // ⚠️ **空的程式不算「找不到進入點」**——它什麼都沒有。
       // 那是學生剛打開編輯器的狀態，按執行不該看到錯誤。

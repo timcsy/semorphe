@@ -39,7 +39,7 @@ const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) nodes(k, out)
   return out
 }
-const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.conceptId)
+const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
 const gen = (t: SemanticNode): string => generateCode(t, 'cpp', apcs as StylePreset)
 const rt = (src: string): { once: string; twice: string } => {
   const once = gen(lift(src))
@@ -121,7 +121,7 @@ describe('第 2 批：套件物件（型別辨識）', () => {
     // 🔴 這一條就是那個 bug 本身：`begin()` 零引數，而迭代器認的正是零引數的 begin
     expect(list).not.toContain('cpp:container_iter')
     // 濕度與溫度是同一顆的兩個參數
-    const reads = nodes(lift(DHT)).filter((x) => x.conceptId === 'cpp:dht_read')
+    const reads = nodes(lift(DHT)).filter((x) => x.componentId === 'cpp:dht_read')
     expect(reads.map((r) => r.properties.quantity).sort()).toEqual(['humidity', 'temperature'])
   })
 
@@ -140,7 +140,7 @@ describe('第 2 批：套件物件（型別辨識）', () => {
     expect(e).toContain('cpp:eeprom_write')
     const w = ids(lift(WIFI))
     expect(w).toContain('cpp:wifi_open')
-    const reads = nodes(lift(WIFI)).filter((x) => x.conceptId === 'cpp:wifi_read')
+    const reads = nodes(lift(WIFI)).filter((x) => x.componentId === 'cpp:wifi_read')
     expect(reads.map((r) => r.properties.quantity).sort()).toEqual(['address', 'status'])
   })
 
@@ -238,7 +238,7 @@ void loop() {}
     const tree = lift(src)
     expect(ids(tree)).toContain('cpp:lcd_declare')       // ← 正向錨點
     expect(ids(tree)).toContain('cpp:lcd_print')
-    const decl = nodes(tree).find((x) => x.conceptId === 'cpp:lcd_declare')
+    const decl = nodes(tree).find((x) => x.componentId === 'cpp:lcd_declare')
     expect(decl?.properties.decl_type).toBe('LiquidCrystal_I2C')
     // 🔴 產回去必須還是 I2C 版
     expect(gen(tree)).toContain('LiquidCrystal_I2C lcd(0x27, 16, 2);')
@@ -246,7 +246,7 @@ void loop() {}
 
   it('⚠️ 而並列版仍然是並列版——不得被 I2C 汙染', () => {
     const tree = lift('#include <LiquidCrystal.h>\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\nvoid setup() { lcd.clear(); }\nvoid loop() {}\n')
-    const decl = nodes(tree).find((x) => x.conceptId === 'cpp:lcd_declare')
+    const decl = nodes(tree).find((x) => x.componentId === 'cpp:lcd_declare')
     expect(decl, '宣告要在').toBeDefined()                // ← 正向錨點
     expect(decl?.properties.decl_type).toBe('LiquidCrystal')
     expect(gen(tree)).toContain('LiquidCrystal lcd(12, 11, 5, 4, 3, 2);')
@@ -269,7 +269,7 @@ void loop() {}
     ]
     for (const [decl, want] of cases) {
       const tree = lift(`${decl}\nvoid setup() {}\nvoid loop() {}\n`)
-      const d = nodes(tree).find((x) => /^cpp:(servo|dht|lcd)_declare$/.test(x.conceptId))
+      const d = nodes(tree).find((x) => /^cpp:(servo|dht|lcd)_declare$/.test(x.componentId))
       expect(d, `${decl}：宣告沒認出來`).toBeDefined()      // ← 正向錨點
       expect(d?.children.initializer ?? [], `${decl}：語義樹的接點數`).toHaveLength(want)
       expect(Number(d?.properties.ctorCount), `${decl}：ctorCount`).toBe(want)

@@ -4,10 +4,10 @@
  * 轉型的數值語義是**共用的演算法**（`core/runtime/cast.ts`），
  * 不是另一顆元件的實作——四種命名轉型與 C 風格轉型各自宣告自己用它。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast_static', async (node, ctx) => {
     const targetType = String(node.properties.target_type ?? 'int')
     const valueNodes = node.children.value ?? []

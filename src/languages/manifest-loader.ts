@@ -1,7 +1,7 @@
-import type { LanguageManifest, ConceptDefJSON, BlockProjectionJSON, LiftPattern, UniversalTemplate } from '../core/types'
+import type { LanguageManifest, ComponentDefJSON, BlockProjectionJSON, LiftPattern, UniversalTemplate } from '../core/types'
 
 export interface ManifestResources {
-  concepts: ConceptDefJSON[]
+  concepts: ComponentDefJSON[]
   projections: BlockProjectionJSON[]
   templates: UniversalTemplate[]
   liftPatterns: LiftPattern[]
@@ -16,9 +16,9 @@ export function loadManifestResources(
   manifest: LanguageManifest,
   resolveJSON: (relativePath: string) => unknown[],
 ): ManifestResources {
-  const concepts: ConceptDefJSON[] = []
+  const concepts: ComponentDefJSON[] = []
   for (const p of manifest.provides.concepts) {
-    concepts.push(...resolveJSON(p) as ConceptDefJSON[])
+    concepts.push(...resolveJSON(p) as ComponentDefJSON[])
   }
 
   const projections: BlockProjectionJSON[] = []

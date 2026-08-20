@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_delay",
-    "conceptId": "cpp:delay",
+    "componentId": "cpp:delay",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

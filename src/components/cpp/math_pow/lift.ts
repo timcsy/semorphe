@@ -22,7 +22,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('pow', {
-    conceptId: 'cpp:math_pow',
+    componentId: 'cpp:math_pow',
     argSlots: ['base', 'exponent'],
     source: 'cpp/math_pow',
   })

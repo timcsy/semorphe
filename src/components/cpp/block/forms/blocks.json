@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:block",
-    "conceptId": "cpp:block",
+    "componentId": "cpp:block",
     "language": "cpp",
     "category": "control",
     "version": "1.0.0",

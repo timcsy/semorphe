@@ -29,7 +29,7 @@
  * | 一、集合比對 ＋ 輸出逐字比對 | 漏失：某一路搬丟了、輸出變了 | **錯置**：實作跑進錯的元件底下而輸出恰好相同 |
  * | 二、註冊來源核對 | 錯置：某一路的來源不是它該在的膠囊 | **來源標記本身被寫錯**（複製膠囊忘了改 id） |
  *
- * 防線二對第二欄的對策是**兩個來源互相核對**：宣告裡的 `conceptId`
+ * 防線二對第二欄的對策是**兩個來源互相核對**：宣告裡的 `componentId`
  * vs 從檔案路徑推導的 `sourceDir`。只信宣告會漏掉複製貼上的錯，
  * 只信路徑就變成「從檔名推歸屬」——而那是 `specs/054` 明令禁止的
  * （`strings.ts` 橫跨兩個標準函式庫模組、`containers.ts` 跨六個）。
@@ -124,7 +124,7 @@ function liftCode(code: string): SemanticNode | null {
 
 function collectIds(node: SemanticNode | null, out: Set<string> = new Set()): Set<string> {
   if (!node) return out
-  out.add(node.conceptId)
+  out.add(node.componentId)
   for (const kids of Object.values(node.children ?? {})) {
     for (const k of kids as SemanticNode[]) collectIds(k, out)
   }
@@ -182,7 +182,7 @@ async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
     execOutput[s.name] = await runProgram(s.code)
   }
   return {
-    identitySet: allCppConcepts().map((c) => c.conceptId).sort(),
+    identitySet: allCppConcepts().map((c) => c.componentId).sort(),
     samples: sampleResult,
     execOutput,
     labels: readLabels(),
@@ -218,7 +218,7 @@ describe('膠囊搬家：兩條防線', () => {
     //
     // > **這條護欄量的是【搬家】——而新增一個語言不是搬家。**
     const now = allCppConcepts()
-      .map((c) => c.conceptId)
+      .map((c) => c.componentId)
       .filter((id) => id.startsWith('cpp:'))
       .sort()
     const lost = base.identitySet.filter((id) => !now.includes(id))
@@ -244,15 +244,15 @@ describe('膠囊搬家：兩條防線', () => {
   // ── 防線二：錯置 ────────────────────────────────────────────
   it('防線二：每顆膠囊宣告的身分，與它的資料夾路徑一致', () => {
     const inconsistent = registeredComponents()
-      .filter((c) => idToDir(c.conceptId) !== c.sourceDir)
-      .map((c) => `${c.conceptId} 宣告在 ${c.sourceDir}（應為 ${idToDir(c.conceptId)}）`)
-    expect(inconsistent, '膠囊的身分與位置對不上——複製膠囊時忘了改 conceptId？').toEqual([])
+      .filter((c) => idToDir(c.componentId) !== c.sourceDir)
+      .map((c) => `${c.componentId} 宣告在 ${c.sourceDir}（應為 ${idToDir(c.componentId)}）`)
+    expect(inconsistent, '膠囊的身分與位置對不上——複製膠囊時忘了改 componentId？').toEqual([])
   })
 
   it('防線二：同一個身分不得由兩顆膠囊登錄', () => {
     const seen = new Map<string, string[]>()
     for (const c of registeredComponents()) {
-      seen.set(c.conceptId, [...(seen.get(c.conceptId) ?? []), c.sourceDir])
+      seen.set(c.componentId, [...(seen.get(c.componentId) ?? []), c.sourceDir])
     }
     const duplicates = [...seen.entries()].filter(([, dirs]) => dirs.length > 1)
     expect(duplicates.map(([id, d]) => `${id}: ${d.join('、')}`)).toEqual([])
@@ -267,8 +267,8 @@ describe('膠囊搬家：兩條防線', () => {
     })
 
     it('壞的輸入會報：身分與路徑對不上時，防線二必須發現', () => {
-      const fakeCapsule = { conceptId: 'cpp:vector_declare', sourceDir: 'cpp:wrong_place' }
-      expect(idToDir(fakeCapsule.conceptId)).not.toBe(fakeCapsule.sourceDir)
+      const fakeCapsule = { componentId: 'cpp:vector_declare', sourceDir: 'cpp:wrong_place' }
+      expect(idToDir(fakeCapsule.componentId)).not.toBe(fakeCapsule.sourceDir)
     })
 
     it('好的輸入不亂報：身分與路徑一致時，防線二必須沉默', () => {

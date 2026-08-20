@@ -53,8 +53,8 @@ import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 
-interface ConceptDef {
-  conceptId: string
+interface ComponentDef {
+  componentId: string
   layer?: string
   properties?: string[]
   children?: Record<string, unknown>
@@ -63,13 +63,13 @@ interface ConceptDef {
   skipReasons?: Record<string, string>
 }
 
-const ALL: ConceptDef[] = [
-  ...(universalConcepts as unknown as ConceptDef[]).map((c) => ({ ...c, layer: c.layer ?? 'universal' })),
-  ...(coreConcepts as unknown as ConceptDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-core' })),
-  ...allStdModules.flatMap((m) => (m.concepts as unknown as ConceptDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-library' }))),
+const ALL: ComponentDef[] = [
+  ...(universalConcepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'universal' })),
+  ...(coreConcepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-core' })),
+  ...allStdModules.flatMap((m) => (m.concepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-library' }))),
 ]
-const IDS = ALL.map((c) => c.conceptId)
-const BY_ID = new Map(ALL.map((c) => [c.conceptId, c]))
+const IDS = ALL.map((c) => c.componentId)
+const BY_ID = new Map(ALL.map((c) => [c.componentId, c]))
 
 /**
  * 檔案分三類——**不分開的話有三個信號是結構上死的**。
@@ -130,10 +130,10 @@ const findings: Finding[] = []
 // ── 信號 1：statement／expression 雙版本 ＝ 重複身分（結構上可證）
 // 協定說 `role: 'statement' | 'expression'` 是**屬性**，所以同概念兩個 id 是雙重身分。
 for (const c of ALL) {
-  const base = c.conceptId.replace(/_expr$/, '')
-  if (c.conceptId.endsWith('_expr') && BY_ID.has(base)) {
+  const base = c.componentId.replace(/_expr$/, '')
+  if (c.componentId.endsWith('_expr') && BY_ID.has(base)) {
     findings.push({
-      id: c.conceptId, bucket: '確定', signal: 'statement/expression 雙版本',
+      id: c.componentId, bucket: '確定', signal: 'statement/expression 雙版本',
       why: `與 ${base} 是同一個概念的兩個位置。協定裡 role 是**屬性**，兩個 id 就是雙重身分`,
     })
   }
@@ -144,7 +144,7 @@ for (const c of ALL) {
   for (const p of c.skipPaths ?? []) {
     const reason = c.skipReasons?.[p]
     findings.push({
-      id: c.conceptId, bucket: '要看', signal: `skipPaths:${p}`,
+      id: c.componentId, bucket: '要看', signal: `skipPaths:${p}`,
       why: reason ? `理由「${reason}」——要驗它成不成立` : '**沒有理由**——history/018 的門檻直接不過',
     })
   }
@@ -154,10 +154,10 @@ for (const c of ALL) {
 // 用實作足跡而非總足跡：任何元件至少出現在自己的 concepts.json ＋ blocks.json，
 // 用總足跡的話這個信號幾乎不可能中。
 for (const c of ALL) {
-  const n = footprint(implFiles, c.conceptId).length
+  const n = footprint(implFiles, c.componentId).length
   if (n <= 1) {
     findings.push({
-      id: c.conceptId, bucket: '要看', signal: `實作足跡只有 ${n} 檔`,
+      id: c.componentId, bucket: '要看', signal: `實作足跡只有 ${n} 檔`,
       why: '不是死概念就是殼——兩者要用完全不同的方式處理',
     })
   }
@@ -165,9 +165,9 @@ for (const c of ALL) {
 
 // ── 信號 4：從來沒被測試碰到（**最重要的一條**）
 for (const c of ALL) {
-  if (footprint(testFiles, c.conceptId).length === 0) {
+  if (footprint(testFiles, c.componentId).length === 0) {
     findings.push({
-      id: c.conceptId, bucket: '確定', signal: '零測試足跡',
+      id: c.componentId, bucket: '確定', signal: '零測試足跡',
       why: '沒有任何測試提到它。**它的五路是否真的работает，現在沒有人知道**',
     })
   }
@@ -177,12 +177,12 @@ for (const c of ALL) {
 for (const c of ALL) {
   if (c.layer !== 'universal') continue
   // 用**實作**足跡——通用元件的宣告永遠在中立側，用總足跡的話這個信號結構上死的
-  const files = footprint(implFiles, c.conceptId)
+  const files = footprint(implFiles, c.componentId)
   const langFiles = files.filter((f) => f.startsWith('src/languages/'))
   const neutralFiles = files.filter((f) => !f.startsWith('src/languages/'))
   if (langFiles.length > 0 && neutralFiles.length === 0) {
     findings.push({
-      id: c.conceptId, bucket: '確定', signal: '標 universal 但只有語言側實作',
+      id: c.componentId, bucket: '確定', signal: '標 universal 但只有語言側實作',
       why: '通用層的元件不該只有一個語言認得它——059 的 comment 家族同型',
     })
   }
@@ -198,7 +198,7 @@ for (const c of ALL) {
 // 這與 `lifter.ts` 那條 `/^cpp_(\w+?)_declare$/` 是同一個病：
 // **拿名字的形狀做判斷，形狀一改就靜默失效。**
 const declareFamily = ALL.filter((c) => {
-  const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+  const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
   const op = parseName(bare, SUBJECTS).operation
   return op === 'declare' || op?.startsWith('declare_')
 })
@@ -208,7 +208,7 @@ const declareFamily = ALL.filter((c) => {
 // `count`／`ptr`／`ref`）——而那是產生器的退路字串，跟「型別是身分還是參數」
 // 這個問題無關。第一版把整個 `properties` 塞進 JSON 比對，於是規格化一落地
 // 這個信號就整組消失，六筆判定同時變孤兒。**信號不該被無關的欄位打散。**
-const sig = (c: ConceptDef): string =>
+const sig = (c: ComponentDef): string =>
   JSON.stringify({
     p: paramSpecs(c.properties).map((x) => `${x.name}:${x.kind}`).sort(),
     ch: Object.keys(c.children ?? {}).sort(),
@@ -218,7 +218,7 @@ const bySig = new Map<string, string[]>()
 for (const c of declareFamily) {
   const k = sig(c)
   if (!bySig.has(k)) bySig.set(k, [])
-  bySig.get(k)!.push(c.conceptId)
+  bySig.get(k)!.push(c.componentId)
 }
 for (const [, group] of bySig) {
   if (group.length < 3) continue
@@ -240,8 +240,8 @@ const withUntypedParams = ALL.filter((c) => (c.properties ?? []).length > 0)
  * 而判定會過期：底下的事實變了，判定可能不再成立——所以下面有一支測試
  * 專門抓「信號已經不出現、判定卻還留著」的孤兒。
  */
-const decision = decided.decisions as { conceptId: string; signal: string; decision: string; reason: string }[]
-const decisionKey = new Set(decision.map((d) => `${d.conceptId}::${d.signal}`))
+const decision = decided.decisions as { componentId: string; signal: string; decision: string; reason: string }[]
+const decisionKey = new Set(decision.map((d) => `${d.componentId}::${d.signal}`))
 const alreadyDecided = (f: Finding): boolean => decisionKey.has(`${f.id}::${f.signal.replace(/\d+/g, 'N')}`)
 
 const byBucket = (b: Bucket): Finding[] =>
@@ -318,11 +318,11 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
   })
 
   it('★ 每一筆判定都要有理由，且不得是孤兒（信號已消失）', () => {
-    const noReason = decision.filter((d) => !d.reason || d.reason.length < 10).map((d) => d.conceptId)
+    const noReason = decision.filter((d) => !d.reason || d.reason.length < 10).map((d) => d.componentId)
     expect(noReason, '判定說不出理由 → 那是把「懶得看」寫成「看過了」').toEqual([])
 
     const existingSignals = new Set(findings.map((f) => `${f.id}::${f.signal.replace(/\d+/g, 'N')}`))
-    const orphans = decision.filter((d) => !existingSignals.has(`${d.conceptId}::${d.signal}`)).map((d) => d.conceptId)
+    const orphans = decision.filter((d) => !existingSignals.has(`${d.componentId}::${d.signal}`)).map((d) => d.componentId)
     expect(
       orphans,
       '以下判定的信號已經不再出現——**底下的事實變了，判定可能不再成立**，' +
@@ -342,10 +342,10 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
   })
 
   it('★ 合成注入（正向）：雙版本身分必須被報出', () => {
-    const fake: ConceptDef[] = [{ conceptId: 'synth_thing' }, { conceptId: 'synth_thing_expr' }]
-    const map = new Map(fake.map((c) => [c.conceptId, c]))
-    const hit = fake.filter((c) => c.conceptId.endsWith('_expr') && map.has(c.conceptId.replace(/_expr$/, '')))
-    expect(hit.map((c) => c.conceptId)).toEqual(['synth_thing_expr'])
+    const fake: ComponentDef[] = [{ componentId: 'synth_thing' }, { componentId: 'synth_thing_expr' }]
+    const map = new Map(fake.map((c) => [c.componentId, c]))
+    const hit = fake.filter((c) => c.componentId.endsWith('_expr') && map.has(c.componentId.replace(/_expr$/, '')))
+    expect(hit.map((c) => c.componentId)).toEqual(['synth_thing_expr'])
   })
 
   it('★ 合成注入：檔案分類——清冊不得算成測試、宣告不得算成實作', () => {
@@ -396,9 +396,9 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
 
   it('★ 合成注入（反向）：名字剛好以 _expr 結尾但沒有對應版本的，不得被報出', () => {
     // 沒有 `synth_lone` 的話，`synth_lone_expr` 只是一個名字，不是雙重身分
-    const fake: ConceptDef[] = [{ conceptId: 'synth_lone_expr' }]
-    const map = new Map(fake.map((c) => [c.conceptId, c]))
-    const hit = fake.filter((c) => c.conceptId.endsWith('_expr') && map.has(c.conceptId.replace(/_expr$/, '')))
+    const fake: ComponentDef[] = [{ componentId: 'synth_lone_expr' }]
+    const map = new Map(fake.map((c) => [c.componentId, c]))
+    const hit = fake.filter((c) => c.componentId.endsWith('_expr') && map.has(c.componentId.replace(/_expr$/, '')))
     expect(hit, '沒有配對版本卻報出來 → 每個以 _expr 結尾的名字都會變違規').toEqual([])
   })
 })

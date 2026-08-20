@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_continue",
-    "conceptId": "cpp:continue",
+    "componentId": "cpp:continue",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",

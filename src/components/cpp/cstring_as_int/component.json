@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cstring_as_int",
+  "componentId": "cpp:cstring_as_int",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_sum",
-    "conceptId": "cpp:range_sum",
+    "componentId": "cpp:range_sum",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

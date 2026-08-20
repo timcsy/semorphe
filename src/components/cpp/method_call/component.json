@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:method_call",
+  "componentId": "cpp:method_call",
   "abstractConcept": "cpp:func_call",
   "properties": [
     {

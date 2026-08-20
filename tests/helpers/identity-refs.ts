@@ -37,7 +37,7 @@ import path from 'node:path'
 import { listSourceFiles, REPO_ROOT } from './guardrail'
 import { classifyFile } from './file-classification'
 
-export type Role = 'conceptId' | 'blockType' | '非身分'
+export type Role = 'componentId' | 'blockType' | '非身分'
 
 /**
  * **永久豁免**：這些檔案就是在處理舊身分，它們裡面的舊名字是資料不是債。
@@ -63,7 +63,7 @@ export interface IdRef {
   text: string
 }
 
-/** 第一引數是 **conceptId** 的呼叫 */
+/** 第一引數是 **componentId** 的呼叫 */
 const CONCEPT_CALLS = new Set([
   'createNode',
   'getByConceptId',
@@ -84,13 +84,13 @@ const BLOCKTYPE_CALLS = new Set([
   'isBlockVisible',
 ])
 
-/** 值是 conceptId 的屬性名 */
-const CONCEPT_PROPS = /^(conceptId|abstractConcept)$/
+/** 值是 componentId 的屬性名 */
+const CONCEPT_PROPS = /^(componentId|abstractConcept)$/
 /** 值是 blockType 的屬性名 */
 const BLOCKTYPE_PROPS = /^(type|blockType)$/
 
-/** 變數名長這樣時，指派給它的字面是 conceptId */
-const CONCEPT_VARS = /^(concept|conceptId|cid)$/
+/** 變數名長這樣時，指派給它的字面是 componentId */
+const CONCEPT_VARS = /^(concept|componentId|cid)$/
 
 function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
   const p = n.parent
@@ -101,29 +101,32 @@ function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
     const c = p.expression
     const name = ts.isPropertyAccessExpression(c) ? c.name.text : ts.isIdentifier(c) ? c.text : ''
     if (BLOCKTYPE_CALLS.has(name)) return 'blockType'
-    if (CONCEPT_CALLS.has(name)) return 'conceptId'
+    if (CONCEPT_CALLS.has(name)) return 'componentId'
     return '非身分'
   }
 
-  // { conceptId: 'id' } / { type: 'id' }
+  // { componentId: 'id' } / { type: 'id' }
   if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) {
     const k = p.name.text
-    if (CONCEPT_PROPS.test(k)) return 'conceptId'
+    if (CONCEPT_PROPS.test(k)) return 'componentId'
     if (BLOCKTYPE_PROPS.test(k)) return 'blockType'
     return '非身分'
   }
 
-  // x.conceptId === 'id' ／ x.type === 'id'
+  // x.componentId === 'id' ／ x.type === 'id'
   if (ts.isBinaryExpression(p)) {
     const other = (p.left === n ? p.right : p.left).getText(sf)
-    if (/\bconceptId\b/.test(other)) return 'conceptId'
+    // ⚠️ **偵測器靠【欄位名】認身分引用**——spec 158 改名時它差點變瞎。
+    //    🔴 而變瞎是**靜默的**：它會把身分引用判成「非身分」，數字自己降下去。
+    //    > **一條用名字認東西的檢查，在改名那天會安靜地失效。**
+    if (/\bcomponentId\b/.test(other)) return 'componentId'
     if (/\.type\b|\bblockType\b/.test(other)) return 'blockType'
     return '非身分'
   }
 
   // concept = 'id'（變數指派）
   if (ts.isVariableDeclaration(p) && ts.isIdentifier(p.name) && CONCEPT_VARS.test(p.name.text)) {
-    return 'conceptId'
+    return 'componentId'
   }
 
   return '非身分'
@@ -164,7 +167,7 @@ export function scanTsRefs(ids: Set<string>, extra: { file: string; source: stri
 /**
  * 掃 JSON：**靠欄位位置**，零曖昧。
  *
- * `conceptId` / `abstractConcept` / 課程清單的身分陣列 → 改寫
+ * `componentId` / `abstractConcept` / 課程清單的身分陣列 → 改寫
  * `blockDef.type` → **不得改寫**（66 處與身分同名）
  */
 export function scanJsonRefs(ids: Set<string>, extraFiles: { file: string; data: unknown }[] = []): IdRef[] {
@@ -192,7 +195,7 @@ export function scanJsonRefs(ids: Set<string>, extraFiles: { file: string; data:
     const walk = (v: unknown, key: string | undefined, p: string): void => {
       if (typeof v === 'string') {
         if (!ids.has(v)) return
-        const role: Role = key && BLOCKTYPE_PROPS.test(key) ? 'blockType' : 'conceptId'
+        const role: Role = key && BLOCKTYPE_PROPS.test(key) ? 'blockType' : 'componentId'
         out.push({ file, line: 0, id: v, role, text: `${p} = ${v}` })
         return
       }

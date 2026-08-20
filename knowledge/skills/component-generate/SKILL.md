@@ -56,7 +56,7 @@ src/components/<scope>/<name>/
 - `src/core/component/registry.ts` — 膠囊怎麼被找到（**檔頭寫了為什麼是掃描**）
 - `src/core/component/paths.ts` — 五路的組裝點，**匯出函式名是契約**
 - `knowledge/concepts/元件.md` — 五槽（身分／接點／參數＝真實；形態／行為＝投影）
-- `knowledge/concepts/概念代數.md` — P2 的屬性結構化邊界規則
+- `knowledge/concepts/元件代數.md` — P2 的屬性結構化邊界規則
 
 **照抄一顆既有的**，而挑選有講究：
 
@@ -73,7 +73,7 @@ src/components/<scope>/<name>/
 
 ```jsonc
 {
-  "conceptId": "cpp:vector_declare",       // 必要：身分
+  "componentId": "cpp:vector_declare",       // 必要：身分
   "layer": "lang-library",                 // 必要：lang-core / lang-library / universal
   "properties": [                          // 必要：參數（積木上的欄位）
     { "name": "type", "kind": "enum", "values": ["int", "double"], "default": "int" },
@@ -126,7 +126,7 @@ src/components/<scope>/<name>/
 ```json
 [{
   "id": "cpp:vector_declare",
-  "conceptId": "cpp:vector_declare",
+  "componentId": "cpp:vector_declare",
   "language": "cpp",
   "category": "containers",
   "version": "1.0.0",
@@ -299,10 +299,10 @@ Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
 ### 步驟五：`execute.ts`
 
 ```typescript
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:vector_declare', async (node, ctx) => { /* … */ })
 }

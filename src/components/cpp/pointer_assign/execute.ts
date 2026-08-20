@@ -11,10 +11,10 @@
  *
  * > **同一族的兩顆元件，一顆會出聲一顆不會——而它們錯的是同一件事。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:pointer_assign', async (node, ctx) => {
     const ptrName = String(node.properties.obj)
     const valueNodes = node.children.value ?? []

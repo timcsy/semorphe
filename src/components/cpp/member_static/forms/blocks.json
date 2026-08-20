@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_member_static",
-    "conceptId": "cpp:member_static",
+    "componentId": "cpp:member_static",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",

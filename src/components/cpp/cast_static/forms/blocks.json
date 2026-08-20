@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cast_static",
-    "conceptId": "cpp:cast_static",
+    "componentId": "cpp:cast_static",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

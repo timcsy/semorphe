@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_wifi_read",
-    "conceptId": "cpp:wifi_read",
+    "componentId": "cpp:wifi_read",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

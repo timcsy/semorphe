@@ -59,7 +59,7 @@ const lift = (code: string): SemanticNode | null => lifter.lift(tsParser.parse(c
 
 function find(n: SemanticNode | null, id: string): SemanticNode | null {
   if (!n) return null
-  if (n.conceptId === id) return n
+  if (n.componentId === id) return n
   for (const kids of Object.values(n.children ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = find(k, id)

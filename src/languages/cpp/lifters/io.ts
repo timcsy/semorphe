@@ -52,7 +52,7 @@ function tryStringMethodLift(
         const n = argChildren[i] ? ctx.lift(argChildren[i]) : null
         children[slot] = n ? [n] : []
       })
-      return createNode(shape.conceptId, { obj }, children)
+      return createNode(shape.componentId, { obj }, children)
     }
   }
   switch (method) {
@@ -154,12 +154,12 @@ export function registerIOLifters(lifter: Lifter): void {
       // 接收者的型別查得到的話，用專屬身分；**查不到就留在通用版**。
       // 猜一個的話，猜錯會靜默產生一個錯的身分——那比誠實降級更糟。
       const objType = objText ? ctx.data.getType(objText) : null
-      const conceptId =
+      const componentId =
         (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
         (objType ? typedMethodConcept(objType, methodName) : undefined) ??
         METHOD_TO_CONCEPT[methodName] ??
         containerMethodConcept(methodName)
-      if (conceptId) {
+      if (componentId) {
         const properties: Record<string, string> = { obj: objText }
 
         // 容器種類——**投影要用，而投影查不到脈絡**。
@@ -181,10 +181,10 @@ export function registerIOLifters(lifter: Lifter): void {
           const argNodes = argsNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(conceptId, properties, { [childSlot]: argNodes })
+          return createNode(componentId, properties, { [childSlot]: argNodes })
         }
 
-        return createNode(conceptId, properties)
+        return createNode(componentId, properties)
       }
 
       // 不認得的方法呼叫 → 泛用的方法呼叫概念。
@@ -236,7 +236,7 @@ export function registerIOLifters(lifter: Lifter): void {
           children[slot] = args[i] ? [args[i]] : []
         })
         const props = shape.funcProp ? { [shape.funcProp]: funcName } : {}
-        return createNode(shape.conceptId, props, children)
+        return createNode(shape.componentId, props, children)
       }
     }
 

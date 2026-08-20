@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:loop_for",
+  "componentId": "cpp:loop_for",
   "abstractConcept": "cpp:loop_count",
   "properties": [],
   "children": {

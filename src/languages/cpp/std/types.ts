@@ -1,4 +1,4 @@
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../../core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../../core/types'
 
 /**
  * 一個標準函式庫模組。
@@ -29,6 +29,6 @@ import type { ConceptDefJSON, BlockProjectionJSON } from '../../../core/types'
 export interface StdModule {
   header: string
   /** ⚠️ 今天全部是空陣列。留著是因為第二個語言進來時它是暫放處。 */
-  concepts: ConceptDefJSON[]
+  concepts: ComponentDefJSON[]
   blocks: BlockProjectionJSON[]
 }

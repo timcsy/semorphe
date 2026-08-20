@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:bits_count",
-    "conceptId": "cpp:bits_count",
+    "componentId": "cpp:bits_count",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

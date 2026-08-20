@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_loop_do_while",
-    "conceptId": "cpp:loop_do_while",
+    "componentId": "cpp:loop_do_while",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",

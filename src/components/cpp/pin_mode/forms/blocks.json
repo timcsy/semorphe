@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pin_mode",
-    "conceptId": "cpp:pin_mode",
+    "componentId": "cpp:pin_mode",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

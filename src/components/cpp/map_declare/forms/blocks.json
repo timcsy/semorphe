@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:map_declare",
-    "conceptId": "cpp:map_declare",
+    "componentId": "cpp:map_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

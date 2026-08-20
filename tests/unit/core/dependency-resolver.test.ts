@@ -8,13 +8,13 @@ import type { DependencyResolver, DependencyEdge } from '../../../src/core/depen
 class MockDependencyResolver implements DependencyResolver {
   private conceptToHeader = new Map<string, { header: string; directive: string }>()
 
-  addMapping(conceptId: string, header: string, directive: string): void {
-    this.conceptToHeader.set(conceptId, { header, directive })
+  addMapping(componentId: string, header: string, directive: string): void {
+    this.conceptToHeader.set(componentId, { header, directive })
   }
 
-  resolve(conceptIds: string[]): DependencyEdge[] {
+  resolve(componentIds: string[]): DependencyEdge[] {
     const seen = new Map<string, DependencyEdge>()
-    for (const id of conceptIds) {
+    for (const id of componentIds) {
       const mapping = this.conceptToHeader.get(id)
       if (mapping && !seen.has(mapping.header)) {
         seen.set(mapping.header, {
@@ -30,7 +30,7 @@ class MockDependencyResolver implements DependencyResolver {
 }
 
 describe('DependencyResolver contract', () => {
-  it('should return empty array for empty conceptIds', () => {
+  it('should return empty array for empty componentIds', () => {
     const resolver = new MockDependencyResolver()
     expect(resolver.resolve([])).toEqual([])
   })

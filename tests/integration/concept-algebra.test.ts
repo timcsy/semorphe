@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ConceptRegistry } from '../../src/core/concept-registry'
-import type { ConceptDef } from '../../src/core/types'
+import { ComponentRegistry } from '../../src/core/component-registry'
+import type { ComponentDef } from '../../src/core/types'
 
 describe('Concept Algebra (US8)', () => {
-  let registry: ConceptRegistry
+  let registry: ComponentRegistry
 
   beforeEach(() => {
-    registry = new ConceptRegistry()
+    registry = new ComponentRegistry()
 
     // Universal layer
     registry.register({

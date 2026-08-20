@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_at",
+  "componentId": "cpp:string_at",
   "properties": [
     {
       "name": "obj",

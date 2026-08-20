@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pin_constant",
-    "conceptId": "cpp:pin_constant",
+    "componentId": "cpp:pin_constant",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",

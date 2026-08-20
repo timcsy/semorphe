@@ -37,7 +37,7 @@ argument-hint: "[要改什麼名字；空＝從當前 spec 的驗收數字推]"
 ### 2. 量規模，用**位置**分角色，不用字串比對 ⚠️
 
 `tests/helpers/identity-refs.ts` 是現成的（TypeScript AST，分
-`conceptId`／`blockType`／`非身分`）。**不要重寫，不要用 grep 代替。**
+`componentId`／`blockType`／`非身分`）。**不要重寫，不要用 grep 代替。**
 
 理由是實測的：177 顆身分裡 32 顆是**裸名**（`if`／`print`／`comment`／`input`），
 而它們同時是 DOM 標籤、tree-sitter 節點型別、除錯動作、產生出來的原始碼文字。
@@ -60,12 +60,12 @@ argument-hint: "[要改什麼名字；空＝從當前 spec 的驗收數字推]"
 #### JSON 的鍵清單——照抄，不要憑印象重打
 
 ```
-conceptId, concept, id, type, blockType, componentId,
+componentId, concept, id, type, blockType, componentId,
 abstractConcept, extends, requires, provides, blocks[], concepts[]
 ```
 
 ⚠️ **`id` 是漏過四輪的那一個。** `blocks.json` 用 `id` 而不是 `blockType`，
-而我每次重建工具時都從「conceptId 開頭」想起，想不到那裡去。
+而我每次重建工具時都從「componentId 開頭」想起，想不到那裡去。
 
 **每次跑完，對沒被改到的檔案做一次反向抽查**：如果某個檔案一處都沒改，
 問「它本來就沒有身分，還是它的鍵不在清單上」。
@@ -154,7 +154,7 @@ G 的護欄第一版誤報 84 顆（實測 ~35）。第三個原因最值得記�
 
 ## 2026-08-11 實測：**改名積木型別**（不是身分）——五步全部適用，而多一條
 
-`spec 116` 把 153 顆積木型別改成從概念身分導出。**五個步驟一條都沒有失效**
+`spec 116` 把 153 顆積木型別改成從元件身分導出。**五個步驟一條都沒有失效**
 （護欄先蓋且第一次紅、一段一驗收、一次改名＝一次存檔版本＋凍結明表全部照用），
 而它掀出一條這張表沒有的：
 
@@ -185,7 +185,7 @@ G 的護欄第一版誤報 84 顆（實測 ~35）。第三個原因最值得記�
 **那時測試不保護任何東西**。
 
 同一個病的第三處是用**字串手術**組出另一個系統的名字
-（`` `u_${conceptId.split(':').pop()}` ``）。它壞過一次、被補了註解，
+（`` `u_${componentId.split(':').pop()}` ``）。它壞過一次、被補了註解，
 **而註解擋不住第二次**。
 
 > **會漂移的不是那一行，是「用手拼出另一個系統的名字」這件事本身。**

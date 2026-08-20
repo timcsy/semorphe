@@ -1,9 +1,9 @@
 /** `cpp:struct_at_ptr` 的 **execute** 路——從共用檔原封剪過來（批次第十五批：field_expression 的分支）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { getMember } from '../../../interpreter/executors/variables'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   /** `p->x` */
     register('cpp:struct_at_ptr', async (node, ctx) => {
       const ptrName = String(node.properties.obj)

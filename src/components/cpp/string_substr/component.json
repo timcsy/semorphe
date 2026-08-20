@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_substr",
+  "componentId": "cpp:string_substr",
   "properties": [
     {
       "name": "obj",

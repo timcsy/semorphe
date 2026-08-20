@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_append",
-    "conceptId": "cpp:cstring_append",
+    "componentId": "cpp:cstring_append",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

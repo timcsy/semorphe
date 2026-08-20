@@ -5,7 +5,7 @@
  * 而它們的差別只有一個關鍵字。原本那個對應寫在一個三元運算子裡：
  *
  * ```ts
- * const conceptId = qualifier === 'const' ? 'cpp:var_declare_const'
+ * const componentId = qualifier === 'const' ? 'cpp:var_declare_const'
  *                                         : 'cpp:var_declare_constexpr'
  * ```
  *
@@ -16,20 +16,20 @@
  * ⚠️ 表是空的：核心給機制、套件給資料。
  */
 
-const table = new Map<string, { conceptId: string; source: string }>()
+const table = new Map<string, { componentId: string; source: string }>()
 
-export function registerQualifierConcept(qualifier: string, conceptId: string, source: string): void {
+export function registerQualifierConcept(qualifier: string, componentId: string, source: string): void {
   const existing = table.get(qualifier)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `修飾詞「${qualifier}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。`,
     )
   }
-  table.set(qualifier, { conceptId, source })
+  table.set(qualifier, { componentId, source })
 }
 
 /** 修飾詞 → 元件身分。認不得回 `undefined`。 */
 export function qualifierConcept(qualifier: string): string | undefined {
-  return table.get(qualifier)?.conceptId
+  return table.get(qualifier)?.componentId
 }

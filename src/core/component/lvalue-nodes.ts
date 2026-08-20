@@ -26,13 +26,13 @@ export type LvalueKind =
 const lvalues = new Map<string, LvalueKind>()
 
 /** 元件宣告：「我這種節點可以被寫回，形狀是這種」。 */
-export function declareLvalue(conceptId: string, kind: LvalueKind): void {
-  lvalues.set(conceptId, kind)
+export function declareLvalue(componentId: string, kind: LvalueKind): void {
+  lvalues.set(componentId, kind)
 }
 
 /** 這個節點可以被寫回嗎？沒有人宣告過就是 `undefined`——不猜。 */
-export function lvalueKindOf(conceptId: string): LvalueKind | undefined {
-  return lvalues.get(conceptId)
+export function lvalueKindOf(componentId: string): LvalueKind | undefined {
+  return lvalues.get(componentId)
 }
 
 /** 護欄用：誰宣告過。 */

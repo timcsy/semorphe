@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:char_is_alpha",
+  "componentId": "cpp:char_is_alpha",
   "abstractConcept": null,
   "properties": [],
   "children": {

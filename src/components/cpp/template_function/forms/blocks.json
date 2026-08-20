@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:template_function",
-    "conceptId": "cpp:template_function",
+    "componentId": "cpp:template_function",
     "language": "cpp",
     "category": "templates",
     "version": "1.0.0",

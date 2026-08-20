@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_lcd_clear",
-    "conceptId": "cpp:lcd_clear",
+    "componentId": "cpp:lcd_clear",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

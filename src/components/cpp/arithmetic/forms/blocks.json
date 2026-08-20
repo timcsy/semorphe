@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_arithmetic",
-    "conceptId": "cpp:arithmetic",
+    "componentId": "cpp:arithmetic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",

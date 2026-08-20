@@ -37,11 +37,11 @@ import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 import { registeredIdMigrations } from '../../src/core/storage-version'
 import { isValidComponentId, isNamespaced } from '../../src/core/identity'
 import { registeredComponents } from '../../src/core/component/registry'
-import type { ConceptDefJSON } from '../../src/core/types'
+import type { ComponentDefJSON } from '../../src/core/types'
 
-const allIdentities = new Set(allCppConcepts().map((c) => c.conceptId))
+const allIdentities = new Set(allCppConcepts().map((c) => c.componentId))
 
-interface formatViolations { conceptId: string; why: string }
+interface formatViolations { componentId: string; why: string }
 
 /**
  * 🔄 **spec 156：判準從「白名單」換成「結構對應」。**
@@ -56,28 +56,28 @@ interface formatViolations { conceptId: string; why: string }
  * > **一份白名單會在第二個成員出現時擋住它；
  * > 而一個結構對應只擋【不一致】。**
  */
-function checkFormat(inject: ConceptDefJSON[] = []): formatViolations[] {
+function checkFormat(inject: ComponentDefJSON[] = []): formatViolations[] {
   const out: formatViolations[] = []
   const folderOf = new Map(
-    registeredComponents().map((c) => [c.conceptId, c.sourceDir.split('/').at(-2) ?? '']),
+    registeredComponents().map((c) => [c.componentId, c.sourceDir.split('/').at(-2) ?? '']),
   )
   for (const c of [...allCppConcepts(), ...inject]) {
-    if (!isNamespaced(c.conceptId)) {
-      out.push({ conceptId: c.conceptId, why: '沒有命名空間（裸名或缺 scope）' })
+    if (!isNamespaced(c.componentId)) {
+      out.push({ componentId: c.componentId, why: '沒有命名空間（裸名或缺 scope）' })
       continue
     }
-    if (!isValidComponentId(c.conceptId)) {
-      out.push({ conceptId: c.conceptId, why: 'scope 的格式不合（要小寫識別字）' })
+    if (!isValidComponentId(c.componentId)) {
+      out.push({ componentId: c.componentId, why: 'scope 的格式不合（要小寫識別字）' })
       continue
     }
     // 🔴 結構對應——⚠️ 只對**膠囊**成立；共用檔宣告的概念沒有資料夾，跳過。
-    const folder = folderOf.get(c.conceptId)
-    const scope = c.conceptId.slice(0, c.conceptId.indexOf(':'))
+    const folder = folderOf.get(c.componentId)
+    const scope = c.componentId.slice(0, c.componentId.indexOf(':'))
     if (folder !== undefined && folder !== scope) {
-      out.push({ conceptId: c.conceptId, why: `scope 與資料夾不一致（資料夾是 ${folder}）` })
+      out.push({ componentId: c.componentId, why: `scope 與資料夾不一致（資料夾是 ${folder}）` })
     }
   }
-  return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+  return out.sort((a, b) => a.componentId.localeCompare(b.componentId))
 }
 
 /** 舊格式（沒有命名空間）的身分引用——**只算角色分類得出的** */
@@ -85,8 +85,8 @@ function legacyRefs(extra: { file: string; source: string }[] = []): { ts: numbe
   const old = new Set([...allIdentities].filter((id) => !isNamespaced(id)))
   if (old.size === 0) return { ts: 0, json: 0 }
   return {
-    ts: scanTsRefs(old, extra).filter((r) => r.role === 'conceptId').length,
-    json: scanJsonRefs(old).filter((r) => r.role === 'conceptId').length,
+    ts: scanTsRefs(old, extra).filter((r) => r.role === 'componentId').length,
+    json: scanJsonRefs(old).filter((r) => r.role === 'componentId').length,
   }
 }
 
@@ -122,13 +122,13 @@ function blockTypeFingerprint(): string {
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
-const syntheticConcept = (id: string): ConceptDefJSON =>
-  ({ conceptId: id, layer: 'universal', properties: [], children: {} }) as unknown as ConceptDefJSON
+const syntheticConcept = (id: string): ComponentDefJSON =>
+  ({ componentId: id, layer: 'universal', properties: [], children: {} }) as unknown as ComponentDefJSON
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆裸名身分 → **必須被報出**', () => {
     const hit = checkFormat([syntheticConcept('__合成_裸名__')])
-    expect(hit.find((f) => f.conceptId === '__合成_裸名__'), '裸名沒被報出 → **護欄壞了**').toBeDefined()
+    expect(hit.find((f) => f.componentId === '__合成_裸名__'), '裸名沒被報出 → **護欄壞了**').toBeDefined()
   })
 
   it('★ 注入一顆 scope 與資料夾不一致的身分 → **必須被報出**', () => {
@@ -136,12 +136,12 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     //    ⚠️ 而白名單在第二個語言進來時會擋住它——所以改成問結構。
     //    這裡合成「身分說 cop、而它註冊在某個真的資料夾裡」。
     const real = registeredComponents()[0]
-    const hit = checkFormat([{ ...syntheticConcept(real.conceptId), conceptId: real.conceptId }])
+    const hit = checkFormat([{ ...syntheticConcept(real.componentId), componentId: real.componentId }])
     // 正常情況不該被報（一致）
-    expect(hit.find((f) => f.conceptId === real.conceptId), '一致的身分被誤報了').toBeUndefined()
+    expect(hit.find((f) => f.componentId === real.componentId), '一致的身分被誤報了').toBeUndefined()
 
     // 🔴 真正的注入：把某顆膠囊的身分換成別的 scope，結構就對不上了
-    const mismatched = real.conceptId.replace(/^[a-z0-9_]+:/, 'cop:')
+    const mismatched = real.componentId.replace(/^[a-z0-9_]+:/, 'cop:')
     expect(isValidComponentId(mismatched), '格式本身是合法的——所以只有結構抓得到它').toBe(true)
     expect(mismatched.startsWith('cop:'), '合成失敗').toBe(true)
   })
@@ -149,7 +149,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 反向：注入一顆格式正確的身分 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上面兩支。
     expect(
-      checkFormat([syntheticConcept('cpp:__合成_正確__')]).find((f) => f.conceptId === 'cpp:__合成_正確__'),
+      checkFormat([syntheticConcept('cpp:__合成_正確__')]).find((f) => f.componentId === 'cpp:__合成_正確__'),
       '一顆格式正確的身分被報成違規 → 這條會亂叫',
     ).toBeUndefined()
   })
@@ -232,7 +232,7 @@ describe('元件身分命名空間', () => {
   it('報表', () => {
     const scopeDistribution = new Map<string, number>()
     for (const c of allCppConcepts()) {
-      const s = isNamespaced(c.conceptId) ? c.conceptId.slice(0, c.conceptId.indexOf(':')) : '（裸名）'
+      const s = isNamespaced(c.componentId) ? c.componentId.slice(0, c.componentId.indexOf(':')) : '（裸名）'
       scopeDistribution.set(s, (scopeDistribution.get(s) ?? 0) + 1)
     }
     printReport('身分命名空間', [
@@ -241,7 +241,7 @@ describe('元件身分命名空間', () => {
       '',
       'scope 分佈：' + [...scopeDistribution].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join('｜'),
       '',
-      ...violations.slice(0, 12).map((f) => `  ⚠️ ${f.conceptId.padEnd(30)} ${f.why}`),
+      ...violations.slice(0, 12).map((f) => `  ⚠️ ${f.componentId.padEnd(30)} ${f.why}`),
       violations.length > 12 ? `     …還有 ${violations.length - 12} 顆` : '',
       '',
       '**殘留**（角色分類不到、看起來與概念有關——收硬性零前要逐筆看）：',
@@ -272,7 +272,7 @@ describe('元件身分命名空間', () => {
     // 「留一筆還成立嗎」→ 不成立：一顆沒有命名空間的身分就是一顆沒有擁有者的
     // 身分，第三方套件與硬體域都建立在「身分有主」這件事上。
     // 「修法貴不貴」→ 遷移已經做完了，維持它是免費的。
-    expect(violations.map((f) => `${f.conceptId}：${f.why}`), '身分格式退回舊樣了').toEqual([])
+    expect(violations.map((f) => `${f.componentId}：${f.why}`), '身分格式退回舊樣了').toEqual([])
     expect(references.ts, '程式碼裡還有舊格式的身分引用').toBe(0)
     expect(references.json, '宣告裡還有舊格式的身分引用').toBe(0)
   })
@@ -284,9 +284,9 @@ describe('元件身分命名空間', () => {
       return
     }
     const base = loadBaseline<typeof current>('identity-namespace')
-    const added = newItems(violations, base.violations, (f) => f.conceptId)
+    const added = newItems(violations, base.violations, (f) => f.componentId)
     expect(
-      added.map((f) => `${f.conceptId}  ${f.why}`),
+      added.map((f) => `${f.componentId}  ${f.why}`),
       '新增了一顆沒有命名空間的身分——格式退回去了。',
     ).toEqual([])
     assertRatchet([

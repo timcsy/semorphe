@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_substr",
-    "conceptId": "cpp:string_substr",
+    "componentId": "cpp:string_substr",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:logic_not",
+  "componentId": "cpp:logic_not",
   "abstractConcept": null,
   "properties": [],
   "children": {

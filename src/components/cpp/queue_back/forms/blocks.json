@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:queue_back",
-    "conceptId": "cpp:queue_back",
+    "componentId": "cpp:queue_back",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

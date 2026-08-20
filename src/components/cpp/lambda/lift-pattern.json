@@ -2,7 +2,7 @@
   "id": "cpp_lambda_expr",
   "astNodeType": "lambda_expression",
   "concept": {
-    "conceptId": "cpp:lambda"
+    "componentId": "cpp:lambda"
   },
   "liftStrategy": "cpp:liftLambda",
   "fieldMappings": []

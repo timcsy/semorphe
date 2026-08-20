@@ -182,7 +182,7 @@ Agent A 回傳程式後：
 | **EXPECTED_DEGRADATION** | 程式碼使用不支援的特性，降級為 raw_code | 預期中 — 記錄覆蓋缺口 |
 | **SCAFFOLD_LEAK** | 低層級輸出包含高層級概念語法 | **BUG** — P4 漸進揭露違規 |
 | **ROUNDTRIP_DRIFT** | 二次 round-trip 語義樹結構不同 | **BUG** — P1 可逆性違規 |
-| **WRONG_CONCEPT** | 語義樹使用了錯誤的概念（如用 `var_declare` 而非專屬概念） | **BUG** — 概念身分違規，積木無法正確渲染 |
+| **WRONG_CONCEPT** | 語義樹使用了錯誤的概念（如用 `var_declare` 而非專屬概念） | **BUG** — 元件身分違規，積木無法正確渲染 |
 | **TIMEOUT** | 產生的程式碼掛住 | **BUG** — 可能有無窮迴圈 |
 
 **層級轉換穩定性**：驗證 L₁ 可見概念在 L₂ 的呈現不變——只增不改（§2.4 層級轉換穩定性）。
@@ -225,7 +225,7 @@ Agent A 回傳程式後：
 
 1. **PASS 的測試**：在 `tests/integration/` 建立測試檔（檔名 `fuzz-{lang}-{scope}.test.ts`），將 PASS 的程式轉化為 round-trip 回歸測試。每個測試**必須同時驗證**：
    - lift → generate 的語義樹結構等價性
-   - **概念身分（CONCEPT_IDENTITY）**：語義樹中被測概念使用了正確的 conceptId，而非退化到通用概念。使用 `findConcepts(sem, 'expected_concept_id')` 斷言節點存在。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性（如指標宣告被 lift 為 `var_declare` 但 roundtrip 仍正確的情況）。
+   - **元件身分（CONCEPT_IDENTITY）**：語義樹中被測概念使用了正確的 componentId，而非退化到通用概念。使用 `findConcepts(sem, 'expected_concept_id')` 斷言節點存在。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性（如指標宣告被 lift 為 `var_declare` 但 roundtrip 仍正確的情況）。
 2. **BUG（❌）的測試**：同樣建立測試檔（檔名加 `fuzz-` 前綴），用 `it.skip` 或 `it.todo` 標記，附上 bug 描述和根本原因假設，待修復後啟用。
 3. **Runner 腳本不可作為驗證手段**：`/tmp/` 下的臨時 runner 僅用於探索性執行。最終驗證結果必須轉化為 Vitest 測試案例，確保 CI 可重複捕捉回歸。
 4. 如果已有同範疇的測試檔，將新案例**追加**到既有檔案中。

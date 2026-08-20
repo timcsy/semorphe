@@ -43,7 +43,7 @@ interface StyleExceptionRule {
  * 不是「兩端」本身。
  */
 function matchesRoleAndStyle(node: SemanticNode, role: string, style: string): boolean {
-  const t = ioTraitOf(node.conceptId)
+  const t = ioTraitOf(node.componentId)
   return t?.role === role && t?.style === style
 }
 
@@ -52,7 +52,7 @@ function matchesRoleAndStyle(node: SemanticNode, role: string, style: string): b
 /** Header: bits/stdc++.h in non-competitive styles */
 const bitsHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    isIncludeDirective(node.conceptId) &&
+    isIncludeDirective(node.componentId) &&
     node.properties.header === 'bits/stdc++.h' &&
     style.headerStyle !== 'bits',
   label: () => '#include <bits/stdc++.h>',
@@ -72,7 +72,7 @@ const bitsHeaderRule: StyleExceptionRule = {
 /** Header: cstdio in iostream-preferred styles */
 const cstdioHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    isIncludeDirective(node.conceptId) &&
+    isIncludeDirective(node.componentId) &&
     node.properties.header === 'cstdio' &&
     style.ioPreference === 'iostream',
   label: () => '#include <cstdio>',
@@ -85,7 +85,7 @@ const cstdioHeaderRule: StyleExceptionRule = {
 /** Header: iostream in cstdio-preferred styles */
 const iostreamHeaderRule: StyleExceptionRule = {
   match: (node, style) =>
-    isIncludeDirective(node.conceptId) &&
+    isIncludeDirective(node.componentId) &&
     node.properties.header === 'iostream' &&
     style.ioPreference === 'cstdio',
   label: () => '#include <iostream>',
@@ -130,13 +130,13 @@ const printToCstdioRule: StyleExceptionRule = {
   suggestion: () => 'printf(...)',
   convert: (node) => {
     const values = node.children.values ?? []
-    const hasEndl = values.some(v => isLineBreak(v.conceptId))
+    const hasEndl = values.some(v => isLineBreak(v.componentId))
     // Build format string: embed string_literal values directly, use %d for expressions
     const formatParts: string[] = []
     const args: typeof values = []
     for (const v of values) {
-      if (isLineBreak(v.conceptId)) continue
-      if (isStringLiteral(v.conceptId)) {
+      if (isLineBreak(v.componentId)) continue
+      if (isStringLiteral(v.componentId)) {
         // Embed string value directly into format string
         const text = (v.properties.value as string) ?? ''
         formatParts.push(text)
@@ -290,7 +290,7 @@ function walkTree(
 
   // If no hardcoded rule matched and we have a registry, try module-based detection
   if (!matched && registry) {
-    const header = registry.getHeaderForConcept(node.conceptId)
+    const header = registry.getHeaderForConcept(node.componentId)
     if (header && IO_MODULE_HEADERS.has(header)) {
       const preferredHeader = IO_PREF_TO_HEADER[style.ioPreference]
       if (preferredHeader && header !== preferredHeader) {
@@ -299,7 +299,7 @@ function walkTree(
         // but this catches any new concepts added to modules without explicit rules)
         exceptions.push({
           node,
-          label: `${node.conceptId} (${header})`,
+          label: `${node.componentId} (${header})`,
           suggestion: `use ${preferredHeader} equivalent`,
           convert: () => [node], // No auto-conversion for unknown concepts
         })

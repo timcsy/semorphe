@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:serial_print",
+  "componentId": "cpp:serial_print",
   "abstractConcept": "cpp:print",
   "properties": [
     {

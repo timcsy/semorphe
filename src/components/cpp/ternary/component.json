@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:ternary",
+  "componentId": "cpp:ternary",
   "abstractConcept": "cpp:if_else",
   "properties": [],
   "children": {

@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('constrain', {
-    conceptId: 'cpp:math_constrain',
+    componentId: 'cpp:math_constrain',
     argSlots: ['value', 'low', 'high'],
     source: 'cpp/math_constrain',
   })

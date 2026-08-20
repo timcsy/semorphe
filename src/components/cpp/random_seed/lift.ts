@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('srand', {
-    conceptId: 'cpp:random_seed',
+    componentId: 'cpp:random_seed',
     argSlots: ["seed"],
     source: 'cpp/random_seed',
   })

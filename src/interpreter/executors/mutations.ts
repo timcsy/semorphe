@@ -1,8 +1,8 @@
-import type { ConceptExecutor } from '../executor-registry'
+import type { ComponentExecutor } from '../executor-registry'
 import type { RuntimeValue } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 
-export const execIncrement: ConceptExecutor = async (node, ctx) => {
+export const execIncrement: ComponentExecutor = async (node, ctx) => {
   const name = String(node.properties.name)
   const op = String(node.properties.operator)
   const position = String(node.properties.position ?? 'postfix')
@@ -78,7 +78,7 @@ switch (op) {
 }
 }
 
-export const execCompoundAssign: ConceptExecutor = async (node, ctx) => {
+export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
   const name = String(node.properties.name)
   const op = String(node.properties.operator)
   const rhs = await ctx.evaluate(node.children.value[0])
@@ -154,7 +154,7 @@ export const execCompoundAssign: ConceptExecutor = async (node, ctx) => {
   return newValue
 }
 
-export function registerMutationExecutors(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerMutationExecutors(register: (concept: string, executor: ComponentExecutor) => void): void {
 
   register('compound_assign', execCompoundAssign)
 }

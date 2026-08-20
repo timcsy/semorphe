@@ -7,14 +7,14 @@
 import { describe, it, expect } from 'vitest'
 import { extractDiscriminators, provablyDisjoint, classifyPair, type RuleLike } from '../../helpers/discriminator'
 
-const rule = (o: Partial<RuleLike> & { conceptId: string }): RuleLike => ({
+const rule = (o: Partial<RuleLike> & { componentId: string }): RuleLike => ({
   patternType: 'simple', priority: 10, ...o,
 })
 
 describe('extractDiscriminators：判別式不只在限定條件裡', () => {
   it('從限定條件萃取', () => {
     const d = extractDiscriminators(rule({
-      conceptId: 'x',
+      componentId: 'x',
       constraints: [{ field: 'operator', text: '+' }, { field: 'left', nodeType: 'identifier' }],
     }))
     expect(d).toEqual([
@@ -25,7 +25,7 @@ describe('extractDiscriminators：判別式不只在限定條件裡', () => {
 
   it('★ 從 chain 萃取——這是最容易漏的一層', () => {
     const d = extractDiscriminators(rule({
-      conceptId: 'cpp:print', patternType: 'chain',
+      componentId: 'cpp:print', patternType: 'chain',
       chain: { operator: '<<', rootMatch: { text: 'cout' } },
     }))
     expect(d.map(x => x.dimension).sort()).toEqual(['chain:operator', 'chain:rootText'])
@@ -33,7 +33,7 @@ describe('extractDiscriminators：判別式不只在限定條件裡', () => {
 
   it('從 operatorDispatch 萃取運算子集合', () => {
     const d = extractDiscriminators(rule({
-      conceptId: 'x', patternType: 'operatorDispatch',
+      componentId: 'x', patternType: 'operatorDispatch',
       operatorDispatch: { routes: { '+': 'a', '-': 'b' } },
     }))
     expect(d).toEqual([{ dimension: 'dispatch:operators', kind: 'set', value: '+|-' }])
@@ -41,7 +41,7 @@ describe('extractDiscriminators：判別式不只在限定條件裡', () => {
 
   it('從 composite 萃取每個 check', () => {
     const d = extractDiscriminators(rule({
-      conceptId: 'x', patternType: 'composite',
+      componentId: 'x', patternType: 'composite',
       composite: { checks: [{ field: 'value', typeIs: 'call_expression' }] },
     }))
     expect(d).toEqual([{ dimension: 'composite:value', kind: 'nodeType', value: 'call_expression' }])
@@ -76,9 +76,9 @@ describe('provablyDisjoint：只有證明得出來才回 true', () => {
 
 describe('classifyPair：三分類', () => {
   it('★ print vs input 必須是 never——它們是專案最常用的兩條規則', () => {
-    const print = rule({ conceptId: 'cpp:print', patternType: 'chain', priority: 105,
+    const print = rule({ componentId: 'cpp:print', patternType: 'chain', priority: 105,
       chain: { operator: '<<', rootMatch: { text: 'cout' } } })
-    const input = rule({ conceptId: 'cpp:input', patternType: 'chain', priority: 105,
+    const input = rule({ componentId: 'cpp:input', patternType: 'chain', priority: 105,
       chain: { operator: '>>', rootMatch: { text: 'cin' } } })
     const v = classifyPair(print, input)
     expect(v.verdict, `誤報這一對會讓維護者立刻學會忽略整個護欄。理由：${v.reason}`).toBe('never')
@@ -86,7 +86,7 @@ describe('classifyPair：三分類', () => {
   })
 
   it('兩條都沒有判別式 → definitely', () => {
-    const v = classifyPair(rule({ conceptId: 'a' }), rule({ conceptId: 'b' }))
+    const v = classifyPair(rule({ componentId: 'a' }), rule({ componentId: 'b' }))
     expect(v.verdict).toBe('definitely')
   })
 
@@ -96,8 +96,8 @@ describe('classifyPair：三分類', () => {
     // 先登記的贏走全部，其餘永遠不會被試到。
     const c = [{ field: 'type', nodeType: 'template_type' }]
     const v = classifyPair(
-      rule({ conceptId: 'cpp:vector_declare', patternType: 'constrained', constraints: c }),
-      rule({ conceptId: 'cpp:map_declare', patternType: 'constrained', constraints: c }),
+      rule({ componentId: 'cpp:vector_declare', patternType: 'constrained', constraints: c }),
+      rule({ componentId: 'cpp:map_declare', patternType: 'constrained', constraints: c }),
     )
     expect(v.verdict).toBe('definitely')
     expect(v.reason).toContain('永遠不會被試到')
@@ -105,16 +105,16 @@ describe('classifyPair：三分類', () => {
 
   it('一方的限定條件是另一方的子集 → definitely', () => {
     const v = classifyPair(
-      rule({ conceptId: 'loose', constraints: [{ field: 'type', text: 'int' }] }),
-      rule({ conceptId: 'strict', constraints: [{ field: 'type', text: 'int' }, { field: 'x', text: 'y' }] }),
+      rule({ componentId: 'loose', constraints: [{ field: 'type', text: 'int' }] }),
+      rule({ componentId: 'strict', constraints: [{ field: 'type', text: 'int' }, { field: 'x', text: 'y' }] }),
     )
     expect(v.verdict).toBe('definitely')
   })
 
   it('★ 不同 field 的限定條件 → unknown，不得樂觀歸 never', () => {
     const v = classifyPair(
-      rule({ conceptId: 'a', constraints: [{ field: 'x', text: '1' }] }),
-      rule({ conceptId: 'b', constraints: [{ field: 'y', text: '2' }] }),
+      rule({ componentId: 'a', constraints: [{ field: 'x', text: '1' }] }),
+      rule({ componentId: 'b', constraints: [{ field: 'y', text: '2' }] }),
     )
     expect(v.verdict, '判不出來就說判不出來——保守是刻意的').toBe('unknown')
   })
@@ -124,8 +124,8 @@ describe('classifyPair：三分類', () => {
     // 但那是錯的：沒有限定條件的那條會匹配該語法的**全部**情形，所以
     // **任何滿足另一條的輸入，必然也滿足它**。兩者必定同時認領。
     const v = classifyPair(
-      rule({ conceptId: 'a', constraints: [{ field: 'x', text: '1' }] }),
-      rule({ conceptId: 'b' }),
+      rule({ componentId: 'a', constraints: [{ field: 'x', text: '1' }] }),
+      rule({ componentId: 'b' }),
     )
     expect(v.verdict).toBe('definitely')
   })

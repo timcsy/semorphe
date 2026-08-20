@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { extractInputNames, getInputs } from '../../src/core/block-input-names'
-import type { BlockSpec, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 // ⚠️ **第十一個組裝點**：這裡原本只讀 `universal` 的兩個陣列。
 // 一顆通用元件搬進膠囊之後 `specs.find(...)` 回 undefined，
 // 而斷言訊息說的是「must use CONDITION, not COND」——**訊息與根因無關**。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 
@@ -57,7 +57,7 @@ describe('blockDef input name sanity checks', () => {
   // > 每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。
   const _allConcepts = [
     ...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts),
-    ...(componentConcepts() as unknown as ConceptDefJSON[]),
+    ...(componentConcepts() as unknown as ComponentDefJSON[]),
   ]
   _reg.loadFromSplit(_allConcepts, [
     ...universalBlocks,

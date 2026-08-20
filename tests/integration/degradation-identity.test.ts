@@ -73,7 +73,7 @@ beforeAll(() => {
 function walkedIdentities(node: SemanticNode): string | null {
   const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [node] }))
   const back = (st.blocks.blocks as never[]).map((b) => extractor.extract(b as never)).filter(Boolean) as SemanticNode[]
-  return back[0]?.conceptId ?? null
+  return back[0]?.componentId ?? null
 }
 
 const condition = (): SemanticNode => createNode('cpp:literal_number', { value: '1' })
@@ -142,7 +142,7 @@ describe('走一次投影，身分不得改變', () => {
     )
     const back = (st.blocks.blocks as never[]).map((b) => extractor.extract(b as never)).filter(Boolean) as SemanticNode[]
     const collect = (n: SemanticNode, out: string[] = []): string[] => {
-      out.push(n.conceptId)
+      out.push(n.componentId)
       for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
       return out
     }

@@ -5,12 +5,12 @@
  * 而**可重現比擬真重要**：一個每次讀到不同值的模擬器，測不出任何東西。
  * 🔴 `INPUT_PULLUP` 是例外：它**本來就該讀回 HIGH**（內部提升電阻）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 const INPUT_PULLUP = 2
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:digital_read', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)

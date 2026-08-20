@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:stringstream_declare",
+  "componentId": "cpp:stringstream_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

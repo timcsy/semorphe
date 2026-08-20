@@ -46,7 +46,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const gen = (t: SemanticNode): string => generateCode(t, 'cpp', apcs as StylePreset)
 const ids = (n: SemanticNode, out: string[] = []): string[] => {
-  out.push(n.conceptId)
+  out.push(n.componentId)
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) ids(k, out)
   return out
 }

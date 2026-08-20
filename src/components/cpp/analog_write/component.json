@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:analog_write",
+  "componentId": "cpp:analog_write",
   "abstractConcept": null,
   "properties": [],
   "children": {

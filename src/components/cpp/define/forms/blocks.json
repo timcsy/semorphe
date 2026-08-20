@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_define",
-    "conceptId": "cpp:define",
+    "componentId": "cpp:define",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",

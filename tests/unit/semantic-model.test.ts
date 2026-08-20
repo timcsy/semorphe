@@ -12,7 +12,7 @@ import type { SemanticNode, SemanticModel } from '../../src/core/types'
 describe('createNode', () => {
   it('should create a node with minimal arguments', () => {
     const node = createNode('cpp:var_declare')
-    expect(node.conceptId).toBe('cpp:var_declare')
+    expect(node.componentId).toBe('cpp:var_declare')
     expect(node.properties).toEqual({})
     expect(node.children).toEqual({})
     expect(node.id).toBeDefined()
@@ -25,14 +25,14 @@ describe('createNode', () => {
       { name: 'x', type: 'int' },
       { initializer: [child] },
     )
-    expect(node.conceptId).toBe('cpp:var_declare')
+    expect(node.componentId).toBe('cpp:var_declare')
     expect(node.properties).toEqual({ name: 'x', type: 'int' })
     expect(node.children.initializer[0]).toBe(child)
   })
 
   it('should create language-specific concept nodes', () => {
     const node = createNode('cpp:include', { header: 'iostream' })
-    expect(node.conceptId).toBe('cpp:include')
+    expect(node.componentId).toBe('cpp:include')
     expect(node.properties.header).toBe('iostream')
   })
 
@@ -150,7 +150,7 @@ describe('walkNodes', () => {
     const root = createNode('cpp:program', {}, { body: [child1, child2] })
 
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.conceptId))
+    walkNodes(root, (node) => visited.push(node.componentId))
 
     expect(visited).toEqual(['cpp:program', 'cpp:literal_number', 'cpp:literal_string'])
   })
@@ -162,7 +162,7 @@ describe('walkNodes', () => {
     const root = createNode('cpp:program', {}, { body: [func] })
 
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.conceptId))
+    walkNodes(root, (node) => visited.push(node.componentId))
 
     expect(visited).toEqual(['cpp:program', 'cpp:func_def', 'cpp:var_declare', 'cpp:literal_number'])
   })
@@ -170,7 +170,7 @@ describe('walkNodes', () => {
   it('should handle empty children', () => {
     const root = createNode('cpp:break')
     const visited: string[] = []
-    walkNodes(root, (node) => visited.push(node.conceptId))
+    walkNodes(root, (node) => visited.push(node.componentId))
     expect(visited).toEqual(['cpp:break'])
   })
 })

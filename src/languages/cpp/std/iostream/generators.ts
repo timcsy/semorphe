@@ -10,10 +10,10 @@ const LOW_PREC_OPS = new Set(['&', '|', '^', '&&', '||', '>', '<', '>=', '<=', '
  * 不是那顆元件的實作——**共用的是演算法，不是身分。**
  */
 export function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
-  if (needsParenInCout(v.conceptId)) return true
+  if (needsParenInCout(v.componentId)) return true
   // ⚠️ 只換掉身分那一半——**清單留著**，那是 `<<` 的排版知識，
   // 不是任何一顆元件的性質。
-  if (isBinaryOperator(v.conceptId) && LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
+  if (isBinaryOperator(v.componentId) && LOW_PREC_OPS.has(String(v.properties.operator ?? ''))) return true
   return false
 }
 

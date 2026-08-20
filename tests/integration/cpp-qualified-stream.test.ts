@@ -39,7 +39,7 @@ const conceptsIn = (code: string): string[] => {
   const t = createTestLifter().lift(parser.parse(code)!.rootNode as never) as SemanticNode
   const ids: string[] = []
   const walk = (n: SemanticNode): void => {
-    ids.push(n.conceptId)
+    ids.push(n.componentId)
     for (const ks of Object.values(n.children ?? {})) for (const k of ks) walk(k)
   }
   if (t) walk(t)

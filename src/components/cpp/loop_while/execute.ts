@@ -1,8 +1,8 @@
 /** `cpp:loop_while` 的 **execute** 路——從共用檔原封剪過來（批次第十二批：lift 是一整筆 pattern）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_while', async (node, ctx) => {
       const body = node.children.body ?? []
       const parentScope = ctx.scope

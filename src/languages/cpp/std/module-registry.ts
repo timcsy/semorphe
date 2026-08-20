@@ -8,21 +8,21 @@ export class ModuleRegistry implements DependencyResolver {
   register(mod: StdModule): void {
     this.modules.set(mod.header, mod)
     for (const concept of mod.concepts) {
-      this.conceptToHeader.set(concept.conceptId, mod.header)
+      this.conceptToHeader.set(concept.componentId, mod.header)
     }
   }
 
-  registerConceptMapping(conceptId: string, header: string): void {
-    this.conceptToHeader.set(conceptId, header)
+  registerConceptMapping(componentId: string, header: string): void {
+    this.conceptToHeader.set(componentId, header)
   }
 
-  getHeaderForConcept(conceptId: string): string | null {
-    return this.conceptToHeader.get(conceptId) ?? null
+  getHeaderForConcept(componentId: string): string | null {
+    return this.conceptToHeader.get(componentId) ?? null
   }
 
-  resolve(conceptIds: string[]): DependencyEdge[] {
+  resolve(componentIds: string[]): DependencyEdge[] {
     const seen = new Map<string, DependencyEdge>()
-    for (const id of conceptIds) {
+    for (const id of componentIds) {
       const header = this.conceptToHeader.get(id)
       if (header && !seen.has(header)) {
         seen.set(header, {

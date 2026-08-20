@@ -2,7 +2,7 @@
  * `cpp:char_is_alpha` 的 **generate** 路：`isalpha(x)`
  *
  * 從 `std/cctype/generators.ts` 的四函式迴圈裡剪出來。
- * ⚠️ 那個迴圈用的鍵是 `cpp_char_is_alpha`（積木型別），而膠囊用 **conceptId**
+ * ⚠️ 那個迴圈用的鍵是 `cpp_char_is_alpha`（積木型別），而膠囊用 **componentId**
  * ——那正是「積木型別與元件身分是兩份會漂移的命名」那條待辦的實例。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'

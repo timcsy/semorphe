@@ -1,7 +1,7 @@
 /** `cpp:string_empty` 的 **execute** 路——從 `std/string/executors.ts` 原封搬過來。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, e: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, e: ComponentExecutor) => void): void {
   register('cpp:string_empty', async (node, ctx) => {
     const obj = String(node.properties.obj)
     const val = ctx.scope.get(obj)

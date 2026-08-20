@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import type { NewLanguageModule, TypeEntry } from '../../src/languages/types'
-import type { ConceptId } from '../../src/core/types'
+import type { ComponentId } from '../../src/core/types'
 
 /**
  * T033: LanguageModule integration tests
@@ -22,7 +22,7 @@ class MockLanguageModule implements NewLanguageModule {
     ]
   }
 
-  getSupportedConcepts(): ConceptId[] {
+  getSupportedConcepts(): ComponentId[] {
     return ['cpp:var_declare', 'cpp:var_assign', 'cpp:if', 'cpp:loop_while', 'cpp:func_def', 'cpp:func_call', 'cpp:print', 'cpp:input']
   }
 
@@ -141,7 +141,7 @@ describe('T033: Concept filtering', () => {
     const supported = new Set(module.getSupportedConcepts())
 
     // Simulate concept-based filtering
-    const allConcepts: ConceptId[] = ['cpp:var_declare', 'pointer_declare', 'cpp:if', 'template_func']
+    const allConcepts: ComponentId[] = ['cpp:var_declare', 'pointer_declare', 'cpp:if', 'template_func']
     const filtered = allConcepts.filter(c => supported.has(c))
 
     expect(filtered).toContain('cpp:var_declare')

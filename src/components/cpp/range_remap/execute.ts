@@ -9,9 +9,9 @@
  * （`map(511, 0, 1023, 0, 255)` 是 127 不是 127.5）。
  * ⚠️ **不要「順手」改成浮點**：那會讓這個積木與真板子算出不同的數。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_remap', async (node, ctx) => {
     const at = async (slot: string): Promise<number> =>
       ctx.toNumber(await ctx.evaluate((node.children[slot] ?? [])[0]))

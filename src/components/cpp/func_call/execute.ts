@@ -9,14 +9,14 @@
  * > **同一個名字在同一個檔案裡指兩件事時，剪錯一個不會報錯——
  * > 只會讓另一個悄悄消失。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
-  const execFuncCall: ConceptExecutor = async (node, ctx) => {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+  const execFuncCall: ComponentExecutor = async (node, ctx) => {
     const name = String(node.properties.name)
 
     // 名字先在**變數**裡找——一個變數可能持有 lambda。

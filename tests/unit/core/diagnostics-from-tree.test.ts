@@ -36,14 +36,14 @@ import type { SemanticNode } from '../../../src/core/types'
 /** 造一個節點。`cause` 給了才有 metadata——**沒給就是一顆健康的節點**。 */
 function node(
   id: string,
-  conceptId: string,
+  componentId: string,
   cause?: 'syntax_error' | 'unsupported' | 'nonstandard_but_valid',
   rawCode?: string,
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode {
   return {
     id,
-    conceptId,
+    componentId,
     properties: {},
     children,
     ...(cause ? { metadata: { degradationCause: cause, rawCode: rawCode ?? '' } } : {}),

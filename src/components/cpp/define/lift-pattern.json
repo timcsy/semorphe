@@ -2,7 +2,7 @@
   "id": "cpp_preproc_def",
   "astNodeType": "preproc_def",
   "concept": {
-    "conceptId": "cpp:define"
+    "componentId": "cpp:define"
   },
   "fieldMappings": [
     {

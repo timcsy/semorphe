@@ -6,7 +6,7 @@ import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
-import type { ConceptDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
 import { getVisibleConcepts } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
@@ -92,7 +92,7 @@ describe('C++ toolbox categories (language module)', () => {
   // 而 `layer` 只是碰巧對——`cpp:print` 剛好標 universal。
   // 改成問那條**等價邊**：同 `ioRole` ＝ 同一個等價類，`ioStyle` ＝ 哪個成員。
   const style = (t: string) => {
-    const cid = createRegistry().getByBlockType(t)?.conceptMapping?.conceptId
+    const cid = createRegistry().getByBlockType(t)?.componentMapping?.componentId
     return cid ? ioTraitOf(cid)?.style : undefined
   }
 

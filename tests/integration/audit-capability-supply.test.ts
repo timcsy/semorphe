@@ -77,14 +77,14 @@ function allTargets(): Target[] {
   return Object.values(TARGET_FILES).map((m) => m.default)
 }
 
-interface Need { conceptId: string; capability: string }
+interface Need { componentId: string; capability: string }
 
-function declaredNeeds(extra: { conceptId: string; capability: string }[] = []): Need[] {
-  const out: Need[] = extra.map((e) => ({ conceptId: e.conceptId, capability: e.capability }))
+function declaredNeeds(extra: { componentId: string; capability: string }[] = []): Need[] {
+  const out: Need[] = extra.map((e) => ({ componentId: e.componentId, capability: e.capability }))
   for (const m of componentManifests()) {
     const t = (m as { traits?: Record<string, unknown> }).traits
     const cap = t?.needsCapability
-    if (typeof cap === 'string' && cap !== '') out.push({ conceptId: m.conceptId, capability: cap })
+    if (typeof cap === 'string' && cap !== '') out.push({ componentId: m.componentId, capability: cap })
   }
   return out
 }
@@ -98,7 +98,7 @@ function suppliedBy(targets: readonly Target[]): (cap: string) => Target[] {
 }
 
 function measure(
-  extra: { conceptId: string; capability: string }[] = [],
+  extra: { componentId: string; capability: string }[] = [],
   targets: readonly Target[] = allTargets(),
 ): { needs: Need[]; orphans: Need[] } {
   const supplies = suppliedBy(targets)
@@ -126,8 +126,8 @@ describe('護欄：能力供給完備性', () => {
     //
     // 🔴 而那件事本身要看得見，見下面的「入口條件」那一支。
     const restricted: Target[] = [{ id: 'r', name: 'r', topic: 't', style: 's', provides: ['other'] } as Target]
-    const { orphans } = measure([{ conceptId: 'test:synthetic', capability: '__nobody_provides__' }], restricted)
-    const hit = orphans.find((o) => o.conceptId === 'test:synthetic')
+    const { orphans } = measure([{ componentId: 'test:synthetic', capability: '__nobody_provides__' }], restricted)
+    const hit = orphans.find((o) => o.componentId === 'test:synthetic')
     expect(hit, '合成的孤兒能力沒有被報出來 → **護欄壞了，不是供給完整**').toBeDefined()
   })
 
@@ -150,22 +150,22 @@ describe('護欄：能力供給完備性', () => {
   it('★ 注入：一個有目標提供的能力 → **必須不被報出**', () => {
     // 🔴 第二支不可省：沒有它，一個「什麼都報」的掃描器也能通過上面那支。
     const fake: Target[] = [{ id: 'x', name: 'x', topic: 't', style: 's', provides: ['__provided__'] } as Target]
-    const { orphans } = measure([{ conceptId: 'test:ok', capability: '__provided__' }], fake)
-    expect(orphans.map((o) => o.conceptId), '有人提供卻仍被報成孤兒 → 護欄會亂報')
+    const { orphans } = measure([{ componentId: 'test:ok', capability: '__provided__' }], fake)
+    expect(orphans.map((o) => o.componentId), '有人提供卻仍被報成孤兒 → 護欄會亂報')
       .not.toContain('test:ok')
   })
 
   it('★ 注入：省略 `provides` 的目標**提供全部**', () => {
     // ⚠️ 這是 FR-006 的機械化：非硬體目標不得因為多了這一格就開始少東西。
     const bare: Target[] = [{ id: 'y', name: 'y', topic: 't', style: 's' } as Target]
-    const { orphans } = measure([{ conceptId: 'test:any', capability: '__anything__' }], bare)
+    const { orphans } = measure([{ componentId: 'test:any', capability: '__anything__' }], bare)
     expect(orphans, '省略 provides 被當成「不提供」→ 既有的三個目標會整批壞掉').toEqual([])
   })
 
   // ── 硬性零 ────────────────────────────────────────────────
   it('🔴 每一個被宣告需要的能力，至少要有一個目標提供它', () => {
     const { needs, orphans } = measure()
-    const report = orphans.map((o) => `  ${o.conceptId} 需要「${o.capability}」，而沒有任何目標提供它`)
+    const report = orphans.map((o) => `  ${o.componentId} 需要「${o.capability}」，而沒有任何目標提供它`)
     expect(orphans, `\n宣告了卻沒有板子提供的能力（那顆元件【任何學生都拿不到】）：\n${report.join('\n')}\n`)
       .toEqual([])
     const restricting = allTargets().filter((t) => t.provides !== undefined).length

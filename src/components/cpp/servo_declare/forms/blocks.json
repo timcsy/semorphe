@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_servo_declare",
-    "conceptId": "cpp:servo_declare",
+    "componentId": "cpp:servo_declare",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

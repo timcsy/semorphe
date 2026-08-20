@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_using_alias",
-    "conceptId": "cpp:using_alias",
+    "componentId": "cpp:using_alias",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",

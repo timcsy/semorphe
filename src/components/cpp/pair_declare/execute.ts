@@ -21,14 +21,14 @@
  * 實例**同一種形狀**——所以 `p.first`（`struct_at_member`）與 `p.first = 1`
  * （`var_assign` 的帶點號名字）**兩條既有的路直接就通了**，不必為 pair 各寫一份。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 
 /** `pair` 的欄位名是語言定的，不是我們取的。 */
 const FIELDS = ['first', 'second'] as const
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:pair_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'p')
 

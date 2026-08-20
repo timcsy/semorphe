@@ -57,8 +57,8 @@ function conceptsDeclaredIn(moduleDir: string): Set<string> {
   const s = new Set<string>()
   const f = path.join(moduleDir, 'concepts.json')
   if (fs.existsSync(f)) {
-    for (const c of JSON.parse(fs.readFileSync(f, 'utf8')) as { conceptId?: string }[]) {
-      if (c.conceptId) s.add(c.conceptId)
+    for (const c of JSON.parse(fs.readFileSync(f, 'utf8')) as { componentId?: string }[]) {
+      if (c.componentId) s.add(c.componentId)
     }
   }
   return s

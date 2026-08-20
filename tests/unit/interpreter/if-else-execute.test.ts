@@ -25,7 +25,7 @@ const n = (
   concept: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
 

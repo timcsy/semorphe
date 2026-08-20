@@ -8,7 +8,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('pulseIn', {
-    conceptId: 'cpp:pulse_read',
+    componentId: 'cpp:pulse_read',
     argSlots: ['pin', 'state', 'timeout'],
     source: 'cpp/pulse_read',
   })

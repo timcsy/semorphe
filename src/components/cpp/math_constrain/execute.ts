@@ -7,9 +7,9 @@
  * 🔴 **本輪不模那個副作用**：這裡每個參數只求值一次。
  * 那是一個**已知的差異**，不是疏漏——而它寫在這裡，不是留給下一個人自己發現。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_constrain', async (node, ctx) => {
     const v = await ctx.evaluate((node.children.value ?? [])[0])
     const lo = await ctx.evaluate((node.children.low ?? [])[0])

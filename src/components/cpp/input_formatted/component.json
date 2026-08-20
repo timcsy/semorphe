@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:input_formatted",
+  "componentId": "cpp:input_formatted",
   "abstractConcept": "cpp:input",
   "properties": [
     {

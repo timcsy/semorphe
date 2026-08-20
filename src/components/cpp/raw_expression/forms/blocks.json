@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_raw_expression",
-    "conceptId": "cpp:raw_expression",
+    "componentId": "cpp:raw_expression",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",

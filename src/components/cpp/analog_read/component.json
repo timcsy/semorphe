@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:analog_read",
+  "componentId": "cpp:analog_read",
   "abstractConcept": null,
   "properties": [],
   "children": {

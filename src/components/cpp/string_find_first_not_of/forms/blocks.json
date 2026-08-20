@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_find_first_not_of",
-    "conceptId": "cpp:string_find_first_not_of",
+    "componentId": "cpp:string_find_first_not_of",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

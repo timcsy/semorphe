@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:print_formatted",
+  "componentId": "cpp:print_formatted",
   "abstractConcept": "cpp:print",
   "properties": [
     {

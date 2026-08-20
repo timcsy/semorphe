@@ -55,7 +55,7 @@ function roundTripCode(code: string): string {
 }
 
 function findConcept(node: any, concept: string): boolean {
-  if (node.conceptId === concept) return true
+  if (node.componentId === concept) return true
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as any[]) {
       if (findConcept(child, concept)) return true

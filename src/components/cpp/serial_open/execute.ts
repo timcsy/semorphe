@@ -8,10 +8,10 @@
  * 它記下「序列埠開過了」，讓未來的診斷說得出
  * 「你沒有 `Serial.begin` 就輸出，真板子上會看不到東西」。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { markSerialOpen } from '../../../languages/cpp/core/runtime/arduino-serial'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_open', async (node, ctx) => {
     await ctx.evaluate((node.children.baud ?? [])[0])   // 引數仍要求值——它可能有副作用
     markSerialOpen(ctx)

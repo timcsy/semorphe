@@ -21,9 +21,9 @@ describe('Toolbox 動態生成與顏色集中管理', () => {
   it('BlockSpecRegistry.getCategories() 應回傳不重複的類別', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromJSON([
-      { id: 'a', language: 'cpp', category: 'data', version: '1', conceptMapping: { conceptId: 'a' }, blockDef: { type: 'a' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'x', constraints: [] } },
-      { id: 'b', language: 'cpp', category: 'data', version: '1', conceptMapping: { conceptId: 'b' }, blockDef: { type: 'b' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'y', constraints: [] } },
-      { id: 'c', language: 'cpp', category: 'control', version: '1', conceptMapping: { conceptId: 'c' }, blockDef: { type: 'c' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'z', constraints: [] } },
+      { id: 'a', language: 'cpp', category: 'data', version: '1', componentMapping: { componentId: 'a' }, blockDef: { type: 'a' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'x', constraints: [] } },
+      { id: 'b', language: 'cpp', category: 'data', version: '1', componentMapping: { componentId: 'b' }, blockDef: { type: 'b' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'y', constraints: [] } },
+      { id: 'c', language: 'cpp', category: 'control', version: '1', componentMapping: { componentId: 'c' }, blockDef: { type: 'c' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'z', constraints: [] } },
     ] as any)
     const cats = registry.getCategories()
     expect(cats).toContain('data')
@@ -34,8 +34,8 @@ describe('Toolbox 動態生成與顏色集中管理', () => {
   it('BlockSpecRegistry.listByCategory 應按可見概念過濾', () => {
     const registry = new BlockSpecRegistry()
     registry.loadFromJSON([
-      { id: 'a', language: 'cpp', category: 'data', version: '1', conceptMapping: { conceptId: 'a' }, blockDef: { type: 'a' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'x', constraints: [] } },
-      { id: 'b', language: 'cpp', category: 'data', version: '1', conceptMapping: { conceptId: 'b' }, blockDef: { type: 'b' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'y', constraints: [] } },
+      { id: 'a', language: 'cpp', category: 'data', version: '1', componentMapping: { componentId: 'a' }, blockDef: { type: 'a' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'x', constraints: [] } },
+      { id: 'b', language: 'cpp', category: 'data', version: '1', componentMapping: { componentId: 'b' }, blockDef: { type: 'b' }, codeTemplate: { pattern: '', imports: [], order: 0 }, astPattern: { nodeType: 'y', constraints: [] } },
     ] as any)
     expect(registry.listByCategory('data', new Set(['a']))).toHaveLength(1)
     expect(registry.listByCategory('data')).toHaveLength(2)

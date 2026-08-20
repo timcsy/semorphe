@@ -21,7 +21,7 @@ beforeAll(() => registerCppLanguage())
 function makeNode(concept: string, props: Record<string, any> = {}, children: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
   return {
     id: 'test-1',
-    conceptId: concept,
+    componentId: concept,
     properties: props,
     children,
     metadata: meta,

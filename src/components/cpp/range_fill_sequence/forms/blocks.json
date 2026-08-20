@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_fill_sequence",
-    "conceptId": "cpp:range_fill_sequence",
+    "componentId": "cpp:range_fill_sequence",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

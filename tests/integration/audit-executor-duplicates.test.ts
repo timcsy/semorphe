@@ -29,7 +29,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 
-const RULE = '從實際建構出來的直譯器量測：同一 conceptId 呼叫 register() 超過一次即計入。'
+const RULE = '從實際建構出來的直譯器量測：同一 componentId 呼叫 register() 超過一次即計入。'
 
 const SELF_FALSIFICATION =
   '⚠️ 這個數字若是 0，先確認計數真的有接上——註冊表在本功能之前完全沒有計數，' +

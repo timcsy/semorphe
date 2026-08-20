@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:map_at",
-    "conceptId": "cpp:map_at",
+    "componentId": "cpp:map_at",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

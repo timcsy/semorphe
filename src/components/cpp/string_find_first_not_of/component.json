@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_find_first_not_of",
+  "componentId": "cpp:string_find_first_not_of",
   "properties": [
     {
       "name": "obj",

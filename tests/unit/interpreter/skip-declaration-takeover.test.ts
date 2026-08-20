@@ -21,7 +21,7 @@ import { isSkipped } from '../../../src/core/skip-declarations'
 import type { SemanticNode } from '../../../src/core/types'
 
 const n = (concept: string, properties: Record<string, unknown> = {}): SemanticNode =>
-  ({ conceptId: concept, properties, children: {} }) as unknown as SemanticNode
+  ({ componentId: concept, properties, children: {} }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()

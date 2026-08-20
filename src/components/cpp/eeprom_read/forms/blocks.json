@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_eeprom_read",
-    "conceptId": "cpp:eeprom_read",
+    "componentId": "cpp:eeprom_read",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:wifi_read",
+  "componentId": "cpp:wifi_read",
   "abstractConcept": null,
   "properties": [
     {

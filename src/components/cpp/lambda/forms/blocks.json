@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_lambda",
-    "conceptId": "cpp:lambda",
+    "componentId": "cpp:lambda",
     "language": "cpp",
     "category": "functions",
     "version": "1.0.0",

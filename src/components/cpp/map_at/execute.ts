@@ -1,9 +1,9 @@
 /** `cpp:map_at` 的 **execute** 路——從共用檔原封剪過來（批次第十四批：subscript_expression 的分支）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { mapFind, makePair, pairParts } from '../../../languages/cpp/core/runtime/map'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:map_at', async (node, ctx) => {
       const name = String(node.properties.obj)
       const keyNodes = node.children.key ?? []

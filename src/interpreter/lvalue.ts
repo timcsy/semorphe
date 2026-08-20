@@ -24,7 +24,7 @@ export interface Place {
  * 寫回會靜靜地丟掉，而程式看起來跑完了。
  */
 export async function resolvePlace(node: SemanticNode, ctx: ExecutionContext): Promise<Place> {
-  const kind = lvalueKindOf(node.conceptId)
+  const kind = lvalueKindOf(node.componentId)
 
   if (kind === 'name') {
     const name = String(node.properties.name)

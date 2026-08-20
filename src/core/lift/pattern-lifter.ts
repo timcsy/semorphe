@@ -7,7 +7,7 @@ import { componentLiftPatterns } from '../component/lift-patterns'
 import { isElseIfChainable } from '../component/traits'
 
 interface PatternEntry {
-  conceptId: string
+  componentId: string
   patternType: string
   priority: number
   constraints: AstPattern['constraints']
@@ -81,7 +81,7 @@ export class PatternLifter {
       if (skipNodeTypes?.has(ap.nodeType)) continue
 
       const entry: PatternEntry = {
-        conceptId: spec.conceptMapping?.conceptId ?? spec.id,
+        componentId: spec.componentMapping?.componentId ?? spec.id,
         patternType: ap.patternType ?? (ap.constraints.length > 0 ? 'constrained' : 'simple'),
         priority: this.calcPriority(ap.patternType ?? 'simple', ap.constraints?.length ?? 0, 0) - 5,
         constraints: ap.constraints,
@@ -121,7 +121,7 @@ export class PatternLifter {
   loadLiftPatterns(patterns: LiftPattern[]): void {
     for (const lp of patterns) {
       const entry: PatternEntry = {
-        conceptId: lp.concept?.conceptId ?? '',
+        componentId: lp.concept?.componentId ?? '',
         patternType: lp.patternType ?? 'simple',
         priority: this.calcPriority(lp.patternType ?? 'simple', lp.constraints?.length ?? 0, lp.priority ?? 0),
         constraints: lp.constraints ?? [],
@@ -250,7 +250,7 @@ export class PatternLifter {
       }
     }
 
-    return createNode(entry.conceptId, props, children)
+    return createNode(entry.componentId, props, children)
   }
 
   // ── Operator Dispatch ──
@@ -336,7 +336,7 @@ export class PatternLifter {
       if (lifted) liftedValues.push(lifted)
     }
 
-    return createNode(entry.conceptId, {}, { values: liftedValues })
+    return createNode(entry.componentId, {}, { values: liftedValues })
   }
 
   // ── Composite ──
@@ -389,7 +389,7 @@ export class PatternLifter {
               const lifted = ctx.lift(target)
               if (!lifted) {
                 // skip
-              } else if (lifted.conceptId === '_compound') {
+              } else if (lifted.componentId === '_compound') {
                 children[semName] = lifted.children.body ?? []
               } else {
                 children[semName] = [lifted]
@@ -414,7 +414,7 @@ export class PatternLifter {
       }
     }
 
-    return createNode(entry.conceptId, props, children)
+    return createNode(entry.componentId, props, children)
   }
 
   // ── Unwrap ──
@@ -453,7 +453,7 @@ export class PatternLifter {
 
     // Apply transform rules
     for (const rule of ct.transformRules) {
-      if (lifted.conceptId === rule.fromConcept) {
+      if (lifted.componentId === rule.fromConcept) {
         return createNode(rule.toConcept, { ...lifted.properties }, { ...lifted.children })
       }
     }
@@ -598,9 +598,9 @@ export class PatternLifter {
           // For wrapper nodes (else_clause) that have no lift handler,
           // fall back to lifting their children.
           const lifted = ctx.lift(child)
-          if (lifted && lifted.conceptId === '_compound') {
+          if (lifted && lifted.componentId === '_compound') {
             children[fm.semantic] = lifted.children.body ?? []
-          } else if (lifted && lifted.conceptId !== 'raw_code' && lifted.conceptId !== 'unresolved') {
+          } else if (lifted && lifted.componentId !== 'raw_code' && lifted.componentId !== 'unresolved') {
             children[fm.semantic] = [lifted]
           } else {
             // Fallback: lift named children (handles else_clause, etc.)
@@ -611,7 +611,7 @@ export class PatternLifter {
             // can distinguish from "else { if (...) {} }"
             if (child.type === 'else_clause' && child.namedChildren.length === 1
                 && child.namedChildren[0].type === 'if_statement'
-                && liftedChildren.length === 1 && isElseIfChainable(liftedChildren[0].conceptId)) {
+                && liftedChildren.length === 1 && isElseIfChainable(liftedChildren[0].componentId)) {
               liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
             }
             children[fm.semantic] = liftedChildren

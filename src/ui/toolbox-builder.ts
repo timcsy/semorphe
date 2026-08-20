@@ -26,7 +26,7 @@ type ToolboxEntry = { kind: string; type: string; extraState?: Record<string, un
  */
 export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpec): boolean {
   if (spec.form) return false
-  const cid = spec.conceptMapping?.conceptId
+  const cid = spec.componentMapping?.componentId
   if (!cid) return false
   const siblings = registry.getFormsByConceptId(cid).filter(s => s.form)
   if (siblings.length === 0) return false
@@ -126,7 +126,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
     // 舊行為把「風格偏好」與「分層」混在一起，而 getline／fstream
     // **沒有風格對立面**——它們不該因為使用者選了 printf 就往前跳。
     const style = (t: string): string | undefined => {
-      const cid = blockSpecRegistry.getByBlockType(t)?.conceptMapping?.conceptId
+      const cid = blockSpecRegistry.getByBlockType(t)?.componentMapping?.componentId
       return cid ? ioTraitOf(cid)?.style : undefined
     }
     // 三堆而不是兩堆——**「其餘」要是扣除式的**（見上面第一版的病歷）。

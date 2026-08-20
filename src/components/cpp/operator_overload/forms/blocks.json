@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_operator_overload",
-    "conceptId": "cpp:operator_overload",
+    "componentId": "cpp:operator_overload",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",

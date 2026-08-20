@@ -5,10 +5,10 @@
  * 理由寫在 `arduino-pins.ts` 的檔頭：出聲會擋住一批真的能跑的入門程式
  * （很多教學範例就是漏了 `pinMode`）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:digital_write', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:lcd_declare",
+  "componentId": "cpp:lcd_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

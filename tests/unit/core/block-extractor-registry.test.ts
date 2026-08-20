@@ -18,7 +18,7 @@ describe('PatternExtractor — extractStrategy', () => {
     }
     const result = extractor.extract(block)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test')
+    expect(result!.componentId).toBe('test')
   })
 
   it('should return null for block types without strategy or spec', () => {
@@ -37,7 +37,7 @@ describe('PatternExtractor — extractStrategy', () => {
     // Load a spec that would auto-derive
     extractor.loadBlockSpecs([{
       blockDef: { type: 'u_test', args0: [{ type: 'field_input', name: 'NAME' }] },
-      conceptMapping: { conceptId: 'test', properties: ['name'], children: {} },
+      componentMapping: { componentId: 'test', properties: ['name'], children: {} },
     }])
     // Register strategy that returns different concept
     extractor.registerExtractStrategy('u_test', () => createNode('strategy_wins', {}))
@@ -49,7 +49,7 @@ describe('PatternExtractor — extractStrategy', () => {
       inputs: {},
     }
     const result = extractor.extract(block)
-    expect(result!.conceptId).toBe('strategy_wins')
+    expect(result!.componentId).toBe('strategy_wins')
   })
 })
 
@@ -92,7 +92,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { items: ['var', 'var'] },
     }
     const result = extractor.extract(block)!
-    expect(result.conceptId).toBe('cpp:var_declare')
+    expect(result.componentId).toBe('cpp:var_declare')
     expect(result.properties.type).toBe('int')
     expect(result.children.declarators).toHaveLength(2)
     expect(result.children.declarators![0].properties.name).toBe('a')
@@ -112,7 +112,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
     // 186 筆對應已固化成顯式宣告，推導已刪除，缺宣告由 `audit-explicit-mapping` 指名。
     extractor.loadBlockSpecs([{
       blockDef: { type: 'cpp_var_ref', args0: [{ type: 'field_input', name: 'NAME' }], output: 'any' },
-      conceptMapping: { conceptId: 'cpp:var_ref', properties: ['name'], children: {} },
+      componentMapping: { componentId: 'cpp:var_ref', properties: ['name'], children: {} },
       renderMapping: { fields: { NAME: 'name' }, inputs: {}, statementInputs: {} },
     }])
 
@@ -127,10 +127,10 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { elseifCount: 1 },
     }
     const result = extractor.extract(block)!
-    expect(result.conceptId).toBe('cpp:if')
+    expect(result.componentId).toBe('cpp:if')
     expect(result.children.condition![0].properties.name).toBe('x')
     expect(result.children.else_body).toHaveLength(1)
-    expect(result.children.else_body![0].conceptId).toBe('cpp:if')
+    expect(result.children.else_body![0].componentId).toBe('cpp:if')
     expect(result.children.else_body![0].properties.isElseIf).toBe('true')
   })
 
@@ -146,7 +146,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
       extraState: { args: [{ mode: 'select', text: 'myVar' }] },
     }
     const result = extractor.extract(block)!
-    expect(result.conceptId).toBe('cpp:input')
+    expect(result.componentId).toBe('cpp:input')
     expect(result.properties.variable).toBe('myVar')
     expect(result.children.values![0].properties.name).toBe('myVar')
   })

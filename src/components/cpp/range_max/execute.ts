@@ -3,11 +3,11 @@
  *
  * ⚠️ 回傳的是**位置**（陣列 ＋ `offset`），不是值——見 `component.json` 的 `_execute_why`。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { resolveRange, numOf } from '../../../languages/cpp/core/runtime/range'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_max', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
       // `resolveRange` 的 `arr` 宣告成 `unknown[]`（它不必知道元素是什麼）——

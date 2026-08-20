@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('strlen', {
-    conceptId: 'cpp:cstring_size',
+    componentId: 'cpp:cstring_size',
     argSlots: ["str"],
     source: 'cpp/cstring_size',
   })

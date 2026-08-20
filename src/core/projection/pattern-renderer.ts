@@ -50,11 +50,11 @@ export class PatternRenderer {
     resetBlockIdCounter()
   }
 
-  /** Load block specs and build conceptId → RenderSpec index */
+  /** Load block specs and build componentId → RenderSpec index */
   loadBlockSpecs(specs: BlockSpec[]): void {
     for (const spec of specs) {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId) continue
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId) continue
 
       const blockDef = spec.blockDef as Record<string, unknown>
       const blockType = blockDef.type as string
@@ -84,12 +84,12 @@ export class PatternRenderer {
           }
         : derived
       // ⚠️ **第一個宣告勝出，後來的不覆寫。**
-      // 在此之前這裡是直接 `set`，於是同一個 conceptId 的第二顆積木會**蓋掉**
+      // 在此之前這裡是直接 `set`，於是同一個 componentId 的第二顆積木會**蓋掉**
       // 第一顆——「一個身分多個形態」因此做不到，而那正是本功能要修的東西。
-      if (!this.renderSpecs.has(conceptId)) this.renderSpecs.set(conceptId, { blockType, mapping })
+      if (!this.renderSpecs.has(componentId)) this.renderSpecs.set(componentId, { blockType, mapping })
       // 變體的 mapping 也要收——選到變體之後仍然要用它的 mapping 渲染欄位
       this.mappingByBlockType.set(blockType, mapping)
-      this.formDeclarations.push({ conceptId, blockType, form: spec.form })
+      this.formDeclarations.push({ componentId, blockType, form: spec.form })
 
       // Track expression-only block types (have output but no previousStatement)
       if (blockDef.output !== undefined && blockDef.previousStatement === undefined) {
@@ -114,9 +114,9 @@ export class PatternRenderer {
     }
     const overrides = topic.blockOverrides
     const overriddenSpecs = specs.map(spec => {
-      const conceptId = spec.conceptMapping?.conceptId
-      if (!conceptId) return spec
-      const override = overrides[conceptId]
+      const componentId = spec.componentMapping?.componentId
+      if (!componentId) return spec
+      const override = overrides[componentId]
       if (!override) return spec
       return applyBlockOverride(spec, override)
     })
@@ -129,7 +129,7 @@ export class PatternRenderer {
     if (renderCtx) this.activeRenderCtx = renderCtx
     const ctx = renderCtx ?? this.activeRenderCtx
 
-    const spec = this.renderSpecs.get(node.conceptId)
+    const spec = this.renderSpecs.get(node.componentId)
     if (!spec) return null
 
     // Layer 3: renderStrategy takes priority over auto-derive mapping
@@ -149,12 +149,12 @@ export class PatternRenderer {
 
     // 選形態——**規則來自宣告**（契約 C-2：本函式不得出現任何具體元件身分）。
     // 沒有多形態的元件走的是同一條路，只是形態集合只有一個成員。
-    const formSet = this.formSets.get(node.conceptId)
+    const formSet = this.formSets.get(node.componentId)
     // 位置軸（statement/expression）在本功能中沒有任何積木宣告它——那是 B 項的事。
     // 傳 undefined 是誠實的：呼叫端目前不知道呈現位置。
     const chosen = formSet ? selectForm(formSet, node, {}) : undefined
     if (chosen?.degraded) {
-      console.warn(`[PatternRenderer] ${node.conceptId}：${chosen.degraded.reason}`)
+      console.warn(`[PatternRenderer] ${node.componentId}：${chosen.degraded.reason}`)
     }
     const formType = chosen?.blockType ?? spec.blockType
     const formMapping = this.mappingByBlockType.get(formType) ?? spec.mapping
@@ -252,7 +252,7 @@ export class PatternRenderer {
           let matched = false
           for (const [modeName, modeRule] of Object.entries(rule.modes)) {
             const wrap = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
-            if (wrap && child.conceptId === wrap) {
+            if (wrap && child.componentId === wrap) {
               // Select mode: store value in extraState
               const nameValue = (child.properties.name as string) ?? ''
               argsExtraState.push({ mode: modeName, text: nameValue })

@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('exit', {
-    conceptId: 'cpp:program_exit',
+    componentId: 'cpp:program_exit',
     argSlots: ["code"],
     source: 'cpp/program_exit',
   })

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:servo_attach",
+  "componentId": "cpp:servo_attach",
   "abstractConcept": null,
   "properties": [
     {

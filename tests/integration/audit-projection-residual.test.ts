@@ -112,7 +112,7 @@ interface stats {
 function measure(corpus: readonly string[]): stats {
   const s: stats = { syntaxComplete: 0, syntaxErrorFragments: 0, totalChars: 0, residualChars: 0, residualNodes: 0, downgradeReason: new Map(), details: [] }
   const walk = (n: SemanticNode) => {
-    if (isResidual(n.conceptId)) {
+    if (isResidual(n.componentId)) {
       s.residualNodes++
       const raw = String(n.metadata?.rawCode ?? '')
       s.residualChars += raw.length

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_micros",
-    "conceptId": "cpp:micros",
+    "componentId": "cpp:micros",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

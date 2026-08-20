@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:increment",
+  "componentId": "cpp:increment",
   "abstractConcept": "cpp:var_assign",
   "properties": [
     {

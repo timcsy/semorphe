@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:char_to_upper",
-    "conceptId": "cpp:char_to_upper",
+    "componentId": "cpp:char_to_upper",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

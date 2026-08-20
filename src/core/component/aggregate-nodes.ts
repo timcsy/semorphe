@@ -18,14 +18,14 @@
 
 const aggregateLists = new Set<string>()
 
-/** 語言套件宣告：「這個 conceptId 的節點是一層聚合初始化列」。 */
-export function declareAggregateList(conceptId: string): void {
-  aggregateLists.add(conceptId)
+/** 語言套件宣告：「這個 componentId 的節點是一層聚合初始化列」。 */
+export function declareAggregateList(componentId: string): void {
+  aggregateLists.add(componentId)
 }
 
 /** 這個節點是不是一層 `{…}`。沒有人宣告過就是 `false`——不猜。 */
-export function isAggregateList(conceptId: string): boolean {
-  return aggregateLists.has(conceptId)
+export function isAggregateList(componentId: string): boolean {
+  return aggregateLists.has(componentId)
 }
 
 /**

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_var_declare_auto",
-    "conceptId": "cpp:var_declare_auto",
+    "componentId": "cpp:var_declare_auto",
     "language": "cpp",
     "category": "data",
     "version": "1.0.0",

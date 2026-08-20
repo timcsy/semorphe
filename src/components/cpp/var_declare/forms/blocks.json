@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_var_declare_expression",
-    "conceptId": "cpp:var_declare",
+    "componentId": "cpp:var_declare",
     "language": "cpp",
     "category": "variables",
     "version": "1.0.0",
@@ -72,7 +72,7 @@
   },
   {
     "id": "cpp_var_declare",
-    "conceptId": "cpp:var_declare",
+    "componentId": "cpp:var_declare",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",

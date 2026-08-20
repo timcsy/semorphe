@@ -18,9 +18,9 @@
  * 而檢查會成功——**那條路徑因此真的被走到了**。
  * 🔴 編一個「25 度」出來才是那個反模式：學生會以為他量到了溫度。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:dht_read', async () => {
     return { type: 'double', value: Number.NaN }
   })

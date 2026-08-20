@@ -19,12 +19,12 @@
  *
  * 🔴 **已知後果**：連線失敗的處理分支永遠走不到。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 /** `WL_CONNECTED` 在 Arduino 的 WiFi 函式庫裡是 3。 */
 const WL_CONNECTED = 3
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:wifi_read', async (node) => {
     return node.properties.quantity === 'address'
       ? { type: 'string' as const, value: '192.168.1.100' }

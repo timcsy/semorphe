@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('strcmp', {
-    conceptId: 'cpp:cstring_compare',
+    componentId: 'cpp:cstring_compare',
     argSlots: ["s1", "s2"],
     source: 'cpp/cstring_compare',
   })

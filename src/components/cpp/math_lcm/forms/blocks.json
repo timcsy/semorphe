@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:math_lcm",
-    "conceptId": "cpp:math_lcm",
+    "componentId": "cpp:math_lcm",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

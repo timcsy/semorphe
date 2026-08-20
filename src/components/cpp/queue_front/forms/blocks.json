@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:queue_front",
-    "conceptId": "cpp:queue_front",
+    "componentId": "cpp:queue_front",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

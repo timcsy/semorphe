@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_lcd_declare",
-    "conceptId": "cpp:lcd_declare",
+    "componentId": "cpp:lcd_declare",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

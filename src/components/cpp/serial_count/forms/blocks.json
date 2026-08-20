@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_serial_count",
-    "conceptId": "cpp:serial_count",
+    "componentId": "cpp:serial_count",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

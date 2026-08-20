@@ -18,7 +18,7 @@
  * 幫它們加上 `skipPaths: ['execute']` 會讓完備性的數字下降而系統一點都沒變。
  * **等 OOP 真的實作了再處理它們。**
  */
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../../interpreter/executor-registry'
 
 
 /**
@@ -49,9 +49,9 @@ const OOP_NOT_IMPLEMENTED = [
 ] as const
 
 export function registerUnimplementedExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
 
-  const noop: ConceptExecutor = async () => {}
+  const noop: ComponentExecutor = async () => {}
   for (const c of OOP_NOT_IMPLEMENTED) register(c, noop)
 }

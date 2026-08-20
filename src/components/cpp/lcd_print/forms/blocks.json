@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_lcd_print",
-    "conceptId": "cpp:lcd_print",
+    "componentId": "cpp:lcd_print",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

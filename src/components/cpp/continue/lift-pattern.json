@@ -2,6 +2,6 @@
   "id": "cpp_continue",
   "astNodeType": "continue_statement",
   "concept": {
-    "conceptId": "cpp:continue"
+    "componentId": "cpp:continue"
   }
 }

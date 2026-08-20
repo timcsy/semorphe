@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_ifdef",
-    "conceptId": "cpp:ifdef",
+    "componentId": "cpp:ifdef",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",

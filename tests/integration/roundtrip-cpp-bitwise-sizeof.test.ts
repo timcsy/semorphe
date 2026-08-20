@@ -45,9 +45,9 @@ describe('Round-trip: bitwise operators and sizeof', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const decl = body[0]
-    expect(decl.conceptId).toBe('cpp:var_declare')
+    expect(decl.componentId).toBe('cpp:var_declare')
     const init = decl.children.initializer?.[0]
-    expect(init?.conceptId).toBe('cpp:arithmetic')
+    expect(init?.componentId).toBe('cpp:arithmetic')
     expect(init?.properties.operator).toBe('&')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -88,7 +88,7 @@ describe('Round-trip: bitwise operators and sizeof', () => {
     const body = tree!.children.body ?? []
     const decl = body[0]
     const init = decl.children.initializer?.[0]
-    expect(init?.conceptId).toBe('cpp:sizeof')
+    expect(init?.componentId).toBe('cpp:sizeof')
     expect(init?.properties.target).toBe('int')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -100,7 +100,7 @@ describe('Round-trip: bitwise operators and sizeof', () => {
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
-    expect(init?.conceptId).toBe('cpp:sizeof')
+    expect(init?.componentId).toBe('cpp:sizeof')
     expect(init?.properties.target).toBe('x')
 
     const code = generateCode(tree!, 'cpp', style)
@@ -111,6 +111,6 @@ describe('Round-trip: bitwise operators and sizeof', () => {
     const tree = liftCode('cout << x << endl;')
     expect(tree).not.toBeNull()
     const body = tree!.children.body ?? []
-    expect(body[0].conceptId).toBe('cpp:print')
+    expect(body[0].componentId).toBe('cpp:print')
   })
 })

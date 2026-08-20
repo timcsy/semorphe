@@ -18,14 +18,14 @@ import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from 
 import { componentLiftStrategyRegistrars } from '../../src/core/component/paths'
 import { registerCppTransforms } from '../../src/languages/cpp/core/lifters/transforms'
 import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/strategies'
-import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 // ⚠️ **第十六個「自己列舉來源」的地方**（今天第六處）。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
@@ -111,7 +111,7 @@ function findConcepts(sem: any): string[] {
   const concepts: string[] = []
   function walk(node: any) {
     if (!node) return
-    if (node.conceptId) concepts.push(node.conceptId)
+    if (node.componentId) concepts.push(node.componentId)
     if (node.children) {
       for (const ch of Object.values(node.children) as any[]) {
         if (Array.isArray(ch)) ch.forEach(walk)
@@ -187,7 +187,7 @@ describe('Code-to-Blocks Pipeline', () => {
       // Walk to find the count_loop and check inclusive
       function findNode(node: any, concept: string): any {
         if (!node) return null
-        if (node.conceptId === concept) return node
+        if (node.componentId === concept) return node
         if (node.children) {
           for (const ch of Object.values(node.children) as any[]) {
             if (Array.isArray(ch)) {

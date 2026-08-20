@@ -4,10 +4,10 @@
  * 兩個運算元是**位置**（`resolvePlace`），不是名字——所以
  * `swap(a[j], a[j+1])`、`swap(p.x, p.y)` 與 `swap(x, y)` 走同一段。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { resolvePlace } from '../../../interpreter/lvalue'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_swap', async (node, ctx) => {
     const leftNode = (node.children.left ?? [])[0]
     const rightNode = (node.children.right ?? [])[0]

@@ -10,12 +10,12 @@
  * 🔴 10 微秒在模擬時鐘（毫秒解析度）裡推不動可見的時間——
  * 那是刻意的，判準是「可重現比擬真重要」（見腳位讀取那顆的檔頭）。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
 export function registerExecute(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:ultrasonic_trigger', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))

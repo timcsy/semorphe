@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:lcd_clear",
+  "componentId": "cpp:lcd_clear",
   "abstractConcept": null,
   "properties": [
     {

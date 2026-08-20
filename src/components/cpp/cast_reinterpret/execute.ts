@@ -4,10 +4,10 @@
  * 轉型的數值語義是**共用的演算法**（`core/runtime/cast.ts`），
  * 不是另一顆元件的實作——四種命名轉型與 C 風格轉型各自宣告自己用它。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast_reinterpret', async (node, ctx) => {
     // 退路與宣告的 `default` 一致（第二十三條護欄，硬性零）。
     // ⚠️ 共用迴圈裡它們四顆的退路全都寫 `'int'`——**與宣告不符，而護欄看不見**：

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_analog_write",
-    "conceptId": "cpp:analog_write",
+    "componentId": "cpp:analog_write",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_malloc",
-    "conceptId": "cpp:malloc",
+    "componentId": "cpp:malloc",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",

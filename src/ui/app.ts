@@ -624,8 +624,8 @@ export class App {
     const code = this.codeView?.getCode() ?? ''
     const depth = this.getScaffoldDepth()
     const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
-      (n: { conceptId: string; properties: Record<string, unknown> }) =>
-        isFunctionDefinition(n.conceptId) && n.properties.name === 'main'
+      (n: { componentId: string; properties: Record<string, unknown> }) =>
+        isFunctionDefinition(n.componentId) && n.properties.name === 'main'
     )
     if (needsRelift && this.cppParser && code.trim()) {
       this.cppParser.parse(code).then(parsed => {

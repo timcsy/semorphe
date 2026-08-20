@@ -29,7 +29,7 @@ function tree(src: string): SemanticNode {
   return createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
 }
 function identities(n: SemanticNode): string[] {
-  const out: string[] = [n.conceptId]
+  const out: string[] = [n.componentId]
   for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }

@@ -13,7 +13,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { filterByTarget } from '../../src/core/component/traits'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalBlocks, UNIVERSAL_OWNER } from '../../src/core/universal'
 import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
@@ -34,7 +34,7 @@ export interface BlockOrigin {
 
 export interface LoadedToolbox {
   registry: BlockSpecRegistry
-  allConcepts: ConceptDefJSON[]
+  allConcepts: ComponentDefJSON[]
   allProjections: BlockProjectionJSON[]
   /** 每顆積木型別 → 它的來源模組 */
   origins: BlockOrigin[]
@@ -54,7 +54,7 @@ function typeOf(proj: BlockProjectionJSON): string {
  * @param extraProjections 合成注入用
  */
 export function loadToolbox(
-  extraConcepts: ConceptDefJSON[] = [],
+  extraConcepts: ComponentDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
   /**
    * 用哪個目標的能力過濾（spec 142）。
@@ -69,7 +69,7 @@ export function loadToolbox(
   // 整批從工具箱消失**——使用者截圖才發現。
   //
   // 組裝只留一份，測試與 production 就不可能分歧。
-  const allConcepts: ConceptDefJSON[] = [...allCppConcepts(), ...extraConcepts]
+  const allConcepts: ComponentDefJSON[] = [...allCppConcepts(), ...extraConcepts]
   const allProjections: BlockProjectionJSON[] = [
     ...allCppProjections(),
     // 合成注入預設蓋核心的章；要驗「加一顆元件到某模組」就自己帶 owner
@@ -99,7 +99,7 @@ export function loadToolbox(
   ]
 
   // ⚠️ 全部概念可見——見檔頭
-  const allVisible = new Set(allConcepts.map((c) => c.conceptId))
+  const allVisible = new Set(allConcepts.map((c) => c.componentId))
   // 🔴 走 production 的**同一個**過濾函式，不在這裡重寫一份會漂移的判準。
   const visibleConcepts = target ? filterByTarget(allVisible, target) : allVisible
 

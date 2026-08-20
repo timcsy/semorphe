@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_address_of",
-    "conceptId": "cpp:address_of",
+    "componentId": "cpp:address_of",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",

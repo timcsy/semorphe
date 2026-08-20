@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:queue_declare",
-    "conceptId": "cpp:queue_declare",
+    "componentId": "cpp:queue_declare",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

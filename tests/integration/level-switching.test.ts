@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import type { ConceptDefJSON, BlockProjectionJSON, Topic } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { getVisibleConcepts } from '../../src/core/level-tree'
 // ⚠️ **第十四個「自己列舉來源」的地方**。漏了膠囊的話 `isBlockVisible`
 // 對搬走的積木回 `true`（查不到 = 當成可見），而斷言訊息只說「expected true to be false」。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../src/languages/cpp/topics/cpp-beginner.json'

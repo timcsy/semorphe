@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:serial_read",
+  "componentId": "cpp:serial_read",
   "abstractConcept": null,
   "properties": [
     {

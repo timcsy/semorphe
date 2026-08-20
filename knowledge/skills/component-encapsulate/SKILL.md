@@ -84,9 +84,9 @@ user-invocable: false
 
 ```ts
 // 之前
-if (caseNode.conceptId === 'cpp:default') { … }
+if (caseNode.componentId === 'cpp:default') { … }
 // 之後
-if (isDefaultCase(caseNode.conceptId)) { … }
+if (isDefaultCase(caseNode.componentId)) { … }
 ```
 
 ```json
@@ -105,7 +105,7 @@ if (isDefaultCase(caseNode.conceptId)) { … }
 
 | | 例 | 處置 |
 |---|---|---|
-| 程式碼 | `node.conceptId === 'cpp:default'` | 問性狀 |
+| 程式碼 | `node.componentId === 'cpp:default'` | 問性狀 |
 | 登錄表 | `{ push: 'cpp:container_push' }` | 元件自己登錄 |
 | **宣告** | `"wrap": "cpp:var_ref"`（在 `forms/blocks.json` 裡）| **指性質**（`wrapTrait`）|
 

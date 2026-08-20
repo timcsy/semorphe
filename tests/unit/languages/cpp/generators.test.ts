@@ -22,7 +22,7 @@ const printfStyle: StylePreset = {
 }
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body } }
+  return { id: 'root', componentId: 'cpp:program', properties: {}, children: { body } }
 }
 
 beforeAll(() => {

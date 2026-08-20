@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('analogWrite', {
-    conceptId: 'cpp:analog_write',
+    componentId: 'cpp:analog_write',
     argSlots: ["pin", "value"],
     source: 'cpp/analog_write',
   })

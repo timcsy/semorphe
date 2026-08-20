@@ -25,7 +25,7 @@ auto-include 系統的所有元件都寫好了：
 
 **問題二：`ModuleRegistry` 用錯欄位名。**
 
-`ConceptDefJSON` 的欄位是 `conceptId`，但 `register()` 寫成 `concept.id`。TypeScript 的 structural typing 沒報錯（`id` 在某些型別中是合法屬性），於是 registry **靜默地註冊了一堆 `undefined` 當 key**。
+`ComponentDefJSON` 的欄位是 `componentId`，但 `register()` 寫成 `concept.id`。TypeScript 的 structural typing 沒報錯（`id` 在某些型別中是合法屬性），於是 registry **靜默地註冊了一堆 `undefined` 當 key**。
 
 即使問題一修好了，問題二還會讓查詢全部落空——而且同樣不會有任何錯誤訊息。
 

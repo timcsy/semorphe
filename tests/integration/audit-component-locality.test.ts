@@ -20,7 +20,7 @@
  * 而實測 `cpp:vector_declare` 的 8 個落點裡，**碎裂最嚴重的兩個是「宣告」類**
  * （`std/vector/{concepts,blocks}.json`，各被 4 顆元件共用），
  * **還有 2 個誰都看不到**（`i18n/{zh-TW,en}/blocks.json`——它們用積木訊息鍵索引，
- * 檔案裡一個 conceptId 字串都沒有）。
+ * 檔案裡一個 componentId 字串都沒有）。
  *
  * 改舊護欄的話，兩個維度的數字混在一起，F 收工時的漲幅會分不出
  * 「實作真的變集中」與「換了一個維度」——`history/018` 的直接處方。
@@ -64,11 +64,11 @@ interface Baseline {
   notEncapsulated: number
 }
 
-const allIdentities = (): string[] => allCppConcepts().map((c) => c.conceptId)
+const allIdentities = (): string[] => allCppConcepts().map((c) => c.componentId)
 
 /** 這顆元件有沒有積木——`componentBlocks()` 是已蓋章的全部膠囊積木。 */
 const hasBlocks = (id: string): boolean =>
-  (componentBlocks() as { conceptId?: string }[]).some((b) => b.conceptId === id)
+  (componentBlocks() as { componentId?: string }[]).some((b) => b.componentId === id)
 
 /** 一個膠囊資料夾的絕對前綴（相對 repo）。 */
 const capsuleDirs = (id: string): string => `src/components/${idToDir(id)}/`
@@ -128,7 +128,7 @@ export function detectLabelResidue(shared: Record<string, string>, capsuleOwns: 
 describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料夾裡嗎）', () => {
   // ── 棘輪：膠囊化的進度 ────────────────────────────────────
   it('棘輪：尚未膠囊化的元件數只准下降', () => {
-    const encapsulated = new Set(registeredComponents().map((c) => c.conceptId))
+    const encapsulated = new Set(registeredComponents().map((c) => c.componentId))
     const notEncapsulated = allIdentities().filter((id) => !encapsulated.has(id))
 
     if (process.env.GENERATE_BASELINE) {
@@ -162,7 +162,7 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
 
   // ── 正向（FR-010）：硬性零 ──────────────────────────────
   it('正向：已膠囊化的元件，其身分不得出現在自己資料夾以外的非清單類檔', () => {
-    const encapsulated = registeredComponents().map((c) => c.conceptId)
+    const encapsulated = registeredComponents().map((c) => c.componentId)
     if (encapsulated.length === 0) {
       // 還沒有膠囊時這一條無事可做，而「無事可做」不等於「通過」。
       // 注入測試（下方）才是它此刻的健康檢查——`build-guardrail` 第 9 步：
@@ -184,14 +184,14 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     const ids = allIdentities()
     const foreign: string[] = []
     for (const c of registeredComponents()) {
-      const dir = capsuleDirs(c.conceptId).replace(/.$/, '')
+      const dir = capsuleDirs(c.componentId).replace(/.$/, '')
       foreign.push(
         ...detectForeign(
           listSourceFiles(dir, ['.ts', '.json']).map((rel) => ({
             rel,
             content: fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'),
           })),
-          c.conceptId,
+          c.componentId,
           ids,
         ),
       )
@@ -219,8 +219,8 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
     // 原本的寫法會逼一顆這樣的元件生出一份**沒有人讀的標籤**，
     // 而那正是這個專案在追的殼。
     const none = registeredComponents()
-      .filter((c) => hasBlocks(c.conceptId) && labelKeysOf(c).length === 0)
-      .map((c) => c.conceptId)
+      .filter((c) => hasBlocks(c.componentId) && labelKeysOf(c).length === 0)
+      .map((c) => c.componentId)
     expect(none, `這些膠囊有積木卻沒有任何標籤：${none.join('、')}`).toEqual([])
   })
 

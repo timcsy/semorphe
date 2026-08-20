@@ -29,7 +29,7 @@ const samplePath = path.join(process.cwd(), 'tests/assets/v9-savedstate.json')
 function makeV9(blockType: string): Record<string, unknown> {
   return {
     version: 9,
-    tree: { conceptId: 'cpp:program', properties: {}, children: { body: [] } },
+    tree: { componentId: 'cpp:program', properties: {}, children: { body: [] } },
     blocklyState: {
       blocks: {
         blocks: [

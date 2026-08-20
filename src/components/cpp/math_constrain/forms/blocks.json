@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_math_constrain",
-    "conceptId": "cpp:math_constrain",
+    "componentId": "cpp:math_constrain",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",

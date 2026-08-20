@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_struct_declare",
-    "conceptId": "cpp:struct_declare",
+    "componentId": "cpp:struct_declare",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",

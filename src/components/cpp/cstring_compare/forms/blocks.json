@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_compare",
-    "conceptId": "cpp:cstring_compare",
+    "componentId": "cpp:cstring_compare",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

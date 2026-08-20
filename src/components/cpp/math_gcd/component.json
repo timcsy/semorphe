@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:math_gcd",
+  "componentId": "cpp:math_gcd",
   "abstractConcept": null,
   "properties": [],
   "children": {

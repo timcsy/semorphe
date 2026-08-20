@@ -110,7 +110,7 @@ npm test
 
 對正在整合的概念，產生 5-10 個代表性程式並執行 round-trip 驗證（同 `/component-roundtrip` 流程）。
 
-**概念身分驗證（必要）**：除了驗證 roundtrip 穩定性和 stdout 等價性之外，**每個測試都必須斷言語義樹中使用了正確的 conceptId**。這防止 lifter 退化到通用概念（如 `var_declare`）卻碰巧生成正確程式碼的假陽性。範例：
+**元件身分驗證（必要）**：除了驗證 roundtrip 穩定性和 stdout 等價性之外，**每個測試都必須斷言語義樹中使用了正確的 componentId**。這防止 lifter 退化到通用概念（如 `var_declare`）卻碰巧生成正確程式碼的假陽性。範例：
 ```typescript
 const ptrs = findConcepts(sem!, 'cpp_pointer_declare')
 expect(ptrs.length).toBeGreaterThan(0)

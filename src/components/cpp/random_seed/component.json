@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:random_seed",
+  "componentId": "cpp:random_seed",
   "abstractConcept": null,
   "properties": [],
   "children": {

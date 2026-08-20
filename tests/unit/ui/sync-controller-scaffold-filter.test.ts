@@ -21,7 +21,7 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('cpp:var_declare')
+    expect(result.children.body[0].componentId).toBe('cpp:var_declare')
   })
 
   it('strips using namespace', () => {
@@ -31,7 +31,7 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('cpp:print')
+    expect(result.children.body[0].componentId).toBe('cpp:print')
   })
 
   it('unwraps func_def main body and skips return', () => {
@@ -45,7 +45,7 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].conceptId).toBe('cpp:var_declare')
+    expect(result.children.body[0].componentId).toBe('cpp:var_declare')
   })
 
   it('keeps user-defined functions', () => {
@@ -57,9 +57,9 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
     ])
     const result = cppStripScaffoldNodes(tree)
     expect(result.children.body).toHaveLength(2)
-    expect(result.children.body[0].conceptId).toBe('cpp:func_def')
+    expect(result.children.body[0].componentId).toBe('cpp:func_def')
     expect(result.children.body[0].properties.name).toBe('helper')
-    expect(result.children.body[1].conceptId).toBe('cpp:print')
+    expect(result.children.body[1].componentId).toBe('cpp:print')
   })
 
   it('strips cpp_include_local too', () => {

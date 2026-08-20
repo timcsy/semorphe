@@ -8,9 +8,9 @@ describe('verify-concept-paths', () => {
   it('should scan and produce reports for all concepts', () => {
     const { reports } = verify(ROOT_DIR)
     expect(reports.length).toBeGreaterThan(0)
-    // Every report should have a conceptId and sources
+    // Every report should have a componentId and sources
     for (const r of reports) {
-      expect(r.conceptId).toBeTruthy()
+      expect(r.componentId).toBeTruthy()
       expect(r.sources.length).toBeGreaterThan(0)
     }
   })
@@ -49,7 +49,7 @@ describe('verify-concept-paths', () => {
 
   it('should exclude internal concepts (_compound, raw_code, unresolved, program)', () => {
     const { reports } = verify(ROOT_DIR)
-    const ids = reports.map(r => r.conceptId)
+    const ids = reports.map(r => r.componentId)
     expect(ids).not.toContain('_compound')
     expect(ids).not.toContain('raw_code')
     expect(ids).not.toContain('unresolved')
@@ -58,7 +58,7 @@ describe('verify-concept-paths', () => {
 
   it('should include core universal concepts', () => {
     const { reports } = verify(ROOT_DIR)
-    const ids = new Set(reports.map(r => r.conceptId))
+    const ids = new Set(reports.map(r => r.componentId))
     expect(ids.has('cpp:var_declare')).toBe(true)
     expect(ids.has('cpp:arithmetic')).toBe(true)
     expect(ids.has('cpp:if')).toBe(true)

@@ -15,7 +15,7 @@ describe('SemanticTree', () => {
   describe('createEmptyProgram', () => {
     it('should create a program node with empty body', () => {
       const tree = createEmptyProgram()
-      expect(tree.conceptId).toBe('cpp:program')
+      expect(tree.componentId).toBe('cpp:program')
       expect(tree.children.body).toEqual([])
       expect(tree.id).toBeTruthy()
     })
@@ -24,7 +24,7 @@ describe('SemanticTree', () => {
   describe('createNode', () => {
     it('should create a node with given concept and properties', () => {
       const node = createNode('cpp:var_declare', { name: 'x', type: 'int' })
-      expect(node.conceptId).toBe('cpp:var_declare')
+      expect(node.componentId).toBe('cpp:var_declare')
       expect(node.properties.name).toBe('x')
       expect(node.properties.type).toBe('int')
       expect(node.id).toBeTruthy()
@@ -34,7 +34,7 @@ describe('SemanticTree', () => {
       const value = createNode('cpp:literal_number', { value: '5' })
       const node = createNode('cpp:var_declare', { name: 'x' }, { initializer: [value] })
       expect(node.children.initializer).toHaveLength(1)
-      expect(node.children.initializer[0].conceptId).toBe('cpp:literal_number')
+      expect(node.children.initializer[0].componentId).toBe('cpp:literal_number')
     })
   })
 
@@ -44,7 +44,7 @@ describe('SemanticTree', () => {
       const child = createNode('cpp:var_declare', { name: 'x' })
       const newTree = addChild(tree, tree.id, 'body', child)
       expect(newTree.children.body).toHaveLength(1)
-      expect(newTree.children.body[0].conceptId).toBe('cpp:var_declare')
+      expect(newTree.children.body[0].componentId).toBe('cpp:var_declare')
       // original tree is unchanged (immutable)
       expect(tree.children.body).toHaveLength(0)
     })
@@ -97,7 +97,7 @@ describe('SemanticTree', () => {
       }
       const found = findById(tree, inner.id)
       expect(found).toBeTruthy()
-      expect(found?.conceptId).toBe('cpp:literal_number')
+      expect(found?.componentId).toBe('cpp:literal_number')
     })
 
     it('should return null for non-existent id', () => {
@@ -117,9 +117,9 @@ describe('SemanticTree', () => {
 
       const json = serializeTree(withDecl)
       const restored = deserializeTree(json)
-      expect(restored.conceptId).toBe('cpp:program')
+      expect(restored.componentId).toBe('cpp:program')
       expect(restored.children.body).toHaveLength(1)
-      expect(restored.children.body[0].conceptId).toBe('cpp:var_declare')
+      expect(restored.children.body[0].componentId).toBe('cpp:var_declare')
       expect(restored.children.body[0].properties.name).toBe('x')
     })
 

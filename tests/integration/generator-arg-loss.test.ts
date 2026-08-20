@@ -67,12 +67,12 @@ describe('護欄：產生器不得靜默丟掉引數', () => {
   it('🔴 而 push_back 少了字元時要【出聲】，不是再用一次預設值', () => {
     // ⚠️ 用預設值掩蓋一次資料遺失，就是這個 bug 本身的成因。
     const bad = {
-      conceptId: 'cpp:string_append_char',
+      componentId: 'cpp:string_append_char',
       properties: { obj: 's' },
       children: {},
       metadata: {},
     } as unknown as SemanticNode
-    const prog = { conceptId: 'cpp:program', properties: {}, children: { body: [bad] }, metadata: {} } as unknown as SemanticNode
+    const prog = { componentId: 'cpp:program', properties: {}, children: { body: [bad] }, metadata: {} } as unknown as SemanticNode
     expect(() => generateCode(prog, 'cpp', apcs as StylePreset)).toThrow(/少了要加的字元/)
   })
 })

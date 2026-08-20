@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cast_const",
-    "conceptId": "cpp:cast_const",
+    "componentId": "cpp:cast_const",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

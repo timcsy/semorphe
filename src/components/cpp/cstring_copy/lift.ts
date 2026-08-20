@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('strcpy', {
-    conceptId: 'cpp:cstring_copy',
+    componentId: 'cpp:cstring_copy',
     argSlots: ["dest", "src"],
     source: 'cpp/cstring_copy',
   })

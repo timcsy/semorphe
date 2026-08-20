@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:exception_make",
-    "conceptId": "cpp:exception_make",
+    "componentId": "cpp:exception_make",
     "language": "cpp",
     "category": "advanced",
     "version": "1.0.0",

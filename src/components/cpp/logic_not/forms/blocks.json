@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_logic_not",
-    "conceptId": "cpp:logic_not",
+    "componentId": "cpp:logic_not",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",

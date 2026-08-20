@@ -2,7 +2,7 @@
   "id": "cpp_delete_expression",
   "astNodeType": "delete_expression",
   "concept": {
-    "conceptId": "cpp:delete"
+    "componentId": "cpp:delete"
   },
   "fieldMappings": [
     {

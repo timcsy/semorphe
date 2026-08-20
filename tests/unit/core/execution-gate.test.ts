@@ -37,7 +37,7 @@ function node(
 ): SemanticNode {
   return {
     id,
-    conceptId: 'cpp:var_declare',
+    componentId: 'cpp:var_declare',
     properties: {},
     children,
     ...(cause ? { metadata: { degradationCause: cause, rawCode: 'x' } } : {}),

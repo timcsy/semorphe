@@ -45,7 +45,7 @@ import { createNode } from '../../src/core/semantic-tree'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type {
   UniversalTemplate,
-  ConceptDefJSON,
+  ComponentDefJSON,
   BlockProjectionJSON,
   SemanticNode,
   PathName,
@@ -67,7 +67,7 @@ const DECLARATION_WARNING =
   '實測 34 個候選裡只有 12 個站得住；**若哪天 📄 逼近 34，那是判準壞了，不是我們變好了**。'
 
 const RULE =
-  '從 ConceptDef 合成最小節點跑一圈五路。' +
+  '從 ComponentDef 合成最小節點跑一圈五路。' +
   'missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。'
 
 /**
@@ -275,12 +275,12 @@ function wrap(node: SemanticNode | null, id?: string, contextNode?: SemanticNode
 
 function findConcept(node: SemanticNode | null, id: string): boolean {
   if (!node) return false
-  if (node.conceptId === id) return true
+  if (node.componentId === id) return true
   return Object.values(node.children ?? {}).some((arr) => arr.some((c) => findConcept(c, id)))
 }
 
-function classify(def: ConceptDefJSON): { row: Row; generated: string } {
-  const id = def.conceptId
+function classify(def: ComponentDefJSON): { row: Row; generated: string } {
+  const id = def.componentId
   const skip = new Set<PathName>(def.skipPaths ?? [])
   const { node } = synthMinimalNode(def)
   const row = {} as Row
@@ -410,8 +410,8 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
       try {
         const back = extractor.extract(block)
         if (!back) return { verdict: 'shell', reason: 'extract 回傳 null' } as PathResult
-        if (back.conceptId !== id)
-          return { verdict: 'shell', reason: `取回的身分是 ${back.conceptId}，不是 ${id}` } as PathResult
+        if (back.componentId !== id)
+          return { verdict: 'shell', reason: `取回的身分是 ${back.componentId}，不是 ${id}` } as PathResult
         return { verdict: 'implemented' } as PathResult
       } catch (e) {
         return { verdict: 'shell', reason: `擲出例外：${(e as Error).message.slice(0, 60)}` } as PathResult
@@ -435,8 +435,8 @@ function classify(def: ConceptDefJSON): { row: Row; generated: string } {
 function measure(): Map<string, Row> {
   const out = new Map<string, Row>()
   for (const def of allComponentDefs()) {
-    if (out.has(def.conceptId)) continue
-    out.set(def.conceptId, classify(def).row)
+    if (out.has(def.componentId)) continue
+    out.set(def.componentId, classify(def).row)
   }
   return out
 }
@@ -458,12 +458,12 @@ function measure(): Map<string, Row> {
 function generatedUnderCurrentConfig(): Map<string, string> {
   const out = new Map<string, string>()
   for (const def of allComponentDefs()) {
-    if (out.has(def.conceptId)) continue
+    if (out.has(def.componentId)) continue
     const { node } = synthMinimalNode(def)
     try {
-      out.set(def.conceptId, generateCode(wrap(node), 'cpp', STYLE))
+      out.set(def.componentId, generateCode(wrap(node), 'cpp', STYLE))
     } catch (e) {
-      out.set(def.conceptId, `<<throw:${(e as Error).message.slice(0, 40)}>>`)
+      out.set(def.componentId, `<<throw:${(e as Error).message.slice(0, 40)}>>`)
     }
   }
   return out
@@ -475,8 +475,8 @@ function measureConfigDelta(): { componentId: string; actual: string; declared: 
   const tg = new TemplateGenerator()
   tg.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
   for (const spec of specsCache) {
-    if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
-      tg.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+    if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
+      tg.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
     }
   }
   setTemplateGenerator(tg)
@@ -605,7 +605,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       ...(delta.length > 25 ? [`  … 另外 ${delta.length - 25} 個`] : []),
     ])
 
-    expect(result.size).toBe(new Set(allComponentDefs().map((d) => d.conceptId)).size)
+    expect(result.size).toBe(new Set(allComponentDefs().map((d) => d.componentId)).size)
   })
 
   // ─────────────────────────────────────────────────────────────
@@ -623,12 +623,12 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
   // ─────────────────────────────────────────────────────────────
   it('★ 合成注入：一個不存在的概念必須被判為缺（零才可信）', () => {
     const fakeConcept = {
-      conceptId: '__zz_never_implemented__',
+      componentId: '__zz_never_implemented__',
       layer: 'lang-core',
       properties: [],
       children: {},
       role: 'statement',
-    } as unknown as ConceptDefJSON
+    } as unknown as ComponentDefJSON
     const { row } = classify(fakeConcept)
     const decision = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
     expect(
@@ -640,7 +640,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
 
   it('★ 對照組：一個真的實作了的概念不得被判為缺', () => {
     // 沒有這支的話，一個「什麼都判缺」的量測也會通過上一支
-    const real = allComponentDefs().find((d) => d.conceptId === 'cpp:var_declare')!
+    const real = allComponentDefs().find((d) => d.componentId === 'cpp:var_declare')!
     const { row } = classify(real)
     expect(row.execute.verdict, 'var_declare 的執行被判為缺 → 量測壞了').not.toBe('missing')
   })

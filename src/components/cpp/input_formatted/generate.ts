@@ -13,7 +13,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         const args = argNodes.map(a => {
           const expr = generateExpression(a, ctx)
           // var_ref nodes need & prefix (unless array/string/pointer)
-          if (isVariableRef(a.conceptId) && !a.properties.noAddr) {
+          if (isVariableRef(a.componentId) && !a.properties.noAddr) {
             return `&${expr}`
           }
           // no-addr var_ref, or compose/custom: user already controls &

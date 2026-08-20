@@ -14,7 +14,7 @@
  * → 組裝只留一份。測試與 production 用同一個函式，**就不可能分歧**
  *   （「與其偵測錯誤，不如換一個讓錯誤無法被表達的形式」）。
  */
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
 import { universalConcepts, universalBlocks } from '../../core/universal'
 import { coreConcepts, coreBlocks } from './core'
 import { allStdModules } from './std'
@@ -28,12 +28,12 @@ import '../../migrations/id-migrations'
 import './id-migrations'
 
 
-export function allCppConcepts(): ConceptDefJSON[] {
+export function allCppConcepts(): ComponentDefJSON[] {
   return [
     ...universalConcepts,
     ...coreConcepts,
     ...allStdModules.flatMap((m) => m.concepts),
-    ...(componentConcepts() as unknown as ConceptDefJSON[]),
+    ...(componentConcepts() as unknown as ComponentDefJSON[]),
   ]
 }
 

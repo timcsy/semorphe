@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:math_gcd",
-    "conceptId": "cpp:math_gcd",
+    "componentId": "cpp:math_gcd",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

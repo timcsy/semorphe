@@ -1,11 +1,11 @@
 /** `cpp:input` 的 **execute** 路——從共用檔原封剪過來（批次第三十九批）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { isIndexedAccess } from '../../../core/component/traits'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:input', async (node, ctx) => {
       const valueNodes = node.children.values ?? []
 
@@ -34,7 +34,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
         let lastVal: RuntimeValue = { type: 'int', value: 0 }
         let itemsRead = 0
         for (const varRefNode of valueNodes) {
-          if (isIndexedAccess(varRefNode.conceptId)) {
+          if (isIndexedAccess(varRefNode.componentId)) {
             const arrName = String(varRefNode.properties.obj)
             const arr = ctx.scope.get(arrName)
             if (arr.type !== 'array' || !Array.isArray(arr.value)) {

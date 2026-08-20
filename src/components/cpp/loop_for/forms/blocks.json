@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_loop_for",
-    "conceptId": "cpp:loop_for",
+    "componentId": "cpp:loop_for",
     "language": "cpp",
     "category": "loops",
     "version": "1.0.0",

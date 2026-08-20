@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { ModuleRegistry } from '../../../../../src/languages/cpp/std/module-registry'
 import type { StdModule } from '../../../../../src/languages/cpp/std/types'
 
-function createMockModule(header: string, conceptIds: string[]): StdModule {
+function createMockModule(header: string, componentIds: string[]): StdModule {
   return {
     header,
-    concepts: conceptIds.map(id => ({ conceptId: id, properties: {}, children: {} })) as any[],
+    concepts: componentIds.map(id => ({ componentId: id, properties: {}, children: {} })) as any[],
     blocks: [],
     registerGenerators: () => {},
     registerLifters: () => {},
@@ -50,7 +50,7 @@ describe('ModuleRegistry', () => {
   // ─── DependencyResolver.resolve() tests ───
 
   describe('resolve() (DependencyResolver)', () => {
-    it('should return empty array for empty conceptIds', () => {
+    it('should return empty array for empty componentIds', () => {
       const registry = new ModuleRegistry()
       expect(registry.resolve([])).toEqual([])
     })
@@ -103,8 +103,8 @@ describe('ModuleRegistry', () => {
       registry.register(createMockModule('<vector>', ['vector_create']))
       registry.register(createMockModule('<algorithm>', ['algorithm_sort']))
 
-      const conceptIds = ['cpp:print', 'vector_create', 'algorithm_sort', 'cpp:if']
-      const edges = registry.resolve(conceptIds)
+      const componentIds = ['cpp:print', 'vector_create', 'algorithm_sort', 'cpp:if']
+      const edges = registry.resolve(componentIds)
       const headers = edges.map(e => e.header)
       expect(headers).toEqual(['<algorithm>', '<iostream>', '<vector>'])
     })

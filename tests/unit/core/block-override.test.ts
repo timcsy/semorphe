@@ -8,7 +8,7 @@ function makeBlockSpec(overrides: Partial<BlockSpec> = {}): BlockSpec {
     language: 'cpp',
     category: 'io',
     version: '1.0.0',
-    conceptMapping: { conceptId: 'cpp:print' },
+    componentMapping: { componentId: 'cpp:print' },
     blockDef: {
       type: 'c_print',
       message0: 'print %1',

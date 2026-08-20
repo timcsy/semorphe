@@ -7,10 +7,10 @@
  * > **不為迭代器發明第三種表示。** 指標算術（`it + 1`）、解參考（`*it`）、
  * > 相減（`it - v.begin()`）在那個表示上全都已經能跑。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_iter', async (node, ctx) => {
     const name = String(node.properties.obj)
     const which = String(node.properties.which ?? 'begin')

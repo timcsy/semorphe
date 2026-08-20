@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_dht_read",
-    "conceptId": "cpp:dht_read",
+    "componentId": "cpp:dht_read",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

@@ -7,13 +7,13 @@
  * 那正是本功能要治的病。合成能保證覆蓋率 100%（spec SC-003 要求無元件被
  * 靜默略過）。
  *
- * `ConceptDefJSON` 已經有 `properties`、`children`、`role`，足以合成。
+ * `ComponentDefJSON` 已經有 `properties`、`children`、`role`，足以合成。
  *
  * 見 specs/049-audit-guardrails/research.md D6
  */
 import { createNode } from '../../src/core/semantic-tree'
 import { paramSpecs } from '../../src/core/param-spec'
-import type { ConceptDefJSON, SemanticNode, PropertyValue, ParamSpec, ParamKind } from '../../src/core/types'
+import type { ComponentDefJSON, SemanticNode, PropertyValue, ParamSpec, ParamKind } from '../../src/core/types'
 
 /**
  * 概念 → 它的運算子該長什麼樣。
@@ -59,7 +59,7 @@ const BY_KIND: Record<ParamKind, PropertyValue> = {
  * 順序有理由：`default`（產生器實際的退路，最貼近真實）→ `values[0]`
  * （enum 唯一保證合法的值）→ `kind` → 名字正則。
  */
-function synthValue(sp: ParamSpec, conceptId?: string): PropertyValue {
+function synthValue(sp: ParamSpec, componentId?: string): PropertyValue {
   // ⚠️ **空字串不算可用的合成值。** `default: ''` 是誠實的（產生器的退路
   // 真的是空），而拿它去合成節點會產出 `var_ref` 沒有名字、`cpp_raw_code`
   // 沒有內容——完備性護欄當場多出七個假的「殼」。
@@ -67,15 +67,15 @@ function synthValue(sp: ParamSpec, conceptId?: string): PropertyValue {
   if (sp.default !== undefined && sp.default !== '') return sp.default
   if (sp.kind === 'enum' && sp.values?.length) return sp.values[0]
   if (sp.kind !== 'literal') return BY_KIND[sp.kind]
-  return defaultFor(sp.name, conceptId)
+  return defaultFor(sp.name, componentId)
 }
 
 /** 屬性名 → 合理的預設值。**未規格化的元件走這條**——靠名字猜。 */
-function defaultFor(prop: string, conceptId?: string): PropertyValue {
+function defaultFor(prop: string, componentId?: string): PropertyValue {
   const p = prop.toLowerCase()
   if (/(^|_)(name|var|obj|target|func|label)($|_)/.test(p)) return 'x'
   if (/(^|_)(type|vartype|rettype)($|_)/.test(p)) return 'int'
-  if (/(^|_)(op|operator)($|_)/.test(p)) return OPERATOR_FOR[conceptId ?? ''] ?? '+'
+  if (/(^|_)(op|operator)($|_)/.test(p)) return OPERATOR_FOR[componentId ?? ''] ?? '+'
   if (/(^|_)(value|literal|text|str|msg)($|_)/.test(p)) return '1'
   if (/(^|_)(index|idx|pos|size|count|len|n)($|_)/.test(p)) return '0'
   if (/(^|_)(header|include|module)($|_)/.test(p)) return 'iostream'
@@ -134,14 +134,14 @@ export interface SynthResult {
 /**
  * 合成一個最小節點：properties 填預設、children 每個具名槽填一個最小子節點。
  */
-export function synthMinimalNode(def: ConceptDefJSON): SynthResult {
+export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
   const notes: string[] = []
 
   const properties: Record<string, PropertyValue> = {}
   // ⚠️ 已規格化的元件走 `synthValue`（讀宣告），其餘走 `defaultFor`（猜名字）。
   // `paramSpecs` 把純名字清單正規化成 `kind: 'literal'`，於是那條路自動落回猜測。
   for (const sp of paramSpecs(def.properties)) {
-    properties[sp.name] = synthValue(sp, def.conceptId)
+    properties[sp.name] = synthValue(sp, def.componentId)
   }
 
   const children: Record<string, SemanticNode[]> = {}
@@ -166,7 +166,7 @@ export function synthMinimalNode(def: ConceptDefJSON): SynthResult {
     }
   }
 
-  return { node: createNode(def.conceptId, properties, children), notes }
+  return { node: createNode(def.componentId, properties, children), notes }
 }
 
 /** 判斷一段程式碼是不是「佔位輸出」——空字串、只有空白、或只剩分號 */

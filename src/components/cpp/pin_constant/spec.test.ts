@@ -33,7 +33,7 @@ beforeAll(async () => {
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const collect = (n: SemanticNode, out: string[] = []): string[] => {
-  out.push(n.conceptId)
+  out.push(n.componentId)
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
   return out
 }
@@ -75,11 +75,11 @@ describe('膠囊自證：cpp:pin_constant', () => {
    * 所以這一支**直接餵一顆合成的節點**給產生器。
    */
   it('★ generate：從積木來的節點產得出名字', () => {
-    const node = { conceptId: 'cpp:pin_constant', properties: { value: 'INPUT_PULLUP' }, children: {} } as unknown as SemanticNode
+    const node = { componentId: 'cpp:pin_constant', properties: { value: 'INPUT_PULLUP' }, children: {} } as unknown as SemanticNode
     const code = generateCode(
-      { conceptId: 'cpp:program', properties: {}, children: { body: [
-        { conceptId: 'cpp:pin_mode', properties: {}, children: {
-          pin: [{ conceptId: 'cpp:literal_number', properties: { value: '2' }, children: {} } as unknown as SemanticNode],
+      { componentId: 'cpp:program', properties: {}, children: { body: [
+        { componentId: 'cpp:pin_mode', properties: {}, children: {
+          pin: [{ componentId: 'cpp:literal_number', properties: { value: '2' }, children: {} } as unknown as SemanticNode],
           mode: [node],
         } } as unknown as SemanticNode,
       ] } } as unknown as SemanticNode, 'cpp', apcs as unknown as StylePreset)

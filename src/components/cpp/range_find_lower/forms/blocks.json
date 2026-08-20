@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_find_lower",
-    "conceptId": "cpp:range_find_lower",
+    "componentId": "cpp:range_find_lower",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

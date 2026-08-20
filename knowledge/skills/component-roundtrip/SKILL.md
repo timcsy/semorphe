@@ -112,7 +112,7 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 **層級二 — 語義樹完整性（P1 投影定理）**：
 - 將 SemanticTree dump 為 JSON
 - 檢查沒有節點有 `confidence: 'raw_code'`（除非該概念確實不支援）
-- **概念身分驗證（CONCEPT_IDENTITY）**：對每個被測概念，斷言語義樹中存在對應的概念節點，且使用的是正確的 conceptId（而非退化到 `var_declare` 等通用概念）。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性。範例：
+- **元件身分驗證（CONCEPT_IDENTITY）**：對每個被測概念，斷言語義樹中存在對應的元件節點，且使用的是正確的 componentId（而非退化到 `var_declare` 等通用概念）。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性。範例：
   ```typescript
   // ❌ 只驗證輸出字串（可能用錯概念但碰巧生成正確程式碼）
   expect(gen).toContain('int* ptr = &x')
@@ -158,7 +158,7 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 | DEGRADED | 🟡 | 程式碼被降級為 raw_code — 覆蓋缺口 |
 | SCAFFOLD_LEAK | ❌ | 低層級輸出包含高層級概念語法 — P4 違規 |
 | ROUNDTRIP_DRIFT | ❌ | 二次 round-trip 語義樹結構不同 — P1 違規 |
-| WRONG_CONCEPT | ❌ | 語義樹使用了錯誤的概念（如指標宣告用了 var_declare 而非 cpp_pointer_declare）— 概念身分違規 |
+| WRONG_CONCEPT | ❌ | 語義樹使用了錯誤的概念（如指標宣告用了 var_declare 而非 cpp_pointer_declare）— 元件身分違規 |
 | TIMEOUT | ❌ | 產生的程式碼掛住 — 可能的無窮迴圈 |
 | STRUCTURE_DIFF | 🔵 | Stdout 匹配但程式碼結構顯著不同 |
 
@@ -185,7 +185,7 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 
 1. **PASS 的測試**：在 `tests/integration/` 建立測試檔（檔名 `roundtrip-{lang}-{concept}.test.ts`），包含所有 PASS 的測試程式作為 round-trip 回歸測試。每個測試**必須同時驗證**：
    - lift → generate → 再 lift 的語義樹結構等價性
-   - **概念身分（CONCEPT_IDENTITY）**：語義樹中被測概念使用了正確的 conceptId，而非退化到通用概念（如 `var_declare`）。使用 `findConcepts(sem, 'expected_concept_id')` 斷言節點存在且屬性正確。
+   - **元件身分（CONCEPT_IDENTITY）**：語義樹中被測概念使用了正確的 componentId，而非退化到通用概念（如 `var_declare`）。使用 `findConcepts(sem, 'expected_concept_id')` 斷言節點存在且屬性正確。
 2. **失敗的測試（❌）**：同樣建立測試檔（檔名加 `roundtrip-` 前綴），但用 `it.skip` 或 `it.todo` 標記，附上失敗原因註解，待修復後啟用。
 3. **Runner 腳本不可作為驗證手段**：`/tmp/` 下的臨時 runner 僅用於探索性執行。最終驗證結果必須轉化為 Vitest 測試案例，確保 CI 可重複捕捉回歸。
 4. 如果目標概念已有測試檔（如 `tests/integration/cmath-roundtrip.test.ts`），將新案例**追加**到既有檔案中，避免重複建檔。

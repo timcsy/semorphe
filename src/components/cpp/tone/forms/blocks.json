@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_tone",
-    "conceptId": "cpp:tone",
+    "componentId": "cpp:tone",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

@@ -7,7 +7,7 @@
  *
  * | 消費者 | 原本怎麼寫的 |
  * |---|---|
- * | 同步控制器的降級 | `node.conceptId === 'cpp_string_declare' ? 'string' : undefined` |
+ * | 同步控制器的降級 | `node.componentId === 'cpp_string_declare' ? 'string' : undefined` |
  * | 積木註冊處的下拉選單 | `if (block.type === 'cpp_string_declare')` |
  *
  * 兩處都**只認得那一個概念**。而危險的地方是：加一個同類概念（例如另一種

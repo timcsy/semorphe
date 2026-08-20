@@ -1,10 +1,10 @@
 /** `cpp:var_declare_ref` 的 **execute** 路——從共用檔原封剪過來（批次第三十批）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { execVarDeclare } from '../../../interpreter/executors/variables'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡寫另一顆的身分，就近性護欄的反向檢查會指名。
 import { isVariableRef } from '../../../languages/cpp/core/node-traits'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   /**
      * `int& r = a;`——**別名，不是複製**。
      *
@@ -17,7 +17,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       const name = String(node.properties.name)
       const inits = node.children.initializer ?? []
       const target = inits[0]
-      if (target && isVariableRef(target.conceptId) && target.properties?.name !== undefined) {
+      if (target && isVariableRef(target.componentId) && target.properties?.name !== undefined) {
         // `get`／`set` 會沿 parent 往上找，所以目標作用域傳當前的就夠
         ctx.scope.declareRef(name, ctx.scope, String(target.properties.name))
         return

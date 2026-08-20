@@ -14,9 +14,9 @@
  * 讓每個消費者各自寫 `Array.isArray(p) && typeof p[0] === 'string' ? … : …`
  * 就是在製造 N 份會漂移的判斷。
  */
-import type { ConceptDefJSON, ParamSpec } from './types'
+import type { ComponentDefJSON, ParamSpec } from './types'
 
-type ParamsField = ConceptDefJSON['properties']
+type ParamsField = ComponentDefJSON['properties']
 
 /** 正規化成規格。純名字的一律當 `literal`——**未規格化 ≠ 沒有規格** */
 export function paramSpecs(params: ParamsField | undefined): ParamSpec[] {

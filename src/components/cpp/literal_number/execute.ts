@@ -28,12 +28,12 @@
  * JavaScript 的 `number`，⚠️ **所以後綴在這裡只需要被【剝掉】，不需要被實現**
  * ——而「不需要實現」與「可以忽略」是兩件事：忽略的話值就變成 `NaN`。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 /** 整數／浮點的字面後綴。**只影響型別，不影響值**——見檔頭。 */
 const SUFFIX = /(?:[uU]|[lL]{1,2}|[fF])+$/
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:literal_number', async (node) => {
       const raw = String(node.properties.value)
       // ⚠️ 十六進位／二進位不能剝：`0xFF` 的 `F` 是數字不是後綴。

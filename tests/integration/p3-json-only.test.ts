@@ -13,7 +13,7 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
-import type { BlockSpec, LiftPattern, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
@@ -86,8 +86,8 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     extractor.loadBlockSpecs(specs)
 
     for (const spec of specs) {
-      if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
-        generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
+        generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
       }
     }
   })
@@ -112,7 +112,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
 
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:increment')
+      expect(result!.componentId).toBe('cpp:increment')
       expect(result!.properties.name).toBe('i')
     })
 
@@ -151,7 +151,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       }
       const node = extractor.extract(block as any)
       expect(node).not.toBeNull()
-      expect(node!.conceptId).toBe('cpp:increment')
+      expect(node!.componentId).toBe('cpp:increment')
       expect(node!.properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
@@ -165,7 +165,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       })
       const semantic1 = lifter.tryLift(astNode, liftCtx())
       expect(semantic1).not.toBeNull()
-      expect(semantic1!.conceptId).toBe('cpp:increment')
+      expect(semantic1!.componentId).toBe('cpp:increment')
 
       // Step 2: Semantic → Block (render)
       const block = renderer.render(semantic1!)
@@ -175,7 +175,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       // Step 3: Block → Semantic (extract)
       const semantic2 = extractor.extract(block!)
       expect(semantic2).not.toBeNull()
-      expect(semantic2!.conceptId).toBe('cpp:increment')
+      expect(semantic2!.componentId).toBe('cpp:increment')
       expect(semantic2!.properties.name).toBe('i')
     })
   })
@@ -185,7 +185,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const node = mockNode('char_literal', "'a'")
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:literal_char')
+      expect(result!.componentId).toBe('cpp:literal_char')
       expect(result!.properties.char).toBe("'a'")
     })
   })
@@ -199,7 +199,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:literal_number', role: 'expression' },
+        componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
         codeTemplate: { pattern: '${value}', imports: [], order: 20 },
         astPattern: {
@@ -220,10 +220,10 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
 
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:var_assign_compound')
+      expect(result!.componentId).toBe('cpp:var_assign_compound')
       expect(result!.properties.name).toBe('x')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
+      expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
     })
   })
 })

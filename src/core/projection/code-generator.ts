@@ -201,13 +201,13 @@ function wireTemplateFallbacks(ctx: GeneratorContext): void {
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
   if (!tg) return
   tg.setExpressionFallback((node, _tgCtx) => {
-    const generator = ctx.generators.get(node.conceptId)
+    const generator = ctx.generators.get(node.componentId)
     if (!generator) return null
     // Hand-written expression generators return just the expression text
     return generator(node, ctx)
   })
   tg.setBodyFallback((node, tgCtx) => {
-    const generator = ctx.generators.get(node.conceptId)
+    const generator = ctx.generators.get(node.componentId)
     if (!generator) return null
     const bodyCtx = { ...ctx, indent: tgCtx.indent }
     return generator(node, bodyCtx)
@@ -249,7 +249,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
   } else {
     // Fall back to hand-written generators (including meta-concept generators)
-    const generator = ctx.generators.get(node.conceptId)
+    const generator = ctx.generators.get(node.componentId)
     if (generator) {
       result = generator(node, ctx)
     } else {
@@ -268,7 +268,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
       //
       // 註解是每個語言各自的機制（`//`／`#`／`;`），所以它的產生器屬於語言；
       // 而「沒有語言時不要弄丟內容」是**核心對所有節點的責任**，與註解無關。
-      result = `⟨unknown concept: ${node.conceptId}${contentDigest(node)}⟩\n`
+      result = `⟨unknown concept: ${node.componentId}${contentDigest(node)}⟩\n`
     }
   }
 
@@ -338,11 +338,11 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   if (templateResult !== null) return templateResult
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
-  const generator = exprCtx.generators.get(node.conceptId)
+  const generator = exprCtx.generators.get(node.componentId)
   if (generator) return generator(node, exprCtx)
   // Meta-concepts that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
-  return `⟨${node.conceptId}⟩`
+  return `⟨${node.componentId}⟩`
 }
 
 export function indent(ctx: GeneratorContext): string {
@@ -405,5 +405,5 @@ export function generateBody(nodes: SemanticNode[], ctx: GeneratorContext): stri
  */
 function asStatement(node: SemanticNode, text: string, ctx: GeneratorContext): string {
   if (text === '' || text.endsWith('\n') || ctx.indent === 0) return text
-  return roleOf(node.conceptId) === 'expression' ? `${indent(ctx)}${text};\n` : text
+  return roleOf(node.componentId) === 'expression' ? `${indent(ctx)}${text};\n` : text
 }

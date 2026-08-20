@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('map', {
-    conceptId: 'cpp:range_remap',
+    componentId: 'cpp:range_remap',
     argSlots: ["value", "from_low", "from_high", "to_low", "to_high"],
     source: 'cpp/range_remap',
   })

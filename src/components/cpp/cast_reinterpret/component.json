@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cast_reinterpret",
+  "componentId": "cpp:cast_reinterpret",
   "abstractConcept": null,
   "properties": [
     {

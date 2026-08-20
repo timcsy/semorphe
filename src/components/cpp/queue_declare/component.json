@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:queue_declare",
+  "componentId": "cpp:queue_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

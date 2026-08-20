@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_analog_read",
-    "conceptId": "cpp:analog_read",
+    "componentId": "cpp:analog_read",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

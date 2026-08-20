@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_var_ref",
-    "conceptId": "cpp:var_ref",
+    "componentId": "cpp:var_ref",
     "language": "universal",
     "category": "data",
     "version": "1.0.0",

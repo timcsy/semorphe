@@ -94,7 +94,7 @@ import type { SemanticNode } from '../../src/core/types'
 const GUARD = 'conformance'
 
 interface decision {
-  conceptId: string
+  componentId: string
   bucket: '確定違規' | '無法確定' | '安全'
   missing: string[]
   reason: string
@@ -121,23 +121,23 @@ interface BlockState {
  * 注入測試，會在那些資料被修好的那天失效。
  */
 export function judgeConformance(
-  conceptId: string,
+  componentId: string,
   slotsPutIn: readonly string[],
   slotsGotBack: readonly string[] | null,
 ): decision {
-  if (!slotsPutIn.length) return { conceptId, bucket: '安全', missing: [], reason: '沒有宣告接點，或合成不出子節點' }
+  if (!slotsPutIn.length) return { componentId, bucket: '安全', missing: [], reason: '沒有宣告接點，或合成不出子節點' }
   if (slotsGotBack === null) {
     return {
-      conceptId,
+      componentId,
       bucket: '無法確定',
       missing: [...slotsPutIn],
       reason: '走不完 render → extract（可能只能當運算式，也可能是漏了）；判不出來不計入安全',
     }
   }
   const missing = slotsPutIn.filter((k) => !slotsGotBack.includes(k))
-  if (!missing.length) return { conceptId, bucket: '安全', missing: [], reason: '每個放得進去的接點都回得來' }
+  if (!missing.length) return { componentId, bucket: '安全', missing: [], reason: '每個放得進去的接點都回得來' }
   return {
-    conceptId,
+    componentId,
     bucket: '確定違規',
     missing,
     reason: `接點 [${missing.join('、')}] 放得進語義樹，走完 render → extract 之後不見了（回來的：${slotsGotBack.join('、') || '無'}）`,
@@ -145,9 +145,9 @@ export function judgeConformance(
 }
 
 
-interface form { conceptId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
+interface form { componentId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
 const formsOf = (id: string): form[] =>
-  (allCppProjections() as never as form[]).filter((f) => f.conceptId === id)
+  (allCppProjections() as never as form[]).filter((f) => f.componentId === id)
 
 let extractor: PatternExtractor
 let cache: decision[] | null = null
@@ -155,7 +155,7 @@ let cache: decision[] | null = null
 function measureOnce(): decision[] {
   if (cache) return cache
   const out: decision[] = []
-  for (const c of allCppConcepts() as never as { conceptId: string; children?: Record<string, unknown> }[]) {
+  for (const c of allCppConcepts() as never as { componentId: string; children?: Record<string, unknown> }[]) {
     const slotDecl = Object.keys(c.children ?? {})
     if (!slotDecl.length) continue
     let node: SemanticNode
@@ -163,7 +163,7 @@ function measureOnce(): decision[] {
       const s = synthMinimalNode(c as never) as { node?: SemanticNode }
       node = (s.node ?? (s as unknown as SemanticNode))
     } catch {
-      out.push({ conceptId: c.conceptId, bucket: '無法確定', missing: slotDecl, reason: '合成不出最小節點' })
+      out.push({ componentId: c.componentId, bucket: '無法確定', missing: slotDecl, reason: '合成不出最小節點' })
       continue
     }
     // ⚠️ **合成器不知道某個接點該放什麼型別的子節點**——它按 `allowed`
@@ -171,7 +171,7 @@ function measureOnce(): decision[] {
     // 那不是違規，是合成產物：一顆沒有 `type`／`name` 屬性的節點當然序列化不出東西。
     //
     // 而**宣告裡就寫著該放什麼**（`childrenAsField.childConcept`）。讀它，不要猜。
-    for (const caf of formsOf(c.conceptId).flatMap((f) => f.renderMapping?.childrenAsField ?? [])) {
+    for (const caf of formsOf(c.componentId).flatMap((f) => f.renderMapping?.childrenAsField ?? [])) {
       if (!(node.children[caf.childSlot] ?? []).length) continue
       node.children[caf.childSlot] = [
         createNode(caf.childConcept, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
@@ -196,7 +196,7 @@ function measureOnce(): decision[] {
         const extractBack = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
         const find = (n: SemanticNode | null): SemanticNode | null => {
           if (!n) return null
-          if (n.conceptId === c.conceptId) return n
+          if (n.componentId === c.componentId) return n
           for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
           return null
         }
@@ -207,8 +207,8 @@ function measureOnce(): decision[] {
     }
     out.push(
       renderedOnce
-        ? judgeConformance(c.conceptId, allSlots, allSlots.filter((k) => !missing.includes(k)))
-        : judgeConformance(c.conceptId, allSlots, null),
+        ? judgeConformance(c.componentId, allSlots, allSlots.filter((k) => !missing.includes(k)))
+        : judgeConformance(c.componentId, allSlots, null),
     )
   }
   cache = out
@@ -246,7 +246,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     // **錨在「整顆乾淨」上，等於錨在「這顆元件的每一個接點都沒問題」**，
     // 而那是一個會隨世界變動的合取。正確的錨是**單一接點**——
     // 「`INIT_0` 那條動態插槽的路走得通」在補宣告前後都成立。
-    const d = new Map(measureOnce().map((x) => [x.conceptId, x]))
+    const d = new Map(measureOnce().map((x) => [x.componentId, x]))
     for (const [id, slots] of [['cpp:print', 'values'], ['cpp:var_declare', 'initializer'], ['cpp:if', 'then_body']] as const) {
       expect(
         d.get(id)?.missing ?? [],
@@ -261,8 +261,8 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     const violations = all.filter((d) => d.bucket === '確定違規')
     const pending = all.filter((d) => d.bucket === '無法確定')
 
-    printReport('符合性：確定違規', violations.map((d) => `  ✘ ${d.conceptId} — ${d.reason}`))
-    printReport('符合性：無法確定（不計入安全）', pending.map((d) => `  ？ ${d.conceptId} — ${d.reason}`))
+    printReport('符合性：確定違規', violations.map((d) => `  ✘ ${d.componentId} — ${d.reason}`))
+    printReport('符合性：無法確定（不計入安全）', pending.map((d) => `  ？ ${d.componentId} — ${d.reason}`))
 
     if (process.env.GENERATE_BASELINE) {
       writeBaseline(GUARD, {
@@ -278,7 +278,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
         },
         certainViolations: violations.length,
         undetermined: pending.length,
-        violationList: violations.map((d) => `${d.conceptId}: ${d.missing.join('、')}`).sort(),
+        violationList: violations.map((d) => `${d.componentId}: ${d.missing.join('、')}`).sort(),
       } satisfies Baseline)
     }
 

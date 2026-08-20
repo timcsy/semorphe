@@ -72,7 +72,7 @@ describe('parseToChildren：文字 → 子節點', () => {
   it('一般情形', () => {
     const r = parseToChildren('int a, int b', spec)
     expect(r.map((n) => n.properties)).toEqual([{ type: 'int', name: 'a' }, { type: 'int', name: 'b' }])
-    expect(r.every((n) => n.conceptId === 'param_decl')).toBe(true)
+    expect(r.every((n) => n.componentId === 'param_decl')).toBe(true)
   })
 
   it('★ 最後一個空白分隔的詞是名字，其餘全是型別', () => {

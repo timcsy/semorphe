@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_container_count",
-    "conceptId": "cpp:container_count",
+    "componentId": "cpp:container_count",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

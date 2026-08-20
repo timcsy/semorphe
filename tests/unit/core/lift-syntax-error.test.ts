@@ -45,7 +45,7 @@ const lift = (body: string): SemanticNode =>
 /** 樹上所有被標為語法錯誤的節點 */
 function broken(n: SemanticNode, out: { id: string; raw: string }[] = []): { id: string; raw: string }[] {
   if (n.metadata?.degradationCause === 'syntax_error') {
-    out.push({ id: n.conceptId, raw: String(n.metadata?.rawCode ?? '') })
+    out.push({ id: n.componentId, raw: String(n.metadata?.rawCode ?? '') })
   }
   for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) broken(c, out)
   return out

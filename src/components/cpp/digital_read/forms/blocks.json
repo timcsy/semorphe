@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_digital_read",
-    "conceptId": "cpp:digital_read",
+    "componentId": "cpp:digital_read",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

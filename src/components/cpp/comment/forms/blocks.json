@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_comment",
-    "conceptId": "cpp:comment",
+    "componentId": "cpp:comment",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",

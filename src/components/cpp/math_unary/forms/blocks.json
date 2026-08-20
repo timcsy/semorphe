@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_math_unary",
-    "conceptId": "cpp:math_unary",
+    "componentId": "cpp:math_unary",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",

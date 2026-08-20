@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { PatternRenderer } from '../../../src/core/projection/pattern-renderer'
 import type { BlockSpec } from '../../../src/core/types'
 
-function makeSpec(blockType: string, conceptId: string, opts: {
+function makeSpec(blockType: string, componentId: string, opts: {
   hasOutput?: boolean
   hasPreviousStatement?: boolean
   expressionCounterpart?: string
@@ -25,7 +25,7 @@ function makeSpec(blockType: string, conceptId: string, opts: {
     category: 'test',
     level: 1,
     version: '1.0.0',
-    conceptMapping: { conceptId, properties: [], children: {} },
+    componentMapping: { componentId, properties: [], children: {} },
     blockDef,
     codeTemplate: { pattern: '', imports: [], order: 0 },
     astPattern: { nodeType: '_none', constraints: [] },

@@ -117,7 +117,7 @@ describe('Round-trip: C++ reference and static (cpp_ref_declare, cpp_static_decl
       expect(tree2).not.toBeNull()
 
       function findConcept(node: any, concept: string): boolean {
-        if (node.conceptId === concept) return true
+        if (node.componentId === concept) return true
         for (const children of Object.values(node.children ?? {})) {
           for (const child of children as any[]) {
             if (findConcept(child, concept)) return true

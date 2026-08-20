@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pwm_open",
-    "conceptId": "cpp:pwm_open",
+    "componentId": "cpp:pwm_open",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

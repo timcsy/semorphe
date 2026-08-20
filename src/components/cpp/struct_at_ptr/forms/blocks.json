@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_struct_at_ptr",
-    "conceptId": "cpp:struct_at_ptr",
+    "componentId": "cpp:struct_at_ptr",
     "language": "cpp",
     "category": "structures",
     "version": "1.0.0",

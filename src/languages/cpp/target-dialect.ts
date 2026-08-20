@@ -76,7 +76,7 @@ export function cTypeName(type: string, structNames: ReadonlySet<string>): strin
  * 而不是在這裡寫死 `cpp:struct_declare`。
  */
 export function collectStructNames(root: SemanticNode, acc = new Set<string>()): Set<string> {
-  if (root.conceptId.endsWith(':struct_declare') && typeof root.properties?.name === 'string') {
+  if (root.componentId.endsWith(':struct_declare') && typeof root.properties?.name === 'string') {
     acc.add(root.properties.name)
   }
   for (const bucket of Object.values(root.children ?? {})) {

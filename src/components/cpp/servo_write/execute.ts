@@ -5,10 +5,10 @@
  * 「沒有 `pinMode` 就寫」的處置相同：出聲會擋住一批真的能跑的入門程式。
  * ⚠️ 而角度**夾在 0–180**，與真板子一致。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_write', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'myServo')
     const angle = ctx.toNumber(await ctx.evaluate((node.children.angle ?? [])[0]))

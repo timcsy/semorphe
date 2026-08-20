@@ -1,9 +1,9 @@
 /** `cpp:priority_queue_peek` 的 **execute** 路——從共用檔原封剪過來（批次第十三批：依型別分派的方法表）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { heapTopIndex } from '../../../languages/cpp/core/runtime/heap'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:priority_queue_peek', async (node, ctx) => {
       const name = String(node.properties.obj)
       const arr = ctx.scope.get(name)

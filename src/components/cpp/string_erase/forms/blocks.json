@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_erase",
-    "conceptId": "cpp:string_erase",
+    "componentId": "cpp:string_erase",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

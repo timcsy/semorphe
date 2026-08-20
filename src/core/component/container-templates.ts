@@ -25,30 +25,30 @@
 
 import { registeredComponents } from './registry'
 
-const table = new Map<string, { conceptId: string; source: string }>()
+const table = new Map<string, { componentId: string; source: string }>()
 
 /**
  * 登錄一個樣板名。
  *
  * @param templateName C++ 的樣板容器名（`vector`／`stack`…）
- * @param conceptId 對應的元件身分
+ * @param componentId 對應的元件身分
  * @param source 誰登錄的——膠囊填自己的資料夾，過渡表填 `'(尚未元件化)'`
  */
-export function registerContainerTemplate(templateName: string, conceptId: string, source: string): void {
+export function registerContainerTemplate(templateName: string, componentId: string, source: string): void {
   const existing = table.get(templateName)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `樣板名「${templateName}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。` +
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。` +
         `不自動取其一——靜默覆蓋的症狀是「某種容器被辨識成另一種」。`,
     )
   }
-  table.set(templateName, { conceptId, source })
+  table.set(templateName, { componentId, source })
 }
 
 /** 樣板名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
 export function conceptForContainerTemplate(templateName: string): string | undefined {
-  return table.get(templateName)?.conceptId
+  return table.get(templateName)?.componentId
 }
 
 /** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */
@@ -65,22 +65,22 @@ export function containerTemplateSources(): [templateName: string, source: strin
  *
  * ⚠️ 表是空的：核心給機制、套件給資料。
  */
-const typeNameTable = new Map<string, { conceptId: string; source: string }>()
+const typeNameTable = new Map<string, { componentId: string; source: string }>()
 
-export function registerPlainTypeConcept(typeName: string, conceptId: string, source: string): void {
+export function registerPlainTypeConcept(typeName: string, componentId: string, source: string): void {
   const existing = typeNameTable.get(typeName)
-  if (existing && existing.conceptId !== conceptId) {
+  if (existing && existing.componentId !== componentId) {
     throw new Error(
       `型別名「${typeName}」被登錄兩次且指向不同身分：` +
-        `${existing.conceptId}（${existing.source}）與 ${conceptId}（${source}）。`,
+        `${existing.componentId}（${existing.source}）與 ${componentId}（${source}）。`,
     )
   }
-  typeNameTable.set(typeName, { conceptId, source })
+  typeNameTable.set(typeName, { componentId, source })
 }
 
 /** 型別名 → 元件身分。認不得回 `undefined`。 */
 export function plainTypeConcept(typeName: string): string | undefined {
-  return typeNameTable.get(typeName)?.conceptId
+  return typeNameTable.get(typeName)?.componentId
 }
 
 /**
@@ -107,7 +107,7 @@ export function plainTypeConcept(typeName: string): string | undefined {
 export function recordedTypeIsDevice(recordedType: string): boolean {
   const suffix = `:${recordedType}_declare`
   for (const c of registeredComponents()) {
-    if (c.conceptId.endsWith(suffix)) {
+    if (c.componentId.endsWith(suffix)) {
       return (c.manifest as { owner?: string }).owner === '(arduino)'
     }
   }

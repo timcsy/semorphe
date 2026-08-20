@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_bitwise_not",
-    "conceptId": "cpp:bitwise_not",
+    "componentId": "cpp:bitwise_not",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

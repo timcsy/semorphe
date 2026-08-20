@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:array_2d_declare",
+  "componentId": "cpp:array_2d_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

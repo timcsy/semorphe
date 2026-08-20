@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_replace",
-    "conceptId": "cpp:string_replace",
+    "componentId": "cpp:string_replace",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

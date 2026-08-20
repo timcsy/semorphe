@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('ledcSetup', {
-    conceptId: 'cpp:pwm_open',
+    componentId: 'cpp:pwm_open',
     argSlots: ['channel', 'freq', 'bits'],
     source: 'cpp/pwm_open',
   })

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { universalConcepts, universalBlocks } from '../../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
@@ -60,28 +60,28 @@ describe('Concept/BlockDef split integrity', () => {
 
   it('should have all concept IDs unique across core + std', () => {
     const allConceptIds: string[] = []
-    for (const c of coreConcepts) allConceptIds.push(c.conceptId)
+    for (const c of coreConcepts) allConceptIds.push(c.componentId)
     for (const mod of allStdModules) {
-      for (const c of mod.concepts) allConceptIds.push(c.conceptId)
+      for (const c of mod.concepts) allConceptIds.push(c.componentId)
     }
     expect(new Set(allConceptIds).size).toBe(allConceptIds.length)
   })
 
-  it('should have every projection conceptId present in concepts', () => {
+  it('should have every projection componentId present in concepts', () => {
     const allConceptIds = new Set([
-      ...(universalConcepts).map(c => c.conceptId),
-      ...coreConcepts.map(c => c.conceptId),
-      ...allStdModules.flatMap(m => m.concepts).map(c => c.conceptId),
+      ...(universalConcepts).map(c => c.componentId),
+      ...coreConcepts.map(c => c.componentId),
+      ...allStdModules.flatMap(m => m.concepts).map(c => c.componentId),
     ])
 
     const allProjections = [
-      ...(universalBlocks) as Array<{ conceptId: string }>,
-      ...coreBlocks as Array<{ conceptId: string }>,
-      ...allStdModules.flatMap(m => m.blocks) as Array<{ conceptId: string }>,
+      ...(universalBlocks) as Array<{ componentId: string }>,
+      ...coreBlocks as Array<{ componentId: string }>,
+      ...allStdModules.flatMap(m => m.blocks) as Array<{ componentId: string }>,
     ]
 
     for (const proj of allProjections) {
-      expect(allConceptIds.has(proj.conceptId), `Missing concept for projection conceptId: ${proj.conceptId}`).toBe(true)
+      expect(allConceptIds.has(proj.componentId), `Missing concept for projection componentId: ${proj.componentId}`).toBe(true)
     }
   })
 
@@ -108,8 +108,8 @@ describe('Concept/BlockDef split integrity', () => {
     ]
 
     for (const p of allProjections) {
-      // Should have conceptId (reference) but not concept definition fields
-      expect(p).toHaveProperty('conceptId')
+      // Should have componentId (reference) but not concept definition fields
+      expect(p).toHaveProperty('componentId')
       expect(p).not.toHaveProperty('properties')
       expect(p).not.toHaveProperty('children')
       expect(p).not.toHaveProperty('role')

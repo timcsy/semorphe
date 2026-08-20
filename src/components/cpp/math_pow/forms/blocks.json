@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_math_pow",
-    "conceptId": "cpp:math_pow",
+    "componentId": "cpp:math_pow",
     "language": "cpp",
     "category": "math",
     "version": "1.0.0",

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:vector_back",
-    "conceptId": "cpp:vector_back",
+    "componentId": "cpp:vector_back",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

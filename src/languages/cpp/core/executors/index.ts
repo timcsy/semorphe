@@ -1,5 +1,5 @@
 import { registerUnimplementedExecutors } from './unimplemented'
-import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../../interpreter/executor-registry'
 
 /**
  * C++ 語言核心的執行路。
@@ -8,7 +8,7 @@ import type { ConceptExecutor } from '../../../../interpreter/executor-registry'
  * 與 `core/generators/`、`core/lifters/` 對稱。
  */
 export function registerCoreExecutors(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
   registerUnimplementedExecutors(register)
 }

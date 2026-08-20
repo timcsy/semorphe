@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:array_2d_assign",
+  "componentId": "cpp:array_2d_assign",
   "abstractConcept": "cpp:array_assign",
   "properties": [
     {

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:cstring_as_int",
-    "conceptId": "cpp:cstring_as_int",
+    "componentId": "cpp:cstring_as_int",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

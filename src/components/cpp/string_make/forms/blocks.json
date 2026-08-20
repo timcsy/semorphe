@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_make",
-    "conceptId": "cpp:string_make",
+    "componentId": "cpp:string_make",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

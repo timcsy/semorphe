@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:stack_peek",
-    "conceptId": "cpp:stack_peek",
+    "componentId": "cpp:stack_peek",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

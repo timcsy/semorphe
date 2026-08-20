@@ -124,7 +124,7 @@ describe('六顆宣告概念的身分', () => {
       const ids: string[] = []
       const walk = (n: SemanticNode): void => {
         if (!n) return
-        ids.push(n.conceptId)
+        ids.push(n.componentId)
         for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
       }
       walk(lift(`${P}int main(){ int a = 0; ${program} return 0; }`))

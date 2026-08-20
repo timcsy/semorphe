@@ -7,10 +7,10 @@
  * ⚠️ **已知後果**：學生按執行，液晶什麼都不會顯示。
  * 那是**視圖層**的缺口（板子視圖，已推遲），**不是用汙染 stdout 去補的**。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_print', async (node, ctx) => {
     const s = lcdOf(ctx, String(node.properties.obj ?? 'lcd'))
     const v = await ctx.evaluate((node.children.value ?? [])[0])

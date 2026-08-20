@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('digitalWrite', {
-    conceptId: 'cpp:digital_write',
+    componentId: 'cpp:digital_write',
     argSlots: ["pin", "value"],
     source: 'cpp/digital_write',
   })

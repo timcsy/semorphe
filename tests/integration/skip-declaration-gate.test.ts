@@ -30,7 +30,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const missingReason: string[] = []
     for (const def of allComponentDefs()) {
       for (const p of def.skipPaths ?? []) {
-        if (!def.skipReasons?.[p as PathName]) missingReason.push(`${def.conceptId} 的 ${p}`)
+        if (!def.skipReasons?.[p as PathName]) missingReason.push(`${def.componentId} 的 ${p}`)
       }
     }
     expect(
@@ -43,7 +43,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const badReason: string[] = []
     for (const def of allComponentDefs()) {
       for (const [p, r] of Object.entries(def.skipReasons ?? {})) {
-        if (!REASONS.has(String(r))) badReason.push(`${def.conceptId} 的 ${p}：「${r}」`)
+        if (!REASONS.has(String(r))) badReason.push(`${def.componentId} 的 ${p}：「${r}」`)
       }
     }
     expect(badReason, `不認得的理由：${badReason.join('、')}`).toEqual([])
@@ -70,12 +70,12 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
 
     const unsupported: string[] = []
     for (const d of downgradeTarget) {
-      if (!pointedTo.has(d.conceptId)) {
-        unsupported.push(`${d.conceptId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
+      if (!pointedTo.has(d.componentId)) {
+        unsupported.push(`${d.componentId}：沒有任何概念宣告它為 abstractConcept —— 它不是誰的降級目標`)
       }
       // 工具箱排除的形式是 `excludeTypes: ['cpp_xxx']`
       //
-      // ⚠️ 這裡原本是**字串手術**：`` `u_${d.conceptId.split(':').pop()}` ``。
+      // ⚠️ 這裡原本是**字串手術**：`` `u_${d.componentId.split(':').pop()}` ``。
       // 它壞過一次（命名空間遷移後組出 `u_lang:if_else`），被補了一則註解
       // ——**而註解擋不住第二次**：116 把積木型別改成從身分導出之後，
       // `u_` 這個前綴不再存在，同一行又壞了。
@@ -83,9 +83,9 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       // > **會漂移的不是那一行，是「用手拼出另一個系統的名字」這件事本身。**
       //
       // 改成呼叫導出規則——那是這個問題今天唯一的正確答案。
-      const blockType = deriveBlockType(d.conceptId)
+      const blockType = deriveBlockType(d.componentId)
       if (!toolbox.includes(`'${blockType}'`)) {
-        unsupported.push(`${d.conceptId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
+        unsupported.push(`${d.componentId}：沒有在工具箱裡被排除 —— 使用者拖得到的話它就該辨識得回來`)
       }
     }
     expect(
@@ -122,8 +122,8 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const contradictions: string[] = []
     for (const def of allComponentDefs()) {
       if (!(def.skipPaths ?? []).includes('generate' as never)) continue
-      if (m.templateGenerator.templates.has(def.conceptId)) {
-        contradictions.push(`${def.conceptId}（宣告不產生，卻註冊了模板）`)
+      if (m.templateGenerator.templates.has(def.componentId)) {
+        contradictions.push(`${def.componentId}（宣告不產生，卻註冊了模板）`)
       }
     }
     expect(
@@ -138,9 +138,9 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const n = allComponentDefs().filter((d) => (d.skipPaths ?? []).includes('generate' as never)).length
     // 目前預期是 0（四筆假宣告已撤）——所以這裡改成釘住**機制**：
     // 合成一個宣告 skip generate 又有模板的假元件，必須被判為矛盾
-    const fakeComponent = { conceptId: 'synth_fake', skipPaths: ['generate'] }
+    const fakeComponent = { componentId: 'synth_fake', skipPaths: ['generate'] }
     const fakeTemplate = new Map<string, unknown>([['synth_fake', {}]])
-    const willCall = (fakeComponent.skipPaths ?? []).includes('generate') && fakeTemplate.has(fakeComponent.conceptId)
+    const willCall = (fakeComponent.skipPaths ?? []).includes('generate') && fakeTemplate.has(fakeComponent.componentId)
     expect(willCall, '合成的矛盾沒被判出來 → 上面那支是死的').toBe(true)
     expect(n, '真實資料目前應為 0（四筆假宣告已撤）').toBe(0)
   })
@@ -150,7 +150,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     for (const def of allComponentDefs()) {
       const declared = new Set(def.skipPaths ?? [])
       for (const p of Object.keys(def.skipReasons ?? {})) {
-        if (!declared.has(p as PathName)) orphans.push(`${def.conceptId} 的 ${p}`)
+        if (!declared.has(p as PathName)) orphans.push(`${def.componentId} 的 ${p}`)
       }
     }
     expect(orphans).toEqual([])
@@ -161,12 +161,12 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     const contradictions: string[] = []
     for (const def of allComponentDefs()) {
       if (!(def.skipPaths ?? []).includes('execute')) continue
-      const ex = interp.getExecutor(def.conceptId)
+      const ex = interp.getExecutor(def.componentId)
       if (!ex) continue
       // 空操作的函式原始碼很短且沒有 body 內容；會做事的不是
       const src = ex.toString().replace(/\s+/g, '')
       const isNoop = /^async\(?\)?=>\{\}$/.test(src) || /=>\{\}$/.test(src)
-      if (!isNoop) contradictions.push(`${def.conceptId}（宣告不執行，卻註冊了會做事的執行器）`)
+      if (!isNoop) contradictions.push(`${def.componentId}（宣告不執行，卻註冊了會做事的執行器）`)
     }
     expect(contradictions, contradictions.join('\n  ')).toEqual([])
   })
@@ -202,8 +202,8 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       //   cpp_include_local：與 `cpp_include` 是同一件事，後者早已宣告 declarative。
     ]
     const smuggled = allComponentDefs()
-      .filter((d) => mustNotDeclare.includes(d.conceptId) && (d.skipPaths ?? []).includes('execute'))
-      .map((d) => d.conceptId)
+      .filter((d) => mustNotDeclare.includes(d.componentId) && (d.skipPaths ?? []).includes('execute'))
+      .map((d) => d.componentId)
     expect(
       smuggled,
       '以下概念實測會產生錯誤的執行結果（或根本測不到），不得宣告成「刻意不執行」：\n  ' +
@@ -232,7 +232,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
       'cpp:ofstream_declare', 'cpp:case', 'cpp:default',
     ]
     const omitted = shouldDeclare.filter((id) => {
-      const d = allComponentDefs().find((x) => x.conceptId === id)
+      const d = allComponentDefs().find((x) => x.componentId === id)
       return !d || !(d.skipPaths ?? []).includes('execute')
     })
     expect(omitted, `這些通過了實測卻沒拿到宣告：${omitted.join('、')}`).toEqual([])

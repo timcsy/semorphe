@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:random_seed",
-    "conceptId": "cpp:random_seed",
+    "componentId": "cpp:random_seed",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

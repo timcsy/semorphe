@@ -1,11 +1,11 @@
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 import type { RuntimeValue } from '../types'
-import type { ConceptExecutor } from '../executor-registry'
+import type { ComponentExecutor } from '../executor-registry'
 import { defaultValue } from '../types'
 import { isNamedCall } from '../../core/component/traits'
 import { evalInitializer } from '../aggregate'
 
-export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
+export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
   // Multi-variable declaration: int a, b, c;
   const declarators = node.children.declarators
   if (declarators && declarators.length > 0) {
@@ -58,9 +58,9 @@ export const execVarDeclare: ConceptExecutor = async (node, ctx) => {
       // 「a（不是一個結構）」——宣告與消費者對不上的又一筆。
       const isCtor =
         String(node.properties.init_style) === 'constructor' ||
-        (isNamedCall(arg0.conceptId) && String(arg0.properties?.name) === type)
+        (isNamedCall(arg0.componentId) && String(arg0.properties?.name) === type)
       const ctorArgs =
-        isNamedCall(arg0.conceptId) && String(arg0.properties?.name) === type
+        isNamedCall(arg0.componentId) && String(arg0.properties?.name) === type
           ? (arg0.children?.args ?? [])
           : init0
       // ⚠️ `evalInitializer` 而不是 `evaluate`：`P a{3};` 的初始值是一層 `{…}`，

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_default",
-    "conceptId": "cpp:default",
+    "componentId": "cpp:default",
     "language": "cpp",
     "category": "conditions",
     "version": "1.0.0",

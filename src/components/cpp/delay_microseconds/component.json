@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:delay_microseconds",
+  "componentId": "cpp:delay_microseconds",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -2,7 +2,7 @@
   "id": "cpp_preproc_include",
   "astNodeType": "preproc_include",
   "concept": {
-    "conceptId": "cpp:include"
+    "componentId": "cpp:include"
   },
   "liftStrategy": "cpp:liftPreprocInclude",
   "fieldMappings": [

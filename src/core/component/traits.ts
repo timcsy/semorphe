@@ -19,7 +19,7 @@
  * 而**核心層也有消費者**：`interpreter/executors/variables.ts` 要分辨
  * `A a(5)` 是建構還是求值，判斷條件是「初值是不是一個名字等於型別的呼叫」。
  *
- * 它原本寫死 `arg0.conceptId === 'cpp:func_call'`——一顆 C++ 元件的身分
+ * 它原本寫死 `arg0.componentId === 'cpp:func_call'`——一顆 C++ 元件的身分
  * 寫在核心裡。改成問語言套件那份性狀的話，**核心就 import 了語言套件**，
  * 而那是 P9 的字面違反（中立性護欄當場抓到）。
  *
@@ -32,8 +32,8 @@
 import { registeredComponents } from './registry'
 
 /** 一顆已膠囊化元件宣告的性狀。沒宣告回 `undefined`——**不猜**。 */
-export function componentTraits(conceptId: string): Record<string, unknown> | undefined {
-  const c = registeredComponents().find((x) => x.conceptId === conceptId)
+export function componentTraits(componentId: string): Record<string, unknown> | undefined {
+  const c = registeredComponents().find((x) => x.componentId === componentId)
   return (c?.manifest as { traits?: Record<string, unknown> } | undefined)?.traits
 }
 
@@ -43,8 +43,8 @@ export function componentTraits(conceptId: string): Record<string, unknown> | un
  * ⚠️ 只認膠囊的宣告。還沒膠囊化的元件在這裡一律回 `false`——
  * 那是保守的方向：**寧可少認一個，不要認錯一個**。
  */
-export function isNamedCall(conceptId: string): boolean {
-  return componentTraits(conceptId)?.namedCall === true
+export function isNamedCall(componentId: string): boolean {
+  return componentTraits(componentId)?.namedCall === true
 }
 
 /**
@@ -62,8 +62,8 @@ export function isNamedCall(conceptId: string): boolean {
  *
  * 認不得的回 `undefined`（不是猜一個看起來合理的）。
  */
-export function roleOf(conceptId: string): string | undefined {
-  const c = registeredComponents().find((x) => x.conceptId === conceptId)
+export function roleOf(componentId: string): string | undefined {
+  const c = registeredComponents().find((x) => x.componentId === componentId)
   return (c?.manifest as { role?: string } | undefined)?.role
 }
 
@@ -73,8 +73,8 @@ export function roleOf(conceptId: string): string | undefined {
  * ⚠️ 核心的 `interpreter/executors/io.ts` 要認得它——`cin >> arr[i]` 讀進來的值
  * 要寫回陣列的某一格。核心不得 import 語言套件（P9），所以這一份在這裡。
  */
-export function isIndexedAccess(conceptId: string): boolean {
-  return componentTraits(conceptId)?.indexedAccess === true
+export function isIndexedAccess(componentId: string): boolean {
+  return componentTraits(componentId)?.indexedAccess === true
 }
 
 /**
@@ -86,7 +86,7 @@ export function isIndexedAccess(conceptId: string): boolean {
  */
 export function conceptWithTrait(trait: string): string | undefined {
   for (const c of registeredComponents()) {
-    if ((c.manifest as { traits?: Record<string, unknown> }).traits?.[trait] === true) return c.conceptId
+    if ((c.manifest as { traits?: Record<string, unknown> }).traits?.[trait] === true) return c.componentId
   }
   return undefined
 }
@@ -97,8 +97,8 @@ export function conceptWithTrait(trait: string): string | undefined {
  * ⚠️ 三個消費者要問它——產生器、渲染器、**以及核心的 `pattern-lifter`**。
  * 核心不得 import 語言套件（P9），所以這一份在這裡。
  */
-export function isElseIfChainable(conceptId: string): boolean {
-  return componentTraits(conceptId)?.elseIfChainable === true
+export function isElseIfChainable(componentId: string): boolean {
+  return componentTraits(componentId)?.elseIfChainable === true
 }
 
 
@@ -116,8 +116,8 @@ export function programRootConcept(): string | undefined {
 }
 
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
-export function isFunctionDefinition(conceptId: string): boolean {
-  return componentTraits(conceptId)?.functionDefinition === true
+export function isFunctionDefinition(componentId: string): boolean {
+  return componentTraits(componentId)?.functionDefinition === true
 }
 
 /**
@@ -132,8 +132,8 @@ export function isFunctionDefinition(conceptId: string): boolean {
  * `ioRole` ＝ 等價類、`ioStyle` ＝ 哪個成員，那是**一條被宣告出來的等價邊**
  * （見 `concepts/等價與觀察集.md`）。等價邊不屬於任何一個語言。
  */
-export function ioTraitOf(conceptId: string): { role?: string; style?: string } | undefined {
-  const t = componentTraits(conceptId)
+export function ioTraitOf(componentId: string): { role?: string; style?: string } | undefined {
+  const t = componentTraits(componentId)
   const role = t?.ioRole as string | undefined
   const style = t?.ioStyle as string | undefined
   if (!role && !style) return undefined
@@ -152,8 +152,8 @@ export function ioTraitOf(conceptId: string): { role?: string; style?: string } 
  *
  * > **判斷一個函式屬於哪一層，看它認識什麼，不看它今天被誰用。**
  */
-export function isPlainDeclaration(conceptId: string): boolean {
-  return componentTraits(conceptId)?.plainDeclaration === true
+export function isPlainDeclaration(componentId: string): boolean {
+  return componentTraits(componentId)?.plainDeclaration === true
 }
 
 /**
@@ -173,8 +173,8 @@ export function isPlainDeclaration(conceptId: string): boolean {
  * 世界裡有意義」，這裡說「我只在有某個硬體能力的板子上存在」。
  * 兩者都是**性狀**——消費者問「這顆是什麼」，不問「這顆叫什麼」。
  */
-export function capabilityOf(conceptId: string): string | undefined {
-  const cap = componentTraits(conceptId)?.needsCapability
+export function capabilityOf(componentId: string): string | undefined {
+  const cap = componentTraits(componentId)?.needsCapability
   return typeof cap === 'string' && cap !== '' ? cap : undefined
 }
 

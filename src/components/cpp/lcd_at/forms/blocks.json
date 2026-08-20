@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_lcd_at",
-    "conceptId": "cpp:lcd_at",
+    "componentId": "cpp:lcd_at",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

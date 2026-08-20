@@ -7,9 +7,9 @@
  * ⚠️ 而值本身是一個**空殼**：狀態記在
  * `languages/cpp/core/runtime/arduino-devices.ts`，以變數名為鍵。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:dht_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'dht')
     if (!name) throw new Error('硬體物件的宣告少了名字')

@@ -63,7 +63,7 @@ function roundTrip(node: SemanticNode, slot: string): { ok: boolean; back: strin
     const out = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
     const find = (n: SemanticNode | null): SemanticNode | null => {
       if (!n) return null
-      if (n.conceptId === node.conceptId) return n
+      if (n.componentId === node.componentId) return n
       for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
       return null
     }
@@ -161,7 +161,7 @@ describe('第一週語法的接點走得完來回', () => {
     const back = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
     const find = (n: SemanticNode | null): SemanticNode | null => {
       if (!n) return null
-      if (n.conceptId === 'cpp:var_declare' && (n.children.declarators ?? []).length > 0) return n
+      if (n.componentId === 'cpp:var_declare' && (n.children.declarators ?? []).length > 0) return n
       for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
       return null
     }

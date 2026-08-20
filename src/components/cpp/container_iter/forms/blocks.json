@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:container_iter",
-    "conceptId": "cpp:container_iter",
+    "componentId": "cpp:container_iter",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

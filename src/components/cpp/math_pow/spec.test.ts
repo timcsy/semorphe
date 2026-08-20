@@ -29,7 +29,7 @@ function tree(src: string): SemanticNode {
   return createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
 }
 function identities(n: SemanticNode): string[] {
-  const out: string[] = [n.conceptId]
+  const out: string[] = [n.componentId]
   for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
@@ -61,7 +61,7 @@ describe('膠囊自證：cpp:math_pow', () => {
   it('★ lift：引數依序進 base / exponent 兩個槽——**槽名是契約**', () => {
     const n = tree(program('pow(2, 10)'))
     const find = (x: SemanticNode): SemanticNode | null => {
-      if (x.conceptId === 'cpp:math_pow') return x
+      if (x.componentId === 'cpp:math_pow') return x
       for (const kids of Object.values(x.children ?? {})) for (const k of kids) {
         const r = find(k as SemanticNode); if (r) return r
       }

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_using_namespace",
-    "conceptId": "cpp:using_namespace",
+    "componentId": "cpp:using_namespace",
     "language": "cpp",
     "category": "preprocessor",
     "version": "1.0.0",

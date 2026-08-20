@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_func_def",
-    "conceptId": "cpp:func_def",
+    "componentId": "cpp:func_def",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",

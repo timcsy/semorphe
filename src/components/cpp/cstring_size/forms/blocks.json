@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_cstring_size",
-    "conceptId": "cpp:cstring_size",
+    "componentId": "cpp:cstring_size",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

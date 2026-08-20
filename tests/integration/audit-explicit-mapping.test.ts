@@ -69,8 +69,8 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
     const rm = spec.renderMapping
     const missing: string[] = []
     // 只在「這顆積木確實有這類參數」而且「概念確實有對應的槽」時才要求宣告
-    const props = spec.conceptMapping?.properties ?? []
-    const children = Object.keys(spec.conceptMapping?.children ?? {})
+    const props = spec.componentMapping?.properties ?? []
+    const children = Object.keys(spec.componentMapping?.children ?? {})
 
     if (props.length > 0 && has((t) => t.startsWith('field_')) && !(rm?.fields && Object.keys(rm.fields).length)) {
       missing.push('fields')
@@ -93,7 +93,7 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
 const synthetic = (type: string): BlockProjectionJSON =>
   ({
     id: type,
-    conceptId: 'cpp:var_declare', // 有 properties 的真概念
+    componentId: 'cpp:var_declare', // 有 properties 的真概念
     language: 'cpp',
     category: 'data',
     version: '1.0.0',

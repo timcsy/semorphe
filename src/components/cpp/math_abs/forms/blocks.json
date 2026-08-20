@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:math_abs",
-    "conceptId": "cpp:math_abs",
+    "componentId": "cpp:math_abs",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

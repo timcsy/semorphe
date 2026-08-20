@@ -27,8 +27,8 @@ describe('PatternExtractor', () => {
         category: 'operators',
         level: 1,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:increment',
+        componentMapping: {
+          componentId: 'cpp:increment',
           properties: ['name', 'operator'],
           role: 'both',
         },
@@ -54,7 +54,7 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:increment')
+      expect(result!.componentId).toBe('cpp:increment')
       expect(result!.properties.name).toBe('i')
       expect(result!.properties.operator).toBe('++')
     })
@@ -68,8 +68,8 @@ describe('PatternExtractor', () => {
         category: 'functions',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:return',
+        componentMapping: {
+          componentId: 'cpp:return',
           children: { value: 'expression' },
           role: 'statement',
         },
@@ -88,8 +88,8 @@ describe('PatternExtractor', () => {
         category: 'data',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:literal_number',
+        componentMapping: {
+          componentId: 'cpp:literal_number',
           properties: ['value'],
           role: 'expression',
         },
@@ -122,9 +122,9 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:return')
+      expect(result!.componentId).toBe('cpp:return')
       expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
+      expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
       expect(result!.children.value[0].properties.value).toBe('42')
     })
   })
@@ -137,8 +137,8 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: {
-          conceptId: 'cpp:loop_while',
+        componentMapping: {
+          componentId: 'cpp:loop_while',
           children: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
@@ -158,7 +158,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:break', role: 'statement' },
+        componentMapping: { componentId: 'cpp:break', role: 'statement' },
         blockDef: { type: 'cpp_break' },
         codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
@@ -170,7 +170,7 @@ describe('PatternExtractor', () => {
         category: 'control',
         level: 0,
         version: '1.0.0',
-        conceptMapping: { conceptId: 'cpp:continue', role: 'statement' },
+        componentMapping: { componentId: 'cpp:continue', role: 'statement' },
         blockDef: { type: 'cpp_continue' },
         codeTemplate: { pattern: 'continue;', imports: [], order: 0 },
         astPattern: { nodeType: 'continue_statement', constraints: [] },
@@ -204,10 +204,10 @@ describe('PatternExtractor', () => {
       const result = extractor.extract(block as any)
 
       expect(result).not.toBeNull()
-      expect(result!.conceptId).toBe('cpp:loop_while')
+      expect(result!.componentId).toBe('cpp:loop_while')
       expect(result!.children.body).toHaveLength(2)
-      expect(result!.children.body[0].conceptId).toBe('cpp:break')
-      expect(result!.children.body[1].conceptId).toBe('cpp:continue')
+      expect(result!.children.body[0].componentId).toBe('cpp:break')
+      expect(result!.children.body[1].componentId).toBe('cpp:continue')
     })
   })
 

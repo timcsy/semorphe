@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_insert",
-    "conceptId": "cpp:string_insert",
+    "componentId": "cpp:string_insert",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -30,11 +30,11 @@
  * 「指向某個變數」（`&x`）仍然走 `pointerTargets` 那套符號式的路。
  * 這一刀只讓「動態配置的一塊記憶體」有真的身分。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:new', async (node, ctx) => {
     const type = String(node.properties.type ?? 'int')
 

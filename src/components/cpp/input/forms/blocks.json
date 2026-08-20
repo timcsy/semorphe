@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_input",
-    "conceptId": "cpp:input",
+    "componentId": "cpp:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",
@@ -47,7 +47,7 @@
   },
   {
     "id": "cpp_input_expression",
-    "conceptId": "cpp:input",
+    "componentId": "cpp:input",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",

@@ -2,7 +2,7 @@
   "id": "cpp_namespace_definition",
   "astNodeType": "namespace_definition",
   "concept": {
-    "conceptId": "cpp:namespace_def"
+    "componentId": "cpp:namespace_def"
   },
   "liftStrategy": "cpp:liftNamespace",
   "fieldMappings": []

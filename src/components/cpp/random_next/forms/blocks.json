@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:random_next",
-    "conceptId": "cpp:random_next",
+    "componentId": "cpp:random_next",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

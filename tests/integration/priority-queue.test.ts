@@ -52,7 +52,7 @@ function collect(node: SemanticNode, id: string): SemanticNode[] {
   const out: SemanticNode[] = []
   const walk = (n: SemanticNode): void => {
     if (!n) return
-    if (n.conceptId === id) out.push(n)
+    if (n.componentId === id) out.push(n)
     for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
   }
   walk(node)

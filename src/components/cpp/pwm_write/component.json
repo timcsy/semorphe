@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pwm_write",
+  "componentId": "cpp:pwm_write",
   "abstractConcept": null,
   "properties": [],
   "children": {

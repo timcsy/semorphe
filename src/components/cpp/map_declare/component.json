@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:map_declare",
+  "componentId": "cpp:map_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

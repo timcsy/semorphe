@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('delayMicroseconds', {
-    conceptId: 'cpp:delay_microseconds',
+    componentId: 'cpp:delay_microseconds',
     argSlots: ['us'],
     source: 'cpp/delay_microseconds',
   })

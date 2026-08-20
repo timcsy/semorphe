@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_endl",
-    "conceptId": "cpp:endl",
+    "componentId": "cpp:endl",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",

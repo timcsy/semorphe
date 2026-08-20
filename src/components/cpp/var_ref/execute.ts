@@ -1,5 +1,5 @@
 /** `cpp:var_ref` 的 **execute** 路——從共用檔原封剪過來（批次第三十八批）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { pinConstantValue } from '../../../languages/cpp/core/runtime/arduino-pins'
@@ -37,7 +37,7 @@ const STREAMS: Record<string, string> = {
   cin: '>>',
 }
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_ref', async (node, ctx) => {
       const name = String(node.properties.name)
       // **一個識別字也可能是函式名**——`sort(v.begin(), v.end(), cmp)` 的 `cmp`。

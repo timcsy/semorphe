@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_find",
+  "componentId": "cpp:string_find",
   "properties": [
     {
       "name": "obj",

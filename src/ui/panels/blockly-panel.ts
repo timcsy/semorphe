@@ -160,7 +160,7 @@ export class BlocklyPanel implements ViewHost {
    * 🟢 組裝點一定會傳（`app.ts`），這個退路只是為了讓面板單獨建得起來。
    */
   private buildProgramRoot: (body: SemanticNode[]) => SemanticNode =
-    (body) => ({ id: 'program', conceptId: 'program', properties: {}, children: { body } } as SemanticNode)
+    (body) => ({ id: 'program', componentId: 'program', properties: {}, children: { body } } as SemanticNode)
 
   /**
    * 抽取策略由**組裝點**裝上（spec 153）。
@@ -938,7 +938,7 @@ export class BlocklyPanel implements ViewHost {
           // Try simpleExpressionToCode for known concepts as statement
           const expr = this.simpleExpressionToCode(n)
           if (!isUngeneratable(expr)) return '    ' + expr + ';'
-          return `    ⟨${n.conceptId}⟩`
+          return `    ⟨${n.componentId}⟩`
         }).join('\n')
       }
 
@@ -1332,9 +1332,9 @@ export class BlocklyPanel implements ViewHost {
       const svgRoot = (block as Blockly.BlockSvg).getSvgRoot?.()
       if (!svgRoot) continue
       const spec = this.blockSpecRegistry.getAll().find(s => s.blockDef?.type === block.type)
-      const conceptId = spec?.conceptMapping?.conceptId
+      const componentId = spec?.componentMapping?.componentId
       // If block has no concept (unknown/custom), treat as visible
-      if (!conceptId || visibleConcepts.has(conceptId)) {
+      if (!componentId || visibleConcepts.has(componentId)) {
         svgRoot.style.opacity = ''
         svgRoot.classList.remove('out-of-scope-block')
       } else {

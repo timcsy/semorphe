@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:program_exit",
+  "componentId": "cpp:program_exit",
   "abstractConcept": null,
   "properties": [],
   "children": {

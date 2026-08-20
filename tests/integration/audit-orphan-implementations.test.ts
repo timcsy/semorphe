@@ -52,7 +52,7 @@ function orphans(): string[] {
   const registered = (interp as unknown as {
     executorRegistry: { list(): string[] }
   }).executorRegistry.list()
-  const declared = new Set(allComponentDefs().map((d) => d.conceptId))
+  const declared = new Set(allComponentDefs().map((d) => d.componentId))
   return registered.filter((c) => !declared.has(c)).sort()
 }
 
@@ -82,7 +82,7 @@ describe('護欄：有實作卻沒有宣告', () => {
       executorRegistry: { register(c: string, e: () => Promise<void>): void; list(): string[] }
     }).executorRegistry
     reg.register('__orphan_probe__', async () => {})
-    const declared = new Set(allComponentDefs().map((d) => d.conceptId))
+    const declared = new Set(allComponentDefs().map((d) => d.componentId))
     expect(
       reg.list().filter((c) => !declared.has(c)),
       '刻意註冊一個沒宣告的概念卻沒被抓到 → 這條護欄的 0 不可信',
@@ -90,7 +90,7 @@ describe('護欄：有實作卻沒有宣告', () => {
   })
 
   it('★ 注入：有宣告的概念不得被誤報', () => {
-    const declared = new Set(allComponentDefs().map((d) => d.conceptId))
+    const declared = new Set(allComponentDefs().map((d) => d.componentId))
     expect(found.filter((c) => declared.has(c))).toEqual([])
   })
 

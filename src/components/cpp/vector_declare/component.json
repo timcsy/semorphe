@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:vector_declare",
+  "componentId": "cpp:vector_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

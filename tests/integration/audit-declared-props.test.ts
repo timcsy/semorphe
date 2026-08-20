@@ -99,8 +99,8 @@ beforeAll(async () => {
 
 function declTable(): Map<string, Set<string>> {
   const m = new Map<string, Set<string>>()
-  for (const c of allCppConcepts() as unknown as { conceptId: string; properties?: ({ name: string } | string)[] }[]) {
-    m.set(c.conceptId, new Set((c.properties ?? []).map((x) => (typeof x === 'string' ? x : x.name))))
+  for (const c of allCppConcepts() as unknown as { componentId: string; properties?: ({ name: string } | string)[] }[]) {
+    m.set(c.componentId, new Set((c.properties ?? []).map((x) => (typeof x === 'string' ? x : x.name))))
   }
   return m
 }
@@ -133,15 +133,15 @@ function measure(corpus: readonly string[]): result {
   const r: result = { segments: 0, node: 0, nodesWithDeclTable: 0, hits: [] }
   const walk = (n: SemanticNode): void => {
     r.node++
-    const d = declare.get(n.conceptId)
+    const d = declare.get(n.componentId)
     if (d) {
       r.nodesWithDeclTable++
       for (const k of Object.keys(n.properties ?? {})) {
         if (d.has(k)) continue
-        const key = `${n.conceptId}.${k}`
+        const key = `${n.componentId}.${k}`
         const old = acc.get(key)
         if (old) old.count++
-        else acc.set(key, { key, concept: n.conceptId, props: k, count: 1, shape: classifyProp(n.conceptId, k) })
+        else acc.set(key, { key, concept: n.componentId, props: k, count: 1, shape: classifyProp(n.componentId, k) })
       }
     }
     for (const ks of Object.values(n.children ?? {})) for (const c of ks) walk(c)
@@ -193,7 +193,7 @@ describe('第三十四條護欄：屬性方向的宣告完整性', () => {
     // 改成錨在**合成輸入**上：直接餵一顆宣告表裡查得到、而屬性名一定不在宣告裡的節點。
     // 合成規則不隨真實世界的修復而失效。
     const fakeNode = {
-      conceptId: 'cpp:include',
+      componentId: 'cpp:include',
       properties: { header: 'string', propNeverDeclared: 'x' },
       children: {},
     } as unknown as SemanticNode

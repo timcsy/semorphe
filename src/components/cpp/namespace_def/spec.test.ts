@@ -37,7 +37,7 @@ const lift = (code: string): SemanticNode | null => lifter.lift(tsParser.parse(c
 
 function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   if (!n) return out
-  out.add(n.conceptId)
+  out.add(n.componentId)
   for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) ids(k, out)
   return out
 }

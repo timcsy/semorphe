@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:digital_write",
+  "componentId": "cpp:digital_write",
   "abstractConcept": null,
   "properties": [],
   "children": {

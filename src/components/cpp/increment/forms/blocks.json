@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_increment",
-    "conceptId": "cpp:increment",
+    "componentId": "cpp:increment",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",
@@ -81,7 +81,7 @@
   },
   {
     "id": "cpp_increment_expression",
-    "conceptId": "cpp:increment",
+    "componentId": "cpp:increment",
     "language": "cpp",
     "category": "operators",
     "version": "1.0.0",

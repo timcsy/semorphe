@@ -1,5 +1,5 @@
 /** `cpp:try_catch` 的 **execute** 路——從共用檔原封剪過來（批次第三批：lift 是只產一種身分的具名策略）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
 // ⚠️ **訊號類別必須是同一個**——複製一份的話 `instanceof` 會失敗，
 // 而失敗的樣子是「throw 沒有被 catch 接住」，不是編譯錯誤。
@@ -10,7 +10,7 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 // 兩顆一起改指真正的那一份——**順手把那個複本消滅掉**。
 import { ThrownSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:try_catch', async (node, ctx) => {
       const tryBody = node.children.try_body ?? []
       const catchBody = node.children.catch_body ?? []

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_method_virtual_pure",
-    "conceptId": "cpp:method_virtual_pure",
+    "componentId": "cpp:method_virtual_pure",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",

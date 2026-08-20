@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_array_declare",
-    "conceptId": "cpp:array_declare",
+    "componentId": "cpp:array_declare",
     "language": "universal",
     "category": "arrays",
     "version": "1.0.0",

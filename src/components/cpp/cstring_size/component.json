@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cstring_size",
+  "componentId": "cpp:cstring_size",
   "abstractConcept": null,
   "properties": [],
   "children": {

@@ -24,7 +24,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
 import { deriveBlockType } from '../../src/core/component/derive-block-type'
-import type { ConceptDefJSON } from '../../src/core/types'
+import type { ComponentDefJSON } from '../../src/core/types'
 import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
 
 /**
@@ -43,7 +43,7 @@ import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
  * 膠囊接上了正式組裝點，而孤兒實作護欄走的是這裡，於是回報
  * 「`cpp:vector_declare` 有實作卻沒有宣告」——**一顆剛搬好的元件，看起來像孤兒。**
  */
-export function allComponentDefs(): ConceptDefJSON[] {
+export function allComponentDefs(): ComponentDefJSON[] {
   return allCppConcepts()
 }
 
@@ -78,11 +78,11 @@ export function allComponentDefs(): ConceptDefJSON[] {
  * 是**同一個病的第二次**：那次也是「因為第一次真的去量了」。
  */
 export function allComponentBlockTypes(): string[] {
-  return [...new Set(allComponentDefs().map((c) => deriveBlockType(c.conceptId)))].sort()
+  return [...new Set(allComponentDefs().map((c) => deriveBlockType(c.componentId)))].sort()
 }
 
 export function allComponentIds(): string[] {
-  return [...new Set(allComponentDefs().map((c) => c.conceptId))].sort()
+  return [...new Set(allComponentDefs().map((c) => c.componentId))].sort()
 }
 
 /**

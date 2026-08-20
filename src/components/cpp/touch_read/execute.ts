@@ -11,13 +11,13 @@
  * 那是板子視圖（已推遲）要補的，**不是用一個隨機數去假裝的**——
  * 判準是 `digital_read` 檔頭那句：**可重現比擬真重要**。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
 
 /** ESP32 未觸碰時的典型讀數。 */
 const UNTOUCHED = 75
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:touch_read', async (node, ctx) => {
     requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     return { type: 'int', value: UNTOUCHED }

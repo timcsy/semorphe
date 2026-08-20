@@ -94,7 +94,7 @@ interface hit {
 
 /** 樹上被標成語法錯誤的節點。**吃樹而不是吃原始碼**，注入才餵得進來。 */
 function markedNodes(n: SemanticNode, out: string[] = []): string[] {
-  if (n.metadata?.degradationCause === 'syntax_error') out.push(n.conceptId)
+  if (n.metadata?.degradationCause === 'syntax_error') out.push(n.componentId)
   for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) markedNodes(c, out)
   return out
 }

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_constructor",
-    "conceptId": "cpp:constructor",
+    "componentId": "cpp:constructor",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",

@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('atof', {
-    conceptId: 'cpp:cstring_as_double',
+    componentId: 'cpp:cstring_as_double',
     argSlots: ["str"],
     source: 'cpp/cstring_as_double',
   })

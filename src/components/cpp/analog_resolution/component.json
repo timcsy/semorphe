@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:analog_resolution",
+  "componentId": "cpp:analog_resolution",
   "abstractConcept": null,
   "properties": [],
   "children": {

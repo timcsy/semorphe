@@ -17,7 +17,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('atoi', {
-    conceptId: 'cpp:cstring_as_int',
+    componentId: 'cpp:cstring_as_int',
     argSlots: ["str"],
     source: 'cpp/cstring_as_int',
   })

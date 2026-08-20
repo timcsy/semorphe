@@ -49,7 +49,7 @@ beforeAll(async () => {
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const conceptsIn = (n: SemanticNode, out: string[] = []): string[] => {
-  out.push(n.conceptId)
+  out.push(n.componentId)
   for (const ks of Object.values(n.children ?? {})) for (const k of ks) conceptsIn(k, out)
   return out
 }

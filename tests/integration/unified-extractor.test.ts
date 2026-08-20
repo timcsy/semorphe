@@ -11,17 +11,17 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 // ⚠️ **第十五個「自己列舉來源」的地方**（今天的同一個形狀）。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 let extractor: PatternExtractor
 
 beforeAll(() => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ConceptDefJSON[])],
+    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ComponentDefJSON[])],
     [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks), ...(componentBlocks() as BlockProjectionJSON[])]
   )
   extractor = new PatternExtractor()
@@ -50,11 +50,11 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:var_declare_const')
+    expect(result!.componentId).toBe('cpp:var_declare_const')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('limit')
     expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].conceptId).toBe('cpp:arithmetic')
+    expect(result!.children.initializer[0].componentId).toBe('cpp:arithmetic')
   })
 
   it('cpp_pointer_declare with INIT input → cpp_pointer_declare with initializer', () => {
@@ -77,11 +77,11 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:pointer_declare')
+    expect(result!.componentId).toBe('cpp:pointer_declare')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('ptr')
     expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].conceptId).toBe('cpp:address_of')
+    expect(result!.children.initializer[0].componentId).toBe('cpp:address_of')
   })
 
   it('cpp_var_declare_ref with INIT input → cpp_ref_declare with initializer', () => {
@@ -95,7 +95,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:var_declare_ref')
+    expect(result!.componentId).toBe('cpp:var_declare_ref')
     expect(result!.properties.name).toBe('ref')
     expect(result!.children.initializer).toHaveLength(1)
   })
@@ -111,7 +111,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:cast')
+    expect(result!.componentId).toBe('cpp:cast')
     expect(result!.properties.target_type).toBe('int')
     expect(result!.children.value).toHaveLength(1)
   })
@@ -128,7 +128,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:arithmetic')
+    expect(result!.componentId).toBe('cpp:arithmetic')
     expect(result!.properties.operator).toBe('+')
     expect(result!.children.left).toHaveLength(1)
     expect(result!.children.right).toHaveLength(1)

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pulse_read",
+  "componentId": "cpp:pulse_read",
   "abstractConcept": null,
   "properties": [],
   "children": {

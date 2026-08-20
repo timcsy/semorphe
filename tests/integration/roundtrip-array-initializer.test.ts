@@ -52,7 +52,7 @@ function lift(code: string): SemanticNode | null {
 /** 找出樹中第一個指定概念的節點 */
 function find(node: SemanticNode | null, concept: string): SemanticNode | null {
   if (!node) return null
-  if (node.conceptId === concept) return node
+  if (node.componentId === concept) return node
   for (const arr of Object.values(node.children ?? {})) {
     for (const c of arr) {
       const hit = find(c, concept)
@@ -100,7 +100,7 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
     const n = arrayOf('int x=1; int a[2] = {x+1, 3};')
     const values = n!.children.values ?? []
     expect(values.length).toBe(2)
-    expect(values[0].conceptId).not.toBe('raw_code')
+    expect(values[0].componentId).not.toBe('raw_code')
   })
 
   it('多維初始值的層次不被壓平', () => {

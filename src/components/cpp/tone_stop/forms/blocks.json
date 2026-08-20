@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_tone_stop",
-    "conceptId": "cpp:tone_stop",
+    "componentId": "cpp:tone_stop",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

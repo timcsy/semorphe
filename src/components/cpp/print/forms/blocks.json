@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_print",
-    "conceptId": "cpp:print",
+    "componentId": "cpp:print",
     "language": "universal",
     "category": "io",
     "version": "1.0.0",

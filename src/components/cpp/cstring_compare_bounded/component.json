@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cstring_compare_bounded",
+  "componentId": "cpp:cstring_compare_bounded",
   "abstractConcept": null,
   "properties": [],
   "children": {

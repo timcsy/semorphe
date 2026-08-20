@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:eeprom_read",
+  "componentId": "cpp:eeprom_read",
   "abstractConcept": null,
   "properties": [
     {

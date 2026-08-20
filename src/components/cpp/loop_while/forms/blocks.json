@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_loop_while",
-    "conceptId": "cpp:loop_while",
+    "componentId": "cpp:loop_while",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",

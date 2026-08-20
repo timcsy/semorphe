@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_erase",
+  "componentId": "cpp:string_erase",
   "properties": [
     {
       "name": "obj",

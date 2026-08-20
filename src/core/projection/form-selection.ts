@@ -6,7 +6,7 @@
  * `concepts/元件.md` 的試金石：「**換一個檢視它會變嗎？會變就是投影，不會就是真實。**」
  * 積木的標籤與形狀會變 → 它們是**形態**（投影），而形態本來就可以有多個。
  *
- * 而在此之前做不到：`PatternRenderer.renderSpecs` 是 `Map<conceptId, RenderSpec>`，
+ * 而在此之前做不到：`PatternRenderer.renderSpecs` 是 `Map<componentId, RenderSpec>`，
  * 一個概念只能對一個積木。於是「統一身分」被迫連帶「統一形態」——
  * **而那產生了一個真實的使用者困惑**：
  *
@@ -135,10 +135,10 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
   }
 
   // FS-4
-  const othersOwn = new Set(others.flatMap((o) => (o.conceptId === formSet.conceptId ? [] : Object.values(o.forms))))
+  const othersOwn = new Set(others.flatMap((o) => (o.componentId === formSet.componentId ? [] : Object.values(o.forms))))
   for (const v of values) {
     if (othersOwn.has(v)) {
-      return { ok: false, reason: `積木型別「${v}」已經屬於另一個元件身分——反推不出 conceptId` }
+      return { ok: false, reason: `積木型別「${v}」已經屬於另一個元件身分——反推不出 componentId` }
     }
   }
 
@@ -151,8 +151,8 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
  * 分成一個函式是為了讓「沒有多形態」與「有多形態」走同一條路：
  * 呼叫端永遠拿到 `FormSet`，不必分兩種情況處理。
  */
-export function singleForm(conceptId: string, blockType: string): FormSet {
-  return { conceptId, axis: null, forms: { _: blockType }, fallback: blockType }
+export function singleForm(componentId: string, blockType: string): FormSet {
+  return { componentId, axis: null, forms: { _: blockType }, fallback: blockType }
 }
 
 /**
@@ -172,7 +172,7 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
 export interface FormDeclaration {
-  conceptId: string
+  componentId: string
   blockType: string
   form?: { axis: string; value: string }
 }
@@ -180,7 +180,7 @@ export interface FormDeclaration {
 /**
  * 把一堆積木宣告收攏成「每個元件身分一個形態集合」。
  *
- * ⚠️ **同一個 conceptId 的第二個宣告不得蓋掉第一個**（FR-002）——
+ * ⚠️ **同一個 componentId 的第二個宣告不得蓋掉第一個**（FR-002）——
  * 那正是這個功能存在之前的實際行為（`Map.set` 直接覆寫）。
  */
 export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, FormSet> {
@@ -190,23 +190,23 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
   for (const d of decls) {
     if (!d.form) {
       // 第一個中性宣告勝出——後來的不覆寫，否則載入順序會決定行為
-      if (!neutral.has(d.conceptId)) neutral.set(d.conceptId, d.blockType)
+      if (!neutral.has(d.componentId)) neutral.set(d.componentId, d.blockType)
       continue
     }
-    const cur = variant.get(d.conceptId) ?? { axis: d.form.axis, values: {} }
+    const cur = variant.get(d.componentId) ?? { axis: d.form.axis, values: {} }
     cur.values[d.form.value] = d.blockType
-    variant.set(d.conceptId, cur)
+    variant.set(d.componentId, cur)
   }
 
   const out = new Map<string, FormSet>()
-  for (const [conceptId, blockType] of neutral) {
-    const v = variant.get(conceptId)
+  for (const [componentId, blockType] of neutral) {
+    const v = variant.get(componentId)
     if (!v) {
-      out.set(conceptId, singleForm(conceptId, blockType))
+      out.set(componentId, singleForm(componentId, blockType))
       continue
     }
-    out.set(conceptId, {
-      conceptId,
+    out.set(componentId, {
+      componentId,
       axis: KNOWN_AXES[v.axis] ?? null,
       forms: { [NEUTRAL_KEY]: blockType, ...v.values },
       fallback: blockType,
@@ -215,11 +215,11 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
 
   // 只有變體、沒有中性宣告 → 拿第一個變體當中性，並且**出聲**不了（這裡沒有報表）
   // ——所以改成不接受：沒有中性形態的元件在 validateFormSet 會被擋下。
-  for (const [conceptId, v] of variant) {
-    if (out.has(conceptId)) continue
+  for (const [componentId, v] of variant) {
+    if (out.has(componentId)) continue
     const first = Object.values(v.values)[0]
-    out.set(conceptId, {
-      conceptId,
+    out.set(componentId, {
+      componentId,
       axis: KNOWN_AXES[v.axis] ?? null,
       forms: { [NEUTRAL_KEY]: first, ...v.values },
       fallback: first,

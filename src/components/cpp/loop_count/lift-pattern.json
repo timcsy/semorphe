@@ -3,7 +3,7 @@
   "astNodeType": "for_statement",
   "patternType": "composite",
   "concept": {
-    "conceptId": "cpp:loop_count"
+    "componentId": "cpp:loop_count"
   },
   "liftStrategy": "cpp:liftCountFor",
   "composite": {

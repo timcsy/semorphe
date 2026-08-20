@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_free",
-    "conceptId": "cpp:free",
+    "componentId": "cpp:free",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",

@@ -43,7 +43,7 @@ import { paramNames, paramSpecs, isSpecified } from '../../src/core/param-spec'
 import type { ParamSpec } from '../../src/core/types'
 
 /** componentId → 宣告的參數名 */
-const declare = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramNames(c.properties))]))
+const declare = new Map(allCppConcepts().map((c) => [c.componentId, new Set(paramNames(c.properties))]))
 
 /**
  * componentId → 規格（只含**已規格化**的元件）。
@@ -54,7 +54,7 @@ const declare = new Map(allCppConcepts().map((c) => [c.conceptId, new Set(paramN
 const spec = new Map<string, ParamSpec[]>(
   allCppConcepts()
     .filter((c) => isSpecified(c.properties))
-    .map((c) => [c.conceptId, paramSpecs(c.properties)]),
+    .map((c) => [c.componentId, paramSpecs(c.properties)]),
 )
 
 interface Finding {
@@ -205,14 +205,14 @@ describe('自我驗證：這條護欄的判準是準的', () => {
 
 // ─── 規格自身的自洽（規格化之後才可能檢查的三件事）─────────────────
 
-interface specIssues { conceptId: string; issue: string }
+interface specIssues { componentId: string; issue: string }
 
 /**
  * @param inject 合成的元件宣告，用來自我否證。
  */
-function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDef?: unknown }[] = []): specIssues[] {
+function checkSpec(inject: { componentId: string; properties: ParamSpec[]; blockDef?: unknown }[] = []): specIssues[] {
   const out: specIssues[] = []
-  const concepts = [...(allCppConcepts() as unknown as { conceptId: string; properties?: unknown }[]), ...inject]
+  const concepts = [...(allCppConcepts() as unknown as { componentId: string; properties?: unknown }[]), ...inject]
 
   // 積木下拉的選項——`values` 的來源真相
   const dropdown = new Map<string, Map<string, string[]>>()
@@ -225,9 +225,9 @@ function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDe
       if (a.type !== 'field_dropdown' || !Array.isArray(a.options)) continue
       const param = rm[String(a.name)]
       if (!param) continue
-      const m = dropdown.get(proj.conceptId as string) ?? new Map<string, string[]>()
+      const m = dropdown.get(proj.componentId as string) ?? new Map<string, string[]>()
       m.set(param, (a.options as unknown[][]).map((o) => String(o[1])))
-      dropdown.set(proj.conceptId as string, m)
+      dropdown.set(proj.componentId as string, m)
     }
   }
 
@@ -237,7 +237,7 @@ function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDe
 
     // ① 有參數就要規格化——否則新元件會靜靜地退回純名字清單
     if (!isSpecified(raw)) {
-      out.push({ conceptId: c.conceptId, issue: `參數未規格化（仍是純名字：${paramNames(raw).join('、')}）` })
+      out.push({ componentId: c.componentId, issue: `參數未規格化（仍是純名字：${paramNames(raw).join('、')}）` })
       continue
     }
 
@@ -255,11 +255,11 @@ function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDe
       //
       // > **一個檢查如果比對的是抄件，它證明的是抄得對不對，
       // > 不是那件事本身對不對。**
-      const opts = dropdown.get(c.conceptId)?.get(sp.name)
+      const opts = dropdown.get(c.componentId)?.get(sp.name)
       if (sp.kind === 'enum' && opts && opts.length > 0
           && sp.default !== undefined && !opts.includes(String(sp.default))) {
         out.push({
-          conceptId: c.conceptId,
+          componentId: c.componentId,
           issue: `${sp.name} 的 default ${JSON.stringify(sp.default)} 不在積木下拉裡（${opts.join('|')}）`,
         })
       }
@@ -277,14 +277,14 @@ function checkSpec(inject: { conceptId: string; properties: ParamSpec[]; blockDe
 }
 
 describe('規格自身要自洽', () => {
-  const synthetic = (properties: ParamSpec[]): { conceptId: string; properties: ParamSpec[] } => ({
-    conceptId: '__合成__',
+  const synthetic = (properties: ParamSpec[]): { componentId: string; properties: ParamSpec[] } => ({
+    componentId: '__合成__',
     properties,
   })
 
   it('★ 注入：參數沒規格化（純名字） → **必須被報出**', () => {
-    const hit = checkSpec([{ conceptId: '__合成2__', properties: ['just_a_name'] as unknown as ParamSpec[] }])
-    expect(hit.filter((x) => x.conceptId === '__合成2__')).toHaveLength(1)
+    const hit = checkSpec([{ componentId: '__合成2__', properties: ['just_a_name'] as unknown as ParamSpec[] }])
+    expect(hit.filter((x) => x.componentId === '__合成2__')).toHaveLength(1)
   })
 
   it('★ 注入：default 不在積木下拉裡 → **必須被報出**', () => {
@@ -304,19 +304,19 @@ describe('規格自身要自洽', () => {
     // 🔴 用一顆**真的有下拉的元件**（`arithmetic` 的 `operator`）宣告一個
     //    下拉裡沒有的 default，才證明得了它有接上。
     const hit = checkSpec([
-      { conceptId: 'cpp:arithmetic', properties: [{ name: 'operator', kind: 'enum', default: '@@@' }] },
-    ] as never).filter((x) => x.conceptId === 'cpp:arithmetic')
+      { componentId: 'cpp:arithmetic', properties: [{ name: 'operator', kind: 'enum', default: '@@@' }] },
+    ] as never).filter((x) => x.componentId === 'cpp:arithmetic')
     expect(hit, 'default 不在下拉裡卻沒被報出 → 第 ② 條沒有接上').toHaveLength(1)
   })
 
   it('★ 反向：一筆完全正確的規格 → **必須不被報出**', () => {
     const ok = checkSpec([synthetic([{ name: 'k', kind: 'enum', values: ['a', 'b'], default: 'a' }])])
-    expect(ok.filter((x) => x.conceptId === '__合成__'), '正確的規格被報成問題 → 這條會亂叫').toEqual([])
+    expect(ok.filter((x) => x.componentId === '__合成__'), '正確的規格被報成問題 → 這條會亂叫').toEqual([])
   })
 
   it('★ 規格自洽 = 0', () => {
     // 硬性零：規格是這一輪自己寫的，寫錯就改——修法便宜（第 6.8 步）。
-    expect(checkSpec().map((x) => `${x.conceptId}：${x.issue}`)).toEqual([])
+    expect(checkSpec().map((x) => `${x.componentId}：${x.issue}`)).toEqual([])
   })
 })
 

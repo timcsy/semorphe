@@ -15,14 +15,14 @@ export function cppStripScaffoldNodes(tree: SemanticNode): SemanticNode {
 
   for (const node of body) {
     // 鷹架（include／using namespace…）由元件自己宣告
-    if (isScaffold(node.conceptId)) continue
+    if (isScaffold(node.componentId)) continue
     // Unwrap func_def(main) — extract its body, skip trailing return
-    if (isFunctionDefinition(node.conceptId) && node.properties.name === 'main') {
+    if (isFunctionDefinition(node.componentId) && node.properties.name === 'main') {
       const funcBody = node.children.body ?? []
       for (const stmt of funcBody) {
         // ⚠️ 問**性狀**不問身分。而它是 `scaffoldInMain` 不是 `scaffold`：
         // `return` 只有在 main 裡才是鷹架，在別的函式裡是使用者寫的東西。
-        if (isScaffoldInMain(stmt.conceptId)) continue
+        if (isScaffoldInMain(stmt.componentId)) continue
         userBody.push(stmt)
       }
       continue

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_throw",
-    "conceptId": "cpp:throw",
+    "componentId": "cpp:throw",
     "language": "cpp",
     "category": "control",
     "version": "1.0.0",

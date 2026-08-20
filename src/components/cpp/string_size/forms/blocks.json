@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_size",
-    "conceptId": "cpp:string_size",
+    "componentId": "cpp:string_size",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

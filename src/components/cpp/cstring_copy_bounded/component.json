@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:cstring_copy_bounded",
+  "componentId": "cpp:cstring_copy_bounded",
   "abstractConcept": null,
   "properties": [],
   "children": {

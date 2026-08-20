@@ -11,7 +11,7 @@ export type PropertyValue = string | number | boolean | string[]
  *
  * 這裡原本列著 24 顆 `UniversalConcept` 的字面聯集。**D 之後它對型別零貢獻**——
  * 所有身分都加上了 `:`，於是每一顆都已經是 `` `${string}:${string}` ``，
- * 整個聯集被完全吸收（`UniversalConcept extends ConceptId` 恆真，反向不成立）。
+ * 整個聯集被完全吸收（`UniversalConcept extends ComponentId` 恆真，反向不成立）。
  * 而 `UniversalConcept` 除了餵這一行之外沒有任何使用者。
  *
  * ⚠️ 它同時是 P9 的一筆違規，而**中立性護欄回報 0**——那條護欄按設計遮掉
@@ -19,13 +19,13 @@ export type PropertyValue = string | number | boolean | string[]
  * （`draft/2026-08-07-元件目錄與膠囊契約.md` §九 把這批列為「落在護欄維度外面」，
  * 而正確的處置比改護欄便宜：刪掉，沒有任何東西會變。）
  */
-export type ConceptId = `${string}:${string}`
+export type ComponentId = `${string}:${string}`
 
 // ─── Semantic Tree ───
 
 export interface SemanticNode {
   id: string
-  conceptId: string
+  componentId: string
   properties: Record<string, PropertyValue>
   children: Record<string, SemanticNode[]>
   annotations?: Annotation[]
@@ -86,7 +86,7 @@ export interface SemanticModel {
 // ─── Concept System ───
 
 
-export interface ConceptDef {
+export interface ComponentDef {
   id: string
   abstractConcept?: string
   propertyNames: string[]
@@ -157,15 +157,15 @@ export interface BlockSpec {
    * 改名讓「`concept`」在專案裡的意思收斂。見 experience「同一個欄位名長在
    * 三個不同型別上時」。
    */
-  conceptMapping: ConceptMapping
+  componentMapping: ComponentMapping
   blockDef: Record<string, unknown>
   codeTemplate: CodeTemplate
   astPattern: AstPattern
   renderMapping?: RenderMapping
 }
 
-export interface ConceptMapping {
-  conceptId: string
+export interface ComponentMapping {
+  componentId: string
   /**
    * 這顆概念屬於哪一層——**呈現層要分「通用 vs 語言專屬」時問這裡，
    * 不要看名字的前綴。**
@@ -309,7 +309,7 @@ export interface FormAxis {
  * 由 `validateFormSet()` 檢查。
  */
 export interface FormSet {
-  conceptId: string
+  componentId: string
   /** null = 只有一個形態（絕大多數元件） */
   axis: FormAxis | null
   /** 軸值 → 積木型別 */
@@ -450,8 +450,8 @@ export interface ParamSpec {
   default?: string
 }
 
-export interface ConceptDefJSON {
-  conceptId: string
+export interface ComponentDefJSON {
+  componentId: string
   abstractConcept?: string | null
   /**
    * ⚠️ **過渡中**：純名字清單（124 顆）與 `ParamSpec[]`（規格化後）並存。
@@ -557,7 +557,7 @@ export interface BlockProjectionJSON {
   toolboxCategory?: string | string[]
 
   id: string
-  conceptId: string
+  componentId: string
   language: string
   category: string
   version: string
@@ -587,7 +587,7 @@ export interface LanguageManifest {
 // ─── Universal Template (Language-specific code templates for universal concepts) ───
 
 export interface UniversalTemplate {
-  conceptId: string
+  componentId: string
   pattern?: string
   styleVariants?: Record<string, CodeTemplate>
   styleKey?: string
@@ -600,7 +600,7 @@ export interface UniversalTemplate {
 export interface LiftPattern {
   id: string
   astNodeType: string
-  concept?: { conceptId: string }
+  concept?: { componentId: string }
   patternType?: PatternType
   constraints?: AstConstraint[]
   fieldMappings?: FieldMapping[]

@@ -41,8 +41,8 @@ import type { SemanticNode } from '../../../core/types'
 
 registerCppLanguage()
 
-const node = (conceptId: string, properties: Record<string, unknown> = {}, children: Record<string, SemanticNode[]> = {}): SemanticNode =>
-  ({ conceptId, properties, children } as SemanticNode)
+const node = (componentId: string, properties: Record<string, unknown> = {}, children: Record<string, SemanticNode[]> = {}): SemanticNode =>
+  ({ componentId, properties, children } as SemanticNode)
 
 /** `void <name>(){ cout << <text> << endl; }` */
 const printingFunc = (name: string, text: string): SemanticNode =>

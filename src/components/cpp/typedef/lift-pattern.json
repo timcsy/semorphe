@@ -2,7 +2,7 @@
   "id": "cpp_type_definition",
   "astNodeType": "type_definition",
   "concept": {
-    "conceptId": "cpp:typedef"
+    "componentId": "cpp:typedef"
   },
   "liftStrategy": "cpp:liftTypedef",
   "priority": 15

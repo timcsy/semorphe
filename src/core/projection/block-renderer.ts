@@ -38,7 +38,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.conceptId !== programRootConcept()) {
+  if (tree.componentId !== programRootConcept()) {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
@@ -107,9 +107,9 @@ function renderBlock(node: SemanticNode): BlockState | null {
 
   if (!block) {
     // Fallback for meta-concepts with rawCode (raw_code, unresolved, etc.)
-    if (node.metadata?.rawCode != null || node.conceptId === 'raw_code' || node.conceptId === 'unresolved') {
+    if (node.metadata?.rawCode != null || node.componentId === 'raw_code' || node.componentId === 'unresolved') {
       const extra: Record<string, unknown> = {}
-      if (node.conceptId === 'unresolved') {
+      if (node.componentId === 'unresolved') {
         extra.unresolved = true
         extra.nodeType = node.properties.node_type
       }
@@ -166,7 +166,7 @@ function renderExpression(node: SemanticNode): BlockState | null {
       return { ...block, type: exprType }
     }
     // 沒有運算式版的對應積木 → 降級（型別由語言套件宣告，spec 154）
-    const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.conceptId
+    const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.componentId
     // Strip trailing semicolons/newlines — expression context doesn't need them
     const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw
     return {

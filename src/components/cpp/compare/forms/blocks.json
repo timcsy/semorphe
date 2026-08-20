@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_compare",
-    "conceptId": "cpp:compare",
+    "componentId": "cpp:compare",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",

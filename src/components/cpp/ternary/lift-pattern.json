@@ -2,7 +2,7 @@
   "id": "cpp_ternary_expr",
   "astNodeType": "conditional_expression",
   "concept": {
-    "conceptId": "cpp:ternary"
+    "componentId": "cpp:ternary"
   },
   "fieldMappings": [
     {

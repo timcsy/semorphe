@@ -35,9 +35,9 @@ registerCppLanguage()
 
 /** 複製 sync-controller 的降級規則，用來證明「就地改寫」這件事本身是危險的 */
 function downgradeInPlace(node: SemanticNode, visible: Set<string>): void {
-  if (!visible.has(node.conceptId)) {
-    const parent = abstractConceptOf(node.conceptId)
-    if (parent && visible.has(parent)) node.conceptId = parent
+  if (!visible.has(node.componentId)) {
+    const parent = abstractConceptOf(node.componentId)
+    if (parent && visible.has(parent)) node.componentId = parent
   }
   for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => downgradeInPlace(c, visible))
 }
@@ -62,7 +62,7 @@ describe('降級是投影，不得寫回真實', () => {
 
     const display = clone(truth())
     downgradeInPlace(display, new Set(['cpp:program', parent!]))
-    expect(display.children.body![0].conceptId, '降級沒有發生 → 這支測試沒有在測降級').toBe(parent)
+    expect(display.children.body![0].componentId, '降級沒有發生 → 這支測試沒有在測降級').toBe(parent)
   })
 
   it('★ 降級作用在拷貝上時，真實不變', () => {
@@ -70,7 +70,7 @@ describe('降級是投影，不得寫回真實', () => {
     const parent = abstractConceptOf('cpp:vector_declare')!
     downgradeInPlace(clone(t), new Set(['cpp:program', parent]))
     expect(
-      t.children.body![0].conceptId,
+      t.children.body![0].componentId,
       '真實被降級改掉了——執行會拿到 `int v;`，而 `v[0]` 會炸',
     ).toBe('cpp:vector_declare')
   })
@@ -81,7 +81,7 @@ describe('降級是投影，不得寫回真實', () => {
     const t = truth()
     const parent = abstractConceptOf('cpp:vector_declare')!
     downgradeInPlace(t, new Set(['cpp:program', parent]))
-    expect(t.children.body![0].conceptId, '就地降級沒有改到真實 → 那前一支就沒有在防什麼').toBe(parent)
+    expect(t.children.body![0].componentId, '就地降級沒有改到真實 → 那前一支就沒有在防什麼').toBe(parent)
   })
 })
 
@@ -103,18 +103,18 @@ describe('降級是投影，不得寫回真實', () => {
 describe('降級的反方向：抽回來的樹不得把降級當成真實', () => {
   /** 模擬 sync-controller 的兩張表：降級時記、抽回來時還原 */
   function downgradeAndRecord(node: SemanticNode, visible: Set<string>, record: Map<string, string>): void {
-    if (!visible.has(node.conceptId)) {
-      const parent = abstractConceptOf(node.conceptId)
+    if (!visible.has(node.componentId)) {
+      const parent = abstractConceptOf(node.componentId)
       if (parent && visible.has(parent)) {
-        record.set(node.id, node.conceptId)
-        node.conceptId = parent
+        record.set(node.id, node.componentId)
+        node.componentId = parent
       }
     }
     for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => downgradeAndRecord(c, visible, record))
   }
   function restore(node: SemanticNode, record: Map<string, string>): void {
     const original = record.get(node.id)
-    if (original !== undefined && node.conceptId === abstractConceptOf(original)) node.conceptId = original
+    if (original !== undefined && node.componentId === abstractConceptOf(original)) node.componentId = original
     for (const arr of Object.values(node.children ?? {})) arr.forEach((c) => restore(c, record))
   }
 
@@ -129,7 +129,7 @@ describe('降級的反方向：抽回來的樹不得把降級當成真實', () =
     const t = tree()
     const record = new Map<string, string>()
     downgradeAndRecord(t, onlySeesBasics, record)
-    expect(t.children.body[0].conceptId, '沒有降級發生 → 這支測試什麼都沒測到').toBe('cpp:var_declare')
+    expect(t.children.body[0].componentId, '沒有降級發生 → 這支測試什麼都沒測到').toBe('cpp:var_declare')
     expect(record.size).toBe(1)
   })
 
@@ -139,7 +139,7 @@ describe('降級的反方向：抽回來的樹不得把降級當成真實', () =
     downgradeAndRecord(displayTree, onlySeesBasics, record)
     // 使用者拖了一下 → 抽回來的就是顯示樹（nodeId 由 _blockIdToNodeId 保住）
     restore(displayTree, record)
-    expect(displayTree.children.body[0].conceptId).toBe('cpp:vector_declare')
+    expect(displayTree.children.body[0].componentId).toBe('cpp:vector_declare')
   })
 
   it('★ 反向：使用者**真的**把它換成別的概念時，不得還原', () => {
@@ -148,9 +148,9 @@ describe('降級的反方向：抽回來的樹不得把降級當成真實', () =
     const displayTree = tree()
     const record = new Map<string, string>()
     downgradeAndRecord(displayTree, onlySeesBasics, record)
-    displayTree.children.body[0].conceptId = 'cpp:string_declare' // 使用者換掉了
+    displayTree.children.body[0].componentId = 'cpp:string_declare' // 使用者換掉了
     restore(displayTree, record)
-    expect(displayTree.children.body[0].conceptId, '使用者的編輯被還原吃掉了').toBe('cpp:string_declare')
+    expect(displayTree.children.body[0].componentId, '使用者的編輯被還原吃掉了').toBe('cpp:string_declare')
   })
 })
 

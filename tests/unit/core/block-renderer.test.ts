@@ -11,7 +11,7 @@ import { declareDegradationBlocks } from '../../../src/core/degradation-blocks'
 declareDegradationBlocks({ statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', conceptId: 'cpp:program', properties: {}, children: { body } }
+  return { id: 'root', componentId: 'cpp:program', properties: {}, children: { body } }
 }
 
 describe('block-renderer', () => {

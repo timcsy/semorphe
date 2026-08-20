@@ -25,7 +25,7 @@ export class Lifter {
     this.patternLifter = pl
   }
 
-  /** Set AST nodeType → conceptId mapping for unsupported detection */
+  /** Set AST nodeType → componentId mapping for unsupported detection */
   setAstNodeConceptMap(map: Map<string, string>): void {
     this.astNodeConceptMap = map
   }
@@ -54,7 +54,7 @@ export class Lifter {
     //
     // 順手把 `cpp` 也拿掉：scope 不該寫死在核心（P9）。任何 scope 的
     // `<x>_declare` 都適用同一條規則。
-    const fromConcept = /^[a-z]+:(\w+?)_declare$/.exec(r.conceptId ?? '')?.[1]
+    const fromConcept = /^[a-z]+:(\w+?)_declare$/.exec(r.componentId ?? '')?.[1]
     const type = fromConcept ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
     if (type) data.declare(String(name), type)
   }
@@ -215,7 +215,7 @@ export class Lifter {
     // Level 3: check for partially-liftable structures
     if (node.namedChildren.length > 0) {
       const liftedChildren = this.liftStatementsWithContext(node.namedChildren, contextData)
-      if (liftedChildren.length > 0 && liftedChildren.some(c => c.conceptId !== 'raw_code')) {
+      if (liftedChildren.length > 0 && liftedChildren.some(c => c.componentId !== 'raw_code')) {
         // Has some meaningful sub-nodes — create unresolved node preserving children
         const unresolved = createNode('unresolved', { node_type: node.type }, {
           children: liftedChildren,
@@ -311,7 +311,7 @@ export class Lifter {
       // 判準看**父節點**：獨立區塊的父也是 compound_statement；
       // 結構的 body 的父是 `if_statement`／`while_statement`／
       // `function_definition`… 而那正是該展平的那些。
-      if (lifted.conceptId === '_compound') {
+      if (lifted.componentId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
         if (standalone) results.push(buildStandaloneBlock(lifted.children.body ?? []))
         else results.push(...(lifted.children.body ?? []))

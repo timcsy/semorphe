@@ -107,7 +107,7 @@ function filler(slotType: unknown, n: number): SemanticNode {
 }
 
 interface Loss {
-  conceptId: string
+  componentId: string
   slot: string
   put: number
   found: number
@@ -127,20 +127,20 @@ interface Loss {
  * ⚠️ 而這是**機械可查證**的（`renderMapping.strategy` 在不在），
  * 不是一份手寫白名單。
  */
-function usesNamedStrategy(conceptId: string): boolean {
-  for (const b of componentBlocks() as { conceptId?: string; renderMapping?: { strategy?: string } }[]) {
-    if (b.conceptId === conceptId && b.renderMapping?.strategy) return true
+function usesNamedStrategy(componentId: string): boolean {
+  for (const b of componentBlocks() as { componentId?: string; renderMapping?: { strategy?: string } }[]) {
+    if (b.componentId === componentId && b.renderMapping?.strategy) return true
   }
   return false
 }
 
 /** 掃一顆元件：把每個接點填滿、渲染、數標記。 */
 function scan(def: {
-  conceptId: string
+  componentId: string
   children?: Record<string, unknown>
   skipPaths?: string[]
 }): { losses: Loss[]; markersPut: number } | null {
-  if (def.conceptId.startsWith('_')) return null              // 偽概念，不是使用者面的積木
+  if (def.componentId.startsWith('_')) return null              // 偽概念，不是使用者面的積木
   if ((def.skipPaths ?? []).includes('render')) return null   // 顯式宣告沒有這一路
   const slots = Object.entries(def.children ?? {})
   if (slots.length === 0) return null                          // 沒有接點，無從丟失
@@ -184,7 +184,7 @@ function scan(def: {
   }
   for (const [slot, ms] of Object.entries(expect_)) {
     const found = ms.filter((m) => json.includes(m)).length
-    if (found < ms.length) losses.push({ conceptId: def.conceptId, slot, put: ms.length, found })
+    if (found < ms.length) losses.push({ componentId: def.componentId, slot, put: ms.length, found })
   }
   return { losses, markersPut }
 }
@@ -194,7 +194,7 @@ function measure(): { losses: Loss[]; undecidable: Loss[]; scanned: number; mark
   const undecidable: Loss[] = []
   let scanned = 0
   let markersPut = 0
-  for (const def of componentConcepts() as { conceptId: string }[]) {
+  for (const def of componentConcepts() as { componentId: string }[]) {
     const r = scan(def as never)
     if (!r) continue
     scanned++
@@ -202,14 +202,14 @@ function measure(): { losses: Loss[]; undecidable: Loss[]; scanned: number; mark
     // ⚠️ **兩欄分開記**——只記分子的話，「把一顆搬去判不出來」就能讓數字下降，
     //    而那比修它容易（本專案在殘差率那條上付過同一筆學費）。
     for (const l of r.losses) {
-      (usesNamedStrategy(l.conceptId) ? undecidable : losses).push(l)
+      (usesNamedStrategy(l.componentId) ? undecidable : losses).push(l)
     }
   }
-  const by = (a: Loss, b: Loss): number => a.conceptId.localeCompare(b.conceptId)
+  const by = (a: Loss, b: Loss): number => a.componentId.localeCompare(b.componentId)
   return { losses: losses.sort(by), undecidable: undecidable.sort(by), scanned, markersPut }
 }
 
-const key = (l: Loss): string => `${l.conceptId}::${l.slot}`
+const key = (l: Loss): string => `${l.componentId}::${l.slot}`
 
 describe('護欄：投影遺失（宣告的接點在積木上有沒有落點）', () => {
   it('⚠️ 入口條件：登錄表真的載入了（🔴 錨在元件數，不在違規數）', () => {
@@ -224,14 +224,14 @@ describe('護欄：投影遺失（宣告的接點在積木上有沒有落點）'
 
   it('★ 注入：宣告三個接點而積木只有一個插槽 → **必須被報出**', () => {
     // ⚠️ 合成的身分，**不是真實元件**——真實元件被修好的那天，這支不會爛。
-    const fake = { conceptId: 'synthetic:leaky', children: { args: 'expressions' } }
+    const fake = { componentId: 'synthetic:leaky', children: { args: 'expressions' } }
     // 直接驗判定函式：渲染一個不存在的身分會拋錯 → scan 回 null（判不出來）。
     // 所以這裡驗的是**判定的算術**：填三個、只找到一個 → 報一筆。
     const ms = [marker(1), marker(2), marker(3)]
     const pretendJson = JSON.stringify({ v: ms[0] })
     const found = ms.filter((m) => pretendJson.includes(m)).length
     expect(found).toBe(1)
-    const loss: Loss = { conceptId: fake.conceptId, slot: 'args', put: 3, found }
+    const loss: Loss = { componentId: fake.componentId, slot: 'args', put: 3, found }
     expect(loss.found).toBeLessThan(loss.put)   // ← 這就是「會報」的條件
   })
 
@@ -256,10 +256,10 @@ describe('護欄：投影遺失（宣告的接點在積木上有沒有落點）'
       `投影遺失：掃 ${scanned} 顆 · 填 ${markersPut} 個標記 · ` +
         `遺失 ${losses.length} 處 · 判不出來 ${undecidable.length} 處`,
       [
-        ...losses.map((l) => `${l.conceptId} 的 ${l.slot}：填 ${l.put} 個，積木上只找到 ${l.found} 個`),
+        ...losses.map((l) => `${l.componentId} 的 ${l.slot}：填 ${l.put} 個，積木上只找到 ${l.found} 個`),
         ...(undecidable.length > 0
           ? ['', '⚠️ 判不出來（走具名渲染策略，合成器給不出它要的形狀）：',
-             ...undecidable.map((l) => `  ${l.conceptId} 的 ${l.slot}`)]
+             ...undecidable.map((l) => `  ${l.componentId} 的 ${l.slot}`)]
           : []),
       ],
     )

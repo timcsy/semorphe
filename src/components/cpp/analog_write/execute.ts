@@ -8,10 +8,10 @@
  * ⚠️ **後果是：`analogWrite` 之後 `digitalRead` 讀到的是那個原始數值的高低判定**，
  * 而不是「平均電位」。本輪接受這個差異。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:analog_write', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))

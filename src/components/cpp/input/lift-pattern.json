@@ -3,7 +3,7 @@
   "astNodeType": "binary_expression",
   "patternType": "chain",
   "concept": {
-    "conceptId": "cpp:input"
+    "componentId": "cpp:input"
   },
   "chain": {
     "operator": ">>",

@@ -2,7 +2,7 @@
   "id": "cpp_cast_expr",
   "astNodeType": "cast_expression",
   "concept": {
-    "conceptId": "cpp:cast"
+    "componentId": "cpp:cast"
   },
   "liftStrategy": "cpp:liftCastExpression",
   "fieldMappings": [

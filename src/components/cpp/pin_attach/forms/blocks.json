@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pin_attach",
-    "conceptId": "cpp:pin_attach",
+    "componentId": "cpp:pin_attach",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

@@ -87,7 +87,7 @@ describe('vector 的運算式初始值（期望值來自 g++ -std=c++17）', () 
 describe('概念身分與五路', () => {
   it('初始值掛在 source 底下，且不是被丟掉', () => {
     const tree = liftMain('vector<int> v = f();')
-    const decls = collect(tree, (n) => n.conceptId === 'cpp:vector_declare')
+    const decls = collect(tree, (n) => n.componentId === 'cpp:vector_declare')
     expect(decls).toHaveLength(1)
     expect(
       (decls[0].children?.source ?? []).length,
@@ -103,7 +103,7 @@ describe('概念身分與五路', () => {
   })
 
   it('負向：元素列表仍走 values，不得改走 source', () => {
-    const decls = collect(liftMain('vector<int> v = {3, 1, 4};'), (n) => n.conceptId === 'cpp:vector_declare')
+    const decls = collect(liftMain('vector<int> v = {3, 1, 4};'), (n) => n.componentId === 'cpp:vector_declare')
     expect(decls[0].children?.source ?? []).toHaveLength(0)
     expect(decls[0].children?.values ?? []).toHaveLength(3)
   })
@@ -111,7 +111,7 @@ describe('概念身分與五路', () => {
   it('負向：`vector<int> v(5)` 是建構子引數，兩個子節點都不得有東西', () => {
     // argument_list 不是初始值運算式——當成 source 的話會產出
     // `vector<int> v = 5;`，那不是合法程式
-    const decls = collect(liftMain('vector<int> v(5);'), (n) => n.conceptId === 'cpp:vector_declare')
+    const decls = collect(liftMain('vector<int> v(5);'), (n) => n.componentId === 'cpp:vector_declare')
     expect(decls[0].children?.source ?? []).toHaveLength(0)
     expect(decls[0].children?.values ?? []).toHaveLength(0)
   })
@@ -127,7 +127,7 @@ describe('概念身分與五路', () => {
     // 執行語義），它讓完備性護欄綠著而 5 段語料跑不動。
     const decls = collect(
       liftMain('pair<int, string> p = make_pair(42, "hello");'),
-      (n) => n.conceptId === 'cpp:pair_declare',
+      (n) => n.componentId === 'cpp:pair_declare',
     )
     expect(decls[0].children?.source ?? []).toHaveLength(1)
   })

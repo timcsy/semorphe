@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_min",
-    "conceptId": "cpp:range_min",
+    "componentId": "cpp:range_min",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

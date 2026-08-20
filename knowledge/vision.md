@@ -60,7 +60,7 @@ C++ 單語言可用，程式碼 ↔ 積木雙向 round-trip 成立，語義直�
 > 它原本寫著「中立性護欄 `total: 0`」——**一個數字**。而那條護欄後來被量出**三個維度**：
 >
 > ```
-> ① 概念身分字面（cpp:print）   一直都有         0
+> ① 元件身分字面（cpp:print）   一直都有         0
 > ② 積木型別字面（cpp_print）   spec 153 才加     核心當時有 11 筆 → spec 154 歸零
 > ③ import                     spec 155 才加     核心當時有 1 筆  → spec 155 歸零
 > ```
@@ -86,7 +86,7 @@ C++ 單語言可用，程式碼 ↔ 積木雙向 round-trip 成立，語義直�
 
 **已完成元件：**
 
-- **Core**：SemanticNode 型別、ConceptRegistry、BlockSpecRegistry、PatternLifter、PatternRenderer/Extractor、CodeGenerator、TemplateGenerator、BlockRenderer、Interpreter、Topic 系統、Storage、DependencyResolver（語言無關介面）、ProgramScaffold、CodeMapping + BlockMapping（nodeId-based 跨投影查詢）
+- **Core**：SemanticNode 型別、ComponentRegistry、BlockSpecRegistry、PatternLifter、PatternRenderer/Extractor、CodeGenerator、TemplateGenerator、BlockRenderer、Interpreter、Topic 系統、Storage、DependencyResolver（語言無關介面）、ProgramScaffold、CodeMapping + BlockMapping（nodeId-based 跨投影查詢）
 - **C++ 語言套件**：core concepts/blocks/generators/lifters、std modules（iostream/cstdio/vector/algorithm/string/map/stack/queue/set/cstring/cmath）、ModuleRegistry、auto-include、lift-patterns、render strategies、style presets（apcs/competitive/google）、style-exceptions、manifest
 - **UI**：Blockly/Monaco/Console/Variable 面板、Debug 工具列、SyncController、ToolboxBuilder、BlockRegistrar、AppShell、ExecutionController、Ghost Line
 - **宿主層**：`CodeView`／`HostProfile` 兩個角色（網頁版注入編輯器面板，擴充注入交給 IDE 的空殼）、
@@ -273,7 +273,7 @@ languages/{lang}/
 > 🧾 **三刀已完成**——中立性護欄從**一個數字**長成**三個維度**：
 >
 > ```
-> ① 概念身分字面   0        一直都有
+> ① 元件身分字面   0        一直都有
 > ② 積木型別字面   33       spec 153 加（44）→ spec 154 清掉核心那 11 筆
 > ③ import        0        spec 155 加（1）→ 同刀清掉
 > ```
@@ -377,6 +377,18 @@ languages/{lang}/
 
 🔴 **這些不會因為某一刀做完而消失——每一條都要有人領走。**
 
+- [ ] 🆕 **名詞表的其餘各列**（2026-08-20，spec `158` 只做了身分鍵那一列）
+      —— `concepts/元件.md` 的「現況落差」表逐列還在：
+      ```
+      三個登錄表的【合併】   ComponentRegistry ／ BlockSpecRegistry ／ component/registry
+      Instance             取代 SemanticNode（動的是型別的意義，不只名字）
+      params / ParamSpec   型別側只有名字清單，沒有型別、範圍、預設值
+      attachments + relation   資訊軸【尚不存在】——那是要加的，不是要改的
+      forms                blockDef／codeTemplate／astPattern 分屬三個機制
+      ```
+      🔴 **每一列都是一刀**，而 `params` 那列**不只是改名**——名詞表自己寫著
+      「改名時應連結構一起借過來」。
+
 - [x] 🟢 **`cpp:var_ref` 的下拉只投影了「範圍」的一半**（spec `149`，2026-08-19）
       → [100](history/100-名字的範圍在積木上只畫得出一段而錨點掀出第二個缺口.md)
       貼上 `pinMode(D1, OUTPUT)` → 下拉從「只有一個 `x`」變成
@@ -384,7 +396,7 @@ languages/{lang}/
       🔄 **這條原本寫成身分問題——查了執行期之後改寫成投影問題**，於是從一場規格辯論
       變成一次小改動。
       🔴 **而 US2 的錨點掀出第二個缺口**：`abstractConceptOf(block.type)` 傳錯了命名空間
-      （積木型別 vs 概念身分），**24 顆宣告元件一顆都沒進下拉**，而它不會拋錯。
+      （積木型別 vs 元件身分），**24 顆宣告元件一顆都沒進下拉**，而它不會拋錯。
 - [ ] **`execution:at-node`：拆掉那張中央對映表**（2026-08-12 升格）
       —— 設計見 [draft/執行器直接持有五個面板](draft/2026-08-11-執行器直接持有五個面板.md)
 - [ ] **C2 資訊軸（邊）**——⚠️ **延後的理由（「今天沒有消費者」）已經失效三次**。

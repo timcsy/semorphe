@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:comma_expr",
+  "componentId": "cpp:comma_expr",
   "abstractConcept": null,
   "properties": [],
   "children": {

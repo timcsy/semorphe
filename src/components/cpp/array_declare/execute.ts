@@ -1,9 +1,9 @@
 /** `cpp:array_declare` 的 **execute** 路——從共用檔原封剪過來（批次第十八批：四個重複建立點收成一個建構子）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { evalInitializer } from '../../../interpreter/aggregate'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:array_declare', async (node, ctx) => {
       const name = String(node.properties.name)
       const type = String(node.properties.type || 'int')

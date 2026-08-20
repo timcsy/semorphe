@@ -2,7 +2,7 @@
   "id": "cpp:literal_char",
   "astNodeType": "char_literal",
   "concept": {
-    "conceptId": "cpp:literal_char"
+    "componentId": "cpp:literal_char"
   },
   "fieldMappings": [
     {

@@ -19,11 +19,11 @@
  * ——與這個專案追了一整年的靜默資料遺失同一個形狀。
  * 所以共用同一個 `value` 陣列，用 `offset` 記位置。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:address_of', async (node, ctx) => {
     const varNodes = node.children.var ?? []
     if (varNodes.length === 0) return { type: 'int', value: 0 }
@@ -32,7 +32,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
     // `&arr[i]` —— 取陣列某一格的位址。
     //
     // ⚠️ **判別看結構，不看身分。** 第一版寫的是
-    // `target.conceptId === 'cpp:array_at'`，而膠囊就近性護欄當場報了兩個方向的
+    // `target.componentId === 'cpp:array_at'`，而膠囊就近性護欄當場報了兩個方向的
     // 違規（「膠囊裡混進別顆元件」＋「那顆元件出現在自己資料夾外」）——**它是對的**：
     // 一顆元件認得另一顆的身分，就是把兩者黏死。
     //

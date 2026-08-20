@@ -203,7 +203,7 @@ export function assertRatchet(rows: readonly [string, number, number][]): void {
  * | `specs/113` | `檔:行號` | 刪一行 → 底下全漂移，**判定全變孤兒而程式碼沒改** |
  * | 同日 `#35` | `檔:行號` | 同一個坑，**在修好上一個的同一天寫的** |
  *
- * 而第四條護欄（`component-identity-review`）用 `conceptId` 當鍵——
+ * 而第四條護欄（`component-identity-review`）用 `componentId` 當鍵——
  * **穩定身分天生沒有這個問題**。所以坑只在「從內容或位置導出鍵」的時候。
  *
  * > **識別碼必須識別得出那個東西。**

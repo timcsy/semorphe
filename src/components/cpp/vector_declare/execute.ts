@@ -3,7 +3,7 @@
  *
  * 從 `src/languages/cpp/std/vector/executors.ts` **原封搬過來**——搬移不重寫。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 
@@ -21,7 +21,7 @@ function cloneValue(v: RuntimeValue): RuntimeValue {
 }
 
 export function registerExecute(
-  register: (concept: string, executor: ConceptExecutor) => void,
+  register: (concept: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)

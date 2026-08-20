@@ -7,7 +7,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('noTone', {
-    conceptId: 'cpp:tone_stop',
+    componentId: 'cpp:tone_stop',
     argSlots: ['pin'],
     source: 'cpp/tone_stop',
   })

@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('analogRead', {
-    conceptId: 'cpp:analog_read',
+    componentId: 'cpp:analog_read',
     argSlots: ["pin"],
     source: 'cpp/analog_read',
   })

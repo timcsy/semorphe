@@ -103,7 +103,7 @@ const DEAD = ['cpp:include', 'cpp:include_local', 'cpp:using_namespace']
 /** 蒐集樹中出現過的概念身分——沒出現的話，這一列什麼都沒測到 */
 function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
-  acc.add(node.conceptId)
+  acc.add(node.componentId)
   for (const arr of Object.values(node.children ?? {})) for (const c of arr) conceptsIn(c, acc)
   return acc
 }

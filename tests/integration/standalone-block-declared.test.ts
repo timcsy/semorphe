@@ -31,7 +31,7 @@ beforeAll(async () => {
 })
 
 function conceptsIn(node: SemanticNode, out: string[] = []): string[] {
-  out.push(node.conceptId)
+  out.push(node.componentId)
   for (const kids of Object.values(node.children ?? {})) {
     for (const k of kids as SemanticNode[]) conceptsIn(k, out)
   }

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_dht_declare",
-    "conceptId": "cpp:dht_declare",
+    "componentId": "cpp:dht_declare",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

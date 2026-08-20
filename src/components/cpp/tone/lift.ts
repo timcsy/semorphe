@@ -8,7 +8,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('tone', {
-    conceptId: 'cpp:tone',
+    componentId: 'cpp:tone',
     argSlots: ['pin', 'frequency', 'duration'],
     source: 'cpp/tone',
   })

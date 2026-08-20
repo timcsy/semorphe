@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:vector_make",
-    "conceptId": "cpp:vector_make",
+    "componentId": "cpp:vector_make",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

@@ -160,12 +160,12 @@ describe('cmath Round-trip', () => {
   })
 
   describe('Lift semantic structure', () => {
-    function findConcept(node: any, conceptId: string): any {
+    function findConcept(node: any, componentId: string): any {
       if (!node) return null
-      if (node.conceptId === conceptId) return node
+      if (node.componentId === componentId) return node
       for (const children of Object.values(node.children ?? {})) {
         for (const child of children as any[]) {
-          const found = findConcept(child, conceptId)
+          const found = findConcept(child, componentId)
           if (found) return found
         }
       }

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_digital_write",
-    "conceptId": "cpp:digital_write",
+    "componentId": "cpp:digital_write",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

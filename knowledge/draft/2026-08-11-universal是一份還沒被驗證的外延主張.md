@@ -69,7 +69,7 @@ const sorted = ioPref === 'iostream' ? [...universalIo, ...langIo] : [...langIo,
 ## 四、已做：第四版問那條等價邊
 
 ```ts
-const 風格 = (t) => ioTraitOf(conceptId)?.style
+const 風格 = (t) => ioTraitOf(componentId)?.style
 const 合偏好 = ioTypes.filter(t => 風格(t) === ioPref)
 const 其餘   = ioTypes.filter(t => 風格(t) !== ioPref)
 ```

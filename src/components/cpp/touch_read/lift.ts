@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('touchRead', {
-    conceptId: 'cpp:touch_read',
+    componentId: 'cpp:touch_read',
     argSlots: ['pin'],
     source: 'cpp/touch_read',
   })

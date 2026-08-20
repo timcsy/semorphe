@@ -19,9 +19,9 @@
  * > **一個作用域少了，症狀不是「變數不見」而是「變數活太久」
  * > ——而活太久不會報錯。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:block', async (node, ctx) => {
     const outer = ctx.scope
     ctx.scope = outer.createChild()

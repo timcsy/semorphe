@@ -3,7 +3,7 @@ import { registerCallConcept } from '../../../core/component/call-concepts'
 
 export function registerLift(): void {
   registerCallConcept('millis', {
-    conceptId: 'cpp:millis',
+    componentId: 'cpp:millis',
     argSlots: [],
     source: 'cpp/millis',
   })

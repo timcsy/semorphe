@@ -1,8 +1,8 @@
 /** `cpp:var_assign` 的 **execute** 路——從共用檔原封剪過來（批次第三十七批）。 */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { setMember } from '../../../interpreter/executors/variables'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_assign', async (node, ctx) => {
       const name = String(node.properties.obj)
       const valueNodes = node.children.value

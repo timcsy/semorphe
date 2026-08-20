@@ -1,5 +1,5 @@
 {
-  "conceptId": "python:print",
+  "componentId": "python:print",
   "_why": "spec 156：第一顆 Python 元件。它此刻【只是一個有性狀的身分】——沒有積木、沒有執行期。",
   "abstractConcept": null,
   "properties": [],

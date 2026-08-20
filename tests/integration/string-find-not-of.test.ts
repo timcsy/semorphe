@@ -51,7 +51,7 @@ function concepts(body: string): string[] {
   const out: string[] = []
   const walk = (n: SemanticNode | null | undefined): void => {
     if (!n) return
-    if (n.conceptId) out.push(n.conceptId)
+    if (n.componentId) out.push(n.componentId)
     for (const k of Object.keys(n.children ?? {}))
       for (const c of (n.children as Record<string, SemanticNode[]>)[k] ?? []) walk(c)
   }

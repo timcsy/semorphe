@@ -17,7 +17,7 @@ export type BodyFallback = (node: SemanticNode, ctx: { indent: number; style: St
 export class TemplateGenerator {
   private templates = new Map<string, CodeTemplate>()
   /**
-   * 位置分化的模板——`conceptId` → 運算式版。
+   * 位置分化的模板——`componentId` → 運算式版。
    *
    * 一個元件身分可以有多個形態（097），而它們的**碼形態也不同**：
    * `i++;`（敘述）vs `i++`（運算式）。索引若只有一份，兩者會互相覆蓋——
@@ -39,14 +39,14 @@ export class TemplateGenerator {
     this.bodyFallback = fn
   }
 
-  /** Register a code template for a specific conceptId */
-  registerTemplate(conceptId: string, template: CodeTemplate, form?: { axis: string; value: string }): void {
+  /** Register a code template for a specific componentId */
+  registerTemplate(componentId: string, template: CodeTemplate, form?: { axis: string; value: string }): void {
     if (form?.axis === 'role' && form.value === 'expression') {
-      this.expressionTemplates.set(conceptId, template)
+      this.expressionTemplates.set(componentId, template)
       return
     }
     if (form) return  // 其他軸的形態（例如容器種類）碼形態相同，不另存
-    this.templates.set(conceptId, template)
+    this.templates.set(componentId, template)
   }
 
   /** Load universal templates (with style variants) */
@@ -68,12 +68,12 @@ export class TemplateGenerator {
   generate(node: SemanticNode, ctx: GenerateContext): string | null {
     // 1. Try direct template lookup —— **位置決定用哪一份**
     let template = ctx.isExpression
-      ? (this.expressionTemplates.get(node.conceptId) ?? this.templates.get(node.conceptId))
-      : this.templates.get(node.conceptId)
+      ? (this.expressionTemplates.get(node.componentId) ?? this.templates.get(node.componentId))
+      : this.templates.get(node.componentId)
 
     // 2. Try universal template with style variants
     if (!template) {
-      template = this.resolveUniversalTemplate(node.conceptId, ctx.style) ?? undefined
+      template = this.resolveUniversalTemplate(node.componentId, ctx.style) ?? undefined
     }
 
     if (!template) return null
@@ -87,9 +87,9 @@ export class TemplateGenerator {
     return this.expandPattern(template.pattern, node, ctx)
   }
 
-  private resolveUniversalTemplate(conceptId: string, style: StylePreset): CodeTemplate | null {
+  private resolveUniversalTemplate(componentId: string, style: StylePreset): CodeTemplate | null {
     for (const ut of this.universalTemplates) {
-      if (ut.conceptId !== conceptId) continue
+      if (ut.componentId !== componentId) continue
 
       // Try style variants
       if (ut.styleVariants && ut.styleKey) {
@@ -169,7 +169,7 @@ export class TemplateGenerator {
       const fb = this.expressionFallback(node, ctx)
       if (fb !== null) return fb
     }
-    return (node.metadata?.rawCode as string) ?? `⟨${node.conceptId}⟩`
+    return (node.metadata?.rawCode as string) ?? `⟨${node.componentId}⟩`
   }
 
   private generateBody(nodes: SemanticNode[], ctx: GenerateContext): string {
@@ -182,7 +182,7 @@ export class TemplateGenerator {
         const fb = this.bodyFallback(n, ctx)
         if (fb !== null) return fb
       }
-      return `${indentStr}⟨unknown: ${n.conceptId}⟩`
+      return `${indentStr}⟨unknown: ${n.componentId}⟩`
     }).join('\n')
   }
 

@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:memory_copy",
+  "componentId": "cpp:memory_copy",
   "abstractConcept": null,
   "properties": [],
   "children": {

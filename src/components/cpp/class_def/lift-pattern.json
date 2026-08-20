@@ -2,7 +2,7 @@
   "id": "cpp_class_specifier",
   "astNodeType": "class_specifier",
   "concept": {
-    "conceptId": "cpp:class_def"
+    "componentId": "cpp:class_def"
   },
   "liftStrategy": "cpp:liftClassDef",
   "fieldMappings": [],

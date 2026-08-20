@@ -77,7 +77,7 @@ function extractBody(node: import('../../../../core/lift/types').AstNode | null,
   const lifted = ctx.lift(node)
   if (!lifted) return []
   // If it's a compound statement, unwrap the body
-  if (lifted.conceptId === '_compound') {
+  if (lifted.componentId === '_compound') {
     return lifted.children.body ?? []
   }
   return [lifted]
@@ -202,7 +202,7 @@ function wrapForExpr(
   const lifted = ctx.lift(node)
   if (!lifted) return null
   // If the lifted concept is a known expression, keep it
-  if (canBeForLoopPart(lifted.conceptId)) return lifted
+  if (canBeForLoopPart(lifted.componentId)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
   // Strip trailing semicolons — for-loop parts don't need them
   return buildRawExpression(node.text.replace(/;\s*$/, '').trim())

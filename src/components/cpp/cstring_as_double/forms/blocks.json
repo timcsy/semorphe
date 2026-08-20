@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:cstring_as_double",
-    "conceptId": "cpp:cstring_as_double",
+    "componentId": "cpp:cstring_as_double",
     "language": "cpp",
     "category": "stdlib",
     "version": "1.0.0",

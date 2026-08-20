@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:pointer_assign",
+  "componentId": "cpp:pointer_assign",
   "abstractConcept": "cpp:var_assign",
   "properties": [
     {

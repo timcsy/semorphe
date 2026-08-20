@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_if",
-    "conceptId": "cpp:if",
+    "componentId": "cpp:if",
     "language": "universal",
     "category": "control",
     "version": "1.0.0",

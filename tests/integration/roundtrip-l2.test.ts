@@ -10,7 +10,7 @@ import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, LiftPattern, UniversalTemplate, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
@@ -87,10 +87,10 @@ describe('L2 Block Roundtrip', () => {
     extractor.loadBlockSpecs(allSpecs)
 
     for (const spec of allSpecs) {
-      if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
+      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
         // 形態要一起傳——不傳的話變體的模板會蓋掉中性版（實測：少一個分號）
         generator.registerTemplate(
-          spec.conceptMapping.conceptId,
+          spec.componentMapping.componentId,
           spec.codeTemplate,
           (spec as { form?: { axis: string; value: string } }).form,
         )
@@ -123,7 +123,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.NAME).toBe('ptr')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:pointer_declare')
+      expect(sem2!.componentId).toBe('cpp:pointer_declare')
       expect(sem2!.properties.type).toBe('int')
       expect(sem2!.properties.name).toBe('ptr')
     })
@@ -146,7 +146,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_pointer_deref')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:pointer_deref')
+      expect(sem2!.componentId).toBe('cpp:pointer_deref')
     })
 
     it('should generate code', () => {
@@ -164,7 +164,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:pointer_deref')
+      expect(sem!.componentId).toBe('cpp:pointer_deref')
     })
   })
 
@@ -177,7 +177,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_address_of')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:address_of')
+      expect(sem2!.componentId).toBe('cpp:address_of')
     })
 
     it('should generate code', () => {
@@ -195,7 +195,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:address_of')
+      expect(sem!.componentId).toBe('cpp:address_of')
     })
   })
 
@@ -208,7 +208,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_free')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:free')
+      expect(sem2!.componentId).toBe('cpp:free')
     })
 
     it('should generate code', () => {
@@ -240,7 +240,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.MEMBER).toBe('x')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:struct_at_member')
+      expect(sem2!.componentId).toBe('cpp:struct_at_member')
       expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
@@ -271,7 +271,7 @@ describe('L2 Block Roundtrip', () => {
       })
       const sem = tryAstBranches('field_expression', ast, liftCtx())
       expect(sem, 'field_expression 的分支沒有認領它').not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:struct_at_member')
+      expect(sem!.componentId).toBe('cpp:struct_at_member')
       expect(sem!.properties.obj).toBe('p')
       // ★ 反向：單純的識別字仍然走**字串屬性**，不掛接點
       // ——掛了的話 `p.first` 這種最常見的寫法會多一層而產生器讀不到。
@@ -287,7 +287,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_struct_at_ptr')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:struct_at_ptr')
+      expect(sem2!.componentId).toBe('cpp:struct_at_ptr')
       expect(sem2!.properties.obj).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
@@ -310,7 +310,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_cstring_size')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:cstring_size')
+      expect(sem2!.componentId).toBe('cpp:cstring_size')
     })
 
     it('should return null from TemplateGenerator (uses hand-written generator)', () => {
@@ -371,7 +371,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.NAME).toBe('v')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:vector_declare')
+      expect(sem2!.componentId).toBe('cpp:vector_declare')
       expect(sem2!.properties.type).toBe('int')
       expect(sem2!.properties.name).toBe('v')
     })
@@ -392,7 +392,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_container_append')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:container_append')
+      expect(sem2!.componentId).toBe('cpp:container_append')
       expect(sem2!.properties.obj).toBe('v')
     })
 
@@ -412,7 +412,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_vector_size')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:vector_size')
+      expect(sem2!.componentId).toBe('cpp:vector_size')
       expect(sem2!.properties.obj).toBe('v')
     })
 
@@ -431,7 +431,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_map_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:map_declare')
+      expect(sem2!.componentId).toBe('cpp:map_declare')
     })
 
     it('should generate code', () => {
@@ -449,7 +449,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_string_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:string_declare')
+      expect(sem2!.componentId).toBe('cpp:string_declare')
       expect(sem2!.properties.name).toBe('s')
     })
 
@@ -485,7 +485,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_stack_declare')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:stack_declare')
+      expect(sem2!.componentId).toBe('cpp:stack_declare')
     })
 
     it('should generate code', () => {
@@ -521,7 +521,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_new')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:new')
+      expect(sem2!.componentId).toBe('cpp:new')
       expect(sem2!.properties.type).toBe('Node')
     })
 
@@ -557,7 +557,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_method_call')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:method_call')
+      expect(sem2!.componentId).toBe('cpp:method_call')
       expect(sem2!.properties.obj).toBe('v')
       expect(sem2!.properties.method).toBe('clear')
     })
@@ -577,7 +577,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_method_call')  // 中性形態（渲染端未給位置）
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:method_call')
+      expect(sem2!.componentId).toBe('cpp:method_call')
     })
 
     it('should generate code', () => {
@@ -599,7 +599,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.CONDITION).toBe('DEBUG')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:ifdef')
+      expect(sem2!.componentId).toBe('cpp:ifdef')
       expect(sem2!.properties.condition).toBe('DEBUG')
     })
 
@@ -619,7 +619,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_ifndef')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:ifndef')
+      expect(sem2!.componentId).toBe('cpp:ifndef')
       expect(sem2!.properties.condition).toBe('HEADER_H')
     })
 
@@ -642,7 +642,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.fields?.HEADER).toBe('iostream')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:include')
+      expect(sem2!.componentId).toBe('cpp:include')
       expect(sem2!.properties.header).toBe('iostream')
     })
 
@@ -661,7 +661,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_define')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:define')
+      expect(sem2!.componentId).toBe('cpp:define')
       expect(sem2!.properties.name).toBe('MAX')
       expect(sem2!.properties.value).toBe('100')
     })
@@ -681,7 +681,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_using_namespace')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:using_namespace')
+      expect(sem2!.componentId).toBe('cpp:using_namespace')
       expect(sem2!.properties.ns).toBe('std')
     })
 
@@ -700,7 +700,7 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_comment')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:comment')
+      expect(sem2!.componentId).toBe('cpp:comment')
       expect(sem2!.properties.text).toBe('hello')
     })
 

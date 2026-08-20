@@ -50,7 +50,7 @@
  * ## 這條規則管不到誰
  *
  * 使用者上傳的自訂積木（`onUploadCustomBlocks` → `defineBlocksWithJsonArray`）
- * 沒有 conceptId，導出規則對它不成立。**護欄的範圍是「專案宣告的積木」，
+ * 沒有 componentId，導出規則對它不成立。**護欄的範圍是「專案宣告的積木」，
  * 不是「Blockly 執行期認得的積木」**——這兩者在執行期是同一個 registry。
  *
  * 不劃這條界的話，護欄會在使用者上傳一顆自訂積木時變紅，而那是正常操作。
@@ -65,17 +65,17 @@ export interface BlockForm {
 /**
  * 概念身分（＋形態）→ 積木型別。
  *
- * @param conceptId 例如 `cpp:stack_peek`
+ * @param componentId 例如 `cpp:stack_peek`
  * @param form 非中性形態才傳
  */
-export function deriveBlockType(conceptId: string, form?: BlockForm | null): string {
-  const body = conceptId.replace(':', '_')
+export function deriveBlockType(componentId: string, form?: BlockForm | null): string {
+  const body = componentId.replace(':', '_')
   return form ? `${body}_${form.value}` : body
 }
 
 /** 一筆待檢查的積木宣告。 */
 export interface blockDecl {
-  conceptId: string
+  componentId: string
   form?: BlockForm | null
   blockType: string
 }
@@ -94,21 +94,21 @@ export interface blockDecl {
 export function assertDerivedNamesUnique(declarations: readonly blockDecl[]): void {
   const seen = new Map<string, string>()
   for (const b of declarations) {
-    const name = deriveBlockType(b.conceptId, b.form)
+    const name = deriveBlockType(b.componentId, b.form)
     const existing = seen.get(name)
-    if (existing !== undefined && existing !== b.conceptId) {
+    if (existing !== undefined && existing !== b.componentId) {
       throw new Error(
-        `兩顆積木導出同一個型別「${name}」：${existing} 與 ${b.conceptId}。` +
+        `兩顆積木導出同一個型別「${name}」：${existing} 與 ${b.componentId}。` +
           `Blockly 的 registry 以型別為鍵，後登錄的會安靜地蓋掉先登錄的。`,
       )
     }
     if (existing !== undefined) {
       throw new Error(
-        `同一顆身分「${b.conceptId}」的兩個形態導出同名「${name}」——` +
+        `同一顆身分「${b.componentId}」的兩個形態導出同名「${name}」——` +
           `form.value 撞名了。導出規則不編入 axis（見本檔頭），` +
           `所以不同軸上的同名值會撞。`,
       )
     }
-    seen.set(name, b.conceptId)
+    seen.set(name, b.componentId)
   }
 }

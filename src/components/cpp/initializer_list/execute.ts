@@ -9,10 +9,10 @@
  * （被 `ctx.evaluate` 直接求值），少了這一路會丟 `UNKNOWN_CONCEPT`。
  * 那時它就是一串值——**不猜型別，也不丟錯**。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:initializer_list', async (node, ctx) => {
     const values: RuntimeValue[] = []
     for (const v of node.children.values ?? []) values.push(await ctx.evaluate(v))

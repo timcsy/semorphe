@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:string_append_char",
-    "conceptId": "cpp:string_append_char",
+    "componentId": "cpp:string_append_char",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

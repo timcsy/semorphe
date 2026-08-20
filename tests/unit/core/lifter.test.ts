@@ -33,7 +33,7 @@ describe('Lifter', () => {
     const node = mockNode('number_literal', '42')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:literal_number')
+    expect(result!.componentId).toBe('cpp:literal_number')
     expect(result!.properties.value).toBe('42')
   })
 
@@ -41,7 +41,7 @@ describe('Lifter', () => {
     const node = mockNode('identifier', 'myVar')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:var_ref')
+    expect(result!.componentId).toBe('cpp:var_ref')
     expect(result!.properties.name).toBe('myVar')
   })
 
@@ -49,7 +49,7 @@ describe('Lifter', () => {
     const node = mockNode('string_literal', '"hello"')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:literal_string')
+    expect(result!.componentId).toBe('cpp:literal_string')
     expect(result!.properties.value).toBe('hello')
   })
 
@@ -62,7 +62,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:arithmetic')
+    expect(result!.componentId).toBe('cpp:arithmetic')
     expect(result!.properties.operator).toBe('+')
     expect(result!.children.left).toHaveLength(1)
     expect(result!.children.right).toHaveLength(1)
@@ -77,7 +77,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:compare')
+    expect(result!.componentId).toBe('cpp:compare')
     expect(result!.properties.operator).toBe('>=')
   })
 
@@ -90,7 +90,7 @@ describe('Lifter', () => {
     })
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:logic')
+    expect(result!.componentId).toBe('cpp:logic')
     expect(result!.properties.operator).toBe('&&')
   })
 
@@ -99,7 +99,7 @@ describe('Lifter', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     // With BlockSpec patterns loaded, template functions may be lifted instead of degraded
-    expect(['raw_code', 'cpp:template_function']).toContain(result!.conceptId)
+    expect(['raw_code', 'cpp:template_function']).toContain(result!.componentId)
   })
 
   it('should lift translation_unit as program', () => {
@@ -115,7 +115,7 @@ describe('Lifter', () => {
     const root = mockNode('translation_unit', 'int x = 42;', [declNode])
     const result = lifter.lift(root)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:program')
+    expect(result!.componentId).toBe('cpp:program')
     expect(result!.children.body.length).toBeGreaterThan(0)
   })
 
@@ -126,16 +126,16 @@ describe('Lifter', () => {
     ])
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('cpp:return')
+    expect(result!.componentId).toBe('cpp:return')
     expect(result!.children.value).toHaveLength(1)
-    expect(result!.children.value[0].conceptId).toBe('cpp:literal_number')
+    expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
   })
 
   it('should lift break_statement and continue_statement', () => {
     const breakNode = mockNode('break_statement', 'break;')
     const contNode = mockNode('continue_statement', 'continue;')
-    expect(lifter.lift(breakNode)!.conceptId).toBe('cpp:break')
-    expect(lifter.lift(contNode)!.conceptId).toBe('cpp:continue')
+    expect(lifter.lift(breakNode)!.componentId).toBe('cpp:break')
+    expect(lifter.lift(contNode)!.componentId).toBe('cpp:continue')
   })
 
   it('should detect deeply nested ERROR descendant (not just direct children)', () => {
@@ -149,7 +149,7 @@ describe('Lifter', () => {
     const result = lifter.lift(stmt)
     // A node with a deep ERROR descendant should be classified as syntax_error
     expect(result).not.toBeNull()
-    if (result!.conceptId === 'raw_code') {
+    if (result!.componentId === 'raw_code') {
       expect(result!.metadata?.degradationCause).toBe('syntax_error')
     }
   })

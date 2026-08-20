@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
@@ -101,15 +101,15 @@ describe('JSON-only extension (US6)', () => {
     ])
     const sortSpec = registry.getAll().find(s => s.id === 'cpp:range_sort')
     expect(sortSpec).toBeDefined()
-    expect(sortSpec!.conceptMapping.conceptId).toBe('cpp:range_sort')
+    expect(sortSpec!.componentMapping.componentId).toBe('cpp:range_sort')
     // 原本斷言的是 'sort'——而那個概念**從來不存在**，查詢父概念會靜默回傳
     // undefined。這支測試等於在釘住一個懸空指標。
     // cpp_range_sort 目前沒有語言中立的父概念（通用概念集裡沒有「排序」這個抽象），
     // 所以正確的值是「沒有」。見 specs/056-abstract-concept-integrity。
-    expect(sortSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
+    expect(sortSpec!.componentMapping.abstractConcept ?? null).toBeNull()
 
     const backSpec = registry.getAll().find(s => s.id === 'cpp:vector_back')
     // 同上：'vector_back' 這個概念從來不存在
-    expect(backSpec!.conceptMapping.abstractConcept ?? null).toBeNull()
+    expect(backSpec!.componentMapping.abstractConcept ?? null).toBeNull()
   })
 })

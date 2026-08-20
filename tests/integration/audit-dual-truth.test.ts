@@ -60,8 +60,8 @@ function jsonBlockDefs(): Map<string, Record<string, unknown>> {
       continue
     }
     const arr = Array.isArray(data) ? data : ((data as { blocks?: unknown[] }).blocks ?? [])
-    for (const b of arr as { id?: string; conceptId?: string; blockDef?: Record<string, unknown> }[]) {
-      if (b?.blockDef) out.set(b.id ?? b.conceptId ?? '', b.blockDef)
+    for (const b of arr as { id?: string; componentId?: string; blockDef?: Record<string, unknown> }[]) {
+      if (b?.blockDef) out.set(b.id ?? b.componentId ?? '', b.blockDef)
     }
   }
   return out

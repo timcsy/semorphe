@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:math_is_nan",
+  "componentId": "cpp:math_is_nan",
   "abstractConcept": null,
   "properties": [],
   "children": {

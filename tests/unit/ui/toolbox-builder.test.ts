@@ -4,7 +4,7 @@ import * as path from 'path'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
-import type { ConceptDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
 import { getVisibleConcepts } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
@@ -89,7 +89,7 @@ describe('ToolboxBuilder', () => {
       // 116 之後沒有型別以 `c_` 開頭，這一句會永遠是 false。
       // 要問的是「它是不是語言專屬的」，而那寫在概念宣告的 `layer` 上。
       const firstType = ioCat.contents[0]?.type
-      const layer = firstType ? reg.getByBlockType(firstType)?.conceptMapping?.layer : undefined
+      const layer = firstType ? reg.getByBlockType(firstType)?.componentMapping?.layer : undefined
       expect(layer, `cstdio 偏好時第一顆該是語言專屬的，實得 ${firstType}`).not.toBe('universal')
     }
   })

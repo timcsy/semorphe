@@ -45,7 +45,7 @@ import {
 import { universalConcepts } from '../../src/core/universal'
 import { coreConcepts } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import type { ConceptDefJSON } from '../../src/core/types'
+import type { ComponentDefJSON } from '../../src/core/types'
 // ⚠️ **不要自己列宣告來源。**
 // 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。

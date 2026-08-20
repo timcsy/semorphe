@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_try_catch",
-    "conceptId": "cpp:try_catch",
+    "componentId": "cpp:try_catch",
     "language": "cpp",
     "category": "control",
     "version": "1.0.0",

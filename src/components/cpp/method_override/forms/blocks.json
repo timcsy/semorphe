@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_method_override",
-    "conceptId": "cpp:method_override",
+    "componentId": "cpp:method_override",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_func_call",
-    "conceptId": "cpp:func_call",
+    "componentId": "cpp:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",
@@ -42,7 +42,7 @@
   },
   {
     "id": "cpp_func_call_expression",
-    "conceptId": "cpp:func_call",
+    "componentId": "cpp:func_call",
     "language": "universal",
     "category": "functions",
     "version": "1.0.0",

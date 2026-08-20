@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:range_sum_partial",
+  "componentId": "cpp:range_sum_partial",
   "abstractConcept": null,
   "properties": [
     {

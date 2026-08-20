@@ -23,35 +23,35 @@ const declarations = new Map<string, Partial<Record<PathName, SkipReason>>>()
 
 /** 語言套件載入時呼叫，把概念自己的宣告推進來 */
 export function declareSkips(
-  conceptId: string,
+  componentId: string,
   reasons: Partial<Record<PathName, SkipReason>>,
 ): void {
-  declarations.set(conceptId, reasons)
+  declarations.set(componentId, reasons)
 }
 
 /** 這個概念是否宣告了刻意不走這條路徑 */
-export function isSkipped(conceptId: string, path: PathName): boolean {
-  return declarations.get(conceptId)?.[path] !== undefined
+export function isSkipped(componentId: string, path: PathName): boolean {
+  return declarations.get(componentId)?.[path] !== undefined
 }
 
 /** 宣告的理由——報表要說得出「為什麼」，宣告才是可複查的 */
-export function skipReason(conceptId: string, path: PathName): SkipReason | undefined {
-  return declarations.get(conceptId)?.[path]
+export function skipReason(componentId: string, path: PathName): SkipReason | undefined {
+  return declarations.get(componentId)?.[path]
 }
 
 /** 全部宣告（護欄報表用） */
 export function allSkipDeclarations(): {
-  conceptId: string
+  componentId: string
   path: PathName
   reason: SkipReason
 }[] {
-  const out: { conceptId: string; path: PathName; reason: SkipReason }[] = []
-  for (const [conceptId, reasons] of declarations) {
+  const out: { componentId: string; path: PathName; reason: SkipReason }[] = []
+  for (const [componentId, reasons] of declarations) {
     for (const [path, reason] of Object.entries(reasons)) {
-      if (reason) out.push({ conceptId, path: path as PathName, reason })
+      if (reason) out.push({ componentId, path: path as PathName, reason })
     }
   }
-  return out.sort((a, b) => a.conceptId.localeCompare(b.conceptId))
+  return out.sort((a, b) => a.componentId.localeCompare(b.componentId))
 }
 
 /** 測試用：清空（正式流程不呼叫） */
@@ -66,20 +66,20 @@ export function resetSkipDeclarations(): void {
 // 算一個除錯步驟」。那是**視圖層的關心**（除錯器要在哪裡停）寫在核心，而且
 // 用的是語言專屬的名字。
 //
-// 標註本來就是專案規劃中「語言套件 ↔ 視圖套件的開放契約」，`ConceptDefJSON`
+// 標註本來就是專案規劃中「語言套件 ↔ 視圖套件的開放契約」，`ComponentDefJSON`
 // 上早就有 `annotations` 欄位。
 // ─────────────────────────────────────────────────────────────────────────
 
 const annotations = new Map<string, Record<string, unknown>>()
 
 /** 語言套件載入時呼叫 */
-export function declareAnnotations(conceptId: string, ann: Record<string, unknown>): void {
-  annotations.set(conceptId, ann)
+export function declareAnnotations(componentId: string, ann: Record<string, unknown>): void {
+  annotations.set(componentId, ann)
 }
 
 /** 這個概念有沒有帶某個標註且為真。**缺標註時為 false**——與原本「清單外不停」一致 */
-export function hasAnnotation(conceptId: string, key: string): boolean {
-  return annotations.get(conceptId)?.[key] === true
+export function hasAnnotation(componentId: string, key: string): boolean {
+  return annotations.get(componentId)?.[key] === true
 }
 
 /** 測試用 */

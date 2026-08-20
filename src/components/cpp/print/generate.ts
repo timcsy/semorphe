@@ -19,12 +19,12 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
         return `${indent(ctx)}cout << ${parts.join(' << ')};\n`
       }
       // printf mode: embed string_literal values into format, use %d for expressions
-      const hasEndl = values.some(v => isLineBreak(v.conceptId))
+      const hasEndl = values.some(v => isLineBreak(v.componentId))
       const fmtParts: string[] = []
       const argParts: string[] = []
       for (const v of values) {
-        if (isLineBreak(v.conceptId)) continue
-        if (isStringLiteral(v.conceptId)) {
+        if (isLineBreak(v.componentId)) continue
+        if (isStringLiteral(v.componentId)) {
           fmtParts.push((v.properties.value as string) ?? '')
         } else {
           fmtParts.push('%d')

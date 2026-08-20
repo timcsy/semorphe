@@ -13,10 +13,10 @@ import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十二個組裝點**（同一個形狀，這是今天第三處）。
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import type { ConceptDefJSON, BlockProjectionJSON, BlockSpec, RenderMapping } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON, BlockSpec, RenderMapping } from '../../src/core/types'
 
 let extractor: PatternExtractor
 let renderer: PatternRenderer
@@ -29,7 +29,7 @@ beforeAll(() => {
   // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
   registry.loadFromSplit(
     [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts),
-     ...(componentConcepts() as unknown as ConceptDefJSON[])],
+     ...(componentConcepts() as unknown as ComponentDefJSON[])],
     [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks),
      ...(componentBlocks() as BlockProjectionJSON[])]
   )
@@ -52,8 +52,8 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      conceptMapping: {
-        conceptId: 'test_func_call',
+      componentMapping: {
+        componentId: 'test_func_call',
         properties: ['name'],
         children: { args: 'expression' },
         role: 'expression',
@@ -80,8 +80,8 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      conceptMapping: {
-        conceptId: 'test_func_def',
+      componentMapping: {
+        componentId: 'test_func_def',
         properties: ['name', 'return_type'],
         children: { params: 'expression', body: 'statements' },
         role: 'statement',
@@ -109,8 +109,8 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      conceptMapping: {
-        conceptId: 'test_scanf',
+      componentMapping: {
+        componentId: 'test_scanf',
         properties: ['format'],
         children: { args: 'expression' },
         role: 'statement',
@@ -141,8 +141,8 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      conceptMapping: {
-        conceptId: 'test_if',
+      componentMapping: {
+        componentId: 'test_if',
         properties: [],
         children: { condition: 'expression', then_body: 'statements', else_body: 'statements' },
         role: 'statement',
@@ -175,8 +175,8 @@ function createTestBlockSpecs(): BlockSpec[] {
       language: 'test',
       category: 'test',
       version: '1.0.0',
-      conceptMapping: {
-        conceptId: 'test_print',
+      componentMapping: {
+        componentId: 'test_print',
         properties: [],
         children: { values: 'expression' },
         role: 'statement',
@@ -215,12 +215,12 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_func_call')
+    expect(result!.componentId).toBe('test_func_call')
     expect(result!.properties.name).toBe('add')
     expect(result!.children.args).toHaveLength(3)
-    expect(result!.children.args[0].conceptId).toBe('cpp:literal_number')
+    expect(result!.children.args[0].componentId).toBe('cpp:literal_number')
     expect(result!.children.args[0].properties.value).toBe('1')
-    expect(result!.children.args[2].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.args[2].componentId).toBe('cpp:var_ref')
     expect(result!.children.args[2].properties.name).toBe('x')
   })
 
@@ -233,7 +233,7 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_func_call')
+    expect(result!.componentId).toBe('test_func_call')
     expect(result!.children.args ?? []).toHaveLength(0)
   })
 })
@@ -254,12 +254,12 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_scanf')
+    expect(result!.componentId).toBe('test_scanf')
     expect(result!.properties.format).toBe('%d %d')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.args[1].componentId).toBe('cpp:var_ref')
     expect(result!.children.args[1].properties.name).toBe('y')
   })
 
@@ -284,9 +284,9 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].conceptId).toBe('cpp:arithmetic')
+    expect(result!.children.args[1].componentId).toBe('cpp:arithmetic')
   })
 })
 
@@ -301,11 +301,11 @@ describe('T013: PatternExtractor dynamicRules — repeat field group (func_def)'
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_func_def')
+    expect(result!.componentId).toBe('test_func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].conceptId).toBe('param_decl')
+    expect(result!.children.params[0].componentId).toBe('param_decl')
     expect(result!.children.params[0].properties.type).toBe('int')
     expect(result!.children.params[0].properties.name).toBe('a')
     expect(result!.children.params[1].properties.name).toBe('b')
@@ -343,14 +343,14 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_if')
+    expect(result!.componentId).toBe('test_if')
     // Static mappings
     expect(result!.children.condition).toHaveLength(1)
     expect(result!.children.then_body).toHaveLength(1)
     expect(result!.children.else_body).toHaveLength(1)
     // Dynamic elseif conditions
     expect(result!.children.elseif_conditions).toHaveLength(2)
-    expect(result!.children.elseif_conditions[0].conceptId).toBe('cpp:var_ref')
+    expect(result!.children.elseif_conditions[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.elseif_conditions[0].properties.name).toBe('cond1')
     // Dynamic elseif bodies (statement chains)
     expect(result!.children.elseif_bodies).toHaveLength(2)
@@ -387,11 +387,11 @@ describe('T011 (print): PatternExtractor dynamicRules — repeat expression (pri
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.conceptId).toBe('test_print')
+    expect(result!.componentId).toBe('test_print')
     expect(result!.children.values).toHaveLength(3)
-    expect(result!.children.values[0].conceptId).toBe('cpp:literal_string')
-    expect(result!.children.values[1].conceptId).toBe('cpp:var_ref')
-    expect(result!.children.values[2].conceptId).toBe('cpp:endl')
+    expect(result!.children.values[0].componentId).toBe('cpp:literal_string')
+    expect(result!.children.values[1].componentId).toBe('cpp:var_ref')
+    expect(result!.children.values[2].componentId).toBe('cpp:endl')
   })
 })
 
@@ -511,10 +511,10 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     expect(rendered).not.toBeNull()
     const reExtracted = extractor.extract(rendered as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('test_func_call')
+    expect(reExtracted!.componentId).toBe('test_func_call')
     expect(reExtracted!.properties.name).toBe('f')
     expect(reExtracted!.children.args).toHaveLength(1)
-    expect(reExtracted!.children.args[0].conceptId).toBe('cpp:literal_number')
+    expect(reExtracted!.children.args[0].componentId).toBe('cpp:literal_number')
   })
 
   it('print roundtrips correctly', () => {
@@ -535,7 +535,7 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     expect(rendered).not.toBeNull()
     const reExtracted = extractor.extract(rendered as never)
     expect(reExtracted).not.toBeNull()
-    expect(reExtracted!.conceptId).toBe('test_print')
+    expect(reExtracted!.componentId).toBe('test_print')
     expect(reExtracted!.children.values).toHaveLength(2)
   })
 })

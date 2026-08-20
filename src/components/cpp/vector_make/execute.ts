@@ -5,7 +5,7 @@
  * 如果兩列共用同一個陣列物件，`g[0][0] = 9` 會同時改到 `g[1][0]`
  * ——而那個症狀離現場很遠：程式跑完、印出東西、而它是錯的。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defaultValue } from '../../../interpreter/types'
 
@@ -22,7 +22,7 @@ function cloneValue(v: RuntimeValue): RuntimeValue {
   return { ...v }
 }
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:vector_make', async (node, ctx) => {
     const elemType = String(node.properties.type ?? 'int')
     const sizeNode = (node.children.size ?? [])[0]

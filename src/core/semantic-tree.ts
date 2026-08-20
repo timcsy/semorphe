@@ -25,7 +25,7 @@ export function resetIdCounter(): void {
 export function createEmptyProgram(): SemanticNode {
   const root = programRootConcept()
   if (!root) throw new Error('沒有任何元件宣告 `traits.programRoot` —— 建不出空的語義樹')
-  return { id: generateId(), conceptId: root, properties: {}, children: { body: [] } }
+  return { id: generateId(), componentId: root, properties: {}, children: { body: [] } }
 }
 
 export function createNode(
@@ -35,7 +35,7 @@ export function createNode(
 ): SemanticNode {
   return {
     id: generateId(),
-    conceptId: concept,
+    componentId: concept,
     properties,
     children,
   }
@@ -154,7 +154,7 @@ export function deserializeTree(json: string): SemanticNode {
 
 /** 深比較兩個 SemanticNode 的語義是否等價（忽略 metadata） */
 export function nodeEquals(a: SemanticNode, b: SemanticNode): boolean {
-  if (a.conceptId !== b.conceptId) return false
+  if (a.componentId !== b.componentId) return false
 
   const aKeys = Object.keys(a.properties)
   const bKeys = Object.keys(b.properties)

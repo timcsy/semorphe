@@ -33,7 +33,7 @@ import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, S
 type violationKind = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { kind: violationKind; id: string; note: string }
 
-interface concept { conceptId: string; properties?: unknown }
+interface concept { componentId: string; properties?: unknown }
 
 /**
  * 接收者 = **操作作用在它身上的那個既有物件**。
@@ -55,7 +55,7 @@ function receiverParamName(concepts: concept[]): Map<string, string> {
   const ownName = new Set<string>([...SELF_NAMING_OPERATIONS, ...KINDS])
   const out = new Map<string, string>()
   for (const c of concepts) {
-    const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+    const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
     const op = parseName(bare, SUBJECTS).operation
     // ⚠️ 複合的第二段要看**開頭的操作**——`var_declare_auto` 的操作是 `declare`
     // （創造，不是操作既有物件），而整段 `declare_auto` 不在自名清單裡。
@@ -65,7 +65,7 @@ function receiverParamName(concepts: concept[]): Map<string, string> {
       : undefined
     if (!op || ownName.has(op) || mainOp) continue
     const first = paramSpecs(c.properties as never)[0]
-    if (first?.kind === 'identifier') out.set(c.conceptId, first.name)
+    if (first?.kind === 'identifier') out.set(c.componentId, first.name)
   }
   return out
 }
@@ -99,18 +99,18 @@ function measure(inject: concept[] = []): Finding[] {
   }
 
   for (const c of concepts) {
-    const scope = c.conceptId.slice(0, c.conceptId.indexOf(':'))
-    const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+    const scope = c.componentId.slice(0, c.componentId.indexOf(':'))
+    const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
 
     // ⑤ D1：`lang:` 這個 scope 已經沒有工作了
     if (scope === 'lang') {
-      out.push({ kind: '殘留 lang: scope', id: c.conceptId, note: '各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱' })
+      out.push({ kind: '殘留 lang: scope', id: c.componentId, note: '各套件自理，通用性住在轉換規範裡——`lang:` 是假的通用宣稱' })
     }
 
     // ④ 修飾詞不得站在主體位置
     const firstSection = bare.split(SEPARATOR)[0]
     if (mods.has(firstSection)) {
-      out.push({ kind: '修飾詞站主體位', id: c.conceptId, note: `\`${firstSection}\` 是修飾詞，該是參數或形態` })
+      out.push({ kind: '修飾詞站主體位', id: c.componentId, note: `\`${firstSection}\` 是修飾詞，該是參數或形態` })
       continue
     }
 
@@ -130,7 +130,7 @@ function measure(inject: concept[] = []): Finding[] {
       : [...SUBJECTS].sort((a, b) => b.length - a.length)
           .find((sub) => bare !== sub && bare.endsWith(SEPARATOR + sub))
     if (suffix) {
-      out.push({ kind: '主體不在前', id: c.conceptId, note: `主體 \`${suffix}\` 在後面——排序即分群，同族要排得在一起` })
+      out.push({ kind: '主體不在前', id: c.componentId, note: `主體 \`${suffix}\` 在後面——排序即分群，同族要排得在一起` })
       continue
     }
 
@@ -138,19 +138,19 @@ function measure(inject: concept[] = []): Finding[] {
     if (parsed.atomic) {
       // ③ 不可分解的名字必須是被允許的單字名
       if (!atomics.has(bare)) {
-        out.push({ kind: '裸的函式庫名', id: c.conceptId, note: '不可分解，且不在允許的單字名清單裡（多半是抄來的函式庫名）' })
+        out.push({ kind: '裸的函式庫名', id: c.componentId, note: '不可分解，且不在允許的單字名清單裡（多半是抄來的函式庫名）' })
       }
       continue
     }
     // ② 操作詞必須在封閉詞彙裡
     if (parsed.operation && !validSecondPart(parsed.operation)) {
-      out.push({ kind: '操作詞不在詞彙', id: c.conceptId, note: `操作 \`${parsed.operation}\` 不在詞彙表（同義詞請合併）` })
+      out.push({ kind: '操作詞不在詞彙', id: c.componentId, note: `操作 \`${parsed.operation}\` 不在詞彙表（同義詞請合併）` })
     }
   }
   return out.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id))
 }
 
-const synthetic = (id: string): concept => ({ conceptId: id, properties: [] })
+const synthetic = (id: string): concept => ({ componentId: id, properties: [] })
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
@@ -194,7 +194,7 @@ describe('詞彙表不得長出沒人用的字', () => {
   it('報表：每個宣告的操作詞被幾顆元件用', () => {
     const usage = new Map<string, number>(OPERATIONS.map((o) => [o, 0]))
     for (const c of allCppConcepts() as unknown as concept[]) {
-      const bare = c.conceptId.slice(c.conceptId.indexOf(':') + 1)
+      const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
       const op = parseName(bare, SUBJECTS).operation
       if (op && usage.has(op)) usage.set(op, usage.get(op)! + 1)
     }

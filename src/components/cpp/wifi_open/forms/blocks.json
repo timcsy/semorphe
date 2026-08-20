@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_wifi_open",
-    "conceptId": "cpp:wifi_open",
+    "componentId": "cpp:wifi_open",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

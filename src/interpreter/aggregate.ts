@@ -32,7 +32,7 @@ import { isAggregateList, aggregateShapeOf } from '../core/component/aggregate-n
  * 而這個檔住在核心。語言套件在註冊 lifter 時宣告（`declareAggregateList`）。
  */
 export function isBraceList(node: SemanticNode): boolean {
-  return isAggregateList(node.conceptId)
+  return isAggregateList(node.componentId)
 }
 
 /**

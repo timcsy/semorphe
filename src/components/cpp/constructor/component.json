@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:constructor",
+  "componentId": "cpp:constructor",
   "abstractConcept": null,
   "properties": [
     {
@@ -30,6 +30,6 @@
     "_execute_why": "**顯式的空，不是遺漏。**"
   },
   "memberRole": "constructor",
-  "_memberRole_why": "⚠️ **這顆在類別裡扮演什麼角色，由它自己宣告。** `structs.ts` 的 `拆解成員` 原本寫死 `m.conceptId === '…'` 來分派，而那讓這顆永遠搬不進膠囊。**「另一顆元件需要認得它」是真的耦合，不是碎裂**——處置不是把消費者搬走，是把「我是什麼角色」變成元件自己的宣告。",
+  "_memberRole_why": "⚠️ **這顆在類別裡扮演什麼角色，由它自己宣告。** `structs.ts` 的 `拆解成員` 原本寫死 `m.componentId === '…'` 來分派，而那讓這顆永遠搬不進膠囊。**「另一顆元件需要認得它」是真的耦合，不是碎裂**——處置不是把消費者搬走，是把「我是什麼角色」變成元件自己的宣告。",
   "_children_why": "`inits` 是**成員初始化列**（`Node(int x) : v(x) {}` 的 `v(x)`），一串賦值。\n\n🔴 它原本是一個叫 `init_list` 的**字串屬性**，而**執行那一路從未讀它**——`struct Node { int v; Node(int x) : v(x) {} };` 建出來的物件 `v` 是 0，而產生的程式碼完全正確。**投影對、執行錯，是最難發現的那一種。**\n\n⚠️ 這是 P8 允許的不相容改動（投影的存檔格式），見 `history/026` 的範圍釐清。"
 }

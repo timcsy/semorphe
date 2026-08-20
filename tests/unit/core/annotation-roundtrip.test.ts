@@ -10,7 +10,7 @@ import { LiftContextData } from '../../../src/core/lift/lift-context'
 import { registerExpressionLifters } from '../../../src/languages/cpp/core/lifters/expressions'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
-import type { BlockSpec, LiftPattern, SemanticNode, ConceptDefJSON, BlockProjectionJSON } from '../../../src/core/types'
+import type { BlockSpec, LiftPattern, SemanticNode, ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
 import { universalConcepts, universalBlocks } from '../../../src/core/universal'
@@ -102,7 +102,7 @@ describe('Annotation Roundtrip', () => {
       const data = new LiftContextData()
       const results = lifter.liftStatements([commentNode, stmtNode])
       expect(results.length).toBe(2)
-      expect(results[0].conceptId).toBe('cpp:comment')
+      expect(results[0].componentId).toBe('cpp:comment')
       expect(results[0].properties.text).toBe('// section header')
     })
 
@@ -113,8 +113,8 @@ describe('Annotation Roundtrip', () => {
 
       const results = lifter.liftStatements([c1, c2])
       expect(results.length).toBe(2)
-      expect(results[0].conceptId).toBe('cpp:comment')
-      expect(results[1].conceptId).toBe('cpp:comment')
+      expect(results[0].componentId).toBe('cpp:comment')
+      expect(results[1].componentId).toBe('cpp:comment')
     })
   })
 
@@ -145,7 +145,7 @@ describe('Annotation Roundtrip', () => {
 
       const results = lifter.liftStatements([unknownNode, commentNode])
       expect(results.length).toBe(1)
-      expect(results[0].conceptId).toBe('raw_code')
+      expect(results[0].componentId).toBe('raw_code')
       expect(results[0].annotations).toBeDefined()
       expect(results[0].annotations![0].position).toBe('inline')
       expect(results[0].annotations![0].text).toBe('lambda')

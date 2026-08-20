@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_negate",
-    "conceptId": "cpp:negate",
+    "componentId": "cpp:negate",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",

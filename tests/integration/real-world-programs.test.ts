@@ -15,7 +15,7 @@ import { renderToBlocklyState, setPatternRenderer } from '../../src/core/project
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
-import type { ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
 import { universalConcepts, universalBlocks } from '../../src/core/universal'
 import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
@@ -324,12 +324,12 @@ describe('prime checker program', () => {
       }
     `)
     expect(sem).not.toBeNull()
-    expect(sem!.conceptId).toBe('cpp:program')
+    expect(sem!.componentId).toBe('cpp:program')
     // Should have body children including includes, forward decls, main, listp, checkp
     const body = sem!.children.body ?? []
     expect(body.length).toBeGreaterThanOrEqual(5) // at least: 2 includes + using + main + listp + checkp
     // Should have function definitions for main, listp, checkp
-    const funcDefs = body.filter(n => n.conceptId === 'cpp:func_def')
+    const funcDefs = body.filter(n => n.componentId === 'cpp:func_def')
     expect(funcDefs.length).toBe(3)
     const funcNames = funcDefs.map(n => n.properties.name)
     expect(funcNames).toContain('main')
@@ -477,10 +477,10 @@ describe('full render pipeline', () => {
     `)
     // Check that the semantic tree has array_assign concepts
     const body = sem.children.body ?? []
-    const mainFunc = body.find(n => n.conceptId === 'cpp:func_def' && n.properties.name === 'main')
+    const mainFunc = body.find(n => n.componentId === 'cpp:func_def' && n.properties.name === 'main')
     expect(mainFunc).toBeDefined()
     const mainBody = mainFunc!.children.body ?? []
-    const arrayAssigns = mainBody.filter(n => n.conceptId === 'cpp:array_assign')
+    const arrayAssigns = mainBody.filter(n => n.componentId === 'cpp:array_assign')
     expect(arrayAssigns.length).toBe(2)
   })
 })

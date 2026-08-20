@@ -20,10 +20,10 @@
  * today 由 `try_catch` 決定（它不看型別，一律接住）。那是既有行為，
  * 而它讓這一顆能用；真的要做型別過濾是另一個題目。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:exception_make', async (node, ctx) => {
     const kind = String(node.properties.kind ?? 'runtime_error')
     const msgNode = (node.children.message ?? [])[0]

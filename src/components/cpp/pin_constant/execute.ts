@@ -14,7 +14,7 @@
  * （`digitalWrite(13, OUTPUT)` 編得過、跑得動、而意思是 `HIGH`）。
  * ⚠️ 本輪**不擋這個誤用**——擋它需要知道引數的角色，那是診斷系統的事。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 const PIN_CONSTANTS: Record<string, number> = {
   HIGH: 1, LOW: 0,
@@ -22,7 +22,7 @@ const PIN_CONSTANTS: Record<string, number> = {
   A0: 14,
 }
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:pin_constant', async (node) => {
     // ⚠️ 退路要與 component.json 宣告的 default 一致——第二十三條護欄在看
     const name = String(node.properties.value ?? 'HIGH')

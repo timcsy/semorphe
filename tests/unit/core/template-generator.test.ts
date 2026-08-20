@@ -110,7 +110,7 @@ describe('TemplateGenerator', () => {
   describe('universal templates with styleVariants', () => {
     it('should select correct style variant', () => {
       const template: UniversalTemplate = {
-        conceptId: 'cpp:print',
+        componentId: 'cpp:print',
         styleVariants: {
           cout: { pattern: 'cout << ${EXPR}', imports: ['iostream'], order: 0 },
           printf: { pattern: 'printf("%s", ${EXPR})', imports: ['stdio.h'], order: 0 },
@@ -163,10 +163,10 @@ describe('TemplateGenerator', () => {
 
       // Set fallback for concepts without templates
       gen.setExpressionFallback((node) => {
-        if (node.conceptId === 'cpp_increment_expr') {
+        if (node.componentId === 'cpp_increment_expr') {
           return `${node.properties.name}${node.properties.operator}`
         }
-        if (node.conceptId === 'var_declare_expr') {
+        if (node.componentId === 'var_declare_expr') {
           return `${node.properties.type} ${node.properties.name} = 0`
         }
         return null
@@ -222,7 +222,7 @@ describe('TemplateGenerator', () => {
       })
 
       gen.setBodyFallback((node) => {
-        if (node.conceptId === 'cpp:array_assign') {
+        if (node.componentId === 'cpp:array_assign') {
           return `    ${node.properties.obj}[0] = 1;`
         }
         return null

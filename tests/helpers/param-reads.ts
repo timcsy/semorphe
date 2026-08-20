@@ -157,12 +157,12 @@ export function templateReads(): Map<string, Set<string>> {
     }
     if (!Array.isArray(arr)) continue
     for (const e of arr) {
-      const proj = e as { conceptId?: string; codeTemplate?: { pattern?: string } }
+      const proj = e as { componentId?: string; codeTemplate?: { pattern?: string } }
       const pat = proj?.codeTemplate?.pattern
-      if (!proj.conceptId || !pat) continue
-      const set = out.get(proj.conceptId) ?? new Set<string>()
+      if (!proj.componentId || !pat) continue
+      const set = out.get(proj.componentId) ?? new Set<string>()
       for (const m of pat.matchAll(/\$\{(\w+)\}/g)) set.add(m[1].toLowerCase())
-      if (set.size) out.set(proj.conceptId, set)
+      if (set.size) out.set(proj.componentId, set)
     }
   }
   return out

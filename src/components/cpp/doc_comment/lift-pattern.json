@@ -2,7 +2,7 @@
   "id": "cpp_doc_comment",
   "astNodeType": "comment",
   "concept": {
-    "conceptId": "cpp:doc_comment"
+    "componentId": "cpp:doc_comment"
   },
   "constraints": [
     {

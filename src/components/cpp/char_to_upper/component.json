@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:char_to_upper",
+  "componentId": "cpp:char_to_upper",
   "abstractConcept": null,
   "properties": [],
   "children": {

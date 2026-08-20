@@ -78,10 +78,10 @@ function validateNode(node: LevelNode, warnings: DoublingWarning[]): void {
 }
 
 export function isConceptVisible(
-  conceptId: string,
+  componentId: string,
   topic: Topic,
   enabledBranches: Set<string>
 ): boolean {
   const visible = getVisibleConcepts(topic, enabledBranches)
-  return visible.has(conceptId)
+  return visible.has(componentId)
 }

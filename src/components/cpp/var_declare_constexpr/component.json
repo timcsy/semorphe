@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:var_declare_constexpr",
+  "componentId": "cpp:var_declare_constexpr",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

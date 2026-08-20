@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:range_sum_partial",
-    "conceptId": "cpp:range_sum_partial",
+    "componentId": "cpp:range_sum_partial",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

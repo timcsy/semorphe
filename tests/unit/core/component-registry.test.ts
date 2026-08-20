@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ConceptRegistry } from '../../../src/core/concept-registry'
-import type { ConceptDef } from '../../../src/core/types'
+import { ComponentRegistry } from '../../../src/core/component-registry'
+import type { ComponentDef } from '../../../src/core/types'
 
-describe('ConceptRegistry', () => {
-  let registry: ConceptRegistry
+describe('ComponentRegistry', () => {
+  let registry: ComponentRegistry
 
   beforeEach(() => {
-    registry = new ConceptRegistry()
+    registry = new ComponentRegistry()
   })
 
   describe('register and get', () => {
     it('should register and retrieve a concept', () => {
-      const def: ConceptDef = {
+      const def: ComponentDef = {
         id: 'cpp:var_declare',
         layer: 'universal',
         propertyNames: ['name', 'type'],
@@ -22,7 +22,7 @@ describe('ConceptRegistry', () => {
     })
 
     it('should throw on duplicate registration', () => {
-      const def: ConceptDef = {
+      const def: ComponentDef = {
         id: 'cpp:var_declare',
         layer: 'universal',
         propertyNames: ['name'],

@@ -66,7 +66,7 @@ interface Level {
 const ALL_TOPICS = Object.values(topicModules).map((m) => m.default)
 
 const { allConcepts } = loadToolbox()
-const knownComponents = new Set(allConcepts.map((c) => c.conceptId))
+const knownComponents = new Set(allConcepts.map((c) => c.componentId))
 
 /**
  * **刻意不收進任何課程**的元件——每筆附理由。

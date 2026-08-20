@@ -34,7 +34,7 @@ function identities(src: string): string[] {
   const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
   const out: string[] = []
   const walk = (n: SemanticNode) => {
-    out.push(n.conceptId)
+    out.push(n.componentId)
     for (const kids of Object.values(n.children ?? {})) for (const k of kids) walk(k as SemanticNode)
   }
   walk(tree)

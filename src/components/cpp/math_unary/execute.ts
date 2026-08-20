@@ -10,9 +10,9 @@
  * 兩者都不是這次搬家造成的，也不在這次的 diff 裡改
  * （搬移不重寫；要改是另一個 commit）。記在這裡是為了讓它**有名字**。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_unary', async (node, ctx) => {
     const func = String(node.properties.func ?? 'abs')
     const v = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))

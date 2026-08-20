@@ -7,12 +7,12 @@
  *
  * > **共用的是演算法（在實例上執行一個方法），不是身分。**
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { runOnInstance } from '../../../languages/cpp/core/executors/structs'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
-  const callMethod: ConceptExecutor = async (node, ctx) => {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+  const callMethod: ComponentExecutor = async (node, ctx) => {
     const objName = String(node.properties.obj)
     const methodName = String(node.properties.method)
     const obj = ctx.scope.get(objName)

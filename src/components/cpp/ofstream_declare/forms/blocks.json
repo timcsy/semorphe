@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:ofstream_declare",
-    "conceptId": "cpp:ofstream_declare",
+    "componentId": "cpp:ofstream_declare",
     "language": "cpp",
     "category": "io",
     "version": "1.0.0",

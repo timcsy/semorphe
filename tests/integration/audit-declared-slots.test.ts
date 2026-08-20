@@ -77,7 +77,7 @@ import type { SemanticNode } from '../../src/core/types'
 const GUARD = 'declared-slots'
 
 interface decision {
-  conceptId: string
+  componentId: string
   bucket: '確定違規' | '無法確定' | '安全'
   undeclared: string[]
   reason: string
@@ -104,13 +104,13 @@ interface decision {
  *
  * ⚠️ 這條護欄是四條有判定落點的護欄裡**唯一沒有的**（#32／#33／#35 都有）。
  *
- * ## 鍵用 conceptId，不用行號或截斷的字串
+ * ## 鍵用 componentId，不用行號或截斷的字串
  *
- * `conceptId` 是**穩定身分**——它天生沒有那兩個坑
+ * `componentId` 是**穩定身分**——它天生沒有那兩個坑
  * （`specs/110` 的截斷碰撞、`specs/113` 的行號漂移）。
  */
 interface undeterminedDecision {
-  conceptId: string
+  componentId: string
   cause: '宣告過的降級目標' | '元概念' | '辨識到不了' | '語料沒覆蓋'
   reason: string
 }
@@ -128,10 +128,10 @@ interface Baseline {
  * @param declaredOnes `concepts.json` 裡 `children` 的鍵
  * @param producedOnes 語料裡實際出現過的、非空的接點名；`null` = 語料沒碰到這顆
  */
-export function judgeDeclCompleteness(conceptId: string, declaredOnes: readonly string[], producedOnes: readonly string[] | null): decision {
+export function judgeDeclCompleteness(componentId: string, declaredOnes: readonly string[], producedOnes: readonly string[] | null): decision {
   if (producedOnes === null) {
     return {
-      conceptId,
+      componentId,
       bucket: '無法確定',
       undeclared: [],
       reason: '語料沒有碰到這顆元件——不知道它會產出什麼接點；判不出來不計入安全',
@@ -139,10 +139,10 @@ export function judgeDeclCompleteness(conceptId: string, declaredOnes: readonly 
   }
   const undeclared = producedOnes.filter((k) => !declaredOnes.includes(k))
   if (!undeclared.length) {
-    return { conceptId, bucket: '安全', undeclared: [], reason: '產出的接點宣告裡都有' }
+    return { componentId, bucket: '安全', undeclared: [], reason: '產出的接點宣告裡都有' }
   }
   return {
-    conceptId,
+    componentId,
     bucket: '確定違規',
     undeclared,
     reason:
@@ -179,7 +179,7 @@ export function takeActual(l: Lifter, p: Parser, code: string): Map<string, stri
   const out = new Map<string, string[]>()
   const walk = (n: SemanticNode): void => {
     const hasValue = Object.keys(n.children ?? {}).filter((k) => (n.children[k] ?? []).length > 0)
-    out.set(n.conceptId, [...new Set([...(out.get(n.conceptId) ?? []), ...hasValue])])
+    out.set(n.componentId, [...new Set([...(out.get(n.componentId) ?? []), ...hasValue])])
     for (const kids of Object.values(n.children ?? {})) for (const c of kids) walk(c)
   }
   const t = l.lift(p.parse(code)!.rootNode as never)
@@ -192,15 +192,15 @@ let cache: { decision: decision[]; corpusCount: number; hitCount: number } | nul
 function measureOnce(lifter: Lifter, p: Parser): NonNullable<typeof cache> {
   if (cache) return cache
   const declare = new Map(
-    (allCppConcepts() as never as { conceptId: string; children?: Record<string, unknown> }[]).map((c) => [
-      c.conceptId,
+    (allCppConcepts() as never as { componentId: string; children?: Record<string, unknown> }[]).map((c) => [
+      c.componentId,
       Object.keys(c.children ?? {}),
     ]),
   )
   const actual = new Map<string, Set<string>>()
   const walk = (n: SemanticNode): void => {
-    if (!actual.has(n.conceptId)) actual.set(n.conceptId, new Set())
-    const s = actual.get(n.conceptId)!
+    if (!actual.has(n.componentId)) actual.set(n.componentId, new Set())
+    const s = actual.get(n.componentId)!
     for (const [k, kids] of Object.entries(n.children ?? {})) {
       if ((kids ?? []).length > 0) s.add(k)
     }
@@ -264,11 +264,11 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
 
     printReport(
       `宣告完整性：確定違規（語料 ${corpusCount} 段，碰到 ${hitCount} 顆）`,
-      violations.map((d) => `  ✘ ${d.conceptId} — 產出 [${d.undeclared.join('、')}] 而宣告裡沒有`),
+      violations.map((d) => `  ✘ ${d.componentId} — 產出 [${d.undeclared.join('、')}] 而宣告裡沒有`),
     )
     printReport(
       `宣告完整性：語料沒碰到（${pending.length} 顆，不計入安全）`,
-      [`  ？ ${pending.slice(0, 10).map((d) => d.conceptId).join('、')}${pending.length > 10 ? ' …' : ''}`],
+      [`  ？ ${pending.slice(0, 10).map((d) => d.componentId).join('、')}${pending.length > 10 ? ' …' : ''}`],
     )
 
     // ── 判定落點：逐筆說出「為什麼無法確定」 ────────────────
@@ -276,11 +276,11 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
     const decisions: undeterminedDecision[] = fs.existsSync(decisionFile)
       ? (JSON.parse(fs.readFileSync(decisionFile, 'utf8')) as undeterminedDecision[])
       : []
-    const decided = new Map(decisions.map((d) => [d.conceptId, d]))
-    const toReview = pending.filter((d) => !decided.has(d.conceptId))
-    const orphans = decisions.filter((d) => !pending.some((x) => x.conceptId === d.conceptId))
+    const decided = new Map(decisions.map((d) => [d.componentId, d]))
+    const toReview = pending.filter((d) => !decided.has(d.componentId))
+    const orphans = decisions.filter((d) => !pending.some((x) => x.componentId === d.componentId))
     const byReason = (r: undeterminedDecision['cause']): number =>
-      pending.filter((d) => decided.get(d.conceptId)?.cause === r).length
+      pending.filter((d) => decided.get(d.componentId)?.cause === r).length
 
     printReport('宣告完整性：「無法確定」的原因分佈', [
       `  辨識到不了     ${byReason('辨識到不了')} 顆 ← **真的缺口**（補語料也碰不到）`,
@@ -307,13 +307,13 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
         },
         certainViolations: violations.length,
         undetermined: pending.length,
-        violationList: violations.map((d) => `${d.conceptId}: ${d.undeclared.join('、')}`).sort(),
+        violationList: violations.map((d) => `${d.componentId}: ${d.undeclared.join('、')}`).sort(),
       } satisfies Baseline)
     }
 
     const base = loadBaseline<Baseline>(GUARD)
-    expect(toReview.map((d) => d.conceptId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
-    expect(orphans.map((d) => d.conceptId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
+    expect(toReview.map((d) => d.componentId), '有未判定的「無法確定」——它的原因要人說').toEqual([])
+    expect(orphans.map((d) => d.componentId), '判定過期了——那顆已經不在「無法確定」裡了').toEqual([])
     expect(
       decisions.filter((d) => !d.reason || d.reason.length < 4),
       '沒有理由的判定是把「懶得看」寫成「看過了」',

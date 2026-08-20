@@ -19,10 +19,10 @@
  * 建出來的**同一種形狀**，所以 `struct_at_member` 與 `var_assign`
  * 兩條既有的路直接就通。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:pair_make', async (node, ctx) => {
     const f = node.children.first?.[0]
     const s = node.children.second?.[0]

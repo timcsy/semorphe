@@ -63,7 +63,7 @@ function collect(node: SemanticNode, id: string): SemanticNode[] {
   const out: SemanticNode[] = []
   const walk = (n: SemanticNode): void => {
     if (!n) return
-    if (n.conceptId === id) out.push(n)
+    if (n.componentId === id) out.push(n)
     for (const list of Object.values(n.children ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
   }
   walk(node)
@@ -114,7 +114,7 @@ describe('var_declarator — 多變數宣告', () => {
   it('負向：不同形狀的宣告子拿到**不同**的概念', () => {
     const tree = lift('int a = 1, *p = nullptr, arr[3];')
     const outer = collect(tree, 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)[0]
-    const ids = (outer.children!.declarators as SemanticNode[]).map((d) => d.conceptId)
+    const ids = (outer.children!.declarators as SemanticNode[]).map((d) => d.componentId)
     expect(new Set(ids).size, '全部同一個概念 → 指標與陣列的形狀資訊掉了').toBeGreaterThan(1)
   })
 

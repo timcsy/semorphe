@@ -43,7 +43,7 @@ export function splitMember(members: SemanticNode[]): {
     }))
   // ⚠️ **問角色，不問身分。**
   //
-  // 這裡原本寫死三個 conceptId，而那讓那幾顆元件**永遠搬不進膠囊**
+  // 這裡原本寫死三個 componentId，而那讓那幾顆元件**永遠搬不進膠囊**
   // ——就近性護欄會指名「身分出現在自己資料夾外」。
   //
   // > **「另一顆元件需要認得它」是真的耦合，不是碎裂。**
@@ -60,33 +60,33 @@ export function splitMember(members: SemanticNode[]): {
   // ——看起來像使用者打錯欄位名。
   const flat: SemanticNode[] = []
   for (const m of members) {
-    if (m.conceptId === '_multi_field') flat.push(...(m.children.fields ?? []))
+    if (m.componentId === '_multi_field') flat.push(...(m.children.fields ?? []))
     else flat.push(m)
   }
   for (const m of flat) {
-    if (role(m.conceptId) === 'static-field') {
+    if (role(m.componentId) === 'static-field') {
       statics.push({ name: String(m.properties.name), type: String(m.properties.type ?? 'int') })
-    } else if (role(m.conceptId) === 'pure-virtual') {
+    } else if (role(m.componentId) === 'pure-virtual') {
       // 沒有本體。註冊它是為了讓「呼叫一個純虛擬方法」能**出聲**——
       // 不註冊的話那會變成「找不到方法」，訊息指錯方向。
       methods.push({ name: String(m.properties.name), params: params(m), body: [], pure: true })
-    } else if (role(m.conceptId) === 'operator') {
+    } else if (role(m.componentId) === 'operator') {
       // 存成名字是 `operator+` 的方法，讓算術執行器找得到
       methods.push({
         name: `operator${String(m.properties.operator)}`,
         params: [{ name: String(m.properties.param_name ?? 'rhs'), type: String(m.properties.param_type ?? 'int') }],
         body: m.children.body ?? [],
       })
-    } else if (methodConcepts.has(m.conceptId)) {
+    } else if (methodConcepts.has(m.componentId)) {
       methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
-    } else if (role(m.conceptId) === 'constructor') {
+    } else if (role(m.componentId) === 'constructor') {
       ctor = {
         name: String(m.properties.class_name ?? ''),
         params: params(m),
         inits: m.children.inits ?? [],
         body: m.children.body ?? [],
       }
-    } else if (role(m.conceptId) === 'destructor') {
+    } else if (role(m.componentId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       fields.push({

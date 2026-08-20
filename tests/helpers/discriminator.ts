@@ -34,7 +34,7 @@ export interface Discriminator {
 
 /** PatternLifter 內部規則的結構性子集——只取判定需要的欄位 */
 export interface RuleLike {
-  conceptId: string
+  componentId: string
   patternType: string
   priority: number
   constraints?: { field: string; text?: string; nodeType?: string; match?: string }[]
@@ -162,7 +162,7 @@ function isSubset(a: Discriminator[], b: Discriminator[]): boolean {
 export function classifyPair(ruleA: RuleLike, ruleB: RuleLike): PairVerdict {
   const da = extractDiscriminators(ruleA)
   const db = extractDiscriminators(ruleB)
-  const base = { a: ruleA.conceptId, b: ruleB.conceptId }
+  const base = { a: ruleA.componentId, b: ruleB.componentId }
 
   for (const x of da) {
     for (const y of db) {

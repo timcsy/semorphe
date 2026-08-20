@@ -23,7 +23,7 @@ const unaryFuncs = [
 
 export function registerLift(): void {
   registerCallConcept(unaryFuncs, {
-    conceptId: 'cpp:math_unary',
+    componentId: 'cpp:math_unary',
     argSlots: ['value'],
     funcProp: 'func',
     source: 'cpp/math_unary',

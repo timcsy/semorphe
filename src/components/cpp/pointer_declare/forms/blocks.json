@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pointer_declare",
-    "conceptId": "cpp:pointer_declare",
+    "componentId": "cpp:pointer_declare",
     "language": "cpp",
     "category": "pointers",
     "version": "1.0.0",

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_servo_read",
-    "conceptId": "cpp:servo_read",
+    "componentId": "cpp:servo_read",
     "language": "cpp",
     "category": "modules",
     "version": "1.0.0",

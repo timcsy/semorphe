@@ -1,4 +1,4 @@
-import type { ConceptId, SemanticModel, SemanticNode } from '../core/types'
+import type { ComponentId, SemanticModel, SemanticNode } from '../core/types'
 import type { CodingStyle } from './style'
 
 /** 語言模組提供的型別定義項目 */
@@ -9,8 +9,8 @@ export interface TypeEntry {
 }
 
 /** 語言專屬的概念定義 */
-export interface ConceptDefinition {
-  id: ConceptId
+export interface ComponentDefinition {
+  id: ComponentId
   descriptionKey: string
   propertyNames: string[]
   childNames: string[]
@@ -42,8 +42,8 @@ export interface NewLanguageModule {
   readonly languageId: string
   readonly displayNameKey: string
   getTypes(): TypeEntry[]
-  getSupportedConcepts(): ConceptId[]
-  getAdditionalConcepts(): ConceptDefinition[]
+  getSupportedConcepts(): ComponentId[]
+  getAdditionalConcepts(): ComponentDefinition[]
   getTooltipOverrides(): Record<string, string>
   getBlockSpecs(): unknown[]
   getGenerator(): Generator

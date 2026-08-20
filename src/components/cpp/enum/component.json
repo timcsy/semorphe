@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:enum",
+  "componentId": "cpp:enum",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

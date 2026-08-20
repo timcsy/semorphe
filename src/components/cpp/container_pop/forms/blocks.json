@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_container_pop",
-    "conceptId": "cpp:container_pop",
+    "componentId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -33,7 +33,7 @@
   },
   {
     "id": "cpp_container_pop_stack",
-    "conceptId": "cpp:container_pop",
+    "componentId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",
@@ -70,7 +70,7 @@
   },
   {
     "id": "cpp_container_pop_queue",
-    "conceptId": "cpp:container_pop",
+    "componentId": "cpp:container_pop",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

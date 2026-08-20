@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pulse_read",
-    "conceptId": "cpp:pulse_read",
+    "componentId": "cpp:pulse_read",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

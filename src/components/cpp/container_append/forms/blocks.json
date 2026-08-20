@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_container_append",
-    "conceptId": "cpp:container_append",
+    "componentId": "cpp:container_append",
     "language": "cpp",
     "category": "containers",
     "version": "1.0.0",

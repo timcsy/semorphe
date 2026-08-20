@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_pwm_tie",
-    "conceptId": "cpp:pwm_tie",
+    "componentId": "cpp:pwm_tie",
     "language": "cpp",
     "category": "hardware",
     "version": "1.0.0",

@@ -19,7 +19,7 @@ import { createNode } from '../../../src/core/semantic-tree'
 
 /** 依容器種類分的形態集合——本功能的第一個真實案例 */
 const containerForm: FormSet = {
-  conceptId: 'synth_container_push',
+  componentId: 'synth_container_push',
   axis: { name: 'container_kind', from: 'property', property: 'container_kind' },
   // ⚠️ `_` 是保留鍵＝**中性形態**（軸值取不到時用的那個）。
   // 第一版把中性形態只寫在 `fallback` 而沒放進 `forms`，於是 FS-2
@@ -31,7 +31,7 @@ const containerForm: FormSet = {
 
 /** 依呈現位置分的形態集合——既有 expressionCounterpart 的一般化 */
 const positionForm: FormSet = {
-  conceptId: 'synth_increment',
+  componentId: 'synth_increment',
   axis: { name: 'role', from: 'position' },
   forms: { _: 'synth_increment', statement: 'synth_increment', expression: 'synth_increment_expr' },
   fallback: 'synth_increment',
@@ -39,7 +39,7 @@ const positionForm: FormSet = {
 
 /** 沒有軸的形態集合——絕大多數元件是這一種 */
 const singleForm: FormSet = {
-  conceptId: 'synth_plain',
+  componentId: 'synth_plain',
   axis: null,
   forms: { _: 'synth_plain' },
   fallback: 'synth_plain',
@@ -139,16 +139,16 @@ describe('C-3 同一身分的任兩形態必須等價', () => {
   })
 })
 
-describe('C-4 反向唯一——一個 blockType 只能屬於一個 conceptId', () => {
+describe('C-4 反向唯一——一個 blockType 只能屬於一個 componentId', () => {
   it('★ 兩個形態集合共用同一個 blockType 必須被擋下', () => {
     const another: FormSet = {
-      conceptId: 'synth_other',
+      componentId: 'synth_other',
       axis: null,
       forms: { _: 'synth_stack_push' }, // ← 撞到容器形態的 stack 形態
       fallback: 'synth_stack_push',
     }
     const v = validateFormSet(another, [containerForm])
-    expect(v.ok, '共用 blockType 的話反推不出 conceptId').toBe(false)
+    expect(v.ok, '共用 blockType 的話反推不出 componentId').toBe(false)
     expect(v.reason).toContain('synth_stack_push')
   })
 
@@ -159,12 +159,12 @@ describe('C-4 反向唯一——一個 blockType 只能屬於一個 conceptId', 
 
 // ─── US2：登錄側支援一個身分多個形態（FR-002）────────────────────────
 
-describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉先來的', () => {
+describe('FR-002 同一個 componentId 註冊多個形態，後來的不得蓋掉先來的', () => {
   it('★ 三個宣告收攏成一個形態集合', () => {
     const sets = buildFormSets([
-      { conceptId: 'synth_push', blockType: 'synth_neutral' },
-      { conceptId: 'synth_push', blockType: 'synth_stack', form: { axis: 'container_kind', value: 'stack' } },
-      { conceptId: 'synth_push', blockType: 'synth_queue', form: { axis: 'container_kind', value: 'queue' } },
+      { componentId: 'synth_push', blockType: 'synth_neutral' },
+      { componentId: 'synth_push', blockType: 'synth_stack', form: { axis: 'container_kind', value: 'stack' } },
+      { componentId: 'synth_push', blockType: 'synth_queue', form: { axis: 'container_kind', value: 'queue' } },
     ])
     const fs = sets.get('synth_push')!
     expect(Object.values(fs.forms).sort(), '第二次註冊蓋掉第一次的話這裡只會有一個').toEqual(
@@ -177,11 +177,11 @@ describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉�
   it('★ SC-006：一對 statement/expression 可以併成一個身分兩個形態', () => {
     // **不改動任何既有身分**——用合成宣告證明機制成立。
     // 這是 B 項（身分整併）的前提：`func_call` 與 `func_call_expr` 目前是
-    // 兩個 conceptId，而它們是同一個概念的兩個位置。
+    // 兩個 componentId，而它們是同一個概念的兩個位置。
     const sets = buildFormSets([
-      { conceptId: 'synth_call', blockType: 'synth_call_stmt' },
-      { conceptId: 'synth_call', blockType: 'synth_call_stmt', form: { axis: 'role', value: 'statement' } },
-      { conceptId: 'synth_call', blockType: 'synth_call_expr', form: { axis: 'role', value: 'expression' } },
+      { componentId: 'synth_call', blockType: 'synth_call_stmt' },
+      { componentId: 'synth_call', blockType: 'synth_call_stmt', form: { axis: 'role', value: 'statement' } },
+      { componentId: 'synth_call', blockType: 'synth_call_expr', form: { axis: 'role', value: 'expression' } },
     ])
     const fs = sets.get('synth_call')!
     expect(validateFormSet(fs).ok).toBe(true)
@@ -191,7 +191,7 @@ describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉�
   })
 
   it('★ 沒有變體的元件仍然拿得到形態集合（走同一條路）', () => {
-    const sets = buildFormSets([{ conceptId: 'synth_plain2', blockType: 'synth_plain2' }])
+    const sets = buildFormSets([{ componentId: 'synth_plain2', blockType: 'synth_plain2' }])
     const fs = sets.get('synth_plain2')!
     expect(fs.axis).toBeNull()
     expect(selectForm(fs, createNode('synth_plain2', {}, {}), {}).blockType).toBe('synth_plain2')
@@ -199,8 +199,8 @@ describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉�
 
   it('★ 負向：兩個中性宣告時，第一個勝出（載入順序不得決定行為）', () => {
     const sets = buildFormSets([
-      { conceptId: 'synth_dup', blockType: 'synth_first' },
-      { conceptId: 'synth_dup', blockType: 'synth_second' },
+      { componentId: 'synth_dup', blockType: 'synth_first' },
+      { componentId: 'synth_dup', blockType: 'synth_second' },
     ])
     expect(sets.get('synth_dup')!.fallback, '後者覆寫的話，改變 JSON 順序就會改變行為').toBe('synth_first')
   })
@@ -208,7 +208,7 @@ describe('FR-002 同一個 conceptId 註冊多個形態，後來的不得蓋掉�
 
 // ─── 登錄表的宣告側也要一致（T028）──────────────────────────────────
 
-describe('登錄表：一個 conceptId 查得到它所有的形態', () => {
+describe('登錄表：一個 componentId 查得到它所有的形態', () => {
   it('★ getFormsByConceptId 回傳全部三顆，而不是最後註冊的那顆', async () => {
     const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
     // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本讀 `core`，

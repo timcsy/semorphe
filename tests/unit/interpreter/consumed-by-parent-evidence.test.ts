@@ -26,7 +26,7 @@ const n = (
   concept: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ conceptId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
 
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })
@@ -132,10 +132,10 @@ describe('宣告的依據必須存在——反過來查一次', () => {
     const declarers = allComponentDefs()
       .filter(
         (d) =>
-          classMembers.has(d.conceptId) &&
+          classMembers.has(d.componentId) &&
           (d.skipReasons as Record<string, string> | undefined)?.execute === 'consumed-by-parent',
       )
-      .map((d) => d.conceptId)
+      .map((d) => d.componentId)
 
     expect(
       declarers.length,

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_raw_code",
-    "conceptId": "cpp:raw_code",
+    "componentId": "cpp:raw_code",
     "language": "cpp",
     "category": "special",
     "version": "1.0.0",

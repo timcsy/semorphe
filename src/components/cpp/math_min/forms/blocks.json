@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:math_min",
-    "conceptId": "cpp:math_min",
+    "componentId": "cpp:math_min",
     "language": "cpp",
     "category": "algorithms",
     "version": "1.0.0",

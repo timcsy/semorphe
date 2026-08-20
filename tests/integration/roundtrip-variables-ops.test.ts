@@ -115,7 +115,7 @@ describe('cpp:literal_string', () => {
     // string_literal should have value: hello
     const body = sem!.children.body ?? []
     const node = body[0]
-    expect(node.conceptId).toBe('cpp:literal_string')
+    expect(node.componentId).toBe('cpp:literal_string')
     expect(node.properties.value).toBe('hello')
   })
 
@@ -174,10 +174,10 @@ describe('cpp:var_ref', () => {
     expect(sem).not.toBeNull()
     const body = sem!.children.body ?? []
     const decl = body[0]
-    expect(decl.conceptId).toBe('cpp:var_declare')
+    expect(decl.componentId).toBe('cpp:var_declare')
     const init = (decl.children.initializer ?? [])[0]
     expect(init).toBeDefined()
-    expect(init.conceptId).toBe('cpp:var_ref')
+    expect(init.componentId).toBe('cpp:var_ref')
     expect(init.properties.name).toBe('x')
   })
 

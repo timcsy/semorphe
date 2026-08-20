@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:priority_queue_declare",
+  "componentId": "cpp:priority_queue_declare",
   "abstractConcept": "cpp:var_declare",
   "properties": [
     {

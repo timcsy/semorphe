@@ -12,7 +12,7 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
-import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ConceptDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
@@ -82,8 +82,8 @@ describe('L1 Block Roundtrip', () => {
     extractor.loadBlockSpecs(allSpecs)
 
     for (const spec of allSpecs) {
-      if (spec.codeTemplate?.pattern && spec.conceptMapping?.conceptId) {
-        generator.registerTemplate(spec.conceptMapping.conceptId, spec.codeTemplate)
+      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
+        generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
       }
     }
     generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
@@ -107,14 +107,14 @@ describe('L1 Block Roundtrip', () => {
 
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:increment')
+      expect(sem!.componentId).toBe('cpp:increment')
 
       const block = renderer.render(sem!)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_increment')
 
       const sem2 = extractor.extract(block!)
-      expect(sem2!.conceptId).toBe('cpp:increment')
+      expect(sem2!.componentId).toBe('cpp:increment')
       expect(sem2!.properties.name).toBe('i')
     })
 
@@ -141,7 +141,7 @@ describe('L1 Block Roundtrip', () => {
       const ast = mockNode('char_literal', "'x'")
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:literal_char')
+      expect(sem!.componentId).toBe('cpp:literal_char')
     })
   })
 
@@ -155,7 +155,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:var_assign_compound')
+      expect(sem!.componentId).toBe('cpp:var_assign_compound')
       expect(sem!.properties.name).toBe('x')
       expect(sem!.children.value).toHaveLength(1)
     })
@@ -181,7 +181,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('+', '+')
       const ast = mockNode('binary_expression', '3 + 5', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:arithmetic')
+      expect(sem!.componentId).toBe('cpp:arithmetic')
       expect(sem!.properties.operator).toBe('+')
     })
 
@@ -191,7 +191,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('>', '>')
       const ast = mockNode('binary_expression', 'x > 0', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:compare')
+      expect(sem!.componentId).toBe('cpp:compare')
     })
 
     it('should dispatch && to logic', () => {
@@ -200,7 +200,7 @@ describe('L1 Block Roundtrip', () => {
       const op = unnamed('&&', '&&')
       const ast = mockNode('binary_expression', 'a && b', [left, op, right], { left, right })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:logic')
+      expect(sem!.componentId).toBe('cpp:logic')
     })
   })
 
@@ -220,7 +220,7 @@ describe('L1 Block Roundtrip', () => {
 
       const sem = lifter.tryLift(outer, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:print')
+      expect(sem!.componentId).toBe('cpp:print')
       expect(sem!.children.values.length).toBeGreaterThanOrEqual(2)
     })
   })
@@ -236,7 +236,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:if')
+      expect(sem!.componentId).toBe('cpp:if')
       expect(sem!.children.then_body).toBeDefined()
     })
   })
@@ -249,7 +249,7 @@ describe('L1 Block Roundtrip', () => {
         condition: cond, body: body,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:loop_while')
+      expect(sem!.componentId).toBe('cpp:loop_while')
     })
   })
 
@@ -279,7 +279,7 @@ describe('L1 Block Roundtrip', () => {
       )
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
-      expect(sem!.conceptId).toBe('cpp:loop_count')
+      expect(sem!.componentId).toBe('cpp:loop_count')
     })
   })
 
@@ -290,7 +290,7 @@ describe('L1 Block Roundtrip', () => {
         value: val,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:return')
+      expect(sem!.componentId).toBe('cpp:return')
       expect(sem!.children.value).toHaveLength(1)
     })
   })
@@ -298,12 +298,12 @@ describe('L1 Block Roundtrip', () => {
   describe('break / continue', () => {
     it('should lift break_statement', () => {
       const sem = lifter.tryLift(mockNode('break_statement', 'break;'), liftCtx())
-      expect(sem!.conceptId).toBe('cpp:break')
+      expect(sem!.componentId).toBe('cpp:break')
     })
 
     it('should lift continue_statement', () => {
       const sem = lifter.tryLift(mockNode('continue_statement', 'continue;'), liftCtx())
-      expect(sem!.conceptId).toBe('cpp:continue')
+      expect(sem!.componentId).toBe('cpp:continue')
     })
   })
 
@@ -314,7 +314,7 @@ describe('L1 Block Roundtrip', () => {
         argument: arg,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:logic_not')
+      expect(sem!.componentId).toBe('cpp:logic_not')
     })
 
     it('should lift -x to negate', () => {
@@ -323,7 +323,7 @@ describe('L1 Block Roundtrip', () => {
         argument: arg,
       })
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:negate')
+      expect(sem!.componentId).toBe('cpp:negate')
     })
   })
 
@@ -347,7 +347,7 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('parenthesized_expression', '(42)', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:literal_number')
+      expect(sem!.componentId).toBe('cpp:literal_number')
       expect(sem!.properties.value).toBe('42')
     })
   })
@@ -357,7 +357,7 @@ describe('L1 Block Roundtrip', () => {
       const inner = mockNode('number_literal', '42')
       const ast = mockNode('expression_statement', '42;', [inner])
       const sem = lifter.tryLift(ast, liftCtx())
-      expect(sem!.conceptId).toBe('cpp:literal_number')
+      expect(sem!.componentId).toBe('cpp:literal_number')
     })
   })
 

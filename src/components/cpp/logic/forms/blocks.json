@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_logic",
-    "conceptId": "cpp:logic",
+    "componentId": "cpp:logic",
     "language": "universal",
     "category": "operators",
     "version": "1.0.0",

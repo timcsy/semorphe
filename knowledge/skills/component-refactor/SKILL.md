@@ -136,7 +136,7 @@ python3 -c "
 import json,glob
 for f in sorted(glob.glob('src/components/*/*/component.json')):
     d=json.load(open(f))
-    print(d['conceptId'], sorted(d.get('paths',{}).keys()), 'skip:', d.get('skipPaths',[]))"
+    print(d['componentId'], sorted(d.get('paths',{}).keys()), 'skip:', d.get('skipPaths',[]))"
 ```
 
 對每個概念，逐一檢查（`FIVE_PATHS` ＋ 測試）：
@@ -343,7 +343,7 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 
 #### H2. 修復策略決定
 
-根據缺失路徑和概念類型，決定修復策略：
+根據缺失路徑和元件身分，決定修復策略：
 
 | 情境 | 策略 |
 |------|------|
@@ -506,7 +506,7 @@ npx tsc --noEmit && npm test
 （⚠️ 課程快照基線會紅——那是對的，要一起改並在 commit 說明）。
 
 ⚠️ **身分不要「順手」改名或重用**：`P8` 不做向後相容管的是投影與程式碼，
-**不管語義詞彙本身**——任何 conceptId 的變動都必須附一次性存檔轉換（`history/026`）。
+**不管語義詞彙本身**——任何 componentId 的變動都必須附一次性存檔轉換（`history/026`）。
 
 ### P4. 驗證
 

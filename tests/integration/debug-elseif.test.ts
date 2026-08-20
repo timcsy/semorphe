@@ -98,7 +98,7 @@ int main() {
     const body = result?.children.body ?? []
     const ifNode = body[0]
     const elseBody = ifNode?.children.else_body ?? []
-    console.log('nested else body[0] conceptId:', elseBody[0]?.conceptId)
+    console.log('nested else body[0] componentId:', elseBody[0]?.componentId)
     console.log('nested else body length:', elseBody.length)
 
     // Code generation: should produce "else { if ..." not "else if"

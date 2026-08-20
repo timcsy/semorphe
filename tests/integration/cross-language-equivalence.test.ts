@@ -36,7 +36,7 @@ import { printReport } from '../helpers/guardrail'
 /** 觀察集：這一刀只取一維。**先有一條邊，再談半徑。** */
 const OBSERVATION_SET = ['ioRole'] as const
 
-interface Member { conceptId: string; scope: string }
+interface Member { componentId: string; scope: string }
 
 /** 依觀察集把概念分群——鍵是「在這個觀察集下看起來的樣子」。 */
 function classes(): Map<string, Member[]> {
@@ -45,9 +45,9 @@ function classes(): Map<string, Member[]> {
     const traits = ((def as unknown as { traits?: Record<string, unknown> }).traits) ?? {}
     const key = OBSERVATION_SET.map((d) => traits[d]).join('｜')
     if (OBSERVATION_SET.every((d) => traits[d] === undefined)) continue  // 這個觀察集看不到它
-    const scope = def.conceptId.slice(0, def.conceptId.indexOf(':'))
+    const scope = def.componentId.slice(0, def.componentId.indexOf(':'))
     const arr = out.get(key) ?? []
-    arr.push({ conceptId: def.conceptId, scope })
+    arr.push({ componentId: def.componentId, scope })
     out.set(key, arr)
   }
   return out
@@ -68,7 +68,7 @@ describe('spec 156 · 等價類（觀察集 = {ioRole}）', () => {
       ...[...cls.entries()].sort().map(([k, ms]) => {
         const scopes = [...new Set(ms.map((m) => m.scope))].sort()
         const mark = scopes.length > 1 ? '🟢 跨語言' : `⚠️ 只有 ${scopes[0]}`
-        return `  ${mark}  ioRole=${k}：${ms.map((m) => m.conceptId).sort().join('、')}`
+        return `  ${mark}  ioRole=${k}：${ms.map((m) => m.componentId).sort().join('、')}`
       }),
       '',
       `跨語言的類：${crossing.length}｜單語言的類：${cls.size - crossing.length}`,
@@ -81,7 +81,7 @@ describe('spec 156 · 等價類（觀察集 = {ioRole}）', () => {
     // 判準：在這個觀察集下，**只有單邊成員**的類就是分歧點的候選。
     const singles = [...cls.entries()]
       .filter(([, ms]) => new Set(ms.map((m) => m.scope)).size === 1)
-      .map(([k, ms]) => ({ key: k, scope: ms[0].scope, members: ms.map((m) => m.conceptId).sort() }))
+      .map(([k, ms]) => ({ key: k, scope: ms[0].scope, members: ms.map((m) => m.componentId).sort() }))
       .sort((a, b) => a.key.localeCompare(b.key))
 
     printReport('第一個分歧點（觀察集 = {ioRole}）', [

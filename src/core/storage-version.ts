@@ -77,8 +77,8 @@ function rewriteIdentity(node: unknown, table: Record<string, string>): unknown 
   if (Array.isArray(node)) return node.map((n) => rewriteIdentity(n, table))
   const n = node as Record<string, unknown>
   const out: Record<string, unknown> = { ...n }
-  const cid = out.conceptId
-  if (typeof cid === 'string' && table[cid]) out.conceptId = table[cid]
+  const cid = out.componentId
+  if (typeof cid === 'string' && table[cid]) out.componentId = table[cid]
   const children = out.children
   if (children && typeof children === 'object' && !Array.isArray(children)) {
     const c: Record<string, unknown> = {}
@@ -119,7 +119,7 @@ export function registerIdMigration(m: Record<string, string>): void {
 }
 
 /**
- * **參數改名**——`{ conceptId: { 舊屬性名: 新屬性名 } }`。
+ * **參數改名**——`{ componentId: { 舊屬性名: 新屬性名 } }`。
  *
  * 與身分改名同一個形狀，而且同樣由**套件**提供：核心不得認得
  * `cpp:vector_size` 的參數叫什麼（第二十二條護欄會叫）。
@@ -147,7 +147,7 @@ function rewriteParams(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(rewriteParams)
   const n = node as Record<string, unknown>
   const out: Record<string, unknown> = { ...n }
-  const cid = out.conceptId
+  const cid = out.componentId
   const map = typeof cid === 'string' ? propMigrations[cid] : undefined
   if (map && out.properties && typeof out.properties === 'object') {
     const props: Record<string, unknown> = {}

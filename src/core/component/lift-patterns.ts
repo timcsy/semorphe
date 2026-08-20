@@ -43,7 +43,7 @@ const file = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: 
  * ⚠️ **一顆膠囊可以帶不只一筆。** 第一版寫 `.map(m => m.default ?? m)`
  * ——**一個檔一筆**，因為當時每顆都只有一筆。
  * `cpp:builtin_constant` 帶 6 筆（`true`／`false`／`nullptr`／`NULL`／`EOF`／`null`），
- * 於是整個陣列被當成**一筆** pattern 餵進去，`conceptId` 讀成 `undefined`
+ * 於是整個陣列被當成**一筆** pattern 餵進去，`componentId` 讀成 `undefined`
  * ——**`true` 這個字從此辨識不出來**，而症狀是 13 段語料在執行期
  * 報 `UNKNOWN_CONCEPT: raw_code`（辨識失敗後降級的落點）。
  *

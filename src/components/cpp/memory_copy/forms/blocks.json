@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp_memory_copy",
-    "conceptId": "cpp:memory_copy",
+    "componentId": "cpp:memory_copy",
     "language": "cpp",
     "category": "strings",
     "version": "1.0.0",

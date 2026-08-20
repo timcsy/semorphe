@@ -67,13 +67,13 @@ function loadRules(): Map<string, RuleLike[]> {
 function measure(): {
   groups: Group[]
   pairs: PairVerdict[]
-  duplicates: { nodeType: string; conceptId: string; priorities: number[] }[]
+  duplicates: { nodeType: string; componentId: string; priorities: number[] }[]
   crossPriorityCollisions: PairVerdict[]
 } {
   const patterns = loadRules()
   const groups: Group[] = []
   const pairs: PairVerdict[] = []
-  const duplicates: { nodeType: string; conceptId: string; priorities: number[] }[] = []
+  const duplicates: { nodeType: string; componentId: string; priorities: number[] }[] = []
   const crossPriorityCollisions: PairVerdict[] = []
 
   for (const [nodeType, list] of patterns) {
@@ -87,7 +87,7 @@ function measure(): {
     for (const [priority, rules] of byPri) {
       if (rules.length < 2) continue
       // list 已依 priority 降冪排序；同優先權時，先出現的先被試到
-      const winner = rules[0].conceptId
+      const winner = rules[0].componentId
       // 同優先權 → 勝出純粹靠登記先後，不是設計
       groups.push({ nodeType, priority, rules, winner, winReason: 'insertion-order' })
       for (let i = 0; i < rules.length; i++) {
@@ -98,19 +98,19 @@ function measure(): {
     // ── 重複登記：同一概念在同一語法上出現一次以上
     const byConcept = new Map<string, number[]>()
     for (const r of list) {
-      const arr = byConcept.get(r.conceptId) ?? []
+      const arr = byConcept.get(r.componentId) ?? []
       arr.push(r.priority)
-      byConcept.set(r.conceptId, arr)
+      byConcept.set(r.componentId, arr)
     }
-    for (const [conceptId, priorities] of byConcept) {
-      if (priorities.length > 1) duplicates.push({ nodeType, conceptId, priorities: priorities.sort() })
+    for (const [componentId, priorities] of byConcept) {
+      if (priorities.length > 1) duplicates.push({ nodeType, componentId, priorities: priorities.sort() })
     }
 
     // ── 不同優先權卻可能會撞：優先權在做「隱形仲裁」——比同優先權更危險
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < list.length; j++) {
         if (list[i].priority === list[j].priority) continue
-        if (list[i].conceptId === list[j].conceptId) continue // 重複登記另外算
+        if (list[i].componentId === list[j].componentId) continue // 重複登記另外算
         const v = classifyPair(list[i], list[j])
         if (v.verdict === 'definitely') crossPriorityCollisions.push(v)
       }
@@ -143,7 +143,7 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
     lines.push('')
 
     for (const g of [...groups].sort((a, b) => b.rules.length - a.rules.length)) {
-      const own = pairs.filter((p) => g.rules.some((r) => r.conceptId === p.a) && g.rules.some((r) => r.conceptId === p.b))
+      const own = pairs.filter((p) => g.rules.some((r) => r.componentId === p.a) && g.rules.some((r) => r.componentId === p.b))
       const d = own.filter((p) => p.verdict === 'definitely').length
       const u = own.filter((p) => p.verdict === 'unknown').length
       lines.push(
@@ -151,18 +151,18 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
           `（🔴${d} 🟡${u}）→ 目前勝出：${g.winner}` +
           `（原因：${g.winReason === 'priority' ? '優先權較高' : '**只是登記得早**'}）`,
       )
-      lines.push(`      ${g.rules.map((r) => r.conceptId).join(', ')}`)
+      lines.push(`      ${g.rules.map((r) => r.componentId).join(', ')}`)
     }
 
     if (duplicates.length > 0) {
       lines.push('')
       lines.push('**重複登記**（同一概念在同一語法上登記多次——不是優先權設計，是意外）：')
-      for (const d of duplicates) lines.push(`  ${d.nodeType}: ${d.conceptId} @優先權 ${d.priorities.join(', ')}`)
+      for (const d of duplicates) lines.push(`  ${d.nodeType}: ${d.componentId} @優先權 ${d.priorities.join(', ')}`)
     }
 
     // 差集：兩個方向都是資訊
     const groupsAllSafe = groups.filter((g) => {
-      const own = pairs.filter((p) => g.rules.some((r) => r.conceptId === p.a) && g.rules.some((r) => r.conceptId === p.b))
+      const own = pairs.filter((p) => g.rules.some((r) => r.componentId === p.a) && g.rules.some((r) => r.componentId === p.b))
       return own.length > 0 && own.every((p) => p.verdict === 'never')
     })
     lines.push('')
@@ -207,8 +207,8 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
   //
   // **build-guardrail 第 2 步明文警告過這件事，而這是它第二次發生。**
   // 錨點改成合成規則：它不隨真實世界的修復而失效。
-  const synthetic = (conceptId: string, constraints?: RuleLike['constraints']): RuleLike => ({
-    conceptId, patternType: 'simple', priority: 10, constraints,
+  const synthetic = (componentId: string, constraints?: RuleLike['constraints']): RuleLike => ({
+    componentId, patternType: 'simple', priority: 10, constraints,
   })
 
   it('★ 合成注入：兩條約束一字不差的規則必須判「確定會撞」', () => {
@@ -263,7 +263,7 @@ describe('護欄：辨識歧義（誰認領這段語法，是設計還是運氣�
       )
       printReport('辨識歧義：數字上升', [
         ...worsened.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`),
-        ...newGroups.map((g) => `  ✘ 新群組：${g.nodeType} @優先權=${g.priority} → ${g.rules.map((r) => r.conceptId).join(', ')}`),
+        ...newGroups.map((g) => `  ✘ 新群組：${g.nodeType} @優先權=${g.priority} → ${g.rules.map((r) => r.componentId).join(', ')}`),
       ])
     }
     // 只擋上升的棘輪不會自己收緊——舊基線會默許退回去，而**綠色套件的輸出
@@ -289,7 +289,7 @@ if (process.env.GENERATE_BASELINE) {
     groups: groups.map((g) => ({
       nodeType: g.nodeType,
       priority: g.priority,
-      rules: g.rules.map((r) => r.conceptId),
+      rules: g.rules.map((r) => r.componentId),
     })),
   })
 }

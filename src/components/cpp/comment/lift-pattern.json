@@ -2,7 +2,7 @@
   "id": "cpp_comment",
   "astNodeType": "comment",
   "concept": {
-    "conceptId": "cpp:comment"
+    "componentId": "cpp:comment"
   },
   "fieldMappings": [
     {

@@ -2,16 +2,16 @@
  * `cpp:input_formatted` 的 **execute** 路（`scanf`）
  *
  * ⚠️ 它原本是 `std/cstdio/executors.ts` 裡一個叫 `execScanf` 的閉包。
- * `isIndexedAccess` 那一句原本寫死 `argNode.conceptId === 'cpp:array_at'`
+ * `isIndexedAccess` 那一句原本寫死 `argNode.componentId === 'cpp:array_at'`
  * ——`scanf("%d", &arr[i])` 讀進來的值要寫回**陣列的某一格**，
  * 而那是 `array_at` 的性質，不是這顆該認得的身分。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { isIndexedAccess } from '../../../languages/cpp/core/node-traits'
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
-  const execScanf: ConceptExecutor = async (node, ctx) => {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+  const execScanf: ComponentExecutor = async (node, ctx) => {
     const format = String(node.properties.format ?? '%d')
     const argNodes = node.children.args ?? []
     const specifiers = format.match(/%[^%]*?[diouxXeEfgGcsplnDOUaA]/g) ?? []
@@ -40,7 +40,7 @@ export function registerExecute(register: (concept: string, executor: ConceptExe
       const lastVal = parseInputValue(raw, targetType) ?? defaultValue(targetType)
       itemsRead++
 
-      if (isIndexedAccess(argNode.conceptId)) {
+      if (isIndexedAccess(argNode.componentId)) {
         const arrName = String(argNode.properties.obj)
         const arr = ctx.scope.get(arrName)
         if (arr.type === 'array' && Array.isArray(arr.value)) {

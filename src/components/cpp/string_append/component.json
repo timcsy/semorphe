@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:string_append",
+  "componentId": "cpp:string_append",
   "properties": [
     {
       "name": "obj",

@@ -1,7 +1,7 @@
 [
   {
     "id": "cpp:initializer_list",
-    "conceptId": "cpp:initializer_list",
+    "componentId": "cpp:initializer_list",
     "language": "cpp",
     "category": "arrays",
     "version": "1.0.0",

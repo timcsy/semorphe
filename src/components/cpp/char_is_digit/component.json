@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:char_is_digit",
+  "componentId": "cpp:char_is_digit",
   "abstractConcept": null,
   "properties": [],
   "children": {

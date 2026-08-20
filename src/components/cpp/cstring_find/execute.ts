@@ -9,10 +9,10 @@
  * 字元也是假：`while ((p = strchr(...)) != 0)` **一次都不跑**，
  * 而程式照樣跑完、印出後面的東西。
  */
-import type { ConceptExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ConceptExecutor) => void): void {
+export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_find', async () => {
     throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
       '%1': 'cstring_find 回傳指向陣列中間的指標，這個直譯器還表示不了',

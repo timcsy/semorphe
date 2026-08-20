@@ -103,24 +103,24 @@ const queueProgram = 'queue<int> q; q.push(1); q.pop();'
 
 describe('辨識：容器種類寫進節點', () => {
   it('★ 堆疊上的 push 帶 container_kind: stack', () => {
-    const pushes = collect(lift(stackProgram), (n) => n.conceptId === 'cpp:container_push')
+    const pushes = collect(lift(stackProgram), (n) => n.componentId === 'cpp:container_push')
     expect(pushes).toHaveLength(1)
     expect(pushes[0].properties?.container_kind).toBe('stack')
   })
 
   it('★ 佇列上的 push 帶 container_kind: queue', () => {
-    const pushes = collect(lift(queueProgram), (n) => n.conceptId === 'cpp:container_push')
+    const pushes = collect(lift(queueProgram), (n) => n.componentId === 'cpp:container_push')
     expect(pushes[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ pop 同樣帶容器種類', () => {
-    expect(collect(lift(stackProgram), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('stack')
-    expect(collect(lift(queueProgram), (n) => n.conceptId === 'cpp:container_pop')[0].properties?.container_kind).toBe('queue')
+    expect(collect(lift(stackProgram), (n) => n.componentId === 'cpp:container_pop')[0].properties?.container_kind).toBe('stack')
+    expect(collect(lift(queueProgram), (n) => n.componentId === 'cpp:container_pop')[0].properties?.container_kind).toBe('queue')
   })
 
   it('★ 負向（CK-1）：查不到型別時**不寫**該屬性，不猜', () => {
     // `unknownThing` 沒有宣告 → 辨識脈絡查不到型別
-    const pushes = collect(lift('unknownThing.push(1);'), (n) => n.conceptId === 'cpp:container_push')
+    const pushes = collect(lift('unknownThing.push(1);'), (n) => n.componentId === 'cpp:container_push')
     expect(pushes).toHaveLength(1)
     expect(
       pushes[0].properties?.container_kind,
@@ -215,12 +215,12 @@ describe('加法式：舊存檔不會壞', () => {
     expect(reg.getByBlockType('cpp_container_pop')).toBeDefined()
   })
 
-  it('★ 舊積木型別反推得到同一個 conceptId（C-4）', () => {
+  it('★ 舊積木型別反推得到同一個 componentId（C-4）', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppConcepts(), allCppProjections())
-    const neutral = reg.getByBlockType('cpp_container_push')?.conceptMapping?.conceptId
-    const stack = reg.getByBlockType('cpp_container_push_stack')?.conceptMapping?.conceptId
-    const queue = reg.getByBlockType('cpp_container_push_queue')?.conceptMapping?.conceptId
+    const neutral = reg.getByBlockType('cpp_container_push')?.componentMapping?.componentId
+    const stack = reg.getByBlockType('cpp_container_push_stack')?.componentMapping?.componentId
+    const queue = reg.getByBlockType('cpp_container_push_queue')?.componentMapping?.componentId
     expect(neutral).toBe('cpp:container_push')
     expect(stack).toBe('cpp:container_push')
     expect(queue).toBe('cpp:container_push')

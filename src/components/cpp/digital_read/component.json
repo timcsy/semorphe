@@ -1,5 +1,5 @@
 {
-  "conceptId": "cpp:digital_read",
+  "componentId": "cpp:digital_read",
   "abstractConcept": null,
   "properties": [],
   "children": {

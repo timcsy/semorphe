@@ -21,6 +21,6 @@
 
 ## 狀態
 
-✅ 已採用（commit `66885b7`）。`children` 一律陣列成為 [概念代數](../concepts/概念代數.md) 中 SemanticNode 標準形式的硬約束。
+✅ 已採用（commit `66885b7`）。`children` 一律陣列成為 [元件代數](../concepts/元件代數.md) 中 SemanticNode 標準形式的硬約束。
 
 蒸餾出的教訓見 [experience.md](../experience.md)「型別分裂在『兩邊都能跑』時最危險」；完整現場見 [episodes/2026-03-08-兩套型別的統一.md](../episodes/2026-03-08-兩套型別的統一.md)。

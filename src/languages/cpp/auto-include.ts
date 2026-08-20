@@ -15,7 +15,7 @@ import { isIncludeDirective } from './core/node-traits'
  * Collect all concept IDs from a semantic tree (recursive).
  */
 export function collectConcepts(node: SemanticNode, out: Set<string>): void {
-  out.add(node.conceptId)
+  out.add(node.componentId)
   for (const children of Object.values(node.children)) {
     for (const child of children) {
       collectConcepts(child, out)
@@ -29,7 +29,7 @@ export function collectConcepts(node: SemanticNode, out: Set<string>): void {
 function collectManualIncludes(body: SemanticNode[]): Set<string> {
   const manual = new Set<string>()
   for (const node of body) {
-    if (isIncludeDirective(node.conceptId) && typeof node.properties.header === 'string') {
+    if (isIncludeDirective(node.componentId) && typeof node.properties.header === 'string') {
       manual.add(`<${node.properties.header}>`)
     }
   }
