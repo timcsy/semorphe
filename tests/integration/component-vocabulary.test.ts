@@ -92,14 +92,20 @@ const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
 const KNOWLEDGE_ROOTS = ['knowledge/concepts', 'knowledge/principles.md', 'knowledge/vision.md']
 
 /**
- * 🟢 **名詞表的表格列豁免**——與這個測試檔自己豁免是**同一個理由**：
+ * 🟢 **「宣告退場」的那一行豁免**——與這個測試檔自己豁免是**同一個理由**：
  * 宣告「X 退場、改用 Y」的地方**必須寫得出 X**，否則它無從宣告。
- * `concepts/元件.md` 的「名詞表」與「現況落差」兩張表就是那個地方。
+ *
+ * 判準是**逐行**的，而且不看語法長相：**這一行有沒有同時寫出舊名與取代它的新名**。
+ * 有 → 它是一筆對照，留著；只有舊名 → 它是活的用法，該改。
+ *
+ * ⚠️ 第一版寫成「`concepts/元件.md` 的表格列豁免」——**太窄了**。
+ * 2026-08-20 根公理的理由塊（一段引言，不是表格）同樣在宣告退場，被誤報。
+ * > **豁免要照【它為什麼合法】寫，不要照【它長什麼樣】寫。**
  */
-const GLOSSARY = 'knowledge/concepts/元件.md'
-function scannableLines(rel: string, text: string): string {
-  if (rel !== GLOSSARY) return text
-  return text.split('\n').filter((l) => !l.trimStart().startsWith('|')).join('\n')
+function scannableLines(text: string, retired: RegExp, replacedBy: string): string {
+  return text.split('\n')
+    .filter((l) => !(retired.test(l) && l.includes(replacedBy)))
+    .join('\n')
 }
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -197,7 +203,7 @@ describe('spec 158 · 舊詞彙不准回來', () => {
     it(`🔴 知識庫（現況型）不得留 \`${pattern.source.replace(/\\b/g, '')}\``, () => {
       const hits = knowledgeFiles
         .filter((f) => new RegExp(pattern.source + '|' + pattern.source.replace(/\\b$/, '') + 's\\b')
-          .test(scannableLines(f, fs.readFileSync(path.join(REPO_ROOT, f), 'utf8'))))
+          .test(scannableLines(fs.readFileSync(path.join(REPO_ROOT, f), 'utf8'), pattern, replacedBy)))
       expect(hits,
         `⚠️ 這是 spec 158 大改名的殘留。\`${replacedBy}\` 才是現在的名字。`
         + '（`history/`／`experience.md` 不在此列——那裡的舊名是**病歷**，必須留。）').toEqual([])
