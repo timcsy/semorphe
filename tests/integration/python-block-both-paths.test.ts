@@ -1,0 +1,198 @@
+/**
+ * spec 160：**Python 的第一顆積木——兩條到達路徑各自走一次。**
+ *
+ * ## 為什麼一定要兩條
+ *
+ * `experience.md` 逐字：
+ *
+ * > 一顆積木可以有兩條到達路徑（**工具箱拖出來** vs **貼上程式碼 lift 出來**），
+ * > 而**修好其中一條，另一條上的學生什麼都沒感覺到**。
+ *
+ * ```
+ * 路徑①  工具箱拖一顆  →  積木 → extract → 樹 → generate  →  print(...)
+ * 路徑②  貼一段程式碼  →  解析 → lift → 樹 → render      →  python_print 積木
+ * ```
+ *
+ * ## ⚠️ 這一支刻意不比字串就算數
+ *
+ * `history/108` 抓到的三個假綠裡有一個是**roundtrip 走的是降級路徑**
+ * ——`raw_code` 把原文原樣吐回來，於是字串一字不差**而身分是錯的**。
+ *
+ * > **比對輸出字串量不到身分。** 所以每一條都斷言 `componentId`。
+ */
+import { describe, it, expect, beforeAll } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import { REPO_ROOT } from '../helpers/guardrail'
+import { Parser, Language } from 'web-tree-sitter'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
+import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
+import { RenderStrategyRegistry } from '../../src/core/registry'
+import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
+import { allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allComponentDefs } from '../helpers/component-scan'
+import { createTestLifter } from '../helpers/setup-lifter'
+import type { Lifter } from '../../src/core/lift/lifter'
+import type { SemanticNode, BlockState } from '../../src/core/types'
+import { PythonParser } from '../../src/languages/python/parser'
+
+let renderer: PatternRenderer
+let extractor: PatternExtractor
+let lifter: Lifter
+let pyParser: PythonParser
+
+beforeAll(async () => {
+  const reg = new BlockSpecRegistry()
+  reg.loadFromSplit(allComponentDefs(), allCppProjections())
+  const specs = reg.getAll()
+
+  const rsr = new RenderStrategyRegistry()
+  registerCppRenderStrategies(rsr)
+  renderer = new PatternRenderer()
+  renderer.setRenderStrategyRegistry(rsr)
+  renderer.loadBlockSpecs(specs)
+  extractor = new PatternExtractor()
+  extractor.loadBlockSpecs(specs)
+
+  // 🔴 **從 `public/` 讀**——wasm 出貨之後這裡與瀏覽器走同一份檔。
+  pyParser = new PythonParser()
+  await pyParser.init(`${process.cwd()}/public`)
+
+  await Parser.init()
+  lifter = await createTestLifter()
+}, 60_000)
+
+/** 一顆 `print(x)` 的語義節點——路徑①的起點（工具箱拖出來時的形狀）。 */
+function printNode(): SemanticNode {
+  return {
+    id: 'n1',
+    componentId: 'python:print',
+    properties: {},
+    children: {
+      values: [{ id: 'n2', componentId: 'cpp:literal_string', properties: { value: 'hi' }, children: {} }],
+    },
+  }
+}
+
+describe('spec 160 · 兩條到達路徑', () => {
+  it('★ 錨點：登錄表裡真的有 python_print（否則下面在驗空集合）', () => {
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(allComponentDefs(), allCppProjections())
+    expect(reg.getByBlockType('python_print'), 'forms/blocks.json 沒進登錄表').toBeTruthy()
+  })
+
+  it('🔴 路徑①：語義 → 積木 → 抽回語義，**身分不得漂走**', () => {
+    const block = renderer.render(printNode()) as BlockState | null
+    expect(block, 'render 回 null → 路徑①的第一段就斷了').toBeTruthy()
+    expect(block!.type, '渲染出來的不是 Python 那顆').toBe('python_print')
+
+    // 🔴 **引數要真的接在積木上。**
+    //
+    // ⚠️ 這一行是**瀏覽器抓到的、測試沒抓到的**：`renderMapping.inputs` 的方向
+    // 我寫反了（寫成 `{語義接點: 輸入名}`，正確是 `{輸入名: 語義接點}`），
+    // 而上下那些斷言**修正前後都綠**——它們只問「積木型別對不對」。
+    // 使用者看到的是**一顆「輸出」積木，插槽空著**。
+    //
+    // > **型別對了不代表接點接上了**——而空插槽在截圖裡才看得見。
+    expect(Object.keys(block!.inputs ?? {}),
+      '引數沒接上 → 使用者看到一個空插槽').toEqual(['EXPR0'])
+
+    const back = extractor.extract(block!)
+    expect(back, 'extract 回 null → 積木抽不回語義，兩路沒有成對').toBeTruthy()
+    // ⚠️ 這一行才是重點：字串對得上不代表身分對得上（history/108）
+    expect(back!.componentId, '抽回來的身分漂走了——降級路徑也會給出「看起來對」的結果')
+      .toBe('python:print')
+  })
+
+  it('🔴 路徑②：貼一段真的 Python → 認出 `python:print`，**不是降級**', async () => {
+    const tree = await pyParser.parse('print("hi")')
+    const sem = lifter.lift(tree.rootNode as never, 'python')
+    expect(sem, 'lift 回 null → 路徑②走不到任何積木').toBeTruthy()
+
+    const found = collect(sem!).filter((n) => n.componentId === 'python:print')
+    expect(found.length,
+      '⚠️ 沒認出來的話它會退成 raw_code——而 raw_code 把原文原樣吐回去，'
+      + '**輸出字串會一字不差而身分是錯的**（history/108 的第二個假綠）').toBe(1)
+
+    // 反向：**那顆 print 自己**不得是降級的
+    expect(found[0]!.componentId, 'print 這顆本身走了降級路徑').toBe('python:print')
+  })
+
+  /**
+   * 🔴 **宣告的接點必須是 lift 真的產出的那些。**
+   *
+   * ⚠️ 這一支是**注射逼出來的**：改壞 `component.json` 的 `children` 之後，
+   * 上面五支**一支都沒紅**——那個宣告沒有任何東西在驗。
+   *
+   * 而全域的宣告完整性護欄看不到它：**它的語料是 `tests/integration/` 裡的
+   * C++ 片段**，Python 這顆躲在「無法確定」裡（cause=語料沒覆蓋）。
+   *
+   * > **一個量不到的地方，宣告錯了與宣告對了長得一模一樣**
+   * > ——而我在修這顆的時候把這句話寫進了膠囊，卻沒有補上量它的東西。
+   */
+  it('🔴 `children` 宣告 ↔ lift 實際產出，必須對得上', async () => {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(REPO_ROOT, 'src/components/python/print/component.json'), 'utf8'))
+    const declared = Object.keys(manifest.children as Record<string, unknown>).sort()
+
+    const tree = await pyParser.parse('print("hi")')
+    const sem = lifter.lift(tree.rootNode as never, 'python')
+    const print = collect(sem!).find((n) => n.componentId === 'python:print')!
+    const actual = Object.keys(print.children ?? {}).sort()
+
+    expect(actual, `宣告 ${declared.join('/')} 而 lift 產出 ${actual.join('/')}`).toEqual(declared)
+  })
+
+  /**
+   * 🔴 **這一支釘的是【鄰域的邊界】，不是一個缺陷。**
+   *
+   * vision 階段 7 逐字：
+   * > **第一個【不】落在同一類的地方在哪** —— 它比上一條更有價值：**它是鄰域的邊界**
+   *
+   * `print("hi")` 的**引數**降級成 `raw_code`，因為**沒有任何語言中立的字面常數元件**
+   * ——233 顆全是 `cpp:` scope，`cpp:literal_string` 對 Python 不成立。
+   *
+   * ```
+   * python:print          🟢 跨語言等價（ioRole=print）
+   *   [values] raw_code   🔴 邊界：值的元件【是語言專屬的】
+   * ```
+   *
+   * > **第二個語言連 `"hi"` 都得重做**——而那不是 print 的問題，是**元件身分的 scope 沒有中立層**。
+   *
+   * ⚠️ **釘成測試而不是寫在筆記裡**，因為它會被修掉：哪天有人加了語言中立的
+   * 字面常數，這一支會紅，而**那時候紅是好事**——它會逼人回來改 vision 那一格。
+   */
+  it('🔴 邊界：引數降級，因為【沒有語言中立的字面常數元件】', async () => {
+    const tree = await pyParser.parse('print("hi")')
+    const sem = lifter.lift(tree.rootNode as never, 'python')
+    const print = collect(sem!).find((n) => n.componentId === 'python:print')!
+    const arg = print.children.values?.[0]
+    expect(arg?.componentId,
+      '⚠️ 這一格變了就表示邊界移動了——去改 vision 階段 7 的「第一個不落在同一類的地方」，'
+      + '不要只是把測試改綠').toBe('raw_code')
+  })
+
+  it('🔴 路徑②的下半：lift 出來的樹**渲染得成積木**（兩條路在此會合）', async () => {
+    const tree = await pyParser.parse('print("hi")')
+    const sem = lifter.lift(tree.rootNode as never, 'python')
+    const node = collect(sem!).find((n) => n.componentId === 'python:print')!
+    const block = renderer.render(node) as BlockState | null
+    expect(block?.type,
+      '⚠️ 貼上程式碼之後【看得到積木】才算走完——lift 對了而渲染不出來，'
+      + '學生看到的是空白').toBe('python_print')
+  })
+
+  it('★ 反向：不亂認——`foo("hi")` 不得變成 `python:print`', async () => {
+    const tree = await pyParser.parse('foo("hi")')
+    const sem = lifter.lift(tree.rootNode as never, 'python')
+    expect(collect(sem!).filter((n) => n.componentId === 'python:print'),
+      '只釘「會報」而不釘「不亂報」，等於沒釘（spec 157 的第三個假綠）').toEqual([])
+  })
+})
+
+function collect(n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] {
+  out.push(n)
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids) collect(k, out)
+  return out
+}

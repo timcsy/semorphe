@@ -54,7 +54,11 @@ import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
  *
  * 與 `component/registry.ts` 同一個處置：**加一份課程清單＝新增一個檔，零編輯。**
  */
-const topicModules = import.meta.glob('../../src/languages/cpp/topics/*.json', { eager: true }) as
+// 🔴 **`*` 不是 `cpp`**——第一版寫死 `languages/cpp/topics/`，於是
+// Python 有了自己的課程之後，這條護欄**看不到它**：`python:print` 明明被收錄了，
+// 而報表說它「不在任何課程裡」。
+// > **一個掃描器的路徑寫死了一個語言，它就只能替那個語言說話。**
+const topicModules = import.meta.glob('../../src/languages/*/topics/*.json', { eager: true }) as
   Record<string, { default: { id: string; levelTree: Level } }>
 
 interface Level {
@@ -78,14 +82,16 @@ const deliberatelyExcluded: Record<string, string> = {
   'cpp:program':
     '程式的根鷹架。它不是學生選得出來的積木——每個程式都有一個，由系統自動建立，' +
     '收進課程等於在工具箱裡放一顆「整個程式」。',
-  // 🔴 **spec 156：第一顆 Python 元件**——而它不收錄的理由與上面那顆完全不同。
-  'python:print':
-    'Python 【還沒有課程】。所有 topic（`cpp-beginner`／`c-beginner`／`arduino`／' +
-    '`cpp-competitive`）都是 C++ 的課，把一顆 Python 概念收進去會讓學 C++ 的學生' +
-    '在工具箱裡看到 `print(...)`。' +
-    '⚠️ 而這【不是】「忘了收錄」：spec 156 明確排除工具箱切換與 Python 課程' +
-    '——它此刻只是一個【有性狀的身分】，用來產生第一條跨語言的等價邊。' +
-    '🟢 重開條件是「Python 有了自己的 topic」，不是「又想到它了」。',
+  // 🟢 **`python:print` 的豁免已於 spec 160 移除**——它寫的重開條件是
+  // 「Python 有了自己的 topic」，而 `python-beginner` 就是那個 topic。
+  // ⚠️ 一條寫明重開條件的豁免，**在條件成立那天要有人回來拿掉它**
+  // ——而沒有人會主動回來看，是這條護欄在那天說話的。
+  'python:program':
+    'Python 的程式根——理由與 `cpp:program` 同一條：**它不是學生選得出來的積木**。' +
+    '一個 Python 檔就是它的模組，由系統建立。' +
+    '⚠️ 而它與 C++ 那顆的**分歧點**值得記：C++ 的根要產出 `int main(){…}` 外殼，' +
+    'Python 的根什麼都不包——兩顆都叫「程式的根」，' +
+    '而在觀察集「產出的形式」下它們**不落在同一類**。',
 }
 
 const course = ALL_TOPICS.map((t) => curriculumSnapshot(t as never))

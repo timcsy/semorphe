@@ -343,6 +343,22 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
         } as PathResult
       if (row.generate.verdict !== 'implemented')
         return { verdict: 'missing', reason: 'generate 未產出可解析的程式碼' } as PathResult
+      // 🔴 **量測用的是 C++ 解析器**——非 C++ 的元件在這裡是【判不出來】，不是殼。
+      //
+      // 2026-08-20（spec 160）實測：`python:program` 被判成「lift 殼」，
+      // 而真相是它的樣本被送去給 C++ 的文法解析。**怪 lift 沒辦到一件
+      // 用錯工具去量的事，會讓「殼」這個數字灌水，進而讓清償優先序指錯方向**
+      // ——這正是本檔既有註解在講的那件事，只是這次的成因是**語言**。
+      //
+      // ⚠️ 這**不是**把 Python 排除在量測之外：它進報表、算進「無法確定」，
+      // 而理由寫明「量測方法碰不到」。判準沒有被收窄。
+      // 🟢 重開條件：這條護欄有了逐語言的解析器。
+      if (!id.startsWith('cpp:')) {
+        return {
+          verdict: 'undecidable',
+          reason: '量測用的是 C++ 解析器——非 C++ 的元件在這裡碰不到',
+        } as PathResult
+      }
       try {
         const tree = tsParser.parse(generated)
         // 樣本本身就不是合法的 C++ → 這一列**判不出來**，不是殼。

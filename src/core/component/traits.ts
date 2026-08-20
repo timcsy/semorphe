@@ -115,6 +115,27 @@ export function programRootComponent(): string | undefined {
   return componentWithTrait('programRoot')
 }
 
+/**
+ * 🔴 **這顆是不是【某個語言的】程式根。**
+ *
+ * ## 為什麼不能用 `programRootComponent()` 比對
+ *
+ * `componentWithTrait` **回傳第一個匹配**——第二個語言宣告了 `programRoot`
+ * 之後，兩顆之中會有一顆**靜默失效**。
+ *
+ * 2026-08-20（spec 160）實測就是這個症狀：Python 的樹送進
+ * `renderToBlocklyState`，那裡寫著 `tree.componentId !== programRootComponent()`
+ * → 回**空的積木清單，零錯誤**。使用者看到的是**空白畫布**。
+ *
+ * > **一個「全域只有一個」的假設，在第二個成員出現時不會報錯——它會挑一個。**
+ *
+ * 🟢 正解：**問這顆自己的宣告**，不要跟一個全域單值比。
+ * 這樣「有幾個語言」對核心而言不再是一個要知道的數字。
+ */
+export function isProgramRoot(componentId: string): boolean {
+  return componentTraits(componentId)?.programRoot === true
+}
+
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
 export function isFunctionDefinition(componentId: string): boolean {
   return componentTraits(componentId)?.functionDefinition === true

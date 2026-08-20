@@ -4,7 +4,7 @@ import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
 import type { RenderContext } from '../registry/render-strategy-registry'
 import { nextBlockId, resetBlockIdCounter } from './common-mappings'
-import { programRootComponent } from '../component/traits'
+import { isProgramRoot } from '../component/traits'
 
 interface BlockState {
   type: string
@@ -38,7 +38,9 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.componentId !== programRootComponent()) {
+  // 🔴 **問這顆自己是不是根**，不跟全域單值比——見 `traits.ts` 的 `isProgramRoot`。
+  // 比對單值的話，第二個語言的根會靜默渲染成空白畫布（spec 160 實測）。
+  if (!isProgramRoot(tree.componentId)) {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 

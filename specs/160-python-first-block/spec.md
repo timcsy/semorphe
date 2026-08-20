@@ -71,11 +71,57 @@ python 套件    src/languages/python/ 只有 types.ts 一個檔
 
 ## 驗收
 
-- [ ] 🔴 `python_print` **沒有在 `block-registrar` 加任何一行命令式註冊**（P3 的直接檢驗）
-- [ ] 🔴 路徑①：工具箱拖一顆 → `print(...)`
-- [ ] 🔴 路徑②：貼 `print("hi")` → **`python_print` 積木**，不是 `raw_code`
-- [ ] 積木 → extract → 樹 → generate **一字不差**
-- [ ] 完備性缺 3 → **1**；中立性三維不得上升
-- [ ] 🔴 wasm 出貨且 **e2e 第四十六條護欄綠**（有人真的去要它）
-- [ ] 🔴 **block-registrar 假設清單**產出
-- [ ] 反向：C++ 既有測試一支都不變
+- [x] 🔴 `python_print` **沒有在 `block-registrar` 加任何一行命令式註冊**（P3 通過）
+- [x] 🔴 路徑①：工具箱「輸入輸出」拿得到 → 拖一顆 → `print()`（**瀏覽器實測**）
+- [x] 🔴 路徑②：貼 `print("hi")` → **`python_print` 積木**（**瀏覽器實測 ＋ 截圖**）
+- [x] 積木 → extract → 樹 → generate 一字不差
+- [x] 完備性缺 3 → **4**（⚠️ 不是 1——見下）；中立性三維維持 0/33/0
+- [x] 🔴 wasm 出貨且 **e2e 第四十六條護欄綠**
+- [x] 🔴 **假設清單產出：9 筆**
+- [x] 反向：4777 綠、e2e 37 全過
+
+## ⚠️ 一項驗收沒有照原本的數字達成
+
+「完備性缺 3 → 1」**沒有達成，實際是 3 → 4**——而它是**兩個相反動作的淨值**：
+
+```
+🟢 -2   python:print 的 render／extract 補實了
+🔴 +3   新的 python:program（程式根）——它是路徑②的結構前提，被逼出來的
+```
+
+spec 寫「不做第二顆 Python 元件」時，**沒有預見路徑②在結構上需要一個程式根**：
+`renderToBlocklyState` 的第一行問「這顆是不是程式根」，Python 沒有 → **回空清單、零錯誤**。
+
+> **它不是第二個功能，是路徑②的結構前提。**
+
+---
+
+# 🔴 交付：`block-registrar` 與核心對 C++ 的假設清單
+
+**這是這一刀真正買的東西。** 每一筆都是**被 Python 撞出來的**，不是想出來的。
+
+| # | 位置 | 假設 | 症狀 | 本刀處置 |
+|---|---|---|---|---|
+| 1 | `component.json` 的 `children` | — | `python:print` 宣告 `{}` 而 lift 一直產出 `values`，**沒有東西說話**（宣告完整性護欄的語料是 C++ 的） | 補宣告 ＋ **新增一支「宣告↔實際」的斷言**（注射逼出來的） |
+| 2 | 可拿性護欄 → `cppCategoryDefs` | 工具箱分類只有 cpp 那一份 | `python_print`「使用者拿不到」 | 新增 `core/toolbox-categories.ts` 宣告登記處 |
+| 3 | `audit-curriculum-coverage` 的 glob | `languages/cpp/topics/*.json` | Python 收錄了而護欄說「不在任何課程裡」 | glob 改成 `languages/*/topics/` |
+| 4 | `audit-completeness` 的 `tsParser` | **用 C++ 解析器量所有元件** | `python:program` 被判成「lift 殼」 | 非 cpp 判「無法確定」＋理由 |
+| 5 | `componentWithTrait('programRoot')` | **全域只有一個程式根** | 回傳第一個匹配 → 第二個語言**靜默失效**，畫布空白零錯誤 | 改成 `isProgramRoot()`（**問宣告，不比全域單值**） |
+| 6 | `cppStripScaffoldNodes` | 剝 C++ 的 `main` 外殼 | 套在 Python 樹上（目前無害，`buildProgram` 重建根） | 記錄，未動 |
+| 7 | `Target.entryShell` 預設 `'main'` | 沒宣告就是 C++ | 切到 Python 產出 `int main(){ print("hi") return 0; }` | Python target 宣告 `entryShell: 'none'` |
+| 8 | 🎯 **`block-registrar` 的可變參數機制** | `appendValueInput('EXPR'+idx)` 是**命令式的、只認 cpp** | `The block "python_print" is missing a(n) EXPR0 connection` | **不重寫**（vision 明令）——改成固定單參數，把界線**變成可量的** |
+| 9 | `audit-projection-loss` 只認 `skipPaths` | 「沒有 render」只有一種表達方式 | 程式根被報成「body 找不到落點」 | 認得「render 記成誠實的缺」這個形狀 |
+
+## 🔴 第 8 筆就是 vision 那 33 筆
+
+`vision.md:289` 逐字：「**它等的是 Python 的第一顆【積木】**……**應該由 Python 逼出來，
+而不是憑空重寫**」——**它等到了，而且症狀是具體的**：可變參數的 `print(a, b)` 走不完，
+固定單參數的 `print(x)` 走得完。那條界線現在**看得見、量得到**。
+
+## 鄰域的邊界（階段 7 的第二個交付）
+
+| 邊界 | 內容 |
+|---|---|
+| ① 字面常數 | `print("hi")` 的引數降級成 `raw_code`——**沒有語言中立的字面常數元件**，233 顆全是 `cpp:` |
+| ② 程式的入口 | `cpp:program`（`int main(){…}`）與 `python:program`（什麼都不包）**在觀察集「產出的形式」下不落在同一類**——`abstractComponent` 誠實地留 `null` |
+| ③ 參數的元數 | 可變 vs 固定——第 8 筆 |

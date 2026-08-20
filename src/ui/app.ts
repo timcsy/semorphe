@@ -62,6 +62,12 @@ import { PatternRenderer } from '../core/projection/pattern-renderer'
 import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { CppParser } from '../languages/cpp/parser'
+import { PythonParser } from '../languages/python/parser'
+import { toolboxCategoriesOf } from '../core/toolbox-categories'
+import '../languages/python/toolbox-categories'
+import pythonBeginnerTopic from '../languages/python/topics/python-beginner.json'
+import pythonTargetDef from '../languages/python/targets/python.json'
+import pythonPreset from '../languages/python/styles/python.json'
 import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -100,6 +106,7 @@ const STYLE_PRESETS: StylePreset[] = [
   // ⚠️ 那正是「機制有了沒人接上」的第六次，而它差一點發生：
   // 本輪把 C 的產出從 6/10 修到 10/10，**而沒有人拿得到那個成果**。
   cPreset as StylePreset,
+  pythonPreset as StylePreset,
 ]
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
@@ -183,6 +190,8 @@ export class App {
     this.topicRegistry.register(cppCompetitiveTopic as Topic)
     this.topicRegistry.register(cBeginnerTopic as Topic)
     this.topicRegistry.register(arduinoTopic as Topic)
+    // 🔴 **第一個非 C++ 的主題。** 只有一顆積木——而**那正是它要說的話**。
+    this.topicRegistry.register(pythonBeginnerTopic as Topic)
 
     // ⚠️ **注入而不是 import**——核心的登錄表不認識任何具體目標（P9／中立性護欄）。
     // 目標是「課程清單 ＋ 風格」的具名組合，讓使用者選一次而不是三次。
@@ -190,6 +199,7 @@ export class App {
     this.targetRegistry.register(cTargetDef as Target)
     this.targetRegistry.register(cppCompetitiveTargetDef as Target)
     this.targetRegistry.register(arduinoTargetDef as Target)
+    this.targetRegistry.register(pythonTargetDef as Target)
     // ⚠️ 既有的 `arduino` **保留**——它省略 `provides` ＝ 提供全部，
     //    意思是「不指定板子」。移除它會讓既有使用者的設定失效。
     this.targetRegistry.register(arduinoUnoTargetDef as Target)
@@ -492,9 +502,14 @@ export class App {
     setPatternRenderer(pr)
     this.patternRenderer = pr
     registerCppLifters(lifter, { transformRegistry, liftStrategyRegistry, renderStrategyRegistry })
-    const parser = new CppParser()
-    await parser.init()
-    this.cppParser = parser
+    // 🔴 **解析器依【目前主題的語言】選**——在此之前它寫死 `CppParser`。
+    //
+    // ⚠️ 而這一行就是 `tree-sitter-python.wasm` **出貨的理由**：
+    // `e2e/shipped-assets.spec.ts` 的判準是「出貨的每一個 wasm 都要有人真的去要它」，
+    // 而在有這一行之前，Python 的 wasm 放進 `public/` 只是死重
+    // ——**護欄當場把它抓出來，那正是它存在的原因。**
+    const parser = await this.parserFor(this.currentTopic.language)
+    this.cppParser = parser instanceof CppParser ? parser : null
     const codeParser = { _lastTree: null as unknown, parse(_code: string) { return { rootNode: this._lastTree } } }
     this.codeParserCache = codeParser
     this.syncController!.setCodeToBlocksPipeline(lifter, codeParser)
@@ -504,7 +519,11 @@ export class App {
     this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
       const code = codeArg ?? codeView.getCode()
       this._codeToBlocksInProgress = true
-      parser.parse(code).then(tree => {
+      // 🔴 **每次都問一次「這個語言的解析器」**——切目標時語言會變，
+      // 而在此之前這裡抓的是啟動時建好的那一顆（寫死 `CppParser`）。
+      // ⚠️ 症狀不是報錯，是**用 C++ 的文法去解析 Python**：
+      // `print("hi")` 會被解析成一個運算式陳述，然後靜靜地降級。
+      this.parserFor(this.currentTopic.language).then(p => p.parse(code)).then(tree => {
         codeParser._lastTree = tree.rootNode
         originalSync(code)
         const patched = this.syncController?.patchMissingDependencies(code)
@@ -613,7 +632,14 @@ export class App {
       ioPreference: this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,
-      categoryDefs: cppCategoryDefs,
+      // 🔴 **依目標的語言選分類**，不再寫死 cpp。
+      //
+      // ⚠️ 不能用「全部語言的聯集」——那會讓 C++ 使用者的工具箱
+      // 多出一個空的「輸入輸出」分類（spec 160 實測，工具箱快照當場紅）。
+      // > **一個沒有積木的分類是一個空段落。**
+      categoryDefs: this.currentTopic.language === 'cpp'
+        ? cppCategoryDefs
+        : toolboxCategoriesOf(this.currentTopic.language),
     })
   }
 
@@ -647,6 +673,24 @@ export class App {
    * > **同一件事有兩個入口時，要嘛共用一個實作，
    * > 要嘛就會有兩個「換目標之後畫面長什麼樣」的真相。**
    */
+  /**
+   * 這個語言的解析器——**一個語言一顆，載入過就留著**。
+   *
+   * ⚠️ `init()` 要抓 wasm，切一次目標就重載一次會很痛；
+   * 而快取讓 `tree-sitter-python.wasm` **只在第一次切到 Python 時被要**
+   * ——那正是 `e2e/shipped-assets.spec.ts` 要看到的那一次請求。
+   */
+  private parsers = new Map<string, { parse(code: string): Promise<{ rootNode: unknown }> }>()
+
+  private async parserFor(language: string): Promise<{ parse(code: string): Promise<{ rootNode: unknown }> }> {
+    const hit = this.parsers.get(language)
+    if (hit) return hit
+    const made = language === 'python' ? new PythonParser() : new CppParser()
+    await made.init()
+    this.parsers.set(language, made)
+    return made
+  }
+
   private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.scaffold?.setEntryShell(target.entryShell ?? 'main')

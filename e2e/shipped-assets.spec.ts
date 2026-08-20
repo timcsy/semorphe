@@ -84,6 +84,43 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   await page.getByText('程式碼→積木').click()
   await page.waitForTimeout(2500)
 
+  // 🔴 **Python 的 wasm 只有切到 Python 目標才會被要**（spec 160）。
+  //
+  // 這一段是照這支護欄**自己的檔頭**加的：
+  // > 「若哪天有一個 wasm 只在某個面板開啟時才要，這支會誤判它是死的。
+  // >  **那時要擴充這支的操作，不是放寬判準。**」
+  //
+  // ⚠️ 而它第一次跑就抓到了：wasm 出貨了、而瀏覽器裡沒有人去要它
+  // （解析器寫死 `CppParser`）。**護欄先紅，然後我才去接那條線。**
+  // ⚠️ **要認【目標】選單，不是任何含「Python」的選單。**
+  //
+  // 第一版用 `/Python/` 抓第一個匹配的 `<select>`——那是**風格**選單
+  // （「Python 風格」），於是它切了風格、語言仍然是 cpp，
+  // **而測試回報「切換成功」**。症狀是 wasm 依然沒人要，而原因看起來像別的。
+  //
+  // > **一個用寬鬆樣式挑控制項的測試，會安靜地操作錯的那一個。**
+  const switched = await page.evaluate(() => {
+    const sel = [...document.querySelectorAll('select')]
+      .find((s) => [...s.options].some((o) => /^Python 入門$/.test((o.textContent ?? '').trim())))
+    if (!sel) return false
+    const opt = [...sel.options].find((o) => /^Python 入門$/.test((o.textContent ?? '').trim()))!
+    sel.value = opt.value
+    sel.dispatchEvent(new Event('change', { bubbles: true }))
+    return true
+  })
+  expect(switched, '🔴 選單裡沒有 Python 目標——那顆 wasm 就【真的】沒有人要').toBe(true)
+  // ★ 而且要真的切過去了——不是「按了一個看起來對的東西」
+  expect(
+    await page.evaluate(() => (window as never as { __app: { currentTopic: { language: string } } }).__app.currentTopic.language),
+    '🔴 按了選單而語言沒變 → 操作到錯的控制項了（第一版就是這樣）',
+  ).toBe('python')
+  await page.waitForTimeout(1500)
+  await page.evaluate(() =>
+    (window as never as { __app: { codeView: { setCode(c: string): void } } })
+      .__app.codeView.setCode('print("hi")'))
+  await page.getByText('程式碼→積木').click()
+  await page.waitForTimeout(2500)
+
   const shipped = fs.readdirSync(path.join(process.cwd(), 'dist'))
     .filter((f) => f.endsWith('.wasm'))
 

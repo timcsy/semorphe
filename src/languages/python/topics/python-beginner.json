@@ -1,0 +1,14 @@
+{
+  "id": "python-beginner",
+  "language": "python",
+  "name": "Python 入門",
+  "default": false,
+  "description": "第一個非 C++ 的語言。⚠️ 目前只有一顆積木——這不是精簡版，是【真的只有一顆】。",
+  "levelTree": {
+    "id": "L0",
+    "level": 0,
+    "label": "L0: 輸出",
+    "components": ["python:print"],
+    "children": []
+  }
+}

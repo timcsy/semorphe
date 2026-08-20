@@ -1,0 +1,16 @@
+{
+  "id": "python_program",
+  "astNodeType": "module",
+  "component": {
+    "componentId": "python:program"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "body",
+      "ast": "$children",
+      "extract": "liftChildren"
+    }
+  ],
+  "priority": 5,
+  "_why": "根節點——`priority` 低，讓具體的 pattern 先匹配。\n\n⚠️ **`ast` 是 `$children` 不是 `children`**：後者會被當成一個 tree-sitter **欄位名**去查，查不到就靜靜回空陣列——症狀是「根認出來了而 body 是空的」。"
+}

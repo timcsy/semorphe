@@ -263,5 +263,10 @@
     "componentId": "python:print",
     "cause": "語料沒覆蓋",
     "reason": "spec 156 的第一顆 Python 元件。⚠️ 語料**沒有任何 Python 程式碼**——這條護欄的語料是 C++ 的，所以它碰不到這顆。🔴 而那不是「補語料就好」：Python 的 lift 這一刀只做一個樣式，**完整的 Python 語料是階段 7 後續的事**。🟢 這顆此刻的正確性由 `spec 156` 的等價量測釘住，不是由這條護欄。"
+  },
+  {
+    "componentId": "python:program",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 160 的程式根。理由與 `python:print` 同一條：**這條護欄的語料是 C++ 的**，它碰不到任何 Python 元件。\n🟢 而這一顆的接點（`body`）由 `python-block-both-paths.test.ts` 的「`children` 宣告 ↔ lift 實際產出」那一支釘住——**那支是注射逼出來的**：改壞宣告之後其他五支一支都沒紅，代表那個宣告原本沒有任何東西在驗。"
   }
 ]

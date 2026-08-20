@@ -1,0 +1,10 @@
+{
+  "id": "python",
+  "name": { "zh-TW": "Python 風格", "en": "Python Style" },
+  "io_style": "print",
+  "naming_convention": "snake_case",
+  "indent_size": 4,
+  "brace_style": "none",
+  "namespace_style": "none",
+  "header_style": "import"
+}

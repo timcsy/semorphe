@@ -1,0 +1,27 @@
+{
+  "componentId": "python:program",
+  "_why": "🔴 **這顆是 spec 160 被【逼出來】的，不是規劃裡的。**\n\nspec 的排除清單寫著「不做第二顆 Python 元件」，理由是「一顆就夠逼出假設」。\n而瀏覽器實測發現**路徑②根本走不完**：`renderToBlocklyState` 的第一行是\n「這顆是不是程式根」，Python 沒有根 → **回空的積木清單、零錯誤**，使用者看到**空白畫布**。\n\n> **它不是第二個功能，是路徑②的結構前提。**\n\n⚠️ 而它掀出的更深的東西是：`componentWithTrait('programRoot')` **回傳第一個匹配**\n——兩個語言都宣告的話會有一顆靜默失效。已改成問宣告（`isProgramRoot`）。\n\n🟢 **原本叫 `python:module`，而命名護欄當場擋下**：詞彙表裡已經有 `program`，`module` 是它的同義詞。\n> 「有人會在寫 `length` 的時候看到清單上已經有 `size`。」——那正是這條護欄要買的東西。",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **真的沒有。** C++ 的 `main` 與 Python 的 module 不是同一個東西：前者是一個具名函式、後者是檔案本身。硬指一個抽象父會是**猜的**（P6：不給看起來合理的結構）。\n\n🟢 而這正是階段 7 要找的「**第一個不落在同一類的地方**」的第二個實例——第一個是字面常數，這是**程式的入口**。",
+  "properties": [],
+  "children": {
+    "body": "statement"
+  },
+  "role": "statement",
+  "annotations": [],
+  "owner": "(python)",
+  "traits": {
+    "programRoot": true,
+    "_programRoot_why": "整棵樹的根。核心用它決定「這棵樹渲染得成積木嗎」。"
+  },
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "render": null,
+    "_render_why": "🔴 **真的缺，而且是【對的】**：程式根不是一顆積木——它是畫布本身。C++ 那顆程式根同樣沒有 render（它走 `scaffold`）。\n⚠️ 記成誠實的缺，而不是用 `skipPaths` 洗掉——契約的理由詞彙裡沒有「它是容器」這一個，而發明第三個理由正是 `history/018` 擋的事。",
+    "extract": null,
+    "_extract_why": "同 `render`——沒有積木就沒有抽取，兩路必須成對。",
+    "execute": null,
+    "_execute_why": "真的缺。spec 156 明確排除 Python 的執行期。"
+  }
+}
