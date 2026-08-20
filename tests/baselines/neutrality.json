@@ -4,7 +4,8 @@
     "measuredAt": "2026-08-20",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），但**先遮掉拼法像身分、實際不是**的位置（型別位置的聯集成員、Blockly 欄位的預設值）——判不出來一律留著算違規。計入【全部】元件身分（spec 152 拿掉了 universal 豁免，它的理由是假的）。註解中的引用另計、不入基線。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。",
-    "二維": "🔴 spec 153：這條護欄有【兩個】數字。`total` 掃**概念身分**（`cpp:print`），`blockTypes` 掃**積木型別**（`cpp_print`）。⚠️ 只看任一個都會誤判——把 `block-registrar` 的常數搬進 `core/` 會讓前者降、後者升。"
+    "二維": "🔴 spec 153：這條護欄有【兩個】數字。`total` 掃**概念身分**（`cpp:print`），`blockTypes` 掃**積木型別**（`cpp_print`）。⚠️ 只看任一個都會誤判——把 `block-registrar` 的常數搬進 `core/` 會讓前者降、後者升。",
+    "三維": "🔴 spec 155：這條護欄有【三個】數字。① 概念身分字面 ② 積木型別字面 ③ import。⚠️ 三個都要一起看——三次量測才量全，而每一次都是「前一維看不見另一種拼法」。"
   },
   "total": 0,
   "files": {},
@@ -14,5 +15,10 @@
     "files": {
       "src/ui/block-registrar.ts": 33
     }
+  },
+  "imports": {
+    "total": 0,
+    "_why": "🔴 spec 155 新增的第三維。前兩維掃的都是**字串字面**，而 `import { x } from '.../languages/cpp/y'` 裡一個身分字面都沒有——**於是它對它們不存在**。實測只有一筆（`core/lift/lifter.ts` import 了一顆 cpp 元件），已改成語言套件宣告。⚠️ 組裝點 `src/ui/app.ts` 明確豁免，而豁免印在報表上。",
+    "compositionRootExempt": "src/ui/app.ts"
   }
 }

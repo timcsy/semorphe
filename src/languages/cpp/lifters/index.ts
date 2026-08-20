@@ -1,4 +1,6 @@
 import type { Lifter } from '../../../core/lift/lifter'
+import { declareStandaloneBlockBuilder } from '../../../core/standalone-block'
+import { buildBlock } from '../../../components/cpp/block/lift'
 import { createNode } from '../../../core/semantic-tree'
 import { registerStatementLifters } from '../core/lifters/statements'
 import { registerDeclarationLifters } from '../core/lifters/declarations'
@@ -23,6 +25,11 @@ export interface CppRegistries {
 }
 
 export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): void {
+  // 🔴 **獨立區塊的身分**（spec 155）——原本是 `core/lift/lifter.ts` 直接
+  //    import `components/cpp/block/lift`，那是**核心 import 了一顆 C++ 元件**。
+  //    🟢 放在這裡，兩個組裝點（產品的 `app.ts` 與測試的 `createTestLifter`）
+  //    **自動都有**——它們都呼叫這一支。
+  declareStandaloneBlockBuilder(buildBlock)
   // Register C++ transforms (Layer 2)
   if (registries?.transformRegistry) {
     registerCppTransforms(registries.transformRegistry)

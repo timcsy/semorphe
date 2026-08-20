@@ -27,7 +27,7 @@ import {
   assertRatchet,
 } from '../helpers/guardrail'
 import neutralityBaseline from '../baselines/neutrality.json'
-import { allComponentIds, allComponentBlockTypes, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
+import { allComponentIds, allComponentBlockTypes, languageImportsIn, COMPOSITION_ROOT, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
 const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
@@ -67,6 +67,8 @@ function measure(): {
   commentOnly: Map<string, string[]>
   /** 🔴 spec 153 新增的第二維：中立範圍裡硬編的【積木型別】。 */
   blockTypeHits: { file: string; count: number }[]
+  /** 🔴 spec 155 新增的第三維：中立範圍裡**真正 import 語言套件**的地方。 */
+  languageImports: { file: string; spec: string }[]
 } {
   // 🔄 **spec 152：計入【全部】元件身分。**
   //    舊版只計 lang-core／lang-library，而豁免 universal 的理由
@@ -92,7 +94,7 @@ function measure(): {
     for (const id of h.code) violations.push({ file, componentId: id, lines: h.lines[id] ?? [] })
     if (h.commentOnly.length > 0) commentOnly.set(file, h.commentOnly)
   }
-  return { violations, commentOnly, blockTypeHits }
+  return { violations, commentOnly, blockTypeHits, languageImports: languageImportsIn(NEUTRAL_DIRS) }
 }
 
 const key = (v: Violation): string => `${v.file}::${v.componentId}`
@@ -148,7 +150,7 @@ describe('護欄：核心不得 import 語言套件（P9 的字面要求）', ()
 })
 
 describe('護欄：中立性（kernel／app／render 不得認得特定語言的元件身分）', () => {
-  const { violations, commentOnly, blockTypeHits } = measure()
+  const { violations, commentOnly, blockTypeHits, languageImports } = measure()
   const files = [...new Set(violations.map((v) => v.file))]
 
   // 兩欄歸因：拿 059 動工前拍的 29 筆快照當基準，逐筆判斷它為什麼不見了
@@ -159,6 +161,13 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
   const gone = beforeWork.filter((k) => !present.has(k))
   const fixedFalsePositives = gone.filter((k) => (falsePositiveList as readonly string[]).includes(k))
   const actuallyMoved = gone.filter((k) => !(falsePositiveList as readonly string[]).includes(k))
+
+  it('🔴 第三維（import）——P9 原文就寫著「無 languages/cpp import」', () => {
+    // ⚠️ 組裝點豁免，而豁免印在報表上（見報表那一支）。
+    expect(languageImports.map((x) => `${x.file} → ${x.spec}`),
+      '中立層 import 了語言套件。**前兩維看不到這種耦合**——它們掃的是字串字面。')
+      .toEqual([])
+  })
 
   it('🔴 第二維（積木型別）只准下降', () => {
     // 🟢 **它不是紅燈，是基線**：44 筆在 2026-08-20 之前對這條護欄不存在。
@@ -187,6 +196,11 @@ describe('護欄：中立性（kernel／app／render 不得認得特定語言的
     lines.push(`② 積木型別（\`cpp_print\`）：${btTotal} 筆（Baseline ${neutralityBaseline.blockTypes.total}）`)
     lines.push('   ⚠️ **這一維在 2026-08-20 之前對護欄【不存在】**——它只掃了①。')
     for (const x of blockTypeHits) lines.push(`     ✘ ${x.file}：${x.count} 筆`)
+    lines.push('')
+    // 🔴 **第三維（spec 155）——三個數字必須一起印。**
+    lines.push(`③ import 語言套件：${languageImports.length} 處（硬性零）`)
+    lines.push(`   ⚠️ 組裝點 ${COMPOSITION_ROOT} 明確豁免——它知道自己裝了什麼是正常的。`)
+    for (const x of languageImports) lines.push(`     ✘ ${x.file} → ${x.spec}`)
     lines.push('')
 
     // ── 兩欄歸因（FR-005）

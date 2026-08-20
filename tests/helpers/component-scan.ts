@@ -341,3 +341,53 @@ export function scanDirs(
   }
   return result
 }
+
+/**
+ * 中立範圍裡**真正 import 語言套件**的地方——🔴 spec 155 的第三維。
+ *
+ * ```
+ * ① 概念身分字面（`cpp:print`）   中立性護欄本來就掃
+ * ② 積木型別字面（`cpp_print`）   spec 153 才加
+ * ③ 【import】                   🔴 在此之前【沒有任何護欄在掃】
+ * ```
+ *
+ * 前兩維掃的都是**字串字面**，而 `import { x } from '.../languages/cpp/y'`
+ * 裡一個身分字面都沒有——**於是它對它們不存在**。
+ *
+ * 🔴 而 P9 的原文逐字寫著這個判準（`principles.md:158`）：
+ * 「拔掉 C++，只裝 Python stub → 所有視圖仍啟動，**無 `languages/cpp/` import**」
+ *
+ * ⚠️ **組裝點豁免**：`src/ui/app.ts` 知道自己裝了什麼是正常的
+ * ——而豁免要**印出來**，否則它的 35 處會讓這一維永遠不是 0。
+ */
+export const COMPOSITION_ROOT = 'src/ui/app.ts'
+
+export function languageImportsIn(dirs: readonly string[]): { file: string; spec: string }[] {
+  const out: { file: string; spec: string }[] = []
+  // ⚠️ **判準借用既有的那一份**（`audit-four-independences.test.ts` 的
+  //    `isLanguageSpecificImport`）——它已經分得出 `languages/style`
+  //    （中立的 `CodingStyle` 型別）與 `languages/cpp/…`（語言套件）。
+  //    🔴 **不要寫第二份**：兩份判準遲早會漂。
+  const re = /^\s*(?:import|export)[^\n]*?from\s*['"]([^'"]+)['"]/gm
+  const isLanguageSpecific = (p: string): boolean => {
+    if (/\/languages\/style(\/|$)/.test(p) || p.endsWith('languages/style')) return false
+    return /\/(languages|components)\/[a-z][a-z0-9_-]*\//.test(p)
+  }
+  for (const dir of dirs) {
+    const abs = path.join(REPO_ROOT, dir)
+    if (!fs.existsSync(abs)) continue
+    const walk = (d: string): void => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p2 = path.join(d, e.name)
+        if (e.isDirectory()) { walk(p2); continue }
+        if (!e.name.endsWith('.ts')) continue
+        const rel = path.relative(REPO_ROOT, p2)
+        if (rel === COMPOSITION_ROOT) continue   // ⚠️ 組裝點豁免（見上）
+        const src = fs.readFileSync(p2, 'utf8')
+        for (const m of src.matchAll(re)) if (isLanguageSpecific(m[1])) out.push({ file: rel, spec: m[1] })
+      }
+    }
+    walk(abs)
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file))
+}

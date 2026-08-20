@@ -7,7 +7,9 @@ import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
 import { liftPostProcessors } from './post-processors'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
-import { buildBlock } from '../../components/cpp/block/lift'
+// 🔴 **不再 import 語言套件**（spec 155）——身分由語言套件宣告。
+//    P9 原文逐字：「拔掉 C++……**無 `languages/cpp/` import**」。
+import { buildStandaloneBlock } from '../standalone-block'
 
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
@@ -311,7 +313,7 @@ export class Lifter {
       // `function_definition`… 而那正是該展平的那些。
       if (lifted.conceptId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
-        if (standalone) results.push(buildBlock(lifted.children.body ?? []))
+        if (standalone) results.push(buildStandaloneBlock(lifted.children.body ?? []))
         else results.push(...(lifted.children.body ?? []))
       } else {
         results.push(lifted)
