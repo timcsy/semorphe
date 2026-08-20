@@ -268,5 +268,10 @@
     "componentId": "python:program",
     "cause": "語料沒覆蓋",
     "reason": "spec 160 的程式根。理由與 `python:print` 同一條：**這條護欄的語料是 C++ 的**，它碰不到任何 Python 元件。\n🟢 而這一顆的接點（`body`）由 `python-block-both-paths.test.ts` 的「`children` 宣告 ↔ lift 實際產出」那一支釘住——**那支是注射逼出來的**：改壞宣告之後其他五支一支都沒紅，代表那個宣告原本沒有任何東西在驗。"
+  },
+  {
+    "componentId": "python:literal_string",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 167 的 Python 字面常數。理由與前兩顆 Python 元件同一條：這條護欄的語料是 C++ 的。\n🟢 而它【沒有接點】（children: {}），所以「宣告的接點對不對」對它是空的——它的正確性由膠囊自證測釘住（4 支，含一條反向：C++ 的字串不得被認成 Python 那顆）。"
   }
 ]

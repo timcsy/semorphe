@@ -16,6 +16,13 @@ export const pythonCategoryDefs: ToolboxCategoryDef[] = [
     colorKey: 'io',
     sources: [{ from: '(python)', category: 'io' }],
   },
+  {
+    key: 'data',
+    nameKey: 'CAT_DATA',
+    fallback: '資料',
+    colorKey: 'data',
+    sources: [{ from: '(python)', category: 'data' }],
+  },
 ]
 
 declareToolboxCategories('python', pythonCategoryDefs)

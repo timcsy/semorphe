@@ -1,0 +1,27 @@
+{
+  "componentId": "python:literal_string",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **真的沒有**。C++ 的字串字面值是 `\"hi\"`（char 陣列／std::string），Python 的是一個 `str` 物件——**兩者在型別系統裡不是同一種東西**。\n⚠️ 硬指一個抽象父會是猜的（P6：不給看起來合理的結構）。\n🟢 而它們**在觀察集『產出的形式』下確實同類**（都是引號包起來的文字）——那條等價邊要等有人量它時再宣告。",
+  "properties": [
+    {
+      "name": "value",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": null,
+    "lift": "./lift-pattern.json",
+    "_execute_why": "真的缺。Python 的執行期整個還沒做（spec 156 明確排除）——⚠️ 而這裡刻意【不】寫一個空的執行器：**顯式的空與遺漏的空要分得出來**，而一個 noop 函式兩者長得一樣。"
+  },
+  "traits": {
+    "stringLiteral": true
+  },
+  "_traits_why": "**我是不是字串字面值是我自己的性質**——與 C++ 那顆同一個宣告（`stringLiteral`），所以它們在那個觀察集下是同一類。"
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "python_literal_string",
+    "componentId": "python:literal_string",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_literal_string",
+      "message0": "\" %1 \"",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TEXT",
+          "text": "hello"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_STRING_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TEXT": "value"
+      }
+    }
+  }
+]

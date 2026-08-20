@@ -1,0 +1,16 @@
+{
+  "id": "python_string_literal",
+  "astNodeType": "string",
+  "component": {
+    "componentId": "python:literal_string"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "value",
+      "ast": "$text",
+      "extract": "text",
+      "transform": "stripQuotes"
+    }
+  ],
+  "_why": "⚠️ **tree-sitter-python 的節點叫 `string`，不是 `string_literal`**（C++ 那顆是後者）。\n🟢 而 `stripQuotes` 這個 transform **兩個語言共用**——它只是去掉頭尾的引號，一個 C++ 的字都不認識。"
+}

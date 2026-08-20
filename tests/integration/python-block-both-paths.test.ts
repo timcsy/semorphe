@@ -214,14 +214,22 @@ describe('spec 160 · 兩條到達路徑', () => {
    * ⚠️ **釘成測試而不是寫在筆記裡**，因為它會被修掉：哪天有人加了語言中立的
    * 字面常數，這一支會紅，而**那時候紅是好事**——它會逼人回來改 vision 那一格。
    */
-  it('🔴 邊界：引數降級，因為【沒有語言中立的字面常數元件】', async () => {
+  it('🟢 邊界【已經移動】：引數不再降級——Python 有自己的字面常數了', async () => {
     const tree = await pyParser.parse('print("hi")')
     const sem = lifter.lift(tree.rootNode as never, 'python')
     const print = collect(sem!).find((n) => n.componentId === 'python:print')!
     const arg = print.children.values?.[0]
-    expect(arg?.componentId,
-      '⚠️ 這一格變了就表示邊界移動了——去改 vision 階段 7 的「第一個不落在同一類的地方」，'
-      + '不要只是把測試改綠').toBe('raw_code')
+    // 🎯 **spec 167：這一格從 `raw_code` 變成 `python:literal_string`。**
+    //
+    // spec 160 寫這一條時附了一句話：
+    // > 「⚠️ 這一格變了就表示邊界移動了——**去改 vision**，不要只是把測試改綠。」
+    //
+    // 🟢 **它真的變了，而 vision 也改了。**
+    // ⚠️ 而**邊界本身還在，只是往後退了一格**：`python:literal_string` 的
+    // `abstractComponent` 仍然是 `null`——C++ 的字串字面值與 Python 的 `str`
+    // **在型別系統裡不是同一種東西**，硬指一個抽象父會是猜的（P6）。
+    expect(arg?.componentId, '⚠️ 又降級了 → 字面常數那顆的 lift 樣式壞了')
+      .toBe('python:literal_string')
   })
 
   it('🔴 路徑②的下半：lift 出來的樹**渲染得成積木**（兩條路在此會合）', async () => {

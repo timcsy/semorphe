@@ -3,12 +3,15 @@
   "language": "python",
   "name": "Python 入門",
   "default": false,
-  "description": "第一個非 C++ 的語言。⚠️ 目前只有一顆積木——這不是精簡版，是【真的只有一顆】。",
+  "description": "第一個非 C++ 的語言。目前有 print 與字串字面值——**貼一段 print(\"hi\") 進來，兩顆積木都認得出來**。",
   "levelTree": {
     "id": "L0",
     "level": 0,
     "label": "L0: 輸出",
-    "components": ["python:print"],
+    "components": [
+      "python:print",
+      "python:literal_string"
+    ],
     "children": []
   }
 }
