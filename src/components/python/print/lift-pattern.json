@@ -1,9 +1,22 @@
 {
   "id": "python_print_call",
   "astNodeType": "call",
-  "patternType": "named-call",
-  "concept": { "conceptId": "python:print" },
-  "namedCall": { "name": "print", "argsField": "arguments", "collectInto": "values" },
+  "concept": {
+    "conceptId": "python:print"
+  },
+  "constraints": [
+    {
+      "field": "function",
+      "text": "print"
+    }
+  ],
+  "fieldMappings": [
+    {
+      "semantic": "values",
+      "ast": "arguments",
+      "extract": "liftChildren"
+    }
+  ],
   "priority": 15,
-  "_why": "spec 156 的第一個 Python lift 樣式。⚠️ 它【還沒有接上 Python 的解析器】——這一刀交付的是【等價的證據】，不是完整的 lift 路徑（見 spec 的明確排除）。"
+  "_why": "🔄 **spec 157 修正**：spec 156 寫的是 `patternType: \"named-call\"`——**那不是合法值**，而它被 glob 收進生產路徑、沒有任何東西說話。\n\n> **照抄之前要先問「它是不是同一類」**（`lift-patterns.ts` 檔頭早就寫著）。\n\n🟢 改成預設的 `simple` 形狀：`constraints` 認出 `print`，`fieldMappings` 把 `arguments` 收進 `values`。"
 }

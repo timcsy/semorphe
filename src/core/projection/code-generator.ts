@@ -97,12 +97,25 @@ export function registerLanguage(language: string, factory: LanguageGeneratorFac
 export function registerMetaConceptGenerators(generators: Map<string, NodeGenerator>): void {
   generators.set('raw_code', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
+    // 🔴 **運算式位置不縮排、不換行**（spec 157）。
+    //
+    // 原本無條件補 `\n` ＋ 縮排——而降級節點**會落在運算式位置**：
+    // Python 的 `print("hi")` 裡，`"hi"` 還沒有元件，於是它是一顆 `raw_code`，
+    // 產出變成 `print("hi"\n)`。
+    //
+    // ⚠️ 積木那一側**早就處理過同一件事**（`block-renderer` 的
+    // 「語句位置的降級積木出現在運算式位置時換成運算式版」）
+    // ——而**產生器這一側沒有人接**。
+    //
+    // > **同一個問題在兩個投影上各要處理一次，而修了一邊很容易以為修完了。**
+    if (ctx.isExpression) return raw.trim()
     const indented = raw.startsWith('#') ? raw : indent(ctx) + raw
     return indented.endsWith('\n') ? indented : indented + '\n'
   })
 
-  generators.set('unresolved', (node, _ctx) => {
+  generators.set('unresolved', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? '')
+    if (ctx.isExpression) return raw.trim()   // 同上
     return raw.endsWith('\n') ? raw : raw + '\n'
   })
 

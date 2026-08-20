@@ -189,10 +189,28 @@ export interface CodeTemplate {
   order: number
 }
 
+/**
+ * 一筆 lift 樣式的**種類**——🔴 **這是唯一真相**（spec 157）。
+ *
+ * 它原本只是 `AstPattern.patternType` 上的一個字面聯集，
+ * 而 `lift-pattern.json` 是**資料**：TypeScript 檢查不到它。
+ * ⚠️ spec 156 寫了一筆 `patternType: 'named-call'`——**不在這個集合裡**，
+ * 而它被 `componentLiftPatterns()` 的 glob **收進生產路徑，沒有任何東西說話**。
+ *
+ * > **一筆型別不合法的宣告被讀了進去，而讀的人不驗。**
+ *
+ * 🟢 提成執行期的常數，讓護欄**用同一份**去驗——
+ * ⚠️ **不要在測試裡再抄一份**：兩份判準遲早會漂。
+ */
+export const PATTERN_TYPES = [
+  'simple', 'operatorDispatch', 'chain', 'composite', 'unwrap', 'contextTransform', 'multiResult',
+] as const
+export type PatternType = (typeof PATTERN_TYPES)[number]
+
 export interface AstPattern {
   nodeType: string
   constraints: AstConstraint[]
-  patternType?: 'simple' | 'operatorDispatch' | 'chain' | 'composite' | 'unwrap' | 'contextTransform' | 'multiResult'
+  patternType?: PatternType
   fieldMappings?: FieldMapping[]
   operatorDispatch?: OperatorDispatchDef
   chain?: ChainDef
@@ -583,7 +601,7 @@ export interface LiftPattern {
   id: string
   astNodeType: string
   concept?: { conceptId: string }
-  patternType?: AstPattern['patternType']
+  patternType?: PatternType
   constraints?: AstConstraint[]
   fieldMappings?: FieldMapping[]
   operatorDispatch?: OperatorDispatchDef
