@@ -35,6 +35,31 @@ import path from 'node:path'
 import { REPO_ROOT } from '../helpers/guardrail'
 
 const ROOTS = ['src', 'tests', 'e2e'] as const
+
+/**
+ * 🔴 **spec 159：從「擋四個名字」擴成「擋整個 concept 家族」。**
+ *
+ * spec 158 的護欄只認 `\bconceptId\b`——於是 `byConceptId`（大寫 C 讓 `\b` 不成立）、
+ * `getVisibleConcepts`、`registerCallConcept`、檔名 `method-concepts.ts` 全部漏掉。
+ * 2026-08-20 實測**還有 3496 處**散在 656 個檔，而護欄一個都沒擋住。
+ *
+ * > **一條擋「四個名字」的規則，擋不住一個【家族】。**
+ *
+ * ## 具名豁免（每一條都要說得出理由——靠路徑規則順便放過就是用宣告刷數字）
+ */
+const EXEMPT: { path: RegExp; why: string }[] = [
+  { path: /^tests\/integration\/component-vocabulary\.test\.ts$/,
+    why: '護欄自己——它要寫得出舊名才擋得住舊名' },
+  { path: /^tests\/baselines\//,
+    why: '量測工具不得量到自己（基線 JSON 會數到護欄的規則文字）' },
+  { path: /^src\/migrations\//,
+    why: '凍結明表——它的鍵是【過去】的身分，改掉等於真實使用者的舊存檔升不上來' },
+  { path: /^src\/languages\/[^/]+\/id-migrations\.ts$/,
+    why: '同上：語言側的凍結明表' },
+]
+
+/** `knowledge/concepts/` 是**知識庫資料夾**，人拍板不改名（見 concepts/元件.md）。 */
+const KNOWLEDGE_DIR = /knowledge\/concepts\//g
 const SELF = 'tests/integration/component-vocabulary.test.ts'
 /** 舊詞彙——🔴 每一個都要說得出它被誰取代。 */
 const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
@@ -93,6 +118,51 @@ function walkMd(target: string, out: string[] = []): string[] {
   return out
 }
 const knowledgeFiles = KNOWLEDGE_ROOTS.flatMap((r) => walkMd(r))
+
+describe('spec 159 · 整個 concept 家族退場', () => {
+  const family = /[Cc]oncepts?/
+  const scanned = files.filter((f) => !EXEMPT.some((e) => e.path.test(f)))
+
+  it('★ 錨點：豁免沒有把檔案掃光', () => {
+    expect(scanned.length).toBeGreaterThan(500)
+    // `tests/baselines/` 是**整個目錄**的豁免（34 份基線），它不是「順便放過」而是
+    // 「量測工具不得量到自己」。⚠️ 真正該盯的是**它以外**還豁免了幾個檔。
+    const exemptOutsideBaselines = files.filter(
+      (f) => !f.startsWith('tests/baselines/') && EXEMPT.some((e) => e.path.test(f)))
+    expect(exemptOutsideBaselines.sort(),
+      '基線目錄以外的豁免必須逐一具名——多一個就是靠路徑規則順便放過').toEqual([
+      'src/languages/cpp/id-migrations.ts',
+      'src/migrations/block-type-migrations.ts',
+      'src/migrations/id-migrations.ts',
+      'src/migrations/merged-identities.ts',
+    ])
+  })
+
+  it('🔴 `concept` 家族已整族退場——請用 `component` 家族', () => {
+    const hits = scanned
+      .map((f) => ({ f, n: (fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')
+        .replace(KNOWLEDGE_DIR, '').match(new RegExp(family, 'g')) ?? []).length }))
+      .filter((x) => x.n > 0)
+    const total = hits.reduce((a, b) => a + b.n, 0)
+    expect(total,
+      `還有 ${total} 處散在 ${hits.length} 個檔。`
+      + '⚠️ 這條是【硬性零】不是棘輪——改名的修法很便宜（見 build-guardrail 6.8）。'
+      + `最大的：${hits.sort((a, b) => b.n - a.n).slice(0, 5).map((x) => `${x.f}(${x.n})`).join(' ')}`)
+      .toBe(0)
+  })
+
+  it('🔴 檔名也不准帶 concept', () => {
+    expect(scanned.filter((f) => /concept/i.test(path.basename(f))), '檔名是識別字').toEqual([])
+  })
+
+  it('★ 存檔格式不受本輪影響——SavedState 沒有任何 concept 欄位', () => {
+    const sv = fs.readFileSync(path.join(REPO_ROOT, 'src/core/storage-version.ts'), 'utf8')
+    const fields = sv.slice(sv.indexOf('SAVED_STATE_FIELDS'), sv.indexOf('REQUIRED_FIELDS'))
+    expect(family.test(fields),
+      '⚠️ 若存檔欄位出現 concept，本輪就【需要】一次存檔版本＋凍結明表（見 component-rename 步驟 5）')
+      .toBe(false)
+  })
+})
 
 describe('spec 158 · 舊詞彙不准回來', () => {
   it('★ 錨點：真的掃到檔案了（否則下面在驗空集合）', () => {
