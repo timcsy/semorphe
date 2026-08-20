@@ -46,6 +46,27 @@ if (tree.componentId !== programRootComponent()) return { blocks: [] }
 | ② 程式的入口 | 兩顆都叫「程式的根」，而在觀察集「產出的形式」下**不落在同一類**（`abstractComponent` 誠實留 `null`） |
 | ③ 參數的元數 | 可變 vs 固定 |
 
+## 兩個順帶做成的決定（判官逼出來的補記）
+
+**① `core/toolbox-categories.ts`——第九個宣告登記處**
+
+「這個語言的工具箱有哪些分類」原本寫死成 `cppCategoryDefs`，`app.ts` 與可拿性護欄
+各自 import 它。加一個登記處（**語言套件推、核心讀**）之後，`app.ts:640` 依
+`currentTopic.language` 選，工具箱切語言就跟著換。
+
+⚠️ 而這個形狀**已經是第九次**了（`comment-syntax`／`skip-declarations`／
+`degradation-blocks`／`standalone-block`／`language-executors`／`non-components`／
+`board-constant-dropdown`／`variable-dropdown`／`toolbox-categories`）
+——它在這一輪被升格成一個概念：[宣告登記處](../concepts/宣告登記處.md)。
+
+**② `Target.entryShell: 'none'`**
+
+`app.ts` 三處寫著 `target.entryShell ?? 'main'`——**沒宣告就是 C++**。
+於是切到 Python 貼 `print("hi")`，使用者拿到
+`int main() { print("hi") return 0; }`，**而全套測試是綠的**（測試繞過了外殼）。
+
+🟢 處置是讓那個目標**自己說**它沒有外殼，不是在核心加分支。
+
 ## 代價，要誠實記
 
 驗收的「完備性缺 3 → 1」**沒有達成，實際 3 → 4**。那是 **-2（補實兩路）＋3（新的程式根）**

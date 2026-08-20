@@ -110,6 +110,9 @@ export function isElseIfChainable(componentId: string): boolean {
  * 換一個語言就換一顆，核心只要問「誰是根」。
  *
  * > **核心可以知道「有一個根」，不該知道那個根叫什麼。**
+ *
+ * ⚠️ 而這句話**少了一半**——`knowledge/concepts/宣告登記處.md` 補完了它：
+ * **也不該假設它有幾個**。下面的 `isProgramRoot` 就是那半句的產物。
  */
 export function programRootComponent(): string | undefined {
   return componentWithTrait('programRoot')
