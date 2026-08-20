@@ -6,6 +6,8 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
+import { attachBranchList } from './branch-list-block'
+import { attachParamList } from './param-list-block'
 import { defineVariadicBlock } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { abstractComponentOf } from '../core/language-executors'
@@ -458,6 +460,29 @@ export class BlockRegistrar {
       // 一顆一顆選入，而每一顆選入時都要開瀏覽器看它長對了沒。
       const rules = (spec.renderMapping as { dynamicRules?: { inputPattern?: string; childSlot?: string }[] } | undefined)?.dynamicRules
       const soleRule = rules?.length === 1 ? rules[0] : undefined
+      // 🔴 **第二種形狀：可增減的【欄位組】**（spec 169）——`def f(a, b)` 的參數列。
+      //
+      // 與上面那種的差別是「加減的是什麼」：那種加減值插槽，這種加減欄位組。
+      // 而它**不建整顆積木**：`jsonInit` 先建靜態的部分（標籤、名字欄位、函式體），
+      // 這裡再把動態的那一段接上去。
+      //
+      // > **一個「從零建整顆」的建構子，遇到「只有一部分是動態的」積木時，
+      // > 唯一的出路是把靜態的部分也吞進去——而那正是它會弄丟欄位的原因。**
+      // 🔴 **第三種形狀：可增減的【成對插槽】＋ 一個可有可無的尾巴**（spec 169）
+      //    —— `if / elif… / else`。使用者：「if-else 還沒有 mutation」。
+      const branchSpec = (blockDef as { branchList?: Record<string, unknown> }).branchList
+      if (branchSpec) {
+        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        attachBranchList(blockType, branchSpec as unknown as Parameters<typeof attachBranchList>[1])
+        continue
+      }
+
+      const paramSpec = (blockDef as { paramList?: Record<string, unknown> }).paramList
+      if (paramSpec) {
+        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        attachParamList(blockType, paramSpec as unknown as Parameters<typeof attachParamList>[1])
+        continue
+      }
       if (soleRule?.inputPattern && (blockDef as { builder?: string }).builder === 'variadic') {
         const bd = blockDef as unknown as Record<string, unknown>
         defineVariadicBlock(blockType, {
@@ -475,6 +500,7 @@ export class BlockRegistrar {
           nextStatement: bd.nextStatement as string | undefined,
           output: bd.output as string | undefined,
           leadingField: bd.leadingField as { type: string; name: string } | undefined,
+          minCount: bd.minCount as number | undefined,
         })
         continue
       }

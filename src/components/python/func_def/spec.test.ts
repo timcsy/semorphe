@@ -9,9 +9,22 @@ describe('python:func_def', () => {
     expect(ids, 'body 沒接進來').toContain('python:return')
   })
 
-  it('🔴 參數列的括號要剝掉——不然會產出 `def f((a, b))`', async () => {
-    expect(gen(await liftPython('def add(a, b):\n    return a\n')))
-      .toBe('def add(a, b):\n    return a')
+  it('🔴 參數是【結構節點】不是一個字串——這是 mutation 的前提', async () => {
+    const t = await liftPython('def add(a, b):\n    return a\n')
+    const find = (n: typeof t): typeof t =>
+      !n ? null : n.componentId === 'python:func_def' ? n
+        : Object.values(n.children ?? {}).flat().map((k) => find(k)).find(Boolean) ?? null
+    const fd = find(t)!
+    expect(fd.children.params?.length, '🔴 兩個參數要是兩格——一個逗號分隔的字串表達不出「兩格」').toBe(2)
+    expect(fd.children.params!.map((p) => p.properties.name)).toEqual(['a', 'b'])
+    expect(gen(t)).toBe('def add(a, b):\n    return a')
+  })
+
+  it('🔴 認不出來的參數形式走誠實降級，不得產回一個【少了東西】的函式', async () => {
+    // `b=1` 是 default_parameter —— 收一半的話 `def f(a, b=1)` 會產回 `def f(a, b)`，
+    // 而使用者的預設值就不見了。
+    const ids = componentIdsOf(await liftPython('def f(a, b=1):\n    return a\n'))
+    expect(ids, '⚠️ 預設值參數被吃掉了').not.toContain('python:func_def')
   })
 
   it('★ 零參數也走得完', async () => {

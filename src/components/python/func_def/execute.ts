@@ -4,10 +4,10 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:func_def', async (node, ctx) => {
     const name = String(node.properties.name ?? 'f')
-    const params = String(node.properties.params ?? '')
-      .split(',').map((s) => s.trim()).filter(Boolean)
-      // 型別留空 —— Python 沒有參數型別，而這個欄位是共用結構要的。
-      .map((n) => ({ name: n, type: '' }))
+    // 型別留空 —— Python 沒有參數型別，而這個欄位是共用結構要的。
+    const params = (node.children.params ?? [])
+      .map((p) => ({ name: String(p.properties.name ?? ''), type: '' }))
+      .filter((p) => p.name)
     ctx.functions.set(name, { name, params, body: node.children.body ?? [], returnType: '' })
   })
 }

@@ -32,7 +32,6 @@
           "python:logic_not",
           "python:negate",
           "python:if",
-          "python:if_else",
           "python:loop_while"
         ],
         "children": [

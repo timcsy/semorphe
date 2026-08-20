@@ -20,7 +20,8 @@
         "type": "field_dynamic_dropdown",
         "name": "NAME",
         "source": "funcs"
-      }
+      },
+      "minCount": 0
     },
     "renderMapping": {
       "fields": {
@@ -37,7 +38,7 @@
       ],
       "expressionCounterpart": "python_func_call_expression"
     },
-    "_why": "⚠️ **兩個形態，一個身分**（`form: {axis:'role'}`）——`add(1,2)` 單獨一行是語句，放進 `x = add(1,2)` 是運算式。**位置不是身分，是形態。**\n\n🔴 **`builder: variadic`**：引數個數不定，所以要 mutation（±）——與輸出那顆同一個建構子（spec 162）。而它比那顆多一個**前置欄位**（函式名的下拉）。\n\n⚠️ 兩個形態的 **extraState 格式必須完全相同**——`STATEMENT_TO_EXPRESSION` 直接搬移它。\n\n🔴 **`expressionCounterpart` 是【語句那一份】要宣告的**——`block-renderer` 在「運算式插槽裡收到一顆語句積木」時問它（`getExpressionCounterpart`）。\n⚠️ 少了它的症狀是 **`x = fib(3)` 產出一顆灰色的 `raw_expression`**：lift 是對的、樹裡有這顆元件，而**渲染時挑不到運算式那個形態**。\n> **`form: {axis:'role'}` 說了「有兩種形態」，而【什麼時候用哪一種】要另外一個宣告。**"
+    "_why": "⚠️ **兩個形態，一個身分**（`form: {axis:'role'}`）——`add(1,2)` 單獨一行是語句，放進 `x = add(1,2)` 是運算式。**位置不是身分，是形態。**\n\n🔴 **`builder: variadic`**：引數個數不定，所以要 mutation（±）——與輸出那顆同一個建構子（spec 162）。而它比那顆多一個**前置欄位**（函式名的下拉）。\n\n⚠️ 兩個形態的 **extraState 格式必須完全相同**——`STATEMENT_TO_EXPRESSION` 直接搬移它。\n\n🔴 **`expressionCounterpart` 是【語句那一份】要宣告的**——`block-renderer` 在「運算式插槽裡收到一顆語句積木」時問它（`getExpressionCounterpart`）。\n⚠️ 少了它的症狀是 **`x = fib(3)` 產出一顆灰色的 `raw_expression`**：lift 是對的、樹裡有這顆元件，而**渲染時挑不到運算式那個形態**。\n> **`form: {axis:'role'}` 說了「有兩種形態」，而【什麼時候用哪一種】要另外一個宣告。**\n\n🔴 **`minCount: 0`**（使用者 2026-08-21：「初始參數量應該是零才對」）——`reset()` 是常態，而一顆開起來就掛著一個空插槽的呼叫積木，讀起來像「這裡少了一個東西」。\n⚠️ 而輸出那顆維持 1：`print()` 印一個空行是合法的，**而它不是學生想做的事**。\n> **最少幾格是一個教學決定，不是一個技術預設。**"
   },
   {
     "id": "python_func_call_expression",
@@ -59,7 +60,8 @@
         "type": "field_dynamic_dropdown",
         "name": "NAME",
         "source": "funcs"
-      }
+      },
+      "minCount": 0
     },
     "renderMapping": {
       "fields": {

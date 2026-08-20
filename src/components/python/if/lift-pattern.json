@@ -3,28 +3,12 @@
     "id": "python_if",
     "grammar": "tree-sitter-python",
     "astNodeType": "if_statement",
+    "liftStrategy": "python:liftIf",
+    "priority": 10,
+    "_why": "🔴 **具名策略**：`elif` 在 tree-sitter-python 是掛在 `alternative` 上的一條**遞迴的 `elif_clause` 鏈**，而 `fieldMappings` 只認得住「一個欄位對一個接點」。要把那條鏈攤平成兩個並排的清單，得走一段真的邏輯。\n\n⚠️ 上一版把帶 `elif` 的 if **整顆降級**，而那是刻意的邊界（少做一半而不出聲比降級更貴）。spec 169 把那個邊界收掉了。\n\n⚠️ **具名策略也要宣告 `component`**：`lift-pattern-shape` 護欄逐字說「樣式**說不出它產生哪個概念**」——策略函式產出什麼，靜態掃不到。",
     "component": {
       "componentId": "python:if"
     },
-    "constraints": [
-      {
-        "field": "alternative",
-        "absent": true
-      }
-    ],
-    "fieldMappings": [
-      {
-        "semantic": "condition",
-        "ast": "condition",
-        "extract": "lift"
-      },
-      {
-        "semantic": "body",
-        "ast": "consequence",
-        "extract": "liftBody"
-      }
-    ],
-    "priority": 10,
-    "_why": "⚠️ **`constraints` 要求沒有 `alternative`**——有 else／elif 的走 `if_else` 那一筆（優先級較高）。\n\n🔴 **`elif` 沒有收，而那是【刻意的邊界】不是遺漏。**\n\ntree-sitter-python 把 `elif` 切成一個獨立的 `elif_clause` 節點掛在 `alternative` 上（不是像 C 那樣巢狀的 `if`）。要正確處理一條 `if/elif/elif/else` 鏈，需要把那條鏈**攤平成一顆多分支的積木**——那是一個獨立的形態設計，不是一個 fieldMapping。\n\n🟢 **所以帶 `elif` 的 if 走誠實降級**：學生看到一顆灰色方塊，而不是一顆「看起來對、但少了兩個分支」的積木。\n> **一個少做了一半而不出聲的投影，比一個誠實的降級更貴。**"
+    "fieldMappings": []
   }
 ]

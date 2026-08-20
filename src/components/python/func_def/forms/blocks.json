@@ -13,11 +13,6 @@
           "type": "field_input",
           "name": "NAME",
           "text": "f"
-        },
-        {
-          "type": "field_input",
-          "name": "PARAMS",
-          "text": ""
         }
       ],
       "message1": "%1",
@@ -28,19 +23,46 @@
           "check": "Statement"
         }
       ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF6680",
-      "tooltip": "%{BKY_PYTHON_FUNC_DEF_TOOLTIP}"
+      "tooltip": "%{BKY_PYTHON_FUNC_DEF_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "p{i}"
+          }
+        ],
+        "separator": "，",
+        "openLabelKey": "PYTHON_FUNC_DEF_PARAMS_OPEN",
+        "openLabelFallback": "（參數",
+        "closeLabelKey": "PYTHON_FUNC_DEF_PARAMS_CLOSE",
+        "closeLabelFallback": "）",
+        "moveTailTo": "BODY"
+      }
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name",
-        "PARAMS": "params"
+        "NAME": "name"
       },
       "statementInputs": {
         "BODY": "body"
-      }
-    }
+      },
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "childFields": {
+            "PARAM_{i}": "name"
+          }
+        }
+      ]
+    },
+    "_why": "🔴 **`paramList`：可增減的欄位組**（spec 169，使用者回報「函式定義還沒有 mutation」）。\n\n⚠️ 與 `builder: variadic` **不是同一種**：那種加減**值插槽**（每格接一顆積木），這種加減**欄位組**（每格是一個文字欄位）。Python 的參數只有名字，所以 `fields` 只有一項——C++ 那顆要兩項（型別 ＋ 名字）。\n\n⚠️ **零參數時不顯示括號**：`def f():` 的括號由產生器補，而積木上顯示一對空括號會讓「沒有參數」看起來像「有一個空參數」。"
   }
 ]

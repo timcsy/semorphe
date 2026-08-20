@@ -955,15 +955,11 @@
       "dirs": 1
     },
     "python:func_def": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "python:if": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:if_else": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "python:input": {

@@ -3,27 +3,12 @@
     "id": "python_func_def",
     "grammar": "tree-sitter-python",
     "astNodeType": "function_definition",
+    "liftStrategy": "python:liftFuncDef",
+    "priority": 10,
+    "_why": "🔴 **具名策略，不是純資料**：參數列要變成【一串結構節點】而不是一個字串，而 `fieldMappings` 的 `extract` 只產得出字串或「lift 出來的東西」——`a` 這個 identifier lift 出來會是一顆變數參照，那讀起來像「把 a 的值當參數」。\n\n> **參數的名字與變數的引用長得一模一樣，而它們是兩件事。**\n\n⚠️ **具名策略也要宣告 `component`**：`lift-pattern-shape` 護欄逐字說「樣式**說不出它產生哪個概念**」——策略函式產出什麼，靜態掃不到。",
     "component": {
       "componentId": "python:func_def"
     },
-    "fieldMappings": [
-      {
-        "semantic": "name",
-        "ast": "name",
-        "extract": "text"
-      },
-      {
-        "semantic": "params",
-        "ast": "parameters",
-        "extract": "text",
-        "transform": "python:stripParens"
-      },
-      {
-        "semantic": "body",
-        "ast": "body",
-        "extract": "liftBody"
-      }
-    ],
-    "priority": 10
+    "fieldMappings": []
   }
 ]

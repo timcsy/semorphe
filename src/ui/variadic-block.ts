@@ -8,11 +8,11 @@
  * **積木型別的【定義】那一半是命令式的**，寫死在 `block-registrar.ts` 裡，
  * 一顆一段、只認 `cpp_*`。
  *
- * 症狀在 spec 160 具體出現過：`python_print` 宣告了 `dynamicRules`，
+ * 症狀在 spec 160 具體出現過：第二個語言的第一顆積木宣告了 `dynamicRules`，
  * 而瀏覽器報 `The block "python_print" is missing a(n) EXPR0 connection`
  * ——**宣告有了，沒有人照著它建那些 input**。
  *
- * > `vision` 逐字：「它等的是 Python 的第一顆【積木】」——而它等到了。
+ * > `vision` 逐字：「它等的是第二個語言的第一顆【積木】」——而它等到了。
  *
  * ## 判準：什麼樣的積木適用
  *
@@ -69,7 +69,7 @@ export interface VariadicSpec {
   /**
    * 第一個插槽**前面**的一個欄位（spec 168）。
    *
-   * 🔴 `python:func_call` 需要它：`呼叫 [名字下拉] (引數…)` ——
+   * 🔴 第二個語言的呼叫積木需要它：`呼叫 [名字下拉] (引數…)` ——
    * 標籤、下拉、然後才是可變的插槽。
    *
    * ⚠️ 在此之前這個建構子只做得出「標籤 ＋ 插槽」，於是任何
@@ -79,6 +79,17 @@ export interface VariadicSpec {
    * > **一個建構子表達不出來的形狀，會變成一筆新的雙重真相。**
    */
   leadingField?: { type: string; name: string; source?: string; options?: unknown }
+  /**
+   * 最少幾格（預設 1）。
+   *
+   * 🔴 **第二個語言的呼叫積木要 0**（使用者 2026-08-21：「初始參數量應該是零才對」）
+   * ——`reset()` 是常態，而一顆開起來就掛著一個空插槽的呼叫積木，
+   * 讀起來像「這裡少了一個東西」。
+   *
+   * ⚠️ 而輸出那顆要 1：`print()` 印一個空行是合法的，**而它不是學生想做的事**。
+   * > **最少幾格是一個教學決定，不是一個技術預設。**
+   */
+  minCount?: number
 }
 
 /** `EXPR{i}` → `EXPR3` */
@@ -95,18 +106,26 @@ function inputName(pattern: string, i: number): string {
 export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
   const msg = Blockly.Msg as Record<string, string>
   Blockly.Blocks[type] = {
-    itemCount_: 1,
+    itemCount_: spec.minCount ?? 1,
     init: function (this: any) {
-      this.itemCount_ = 1
-      const first = this.appendValueInput(inputName(spec.inputPattern, 0))
-      if (spec.check) first.setCheck(spec.check)
+      const min = spec.minCount ?? 1
+      this.itemCount_ = 0
+      // 🔴 **標籤與前置欄位放在自己的啞輸入上**（spec 169）。
+      //
+      // ⚠️ 第一版把它們掛在**第一個值插槽**上，而那有兩個後果：
+      //   ① 最少 0 格的積木（`reset()`）沒有第一個插槽 → **標籤整個不見**
+      //   ② 版面與命令式那些積木不同（它們用 `appendDummyInput('LABEL')`）
+      //      → 比對護欄永遠報 differ，那批命令式定義因此退不了場
+      //
+      // > **一個「把標籤掛在第一個資料上」的版面，在資料可以是零個的時候就崩了。**
+      const head = this.appendDummyInput('HEAD')
       const label = spec.labelKey ? (msg[spec.labelKey] || spec.labelFallback) : spec.labelFallback
-      if (label) first.appendField(label)
+      if (label) head.appendField(label)
       if (spec.leadingField) {
         // 用 Blockly 的 JSON 欄位工廠——**不要自己 new 一個具體的欄位類別**，
         // 那樣自訂欄位（`field_dynamic_dropdown`）就接不進來。
         const f = Blockly.fieldRegistry.fromJson(spec.leadingField as never)
-        if (f) first.appendField(f, spec.leadingField.name)
+        if (f) head.appendField(f, spec.leadingField.name)
       }
       this.appendDummyInput('TAIL')
         .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
@@ -120,6 +139,8 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
       this.setColour(spec.colour)
       const tip = spec.tooltipKey ? (msg[spec.tooltipKey] || spec.tooltipFallback) : spec.tooltipFallback
       if (tip) this.setTooltip(tip)
+      for (let i = 0; i < min; i++) this.plus_()
+      setMinusState(this, this.itemCount_ <= min)
     },
     plus_: function (this: any) {
       const n = inputName(spec.inputPattern, this.itemCount_)
@@ -130,16 +151,16 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
       setMinusState(this, false)
     },
     minus_: function (this: any) {
-      if (this.itemCount_ <= 1) return
+      if (this.itemCount_ <= (spec.minCount ?? 1)) return
       this.itemCount_--
       this.removeInput(inputName(spec.inputPattern, this.itemCount_))
-      setMinusState(this, this.itemCount_ <= 1)
+      setMinusState(this, this.itemCount_ <= (spec.minCount ?? 1))
     },
     saveExtraState: function (this: any) {
       return { itemCount: this.itemCount_ }
     },
     loadExtraState: function (this: any, state: { itemCount?: number }) {
-      const count = state?.itemCount ?? 1
+      const count = state?.itemCount ?? (spec.minCount ?? 1)
       while (this.itemCount_ < count) this.plus_()
     },
   }

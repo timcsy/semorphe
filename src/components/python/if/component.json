@@ -1,14 +1,19 @@
 {
   "componentId": "python:if",
   "abstractComponent": null,
-  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `if` 用縮排劃範圍、而且 `elif` 是一個獨立的語法結構。邊界與 C++ 那顆不同。",
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `elif` 是一個**獨立的語法結構**（不是巢狀的 if），而 C++ 沒有這件事。邊界不同。",
   "properties": [],
   "children": {
     "condition": "expression",
-    "body": "statements"
+    "body": "statements",
+    "elif_condition": "expression",
+    "elif_body": "statements",
+    "else_body": "statements"
   },
+  "_children_why": "🔴 **五個接點，而 `elif_condition` 與 `elif_body` 靠【索引】配對。**\n\n上一版是兩顆元件（`if` 與 `if_else`）而 `elif` 走誠實降級——使用者 2026-08-21 回報「if-else 還沒有 mutation」，而做得出 `+`／`−` 的前提就是**分支是一串**。\n\n> **兩個靠索引配對的清單，只要有一個地方少加一格，配對就整條錯開——而錯開之後每一格都還在，只是接錯了人。**\n所以積木那側的加減一律成對（`attachBranchList` 的 `plusBranch_`／`minusBranch_`）。\n\n🟢 而 `else_body` 是 0 或 1 格——「有沒有 else」是一個**開關**不是一個數量。",
   "role": "statement",
   "owner": "(python)",
+  "_owner_why": "⚠️ 章要蓋 `(python)` 不是 `(core)`。工具箱的來源段落寫著 `{ from: '(python)' }`。",
   "annotations": {
     "debug_step": true
   },
@@ -17,7 +22,7 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
     "execute": "./execute.ts"
-  },
-  "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
+  }
 }

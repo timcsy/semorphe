@@ -43,6 +43,26 @@ export const pythonCategoryDefs: ToolboxCategoryDef[] = [
     fallback: '控制',
     colorKey: 'control',
     sources: [{ from: '(python)', category: 'control' }],
+    // 🔴 **同一顆積木用三個不同的預設狀態出現**——那是**教學設計**，
+    //    讓學生直接拖到「有 else 的 if」而不必先按齒輪。**登錄表推不出來。**
+    //
+    // ⚠️ 使用者 2026-08-21：「工具箱不要只有放 if，if-else、if-elif-else 也要」
+    //    ——而 C++ 那側**早就是這樣**（`cpp_if` 的三筆）。
+    //    這是「跟 C++ 一致」的第三個實例：顏色、互動、**工具箱的入口**。
+    //
+    // ⚠️ extraState 的鍵沿用命令式那份（`elseifCount`／`hasElse`），
+    //    見 `ui/branch-list-block.ts` 的檔頭。
+    // ⚠️ **三筆都要列**——`sources` 收不到 `python_if`（它的來源分類與這裡對不上），
+    //    所以純的那一顆也得自己列。
+    //
+    // 🔴 **我兩次都靠數數量判斷而不是【看】**，第一次多一顆、第二次少一顆。
+    //    使用者 2026-08-21：「很多問題是你沒有直接在瀏覽器把工具箱截圖」——對的。
+    //    > **`getToolboxItems().length` 答得出「有幾個」，答不出「長對了沒」。**
+    extraTypes: [
+      { type: 'python_if' },
+      { type: 'python_if', extraState: { hasElse: true } },
+      { type: 'python_if', extraState: { elseifCount: 1, hasElse: true } },
+    ],
   },
   {
     key: 'functions',

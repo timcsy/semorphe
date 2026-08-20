@@ -1,4 +1,6 @@
 {
-  "PYTHON_FUNC_DEF_MSG0": "定義函式 %1 參數 %2",
-  "PYTHON_FUNC_DEF_TOOLTIP": "把一段步驟取個名字，之後就可以重複呼叫它。參數用逗號分隔"
+  "PYTHON_FUNC_DEF_MSG0": "定義函式 %1",
+  "PYTHON_FUNC_DEF_PARAMS_OPEN": "（參數",
+  "PYTHON_FUNC_DEF_PARAMS_CLOSE": "）",
+  "PYTHON_FUNC_DEF_TOOLTIP": "把一段步驟取個名字，之後就可以重複呼叫它。按 + 加參數"
 }

@@ -1,5 +1,0 @@
-{
-  "PYTHON_IF_ELSE_MSG0": "if %1",
-  "PYTHON_IF_ELSE_MSG2": "else",
-  "PYTHON_IF_ELSE_TOOLTIP": "Do the first group when the condition holds, the second when it does not"
-}

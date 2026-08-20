@@ -342,12 +342,7 @@
   {
     "componentId": "python:if",
     "cause": "語料沒覆蓋",
-    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。\n🟢 **判準沒有被收窄**——只是誠實地說「還沒量到」。\n🔴 而這一顆有一條**別的元件沒有的**要驗：帶 `elif` 的 if **必須走誠實降級**，不得被它接走（那兩個分支會被靜靜丟掉）。自證測有專門的一支。"
-  },
-  {
-    "componentId": "python:if_else",
-    "cause": "語料沒覆蓋",
-    "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。\n🟢 **判準沒有被收窄**——只是誠實地說「還沒量到」。\n🔴 `else_body` 特別容易假通過：`alternative` 指到的是 `else_clause` 這個殼，不拆的話接點在、長度是 1、而裡面是 `unresolved`。\n> **「接點空了」與「接點裡是垃圾」，在斷言 `length === 1` 時完全相同。**"
+    "reason": "spec 169：一顆元件帶 elif 鏈 ＋ 可有可無的 else（`if_else` 已退場）。這條護欄的語料是 C++ 的，碰不到 Python。\n🔴 而它的接點**最容易假通過**：`elif_condition` 與 `elif_body` **靠索引配對**，而兩個清單長度不同時每一格都還在，只是接錯了人——自證測有一支專釘長度相同。"
   },
   {
     "componentId": "python:func_call",

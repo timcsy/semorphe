@@ -223,7 +223,6 @@
     "python:func_call",
     "python:func_def",
     "python:if",
-    "python:if_else",
     "python:input",
     "python:literal_bool",
     "python:logic",

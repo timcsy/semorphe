@@ -1,4 +1,6 @@
 {
-  "PYTHON_FUNC_DEF_MSG0": "define %1 with parameters %2",
-  "PYTHON_FUNC_DEF_TOOLTIP": "Give a group of steps a name so you can call it again. Separate parameters with commas"
+  "PYTHON_FUNC_DEF_MSG0": "define %1",
+  "PYTHON_FUNC_DEF_PARAMS_OPEN": "( params",
+  "PYTHON_FUNC_DEF_PARAMS_CLOSE": ")",
+  "PYTHON_FUNC_DEF_TOOLTIP": "Give a group of steps a name so you can call it again. Press + to add a parameter"
 }

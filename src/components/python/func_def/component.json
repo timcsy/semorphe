@@ -7,15 +7,10 @@
       "name": "name",
       "kind": "identifier",
       "default": "f"
-    },
-    {
-      "name": "params",
-      "kind": "literal",
-      "default": "",
-      "_why": "⚠️ **參數列存成一個字串**（`\"a, b\"`）而不是結構化的清單。🔴 **這是一個已知的權宜**——`knowledge` 記著「需要 parse 回結構才能用的字串，就不該是字串」。而做成結構化的接點需要一顆 `param` 元件與可變插槽，那是獨立的一刀。**記在這裡，不要讓它變成看不見的。**"
     }
   ],
   "children": {
+    "params": "param_decl",
     "body": "statements"
   },
   "role": "statement",
@@ -29,6 +24,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
-    "execute": "./execute.ts"
-  }
+    "execute": "./execute.ts",
+    "liftStrategy": "./lift-strategy.ts"
+  },
+  "_children_why": "🟢 **spec 169：參數從一個字串變成【接點】。**\n\n上一版存的是 `\"a, b\"`，而 `knowledge` 記著「**需要 parse 回結構才能用的字串，就不該是字串**」——那筆已知權宜寫在這裡等人來還。\n\n🔴 而還它的是使用者：「函式定義還沒有 mutation」。做得出 `+`／`−` 的前提是**每個參數是一格**，而一個逗號分隔的字串表達不出「三格」。\n\n> **一個 UI 上的 mutation，逼出的是資料模型上的一個結構。**\n\n⚠️ 用的是既有的結構節點（`non-components` 裡那顆），**沒有新增元件**——它本來就不帶語言前綴，兩個語言共用。"
 }
