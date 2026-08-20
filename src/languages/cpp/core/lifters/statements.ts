@@ -40,8 +40,8 @@ export function registerStatementLifters(lifter: Lifter): void {
     const body = extractBody(bodyNode, ctx)
 
     // cpp_loop_for's INIT/COND/UPDATE are expression inputs, but for-loop parts
-    // may lift to statement concepts (var_declare, cpp_compound_assign, etc.)
-    // Wrap non-expression concepts as cpp_raw_expression with the source text
+    // may lift to statement components (var_declare, cpp_compound_assign, etc.)
+    // Wrap non-expression components as cpp_raw_expression with the source text
     const initSem = wrapForExpr(initNode, ctx)
     const condSem = wrapForExpr(condNode, ctx)
     const updateSem = wrapForExpr(updateNode, ctx)
@@ -193,7 +193,7 @@ function extractUpdateVar(update: import('../../../../core/lift/types').AstNode 
 }
 
 
-/** Lift a for-loop part (init/cond/update) and wrap non-expression concepts as cpp_raw_expression */
+/** Lift a for-loop part (init/cond/update) and wrap non-expression components as cpp_raw_expression */
 function wrapForExpr(
   node: import('../../../../core/lift/types').AstNode | null,
   ctx: import('../../../../core/lift/types').LiftContext,
@@ -201,7 +201,7 @@ function wrapForExpr(
   if (!node) return null
   const lifted = ctx.lift(node)
   if (!lifted) return null
-  // If the lifted concept is a known expression, keep it
+  // If the lifted component is a known expression, keep it
   if (canBeForLoopPart(lifted.componentId)) return lifted
   // Otherwise wrap as raw expression text (statements, unresolved, etc.)
   // Strip trailing semicolons — for-loop parts don't need them

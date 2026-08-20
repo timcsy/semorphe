@@ -2,7 +2,7 @@
  * C++ Language Module
  *
  * Central initialization for the JSON-driven conversion pipeline.
- * Loads concept definitions (semantic layer) and block projections (projection layer)
+ * Loads component definitions (semantic layer) and block projections (projection layer)
  * directly into registries, then wires into the four generic engines.
  */
 import type { LiftPattern, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
@@ -13,13 +13,13 @@ import { TemplateGenerator } from '../../core/projection/template-generator'
 import { PatternRenderer } from '../../core/projection/pattern-renderer'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
-// Semantic layer: concept definitions
-import { universalConcepts } from '../../core/universal'
+// Semantic layer: component definitions
+import { universalComponents } from '../../core/universal'
 import { declareNonComponent } from '../../core/non-components'
 import { allCppProjections } from './all-declarations'
-import { coreConcepts } from './core'
+import { coreComponents } from './core'
 import { allStdModules } from './std'
-import { componentConcepts } from '../../core/component/registry'
+import { componentComponents } from '../../core/component/registry'
 
 // Projection layer: block definitions
 
@@ -76,18 +76,18 @@ export function initCppModule(): CppModuleEngines {
   const patternRenderer = new PatternRenderer()
   const patternExtractor = new PatternExtractor()
 
-  // 1. Load concepts into ComponentRegistry (semantic layer, independent of Blockly)
-  const allConcepts: ComponentDefJSON[] = [
-    ...universalConcepts as unknown as ComponentDefJSON[],
-    ...coreConcepts,
-    ...allStdModules.flatMap(m => m.concepts),
-    ...(componentConcepts() as unknown as ComponentDefJSON[]),
+  // 1. Load components into ComponentRegistry (semantic layer, independent of Blockly)
+  const allComponents: ComponentDefJSON[] = [
+    ...universalComponents as unknown as ComponentDefJSON[],
+    ...coreComponents,
+    ...allStdModules.flatMap(m => m.components),
+    ...(componentComponents() as unknown as ComponentDefJSON[]),
   ]
-  componentRegistry.loadFromJSON(allConcepts)
+  componentRegistry.loadFromJSON(allComponents)
 
   // 2. Load split JSON directly into registry
   const allProjections: BlockProjectionJSON[] = allCppProjections()
-  registry.loadFromSplit(allConcepts, allProjections)
+  registry.loadFromSplit(allComponents, allProjections)
   const allSpecs = registry.getAll()
 
   // 3. Load block specs into engines

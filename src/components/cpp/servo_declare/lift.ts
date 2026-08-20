@@ -8,8 +8,8 @@
  * `myServo` 的型別是 `Servo`，之後 `myServo.someMethod()` 才查得到主人。
  * **型別是宣告出來的，不是猜的**——這一批的辨識因此比零件那一批更穩。
  */
-import { registerPlainTypeConcept } from '../../../core/component/container-templates'
+import { registerPlainTypeComponent } from '../../../core/component/container-templates'
 
 export function registerLift(): void {
-  registerPlainTypeConcept('Servo', 'cpp:servo_declare', 'cpp/servo_declare')
+  registerPlainTypeComponent('Servo', 'cpp:servo_declare', 'cpp/servo_declare')
 }

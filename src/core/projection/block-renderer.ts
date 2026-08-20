@@ -4,7 +4,7 @@ import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
 import type { RenderContext } from '../registry/render-strategy-registry'
 import { nextBlockId, resetBlockIdCounter } from './common-mappings'
-import { programRootConcept } from '../component/traits'
+import { programRootComponent } from '../component/traits'
 
 interface BlockState {
   type: string
@@ -38,7 +38,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   resetBlockIdCounter()
   currentBlockMappings = []
 
-  if (tree.componentId !== programRootConcept()) {
+  if (tree.componentId !== programRootComponent()) {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
@@ -106,7 +106,7 @@ function renderBlock(node: SemanticNode): BlockState | null {
   }
 
   if (!block) {
-    // Fallback for meta-concepts with rawCode (raw_code, unresolved, etc.)
+    // Fallback for meta-components with rawCode (raw_code, unresolved, etc.)
     if (node.metadata?.rawCode != null || node.componentId === 'raw_code' || node.componentId === 'unresolved') {
       const extra: Record<string, unknown> = {}
       if (node.componentId === 'unresolved') {

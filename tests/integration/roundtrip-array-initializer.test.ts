@@ -50,12 +50,12 @@ function lift(code: string): SemanticNode | null {
 }
 
 /** 找出樹中第一個指定概念的節點 */
-function find(node: SemanticNode | null, concept: string): SemanticNode | null {
+function find(node: SemanticNode | null, component: string): SemanticNode | null {
   if (!node) return null
-  if (node.componentId === concept) return node
+  if (node.componentId === component) return node
   for (const arr of Object.values(node.children ?? {})) {
     for (const c of arr) {
-      const hit = find(c, concept)
+      const hit = find(c, component)
       if (hit) return hit
     }
   }

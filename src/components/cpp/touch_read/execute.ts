@@ -17,7 +17,7 @@ import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino
 /** ESP32 未觸碰時的典型讀數。 */
 const UNTOUCHED = 75
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:touch_read', async (node, ctx) => {
     requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     return { type: 'int', value: UNTOUCHED }

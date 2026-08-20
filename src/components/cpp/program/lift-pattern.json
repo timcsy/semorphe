@@ -1,7 +1,7 @@
 {
   "id": "cpp_translation_unit",
   "astNodeType": "translation_unit",
-  "concept": {
+  "component": {
     "componentId": "cpp:program"
   },
   "fieldMappings": [

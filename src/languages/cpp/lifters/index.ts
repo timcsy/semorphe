@@ -14,7 +14,7 @@ import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
-import { qualifierConcept } from '../../../core/component/qualifier-components'
+import { qualifierComponent } from '../../../core/component/qualifier-components'
 import { buildUsingNamespace } from '../../../components/cpp/using_namespace/lift'
 import { buildDefine } from '../../../components/cpp/define/lift'
 
@@ -112,12 +112,12 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     // 指令 → 身分由膠囊登錄（`core/component/qualifier-components.ts`）。
     // 這裡只認語法：開頭是不是 `#ifndef`。
     const command = node.text.trimStart().startsWith('#ifndef') ? 'ifndef' : 'ifdef'
-    const concept = qualifierConcept(command)
-    if (!concept) return null
+    const component = qualifierComponent(command)
+    if (!component) return null
     // ⚠️ 原本寫 `{ condition: name, name }`——**同一個值兩個名字**，
     // 而執行器對應地寫著 `properties.condition ?? properties.name`。
     // 兩個名字不是相容層，是重複：沒有任何情境只有其中一個。已收斂成 `condition`。
-    return createNode(concept, { condition: name }, { body })
+    return createNode(component, { condition: name }, { body })
   })
 
   // Keep preproc_ifndef registration in case future tree-sitter versions separate them
@@ -135,8 +135,8 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
     )
     // ⚠️ 上面那段的註解寫著「兩個名字已收斂成 `condition`」，**而這一處沒收**
     // ——同一個修法只套用在發現它的那一處。一併收了。
-    const concept2 = qualifierConcept('ifndef')
-    if (!concept2) return null
-    return createNode(concept2, { condition: name }, { body })
+    const component2 = qualifierComponent('ifndef')
+    if (!component2) return null
+    return createNode(component2, { condition: name }, { body })
   })
 }

@@ -16,7 +16,7 @@ function headers(edges: ReturnType<typeof computeAutoIncludes>): string[] {
 
 describe('Auto-include engine', () => {
   describe('computeAutoIncludes', () => {
-    it('should return <iostream> for print concept', () => {
+    it('should return <iostream> for print component', () => {
       const tree = makeProgram([
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
@@ -28,7 +28,7 @@ describe('Auto-include engine', () => {
       expect(headers(edges)).toContain('<iostream>')
     })
 
-    it('should return <cstdio> for cpp_printf concept', () => {
+    it('should return <cstdio> for cpp_printf component', () => {
       const tree = makeProgram([
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
@@ -40,7 +40,7 @@ describe('Auto-include engine', () => {
       expect(headers(edges)).toContain('<cstdio>')
     })
 
-    it('should return <vector> for cpp_vector_declare concept', () => {
+    it('should return <vector> for cpp_vector_declare component', () => {
       const tree = makeProgram([
         createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ])
@@ -48,7 +48,7 @@ describe('Auto-include engine', () => {
       expect(headers(edges)).toContain('<vector>')
     })
 
-    it('should return multiple headers for mixed concepts', () => {
+    it('should return multiple headers for mixed components', () => {
       const tree = makeProgram([
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
@@ -86,7 +86,7 @@ describe('Auto-include engine', () => {
       expect(headers(edges)).not.toContain('<iostream>')
     })
 
-    it('should return empty for core-only concepts (no #include needed)', () => {
+    it('should return empty for core-only components (no #include needed)', () => {
       const tree = makeProgram([
         createNode('cpp:var_declare', { name: 'x', type: 'int' }),
         createNode('cpp:if', {}, {

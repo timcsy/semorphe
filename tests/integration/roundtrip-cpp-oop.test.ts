@@ -1,5 +1,5 @@
 /**
- * Round-trip tests for C++ OOP concepts:
+ * Round-trip tests for C++ OOP components:
  * cpp_struct_declare, cpp_class_def, cpp_constructor, cpp_destructor,
  * cpp_virtual_method, cpp_pure_virtual, cpp_override_method, cpp_operator_overload
  *
@@ -54,17 +54,17 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: any, concept: string): boolean {
-  if (node.componentId === concept) return true
+function findComponent(node: any, component: string): boolean {
+  if (node.componentId === component) return true
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as any[]) {
-      if (findConcept(child, concept)) return true
+      if (findComponent(child, component)) return true
     }
   }
   return false
 }
 
-describe('Round-trip: C++ OOP concepts', () => {
+describe('Round-trip: C++ OOP components', () => {
   // ---- 1. simple_struct: struct with data members ----
   describe('cpp_struct_declare (simple_struct)', () => {
     it('struct lifts to cpp_struct_declare', () => {
@@ -74,7 +74,7 @@ describe('Round-trip: C++ OOP concepts', () => {
 };`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree!, 'cpp:struct_declare')).toBe(true)
+      expect(findComponent(tree!, 'cpp:struct_declare')).toBe(true)
     })
 
     it('struct generates back', () => {
@@ -248,7 +248,7 @@ public:
 };`
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      expect(findConcept(tree!, 'cpp:struct_declare')).toBe(true)
+      expect(findComponent(tree!, 'cpp:struct_declare')).toBe(true)
     })
   })
 
@@ -442,8 +442,8 @@ public:
       const gen1 = generateCode(tree1!, 'cpp', style)
       const tree2 = liftCode(gen1)
       expect(tree2).not.toBeNull()
-      expect(findConcept(tree1!, 'cpp:class_def')).toBe(true)
-      expect(findConcept(tree2!, 'cpp:class_def')).toBe(true)
+      expect(findComponent(tree1!, 'cpp:class_def')).toBe(true)
+      expect(findComponent(tree2!, 'cpp:class_def')).toBe(true)
     })
 
     it('virtual method class is P1 stable', () => {

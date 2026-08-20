@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { unescapeC } from '../../../core/registry/transform-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:literal_string', async (node) => {
       return { type: 'string', value: unescapeC(String(node.properties.value)) }
     })

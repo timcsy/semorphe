@@ -8,7 +8,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_binary', async (node, ctx) => {
     const func = String(node.properties.func ?? 'fmod')
     const v1 = ctx.toNumber(await ctx.evaluate((node.children.arg1 ?? [])[0]))

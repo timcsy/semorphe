@@ -13,17 +13,17 @@ import type { AstNode, LiftContext } from '../../../src/core/lift/types'
 import type { BlockSpec, LiftPattern, SemanticNode, ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
-import { universalConcepts, universalBlocks } from '../../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
 // 見上：行尾註解的語法（` // text`）也搬進了語言套件
 beforeAll(() => registerCppLanguage())
@@ -80,9 +80,9 @@ describe('Annotation Roundtrip', () => {
     const patternLifter = new PatternLifter()
 
     const specRegistry = new BlockSpecRegistry()
-    const allConcepts = allCppConcepts()
+    const allComponents = allCppComponents()
     const allProjections = allCppProjections()
-    specRegistry.loadFromSplit(allConcepts, allProjections)
+    specRegistry.loadFromSplit(allComponents, allProjections)
     const allSpecs = specRegistry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])

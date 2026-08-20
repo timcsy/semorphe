@@ -35,7 +35,7 @@
  * 圖鑑        registry-browser   登錄表的視圖
  * ```
  *
- * `concepts/元件.md` 的五槽裡，**形態**（積木／文字／2D／3D／URDF）本來就是
+ * `components/元件.md` 的五槽裡，**形態**（積木／文字／2D／3D／URDF）本來就是
  * **一個槽、多個值**。而今天的實作把它攤平成「render＝Blockly、generate＝文字」
  * ——這個登錄表是把那個攤平還原成集合的第一步。
  *

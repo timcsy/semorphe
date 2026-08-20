@@ -20,7 +20,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import {
   variableTypeOf,
-  conceptsDeclaringVariableType,
+  componentsDeclaringVariableType,
 } from '../../../src/core/language-executors'
 import { allVariableDropdownBlocks } from '../../../src/core/variable-dropdown-blocks'
 
@@ -32,25 +32,25 @@ describe('變數型別宣告：語言套件推、核心讀', () => {
   it('★ 宣告真的被推進來了——沒有的話下面兩支會因為「兩邊都空」而假通過', () => {
     expect(
       variableTypeOf('cpp:string_declare'),
-      'concepts.json 的 declaresVariableType 沒有被推進核心。' +
+      'components.json 的 declaresVariableType 沒有被推進核心。' +
         '下拉選單會變成空的，而使用者只會覺得「怎麼選不到字串變數」——測試全綠。',
     ).toBe('string')
   })
 
   it('★ 反查得到——下拉選單靠的是這個方向', () => {
-    expect(conceptsDeclaringVariableType('string')).toContain('cpp:string_declare')
+    expect(componentsDeclaringVariableType('string')).toContain('cpp:string_declare')
   })
 
   it('★ 沒宣告的概念不得被誤認——「什麼都回報」也能通過上面兩支', () => {
     expect(variableTypeOf('cpp:var_declare')).toBeUndefined()
-    expect(conceptsDeclaringVariableType('string')).not.toContain('cpp:var_declare')
-    expect(conceptsDeclaringVariableType('__no_such_type__')).toEqual([])
+    expect(componentsDeclaringVariableType('string')).not.toContain('cpp:var_declare')
+    expect(componentsDeclaringVariableType('__no_such_type__')).toEqual([])
   })
 
   it('★ 加一個同類概念時，兩個消費者都要自動涵蓋它', () => {
     // 這一支是本功能的重點：宣告是**開放**的，不是一份寫死的清單。
     // 它證明「再多一個字串宣告概念」不需要改任何消費者的程式碼。
-    const existing2 = conceptsDeclaringVariableType('string')
+    const existing2 = componentsDeclaringVariableType('string')
     expect(existing2.length).toBeGreaterThan(0)
     expect(
       existing2.every((c) => variableTypeOf(c) === 'string'),
@@ -79,7 +79,7 @@ describe('有工作區下拉選單的積木：名單由語言套件宣告（064�
   it('★ 每一筆的變數型別都必須有概念真的宣告它', () => {
     for (const d of allVariableDropdownBlocks()) {
       expect(
-        conceptsDeclaringVariableType(d.variableType).length,
+        componentsDeclaringVariableType(d.variableType).length,
         `${d.blockType} 的下拉選單要列 ${d.variableType} 變數，` +
           `但**沒有任何概念宣告自己是 ${d.variableType}**——選單會永遠是空的。`,
       ).toBeGreaterThan(0)

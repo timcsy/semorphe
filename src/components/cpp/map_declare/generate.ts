@@ -3,7 +3,7 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  // Statement concepts
+  // Statement components
     g.set('cpp:map_declare', (node, ctx) => {
       const keyType = node.properties.key_type ?? 'int'
       const valueType = node.properties.value_type ?? 'int'

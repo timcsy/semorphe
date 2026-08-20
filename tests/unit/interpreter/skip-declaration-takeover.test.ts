@@ -20,8 +20,8 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { isSkipped } from '../../../src/core/skip-declarations'
 import type { SemanticNode } from '../../../src/core/types'
 
-const n = (concept: string, properties: Record<string, unknown> = {}): SemanticNode =>
-  ({ componentId: concept, properties, children: {} }) as unknown as SemanticNode
+const n = (component: string, properties: Record<string, unknown> = {}): SemanticNode =>
+  ({ componentId: component, properties, children: {} }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()
@@ -48,13 +48,13 @@ describe('cpp_include_local：核心的空操作刪了，宣告接手', () => {
 
   it('★ 執行它不報錯、不中斷——行為與刪除前完全相同', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
-    let unknownConceptFired = false
-    ;(interp as unknown as { unknownConceptHandler?: unknown }).unknownConceptHandler = () => {
-      unknownConceptFired = true
+    let unknownComponentFired = false
+    ;(interp as unknown as { unknownComponentHandler?: unknown }).unknownComponentHandler = () => {
+      unknownComponentFired = true
       return 'skip'
     }
     // 宣告接手的話會靜靜返回；沒接手的話會走未知概念那條路
     await interp.executeNode(n('cpp:include_local', { header: 'mine.h' }))
-    expect(unknownConceptFired, '宣告沒有接手——這個概念變成了未知概念，會中斷使用者的程式').toBe(false)
+    expect(unknownComponentFired, '宣告沒有接手——這個概念變成了未知概念，會中斷使用者的程式').toBe(false)
   })
 })

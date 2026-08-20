@@ -22,13 +22,13 @@ import type { ComponentDefJSON, BlockProjectionJSON } from '../../../core/types'
  *
  * **一個名字，加上兩份可能是空的宣告。** 而名字**不是殘留**——
  * 它是工具箱段落的鍵（`toolbox-categories.ts` 的 `{ from: '<cstdio>' }`），
- * 而 `concepts`／`blocks` 是還沒膠囊化的元件的暫放處（今天全部是空的）。
+ * 而 `components`／`blocks` 是還沒膠囊化的元件的暫放處（今天全部是空的）。
  *
  * > **模組是搬家的中途站，不是終點——而中途站的最後一塊石頭是它的名字。**
  */
 export interface StdModule {
   header: string
   /** ⚠️ 今天全部是空陣列。留著是因為第二個語言進來時它是暫放處。 */
-  concepts: ComponentDefJSON[]
+  components: ComponentDefJSON[]
   blocks: BlockProjectionJSON[]
 }

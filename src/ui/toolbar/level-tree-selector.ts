@@ -71,8 +71,8 @@ export class LevelTreeSelector {
 
     const label = document.createElement('label')
     label.htmlFor = checkbox.id
-    label.textContent = `${node.label} (${node.concepts.length})`
-    label.title = `${node.concepts.length} concepts`
+    label.textContent = `${node.label} (${node.components.length})`
+    label.title = `${node.components.length} components`
 
     row.appendChild(checkbox)
     row.appendChild(label)

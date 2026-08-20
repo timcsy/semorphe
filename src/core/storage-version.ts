@@ -107,7 +107,7 @@ function rewriteIdentity(node: unknown, table: Record<string, string>): unknown 
  *
  * ## 「沒人接上」的防線
  *
- * 這個機制天生有 `concepts/執行機構.md` 的病：套件忘了登錄，存檔就靜靜地
+ * 這個機制天生有 `components/執行機構.md` 的病：套件忘了登錄，存檔就靜靜地
  * 不轉換。防線是 `audit-identity-namespace` 的一支檢查——
  * **已登錄的表必須涵蓋全部舊身分**。少一顆就指名。
  */

@@ -2,7 +2,7 @@ import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../typ
 import { parseToChildren } from './children-as-field'
 import { createNode } from '../semantic-tree'
 import { resolvePath, resolvePattern } from './common-mappings'
-import { conceptWithTrait } from '../component/traits'
+import { componentWithTrait } from '../component/traits'
 
 export interface BlockState {
   type: string
@@ -45,7 +45,7 @@ export class PatternExtractor {
 
       // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
       // ⚠️ **推導已退場。** 186 筆對應全部固化成顯式宣告（驗過「合併結果一字不差」），
-      // 於是這裡不再從 `concept.properties` 推導任何東西。
+      // 於是這裡不再從 `component.properties` 推導任何東西。
       //
       // 那正是重點：推導在的時候，**參數宣告驅動了抽取行為**——改一顆元件的
       // 參數列就會改變它的積木怎麼被讀回來，而那是 C1（參數規格化）動不了的原因。
@@ -171,9 +171,9 @@ export class PatternExtractor {
           const mode = resolvePath(extraState, modePathResolved) as string | undefined
           if (mode && rule.modes[mode]) {
             const modeRule = rule.modes[mode]
-            const wrap = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            const wrap = modeRule.wrapTrait ? componentWithTrait(modeRule.wrapTrait) : modeRule.wrap
             if (modeRule.field && wrap) {
-              // Select mode: read value from extraState, wrap as concept node
+              // Select mode: read value from extraState, wrap as component node
               const fieldPathResolved = resolvePattern(modeRule.field, i)
               const value = resolvePath(extraState, fieldPathResolved) as string | undefined
               if (value !== undefined) {
@@ -192,8 +192,8 @@ export class PatternExtractor {
           continue
         }
 
-        // Repeat field group pattern (childConcept + childFields)
-        if (rule.childConcept && rule.childFields) {
+        // Repeat field group pattern (childComponent + childFields)
+        if (rule.childComponent && rule.childFields) {
           const fieldProps: Record<string, string> = {}
           for (const [fieldPattern, propName] of Object.entries(rule.childFields)) {
             const fieldName = resolvePattern(fieldPattern, i)
@@ -202,7 +202,7 @@ export class PatternExtractor {
               fieldProps[propName] = String(value)
             }
           }
-          childNodes.push(createNode(rule.childConcept, fieldProps))
+          childNodes.push(createNode(rule.childComponent, fieldProps))
           continue
         }
 

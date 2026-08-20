@@ -51,11 +51,11 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcepts(node: SemanticNode): string[] {
-  const concepts: string[] = []
+function findComponents(node: SemanticNode): string[] {
+  const components: string[] = []
   function walk(n: SemanticNode) {
     if (!n) return
-    if (n.componentId) concepts.push(n.componentId)
+    if (n.componentId) components.push(n.componentId)
     if (n.children) {
       for (const ch of Object.values(n.children)) {
         if (Array.isArray(ch)) ch.forEach(walk)
@@ -63,7 +63,7 @@ function findConcepts(node: SemanticNode): string[] {
     }
   }
   walk(node)
-  return concepts
+  return components
 }
 
 function findNode(root: SemanticNode, componentId: string): SemanticNode | undefined {
@@ -102,11 +102,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts cpp_try_catch and cpp_throw concepts', () => {
+    it('lifts cpp_try_catch and cpp_throw components', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:try_catch')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:try_catch')
     })
 
     it('generates compilable code preserving try-catch structure', () => {
@@ -136,9 +136,9 @@ int main() {
     it('lifts cpp_try_catch with int catch type', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:try_catch')
-      expect(concepts).toContain('cpp:throw')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:try_catch')
+      expect(components).toContain('cpp:throw')
     })
 
     it('preserves catch type in generated code', () => {
@@ -179,10 +179,10 @@ int main() {
     it('lifts cpp_throw inside function and cpp_try_catch in main', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:throw')
-      expect(concepts).toContain('cpp:try_catch')
-      expect(concepts).toContain('cpp:func_def')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:throw')
+      expect(components).toContain('cpp:try_catch')
+      expect(components).toContain('cpp:func_def')
     })
 
     it('generates code with throw in function body', () => {
@@ -206,11 +206,11 @@ int main() {
     cout << x;
 }`
 
-    it('lifts cpp_range_for concept', () => {
+    it('lifts cpp_range_for component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:loop_range')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:loop_range')
     })
 
     it('generates range-for syntax', () => {
@@ -242,11 +242,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts cpp_range_for concept from full program', () => {
+    it('lifts cpp_range_for component from full program', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:loop_range')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:loop_range')
     })
 
     it('preserves vector<int> declaration through roundtrip', () => {
@@ -269,11 +269,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts cpp_lambda concept', () => {
+    it('lifts cpp_lambda component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:lambda')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:lambda')
     })
 
     it('generates lambda with capture and return type', () => {
@@ -307,8 +307,8 @@ int main() {
     it('lifts cpp_lambda for comparator', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:lambda')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:lambda')
     })
 
     it('generates lambda comparator', () => {
@@ -343,11 +343,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts cpp_namespace_def concept', () => {
+    it('lifts cpp_namespace_def component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:namespace_def')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:namespace_def')
     })
 
     it('preserves namespace name and body', () => {
@@ -379,11 +379,11 @@ int main() {
     const code = `double pi = 3.14159;
 int n = static_cast<int>(pi);`
 
-    it('lifts cpp_static_cast concept', () => {
+    it('lifts cpp_static_cast component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:cast_static')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:cast_static')
     })
 
     it('preserves target type', () => {
@@ -421,11 +421,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts multiple cpp_static_cast concepts', () => {
+    it('lifts multiple cpp_static_cast components', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      const castCount = concepts.filter(c => c === 'cpp:cast_static').length
+      const components = findComponents(tree!)
+      const castCount = components.filter(c => c === 'cpp:cast_static').length
       expect(castCount).toBeGreaterThanOrEqual(2)
     })
 
@@ -449,12 +449,12 @@ int main() {
     cout << "error: " << e.what() << endl;
 }`
 
-    it('lifts all three concepts', () => {
+    it('lifts all three components', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:try_catch')
-      expect(concepts).toContain('cpp:loop_range')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:try_catch')
+      expect(components).toContain('cpp:loop_range')
     })
 
     it('generates combined structure', () => {
@@ -488,11 +488,11 @@ int main() {
     return 0;
 }`
 
-    it('lifts cpp_template_function concept', () => {
+    it('lifts cpp_template_function component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:template_function')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:template_function')
     })
 
     it('preserves template type param and function name', () => {
@@ -551,11 +551,11 @@ int add(int a, int b) {
     return a + b;
 }`
 
-    it('lifts forward_decl concept', () => {
+    it('lifts forward_decl component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:forward_decl')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:forward_decl')
     })
 
     it('generates forward declaration before main', () => {
@@ -642,9 +642,9 @@ int main() {
     it('lifts cpp_throw inside conditional branches', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = findConcepts(tree!)
-      expect(concepts).toContain('cpp:throw')
-      expect(concepts).toContain('cpp:func_def')
+      const components = findComponents(tree!)
+      expect(components).toContain('cpp:throw')
+      expect(components).toContain('cpp:func_def')
     })
 
     it('generates throw inside if blocks', () => {

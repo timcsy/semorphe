@@ -199,9 +199,9 @@ describe('Full Round-trip (SC-001): All Universal + C++ blocks', () => {
       // > **一支「未知構造要降級」的測試，會在那個構造被支援的那天變紅
       // > ——而那是好消息。它需要的是一個新的未知例子，不是把支援拿掉。**
       //
-      // 換成 C++20 的 concept——今天真的不支援，而它的語法夠獨特。
-      const code = roundTripCode('template<typename T> concept Addable = requires(T a) { a + a; };')
-      expect(code).toContain('concept')
+      // 換成 C++20 的 component——今天真的不支援，而它的語法夠獨特。
+      const code = roundTripCode('template<typename T> component Addable = requires(T a) { a + a; };')
+      expect(code).toContain('component')
     })
   })
 

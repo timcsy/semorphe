@@ -1,13 +1,13 @@
 /**
  * C++ Set Operations Roundtrip Tests
  *
- * Verifies that C++ set concepts (cpp_set_declare, cpp_set_insert,
+ * Verifies that C++ set components (cpp_set_declare, cpp_set_insert,
  * cpp_set_erase, cpp_set_count, cpp_set_empty) survive the full roundtrip.
  *
  * Note: .erase() maps to cpp_container_erase (shared method).
  * Note: .count() maps to cpp_container_count (shared method).
  * Note: .empty() maps to cpp_container_empty (shared method).
- * All generate correct code regardless of which concept they map to.
+ * All generate correct code regardless of which component they map to.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -56,24 +56,24 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -84,9 +84,9 @@ describe('C++ Set Operations Roundtrip', () => {
   describe('cpp:set_declare', () => {
     const code = 'set<int> s;\ncout << "created" << endl;'
 
-    it('should lift to cpp_set_declare concept', () => {
+    it('should lift to cpp_set_declare component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:set_declare')
+      const node = findComponent(tree, 'cpp:set_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.type).toBe('int')
       expect(node!.properties.name).toBe('s')
@@ -101,7 +101,7 @@ describe('C++ Set Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:set_declare')
+      const node2 = findComponent(tree2, 'cpp:set_declare')
       expect(node2).not.toBeNull()
       expect(node2!.properties.type).toBe('int')
     })
@@ -110,9 +110,9 @@ describe('C++ Set Operations Roundtrip', () => {
   describe('cpp:set_insert', () => {
     const code = 'set<int> s;\ns.insert(10);\ns.insert(20);\ncout << "inserted" << endl;'
 
-    it('should lift to cpp_set_insert concept', () => {
+    it('should lift to cpp_set_insert component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:set_insert')
+      const node = findComponent(tree, 'cpp:set_insert')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -125,7 +125,7 @@ describe('C++ Set Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:set_insert')
+      const node2 = findComponent(tree2, 'cpp:set_insert')
       expect(node2).not.toBeNull()
     })
   })
@@ -135,7 +135,7 @@ describe('C++ Set Operations Roundtrip', () => {
 
     it('should lift .erase() to cpp_container_erase (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_erase')
+      const node = findComponent(tree, 'cpp:container_erase')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -148,7 +148,7 @@ describe('C++ Set Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_erase')
+      const node2 = findComponent(tree2, 'cpp:container_erase')
       expect(node2).not.toBeNull()
     })
   })
@@ -158,7 +158,7 @@ describe('C++ Set Operations Roundtrip', () => {
 
     it('should lift .count() to cpp_container_count (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_count')
+      const node = findComponent(tree, 'cpp:container_count')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -171,7 +171,7 @@ describe('C++ Set Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_count')
+      const node2 = findComponent(tree2, 'cpp:container_count')
       expect(node2).not.toBeNull()
     })
   })
@@ -181,7 +181,7 @@ describe('C++ Set Operations Roundtrip', () => {
 
     it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_empty')
+      const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -193,7 +193,7 @@ describe('C++ Set Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_empty')
+      const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -201,23 +201,23 @@ describe('C++ Set Operations Roundtrip', () => {
   describe('combo: insert + erase + count + empty', () => {
     const code = 'set<int> s;\ns.insert(1);\ns.insert(2);\ns.insert(3);\ns.erase(2);\nif (s.count(2)) {\n    cout << "found" << endl;\n} else {\n    cout << "not found" << endl;\n}\ncout << s.empty() << endl;'
 
-    it('should lift all set concepts', () => {
+    it('should lift all set components', () => {
       const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:set_declare')).toBe(true)
-      expect(concepts.has('cpp:set_insert')).toBe(true)
-      expect(concepts.has('cpp:container_erase')).toBe(true) // shared
-      expect(concepts.has('cpp:container_count')).toBe(true) // shared
+      const components = collectComponents(tree)
+      expect(components.has('cpp:set_declare')).toBe(true)
+      expect(components.has('cpp:set_insert')).toBe(true)
+      expect(components.has('cpp:container_erase')).toBe(true) // shared
+      expect(components.has('cpp:container_count')).toBe(true) // shared
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:set_declare')).toBe(true)
-      expect(concepts2.has('cpp:set_insert')).toBe(true)
-      expect(concepts2.has('cpp:container_erase')).toBe(true)
-      expect(concepts2.has('cpp:container_count')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:set_declare')).toBe(true)
+      expect(components2.has('cpp:set_insert')).toBe(true)
+      expect(components2.has('cpp:container_erase')).toBe(true)
+      expect(components2.has('cpp:container_count')).toBe(true)
     })
   })
 })

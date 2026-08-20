@@ -7,7 +7,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const obj = node.properties.obj ?? 'str'
       // 🔴 **接點名有兩個，而它們來自兩條不同的路。**
       //
-      // lift 走共用的型別方法表（`registerTypedMethodConcept`），而那條路用
+      // lift 走共用的型別方法表（`registerTypedMethodComponent`），而那條路用
       // 一組共用的槽名對應——`push_back` 對到 **`value`**。
       // ⚠️ 而這個產生器原本只讀 `char`，於是：
       //

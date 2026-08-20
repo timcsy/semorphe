@@ -35,7 +35,7 @@
  * - **來回轉換**的測試比碼，所以也是綠的
  *
  * 三十條護欄沒有一條看得見它。而它改變的是**語義樹的身分**——
- * `concepts/等價與觀察集.md`：「外延等價是可以收回的觀察；**內涵身分是收不回的承諾**」。
+ * `components/等價與觀察集.md`：「外延等價是可以收回的觀察；**內涵身分是收不回的承諾**」。
  *
  * ## 為什麼用 `it.fails` 而不是 `it.skip`
  *
@@ -53,7 +53,7 @@ import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors/extract-strategies'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -63,7 +63,7 @@ beforeAll(() => {
   registerCppLanguage()
   setupTestRenderer()
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts() as never, allCppProjections() as never)
+  reg.loadFromSplit(allCppComponents() as never, allCppProjections() as never)
   extractor = new PatternExtractor()
   extractor.loadBlockSpecs(reg.getAll())
   registerCppExtractStrategies(extractor)

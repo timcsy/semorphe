@@ -12,11 +12,11 @@ describe('ComponentExecutorRegistry', () => {
   it('register and get executor', () => {
     const registry = new ComponentExecutorRegistry()
     const executor: ComponentExecutor = async (_node, _ctx) => ({ type: 'int', value: 42 })
-    registry.register('test_concept', executor)
-    expect(registry.get('test_concept')).toBe(executor)
+    registry.register('test_component', executor)
+    expect(registry.get('test_component')).toBe(executor)
   })
 
-  it('returns undefined for unregistered concept', () => {
+  it('returns undefined for unregistered component', () => {
     const registry = new ComponentExecutorRegistry()
     expect(registry.get('nonexistent')).toBeUndefined()
   })
@@ -25,9 +25,9 @@ describe('ComponentExecutorRegistry', () => {
     const registry = new ComponentExecutorRegistry()
     const exec1: ComponentExecutor = async () => ({ type: 'int', value: 1 })
     const exec2: ComponentExecutor = async () => ({ type: 'int', value: 2 })
-    registry.registerAll({ concept_a: exec1, concept_b: exec2 })
-    expect(registry.get('concept_a')).toBe(exec1)
-    expect(registry.get('concept_b')).toBe(exec2)
+    registry.registerAll({ component_a: exec1, component_b: exec2 })
+    expect(registry.get('component_a')).toBe(exec1)
+    expect(registry.get('component_b')).toBe(exec2)
   })
 
   it('has() checks registration', () => {

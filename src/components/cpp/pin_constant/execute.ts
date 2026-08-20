@@ -22,7 +22,7 @@ const PIN_CONSTANTS: Record<string, number> = {
   A0: 14,
 }
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pin_constant', async (node) => {
     // ⚠️ 退路要與 component.json 宣告的 default 一致——第二十三條護欄在看
     const name = String(node.properties.value ?? 'HIGH')

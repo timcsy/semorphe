@@ -25,7 +25,7 @@ import { describe, it, expect } from 'vitest'
 import { scanText } from '../../helpers/component-scan'
 
 /** 用一個絕不會與真實概念撞名的探針 id，避免測試被真實資料影響 */
-const PROBE = 'zz_probe_concept'
+const PROBE = 'zz_probe_component'
 
 describe('遮罩：真的身分引用必須仍被報出（FR-003）', () => {
   it('★ registry 查表——最典型的身分引用', () => {
@@ -73,7 +73,7 @@ describe('裸的物件鍵也算引用（082 補的盲點）', () => {
     ).toContain(PROBE)
   })
 
-  it('★ 但屬性存取不得誤報——`x.zz_probe_concept` 是讀一個欄位', () => {
+  it('★ 但屬性存取不得誤報——`x.zz_probe_component` 是讀一個欄位', () => {
     expect(
       scanText(`const v = obj.${PROBE}\nconst w = 1`, [PROBE]).code,
       '把屬性存取當成身分引用的話，每一個同名欄位都會變成違規',

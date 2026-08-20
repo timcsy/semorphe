@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { CPP_BUILTIN_CONSTANTS } from '../../../languages/cpp/builtins'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:builtin_constant', async (node) => {
       const value = String(node.properties.value)
       const builtin = CPP_BUILTIN_CONSTANTS[value]

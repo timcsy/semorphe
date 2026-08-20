@@ -9,7 +9,7 @@
  * ## 它取代了什麼
  *
  * 在此之前，沒有 `renderMapping` 的積木由 `deriveRenderMapping` **自動推導**
- * 對應——拿 `concept.properties` 去比對積木欄位名。方便，而代價有兩層：
+ * 對應——拿 `component.properties` 去比對積木欄位名。方便，而代價有兩層：
  *
  * 1. **推導有兩份，而兩份不一樣**（`audit-derive-agreement` 抓到的）：
  *    `cpp_block_comment` 的內容渲染得出去、抽取不回來，使用者寫的註解會消失。
@@ -32,7 +32,7 @@
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { BlockProjectionJSON, BlockSpec } from '../../src/core/types'
 
 /** 手寫抽取策略的積木——它們的欄位由程式碼讀，不走宣告式對應 */
@@ -50,7 +50,7 @@ interface Finding {
 
 function measure(extra: BlockProjectionJSON[] = []): Finding[] {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts(), [...allCppProjections(), ...extra])
+  reg.loadFromSplit(allCppComponents(), [...allCppProjections(), ...extra])
 
   const out: Finding[] = []
   for (const spec of reg.getAll() as BlockSpec[]) {
@@ -119,7 +119,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
     expect(reg.getAll().length, '零筆 spec → 是載入壞了').toBeGreaterThan(150)
   })
 })

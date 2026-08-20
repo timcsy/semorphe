@@ -13,7 +13,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const hz = ctx.toNumber(await ctx.evaluate((node.children.frequency ?? [])[0]))

@@ -1,8 +1,8 @@
 /**
- * Roundtrip tests for C++ <cstring> concepts not covered by fuzz tests
+ * Roundtrip tests for C++ <cstring> components not covered by fuzz tests
  *
  * Covers: cpp_strcat, cpp_strncmp, cpp_strncpy, cpp_memcpy, cpp_memset
- * These concepts have generators and blocks but were missing dedicated roundtrip tests.
+ * These components have generators and blocks but were missing dedicated roundtrip tests.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -46,12 +46,12 @@ function liftCode(code: string): SemanticNode | null {
   return lifter.lift(tree.rootNode as any)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
@@ -61,10 +61,10 @@ function findConcept(node: SemanticNode | null, componentId: string): SemanticNo
 describe('C++ <cstring> extra roundtrip', () => {
   // ─── cpp_strcat ────────────────────────────────────────
   describe('cpp:cstring_append', () => {
-    it('should lift strcat(dest, src) to cpp_strcat concept', () => {
+    it('should lift strcat(dest, src) to cpp_strcat component', () => {
       const tree = liftCode('strcat(dest, src);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:cstring_append')
+      const node = findComponent(tree, 'cpp:cstring_append')
       expect(node).not.toBeNull()
     })
 
@@ -83,10 +83,10 @@ describe('C++ <cstring> extra roundtrip', () => {
 
   // ─── cpp_strncpy ───────────────────────────────────────
   describe('cpp:cstring_copy_bounded', () => {
-    it('should lift strncpy(dest, src, n) to cpp_strncpy concept', () => {
+    it('should lift strncpy(dest, src, n) to cpp_strncpy component', () => {
       const tree = liftCode('strncpy(dest, src, 10);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:cstring_copy_bounded')
+      const node = findComponent(tree, 'cpp:cstring_copy_bounded')
       expect(node).not.toBeNull()
     })
 
@@ -107,10 +107,10 @@ describe('C++ <cstring> extra roundtrip', () => {
 
   // ─── cpp_strncmp ───────────────────────────────────────
   describe('cpp:cstring_compare_bounded', () => {
-    it('should lift strncmp(s1, s2, n) to cpp_strncmp concept', () => {
+    it('should lift strncmp(s1, s2, n) to cpp_strncmp component', () => {
       const tree = liftCode('int r = strncmp(s1, s2, 3);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:cstring_compare_bounded')
+      const node = findComponent(tree, 'cpp:cstring_compare_bounded')
       expect(node).not.toBeNull()
     })
 
@@ -134,10 +134,10 @@ describe('C++ <cstring> extra roundtrip', () => {
 
   // ─── cpp_memset ────────────────────────────────────────
   describe('cpp:memory_fill', () => {
-    it('should lift memset(ptr, val, size) to cpp_memset concept', () => {
+    it('should lift memset(ptr, val, size) to cpp_memset component', () => {
       const tree = liftCode('memset(arr, 0, 100);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:memory_fill')
+      const node = findComponent(tree, 'cpp:memory_fill')
       expect(node).not.toBeNull()
     })
 
@@ -158,10 +158,10 @@ describe('C++ <cstring> extra roundtrip', () => {
 
   // ─── cpp_memcpy ────────────────────────────────────────
   describe('cpp:memory_copy', () => {
-    it('should lift memcpy(dest, src, size) to cpp_memcpy concept', () => {
+    it('should lift memcpy(dest, src, size) to cpp_memcpy component', () => {
       const tree = liftCode('memcpy(dest, src, 64);')
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:memory_copy')
+      const node = findComponent(tree, 'cpp:memory_copy')
       expect(node).not.toBeNull()
     })
 

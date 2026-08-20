@@ -16,17 +16,17 @@ import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ComponentD
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import { componentGenerateRegistrars } from '../../src/core/component/paths'
 
@@ -66,9 +66,9 @@ describe('L1 Block Roundtrip', () => {
     extractor = new PatternExtractor()
 
     const registry = new BlockSpecRegistry()
-    const allConcepts = allCppConcepts()
+    const allComponents = allCppComponents()
     const allProjections = allCppProjections()
-    registry.loadFromSplit(allConcepts, allProjections)
+    registry.loadFromSplit(allComponents, allProjections)
     const allSpecs = registry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
@@ -125,7 +125,7 @@ describe('L1 Block Roundtrip', () => {
     for (const reg of componentGenerateRegistrars())
       (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
       // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，
-      // 而這裡只裝共用的那一批——症狀是 `⟨unknown concept: cpp:increment⟩`，
+      // 而這裡只裝共用的那一批——症狀是 `⟨unknown component: cpp:increment⟩`，
       // 看起來像產生器不見了。第三十七條護欄講的是宣告那一維，
       // **產生器這一維是同一個病。**
       for (const reg of componentGenerateRegistrars())
@@ -226,7 +226,7 @@ describe('L1 Block Roundtrip', () => {
   })
 
   describe('if_statement', () => {
-    it('should lift if statement to if concept', () => {
+    it('should lift if statement to if component', () => {
       const cond = mockNode('identifier', 'x')
       const bodyStmt = mockNode('break_statement', 'break;')
       const body = mockNode('compound_statement', '{ break; }', [bodyStmt])
@@ -361,7 +361,7 @@ describe('L1 Block Roundtrip', () => {
     })
   })
 
-  describe('code generation for universal concepts', () => {
+  describe('code generation for universal components', () => {
     it('should generate var_ref code', () => {
       const node = createNode('cpp:var_ref', { name: 'myVar' })
       const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })

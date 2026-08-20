@@ -32,7 +32,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本只讀 `core`，
 // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀是「積木文字是空的」
 // 與「舊積木型別註冊不到」，看起來像形態機制壞了。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 // 膠囊自帶的標籤——搬進膠囊的元件其 MSG0 不在共用 i18n 檔裡了。
@@ -87,7 +87,7 @@ function blockTypes(tree: SemanticNode): string[] {
 /** 積木型別 → 它的 MSG0 字串（**不是 tooltip**） */
 function msg0(blockType: string): string {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts(), allCppProjections())
+  reg.loadFromSplit(allCppComponents(), allCppProjections())
   const spec = reg.getByBlockType(blockType)
   const raw = (spec?.blockDef as Record<string, unknown> | undefined)?.message0 as string | undefined
   if (!raw) return ''
@@ -210,14 +210,14 @@ describe('加法式：舊存檔不會壞', () => {
     // 這是加法式的核心保證。**一旦有人手癢把它改名，這支就紅**——
     // 而改名會讓每一份既有存檔裡的那顆積木變成不認得的型別。
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
     expect(reg.getByBlockType('cpp_container_push')).toBeDefined()
     expect(reg.getByBlockType('cpp_container_pop')).toBeDefined()
   })
 
   it('★ 舊積木型別反推得到同一個 componentId（C-4）', () => {
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
     const neutral = reg.getByBlockType('cpp_container_push')?.componentMapping?.componentId
     const stack = reg.getByBlockType('cpp_container_push_stack')?.componentMapping?.componentId
     const queue = reg.getByBlockType('cpp_container_push_queue')?.componentMapping?.componentId
@@ -260,7 +260,7 @@ describe('工具箱放的是形態，不是退路', () => {
   it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {
     const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
     const objDefault = (bt: string): string | undefined => {
       const args = ((reg.getByBlockType(bt)?.blockDef as Record<string, unknown>)?.args0 ?? []) as { name?: string; text?: string }[]
       return args.find((a) => a.name === 'OBJ')?.text

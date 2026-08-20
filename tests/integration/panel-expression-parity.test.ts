@@ -24,10 +24,10 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
 
 const n = (
-  concept: string,
+  component: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: component, properties, children }) as unknown as SemanticNode
 
 beforeAll(() => {
   registerCppLanguage()
@@ -126,8 +126,8 @@ describe('面板的運算式產生：切換前後一字不差', () => {
 
 describe('產不出來時的行為不得無聲改變（FR-005）', () => {
   it('★ 認不得的概念仍然產出可見的標記，不是空字串', () => {
-    const out = generateExpressionCode(n('__no_such_concept__', {}), 'cpp', 'apcs' as never)
+    const out = generateExpressionCode(n('__no_such_component__', {}), 'cpp', 'apcs' as never)
     expect(out, '認不得的概念無聲產出空字串——降級路徑上的靜默失敗最難發現').not.toBe('')
-    expect(out).toContain('__no_such_concept__')
+    expect(out).toContain('__no_such_component__')
   })
 })

@@ -6,8 +6,8 @@
  * 與 `var_declare_const`／`constexpr` 同一個形狀，所以共用同一張登錄表
  * ——**「關鍵字 → 身分」是一種形狀，不是一個特例。**
  */
-import { registerQualifierConcept } from '../../../core/component/qualifier-components'
+import { registerQualifierComponent } from '../../../core/component/qualifier-components'
 
 export function registerLift(): void {
-  registerQualifierConcept('ifdef', 'cpp:ifdef', 'cpp/ifdef')
+  registerQualifierComponent('ifdef', 'cpp:ifdef', 'cpp/ifdef')
 }

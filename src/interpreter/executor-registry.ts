@@ -62,16 +62,16 @@ export interface ExecutionContext {
 export type ComponentExecutor = (node: SemanticNode, ctx: ExecutionContext) => Promise<RuntimeValue | void>
 
 /**
- * Registry for concept executors.
+ * Registry for component executors.
  */
 export class ComponentExecutorRegistry {
   private executors = new Map<string, ComponentExecutor>()
   /** 同一概念被註冊幾次。>1 代表勝負由載入順序決定，而那個順序不是任何人設計的 */
   private registrationCount = new Map<string, number>()
 
-  register(concept: string, executor: ComponentExecutor): void {
-    this.registrationCount.set(concept, (this.registrationCount.get(concept) ?? 0) + 1)
-    this.executors.set(concept, executor)
+  register(component: string, executor: ComponentExecutor): void {
+    this.registrationCount.set(component, (this.registrationCount.get(component) ?? 0) + 1)
+    this.executors.set(component, executor)
   }
 
   /**
@@ -81,25 +81,25 @@ export class ComponentExecutorRegistry {
    * 逐一消除排在後面。見 knowledge/history/017（加嚴之前先回答「被拒絕的
    * 東西去哪了」，而這裡的答案目前是「不知道」）。
    */
-  duplicates(): { concept: string; count: number }[] {
+  duplicates(): { component: string; count: number }[] {
     return [...this.registrationCount.entries()]
       .filter(([, n]) => n > 1)
-      .map(([concept, count]) => ({ concept, count }))
-      .sort((a, b) => b.count - a.count || a.concept.localeCompare(b.concept))
+      .map(([component, count]) => ({ component, count }))
+      .sort((a, b) => b.count - a.count || a.component.localeCompare(b.component))
   }
 
   registerAll(map: Record<string, ComponentExecutor>): void {
-    for (const [concept, executor] of Object.entries(map)) {
-      this.executors.set(concept, executor)
+    for (const [component, executor] of Object.entries(map)) {
+      this.executors.set(component, executor)
     }
   }
 
-  get(concept: string): ComponentExecutor | undefined {
-    return this.executors.get(concept)
+  get(component: string): ComponentExecutor | undefined {
+    return this.executors.get(component)
   }
 
-  has(concept: string): boolean {
-    return this.executors.has(concept)
+  has(component: string): boolean {
+    return this.executors.has(component)
   }
 
   /** 目前認得的所有概念。搬移用的清冊靠它——集合比對漏一個會現形，輸出比對不會 */

@@ -108,10 +108,10 @@ describe('New Round-trip: code → semantic tree → code', () => {
     //
     // > **一支「未知構造要降級」的測試，會在那個構造被支援的那天變紅
     // > ——而那是好消息。它需要的是一個新的未知例子，不是把支援拿掉。**
-    const tree = liftCode('template<typename T> concept Addable = requires(T a) { a + a; };')
+    const tree = liftCode('template<typename T> component Addable = requires(T a) { a + a; };')
     expect(tree).not.toBeNull()
     const code = generateCode(tree!, 'cpp', style)
-    expect(code).toContain('concept')
+    expect(code).toContain('component')
   })
 })
 

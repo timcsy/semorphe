@@ -59,12 +59,12 @@ describe('Panel independence', () => {
     }
   })
 
-  it('concepts.json should not contain blockDef fields', () => {
-    const conceptFiles = [
+  it('components.json should not contain blockDef fields', () => {
+    const componentFiles = [
       path.resolve(__dirname, '../../../src/core/universal-components.json'),
       path.resolve(__dirname, '../../../src/languages/cpp/core/components.json'),
     ]
-    for (const filePath of conceptFiles) {
+    for (const filePath of componentFiles) {
       const content = fs.readFileSync(filePath, 'utf-8')
       expect(content).not.toContain('"blockDef"')
       expect(content).not.toContain('"codeTemplate"')

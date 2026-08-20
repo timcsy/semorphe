@@ -6,7 +6,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, e: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, e: ComponentExecutor) => void): void {
   register('cpp:literal_char', async (node) => {
     const ch = String(node.properties.char ?? 'a')
     return { type: 'char', value: ch.charCodeAt(0) || 0 }

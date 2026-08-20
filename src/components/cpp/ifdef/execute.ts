@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defined } from '../../../languages/cpp/core/executors/preprocessor'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:ifdef', async (node, ctx) => {
       const name = String(node.properties.condition ?? '')
       if (defined.has(name)) await ctx.executeBody(node.children.body ?? [])

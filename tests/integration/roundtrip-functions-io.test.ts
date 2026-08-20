@@ -1,7 +1,7 @@
 /**
  * Phase 3 Roundtrip: Functions & I/O
  *
- * Covers concepts:
+ * Covers components:
  * func_def, func_call, func_call_expr, return, print, endl,
  * cpp_include, cpp_using_namespace, cpp_define,
  * comment, block_comment, doc_comment

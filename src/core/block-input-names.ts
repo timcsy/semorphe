@@ -17,13 +17,13 @@ import { BlockSpecRegistry } from './block-spec-registry'
 // ——**訊息指著一個已經不是唯一來源的檔**。
 //
 // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
-import { universalConcepts, universalBlocks } from './universal'
-import { componentConcepts, componentBlocks } from './component/registry'
+import { universalComponents, universalBlocks } from './universal'
+import { componentComponents, componentBlocks } from './component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from './types'
 
 const _registry = new BlockSpecRegistry()
 _registry.loadFromSplit(
-  [...universalConcepts, ...(componentConcepts() as unknown as ComponentDefJSON[])],
+  [...universalComponents, ...(componentComponents() as unknown as ComponentDefJSON[])],
   [...universalBlocks, ...(componentBlocks() as BlockProjectionJSON[])],
 )
 const specs = _registry.getAll()

@@ -12,7 +12,7 @@
  *
  * > **一個把結構壓成顯示字串的值，會在「只被印出來」的測試裡一路通過。**
  *
- * 而這個專案已經記過同一個形狀（`concepts/元件.md` 那條
+ * 而這個專案已經記過同一個形狀（`components/元件.md` 那條
  * 「一個要 parse 回結構才能用的字串，就不該是字串」）。
  *
  * 改成 `type: 'object'` ＋ `Map{first, second}`——與 `cpp:pair_declare`
@@ -22,7 +22,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pair_make', async (node, ctx) => {
     const f = node.children.first?.[0]
     const s = node.children.second?.[0]

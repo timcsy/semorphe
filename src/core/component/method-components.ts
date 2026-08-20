@@ -30,7 +30,7 @@
  */
 
 /** 一個方法名對應的節點形狀。 */
-export interface MethodConceptShape {
+export interface MethodComponentShape {
   componentId: string
   /**
    * 引數依序放進哪些子節點槽。空陣列 = 這個方法不吃引數（`s.length()`）。
@@ -42,7 +42,7 @@ export interface MethodConceptShape {
   source: string
 }
 
-const table = new Map<string, MethodConceptShape>()
+const table = new Map<string, MethodComponentShape>()
 
 /**
  * 登錄一個方法名。
@@ -51,7 +51,7 @@ const table = new Map<string, MethodConceptShape>()
  * @param componentId 對應的元件身分——**寫成字面字串**，別用樣板組
  * @param source 誰登錄的——膠囊填自己的資料夾
  */
-export function registerMethodConcept(
+export function registerMethodComponent(
   methodName: string,
   componentId: string,
   source: string,
@@ -69,25 +69,25 @@ export function registerMethodConcept(
 }
 
 /** 方法名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
-export function conceptForMethod(methodName: string): string | undefined {
+export function componentForMethod(methodName: string): string | undefined {
   return table.get(methodName)?.componentId
 }
 
 
 /** 方法名 → 完整形狀（含引數槽名）。 */
-export function methodConceptFor(methodName: string): MethodConceptShape | undefined {
+export function methodComponentFor(methodName: string): MethodComponentShape | undefined {
   return table.get(methodName)
 }
 
 /** 護欄用：每一筆是誰登錄的。 */
-export function methodConceptSources(): [methodName: string, source: string][] {
+export function methodComponentSources(): [methodName: string, source: string][] {
   return [...table.entries()].map(([k, v]) => [k, v.source])
 }
 
 /**
  * **容器方法**的登錄表——與上面那張分開，因為**查詢點不同**。
  *
- * ⚠️ 上面那張（`methodConceptFor`）在路由器**早期**被查，直接建節點。
+ * ⚠️ 上面那張（`methodComponentFor`）在路由器**早期**被查，直接建節點。
  * 而容器方法要先做兩件事才建得出正確的節點：
  *
  * 1. **依接收者型別分派**（`s.clear()` 是字串版、`v.clear()` 是容器版）
@@ -101,7 +101,7 @@ export function methodConceptSources(): [methodName: string, source: string][] {
  */
 const containerMethodTable = new Map<string, { componentId: string; source: string }>()
 
-export function registerContainerMethodConcept(methodName: string, componentId: string, source: string): void {
+export function registerContainerMethodComponent(methodName: string, componentId: string, source: string): void {
   const existing = containerMethodTable.get(methodName)
   if (existing && existing.componentId !== componentId) {
     throw new Error(
@@ -113,7 +113,7 @@ export function registerContainerMethodConcept(methodName: string, componentId: 
 }
 
 /** 容器方法名 → 元件身分。認不得回傳 `undefined`。 */
-export function containerMethodConcept(methodName: string): string | undefined {
+export function containerMethodComponent(methodName: string): string | undefined {
   return containerMethodTable.get(methodName)?.componentId
 }
 
@@ -128,7 +128,7 @@ export function containerMethodConcept(methodName: string): string | undefined {
  */
 const typeMethodTable = new Map<string, Map<string, { componentId: string; source: string }>>()
 
-export function registerTypedMethodConcept(type: string, methodName: string, componentId: string, source: string): void {
+export function registerTypedMethodComponent(type: string, methodName: string, componentId: string, source: string): void {
   const m = typeMethodTable.get(type) ?? new Map()
   const existing = m.get(methodName)
   if (existing && existing.componentId !== componentId) {
@@ -142,6 +142,6 @@ export function registerTypedMethodConcept(type: string, methodName: string, com
 }
 
 /** 型別 ＋ 方法名 → 元件身分。查不到回 `undefined`——**不猜**。 */
-export function typedMethodConcept(type: string, methodName: string): string | undefined {
+export function typedMethodComponent(type: string, methodName: string): string | undefined {
   return typeMethodTable.get(type)?.get(methodName)?.componentId
 }

@@ -5,7 +5,7 @@ import { verify } from '../../../src/scripts/verify-component-paths'
 const ROOT_DIR = path.resolve(__dirname, '../../..')
 
 describe('verify-component-paths', () => {
-  it('should scan and produce reports for all concepts', () => {
+  it('should scan and produce reports for all components', () => {
     const { reports } = verify(ROOT_DIR)
     expect(reports.length).toBeGreaterThan(0)
     // Every report should have a componentId and sources
@@ -15,7 +15,7 @@ describe('verify-component-paths', () => {
     }
   })
 
-  it('should check all four paths for each concept', () => {
+  it('should check all four paths for each component', () => {
     const { reports } = verify(ROOT_DIR)
     for (const r of reports) {
       expect(r.paths).toHaveProperty('lift')
@@ -37,7 +37,7 @@ describe('verify-component-paths', () => {
     }
   })
 
-  it('should return exit code 0 when all concepts are fully covered', () => {
+  it('should return exit code 0 when all components are fully covered', () => {
     const { reports, exitCode } = verify(ROOT_DIR)
     const missing = reports.filter(r => r.missing.length > 0)
     if (missing.length === 0) {
@@ -47,7 +47,7 @@ describe('verify-component-paths', () => {
     }
   })
 
-  it('should exclude internal concepts (_compound, raw_code, unresolved, program)', () => {
+  it('should exclude internal components (_compound, raw_code, unresolved, program)', () => {
     const { reports } = verify(ROOT_DIR)
     const ids = reports.map(r => r.componentId)
     expect(ids).not.toContain('_compound')
@@ -56,7 +56,7 @@ describe('verify-component-paths', () => {
     expect(ids).not.toContain('cpp:program')
   })
 
-  it('should include core universal concepts', () => {
+  it('should include core universal components', () => {
     const { reports } = verify(ROOT_DIR)
     const ids = new Set(reports.map(r => r.componentId))
     expect(ids.has('cpp:var_declare')).toBe(true)

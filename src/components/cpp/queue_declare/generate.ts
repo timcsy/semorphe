@@ -3,7 +3,7 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  // Statement concepts
+  // Statement components
     g.set('cpp:queue_declare', (node, ctx) => {
       const type = node.properties.type ?? 'int'
       const name = node.properties.name ?? 'q'

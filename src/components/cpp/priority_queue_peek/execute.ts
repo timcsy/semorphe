@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { heapTopIndex } from '../../../languages/cpp/core/runtime/heap'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:priority_queue_peek', async (node, ctx) => {
       const name = String(node.properties.obj)
       const arr = ctx.scope.get(name)

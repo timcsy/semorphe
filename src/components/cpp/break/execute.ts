@@ -2,6 +2,6 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:break', async () => { throw new BreakSignal() })
 }

@@ -418,7 +418,7 @@ describe('I/O Style Conformance Analysis (code-level)', () => {
 describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
   const registry = createPopulatedRegistry()
 
-  describe('APCS (iostream-preferred) + cstdio concepts = borrowing', () => {
+  describe('APCS (iostream-preferred) + cstdio components = borrowing', () => {
     it('should detect cpp_printf as borrowing via registry', () => {
       const tree = makeProgram([
         createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [createNode('cpp:var_ref', { name: 'x' })] }),
@@ -440,7 +440,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
     })
   })
 
-  describe('Competitive (cstdio-preferred) + iostream concepts = borrowing', () => {
+  describe('Competitive (cstdio-preferred) + iostream components = borrowing', () => {
     it('should detect print (cout-origin) as borrowing via registry', () => {
       const tree = makeProgram([
         createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),
@@ -493,7 +493,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       expect(exceptions).toHaveLength(0)
     })
 
-    it('should NOT flag non-IO concepts (var_declare) with registry', () => {
+    it('should NOT flag non-IO components (var_declare) with registry', () => {
       const tree = makeProgram([
         createNode('cpp:var_declare', { name: 'x', type: 'int' }),
       ])
@@ -501,7 +501,7 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
       expect(exceptions).toHaveLength(0)
     })
 
-    it('should NOT flag vector concepts (non-IO module) with registry', () => {
+    it('should NOT flag vector components (non-IO module) with registry', () => {
       const tree = makeProgram([
         createNode('cpp:vector_declare', { type: 'int', name: 'v' }),
       ])
@@ -510,33 +510,33 @@ describe('Module-based Borrowing Detection (with ModuleRegistry)', () => {
     })
   })
 
-  describe('Registry concept→header mappings', () => {
+  describe('Registry component→header mappings', () => {
     it('should map print to <iostream>', () => {
-      expect(registry.getHeaderForConcept('cpp:print')).toBe('<iostream>')
+      expect(registry.getHeaderForComponent('cpp:print')).toBe('<iostream>')
     })
 
     it('should map input to <iostream>', () => {
-      expect(registry.getHeaderForConcept('cpp:input')).toBe('<iostream>')
+      expect(registry.getHeaderForComponent('cpp:input')).toBe('<iostream>')
     })
 
     it('should map endl to <iostream>', () => {
-      expect(registry.getHeaderForConcept('cpp:endl')).toBe('<iostream>')
+      expect(registry.getHeaderForComponent('cpp:endl')).toBe('<iostream>')
     })
 
     it('should map cpp_printf to <cstdio>', () => {
-      expect(registry.getHeaderForConcept('cpp:print_formatted')).toBe('<cstdio>')
+      expect(registry.getHeaderForComponent('cpp:print_formatted')).toBe('<cstdio>')
     })
 
     it('should map cpp_scanf to <cstdio>', () => {
-      expect(registry.getHeaderForConcept('cpp:input_formatted')).toBe('<cstdio>')
+      expect(registry.getHeaderForComponent('cpp:input_formatted')).toBe('<cstdio>')
     })
 
     it('should map cpp_vector_declare to <vector>', () => {
-      expect(registry.getHeaderForConcept('cpp:vector_declare')).toBe('<vector>')
+      expect(registry.getHeaderForComponent('cpp:vector_declare')).toBe('<vector>')
     })
 
-    it('should return null for core concepts (no header)', () => {
-      expect(registry.getHeaderForConcept('cpp:var_declare')).toBeNull()
+    it('should return null for core components (no header)', () => {
+      expect(registry.getHeaderForComponent('cpp:var_declare')).toBeNull()
     })
   })
 })

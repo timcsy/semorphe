@@ -1,7 +1,7 @@
 /** `cpp:string_declare` 的 **execute** 路——從共用檔原封剪過來（批次第十六批：型別名資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:string_declare', async (node, ctx) => {
       const name = String(node.properties.name ?? 'str')
       // ⚠️ **初始值原本被完全忽略**——`string s = "abc";` 之後 `s` 是 `""`。

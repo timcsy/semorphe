@@ -58,8 +58,17 @@ const EXEMPT: { path: RegExp; why: string }[] = [
     why: '同上：語言側的凍結明表' },
 ]
 
-/** `knowledge/concepts/` 是**知識庫資料夾**，人拍板不改名（見 concepts/元件.md）。 */
-const KNOWLEDGE_DIR = /knowledge\/concepts\//g
+/**
+ * 掃描前先遮掉**兩種指向別處的路徑**——它們是引用，不是本專案的詞彙：
+ *
+ * - `knowledge/concepts/`：知識庫資料夾，人拍板**不改名**（它裝的是知識層的概念，
+ *   不是產品層的元件——見 `concepts/元件.md`「為何是『元件』不是『概念』」）
+ * - `specs/NNN-…concept…/`：**病歷**。目錄名記錄的是那一刀當時叫什麼，
+ *   改它等於竄改記錄（component-rename 第六步的第一類誤傷）
+ *
+ * ⚠️ 遮掉的是**路徑字面**，不是整個檔——同一個檔裡別的地方寫了 `concept` 照樣會被抓。
+ */
+const REFERENCE_PATHS = /knowledge\/concepts\/|specs\/\d+-[a-z0-9-]*concept[a-z0-9-]*/g
 const SELF = 'tests/integration/component-vocabulary.test.ts'
 /** 舊詞彙——🔴 每一個都要說得出它被誰取代。 */
 const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
@@ -141,7 +150,7 @@ describe('spec 159 · 整個 concept 家族退場', () => {
   it('🔴 `concept` 家族已整族退場——請用 `component` 家族', () => {
     const hits = scanned
       .map((f) => ({ f, n: (fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')
-        .replace(KNOWLEDGE_DIR, '').match(new RegExp(family, 'g')) ?? []).length }))
+        .replace(REFERENCE_PATHS, '').match(new RegExp(family, 'g')) ?? []).length }))
       .filter((x) => x.n > 0)
     const total = hits.reduce((a, b) => a + b.n, 0)
     expect(total,

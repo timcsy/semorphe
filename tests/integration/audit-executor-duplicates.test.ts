@@ -41,9 +41,9 @@ const NOT_DETECTED =
 
 interface DupBaseline {
   _meta: BaselineMeta
-  duplicateConcepts: number
+  duplicateComponents: number
   totalExtraRegistrations: number
-  concepts: string[]
+  components: string[]
 }
 
 /**
@@ -67,7 +67,7 @@ interface DupBaseline {
 let interp: SemanticInterpreter
 let dups: ReturnType<SemanticInterpreter['duplicateRegistrations']>
 let extra = 0
-let registeredConceptCount = 0
+let registeredComponentCount = 0
 
 beforeAll(async () => {
   await Parser.init({ locateFile: (s2: string) => `${process.cwd()}/public/${s2}` })
@@ -75,7 +75,7 @@ beforeAll(async () => {
   interp = new SemanticInterpreter({ maxSteps: 1 })
   dups = interp.duplicateRegistrations()
   extra = dups.reduce((n, d) => n + d.count - 1, 0)
-  registeredConceptCount = (interp as unknown as {
+  registeredComponentCount = (interp as unknown as {
     executorRegistry: { list(): string[] }
   }).executorRegistry.list().length
 })
@@ -85,7 +85,7 @@ describe('護欄：執行器重複註冊', () => {
     // ⚠️ 錨在**註冊了幾個概念**（合成量），不錨在重複數——後者正是這條護欄
     // 要推向零的東西。而這一支正是本護欄缺了四天的那一道：
     // 它的注入證明計數器會數，而**沒有任何東西證明註冊表被填過**。
-    expect(registeredConceptCount, '執行器註冊表是空的 → 這條護欄什麼都沒量到，數字一律不可信').toBeGreaterThan(50)
+    expect(registeredComponentCount, '執行器註冊表是空的 → 這條護欄什麼都沒量到，數字一律不可信').toBeGreaterThan(50)
   })
 
   it('產出可讀報表', () => {
@@ -101,7 +101,7 @@ describe('護欄：執行器重複註冊', () => {
       '沒有任何人刻意設計過那個順序。',
       '',
     ]
-    for (const d of dups) lines.push(`  ${d.concept}：註冊 ${d.count} 次`)
+    for (const d of dups) lines.push(`  ${d.component}：註冊 ${d.count} 次`)
     printReport('執行器重複註冊護欄', lines)
     expect(dups.length).toBeGreaterThanOrEqual(0)
   })
@@ -114,7 +114,7 @@ describe('護欄：執行器重複註冊', () => {
     }).executorRegistry
     reg.register('__probe_dup__', async () => {})
     reg.register('__probe_dup__', async () => {})
-    const found = probe.duplicateRegistrations().find((d) => d.concept === '__probe_dup__')
+    const found = probe.duplicateRegistrations().find((d) => d.component === '__probe_dup__')
     expect(found, '刻意註冊兩次卻沒被數到 → 計數沒接上，報表的數字一律不可信').toBeDefined()
     expect(found!.count).toBe(2)
   })
@@ -125,22 +125,22 @@ describe('護欄：執行器重複註冊', () => {
       executorRegistry: { register(c: string, e: () => Promise<void>) : void }
     }).executorRegistry
     reg.register('__probe_single__', async () => {})
-    expect(probe.duplicateRegistrations().find((d) => d.concept === '__probe_single__')).toBeUndefined()
+    expect(probe.duplicateRegistrations().find((d) => d.component === '__probe_single__')).toBeUndefined()
   })
 
   it('★ 四個轉型概念不得再出現——它們是本功能修掉的那一批', () => {
-    const casts = dups.filter((d) => d.concept.includes('cast'))
+    const casts = dups.filter((d) => d.component.includes('cast'))
     expect(
-      casts.map((d) => `${d.concept}×${d.count}`),
+      casts.map((d) => `${d.component}×${d.count}`),
       '轉型概念又被重複註冊了——那正是 static_cast 輸出 void 的原因',
     ).toEqual([])
   })
 
   it('棘輪：不得上升', () => {
     const b = loadBaseline<DupBaseline>('executor-duplicates')
-    const added = dups.map((d) => d.concept).filter((c) => !b.concepts.includes(c))
+    const added = dups.map((d) => d.component).filter((c) => !b.components.includes(c))
     expect(added, `新增的重複註冊：${added.join('、')}`).toEqual([])
-    assertRatchet([['重複註冊的概念', dups.length, b.duplicateConcepts]])
+    assertRatchet([['重複註冊的概念', dups.length, b.duplicateComponents]])
   })
 })
 
@@ -153,8 +153,8 @@ if (process.env.GENERATE_BASELINE) {
       rule: RULE,
       note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,
     },
-    duplicateConcepts: dups.length,
+    duplicateComponents: dups.length,
     totalExtraRegistrations: extra,
-    concepts: dups.map((d) => d.concept),
+    components: dups.map((d) => d.component),
   })
 }

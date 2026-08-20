@@ -22,11 +22,11 @@ class MockLanguageModule implements NewLanguageModule {
     ]
   }
 
-  getSupportedConcepts(): ComponentId[] {
+  getSupportedComponents(): ComponentId[] {
     return ['cpp:var_declare', 'cpp:var_assign', 'cpp:if', 'cpp:loop_while', 'cpp:func_def', 'cpp:func_call', 'cpp:print', 'cpp:input']
   }
 
-  getAdditionalConcepts() { return [] }
+  getAdditionalComponents() { return [] }
 
   getTooltipOverrides(): Record<string, string> {
     return {
@@ -65,11 +65,11 @@ describe('T033: LanguageModule Interface', () => {
     }
   })
 
-  it('should return supported universal concepts', () => {
-    const concepts = module.getSupportedConcepts()
-    expect(concepts).toContain('cpp:var_declare')
-    expect(concepts).toContain('cpp:if')
-    expect(concepts).toContain('cpp:func_def')
+  it('should return supported universal components', () => {
+    const components = module.getSupportedComponents()
+    expect(components).toContain('cpp:var_declare')
+    expect(components).toContain('cpp:if')
+    expect(components).toContain('cpp:func_def')
   })
 
   it('should return tooltip overrides as key-value pairs', () => {
@@ -135,14 +135,14 @@ describe('T033: Type injection flow', () => {
   })
 })
 
-describe('T033: Concept filtering', () => {
-  it('should filter toolbox blocks based on supported concepts', () => {
+describe('T033: Component filtering', () => {
+  it('should filter toolbox blocks based on supported components', () => {
     const module = new MockLanguageModule()
-    const supported = new Set(module.getSupportedConcepts())
+    const supported = new Set(module.getSupportedComponents())
 
-    // Simulate concept-based filtering
-    const allConcepts: ComponentId[] = ['cpp:var_declare', 'pointer_declare', 'cpp:if', 'template_func']
-    const filtered = allConcepts.filter(c => supported.has(c))
+    // Simulate component-based filtering
+    const allComponents: ComponentId[] = ['cpp:var_declare', 'pointer_declare', 'cpp:if', 'template_func']
+    const filtered = allComponents.filter(c => supported.has(c))
 
     expect(filtered).toContain('cpp:var_declare')
     expect(filtered).toContain('cpp:if')

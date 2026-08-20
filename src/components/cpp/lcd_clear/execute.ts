@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_clear', async (node, ctx) => {
     const s = lcdOf(ctx, String(node.properties.obj ?? 'lcd'))
     s.lines = s.lines.map(() => '')

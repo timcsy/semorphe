@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { splitMember, installMethodExecutors } from '../../../languages/cpp/core/executors/structs'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
      * `class C { public: … private: … };`
      *

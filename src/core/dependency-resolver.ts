@@ -7,13 +7,13 @@ export interface DependencyEdge {
   sourceType: 'builtin' | 'stdlib' | 'external'
   /** Header/module identifier (e.g., '<iostream>') */
   header: string
-  /** The concept that triggered this dependency (for tooltip display) */
+  /** The component that triggered this dependency (for tooltip display) */
   reason?: string
 }
 
 export interface DependencyResolver {
   /**
-   * Resolve concept IDs to dependency edges.
+   * Resolve component IDs to dependency edges.
    * Returns deduplicated, sorted edges.
    */
   resolve(componentIds: string[]): DependencyEdge[]

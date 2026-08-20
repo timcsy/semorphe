@@ -31,7 +31,7 @@ import { isFunctionDefinition } from '../../../core/component/traits'
 import { buildFuncCall } from '../func_call/lift'
 import { loopBudget, tickLoop } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {
       const body = node.children.body ?? []
       await ctx.executeBody(body)

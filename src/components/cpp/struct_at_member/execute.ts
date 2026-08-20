@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { getMember } from '../../../interpreter/executors/variables'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /** `p.x` */
     register('cpp:struct_at_member', async (node, ctx) => {
       const objName = String(node.properties.obj)

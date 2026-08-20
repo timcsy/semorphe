@@ -9,7 +9,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:delay', async (node, ctx) => {
     await sleepMillis(ctx.toNumber(await ctx.evaluate((node.children.ms ?? [])[0])))
   })

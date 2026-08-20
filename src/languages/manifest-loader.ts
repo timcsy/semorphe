@@ -1,7 +1,7 @@
 import type { LanguageManifest, ComponentDefJSON, BlockProjectionJSON, LiftPattern, UniversalTemplate } from '../core/types'
 
 export interface ManifestResources {
-  concepts: ComponentDefJSON[]
+  components: ComponentDefJSON[]
   projections: BlockProjectionJSON[]
   templates: UniversalTemplate[]
   liftPatterns: LiftPattern[]
@@ -16,9 +16,9 @@ export function loadManifestResources(
   manifest: LanguageManifest,
   resolveJSON: (relativePath: string) => unknown[],
 ): ManifestResources {
-  const concepts: ComponentDefJSON[] = []
-  for (const p of manifest.provides.concepts) {
-    concepts.push(...resolveJSON(p) as ComponentDefJSON[])
+  const components: ComponentDefJSON[] = []
+  for (const p of manifest.provides.components) {
+    components.push(...resolveJSON(p) as ComponentDefJSON[])
   }
 
   const projections: BlockProjectionJSON[] = []
@@ -36,5 +36,5 @@ export function loadManifestResources(
     liftPatterns.push(...resolveJSON(p) as LiftPattern[])
   }
 
-  return { concepts, projections, templates, liftPatterns }
+  return { components, projections, templates, liftPatterns }
 }

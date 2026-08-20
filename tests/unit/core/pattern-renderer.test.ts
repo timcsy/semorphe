@@ -190,9 +190,9 @@ describe('PatternRenderer', () => {
     })
   })
 
-  describe('unknown concept fallback', () => {
-    it('should return null for unknown concept', () => {
-      const node = createNode('unknown_concept', {})
+  describe('unknown component fallback', () => {
+    it('should return null for unknown component', () => {
+      const node = createNode('unknown_component', {})
       const result = renderer.render(node)
       expect(result).toBeNull()
     })

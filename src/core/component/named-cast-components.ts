@@ -26,6 +26,6 @@ export function registerNamedCast(keyword: string, componentId: string, source: 
 }
 
 /** 這個關鍵字屬於誰。不認得回 `undefined`——**不猜**。 */
-export function namedCastConcept(keyword: string): string | undefined {
+export function namedCastComponent(keyword: string): string | undefined {
   return table.get(keyword)?.componentId
 }

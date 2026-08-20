@@ -9,6 +9,6 @@ import { registerBinaryOperator, registerBinaryOperatorFallback } from '../../..
 export function registerLift(): void {
   registerBinaryOperator(["+", "-", "*", "/", "%", "&", "|", "^", "<<", ">>"], 'cpp:arithmetic', 'cpp/arithmetic')
   // ⚠️ **認不得的二元運算子由我兜底**——原本是共用檔的
-  // `else concept = 'cpp:arithmetic'`，一個沒有人宣告過的預設值。
+  // `else component = 'cpp:arithmetic'`，一個沒有人宣告過的預設值。
   registerBinaryOperatorFallback('cpp:arithmetic', 'cpp/arithmetic')
 }

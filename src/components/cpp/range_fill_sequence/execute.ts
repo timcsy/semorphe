@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { resolveRange } from '../../../languages/cpp/core/runtime/range'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_fill_sequence', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
       const start = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))

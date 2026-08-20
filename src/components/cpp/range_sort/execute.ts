@@ -12,7 +12,7 @@ import { callWithValues } from '../../../languages/cpp/core/runtime/lambda'
 
 export function registerGenerateUnused(): void {}
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_sort', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
       const cells = r.arr as RuntimeValue[]

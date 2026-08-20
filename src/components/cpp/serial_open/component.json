@@ -21,5 +21,5 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts"
   },
-  "_lift_why": "🔴 用**分支**而不是 `registerMethodConcept`：那張表的鍵是**方法名**，而 `begin` 已經被 `container_iter`（`v.begin()`）用著。**「begin 在 Serial 上」這件事，一張只放得下方法名的表【表達不出來】**——分支看得到 `obj`。 ⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 檔頭。"
+  "_lift_why": "🔴 用**分支**而不是 `registerMethodComponent`：那張表的鍵是**方法名**，而 `begin` 已經被 `container_iter`（`v.begin()`）用著。**「begin 在 Serial 上」這件事，一張只放得下方法名的表【表達不出來】**——分支看得到 `obj`。 ⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 檔頭。"
 }

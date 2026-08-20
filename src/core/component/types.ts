@@ -21,10 +21,10 @@
  * ```
  *
  * 把 `<vector>` 膠囊當成 StdModule 註冊，會與既有的 `<vector>` 模組**撞鍵並
- * 覆蓋掉其中一個**，而 `conceptToHeader` 仍然正確 → 症狀是
+ * 覆蓋掉其中一個**，而 `componentToHeader` 仍然正確 → 症狀是
  * 「`getModule('<vector>')` 少了一半內容」而測試全綠。
  *
- * → 膠囊走自己的清單，`#include` 靠 `registerConceptMapping()`
+ * → 膠囊走自己的清單，`#include` 靠 `registerComponentMapping()`
  *   （那個機制已經在用了：`cpp:print` → `<iostream>`）。
  */
 
@@ -39,7 +39,7 @@ export const FIVE_PATHS: readonly FivePath[] = ['lift', 'generate', 'render', 'e
 /**
  * `component.json` 的形狀。
  *
- * 欄位幾乎與現行 `concepts.json` 的一筆相同——**因為它就是那一筆**。
+ * 欄位幾乎與現行 `components.json` 的一筆相同——**因為它就是那一筆**。
  * 搬家不重寫。多的只有兩個槽，各自有當前的消費者：
  *
  * | 槽 | 當前消費者 |
@@ -51,7 +51,7 @@ export interface ComponentManifest {
   /**
    * 身分。**欄位名是 `componentId` 而不是 `componentId`。**
    *
-   * `concepts/元件.md` 的詞彙表用 `componentId`，而程式碼裡 `componentId` 有 707 處、
+   * `components/元件.md` 的詞彙表用 `componentId`，而程式碼裡 `componentId` 有 707 處、
    * `componentId` 只有 21 處。在 `component.json` 裡改用後者，等於為同一件事造
    * **第二個名字**——而那正是這整個階段在清的雙重真相。
    *

@@ -23,7 +23,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:address_of', async (node, ctx) => {
     const varNodes = node.children.var ?? []
     if (varNodes.length === 0) return { type: 'int', value: 0 }

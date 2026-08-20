@@ -3,7 +3,7 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  // Expression concepts
+  // Expression components
     g.set('cpp:map_at', (node, ctx) => {
       const obj = node.properties.obj ?? 'mp'
       const keyNodes = node.children.key ?? []

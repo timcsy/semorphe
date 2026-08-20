@@ -2,7 +2,7 @@
   {
     "id": "cpp_runtime_error",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [
@@ -18,7 +18,7 @@
   {
     "id": "cpp_logic_error",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [
@@ -34,7 +34,7 @@
   {
     "id": "cpp_out_of_range",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [
@@ -50,7 +50,7 @@
   {
     "id": "cpp_invalid_argument",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [
@@ -66,7 +66,7 @@
   {
     "id": "cpp_overflow_error",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [
@@ -82,7 +82,7 @@
   {
     "id": "cpp_length_error",
     "astNodeType": "call_expression",
-    "concept": {
+    "component": {
       "componentId": "cpp:exception_make"
     },
     "constraints": [

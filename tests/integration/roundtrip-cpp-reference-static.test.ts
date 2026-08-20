@@ -1,5 +1,5 @@
 /**
- * Round-trip tests for C++ reference and static concepts:
+ * Round-trip tests for C++ reference and static components:
  * cpp_ref_declare, cpp_static_declare, cpp_static_member
  *
  * Verifies: code → lift → SemanticTree → generate → code
@@ -116,17 +116,17 @@ describe('Round-trip: C++ reference and static (cpp_ref_declare, cpp_static_decl
       const tree2 = liftCode(generated)
       expect(tree2).not.toBeNull()
 
-      function findConcept(node: any, concept: string): boolean {
-        if (node.componentId === concept) return true
+      function findComponent(node: any, component: string): boolean {
+        if (node.componentId === component) return true
         for (const children of Object.values(node.children ?? {})) {
           for (const child of children as any[]) {
-            if (findConcept(child, concept)) return true
+            if (findComponent(child, component)) return true
           }
         }
         return false
       }
-      expect(findConcept(tree1!, 'cpp:var_declare_static')).toBe(true)
-      expect(findConcept(tree2!, 'cpp:var_declare_static')).toBe(true)
+      expect(findComponent(tree1!, 'cpp:var_declare_static')).toBe(true)
+      expect(findComponent(tree2!, 'cpp:var_declare_static')).toBe(true)
     })
   })
 })

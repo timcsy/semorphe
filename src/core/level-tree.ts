@@ -7,19 +7,19 @@ export interface DoublingWarning {
   severity: 'warning'
 }
 
-export function getVisibleConcepts(topic: Topic, enabledBranches: Set<string>): Set<string> {
+export function getVisibleComponents(topic: Topic, enabledBranches: Set<string>): Set<string> {
   const result = new Set<string>()
-  collectConcepts(topic.levelTree, enabledBranches, result)
+  collectComponents(topic.levelTree, enabledBranches, result)
   return result
 }
 
-function collectConcepts(node: LevelNode, enabledBranches: Set<string>, result: Set<string>): void {
+function collectComponents(node: LevelNode, enabledBranches: Set<string>, result: Set<string>): void {
   if (!enabledBranches.has(node.id)) return
-  for (const concept of node.concepts) {
-    result.add(concept)
+  for (const component of node.components) {
+    result.add(component)
   }
   for (const child of node.children) {
-    collectConcepts(child, enabledBranches, result)
+    collectComponents(child, enabledBranches, result)
   }
 }
 
@@ -62,14 +62,14 @@ export function validateDoublingGuideline(root: LevelNode): DoublingWarning[] {
 }
 
 function validateNode(node: LevelNode, warnings: DoublingWarning[]): void {
-  const parentCount = node.concepts.length
+  const parentCount = node.components.length
   for (const child of node.children) {
-    const childCount = child.concepts.length
+    const childCount = child.components.length
     if (parentCount > 0 && childCount > parentCount * 2) {
       warnings.push({
         nodeId: child.id,
         parentId: node.id,
-        message: `Node "${child.id}" has ${childCount} concepts, more than double its parent "${node.id}" (${parentCount})`,
+        message: `Node "${child.id}" has ${childCount} components, more than double its parent "${node.id}" (${parentCount})`,
         severity: 'warning',
       })
     }
@@ -77,11 +77,11 @@ function validateNode(node: LevelNode, warnings: DoublingWarning[]): void {
   }
 }
 
-export function isConceptVisible(
+export function isComponentVisible(
   componentId: string,
   topic: Topic,
   enabledBranches: Set<string>
 ): boolean {
-  const visible = getVisibleConcepts(topic, enabledBranches)
+  const visible = getVisibleComponents(topic, enabledBranches)
   return visible.has(componentId)
 }

@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
 import { installLambda } from '../../../languages/cpp/core/runtime/lambda'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lambda', async (node, ctx) => {
       installLambda(ctx)
       const raw = String(node.properties.capture ?? '&')

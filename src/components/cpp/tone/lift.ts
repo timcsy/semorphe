@@ -4,10 +4,10 @@
  * ⚠️ 第三個槽（`duration`）是**可選的**：`tone(pin, freq)` 只有兩個引數時，
  * 那個槽拿到空陣列——而 `generate.ts` 靠「空不空」決定產不產出第三個引數。
  */
-import { registerCallConcept } from '../../../core/component/call-components'
+import { registerCallComponent } from '../../../core/component/call-components'
 
 export function registerLift(): void {
-  registerCallConcept('tone', {
+  registerCallComponent('tone', {
     componentId: 'cpp:tone',
     argSlots: ['pin', 'frequency', 'duration'],
     source: 'cpp/tone',

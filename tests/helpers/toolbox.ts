@@ -3,7 +3,7 @@
  *
  * `build-guardrail` 第 4 步：「勝負常常取決於模組匯入順序，讀設定檔算不出來。」
  *
- * ⚠️ **`visibleConcepts` 要餵全部概念，不要餵單一 topic。**
+ * ⚠️ **`visibleComponents` 要餵全部概念，不要餵單一 topic。**
  *
  * 規劃階段第一版掃描餵的是 `cpp-beginner` 的可見集合，於是被課程可見度擋掉的
  * 積木一顆都沒被數到——報「拿不到 6 顆」，實際是 10 顆。課程收不收錄是策展，
@@ -16,7 +16,7 @@ import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalBlocks, UNIVERSAL_OWNER } from '../../src/core/universal'
 import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { componentBlocks, componentBlocksNotIn } from '../../src/core/component/registry'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
@@ -34,7 +34,7 @@ export interface BlockOrigin {
 
 export interface LoadedToolbox {
   registry: BlockSpecRegistry
-  allConcepts: ComponentDefJSON[]
+  allComponents: ComponentDefJSON[]
   allProjections: BlockProjectionJSON[]
   /** 每顆積木型別 → 它的來源模組 */
   origins: BlockOrigin[]
@@ -50,11 +50,11 @@ function typeOf(proj: BlockProjectionJSON): string {
 /**
  * 載入全部宣告並組出工具箱。
  *
- * @param extraConcepts   合成注入用（雙向注入測試）
+ * @param extraComponents   合成注入用（雙向注入測試）
  * @param extraProjections 合成注入用
  */
 export function loadToolbox(
-  extraConcepts: ComponentDefJSON[] = [],
+  extraComponents: ComponentDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
   /**
    * 用哪個目標的能力過濾（spec 142）。
@@ -69,7 +69,7 @@ export function loadToolbox(
   // 整批從工具箱消失**——使用者截圖才發現。
   //
   // 組裝只留一份，測試與 production 就不可能分歧。
-  const allConcepts: ComponentDefJSON[] = [...allCppConcepts(), ...extraConcepts]
+  const allComponents: ComponentDefJSON[] = [...allCppComponents(), ...extraComponents]
   const allProjections: BlockProjectionJSON[] = [
     ...allCppProjections(),
     // 合成注入預設蓋核心的章；要驗「加一顆元件到某模組」就自己帶 owner
@@ -77,7 +77,7 @@ export function loadToolbox(
   ]
 
   const registry = new BlockSpecRegistry()
-  registry.loadFromSplit(allConcepts, allProjections)
+  registry.loadFromSplit(allComponents, allProjections)
 
   const origins: BlockOrigin[] = [
     ...universalBlocks.map((b) => ({ type: typeOf(b), owner: UNIVERSAL_OWNER })),
@@ -99,13 +99,13 @@ export function loadToolbox(
   ]
 
   // ⚠️ 全部概念可見——見檔頭
-  const allVisible = new Set(allConcepts.map((c) => c.componentId))
+  const allVisible = new Set(allComponents.map((c) => c.componentId))
   // 🔴 走 production 的**同一個**過濾函式，不在這裡重寫一份會漂移的判準。
-  const visibleConcepts = target ? filterByTarget(allVisible, target) : allVisible
+  const visibleComponents = target ? filterByTarget(allVisible, target) : allVisible
 
   const built = buildToolbox({
     blockSpecRegistry: registry,
-    visibleConcepts,
+    visibleComponents,
     ioPreference: 'iostream',
     msgs: {},
     categoryColors: CATEGORY_COLORS,
@@ -128,19 +128,19 @@ export function loadToolbox(
     }
   }
 
-  return { registry, allConcepts, allProjections, origins, snapshot, categoriesOf }
+  return { registry, allComponents, allProjections, origins, snapshot, categoriesOf }
 }
 
 /** 課程清單的快照——成員是策展，這裡只負責留照片 */
 export function curriculumSnapshot(topic: {
   id?: string
   levelTree?: unknown
-}): { id: string; levels: { id: string; label: string; concepts: string[] }[] } {
-  const levels: { id: string; label: string; concepts: string[] }[] = []
+}): { id: string; levels: { id: string; label: string; components: string[] }[] } {
+  const levels: { id: string; label: string; components: string[] }[] = []
   const walk = (node: unknown): void => {
     if (!node || typeof node !== 'object') return
-    const n = node as { id?: string; label?: string; concepts?: string[]; children?: unknown[] }
-    if (n.id) levels.push({ id: n.id, label: n.label ?? '', concepts: [...(n.concepts ?? [])] })
+    const n = node as { id?: string; label?: string; components?: string[]; children?: unknown[] }
+    if (n.id) levels.push({ id: n.id, label: n.label ?? '', components: [...(n.components ?? [])] })
     for (const c of n.children ?? []) walk(c)
   }
   walk(topic.levelTree)

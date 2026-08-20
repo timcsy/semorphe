@@ -6,8 +6,8 @@
  *
  * **型別查不到時不猜**——留在通用版。猜一個錯的專屬身分比誠實降級更糟。
  */
-import { registerTypedMethodConcept } from '../../../core/component/method-components'
+import { registerTypedMethodComponent } from '../../../core/component/method-components'
 
 export function registerLift(): void {
-  registerTypedMethodConcept('priority_queue', 'top', 'cpp:priority_queue_peek', 'cpp/priority_queue_peek')
+  registerTypedMethodComponent('priority_queue', 'top', 'cpp:priority_queue_peek', 'cpp/priority_queue_peek')
 }

@@ -4,7 +4,7 @@
  * 分辨「做完了」與「看起來做完了」。
  *
  * 這是 P2「缺任一條路徑 = coverage gap = 架構缺陷（**0 容忍**）」的執行機構。
- * 那條原則寫在 principles.md、概念代數也定義了 ∀concept 五路，但在本護欄
+ * 那條原則寫在 principles.md、概念代數也定義了 ∀component 五路，但在本護欄
  * 之前**沒有任何測試在檢查它**——原則本身是殼。
  *
  * ⚠️ 本護欄**不檢測「條件性正確」**（單獨測通過、組合時失敗）。它跑的
@@ -273,10 +273,10 @@ function wrap(node: SemanticNode | null, id?: string, contextNode?: SemanticNode
   return createNode('cpp:program', {}, { body: [...prelude, stmt] })
 }
 
-function findConcept(node: SemanticNode | null, id: string): boolean {
+function findComponent(node: SemanticNode | null, id: string): boolean {
   if (!node) return false
   if (node.componentId === id) return true
-  return Object.values(node.children ?? {}).some((arr) => arr.some((c) => findConcept(c, id)))
+  return Object.values(node.children ?? {}).some((arr) => arr.some((c) => findComponent(c, id)))
 }
 
 function classify(def: ComponentDefJSON): { row: Row; generated: string } {
@@ -352,7 +352,7 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
         // 「殼」這個數字灌水，進而讓清償優先序指錯方向。
         const lifted = lifter.lift(tree.rootNode as never)
         if (!lifted) return { verdict: 'shell', reason: 'lift 回傳 null' } as PathResult
-        if (findConcept(lifted, id)) return { verdict: 'implemented' } as PathResult
+        if (findComponent(lifted, id)) return { verdict: 'implemented' } as PathResult
         // 身分沒找到——但樣本本身若不是合法的獨立程式，那是**樣本的問題**。
         //
         // `case 1:` 脫離 switch 就不合法；怪 lift 沒辦到不可能的事，會讓「殼」
@@ -380,7 +380,7 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
             reason: '概念宣告了 consumed-by-parent——它只在父節點裡出現，單獨量不到',
           } as PathResult
         }
-        if (findConcept(lifted, 'raw_code'))
+        if (findComponent(lifted, 'raw_code'))
           return { verdict: 'shell', reason: '降級成 raw_code' } as PathResult
         return { verdict: 'shell', reason: '回來的樹裡找不到原本的身分' } as PathResult
       } catch (e) {
@@ -622,14 +622,14 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
   // 合成輸入不隨真實世界的修復而失效。
   // ─────────────────────────────────────────────────────────────
   it('★ 合成注入：一個不存在的概念必須被判為缺（零才可信）', () => {
-    const fakeConcept = {
+    const fakeComponent = {
       componentId: '__zz_never_implemented__',
       layer: 'lang-core',
       properties: [],
       children: {},
       role: 'statement',
     } as unknown as ComponentDefJSON
-    const { row } = classify(fakeConcept)
+    const { row } = classify(fakeComponent)
     const decision = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
     expect(
       decision.some((v) => v === 'missing' || v === 'shell'),

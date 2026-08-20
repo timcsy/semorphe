@@ -34,7 +34,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:new', async (node, ctx) => {
     const type = String(node.properties.type ?? 'int')
 

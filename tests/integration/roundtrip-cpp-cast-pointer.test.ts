@@ -1,5 +1,5 @@
 /**
- * Roundtrip tests for C++ cast and pointer assignment concepts
+ * Roundtrip tests for C++ cast and pointer assignment components
  *
  * Covers: cpp_cast, cpp_pointer_assign
  */
@@ -51,12 +51,12 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
@@ -65,10 +65,10 @@ function findConcept(node: SemanticNode | null, componentId: string): SemanticNo
 
 describe('C++ cast Roundtrip', () => {
   describe('cpp_cast — C-style cast', () => {
-    it('should lift (int)x to cpp_cast concept', () => {
+    it('should lift (int)x to cpp_cast component', () => {
       const tree = liftCode('int y = (int)x;')
       expect(tree).not.toBeNull()
-      const castNode = findConcept(tree, 'cpp:cast')
+      const castNode = findComponent(tree, 'cpp:cast')
       expect(castNode).not.toBeNull()
       expect(castNode!.properties.target_type).toBe('int')
     })
@@ -76,7 +76,7 @@ describe('C++ cast Roundtrip', () => {
     it('should lift (double)n to cpp_cast with double type', () => {
       const tree = liftCode('double y = (double)n;')
       expect(tree).not.toBeNull()
-      const castNode = findConcept(tree, 'cpp:cast')
+      const castNode = findComponent(tree, 'cpp:cast')
       expect(castNode).not.toBeNull()
       expect(castNode!.properties.target_type).toBe('double')
     })
@@ -98,24 +98,24 @@ describe('C++ cast Roundtrip', () => {
 
 describe('C++ pointer assign Roundtrip', () => {
   describe('cpp_pointer_assign — *ptr = value', () => {
-    it('should lift *ptr = 5 to cpp_pointer_assign concept', () => {
+    it('should lift *ptr = 5 to cpp_pointer_assign component', () => {
       // tree-sitter parses *ptr = 5 as assignment to pointer_expression
       const tree = liftCode('*ptr = 5;')
       expect(tree).not.toBeNull()
-      const assignNode = findConcept(tree, 'cpp:pointer_assign')
+      const assignNode = findComponent(tree, 'cpp:pointer_assign')
       if (assignNode) {
         expect(assignNode.properties.obj).toBe('ptr')
       } else {
-        // May be lifted as var_assign with pointer deref — check concept exists
-        const concepts = new Set<string>()
+        // May be lifted as var_assign with pointer deref — check component exists
+        const components = new Set<string>()
         function walk(n: SemanticNode) {
-          concepts.add(n.componentId)
+          components.add(n.componentId)
           for (const ch of Object.values(n.children ?? {}))
             for (const c of ch as SemanticNode[]) walk(c)
         }
         walk(tree!)
         // Either cpp_pointer_assign or var_assign with cpp_pointer_deref
-        expect(concepts.has('cpp:pointer_assign') || concepts.has('cpp:var_assign')).toBe(true)
+        expect(components.has('cpp:pointer_assign') || components.has('cpp:var_assign')).toBe(true)
       }
     })
 

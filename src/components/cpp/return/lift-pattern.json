@@ -1,7 +1,7 @@
 {
   "id": "cpp_return_statement",
   "astNodeType": "return_statement",
-  "concept": {
+  "component": {
     "componentId": "cpp:return"
   },
   "fieldMappings": [

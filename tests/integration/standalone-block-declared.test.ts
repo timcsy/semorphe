@@ -30,10 +30,10 @@ beforeAll(async () => {
   lifter = createTestLifter()
 })
 
-function conceptsIn(node: SemanticNode, out: string[] = []): string[] {
+function componentsIn(node: SemanticNode, out: string[] = []): string[] {
   out.push(node.componentId)
   for (const kids of Object.values(node.children ?? {})) {
-    for (const k of kids as SemanticNode[]) conceptsIn(k, out)
+    for (const k of kids as SemanticNode[]) componentsIn(k, out)
   }
   return out
 }
@@ -42,7 +42,7 @@ describe('spec 155 · 獨立區塊', () => {
   it('★ 錨點：一般的程式 lift 得起來（否則下面在測空樹）', () => {
     const t = lifter.lift(tsParser.parse('int main(){ int x = 1; return 0; }').rootNode as never)
     expect(t, 'lift 回了 null').not.toBeNull()
-    expect(conceptsIn(t!)).toContain('cpp:var_declare')
+    expect(componentsIn(t!)).toContain('cpp:var_declare')
   })
 
   it('🔴 一段獨立的 `{ … }` 會包成 `cpp:block`——而那個身分是【宣告】來的', () => {
@@ -50,7 +50,7 @@ describe('spec 155 · 獨立區塊', () => {
     const src = 'int main(){\n  {\n    int inner = 1;\n  }\n  return 0;\n}'
     const t = lifter.lift(tsParser.parse(src).rootNode as never)
     expect(t, 'lift 回了 null').not.toBeNull()
-    expect(conceptsIn(t!),
+    expect(componentsIn(t!),
       '獨立區塊沒有變成 cpp:block——⚠️ 若是「語言套件沒宣告建構子」，它會拋錯；'
       + '而若是它靜靜地換了個身分，那正是這一支要擋的')
       .toContain('cpp:block')

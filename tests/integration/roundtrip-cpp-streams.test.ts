@@ -1,8 +1,8 @@
 /**
- * Roundtrip tests for C++ stream declaration concepts
+ * Roundtrip tests for C++ stream declaration components
  *
  * Covers: cpp_ifstream_declare, cpp_ofstream_declare, cpp_stringstream_declare
- * These are Blockly-only concepts (no source-code lifter) — tests verify generator output.
+ * These are Blockly-only components (no source-code lifter) — tests verify generator output.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'

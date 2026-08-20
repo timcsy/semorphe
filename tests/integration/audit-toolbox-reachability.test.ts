@@ -86,10 +86,10 @@ const imperativelyRegistered = new Set(
 )
 
 function measure(
-  extraConcepts: ComponentDefJSON[] = [],
+  extraComponents: ComponentDefJSON[] = [],
   extraProjections: BlockProjectionJSON[] = [],
 ): { findings: Finding[]; ghosts: string[]; imperativeOnly: string[]; total: number; categoriesOf: Map<string, string[]> } {
-  const { registry, origins, categoriesOf } = loadToolbox(extraConcepts, extraProjections)
+  const { registry, origins, categoriesOf } = loadToolbox(extraComponents, extraProjections)
 
   const findings: Finding[] = []
   for (const { type, owner } of origins) {
@@ -135,7 +135,7 @@ function measure(
 
 // ─── 合成注入：兩個方向都要釘（第 9 步）─────────────────────────────
 
-const syntheticConcept = (id: string): ComponentDefJSON =>
+const syntheticComponent = (id: string): ComponentDefJSON =>
   ({ componentId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ComponentDefJSON
 
 const syntheticBlock = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
@@ -150,7 +150,7 @@ const syntheticBlock = (id: string, type: string, category: string, owner = '(co
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆沒有任何分類收它的積木 → **必須被報成缺陷**', () => {
     const { findings } = measure(
-      [syntheticConcept('__合成_拿不到__')],
+      [syntheticComponent('__合成_拿不到__')],
       [syntheticBlock('__合成_拿不到__', '__合成_拿不到__', '__不存在的分類__')],
     )
     const hit = findings.find((f) => f.type === '__合成_拿不到__')
@@ -164,7 +164,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支。
     // `(core)/pointers` 是「指標與記憶體」分類的段落之一。
     const { findings } = measure(
-      [syntheticConcept('__合成_拿得到__')],
+      [syntheticComponent('__合成_拿得到__')],
       [syntheticBlock('__合成_拿得到__', '__合成_拿得到__', 'pointers')],
     )
     expect(
@@ -198,7 +198,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ R-3：加一顆元件到既有模組，**不編輯任何清單**，它自己出現', () => {
     // 這是「導出」與「把手寫換個地方」的分界線（FR-003 / P3）。
     const { categoriesOf } = measure(
-      [syntheticConcept('__合成_新元件__')],
+      [syntheticComponent('__合成_新元件__')],
       [syntheticBlock('__合成_新元件__', '__合成_新元件__', 'containers', '<stack>')],
     )
     expect(

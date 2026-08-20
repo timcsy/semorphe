@@ -91,10 +91,10 @@ export function registerLanguage(language: string, factory: LanguageGeneratorFac
   languageFactories.set(language, factory)
 }
 
-// ─── Meta-concept generators ───
+// ─── Meta-component generators ───
 
-/** Register generators for meta-concepts (raw_code, unresolved, comment, doc_comment, block_comment) */
-export function registerMetaConceptGenerators(generators: Map<string, NodeGenerator>): void {
+/** Register generators for meta-components (raw_code, unresolved, comment, doc_comment, block_comment) */
+export function registerMetaComponentGenerators(generators: Map<string, NodeGenerator>): void {
   generators.set('raw_code', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
     // 🔴 **運算式位置不縮排、不換行**（spec 157）。
@@ -144,7 +144,7 @@ export function isUngeneratable(code: string): boolean {
 export function generateCode(tree: SemanticNode, language: string, style: StylePreset): string {
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
-  registerMetaConceptGenerators(generators)
+  registerMetaComponentGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
@@ -169,7 +169,7 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
 export function generateExpressionCode(node: SemanticNode, language: string, style: StylePreset): string {
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
-  registerMetaConceptGenerators(generators)
+  registerMetaComponentGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators, isExpression: true }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
   wireTemplateFallbacks(ctx)
@@ -183,7 +183,7 @@ export function generateCodeWithMapping(
 ): { code: string; mappings: CodeMapping[] } {
   const factory = languageFactories.get(language)
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
-  registerMetaConceptGenerators(generators)
+  registerMetaComponentGenerators(generators)
   const mappings: CodeMapping[] = []
   const lineBox = { value: 0 }
   const ctx: GeneratorContext = { indent: 0, style, language, generators, _mappings: mappings, _lineCount: 0, _lineBox: lineBox }
@@ -248,7 +248,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
   if (templateResult !== null) {
     result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
   } else {
-    // Fall back to hand-written generators (including meta-concept generators)
+    // Fall back to hand-written generators (including meta-component generators)
     const generator = ctx.generators.get(node.componentId)
     if (generator) {
       result = generator(node, ctx)
@@ -268,7 +268,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
       //
       // 註解是每個語言各自的機制（`//`／`#`／`;`），所以它的產生器屬於語言；
       // 而「沒有語言時不要弄丟內容」是**核心對所有節點的責任**，與註解無關。
-      result = `⟨unknown concept: ${node.componentId}${contentDigest(node)}⟩\n`
+      result = `⟨unknown component: ${node.componentId}${contentDigest(node)}⟩\n`
     }
   }
 
@@ -340,7 +340,7 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
   const generator = exprCtx.generators.get(node.componentId)
   if (generator) return generator(node, exprCtx)
-  // Meta-concepts that carry raw code — expression context returns raw value without formatting
+  // Meta-components that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
   return `⟨${node.componentId}⟩`
 }

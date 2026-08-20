@@ -54,7 +54,7 @@ function literalValue(raw: string): RuntimeValue | null {
   return null
 }
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:define', async (node, ctx) => {
     const name = String(node.properties.name ?? '')
     if (!name) return

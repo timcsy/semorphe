@@ -1,7 +1,7 @@
 {
   "id": "cpp_throw_statement",
   "astNodeType": "throw_statement",
-  "concept": {
+  "component": {
     "componentId": "cpp:throw"
   },
   "fieldMappings": [

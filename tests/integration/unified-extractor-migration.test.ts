@@ -10,10 +10,10 @@ import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十三個組裝點**（今天第四處同一個形狀）。
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { componentComponents, componentBlocks } from '../../src/core/component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
@@ -23,7 +23,7 @@ let renderer: PatternRenderer
 beforeAll(() => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts), ...(componentConcepts() as unknown as ComponentDefJSON[])],
+    [...universalComponents, ...coreComponents, ...allStdModules.flatMap(m => m.components), ...(componentComponents() as unknown as ComponentDefJSON[])],
     [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks), ...(componentBlocks() as BlockProjectionJSON[])]
   )
   extractor = new PatternExtractor()
@@ -34,7 +34,7 @@ beforeAll(() => {
 })
 
 describe('Migration roundtrip: func_call with dynamicRules', () => {
-  it('extract → concept identity preserved for func_call with args', () => {
+  it('extract → component identity preserved for func_call with args', () => {
     const blockState = {
       type: 'cpp_func_call',
       id: 'fc1',
@@ -74,7 +74,7 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: func_def with dynamicRules', () => {
-  it('extract → concept identity preserved for func_def with params', () => {
+  it('extract → component identity preserved for func_def with params', () => {
     const blockState = {
       type: 'cpp_func_def',
       id: 'fd1',
@@ -119,7 +119,7 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: print with dynamicRules', () => {
-  it('extract → concept identity preserved for print with values', () => {
+  it('extract → component identity preserved for print with values', () => {
     const blockState = {
       type: 'cpp_print',
       id: 'pr1',
@@ -155,7 +155,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: input with dynamicRules', () => {
-  it('extract → concept identity preserved for cin with select vars', () => {
+  it('extract → component identity preserved for cin with select vars', () => {
     const blockState = {
       type: 'cpp_input',
       id: 'in1',
@@ -194,7 +194,7 @@ describe('Migration roundtrip: input with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
-  it('extract → concept identity for scanf with select/compose args', () => {
+  it('extract → component identity for scanf with select/compose args', () => {
     const blockState = {
       type: 'cpp_input_formatted',
       id: 'sc1',
@@ -259,7 +259,7 @@ describe('Migration roundtrip: if with elseif chain', () => {
 })
 
 describe('Migration roundtrip: forward_decl with dynamicRules', () => {
-  it('extract → concept identity for forward_decl with params', () => {
+  it('extract → component identity for forward_decl with params', () => {
     const blockState = {
       type: 'cpp_forward_decl',
       id: 'fwd1',
@@ -281,7 +281,7 @@ describe('Migration roundtrip: forward_decl with dynamicRules', () => {
 describe('Migration roundtrip: doc_comment', () => {
   // NOTE: doc_comment uses flat properties (param_0_name, param_0_desc) in its semantic model,
   // not children. Keeping strategy-based rendering for now.
-  it('extract → concept identity for doc_comment brief field', () => {
+  it('extract → component identity for doc_comment brief field', () => {
     const blockState = {
       type: 'cpp_doc_comment',
       id: 'doc1',

@@ -9,11 +9,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { programRootConcept } from '../core/component/traits'
+import { programRootComponent } from '../core/component/traits'
 
 // ─── Types ───
 
-export interface ConceptPathReport {
+export interface ComponentPathReport {
   componentId: string
   sources: string[]
   paths: {
@@ -25,18 +25,18 @@ export interface ConceptPathReport {
   missing: string[]
 }
 
-// ─── Concept Collection ───
+// ─── Component Collection ───
 
 /** 從 BlockSpec JSON 檔案收集 componentId */
 export function collectFromBlockSpecs(jsonPaths: string[]): Map<string, string[]> {
   const result = new Map<string, string[]>()
   for (const p of jsonPaths) {
-    // ⚠️ **兩種形狀都要認**：舊的投影檔把身分包在 `concept.componentId` 裡，
+    // ⚠️ **兩種形狀都要認**：舊的投影檔把身分包在 `component.componentId` 裡，
     // 而拆分之後（Phase 3）它是**頂層的 `componentId`**。只認前者的話，
     // 這份腳本會說「這個專案只有 23 顆概念」——而那些概念的積木好端端地在。
-    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ concept?: { componentId?: string }; componentId?: string }>
+    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{ component?: { componentId?: string }; componentId?: string }>
     for (const spec of data) {
-      const id = spec.concept?.componentId ?? spec.componentId
+      const id = spec.component?.componentId ?? spec.componentId
       if (!id) continue
       const sources = result.get(id) ?? []
       sources.push(path.basename(p))
@@ -49,9 +49,9 @@ export function collectFromBlockSpecs(jsonPaths: string[]): Map<string, string[]
 /** 從 LiftPattern JSON 收集 componentId */
 export function collectFromLiftPatterns(jsonPath: string): Map<string, string[]> {
   const result = new Map<string, string[]>()
-  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ concept?: { componentId?: string } }>
+  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ component?: { componentId?: string } }>
   for (const pattern of data) {
-    const id = pattern.concept?.componentId
+    const id = pattern.component?.componentId
     if (!id) continue
     const sources = result.get(id) ?? []
     sources.push('lift-patterns.json')
@@ -75,64 +75,64 @@ export function collectFromUniversalTemplates(jsonPath: string): Map<string, str
 
 /** 從手寫 lifter/generator TS 檔案中提取 componentId（via regex） */
 export function collectFromHandWritten(tsFiles: string[], type: 'lifter' | 'generator'): Set<string> {
-  const concepts = new Set<string>()
+  const components = new Set<string>()
   for (const f of tsFiles) {
     const code = fs.readFileSync(f, 'utf8')
     if (type === 'lifter') {
       // Match createNode('componentId', ...) patterns
       const matches = code.matchAll(/createNode\(\s*['"]([^'"]+)['"]/g)
-      for (const m of matches) concepts.add(m[1])
+      for (const m of matches) components.add(m[1])
     } else {
       // Match g.set('componentId', ...) or .register('componentId', ...) patterns
       const setMatches = code.matchAll(/\.set\(\s*['"]([^'"]+)['"]/g)
-      for (const m of setMatches) concepts.add(m[1])
+      for (const m of setMatches) components.add(m[1])
       const regMatches = code.matchAll(/\.register\(\s*['"]([^'"]+)['"]/g)
-      for (const m of regMatches) concepts.add(m[1])
+      for (const m of regMatches) components.add(m[1])
     }
   }
-  return concepts
+  return components
 }
 
 // ─── Path Checking ───
 
 /** 哪些概念有 lift path */
-export function getConceptsWithLift(
-  blockSpecConceptIds: Set<string>,
-  liftPatternConceptIds: Set<string>,
-  handWrittenLifterConcepts: Set<string>,
+export function getComponentsWithLift(
+  blockSpecComponentIds: Set<string>,
+  liftPatternComponentIds: Set<string>,
+  handWrittenLifterComponents: Set<string>,
 ): Set<string> {
   const result = new Set<string>()
   // BlockSpec 的 astPattern 提供 lift path
-  for (const id of blockSpecConceptIds) result.add(id)
+  for (const id of blockSpecComponentIds) result.add(id)
   // LiftPattern 提供 lift path
-  for (const id of liftPatternConceptIds) result.add(id)
+  for (const id of liftPatternComponentIds) result.add(id)
   // 手寫 lifter 透過 createNode 產出概念
-  for (const id of handWrittenLifterConcepts) result.add(id)
+  for (const id of handWrittenLifterComponents) result.add(id)
   return result
 }
 
 /** 哪些概念有 render path（BlockSpec 存在即可，PatternRenderer 自動 derive） */
-export function getConceptsWithRender(blockSpecConceptIds: Set<string>, renderStrategyConcepts: Set<string>): Set<string> {
-  const result = new Set<string>(blockSpecConceptIds)
-  for (const id of renderStrategyConcepts) result.add(id)
+export function getComponentsWithRender(blockSpecComponentIds: Set<string>, renderStrategyComponents: Set<string>): Set<string> {
+  const result = new Set<string>(blockSpecComponentIds)
+  for (const id of renderStrategyComponents) result.add(id)
   return result
 }
 
 /** 哪些概念有 extract path（同 render，PatternExtractor 依 renderMapping 反向） */
-export function getConceptsWithExtract(blockSpecConceptIds: Set<string>, renderStrategyConcepts: Set<string>): Set<string> {
-  return getConceptsWithRender(blockSpecConceptIds, renderStrategyConcepts)
+export function getComponentsWithExtract(blockSpecComponentIds: Set<string>, renderStrategyComponents: Set<string>): Set<string> {
+  return getComponentsWithRender(blockSpecComponentIds, renderStrategyComponents)
 }
 
 /** 哪些概念有 generate path */
-export function getConceptsWithGenerate(
+export function getComponentsWithGenerate(
   blockSpecWithTemplate: Set<string>,
-  universalTemplateConcepts: Set<string>,
-  handWrittenGeneratorConcepts: Set<string>,
+  universalTemplateComponents: Set<string>,
+  handWrittenGeneratorComponents: Set<string>,
 ): Set<string> {
   const result = new Set<string>()
   for (const id of blockSpecWithTemplate) result.add(id)
-  for (const id of universalTemplateConcepts) result.add(id)
-  for (const id of handWrittenGeneratorConcepts) result.add(id)
+  for (const id of universalTemplateComponents) result.add(id)
+  for (const id of handWrittenGeneratorComponents) result.add(id)
   return result
 }
 
@@ -141,31 +141,31 @@ export function collectBlockSpecsWithTemplate(jsonPaths: string[]): Set<string> 
   const result = new Set<string>()
   for (const p of jsonPaths) {
     const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{
-      concept?: { componentId?: string }
+      component?: { componentId?: string }
       codeTemplate?: { pattern?: string }
     }>
     for (const spec of data) {
-      const id = spec.concept?.componentId
+      const id = spec.component?.componentId
       if (id && spec.codeTemplate?.pattern) result.add(id)
     }
   }
   return result
 }
 
-/** 從 render strategy TS 檔案中提取 registered concept IDs */
-export function collectRenderStrategyConcepts(tsFiles: string[]): Set<string> {
-  const concepts = new Set<string>()
+/** 從 render strategy TS 檔案中提取 registered component IDs */
+export function collectRenderStrategyComponents(tsFiles: string[]): Set<string> {
+  const components = new Set<string>()
   for (const f of tsFiles) {
     const code = fs.readFileSync(f, 'utf8')
-    // render strategies map to concepts indirectly; the strategy name encodes the concept
+    // render strategies map to components indirectly; the strategy name encodes the component
     // e.g., 'cpp:renderInput' → input, 'cpp:renderPrint' → print
-    // We check what concepts BlockSpecs point to via renderMapping.strategy
+    // We check what components BlockSpecs point to via renderMapping.strategy
     // For simplicity, we parse the strategy registration and the BlockSpec references
   }
-  return concepts
+  return components
 }
 
-// ─── Excluded Concepts ───
+// ─── Excluded Components ───
 
 /** 不需要完整四條路徑的內部/特殊概念 */
 const INTERNAL_CONCEPTS = new Set([
@@ -174,12 +174,12 @@ const INTERNAL_CONCEPTS = new Set([
   'unresolved',    // 內部降級概念
   // ⚠️ **樹根**。它不需要 render／extract，而它現在是一顆膠囊
   // ——身分寫在這裡會被就近性護欄指名，所以問性狀。
-  ...(programRootConcept() ? [programRootConcept() as string] : []),
+  ...(programRootComponent() ? [programRootComponent() as string] : []),
 ])
 
 // ─── Main Verification ───
 
-export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCode: number } {
+export function verify(rootDir: string): { reports: ComponentPathReport[]; exitCode: number } {
   // Discover std module block files dynamically
   const stdDir = path.join(rootDir, 'src/languages/cpp/std')
   const stdBlockPaths: string[] = []
@@ -235,70 +235,70 @@ export function verify(rootDir: string): { reports: ConceptPathReport[]; exitCod
     path.join(rootDir, 'src/languages/cpp/renderers/strategies.ts'),
   ].filter(f => fs.existsSync(f))
 
-  // Collect all concept IDs and their sources
-  const blockSpecConcepts = collectFromBlockSpecs(blockSpecPaths)
-  const liftPatternConcepts = collectFromLiftPatterns(liftPatternsPath)
-  const universalTemplateConcepts = collectFromUniversalTemplates(universalTemplatesPath)
+  // Collect all component IDs and their sources
+  const blockSpecComponents = collectFromBlockSpecs(blockSpecPaths)
+  const liftPatternComponents = collectFromLiftPatterns(liftPatternsPath)
+  const universalTemplateComponents = collectFromUniversalTemplates(universalTemplatesPath)
 
   // Merge all sources
-  const allConcepts = new Map<string, string[]>()
-  for (const [id, sources] of blockSpecConcepts) {
-    allConcepts.set(id, [...(allConcepts.get(id) ?? []), ...sources])
+  const allComponents = new Map<string, string[]>()
+  for (const [id, sources] of blockSpecComponents) {
+    allComponents.set(id, [...(allComponents.get(id) ?? []), ...sources])
   }
-  for (const [id, sources] of liftPatternConcepts) {
-    allConcepts.set(id, [...(allConcepts.get(id) ?? []), ...sources])
+  for (const [id, sources] of liftPatternComponents) {
+    allComponents.set(id, [...(allComponents.get(id) ?? []), ...sources])
   }
-  for (const [id, sources] of universalTemplateConcepts) {
-    allConcepts.set(id, [...(allConcepts.get(id) ?? []), ...sources])
+  for (const [id, sources] of universalTemplateComponents) {
+    allComponents.set(id, [...(allComponents.get(id) ?? []), ...sources])
   }
 
   // Collect path coverage
   const handWrittenLifters = collectFromHandWritten(lifterFiles, 'lifter')
   const handWrittenGenerators = collectFromHandWritten(generatorFiles, 'generator')
-  const blockSpecIds = new Set(blockSpecConcepts.keys())
-  const liftPatternIds = new Set(liftPatternConcepts.keys())
-  const universalTemplateIds = new Set(universalTemplateConcepts.keys())
+  const blockSpecIds = new Set(blockSpecComponents.keys())
+  const liftPatternIds = new Set(liftPatternComponents.keys())
+  const universalTemplateIds = new Set(universalTemplateComponents.keys())
   const blockSpecsWithTemplate = collectBlockSpecsWithTemplate(blockSpecPaths)
 
-  // Render strategies produce concepts that are registered in BlockSpec.renderMapping.strategy
-  // But the strategy registry maps concept→strategy via the PatternRenderer
-  // For path checking, if a BlockSpec exists for a concept, render+extract paths exist
+  // Render strategies produce components that are registered in BlockSpec.renderMapping.strategy
+  // But the strategy registry maps component→strategy via the PatternRenderer
+  // For path checking, if a BlockSpec exists for a component, render+extract paths exist
   // (because PatternRenderer.deriveRenderMapping auto-generates)
-  // Additionally, render strategies registered in strategies.ts cover specific concepts
-  const renderStrategyConcepts = new Set<string>()
+  // Additionally, render strategies registered in strategies.ts cover specific components
+  const renderStrategyComponents = new Set<string>()
   for (const f of rendererFiles) {
     const code = fs.readFileSync(f, 'utf8')
     const matches = code.matchAll(/registry\.register\(\s*['"]([^'"]+)['"]/g)
-    for (const m of matches) renderStrategyConcepts.add(m[1])
+    for (const m of matches) renderStrategyComponents.add(m[1])
   }
-  // Map strategy names to their target concepts by scanning BlockSpec renderMapping.strategy
-  const strategyToConcept = new Map<string, string>()
+  // Map strategy names to their target components by scanning BlockSpec renderMapping.strategy
+  const strategyToComponent = new Map<string, string>()
   for (const p of blockSpecPaths) {
     const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{
-      concept?: { componentId?: string }
+      component?: { componentId?: string }
       renderMapping?: { strategy?: string }
     }>
     for (const spec of data) {
-      if (spec.concept?.componentId && spec.renderMapping?.strategy) {
-        strategyToConcept.set(spec.renderMapping.strategy, spec.concept.componentId)
+      if (spec.component?.componentId && spec.renderMapping?.strategy) {
+        strategyToComponent.set(spec.renderMapping.strategy, spec.component.componentId)
       }
     }
   }
-  const renderCoveredConcepts = new Set<string>()
-  for (const [strategy, concept] of strategyToConcept) {
-    if (renderStrategyConcepts.has(strategy)) renderCoveredConcepts.add(concept)
+  const renderCoveredComponents = new Set<string>()
+  for (const [strategy, component] of strategyToComponent) {
+    if (renderStrategyComponents.has(strategy)) renderCoveredComponents.add(component)
   }
 
-  const liftCovered = getConceptsWithLift(blockSpecIds, liftPatternIds, handWrittenLifters)
-  const renderCovered = getConceptsWithRender(blockSpecIds, renderCoveredConcepts)
-  const extractCovered = getConceptsWithExtract(blockSpecIds, renderCoveredConcepts)
-  const generateCovered = getConceptsWithGenerate(blockSpecsWithTemplate, universalTemplateIds, handWrittenGenerators)
+  const liftCovered = getComponentsWithLift(blockSpecIds, liftPatternIds, handWrittenLifters)
+  const renderCovered = getComponentsWithRender(blockSpecIds, renderCoveredComponents)
+  const extractCovered = getComponentsWithExtract(blockSpecIds, renderCoveredComponents)
+  const generateCovered = getComponentsWithGenerate(blockSpecsWithTemplate, universalTemplateIds, handWrittenGenerators)
 
   // Build reports
-  const reports: ConceptPathReport[] = []
+  const reports: ComponentPathReport[] = []
   let hasMissing = false
 
-  for (const [componentId, sources] of [...allConcepts.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [componentId, sources] of [...allComponents.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     if (INTERNAL_CONCEPTS.has(componentId)) continue
 
     const missing: string[] = []
@@ -333,13 +333,13 @@ function main(): void {
   const rootDir = path.resolve(__dirname, '../..')
   const { reports, exitCode } = verify(rootDir)
 
-  console.log('Scanning concept sources...\n')
+  console.log('Scanning component sources...\n')
 
-  let totalConcepts = 0
+  let totalComponents = 0
   let missingCount = 0
 
   for (const r of reports) {
-    totalConcepts++
+    totalComponents++
     const mark = r.missing.length === 0 ? '✓' : '✗'
     const pathStatus = ['lift', 'render', 'extract', 'generate']
       .map(p => `${p} ${(r.paths as Record<string, boolean>)[p] ? '✓' : '✗'}`)
@@ -352,7 +352,7 @@ function main(): void {
     }
   }
 
-  console.log(`\nResult: ${totalConcepts - missingCount}/${totalConcepts} concepts fully covered (${missingCount} with missing paths)`)
+  console.log(`\nResult: ${totalComponents - missingCount}/${totalComponents} components fully covered (${missingCount} with missing paths)`)
   process.exit(exitCode)
 }
 

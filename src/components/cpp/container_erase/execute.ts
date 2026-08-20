@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { mapFind } from '../../../languages/cpp/core/runtime/map'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_erase', async (node, ctx) => {
       const name = String(node.properties.obj)
       const keyNodes = node.children.key ?? []

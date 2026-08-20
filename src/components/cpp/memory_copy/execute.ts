@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { writableArray } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:memory_copy', async (node, ctx) => {
       const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'memcpy 的目標')
       const srcNode = (node.children.src ?? [])[0]

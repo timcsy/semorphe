@@ -1,5 +1,5 @@
 import type { SemanticNode, PropertyValue, SemanticModel } from './types'
-import { programRootConcept } from './component/traits'
+import { programRootComponent } from './component/traits'
 
 let idCounter = 0
 
@@ -23,19 +23,19 @@ export function resetIdCounter(): void {
  * 整個編輯器會拿到一棵沒有人認得的樹，而症狀出現在很遠的地方。
  */
 export function createEmptyProgram(): SemanticNode {
-  const root = programRootConcept()
+  const root = programRootComponent()
   if (!root) throw new Error('沒有任何元件宣告 `traits.programRoot` —— 建不出空的語義樹')
   return { id: generateId(), componentId: root, properties: {}, children: { body: [] } }
 }
 
 export function createNode(
-  concept: string,
+  component: string,
   properties: Record<string, PropertyValue> = {},
   children: Record<string, SemanticNode[]> = {},
 ): SemanticNode {
   return {
     id: generateId(),
-    componentId: concept,
+    componentId: component,
     properties,
     children,
   }

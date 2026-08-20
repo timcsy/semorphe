@@ -21,7 +21,7 @@ function cloneValue(v: RuntimeValue): RuntimeValue {
 }
 
 export function registerExecute(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)

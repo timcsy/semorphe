@@ -1,7 +1,7 @@
 {
   "id": "cpp_block_comment",
   "astNodeType": "comment",
-  "concept": {
+  "component": {
     "componentId": "cpp:block_comment"
   },
   "constraints": [

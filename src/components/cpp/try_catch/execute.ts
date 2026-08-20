@@ -10,7 +10,7 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 // 兩顆一起改指真正的那一份——**順手把那個複本消滅掉**。
 import { ThrownSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:try_catch', async (node, ctx) => {
       const tryBody = node.children.try_body ?? []
       const catchBody = node.children.catch_body ?? []

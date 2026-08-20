@@ -8,7 +8,7 @@ import type { ComponentExecutor } from '../../../../interpreter/executor-registr
  * 與 `core/generators/`、`core/lifters/` 對稱。
  */
 export function registerCoreExecutors(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   registerUnimplementedExecutors(register)
 }

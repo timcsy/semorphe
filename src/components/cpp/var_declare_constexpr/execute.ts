@@ -2,6 +2,6 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { execVarDeclare } from '../../../interpreter/executors/variables'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_declare_constexpr', execVarDeclare)
 }

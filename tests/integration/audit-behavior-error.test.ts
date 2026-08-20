@@ -241,7 +241,7 @@ async function runInterpreter(code: string): Promise<runOutcome> {
  *
  * ⚠️ 與 `details`（誤差）分開存，因為它們的意義相反：
  * **誤差＝模型是錯的（會騙人）；缺口＝模型還沒長到那裡（仍然誠實）。**
- * 而 `concepts/等價與觀察集` 那條「兩者不可合併」在這裡同樣成立。
+ * 而 `components/等價與觀察集` 那條「兩者不可合併」在這裡同樣成立。
  */
 /** 只有直譯器跑得動的一段——**帶著參照為什麼拒絕**。 */
 interface oursDetail {

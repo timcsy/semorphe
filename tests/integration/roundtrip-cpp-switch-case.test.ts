@@ -1,5 +1,5 @@
 /**
- * Roundtrip tests for C++ switch/case/default concepts
+ * Roundtrip tests for C++ switch/case/default components
  *
  * Covers: cpp_case, cpp_default (within cpp_switch)
  */
@@ -50,24 +50,24 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -84,10 +84,10 @@ describe('C++ switch/case/default Roundtrip', () => {
         break;
 }`
 
-    it('should lift to cpp_case concept', () => {
+    it('should lift to cpp_case component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const caseNode = findConcept(tree, 'cpp:case')
+      const caseNode = findComponent(tree, 'cpp:case')
       expect(caseNode).not.toBeNull()
     })
 
@@ -108,10 +108,10 @@ describe('C++ switch/case/default Roundtrip', () => {
         break;
 }`
 
-    it('should lift to cpp_default concept', () => {
+    it('should lift to cpp_default component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const defaultNode = findConcept(tree, 'cpp:default')
+      const defaultNode = findComponent(tree, 'cpp:default')
       expect(defaultNode).not.toBeNull()
     })
 
@@ -146,10 +146,10 @@ int main() {
     it('should lift all cases and default', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:case')).toBe(true)
-      expect(concepts.has('cpp:default')).toBe(true)
-      expect(concepts.has('cpp:switch')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:case')).toBe(true)
+      expect(components.has('cpp:default')).toBe(true)
+      expect(components.has('cpp:switch')).toBe(true)
     })
 
     it('should roundtrip complete switch statement', () => {

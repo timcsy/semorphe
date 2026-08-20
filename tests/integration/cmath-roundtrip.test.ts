@@ -160,22 +160,22 @@ describe('cmath Round-trip', () => {
   })
 
   describe('Lift semantic structure', () => {
-    function findConcept(node: any, componentId: string): any {
+    function findComponent(node: any, componentId: string): any {
       if (!node) return null
       if (node.componentId === componentId) return node
       for (const children of Object.values(node.children ?? {})) {
         for (const child of children as any[]) {
-          const found = findConcept(child, componentId)
+          const found = findComponent(child, componentId)
           if (found) return found
         }
       }
       return null
     }
 
-    it('lifts pow to cpp:math_pow concept', () => {
+    it('lifts pow to cpp:math_pow component', () => {
       const tree = liftCode('double y = pow(x, 2);')
       expect(tree).not.toBeNull()
-      const pow = findConcept(tree, 'cpp:math_pow')
+      const pow = findComponent(tree, 'cpp:math_pow')
       expect(pow).not.toBeNull()
       expect(pow.children.base).toHaveLength(1)
       expect(pow.children.exponent).toHaveLength(1)
@@ -184,7 +184,7 @@ describe('cmath Round-trip', () => {
     it('lifts sqrt to cpp:math_unary with func=sqrt', () => {
       const tree = liftCode('double y = sqrt(x);')
       expect(tree).not.toBeNull()
-      const sqrt = findConcept(tree, 'cpp:math_unary')
+      const sqrt = findComponent(tree, 'cpp:math_unary')
       expect(sqrt).not.toBeNull()
       expect(sqrt.properties.func).toBe('sqrt')
       expect(sqrt.children.value).toHaveLength(1)
@@ -193,7 +193,7 @@ describe('cmath Round-trip', () => {
     it('lifts fmod to cpp:math_binary with func=fmod', () => {
       const tree = liftCode('double y = fmod(a, b);')
       expect(tree).not.toBeNull()
-      const fmod = findConcept(tree, 'cpp:math_binary')
+      const fmod = findComponent(tree, 'cpp:math_binary')
       expect(fmod).not.toBeNull()
       expect(fmod.properties.func).toBe('fmod')
       expect(fmod.children.arg1).toHaveLength(1)

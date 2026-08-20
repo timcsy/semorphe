@@ -5,7 +5,7 @@ import type { StdModule } from '../../../../../src/languages/cpp/std/types'
 function createMockModule(header: string, componentIds: string[]): StdModule {
   return {
     header,
-    concepts: componentIds.map(id => ({ componentId: id, properties: {}, children: {} })) as any[],
+    components: componentIds.map(id => ({ componentId: id, properties: {}, children: {} })) as any[],
     blocks: [],
     registerGenerators: () => {},
     registerLifters: () => {},
@@ -22,14 +22,14 @@ describe('ModuleRegistry', () => {
     expect(registry.getModule('<vector>')).toBeUndefined()
   })
 
-  it('should map concepts to headers', () => {
+  it('should map components to headers', () => {
     const registry = new ModuleRegistry()
     registry.register(createMockModule('<iostream>', ['cpp:print', 'cpp:input']))
     registry.register(createMockModule('<cstdio>', ['cpp:print_formatted', 'cpp:input_formatted']))
 
-    expect(registry.getHeaderForConcept('cpp:print')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('cpp:print_formatted')).toBe('<cstdio>')
-    expect(registry.getHeaderForConcept('cpp:if')).toBeNull()
+    expect(registry.getHeaderForComponent('cpp:print')).toBe('<iostream>')
+    expect(registry.getHeaderForComponent('cpp:print_formatted')).toBe('<cstdio>')
+    expect(registry.getHeaderForComponent('cpp:if')).toBeNull()
   })
 
   it('should return all modules', () => {
@@ -40,11 +40,11 @@ describe('ModuleRegistry', () => {
     expect(registry.getAllModules()).toHaveLength(2)
   })
 
-  it('should support manual concept mapping', () => {
+  it('should support manual component mapping', () => {
     const registry = new ModuleRegistry()
-    registry.registerConceptMapping('cpp:print', '<iostream>')
+    registry.registerComponentMapping('cpp:print', '<iostream>')
 
-    expect(registry.getHeaderForConcept('cpp:print')).toBe('<iostream>')
+    expect(registry.getHeaderForComponent('cpp:print')).toBe('<iostream>')
   })
 
   // ─── DependencyResolver.resolve() tests ───
@@ -76,7 +76,7 @@ describe('ModuleRegistry', () => {
       const edges = registry.resolve(['cpp:print', 'cpp:input', 'cpp:endl'])
       expect(edges).toHaveLength(1)
       expect(edges[0].header).toBe('<iostream>')
-      expect(edges[0].reason).toBe('cpp:print') // first concept wins
+      expect(edges[0].reason).toBe('cpp:print') // first component wins
     })
 
     it('should sort edges by header', () => {
@@ -89,7 +89,7 @@ describe('ModuleRegistry', () => {
       expect(edges.map(e => e.header)).toEqual(['<algorithm>', '<iostream>', '<vector>'])
     })
 
-    it('should ignore unknown concepts', () => {
+    it('should ignore unknown components', () => {
       const registry = new ModuleRegistry()
       registry.register(createMockModule('<iostream>', ['cpp:print']))
 

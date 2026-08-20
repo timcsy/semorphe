@@ -27,8 +27,8 @@ import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { buildToolbox } from '../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
-import { getVisibleConcepts } from '../../src/core/level-tree'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { getVisibleComponents } from '../../src/core/level-tree'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { REPO_ROOT } from '../helpers/guardrail'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
@@ -99,13 +99,13 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
   // 少掉的那一批被其他分類的數量蓋過去。只有**起始關卡**會讓它裸露出來，
   // 因為那一關幾乎只有通用積木。
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts(), allCppProjections())
+  reg.loadFromSplit(allCppComponents(), allCppProjections())
 
   /** 一門課的**起始關卡**——使用者第一次打開看到的就是這個 */
   function startLevel(topic: unknown): { classify: string[]; blocks: string[] } {
     const tb = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: getVisibleConcepts(topic as never, new Set(['L0'])),
+      visibleComponents: getVisibleComponents(topic as never, new Set(['L0'])),
       ioPreference: 'iostream',
       msgs: {},
       categoryColors: CATEGORY_COLORS,

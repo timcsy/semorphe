@@ -6,8 +6,8 @@
  *
  * **型別查不到時不猜**——留在通用版。猜一個錯的專屬身分比誠實降級更糟。
  */
-import { registerTypedMethodConcept } from '../../../core/component/method-components'
+import { registerTypedMethodComponent } from '../../../core/component/method-components'
 
 export function registerLift(): void {
-  registerTypedMethodConcept('string', 'push_back', 'cpp:string_append_char', 'cpp/string_append_char')
+  registerTypedMethodComponent('string', 'push_back', 'cpp:string_append_char', 'cpp/string_append_char')
 }

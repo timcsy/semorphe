@@ -7,7 +7,7 @@
  *   Semantic → Code (generate)
  *   Code → Semantic → Blocks → Code (full roundtrip)
  *
- * Covers all supported C++ concepts including edge cases.
+ * Covers all supported C++ components including edge cases.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -448,7 +448,7 @@ describe('I/O', () => {
       expect(values[1].componentId).toBe('cpp:var_ref')
     })
 
-    it('lifts cout << "hi" << endl; with endl concept', () => {
+    it('lifts cout << "hi" << endl; with endl component', () => {
       const body = liftBody('int main() { cout << "hi" << endl; }')
       const mainBody = body[0]?.children.body ?? []
       const printNode = mainBody[0]
@@ -554,7 +554,7 @@ describe('I/O', () => {
   })
 
   describe('cpp:endl', () => {
-    it('lifts endl identifier as endl concept (not var_ref)', () => {
+    it('lifts endl identifier as endl component (not var_ref)', () => {
       const body = liftBody('int main() { cout << endl; }')
       const mainBody = body[0]?.children.body ?? []
       const printNode = mainBody[0]

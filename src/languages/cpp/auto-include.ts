@@ -1,7 +1,7 @@
 /**
  * Auto-include engine
  *
- * Scans a semantic tree to collect all concept IDs, then queries
+ * Scans a semantic tree to collect all component IDs, then queries
  * DependencyResolver to determine which #include headers are required.
  * Merges with manually placed #include blocks (deduplication).
  */
@@ -12,13 +12,13 @@ import { buildInclude } from '../../components/cpp/include/lift'
 import { isIncludeDirective } from './core/node-traits'
 
 /**
- * Collect all concept IDs from a semantic tree (recursive).
+ * Collect all component IDs from a semantic tree (recursive).
  */
-export function collectConcepts(node: SemanticNode, out: Set<string>): void {
+export function collectComponents(node: SemanticNode, out: Set<string>): void {
   out.add(node.componentId)
   for (const children of Object.values(node.children)) {
     for (const child of children) {
-      collectConcepts(child, out)
+      collectComponents(child, out)
     }
   }
 }
@@ -38,7 +38,7 @@ function collectManualIncludes(body: SemanticNode[]): Set<string> {
 
 /**
  * Compute the set of #include headers required by the semantic tree,
- * based on concepts used and their module membership.
+ * based on components used and their module membership.
  *
  * Returns sorted, deduplicated DependencyEdge list excluding any already
  * present as manual #include blocks in the program body.
@@ -47,10 +47,10 @@ export function computeAutoIncludes(
   root: SemanticNode,
   resolver: DependencyResolver,
 ): DependencyEdge[] {
-  const concepts = new Set<string>()
-  collectConcepts(root, concepts)
+  const components = new Set<string>()
+  collectComponents(root, components)
 
-  const edges = resolver.resolve([...concepts])
+  const edges = resolver.resolve([...components])
 
   // Exclude headers already manually included
   const body = root.children.body ?? []
@@ -61,7 +61,7 @@ export function computeAutoIncludes(
 
 /**
  * Create a code patcher that fixes missing scaffold items (#include, using namespace, int main)
- * based on concepts used in the semantic tree.
+ * based on components used in the semantic tree.
  */
 export function createCppCodePatcher(
   resolver: DependencyResolver,
@@ -83,9 +83,9 @@ export function createCppCodePatcher(
   entryShell?: 'main' | 'none',
 ) => string | null {
   return (code, tree, namespaceStyle, cogLevel = 1, entryShell = 'main') => {
-    const concepts = new Set<string>()
-    collectConcepts(tree, concepts)
-    const edges = resolver.resolve([...concepts])
+    const components = new Set<string>()
+    collectComponents(tree, components)
+    const edges = resolver.resolve([...components])
     let changed = false
     let patched = code
 

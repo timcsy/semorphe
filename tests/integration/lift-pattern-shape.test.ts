@@ -31,20 +31,20 @@ import { PATTERN_TYPES } from '../../src/core/types'
 interface Loaded {
   id?: string
   patternType?: string
-  concept?: { componentId?: string }
+  component?: { componentId?: string }
   operatorDispatch?: { routes?: Record<string, string> }
 }
 
 /**
  * 這一筆樣式**說得出它產生哪個概念**嗎。
  *
- * 🔴 **身分的位置依 `patternType` 而不同**——第一版只問 `concept.componentId`，
+ * 🔴 **身分的位置依 `patternType` 而不同**——第一版只問 `component.componentId`，
  * 於是五筆 `operatorDispatch` 被誤報（它們的身分在 `routes` 的值裡）。
  *
  * > **一個「每一筆都要有 X」的判準，先要問【X 在每一種形狀裡都在同一個地方嗎】。**
  */
-function declaredConcepts(p: Loaded): string[] {
-  if (p.concept?.componentId) return [p.concept.componentId]
+function declaredComponents(p: Loaded): string[] {
+  if (p.component?.componentId) return [p.component.componentId]
   if (p.patternType === 'operatorDispatch') return Object.values(p.operatorDispatch?.routes ?? {})
   return []
 }
@@ -59,17 +59,17 @@ describe('spec 157 · lift 樣式的形狀', () => {
   it('🔴 每一筆的 `patternType` 都要在合法集合裡', () => {
     const bad = patterns
       .filter((p) => p.patternType !== undefined && !(PATTERN_TYPES as readonly string[]).includes(p.patternType))
-      .map((p) => `${p.id ?? p.concept?.componentId ?? '(無 id)'}：${p.patternType}`)
+      .map((p) => `${p.id ?? p.component?.componentId ?? '(無 id)'}：${p.patternType}`)
     expect(bad,
       `不認得的 patternType（合法值：${PATTERN_TYPES.join('｜')}）。`
       + '⚠️ 它會被靜靜忽略——樣式不生效，而學生的程式碼辨識不出來。').toEqual([])
   })
 
   it('🔴 每一筆都要說得出它產生哪個概念', () => {
-    const bad = patterns.filter((p) => declaredConcepts(p).length === 0).map((p) => `${p.id ?? '(無 id)'}(${p.patternType ?? 'simple'})`)
+    const bad = patterns.filter((p) => declaredComponents(p).length === 0).map((p) => `${p.id ?? '(無 id)'}(${p.patternType ?? 'simple'})`)
     expect(bad,
       '樣式說不出它產生哪個概念——它 lift 出來的東西沒有身分。'
-      + '⚠️ 若這是一種【新的形狀】，要在 `declaredConcepts()` 裡教它去哪裡找，'
+      + '⚠️ 若這是一種【新的形狀】，要在 `declaredComponents()` 裡教它去哪裡找，'
       + '**不是放寬判準**。').toEqual([])
   })
 

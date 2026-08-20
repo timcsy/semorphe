@@ -1,7 +1,7 @@
 {
   "id": "cpp_continue",
   "astNodeType": "continue_statement",
-  "concept": {
+  "component": {
     "componentId": "cpp:continue"
   }
 }

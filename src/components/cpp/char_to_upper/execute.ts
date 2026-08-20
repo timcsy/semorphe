@@ -9,7 +9,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { charOf } from '../../../languages/cpp/core/runtime/char'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:char_to_upper', async (node, ctx) => {
     const c = node.children.value?.[0]
     const v = c ? ((await ctx.evaluate(c)) as RuntimeValue) : null

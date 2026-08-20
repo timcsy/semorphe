@@ -6,16 +6,16 @@ import type { DependencyResolver, DependencyEdge } from '../../../src/core/depen
  * Uses a simple mock implementation to verify contract rules.
  */
 class MockDependencyResolver implements DependencyResolver {
-  private conceptToHeader = new Map<string, { header: string; directive: string }>()
+  private componentToHeader = new Map<string, { header: string; directive: string }>()
 
   addMapping(componentId: string, header: string, directive: string): void {
-    this.conceptToHeader.set(componentId, { header, directive })
+    this.componentToHeader.set(componentId, { header, directive })
   }
 
   resolve(componentIds: string[]): DependencyEdge[] {
     const seen = new Map<string, DependencyEdge>()
     for (const id of componentIds) {
-      const mapping = this.conceptToHeader.get(id)
+      const mapping = this.componentToHeader.get(id)
       if (mapping && !seen.has(mapping.header)) {
         seen.set(mapping.header, {
           directive: mapping.directive,
@@ -35,7 +35,7 @@ describe('DependencyResolver contract', () => {
     expect(resolver.resolve([])).toEqual([])
   })
 
-  it('should return single edge for known concept', () => {
+  it('should return single edge for known component', () => {
     const resolver = new MockDependencyResolver()
     resolver.addMapping('cpp:print', '<iostream>', '#include <iostream>')
     const edges = resolver.resolve(['cpp:print'])
@@ -64,15 +64,15 @@ describe('DependencyResolver contract', () => {
     expect(edges.map(e => e.header)).toEqual(['<algorithm>', '<iostream>', '<vector>'])
   })
 
-  it('should ignore unknown concepts', () => {
+  it('should ignore unknown components', () => {
     const resolver = new MockDependencyResolver()
     resolver.addMapping('cpp:print', '<iostream>', '#include <iostream>')
-    const edges = resolver.resolve(['cpp:print', 'unknown_concept', 'cpp:if', 'cpp:var_declare'])
+    const edges = resolver.resolve(['cpp:print', 'unknown_component', 'cpp:if', 'cpp:var_declare'])
     expect(edges).toHaveLength(1)
     expect(edges[0].header).toBe('<iostream>')
   })
 
-  it('should set reason to the first concept that triggered the dependency', () => {
+  it('should set reason to the first component that triggered the dependency', () => {
     const resolver = new MockDependencyResolver()
     resolver.addMapping('cpp:print', '<iostream>', '#include <iostream>')
     resolver.addMapping('cpp:input', '<iostream>', '#include <iostream>')

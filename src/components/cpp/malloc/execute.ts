@@ -38,7 +38,7 @@ function elementType(node: { properties: Record<string, unknown> }): string {
   return cast.replace(/\s*\*+\s*$/, '').trim() || 'int'
 }
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:malloc', async (node, ctx) => {
     const elem = elementType(node)
     const unit = SIZES[elem] ?? 4

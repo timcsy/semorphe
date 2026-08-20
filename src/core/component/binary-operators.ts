@@ -4,16 +4,16 @@
  * `lifters/expressions.ts` 原本內嵌三組集合：
  *
  * ```ts
- * if (ARITHMETIC_OPS.has(op)) concept = 'cpp:arithmetic'
- * else if (COMPARE_OPS.has(op)) concept = 'cpp:compare'
- * else if (LOGIC_OPS.has(op)) concept = 'cpp:logic'
- * else concept = 'cpp:arithmetic'   // ← 退路也是一個身分
+ * if (ARITHMETIC_OPS.has(op)) component = 'cpp:arithmetic'
+ * else if (COMPARE_OPS.has(op)) component = 'cpp:compare'
+ * else if (LOGIC_OPS.has(op)) component = 'cpp:logic'
+ * else component = 'cpp:arithmetic'   // ← 退路也是一個身分
  * ```
  *
  * 「這是不是 `binary_expression`」是 C++ 語法的知識，留在共用檔；
  * **「`+` 這個符號屬於我」是元件自己的宣告。**
  *
- * ⚠️ **退路那一行也要有人認領**——`else concept = 'cpp:arithmetic'` 是說
+ * ⚠️ **退路那一行也要有人認領**——`else component = 'cpp:arithmetic'` 是說
  * 「認不得的二元運算子當算術處理」。那是一個**決定**，所以要有元件顯式宣告
  * 自己是那個兜底，不能靠共用檔記得。
  */
@@ -45,6 +45,6 @@ export function registerBinaryOperatorFallback(componentId: string, source: stri
 }
 
 /** 這個運算子屬於誰。認不得就回兜底；連兜底都沒登錄回 `undefined`——**不猜**。 */
-export function binaryOperatorConcept(op: string): string | undefined {
+export function binaryOperatorComponent(op: string): string | undefined {
   return table.get(op)?.componentId ?? fallback?.componentId
 }

@@ -1,7 +1,7 @@
 import { allVariableDropdownBlocks } from '../core/variable-dropdown-blocks'
 import { allBoardConstantDropdowns, boardConstantOptions } from '../core/board-constant-dropdown-blocks'
 import type { BoardPinModel } from '../core/types'
-import { conceptsDeclaringVariableType } from '../core/language-executors'
+import { componentsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -283,7 +283,7 @@ export class BlockRegistrar {
    * 都要回頭改這一行，而沒有任何東西會提醒你。
    *
    * 現在問的是「**哪些概念宣告了字串變數**」，答案來自概念自己的宣告
-   * （`concepts.json` 的 `declaresVariableType`）。同一個宣告也餵給同步
+   * （`components.json` 的 `declaresVariableType`）。同一個宣告也餵給同步
    * 控制器的降級——一個事實，兩個消費者。
    */
   /**
@@ -302,21 +302,21 @@ export class BlockRegistrar {
    * ⚠️ 而它靜默了很久：查不到只會讓下拉少幾個名字，**不會拋錯**。
    */
   private componentIdOfBlockType(blockType: string): string | undefined {
-    if (!this.blockTypeToConcept) {
-      this.blockTypeToConcept = new Map()
+    if (!this.blockTypeToComponent) {
+      this.blockTypeToComponent = new Map()
       for (const spec of this.blockSpecRegistry.getAll()) {
         const t = (spec.blockDef as { type?: string } | undefined)?.type
         const cid = spec.componentMapping?.componentId
-        if (t && cid) this.blockTypeToConcept.set(t, cid)
+        if (t && cid) this.blockTypeToComponent.set(t, cid)
       }
     }
-    return this.blockTypeToConcept.get(blockType)
+    return this.blockTypeToComponent.get(blockType)
   }
 
-  private blockTypeToConcept?: Map<string, string>
+  private blockTypeToComponent?: Map<string, string>
 
   private blockTypesDeclaringVariableType(type: string): Set<string> {
-    const componentIds = new Set(conceptsDeclaringVariableType(type))
+    const componentIds = new Set(componentsDeclaringVariableType(type))
     const types = new Set<string>()
     for (const spec of this.blockSpecRegistry.getAll()) {
       const cid = spec.componentMapping?.componentId

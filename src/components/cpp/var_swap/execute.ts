@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { resolvePlace } from '../../../interpreter/lvalue'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_swap', async (node, ctx) => {
     const leftNode = (node.children.left ?? [])[0]
     const rightNode = (node.children.right ?? [])[0]

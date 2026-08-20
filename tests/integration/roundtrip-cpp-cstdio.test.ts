@@ -1,7 +1,7 @@
 /**
  * C++ cstdio Roundtrip Tests
  *
- * Verifies that C++ cstdio concepts (cpp_printf, cpp_scanf, cpp_scanf_expr)
+ * Verifies that C++ cstdio components (cpp_printf, cpp_scanf, cpp_scanf_expr)
  * survive the full roundtrip:
  *
  *   C++ code → (tree-sitter parse) → AST → (lift) → SemanticTree
@@ -54,12 +54,12 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
@@ -71,10 +71,10 @@ describe('C++ cstdio Roundtrip', () => {
   describe('cpp_printf basic', () => {
     const code = '#include <cstdio>\nint main() {\n    int x = 42;\n    printf("%d\\n", x);\n    return 0;\n}'
 
-    it('should lift to cpp_printf concept', () => {
+    it('should lift to cpp_printf component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
       expect(node!.properties.format).toContain('%d')
     })
@@ -88,7 +88,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:print_formatted')
+      const node2 = findComponent(tree2, 'cpp:print_formatted')
       expect(node2).not.toBeNull()
       expect(node2!.properties.format).toContain('%d')
     })
@@ -101,7 +101,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift with multiple args as children', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
       expect(node!.children.args).toBeDefined()
       expect(node!.children.args.length).toBeGreaterThanOrEqual(3)
@@ -111,7 +111,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:print_formatted')
+      const node2 = findComponent(tree2, 'cpp:print_formatted')
       expect(node2).not.toBeNull()
       expect(node2!.children.args.length).toBeGreaterThanOrEqual(3)
     })
@@ -124,7 +124,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift to cpp_printf with no args', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
     })
 
@@ -137,7 +137,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      expect(findConcept(tree2, 'cpp:print_formatted')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:print_formatted')).not.toBeNull()
     })
   })
 
@@ -148,7 +148,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift with float format string', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
       expect(node!.properties.format).toContain('%.2f')
     })
@@ -157,7 +157,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:print_formatted')
+      const node2 = findComponent(tree2, 'cpp:print_formatted')
       expect(node2).not.toBeNull()
       expect(node2!.properties.format).toContain('%.2f')
     })
@@ -167,10 +167,10 @@ describe('C++ cstdio Roundtrip', () => {
   describe('cpp_scanf basic', () => {
     const code = '#include <cstdio>\nint main() {\n    int x;\n    scanf("%d", &x);\n    printf("%d\\n", x);\n    return 0;\n}'
 
-    it('should lift to cpp_scanf concept', () => {
+    it('should lift to cpp_scanf component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:input_formatted')
+      const node = findComponent(tree, 'cpp:input_formatted')
       expect(node).not.toBeNull()
       expect(node!.properties.format).toContain('%d')
     })
@@ -184,7 +184,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:input_formatted')
+      const node2 = findComponent(tree2, 'cpp:input_formatted')
       expect(node2).not.toBeNull()
       expect(node2!.properties.format).toContain('%d')
     })
@@ -197,7 +197,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift with multiple var_ref children', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:input_formatted')
+      const node = findComponent(tree, 'cpp:input_formatted')
       expect(node).not.toBeNull()
       expect(node!.children.args.length).toBe(2)
     })
@@ -206,7 +206,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:input_formatted')
+      const node2 = findComponent(tree2, 'cpp:input_formatted')
       expect(node2).not.toBeNull()
       expect(node2!.children.args.length).toBe(2)
     })
@@ -219,7 +219,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift with char format', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
       expect(node!.properties.format).toContain('%c')
     })
@@ -228,7 +228,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      expect(findConcept(tree2, 'cpp:print_formatted')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:print_formatted')).not.toBeNull()
     })
   })
 
@@ -239,7 +239,7 @@ describe('C++ cstdio Roundtrip', () => {
     it('should lift printf inside loop body', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:print_formatted')
+      const node = findComponent(tree, 'cpp:print_formatted')
       expect(node).not.toBeNull()
     })
 
@@ -253,7 +253,7 @@ describe('C++ cstdio Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      expect(findConcept(tree2, 'cpp:print_formatted')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:print_formatted')).not.toBeNull()
     })
   })
 })

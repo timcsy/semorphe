@@ -7,7 +7,7 @@ export type { ToolboxCategoryDef }
 
 export interface ToolboxBuildConfig {
   blockSpecRegistry: BlockSpecRegistry
-  visibleConcepts: Set<string>
+  visibleComponents: Set<string>
   ioPreference: 'iostream' | 'cstdio'
   msgs: Record<string, string>
   categoryColors: Record<string, string>
@@ -28,7 +28,7 @@ export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpe
   if (spec.form) return false
   const cid = spec.componentMapping?.componentId
   if (!cid) return false
-  const siblings = registry.getFormsByConceptId(cid).filter(s => s.form)
+  const siblings = registry.getFormsByComponentId(cid).filter(s => s.form)
   if (siblings.length === 0) return false
   return siblings.some(s => KNOWN_AXES[s.form!.axis]?.from === 'property')
 }
@@ -43,10 +43,10 @@ export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpe
  * 現在一顆積木出現在工具箱裡，只因為它被宣告在某個模組的 `blocks.json` 裡。
  */
 export function buildToolbox(config: ToolboxBuildConfig): object {
-  const { blockSpecRegistry, visibleConcepts, ioPreference: ioPref, msgs, categoryColors, categoryDefs = [] } = config
+  const { blockSpecRegistry, visibleComponents, ioPreference: ioPref, msgs, categoryColors, categoryDefs = [] } = config
 
   const isVisible = (blockType: string): boolean =>
-    blockSpecRegistry.isBlockVisible(blockType, visibleConcepts)
+    blockSpecRegistry.isBlockVisible(blockType, visibleComponents)
 
   /**
    * 一個段落裡**屬於這個工具箱分類**的積木型別，維持宣告順序。
@@ -74,7 +74,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
    */
   const sourceBlocks = (from: string, category: string, targetKey: string): string[] =>
     blockSpecRegistry
-      .listBySource(from, category, visibleConcepts)
+      .listBySource(from, category, visibleComponents)
       .filter(s => {
         if (isTypeLookupFallback(blockSpecRegistry, s)) return false
         const declared = s.toolboxCategory
@@ -86,7 +86,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
 
   const buildIoContents = (def: ToolboxCategoryDef): ToolboxEntry[] => {
     if (def.buildContents) {
-      return def.buildContents(blockSpecRegistry, visibleConcepts, ioPref)
+      return def.buildContents(blockSpecRegistry, visibleComponents, ioPref)
     }
     const ioTypes = def.sources.flatMap(src => sourceBlocks(src.from, src.category, def.key))
 
@@ -118,7 +118,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
     // 第四版問的是那條**等價邊**本身：`cpp:print` 與 `cpp:print_formatted`
     // 宣告了同一個 `ioRole`（＝同一個等價類）與不同的 `ioStyle`（＝哪個成員）。
     // 「先給學生看哪一顆」＝ **在教學這個情境下，等價類的代表元是誰**。
-    // 見 `concepts/等價與觀察集.md` §六與 `concepts/性狀.md`。
+    // 見 `components/等價與觀察集.md` §六與 `components/性狀.md`。
     //
     // ⚠️ **行為有一處刻意改變**：`ioPref = 'cstdio'` 時，原本是
     // 「**全部** lang 的（含 getline、fstream）排前面」，現在是

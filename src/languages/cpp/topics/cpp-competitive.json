@@ -8,7 +8,7 @@
     "id": "L0",
     "level": 0,
     "label": "L0: 基礎 + I/O",
-    "concepts": [
+    "components": [
       "cpp:print_formatted",
       "cpp:input_formatted",
       "cpp:print",
@@ -38,7 +38,7 @@
         "id": "L1a",
         "level": 1,
         "label": "L1a: 陣列與排序",
-        "concepts": [
+        "components": [
           "cpp:array_declare",
           "cpp:initializer_list",
           "cpp:array_at",
@@ -72,7 +72,7 @@
             "id": "L2a",
             "level": 2,
             "label": "L2a: STL 容器",
-            "concepts": [
+            "components": [
               "cpp:container_empty",
               "cpp:container_push",
               "cpp:container_pop",
@@ -152,7 +152,7 @@
         "id": "L1b",
         "level": 1,
         "label": "L1b: 進階控制流",
-        "concepts": [
+        "components": [
           "cpp:switch",
           "cpp:case",
           "cpp:default",
@@ -182,7 +182,7 @@
             "id": "L2b",
             "level": 2,
             "label": "L2b: 指標與結構",
-            "concepts": [
+            "components": [
               "cpp:pointer_declare",
               "cpp:pointer_deref",
               "cpp:pointer_assign",

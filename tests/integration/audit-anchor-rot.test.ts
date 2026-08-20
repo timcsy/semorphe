@@ -52,7 +52,7 @@
  * 「那個世界裡一定有東西不合規——否則這條規範早就自動被遵守了」。
  *
  * **這一條的世界不同：規範已經被遵守了**——八次都被修掉過（最後一次是
- * 全套測試在同一輪抓到的）。而 `concepts/執行機構.md` 有先例：
+ * 全套測試在同一輪抓到的）。而 `components/執行機構.md` 有先例：
  *
  * > 「第六條不同。它量的三種違規在它裝上去之前就已經被同一個功能修完了，
  * > 所以基線是 0／0。**而這時候「數字不為零」那招反過來會逼你造假。**」
@@ -110,23 +110,23 @@ function trueIdentity(): Set<string> {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name)
       if (e.isDirectory()) walk(p)
-      // ⚠️ **膠囊的宣告檔叫 `component.json`，不叫 `concepts.json`。**
+      // ⚠️ **膠囊的宣告檔叫 `component.json`，不叫 `components.json`。**
       //
       // 這條護欄的入口條件錨在「載入幾顆真實身分」上，而 F（膠囊搬家）
-      // 會把身分從共用的 `concepts.json` 一顆一顆搬走。只認舊檔名的話，
+      // 會把身分從共用的 `components.json` 一顆一顆搬走。只認舊檔名的話，
       // **這個數字隨 F 下降，而它是這條護欄自己的健康錨點**
       // ——2026-08-11 它跌破 100 當場變紅。
       //
       // > **一條「錨點會爛」的護欄，自己的錨點爛了。**
       // > 而它爛的方式正是它在講的那一種：錨在一個會隨進度改變的數字上。
-      else if (e.name === 'concepts.json' || e.name === 'component.json' || /universal-concepts\.json$/.test(e.name)) {
+      else if (e.name === 'components.json' || e.name === 'component.json' || /universal-components\.json$/.test(e.name)) {
         try {
           const j = JSON.parse(fs.readFileSync(p, 'utf8')) as unknown
           const arr = Array.isArray(j)
             ? j
-            : (j as { concepts?: unknown[]; componentId?: string }).componentId
+            : (j as { components?: unknown[]; componentId?: string }).componentId
               ? [j]                                   // 膠囊的 component.json 是單一物件
-              : ((j as { concepts?: unknown[] }).concepts ?? [])
+              : ((j as { components?: unknown[] }).components ?? [])
           for (const c of arr as { componentId?: string }[]) if (c?.componentId) ids.add(c.componentId)
         } catch {
           /* 壞掉的 JSON 由別條護欄管 */

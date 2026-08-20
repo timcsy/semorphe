@@ -10,7 +10,7 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 
 const INPUT_PULLUP = 2
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:digital_read', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)

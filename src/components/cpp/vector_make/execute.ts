@@ -22,7 +22,7 @@ function cloneValue(v: RuntimeValue): RuntimeValue {
   return { ...v }
 }
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:vector_make', async (node, ctx) => {
     const elemType = String(node.properties.type ?? 'int')
     const sizeNode = (node.children.size ?? [])[0]

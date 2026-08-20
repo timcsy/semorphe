@@ -15,12 +15,12 @@
  *   （「與其偵測錯誤，不如換一個讓錯誤無法被表達的形式」）。
  */
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
-import { universalConcepts, universalBlocks } from '../../core/universal'
-import { coreConcepts, coreBlocks } from './core'
+import { universalComponents, universalBlocks } from '../../core/universal'
+import { coreComponents, coreBlocks } from './core'
 import { allStdModules } from './std'
 // 元件膠囊——一顆一個資料夾，`import.meta.glob` 掃出來。
 // 加一顆元件不必編輯這個檔（那正是元件化要買的東西）。
-import { componentConcepts, componentBlocks, componentBlocksNotIn } from '../../core/component/registry'
+import { componentComponents, componentBlocks, componentBlocksNotIn } from '../../core/component/registry'
 // ⚠️ **副作用匯入**：這兩份模組在載入時登錄自己的身分改名表（v2 → v3）。
 // 掛在這個組裝點上，是因為它已經是「所有宣告的唯一入口」（spec 100）——
 // 忘了匯入的話存檔會靜靜地不轉換，而 `audit-identity-namespace` 的涵蓋率檢查會指名。
@@ -28,12 +28,12 @@ import '../../migrations/id-migrations'
 import './id-migrations'
 
 
-export function allCppConcepts(): ComponentDefJSON[] {
+export function allCppComponents(): ComponentDefJSON[] {
   return [
-    ...universalConcepts,
-    ...coreConcepts,
-    ...allStdModules.flatMap((m) => m.concepts),
-    ...(componentConcepts() as unknown as ComponentDefJSON[]),
+    ...universalComponents,
+    ...coreComponents,
+    ...allStdModules.flatMap((m) => m.components),
+    ...(componentComponents() as unknown as ComponentDefJSON[]),
   ]
 }
 

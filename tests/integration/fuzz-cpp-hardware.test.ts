@@ -48,9 +48,9 @@ beforeAll(async () => {
 
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
-const conceptsIn = (n: SemanticNode, out: string[] = []): string[] => {
+const componentsIn = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) conceptsIn(k, out)
+  for (const ks of Object.values(n.children ?? {})) for (const k of ks) componentsIn(k, out)
   return out
 }
 const run = async (src: string): Promise<string> => {
@@ -92,7 +92,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -132,7 +132,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -197,7 +197,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -248,7 +248,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -300,7 +300,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -357,7 +357,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)
@@ -411,7 +411,7 @@ void loop() {
 }
 `
     // 🔴 **概念身分**：它真的走了 Arduino 那些概念，不是退化成通用的函式呼叫
-    const ids = conceptsIn(lift(src))
+    const ids = componentsIn(lift(src))
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     // round-trip：程式碼 → 樹 → 程式碼，兩次相同
     const once = generateCode(lift(src), 'cpp', S)

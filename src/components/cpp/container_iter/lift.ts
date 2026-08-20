@@ -5,7 +5,7 @@
  * 那是「哪一端變成參數」這條命名規則的直接後果——與 `container_peek`
  * 用同一個理由：兩者的**紀律相同**（取得一個位置），差的只是哪一端。
  *
- * 用分支而不是 `registerMethodConcept`，因為那張純資料表產不出 `which`
+ * 用分支而不是 `registerMethodComponent`，因為那張純資料表產不出 `which`
  * ——它只放得下「名字 → 身分」。
  */
 import type { SemanticNode } from '../../../core/types'
@@ -25,7 +25,7 @@ export function registerLift(): void {
     // ——於是全部被這裡認成「取得迭代器」。
     //
     // ⚠️ 而登錄型別方法**搶不回來**：這個分支跑在型別查詢**之前**
-    //（`lifters/io.ts` 的 `tryMethodBranches` 早於 `typedMethodConcept`）。
+    //（`lifters/io.ts` 的 `tryMethodBranches` 早於 `typedMethodComponent`）。
     //
     // > **一個靠方法名認人的樣式，會把別人的方法搶走。**
     // > ——與腳位常數那顆付過的學費同一條，只是這次是【方法名】不是識別字名。

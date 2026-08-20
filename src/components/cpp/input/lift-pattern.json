@@ -2,7 +2,7 @@
   "id": "cpp_cin_chain",
   "astNodeType": "binary_expression",
   "patternType": "chain",
-  "concept": {
+  "component": {
     "componentId": "cpp:input"
   },
   "chain": {

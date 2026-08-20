@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_range', async (node, ctx) => {
       const varName = String(node.properties.var_name ?? 'x')
       const containerName = String(node.properties.container ?? 'vec')

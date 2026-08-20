@@ -52,7 +52,7 @@ import { setupTestRenderer } from '../helpers/setup-renderer'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { StylePreset } from '../../src/core/types'
 import type { SemanticNode } from '../../src/core/semantic-tree'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { REPO_ROOT } from '../helpers/guardrail'
 import { registeredComponents } from '../../src/core/component/registry'
 import { idToDir } from '../../src/core/component/types'
@@ -182,7 +182,7 @@ async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
     execOutput[s.name] = await runProgram(s.code)
   }
   return {
-    identitySet: allCppConcepts().map((c) => c.componentId).sort(),
+    identitySet: allCppComponents().map((c) => c.componentId).sort(),
     samples: sampleResult,
     execOutput,
     labels: readLabels(),
@@ -212,12 +212,12 @@ describe('膠囊搬家：兩條防線', () => {
   it('防線一：搬家前後，系統認得的身分集合完全相同', async () => {
     const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
     // 🔴 **只比對 cpp 的身分**（spec 156）。
-    //    ⚠️ `allCppConcepts()` 的名字說謊——它回的是【全部】語言的概念
-    //    （它把 `componentConcepts()` 整個收進來）。第一顆 Python 元件進來時，
+    //    ⚠️ `allCppComponents()` 的名字說謊——它回的是【全部】語言的概念
+    //    （它把 `componentComponents()` 整個收進來）。第一顆 Python 元件進來時，
     //    這條「搬家前後身分集合完全相同」就把它報成「複製沒刪乾淨」。
     //
     // > **這條護欄量的是【搬家】——而新增一個語言不是搬家。**
-    const now = allCppConcepts()
+    const now = allCppComponents()
       .map((c) => c.componentId)
       .filter((id) => id.startsWith('cpp:'))
       .sort()

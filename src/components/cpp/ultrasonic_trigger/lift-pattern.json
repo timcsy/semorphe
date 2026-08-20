@@ -2,7 +2,7 @@
   {
     "id": "cpp_ultrasonic_trigger",
     "astNodeType": "compound_statement",
-    "concept": {
+    "component": {
       "componentId": "cpp:ultrasonic_trigger"
     },
     "liftStrategy": "cpp:liftUltrasonicTrigger",
@@ -11,7 +11,7 @@
   {
     "id": "cpp_ultrasonic_trigger_toplevel",
     "astNodeType": "translation_unit",
-    "concept": {
+    "component": {
       "componentId": "cpp:ultrasonic_trigger"
     },
     "liftStrategy": "cpp:liftUltrasonicTrigger",

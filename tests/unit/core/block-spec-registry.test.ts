@@ -37,21 +37,21 @@ describe('BlockSpecRegistry', () => {
   describe('loadFromJSON', () => {
     it('should load block specs from array', () => {
       registry.loadFromJSON([sampleSpec, sortSpec])
-      expect(registry.getByConceptId('cpp:var_declare')).toEqual(sampleSpec)
-      expect(registry.getByConceptId('cpp:stdlib:sort')).toEqual(sortSpec)
+      expect(registry.getByComponentId('cpp:var_declare')).toEqual(sampleSpec)
+      expect(registry.getByComponentId('cpp:stdlib:sort')).toEqual(sortSpec)
     })
   })
 
-  describe('getByConceptId', () => {
-    it('should find spec by concept id', () => {
+  describe('getByComponentId', () => {
+    it('should find spec by component id', () => {
       registry.loadFromJSON([sampleSpec])
-      const found = registry.getByConceptId('cpp:var_declare')
+      const found = registry.getByComponentId('cpp:var_declare')
       expect(found).toBeTruthy()
       expect(found?.id).toBe('cpp_var_declare')
     })
 
-    it('should return undefined for unknown concept', () => {
-      expect(registry.getByConceptId('nonexistent')).toBeUndefined()
+    it('should return undefined for unknown component', () => {
+      expect(registry.getByComponentId('nonexistent')).toBeUndefined()
     })
   })
 
@@ -79,7 +79,7 @@ describe('BlockSpecRegistry', () => {
   })
 
   describe('listByCategory', () => {
-    it('should list specs by category with visibleConcepts filter', () => {
+    it('should list specs by category with visibleComponents filter', () => {
       registry.loadFromJSON([sampleSpec, sortSpec])
 
       const allVars = registry.listByCategory('variables')

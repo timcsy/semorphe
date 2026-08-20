@@ -28,5 +28,5 @@
   "requires": [
     "<string>"
   ],
-  "_children_why": "⚠️ `value` 由 lift 產出（`registerMethodConcept` 登錄的引數槽），而**產生器沒有讀它**。\n\n2026-08-18 我一度把它當成死接點刪掉，而宣告完整性護欄糾正了：**lift 真的會產出它**。"
+  "_children_why": "⚠️ `value` 由 lift 產出（`registerMethodComponent` 登錄的引數槽），而**產生器沒有讀它**。\n\n2026-08-18 我一度把它當成死接點刪掉，而宣告完整性護欄糾正了：**lift 真的會產出它**。"
 }

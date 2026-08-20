@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { ComponentRegistry } from '../../src/core/component-registry'
 import type { ComponentDef } from '../../src/core/types'
 
-describe('Concept Algebra (US8)', () => {
+describe('Component Algebra (US8)', () => {
   let registry: ComponentRegistry
 
   beforeEach(() => {
@@ -66,25 +66,25 @@ describe('Concept Algebra (US8)', () => {
   //    是「被測的功能不存在了」。判準見 `specs/152-retire-layer/spec.md` US1。
 
 
-  describe('Abstract concept mapping', () => {
-    it('should find abstract concept for cpp:vector_push_back', () => {
+  describe('Abstract component mapping', () => {
+    it('should find abstract component for cpp:vector_push_back', () => {
       const abstract = registry.findAbstract('cpp:vector_push_back')
       expect(abstract).toBeDefined()
       expect(abstract!.id).toBe('container_add')
       expect(abstract!.layer).toBe('universal')
     })
 
-    it('should find abstract concept for cpp:sort', () => {
+    it('should find abstract component for cpp:sort', () => {
       const abstract = registry.findAbstract('cpp:range_sort')
       expect(abstract).toBeDefined()
       expect(abstract!.id).toBe('container_sort')
     })
 
-    it('should return undefined for concept without abstract', () => {
+    it('should return undefined for component without abstract', () => {
       expect(registry.findAbstract('cpp:var_declare')).toBeUndefined()
     })
 
-    it('should return undefined for unknown concept', () => {
+    it('should return undefined for unknown component', () => {
       expect(registry.findAbstract('nonexistent')).toBeUndefined()
     })
   })

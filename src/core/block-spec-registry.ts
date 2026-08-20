@@ -4,18 +4,18 @@ import { paramNames } from './param-spec'
 
 export class BlockSpecRegistry {
   private specs = new Map<string, BlockSpec>()
-  private byConceptId = new Map<string, BlockSpec>()
+  private byComponentId = new Map<string, BlockSpec>()
   /** 一個元件身分的**所有**形態（含中性與各變體） */
-  private formsByConceptId = new Map<string, BlockSpec[]>()
+  private formsByComponentId = new Map<string, BlockSpec[]>()
   private byBlockType = new Map<string, BlockSpec>()
-  private conceptToBlockType = new Map<string, string>()
+  private componentToBlockType = new Map<string, string>()
 
-  /** Load from split concept + projection JSON (Phase 3 architecture) */
-  loadFromSplit(concepts: ComponentDefJSON[], projections: BlockProjectionJSON[]): void {
-    const conceptMap = new Map<string, ComponentDefJSON>()
-    for (const c of concepts) conceptMap.set(c.componentId, c)
+  /** Load from split component + projection JSON (Phase 3 architecture) */
+  loadFromSplit(components: ComponentDefJSON[], projections: BlockProjectionJSON[]): void {
+    const componentMap = new Map<string, ComponentDefJSON>()
+    for (const c of components) componentMap.set(c.componentId, c)
     const specs: BlockSpec[] = projections.map(proj => {
-      const concept = conceptMap.get(proj.componentId)
+      const component = componentMap.get(proj.componentId)
       return {
         // ⚠️ **展開合併，不要逐欄位列舉。**
         //
@@ -37,12 +37,12 @@ export class BlockSpecRegistry {
           //
           // 欄位還在，是因為它記著「這顆概念當初被認為多通用」——
           // 那是一份**還沒被驗證過的外延主張**，而驗它需要第二個語言。
-          // 見 `concepts/等價與觀察集.md` 剪枝力②：**「通用」是外延的，不住在名字裡**。
-          abstractComponent: concept?.abstractComponent ?? undefined,
-          properties: paramNames(concept?.properties),
-          children: concept?.children,
-          role: concept?.role,
-          annotations: concept?.annotations,
+          // 見 `components/等價與觀察集.md` 剪枝力②：**「通用」是外延的，不住在名字裡**。
+          abstractComponent: component?.abstractComponent ?? undefined,
+          properties: paramNames(component?.properties),
+          children: component?.children,
+          role: component?.role,
+          annotations: component?.annotations,
         },
         blockDef: proj.blockDef,
         codeTemplate: proj.codeTemplate ?? { pattern: '', imports: [], order: 0 },
@@ -78,13 +78,13 @@ export class BlockSpecRegistry {
         // 而「統一身分」因此被迫連帶「統一形態」，那產生了一個真實的使用者困惑
         // （見 `knowledge/episodes/2026-08-07-學生說積木寫錯了.md`）。
         //
-        // `byConceptId` 保留「中性形態」給既有呼叫端；完整的形態清單走
-        // `getFormsByConceptId()`。中性 = 沒有宣告 `form` 的那一顆，
+        // `byComponentId` 保留「中性形態」給既有呼叫端；完整的形態清單走
+        // `getFormsByComponentId()`。中性 = 沒有宣告 `form` 的那一顆，
         // **第一個勝出**——後者覆寫的話，改變 JSON 順序就會改變行為。
-        if (!spec.form && !this.byConceptId.has(cid)) this.byConceptId.set(cid, spec)
-        const list = this.formsByConceptId.get(cid) ?? []
+        if (!spec.form && !this.byComponentId.has(cid)) this.byComponentId.set(cid, spec)
+        const list = this.formsByComponentId.get(cid) ?? []
         list.push(spec)
-        this.formsByConceptId.set(cid, list)
+        this.formsByComponentId.set(cid, list)
       }
       const blockType = (spec.blockDef as Record<string, unknown>)?.type as string | undefined
       if (blockType) {
@@ -92,36 +92,36 @@ export class BlockSpecRegistry {
         // 只記中性形態——這張表的消費者要的是「這個概念預設長什麼樣」
         if (spec.componentMapping?.componentId && !spec.form) {
           const cid = spec.componentMapping.componentId
-          if (!this.conceptToBlockType.has(cid)) this.conceptToBlockType.set(cid, blockType)
+          if (!this.componentToBlockType.has(cid)) this.componentToBlockType.set(cid, blockType)
         }
       }
     }
   }
 
-  /** 中性形態（沒有宣告 `form` 的那一顆）。要全部請用 `getFormsByConceptId` */
-  getByConceptId(componentId: string): BlockSpec | undefined {
-    return this.byConceptId.get(componentId)
+  /** 中性形態（沒有宣告 `form` 的那一顆）。要全部請用 `getFormsByComponentId` */
+  getByComponentId(componentId: string): BlockSpec | undefined {
+    return this.byComponentId.get(componentId)
   }
 
   /** 一個元件身分的**所有**積木形態 */
-  getFormsByConceptId(componentId: string): BlockSpec[] {
-    return this.formsByConceptId.get(componentId) ?? []
+  getFormsByComponentId(componentId: string): BlockSpec[] {
+    return this.formsByComponentId.get(componentId) ?? []
   }
 
   getByBlockType(blockType: string): BlockSpec | undefined {
     return this.byBlockType.get(blockType)
   }
 
-  /** Get the block type string for a given concept ID */
-  getBlockTypeForConcept(componentId: string): string | undefined {
-    return this.conceptToBlockType.get(componentId)
+  /** Get the block type string for a given component ID */
+  getBlockTypeForComponent(componentId: string): string | undefined {
+    return this.componentToBlockType.get(componentId)
   }
 
-  /** Get the auto-built concept→blockType map (replaces hardcoded CONCEPT_TO_BLOCK) */
-  getConceptToBlockMap(): Record<string, string> {
+  /** Get the auto-built component→blockType map (replaces hardcoded CONCEPT_TO_BLOCK) */
+  getComponentToBlockMap(): Record<string, string> {
     const map: Record<string, string> = {}
-    for (const [concept, blockType] of this.conceptToBlockType) {
-      map[concept] = blockType
+    for (const [component, blockType] of this.componentToBlockType) {
+      map[component] = blockType
     }
     return map
   }
@@ -143,12 +143,12 @@ export class BlockSpecRegistry {
     )
   }
 
-  listByCategory(category: string, visibleConcepts?: Set<string>): BlockSpec[] {
+  listByCategory(category: string, visibleComponents?: Set<string>): BlockSpec[] {
     return [...this.specs.values()].filter(spec => {
       if (spec.category !== category) return false
-      if (!visibleConcepts) return true
+      if (!visibleComponents) return true
       if (!spec.componentMapping?.componentId) return true
-      return visibleConcepts.has(spec.componentMapping.componentId)
+      return visibleComponents.has(spec.componentMapping.componentId)
     })
   }
 
@@ -159,12 +159,12 @@ export class BlockSpecRegistry {
    * **那個順序就是學生在工具箱裡看到的順序**——所以把一顆積木放進
    * `blocks.json` 的正確位置，它在工具箱裡就會出現在正確的位置。
    */
-  listBySource(owner: string, category: string, visibleConcepts?: Set<string>): BlockSpec[] {
+  listBySource(owner: string, category: string, visibleComponents?: Set<string>): BlockSpec[] {
     return [...this.specs.values()].filter(spec => {
       if (spec.owner !== owner || spec.category !== category) return false
-      if (!visibleConcepts) return true
+      if (!visibleComponents) return true
       if (!spec.componentMapping?.componentId) return true
-      return visibleConcepts.has(spec.componentMapping.componentId)
+      return visibleComponents.has(spec.componentMapping.componentId)
     })
   }
 
@@ -172,18 +172,18 @@ export class BlockSpecRegistry {
     return [...this.specs.values()]
   }
 
-  /** Check if a block type is visible given a set of visible concepts */
-  isBlockVisible(blockType: string, visibleConcepts?: Set<string>): boolean {
-    if (!visibleConcepts) return true
+  /** Check if a block type is visible given a set of visible components */
+  isBlockVisible(blockType: string, visibleComponents?: Set<string>): boolean {
+    if (!visibleComponents) return true
     const spec = this.byBlockType.get(blockType)
     if (!spec) return true
     if (!spec.componentMapping?.componentId) return true
-    return visibleConcepts.has(spec.componentMapping.componentId)
+    return visibleComponents.has(spec.componentMapping.componentId)
   }
 
   /** Get a BlockSpec with Topic override applied (if any) */
   getWithOverride(componentId: string, topic?: Topic): BlockSpec | undefined {
-    const spec = this.byConceptId.get(componentId)
+    const spec = this.byComponentId.get(componentId)
     if (!spec) return undefined
     if (!topic?.blockOverrides) return spec
     const override = topic.blockOverrides[componentId]

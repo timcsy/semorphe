@@ -42,16 +42,16 @@ import {
   REPO_ROOT,
   assertRatchet,
 } from '../helpers/guardrail'
-import { universalConcepts } from '../../src/core/universal'
-import { coreConcepts } from '../../src/languages/cpp/core'
+import { universalComponents } from '../../src/core/universal'
+import { coreComponents } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON } from '../../src/core/types'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 const RULE =
   '宣告者 = 概念定義的 annotations 裡有這個鍵。讀取點 = 原始碼呼叫 ' +
@@ -110,7 +110,7 @@ function allSource(): string {
 function measure(): { name: string; declarers: number; readers: number }[] {
   const src = allSource()
   const counts = new Map<string, number>()
-  const all = allCppConcepts()
+  const all = allCppComponents()
   for (const c of all) {
     const ann = (c as { annotations?: Record<string, unknown> }).annotations
     if (!ann) continue
@@ -149,7 +149,7 @@ describe('護欄：標註採用率（機制有沒有人用）', () => {
   })
 
   it('★ 合成注入：具名讀取必須被數到', () => {
-    expect(countReaders(`if (hasAnnotation(concept, 'debug_step')) return`, 'debug_step')).toBe(1)
+    expect(countReaders(`if (hasAnnotation(component, 'debug_step')) return`, 'debug_step')).toBe(1)
     expect(countReaders(`const v = annotationOf(c, "control_flow")`, 'control_flow')).toBe(1)
   })
 

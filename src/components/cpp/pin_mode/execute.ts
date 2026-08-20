@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pin_mode', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
     const mode = ctx.toNumber(await ctx.evaluate((node.children.mode ?? [])[0]))

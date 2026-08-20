@@ -9,7 +9,7 @@
  * |---|---|
  * | `projection/code-generator.ts` | 產生 `//`、`/** *​/`、`/* *​/` |
  * | `projection/code-generator.ts` | 行末標註接 ` // text` |
- * | `projection/code-generator.ts` | 認不得的概念退回 `/* unknown concept *​/` |
+ * | `projection/code-generator.ts` | 認不得的概念退回 `/* unknown component *​/` |
  * | `lift/lifter.ts` | 從原始碼**剝掉** `//` 與 `/* *​/` |
  *
  * Python 要的是 `#`，Lisp 要的是 `;`。那四處全部違反「拔掉 C++，核心仍能運作」。

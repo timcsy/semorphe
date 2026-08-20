@@ -1,7 +1,7 @@
 {
   "id": "cpp_new_expression",
   "astNodeType": "new_expression",
-  "concept": {
+  "component": {
     "componentId": "cpp:new"
   },
   "liftStrategy": "cpp:liftNewExpression",

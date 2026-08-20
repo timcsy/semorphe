@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_read', async (node, ctx) => {
     return { type: 'int', value: servoOf(ctx, String(node.properties.obj ?? 'myServo')).angle }
   })

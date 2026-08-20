@@ -3,11 +3,11 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 import { allStdModules } from '../../std'
-import { conceptForContainerTemplate } from '../../../../core/component/container-templates'
+import { componentForContainerTemplate } from '../../../../core/component/container-templates'
 // ⚠️ 元件膠囊也要算進來——第五處「從 allStdModules 推導」的地方。
 // 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
-import { componentConcepts } from '../../../../core/component/registry'
-import { plainTypeConcept } from '../../../../core/component/container-templates'
+import { componentComponents } from '../../../../core/component/registry'
+import { plainTypeComponent } from '../../../../core/component/container-templates'
 import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift'
@@ -15,7 +15,7 @@ import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
 import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
-import { qualifierConcept } from '../../../../core/component/qualifier-components'
+import { qualifierComponent } from '../../../../core/component/qualifier-components'
 import { buildStringStreamDecl } from '../../../../components/cpp/istringstream_declare/lift'
 import { buildTemplateFunc } from '../../../../components/cpp/template_function/lift'
 import { buildConstructor } from '../../../../components/cpp/constructor/lift'
@@ -52,7 +52,7 @@ import { buildInitializerList } from '../../../../components/cpp/initializer_lis
  * 比對一直是綠的。記在缺陷帳，不在這裡順手擴大範圍。
  */
 const hasInitSourceDecl = new Set(
-  [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
+  [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
@@ -64,7 +64,7 @@ const hasInitSourceDecl = new Set(
  * 「被正確地排除、然後沒有人接住」的缺陷——見下方 `argument_list` 那一段。
  */
 const hasSizeDecl = new Set(
-  [...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
+  [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.size !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
@@ -517,7 +517,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
       // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
       // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
-      const componentId = conceptForContainerTemplate(templateName)
+      const componentId = componentForContainerTemplate(templateName)
       if (componentId) {
         const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
         const name = decl?.type === 'identifier'
@@ -627,24 +627,24 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // Detect non-template container/stream types (string, ifstream, ofstream, stringstream)
     // These are type_identifier, possibly inside qualified_identifier (std::string, std::ifstream, etc.)
     // ⚠️ **這張表已經空了**——五顆元件各自登錄自己的型別名
-    // （`core/component/container-templates.ts` 的 `registerPlainTypeConcept`）。
+    // （`core/component/container-templates.ts` 的 `registerPlainTypeComponent`）。
     // 留著空表是為了讓「查不到」與「忘了查」分得出來。
-    const streamConcepts: Record<string, string> = {}
+    const streamComponents: Record<string, string> = {}
     const typeIdentNode = node.namedChildren.find(c => c.type === 'type_identifier')
     const qualifiedIdNode = node.namedChildren.find(c => c.type === 'qualified_identifier')
     // Get the final type name (e.g., "string" from "std::string" or plain "string")
     let simpleTypeName: string | null = null
-    if (typeIdentNode && (streamConcepts[typeIdentNode.text] ?? plainTypeConcept(typeIdentNode.text))) {
+    if (typeIdentNode && (streamComponents[typeIdentNode.text] ?? plainTypeComponent(typeIdentNode.text))) {
       simpleTypeName = typeIdentNode.text
     } else if (qualifiedIdNode) {
       // Look for type_identifier inside qualified_identifier (e.g., std::string → "string")
       const innerTypeIdent = qualifiedIdNode.namedChildren.find(c => c.type === 'type_identifier')
-      if (innerTypeIdent && (streamConcepts[innerTypeIdent.text] ?? plainTypeConcept(innerTypeIdent.text))) {
+      if (innerTypeIdent && (streamComponents[innerTypeIdent.text] ?? plainTypeComponent(innerTypeIdent.text))) {
         simpleTypeName = innerTypeIdent.text
       }
     }
-    if (simpleTypeName && (streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName))) {
-      const componentId = streamConcepts[simpleTypeName] ?? plainTypeConcept(simpleTypeName)
+    if (simpleTypeName && (streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName))) {
+      const componentId = streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName)
       // 🔴 **一個身分可能被多個型別名登錄**（同一片液晶的並列版與 I2C 版）。
       //    那個差別在程式碼裡是真的，而**它不得被改寫**——所以要帶著。
       //
@@ -652,7 +652,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //    替它們憑空多一個屬性會讓宣告與產出對不上（參數規格護欄在看）。
       //
       // > **共用層要不要記一件事，由那顆元件的宣告說了算。**
-      const wantsDeclType = componentConcepts().some(
+      const wantsDeclType = componentComponents().some(
         (c) => (c as { componentId?: string }).componentId === componentId &&
           ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'decl_type'),
       )
@@ -666,7 +666,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       // > lift 與 generate 各自的測試都看不到它。**
       //
       // 同上：只在**概念自己宣告了這一格**時才寫。
-      const wantsCtorCount = componentConcepts().some(
+      const wantsCtorCount = componentComponents().some(
         (c) => (c as { componentId?: string }).componentId === componentId &&
           ((c as { properties?: { name?: string }[] }).properties ?? []).some((pp) => pp?.name === 'ctorCount'),
       )
@@ -691,7 +691,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //
       // 🟢 而這裡分得出來：**型別是一個登錄過的具體型別**（`DHT`／`Servo`／
       // `LiquidCrystal`／`string`…），而那種型別在 sketch 裡**不會**被當成
-      // 函式的回傳型別。⚠️ 走到這一行代表 `plainTypeConcept` 已經認領了它。
+      // 函式的回傳型別。⚠️ 走到這一行代表 `plainTypeComponent` 已經認領了它。
       const fnDecl = node.namedChildren.find(c => c.type === 'function_declarator')
       if (!decl && fnDecl) {
         const nameNode = fnDecl.namedChildren.find(c => c.type === 'identifier')
@@ -778,9 +778,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return degrade(buildRawCode(node.text), `${qualifier} ＋ 陣列宣告尚未支援`)
         }
         const lifted = liftSingleDeclarator(decl, type, ctx)
-        const componentId = qualifierConcept(qualifier)
+        const componentId = qualifierComponent(qualifier)
         if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
-        // Use type from lifted node; append * for pointer concepts
+        // Use type from lifted node; append * for pointer components
         let liftedType = (lifted.properties.type as string) ?? type
         // ⚠️ 問**性狀**不問身分：「我的型別要接一個 `*`」是那顆元件的性質。
         // 寫死 `'cpp:pointer_declare'` 的話它永遠搬不進膠囊。
@@ -792,7 +792,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           initializer: lifted.children.initializer ?? [],
         })
       }
-      const componentId = qualifierConcept(qualifier)
+      const componentId = qualifierComponent(qualifier)
       if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
       return createNode(componentId, { type, name: 'x' })
     }

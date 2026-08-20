@@ -1,8 +1,8 @@
 /** `cpp:pwm_open` 的 **lift** 路——**一筆資料，不是函式**。 */
-import { registerCallConcept } from '../../../core/component/call-components'
+import { registerCallComponent } from '../../../core/component/call-components'
 
 export function registerLift(): void {
-  registerCallConcept('ledcSetup', {
+  registerCallComponent('ledcSetup', {
     componentId: 'cpp:pwm_open',
     argSlots: ['channel', 'freq', 'bits'],
     source: 'cpp/pwm_open',

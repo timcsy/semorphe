@@ -1,7 +1,7 @@
 {
   "id": "cpp_function_definition",
   "astNodeType": "function_definition",
-  "concept": {
+  "component": {
     "componentId": "cpp:func_def"
   },
   "liftStrategy": "cpp:liftFunctionDef",

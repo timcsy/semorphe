@@ -3,7 +3,7 @@
     "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。",
     "capturedAt": "2026-08-18"
   },
-  "concepts": [
+  "components": [
     "compound_assign",
     "cpp:address_of",
     "cpp:analog_read",

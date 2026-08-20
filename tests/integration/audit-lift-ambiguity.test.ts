@@ -32,7 +32,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 const RULE =
   '從實際載入後的規則表量測。判定保守：只有能證明互斥才判「不會撞」，判不出來一律「無法確定」。'
 
-/** 護欄的失效樣態——照 concepts/執行機構.md 的要求 */
+/** 護欄的失效樣態——照 components/執行機構.md 的要求 */
 const SELF_FALSIFICATION =
   '⚠️ 這條護欄的健康檢查是下面那兩支「★ 合成注入」，**不是報表上的數字**。' +
   '「確定會撞 0」與「判定邏輯整個沒接上」產出完全一樣——注入測試是唯一分得出來的東西。'
@@ -96,13 +96,13 @@ function measure(): {
     }
 
     // ── 重複登記：同一概念在同一語法上出現一次以上
-    const byConcept = new Map<string, number[]>()
+    const byComponent = new Map<string, number[]>()
     for (const r of list) {
-      const arr = byConcept.get(r.componentId) ?? []
+      const arr = byComponent.get(r.componentId) ?? []
       arr.push(r.priority)
-      byConcept.set(r.componentId, arr)
+      byComponent.set(r.componentId, arr)
     }
-    for (const [componentId, priorities] of byConcept) {
+    for (const [componentId, priorities] of byComponent) {
       if (priorities.length > 1) duplicates.push({ nodeType, componentId, priorities: priorities.sort() })
     }
 

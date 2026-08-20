@@ -11,7 +11,7 @@
  *
  * ## 為什麼這條護欄要**先於** 124 顆宣告
  *
- * `concepts/執行機構.md`「機制有了，沒人接上」目前有**七個實例**——
+ * `components/執行機構.md`「機制有了，沒人接上」目前有**七個實例**——
  * `skipPaths` 0/175、`abstractComponent` 33/131、`introduces_scope` 0/4、
  * 型別追蹤 0 呼叫者、`buildIoCategoryContents` 只有測試在叫、**CI 沒跑測試**。
  *
@@ -38,12 +38,12 @@
 import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
 import { paramReadsByComponent, scanParamReads, templateReads, fallbacksByComponent } from '../helpers/param-reads'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramNames, paramSpecs, isSpecified } from '../../src/core/param-spec'
 import type { ParamSpec } from '../../src/core/types'
 
 /** componentId → 宣告的參數名 */
-const declare = new Map(allCppConcepts().map((c) => [c.componentId, new Set(paramNames(c.properties))]))
+const declare = new Map(allCppComponents().map((c) => [c.componentId, new Set(paramNames(c.properties))]))
 
 /**
  * componentId → 規格（只含**已規格化**的元件）。
@@ -52,7 +52,7 @@ const declare = new Map(allCppConcepts().map((c) => [c.componentId, new Set(para
  * `kind: 'literal'` 的假規格——拿假規格去比對預設值，會對著 124 顆亂叫。
  */
 const spec = new Map<string, ParamSpec[]>(
-  allCppConcepts()
+  allCppComponents()
     .filter((c) => isSpecified(c.properties))
     .map((c) => [c.componentId, paramSpecs(c.properties)]),
 )
@@ -212,7 +212,7 @@ interface specIssues { componentId: string; issue: string }
  */
 function checkSpec(inject: { componentId: string; properties: ParamSpec[]; blockDef?: unknown }[] = []): specIssues[] {
   const out: specIssues[] = []
-  const concepts = [...(allCppConcepts() as unknown as { componentId: string; properties?: unknown }[]), ...inject]
+  const components = [...(allCppComponents() as unknown as { componentId: string; properties?: unknown }[]), ...inject]
 
   // 積木下拉的選項——`values` 的來源真相
   const dropdown = new Map<string, Map<string, string[]>>()
@@ -231,7 +231,7 @@ function checkSpec(inject: { componentId: string; properties: ParamSpec[]; block
     }
   }
 
-  for (const c of concepts) {
+  for (const c of components) {
     const raw = c.properties as string[] | ParamSpec[] | undefined
     if (!raw || raw.length === 0) continue
 

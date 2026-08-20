@@ -559,7 +559,7 @@ describe('C++ Statement Lifters', () => {
     expect(result!.children.update).toHaveLength(0)
   })
 
-  it('should wrap statement-concept update (i += 2) as cpp_raw_expression in cpp_for_loop', () => {
+  it('should wrap statement-component update (i += 2) as cpp_raw_expression in cpp_for_loop', () => {
     const initDecl = mockNode('init_declarator', 'i = 0', [
       mockNode('identifier', 'i'),
       mockNode('number_literal', '0'),

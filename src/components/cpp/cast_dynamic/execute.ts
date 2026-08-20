@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast_dynamic', async (node, ctx) => {
     // 退路與宣告的 `default` 一致（第二十三條護欄，硬性零）。
     // ⚠️ 共用迴圈裡它們四顆的退路全都寫 `'int'`——**與宣告不符，而護欄看不見**：

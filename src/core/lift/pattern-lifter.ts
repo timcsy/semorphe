@@ -121,7 +121,7 @@ export class PatternLifter {
   loadLiftPatterns(patterns: LiftPattern[]): void {
     for (const lp of patterns) {
       const entry: PatternEntry = {
-        componentId: lp.concept?.componentId ?? '',
+        componentId: lp.component?.componentId ?? '',
         patternType: lp.patternType ?? 'simple',
         priority: this.calcPriority(lp.patternType ?? 'simple', lp.constraints?.length ?? 0, lp.priority ?? 0),
         constraints: lp.constraints ?? [],
@@ -262,16 +262,16 @@ export class PatternLifter {
     const opValue = this.resolveAstField(node, dispatch.operatorField)
     if (!opValue) return null
 
-    // Find which concept this operator maps to
-    let targetConcept: string | null = null
-    for (const [ops, concept] of Object.entries(dispatch.routes)) {
+    // Find which component this operator maps to
+    let targetComponent: string | null = null
+    for (const [ops, component] of Object.entries(dispatch.routes)) {
       const opList = ops.split(',').map(o => o.trim())
       if (opList.includes(opValue)) {
-        targetConcept = concept
+        targetComponent = component
         break
       }
     }
-    if (!targetConcept) return null
+    if (!targetComponent) return null
 
     const props: Record<string, string> = {}
     const children: Record<string, SemanticNode[]> = {}
@@ -281,7 +281,7 @@ export class PatternLifter {
       this.extractField(node, fm, ctx, props, children)
     }
 
-    return createNode(targetConcept, props, children)
+    return createNode(targetComponent, props, children)
   }
 
   // ── Chain (left-recursive) ──
@@ -453,8 +453,8 @@ export class PatternLifter {
 
     // Apply transform rules
     for (const rule of ct.transformRules) {
-      if (lifted.componentId === rule.fromConcept) {
-        return createNode(rule.toConcept, { ...lifted.properties }, { ...lifted.children })
+      if (lifted.componentId === rule.fromComponent) {
+        return createNode(rule.toComponent, { ...lifted.properties }, { ...lifted.children })
       }
     }
 

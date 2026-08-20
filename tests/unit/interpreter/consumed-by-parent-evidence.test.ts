@@ -23,10 +23,10 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../../src/core/types'
 
 const n = (
-  concept: string,
+  component: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: component, properties, children }) as unknown as SemanticNode
 
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })
@@ -53,13 +53,13 @@ describe('cpp_class_def 真的消費這六種成員', () => {
     ['cpp:method_virtual_pure', 'pv'],
   ]
 
-  for (const [concept, name] of methodKind) {
-    it(`★ ${concept} 被收進型別的方法表`, async () => {
-      const body = concept === 'cpp:method_virtual_pure' ? {} : { body: [ret(num(1))] }
-      const interp = await declKind(n(concept, { name, return_type: 'int' }, { params: [], ...body }))
+  for (const [component, name] of methodKind) {
+    it(`★ ${component} 被收進型別的方法表`, async () => {
+      const body = component === 'cpp:method_virtual_pure' ? {} : { body: [ret(num(1))] }
+      const interp = await declKind(n(component, { name, return_type: 'int' }, { params: [], ...body }))
       expect(
         interp.structs.method('K', name),
-        `${concept} 沒有被 cpp_class_def 收進去 → 「由父概念消費」是假的，` +
+        `${component} 沒有被 cpp_class_def 收進去 → 「由父概念消費」是假的，` +
           '那個 skipPaths 宣告就是在把一個空操作洗成設計',
       ).toBeDefined()
     })

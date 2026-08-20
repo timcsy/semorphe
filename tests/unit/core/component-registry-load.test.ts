@@ -3,31 +3,31 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { ComponentRegistry } from '../../../src/core/component-registry'
 import type { ComponentDefJSON } from '../../../src/core/types'
-import { universalConcepts } from '../../../src/core/universal'
-import { coreConcepts } from '../../../src/languages/cpp/core'
+import { universalComponents } from '../../../src/core/universal'
+import { coreComponents } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
-function loadConcepts(): ComponentDefJSON[] {
-  return allCppConcepts()
+function loadComponents(): ComponentDefJSON[] {
+  return allCppComponents()
 }
 
 describe('ComponentRegistry.loadFromJSON', () => {
-  it('should load correct number of concepts', () => {
+  it('should load correct number of components', () => {
     const registry = new ComponentRegistry()
-    const concepts = loadConcepts()
-    registry.loadFromJSON(concepts)
-    expect(registry.listAll().length).toBe(concepts.length)
+    const components = loadComponents()
+    registry.loadFromJSON(components)
+    expect(registry.listAll().length).toBe(components.length)
   })
 
   it('should load var_declare with correct properties and children', () => {
     const registry = new ComponentRegistry()
-    registry.loadFromJSON(loadConcepts())
+    registry.loadFromJSON(loadComponents())
     const varDecl = registry.get('cpp:var_declare')
     expect(varDecl).toBeDefined()
     expect(varDecl!.propertyNames).toContain('type')

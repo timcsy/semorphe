@@ -42,7 +42,7 @@ const NOT_DETECTED =
 interface OrphanBaseline {
   _meta: BaselineMeta
   orphans: number
-  concepts: string[]
+  components: string[]
 }
 
 registerCppLanguage()
@@ -96,7 +96,7 @@ describe('護欄：有實作卻沒有宣告', () => {
 
   it('棘輪：不得上升', () => {
     const b = loadBaseline<OrphanBaseline>('orphan-implementations')
-    const added = found.filter((c) => !b.concepts.includes(c))
+    const added = found.filter((c) => !b.components.includes(c))
     expect(
       added,
       `新增的孤兒實作：${added.join('、')}\n` +
@@ -116,6 +116,6 @@ if (process.env.GENERATE_BASELINE) {
       note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,
     },
     orphans: found.length,
-    concepts: found,
+    components: found,
   })
 }

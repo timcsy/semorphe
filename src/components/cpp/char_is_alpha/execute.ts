@@ -18,7 +18,7 @@ function charOf(v: RuntimeValue): string {
   return String(v.value).charAt(0)
 }
 
-export function registerExecute(register: (concept: string, e: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, e: ComponentExecutor) => void): void {
   register('cpp:char_is_alpha', async (node, ctx) => {
     const v = (node.children.value ?? [])[0]
     if (!v) throw new Error('cpp:char_is_alpha 少了 value 子節點——語義樹壞了')

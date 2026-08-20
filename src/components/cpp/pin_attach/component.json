@@ -1,7 +1,7 @@
 {
   "componentId": "cpp:pin_attach",
   "abstractComponent": "cpp:var_declare",
-  "_abstractConcept_why": "它**產出的就是一個常數宣告**（`const int ledPin = 13;`）。抽象概念記的是「拆開之後我是什麼」，而那正是這顆的降級路徑：D1 預組 → D2 展開成既有的**常數宣告元件**，⚠️ **不是 raw_code**。\n\n⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 裡。",
+  "_abstractComponent_why": "它**產出的就是一個常數宣告**（`const int ledPin = 13;`）。抽象概念記的是「拆開之後我是什麼」，而那正是這顆的降級路徑：D1 預組 → D2 展開成既有的**常數宣告元件**，⚠️ **不是 raw_code**。\n\n⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 裡。",
   "properties": [
     {
       "name": "device",

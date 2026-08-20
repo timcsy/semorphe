@@ -2,7 +2,7 @@ import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver } from '../../core/dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig, ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 import { resolveVisibility } from '../../core/program-scaffold'
-import { collectConcepts } from './auto-include'
+import { collectComponents } from './auto-include'
 import { expandHeaderAliases } from './header-aliases'
 
 export class CppScaffold implements ProgramScaffold {
@@ -33,12 +33,12 @@ export class CppScaffold implements ProgramScaffold {
     const { scaffoldDepth, manualImports = [], pinnedItems = [] } = config
     const manualSet = expandHeaderAliases(new Set(manualImports))
 
-    // Collect concepts from semantic tree
-    const concepts = new Set<string>()
-    collectConcepts(tree, concepts)
+    // Collect components from semantic tree
+    const components = new Set<string>()
+    collectComponents(tree, components)
 
     // Resolve dependencies and filter manual imports
-    const edges = this.resolver.resolve([...concepts])
+    const edges = this.resolver.resolve([...components])
     const filteredEdges = edges.filter(e => !manualSet.has(e.header))
 
     // Build scaffold items

@@ -19,6 +19,6 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_read', async () => ({ type: 'int', value: -1 }))
 }

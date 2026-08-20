@@ -35,7 +35,7 @@ beforeAll(async () => {
   registerCppLanguage()
 }, 30000)
 
-const conceptsIn = (code: string): string[] => {
+const componentsIn = (code: string): string[] => {
   const t = createTestLifter().lift(parser.parse(code)!.rootNode as never) as SemanticNode
   const ids: string[] = []
   const walk = (n: SemanticNode): void => {
@@ -48,27 +48,27 @@ const conceptsIn = (code: string): string[] => {
 
 describe('限定名稱的串流輸出', () => {
   it('正向錨點：不限定的形式本來就好的', () => {
-    const ids = conceptsIn('int main(){ cout << 1; }')
+    const ids = componentsIn('int main(){ cout << 1; }')
     expect(ids).toContain('cpp:print')
     expect(ids).not.toContain('raw_code')
   })
 
   it('🔴 `std::cout` 要與 `cout` 認成同一顆概念', () => {
-    const ids = conceptsIn('int main(){ std::cout << 1; }')
+    const ids = componentsIn('int main(){ std::cout << 1; }')
     expect(ids, '限定名稱的串流輸出必須是 cpp:print').toContain('cpp:print')
     expect(ids).not.toContain('raw_code')
     expect(ids).not.toContain('unresolved')
   })
 
   it('🔴 鏈上有多個值時也一樣', () => {
-    const ids = conceptsIn('int main(){ int x=1; std::cout << x << "hi" << 2; }')
+    const ids = componentsIn('int main(){ int x=1; std::cout << x << "hi" << 2; }')
     expect(ids).toContain('cpp:print')
     expect(ids).not.toContain('unresolved')
   })
 
   it('⚠️ 而它不得過度匹配——`mycout` 不是 `cout`', () => {
     // 比對的是「最後一段」，所以 `foo::cout` 算、`mycout` 不算。
-    const ids = conceptsIn('int main(){ int mycout=0; mycout << 1; }')
+    const ids = componentsIn('int main(){ int mycout=0; mycout << 1; }')
     expect(ids).not.toContain('cpp:print')
   })
 })

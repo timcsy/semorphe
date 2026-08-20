@@ -32,5 +32,5 @@
     "lift": "./lift.ts",
     "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建樣板函式`）——判別留在共用檔。"
   },
-  "_children_why": "🔴 `params` 裝的是 **`param_decl`**（帶 `{type, name}` 的結構節點），不是裸的運算式。\n\n⚠️ 第一版宣告 `'expressions'`，而它的投影規則（`childrenAsField`）明寫著 `childConcept: 'param_decl'`——**兩份宣告在同一顆元件裡互相矛盾**，而沒有人在看。\n\n> **一個說謊的宣告會讓信任它的護欄一起說謊**——投影遺失那條照宣告合成裸數字，於是量到「參數掉了」，而真正掉的是我的合成物。"
+  "_children_why": "🔴 `params` 裝的是 **`param_decl`**（帶 `{type, name}` 的結構節點），不是裸的運算式。\n\n⚠️ 第一版宣告 `'expressions'`，而它的投影規則（`childrenAsField`）明寫著 `childComponent: 'param_decl'`——**兩份宣告在同一顆元件裡互相矛盾**，而沒有人在看。\n\n> **一個說謊的宣告會讓信任它的護欄一起說謊**——投影遺失那條照宣告合成裸數字，於是量到「參數掉了」，而真正掉的是我的合成物。"
 }

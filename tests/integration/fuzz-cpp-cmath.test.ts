@@ -76,7 +76,7 @@ function countRawCode(node: SemanticNode): number {
   return count
 }
 
-// Fuzz regression tests from concept.fuzz run on 2026-03-12
+// Fuzz regression tests from component.fuzz run on 2026-03-12
 // These tests verify lift → generate round-trip structural equivalence
 describe('cmath fuzz regression', () => {
   describe('easy — basic function calls', () => {

@@ -20,5 +20,5 @@
   "requires": [
     "<iostream>"
   ],
-  "_requires_why": "⚠️ 原本寫在 `std/index.ts` 的 `registerConceptMapping('cpp:endl', '<iostream>')`——**一句手寫的例外**，因為 endl 的宣告不在 iostream 模組裡。搬進膠囊之後它就是這顆元件自己的 `requires`。"
+  "_requires_why": "⚠️ 原本寫在 `std/index.ts` 的 `registerComponentMapping('cpp:endl', '<iostream>')`——**一句手寫的例外**，因為 endl 的宣告不在 iostream 模組裡。搬進膠囊之後它就是這顆元件自己的 `requires`。"
 }

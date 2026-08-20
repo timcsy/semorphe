@@ -48,10 +48,10 @@ import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../helpers/component-scan'
 import { classifyFile } from '../helpers/file-classification'
 import decided from '../assets/identity-review-decisions.json'
-import { universalConcepts } from '../../src/core/universal'
-import { coreConcepts } from '../../src/languages/cpp/core'
+import { universalComponents } from '../../src/core/universal'
+import { coreComponents } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 
 interface ComponentDef {
   componentId: string
@@ -64,9 +64,9 @@ interface ComponentDef {
 }
 
 const ALL: ComponentDef[] = [
-  ...(universalConcepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'universal' })),
-  ...(coreConcepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-core' })),
-  ...allStdModules.flatMap((m) => (m.concepts as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-library' }))),
+  ...(universalComponents as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'universal' })),
+  ...(coreComponents as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-core' })),
+  ...allStdModules.flatMap((m) => (m.components as unknown as ComponentDef[]).map((c) => ({ ...c, layer: c.layer ?? 'lang-library' }))),
 ]
 const IDS = ALL.map((c) => c.componentId)
 const BY_ID = new Map(ALL.map((c) => [c.componentId, c]))
@@ -312,7 +312,7 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     //
     // 改錨在**宣告總量**上：那是「工具吃到輸入沒有」，不隨膠囊化而變。
     expect(
-      allCppConcepts().length,
+      allCppComponents().length,
       '一顆元件都沒載入 → 每個數字都是假的',
     ).toBeGreaterThan(150)
   })

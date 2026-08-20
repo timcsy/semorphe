@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { writableArray } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:memory_fill', async (node, ctx) => {
       const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')
       const v = await ctx.evaluate((node.children.value ?? [])[0])

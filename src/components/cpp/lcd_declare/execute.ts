@@ -9,7 +9,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'lcd')
     if (!name) throw new Error('硬體物件的宣告少了名字')

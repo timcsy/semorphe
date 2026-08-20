@@ -29,7 +29,7 @@ import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors/extract-strategies'
-import { allCppProjections, allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppProjections, allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 
@@ -50,7 +50,7 @@ beforeAll(async () => {
   await setupTestRenderer()
   registerCppLanguage()
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts() as never, allCppProjections() as never)
+  reg.loadFromSplit(allCppComponents() as never, allCppProjections() as never)
   extractor = new PatternExtractor()
   extractor.loadBlockSpecs(reg.getAll())
   registerCppExtractStrategies(extractor)

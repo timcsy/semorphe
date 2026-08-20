@@ -15,7 +15,7 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
 export function registerExecute(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:ultrasonic_trigger', async (node, ctx) => {
     const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))

@@ -6,9 +6,9 @@ import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../../src/core/types'
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 /** Create a fully wired Lifter with PatternLifter + registries for testing */
 export function createTestLifter(): Lifter {
@@ -27,9 +27,9 @@ export function createTestLifter(): Lifter {
   // `toolbox.ts` 的積木來源、以及 `all-declarations.ts` 檔頭記的那兩份）。
   // 元件膠囊接上正式路徑之後它才現形：這裡看不到膠囊，於是
   // 「`vector<int> v = f()` 的初始值被丟掉」——而那正是這個檔頭在講的那個缺陷。
-  const allConcepts = allCppConcepts()
+  const allComponents = allCppComponents()
   const allProjections = allCppProjections()
-  blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
+  blockSpecRegistry.loadFromSplit(allComponents, allProjections)
 
   const pl = new PatternLifter()
   pl.setTransformRegistry(transformRegistry)

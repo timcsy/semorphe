@@ -97,7 +97,7 @@ export function resolvePattern(pattern: string, index: number): string {
  *
  * ## 這份推導**還會被消滅**
  *
- * 它讀 `concept.properties` 去比對積木欄位名，於是**參數宣告驅動了抽取行為**
+ * 它讀 `component.properties` 去比對積木欄位名，於是**參數宣告驅動了抽取行為**
  * ——那是 C1（參數規格化）的卡點。下一步是把推導結果固化成顯式宣告，
  * 之後這個函式就沒有呼叫者了。見 `knowledge/vision.md` 的 C1。
  */

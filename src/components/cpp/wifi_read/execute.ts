@@ -24,7 +24,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 /** `WL_CONNECTED` 在 Arduino 的 WiFi 函式庫裡是 3。 */
 const WL_CONNECTED = 3
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:wifi_read', async (node) => {
     return node.properties.quantity === 'address'
       ? { type: 'string' as const, value: '192.168.1.100' }

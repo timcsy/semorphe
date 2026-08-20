@@ -1,7 +1,7 @@
 {
   "id": "cpp_enum_specifier",
   "astNodeType": "enum_specifier",
-  "concept": {
+  "component": {
     "componentId": "cpp:enum"
   },
   "liftStrategy": "cpp:liftEnum",

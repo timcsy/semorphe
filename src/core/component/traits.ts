@@ -84,7 +84,7 @@ export function isIndexedAccess(componentId: string): boolean {
  * 而沒有元件宣告該性狀時，正確的反應是「這條規則不生效」，
  * 不是「包成一顆猜出來的元件」。
  */
-export function conceptWithTrait(trait: string): string | undefined {
+export function componentWithTrait(trait: string): string | undefined {
   for (const c of registeredComponents()) {
     if ((c.manifest as { traits?: Record<string, unknown> }).traits?.[trait] === true) return c.componentId
   }
@@ -111,8 +111,8 @@ export function isElseIfChainable(componentId: string): boolean {
  *
  * > **核心可以知道「有一個根」，不該知道那個根叫什麼。**
  */
-export function programRootConcept(): string | undefined {
-  return conceptWithTrait('programRoot')
+export function programRootComponent(): string | undefined {
+  return componentWithTrait('programRoot')
 }
 
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
@@ -130,7 +130,7 @@ export function isFunctionDefinition(componentId: string): boolean {
  * ——P9 語言獨立性的字面違反（第三十九條護欄抓到）。
  *
  * `ioRole` ＝ 等價類、`ioStyle` ＝ 哪個成員，那是**一條被宣告出來的等價邊**
- * （見 `concepts/等價與觀察集.md`）。等價邊不屬於任何一個語言。
+ * （見 `components/等價與觀察集.md`）。等價邊不屬於任何一個語言。
  */
 export function ioTraitOf(componentId: string): { role?: string; style?: string } | undefined {
   const t = componentTraits(componentId)
@@ -213,12 +213,12 @@ export function targetProvides(
  * 程式碼，`touchRead` 仍要被認出來，只是他拉不出新的一顆。
  */
 export function filterByTarget(
-  concepts: ReadonlySet<string>,
+  components: ReadonlySet<string>,
   target: { provides?: readonly string[] },
 ): Set<string> {
-  if (target.provides === undefined) return new Set(concepts)
+  if (target.provides === undefined) return new Set(components)
   const out = new Set<string>()
-  for (const id of concepts) {
+  for (const id of components) {
     if (targetProvides(target, capabilityOf(id))) out.add(id)
   }
   return out

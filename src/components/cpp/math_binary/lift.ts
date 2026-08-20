@@ -7,12 +7,12 @@
  * ⚠️ **`max` / `min` 不在這張表裡**——它們是 `<algorithm>` 的，
  * 而執行器的 switch 仍認得（見 `execute.ts`）。
  */
-import { registerCallConcept } from '../../../core/component/call-components'
+import { registerCallComponent } from '../../../core/component/call-components'
 
 const binaryFuncs = ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']
 
 export function registerLift(): void {
-  registerCallConcept(binaryFuncs, {
+  registerCallComponent(binaryFuncs, {
     componentId: 'cpp:math_binary',
     argSlots: ['arg1', 'arg2'],
     funcProp: 'func',

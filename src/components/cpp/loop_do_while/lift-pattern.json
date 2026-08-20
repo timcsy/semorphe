@@ -1,7 +1,7 @@
 {
   "id": "cpp:loop_do_while",
   "astNodeType": "do_statement",
-  "concept": {
+  "component": {
     "componentId": "cpp:loop_do_while"
   },
   "fieldMappings": [

@@ -130,8 +130,8 @@ describe('TemplateGenerator', () => {
   })
 
   describe('fallback', () => {
-    it('should return null for unknown concept', () => {
-      const node = createNode('unknown_concept', { x: '1' })
+    it('should return null for unknown component', () => {
+      const node = createNode('unknown_component', { x: '1' })
       const result = gen.generate(node, { indent: 0, style: defaultStyle })
       expect(result).toBeNull()
     })
@@ -161,7 +161,7 @@ describe('TemplateGenerator', () => {
       // Register template for COND but NOT for INIT or UPDATE
       gen.registerTemplate('cpp:var_ref', { pattern: '${name}', imports: [], order: 20 })
 
-      // Set fallback for concepts without templates
+      // Set fallback for components without templates
       gen.setExpressionFallback((node) => {
         if (node.componentId === 'cpp_increment_expr') {
           return `${node.properties.name}${node.properties.operator}`
@@ -198,7 +198,7 @@ describe('TemplateGenerator', () => {
       expect(result).toBe('f(raw_text_here)')
     })
 
-    it('should show ⟨concept⟩ when no fallback and no rawCode', () => {
+    it('should show ⟨component⟩ when no fallback and no rawCode', () => {
       gen.registerTemplate('parent', {
         pattern: 'f(${CHILD})',
         imports: [],
@@ -235,7 +235,7 @@ describe('TemplateGenerator', () => {
       expect(result).toContain('arr[0] = 1;')
     })
 
-    it('should show ⟨unknown: concept⟩ when body fallback fails', () => {
+    it('should show ⟨unknown: component⟩ when body fallback fails', () => {
       gen.registerTemplate('cpp:loop_while', {
         pattern: 'while (true) {\n${BODY}\n}',
         imports: [],

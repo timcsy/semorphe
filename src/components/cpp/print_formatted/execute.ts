@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { formatPrintf } from '../../../languages/cpp/std/cstdio/executors'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:print_formatted', async (node, ctx) => {
       const format = String(node.properties.format ?? '')
       const argNodes = node.children.args ?? []

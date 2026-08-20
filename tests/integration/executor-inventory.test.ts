@@ -53,9 +53,9 @@ function registeredIn(file: string): string[] {
 }
 
 /** 這個模組的定義檔宣告了哪些概念（含通用層——通用概念可以住在語言核心的執行器裡） */
-function conceptsDeclaredIn(moduleDir: string): Set<string> {
+function componentsDeclaredIn(moduleDir: string): Set<string> {
   const s = new Set<string>()
-  const f = path.join(moduleDir, 'concepts.json')
+  const f = path.join(moduleDir, 'components.json')
   if (fs.existsSync(f)) {
     for (const c of JSON.parse(fs.readFileSync(f, 'utf8')) as { componentId?: string }[]) {
       if (c.componentId) s.add(c.componentId)
@@ -66,11 +66,11 @@ function conceptsDeclaredIn(moduleDir: string): Set<string> {
 
 interface Inventory {
   _meta: { note: string; capturedAt: string }
-  concepts: string[]
+  components: string[]
 }
 
 /** 目前執行引擎認得的所有概念 */
-function currentConcepts(): string[] {
+function currentComponents(): string[] {
   const interp = new SemanticInterpreter({ maxSteps: 1 })
   const reg = (interp as unknown as {
     executorRegistry: { list(): string[] }
@@ -93,8 +93,8 @@ describe('執行器清冊：搬移前後認得的概念必須完全相同', () =
   })
 
   it('★ 集合完全相同——少一個或多一個都要指名', () => {
-    const now = currentConcepts()
-    const base = (JSON.parse(fs.readFileSync(ASSET, 'utf8')) as Inventory).concepts
+    const now = currentComponents()
+    const base = (JSON.parse(fs.readFileSync(ASSET, 'utf8')) as Inventory).components
 
     const lost = base.filter((c) => !now.includes(c))
     const extra = now.filter((c) => !base.includes(c))
@@ -114,7 +114,7 @@ describe('執行器清冊：搬移前後認得的概念必須完全相同', () =
   })
 
   it('清冊不是空的——空的話代表語言套件沒載入，這支測試什麼都沒驗到', () => {
-    expect(currentConcepts().length).toBeGreaterThan(50)
+    expect(currentComponents().length).toBeGreaterThan(50)
   })
 })
 
@@ -122,7 +122,7 @@ describe('落點與宣告一致——清冊比對抓漏失，這條抓錯置', (
   it('★ 每個執行器檔裡的概念，都必須宣告在同一個模組', () => {
     const misplaced: string[] = []
     for (const f of listExecutorFiles()) {
-      const declaredHere = conceptsDeclaredIn(f.moduleDir)
+      const declaredHere = componentsDeclaredIn(f.moduleDir)
       for (const cid of registeredIn(f.file)) {
         if (!declaredHere.has(cid)) misplaced.push(`${cid} 的執行器在 ${f.moduleDir}，但它宣告在別處`)
       }
@@ -140,7 +140,7 @@ if (process.env.GENERATE_INVENTORY) {
   describe('產生清冊', () => {
     it('寫入', () => {
       registerCppLanguage()
-      const concepts = currentConcepts()
+      const components = currentComponents()
       fs.mkdirSync(path.dirname(ASSET), { recursive: true })
       fs.writeFileSync(
         ASSET,
@@ -152,14 +152,14 @@ if (process.env.GENERATE_INVENTORY) {
                 '刻意新增或移除概念時才重新產生，並在 commit 訊息說明。',
               capturedAt: new Date().toISOString().slice(0, 10),
             },
-            concepts,
+            components,
           },
           null,
           2,
         ) + '\n',
         'utf8',
       )
-      expect(concepts.length).toBeGreaterThan(0)
+      expect(components.length).toBeGreaterThan(0)
     })
   })
 }

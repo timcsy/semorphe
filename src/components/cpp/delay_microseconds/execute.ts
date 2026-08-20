@@ -13,7 +13,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:delay_microseconds', async (node, ctx) => {
     const us = ctx.toNumber(await ctx.evaluate((node.children.us ?? [])[0]))
     await sleepMillis(us / 1000)

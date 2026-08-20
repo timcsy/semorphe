@@ -7,8 +7,8 @@
  * 拆開只剩三樣：**方法名、身分、引數槽名**。判別（找 field_expression、
  * 取 obj 與引數）留在共用檔。
  */
-import { registerMethodConcept } from '../../../core/component/method-components'
+import { registerMethodComponent } from '../../../core/component/method-components'
 
 export function registerLift(): void {
-  registerMethodConcept('append', 'cpp:string_append', 'cpp/string_append', ["value"])
+  registerMethodComponent('append', 'cpp:string_append', 'cpp/string_append', ["value"])
 }

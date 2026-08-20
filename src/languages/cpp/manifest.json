@@ -7,7 +7,7 @@
     "language": "cpp"
   },
   "provides": {
-    "concepts": [
+    "components": [
       "./core/components.json"
     ],
     "blocks": [

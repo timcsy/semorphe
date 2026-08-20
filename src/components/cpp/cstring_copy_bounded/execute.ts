@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { writableArray, readCString } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_copy_bounded', async (node, ctx) => {
       const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')
       const n = ctx.toNumber(await ctx.evaluate((node.children.n ?? [])[0]))

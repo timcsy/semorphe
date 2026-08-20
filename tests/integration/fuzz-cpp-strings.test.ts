@@ -13,7 +13,7 @@
  * - Longest common prefix
  * - replaceAll (find + replace)
  *
- * Key concept under test: cpp_string_at (str[i] character access)
+ * Key component under test: cpp_string_at (str[i] character access)
  * - Lift: str[i] degrades to array_access (no dedicated lifter — expected)
  * - Generate: cpp_string_at node → str[i] (tested in unit tests)
  *
@@ -59,12 +59,12 @@ function liftCode(code: string): SemanticNode | null {
   return lifter.lift(tree.rootNode as any)
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result

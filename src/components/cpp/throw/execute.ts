@@ -9,7 +9,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 // 兩顆一起改指真正的那一份——**順手把那個複本消滅掉**。
 import { ThrownSignal } from '../../../interpreter/executors/control-flow'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:throw', async (node, ctx) => {
       const vals = node.children.value ?? []
       const value = vals.length > 0 ? await ctx.evaluate(vals[0]) : 'exception'

@@ -18,7 +18,7 @@
 
 const table = new Map<string, { componentId: string; source: string }>()
 
-export function registerQualifierConcept(qualifier: string, componentId: string, source: string): void {
+export function registerQualifierComponent(qualifier: string, componentId: string, source: string): void {
   const existing = table.get(qualifier)
   if (existing && existing.componentId !== componentId) {
     throw new Error(
@@ -30,6 +30,6 @@ export function registerQualifierConcept(qualifier: string, componentId: string,
 }
 
 /** 修飾詞 → 元件身分。認不得回 `undefined`。 */
-export function qualifierConcept(qualifier: string): string | undefined {
+export function qualifierComponent(qualifier: string): string | undefined {
   return table.get(qualifier)?.componentId
 }

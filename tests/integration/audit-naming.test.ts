@@ -25,7 +25,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
 import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
@@ -33,7 +33,7 @@ import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, S
 type violationKind = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { kind: violationKind; id: string; note: string }
 
-interface concept { componentId: string; properties?: unknown }
+interface component { componentId: string; properties?: unknown }
 
 /**
  * 接收者 = **操作作用在它身上的那個既有物件**。
@@ -48,13 +48,13 @@ interface concept { componentId: string; properties?: unknown }
  * **已知盲點**：單字名的元件（`increment`／`input`）拆不出操作，這裡看不到。
  * 那類會**低報**，不會誤報。
  */
-function receiverParamName(concepts: concept[]): Map<string, string> {
+function receiverParamName(components: component[]): Map<string, string> {
   // ⚠️ **第二段是「種類」的元件沒有接收者**——它是一個東西，不是一個動作。
   // `loop_count` 的 `var_name` 是被創造的迴圈變數，不是被操作的物件。
   // 第一版只排除 `SELF_NAMING_OPERATIONS`，於是 loop 家族改名後全被誤報。
   const ownName = new Set<string>([...SELF_NAMING_OPERATIONS, ...KINDS])
   const out = new Map<string, string>()
-  for (const c of concepts) {
+  for (const c of components) {
     const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
     const op = parseName(bare, SUBJECTS).operation
     // ⚠️ 複合的第二段要看**開頭的操作**——`var_declare_auto` 的操作是 `declare`
@@ -70,10 +70,10 @@ function receiverParamName(concepts: concept[]): Map<string, string> {
   return out
 }
 
-function measure(inject: concept[] = []): Finding[] {
+function measure(inject: component[] = []): Finding[] {
   const out: Finding[] = []
-  const concepts = [...(allCppConcepts() as unknown as concept[]), ...inject]
-  const recv = receiverParamName(concepts)
+  const components = [...(allCppComponents() as unknown as component[]), ...inject]
+  const recv = receiverParamName(components)
   // 第二段可以是**操作**、**種類**、或**操作＋種類**的複合。
   //
   // ⚠️ 複合這一層是必要的：`string_append_char`（加一個字元）與
@@ -98,7 +98,7 @@ function measure(inject: concept[] = []): Finding[] {
     }
   }
 
-  for (const c of concepts) {
+  for (const c of components) {
     const scope = c.componentId.slice(0, c.componentId.indexOf(':'))
     const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
 
@@ -150,7 +150,7 @@ function measure(inject: concept[] = []): Finding[] {
   return out.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id))
 }
 
-const synthetic = (id: string): concept => ({ componentId: id, properties: [] })
+const synthetic = (id: string): component => ({ componentId: id, properties: [] })
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
@@ -183,8 +183,8 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   })
 
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
-    expect(allCppConcepts().length, '登錄表是空的 → 每一項都會是假的零').toBeGreaterThan(150)
-    expect(receiverParamName(allCppConcepts() as unknown as concept[]).size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
+    expect(allCppComponents().length, '登錄表是空的 → 每一項都會是假的零').toBeGreaterThan(150)
+    expect(receiverParamName(allCppComponents() as unknown as component[]).size, '一個接收者都認不出來 → 模板比對壞了').toBeGreaterThan(20)
   })
 })
 
@@ -193,7 +193,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 describe('詞彙表不得長出沒人用的字', () => {
   it('報表：每個宣告的操作詞被幾顆元件用', () => {
     const usage = new Map<string, number>(OPERATIONS.map((o) => [o, 0]))
-    for (const c of allCppConcepts() as unknown as concept[]) {
+    for (const c of allCppComponents() as unknown as component[]) {
       const bare = c.componentId.slice(c.componentId.indexOf(':') + 1)
       const op = parseName(bare, SUBJECTS).operation
       if (op && usage.has(op)) usage.set(op, usage.get(op)! + 1)

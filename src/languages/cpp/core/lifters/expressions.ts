@@ -12,7 +12,7 @@ import { buildAddressOf } from '../../../../components/cpp/address_of/lift'
 import { buildPointerDeref } from '../../../../components/cpp/pointer_deref/lift'
 import { buildIncrement } from '../../../../components/cpp/increment/lift'
 import { buildCommaExpr } from '../../../../components/cpp/comma_expr/lift'
-import { binaryOperatorConcept } from '../../../../core/component/binary-operators'
+import { binaryOperatorComponent } from '../../../../core/component/binary-operators'
 import { isBinaryOperator } from '../node-traits'
 import { buildEndl } from '../../../../components/cpp/endl/lift'
 import { buildArrayAt } from '../../../../components/cpp/array_at/lift'
@@ -25,7 +25,7 @@ import { declareAggregateShape } from '../../../../core/component/aggregate-node
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
 
 // ⚠️ 這裡原本有三組運算子集合（ARITHMETIC／COMPARE／LOGIC）＋ 一行
-// `else concept = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
+// `else component = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
 // **每一個符號由它自己的元件認領**，兜底也變成一句顯式宣告。
 
 // ─── 字串型別推斷（供 subscript_expression lifter 使用） ──────────────────────
@@ -166,10 +166,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
 
     // **哪個符號屬於哪顆元件由膠囊登錄**（`core/component/binary-operators.ts`）。
     // 認不得的運算子走顯式登錄的兜底——那也是一顆元件的宣告，不是這裡的預設值。
-    const concept = binaryOperatorConcept(op)
-    if (!concept) return null
+    const component = binaryOperatorComponent(op)
+    if (!component) return null
 
-    return createNode(concept, { operator: op }, {
+    return createNode(component, { operator: op }, {
       left: left ? [left] : [],
       right: right ? [right] : [],
     })

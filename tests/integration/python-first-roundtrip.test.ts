@@ -53,18 +53,18 @@ beforeAll(async () => {
   })
 })
 
-function conceptsIn(n: SemanticNode, out: string[] = []): string[] {
+function componentsIn(n: SemanticNode, out: string[] = []): string[] {
   out.push(n.componentId)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) conceptsIn(k, out)
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) componentsIn(k, out)
   return out
 }
 
 /** 找出那顆 `python:print`——⚠️ **不要拿整棵樹去產出**，見下一段。 */
-function findConcept(n: SemanticNode, id: string): SemanticNode | null {
+function findComponent(n: SemanticNode, id: string): SemanticNode | null {
   if (n.componentId === id) return n
   for (const kids of Object.values(n.children ?? {})) {
     for (const k of kids as SemanticNode[]) {
-      const hit = findConcept(k, id)
+      const hit = findComponent(k, id)
       if (hit) return hit
     }
   }
@@ -81,7 +81,7 @@ describe('spec 157 · Python 的第一趟行為證據', () => {
   it('🔴 `print("hi")` lift 出 `python:print`', () => {
     const tree = lifter.lift(pyParser.parse('print("hi")').rootNode as never)
     expect(tree, 'lift 回了 null').not.toBeNull()
-    expect(conceptsIn(tree!),
+    expect(componentsIn(tree!),
       'Python 的 print 沒有被辨識——⚠️ 而 spec 156 那筆 `patternType: "named-call"` '
       + '就是這樣被靜靜忽略的').toContain('python:print')
   })
@@ -93,7 +93,7 @@ describe('spec 157 · Python 的第一趟行為證據', () => {
     // > **「會報」與「不亂報」是兩個方向，而只釘一個方向的護欄，
     // > 一個「什麼都認」的樣式也能通過。**
     const tree = lifter.lift(pyParser.parse('foo("hi")').rootNode as never)!
-    expect(conceptsIn(tree), 'foo(...) 也被認成 print → 樣式的 constraints 沒生效')
+    expect(componentsIn(tree), 'foo(...) 也被認成 print → 樣式的 constraints 沒生效')
       .not.toContain('python:print')
   })
 
@@ -106,7 +106,7 @@ describe('spec 157 · Python 的第一趟行為證據', () => {
     //
     // > **一個因為錯誤理由而給出正確結果的護欄，看起來與健康的完全一樣。**
     const tree = lifter.lift(pyParser.parse('print("hi")').rootNode as never)!
-    const node = findConcept(tree, 'python:print')
+    const node = findComponent(tree, 'python:print')
     expect(node, '樹裡沒有 python:print').not.toBeNull()
     expect(node!.children.values?.length,
       '引數沒有被收進 `values` → `fieldMappings` 沒生效').toBe(1)
@@ -114,7 +114,7 @@ describe('spec 157 · Python 的第一趟行為證據', () => {
 
   it('🔴 產回去一字不差——而且是【那顆節點】產的', () => {
     const tree = lifter.lift(pyParser.parse('print("hi")').rootNode as never)!
-    const node = findConcept(tree, 'python:print')!
+    const node = findComponent(tree, 'python:print')!
     const out = generateCode(node, 'python', googleStyle as unknown as StylePreset)
     expect(out.trim(), `產出對不上：${JSON.stringify(out)}`).toBe('print("hi")')
   })

@@ -16,22 +16,22 @@ import { createNode } from '../../src/core/semantic-tree'
 import type { BlockSpec, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 // Build allSpecs eagerly at module level (needed for describe-time iteration)
 const _registry = new BlockSpecRegistry()
-const _allConcepts = allCppConcepts()
+const _allComponents = allCppComponents()
 const _allProjections = allCppProjections()
-_registry.loadFromSplit(_allConcepts, _allProjections)
+_registry.loadFromSplit(_allComponents, _allProjections)
 const allSpecs: BlockSpec[] = _registry.getAll()
 
 let renderer: PatternRenderer
@@ -56,18 +56,18 @@ beforeAll(() => {
 
 /**
  * Build a minimal SemanticNode with dummy values for all properties and children
- * based on the block's concept definition.
+ * based on the block's component definition.
  */
 function buildDummyNode(spec: BlockSpec) {
-  const concept = spec.componentMapping!
+  const component = spec.componentMapping!
   const props: Record<string, string> = {}
   const children: Record<string, any[]> = {}
 
-  for (const prop of concept.properties ?? []) {
+  for (const prop of component.properties ?? []) {
     props[prop] = 'test'
   }
 
-  const childDefs = concept.children ?? {}
+  const childDefs = component.children ?? {}
   // children can be array of objects or a plain object
   if (Array.isArray(childDefs)) {
     for (const childObj of childDefs) {
@@ -89,17 +89,17 @@ function buildDummyNode(spec: BlockSpec) {
     }
   }
 
-  return createNode(concept.componentId, props, children)
+  return createNode(component.componentId, props, children)
 }
 
 describe('Full Roundtrip — All 68 Blocks', () => {
-  // Skip blocks that are raw/unresolved (no real concept mapping)
-  const skipConcepts = new Set(['cpp:raw_code', 'cpp:raw_expression'])
+  // Skip blocks that are raw/unresolved (no real component mapping)
+  const skipComponents = new Set(['cpp:raw_code', 'cpp:raw_expression'])
 
-  describe('Render coverage: every concept renders to correct block type', () => {
+  describe('Render coverage: every component renders to correct block type', () => {
     for (const spec of allSpecs) {
       const componentId = spec.componentMapping?.componentId
-      if (!componentId || skipConcepts.has(componentId)) continue
+      if (!componentId || skipComponents.has(componentId)) continue
 
       const blockType = (spec.blockDef as any).type
       const form = (spec as { form?: { axis: string; value: string } }).form
@@ -122,7 +122,7 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         // 位置由呼叫端說，運算式位置走 `renderExpression`（另有測試驗）。
         if (form && form.axis !== 'role') sem.properties[form.axis] = form.value
         const block = renderer.render(sem)
-        expect(block, `Failed to render concept '${componentId}'`).not.toBeNull()
+        expect(block, `Failed to render component '${componentId}'`).not.toBeNull()
         if (form?.axis === 'role') {
           // 只驗「渲染得出來、而且是這個身分宣告過的某個形態」
           const allForms = allSpecs
@@ -136,10 +136,10 @@ describe('Full Roundtrip — All 68 Blocks', () => {
     }
   })
 
-  describe('Extract coverage: every block extracts to correct concept', () => {
+  describe('Extract coverage: every block extracts to correct component', () => {
     for (const spec of allSpecs) {
       const componentId = spec.componentMapping?.componentId
-      if (!componentId || skipConcepts.has(componentId)) continue
+      if (!componentId || skipComponents.has(componentId)) continue
 
       const blockType = (spec.blockDef as any).type
 
@@ -155,10 +155,10 @@ describe('Full Roundtrip — All 68 Blocks', () => {
     }
   })
 
-  describe('Code generation coverage: every concept generates code', () => {
+  describe('Code generation coverage: every component generates code', () => {
     for (const spec of allSpecs) {
       const componentId = spec.componentMapping?.componentId
-      if (!componentId || skipConcepts.has(componentId)) continue
+      if (!componentId || skipComponents.has(componentId)) continue
       if (!spec.codeTemplate?.pattern) continue // skip blocks without templates
 
       it(`${componentId} generates code`, () => {

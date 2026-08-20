@@ -136,7 +136,7 @@ export function resetComponentCache(): void {
   cache = null
 }
 
-/** 膠囊宣告的概念定義（形狀與 `concepts.json` 的一筆相同，因為它就是那一筆）。 */
+/** 膠囊宣告的概念定義（形狀與 `components.json` 的一筆相同，因為它就是那一筆）。 */
 export function componentManifests(): ComponentManifest[] {
   return registeredComponents().map((c) => c.manifest)
 }
@@ -160,8 +160,8 @@ const FORMS = import.meta.glob('/src/components/*/*/forms/blocks.json', { eager:
   { default: unknown[] }
 >
 
-/** 元件宣告的概念定義。形狀與 `concepts.json` 的一筆相同，因為它就是那一筆。 */
-export function componentConcepts(): ComponentManifest[] {
+/** 元件宣告的概念定義。形狀與 `components.json` 的一筆相同，因為它就是那一筆。 */
+export function componentComponents(): ComponentManifest[] {
   return registeredComponents().map((c) => c.manifest)
 }
 
@@ -221,7 +221,7 @@ export function componentBlocksNotIn(handled: readonly (string | null)[]): unkno
 }
 
 /** `componentId` → 依賴（C++ 是標頭檔）。給 `#include` 解析用。 */
-export function componentConceptMappings(): [componentId: string, header: string][] {
+export function componentComponentMappings(): [componentId: string, header: string][] {
   return registeredComponents().flatMap((c) =>
     (c.manifest.requires ?? []).map((h) => [c.componentId, h] as [string, string]),
   )

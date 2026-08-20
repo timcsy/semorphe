@@ -5,7 +5,7 @@
       {
         "id": "L0",
         "label": "L0: 基礎",
-        "concepts": [
+        "components": [
           "cpp:print",
           "cpp:endl",
           "cpp:input",
@@ -30,7 +30,7 @@
       {
         "id": "L1a",
         "label": "L1a: 函式與迴圈",
-        "concepts": [
+        "components": [
           "cpp:func_def",
           "cpp:func_call",
           "cpp:return",
@@ -57,7 +57,7 @@
       {
         "id": "L2a",
         "label": "L2a: 陣列與字串",
-        "concepts": [
+        "components": [
           "cpp:array_declare",
           "cpp:initializer_list",
           "cpp:array_at",
@@ -103,7 +103,7 @@
       {
         "id": "L3a",
         "label": "L3a: STL 容器操作",
-        "concepts": [
+        "components": [
           "cpp:container_empty",
           "cpp:container_push",
           "cpp:container_pop",
@@ -136,7 +136,7 @@
       {
         "id": "L1b",
         "label": "L1b: 控制流進階",
-        "concepts": [
+        "components": [
           "cpp:switch",
           "cpp:case",
           "cpp:default",
@@ -160,7 +160,7 @@
       {
         "id": "L2b",
         "label": "L2b: 指標與記憶體",
-        "concepts": [
+        "components": [
           "cpp:pointer_declare",
           "cpp:pointer_deref",
           "cpp:pointer_assign",
@@ -181,7 +181,7 @@
       {
         "id": "L2c",
         "label": "L2c: 結構與類別",
-        "concepts": [
+        "components": [
           "cpp:struct_declare",
           "cpp:struct_at_member",
           "cpp:struct_at_ptr",
@@ -204,7 +204,7 @@
       {
         "id": "L3b",
         "label": "L3b: OOP 進階",
-        "concepts": [
+        "components": [
           "cpp:method_virtual",
           "cpp:method_virtual_pure",
           "cpp:method_override",
@@ -217,7 +217,7 @@
       {
         "id": "L3c",
         "label": "L3c: 例外與進階",
-        "concepts": [
+        "components": [
           "cpp:try_catch",
           "cpp:throw",
           "cpp:cast_static",
@@ -234,7 +234,7 @@
       {
         "id": "L1c",
         "label": "L1c: 型別系統",
-        "concepts": [
+        "components": [
           "cpp:var_declare_const",
           "cpp:var_declare_constexpr",
           "cpp:var_declare_auto",
@@ -250,7 +250,7 @@
       {
         "id": "L0",
         "label": "L0: 基礎 + I/O",
-        "concepts": [
+        "components": [
           "cpp:print_formatted",
           "cpp:input_formatted",
           "cpp:print",
@@ -279,7 +279,7 @@
       {
         "id": "L1a",
         "label": "L1a: 陣列與排序",
-        "concepts": [
+        "components": [
           "cpp:array_declare",
           "cpp:initializer_list",
           "cpp:array_at",
@@ -312,7 +312,7 @@
       {
         "id": "L2a",
         "label": "L2a: STL 容器",
-        "concepts": [
+        "components": [
           "cpp:container_empty",
           "cpp:container_push",
           "cpp:container_pop",
@@ -388,7 +388,7 @@
       {
         "id": "L1b",
         "label": "L1b: 進階控制流",
-        "concepts": [
+        "components": [
           "cpp:switch",
           "cpp:case",
           "cpp:default",
@@ -417,7 +417,7 @@
       {
         "id": "L2b",
         "label": "L2b: 指標與結構",
-        "concepts": [
+        "components": [
           "cpp:pointer_declare",
           "cpp:pointer_deref",
           "cpp:pointer_assign",

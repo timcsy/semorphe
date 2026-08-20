@@ -30,7 +30,7 @@ describe('createNode', () => {
     expect(node.children.initializer[0]).toBe(child)
   })
 
-  it('should create language-specific concept nodes', () => {
+  it('should create language-specific component nodes', () => {
     const node = createNode('cpp:include', { header: 'iostream' })
     expect(node.componentId).toBe('cpp:include')
     expect(node.properties.header).toBe('iostream')
@@ -50,7 +50,7 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(true)
   })
 
-  it('should return false for different concepts', () => {
+  it('should return false for different components', () => {
     const a = createNode('cpp:literal_number', { value: '42' })
     const b = createNode('cpp:literal_string', { value: '42' })
     expect(nodeEquals(a, b)).toBe(false)

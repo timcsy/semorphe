@@ -47,7 +47,7 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
@@ -58,7 +58,7 @@ type shape = '漏宣告' | '投影提示' | '動態編號'
 
 interface hits {
   key: string
-  concept: string
+  component: string
   props: string
   count: number
   shape: shape
@@ -78,7 +78,7 @@ interface Baseline {
  * ⚠️ 分不出來的歸「漏宣告」（最嚴格的那一桶），**不歸進不進棘輪的那兩桶**
  * ——`build-guardrail` 第 5 步：判不出來不計入安全。
  */
-export function classifyProp(concept: string, props: string): shape {
+export function classifyProp(component: string, props: string): shape {
   // 動態編號：`param_0_name`、`param_1_desc`——`N` 是變動的，靜態表裝不下
   if (/_\d+(_|$)/.test(props)) return '動態編號'
   // 投影提示：只影響「怎麼畫」，同一棵樹在別的投影下不需要它
@@ -99,7 +99,7 @@ beforeAll(async () => {
 
 function declTable(): Map<string, Set<string>> {
   const m = new Map<string, Set<string>>()
-  for (const c of allCppConcepts() as unknown as { componentId: string; properties?: ({ name: string } | string)[] }[]) {
+  for (const c of allCppComponents() as unknown as { componentId: string; properties?: ({ name: string } | string)[] }[]) {
     m.set(c.componentId, new Set((c.properties ?? []).map((x) => (typeof x === 'string' ? x : x.name))))
   }
   return m
@@ -141,7 +141,7 @@ function measure(corpus: readonly string[]): result {
         const key = `${n.componentId}.${k}`
         const old = acc.get(key)
         if (old) old.count++
-        else acc.set(key, { key, concept: n.componentId, props: k, count: 1, shape: classifyProp(n.componentId, k) })
+        else acc.set(key, { key, component: n.componentId, props: k, count: 1, shape: classifyProp(n.componentId, k) })
       }
     }
     for (const ks of Object.values(n.children ?? {})) for (const c of ks) walk(c)

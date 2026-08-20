@@ -11,7 +11,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_remap', async (node, ctx) => {
     const at = async (slot: string): Promise<number> =>
       ctx.toNumber(await ctx.evaluate((node.children[slot] ?? [])[0]))

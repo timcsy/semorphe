@@ -1,7 +1,7 @@
 /**
  * Style Exception Detection & Conversion
  *
- * After code→blocks lifting, scans the semantic tree for concepts that
+ * After code→blocks lifting, scans the semantic tree for components that
  * don't match the current coding style. If alternatives exist (can be lifted),
  * offers the user the option to convert.
  */
@@ -235,7 +235,7 @@ const IO_MODULE_HEADERS = new Set(['<iostream>', '<cstdio>'])
 /**
  * Scan a semantic tree for style exceptions.
  * When a ModuleRegistry is provided, uses module-based borrowing detection:
- * if a concept belongs to a non-preferred I/O module, it's flagged as a borrowing.
+ * if a component belongs to a non-preferred I/O module, it's flagged as a borrowing.
  */
 export function detectStyleExceptions(
   root: SemanticNode,
@@ -290,18 +290,18 @@ function walkTree(
 
   // If no hardcoded rule matched and we have a registry, try module-based detection
   if (!matched && registry) {
-    const header = registry.getHeaderForConcept(node.componentId)
+    const header = registry.getHeaderForComponent(node.componentId)
     if (header && IO_MODULE_HEADERS.has(header)) {
       const preferredHeader = IO_PREF_TO_HEADER[style.ioPreference]
       if (preferredHeader && header !== preferredHeader) {
-        // Concept belongs to non-preferred I/O module — borrowing detected
+        // Component belongs to non-preferred I/O module — borrowing detected
         // Find matching hardcoded rule for conversion (should already exist above,
-        // but this catches any new concepts added to modules without explicit rules)
+        // but this catches any new components added to modules without explicit rules)
         exceptions.push({
           node,
           label: `${node.componentId} (${header})`,
           suggestion: `use ${preferredHeader} equivalent`,
-          convert: () => [node], // No auto-conversion for unknown concepts
+          convert: () => [node], // No auto-conversion for unknown components
         })
       }
     }

@@ -81,7 +81,7 @@ describe('Style Switching — same semantic tree, different code output', () => 
     expect(compCode).toContain('printf')
   })
 
-  it('should generate cout vs printf for universal print concept', () => {
+  it('should generate cout vs printf for universal print component', () => {
     const tree = liftCode('cout << x;')
     expect(tree).not.toBeNull()
 

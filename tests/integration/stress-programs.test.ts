@@ -987,7 +987,7 @@ describe('Cross-style Code Generation', () => {
         return 0;
       }
     `, printfStyle)
-    // print concept should generate printf in printf style
+    // print component should generate printf in printf style
     expect(code).toContain('printf')
     expect(code).not.toContain('cout')
   })
@@ -1002,7 +1002,7 @@ describe('Cross-style Code Generation', () => {
         return 0;
       }
     `, coutStyle)
-    // cpp_printf concept has its own generator, preserves printf
+    // cpp_printf component has its own generator, preserves printf
     // (lossless lift means it stays as cpp_printf)
     expect(code).toContain('printf')
   })

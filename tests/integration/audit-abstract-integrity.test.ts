@@ -9,7 +9,7 @@
  * ```
  * findAbstract(id) {
  *   if (!concrete?.abstractComponent) return undefined   // 沒有宣告
- *   return this.concepts.get(concrete.abstractComponent) // 指不到 → 也是 undefined
+ *   return this.components.get(concrete.abstractComponent) // 指不到 → 也是 undefined
  * }
  * ```
  *

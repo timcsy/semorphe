@@ -19,7 +19,7 @@
         {
           "countSource": "paramCount",
           "childSlot": "params",
-          "childConcept": "param_decl",
+          "childComponent": "param_decl",
           "childFields": {
             "TYPE_{i}": "type",
             "PARAM_{i}": "name"

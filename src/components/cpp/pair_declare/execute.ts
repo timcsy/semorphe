@@ -13,7 +13,7 @@
  * > **一個假的「顯式的空」比一個誠實的遺漏危險：
  * > 完備性護欄看到它會變綠，而缺陷還在。**
  *
- * 這是 `concepts/執行機構.md` 那一串的又一個形狀——**殼有了一張合格證**。
+ * 這是 `components/執行機構.md` 那一串的又一個形狀——**殼有了一張合格證**。
  *
  * ## pair 就是一個只有兩個欄位的結構
  *
@@ -28,7 +28,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 /** `pair` 的欄位名是語言定的，不是我們取的。 */
 const FIELDS = ['first', 'second'] as const
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pair_declare', async (node, ctx) => {
     const name = String(node.properties.name ?? 'p')
 

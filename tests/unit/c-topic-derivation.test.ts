@@ -106,10 +106,10 @@ function libraryLevelExclusions(): Set<string> {
   return out
 }
 
-function conceptsOf(root: LevelNode): Set<string> {
+function componentsOf(root: LevelNode): Set<string> {
   const out = new Set<string>()
   const walk = (n: LevelNode): void => {
-    for (const c of n.concepts) out.add(c)
+    for (const c of n.components) out.add(c)
     for (const k of n.children) walk(k)
   }
   walk(root)
@@ -126,8 +126,8 @@ function shapeOf(root: LevelNode): string[] {
   return out
 }
 
-const CPP = conceptsOf((cppBeginner as { levelTree: LevelNode }).levelTree)
-const C = conceptsOf((cBeginner as { levelTree: LevelNode }).levelTree)
+const CPP = componentsOf((cppBeginner as { levelTree: LevelNode }).levelTree)
+const C = componentsOf((cBeginner as { levelTree: LevelNode }).levelTree)
 
 describe('C 課程清單的推導', () => {
   it('★ 入口條件：兩份清單都真的載入了（合成量）', () => {

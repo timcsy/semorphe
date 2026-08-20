@@ -7,29 +7,29 @@ import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
-import { getVisibleConcepts } from '../../../src/core/level-tree'
+import { getVisibleComponents } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
-import { universalConcepts, universalBlocks } from '../../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
 import { loadToolbox } from '../../helpers/toolbox'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 import { ioTraitOf } from '../../../src/languages/cpp/core/node-traits'
 
 const topic = cppBeginnerTopic as Topic
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  const allConcepts = allCppConcepts()
+  const allComponents = allCppComponents()
   const allProjections = allCppProjections()
-  reg.loadFromSplit(allConcepts, allProjections)
+  reg.loadFromSplit(allComponents, allProjections)
   return reg
 }
 
@@ -69,10 +69,10 @@ describe('C++ toolbox categories (language module)', () => {
   // 改成走 `buildToolbox` 的真實路徑。
   function ioContents(pref: 'iostream' | 'cstdio'): string[] {
     const reg = createRegistry()
-    const visible = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const visible = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
     const tb = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: visible,
+      visibleComponents: visible,
       ioPreference: pref,
       msgs: {},
       categoryColors: CATEGORY_COLORS,
@@ -139,10 +139,10 @@ describe('C++ toolbox categories (language module)', () => {
 
   it('buildToolbox accepts external categoryDefs', () => {
     const reg = createRegistry()
-    const allConcepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const allComponents = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: allConcepts,
+      visibleComponents: allComponents,
       ioPreference: 'iostream',
       msgs: {},
       categoryColors: CATEGORY_COLORS,

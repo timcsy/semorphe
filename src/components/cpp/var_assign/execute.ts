@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { setMember } from '../../../interpreter/executors/variables'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_assign', async (node, ctx) => {
       const name = String(node.properties.obj)
       const valueNodes = node.children.value

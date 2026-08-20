@@ -21,7 +21,7 @@
  *
  * > **不要讓核心認得某一類節點，讓核心不要弄丟任何節點。**
  *
- * 未知概念的標記改成帶著內容出來（`⟨unknown concept: cpp:comment | 文字⟩`），
+ * 未知概念的標記改成帶著內容出來（`⟨unknown component: cpp:comment | 文字⟩`），
  * 於是「註解怎麼寫」可以完全屬於語言——**而註解本來就是每個語言各自的機制**。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'

@@ -15,7 +15,7 @@ import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const execFuncCall: ComponentExecutor = async (node, ctx) => {
     const name = String(node.properties.name)
 

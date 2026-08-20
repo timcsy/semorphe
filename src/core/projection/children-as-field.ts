@@ -40,7 +40,7 @@ export interface ChildrenAsField {
   /** 語義接點名，例如 `params` */
   childSlot: string
   /** 子節點的概念身分，例如 `param_decl` */
-  childConcept: string
+  childComponent: string
   /**
    * 每個子節點怎麼寫成文字：屬性名的順序。
    *
@@ -125,6 +125,6 @@ export function parseToChildren(text: string, spec: ChildrenAsField): SemanticNo
       props[spec.parts[0]] = item
       for (let i = 1; i < n; i++) props[spec.parts[i]] = ''
     }
-    return createNode(spec.childConcept, props)
+    return createNode(spec.childComponent, props)
   })
 }

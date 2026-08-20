@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest'
 import { serializeChildren, parseToChildren, splitTopLevel } from '../../src/core/projection/children-as-field'
 import { createNode } from '../../src/core/semantic-tree'
 
-const spec = { field: 'PARAMS', childSlot: 'params', childConcept: 'param_decl', parts: ['type', 'name'] }
+const spec = { field: 'PARAMS', childSlot: 'params', childComponent: 'param_decl', parts: ['type', 'name'] }
 const p = (type: string, name: string) => createNode('param_decl', { type, name })
 
 describe('splitTopLevel：深度感知的分割', () => {

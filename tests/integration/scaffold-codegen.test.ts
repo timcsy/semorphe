@@ -197,7 +197,7 @@ describe('Auto-include across cognitive levels', () => {
     expect(matches).toHaveLength(1)
   })
 
-  it('L0: multiple concepts should auto-include all required headers', () => {
+  it('L0: multiple components should auto-include all required headers', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] }),

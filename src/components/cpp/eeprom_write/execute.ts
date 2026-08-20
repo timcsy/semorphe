@@ -8,7 +8,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { eepromOf, requireAddress } from '../../../languages/cpp/core/runtime/arduino-devices'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:eeprom_write', async (node, ctx) => {
     const addr = requireAddress(ctx.toNumber(await ctx.evaluate((node.children.address ?? [])[0])))
     const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))

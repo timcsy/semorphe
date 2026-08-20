@@ -2,17 +2,17 @@ import type { ComponentDef, ComponentDefJSON } from './types'
 import { paramNames } from './param-spec'
 
 export class ComponentRegistry {
-  private concepts = new Map<string, ComponentDef>()
+  private components = new Map<string, ComponentDef>()
 
   register(def: ComponentDef): void {
-    if (this.concepts.has(def.id)) {
-      throw new Error(`Concept '${def.id}' is already registered`)
+    if (this.components.has(def.id)) {
+      throw new Error(`Component '${def.id}' is already registered`)
     }
-    this.concepts.set(def.id, def)
+    this.components.set(def.id, def)
   }
 
   get(id: string): ComponentDef | undefined {
-    return this.concepts.get(id)
+    return this.components.get(id)
   }
 
   /**
@@ -21,30 +21,30 @@ export class ComponentRegistry {
    *
    * 沒有刪掉，是因為 `layer` 該不該存在是一個**還開著的設計題**：
    * 它是一份被放在內涵位置（宣告）的**外延主張**（「任何語言都滿足得了」），
-   * 而 `concepts/等價與觀察集.md` 說外延該是**導出的**，不是宣告的。
+   * 而 `components/等價與觀察集.md` 說外延該是**導出的**，不是宣告的。
    * 導出它需要跨語言的等價邊，而今天只有一個語言。
    *
    * → 見 `draft/2026-08-11-universal是一份還沒被驗證的外延主張.md`
    */
 
   findAbstract(concreteId: string): ComponentDef | undefined {
-    const concrete = this.concepts.get(concreteId)
+    const concrete = this.components.get(concreteId)
     if (!concrete?.abstractComponent) return undefined
-    return this.concepts.get(concrete.abstractComponent)
+    return this.components.get(concrete.abstractComponent)
   }
 
   listAll(): ComponentDef[] {
-    return [...this.concepts.values()]
+    return [...this.components.values()]
   }
 
-  /** Register or update a concept (overwrites if already exists) */
+  /** Register or update a component (overwrites if already exists) */
   registerOrUpdate(def: ComponentDef): void {
-    this.concepts.set(def.id, def)
+    this.components.set(def.id, def)
   }
 
-  /** Batch load from concepts.json format */
-  loadFromJSON(concepts: ComponentDefJSON[]): void {
-    for (const c of concepts) {
+  /** Batch load from components.json format */
+  loadFromJSON(components: ComponentDefJSON[]): void {
+    for (const c of components) {
       this.registerOrUpdate({
         id: c.componentId,
         abstractComponent: c.abstractComponent ?? undefined,
@@ -55,9 +55,9 @@ export class ComponentRegistry {
     }
   }
 
-  /** Query an annotation value for a concept */
+  /** Query an annotation value for a component */
   getAnnotation(componentId: string, key: string): unknown {
-    const def = this.concepts.get(componentId)
+    const def = this.components.get(componentId)
     return def?.annotations?.[key]
   }
 }

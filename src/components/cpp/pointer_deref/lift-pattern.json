@@ -1,7 +1,7 @@
 {
   "id": "cpp_pointer_deref_ptr",
   "astNodeType": "pointer_expression",
-  "concept": {
+  "component": {
     "componentId": "cpp:pointer_deref"
   },
   "constraints": [

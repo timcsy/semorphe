@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { getMember } from '../../../interpreter/executors/variables'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /** `p->x` */
     register('cpp:struct_at_ptr', async (node, ctx) => {
       const ptrName = String(node.properties.obj)

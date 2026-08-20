@@ -350,7 +350,7 @@ export { ioTraitOf, isPlainDeclaration } from '../../../core/component/traits'
  * ⚠️ 找不到回 `undefined`——**不猜**。找不到的意思是那個風格還沒有人實作，
  * 而猜一個會讓風格轉換產出一顆不存在的元件。
  */
-export function ioConceptFor(role: string, style: string): string | undefined {
+export function ioComponentFor(role: string, style: string): string | undefined {
   for (const id of allIdentities()) {
     const t = traits(id)
     if (t?.ioRole === role && t?.ioStyle === style) return id

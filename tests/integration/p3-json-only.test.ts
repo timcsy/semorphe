@@ -17,17 +17,17 @@ import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjec
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
-// Import split concept/projection JSON files
-import { universalConcepts } from '../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+// Import split component/projection JSON files
+import { universalComponents } from '../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import { componentGenerateRegistrars } from '../../src/core/component/paths'
 
@@ -69,8 +69,8 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
-    const allConcepts = allCppConcepts()
-    registry.loadFromSplit(allConcepts, allCppProjections())
+    const allComponents = allCppComponents()
+    registry.loadFromSplit(allComponents, allCppProjections())
     const specs = registry.getAll()
     lifter.loadBlockSpecs(specs)
     // `lift-patterns.json` **也是 JSON**——這支測試驗的是「不寫程式碼就能加
@@ -123,7 +123,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     for (const reg of componentGenerateRegistrars())
       (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
       // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，
-      // 而這裡只裝共用的那一批——症狀是 `⟨unknown concept: cpp:increment⟩`，
+      // 而這裡只裝共用的那一批——症狀是 `⟨unknown component: cpp:increment⟩`，
       // 看起來像產生器不見了。第三十七條護欄講的是宣告那一維，
       // **產生器這一維是同一個病。**
       for (const reg of componentGenerateRegistrars())

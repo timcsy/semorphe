@@ -73,7 +73,7 @@ export interface SemanticUpdateEvent {
  * | Error | `error` | — |
  *
  * ⚠️ **詞彙是封閉的**——三個值。第四個值出現時要先問「它是不是一個新的 `status`」，
- * 而不是順手加進來（`concepts/執行機構.md:263` 的同一條：
+ * 而不是順手加進來（`components/執行機構.md:263` 的同一條：
  * 「宣告需要門檻……第三個值就是在替『還沒做』找一個體面的名字」）。
  */
 /**

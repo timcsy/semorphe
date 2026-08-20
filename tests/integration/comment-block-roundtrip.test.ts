@@ -21,12 +21,12 @@ import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { createNode } from '../../src/core/semantic-tree'
 
 function pipeline(): { render: PatternRenderer; extract: PatternExtractor } {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts(), allCppProjections())
+  reg.loadFromSplit(allCppComponents(), allCppProjections())
   const specs = reg.getAll()
   const render = new PatternRenderer()
   const extract = new PatternExtractor()

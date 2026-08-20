@@ -6,7 +6,7 @@
  * These tests verify:
  * 1. Lift→Generate stability (code is stable after round-trip even as array_access)
  * 2. Generate-only: SemanticNode with cpp_string_at generates correct subscript code
- * 3. Concept identity: lifting str[i] produces array_access (DEGRADED, expected)
+ * 3. Component identity: lifting str[i] produces array_access (DEGRADED, expected)
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -55,7 +55,7 @@ function roundTrip(code: string): string {
   return generateCode(sem!, 'cpp', style)
 }
 
-function findConcepts(node: SemanticNode, target: string): SemanticNode[] {
+function findComponents(node: SemanticNode, target: string): SemanticNode[] {
   const result: SemanticNode[] = []
   function walk(n: SemanticNode) {
     if (!n) return
@@ -189,9 +189,9 @@ int main() {
   })
 })
 
-// ─── Concept identity (DEGRADED, expected) ───────────────────────────────────
+// ─── Component identity (DEGRADED, expected) ───────────────────────────────────
 
-describe('cpp_string_at concept identity', () => {
+describe('cpp_string_at component identity', () => {
   it('t09: str[i] correctly lifts as cpp_string_at when variable is declared as string', () => {
     // AST-based type inference: walk up scopes to find the declaration of `word`,
     // confirm it's a string, and lift subscript_expression as cpp_string_at.
@@ -204,11 +204,11 @@ int main() {
 }`
     const sem = liftCode(code)
     expect(sem).not.toBeNull()
-    const stringAtNodes = findConcepts(sem!, 'cpp:string_at')
+    const stringAtNodes = findComponents(sem!, 'cpp:string_at')
     expect(stringAtNodes.length).toBeGreaterThan(0)
     expect(stringAtNodes[0].properties.obj).toBe('word')
     // Should NOT degrade to array_access for string variables
-    const arrayAccessNodes = findConcepts(sem!, 'cpp:array_at')
+    const arrayAccessNodes = findComponents(sem!, 'cpp:array_at')
     expect(arrayAccessNodes).toHaveLength(0)
   })
 

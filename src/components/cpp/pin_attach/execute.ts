@@ -30,7 +30,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:pin_attach', async (node, ctx) => {
     // ⚠️ **這裡刻意沒有 `?? 預設值`**——參數規格一致性護欄在看：

@@ -457,7 +457,7 @@ describe('Interpreter - edge cases', () => {
   // 概念名從冒號式改為底線式；冒號版在 src/ 已無任何地方產生，因此不再被
   // 當成「刻意不執行」——沒有註冊過的概念就是未知概念，那是對的。
   // 見 specs/053-declare-noop-execute/classification.md 的死條目。
-  it('should skip language-specific concepts', async () => {
+  it('should skip language-specific components', async () => {
     const interp = await run([
       createNode('cpp:include' as any, { header: 'iostream' }, {}),
       createNode('cpp:using_namespace' as any, { namespace: 'std' }, {}),
@@ -1033,7 +1033,7 @@ describe('Interpreter - more edge cases', () => {
   })
 })
 
-describe('Interpreter - expression concepts in for-loop', () => {
+describe('Interpreter - expression components in for-loop', () => {
   it('should handle var_declare_expr in for-loop init', async () => {
     // for (int i = 0; i < 3; i++) { print i }
     const interp = await run([

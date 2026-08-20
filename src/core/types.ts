@@ -2,17 +2,17 @@
 
 export type PropertyValue = string | number | boolean | string[]
 
-// ─── Concept IDs ───
+// ─── Component IDs ───
 
 /**
  * 元件身分：`<scope>:<name>`。
  *
  * ## 為什麼這裡沒有一份「通用概念」的聯集了（2026-08-09 刪）
  *
- * 這裡原本列著 24 顆 `UniversalConcept` 的字面聯集。**D 之後它對型別零貢獻**——
+ * 這裡原本列著 24 顆 `UniversalComponent` 的字面聯集。**D 之後它對型別零貢獻**——
  * 所有身分都加上了 `:`，於是每一顆都已經是 `` `${string}:${string}` ``，
- * 整個聯集被完全吸收（`UniversalConcept extends ComponentId` 恆真，反向不成立）。
- * 而 `UniversalConcept` 除了餵這一行之外沒有任何使用者。
+ * 整個聯集被完全吸收（`UniversalComponent extends ComponentId` 恆真，反向不成立）。
+ * 而 `UniversalComponent` 除了餵這一行之外沒有任何使用者。
  *
  * ⚠️ 它同時是 P9 的一筆違規，而**中立性護欄回報 0**——那條護欄按設計遮掉
  * 「型別位置的聯集成員」。加一顆通用元件本來要編輯核心的型別；現在不用了。
@@ -83,7 +83,7 @@ export interface SemanticModel {
   metadata: ProgramMetadata
 }
 
-// ─── Concept System ───
+// ─── Component System ───
 
 
 export interface ComponentDef {
@@ -150,11 +150,11 @@ export interface BlockSpec {
   /**
    * 這顆積木對應的概念。
    *
-   * 舊名 `concept`——與 `SemanticNode.concept`（一個**字串**）同名而不同義，
+   * 舊名 `component`——與 `SemanticNode.component`（一個**字串**）同名而不同義，
    * 是 2026-08-06 那次改名翻車的直接原因：腳本分不出「值是物件」與「值是
-   * 字串」的兩種 `concept`，而測試檔不在型別檢查範圍內，改錯了照樣編得過。
+   * 字串」的兩種 `component`，而測試檔不在型別檢查範圍內，改錯了照樣編得過。
    *
-   * 改名讓「`concept`」在專案裡的意思收斂。見 experience「同一個欄位名長在
+   * 改名讓「`component`」在專案裡的意思收斂。見 experience「同一個欄位名長在
    * 三個不同型別上時」。
    */
   componentMapping: ComponentMapping
@@ -261,8 +261,8 @@ export interface CompositeDef {
 export interface ContextTransformDef {
   liftChild: number | string
   transformRules: Array<{
-    fromConcept: string
-    toConcept: string
+    fromComponent: string
+    toComponent: string
   }>
 }
 
@@ -372,9 +372,9 @@ export interface DynamicRule {
   modeSource?: string
   /** Mode-specific extraction rules */
   modes?: Record<string, ModeExtractRule>
-  /** Concept to create for each element (used with fieldPattern groups) */
-  childConcept?: string
-  /** Map of field patterns → property names for childConcept nodes */
+  /** Component to create for each element (used with fieldPattern groups) */
+  childComponent?: string
+  /** Map of field patterns → property names for childComponent nodes */
   childFields?: Record<string, string>
   /** If true, the inputPattern refers to statement inputs (chains) rather than expression inputs */
   isStatementInput?: boolean
@@ -384,7 +384,7 @@ export interface DynamicRule {
 export interface ModeExtractRule {
   /** Path in extraState to read the value (for select/input modes) */
   field?: string
-  /** Wrap the value as this concept (e.g., "var_ref", "number_literal") */
+  /** Wrap the value as this component (e.g., "var_ref", "number_literal") */
   /**
    * ⚠️ **已由 `wrapTrait` 取代**（2026-08-11）。留著是為了不打破外部的自訂積木。
    *
@@ -405,12 +405,12 @@ export interface ModeExtractRule {
   input?: string
 }
 
-// ─── Split JSON Formats (Phase 3: concept/blockDef separation) ───
+// ─── Split JSON Formats (Phase 3: component/blockDef separation) ───
 
 /** 五路完備性的路徑名 */
 export type PathName = 'lift' | 'render' | 'extract' | 'generate' | 'execute'
 
-/** Concept definition in concepts.json (semantic layer) */
+/** Component definition in components.json (semantic layer) */
 /**
  * 一個參數的**語義種類**——決定「什麼值是錯的」。
  *
@@ -577,14 +577,14 @@ export interface LanguageManifest {
     language: string
   }
   provides: {
-    concepts: string[]
+    components: string[]
     blocks: string[]
     templates: string[]
     liftPatterns: string[]
   }
 }
 
-// ─── Universal Template (Language-specific code templates for universal concepts) ───
+// ─── Universal Template (Language-specific code templates for universal components) ───
 
 export interface UniversalTemplate {
   componentId: string
@@ -600,7 +600,7 @@ export interface UniversalTemplate {
 export interface LiftPattern {
   id: string
   astNodeType: string
-  concept?: { componentId: string }
+  component?: { componentId: string }
   patternType?: PatternType
   constraints?: AstConstraint[]
   fieldMappings?: FieldMapping[]
@@ -717,7 +717,7 @@ export interface ToolboxCategoryDef {
   /** If true, this category uses the I/O builder (iostream/cstdio sorting) */
   isIoCategory?: boolean
   /** Custom content builder for special categories */
-  buildContents?: (registry: import('./block-spec-registry').BlockSpecRegistry, visibleConcepts: Set<string>, ioPreference: 'iostream' | 'cstdio') => { kind: string; type: string }[]
+  buildContents?: (registry: import('./block-spec-registry').BlockSpecRegistry, visibleComponents: Set<string>, ioPreference: 'iostream' | 'cstdio') => { kind: string; type: string }[]
 }
 
 // ─── Target（目標）───
@@ -847,7 +847,7 @@ export interface LevelNode {
   id: string
   level: number
   label: string
-  concepts: string[]
+  components: string[]
   children: LevelNode[]
 }
 

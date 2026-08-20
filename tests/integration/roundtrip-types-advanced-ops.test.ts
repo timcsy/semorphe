@@ -52,11 +52,11 @@ function assertStableRoundtrip(code: string) {
   return { sem: sem!, generated }
 }
 
-function hasNoConcept(node: SemanticNode, forbidden: string[]): boolean {
+function hasNoComponent(node: SemanticNode, forbidden: string[]): boolean {
   if (forbidden.includes(node.componentId)) return false
   for (const children of Object.values(node.children || {})) {
     for (const child of children) {
-      if (!hasNoConcept(child, forbidden)) return false
+      if (!hasNoComponent(child, forbidden)) return false
     }
   }
   return true
@@ -72,7 +72,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('const int MAX = 100;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t02: auto declare', () => {
@@ -86,7 +86,7 @@ int main() {
 }`)
     expect(generated).toContain('auto x = 42;')
     expect(generated).toContain('auto y = 3.14;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t03: typedef', () => {
@@ -99,7 +99,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('typedef long long ll;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t04: sizeof', () => {
@@ -112,7 +112,7 @@ int main() {
 }`)
     expect(generated).toContain('sizeof(int)')
     expect(generated).toContain('sizeof(double)')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t05: ternary', () => {
@@ -126,7 +126,7 @@ int main() {
 }`)
     expect(generated).toContain('?')
     expect(generated).toContain(':')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t06: cast', () => {
@@ -139,7 +139,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('(int)')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t07: increment/decrement', () => {
@@ -156,7 +156,7 @@ int main() {
 }`)
     expect(generated).toContain('x++')
     expect(generated).toContain('y--')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t08: compound assign', () => {
@@ -173,7 +173,7 @@ int main() {
     expect(generated).toContain('x += 5;')
     expect(generated).toContain('x -= 3;')
     expect(generated).toContain('x *= 2;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t09: enum', () => {
@@ -189,7 +189,7 @@ int main() {
     expect(generated).toContain('RED')
     expect(generated).toContain('GREEN')
     expect(generated).toContain('BLUE')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t10: constexpr', () => {
@@ -203,7 +203,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('constexpr int SIZE = 10;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t11: using alias', () => {
@@ -216,7 +216,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('using ll = long long;')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t12: static_cast', () => {
@@ -229,7 +229,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('static_cast<int>')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t13: const_cast with pointer', () => {
@@ -244,7 +244,7 @@ int main() {
 }`)
     expect(generated).toContain('const_cast<int*>')
     expect(generated).toContain('const int* cp')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t14: bitwise_not', () => {
@@ -256,7 +256,7 @@ int main() {
     return 0;
 }`)
     expect(generated).toContain('~x')
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t15: bitwise binary ops', () => {
@@ -273,7 +273,7 @@ int main() {
     cout << d << endl;
     return 0;
 }`)
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t16: increment expression in cout', () => {
@@ -287,7 +287,7 @@ int main() {
     cout << ++y << endl;
     return 0;
 }`)
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t17: compound assign bitwise', () => {
@@ -303,7 +303,7 @@ int main() {
     cout << x << endl;
     return 0;
 }`)
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 
   it('t18: mixed — ternary in cout + for loop', () => {
@@ -317,6 +317,6 @@ int main() {
     cout << (sum > 5 ? "big" : "small") << endl;
     return 0;
 }`)
-    expect(hasNoConcept(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
+    expect(hasNoComponent(sem!, ['cpp:raw_code', 'cpp:raw_expression', 'unresolved'])).toBe(true)
   })
 })

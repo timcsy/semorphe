@@ -1,7 +1,7 @@
 {
   "id": "cpp_try_statement",
   "astNodeType": "try_statement",
-  "concept": {
+  "component": {
     "componentId": "cpp:try_catch"
   },
   "liftStrategy": "cpp:liftTryCatch",

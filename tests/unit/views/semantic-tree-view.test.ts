@@ -6,7 +6,7 @@ import type { SemanticNode } from '../../../src/core/types'
 /**
  * ⚠️ **這個類別原本住在 `src/views/`，是一個假的視圖**——它的檔頭逐字寫著：
  *
- * > 「Dummy read-only view … **Used to verify** that the concept/blockDef split
+ * > 「Dummy read-only view … **Used to verify** that the component/blockDef split
  * > enables views independent of the Blockly projection layer」
  *
  * 它成功了：`ViewHost` 契約與視圖登錄表（`src/core/view-registry.ts`）
@@ -39,8 +39,8 @@ class SemanticTreeView {
       .join('')
 
     return (
-      `${indent}<div class="node" data-concept="${node.componentId}">` +
-      `<span class="concept">${node.componentId}</span>` +
+      `${indent}<div class="node" data-component="${node.componentId}">` +
+      `<span class="component">${node.componentId}</span>` +
       (props ? ` ${props}` : '') +
       (childrenHtml ? `\n${childrenHtml}\n${indent}` : '') +
       `</div>\n`
@@ -49,7 +49,7 @@ class SemanticTreeView {
 }
 
 describe('SemanticTreeView', () => {
-  it('should render a tree with concept names and properties', () => {
+  it('should render a tree with component names and properties', () => {
     const tree: SemanticNode = {
       id: 'root',
       componentId: 'cpp:program',

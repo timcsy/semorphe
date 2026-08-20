@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast_static', async (node, ctx) => {
     const targetType = String(node.properties.target_type ?? 'int')
     const valueNodes = node.children.value ?? []

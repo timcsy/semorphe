@@ -2,7 +2,7 @@
   {
     "id": "cpp_eof",
     "astNodeType": "identifier",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "constraints": [
@@ -23,7 +23,7 @@
   {
     "id": "cpp_null_id",
     "astNodeType": "identifier",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "constraints": [
@@ -44,7 +44,7 @@
   {
     "id": "cpp_true",
     "astNodeType": "true",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "fieldMappings": [
@@ -58,7 +58,7 @@
   {
     "id": "cpp_false",
     "astNodeType": "false",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "fieldMappings": [
@@ -72,7 +72,7 @@
   {
     "id": "cpp_nullptr",
     "astNodeType": "nullptr",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "fieldMappings": [
@@ -86,7 +86,7 @@
   {
     "id": "cpp_null",
     "astNodeType": "null",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "fieldMappings": [
@@ -100,7 +100,7 @@
   {
     "id": "cpp_npos_qualified",
     "astNodeType": "qualified_identifier",
-    "concept": {
+    "component": {
       "componentId": "cpp:builtin_constant"
     },
     "constraints": [

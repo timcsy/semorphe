@@ -27,6 +27,6 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "execute": "./execute.ts",
-    "_generate_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown concept⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。"
+    "_generate_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown component⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。"
   }
 }

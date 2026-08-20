@@ -7,7 +7,7 @@
  * 是七顆容器共用的一個 strategy 函式裡的**一列**：
  *
  * ```ts
- * const containerConcepts = { 'vector': 'cpp:vector_declare', 'stack': …, … }
+ * const containerComponents = { 'vector': 'cpp:vector_declare', 'stack': …, … }
  * ```
  *
  * 搬一顆進膠囊，就必須讓那一列**從膠囊來**。
@@ -47,7 +47,7 @@ export function registerContainerTemplate(templateName: string, componentId: str
 }
 
 /** 樣板名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
-export function conceptForContainerTemplate(templateName: string): string | undefined {
+export function componentForContainerTemplate(templateName: string): string | undefined {
   return table.get(templateName)?.componentId
 }
 
@@ -67,7 +67,7 @@ export function containerTemplateSources(): [templateName: string, source: strin
  */
 const typeNameTable = new Map<string, { componentId: string; source: string }>()
 
-export function registerPlainTypeConcept(typeName: string, componentId: string, source: string): void {
+export function registerPlainTypeComponent(typeName: string, componentId: string, source: string): void {
   const existing = typeNameTable.get(typeName)
   if (existing && existing.componentId !== componentId) {
     throw new Error(
@@ -79,7 +79,7 @@ export function registerPlainTypeConcept(typeName: string, componentId: string, 
 }
 
 /** 型別名 → 元件身分。認不得回 `undefined`。 */
-export function plainTypeConcept(typeName: string): string | undefined {
+export function plainTypeComponent(typeName: string): string | undefined {
   return typeNameTable.get(typeName)?.componentId
 }
 

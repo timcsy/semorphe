@@ -58,7 +58,7 @@ function blockType(code: string): string[] {
   return out
 }
 
-function concepts(code: string): string[] {
+function components(code: string): string[] {
   const sem = lifter.lift(tp.parse(code)!.rootNode as never)
   const out: string[] = []
   const walk = (n: SemanticNode | null | undefined): void => {
@@ -75,15 +75,15 @@ function concepts(code: string): string[] {
 
 describe('方法呼叫：位置決定形態，不決定身分', () => {
   it('★ 兩個位置都是**同一個身分**', () => {
-    expect(concepts('int main(){ MyObj x; x.doThing(); }')).toContain('cpp:method_call')
+    expect(components('int main(){ MyObj x; x.doThing(); }')).toContain('cpp:method_call')
     expect(
-      concepts('int main(){ MyObj x; int a = x.getThing(); }'),
+      components('int main(){ MyObj x; int a = x.getThing(); }'),
       '運算式位置拿到不同的身分 → 位置又被編碼進身分了',
     ).toContain('cpp:method_call')
   })
 
   it('★ 而語義樹裡**不存在**運算式版的身分', () => {
-    const c = concepts('int main(){ MyObj x; int a = 1 + x.getThing(); }')
+    const c = components('int main(){ MyObj x; int a = 1 + x.getThing(); }')
     expect(c, 'B 項合併掉的身分又出現了').not.toContain('cpp_method_call_expression')
   })
 
@@ -102,7 +102,7 @@ describe('方法呼叫：位置決定形態，不決定身分', () => {
   })
 
   it('★ 已知的容器／字串方法不受影響——它們有自己的專屬身分', () => {
-    const c = concepts('int main(){ vector<int> v; v.clear(); }')
+    const c = components('int main(){ vector<int> v; v.clear(); }')
     expect(c, '專屬身分被泛用的敘述版蓋掉了').toContain('cpp:container_clear')
     expect(c).not.toContain('cpp:method_call')
   })

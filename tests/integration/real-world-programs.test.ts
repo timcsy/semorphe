@@ -17,8 +17,8 @@ import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
@@ -48,7 +48,7 @@ beforeAll(async () => {
   //
   // > **列舉式的組裝點，每加一種來源就漏一次。**
   const tempRegistry = new BlockSpecRegistry()
-  tempRegistry.loadFromSplit(allCppConcepts(), allCppProjections())
+  tempRegistry.loadFromSplit(allCppComponents(), allCppProjections())
   const allSpecs = tempRegistry.getAll()
   patternRenderer = new PatternRenderer()
   const renderStrategyRegistry = new RenderStrategyRegistry()
@@ -475,7 +475,7 @@ describe('full render pipeline', () => {
         return 0;
       }
     `)
-    // Check that the semantic tree has array_assign concepts
+    // Check that the semantic tree has array_assign components
     const body = sem.children.body ?? []
     const mainFunc = body.find(n => n.componentId === 'cpp:func_def' && n.properties.name === 'main')
     expect(mainFunc).toBeDefined()

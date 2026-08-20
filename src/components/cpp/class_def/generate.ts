@@ -6,7 +6,7 @@ import { indent, indented, generateBody } from '../../../core/projection/code-ge
 
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = openBraceFor(style)
-  // OOP concepts
+  // OOP components
     g.set('cpp:class_def', (node, ctx) => {
       const name = node.properties.name ?? 'MyClass'
       const baseClass = node.properties.base_class ?? ''

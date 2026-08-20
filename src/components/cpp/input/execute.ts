@@ -5,7 +5,7 @@ import { defaultValue, parseInputValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { isIndexedAccess } from '../../../core/component/traits'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:input', async (node, ctx) => {
       const valueNodes = node.children.values ?? []
 

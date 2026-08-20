@@ -12,16 +12,16 @@ import { registerExpressionLifters } from '../../../src/languages/cpp/core/lifte
 import type { BlockSpec, LiftPattern, ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 
-import { universalConcepts, universalBlocks } from '../../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import liftPatternsJson from '../../../src/languages/cpp/lift-patterns.json'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
 function mockNode(
   type: string,
@@ -58,9 +58,9 @@ describe('Confidence & DegradationCause', () => {
     registry = new ComponentRegistry()
 
     const specRegistry = new BlockSpecRegistry()
-    const allConcepts = allCppConcepts()
+    const allComponents = allCppComponents()
     const allProjections = allCppProjections()
-    specRegistry.loadFromSplit(allConcepts, allProjections)
+    specRegistry.loadFromSplit(allComponents, allProjections)
     const allSpecs = specRegistry.getAll()
 
     const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration'])
@@ -68,7 +68,7 @@ describe('Confidence & DegradationCause', () => {
     patternLifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(patternLifter)
 
-    // Register known concept IDs in ComponentRegistry
+    // Register known component IDs in ComponentRegistry
     for (const spec of allSpecs) {
       const componentId = (spec as BlockSpec).componentId?.componentId
       if (componentId && !registry.get(componentId)) {
@@ -132,13 +132,13 @@ describe('Confidence & DegradationCause', () => {
   describe('已知概念但寫法不匹配 → unsupported', () => {
     it('should set degradationCause to unsupported for known node type with no matching pattern', () => {
       setup()
-      // binary_expression is a known AST node type (maps to arithmetic/compare/logic concepts)
+      // binary_expression is a known AST node type (maps to arithmetic/compare/logic components)
       // but with an unknown operator it should degrade
       // Actually, binary_expression with unknown op falls back to arithmetic in hand-written lifter
-      // So let's use a node type that has a concept mapping but the pattern doesn't match
-      // For this test, we need an AST node type that IS in the concept mapping but fails to match
+      // So let's use a node type that has a component mapping but the pattern doesn't match
+      // For this test, we need an AST node type that IS in the component mapping but fails to match
       // Let's test with a completely empty compound_statement (no children to lift)
-      // Actually, let me use an approach: register a concept for a known AST type,
+      // Actually, let me use an approach: register a component for a known AST type,
       // then give a node of that type that doesn't match
       registry.register({
         id: 'test_known',
@@ -147,8 +147,8 @@ describe('Confidence & DegradationCause', () => {
         propertyNames: [],
         childNames: [],
       })
-      // Map an AST nodeType to this concept in the lifter's concept mapping
-      lifter.setAstNodeConceptMap(new Map([['some_known_type', 'test_known']]))
+      // Map an AST nodeType to this component in the lifter's component mapping
+      lifter.setAstNodeComponentMap(new Map([['some_known_type', 'test_known']]))
 
       const ast = mockNode('some_known_type', 'some_unknown_code')
       const sem = lifter.liftWithContext(ast, new LiftContextData())

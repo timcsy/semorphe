@@ -11,7 +11,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { markSerialOpen } from '../../../languages/cpp/core/runtime/arduino-serial'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_open', async (node, ctx) => {
     await ctx.evaluate((node.children.baud ?? [])[0])   // 引數仍要求值——它可能有副作用
     markSerialOpen(ctx)

@@ -42,8 +42,8 @@ export interface NewLanguageModule {
   readonly languageId: string
   readonly displayNameKey: string
   getTypes(): TypeEntry[]
-  getSupportedConcepts(): ComponentId[]
-  getAdditionalConcepts(): ComponentDefinition[]
+  getSupportedComponents(): ComponentId[]
+  getAdditionalComponents(): ComponentDefinition[]
   getTooltipOverrides(): Record<string, string>
   getBlockSpecs(): unknown[]
   getGenerator(): Generator

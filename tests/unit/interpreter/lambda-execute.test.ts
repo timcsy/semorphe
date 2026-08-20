@@ -23,10 +23,10 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../../src/core/types'
 
 const n = (
-  concept: string,
+  component: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: component, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })

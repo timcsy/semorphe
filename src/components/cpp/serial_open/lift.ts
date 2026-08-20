@@ -1,7 +1,7 @@
 /**
  * `cpp:serial_open` 的 **lift** 路——**一個看得到 `obj` 的分支**。
  *
- * 🔴 **為什麼不是 `registerMethodConcept`**：那張表的鍵是**方法名**，
+ * 🔴 **為什麼不是 `registerMethodComponent`**：那張表的鍵是**方法名**，
  * 而 `begin` 已經被 `cpp:container_iter`（`v.begin()`）用著。
  *
  * > **「`begin` 在 `Serial` 上」這件事，一張只放得下方法名的表【表達不出來】。**

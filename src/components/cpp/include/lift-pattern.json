@@ -1,7 +1,7 @@
 {
   "id": "cpp_preproc_include",
   "astNodeType": "preproc_include",
-  "concept": {
+  "component": {
     "componentId": "cpp:include"
   },
   "liftStrategy": "cpp:liftPreprocInclude",

@@ -40,12 +40,12 @@ import { printReport } from '../helpers/guardrail'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { BlockSpec } from '../../src/core/types'
 
 function load(): BlockSpec[] {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allCppConcepts(), allCppProjections())
+  reg.loadFromSplit(allCppComponents(), allCppProjections())
   return reg.getAll()
 }
 

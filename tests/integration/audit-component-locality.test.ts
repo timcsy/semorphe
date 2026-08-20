@@ -18,7 +18,7 @@
  * ```
  *
  * 而實測 `cpp:vector_declare` 的 8 個落點裡，**碎裂最嚴重的兩個是「宣告」類**
- * （`std/vector/{concepts,blocks}.json`，各被 4 顆元件共用），
+ * （`std/vector/{components,blocks}.json`，各被 4 顆元件共用），
  * **還有 2 個誰都看不到**（`i18n/{zh-TW,en}/blocks.json`——它們用積木訊息鍵索引，
  * 檔案裡一個 componentId 字串都沒有）。
  *
@@ -48,7 +48,7 @@ import path from 'node:path'
 import { REPO_ROOT, loadBaseline, writeBaseline, listSourceFiles, RATCHET_NOTE } from '../helpers/guardrail'
 import { classifyFile } from '../helpers/file-classification'
 import { scanText } from '../helpers/component-scan'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { registeredComponents } from '../../src/core/component/registry'
 import { componentOwnedLabelKeys, labelKeysOf } from '../../src/core/component/labels'
 import { componentBlocks } from '../../src/core/component/registry'
@@ -64,7 +64,7 @@ interface Baseline {
   notEncapsulated: number
 }
 
-const allIdentities = (): string[] => allCppConcepts().map((c) => c.componentId)
+const allIdentities = (): string[] => allCppComponents().map((c) => c.componentId)
 
 /** 這顆元件有沒有積木——`componentBlocks()` 是已蓋章的全部膠囊積木。 */
 const hasBlocks = (id: string): boolean =>

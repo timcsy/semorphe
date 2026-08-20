@@ -18,7 +18,7 @@
  * | 介面層 | **機制**——怎麼建一個會掃工作區的下拉選單 |
  * | 語言套件 | **名單**——哪些積木要用它、欄位叫什麼、列哪一種型別的變數 |
  *
- * 變數型別本身也是宣告的（`concepts.json` 的 `declaresVariableType`），所以
+ * 變數型別本身也是宣告的（`components.json` 的 `declaresVariableType`），所以
  * 加一個新的字串宣告概念時，這個下拉選單**自動涵蓋它**。
  *
  * 形狀與 `skip-declarations.ts`、`language-executors.ts`、`comment-syntax.ts`
@@ -32,7 +32,7 @@ export interface VariableDropdownBlock {
   blockType: string
   /** 下拉選單所在的欄位名 */
   field: string
-  /** 列出哪一種型別的變數——對應 `concepts.json` 的 `declaresVariableType` */
+  /** 列出哪一種型別的變數——對應 `components.json` 的 `declaresVariableType` */
   variableType: string
   /** 值輸入的名稱（例如索引） */
   valueInput: string

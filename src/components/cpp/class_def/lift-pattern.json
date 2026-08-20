@@ -1,7 +1,7 @@
 {
   "id": "cpp_class_specifier",
   "astNodeType": "class_specifier",
-  "concept": {
+  "component": {
     "componentId": "cpp:class_def"
   },
   "liftStrategy": "cpp:liftClassDef",

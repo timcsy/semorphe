@@ -1,7 +1,7 @@
 {
   "id": "python_print_call",
   "astNodeType": "call",
-  "concept": {
+  "component": {
     "componentId": "python:print"
   },
   "constraints": [

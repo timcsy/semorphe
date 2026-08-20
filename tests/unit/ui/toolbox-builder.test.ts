@@ -5,28 +5,28 @@ import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
 import { buildToolbox } from '../../../src/ui/toolbox-builder'
 import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
-import { getVisibleConcepts } from '../../../src/core/level-tree'
+import { getVisibleComponents } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
-import { universalConcepts, universalBlocks } from '../../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
 // ⚠️ **不要自己列宣告來源。**
-// 手列 `universalConcepts ＋ coreConcepts ＋ allStdModules` 會**漏掉膠囊**
+// 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
-// `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+// `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
-import { allCppConcepts, allCppProjections } from '../../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 
 const topic = cppBeginnerTopic as Topic
 
 function createRegistry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  const allConcepts = allCppConcepts()
+  const allComponents = allCppComponents()
   const allProjections = allCppProjections()
-  reg.loadFromSplit(allConcepts, allProjections)
+  reg.loadFromSplit(allComponents, allProjections)
   return reg
 }
 
@@ -35,10 +35,10 @@ const emptyMsgs: Record<string, string> = {}
 describe('ToolboxBuilder', () => {
   it('should produce toolbox with only root-level blocks', () => {
     const reg = createRegistry()
-    const visibleConcepts = getVisibleConcepts(topic, new Set(['L0']))
+    const visibleComponents = getVisibleComponents(topic, new Set(['L0']))
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts,
+      visibleComponents,
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
@@ -56,11 +56,11 @@ describe('ToolboxBuilder', () => {
 
   it('should produce more blocks for deeper branches', () => {
     const reg = createRegistry()
-    const rootOnly = getVisibleConcepts(topic, new Set(['L0']))
-    const withL1 = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b']))
+    const rootOnly = getVisibleComponents(topic, new Set(['L0']))
+    const withL1 = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b']))
 
-    const configRoot = { blockSpecRegistry: reg, visibleConcepts: rootOnly, ioPreference: 'iostream' as const, msgs: emptyMsgs, categoryColors: CATEGORY_COLORS, categoryDefs: cppCategoryDefs }
-    const configL1 = { ...configRoot, visibleConcepts: withL1 }
+    const configRoot = { blockSpecRegistry: reg, visibleComponents: rootOnly, ioPreference: 'iostream' as const, msgs: emptyMsgs, categoryColors: CATEGORY_COLORS, categoryDefs: cppCategoryDefs }
+    const configL1 = { ...configRoot, visibleComponents: withL1 }
 
     const tRoot = buildToolbox(configRoot) as { contents: Array<{ contents: unknown[] }> }
     const tL1 = buildToolbox(configL1) as { contents: Array<{ contents: unknown[] }> }
@@ -73,10 +73,10 @@ describe('ToolboxBuilder', () => {
 
   it('should put cstdio blocks before iostream when ioPreference is cstdio', () => {
     const reg = createRegistry()
-    const allConcepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b']))
+    const allComponents = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b']))
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: allConcepts,
+      visibleComponents: allComponents,
       ioPreference: 'cstdio',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
@@ -98,7 +98,7 @@ describe('ToolboxBuilder', () => {
     const reg = new BlockSpecRegistry()
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: new Set(),
+      visibleComponents: new Set(),
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
@@ -109,12 +109,12 @@ describe('ToolboxBuilder', () => {
     expect(Array.isArray(toolbox.contents)).toBe(true)
   })
 
-  it('should include cpp_input_expression when input concept is visible', () => {
+  it('should include cpp_input_expression when input component is visible', () => {
     const reg = createRegistry()
-    const allConcepts = getVisibleConcepts(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const allComponents = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
     const result = buildToolbox({
       blockSpecRegistry: reg,
-      visibleConcepts: allConcepts,
+      visibleComponents: allComponents,
       ioPreference: 'iostream',
       msgs: emptyMsgs,
       categoryColors: CATEGORY_COLORS,
@@ -128,10 +128,10 @@ describe('ToolboxBuilder', () => {
   it('toolbox should be monotonically inclusive: root ⊆ root+L1 ⊆ all', () => {
     const reg = createRegistry()
     const getTypes = (branches: Set<string>) => {
-      const concepts = getVisibleConcepts(topic, branches)
+      const components = getVisibleComponents(topic, branches)
       const r = buildToolbox({
         blockSpecRegistry: reg,
-        visibleConcepts: concepts,
+        visibleComponents: components,
         ioPreference: 'iostream',
         msgs: emptyMsgs,
         categoryColors: CATEGORY_COLORS,

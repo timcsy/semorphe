@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { rootScope } from '../../../languages/cpp/core/runtime/scope'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
      * `static int n = 0;` 在函式裡——**跨呼叫保存**。
      *

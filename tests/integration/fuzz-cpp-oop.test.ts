@@ -1,5 +1,5 @@
 /**
- * Fuzz Test Regression: C++ OOP Concepts
+ * Fuzz Test Regression: C++ OOP Components
  * Generated from fuzz testing (2026-03-12)
  *
  * Tests lift -> generate -> execution roundtrip for OOP programs:

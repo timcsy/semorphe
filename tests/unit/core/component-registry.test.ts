@@ -10,7 +10,7 @@ describe('ComponentRegistry', () => {
   })
 
   describe('register and get', () => {
-    it('should register and retrieve a concept', () => {
+    it('should register and retrieve a component', () => {
       const def: ComponentDef = {
         id: 'cpp:var_declare',
         layer: 'universal',
@@ -32,7 +32,7 @@ describe('ComponentRegistry', () => {
       expect(() => registry.register(def)).toThrow()
     })
 
-    it('should return undefined for unregistered concept', () => {
+    it('should return undefined for unregistered component', () => {
       expect(registry.get('nonexistent')).toBeUndefined()
     })
   })
@@ -44,7 +44,7 @@ describe('ComponentRegistry', () => {
 
 
   describe('findAbstract', () => {
-    it('should find the abstract concept for a concrete concept', () => {
+    it('should find the abstract component for a concrete component', () => {
       registry.register({
         id: 'collection_sort', layer: 'universal',
         propertyNames: [], childNames: [],
@@ -70,7 +70,7 @@ describe('ComponentRegistry', () => {
   })
 
   describe('annotations', () => {
-    it('should return annotation value for registered concept', () => {
+    it('should return annotation value for registered component', () => {
       registry.register({
         id: 'for_loop', layer: 'universal',
         propertyNames: [], childNames: ['body'],
@@ -90,11 +90,11 @@ describe('ComponentRegistry', () => {
       expect(registry.getAnnotation('cpp:if', 'hardware_binding')).toBeUndefined()
     })
 
-    it('should return undefined for unregistered concept', () => {
+    it('should return undefined for unregistered component', () => {
       expect(registry.getAnnotation('nonexistent', 'control_flow')).toBeUndefined()
     })
 
-    it('should return undefined when concept has no annotations', () => {
+    it('should return undefined when component has no annotations', () => {
       registry.register({
         id: 'cpp:var_ref', layer: 'universal',
         propertyNames: ['name'], childNames: [],
@@ -102,23 +102,23 @@ describe('ComponentRegistry', () => {
       expect(registry.getAnnotation('cpp:var_ref', 'control_flow')).toBeUndefined()
     })
 
-    it('should use latest annotations when concept is re-registered', () => {
+    it('should use latest annotations when component is re-registered', () => {
       // First registration
       registry.register({
-        id: 'test_concept', layer: 'universal',
+        id: 'test_component', layer: 'universal',
         propertyNames: [], childNames: [],
         annotations: { old_key: 'old_value' },
       })
-      expect(registry.getAnnotation('test_concept', 'old_key')).toBe('old_value')
+      expect(registry.getAnnotation('test_component', 'old_key')).toBe('old_value')
 
       // Re-register with different annotations (using registerOrUpdate)
       registry.registerOrUpdate({
-        id: 'test_concept', layer: 'universal',
+        id: 'test_component', layer: 'universal',
         propertyNames: [], childNames: [],
         annotations: { new_key: 'new_value' },
       })
-      expect(registry.getAnnotation('test_concept', 'new_key')).toBe('new_value')
-      expect(registry.getAnnotation('test_concept', 'old_key')).toBeUndefined()
+      expect(registry.getAnnotation('test_component', 'new_key')).toBe('new_value')
+      expect(registry.getAnnotation('test_component', 'old_key')).toBeUndefined()
     })
   })
 })

@@ -2,7 +2,7 @@
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  // Expression concepts
+  // Expression components
     g.set('cpp:queue_front', (node) => {
       const obj = node.properties.obj ?? 'q'
       return `${obj}.front()`

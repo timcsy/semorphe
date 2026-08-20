@@ -83,6 +83,6 @@
     }
   ],
   "_meta": {
-    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 concepts.json 的 properties。系統一行行為都沒變。"
+    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。"
   }
 }

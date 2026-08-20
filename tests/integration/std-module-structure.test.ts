@@ -29,22 +29,22 @@ describe('Std module structure consistency', () => {
     }
   })
 
-  it('concepts and blocks should be arrays', () => {
+  it('components and blocks should be arrays', () => {
     for (const mod of allStdModules) {
-      expect(Array.isArray(mod.concepts)).toBe(true)
+      expect(Array.isArray(mod.components)).toBe(true)
       expect(Array.isArray(mod.blocks)).toBe(true)
     }
   })
 
-  it('all concept IDs should be unique across modules', () => {
+  it('all component IDs should be unique across modules', () => {
     const seen = new Map<string, string>()
     for (const mod of allStdModules) {
-      for (const concept of mod.concepts) {
-        const existing = seen.get(concept.componentId)
+      for (const component of mod.components) {
+        const existing = seen.get(component.componentId)
         if (existing) {
-          throw new Error(`Duplicate concept "${concept.componentId}" in ${mod.header} and ${existing}`)
+          throw new Error(`Duplicate component "${component.componentId}" in ${mod.header} and ${existing}`)
         }
-        seen.set(concept.componentId, mod.header)
+        seen.set(component.componentId, mod.header)
       }
     }
     // ⚠️ **不要錨在「std 模組裡還有幾顆」上**——那個數字隨膠囊搬家下降，
@@ -74,21 +74,21 @@ describe('Std module structure consistency', () => {
     expect(allStdModules.length, '一個 std 模組都沒有 → 量測壞了').toBeGreaterThan(3)
   })
 
-  it('populated registry should have all module concepts mapped', () => {
+  it('populated registry should have all module components mapped', () => {
     const registry = createPopulatedRegistry()
     for (const mod of allStdModules) {
-      for (const concept of mod.concepts) {
-        const header = registry.getHeaderForConcept(concept.componentId)
+      for (const component of mod.components) {
+        const header = registry.getHeaderForComponent(component.componentId)
         expect(header).toBe(mod.header)
       }
     }
   })
 
-  it('populated registry should have universal IO concepts mapped to <iostream>', () => {
+  it('populated registry should have universal IO components mapped to <iostream>', () => {
     const registry = createPopulatedRegistry()
-    expect(registry.getHeaderForConcept('cpp:print')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('cpp:input')).toBe('<iostream>')
-    expect(registry.getHeaderForConcept('cpp:endl')).toBe('<iostream>')
+    expect(registry.getHeaderForComponent('cpp:print')).toBe('<iostream>')
+    expect(registry.getHeaderForComponent('cpp:input')).toBe('<iostream>')
+    expect(registry.getHeaderForComponent('cpp:endl')).toBe('<iostream>')
   })
 
   it('should have 17 std modules', () => {

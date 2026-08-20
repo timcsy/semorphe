@@ -39,7 +39,7 @@ describe('PatternExtractor — extractStrategy', () => {
       blockDef: { type: 'u_test', args0: [{ type: 'field_input', name: 'NAME' }] },
       componentMapping: { componentId: 'test', properties: ['name'], children: {} },
     }])
-    // Register strategy that returns different concept
+    // Register strategy that returns different component
     extractor.registerExtractStrategy('u_test', () => createNode('strategy_wins', {}))
 
     const block: BlockState = {

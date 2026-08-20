@@ -3,27 +3,27 @@ import type { DependencyEdge, DependencyResolver } from '../../../core/dependenc
 
 export class ModuleRegistry implements DependencyResolver {
   private modules = new Map<string, StdModule>()
-  private conceptToHeader = new Map<string, string>()
+  private componentToHeader = new Map<string, string>()
 
   register(mod: StdModule): void {
     this.modules.set(mod.header, mod)
-    for (const concept of mod.concepts) {
-      this.conceptToHeader.set(concept.componentId, mod.header)
+    for (const component of mod.components) {
+      this.componentToHeader.set(component.componentId, mod.header)
     }
   }
 
-  registerConceptMapping(componentId: string, header: string): void {
-    this.conceptToHeader.set(componentId, header)
+  registerComponentMapping(componentId: string, header: string): void {
+    this.componentToHeader.set(componentId, header)
   }
 
-  getHeaderForConcept(componentId: string): string | null {
-    return this.conceptToHeader.get(componentId) ?? null
+  getHeaderForComponent(componentId: string): string | null {
+    return this.componentToHeader.get(componentId) ?? null
   }
 
   resolve(componentIds: string[]): DependencyEdge[] {
     const seen = new Map<string, DependencyEdge>()
     for (const id of componentIds) {
-      const header = this.conceptToHeader.get(id)
+      const header = this.componentToHeader.get(id)
       if (header && !seen.has(header)) {
         seen.set(header, {
           directive: `#include ${header}`,

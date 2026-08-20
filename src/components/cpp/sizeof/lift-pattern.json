@@ -1,7 +1,7 @@
 {
   "id": "cpp_sizeof_expr",
   "astNodeType": "sizeof_expression",
-  "concept": {
+  "component": {
     "componentId": "cpp:sizeof"
   },
   "liftStrategy": "cpp:liftSizeof",

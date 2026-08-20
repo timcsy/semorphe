@@ -291,7 +291,7 @@ describe('PatternLifter', () => {
   })
 
   describe('LiftPattern - operatorDispatch', () => {
-    it('should dispatch binary_expression to different concepts by operator', () => {
+    it('should dispatch binary_expression to different components by operator', () => {
       const pattern: LiftPattern = {
         id: 'binary_dispatch',
         astNodeType: 'binary_expression',
@@ -377,12 +377,12 @@ describe('PatternLifter', () => {
   })
 
   describe('LiftPattern - chain', () => {
-    it('should detect cout << chain and produce print concept', () => {
+    it('should detect cout << chain and produce print component', () => {
       const pattern: LiftPattern = {
         id: 'cout_chain',
         astNodeType: 'binary_expression',
         patternType: 'chain',
-        concept: { componentId: 'cpp:print' },
+        component: { componentId: 'cpp:print' },
         chain: {
           operator: '<<',
           direction: 'left',
@@ -443,7 +443,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { componentId: 'cpp:loop_count' },
+        component: { componentId: 'cpp:loop_count' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },
@@ -527,7 +527,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { componentId: 'cpp:loop_count' },
+        component: { componentId: 'cpp:loop_count' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },
@@ -605,7 +605,7 @@ describe('PatternLifter', () => {
         category: 'loops',
         level: 1,
         version: '1.0.0',
-        concept: { componentId: 'cpp:loop_for', role: 'statement' },
+        component: { componentId: 'cpp:loop_for', role: 'statement' },
         blockDef: { type: 'cpp_loop_for' },
         codeTemplate: { pattern: 'for (...) { ... }', imports: [], order: 0 },
         astPattern: { nodeType: 'for_statement', constraints: [] },
@@ -616,7 +616,7 @@ describe('PatternLifter', () => {
         id: 'count_for',
         astNodeType: 'for_statement',
         patternType: 'composite',
-        concept: { componentId: 'cpp:loop_count' },
+        component: { componentId: 'cpp:loop_count' },
         composite: {
           checks: [
             { field: 'initializer', typeIs: 'declaration' },

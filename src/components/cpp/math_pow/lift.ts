@@ -18,10 +18,10 @@
  * 那三列因此塞得進 `call-components` 這張已被第二顆膠囊驗證的表——
  * 只需要讓表多帶一個「引數槽名」。
  */
-import { registerCallConcept } from '../../../core/component/call-components'
+import { registerCallComponent } from '../../../core/component/call-components'
 
 export function registerLift(): void {
-  registerCallConcept('pow', {
+  registerCallComponent('pow', {
     componentId: 'cpp:math_pow',
     argSlots: ['base', 'exponent'],
     source: 'cpp/math_pow',

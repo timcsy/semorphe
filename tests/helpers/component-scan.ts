@@ -25,14 +25,14 @@ import path from 'node:path'
 import { REPO_ROOT } from './guardrail'
 import { deriveBlockType } from '../../src/core/component/derive-block-type'
 import type { ComponentDefJSON } from '../../src/core/types'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 
 /**
  * 全部已註冊的元件定義。
  *
- * ⚠️ **必須走 `allCppConcepts()`，不得在這裡自己組一份。**
+ * ⚠️ **必須走 `allCppComponents()`，不得在這裡自己組一份。**
  *
- * 這個函式原本自己 import `universalConcepts` ＋ `coreConcepts` ＋ `allStdModules`
+ * 這個函式原本自己 import `universalComponents` ＋ `coreComponents` ＋ `allStdModules`
  * 再串起來——而 `all-declarations.ts` 的存在理由就是要消滅這種第二份組裝，
  * 它的檔頭寫著：
  *
@@ -44,7 +44,7 @@ import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
  * 「`cpp:vector_declare` 有實作卻沒有宣告」——**一顆剛搬好的元件，看起來像孤兒。**
  */
 export function allComponentDefs(): ComponentDefJSON[] {
-  return allCppConcepts()
+  return allCppComponents()
 }
 
 /**
@@ -311,7 +311,7 @@ export function scanText(rawSrc: string, ids: readonly string[]): FileHits {
  * 掃一組目錄，回傳每個有命中的檔案。
  *
  * `exts` 預設只有 `.ts`（中立性護欄用——核心層不該有元件 JSON）。
- * 就近性護欄要加上 `.json`：一個元件的 `concepts.json`／`blocks.json`
+ * 就近性護欄要加上 `.json`：一個元件的 `components.json`／`blocks.json`
  * **本來就是它的實作**，不算進去會低估擴散度。
  */
 export function scanDirs(

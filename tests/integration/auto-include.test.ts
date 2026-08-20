@@ -32,7 +32,7 @@ const competitiveStyle: StylePreset = {
 /**
  * ⚠️ **不要自己組裝產生器 map**（`scaffold-codegen` 已經改過同一件事）。
  * 手列 registrar 會漏掉 `componentGenerateRegistrars()`，症狀是
- * `⟨unknown concept: cpp:print_formatted⟩`——看起來像產生器不見了。
+ * `⟨unknown component: cpp:print_formatted⟩`——看起來像產生器不見了。
  */
 function makeGenerators(style: StylePreset): Map<string, NodeGenerator> {
   return createCppGenerators(style)
@@ -111,7 +111,7 @@ describe('Auto-include integration', () => {
     expect(code).not.toContain('#include')
   })
 
-  it('should inject multiple headers for mixed concepts', () => {
+  it('should inject multiple headers for mixed components', () => {
     const tree = createNode('cpp:program', {}, {
       body: [
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {

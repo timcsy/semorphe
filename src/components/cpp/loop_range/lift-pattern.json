@@ -1,7 +1,7 @@
 {
   "id": "cpp_for_range_loop",
   "astNodeType": "for_range_loop",
-  "concept": {
+  "component": {
     "componentId": "cpp:loop_range"
   },
   "liftStrategy": "cpp:liftRangeFor",

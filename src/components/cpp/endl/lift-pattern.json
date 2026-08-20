@@ -1,7 +1,7 @@
 {
   "id": "cpp_endl",
   "astNodeType": "identifier",
-  "concept": {
+  "component": {
     "componentId": "cpp:endl"
   },
   "constraints": [

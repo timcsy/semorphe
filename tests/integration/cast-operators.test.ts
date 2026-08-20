@@ -78,10 +78,10 @@ describe('轉型運算：實作一直都在，只是被清單蓋掉', () => {
     }
     // 勝出的必須是**會回傳值**的那個，不是空操作
     const dup = interp.duplicateRegistrations()
-    const castDups = dup.filter((d) => d.concept.includes('cast'))
+    const castDups = dup.filter((d) => d.component.includes('cast'))
     expect(
       castDups,
-      `轉型概念仍有重複註冊：${castDups.map((d) => `${d.concept}×${d.count}`).join('、')}` +
+      `轉型概念仍有重複註冊：${castDups.map((d) => `${d.component}×${d.count}`).join('、')}` +
         '——勝負由載入順序決定，而那個順序不是任何人設計的',
     ).toEqual([])
   })

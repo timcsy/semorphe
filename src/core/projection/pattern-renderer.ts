@@ -20,7 +20,7 @@ interface RenderSpec {
 
 import { serializeChildren } from './children-as-field'
 import { nextBlockId as _nextBlockId, resetBlockIdCounter } from './common-mappings'
-import { conceptWithTrait } from '../component/traits'
+import { componentWithTrait } from '../component/traits'
 
 function nextBlockId(): string {
   return _nextBlockId('pblock_')
@@ -60,7 +60,7 @@ export class PatternRenderer {
       const blockType = blockDef.type as string
       // Merge: auto-derive base mapping, then overlay explicit renderMapping from spec
       // ⚠️ **推導已退場。** 186 筆對應全部固化成顯式宣告（驗過「合併結果一字不差」），
-      // 於是這裡不再從 `concept.properties` 推導任何東西。
+      // 於是這裡不再從 `component.properties` 推導任何東西。
       //
       // 那正是重點：推導在的時候，**參數宣告驅動了抽取行為**——改一顆元件的
       // 參數列就會改變它的積木怎麼被讀回來，而那是 C1（參數規格化）動不了的原因。
@@ -247,11 +247,11 @@ export class PatternRenderer {
         for (let i = 0; i < childNodes.length; i++) {
           const child = childNodes[i]
           // Determine which mode this child maps to:
-          // If a mode has `wrap` matching the child concept, use that mode's select path
+          // If a mode has `wrap` matching the child component, use that mode's select path
           // Otherwise use compose mode
           let matched = false
           for (const [modeName, modeRule] of Object.entries(rule.modes)) {
-            const wrap = modeRule.wrapTrait ? conceptWithTrait(modeRule.wrapTrait) : modeRule.wrap
+            const wrap = modeRule.wrapTrait ? componentWithTrait(modeRule.wrapTrait) : modeRule.wrap
             if (wrap && child.componentId === wrap) {
               // Select mode: store value in extraState
               const nameValue = (child.properties.name as string) ?? ''
@@ -289,8 +289,8 @@ export class PatternRenderer {
         continue
       }
 
-      // Repeat field group pattern (childConcept + childFields)
-      if (rule.childConcept && rule.childFields) {
+      // Repeat field group pattern (childComponent + childFields)
+      if (rule.childComponent && rule.childFields) {
         if (childNodes.length === 0) continue
         for (let i = 0; i < childNodes.length; i++) {
           const child = childNodes[i]

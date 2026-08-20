@@ -8,7 +8,7 @@
     "id": "L0",
     "level": 0,
     "label": "L0: 基礎",
-    "concepts": [
+    "components": [
       "cpp:print",
       "cpp:input",
       "cpp:var_declare",
@@ -32,7 +32,7 @@
         "id": "L1a",
         "level": 1,
         "label": "L1a: 函式與迴圈",
-        "concepts": [
+        "components": [
           "cpp:func_def",
           "cpp:func_call",
           "cpp:return",
@@ -56,7 +56,7 @@
             "id": "L2a",
             "level": 2,
             "label": "L2a: 陣列與字串",
-            "concepts": [
+            "components": [
               "cpp:array_declare",
               "cpp:initializer_list",
               "cpp:array_at",
@@ -88,7 +88,7 @@
         "id": "L1b",
         "level": 1,
         "label": "L1b: 控制流進階",
-        "concepts": [
+        "components": [
           "cpp:switch",
           "cpp:case",
           "cpp:default",
@@ -112,7 +112,7 @@
             "id": "L2b",
             "level": 2,
             "label": "L2b: 指標與記憶體",
-            "concepts": [
+            "components": [
               "cpp:pointer_declare",
               "cpp:pointer_deref",
               "cpp:pointer_assign",
@@ -134,7 +134,7 @@
             "id": "L2c",
             "level": 2,
             "label": "L2c: 結構與類別",
-            "concepts": [
+            "components": [
               "cpp:struct_declare",
               "cpp:struct_at_member",
               "cpp:struct_at_ptr",
@@ -148,7 +148,7 @@
         "id": "L1c",
         "level": 1,
         "label": "L1c: 型別系統",
-        "concepts": [
+        "components": [
           "cpp:var_declare_const",
           "cpp:typedef"
         ],

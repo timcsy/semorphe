@@ -44,7 +44,7 @@
         {
           "field": "PARAMS",
           "childSlot": "params",
-          "childConcept": "param_decl",
+          "childComponent": "param_decl",
           "parts": [
             "type",
             "name"

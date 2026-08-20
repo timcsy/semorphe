@@ -1,5 +1,5 @@
 import type { SemanticNode, StylePreset, Topic } from '../core/types'
-import { flattenLevelTree, getVisibleConcepts } from '../core/level-tree'
+import { flattenLevelTree, getVisibleComponents } from '../core/level-tree'
 import type { ProgramScaffold, ScaffoldResult } from '../core/program-scaffold'
 import type { CodingStyle } from '../languages/style'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
@@ -197,7 +197,7 @@ export class SyncController {
   /**
    * Set a display tree enhancer — called just before renderToBlocklyState() to inject
    * virtual nodes (e.g., auto-include cpp_include nodes) into the display tree.
-   * The enhancer receives the tree, the current visible concept set, and a
+   * The enhancer receives the tree, the current visible component set, and a
    * `scaffoldVisible` flag (true when depth > 0, i.e., scaffold nodes are shown).
    * It must NOT mutate the original tree.
    */
@@ -208,7 +208,7 @@ export class SyncController {
   /** Apply the display tree enhancer (if set) and return the enhanced tree. */
   private enhanceDisplayTree(tree: SemanticNode): SemanticNode {
     if (!this.displayTreeEnhancer || !this.currentTopic) return tree
-    const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
+    const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
     const scaffoldVisible = !this.shouldStripScaffold()
     return this.displayTreeEnhancer(tree, visible, scaffoldVisible)
   }
@@ -345,16 +345,16 @@ export class SyncController {
       this.codeMappings = this.buildCodeMappingsFromSourceRange(tree, genMappings)
 
       // 降級只作用在**顯示用的拷貝**上——`tree` 是真實，執行要拿到它。
-      // （`downgradeConceptsForLevel` 是就地改寫，見 `cloneTree` 的說明）
+      // （`downgradeComponentsForLevel` 是就地改寫，見 `cloneTree` 的說明）
       // ⚠️ 這個變數原本叫「顯示樹」，而下面還有一個英文的 `displayTree`
       // ——改名時**兩個撞在一起**。它是**降級後**的樹，`displayTree` 是
       // 再濾掉鷹架之後的；名字要分得出這一層差別。
       let downgradedTree = tree
       this.identityBeforeDowngrade.clear()
       if (this.currentTopic) {
-        const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
+        const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
         downgradedTree = this.cloneTree(tree)
-        this.downgradeConceptsForLevel(downgradedTree, visible)
+        this.downgradeComponentsForLevel(downgradedTree, visible)
       }
 
       // For L0: strip scaffold nodes so blocks only show user's logic
@@ -376,7 +376,7 @@ export class SyncController {
   /**
    * 深拷貝一棵語義樹——**給降級用的**。
    *
-   * ⚠️ `downgradeConceptsForLevel` 是**就地改寫**，而 `this.currentTree` 指向
+   * ⚠️ `downgradeComponentsForLevel` 是**就地改寫**，而 `this.currentTree` 指向
    * 同一個物件。少了這個拷貝，降級的結果會**直接覆寫真實**：
    *
    * ```
@@ -398,11 +398,11 @@ export class SyncController {
   }
 
   /**
-   * Downgrade concepts not visible in current level to universal equivalents.
-   * If no universal equivalent exists, keep the original concept (never degrade to raw_code).
+   * Downgrade components not visible in current level to universal equivalents.
+   * If no universal equivalent exists, keep the original component (never degrade to raw_code).
    * Mutates the tree in place.
    */
-  private downgradeConceptsForLevel(node: SemanticNode, visible: Set<string>): void {
+  private downgradeComponentsForLevel(node: SemanticNode, visible: Set<string>): void {
     // 降級目標由**概念自己宣告的父概念**決定，不再寫死在這裡。
     //
     // 這份清單原本有 16 行，全部在講同一件事：「這些概念是變數宣告的一種」。
@@ -432,7 +432,7 @@ export class SyncController {
     for (const children of Object.values(node.children)) {
       if (Array.isArray(children)) {
         for (const child of children) {
-          this.downgradeConceptsForLevel(child, visible)
+          this.downgradeComponentsForLevel(child, visible)
         }
       }
     }
@@ -488,9 +488,9 @@ export class SyncController {
       // 同上：降級只作用在顯示用的拷貝上，`fullTree` 保持真實
       let downgradedTree = fullTree
       if (this.currentTopic) {
-        const visible = getVisibleConcepts(this.currentTopic, this.enabledBranches)
+        const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
         downgradedTree = this.cloneTree(fullTree)
-        this.downgradeConceptsForLevel(downgradedTree, visible)
+        this.downgradeComponentsForLevel(downgradedTree, visible)
       }
 
       // For blocks: strip scaffold if L0

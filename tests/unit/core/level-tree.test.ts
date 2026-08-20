@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
-  getVisibleConcepts,
+  getVisibleComponents,
   flattenLevelTree,
   resolveEnabledBranches,
   validateDoublingGuideline,
-  isConceptVisible,
+  isComponentVisible,
 } from '../../../src/core/level-tree'
 import type { LevelNode, Topic } from '../../../src/core/types'
 
@@ -12,19 +12,19 @@ const sampleTree: LevelNode = {
   id: 'L0',
   level: 0,
   label: 'L0: 基礎',
-  concepts: ['cpp:print', 'cpp:var_declare', 'cpp:if', 'while'],
+  components: ['cpp:print', 'cpp:var_declare', 'cpp:if', 'while'],
   children: [
     {
       id: 'L1a',
       level: 1,
       label: 'L1a: 函式',
-      concepts: ['cpp:func_def', 'cpp:func_call', 'for_loop'],
+      components: ['cpp:func_def', 'cpp:func_call', 'for_loop'],
       children: [
         {
           id: 'L2a',
           level: 2,
           label: 'L2a: 陣列',
-          concepts: ['cpp:array_declare', 'cpp:array_at'],
+          components: ['cpp:array_declare', 'cpp:array_at'],
           children: [],
         },
       ],
@@ -33,13 +33,13 @@ const sampleTree: LevelNode = {
       id: 'L1b',
       level: 1,
       label: 'L1b: 控制流',
-      concepts: ['switch_case', 'do_while'],
+      components: ['switch_case', 'do_while'],
       children: [
         {
           id: 'L2b',
           level: 2,
           label: 'L2b: 指標',
-          concepts: ['pointer', 'reference'],
+          components: ['pointer', 'reference'],
           children: [],
         },
       ],
@@ -54,34 +54,34 @@ const sampleTopic: Topic = {
   levelTree: sampleTree,
 }
 
-describe('getVisibleConcepts', () => {
-  it('should return root concepts when only root enabled', () => {
-    const result = getVisibleConcepts(sampleTopic, new Set(['L0']))
+describe('getVisibleComponents', () => {
+  it('should return root components when only root enabled', () => {
+    const result = getVisibleComponents(sampleTopic, new Set(['L0']))
     expect(result).toEqual(new Set(['cpp:print', 'cpp:var_declare', 'cpp:if', 'while']))
   })
 
   it('should return union of enabled branches', () => {
-    const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a']))
+    const result = getVisibleComponents(sampleTopic, new Set(['L0', 'L1a']))
     expect(result).toEqual(
       new Set(['cpp:print', 'cpp:var_declare', 'cpp:if', 'while', 'cpp:func_def', 'cpp:func_call', 'for_loop'])
     )
   })
 
   it('should support multiple branches (union semantics)', () => {
-    const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a', 'L1b']))
+    const result = getVisibleComponents(sampleTopic, new Set(['L0', 'L1a', 'L1b']))
     expect(result.has('cpp:func_def')).toBe(true)
     expect(result.has('switch_case')).toBe(true)
     expect(result.size).toBe(9)
   })
 
-  it('should include deep branch concepts', () => {
-    const result = getVisibleConcepts(sampleTopic, new Set(['L0', 'L1a', 'L2a']))
+  it('should include deep branch components', () => {
+    const result = getVisibleComponents(sampleTopic, new Set(['L0', 'L1a', 'L2a']))
     expect(result.has('cpp:array_declare')).toBe(true)
     expect(result.has('cpp:array_at')).toBe(true)
   })
 
   it('should return empty set when no branches enabled', () => {
-    const result = getVisibleConcepts(sampleTopic, new Set())
+    const result = getVisibleComponents(sampleTopic, new Set())
     expect(result.size).toBe(0)
   })
 })
@@ -94,7 +94,7 @@ describe('flattenLevelTree', () => {
   })
 
   it('should handle single node tree', () => {
-    const single: LevelNode = { id: 'root', level: 0, label: 'Root', concepts: [], children: [] }
+    const single: LevelNode = { id: 'root', level: 0, label: 'Root', components: [], children: [] }
     expect(flattenLevelTree(single)).toHaveLength(1)
   })
 })
@@ -127,18 +127,18 @@ describe('validateDoublingGuideline', () => {
     expect(warnings.every((w) => w.severity === 'warning')).toBe(true)
   })
 
-  it('should warn when child has too many concepts relative to parent', () => {
+  it('should warn when child has too many components relative to parent', () => {
     const unbalanced: LevelNode = {
       id: 'L0',
       level: 0,
       label: 'L0',
-      concepts: ['a'],
+      components: ['a'],
       children: [
         {
           id: 'L1',
           level: 1,
           label: 'L1',
-          concepts: ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'],
+          components: ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'],
           children: [],
         },
       ],
@@ -148,16 +148,16 @@ describe('validateDoublingGuideline', () => {
   })
 })
 
-describe('isConceptVisible', () => {
-  it('should return true for concept in enabled branch', () => {
-    expect(isConceptVisible('cpp:func_def', sampleTopic, new Set(['L0', 'L1a']))).toBe(true)
+describe('isComponentVisible', () => {
+  it('should return true for component in enabled branch', () => {
+    expect(isComponentVisible('cpp:func_def', sampleTopic, new Set(['L0', 'L1a']))).toBe(true)
   })
 
-  it('should return false for concept not in enabled branches', () => {
-    expect(isConceptVisible('switch_case', sampleTopic, new Set(['L0', 'L1a']))).toBe(false)
+  it('should return false for component not in enabled branches', () => {
+    expect(isComponentVisible('switch_case', sampleTopic, new Set(['L0', 'L1a']))).toBe(false)
   })
 
-  it('should return false for unknown concept', () => {
-    expect(isConceptVisible('nonexistent', sampleTopic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b']))).toBe(false)
+  it('should return false for unknown component', () => {
+    expect(isComponentVisible('nonexistent', sampleTopic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b']))).toBe(false)
   })
 })

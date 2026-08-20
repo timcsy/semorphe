@@ -1,7 +1,7 @@
 /**
  * C++ Map Operations Roundtrip Tests
  *
- * Verifies that C++ map concepts (cpp_map_declare, cpp_container_erase,
+ * Verifies that C++ map components (cpp_map_declare, cpp_container_erase,
  * cpp_container_count, cpp_map_empty, cpp_map_at) survive the full roundtrip.
  *
  * Note: .empty() maps to cpp_container_empty (shared method).
@@ -54,24 +54,24 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -84,7 +84,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift to cpp_map_declare with key_type and value_type', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:map_declare')
+      const node = findComponent(tree, 'cpp:map_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.key_type).toBe('string')
       expect(node!.properties.value_type).toBe('int')
@@ -100,7 +100,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:map_declare')
+      const node2 = findComponent(tree2, 'cpp:map_declare')
       expect(node2).not.toBeNull()
       expect(node2!.properties.key_type).toBe('string')
       expect(node2!.properties.value_type).toBe('int')
@@ -112,7 +112,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift with both types as int', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:map_declare')
+      const node = findComponent(tree, 'cpp:map_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.key_type).toBe('int')
       expect(node!.properties.value_type).toBe('int')
@@ -121,7 +121,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:map_declare')
+      const node2 = findComponent(tree2, 'cpp:map_declare')
       expect(node2).not.toBeNull()
     })
   })
@@ -131,7 +131,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift to cpp_container_erase with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_erase')
+      const node = findComponent(tree, 'cpp:container_erase')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
       expect(node!.children.key).toBeDefined()
@@ -146,7 +146,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_erase')
+      const node2 = findComponent(tree2, 'cpp:container_erase')
       expect(node2).not.toBeNull()
     })
   })
@@ -156,7 +156,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift to cpp_container_count with obj and key', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_count')
+      const node = findComponent(tree, 'cpp:container_count')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('mp')
     })
@@ -169,7 +169,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_count')
+      const node2 = findComponent(tree2, 'cpp:container_count')
       expect(node2).not.toBeNull()
     })
   })
@@ -181,14 +181,14 @@ describe('C++ Map Operations Roundtrip', () => {
     const code = 'map<string, int> mp;\ncout << mp["key"] << endl;'
 
     it('★ m[key] 辨識成 cpp_map_at，不是 array_access', () => {
-      const concepts = collectConcepts(liftCode(code))
-      expect(concepts.has('cpp:map_at')).toBe(true)
-      expect(concepts.has('cpp:array_at'), '降級回去了——型別查得到卻沒用').toBe(false)
+      const components = collectComponents(liftCode(code))
+      expect(components.has('cpp:map_at')).toBe(true)
+      expect(components.has('cpp:array_at'), '降級回去了——型別查得到卻沒用').toBe(false)
     })
 
     it('★ 來回轉換之後身分不變', () => {
-      const concepts2 = collectConcepts(liftCode(roundTripCode(code)))
-      expect(concepts2.has('cpp:map_at')).toBe(true)
+      const components2 = collectComponents(liftCode(roundTripCode(code)))
+      expect(components2.has('cpp:map_at')).toBe(true)
     })
   })
 
@@ -197,7 +197,7 @@ describe('C++ Map Operations Roundtrip', () => {
 
     it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_empty')
+      const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -209,7 +209,7 @@ describe('C++ Map Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_empty')
+      const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -217,21 +217,21 @@ describe('C++ Map Operations Roundtrip', () => {
   describe('combo: map declare + erase + count + empty', () => {
     const code = 'map<int, int> mp;\nmp.erase(5);\nif (mp.count(3)) {\n    cout << "found" << endl;\n}\ncout << mp.empty() << endl;'
 
-    it('should lift all map concepts', () => {
+    it('should lift all map components', () => {
       const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:map_declare')).toBe(true)
-      expect(concepts.has('cpp:container_erase')).toBe(true)
-      expect(concepts.has('cpp:container_count')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:map_declare')).toBe(true)
+      expect(components.has('cpp:container_erase')).toBe(true)
+      expect(components.has('cpp:container_count')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:map_declare')).toBe(true)
-      expect(concepts2.has('cpp:container_erase')).toBe(true)
-      expect(concepts2.has('cpp:container_count')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:map_declare')).toBe(true)
+      expect(components2.has('cpp:container_erase')).toBe(true)
+      expect(components2.has('cpp:container_count')).toBe(true)
     })
   })
 })

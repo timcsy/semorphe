@@ -16,7 +16,7 @@
  * cpp:string_declare →  記成 'string'
  * ```
  *
- * 那是既有的慣例（`registerTypedMethodConcept('string', …)` 也是這樣對上的）。
+ * 那是既有的慣例（`registerTypedMethodComponent('string', …)` 也是這樣對上的）。
  * ⚠️ 第一版寫 `'Servo'`，於是**每一顆方法都認不出來**——而症狀是
  * 「宣告認得出來、方法認不出來」，看起來像方法那一側壞了。
  *

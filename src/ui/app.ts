@@ -31,7 +31,7 @@ import { setLanguageInputNames } from './block-registrar'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
-import { getVisibleConcepts, flattenLevelTree } from '../core/level-tree'
+import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
 import type { Target, Topic } from '../core/types'
 import cppBeginnerTopic from '../languages/cpp/topics/cpp-beginner.json'
 import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
@@ -83,7 +83,7 @@ import type { AppShellElements } from './app-shell'
 import { isFunctionDefinition } from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
-import { allCppConcepts, allCppProjections } from '../languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../languages/cpp/all-declarations'
 // Projection layer
 import apcsPreset from '../languages/cpp/styles/apcs.json'
 import competitivePreset from '../languages/cpp/styles/competitive.json'
@@ -222,10 +222,10 @@ export class App {
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
 
-    // 2. Load block specs (split concept/projection architecture)
-    const allConcepts = allCppConcepts()
+    // 2. Load block specs (split component/projection architecture)
+    const allComponents = allCppComponents()
     const allProjections = allCppProjections()
-    this.blockSpecRegistry.loadFromSplit(allConcepts, allProjections)
+    this.blockSpecRegistry.loadFromSplit(allComponents, allProjections)
 
     // 4. Register all blocks with Blockly
     this.blockRegistrar.registerAll({
@@ -572,8 +572,8 @@ export class App {
     this.syncBlocksToCodeWithMappings()
   }
 
-  private getVisibleConcepts(): Set<string> {
-    return getVisibleConcepts(this.currentTopic, this.enabledBranches)
+  private getVisibleComponents(): Set<string> {
+    return getVisibleComponents(this.currentTopic, this.enabledBranches)
   }
 
   private getScaffoldDepth(): number {
@@ -588,7 +588,7 @@ export class App {
   }
 
   private markOutOfScopeBlocks(): void {
-    this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleConcepts())
+    this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleComponents())
   }
 
   private reloadBlockSpecsForTopic(): void {
@@ -600,7 +600,7 @@ export class App {
   private callBuildToolbox(): object {
     return buildToolbox({
       blockSpecRegistry: this.blockSpecRegistry,
-      // 🔴 **能力過濾只加在這裡，不加進 `getVisibleConcepts()`。**
+      // 🔴 **能力過濾只加在這裡，不加進 `getVisibleComponents()`。**
       //
       // 那個函式同時餵給 `markOutOfScopeBlocks()`（畫布上的灰階標記），
       // 而把板子過濾加進去會讓**畫布上既有的積木變灰**——那不是本刀的需求，
@@ -609,7 +609,7 @@ export class App {
       //
       // ⚠️ 學生在 ESP32 下拉了一顆觸摸積木、切到 Uno，**那顆積木要留在畫布上**
       // ——切走一個目標不該吃掉他的作品。
-      visibleConcepts: filterByTarget(this.getVisibleConcepts(), this.currentTarget),
+      visibleComponents: filterByTarget(this.getVisibleComponents(), this.currentTarget),
       ioPreference: this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,

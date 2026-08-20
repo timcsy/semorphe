@@ -5,8 +5,8 @@
  * （template_type），這些是 `ofstream x;`（type_identifier，可能包在 `std::` 裡）。
  * 判別邏輯不同，所以是兩張表——**位置決定形狀**。
  */
-import { registerPlainTypeConcept } from '../../../core/component/container-templates'
+import { registerPlainTypeComponent } from '../../../core/component/container-templates'
 
 export function registerLift(): void {
-  registerPlainTypeConcept('ofstream', 'cpp:ofstream_declare', 'cpp/ofstream_declare')
+  registerPlainTypeComponent('ofstream', 'cpp:ofstream_declare', 'cpp/ofstream_declare')
 }

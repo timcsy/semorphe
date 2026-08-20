@@ -1,7 +1,7 @@
 {
   "id": "cpp_alias_declaration",
   "astNodeType": "alias_declaration",
-  "concept": {
+  "component": {
     "componentId": "cpp:using_alias"
   },
   "liftStrategy": "cpp:liftAliasDeclaration",

@@ -1,7 +1,7 @@
 {
   "id": "cpp_identifier",
   "astNodeType": "identifier",
-  "concept": {
+  "component": {
     "componentId": "cpp:var_ref"
   },
   "fieldMappings": [

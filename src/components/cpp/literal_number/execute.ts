@@ -33,7 +33,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 /** 整數／浮點的字面後綴。**只影響型別，不影響值**——見檔頭。 */
 const SUFFIX = /(?:[uU]|[lL]{1,2}|[fF])+$/
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:literal_number', async (node) => {
       const raw = String(node.properties.value)
       // ⚠️ 十六進位／二進位不能剝：`0xFF` 的 `F` 是數字不是後綴。

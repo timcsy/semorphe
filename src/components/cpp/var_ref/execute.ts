@@ -37,7 +37,7 @@ const STREAMS: Record<string, string> = {
   cin: '>>',
 }
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_ref', async (node, ctx) => {
       const name = String(node.properties.name)
       // **一個識別字也可能是函式名**——`sort(v.begin(), v.end(), cmp)` 的 `cmp`。

@@ -23,7 +23,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:exception_make', async (node, ctx) => {
     const kind = String(node.properties.kind ?? 'runtime_error')
     const msgNode = (node.children.message ?? [])[0]

@@ -8,7 +8,7 @@
     "id": "L0",
     "level": 0,
     "label": "L0: 基礎",
-    "concepts": [
+    "components": [
       "cpp:var_declare",
       "cpp:var_assign",
       "cpp:var_ref",
@@ -42,7 +42,7 @@
         "id": "L1a",
         "level": 1,
         "label": "L1a: 函式與迴圈",
-        "concepts": [
+        "components": [
           "cpp:func_def",
           "cpp:func_call",
           "cpp:return",
@@ -88,7 +88,7 @@
             "id": "L2a",
             "level": 2,
             "label": "L2a: 陣列與字串",
-            "concepts": [
+            "components": [
               "cpp:array_declare",
               "cpp:initializer_list",
               "cpp:array_at",
@@ -146,7 +146,7 @@
                 "id": "L3a",
                 "level": 3,
                 "label": "L3a: STL 容器操作",
-                "concepts": [
+                "components": [
                   "cpp:container_empty",
                   "cpp:container_push",
                   "cpp:container_pop",
@@ -185,7 +185,7 @@
         "id": "L1b",
         "level": 1,
         "label": "L1b: 控制流進階",
-        "concepts": [
+        "components": [
           "cpp:switch",
           "cpp:case",
           "cpp:default",
@@ -208,7 +208,7 @@
             "id": "L2b",
             "level": 2,
             "label": "L2b: 指標與記憶體",
-            "concepts": [
+            "components": [
               "cpp:pointer_declare",
               "cpp:pointer_deref",
               "cpp:pointer_assign",
@@ -231,7 +231,7 @@
             "id": "L2c",
             "level": 2,
             "label": "L2c: 結構與類別",
-            "concepts": [
+            "components": [
               "cpp:struct_declare",
               "cpp:struct_at_member",
               "cpp:struct_at_ptr",
@@ -255,7 +255,7 @@
                 "id": "L3b",
                 "level": 3,
                 "label": "L3b: OOP 進階",
-                "concepts": [
+                "components": [
                   "cpp:method_virtual",
                   "cpp:method_virtual_pure",
                   "cpp:method_override",
@@ -270,7 +270,7 @@
                 "id": "L3c",
                 "level": 3,
                 "label": "L3c: 例外與進階",
-                "concepts": [
+                "components": [
                   "cpp:try_catch",
                   "cpp:throw",
                   "cpp:cast_static",
@@ -293,7 +293,7 @@
         "id": "L1c",
         "level": 1,
         "label": "L1c: 型別系統",
-        "concepts": [
+        "components": [
           "cpp:var_declare_const",
           "cpp:var_declare_constexpr",
           "cpp:var_declare_auto",

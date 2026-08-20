@@ -23,7 +23,7 @@
  * 32 顆裸名同時是 DOM 標籤（`document.createElement('input')`）、tree-sitter
  * 節點型別（`node.type === 'comment'`）、產生出來的原始碼文字（`'endl'`）。
  * 字串計數器會被那些卡在非零——而**一條永遠紅的護欄，人會學會忽略它**
- * （`concepts/執行機構.md`）。
+ * （`components/執行機構.md`）。
  *
  * 代價是分類器會低報，而低報讓棘輪**提早喊零**。
  * → 收硬性零之前必須看過 `residualRefs()`，那份清單就是為此存在的。
@@ -33,13 +33,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { listSourceFiles, REPO_ROOT, printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
 import { scanTsRefs, scanJsonRefs, residualRefs } from '../helpers/identity-refs'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { registeredIdMigrations } from '../../src/core/storage-version'
 import { isValidComponentId, isNamespaced } from '../../src/core/identity'
 import { registeredComponents } from '../../src/core/component/registry'
 import type { ComponentDefJSON } from '../../src/core/types'
 
-const allIdentities = new Set(allCppConcepts().map((c) => c.componentId))
+const allIdentities = new Set(allCppComponents().map((c) => c.componentId))
 
 interface formatViolations { componentId: string; why: string }
 
@@ -61,7 +61,7 @@ function checkFormat(inject: ComponentDefJSON[] = []): formatViolations[] {
   const folderOf = new Map(
     registeredComponents().map((c) => [c.componentId, c.sourceDir.split('/').at(-2) ?? '']),
   )
-  for (const c of [...allCppConcepts(), ...inject]) {
+  for (const c of [...allCppComponents(), ...inject]) {
     if (!isNamespaced(c.componentId)) {
       out.push({ componentId: c.componentId, why: '沒有命名空間（裸名或缺 scope）' })
       continue
@@ -122,12 +122,12 @@ function blockTypeFingerprint(): string {
 
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
-const syntheticConcept = (id: string): ComponentDefJSON =>
+const syntheticComponent = (id: string): ComponentDefJSON =>
   ({ componentId: id, layer: 'universal', properties: [], children: {} }) as unknown as ComponentDefJSON
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆裸名身分 → **必須被報出**', () => {
-    const hit = checkFormat([syntheticConcept('__合成_裸名__')])
+    const hit = checkFormat([syntheticComponent('__合成_裸名__')])
     expect(hit.find((f) => f.componentId === '__合成_裸名__'), '裸名沒被報出 → **護欄壞了**').toBeDefined()
   })
 
@@ -136,7 +136,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     //    ⚠️ 而白名單在第二個語言進來時會擋住它——所以改成問結構。
     //    這裡合成「身分說 cop、而它註冊在某個真的資料夾裡」。
     const real = registeredComponents()[0]
-    const hit = checkFormat([{ ...syntheticConcept(real.componentId), componentId: real.componentId }])
+    const hit = checkFormat([{ ...syntheticComponent(real.componentId), componentId: real.componentId }])
     // 正常情況不該被報（一致）
     expect(hit.find((f) => f.componentId === real.componentId), '一致的身分被誤報了').toBeUndefined()
 
@@ -149,7 +149,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 反向：注入一顆格式正確的身分 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上面兩支。
     expect(
-      checkFormat([syntheticConcept('cpp:__合成_正確__')]).find((f) => f.componentId === 'cpp:__合成_正確__'),
+      checkFormat([syntheticComponent('cpp:__合成_正確__')]).find((f) => f.componentId === 'cpp:__合成_正確__'),
       '一顆格式正確的身分被報成違規 → 這條會亂叫',
     ).toBeUndefined()
   })
@@ -192,7 +192,7 @@ describe('身分改名表的涵蓋率', () => {
     // `registerIdMigration`。那個設計是對的——中立性護欄擋下了把 174 顆
     // 語言身分寫進 `src/core` 的第一版。
     //
-    // 但登錄式機制天生有 `concepts/執行機構.md` 的病：**套件忘了登錄，
+    // 但登錄式機制天生有 `components/執行機構.md` 的病：**套件忘了登錄，
     // 存檔就靜靜地不轉換**，而症狀要等到使用者打開舊檔才出現。
     //
     // > 建一個機制時，同時交付一條量採用率的檢查。
@@ -231,7 +231,7 @@ describe('元件身分命名空間', () => {
 
   it('報表', () => {
     const scopeDistribution = new Map<string, number>()
-    for (const c of allCppConcepts()) {
+    for (const c of allCppComponents()) {
       const s = isNamespaced(c.componentId) ? c.componentId.slice(0, c.componentId.indexOf(':')) : '（裸名）'
       scopeDistribution.set(s, (scopeDistribution.get(s) ?? 0) + 1)
     }

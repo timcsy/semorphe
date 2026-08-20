@@ -1,7 +1,7 @@
 /**
  * Code-to-Blocks Integration Tests (T050)
  *
- * Verifies that common C++ code patterns are lifted to the correct semantic concepts
+ * Verifies that common C++ code patterns are lifted to the correct semantic components
  * and rendered to the correct block types via the JSON-driven pipeline.
  * Uses real tree-sitter parsing.
  */
@@ -22,11 +22,11 @@ import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjec
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 // ⚠️ **第十六個「自己列舉來源」的地方**（今天第六處）。
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 
@@ -58,14 +58,14 @@ beforeAll(async () => {
   // Wire up JSON-driven PatternLifter with block specs (overrides the one from createTestLifter)
   const specRegistry = new BlockSpecRegistry()
   // ⚠️ **不要自己列宣告來源。** 這裡原本手列
-  // `universalConcepts ＋ coreConcepts ＋ allStdModules`（積木那邊還記得加
+  // `universalComponents ＋ coreComponents ＋ allStdModules`（積木那邊還記得加
   // `componentBlocks()`，概念這邊**忘了**）——於是膠囊的概念一筆都不在，
   // 而症狀是「`x += 5` 辨識不出來」，看起來像 lifter 壞了。
   //
   // > **一份少一半的組裝，錯誤訊息會指向被害者，不是兇手。**
-  const allConcepts = allCppConcepts()
+  const allComponents = allCppComponents()
   const allProjections = allCppProjections()
-  specRegistry.loadFromSplit(allConcepts, allProjections)
+  specRegistry.loadFromSplit(allComponents, allProjections)
   const allSpecs = specRegistry.getAll()
 
   const transformRegistry = new TransformRegistry()
@@ -107,11 +107,11 @@ function liftCode(code: string) {
   return lifter.lift(tree.rootNode as any)
 }
 
-function findConcepts(sem: any): string[] {
-  const concepts: string[] = []
+function findComponents(sem: any): string[] {
+  const components: string[] = []
   function walk(node: any) {
     if (!node) return
-    if (node.componentId) concepts.push(node.componentId)
+    if (node.componentId) components.push(node.componentId)
     if (node.children) {
       for (const ch of Object.values(node.children) as any[]) {
         if (Array.isArray(ch)) ch.forEach(walk)
@@ -119,7 +119,7 @@ function findConcepts(sem: any): string[] {
     }
   }
   walk(sem)
-  return concepts
+  return components
 }
 
 function findBlockTypes(state: any): string[] {
@@ -142,10 +142,10 @@ function findBlockTypes(state: any): string[] {
 
 describe('Code-to-Blocks Pipeline', () => {
   describe('Increment/Decrement — i++, i--', () => {
-    it('should lift i++ to cpp_increment concept', () => {
+    it('should lift i++ to cpp_increment component', () => {
       const sem = liftCode('i++;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:increment')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:increment')
     })
 
     it('should render i++ to cpp_increment block', () => {
@@ -157,18 +157,18 @@ describe('Code-to-Blocks Pipeline', () => {
   })
 
   describe('Compound Assignment — x += 5', () => {
-    it('should lift x += 5 to cpp_compound_assign concept', () => {
+    it('should lift x += 5 to cpp_compound_assign component', () => {
       const sem = liftCode('x += 5;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:var_assign_compound')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:var_assign_compound')
     })
   })
 
   describe('Counting for loop', () => {
-    it('should lift counting for loop to count_loop concept', () => {
+    it('should lift counting for loop to count_loop component', () => {
       const sem = liftCode('for (int i = 0; i < 10; i++) { x = 1; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:loop_count')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:loop_count')
     })
 
     it('should render to cpp_loop_count block', () => {
@@ -182,17 +182,17 @@ describe('Code-to-Blocks Pipeline', () => {
   describe('Counting for loop with inclusive (<=)', () => {
     it('should lift i <= n counting for loop with inclusive TRUE', () => {
       const sem = liftCode('for (int i = 1; i <= n; i++) { x = 1; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:loop_count')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:loop_count')
       // Walk to find the count_loop and check inclusive
-      function findNode(node: any, concept: string): any {
+      function findNode(node: any, component: string): any {
         if (!node) return null
-        if (node.componentId === concept) return node
+        if (node.componentId === component) return node
         if (node.children) {
           for (const ch of Object.values(node.children) as any[]) {
             if (Array.isArray(ch)) {
               for (const c of ch) {
-                const found = findNode(c, concept)
+                const found = findNode(c, component)
                 if (found) return found
               }
             }
@@ -207,10 +207,10 @@ describe('Code-to-Blocks Pipeline', () => {
   })
 
   describe('Three-part for loop (non-counting)', () => {
-    it('should lift non-counting for loop to cpp_for_loop concept', () => {
+    it('should lift non-counting for loop to cpp_for_loop component', () => {
       const sem = liftCode('for (x = 0; x < 10; x = x + 1) { y = 1; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:loop_for')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:loop_for')
     })
 
     it('should render non-counting for to cpp_loop_for block', () => {
@@ -222,151 +222,151 @@ describe('Code-to-Blocks Pipeline', () => {
   })
 
   describe('cout / cin I/O', () => {
-    it('should lift cout << x to print concept', () => {
+    it('should lift cout << x to print component', () => {
       const sem = liftCode('cout << x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:print')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:print')
     })
 
-    it('should lift cin >> x to input concept', () => {
+    it('should lift cin >> x to input component', () => {
       const sem = liftCode('cin >> x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:input')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:input')
     })
   })
 
   describe('if / if-else', () => {
-    it('should lift if statement to if concept', () => {
+    it('should lift if statement to if component', () => {
       const sem = liftCode('if (x > 0) { y = 1; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:if')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:if')
     })
 
-    it('should lift if-else to if concept with else_body', () => {
+    it('should lift if-else to if component with else_body', () => {
       const sem = liftCode('if (x > 0) { y = 1; } else { y = 0; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:if')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:if')
     })
   })
 
   describe('while loop', () => {
-    it('should lift while loop to while_loop concept', () => {
+    it('should lift while loop to while_loop component', () => {
       const sem = liftCode('while (x > 0) { x--; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:loop_while')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:loop_while')
     })
   })
 
   describe('Binary expressions', () => {
     it('should lift arithmetic: a + b', () => {
       const sem = liftCode('int r = a + b;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:arithmetic')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:arithmetic')
     })
 
     it('should lift comparison: x > 0', () => {
       const sem = liftCode('if (x > 0) {}')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:compare')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:compare')
     })
 
     it('should lift logic: a && b', () => {
       const sem = liftCode('if (a && b) {}')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:logic')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:logic')
     })
   })
 
   describe('Unary expressions', () => {
     it('should lift !x to logic_not', () => {
       const sem = liftCode('if (!x) {}')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:logic_not')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:logic_not')
     })
 
     it('should lift -x to negate', () => {
       const sem = liftCode('int y = -x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:negate')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:negate')
     })
   })
 
   describe('Pointer operations', () => {
     it('should lift *ptr to cpp_pointer_deref', () => {
       const sem = liftCode('int x = *ptr;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:pointer_deref')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:pointer_deref')
     })
 
     it('should lift &x to cpp_address_of', () => {
       const sem = liftCode('int *p = &x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:address_of')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:address_of')
     })
   })
 
   describe('Function calls', () => {
-    it('should lift strlen(s) to cpp_strlen concept', () => {
+    it('should lift strlen(s) to cpp_strlen component', () => {
       const sem = liftCode('int n = strlen(s);')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:cstring_size')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:cstring_size')
     })
 
     it('should lift free(ptr) to cpp_free (hand-written lifter)', () => {
       const sem = liftCode('free(ptr);')
-      const concepts = findConcepts(sem)
-      // free() is now recognized as cpp_free concept
-      expect(concepts).toContain('cpp:free')
+      const components = findComponents(sem)
+      // free() is now recognized as cpp_free component
+      expect(components).toContain('cpp:free')
     })
   })
 
   describe('Struct access', () => {
     it('should lift p.x to cpp_struct_member_access', () => {
       const sem = liftCode('int v = p.x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:struct_at_member')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:struct_at_member')
     })
 
     it('should lift p->x to cpp_struct_pointer_access', () => {
       const sem = liftCode('int v = p->x;')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:struct_at_ptr')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:struct_at_ptr')
     })
   })
 
   describe('Preprocessor', () => {
     it('should lift #include to cpp_include', () => {
       const sem = liftCode('#include <iostream>')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:include')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:include')
     })
 
     it('should lift #define to cpp_define', () => {
       const sem = liftCode('#define MAX 100')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:define')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:define')
     })
   })
 
   describe('Return statement', () => {
-    it('should lift return 0 to return concept', () => {
+    it('should lift return 0 to return component', () => {
       const sem = liftCode('int main() { return 0; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:return')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:return')
     })
   })
 
   describe('Break / Continue', () => {
-    it('should lift break to break concept', () => {
+    it('should lift break to break component', () => {
       const sem = liftCode('while(1) { break; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:break')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:break')
     })
 
-    it('should lift continue to continue concept', () => {
+    it('should lift continue to continue component', () => {
       const sem = liftCode('while(1) { continue; }')
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:continue')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:continue')
     })
   })
 
@@ -387,12 +387,12 @@ int main() {
 }`
       const sem = liftCode(code)
       expect(sem).not.toBeNull()
-      const concepts = findConcepts(sem)
-      expect(concepts).toContain('cpp:include')
-      expect(concepts).toContain('cpp:input')
-      expect(concepts).toContain('cpp:loop_count')
-      expect(concepts).toContain('cpp:print')
-      expect(concepts).toContain('cpp:return')
+      const components = findComponents(sem)
+      expect(components).toContain('cpp:include')
+      expect(components).toContain('cpp:input')
+      expect(components).toContain('cpp:loop_count')
+      expect(components).toContain('cpp:print')
+      expect(components).toContain('cpp:return')
 
       // Verify code generation roundtrip
       const generated = generateCode(sem!, 'cpp', style)

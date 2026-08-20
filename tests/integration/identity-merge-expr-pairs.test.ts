@@ -35,9 +35,9 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { SemanticNode } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -65,21 +65,21 @@ const mergedOnes = [
 /**
  * ⚠️ **不要自己列宣告來源。**
  *
- * 這裡原本手列 `universalConcepts ＋ coreConcepts ＋ allStdModules`
+ * 這裡原本手列 `universalComponents ＋ coreComponents ＋ allStdModules`
  * ——**膠囊的宣告一筆都不在**。一顆元件搬進膠囊之後，這支測試會說
  * 「它的積木不見了」，而生產環境好好的。
  *
  * > **一個各自組裝的地方，會在別人搬家時變紅——而它的錯誤訊息與真的壞掉一模一樣。**
  *
- * `allCppConcepts()`／`allCppProjections()` 是組裝函式，它們含膠囊。
+ * `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
  */
-function allConcepts(): ComponentDefJSON[] {
-  return allCppConcepts()
+function allComponents(): ComponentDefJSON[] {
+  return allCppComponents()
 }
 
 function registry(): BlockSpecRegistry {
   const reg = new BlockSpecRegistry()
-  reg.loadFromSplit(allConcepts(), allCppProjections())
+  reg.loadFromSplit(allComponents(), allCppProjections())
   return reg
 }
 
@@ -119,7 +119,7 @@ function blockTypes(tree: SemanticNode): string[] {
 
 describe('六對雙版本已合併成六個身分', () => {
   it('★ 六個 `_expr` 概念都不在登錄表裡', () => {
-    const ids = new Set(allConcepts().map((c) => c.componentId))
+    const ids = new Set(allComponents().map((c) => c.componentId))
     for (const id of mergedOnes) {
       expect(ids.has(id), `${id} 還在——雙重身分沒有消掉`).toBe(false)
     }
@@ -139,7 +139,7 @@ describe('六對雙版本已合併成六個身分', () => {
   })
 
   it('★ 一個身分查得到兩個形態', () => {
-    const forms = registry().getFormsByConceptId('cpp:increment')
+    const forms = registry().getFormsByComponentId('cpp:increment')
     expect(forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort()).toEqual(
       ['cpp_increment', 'cpp_increment_expression'],
     )

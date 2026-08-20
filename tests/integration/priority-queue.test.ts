@@ -118,7 +118,7 @@ describe('工具箱（E 項的第一次回報）', () => {
   // ⚠️ **上面那一支是使用者拿不到的證據，不是拿得到的證據。**
   //
   // `loadToolbox()` 用「全部概念可見」。而使用者看到的是**課程**的可見集合——
-  // 一顆沒有被任何課程收錄的元件，`getVisibleConcepts` 會把它擋掉，
+  // 一顆沒有被任何課程收錄的元件，`getVisibleComponents` 會把它擋掉，
   // 學生**永遠看不到**。
   //
   // 第一版只有上面那一支，於是它綠著，而使用者回報「priority_queue 我沒看到呀」。
@@ -127,17 +127,17 @@ describe('工具箱（E 項的第一次回報）', () => {
   // 而「快照要釘在使用者實際會看到的狀態上，不是最大的那個狀態」這句話
   // 三個 commit 前才寫進 experience.md。
   it('★ **學生真的看得到**——在課程的可見集合裡', async () => {
-    const { getVisibleConcepts } = await import('../../src/core/level-tree')
+    const { getVisibleComponents } = await import('../../src/core/level-tree')
     const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
     const { buildToolbox } = await import('../../src/ui/toolbox-builder')
     const { CATEGORY_COLORS } = await import('../../src/ui/theme/category-colors')
-    const { allCppConcepts, allCppProjections } = await import('../../src/languages/cpp/all-declarations')
+    const { allCppComponents, allCppProjections } = await import('../../src/languages/cpp/all-declarations')
     const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
     const beginner = (await import('../../src/languages/cpp/topics/cpp-beginner.json')).default
     const competitive = (await import('../../src/languages/cpp/topics/cpp-competitive.json')).default
 
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts(), allCppProjections())
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
 
     for (const [name, topic, levels] of [
       ['初學 C++', beginner, ['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c', 'L3a']],
@@ -145,7 +145,7 @@ describe('工具箱（E 項的第一次回報）', () => {
     ] as const) {
       const tb = buildToolbox({
         blockSpecRegistry: reg,
-        visibleConcepts: getVisibleConcepts(topic as never, new Set(levels)),
+        visibleComponents: getVisibleComponents(topic as never, new Set(levels)),
         ioPreference: 'iostream',
         msgs: {},
         categoryColors: CATEGORY_COLORS,

@@ -1,7 +1,7 @@
 /**
  * C++ cctype Roundtrip Tests
  *
- * Verifies that C++ cctype concepts (cpp_char_is_alpha, cpp_char_is_digit, cpp_char_to_upper, cpp_char_to_lower)
+ * Verifies that C++ cctype components (cpp_char_is_alpha, cpp_char_is_digit, cpp_char_to_upper, cpp_char_to_lower)
  * survive the full roundtrip: code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -51,12 +51,12 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
@@ -68,9 +68,9 @@ describe('C++ cctype Roundtrip', () => {
   describe('cpp:char_is_alpha', () => {
     const code = "if (isalpha('A')) { cout << \"yes\" << endl; }"
 
-    it('should lift to cpp_char_is_alpha concept', () => {
+    it('should lift to cpp_char_is_alpha component', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:char_is_alpha')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_is_alpha')).not.toBeNull()
     })
 
     it('should generate code containing isalpha()', () => {
@@ -81,16 +81,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:char_is_alpha')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_is_alpha')).not.toBeNull()
     })
   })
 
   describe('cpp:char_is_digit', () => {
     const code = "if (isdigit('5')) { cout << \"digit\" << endl; }"
 
-    it('should lift to cpp_char_is_digit concept', () => {
+    it('should lift to cpp_char_is_digit component', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:char_is_digit')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_is_digit')).not.toBeNull()
     })
 
     it('should generate code containing isdigit()', () => {
@@ -101,16 +101,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:char_is_digit')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_is_digit')).not.toBeNull()
     })
   })
 
   describe('cpp:char_to_upper', () => {
     const code = "char c = toupper('a');"
 
-    it('should lift to cpp_char_to_upper concept', () => {
+    it('should lift to cpp_char_to_upper component', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:char_to_upper')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_to_upper')).not.toBeNull()
     })
 
     it('should generate code containing toupper()', () => {
@@ -121,16 +121,16 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:char_to_upper')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_to_upper')).not.toBeNull()
     })
   })
 
   describe('cpp:char_to_lower', () => {
     const code = "char c = tolower('Z');"
 
-    it('should lift to cpp_char_to_lower concept', () => {
+    it('should lift to cpp_char_to_lower component', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:char_to_lower')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_to_lower')).not.toBeNull()
     })
 
     it('should generate code containing tolower()', () => {
@@ -141,7 +141,7 @@ describe('C++ cctype Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:char_to_lower')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_to_lower')).not.toBeNull()
     })
   })
 
@@ -155,19 +155,19 @@ if (isdigit('3')) {
 }
 cout << (char)tolower('Z') << endl;`
 
-    it('should lift all four cctype concepts', () => {
+    it('should lift all four cctype components', () => {
       const tree = liftCode(code)
-      expect(findConcept(tree, 'cpp:char_is_alpha')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:char_is_digit')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:char_to_upper')).not.toBeNull()
-      expect(findConcept(tree, 'cpp:char_to_lower')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_is_alpha')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_is_digit')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_to_upper')).not.toBeNull()
+      expect(findComponent(tree, 'cpp:char_to_lower')).not.toBeNull()
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      expect(findConcept(tree2, 'cpp:char_is_alpha')).not.toBeNull()
-      expect(findConcept(tree2, 'cpp:char_to_upper')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_is_alpha')).not.toBeNull()
+      expect(findComponent(tree2, 'cpp:char_to_upper')).not.toBeNull()
     })
   })
 })

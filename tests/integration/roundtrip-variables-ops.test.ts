@@ -1,11 +1,11 @@
 /**
  * Phase 1 Roundtrip: Variables & Operators
  *
- * Covers all 12 concepts from the variables-ops pipeline:
+ * Covers all 12 components from the variables-ops pipeline:
  * number_literal, string_literal, cpp_char_literal, builtin_constant,
  * var_ref, var_declare, var_assign, arithmetic, compare, logic, logic_not, negate
  *
- * Each concept is tested for:
+ * Each component is tested for:
  * 1. code → lift → semantic tree correctness
  * 2. semantic tree → code generation fidelity
  * 3. execution correctness (via interpreter)

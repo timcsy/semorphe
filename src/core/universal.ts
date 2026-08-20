@@ -19,13 +19,13 @@
  * 而空陣列的展開移除是安全的但需要逐處確認。
  */
 import type { ComponentDefJSON, BlockProjectionJSON } from '../core/types'
-import _concepts from './universal-components.json'
+import _components from './universal-components.json'
 import _blocks from './universal-blocks.json'
 
 /** 通用積木的 owner 標記——與 std 模組的 header 同一個名字空間 */
 export const UNIVERSAL_OWNER = '(universal)'
 
-export const universalConcepts = _concepts as unknown as ComponentDefJSON[]
+export const universalComponents = _components as unknown as ComponentDefJSON[]
 
 export const universalBlocks: BlockProjectionJSON[] = (
   _blocks as unknown as BlockProjectionJSON[]

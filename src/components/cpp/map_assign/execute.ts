@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { mapFind, makePair, setPairValue } from '../../../languages/cpp/core/runtime/map'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
      * `m[key] = value`——**對應表的寫入，與陣列的索引寫入是不同的行為**。
      *

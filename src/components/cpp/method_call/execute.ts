@@ -11,7 +11,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { runOnInstance } from '../../../languages/cpp/core/executors/structs'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const callMethod: ComponentExecutor = async (node, ctx) => {
     const objName = String(node.properties.obj)
     const methodName = String(node.properties.method)

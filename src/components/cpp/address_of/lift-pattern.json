@@ -1,7 +1,7 @@
 {
   "id": "cpp_address_of_ptr",
   "astNodeType": "pointer_expression",
-  "concept": {
+  "component": {
     "componentId": "cpp:address_of"
   },
   "constraints": [

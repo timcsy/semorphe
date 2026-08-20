@@ -45,7 +45,7 @@
  */
 
 /** 一個函式名對應的節點形狀。 */
-export interface CallConceptShape {
+export interface CallComponentShape {
   componentId: string
   /**
    * 引數依序放進哪些子節點槽。`['base','exponent']` → 第一引數進 `base`。
@@ -63,10 +63,10 @@ export interface CallConceptShape {
   source: string
 }
 
-const table = new Map<string, CallConceptShape>()
+const table = new Map<string, CallComponentShape>()
 
 /** 登錄一組函式名共用的一個形狀。 */
-export function registerCallConcept(funcNames: string | string[], shape: CallConceptShape): void {
+export function registerCallComponent(funcNames: string | string[], shape: CallComponentShape): void {
   for (const name of typeof funcNames === 'string' ? [funcNames] : funcNames) {
     const existing = table.get(name)
     if (existing && existing.componentId !== shape.componentId) {
@@ -87,16 +87,16 @@ export function registerCallConcept(funcNames: string | string[], shape: CallCon
  * 而**把已驗證的形狀換掉需要理由**。
  */
 export function registerSingleArgFunction(funcName: string, componentId: string, source: string): void {
-  registerCallConcept(funcName, { componentId, argSlots: ['value'], source })
+  registerCallComponent(funcName, { componentId, argSlots: ['value'], source })
 }
 
 /** 函式名 → 形狀。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
-export function callConceptFor(funcName: string): CallConceptShape | undefined {
+export function callComponentFor(funcName: string): CallComponentShape | undefined {
   return table.get(funcName)
 }
 
 /** 函式名 → 元件身分。 */
-export function conceptForSingleArgFunction(funcName: string): string | undefined {
+export function componentForSingleArgFunction(funcName: string): string | undefined {
   return table.get(funcName)?.componentId
 }
 

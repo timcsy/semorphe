@@ -154,7 +154,7 @@ export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
   return newValue
 }
 
-export function registerMutationExecutors(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerMutationExecutors(register: (component: string, executor: ComponentExecutor) => void): void {
 
   register('compound_assign', execCompoundAssign)
 }

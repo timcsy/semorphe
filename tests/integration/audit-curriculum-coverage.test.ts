@@ -12,10 +12,10 @@
  * ## 這條**刻意不做**的事：不導出成員
  *
  * ```
- * L0: 基礎          concepts: 19
- *   L1a: 函式與迴圈   concepts: 20
- *     L2a: 陣列與字串  concepts: 33
- *       L3a: STL 容器   concepts: 25
+ * L0: 基礎          components: 19
+ *   L1a: 函式與迴圈   components: 20
+ *     L2a: 陣列與字串  components: 33
+ *       L3a: STL 容器   components: 25
  * ```
  *
  * 那是**一條教學漸進線**。「`vector` 屬於 L3a 而不是 L0」是人的判斷，
@@ -60,13 +60,13 @@ const topicModules = import.meta.glob('../../src/languages/cpp/topics/*.json', {
 interface Level {
   id: string
   label: string
-  concepts: string[]
+  components: string[]
 }
 
 const ALL_TOPICS = Object.values(topicModules).map((m) => m.default)
 
-const { allConcepts } = loadToolbox()
-const knownComponents = new Set(allConcepts.map((c) => c.componentId))
+const { allComponents } = loadToolbox()
+const knownComponents = new Set(allComponents.map((c) => c.componentId))
 
 /**
  * **刻意不收進任何課程**的元件——每筆附理由。
@@ -91,26 +91,26 @@ const deliberatelyExcluded: Record<string, string> = {
 const course = ALL_TOPICS.map((t) => curriculumSnapshot(t as never))
 
 /** 懸空引用：課程指向一顆不存在的元件 */
-function dangling(levels: Level[], known: Set<string> = knownComponents): { level: string; concept: string }[] {
-  const out: { level: string; concept: string }[] = []
+function dangling(levels: Level[], known: Set<string> = knownComponents): { level: string; component: string }[] {
+  const out: { level: string; component: string }[] = []
   for (const lv of levels) {
-    for (const c of lv.concepts) if (!known.has(c)) out.push({ level: lv.id, concept: c })
+    for (const c of lv.components) if (!known.has(c)) out.push({ level: lv.id, component: c })
   }
   return out
 }
 
 describe('自我驗證：這條檢查真的量得到東西', () => {
   it('★ 注入一個引用幽靈元件的層級 → **必須被報出**', () => {
-    const synthetic: Level[] = [{ id: '__合成層級__', label: '合成', concepts: ['__不存在的元件__'] }]
+    const synthetic: Level[] = [{ id: '__合成層級__', label: '合成', components: ['__不存在的元件__'] }]
     expect(
       dangling(synthetic),
       '合成的懸空引用沒有被報出來 → **檢查壞了，不是清單健康**',
-    ).toEqual([{ level: '__合成層級__', concept: '__不存在的元件__' }])
+    ).toEqual([{ level: '__合成層級__', component: '__不存在的元件__' }])
   })
 
   it('★ 反向：注入一個引用真元件的層級 → **必須不被報出**', () => {
     // 沒有這一支的話，一個「什麼都報」的檢查也能通過上一支。
-    const synthetic: Level[] = [{ id: '__合成層級__', label: '合成', concepts: ['cpp:print'] }]
+    const synthetic: Level[] = [{ id: '__合成層級__', label: '合成', components: ['cpp:print'] }]
     expect(dangling(synthetic), '一個引用真元件的層級被報成懸空 → 這條檢查會亂叫').toEqual([])
   })
 
@@ -121,15 +121,15 @@ describe('自我驗證：這條檢查真的量得到東西', () => {
 })
 
 describe('課程清單', () => {
-  const allDangling = course.flatMap((t) => dangling(t.levels).map((d) => `${t.id} · ${d.level} → ${d.concept}`))
-  const included = new Set(course.flatMap((t) => t.levels.flatMap((l) => l.concepts)))
+  const allDangling = course.flatMap((t) => dangling(t.levels).map((d) => `${t.id} · ${d.level} → ${d.component}`))
+  const included = new Set(course.flatMap((t) => t.levels.flatMap((l) => l.components)))
   const notIncluded = [...knownComponents].filter((c) => !included.has(c)).sort()
 
   it('報表', () => {
     printReport('課程收錄', [
       `元件 ${knownComponents.size}｜被至少一門課收錄 ${included.size}｜未收錄 ${notIncluded.length}`,
       '',
-      ...course.map((t) => `  ${t.id}：${t.levels.length} 層，${t.levels.reduce((n, l) => n + l.concepts.length, 0)} 筆引用`),
+      ...course.map((t) => `  ${t.id}：${t.levels.length} 層，${t.levels.reduce((n, l) => n + l.components.length, 0)} 筆引用`),
       '',
       '未收錄（**不是違規**——沒收錄是策展決定）：',
       ...notIncluded.map((c) => `    ${c}`),
@@ -151,7 +151,7 @@ describe('課程清單', () => {
 
   it('★ 未收錄 MUST 是**明確的策展決定**，不得是「忘了」', () => {
     // ⚠️ **這一支是使用者逼出來的**：`priority_queue` 補齊了五路、進了工具箱、
-    // 測試全綠——而**它沒有被任何課程收錄**，於是 `getVisibleConcepts` 把它擋掉，
+    // 測試全綠——而**它沒有被任何課程收錄**，於是 `getVisibleComponents` 把它擋掉，
     // 學生永遠看不到。使用者的話是「priority_queue 我沒看到呀」。
     //
     // TP-2 刻意不把「未收錄」算成違規（做成違規會逼出「為了讓護欄綠而亂塞課程」）。

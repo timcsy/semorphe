@@ -1,7 +1,7 @@
 /**
  * C++ Queue Operations Roundtrip Tests
  *
- * Verifies that C++ queue concepts (cpp_queue_declare, cpp_queue_push,
+ * Verifies that C++ queue components (cpp_queue_declare, cpp_queue_push,
  * cpp_queue_pop, cpp_queue_front, cpp_queue_empty) survive the full roundtrip.
  *
  * Note: .push()/.pop() are shared methods that lifter maps to cpp_container_push/pop.
@@ -54,24 +54,24 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -82,9 +82,9 @@ describe('C++ Queue Operations Roundtrip', () => {
   describe('cpp:queue_declare', () => {
     const code = 'queue<int> q;\ncout << "created" << endl;'
 
-    it('should lift to cpp_queue_declare concept', () => {
+    it('should lift to cpp_queue_declare component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:queue_declare')
+      const node = findComponent(tree, 'cpp:queue_declare')
       expect(node).not.toBeNull()
       expect(node!.properties.type).toBe('int')
       expect(node!.properties.name).toBe('q')
@@ -99,7 +99,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:queue_declare')
+      const node2 = findComponent(tree2, 'cpp:queue_declare')
       expect(node2).not.toBeNull()
       expect(node2!.properties.type).toBe('int')
     })
@@ -110,7 +110,7 @@ describe('C++ Queue Operations Roundtrip', () => {
 
     it('should lift .push() to cpp_container_push (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_push')
+      const node = findComponent(tree, 'cpp:container_push')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('q')
     })
@@ -123,7 +123,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_push')
+      const node2 = findComponent(tree2, 'cpp:container_push')
       expect(node2).not.toBeNull()
     })
   })
@@ -131,9 +131,9 @@ describe('C++ Queue Operations Roundtrip', () => {
   describe('cpp:queue_front', () => {
     const code = 'queue<int> q;\nq.push(42);\ncout << q.front() << endl;'
 
-    it('should lift to cpp_queue_front concept', () => {
+    it('should lift to cpp_queue_front component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:queue_front')
+      const node = findComponent(tree, 'cpp:queue_front')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('q')
     })
@@ -146,7 +146,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:queue_front')
+      const node2 = findComponent(tree2, 'cpp:queue_front')
       expect(node2).not.toBeNull()
     })
   })
@@ -156,7 +156,7 @@ describe('C++ Queue Operations Roundtrip', () => {
 
     it('should lift .pop() to cpp_container_pop (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_pop')
+      const node = findComponent(tree, 'cpp:container_pop')
       expect(node).not.toBeNull()
     })
 
@@ -168,7 +168,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_pop')
+      const node2 = findComponent(tree2, 'cpp:container_pop')
       expect(node2).not.toBeNull()
     })
   })
@@ -178,7 +178,7 @@ describe('C++ Queue Operations Roundtrip', () => {
 
     it('should lift .empty() to cpp_container_empty (shared method)', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:container_empty')
+      const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
     })
 
@@ -190,7 +190,7 @@ describe('C++ Queue Operations Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:container_empty')
+      const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
     })
   })
@@ -198,23 +198,23 @@ describe('C++ Queue Operations Roundtrip', () => {
   describe('combo: FIFO drain loop', () => {
     const code = 'queue<int> q;\nq.push(10);\nq.push(20);\nq.push(30);\nwhile (!q.empty()) {\n    cout << q.front() << endl;\n    q.pop();\n}'
 
-    it('should lift all queue concepts', () => {
+    it('should lift all queue components', () => {
       const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:queue_declare')).toBe(true)
-      expect(concepts.has('cpp:container_push')).toBe(true)
-      expect(concepts.has('cpp:queue_front')).toBe(true)
-      expect(concepts.has('cpp:container_pop')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:queue_declare')).toBe(true)
+      expect(components.has('cpp:container_push')).toBe(true)
+      expect(components.has('cpp:queue_front')).toBe(true)
+      expect(components.has('cpp:container_pop')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:queue_declare')).toBe(true)
-      expect(concepts2.has('cpp:container_push')).toBe(true)
-      expect(concepts2.has('cpp:queue_front')).toBe(true)
-      expect(concepts2.has('cpp:container_pop')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:queue_declare')).toBe(true)
+      expect(components2.has('cpp:container_push')).toBe(true)
+      expect(components2.has('cpp:queue_front')).toBe(true)
+      expect(components2.has('cpp:container_pop')).toBe(true)
     })
   })
 })

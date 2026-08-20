@@ -4,9 +4,9 @@
  * ⚠️ `method-components.ts` 有**三張表**，而它們不能合併：
  *
  * ```
- * methodConceptFor(方法名)         早——路由器一拿到方法名就查，直接建節點
- * containerMethodConcept(方法名)   晚——要先做型別分派、還要記下 container_kind
- * typedMethodConcept(型別, 方法名)  晚——只有接收者型別查得到時才問
+ * methodComponentFor(方法名)         早——路由器一拿到方法名就查，直接建節點
+ * containerMethodComponent(方法名)   晚——要先做型別分派、還要記下 container_kind
+ * typedMethodComponent(型別, 方法名)  晚——只有接收者型別查得到時才問
  * ```
  *
  * 這顆登在**晚查**那張表：`st.push(x)` 與 `q.push(x)` 執行行為相同，
@@ -19,8 +19,8 @@
  * > **兩個查詢點就是兩張表。合併會讓其中一個查詢點的前置工作被跳過，
  * > 而那不會報錯。**
  */
-import { registerContainerMethodConcept } from '../../../core/component/method-components'
+import { registerContainerMethodComponent } from '../../../core/component/method-components'
 
 export function registerLift(): void {
-  registerContainerMethodConcept('push', 'cpp:container_push', 'cpp/container_push')
+  registerContainerMethodComponent('push', 'cpp:container_push', 'cpp/container_push')
 }

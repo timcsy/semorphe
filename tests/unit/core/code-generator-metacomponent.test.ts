@@ -1,14 +1,14 @@
 /**
- * TDD tests for Phase A Item 6: code-generator meta-concept if-else → generator Map
+ * TDD tests for Phase A Item 6: code-generator meta-component if-else → generator Map
  *
- * After refactoring, meta-concepts (raw_code, unresolved, comment, doc_comment, block_comment)
+ * After refactoring, meta-components (raw_code, unresolved, comment, doc_comment, block_comment)
  * should be registered as regular generators, not handled by if-else chain.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { generateNode, type GeneratorContext, registerMetaConceptGenerators } from '../../../src/core/projection/code-generator'
+import { generateNode, type GeneratorContext, registerMetaComponentGenerators } from '../../../src/core/projection/code-generator'
 import type { SemanticNode } from '../../../src/core/types'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
-// ⚠️ 註解那三顆 2026-08-11 搬進膠囊——核心的 `registerMetaConceptGenerators`
+// ⚠️ 註解那三顆 2026-08-11 搬進膠囊——核心的 `registerMetaComponentGenerators`
 // 不再認得它們。少了這一行，這支測試量到的是**生產環境不存在的組態**
 // （一個沒有註解產生器的 Map）。
 import { componentGenerateRegistrars } from '../../../src/core/component/paths'
@@ -18,10 +18,10 @@ import { componentGenerateRegistrars } from '../../../src/core/component/paths'
 // **生產環境不存在的組態**（語言中立的退路，不是任何語言的註解）。
 beforeAll(() => registerCppLanguage())
 
-function makeNode(concept: string, props: Record<string, any> = {}, children: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
+function makeNode(component: string, props: Record<string, any> = {}, children: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
   return {
     id: 'test-1',
-    componentId: concept,
+    componentId: component,
     properties: props,
     children,
     metadata: meta,
@@ -30,8 +30,8 @@ function makeNode(concept: string, props: Record<string, any> = {}, children: Re
 
 function makeCtx(generators?: Map<string, any>): GeneratorContext {
   const gens = generators ?? new Map()
-  // Register meta-concept generators into the map
-  registerMetaConceptGenerators(gens)
+  // Register meta-component generators into the map
+  registerMetaComponentGenerators(gens)
   // 膠囊自帶的產生器（註解那三顆在這裡）
   const st = { id: 'test', name: {}, io_style: 'cout', naming_convention: 'camelCase', indent_size: 4, brace_style: 'K&R', namespace_style: 'using', header_style: 'bits' }
   for (const reg of componentGenerateRegistrars())
@@ -44,10 +44,10 @@ function makeCtx(generators?: Map<string, any>): GeneratorContext {
   }
 }
 
-describe('meta-concept generators', () => {
+describe('meta-component generators', () => {
   it('★ 核心只登記真正的元概念——註解那三顆已經是膠囊了', () => {
     const map = new Map()
-    registerMetaConceptGenerators(map)
+    registerMetaComponentGenerators(map)
     // `raw_code`／`unresolved` 是**辨識失敗的落點**，沒有語言歸屬——留在核心。
     expect(map.has('raw_code')).toBe(true)
     expect(map.has('unresolved')).toBe(true)
@@ -130,10 +130,10 @@ describe('meta-concept generators', () => {
     expect(result).toContain(' */')
   })
 
-  it('unknown concept falls through to fallback', () => {
+  it('unknown component falls through to fallback', () => {
     const ctx = makeCtx()
     const node = makeNode('totally_unknown', {})
     const result = generateNode(node, ctx)
-    expect(result).toContain('unknown concept')
+    expect(result).toContain('unknown component')
   })
 })

@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { writableArray, readCString, writeCString } from '../../../languages/cpp/core/runtime/cstring'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_append', async (node, ctx) => {
       const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcat 的目標')
       const cur = readCString({ type: 'array', value: dest } as RuntimeValue)

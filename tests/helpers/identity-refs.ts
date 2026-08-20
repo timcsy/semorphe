@@ -25,7 +25,7 @@
  *
  * - **不追函式呼叫**：id 經由變數傳好幾層再用，這裡看不到
  * - **已知低報**：
- *   - 變數指派 `concept = 'arithmetic'`（已涵蓋，見 `CONCEPT_VARS`）
+ *   - 變數指派 `component = 'arithmetic'`（已涵蓋，見 `CONCEPT_VARS`）
  *   - 未列入 `CONCEPT_CALLS` 的註冊函式
  *
  * ⚠️ **低報的後果是棘輪提早喊零。** 所以收硬性零之前必須把
@@ -66,11 +66,11 @@ export interface IdRef {
 /** 第一引數是 **componentId** 的呼叫 */
 const CONCEPT_CALLS = new Set([
   'createNode',
-  'getByConceptId',
-  'getFormsByConceptId',
+  'getByComponentId',
+  'getFormsByComponentId',
   'getWithOverride',
-  'getBlockTypeForConcept',
-  'registerConceptMapping',
+  'getBlockTypeForComponent',
+  'registerComponentMapping',
   'register',
   'registerExecutor',
   'set',
@@ -90,7 +90,7 @@ const CONCEPT_PROPS = /^(componentId|abstractComponent)$/
 const BLOCKTYPE_PROPS = /^(type|blockType)$/
 
 /** 變數名長這樣時，指派給它的字面是 componentId */
-const CONCEPT_VARS = /^(concept|componentId|cid)$/
+const CONCEPT_VARS = /^(component|componentId|cid)$/
 
 function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
   const p = n.parent
@@ -124,7 +124,7 @@ function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
     return '非身分'
   }
 
-  // concept = 'id'（變數指派）
+  // component = 'id'（變數指派）
   if (ts.isVariableDeclaration(p) && ts.isIdentifier(p.name) && CONCEPT_VARS.test(p.name.text)) {
     return 'componentId'
   }
@@ -219,5 +219,5 @@ export function scanJsonRefs(ids: Set<string>, extraFiles: { file: string; data:
  * 過濾掉明顯無關的（DOM、tree-sitter）之後剩下的，每一筆都要有判定。
  */
 export function residualRefs(ids: Set<string>): IdRef[] {
-  return scanTsRefs(ids).filter((r) => r.role === '非身分' && /concept|Node|tree|lift|身分/i.test(r.text))
+  return scanTsRefs(ids).filter((r) => r.role === '非身分' && /component|Node|tree|lift|身分/i.test(r.text))
 }

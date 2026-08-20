@@ -25,7 +25,7 @@ import type { ComponentExecutor } from '../../../../interpreter/executor-registr
  * 直譯器不支援物件導向。這十個是**殼**，不是宣告——見檔頭。
  *
  * `cpp_include_local` 曾經也在這份清單裡，但它有真的宣告
- * （`concepts.json` 的 `skipPaths: ['execute']`, `reason: 'declarative'`），
+ * （`components.json` 的 `skipPaths: ['execute']`, `reason: 'declarative'`），
  * 而直譯器會讀那份宣告（`interpreter.ts` 的 `isSkipped`）。
  * 所以那一筆是 053 之後的**殘留**，已刪除——不是搬過來。
  */
@@ -49,7 +49,7 @@ const OOP_NOT_IMPLEMENTED = [
 ] as const
 
 export function registerUnimplementedExecutors(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
 
   const noop: ComponentExecutor = async () => {}

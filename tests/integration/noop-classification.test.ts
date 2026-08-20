@@ -101,10 +101,10 @@ const CASES: Case[] = [
 const DEAD = ['cpp:include', 'cpp:include_local', 'cpp:using_namespace']
 
 /** 蒐集樹中出現過的概念身分——沒出現的話，這一列什麼都沒測到 */
-function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
+function componentsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
   acc.add(node.componentId)
-  for (const arr of Object.values(node.children ?? {})) for (const c of arr) conceptsIn(c, acc)
+  for (const arr of Object.values(node.children ?? {})) for (const c of arr) componentsIn(c, acc)
   return acc
 }
 
@@ -112,7 +112,7 @@ async function run(c: Case): Promise<{ got: string; err: string; present: boolea
   const [prelude, body] = c.code.includes('%%') ? c.code.split('%%') : ['', c.code]
   const src = `#include <iostream>\n#include <sstream>\n#include <fstream>\n#include <utility>\nusing namespace std;\n${prelude}\nint main(){ ${body} return 0; }\n`
   const tree = lifter.lift(tsParser.parse(src).rootNode as never) as SemanticNode
-  const present = conceptsIn(tree).has(c.id)
+  const present = componentsIn(tree).has(c.id)
   const out: string[] = []
   const interp = new SemanticInterpreter({ maxSteps: 200000 })
   interp.setOutputCallback((s: string) => out.push(s))

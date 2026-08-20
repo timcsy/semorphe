@@ -7,6 +7,6 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { nowMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:millis', async () => ({ type: 'int', value: nowMillis() }))
 }

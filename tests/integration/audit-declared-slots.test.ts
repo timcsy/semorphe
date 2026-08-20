@@ -70,7 +70,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { loadBaseline, writeBaseline, RATCHET_NOTE, assertRatchet, printReport, REPO_ROOT } from '../helpers/guardrail'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -125,7 +125,7 @@ interface Baseline {
 /**
  * 判定一顆元件。**純函式**——注入才餵得進合成輸入。
  *
- * @param declaredOnes `concepts.json` 裡 `children` 的鍵
+ * @param declaredOnes `components.json` 裡 `children` 的鍵
  * @param producedOnes 語料裡實際出現過的、非空的接點名；`null` = 語料沒碰到這顆
  */
 export function judgeDeclCompleteness(componentId: string, declaredOnes: readonly string[], producedOnes: readonly string[] | null): decision {
@@ -192,7 +192,7 @@ let cache: { decision: decision[]; corpusCount: number; hitCount: number } | nul
 function measureOnce(lifter: Lifter, p: Parser): NonNullable<typeof cache> {
   if (cache) return cache
   const declare = new Map(
-    (allCppConcepts() as never as { componentId: string; children?: Record<string, unknown> }[]).map((c) => [
+    (allCppComponents() as never as { componentId: string; children?: Record<string, unknown> }[]).map((c) => [
       c.componentId,
       Object.keys(c.children ?? {}),
     ]),
@@ -299,7 +299,7 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
           guard: GUARD,
           measuredAt: new Date().toISOString().slice(0, 10),
           rule:
-            '跑 lift 在真實語料上（掃測試檔裡的 C++ 片段），比對「實際產出的非空接點」與「concepts.json 宣告的 children 鍵」。' +
+            '跑 lift 在真實語料上（掃測試檔裡的 C++ 片段），比對「實際產出的非空接點」與「components.json 宣告的 children 鍵」。' +
             '⚠️ **是實測不是靜態掃描**——靜態掃 `createNode(` 看得到產生了什麼概念，' +
             '看不到它被掛在**哪個接點**下，而後者才是這條護欄要問的。' +
             '語料沒碰到的元件歸「無法確定」，**不計入安全**——那個數字是這條護欄的誠實度指標。',

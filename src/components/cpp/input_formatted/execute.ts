@@ -10,7 +10,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { isIndexedAccess } from '../../../languages/cpp/core/node-traits'
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const execScanf: ComponentExecutor = async (node, ctx) => {
     const format = String(node.properties.format ?? '%d')
     const argNodes = node.children.args ?? []

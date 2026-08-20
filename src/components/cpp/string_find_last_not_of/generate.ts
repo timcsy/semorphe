@@ -4,7 +4,7 @@
  * ## ⚠️ 這一路搬家前**根本不存在**
  *
  * 實測（`git stash` 回到搬家前的原始碼）：`generateCode` 對這顆身分回
- * `⟨unknown concept⟩`。lift 得到它、execute 跑得動它，**但投影回程式碼會斷**。
+ * `⟨unknown component⟩`。lift 得到它、execute 跑得動它，**但投影回程式碼會斷**。
  *
  * 也就是說 `s.find_last_not_of(" ")` 這段真實可寫的 C++，
  * 走「程式碼 → 積木 → 程式碼」一圈之後**變成一句錯誤訊息**。

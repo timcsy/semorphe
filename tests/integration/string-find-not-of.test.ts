@@ -11,7 +11,7 @@
  *
  * | 路 | 交付 |
  * |---|---|
- * | 語義 | `concepts.json` 的概念定義 |
+ * | 語義 | `components.json` 的概念定義 |
  * | 投影 | `blocks.json` 的積木 |
  * | 產生 | 積木的 `codeTemplate` |
  * | 辨識 | `lifters/io.ts` 的方法分派 |
@@ -47,7 +47,7 @@ const wrap = (body: string): string =>
 
 const lift = (body: string): SemanticNode | null => lifter.lift(tp.parse(wrap(body))!.rootNode as never)
 
-function concepts(body: string): string[] {
+function components(body: string): string[] {
   const out: string[] = []
   const walk = (n: SemanticNode | null | undefined): void => {
     if (!n) return
@@ -67,17 +67,17 @@ async function run(body: string): Promise<string> {
 
 describe('辨識：兩個方法各自拿到專屬身分', () => {
   it('★ find_first_not_of', () => {
-    expect(concepts('string s = "  hi"; cout << s.find_first_not_of(" ");'))
+    expect(components('string s = "  hi"; cout << s.find_first_not_of(" ");'))
       .toContain('cpp:string_find_first_not_of')
   })
 
   it('★ find_last_not_of', () => {
-    expect(concepts('string s = "hi  "; cout << s.find_last_not_of(" ");'))
+    expect(components('string s = "hi  "; cout << s.find_last_not_of(" ");'))
       .toContain('cpp:string_find_last_not_of')
   })
 
   it('★ 一般的 find 不得被混進來', () => {
-    const c = concepts('string s = "abc"; cout << s.find("b");')
+    const c = components('string s = "abc"; cout << s.find("b");')
     expect(c).toContain('cpp:string_find')
     expect(c).not.toContain('cpp:string_find_first_not_of')
   })

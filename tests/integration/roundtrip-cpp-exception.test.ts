@@ -1,5 +1,5 @@
 /**
- * Round-trip tests for C++ exception handling concepts:
+ * Round-trip tests for C++ exception handling components:
  * cpp_try_catch, cpp_throw
  *
  * Verifies: code → lift → SemanticTree → generate → code
@@ -170,18 +170,18 @@ int main() {
       const tree2 = liftCode(generated)
       expect(tree2).not.toBeNull()
 
-      // Compare structure: same concept at root level
-      function findConcept(node: any, concept: string): boolean {
-        if (node.componentId === concept) return true
+      // Compare structure: same component at root level
+      function findComponent(node: any, component: string): boolean {
+        if (node.componentId === component) return true
         for (const children of Object.values(node.children ?? {})) {
           for (const child of children as any[]) {
-            if (findConcept(child, concept)) return true
+            if (findComponent(child, component)) return true
           }
         }
         return false
       }
-      expect(findConcept(tree1!, 'cpp:try_catch')).toBe(true)
-      expect(findConcept(tree2!, 'cpp:try_catch')).toBe(true)
+      expect(findComponent(tree1!, 'cpp:try_catch')).toBe(true)
+      expect(findComponent(tree2!, 'cpp:try_catch')).toBe(true)
     })
   })
 })

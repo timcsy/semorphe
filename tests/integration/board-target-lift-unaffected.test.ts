@@ -61,7 +61,7 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-function conceptsIn(n: SemanticNode | null): Set<string> {
+function componentsIn(n: SemanticNode | null): Set<string> {
   const out = new Set<string>()
   const walk = (x: SemanticNode): void => {
     out.add(x.componentId)
@@ -75,7 +75,7 @@ describe('spec 142 · US2：lift 不受目標影響', () => {
   it('★ 錨點：這段程式碼真的 lift 得出東西', () => {
     // 🔴 沒有這一條的話，`lift` 回 null 時集合是空的，
     //    而下面每一條負向斷言都會**空過**。
-    const ids = conceptsIn(lifter.lift(tsParser.parse(ESP32_SKETCH).rootNode as never))
+    const ids = componentsIn(lifter.lift(tsParser.parse(ESP32_SKETCH).rootNode as never))
     expect(ids.size, 'lift 回了空的 → 下面每一條都空過').toBeGreaterThan(5)
     expect(ids.has('cpp:touch_read'), '正向錨點：touchRead 本來就該被認出來').toBe(true)
   })
@@ -83,7 +83,7 @@ describe('spec 142 · US2：lift 不受目標影響', () => {
   it('🔴 在 Uno 目標下，touchRead 仍被認成專屬概念、不得降級', () => {
     // ⚠️ 「在 Uno 目標下」在今天是一句**廢話**——lift 不看目標。
     //    這一支的價值就在於**它會在有人讓 lift 看目標的那天變紅**。
-    const ids = conceptsIn(lifter.lift(tsParser.parse(ESP32_SKETCH).rootNode as never))
+    const ids = componentsIn(lifter.lift(tsParser.parse(ESP32_SKETCH).rootNode as never))
     expect(ids.has('cpp:touch_read')).toBe(true)
     expect(ids.has('cpp:raw_code'), 'touchRead 降級成 raw_code → 過濾被搬到 lift 了').toBe(false)
     expect(ids.has('cpp:raw_expression')).toBe(false)
@@ -96,7 +96,7 @@ describe('spec 142 · US2：lift 不受目標影響', () => {
     expect(twice, 'generate 不是純函式').toBe(once)
     expect(once).toContain('touchRead(T0)')
     // 二次 lift 結構等價
-    const again = conceptsIn(lifter.lift(tsParser.parse(once).rootNode as never))
+    const again = componentsIn(lifter.lift(tsParser.parse(once).rootNode as never))
     expect(again.has('cpp:touch_read'), '二次 lift 認不得自己產出的程式碼').toBe(true)
   })
 

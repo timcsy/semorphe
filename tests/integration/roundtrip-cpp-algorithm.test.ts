@@ -1,7 +1,7 @@
 /**
  * C++ Algorithm Roundtrip Tests
  *
- * Verifies that C++ algorithm concepts (cpp_range_sort, cpp_range_reverse, cpp_range_fill,
+ * Verifies that C++ algorithm components (cpp_range_sort, cpp_range_reverse, cpp_range_fill,
  * cpp_math_min, cpp_math_max, cpp_var_swap) survive the full roundtrip:
  * code → lift → generate → re-lift → structural equivalence.
  */
@@ -52,24 +52,24 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -80,9 +80,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_sort', () => {
     const code = 'vector<int> v;\nv.push_back(3);\nv.push_back(1);\nv.push_back(2);\nsort(v.begin(), v.end());\ncout << v[0] << endl;'
 
-    it('should lift to cpp_range_sort concept', () => {
+    it('should lift to cpp_range_sort component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:range_sort')
+      const node = findComponent(tree, 'cpp:range_sort')
       expect(node).not.toBeNull()
       expect(node!.properties.begin).toBe('v.begin()')
       expect(node!.properties.end).toBe('v.end()')
@@ -98,7 +98,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:range_sort')
+      const node2 = findComponent(tree2, 'cpp:range_sort')
       expect(node2).not.toBeNull()
       expect(node2!.properties.begin).toBe('v.begin()')
     })
@@ -107,9 +107,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_reverse', () => {
     const code = 'vector<int> v;\nv.push_back(1);\nv.push_back(2);\nv.push_back(3);\nreverse(v.begin(), v.end());\ncout << v[0] << endl;'
 
-    it('should lift to cpp_range_reverse concept', () => {
+    it('should lift to cpp_range_reverse component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:range_reverse')
+      const node = findComponent(tree, 'cpp:range_reverse')
       expect(node).not.toBeNull()
       expect(node!.properties.begin).toBe('v.begin()')
       expect(node!.properties.end).toBe('v.end()')
@@ -123,7 +123,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:range_reverse')
+      const node2 = findComponent(tree2, 'cpp:range_reverse')
       expect(node2).not.toBeNull()
     })
   })
@@ -131,9 +131,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:range_fill', () => {
     const code = 'vector<int> v;\nv.push_back(0);\nv.push_back(0);\nv.push_back(0);\nfill(v.begin(), v.end(), 42);\ncout << v[0] << endl;'
 
-    it('should lift to cpp_range_fill concept with value child', () => {
+    it('should lift to cpp_range_fill component with value child', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:range_fill')
+      const node = findComponent(tree, 'cpp:range_fill')
       expect(node).not.toBeNull()
       expect(node!.properties.begin).toBe('v.begin()')
       expect(node!.children.value).toBeDefined()
@@ -149,7 +149,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:range_fill')
+      const node2 = findComponent(tree2, 'cpp:range_fill')
       expect(node2).not.toBeNull()
     })
   })
@@ -157,9 +157,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:math_min', () => {
     const code = 'int a = 5;\nint b = 3;\ncout << min(a, b) << endl;'
 
-    it('should lift to cpp_math_min concept', () => {
+    it('should lift to cpp_math_min component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:math_min')
+      const node = findComponent(tree, 'cpp:math_min')
       expect(node).not.toBeNull()
       expect(node!.children.a).toBeDefined()
       expect(node!.children.b).toBeDefined()
@@ -173,7 +173,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:math_min')
+      const node2 = findComponent(tree2, 'cpp:math_min')
       expect(node2).not.toBeNull()
     })
   })
@@ -181,9 +181,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:math_max', () => {
     const code = 'int a = 5;\nint b = 3;\ncout << max(a, b) << endl;'
 
-    it('should lift to cpp_math_max concept', () => {
+    it('should lift to cpp_math_max component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:math_max')
+      const node = findComponent(tree, 'cpp:math_max')
       expect(node).not.toBeNull()
       expect(node!.children.a).toBeDefined()
       expect(node!.children.b).toBeDefined()
@@ -197,7 +197,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:math_max')
+      const node2 = findComponent(tree2, 'cpp:math_max')
       expect(node2).not.toBeNull()
     })
   })
@@ -205,9 +205,9 @@ describe('C++ Algorithm Roundtrip', () => {
   describe('cpp:var_swap', () => {
     const code = 'int a = 10;\nint b = 20;\nswap(a, b);\ncout << a << " " << b << endl;'
 
-    it('should lift to cpp_var_swap concept', () => {
+    it('should lift to cpp_var_swap component', () => {
       const tree = liftCode(code)
-      const node = findConcept(tree, 'cpp:var_swap')
+      const node = findComponent(tree, 'cpp:var_swap')
       expect(node).not.toBeNull()
       // ⚠️ 2026-08-13：兩個運算元從**字串屬性**升格成接點。
       // 舊形狀（`properties.a`／`properties.b`）讓 `swap(a[j], a[j+1])` 的
@@ -224,7 +224,7 @@ describe('C++ Algorithm Roundtrip', () => {
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const node2 = findConcept(tree2, 'cpp:var_swap')
+      const node2 = findComponent(tree2, 'cpp:var_swap')
       expect(node2).not.toBeNull()
     })
   })
@@ -234,17 +234,17 @@ describe('C++ Algorithm Roundtrip', () => {
 
     it('should lift both cpp_math_min and cpp_math_max', () => {
       const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:math_min')).toBe(true)
-      expect(concepts.has('cpp:math_max')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:math_min')).toBe(true)
+      expect(components.has('cpp:math_max')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:math_min')).toBe(true)
-      expect(concepts2.has('cpp:math_max')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:math_min')).toBe(true)
+      expect(components2.has('cpp:math_max')).toBe(true)
     })
   })
 
@@ -253,17 +253,17 @@ describe('C++ Algorithm Roundtrip', () => {
 
     it('should lift both cpp_range_sort and cpp_range_reverse', () => {
       const tree = liftCode(code)
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:range_sort')).toBe(true)
-      expect(concepts.has('cpp:range_reverse')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:range_sort')).toBe(true)
+      expect(components.has('cpp:range_reverse')).toBe(true)
     })
 
     it('should survive P1 structural equivalence', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:range_sort')).toBe(true)
-      expect(concepts2.has('cpp:range_reverse')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:range_sort')).toBe(true)
+      expect(components2.has('cpp:range_reverse')).toBe(true)
     })
   })
 })

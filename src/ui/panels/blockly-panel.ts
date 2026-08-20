@@ -935,7 +935,7 @@ export class BlocklyPanel implements ViewHost {
         return stmtBody.map(n => {
           const raw = n.metadata?.rawCode
           if (raw) return '    ' + raw
-          // Try simpleExpressionToCode for known concepts as statement
+          // Try simpleExpressionToCode for known components as statement
           const expr = this.simpleExpressionToCode(n)
           if (!isUngeneratable(expr)) return '    ' + expr + ';'
           return `    ⟨${n.componentId}⟩`
@@ -1324,8 +1324,8 @@ export class BlocklyPanel implements ViewHost {
     }
   }
 
-  /** Mark blocks whose concept is not in visibleConcepts as semi-transparent */
-  markOutOfScopeBlocks(visibleConcepts: Set<string>): void {
+  /** Mark blocks whose component is not in visibleComponents as semi-transparent */
+  markOutOfScopeBlocks(visibleComponents: Set<string>): void {
     if (!this.workspace || !this.blockSpecRegistry) return
     const allBlocks = this.workspace.getAllBlocks(false)
     for (const block of allBlocks) {
@@ -1333,8 +1333,8 @@ export class BlocklyPanel implements ViewHost {
       if (!svgRoot) continue
       const spec = this.blockSpecRegistry.getAll().find(s => s.blockDef?.type === block.type)
       const componentId = spec?.componentMapping?.componentId
-      // If block has no concept (unknown/custom), treat as visible
-      if (!componentId || visibleConcepts.has(componentId)) {
+      // If block has no component (unknown/custom), treat as visible
+      if (!componentId || visibleComponents.has(componentId)) {
         svgRoot.style.opacity = ''
         svgRoot.classList.remove('out-of-scope-block')
       } else {

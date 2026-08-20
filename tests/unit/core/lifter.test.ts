@@ -29,7 +29,7 @@ beforeAll(() => {
 })
 
 describe('Lifter', () => {
-  it('should lift number_literal to number_literal concept', () => {
+  it('should lift number_literal to number_literal component', () => {
     const node = mockNode('number_literal', '42')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
@@ -37,7 +37,7 @@ describe('Lifter', () => {
     expect(result!.properties.value).toBe('42')
   })
 
-  it('should lift identifier to var_ref concept', () => {
+  it('should lift identifier to var_ref component', () => {
     const node = mockNode('identifier', 'myVar')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
@@ -45,7 +45,7 @@ describe('Lifter', () => {
     expect(result!.properties.name).toBe('myVar')
   })
 
-  it('should lift string_literal to string_literal concept', () => {
+  it('should lift string_literal to string_literal component', () => {
     const node = mockNode('string_literal', '"hello"')
     const result = lifter.lift(node)
     expect(result).not.toBeNull()

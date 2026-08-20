@@ -22,10 +22,10 @@ import { hasAnnotation } from '../../../src/core/skip-declarations'
 import type { SemanticNode } from '../../../src/core/types'
 
 const n = (
-  concept: string,
+  component: string,
   properties: Record<string, unknown> = {},
   children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ componentId: concept, properties, children }) as unknown as SemanticNode
+): SemanticNode => ({ componentId: component, properties, children }) as unknown as SemanticNode
 
 const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { body })
 
@@ -69,11 +69,11 @@ describe('if_else：兩個分支都要能跑', () => {
     //
     // ⚠️ 哪天作用域修好了，這支會**因為兩者仍然一致而繼續通過**——
     // 所以它不是那個缺陷的釘子。缺陷本身另記。
-    const branches = (concept: string, thenKey: string): SemanticNode =>
+    const branches = (component: string, thenKey: string): SemanticNode =>
       n('cpp:program', {}, {
         body: [
           n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:literal_number', { value: 1 })] }),
-          n(concept, {}, { condition: [n('cpp:literal_number', { value: 1 })], [thenKey]: [
+          n(component, {}, { condition: [n('cpp:literal_number', { value: 1 })], [thenKey]: [
             n('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [n('cpp:literal_number', { value: 9 })] }),
           ] }),
           n('cpp:print', {}, { values: [n('cpp:var_ref', { name: 'x' })] }),
@@ -150,7 +150,7 @@ describe('分支自成作用域——標註終於被讀了（067 修好，釘子
    * ## 修法不是再寫死一份清單
    *
    * `introduces_scope` 這個標註**一直都在，而沒有任何東西讀它**——
-   * `concepts/執行機構.md` 的「機制有了，沒人接上」。寫死「if 和 if_else 要
+   * `components/執行機構.md` 的「機制有了，沒人接上」。寫死「if 和 if_else 要
    * 建子作用域」也能修，但那會是這個階段的**第三份**寫死清單。
    *
    * 核心讀宣告，語言套件推宣告——與 skip、executor、註解語法同一個形狀。

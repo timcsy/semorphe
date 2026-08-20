@@ -21,7 +21,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:block', async (node, ctx) => {
     const outer = ctx.scope
     ctx.scope = outer.createChild()

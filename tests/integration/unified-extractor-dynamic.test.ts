@@ -11,10 +11,10 @@ import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十二個組裝點**（同一個形狀，這是今天第三處）。
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { componentComponents, componentBlocks } from '../../src/core/component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON, BlockProjectionJSON, BlockSpec, RenderMapping } from '../../src/core/types'
 
@@ -28,8 +28,8 @@ beforeAll(() => {
   // 搬進膠囊之後這裡查不到，而失敗訊息是「ELSEIF 子節點少一個」。
   // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
   registry.loadFromSplit(
-    [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts),
-     ...(componentConcepts() as unknown as ComponentDefJSON[])],
+    [...universalComponents, ...coreComponents, ...allStdModules.flatMap(m => m.components),
+     ...(componentComponents() as unknown as ComponentDefJSON[])],
     [...universalBlocks, ...coreBlocks, ...allStdModules.flatMap(m => m.blocks),
      ...(componentBlocks() as BlockProjectionJSON[])]
   )
@@ -97,7 +97,7 @@ function createTestBlockSpecs(): BlockSpec[] {
           {
             countSource: 'paramCount',
             childSlot: 'params',
-            childConcept: 'param_decl',
+            childComponent: 'param_decl',
             childFields: { 'TYPE_{i}': 'type', 'PARAM_{i}': 'name' },
           },
         ],

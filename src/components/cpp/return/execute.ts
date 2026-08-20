@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:return', async (node, ctx) => {
       const valueNodes = node.children.value
       if (valueNodes && valueNodes.length > 0) {

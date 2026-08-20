@@ -14,11 +14,11 @@
  *
  * ## 這條規範從哪來
  *
- * `concepts/元件.md:346`：
+ * `components/元件.md:346`：
  *
  * > | 投影忠實度不變式 | **符合性** | `conformance` | （原無名） |
  *
- * 它一直沒有機制，而 `concepts/執行機構.md` 的「宣稱 / 檢查 / 後果」表
+ * 它一直沒有機制，而 `components/執行機構.md` 的「宣稱 / 檢查 / 後果」表
  * 2026-08-10 新增的第六列就是它。後果使用者看得到：
  * `vector<int> v = {3,1,4}` 走一次投影就變成 `vector<int> v;`
  * ——切語言、切風格、存檔重載都會走那條路。
@@ -88,7 +88,7 @@ import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors/extract-strategies'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { createNode } from '../../src/core/semantic-tree'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import type { SemanticNode } from '../../src/core/types'
 
 const GUARD = 'conformance'
@@ -145,7 +145,7 @@ export function judgeConformance(
 }
 
 
-interface form { componentId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childConcept: string; parts: string[] }[] } }
+interface form { componentId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childComponent: string; parts: string[] }[] } }
 const formsOf = (id: string): form[] =>
   (allCppProjections() as never as form[]).filter((f) => f.componentId === id)
 
@@ -155,7 +155,7 @@ let cache: decision[] | null = null
 function measureOnce(): decision[] {
   if (cache) return cache
   const out: decision[] = []
-  for (const c of allCppConcepts() as never as { componentId: string; children?: Record<string, unknown> }[]) {
+  for (const c of allCppComponents() as never as { componentId: string; children?: Record<string, unknown> }[]) {
     const slotDecl = Object.keys(c.children ?? {})
     if (!slotDecl.length) continue
     let node: SemanticNode
@@ -170,11 +170,11 @@ function measureOnce(): decision[] {
     // （`'expression'`）挑一顆，於是 `params` 會拿到 `cpp:literal_number`。
     // 那不是違規，是合成產物：一顆沒有 `type`／`name` 屬性的節點當然序列化不出東西。
     //
-    // 而**宣告裡就寫著該放什麼**（`childrenAsField.childConcept`）。讀它，不要猜。
+    // 而**宣告裡就寫著該放什麼**（`childrenAsField.childComponent`）。讀它，不要猜。
     for (const caf of formsOf(c.componentId).flatMap((f) => f.renderMapping?.childrenAsField ?? [])) {
       if (!(node.children[caf.childSlot] ?? []).length) continue
       node.children[caf.childSlot] = [
-        createNode(caf.childConcept, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
+        createNode(caf.childComponent, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
       ]
     }
     // ⚠️ **一個接點合成一棵樹，不要一次全放。**
@@ -221,7 +221,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     registerCppLanguage()
     setupTestRenderer()
     const reg = new BlockSpecRegistry()
-    reg.loadFromSplit(allCppConcepts() as never, allCppProjections() as never)
+    reg.loadFromSplit(allCppComponents() as never, allCppProjections() as never)
     extractor = new PatternExtractor()
     extractor.loadBlockSpecs(reg.getAll())
     registerCppExtractStrategies(extractor)

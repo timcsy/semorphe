@@ -184,7 +184,7 @@ export class TopicSelector {
 
     const text = document.createElement('span')
     text.className = 'topic-tree-label'
-    text.textContent = `${node.label} (${node.concepts.length})`
+    text.textContent = `${node.label} (${node.components.length})`
 
     row.appendChild(checkbox)
     row.appendChild(text)

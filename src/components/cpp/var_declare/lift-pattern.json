@@ -1,7 +1,7 @@
 {
   "id": "cpp_declaration",
   "astNodeType": "declaration",
-  "concept": {
+  "component": {
     "componentId": "cpp:var_declare"
   },
   "liftStrategy": "cpp:liftDeclaration",

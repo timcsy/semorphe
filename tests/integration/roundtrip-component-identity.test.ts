@@ -62,10 +62,10 @@ beforeAll(async () => {
 }, 60_000)
 
 /** 蒐集樹中所有出現過的概念身分 */
-function conceptsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
+function componentsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
   acc.add(node.componentId)
-  for (const arr of Object.values(node.children ?? {})) for (const c of arr) conceptsIn(c, acc)
+  for (const arr of Object.values(node.children ?? {})) for (const c of arr) componentsIn(c, acc)
   return acc
 }
 
@@ -81,7 +81,7 @@ function roundTripIdentity(componentId: string): { kept: boolean; became: string
   const { node } = synthMinimalNode(def)
   const code = generateCode(createNode('cpp:program', {}, { body: [node] }), 'cpp', STYLE)
   const back = lifter.lift(tsParser.parse(code).rootNode as never)
-  const found = conceptsIn(back)
+  const found = componentsIn(back)
   return {
     kept: found.has(componentId),
     // 回來的樹裡出現、但不是結構性外殼的概念——就是「它變成了什麼」

@@ -1,7 +1,7 @@
 /** `cpp:cstring_compare` 的 **execute** 路——從共用檔原封剪過來（批次第二批：lift 是 io.ts 的一個純資料分支）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_compare', async (node, ctx) => {
       const s1Nodes = node.children.s1 ?? []
       const s2Nodes = node.children.s2 ?? []

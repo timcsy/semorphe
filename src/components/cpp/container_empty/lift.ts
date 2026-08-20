@@ -5,8 +5,8 @@
  * 容器方法要先依接收者型別分派、並記下 `container_kind`（形態要用）。
  * 塞進早期那張表會被先攔截，而那不會報錯，只會安靜地少掉資訊。
  */
-import { registerContainerMethodConcept } from '../../../core/component/method-components'
+import { registerContainerMethodComponent } from '../../../core/component/method-components'
 
 export function registerLift(): void {
-  registerContainerMethodConcept('empty', 'cpp:container_empty', 'cpp/container_empty')
+  registerContainerMethodComponent('empty', 'cpp:container_empty', 'cpp/container_empty')
 }

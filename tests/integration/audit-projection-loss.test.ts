@@ -50,7 +50,7 @@
  * ⚠️ **所以它綠不代表積木沒問題**——它只代表「宣告的接點沒有在渲染時被丟掉」。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { registeredComponents, componentConcepts, componentBlocks } from '../../src/core/component/registry'
+import { registeredComponents, componentComponents, componentBlocks } from '../../src/core/component/registry'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
@@ -194,7 +194,7 @@ function measure(): { losses: Loss[]; undecidable: Loss[]; scanned: number; mark
   const undecidable: Loss[] = []
   let scanned = 0
   let markersPut = 0
-  for (const def of componentConcepts() as { componentId: string }[]) {
+  for (const def of componentComponents() as { componentId: string }[]) {
     const r = scan(def as never)
     if (!r) continue
     scanned++

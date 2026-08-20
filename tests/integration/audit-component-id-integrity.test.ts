@@ -49,12 +49,12 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
 import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments } from '../helpers/component-scan'
-import { allCppConcepts } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { nonComponentDecl, allNonComponents } from '../../src/core/non-components'
 import '../../src/languages/cpp/module'
 
 /** 登錄表認得的身分 */
-const declared = new Set(allCppConcepts().map((c) => c.componentId))
+const declared = new Set(allCppComponents().map((c) => c.componentId))
 
 // ─── 靜態掃描：只認 `createNode(` ────────────────────────────────
 //
@@ -180,7 +180,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 // ⚠️ **這一半不是補強，是主力。**
 //
 // 靜態掃描只認 `createNode('字面')`。而 `cpp_priority_queue_declare` 走的是
-// **對照表**：`containerConcepts[templateName]` 算出身分再 `createNode(componentId, …)`。
+// **對照表**：`containerComponents[templateName]` 算出身分再 `createNode(componentId, …)`。
 // 靜態掃描**完全看不到它**——它在前一版護欄裡是綠的，而它是這個功能的起因之一。
 //
 // 走流程掃樹看的是**系統真的產出了什麼**，算出來的身分躲不掉。
@@ -247,7 +247,7 @@ describe('走流程掃樹（硬關卡）', () => {
     expect(
       [...new Set(ghosts)].sort(),
       '辨識產出了一個沒有人認識的身分。⚠️ 靜態掃描看不到它——' +
-        '它是從對照表算出來的（`containerConcepts[templateName]`）。',
+        '它是從對照表算出來的（`containerComponents[templateName]`）。',
     ).toEqual([])
   })
 

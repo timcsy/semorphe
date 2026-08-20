@@ -14,7 +14,7 @@ import { buildStandaloneBlock } from '../standalone-block'
 export class Lifter {
   private lifters = new Map<string, NodeLifter>()
   private patternLifter: PatternLifter | null = null
-  private astNodeConceptMap: Map<string, string> | null = null
+  private astNodeComponentMap: Map<string, string> | null = null
 
   register(nodeType: string, lifter: NodeLifter): void {
     this.lifters.set(nodeType, lifter)
@@ -26,8 +26,8 @@ export class Lifter {
   }
 
   /** Set AST nodeType → componentId mapping for unsupported detection */
-  setAstNodeConceptMap(map: Map<string, string>): void {
-    this.astNodeConceptMap = map
+  setAstNodeComponentMap(map: Map<string, string>): void {
+    this.astNodeComponentMap = map
   }
 
   lift(node: AstNode): SemanticNode | null {
@@ -54,8 +54,8 @@ export class Lifter {
     //
     // 順手把 `cpp` 也拿掉：scope 不該寫死在核心（P9）。任何 scope 的
     // `<x>_declare` 都適用同一條規則。
-    const fromConcept = /^[a-z]+:(\w+?)_declare$/.exec(r.componentId ?? '')?.[1]
-    const type = fromConcept ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
+    const fromComponent = /^[a-z]+:(\w+?)_declare$/.exec(r.componentId ?? '')?.[1]
+    const type = fromComponent ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
     if (type) data.declare(String(name), type)
   }
 
@@ -329,7 +329,7 @@ export class Lifter {
       return 'syntax_error'
     }
 
-    // Check if AST nodeType maps to a known concept
+    // Check if AST nodeType maps to a known component
     if (this.isKnownNodeType(node.type)) {
       return 'unsupported'
     }
@@ -409,10 +409,10 @@ export class Lifter {
     return false
   }
 
-  /** Check if an AST node type corresponds to a known concept */
+  /** Check if an AST node type corresponds to a known component */
   private isKnownNodeType(nodeType: string): boolean {
-    // Check explicit AST→concept mapping
-    if (this.astNodeConceptMap?.has(nodeType)) return true
+    // Check explicit AST→component mapping
+    if (this.astNodeComponentMap?.has(nodeType)) return true
 
     // Check if PatternLifter has patterns for this node type
     if (this.patternLifter?.hasPatternForNodeType(nodeType)) return true

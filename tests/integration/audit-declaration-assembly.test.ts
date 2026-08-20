@@ -4,11 +4,11 @@
  * ## 它量什麼
  *
  * ```ts
- * const allConcepts = [...universalConcepts, ...coreConcepts, ...allStdModules.flatMap(m => m.concepts)]
+ * const allComponents = [...universalComponents, ...coreComponents, ...allStdModules.flatMap(m => m.components)]
  * //                                                                                    ↑ 膠囊不在這裡
  * ```
  *
- * 專案有一個組裝函式 `allCppConcepts()`／`allCppProjections()`，它含膠囊。
+ * 專案有一個組裝函式 `allCppComponents()`／`allCppProjections()`，它含膠囊。
  * 而**每一處自己列來源的地方，都會在下一顆元件搬進膠囊時漏掉它**。
  *
  * ## ⚠️ 它為什麼值得一條護欄：症狀指向被害者，不是兇手
@@ -20,7 +20,7 @@
  * | `code-to-blocks` | 「`x += 5` 辨識不出 `cpp:var_assign_compound`」 |
  * | `identity-merge-expr-pairs` | 「`cpp_increment_expression` 不見了」 |
  * | `p3-json-only` | 「lift 回傳 null」 |
- * | `scaffold-codegen` | 「`⟨unknown concept: cpp:using_namespace⟩`」 |
+ * | `scaffold-codegen` | 「`⟨unknown component: cpp:using_namespace⟩`」 |
  *
  * 四個訊息各自看起來都像「那顆元件壞了」。
  *
@@ -78,9 +78,9 @@ function testFiles(): string[] {
  * 會在那些檔案被修好的那天失效**。
  */
 export function detectAdHocAssembly(content: string): boolean {
-  const ownList = /\.\.\.\s*universalConcepts|m\.concepts\b/.test(content)
+  const ownList = /\.\.\.\s*universalComponents|m\.components\b/.test(content)
   if (!ownList) return false
-  const hasCapsule = /componentConcepts\(\)|allCppConcepts\(\)/.test(content)
+  const hasCapsule = /componentComponents\(\)|allCppComponents\(\)/.test(content)
   return !hasCapsule
 }
 
@@ -91,14 +91,14 @@ describe('第三十七條護欄：宣告來源的組裝點', () => {
   })
 
   it('★ 注入①：自己列來源而沒算膠囊，必須被報出', () => {
-    expect(detectAdHocAssembly('const all = [...universalConcepts, ...coreConcepts]')).toBe(true)
-    expect(detectAdHocAssembly('allStdModules.flatMap(m => m.concepts)')).toBe(true)
+    expect(detectAdHocAssembly('const all = [...universalComponents, ...coreComponents]')).toBe(true)
+    expect(detectAdHocAssembly('allStdModules.flatMap(m => m.components)')).toBe(true)
   })
 
   it('★ 注入②：算了膠囊的、以及根本沒列來源的，都不得被報', () => {
     // 這一條不可省。沒有它，一個「什麼都報」的掃描器也能通過注入①。
-    expect(detectAdHocAssembly('const all = [...universalConcepts, ...componentConcepts()]')).toBe(false)
-    expect(detectAdHocAssembly('const all = allCppConcepts()')).toBe(false)
+    expect(detectAdHocAssembly('const all = [...universalComponents, ...componentComponents()]')).toBe(false)
+    expect(detectAdHocAssembly('const all = allCppComponents()')).toBe(false)
     expect(detectAdHocAssembly('沒有任何宣告來源的一支測試')).toBe(false)
   })
 
@@ -114,7 +114,7 @@ describe('第三十七條護欄：宣告來源的組裝點', () => {
         _meta: {
           note:
             '各自列宣告來源、而沒把膠囊算進去的測試檔數。\n' +
-            '處方：改用 `allCppConcepts()` / `allCppProjections()`（它們含膠囊）。\n' +
+            '處方：改用 `allCppComponents()` / `allCppProjections()`（它們含膠囊）。\n' +
             '⚠️ 這個數字只准下降，而**下降必須是因為改用組裝函式**，' +
             '不是因為那支測試被刪掉了。',
           ratchet: RATCHET_NOTE,
@@ -133,7 +133,7 @@ describe('第三十七條護欄：宣告來源的組裝點', () => {
       ...details.map((m) => `  ✘ ${m}`),
     ])
     const added = details.filter((m) => !base.details.includes(m))
-    expect(added, `新增了各自組裝的地方——請改用 allCppConcepts()：\n  ${added.join('\n  ')}`).toEqual([])
+    expect(added, `新增了各自組裝的地方——請改用 allCppComponents()：\n  ${added.join('\n  ')}`).toEqual([])
     assertRatchet([['各自組裝', details.length, base.adHocAssembly]])
   })
 })

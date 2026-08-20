@@ -3,15 +3,15 @@ import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../core/runtime/printf'
-import { callConceptFor } from '../../../core/component/call-components'
-import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-components'
+import { callComponentFor } from '../../../core/component/call-components'
+import { methodComponentFor, containerMethodComponent, typedMethodComponent } from '../../../core/component/method-components'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
-import { namedCastConcept } from '../../../core/component/named-cast-components'
+import { namedCastComponent } from '../../../core/component/named-cast-components'
 import { buildMalloc } from '../../../components/cpp/malloc/lift'
 import { buildMethodCall } from '../../../components/cpp/method_call/lift'
 import { buildFuncCall } from '../../../components/cpp/func_call/lift'
 
-/** Try to lift a method call (field_expression) into a string-specific concept.
+/** Try to lift a method call (field_expression) into a string-specific component.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
  *  can dispatch them via METHOD_TO_CONCEPT for container support. */
 function tryStringMethodLift(
@@ -32,7 +32,7 @@ function tryStringMethodLift(
   // String-ONLY methods (no other container uses these)
   switch (method) {
     // `find_first_not_of` / `find_last_not_of` 已元件化——身分由膠囊登錄，
-    // 見下方 `conceptForMethod` 的分支。
+    // 見下方 `componentForMethod` 的分支。
     //
     // ⚠️ 原本這裡是兩個 case 標籤 ＋ `createNode(\`cpp:string_${method}\`)`，
     // 而那一行的註解記著它害過一次：**模板字串組出來的身分，掃描器看不到**
@@ -45,7 +45,7 @@ function tryStringMethodLift(
   {
     const claim = tryMethodBranches(obj, method, argChildren, ctx)
     if (claim) return claim
-    const shape = methodConceptFor(method)
+    const shape = methodComponentFor(method)
     if (shape) {
       const children: Record<string, SemanticNode[]> = {}
       shape.argSlots.forEach((slot, i) => {
@@ -80,7 +80,7 @@ function tryStringMethodLift(
  */
 const METHOD_TO_CONCEPT: Record<string, string> = {
   // ⚠️ **空的，而那是進度不是設計。** 這張表原本列 `push`／`pop`，
-  // 而那兩顆已經搬進膠囊、改用 `registerMethodConcept` 自己認領方法名。
+  // 而那兩顆已經搬進膠囊、改用 `registerMethodComponent` 自己認領方法名。
   // 剩下的（今天是零筆）是**還沒膠囊化**的，它只減不增。
 }
 
@@ -156,9 +156,9 @@ export function registerIOLifters(lifter: Lifter): void {
       const objType = objText ? ctx.data.getType(objText) : null
       const componentId =
         (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
-        (objType ? typedMethodConcept(objType, methodName) : undefined) ??
+        (objType ? typedMethodComponent(objType, methodName) : undefined) ??
         METHOD_TO_CONCEPT[methodName] ??
-        containerMethodConcept(methodName)
+        containerMethodComponent(methodName)
       if (componentId) {
         const properties: Record<string, string> = { obj: objText }
 
@@ -216,7 +216,7 @@ export function registerIOLifters(lifter: Lifter): void {
     // 拆開看只是三筆「名字 → 身分 ＋ 引數槽名」的資料配上共用判別。
     // 資料回膠囊，判別留這裡。
     {
-      const shape = callConceptFor(funcName)
+      const shape = callComponentFor(funcName)
       // 🔴 **不要加回 `argSlots.length > 0` 這個條件。**
       //
       // 它原本在這裡，而它是一個**沒有說出口的假設**：「登錄的概念都至少有一個引數」。
@@ -245,11 +245,11 @@ export function registerIOLifters(lifter: Lifter): void {
       const castName = funcNode.namedChildren.find(c => c.type === 'identifier')?.text
       const templateArgs = funcNode.namedChildren.find(c => c.type === 'template_argument_list')
       const targetType = templateArgs ? templateArgs.text.slice(1, -1) : 'int' // strip < >
-      const castConcept = castName ? namedCastConcept(castName) : undefined
-      if (castConcept) {
+      const castComponent = castName ? namedCastComponent(castName) : undefined
+      if (castComponent) {
         const argNodes = argsNode?.namedChildren ?? []
         const value = argNodes.length > 0 ? ctx.lift(argNodes[0]) : null
-        return createNode(castConcept, { target_type: targetType }, {
+        return createNode(castComponent, { target_type: targetType }, {
           value: value ? [value] : [],
         })
       }

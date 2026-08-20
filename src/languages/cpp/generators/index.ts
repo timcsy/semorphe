@@ -9,13 +9,13 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { registerLanguage } from '../../../core/projection/code-generator'
 import { registerDeclarationGenerators } from '../core/generators/declarations'
 import { allStdModules } from '../std'
-import { componentConcepts } from '../../../core/component/registry'
+import { componentComponents } from '../../../core/component/registry'
 import { componentGenerateRegistrars, componentExecuteRegistrars } from '../../../core/component/paths'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
 import { declareExecutor, declareBuiltinConstants, declareAbstract, declareVariableType } from '../../../core/language-executors'
 import { CPP_BUILTIN_CONSTANTS } from '../builtins'
 import { registerCoreExecutors } from '../core/executors'
-import { coreConcepts } from '../core'
+import { coreComponents } from '../core'
 import type { PathName, SkipReason } from '../../../core/types'
 
 /**
@@ -73,8 +73,8 @@ export function registerCppLanguage(): void {
 export function registerCppExecutors(): void {
   if (executorsPushed) return
   executorsPushed = true
-  const push = (concept: string, executor: unknown): void =>
-    declareExecutor(concept, executor as never)
+  const push = (component: string, executor: unknown): void =>
+    declareExecutor(component, executor as never)
   declareBuiltinConstants(CPP_BUILTIN_CONSTANTS)
   registerCoreExecutors(push as never)
   for (const reg of componentExecuteRegistrars()) (reg as (p: typeof push) => void)(push)
@@ -91,7 +91,7 @@ let executorsPushed = false
  * 見 specs/053-declare-noop-execute/classification.md
  */
 export function registerCppSkipDeclarations(): void {
-  const all = [...coreConcepts, ...allStdModules.flatMap((m) => m.concepts), ...(componentConcepts() as never[])]
+  const all = [...coreComponents, ...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
   for (const c of all) {
     const reasons = (c as { skipReasons?: Partial<Record<PathName, SkipReason>> }).skipReasons
     if (reasons && Object.keys(reasons).length > 0) declareSkips(c.componentId, reasons)

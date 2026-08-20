@@ -1,7 +1,7 @@
 {
   "id": "cpp_string_literal",
   "astNodeType": "string_literal",
-  "concept": {
+  "component": {
     "componentId": "cpp:literal_string"
   },
   "fieldMappings": [

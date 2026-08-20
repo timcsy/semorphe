@@ -4,7 +4,7 @@
  * ## 🔴 它們的形狀與前面八顆不同
  *
  * ```
- * pinMode(13, OUTPUT)      call_expression   → registerCallConcept（一行資料）
+ * pinMode(13, OUTPUT)      call_expression   → registerCallComponent（一行資料）
  * Serial.println("hi")     方法呼叫           → registerMethodBranch（看得到 obj）
  * ```
  *

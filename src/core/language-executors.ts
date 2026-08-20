@@ -23,15 +23,15 @@ import type { RuntimeType } from '../interpreter/types'
  */
 export type LanguageExecutor = (node: SemanticNode, ctx: never) => unknown
 
-const pending: { concept: string; executor: LanguageExecutor }[] = []
+const pending: { component: string; executor: LanguageExecutor }[] = []
 
 /** 語言套件載入時呼叫 */
-export function declareExecutor(concept: string, executor: LanguageExecutor): void {
-  pending.push({ concept, executor })
+export function declareExecutor(component: string, executor: LanguageExecutor): void {
+  pending.push({ component, executor })
 }
 
 /** 直譯器建構時取走。回傳的是**快照**，不清空——直譯器可以被建立多次 */
-export function allLanguageExecutors(): readonly { concept: string; executor: LanguageExecutor }[] {
+export function allLanguageExecutors(): readonly { component: string; executor: LanguageExecutor }[] {
   return pending
 }
 
@@ -89,13 +89,13 @@ export function declareAbstract(componentId: string, parent: string): void {
  *
  * | 消費者 | 原本怎麼寫的 |
  * |---|---|
- * | 同步控制器的降級 | `node.concept === 'cpp_string_declare' ? 'string' : undefined` |
+ * | 同步控制器的降級 | `node.component === 'cpp_string_declare' ? 'string' : undefined` |
  * | 積木註冊處的下拉選單 | `if (block.type === 'cpp_string_declare')` 掃工作區 |
  *
  * 兩處都**只認得這一個概念**，而且沒有任何東西提醒下一個同類概念也需要它。
  * 換一種語言的話兩處都要改。
  *
- * 現在是概念自己說的（`concepts.json` 的 `declaresVariableType`）。
+ * 現在是概念自己說的（`components.json` 的 `declaresVariableType`）。
  */
 const variableType = new Map<string, string>()
 
@@ -109,7 +109,7 @@ export function variableTypeOf(componentId: string): string | undefined {
 }
 
 /** 哪些概念宣告了這個型別的變數——反查，給下拉選單那類消費者用 */
-export function conceptsDeclaringVariableType(type: string): string[] {
+export function componentsDeclaringVariableType(type: string): string[] {
   return [...variableType].filter(([, v]) => v === type).map(([c]) => c)
 }
 

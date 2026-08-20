@@ -29,7 +29,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pulse_read', async (node, ctx) => {
     // ⚠️ 腳位仍然要驗——超出範圍要出聲，而不是安靜地回 0。
     requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))

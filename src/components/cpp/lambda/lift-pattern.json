@@ -1,7 +1,7 @@
 {
   "id": "cpp_lambda_expr",
   "astNodeType": "lambda_expression",
-  "concept": {
+  "component": {
     "componentId": "cpp:lambda"
   },
   "liftStrategy": "cpp:liftLambda",

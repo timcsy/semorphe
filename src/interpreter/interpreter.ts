@@ -3,7 +3,7 @@ import type { BoardPinModel } from '../core/types'
 import type { SemanticNode } from '../core/types'
 import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../core/skip-declarations'
 import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
-import { universalConcepts } from '../core/universal'
+import { universalComponents } from '../core/universal'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
@@ -23,7 +23,7 @@ let universalLoaded = false
 function loadUniversalDeclarations(): void {
   if (universalLoaded) return
   universalLoaded = true
-  for (const c of universalConcepts as unknown as {
+  for (const c of universalComponents as unknown as {
     componentId: string
     skipReasons?: Record<string, string>
     annotations?: Record<string, unknown>
@@ -62,7 +62,7 @@ export class SemanticInterpreter implements ExecutionContext {
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((nodeId: string | null) => void) | null = null
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
-  private unknownConceptHandler: ((concept: string) => Promise<'skip' | 'abort'>) | null = null
+  private unknownComponentHandler: ((component: string) => Promise<'skip' | 'abort'>) | null = null
   private currentNode: SemanticNode | null = null
   private executorRegistry: ComponentExecutorRegistry
 
@@ -74,8 +74,8 @@ export class SemanticInterpreter implements ExecutionContext {
     // 所以核心可以自行載入它們的宣告與標註。語言專屬的那些由語言套件推進來。
     loadUniversalDeclarations()
     this.executorRegistry = new ComponentExecutorRegistry()
-    const reg = (concept: string, executor: import('./executor-registry').ComponentExecutor) =>
-      this.executorRegistry.register(concept, executor)
+    const reg = (component: string, executor: import('./executor-registry').ComponentExecutor) =>
+      this.executorRegistry.register(component, executor)
     registerMutationExecutors(reg)
 
 
@@ -97,11 +97,11 @@ export class SemanticInterpreter implements ExecutionContext {
     // 搬移只改變了住處，沒有改變任何一個判定。它們**不得**取得 `skipPaths`
     // 宣告——見 history/018「拿判準當藉口，把缺陷洗成設計」。
     //
-    // `cpp_include_local` 曾在同一份清單裡，但它有真的宣告（concepts.json
+    // `cpp_include_local` 曾在同一份清單裡，但它有真的宣告（components.json
     // 的 `skipPaths: ['execute']`），而下面的 `isSkipped` 會讀它。那一筆是
     // 053 之後的殘留，已刪除——不是搬過去。
 
-    // algorithm concepts — noop for sort/reverse/fill (operate on containers, not interpreter values)
+    // algorithm components — noop for sort/reverse/fill (operate on containers, not interpreter values)
 
     // min/max — evaluate children and return the smaller/larger
 
@@ -114,7 +114,7 @@ export class SemanticInterpreter implements ExecutionContext {
     // （`static_cast` 輸出 void、四個轉型被清單覆蓋、條件編譯的 body 不跑）。
     //
     // 註冊表是「後註冊的贏」，所以順序就是優先權。見 knowledge/history/020。
-    for (const { concept, executor } of allLanguageExecutors()) reg(concept, executor as never)
+    for (const { component, executor } of allLanguageExecutors()) reg(component, executor as never)
   }
 
   /** Abort execution from outside (e.g., Ctrl+C) */
@@ -152,9 +152,9 @@ export class SemanticInterpreter implements ExecutionContext {
     this.stepRecordCallback = callback
   }
 
-  /** Register a handler for unknown concepts. Returns 'skip' to continue or 'abort' to stop. */
-  setUnknownConceptHandler(handler: ((concept: string) => Promise<'skip' | 'abort'>) | null): void {
-    this.unknownConceptHandler = handler
+  /** Register a handler for unknown components. Returns 'skip' to continue or 'abort' to stop. */
+  setUnknownComponentHandler(handler: ((component: string) => Promise<'skip' | 'abort'>) | null): void {
+    this.unknownComponentHandler = handler
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
@@ -246,31 +246,31 @@ export class SemanticInterpreter implements ExecutionContext {
    * 在測試裡複製一份 executor 註冊清單——那會立刻長成第二個真相源，
    * 正是本專案頭號病灶。
    */
-  getExecutor(concept: string): ((node: SemanticNode, ctx: ExecutionContext) => unknown) | undefined {
-    return this.executorRegistry.get(concept)
+  getExecutor(component: string): ((node: SemanticNode, ctx: ExecutionContext) => unknown) | undefined {
+    return this.executorRegistry.get(component)
   }
 
   /** 被註冊超過一次的概念——勝負由載入順序決定的那些 */
-  duplicateRegistrations(): { concept: string; count: number }[] {
+  duplicateRegistrations(): { component: string; count: number }[] {
     return this.executorRegistry.duplicates()
   }
 
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
     await this.countStep()
     this.currentNode = node
-    const concept = node.componentId
+    const component = node.componentId
 
-    const executor = this.executorRegistry.get(concept)
+    const executor = this.executorRegistry.get(component)
     if (executor) {
       // ── 概念自己宣告「我引入一個作用域」，核心讀它
       //
       // `introduces_scope` 這個標註**存在，而沒有任何東西在讀它**——那是
-      // `concepts/執行機構.md`「機制有了，沒人接上」講的形狀，而這裡藏的是
+      // `components/執行機構.md`「機制有了，沒人接上」講的形狀，而這裡藏的是
       // 一個真的語義錯誤：分支裡宣告的變數會外洩到外層。
       //
       // 寫死「if 和 if_else 要建子作用域」也能修，但那會是**第三份**寫死的
       // 清單（前兩份已經在這個階段換成宣告了）。核心讀宣告，語言套件推宣告。
-      if (hasAnnotation(concept, 'introduces_scope')) {
+      if (hasAnnotation(component, 'introduces_scope')) {
         const outer = this.scope
         const inner = outer.createChild()
         this.scope = inner
@@ -284,20 +284,20 @@ export class SemanticInterpreter implements ExecutionContext {
     }
 
     // 概念自己宣告了「刻意不執行」——來源是概念檔，不是核心層的清單
-    if (isSkipped(concept, 'execute')) return
+    if (isSkipped(component, 'execute')) return
 
     // 未知概念：通知使用者決定跳過或停止
-    if (this.unknownConceptHandler) {
-      const action = await this.unknownConceptHandler(concept)
+    if (this.unknownComponentHandler) {
+      const action = await this.unknownComponentHandler(component)
       if (action === 'abort') {
-        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { concept })
+        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { component })
       }
       // 'skip' — 繼續執行
       return
     }
     // 無 handler 時預設報錯
     throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, {
-      concept,
+      component,
       // 判準是「註冊表空不空」，不是「概念名長得像什麼」——後者會讓核心
       // 重新認識語言，等於把剛搬走的東西搬回來
       ...(this.executorRegistry.hasAnyExecutor()
@@ -438,8 +438,8 @@ export class SemanticInterpreter implements ExecutionContext {
 
   private async recordStepInfo(node: SemanticNode): Promise<void> {
     if (!this.recordSteps) return
-    const concept = node.componentId
-    // ⚠️ 這裡原本有一行 `if (concept.includes(':')) return`——用「有沒有冒號」
+    const component = node.componentId
+    // ⚠️ 這裡原本有一行 `if (component.includes(':')) return`——用「有沒有冒號」
     // 當「是不是語言專屬」的判準。命名空間遷移（103）之後**每一顆身分都有冒號**，
     // 那一行變成「什麼都不記錄」，症狀是單步除錯完全失效。
     //
@@ -449,7 +449,7 @@ export class SemanticInterpreter implements ExecutionContext {
     // 「哪些概念算一個除錯步驟」由概念自己標註，不由核心層的清單決定。
     // 那是視圖層的關心（除錯器要在哪裡停），核心層不該認得語言專屬的名字。
     // 缺標註 → 不停，與原本「清單外不停」一致。
-    if (!hasAnnotation(concept, 'debug_step')) return
+    if (!hasAnnotation(component, 'debug_step')) return
 
     const scopeSnapshot: { name: string; type: string; value: string }[] = []
     for (const [name, val] of this.scope.getAll()) {

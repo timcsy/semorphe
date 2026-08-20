@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { installMethodExecutors, splitMember } from '../../../languages/cpp/core/executors/structs'
 
-export function registerExecute(register: (concept: string, executor: ComponentExecutor) => void): void {
+export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:struct_declare', async (node, ctx) => {
       installMethodExecutors(ctx)
       const name = String(node.properties.name)

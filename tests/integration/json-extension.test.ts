@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { universalConcepts, universalBlocks } from '../../src/core/universal'
-import { coreConcepts, coreBlocks } from '../../src/languages/cpp/core'
+import { universalComponents, universalBlocks } from '../../src/core/universal'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
 import { allStdModules } from '../../src/languages/cpp/std'
 import rangeSortBlocks from '../../src/components/cpp/range_sort/forms/blocks.json'
 // ⚠️ `cpp:vector_declare` 已元件化，不在這個模組檔裡了——走唯一組裝點。
-import { allCppConcepts, allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 // `<vector>` 模組的積木 ＋ 已元件化的那幾顆。原本直接讀模組的 blocks.json，
 // 而 `cpp:vector_declare` 搬進膠囊之後那個檔就少了一筆。
@@ -14,7 +14,7 @@ const containerBlocks = allCppProjections().filter(
   (b) => (b as { owner?: string }).owner === '<vector>',
 )
 
-const allConcepts = allCppConcepts()
+const allComponents = allCppComponents()
 
 describe('JSON-only extension (US6)', () => {
   // ⚠️ **`std/algorithm/blocks.json` 已經空了**（2026-08-11，第八批）——
@@ -26,7 +26,7 @@ describe('JSON-only extension (US6)', () => {
   // 改成讀膠囊的 forms——同一條路，新的住處。
   it('should load block specs from JSON alone（膠囊的 forms/blocks.json）', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allComponents, rangeSortBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     expect(all.length).toBe(1)
     expect(all.map(s => s.id)).toContain('cpp:range_sort')
@@ -35,7 +35,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should load container block specs from JSON', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, containerBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allComponents, containerBlocks as unknown as BlockProjectionJSON[])
     const all = registry.getAll()
     // ⚠️ 這個數字會隨 `<vector>` 家族長大——2026-08-13 加入 `cpp:vector_make`
     // （`vector<int>(n, x)` 當運算式，二維向量的內層）時 4 → 5。
@@ -50,7 +50,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should have valid blockDef with type field', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, [
+    registry.loadFromSplit(allComponents, [
       ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])
@@ -63,7 +63,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should have valid block definitions', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allComponents, rangeSortBlocks as unknown as BlockProjectionJSON[])
     for (const spec of registry.getAll()) {
       // Algorithm blocks use hand-written generators, so codeTemplate may be empty
       // Just verify blockDef is valid
@@ -74,7 +74,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should have astPattern for lifting', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, rangeSortBlocks as unknown as BlockProjectionJSON[])
+    registry.loadFromSplit(allComponents, rangeSortBlocks as unknown as BlockProjectionJSON[])
     for (const spec of registry.getAll()) {
       expect(spec.astPattern.nodeType).toBeTruthy()
     }
@@ -82,7 +82,7 @@ describe('JSON-only extension (US6)', () => {
 
   it('should coexist with universal blocks without conflicts', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, [
+    registry.loadFromSplit(allComponents, [
       ...universalBlocks,
       ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
@@ -93,9 +93,9 @@ describe('JSON-only extension (US6)', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('should have concept mapping with abstractComponent', () => {
+  it('should have component mapping with abstractComponent', () => {
     const registry = new BlockSpecRegistry()
-    registry.loadFromSplit(allConcepts, [
+    registry.loadFromSplit(allComponents, [
       ...rangeSortBlocks as unknown as BlockProjectionJSON[],
       ...containerBlocks as unknown as BlockProjectionJSON[],
     ])

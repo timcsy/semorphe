@@ -1,7 +1,7 @@
 /**
  * Phase 2 Roundtrip: Control Flow
  *
- * Covers control flow concepts:
+ * Covers control flow components:
  * if, if-else, if-else-if, while, for (count), for (general),
  * do-while, switch-case, break, continue
  *
@@ -384,7 +384,7 @@ int main() {
   })
 })
 
-// ─── Program 12: Complex control flow (all concepts) ───
+// ─── Program 12: Complex control flow (all components) ───
 describe('control flow: complex combined', () => {
   const code = `#include <iostream>
 using namespace std;

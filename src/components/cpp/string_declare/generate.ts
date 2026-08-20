@@ -3,7 +3,7 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  // Statement concepts — return full line with indent and newline
+  // Statement components — return full line with indent and newline
     g.set('cpp:string_declare', (node, ctx) => {
       const name = node.properties.name ?? 'str'
       const initNodes = node.children.initializer ?? []

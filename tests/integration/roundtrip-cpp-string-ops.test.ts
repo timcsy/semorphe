@@ -1,7 +1,7 @@
 /**
  * C++ String Operations Roundtrip Tests
  *
- * Verifies that C++ string operation concepts (cpp_string_size, cpp_string_substr,
+ * Verifies that C++ string operation components (cpp_string_size, cpp_string_substr,
  * cpp_string_find, cpp_string_append, cpp_string_as_cstring, cpp_input_line, cpp_string_make,
  * cpp_string_as_int, cpp_string_as_double) survive the full roundtrip:
  *
@@ -56,26 +56,26 @@ function roundTripCode(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-/** Recursively search for a concept in the semantic tree */
-function findConcept(node: SemanticNode | null, componentId: string): SemanticNode | null {
+/** Recursively search for a component in the semantic tree */
+function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      const found = findConcept(child, componentId)
+      const found = findComponent(child, componentId)
       if (found) return found
     }
   }
   return null
 }
 
-/** Collect all concept IDs present in a semantic tree */
-function collectConcepts(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
+/** Collect all component IDs present in a semantic tree */
+function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
   for (const children of Object.values(node.children ?? {})) {
     for (const child of children as SemanticNode[]) {
-      collectConcepts(child, result)
+      collectComponents(child, result)
     }
   }
   return result
@@ -87,10 +87,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_size', () => {
     const code = 'string s = "hello";\nint n = s.length();'
 
-    it('should lift to cpp_string_size concept', () => {
+    it('should lift to cpp_string_size component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_size')
+      const node = findComponent(tree, 'cpp:string_size')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -104,7 +104,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_size')
+      const node2 = findComponent(tree2, 'cpp:string_size')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -115,10 +115,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_substr', () => {
     const code = 'string s = "hello world";\nstring sub = s.substr(0, 5);'
 
-    it('should lift to cpp_string_substr concept', () => {
+    it('should lift to cpp_string_substr component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_substr')
+      const node = findComponent(tree, 'cpp:string_substr')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
       expect(node!.children.pos).toHaveLength(1)
@@ -134,7 +134,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_substr')
+      const node2 = findComponent(tree2, 'cpp:string_substr')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
       expect(node2!.children.pos).toHaveLength(1)
@@ -147,10 +147,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_find', () => {
     const code = 'string s = "hello";\nint pos = s.find("ll");'
 
-    it('should lift to cpp_string_find concept', () => {
+    it('should lift to cpp_string_find component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_find')
+      const node = findComponent(tree, 'cpp:string_find')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
       expect(node!.children.arg).toHaveLength(1)
@@ -165,7 +165,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_find')
+      const node2 = findComponent(tree2, 'cpp:string_find')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -176,10 +176,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_append', () => {
     const code = 'string s = "hello";\ns.append(" world");'
 
-    it('should lift to cpp_string_append concept', () => {
+    it('should lift to cpp_string_append component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_append')
+      const node = findComponent(tree, 'cpp:string_append')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
       expect(node!.children.value).toHaveLength(1)
@@ -196,7 +196,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_append')
+      const node2 = findComponent(tree2, 'cpp:string_append')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -207,10 +207,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_as_cstring', () => {
     const code = 'string s = "hello";\nprintf("%s", s.c_str());'
 
-    it('should lift to cpp_string_as_cstring concept', () => {
+    it('should lift to cpp_string_as_cstring component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_as_cstring')
+      const node = findComponent(tree, 'cpp:string_as_cstring')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -224,7 +224,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_as_cstring')
+      const node2 = findComponent(tree2, 'cpp:string_as_cstring')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -235,10 +235,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:input_line', () => {
     const code = 'string line;\ngetline(cin, line);'
 
-    it('should lift to cpp_input_line concept', () => {
+    it('should lift to cpp_input_line component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:input_line')
+      const node = findComponent(tree, 'cpp:input_line')
       expect(node).not.toBeNull()
       expect(node!.properties.name).toBe('line')
     })
@@ -254,7 +254,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:input_line')
+      const node2 = findComponent(tree2, 'cpp:input_line')
       expect(node2).not.toBeNull()
       expect(node2!.properties.name).toBe('line')
     })
@@ -265,10 +265,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_make', () => {
     const code = 'int n = 42;\nstring s = to_string(n);'
 
-    it('should lift to cpp_string_make concept', () => {
+    it('should lift to cpp_string_make component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_make')
+      const node = findComponent(tree, 'cpp:string_make')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -282,7 +282,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_make')
+      const node2 = findComponent(tree2, 'cpp:string_make')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -293,10 +293,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_as_int', () => {
     const code = 'string s = "42";\nint n = stoi(s);'
 
-    it('should lift to cpp_string_as_int concept', () => {
+    it('should lift to cpp_string_as_int component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_as_int')
+      const node = findComponent(tree, 'cpp:string_as_int')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -310,7 +310,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_as_int')
+      const node2 = findComponent(tree2, 'cpp:string_as_int')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -321,10 +321,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_as_double', () => {
     const code = 'string s = "3.14";\ndouble d = stod(s);'
 
-    it('should lift to cpp_string_as_double concept', () => {
+    it('should lift to cpp_string_as_double component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_as_double')
+      const node = findComponent(tree, 'cpp:string_as_double')
       expect(node).not.toBeNull()
       expect(node!.children.value).toHaveLength(1)
     })
@@ -338,7 +338,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_as_double')
+      const node2 = findComponent(tree2, 'cpp:string_as_double')
       expect(node2).not.toBeNull()
       expect(node2!.children.value).toHaveLength(1)
     })
@@ -349,11 +349,11 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_empty', () => {
     const code = 'string s = "";\nbool b = s.empty();'
 
-    it('should lift to cpp_container_empty concept（型別已知時的專屬身分）', () => {
+    it('should lift to cpp_container_empty component（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      // empty() is a shared method — without type info, lifts as generic container concept
-      const node = findConcept(tree, 'cpp:container_empty')
+      // empty() is a shared method — without type info, lifts as generic container component
+      const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -367,7 +367,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:container_empty')
+      const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -378,10 +378,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_erase', () => {
     const code = 'string s = "hello world";\ns.erase(5, 6);'
 
-    it('should lift to cpp_string_erase concept', () => {
+    it('should lift to cpp_string_erase component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_erase')
+      const node = findComponent(tree, 'cpp:string_erase')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -395,7 +395,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_erase')
+      const node2 = findComponent(tree2, 'cpp:string_erase')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -406,10 +406,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_insert', () => {
     const code = 'string s = "helo";\ns.insert(3, "l");'
 
-    it('should lift to cpp_string_insert concept', () => {
+    it('should lift to cpp_string_insert component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_insert')
+      const node = findComponent(tree, 'cpp:string_insert')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -423,7 +423,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_insert')
+      const node2 = findComponent(tree2, 'cpp:string_insert')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -434,10 +434,10 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_replace', () => {
     const code = 'string s = "hello world";\ns.replace(0, 5, "hi");'
 
-    it('should lift to cpp_string_replace concept', () => {
+    it('should lift to cpp_string_replace component', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      const node = findConcept(tree, 'cpp:string_replace')
+      const node = findComponent(tree, 'cpp:string_replace')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -451,7 +451,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_replace')
+      const node2 = findComponent(tree2, 'cpp:string_replace')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -468,11 +468,11 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_append_char', () => {
     const code = "string s = \"abc\";\ns.push_back('d');"
 
-    it('should lift to cpp_string_append_char concept（型別已知時的專屬身分）', () => {
+    it('should lift to cpp_string_append_char component（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      // push_back() is a shared method — without type info, lifts as generic container concept
-      const node = findConcept(tree, 'cpp:string_append_char')
+      // push_back() is a shared method — without type info, lifts as generic container component
+      const node = findComponent(tree, 'cpp:string_append_char')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -486,7 +486,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_append_char')
+      const node2 = findComponent(tree2, 'cpp:string_append_char')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -497,11 +497,11 @@ describe('C++ String Operations Roundtrip', () => {
   describe('cpp:string_clear', () => {
     const code = 'string s = "hello";\ns.clear();'
 
-    it('should lift to cpp_string_clear concept（型別已知時的專屬身分）', () => {
+    it('should lift to cpp_string_clear component（型別已知時的專屬身分）', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
-      // clear() is a shared method — without type info, lifts as generic container concept
-      const node = findConcept(tree, 'cpp:string_clear')
+      // clear() is a shared method — without type info, lifts as generic container component
+      const node = findComponent(tree, 'cpp:string_clear')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
     })
@@ -515,7 +515,7 @@ describe('C++ String Operations Roundtrip', () => {
       const output = roundTripCode(code)
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
-      const node2 = findConcept(tree2, 'cpp:string_clear')
+      const node2 = findComponent(tree2, 'cpp:string_clear')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
     })
@@ -542,24 +542,24 @@ describe('C++ String Operations Roundtrip', () => {
       "s.push_back('!');",
     ].join('\n')
 
-    it('should lift all string concepts from mixed program', () => {
+    it('should lift all string components from mixed program', () => {
       const tree = liftCode(code)
       expect(tree).not.toBeNull()
 
-      const concepts = collectConcepts(tree)
-      expect(concepts.has('cpp:string_size')).toBe(true)
-      expect(concepts.has('cpp:string_substr')).toBe(true)
-      expect(concepts.has('cpp:string_find')).toBe(true)
-      expect(concepts.has('cpp:string_append')).toBe(true)
-      expect(concepts.has('cpp:input_line')).toBe(true)
-      expect(concepts.has('cpp:string_make')).toBe(true)
-      expect(concepts.has('cpp:string_as_int')).toBe(true)
-      expect(concepts.has('cpp:string_as_double')).toBe(true)
-      expect(concepts.has('cpp:string_erase')).toBe(true)
-      expect(concepts.has('cpp:string_insert')).toBe(true)
-      expect(concepts.has('cpp:string_replace')).toBe(true)
-      // Shared methods lift as vector concepts (no type info available)
-      expect(concepts.has('cpp:string_append_char')).toBe(true)
+      const components = collectComponents(tree)
+      expect(components.has('cpp:string_size')).toBe(true)
+      expect(components.has('cpp:string_substr')).toBe(true)
+      expect(components.has('cpp:string_find')).toBe(true)
+      expect(components.has('cpp:string_append')).toBe(true)
+      expect(components.has('cpp:input_line')).toBe(true)
+      expect(components.has('cpp:string_make')).toBe(true)
+      expect(components.has('cpp:string_as_int')).toBe(true)
+      expect(components.has('cpp:string_as_double')).toBe(true)
+      expect(components.has('cpp:string_erase')).toBe(true)
+      expect(components.has('cpp:string_insert')).toBe(true)
+      expect(components.has('cpp:string_replace')).toBe(true)
+      // Shared methods lift as vector components (no type info available)
+      expect(components.has('cpp:string_append_char')).toBe(true)
     })
 
     it('should generate code preserving all string operations', () => {
@@ -583,20 +583,20 @@ describe('C++ String Operations Roundtrip', () => {
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
 
-      const concepts2 = collectConcepts(tree2)
-      expect(concepts2.has('cpp:string_size')).toBe(true)
-      expect(concepts2.has('cpp:string_substr')).toBe(true)
-      expect(concepts2.has('cpp:string_find')).toBe(true)
-      expect(concepts2.has('cpp:string_make')).toBe(true)
-      expect(concepts2.has('cpp:string_as_int')).toBe(true)
-      expect(concepts2.has('cpp:string_as_double')).toBe(true)
-      expect(concepts2.has('cpp:string_append')).toBe(true)
-      expect(concepts2.has('cpp:input_line')).toBe(true)
-      expect(concepts2.has('cpp:string_erase')).toBe(true)
-      expect(concepts2.has('cpp:string_insert')).toBe(true)
-      expect(concepts2.has('cpp:string_replace')).toBe(true)
-      // Shared methods lift as vector concepts (no type info available)
-      expect(concepts2.has('cpp:string_append_char')).toBe(true)
+      const components2 = collectComponents(tree2)
+      expect(components2.has('cpp:string_size')).toBe(true)
+      expect(components2.has('cpp:string_substr')).toBe(true)
+      expect(components2.has('cpp:string_find')).toBe(true)
+      expect(components2.has('cpp:string_make')).toBe(true)
+      expect(components2.has('cpp:string_as_int')).toBe(true)
+      expect(components2.has('cpp:string_as_double')).toBe(true)
+      expect(components2.has('cpp:string_append')).toBe(true)
+      expect(components2.has('cpp:input_line')).toBe(true)
+      expect(components2.has('cpp:string_erase')).toBe(true)
+      expect(components2.has('cpp:string_insert')).toBe(true)
+      expect(components2.has('cpp:string_replace')).toBe(true)
+      // Shared methods lift as vector components (no type info available)
+      expect(components2.has('cpp:string_append_char')).toBe(true)
     })
   })
 })

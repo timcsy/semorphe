@@ -22,7 +22,7 @@ describe('SemanticTree', () => {
   })
 
   describe('createNode', () => {
-    it('should create a node with given concept and properties', () => {
+    it('should create a node with given component and properties', () => {
       const node = createNode('cpp:var_declare', { name: 'x', type: 'int' })
       expect(node.componentId).toBe('cpp:var_declare')
       expect(node.properties.name).toBe('x')
