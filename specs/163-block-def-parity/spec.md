@@ -48,14 +48,15 @@
 ## 那 19 筆落差的性質（逐筆判，不准刷數字）
 
 ```
-cpp_break        statement true/false vs true/true   ← 🔴 命令式【少了 nextStatement】，宣告才是對的
+cpp_break        statement true/false vs true/true   ← 🔴 **命令式才是對的**：break 之後接東西是不可達的程式碼
 cpp_comment      「註解：」vs「備註：」                ← 標籤字不同
 cpp_func_call    output null vs Expression           ← 命令式是語句版、宣告是運算式版（兩顆積木被比在一起）
 cpp_func_def     插槽 4 個 vs 1 個                    ← 形狀差很多，宣告表達不完
 ```
 
 🔴 **不准用「把宣告改成跟命令式一樣」來還數字**——那是在假設命令式是對的，
-而 `cpp_break` 那筆**命令式才是錯的**。
+而每一筆都要**分開判**——`cpp_break` 那筆**宣告多了 `nextStatement`**（`break` 之後不該接東西），
+是**宣告錯了**。
 
 ## 驗收
 
