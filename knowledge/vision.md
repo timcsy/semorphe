@@ -292,8 +292,14 @@ languages/{lang}/
       ```
       🟢 已退場   cpp_print、python_print（162）
                  cpp_array_at、cpp_continue、cpp_endl、cpp_literal_string（163）
-      🔴 還有 19 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
+                 cpp_break、cpp_return、cpp_var_ref（164）
+      🔴 還有 17 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
       ```
+      —— 🛠 **這個操作已 skill 化**：`retire-imperative-block`
+      （先比對、判哪一邊對、補齊對的那份、才刪、然後開瀏覽器看）
+      —— 🟢 **還法有三種**（spec `164` → [115](history/115-還債的方式是把對的那份補齊.md)）：
+      修宣告 ／ 補機制 ／ 兩邊都錯就都修。
+      > **不是「刪掉就降」——是「把對的那一份補齊，另一份才變成多餘的」。**
       —— 🎯 **落差第一次被量出來**（spec `163`）→ [114](history/114-兩份定義的落差第一次被量出來.md)
       ⚠️ 那 19 筆**要逐筆判**「哪一邊才是對的」，
       **不准用「把宣告改成跟命令式一樣」刷數字**——每一筆要分開判，兩個方向都有實例。
