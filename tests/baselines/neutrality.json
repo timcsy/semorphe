@@ -19,6 +19,8 @@
   "imports": {
     "total": 0,
     "_why": "🔴 spec 155 新增的第三維。前兩維掃的都是**字串字面**，而 `import { x } from '.../languages/cpp/y'` 裡一個身分字面都沒有——**於是它對它們不存在**。實測只有一筆（`core/lift/lifter.ts` import 了一顆 cpp 元件），已改成語言套件宣告。⚠️ 組裝點 `src/ui/app.ts` 明確豁免，而豁免印在報表上。",
-    "compositionRootExempt": "src/ui/app.ts"
+    "compositionRootExempt": "src/ui/app.ts",
+    "compositionRootWiring": 0,
+    "_compositionRootWiring_why": "🔴 【2026-08-20 spec 161】豁免**附上數字**。\nexperience 的判準：一條護欄的每個例外，都要能回答「它今天豁免了幾筆」。\n在此之前 app.ts 的豁免只有一句「它知道自己裝了什麼是正常的」——**它不印數字**，\n於是 spec 160 在那裡加了 8 處【選單接線】而沒有任何東西說話。\n🟢 這一格是【選單接線】的數字（硬性零）；語言管線那一半有自己的棘輪，\n  兩個都在 audit-language-plugin.test.ts 與 tests/baselines/language-plugin.json。"
   }
 }

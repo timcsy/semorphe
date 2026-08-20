@@ -32,6 +32,23 @@ import { REPO_ROOT } from '../helpers/guardrail'
 const APP = path.join(REPO_ROOT, 'src/ui/app.ts')
 const src = (): string => fs.readFileSync(APP, 'utf8')
 
+/**
+ * 🔴 **兩個維度，各自一個數字**——而它們是不同的東西。
+ *
+ * ```
+ * 選單接線   topic／target／style／分類／解析器   ← 「加一個語言」的直接代價
+ * 語言管線   產生器／lifters／鷹架／診斷           ← 舊債，與 vision 的「app.ts 的 35 處」同一筆
+ * ```
+ *
+ * ⚠️ **第一版把兩個混成一個數字（47），而那讓「做完了沒」問不出答案**：
+ * 選單接線是 spec 160 弄壞的、可以當天還完；語言管線是既有的、
+ * 要把整個 bootstrap 搬進安裝鉤（它們與 `app.ts` 自己的物件深度交織）。
+ *
+ * > **一個把兩種債加在一起的數字，會讓還完的那一半看起來沒還。**
+ */
+const MENU_WIRING = /topics?\/|targets?\/|styles?\/|toolbox-categories|\/parser['"]/
+const PIPELINE = /diagnostics|auto-include|generators|extractors|block-input-names|style-exceptions|\/std['"]|scaffold|code-patcher|lifters|lift-patterns|all-declarations/
+
 /** `app.ts` 裡**指名某一個語言**的行——組裝點該認得「語言」這個概念，不該認得語言的名字。 */
 function perLanguageWiring(text: string): string[] {
   const langs = fs.readdirSync(path.join(REPO_ROOT, 'src/languages'), { withFileTypes: true })
@@ -40,11 +57,17 @@ function perLanguageWiring(text: string): string[] {
   text.split('\n').forEach((line, i) => {
     if (line.trimStart().startsWith('*') || line.trimStart().startsWith('//')) return
     for (const l of langs) {
-      if (new RegExp(`languages/${l}\\b|['"\`]${l}['"\`]`).test(line)) { hits.push(`${i + 1}: ${line.trim().slice(0, 80)}`); break }
+      // ⚠️ **截斷只用在顯示，分類要看整行**——第一版把截斷後的字串拿去分類，
+      // 於是兩行的關鍵字落在第 80 字之後、兩類都不屬於。
+      // > **一個為了好讀而截斷的字串，拿去做判斷就會少判。**
+      if (new RegExp(`languages/${l}\\b|['"\`]${l}['"\`]`).test(line)) { hits.push(`${i + 1}\t${line.trim()}`); break }
     }
   })
   return hits
 }
+
+/** 只在**顯示**時截斷——分類永遠看整行。 */
+const show = (hits: string[]): string => hits.map((h) => '    ' + h.slice(0, 100)).join('\n')
 
 describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
   it('★ 錨點：真的讀到 app.ts 了（否則下面在驗空集合）', () => {
@@ -54,12 +77,33 @@ describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
       '語言資料夾少了 → 這條的判準會整個空掉').toEqual(['cpp', 'python'])
   })
 
-  it('🔴 `app.ts` 不得有【指名某個語言】的接線', () => {
-    const hits = perLanguageWiring(src())
+  it('🔴 硬性零：`app.ts` 不得有【選單接線】——加一個語言不必編輯它', () => {
+    const hits = perLanguageWiring(src()).filter((l) => MENU_WIRING.test(l))
     expect(hits,
-      `⚠️ 還有 ${hits.length} 行指名了語言。組裝點知道自己裝了「一些語言」是正常的，`
-      + '而知道**它們各自叫什麼**不是——那代表加第三個語言要再編輯這裡一次。\n'
-      + hits.join('\n')).toEqual([])
+      '⚠️ topic／target／style／分類／解析器是「加一個語言」的直接代價。'
+      + '這一項是**硬性零**：spec 160 在這裡加了 8 處，而 161 還完了。\n'
+      + show(hits)).toEqual([])
+  })
+
+  it('🟡 棘輪：`app.ts` 的【語言管線】只准下降', () => {
+    const hits = perLanguageWiring(src()).filter((l) => PIPELINE.test(l))
+    const baseline = JSON.parse(fs.readFileSync(
+      path.join(REPO_ROOT, 'tests/baselines/language-plugin.json'), 'utf8'))
+    // eslint-disable-next-line no-console
+    console.log(`\n  語言管線：${hits.length} 處（基線 ${baseline.pipeline}）\n` + show(hits))
+    expect(hits.length,
+      '⚠️ 這一項【不是】硬性零——把整個 bootstrap 搬進安裝鉤是另一刀'
+      + '（它們與 `app.ts` 自己的物件深度交織）。而它**有數字了**，'
+      + '那正是 spec 161 要買的：豁免答得出「它今天豁免了幾筆」。')
+      .toBeLessThanOrEqual(baseline.pipeline)
+  })
+
+  it('★ 兩個維度加起來要等於全部——否則有一類漏出分類', () => {
+    const all = perLanguageWiring(src())
+    const classified = all.filter((l) => MENU_WIRING.test(l) || PIPELINE.test(l))
+    expect(all.filter((l) => !classified.includes(l)),
+      '⚠️ 有指名語言的行**兩類都不屬於** → 分類器漏了一種形狀，而漏掉的那種不會被任何一個數字看見')
+      .toEqual([])
   })
 
   it('🔴 每個語言都要有 manifest，而 manifest 要說得出它提供什麼', () => {
@@ -70,10 +114,35 @@ describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
 
     for (const l of langs) {
       const m = JSON.parse(fs.readFileSync(path.join(dir, l, 'manifest.json'), 'utf8'))
-      expect(Object.keys(m.provides ?? {}).sort(),
-        `${l} 的 manifest 沒說完它提供什麼——少一項就是那一項回到 app.ts`)
-        .toEqual(['blocks', 'categories', 'components', 'styles', 'targets', 'topics'])
+      // ⚠️ **至少六項，不是剛好六項**——cpp 另有 `templates`／`liftPatterns`，
+      // 而「多提供一種東西」不是違規。第一版寫 `toEqual` 於是把既有的兩項判成錯。
+      // > **一條「必須有 X」的規則，寫成「只能有 X」就會擋住合法的成長。**
+      const required = ['blocks', 'categories', 'components', 'styles', 'targets', 'topics']
+      const missing = required.filter((k) => !(k in (m.provides ?? {})))
+      expect(missing, `${l} 的 manifest 少了這幾項——少一項就是那一項回到 app.ts`).toEqual([])
     }
+  })
+
+  /**
+   * 🎯 **這一支才是 P3 的直接檢驗**：不是數字，是**真的加一個語言**。
+   *
+   * ⚠️ 實測用的 stub 是**臨時建立、當場刪掉**的——留在 `src/languages/` 裡的話
+   * 每一條吃語言清單的護欄都會多一筆假資料（`錨點` 那支就是這樣抓到的）。
+   * 這裡改成**檢查機制的形狀**：載入器的 glob 樣式必須涵蓋任何一個
+   * `languages/<新語言>/pack.ts`，而 `app.ts` 不得有「哪些語言」的清單。
+   *
+   * 🟢 2026-08-20 的一次性實測結論記在 `specs/161-manifest-language-loading/`：
+   * 建一個 `src/languages/stub/pack.ts` 之後，**`app.ts` 一個 byte 都沒動**，
+   * 而 `stub` 進了語言登記表與目標登記表。
+   */
+  it('🎯 機制上「加一個語言＝加一個資料夾」——載入器不指名任何語言', () => {
+    const loader = fs.readFileSync(path.join(REPO_ROOT, 'src/core/load-language-packs.ts'), 'utf8')
+    expect(loader).toContain("import.meta.glob('/src/languages/*/pack.ts'")
+    // 反向：載入器自己不得指名語言（那會讓 glob 變成一份手寫清單）
+    const langs = fs.readdirSync(path.join(REPO_ROOT, 'src/languages'), { withFileTypes: true })
+      .filter((e) => e.isDirectory()).map((e) => e.name)
+    expect(langs.filter((l) => new RegExp(`['"\`/]${l}['"\`/]`).test(loader)),
+      '載入器指名了語言 → 它不是 glob，是一份手寫清單').toEqual([])
   })
 
   it('★ 反向：中立性護欄對 app.ts 的豁免要【附數字】', () => {

@@ -793,10 +793,19 @@ export function updateStatusBar(
   currentBlockStyleId: string,
   topicName: string,
   mobileMenu?: MobileMenu | null,
+  /**
+   * 目前語言的顯示名。
+   *
+   * 🔴 **原本這裡寫死 `'C++'`**——視圖層寫死一個語言的名字（P9 第一項）。
+   * 症狀是切到 Python 之後狀態列仍然說「C++ | … | Python 入門」，
+   * **而全套測試綠**：沒有任何一支在看那一行字。
+   * > **一個只出現在狀態列的字串，只有截圖抓得到。**
+   */
+  languageName = 'C++',
 ): void {
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
-  const summaryText = `C++ | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
+  const summaryText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
 
   const statusBar = document.getElementById('status-bar')
   if (statusBar) {

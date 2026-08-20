@@ -65,3 +65,57 @@ toolbox-categories      🔴 不對稱：cpp 繞過自己的登記處（app.ts �
 - [ ] 🔴 中立性護欄的 `app.ts` 豁免**附上數字**
 - [ ] `toolbox-categories` 的宣告者從「只有 python」變成 **cpp ＋ python**
 - [ ] 中立性三維不上升；4777 綠；**e2e 綠 ＋ 瀏覽器截圖**
+
+---
+
+# 結果
+
+| | 動手前 | 之後 |
+|---|---|---|
+| **選單接線**（topic/target/style/分類/解析器） | 🔴 — | 🟢 **硬性零** |
+| **語言管線**（產生器/lifters/鷹架/診斷） | 🔴 — | 🟡 **12，棘輪**（另一刀） |
+| 兩者合計 | 🔴 47 | 🟡 12 |
+| 有 manifest 的語言 | 🔴 1 / 2 | 🟢 2 / 2，`provides` 六項齊全 |
+| `app.ts` 的豁免 | 🔴 只有一句話 | 🟢 **附數字** |
+| `toolbox-categories` 的宣告者 | 🔴 只有 python | 🟢 cpp ＋ python |
+
+## ⚠️ 驗收的「47 → 0」拆成了兩個數字，而那不是搬目標
+
+原本的一個數字**把兩種債加在一起**：
+
+```
+選單接線   spec 160 弄壞的，當天就還得完
+語言管線   既有的，要把整個 bootstrap 搬進安裝鉤——而它們與 app.ts 自己的物件深度交織
+```
+
+> **一個把兩種債加總的數字，會讓還完的那一半看起來沒還。**
+
+🟢 而**兩個數字都印出來**，語言管線那一半有自己的棘輪與基線。
+
+## 🎯 核心驗收：真的加一個語言
+
+一次性實測：建 `src/languages/stub/pack.ts`（一個檔）之後 —
+
+```
+app.ts   🟢 一個 byte 都沒動（diff -q）
+登記表   🟢 stub 進了語言登記表與目標登記表
+```
+
+stub 當場刪掉——留在 `src/languages/` 裡的話每一條吃語言清單的護欄都會多一筆假資料。
+常設的那一支改成**檢查機制的形狀**（載入器的 glob 不得指名任何語言）。
+
+## 🔴 四件測試綠而瀏覽器紅
+
+| 症狀 | 根因 |
+|---|---|
+| 預設目標變成 **Python** | `allLanguagePacks()[0].targets[0]`——靠陣列位置。而 `default: true` **早就宣告在 topic 上** |
+| 選單順序亂掉 | 載入器裡的 `void Object.keys(mods).sort()` **一行效果都沒有**：eager glob 在取得鍵之前就 import 完了 |
+| 狀態列一直說「C++」 | `app-shell.ts:799` 把 `'C++'` **寫死在字串裡**——只有截圖抓得到 |
+| 板子護欄說「板子沒註冊」 | 它掃 `app.ts` 的**文字**，而註冊搬家了 → 改成**問登記表** |
+
+## 另外兩件
+
+- 🔴 **循環初始化**：`import.meta.glob({eager:true})` 被提升成靜態 import，
+  登記表**不能自己 glob 自己的宣告者** → 拆成 `load-language-packs.ts`
+- 🔴 **修好一個真缺陷**：切目標可能就是切語言，而**沒有人叫 `setLanguage`／`setCodeContext`**
+  ——`generateCodeWithMapping(tree, 'cpp', …)` 對 Python 的樹照樣產得出東西，只是語言參數是錯的

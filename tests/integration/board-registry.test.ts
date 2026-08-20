@@ -148,15 +148,26 @@ describe('spec 147 · US3：能力逐塊查證', () => {
 })
 
 describe('spec 147 · 🔴 加了板子而忘了讓它出現在選單裡', () => {
-  it('🔴 每一份板子 JSON 都要在 `app.ts` 註冊', async () => {
+  it('🔴 每一份板子 JSON 都要真的進得了目標登記表', async () => {
     // 🟢 順序是設計出來的（由簡到繁），所以那裡不用 `import.meta.glob`
     //    ——⚠️ 而手寫的清單會漏，這一條就是那個漏的偵測器。
-    const fs = await import('node:fs/promises')
-    const path = await import('node:path')
-    const app = await fs.readFile(path.resolve(process.cwd(), 'src/ui/app.ts'), 'utf8')
+    //
+    // 🔴 **2026-08-20（spec 161）換了問法**：原本掃 `app.ts` 的**文字**
+    // （`includes('targets/x.json')` ＋ `includes('xTargetDef as Target')`），
+    // 而註冊搬進 `languages/cpp/pack.ts` 之後那兩行**當場失效**。
+    //
+    // > **一條靠檔案文字判斷的護欄，在那段程式碼搬家的那天會說錯話**
+    // > ——而它說的是「板子沒註冊」，聽起來像是我弄丟了板子。
+    //
+    // 🟢 正解與 `component-rename` 第 6 步同一條：**問登記表，不要拿名字的形狀做判斷**。
+    // 換完之後這條護欄**不在乎註冊寫在哪個檔**，只在乎「拿不拿得到」。
+    const { allLanguagePacks } = await import('../../src/core/language-packs')
+    const { loadAllLanguagePacks } = await import('../../src/core/load-language-packs')
+    loadAllLanguagePacks()
+    const registered = new Set(allLanguagePacks().flatMap((p) => p.targets).map((t) => t.id))
+    expect(registered.size, '登記表整個空的 → 是載入壞了，不是板子沒了').toBeGreaterThan(5)
     for (const b of boards) {
-      expect(app.includes(`targets/${b.id}.json`), `板子 ${b.id} 有 JSON 但沒有人註冊它`).toBe(true)
-      expect(app.includes(`${camel(b.id)}TargetDef as Target`), `板子 ${b.id} 匯入了但沒 register`).toBe(true)
+      expect(registered.has(b.id), `板子 ${b.id} 有 JSON 但沒有人註冊它`).toBe(true)
     }
   })
 })

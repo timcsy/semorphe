@@ -33,24 +33,8 @@ import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
 import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
 import type { Target, Topic } from '../core/types'
-import cppBeginnerTopic from '../languages/cpp/topics/cpp-beginner.json'
-import cppCompetitiveTopic from '../languages/cpp/topics/cpp-competitive.json'
-import cBeginnerTopic from '../languages/cpp/topics/c-beginner.json'
-import arduinoTopic from '../languages/cpp/topics/arduino.json'
-import cppTargetDef from '../languages/cpp/targets/cpp.json'
-import cTargetDef from '../languages/cpp/targets/c.json'
-import cppCompetitiveTargetDef from '../languages/cpp/targets/cpp-competitive.json'
-import arduinoTargetDef from '../languages/cpp/targets/arduino.json'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
 //（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
-import arduinoUnoTargetDef from '../languages/cpp/targets/arduino-uno.json'
-import arduinoNanoTargetDef from '../languages/cpp/targets/arduino-nano.json'
-import esp32TargetDef from '../languages/cpp/targets/esp32.json'
-import esp32c3TargetDef from '../languages/cpp/targets/esp32c3.json'
-import esp32s3TargetDef from '../languages/cpp/targets/esp32s3.json'
-import esp32s3CamTargetDef from '../languages/cpp/targets/esp32s3-cam.json'
-import wemosD1MiniTargetDef from '../languages/cpp/targets/wemos-d1-mini.json'
-import nodemcuEsp8266TargetDef from '../languages/cpp/targets/nodemcu-esp8266.json'
 import { createPopulatedRegistry } from '../languages/cpp/std'
 import { CppScaffold } from '../languages/cpp/cpp-scaffold'
 import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
@@ -61,13 +45,8 @@ import { PatternLifter } from '../core/lift/pattern-lifter'
 import { PatternRenderer } from '../core/projection/pattern-renderer'
 import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
-import { CppParser } from '../languages/cpp/parser'
-import { PythonParser } from '../languages/python/parser'
-import { toolboxCategoriesOf } from '../core/toolbox-categories'
-import '../languages/python/toolbox-categories'
-import pythonBeginnerTopic from '../languages/python/topics/python-beginner.json'
-import pythonTargetDef from '../languages/python/targets/python.json'
-import pythonPreset from '../languages/python/styles/python.json'
+import { allLanguagePacks, languagePack, defaultTarget } from '../core/language-packs'
+import { loadAllLanguagePacks } from '../core/load-language-packs'
 import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -82,7 +61,6 @@ import { CATEGORY_COLORS } from './theme/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from './toolbox-builder'
 import { registeredViews } from '../core/view-registry'
-import { cppCategoryDefs } from '../languages/cpp/toolbox-categories'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements } from './app-shell'
@@ -91,23 +69,16 @@ import { ExecutionController } from './execution-controller'
 // Semantic layer
 import { allCppComponents, allCppProjections } from '../languages/cpp/all-declarations'
 // Projection layer
-import apcsPreset from '../languages/cpp/styles/apcs.json'
-import competitivePreset from '../languages/cpp/styles/competitive.json'
-import googlePreset from '../languages/cpp/styles/google.json'
-import cPreset from '../languages/cpp/styles/c.json'
 import { CURRENT_VERSION } from '../core/storage-version'
 
-const STYLE_PRESETS: StylePreset[] = [
-  apcsPreset as StylePreset,
-  competitivePreset as StylePreset,
-  googlePreset as StylePreset,
-  // 🔴 **C 風格 2026-08-17 才接上選單**（階段 6.10）——在那之前它
-  // 只活在測試裡（`c-style-parity`），**而使用者選不到**。
-  // ⚠️ 那正是「機制有了沒人接上」的第六次，而它差一點發生：
-  // 本輪把 C 的產出從 6/10 修到 10/10，**而沒有人拿得到那個成果**。
-  cPreset as StylePreset,
-  pythonPreset as StylePreset,
-]
+/**
+ * 全部語言的風格預設——**從語言套件收，不逐個 import**。
+ *
+ * ⚠️ 順序＝各套件宣告的順序 ＋ 套件之間的登錄順序，
+ * 而 `loadAllLanguagePacks()` 對 glob 的鍵排序，所以它在每一台機器上都一樣。
+ */
+loadAllLanguagePacks()
+const STYLE_PRESETS: StylePreset[] = allLanguagePacks().flatMap((p) => p.styles)
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 
@@ -152,7 +123,13 @@ export class App {
   private topicSelector: TopicSelector | null = null
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
-  private cppParser: CppParser | null = null
+  /**
+   * 目前語言的解析器。
+   *
+   * ⚠️ **原本叫 `cppParser`**——那個名字本身就是「組裝點知道語言的名字」。
+   * 而它的用途（重新解析程式碼以重建語義樹）**與語言無關**。
+   */
+  private currentParser: { parse(code: string): Promise<{ rootNode: unknown }> } | null = null
   private codeParserCache: { _lastTree: unknown } | null = null
   private patternRenderer: PatternRenderer | null = null
   private mobileMenu: import('./toolbar/mobile-menu').MobileMenu | null = null
@@ -185,36 +162,24 @@ export class App {
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()
 
-    // Register topics
-    this.topicRegistry.register(cppBeginnerTopic as Topic)
-    this.topicRegistry.register(cppCompetitiveTopic as Topic)
-    this.topicRegistry.register(cBeginnerTopic as Topic)
-    this.topicRegistry.register(arduinoTopic as Topic)
-    // 🔴 **第一個非 C++ 的主題。** 只有一顆積木——而**那正是它要說的話**。
-    this.topicRegistry.register(pythonBeginnerTopic as Topic)
-
-    // ⚠️ **注入而不是 import**——核心的登錄表不認識任何具體目標（P9／中立性護欄）。
-    // 目標是「課程清單 ＋ 風格」的具名組合，讓使用者選一次而不是三次。
-    this.targetRegistry.register(cppTargetDef as Target)
-    this.targetRegistry.register(cTargetDef as Target)
-    this.targetRegistry.register(cppCompetitiveTargetDef as Target)
-    this.targetRegistry.register(arduinoTargetDef as Target)
-    this.targetRegistry.register(pythonTargetDef as Target)
-    // ⚠️ 既有的 `arduino` **保留**——它省略 `provides` ＝ 提供全部，
-    //    意思是「不指定板子」。移除它會讓既有使用者的設定失效。
-    this.targetRegistry.register(arduinoUnoTargetDef as Target)
-    this.targetRegistry.register(arduinoNanoTargetDef as Target)
-    this.targetRegistry.register(esp32TargetDef as Target)
-    // 🔴 **順序是設計出來的**（由簡到繁），所以這裡不用 `import.meta.glob`
-    //    ——檔名排序「不是任何人設計的」（`lift-branches.ts:26` 已記過這一課）。
-    this.targetRegistry.register(esp32c3TargetDef as Target)
-    this.targetRegistry.register(esp32s3TargetDef as Target)
-    this.targetRegistry.register(esp32s3CamTargetDef as Target)
-    this.targetRegistry.register(wemosD1MiniTargetDef as Target)
-    this.targetRegistry.register(nodemcuEsp8266TargetDef as Target)
+    // 🔴 **組裝點知道自己裝了「一些語言」，不知道它們各自叫什麼**（P3／P9）。
+    //
+    // 在 spec 161 之前這裡有 5 + 14 行逐個 `register(...)`，而加第三個語言
+    // 就是再加一輪——**而中立性護欄豁免組裝點、不印數字，所以沒有人會看見。**
+    //
+    // ⚠️ **順序仍然是設計出來的**，只是那個設計搬進了各語言的 `pack.ts`
+    // （由簡到繁的板子順序在 `cpp/pack.ts` 的陣列裡）。這裡只保證
+    // **套件之間**的順序穩定（`loadAllLanguagePacks` 對 glob 的鍵排序）。
+    for (const pack of allLanguagePacks()) {
+      for (const t of pack.topics) this.topicRegistry.register(t)
+      for (const t of pack.targets) this.targetRegistry.register(t)
+    }
 
     // Default target → topic and branches (only root level enabled for simplest starting point)
-    this.currentTarget = this.targetRegistry.get('cpp')!
+    // 🔴 **問宣告**（哪個 topic 標了 `default: true`），不是取陣列第一個。
+    // ⚠️ 第一版寫 `allLanguagePacks()[0].targets[0]`，而 glob 的順序讓預設變成 Python
+    // ——**全套測試綠，瀏覽器一開就看得見**。
+    this.currentTarget = defaultTarget()!
     this.currentTopic = this.topicRegistry.get(this.currentTarget.topic)!
     this.enabledBranches = new Set([this.currentTopic.levelTree.id])
   }
@@ -259,7 +224,7 @@ export class App {
     this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
-    this.syncController = new SyncController(this.bus, 'cpp', DEFAULT_STYLE)
+    this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
     this.syncController.setStyleAnalyzer({
       detectStyleExceptions,
       applyStyleConversions,
@@ -269,7 +234,7 @@ export class App {
     })
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
-    this.blocklyPanel?.setCodeContext('cpp', DEFAULT_STYLE)
+    this.blocklyPanel?.setCodeContext(this.currentTopic.language, DEFAULT_STYLE)
     this.syncController.setProgramScaffold(this.scaffold!)
     this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
     const cppPatcher = createCppCodePatcher(registry)
@@ -432,7 +397,7 @@ export class App {
       },
       onStyleChange: (style) => {
         this.syncController?.setStyle(style)
-        this.blocklyPanel?.setCodeContext('cpp', style)  // 面板不得落後於同步控制器
+        this.blocklyPanel?.setCodeContext(this.currentTopic.language, style)  // 面板不得落後於同步控制器
         this.syncController?.setCodingStyle(style)
         this.syncBlocksToCodeWithMappings()
         this.currentStylePreset = style
@@ -509,7 +474,7 @@ export class App {
     // 而在有這一行之前，Python 的 wasm 放進 `public/` 只是死重
     // ——**護欄當場把它抓出來，那正是它存在的原因。**
     const parser = await this.parserFor(this.currentTopic.language)
-    this.cppParser = parser instanceof CppParser ? parser : null
+    this.currentParser = parser
     const codeParser = { _lastTree: null as unknown, parse(_code: string) { return { rootNode: this._lastTree } } }
     this.codeParserCache = codeParser
     this.syncController!.setCodeToBlocksPipeline(lifter, codeParser)
@@ -582,7 +547,7 @@ export class App {
   private applyStylePreset(preset: StylePreset): void {
     this.currentStylePreset = preset
     this.syncController?.setStyle(preset)
-    this.blocklyPanel?.setCodeContext('cpp', preset)  // 同上
+    this.blocklyPanel?.setCodeContext(this.currentTopic.language, preset)  // 同上
     this.syncController?.setCodingStyle(preset)
     this.styleSelector?.setValue(preset.id)
     this.refreshStatusBar()
@@ -637,9 +602,7 @@ export class App {
       // ⚠️ 不能用「全部語言的聯集」——那會讓 C++ 使用者的工具箱
       // 多出一個空的「輸入輸出」分類（spec 160 實測，工具箱快照當場紅）。
       // > **一個沒有積木的分類是一個空段落。**
-      categoryDefs: this.currentTopic.language === 'cpp'
-        ? cppCategoryDefs
-        : toolboxCategoriesOf(this.currentTopic.language),
+      categoryDefs: languagePack(this.currentTopic.language)?.categories ?? [],
     })
   }
 
@@ -653,8 +616,8 @@ export class App {
       (n: { componentId: string; properties: Record<string, unknown> }) =>
         isFunctionDefinition(n.componentId) && n.properties.name === 'main'
     )
-    if (needsRelift && this.cppParser && code.trim()) {
-      this.cppParser.parse(code).then(parsed => {
+    if (needsRelift && this.currentParser && code.trim()) {
+      this.currentParser.parse(code).then((parsed: { rootNode: unknown }) => {
         if (this.codeParserCache) this.codeParserCache._lastTree = parsed.rootNode
         this.syncController?.resyncForTopic(tree, code)
       }).catch(() => this.syncController?.resyncForTopic(tree, code))
@@ -685,7 +648,11 @@ export class App {
   private async parserFor(language: string): Promise<{ parse(code: string): Promise<{ rootNode: unknown }> }> {
     const hit = this.parsers.get(language)
     if (hit) return hit
-    const made = language === 'python' ? new PythonParser() : new CppParser()
+    const pack = languagePack(language)
+    // 🔴 **沒有這個語言的套件就丟錯，不猜一個**（P6：禁止給出看起來合理的結構）。
+    // 猜 `CppParser` 的話症狀是「用 C++ 的文法解析 Python」——安靜地全部降級。
+    if (!pack) throw new Error(`沒有語言套件：${language}`)
+    const made = pack.createParser()
     await made.init()
     this.parsers.set(language, made)
     return made
@@ -705,6 +672,13 @@ export class App {
         setScaffoldConfig({ scaffoldDepth: newDepth })
         // ⚠️ **換到沒有替換表的目標時要真的清掉**——否則上一塊板子的替換會留著。
         setHeaderAliases(target.headerAliases)
+        // 🔴 **切目標可能就是切語言**——而在 spec 161 之前**沒有人叫這兩個 setter**：
+        // `SyncController` 與積木面板從啟動起就一直拿著 `'cpp'`。
+        // ⚠️ 症狀不是報錯：`generateCodeWithMapping(tree, 'cpp', …)` 對 Python 的樹
+        // **照樣產得出東西**（產生器是按元件身分查的），只是那個語言參數是錯的。
+        // > **一個從來沒有人呼叫的 setter，與一個不存在的機制分不出來。**
+        this.syncController?.setLanguage(topic.language)
+        this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
         this.syncController?.setTopic(topic, branches)
         this.reloadBlockSpecsForTopic()
         this.updateToolbox()
@@ -809,7 +783,8 @@ export class App {
   }
 
   private refreshStatusBar(): void {
-    updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu)
+    updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu,
+      languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language)
   }
 
   private setupBidirectionalHighlight(): void {
@@ -852,7 +827,7 @@ export class App {
   private buildSaveState(): SavedState {
     return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
       blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.codeView?.getCode() ?? '',
-      language: 'cpp', styleId: this.currentStylePreset.id,
+      language: this.currentTopic.language, styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
   }
