@@ -293,7 +293,10 @@ languages/{lang}/
       🟢 已退場   cpp_print、python_print（162）
                  cpp_array_at、cpp_continue、cpp_endl、cpp_literal_string（163）
                  cpp_break、cpp_return、cpp_var_ref（164）
-      🔴 還有 17 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
+                 array_assign、block_comment、comment、loop_count、var_assign、loop_while（165）
+      🔴 還有 10 顆【宣告與命令式說得不一樣】——逐筆印在 audit-block-def-parity 的報表上
+      ⚠️ 另有 1 顆（`cpp_raw_code`）**比對說可刪而刻意沒刪**：它的 `loadExtraState`
+      依降級原因換視覺，而**比對只比「剛建好的樣子」**（→ [116](history/116-比對器四次指控宣告而四次都是它自己缺東西.md)）
       ```
       —— 🛠 **這個操作已 skill 化**：`retire-imperative-block`
       （先比對、判哪一邊對、補齊對的那份、才刪、然後開瀏覽器看）
