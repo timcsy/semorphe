@@ -1,0 +1,51 @@
+[
+  {
+    "id": "python_literal_true",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "true",
+    "component": {
+      "componentId": "python:literal_bool"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 15
+  },
+  {
+    "id": "python_literal_false",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "false",
+    "component": {
+      "componentId": "python:literal_bool"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 15
+  },
+  {
+    "id": "python_literal_none",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "none",
+    "component": {
+      "componentId": "python:literal_bool"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 15,
+    "_why": "⚠️ **一顆元件三筆 pattern**：`True`/`False`/`None` 在 tree-sitter-python 是**三個不同的節點型別**（不是一個帶值的字面值節點）。而它們是同一個身分的三個值。"
+  }
+]

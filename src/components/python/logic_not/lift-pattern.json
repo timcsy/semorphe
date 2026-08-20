@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_not_operator",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "not_operator",
+    "component": {
+      "componentId": "python:logic_not"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "argument",
+        "extract": "lift"
+      }
+    ],
+    "priority": 10,
+    "_why": "⚠️ **`not` 在 tree-sitter-python 有自己的節點型別**（`not_operator`），而 `-` 走 `unary_operator`。C++ 的 `!` 與 `-` **共用** `unary_expression`——**同一個概念家族，兩個文法切得不一樣**。"
+  }
+]

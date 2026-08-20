@@ -1,0 +1,6 @@
+{
+  "PYTHON_ARITHMETIC_OP_FLOORDIV": "floor divide",
+  "PYTHON_ARITHMETIC_OP_REMAINDER": "remainder",
+  "PYTHON_ARITHMETIC_OP_POWER": "to the power of",
+  "PYTHON_ARITHMETIC_TOOLTIP": "Arithmetic on two numbers. Note: divide always yields a decimal (7 / 2 is 3.5); use floor divide for a whole number"
+}

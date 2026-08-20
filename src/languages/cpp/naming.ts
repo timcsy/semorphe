@@ -169,6 +169,13 @@ export const KINDS = [
   //    **沒有檢查函式的話，那句話是空的**（程式會在檢查那一行中止）。
   'nan',
   'char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while',
+  // ⚠️ `bool` 加入日 2026-08-21——`python:literal_bool`（`True`／`False`／`None`）。
+  //    🔴 **這是第一個由非 C++ 元件帶進詞彙表的字**，而它值得留一句：
+  //    C++ 的 `true`／`false` 收在 `cpp:builtin_constant` 裡（與 `nullptr`／`EOF` 同一顆），
+  //    所以 C++ 從來不需要這個字。**Python 把那個集合切在不同的地方**——
+  //    它的 `True`／`False`／`None` 是關鍵字，而 `None` 不是布林。
+  //    > **詞彙表要不要多一個字，答案在【那個語言怎麼切概念】，不在字典裡。**
+  'bool',
   // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
   'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',
   'member', 'ptr', 'cstring',

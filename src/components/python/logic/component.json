@@ -1,0 +1,47 @@
+{
+  "componentId": "python:logic",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `and`／`or` 回傳的是**運算元本身**而不是布林（`0 or 'x'` 是 `'x'`），C++ 的 `||` 回傳 bool。語義不同。",
+  "properties": [
+    {
+      "name": "operator",
+      "kind": "enum",
+      "default": "and",
+      "_values_why": "⚠️ **刻意不宣告 `values`**（原本有 2 個）。第二十六條護欄逐字：「宣告了 values 而沒有人讀它」——**今天沒有消費者**。真正的清單住在 `forms/blocks.json` 的下拉選項裡，那是**有人讀的**那一份。\\n> 一個沒有人讀的宣告，與一個寫錯的宣告長得一模一樣。"
+    }
+  ],
+  "children": {
+    "left": "expression",
+    "right": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "binaryOperator": true,
+    "precedenceByOperator": {
+      "default": 6,
+      "rules": [
+        {
+          "ops": [
+            "or"
+          ],
+          "p": 5
+        },
+        {
+          "ops": [
+            "and"
+          ],
+          "p": 6
+        }
+      ]
+    }
+  },
+  "_traits_why": "`and` 綁得比 `or` 緊（6 > 5），而兩者都低於比較（8）——**Python 的優先級表**。"
+}

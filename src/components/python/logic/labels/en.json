@@ -1,0 +1,5 @@
+{
+  "PYTHON_LOGIC_OP_AND": "and",
+  "PYTHON_LOGIC_OP_OR": "or",
+  "PYTHON_LOGIC_TOOLTIP": "Combine two conditions. And needs both to hold; or needs only one"
+}

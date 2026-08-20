@@ -1,0 +1,23 @@
+{
+  "componentId": "python:negate",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——見同批其他運算子的理由。",
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "precedence": 13,
+    "prefixOperator": true
+  },
+  "_traits_why": "Python 的一元負號是 13——**比 `**`（14）低**，所以 `-2 ** 2` 是 `-(2 ** 2)` ＝ -4，不是 4。這一格與多數人的直覺相反，而它是這顆自己的性質。"
+}

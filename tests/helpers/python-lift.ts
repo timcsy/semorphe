@@ -15,7 +15,10 @@ import { loadAllLanguagePacks } from '../../src/core/load-language-packs'
 import { allLanguagePacks } from '../../src/core/language-packs'
 import { registerCppLifters } from '../../src/languages/cpp/lifters'
 import { RenderStrategyRegistry } from '../../src/core/registry'
-import type { LiftPattern, SemanticNode } from '../../src/core/types'
+import { componentGenerateRegistrars } from '../../src/core/component/paths'
+import { registerLanguage, generateCode } from '../../src/core/projection/code-generator'
+import googleStyle from '../../src/languages/cpp/styles/google.json'
+import type { LiftPattern, SemanticNode, NodeGenerator, StylePreset } from '../../src/core/types'
 
 /**
  * 基準語料——**這一段是驗收的錨點，改它等於改驗收**。
@@ -101,4 +104,36 @@ export function componentIdsOf(n: SemanticNode | null, out: string[] = []): stri
   out.push(n.componentId)
   for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) componentIdsOf(k, out)
   return out
+}
+
+
+/**
+ * 產生 Python 程式碼——**走膠囊的登錄表，不手接一堆 `registerGenerate`**。
+ *
+ * ⚠️ 既有的三支 Python 自證測是**逐個 import 產生器**的
+ * （`registerGenerate as registerPrint` / `registerProgram` …）。
+ * 那在只有三顆元件時可行，而**每加一顆就要有人記得去改那份清單**
+ * ——那正是這個專案在治的「手寫清單」病。
+ *
+ * > **一份「加東西時要記得改」的清單，就是一個等著被忘記的地方。**
+ *
+ * 🟢 `componentGenerateRegistrars()` 由 `import.meta.glob` 直讀，**加一顆零編輯**。
+ */
+let pythonGeneratorsReady = false
+
+export function generatePython(tree: SemanticNode | null): string {
+  if (!pythonGeneratorsReady) {
+    const g = new Map<string, NodeGenerator>()
+    // ⚠️ **`style` 一定要傳**——共用產生器裡有一批 helper 是捕獲 `style` 的閉包，
+    // 剪出去的膠囊拿不到那個閉包，只能自己從 `style` 算。
+    // 少傳的症狀不是「排版怪」，是 `cpp/class_def` 當場 `Cannot read 'brace_style'`。
+    const style = googleStyle as unknown as StylePreset
+    for (const reg of componentGenerateRegistrars())
+      (reg as (m: typeof g, s: StylePreset) => void)(g, style)
+    // ⚠️ `registerLanguage` 收的是**工廠**（`(style) => Map`），不是 Map。
+    // 傳 Map 進去不會紅，而 `generateCode` 會 `factory is not a function`。
+    registerLanguage('python', () => g)
+    pythonGeneratorsReady = true
+  }
+  return generateCode(tree as SemanticNode, 'python', googleStyle as unknown as StylePreset).trim()
 }

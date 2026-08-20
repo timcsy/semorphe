@@ -1,0 +1,53 @@
+[
+  {
+    "id": "python_logic",
+    "componentId": "python:logic",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_logic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "%{BKY_PYTHON_LOGIC_OP_AND}",
+              "and"
+            ],
+            [
+              "%{BKY_PYTHON_LOGIC_OP_OR}",
+              "or"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_PYTHON_LOGIC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
+    },
+    "_why": "⚠️ **下拉用 `%{BKY_...}` 而不是直接寫 `and`／`or`**——那兩個是 Python 的關鍵字，而 i18n 風格規範說關鍵字不當標籤。"
+  }
+]

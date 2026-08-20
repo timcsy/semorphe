@@ -1,0 +1,39 @@
+[
+  {
+    "id": "python_binary_arithmetic",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "binary_operator",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "operator",
+      "routes": {
+        "+": "python:arithmetic",
+        "-": "python:arithmetic",
+        "*": "python:arithmetic",
+        "/": "python:arithmetic",
+        "//": "python:arithmetic",
+        "%": "python:arithmetic",
+        "**": "python:arithmetic"
+      },
+      "fieldMappings": [
+        {
+          "semantic": "operator",
+          "ast": "operator",
+          "extract": "text"
+        },
+        {
+          "semantic": "left",
+          "ast": "left",
+          "extract": "lift"
+        },
+        {
+          "semantic": "right",
+          "ast": "right",
+          "extract": "lift"
+        }
+      ]
+    },
+    "priority": 5,
+    "_why": "⚠️ **`operatorField` 是 `operator` 而不是 C++ 那份的 `$operator`**：tree-sitter-python 的 `binary_operator` **有一個具名的 `operator` 欄位**，而 tree-sitter-cpp 的 `binary_expression` 沒有（要拿第一個未具名子節點）。**兩個文法對同一件事的表達方式不同**——這正是 spec 167 那條「撞名是必然」的另一面：名字一樣的節點，內部結構未必一樣。\n\n⚠️ 位元運算（`&` `|` `^` `<<` `>>`）**刻意不收**：它們也走 `binary_operator`，而那是另一個教學概念。沒收的會走誠實降級。"
+  }
+]

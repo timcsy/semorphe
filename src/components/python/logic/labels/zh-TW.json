@@ -1,0 +1,5 @@
+{
+  "PYTHON_LOGIC_OP_AND": "而且",
+  "PYTHON_LOGIC_OP_OR": "或者",
+  "PYTHON_LOGIC_TOOLTIP": "兩個條件的邏輯組合。「而且」要兩邊都成立，「或者」只要一邊成立"
+}

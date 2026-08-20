@@ -28,17 +28,34 @@ export interface DegradationBlocks {
   expression: string
 }
 
-let declared: DegradationBlocks | null = null
+/**
+ * 🔴 **依語言存**（spec 168）。
+ *
+ * ⚠️ 第一版是**一個全域槽**（`let declared`），於是不論目前是哪個語言，
+ * 拿到的都是最後一個載入的套件宣告的那組——實測：一段 Python 降級之後
+ * 產出 5 顆 `cpp_raw_code`。**降級本身是對的，而那顆積木的身分是別的語言的。**
+ *
+ * > **一個「全域只有一份」的登記處，等於宣告了「這個系統只有一個語言」。**
+ */
+const byLanguage = new Map<string, DegradationBlocks>()
+/** 目前是哪個語言——組裝點在切目標時設。 */
+let active: string | null = null
 
 /** 語言套件載入時呼叫。 */
-export function declareDegradationBlocks(blocks: DegradationBlocks): void {
-  declared = blocks
+export function declareDegradationBlocks(language: string, blocks: DegradationBlocks): void {
+  byLanguage.set(language, blocks)
+}
+
+/** 切語言時呼叫。 */
+export function setDegradationLanguage(language: string): void {
+  active = language
 }
 
 /**
- * 目前的降級積木——⚠️ **`null` 代表沒有語言套件宣告過**，
- * 不是「這個語言不需要降級」。
+ * 目前語言的降級積木——⚠️ **`null` 代表這個語言沒有宣告過**，
+ * 不是「不需要降級」，**更不是「用別的語言的」**。
  */
 export function degradationBlocks(): DegradationBlocks | null {
-  return declared
+  if (active === null) return null
+  return byLanguage.get(active) ?? null
 }

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "python_boolean_operator",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "boolean_operator",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "operator",
+      "routes": {
+        "and": "python:logic",
+        "or": "python:logic"
+      },
+      "fieldMappings": [
+        {
+          "semantic": "operator",
+          "ast": "operator",
+          "extract": "text"
+        },
+        {
+          "semantic": "left",
+          "ast": "left",
+          "extract": "lift"
+        },
+        {
+          "semantic": "right",
+          "ast": "right",
+          "extract": "lift"
+        }
+      ]
+    },
+    "priority": 5
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "python_raw_code",
+    "componentId": "python:raw_code",
+    "language": "python",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_raw_code",
+      "message0": "%{BKY_PYTHON_RAW_CODE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CODE",
+          "text": ""
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_PYTHON_RAW_CODE_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${CODE}",
+      "imports": [],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "CODE": "code"
+      }
+    },
+    "_why": "⚠️ **沒有 `astPattern`**——這顆不從 AST 認出來，它是降級的落點。\n\n🔴 而**顏色與 C++ 那顆一樣是灰的，那是刻意的**：灰色是「系統看不懂這段」的視覺約定，跨語言一致才讀得懂。"
+  }
+]

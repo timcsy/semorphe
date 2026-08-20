@@ -1,0 +1,23 @@
+[
+  {
+    "id": "python_unary_negate",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "unary_operator",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "operator",
+      "routes": {
+        "-": "python:negate"
+      },
+      "fieldMappings": [
+        {
+          "semantic": "value",
+          "ast": "argument",
+          "extract": "lift"
+        }
+      ]
+    },
+    "priority": 10,
+    "_why": "⚠️ **只路由 `-`**。`unary_operator` 也涵蓋 `+`（無意義）與 `~`（位元反相，另一個概念），它們沒有路由 → **走誠實降級**，而那是對的：學生看得到一個灰色方塊，而不是一個猜出來的身分。"
+  }
+]

@@ -1,25 +1,25 @@
-import type { NodeGenerator } from '../../../../core/projection/code-generator'
-import { generateExpression } from '../../../../core/projection/code-generator'
-import type { SemanticNode } from '../../../../core/types'
 // ⚠️ 這裡問的是**性狀**不是身分：括號怎麼加是排版演算法（共用），
 // 「我的優先級是 14」是那一顆元件的性質（自己宣告）。
-import { precedenceOfNode } from '../node-traits'
 
 
 /** C++ operator precedence (higher = binds tighter) */
-export function precedence(node: SemanticNode | undefined): number {
-  if (!node) return 100
-  // 固定的與隨運算子而變的都由元件自己宣告（`node-traits.ts`）。
-  return precedenceOfNode(node) ?? 100 // literals, var_ref, etc. — never need parens
-}
-
-/** Wrap child expression in parentheses if its precedence is lower than parent's */
-export function genChild(child: SemanticNode | undefined, parentPrec: number, ctx: Parameters<NodeGenerator>[1]): string {
-  if (!child) return ''
-  const expr = generateExpression(child, ctx)
-  const childPrec = precedence(child)
-  return childPrec < parentPrec ? `(${expr})` : expr
-}
+/**
+ * ⚠️ **這兩個已經搬到核心了**（spec 168）——這裡只是**轉出**，不是第二份實作。
+ *
+ * 搬的理由是這個檔自己原本的註解：
+ *
+ * > 「`precedence`／`genChild` 是**共用的排版演算法**……而那不屬於任何一顆元件。」
+ *
+ * 🔴 它不屬於任何一顆元件是對的，而它也不屬於任何一個**語言**。
+ * Python 的運算子需要同一個演算法，而一個 Python 膠囊不得 import `languages/cpp`。
+ *
+ * ⚠️ **9 個檔在 import 這裡，所以名字留著**——而**留著的是名字，不是實作**：
+ * 兩份同名的 export 會漂移（第二十七條護欄逐字：「新增了兩份同名的 export」），
+ * 而這一份第一版**真的是複製過去的**，護欄當場抓到。
+ *
+ * > **一次「搬移」如果留下了兩份實作，那它是一次複製。**
+ */
+export { precedence, genChild } from '../../../../core/projection/precedence'
 
 /**
  * ⚠️ **這個模組不再註冊任何產生器**——運算式那一批全部搬進膠囊了。

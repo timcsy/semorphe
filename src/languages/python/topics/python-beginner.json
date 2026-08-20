@@ -3,16 +3,34 @@
   "language": "python",
   "name": "Python 入門",
   "default": false,
-  "description": "第一個非 C++ 的語言。目前有 print 與字串字面值——**貼一段 print(\"hi\") 進來，兩顆積木都認得出來**。",
+  "description": "第一個非 C++ 的語言。輸出、資料、變數、運算與判斷——貼一段 Python 進來，認得的變積木，認不得的變灰色方塊（而不是變成 C++）。",
   "levelTree": {
     "id": "L0",
     "level": 0,
-    "label": "L0: 輸出",
+    "label": "L0: 輸出與資料",
     "components": [
       "python:print",
       "python:literal_string",
-      "python:literal_number"
+      "python:literal_number",
+      "python:literal_bool",
+      "python:var_ref",
+      "python:raw_code",
+      "python:raw_expression"
     ],
-    "children": []
+    "children": [
+      {
+        "id": "L1",
+        "level": 1,
+        "label": "L1: 運算與判斷",
+        "components": [
+          "python:arithmetic",
+          "python:compare",
+          "python:logic",
+          "python:logic_not",
+          "python:negate"
+        ],
+        "children": []
+      }
+    ]
   }
 }

@@ -1,0 +1,57 @@
+{
+  "componentId": "python:arithmetic",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——`a / b` 在 Python 一律是浮點除法、`//` 才是整除，而 C++ 的 `/` 對整數是整除。**同一個符號、不同的語義**，硬掛等於宣告了一個假的等價。",
+  "properties": [
+    {
+      "name": "operator",
+      "kind": "enum",
+      "default": "+",
+      "_values_why": "⚠️ **刻意不宣告 `values`**（原本有 7 個）。第二十六條護欄逐字：「宣告了 values 而沒有人讀它」——**今天沒有消費者**。真正的清單住在 `forms/blocks.json` 的下拉選項裡，那是**有人讀的**那一份。\\n> 一個沒有人讀的宣告，與一個寫錯的宣告長得一模一樣。"
+    }
+  ],
+  "children": {
+    "left": "expression",
+    "right": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "binaryOperator": true,
+    "precedenceByOperator": {
+      "default": 12,
+      "rules": [
+        {
+          "ops": [
+            "+",
+            "-"
+          ],
+          "p": 11
+        },
+        {
+          "ops": [
+            "*",
+            "/",
+            "//",
+            "%"
+          ],
+          "p": 12
+        },
+        {
+          "ops": [
+            "**"
+          ],
+          "p": 14
+        }
+      ]
+    }
+  },
+  "_traits_why": "**Python 的優先級與 C++ 不同**：`**` 是 14（C++ 沒有這個運算子），而位元運算不在這顆裡（那是另一個概念）。優先級是這顆自己的性質，不是共用表該列的。"
+}

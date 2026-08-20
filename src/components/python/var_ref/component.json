@@ -1,0 +1,26 @@
+{
+  "componentId": "python:var_ref",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null。** 「Python 的變數參照與 C++ 的是同一個概念嗎」是一個**外延主張**，而驗它需要一個固定的觀察集（見 `knowledge/concepts/等價與觀察集.md`）。今天沒有那個觀察集——**不掛比掛錯便宜**。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "variableRef": true
+  },
+  "_traits_why": "**「我是一個變數參照」是我自己的宣告**——別的元件靠它判斷，而它們不必知道我的名字。"
+}

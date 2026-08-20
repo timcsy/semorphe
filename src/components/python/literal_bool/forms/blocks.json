@@ -1,0 +1,42 @@
+[
+  {
+    "id": "python_literal_bool",
+    "componentId": "python:literal_bool",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_literal_bool",
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VALUE",
+          "options": [
+            [
+              "%{BKY_PYTHON_LITERAL_BOOL_TRUE}",
+              "True"
+            ],
+            [
+              "%{BKY_PYTHON_LITERAL_BOOL_FALSE}",
+              "False"
+            ],
+            [
+              "%{BKY_PYTHON_LITERAL_BOOL_NONE}",
+              "None"
+            ]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": "#5C81A6",
+      "tooltip": "%{BKY_PYTHON_LITERAL_BOOL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "VALUE": "value"
+      }
+    },
+    "_why": "⚠️ **下拉的顯示文字用 `%{BKY_...}` 而不是硬編**——標籤要教「真／假／沒有值」這三個**語義**，而不是三個關鍵字（i18n 風格規範：語言關鍵字不當標籤）。"
+  }
+]

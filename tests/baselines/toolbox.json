@@ -18,6 +18,8 @@
         "cpp_var_declare_ref",
         "cpp_var_declare_static",
         "cpp_var_ref",
+        "python_literal_bool",
+        "python_var_ref",
         "cpp_literal_char",
         "cpp_var_declare_expression",
         "cpp_pin_constant"
@@ -42,6 +44,11 @@
         "cpp_sizeof",
         "cpp_ternary",
         "cpp_var_assign_compound",
+        "python_arithmetic",
+        "python_compare",
+        "python_logic",
+        "python_logic_not",
+        "python_negate",
         "cpp_increment_expression",
         "cpp_var_assign_compound_expression",
         "cpp_math_binary",
@@ -328,6 +335,8 @@
         "cpp_doc_comment",
         "cpp_raw_code",
         "cpp_raw_expression",
+        "python_raw_code",
+        "python_raw_expression",
         "cpp_namespace_def"
       ]
     }

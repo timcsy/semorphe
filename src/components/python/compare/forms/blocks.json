@@ -1,0 +1,69 @@
+[
+  {
+    "id": "python_compare",
+    "componentId": "python:compare",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_compare",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "<",
+              "<"
+            ],
+            [
+              "≤",
+              "<="
+            ],
+            [
+              ">",
+              ">"
+            ],
+            [
+              "≥",
+              ">="
+            ],
+            [
+              "=",
+              "=="
+            ],
+            [
+              "≠",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_PYTHON_COMPARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
+    },
+    "_why": "⚠️ **下拉顯示的是數學符號（≤ ≥ = ≠）而值是 Python 的寫法**。學生讀到的是數學，產出的是程式碼——那正是投影該做的事。\n\n⚠️ `in`／`is` **刻意不收**：它們也走 `comparison_operator`，而「成員資格」與「同一個物件」是另外兩個概念。"
+  }
+]

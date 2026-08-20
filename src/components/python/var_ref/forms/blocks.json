@@ -1,0 +1,29 @@
+[
+  {
+    "id": "python_var_ref",
+    "componentId": "python:var_ref",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_var_ref",
+      "message0": "%{BKY_PYTHON_VAR_REF_LABEL} %1",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "NAME",
+          "source": "names"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PYTHON_VAR_REF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      }
+    },
+    "_why": "🟢 用 `field_dynamic_dropdown`（spec 164 建立的機制）——**跟著工作區長的下拉**。靜態的 `field_input` 會讓學生自己打字，而打錯了不會有人說話。"
+  }
+]

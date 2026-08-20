@@ -1,0 +1,23 @@
+{
+  "componentId": "python:logic_not",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——理由與同批的邏輯運算子同族：等價要靠觀察集驗，今天沒有。",
+  "properties": [],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "precedence": 7,
+    "prefixOperator": true
+  },
+  "_traits_why": "**優先級與「我是前綴符號」是我自己的性質。** Python 的 `not` 是 7——低於比較（8）而高於 `and`（6），所以 `not a == b` 是 `not (a == b)`。"
+}

@@ -1,0 +1,73 @@
+[
+  {
+    "id": "python_arithmetic",
+    "componentId": "python:arithmetic",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_arithmetic",
+      "message0": "%1 %2 %3",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "+",
+              "+"
+            ],
+            [
+              "-",
+              "-"
+            ],
+            [
+              "×",
+              "*"
+            ],
+            [
+              "÷",
+              "/"
+            ],
+            [
+              "%{BKY_PYTHON_ARITHMETIC_OP_FLOORDIV}",
+              "//"
+            ],
+            [
+              "%{BKY_PYTHON_ARITHMETIC_OP_REMAINDER}",
+              "%"
+            ],
+            [
+              "%{BKY_PYTHON_ARITHMETIC_OP_POWER}",
+              "**"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5B67A5",
+      "tooltip": "%{BKY_PYTHON_ARITHMETIC_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "right"
+      }
+    },
+    "_why": "⚠️ **`/` 與 `//` 同時在下拉裡，而它們不一樣**：Python 的 `/` 一律回浮點（`7 / 2 == 3.5`），`//` 才是整除。這是初學者最常撞的一格，所以兩個都露出來、標籤講語義。"
+  }
+]

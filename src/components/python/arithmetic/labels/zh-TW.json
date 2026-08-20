@@ -1,0 +1,6 @@
+{
+  "PYTHON_ARITHMETIC_OP_FLOORDIV": "整除",
+  "PYTHON_ARITHMETIC_OP_REMAINDER": "取餘數",
+  "PYTHON_ARITHMETIC_OP_POWER": "次方",
+  "PYTHON_ARITHMETIC_TOOLTIP": "兩個數的四則運算。注意：÷ 一律得到小數（7 ÷ 2 是 3.5），要得到整數請用「整除」"
+}

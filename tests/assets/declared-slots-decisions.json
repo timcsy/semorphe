@@ -278,5 +278,50 @@
     "componentId": "python:literal_number",
     "cause": "語料沒覆蓋",
     "reason": "spec 167。理由與其餘 Python 元件同一條：這條護欄的語料是 C++ 的。\n🟢 它沒有接點，正確性由膠囊自證測釘住（4 支，含一條專測【浮點數是另一種 AST 節點】）。"
+  },
+  {
+    "componentId": "python:raw_code",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168 的降級落點。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 而它**本來就碰不到**：它不從 AST 認出來（沒有 `astPattern`），是核心判定「這段我看不懂」時的落點。它的接點是空的（`children: {}`），所以「宣告的接點對不對」對它是空的。"
+  },
+  {
+    "componentId": "python:raw_expression",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168 的降級落點（運算式位置）。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 與 `python:raw_code` 同一個理由：不從 AST 認出來，且沒有接點。"
+  },
+  {
+    "componentId": "python:var_ref",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 它沒有接點（只有 `name` 這個屬性），正確性由膠囊自證測釘住。"
+  },
+  {
+    "componentId": "python:literal_bool",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168 的 `True`／`False`／`None`。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 沒有接點。⚠️ 而它有一件別的元件沒有的事要驗：**三個節點型別對應同一顆元件**（tree-sitter-python 把 `true`／`false`／`none` 切成三種節點），那由膠囊自證測釘。"
+  },
+  {
+    "componentId": "python:arithmetic",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🔴 而這一顆的接點（`left`／`right`）**確實需要被驗**，所以膠囊自證測有一支專門斷言「lift 出來的 left/right 兩個接點都在原地」——**不靠這條護欄**。"
+  },
+  {
+    "componentId": "python:compare",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🔴 這一顆的接點取法與同族**不一樣**（`comparison_operator` 沒有 left/right 欄位，用位置式子節點），所以自證測特別釘了那一條——**那正是「量不到的地方，宣告錯了與宣告對了長得一樣」最容易出事的形狀**。"
+  },
+  {
+    "componentId": "python:logic",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 接點由膠囊自證測釘（含短路求值那一條）。"
+  },
+  {
+    "componentId": "python:logic_not",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 單一接點 `value`，由膠囊自證測釘。"
+  },
+  {
+    "componentId": "python:negate",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 單一接點 `value`，由膠囊自證測釘。"
   }
 ]

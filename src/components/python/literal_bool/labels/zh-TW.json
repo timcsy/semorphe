@@ -1,0 +1,6 @@
+{
+  "PYTHON_LITERAL_BOOL_TRUE": "真",
+  "PYTHON_LITERAL_BOOL_FALSE": "假",
+  "PYTHON_LITERAL_BOOL_NONE": "沒有值",
+  "PYTHON_LITERAL_BOOL_TOOLTIP": "真與假兩個布林值，以及代表「沒有值」的 None"
+}

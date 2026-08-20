@@ -1,0 +1,23 @@
+{
+  "componentId": "python:raw_expression",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——與同批的語句降級元件同一個理由：降級的落點是【這個語言的積木長什麼樣】，不是一個跨語言的概念。",
+  "properties": [
+    {
+      "name": "code",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "🔴 **這顆不認領任何 AST 節點**——降級的落點，判別屬於核心。",
+    "execute": "./execute.ts"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "PYTHON_RAW_EXPRESSION_MSG0": "直接寫運算式：%1",
+  "PYTHON_RAW_EXPRESSION_TOOLTIP": "直接輸入運算式，不經過積木轉換。用於積木還無法表達的寫法"
+}

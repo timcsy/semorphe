@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_var_ref",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "python:var_ref"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "name",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 1,
+    "_why": "⚠️ **優先級刻意最低（1）**：`identifier` 是 Python 裡最常見的節點，而它在很多位置上**不是變數參照**（函式名、參數名、關鍵字引數名）。那些位置由更具體的 pattern 先認走，這一筆是**兜底**。"
+  }
+]

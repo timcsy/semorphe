@@ -63,13 +63,38 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
   // ─────────────────────────────────────────────────────────
   // FR-005 / SC-002：認不出來要【看得見】
   // ─────────────────────────────────────────────────────────
-  it('🔴 FR-005：認不出來的 Python 節點走誠實降級，不是安靜認錯', async () => {
+  it('🔴 FR-005：認不出來的節點降級成 **Python 的**灰色積木，不是 C++ 的', async () => {
+    // ⚠️ **這一條要問【渲染】那一層，不是語義樹那一層。**
+    //
+    // 第一版問的是「樹裡有沒有 raw_code」——**答案永遠是 0，而那不是缺陷**：
+    // 核心降級時建的是**裸的 `unresolved`**（`core/lift/lifter.ts`），
+    // 而「要用哪一顆積木裝它」是 `block-renderer` 查降級登記處決定的。
+    //
+    // > **一條問錯層的斷言，會把一個健康的系統判成有病。**
+    const { setDegradationLanguage, degradationBlocks } = await import('../../src/core/degradation-blocks')
+    await import('../../src/languages/python/pack')
+    await import('../../src/languages/cpp/generators/index')
+
+    setDegradationLanguage('python')
+    const py = degradationBlocks()
+    expect(py, '★ 錨點：python 要宣告過降級積木，否則下面在驗 null').toBeTruthy()
+    expect(py!.statement, '🔴 Python 的降級用了別的語言的積木').toBe('python_raw_code')
+    expect(py!.expression).toBe('python_raw_expression')
+
+    setDegradationLanguage('cpp')
+    expect(degradationBlocks()!.statement, '⚠️ 反向：C++ 那側不得被 Python 換掉').toBe('cpp_raw_code')
+
+    setDegradationLanguage('一個沒有宣告過的語言')
+    expect(degradationBlocks(),
+      '🔴 回了某個語言的降級積木 → 登記處又變回全域單槽了').toBeNull()
+  })
+
+  it('🔴 FR-005 之二：沒有 Python 身分的節點一律是 `unresolved`——**不得穿別人的身分**', async () => {
     const ids = componentIdsOf(await liftPython(PYTHON_BASELINE))
-    const unknown = ids.filter((i) => i === 'unresolved' || i.startsWith('cpp:'))
-    const degraded = ids.filter((i) => /raw_code|raw_expression/.test(i))
-    expect(degraded.length,
-      `🔴 有 ${unknown.length} 個節點沒有 Python 身分，而降級積木只有 ${degraded.length} 顆。\n` +
-      '   P6 誠實降級：認不出來要變成學生【看得見】的灰色方塊。').toBeGreaterThan(0)
+    expect(ids.length, '★ 錨點').toBeGreaterThan(10)
+    const foreign = ids.filter((i) => i.includes(':') && !i.startsWith('python:'))
+    expect(foreign,
+      '🔴 一個錯的身分比一個誠實的降級更糟，因為它不出聲。').toEqual([])
   })
 
   // ─────────────────────────────────────────────────────────
@@ -94,6 +119,48 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
     ) as { id?: string; grammar?: string }[]
     const missing = shared.filter((p) => !p.grammar).map((p) => p.id)
     expect(missing, '它住在 src/languages/cpp/ 底下——而【住在哪裡】是慣例，不是宣告。').toEqual([])
+  })
+
+  // ─────────────────────────────────────────────────────────
+  // 🔴 附帶：pattern 裡不得有【不存在的鍵】
+  //
+  // 2026-08-21 實測撞到：`constraints: [{ field, textIn: [...] }]`
+  // ——`textIn` **不是 `AstConstraint` 的欄位**，於是那個限制被**靜默忽略**，
+  // 而 `a is b` 照樣被認成比較。JSON 沒有型別檢查，**沒有任何東西會說話**。
+  //
+  // > **一個不存在的欄位不會報錯，它只會讓你以為那個限制生效了。**
+  // ─────────────────────────────────────────────────────────
+  it('🔴 lift pattern 不得有不存在的鍵——JSON 沒有型別檢查，拼錯了沒有人會說', () => {
+    const PATTERN_KEYS = new Set(['id', 'grammar', 'astNodeType', 'component', 'patternType',
+      'constraints', 'fieldMappings', 'operatorDispatch', 'chain', 'composite', 'unwrapChild',
+      'contextTransform', 'multiResult', 'extract', 'priority', 'liftStrategy'])
+    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match'])
+    const MAPPING_KEYS = new Set(['semantic', 'ast', 'extract', 'transform'])
+    const bad: string[] = []
+    const check = (obj: Record<string, unknown>, allowed: Set<string>, where: string) => {
+      for (const k of Object.keys(obj)) {
+        if (k.startsWith('_')) continue // `_why` 那一族是刻意的註解慣例
+        if (!allowed.has(k)) bad.push(`${where} · ${k}`)
+      }
+    }
+    const walk = (pats: Record<string, unknown>[], src: string) => {
+      for (const p of pats) {
+        const id = String(p.id ?? '(無 id)')
+        check(p, PATTERN_KEYS, `${src} · ${id}`)
+        for (const c of (p.constraints ?? []) as Record<string, unknown>[])
+          check(c, CONSTRAINT_KEYS, `${src} · ${id} · constraints`)
+        for (const m of (p.fieldMappings ?? []) as Record<string, unknown>[])
+          check(m, MAPPING_KEYS, `${src} · ${id} · fieldMappings`)
+        const od = p.operatorDispatch as { fieldMappings?: Record<string, unknown>[] } | undefined
+        for (const m of od?.fieldMappings ?? [])
+          check(m, MAPPING_KEYS, `${src} · ${id} · operatorDispatch.fieldMappings`)
+      }
+    }
+    walk(componentLiftPatterns() as Record<string, unknown>[], '膠囊')
+    for (const f of ['src/languages/cpp/lift-patterns.json', 'src/languages/python/lift-patterns.json']) {
+      walk(JSON.parse(fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')) as Record<string, unknown>[], f)
+    }
+    expect(bad, '🔴 這些鍵不在型別上——它們【被靜默忽略】，而寫的人以為限制生效了。').toEqual([])
   })
 
   // ─────────────────────────────────────────────────────────

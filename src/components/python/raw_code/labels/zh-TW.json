@@ -1,0 +1,4 @@
+{
+  "PYTHON_RAW_CODE_MSG0": "直接寫程式碼：%1",
+  "PYTHON_RAW_CODE_TOOLTIP": "直接輸入程式碼，不經過積木轉換。用於積木還無法表達的語法"
+}

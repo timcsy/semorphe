@@ -1,0 +1,38 @@
+[
+  {
+    "id": "python_comparison",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "comparison_operator",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "operators",
+      "routes": {
+        "<": "python:compare",
+        ">": "python:compare",
+        "<=": "python:compare",
+        ">=": "python:compare",
+        "==": "python:compare",
+        "!=": "python:compare"
+      },
+      "fieldMappings": [
+        {
+          "semantic": "operator",
+          "ast": "operators",
+          "extract": "text"
+        },
+        {
+          "semantic": "left",
+          "ast": "$namedChildren[0]",
+          "extract": "lift"
+        },
+        {
+          "semantic": "right",
+          "ast": "$namedChildren[1]",
+          "extract": "lift"
+        }
+      ]
+    },
+    "priority": 5,
+    "_why": "🔴 **這一筆與同族的形狀不同，而那是實測出來的**：tree-sitter-python 的 `comparison_operator` **沒有 `left`／`right` 欄位**——只有一個 `operators` 欄位，兩個運算元是**位置式**的具名子節點。\n\n> **同一族的節點，在同一個文法裡也未必是同一個形狀。**\n\n⚠️ **第一版寫成 `constraints: [{field, textIn: [...]}]` 來排除 `in`／`is`——而 `textIn` 不是合法的鍵，它被【靜默忽略】**，於是 `a is b` 照樣被認成比較。\n🟢 改用 `operatorDispatch` 的 `routes`：沒列在裡面的運算子**沒有路由**，走誠實降級。\n> **一個不存在的欄位不會報錯，它只會讓你以為那個限制生效了。**\n\n⚠️ 而**串接比較**（`0 < x < 10`）有三個運算元，這裡只取前兩個——它由 `routes` 之外的路徑走降級。"
+  }
+]

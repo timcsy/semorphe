@@ -1,0 +1,23 @@
+{
+  "componentId": "python:raw_code",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null。** 它不是「另一個語言那顆降級元件在 Python 的版本」——降級的落點是【這個語言的積木長什麼樣】，而不是一個跨語言的概念。把它掛在 「另一個語言的那顆」 底下會讓「兩個語言的降級是同一件事」變成一個沒有人驗過的主張。",
+  "properties": [
+    {
+      "name": "code",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift.ts",
+    "_lift_why": "🔴 **這顆不認領任何 AST 節點。** 它是降級的【落點】：核心判定「這段我看不懂」時建一顆裸的 `raw_code`，而積木型別由降級登記處決定。所以 `registerLift` 是空的——**判別屬於核心，形態屬於膠囊**。",
+    "execute": "./execute.ts"
+  }
+}

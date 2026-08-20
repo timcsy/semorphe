@@ -45,6 +45,7 @@ import { PatternRenderer } from '../core/projection/pattern-renderer'
 import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { allLanguagePacks, languagePack, defaultTarget } from '../core/language-packs'
+import { setDegradationLanguage } from '../core/degradation-blocks'
 import { loadAllLanguagePacks } from '../core/load-language-packs'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
@@ -473,6 +474,7 @@ export class App {
       const g = languagePack(language)?.grammar
       if (!g) throw new Error(`沒有語言套件：${language}——辨識不得用猜的文法繼續`)
       pl.setGrammar(g)
+      setDegradationLanguage(language)
       // ⚠️ **兩邊都要切**：pattern 那條路與手寫 lifter 那條路是分開的，
       // 而只切一邊的症狀是「大部分對，少數幾顆仍然是別的語言的」。
       lifter.setGrammar(g)

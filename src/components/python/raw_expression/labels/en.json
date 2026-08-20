@@ -1,0 +1,4 @@
+{
+  "PYTHON_RAW_EXPRESSION_MSG0": "raw expression: %1",
+  "PYTHON_RAW_EXPRESSION_TOOLTIP": "Enter an expression directly without block conversion. Use for syntax that blocks cannot express yet"
+}

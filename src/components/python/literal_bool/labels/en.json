@@ -1,0 +1,6 @@
+{
+  "PYTHON_LITERAL_BOOL_TRUE": "true",
+  "PYTHON_LITERAL_BOOL_FALSE": "false",
+  "PYTHON_LITERAL_BOOL_NONE": "no value",
+  "PYTHON_LITERAL_BOOL_TOOLTIP": "The two boolean values, plus None which stands for no value"
+}

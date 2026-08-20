@@ -60,9 +60,17 @@ export function registerCppLanguage(): void {
   //    ——八塊板子的 `A0` 是五個不同的值，而 D1 mini 還多九個 `D` 系名字。
   declareBoardConstantDropdown({ blockType: 'cpp_pin_constant', field: 'VALUE' })
 
-  // 🔴 **降級積木的名字**（spec 154）——原本寫死在 `core/projection/block-renderer.ts`。
-  declareDegradationBlocks({ statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
 }
+
+// 🔴 **降級積木的名字**（spec 154）——原本寫死在 `core/projection/block-renderer.ts`。
+//
+// ⚠️ **spec 168：搬到模組頂層。** 它原本在上面那個函式裡，於是宣告要等
+// 「有人建過一次產生器」才發生——而 Python 那份是**載入時**宣告的。
+// 兩個語言的同一件事，一個在載入時、一個在第一次用時。
+//
+// > **一個登記處如果各語言宣告的【時機】不同，那它的內容就依賴呼叫順序
+// > ——而呼叫順序不是任何人設計的。**
+declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
 
 /**
  * 把各模組的執行器推進直譯器。
