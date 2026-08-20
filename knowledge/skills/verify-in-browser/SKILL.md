@@ -85,5 +85,8 @@ function allBranchIds(n, acc=[]) { acc.push(n.id); for (const c of n.children||[
 
 ## 相關
 
+- **誕生場景**：`knowledge/draft/2026-08-18-收工前的瀏覽器驗收.md`
+  ——它記的是這支 skill 為什麼存在（三種「測試全綠而使用者一看就發現」的缺陷），
+  以及**為什麼不與 [[diagnose-in-browser]] 合併**。
 - [[manual-acceptance]]——把看到的東西寫成一張別人也按得完的清單
 - [[執行機構]]「量測工具有三種」——這一支產出的是**探針**，不是護欄
