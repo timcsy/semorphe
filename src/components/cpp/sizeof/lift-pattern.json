@@ -1,5 +1,6 @@
 {
   "id": "cpp_sizeof_expr",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "sizeof_expression",
   "component": {
     "componentId": "cpp:sizeof"

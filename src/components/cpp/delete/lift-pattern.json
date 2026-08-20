@@ -1,5 +1,6 @@
 {
   "id": "cpp_delete_expression",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "delete_expression",
   "component": {
     "componentId": "cpp:delete"

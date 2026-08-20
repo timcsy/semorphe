@@ -1,5 +1,6 @@
 {
   "id": "cpp_count_for",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "for_statement",
   "patternType": "composite",
   "component": {

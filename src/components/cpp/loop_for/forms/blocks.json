@@ -44,6 +44,7 @@
       "order": 0
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "for_statement",
       "constraints": [],
       "fieldMappings": [

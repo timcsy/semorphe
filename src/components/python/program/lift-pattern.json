@@ -1,5 +1,6 @@
 {
   "id": "python_program",
+  "grammar": "tree-sitter-python",
   "astNodeType": "module",
   "component": {
     "componentId": "python:program"

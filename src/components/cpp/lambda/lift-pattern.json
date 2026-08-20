@@ -1,5 +1,6 @@
 {
   "id": "cpp_lambda_expr",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "lambda_expression",
   "component": {
     "componentId": "cpp:lambda"

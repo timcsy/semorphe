@@ -1,5 +1,6 @@
 {
   "id": "cpp_cout_chain",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "binary_expression",
   "patternType": "chain",
   "component": {

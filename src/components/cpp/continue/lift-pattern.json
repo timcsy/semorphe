@@ -1,5 +1,6 @@
 {
   "id": "cpp_continue",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "continue_statement",
   "component": {
     "componentId": "cpp:continue"

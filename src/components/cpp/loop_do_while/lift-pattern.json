@@ -1,5 +1,6 @@
 {
   "id": "cpp:loop_do_while",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "do_statement",
   "component": {
     "componentId": "cpp:loop_do_while"

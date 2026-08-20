@@ -1,5 +1,6 @@
 {
   "id": "cpp_break",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "break_statement",
   "component": {
     "componentId": "cpp:break"

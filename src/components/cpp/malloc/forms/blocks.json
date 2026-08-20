@@ -72,6 +72,7 @@
       "order": 20
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "cast_expression",
       "constraints": [],
       "fieldMappings": [

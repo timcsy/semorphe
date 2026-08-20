@@ -1,5 +1,6 @@
 {
   "id": "cpp_identifier",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "identifier",
   "component": {
     "componentId": "cpp:var_ref"

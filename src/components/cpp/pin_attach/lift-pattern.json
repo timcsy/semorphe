@@ -1,6 +1,7 @@
 [
   {
     "id": "cpp_pin_attach",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "declaration",
     "component": {
       "componentId": "cpp:pin_attach"
@@ -10,6 +11,7 @@
   },
   {
     "id": "cpp_pin_attach_define",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "preproc_def",
     "component": {
       "componentId": "cpp:pin_attach"

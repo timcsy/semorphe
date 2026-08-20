@@ -1,5 +1,6 @@
 {
   "id": "cpp_translation_unit",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "translation_unit",
   "component": {
     "componentId": "cpp:program"

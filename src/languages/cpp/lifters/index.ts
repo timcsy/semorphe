@@ -24,7 +24,21 @@ export interface CppRegistries {
   renderStrategyRegistry?: RenderStrategyRegistry
 }
 
+/**
+ * 註冊 C++ 的手寫 lifter。
+ *
+ * 🔴 **整批包在 `registerFor('tree-sitter-cpp')` 裡**（spec 167）——
+ * 在此之前它們以裸的 `nodeType` 當鍵，於是 `for_statement`／`if_statement`
+ * 這些**與 tree-sitter-python 同名**的節點也被接走了，
+ * 而它們不經過 `PatternLifter`，**文法過濾看不到它們**。
+ *
+ * > **一條繞過過濾器的路，會讓過濾器的報告變成一份「它看得到的範圍內」的報告。**
+ */
 export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): void {
+  lifter.registerFor('tree-sitter-cpp', () => registerCppLiftersInner(lifter, registries))
+}
+
+function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): void {
   // 🔴 **獨立區塊的身分**（spec 155）——原本是 `core/lift/lifter.ts` 直接
   //    import `components/cpp/block/lift`，那是**核心 import 了一顆 C++ 元件**。
   //    🟢 放在這裡，兩個組裝點（產品的 `app.ts` 與測試的 `createTestLifter`）

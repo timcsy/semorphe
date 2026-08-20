@@ -1,5 +1,6 @@
 {
   "id": "cpp_preproc_include",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "preproc_include",
   "component": {
     "componentId": "cpp:include"

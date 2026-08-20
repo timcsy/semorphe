@@ -1,5 +1,6 @@
 {
   "id": "cpp_new_expression",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "new_expression",
   "component": {
     "componentId": "cpp:new"

@@ -1,5 +1,6 @@
 {
   "id": "cpp_function_definition",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "function_definition",
   "component": {
     "componentId": "cpp:func_def"

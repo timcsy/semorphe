@@ -31,6 +31,7 @@
       "order": 20
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "field_expression",
       "constraints": [
         {

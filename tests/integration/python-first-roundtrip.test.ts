@@ -28,7 +28,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
+import { createPythonLifter } from '../helpers/python-lift'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode, StylePreset, NodeGenerator } from '../../src/core/types'
 import { registerLanguage, generateCode } from '../../src/core/projection/code-generator'
@@ -43,7 +43,7 @@ beforeAll(async () => {
   pyParser = new Parser()
   // ⚠️ 從 `tests/assets/` 讀——**不是 `public/`**（見檔頭）。
   pyParser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-python.wasm`))
-  lifter = createTestLifter()
+  lifter = createPythonLifter()
 
   // 🟢 Python 的產生器——**組裝點在測試裡**，因為產品還沒有 Python target。
   registerLanguage('python', (): Map<string, NodeGenerator> => {

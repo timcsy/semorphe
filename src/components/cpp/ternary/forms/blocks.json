@@ -36,6 +36,7 @@
       "order": 3
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "conditional_expression",
       "constraints": [],
       "fieldMappings": [

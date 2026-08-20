@@ -49,6 +49,7 @@
       "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "update_expression",
       "constraints": [],
       "fieldMappings": [

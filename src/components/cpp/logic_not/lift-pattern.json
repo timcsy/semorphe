@@ -1,5 +1,6 @@
 {
   "id": "cpp_unary_not",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "unary_expression",
   "patternType": "operatorDispatch",
   "operatorDispatch": {

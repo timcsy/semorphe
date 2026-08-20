@@ -36,6 +36,11 @@ export function createTestLifter(): Lifter {
   pl.setLiftStrategyRegistry(liftStrategyRegistry)
   const liftSkipNodeTypes = new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression', 'preproc_ifdef'])
   pl.loadBlockSpecs(blockSpecRegistry.getAll(), liftSkipNodeTypes)
+  // 🔴 **明說文法**（spec 167）。這個助手是 C++ 專用的——
+  // 而在 167 之前那件事只寫在檔頭的散文裡，**程式碼一個字都沒說**。
+  // > **一個「大家都知道」的前提，如果沒有寫成宣告，第二個語言進來的那天它就會出事。**
+  pl.setGrammar('tree-sitter-cpp')
+  lifter.setGrammar('tree-sitter-cpp')
   pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
   lifter.setPatternLifter(pl)
 

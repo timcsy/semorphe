@@ -7,6 +7,8 @@ import { componentLiftPatterns } from '../component/lift-patterns'
 import { isElseIfChainable } from '../component/traits'
 
 interface PatternEntry {
+  /** 這一筆寫給哪個文法。🔴 沒有預設值——見 `LiftPattern.grammar`。 */
+  grammar: string
   componentId: string
   patternType: string
   priority: number
@@ -56,8 +58,29 @@ export class PatternLifter {
   }
 
   private patterns = new Map<string, PatternEntry[]>()
+  /**
+   * 目前在辨識哪個文法。**產品路徑一律明說**（組裝點從語言套件讀）。
+   *
+   * ⚠️ `null` ＝ 不過濾，那是 spec 167 之前的行為。留著它的唯一理由是
+   * **113 個 C++ 測試檔共用的 `createTestLifter`**——而那個助手自己也明說了
+   * `tree-sitter-cpp`，所以今天沒有任何一條產品路徑靠這個預設。
+   *
+   * 🔴 **而「組裝點有沒有明說」由護欄看著**（`audit-lift-grammar`），
+   * 不是靠這裡拋錯——拋錯會讓那 113 個測試變成這一刀的範圍。
+   */
+  private activeGrammar: string | null = null
   private transformRegistry: TransformRegistry | null = null
   private liftStrategyRegistry: LiftStrategyRegistry | null = null
+
+  /**
+   * 指定現在在辨識哪個文法——**只有這個文法的 pattern 會參與比對**。
+   *
+   * 🔴 在此之前 `python:if` 與 `cpp:if` 掛在同一個 `if_statement` 上，
+   * 而**勝負由 `priority` 決定——那是一個沒有人設計過的排序**。
+   */
+  setGrammar(grammar: string): void {
+    this.activeGrammar = grammar
+  }
 
   setTransformRegistry(registry: TransformRegistry): void {
     this.transformRegistry = registry
@@ -69,18 +92,37 @@ export class PatternLifter {
 
   /** Check if any pattern exists for the given AST node type */
   hasPatternForNodeType(nodeType: string): boolean {
-    return this.patterns.has(nodeType)
+    this.mergeIntoCapsule()
+    return this.entriesFor(nodeType).length > 0
+  }
+
+  /**
+   * 取出**屬於目前文法**的 pattern。
+   *
+   * ⚠️ 這是這一刀唯一的過濾點——`tryLift` 與 `hasPatternForNodeType` 都走它，
+   * 否則「有沒有 pattern」與「用哪一筆 pattern」會給出不一致的答案。
+   */
+  private entriesFor(nodeType: string): PatternEntry[] {
+    const all = this.patterns.get(nodeType) ?? []
+    if (this.activeGrammar === null) return all
+    return all.filter((e) => e.grammar === this.activeGrammar)
   }
 
   /** Load patterns from BlockSpec JSON definitions (simple/constrained patterns).
    *  skipNodeTypes: set of AST node types to skip (handled by hand-written lifters or lift-patterns.json) */
-  loadBlockSpecs(specs: BlockSpec[], skipNodeTypes?: Set<string>): void {
+  loadBlockSpecs(specs: BlockSpec[], skipNodeTypes?: Set<string> | ReadonlyMap<string, ReadonlySet<string>>): void {
     for (const spec of specs) {
       const ap = spec.astPattern
       if (!ap || ap.nodeType.startsWith('_')) continue
-      if (skipNodeTypes?.has(ap.nodeType)) continue
+      // ⚠️ **跳過清單是【文法】的性質**：一份 Set 會把 C++ 的清單套在所有語言上，
+      // 而那正是 spec 167 在治的病。傳 Map 時只有同文法的那份算數。
+      const skip = skipNodeTypes instanceof Map
+        ? skipNodeTypes.get(ap.grammar)
+        : (skipNodeTypes as Set<string> | undefined)
+      if (skip?.has(ap.nodeType)) continue
 
       const entry: PatternEntry = {
+        grammar: ap.grammar,
         componentId: spec.componentMapping?.componentId ?? spec.id,
         patternType: ap.patternType ?? (ap.constraints.length > 0 ? 'constrained' : 'simple'),
         priority: this.calcPriority(ap.patternType ?? 'simple', ap.constraints?.length ?? 0, 0) - 5,
@@ -121,6 +163,7 @@ export class PatternLifter {
   loadLiftPatterns(patterns: LiftPattern[]): void {
     for (const lp of patterns) {
       const entry: PatternEntry = {
+        grammar: lp.grammar,
         componentId: lp.component?.componentId ?? '',
         patternType: lp.patternType ?? 'simple',
         priority: this.calcPriority(lp.patternType ?? 'simple', lp.constraints?.length ?? 0, lp.priority ?? 0),
@@ -167,8 +210,8 @@ export class PatternLifter {
   /** Try to lift an AST node using loaded patterns. Returns null if no pattern matches. */
   tryLift(node: AstNode, ctx: LiftContext): SemanticNode | null {
     this.mergeIntoCapsule()
-    const entries = this.patterns.get(node.type)
-    if (!entries) return null
+    const entries = this.entriesFor(node.type)
+    if (entries.length === 0) return null
 
     for (const entry of entries) {
       const result = this.tryMatch(node, entry, ctx)

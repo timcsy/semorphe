@@ -1,5 +1,6 @@
 {
   "id": "cpp_return_statement",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "return_statement",
   "component": {
     "componentId": "cpp:return"

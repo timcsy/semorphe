@@ -1,5 +1,6 @@
 {
   "id": "cpp_endl",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "identifier",
   "component": {
     "componentId": "cpp:endl"

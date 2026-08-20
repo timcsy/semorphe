@@ -1,5 +1,6 @@
 {
   "id": "cpp_ternary_expr",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "conditional_expression",
   "component": {
     "componentId": "cpp:ternary"

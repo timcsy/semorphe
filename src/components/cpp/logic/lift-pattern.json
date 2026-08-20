@@ -1,5 +1,6 @@
 {
   "id": "cpp_binary_logic",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "binary_expression",
   "patternType": "operatorDispatch",
   "operatorDispatch": {

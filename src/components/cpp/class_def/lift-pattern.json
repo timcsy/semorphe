@@ -1,5 +1,6 @@
 {
   "id": "cpp_class_specifier",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "class_specifier",
   "component": {
     "componentId": "cpp:class_def"

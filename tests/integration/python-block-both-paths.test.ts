@@ -32,7 +32,7 @@ import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
-import { createTestLifter } from '../helpers/setup-lifter'
+import { createPythonLifter } from '../helpers/python-lift'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode, BlockState } from '../../src/core/types'
 import { PythonParser } from '../../src/languages/python/parser'
@@ -66,7 +66,7 @@ beforeAll(async () => {
   await pyParser.init(`${process.cwd()}/public`)
 
   await Parser.init()
-  lifter = await createTestLifter()
+  lifter = createPythonLifter()
 }, 60_000)
 
 /** 一顆 `print(x)` 的語義節點——路徑①的起點（工具箱拖出來時的形狀）。 */

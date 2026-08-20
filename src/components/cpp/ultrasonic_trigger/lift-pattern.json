@@ -1,6 +1,7 @@
 [
   {
     "id": "cpp_ultrasonic_trigger",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "compound_statement",
     "component": {
       "componentId": "cpp:ultrasonic_trigger"
@@ -10,6 +11,7 @@
   },
   {
     "id": "cpp_ultrasonic_trigger_toplevel",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "translation_unit",
     "component": {
       "componentId": "cpp:ultrasonic_trigger"

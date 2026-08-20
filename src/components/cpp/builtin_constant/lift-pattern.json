@@ -1,6 +1,7 @@
 [
   {
     "id": "cpp_eof",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "identifier",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -22,6 +23,7 @@
   },
   {
     "id": "cpp_null_id",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "identifier",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -43,6 +45,7 @@
   },
   {
     "id": "cpp_true",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "true",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -57,6 +60,7 @@
   },
   {
     "id": "cpp_false",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "false",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -71,6 +75,7 @@
   },
   {
     "id": "cpp_nullptr",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "nullptr",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -85,6 +90,7 @@
   },
   {
     "id": "cpp_null",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "null",
     "component": {
       "componentId": "cpp:builtin_constant"
@@ -99,6 +105,7 @@
   },
   {
     "id": "cpp_npos_qualified",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "qualified_identifier",
     "component": {
       "componentId": "cpp:builtin_constant"

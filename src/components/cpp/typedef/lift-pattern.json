@@ -1,5 +1,6 @@
 {
   "id": "cpp_type_definition",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "type_definition",
   "component": {
     "componentId": "cpp:typedef"

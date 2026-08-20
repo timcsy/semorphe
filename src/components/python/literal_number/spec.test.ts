@@ -12,7 +12,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser } from 'web-tree-sitter'
-import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
+import { createPythonLifter } from '../../../../tests/helpers/python-lift'
 import { PythonParser } from '../../../languages/python/parser'
 import { registerLanguage, generateCode } from '../../../core/projection/code-generator'
 import { registerGenerate } from './generate'
@@ -30,7 +30,7 @@ beforeAll(async () => {
   py = new PythonParser()
   await py.init(`${process.cwd()}/public`)
   await Parser.init()
-  lifter = await createTestLifter()
+  lifter = createPythonLifter()
   registerLanguage('python', () => {
     const g = new Map<string, NodeGenerator>()
     registerGenerate(g); registerPrint(g); registerProgram(g); registerStr(g)

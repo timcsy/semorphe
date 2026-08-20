@@ -208,6 +208,8 @@ export const PATTERN_TYPES = [
 export type PatternType = (typeof PATTERN_TYPES)[number]
 
 export interface AstPattern {
+  /** 🔴 這個 AST 形狀寫給哪個文法——理由與 `LiftPattern.grammar` 相同。 */
+  grammar: GrammarId
   nodeType: string
   constraints: AstConstraint[]
   patternType?: PatternType
@@ -597,8 +599,38 @@ export interface UniversalTemplate {
 
 // ─── Lift Pattern (JSON-driven AST→Semantic patterns) ───
 
+/**
+ * **文法**——`astNodeType` 這個字串所屬的命名空間。
+ *
+ * 🔴 **它不是「語言」。** `cpp` 套件一個文法（tree-sitter-cpp）服務四個教學語言
+ * （c-beginner／cpp-beginner／cpp-competitive／arduino）——以語言為鍵過濾，
+ * `c-beginner` 會拿不到 C++ 的 pattern。
+ *
+ * 取值採用**解析器的名字**（`tree-sitter-cpp`／`tree-sitter-python`），
+ * 因為它**已經是出貨的 wasm 檔名**——對得起來、查得到，不是自創代號。
+ */
+export type GrammarId = string
+
 export interface LiftPattern {
   id: string
+  /**
+   * 🔴 **這一筆 pattern 寫給哪個文法——必填，而且【不得】從任何名字、路徑或前綴推導。**
+   *
+   * tree-sitter-python 與 tree-sitter-cpp 大量同名：`if_statement`／`while_statement`／
+   * `for_statement`／`return_statement`／`identifier`／`call`。
+   *
+   * > **兩個文法各自獨立命名，而它們自然會撞名——因為它們描述的是同一批程式語言概念。
+   * > 撞名不是巧合，是必然。而 pattern 的比對鍵剛好只有那個名字。**
+   *
+   * ⚠️ **為什麼不從 `component.componentId` 的前綴導**：5 筆 `operatorDispatch` pattern
+   * （negate／logic_not／logic／compare／arithmetic）**沒有 componentId**——身分依運算子而定。
+   *
+   * ⚠️ **為什麼不從膠囊資料夾導**：那是慣例不是契約，而這個專案在
+   * 「拿名字的形狀做判斷」上付過**三次**學費（型別追蹤靜靜失效、單步除錯完全失效、
+   * 一整族從護欄的信號裡消失）——**三次都不會讓測試變紅**。
+   * 清單與原文見 `knowledge/skills/component-rename/SKILL.md` 第 6 步。
+   */
+  grammar: GrammarId
   astNodeType: string
   component?: { componentId: string }
   patternType?: PatternType

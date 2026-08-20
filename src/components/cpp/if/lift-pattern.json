@@ -1,5 +1,6 @@
 {
   "id": "cpp_if_statement",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "if_statement",
   "component": {
     "componentId": "cpp:if"

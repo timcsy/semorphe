@@ -26,6 +26,7 @@
       "order": 8
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "unary_expression",
       "constraints": [
         {

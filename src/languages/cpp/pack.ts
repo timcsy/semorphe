@@ -14,6 +14,7 @@ import type { Topic, Target, StylePreset } from '../../core/types'
 import { declareLanguagePack } from '../../core/language-packs'
 import { cppCategoryDefs } from './toolbox-categories'
 import { CppParser } from './parser'
+import cppLiftPatterns from './lift-patterns.json'
 import cppBeginnerTopic from './topics/cpp-beginner.json'
 import cppCompetitiveTopic from './topics/cpp-competitive.json'
 import cBeginnerTopic from './topics/c-beginner.json'
@@ -38,6 +39,24 @@ import cPreset from './styles/c.json'
 declareLanguagePack({
   id: 'cpp',
   name: 'C++',
+  /**
+   * ⚠️ **一個文法，四個教學語言**——下面 `topics` 那四筆
+   * （cpp-beginner／cpp-competitive／c-beginner／arduino）全走這一個文法。
+   * 這就是「文法不是語言」最直接的證據。
+   */
+  grammar: 'tree-sitter-cpp',
+  liftPatterns: cppLiftPatterns,
+  /**
+   * 這些節點由手寫 lifter 或 lift-pattern 接手，**pattern 那條路要跳過**。
+   *
+   * 🔴 spec 167 之前這一串寫在 `app.ts` 的組裝點，**而它套用在所有語言上**
+   * ——於是 Python 的 `for_statement` 也被跳過了，而沒有任何東西說話。
+   */
+  liftSkipNodeTypes: [
+    'call_expression', 'using_declaration', 'for_statement', 'assignment_expression',
+    'update_expression', 'switch_statement', 'case_statement', 'do_statement',
+    'conditional_expression', 'cast_expression', 'preproc_ifdef',
+  ],
   order: 0,
   topics: [cppBeginnerTopic, cppCompetitiveTopic, cBeginnerTopic, arduinoTopic] as Topic[],
   // ⚠️ **順序就是選單順序**——照 `app.ts` 原本的註冊順序原封搬過來。

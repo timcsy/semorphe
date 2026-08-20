@@ -1,5 +1,6 @@
 {
   "id": "cpp_alias_declaration",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "alias_declaration",
   "component": {
     "componentId": "cpp:using_alias"

@@ -1,5 +1,6 @@
 {
   "id": "cpp_throw_statement",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "throw_statement",
   "component": {
     "componentId": "cpp:throw"

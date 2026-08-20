@@ -1,5 +1,6 @@
 {
   "id": "cpp_doc_comment",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "comment",
   "component": {
     "componentId": "cpp:doc_comment"

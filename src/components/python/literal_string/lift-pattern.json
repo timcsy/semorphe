@@ -1,5 +1,6 @@
 {
   "id": "python_string_literal",
+  "grammar": "tree-sitter-python",
   "astNodeType": "string",
   "component": {
     "componentId": "python:literal_string"

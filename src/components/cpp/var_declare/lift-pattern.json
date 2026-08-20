@@ -1,5 +1,6 @@
 {
   "id": "cpp_declaration",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "declaration",
   "component": {
     "componentId": "cpp:var_declare"

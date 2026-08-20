@@ -1,5 +1,6 @@
 {
   "id": "cpp_for_range_loop",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "for_range_loop",
   "component": {
     "componentId": "cpp:loop_range"

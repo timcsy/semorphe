@@ -1,5 +1,6 @@
 {
   "id": "python_print_call",
+  "grammar": "tree-sitter-python",
   "astNodeType": "call",
   "component": {
     "componentId": "python:print"

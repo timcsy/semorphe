@@ -62,6 +62,7 @@
       }
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "declaration",
       "constraints": [
         {

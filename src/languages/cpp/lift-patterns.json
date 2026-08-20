@@ -1,18 +1,21 @@
 [
   {
     "id": "cpp_unwrap_parens",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "parenthesized_expression",
     "patternType": "unwrap",
     "unwrapChild": 0
   },
   {
     "id": "cpp_unwrap_condition_clause",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "condition_clause",
     "patternType": "unwrap",
     "unwrapChild": 0
   },
   {
     "id": "cpp_expression_statement",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "expression_statement",
     "patternType": "unwrap",
     "unwrapChild": 0,
@@ -20,6 +23,7 @@
   },
   {
     "id": "cpp_parameter_pack_expansion",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "parameter_pack_expansion",
     "patternType": "unwrap",
     "unwrapChild": 0,
@@ -27,6 +31,7 @@
   },
   {
     "id": "cpp_compound_stmt",
+    "grammar": "tree-sitter-cpp",
     "astNodeType": "compound_statement",
     "component": {
       "componentId": "_compound"

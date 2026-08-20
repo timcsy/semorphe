@@ -1,5 +1,6 @@
 {
   "id": "cpp_preproc_def",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "preproc_def",
   "component": {
     "componentId": "cpp:define"

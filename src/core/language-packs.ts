@@ -30,6 +30,34 @@ export interface LanguagePack {
   id: string
   name: string
   /**
+   * 🔴 **這個套件的解析器產出的 AST 屬於哪個文法。**
+   *
+   * ⚠️ **它與 `id` 不是同一件事，而今天就已經不是**：`cpp` 這一個套件
+   * 服務四個教學語言（c-beginner／cpp-beginner／cpp-competitive／arduino），
+   * 而它們共用**一個**文法。以 `id` 當過濾鍵會讓 `c-beginner` 拿不到 C++ 的 pattern。
+   *
+   * > **語言是教學上的分類，文法是 `astNodeType` 那個字串的命名空間。**
+   */
+  grammar: string
+  /**
+   * 辨識時要**跳過**的 AST 節點型別——由手寫的 lifter 或 lift-pattern 接手。
+   *
+   * 🔴 **這是文法的性質，所以它住在這裡。** 在 spec 167 之前它是
+   * `app.ts` 裡一串硬編的 C++ 節點型別（`call_expression`／`using_declaration`／…），
+   * 而**那一串套用在所有語言上**——Python 的 `for_statement` 因此也被跳過了。
+   */
+  liftSkipNodeTypes?: readonly string[]
+  /**
+   * 這個文法的**結構性** lift pattern——不屬於任何一顆元件的那些
+   * （拆殼 `unwrap`、運算子分派…）。
+   *
+   * 🔴 spec 167 之前，組裝點**寫死 import** 了 `src/languages/cpp/lift-patterns.json`
+   * ——於是換一個語言時，載進來的仍然是 C++ 的那份。
+   *
+   * > **一個寫死的 import，是一份沒有人宣告過的預設值。**
+   */
+  liftPatterns?: readonly unknown[]
+  /**
    * 選單順序——**明說的，不是檔名排出來的**。
    *
    * 🔴 `import.meta.glob` 的鍵順序不保證，而**選單順序是設計出來的**

@@ -12,12 +12,54 @@ import { liftPostProcessors } from './post-processors'
 import { buildStandaloneBlock } from '../standalone-block'
 
 export class Lifter {
+  /** `文法\u0000節點型別` → 手寫 lifter。**鍵帶文法**，見 `registerFor`。 */
   private lifters = new Map<string, NodeLifter>()
+  /** 目前註冊中的文法——`registerFor` 開，`register` 讀。 */
+  private registeringGrammar: string | null = null
+  /** 目前辨識中的文法。`null` ＝ 不過濾（spec 167 之前的行為）。 */
+  private activeGrammar: string | null = null
   private patternLifter: PatternLifter | null = null
   private astNodeComponentMap: Map<string, string> | null = null
 
+  /**
+   * 在**指定文法**底下註冊一批手寫 lifter。
+   *
+   * 🔴 **spec 167**：手寫 lifter 原本直接以 `nodeType` 當鍵，
+   * 於是 `registerCppLifters` 註冊的 `for_statement` **也接走了 Python 的 for**
+   * ——而它不經過 `PatternLifter`，所以**文法過濾看不到它**。
+   *
+   * > **一條繞過過濾器的路，會讓過濾器的報告變成一份【它看得到的範圍內】的報告。**
+   */
+  registerFor(grammar: string, register: () => void): void {
+    const prev = this.registeringGrammar
+    this.registeringGrammar = grammar
+    try { register() } finally { this.registeringGrammar = prev }
+  }
+
+  /** 指定現在在辨識哪個文法——只有這個文法的手寫 lifter 會被查到。 */
+  setGrammar(grammar: string): void {
+    this.activeGrammar = grammar
+  }
+
   register(nodeType: string, lifter: NodeLifter): void {
-    this.lifters.set(nodeType, lifter)
+    this.lifters.set(this.key(this.registeringGrammar, nodeType), lifter)
+  }
+
+  private key(grammar: string | null, nodeType: string): string {
+    return grammar === null ? nodeType : `${grammar}\u0000${nodeType}`
+  }
+
+  /** 查手寫 lifter——**先問目前文法，沒有再問「沒標文法」那批**。 */
+  private lifterFor(nodeType: string): NodeLifter | undefined {
+    if (this.activeGrammar !== null) {
+      const hit = this.lifters.get(this.key(this.activeGrammar, nodeType))
+      if (hit) return hit
+      // ⚠️ 有活躍文法時，**不得回退到別的文法**——那正是這一刀在治的病。
+      // 只回退到「沒標文法」那批（測試裡手動註冊的）。
+      return this.lifters.get(nodeType)
+    }
+    return this.lifters.get(nodeType) ?? [...this.lifters.entries()]
+      .find(([k]) => k.endsWith(`\u0000${nodeType}`))?.[1]
   }
 
   /** Set the JSON-driven pattern lifter engine */
@@ -202,7 +244,7 @@ export class Lifter {
       }
     }
 
-    const lifter = this.lifters.get(node.type)
+    const lifter = this.lifterFor(node.type)
     if (lifter) {
       const handWrittenResult = lifter(node, ctx)
       if (handWrittenResult) {
@@ -418,7 +460,9 @@ export class Lifter {
     if (this.patternLifter?.hasPatternForNodeType(nodeType)) return true
 
     // Check if we have a hand-written lifter for this node type
-    if (this.lifters.has(nodeType)) return true
+    // ⚠️ 走 `lifterFor` ——否則「有沒有 lifter」會跨文法回答，
+    //    而「用哪一個 lifter」不會，兩者的答案就對不起來。
+    if (this.lifterFor(nodeType)) return true
 
     return false
   }

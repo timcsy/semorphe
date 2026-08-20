@@ -33,6 +33,7 @@
       "order": 0
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",
       "constraints": [
         {

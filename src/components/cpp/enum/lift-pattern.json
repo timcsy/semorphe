@@ -1,5 +1,6 @@
 {
   "id": "cpp_enum_specifier",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "enum_specifier",
   "component": {
     "componentId": "cpp:enum"

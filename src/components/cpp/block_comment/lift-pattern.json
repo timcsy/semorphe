@@ -1,5 +1,6 @@
 {
   "id": "cpp_block_comment",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "comment",
   "component": {
     "componentId": "cpp:block_comment"

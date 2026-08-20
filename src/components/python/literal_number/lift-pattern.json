@@ -1,6 +1,7 @@
 [
   {
     "id": "python_integer_literal",
+    "grammar": "tree-sitter-python",
     "astNodeType": "integer",
     "component": {
       "componentId": "python:literal_number"
@@ -15,6 +16,7 @@
   },
   {
     "id": "python_float_literal",
+    "grammar": "tree-sitter-python",
     "astNodeType": "float",
     "component": {
       "componentId": "python:literal_number"

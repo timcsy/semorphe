@@ -1,5 +1,6 @@
 {
   "id": "cpp_cast_expr",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "cast_expression",
   "component": {
     "componentId": "cpp:cast"

@@ -57,6 +57,7 @@
       "order": 0
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "assignment_expression",
       "constraints": [],
       "fieldMappings": [

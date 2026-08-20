@@ -1,5 +1,6 @@
 {
   "id": "cpp_pointer_deref_ptr",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "pointer_expression",
   "component": {
     "componentId": "cpp:pointer_deref"

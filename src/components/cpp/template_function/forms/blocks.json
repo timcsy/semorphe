@@ -50,6 +50,7 @@
       "order": 0
     },
     "astPattern": {
+      "grammar": "tree-sitter-cpp",
       "nodeType": "template_declaration",
       "constraints": [],
       "liftStrategy": "cpp:liftTemplateFunction",

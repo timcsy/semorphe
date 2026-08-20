@@ -1,0 +1,11 @@
+[
+  {
+    "id": "python_expression_statement",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "expression_statement",
+    "patternType": "unwrap",
+    "unwrapChild": 0,
+    "priority": 1,
+    "_why": "🔴 **spec 167 掀出來的**。Python 把 `print(...)` 包在 `expression_statement` 裡，而在此之前**是 C++ 的同名 pattern 幫它拆的**——文法過濾一裝上，這個洞就現形了。\n\n> **一段靠別的語言的規則才走得通的路，在它們被分開的那天才會被發現。**"
+  }
+]

@@ -46,7 +46,6 @@ import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { allLanguagePacks, languagePack, defaultTarget } from '../core/language-packs'
 import { loadAllLanguagePacks } from '../core/load-language-packs'
-import liftPatternsJson from '../languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
 
@@ -440,6 +439,12 @@ export class App {
     this.restoreState()
   }
 
+  /**
+   * 切換辨識用的文法。**由 `setupCodeToBlocksPipeline` 裝上**——
+   * 在它跑之前是 `null`，而那段期間沒有人會切目標。
+   */
+  private setActiveGrammar: ((language: string) => void) | null = null
+
   private async setupCodeToBlocksPipeline(): Promise<void> {
     const lifter = new Lifter()
     const transformRegistry = new TransformRegistry()
@@ -450,8 +455,35 @@ export class App {
     const pl = new PatternLifter()
     pl.setTransformRegistry(transformRegistry)
     pl.setLiftStrategyRegistry(liftStrategyRegistry)
-    pl.loadBlockSpecs(allSpecs, new Set(['call_expression', 'using_declaration', 'for_statement', 'assignment_expression', 'update_expression', 'switch_statement', 'case_statement', 'do_statement', 'conditional_expression', 'cast_expression', 'preproc_ifdef']))
-    pl.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
+    // 🔴 **文法與跳過清單都【問語言套件】，不在這裡硬編。**
+    //
+    // spec 167 之前這一行是一串 C++ 的節點型別，而**它套用在所有語言上**
+    // ——於是 Python 的 `for_statement` 也被跳過，而 `if_statement` 之類
+    // 撞名的節點則直接被 C++ 的 pattern 認走：一段 Python 貼進去產出 C++。
+    //
+    // > **一個組裝點硬編的清單，會安靜地變成所有語言的清單。**
+    //
+    // ⚠️ **全部語言一起載，切換的是【活躍文法】**——因為這個函式**只跑一次**
+    // （init 時），而使用者可以隨時切目標。第一版只載當下那個語言的，
+    // 於是切到 Python 之後 lifter 仍然停在 C++ 的文法上，**而畫面是空的**。
+    // > **一份「在啟動時決定」的設定，遇到「隨時可以改」的選單就會過期。**
+    const skipByGrammar = new Map<string, ReadonlySet<string>>()
+    for (const lp of allLanguagePacks()) skipByGrammar.set(lp.grammar, new Set(lp.liftSkipNodeTypes ?? []))
+    this.setActiveGrammar = (language: string) => {
+      const g = languagePack(language)?.grammar
+      if (!g) throw new Error(`沒有語言套件：${language}——辨識不得用猜的文法繼續`)
+      pl.setGrammar(g)
+      // ⚠️ **兩邊都要切**：pattern 那條路與手寫 lifter 那條路是分開的，
+      // 而只切一邊的症狀是「大部分對，少數幾顆仍然是別的語言的」。
+      lifter.setGrammar(g)
+    }
+    this.setActiveGrammar(this.currentTopic.language)
+    pl.loadBlockSpecs(allSpecs, skipByGrammar)
+    // 🔴 **問套件，不寫死 import**（spec 167）。
+    // 在此之前這一行載的永遠是 C++ 的那份，換了語言也一樣。
+    pl.loadLiftPatterns(
+      allLanguagePacks().flatMap((lp) => lp.liftPatterns ?? []) as unknown as LiftPattern[],
+    )
     lifter.setPatternLifter(pl)
     const pr = new PatternRenderer()
     pr.setRenderStrategyRegistry(renderStrategyRegistry)
@@ -669,6 +701,9 @@ export class App {
         // ⚠️ 症狀不是報錯：`generateCodeWithMapping(tree, 'cpp', …)` 對 Python 的樹
         // **照樣產得出東西**（產生器是按元件身分查的），只是那個語言參數是錯的。
         // > **一個從來沒有人呼叫的 setter，與一個不存在的機制分不出來。**
+        // 🔴 **辨識用的文法也要跟著切**（spec 167）——與上面那兩個 setter 同一個理由，
+        // 而它的症狀更狠：文法不對時**一顆積木都畫不出來**（全部不匹配）。
+        this.setActiveGrammar?.(topic.language)
         this.syncController?.setLanguage(topic.language)
         this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
         this.syncController?.setTopic(topic, branches)
@@ -860,6 +895,17 @@ export class App {
       const topic = this.topicRegistry.get(topicId)
       if (topic) {
         this.currentTopic = topic
+        // 🔴 **還原也要切辨識用的文法**（spec 167）。
+        //
+        // ⚠️ 這條路**刻意不走 `handleTargetChange`**（註解就在上面幾行：
+        // 「WITHOUT triggering resyncAfterTopicChange」），於是每一個
+        // 「切目標時要做的事」都必須在這裡**再寫一次**——而漏掉的那些不會報錯。
+        //
+        // 症狀：存檔存的是 Python，重開之後 lifter 停在 C++ 的文法上，
+        // **每一個節點都不匹配 → 整棵樹 `unresolved` → 畫面一片空白**。
+        //
+        // > **一條「只在還原時走」的路，會安靜地漏掉每一件在另一條路上做的事。**
+        this.setActiveGrammar?.(topic.language)
         this.enabledBranches = state.enabledBranches
           ? new Set(state.enabledBranches)
           : new Set([topic.levelTree.id])

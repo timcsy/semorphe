@@ -1,5 +1,6 @@
 {
   "id": "cpp_namespace_definition",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "namespace_definition",
   "component": {
     "componentId": "cpp:namespace_def"

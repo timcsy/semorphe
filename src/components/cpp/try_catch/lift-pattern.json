@@ -1,5 +1,6 @@
 {
   "id": "cpp_try_statement",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "try_statement",
   "component": {
     "componentId": "cpp:try_catch"

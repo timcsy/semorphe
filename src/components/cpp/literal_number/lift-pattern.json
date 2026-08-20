@@ -1,5 +1,6 @@
 {
   "id": "cpp_number_literal",
+  "grammar": "tree-sitter-cpp",
   "astNodeType": "number_literal",
   "component": {
     "componentId": "cpp:literal_number"
