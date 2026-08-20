@@ -1,3 +1,4 @@
+import { degradationBlocks } from '../degradation-blocks'
 import type { SemanticNode } from '../types'
 import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
@@ -112,8 +113,10 @@ function renderBlock(node: SemanticNode): BlockState | null {
         extra.unresolved = true
         extra.nodeType = node.properties.node_type
       }
+      // 🔴 **型別由語言套件宣告**（spec 154）——核心不認得任何語言的積木型別。
+      //    ⚠️ 沒有宣告時用一個**看得出是降級**的記號，不猜一個語言的名字。
       block = {
-        type: 'cpp_raw_code',
+        type: degradationBlocks()?.statement ?? 'raw_code',
         id: nextBlockId('block_'),
         fields: { CODE: node.metadata?.rawCode ?? node.properties.code ?? '' },
         inputs: {},
@@ -151,9 +154,10 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
 function renderExpression(node: SemanticNode): BlockState | null {
   const block = renderBlock(node)
   if (!block) return null
-  // If it's a raw_code (statement) block in expression context, use cpp_raw_expression instead
-  if (block.type === 'cpp_raw_code') {
-    return { ...block, type: 'cpp_raw_expression' }
+  // 語句位置的降級積木出現在運算式位置時，換成運算式版（型別由語言套件宣告）
+  const deg = degradationBlocks()
+  if (deg && block.type === deg.statement) {
+    return { ...block, type: deg.expression }
   }
   // Check if a statement-only block has an expression counterpart
   if (globalPatternRenderer?.isStatementOnly(block.type)) {
@@ -161,12 +165,12 @@ function renderExpression(node: SemanticNode): BlockState | null {
     if (exprType) {
       return { ...block, type: exprType }
     }
-    // No expression counterpart — fall back to cpp_raw_expression
+    // 沒有運算式版的對應積木 → 降級（型別由語言套件宣告，spec 154）
     const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.conceptId
     // Strip trailing semicolons/newlines — expression context doesn't need them
     const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw
     return {
-      type: 'cpp_raw_expression',
+      type: degradationBlocks()?.expression ?? 'raw_expression',
       id: block.id,
       fields: { CODE: rawCode },
       inputs: {},

@@ -54,3 +54,26 @@ export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
 export const C_COMPOUND_ASSIGN_INPUTS = getInputs('cpp_var_assign_compound')
 export const C_COMPOUND_ASSIGN_EXPR_INPUTS = getInputs('cpp_var_assign_compound_expression')
 export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')
+
+// ── 🔴 spec 154：從 `core/block-input-names.ts` 搬過來的九個 ──────────────
+//
+// 那個檔的註解（057 寫的）早就標出這個張力，逐字：
+//
+// > ⚠️ **本模組只涵蓋 universal 積木**……語言專屬積木的插槽名因此仍然寫死
+// > ——要涵蓋它們，這個模組得引用語言套件，那與「核心不認識語言」相衝。
+// > **那是另一個決定，不在 057 的範圍。不硬湊。**
+//
+// 🟢 **spec 154 就是那個決定**：它們一個一個都是 `cpp_*`，
+// 而核心層不該認得任何語言的積木型別（P9）。
+//
+// ⚠️ 而 `extractInputNames`／`getInputs` **留在核心**——那兩個是通用工具，
+// 一個語言專屬的字都沒有。搬走它們才會製造匯入循環。
+export const IF_INPUTS = getInputs('cpp_if')
+export const WHILE_INPUTS = getInputs('cpp_loop_while')
+export const COUNT_LOOP_INPUTS = getInputs('cpp_loop_count')
+export const FUNDEF_INPUTS = getInputs('cpp_func_def')
+export const RETURN_INPUTS = getInputs('cpp_return')
+export const ARRAY_ACCESS_INPUTS = getInputs('cpp_array_at')
+export const ARRAY_ASSIGN_INPUTS = getInputs('cpp_array_assign')
+export const VAR_ASSIGN_INPUTS = getInputs('cpp_var_assign')
+// ⚠️ `ARRAY_DECLARE_INPUTS` **沒有搬**——它零消費者（只剩一段註解提到它）。

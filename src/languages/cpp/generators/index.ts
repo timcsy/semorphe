@@ -1,5 +1,6 @@
 import { declareVariableDropdownBlock } from '../../../core/variable-dropdown-blocks'
 import { declareBoardConstantDropdown } from '../../../core/board-constant-dropdown-blocks'
+import { declareDegradationBlocks } from '../../../core/degradation-blocks'
 import { CPP_STRING_AT_INPUTS } from '../block-input-names'
 import { declareCommentSyntax } from '../../../core/comment-syntax'
 import { cppCommentSyntax } from '../core/comment-syntax'
@@ -58,6 +59,9 @@ export function registerCppLanguage(): void {
   // 🔴 **腳位常數的下拉列的是【目前這塊板子】的具名常數**（spec 148）
   //    ——八塊板子的 `A0` 是五個不同的值，而 D1 mini 還多九個 `D` 系名字。
   declareBoardConstantDropdown({ blockType: 'cpp_pin_constant', field: 'VALUE' })
+
+  // 🔴 **降級積木的名字**（spec 154）——原本寫死在 `core/projection/block-renderer.ts`。
+  declareDegradationBlocks({ statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
 }
 
 /**

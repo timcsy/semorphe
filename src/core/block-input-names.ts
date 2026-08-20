@@ -63,23 +63,17 @@ function getInputs(blockType: string): InputNames {
   return extractInputNames(getSpec(blockType).blockDef)
 }
 
-// Pre-extract for blocks that have dynamic overrides in app.new.ts
-export const IF_INPUTS = getInputs('cpp_if')
-export const WHILE_INPUTS = getInputs('cpp_loop_while')
-export const COUNT_LOOP_INPUTS = getInputs('cpp_loop_count')
-
-// 057：把寫死的插槽名換成這裡導出的常數——JSON 改了動態註冊自動跟上
+// 🔴 **這裡不再有任何積木型別**（spec 154）。
 //
-// ⚠️ **本模組只涵蓋 universal 積木**（它只載入 universal-blocks.json）。
-// 語言專屬積木（`cpp_string_at`、`cpp_var_assign_compound` 等）的插槽名因此仍然
-// 寫死——要涵蓋它們，這個模組得引用語言套件，那與「核心不認識語言」相衝。
-// 那是另一個決定，不在 057 的範圍。**不硬湊。**
-export const FUNDEF_INPUTS = getInputs('cpp_func_def')
-export const RETURN_INPUTS = getInputs('cpp_return')
-export const ARRAY_DECLARE_INPUTS = getInputs('cpp_array_declare')
-export const ARRAY_ACCESS_INPUTS = getInputs('cpp_array_at')
-export const ARRAY_ASSIGN_INPUTS = getInputs('cpp_array_assign')
-export const VAR_ASSIGN_INPUTS = getInputs('cpp_var_assign')
+// 原本有九個 `getInputs('cpp_*')` 常數，而它們**唯一的消費者是
+// `src/ui/block-registrar.ts`**——一個只服務單一語言的模組，
+// 住在 `core/` 只是**位置**，不是**身分**。
+//
+// > **核心層是所有語言共用的那一份，所以它的違規比視圖層更硬。**
+//
+// 🟢 常數搬去 `languages/cpp/block-input-names.ts`（那裡本來就有同形狀的機制），
+// 由**組裝點**注入給 registrar。這裡只留 `extractInputNames`／`getInputs`
+// ——⚠️ 它們是**通用工具**，一個語言專屬的字都沒有。
 
 // Re-export the extractor for use in tests
 export { extractInputNames, getInputs }

@@ -6,7 +6,6 @@ import * as Blockly from 'blockly'
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
-import { ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, IF_INPUTS, RETURN_INPUTS, VAR_ASSIGN_INPUTS, WHILE_INPUTS } from '../core/block-input-names'
 import { abstractConceptOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
@@ -16,20 +15,56 @@ import { isPlainDeclaration } from '../core/component/traits'
 //    那個檔已經硬編了 9 個 `cpp_*` 積木型別，搬過去會讓
 //    中立性護欄的**第一維降、第二維升**——把搬家當成清償。
 //    （第二維就是 spec 153 為此加的。）
-type InputNames = { value: string[] }
-let C_COMPOUND_ASSIGN_INPUTS: InputNames = { value: ['VALUE'] }
-let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'] }
-let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'] }
+type InputNames = { value: string[]; statement: string[] }
+
+// 🔴 **十二個插槽名全部由組裝點注入**（spec 153 三個 → spec 154 十二個）。
+//    其中九個原本住在 `core/block-input-names.ts`——而那是**位置錯**：
+//    它們一個一個都是 `cpp_*`，唯一的消費者就是這個檔。
+//
+// 🔴 **這些初始值不是「預設」，是【還沒注入】的佔位**。
+//    ⚠️ 一個看起來合理的預設值，會讓「組裝點漏了」與「值本來就是這樣」
+//    長得一模一樣——而那是這個專案的**靜默降級反模式**。
+//    🟢 所以 `registerAll` 會在沒注入時**當場拋錯**，不是默默用佔位值。
+let C_COMPOUND_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
+let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
+let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
+let IF_INPUTS: InputNames = { value: ['CONDITION'], statement: ['THEN', 'ELSE'] }
+let WHILE_INPUTS: InputNames = { value: ['CONDITION'], statement: ['BODY'] }
+let COUNT_LOOP_INPUTS: InputNames = { value: ['FROM', 'TO'], statement: ['BODY'] }
+let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
+let RETURN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
+let ARRAY_ACCESS_INPUTS: InputNames = { value: ['INDEX'], statement: [] }
+let ARRAY_ASSIGN_INPUTS: InputNames = { value: ['INDEX', 'VALUE'], statement: [] }
+let VAR_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
+
+let inputNamesInjected = false
 
 /** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
 export function setLanguageInputNames(names: {
   compoundAssign: InputNames
   compoundAssignExpr: InputNames
   varDeclareExpr: InputNames
+  ifBlock: InputNames
+  whileBlock: InputNames
+  countLoop: InputNames
+  funcDef: InputNames
+  returnBlock: InputNames
+  arrayAccess: InputNames
+  arrayAssign: InputNames
+  varAssign: InputNames
 }): void {
   C_COMPOUND_ASSIGN_INPUTS = names.compoundAssign
   C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
   C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
+  IF_INPUTS = names.ifBlock
+  WHILE_INPUTS = names.whileBlock
+  COUNT_LOOP_INPUTS = names.countLoop
+  FUNDEF_INPUTS = names.funcDef
+  RETURN_INPUTS = names.returnBlock
+  ARRAY_ACCESS_INPUTS = names.arrayAccess
+  ARRAY_ASSIGN_INPUTS = names.arrayAssign
+  VAR_ASSIGN_INPUTS = names.varAssign
+  inputNamesInjected = true
 }
 
 export interface WorkspaceAccessors {
@@ -45,6 +80,13 @@ export class BlockRegistrar {
   }
 
   registerAll(accessors: WorkspaceAccessors): void {
+    // 🔴 **沒注入就出聲**——見上面那段的理由。
+    if (!inputNamesInjected) {
+      throw new Error(
+        'BlockRegistrar：語言的插槽名還沒注入。組裝點要先呼叫 `setLanguageInputNames(...)`'
+        + '——⚠️ 沒有它的話積木會用佔位的插槽名建起來，而那個錯只會在序列化時浮現。',
+      )
+    }
     this.accessors = accessors
     this.registerBlocksFromSpecs()
   }

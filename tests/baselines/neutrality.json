@@ -9,11 +9,9 @@
   "total": 0,
   "files": {},
   "blockTypes": {
-    "total": 44,
-    "_why": "2026-08-20 第一次量。護欄在此之前只掃概念身分，於是這 44 筆對它【不存在】。⚠️ 這個數字**不是違規紅燈**，它是一個原本看不見的東西第一次有了基線。",
+    "total": 33,
+    "_why": "2026-08-20 第一次量。護欄在此之前只掃概念身分，於是這 44 筆對它【不存在】。⚠️ 這個數字**不是違規紅燈**，它是一個原本看不見的東西第一次有了基線。\n🟢 **44 → 33（spec 154）**：`src/core/` 歸零。9 筆的常數搬去 `languages/cpp/`（唯一消費者是 UI 的 registrar，而它們一個一個都是 `cpp_*`——住在 core 只是位置不是身分），由組裝點注入；2 筆的降級積木型別改成語言套件宣告（`declareDegradationBlocks`）。⚠️ 剩下的 33 筆是 `block-registrar` 裡 40 顆命令式 cpp 積木，**應該由 Python 逼出來，而不是憑空重寫**。",
     "files": {
-      "src/core/block-input-names.ts": 9,
-      "src/core/projection/block-renderer.ts": 2,
       "src/ui/block-registrar.ts": 33
     }
   }

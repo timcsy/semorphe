@@ -21,6 +21,8 @@ import { registerCppExtractStrategies } from '../languages/cpp/extractors/extrac
 import { buildProgram } from '../components/cpp/program/lift'
 import {
   C_COMPOUND_ASSIGN_INPUTS, C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
+  IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS, FUNDEF_INPUTS, RETURN_INPUTS,
+  ARRAY_ACCESS_INPUTS, ARRAY_ASSIGN_INPUTS, VAR_ASSIGN_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
   detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
@@ -157,6 +159,15 @@ export class App {
       compoundAssign: C_COMPOUND_ASSIGN_INPUTS,
       compoundAssignExpr: C_COMPOUND_ASSIGN_EXPR_INPUTS,
       varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
+      // 🔴 spec 154：這九個原本住在 `core/block-input-names.ts`
+      ifBlock: IF_INPUTS,
+      whileBlock: WHILE_INPUTS,
+      countLoop: COUNT_LOOP_INPUTS,
+      funcDef: FUNDEF_INPUTS,
+      returnBlock: RETURN_INPUTS,
+      arrayAccess: ARRAY_ACCESS_INPUTS,
+      arrayAssign: ARRAY_ASSIGN_INPUTS,
+      varAssign: VAR_ASSIGN_INPUTS,
     })
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
     // 🔴 **與執行那側同一份來源**（`currentBoard: () => this.currentTarget.board`）
