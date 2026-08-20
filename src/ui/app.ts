@@ -20,7 +20,7 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
 import { buildProgram } from '../components/cpp/program/lift'
 import {
-  C_COMPOUND_ASSIGN_INPUTS, C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
+  C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
   IF_INPUTS, FUNDEF_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
@@ -139,7 +139,6 @@ export class App {
     this.blockSpecRegistry = new BlockSpecRegistry()
     // ⚠️ **必須在 `registerAll` 之前**——註冊時就會讀這些名字。
     setLanguageInputNames({
-      compoundAssign: C_COMPOUND_ASSIGN_INPUTS,
       compoundAssignExpr: C_COMPOUND_ASSIGN_EXPR_INPUTS,
       varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
       // 🔴 spec 154：這九個原本住在 `core/block-input-names.ts`

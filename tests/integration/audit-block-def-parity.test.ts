@@ -39,6 +39,48 @@ import { allComponentDefs } from '../helpers/component-scan'
 import { componentLabels } from '../../src/core/component/labels'
 import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
 
+/**
+ * 🔴 **命令式那顆的 `saveExtraState` 會吐出哪些鍵。**
+ *
+ * ## 為什麼要這一維
+ *
+ * spec 165 裡 `cpp_raw_code` 的比對報告「一模一樣，可刪」——**而它不能刪**：
+ * `loadExtraState` 會依 `degradationCause` 換顏色與 tooltip。
+ *
+ * ⚠️ **而我發現它的方式是 `tsc` 抱怨那個常數變成未用的 import**——不是護欄告訴我的。
+ *
+ * > **一次靠運氣攔下的迴歸，下一次不會有那個運氣。**
+ *
+ * ## 為什麼讀函式的原始碼，而不是呼叫它
+ *
+ * 剛建好的積木多半吐出**空的** extraState（`hasIndex_` 是 false、`unresolved_` 是
+ * undefined），**於是呼叫它什麼也量不到**。而它**會**吐出什麼是寫在函式裡的。
+ *
+ * 🟢 `fn.toString()` 讀的是**執行期真的註冊的那個函式**——不是掃檔案文字，
+ * 所以那段程式碼搬家不會讓這條失效（`component-rename` 第 6 步的教訓）。
+ */
+function extraStateKeys(def: Record<string, unknown> | undefined): string[] {
+  const fn = def?.saveExtraState
+  if (typeof fn !== 'function') return []
+  const src = String(fn)
+  const keys = new Set<string>()
+  for (const m of src.matchAll(/return\s*\{\s*([a-zA-Z_][\w]*)\s*:/g)) keys.add(m[1])
+  for (const m of src.matchAll(/state\.([a-zA-Z_][\w]*)\s*=/g)) keys.add(m[1])
+  return [...keys].sort()
+}
+
+/** 宣告**表達得出**哪些 extraState 鍵。 */
+function declarableKeys(spec: unknown): string[] {
+  const rm = (spec as { renderMapping?: {
+    dynamicRules?: { countSource?: string }[]
+    extraStateFlags?: Record<string, string>
+  } })?.renderMapping
+  const keys = new Set<string>()
+  for (const r of rm?.dynamicRules ?? []) if (r.countSource) keys.add(r.countSource)
+  for (const k of Object.keys(rm?.extraStateFlags ?? {})) keys.add(k)
+  return [...keys].sort()
+}
+
 /** 一顆積木「長什麼樣」的可比對摘要。 */
 interface Shape {
   inputs: string[]
@@ -82,6 +124,8 @@ function shapeOf(b: Blockly.Block): Shape {
 
 let reg: BlockSpecRegistry
 let ws: Blockly.Workspace
+/** 上一支比對建起來的宣告——讓「載入時的狀態」那支指名得出母體。 */
+const declaredCache = new Map<string, Shape>()
 
 beforeAll(() => {
   // 🔴 **先把標籤載進 `Blockly.Msg`**——`jsonInit` 會把 `%{BKY_X}` 展開成訊息文字，
@@ -147,7 +191,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
 
     // 🔴 **順序要對**：欄位在 `init` 的當下就抓住選項產生器，
     // 所以合成來源要在**建積木之前**設好，兩邊都是。
-    const declared = new Map<string, Shape>()
+    const declared = declaredCache
     for (const s of reg.getAll() as { blockDef?: { type?: string } }[]) {
       const t = s.blockDef?.type
       if (!t) continue
@@ -195,6 +239,18 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       if (String(imp.output) !== String(d.output)) diffs.push(`output ${imp.output} vs ${d.output}`)
       if (imp.prev !== d.prev || imp.next !== d.next) diffs.push(`statement ${imp.prev}/${imp.next} vs ${d.prev}/${d.next}`)
       if (imp.colour !== d.colour) diffs.push(`顏色 ${imp.colour} vs ${d.colour}`)
+      // 🔴 **載入時才跑的那一半**——見 `extraStateKeys` 的檔頭。
+      //
+      // ⚠️ 比的是**鍵**不是「有沒有」：`cpp_var_assign_compound` 宣告了 `dynamicRules`，
+      // 而它的 extraState 是 `{hasIndex}`——**與 `dynamicRules` 無關**。
+      // > **一個「有沒有宣告某種 extraState」的檢查，
+      // > 答不出「宣告的是不是【同一個】extraState」。**
+      const impKeys = extraStateKeys(Blockly.Blocks[t] as Record<string, unknown>)
+      const canDeclare = new Set(declarableKeys(reg.getByBlockType(t)))
+      const unexpressed = impKeys.filter((k) => !canDeclare.has(k))
+      if (unexpressed.length > 0) {
+        diffs.push(`載入時的狀態 ${unexpressed.join(',')} —— 宣告表達不出`)
+      }
       if (diffs.length === 0) same.push(t)
       else differ.push({ t, why: diffs.join(' ｜ ') })
     }
@@ -202,7 +258,12 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     console.log(`\n  🟢 一模一樣（可刪）${same.length} 顆：\n    ${same.join(' ')}\n`
       + `  🔴 有差異（不准刪）${differ.length} 顆：\n`
       + differ.map((x) => `    ${x.t}\n      ${x.why}`).join('\n'))
-    expect(same.length + differ.length, '一顆都沒比到 → registerAll 沒跑起來').toBeGreaterThan(10)
+    // ⚠️ **錨點不能錨在一個會隨清理下降的數字上**——第一版寫 `> 10`，
+    // 而清到剩 10 顆的那天它自己紅了，訊息還說「registerAll 沒跑起來」。
+    // > **一個錨在「今天有多少」的錨點，會在事情變好的那天說謊。**
+    // 🟢 錨在「**有沒有比到**」與「母體是不是空的」。
+    expect(same.length + differ.length, '一顆都沒比到 → registerAll 沒跑起來').toBeGreaterThan(0)
+    expect(declared.size, '宣告一顆都沒建起來 → 是 jsonInit 那條路壞了').toBeGreaterThan(100)
 
     // 🔴 **棘輪：差異只准下降。**
     //
@@ -222,6 +283,32 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       '⚠️ 宣告與命令式的落差變多了 → 有人改了一邊沒改另一邊，'
       + '而使用者看到的是命令式那份（CLAUDE.md 的「雙重真相來源」）')
       .toBeLessThanOrEqual(baseline.differ)
+  })
+
+  /**
+   * 🔴 **這一維要有自己的斷言，否則它不會讓任何東西變紅。**
+   *
+   * ⚠️ 注射實測：拿掉宣告的 `extraStateFlags`、甚至**整條關掉這一維**，
+   * `differ` 的棘輪都是綠的——因為那兩個注射讓數字**下降**，而棘輪只擋上升。
+   *
+   * > **一條只擋「變差」的棘輪，擋不住「量得更少」。**
+   *
+   * 🟢 所以指名：**這幾顆的「載入時的狀態」必須被報出來**。
+   * 它們是今天已知宣告表達不出的那些——**任何一顆從清單消失，
+   * 要嘛是宣告補上了（好事，改清單），要嘛是這一維瞎了（壞事）**。
+   */
+  it('🔴 「載入時的狀態」那一維要真的在報——指名它今天抓到誰', async () => {
+    const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+    void BlockRegistrar
+    const withLoad = [...declaredCache.keys()].filter((t) => {
+      const impKeys = extraStateKeys(Blockly.Blocks[t] as Record<string, unknown>)
+      const canDeclare = new Set(declarableKeys(reg.getByBlockType(t)))
+      return impKeys.some((k) => !canDeclare.has(k))
+    }).sort()
+    expect(withLoad,
+      '⚠️ 這一維瞎了，或某顆的宣告補上了。前者是護欄壞掉，後者要改這份清單'
+      + '——**而兩者長得一樣，所以要指名**。')
+      .toEqual(['cpp_doc_comment', 'cpp_if', 'cpp_if_else', 'cpp_raw_code'])
   })
 
   it('★ 報表：哪些積木的宣告【建得起來】', () => {

@@ -12,7 +12,7 @@
         {
           "type": "field_multilinetext",
           "name": "BRIEF",
-          "text": "description"
+          "text": "說明"
         }
       ],
       "previousStatement": "Statement",
@@ -27,6 +27,7 @@
       "inputs": {},
       "statementInputs": {},
       "strategy": "cpp:renderDocComment"
-    }
+    },
+    "_why": "🔴 **spec 166：預設值本來是英文 `description`**——與 `cpp_loop_count` 的寫死英文下拉是**同一類缺陷**（第二次）。\n命令式那份用的是 `Blockly.Msg[...] || '說明'`。"
   }
 ]

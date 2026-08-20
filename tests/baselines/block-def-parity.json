@@ -2,8 +2,8 @@
   "_meta": {
     "guard": "block-def-parity",
     "measuredAt": "2026-08-20",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n🎯 這條量的是【同一顆積木的兩份定義說得一不一樣】。\n  命令式那份沒有守衛（直接賦值）且後跑 → 使用者看到的是它。\n  宣告式那份有守衛且先跑 → 它躺著。\n\n⚠️ 每一筆落差要【逐筆判】，不准用「把宣告改成跟命令式一樣」來刷數字\n  ——其中有幾筆（cpp_break 少了 nextStatement）命令式才是錯的。\n\n🟢 【spec 163】`same` 4 → 0：那四顆刪掉了，所以不再有「一樣的兩份」。`differ` 維持 19。\n\n🟢 【spec 164】`differ` 19 → 17（break／return 的宣告修好、var_ref 補了下拉機制）。\n\n🎯 【spec 165】differ 17 → 10。而 same 是 1 而不是 0：`cpp_raw_code` **比對說一模一樣，卻刻意沒刪**——它的 loadExtraState 會依 degradationCause 換視覺，而**這條護欄只比「剛建好的樣子」**。\n  > **一個「可刪」的判定，只在這條護欄看得到的範圍內成立。**"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n🎯 這條量的是【同一顆積木的兩份定義說得一不一樣】。\n  命令式那份沒有守衛（直接賦值）且後跑 → 使用者看到的是它。\n  宣告式那份有守衛且先跑 → 它躺著。\n\n⚠️ 每一筆落差要【逐筆判】，不准用「把宣告改成跟命令式一樣」來刷數字\n  ——其中有幾筆（cpp_break 少了 nextStatement）命令式才是錯的。\n\n🟢 【spec 163】`same` 4 → 0：那四顆刪掉了，所以不再有「一樣的兩份」。`differ` 維持 19。\n\n🟢 【spec 164】`differ` 19 → 17（break／return 的宣告修好、var_ref 補了下拉機制）。\n\n🎯 【spec 165】differ 17 → 10。而 same 是 1 而不是 0：`cpp_raw_code` **比對說一模一樣，卻刻意沒刪**——它的 loadExtraState 會依 degradationCause 換視覺，而**這條護欄只比「剛建好的樣子」**。\n  > **一個「可刪」的判定，只在這條護欄看得到的範圍內成立。**\n\n🎯 【2026-08-20 spec 166】**護欄多了第五維：`loadExtraState`**。\n  ⚠️ **`differ` 沒有下降到 9 而是停在 10——那不是惡化，是護欄第一次看得見。**\n  `cpp_raw_code` 原本被判「一模一樣，可刪」，而它的 `loadExtraState` 會依\n  `degradationCause` 換顏色與 tooltip。\n  🔴 **而 spec 165 發現它的方式是 `tsc` 抱怨未用的 import——不是護欄告訴我的。**\n  > **一次靠運氣攔下的迴歸，下一次不會有那個運氣。**\n\n  🟢 這一維比的是**鍵**不是「有沒有」：`cpp_var_assign_compound` 宣告了\n  `dynamicRules`，而它的 extraState 是 `{hasIndex}`——由 `extraStateFlags` 表達，\n  **護欄因此正確地【沒有】報它**（我原本猜它會報，猜錯了）。"
   },
-  "same": 1,
+  "same": 0,
   "differ": 10
 }

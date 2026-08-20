@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "field_dynamic_dropdown",
           "name": "NAME",
-          "text": "x"
+          "source": "vars"
         },
         {
           "type": "field_dropdown",
@@ -90,7 +90,8 @@
         "NAME": "name",
         "OP": "operator"
       }
-    }
+    },
+    "_why": "🔴 **spec 166：靜態 `field_input` → 動態下拉**（與 `cpp_var_assign` 同一條）。\n\n🟢 而它的 `hasIndex` extraState **宣告本來就表達得出**（`extraStateFlags`）——我一度以為它像 `cpp_raw_code` 一樣有「載入時才長出來的東西」，**而護欄的新那一維證明了不是**。\n> **一個猜測被護欄否證，比被護欄證實更有價值。**"
   },
   {
     "id": "cpp_var_assign_compound_expression",
@@ -162,6 +163,7 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
+    },
+    "_why": "🔴 **spec 166：靜態 `field_input` → 動態下拉**（與 `cpp_var_assign` 同一條）。\n\n🟢 而它的 `hasIndex` extraState **宣告本來就表達得出**（`extraStateFlags`）——我一度以為它像 `cpp_raw_code` 一樣有「載入時才長出來的東西」，**而護欄的新那一維證明了不是**。\n> **一個猜測被護欄否證，比被護欄證實更有價值。**"
   }
 ]

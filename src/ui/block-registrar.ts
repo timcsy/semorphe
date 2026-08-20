@@ -27,7 +27,6 @@ type InputNames = { value: string[]; statement: string[] }
 //    ⚠️ 一個看起來合理的預設值，會讓「組裝點漏了」與「值本來就是這樣」
 //    長得一模一樣——而那是這個專案的**靜默降級反模式**。
 //    🟢 所以 `registerAll` 會在沒注入時**當場拋錯**，不是默默用佔位值。
-let C_COMPOUND_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
 let IF_INPUTS: InputNames = { value: ['CONDITION'], statement: ['THEN', 'ELSE'] }
@@ -39,20 +38,18 @@ let inputNamesInjected = false
 
 /** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
 /**
- * 🪦 **`arrayAccess`（163）·`returnBlock`（164）·`whileBlock`／`countLoop`／`arrayAssign`／`varAssign`（165）已從契約移除**——它的唯一消費者
+ * 🪦 **`arrayAccess`（163）·`returnBlock`（164）·`whileBlock`／`countLoop`／`arrayAssign`／`varAssign`（165）·`compoundAssign`（166）已從契約移除**——它的唯一消費者
  * （`cpp_array_at` 的命令式定義）退場了。
  *
  * ⚠️ **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料**
  * ——而那份資料從此沒有人驗，錯了也不會有人知道。
  */
 export function setLanguageInputNames(names: {
-  compoundAssign: InputNames
   compoundAssignExpr: InputNames
   varDeclareExpr: InputNames
   ifBlock: InputNames
   funcDef: InputNames
 }): void {
-  C_COMPOUND_ASSIGN_INPUTS = names.compoundAssign
   C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
   C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
   IF_INPUTS = names.ifBlock
@@ -2092,79 +2089,9 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_var_assign_compound
-    {
-      Blockly.Blocks['cpp_var_assign_compound'] = {
-        hasIndex_: false,
-        init: function (this: any) {
-          this.hasIndex_ = false
-          this.buildInputs_()
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.operators)
-          this.setTooltip(Blockly.Msg['C_COMPOUND_ASSIGN_TOOLTIP'] || '把變數的值加上、減去、乘以、除以或取餘數後存回去')
-        },
-        buildInputs_: function (this: any) {
-          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
-          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
-          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
-          const savedValue = this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0]) ? this.getInputTargetBlock('VALUE') : null
-          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
-          if (this.getInput('INDEX_LABEL')) this.removeInput('INDEX_LABEL')
-          if (this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])) this.removeInput('VALUE', true)
-
-          if (this.hasIndex_) {
-            this.appendValueInput('INDEX')
-              .setCheck('Expression')
-              .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-              .appendField('的第 [')
-            this.appendValueInput(C_COMPOUND_ASSIGN_INPUTS.value[0])
-              .setCheck('Expression')
-              .appendField('] 格')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
-              ]) as Blockly.Field, 'OP')
-          } else {
-            this.appendValueInput(C_COMPOUND_ASSIGN_INPUTS.value[0])
-              .setCheck('Expression')
-              .appendField(Blockly.Msg['C_COMPOUND_ASSIGN_VAR_LABEL'] || '把變數')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_PLUS_EQ'] || '加上（+=）', '+='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_MINUS_EQ'] || '減去（-=）', '-='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_TIMES_EQ'] || '乘以（*=）', '*='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_DIVIDE_EQ'] || '除以（/=）', '/='],
-                [Blockly.Msg['C_COMPOUND_ASSIGN_OP_REMAINDER_EQ'] || '取餘數（%=）', '%='],
-              ]) as Blockly.Field, 'OP')
-          }
-          this.setInputsInline(true)
-          if (savedName) this.setFieldValue(savedName, 'NAME')
-          if (savedOp) this.setFieldValue(savedOp, 'OP')
-          if (savedIndex && this.getInput('INDEX')) {
-            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
-          }
-          if (savedValue && this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])) {
-            this.getInput(C_COMPOUND_ASSIGN_INPUTS.value[0])!.connection?.connect(savedValue.outputConnection)
-          }
-        },
-        saveExtraState: function (this: any) {
-          if (!this.hasIndex_) return {}
-          return { hasIndex: true }
-        },
-        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
-          const needIndex = !!state?.hasIndex
-          if (needIndex !== this.hasIndex_) {
-            this.hasIndex_ = needIndex
-            this.buildInputs_()
-          }
-        },
-      }
-    }
+    // 🪦 **`cpp_var_assign_compound` 的命令式定義已於 spec 166 刪除**（比對護欄確認一模一樣）。
+    //    ⚠️ 而它的 `hasIndex`（載入時加／移除 `INDEX` 插槽）**宣告表達得出**
+    //    （`extraStateFlags`）——那一點是**護欄新增的第五維**證明的，不是我猜的。
 
     // cpp_forward_decl
     {
