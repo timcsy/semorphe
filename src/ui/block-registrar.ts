@@ -34,13 +34,21 @@ let WHILE_INPUTS: InputNames = { value: ['CONDITION'], statement: ['BODY'] }
 let COUNT_LOOP_INPUTS: InputNames = { value: ['FROM', 'TO'], statement: ['BODY'] }
 let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
 let RETURN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
-let ARRAY_ACCESS_INPUTS: InputNames = { value: ['INDEX'], statement: [] }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 let ARRAY_ASSIGN_INPUTS: InputNames = { value: ['INDEX', 'VALUE'], statement: [] }
 let VAR_ASSIGN_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 
 let inputNamesInjected = false
 
 /** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
+/**
+ * 🪦 **`arrayAccess` 已於 spec 163 從契約移除**——它的唯一消費者
+ * （`cpp_array_at` 的命令式定義）退場了。
+ *
+ * ⚠️ **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料**
+ * ——而那份資料從此沒有人驗，錯了也不會有人知道。
+ */
 export function setLanguageInputNames(names: {
   compoundAssign: InputNames
   compoundAssignExpr: InputNames
@@ -50,7 +58,6 @@ export function setLanguageInputNames(names: {
   countLoop: InputNames
   funcDef: InputNames
   returnBlock: InputNames
-  arrayAccess: InputNames
   arrayAssign: InputNames
   varAssign: InputNames
 }): void {
@@ -62,7 +69,6 @@ export function setLanguageInputNames(names: {
   COUNT_LOOP_INPUTS = names.countLoop
   FUNDEF_INPUTS = names.funcDef
   RETURN_INPUTS = names.returnBlock
-  ARRAY_ACCESS_INPUTS = names.arrayAccess
   ARRAY_ASSIGN_INPUTS = names.arrayAssign
   VAR_ASSIGN_INPUTS = names.varAssign
   inputNamesInjected = true
@@ -548,25 +554,9 @@ export class BlockRegistrar {
       if (f) f.setValue(isAtMin ? MINUS_DISABLED_IMG : MINUS_IMG)
     }
 
-    // cpp_literal_string
-    {
-      Blockly.Blocks['cpp_literal_string'] = {
-        init: function (this: any) {
-          const field = new Blockly.FieldTextInput('hello')
-          ;(field as any).getDisplayText_ = function (this: any) {
-            const val = this.getValue() ?? ''
-            return val.replace(/ /g, '\u00A0') || '\u00A0'
-          }
-          this.appendDummyInput()
-            .appendField('"')
-            .appendField(field as Blockly.Field, 'TEXT')
-            .appendField('"')
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.data)
-          this.setTooltip(Blockly.Msg['U_STRING_TOOLTIP'] || '文字')
-        },
-      }
-    }
+    // 🪦 **`cpp_literal_string` 的命令式定義已於 spec 163 刪除。**
+    //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
+    //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
     const getTypeOptions = (currentVal?: string): Array<[string, string]> => {
         const opts: Array<[string, string]> = [
@@ -1333,18 +1323,9 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_endl
-    {
-      Blockly.Blocks['cpp_endl'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['U_ENDL_MSG0'] || '換行')
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.io)
-          this.setTooltip(Blockly.Msg['U_ENDL_TOOLTIP'] || '換行')
-        },
-      }
-    }
+    // 🪦 **`cpp_endl` 的命令式定義已於 spec 163 刪除。**
+    //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
+    //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
     // cpp_if
     {
@@ -1542,17 +1523,9 @@ export class BlockRegistrar {
         },
       }
     }
-    {
-      Blockly.Blocks['cpp_continue'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_CONTINUE_MSG'] || '跳至下一次')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.control)
-          this.setTooltip(Blockly.Msg['U_CONTINUE_TOOLTIP'] || '跳過本次迴圈，直接執行下一次')
-        },
-      }
-    }
+    // 🪦 **`cpp_continue` 的命令式定義已於 spec 163 刪除。**
+    //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
+    //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
     const getParamTypeOptions = (currentVal?: string): Array<[string, string]> => {
       const opts: Array<[string, string]> = [
@@ -2061,23 +2034,9 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_array_at
-    {
-      Blockly.Blocks['cpp_array_at'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(ARRAY_ACCESS_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_ARRAY_ACCESS_ARRAY_LABEL'] || '陣列')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceArrayOptions()) as Blockly.Field, 'NAME')
-            .appendField(Blockly.Msg['U_ARRAY_ACCESS_AT_LABEL'] || '的第 [')
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['U_ARRAY_ACCESS_END_LABEL'] || '] 格')
-          this.setInputsInline(true)
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['U_ARRAY_ACCESS_TOOLTIP'] || '陣列存取')
-        },
-      }
-    }
+    // 🪦 **`cpp_array_at` 的命令式定義已於 spec 163 刪除。**
+    //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
+    //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
     // ── 有工作區變數下拉選單的積木
     //
