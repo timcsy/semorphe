@@ -19,6 +19,6 @@ export function registerLift(): void {
           len: len ? [len] : [],
         })
       }
-      return null // 1 arg → container erase (handled by METHOD_TO_CONCEPT)
+      return null // 1 arg → container erase (handled by METHOD_TO_COMPONENT)
   })
 }

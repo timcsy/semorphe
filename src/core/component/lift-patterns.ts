@@ -45,7 +45,7 @@ const file = import.meta.glob('/src/components/*/*/lift-pattern.json', { eager: 
  * `cpp:builtin_constant` 帶 6 筆（`true`／`false`／`nullptr`／`NULL`／`EOF`／`null`），
  * 於是整個陣列被當成**一筆** pattern 餵進去，`componentId` 讀成 `undefined`
  * ——**`true` 這個字從此辨識不出來**，而症狀是 13 段語料在執行期
- * 報 `UNKNOWN_CONCEPT: raw_code`（辨識失敗後降級的落點）。
+ * 報 `UNKNOWN_COMPONENT: raw_code`（辨識失敗後降級的落點）。
  *
  * > **「每個檔案一筆」是一個沒有被寫下來的假設，
  * > 而它在第 N 顆元件身上才會被否證。**

@@ -168,7 +168,7 @@ export function collectRenderStrategyComponents(tsFiles: string[]): Set<string> 
 // ─── Excluded Components ───
 
 /** 不需要完整四條路徑的內部/特殊概念 */
-const INTERNAL_CONCEPTS = new Set([
+const INTERNAL_COMPONENTS = new Set([
   '_compound',     // 內部展開用
   'raw_code',      // 降級概念，不需要 lift pattern
   'unresolved',    // 內部降級概念
@@ -299,7 +299,7 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   let hasMissing = false
 
   for (const [componentId, sources] of [...allComponents.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    if (INTERNAL_CONCEPTS.has(componentId)) continue
+    if (INTERNAL_COMPONENTS.has(componentId)) continue
 
     const missing: string[] = []
     if (!liftCovered.has(componentId)) missing.push('lift')

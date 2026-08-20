@@ -241,7 +241,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
    * `P a{3};`、`v.push_back({2,1})`、`vector<S> v = {{3},{1}}`。
    *
    * 少了它，那些 `{…}` 落進 `unresolved`——而 `unresolved` 在執行期是
-   * `UNKNOWN_CONCEPT`，整段程式停在那裡。
+   * `UNKNOWN_COMPONENT`，整段程式停在那裡。
    *
    * 產出的是**結構節點**（`cpp_initializer_list`，`non-components` 裡宣告過），
    * 不是元件：`{3}` 是什麼要看**誰在消費它**——目標型別是結構就是聚合初始化，

@@ -1,5 +1,5 @@
 /**
- * CONCEPT IDENTITY AUDIT
+ * COMPONENT IDENTITY AUDIT
  *
  * Verifies that every component defined in the Semorphe C++ language support
  * is correctly identified by the lifter — i.e. when we write C++ code that
@@ -77,7 +77,7 @@ function collectComponentIds(node: SemanticNode): string[] {
 }
 
 // ═══════════════════════════════════════════════════════════
-// UNIVERSAL CONCEPTS
+// UNIVERSAL COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
 describe('Universal Components', () => {
@@ -221,7 +221,7 @@ int main() { int x; cin >> x; }`, 'cpp:input')
 })
 
 // ═══════════════════════════════════════════════════════════
-// C++ CORE CONCEPTS
+// C++ CORE COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
 describe('C++ Core Components', () => {
@@ -633,7 +633,7 @@ public:
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — cstdio
+// STD MODULE COMPONENTS — cstdio
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdio', () => {
@@ -656,7 +656,7 @@ int main() { int x; scanf("%d", &x); }`, 'cpp:input_formatted')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — cmath
+// STD MODULE COMPONENTS — cmath
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cmath', () => {
@@ -677,7 +677,7 @@ int main() { double x = fmod(5.0, 3.0); }`, 'cpp:math_binary')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — string
+// STD MODULE COMPONENTS — string
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: string', () => {
@@ -778,7 +778,7 @@ int main() { std::string s; s.clear(); }`, 'cpp:string_clear')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — cctype
+// STD MODULE COMPONENTS — cctype
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cctype', () => {
@@ -804,7 +804,7 @@ int main() { char c = tolower('A'); }`, 'cpp:char_to_lower')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — algorithm
+// STD MODULE COMPONENTS — algorithm
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: algorithm', () => {
@@ -843,7 +843,7 @@ int main() { int a = 1; int b = 2; swap(a, b); }`, 'cpp:var_swap')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — cstdlib
+// STD MODULE COMPONENTS — cstdlib
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstdlib', () => {
@@ -879,7 +879,7 @@ int main() { double x = atof("3.14"); }`, 'cpp:cstring_as_double')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — cstring
+// STD MODULE COMPONENTS — cstring
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: cstring', () => {
@@ -935,7 +935,7 @@ int main() { int src[3]; int dest[3]; memcpy(dest, src, sizeof(src)); }`, 'cpp:m
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — numeric
+// STD MODULE COMPONENTS — numeric
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: numeric', () => {
@@ -970,7 +970,7 @@ int main() { int l = lcm(12, 8); }`, 'cpp:math_lcm')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — vector
+// STD MODULE COMPONENTS — vector
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: vector', () => {
@@ -997,7 +997,7 @@ int main() { std::vector<int> v; int x = v.back(); }`, 'cpp:vector_back')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — stack
+// STD MODULE COMPONENTS — stack
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: stack', () => {
@@ -1014,7 +1014,7 @@ int main() { std::stack<int> s; s.push(1); int x = s.top(); }`, 'cpp:stack_peek'
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — queue
+// STD MODULE COMPONENTS — queue
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: queue', () => {
@@ -1031,7 +1031,7 @@ int main() { std::queue<int> q; q.push(1); int x = q.front(); }`, 'cpp:queue_fro
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — map
+// STD MODULE COMPONENTS — map
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: map', () => {
@@ -1061,7 +1061,7 @@ int main() { std::map<int, int> m; int x = m[1]; }`, 'cpp:map_at')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — set
+// STD MODULE COMPONENTS — set
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: set', () => {
@@ -1078,7 +1078,7 @@ int main() { std::set<int> s; s.insert(1); }`, 'cpp:set_insert')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — fstream
+// STD MODULE COMPONENTS — fstream
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: fstream', () => {
@@ -1095,7 +1095,7 @@ int main() { std::ofstream fout("output.txt"); }`, 'cpp:ofstream_declare')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — sstream
+// STD MODULE COMPONENTS — sstream
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: sstream', () => {
@@ -1107,7 +1107,7 @@ int main() { std::stringstream ss; }`, 'cpp:stringstream_declare')
 })
 
 // ═══════════════════════════════════════════════════════════
-// STD MODULE CONCEPTS — utility
+// STD MODULE COMPONENTS — utility
 // ═══════════════════════════════════════════════════════════
 
 describe('STD: utility', () => {

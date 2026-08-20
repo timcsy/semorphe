@@ -65,7 +65,7 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
           : init0
       // ⚠️ `evalInitializer` 而不是 `evaluate`：`P a{3};` 的初始值是一層 `{…}`，
       // 而那是**聚合初始化**——要按成員宣告順序填，不是求一個值出來。
-      // `evaluate` 對它會丟 `UNKNOWN_CONCEPT`。哪個節點算一層 `{…}`
+      // `evaluate` 對它會丟 `UNKNOWN_COMPONENT`。哪個節點算一層 `{…}`
       // 由語言套件宣告（`core/component/aggregate-nodes.ts`），這裡不比對名字。
       ctx.scope.declare(
         name,

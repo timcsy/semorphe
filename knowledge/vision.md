@@ -87,7 +87,7 @@ C++ 單語言可用，程式碼 ↔ 積木雙向 round-trip 成立，語義直�
 **已完成元件：**
 
 - **Core**：SemanticNode 型別、ComponentRegistry、BlockSpecRegistry、PatternLifter、PatternRenderer/Extractor、CodeGenerator、TemplateGenerator、BlockRenderer、Interpreter、Topic 系統、Storage、DependencyResolver（語言無關介面）、ProgramScaffold、CodeMapping + BlockMapping（nodeId-based 跨投影查詢）
-- **C++ 語言套件**：core concepts/blocks/generators/lifters、std modules（iostream/cstdio/vector/algorithm/string/map/stack/queue/set/cstring/cmath）、ModuleRegistry、auto-include、lift-patterns、render strategies、style presets（apcs/competitive/google）、style-exceptions、manifest
+- **C++ 語言套件**：core components/blocks/generators/lifters、std modules（iostream/cstdio/vector/algorithm/string/map/stack/queue/set/cstring/cmath）、ModuleRegistry、auto-include、lift-patterns、render strategies、style presets（apcs/competitive/google）、style-exceptions、manifest
 - **UI**：Blockly/Monaco/Console/Variable 面板、Debug 工具列、SyncController、ToolboxBuilder、BlockRegistrar、AppShell、ExecutionController、Ghost Line
 - **宿主層**：`CodeView`／`HostProfile` 兩個角色（網頁版注入編輯器面板，擴充注入交給 IDE 的空殼）、
   `src/vscode/`（VSCode ／ Arduino IDE 擴充：面板、範圍編輯、回音守衛、鏡像對帳、視圖狀態）
@@ -114,7 +114,7 @@ SemanticCore（語義樹 + 元件註冊 + 投影引擎 + 直譯器，零 DOM 依
 
 ### 三層契約
 
-- **Layer 1（語義宣告）**：concepts.json + lift-patterns + lifters — 所有消費者可用
+- **Layer 1（語義宣告）**：components.json + lift-patterns + lifters — 所有消費者可用
 - **Layer 2（投影提示）**：blockDef / renderMapping / codeTemplate / generator — 僅對應視圖消費
 - **Layer 3（視圖策略）**：視圖根據 annotations 決定呈現 — 新增唯讀視圖不需改語言套件
 
@@ -123,7 +123,7 @@ SemanticCore（語義樹 + 元件註冊 + 投影引擎 + 直譯器，零 DOM 依
 ```
 languages/{lang}/
   ├─ manifest.json          ← 套件中繼資料
-  ├─ core/                  ← 語言核心元件（concepts.json / blocks.json / generators/ / lifters/）
+  ├─ core/                  ← 語言核心元件（components.json / blocks.json / generators/ / lifters/）
   ├─ std/                   ← 標準函式庫（目錄名即 header 名）
   ├─ lift-patterns.json     ← AST → 語義 pattern 規則
   └─ auto-include.ts / style-exceptions.ts / renderers/ / styles/
@@ -377,8 +377,12 @@ languages/{lang}/
 
 🔴 **這些不會因為某一刀做完而消失——每一條都要有人領走。**
 
-- [ ] 🆕 **名詞表的其餘各列**（2026-08-20，spec `158` 只做了身分鍵那一列）
-      —— `concepts/元件.md` 的「現況落差」表逐列還在：
+- [ ] 🆕 **名詞表的其餘各列**（2026-08-20）
+      🟢 **命名本身已經掃乾淨**：spec `158` 做了身分鍵那一列，spec `159` 把
+      `concept` 家族的**周邊命名**整族退場（3496 處／656 檔 → 0，含 14 個檔名與 39 個匯出符號），
+      轉變見 [history/110](history/110-concept家族整族退場.md)。
+      🔴 **而 `concepts/元件.md`「現況落差」表的下面五列一列都沒動**
+      ——它們不是改名，是**改結構**：
       ```
       三個登錄表的【合併】   ComponentRegistry ／ BlockSpecRegistry ／ component/registry
       Instance             取代 SemanticNode（動的是型別的意義，不只名字）

@@ -36,14 +36,14 @@ $ARGUMENTS
 
 ### 醫治模式（診斷 + 修復）
 
-- `{lang} fix {concept}` — 診斷並修復單一概念的所有缺失路徑
+- `{lang} fix {component}` — 診斷並修復單一概念的所有缺失路徑
 - `{lang} fix {module}` — 診斷並修復整個 STD 模組（如 `fix vector`、`fix cmath`）
 - `{lang} fix all` — 診斷並修復該語言所有概念
 - `{lang} fix --dry-run` — 只診斷不修復，顯示會做什麼
 
 ### 重構模式（技術債清理）
 
-- `{lang} migrate {concept}` — 將 hand-written lifter（AST→SemanticNode）遷移至 JSON pattern
+- `{lang} migrate {component}` — 將 hand-written lifter（AST→SemanticNode）遷移至 JSON pattern
 - `{lang} migrate all` — 遷移所有可遷移的概念（注意：此遷移僅涉及 lift 路徑，extract 路徑已統一由 PatternExtractor 處理）
 - `{lang} dedup` — 清除雙重註冊
 - `{lang} render-fix` — 修復渲染一致性問題
@@ -100,7 +100,7 @@ $ARGUMENTS
 
 閱讀以下檔案以理解目前實作：
 
-- `src/core/types.ts` — SemanticNode、ConceptId
+- `src/core/types.ts` — SemanticNode、ComponentId
 - `src/core/lift/lifter.ts` — 優先權鏈
 - `src/core/lift/pattern-lifter.ts` — pattern types 和信心等級設定邏輯
 - `src/core/component/registry.ts` — **膠囊登錄表**（掃 `component.json`，這是概念的來源）
@@ -128,7 +128,7 @@ npx vitest run tests/integration/audit-completeness.test.ts \
 
 只有在**要看單一概念的細節**、或護欄報出東西要診斷時，才自己掃。
 
-概念的來源是**膠囊的 `component.json`**（`concepts.json` 已不存在）：
+概念的來源是**膠囊的 `component.json`**（`concepts.json`／`components.json` 那種共用檔已不存在）：
 
 ```bash
 # 收集所有概念 ID 與它宣告的五路
@@ -330,7 +330,7 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 讀取審計結果（或即時掃描），確定缺失的路徑：
 
 ```
-概念 {concept_id} 診斷：
+元件 {component_id} 診斷：
   Lift:     ❌ 缺失 — 膠囊無 lift.ts／lift-pattern.json
   Render:   ❌ 缺失 — 膠囊無 forms/blocks.json 條目
   Extract:  ❌ 缺失 — renderMapping 沒覆蓋接點 values
@@ -482,7 +482,7 @@ npx tsc --noEmit && npm test
 
 ### M6. Round-trip 驗證
 
-對遷移的概念用 Skill tool 調用 `/component-roundtrip {lang} {concept}` 確保行為等價。
+對遷移的概念用 Skill tool 調用 `/component-roundtrip {lang} {component}` 確保行為等價。
 
 ---
 

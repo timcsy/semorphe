@@ -19,6 +19,6 @@ export function registerLift(): void {
           value: value ? [value] : [],
         })
       }
-      return null // 1 arg → set insert (handled by METHOD_TO_CONCEPT)
+      return null // 1 arg → set insert (handled by METHOD_TO_COMPONENT)
   })
 }

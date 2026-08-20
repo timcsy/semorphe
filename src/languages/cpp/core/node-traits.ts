@@ -10,7 +10,7 @@
  * const PRECEDENCE_MAP = new Map([['cpp:cast', 14], ['cpp:array_at', 16], …])
  *
  * // lifters/statements.ts —— for(...) 的三個位置放得下什麼
- * const FOR_LOOP_CONCEPTS = new Set(['cpp:cast', 'cpp:comma_expr', …])
+ * const FOR_LOOP_COMPONENTS = new Set(['cpp:cast', 'cpp:comma_expr', …])
  * ```
  *
  * 括號怎麼加是**排版演算法**，for 迴圈的文法是 **C++ 語法的知識**——

@@ -25,7 +25,7 @@ argument-hint: "[要審的抽象/層/理論/原則/draft；空＝審當前 diff 
 
 ## 何時用
 - 提出新抽象/新層/新設計模式/新原則/新理論時（動手前更好）。
-- review 一份 draft / concept / PR，覺得「很漂亮但說不清值在哪」時。
+- review 一份 draft／概念檔／PR，覺得「很漂亮但說不清值在哪」時。
 - `/knowie-judge`、`/simplify` 順手帶一刀。
 
 ## 與別的 skill 分工

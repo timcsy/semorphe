@@ -62,7 +62,7 @@ function wrap(body: string): string {
   return `#include <iostream>\nusing namespace std;\nint main() {\n${body}\n    return 0;\n}`
 }
 
-describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
+describe('COMPONENT_IDENTITY audit: pointer declarations', () => {
   it('int* ptr = &x → cpp_pointer_declare', () => {
     const sem = liftCode(wrap('    int x = 42;\n    int* ptr = &x;'))!
     const ptrs = findComponents(sem, 'cpp:pointer_declare')
@@ -132,7 +132,7 @@ describe('CONCEPT_IDENTITY audit: pointer declarations', () => {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: pointer operations', () => {
+describe('COMPONENT_IDENTITY audit: pointer operations', () => {
   it('*ptr → cpp_pointer_deref', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int* p = &x;\n    cout << *p << endl;'))!
     const derefs = findComponents(sem, 'cpp:pointer_deref')
@@ -153,7 +153,7 @@ describe('CONCEPT_IDENTITY audit: pointer operations', () => {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: reference declarations', () => {
+describe('COMPONENT_IDENTITY audit: reference declarations', () => {
   it('int& ref = x → cpp_ref_declare', () => {
     const sem = liftCode(wrap('    int x = 5;\n    int& ref = x;'))!
     const refs = findComponents(sem, 'cpp:var_declare_ref')
@@ -177,7 +177,7 @@ describe('CONCEPT_IDENTITY audit: reference declarations', () => {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: memory management', () => {
+describe('COMPONENT_IDENTITY audit: memory management', () => {
   it('new Type() → cpp_new', () => {
     const sem = liftCode(wrap('    int* p = new int(5);\n    delete p;'))!
     const news = findComponents(sem, 'cpp:new')
@@ -206,7 +206,7 @@ describe('CONCEPT_IDENTITY audit: memory management', () => {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: const + pointer', () => {
+describe('COMPONENT_IDENTITY audit: const + pointer', () => {
   it('const int* cp = &x → cpp_const_declare with type int*', () => {
     const sem = liftCode(wrap('    const int x = 42;\n    const int* cp = &x;'))!
     const consts = findComponents(sem, 'cpp:var_declare_const')
@@ -216,7 +216,7 @@ describe('CONCEPT_IDENTITY audit: const + pointer', () => {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: struct pointer access', () => {
+describe('COMPONENT_IDENTITY audit: struct pointer access', () => {
   it('ptr->member → cpp_struct_pointer_access', () => {
     const code = `struct Point { int x; int y; };
 int main() {
@@ -233,7 +233,7 @@ int main() {
   })
 })
 
-describe('CONCEPT_IDENTITY audit: roundtrip correctness', () => {
+describe('COMPONENT_IDENTITY audit: roundtrip correctness', () => {
   const cases = [
     { name: 'int* with init', code: wrap('    int x = 42;\n    int* ptr = &x;\n    cout << *ptr << endl;') },
     { name: 'int* no init', code: wrap('    int* ptr;\n    int x = 10;\n    ptr = &x;\n    cout << *ptr << endl;') },

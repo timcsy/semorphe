@@ -25,8 +25,8 @@
  *
  * - **不追函式呼叫**：id 經由變數傳好幾層再用，這裡看不到
  * - **已知低報**：
- *   - 變數指派 `component = 'arithmetic'`（已涵蓋，見 `CONCEPT_VARS`）
- *   - 未列入 `CONCEPT_CALLS` 的註冊函式
+ *   - 變數指派 `component = 'arithmetic'`（已涵蓋，見 `COMPONENT_VARS`）
+ *   - 未列入 `COMPONENT_CALLS` 的註冊函式
  *
  * ⚠️ **低報的後果是棘輪提早喊零。** 所以收硬性零之前必須把
  * `residualRefs()` 的清單逐筆看過——那份清單就是為此存在的。
@@ -64,7 +64,7 @@ export interface IdRef {
 }
 
 /** 第一引數是 **componentId** 的呼叫 */
-const CONCEPT_CALLS = new Set([
+const COMPONENT_CALLS = new Set([
   'createNode',
   'getByComponentId',
   'getFormsByComponentId',
@@ -85,12 +85,12 @@ const BLOCKTYPE_CALLS = new Set([
 ])
 
 /** 值是 componentId 的屬性名 */
-const CONCEPT_PROPS = /^(componentId|abstractComponent)$/
+const COMPONENT_PROPS = /^(componentId|abstractComponent)$/
 /** 值是 blockType 的屬性名 */
 const BLOCKTYPE_PROPS = /^(type|blockType)$/
 
 /** 變數名長這樣時，指派給它的字面是 componentId */
-const CONCEPT_VARS = /^(component|componentId|cid)$/
+const COMPONENT_VARS = /^(component|componentId|cid)$/
 
 function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
   const p = n.parent
@@ -101,14 +101,14 @@ function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
     const c = p.expression
     const name = ts.isPropertyAccessExpression(c) ? c.name.text : ts.isIdentifier(c) ? c.text : ''
     if (BLOCKTYPE_CALLS.has(name)) return 'blockType'
-    if (CONCEPT_CALLS.has(name)) return 'componentId'
+    if (COMPONENT_CALLS.has(name)) return 'componentId'
     return '非身分'
   }
 
   // { componentId: 'id' } / { type: 'id' }
   if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) {
     const k = p.name.text
-    if (CONCEPT_PROPS.test(k)) return 'componentId'
+    if (COMPONENT_PROPS.test(k)) return 'componentId'
     if (BLOCKTYPE_PROPS.test(k)) return 'blockType'
     return '非身分'
   }
@@ -125,7 +125,7 @@ function classify(n: ts.StringLiteral, sf: ts.SourceFile): Role {
   }
 
   // component = 'id'（變數指派）
-  if (ts.isVariableDeclaration(p) && ts.isIdentifier(p.name) && CONCEPT_VARS.test(p.name.text)) {
+  if (ts.isVariableDeclaration(p) && ts.isIdentifier(p.name) && COMPONENT_VARS.test(p.name.text)) {
     return 'componentId'
   }
 

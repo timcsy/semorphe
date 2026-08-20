@@ -23,7 +23,7 @@ user-invocable: true
 $ARGUMENTS
 ```
 
-參數應為概念探索報告的路徑（來自 `/component-discover`），或 `{lang} {concept_name}` 格式（例如 `cpp do_while`、`python list_comprehension`）。
+參數應為概念探索報告的路徑（來自 `/component-discover`），或 `{lang} {component_name}` 格式（例如 `cpp do_while`、`python list_comprehension`）。
 
 ## 背景——⚠️ 一顆新元件今天的家是**膠囊**，不是共用檔
 
@@ -302,7 +302,7 @@ Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(
-  register: (concept: string, executor: ComponentExecutor) => void,
+  register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:vector_declare', async (node, ctx) => { /* … */ })
 }
@@ -315,7 +315,7 @@ export function registerExecute(
 
 規則：子節點求值用 `ctx.evaluate()`；轉換用 `ctx.toNumber()`/`ctx.toBool()`；
 回傳 `RuntimeValue`（`{ type, value }`）；語句型不回傳值。
-⚠️ **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownConceptHandler`。
+⚠️ **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownComponentHandler`。
 
 ⚠️ **不要靜默回退**：多層 fallback 都用同一預設值會掩蓋真正的資料遺失
 （第三十三條護欄在看這個）。判不出來就丟錯，不要回 0。
@@ -324,7 +324,7 @@ export function registerExecute(
 
 ```typescript
 it('lift', () => {
-  const ids = conceptsIn(lift('vector<int> v = {3,1,4};'))
+  const ids = componentsIn(lift('vector<int> v = {3,1,4};'))
   expect(ids).toContain('cpp:vector_declare')      // ← 正向錨點，先證明量到了東西
   expect(ids).not.toContain('cpp:raw_code')        // ← 負向才有意義
 })
@@ -367,7 +367,7 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 | 合法命中 | 例 |
 |---|---|
 | **凍結的歷史明表** | `src/migrations/id-migrations.ts:130` `'lang:if': 'cpp:if'`——**一個字都不准改** |
-| **課程清單** | `topics/*.json` 的 `concepts[]`——本 skill 步驟八**自己叫你加的** |
+| **課程清單** | `topics/*.json` 的 `components[]`——本 skill 步驟八**自己叫你加的** |
 | **註解裡的提及** | `generators/statements.ts:54` 的 `* g.set('cpp:if', ifGenerator)` |
 
 `cpp:if` 這樣一顆**已經正確膠囊化**的元件，那條 grep 給出 **21 筆**。
@@ -390,9 +390,9 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 
 | 要做的 | 在哪 |
 |---|---|
-| ✅ **加進課程清單** | `src/languages/{lang}/topics/*.json` 的 `levelTree` 節點 `concepts[]` |
+| ✅ **加進課程清單** | `src/languages/{lang}/topics/*.json` 的 `levelTree` 節點 `components[]` |
 | ❌ ~~工具箱分類~~ | **不用**——`toolbox-categories.ts` 已改成 45 段**有序來源**自動導出 |
-| ❌ ~~concept registry~~ | **不用**——`registry.ts` 掃 `component.json` |
+| ❌ ~~component registry~~ | **不用**——`registry.ts` 掃 `component.json` |
 | ❌ ~~`UniversalConcept` 型別~~ | **該型別已刪**（`58d64eb`，只剩墓碑註解） |
 | ❌ ~~五路的 import~~ | **不用**——`paths.ts` glob 直讀 |
 
@@ -429,7 +429,7 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 ### 步驟九：輸出摘要
 
 ```
-## {concept_name} 的膠囊（{scope}）
+## {component_name} 的膠囊（{scope}）
 
 src/components/{scope}/{name}/
 - [ ] component.json（六個必要鍵 ＋ 非顯然宣告附 _why）
@@ -459,7 +459,7 @@ npm test          # 那批護欄在裡面——就近性、可拿性、課程快
 ## 完成標記（強制）
 
 ```
-🏁 SKILL_COMPLETE: component-generate | {scope} | {concept_name} | 五路：{N}/5（skip {M}）| tsc: PASS/FAIL
+🏁 SKILL_COMPLETE: component-generate | {scope} | {component_name} | 五路：{N}/5（skip {M}）| tsc: PASS/FAIL
 ```
 
 如果未輸出此標記，pipeline 不會繼續下一階段。

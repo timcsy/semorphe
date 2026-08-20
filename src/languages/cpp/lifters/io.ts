@@ -13,7 +13,7 @@ import { buildFuncCall } from '../../../components/cpp/func_call/lift'
 
 /** Try to lift a method call (field_expression) into a string-specific component.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
- *  can dispatch them via METHOD_TO_CONCEPT for container support. */
+ *  can dispatch them via METHOD_TO_COMPONENT for container support. */
 function tryStringMethodLift(
   funcNode: AstNode,
   argsNode: AstNode | null | undefined,
@@ -61,7 +61,7 @@ function tryStringMethodLift(
   }
 
   // Shared methods (empty, clear, push_back, pop_back, back, size, etc.)
-  // → return null so caller dispatches via METHOD_TO_CONCEPT
+  // → return null so caller dispatches via METHOD_TO_COMPONENT
   return null
 }
 
@@ -75,10 +75,10 @@ function tryStringMethodLift(
  * 實際上辨識脈絡一直有作用域與型別追蹤，只是**沒有人接上**（見
  * `knowledge/concepts/執行機構.md`「機制有了，沒人接上」第五個實例）。
  *
- * 076 接上了：脈絡查得到型別時走 `TYPED_METHOD_TO_CONCEPT`，
+ * 076 接上了：脈絡查得到型別時走 `TYPED_METHOD_TO_COMPONENT`，
  * **查不到就留在通用版**——猜一個錯的專屬身分比誠實降級更糟。
  */
-const METHOD_TO_CONCEPT: Record<string, string> = {
+const METHOD_TO_COMPONENT: Record<string, string> = {
   // ⚠️ **空的，而那是進度不是設計。** 這張表原本列 `push`／`pop`，
   // 而那兩顆已經搬進膠囊、改用 `registerMethodComponent` 自己認領方法名。
   // 剩下的（今天是零筆）是**還沒膠囊化**的，它只減不增。
@@ -90,7 +90,7 @@ const METHOD_TO_CONCEPT: Record<string, string> = {
  * 只列**確定不同**的那些：字串的 `clear` 與容器的 `clear` 是兩個概念，
  * 產生的程式碼與執行行為都不同。型別查不到時不用這張表。
  */
-const TYPED_METHOD_TO_CONCEPT: Record<string, Record<string, string>> = {
+const TYPED_METHOD_TO_COMPONENT: Record<string, Record<string, string>> = {
   string: {
   },
   // ⚠️ `top` 的通用退路是 `cpp_stack_peek`（回傳最後推入的）。
@@ -155,9 +155,9 @@ export function registerIOLifters(lifter: Lifter): void {
       // 猜一個的話，猜錯會靜默產生一個錯的身分——那比誠實降級更糟。
       const objType = objText ? ctx.data.getType(objText) : null
       const componentId =
-        (objType ? TYPED_METHOD_TO_CONCEPT[objType]?.[methodName] : undefined) ??
+        (objType ? TYPED_METHOD_TO_COMPONENT[objType]?.[methodName] : undefined) ??
         (objType ? typedMethodComponent(objType, methodName) : undefined) ??
-        METHOD_TO_CONCEPT[methodName] ??
+        METHOD_TO_COMPONENT[methodName] ??
         containerMethodComponent(methodName)
       if (componentId) {
         const properties: Record<string, string> = { obj: objText }

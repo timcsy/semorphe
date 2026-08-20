@@ -29,7 +29,7 @@ const modules = import.meta.glob('../../src/languages/cpp/targets/*.json', { eag
 const targets = Object.values(modules).map((m) => m.default)
 const byId = (id: string) => targets.find((t) => t.id === id)!
 
-const WIFI_CONCEPTS = ['cpp:wifi_open', 'cpp:wifi_read'] as const
+const WIFI_COMPONENTS = ['cpp:wifi_open', 'cpp:wifi_read'] as const
 
 describe('spec 150 · US1：標頭跟著板子走', () => {
   it('★ 錨點：兩塊 ESP8266 都帶著替換表', () => {
@@ -59,14 +59,14 @@ describe('spec 150 · US1：標頭跟著板子走', () => {
 
 describe('spec 150 · US2：沒有 WiFi 的板子看不到 WiFi 積木', () => {
   it('★ 錨點：兩顆 WiFi 元件都宣告了它需要 `wifi`', () => {
-    for (const c of WIFI_CONCEPTS) {
+    for (const c of WIFI_COMPONENTS) {
       expect(componentTraits(c)?.needsCapability, `${c} 沒宣告 needsCapability`).toBe('wifi')
     }
   })
 
   it('🔴 Uno／Nano 看不到——AVR 的核心裡沒有 WiFi 函式庫', () => {
     for (const id of ['arduino-uno', 'arduino-nano'] as const) {
-      const visible = filterByTarget(new Set<string>(WIFI_CONCEPTS), byId(id))
+      const visible = filterByTarget(new Set<string>(WIFI_COMPONENTS), byId(id))
       expect([...visible], `${id} 上看得到 WiFi 積木`).toEqual([])
     }
   })
@@ -74,8 +74,8 @@ describe('spec 150 · US2：沒有 WiFi 的板子看不到 WiFi 積木', () => {
   it('🔴 而六塊有 WiFi 的板子【看得到】——否則上面只是全部被關掉', () => {
     for (const id of ['esp32', 'esp32c3', 'esp32s3', 'esp32s3-cam',
                       'wemos-d1-mini', 'nodemcu-esp8266'] as const) {
-      const visible = filterByTarget(new Set<string>(WIFI_CONCEPTS), byId(id))
-      expect([...visible].sort(), `${id} 上看不到 WiFi 積木`).toEqual([...WIFI_CONCEPTS].sort())
+      const visible = filterByTarget(new Set<string>(WIFI_COMPONENTS), byId(id))
+      expect([...visible].sort(), `${id} 上看不到 WiFi 積木`).toEqual([...WIFI_COMPONENTS].sort())
     }
   })
 })
@@ -84,8 +84,8 @@ describe('spec 150 · US3：其他目標一個字都不能變', () => {
   it('🔴 不指定板子的 `arduino` 省略 `provides` ＝ 提供全部', () => {
     const arduino = byId('arduino')
     expect(arduino.provides, '`arduino` 長出了 provides——那條預設不可反').toBeUndefined()
-    expect([...filterByTarget(new Set<string>(WIFI_CONCEPTS), arduino)].sort())
-      .toEqual([...WIFI_CONCEPTS].sort())
+    expect([...filterByTarget(new Set<string>(WIFI_COMPONENTS), arduino)].sort())
+      .toEqual([...WIFI_COMPONENTS].sort())
   })
 
   it('🔴 `cpp`／`c`／競程沒有替換表也沒有板子', () => {

@@ -142,7 +142,7 @@
   "RUNTIME_ERR_UNDEFINED_FUNC": "Function '%1' is not defined",
   "RUNTIME_ERR_NO_ENTRY_POINT": "No entry point found — there is no main, and no setup/loop. (Defined here: %1)",
   "RUNTIME_ERR_ABORTED": "Execution aborted",
-  "RUNTIME_ERR_UNKNOWN_CONCEPT": "I don't know how to run this piece yet — that's a gap in the system, not a mistake of yours",
+  "RUNTIME_ERR_UNKNOWN_COMPONENT": "I don't know how to run this piece yet — that's a gap in the system, not a mistake of yours",
   "RUNTIME_ERR_UNRECOGNIZED_CODE": "I can't read this piece of code, so I can't run it",
   "RUNTIME_ERR_FALLBACK": "The program stopped and I can't say why — that's the system's problem, not yours",
   "RUNTIME_ERR_BREAK_OUTSIDE_LOOP": "'break' can only be used inside a loop",

@@ -25,7 +25,7 @@ $ARGUMENTS
 
 參數可以是：
 - 一段程式碼片段（內嵌或檔案路徑），語言從副檔名或語法推斷
-- `{lang} {concept_name}` 格式（例如 `cpp if`、`python while_loop`）
+- `{lang} {component_name}` 格式（例如 `cpp if`、`python while_loop`）
 - `{lang} {difficulty}` 格式（例如 `cpp easy`、`python hard`）
 - `{lang} all` 測試該語言所有支援的概念
 
@@ -37,7 +37,7 @@ $ARGUMENTS
 
 閱讀以下檔案以理解目前的管線：
 
-- `src/core/types.ts` — SemanticNode、ConceptId、所有型別定義
+- `src/core/types.ts` — SemanticNode、ComponentId、所有型別定義
 - `src/languages/{lang}/core/blocks.json` 和 `src/languages/{lang}/std/*/blocks.json` — 所有 block spec JSON 檔案（了解支援的概念）
 - `src/languages/{lang}/core/generators/` — 程式碼產生器（了解輸出格式）
 - `src/languages/{lang}/core/lifters/` — 提升器（了解輸入處理）
@@ -63,7 +63,7 @@ $ARGUMENTS
 - easy：Topic 層級樹根節點的概念（如 var_declare、arithmetic、if、while_loop、print）
 - medium：第一層分支的概念（如 func_def、func_call、count_loop、break、continue）
 - hard：第二層以上分支的概念（如 array_declare、array_access 及語言特定的進階概念）
-- 使用 `getVisibleConcepts(topic, enabledBranches)` 取得對應分支的可見概念集
+- 使用 `getVisibleComponents(topic, enabledBranches)` 取得對應分支的可見概念集
 
 **如果是 `all`：**
 - 為每個支援的概念產生一個典範程式
@@ -112,13 +112,13 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 **層級二 — 語義樹完整性（P1 投影定理）**：
 - 將 SemanticTree dump 為 JSON
 - 檢查沒有節點有 `confidence: 'raw_code'`（除非該概念確實不支援）
-- **元件身分驗證（CONCEPT_IDENTITY）**：對每個被測概念，斷言語義樹中存在對應的元件節點，且使用的是正確的 componentId（而非退化到 `var_declare` 等通用概念）。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性。範例：
+- **元件身分驗證（COMPONENT_IDENTITY）**：對每個被測概念，斷言語義樹中存在對應的元件節點，且使用的是正確的 componentId（而非退化到 `var_declare` 等通用概念）。此驗證防止 lifter 用錯誤概念但碰巧生成正確程式碼的假陽性。範例：
   ```typescript
   // ❌ 只驗證輸出字串（可能用錯概念但碰巧生成正確程式碼）
   expect(gen).toContain('int* ptr = &x')
 
   // ✅ 同時驗證語義樹使用了正確的概念
-  const ptrs = findConcepts(sem!, 'cpp_pointer_declare')
+  const ptrs = findComponents(sem!, 'cpp_pointer_declare')
   expect(ptrs.length).toBeGreaterThan(0)
   expect(ptrs[0].properties.type).toBe('int')
   ```
@@ -158,13 +158,13 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 | DEGRADED | 🟡 | 程式碼被降級為 raw_code — 覆蓋缺口 |
 | SCAFFOLD_LEAK | ❌ | 低層級輸出包含高層級概念語法 — P4 違規 |
 | ROUNDTRIP_DRIFT | ❌ | 二次 round-trip 語義樹結構不同 — P1 違規 |
-| WRONG_CONCEPT | ❌ | 語義樹使用了錯誤的概念（如指標宣告用了 var_declare 而非 cpp_pointer_declare）— 元件身分違規 |
+| WRONG_COMPONENT | ❌ | 語義樹使用了錯誤的概念（如指標宣告用了 var_declare 而非 cpp_pointer_declare）— 元件身分違規 |
 | TIMEOUT | ❌ | 產生的程式碼掛住 — 可能的無窮迴圈 |
 | STRUCTURE_DIFF | 🔵 | Stdout 匹配但程式碼結構顯著不同 |
 
 ### 步驟七：輸出報告
 
-將報告儲存到 `tests/reports/roundtrip-{lang}-{concept|difficulty}-{timestamp}.md`（目錄不存在時自行建立），同時印出摘要表格：
+將報告儲存到 `tests/reports/roundtrip-{lang}-{component|difficulty}-{timestamp}.md`（目錄不存在時自行建立），同時印出摘要表格：
 
 ```
 ## Round-Trip 測試結果（{language}）
@@ -183,9 +183,9 @@ diff /tmp/semorphe-roundtrip/test_{id}_expected.txt /tmp/semorphe-roundtrip/test
 
 **所有測試案例都必須留存為可重複執行的 Vitest 測試檔**，不可用完即丟。
 
-1. **PASS 的測試**：在 `tests/integration/` 建立測試檔（檔名 `roundtrip-{lang}-{concept}.test.ts`），包含所有 PASS 的測試程式作為 round-trip 回歸測試。每個測試**必須同時驗證**：
+1. **PASS 的測試**：在 `tests/integration/` 建立測試檔（檔名 `roundtrip-{lang}-{component}.test.ts`），包含所有 PASS 的測試程式作為 round-trip 回歸測試。每個測試**必須同時驗證**：
    - lift → generate → 再 lift 的語義樹結構等價性
-   - **元件身分（CONCEPT_IDENTITY）**：語義樹中被測概念使用了正確的 componentId，而非退化到通用概念（如 `var_declare`）。使用 `findConcepts(sem, 'expected_concept_id')` 斷言節點存在且屬性正確。
+   - **元件身分（COMPONENT_IDENTITY）**：語義樹中被測概念使用了正確的 componentId，而非退化到通用概念（如 `var_declare`）。使用 `findComponents(sem, 'expected_component_id')` 斷言節點存在且屬性正確。
 2. **失敗的測試（❌）**：同樣建立測試檔（檔名加 `roundtrip-` 前綴），但用 `it.skip` 或 `it.todo` 標記，附上失敗原因註解，待修復後啟用。
 3. **Runner 腳本不可作為驗證手段**：`/tmp/` 下的臨時 runner 僅用於探索性執行。最終驗證結果必須轉化為 Vitest 測試案例，確保 CI 可重複捕捉回歸。
 4. 如果目標概念已有測試檔（如 `tests/integration/cmath-roundtrip.test.ts`），將新案例**追加**到既有檔案中，避免重複建檔。

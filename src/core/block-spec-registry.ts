@@ -117,7 +117,7 @@ export class BlockSpecRegistry {
     return this.componentToBlockType.get(componentId)
   }
 
-  /** Get the auto-built component→blockType map (replaces hardcoded CONCEPT_TO_BLOCK) */
+  /** Get the auto-built component→blockType map (replaces hardcoded COMPONENT_TO_BLOCK) */
   getComponentToBlockMap(): Record<string, string> {
     const map: Record<string, string> = {}
     for (const [component, blockType] of this.componentToBlockType) {

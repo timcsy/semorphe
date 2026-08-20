@@ -27,7 +27,7 @@ $ARGUMENTS
 ```
 
 參數應為以下其一：
-- `{lang} {concept_name}`（例如 `cpp do_while`、`python list_comprehension`）
+- `{lang} {component_name}`（例如 `cpp do_while`、`python list_comprehension`）
 - 概念探索報告的路徑，以整合其中所有概念
 - `{lang} check` — 只執行驗證，不整合
 - `{lang} status` — 顯示該語言所有待整合概念的目前狀態
@@ -47,10 +47,10 @@ $ARGUMENTS
 - [ ] 渲染映射在 block spec JSON 中（auto-derive 或顯式 renderStrategy 或 dynamicRules）
 - [ ] Interpreter executor 在 `src/interpreter/executors/*.ts` 中註冊（可執行概念需實作邏輯，宣告性概念需 noop）
 - [ ] 單元測試在 `tests/`（含執行測試）
-- [ ] 概念在核心 `src/languages/{lang}/core/concepts.json` 或 STD `src/languages/{lang}/std/{module}/concepts.json` 中註冊
+- [ ] 概念在核心 `src/languages/{lang}/core/components.json` 或 STD `src/languages/{lang}/std/{module}/components.json` 中註冊
 
 如果是通用概念，額外檢查：
-- [ ] `src/core/types.ts` 中的 `UniversalConcept` 型別已更新
+- [ ] ~~`src/core/types.ts` 中的 `UniversalConcept` 型別已更新~~ ← **該型別已刪**（`58d64eb`）
 - [ ] 所有已支援語言都有對應的 generator 和 lifter
 
 如果缺少任何產出物，報告缺少哪些，並建議先執行 `/component-generate` 或 `/component-refactor fix`。
@@ -65,7 +65,7 @@ $ARGUMENTS
 
 ```bash
 # 用 grep 搜尋概念在各路徑中的存在性
-grep -rn "'{concept_id}'" src/languages/{lang}/ src/interpreter/executors/ tests/ --include="*.ts" --include="*.json"
+grep -rn "'{component_id}'" src/languages/{lang}/ src/interpreter/executors/ tests/ --include="*.ts" --include="*.json"
 ```
 
 逐一確認：
@@ -74,14 +74,14 @@ grep -rn "'{concept_id}'" src/languages/{lang}/ src/interpreter/executors/ tests
 |---|------|---------|-------|
 | 1 | Lift | lifter `register()` 或 `lift-patterns.json` 條目 | |
 | 2 | Render | blocks.json 中的 BlockSpec + `renderMapping` | |
-| 3 | Extract | PatternExtractor auto-derive 可反向提取（blockDef args + concept children）；動態概念需有 `dynamicRules`；expression counterpart 須有完整 blockDef args0 | |
+| 3 | Extract | PatternExtractor auto-derive 可反向提取（blockDef args + component children）；動態概念需有 `dynamicRules`；expression counterpart 須有完整 blockDef args0 | |
 | 4 | Generate | generator `generators.set()` | |
 | 5 | Execute | executor `register()` | |
 | 6 | Test | 測試檔含 lift/generate/round-trip 測試 | |
 
 **任何路徑缺失即為阻擋問題**：
 - 報告缺失路徑清單
-- 建議執行 `/component-generate {lang} {concept}` 補全，或 `/component-refactor {lang} fix {concept}` 修復
+- 建議執行 `/component-generate {lang} {component}` 補全，或 `/component-refactor {lang} fix {component}` 修復
 - **不可繼續後續步驟**
 
 ### 步驟一：TypeScript 編譯檢查
@@ -112,11 +112,11 @@ npm test
 
 **元件身分驗證（必要）**：除了驗證 roundtrip 穩定性和 stdout 等價性之外，**每個測試都必須斷言語義樹中使用了正確的 componentId**。這防止 lifter 退化到通用概念（如 `var_declare`）卻碰巧生成正確程式碼的假陽性。範例：
 ```typescript
-const ptrs = findConcepts(sem!, 'cpp_pointer_declare')
+const ptrs = findComponents(sem!, 'cpp_pointer_declare')
 expect(ptrs.length).toBeGreaterThan(0)
 ```
 
-如果語義樹中存在錯誤的概念，即使 roundtrip 程式碼正確，也應標記為 **WRONG_CONCEPT** 並視為 BUG 修復。
+如果語義樹中存在錯誤的概念，即使 roundtrip 程式碼正確，也應標記為 **WRONG_COMPONENT** 並視為 BUG 修復。
 
 所有程式必須 PASS 或 DEGRADED。
 
@@ -210,7 +210,7 @@ i18n 標籤審計：
 
 檢查概念在所有必要位置都有正確註冊：
 
-1. **概念註冊表**（核心 `src/languages/{lang}/core/concepts.json` 或 STD `src/languages/{lang}/std/{module}/concepts.json`）
+1. **概念註冊表**（核心 `src/languages/{lang}/core/components.json` 或 STD `src/languages/{lang}/std/{module}/components.json`）
 2. **Block spec 註冊表**（核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json`）
 3. **工具箱分類**（`src/languages/{lang}/toolbox-categories.ts`）
 4. **Lift patterns**（lifter 註冊或 `src/languages/{lang}/lift-patterns.json`）
@@ -221,7 +221,7 @@ i18n 標籤審計：
 在整合前，掃描 `tests/integration/` 和 `tests/unit/` 中與此概念相關的測試檔，檢查是否存在殘留的 `it.todo` 或 `it.skip`：
 
 ```bash
-grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_or_scope}"
+grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{component_or_scope}"
 ```
 
 對每個找到的 `it.todo` / `it.skip`：
@@ -247,24 +247,24 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_o
 
 1. **再執行一次完整測試套件**
 2. **Git commit**（如果有未 commit 的變更）：
-   - Stage 所有概念相關的變更檔案（blocks.json、generators、lifters、concepts.json、lift-patterns.json、toolbox-categories.ts、topics/*.json、tests 等）
+   - Stage 所有概念相關的變更檔案（blocks.json、generators、lifters、components.json、lift-patterns.json、toolbox-categories.ts、topics/*.json、tests 等）
    - 不用 `git add -A`，逐檔 stage 避免加入無關檔案
-   - Commit message 格式：`feat({lang}): add {concept_name} concept`
+   - Commit message 格式：`feat({lang}): add {component_name} component`
    - 如果是由 `/component-pipeline` 批次調用，跳過 commit（由 pipeline 統一 commit）
 3. **建立摘要**
 
 輸出：
 
 ```markdown
-## 整合完成：{concept_name}（{language}）
+## 整合完成：{component_name}（{language}）
 
 ### 整合的產出物
 - Block spec：核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json` — {block_type}
 - Generator：核心 `src/languages/{lang}/core/generators/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/generators.ts`
 - Lifter：核心 `src/languages/{lang}/core/lifters/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/lifters.ts`
 - Executor：`src/interpreter/executors/{file}.ts`（可執行概念需實作邏輯，宣告性概念需 noop）
-- Concept def：核心 `src/languages/{lang}/core/concepts.json` 或 STD `src/languages/{lang}/std/{module}/concepts.json`
-- 測試：`tests/unit/languages/{lang}/{concept}.test.ts`
+- Component def：核心 `src/languages/{lang}/core/components.json` 或 STD `src/languages/{lang}/std/{module}/components.json`
+- 測試：`tests/unit/languages/{lang}/{component}.test.ts`
 
 ### 測試結果
 - TypeScript：✅ 無錯誤
@@ -299,7 +299,7 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_o
 | 概念 | Generator | Lifter | Block | 測試 |
 |------|-----------|--------|-------|------|
 
-#### 在 concepts.json 中但無實作
+#### 在 components.json 中但無實作
 | 概念 | Topic 節點 | 備註 |
 |------|-----------|------|
 ```
@@ -318,7 +318,7 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{concept_o
 此 skill 完成後，**必須**輸出以下格式的完成標記：
 
 ```
-🏁 SKILL_COMPLETE: component-integrate | {lang} | {concept_name} | {PASS/FAIL} | 殘留 todo: {N}
+🏁 SKILL_COMPLETE: component-integrate | {lang} | {component_name} | {PASS/FAIL} | 殘留 todo: {N}
 ```
 
 如果未輸出此標記，pipeline 的該概念視為未整合。

@@ -21,7 +21,7 @@ export async function freshApp(page: Page): Promise<void> {
  *
  * ⚠️ **一定要打單行**：多行輸入會被 Monaco 的自動補括號弄壞
  * ——實測第一版打多行，lift 出來是 `raw_code`，
- * 而錯誤訊息（`RUNTIME_ERR_UNKNOWN_CONCEPT`）看起來像產品的 bug。
+ * 而錯誤訊息（`RUNTIME_ERR_UNKNOWN_COMPONENT`）看起來像產品的 bug。
  *
  * 打完按「積木→程式碼」讓它重新產生：那一步同時
  * ① 把單行攤成多行（行號才有意義）

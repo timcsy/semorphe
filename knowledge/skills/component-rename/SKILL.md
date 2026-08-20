@@ -85,8 +85,8 @@ argument-hint: "[要改什麼名字；空＝從當前 spec 的驗收數字推]"
 #### JSON 的鍵清單——照抄，不要憑印象重打
 
 ```
-componentId, concept, id, type, blockType, componentId,
-abstractComponent, extends, requires, provides, blocks[], concepts[]
+componentId, component, id, type, blockType,
+abstractComponent, extends, requires, provides, blocks[], components[]
 ```
 
 ⚠️ **`id` 是漏過四輪的那一個。** `blocks.json` 用 `id` 而不是 `blockType`，

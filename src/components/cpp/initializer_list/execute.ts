@@ -6,7 +6,7 @@
  * ——結構就是聚合初始化，其他就是一串值。
  *
  * 而它仍然需要一個執行器：`{1,2,3}` 出現在**沒有型別脈絡**的位置時
- * （被 `ctx.evaluate` 直接求值），少了這一路會丟 `UNKNOWN_CONCEPT`。
+ * （被 `ctx.evaluate` 直接求值），少了這一路會丟 `UNKNOWN_COMPONENT`。
  * 那時它就是一串值——**不猜型別，也不丟錯**。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'

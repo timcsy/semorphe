@@ -290,13 +290,13 @@ export class SemanticInterpreter implements ExecutionContext {
     if (this.unknownComponentHandler) {
       const action = await this.unknownComponentHandler(component)
       if (action === 'abort') {
-        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, { component })
+        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_COMPONENT, { component })
       }
       // 'skip' — 繼續執行
       return
     }
     // 無 handler 時預設報錯
-    throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_CONCEPT, {
+    throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_COMPONENT, {
       component,
       // 判準是「註冊表空不空」，不是「概念名長得像什麼」——後者會讓核心
       // 重新認識語言，等於把剛搬走的東西搬回來

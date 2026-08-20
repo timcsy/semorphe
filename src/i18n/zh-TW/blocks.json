@@ -142,7 +142,7 @@
   "RUNTIME_ERR_UNDEFINED_FUNC": "函式 '%1' 尚未定義",
   "RUNTIME_ERR_NO_ENTRY_POINT": "找不到程式的進入點——沒有 main、也沒有 setup／loop。（這個程式定義了：%1）",
   "RUNTIME_ERR_ABORTED": "執行已中止",
-  "RUNTIME_ERR_UNKNOWN_CONCEPT": "這一塊我還不會執行——這是系統還沒長到的地方，不是你寫錯了",
+  "RUNTIME_ERR_UNKNOWN_COMPONENT": "這一塊我還不會執行——這是系統還沒長到的地方，不是你寫錯了",
   "RUNTIME_ERR_UNRECOGNIZED_CODE": "這一段程式我看不懂，所以沒有辦法執行它",
   "RUNTIME_ERR_FALLBACK": "程式停下來了，而我說不出是為什麼——這是系統的問題，不是你的",
   "RUNTIME_ERR_BREAK_OUTSIDE_LOOP": "break 只能在迴圈內使用",

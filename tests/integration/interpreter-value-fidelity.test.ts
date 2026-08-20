@@ -148,7 +148,7 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
   // ── 聚合初始化：`{…}` 在執行那一路本來沒有人認得 ────────────────────
   //
   // 辨識那一路產出 `cpp_initializer_list`（結構節點），而執行器只認元件
-  // ——於是巢狀的 `{…}` 直接丟 `UNKNOWN_CONCEPT`。三種形狀共用一支
+  // ——於是巢狀的 `{…}` 直接丟 `UNKNOWN_COMPONENT`。三種形狀共用一支
   // `evalInitializer`（`core/runtime/aggregate.ts`）。
   it('★ 結構體陣列的聚合初始化', async () => {
     expect(
@@ -166,7 +166,7 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
   })
 
   it('★ 表達式位置的 `{…}` 也是聚合初始化', async () => {
-    // 修之前落進 `unresolved` → 執行期 UNKNOWN_CONCEPT，整段停在宣告那一行
+    // 修之前落進 `unresolved` → 執行期 UNKNOWN_COMPONENT，整段停在宣告那一行
     expect(await run(IO, `struct P { int x; }; int main(){ P a{3}; cout << a.x; }`)).toBe('3')
   })
 

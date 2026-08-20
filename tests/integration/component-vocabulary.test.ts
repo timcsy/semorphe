@@ -68,7 +68,8 @@ const EXEMPT: { path: RegExp; why: string }[] = [
  *
  * ⚠️ 遮掉的是**路徑字面**，不是整個檔——同一個檔裡別的地方寫了 `concept` 照樣會被抓。
  */
-const REFERENCE_PATHS = /knowledge\/concepts\/|specs\/\d+-[a-z0-9-]*concept[a-z0-9-]*/g
+const REFERENCE_PATHS =
+  /(?:knowledge\/|\.\.\/)?concepts\/|specs\/concepts\/?|specs\/\d+-[a-z0-9-]*concept[a-z0-9-]*/g
 const SELF = 'tests/integration/component-vocabulary.test.ts'
 /** 舊詞彙——🔴 每一個都要說得出它被誰取代。 */
 const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
@@ -89,7 +90,29 @@ const RETIRED: { pattern: RegExp; replacedBy: string }[] = [
  * ⚠️ 不擋中文的「概念」——[名詞表](../../knowledge/concepts/元件.md)已經定：
  * **概念是元件在語言域的樣子**，談語言時它仍然讀得通。擋的是**識別字**。
  */
-const KNOWLEDGE_ROOTS = ['knowledge/concepts', 'knowledge/principles.md', 'knowledge/vision.md']
+/**
+ * 🪦 **墓碑豁免**——與「宣告退場的那一行」同一個道理：
+ * 一行**說這東西已經沒了**的字，必須寫得出它的名字。
+ *
+ * ```
+ * | ❌ ~~`UniversalConcept` 型別~~ | **該型別已刪**（58d64eb，只剩墓碑註解） |
+ * ```
+ *
+ * ⚠️ 判準是**這一行有沒有說它不在了**，不是它長什麼樣（刪節線只是其中一種寫法）。
+ */
+const TOMBSTONE = /~~|已刪|已不存在|已刪除|已退休|不再調用|已被.{0,6}取代/
+
+const KNOWLEDGE_ROOTS = [
+  'knowledge/concepts', 'knowledge/principles.md', 'knowledge/vision.md',
+  // 🔴 **`skills/` 會【執行】**——它指名的函式不存在時，照著做的人會撞牆。
+  // 判官的話：stale skill 的風險高於 stale doc（它動手，不只誤導）。
+  //
+  // ⚠️ 2026-08-20 實測：spec 159 把程式碼改完了，而 5 支 skill 還寫著
+  // `findConcepts(`（程式碼 0 處，實際叫 `findComponents`）、`UniversalConcept`（0 處）。
+  // 漏掉的原因與改名當天漏掉 `package.json` **是同一個形狀**：
+  // > **掃描根寫死了，而下游不只那三個資料夾。**
+  'knowledge/skills',
+]
 
 /**
  * 🟢 **「宣告退場」的那一行豁免**——與這個測試檔自己豁免是**同一個理由**：
@@ -135,7 +158,11 @@ function walkMd(target: string, out: string[] = []): string[] {
 const knowledgeFiles = KNOWLEDGE_ROOTS.flatMap((r) => walkMd(r))
 
 describe('spec 159 · 整個 concept 家族退場', () => {
-  const family = /[Cc]oncepts?/
+  // ⚠️ **`[Cc]` 不夠——全大寫的 `CONCEPT_IDENTITY` 兩個都不匹配。**
+  // spec 159 的家族規則漏了 77 處全大寫形式，2026-08-20 判官掃出來。
+  // > 這是 spec 158「`\bconceptId\b` 擋不住 `byConceptId`」的同一種病：
+  // > **規則寫得比它要擋的東西窄，而它會綠。**
+  const family = /CONCEPT|[Cc]oncepts?/
   const scanned = files.filter((f) => !EXEMPT.some((e) => e.path.test(f)))
 
   it('★ 錨點：豁免沒有把檔案掃光', () => {
@@ -193,6 +220,40 @@ describe('spec 158 · 舊詞彙不准回來', () => {
         + '⚠️ 而它回來的方式多半是**照抄現況**——那正是這條護欄存在的理由。').toEqual([])
     })
   }
+
+  /**
+   * 🔴 **`skills/` 用【家族】規則，不是那五個指名的字。**
+   *
+   * 2026-08-20 判官實測：spec 159 把程式碼改完了，而 5 支 skill 還寫著
+   * `findConcepts(`（程式碼 **0 處**，實際叫 `findComponents`，91 處）、
+   * `UniversalConcept`（0 處）、`getVisibleConcepts`（實際 `getVisibleComponents`）。
+   * 窄規則一個都沒擋到——**skill 會照著做，它不只是誤導。**
+   */
+  it('🔴 `skills/` 不得指名 concept 家族——除非那一行在立墓碑', () => {
+    /**
+     * 兩條**整檔**豁免，各自說得出理由：
+     * - `component-rename`：**它的主題就是改名**，全篇必須寫得出舊名
+     *   （與這個測試檔自己豁免同一條理由）
+     * - `status: superseded` 的 skill：**它整份就是紀錄**。判官明說退休的 skill
+     *   不該被「修復」——那等於把它復活
+     */
+    const skills = walkMd('knowledge/skills').filter((f) => {
+      if (f.includes('component-rename/')) return false
+      return !/^---[\s\S]*?status:\s*superseded/.test(
+        fs.readFileSync(path.join(REPO_ROOT, f), 'utf8'))
+    })
+    const hits: string[] = []
+    for (const f of skills) {
+      const text = fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')
+      text.split('\n').forEach((line, i) => {
+        const bare = line.replace(REFERENCE_PATHS, '')
+        if (/CONCEPT|[Cc]oncepts?/.test(bare) && !TOMBSTONE.test(line)) hits.push(`${f}:${i + 1}`)
+      })
+    }
+    expect(hits,
+      '⚠️ skill 指名的符號要嘛存在，要嘛那一行要說它已經不在了（墓碑）。'
+      + '兩者都不是的話，照著做的人會撞牆。').toEqual([])
+  })
 
   it('★ 錨點：知識庫的現況型檔案真的掃到了', () => {
     expect(knowledgeFiles.length, '一個 .md 都沒掃到 → 掃描壞了').toBeGreaterThan(10)

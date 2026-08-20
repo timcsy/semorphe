@@ -62,7 +62,7 @@ describe('膠囊自證：cpp:initializer_list', () => {
 
   it('★ execute：沒有型別脈絡時它就是一串值——不猜型別也不丟錯', async () => {
     // ⚠️ 消費者（`evalInitializer`）通常會先攔截它。這一支測的是**沒有被攔截**時，
-    // 少了執行器會丟 `UNKNOWN_CONCEPT`——那會讓整段程式停住。
+    // 少了執行器會丟 `UNKNOWN_COMPONENT`——那會讓整段程式停住。
     expect(await run('struct P{int x;}; P p{7}; cout << p.x;')).toBe('7')
   })
 

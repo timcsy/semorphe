@@ -61,7 +61,7 @@ export function registerExecute(register: (component: string, executor: Componen
         //
         // ⚠️ `evalInitializer` 而不是 `evaluate`：元素本身可能是一層 `{…}`
         // （`S arr[2] = {{"a",90},{"b",80}}`、多維陣列的內層），
-        // 而 `{…}` 在執行那一路**沒有任何人認得**——直接丟 UNKNOWN_CONCEPT。
+        // 而 `{…}` 在執行那一路**沒有任何人認得**——直接丟 UNKNOWN_COMPONENT。
         elements[i] = await evalInitializer(init[i], type, ctx)
       }
       // 宣告時沒寫大小（`int a[] = {1,2,3}`）→ 長度由初始值決定

@@ -35,7 +35,7 @@ $ARGUMENTS
 
 **關鍵**：開始前請先閱讀專案的第一性原理：
 - `knowledge/principles.md` — 特別是 P2（元件代數）和 P4（漸進揭露）；細節見 `knowledge/concepts/元件代數.md`、`knowledge/concepts/漸進揭露.md`
-- `src/core/types.ts` — 現有的 UniversalConcept 和 LanguageSpecificConcept 型別
+- `src/core/types.ts` — 元件的型別（⚠️ `UniversalConcept`／`LanguageSpecificConcept` **都已刪**，見 `58d64eb`）
 
 然後確認目標語言的現有支援：
 - `src/languages/` — 查看已有哪些語言模組
@@ -82,11 +82,11 @@ $ARGUMENTS
 | **先備知識** | 學習者必須已經知道的概念 |
 | **錯誤模式** | 初學者常犯的錯誤 |
 
-**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + concept children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 concept 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（concept → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
+**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + component children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 component 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（component → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
 
 ### 階段三：Topic 層級樹分類
 
-概念透過 **Topic JSON 檔案**（例如 `src/languages/{lang}/topics/{lang}-beginner.json`）中的 `levelTree` 組織為樹狀結構。每個 `LevelNode` 有 `id`、`label`、`level`（深度）、`concepts[]`、`children[]`。
+概念透過 **Topic JSON 檔案**（例如 `src/languages/{lang}/topics/{lang}-beginner.json`）中的 `levelTree` 組織為樹狀結構。每個 `LevelNode` 有 `id`、`label`、`level`（深度）、`components[]`、`children[]`。
 
 **倍增軟指引**：每往下一層，新增積木數約為上一層兩倍（L0~8, L1~16, L2~32）（§2.4）。
 
@@ -118,7 +118,7 @@ $ARGUMENTS
 - **通用概念**（跨語言共通）：`snake_case`（例如 `sort_range`、`find_element`）
   - 如果多個語言都有等價的概念，應為通用概念
 - **語言特定概念**：`{lang}:snake_case`（例如 `cpp:vector_push`、`py:list_append`、`java:stream_map`）
-  - 語言前綴使用 ConceptId 的 `lang:concept` 格式
+  - 語言前綴使用 ComponentId 的 `lang:component` 格式
 - 名稱應描述**語義動作**，而非語法
 - 偏好簡短、描述性名稱（最多 2-3 個詞）
 
@@ -129,7 +129,7 @@ $ARGUMENTS
 
 - 路徑變了：`src/blocks/semantics/` → `src/core/`（`specs/117`）
 - **而更重要的是：那一層已經沒有東西了**。F 完成（177/177 膠囊化）之後
-  `universal-concepts.json` 與 `universal-blocks.json` 都是 `[]`。
+  `universal-components.json` 與 `universal-blocks.json` 都是 `[]`。
 
 > **一顆新元件今天的家是膠囊**：`src/components/<scope>/<name>/`
 > ——宣告、形態、標籤、五路實作全在裡面。見 [[元件]] 的五槽與
@@ -139,8 +139,8 @@ $ARGUMENTS
 ⚠️ **但不要照著它放新東西**：
 
 - ~~**universal**（跨語言共通）→ `src/blocks/semantics/`~~ → 今天是 `src/core/`，而且是空的
-- **lang-core**（語言核心語法）→ `src/languages/{lang}/core/`（`blocks.json`、`concepts.json`）
-- **lang-library**（語言標準庫）→ `src/languages/{lang}/std/{module}/`（`blocks.json`、`concepts.json`）
+- **lang-core**（語言核心語法）→ `src/languages/{lang}/core/`（`blocks.json`、`components.json`）
+- **lang-library**（語言標準庫）→ `src/languages/{lang}/std/{module}/`（`blocks.json`、`components.json`）
 
 ### 階段五：輸出
 
@@ -206,7 +206,7 @@ $ARGUMENTS
 - **優先考慮通用概念** — 如果概念在多個語言中存在（如 for 迴圈、排序），盡量定義為通用概念
 - **一個積木 = 一個語義概念**（Sc3 認知一致性）— 不要把兩個不同的語法結構合成一個積木，也不要把一個語法結構拆成兩個積木
 - **積木不可引入程式碼中不存在的概念**（§1.4 Sc2）— 積木只能表達原始碼中實際存在的結構
-- **區分 concept layer** — 每個概念必須標明層級：universal（跨語言共通）、lang-core（語言核心語法）、lang-library（語言標準庫）
+- **區分 component layer** — 每個概念必須標明層級：universal（跨語言共通）、lang-core（語言核心語法）、lang-library（語言標準庫）
 
 ## 完成標記（強制）
 

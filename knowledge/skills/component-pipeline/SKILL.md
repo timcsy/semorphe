@@ -23,10 +23,10 @@ user-invocable: true
 | 階段 | 必須調用的 Skill | 調用方式 |
 |------|-----------------|---------|
 | 1. 探索 | `component-discover` | `Skill tool: skill="component-discover", args="{lang} {target}"` |
-| 2. 產生 | `component-generate` | `Skill tool: skill="component-generate", args="{lang} {concept}"` |
-| 3. Round-trip | `component-roundtrip` | `Skill tool: skill="component-roundtrip", args="{lang} {concept}"` |
+| 2. 產生 | `component-generate` | `Skill tool: skill="component-generate", args="{lang} {component}"` |
+| 3. Round-trip | `component-roundtrip` | `Skill tool: skill="component-roundtrip", args="{lang} {component}"` |
 | 4. 模糊測試 | `component-fuzz` | `Skill tool: skill="component-fuzz", args="{lang} {difficulty} {scope} {count}"` |
-| 5. 整合 | `component-integrate` | `Skill tool: skill="component-integrate", args="{lang} {concept}"` |
+| 5. 整合 | `component-integrate` | `Skill tool: skill="component-integrate", args="{lang} {component}"` |
 
 **「調用」的唯一合法方式是使用 Skill tool。** 以下行為全部視為違規：
 - ❌ 自己寫程式碼代替 skill 的工作
@@ -83,7 +83,7 @@ $ARGUMENTS
 可選旗標（附加在目標之後）：
 - `--dry-run` — 只執行 discover + generate，跳過測試和整合
 - `--skip-fuzz` — 跳過模糊測試階段（更快，但較不徹底）
-- `--concepts=X,Y,Z` — 只處理探索報告中的特定概念（跳過其餘）
+- `--components=X,Y,Z` — 只處理探索報告中的特定概念（跳過其餘）
 - `--fuzz-count=N` — 要產生的模糊測試程式數量（預設：10）
 
 ## 總覽
@@ -144,7 +144,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 
 建議實作順序：{ordered list}
 
-要處理全部 {N} 個概念嗎？或用 --concepts=X,Y,Z 指定特定的
+要處理全部 {N} 個概念嗎？或用 --components=X,Y,Z 指定特定的
 ```
 
 ### 階段二：產生（逐個概念）
@@ -153,7 +153,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="component-generate", args="{lang} {concept_name}"
+   Skill tool: skill="component-generate", args="{lang} {component_name}"
    ```
 2. **關卡**：膠囊 `src/components/<scope>/<name>/` 存在，五路齊全
    （`FIVE_PATHS` ＝ lift／generate／render／extract／execute，刻意不做的須在
@@ -172,7 +172,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="component-roundtrip", args="{lang} {concept_name}"
+   Skill tool: skill="component-roundtrip", args="{lang} {component_name}"
    ```
 2. **關卡**：所有目標測試必須 PASS 或 DEGRADED
 3. **完成標記**：`🏁 SKILL_COMPLETE: component-roundtrip | ...`
@@ -213,7 +213,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 
 1. **⚠️ 必須使用 Skill tool 調用**：
    ```
-   Skill tool: skill="component-integrate", args="{lang} {concept_name}"
+   Skill tool: skill="component-integrate", args="{lang} {component_name}"
    ```
 2. **關卡**：所有檢查通過
 3. **完成標記**：`🏁 SKILL_COMPLETE: component-integrate | ...`
@@ -250,7 +250,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 1. **Stage 所有變更的檔案**（僅概念相關檔案，不用 `git add -A`）
 2. **建立 commit**：
    ```
-   feat({lang}): add {topic} concepts ({concept_list})
+   feat({lang}): add {topic} components ({component_list})
    ```
 3. **詢問使用者是否要建立 PR**：
    ```
@@ -263,22 +263,22 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 
 管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
 - `/component-generate specs/concepts/{lang}-{topic}.md`
-- `/component-roundtrip {lang} {concept_name}`
-- `/component-integrate {lang} {concept_name}`
+- `/component-roundtrip {lang} {component_name}`
+- `/component-integrate {lang} {component_name}`
 
 ## 既有概念修復
 
 如果發現既有概念存在問題（四路不完備、信心等級違規、死概念等），應使用 `/component-refactor` 的醫治模式修復：
 
 - `/component-refactor {lang} audit` — 完整審計，了解問題全貌
-- `/component-refactor {lang} fix {concept}` — 修復單一概念的缺失路徑
+- `/component-refactor {lang} fix {component}` — 修復單一概念的缺失路徑
 - `/component-refactor {lang} fix all` — 修復該語言所有概念
 - `/component-refactor {lang} full` — 完整重構（audit → fix → dedup → migrate → render-fix → purge）
 
 **pipeline 與 refactor 的分工**：
 - `/component-pipeline` 用於**新增**概念（從零到一）
 - `/component-refactor fix` 用於**修復**既有概念（從不完整到完整）
-- `/component-refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + concept children），無需遷移
+- `/component-refactor migrate` 用於**重構**既有概念的 lift 路徑（從 hand-written lifter 到 JSON pattern）。注意：extract 路徑已統一由 PatternExtractor 處理（auto-derive from blockDef args + component children），無需遷移
 
 ## 範例
 
@@ -290,7 +290,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 /component-pipeline python list comprehension --skip-fuzz
 
 # Java 只處理特定概念
-/component-pipeline java Stream API --concepts=stream_map,stream_filter
+/component-pipeline java Stream API --components=stream_map,stream_filter
 
 # 乾跑看看會產生什麼
 /component-pipeline cpp pointer arithmetic --dry-run
