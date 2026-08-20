@@ -11,7 +11,7 @@
  *
  * 形狀的來歷見 `../math_pow/lift.ts`：`tryCmathLift` 拆開只剩三列資料。
  */
-import { registerCallConcept } from '../../../core/component/call-concepts'
+import { registerCallConcept } from '../../../core/component/call-components'
 
 /** ⚠️ 這張名單就是「哪些寫法會被辨識」——少一個名字＝那個函式掉進 raw_code。 */
 const unaryFuncs = [

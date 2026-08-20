@@ -1,7 +1,7 @@
 /**
  * `cpp:container_push` 的 **lift** 路——**一筆登錄，而且是登在「晚查」那張表上**
  *
- * ⚠️ `method-concepts.ts` 有**三張表**，而它們不能合併：
+ * ⚠️ `method-components.ts` 有**三張表**，而它們不能合併：
  *
  * ```
  * methodConceptFor(方法名)         早——路由器一拿到方法名就查，直接建節點
@@ -19,7 +19,7 @@
  * > **兩個查詢點就是兩張表。合併會讓其中一個查詢點的前置工作被跳過，
  * > 而那不會報錯。**
  */
-import { registerContainerMethodConcept } from '../../../core/component/method-concepts'
+import { registerContainerMethodConcept } from '../../../core/component/method-components'
 
 export function registerLift(): void {
   registerContainerMethodConcept('push', 'cpp:container_push', 'cpp/container_push')

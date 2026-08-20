@@ -21,5 +21,5 @@
     "scaffoldInMain": true
   },
   "_traits_why": "**「我在 main 裡時算鷹架」是我自己的宣告**，不是過濾器該寫死的身分。",
-  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-concepts.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）"
+  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-components.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）"
 }

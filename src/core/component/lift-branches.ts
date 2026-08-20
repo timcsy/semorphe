@@ -3,7 +3,7 @@
  *
  * ## 為什麼登錄表不夠
  *
- * `call-concepts`／`method-concepts` 收的是**純資料**：名字 → 身分 ＋ 引數槽名。
+ * `call-components`／`method-components` 收的是**純資料**：名字 → 身分 ＋ 引數槽名。
  * 而 `lifters/io.ts` 剩下的分支有真的判別邏輯：
  *
  * ```ts

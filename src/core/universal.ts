@@ -7,7 +7,7 @@
  *
  * ## ⚠️ 而今天這兩個陣列都是**空的**（2026-08-12 查證）
  *
- * F 完成（177/177 膠囊化）之後，`universal-concepts.json` 與
+ * F 完成（177/177 膠囊化）之後，`universal-components.json` 與
  * `universal-blocks.json` 都是 `[]`。所以這個模組今天實際提供的只有
  * `UNIVERSAL_OWNER` 這個字串常數，而 29 處 import 展開的是兩個空陣列。
  *
@@ -19,7 +19,7 @@
  * 而空陣列的展開移除是安全的但需要逐處確認。
  */
 import type { ComponentDefJSON, BlockProjectionJSON } from '../core/types'
-import _concepts from './universal-concepts.json'
+import _concepts from './universal-components.json'
 import _blocks from './universal-blocks.json'
 
 /** 通用積木的 owner 標記——與 std 模組的 header 同一個名字空間 */

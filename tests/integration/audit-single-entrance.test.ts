@@ -30,7 +30,7 @@
  * - **不檢測「入口本身對不對」**——它只保證大家走同一扇門。門後面錯了，
  *   全體一起錯（而那是好事：至少會有人發現）。
  * - **不檢測用檔案路徑讀取的程式碼**（`fs.readFileSync(...json)`）。那類多半是
- *   **檢查檔案本身**的工具（`verify-concept-paths`、「concepts.json 不得含 blockDef」），
+ *   **檢查檔案本身**的工具（`verify-component-paths`、「concepts.json 不得含 blockDef」），
  *   它們要的就是原始檔，不是載入後的狀態。**只擋 `import`。**
  * - **不檢測其他唯一真相機制的採用率**（`block-input-names`、`abstractComponent`…）
  *   ——那是 `audit-annotation-adoption` 與就近性的事。
@@ -140,7 +140,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   })
 
   it('★ 注入一個**用檔案路徑讀取**的用法 → **必須不被報出**', () => {
-    // 檔頭寫明只擋 import。`verify-concept-paths` 與「concepts.json 不得含 blockDef」
+    // 檔頭寫明只擋 import。`verify-component-paths` 與「concepts.json 不得含 blockDef」
     // 那類工具要的就是原始檔——把它們也擋掉會逼人繞過護欄。
     const hit = scan([
       { file: '合成/讀檔.ts', source: `const p = path.join(root, '${forbiddenPaths}')\n` },

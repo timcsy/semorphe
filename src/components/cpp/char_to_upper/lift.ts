@@ -5,7 +5,7 @@
  * **「`toupper` 這個名字屬於我」是這顆元件的宣告。**
  * 單引數自由函式——`registerSingleArgFunction` 是它的專用入口。
  */
-import { registerSingleArgFunction } from '../../../core/component/call-concepts'
+import { registerSingleArgFunction } from '../../../core/component/call-components'
 
 export function registerLift(): void {
   registerSingleArgFunction('toupper', 'cpp:char_to_upper', 'cpp/char_to_upper')

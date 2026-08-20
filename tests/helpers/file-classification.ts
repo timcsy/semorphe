@@ -43,7 +43,11 @@ export type FileClass = '宣告' | '清單' | '實作' | '清冊' | '測試'
  * 範圍內——膠囊只是把同一種檔案搬進了 `src/`。
  */
 export function classifyFile(rel: string): FileClass {
-  if (/\/(concepts|blocks)\.json$/.test(rel) || /universal-(concepts|blocks)\.json$/.test(rel)) return '宣告'
+  // ⚠️ **靠檔名的形狀分類，改名那天會靜靜失效**（spec 159 實測：`concepts.json`
+  // 改成 `components.json` 之後這一條恆為 false，整族宣告從量測消失）。
+  // 這次它是**紅的**而不是靜默的，因為 `file-classification.test.ts` 在守它
+  // ——那支測試就是這一行的安全帶。⚠️ 加新的宣告檔名時，兩邊一起加。
+  if (/\/(components|blocks)\.json$/.test(rel) || /universal-(components|blocks)\.json$/.test(rel)) return '宣告'
   // 元件膠囊的 `component.json` **是宣告**，與 `concepts.json` 同一類——
   // 它就是那一筆記錄搬了個家。不加這一條的話，一顆搬進膠囊的元件會因為
   // 「多了一個實作檔」而讓就近性數字**上升**，而它明明變集中了。

@@ -4,7 +4,7 @@
  * 掃描所有概念來源，檢查每個概念的四條路徑：
  * lift（AST→Semantic）、render（Semantic→Block）、extract（Block→Semantic）、generate（Semantic→Code）
  *
- * 用法：npx tsx src/scripts/verify-concept-paths.ts
+ * 用法：npx tsx src/scripts/verify-component-paths.ts
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -358,7 +358,7 @@ function main(): void {
 
 // Run if executed directly
 const isMain = import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('verify-concept-paths.ts')
+  process.argv[1]?.endsWith('verify-component-paths.ts')
 if (isMain) {
   main()
 }

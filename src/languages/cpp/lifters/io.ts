@@ -3,10 +3,10 @@ import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../core/runtime/printf'
-import { callConceptFor } from '../../../core/component/call-concepts'
-import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-concepts'
+import { callConceptFor } from '../../../core/component/call-components'
+import { methodConceptFor, containerMethodConcept, typedMethodConcept } from '../../../core/component/method-components'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
-import { namedCastConcept } from '../../../core/component/named-cast-concepts'
+import { namedCastConcept } from '../../../core/component/named-cast-components'
 import { buildMalloc } from '../../../components/cpp/malloc/lift'
 import { buildMethodCall } from '../../../components/cpp/method_call/lift'
 import { buildFuncCall } from '../../../components/cpp/func_call/lift'
@@ -41,7 +41,7 @@ function tryStringMethodLift(
     default:
       break
   }
-  // **方法名 → 身分**由膠囊登錄（`core/component/method-concepts.ts`）。
+  // **方法名 → 身分**由膠囊登錄（`core/component/method-components.ts`）。
   {
     const claim = tryMethodBranches(obj, method, argChildren, ctx)
     if (claim) return claim
@@ -210,7 +210,7 @@ export function registerIOLifters(lifter: Lifter): void {
       return extractScanf(argsNode, ctx)
     }
 
-    // **自由函式呼叫 → 身分**由膠囊登錄（`core/component/call-concepts.ts`）。
+    // **自由函式呼叫 → 身分**由膠囊登錄（`core/component/call-components.ts`）。
     //
     // ⚠️ 這一段取代了原本的 `tryCmathLift`——那個函式看起來像實作，
     // 拆開看只是三筆「名字 → 身分 ＋ 引數槽名」的資料配上共用判別。

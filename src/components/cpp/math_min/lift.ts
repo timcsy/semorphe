@@ -2,7 +2,7 @@
  * `cpp:math_min` 的 **lift** 路——**一個帶真邏輯的分支**
  *
  * 原本是 `lifters/io.ts` 的 `if (funcName === 'min' || funcName === 'std::min') { … }`。
- * 它塞不進 `call-concepts` 那張純資料表——判別本身是這顆元件的知識
+ * 它塞不進 `call-components` 那張純資料表——判別本身是這顆元件的知識
  * （「`min` 帶這些引數時是我」），不是路由器的知識。
  *
  * > **路由器該知道的是「去問誰」，不是「答案是什麼」。**

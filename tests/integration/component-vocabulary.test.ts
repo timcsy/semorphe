@@ -40,7 +40,7 @@ const ROOTS = ['src', 'tests', 'e2e'] as const
  * 🔴 **spec 159：從「擋四個名字」擴成「擋整個 concept 家族」。**
  *
  * spec 158 的護欄只認 `\bconceptId\b`——於是 `byConceptId`（大寫 C 讓 `\b` 不成立）、
- * `getVisibleConcepts`、`registerCallConcept`、檔名 `method-concepts.ts` 全部漏掉。
+ * `getVisibleConcepts`、`registerCallConcept`、檔名 `method-components.ts` 全部漏掉。
  * 2026-08-20 實測**還有 3496 處**散在 656 個檔，而護欄一個都沒擋住。
  *
  * > **一條擋「四個名字」的規則，擋不住一個【家族】。**

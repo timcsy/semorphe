@@ -1,6 +1,6 @@
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../../core/types'
 
-import _coreConcepts from './concepts.json'
+import _coreConcepts from './components.json'
 import _coreBlocks from './blocks.json'
 
 /** 核心積木的 owner 標記——與 std 模組的 header 同一個名字空間 */

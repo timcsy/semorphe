@@ -21,9 +21,9 @@ describe('檔案分類', () => {
   })
 
   it('★ 宣告：元件自己的定義', () => {
-    expect(classifyFile('src/languages/cpp/std/vector/concepts.json')).toBe('宣告')
+    expect(classifyFile('src/languages/cpp/std/vector/components.json')).toBe('宣告')
     expect(classifyFile('src/languages/cpp/std/vector/blocks.json')).toBe('宣告')
-    expect(classifyFile('src/core/universal-concepts.json')).toBe('宣告')
+    expect(classifyFile('src/core/universal-components.json')).toBe('宣告')
     expect(classifyFile('src/core/universal-blocks.json')).toBe('宣告')
   })
 
@@ -53,13 +53,13 @@ describe('檔案分類', () => {
   it('★ 反向：`.test.ts` 之外的 src 檔仍然是實作（不得整批被新規則吃掉）', () => {
     // 沒有這一支的話，一個把 `src/**` 都判成「測試」的規則也會通過上面那支。
     expect(classifyFile('src/components/cpp/vector_declare/generate.ts')).toBe('實作')
-    expect(classifyFile('src/components/cpp/vector_declare/component.json'), '膠囊的宣告與 concepts.json 同一類').toBe('宣告')
+    expect(classifyFile('src/components/cpp/vector_declare/component.json'), '膠囊的宣告與 components.json 同一類').toBe('宣告')
     expect(classifyFile('src/components/cpp/vector_declare/forms/blocks.json')).toBe('宣告')
   })
 
   it('★ 判準是路徑規則，不是檔名清單（FC-1）', () => {
     // 一份**還不存在**的清單檔要能被判對——手寫清單做不到這件事。
     expect(classifyFile('src/languages/python/topics/py-beginner.json')).toBe('清單')
-    expect(classifyFile('src/languages/python/std/list/concepts.json')).toBe('宣告')
+    expect(classifyFile('src/languages/python/std/list/components.json')).toBe('宣告')
   })
 })

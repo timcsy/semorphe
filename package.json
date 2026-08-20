@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify-concepts": "npx tsx src/scripts/verify-concept-paths.ts",
+    "verify-components": "npx tsx src/scripts/verify-component-paths.ts",
     "test:e2e": "playwright test",
     "build:vscode": "npx tsx src/scripts/build-vscode.ts",
     "install:ide": "node tools/install-ide.mjs",

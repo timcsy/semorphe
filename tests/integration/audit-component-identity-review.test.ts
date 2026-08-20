@@ -32,7 +32,7 @@
  *
  * ## 本護欄不檢測什麼
  *
- * **維度**：只看**宣告**（`concepts.json` 的欄位）與**名字的形狀**。
+ * **維度**：只看**宣告**（`components.json` 的欄位）與**名字的形狀**。
  * 不看實作品質、不看語義是否正確、不看形態長得好不好。
  * 一顆宣告完美而執行器全錯的元件，這裡是乾淨的。
  *
@@ -78,8 +78,8 @@ const BY_ID = new Map(ALL.map((c) => [c.componentId, c]))
  * - 「零測試足跡」**全部沒中**，因為 `tests/baselines/*.json` 與 `tests/assets/*.json`
  *   **本身就列出每一顆元件**——那是清冊不是測試。
  * - 「標 universal 但只有語言側」**永遠不會中**，因為每顆通用元件的宣告都在
- *   `universal-concepts.json`（非 `languages/`），中立側永遠 ≥ 1。
- * - 「足跡極小」也幾乎不會中，因為任何元件至少出現在自己的 concepts.json ＋ blocks.json。
+ *   `universal-components.json`（非 `languages/`），中立側永遠 ≥ 1。
+ * - 「足跡極小」也幾乎不會中，因為任何元件至少出現在自己的 components.json ＋ blocks.json。
  *
  * **抓到第一個的是本檔的自我否證聲明**（「這個是 0 就代表偵測沒接上」），
  * 另外兩個是順著它推出來的。
@@ -151,7 +151,7 @@ for (const c of ALL) {
 }
 
 // ── 信號 3：**實作**足跡極小 → 死概念或殼
-// 用實作足跡而非總足跡：任何元件至少出現在自己的 concepts.json ＋ blocks.json，
+// 用實作足跡而非總足跡：任何元件至少出現在自己的 components.json ＋ blocks.json，
 // 用總足跡的話這個信號幾乎不可能中。
 for (const c of ALL) {
   const n = footprint(implFiles, c.componentId).length
@@ -357,8 +357,8 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
     // 它的負向斷言必然提到別的元件身分，算成實作擴散會讓別人的數字上升。
     expect(classify('tests/integration/sstream-input.test.ts'), '真正的測試不得被當成清冊排除掉').toBe('測試')
     expect(classify('src/components/cpp/vector_declare/spec.test.ts'), '膠囊裡的自證測也要算測試足跡').toBe('測試')
-    expect(classify('src/languages/cpp/std/vector/concepts.json'), '元件自己的定義不是它的實作').toBe('宣告')
-    expect(classify('src/core/universal-concepts.json')).toBe('宣告')
+    expect(classify('src/languages/cpp/std/vector/components.json'), '元件自己的定義不是它的實作').toBe('宣告')
+    expect(classify('src/core/universal-components.json')).toBe('宣告')
     expect(classify('src/languages/cpp/topics/cpp-beginner.json'), '課程清單是登錄表的視圖，不是實作').toBe('清單')
     expect(classify('src/languages/cpp/std/vector/executors.ts'), '執行器是實作').toBe('實作')
   })

@@ -15,10 +15,10 @@
  * > **一個函式長得像實作，不代表它是實作。**
  * > 判準：把它的分支排成表，每一列還剩下什麼？只剩資料 → 它是分派表。
  *
- * 那三列因此塞得進 `call-concepts` 這張已被第二顆膠囊驗證的表——
+ * 那三列因此塞得進 `call-components` 這張已被第二顆膠囊驗證的表——
  * 只需要讓表多帶一個「引數槽名」。
  */
-import { registerCallConcept } from '../../../core/component/call-concepts'
+import { registerCallConcept } from '../../../core/component/call-components'
 
 export function registerLift(): void {
   registerCallConcept('pow', {

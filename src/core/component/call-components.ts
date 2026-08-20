@@ -33,7 +33,7 @@
  * |---|---|---|
  * | `container-templates` | 宣告的型別 | `vector<int> v;` |
  * | **這一張** | 自由函式呼叫 | `sqrt(x)` |
- * | `method-concepts` | 方法呼叫 | `s.find_first_not_of(x)` |
+ * | `method-components` | 方法呼叫 | `s.find_first_not_of(x)` |
  *
  * 不合併是因為**位置決定形狀**：方法多一個 `obj`，宣告根本不是呼叫。
  * 合併成一張要嘛塞進一堆 optional 欄位，要嘛在查詢端再分一次流。

@@ -12,7 +12,7 @@
  * > 那種形式連掃描器都看得到，而**它不會出現在任何「建立點」的統計裡**
  * > ——因為它不是建立，是選名字。
  */
-import { registerQualifierConcept } from '../../../core/component/qualifier-concepts'
+import { registerQualifierConcept } from '../../../core/component/qualifier-components'
 
 export function registerLift(): void {
   registerQualifierConcept('constexpr', 'cpp:var_declare_constexpr', 'cpp/var_declare_constexpr')

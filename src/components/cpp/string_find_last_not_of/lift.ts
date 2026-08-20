@@ -8,7 +8,7 @@
  *
  * → 搬進膠囊順帶治了它：**身分現在是字面字串，掃描器看得到。**
  */
-import { registerMethodConcept } from '../../../core/component/method-concepts'
+import { registerMethodConcept } from '../../../core/component/method-components'
 
 export function registerLift(): void {
   registerMethodConcept('find_last_not_of', 'cpp:string_find_last_not_of', 'cpp/string_find_last_not_of', ['arg'])

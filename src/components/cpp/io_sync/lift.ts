@@ -5,7 +5,7 @@
  * ——`ios::sync_with_stdio` 與 `ios_base::sync_with_stdio` 是**同一個函式**。
  * 產出時正規化成前者（見 `generate.ts` 的理由）。
  */
-import { registerCallConcept } from '../../../core/component/call-concepts'
+import { registerCallConcept } from '../../../core/component/call-components'
 
 export function registerLift(): void {
   registerCallConcept(

@@ -2,7 +2,7 @@
  * `cpp:pair_make` 的 **lift** 路——**一個帶真邏輯的分支**
  *
  * 原本是 `lifters/io.ts` 的 `if (funcName === 'make_pair' || funcName === 'std::make_pair') { … }`。
- * 它塞不進 `call-concepts` 那張純資料表——判別本身是這顆元件的知識
+ * 它塞不進 `call-components` 那張純資料表——判別本身是這顆元件的知識
  * （「`make_pair` 帶這些引數時是我」），不是路由器的知識。
  *
  * > **路由器該知道的是「去問誰」，不是「答案是什麼」。**

@@ -8,7 +8,7 @@
   },
   "provides": {
     "concepts": [
-      "./core/concepts.json"
+      "./core/components.json"
     ],
     "blocks": [
       "./core/blocks.json"

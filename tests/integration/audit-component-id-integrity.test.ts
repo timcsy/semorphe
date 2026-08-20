@@ -77,7 +77,7 @@ function staticScan(extra: { file: string; source: string }[] = []): Site[] {
   ]
   const out: Site[] = []
   for (const { file, source } of files) {
-    // ⚠️ **先剝掉註解。** 第一次跑報了 `verify-concept-paths.ts:78` 的 `componentId`
+    // ⚠️ **先剝掉註解。** 第一次跑報了 `verify-component-paths.ts:78` 的 `componentId`
     // ——那是一行**註解裡的範例**（`// Match createNode('componentId', ...) patterns`）。
     //
     // 而剝離註解的處方**專案早就有了**（`splitCodeAndComments`，中立性護欄在用），
@@ -146,7 +146,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
   })
 
   it('★ **註解裡**的 createNode 不得被報出', () => {
-    // 迴歸釘：第一次跑報了 `verify-concept-paths.ts:78`，而那是註解裡的範例。
+    // 迴歸釘：第一次跑報了 `verify-component-paths.ts:78`，而那是註解裡的範例。
     const hit = measure([
       { file: '合成/註解.ts', source: "// Match createNode('__註解裡的假身分__', ...) patterns\n" },
     ]).find((f) => f.id === '__註解裡的假身分__')

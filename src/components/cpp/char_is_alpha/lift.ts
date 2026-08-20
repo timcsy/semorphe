@@ -18,7 +18,7 @@
  * （相對於 `strategies.ts` 那 41 顆已驗證）。**實測結果：兩批是同一種形狀。**
  * 那 109 顆的估計因此可以合併。
  */
-import { registerSingleArgFunction } from '../../../core/component/call-concepts'
+import { registerSingleArgFunction } from '../../../core/component/call-components'
 
 export function registerLift(): void {
   registerSingleArgFunction('isalpha', 'cpp:char_is_alpha', 'cpp/char_is_alpha')

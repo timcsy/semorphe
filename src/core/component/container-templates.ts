@@ -61,7 +61,7 @@ export function containerTemplateSources(): [templateName: string, source: strin
  *
  * 與上面那張的差別是**語法位置**：容器樣板是 `vector<int> v;`（template_type），
  * 這些是 `string s;`（type_identifier，可能包在 `std::` 裡）。
- * 判別邏輯不同，所以是兩張表——**位置決定形狀**（同 `call-concepts` 的三表註解）。
+ * 判別邏輯不同，所以是兩張表——**位置決定形狀**（同 `call-components` 的三表註解）。
  *
  * ⚠️ 表是空的：核心給機制、套件給資料。
  */

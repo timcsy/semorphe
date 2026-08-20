@@ -14,7 +14,7 @@ import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
-import { qualifierConcept } from '../../../core/component/qualifier-concepts'
+import { qualifierConcept } from '../../../core/component/qualifier-components'
 import { buildUsingNamespace } from '../../../components/cpp/using_namespace/lift'
 import { buildDefine } from '../../../components/cpp/define/lift'
 
@@ -109,7 +109,7 @@ export function registerCppLifters(lifter: Lifter, registries?: CppRegistries): 
         (c) => c !== nameNode && !isMacroName(c) && c.type !== 'preproc_arg',
       ),
     )
-    // 指令 → 身分由膠囊登錄（`core/component/qualifier-concepts.ts`）。
+    // 指令 → 身分由膠囊登錄（`core/component/qualifier-components.ts`）。
     // 這裡只認語法：開頭是不是 `#ifndef`。
     const command = node.text.trimStart().startsWith('#ifndef') ? 'ifndef' : 'ifdef'
     const concept = qualifierConcept(command)

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import * as path from 'path'
-import { verify } from '../../../src/scripts/verify-concept-paths'
+import { verify } from '../../../src/scripts/verify-component-paths'
 
 const ROOT_DIR = path.resolve(__dirname, '../../..')
 
-describe('verify-concept-paths', () => {
+describe('verify-component-paths', () => {
   it('should scan and produce reports for all concepts', () => {
     const { reports } = verify(ROOT_DIR)
     expect(reports.length).toBeGreaterThan(0)
