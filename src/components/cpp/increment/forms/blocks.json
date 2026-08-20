@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_INCREMENT_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "field_dynamic_dropdown",
           "name": "NAME",
-          "text": "i"
+          "source": "vars"
         },
         {
           "type": "field_dropdown",
@@ -78,7 +78,8 @@
         "OP": "operator",
         "POSITION": "position"
       }
-    }
+    },
+    "_why": "🔴 **spec 169：靜態 `field_input` → 宣告式的動態下拉。**\n命令式那份是 `FieldDropdown(() => getWorkspaceVarOptions())`——**跟著工作區長的下拉**，而宣告只能退成一個死的文字框（預設 `i`）。比對護欄逐字印出：`變數,⟨活下拉⟩ vs 變數,i`。\n🟢 `field_dynamic_dropdown`（spec 164 的機制）讓宣告表達得出這件事——**這一顆不需要可變參數，所以它是這批裡最便宜的一筆。**"
   },
   {
     "id": "cpp_increment_expression",

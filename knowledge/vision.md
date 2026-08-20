@@ -375,13 +375,33 @@ languages/{lang}/
       語言管線（產生器/lifters/鷹架/診斷）          🟡 12，棘輪 → 下面那一格
       ```
 
-- [ ] 🎯 **重量那 10 筆命令式積木**——`leadingField` 可能已經解掉其中一批
-      vision 原本把剩下的分成「需要可變參數＋前置欄位」與「需要依 extraState 換視覺」，
-      而 🔴 **前者的阻斷（`VariadicSpec.leadingField`）在 spec `168` 已經存在**
-      ——它是 `python:func_call` 逼出來的（標籤 ＋ 名字下拉 ＋ 可變引數）。
+- [ ] 🎯 **重量那 10 筆命令式積木**——2026-08-21 量過了，而**缺的那一格換了名字**
+
+      🔴 **原本的說法「需要可變參數＋前置欄位」不夠精確。** `VariadicSpec.leadingField`
+      （spec `168`，`python:func_call` 逼出來的）給了**能力**，而版面結構仍然不同：
+
+      ```
+      命令式      appendDummyInput('LABEL')   標籤與下拉在一個【獨立的啞輸入】裡
+                  ARG_0…（值輸入）
+                  appendDummyInput('TAIL')    ±
+      建構子      appendValueInput('EXPR0')   標籤【掛在第一個值輸入上】
+                  TAIL
+      ```
+
+      → **真正缺的是「前置的啞輸入」**（`cpp_func_call`／`cpp_func_call_expression`／
+      `cpp_input` 三筆卡在這裡）。⚠️ `cpp_print` 之所以退得掉，是因為它的命令式版本
+      **本來就把標籤掛在值輸入上**——同一個機制，兩種版面。
+
+      🟢 **已經解掉的**：`cpp_increment` 的欄位對上了（宣告式從死的文字框
+      改成 `field_dynamic_dropdown`）——**它不需要可變參數，是這批裡最便宜的**。
+      ⚠️ 而它還差一個 `MAIN` 啞輸入，與上面三筆是同一個缺口。
+
+      剩下四筆是**另一族**（`cpp_if` 的 elseif 鏈、`cpp_doc_comment` 的 paramCount、
+      兩顆格式化 I/O）——報表逐字寫著「**載入時的狀態 …—— 宣告表達不出**」。
+
       驗收：`block-def-parity` 的 `differ` 下降，而**判準是「比對護欄說它們一模一樣」**，
-      不是「看起來很像」。
-      ⚠️ 反向：那批退場之後 `dual-truth` 與 `neutrality.blockTypes` 要一起降。
+      不是「看起來很像」。⚠️ 反向：那批退場之後 `dual-truth` 與
+      `neutrality.blockTypes` 要一起降。
 
 - [ ] **網頁版的空行**——`preserveBlankLines` 只接在擴充那側（`vscode-code-view.ts:229`）
       🔴 **而它可能是刻意的**：擴充那側動的是**使用者的檔案**，網頁版的程式碼面板是產出來的。
