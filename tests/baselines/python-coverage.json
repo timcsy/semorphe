@@ -12,7 +12,7 @@
   "degraded": 21,
   "roundTripDiff": 0,
   "genericCall": 30,
-  "runFailed": 12,
+  "runFailed": 8,
   "unresolvedTypes": {
     "function_definition": 1,
     "parameters": 1,
