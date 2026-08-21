@@ -56,3 +56,26 @@ describe('python:compare', () => {
     expect(await runPython('print([1,2] == [1,2])\n'), '容器逐格比').toContain('True')
   })
 })
+
+/**
+ * 🔴 **序對逐格比**（2026-08-22）。`sorted(key=lambda p: (-p[1], p[0]))`
+ * 的鍵是一個 tuple，而比較器曾經只認數字與字串——`toNumber` 對序對給 NaN，
+ * 所有比較都變成 false，於是排序**退化成原本的順序**。
+ *
+ * ⚠️ 症狀看起來像「`key=` 沒生效」，而其實是比較器不認得那種鍵。
+ */
+describe('序對的大小', () => {
+  it('🔴 先比第一格，相同才比第二格', async () => {
+    expect(await runPython('print(sorted([(2, "b"), (1, "a"), (2, "a")]))\n'))
+      .toContain("[(1, 'a'), (2, 'a'), (2, 'b')]")
+  })
+
+  it('🔴 排序的鍵是序對時也要對——這是它被發現的場景', async () => {
+    const out = await runPython('text = "banana"\ncount = {}\nfor ch in text:\n    count[ch] = count.get(ch, 0) + 1\nfor ch, n in sorted(count.items(), key=lambda p: (-p[1], p[0])):\n    print(ch, n)\n')
+    expect(out).toContain('a 3\nn 2\nb 1')
+  })
+
+  it('★ 前面都相同時短的比較小', async () => {
+    expect(await runPython('print(sorted([(1, 2), (1,)]))\n')).toContain('[(1,), (1, 2)]')
+  })
+})

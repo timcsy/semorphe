@@ -4,8 +4,8 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 224,
-    "exportCount": 533
+    "fileCount": 225,
+    "exportCount": 535
   },
   "husks": 0,
   "duplicates": 0,

@@ -20,6 +20,8 @@
  */
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+// 🔴 「格式規格」只有一份——舊式的 `%.2f` 與新式的 `{:.2f}` 是同一套語義。
+import { applyFormatSpec } from '../../../languages/python/format-spec'
 
 /**
  * ⚠️ **布林在 Python 是整數的一種**——`True + True` 是 `2` 不是 `2.0`。
@@ -49,11 +51,26 @@ export function applyPythonBinary(
     if (op === '%' && l.type === 'string') {
       const args = r.type === 'array' ? (r.value as RuntimeValue[]) : [r]
       let i = 0
+      // 🔴 **舊式的格式也有旗標／寬度／精度**（`%.2f`、`%5d`、`%-10s`），
+      //    而它們與新式的 `{:…}` 是**同一套語義**——所以翻譯過去，
+      //    不要在這裡再寫一份。少了這一段的症狀是 `"%.2f" % x` 原樣印出
+      //    `%.2f`（樣式沒被認出來）而 `%d` 不截斷小數。
       return {
         type: 'string',
-        value: String(l.value).replace(/%[sdif]/g, () => {
+        value: String(l.value).replace(/%(?:([-+ 0#]*)(\d+)?(?:\.(\d+))?([sdifeExXo%])|%)/g, (whole, flags: string, width: string, prec: string, type: string) => {
+          if (whole === '%%') return '%'
           const v = args[i++]
-          return v === undefined ? '' : v.type === 'bool' ? (v.value ? 'True' : 'False') : String(v.value)
+          if (v === undefined) return ''
+          const align = flags?.includes('-') ? '<' : ''
+          const zero = flags?.includes('0') ? '0' : ''
+          const sign = flags?.includes('+') ? '+' : flags?.includes(' ') ? ' ' : ''
+          // `%i` 是 `%d` 的別名；`%s` 在新式裡也是 `s`
+          const t = type === 'i' ? 'd' : type
+          const spec = `${align}${sign}${zero}${width ?? ''}${prec === undefined ? '' : `.${prec}`}${t}`
+          // ⚠️ `%d` 吃小數時 Python **截斷**（`%d % 92.456` 是 92），
+          //    而新式的 `d` 對小數是錯誤——所以先截。
+          const value = t === 'd' && typeof v.value === 'number' ? { ...v, type: 'int' as const, value: Math.trunc(v.value) } : v
+          return applyFormatSpec(value, spec)
         }),
       }
     }

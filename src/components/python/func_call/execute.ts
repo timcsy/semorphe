@@ -14,6 +14,11 @@
  * ④ 內建的自由函式  `len`／`max`／`str`…
  * ```
  *
+ * 🔴 **而在②之前還有一步：這個名字是不是一個【拿在手上的函式】**
+ * （`def twice(f, x): return f(x, x)` 裡的 `f`）。
+ * 少了它的症狀是「沒有這個函式 f」——而 `f` 明明就在作用域裡，
+ * 只是它是一個**值**不是一個定義。
+ *
  * 🔴 **`obj.method()` 不在這裡**——它有自己的元件（接收者是一個**接點**）。
  * 在那顆之前，這裡靠拆名字裡的點來找接收者，而**每一種新的接收者形狀
  * 都變成一道新的字串解析題**（`line.strip()`、`"-"`、`parts[0]` 各一種）。
@@ -25,6 +30,7 @@
  * 預設值那條只會在其中一處被修好。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { Scope } from '../../../interpreter/scope'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { callWith, withCall } from '../func_def/call'
@@ -36,11 +42,31 @@ export function registerExecute(register: (component: string, executor: Componen
     const argValues: RuntimeValue[] = []
     for (const a of node.children.args ?? []) argValues.push(await ctx.evaluate(a))
 
+    // 🔴 **拿在手上的函式優先於同名的定義**：參數遮蔽外層是作用域的規則
+    if (ctx.scope.has(name)) {
+      const held = ctx.scope.get(name)
+      if (held.type === 'function') return withCall(ctx).call(held, argValues)
+    }
+
     const funcDef = ctx.functions.get(name)
 
     // ① 類別的建構：建一個實例，再跑 `__init__`
     if (funcDef && funcDef.returnType === name && funcDef.body.length === 0) {
       const self: RuntimeValue = { type: 'object', value: new Map() as ObjectFields, structName: name }
+      // 🔴 **類別層級的屬性先跑**——它們是每個實例的初始值（見那顆元件的宣告）。
+      //    ⚠️ 跑在一個**以 self 為家**的作用域裡：`total = 0` 寫在類別裡，
+      //    而它要變成 `self.total`。
+      const fields = ctx.functions.get(`${name}.__fields__`)
+      if (fields && fields.body.length > 0) {
+        const parent = ctx.scope
+        ctx.scope = new Scope(parent)
+        try {
+          await ctx.executeBody(fields.body)
+          for (const [k, v] of ctx.scope.own()) (self.value as ObjectFields).set(k, v)
+        } finally {
+          ctx.scope = parent
+        }
+      }
       const init = ctx.functions.get(`${name}.__init__`)
       if (init) await callWith(init, [self, ...argValues], ctx, name)
       return self

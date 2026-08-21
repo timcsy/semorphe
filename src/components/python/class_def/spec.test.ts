@@ -28,8 +28,13 @@ describe('python:class_def', () => {
     expect(await ids('class D(A, B):\n    def m(self):\n        pass\n')).not.toContain('python:class_def')
   })
 
-  it('🔴 lift：類別層級的屬性也整顆降級——還沒有地方放', async () => {
-    expect(await ids('class C:\n    count = 0\n')).not.toContain('python:class_def')
+  /**
+   * ⚠️ **這條原本釘的是「類別層級的屬性整顆降級」，而邊界在 2026-08-22 移動了**
+   * ——它們收得下（每個實例各一份的初始值）。今天降級的是**巢狀類別**
+   * 與**裝飾器**：`class` 的身體裡出現方法與指派以外的東西。
+   */
+  it('🔴 lift：類別身體裡的其他東西仍然整顆降級', async () => {
+    expect(await ids('class C:\n    class Inner:\n        pass\n')).not.toContain('python:class_def')
   })
 
   it('來回：一字不差', async () => {
@@ -77,5 +82,36 @@ describe('繼承', () => {
   it('🔴 多重繼承走誠實降級——積木上只有一格', async () => {
     expect(componentIdsOf(await liftPython('class D(A, B):\n    def m(self):\n        pass\n')))
       .not.toContain('python:class_def')
+  })
+})
+
+/**
+ * 🔴 **`super()` 與類別層級的屬性**（2026-08-22）。
+ */
+describe('super 與類別層級的屬性', () => {
+  it('🔴 `super().__init__(…)` 用同一個 self，而方法從上一層開始找', async () => {
+    const out = await runPython(
+      'class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    def __init__(self, name, color):\n        super().__init__(name)\n        self.color = color\n\n    def speak(self):\n        return super().speak() + "汪"\n\nd = Dog("小黑", "黑")\nprint(d.name, d.color)\nprint(d.speak())\n',
+    )
+    expect(out, '父的建構式沒跑到').toContain('小黑 黑')
+    expect(out, '被覆蓋的方法仍然叫得到上一層').toContain('...汪')
+  })
+
+  it('🔴 不在方法裡用 `super()` 要出聲', async () => {
+    expect(await runPython('super().x()\n')).toMatch(/例外|錯誤|Error/)
+  })
+
+  it('🔴 類別層級的屬性變成每個實例的初始值', async () => {
+    const out = await runPython(
+      'class Counter:\n    total = 0\n\n    def __init__(self):\n        self.n = 0\n\n    def bump(self):\n        self.n += 1\n        return self.n\n\nc = Counter()\nprint(c.bump(), c.bump())\nprint(c.n, c.total)\n',
+    )
+    expect(out).toContain('1 2')
+    expect(out).toContain('2 0')
+  })
+
+  it('★ 來回：欄位排在方法之前，一字不差', async () => {
+    const code = 'class C:\n    n = 0\n\n    def m(self):\n        pass\n'
+    expect(gen(await liftPython(code)).replace(/\n+/g, '\n').trimEnd())
+      .toBe(code.replace(/\n+/g, '\n').trimEnd())
   })
 })

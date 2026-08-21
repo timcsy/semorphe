@@ -31,6 +31,8 @@ import { pythonDisplay as pyStr } from './value-display'
 import { dictKeys } from './dict'
 // 🔴 「冒號後面那一段」只有一份——格式化文字與 `.format(...)` 共用。
 import { applyFormatSpec } from './format-spec'
+// 🔴 「兩個值誰大」只有一份——比較運算子、串接比較、排序共用（見那個模組的檔頭）。
+import { compareForSort as compare } from './compare'
 
 /**
  * 求值用的最小介面。
@@ -82,29 +84,6 @@ async function sortWith(items: RuntimeValue[], args: RuntimeValue[], c: builtinC
   const keyed: { k: RuntimeValue; v: RuntimeValue }[] = []
   for (const v of items) keyed.push({ k: await c.call(key, [v]), v })
   return keyed.sort((x, y) => dir * compare(x.k, y.k)).map((x) => x.v)
-}
-
-/**
- * 兩個值誰大——**排序與 `max`／`min` 共用這一份**。
- *
- * 🔴 **字串比字典序**：`max("a", "b")` 是 `"b"`，而 `toNumber` 對字串給 `NaN`
- * ——`NaN > NaN` 恆假，於是它**永遠回傳第一個**。看起來像有答案，而那是巧合。
- */
-function compare(x: RuntimeValue, y: RuntimeValue): number {
-  if (x?.type === 'string' && y?.type === 'string') {
-    const a = String(x.value), b = String(y.value)
-    return a < b ? -1 : a > b ? 1 : 0
-  }
-  return NaN2Zero(x) - NaN2Zero(y)
-}
-function NaN2Zero(v: RuntimeValue): number {
-  const n = numberOf(v)
-  return Number.isNaN(n) ? 0 : n
-}
-/** ⚠️ 這裡不能用 `c.toNumber`——比較器必須同步，而它拿不到 ctx。 */
-function numberOf(v: RuntimeValue): number {
-  if (v?.type === 'bool') return v.value ? 1 : 0
-  return Number(v?.value)
 }
 
 const num = (v: number): RuntimeValue => ({ type: Number.isInteger(v) ? 'int' : 'double', value: v })
@@ -270,6 +249,40 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     const out: RuntimeValue[] = []
     for (const x of asList(a[1])) if (truthy(await c.call(a[0], [x]))) out.push(x)
     return arr(out)
+  },
+  /**
+   * 🔴 **`bool` 要排在 `int` 之前判**——Python 的 `True` **是**一個整數
+   * （`isinstance(True, int)` 是 `True`），而學生寫的 `elif isinstance(x, bool)`
+   * 期待它與整數分得開。這裡照實回答，順序由使用者的 `if` 鏈決定。
+   *
+   * ⚠️ 認不得的型別名**丟錯**，不要回 `False`：`False` 與「這個型別我不認得」
+   * 在畫面上長得一模一樣。
+   */
+  isinstance: (a) => {
+    const v = a[0]
+    // ⚠️ **第二個引數是一個名字，而 `int`／`str` 這些名字求值出來是【函式值】**
+    //    （Python 的型別本身可以呼叫）——所以這裡讀的是它指到的名字。
+    const t = a[1]
+    const want = t?.type === 'function' && t.value && typeof t.value === 'object' && 'name' in t.value
+      ? String((t.value as { name: string }).name)
+      : String(t?.value ?? '')
+    const is = (t: string): boolean => {
+      switch (t) {
+        case 'int': return v?.type === 'int' || v?.type === 'bool' || v?.type === 'char'
+        case 'float': return v?.type === 'double' || v?.type === 'float'
+        case 'str': return v?.type === 'string'
+        case 'bool': return v?.type === 'bool'
+        case 'list': case 'tuple': return v?.type === 'array'
+        case 'dict': return v?.type === 'object'
+        default: return false
+      }
+    }
+    // 使用者自己的類別：第二個引數是一個**類別名**，而實例帶著它
+    if (!['int', 'float', 'str', 'bool', 'list', 'tuple', 'dict'].includes(want)) {
+      if (v?.type === 'object' && v.structName) return bool(v.structName === want)
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `isinstance：不認得型別 ${want}` })
+    }
+    return bool(is(want))
   },
   any: (a) => bool(asList(a[0]).some(truthy)),
   all: (a) => bool(asList(a[0]).every(truthy)),

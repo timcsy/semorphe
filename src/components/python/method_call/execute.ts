@@ -10,8 +10,10 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
-import { withCall } from '../func_def/call'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { callWith, withCall } from '../func_def/call'
 import { callMethod } from './dispatch'
+import { isNamedCall } from '../../../core/component/traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:method_call', async (node, ctx) => {
@@ -28,6 +30,30 @@ export function registerExecute(register: (component: string, executor: Componen
         for (const a of node.children.args ?? []) modArgs.push(await ctx.evaluate(a))
         return modFn(modArgs, withCall(ctx))
       }
+    }
+
+    // 🔴 **`super().__init__(…)`**：接收者是一個對 `super` 的呼叫，而它在
+    //    作用域裡不存在。它的意思是「同一個 self，而方法從**上一層**開始找」。
+    //
+    // ⚠️ **上一層是誰記在函式表裡**（`類別.__base__`，見類別定義那顆）——
+    //    而「哪一個類別」由 `self` 自己帶著（`structName`）。
+    //    少了這一段的症狀是「沒有這個函式 super」，而使用者寫的是
+    //    Python 裡最標準的建構式串接。
+    // ⚠️ **問性狀不看身分**——`isNamedCall` 是同族那顆自己宣告的，
+    //    而拿身分比對的話那顆改名時不會有人發現。
+    if (isNamedCall(objNode.componentId) && String(objNode.properties?.name ?? '') === 'super') {
+      const self = ctx.scope.has('self') ? ctx.scope.get('self') : null
+      if (!self || self.type !== 'object' || !self.structName) {
+        throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': 'super()（不在方法裡）' })
+      }
+      const base = ctx.functions.get(`${self.structName}.__base__`)?.name
+      const fn = base ? ctx.functions.get(`${base}.${method}`) : undefined
+      if (!fn) {
+        throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `super().${method}()` })
+      }
+      const superArgs: RuntimeValue[] = []
+      for (const a of node.children.args ?? []) superArgs.push(await ctx.evaluate(a))
+      return callWith(fn, [self, ...superArgs], ctx, `super().${method}`)
     }
 
     const self = await ctx.evaluate(objNode)

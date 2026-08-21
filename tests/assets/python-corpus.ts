@@ -604,4 +604,73 @@ print(len(memo))`],
 
 print(total(1, 2, 3))
 print(total())`],
+  ['呼叫父類別的建構式', `class Animal:
+    def __init__(self, name):
+        self.name = name
+
+class Dog(Animal):
+    def __init__(self, name, color):
+        super().__init__(name)
+        self.color = color
+
+d = Dog("小黑", "黑")
+print(d.name, d.color)`],
+  ['型別判斷', `xs = [1, "a", 3.5, True]
+for x in xs:
+    if isinstance(x, str):
+        print("文字", x)
+    elif isinstance(x, bool):
+        print("真假", x)
+    elif isinstance(x, int):
+        print("整數", x)
+    else:
+        print("其他", x)`],
+  ['類別層級的屬性', `class Counter:
+    total = 0
+
+    def __init__(self):
+        self.n = 0
+
+    def bump(self):
+        self.n += 1
+        return self.n
+
+c = Counter()
+print(c.bump(), c.bump())
+print(c.n)`],
+  ['字典裡放串列', `groups = {}
+words = ["ant", "bee", "ape", "bat"]
+for w in words:
+    k = w[0]
+    if k not in groups:
+        groups[k] = []
+    groups[k].append(w)
+for k in sorted(groups):
+    print(k, groups[k])`],
+  ['百分號格式化', `name = "小明"
+score = 92.456
+print("%s 得了 %d 分" % (name, score))
+print("%.2f" % score)
+print("%s|%s" % (name, "x"))`],
+  ['計次並排序', `text = "banana"
+count = {}
+for ch in text:
+    count[ch] = count.get(ch, 0) + 1
+for ch, n in sorted(count.items(), key=lambda p: (-p[1], p[0])):
+    print(ch, n)`],
+  ['字串建表', `rows = ["小明,90", "小華,85"]
+table = {}
+for r in rows:
+    name, score = r.split(",")
+    table[name] = int(score)
+print(table)
+print(sum(table.values()) / len(table))`],
+  ['多層函式呼叫', `def add(a, b):
+    return a + b
+
+def twice(f, x):
+    return f(x, x)
+
+print(twice(add, 5))
+print(add(twice(add, 1), 3))`],
 ]

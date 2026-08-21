@@ -182,6 +182,19 @@ export class Scope {
     return s
   }
 
+  /**
+   * **這一層自己的名字**——不含外層。
+   *
+   * ⚠️ 與 `getAll()` 的差別是「往不往上攤平」，而**用錯的症狀是安靜的**：
+   * 類別層級的屬性用 `getAll()` 收集的話，**外層的每一個變數都會被抄進實例裡**
+   * ——程式照跑，而每個物件多出一堆看不見的欄位。
+   *
+   * > **與 `hasLocal` 同一條線：「看得見」與「屬於這一層」是兩個問題。**
+   */
+  own(): Map<string, RuntimeValue> {
+    return new Map(this.variables)
+  }
+
   getAll(): Map<string, RuntimeValue> {
     const result = new Map<string, RuntimeValue>()
     if (this.parent) {

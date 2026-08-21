@@ -20,18 +20,26 @@
           "text": ""
         }
       ],
-      "message1": "%1",
+      "message1": "%{BKY_PY_CLASS_FIELDS} %1",
       "args1": [
         {
           "type": "input_statement",
-          "name": "METHODS",
+          "name": "FIELDS",
           "check": "Statement"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF6680",
-      "tooltip": "%{BKY_PY_CLASS_TOOLTIP}"
+      "tooltip": "%{BKY_PY_CLASS_TOOLTIP}",
+      "message2": "%1",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "METHODS",
+          "check": "Statement"
+        }
+      ]
     },
     "renderMapping": {
       "fields": {
@@ -39,6 +47,7 @@
         "BASE": "base"
       },
       "statementInputs": {
+        "FIELDS": "fields",
         "METHODS": "methods"
       }
     },

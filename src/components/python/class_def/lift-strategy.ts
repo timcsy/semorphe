@@ -24,15 +24,17 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 
     const body = node.childForFieldName('body')
     const members = body?.namedChildren ?? []
-    // 只收方法。其餘（類別層級的屬性、巢狀類別）→ 整顆降級
-    if (members.some((m) => m.type !== 'function_definition')) return null
-
+    // 🟢 **方法與類別層級的屬性都收**（2026-08-22）。其餘（巢狀類別、
+    //    裝飾器…）→ 整顆降級：收一半會產出一個**合法而行為不同**的類別。
     const methods: SemanticNode[] = []
+    const fields: SemanticNode[] = []
     for (const m of members) {
+      if (m.type !== 'function_definition' && m.type !== 'expression_statement') return null
       const lifted = ctx.lift(m)
-      if (!lifted) return null // 有一個方法認不出來 → 整顆降級，不產出少了方法的類別
-      methods.push(lifted)
+      if (!lifted) return null // 有一個認不出來 → 整顆降級，不產出少了東西的類別
+      if (m.type === 'function_definition') methods.push(lifted)
+      else fields.push(lifted)
     }
-    return createNode('python:class_def', { name: node.childForFieldName('name')?.text ?? 'MyClass', base }, { methods })
+    return createNode('python:class_def', { name: node.childForFieldName('name')?.text ?? 'MyClass', base }, { methods, fields })
   })
 }

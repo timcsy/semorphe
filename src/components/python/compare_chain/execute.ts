@@ -6,11 +6,11 @@
  *
  * 🔴 **而它會短路**：前半不成立就不算後半。
  *
- * ⚠️ 比較的語義（數字家族互比、型別不同就不等…）住在同族一般比較的
- * `compare.ts`——**這裡不重寫一份**。
+ * ⚠️ 比較的語義（數字家族互比、型別不同就不等、序對逐格比…）住在
+ * `languages/python/compare.ts`——**這裡不重寫一份**。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { comparePython } from '../compare/compare'
+import { comparePython } from '../../../languages/python/compare'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:compare_chain', async (node, ctx) => {

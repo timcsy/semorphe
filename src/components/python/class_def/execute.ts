@@ -36,6 +36,17 @@ export function registerExecute(register: (component: string, executor: Componen
         .filter((p) => p.name)
       ctx.functions.set(`${cls}.${mName}`, { name: mName, params, body: m.children.body ?? [], returnType: '' })
     }
+    // 🔴 **類別層級的屬性存成「建構時要跑的那幾行」**——見宣告裡的已知簡化：
+    //    它們在這裡是**每個實例各一份的初始值**，不是共用的一份。
+    ctx.functions.set(`${cls}.__fields__`, {
+      name: '__fields__', params: [], body: node.children.fields ?? [], returnType: '',
+    })
+    // 🔴 **父類別記在函式表裡**——`super().__init__(…)` 要靠它找到上一層。
+    //    ⚠️ 存在這裡而不是另開一張表：**一個實例找得到它的類別**（`structName`），
+    //    而類別的資料就該與它的方法放在同一個地方。
+    if (base) {
+      ctx.functions.set(`${cls}.__base__`, { name: base, params: [], body: [], returnType: base })
+    }
     // 類別本身也要在函式表裡——`Dog("小黑")` 是一個呼叫
     ctx.functions.set(cls, { name: cls, params: [], body: [], returnType: cls })
   })
