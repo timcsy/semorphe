@@ -218,6 +218,20 @@ describe('第五十條護欄：AI 生的 Python，我們處理得了多少', () 
     expect(ok, '參照一段都跑不動 → 量測機構壞了，不是語料壞了').toBeGreaterThan(20)
   })
 
+  /**
+   * 🔴 **名字重複的症狀是「參照對到別段程式」**（2026-08-22 撞到）：
+   * `reference` 是一個以名字為鍵的 Map，兩段同名時**後者覆蓋前者**，
+   * 於是前一段拿**別人的**正確答案來比——報表上多出一筆看起來很嚇人
+   * 而其實不存在的缺陷，同時**真正的那段被漏掉**。
+   *
+   * > **一個以名字為鍵的索引，在名字重複時不會報錯——它只會安靜地對錯。**
+   */
+  it('★ 錨點：語料的名字不得重複——否則參照會對到別段程式', () => {
+    const names = PYTHON_CORPUS.map(([n]) => n)
+    const dup = names.filter((n, i) => names.indexOf(n) !== i)
+    expect(dup, `重複的名字：${dup.join('、')}`).toEqual([])
+  })
+
   it('★ 錨點：語料真的載入且真的 lift 得出東西', () => {
     expect(PYTHON_CORPUS.length, '語料是空的 → 每個數字都是假的零').toBeGreaterThan(10)
     expect(r.nodes, '一個節點都沒 lift 出來 → 量測壞了，不是 Python 很完美').toBeGreaterThan(200)

@@ -29,10 +29,39 @@ export interface Callable {
   snapshot?: Map<string, RuntimeValue>
 }
 
+/**
+ * **一個函式被當成值拿在手上**——只記名字，不記實作。
+ *
+ * ```python
+ * sorted(words, key=len)     # ← 這個 len
+ * ```
+ *
+ * ⚠️ 記名字而不是記實作，是因為**同一個名字在呼叫的當下該查誰**是有順序的
+ * （使用者定義的蓋掉內建的），而那個順序只該有一份——住在呼叫的地方。
+ */
+export interface FuncRef {
+  ref: 'user' | 'builtin'
+  name: string
+}
+
 /** 執行期值 */
 export interface RuntimeValue {
   type: RuntimeType
-  value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable
+  /**
+   * 🔴 **這一串是 tuple 不是串列**——只影響「印出來長什麼樣」。
+   *
+   * ```
+   * print(list(enumerate([9])))   真 Python  [(0, 9)]   我們曾經  [[0, 9]]
+   * ```
+   *
+   * ⚠️ 刻意**不開一個新的 `RuntimeType`**：不可變是語言層的約束，而這個直譯器
+   * 還沒有那一層；每一處 `type === 'array'` 的判斷都仍然該對 tuple 成立。
+   * 開新型別的話，那幾十處會**一處一處地**在 tuple 上安靜失效。
+   *
+   * > **一個只在顯示上不同的東西，不該用型別去表示它。**
+   */
+  seqKind?: 'tuple'
+  value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable | FuncRef
   /** `type === 'object'` 時，它是哪一個結構／類別 */
   structName?: string
   /**

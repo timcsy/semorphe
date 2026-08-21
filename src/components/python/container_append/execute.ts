@@ -6,6 +6,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
+import { withCall } from '../func_def/call'
 import { PYTHON_BUILTIN_METHODS } from '../../../languages/python/builtins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -13,6 +14,6 @@ export function registerExecute(register: (component: string, executor: Componen
     const self = await ctx.evaluate(node.children.obj[0])
     const args: RuntimeValue[] = []
     args.push(await ctx.evaluate(node.children.value[0]))
-    return PYTHON_BUILTIN_METHODS['append'](self, args, ctx)
+    return PYTHON_BUILTIN_METHODS['append'](self, args, withCall(ctx))
   })
 }

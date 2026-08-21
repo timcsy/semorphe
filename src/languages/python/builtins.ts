@@ -40,37 +40,67 @@ import { pythonDisplay as pyStr } from './value-display'
  * ⚠️ 它是**非同步**的（求值一個 lambda 的本體要走直譯器），
  * 而比較器必須同步——所以排序是「**先把每一格的鍵算好，再排**」。
  *
- * ⚠️ 它是可選的：不是每個呼叫端都拿得到直譯器。拿不到而使用者給了 `key=` 時
- * **要出聲**，不得靜靜用預設比較。
+ * 🔴 **它是必要的，不是可選的**（2026-08-22 改）。曾經是可選，於是十一個
+ * 元件的執行器把**裸的 `ctx`** 遞進來——`max(d, key=…)` 當場丟
+ * 「這裡叫不動函式」，而使用者寫的是完全正確的 Python。
+ *
+ * > **一個可選的欄位，會讓「忘了給」與「刻意不給」長得一模一樣
+ * > ——而型別檢查對前者本來是有話要說的。**
  */
 export interface builtinCtx {
   toNumber(v: RuntimeValue): number
-  call?: (fn: RuntimeValue, args: RuntimeValue[]) => Promise<RuntimeValue>
+  call: (fn: RuntimeValue, args: RuntimeValue[]) => Promise<RuntimeValue>
 }
 
-/** 從引數裡撈出 `key=`（`param_named` 把它包成 `['__kw__key', 值]`）。 */
-function keyArg(args: RuntimeValue[]): RuntimeValue | null {
+/** 從引數裡撈出一個關鍵字引數（`param_named` 把它包成 `['__kw__名字', 值]`）。 */
+function kwArg(args: RuntimeValue[], name: string): RuntimeValue | null {
   for (const a of args) {
     if (a?.type !== 'array') continue
     const pair = a.value as RuntimeValue[]
-    if (pair.length === 2 && String(pair[0]?.value) === '__kw__key') return pair[1]
+    if (pair.length === 2 && String(pair[0]?.value) === `__kw__${name}`) return pair[1]
   }
   return null
 }
+const keyArg = (args: RuntimeValue[]): RuntimeValue | null => kwArg(args, 'key')
 
 /**
  * 照 `key=` 排序——**拿不到就丟錯，不要靜靜用預設比較**。
  */
 async function sortWith(items: RuntimeValue[], args: RuntimeValue[], c: builtinCtx): Promise<RuntimeValue[]> {
+  // 🔴 `reverse=True` 與 `key=` 是**兩個各自獨立**的關鍵字引數，
+  //    而它們常一起出現（`sorted(xs, key=len, reverse=True)`）。
+  //    漏掉 `reverse` 的症狀是**順序剛好相反**——有輸出、不報錯。
+  const rev = kwArg(args, 'reverse')
+  const dir = rev && rev.value === true ? -1 : 1
   const key = keyArg(args)
-  if (!key) return [...items].sort((x, y) => c.toNumber(x) - c.toNumber(y))
-  if (!c.call) {
-    throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': 'key=（這裡叫不動函式）' })
-  }
+  if (!key) return [...items].sort((x, y) => dir * compare(x, y))
   // 🟢 **先算好每一格的鍵，再排**——比較器必須同步，而求值是非同步的。
-  const keyed: { k: number; v: RuntimeValue }[] = []
-  for (const v of items) keyed.push({ k: c.toNumber(await c.call(key, [v])), v })
-  return keyed.sort((x, y) => x.k - y.k).map((x) => x.v)
+  const keyed: { k: RuntimeValue; v: RuntimeValue }[] = []
+  for (const v of items) keyed.push({ k: await c.call(key, [v]), v })
+  return keyed.sort((x, y) => dir * compare(x.k, y.k)).map((x) => x.v)
+}
+
+/**
+ * 兩個值誰大——**排序與 `max`／`min` 共用這一份**。
+ *
+ * 🔴 **字串比字典序**：`max("a", "b")` 是 `"b"`，而 `toNumber` 對字串給 `NaN`
+ * ——`NaN > NaN` 恆假，於是它**永遠回傳第一個**。看起來像有答案，而那是巧合。
+ */
+function compare(x: RuntimeValue, y: RuntimeValue): number {
+  if (x?.type === 'string' && y?.type === 'string') {
+    const a = String(x.value), b = String(y.value)
+    return a < b ? -1 : a > b ? 1 : 0
+  }
+  return NaN2Zero(x) - NaN2Zero(y)
+}
+function NaN2Zero(v: RuntimeValue): number {
+  const n = numberOf(v)
+  return Number.isNaN(n) ? 0 : n
+}
+/** ⚠️ 這裡不能用 `c.toNumber`——比較器必須同步，而它拿不到 ctx。 */
+function numberOf(v: RuntimeValue): number {
+  if (v?.type === 'bool') return v.value ? 1 : 0
+  return Number(v?.value)
 }
 
 const num = (v: number): RuntimeValue => ({ type: Number.isInteger(v) ? 'int' : 'double', value: v })
@@ -84,6 +114,49 @@ const num = (v: number): RuntimeValue => ({ type: Number.isInteger(v) ? 'int' : 
 const dbl = (v: number): RuntimeValue => ({ type: 'double', value: v })
 const str = (v: string): RuntimeValue => ({ type: 'string', value: v })
 const arr = (v: RuntimeValue[]): RuntimeValue => ({ type: 'array', value: v })
+/**
+ * 一格 tuple。`enumerate`／`zip`／`d.items()` 產的是**這個**，不是串列
+ * ——差別只在印出來（`(0, 9)` 對 `[0, 9]`），而使用者一眼看得到。
+ */
+const tup = (v: RuntimeValue[]): RuntimeValue => ({ type: 'array', value: v, seqKind: 'tuple' })
+
+/**
+ * 只留位置引數。
+ *
+ * 🔴 **`max(d, key=f)` 的 `key=` 也在 `args` 裡**（包成 `['__kw__key', 值]`），
+ * 而 `max` 用 `a.length === 1` 判斷「吃序列還是吃多個引數」
+ * ——於是它把那個關鍵字包裹**當成一個要比大小的候選人**，
+ * 比出 NaN，回傳第一個（也就是那個字典本身）。
+ *
+ * > **一個關鍵字引數混在位置引數裡，會讓「有幾個引數」這個問題的答案是錯的。**
+ */
+function positional(a: RuntimeValue[]): RuntimeValue[] {
+  return a.filter((x) => {
+    if (x?.type !== 'array') return true
+    const pair = x.value as RuntimeValue[]
+    return !(pair.length === 2 && String(pair[0]?.value ?? '').startsWith('__kw__'))
+  })
+}
+
+/**
+ * `max`／`min`——**含 `key=`**。
+ *
+ * ⚠️ `max(d, key=lambda k: d[k])` 走的是**鍵**（`asList` 對字典給鍵），
+ * 而回傳的是**原本那一格**，不是算出來的鍵值。
+ */
+async function extreme(a: RuntimeValue[], c: builtinCtx, sign: 1 | -1): Promise<RuntimeValue> {
+  const pos = positional(a)
+  const items = pos.length === 1 ? asList(pos[0]) : pos
+  if (items.length === 0) throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': 'max()／min() 拿到空的序列' })
+  const key = keyArg(a)
+  let best = items[0]
+  let bestK = key ? await c.call(key, [best]) : best
+  for (const x of items.slice(1)) {
+    const k = key ? await c.call(key, [x]) : x
+    if (sign * compare(k, bestK) > 0) { best = x; bestK = k }
+  }
+  return best
+}
 const bool = (v: boolean): RuntimeValue => ({ type: 'bool', value: v })
 
 
@@ -135,8 +208,8 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     return num(f % 2 === 0 ? f : f + 1)
   },
   // ⚠️ `max`／`min`／`sum` 吃**一個序列**或**多個引數**，兩種都要。
-  max: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) > c.toNumber(m) ? x : m)),
-  min: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) < c.toNumber(m) ? x : m)),
+  max: (a, c) => extreme(a, c, 1),
+  min: (a, c) => extreme(a, c, -1),
   sum: (a, c) => num(asList(a[0]).reduce((t, x) => t + c.toNumber(x), 0)),
   sorted: async (a, c) => arr(await sortWith(asList(a[0]), a.slice(1), c)),
   reversed: (a) => arr([...asList(a[0])].reverse()),
@@ -161,11 +234,11 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     for (let v = s; (st ?? 1) > 0 ? v < e : v > e; v += st ?? 1) out.push(num(v))
     return arr(out)
   },
-  enumerate: (a) => arr(asList(a[0]).map((x, i) => arr([num(i), x]))),
+  enumerate: (a) => arr(asList(a[0]).map((x, i) => tup([num(i), x]))),
   zip: (a) => {
     const ls = a.map(asList)
     const n = Math.min(...ls.map((l) => l.length))
-    return arr(Array.from({ length: n }, (_, i) => arr(ls.map((l) => l[i]))))
+    return arr(Array.from({ length: n }, (_, i) => tup(ls.map((l) => l[i]))))
   },
 }
 
@@ -200,7 +273,7 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   // 字典
   keys: (s) => arr([...(s.value as ObjectFields).keys()].map(str)),
   values: (s) => arr([...(s.value as ObjectFields).values()]),
-  items: (s) => arr([...(s.value as ObjectFields).entries()].map(([k, v]) => arr([str(k), v]))),
+  items: (s) => arr([...(s.value as ObjectFields).entries()].map(([k, v]) => tup([str(k), v]))),
   get: (s, a) => (s.value as ObjectFields).get(String(a[0].value)) ?? a[1] ?? { type: 'void', value: null },
   // 🔴 **`.format()` 與 `%` 是格式化文字之外的另外兩種寫法**——AI 生的
   //    Python 兩種都會出現，而它們與 f-string 是同一件事的三個語法。

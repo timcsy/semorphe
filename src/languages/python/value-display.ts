@@ -18,6 +18,7 @@
  * 3.0             小數保留小數點       C++ 的 3.0 印成 3
  * [1, 2]          串列有中括號與逗號
  * {'a': 1}        字典的鍵用單引號     ← Python 自己就是這樣印的
+ * (0, 9)          tuple 是圓括號       ← `enumerate`／`zip`／`d.items()` 產的是這個
  * ```
  *
  * ## 🔴 而**容器裡面的字串有引號，裸的字串沒有**
@@ -42,7 +43,12 @@ export function pythonDisplay(v: RuntimeValue, insideContainer = false): string 
     // `3.5` → `3.5`；`3.0` → `3.0`（Python 不會把它印成 `3`）
     return Number.isInteger(n) ? `${n}.0` : String(n)
   }
-  if (v.type === 'array') return `[${(v.value as RuntimeValue[]).map((x) => pythonDisplay(x, true)).join(', ')}]`
+  if (v.type === 'array') {
+    const xs = (v.value as RuntimeValue[]).map((x) => pythonDisplay(x, true))
+    // ⚠️ 一格的 tuple 印成 `(1,)`——那個逗號是 Python 用來與「加括號的運算式」分辨的
+    if (v.seqKind === 'tuple') return xs.length === 1 ? `(${xs[0]},)` : `(${xs.join(', ')})`
+    return `[${xs.join(', ')}]`
+  }
   if (v.type === 'object') {
     const e = [...(v.value as ObjectFields).entries()].map(([k, x]) => `'${k}': ${pythonDisplay(x, true)}`)
     return `{${e.join(', ')}}`

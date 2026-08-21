@@ -76,3 +76,43 @@ describe('內建函式與方法', () => {
     expect(await runPython('print([1, 2])\n')).toContain('[1, 2]')
   })
 })
+
+/**
+ * 🔴 **函式是值**——參照直譯器 2026-08-22 抓到的一族。
+ *
+ * 這四條的共通形狀是「**一個引數被靜靜忽略，或一個名字被當成打錯字**」，
+ * 而每一條都不報錯或報一個誤導的錯。
+ */
+describe('函式當成值傳、關鍵字引數', () => {
+  it('🔴 `key=len`：內建函式的裸名是一個值，不是「未宣告的變數」', async () => {
+    expect(await runPython('w = ["bb", "a", "ccc"]\nprint(sorted(w, key=len))\n')).toContain("['a', 'bb', 'ccc']")
+  })
+
+  it('🔴 `key=` 也可以是使用者定義的函式', async () => {
+    expect(await runPython('def neg(x):\n    return -x\n\nprint(sorted([1, 3, 2], key=neg))\n')).toContain('[3, 2, 1]')
+  })
+
+  it('★ 對照組：`len = 3` 之後那個名字就是變數了——變數優先', async () => {
+    expect(await runPython('len = 3\nprint(len)\n')).toContain('3')
+  })
+
+  it('🔴 `max(d, key=f)`：關鍵字引數不得被當成一個比大小的候選人', async () => {
+    const out = await runPython('d = {"a": 3, "b": 1}\nprint(max(d, key=lambda k: d[k]))\nprint(min(d, key=lambda k: d[k]))\n')
+    expect(out, `印出整個字典＝關鍵字包裹被當成候選人：${JSON.stringify(out)}`).toContain('a\nb')
+  })
+
+  it('🔴 `reverse=True` 不得被靜靜忽略——症狀是順序剛好相反', async () => {
+    expect(await runPython('print(sorted(["b", "a", "c"], reverse=True))\n')).toContain("['c', 'b', 'a']")
+  })
+
+  it('🔴 字串比大小走字典序——`toNumber` 給 NaN 而 `NaN > NaN` 恆假', async () => {
+    expect(await runPython('print(max("a", "b"), min("b", "a"))\n')).toContain('b a')
+  })
+
+  it('🔴 tuple 印出來是圓括號——`enumerate`／`zip`／`items()` 產的是 tuple', async () => {
+    const out = await runPython('print(list(enumerate([9])))\nprint((1,))\nd = {"a": 1}\nprint(list(d.items()))\n')
+    expect(out).toContain('[(0, 9)]')
+    expect(out, '一格的 tuple 要有那個逗號').toContain('(1,)')
+    expect(out).toContain("[('a', 1)]")
+  })
+})

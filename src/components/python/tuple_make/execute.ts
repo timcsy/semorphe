@@ -12,6 +12,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:tuple_make', async (node, ctx) => {
     const items: RuntimeValue[] = []
     for (const it of node.children.items ?? []) items.push(await ctx.evaluate(it))
-    return { type: 'array', value: items }
+    // ⚠️ 值型別與串列同一個（見檔頭），而 `seqKind` 讓它**印出來**是 `(1, 2)`
+    return { type: 'array', value: items, seqKind: 'tuple' }
   })
 }

@@ -96,7 +96,8 @@ scores = [90, 80]
 for i, n in enumerate(names):
     print(i, n)
 for n, s in zip(names, scores):
-    print(n, s)`],
+    print(n, s)
+print(list(enumerate(scores)))`],
   ['tuple 與多重指派', `p = (3, 4)
 x, y = p
 a, b = 1, 2
@@ -160,20 +161,34 @@ print(status, ok, bad)`],
 print(xs[1:3])
 print(xs[:2])
 print(xs[-2:])
+print(xs[2:])
 s = "abcdef"
-print(s[2:4])`],
+print(s[2:4])
+print(len(xs[1:3]))`],
   ['while True 與 break', `n = 0
 while True:
     n += 1
     if n >= 3:
         break
-print(n)`],
+print(n)
+total = 0
+for i in range(10):
+    if i % 2 == 0:
+        continue
+    total += i
+print(total)`],
   ['遞迴', `def fact(n):
     if n <= 1:
         return 1
     return n * fact(n - 1)
 
-print(fact(5))`],
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+print(fact(5))
+print(fib(7))`],
   ['主程式慣例', `def main():
     print("跑起來了")
 
@@ -295,4 +310,39 @@ r = False and side(xs)
 print(len(xs), r)
 r2 = True or side(xs)
 print(len(xs), r2)`],
+  ['集合去重', `xs = [3, 1, 3, 2, 1]
+s = set(xs)
+print(len(s))
+print(sorted(s))
+print(3 in s)`],
+  ['排序的三種要求', `words = ["banana", "kiwi", "apple"]
+print(sorted(words))
+print(sorted(words, key=len))
+print(sorted(words, reverse=True))
+nums = [3, 1, 2]
+nums.sort()
+print(nums)`],
+  ['字串方法串接', `line = "  小明,90,甲  "
+parts = line.strip().split(",")
+print(parts)
+print(parts[0].upper())
+print("-".join(parts))
+print(line.strip().replace(",", " "))`],
+  ['多回傳值與預設參數', `def stats(xs):
+    return min(xs), max(xs), sum(xs)
+
+def greet(name, greeting="你好"):
+    return greeting + "，" + name
+
+lo, hi, total = stats([4, 2, 9])
+print(lo, hi, total)
+print(greet("小明"))
+print(greet("小華", "早安"))`],
+  ['字典的 get 與計次', `text = "abracadabra"
+count = {}
+for ch in text:
+    count[ch] = count.get(ch, 0) + 1
+print(count["a"], count.get("z", 0))
+best = max(count, key=lambda k: count[k])
+print(best)`],
 ]

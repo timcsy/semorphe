@@ -18,7 +18,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
-import { callWith } from '../func_def/call'
+import { callWith, withCall } from '../func_def/call'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_size', async (node, ctx) => {
@@ -27,6 +27,6 @@ export function registerExecute(register: (component: string, executor: Componen
     const args: RuntimeValue[] = []
     for (const a of node.children.obj ?? []) args.push(await ctx.evaluate(a))
     if (userDefined) return callWith(userDefined, args, ctx, 'len')
-    return PYTHON_BUILTIN_FUNCTIONS['len'](args, ctx)
+    return PYTHON_BUILTIN_FUNCTIONS['len'](args, withCall(ctx))
   })
 }
