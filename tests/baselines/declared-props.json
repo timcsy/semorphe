@@ -4,8 +4,8 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "segments": 456,
-    "nodesWithDeclTable": 9961
+    "segments": 457,
+    "nodesWithDeclTable": 9962
   },
   "missingDecl": 0,
   "projectionHint": 4,

@@ -67,6 +67,20 @@ function makePanel(): { panel: BlocklyPanel; fired: () => number } {
  *
  * ⚠️ **它只是「讓佇列跑一輪」，不是「等某件事發生」**——需要等某件事的地方
  * 用下面的 `until()`。
+ *
+ * 🔴 **而有一種地方 `until()` 幫不上忙：負向斷言**（「不得觸發」）。
+ * 沒辦法輪詢「某件事**沒有**發生」——輪到它成立就只是「它還沒發生」而已。
+ *
+ * 而兩者等太短的**後果相反**：
+ *
+ * | | 等太短的症狀 |
+ * |---|---|
+ * | 正向（`toBeGreaterThan(0)`） | **假紅**——機器忙的時候它說「產品壞了」 |
+ * | 負向（`.toBe(0)`） | **假綠**——安靜地變弱，永遠不會有人發現 |
+ *
+ * 所以負向斷言的正確做法不是等更久，是**釘在一個已經完成的正向代理之後**：
+ * 先 `until(積木載進去了)`，再斷言「而回呼沒響」。那時「沒響」才有意義
+ * ——因為**會讓它響的那件事已經跑完了**。
  */
 const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 60))
 
@@ -90,11 +104,30 @@ const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 60))
 async function until(
   pred: () => boolean,
   why: string,
-  timeoutMs = 3000,
+  // 🔴 **3000 不夠**（2026-08-21 第三次紅）：機器降頻 ＋ 四個 worker 搶 CPU 時，
+  // `requestAnimationFrame → setTimeout(0)` 這條鏈跑不完，於是 `until` 自己逾時，
+  // 而它的訊息寫「條件仍不成立」——**讀起來像產品壞了**。
+  //
+  // 放寬的理由與 `vitest.config.ts` 的 `testTimeout: 60000` 逐字相同：
+  // **通過時這個數字不花任何時間**（條件成立就立刻回），只在真的卡住時才付。
+  timeoutMs = 15000,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs
   for (;;) {
-    if (pred()) return
+    if (pred()) {
+      // 🔴 **條件成立 ≠ 佇列排乾了。**（2026-08-21，把 `tick` 換成 `until` 時當場撞到）
+      //
+      // `tick()` 的 60ms 在做**兩件事**：等條件、以及**把 Blockly 排隊中的
+      // `requestAnimationFrame → setTimeout(0)` 排乾**。而 `until` 條件一成立
+      // 就回（可能 10ms），第二件事**被一起拿掉了**——殘留的事件漏進下一支測試，
+      // 於是**別支**測試莫名其妙紅（實測：改完之後 14 綠變成 2 紅，
+      // 而那兩支我一行都沒動）。
+      //
+      // > **一個固定的等待，往往同時是「等」與「讓別人跑完」。
+      // > 換成條件輪詢只保住了前者，而後者是沒有人寫下來的那一半。**
+      await tick()
+      return
+    }
     if (Date.now() > deadline) throw new Error(`等了 ${timeoutMs}ms 條件仍不成立：${why}`)
     await new Promise((r) => setTimeout(r, 10))
   }
@@ -115,8 +148,7 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     const ws = panel.getWorkspace()
     expect(ws, '工作區沒建起來 → 下面每一條都是空過的').not.toBeNull()
     ws!.newBlock(PROBE)
-    await tick()
-    expect(fired(), '回呼從來不響的話，負向斷言全部沒有意義').toBeGreaterThan(0)
+    await until(() => fired() > 0, '回呼從來不響的話，負向斷言全部沒有意義')
   })
 
 
@@ -142,9 +174,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       )
       await tick()
     } finally { Blockly.Events.disable = real.disable; Blockly.Events.enable = real.enable }
-    expect(panel.getWorkspace()!.getAllBlocks(false).length, '積木沒載進去 → 這一條空過').toBe(1)
-    expect(fired(), '繞開之後仍然是 0 → 這支測試量不到東西，下面三條都是假的')
-      .toBeGreaterThan(0)
+    await until(() => panel.getWorkspace()!.getAllBlocks(false).length === 1, '積木沒載進去 → 這一條空過')
+    await until(() => fired() > 0, '繞開之後仍然是 0 → 這支測試量不到東西，下面三條都是假的')
   })
 
   it('程式碼→積木【不得】觸發回呼', async () => {
@@ -155,9 +186,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     }
     panel.onSemanticUpdate(ev)
-    await tick()
-    // 先證明它真的載進去了——否則「沒觸發」只是因為什麼都沒發生
-    expect(panel.getWorkspace()!.getAllBlocks(false).length, '積木沒載進去 → 這一條空過').toBe(1)
+    // 先等它真的載進去——否則「沒觸發」只是因為什麼都還沒發生（見 `tick` 檔頭）
+    await until(() => panel.getWorkspace()!.getAllBlocks(false).length === 1, '積木沒載進去 → 這一條空過')
     expect(fired(), '每一次程式碼→積木都反手寫回文件 → 使用者的復原堆疊被灌爆').toBe(0)
   })
 
@@ -168,8 +198,7 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'resync',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
-    expect(panel.getWorkspace()!.getAllBlocks(false).length).toBe(1)
+    await until(() => panel.getWorkspace()!.getAllBlocks(false).length === 1, 'resync 沒載進去 → 下面那條空過')
     expect(fired()).toBe(0)
   })
 
@@ -302,9 +331,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
     // 正向錨點：畫過之後【必須】解除，否則這個旗標等於永久停用寫回
-    expect(panel.isStateStale, '畫過了還算殘 → 積木永遠寫不回程式碼').toBe(false)
+    await until(() => !panel.isStateStale, '畫過了還算殘 → 積木永遠寫不回程式碼')
   })
 
   // ── 🔴 第三層：重畫【之後】那一幀內建立的事件也不得可復原 ────────
@@ -373,7 +401,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
+    // 🔴 同上：base 取早了的話下游全錯
+    await until(() => ws.getAllBlocks(false).length === 1, '匯流排還沒畫完就取基準')
     const base = fired()
 
     const realVisible = Blockly.WidgetDiv.isVisible
@@ -398,7 +427,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
+    // 🔴 base 取早了的話下游三條全錯——先等匯流排真的畫完
+    await until(() => ws.getAllBlocks(false).length === 1, '匯流排還沒畫完就取基準')
     const base = fired()
     const real = Blockly.DropDownDiv.isVisible
     Blockly.DropDownDiv.isVisible = (): boolean => true
@@ -406,8 +436,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     await tick()
     expect(fired(), '只擋 WidgetDiv 會漏掉下拉').toBe(base)
     Blockly.DropDownDiv.isVisible = real
-    await new Promise((r) => setTimeout(r, 300))
-    expect(fired()).toBeGreaterThan(base)
+    // ⚠️ 原本是硬等 300ms——同一個病，只是數字大一點
+    await until(() => fired() > base, '下拉關掉之後沒補寫')
   })
 
   it('拖曳中的變動不得觸發寫回，放下之後補一次', async () => {
@@ -419,7 +449,8 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
       source: 'code',
       blockState: { blocks: { languageVersion: 0, blocks: [{ type: PROBE }] } },
     })
-    await tick()
+    // 🔴 同上：base 取早了的話下游全錯
+    await until(() => ws.getAllBlocks(false).length === 1, '匯流排還沒畫完就取基準')
     const base = fired()
 
     // ① 拖曳中——不得寫
@@ -433,7 +464,6 @@ describe('護欄：匯流排造成的積木變動不得被當成使用者編輯'
     //    🔴 沒有這一條的話，「永遠不寫」也能讓上面那條通過，而那是更糟的 bug。
     ws.isDragging = realIsDragging
     ws.newBlock(PROBE)
-    await tick()
-    expect(fired(), '放下之後沒補寫 → 使用者的那一步永遠不會進檔案').toBeGreaterThan(base)
+    await until(() => fired() > base, '放下之後沒補寫 → 使用者的那一步永遠不會進檔案')
   })
 })
