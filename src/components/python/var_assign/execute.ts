@@ -5,8 +5,9 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:var_assign', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'x')
     const v = await ctx.evaluate(node.children.value[0])
-    // Python 沒有宣告 —— 第一次指派就建立它，之後的指派覆寫。
-    // 所以這裡【不能】先查它存不存在再決定要 declare 還是 set。
-    ctx.scope.declare(name, v)
+    // 🔴 **Python 沒有「宣告」這件事**：第一次指派建立它，之後覆寫。
+    // ⚠️ 所以【不能】每次都 `declare`——那在迴圈第二圈會 `DUPLICATE_DECLARATION`。
+    if (ctx.scope.has(name)) ctx.scope.set(name, v)
+    else ctx.scope.declare(name, v)
   })
 }

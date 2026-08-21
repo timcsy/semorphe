@@ -16,9 +16,8 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
-    "execute": null,
-    "lift": "./lift-pattern.json",
-    "_execute_why": "真的缺。Python 的執行期整個還沒做（spec 156 明確排除）——⚠️ 而這裡刻意【不】寫一個空的執行器：**顯式的空與遺漏的空要分得出來**，而一個 noop 函式兩者長得一樣。"
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
   },
   "traits": {
     "stringLiteral": true

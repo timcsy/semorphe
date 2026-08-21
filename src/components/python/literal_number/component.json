@@ -16,8 +16,7 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
-    "execute": null,
-    "_execute_why": "真的缺。Python 的執行期整個還沒做（spec 156 明確排除）——⚠️ 刻意【不】寫空的執行器：顯式的空與遺漏的空要分得出來。",
+    "execute": "./execute.ts",
     "lift": "./lift-pattern.json"
   },
   "traits": {

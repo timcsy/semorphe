@@ -150,3 +150,38 @@ export function generatePython(tree: SemanticNode | null): string {
   }
   return generateCode(tree as SemanticNode, 'python', pythonStyle as unknown as StylePreset).trim()
 }
+
+
+/**
+ * 跑一段 Python，回 `狀態|輸出`。
+ *
+ * ⚠️ **不是 `getState()`**——它只回 `{ status }`，而第一版寫成 `getState().output`
+ * 會讓每一筆輸出都錄成空字串，**而空字串 === 空字串，測試照樣全綠**
+ * （`component-move-parity` 的檔頭記著同一個坑）。
+ */
+export async function runPython(code: string, stdin: string[] = []): Promise<string> {
+  const { SemanticInterpreter } = await import('../../src/interpreter/interpreter')
+  const { registerCppExecutors, registerCppSkipDeclarations } =
+    await import('../../src/languages/cpp/generators/index')
+  // 🔴 **兩個都要叫，而它們都住在 C++ 名字的函式裡**——
+  // 它們做的事分別是 `componentExecuteRegistrars()` 與 `componentComponents()`，
+  // **兩個都是掃【全部】膠囊的 glob**。Python 因此是「順帶」被收的。
+  //
+  // ⚠️ 少了第二個的症狀：`# 註解` 讓整支程式在執行時掛掉
+  // （`RUNTIME_ERR_UNKNOWN_COMPONENT`）——因為「這顆刻意沒有執行器」這件事
+  // 沒有到達直譯器。
+  //
+  // > **一個語言中立的登記，如果它的呼叫點掛在某個語言的名字底下，
+  // > 那麼「有沒有被呼叫」就變成那個語言的內部細節。**
+  registerCppSkipDeclarations()
+  registerCppExecutors()
+  const tree = await liftPython(code)
+  if (!tree) return '<lift 失敗>'
+  const interp = new SemanticInterpreter()
+  try {
+    await interp.execute(tree, stdin)
+  } catch (e) {
+    return `<執行例外：${(e as Error).message}>`
+  }
+  return `${interp.getState().status}|${interp.getOutput().join('')}`
+}

@@ -34,7 +34,10 @@ export function registerExecute(register: (component: string, executor: Componen
     }
 
     for (const v of values) {
-      ctx.scope.declare(name, { type: 'int', value: v })
+      // 🔴 每一圈都要能覆寫——`declare` 在第二圈會 `DUPLICATE_DECLARATION`。
+      const bound = { type: 'int' as const, value: v }
+      if (ctx.scope.has(name)) ctx.scope.set(name, bound)
+      else ctx.scope.declare(name, bound)
       try {
         await ctx.executeBody(node.children.body ?? [])
       } catch (signal) {

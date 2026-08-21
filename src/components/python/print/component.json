@@ -15,8 +15,7 @@
     "extract": "./forms/blocks.json",
     "_extract_why": "同 `render`——同一份 `forms/blocks.json`，兩路成對。",
     "generate": "./generate.ts",
-    "execute": null,
-    "_execute_why": "真的缺。spec 156 明確排除 Python 的執行期。⚠️ 而這裡刻意【不】寫一個空的執行器——顯式的空與遺漏的空要分得出來，而一個 noop 函式兩者長得一樣。",
+    "execute": "./execute.ts",
     "lift": "./lift-pattern.json"
   },
   "traits": {

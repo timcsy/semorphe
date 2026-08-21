@@ -46,15 +46,23 @@ describe('spec 160 · Python 的第一顆積木', () => {
       + '這正是 vision 那 33 筆要量的東西。').toBe(false)
   })
 
-  it('🔴 五路完備性：render／extract 不再是缺（只剩 execute）', () => {
+  it('🔴 五路完備性：**五路都在了**（2026-08-21 邊界移動）', () => {
+    // 🔄 **這一支是刻意種的邊界測試，而它紅了三次——每一次邊界都往前移一格**：
+    //
+    //   spec 156   只有 lift ＋ generate       缺 render／extract／execute
+    //   spec 160   補上 render／extract        只剩 execute（「誠實的缺」）
+    //   spec 170   🟢 execute 也補上了         **五路全滿**
+    //
+    // ⚠️ 每一次都是**更新它**而不是繞過它——一支永遠綠的邊界測試，
+    // 與一支沒有人寫的邊界測試，作用完全相同。
     const manifest = JSON.parse(fs.readFileSync(
       path.join(REPO_ROOT, 'src/components/python/print/component.json'), 'utf8'))
     const missing = Object.entries(manifest.paths as Record<string, unknown>)
       .filter(([k, v]) => !k.startsWith('_') && v === null)
       .map(([k]) => k)
     expect(missing.sort(),
-      'render／extract 必須成對補上；execute 維持【誠實的缺】（spec 156 明確排除 Python 執行期）')
-      .toEqual(['execute'])
+      '🔴 五路又缺了一路——如果那是刻意的，把理由寫進 `_X_why` 並更新這一支')
+      .toEqual([])
   })
 
   it('🔴 wasm 出貨——而它出貨的理由是【有人要它】', () => {
