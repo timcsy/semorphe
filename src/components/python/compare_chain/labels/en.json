@@ -1,0 +1,3 @@
+{
+  "PY_COMPARE_CHAIN_TOOLTIP": "Compare across two steps (e.g. 0 <= score <= 100). The middle value is evaluated once, and the second step is skipped when the first fails."
+}

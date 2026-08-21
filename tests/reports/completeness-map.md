@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：300｜✅ 實作 1372｜📄 已宣告不提供 37｜❔ 判不出來 89｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：303｜✅ 實作 1384｜📄 已宣告不提供 37｜❔ 判不出來 92｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -253,7 +253,9 @@
 | `python:class_def` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:comment` | ✅ | ❔ | ✅ | ✅ | 📄 |
 | `python:compare` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:compare_chain` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_append` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:container_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_enumerate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_find` | ✅ | ❔ | ✅ | ✅ | ✅ |
@@ -286,6 +288,7 @@
 | `python:math_max` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:math_min` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:math_round` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:member_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:member_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:method_call` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |

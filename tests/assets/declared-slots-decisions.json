@@ -300,9 +300,19 @@
     "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🔴 這一顆的接點取法與同族**不一樣**（`comparison_operator` 沒有 left/right 欄位，用位置式子節點），所以自證測特別釘了那一條——**那正是「量不到的地方，宣告錯了與宣告對了長得一樣」最容易出事的形狀**。"
   },
   {
+    "componentId": "python:compare_chain",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "同一個 `comparison_operator` 節點型別，差別在**有幾個運算元**——判別要跑真邏輯。⚠️ 接點（`left`／`middle`／`right`）由這顆自己的 `spec.test.ts` 釘住，含「三段以上主動變灰」與「中間那一格只求值一次」。"
+  },
+  {
     "componentId": "python:container_append",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_assign",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "這條護欄的語料掃的是**測試檔裡的程式碼片段**，而它今天沒有 `a[0] = 5` 這種左邊。⚠️ 接點（`target`／`value`）由這顆自己的 `spec.test.ts` 釘住，含巢狀的 `grid[1][1] = 9`（那正是它被做出來的原因）。"
   },
   {
     "componentId": "python:container_at",
@@ -463,6 +473,11 @@
     "componentId": "python:math_round",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "`round(x)` 與 `round(x, 2)` 的引數格數不同，判別要跑真邏輯。⚠️ 接點（`value`／`digits`）由這顆自己的 `spec.test.ts` 釘住，含「位數留空時不得產出一個逗號」。"
+  },
+  {
+    "componentId": "python:member_assign",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "同上——語料裡沒有 `self.name = n` 這種左邊。⚠️ 接點（`target`／`value`）由這顆自己的 `spec.test.ts` 釘住，含「接收者是一個運算式」（`xs[0].n = 7`）。"
   },
   {
     "componentId": "python:member_at",

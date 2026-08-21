@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_compare_chain",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "comparison_operator",
+    "component": {
+      "componentId": "python:compare_chain"
+    },
+    "liftStrategy": "python:lift_compare_chain",
+    "fieldMappings": [],
+    "priority": 90,
+    "_why": "🔴 **priority 90，而同族的一般比較寫的是 5**——兩個數字不可以直接比。\n`pattern-lifter.ts` 的 `calcPriority` 把它算成 **型別基準 ＋ 限制數×5 ＋ 這個數字**：\n```\ncomposite 100 · chain 90 · operatorDispatch 80 · contextTransform 70\nmultiResult 60 · constrained 50 · unwrap 40 · simple 10\n```\n同族的一般比較是 `operatorDispatch`（80＋5＝85），這一筆是 `simple`（10＋這個數字）。\n⚠️ **寫 9 的話它是 19，安靜地輸掉**——症狀是串接比較被一般比較接走、後半段被砍掉，而**它碰巧算出同一個答案**。\n> **一個「優先級」欄位如果是加在一個看不見的基準上，那麼兩筆的數字大小說明不了誰贏。**"
+  }
+]

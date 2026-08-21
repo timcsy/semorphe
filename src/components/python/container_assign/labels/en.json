@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ASSIGN_MSG0": "Set %1 to %2",
+  "PY_CONTAINER_ASSIGN_TOOLTIP": "Write into one slot of a container. A list slot must already exist; a dictionary can gain a new key this way."
+}

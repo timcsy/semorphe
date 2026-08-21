@@ -4,13 +4,13 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 285,
-    "return 總數": 172
+    "fileCount": 288,
+    "return 總數": 168
   },
   "typeMismatch": 0,
-  "missingChild": 19,
+  "missingChild": 20,
   "hits": {
-    "entryCount": 24,
+    "entryCount": 25,
     "details": [
       {
         "key": "src/components/cpp/address_of/execute.ts#b5q594",
@@ -179,6 +179,13 @@
         "condition": "ctx.toBool(condition)",
         "returns": "return falseNodes.length > 0 ? await ctx.evaluate(falseNodes",
         "shape": "值判斷"
+      },
+      {
+        "key": "src/components/python/compare_chain/execute.ts#1qwsa28",
+        "position": "src/components/python/compare_chain/execute.ts:20",
+        "condition": "!first",
+        "returns": "if (!first) return { type: 'bool', value: false }",
+        "shape": "缺子節點"
       }
     ]
   }

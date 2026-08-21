@@ -17,7 +17,7 @@
  * None            而不是空字串
  * 3.0             小數保留小數點       C++ 的 3.0 印成 3
  * [1, 2]          串列有中括號與逗號
- * {'a': 1}        字典的鍵用單引號     ← Python 自己就是這樣印的
+ * {'a': 1}        字典的鍵用單引號     ← 而 `{1: 1}` 的鍵【沒有】引號
  * (0, 9)          tuple 是圓括號       ← `enumerate`／`zip`／`d.items()` 產的是這個
  * ```
  *
@@ -32,6 +32,8 @@
  * 一個學生印出串列時看到 `[a, b]` 會以為那是兩個變數名。
  */
 import type { RuntimeValue, ObjectFields } from '../../interpreter/types'
+// 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
+import { dictKeys } from './dict'
 
 export function pythonDisplay(v: RuntimeValue, insideContainer = false): string {
   // 容器裡面的字串用 repr —— 見檔頭那一段
@@ -50,7 +52,12 @@ export function pythonDisplay(v: RuntimeValue, insideContainer = false): string 
     return `[${xs.join(', ')}]`
   }
   if (v.type === 'object') {
-    const e = [...(v.value as ObjectFields).entries()].map(([k, x]) => `'${k}': ${pythonDisplay(x, true)}`)
+    // 🔴 **鍵照它原本的型別印**：`{1: 1}` 不是 `{'1': 1}`。
+    //    底層的 `Map` 只吃字串，而原本的值存在旁邊一張表裡。
+    const ks = dictKeys(v)
+    const e = [...(v.value as ObjectFields).values()].map(
+      (x, i) => `${pythonDisplay(ks[i], true)}: ${pythonDisplay(x, true)}`,
+    )
     return `{${e.join(', ')}}`
   }
   return String(v.value)

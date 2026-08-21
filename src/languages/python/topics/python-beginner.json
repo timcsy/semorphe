@@ -56,7 +56,10 @@
           "python:cast",
           "python:math_round",
           "python:string_strip",
-          "python:string_replace"
+          "python:string_replace",
+          "python:container_assign",
+          "python:member_assign",
+          "python:compare_chain"
         ],
         "children": [
           {

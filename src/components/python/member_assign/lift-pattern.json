@@ -1,0 +1,30 @@
+[
+  {
+    "id": "python_member_assign",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "assignment",
+    "component": {
+      "componentId": "python:member_assign"
+    },
+    "constraints": [
+      {
+        "field": "left",
+        "nodeType": "attribute"
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "target",
+        "ast": "left",
+        "extract": "lift"
+      },
+      {
+        "semantic": "value",
+        "ast": "right",
+        "extract": "lift"
+      }
+    ],
+    "priority": 14,
+    "_why": "priority 14：**高於一般指派的 10**——同一個 `assignment` 節點型別，而這一筆多一個限制（左邊是那種節點）。限制不成立時比對迴圈落回一般指派。"
+  }
+]

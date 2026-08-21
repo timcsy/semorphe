@@ -415,4 +415,83 @@ for name in sorted(scores):
 pairs = sorted(scores.items(), key=lambda p: p[1], reverse=True)
 for name, s in pairs:
     print(name, s)`],
+  ['map 與 filter', `nums = [1, 2, 3, 4]
+doubled = list(map(lambda x: x * 2, nums))
+evens = list(filter(lambda x: x % 2 == 0, nums))
+print(doubled)
+print(evens)
+print(list(map(str, nums)))`],
+  ['串列相乘與相加', `zeros = [0] * 3
+print(zeros)
+print([1, 2] + [3])
+grid = [[0] * 2 for _ in range(3)]
+grid[1][1] = 9
+print(grid)
+print("ab" * 3)`],
+  ['字典推導式', `nums = [1, 2, 3]
+squares = {n: n * n for n in nums}
+print(squares)
+print({k: v for k, v in squares.items() if v > 2})`],
+  ['巢狀函式與累加', `def make_counter():
+    count = 0
+    def step():
+        return count + 1
+    return step()
+
+print(make_counter())
+
+def total(xs):
+    s = 0
+    for x in xs:
+        s += x
+    return s
+
+print(total([1, 2, 3]))`],
+  ['字串格式化的三種寫法', `name = "小明"
+score = 92.456
+print(f"{name}：{score:.2f}")
+print("{}：{}".format(name, 92))
+print(name + " 得了 " + str(92) + " 分")`],
+  ['讀輸入並計算', `n = int(input())
+total = 0
+for i in range(n):
+    total += i
+print("總和是", total)`],
+  ['類別與方法', `class Dog:
+    def __init__(self, name):
+        self.name = name
+        self.age = 0
+
+    def bark(self):
+        return self.name + " 汪汪"
+
+    def birthday(self):
+        self.age += 1
+        return self.age
+
+d = Dog("小黑")
+print(d.bark())
+print(d.birthday(), d.birthday())
+print(d.name, d.age)`],
+  ['交換與多重比較', `a, b = 3, 7
+a, b = b, a
+print(a, b)
+x = 5
+print(1 < x < 10)
+print(x != 5, not x == 5)
+print(a > b and x > 0, a > b or x > 0)`],
+  ['質數與巢狀迴圈', `def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
+
+primes = []
+for n in range(2, 20):
+    if is_prime(n):
+        primes.append(n)
+print(primes)
+print(len(primes), sum(primes))`],
 ]

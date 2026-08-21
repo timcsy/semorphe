@@ -1,0 +1,105 @@
+[
+  {
+    "id": "python_compare_chain",
+    "componentId": "python:compare_chain",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_compare_chain",
+      "inputsInline": true,
+      "message0": "%1 %2 %3 %4 %5",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "A",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "<",
+              "<"
+            ],
+            [
+              "≤",
+              "<="
+            ],
+            [
+              ">",
+              ">"
+            ],
+            [
+              "≥",
+              ">="
+            ],
+            [
+              "=",
+              "=="
+            ],
+            [
+              "≠",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "B",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "OP2",
+          "options": [
+            [
+              "<",
+              "<"
+            ],
+            [
+              "≤",
+              "<="
+            ],
+            [
+              ">",
+              ">"
+            ],
+            [
+              "≥",
+              ">="
+            ],
+            [
+              "=",
+              "=="
+            ],
+            [
+              "≠",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "C",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_COMPARE_CHAIN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator",
+        "OP2": "operator2"
+      },
+      "inputs": {
+        "A": "left",
+        "B": "middle",
+        "C": "right"
+      }
+    }
+  }
+]

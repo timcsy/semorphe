@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ASSIGN_MSG0": "把 %1 設成 %2",
+  "PY_CONTAINER_ASSIGN_TOOLTIP": "寫進容器的某一格。串列的那一格必須已經存在；字典可以用這個方式新增一個鍵。"
+}

@@ -7,6 +7,9 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
+// 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
+import { dictKeyOf, makeDict } from '../../../languages/python/dict'
+
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:map_make_for', async (node, ctx) => {
     const names = (node.children.targets ?? []).map((t) => String(t.properties.name ?? ''))
@@ -18,6 +21,7 @@ export function registerExecute(register: (component: string, executor: Componen
 
     const saved = new Map(names.filter((n) => ctx.scope.has(n)).map((n) => [n, ctx.scope.get(n)]))
     const out: ObjectFields = new Map()
+    const keys = new Map<string, RuntimeValue>()
     try {
       for (const it of items) {
         if (names.length > 1) {
@@ -35,11 +39,12 @@ export function registerExecute(register: (component: string, executor: Componen
         const cond = (node.children.condition ?? [])[0]
         if (cond && !ctx.toBool(await ctx.evaluate(cond))) continue
         const k = await ctx.evaluate(node.children.key[0])
-        out.set(String(k.value), await ctx.evaluate(node.children.value[0]))
+        out.set(dictKeyOf(k), await ctx.evaluate(node.children.value[0]))
+        keys.set(dictKeyOf(k), k)
       }
     } finally {
       for (const [n, v] of saved) ctx.scope.set(n, v)
     }
-    return { type: 'object', value: out, structName: 'dict' }
+    return makeDict(out, keys)
   })
 }

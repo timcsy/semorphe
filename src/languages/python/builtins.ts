@@ -27,6 +27,8 @@ import type { RuntimeValue, ObjectFields } from '../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../interpreter/errors'
 // 「印出來長什麼樣」只有一份——`print` 與格式化文字用的是同一個。
 import { pythonDisplay as pyStr } from './value-display'
+// 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
+import { dictKeys } from './dict'
 
 /**
  * 求值用的最小介面。
@@ -185,7 +187,7 @@ function lengthOf(v: RuntimeValue): number {
 const asList = (v: RuntimeValue): RuntimeValue[] =>
   v.type === 'array' ? (v.value as RuntimeValue[])
   : v.type === 'string' ? [...String(v.value)].map(str)
-  : v.type === 'object' ? [...(v.value as ObjectFields).keys()].map(str)
+  : v.type === 'object' ? dictKeys(v)
   : []
 
 /** 自由函式：`len(x)`、`max(xs)`… */
@@ -247,6 +249,25 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     const x = c.toNumber(a[0]), y = c.toNumber(a[1])
     if (y === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO, {})
     return tup([num(Math.floor(x / y)), num(x - Math.floor(x / y) * y)])
+  },
+  /**
+   * 🔴 `map`／`filter` 在 Python 3 回的是**惰性的**，而這裡回串列。
+   * ⚠️ 那是一個**已知的簡化**：教學語料裡它們幾乎一律被 `list(...)` 或
+   * 迴圈立刻吃掉，而**惰性看得見的地方**（無限序列、副作用的順序）
+   * 不在初學課裡。寫在這裡是為了讓它是已知的，不是沒有人記得的巧合。
+   */
+  // ⚠️ **一格一格【依序】呼叫，不可以 `Promise.all`**：呼叫時會換掉直譯器的
+  //    作用域再換回來，並行的話每一格會看到別格的參數
+  //    ——症狀是 `map(lambda x: x*2, [1,2,3,4])` 給 `[8, 8, 8, 8]`（全部是最後一格）。
+  map: async (a, c) => {
+    const out: RuntimeValue[] = []
+    for (const x of asList(a[1])) out.push(await c.call(a[0], [x]))
+    return arr(out)
+  },
+  filter: async (a, c) => {
+    const out: RuntimeValue[] = []
+    for (const x of asList(a[1])) if (truthy(await c.call(a[0], [x]))) out.push(x)
+    return arr(out)
   },
   any: (a) => bool(asList(a[0]).some(truthy)),
   all: (a) => bool(asList(a[0]).every(truthy)),
@@ -312,7 +333,16 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   /** 字典的合併——**就地改動接收者**。 */
   update: (s, a) => {
     const m = s.value as ObjectFields
-    if (a[0]?.type === 'object') for (const [k, v] of a[0].value as ObjectFields) m.set(k, v)
+    if (a[0]?.type === 'object') {
+      const ks = dictKeys(a[0])
+      let i = 0
+      for (const [k, v] of a[0].value as ObjectFields) {
+        m.set(k, v)
+        // ⚠️ 合併進來的鍵**原本長什麼樣**也要跟著搬，否則它們印出來會多引號
+        if (!s.keyValues) s.keyValues = new Map()
+        s.keyValues.set(k, ks[i++])
+      }
+    }
     return { type: 'void', value: null }
   },
   // ── 字串的查詢
@@ -321,9 +351,9 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   isdigit: (s) => bool(/^[0-9]+$/.test(String(s.value))),
   isalpha: (s) => bool(/^[A-Za-z]+$/.test(String(s.value))),
   title: (s) => str(String(s.value).replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())),
-  keys: (s) => arr([...(s.value as ObjectFields).keys()].map(str)),
+  keys: (s) => arr(dictKeys(s)),
   values: (s) => arr([...(s.value as ObjectFields).values()]),
-  items: (s) => arr([...(s.value as ObjectFields).entries()].map(([k, v]) => tup([str(k), v]))),
+  items: (s) => arr([...(s.value as ObjectFields).values()].map((v, i) => tup([dictKeys(s)[i], v]))),
   get: (s, a) => (s.value as ObjectFields).get(String(a[0].value)) ?? a[1] ?? { type: 'void', value: null },
   // 🔴 **`.format()` 與 `%` 是格式化文字之外的另外兩種寫法**——AI 生的
   //    Python 兩種都會出現，而它們與 f-string 是同一件事的三個語法。

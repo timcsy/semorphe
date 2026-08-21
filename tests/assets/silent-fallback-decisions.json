@@ -160,5 +160,12 @@
     "signal": "!got.ok → if (!got.ok) return { type: 'int', value: 0 }",
     "decision": "合法",
     "reason": "`cin >> a >> b` 的**回傳值是讀成功幾筆**，失敗時就是 0——`while (cin >> x)` 正是靠這個 falsy 終止的。回 0 在這裡是運算子的語義，與 `&&` 短路回 false 同一類（見 cpp/logic 那筆）。⚠️ 而變數的處置**不在**這一行：EOF 時不動、格式不符時設零值，兩者實測不同，見 execute.ts 檔頭那張表。"
+  },
+  {
+    "key": "src/components/python/compare_chain/execute.ts#1qwsa28",
+    "position": "src/components/python/compare_chain/execute.ts:20",
+    "signal": "!first → if (!first) return { type: 'bool', value: false }",
+    "decision": "合法",
+    "reason": "🔴 **這是短路，不是回退**：`10 < x < 20` 的前半不成立時 Python **不算後半**（`0 < f() < 10` 只呼叫 `f()` 一次是同一條規則）。回 `false` 是這個運算式**正確的答案**，不是「判不出來所以給個值」。這顆自己的 `spec.test.ts` 有一條專門釘它。"
   }
 ]

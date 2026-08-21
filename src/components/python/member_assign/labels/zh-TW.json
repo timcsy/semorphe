@@ -1,0 +1,4 @@
+{
+  "PY_MEMBER_ASSIGN_MSG0": "把 %1 設成 %2",
+  "PY_MEMBER_ASSIGN_TOOLTIP": "寫進一個物件的欄位。在方法裡用 self 就是在寫這個物件自己的欄位。"
+}

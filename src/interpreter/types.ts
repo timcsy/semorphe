@@ -61,6 +61,17 @@ export interface RuntimeValue {
    * > **一個只在顯示上不同的東西，不該用型別去表示它。**
    */
   seqKind?: 'tuple'
+  /**
+   * 字典的**鍵原本長什麼樣**（底層的 `Map` 只吃字串）。
+   *
+   * ```python
+   * print({1: 1})     # 真 Python：{1: 1}   少了這張表：{'1': 1}
+   * ```
+   *
+   * ⚠️ 與 `seqKind` 同一個理由：**只影響「看得到的樣子」**，
+   * 查詢／寫入／`in` 仍然走字串鍵，所以每一處既有的判斷都不必改。
+   */
+  keyValues?: Map<string, RuntimeValue>
   value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable | FuncRef
   /** `type === 'object'` 時，它是哪一個結構／類別 */
   structName?: string

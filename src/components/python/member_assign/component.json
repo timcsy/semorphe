@@ -1,0 +1,24 @@
+{
+  "componentId": "python:member_assign",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側依容器型別切成兩顆（編譯期就知道型別），Python 這一顆合成一顆——指向其中任一顆都會是一個我們判不出來的宣稱。",
+  "properties": [],
+  "children": {
+    "target": "expression",
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "🔴 **被指派的那一邊是一個【接點】不是一個字串**——`grid[1][1] = 9` 的左邊是一整個運算式，而壓成字串的話**每一種新的左邊都會變成一道新的解析題**（同族的一般指派用正規表示式拆，`grid[1][1]` 拆出來的名字是 `1][1`）。",
+  "_lift_why": "左邊是 `attribute`（`self.name`／`d.age`）——**整段用 `lift`**，於是接收者可以是任何運算式。"
+}

@@ -1,0 +1,38 @@
+{
+  "componentId": "python:compare_chain",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **C++ 沒有這件事**：`0 < x < 10` 在 C++ 是 `(0<x) < 10`（先比出真假再拿去比 10），語義完全不同。指向 C++ 那顆比較會是一個假的等價。",
+  "_componentId_why": "`chain`（串接）是這顆與同族的一般比較之間的**種差**——同一個操作，多一段。",
+  "properties": [
+    {
+      "name": "operator",
+      "kind": "enum",
+      "default": "<"
+    },
+    {
+      "name": "operator2",
+      "kind": "enum",
+      "default": "<"
+    }
+  ],
+  "children": {
+    "left": "expression",
+    "middle": "expression",
+    "right": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": {
+    "precedence": 8
+  },
+  "_traits_why": "與同族的一般比較同一個優先級——它們是同一種運算。",
+  "_lift_why": "🔴 **只收【兩段】的串接**（`a < b < c`）。三段以上（`a < b < c < d`）回 `null` 走誠實降級——那是一個**宣告出來的邊界**，不是一個沒有人記得的極限。\n⚠️ 而在此之前串接被**靜靜地砍掉後半段**：`1 < x < 10` 產出 `1 < x`，而那一次它**碰巧算出同一個答案**。"
+}

@@ -72,6 +72,39 @@ export function applyPythonBinary(
     })
   }
 
+  // ── 串列的運算：Python 有【兩個】，而它們與數字的同名運算不同 ──
+  //
+  // ⚠️ **這一段要排在字串那一段【之後】**：`"%s %s" % (a, b)` 的右邊是一個
+  //    tuple——也就是一個串列——而它要走的是**字串的格式化**那條路。
+  //    排在前面的話那種寫法會被判成「串列不能做 %」。
+  //
+  // 🔴 `[0] * 3` 與 `[1,2] + [3]`。少了它們的症狀是**靜靜回 `0.0`**
+  //    （`toNumber` 對串列給 NaN，而 NaN 走完整個 switch 沒有人攔）
+  //    ——`[[0] * 2 for _ in range(3)]` 這個「建二維表」的慣用寫法整段崩掉。
+  //
+  // ⚠️ **乘出來的每一格是【同一個】值**，那正是 Python 自己的行為
+  //    （`g = [[0] * 2] * 3` 之後改一格會三列一起變）——所以這裡不深拷貝。
+  if (l.type === 'array' || r.type === 'array') {
+    if (op === '+' && l.type === 'array' && r.type === 'array') {
+      return { type: 'array', value: [...(l.value as RuntimeValue[]), ...(r.value as RuntimeValue[])] }
+    }
+    if (op === '*') {
+      const xs = (l.type === 'array' ? l : r).value as RuntimeValue[]
+      const cnt = l.type === 'array' ? r : l
+      if (cnt.type !== 'array') {
+        const n = Math.trunc(ctx.toNumber(cnt))
+        const out: RuntimeValue[] = []
+        for (let i = 0; i < n; i++) out.push(...xs)
+        return { type: 'array', value: out }
+      }
+    }
+    // 其餘的在 Python 是 TypeError —— **出聲**，不要轉成數字。
+    throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+      '%1': `串列不能做 ${op}（Python 會說 TypeError）`,
+    })
+  }
+
+
   const a = ctx.toNumber(l), b = ctx.toNumber(r)
   const bothInt = isInt(l) && isInt(r)
   const num = (v: number, forceFloat = false): RuntimeValue =>

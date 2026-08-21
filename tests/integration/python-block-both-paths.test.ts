@@ -324,6 +324,9 @@ describe('整段程式碼 → 積木（渲染那條路）', () => {
       ['python_container_enumerate', 'a = enumerate(xs)\n'],
       ['python_container_zip', 'a = zip(xs, ys)\n'],
       ['python_throw', 'raise ValueError("壞了")\n'],
+      ['python_container_assign', 'g[1] = 9\n'],
+      ['python_member_assign', 'self.n = 1\n'],
+      ['python_compare_chain', 'y = 1 < x < 10\n'],
     ]
     for (const [type, code] of CASES) {
       const got = typesIn(await render(code))
