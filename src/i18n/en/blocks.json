@@ -229,5 +229,6 @@
   "CATEGORY_HARDWARE_MODULES": "Parts & Modules",
   "CATEGORY_HARDWARE_SERIAL": "Serial",
   "CPP_METHOD_CALL_ON": "On",
-  "CPP_METHOD_CALL_DO": "call"
+  "CPP_METHOD_CALL_DO": "call",
+  "RUNTIME_ERR_NO_MORE_INPUT": "The program asked for a line of input, but there is none left"
 }

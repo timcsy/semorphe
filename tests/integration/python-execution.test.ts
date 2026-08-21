@@ -69,6 +69,24 @@ describe('spec 170 · Python 的執行期', () => {
       .toBe('completed|嗨 小明\n')
   })
 
+  it('🔴 提示要【先印出來】，不然使用者對著空的輸入框發呆', async () => {
+    expect(await runPython('x = input("請輸入名字：")\nprint("hello,", x)\n', ['小明']))
+      .toBe('completed|請輸入名字：hello, 小明\n')
+  })
+
+  it('🔴 沒有輸入時的錯誤訊息要說【實話】，不得說「我看不懂這段程式」', async () => {
+    // ⚠️ 使用者 2026-08-21 回報：按執行 → 主控台印出提示 → 跳出
+    //    「這一段程式我看不懂，所以沒有辦法執行它」——**而程式碼一點問題都沒有**。
+    //    根因是這一格借用了 `UNRECOGNIZED_CODE`。
+    //
+    // > **一個錯誤代碼被拿去兼差時，它的訊息會對著一個完全不同的情境說話
+    // > ——而那個訊息會把使用者送去改一段沒有壞的程式碼。**
+    const out = await runPython('x = input()\nprint(x)\n')  // 刻意不餵 stdin
+    expect(out, '★ 錨點：它要真的失敗，否則下面在驗一個沒發生的事').toContain('<執行例外')
+    expect(out, '🔴 又在說「我看不懂」了').not.toContain('UNRECOGNIZED_CODE')
+    expect(out).toContain('NO_MORE_INPUT')
+  })
+
   it('🔴 認不出來的語法【出聲】，不得靜默跳過', async () => {
     const out = await runPython('class Foo:\n    pass\n')
     expect(out, '一段執行不了的程式碼靜默結束 → 使用者以為它跑成功了').not.toBe('completed|')
