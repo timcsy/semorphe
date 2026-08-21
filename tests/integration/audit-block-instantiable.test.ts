@@ -1,0 +1,171 @@
+/**
+ * 第五十一條護欄：**每一顆宣告的積木都要真的建得出來。**
+ *
+ * ## 為什麼有這一支（2026-08-22，開瀏覽器看出來的）
+ *
+ * `python_loop_for` ——Python 最基本的迴圈積木——**在瀏覽器裡完全建不出來**：
+ *
+ * ```
+ * Error: Block "python_loop_for": Message index %2 out of range.
+ * ```
+ *
+ * 而那時：**5312 支測試全綠**、來回轉換一字不差、執行結果與真的 Python 相同。
+ *
+ * 症狀是使用者打開「流程控制」分類，看到 `if` 之後**就沒有了**
+ * ——`for`／`while`／`break` 全部不見，而沒有任何東西出聲。
+ *
+ * ## 🔴 為什麼既有的測試看不到
+ *
+ * | | 做的事 | 看得到這個嗎 |
+ * |---|---|---|
+ * | 渲染那條路的測試 | 樹 → **BlockState（JSON）** | ❌ 沒有真的建積木 |
+ * | 比對護欄 | 真的建，**而建不起來時 `catch { }` 跳過** | ❌ 被自己的容錯吃掉 |
+ * | 可拿性護欄 | 這顆在不在工具箱的來源裡 | ❌ 在，只是建不出來 |
+ *
+ * > **一整排「渲得出積木」的測試，如果渲的是一份 JSON，
+ * > 那麼它們對「Blockly 建不建得起來」這個問題一個字都沒說。**
+ *
+ * ⚠️ 而 `jsonInit` 的失敗**只在建的那一刻**發生——它讀 `Blockly.Msg` 展開
+ * `%{BKY_...}`，所以**同一份宣告在不同語系下可以一個成功一個失敗**。
+ * 這正是這裡兩種語系都跑一遍的理由。
+ */
+import { describe, it, expect, beforeAll } from 'vitest'
+import * as Blockly from 'blockly'
+import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { allCppProjections } from '../../src/languages/cpp/all-declarations'
+import { allComponentDefs } from '../helpers/component-scan'
+import { componentLabels } from '../../src/core/component/labels'
+import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
+import i18nBlocksEn from '../../src/i18n/en/blocks.json'
+import { printReport, assertRatchet, assertCorpus } from '../helpers/guardrail'
+
+let reg: BlockSpecRegistry
+let ws: Blockly.Workspace
+
+/** 建一顆，回失敗的原因（成功回 `null`）。**注入餵得進來**，所以是純函式。 */
+export function whyNotBuildable(type: string, workspace: Blockly.Workspace): string | null {
+  try {
+    const b = workspace.newBlock(type)
+    b.dispose(false)
+    return null
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e)
+  }
+}
+
+beforeAll(() => {
+  registerFieldMultilineInput()
+  registerDynamicDropdownField()
+  for (const k of ['names', 'vars', 'funcs', 'arrays']) declareDropdownSource(k, () => [])
+  reg = new BlockSpecRegistry()
+  reg.loadFromSplit(allComponentDefs(), allCppProjections())
+  ws = new Blockly.Workspace()
+})
+
+/** 用**產品那條路**註冊全部積木（paramList／branchList／variadic 都在裡面）。 */
+async function registerViaProduct(): Promise<void> {
+  const { BlockRegistrar, setLanguageInputNames } = await import('../../src/ui/block-registrar')
+  const n = await import('../../src/languages/cpp/block-input-names')
+  setLanguageInputNames({
+    compoundAssign: n.C_COMPOUND_ASSIGN_INPUTS, compoundAssignExpr: n.C_COMPOUND_ASSIGN_EXPR_INPUTS,
+    varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, ifBlock: n.IF_INPUTS, whileBlock: n.WHILE_INPUTS,
+    countLoop: n.COUNT_LOOP_INPUTS, funcDef: n.FUNDEF_INPUTS, returnBlock: n.RETURN_INPUTS,
+    arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
+  })
+  new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
+}
+
+/** 宣告裡所有的積木型別。 */
+function declaredTypes(): string[] {
+  return (reg.getAll() as { blockDef?: { type?: string } }[])
+    .map((s) => s.blockDef?.type)
+    .filter((t): t is string => Boolean(t))
+}
+
+describe('第五十一條護欄：宣告的積木，Blockly 真的建得出來嗎', () => {
+  it('★ 錨點：母體不是空的，而且真的走了產品那條註冊路', async () => {
+    Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
+    await registerViaProduct()
+    expect(declaredTypes().length, '一顆都沒宣告 → 下面每一個零都是假的').toBeGreaterThan(100)
+    expect(Blockly.Blocks['python_print'], '產品那條路沒跑 → 建的不是真的那一顆').toBeTruthy()
+  })
+
+  it('★ 注入①：訊息索引超出範圍的宣告【必須】被抓到', () => {
+    Blockly.Blocks['__inject_bad'] = {
+      init: function (this: Blockly.Block) {
+        ;(this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({
+          type: '__inject_bad',
+          message0: '對 %2 裡的每一個 %1',
+          args0: [{ type: 'input_value', name: 'ONLY_ONE' }],
+        })
+      },
+    }
+    const why = whyNotBuildable('__inject_bad', ws)
+    delete Blockly.Blocks['__inject_bad']
+    expect(why, '這種宣告都抓不到 → 這條護欄量的是別的東西').toBeTruthy()
+    expect(why).toContain('%2')
+  })
+
+  it('★ 注入②：健康的宣告不得被誤報', () => {
+    Blockly.Blocks['__inject_ok'] = {
+      init: function (this: Blockly.Block) {
+        ;(this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({
+          type: '__inject_ok', message0: '對 %1', args0: [{ type: 'input_value', name: 'ONLY_ONE' }],
+        })
+      },
+    }
+    const why = whyNotBuildable('__inject_ok', ws)
+    delete Blockly.Blocks['__inject_ok']
+    expect(why, `健康的宣告被判成建不起來：${why}`).toBeNull()
+  })
+
+  it('★ 注入③：訊息沒載入時的失敗與宣告寫錯【必須】分得出來', () => {
+    // ⚠️ `%{BKY_不存在}` 展不開時 Blockly 把它留成字面——那不是「建不起來」。
+    Blockly.Blocks['__inject_msg'] = {
+      init: function (this: Blockly.Block) {
+        ;(this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({
+          type: '__inject_msg', message0: '%{BKY_THIS_KEY_DOES_NOT_EXIST} %1',
+          args0: [{ type: 'input_value', name: 'ONLY_ONE' }],
+        })
+      },
+    }
+    const why = whyNotBuildable('__inject_msg', ws)
+    delete Blockly.Blocks['__inject_msg']
+    expect(why, '缺一則訊息不該被算成「建不起來」——那會讓真正的失敗淹在雜訊裡').toBeNull()
+  })
+
+  it('硬性零：每一顆都建得起來（中英兩種語系各一遍）', async () => {
+    const failures: { type: string; locale: string; why: string }[] = []
+    const types = declaredTypes()
+
+    for (const [locale, table] of [['zh-TW', i18nBlocks], ['en', i18nBlocksEn]] as const) {
+      // 🔴 **語系要重載**：`jsonInit` 展開 `%{BKY_...}` 是在**建的那一刻**，
+      //    所以同一份宣告在不同語系下可以一個成功一個失敗。
+      Object.assign(Blockly.Msg as Record<string, string>, table, componentLabels(locale))
+      for (const t of Object.keys(Blockly.Blocks)) delete Blockly.Blocks[t]
+      await registerViaProduct()
+      for (const t of types) {
+        if (!Blockly.Blocks[t]) continue
+        const why = whyNotBuildable(t, ws)
+        if (why) failures.push({ type: t, locale, why })
+      }
+    }
+
+    printReport('宣告的積木建不建得起來', [
+      `型別 ${types.length} 個 × 2 種語系`,
+      `建不起來  ${failures.length} 個 ← 硬性零`,
+      ...failures.map((f) => `  ✘ ${f.type}（${f.locale}）：${f.why}`),
+      '',
+      '⚠️ 渲染那條路的測試產出的是 **BlockState（JSON）**——它對「Blockly 建不建得起來」',
+      '   一個字都沒說。而 `jsonInit` 的失敗只在**建的那一刻**發生。',
+    ])
+
+    assertCorpus([['宣告的積木型別', types.length]], 'block-instantiable')
+    assertRatchet([['建不起來', failures.length]], 'block-instantiable', {
+      detail: failures.map((f) => `${f.type}（${f.locale}）：${f.why}`),
+    })
+    expect(failures.map((f) => `${f.type}（${f.locale}）：${f.why}`), '建不起來的積木在工具箱裡【看不見】').toEqual([])
+  })
+})

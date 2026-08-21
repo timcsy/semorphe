@@ -63,6 +63,18 @@ export interface ParamListSpec {
   closeLabelFallback?: string
   /** `+`／`−` 那一列要移到哪個 input 之前（`null` ＝ 放在最後） */
   moveTailTo?: string | null
+  /**
+   * **最少要有幾格**（預設 0）。
+   *
+   * 🔴 `for` 迴圈是 1：**零個名字的 for 不是合法的 Python**（`for  in xs:`），
+   * 而工具箱拖出來的那一顆用的就是初始值——學生看到的是「對 ⬤」，
+   * 中間少了那個要被綁定的名字。
+   *
+   * ⚠️ 而函式定義與匿名函式是 **0**：`def f():` 與 `lambda: 3` 都合法。
+   *
+   * > **「最少幾格」是那個語言的規則，所以它是一個宣告，不是一個預設值。**
+   */
+  minCount?: number
 }
 
 function setMinusState(block: any, atMin: boolean): void {
@@ -87,6 +99,7 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   const label = (key: string | undefined, fallback: string | undefined): string | undefined =>
     key ? (msg[key] || fallback) : fallback
 
+  const minCount = spec.minCount ?? 0
   proto.paramCount_ = 0
 
   proto.rebuildTail_ = function (this: any): void {
@@ -106,7 +119,7 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
       .appendField(
         new Blockly.FieldImage(
-          this.paramCount_ <= 0 ? MINUS_DISABLED_IMG : MINUS_IMG, 20, 20, '-', () => this.minusParam_(),
+          this.paramCount_ <= minCount ? MINUS_DISABLED_IMG : MINUS_IMG, 20, 20, '-', () => this.minusParam_(),
         ),
         'PL_MINUS',
       )
@@ -117,6 +130,9 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     baseInit.call(this)
     this.paramCount_ = 0
     this.rebuildTail_()
+    // 🔴 **最少那幾格要在【建的當下】就長出來**——工具箱拖出來的那一顆
+    //    用的就是這個狀態，而 `for` 少了那個名字產不出合法的 Python。
+    while (this.paramCount_ < minCount) this.plusParam_()
   }
 
   proto.plusParam_ = function (this: any): void {
@@ -135,11 +151,11 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   }
 
   proto.minusParam_ = function (this: any): void {
-    if (this.paramCount_ <= 0) return
+    if (this.paramCount_ <= minCount) return
     this.paramCount_--
     this.removeInput(name(spec.itemPattern, this.paramCount_))
     this.rebuildTail_()
-    setMinusState(this, this.paramCount_ <= 0)
+    setMinusState(this, this.paramCount_ <= minCount)
   }
 
   // ⚠️ **格式是契約**：`{ paramCount }`，與命令式那份一字不差。
@@ -149,7 +165,9 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   }
 
   proto.loadExtraState = function (this: any, state: { paramCount?: number } | null): void {
-    const want = state?.paramCount ?? 0
+    // ⚠️ **舊存檔沒有這個鍵時要退到【最少幾格】不是 0**——`for` 的舊檔
+    //    若被載回 0 格，產出的會是 `for  in xs:`。
+    const want = Math.max(state?.paramCount ?? 0, minCount)
     // ⚠️ **靠反覆呼叫 `plusParam_` 重建，不要直接設 `paramCount_`。**
     // 舊存檔只存了數字，插槽是這裡長出來的——改掉這個機制，舊存檔就載不回來。
     while (this.paramCount_ < want) this.plusParam_()

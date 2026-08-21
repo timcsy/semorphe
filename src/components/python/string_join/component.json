@@ -1,0 +1,22 @@
+{
+  "componentId": "python:string_join",
+  "abstractComponent": null,
+  "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `join`。\n⚠️ **接收者是分隔用的那一段文字**（`\"-\".join(xs)`）——這是 Python 特有的語序，而標籤上刻意把它讀成「用 %1 把 %2 接起來」。",
+  "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。"
+}

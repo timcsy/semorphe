@@ -117,15 +117,20 @@ const norm = (x: string): string =>
  * 判準：那個名字在內建表裡（`len`／`max`／`.upper`…）而沒有走到專屬元件。
  * 使用者自己 `def` 的名字不算——它們沒有身分是對的。
  */
-function genericBuiltinCalls(n: SemanticNode | null): number {
-  if (!n) return 0
-  let count = 0
+/**
+ * 掉進通用桶的**內建名字**，逐個名字數。
+ *
+ * ⚠️ 只回總數的話，「該替哪一顆做元件」這個問題**答不出來**
+ * ——而那正是這一欄存在的理由。
+ */
+function genericBuiltinCalls(n: SemanticNode | null, out: Record<string, number> = {}): Record<string, number> {
+  if (!n) return out
   const name = String((n.properties as Record<string, unknown>)?.name ?? '')
   const method = String((n.properties as Record<string, unknown>)?.method ?? '')
-  if (n.componentId === 'python:func_call' && (name in PYTHON_BUILTIN_FUNCTIONS || name in PYTHON_MODULE_METHODS)) count++
-  if (n.componentId === 'python:method_call' && method in PYTHON_BUILTIN_METHODS) count++
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) count += genericBuiltinCalls(k)
-  return count
+  if (n.componentId === 'python:func_call' && (name in PYTHON_BUILTIN_FUNCTIONS || name in PYTHON_MODULE_METHODS)) out[name] = (out[name] ?? 0) + 1
+  if (n.componentId === 'python:method_call' && method in PYTHON_BUILTIN_METHODS) out[`.${method}`] = (out[`.${method}`] ?? 0) + 1
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) genericBuiltinCalls(k, out)
+  return out
 }
 
 function unresolvedOf(n: SemanticNode | null, out: string[] = []): string[] {
@@ -142,13 +147,14 @@ interface result {
   diffs: string[]
   runErrors: string[]
   outputDiffs: string[]
+  genericNames: Record<string, number>
 }
 
 /** 量一批語料。**吃輸入**，所以注入餵得進來。 */
 async function measure(corpus: readonly (readonly [string, string])[]): Promise<result> {
   const r: result = {
     programs: corpus.length, nodes: 0, degraded: 0, roundTripDiff: 0, genericCall: 0,
-    runFailed: 0, outputDiff: 0, unresolvedTypes: {}, diffs: [], runErrors: [], outputDiffs: [],
+    runFailed: 0, outputDiff: 0, unresolvedTypes: {}, diffs: [], runErrors: [], outputDiffs: [], genericNames: {},
   }
   for (const [name, code] of corpus) {
     const tree = await liftPython(code)
@@ -156,7 +162,8 @@ async function measure(corpus: readonly (readonly [string, string])[]): Promise<
     r.nodes += ids.length
     r.degraded += ids.filter(isDegraded).length
     // 只數**內建的**名字——使用者自己定義的函式沒有身分是對的（見檔頭）
-    r.genericCall += genericBuiltinCalls(tree)
+    genericBuiltinCalls(tree, r.genericNames)
+    r.genericCall = Object.values(r.genericNames).reduce((a, b) => a + b, 0)
     for (const t of unresolvedOf(tree)) r.unresolvedTypes[t] = (r.unresolvedTypes[t] ?? 0) + 1
     // 🔴 **跑得動嗎**——`stdin` 餵幾行，讓需要輸入的語料也走得完。
     //    降級的節點跑到時會丟「我看不懂」，那本來就該算失敗：**學生按下執行看到的就是它**。
@@ -277,6 +284,8 @@ describe('第五十條護欄：AI 生的 Python，我們處理得了多少', () 
       `🔴 來回不同  ${r.roundTripDiff} 段  ← 產出【不合法或語義不同】的 Python`,
       `   降級節點  ${r.degraded} 個（${((r.degraded / r.nodes) * 100).toFixed(0)}%）  ← 誠實變灰，學生看得見`,
       `   通用桶    ${r.genericCall} 個  ← 掉進 python:func_call，不降級但身分沒了`,
+      // 🔴 **逐個名字**——「該替哪一顆做元件」只有這一欄答得出來
+      `     ${Object.entries(r.genericNames).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}×${v}`).join('  ')}`,
       '',
       ...r.outputDiffs.map((e) => `     ✘ 答案不同  ${e}`),
       ...r.runErrors.map((e) => `     ✘ 跑不動  ${e}`),

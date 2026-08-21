@@ -1,0 +1,4 @@
+{
+  "PY_STRING_REPLACE_MSG0": "In %1 replace %2 with %3",
+  "PY_STRING_REPLACE_TOOLTIP": "Finds every occurrence in the text and replaces them all, returning new text; the original is unchanged."
+}

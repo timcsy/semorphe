@@ -1,0 +1,4 @@
+{
+  "PY_STRING_JOIN_MSG0": "Join %2 with %1",
+  "PY_STRING_JOIN_TOOLTIP": "Joins several pieces of text into one, inserting the separator between each pair. Every item must be text."
+}

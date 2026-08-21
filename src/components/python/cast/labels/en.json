@@ -1,0 +1,8 @@
+{
+  "PY_CAST_MSG0": "Convert %2 to %1",
+  "PY_CAST_TOOLTIP": "View the same value as another type. Text that is not a number stops with an explanation; converting a decimal to a whole number truncates rather than rounds.",
+  "PY_CAST_INT": "whole number",
+  "PY_CAST_FLOAT": "decimal",
+  "PY_CAST_STR": "text",
+  "PY_CAST_BOOL": "true/false"
+}

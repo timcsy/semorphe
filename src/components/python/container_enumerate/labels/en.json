@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ENUMERATE_MSG0": "Pair each item of %1 with its position",
+  "PY_CONTAINER_ENUMERATE_TOOLTIP": "While walking through, gives both the position and the item; positions start at 0. Each pair is an immutable two-item sequence."
+}

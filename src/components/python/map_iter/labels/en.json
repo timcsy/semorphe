@@ -1,0 +1,7 @@
+{
+  "PY_MAP_ITER_MSG0": "Get the %1 of %2",
+  "PY_MAP_ITER_TOOLTIP": "Spreads the dictionary into a sequence to walk through. Items come as key-value pairs; keys and values can also be taken on their own.",
+  "PY_MAP_ITER_ITEMS": "items",
+  "PY_MAP_ITER_KEYS": "keys",
+  "PY_MAP_ITER_VALUES": "values"
+}

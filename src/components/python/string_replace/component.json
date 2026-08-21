@@ -1,0 +1,23 @@
+{
+  "componentId": "python:string_replace",
+  "abstractComponent": null,
+  "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "old": "expression",
+    "new": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `replace`。⚠️ **只認兩個引數的**——第三個引數（最多換幾次）積木上沒有那一格。",
+  "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。"
+}

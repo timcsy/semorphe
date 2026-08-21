@@ -1,0 +1,8 @@
+{
+  "PY_CAST_MSG0": "把 %2 轉成 %1",
+  "PY_CAST_TOOLTIP": "換一種型別看同一個值。文字轉數字時看不懂會停下來說明原因；數字轉整數是無條件捨去，不是四捨五入。",
+  "PY_CAST_INT": "整數",
+  "PY_CAST_FLOAT": "小數",
+  "PY_CAST_STR": "文字",
+  "PY_CAST_BOOL": "真假"
+}

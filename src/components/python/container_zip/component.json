@@ -1,0 +1,21 @@
+{
+  "componentId": "python:container_zip",
+  "abstractComponent": null,
+  "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
+  "properties": [],
+  "children": {
+    "first": "expression",
+    "second": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `zip`。\n⚠️ **只認兩串的**：Python 的 `zip` 吃任意多串，而積木上是兩格——三串以上讓一般呼叫接手，不然會產出一個少了引數的呼叫。"
+}

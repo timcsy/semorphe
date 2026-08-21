@@ -1,5 +1,5 @@
 {
-  "PYTHON_FOR_MSG0": "對 %2 裡的每一個 %1",
+  "PYTHON_FOR_MSG0": "對 %1",
   "PYTHON_FOR_TOOLTIP": "依序走訪一個序列，每一輪把當前的值放進那個名字裡。range(3) 給出 0、1、2",
   "PYTHON_FOR_TARGETS_OPEN": "裡的每一個",
   "PYTHON_FOR_TARGETS_CLOSE": ""

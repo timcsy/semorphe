@@ -1,0 +1,4 @@
+{
+  "PY_MAP_AT_DEFAULT_MSG0": "取 %1 的 %2，取不到就用 %3",
+  "PY_MAP_AT_DEFAULT_TOOLTIP": "用鍵去字典查值；查不到時不會停下來，而是給出後面那個備用的值。"
+}

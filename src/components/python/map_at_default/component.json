@@ -1,0 +1,23 @@
+{
+  "componentId": "python:map_at_default",
+  "abstractComponent": null,
+  "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "key": "expression",
+    "fallback": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `get`。\n🔴 **叫 `map_at_default` 而不是 `map_get`**：`at`（取那一格）這個操作詞已經有了，而 `get` 會是它的同義詞——**多一個同義詞就是少一分「同一個操作用同一個字」的保證**。`default` 這個種差也是既有的。",
+  "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。"
+}

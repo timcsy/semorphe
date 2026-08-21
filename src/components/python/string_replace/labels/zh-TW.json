@@ -1,0 +1,4 @@
+{
+  "PY_STRING_REPLACE_MSG0": "把 %1 裡的 %2 換成 %3",
+  "PY_STRING_REPLACE_TOOLTIP": "找出文字裡所有出現的那一段，全部換掉，得到新的文字。原本的文字不會變。"
+}

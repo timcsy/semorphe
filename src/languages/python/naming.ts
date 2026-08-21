@@ -58,6 +58,21 @@ export const PYTHON_OPERATIONS = [
   //    `substr`（取一段）／`erase`（刪一段）都只產出**一段**，表達不了「切成好幾段」。
   //    > **詞彙表要不要多一個字，答案在【那個語言怎麼切概念】，不在字典裡。**
   'split',
+  // ⚠️ 下面五個加入日 2026-08-22——第七批（第五十條護欄的通用桶逐名報表）。
+  //    每一個的理由都是同一條：**那個語言把它切成一個動詞，而既有的字表達不了**。
+  //
+  //    `round`      C++ 那側靠 `math_unary` 的下拉；Python 的 `round` 是內建函式，
+  //                 而且是**銀行家捨入**——與「取整」不是同一件事。
+  //    `strip`      C++ 要 `find_first_not_of` ＋ `substr` 兩步。既有的 `erase`
+  //                 是「刪掉指定的一段」，說不出「刪掉兩頭的空白」。
+  //    `join`       C++ 沒有。既有的 `append` 是接**一段**，說不出「每兩段之間插分隔」。
+  //    `enumerate`  「配上序號」。既有的 `iter` 只說走訪，說不出多出來的那個序號。
+  //    `zip`        「兩串一格一格配對」。沒有任何既有的字說得出它。
+  'round',
+  'strip',
+  'join',
+  'enumerate',
+  'zip',
 ] as const
 
 /**
@@ -72,4 +87,9 @@ export const PYTHON_KINDS = [
   // ⚠️ `named` 加入日 2026-08-21——`python:func_call_named`（`sort(key=f)`）。
   //    🔴 **C++ 沒有關鍵字引數**：它靠位置與多載。這是 Python 切概念的方式。
   'named',
+  // ⚠️ `default` 加入日 2026-08-22——`python:map_at_default`（`d.get(k, 0)`）。
+  //    🔴 **這是一個種差不是一個新操作**：它做的仍然是 `at`（取那一格），
+  //    差別在**取不到的時候**。取名 `map_get` 的話 `get` 會是 `at` 的同義詞，
+  //    而「同一個操作在任何主體上用同一個字」正是這份表存在的理由。
+  'default',
 ] as const

@@ -1,0 +1,4 @@
+{
+  "PY_MATH_ROUND_MSG0": "Round %1 to %2 decimal places",
+  "PY_MATH_ROUND_TOOLTIP": "On an exact half it goes to the EVEN side: 2.5 becomes 2 and 3.5 becomes 4. Leave the places empty for a whole number."
+}

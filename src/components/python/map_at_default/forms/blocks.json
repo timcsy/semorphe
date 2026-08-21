@@ -1,0 +1,42 @@
+[
+  {
+    "id": "python_map_at_default",
+    "componentId": "python:map_at_default",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_map_at_default",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MAP_AT_DEFAULT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FALLBACK",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_MAP_AT_DEFAULT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "KEY": "key",
+        "FALLBACK": "fallback"
+      }
+    }
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_map_iter",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:map_iter"
+    },
+    "liftStrategy": "python:lift_map_iter",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於一般呼叫的兜底（3）與方法呼叫（8），低於輸出與讀取輸入（15）。"
+  }
+]

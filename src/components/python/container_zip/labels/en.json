@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ZIP_MSG0": "Pair up %1 and %2 item by item",
+  "PY_CONTAINER_ZIP_TOOLTIP": "Walks both sequences together, first with first and second with second. Stops when the SHORTER one runs out."
+}

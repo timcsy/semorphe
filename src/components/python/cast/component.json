@@ -1,0 +1,22 @@
+{
+  "componentId": "python:cast",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與 C++ 那顆同名的轉型**保證不同**：那邊的目標型別是編譯期的型別名，這裡的四個名字是**四個內建函式**，而 `int(\"12\")` 是**剖析**不是重新詮釋位元。等價要在量得出來的觀察集底下宣告，不是靠同名。",
+  "_componentId_why": "🔴 **叫 `cast` 而不是 `type_convert`**：`cast` 這個操作詞在詞彙表裡已經有了，而「同一個操作在任何主體上用同一個字」正是那份表存在的理由。多一個同義詞就是少一分那個保證。",
+  "properties": [
+    { "name": "target_type", "kind": "enum", "default": "int" }
+  ],
+  "_properties_why": "屬性名與 C++ 那顆轉型一致——**同一個問題該用同一個名字問**。",
+  "children": { "value": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是那四個之一——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。\n⚠️ 使用者若自己 `def int(x)`，這顆仍然會認走它——**那是一個已知的邊界**（判別在 lift 期，被蓋掉是執行期才知道的事），而執行那一路會讓路。"
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "python_cast",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": { "componentId": "python:cast" },
+    "liftStrategy": "python:lift_cast",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於一般呼叫的兜底（3）與方法呼叫（8），低於輸出與讀取輸入（15)。與同族的內建函式元件同一層。"
+  }
+]

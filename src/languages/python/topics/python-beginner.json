@@ -52,7 +52,11 @@
           "python:string_lower",
           "python:string_split",
           "python:container_substr",
-          "python:ternary"
+          "python:ternary",
+          "python:cast",
+          "python:math_round",
+          "python:string_strip",
+          "python:string_replace"
         ],
         "children": [
           {
@@ -78,7 +82,12 @@
               "python:container_sort",
               "python:map_make_for",
               "python:lambda",
-              "python:func_call_named"
+              "python:func_call_named",
+              "python:string_join",
+              "python:map_at_default",
+              "python:map_iter",
+              "python:container_enumerate",
+              "python:container_zip"
             ],
             "children": []
           }

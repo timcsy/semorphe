@@ -9,9 +9,9 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { PYTHON_BUILTIN_METHODS, PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
-import { callWith, withCall } from '../func_def/call'
+import { PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
+import { withCall } from '../func_def/call'
+import { callMethod } from './dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:method_call', async (node, ctx) => {
@@ -34,16 +34,6 @@ export function registerExecute(register: (component: string, executor: Componen
     const args: RuntimeValue[] = []
     for (const a of node.children.args ?? []) args.push(await ctx.evaluate(a))
 
-    // 使用者定義的類別的方法：`d.bark()` —— 登記成 `類別.方法`
-    if (self.type === 'object' && self.structName) {
-      const m = ctx.functions.get(`${self.structName}.${method}`)
-      if (m) return callWith(m, [self, ...args], ctx, method)
-    }
-
-    const builtin = PYTHON_BUILTIN_METHODS[method]
-    if (builtin) return builtin(self, args, withCall(ctx))
-
-    // 查不到就出聲——靜默回 None 會讓錯誤帶到下一步去算。
-    throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `.${method}()` })
+    return callMethod(self, method, args, ctx)
   })
 }

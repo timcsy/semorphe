@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ZIP_MSG0": "把 %1 與 %2 一格一格配對",
+  "PY_CONTAINER_ZIP_TOOLTIP": "兩串東西同時走，第一格配第一格、第二格配第二格。短的那一串走完就停。"
+}

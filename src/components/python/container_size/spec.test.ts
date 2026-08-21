@@ -72,7 +72,9 @@ describe('python 方法的四顆積木', () => {
   })
 
   it('🔴 別的方法不得被搶走（對照組）', async () => {
-    const got = await ids('a = s.strip()\n')
+    // ⚠️ 2026-08-22：這裡原本用 `s.strip()`，而 `strip` 那天有了自己的元件
+    //    ——**這條測試釘的是邊界，所以邊界移動時要換一個還在界外的例子，不是刪掉它**。
+    const got = await ids('a = s.count("x")\n')
     expect(got, '沒有專屬元件的方法走一般方法呼叫').toContain('python:method_call')
   })
 

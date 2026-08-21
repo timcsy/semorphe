@@ -1,0 +1,4 @@
+{
+  "PY_STRING_STRIP_MSG0": "Strip whitespace from %1",
+  "PY_STRING_STRIP_TOOLTIP": "Removes spaces at the start and end of the text, leaving the middle untouched; returns new text."
+}

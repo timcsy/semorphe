@@ -9,27 +9,51 @@
       "type": "python_lambda",
       "inputsInline": true,
       "message0": "%{BKY_PY_LAMBDA_MSG0}",
-      "args0": [{ "type": "input_value", "name": "BODY", "check": "Expression" }],
+      "args0": [],
       "output": "Expression",
       "colour": "#FF6680",
       "tooltip": "%{BKY_PY_LAMBDA_TOOLTIP}",
       "paramList": {
         "itemPattern": "PARAM_{i}",
-        "fields": [{ "type": "field_input", "name": "PARAM_{i}", "text": "x" }],
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "x"
+          }
+        ],
         "separator": "，",
         "openLabelKey": "PY_LAMBDA_OPEN",
         "openLabelFallback": "（參數",
         "closeLabelKey": "PY_LAMBDA_CLOSE",
-        "closeLabelFallback": "）"
-      }
+        "closeLabelFallback": "）算出",
+        "moveTailTo": "BODY"
+      },
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "BODY",
+          "check": "Expression"
+        }
+      ]
     },
     "renderMapping": {
       "fields": {},
-      "inputs": { "BODY": "body" },
-      "dynamicRules": [{
-        "countSource": "paramCount", "childSlot": "params",
-        "childComponent": "param_decl", "childFields": { "PARAM_{i}": "name" }
-      }]
-    }
+      "inputs": {
+        "BODY": "body"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "childFields": {
+            "PARAM_{i}": "name"
+          }
+        }
+      ]
+    },
+    "_why": "🔴 **`message0` 只准引用 `args0` 裡真的有的那幾格**（2026-08-22）：參數列是**接上去的 input**，不是訊息的引數。寫成 `%2` 的症狀是這顆積木**完全建不出來**，而它同分類後面的積木一起從工具箱消失——第五十一條護欄。\n⚠️ 而本體刻意放在 `message1`：`moveTailTo` 把參數列移到某個 input **之前**，所以本體必須是自己的一格，否則參數會排到「臨時函式」這幾個字前面去。**順序只有【看】得出來**——查 API 問不到。"
   }
 ]

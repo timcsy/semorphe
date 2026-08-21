@@ -954,6 +954,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:cast": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:class_def": {
       "files": 4,
       "dirs": 1
@@ -974,6 +978,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:container_enumerate": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:container_find": {
       "files": 3,
       "dirs": 1
@@ -991,6 +999,10 @@
       "dirs": 1
     },
     "python:container_sum": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:container_zip": {
       "files": 4,
       "dirs": 1
     },
@@ -1058,6 +1070,14 @@
       "files": 3,
       "dirs": 1
     },
+    "python:map_at_default": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:map_iter": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:map_make": {
       "files": 3,
       "dirs": 1
@@ -1075,6 +1095,10 @@
       "dirs": 1
     },
     "python:math_min": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:math_round": {
       "files": 4,
       "dirs": 1
     },
@@ -1122,6 +1146,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:string_join": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:string_lower": {
       "files": 4,
       "dirs": 1
@@ -1130,7 +1158,15 @@
       "files": 4,
       "dirs": 1
     },
+    "python:string_replace": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:string_split": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:string_strip": {
       "files": 4,
       "dirs": 1
     },

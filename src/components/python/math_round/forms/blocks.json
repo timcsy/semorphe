@@ -1,0 +1,36 @@
+[
+  {
+    "id": "python_math_round",
+    "componentId": "python:math_round",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_math_round",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MATH_ROUND_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "DIGITS",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_MATH_ROUND_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value",
+        "DIGITS": "digits"
+      }
+    }
+  }
+]

@@ -1,6 +1,6 @@
 {
-  "PY_LAMBDA_MSG0": "臨時函式 %1 算出 %2",
+  "PY_LAMBDA_MSG0": "臨時函式",
   "PY_LAMBDA_OPEN": "（參數",
-  "PY_LAMBDA_CLOSE": "）",
+  "PY_LAMBDA_CLOSE": "）算出",
   "PY_LAMBDA_TOOLTIP": "一個沒有名字的小函式，只能算一個值。常用來告訴排序「要照哪一格比」。"
 }

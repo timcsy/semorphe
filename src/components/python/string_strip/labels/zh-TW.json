@@ -1,0 +1,4 @@
+{
+  "PY_STRING_STRIP_MSG0": "去掉 %1 的頭尾空白",
+  "PY_STRING_STRIP_TOOLTIP": "把文字最前面與最後面的空白去掉，中間的不動，得到新的文字。"
+}

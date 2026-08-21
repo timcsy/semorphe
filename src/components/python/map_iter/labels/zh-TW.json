@@ -1,0 +1,7 @@
+{
+  "PY_MAP_ITER_MSG0": "取 %2 的 %1",
+  "PY_MAP_ITER_TOOLTIP": "把字典攤成一串來走訪。項目是「鍵與值」成對；鍵與值也可以各自單獨取出來。",
+  "PY_MAP_ITER_ITEMS": "項目",
+  "PY_MAP_ITER_KEYS": "鍵",
+  "PY_MAP_ITER_VALUES": "值"
+}

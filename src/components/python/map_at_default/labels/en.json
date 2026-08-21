@@ -1,0 +1,4 @@
+{
+  "PY_MAP_AT_DEFAULT_MSG0": "Get %2 from %1, or %3",
+  "PY_MAP_AT_DEFAULT_TOOLTIP": "Looks a key up in the dictionary; when it is absent this does not stop, it yields the fallback value instead."
+}

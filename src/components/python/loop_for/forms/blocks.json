@@ -42,7 +42,8 @@
         "openLabelFallback": "裡的每一個",
         "closeLabelKey": "PYTHON_FOR_TARGETS_CLOSE",
         "closeLabelFallback": "",
-        "moveTailTo": "BODY"
+        "moveTailTo": "BODY",
+        "minCount": 1
       }
     },
     "renderMapping": {
@@ -64,6 +65,6 @@
         }
       ]
     },
-    "_why": "🔴 **被綁定的名字用 paramList，不是一個文字欄位**（2026-08-21）：`for k, v in d.items():` 有兩個名字，而一個欄位只裝得下一個——症狀是第二個名字在積木來回時**靜默遺失**。\n⚠️ `countSource` 用 `paramCount`，與同族函式定義的參數列一字不差（存檔契約）。"
+    "_why": "🔴 **`message0` 只准引用 `args0` 裡真的有的那幾格**（2026-08-22）：被綁定的名字是 **paramList 接上去的 input**，不是訊息的引數。標籤曾經寫成「對 %2 裡的每一個 %1」，而 `args0` 只有一格——症狀是這顆積木**完全建不出來**，使用者打開「流程控制」看到 `if` 之後就沒有了。第五十一條護欄在看這件事。\n🔴 **被綁定的名字用 paramList，不是一個文字欄位**（2026-08-21）：`for k, v in d.items():` 有兩個名字，而一個欄位只裝得下一個——症狀是第二個名字在積木來回時**靜默遺失**。\n⚠️ `countSource` 用 `paramCount`，與同族函式定義的參數列一字不差（存檔契約）。"
   }
 ]
