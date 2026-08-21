@@ -2,7 +2,7 @@
 name: component-pipeline
 description: >
   為 Semorphe 新增概念的端到端管線。
-  串接全部 5 個元件 skill：discover → generate → roundtrip → fuzz → integrate。
+  串接全部 6 個元件 skill：discover → generate → roundtrip → fuzz → integrate → verify-in-browser。
   當你想從「我要支援 <特性>」到完全整合的概念，用一個指令完成時使用。
   支援任何語言。
 user-invocable: true
@@ -27,6 +27,19 @@ user-invocable: true
 | 3. Round-trip | `component-roundtrip` | `Skill tool: skill="component-roundtrip", args="{lang} {component}"` |
 | 4. 模糊測試 | `component-fuzz` | `Skill tool: skill="component-fuzz", args="{lang} {difficulty} {scope} {count}"` |
 | 5. 整合 | `component-integrate` | `Skill tool: skill="component-integrate", args="{lang} {component}"` |
+| 6. 🔴 **看** | `verify-in-browser` | `Skill tool: skill="verify-in-browser", args="{lang} {component}"` |
+
+> 🔴 **第 6 階段是 2026-08-21 加的，而它補的是這條管線最大的缺口**：
+> 在那之前**整條管線 5 支 skill、3090 行裡「瀏覽器」出現 0 次**
+> ——出口是「測試全綠」。
+>
+> 那天使用者連續回報**五件事**，全部在 4900 多支測試全綠的情況下：
+> 工具箱裡找不到 · 顏色與同族不一致 · 少了 mutation ·
+> 工具箱該有三個入口只有一個 · **mutation 按鈕的位置與同族不同**。
+>
+> **最後一條沒有任何 API 問得出它。**
+>
+> > **一條以「測試全綠」為出口的管線，量得到的只有它自己寫的測試。**
 
 **「調用」的唯一合法方式是使用 Skill tool。** 以下行為全部視為違規：
 - ❌ 自己寫程式碼代替 skill 的工作
@@ -37,9 +50,16 @@ user-invocable: true
 
 ### 規則 2：五個階段缺一不可（除非使用者明確設定旗標）
 
-**必須按順序執行所有 5 個階段。** 只有以下旗標允許跳過：
+**必須按順序執行所有 6 個階段。** 只有以下旗標允許跳過：
 - `--dry-run` → 允許跳過階段 3、4、5
 - `--skip-fuzz` → 允許跳過階段 4
+
+🔴 **階段 6 沒有跳過旗標。** 它是唯一一個「使用者看得到的東西」被檢查的地方——
+而前五個階段全綠的情況下它抓到過五個缺陷。
+
+⚠️ **批次產多顆時**：階段 1–5 可以批次，**階段 6 要在【第一顆】就跑一次**。
+實測（2026-08-21）：批次寫 16 顆之後才看，於是 `owner` 與顏色兩個錯**複製了 16 份**。
+> **可以批次的是「寫」，不可以批次的是「驗」。**
 
 **沒有旗標時，任何階段都不可跳過。** 不可以因為「概念很簡單」、「已經有類似概念」、「時間不夠」等理由省略任何階段。
 

@@ -82,7 +82,7 @@ $ARGUMENTS
 | **先備知識** | 學習者必須已經知道的概念 |
 | **錯誤模式** | 初學者常犯的錯誤 |
 
-**四路完備性 gate**：每個概念必須滿足四路完備性（lift → render → extract → generate），缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + component children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 component 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（component → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
+**五路完備性 gate**：每個概念必須滿足五路完備性——程式碼裡的常數逐字是 `FIVE_PATHS = ['lift', 'generate', 'render', 'extract', 'execute']`（`src/core/component/types.ts:37`）。⚠️ **用語統一成「五路」**：這份文件曾經寫「四路 ＋ 第五層」、`component-integrate` 寫「六路掃描」，而**同一件事三個名字**讓人以為它們是不同的檢查。缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + component children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 component 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（component → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
 
 ### 階段三：Topic 層級樹分類
 
@@ -128,7 +128,7 @@ $ARGUMENTS
 ⚠️ **這張表在 2026-08-12 過時了兩層**，而它是一份**會被照著做**的指示：
 
 - 路徑變了：`src/blocks/semantics/` → `src/core/`（`specs/117`）
-- **而更重要的是：那一層已經沒有東西了**。F 完成（177/177 膠囊化）之後
+- **而更重要的是：那一層已經沒有東西了**。F 完成（`notEncapsulated: 0`）之後
   `universal-components.json` 與 `universal-blocks.json` 都是 `[]`。
 
 > **一顆新元件今天的家是膠囊**：`src/components/<scope>/<name>/`

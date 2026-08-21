@@ -27,7 +27,7 @@ $ARGUMENTS
 
 ## 背景——⚠️ 一顆新元件今天的家是**膠囊**，不是共用檔
 
-階段 6.5 的 F 步（177 顆）已經完成，`component-locality` 基線的 `notEncapsulated` 是 **0**。
+階段 6.5 的 F 步已經完成，`component-locality` 基線的 `notEncapsulated` 是 **0**。
 `src/core/component/registry.ts` 的檔頭逐字說明了為什麼：
 
 > 「手寫清單的話『加一顆元件』＝編輯一個既有的共用檔，而那正是這整個階段要治的病：
@@ -47,8 +47,9 @@ src/components/<scope>/<name>/
   spec.test.ts        這顆自己的測試
 ```
 
-⚠️ **`<scope>` 不是語言，是套件擁有者**。今天只有 `cpp`（177 顆），
+⚠️ **`<scope>` 不是語言，是套件擁有者**。今天有 `cpp` 與 `python`，
 而 `hw` 已在白名單裡——硬體元件用同一個形狀。
+🔴 **而 scope 決定資料夾，`owner` 決定工具箱看不看得到它——兩者【不是】同一件事**（見步驟零）。
 
 ## 前置作業
 
@@ -63,9 +64,20 @@ src/components/<scope>/<name>/
 | 你要做的 | 抄這顆 | 它示範什麼 |
 |---|---|---|
 | 一般語句／運算式 | `cpp/vector_declare/` | 最完整的五路 |
-| lift 是純資料 | 任一有 `lift-pattern.json` 的（44 顆） | **不寫程式的 lift** |
-| 一個身分多種形態 | `cpp/increment/` | `form: {axis, value}` |
-| 少一路 | 任一有 `skipPaths` 的（28 顆） | **顯式的空** |
+| lift 是純資料 | 任一有 `lift-pattern.json` 的 | **不寫程式的 lift** |
+| lift 要跑真邏輯 | 任一有 `lift-strategy.ts` 的 | 具名策略 |
+| 一個身分多種形態 | `cpp/increment/` | `form: {axis, value}` ＋ `expressionCounterpart` |
+| 可增減的插槽／欄位／分支 | `python/print`／`python/func_def`／`python/if` | 三種 mutation |
+| 少一路 | 任一 `paths` 裡有 `null` 的 | **顯式的空** |
+
+⚠️ **不寫數字**（「44 顆」那種）——每加一顆就過期一次，而 2026-08-21 的健檢發現
+**這份文件裡每一個數字都錯了**（177→255、44→67、11→16、28→31…）。
+要數量就去數，不要相信文件。
+
+> 🔴 **而「照抄一顆既有的」有一個前提：被抄的那顆是對的——而沒有人驗過它。**
+> 實測（2026-08-21）：`cpp:func_call` 宣告了兩個形態卻**漏了 `expressionCounterpart`**，
+> 於是 `x = f(1)` 渲染成灰色方塊。**抄它的人會抄到同一個洞。**
+> → 抄完之後**跑一次比對護欄**（`audit-block-def-parity`），別只看它「看起來完整」。
 
 ## 工作流程
 
@@ -73,37 +85,74 @@ src/components/<scope>/<name>/
 
 ```jsonc
 {
-  "componentId": "cpp:vector_declare",       // 必要：身分
-  "layer": "lang-library",                 // 必要：lang-core / lang-library / universal
+  "componentId": "cpp:vector_declare",     // 必要：身分（資料夾要對得上，否則契約 throw）
   "properties": [                          // 必要：參數（積木上的欄位）
-    { "name": "type", "kind": "enum", "values": ["int", "double"], "default": "int" },
+    { "name": "type", "kind": "enum", "default": "int" },
     { "name": "name", "kind": "identifier", "default": "vec" }
   ],
   "children": {                            // 必要：接點
-    "values": { "allowed": ["expression"], "min": 0 }
+    "values": "expression"
   },
-  "role": "statement",                     // 必要：statement / expression / …
-  "paths": {                               // 必要：五路各自在哪
-    "lift": "./lift.ts", "generate": "./generate.ts", "execute": "./execute.ts",
-    "render": "./forms/blocks.json", "extract": "./forms/blocks.json"
+  "role": "statement",                     // 必要：statement / expression / both
+  "owner": "(core)",                       // 🔴 見下面「owner 蓋哪個章」——蓋錯會讓積木【不存在】
+  "paths": {                               // 🔴 必要：五路【全部列出】，沒有的寫 null ＋ _why
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。** 宣告性概念執行起來沒有行為。"
   },
 
-  "abstractComponent": "cpp:var_declare",    // 選用：抽象元件（159/177 有）
-  "owner": "<vector>",                     // 選用：所屬模組（102 顆）
-  "requires": ["<vector>"],                // 選用：相依標頭（78 顆）
-  "traits": { "precedence": 14 },          // 選用：這顆自己的性質（36 顆）
-  "skipPaths": ["execute"],                // 選用：顯式宣告沒有這一路（28 顆）
-  "skipReasons": { "execute": "declarative" }
+  "abstractComponent": "cpp:var_declare",  // 選用：抽象元件
+  "requires": ["<vector>"],                // 選用：相依標頭
+  "traits": { "precedence": 14 }           // 選用：這顆自己的性質
 }
 ```
 
-**`kind` 的值**決定參數怎麼被驗與怎麼被渲染：`enum`（要 `values`）／`identifier`／
-`number`／`string`／`type`。`required: true` 表示沒有預設值。
+**`kind`**：`enum`／`identifier`／`number`／`string`／`literal`／`type`。
+`required: true` 表示沒有預設值。
+
+🔴 **`enum` 不要寫 `values`。** 第二十六條護欄（`audit-declared-enum-values`）逐字：
+「**宣告了 values 而沒有人讀它的元件**」——真正的清單住在
+`forms/blocks.json` 的下拉選項裡，**那是有人讀的那一份**。
+
+> **一個沒有人讀的宣告，與一個寫錯的宣告長得一模一樣。**
+
+⚠️ **`layer` 已於 spec 152 退場**（實測 255 顆裡 0 顆有它）。不要寫。
+
+#### 🔴 `paths` 的五路全列，與 `skipPaths` **不是同一件事**
+
+這一條撞過（2026-08-21）：只寫了 `skipPaths` 就在載入時 throw。
+
+| | 誰檢查 | 意思 |
+|---|---|---|
+| `paths.X: null` ＋ `_X_why` | **契約 C3**（`registry.ts` 的 `verifyContract`） | **沒有這個檔** |
+| `skipPaths` ＋ `skipReasons` | `skip-declarations` 登記處（直譯器讀） | **別為這顆抱怨「沒有執行器」** |
+
+**兩者正交**——實測 22 顆兩者都有、11 顆只有 `null`、9 顆只有 `skipPaths`
+（那 9 顆有真的 `execute.ts`，只是直譯器被告知跳過）。
+
+⚠️ `skipReasons` 的值是**封閉詞彙**：`declarative`／`consumed-by-parent`／`degradation-target`。
+**刻意沒有「還沒做」**。
+
+#### 🔴 `owner` 蓋哪個章——蓋錯的症狀是**積木在工具箱裡不存在**
+
+```
+(core)        核心層的元件
+(universal)   universal 層（⚠️ 蓋成 (core) 會讓工具箱那一段變成【零筆】）
+(python) 等   🔴 【該語言自己的元件】——第二個語言的每一顆都是這個
+<vector> 等   std 模組
+```
+
+實測（2026-08-21）：當時 20 顆 Python 元件裡有 **16 顆**蓋成 `(core)`，而工具箱的來源段落
+寫的是 `{ from: '(python)' }`——**查無此章就整批回傳空**。
+測試全綠、積木畫得出來、來回轉換一字不差，**而使用者打開工具箱看不到任何一顆**。
 
 #### ⚠️ 非顯然的宣告要附 `_why`——這是慣例，不是裝飾
 
-真實統計：`_traits_why` 35 筆、`_lift_why` 22、`_execute_why` 20、`_owner_why` 18、
-`_memberRole_why` 8、`_requires_why` 5、`_generate_why` 5、`_default_why` 2。
+`_why` 的慣例在整個膠囊庫裡有數百筆——`_traits_why`／`_lift_why`／`_execute_why`／
+`_owner_why`／`_requires_why`／`_generate_why` 都是常見的。
 
 實例（`cpp:address_of`）：
 
@@ -118,7 +167,7 @@ src/components/<scope>/<name>/
 ### 步驟一：解析概念定義
 
 從探索報告或使用者輸入中提取（命名慣例見 `/component-discover` 階段四）：
-概念名稱、`layer`、建議歸屬的 Topic 層級樹節點、目標語言的語法模式、
+概念名稱、建議歸屬的 Topic 層級樹節點、目標語言的語法模式、
 屬性、接點、工具箱分類。
 
 ### 步驟二：產生積木形態（`forms/blocks.json`）
@@ -176,6 +225,59 @@ cpp_increment_expression   form: { "axis": "role", "value": "expression" }
 - 最小化 args 數量 — 認知負載原則
 - 語句積木設 `previousStatement`/`nextStatement`；運算式積木設 `output`
 - 如果此概念在不同 Topic 下需不同積木形狀，在 Topic JSON 加 `blockOverrides`（§2.4）
+
+#### 🔴 顏色：**照同族的既有元件抄，不要自己挑**
+
+這一節原本一個字都沒有，而 2026-08-21 使用者第二件回報就是「顏色與 C++ 那邊不一致」。
+
+```bash
+# 找同族那顆的顏色——這是唯一該用的來源
+python3 -c "import json;print([b['blockDef'].get('colour') for b in json.load(open('src/components/cpp/<同族那顆>/forms/blocks.json'))])"
+```
+
+> **顏色是分類的視覺編碼**——學生靠它認「這是同一種東西」。
+> 自己挑一個「看起來合理」的顏色，等於在兩個語言之間製造一條假的分界。
+
+⚠️ 灰色（`#888888`）是**降級的視覺約定**，跨語言必須一致。
+
+#### 🔴 可增減的插槽／欄位／分支——**三種建構子，選錯會弄丟欄位**
+
+```
+builder: "variadic"   加減【值插槽】       EXPR0、EXPR1…      每格接一顆積木
+paramList             加減【欄位組】       PARAM_0…           每格是文字／下拉欄位
+branchList            加減【成對的插槽】   COND_i ＋ BODY_i    ＋ 一個可有可無的尾巴
+```
+
+⚠️ **`dynamicRules` 是一個【陣列】**，不是物件——寫成物件的症狀是
+`rules is not iterable`（2026-08-21 撞到）：
+
+```jsonc
+"renderMapping": {
+  "fields": { "NAME": "name" },
+  "dynamicRules": [
+    { "countSource": "itemCount", "childSlot": "values", "inputPattern": "EXPR{i}" }
+  ]
+}
+```
+
+`countSource` 是 **extraState 的鍵**，而它是**存檔契約**——
+與命令式那份一字不差（`itemCount`／`paramCount`／`elseifCount`＋`hasElse`）。
+換一個鍵名等於讓使用者的舊檔打不開，**也等於讓命令式那顆退不了場**。
+
+⚠️ 語句插槽要加 `"isStatementInput": true`。
+
+#### 🔴 一個身分多種形態 → **還要宣告「什麼時候用哪一種」**
+
+`form: { axis, value }` 說的是「**有幾種**」。而運算式位置要用哪一顆，
+是**語句那一份**宣告的：
+
+```jsonc
+"renderMapping": { "expressionCounterpart": "cpp_func_call_expression" }
+```
+
+⚠️ 少了它的症狀：`x = f(1)` 的 lift 是對的、樹裡有這顆元件，
+而**渲染時挑不到運算式那個形態 → 一顆灰色方塊**。
+🔴 **`cpp:func_call` 漏了它一直到 2026-08-21**——被 Python 那顆同族的元件比出來的。
 
 ### 步驟二之二：i18n 標籤（`labels/zh-TW.json`、`labels/en.json`）
 
@@ -251,11 +353,48 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
 
 **三種形狀，選錯會多寫一個檔**：
 
-| 形狀 | 檔案 | 幾顆在用 | 什麼時候 |
-|---|---|---|---|
-| **純資料** | `lift-pattern.json` | 44 | AST 樣式對得上就成——**不寫程式** |
-| **登錄一筆到共用分派表** | `lift.ts` | 多數 | 判別邏輯共用，回家的是「這個名字屬於我」 |
-| **具名策略** | `lift-strategy.ts` | 11 | 判別要跑真邏輯，而由 lift-pattern 以名字引用 |
+| 形狀 | 檔案 | 什麼時候 |
+|---|---|---|
+| **純資料** | `lift-pattern.json` | AST 樣式對得上就成——**不寫程式** |
+| **登錄一筆到共用分派表** | `lift.ts` | 判別邏輯共用，回家的是「這個名字屬於我」 |
+| **具名策略** | `lift-strategy.ts` | 判別要跑真邏輯，而由 lift-pattern 以名字引用 |
+
+#### 🔴 用具名策略時，**兩個宣告都要**（各撞過一次，2026-08-21）
+
+```jsonc
+// component.json —— 少了它：「有實作卻沒宣告，那是孤兒實作」（載入時 throw）
+"paths": { …, "liftStrategy": "./lift-strategy.ts" }
+
+// lift-pattern.json —— 少了 component：
+//   「樣式說不出它產生哪個概念——它 lift 出來的東西沒有身分」
+{ "id": "…", "grammar": "…", "astNodeType": "…",
+  "liftStrategy": "python:liftIf", "component": { "componentId": "python:if" },
+  "fieldMappings": [], "priority": 10 }
+```
+
+> **策略函式產出什麼，靜態掃不到——所以要在旁邊說一次。**
+
+#### 🔴 `grammar` 是必填，而 `constraints` 的鍵是**封閉集合**
+
+```jsonc
+{ "grammar": "tree-sitter-python", "astNodeType": "if_statement", … }
+```
+
+⚠️ 少了 `grammar`：護欄指名它。而**寫錯鍵名不會報錯，它會被靜默忽略**——
+2026-08-21 寫了 `constraints: [{ field, textIn: [...] }]`，
+`textIn` 不是合法的鍵，於是那個限制**完全沒有生效**而測試照樣綠。
+
+```
+AstConstraint 的合法鍵    field · text · nodeType · match · absent
+FieldMapping 的合法鍵     semantic · ast · extract · transform
+```
+
+> **一個不存在的欄位不會報錯，它只會讓你以為那個限制生效了。**
+
+🟢 已有護欄在擋（`audit-lift-grammar` 的「不得有不存在的鍵」），而**寫的時候就對比較便宜**。
+
+⚠️ **要排除某個 case 時先問「`routes` 做得到嗎」**：`operatorDispatch` 的
+`routes` 沒列到的運算子**自然走降級**，那比 constraint 可靠。
 
 第二種的樣子（`cpp/vector_declare/lift.ts` 全文）：
 
@@ -375,14 +514,26 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 ⚠️ 而在 zsh 裡 `--include=*.ts` **不加引號會被 glob 吃掉**，指令直接不執行
 ——而輸出看起來就是「0 筆，乾淨」。**一個失敗的檢查與一個通過的檢查長得一樣。**
 
-### 步驟七：`layer: "universal"` 的概念
+### 步驟七：🪦 ~~`layer: "universal"` 的概念~~——**`layer` 已退場**
 
-29 顆是 `universal`。⚠️ **而 `layer` 今天沒有生產消費者**
-（`draft/2026-08-11-universal是一份還沒被驗證的外延主張.md` 查證過，
-工具箱排序已改問等價邊）——它是一份**還沒被驗證的外延主張**。
+⚠️ **這一段原本教人「照實填 `layer`」，而 `layer` 於 spec `152` 退場**
+（實測：255 顆膠囊裡 **0 顆**有它）。
+🔴 而更糟的是**同一份文件的步驟零也把它列為「必要」**——
+**一份文件裡兩個相反的指示，讀的人會照著先看到的那個做。**
 
-所以：**照實填 `layer`，但不要因為它是 universal 就自動去別的語言產一份**。
-今天只有一個語言（`scope` 全是 `cpp`），跨語言等價要等第二個語言進來才驗得了。
+它退場的理由值得留著：**「某個東西是不是通用的」在固定觀察集之前是不良定義的**
+——通解是**算子**的性質，不是**解**的性質。
+見 `draft/2026-08-20-通解與特解和小世界模型.md` 與 `vision` 階段 7。
+
+🟢 **今天問「這顆跨不跨語言」的方式是等價邊**（`traits` 上宣告同一個角色，
+例如兩個語言的輸出元件宣告同一個 `ioRole`），而**那是一個可以被護欄印出來的東西**
+（`cross-language-equivalence.test.ts`）。
+
+> **一個「宣告它是通用的」欄位，與一條「量得出它們落在同一類」的邊，
+> 差別在後者答得出「在什麼觀察集底下」。**
+
+⚠️ 而 `forms/blocks.json` 的 `language: "universal"` **是另一回事**（27 筆，仍在用）
+——那說的是**這顆積木的形態跨語言共用**，不是「這個概念是通用的」。
 
 ### 步驟八：更新註冊——**幾乎沒有**
 
@@ -391,10 +542,52 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 | 要做的 | 在哪 |
 |---|---|
 | ✅ **加進課程清單** | `src/languages/{lang}/topics/*.json` 的 `levelTree` 節點 `components[]` |
-| ❌ ~~工具箱分類~~ | **不用**——`toolbox-categories.ts` 已改成 45 段**有序來源**自動導出 |
+| 🟡 **工具箱分類** | **看情況**——見下面那一節。「不用」只對**已經有分類的語言**成立 |
 | ❌ ~~component registry~~ | **不用**——`registry.ts` 掃 `component.json` |
-| ❌ ~~`UniversalConcept` 型別~~ | **該型別已刪**（`58d64eb`，只剩墓碑註解） |
 | ❌ ~~五路的 import~~ | **不用**——`paths.ts` glob 直讀 |
+
+### 🔴 「第二個語言的第一顆」——這一節整個不一樣
+
+上面那句「工具箱分類不用改」**只對 C++ 成立**，因為它的 15 段分類早就在了。
+一個**新語言**的 `toolbox-categories.ts` 是空的，而症狀是：
+
+> **積木全部做好了、測試全綠、來回轉換一字不差——而工具箱裡一顆都看不到。**
+
+實測 2026-08-21：一整批 Python 元件做完，使用者打開工具箱**看不到任何一顆**。
+
+加一個語言的第一顆元件時，這四樣**都要**：
+
+```
+① src/languages/<lang>/toolbox-categories.ts   分類要自己建，來源寫 { from: '(<lang>)' }
+② 每顆 component.json 的 owner                  蓋 (<lang>)，不是 (core)
+③ 每顆 blocks.json 的 language                  寫 <lang>
+④ 顏色                                          抄同族的既有元件（見步驟二）
+```
+
+⚠️ **分類跟著積木長出來，不要先擺好架子等它**——一個沒有積木的分類是一個空段落，
+而空段落與「這個分類就是這麼小」長得一模一樣。
+
+🔴 **而它有一個對稱的失敗樣態，只有一端有護欄在看**：
+
+```
+分類多了沒積木   🟢 可拿性護欄會說話
+積木多了沒分類   🔴 沒有任何東西在看 —— 就是上面那 23 顆
+```
+
+#### 同一顆積木要在工具箱出現**多次**（不同預設狀態）
+
+那是**教學設計**，登錄表推不出來，所以用 `extraTypes`：
+
+```ts
+extraTypes: [
+  { type: 'python_if' },
+  { type: 'python_if', extraState: { hasElse: true } },
+  { type: 'python_if', extraState: { elseifCount: 1, hasElse: true } },
+]
+```
+
+⚠️ **三筆都要列，而不是只列帶狀態的那兩筆**——`sources` 收不收得到純的那一顆
+要看分類對不對得上，**而那件事只有打開工具箱才知道**（我第一次多一顆、第二次少一顆）。
 
 ### 🔴 而「加一顆元件」有一張固定的清單——它今天散在七條護欄的失敗訊息裡
 
@@ -450,11 +643,47 @@ npm test          # 那批護欄在裡面——就近性、可拿性、課程快
 
 ## 準則
 
-- **一次一顆** — 先做完一顆再做下一顆
-- **照抄一顆既有的** — 而按上面那張表挑，不要隨便挑
+- 🔴 **第一顆走完整條路，才批次寫其餘** —— 取代原本的「一次一顆」。
+  實測（2026-08-21）：批次寫 16 顆，於是 `owner` 與顏色**兩個錯複製了 16 份**。
+  而 23 顆一顆一顆做完整流程也不實際。
+  > **可以批次的是「寫」，不可以批次的是「驗」。**
+
+- **照抄一顆既有的** — 按上面那張表挑，**而抄完要驗被抄的那顆**（見上）
+
 - **最小變更** — 產生新概念時不要重構現有程式碼
-- **積木 UX** — 在腦中預覽積木：學生第一眼能看懂嗎？
+
+- 🔴 **積木 UX —— 開瀏覽器【看】，不要在腦中預覽**
+
+  原本這一行寫「在腦中預覽積木：學生第一眼能看懂嗎？」——**那是錯的**。
+  2026-08-21 使用者連續回報五件事，全部在 4900 多支測試全綠的情況下：
+
+  ```
+  工具箱裡找不到 · 顏色與同族不一致 · 少了 mutation
+  工具箱該有三個入口只有一個 · 🔴 mutation 按鈕的位置與同族不同
+  ```
+
+  最後一條**沒有任何 API 問得出它**。
+
+  | 問題 | 查得出來嗎 |
+  |---|---|
+  | 這個分類有幾顆積木 · 這顆什麼顏色 | 🟢 API |
+  | 這顆**長得對不對** | 🔴 **只有看** |
+  | 與同族／另一個語言的那顆**一不一樣** | 🔴 **只有並排看** |
+
+  → 走 [[verify-in-browser]]，而**積木類的改動固定截三張**：
+  工具箱的每個分類、拖一顆出來的樣子、同一顆積木在另一個語言／同族那側。
+
 - ⚠️ **搬移不重寫** — 如果這顆是從共用檔搬來的，**重寫另開 commit**，否則對不出基準
+
+- 🔴 **不要在自己的 `_why` 裡寫別顆元件的完整身分**
+
+  就近性護欄掃的是「身分出現在自己資料夾外」，而**它分不出引用與說明**。
+  2026-08-21 一輪裡犯了**六次**——寫「與 `cpp:builtin_constant` 不同」就會報。
+  → 用敘述：「與 C++ 那顆內建常數不同」。
+
+  ⚠️ 而**程式碼裡真的要判斷別顆元件時，問性狀不看身分**：
+  `isNamedCall(id)` 而不是 `id === 'python:func_call'`——
+  **後者在那顆元件改名時不會有人發現。**
 
 ## 完成標記（強制）
 
