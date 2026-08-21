@@ -219,8 +219,11 @@
     "cpp:wifi_open",
     "cpp:wifi_read",
     "python:arithmetic",
+    "python:array_make",
     "python:break",
     "python:compare",
+    "python:container_at",
+    "python:container_find",
     "python:continue",
     "python:func_call",
     "python:func_def",
@@ -233,7 +236,9 @@
     "python:logic_not",
     "python:loop_for",
     "python:loop_while",
+    "python:map_make",
     "python:negate",
+    "python:pair_make",
     "python:print",
     "python:program",
     "python:raw_code",
@@ -242,6 +247,7 @@
     "python:string_insert",
     "python:string_make",
     "python:var_assign",
+    "python:var_assign_compound",
     "python:var_ref"
   ]
 }

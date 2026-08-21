@@ -1,0 +1,17 @@
+{
+  "id": "python_augmented_assignment",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "augmented_assignment",
+  "component": {
+    "componentId": "python:var_assign_compound"
+  },
+  "constraints": [
+    { "field": "left", "nodeType": "identifier" }
+  ],
+  "fieldMappings": [
+    { "semantic": "name", "ast": "left", "extract": "text" },
+    { "semantic": "operator", "ast": "operator", "extract": "text" },
+    { "semantic": "value", "ast": "right", "extract": "lift" }
+  ],
+  "_why": "⚠️ **`constraints` 把左邊限定成單純的變數名**：`nums[0] += 1` 的左邊是 `subscript`，這裡認不出來，於是它走誠實降級——**那比認一半好**。\n（`field`／`nodeType` 都是合法的約束鍵；`textIn` 那種不存在的鍵會被靜默忽略。）"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "python_dict_literal",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "dictionary",
+  "component": { "componentId": "python:map_make" },
+  "fieldMappings": [
+    { "semantic": "pairs", "ast": "$namedChildren", "extract": "lift" }
+  ],
+  "_why": "具名子節點就是那些 `pair`——大括號與逗號是語法不是內容。\n⚠️ `{**a, **b}`（展開）也會落在這裡而它的子節點不是 `pair`，那時那一格會誠實降級。"
+}

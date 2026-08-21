@@ -1,0 +1,17 @@
+{
+  "componentId": "python:pair_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "它是字典字面裡的一組對應，沒有跨語言的對應物可指。",
+  "properties": [],
+  "children": { "key": "expression", "value": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "**鍵與值各一個接點**——把它們合成一個「文字」欄位的話，`{name: score}` 這種鍵是變數的寫法就表達不了。"
+}

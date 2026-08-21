@@ -1,0 +1,4 @@
+{
+  "PY_PAIR_MAKE_MSG0": "key %1 maps to %2",
+  "PY_PAIR_MAKE_TOOLTIP": "One entry of a dictionary: the key you look up, and the value you get back."
+}

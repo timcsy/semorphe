@@ -388,5 +388,35 @@
     "componentId": "python:string_insert",
     "cause": "沒有自己的 lift 路，接點由父概念的策略建出來",
     "reason": "這一格**沒有對應的 AST 節點型別**（`paths.lift` 是顯式的 `null`）——它只在格式化文字的策略拆解插值時被建出來，所以任何靜態掃描都不會看到它產出接點。\n⚠️ 它的接點與 `format` 參數由父概念的 `spec.test.ts` 一起釘住（「冒號是語法不是格式，不得留在值裡」那一支）。"
+  },
+  {
+    "componentId": "python:array_make",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "串列字面的元素接點（`items`）**是空的也合法**（`a = []`），而護欄的語料裡沒有一段同時證明「元素進得去」與「宣告裡有」。\n⚠️ 正確性由這顆的 `spec.test.ts` 釘住：`a = [1, 2]` 的來回一字不差——**那一支曾經是紅的**（`$namedChildren` 這個欄位參照當時被靜默忽略，產回去是 `a = []`）。"
+  },
+  {
+    "componentId": "python:map_make",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "與同批串列字面同一個理由：`pairs` 接點空著也合法（`d = {}`）。來回與執行由 `spec.test.ts` 釘住。"
+  },
+  {
+    "componentId": "python:pair_make",
+    "cause": "接點由父概念的字面值一起產出",
+    "reason": "它只出現在字典字面裡，靜態掃描看到的是父概念那一層。鍵與值兩個接點由 `spec.test.ts` 的來回（`d = {\"k\": 1, \"j\": 2}`）釘住。"
+  },
+  {
+    "componentId": "python:container_at",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "`target`／`key` 兩個接點都必填，而護欄的語料沒有一段走到靜態掃描認得的形狀。由 `spec.test.ts` 的來回（`a[0]`／`d[\"k\"]`）與執行（含負數索引）釘住。"
+  },
+  {
+    "componentId": "python:container_find",
+    "cause": "lift 走 operatorDispatch 的路由，靜態掃不到",
+    "reason": "它的接點是在 `operatorDispatch` 的 `fieldMappings` 裡宣告的（`$namedChildren[0]`／`[1]`），而那一層靜態掃描不進去。\n⚠️ 而它有一支**對照組**測試釘住「`<` 不得被搶走」——兩筆樣式的路由不重疊。"
+  },
+  {
+    "componentId": "python:var_assign_compound",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "`value` 接點必填，而樣式用 `constraints` 把左邊限定成單純變數名，語料裡的那幾段剛好都在迴圈裡。由 `spec.test.ts` 的六個運算子來回與三條 Python 除法規則釘住。"
   }
 ]

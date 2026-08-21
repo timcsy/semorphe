@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_AT_MSG0": "Get %1 at %2",
+  "PY_CONTAINER_AT_TOOLTIP": "Read one slot of a list, or look a key up in a dictionary. List positions start at 0; negative counts from the end. Missing entries stop with an explanation."
+}

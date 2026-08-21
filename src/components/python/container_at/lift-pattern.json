@@ -1,0 +1,11 @@
+{
+  "id": "python_subscript",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "subscript",
+  "component": { "componentId": "python:container_at" },
+  "fieldMappings": [
+    { "semantic": "target", "ast": "value", "extract": "lift" },
+    { "semantic": "key", "ast": "subscript", "extract": "lift" }
+  ],
+  "_why": "⚠️ tree-sitter 的欄位名是 `value`（容器）與 `subscript`（那一格）——**`value` 在這裡指的是被索引的東西，不是取出來的值**。語義那側改叫 `target`／`key` 就不會再被讀錯。\n⚠️ 切片（`a[1:3]`）的 `subscript` 欄位是 `slice` 節點，它會誠實降級。"
+}

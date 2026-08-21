@@ -1,0 +1,10 @@
+{
+  "id": "python_dict_pair",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "pair",
+  "component": { "componentId": "python:pair_make" },
+  "fieldMappings": [
+    { "semantic": "key", "ast": "key", "extract": "lift" },
+    { "semantic": "value", "ast": "value", "extract": "lift" }
+  ]
+}

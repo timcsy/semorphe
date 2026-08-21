@@ -631,13 +631,33 @@ export class PatternLifter {
         break
       }
       case 'lift': {
-        // Support $namedChildren[N] for lift mode
+        // 🟢 **`$namedChildren`（不加索引）＝ 全部的具名子節點進這一格**（2026-08-21）。
+        //
+        // 容器字面值都是這個形狀：`[1, 2, 3]` 的元素、`{k: v, …}` 的每一組
+        // ——它們沒有欄位名，中括號與逗號是語法不是內容。
+        // 在此之前只支援 `$namedChildren[N]`，而**寫成裸的形式會被靜默忽略**，
+        // 症狀是那一格空著：`a = [1, 2]` 產回去是 `a = []`。
+        //
+        // > **一個不存在的欄位參照不會報錯，它只會讓你以為那個對映生效了。**
+        if (fm.ast === '$namedChildren') {
+          children[fm.semantic] = node.namedChildren
+            .map((c) => ctx.lift(c))
+            .filter((n): n is NonNullable<typeof n> => n !== null)
+          break
+        }
         const namedChildMatch = fm.ast.match(/^\$namedChildren\[(\d+)\]$/)
         let child: AstNode | null = null
         if (namedChildMatch) {
           const idx = parseInt(namedChildMatch[1], 10)
           child = node.namedChildren[idx] ?? null
-        } else if (!fm.ast.startsWith('$')) {
+        } else if (fm.ast.startsWith('$')) {
+          // 🔴 **認不得的 `$xxx` 要出聲**——靜默的話那一格永遠是空的，
+          //    而空插槽與「這個概念本來就沒有子節點」長得一模一樣。
+          throw new Error(
+            `[PatternLifter] 認不得的欄位參照 "${fm.ast}"（semantic: ${fm.semantic}）。` +
+              `lift 模式支援：欄位名／$namedChildren／$namedChildren[N]`,
+          )
+        } else {
           child = node.childForFieldName(fm.ast)
         }
         if (child) {

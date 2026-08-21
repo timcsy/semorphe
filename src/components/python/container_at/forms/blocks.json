@@ -1,0 +1,22 @@
+[
+  {
+    "id": "python_container_at",
+    "componentId": "python:container_at",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_container_at",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_CONTAINER_AT_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "TARGET", "check": "Expression" },
+        { "type": "input_value", "name": "KEY", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_CONTAINER_AT_TOOLTIP}"
+    },
+    "renderMapping": { "fields": {}, "inputs": { "TARGET": "target", "KEY": "key" } }
+  }
+]

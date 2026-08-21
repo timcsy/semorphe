@@ -1,0 +1,18 @@
+{
+  "componentId": "python:map_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與同族串列字面那顆同一個理由：C++ 那側最接近的是宣告，而這是一個值。",
+  "properties": [],
+  "children": { "pairs": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": { "mappingLiteral": true },
+  "_traits_why": "**我算出來的是一個鍵值對應**——與序列不同，讓兩者問得出來而不必比對身分。"
+}

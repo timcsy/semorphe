@@ -1,0 +1,10 @@
+{
+  "PY_COMPOUND_ASSIGN_MSG0": "Update %1 %2 by %3",
+  "PY_COMPOUND_ASSIGN_OP_PLUS_EQ": "adding",
+  "PY_COMPOUND_ASSIGN_OP_MINUS_EQ": "subtracting",
+  "PY_COMPOUND_ASSIGN_OP_TIMES_EQ": "multiplying",
+  "PY_COMPOUND_ASSIGN_OP_DIVIDE_EQ": "dividing",
+  "PY_COMPOUND_ASSIGN_OP_FLOOR_EQ": "floor-dividing",
+  "PY_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "taking remainder",
+  "PY_COMPOUND_ASSIGN_TOOLTIP": "Combine the variable's current value with the right-hand value and store it back. Dividing always yields a decimal; floor-dividing drops the fraction."
+}

@@ -1,0 +1,19 @@
+{
+  "componentId": "python:container_find",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側查「在不在」要靠容器自己的 find 方法，形狀完全不同（回的是位置不是真假）。指同一個抽象父會讓「可以互換」這句話變成假的。",
+  "properties": [
+    { "name": "operator", "kind": "enum", "default": "in" }
+  ],
+  "children": { "needle": "expression", "haystack": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "🟢 **走同族比較元件那筆樣式的 `operatorDispatch` 路由**——那個機制的設計就是「沒列在 routes 裡的運算子走誠實降級」，而 `in`／`not in` 正是這樣被放掉的。加一條路由是它預留的擴充點，**比加 constraint 可靠**。"
+}

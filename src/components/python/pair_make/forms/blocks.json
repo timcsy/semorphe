@@ -1,0 +1,22 @@
+[
+  {
+    "id": "python_pair_make",
+    "componentId": "python:pair_make",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_pair_make",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_PAIR_MAKE_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "KEY", "check": "Expression" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_PAIR_MAKE_TOOLTIP}"
+    },
+    "renderMapping": { "fields": {}, "inputs": { "KEY": "key", "VALUE": "value" } }
+  }
+]

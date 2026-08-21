@@ -65,6 +65,14 @@ export const RUNTIME_ERRORS = {
    */
   UNSUPPORTED_FORMAT: 'RUNTIME_ERR_UNSUPPORTED_FORMAT',
   /**
+   * 用一個字典裡沒有的鍵去查值（Python 的 `KeyError`）。
+   *
+   * 🔴 **不與「索引超出範圍」共用一個碼**：那句話對字典是假的
+   * ——字典沒有「範圍」，它有的是「這個鍵在不在」。
+   * 一個兼差的錯誤碼會讓畫面上那句話在某些路徑下說謊（見 `history/123`）。
+   */
+  KEY_NOT_FOUND: 'RUNTIME_ERR_KEY_NOT_FOUND',
+  /**
    * 整個程式沒有任何進入點。
    *
    * 🔴 **在此之前這個情況是【安靜結束】的**，而那讓「找不到進入點」

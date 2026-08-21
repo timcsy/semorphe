@@ -1,0 +1,39 @@
+[
+  {
+    "id": "python_var_assign_compound",
+    "componentId": "python:var_assign_compound",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_var_assign_compound",
+      "message0": "%{BKY_PY_COMPOUND_ASSIGN_MSG0}",
+      "args0": [
+        { "type": "field_dynamic_dropdown", "name": "NAME", "source": "vars" },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_PLUS_EQ}", "+="],
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_MINUS_EQ}", "-="],
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_TIMES_EQ}", "*="],
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_DIVIDE_EQ}", "/="],
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_FLOOR_EQ}", "//="],
+            ["%{BKY_PY_COMPOUND_ASSIGN_OP_REMAINDER_EQ}", "%="]
+          ]
+        },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_COMPOUND_ASSIGN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "NAME": "name", "OP": "operator" },
+      "inputs": { "VALUE": "value" }
+    },
+    "_why": "🟢 顏色與分類抄同族的指派元件（`#FF8C1A` ／ `data`）。\n⚠️ **多一個 `//=`**（整除）——C++ 那顆沒有這個運算子，而 Python 的整數除法是它。"
+  }
+]

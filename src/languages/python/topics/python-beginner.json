@@ -36,7 +36,13 @@
           "python:if",
           "python:loop_while",
           "python:break",
-          "python:continue"
+          "python:continue",
+          "python:array_make",
+          "python:map_make",
+          "python:pair_make",
+          "python:container_at",
+          "python:container_find",
+          "python:var_assign_compound"
         ],
         "children": [
           {

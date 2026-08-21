@@ -1,0 +1,6 @@
+{
+  "PY_CONTAINER_FIND_MSG0": "%1 %2 %3",
+  "PY_CONTAINER_FIND_OP_IN": "is in",
+  "PY_CONTAINER_FIND_OP_NOT_IN": "is not in",
+  "PY_CONTAINER_FIND_TOOLTIP": "Ask whether something is inside a container. Lists compare values, dictionaries compare keys, text checks for a substring."
+}

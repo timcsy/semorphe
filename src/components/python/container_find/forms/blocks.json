@@ -1,0 +1,34 @@
+[
+  {
+    "id": "python_container_find",
+    "componentId": "python:container_find",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_container_find",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_CONTAINER_FIND_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "NEEDLE", "check": "Expression" },
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            ["%{BKY_PY_CONTAINER_FIND_OP_IN}", "in"],
+            ["%{BKY_PY_CONTAINER_FIND_OP_NOT_IN}", "not in"]
+          ]
+        },
+        { "type": "input_value", "name": "HAYSTACK", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_CONTAINER_FIND_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "OP": "operator" },
+      "inputs": { "NEEDLE": "needle", "HAYSTACK": "haystack" }
+    },
+    "_why": "🟢 顏色與分類抄同族的比較元件（`#59C059` ／ `operators`）——它問的也是一個真假。"
+  }
+]

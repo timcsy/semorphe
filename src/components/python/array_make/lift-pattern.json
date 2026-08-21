@@ -1,0 +1,10 @@
+{
+  "id": "python_list_literal",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "list",
+  "component": { "componentId": "python:array_make" },
+  "fieldMappings": [
+    { "semantic": "items", "ast": "$namedChildren", "extract": "lift" }
+  ],
+  "_why": "元素就是全部的具名子節點——`list` 節點沒有欄位名，中括號與逗號是語法不是內容。"
+}

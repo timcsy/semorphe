@@ -1,0 +1,4 @@
+{
+  "PY_MAP_MAKE_MSG": "Dictionary",
+  "PY_MAP_MAKE_TOOLTIP": "Look values up by key. Each slot holds one key-value entry; use the buttons to add or remove slots."
+}

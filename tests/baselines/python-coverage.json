@@ -7,18 +7,12 @@
   },
   "corpus": {
     "programs": 15,
-    "nodes": 327
+    "nodes": 324
   },
-  "degraded": 34,
+  "degraded": 21,
   "roundTripDiff": 0,
   "genericCall": 30,
   "unresolvedTypes": {
-    "list": 4,
-    "subscript": 2,
-    "dictionary": 1,
-    "pair": 2,
-    "comparison_operator": 1,
-    "augmented_assignment": 3,
     "function_definition": 1,
     "parameters": 1,
     "default_parameter": 1,

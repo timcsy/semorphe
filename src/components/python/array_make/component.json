@@ -1,0 +1,18 @@
+{
+  "componentId": "python:array_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側最接近的是**宣告**（`vector<int> v = {…}`），而這一顆是一個**值**——`[1,2]` 可以直接當引數傳出去，不必先有名字。指同一個抽象父會把宣告與值混成一件事。",
+  "properties": [],
+  "children": { "items": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": { "sequenceLiteral": true },
+  "_traits_why": "**我算出來的是一個有順序的容器**——讓「哪些元件產出序列」問得出來，而不必比對身分。"
+}

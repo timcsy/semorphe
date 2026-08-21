@@ -1,0 +1,10 @@
+{
+  "PY_COMPOUND_ASSIGN_MSG0": "把 %1 %2 %3",
+  "PY_COMPOUND_ASSIGN_OP_PLUS_EQ": "加上",
+  "PY_COMPOUND_ASSIGN_OP_MINUS_EQ": "減去",
+  "PY_COMPOUND_ASSIGN_OP_TIMES_EQ": "乘以",
+  "PY_COMPOUND_ASSIGN_OP_DIVIDE_EQ": "除以",
+  "PY_COMPOUND_ASSIGN_OP_FLOOR_EQ": "整除以",
+  "PY_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "取餘數",
+  "PY_COMPOUND_ASSIGN_TOOLTIP": "把變數目前的值和右邊算過之後，再存回同一個變數。「除以」永遠得到小數；「整除以」會捨去小數。"
+}

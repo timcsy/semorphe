@@ -1,0 +1,22 @@
+{
+  "id": "python_membership",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "comparison_operator",
+  "patternType": "operatorDispatch",
+  "priority": 10,
+  "operatorDispatch": {
+    "operatorField": "operators",
+    "routes": {
+      "in": "python:container_find",
+      "not in": "python:container_find"
+    },
+    "fieldMappings": [
+      { "semantic": "operator", "ast": "operators", "extract": "text" },
+      { "semantic": "needle", "ast": "$namedChildren[0]", "extract": "lift" },
+      { "semantic": "haystack", "ast": "$namedChildren[1]", "extract": "lift" }
+    ]
+  },
+  "component": { "componentId": "python:container_find" },
+  "fieldMappings": [],
+  "_why": "⚠️ **`comparison_operator` 沒有 `left`／`right` 欄位**——兩個運算元是**位置式**的具名子節點，所以用 `$namedChildren[n]`。這是同族比較元件實測出來的形狀。\n⚠️ priority 高於那顆（它是 0），而兩者的 `routes` 不重疊——沒對到的運算子在兩邊都沒有路由，仍然誠實降級。"
+}

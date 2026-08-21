@@ -1,0 +1,78 @@
+/**
+ * Python 的二元運算語義——**抽出來給別人用**。
+ *
+ * ## 為什麼不讓別人自己寫一份
+ *
+ * 複合指派（`total += i`）就是「取值、運算、寫回」，而中間那一步**必須是
+ * Python 的規則**：
+ *
+ * ```
+ * + - * // %      兩邊都是整數 → 整數；否則小數
+ * /               🔴 【永遠】是小數 —— `7 / 2` 是 3.5
+ * %               🔴 跟著【除數】的正負號 —— `-7 % 3` 是 2
+ * "ab" * 3        字串重複
+ * ```
+ *
+ * 這些規則有**四條**是這個專案實測踩過的（`5+3` 印出 `8.0`、`-7 % 3` 得 `2.0`、
+ * `"ab" * 3` 靜靜回 `0.0`）。**再抄一份，就是再踩一次的邀請。**
+ *
+ * > **兩份真相不會同時錯，它們會【先後】錯——而修好的那一份會讓另一份更難被發現。**
+ */
+import type { RuntimeValue } from '../../../interpreter/types'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+
+const isInt = (r: RuntimeValue): boolean => r.type === 'int' || r.type === 'char'
+
+/** `ctx` 只用到數值轉換這一件事，所以只要這麼窄的介面。 */
+export interface numberCoercion { toNumber(v: RuntimeValue): number }
+
+export function applyPythonBinary(
+  op: string,
+  l: RuntimeValue,
+  r: RuntimeValue,
+  ctx: numberCoercion,
+): RuntimeValue {
+  // ── 字串的運算：Python 有【兩個】，而它們的形狀完全不同 ──
+  if (l.type === 'string' || r.type === 'string') {
+    if (op === '+' && l.type === 'string' && r.type === 'string') {
+      return { type: 'string', value: String(l.value) + String(r.value) }
+    }
+    // `"ab" * 3` / `3 * "ab"` —— 字串重複。次數要是整數。
+    if (op === '*') {
+      const str = l.type === 'string' ? String(l.value) : String(r.value)
+      const cnt = l.type === 'string' ? r : l
+      if (cnt.type !== 'string') {
+        const n = Math.trunc(ctx.toNumber(cnt))
+        return { type: 'string', value: n > 0 ? str.repeat(n) : '' }
+      }
+    }
+    // 其餘的字串運算在 Python 是 TypeError —— **出聲**，不要轉成數字。
+    throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+      '%1': `文字不能做 ${op}（Python 會說 TypeError）`,
+    })
+  }
+
+  const a = ctx.toNumber(l), b = ctx.toNumber(r)
+  const bothInt = isInt(l) && isInt(r)
+  const num = (v: number, forceFloat = false): RuntimeValue =>
+    ({ type: !forceFloat && bothInt ? 'int' : 'double', value: v })
+  const nonZero = (): void => {
+    if (b === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO, {})
+  }
+
+  switch (op) {
+    case '+': return num(a + b)
+    case '-': return num(a - b)
+    case '*': return num(a * b)
+    // 🔴 `/` 【永遠】回小數 —— 與 C++ 的整數除法不同。
+    case '/': nonZero(); return num(a / b, true)
+    case '//': nonZero(); return num(Math.floor(a / b))
+    // Python 的取餘數跟著【除數】的正負號 —— `-7 % 3` 是 2，不是 -1。
+    case '%': nonZero(); return num(((a % b) + b) % b)
+    // 負指數會得到小數（`2 ** -1` 是 0.5）。
+    case '**': return num(a ** b, b < 0)
+    default:
+      // 判不出來就丟錯，不要回 0。
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': op })
+  }
+}

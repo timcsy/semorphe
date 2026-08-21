@@ -1,0 +1,6 @@
+{
+  "PY_CONTAINER_FIND_MSG0": "%1 %2 %3",
+  "PY_CONTAINER_FIND_OP_IN": "在裡面：",
+  "PY_CONTAINER_FIND_OP_NOT_IN": "不在裡面：",
+  "PY_CONTAINER_FIND_TOOLTIP": "問一個東西在不在容器裡，得到是或否。串列比的是值、字典比的是鍵、文字比的是有沒有這一段。"
+}

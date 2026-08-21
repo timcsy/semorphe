@@ -1,0 +1,4 @@
+{
+  "PY_ARRAY_MAKE_MSG": "串列",
+  "PY_ARRAY_MAKE_TOOLTIP": "把幾個值排成有順序的一串。每一格放一個值，用左右的按鈕增減格數。"
+}

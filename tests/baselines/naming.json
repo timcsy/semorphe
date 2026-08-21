@@ -1,7 +1,7 @@
 {
   "guard": "naming",
   "breakdown": {
-    "receiverParamName": [],
+    "接收者參數名": [],
     "操作詞不在詞彙": [],
     "裸的函式庫名": [],
     "修飾詞站主體位": [],

@@ -1,0 +1,22 @@
+{
+  "componentId": "python:var_assign_compound",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與 C++ 那顆同名的元件形狀一樣，而**運算的規則不同**（真除法、餘數跟著除數的正負號、多一個整除）——指同一個抽象父會讓「它們可以互換」這句話變成假的。",
+  "properties": [
+    { "name": "name", "kind": "literal", "default": "x" },
+    { "name": "operator", "kind": "enum", "default": "+=" }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "🔴 **沒有 `index` 接點**（C++ 那顆有）——`nums[0] += 1` 的左邊在 AST 上是 `subscript` 而不是 `identifier`，而樣式比對只認後者，所以那種寫法走**誠實降級**。\n加一個接點卻沒有路徑把值放進去，會讓「支援了」與「宣告了」分不出來。"
+}
