@@ -147,6 +147,19 @@ declareCommentSyntax('<lang>', <lang>CommentSyntax)
 套件說「我的程式根是它」。**它們說的不是同一句話**，由護欄互相對帳
 （`audit-program-root`）。
 
+#### 🔴 還有一格藏在**介面層**：變數下拉
+
+至少一顆元件要宣告 `traits.declaresVariable`（名字放在哪些欄位上），
+否則**這個語言的變數一個都進不了下拉**——使用者看到「(自訂)」而選不到任何名字。
+
+```jsonc
+"traits": { "declaresVariable": ["NAME"] }        // 指派、迴圈變數
+"traits": { "declaresVariable": ["PARAM_{i}"] }   // 函式參數（可增減的一組）
+```
+
+⚠️ 而 C++ 走的是**介面層一長串寫死的積木型別**——那是一筆記在帳上的債，
+新語言**不要照抄它**。
+
 ### 判準：還有沒有別的登記處要宣告？
 
 ```bash
