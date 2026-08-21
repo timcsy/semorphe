@@ -69,7 +69,18 @@ export function classifyFile(rel: string): FileClass {
   // 曾經叫什麼」——那是凍結的歷史名冊，不是它的實作散到那裡去了。
   // 不加這一條的話，遷移一落地，就近性會回報 168 顆元件擴散超標，
   // 而那與 E 項踩過的是同一個誤判（`history/029`：把清單算成實作擴散）。
-  if (/\/(topics|templates)\//.test(rel) || /toolbox-categories\.ts$/.test(rel)) return '清單'
+  // ⚠️ **語言套件的 `pack.ts` 是清單，不是實作**（spec 171）。
+  // 它列的是「這個語言選了哪些課程／目標／風格／分類／**程式根**」
+  // ——與 `topics/*.json`、`toolbox-categories.ts` 同一種東西：**登錄表的視圖**。
+  //
+  // 算成實作的話，「讓程式根跟著語言走」這個**減少**耦合的改動，
+  // 反而會讓 `cpp:program`／`python:program` 的擴散度上升
+  // ——與上面 `component.json`／過渡表那兩條同一個理由。
+  //
+  // 判準仍然是「這個檔在 production 執行嗎」：`pack.ts` 只有一個
+  // `declareLanguagePack({...})` 呼叫，裡面沒有任何一行決定行為。
+  if (/\/(topics|templates)\//.test(rel) || /toolbox-categories\.ts$/.test(rel)
+      || /\/languages\/[a-z0-9-]+\/pack\.ts$/.test(rel)) return '清單'
   // 同理：`merged-identities.ts`（v1→v2 合併掉的身分）也是凍結名冊。
   // ⚠️ 它 2026-08-11 之前住在 `storage-version.ts` 裡——**一張凍結的名冊
   // 住在機制檔裡，會讓它列到的每一顆元件都多背一筆擴散**，

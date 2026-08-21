@@ -14,6 +14,7 @@ import type { Topic, Target, StylePreset } from '../../core/types'
 import { declareLanguagePack } from '../../core/language-packs'
 import { cppCategoryDefs } from './toolbox-categories'
 import { CppParser } from './parser'
+import { registerCppLanguage } from './generators'
 import cppLiftPatterns from './lift-patterns.json'
 import cppBeginnerTopic from './topics/cpp-beginner.json'
 import cppCompetitiveTopic from './topics/cpp-competitive.json'
@@ -45,6 +46,8 @@ declareLanguagePack({
    * 這就是「文法不是語言」最直接的證據。
    */
   grammar: 'tree-sitter-cpp',
+  programRoot: 'cpp:program',
+  install: registerCppLanguage,
   liftPatterns: cppLiftPatterns,
   /**
    * 這些節點由手寫 lifter 或 lift-pattern 接手，**pattern 那條路要跳過**。

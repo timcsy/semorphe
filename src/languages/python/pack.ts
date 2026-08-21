@@ -12,6 +12,7 @@ import { declareDegradationBlocks } from '../../core/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
+import { registerPythonLanguage } from './install'
 
 // 🔴 **Python 自己的降級積木**（spec 168）。
 //
@@ -31,6 +32,8 @@ declareLanguagePack({
   id: 'python',
   name: 'Python',
   grammar: 'tree-sitter-python',
+  programRoot: 'python:program',
+  install: registerPythonLanguage,
   liftPatterns: pythonLiftPatterns,
   liftTransforms: registerPythonTransforms,
   /**

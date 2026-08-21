@@ -9,16 +9,15 @@ import { showToast } from './toolbar/toast'
 import { showStyleActionBar } from './toolbar/style-action-bar'
 import { runDiagnostics, diagnosticsFromTree } from '../core/diagnostics'
 import type { SemanticNode } from '../core/types'
+import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
-import { registerCppLanguage } from '../languages/cpp/generators'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases } from '../core/projection/code-generator'
 // 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
 //    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
 //    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
 import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
-import { buildProgram } from '../components/cpp/program/lift'
 import {
   C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
   IF_INPUTS, FUNDEF_INPUTS,
@@ -179,7 +178,14 @@ export class App {
 
   async init(): Promise<void> {
     // 1. Register C++ generators + dependency resolver + scaffold
-    registerCppLanguage()
+    // 🔴 **把【每一個】語言接上，而不是只接 C++**（spec 171）。
+    //
+    // ⚠️ 在此之前這一行是 `registerCppLanguage()`，於是第二個語言的
+    // 產生器從來沒有被註冊過。症狀：切到 Python、走【積木→程式碼】
+    // 那個方向 → `⟨unknown component: python:program⟩`。
+    //
+    // > **組裝點知道「要把每個語言接上」是正常的，知道它們各自怎麼接不是。**
+    for (const lp of allLanguagePacks()) lp.install?.()
     const registry = createPopulatedRegistry()
     setDependencyResolver(registry)
     this.scaffold = new CppScaffold(registry)
@@ -206,7 +212,24 @@ export class App {
 
     const elements: AppShellElements = createAppLayout(appEl, this.blockSpecRegistry, this.callBuildToolbox(), this.profile,
       {
-        buildProgramRoot: buildProgram as never,
+        // 🔴 **問【目前語言】的宣告，不寫死一個建構子**（spec 171）。
+        //
+        // ⚠️ 第一版寫死 import 了 C++ 的 `buildProgram`，而它在應用建構時
+        // 注入一次、**切語言時不會變**。症狀：切到 Python 之後程式碼面板顯示
+        // `⟨unknown component: cpp:program⟩`——積木是 Python 的、執行結果是對的，
+        // 而樹的根是 C++ 的。
+        //
+        // > **一個在啟動時決定的「哪一顆是根」，
+        // > 遇到「隨時可以切語言」的選單就會過期。**
+        //
+        // ⚠️ 而它**只在【積木→程式碼】那個方向出現**（另一個方向的根是 lift 出來的）
+        // ——所以使用者看到的是「有時候」。
+        // > **一個只在單一方向上壞掉的缺陷，在另一個方向上看起來完全正常。**
+        buildProgramRoot: ((body: SemanticNode[] = []) => {
+          const pack = languagePack(this.currentTopic.language)
+          if (!pack) throw new Error(`沒有語言套件：${this.currentTopic.language}——建不出程式根`)
+          return createNode(pack.programRoot, {}, { body })
+        }) as never,
         // 🔴 **用建構選項而不是事後呼叫**（spec 153）：
         //    ① 不新增一筆「直接呼叫視圖」（第四項獨立性的棘輪）
         //    ② 時機回到面板建構時——**沒有「裝了沒人接上」的窗口**
