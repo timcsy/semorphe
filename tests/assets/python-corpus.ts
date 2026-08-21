@@ -189,4 +189,31 @@ if __name__ == "__main__":
 
 letter, comment = grade(75)
 print(letter, comment)`],
+  ['字典生成式與集合', `scores = {"a": 90, "b": 70}
+passed = {k: v for k, v in scores.items() if v >= 80}
+print(passed)
+uniq = set([1, 2, 2, 3])
+print(len(uniq))`],
+  ['lambda 與排序鍵', `people = [("小明", 12), ("小華", 10)]
+people.sort(key=lambda p: p[1])
+print(people[0][0])`],
+  ['巢狀函式與預設可變', `def outer(n):
+    def inner(k):
+        return k * 2
+    return inner(n) + 1
+
+print(outer(3))`],
+  ['字串格式化的另外兩種', `name = "小明"
+print("你好，{}".format(name))
+print("%s 你好" % name)
+print("a" + str(1) + "b")`],
+  ['多層資料', `data = {"users": [{"name": "小明", "tags": ["a", "b"]}]}
+u = data["users"][0]
+print(u["name"], len(u["tags"]))
+for t in u["tags"]:
+    print(t)`],
+  ['整數與布林的邊界', `print(7 // 2, 7 % 2, 2 ** 10)
+print(True + True)
+print(int(True), bool(0), bool(""))
+print(10 / 4)`],
 ]

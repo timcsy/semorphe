@@ -1,0 +1,19 @@
+{
+  "componentId": "python:func_call_named",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 沒有關鍵字引數——它靠位置與多載。**沒有對應物可指。**",
+  "properties": [
+    { "name": "name", "kind": "identifier", "default": "" }
+  ],
+  "children": { "value": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_properties_why": "**參數的名字是一個標籤**（`key=`／`sep=`）——它不對應任何值，所以是欄位不是接點。"
+}

@@ -1,0 +1,6 @@
+{
+  "PY_LAMBDA_MSG0": "Inline function %1 giving %2",
+  "PY_LAMBDA_OPEN": "(taking",
+  "PY_LAMBDA_CLOSE": ")",
+  "PY_LAMBDA_TOOLTIP": "A small unnamed function that computes one value. Often used to tell sorting which part to compare by."
+}

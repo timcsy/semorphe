@@ -1,0 +1,26 @@
+{
+  "componentId": "python:map_make_for",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與同族的串列生成式最像，而它產出的是鍵值對應不是序列——那個差別正是初學者要學會的。",
+  "properties": [],
+  "children": {
+    "targets": "param_decl",
+    "key": "expression",
+    "value": "expression",
+    "iterable": "expression",
+    "condition": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": { "mappingLiteral": true, "declaresVariable": ["PARAM_{i}"] },
+  "_traits_why": "**它算出來的是一個鍵值對應**（與字典字面同一個性狀），而**它也生出變數**——那些名字只在這個運算式裡活著，而變數下拉仍然要看得到。",
+  "_children_why": "🔴 **走訪的目標用 `targets` 子節點**（與同族的迴圈同一個做法）——`{k: v for k, v in d.items()}` 有兩個名字，而字典生成式**幾乎都是這個形狀**。"
+}

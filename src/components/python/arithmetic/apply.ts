@@ -37,6 +37,21 @@ export function applyPythonBinary(
     if (op === '+' && l.type === 'string' && r.type === 'string') {
       return { type: 'string', value: String(l.value) + String(r.value) }
     }
+    // 🔴 `"%s hi" % name` —— **字串的 `%` 是格式化，不是取餘數**。
+    //    AI 生的 Python 兩種格式化都會出現（`.format()` 是另一種）。
+    //    ⚠️ 不接的症狀是「文字不能做 %」——**那句話對取餘數是對的，
+    //    而使用者寫的根本不是取餘數**。
+    if (op === '%' && l.type === 'string') {
+      const args = r.type === 'array' ? (r.value as RuntimeValue[]) : [r]
+      let i = 0
+      return {
+        type: 'string',
+        value: String(l.value).replace(/%[sdif]/g, () => {
+          const v = args[i++]
+          return v === undefined ? '' : v.type === 'bool' ? (v.value ? 'True' : 'False') : String(v.value)
+        }),
+      }
+    }
     // `"ab" * 3` / `3 * "ab"` —— 字串重複。次數要是整數。
     if (op === '*') {
       const str = l.type === 'string' ? String(l.value) : String(r.value)

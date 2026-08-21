@@ -75,7 +75,10 @@
               "python:math_max",
               "python:math_min",
               "python:container_sum",
-              "python:container_sort"
+              "python:container_sort",
+              "python:map_make_for",
+              "python:lambda",
+              "python:func_call_named"
             ],
             "children": []
           }

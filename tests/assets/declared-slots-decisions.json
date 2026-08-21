@@ -528,5 +528,20 @@
     "componentId": "python:ternary",
     "cause": "語料沒碰到這個接點的產出",
     "reason": "三個接點都必填，而護欄的語料裡那一段（`\"成年\" if age >= 18 else \"未成年\"`）走的形狀靜態掃描認不到。\n🔴 由 `spec.test.ts` 釘住最重要的那一條：**索引 0 是「真的時候的值」不是條件**——照 C++ 的直覺對映的話，那個字串會被當成條件而**永遠為真**，而積木畫得出來、來回一字不差、執行永遠走同一邊。"
+  },
+  {
+    "componentId": "python:func_call_named",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "`value` 接點必填，而護欄的語料裡那一段（`sort(key=lambda …)`）走的形狀靜態掃描認不到。\n⚠️ 由 `lambda/spec.test.ts` 釘住，而其中一支是這一輪**最危險的缺陷**：接上 `key=` 之前，`xs.sort(key=lambda x: x[1])` **排序仍然發生、仍然有輸出，而順序是錯的**。"
+  },
+  {
+    "componentId": "python:lambda",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "參數在 `lambda_parameters` 裡，而**沒有參數時那個節點整個不存在**（`lambda: 1`）——要找而不是取欄位。\n⚠️ 由 `spec.test.ts` 釘住：三種簽名的來回、帶預設值的整顆降級、以及照 key 排序。"
+  },
+  {
+    "componentId": "python:map_make_for",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "接點是策略從 `dictionary_comprehension` 的兄弟子節點組出來的（`for_in_clause`／`if_clause` 不是欄位），而走訪目標可能是 `pattern_list`（`for k, v in …`——字典生成式**幾乎都是這個形狀**）。\n⚠️ 由 `lambda/spec.test.ts` 釘住：有無篩選的來回、篩選有作用、以及「那些名字不得污染外面」。"
   }
 ]

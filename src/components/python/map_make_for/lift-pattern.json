@@ -1,0 +1,9 @@
+{
+  "id": "python_dict_comprehension",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "dictionary_comprehension",
+  "component": { "componentId": "python:map_make_for" },
+  "liftStrategy": "python:liftMapMakeFor",
+  "fieldMappings": [],
+  "priority": 10
+}

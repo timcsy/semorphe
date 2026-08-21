@@ -1,0 +1,6 @@
+{
+  "PY_MAP_MAKE_FOR_MSG0": "收集 鍵 %1 對應 %2 取自 %3 只留 %4",
+  "PY_MAP_MAKE_FOR_OPEN": "對每一個",
+  "PY_MAP_MAKE_FOR_CLOSE": "",
+  "PY_MAP_MAKE_FOR_TOOLTIP": "走過一串東西，對每一個算出一組鍵與值，收集成一個字典。最後那一格可以留空。"
+}

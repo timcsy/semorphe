@@ -69,4 +69,7 @@ export const PYTHON_KINDS = [
   //    而這裡是同一個意思當種差用：「例外的一個 case」。
   //    > **同一個概念在任何主體上用同一個字**——那正是這份詞彙表存在的理由。
   'case',
+  // ⚠️ `named` 加入日 2026-08-21——`python:func_call_named`（`sort(key=f)`）。
+  //    🔴 **C++ 沒有關鍵字引數**：它靠位置與多載。這是 Python 切概念的方式。
+  'named',
 ] as const

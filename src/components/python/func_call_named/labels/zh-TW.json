@@ -1,0 +1,4 @@
+{
+  "PY_FUNC_CALL_NAMED_MSG0": "指名 %1 為 %2",
+  "PY_FUNC_CALL_NAMED_TOOLTIP": "呼叫函式時指名某一個參數，而不是照順序給。例如告訴排序要照哪一格比。"
+}

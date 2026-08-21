@@ -25,8 +25,10 @@
  * 預設值那條只會在其中一處被修好。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { Scope } from '../../../interpreter/scope'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import type { SemanticNode } from '../../../core/types'
 import { callWith } from '../func_def/call'
 import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
 
@@ -55,10 +57,42 @@ export function registerExecute(register: (component: string, executor: Componen
 
     // ④ 內建的自由函式
     const fn = PYTHON_BUILTIN_FUNCTIONS[name]
-    if (fn) return fn(argValues, ctx)
+    if (fn) return fn(argValues, withCall(ctx))
 
     // 查不到就出聲——把一個不存在的名字當函式呼叫而靜默回 void，
     // 使用者只會看到一個莫名其妙的結果。
     throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': name })
+  })
+}
+
+/**
+ * 把「怎麼呼叫一個 lambda」交給內建表。
+ *
+ * 🔴 排序的 `key=` 需要它（`xs.sort(key=lambda x: x[1])`），而內建表**不認得
+ * 直譯器**——它只拿得到一個很窄的介面。少了這一格的症狀是 `key=` 被**靜靜忽略**：
+ * 排序仍然發生、仍然有輸出，而**順序是錯的**。
+ *
+ * > **一個被忽略的參數不會讓程式停下來，它只會讓答案不一樣。**
+ */
+function withCall(ctx: Parameters<ComponentExecutor>[1]): Parameters<ComponentExecutor>[1] & {
+  call: (fn: RuntimeValue, args: RuntimeValue[]) => Promise<RuntimeValue>
+} {
+  return Object.assign(Object.create(Object.getPrototypeOf(ctx) as object), ctx, {
+    call: async (fn: RuntimeValue, args: RuntimeValue[]): Promise<RuntimeValue> => {
+      if (fn.type !== 'function') {
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個東西叫不動' })
+      }
+      // ⚠️ 匿名函式的本體是一個**運算式**——`callWith` 走的是語句 ＋ `return` 訊號，
+      //    所以這裡自己綁參數再求值那個運算式。
+      const fnv = fn.value as { params: { name: string }[]; body: SemanticNode[] }
+      const parent = ctx.scope
+      ctx.scope = new Scope(parent)
+      try {
+        fnv.params.forEach((prm, i) => ctx.scope.declare(prm.name, args[i] ?? { type: 'void', value: null }))
+        return await ctx.evaluate(fnv.body[0])
+      } finally {
+        ctx.scope = parent
+      }
+    },
   })
 }

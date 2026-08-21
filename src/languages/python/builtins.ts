@@ -24,12 +24,53 @@
  * 靜默回 `None` 的話，`print(len(x))` 會印出空白而看不出哪裡錯。
  */
 import type { RuntimeValue, ObjectFields } from '../../interpreter/types'
+import { RuntimeError, RUNTIME_ERRORS } from '../../interpreter/errors'
 // 「印出來長什麼樣」只有一份——`print` 與格式化文字用的是同一個。
 import { pythonDisplay as pyStr } from './value-display'
 
-/** 求值用的最小介面——內建函式只需要「把值變成數字」這一件事。 */
+/**
+ * 求值用的最小介面。
+ *
+ * 🔴 `call` 是**排序的 `key=`** 要的：`xs.sort(key=lambda x: x[1])`
+ * 需要對每一格呼叫那個函式。**沒有它的症狀是 key 被靜靜忽略**
+ * ——排序仍然發生、仍然有輸出，而**順序是錯的**（實測：該是「乙」而印出「甲」）。
+ *
+ * > **一個被忽略的參數不會讓程式停下來，它只會讓答案不一樣。**
+ *
+ * ⚠️ 它是**非同步**的（求值一個 lambda 的本體要走直譯器），
+ * 而比較器必須同步——所以排序是「**先把每一格的鍵算好，再排**」。
+ *
+ * ⚠️ 它是可選的：不是每個呼叫端都拿得到直譯器。拿不到而使用者給了 `key=` 時
+ * **要出聲**，不得靜靜用預設比較。
+ */
 export interface builtinCtx {
   toNumber(v: RuntimeValue): number
+  call?: (fn: RuntimeValue, args: RuntimeValue[]) => Promise<RuntimeValue>
+}
+
+/** 從引數裡撈出 `key=`（`param_named` 把它包成 `['__kw__key', 值]`）。 */
+function keyArg(args: RuntimeValue[]): RuntimeValue | null {
+  for (const a of args) {
+    if (a?.type !== 'array') continue
+    const pair = a.value as RuntimeValue[]
+    if (pair.length === 2 && String(pair[0]?.value) === '__kw__key') return pair[1]
+  }
+  return null
+}
+
+/**
+ * 照 `key=` 排序——**拿不到就丟錯，不要靜靜用預設比較**。
+ */
+async function sortWith(items: RuntimeValue[], args: RuntimeValue[], c: builtinCtx): Promise<RuntimeValue[]> {
+  const key = keyArg(args)
+  if (!key) return [...items].sort((x, y) => c.toNumber(x) - c.toNumber(y))
+  if (!c.call) {
+    throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': 'key=（這裡叫不動函式）' })
+  }
+  // 🟢 **先算好每一格的鍵，再排**——比較器必須同步，而求值是非同步的。
+  const keyed: { k: number; v: RuntimeValue }[] = []
+  for (const v of items) keyed.push({ k: c.toNumber(await c.call(key, [v])), v })
+  return keyed.sort((x, y) => x.k - y.k).map((x) => x.v)
 }
 
 const num = (v: number): RuntimeValue => ({ type: Number.isInteger(v) ? 'int' : 'double', value: v })
@@ -53,7 +94,7 @@ const asList = (v: RuntimeValue): RuntimeValue[] =>
   : []
 
 /** 自由函式：`len(x)`、`max(xs)`… */
-export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue> = {
+export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue | Promise<RuntimeValue>> = {
   len: (a) => num(lengthOf(a[0])),
   str: (a) => str(pyStr(a[0])),
   int: (a, c) => num(Math.trunc(c.toNumber(a[0]))),
@@ -65,9 +106,21 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
   max: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) > c.toNumber(m) ? x : m)),
   min: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) < c.toNumber(m) ? x : m)),
   sum: (a, c) => num(asList(a[0]).reduce((t, x) => t + c.toNumber(x), 0)),
-  sorted: (a, c) => arr([...asList(a[0])].sort((x, y) => c.toNumber(x) - c.toNumber(y))),
+  sorted: async (a, c) => arr(await sortWith(asList(a[0]), a.slice(1), c)),
   reversed: (a) => arr([...asList(a[0])].reverse()),
   list: (a) => arr(a.length > 0 ? [...asList(a[0])] : []),
+  // ⚠️ **集合用陣列表示，只是去重**——這個直譯器沒有集合型別。
+  //    🔴 那是一個**已知的簡化**：`len(set(xs))`（數不重複的有幾個）是教學語料裡
+  //    最常見的用途，而它是對的；集合運算（`|`／`&`）還沒有。
+  set: (a) => {
+    const seen = new Set<string>()
+    const out: RuntimeValue[] = []
+    for (const x of a.length > 0 ? asList(a[0]) : []) {
+      const k = pyStr(x)
+      if (!seen.has(k)) { seen.add(k); out.push(x) }
+    }
+    return arr(out)
+  },
   // `range` 在迴圈裡由迴圈自己處理；當成值用時給一個串列
   range: (a, c) => {
     const n = a.map((x) => c.toNumber(x))
@@ -90,11 +143,18 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
  * 🔴 **接收者是第一個引數，而有些方法會【改動】它**（`append`／`sort`）。
  * 那是 Python 的語義：串列是可變的。回傳值與改動是兩件事。
  */
-export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue> = {
+export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue | Promise<RuntimeValue>> = {
   // 串列（就地改動）
   append: (s, a) => { (s.value as RuntimeValue[]).push(a[0]); return { type: 'void', value: null } },
   pop: (s) => (s.value as RuntimeValue[]).pop() ?? { type: 'void', value: null },
-  sort: (s, _a, c) => { (s.value as RuntimeValue[]).sort((x, y) => c.toNumber(x) - c.toNumber(y)); return { type: 'void', value: null } },
+  // ⚠️ `key=` 是一個**關鍵字引數**，而它帶著一個可呼叫的東西。
+  //    這裡只認得「有沒有給」——怎麼呼叫它由呼叫端接（見 `sortWith`）。
+  // 就地排序——`key=` 見 `sortWith`
+  sort: async (s, a, c) => {
+    const sorted = await sortWith(s.value as RuntimeValue[], a, c)
+    ;(s.value as RuntimeValue[]).splice(0, sorted.length, ...sorted)
+    return { type: 'void', value: null }
+  },
   reverse: (s) => { (s.value as RuntimeValue[]).reverse(); return { type: 'void', value: null } },
   // 文字
   upper: (s) => str(String(s.value).toUpperCase()),
@@ -110,6 +170,12 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   values: (s) => arr([...(s.value as ObjectFields).values()]),
   items: (s) => arr([...(s.value as ObjectFields).entries()].map(([k, v]) => arr([str(k), v]))),
   get: (s, a) => (s.value as ObjectFields).get(String(a[0].value)) ?? a[1] ?? { type: 'void', value: null },
+  // 🔴 **`.format()` 與 `%` 是格式化文字之外的另外兩種寫法**——AI 生的
+  //    Python 兩種都會出現，而它們與 f-string 是同一件事的三個語法。
+  format: (s, a) => {
+    let i = 0
+    return str(String(s.value).replace(/\{\}/g, () => pyStr(a[i++] ?? { type: 'void', value: null })))
+  },
   // 共用
   count: (s, a, c) => num(asList(s).filter((x) => c.toNumber(x) === c.toNumber(a[0])).length),
   index: (s, a) => num(asList(s).findIndex((x) => pyStr(x) === pyStr(a[0]))),

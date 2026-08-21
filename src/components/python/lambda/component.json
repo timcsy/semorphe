@@ -1,0 +1,20 @@
+{
+  "componentId": "python:lambda",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那顆有擷取子句（`[&]`／`[=]`）而 Python 沒有——Python 的匿名函式一律看得到外面。**保證不同。**",
+  "properties": [],
+  "children": { "params": "param_decl", "body": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": { "declaresVariable": ["PARAM_{i}"] },
+  "_traits_why": "**參數是變數**——它們只在這個運算式裡活著，而變數下拉仍然要看得到。",
+  "_children_why": "🔴 **本體是一個【運算式】不是一串語句**——Python 的匿名函式只能有一個運算式，而那個限制是語法層的。給它一個語句插槽等於宣告一件做不到的事。"
+}

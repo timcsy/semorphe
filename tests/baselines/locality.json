@@ -1006,6 +1006,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:func_call_named": {
+      "files": 3,
+      "dirs": 1
+    },
     "python:func_def": {
       "files": 4,
       "dirs": 1
@@ -1020,6 +1024,10 @@
     },
     "python:input": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:lambda": {
+      "files": 4,
       "dirs": 1
     },
     "python:literal_bool": {
@@ -1052,6 +1060,10 @@
     },
     "python:map_make": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:map_make_for": {
+      "files": 4,
       "dirs": 1
     },
     "python:math_abs": {

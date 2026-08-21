@@ -1,0 +1,10 @@
+{
+  "id": "python_keyword_argument",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "keyword_argument",
+  "component": { "componentId": "python:func_call_named" },
+  "fieldMappings": [
+    { "semantic": "name", "ast": "name", "extract": "text" },
+    { "semantic": "value", "ast": "value", "extract": "lift" }
+  ]
+}

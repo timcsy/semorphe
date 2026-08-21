@@ -1,0 +1,22 @@
+[
+  {
+    "id": "python_func_call_named",
+    "componentId": "python:func_call_named",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_func_call_named",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_FUNC_CALL_NAMED_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "key" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PY_FUNC_CALL_NAMED_TOOLTIP}"
+    },
+    "renderMapping": { "fields": { "NAME": "name" }, "inputs": { "VALUE": "value" } }
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "python_map_make_for",
+    "componentId": "python:map_make_for",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_map_make_for",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MAP_MAKE_FOR_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "KEY", "check": "Expression" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" },
+        { "type": "input_value", "name": "ITERABLE", "check": "Expression" },
+        { "type": "input_value", "name": "CONDITION", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_MAP_MAKE_FOR_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [{ "type": "field_input", "name": "PARAM_{i}", "text": "k" }],
+        "separator": "，",
+        "openLabelKey": "PY_MAP_MAKE_FOR_OPEN",
+        "openLabelFallback": "對每一個",
+        "closeLabelKey": "PY_MAP_MAKE_FOR_CLOSE",
+        "closeLabelFallback": ""
+      }
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "KEY": "key", "VALUE": "value", "ITERABLE": "iterable", "CONDITION": "condition" },
+      "dynamicRules": [{
+        "countSource": "paramCount", "childSlot": "targets",
+        "childComponent": "param_decl", "childFields": { "PARAM_{i}": "name" }
+      }]
+    }
+  }
+]

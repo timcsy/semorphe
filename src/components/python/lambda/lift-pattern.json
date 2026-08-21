@@ -1,0 +1,9 @@
+{
+  "id": "python_lambda",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "lambda",
+  "component": { "componentId": "python:lambda" },
+  "liftStrategy": "python:liftLambda",
+  "fieldMappings": [],
+  "priority": 10
+}

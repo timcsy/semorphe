@@ -1,0 +1,35 @@
+[
+  {
+    "id": "python_lambda",
+    "componentId": "python:lambda",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_lambda",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_LAMBDA_MSG0}",
+      "args0": [{ "type": "input_value", "name": "BODY", "check": "Expression" }],
+      "output": "Expression",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PY_LAMBDA_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [{ "type": "field_input", "name": "PARAM_{i}", "text": "x" }],
+        "separator": "，",
+        "openLabelKey": "PY_LAMBDA_OPEN",
+        "openLabelFallback": "（參數",
+        "closeLabelKey": "PY_LAMBDA_CLOSE",
+        "closeLabelFallback": "）"
+      }
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "BODY": "body" },
+      "dynamicRules": [{
+        "countSource": "paramCount", "childSlot": "params",
+        "childComponent": "param_decl", "childFields": { "PARAM_{i}": "name" }
+      }]
+    }
+  }
+]

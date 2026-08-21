@@ -1,0 +1,4 @@
+{
+  "PY_FUNC_CALL_NAMED_MSG0": "name %1 as %2",
+  "PY_FUNC_CALL_NAMED_TOOLTIP": "Give one argument by name instead of by position, such as telling sorting which part to compare by."
+}
