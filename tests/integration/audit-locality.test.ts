@@ -70,7 +70,53 @@ function measure(): Spread[] {
     .sort((a, b) => b.files - a.files || a.componentId.localeCompare(b.componentId))
 }
 
+/**
+ * 超過上限的那些——**抽成純函式是為了讓注入餵得進來**。
+ *
+ * 這條護欄是膠囊化整個階段的驗收依據，而在 2026-08-21 之前
+ * **它從來沒有被證明過會說話**：它有錨點（「數字不為零」），
+ * 而錨點答的是「我有沒有量到東西」，不是「我認不認得出違規」。
+ *
+ * > **一條讀了整個 `src/`、而比對寫錯的護欄，錨點會過、計數永遠 0、全綠。**
+ */
+export function overLimit(
+  spreads: readonly Spread[],
+  limits: Record<string, { files: number; dirs: number } | undefined>,
+): string[] {
+  return spreads
+    .filter((s) => {
+      const lim = limits[s.componentId]
+      if (!lim) return s.files > 0 // 基線沒記錄卻有足跡 = 新元件擴散了
+      return s.files > lim.files || s.dirs > lim.dirs
+    })
+    .map((s) => {
+      const lim = limits[s.componentId]
+      return `  ✘ ${s.componentId}: ${s.files} 檔 / ${s.dirs} 目錄` +
+        (lim ? `（上限 ${lim.files} / ${lim.dirs}）` : '（基線無此元件）')
+    })
+}
+
+const spread = (componentId: string, files: number, dirs: number): Spread =>
+  ({ componentId, files, dirs, paths: [] }) as Spread
+
 describe('護欄：就近性（一個元件的實作散在幾個檔）', () => {
+  it('★ 注入①：超過上限的元件【必須】被報出', () => {
+    const lim = { 'cpp:x': { files: 2, dirs: 1 } }
+    expect(overLimit([spread('cpp:x', 3, 1)], lim), '檔數超標沒被抓到').toHaveLength(1)
+    expect(overLimit([spread('cpp:x', 2, 2)], lim), '目錄數超標沒被抓到').toHaveLength(1)
+  })
+
+  it('★ 注入②：剛好等於上限**不算**退步（邊界）', () => {
+    expect(overLimit([spread('cpp:x', 2, 1)], { 'cpp:x': { files: 2, dirs: 1 } })).toEqual([])
+  })
+
+  it('★ 注入③：基線沒記錄而有足跡的新元件必須被報，零足跡的不得被報', () => {
+    // 🔴 這一半特別容易寫錯成 `return false`（「沒基線就放過」），
+    //    而那會讓**每一顆新元件的擴散完全不受管**——加得越多，護欄管得越少。
+    expect(overLimit([spread('cpp:new', 5, 3)], {})).toHaveLength(1)
+    expect(overLimit([spread('cpp:new', 0, 0)], {})).toEqual([])
+  })
+
   const spreads = measure()
 
   it('產出可讀報表：擴散度排名', () => {
@@ -112,17 +158,7 @@ describe('護欄：就近性（一個元件的實作散在幾個檔）', () => {
   it('棘輪：任一元件的擴散度不得超過其上限（FR-003、FR-005）', () => {
     const baseline = loadBaseline<LocalityBaseline>('locality')
 
-    const worsened = spreads
-      .filter((s) => {
-        const lim = baseline.limits[s.componentId]
-        if (!lim) return s.files > 0 // 基線沒記錄卻有足跡 = 新元件擴散了
-        return s.files > lim.files || s.dirs > lim.dirs
-      })
-      .map((s) => {
-        const lim = baseline.limits[s.componentId]
-        return `  ✘ ${s.componentId}: ${s.files} 檔 / ${s.dirs} 目錄` +
-          (lim ? `（上限 ${lim.files} / ${lim.dirs}）` : '（基線無此元件）')
-      })
+    const worsened = overLimit(spreads, baseline.limits)
 
     const improved = spreads.filter((s) => {
       const lim = baseline.limits[s.componentId]

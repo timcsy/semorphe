@@ -1,5 +1,5 @@
 /**
- * **第三十六條護欄：分母要有人看**——基線記了「我掃了多少」，就必須斷言它。
+ * **第四十八條護欄：分母要有人看**——基線記了「我掃了多少」，就必須斷言它。
  *
  * ## 它防的是什麼
  *
@@ -89,7 +89,7 @@ function unasserted(pairs: readonly pair[], read: (f: string) => string): string
     .map((p) => `${p.guard}（記了 ${p.sizeKeys.join('/')}）${p.testFile === null ? ' ← 找不到擁有它的護欄' : ''}`)
 }
 
-describe('第三十六條護欄：分母要有人看', () => {
+describe('第四十八條護欄：分母要有人看', () => {
   it('★ 健康檢查：真的掃到基線與護欄檔了', () => {
     const pairs = survey()
     expect(pairs.length, '一個記了規模欄的基線都沒找到 → 掃描器壞了').toBeGreaterThan(5)

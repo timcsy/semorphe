@@ -32,7 +32,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { listSourceFiles, REPO_ROOT, printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
-import { scanTsRefs, scanJsonRefs, residualRefs } from '../helpers/identity-refs'
+import { scanTsRefs, residualRefs } from '../helpers/identity-refs'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { registeredIdMigrations } from '../../src/core/storage-version'
 import { isValidComponentId, isNamespaced } from '../../src/core/identity'
@@ -81,14 +81,37 @@ function checkFormat(inject: ComponentDefJSON[] = []): formatViolations[] {
 }
 
 /** 舊格式（沒有命名空間）的身分引用——**只算角色分類得出的** */
-function legacyRefs(extra: { file: string; source: string }[] = []): { ts: number; json: number } {
-  const old = new Set([...allIdentities].filter((id) => !isNamespaced(id)))
-  if (old.size === 0) return { ts: 0, json: 0 }
-  return {
-    ts: scanTsRefs(old, extra).filter((r) => r.role === 'componentId').length,
-    json: scanJsonRefs(old).filter((r) => r.role === 'componentId').length,
-  }
-}
+/**
+ * 🪦 **`legacyRefs` 已退休（2026-08-21）**——這裡留一塊墓碑，因為刪掉之後
+ * 「為什麼沒有這個檢查」就沒有地方回答了。
+ *
+ * 它數的是「程式碼裡還有幾處引用**沒有命名空間的**舊身分」，而它的第一行是：
+ *
+ * ```ts
+ * const old = new Set([...allIdentities].filter((id) => !isNamespaced(id)))
+ * if (old.size === 0) return { ts: 0, json: 0 }   // ← 掃描【從來沒有執行過】
+ * ```
+ *
+ * 遷移（specs 116／158）完成之後 `old` 恆為空，於是：
+ *
+ * | | 狀態 |
+ * |---|---|
+ * | 兩個計數 | 結構上恆為 0——不是量出來的 0 |
+ * | 兩支斷言（`toBe(0)`） | 恆真 |
+ * | 兩列棘輪 | 錨在恆為 0 的量上 |
+ * | 兩支注入 | **`if (old.length === 0) return`——遷移完成那天起無條件通過** |
+ * | 報表那一行 | 印「舊格式引用 ts 0 ／ json 0」，**讀起來像量過** |
+ *
+ * > **一個結構上不可能非零的數字，被當成量測結果印出來，
+ * > 就是一句每次都在說的假話。**
+ *
+ * 🟢 **而它防的東西沒有變得沒人管**：`isNamespaced` 的檢查在上面的
+ * 「格式違規」那一欄（硬性零）——**任何一顆沒有命名空間的身分會直接被報**，
+ * 而那是 `legacyRefs` 能非零的**前提**。前提已經被守住了，
+ * 這一層是它的下游。
+ *
+ * 找到它的是第四十九條護欄的「注入不得在缺陷消失時提前跳出」。
+ */
 
 /**
  * 全部積木型別字串的指紋——**這個值不得變動**。
@@ -154,28 +177,6 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     ).toBeUndefined()
   })
 
-  it('★ 注入一處舊格式引用 → **必須被計入**', () => {
-    const old = [...allIdentities].filter((id) => !isNamespaced(id))
-    if (old.length === 0) return // 遷移完成後這一支自然不適用
-    const before = legacyRefs().ts
-    const after = legacyRefs([
-      { file: '合成/舊引用.ts', source: `createNode('${old[0]}', {})\n` },
-    ]).ts
-    expect(after - before, '合成的舊格式引用沒被計入 → 計數器沒接上').toBe(1)
-  })
-
-  it('★ 反向：非身分位置的同名字串 **不得**被計入', () => {
-    // 這是整條護欄最重要的一支。`document.createElement('input')` 裡的 `'input'`
-    // 與元件身分 `input` 是同一個字串，而它們毫無關係。
-    const old = [...allIdentities].filter((id) => !isNamespaced(id))
-    if (old.length === 0) return
-    const before = legacyRefs().ts
-    const after = legacyRefs([
-      { file: '合成/非身分.ts', source: `document.createElement('${old[0]}')\nconst x = { type: '${old[0]}' }\n` },
-    ]).ts
-    expect(after, 'DOM 呼叫與 blockType 屬性被算成身分引用 → 這條護欄永遠收不到零').toBe(before)
-  })
-
   it('★ 掃描器有真的掃到東西（第 10 步）', () => {
     expect(allIdentities.size, '登錄表是空的 → 每一個量測都會是假的零').toBeGreaterThan(150)
     expect(scanTsRefs(allIdentities).length, '零筆引用 → 是掃描壞了').toBeGreaterThan(1000)
@@ -225,7 +226,6 @@ describe('身分改名表的涵蓋率', () => {
 
 describe('元件身分命名空間', () => {
   const violations = checkFormat()
-  const references = legacyRefs()
   const sameName = blockTypeFingerprint()
   const residual = residualRefs(new Set([...allIdentities].filter((id) => !isNamespaced(id))))
 
@@ -236,7 +236,7 @@ describe('元件身分命名空間', () => {
       scopeDistribution.set(s, (scopeDistribution.get(s) ?? 0) + 1)
     }
     printReport('身分命名空間', [
-      `元件 ${allIdentities.size}｜格式違規 ${violations.length}｜舊格式引用 ts ${references.ts} ／ json ${references.json}`,
+      `元件 ${allIdentities.size}｜格式違規 ${violations.length}`,
       `積木型別 ${sameName.split('|').length} 顆（指紋不得變動）｜殘留待人看 ${residual.length}`,
       '',
       'scope 分佈：' + [...scopeDistribution].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join('｜'),
@@ -273,12 +273,10 @@ describe('元件身分命名空間', () => {
     // 身分，第三方套件與硬體域都建立在「身分有主」這件事上。
     // 「修法貴不貴」→ 遷移已經做完了，維持它是免費的。
     expect(violations.map((f) => `${f.componentId}：${f.why}`), '身分格式退回舊樣了').toEqual([])
-    expect(references.ts, '程式碼裡還有舊格式的身分引用').toBe(0)
-    expect(references.json, '宣告裡還有舊格式的身分引用').toBe(0)
   })
 
   it('★ 棘輪：格式違規與舊格式引用只准下降', () => {
-    const current = { guard: 'identity-namespace', violations, references, blockTypeFingerprint: sameName }
+    const current = { guard: 'identity-namespace', violations, blockTypeFingerprint: sameName }
     if (process.env.GENERATE_BASELINE) {
       writeBaseline('identity-namespace', current)
       return
@@ -291,8 +289,6 @@ describe('元件身分命名空間', () => {
     ).toEqual([])
     assertRatchet([
       ['格式違規', violations.length, base.violations.length],
-      ['舊格式引用(ts)', references.ts, base.references.ts],
-      ['舊格式引用(json)', references.json, base.references.json],
     ])
   })
 })

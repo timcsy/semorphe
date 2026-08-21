@@ -24,7 +24,7 @@ import {
   assertRatchet,
   listSourceFiles,
 } from '../helpers/guardrail'
-import { findMultilineDisabled, scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
+import { parseTag, findMultilineDisabled, scanAllDisabled, tombstoneRefExists, type DisabledEntry } from '../helpers/disabled-scan'
 import { allComponentIds } from '../helpers/component-scan'
 
 const RULE =
@@ -133,6 +133,42 @@ describe('護欄：缺陷帳（停用測試的分類與阻斷者）', () => {
 
     printReport('缺陷帳護欄', lines)
     expect(entries.length).toBeGreaterThan(0)
+  })
+
+  // ★ 注入——**錨點問「有沒有吃到東西」，注入問「認不認得出違規」**。
+  //    這條護欄的偵測器是 `parseTag`：它回 `null` 就代表「沒有標記」，
+  //    而**一個永遠回 null 的 parseTag 會讓所有停用測試都變成違規**（過度報），
+  //    **一個永遠回非 null 的則讓違規全部消失**（漏報）。兩個方向都要釘。
+  it('★ 注入①：沒有標記的標題【必須】判成未分類', () => {
+    expect(parseTag('這個先跳過'), '認不出「沒有標記」→ 違規會全部消失').toBeNull()
+    expect(parseTag('[NOTATAG:x] 亂寫的')).toBeNull()
+  })
+
+  it('★ 注入②：四種合法標記都要認得，而且解得出內容', () => {
+    expect(parseTag('[BLOCKED:cpp:foo] 等它')?.blocker).toBe('cpp:foo')
+    expect(parseTag('[UNSUPPORTED:Python 的內建函式] 等概念')?.wanted).toBe('Python 的內建函式')
+    expect(parseTag('[TOMBSTONE:knowledge/history/001.md#錨] 已否決')?.tombstoneRef).toBe(
+      'knowledge/history/001.md#錨',
+    )
+    expect(parseTag('[DEADSKIP] 已修好')?.type).toBe('DEADSKIP')
+  })
+
+  it('★ 注入③：標記缺內容的**不得**被當成合法', () => {
+    // 🔴 `[BLOCKED]` 沒有阻斷者 = 「我知道它壞了但不說是為什麼」——
+    //    那與沒有標記一樣沒有資訊，而它長得像有標記。
+    //
+    // ⚠️ **這一支我第一版寫錯了，而它照樣是綠的**：原本寫
+    // `expect(parseTag('[BLOCKED] 等別人')?.blocker ?? '').toBe('')`
+    // ——`?.` 在回 null 時也給 undefined，於是「認得標記但內容是空」與
+    // 「整個認不出來」**得到同一個綠燈**。而這兩件事的下游處置完全不同。
+    //
+    // > **一支注入如果對兩種相反的實作都會過，它注入的是零。**
+    const blocked = parseTag('[BLOCKED] 等別人')
+    expect(blocked?.type, '標記本身要認得出來').toBe('BLOCKED')
+    expect(blocked?.blocker, '而阻斷者是空的——下游要據此判為違規').toBeUndefined()
+    const unsup = parseTag('[UNSUPPORTED] 就是不行')
+    expect(unsup?.type).toBe('UNSUPPORTED')
+    expect(unsup?.wanted).toBeUndefined()
   })
 
   it('每一個停用測試都必須帶分類標記（FR-033）', () => {

@@ -70,6 +70,32 @@ function perLanguageWiring(text: string): string[] {
 const show = (hits: string[]): string => hits.map((h) => '    ' + h.slice(0, 100)).join('\n')
 
 describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
+  // ⚠️ **錨點與注入不是同一件事，不能互相代替**（2026-08-21 量出來的）：
+  //
+  // ```
+  // 錨點   問「我有沒有吃到東西」        → 防空語料
+  // 注入   問「我的偵測器認得出違規嗎」  → 防【壞掉的偵測器】
+  // ```
+  //
+  // 一條讀了 500 個檔、而正則寫錯的護欄——**錨點會過，計數永遠 0，全綠**。
+  it('★ 注入①：一行語言接線【必須】被報出', () => {
+    const hit = perLanguageWiring("import { x } from '../languages/cpp/styles/apcs.json'")
+    expect(hit.length, '偵測器認不出最典型的那一行 → 它壞了').toBe(1)
+  })
+
+  it('★ 注入②：註解裡提到語言不得被誤報', () => {
+    expect(perLanguageWiring("  // 見 languages/cpp 的說明")).toEqual([])
+    expect(perLanguageWiring("   * languages/python 那一份")).toEqual([])
+  })
+
+  it('★ 注入③：關鍵字落在第 80 字之後照樣要被抓到', () => {
+    // 🔴 這是這個檔頭記著的那個坑：截斷只用在顯示，分類要看整行。
+    //    沒有這一支的話，那個修法哪天被改回去也不會有人知道。
+    const long = '  '.repeat(45) + "const a = require('cpp')"
+    expect(long.indexOf('cpp'), '前置沒有把關鍵字推過 80 字 → 這支注入本身失效').toBeGreaterThan(80)
+    expect(perLanguageWiring(long).length).toBe(1)
+  })
+
   it('★ 錨點：真的讀到 app.ts 了（否則下面在驗空集合）', () => {
     expect(src().length, '讀不到 app.ts → 是掃描壞了').toBeGreaterThan(10_000)
     expect(fs.readdirSync(path.join(REPO_ROOT, 'src/languages'), { withFileTypes: true })

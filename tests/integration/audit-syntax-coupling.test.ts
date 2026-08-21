@@ -114,6 +114,27 @@ describe('護欄：語法耦合（核心不得寫死特定語言的語法記號�
     expect(definite.length).toBeGreaterThanOrEqual(0)
   })
 
+  // ★ 注入——錨點問「記號清單空了沒」，注入問「**掃描器認得出寫死嗎**」。
+  //    `scanSyntaxTokens` 永遠回空的話，這條護欄會說核心一處耦合都沒有，
+  //    **而上面兩支錨點照樣過**（清單有 10 筆、掃到了 200 個檔）。
+  it('★ 注入①：一段寫死了語法記號的程式碼【必須】被報出', () => {
+    const r = scanSyntaxTokens("const line = '#include <iostream>'\nconst q = 'std::cout'")
+    const tokens = [...r.definite, ...r.ambiguous].map((h) => h.token)
+    expect(tokens.length, '最典型的兩個記號都認不出來 → 掃描器壞了').toBeGreaterThan(0)
+  })
+
+  it('★ 注入②：註解裡的記號不得被誤報——那是說明，不是產出', () => {
+    // 🔴 這條規則寫在 `RULE` 裡，而它沒有注入的話，被改掉會讓數字暴增，
+    //    而暴增看起來像「核心真的變髒了」。
+    const r = scanSyntaxTokens("// 這裡處理 #include 與 std:: 的情況\n/* -> 也是 */")
+    expect([...r.definite, ...r.ambiguous]).toEqual([])
+  })
+
+  it('★ 注入③：完全乾淨的程式碼不得被報出', () => {
+    const r = scanSyntaxTokens('export const add = (a: number, b: number): number => a + b')
+    expect([...r.definite, ...r.ambiguous]).toEqual([])
+  })
+
   it('★ 記號清單不是空的——空的話這條護欄什麼都沒掃', () => {
     expect(
       DEFINITE_TOKENS.length + REGEX_ESCAPED_TOKENS.length,

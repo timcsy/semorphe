@@ -45,7 +45,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, listSourceFiles, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, listSourceFiles } from '../helpers/guardrail'
 import { classifyFile } from '../helpers/file-classification'
 import { scanText } from '../helpers/component-scan'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
@@ -127,37 +127,25 @@ export function detectLabelResidue(shared: Record<string, string>, capsuleOwns: 
 
 describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料夾裡嗎）', () => {
   // ── 棘輪：膠囊化的進度 ────────────────────────────────────
-  it('棘輪：尚未膠囊化的元件數只准下降', () => {
+  // 🪦 **這裡原本是一條棘輪**（`notEncapsulated ≤ 基線`，基線 0），
+  //    而它有一份只裝著那一個數字的基線檔 `tests/baselines/component-locality.json`。
+  //
+  //    階段 6.5 的 F 步收工之後那個數字**恆為 0**，於是那份基線的全部內容
+  //    就是一個 0。而它還手刻了一份 `assertRatchet` 的複製品（連錯誤訊息都一樣）。
+  //
+  // > **一份只記著一個 0 的基線，記的不是一個量測值，是一句斷言
+  // > ——而斷言該寫在測試裡，不是存在檔案裡等人去讀。**
+  //
+  // 🟢 改成硬性零。基線檔已刪。護欄的力量本來就在下面那五支
+  //    （三個維度 ＋ 三支注入），這一支只是把它們的前提說出來。
+  it('硬性零：每一顆元件都必須是膠囊', () => {
     const encapsulated = new Set(registeredComponents().map((c) => c.componentId))
     const notEncapsulated = allIdentities().filter((id) => !encapsulated.has(id))
-
-    if (process.env.GENERATE_BASELINE) {
-      writeBaseline(GUARD, {
-        _meta: {
-          guard: GUARD,
-          measuredAt: new Date().toISOString().slice(0, 10),
-          rule:
-            '一顆元件的宣告／實作／標籤都住在 src/components/<scope>/<name>/ 裡。' +
-            '⚠️ **維度與現行就近性護欄不同**：這條算宣告＋實作＋標籤，' +
-            '現行那條只算「實作」類（audit-locality.test.ts:56）。' +
-            '**兩個數字不得互相比較**——3.46 與這裡的數字量的不是同一件事。',
-          note: RATCHET_NOTE,
-        },
-        notEncapsulated: notEncapsulated.length,
-      } satisfies Baseline)
-    }
-
-    const base = loadBaseline<Baseline>(GUARD)
-    expect(notEncapsulated.length, `未膠囊化的元件數上升了：${base.notEncapsulated} → ${notEncapsulated.length}`).toBeLessThanOrEqual(
-      base.notEncapsulated,
-    )
-    if (notEncapsulated.length < base.notEncapsulated) {
-      throw new Error(
-        `棘輪有改善，**請下調基線並與這次改善一起 commit**：\n` +
-          `  ✔ 未膠囊化: ${base.notEncapsulated} → ${notEncapsulated.length}\n` +
-          `（棘輪只擋上升的話不會自己收緊——舊基線會默許退回去而沒有人發現）`,
-      )
-    }
+    expect(
+      notEncapsulated,
+      '這些身分不住在 src/components/<scope>/<name>/ 裡——' +
+        '而下面三個維度的比對【都假設】每顆元件有一個自己的資料夾',
+    ).toEqual([])
   })
 
   // ── 正向（FR-010）：硬性零 ──────────────────────────────
@@ -228,18 +216,18 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
   describe('注入', () => {
     const fakeIdentity = ['cpp:fake_alpha', 'cpp:fake_beta']
 
-    it('壞的輸入會報：實作外洩必須被 scanText 抓到', () => {
+    it('★ 注入壞的輸入會報：實作外洩必須被 scanText 抓到', () => {
       const fakeFile = `register('cpp:fake_alpha', () => {})`
       expect(scanText(fakeFile, fakeIdentity).code).toEqual(['cpp:fake_alpha'])
     })
 
-    it('壞的輸入會報：膠囊裡的外來身分必須被抓到', () => {
+    it('★ 注入壞的輸入會報：膠囊裡的外來身分必須被抓到', () => {
       const fakeFile = `g.set('cpp:fake_beta', () => '')`
       const hits = scanText(fakeFile, fakeIdentity).code.filter((id) => id !== 'cpp:fake_alpha')
       expect(hits).toEqual(['cpp:fake_beta'])
     })
 
-    it('壞的輸入會報：標籤留在共用檔必須被抓到', () => {
+    it('★ 注入壞的輸入會報：標籤留在共用檔必須被抓到', () => {
       const owns = new Set(['CPP_FAKE_ALPHA_MSG0'])
       const shared = { CPP_FAKE_ALPHA_MSG0: '假的', OTHER_KEY: '別人的' }
       expect(Object.keys(shared).filter((k) => owns.has(k))).toEqual(['CPP_FAKE_ALPHA_MSG0'])

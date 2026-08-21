@@ -291,7 +291,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
 
   // ── 注入：三個方向（build-guardrail 第 8、9 步）─────────
   describe('注入', () => {
-    it('(a) 壞的輸入會報：接點放進去了、來回之後沒回來 → 確定違規', () => {
+    it('★ 注入 (a) 壞的輸入會報：接點放進去了、來回之後沒回來 → 確定違規', () => {
       const d = judgeConformance('cpp:fake', ['values', 'source'], [])
       expect(d.bucket).toBe('確定違規')
       expect(d.missing.sort()).toEqual(['source', 'values'])

@@ -51,6 +51,29 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
   // ─────────────────────────────────────────────────────────
   // FR-002 / SC-001：Python 底下不得出現 C++ 元件
   // ─────────────────────────────────────────────────────────
+  // ★ 注入——這條護欄的負向斷言（「不得出現 cpp:」）靠的是 `componentIdsOf`
+  //    **走遍整棵樹**。而一個只看根節點的走訪，會讓所有負向斷言全綠，
+  //    **而上面那兩支錨點照樣會過**（根節點確實 lift 出來了）。
+  it('★ 注入：埋在深處的 `cpp:` 身分【必須】被走訪撈出來', () => {
+    const nested = {
+      componentId: 'python:program',
+      properties: {},
+      children: {
+        body: [
+          {
+            componentId: 'python:if',
+            properties: {},
+            children: { then_body: [{ componentId: 'cpp:var_ref', properties: {}, children: {} }] },
+          },
+        ],
+      },
+    } as unknown as Parameters<typeof componentIdsOf>[0]
+    const ids = componentIdsOf(nested)
+    expect(ids.filter((i) => i.startsWith('cpp:')), '走訪沒有下到第三層 → 負向斷言全部空過').toEqual([
+      'cpp:var_ref',
+    ])
+  })
+
   it('🔴 FR-002：一段 Python lift 出來，不得出現任何 `cpp:` 元件', async () => {
     const ids = componentIdsOf(await liftPython(PYTHON_BASELINE))
     const cpp = ids.filter((i) => i.startsWith('cpp:'))

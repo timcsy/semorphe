@@ -167,7 +167,69 @@ function fromDeclaration(type: string): Shape | null {
   return s
 }
 
+/**
+ * 兩個形狀哪裡不一樣——**抽成純函式是為了讓注入餵得進來**。
+ *
+ * 這裡有兩條**修過的**正規化規則，而它們沒有注入的話，被改回去也不會有人知道：
+ * 欄位比「串起來的字」（不比怎麼切）、以及空白正規化。
+ *
+ * @param unexpressed 命令式有、而宣告表達不出的 extraState 鍵
+ */
+export function shapeDiff(imp: Shape, d: Shape, unexpressed: readonly string[] = []): string[] {
+  const diffs: string[] = []
+  if (imp.inputs.join(',') !== d.inputs.join(',')) diffs.push(`插槽 ${imp.inputs.join(',')} vs ${d.inputs.join(',')}`)
+  // 🔴 **比【串起來的字】，不比【欄位怎麼切】。**
+  //
+  // ⚠️ `cpp_array_assign` 兩邊的字一模一樣（「設定 陣列 ⟨活下拉⟩ 的第 [ ] 格 ←」），
+  // 而命令式把「格」與「←」放在兩個 `appendField`、宣告放在一個訊息裡
+  // ——**那是排版，不是內容**。
+  // > **一個比「欄位怎麼切」的比對，會把同一句話判成兩句。**
+  //
+  // 🟢 而空白要正規化：訊息裡的 `%1` 前後有空白，`appendField` 沒有。
+  const norm = (xs: readonly string[]): string => xs.join('').replace(/\s+/g, '')
+  if (norm(imp.fields) !== norm(d.fields)) diffs.push(`欄位 ${imp.fields.join(',')} vs ${d.fields.join(',')}`)
+  if (String(imp.output) !== String(d.output)) diffs.push(`output ${imp.output} vs ${d.output}`)
+  if (imp.prev !== d.prev || imp.next !== d.next) diffs.push(`statement ${imp.prev}/${imp.next} vs ${d.prev}/${d.next}`)
+  if (imp.colour !== d.colour) diffs.push(`顏色 ${imp.colour} vs ${d.colour}`)
+  // 🔴 **載入時才跑的那一半**——見 `extraStateKeys` 的檔頭。
+  //
+  // ⚠️ 比的是**鍵**不是「有沒有」：`cpp_var_assign_compound` 宣告了 `dynamicRules`，
+  // 而它的 extraState 是 `{hasIndex}`——**與 `dynamicRules` 無關**。
+  // > **一個「有沒有宣告某種 extraState」的檢查，
+  // > 答不出「宣告的是不是【同一個】extraState」。**
+  if (unexpressed.length > 0) diffs.push(`載入時的狀態 ${unexpressed.join(',')} —— 宣告表達不出`)
+  return diffs
+}
+
+/** 注入用的骨架形狀——只改要比的那一項。 */
+const bareShape = (o: Partial<Shape> = {}): Shape =>
+  ({ inputs: [], fields: [], output: null, prev: false, next: false, colour: '#000', ...o }) as Shape
+
 describe('spec 163 · 宣告與命令式，逐項比對', () => {
+  // ★ 注入——錨點問「登錄表載到了嗎」，注入問「**比對認得出差異嗎**」。
+  //    `shapeDiff` 永遠回空陣列的話，這條護欄會說「全部一模一樣、都可以刪」
+  //    ——而錨點照樣過。**那是最貴的一種假綠：它的結論是「去刪程式碼」。**
+  it('★ 注入①：每一項差異都必須被報出', () => {
+    const b = bareShape()
+    expect(shapeDiff(bareShape({ inputs: ['A'] }), b)).toHaveLength(1)
+    expect(shapeDiff(bareShape({ fields: ['甲'] }), b)).toHaveLength(1)
+    expect(shapeDiff(bareShape({ output: 'Number' }), b)).toHaveLength(1)
+    expect(shapeDiff(bareShape({ prev: true }), b)).toHaveLength(1)
+    expect(shapeDiff(bareShape({ colour: '#fff' }), b)).toHaveLength(1)
+    expect(shapeDiff(b, b, ['hasIndex'])).toHaveLength(1)
+  })
+
+  it('★ 注入②：一模一樣的兩個形狀不得被誤報', () => {
+    expect(shapeDiff(bareShape({ inputs: ['A'], fields: ['甲'] }), bareShape({ inputs: ['A'], fields: ['甲'] }))).toEqual([])
+  })
+
+  it('★ 注入③：欄位【怎麼切】與【空白】不算差異——這兩條規則是修過的', () => {
+    // 🔴 沒有這一支的話，正規化被拿掉會讓幾十顆積木憑空變成「有差異」，
+    //    而那看起來就像「宣告真的表達不出來」。
+    expect(shapeDiff(bareShape({ fields: ['格', '←'] }), bareShape({ fields: ['格←'] }))).toEqual([])
+    expect(shapeDiff(bareShape({ fields: [' 設定 ', ' x '] }), bareShape({ fields: ['設定x'] }))).toEqual([])
+  })
+
   it('★ 錨點：登錄表真的載到了（否則下面在比空集合）', () => {
     expect(reg.getAll().length, '零筆 → 是載入壞了').toBeGreaterThan(100)
   })
@@ -224,33 +286,9 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       if (!imperativeTypes.has(t)) continue
       let imp: Shape
       try { const b = ws.newBlock(t); imp = shapeOf(b); b.dispose(false) } catch { continue }
-      const diffs: string[] = []
-      if (imp.inputs.join(',') !== d.inputs.join(',')) diffs.push(`插槽 ${imp.inputs.join(',')} vs ${d.inputs.join(',')}`)
-      // 🔴 **比【串起來的字】，不比【欄位怎麼切】。**
-      //
-      // ⚠️ `cpp_array_assign` 兩邊的字一模一樣（「設定 陣列 ⟨活下拉⟩ 的第 [ ] 格 ←」），
-      // 而命令式把「格」與「←」放在兩個 `appendField`、宣告放在一個訊息裡
-      // ——**那是排版，不是內容**。
-      // > **一個比「欄位怎麼切」的比對，會把同一句話判成兩句。**
-      //
-      // 🟢 而空白要正規化：訊息裡的 `%1` 前後有空白，`appendField` 沒有。
-      const norm = (xs: string[]): string => xs.join('').replace(/\s+/g, '')
-      if (norm(imp.fields) !== norm(d.fields)) diffs.push(`欄位 ${imp.fields.join(',')} vs ${d.fields.join(',')}`)
-      if (String(imp.output) !== String(d.output)) diffs.push(`output ${imp.output} vs ${d.output}`)
-      if (imp.prev !== d.prev || imp.next !== d.next) diffs.push(`statement ${imp.prev}/${imp.next} vs ${d.prev}/${d.next}`)
-      if (imp.colour !== d.colour) diffs.push(`顏色 ${imp.colour} vs ${d.colour}`)
-      // 🔴 **載入時才跑的那一半**——見 `extraStateKeys` 的檔頭。
-      //
-      // ⚠️ 比的是**鍵**不是「有沒有」：`cpp_var_assign_compound` 宣告了 `dynamicRules`，
-      // 而它的 extraState 是 `{hasIndex}`——**與 `dynamicRules` 無關**。
-      // > **一個「有沒有宣告某種 extraState」的檢查，
-      // > 答不出「宣告的是不是【同一個】extraState」。**
       const impKeys = extraStateKeys(Blockly.Blocks[t] as Record<string, unknown>)
       const canDeclare = new Set(declarableKeys(reg.getByBlockType(t)))
-      const unexpressed = impKeys.filter((k) => !canDeclare.has(k))
-      if (unexpressed.length > 0) {
-        diffs.push(`載入時的狀態 ${unexpressed.join(',')} —— 宣告表達不出`)
-      }
+      const diffs = shapeDiff(imp, d, impKeys.filter((k) => !canDeclare.has(k)))
       if (diffs.length === 0) same.push(t)
       else differ.push({ t, why: diffs.join(' ｜ ') })
     }

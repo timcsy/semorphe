@@ -326,7 +326,7 @@ describe('護欄：宣告完整性（lift 產出的接點，宣告裡有嗎）',
 
   // ── 注入：三個方向（第 8、9 步）─────────────────────────
   describe('注入', () => {
-    it('(a) 壞的輸入會報：產出了宣告裡沒有的接點 → 確定違規', () => {
+    it('★ 注入 (a) 壞的輸入會報：產出了宣告裡沒有的接點 → 確定違規', () => {
       const d = judgeDeclCompleteness('cpp:fake', ['condition'], ['condition', 'else_body'])
       expect(d.bucket).toBe('確定違規')
       expect(d.undeclared).toEqual(['else_body'])

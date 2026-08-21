@@ -171,6 +171,30 @@ describe('護欄：雙重真相（JSON blockDef ／ 動態註冊）', () => {
   //
   // 健康檢查要釘在**兩份清單各自都取到了**，不是釘在它們有交集。
   // （build-guardrail 第 2 步：錨點挑不隨修復而失效的東西。）
+  // ★ 注入——錨點問「兩份清單取到了嗎」，注入問「**取名字的那一步對不對**」。
+  //    `inputNamesFromJson` 錯的話兩份清單都非空、交集永遠是空、護欄永遠全綠。
+  it('★ 注入①：blockDef 裡的插槽名【必須】被取出來', () => {
+    const names = inputNamesFromJson({
+      type: 'x',
+      message0: '%1 %2',
+      args0: [{ type: 'input_value', name: 'A' }, { type: 'field_dropdown', name: 'B' }],
+      args1: [{ type: 'input_statement', name: 'C' }],
+    })
+    expect([...names].sort(), '取不出名字 → 交集永遠空 → 護欄永遠全綠').toEqual(['A', 'B', 'C'])
+  })
+
+  it('★ 注入②：沒有 args 的定義取出空集合，而不是拋錯或亂猜', () => {
+    expect([...inputNamesFromJson({ type: 'x', message0: 'hi' })]).toEqual([])
+    // ⚠️ `args0` 存在但不是陣列（壞掉的定義）——**要當成沒有，不得炸掉整條護欄**
+    expect([...inputNamesFromJson({ type: 'x', args0: 'oops' })]).toEqual([])
+  })
+
+  it('★ 注入③：`args` 開頭以外的鍵不得被誤收', () => {
+    // 🔴 `message0`／`extensions` 裡也有物件陣列，收進來的話交集會變大，
+    //    於是「寫死了但 JSON 沒有」被誤報成「兩份真相」。
+    expect([...inputNamesFromJson({ extensions: [{ name: 'NOT_AN_INPUT' }] })]).toEqual([])
+  })
+
   it('★ 兩份清單各自都取到了——空清單與零違規產出一樣', () => {
     expect(dynamicBodies.size, '動態註冊那份沒解析到東西 → 報表的每個數字都是假的').toBeGreaterThan(10)
     expect(json.size, 'JSON 定義那份沒載入 → 同上').toBeGreaterThan(10)
