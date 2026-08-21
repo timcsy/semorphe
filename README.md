@@ -24,146 +24,137 @@
 ## 特色
 
 - **雙向同步** — 修改積木即時更新程式碼，修改程式碼即時更新積木
-- **語義樹驅動** — 以 Semantic Tree 為 Single Source of Truth，非簡單的文字↔積木映射
-- **認知分級** — L0 初學 / L1 進階 / L2 完整，漸進式揭露 C++ 功能
-- **多種程式碼風格** — APCS（cout/cin）、競賽（printf/scanf）、Google 風格一鍵切換
-- **優雅降級** — 不支援的語法自動降級為原始碼積木，標註信心度
-- **VSCode 延伸模組** — 直接在編輯器側邊欄使用積木面板
+- **語義樹驅動** — 語義樹是 Single Source of Truth，**不是**文字↔積木的直接映射
+- **多語言** — C++ 與 Python，各自有自己的文法、產生器與課程
+- **漸進揭露** — 每個課程有自己的層級樹（L0/L1/L2…），工具箱依層級過濾
+- **多種程式碼風格** — APCS（cout/cin）、競賽（printf/scanf）、Google、Python 一鍵切換
+- **誠實降級** — 認不出來的語法變成**看得見的**灰色積木，原文一字不動；
+  ⚠️ 而**每個語言用自己的降級積木**，不會借別的語言的
+- **IDE 延伸模組** — VSCode 與 Arduino IDE（Theia）共用同一份，程式碼那一格交給宿主的編輯器
 
 ## 快速開始
 
 ```bash
-# 安裝依賴
 npm install
-
-# 啟動開發伺服器
-npm run dev
-
-# 執行測試
-npm test
-
-# 建置
-npm run build
+npm run dev          # 開發伺服器
+npm test             # 單元／整合測試
+npm run test:e2e     # Playwright
+npm run build        # tsc + vite build
+npm run build:vscode # 打包 IDE 延伸模組
+npm run install:ide  # 裝進本機的 VSCode / Arduino IDE
 ```
 
 ## 架構
 
 ```
 src/
-├── core/           # 語義樹、投影引擎、block spec registry
-├── languages/      # 語言模組（目前支援 C++）
-├── interpreter/    # 語義樹直譯器
-└── ui/             # Blockly 面板、Monaco 編輯器、同步控制器
+├── core/         # 語義樹、投影引擎、宣告登記處
+├── components/   # 🔴 元件膠囊 —— <scope>/<name>/，一顆元件一個資料夾
+├── languages/    # 語言套件（cpp / python）：解析器、課程、目標、風格、分類
+├── interpreter/  # 語義樹直譯器
+├── ui/           # Blockly 面板、Monaco、同步控制器、積木建構子
+└── vscode/       # IDE 延伸模組（VSCode + Arduino IDE 共用）
 ```
 
-核心原則：語義樹（Semantic Tree）是唯一的真實來源。積木（Blockly）和程式碼（Monaco）都是語義樹的投影。所有轉換都透過語義層進行，不直接在兩種視覺表示之間映射。
+**核心原則**：語義樹是唯一的真實來源。積木與程式碼都是它的投影，
+所有轉換都經過語義層，**不直接在兩種視覺表示之間映射**。
 
-## 概念管線（Concept Pipeline）
-
-Semorphe 提供一套 Claude Code skill，用於系統化地新增語言概念支援。從研究語言特性到完整整合，全程由 AI 輔助完成。
-
-### 概覽
+### 一顆元件長什麼樣
 
 ```
-/concept.discover  →  /concept.generate  →  /concept.roundtrip  →  /concept.fuzz  →  /concept.integrate
-    研究 & 分類         產生實作產出物          目標性 round-trip        資訊隔離盲測          最終關卡 & 註冊
+src/components/<scope>/<name>/
+  component.json        身分／參數／接點／角色／五路各自在哪
+  lift-pattern.json     AST → 語義樹（純資料；要跑邏輯時改用 lift-strategy.ts）
+  generate.ts           語義樹 → 原始碼
+  execute.ts            語義樹 → 執行行為（沒有這一路要寫 null ＋ 理由）
+  forms/blocks.json     積木形態（render 與 extract 共用同一份）
+  labels/{zh-TW,en}.json
+  spec.test.ts
 ```
 
-或直接使用端到端管線一次完成：
+🟢 **加一顆元件＝新增一個資料夾**：登錄表用 `import.meta.glob` 掃描，
+不需要編輯任何共用檔。
+
+## AI 輔助的開發管線
+
+Semorphe 把重複的開發流程固化成 **skill**（`knowledge/skills/`，投影到 `.claude/skills/`）。
+它們是**這個專案的記憶**，不只是模板——每一條規矩後面都有一次翻車。
+
+### 加一顆元件
 
 ```
-/concept.pipeline cpp <algorithm>
+/component-pipeline {lang} {target}
 ```
 
-### 各 Skill 說明
+它串起六個階段：
 
-| Skill | 指令 | 用途 |
-|-------|------|------|
-| **概念探索** | `/concept.discover {lang} {target}` | 研究函式庫/語言特性，萃取概念、按 Topic 層級樹分類、提出命名 |
-| **概念產生** | `/concept.generate {lang} {concept}` | 產生 BlockSpec JSON、generator、lifter、渲染映射、測試 |
-| **Round-Trip 測試** | `/concept.roundtrip {lang} {concept}` | 對特定程式執行 lift → generate → 比較 stdout 的驗證 |
-| **模糊測試** | `/concept.fuzz {lang} {difficulty} {scope} {count}` | 雙代理架構：Agent A（不知實作）出題，Agent B 驗證正確性 |
-| **整合** | `/concept.integrate {lang} {concept}` | 執行所有驗證（tsc、test、round-trip），通過後完成註冊 |
-| **端到端管線** | `/concept.pipeline {lang} {target}` | 串接上述 5 個 skill，一個指令從研究到整合 |
-| **概念重構** | `/concept.refactor {lang} audit\|fix\|migrate\|i18n-fix\|full` | 審計四路完備性、信心等級、i18n 標籤風格；修復缺失產出物；遷移 JSON pattern；清理技術債 |
+| 階段 | Skill | 做什麼 |
+|---|---|---|
+| 1 | `component-discover` | 研究函式庫／語言特性，提出概念與命名 |
+| 2 | `component-generate` | 產一顆膠囊：宣告 ＋ 五路 ＋ 形態 ＋ 標籤 ＋ 測試 |
+| 3 | `component-roundtrip` | 原始碼 → lift → generate → 執行，比對 stdout |
+| 4 | `component-fuzz` | 雙代理資訊隔離的盲測 |
+| 5 | `component-integrate` | 最終關卡：全部驗證跑完才算數 |
+| 6 | `verify-in-browser` | 🔴 **開瀏覽器看**——前五階段全綠而使用者一看就發現的缺陷 |
 
-### 使用範例
+### 加一個**語言**
+
+```
+/add-language
+```
+
+⚠️ **與上面那條是不同的路**——元件管線假設語言已經在了。
+加一個語言要處理文法歸屬、四個登記處、結構性 lift pattern、wasm 出貨。
+
+### 其他
+
+| Skill | 用途 |
+|---|---|
+| `component-refactor` | 審計與修復既有膠囊（主力是護欄報表，它讀報表） |
+| `component-rename` | 大規模改身分／參數名——**必附一次性存檔遷移** |
+| `build-guardrail` | 把一條規範變成**會變紅**的機械檢查 |
+| `manual-acceptance` | 給那些永遠變不紅的規範寫一張人按得完的清單 |
+| `diagnose-in-browser` | 已知有問題時在瀏覽器裡定位 |
+| `ship-extension` | 把一次改動交到兩個 IDE 手上 |
+
+完整清單與各自的緣起見 [`knowledge/skills/README.md`](knowledge/skills/README.md)。
+
+## IDE 延伸模組
+
+**已出貨**，VSCode 與 Arduino IDE（Theia 1.57）**共用同一份 `.vsix`**。
+
+```
+面板【就是】網頁版的 App，只是程式碼那一格換成宿主的編輯器
+```
+
+它開在**編輯器區域的一個分頁**（不是側邊欄），由 `semorphe.openBlocks` 指令喚出。
 
 ```bash
-# 探索 C++ <algorithm> 標頭檔的概念
-/concept.discover cpp <algorithm>
-
-# 為特定概念產生實作
-/concept.generate cpp sort_range
-
-# 驗證 round-trip 正確性
-/concept.roundtrip cpp sort_range
-
-# 用盲測找出邊界案例
-/concept.fuzz cpp medium loops 20
-
-# 完整管線：從研究到整合
-/concept.pipeline cpp <algorithm>
-
-# 快速管線（跳過模糊測試）
-/concept.pipeline python list comprehension --skip-fuzz
-
-# 只處理特定概念
-/concept.pipeline java Stream API --concepts=stream_map,stream_filter
-
-# 審計現有概念實作（四路完備性、信心等級、雙重註冊、i18n 標籤）
-/concept.refactor cpp audit
-
-# 只審計 i18n 標籤風格一致性
-/concept.refactor cpp audit i18n
-
-# 修復特定概念的缺失產出物
-/concept.refactor cpp fix cout
-
-# 修復整個 STD 模組
-/concept.refactor cpp fix vector
-
-# 修復該語言所有概念
-/concept.refactor cpp fix all
-
-# 將特定 hand-written lifter 遷移至 JSON pattern
-/concept.refactor cpp migrate if
-
-# 修復 i18n 標籤風格不一致問題
-/concept.refactor cpp i18n-fix
-
-# 完整重構：audit → fix → dedup → migrate → render-fix → i18n-fix → purge
-/concept.refactor cpp full
+npm run build:vscode   # 產出 .vsix
+npm run install:ide    # 裝進本機兩個 IDE
 ```
 
-### 檔案存放位置
+⚠️ Arduino IDE 的安裝路徑是 `~/.arduinoIDE/plugins/`，
+而 **Theia 的解壓快取以「名字」為鍵**——覆蓋 `.vsix` 不會重新解，而它不報錯。
+用 `npm run install:ide`，不要自己複製。
 
-概念的實作檔案依層級存放：
+> 🪦 2026-03 的那個原型已於 2026-08-16 退休（教訓見
+> [`knowledge/history/069`](knowledge/history/069-vscode原型退休而它的兩個教訓被撈出來.md)），
+> 現在這一份是 2026-08 重做的。
 
-| 層級 | blocks.json | concepts.json | generators | lifters |
-|------|-------------|---------------|------------|---------|
-| **核心語法** | `src/languages/{lang}/core/blocks.json` | `src/languages/{lang}/core/concepts.json` | `src/languages/{lang}/core/generators/` | `src/languages/{lang}/core/lifters/` |
-| **標準庫模組** | `src/languages/{lang}/std/{module}/blocks.json` | `src/languages/{lang}/std/{module}/concepts.json` | `src/languages/{lang}/std/{module}/generators.ts` | `src/languages/{lang}/std/{module}/lifters.ts` |
+## 專案知識庫
 
-詳細的 skill 定義在 `.claude/skills/concept-*/SKILL.md`。
+這個專案的 **why** 記在 [`knowledge/`](knowledge/)，而不是散在 commit 訊息裡：
 
-## VSCode 延伸模組
+| | |
+|---|---|
+| [`principles.md`](knowledge/principles.md) | 根公理與衍生原則——不可協商的那些 |
+| [`vision.md`](knowledge/vision.md) | 定位與**還活著的**路線圖（完成的收斂成一行 ＋ 指標） |
+| [`experience.md`](knowledge/experience.md) | 從翻車裡蒸餾出來的教訓 |
+| `concepts/` `history/` `episodes/` `draft/` | 概念、因果軌跡、完整現場、還沒定案的 |
 
-**2026-08-16 退休。** 原型（2026-03）停在 90 個錯誤、158 天沒動、零自動化，
-而其中 19 個說的是一個**架構限制**：膠囊登錄表用 `import.meta.glob`，
-那是 **Vite 的轉換** —— esbuild 建得出來而執行期才炸。
-
-```
-Vite     CJS 269 KB  → node 跑得動 → 189 顆膠囊全部載入   🟢 已實測
-esbuild  CJS 4.6 KB  → 🔴 import_meta.glob is not a function
-```
-
-要重做的話：**那個宿主也用 Vite 建置**（已驗過），
-而真正的成本不是 glue code，是 `src/ui/app.ts` 的**六個單例**
-——它們寫死了「只有一個文件」，而編輯器有 N 個。
-
-程式碼完整保留在版控裡（`git log -- vscode-ext/`），
-教訓見 [knowledge/history/069](knowledge/history/069-vscode原型退休而它的兩個教訓被撈出來.md)。
+⚠️ **接手任何工作之前先讀那三個檔**——這個專案的多數規矩都有一次具體的災難在後面，
+而**那個災難不在程式碼裡**。
 
 ## 授權
 
