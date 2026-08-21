@@ -1,0 +1,32 @@
+[
+  {
+    "id": "python_math_max",
+    "componentId": "python:math_max",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_math_max",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_MATH_MAX_TOOLTIP}",
+      "labelKey": "PY_MATH_MAX_MSG",
+      "labelFallback": "最大值",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "python_math_abs",
+    "componentId": "python:math_abs",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_math_abs",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MATH_ABS_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_MATH_ABS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

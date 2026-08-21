@@ -966,12 +966,28 @@
       "files": 3,
       "dirs": 1
     },
+    "python:container_append": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:container_at": {
       "files": 3,
       "dirs": 1
     },
     "python:container_find": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:container_size": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:container_sort": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:container_sum": {
+      "files": 4,
       "dirs": 1
     },
     "python:continue": {
@@ -1034,6 +1050,18 @@
       "files": 3,
       "dirs": 1
     },
+    "python:math_abs": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:math_max": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:math_min": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:member_at": {
       "files": 3,
       "dirs": 1
@@ -1058,6 +1086,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:range_make": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:raw_code": {
       "files": 2,
       "dirs": 1
@@ -1074,7 +1106,19 @@
       "files": 3,
       "dirs": 1
     },
+    "python:string_lower": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:string_make": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:string_split": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:string_upper": {
       "files": 4,
       "dirs": 1
     },

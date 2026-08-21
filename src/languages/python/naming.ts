@@ -46,6 +46,21 @@ export const PYTHON_ATOMIC_NAMES = [
 ] as const
 
 /**
+ * Python 自己的**操作詞**。
+ *
+ * 🔴 **這一格要非常克制**：操作詞是封閉集合，而它存在的理由是
+ * 「同一個操作在任何主體上用同一個字」。多一個同義詞就是少一分那個保證。
+ */
+export const PYTHON_OPERATIONS = [
+  // ⚠️ `split` 加入日 2026-08-21——`python:string_split`（`"a,b".split(",")`）。
+  //    🔴 **C++ 那側沒有這個操作**：它切字串要靠 `stringstream` ＋ 迴圈，
+  //    是一段程式不是一個操作。**Python 把它切成一個動詞**，而既有的
+  //    `substr`（取一段）／`erase`（刪一段）都只產出**一段**，表達不了「切成好幾段」。
+  //    > **詞彙表要不要多一個字，答案在【那個語言怎麼切概念】，不在字典裡。**
+  'split',
+] as const
+
+/**
  * Python 自己的**種類**（名詞性的種差）。
  */
 export const PYTHON_KINDS = [

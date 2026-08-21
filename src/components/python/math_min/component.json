@@ -1,0 +1,20 @@
+{
+  "componentId": "python:math_min",
+  "abstractComponent": null,
+  "_abstractComponent_why": "名字與 C++ 那顆同一個操作對齊，而**保證不同**（Python 的容器是動態型別、極值吃序列也吃多引數）。等價要在量得出來的觀察集底下宣告，不是靠同名。",
+  "properties": [],
+  "children": {
+    "values": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `min` ——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。\n⚠️ 而使用者若自己 `def min(x)`，這顆仍然會認走它——🔴 **那是一個已知的邊界**：判別在 lift 期，而「有沒有被使用者蓋掉」是執行期才知道的事。"
+}

@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_APPEND_MSG0": "在 %1 末端加入 %2",
+  "PY_CONTAINER_APPEND_TOOLTIP": "在一串東西的最後面多放一個。原本那一串會被改到。"
+}

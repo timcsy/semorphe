@@ -463,5 +463,60 @@
     "componentId": "python:method_call",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "接收者是 `attribute` 節點的 `object` 欄位——**一整個運算式**，而不是名字的一部分。這顆存在的理由就是把它從字串變回接點。\n⚠️ 由 `spec.test.ts` 與第五十條護欄的語料（鏈式呼叫、字面接收者、索引接收者）釘住。"
+  },
+  {
+    "componentId": "python:container_size",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:math_abs",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:math_max",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:math_min",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_sum",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_sort",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:range_make",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_append",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:string_upper",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:string_lower",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:string_split",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
   }
 ]

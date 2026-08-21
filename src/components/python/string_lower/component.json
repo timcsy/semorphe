@@ -1,0 +1,21 @@
+{
+  "componentId": "python:string_lower",
+  "abstractComponent": null,
+  "_abstractComponent_why": "名字與 C++ 那顆同一個操作對齊，而**保證不同**（Python 的字串不可變，這幾顆回新的；C++ 那側有的就地改）。等價要在量得出來的觀察集底下宣告。",
+  "properties": [],
+  "children": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。",
+  "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `lower` ——判別要跑真邏輯。不是的話回 `null`，由同族的一般方法呼叫接手。"
+}

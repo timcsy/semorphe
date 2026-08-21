@@ -1,0 +1,4 @@
+{
+  "PY_STRING_SPLIT_MSG0": "把 %1 用 %2 切開",
+  "PY_STRING_SPLIT_TOOLTIP": "照著指定的符號把一段文字切成好幾段，得到一串。"
+}

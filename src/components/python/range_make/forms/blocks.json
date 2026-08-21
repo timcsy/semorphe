@@ -1,0 +1,32 @@
+[
+  {
+    "id": "python_range_make",
+    "componentId": "python:range_make",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_range_make",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PY_RANGE_MAKE_TOOLTIP}",
+      "labelKey": "PY_RANGE_MAKE_MSG",
+      "labelFallback": "數列",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  }
+]

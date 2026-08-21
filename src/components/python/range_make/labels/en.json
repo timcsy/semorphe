@@ -1,0 +1,4 @@
+{
+  "PY_RANGE_MAKE_MSG": "Number range",
+  "PY_RANGE_MAKE_TOOLTIP": "Make a run of numbers. One slot is the end, two are start and end, three add a step."
+}

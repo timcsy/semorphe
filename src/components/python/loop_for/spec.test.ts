@@ -9,9 +9,28 @@ describe('python:loop_for', () => {
     expect(ids, '⚠️ 撿到 C++ 那顆三格式的 for 了').not.toContain('cpp:loop_for')
   })
 
+  /**
+   * 🔴 這一支釘的是**結構**：`range(3)` 是一顆放進可走訪插槽的積木，
+   * 不是迴圈上的一個「跑幾次」欄位。
+   *
+   * ⚠️ 原文寫的是「該是一顆 `python:func_call`」——而 2026-08-21 `range`
+   * 有了自己的元件，那個斷言就在**變得更精確的那一天**變紅。
+   *
+   * > **一條錨在「今天是哪一顆元件」上的斷言，會在那顆變得更精確時說謊。**
+   *
+   * 🟢 改成錨在結構上：那個插槽裡**有東西**，而且它不是一個欄位。
+   */
   it('🔴 `range(3)` 進的是【可走訪】那個插槽，不是一個次數欄位', async () => {
-    const ids = componentIdsOf(await liftPython('for i in range(3):\n    print(i)\n'))
-    expect(ids, 'range(...) 該是一顆呼叫積木').toContain('python:func_call')
+    const t = await liftPython('for i in range(3):\n    print(i)\n')
+    const find = (n: any): any => {
+      if (n?.componentId === 'python:loop_for') return n
+      for (const k of Object.values(n?.children ?? {})) for (const c of (k as any[]) ?? []) { const r = find(c); if (r) return r }
+      return null
+    }
+    const loop = find(t)
+    expect(loop, '找不到迴圈 → 這支測試量不到東西').not.toBeNull()
+    expect(loop.children.iterable?.length, '可走訪那個插槽是空的').toBe(1)
+    expect(loop.properties.count, '不得有一個「跑幾次」的欄位').toBeUndefined()
   })
 
   it('★ generate ＋ round-trip', async () => {

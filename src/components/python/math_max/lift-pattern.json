@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_math_max",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:math_max"
+    },
+    "liftStrategy": "python:lift_math_max",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於一般呼叫的兜底（3）與方法呼叫（8），低於輸出與讀取輸入（15）。"
+  }
+]

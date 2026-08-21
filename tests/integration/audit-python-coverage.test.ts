@@ -12,8 +12,15 @@
  * 🔴 執行失敗   跑不起來                 ← 最重。教學上要好用＝要跑得動
  * 來回不同      產回去的碼與原碼不一樣    ← 產出壞掉的碼，見下
  * 降級節點      認不出來而誠實變灰的      ← 少 = 認得多
- * 通用桶        掉進 python:func_call    ← 不降級，但身分沒了
+ * 通用桶        **內建的**名字掉進通用呼叫  ← 跑得動，而學生在工具箱拖不到
  * ```
+ *
+ * ⚠️ **「通用桶」只數內建的名字**（2026-08-21 修正）。第一版數了所有
+ * `python:func_call`，而其中**一半是使用者自己定義的函式**（`greet`／`Dog`／
+ * `count_even`）——那些本來就該是通用呼叫，它們沒有身分是**對的**。
+ *
+ * > **一個把「該有身分而沒有」與「本來就沒有身分」算在同一欄的指標，
+ * > 永遠收不到零——而收不到零的指標會被當成背景噪音。**
  *
  * ## 🔴 為什麼「執行」是後來才加的一軸（2026-08-21）
  *
@@ -54,6 +61,9 @@ import { liftPython, componentIdsOf, generatePython, runPython } from '../helper
 import { PYTHON_CORPUS } from '../assets/python-corpus'
 import { loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 import type { SemanticNode } from '../../src/core/types'
+import {
+  PYTHON_BUILTIN_FUNCTIONS, PYTHON_BUILTIN_METHODS, PYTHON_MODULE_METHODS,
+} from '../../src/languages/python/builtins'
 
 const GUARD = 'python-coverage'
 
@@ -73,6 +83,23 @@ const isDegraded = (id: string): boolean =>
 /** 排版正規化——比的是**程式**，不是空白。 */
 const norm = (x: string): string =>
   x.trim().split('\n').map((l) => l.trimEnd()).filter((l) => l.length > 0).join('\n')
+
+/**
+ * 掉進通用呼叫的**內建**名字有幾個。
+ *
+ * 判準：那個名字在內建表裡（`len`／`max`／`.upper`…）而沒有走到專屬元件。
+ * 使用者自己 `def` 的名字不算——它們沒有身分是對的。
+ */
+function genericBuiltinCalls(n: SemanticNode | null): number {
+  if (!n) return 0
+  let count = 0
+  const name = String((n.properties as Record<string, unknown>)?.name ?? '')
+  const method = String((n.properties as Record<string, unknown>)?.method ?? '')
+  if (n.componentId === 'python:func_call' && (name in PYTHON_BUILTIN_FUNCTIONS || name in PYTHON_MODULE_METHODS)) count++
+  if (n.componentId === 'python:method_call' && method in PYTHON_BUILTIN_METHODS) count++
+  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) count += genericBuiltinCalls(k)
+  return count
+}
 
 function unresolvedOf(n: SemanticNode | null, out: string[] = []): string[] {
   if (!n) return out
@@ -100,7 +127,8 @@ async function measure(corpus: readonly (readonly [string, string])[]): Promise<
     const ids = componentIdsOf(tree)
     r.nodes += ids.length
     r.degraded += ids.filter(isDegraded).length
-    r.genericCall += ids.filter((i) => i === 'python:func_call').length
+    // 只數**內建的**名字——使用者自己定義的函式沒有身分是對的（見檔頭）
+    r.genericCall += genericBuiltinCalls(tree)
     for (const t of unresolvedOf(tree)) r.unresolvedTypes[t] = (r.unresolvedTypes[t] ?? 0) + 1
     // 🔴 **跑得動嗎**——`stdin` 餵幾行，讓需要輸入的語料也走得完。
     //    降級的節點跑到時會丟「我看不懂」，那本來就該算失敗：**學生按下執行看到的就是它**。

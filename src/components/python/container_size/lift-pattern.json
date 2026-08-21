@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_container_size",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:container_size"
+    },
+    "liftStrategy": "python:lift_container_size",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於一般呼叫的兜底（3）與方法呼叫（8），低於輸出與讀取輸入（15）。"
+  }
+]

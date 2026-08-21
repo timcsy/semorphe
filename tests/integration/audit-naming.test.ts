@@ -28,8 +28,8 @@ import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } fro
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
-import { OPERATIONS, KINDS as CPP_KINDS, MODIFIERS, ATOMIC_NAMES as CPP_ATOMIC_NAMES, SUBJECTS as CPP_SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
-import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES, PYTHON_KINDS } from '../../src/languages/python/naming'
+import { OPERATIONS as CPP_OPERATIONS, KINDS as CPP_KINDS, MODIFIERS, ATOMIC_NAMES as CPP_ATOMIC_NAMES, SUBJECTS as CPP_SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
+import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES, PYTHON_KINDS, PYTHON_OPERATIONS } from '../../src/languages/python/naming'
 
 /**
  * 🔴 **詞彙是各語言【補】出來的，不是 C++ 那份套用到所有語言**（2026-08-21）。
@@ -47,6 +47,7 @@ import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES, PYTHON_KINDS } from '../../src/la
 const SUBJECTS = [...CPP_SUBJECTS, ...PYTHON_SUBJECTS]
 const ATOMIC_NAMES = [...CPP_ATOMIC_NAMES, ...PYTHON_ATOMIC_NAMES]
 const KINDS = [...CPP_KINDS, ...PYTHON_KINDS]
+const OPERATIONS = [...CPP_OPERATIONS, ...PYTHON_OPERATIONS]
 
 type violationKind = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { kind: violationKind; id: string; note: string }

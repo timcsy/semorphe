@@ -20,7 +20,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { isNamedCall } from '../../../core/component/traits'
+import { isNamedCall, componentTraits } from '../../../core/component/traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:loop_for', async (node, ctx) => {
@@ -34,8 +34,14 @@ export function registerExecute(register: (component: string, executor: Componen
     // 🔴 **問性狀，不看身分**——`namedCall` 的意思是「`properties.name` 是被呼叫的名字」，
     // 而這一段只需要那件事。寫死另一顆元件的身分會讓就近性護欄兩個方向都報，
     // 而**更實際的代價是：那顆元件改名時這裡不會有人發現**。
-    if (itNode && isNamedCall(itNode.componentId) && itNode.properties.name === 'range') {
-      const args = itNode.children.args ?? []
+    // 🔴 **問性狀，不比身分**——`range(...)` 今天有自己的元件（它宣告
+    //    `producesRange`），而使用者手寫的也可能還是一個通用呼叫。兩種都要認得。
+    const isRange =
+      itNode !== undefined &&
+      (componentTraits(itNode.componentId)?.producesRange === true ||
+        (isNamedCall(itNode.componentId) && itNode.properties.name === 'range'))
+    if (itNode && isRange) {
+      const args = itNode.children.args ?? itNode.children.values ?? []
       const nums: number[] = []
       for (const a of args) nums.push(ctx.toNumber(await ctx.evaluate(a)))
       const [start, stop, step] =
