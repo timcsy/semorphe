@@ -121,6 +121,17 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
  * ⚠️ 只有**取值**在這裡；`math.sqrt(16)` 這種呼叫走方法那條路。
  * 🔴 認不得的成員由取成員那顆元件**丟錯**，不回 None。
  */
+/**
+ * 直譯器一開始就有的名字。
+ *
+ * 🔴 **`__name__` 是 `"__main__"`**——`if __name__ == "__main__":` 是 AI 生的
+ * Python **幾乎必有**的一行，而少了這個名字整段會說「沒有這個變數」。
+ * ⚠️ 我們沒有模組系統，所以它永遠是主程式——那與「直接跑這個檔」一致。
+ */
+export const PYTHON_GLOBALS: Record<string, { type: RuntimeValue['type']; value: string }> = {
+  __name__: { type: 'string', value: '__main__' },
+}
+
 export const PYTHON_MODULE_MEMBERS: Record<string, Record<string, RuntimeValue>> = {
   math: {
     pi: { type: 'double', value: Math.PI },

@@ -1,0 +1,12 @@
+{
+  "id": "python_conditional_expression",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "conditional_expression",
+  "component": { "componentId": "python:ternary" },
+  "fieldMappings": [
+    { "semantic": "then_value", "ast": "$namedChildren[0]", "extract": "lift" },
+    { "semantic": "condition", "ast": "$namedChildren[1]", "extract": "lift" },
+    { "semantic": "else_value", "ast": "$namedChildren[2]", "extract": "lift" }
+  ],
+  "_why": "⚠️ **索引 0 是「真的時候的值」不是條件**——Python 寫成 `真 if 條件 else 假`。\n照 C++ 的直覺（條件在前）對映的話，`\"成年\" if age >= 18 else \"未成年\"` 會把那個字串當成條件，而它**永遠為真**：積木畫得出來、來回一字不差、而**執行永遠走同一邊**。"
+}

@@ -11,6 +11,8 @@ import pythonLiftPatterns from './lift-patterns.json'
 import { declareDegradationBlocks } from '../../core/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
 import { declareExpressionStatement } from '../../core/expression-statement'
+import { declareBuiltinConstants } from '../../core/language-executors'
+import { PYTHON_GLOBALS } from './builtins'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
 import { registerPythonLanguage } from './install'
@@ -32,6 +34,10 @@ declareCommentSyntax('python', pythonCommentSyntax)
 // ——`nums.append(9)print(len(nums))`，**一段不合法的 Python**。
 // 見 `core/expression-statement.ts` 的檔頭。
 declareExpressionStatement('python', { suffix: '', allowedAtTopLevel: true })
+
+// 🔴 **`__name__` 是 `"__main__"`**——`if __name__ == "__main__":` 是 AI 生的
+//    Python 幾乎必有的一行，而少了這個名字整段會說「沒有這個變數」。
+declareBuiltinConstants(PYTHON_GLOBALS)
 import pythonBeginnerTopic from './topics/python-beginner.json'
 import pythonTargetDef from './targets/python.json'
 import pythonPreset from './styles/python.json'

@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_SUBSTR_MSG0": "Slice %1 from %2 to %3",
+  "PY_CONTAINER_SUBSTR_TOOLTIP": "Take a middle section as a new sequence or text. Leave the start blank to begin at the front, the end blank to run to the back. The end position is not included."
+}

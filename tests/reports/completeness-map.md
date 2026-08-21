@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：285｜✅ 實作 1312｜📄 已宣告不提供 37｜❔ 判不出來 74｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：287｜✅ 實作 1320｜📄 已宣告不提供 37｜❔ 判不出來 76｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -257,6 +257,7 @@
 | `python:container_find` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_size` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_sort` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:container_substr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:container_sum` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:continue` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:exception_case` | ✅ | ❔ | ✅ | ✅ | 📄 |
@@ -291,6 +292,7 @@
 | `python:string_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:string_split` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:string_upper` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:ternary` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:try_catch` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:tuple_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |

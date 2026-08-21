@@ -1,0 +1,10 @@
+{
+  "id": "python_slice",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "subscript",
+  "component": { "componentId": "python:container_substr" },
+  "liftStrategy": "python:liftSlice",
+  "fieldMappings": [],
+  "priority": 20,
+  "_why": "priority 高於同族的取一格（它是 0）——兩筆對到同一個 `subscript` 節點型別，差別在 `subscript` 欄位是不是 `slice`。不是的話策略回 `null`，落到下一筆。"
+}

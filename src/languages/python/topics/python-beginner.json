@@ -50,7 +50,9 @@
           "python:container_append",
           "python:string_upper",
           "python:string_lower",
-          "python:string_split"
+          "python:string_split",
+          "python:container_substr",
+          "python:ternary"
         ],
         "children": [
           {

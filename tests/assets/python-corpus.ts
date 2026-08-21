@@ -151,4 +151,42 @@ c = Counter()
 c.add(3)
 c.add(4)
 c.show()`],
+  ['三元與邏輯串接', `age = 20
+status = "成年" if age >= 18 else "未成年"
+ok = age > 0 and age < 150
+bad = not ok or age == 0
+print(status, ok, bad)`],
+  ['切片', `xs = [1, 2, 3, 4, 5]
+print(xs[1:3])
+print(xs[:2])
+print(xs[-2:])
+s = "abcdef"
+print(s[2:4])`],
+  ['while True 與 break', `n = 0
+while True:
+    n += 1
+    if n >= 3:
+        break
+print(n)`],
+  ['遞迴', `def fact(n):
+    if n <= 1:
+        return 1
+    return n * fact(n - 1)
+
+print(fact(5))`],
+  ['主程式慣例', `def main():
+    print("跑起來了")
+
+if __name__ == "__main__":
+    main()`],
+  ['多重回傳與 elif', `def grade(score):
+    if score >= 90:
+        return "A", "很好"
+    elif score >= 60:
+        return "B", "還可以"
+    else:
+        return "C", "加油"
+
+letter, comment = grade(75)
+print(letter, comment)`],
 ]

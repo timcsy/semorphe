@@ -1,0 +1,4 @@
+{
+  "PY_TERNARY_MSG0": "if %1 use %2 otherwise %3",
+  "PY_TERNARY_TOOLTIP": "Pick between two values based on a condition. This is a value, so it can go straight into another slot."
+}

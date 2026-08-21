@@ -49,15 +49,26 @@ export function resetLanguageExecutors(): void {
 // 見 specs/055-finish-executor-move
 // ─────────────────────────────────────────────────────────────────────────
 
-const builtinValues = new Map<string, { type: RuntimeType; value: number }>()
+/**
+ * ⚠️ **值不限定成數字**（2026-08-21 放寬）。
+ *
+ * 原本寫死 `value: number`，因為當時只有 C++ 的 `INT_MAX`／`EOF`／`nullptr`。
+ * 而 Python 的 `__name__` 是一個**字串**（`"__main__"`），
+ * 而 `if __name__ == "__main__":` 是 AI 生的 Python 幾乎必有的一行。
+ *
+ * > **一個「這種東西一定是數字」的型別，是在只有一個語言的時候寫下的。**
+ */
+const builtinValues = new Map<string, { type: RuntimeType; value: number | string | boolean }>()
 
 /** 語言套件載入時推進來 */
-export function declareBuiltinConstants(m: Record<string, { type: RuntimeType; value: number }>): void {
+export function declareBuiltinConstants(
+  m: Record<string, { type: RuntimeType; value: number | string | boolean }>,
+): void {
   for (const [k, v] of Object.entries(m)) builtinValues.set(k, v)
 }
 
 /** 直譯器建構時取走 */
-export function allBuiltinConstants(): ReadonlyMap<string, { type: RuntimeType; value: number }> {
+export function allBuiltinConstants(): ReadonlyMap<string, { type: RuntimeType; value: number | string | boolean }> {
   return builtinValues
 }
 

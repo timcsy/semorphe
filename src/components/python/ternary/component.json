@@ -1,0 +1,17 @@
+{
+  "componentId": "python:ternary",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那顆的三段順序是「條件 ? 真 : 假」，Python 是「真 if 條件 else 假」。**同一個概念、不同的排列**，而產生器要照各自的順序——指同一個抽象父會讓「可以互換」變成假的。",
+  "properties": [],
+  "children": { "condition": "expression", "then_value": "expression", "else_value": "expression" },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "🔴 `conditional_expression` **沒有欄位名**——三個運算元是位置式的具名子節點，而**順序是原始碼的順序**（真、條件、假），不是語義的順序。"
+}

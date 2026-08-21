@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_SUBSTR_MSG0": "取 %1 從 %2 到 %3",
+  "PY_CONTAINER_SUBSTR_TOOLTIP": "取出中間的一段，得到新的一串或一段文字。起點留空就從頭開始，終點留空就到尾巴。終點那一格【不包含】。"
+}

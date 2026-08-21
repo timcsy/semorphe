@@ -986,6 +986,10 @@
       "files": 4,
       "dirs": 1
     },
+    "python:container_substr": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:container_sum": {
       "files": 4,
       "dirs": 1
@@ -1120,6 +1124,10 @@
     },
     "python:string_upper": {
       "files": 4,
+      "dirs": 1
+    },
+    "python:ternary": {
+      "files": 3,
       "dirs": 1
     },
     "python:try_catch": {

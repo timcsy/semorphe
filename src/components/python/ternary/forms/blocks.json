@@ -1,0 +1,27 @@
+[
+  {
+    "id": "python_ternary",
+    "componentId": "python:ternary",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_ternary",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_TERNARY_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "CONDITION", "check": "Expression" },
+        { "type": "input_value", "name": "THEN", "check": "Expression" },
+        { "type": "input_value", "name": "ELSE", "check": "Expression" }
+      ],
+      "output": "Expression",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PY_TERNARY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": { "CONDITION": "condition", "THEN": "then_value", "ELSE": "else_value" }
+    },
+    "_why": "🟢 **積木上條件排在最前面**（與程式碼的順序相反）——學生先問「什麼情況」再問「那要什麼」，而 Python 的寫法把值放前面是語法不是思路。"
+  }
+]
