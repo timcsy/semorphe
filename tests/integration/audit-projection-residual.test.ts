@@ -52,7 +52,7 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -225,6 +225,11 @@ describe('第三十一條護欄：形態的殘差', () => {
     }
 
     const base = loadBaseline<Baseline>(GUARD_NAME)
+    assertCorpus([
+      ['完整語料段', s.syntaxComplete, base.corpus.syntaxComplete],
+      ['殘缺語料段', s.syntaxErrorFragments, base.corpus.syntaxErrorFragments],
+      ['語料總字數', s.totalChars, base.corpus.totalChars],
+    ])
     assertRatchet([['殘差率(%)', rate, base.residual2.ratePercent]])
   })
 })

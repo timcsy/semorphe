@@ -46,7 +46,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 
 const GUARD_NAME = 'declaration-assembly'
 
@@ -134,6 +134,7 @@ describe('第三十七條護欄：宣告來源的組裝點', () => {
     ])
     const added = details.filter((m) => !base.details.includes(m))
     expect(added, `新增了各自組裝的地方——請改用 allCppComponents()：\n  ${added.join('\n  ')}`).toEqual([])
+    assertCorpus([['測試檔數', files.length, base.scanned.testFileCount]])
     assertRatchet([['各自組裝', details.length, base.adHocAssembly]])
   })
 })

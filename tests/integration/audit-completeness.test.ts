@@ -17,6 +17,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import {
   loadBaseline,
+  assertCorpus,
   writeBaseline,
   printReport,
   writeReport,
@@ -673,6 +674,20 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       ])
     }
     expect([...addedShells, ...addedMissing].map(key)).toEqual([])
+
+    // 🔴 **分母也要看。** 「新的殼／缺」是集合比對，而一顆元件從量測裡
+    //    整個消失時，它既不是新殼也不是新缺——**它什麼都不是**，而這條
+    //    護欄會照常全綠。五路 × 元件的總對數就是那個分母。
+    const t = baseline.totals
+    assertCorpus([
+      [
+        '五路×元件的總對數',
+        (['implemented', 'declared', 'undecidable'] as const).reduce((n, k) => n + flatten(result, k).length, 0) +
+          flatten(result, 'shell').length +
+          flatten(result, 'missing').length,
+        t.implemented + t.declared + t.undecidable + t.shell + t.missing,
+      ],
+    ])
   })
 })
 

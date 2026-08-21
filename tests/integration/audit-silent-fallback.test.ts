@@ -44,7 +44,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 
 const GUARD_NAME = 'silent-fallback'
 const decisionFile = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decisions.json')
@@ -383,6 +383,10 @@ describe('第三十三條護欄：靜默回退', () => {
       typeMismatch.length + missingChild.length,
       '兩欄總和變了。只做重新分類時總和必須不變——變了代表真的多了或少了一處回退。',
     ).toBe((b.typeMismatch ?? 0) + (b.missingChild ?? 0))
+    assertCorpus([
+      ['掃描檔數', files.length, base.scanned.fileCount],
+      ['帶 value 的 return', returnTotal, base.scanned['return 總數']],
+    ])
     assertRatchet([['型別不符', typeMismatch.length, b.typeMismatch ?? 0]])
   })
 })

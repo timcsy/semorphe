@@ -63,7 +63,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 
 const GUARD = 'anchor-rot'
 const decisionFile = path.join(REPO_ROOT, 'tests/assets/anchor-rot-decisions.json')
@@ -273,6 +273,10 @@ describe('第三十五條護欄：錨點會爛', () => {
       '沒有理由的判定是把「懶得看」寫成「看過了」',
     ).toHaveLength(0)
     expect(toReview.map((h) => `${h.position} ${h.sourceCode}`), '有未判定的命中——護欄只排順序，判定要人做').toEqual([])
+    assertCorpus([
+      ['護欄檔數', files.length, base.scanned.auditFileCount],
+      ['真實身分數', ids.size, base.scanned.trueIdentityCount],
+    ])
     assertRatchet([['錨錯了', badAnchor.length, base.badAnchor]])
   })
 })

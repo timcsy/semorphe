@@ -191,6 +191,54 @@ export function assertRatchet(rows: readonly [string, number, number][]): void {
 }
 
 /**
+ * **語料棘輪**——`assertRatchet` 的鏡像，而它看的是**分母**。
+ *
+ * ## 它防的是「護欄安靜地不再量任何東西」
+ *
+ * 一條護欄失效的方式**不是說錯話，是輸入悄悄乾掉**：語料被排除、掃描路徑
+ * 改名、glob 被 shell 吃掉（`experience.md` 第十二個實例：`--include=*.md`
+ * 沒加引號 → 每個 grep 靜默回零 → 44 個檔全被報成孤兒）。
+ *
+ * 那時候護欄**全綠**，而且與健康的長得一模一樣。
+ *
+ * > **一條護欄過不過時，不看它的結論舊不舊，看它的輸入還在不在。**
+ *
+ * ## 為什麼「變大」也要紅（而不是只擋縮水）
+ *
+ * 與 `assertRatchet` 同一個理由，方向相反：只擋縮水的話基線會停在舊值，
+ * 於是「244 掉回 200」照樣過關——**而 176 → 244 這件事本來就已經發生過
+ * 一次而沒有人出聲**（`silent-fallback`，2026-08-21 才被發現）。
+ *
+ * ⚠️ **代價要說清楚**：加一顆元件會讓幾條護欄的語料變大，於是要上調基線。
+ * 那是**設計上的摩擦**，不是意外——`component-generate` 的清單裡本來就有
+ * 一批「加一顆元件要一起改的基線」，這幾欄是同一類。
+ * 🔴 而它有一個明確的誤用方式：**看到紅就整批重產基線**。那會把語料縮水
+ * 一起洗掉。上調要看著數字上調。
+ *
+ * @param rows [名稱, 現值, 基線值][]
+ */
+export function assertCorpus(rows: readonly [string, number, number][]): void {
+  const shrank = rows.filter(([, now, base]) => now < base)
+  const grew = rows.filter(([, now, base]) => now > base)
+  if (shrank.length > 0) {
+    throw new Error(
+      '🔴 **語料縮水**——這條護欄現在量的東西比基線少：\n' +
+        shrank.map(([n, now, base]) => `  ✘ ${n}: ${base} → ${now}`).join('\n') +
+        '\n（少掉的那些【沒有被檢查】，而護欄的結論看起來完全正常。' +
+        '先確認是「東西真的被刪了」還是「掃描器不再吃到它」——後者是缺陷。）',
+    )
+  }
+  if (grew.length > 0) {
+    throw new Error(
+      '語料變大了，**請上調基線並與這次改動一起 commit**：\n' +
+        grew.map(([n, now, base]) => `  ✔ ${n}: ${base} → ${now}`).join('\n') +
+        '\n（不上調的話基線會停在舊值，於是往後縮水到舊值都不會出聲。' +
+        '⚠️ 看著數字上調，不要整批重產。）',
+    )
+  }
+}
+
+/**
  * **判定落點的識別碼**——顯示與識別分開。
  *
  * ## 為什麼這個要共用

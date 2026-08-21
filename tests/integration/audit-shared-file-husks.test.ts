@@ -50,7 +50,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 
 const GUARD_NAME = 'shared-file-husks'
 
@@ -197,6 +197,14 @@ describe('第三十八條護欄：共用檔的殼與重複', () => {
     const newDuplicates = duplicates.filter((x) => !base.details.duplicates.includes(x))
     expect(newHusks, `新增了空掉的註冊函式：\n  ${newHusks.join('\n  ')}`).toEqual([])
     expect(newDuplicates, `新增了兩份同名的 export（會漂移）：\n  ${newDuplicates.join('\n  ')}`).toEqual([])
+    assertCorpus([
+      ['共用檔數', files.length, base.scanned.fileCount],
+      [
+        'export 數',
+        files.reduce((n, x) => n + exportedAlgorithms(fs.readFileSync(x, 'utf8')).length, 0),
+        base.scanned.exportCount,
+      ],
+    ])
     assertRatchet([
       ['空殼', husks.length, base.husks],
       ['重複', duplicates.length, base.duplicates],

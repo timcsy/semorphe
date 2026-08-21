@@ -51,7 +51,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { runCppDetailed, runCppBatch, runCppBatchDetailed, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
 import { classifyRefFailure, type refFailClass } from '../helpers/ref-failure'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE, decisionKey } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -548,6 +548,11 @@ describe('第三十二條護欄：行為的誤差', () => {
     ).toHaveLength(0)
 
     const base = loadBaseline<Baseline>(GUARD_NAME)
+    // 語料的**總量**——分欄會隨著「跑得動的變多」而互相流動，那是進步；
+    // 而**總和掉下去**代表有語料不再被跑，那是缺陷。
+    const corpusNow = r.undecidable + r.bothRun + r.onlyReferenceRuns + r.onlyInterpreterRuns + r.neitherRuns
+    const c = base.corpus
+    assertCorpus([['語料總段數', corpusNow, c.undecidable + c.bothRun + c.onlyReferenceRuns + c.onlyInterpreterRuns + c.neitherRuns]])
     assertRatchet([['不一致筆數', mismatches.length, base.mismatch.mismatchCount]])
   }, 900000)
 })

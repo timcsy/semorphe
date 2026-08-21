@@ -4,15 +4,22 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "syntaxComplete": 488,
-    "syntaxErrorFragments": 378,
-    "totalChars": 75892
+    "syntaxComplete": 515,
+    "syntaxErrorFragments": 488,
+    "totalChars": 77723
   },
   "residual2": {
-    "charCount": 0,
-    "nodeCount": 0,
+    "charCount": 3,
+    "nodeCount": 1,
     "ratePercent": 0,
-    "details": [],
-    "downgradeReason": {}
+    "details": [
+      {
+        "raw": "int",
+        "downgradeReason": "nonstandard_but_valid"
+      }
+    ],
+    "downgradeReason": {
+      "nonstandard_but_valid": 1
+    }
   }
 }

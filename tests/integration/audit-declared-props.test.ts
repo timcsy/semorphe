@@ -48,7 +48,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -259,6 +259,10 @@ describe('第三十四條護欄：屬性方向的宣告完整性', () => {
     }
 
     const base = loadBaseline<Baseline>(GUARD)
+    assertCorpus([
+      ['語料段數', r.segments, base.corpus.segments],
+      ['有宣告表的節點', r.nodesWithDeclTable, base.corpus.nodesWithDeclTable],
+    ])
     assertRatchet([['漏宣告(種)', missed.length, base.missingDecl]])
   })
 })

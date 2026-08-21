@@ -96,7 +96,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, RATCHET_NOTE } from '../helpers/guardrail'
+import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 
 const GUARD_NAME = 'four-independences'
 
@@ -387,6 +387,13 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
       const added = r.details[col].filter((x) => !base.details[col].includes(x))
       expect(added, `${col} 新增了：\n  ${added.join('\n  ')}`).toEqual([])
     }
+    // ⚠️ 原本這三欄只有**下限斷言**（`> 20` / `> 100` / `> 500`）——它擋得住
+    //    「掃描整個垮掉」，擋不住「語料縮水 40%」。下限換成語料棘輪。
+    assertCorpus([
+      ['ui 檔數', r.scanned.files, base.scanned.files],
+      ['import 行數', r.scanned.importLines, base.scanned.importLines],
+      ['方法呼叫數', r.scanned.anyMethodCalls, base.scanned.anyMethodCalls],
+    ])
     assertRatchet([
       ['viewImportsLanguage', r.viewImportsLanguage, base.viewImportsLanguage],
       ['otherUiImportsLanguage', r.otherUiImportsLanguage, base.otherUiImportsLanguage],
