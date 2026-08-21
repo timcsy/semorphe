@@ -374,10 +374,26 @@ export class SemanticInterpreter implements ExecutionContext {
     return 0
   }
 
+  /**
+   * 一個值的真假。
+   *
+   * 🔴 **容器看「空不空」**（2026-08-21）——原本的 `return false` 讓
+   * `if xs:` 在**非空的串列上也是 false**，於是那個分支永遠不跑。
+   *
+   * ⚠️ 症狀是**不報錯、有輸出、而走錯邊**：參照直譯器抓到的
+   * （`bool([1,2,3])` 該是 True 而我們印 False）。
+   *
+   * > **一個「其餘一律 false」的退路，在容器進來的那天變成一個錯的答案。**
+   *
+   * ⚠️ 這一條**兩個語言都適用**：C++ 的 `if (v.size())` 走的是數字，
+   * 而空容器在任何語言裡都是 false、非空都是 true。
+   */
   toBool(val: RuntimeValue): boolean {
     if (typeof val.value === 'boolean') return val.value
     if (typeof val.value === 'number') return val.value !== 0
     if (typeof val.value === 'string') return val.value.length > 0
+    if (Array.isArray(val.value)) return val.value.length > 0
+    if (val.value instanceof Map) return val.value.size > 0
     return false
   }
 

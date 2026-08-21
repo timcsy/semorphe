@@ -216,4 +216,38 @@ for t in u["tags"]:
 print(True + True)
 print(int(True), bool(0), bool(""))
 print(10 / 4)`],
+  ['數值的邊界', `print(-7 // 2, -7 % 2)
+print(round(2.5), round(3.5), round(2.675, 2))
+print(3 / 0 if False else "跳過")
+print(abs(-2.5), max(1.5, 2), min(-1, -2))
+print(int(3.9), int(-3.9))`],
+  ['字串的邊界', `s = "Hello"
+print(s * 2)
+print(s[::1] if False else s[1:])
+print(len(""), "" == None)
+print("a" < "b", "abc".index("b"))
+print(str(3.0), str(True), str([1, "a"]))`],
+  ['巢狀迴圈與累加', `total = 0
+grid = [[1, 2], [3, 4]]
+for row in grid:
+    for v in row:
+        total += v
+print(total)
+flat = [v for row in grid for v in row] if False else []
+print(len(grid), len(grid[0]))`],
+  ['條件的組合', `xs = [1, 2, 3]
+if len(xs) > 0 and xs[0] == 1:
+    print("是")
+elif not xs:
+    print("空")
+else:
+    print("否")
+print(bool(xs), bool([]), 0 or "預設", 1 and 2)`],
+  ['函式的回傳與 None', `def f(x):
+    if x > 0:
+        return "正"
+
+print(f(1))
+print(f(-1))
+print(f(-1) is None, f(-1) == None)`],
 ]

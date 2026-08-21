@@ -5,7 +5,7 @@
  * 負向斷言會空過，而一支空過的測試與健康的長得一模一樣。
  */
 import { describe, it, expect } from 'vitest'
-import { liftPython, componentIdsOf, generatePython as gen } from '../../../../tests/helpers/python-lift'
+import { runPython, liftPython, componentIdsOf, generatePython as gen } from '../../../../tests/helpers/python-lift'
 import type { SemanticNode } from '../../../core/types'
 
 describe('python:compare', () => {
@@ -31,7 +31,28 @@ describe('python:compare', () => {
     }
   })
 
-  it('⚠️ `in`／`is` 刻意沒收 → 不得被認成比較', async () => {
-    expect(componentIdsOf(await liftPython('a is b'))).not.toContain('python:compare')
+  /**
+   * 🔴 **這一支原本釘的是舊邊界**：「`in`／`is` 刻意沒收」。
+   * 兩個都在 2026-08-21～22 收了，而**各自去了不同的地方**：
+   *
+   * ```
+   * in / not in   →  同族的「在不在裡面」那顆（它問的是容器）
+   * is / is not   →  這一顆（它問的是相等）
+   * ```
+   *
+   * > **一條「還沒支援」的測試，在支援的那天要改成「支援到哪裡」。**
+   */
+  it('🔴 `is` 走這一顆，而 `in` 走同族那顆——兩者不得互搶', async () => {
+    expect(componentIdsOf(await liftPython('a = b is None\n'))).toContain('python:compare')
+    const inIds = componentIdsOf(await liftPython('a = "k" in d\n'))
+    expect(inIds, '`in` 問的是容器，不是相等').not.toContain('python:compare')
+    expect(inIds).toContain('python:container_find')
+  })
+
+  it('🔴 等不等要先看型別——不得先轉成數字', async () => {
+    // `"" == None` 兩邊轉成數字都是 0 → 相等。真 Python 是 False。
+    expect(await runPython('print("" == None)\n')).toContain('False')
+    expect(await runPython('print(0 == False)\n'), '而數字家族互相比得動').toContain('True')
+    expect(await runPython('print([1,2] == [1,2])\n'), '容器逐格比').toContain('True')
   })
 })

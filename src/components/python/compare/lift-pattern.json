@@ -12,7 +12,9 @@
         "<=": "python:compare",
         ">=": "python:compare",
         "==": "python:compare",
-        "!=": "python:compare"
+        "!=": "python:compare",
+        "is": "python:compare",
+        "is not": "python:compare"
       },
       "fieldMappings": [
         {

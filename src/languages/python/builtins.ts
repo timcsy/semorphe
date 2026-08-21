@@ -107,9 +107,33 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
   str: (a) => str(pyStr(a[0])),
   int: (a, c) => num(Math.trunc(c.toNumber(a[0]))),
   float: (a, c) => ({ type: 'double', value: c.toNumber(a[0]) }),
-  bool: (a, c) => bool(a[0]?.type === 'string' ? String(a[0].value).length > 0 : c.toNumber(a[0]) !== 0),
+  /**
+   * 🔴 **容器的真假看「空不空」**，不是轉成數字。
+   * `bool([1,2,3])` 用 `toNumber` 會得到 NaN → `NaN !== 0` 是 true…
+   * 而 `bool([0])` 也是 true——**兩個都碰巧對，而 `bool([])` 錯**。
+   * > **一個碰巧對的判準，會在邊界上安靜地翻面。**
+   */
+  bool: (a, c) => {
+    const v = a[0]
+    if (v === undefined || v.type === 'void') return bool(false)
+    if (v.type === 'string') return bool(String(v.value).length > 0)
+    if (v.type === 'array') return bool((v.value as RuntimeValue[]).length > 0)
+    if (v.type === 'object') return bool((v.value as ObjectFields).size > 0)
+    return bool(c.toNumber(v) !== 0)
+  },
   abs: (a, c) => num(Math.abs(c.toNumber(a[0]))),
-  round: (a, c) => num(a.length > 1 ? Number(c.toNumber(a[0]).toFixed(c.toNumber(a[1]))) : Math.round(c.toNumber(a[0]))),
+  /**
+   * 🔴 **Python 的 `round` 是「銀行家捨入」**：`round(2.5)` 是 **2** 不是 3
+   * ——遇到剛好一半時往**偶數**靠。`Math.round` 一律往上，於是每一個
+   * 「.5」都會多一。參照直譯器抓到的。
+   */
+  round: (a, c) => {
+    const x = c.toNumber(a[0])
+    if (a.length > 1) return num(Number(x.toFixed(c.toNumber(a[1]))))
+    const f = Math.floor(x)
+    if (x - f !== 0.5) return num(Math.round(x))
+    return num(f % 2 === 0 ? f : f + 1)
+  },
   // ⚠️ `max`／`min`／`sum` 吃**一個序列**或**多個引數**，兩種都要。
   max: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) > c.toNumber(m) ? x : m)),
   min: (a, c) => (a.length === 1 ? asList(a[0]) : a).reduce((m, x) => (c.toNumber(x) < c.toNumber(m) ? x : m)),
