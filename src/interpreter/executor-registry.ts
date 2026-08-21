@@ -52,6 +52,16 @@ export interface ExecutionContext {
   awaitInput(): Promise<string | null>
   /** Read a cin token (whitespace-delimited) from buffer or IO */
   readCinToken(): string | null
+  /**
+   * `cin` 是不是已經進入失敗狀態（C++ 的 `failbit`）。
+   *
+   * 🔴 **它會黏住**：`>>` 一旦失敗，之後每一次 `>>` 都立刻失敗，直到 `clear()`。
+   * 沒有這個狀態的話，「回 0」同時是合法的回傳值與失敗的代號，
+   * **而那時「它到底失敗了沒有」在程式裡沒有地方可以問**。
+   */
+  cinFailed: boolean
+  /** 把 `cin` 設成失敗狀態。今天沒有 `cin.clear()` 元件，所以它只進不出——**真 C++ 也是**。 */
+  failCin(): void
   /** Read a scanf token from buffer or IO */
   readScanfToken(): string | null
 }

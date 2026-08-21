@@ -49,6 +49,8 @@ export class SemanticInterpreter implements ExecutionContext {
   callableOf?: (v: RuntimeValue) => unknown | null
   invokeCallable?: (c: unknown, args: SemanticNode[]) => Promise<RuntimeValue | void>
   scanfTokenBuffer: string[] = []
+  /** C++ 的 `failbit`——見 `ExecutionContext.cinFailed` 的說明。 */
+  cinFailed = false
   private status: ExecutionStatus = 'idle'
   private steps = 0
   private maxSteps: number
@@ -179,6 +181,7 @@ export class SemanticInterpreter implements ExecutionContext {
     this.abortReject = null
 
     this.scanfTokenBuffer = []
+    this.cinFailed = false
 
     // Built-in C/C++ constants — declare subset needed for scope-based lookup
     for (const [name, val] of allBuiltinConstants()) {
@@ -404,19 +407,32 @@ export class SemanticInterpreter implements ExecutionContext {
     }
   }
 
-  /** Read a single whitespace-delimited token for cin >>. Shares buffer with scanf. */
+  failCin(): void { this.cinFailed = true }
+
+  /**
+   * Read a single whitespace-delimited token for cin >>. Shares buffer with scanf.
+   *
+   * 🔴 **空行是空白，不是輸入的結尾。** 這裡本來讀到一個空行就回 `null`，
+   * 於是 `["", "5"]` 這種輸入讓 `cin >> a` 什麼都讀不到——而真 C++ 的 `>>`
+   * 會跳過所有前導空白（換行也是空白）繼續找 token。
+   *
+   * 在 failbit 變成黏著的**之前**這只是「少讀一筆」；之後它會**整條流卡死**。
+   * 兩個缺陷單獨看都不致命，合起來才是。
+   */
   readCinToken(): string | null {
-    if (this.scanfTokenBuffer.length > 0) {
-      return this.scanfTokenBuffer.shift()!
+    for (;;) {
+      if (this.scanfTokenBuffer.length > 0) {
+        return this.scanfTokenBuffer.shift()!
+      }
+      const line = this.io.read()
+      if (line === null) return null
+      const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
+      if (tokens.length === 0) continue // 空行：跳過，繼續找
+      if (tokens.length > 1) {
+        this.scanfTokenBuffer.push(...tokens.slice(1))
+      }
+      return tokens[0]
     }
-    const line = this.io.read()
-    if (line === null) return null
-    const tokens = line.trim().split(/\s+/).filter(t => t.length > 0)
-    if (tokens.length === 0) return null
-    if (tokens.length > 1) {
-      this.scanfTokenBuffer.push(...tokens.slice(1))
-    }
-    return tokens[0]
   }
 
   /** Read a single whitespace-delimited token for scanf. Splits lines into tokens. */

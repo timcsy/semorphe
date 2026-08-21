@@ -65,6 +65,9 @@ export function runCppDetailed(code: string): execResult {
     }
     try {
       // stdin 給 /dev/null：需要輸入的程式不得卡住整批量測。
+      // ⚠️ **要餵 stdin 的請走 `runCppBatchDetailed`。** 這一支是 `execSync`，
+      // 它阻塞整條 Node 執行緒——在 `it()` 裡連跑七次會把同一輪的
+      // 時間敏感測試推過門檻（2026-08-21 實測，`bus-update` 每輪紅不同支）。
       return { ok: true, output: execSync(bin, { encoding: 'utf-8', timeout: timeoutMs, stdio: ['ignore', 'pipe', 'pipe'] }) }
     } catch (e) {
       return { ok: false, stage: 'run', message: String((e as Error).message).slice(0, 200) }
@@ -105,6 +108,8 @@ export async function runCppBatch(codes: readonly string[], concurrency = 8): Pr
 export async function runCppBatchDetailed(
   codes: readonly string[],
   concurrency = 8,
+  /** 第 i 段要餵的標準輸入；省略或 `undefined` 就是 `/dev/null`。 */
+  stdins: readonly (string | undefined)[] = [],
 ): Promise<asyncOutcome[]> {
   const out: asyncOutcome[] = new Array(codes.length).fill(null).map(() => ({ ok: false, output: null }))
   let next = 0
@@ -112,7 +117,7 @@ export async function runCppBatchDetailed(
     for (;;) {
       const i = next++
       if (i >= codes.length) return
-      out[i] = await runCppAsyncDetailed(codes[i])
+      out[i] = await runCppAsyncDetailed(codes[i], stdins[i])
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, codes.length) }, worker))
@@ -139,7 +144,7 @@ async function runCppAsync(code: string): Promise<string | null> {
 }
 
 /** 見 `runCppBatchDetailed`——同一件事，而**不丟掉 stderr**。 */
-async function runCppAsyncDetailed(code: string): Promise<asyncOutcome> {
+async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncOutcome> {
   if (!hasReferenceCompiler()) {
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
@@ -147,6 +152,7 @@ async function runCppAsyncDetailed(code: string): Promise<asyncOutcome> {
   const name = `a${process.pid}_${seq++}`
   const src = path.join(cwd, `${name}.cpp`)
   const bin = path.join(cwd, name)
+  const inFile = path.join(cwd, `${name}.in`)
   const run = (cmd: string, timeout: number): Promise<{ out: string | null; err: string }> =>
     new Promise((res) =>
       exec(cmd, { encoding: 'utf-8', timeout }, (e, stdout, stderr) =>
@@ -159,12 +165,16 @@ async function runCppAsyncDetailed(code: string): Promise<asyncOutcome> {
     if (compiled.out === null) {
       return { ok: false, output: null, stage: 'compile', message: compiled.err.slice(0, 400) }
     }
-    const ran = await run(`${bin} < /dev/null`, timeoutMs)
+    // ⚠️ stdin 走**檔案重導**而不是管線：`exec` 的 callback 形式沒有寫入端，
+    //    而「沒有輸入」與「輸入耗盡」必須是同一條路才量得準。
+    if (stdin !== undefined) writeFileSync(inFile, stdin)
+    const ran = await run(`${bin} < ${stdin === undefined ? '/dev/null' : inFile}`, timeoutMs)
     if (ran.out === null) return { ok: false, output: null, stage: 'run', message: ran.err.slice(0, 400) }
     return { ok: true, output: ran.out }
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })
+    rmSync(inFile, { force: true })
   }
 }
 

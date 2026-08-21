@@ -4,11 +4,11 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 176,
-    "return 總數": 127
+    "fileCount": 244,
+    "return 總數": 163
   },
   "typeMismatch": 0,
-  "missingChild": 22,
+  "missingChild": 19,
   "hits": {
     "entryCount": 24,
     "details": [
@@ -104,25 +104,25 @@
         "shape": "缺子節點"
       },
       {
-        "key": "src/components/cpp/input/execute.ts#1qoepsc",
-        "position": "src/components/cpp/input/execute.ts:55",
-        "condition": "raw === null",
-        "returns": "if (raw === null) return { type: 'int', value: 0 }",
-        "shape": "缺子節點"
+        "key": "src/components/cpp/input/execute.ts#1dwbp3j",
+        "position": "src/components/cpp/input/execute.ts:41",
+        "condition": "ctx.cinFailed",
+        "returns": "if (ctx.cinFailed) return { value: null, ok: false }",
+        "shape": "失敗傳遞"
       },
       {
-        "key": "src/components/cpp/input/execute.ts#1qoepsc",
-        "position": "src/components/cpp/input/execute.ts:77",
-        "condition": "raw === null",
-        "returns": "if (raw === null) return { type: 'int', value: 0 }",
-        "shape": "缺子節點"
+        "key": "src/components/cpp/input/execute.ts#67dmeg",
+        "position": "src/components/cpp/input/execute.ts:100",
+        "condition": "!got.ok",
+        "returns": "if (!got.ok) return { type: 'int', value: 0 }",
+        "shape": "失敗傳遞"
       },
       {
-        "key": "src/components/cpp/input/execute.ts#1qoepsc",
-        "position": "src/components/cpp/input/execute.ts:95",
-        "condition": "raw === null",
-        "returns": "if (raw === null) return { type: 'int', value: 0 }",
-        "shape": "缺子節點"
+        "key": "src/components/cpp/input/execute.ts#67dmeg",
+        "position": "src/components/cpp/input/execute.ts:111",
+        "condition": "!got.ok",
+        "returns": "if (!got.ok) return { type: 'int', value: 0 }",
+        "shape": "失敗傳遞"
       },
       {
         "key": "src/components/cpp/logic/execute.ts#1t4y9k4",

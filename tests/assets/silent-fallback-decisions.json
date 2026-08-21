@@ -133,13 +133,6 @@
     "reason": "**&& 的短路求值**——左邊為假就是 false，這是運算子的語義本身，不是檢查失敗後的退路。從共用檔原封搬過來。"
   },
   {
-    "key": "src/components/cpp/input/execute.ts#1qoepsc",
-    "position": "src/components/cpp/input/execute.ts:55",
-    "signal": "raw === null → if (raw === null) return { type: 'int', value: 0 }",
-    "decision": "合法",
-    "reason": "輸入耗盡（EOF）時回 0——C++ 的 cin 失敗語義就是不改變目標值。不是檢查失敗後的退路。從共用檔原封搬過來。"
-  },
-  {
     "key": "src/components/cpp/address_of/execute.ts#b5q594",
     "position": "src/components/cpp/address_of/execute.ts:29",
     "signal": "varNodes.length === 0",
@@ -153,5 +146,19 @@
     "signal": "!value → if (!value) return { type: 'int' as const, value: 0 }",
     "decision": "防禦性",
     "reason": "引數在 `component.json` 宣告 `min: 1`，所以缺席只發生在**壞掉的語義樹**上。⚠️ 而不丟錯是刻意的：積木剛從工具箱拖出來、還沒接引數時，執行不該炸掉。回 0 在這裡也不說謊——沒有數字就沒有 1 這個位元。**顯式判定，不是漏看。**"
+  },
+  {
+    "key": "src/components/cpp/input/execute.ts#1dwbp3j",
+    "position": "src/components/cpp/input/execute.ts:41",
+    "signal": "ctx.cinFailed → if (ctx.cinFailed) return { value: null, ok: false }",
+    "decision": "合法",
+    "reason": "**C++ 的 `failbit` 會黏住**：`>>` 一失敗，之後每一次 `>>` 都立刻失敗直到 `clear()`。這一行就是那個語義本身，不是檢查失敗後的退路——而它回的 `{ value: null, ok: false }` **明說了失敗**，沒有偽裝成合法結果。（取代舊判定 #1qoepsc，那一筆把『回 0』整個當成 EOF 語義，而漏了『格式不符時也要黏住』。）"
+  },
+  {
+    "key": "src/components/cpp/input/execute.ts#67dmeg",
+    "position": "src/components/cpp/input/execute.ts:100 / :111",
+    "signal": "!got.ok → if (!got.ok) return { type: 'int', value: 0 }",
+    "decision": "合法",
+    "reason": "`cin >> a >> b` 的**回傳值是讀成功幾筆**，失敗時就是 0——`while (cin >> x)` 正是靠這個 falsy 終止的。回 0 在這裡是運算子的語義，與 `&&` 短路回 false 同一類（見 cpp/logic 那筆）。⚠️ 而變數的處置**不在**這一行：EOF 時不動、格式不符時設零值，兩者實測不同，見 execute.ts 檔頭那張表。"
   }
 ]

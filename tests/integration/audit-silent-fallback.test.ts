@@ -63,7 +63,7 @@ const decisionFile = path.join(REPO_ROOT, 'tests/assets/silent-fallback-decision
  * ⚠️ 分不出來的歸 `未分類` 並**計入要看**——不得靜靜歸進防禦欄
  * （`build-guardrail` 第 5 步：判不出來就說判不出來，且不計入安全）。
  */
-type shape = '型別不符' | '缺子節點' | '值判斷' | '未分類'
+type shape = '型別不符' | '缺子節點' | '值判斷' | '失敗傳遞' | '未分類'
 
 interface hits {
   /**
@@ -88,6 +88,16 @@ interface hits {
 /** 依條件的語法形狀分類。**新的寫法會落到「未分類」而不是被默許。** */
 function classify(condition: string): shape {
   if (/\.type\s*[!=]==|typeof\s|instanceof\s|!Array\.isArray|Array\.isArray/.test(condition)) return '型別不符'
+  // ⚠️ **第四種形狀**（2026-08-21，`cin` 的 `failbit` 落地之後才出現）：
+  // 條件讀的是**一個已經記錄下來的失敗**，不是「東西在不在」。
+  //
+  // > **「前一步失敗了」與「東西不見了」在語法上都是一個 if，
+  // > 而只有後者是防禦性的——前者是那個失敗被【傳下去】。**
+  //
+  // 它必須排在「缺子節點」**前面**：`!got.ok` 會被 `^!\w` 先吃掉，
+  // 而那會把一筆失敗傳遞記成防禦性的退路。
+  // ⚠️ 這條規則寫成「失敗旗標」而不是變數名——比對過既有 24 筆命中，命中 0 筆。
+  if (/[Ff]ail(ed)?\b|\.ok\b/.test(condition)) return '失敗傳遞'
   if (/^!\w|\.length\s*===\s*0|\.length\s*<\s*1|=== undefined|== null|!\w+\?\./.test(condition)) return '缺子節點'
   // ⚠️ **第三種形狀**（2026-08-11，掃描範圍擴大到共用執行器之後才出現）：
   // 分支條件是**執行期的值**，不是「東西在不在」。`ctx.toBool(condition)`
@@ -130,6 +140,9 @@ const compatible: Record<shape, decision['decision'][]> = {
   '缺子節點': ['防禦性', '合法'],
   // 值判斷不會是「防禦性」——它不是在防什麼，它就是那個運算子在做的事。
   '值判斷': ['合法', '靜默回退'],
+  // 失敗傳遞**只可能是合法**：那個失敗已經被記下來了，而回傳值帶著
+  // 一個明說的失敗欄位。它既不是在防什麼，也沒有把失敗偽裝成合法結果。
+  '失敗傳遞': ['合法'],
   '未分類': ['靜默回退', '合法', '防禦性'],
 }
 
@@ -274,6 +287,9 @@ describe('第三十三條護欄：靜默回退', () => {
     expect(classify('!v')).toBe('缺子節點')
     expect(classify('valueNodes.length === 0')).toBe('缺子節點')
     // ⚠️ 認不得的**不得**被默許歸進防禦欄——那會讓一個會發生的回退靜靜消失
+    // 🔴 失敗傳遞要排在缺子節點**前面**——`!got.ok` 開頭就是 `!\w`
+    expect(classify('!got.ok')).toBe('失敗傳遞')
+    expect(classify('ctx.cinFailed')).toBe('失敗傳遞')
     expect(classify('someWeirdPredicate(x)')).toBe('未分類')
   })
 
@@ -286,6 +302,7 @@ describe('第三十三條護欄：靜默回退', () => {
     // 而合法在哪一欄都成立——strcmp 相等回 0 可能出現在任何形狀底下
     expect(compatible['缺子節點'].includes('合法')).toBe(true)
     expect(compatible['型別不符'].includes('合法')).toBe(true)
+    expect(compatible['失敗傳遞'].includes('防禦性'), '失敗傳遞判成防禦性應該是矛盾').toBe(false)
   })
 
   // ── 判定落點（第 11 步） ────────────────────────────────────────
@@ -319,6 +336,7 @@ describe('第三十三條護欄：靜默回退', () => {
       '',
       `  **型別不符** ${typeMismatch.length} 筆 ← 棘輪盯這一欄（上游辨識判錯時**會**走到）`,
       `  缺子節點   ${missingChild.length} 筆   防禦性；415 段語料實測走到 **0** 次`,
+      `  失敗傳遞   ${hits.filter((h) => h.shape === '失敗傳遞').length} 筆   前一步的失敗被傳下去，帶著明說的失敗欄位`,
       `  未分類     ${unclassified.length} 筆   ⚠️ 新的條件寫法，要人看`,
       '',
       ...toReview.map((h, i) => `  ${i + 1}. ${h.position}\n       if (${h.condition})\n       ${h.returns}`),
