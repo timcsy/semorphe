@@ -247,3 +247,35 @@ export function filterByTarget(
   }
   return out
 }
+
+
+/**
+ * 這顆元件**讓一個名字存在**時，那個名字放在哪些欄位上。
+ *
+ * 回傳欄位名的樣板清單（`['NAME']`／`['PARAM_{i}']`），`{i}` 代表可增減的一組。
+ *
+ * ## 🔴 為什麼是宣告而不是一份清單
+ *
+ * `block-registrar` 的變數下拉原本是**一長串寫死的積木型別**
+ * （`cpp_var_declare`／`cpp_func_def`／`cpp_loop_count`／`cpp_input`…）。
+ * 於是第二個語言的變數**一個都進不了下拉**——使用者 2026-08-21 回報：
+ * 「Python 那邊的積木選擇無法選到前面已經有的變數」。
+ *
+ * > **一份「哪些積木會產生名字」的清單，如果寫在介面層，
+ * > 那麼「這個語言有沒有變數」就變成介面層要知道的事。**
+ *
+ * ⚠️ C++ 那條既有的路**沒有動**——它是 `vision` 記著的那批命令式定義的一部分，
+ * 而改它要走比對護欄。這裡加的是**第二條路**：宣告式的那條。
+ */
+export function variableNameFields(componentId: string): string[] {
+  const v = componentTraits(componentId)?.declaresVariable
+  if (v === true) return ['NAME']
+  return Array.isArray(v) ? (v as string[]) : []
+}
+
+/** 全部**宣告了**自己會產生名字的元件。 */
+export function componentsDeclaringVariables(): { componentId: string; fields: string[] }[] {
+  return registeredComponents()
+    .map((c) => ({ componentId: c.componentId, fields: variableNameFields(c.componentId) }))
+    .filter((x) => x.fields.length > 0)
+}

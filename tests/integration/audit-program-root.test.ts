@@ -86,3 +86,60 @@ describe('spec 171 · 程式根要跟著語言走', () => {
       + '\n   症狀：程式碼面板顯示 ⟨unknown component: xxx:program⟩').toBe(false)
   })
 })
+
+/**
+ * spec 172：**變數下拉要問宣告，不看寫死的積木型別清單**。
+ *
+ * ## 使用者回報（2026-08-21）
+ *
+ * 「Python 那邊的積木選擇無法選到前面已經有的變數」。
+ *
+ * 根因：`block-registrar.getWorkspaceVarOptions()` 是**一長串寫死的積木型別**
+ * （`cpp_var_declare`／`cpp_func_def`／`cpp_loop_count`／`cpp_input`…）。
+ *
+ * > **一份「哪些積木會產生名字」的清單，如果寫在介面層，
+ * > 那麼「這個語言有沒有變數」就變成介面層要知道的事。**
+ */
+describe('spec 172 · 變數下拉要問宣告', () => {
+  it('★ 錨點：真的有元件宣告了自己會產生名字', async () => {
+    const { componentsDeclaringVariables } = await import('../../src/core/component/traits')
+    expect(componentsDeclaringVariables().length, '一顆都沒有 → 下面在驗空集合')
+      .toBeGreaterThan(0)
+  })
+
+  it('🔴 每個語言都要有【至少一顆】元件宣告它會產生名字', async () => {
+    loadAllLanguagePacks()
+    const { componentsDeclaringVariables } = await import('../../src/core/component/traits')
+    const byScope = new Set(componentsDeclaringVariables()
+      .map((c) => c.componentId.split(':')[0]))
+    const missing = allLanguagePacks().map((p) => p.id)
+      // ⚠️ C++ 走的是介面層那條寫死的舊路（vision 記著的那批命令式定義），
+      //    它還沒有宣告——**而那是一筆記在帳上的債，不是這一條的漏洞**。
+      .filter((id) => id !== 'cpp')
+      .filter((id) => !byScope.has(id))
+    expect(missing,
+      '🔴 這個語言的變數一顆都進不了下拉——使用者會看到「(自訂)」而選不到任何名字')
+      .toEqual([])
+  })
+
+  it('🔴 宣告的欄位名必須真的在那顆積木上', async () => {
+    const { componentsDeclaringVariables } = await import('../../src/core/component/traits')
+    const { componentBlocks } = await import('../../src/core/component/registry')
+    const { deriveBlockType } = await import('../../src/core/component/derive-block-type')
+    const forms = componentBlocks() as { componentId: string; blockDef?: Record<string, unknown> }[]
+    const bad: string[] = []
+    for (const c of componentsDeclaringVariables()) {
+      const bt = deriveBlockType(c.componentId)
+      const form = forms.find((f) => (f.blockDef as { type?: string })?.type === bt)
+      if (!form) { bad.push(`${c.componentId}：找不到積木 ${bt}`); continue }
+      const json = JSON.stringify(form.blockDef)
+      for (const pattern of c.fields) {
+        // `{i}` 那種由建構子動態長出來，只驗它的樣板出現在宣告裡
+        const probe = pattern.includes('{i}') ? pattern.replace('{i}', '') : pattern
+        if (!json.includes(probe)) bad.push(`${c.componentId}：宣告的欄位 ${pattern} 不在積木上`)
+      }
+    }
+    // 🔴 少了這一條的話，改一次欄位名就會讓下拉【安靜地】少收一批名字。
+    expect(bad, '宣告的欄位名與積木對不上').toEqual([])
+  })
+})

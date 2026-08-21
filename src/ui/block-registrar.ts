@@ -10,6 +10,8 @@ import { attachBranchList } from './branch-list-block'
 import { attachParamList } from './param-list-block'
 import { defineVariadicBlock } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
+import { componentsDeclaringVariables } from '../core/component/traits'
+import { deriveBlockType } from '../core/component/derive-block-type'
 import { abstractComponentOf } from '../core/language-executors'
 import { setFieldSafely } from './field-write'
 import { isPlainDeclaration } from '../core/component/traits'
@@ -136,6 +138,37 @@ export class BlockRegistrar {
     const workspace = this.accessors?.getWorkspace()
     if (workspace) {
       const blocks = workspace.getAllBlocks(false)
+
+      // 🔴 **第一條路：問宣告**（spec 172）。
+      //
+      // 下面那一長串是**寫死的積木型別**，於是第二個語言的變數一個都進不了下拉
+      // ——使用者 2026-08-21 回報：「那邊的積木選擇無法選到前面已經有的變數」。
+      //
+      // > **一份「哪些積木會產生名字」的清單，如果寫在介面層，
+      // > 那麼「這個語言有沒有變數」就變成介面層要知道的事。**
+      //
+      // ⚠️ 而下面那一段**沒有動**——它是 vision 記著的那批命令式定義的一部分，
+      // 改它要走比對護欄。這裡加的是**第二條路**，兩條並存到那批退場為止。
+      const declared = new Map(
+        componentsDeclaringVariables().map((c) => [deriveBlockType(c.componentId), c.fields]),
+      )
+      for (const block of blocks) {
+        const fields = declared.get(block.type)
+        if (!fields) continue
+        for (const pattern of fields) {
+          if (pattern.includes('{i}')) {
+            for (let i = 0; ; i++) {
+              const v = block.getFieldValue(pattern.replace('{i}', String(i)))
+              if (v === null || v === undefined) break
+              addOption(v)
+            }
+          } else {
+            const v = block.getFieldValue(pattern)
+            if (v !== null && v !== undefined) addOption(v)
+          }
+        }
+      }
+
       for (const block of blocks) {
         if (block.type === 'cpp_var_declare') {
           for (let i = 0; ; i++) {

@@ -105,7 +105,9 @@ lifter.registerFor('tree-sitter-cpp', () => registerCppLiftersInner(lifter, …)
 
 ```ts
 declareLanguagePack({ id, name, grammar, order, topics, targets, styles, categories,
-                      createParser, liftPatterns, liftTransforms, liftSkipNodeTypes })
+                      createParser, liftPatterns, liftTransforms, liftSkipNodeTypes,
+                      programRoot,   // 🔴 見下
+                      install })     // 🔴 見下
 declareToolboxCategories('<lang>', …)
 declareDegradationBlocks('<lang>', { statement: '<lang>_raw_code', expression: '<lang>_raw_expression' })
 declareCommentSyntax('<lang>', <lang>CommentSyntax)
@@ -123,6 +125,27 @@ declareCommentSyntax('<lang>', <lang>CommentSyntax)
 🔴 **而宣告的【時機】要一致**：全部在**模組頂層**，不要在工廠函式裡。
 一個語言在載入時宣告、另一個在第一次用時宣告
 → **登記處的內容依賴呼叫順序，而呼叫順序不是任何人設計的。**
+
+#### 🔴 `programRoot` 與 `install`——這兩格漏掉的症狀是**一段看不懂的訊息**
+
+使用者 2026-08-21 回報：切到新語言之後程式碼面板顯示
+`⟨unknown component: cpp:program⟩`——**積木是對的、執行結果是對的**。
+
+```
+漏了 programRoot   組裝點只能用「第一個宣告了 traits.programRoot 的元件」
+                   —— 而 `componentWithTrait` 回傳第一個匹配，它會挑到別的語言的
+漏了 install       這個語言的產生器【從來沒有被註冊過】
+                   —— 根對了，而沒有人認得它
+```
+
+⚠️ **兩層，而第二層藏在第一層的錯誤訊息後面**：訊息一模一樣，只差前綴。
+
+> **一個「未知的 X」錯誤修好之後，再跑一次同一個情境
+> ——訊息「變了」與訊息「消失了」是兩件事。**
+
+⚠️ 而 `programRoot` 是**兩份宣告**：元件說「我是一個程式根」，
+套件說「我的程式根是它」。**它們說的不是同一句話**，由護欄互相對帳
+（`audit-program-root`）。
 
 ### 判準：還有沒有別的登記處要宣告？
 
@@ -241,8 +264,14 @@ restoreState()         🔴 它【刻意不走】上面那條（註解逐字：�
 - [ ] 🔴 一段該語言的程式碼 lift 出來，**不得出現任何別的語言的元件身分**
 - [ ] 🔴 認不出來的走**誠實降級**，而那顆積木是**這個語言自己的**
 - [ ] 🔴 **反向**：既有語言的測試一支都不變
+- [ ] 🔴 **兩個方向各走一次**——`程式碼 → 積木` 與 `積木 → 程式碼`
+      ⚠️ 它們**各自有組裝**：只驗一個方向會漏掉另一個（2026-08-21 實測，
+      而使用者是**按了執行**才走到第二個方向）。
+      > **一個缺陷如果只在某一條投影上出現，任何不經過那條投影的檢查都會是綠的。**
 - [ ] 🔴 **開瀏覽器**——工具箱每個分類截圖、拖一顆出來看、與既有語言的同族並排
       （走 [[verify-in-browser]]。`length` 答得出「有幾個」，答不出「長對了沒」）
+- [ ] 🔴 **跑一支真的程式**——按執行鍵，看主控台
+      （宣告完整 ≠ 那一路跑過。見 `history/121`：17 顆執行器存在而從沒被跑過）
 
 ---
 

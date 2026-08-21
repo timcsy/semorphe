@@ -25,5 +25,11 @@
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
     "execute": "./execute.ts"
-  }
+  },
+  "traits": {
+    "declaresVariable": [
+      "NAME"
+    ]
+  },
+  "_traits_why": "🟢 **迴圈變數也是一個名字**——`for i in …` 之後 `i` 在迴圈外仍然看得到（Python 沒有區塊作用域），所以它該進下拉。"
 }
