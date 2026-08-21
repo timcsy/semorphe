@@ -1,4 +1,10 @@
 /**
+ * @vitest-environment happy-dom
+ *
+ * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
+ * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
+ */
+/**
  * 欄位守恆（US1）
  *
  * 存檔格式宣告的每一個欄位，存進去必須載得回來。

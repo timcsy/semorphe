@@ -1,4 +1,10 @@
 /**
+ * @vitest-environment happy-dom
+ *
+ * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
+ * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
+ */
+/**
  * 🔴 **開機不得覆蓋使用者的檔案。**
  *
  * ## 這是本規格唯一一條「做錯了會毀損使用者資料」的

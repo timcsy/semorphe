@@ -1,4 +1,10 @@
 /**
+ * @vitest-environment happy-dom
+ *
+ * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
+ * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
+ */
+/**
  * **第四十二條護欄：每一條診斷規則，在每一個面板、每一種語言都要有文案。**
  *
  * ## 它從哪來

@@ -37,7 +37,32 @@ tests/
 
 ## Commands
 
-npm test && npm run lint
+### 什麼時候跑什麼（2026-08-21 量測之後定的）
+
+全套 412 個檔約需兩分鐘，而**成本是 per-file 的模組載入**——每個測試檔各自
+載入一次 Blockly ＋ tree-sitter wasm ＋ 177 顆膠囊的 glob。所以：
+
+| 你在做什麼 | 跑什麼 | 量級 |
+|---|---|---|
+| 改一顆元件、改一段邏輯 | `npx vitest run <那個檔或目錄>` | **秒** |
+| 改核心／投影／解譯器 | `npm run test:unit` ＋ `npm run test:capsule` | 十幾秒 |
+| 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（54 條護欄） | 分鐘 |
+| commit 前 | `npm test`（全套） | 兩分鐘 |
+| PR | CI 跑全套 ＋ `npm run test:e2e` | — |
+
+判準一句話：**你改的是「行為」，還是「這個 repo 的形狀」？** 後者才需要護欄。
+
+🔴 **而「跑一塊固定的子集」在這個專案幾乎沒有用**（實測）：排掉最慢的五個檔
+省下 **0 秒**（它們被並行 overlap 掉）；扣掉全部 54 條護欄跑全套**沒有變快**。
+有效的子集是「**與這次改動相關的那幾個檔**」，不是「一塊比較小的固定範圍」。
+
+⚠️ **測試環境預設是 `node`**，碰 DOM 的 20 個檔在檔頭寫
+`@vitest-environment happy-dom`。加新測試時如果用到 `document`／`localStorage`／
+面板，記得加上——不加的症狀是那個檔紅，不是靜默錯（`src/` 裡零個
+「偵測 DOM 存在」的分支，已查證）。
+
+⚠️ **沒有 `npm run lint`**（這一行本來寫著它，而那個 script 不存在）。
+型別檢查走 `npx tsc --noEmit`。
 
 ## Code Style
 

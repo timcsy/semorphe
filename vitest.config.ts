@@ -2,7 +2,40 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    environment: 'happy-dom',
+    /**
+     * **預設 `node`，碰 DOM 的檔顯式加回 happy-dom**（2026-08-21）。
+     *
+     * 起因：使用者說跑測試變成開發的瓶頸。量測之後，錢不在原本以為的地方：
+     *
+     * ```
+     * Duration 131.99s
+     *   import      521.57s   ← 412 個檔各自載入一次整個系統
+     *   environment 213.06s   ← 而其中【只有 20 個檔真的需要 DOM】
+     *   tests        95.01s   ← 真正跑測試只有這個
+     *   transform    31.70s
+     * ```
+     *
+     * 🔴 而兩個直覺的解法**都被實測推翻**：
+     *
+     * | 假設 | 實測 |
+     * |---|---|
+     * | 排掉最慢的五個檔（佔 per-file wall 的 90%） | **132 → 133 秒，零**——它們被並行 overlap 掉，不在關鍵路徑 |
+     * | 護欄分層（護欄單獨跑要 85 秒） | 扣掉護欄跑全套 **141 秒，沒有變快** |
+     *
+     * > **成本是 per-file 的模組載入，幾乎均勻攤在 412 個檔上
+     * > ——所以「少跑一塊固定的子集」省不到那一塊單獨跑的時間。**
+     *
+     * 取樣 39 個純邏輯檔實測：happy-dom 5.97s → node 3.85s（**35%**），
+     * 環境 CPU 從 9.82s 掉到 0.003s。
+     *
+     * ⚠️ **安全性先查過才改**：`grep -rn "typeof window\|typeof document" src/`
+     * **零命中**——產品程式碼沒有任何「偵測 DOM 存在」的分支，
+     * 所以換環境不會讓誰靜默走另一條路。**沒查過這件事就換環境，
+     * 症狀會是「測試全綠而行為不同」。**
+     *
+     * 要加回 DOM 的檔，在檔頭寫 `@vitest-environment happy-dom`。
+     */
+    environment: 'node',
     // 元件膠囊的**自證測住在膠囊裡**（`src/components/<scope>/<name>/spec.test.ts`）。
     // 那是刻意的：一顆元件的語義主張與它的實作住在一起，審查者只需要讀一個資料夾。
     include: ['tests/**/*.test.ts', 'src/components/**/*.test.ts'],

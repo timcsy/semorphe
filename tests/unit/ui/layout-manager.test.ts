@@ -1,3 +1,9 @@
+/**
+ * @vitest-environment happy-dom
+ *
+ * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
+ * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
+ */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { LayoutManager, LayoutMode } from '../../../src/ui/layout/layout-manager'
 
