@@ -165,3 +165,75 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
     },
   }
 }
+
+/**
+ * **把可變插槽【接】到一顆已經 `jsonInit` 過的積木上**——而不是從零建整顆。
+ *
+ * ## 為什麼需要第二種模式（2026-08-22）
+ *
+ * `defineVariadicBlock` 從零建：`HEAD`（一個標籤 ＋ 一個前置**欄位**）、
+ * 插槽、`TAIL`。它表達不了「**插槽在前**」的形狀，而
+ * `python_method_call` 正是那一種：`對 [接收者] 做 [方法名] (引數…)`。
+ *
+ * 症狀是**瀏覽器裡載入積木狀態時整個工作區載不進去**：
+ *
+ * ```
+ * MissingConnection: The block "python_method_call" is missing a(n) OBJ connection
+ * ```
+ *
+ * ——`args0` 裡宣告的 `OBJ` 與 `METHOD` **兩個都被丟掉了**，
+ * 而 `METHOD` 被丟掉時甚至不報錯（`getFieldValue` 靜靜回 `null`）。
+ *
+ * 🔴 這個模組自己的檔頭早就寫過這條：
+ *
+ * > **一個「從零建整顆」的建構子，遇到「只有一部分是動態的」積木時，
+ * > 唯一的出路是把靜態的部分也吞進去——而那正是它會弄丟欄位的原因。**
+ *
+ * 那句話在 2026-08-21 是對「未來」說的；2026-08-22 它兌現了。
+ *
+ * ⚠️ **兩種模式的判準是「宣告裡有沒有靜態的部分」**（`args0` 空不空），
+ * 不是「這顆積木叫什麼」。
+ */
+export function attachVariadic(type: string, spec: VariadicSpec): void {
+  const proto = Blockly.Blocks[type] as any
+  if (!proto) throw new Error(`attachVariadic：積木型別 ${type} 還沒被定義——順序反了`)
+  const baseInit = proto.init
+  const min = spec.minCount ?? 1
+
+  proto.itemCount_ = 0
+  proto.init = function (this: any): void {
+    baseInit.call(this)
+    this.itemCount_ = 0
+    this.appendDummyInput('TAIL')
+      .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
+      .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+    for (let i = 0; i < min; i++) this.plus_()
+    setMinusState(this, this.itemCount_ <= min)
+  }
+
+  proto.plus_ = function (this: any): void {
+    const n = inputName(spec.inputPattern, this.itemCount_)
+    const inp = this.appendValueInput(n)
+    if (spec.check) inp.setCheck(spec.check)
+    this.moveInputBefore(n, 'TAIL')
+    this.itemCount_++
+    setMinusState(this, false)
+  }
+
+  proto.minus_ = function (this: any): void {
+    if (this.itemCount_ <= min) return
+    this.itemCount_--
+    this.removeInput(inputName(spec.inputPattern, this.itemCount_))
+    setMinusState(this, this.itemCount_ <= min)
+  }
+
+  // ⚠️ **格式與從零建的那一種一字不差**（`{ itemCount }`）——存檔契約。
+  proto.saveExtraState = function (this: any): { itemCount: number } {
+    return { itemCount: this.itemCount_ }
+  }
+  proto.loadExtraState = function (this: any, state: { itemCount?: number }): void {
+    const count = state?.itemCount ?? min
+    while (this.itemCount_ < count) this.plus_()
+    while (this.itemCount_ > count) this.minus_()
+  }
+}

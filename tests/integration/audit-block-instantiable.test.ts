@@ -40,6 +40,16 @@ import { componentLabels } from '../../src/core/component/labels'
 import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
 import i18nBlocksEn from '../../src/i18n/en/blocks.json'
 import { printReport, assertRatchet, assertCorpus } from '../helpers/guardrail'
+// 第二個維度：**一段程式的積木狀態載得進去嗎**（見那一支的檔頭）
+import { PYTHON_CORPUS } from '../assets/python-corpus'
+import { liftPython, createPythonLifter } from '../helpers/python-lift'
+import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
+import { RenderStrategyRegistry } from '../../src/core/registry'
+import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
+import { PythonParser } from '../../src/languages/python/parser'
+import { Parser } from 'web-tree-sitter'
 
 let reg: BlockSpecRegistry
 let ws: Blockly.Workspace
@@ -168,4 +178,76 @@ describe('第五十一條護欄：宣告的積木，Blockly 真的建得出來�
     })
     expect(failures.map((f) => `${f.type}（${f.locale}）：${f.why}`), '建不起來的積木在工具箱裡【看不見】').toEqual([])
   })
+
+  /**
+   * 🔴 **第二個維度：一段程式的積木狀態【載得進去】嗎**（2026-08-22）。
+   *
+   * 上面那一支問「這顆積木建得起來嗎」，而它答不出下面這個：
+   *
+   * ```
+   * MissingConnection: The block "python_method_call" is missing a(n) OBJ connection
+   * ```
+   *
+   * `python_method_call` **建得起來**（它有 `init`），而它的 `args0` 宣告的
+   * `OBJ` 與 `METHOD` 被可變參數的建構子**丟掉了**——那個建構子從零建整顆，
+   * 表達不了「插槽在前」的形狀。於是渲染出來的狀態指名一個不存在的插槽，
+   * **整個工作區載不進去**，使用者看到的是一片空白。
+   *
+   * ⚠️ 而 `METHOD` 被丟掉時**連錯都不報**（`getFieldValue` 靜靜回 `null`）。
+   *
+   * > **「這顆積木建得起來」與「這一段程式的積木擺得上去」是兩個問題。**
+   *
+   * 🟢 語料用第五十條護欄那一份——**AI 會寫的 Python**，不是照著積木挑的。
+   */
+  it('硬性零：語料的每一段，積木狀態都載得進工作區', async () => {
+    registerCppLanguage()
+    Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
+    for (const t of Object.keys(Blockly.Blocks)) delete Blockly.Blocks[t]
+    await registerViaProduct()
+
+    const rsr = new RenderStrategyRegistry()
+    registerCppRenderStrategies(rsr)
+    const renderer = new PatternRenderer()
+    renderer.setRenderStrategyRegistry(rsr)
+    renderer.loadBlockSpecs(reg.getAll())
+    setPatternRenderer(renderer)
+
+    const pyParser = new PythonParser()
+    await pyParser.init(`${process.cwd()}/public`)
+    await Parser.init()
+    createPythonLifter()
+
+    const failures: string[] = []
+    let loaded = 0
+    for (const [name, code] of PYTHON_CORPUS) {
+      const tree = await liftPython(code)
+      if (!tree) { failures.push(`${name}：lift 回 null`); continue }
+      // ⚠️ `renderToBlocklyState` 回的**已經是**工作區狀態的形狀
+      //    （`{ blocks: { languageVersion, blocks: [...] } }`）——再包一層的話
+      //    Blockly 會說 `a is not iterable`。
+      const { blockMappings: _drop, ...state } = renderToBlocklyState(tree)
+      const load = new Blockly.Workspace()
+      try {
+        Blockly.serialization.workspaces.load(state, load)
+        loaded++
+      } catch (e) {
+        failures.push(`${name}：${e instanceof Error ? e.message : String(e)}`)
+      } finally {
+        load.dispose()
+      }
+    }
+
+    printReport('語料的積木狀態載得進工作區嗎', [
+      `語料 ${PYTHON_CORPUS.length} 段｜載得進去 ${loaded}`,
+      `載不進去  ${failures.length} 段 ← 硬性零`,
+      ...failures.map((f) => `  ✘ ${f}`),
+      '',
+      '⚠️ 「這顆積木建得起來」與「這一段程式的積木擺得上去」是兩個問題：',
+      '   前者只要 `init` 跑得完，後者要**每一個被指名的插槽真的存在**。',
+    ])
+
+    assertCorpus([['語料段數', PYTHON_CORPUS.length]], 'block-state-loadable')
+    assertRatchet([['載不進去', failures.length]], 'block-state-loadable', { detail: failures })
+    expect(failures, '載不進去的那一段，使用者看到的是一片空白').toEqual([])
+  }, 120_000)
 })

@@ -8,7 +8,7 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { attachBranchList } from './branch-list-block'
 import { attachParamList } from './param-list-block'
-import { defineVariadicBlock } from './variadic-block'
+import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { componentsDeclaringVariables } from '../core/component/traits'
 import { deriveBlockType } from '../core/component/derive-block-type'
@@ -518,6 +518,29 @@ export class BlockRegistrar {
       }
       if (soleRule?.inputPattern && (blockDef as { builder?: string }).builder === 'variadic') {
         const bd = blockDef as unknown as Record<string, unknown>
+        // 🔴 **宣告裡有靜態的部分時，用「接上去」而不是「從零建」**（2026-08-22）。
+        //
+        // 從零建的那一種表達不了「插槽在前」的形狀（`對 [接收者] 做 [方法名] (引數…)`），
+        // 而它把 `args0` 裡的每一格**都丟掉**——症狀是瀏覽器載入積木狀態時
+        // `MissingConnection: … is missing a(n) OBJ connection`，
+        // 整個工作區載不進去。而 `METHOD` 被丟掉時連錯都不報。
+        //
+        // ⚠️ 判準是**宣告裡有沒有靜態的部分**，不是這顆積木叫什麼。
+        const spec = {
+          inputPattern: soleRule.inputPattern,
+          check: (bd.slotCheck as string) ?? 'Expression',
+          colour: (bd.colour as string) ?? '#5CB1D6',
+          inputsInline: bd.inputsInline as boolean | undefined,
+          previousStatement: bd.previousStatement as string | undefined,
+          nextStatement: bd.nextStatement as string | undefined,
+          output: bd.output as string | undefined,
+          minCount: bd.minCount as number | undefined,
+        }
+        if (Array.isArray(bd.args0) && bd.args0.length > 0) {
+          Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+          attachVariadic(blockType, spec)
+          continue
+        }
         defineVariadicBlock(blockType, {
           inputPattern: soleRule.inputPattern,
           labelKey: (bd.labelKey as string) ?? undefined,
