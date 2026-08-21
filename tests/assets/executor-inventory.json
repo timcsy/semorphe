@@ -239,6 +239,8 @@
     "python:raw_code",
     "python:raw_expression",
     "python:return",
+    "python:string_insert",
+    "python:string_make",
     "python:var_assign",
     "python:var_ref"
   ]

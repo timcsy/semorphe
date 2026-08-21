@@ -1,0 +1,25 @@
+[
+  {
+    "id": "python_string_insert",
+    "componentId": "python:string_insert",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_string_insert",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_STRING_INSERT_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "VALUE", "check": "Expression" },
+        { "type": "field_input", "name": "FORMAT", "text": "" }
+      ],
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_STRING_INSERT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "FORMAT": "format" },
+      "inputs": { "VALUE": "value" }
+    }
+  }
+]

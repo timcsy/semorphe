@@ -1,0 +1,4 @@
+{
+  "PY_STRING_MAKE_MSG": "格式化文字",
+  "PY_STRING_MAKE_TOOLTIP": "把文字與值拼成一段字串。每一格可以放一段文字，也可以放一個要插進來的值。"
+}

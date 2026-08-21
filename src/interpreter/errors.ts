@@ -58,6 +58,13 @@ export const RUNTIME_ERRORS = {
    */
   NO_MORE_INPUT: 'RUNTIME_ERR_NO_MORE_INPUT',
   /**
+   * 格式化文字裡出現我們還沒實作的格式規格（`f"{x:>10}"` 的 `>10`）。
+   *
+   * 🔴 **丟錯而不是照原樣印**：靜默的話畫面上會出現一個沒有補齊的字，
+   * 而那與「格式本來就是這樣」看起來一模一樣。
+   */
+  UNSUPPORTED_FORMAT: 'RUNTIME_ERR_UNSUPPORTED_FORMAT',
+  /**
    * 整個程式沒有任何進入點。
    *
    * 🔴 **在此之前這個情況是【安靜結束】的**，而那讓「找不到進入點」

@@ -1,0 +1,4 @@
+{
+  "PY_STRING_MAKE_MSG": "Formatted text",
+  "PY_STRING_MAKE_TOOLTIP": "Build one string from text and values. Each slot holds either a piece of text or a value to insert."
+}

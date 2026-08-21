@@ -230,5 +230,6 @@
   "CATEGORY_HARDWARE_SERIAL": "序列埠",
   "CPP_METHOD_CALL_ON": "對",
   "CPP_METHOD_CALL_DO": "執行",
-  "RUNTIME_ERR_NO_MORE_INPUT": "程式想讀一行輸入，而已經沒有輸入了"
+  "RUNTIME_ERR_NO_MORE_INPUT": "程式想讀一行輸入，而已經沒有輸入了",
+  "RUNTIME_ERR_UNSUPPORTED_FORMAT": "這種格式（%1）還不支援"
 }

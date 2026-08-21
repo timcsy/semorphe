@@ -1,0 +1,12 @@
+{
+  "id": "python_string_make",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "string",
+  "component": {
+    "componentId": "python:string_make"
+  },
+  "liftStrategy": "python:liftStringMake",
+  "fieldMappings": [],
+  "priority": 20,
+  "_why": "🔴 **priority 必須高於同族那顆字面值元件**（它是 0）——兩筆樣式對到**同一個** `string` 節點型別，而比對迴圈是「按 priority 由高到低，第一個回非 null 的贏」。\n普通字串走到這裡時策略回 `null`，於是落到下一筆，由字面值那顆接手。\n\n> **兩個概念共用一個 AST 節點型別時，順序就是語義的一部分。**\n\n⚠️ `component` 這一格不能省：策略函式產出什麼**靜態掃不到**，所以要在旁邊說一次。"
+}

@@ -12,6 +12,8 @@
       "python:print",
       "python:input",
       "python:literal_string",
+      "python:string_make",
+      "python:string_insert",
       "python:literal_number",
       "python:literal_bool",
       "python:var_assign",

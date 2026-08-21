@@ -1,0 +1,4 @@
+{
+  "PY_STRING_INSERT_MSG0": "插入 %1 小數位數 %2",
+  "PY_STRING_INSERT_TOOLTIP": "把一個值插進格式化文字裡。小數位數留空就照原樣顯示；填 .2f 表示保留兩位小數。"
+}

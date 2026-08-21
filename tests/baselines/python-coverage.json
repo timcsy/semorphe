@@ -3,14 +3,14 @@
     "guard": "python-coverage",
     "measuredAt": "2026-08-21",
     "rule": "語料是「AI 會生的教學用 Python」，不是照現有元件挑的。三個數字一起看：來回不同（產出壞掉的碼，最重）／降級節點（誠實變灰）／通用桶（不降級但身分沒了）。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n\n⚠️ **2026-08-21 的上調：`來回不同` 4 → 0，而 `降級節點` 33 → 34。**\n那個 +1 是**揭露**不是退步：`class Dog` 那段的 `f\"{self.name} 汪汪叫\"` 以前整段是一顆不透明的字串字面值（不算降級），格式化文字拆開之後 `self.name`（`attribute` 節點）**誠實地變灰了**。\n\n> **一個被包在不透明節點裡的缺口，在那個節點被拆開的那一刻才會被算進來。**"
   },
   "corpus": {
     "programs": 15,
-    "nodes": 311
+    "nodes": 327
   },
-  "degraded": 33,
-  "roundTripDiff": 1,
+  "degraded": 34,
+  "roundTripDiff": 0,
   "genericCall": 30,
   "unresolvedTypes": {
     "list": 4,
@@ -28,10 +28,10 @@
     "try_statement": 1,
     "except_clause": 2,
     "class_definition": 1,
+    "attribute": 2,
     "tuple": 1,
     "expression_list": 2,
     "import_statement": 2,
-    "dotted_name": 2,
-    "attribute": 1
+    "dotted_name": 2
   }
 }

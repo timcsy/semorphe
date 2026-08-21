@@ -1,0 +1,24 @@
+{
+  "componentId": "python:string_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **真的沒有。** C++ 那側最接近的是格式化輸出（printf 那一族），而那是一個**輸出動作**；這一顆是一個**值**——把它們指成同一個抽象父會把「印出去」與「算出一個字串」混成一件事。\n🟢 兩者若真的同類，那條等價邊要在有人量得出來的觀察集底下宣告，不是猜。",
+  "properties": [],
+  "children": {
+    "parts": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "**「這是不是 f-string」要跑真邏輯**——同一個 `string` 節點型別既是普通字串也是 f-string，差別在第一個子節點 `string_start` 的文字是 `f\"` 還是 `\"`。純資料的樣式比對表達不了它，所以走具名策略。\n⚠️ 而策略回 `null` 時會**落到下一筆樣式**（`pattern-lifter.ts` 的比對迴圈），普通字串因此仍由同族那顆字面值元件接手。",
+  "traits": {
+    "stringLike": true
+  },
+  "_traits_why": "**我算出來的是一個字串**——這是我自己的性質，讓「哪些元件產出字串」問得出來。⚠️ 而它**不是**字面值：字面值的內容在寫程式時就定了，這一顆要等執行期才知道。"
+}

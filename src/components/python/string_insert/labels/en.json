@@ -1,0 +1,4 @@
+{
+  "PY_STRING_INSERT_MSG0": "Insert %1 decimals %2",
+  "PY_STRING_INSERT_TOOLTIP": "Insert a value into formatted text. Leave decimals blank to show it as-is; .2f keeps two decimal places."
+}

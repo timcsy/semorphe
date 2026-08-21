@@ -1,0 +1,26 @@
+{
+  "componentId": "python:string_insert",
+  "abstractComponent": null,
+  "_abstractComponent_why": "它是格式化文字裡的一格，沒有跨語言的對應物可指。",
+  "properties": [
+    {
+      "name": "format",
+      "kind": "string",
+      "default": ""
+    }
+  ],
+  "_properties_why": "**格式規格是結構化的一格，不是黏在文字裡的字元。** `f\"{score:.1f}\"` 的 `.1f` 若留在字串裡，用到它的人就得再 parse 一次——而知識庫的教訓逐字：「需要 parse 回結構才能用的字串，就不該是字串」。",
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": null,
+    "_lift_why": "**顯式的空。** 這一格沒有自己的 AST 節點型別可以對——它只在格式化文字的策略拆解插值時被建出來。給它一筆樣式等於宣告「有一種節點會直接變成它」，而那種節點不存在。",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  }
+}

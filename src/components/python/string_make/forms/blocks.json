@@ -1,0 +1,33 @@
+[
+  {
+    "id": "python_string_make",
+    "componentId": "python:string_make",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_string_make",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_STRING_MAKE_TOOLTIP}",
+      "labelKey": "PY_STRING_MAKE_MSG",
+      "labelFallback": "格式化文字",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "parts",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "🟢 **顏色與分類抄同族那顆字面值元件**（`#FF8C1A` ／ `data`）——顏色是分類的視覺編碼，學生靠它認「這是同一種東西」。\n⚠️ `countSource` 用 `itemCount`：那是**存檔契約**，與同族可變參數的積木一字不差。換一個鍵名等於讓使用者的舊檔打不開。"
+  }
+]

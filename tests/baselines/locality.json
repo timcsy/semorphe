@@ -983,7 +983,7 @@
       "dirs": 1
     },
     "python:literal_string": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "python:logic": {
@@ -1024,6 +1024,14 @@
     },
     "python:return": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:string_insert": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:string_make": {
+      "files": 4,
       "dirs": 1
     },
     "python:var_assign": {
