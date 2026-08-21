@@ -1,0 +1,4 @@
+{
+  "PYTHON_CONTINUE_MSG0": "跳過這一輪",
+  "PYTHON_CONTINUE_TOOLTIP": "略過這一輪剩下的步驟，直接開始下一輪"
+}

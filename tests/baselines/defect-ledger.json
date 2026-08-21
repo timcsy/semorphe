@@ -3,11 +3,11 @@
     "guard": "defect-ledger",
     "measuredAt": "2026-08-18",
     "rule": "掃 tests/**/*.test.ts 的 it.todo／it.skip／describe.skip。標記寫在標題開頭：[BLOCKED:id]（修既有元件）／[UNSUPPORTED:描述]（加新概念）／[TOMBSTONE:檔名#錨點]（已否決決定的正確後果）／[DEADSKIP]（已修好沒開回來）。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 2026-08-13 拔掉 [BLOCKED:cpp:destructor] 那根釘子——缺陷被 cpp:block 修掉了，而**那筆是 it.todo（無本體），一聲都沒出**。改成三支真的測試（順序斷言 ＋ 一支反向「if 的 body 不得多一層」）。🔴 `it.todo` 本身就是一種殼：它宣告了一個缺陷，而沒有任何機構在看那個缺陷還在不在。 ⚠️ 2026-08-13（第二次）32 → 31：拔掉 [BLOCKED:cpp:class_def] 那根釘子——成員預設值修好了（lift 讀 default_value ＋ StructRegistry.applyFieldInits）。🔴 順帶抓到掃描器的一個性質：**寫在註解裡的 `[BLOCKED:…]` 釘子原文照樣被數進來**（那一輪 titleOnly 一度 12 → 13）。掃描器不分辨程式與註解是刻意的（否則有人用註解藏缺陷），所以講一根釘子時要用敘述，不要照抄它的寫法。\n\n【2026-08-14 / specs/122】🔴 **上升 31 → 32，而它是刻意的**：新增 `[BLOCKED:cpp:vector_declare]`（`tests/integration/slot-roundtrip-first-week.test.ts`）——`vector<int> v(10)` 的大小走完投影來回會消失，而修法要動 `block-registrar` 的命令式定義（雙重真相，兩邊都要改）。\n⚠️ **這不是新缺陷，是一個既有缺陷【第一次被釘住】**：它本來只存在於 `conformance.json` 的一個數字裡，沒有任何測試在看它。\n✅ 而「有測試本體」也 19 → 20——用的是 `it.fails` 不是 `it.todo`：修好的那天它會紅，逼人來拔釘子。 🔴 **2026-08-17 這次是【退步】，而它是刻意的**（`component-fuzz` 盲測，20 段 Arduino sketch）：停用測試 32 → 45（+13）。**那 13 筆不是新造的缺陷，是【新發現】的缺陷**——盲測的出題者看不到原始碼，所以它問了我不會問自己的問題。⚠️ 而 vision 的目標仍然是「停用測試 → 1」：**發現要記，而記下來就是退步**。每一筆都有分類標記與根因，見 `tests/reports/fuzz-cpp-hardware-2026-08-17.md`。"
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 2026-08-13 拔掉 [BLOCKED:cpp:destructor] 那根釘子——缺陷被 cpp:block 修掉了，而**那筆是 it.todo（無本體），一聲都沒出**。改成三支真的測試（順序斷言 ＋ 一支反向「if 的 body 不得多一層」）。🔴 `it.todo` 本身就是一種殼：它宣告了一個缺陷，而沒有任何機構在看那個缺陷還在不在。 ⚠️ 2026-08-13（第二次）32 → 31：拔掉 [BLOCKED:cpp:class_def] 那根釘子——成員預設值修好了（lift 讀 default_value ＋ StructRegistry.applyFieldInits）。🔴 順帶抓到掃描器的一個性質：**寫在註解裡的 `[BLOCKED:…]` 釘子原文照樣被數進來**（那一輪 titleOnly 一度 12 → 13）。掃描器不分辨程式與註解是刻意的（否則有人用註解藏缺陷），所以講一根釘子時要用敘述，不要照抄它的寫法。\n\n【2026-08-14 / specs/122】🔴 **上升 31 → 32，而它是刻意的**：新增 `[BLOCKED:cpp:vector_declare]`（`tests/integration/slot-roundtrip-first-week.test.ts`）——`vector<int> v(10)` 的大小走完投影來回會消失，而修法要動 `block-registrar` 的命令式定義（雙重真相，兩邊都要改）。\n⚠️ **這不是新缺陷，是一個既有缺陷【第一次被釘住】**：它本來只存在於 `conformance.json` 的一個數字裡，沒有任何測試在看它。\n✅ 而「有測試本體」也 19 → 20——用的是 `it.fails` 不是 `it.todo`：修好的那天它會紅，逼人來拔釘子。 🔴 **2026-08-17 這次是【退步】，而它是刻意的**（`component-fuzz` 盲測，20 段 Arduino sketch）：停用測試 32 → 45（+13）。**那 13 筆不是新造的缺陷，是【新發現】的缺陷**——盲測的出題者看不到原始碼，所以它問了我不會問自己的問題。⚠️ 而 vision 的目標仍然是「停用測試 → 1」：**發現要記，而記下來就是退步**。每一筆都有分類標記與根因，見 `tests/reports/fuzz-cpp-hardware-2026-08-17.md`。\n\n🔴 **2026-08-21（spec 170）44 → 45，而它是【刻意的】**：`fuzz-python-mixed.test.ts` 的 `fuzz_10`（`len()`）。\n  ⚠️ **這不是新造的缺陷，是盲測【新發現】的缺口**——`len` 這一族的內建函式還沒有元件。\n  🟢 而它**不是靜默的**：直譯器丟 `UNDEFINED_FUNC`，使用者看得到。\n  何時修：Python 內建函式那一刀（len／int／str／abs／max／min…），而那是一個獨立的設計題（哪些收、怎麼命名、放第幾關）。\n  理由與根因見 `tests/reports/fuzz-python-2026-08-21.md`。\n  > **一個被測試過的程式如果沒有留下測試，那次測試等於沒有發生。**"
   },
-  "total": 44,
+  "total": 45,
   "withBody": 19,
-  "titleOnly": 25,
+  "titleOnly": 26,
   "unverified": 0,
   "byBlocker": {
     "cpp:print": 2,

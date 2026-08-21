@@ -368,5 +368,15 @@
     "componentId": "python:input",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `prompt` 接點**可以是空的**，而自證測釘了「不得被補成 `input(\"\")`」。"
+  },
+  {
+    "componentId": "python:break",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 170。與其餘 Python 元件同一條理由：這條護欄的語料是 C++ 的，碰不到 Python。\n🔴 **它是盲測抓到的缺口**（2026-08-21，`fuzz_05`／`fuzz_07`）：在它存在之前，`break` 降級成灰色積木，而**執行到那顆積木時整支程式中止**。\n> 一個誠實的降級，在【執行】那一路上仍然是一個中止。\n🟢 它沒有接點，正確性由自證測釘（含「在 for 迴圈裡也接得住」）。"
+  },
+  {
+    "componentId": "python:continue",
+    "cause": "語料沒覆蓋",
+    "reason": "spec 170。與其餘 Python 元件同一條理由：這條護欄的語料是 C++ 的，碰不到 Python。\n同 `break`——盲測抓到的同一族缺口，沒有接點，由自證測釘。"
   }
 ]

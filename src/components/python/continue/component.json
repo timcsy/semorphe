@@ -1,0 +1,24 @@
+{
+  "componentId": "python:continue",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **刻意是 null**——等價要靠觀察集驗，今天沒有。",
+  "properties": [],
+  "children": {},
+  "role": "statement",
+  "owner": "(python)",
+  "_owner_why": "⚠️ 章要蓋 `(python)` 不是 `(core)`。工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空。",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "lift": "./lift-pattern.json",
+    "execute": "./execute.ts"
+  },
+  "traits": {
+    "terminatesFlow": true
+  },
+  "_traits_why": "**「我之後的程式碼不可達」是我自己的宣告**——積木的 `nextStatement` 因此是 null。"
+}

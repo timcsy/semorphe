@@ -942,11 +942,19 @@
       "files": 3,
       "dirs": 1
     },
+    "python:break": {
+      "files": 3,
+      "dirs": 1
+    },
     "python:comment": {
       "files": 2,
       "dirs": 1
     },
     "python:compare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:continue": {
       "files": 3,
       "dirs": 1
     },

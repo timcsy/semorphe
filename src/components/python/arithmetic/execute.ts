@@ -24,9 +24,32 @@ export function registerExecute(register: (component: string, executor: Componen
     const l = await ctx.evaluate(node.children.left[0])
     const r = await ctx.evaluate(node.children.right[0])
 
-    // 字串相加是 Python 的合法運算，而 `+` 以外都不是。
-    if (op === '+' && l.type === 'string' && r.type === 'string') {
-      return { type: 'string', value: String(l.value) + String(r.value) }
+    // ── 字串的運算：Python 有【兩個】，而它們的形狀完全不同 ──
+    //
+    // 🔴 第一版只處理了 `+`，於是 `"ab" * 3` 掉進下面的數值運算
+    // ——`toNumber("ab")` 是 NaN，`NaN * 3` 是 NaN，而它**靜靜印出 `0.0`**。
+    //
+    // > **一個靜默的錯答案，比一個拋出來的錯誤貴得多
+    // > ——因為使用者會拿它去算下一步。**
+    //
+    // 抓到它的是盲測（`fuzz_10`），而**十二題裡只有那一題碰到它**。
+    if (l.type === 'string' || r.type === 'string') {
+      if (op === '+' && l.type === 'string' && r.type === 'string') {
+        return { type: 'string', value: String(l.value) + String(r.value) }
+      }
+      // `"ab" * 3` / `3 * "ab"` —— 字串重複。次數要是整數。
+      if (op === '*') {
+        const str = l.type === 'string' ? String(l.value) : String(r.value)
+        const cnt = l.type === 'string' ? r : l
+        if (cnt.type !== 'string') {
+          const n = Math.trunc(ctx.toNumber(cnt))
+          return { type: 'string', value: n > 0 ? str.repeat(n) : '' }
+        }
+      }
+      // 其餘的字串運算在 Python 是 TypeError —— **出聲**，不要轉成數字。
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+        '%1': `文字不能做 ${op}（Python 會說 TypeError）`,
+      })
     }
 
     const a = ctx.toNumber(l), b = ctx.toNumber(r)

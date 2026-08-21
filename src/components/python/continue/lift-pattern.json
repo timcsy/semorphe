@@ -1,0 +1,11 @@
+[
+  {
+    "id": "python_continue",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "continue_statement",
+    "component": {
+      "componentId": "python:continue"
+    },
+    "priority": 10
+  }
+]

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "python_break",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "break_statement",
+    "component": {
+      "componentId": "python:break"
+    },
+    "priority": 10
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_break",
+    "componentId": "python:break",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_break",
+      "message0": "%{BKY_PYTHON_BREAK_MSG0}",
+      "previousStatement": "Statement",
+      "nextStatement": null,
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PYTHON_BREAK_TOOLTIP}"
+    },
+    "renderMapping": {},
+    "_why": "⚠️ **`nextStatement` 是 `null`**——它之後的程式碼不可達，積木不該接得下去。（C++ 那顆曾經少了這一條，spec 164 修的。）"
+  }
+]
