@@ -138,3 +138,4 @@ describe('generateCode', () => {
     expect(code).toContain('template<typename T> class Foo {};')
   })
 })
+

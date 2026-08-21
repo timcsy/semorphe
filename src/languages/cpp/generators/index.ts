@@ -3,6 +3,7 @@ import { declareBoardConstantDropdown } from '../../../core/board-constant-dropd
 import { declareDegradationBlocks } from '../../../core/degradation-blocks'
 import { CPP_STRING_AT_INPUTS } from '../block-input-names'
 import { declareCommentSyntax } from '../../../core/comment-syntax'
+import { declareExpressionStatement } from '../../../core/expression-statement'
 import { cppCommentSyntax } from '../core/comment-syntax'
 import type { StylePreset } from '../../../core/types'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
@@ -74,6 +75,14 @@ declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_ra
 
 // ⚠️ 與上面同一個理由搬到頂層：宣告的**時機**在各語言之間要一致。
 declareCommentSyntax('cpp', cppCommentSyntax)
+
+// 🔴 **運算式當語句用怎麼收尾**（2026-08-21）——原本寫死在核心的 `asStatement` 裡。
+//
+// ⚠️ `allowedAtTopLevel: false` **不是保守，是文法**：C++ 的編譯單元層級
+// 不允許裸的運算式語句，硬包出來會產出**不能編譯**的碼。
+// 那條規則原本以 `if (ctx.indent === 0) return text` 的形式當成普遍真理，
+// 而 Python 的頂層 `nums.append(9)` 正好是最常見的一行。
+declareExpressionStatement('cpp', { suffix: ';', allowedAtTopLevel: false })
 
 /**
  * 把各模組的執行器推進直譯器。

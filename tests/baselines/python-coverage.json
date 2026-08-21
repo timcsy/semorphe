@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "guard": "python-coverage",
+    "measuredAt": "2026-08-21",
+    "rule": "語料是「AI 會生的教學用 Python」，不是照現有元件挑的。三個數字一起看：來回不同（產出壞掉的碼，最重）／降級節點（誠實變灰）／通用桶（不降級但身分沒了）。",
+    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+  },
+  "corpus": {
+    "programs": 15,
+    "nodes": 311
+  },
+  "degraded": 33,
+  "roundTripDiff": 1,
+  "genericCall": 30,
+  "unresolvedTypes": {
+    "list": 4,
+    "subscript": 2,
+    "dictionary": 1,
+    "pair": 2,
+    "comparison_operator": 1,
+    "augmented_assignment": 3,
+    "function_definition": 1,
+    "parameters": 1,
+    "default_parameter": 1,
+    "list_comprehension": 2,
+    "for_in_clause": 2,
+    "if_clause": 1,
+    "try_statement": 1,
+    "except_clause": 2,
+    "class_definition": 1,
+    "tuple": 1,
+    "expression_list": 2,
+    "import_statement": 2,
+    "dotted_name": 2,
+    "attribute": 1
+  }
+}

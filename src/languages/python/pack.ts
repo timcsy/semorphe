@@ -10,6 +10,7 @@ import { PythonParser } from './parser'
 import pythonLiftPatterns from './lift-patterns.json'
 import { declareDegradationBlocks } from '../../core/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
+import { declareExpressionStatement } from '../../core/expression-statement'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
 import { registerPythonLanguage } from './install'
@@ -24,6 +25,13 @@ declareDegradationBlocks('python', {
   expression: 'python_raw_expression',
 })
 declareCommentSyntax('python', pythonCommentSyntax)
+
+// 🔴 **Python 的頂層裸運算式是最常見的一行**（`nums.append(9)`），而收尾不加東西。
+//
+// 沒有這一筆的話，`asStatement` 不包縮排也不包換行，於是下一行黏上去
+// ——`nums.append(9)print(len(nums))`，**一段不合法的 Python**。
+// 見 `core/expression-statement.ts` 的檔頭。
+declareExpressionStatement('python', { suffix: '', allowedAtTopLevel: true })
 import pythonBeginnerTopic from './topics/python-beginner.json'
 import pythonTargetDef from './targets/python.json'
 import pythonPreset from './styles/python.json'

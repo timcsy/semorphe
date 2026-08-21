@@ -1,5 +1,6 @@
 import { setDegradationLanguage } from '../degradation-blocks'
 import { commentSyntax, setCommentLanguage } from '../comment-syntax'
+import { expressionStatementOf } from '../expression-statement'
 import { roleOf } from '../component/traits'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
@@ -117,7 +118,19 @@ export function registerMetaComponentGenerators(generators: Map<string, NodeGene
   generators.set('unresolved', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? '')
     if (ctx.isExpression) return raw.trim()   // 同上
-    return raw.endsWith('\n') ? raw : raw + '\n'
+    // 🔴 **縮排**（2026-08-21）——這一行原本沒有，而**上面兩行的 `raw_code` 有**。
+    //
+    // 症狀：`for i in range(3):` 裡的 `total += i`（還沒有元件）產回去頂到最左邊
+    // ——**產出的是一段語義完全不同、而且合法的 Python**。
+    // 它比「缺一顆元件」嚴重：一顆灰積木學生看得見（P6），縮排錯掉的碼看起來很正常。
+    //
+    // > **兩個做同一件事的產生器住在同一個檔的相鄰兩行，
+    // > 而其中一個少做了一件事——那不會有任何測試變紅。**
+    //
+    // ⚠️ **只縮第一行**：`rawCode` 是從原始碼剪下來的，多行的構造裡面已經帶著
+    // 自己的相對縮排，全部加前綴會把巢狀推歪。
+    const indented = indent(ctx) + raw
+    return indented.endsWith('\n') ? indented : indented + '\n'
   })
 
 }
@@ -416,6 +429,15 @@ export function generateBody(nodes: SemanticNode[], ctx: GeneratorContext): stri
  * 🔴 判準：**函式體裡的裸運算式是合法的運算式語句，而編譯單元層級的不是。**
  */
 function asStatement(node: SemanticNode, text: string, ctx: GeneratorContext): string {
-  if (text === '' || text.endsWith('\n') || ctx.indent === 0) return text
-  return roleOf(node.componentId) === 'expression' ? `${indent(ctx)}${text};\n` : text
+  if (text === '' || text.endsWith('\n')) return text
+  // 🔴 **收尾與「頂層可不可以」都是語言宣告的**（2026-08-21）——原本這裡寫死
+  // `;` 與 `indent === 0 就跳過`，那是 C++ 的文法，不是普遍真理。
+  // 見 `core/expression-statement.ts` 的檔頭。
+  const syntax = expressionStatementOf(ctx.language)
+  if (!syntax) return text // 沒宣告＝維持舊行為（不包），而不是猜一個
+  if (ctx.indent === 0 && !syntax.allowedAtTopLevel) return text
+  // ⚠️ `both` 也算——它「可以出現在運算式位置」，而語句位置正是要包的那一種。
+  //    全專案只有一顆 `both`（`python:func_call`），所以這一改對 C++ 零影響。
+  const role = roleOf(node.componentId)
+  return role === 'expression' || role === 'both' ? `${indent(ctx)}${text}${syntax.suffix}\n` : text
 }
