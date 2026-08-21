@@ -255,3 +255,78 @@ function collect(n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] {
   for (const kids of Object.values(n.children ?? {})) for (const k of kids) collect(k, out)
   return out
 }
+
+/**
+ * 🔴 **貼一整段程式碼 → 積木**（2026-08-21）。
+ *
+ * 上面那幾支走的是**一顆**積木。而使用者在瀏覽器貼的是一整段，
+ * 於是渲染要走完整棵樹——**而那條路在測試裡從來沒有被完整走過**。
+ *
+ * 症狀（瀏覽器實測看到的）：程式碼在、執行正確，**而畫布是空的**。
+ *
+ * > **一顆積木渲得出來，不代表一棵樹渲得出來
+ * > ——而中間那些節點是【新加的那些】。**
+ */
+describe('整段程式碼 → 積木（渲染那條路）', () => {
+  const render = async (code: string): Promise<BlockState> => {
+    const tree = lifter.lift((await pyParser.parse(code)).rootNode as never) as SemanticNode
+    expect(tree, '提升不得回 null').not.toBeNull()
+    setPatternRenderer(renderer)
+    return renderToBlocklyState(tree, 'python')
+  }
+
+  /** 這棵樹渲出來的積木型別（遞迴收集）。 */
+  const typesIn = (s: unknown, out: string[] = []): string[] => {
+    const n = s as { type?: string; blocks?: unknown[]; inputs?: Record<string, { block?: unknown }>; next?: { block?: unknown } }
+    if (n?.type) out.push(n.type)
+    for (const b of (n?.blocks as { blocks?: unknown[] })?.blocks ?? []) typesIn(b, out)
+    for (const v of Object.values(n?.inputs ?? {})) if (v?.block) typesIn(v.block, out)
+    if (n?.next?.block) typesIn(n.next.block, out)
+    return out
+  }
+
+  it('★ 錨點：最單純的一段渲得出積木（否則下面在驗空集合）', async () => {
+    const state = await render('print(1)\n')
+    expect(typesIn(state), `渲出來是空的：${JSON.stringify(state).slice(0, 200)}`).toContain('python_print')
+  })
+
+  it('🔴 這一批新元件全部渲得出積木', async () => {
+    const CASES: [string, string][] = [
+      ['python_array_make', 'a = [1, 2]\n'],
+      ['python_map_make', 'd = {"k": 1}\n'],
+      ['python_container_at', 'x = a[0]\n'],
+      ['python_container_find', 'y = "k" in d\n'],
+      ['python_var_assign_compound', 'total += 1\n'],
+      ['python_string_make', 'x = f"hi {n}"\n'],
+      ['python_tuple_make', 'p = (3, 4)\n'],
+      ['python_var_assign_sequence', 'x, y = p\n'],
+      ['python_import', 'import math\n'],
+      ['python_member_at', 'x = math.pi\n'],
+      ['python_try_catch', 'try:\n    n = 1\nexcept:\n    pass\n'],
+      ['python_array_make_for', 'a = [x for x in xs]\n'],
+      ['python_class_def', 'class C:\n    def m(self):\n        pass\n'],
+      // ⚠️ 運算式位置用的是**運算式形態**——那正是 `expressionCounterpart` 的作用。
+      //    語句位置（下一筆）才是那一顆本身。
+      ['python_method_call_expression', 'a = s.strip()\n'],
+      ['python_method_call', 's.strip()\n'],
+      ['python_container_size', 'a = len(xs)\n'],
+      ['python_range_make', 'a = range(3)\n'],
+      ['python_string_upper', 'a = s.upper()\n'],
+      ['python_container_append', 'xs.append(1)\n'],
+    ]
+    for (const [type, code] of CASES) {
+      const got = typesIn(await render(code))
+      expect(got, `${code.trim()} 渲不出 ${type}（拿到：${got.join(',')}）`).toContain(type)
+      expect(got, `${code.trim()} 渲出了灰色方塊`).not.toContain('python_raw_code')
+    }
+  })
+
+  it('🔴 一整段（不是一顆）也要渲得出來', async () => {
+    const got = typesIn(await render(
+      'nums = [3, 1]\nfor n in nums:\n    print(n)\nprint(len(nums))\n',
+    ))
+    for (const t of ['python_var_assign', 'python_array_make', 'python_loop_for', 'python_print', 'python_container_size']) {
+      expect(got, `整段裡少了 ${t}（拿到：${got.join(',')}）`).toContain(t)
+    }
+  })
+})
