@@ -232,7 +232,7 @@ cpp_increment_expression   form: { "axis": "role", "value": "expression" }
 
 ```bash
 # 找同族那顆的顏色——這是唯一該用的來源
-python3 -c "import json;print([b['blockDef'].get('colour') for b in json.load(open('src/components/cpp/<同族那顆>/forms/blocks.json'))])"
+python3 -c "import json;print([b['blockDef'].get('colour') for b in json.load(open('src/components/<scope>/<同族那顆>/forms/blocks.json'))])"
 ```
 
 > **顏色是分類的視覺編碼**——學生靠它認「這是同一種東西」。
@@ -447,7 +447,7 @@ export function registerExecute(
 }
 ```
 
-**宣告性概念**（`#include`、`using namespace`、註解）**不要寫 noop**——
+**宣告性概念**（C++ 的 `#include`／`using namespace`、Python 的 `import`、任何語言的註解）**不要寫 noop**——
 在 `component.json` 宣告 `"skipPaths": ["execute"]` ＋ `"skipReasons": {"execute": "declarative"}`。
 
 > **顯式的空與遺漏的空要分得出來**，而一個 noop 函式兩者長得一樣。
@@ -615,9 +615,10 @@ extraTypes: [
 ⚠️ **放進哪一關要看前置**：一顆概念的前置若在更後面的關卡，學生拿得到它卻用不了
 （`array_assign` 曾經就是，2026-08-13 修）。**先問「它需要的東西在同關或更前面嗎」。**
 
-`toolbox-categories.ts` 的 `extraTypes` 只剩 1 筆，而它有明確理由
-（同一顆 `cpp_if` 用三個預設狀態出現＝教學設計，登錄表推不出來）。
-**除非你的概念也是這種「同身分多預設狀態」，否則不要碰它。**
+`extraTypes` 是**少數例外**（每個語言各一格），而它的理由是明確的：
+**同一顆積木用多個預設狀態出現＝教學設計，登錄表推不出來。**
+**除非你的概念也是這種「同身分多預設狀態」，否則不要碰它**——用法見上面
+「第二個語言的第一顆」那一節。
 
 ### 步驟九：輸出摘要
 

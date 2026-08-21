@@ -44,13 +44,21 @@
 - `diagnose-in-browser`——測試綠但使用者看到的是錯的，在瀏覽器裡定位
 - `ship-extension`——把擴充的一次改動交到兩個 IDE 手上（這條流程跑了九次才被固化，而三次災難是流程本身的洞造成的）
 
-**元件管線**（`component-pipeline` 串起前五個）
+**加一個語言**（元件管線的**上游**——那條路假設語言已經在了）
+
+- `add-language`——語言套件 ＋ 解析器 ＋ **文法歸屬** ＋ 四個「全域只有一份」的登記處
+  （緣起：Python 從 0 到 23 顆走了六支 spec，而那條路的清單當時**只存在於六條 history 裡**。
+  最貴的一課：沒有文法歸屬時，一段新語言的程式碼會被**自信地認成舊語言**，而**降級數是 0**）
+
+**元件管線**（`component-pipeline` 串起六個階段）
 
 - `component-discover`——研究函式庫／語言特性，提出概念與命名
 - `component-generate`——產一顆**膠囊**：`component.json` ＋ 五路 ＋ 形態 ＋ 標籤 ＋ 測試
 - `component-roundtrip`——原始碼 → lift → generate → 執行，比對 stdout
 - `component-fuzz`——雙代理資訊隔離的模糊測試
 - `component-integrate`——最終關卡：全部驗證跑完才算數
+- `verify-in-browser`——🔴 **第六階段**（2026-08-21 接進管線）：在那之前整條管線
+  「瀏覽器」出現 **0 次**，出口是「測試全綠」——而那天使用者一口氣回報五個缺陷
 - `component-refactor`——審計與修復既有膠囊（⚠️ 審計主力是 40 條護欄，它讀報表）
 - `component-rename`——大規模改元件身分／參數名，上千處引用 ＋ **必附存檔遷移**（緣起：同一支工具重建八次，重建時漏欄位；見 [history/033](../history/033-draft退場與改名固化成skill.md)）
 
