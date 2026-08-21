@@ -1,4 +1,4 @@
 {
-  "PY_CONTAINER_SORT_MSG0": "Sort %1",
-  "PY_CONTAINER_SORT_TOOLTIP": "Sort ascending into a new sequence; the original is untouched."
+  "PY_CONTAINER_SORT_MSG0": "Sort %1 comparing by %2, reversed %3",
+  "PY_CONTAINER_SORT_TOOLTIP": "Orders items from small to large as a new sequence. Leave the comparison blank to compare values directly, or give a small function to compare what it returns. Set reversed to true for large-to-small."
 }

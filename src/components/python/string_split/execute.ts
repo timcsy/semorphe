@@ -13,7 +13,9 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:string_split', async (node, ctx) => {
     const self = await ctx.evaluate(node.children.obj[0])
     const args: RuntimeValue[] = []
-    args.push(await ctx.evaluate(node.children.value[0]))
+    // ⚠️ 分隔字串**可有可無**——沒有時陣列是空的，而內建表那一份會走
+    //    「用空白切並丟掉頭尾的空段」那條路（兩者不是同一件事）。
+    for (const a of node.children.value ?? []) args.push(await ctx.evaluate(a))
     return PYTHON_BUILTIN_METHODS['split'](self, args, withCall(ctx))
   })
 }

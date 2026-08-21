@@ -306,7 +306,16 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   upper: (s) => str(String(s.value).toUpperCase()),
   lower: (s) => str(String(s.value).toLowerCase()),
   strip: (s) => str(String(s.value).trim()),
-  split: (s, a) => arr(String(s.value).split(a.length > 0 ? String(a[0].value) : /\s+/).map(str)),
+  /**
+   * 🔴 **不帶引數的 `split()` 不只是「用空白切」**——它還會**丟掉頭尾的空段**：
+   * `"  a b  ".split()` 是 `['a', 'b']`，而用 `/\s+/` 直接切會多出兩個空字串。
+   * ⚠️ 而帶引數的**不會**丟：`"  a b  ".split(" ")` 有五格。**兩者不同。**
+   */
+  split: (s, a) => {
+    const text = String(s.value)
+    if (a.length === 0) return arr(text.split(/\s+/).filter((x) => x !== '').map(str))
+    return arr(text.split(String(a[0].value)).map(str))
+  },
   join: (s, a) => str(asList(a[0]).map((x) => pyStr(x)).join(String(s.value))),
   replace: (s, a) => str(String(s.value).split(String(a[0].value)).join(String(a[1].value))),
   startswith: (s, a) => bool(String(s.value).startsWith(String(a[0].value))),

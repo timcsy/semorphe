@@ -4,7 +4,9 @@
   "_abstractComponent_why": "名字與 C++ 那顆同一個操作對齊，而**保證不同**（Python 的容器是動態型別、極值吃序列也吃多引數）。等價要在量得出來的觀察集底下宣告，不是靠同名。",
   "properties": [],
   "children": {
-    "obj": "expression"
+    "obj": "expression",
+    "key": "expression",
+    "reverse": "expression"
   },
   "role": "expression",
   "owner": "(python)",
@@ -16,5 +18,6 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `sorted` ——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。\n⚠️ 而使用者若自己 `def sorted(x)`，這顆仍然會認走它——🔴 **那是一個已知的邊界**：判別在 lift 期，而「有沒有被使用者蓋掉」是執行期才知道的事。"
+  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `sorted` ——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。\n⚠️ 而使用者若自己 `def sorted(x)`，這顆仍然會認走它——🔴 **那是一個已知的邊界**：判別在 lift 期，而「有沒有被使用者蓋掉」是執行期才知道的事。",
+  "_children_why": "🔴 **`key` 與 `reverse` 加入日 2026-08-22**：`sorted(w, key=len)` 與 `sorted(xs, reverse=True)` 在 AI 生的 Python 裡比裸的 `sorted(xs)` 還常見，而它們之前掉進通用桶。\n⚠️ 它們是**接點不是欄位**——`key=lambda p: p[1]` 的右邊是一整個運算式。"
 }

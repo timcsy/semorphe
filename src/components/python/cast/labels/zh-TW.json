@@ -4,5 +4,6 @@
   "PY_CAST_INT": "整數",
   "PY_CAST_FLOAT": "小數",
   "PY_CAST_STR": "文字",
-  "PY_CAST_BOOL": "真假"
+  "PY_CAST_BOOL": "真假",
+  "PY_CAST_LIST": "串列"
 }

@@ -26,6 +26,12 @@ export function registerExecute(register: (component: string, executor: Componen
     const userDefined = ctx.functions.get('sorted')
     const args: RuntimeValue[] = []
     for (const a of node.children.obj ?? []) args.push(await ctx.evaluate(a))
+    // 🔴 **關鍵字引數要包成內建表認得的形狀**（`['__kw__名字', 值]`）
+    //    ——那個包裝只有一種，而 `sorted`／`max`／`print` 用的是同一份拆包。
+    for (const slot of ['key', 'reverse'] as const) {
+      const v = (node.children[slot] ?? [])[0]
+      if (v) args.push({ type: 'array', value: [{ type: 'string', value: `__kw__${slot}` }, await ctx.evaluate(v)] })
+    }
     if (userDefined) return callWith(userDefined, args, ctx, 'sorted')
     return PYTHON_BUILTIN_FUNCTIONS['sorted'](args, withCall(ctx))
   })

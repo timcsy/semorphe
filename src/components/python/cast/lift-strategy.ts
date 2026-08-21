@@ -9,7 +9,11 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
 
-const TARGETS = new Set(['int', 'str', 'float', 'bool'])
+// ⚠️ `list` 加入日 2026-08-22——`list(map(...))`／`list(d.keys())` 是
+//    「把走訪得到的東西收成一串」，教學語料裡到處都是。
+//    🔴 而 `set` 刻意**不加**：這個直譯器沒有集合型別（`set(xs)` 只是去重），
+//    做成「轉成集合」會是一個我們兌現不了的宣稱。
+const TARGETS = new Set(['int', 'str', 'float', 'bool', 'list'])
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:lift_cast', (node, ctx) => {

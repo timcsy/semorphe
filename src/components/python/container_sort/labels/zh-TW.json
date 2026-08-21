@@ -1,4 +1,4 @@
 {
-  "PY_CONTAINER_SORT_MSG0": "排序 %1",
-  "PY_CONTAINER_SORT_TOOLTIP": "由小到大排好，得到新的一串；原本那一串不動。"
+  "PY_CONTAINER_SORT_MSG0": "排序 %1，比較的依據 %2，反過來 %3",
+  "PY_CONTAINER_SORT_TOOLTIP": "由小到大排好，得到新的一串。「依據」留空就直接比值；填一個小函式就比它算出來的東西。「反過來」填真就變成由大到小。"
 }

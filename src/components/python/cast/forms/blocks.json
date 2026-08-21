@@ -14,21 +14,45 @@
           "type": "field_dropdown",
           "name": "TARGET_TYPE",
           "options": [
-            ["%{BKY_PY_CAST_INT}", "int"],
-            ["%{BKY_PY_CAST_FLOAT}", "float"],
-            ["%{BKY_PY_CAST_STR}", "str"],
-            ["%{BKY_PY_CAST_BOOL}", "bool"]
+            [
+              "%{BKY_PY_CAST_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_PY_CAST_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_PY_CAST_STR}",
+              "str"
+            ],
+            [
+              "%{BKY_PY_CAST_BOOL}",
+              "bool"
+            ],
+            [
+              "%{BKY_PY_CAST_LIST}",
+              "list"
+            ]
           ]
         },
-        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
       ],
       "output": "Expression",
       "colour": "#59C059",
       "tooltip": "%{BKY_PY_CAST_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "TARGET_TYPE": "target_type" },
-      "inputs": { "VALUE": "value" }
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
     }
   }
 ]

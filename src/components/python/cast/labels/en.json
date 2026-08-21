@@ -4,5 +4,6 @@
   "PY_CAST_INT": "whole number",
   "PY_CAST_FLOAT": "decimal",
   "PY_CAST_STR": "text",
-  "PY_CAST_BOOL": "true/false"
+  "PY_CAST_BOOL": "true/false",
+  "PY_CAST_LIST": "list"
 }

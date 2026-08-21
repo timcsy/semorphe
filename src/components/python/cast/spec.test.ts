@@ -16,8 +16,21 @@ describe('python:cast', () => {
     expect(ids, '而它仍然要有身分').toContain('python:func_call')
   })
 
-  it('★ 不是那四個名字的不得被認走', async () => {
-    expect(componentIdsOf(await liftPython('list(x)\n'))).not.toContain('python:cast')
+  /**
+   * ⚠️ **這條原本用 `list(x)` 當對照組，而 `list` 在 2026-08-22 加進了下拉**
+   * ——邊界移動時要**改成釘新的邊界，不是刪掉它**。
+   *
+   * 🔴 而 `set` 刻意**留在界外**：這個直譯器沒有集合型別（`set(xs)` 只是去重），
+   * 做成「轉成集合」會是一個我們兌現不了的宣稱。
+   */
+  it('★ 不在下拉裡的名字不得被認走（`set` 是刻意的）', async () => {
+    expect(componentIdsOf(await liftPython('set(x)\n'))).not.toContain('python:cast')
+    expect(componentIdsOf(await liftPython('tuple(x)\n'))).not.toContain('python:cast')
+  })
+
+  it('🟢 而 `list(...)` 收得下——「把走訪得到的東西收成一串」到處都是', async () => {
+    expect(componentIdsOf(await liftPython('a = list(d.keys())\n'))).toContain('python:cast')
+    expect(await runPython('print(list("abc"))\n')).toContain("['a', 'b', 'c']")
   })
 
   it('generate ＋ round-trip', async () => {

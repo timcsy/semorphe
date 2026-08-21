@@ -7,11 +7,11 @@
   },
   "corpus": {
     "programs": 81,
-    "nodes": 2262
+    "nodes": 2256
   },
   "degraded": 0,
   "roundTripDiff": 0,
-  "genericCall": 37,
+  "genericCall": 24,
   "runFailed": 0,
   "outputDiff": 0,
   "unresolvedTypes": {}

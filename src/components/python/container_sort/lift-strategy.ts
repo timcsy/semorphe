@@ -10,14 +10,27 @@ import { createNode } from '../../../core/semantic-tree'
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:lift_container_sort', (node, ctx) => {
     if (node.childForFieldName('function')?.text !== 'sorted') return null
-    const args: SemanticNode[] = []
-    for (const a of node.childForFieldName('arguments')?.namedChildren ?? []) {
+    const raw = node.childForFieldName('arguments')?.namedChildren ?? []
+    // 🟢 **`key=` 與 `reverse=` 收得下**（2026-08-22）：它們是 `keyword_argument`，
+    //    而 `sorted(w, key=len)` 比裸的 `sorted(xs)` 還常見。
+    const kids: Record<string, SemanticNode[]> = {}
+    for (const a of raw) {
+      if (a.type === 'keyword_argument') {
+        const slot = a.childForFieldName('name')?.text ?? ''
+        if (slot !== 'key' && slot !== 'reverse') return null // 別的關鍵字 → 讓一般呼叫接手
+        const v = a.childForFieldName('value')
+        const lifted = v ? ctx.lift(v) : null
+        if (!lifted) return null
+        kids[slot] = [lifted]
+        continue
+      }
+      if (kids['obj']) return null // 兩個位置引數 → 不是我們認得的形狀
       const lifted = ctx.lift(a)
       // 有一個引數認不出來 → 整顆降級，不產出一個少了引數的呼叫
       if (!lifted) return null
-      args.push(lifted)
+      kids['obj'] = [lifted]
     }
-    if (args.length !== 1) return null
-    return createNode('python:container_sort', {}, { obj: args })
+    if (!kids['obj']) return null
+    return createNode('python:container_sort', {}, kids)
   })
 }
