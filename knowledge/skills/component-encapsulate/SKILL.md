@@ -4,7 +4,8 @@ status: superseded
 superseded-by: component-generate
 description: >
   ⚠️ 已退休（2026-08-13）。把一顆元件從共用檔搬進它自己的資料夾（膠囊化）——
-  階段 6.5 的 F 步。**那 177 顆已經全部搬完**（`notEncapsulated: 0`），
+  階段 6.5 的 F 步。**那 177 顆已經全部搬完**（`audit-component-locality` 的硬性零「每一顆元件都必須是膠囊」；
+  ⚠️ 它原本是一條棘輪 ＋ 一份只裝著 `notEncapsulated: 0` 的基線，2026-08-21 收攏，基線已刪），
   這份文件保留為紀錄，不再調用。新元件請用 `component-generate`。
 user-invocable: false
 ---
