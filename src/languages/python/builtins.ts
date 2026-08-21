@@ -74,6 +74,14 @@ async function sortWith(items: RuntimeValue[], args: RuntimeValue[], c: builtinC
 }
 
 const num = (v: number): RuntimeValue => ({ type: Number.isInteger(v) ? 'int' : 'double', value: v })
+/**
+ * 一定是小數的結果。
+ *
+ * 🔴 `math.sqrt(16)` 在 Python 是 **`4.0`** 不是 `4`——`math` 的函式回 float，
+ * 而 `Number.isInteger(4)` 為真會讓它掉回整數。
+ * **不報錯、看起來只是少一個 `.0`**，而它是型別錯了。參照直譯器抓到的。
+ */
+const dbl = (v: number): RuntimeValue => ({ type: 'double', value: v })
 const str = (v: string): RuntimeValue => ({ type: 'string', value: v })
 const arr = (v: RuntimeValue[]): RuntimeValue => ({ type: 'array', value: v })
 const bool = (v: boolean): RuntimeValue => ({ type: 'bool', value: v })
@@ -209,11 +217,11 @@ export const PYTHON_MODULE_MEMBERS: Record<string, Record<string, RuntimeValue>>
 
 /** 模組的方法：`math.sqrt(16)`、`random.randint(1, 6)`。 */
 export const PYTHON_MODULE_METHODS: Record<string, (args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue> = {
-  'math.sqrt': (a, c) => num(Math.sqrt(c.toNumber(a[0]))),
+  'math.sqrt': (a, c) => dbl(Math.sqrt(c.toNumber(a[0]))),
   'math.floor': (a, c) => num(Math.floor(c.toNumber(a[0]))),
   'math.ceil': (a, c) => num(Math.ceil(c.toNumber(a[0]))),
-  'math.pow': (a, c) => num(c.toNumber(a[0]) ** c.toNumber(a[1])),
-  'math.fabs': (a, c) => num(Math.abs(c.toNumber(a[0]))),
+  'math.pow': (a, c) => dbl(c.toNumber(a[0]) ** c.toNumber(a[1])),
+  'math.fabs': (a, c) => dbl(Math.abs(c.toNumber(a[0]))),
   // 🔴 **亂數在教學工具裡要可重現**：每次跑出不同答案的話，
   //    「我的程式對不對」這個問題就沒有辦法用輸出回答。
   //    用一個固定種子的線性同餘產生器，而**這件事寫在這裡**不是靜靜地做。

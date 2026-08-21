@@ -13,5 +13,6 @@
   "roundTripDiff": 0,
   "genericCall": 18,
   "runFailed": 0,
+  "outputDiff": 0,
   "unresolvedTypes": {}
 }

@@ -21,7 +21,12 @@
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
-const isInt = (r: RuntimeValue): boolean => r.type === 'int' || r.type === 'char'
+/**
+ * ⚠️ **布林在 Python 是整數的一種**——`True + True` 是 `2` 不是 `2.0`。
+ * 少了 `'bool'` 的症狀是那個 `.0`：**不報錯、看起來只是排版**，
+ * 而它是型別錯了。參照直譯器抓到的。
+ */
+const isInt = (r: RuntimeValue): boolean => r.type === 'int' || r.type === 'char' || r.type === 'bool'
 
 /** `ctx` 只用到數值轉換這一件事，所以只要這麼窄的介面。 */
 export interface numberCoercion { toNumber(v: RuntimeValue): number }
