@@ -37,8 +37,16 @@ describe('python:func_def', () => {
     expect(gen(t), '⚠️ 預設值被吃掉了 → 產出的碼合法而行為不同').toBe('def f(a, b=1):\n    return a')
   })
 
-  it('🔴 `*args`／`**kwargs` 仍然整顆走誠實降級——還沒有地方放它們', async () => {
-    const ids = componentIdsOf(await liftPython('def f(*args):\n    return 1\n'))
+  /**
+   * ⚠️ **這條原本釘的是「`*args` 與 `**kwargs` 都整顆降級」，而邊界在
+   * 2026-08-22 移動了一半**——`*args` 收得下（星號是一個標記），
+   * 而 `**kwargs` 仍然降級：它要的是「把剩下的具名引數收成一個字典」，
+   * 那是另一件事。
+   *
+   * 邊界移動時要**改成釘新的邊界，不是刪掉它**。
+   */
+  it('🔴 `**kwargs` 仍然整顆走誠實降級——它要的是另一件事', async () => {
+    const ids = componentIdsOf(await liftPython('def f(**kw):\n    pass\n'))
     expect(ids, '收一半會讓使用者的東西不見').not.toContain('python:func_def')
   })
 
@@ -57,5 +65,26 @@ describe('python:func_def', () => {
   it('★ 零參數也走得完', async () => {
     expect(gen(await liftPython('def go():\n    print(1)\n')))
       .toBe('def go():\n    print(1)')
+  })
+})
+
+/**
+ * 🔴 **`*args`**（2026-08-22）。星號是一個**標記**不是名字的一部分
+ * ——名字裡的星號會讓每一個讀名字的人各自再解析一次。
+ */
+describe('可變引數', () => {
+  it('🔴 execute：剩下的位置引數收成一串', async () => {
+    const out = await runPython('def total(*nums):\n    s = 0\n    for n in nums:\n        s += n\n    return s\n\nprint(total(1, 2, 3))\nprint(total())\n')
+    expect(out).toContain('6')
+    expect(out, '一個引數都不給時是空的').toContain('0')
+  })
+
+  it('★ 來回：星號要產得回去', async () => {
+    const code = 'def total(*nums):\n    return 0\n'
+    expect(gen(await liftPython(code)).trimEnd()).toBe(code.trimEnd())
+  })
+
+  it('🔴 `**kwargs` 仍然走誠實降級——它要的是另一件事', async () => {
+    expect(componentIdsOf(await liftPython('def f(**kw):\n    pass\n'))).not.toContain('python:func_def')
   })
 })

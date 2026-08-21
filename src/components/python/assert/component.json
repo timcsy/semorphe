@@ -1,0 +1,26 @@
+{
+  "componentId": "python:assert",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 的 `assert` 是巨集（`<cassert>`），Python 的是語句而且**帶得走一句訊息**。形狀相近而保證不同。",
+  "_componentId_why": "`assert` 是一個**語言構造**（與 `import`／`global` 同一類）——沒有「主體＋操作」可以拆。",
+  "properties": [],
+  "children": {
+    "condition": "expression",
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "訊息是一個**接點**不是一個字串欄位——`assert n > 0, f\"{n} 不能是負的\"` 的第二段可以是任何運算式。",
+  "_lift_why": "`assert_statement` 底下是「條件」或「條件＋訊息」，兩種都收；三段以上（不合法）回 `null`。"
+}

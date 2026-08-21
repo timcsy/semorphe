@@ -540,4 +540,68 @@ print(s[::-1])
 print(s == s[::-1])
 t = "abc"
 print(t[::-1], t[::2])`],
+  ['類別的繼承', `class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    def speak(self):
+        return self.name + " 汪汪"
+
+d = Dog("小黑")
+print(d.speak())
+print(d.name)`],
+  ['try 的三段', `def get(xs, i):
+    try:
+        return xs[i]
+    except IndexError:
+        return None
+    finally:
+        print("查完了")
+
+print(get([1, 2], 0))
+print(get([1, 2], 9))`],
+  ['assert', `def half(n):
+    assert n % 2 == 0
+    return n // 2
+
+print(half(4))`],
+  ['f-string 的對齊與寬度', `name = "小明"
+score = 92.456
+print(f"{name:>6}|")
+print(f"{score:.1f} {score:08.3f}")
+print(f"{10:3d}|{10:<3d}|")
+print(f"{name} 得了 {score:.0f} 分")`],
+  ['format 的三種寫法', `print("{}-{}".format(1, 2))
+print("{0}{1}{0}".format("a", "b"))
+print("{n} 是 {v}".format(n="x", v=1))`],
+  ['數學模組', `import math
+
+print(math.sqrt(16))
+print(math.floor(3.7), math.ceil(3.2))
+print(round(math.pi, 4))
+print(math.pow(2, 10))`],
+  ['記憶化遞迴', `memo = {}
+
+def fib(n):
+    if n in memo:
+        return memo[n]
+    if n < 2:
+        return n
+    memo[n] = fib(n - 1) + fib(n - 2)
+    return memo[n]
+
+print(fib(20))
+print(len(memo))`],
+  ['星號參數', `def total(*nums):
+    s = 0
+    for n in nums:
+        s += n
+    return s
+
+print(total(1, 2, 3))
+print(total())`],
 ]

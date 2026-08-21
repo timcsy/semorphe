@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_assert",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "assert_statement",
+    "component": {
+      "componentId": "python:assert"
+    },
+    "liftStrategy": "python:lift_assert",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "`assert_statement` 沒有別的競爭者，而走策略是因為訊息那一段可有可無。"
+  }
+]

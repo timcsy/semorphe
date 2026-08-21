@@ -22,24 +22,33 @@ import { pythonExceptionText } from '../../../languages/python/exception-text'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:try_catch', async (node, ctx) => {
+    // 🔴 **`finally` 一定要跑**——包含「上面那段 return 了」與「例外往外傳」
+    //    這兩條路。少了它的症狀是收尾的那一段【有時候】不跑，而那種缺陷
+    //    只在錯誤路徑上出現，跑一次正常的程式看不出來。
     try {
-      await ctx.executeBody(node.children.body ?? [])
-    } catch (e) {
-      if (e instanceof BreakSignal || e instanceof ContinueSignal || e instanceof ReturnSignal) throw e
-      const first = (node.children.handlers ?? [])[0]
-      if (!first) throw e // 沒有分支就不吞——不然錯誤會安靜地消失
-      // 🔴 `except X as e:` 要把錯誤**綁到那個名字上**，而它只活在這個分支裡
-      //    ——少了這一段的症狀是分支裡的 `print(e)` 說「沒有這個變數 e」。
-      const alias = String(first.properties.alias ?? '')
-      if (!alias) { await ctx.executeBody(first.children.body ?? []); return }
-      const parent = ctx.scope
-      ctx.scope = new Scope(parent)
       try {
-        ctx.scope.declare(alias, { type: 'string', value: pythonExceptionText(e) })
-        await ctx.executeBody(first.children.body ?? [])
-      } finally {
-        ctx.scope = parent
+        await ctx.executeBody(node.children.body ?? [])
+        // 🟢 沒出錯才跑的那一段
+        await ctx.executeBody(node.children.orelse ?? [])
+      } catch (e) {
+        if (e instanceof BreakSignal || e instanceof ContinueSignal || e instanceof ReturnSignal) throw e
+        const first = (node.children.handlers ?? [])[0]
+        if (!first) throw e // 沒有分支就不吞——不然錯誤會安靜地消失
+        // 🔴 `except X as e:` 要把錯誤**綁到那個名字上**，而它只活在這個分支裡
+        //    ——少了這一段的症狀是分支裡的 `print(e)` 說「沒有這個變數 e」。
+        const alias = String(first.properties.alias ?? '')
+        if (!alias) { await ctx.executeBody(first.children.body ?? []); return }
+        const parent = ctx.scope
+        ctx.scope = new Scope(parent)
+        try {
+          ctx.scope.declare(alias, { type: 'string', value: pythonExceptionText(e) })
+          await ctx.executeBody(first.children.body ?? [])
+        } finally {
+          ctx.scope = parent
+        }
       }
+    } finally {
+      await ctx.executeBody(node.children.ensure ?? [])
     }
   })
 }

@@ -40,7 +40,7 @@ function literalOf(raw: string): RuntimeValue {
  * ——而參數綁定與 `return` 訊號的處理**在三處各寫一份就會漂**。
  */
 export async function callWith(
-  fn: { params: { name: string; type: string; default?: string }[]; body: SemanticNode[] },
+  fn: { params: { name: string; type: string; default?: string; variadic?: string }[]; body: SemanticNode[] },
   args: RuntimeValue[],
   ctx: Parameters<ComponentExecutor>[1],
   label: string,
@@ -61,6 +61,13 @@ export async function callWith(
   ctx.scope = new Scope(parent)
   try {
     for (let i = 0; i < fn.params.length; i++) {
+      // 🔴 `*args`：**把剩下的位置引數收成一個 tuple**，而它一定是最後一個參數
+      if (fn.params[i].variadic === 'list') {
+        ctx.scope.declare(fn.params[i].name, {
+          type: 'array', value: positional.slice(i), seqKind: 'tuple',
+        })
+        break
+      }
       const byName = named.get(fn.params[i].name)
       if (byName !== undefined) { ctx.scope.declare(fn.params[i].name, byName); continue }
       if (i >= positional.length) {

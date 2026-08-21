@@ -94,7 +94,8 @@
               "python:container_zip",
               "python:throw",
               "python:global",
-              "python:loop_iter"
+              "python:loop_iter",
+              "python:assert"
             ],
             "children": []
           }

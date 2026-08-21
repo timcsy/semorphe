@@ -13,6 +13,9 @@ export function registerExecute(register: (component: string, executor: Componen
         name: String(p.properties.name ?? ''),
         type: '',
         default: p.properties.default === undefined ? undefined : String(p.properties.default),
+        // 🔴 **`*args` 的標記也要一起帶過去**——與預設值同一個理由：
+        //    在這裡掉的話症狀是「呼叫時說少了引數」，看起來像 lift 沒認出來。
+        variadic: p.properties.variadic === undefined ? undefined : String(p.properties.variadic),
       }))
       .filter((p) => p.name)
     ctx.functions.set(name, { name, params, body: node.children.body ?? [], returnType: '' })

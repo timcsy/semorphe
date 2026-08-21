@@ -30,9 +30,14 @@ describe('python:try_catch', () => {
     expect(await rt(two), '產回去要有兩段').toBe(two.trim())
   })
 
-  it('🔴 lift：有 finally 的也整顆降級——還沒有地方放它', async () => {
-    const f = 'try:\n    n = 1\nexcept:\n    pass\nfinally:\n    print("done")\n'
-    expect(await ids(f)).not.toContain('python:try_catch')
+  /**
+   * ⚠️ **這條原本釘的是「有 finally 就整顆降級」，而邊界在 2026-08-22 移動了**
+   * ——`else` 與 `finally` 都收得下（見下面那一組）。
+   * 今天降級的是**除了 `except`／`else`／`finally` 以外的東西**。
+   */
+  it('🔴 lift：`try` 一定要有分支——只有 finally 的仍然降級', async () => {
+    expect(await ids('try:\n    n = 1\nfinally:\n    print("x")\n'))
+      .not.toContain('python:try_catch')
   })
 
   it('來回：有名字與沒名字都一字不差', async () => {
@@ -97,5 +102,39 @@ describe('接住的名字', () => {
   it('★ 來回轉換：`as e` 要原樣產得回去', async () => {
     const code = 'try:\n    n = 1\nexcept ValueError as e:\n    print(e)\n'
     expect(gen(await liftPython(code)).trimEnd()).toBe(code.trimEnd())
+  })
+})
+
+/**
+ * 🔴 **`else` 與 `finally`**（2026-08-22）。它們之前整顆降級，
+ * 而那時的理由逐字是「還沒有地方放」——今天有了。
+ */
+describe('else 與 finally', () => {
+  it('🔴 `finally` 在【回傳】的路上也要跑', async () => {
+    const out = await runPython(
+      'def get(xs, i):\n    try:\n        return xs[i]\n    except IndexError:\n        return None\n    finally:\n        print("查完了")\n\nprint(get([1, 2], 0))\n',
+    )
+    expect(out, '收尾那一段沒跑').toContain('查完了')
+    expect(out).toContain('1')
+  })
+
+  it('🔴 `finally` 在【出錯】的路上也要跑', async () => {
+    const out = await runPython(
+      'def get(xs, i):\n    try:\n        return xs[i]\n    except IndexError:\n        return None\n    finally:\n        print("查完了")\n\nprint(get([1, 2], 9))\n',
+    )
+    expect(out).toContain('查完了')
+    expect(out).toContain('None')
+  })
+
+  it('🔴 `else` 只在【沒出錯】時跑', async () => {
+    expect(await runPython('try:\n    n = 1\nexcept ValueError:\n    print("壞了")\nelse:\n    print("沒事")\n')).toContain('沒事')
+    const bad = await runPython('try:\n    raise ValueError("x")\nexcept ValueError:\n    print("壞了")\nelse:\n    print("沒事")\n')
+    expect(bad).toContain('壞了')
+    expect(bad, '出錯了還跑 else').not.toContain('沒事')
+  })
+
+  it('★ 來回：沒有的那兩段不得被補上', async () => {
+    const code = 'try:\n    n = 1\nexcept ValueError:\n    pass\n'
+    expect(gen(await liftPython(code)).trimEnd(), '補一個 finally: pass 就是改了使用者的碼').toBe(code.trimEnd())
   })
 })

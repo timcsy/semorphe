@@ -7,6 +7,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const inner = indented(ctx)
     const methods = node.children.methods ?? []
     const body = methods.length > 0 ? generateBody(methods, inner) : `${indent(inner)}pass\n`
-    return `${indent(ctx)}class ${node.properties.name ?? 'MyClass'}:\n${body}`
+    // ⚠️ 沒有父類別時**不能產出一對空括號**——`class C():` 與 `class C:`
+    //    在 Python 是同一件事，而來回轉換要一字不差。
+    const base = String(node.properties.base ?? '')
+    return `${indent(ctx)}class ${node.properties.name ?? 'MyClass'}${base ? `(${base})` : ''}:\n${body}`
   })
 }

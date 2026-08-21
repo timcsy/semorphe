@@ -3,9 +3,20 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那顆有存取層級（public／private／protected）而 Python 沒有；C++ 的方法宣告與定義可以分開而 Python 不行。形狀差得夠遠。",
   "properties": [
-    { "name": "name", "kind": "identifier", "default": "MyClass" }
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "MyClass"
+    },
+    {
+      "name": "base",
+      "kind": "identifier",
+      "default": ""
+    }
   ],
-  "children": { "methods": "statements" },
+  "children": {
+    "methods": "statements"
+  },
   "role": "statement",
   "owner": "(python)",
   "paths": {
@@ -17,5 +28,6 @@
     "extract": "./forms/blocks.json"
   },
   "_children_why": "🔴 **只收方法**（`function_definition`）——類別層級的屬性（`count = 0` 寫在類別裡）還沒有地方放，那時整顆走誠實降級。\n收一半會產出一個少了那些屬性的合法類別。",
-  "_lift_why": "**繼承（`class Dog(Animal)`）也走誠實降級**：`superclasses` 那一格沒有接點，而少了它產出的類別會安靜地不再繼承。"
+  "_lift_why": "**繼承（`class Dog(Animal)`）也走誠實降級**：`superclasses` 那一格沒有接點，而少了它產出的類別會安靜地不再繼承。",
+  "_properties_why": "🔴 **繼承的父類別是一個屬性**（2026-08-22）：`class Dog(Animal):` 的括號裡在教學語料裡一律是一個名字。多重繼承（兩個以上）走誠實降級——積木上只有一格。"
 }

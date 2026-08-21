@@ -19,8 +19,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // 「收一半會讓 `def f(a, b=1)` 產回 `def f(a, b)`，而使用者的預設值就不見了」
     // ——那個判斷是對的，所以整顆走誠實降級。現在收得了，邊界往前推一格。
     //
-    // ⚠️ `*args`／`**kwargs`（`list_splat_pattern`／`dictionary_splat_pattern`）
-    // **仍然沒有被收**——同一個理由，還沒有地方放它們。
+    // 🟢 **`*args` 收得下**（2026-08-22）：`list_splat_pattern`。
+    //    它在 `param_decl` 上多一個 `variadic` 標記——**不是把星號寫進名字裡**：
+    //    名字裡的星號會讓每一個讀名字的人各自再解析一次。
+    // ⚠️ `**kwargs`（`dictionary_splat_pattern`）**仍然沒有被收**
+    //    ——它要的是「把剩下的具名引數收成一個字典」，而那是另一件事。
     const paramsNode = node.childForFieldName('parameters')
     const params: SemanticNode[] = []
     let unsupported = false
@@ -36,6 +39,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
           name: p.childForFieldName('name')?.text ?? '',
           default: p.childForFieldName('value')?.text ?? '',
         }))
+      } else if (p.type === 'list_splat_pattern') {
+        const n = p.namedChildren[0]
+        if (n?.type !== 'identifier') { unsupported = true; continue }
+        params.push(createNode('param_decl', { type: '', name: n.text, variadic: 'list' }))
       } else {
         unsupported = true
       }

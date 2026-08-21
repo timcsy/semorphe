@@ -29,6 +29,8 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../interpreter/errors'
 import { pythonDisplay as pyStr } from './value-display'
 // 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
 import { dictKeys } from './dict'
+// 🔴 「冒號後面那一段」只有一份——格式化文字與 `.format(...)` 共用。
+import { applyFormatSpec } from './format-spec'
 
 /**
  * 求值用的最小介面。
@@ -357,9 +359,33 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   get: (s, a) => (s.value as ObjectFields).get(String(a[0].value)) ?? a[1] ?? { type: 'void', value: null },
   // 🔴 **`.format()` 與 `%` 是格式化文字之外的另外兩種寫法**——AI 生的
   //    Python 兩種都會出現，而它們與 f-string 是同一件事的三個語法。
+  /**
+   * 🔴 **三種佔位子都要**：`{}`（依序）、`{0}`（指定第幾個）、`{name}`（具名）。
+   * 只認 `{}` 的症狀是後兩種**原樣印出來**——`"{0}{1}{0}".format("a","b")`
+   * 印出 `{0}{1}{0}`：不報錯、有輸出，而那是使用者寫的模板本身。
+   *
+   * ⚠️ 冒號後面那一段走 `format-spec.ts`——與格式化文字**同一份**。
+   */
   format: (s, a) => {
-    let i = 0
-    return str(String(s.value).replace(/\{\}/g, () => pyStr(a[i++] ?? { type: 'void', value: null })))
+    const named = new Map<string, RuntimeValue>()
+    const positional: RuntimeValue[] = []
+    for (const x of a) {
+      const kw = x?.type === 'array' ? (x.value as RuntimeValue[]) : null
+      const tag = kw && kw.length === 2 ? String(kw[0]?.value ?? '') : ''
+      if (tag.startsWith('__kw__')) named.set(tag.slice(6), kw![1])
+      else positional.push(x)
+    }
+    let auto = 0
+    return str(String(s.value).replace(/\{([^{}]*)\}/g, (_, inner: string) => {
+      const [ref, spec] = inner.includes(':') ? [inner.slice(0, inner.indexOf(':')), inner.slice(inner.indexOf(':') + 1)] : [inner, '']
+      const v = ref === '' ? positional[auto++]
+        : /^\d+$/.test(ref) ? positional[Number(ref)]
+        : named.get(ref)
+      if (v === undefined) {
+        throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `format：找不到 {${ref}}` })
+      }
+      return applyFormatSpec(v, spec)
+    }))
   },
   // 共用
   /**

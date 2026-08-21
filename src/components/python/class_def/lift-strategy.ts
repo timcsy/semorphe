@@ -11,8 +11,16 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftClassDef', (node, ctx) => {
-    // `superclasses` 是一個具名子節點（argument_list）——有它就還不收
-    if (node.namedChildren.some((c) => c.type === 'argument_list')) return null
+    // 🟢 **繼承收得下**（2026-08-22）：`superclasses` 是一個 `argument_list`，
+    //    而教學語料裡它一律只有一個名字。多重繼承（兩個以上）或
+    //    不是裸名字的（`class D(Base[int])`）→ 整顆降級。
+    const supers = node.namedChildren.find((c) => c.type === 'argument_list')
+    let base = ''
+    if (supers) {
+      const args = supers.namedChildren
+      if (args.length !== 1 || args[0].type !== 'identifier') return null
+      base = args[0].text
+    }
 
     const body = node.childForFieldName('body')
     const members = body?.namedChildren ?? []
@@ -25,6 +33,6 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       if (!lifted) return null // 有一個方法認不出來 → 整顆降級，不產出少了方法的類別
       methods.push(lifted)
     }
-    return createNode('python:class_def', { name: node.childForFieldName('name')?.text ?? 'MyClass' }, { methods })
+    return createNode('python:class_def', { name: node.childForFieldName('name')?.text ?? 'MyClass', base }, { methods })
   })
 }

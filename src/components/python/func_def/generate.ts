@@ -10,8 +10,10 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const params = (node.children.params ?? [])
       .map((p) => {
         const n = String(p.properties.name ?? '')
+        // 🔴 星號是**標記**不是名字的一部分——見 lift 那一側的理由
+        const star = p.properties.variadic === 'list' ? '*' : ''
         const d = String(p.properties.default ?? '')
-        return n && d ? `${n}=${d}` : n
+        return n && d ? `${n}=${d}` : n ? `${star}${n}` : ''
       })
       .filter(Boolean)
     const body = node.children.body ?? []

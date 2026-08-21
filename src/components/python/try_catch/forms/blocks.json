@@ -26,13 +26,31 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FFAB19",
-      "tooltip": "%{BKY_PY_TRY_TOOLTIP}"
+      "tooltip": "%{BKY_PY_TRY_TOOLTIP}",
+      "message2": "%{BKY_PY_TRY_MSG2} %1",
+      "args2": [
+        {
+          "type": "input_statement",
+          "name": "ORELSE",
+          "check": "Statement"
+        }
+      ],
+      "message3": "%{BKY_PY_TRY_MSG3} %1",
+      "args3": [
+        {
+          "type": "input_statement",
+          "name": "ENSURE",
+          "check": "Statement"
+        }
+      ]
     },
     "renderMapping": {
       "fields": {},
       "statementInputs": {
         "BODY": "body",
-        "HANDLERS": "handlers"
+        "HANDLERS": "handlers",
+        "ORELSE": "orelse",
+        "ENSURE": "ensure"
       }
     },
     "_why": "🟢 顏色與分類抄同族的條件元件（`#FFAB19` ／ `control`）。\n🔴 **分支是一個語句插槽**（2026-08-21）：每個 `except` 是一顆自己的積木疊上去，而不是一個固定的第二格——`except A: … except B: …` 有兩個。"

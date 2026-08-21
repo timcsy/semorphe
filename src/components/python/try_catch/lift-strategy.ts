@@ -28,8 +28,6 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftTry', (node, ctx) => {
     const excepts = node.namedChildren.filter((c) => c.type === 'except_clause')
     if (excepts.length === 0) return null // 只有 finally 的還沒收
-    // `else` 與 `finally` 也還沒有地方放
-    if (node.namedChildren.some((c) => c.type === 'else_clause' || c.type === 'finally_clause')) return null
 
     const handlers = excepts.map((clause) => {
       // `except ValueError:` 的名字在 `value` 欄位；`except:` 沒有那一格。
@@ -44,9 +42,16 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       )
     })
 
+    // 🟢 `else`（沒出錯才跑）與 `finally`（出不出錯都跑）——各自是一段語句
+    const clause = (t: string): SemanticNode[] => {
+      const c = node.namedChildren.find((x) => x.type === t)
+      return c ? statementsOf(c.namedChildren.find((x) => x.type === 'block') ?? null, ctx) : []
+    }
     return createNode('python:try_catch', {}, {
       body: statementsOf(node.childForFieldName('body'), ctx),
       handlers,
+      orelse: clause('else_clause'),
+      ensure: clause('finally_clause'),
     })
   })
 }

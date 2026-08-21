@@ -54,6 +54,8 @@ export const PYTHON_ATOMIC_NAMES = [
   //    🔴 **C++ 沒有這件事**（那邊的內層看得見也改得動外層），
   //    而它是一個語言構造，沒有「主體＋操作」可以拆。
   'global',
+  // ⚠️ `assert` 加入日 2026-08-22。與 `import`／`global` 同一類的語言構造。
+  'assert',
 ] as const
 
 /**

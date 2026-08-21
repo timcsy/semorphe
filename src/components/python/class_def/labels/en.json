@@ -1,4 +1,4 @@
 {
-  "PY_CLASS_MSG0": "Define class %1",
+  "PY_CLASS_MSG0": "Define class %1 extending %2",
   "PY_CLASS_TOOLTIP": "Describe a kind of thing and what it can do. Put functions inside; the first parameter is conventionally self, meaning this one."
 }

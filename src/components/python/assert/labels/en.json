@@ -1,0 +1,4 @@
+{
+  "PY_ASSERT_MSG0": "Check that %1 holds, otherwise say %2",
+  "PY_ASSERT_TOOLTIP": "Confirm something is true at this point. If not, stop here with an explanation — easier to diagnose than carrying wrong data forward."
+}
