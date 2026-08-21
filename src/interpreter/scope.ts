@@ -114,6 +114,29 @@ export class Scope {
     throw this.undeclared(name)
   }
 
+  /**
+   * 這個名字在**這一層**有沒有——不往上找。
+   *
+   * 🔴 Python 的規則：**函式裡的指派建立的是本地變數**，
+   * 即使外面有同名的。而 `has()` 往上找，於是
+   *
+   * ```python
+   * x = 10
+   * def f():
+   *     x = 20     # ← 用 has() 判斷的話這裡會改到【外面的 x】
+   *     return x
+   * print(f(), x)  # 真 Python：20 10 ／ 我們曾經：20 20
+   * ```
+   *
+   * ⚠️ 症狀**不報錯、有輸出、而外面那個值被改掉了**——參照直譯器抓到的。
+   *
+   * > **「這個名字看得見嗎」與「這個名字屬於這一層嗎」是兩個問題，
+   * > 而一個往上找的查詢只答得出前者。**
+   */
+  hasLocal(name: string): boolean {
+    return this.variables.has(name) || this.refs.has(name)
+  }
+
   /** Find the scope that owns a variable (for reference binding) */
   findOwner(name: string): Scope | null {
     if (this.variables.has(name)) return this

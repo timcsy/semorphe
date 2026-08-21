@@ -250,4 +250,49 @@ print(bool(xs), bool([]), 0 or "預設", 1 and 2)`],
 print(f(1))
 print(f(-1))
 print(f(-1) is None, f(-1) == None)`],
+  ['參照與拷貝', `a = [1, 2]
+b = a
+b.append(3)
+print(a)
+c = a[:]
+c.append(4)
+print(len(a), len(c))`],
+  ['作用域', `x = 10
+def f():
+    x = 20
+    return x
+
+print(f(), x)
+def g(xs):
+    xs.append(1)
+
+ys = []
+g(ys)
+print(len(ys))`],
+  ['迴圈的 else 與 continue', `total = 0
+for i in range(5):
+    if i % 2 == 0:
+        continue
+    total += i
+print(total)
+n = 0
+while n < 3:
+    n += 1
+print(n)`],
+  ['字典的走訪順序與更新', `d = {}
+d["b"] = 2
+d["a"] = 1
+print(list(d.keys()))
+d["b"] = 20
+print(d)
+print(len(d), "c" in d)`],
+  ['巢狀呼叫與短路', `def side(xs):
+    xs.append(1)
+    return True
+
+xs = []
+r = False and side(xs)
+print(len(xs), r)
+r2 = True or side(xs)
+print(len(xs), r2)`],
 ]

@@ -73,7 +73,12 @@ export function registerExecute(register: (component: string, executor: Componen
     }
     // 🔴 **Python 沒有「宣告」這件事**：第一次指派建立它，之後覆寫。
     // ⚠️ 所以【不能】每次都 `declare`——那在迴圈第二圈會 `DUPLICATE_DECLARATION`。
-    if (ctx.scope.has(name)) ctx.scope.set(name, v)
+    //
+    // 🔴 **而判斷要用 `hasLocal` 不是 `has`**（2026-08-22）：
+    // Python 的函式裡指派建立的是**本地變數**，即使外面有同名的。
+    // `has()` 往上找，於是函式裡的 `x = 20` 會改到外面那個 `x`
+    // ——**不報錯、有輸出、而外面的值被改掉了**（參照直譯器抓到的）。
+    if (ctx.scope.hasLocal(name)) ctx.scope.set(name, v)
     else ctx.scope.declare(name, v)
   })
 }
