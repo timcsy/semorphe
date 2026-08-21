@@ -70,3 +70,32 @@ describe('python:try_catch', () => {
     expect(out).toContain('1')
   })
 })
+
+/**
+ * 🔴 **`except X as e:` 的那個 `e`**（2026-08-22 語料抓到）。
+ *
+ * 型別與接住的名字曾經被壓成**一個字串**（`"ValueError as e"`）：
+ * 來回轉換一字不差，而**執行時 `e` 是一個沒有宣告的變數**。
+ *
+ * > **一個把兩件事壓成一個字串的欄位，會在需要【用】其中一件的那天才出聲。**
+ */
+describe('接住的名字', () => {
+  it('🔴 `as e` 要綁到分支裡', async () => {
+    const out = await runPython('try:\n    raise ValueError("壞了")\nexcept ValueError as e:\n    print(e)\n')
+    expect(out).toContain('壞了')
+  })
+
+  it('🔴 那個名字只活在這個分支裡', async () => {
+    const out = await runPython('try:\n    raise ValueError("壞了")\nexcept ValueError as e:\n    pass\n\nprint(e)\n')
+    expect(out, '分支外面還看得到 e ＝ 它漏到外層作用域了').toMatch(/例外|錯誤|Error/)
+  })
+
+  it('★ 對照組：沒有 `as` 的仍然接得住', async () => {
+    expect(await runPython('try:\n    raise ValueError("x")\nexcept ValueError:\n    print("接到了")\n')).toContain('接到了')
+  })
+
+  it('★ 來回轉換：`as e` 要原樣產得回去', async () => {
+    const code = 'try:\n    n = 1\nexcept ValueError as e:\n    print(e)\n'
+    expect(gen(await liftPython(code)).trimEnd()).toBe(code.trimEnd())
+  })
+})

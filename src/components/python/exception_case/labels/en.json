@@ -1,4 +1,4 @@
 {
-  "PY_EXCEPTION_CASE_MSG0": "On %1 do %2",
-  "PY_EXCEPTION_CASE_TOOLTIP": "Handle one kind of error. Leave the name blank to catch any error."
+  "PY_EXCEPTION_CASE_MSG0": "On %1 name it %2 then %3",
+  "PY_EXCEPTION_CASE_TOOLTIP": "Handle one kind of error. Leave the kind empty to catch anything; leave the name empty when the details are not needed."
 }

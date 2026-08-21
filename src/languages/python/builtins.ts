@@ -53,7 +53,7 @@ export interface builtinCtx {
 }
 
 /** 從引數裡撈出一個關鍵字引數（`param_named` 把它包成 `['__kw__名字', 值]`）。 */
-function kwArg(args: RuntimeValue[], name: string): RuntimeValue | null {
+export function kwArg(args: RuntimeValue[], name: string): RuntimeValue | null {
   for (const a of args) {
     if (a?.type !== 'array') continue
     const pair = a.value as RuntimeValue[]
@@ -130,7 +130,7 @@ const tup = (v: RuntimeValue[]): RuntimeValue => ({ type: 'array', value: v, seq
  *
  * > **一個關鍵字引數混在位置引數裡，會讓「有幾個引數」這個問題的答案是錯的。**
  */
-function positional(a: RuntimeValue[]): RuntimeValue[] {
+export function positional(a: RuntimeValue[]): RuntimeValue[] {
   return a.filter((x) => {
     if (x?.type !== 'array') return true
     const pair = x.value as RuntimeValue[]
@@ -160,6 +160,20 @@ async function extreme(a: RuntimeValue[], c: builtinCtx, sign: 1 | -1): Promise<
 const bool = (v: boolean): RuntimeValue => ({ type: 'bool', value: v })
 
 
+/**
+ * 一個值的真假——**Python 的規則**（容器看空不空，不是轉成數字）。
+ *
+ * 🔴 與 `bool()` 是同一份：兩份的話 `any([])` 與 `bool([])` 會先後錯。
+ */
+function truthy(v: RuntimeValue): boolean {
+  if (v === undefined || v.type === 'void' || v.value === null) return false
+  if (v.type === 'bool') return v.value === true
+  if (v.type === 'string') return String(v.value).length > 0
+  if (v.type === 'array') return (v.value as RuntimeValue[]).length > 0
+  if (v.type === 'object') return (v.value as ObjectFields).size > 0
+  return Number(v.value) !== 0
+}
+
 /** 一個容器有幾格（`len` 與別處共用）。 */
 function lengthOf(v: RuntimeValue): number {
   if (v.type === 'string') return String(v.value).length
@@ -186,14 +200,7 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
    * 而 `bool([0])` 也是 true——**兩個都碰巧對，而 `bool([])` 錯**。
    * > **一個碰巧對的判準，會在邊界上安靜地翻面。**
    */
-  bool: (a, c) => {
-    const v = a[0]
-    if (v === undefined || v.type === 'void') return bool(false)
-    if (v.type === 'string') return bool(String(v.value).length > 0)
-    if (v.type === 'array') return bool((v.value as RuntimeValue[]).length > 0)
-    if (v.type === 'object') return bool((v.value as ObjectFields).size > 0)
-    return bool(c.toNumber(v) !== 0)
-  },
+  bool: (a) => bool(truthy(a[0])),
   abs: (a, c) => num(Math.abs(c.toNumber(a[0]))),
   /**
    * 🔴 **Python 的 `round` 是「銀行家捨入」**：`round(2.5)` 是 **2** 不是 3
@@ -235,6 +242,17 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     return arr(out)
   },
   enumerate: (a) => arr(asList(a[0]).map((x, i) => tup([num(i), x]))),
+  // ⚠️ `divmod` 回的是 **tuple**（`(3, 2)`），不是串列
+  divmod: (a, c) => {
+    const x = c.toNumber(a[0]), y = c.toNumber(a[1])
+    if (y === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO, {})
+    return tup([num(Math.floor(x / y)), num(x - Math.floor(x / y) * y)])
+  },
+  any: (a) => bool(asList(a[0]).some(truthy)),
+  all: (a) => bool(asList(a[0]).every(truthy)),
+  chr: (a, c) => str(String.fromCharCode(c.toNumber(a[0]))),
+  ord: (a) => num(String(a[0]?.value ?? '').charCodeAt(0)),
+  pow: (a, c) => num(Math.pow(c.toNumber(a[0]), c.toNumber(a[1]))),
   zip: (a) => {
     const ls = a.map(asList)
     const n = Math.min(...ls.map((l) => l.length))
@@ -271,6 +289,38 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   startswith: (s, a) => bool(String(s.value).startsWith(String(a[0].value))),
   endswith: (s, a) => bool(String(s.value).endsWith(String(a[0].value))),
   // 字典
+  // ── 串列的其他就地改動
+  insert: (s, a, c) => {
+    (s.value as RuntimeValue[]).splice(c.toNumber(a[0]), 0, a[1])
+    return { type: 'void', value: null }
+  },
+  /** ⚠️ `remove` 拿掉的是**第一個相等的值**，不是某一格——與 `pop` 不同。 */
+  remove: (s, a) => {
+    const xs = s.value as RuntimeValue[]
+    const i = xs.findIndex((x) => pyStr(x) === pyStr(a[0]))
+    if (i < 0) throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `remove：${pyStr(a[0])} 不在裡面` })
+    xs.splice(i, 1)
+    return { type: 'void', value: null }
+  },
+  extend: (s, a) => { (s.value as RuntimeValue[]).push(...asList(a[0])); return { type: 'void', value: null } },
+  /** ⚠️ 字典與串列都有 `clear`——就地清空。 */
+  clear: (s) => {
+    if (s.type === 'object') (s.value as ObjectFields).clear()
+    else (s.value as RuntimeValue[]).length = 0
+    return { type: 'void', value: null }
+  },
+  /** 字典的合併——**就地改動接收者**。 */
+  update: (s, a) => {
+    const m = s.value as ObjectFields
+    if (a[0]?.type === 'object') for (const [k, v] of a[0].value as ObjectFields) m.set(k, v)
+    return { type: 'void', value: null }
+  },
+  // ── 字串的查詢
+  /** 🔴 找不到回 **-1**，不是丟錯——那正是它與 `index` 的差別。 */
+  find: (s, a) => num(String(s.value).indexOf(String(a[0]?.value ?? ''))),
+  isdigit: (s) => bool(/^[0-9]+$/.test(String(s.value))),
+  isalpha: (s) => bool(/^[A-Za-z]+$/.test(String(s.value))),
+  title: (s) => str(String(s.value).replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())),
   keys: (s) => arr([...(s.value as ObjectFields).keys()].map(str)),
   values: (s) => arr([...(s.value as ObjectFields).values()]),
   items: (s) => arr([...(s.value as ObjectFields).entries()].map(([k, v]) => tup([str(k), v]))),
@@ -282,8 +332,28 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
     return str(String(s.value).replace(/\{\}/g, () => pyStr(a[i++] ?? { type: 'void', value: null })))
   },
   // 共用
-  count: (s, a, c) => num(asList(s).filter((x) => c.toNumber(x) === c.toNumber(a[0])).length),
-  index: (s, a) => num(asList(s).findIndex((x) => pyStr(x) === pyStr(a[0]))),
+  /**
+   * 🔴 **字串的 `count` 數的是【那一小段】出現幾次，不是逐格比對**
+   * ——`"Hello123".count("l")` 是 2。而它原本用 `toNumber` 比，
+   * 字母全部變成 0、目標也變成 0，於是**每一個字母都算命中**（給 5）。
+   *
+   * > **一個把兩邊都轉成同一個「轉不出來」的值再比較的判準，會全部命中。**
+   */
+  count: (s, a) => {
+    const needle = pyStr(a[0])
+    if (s.type === 'string') return num(String(s.value).split(needle).length - 1)
+    return num(asList(s).filter((x) => pyStr(x) === needle).length)
+  },
+  /**
+   * ⚠️ **找不到要丟錯**（Python 的 `index` 是 `ValueError`）——
+   * 回 `-1` 的是 `find`，而那正是兩者的差別。
+   */
+  index: (s, a) => {
+    const needle = pyStr(a[0])
+    const i = s.type === 'string' ? String(s.value).indexOf(needle) : asList(s).findIndex((x) => pyStr(x) === needle)
+    if (i < 0) throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `${needle} is not in list` })
+    return num(i)
+  },
 }
 
 /**

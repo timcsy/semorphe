@@ -2,6 +2,6 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildExceptionCase(exception: string, body: SemanticNode[]): SemanticNode {
-  return createNode('python:exception_case', { exception }, { body })
+export function buildExceptionCase(exception: string, body: SemanticNode[], alias = ''): SemanticNode {
+  return createNode('python:exception_case', { exception, alias }, { body })
 }

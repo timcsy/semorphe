@@ -87,7 +87,8 @@
               "python:map_at_default",
               "python:map_iter",
               "python:container_enumerate",
-              "python:container_zip"
+              "python:container_zip",
+              "python:throw"
             ],
             "children": []
           }

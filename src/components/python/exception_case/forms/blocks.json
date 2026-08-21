@@ -9,14 +9,35 @@
       "type": "python_exception_case",
       "message0": "%{BKY_PY_EXCEPTION_CASE_MSG0}",
       "args0": [
-        { "type": "field_input", "name": "EXCEPTION", "text": "" },
-        { "type": "input_statement", "name": "BODY", "check": "Statement" }
+        {
+          "type": "field_input",
+          "name": "EXCEPTION",
+          "text": ""
+        },
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": ""
+        },
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FFAB19",
       "tooltip": "%{BKY_PY_EXCEPTION_CASE_TOOLTIP}"
     },
-    "renderMapping": { "fields": { "EXCEPTION": "exception" }, "statementInputs": { "BODY": "body" } }
+    "renderMapping": {
+      "fields": {
+        "EXCEPTION": "exception",
+        "ALIAS": "alias"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
   }
 ]

@@ -1178,6 +1178,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:throw": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:try_catch": {
       "files": 4,
       "dirs": 1

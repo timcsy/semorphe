@@ -1,0 +1,23 @@
+[
+  {
+    "id": "python_throw",
+    "componentId": "python:throw",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_throw",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_THROW_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "EXCEPTION", "text": "ValueError" },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PY_THROW_TOOLTIP}"
+    },
+    "renderMapping": { "fields": { "EXCEPTION": "exception" }, "inputs": { "VALUE": "value" } }
+  }
+]

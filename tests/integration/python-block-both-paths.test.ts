@@ -323,6 +323,7 @@ describe('整段程式碼 → 積木（渲染那條路）', () => {
       ['python_map_iter', 'a = d.items()\n'],
       ['python_container_enumerate', 'a = enumerate(xs)\n'],
       ['python_container_zip', 'a = zip(xs, ys)\n'],
+      ['python_throw', 'raise ValueError("壞了")\n'],
     ]
     for (const [type, code] of CASES) {
       const got = typesIn(await render(code))

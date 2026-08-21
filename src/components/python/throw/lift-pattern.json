@@ -1,0 +1,12 @@
+[
+  {
+    "id": "python_throw",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "raise_statement",
+    "component": { "componentId": "python:throw" },
+    "liftStrategy": "python:lift_throw",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：與同族的內建函式元件同一層。`raise_statement` 沒有別的競爭者，而走策略是因為它底下有兩種形狀。"
+  }
+]

@@ -275,6 +275,7 @@
     "python:string_strip",
     "python:string_upper",
     "python:ternary",
+    "python:throw",
     "python:try_catch",
     "python:tuple_make",
     "python:var_assign",

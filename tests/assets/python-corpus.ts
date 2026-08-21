@@ -345,4 +345,74 @@ for ch in text:
 print(count["a"], count.get("z", 0))
 best = max(count, key=lambda k: count[k])
 print(best)`],
+  ['二維串列', `grid = [[1, 2], [3, 4]]
+for row in grid:
+    for x in row:
+        print(x, end=" ")
+    print()
+print(grid[1][0])
+print(len(grid), len(grid[0]))`],
+  ['巢狀字典', `students = {"小明": {"數學": 90, "國文": 80}}
+students["小華"] = {"數學": 70, "國文": 85}
+for name in students:
+    total = students[name]["數學"] + students[name]["國文"]
+    print(name, total)`],
+  ['串列的其他方法', `xs = [3, 1, 4]
+xs.insert(1, 9)
+print(xs)
+xs.remove(4)
+print(xs)
+print(xs.pop())
+print(xs.index(9), xs.count(3))`],
+  ['整數運算的三種除法', `a, b = 17, 5
+print(a / b)
+print(a // b)
+print(a % b)
+print(a ** 2)
+print(divmod(a, b))
+print(-7 // 2, -7 % 2)`],
+  ['字串的判斷', `s = "Hello123"
+print(s.find("l"), s.count("l"))
+print(s.startswith("He"), s.endswith("3"))
+print(s.lower(), s.upper())
+print(len(s), s[0], s[-1])`],
+  ['None 與預設', `def find(xs, target):
+    for x in xs:
+        if x == target:
+            return x
+    return None
+
+r = find([1, 2], 5)
+if r is None:
+    print("沒找到")
+else:
+    print(r)
+print(find([1, 2], 2))`],
+  ['多層條件', `score = 85
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+else:
+    grade = "D"
+print(grade)
+print("及格" if score >= 60 else "不及格")`],
+  ['丟出例外', `def divide(a, b):
+    if b == 0:
+        raise ValueError("除數不能是零")
+    return a / b
+
+try:
+    print(divide(6, 3))
+    print(divide(1, 0))
+except ValueError as e:
+    print("錯誤：", e)`],
+  ['字典的排序輸出', `scores = {"小華": 70, "小明": 90, "小美": 85}
+for name in sorted(scores):
+    print(name, scores[name])
+pairs = sorted(scores.items(), key=lambda p: p[1], reverse=True)
+for name, s in pairs:
+    print(name, s)`],
 ]

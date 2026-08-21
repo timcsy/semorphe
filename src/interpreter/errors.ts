@@ -44,6 +44,14 @@ export const RUNTIME_ERRORS = {
   /** 辨識不出來的原始程式碼被執行到——**不能靜靜略過** */
   UNRECOGNIZED_CODE: 'RUNTIME_ERR_UNRECOGNIZED_CODE',
   /**
+   * **使用者自己丟出來的**（Python 的 `raise`、C++ 的 `throw`）。
+   *
+   * 🔴 與其他錯誤碼的差別是「**誰決定訊息**」：其他每一個的訊息都由我們寫，
+   * 這一個的 `%1` 是**使用者程式裡的那句話**。接住它的那一段印出來的
+   * 也該是那句話——印一個代碼的話，學生看到的是我們的內部詞彙。
+   */
+  USER_RAISED: 'RUNTIME_ERR_USER_RAISED',
+  /**
    * 程式想讀一行輸入，而已經沒有輸入了。
    *
    * 🔴 **這一格原本被 `UNRECOGNIZED_CODE` 兼著用**，於是使用者按執行、

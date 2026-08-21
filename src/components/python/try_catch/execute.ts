@@ -15,6 +15,10 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
+import { Scope } from '../../../interpreter/scope'
+// 🔴 「一個被接住的錯誤印出來長什麼樣」住在語言套件裡——`division by zero`
+//    是 **Python 對這件事的說法**，不是核心的錯誤碼該知道的事。
+import { pythonExceptionText } from '../../../languages/python/exception-text'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:try_catch', async (node, ctx) => {
@@ -24,7 +28,18 @@ export function registerExecute(register: (component: string, executor: Componen
       if (e instanceof BreakSignal || e instanceof ContinueSignal || e instanceof ReturnSignal) throw e
       const first = (node.children.handlers ?? [])[0]
       if (!first) throw e // 沒有分支就不吞——不然錯誤會安靜地消失
-      await ctx.executeBody(first.children.body ?? [])
+      // 🔴 `except X as e:` 要把錯誤**綁到那個名字上**，而它只活在這個分支裡
+      //    ——少了這一段的症狀是分支裡的 `print(e)` 說「沒有這個變數 e」。
+      const alias = String(first.properties.alias ?? '')
+      if (!alias) { await ctx.executeBody(first.children.body ?? []); return }
+      const parent = ctx.scope
+      ctx.scope = new Scope(parent)
+      try {
+        ctx.scope.declare(alias, { type: 'string', value: pythonExceptionText(e) })
+        await ctx.executeBody(first.children.body ?? [])
+      } finally {
+        ctx.scope = parent
+      }
     }
   })
 }

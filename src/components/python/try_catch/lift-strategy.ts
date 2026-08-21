@@ -31,13 +31,18 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // `else` 與 `finally` 也還沒有地方放
     if (node.namedChildren.some((c) => c.type === 'else_clause' || c.type === 'finally_clause')) return null
 
-    const handlers = excepts.map((clause) =>
-      buildExceptionCase(
-        // `except ValueError:` 的名字在 `value` 欄位；`except:` 沒有那一格。
-        clause.childForFieldName('value')?.text ?? '',
+    const handlers = excepts.map((clause) => {
+      // `except ValueError:` 的名字在 `value` 欄位；`except:` 沒有那一格。
+      // 🔴 而 `except ValueError as e:` 的 `value` 是**整串 `ValueError as e`**
+      //    ——拆成兩格，因為執行時要拿 `e` 去宣告一個變數。
+      const raw = clause.childForFieldName('value')?.text ?? ''
+      const m = /^(.*?)\s+as\s+([A-Za-z_]\w*)$/.exec(raw)
+      return buildExceptionCase(
+        (m ? m[1] : raw).trim(),
         statementsOf(clause.namedChildren.find((c) => c.type === 'block') ?? null, ctx),
-      ),
-    )
+        m ? m[2] : '',
+      )
+    })
 
     return createNode('python:try_catch', {}, {
       body: statementsOf(node.childForFieldName('body'), ctx),

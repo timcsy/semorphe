@@ -1,0 +1,22 @@
+{
+  "componentId": "python:throw",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與 C++ 那顆同名的丟出**保證不同**：那邊丟的是任意型別的值（`throw 42` 合法），Python 丟的一定是例外。等價要在量得出來的觀察集底下宣告，不是靠同名。",
+  "_componentId_why": "🔴 **叫 `throw` 而不是 `raise`**：`throw` 這個操作詞在詞彙表裡已經有了，而「同一個操作在任何主體上用同一個字」正是那份表存在的理由。關鍵字是投影，不是身分。",
+  "properties": [
+    { "name": "exception", "kind": "string", "default": "ValueError" }
+  ],
+  "children": { "value": "expression" },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "訊息是一個**接點**不是一個字串欄位——`raise ValueError(f\"{n} 太大\")` 的括號裡可以是任何運算式。壓成字串的話，每一種新的運算式都會變成一道新的解析題。",
+  "_lift_why": "`raise_statement` 底下**兩種形狀**：`raise X(訊息)` 是一個 `call`，`raise X` 是一個裸的 `identifier`——判別要跑真邏輯。認不得的形狀（`raise` 單獨一行的重新丟出、`raise X from Y`）回 `null` 走誠實降級。"
+}

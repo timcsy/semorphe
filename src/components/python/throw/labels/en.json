@@ -1,0 +1,4 @@
+{
+  "PY_THROW_MSG0": "Raise a %1 error saying %2",
+  "PY_THROW_TOOLTIP": "Stop here and pass an error outward. If an enclosing Try catches it, that branch receives this message."
+}
