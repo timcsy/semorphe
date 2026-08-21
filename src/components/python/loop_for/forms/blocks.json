@@ -10,11 +10,6 @@
       "message0": "%{BKY_PYTHON_FOR_MSG0}",
       "args0": [
         {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "i"
-        },
-        {
           "type": "input_value",
           "name": "ITERABLE",
           "check": "Expression"
@@ -32,19 +27,43 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FFAB19",
-      "tooltip": "%{BKY_PYTHON_FOR_TOOLTIP}"
+      "tooltip": "%{BKY_PYTHON_FOR_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "i"
+          }
+        ],
+        "separator": "，",
+        "openLabelKey": "PYTHON_FOR_TARGETS_OPEN",
+        "openLabelFallback": "裡的每一個",
+        "closeLabelKey": "PYTHON_FOR_TARGETS_CLOSE",
+        "closeLabelFallback": "",
+        "moveTailTo": "BODY"
+      }
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
       "inputs": {
         "ITERABLE": "iterable"
       },
       "statementInputs": {
         "BODY": "body"
-      }
+      },
+      "fields": {},
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "targets",
+          "childComponent": "param_decl",
+          "childFields": {
+            "PARAM_{i}": "name"
+          }
+        }
+      ]
     },
-    "_why": "⚠️ **`ITERABLE` 是一個插槽而不是一個「次數」欄位**——`range(3)` 只是**其中一種**可以走訪的東西。做成次數欄位就把 for-each 偷偷變回了三格式的 for。"
+    "_why": "🔴 **被綁定的名字用 paramList，不是一個文字欄位**（2026-08-21）：`for k, v in d.items():` 有兩個名字，而一個欄位只裝得下一個——症狀是第二個名字在積木來回時**靜默遺失**。\n⚠️ `countSource` 用 `paramCount`，與同族函式定義的參數列一字不差（存檔契約）。"
   }
 ]

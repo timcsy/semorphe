@@ -9,7 +9,8 @@
  *
  * ```
  * ① 使用者定義的函式    最優先 —— Python 允許 `def len(x)` 蓋掉內建的
- * ② 方法               名字裡有點：`nums.append` → 接收者 ＋ 方法名
+ * ②a 模組的方法        `math.sqrt` —— 整個名字是鍵，因為模組不是變數
+ * ②b 一般方法          名字裡有點：`nums.append` → 接收者 ＋ 方法名
  * ③ 內建的自由函式      `len`／`max`／`str`…
  * ```
  *
@@ -23,7 +24,7 @@ import { ReturnSignal } from '../../../interpreter/executors/functions'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { Scope } from '../../../interpreter/scope'
-import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_BUILTIN_METHODS } from '../../../languages/python/builtins'
+import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_BUILTIN_METHODS, PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:func_call', async (node, ctx) => {
@@ -34,7 +35,11 @@ export function registerExecute(register: (component: string, executor: Componen
 
     const funcDef = ctx.functions.get(name)
     if (!funcDef) {
-      // ② 方法：名字裡有點。**用最後一個點切**——`obj.attr.method()` 的接收者是 `obj.attr`。
+      // ②a 模組的方法：`math.sqrt(16)` —— 整個名字就是鍵，因為模組不是變數。
+      const modFn = PYTHON_MODULE_METHODS[name]
+      if (modFn) return modFn(argValues, ctx)
+
+      // ②b 方法：名字裡有點。**用最後一個點切**——`obj.attr.method()` 的接收者是 `obj.attr`。
       const dot = name.lastIndexOf('.')
       if (dot > 0) {
         const method = PYTHON_BUILTIN_METHODS[name.slice(dot + 1)]

@@ -28,7 +28,24 @@ import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } fro
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
 import { parseName, SEPARATOR } from '../../src/core/naming'
-import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES, SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
+import { OPERATIONS, KINDS, MODIFIERS, ATOMIC_NAMES as CPP_ATOMIC_NAMES, SUBJECTS as CPP_SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
+import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES } from '../../src/languages/python/naming'
+
+/**
+ * 🔴 **詞彙是各語言【補】出來的，不是 C++ 那份套用到所有語言**（2026-08-21）。
+ *
+ * 在此之前這條護欄只讀 `languages/cpp/naming`，卻檢查每一顆元件——
+ * 於是第二個語言的每一顆都要用 C++ 的詞彙表達自己
+ * （`tuple`／`import` 這種 Python 的切法在那份清單裡不存在）。
+ *
+ * > **一份宣稱通用的清單，在只有一個語言的時候，
+ * > 與一份寫死的清單行為完全相同。**（`history/119` 的同一句話）
+ *
+ * 🟢 而**操作詞刻意仍然共用**——那正是這份詞彙表存在的理由：
+ * 讓 `append` 在兩個語言裡是同一件事。
+ */
+const SUBJECTS = [...CPP_SUBJECTS, ...PYTHON_SUBJECTS]
+const ATOMIC_NAMES = [...CPP_ATOMIC_NAMES, ...PYTHON_ATOMIC_NAMES]
 
 type violationKind = '接收者參數名' | '操作詞不在詞彙' | '裸的函式庫名' | '修飾詞站主體位' | '主體不在前' | '殘留 lang: scope'
 interface Finding { kind: violationKind; id: string; note: string }
@@ -64,6 +81,16 @@ function receiverParamName(components: component[]): Map<string, string> {
       ? [...SELF_NAMING_OPERATIONS].find((o) => op.startsWith(o + SEPARATOR))
       : undefined
     if (!op || ownName.has(op) || mainOp) continue
+    // 🔴 **接收者可以是【接點】而不是屬性**（2026-08-21）。
+    //
+    // 這個推斷原本無條件把「第一個 identifier 屬性」當成接收者，而那假設了
+    // 接收者一定是一個名字欄位。Python 的取成員（`d["k"].name`）左邊是**一整個
+    // 運算式**——它必須是接點，而那時第一個屬性是別的東西，於是被誤判。
+    //
+    // > **一條「第一個 X 就是 Y」的規則，在 Y 有第二種住處時會安靜地指錯人。**
+    //
+    // 🟢 宣告了 `children.obj` 的，接收者就在那裡——屬性那一側不必再猜。
+    if ((c as { children?: Record<string, unknown> }).children?.[RECEIVER_PARAM] !== undefined) continue
     const first = paramSpecs(c.properties as never)[0]
     if (first?.kind === 'identifier') out.set(c.componentId, first.name)
   }

@@ -1,0 +1,9 @@
+{
+  "PY_ASSIGN_SEQ_MSG": "分別設定",
+  "PY_ASSIGN_SEQ_NAME": "變數",
+  "PY_ASSIGN_SEQ_FROM": "從",
+  "PY_ASSIGN_SEQ_TOOLTIP": "把一組值拆開，一次設定好幾個變數。格數要對得上，對不上會停下來說明。",
+  "PY_ASSIGN_SEQ_MSG0": "分別設定 %1",
+  "PY_ASSIGN_SEQ_OPEN": "← 從",
+  "PY_ASSIGN_SEQ_CLOSE": ""
+}

@@ -1,0 +1,10 @@
+{
+  "id": "python_import",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "import_statement",
+  "component": { "componentId": "python:import" },
+  "fieldMappings": [
+    { "semantic": "name", "ast": "name", "extract": "text" }
+  ],
+  "_why": "⚠️ `from x import y` 與 `import x as y` 也是同一個節點型別，而它們的 `name` 欄位長得不一樣——那兩種會產出一個不完整的名字，屬於**已知的邊界**。它們今天沒有語料，等有人碰到再分。"
+}

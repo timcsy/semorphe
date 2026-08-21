@@ -982,6 +982,10 @@
       "files": 4,
       "dirs": 1
     },
+    "python:import": {
+      "files": 2,
+      "dirs": 1
+    },
     "python:input": {
       "files": 3,
       "dirs": 1
@@ -1007,7 +1011,7 @@
       "dirs": 1
     },
     "python:loop_for": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "python:loop_while": {
@@ -1015,6 +1019,10 @@
       "dirs": 1
     },
     "python:map_make": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:member_at": {
       "files": 3,
       "dirs": 1
     },
@@ -1054,12 +1062,20 @@
       "files": 4,
       "dirs": 1
     },
+    "python:tuple_make": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:var_assign": {
       "files": 3,
       "dirs": 1
     },
     "python:var_assign_compound": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:var_assign_sequence": {
+      "files": 4,
       "dirs": 1
     },
     "python:var_ref": {

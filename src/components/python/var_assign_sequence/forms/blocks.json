@@ -1,0 +1,57 @@
+[
+  {
+    "id": "python_var_assign_sequence",
+    "componentId": "python:var_assign_sequence",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_var_assign_sequence",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_ASSIGN_SEQ_TOOLTIP}",
+      "message0": "%{BKY_PY_ASSIGN_SEQ_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "v{i}"
+          }
+        ],
+        "separator": "，",
+        "openLabelKey": "PY_ASSIGN_SEQ_OPEN",
+        "openLabelFallback": "（",
+        "closeLabelKey": "PY_ASSIGN_SEQ_CLOSE",
+        "closeLabelFallback": "）"
+      }
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "targets",
+          "childComponent": "param_decl",
+          "childFields": {
+            "PARAM_{i}": "name"
+          }
+        }
+      ]
+    },
+    "_why": "⚠️ `countSource` 用 `paramCount`——與同族函式定義的參數列**一字不差**，那是存檔契約。"
+  }
+]

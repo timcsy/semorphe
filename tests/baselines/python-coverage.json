@@ -7,12 +7,12 @@
   },
   "corpus": {
     "programs": 15,
-    "nodes": 324
+    "nodes": 330
   },
-  "degraded": 21,
+  "degraded": 12,
   "roundTripDiff": 0,
   "genericCall": 30,
-  "runFailed": 8,
+  "runFailed": 4,
   "unresolvedTypes": {
     "function_definition": 1,
     "parameters": 1,
@@ -22,11 +22,6 @@
     "if_clause": 1,
     "try_statement": 1,
     "except_clause": 2,
-    "class_definition": 1,
-    "attribute": 2,
-    "tuple": 1,
-    "expression_list": 2,
-    "import_statement": 2,
-    "dotted_name": 2
+    "class_definition": 1
   }
 }

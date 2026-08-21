@@ -6,24 +6,9 @@
     "component": {
       "componentId": "python:loop_for"
     },
-    "fieldMappings": [
-      {
-        "semantic": "obj",
-        "ast": "left",
-        "extract": "text"
-      },
-      {
-        "semantic": "iterable",
-        "ast": "right",
-        "extract": "lift"
-      },
-      {
-        "semantic": "body",
-        "ast": "body",
-        "extract": "liftBody"
-      }
-    ],
+    "fieldMappings": [],
     "priority": 10,
-    "_why": "⚠️ **`left` 用 `text`**——它是**被綁定的名字**，不是一個要求值的運算式（與 `assignment` 同一個道理）。而 `for a, b in …` 的解構 `left` 是 `pattern_list`，`text` 會拿到 `a, b`：🔴 **那是一個已知的邊界。**"
+    "_why": "🟢 **2026-08-21 從純資料換成具名策略**：原本 `left` 走 `extract: \"text\"`，而 `for a, b in …` 的 `left` 是 `pattern_list`，`text` 拿到的是字串 `\"a, b\"`——**字串裡藏著結構**。舊的 `_why` 自己寫著那是「已知的邊界」，而它的代價在執行期才付：迴圈宣告了一個名字叫 `k, v` 的變數。\n見 `lift-strategy.ts` 的檔頭。",
+    "liftStrategy": "python:liftLoopFor"
   }
 ]

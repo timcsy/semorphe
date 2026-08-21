@@ -1,0 +1,23 @@
+{
+  "componentId": "python:tuple_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與同族串列字面那顆最像，而**它們在 Python 是兩種型別**：一個可變、一個不可變。指同一個抽象父會把那個差別抹掉，而那正是初學者要學會的差別之一。",
+  "properties": [],
+  "children": {
+    "items": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "liftStrategy": "./lift-strategy.ts"
+  },
+  "traits": {
+    "sequenceLiteral": true
+  },
+  "_traits_why": "與串列字面同一個性狀——**它們算出來的都是有順序的容器**，而可不可變是另一件事。"
+}

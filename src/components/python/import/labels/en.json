@@ -1,0 +1,4 @@
+{
+  "PY_IMPORT_MSG0": "Import module %1",
+  "PY_IMPORT_TOOLTIP": "Bring in a module so you can use what it provides (for example the math module gives pi and square root)."
+}

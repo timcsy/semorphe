@@ -62,6 +62,21 @@ export interface NodeMetadata {
   sourceRange?: SourceRange
   /** Block ID from which this node was extracted (for block↔code highlight mapping) */
   sourceBlockId?: string
+  /**
+   * **原文的排版偏好**——「這個節點在原始碼裡長什麼樣」，而語義不看它。
+   *
+   * 🔴 **它在 `metadata` 而不是 `properties`，是刻意的**：積木上沒有這一格、
+   * 學生不必知道，而產生器要能把使用者的碼原樣還回去。
+   *
+   * > **投影記住它，積木看不到它。**（空行那一刀的同一句話）
+   *
+   * 今天的唯一消費者：Python 的固定組合——`a, b = 1, 2` 沒有括號，
+   * 而 `(1, 2)` 有；兩者語義相同，硬加括號等於改了使用者的碼。
+   *
+   * ⚠️ 使用者在積木那側改過之後這一格會不在，那時產出預設的排版
+   * ——**仍然正確**。排版的遺失不是語義的遺失。
+   */
+  layoutHints?: Record<string, boolean>
 }
 
 export interface SourceRange {

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "python_attribute",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "attribute",
+    "component": {
+      "componentId": "python:member_at"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "obj",
+        "ast": "object",
+        "extract": "lift"
+      },
+      {
+        "semantic": "member",
+        "ast": "attribute",
+        "extract": "text"
+      }
+    ],
+    "_why": "⚠️ **方法呼叫（`s.upper()`）不會走到這裡**——那是 `call` 節點，它的 `function` 欄位才是這個 `attribute`，而呼叫那顆元件把整段當成一個名字處理。這一顆管的是**取值**（`math.pi`）。\n🔴 **`semantic` 是 `obj`（接收者的約定名），`ast` 是 `object`（tree-sitter 的欄位名）——兩者不是同一件事。** 2026-08-21 一次批次改名把後者也改掉，症狀是產出 `x = .pi`：接收者整個不見，而**測試以外沒有任何地方會出聲**。"
+  }
+]

@@ -24,6 +24,8 @@ import { isNamedCall } from '../../../core/component/traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:loop_for', async (node, ctx) => {
+    // 多目標（`for k, v in d.items():`）——每一圈把那一格拆開分給每個名字
+    const targets = (node.children.targets ?? []).map((t) => String(t.properties.name ?? ''))
     const name = String(node.properties.obj ?? 'i')
     const itNode = (node.children.iterable ?? [])[0]
     // 走訪的是**值**，不是數字——`range` 只是其中一種來源。
@@ -63,10 +65,24 @@ export function registerExecute(register: (component: string, executor: Componen
       })
     }
 
-    for (const bound of values) {
+    const bind = (n: string, v: RuntimeValue): void => {
       // 🔴 每一圈都要能覆寫——`declare` 在第二圈會 `DUPLICATE_DECLARATION`。
-      if (ctx.scope.has(name)) ctx.scope.set(name, bound)
-      else ctx.scope.declare(name, bound)
+      if (ctx.scope.has(n)) ctx.scope.set(n, v)
+      else ctx.scope.declare(n, v)
+    }
+    for (const bound of values) {
+      if (targets.length > 1) {
+        const parts = bound.type === 'array' ? (bound.value as RuntimeValue[]) : null
+        // 🔴 拆不開就丟錯——Python 說 ValueError。補 None 會讓真的錯誤看起來像跑成功。
+        if (!parts || parts.length !== targets.length) {
+          throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+            '%1': `每一圈要拆成 ${targets.length} 格，而這一格${parts ? `有 ${parts.length}` : '不是一組值'}`,
+          })
+        }
+        targets.forEach((n, i) => bind(n, parts[i]))
+      } else {
+        bind(name, bound)
+      }
       try {
         await ctx.executeBody(node.children.body ?? [])
       } catch (signal) {

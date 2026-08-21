@@ -11,7 +11,8 @@
   ],
   "children": {
     "iterable": "expression",
-    "body": "statements"
+    "body": "statements",
+    "targets": "param_decl"
   },
   "role": "statement",
   "owner": "(python)",
@@ -24,12 +25,14 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
-    "execute": "./execute.ts"
+    "execute": "./execute.ts",
+    "liftStrategy": "./lift-strategy.ts"
   },
   "traits": {
     "declaresVariable": [
-      "NAME"
+      "PARAM_{i}"
     ]
   },
-  "_traits_why": "🟢 **迴圈變數也是一個名字**——`for i in …` 之後 `i` 在迴圈外仍然看得到（Python 沒有區塊作用域），所以它該進下拉。"
+  "_traits_why": "**這顆積木會生出變數**——迴圈的每一個被綁定的名字都要進變數下拉。\n⚠️ 欄位名跟著形態走：2026-08-21 從單一的 `NAME` 換成 paramList 的 `PARAM_{i}`（多目標的 `for k, v in …`），而**宣告不跟著改的話下拉會少一整族名字**——護欄 `audit-program-root` 當場擋下。",
+  "_children_why": "**多目標（`for k, v in …`）走 `targets` 子節點**，與同族函式定義的參數同一個做法；單一目標仍然走 `obj` 屬性——**舊存檔照樣打得開**，而積木上那個名字欄位也還在用它。\n⚠️ 兩者不是兩份真相：`targets` 有東西時它是唯一的真實，`obj` 是它的第一格。"
 }

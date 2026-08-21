@@ -1,0 +1,9 @@
+{
+  "PY_ASSIGN_SEQ_MSG": "Unpack into",
+  "PY_ASSIGN_SEQ_NAME": "variable",
+  "PY_ASSIGN_SEQ_FROM": "from",
+  "PY_ASSIGN_SEQ_TOOLTIP": "Split one group of values across several variables. The counts must match; a mismatch stops with an explanation.",
+  "PY_ASSIGN_SEQ_MSG0": "Unpack %1 into",
+  "PY_ASSIGN_SEQ_OPEN": "from",
+  "PY_ASSIGN_SEQ_CLOSE": ""
+}

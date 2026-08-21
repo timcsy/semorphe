@@ -42,7 +42,9 @@
           "python:pair_make",
           "python:container_at",
           "python:container_find",
-          "python:var_assign_compound"
+          "python:var_assign_compound",
+          "python:tuple_make",
+          "python:var_assign_sequence"
         ],
         "children": [
           {
@@ -53,7 +55,9 @@
               "python:loop_for",
               "python:func_def",
               "python:func_call",
-              "python:return"
+              "python:return",
+              "python:import",
+              "python:member_at"
             ],
             "children": []
           }

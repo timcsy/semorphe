@@ -114,3 +114,41 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   count: (s, a, c) => num(asList(s).filter((x) => c.toNumber(x) === c.toNumber(a[0])).length),
   index: (s, a) => num(asList(s).findIndex((x) => pyStr(x) === pyStr(a[0]))),
 }
+
+/**
+ * 模組成員——**這個直譯器沒有模組系統**，而 `math.pi` 在教學語料裡到處都是。
+ *
+ * ⚠️ 只有**取值**在這裡；`math.sqrt(16)` 這種呼叫走方法那條路。
+ * 🔴 認不得的成員由取成員那顆元件**丟錯**，不回 None。
+ */
+export const PYTHON_MODULE_MEMBERS: Record<string, Record<string, RuntimeValue>> = {
+  math: {
+    pi: { type: 'double', value: Math.PI },
+    e: { type: 'double', value: Math.E },
+    tau: { type: 'double', value: Math.PI * 2 },
+    inf: { type: 'double', value: Infinity },
+  },
+}
+
+/** 模組的方法：`math.sqrt(16)`、`random.randint(1, 6)`。 */
+export const PYTHON_MODULE_METHODS: Record<string, (args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue> = {
+  'math.sqrt': (a, c) => num(Math.sqrt(c.toNumber(a[0]))),
+  'math.floor': (a, c) => num(Math.floor(c.toNumber(a[0]))),
+  'math.ceil': (a, c) => num(Math.ceil(c.toNumber(a[0]))),
+  'math.pow': (a, c) => num(c.toNumber(a[0]) ** c.toNumber(a[1])),
+  'math.fabs': (a, c) => num(Math.abs(c.toNumber(a[0]))),
+  // 🔴 **亂數在教學工具裡要可重現**：每次跑出不同答案的話，
+  //    「我的程式對不對」這個問題就沒有辦法用輸出回答。
+  //    用一個固定種子的線性同餘產生器，而**這件事寫在這裡**不是靜靜地做。
+  'random.randint': (a, c) => {
+    const lo = c.toNumber(a[0]), hi = c.toNumber(a[1])
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    return num(lo + (seed % (hi - lo + 1)))
+  },
+  'random.random': () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    return { type: 'double', value: seed / 2147483648 }
+  },
+}
+
+let seed = 42

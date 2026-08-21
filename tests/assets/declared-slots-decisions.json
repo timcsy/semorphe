@@ -418,5 +418,25 @@
     "componentId": "python:var_assign_compound",
     "cause": "語料沒碰到這個接點的產出",
     "reason": "`value` 接點必填，而樣式用 `constraints` 把左邊限定成單純變數名，語料裡的那幾段剛好都在迴圈裡。由 `spec.test.ts` 的六個運算子來回與三條 Python 除法規則釘住。"
+  },
+  {
+    "componentId": "python:import",
+    "cause": "這顆沒有接點",
+    "reason": "`import math` 沒有子節點——名字是一個屬性。**沒有接點的元件不可能有『產出了宣告裡沒有的接點』**，所以這一筆恆為「無法確定」。\n⚠️ 它的正確性由這顆的 `spec.test.ts` 的來回釘住。"
+  },
+  {
+    "componentId": "python:member_at",
+    "cause": "語料沒碰到這個接點的產出",
+    "reason": "`obj` 接點必填，而護欄的語料裡取成員的那幾段（`math.pi`）走的是模組那條路。由這一族的 `spec.test.ts` 釘住（來回 ＋ 執行 `math.pi > 3`）。"
+  },
+  {
+    "componentId": "python:tuple_make",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "接點是在策略裡組出來的（兩個節點型別共用一顆元件：有括號的 `tuple` 與裸的 `expression_list`）。\n⚠️ 而策略還把「有沒有括號」記進 `metadata.layoutHints`——**投影記住它，積木看不到它**。由 `spec.test.ts` 的三支來回釘住（含一格的 `(3,)`）。"
+  },
+  {
+    "componentId": "python:var_assign_sequence",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "與同族固定組合同一個理由：目標名單是策略從 `pattern_list` 拆出來的。由 `spec.test.ts` 的來回與「格數對不上要出聲」釘住。"
   }
 ]

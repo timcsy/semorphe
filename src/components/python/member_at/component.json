@@ -1,0 +1,26 @@
+{
+  "componentId": "python:member_at",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的成員存取編譯期就知道型別，而這一顆執行期才查。形狀相近而保證不同。",
+  "properties": [
+    {
+      "name": "member",
+      "kind": "identifier",
+      "default": ""
+    }
+  ],
+  "children": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "**接收者叫 `obj`**——那是這個專案的約定（`RECEIVER_PARAM`），讓「這顆作用在什麼上」在任何元件都是同一個名字。\n而它是**接點不是欄位**：`d[\"k\"].name` 這種鏈式存取的左邊是一整個運算式。",
+  "_properties_why": "🔴 **`default` 是空字串，與產生器和執行器的退路一致**——宣告一個 `pi` 而程式碼退路用 `\"\"`，等於兩份真相（第 N 條護欄逐字比對它們）。"
+}

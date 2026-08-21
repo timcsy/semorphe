@@ -1,0 +1,28 @@
+{
+  "componentId": "python:var_assign_sequence",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側最接近的是結構化繫結，而它需要型別。這一顆在執行期才知道右邊有幾格。",
+  "properties": [],
+  "children": {
+    "targets": "param_decl",
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "**目標是子節點不是屬性**——與同族函式定義的參數同一個做法（`children.params`）。名字有幾個是變動的，而一個「用逗號串起來的字串」需要 parse 回結構才能用。",
+  "_lift_why": "同一個 `assignment` 節點型別既是單一指派也是序列指派，差別在左邊是不是 `pattern_list`——**判別要跑真邏輯**，所以走具名策略；不是的話回 `null` 讓同族那顆單一指派接手。",
+  "traits": {
+    "declaresVariable": [
+      "PARAM_{i}"
+    ]
+  },
+  "_traits_why": "**這顆會生出變數**——拆開之後的每一個名字都要進變數下拉，與同族的迴圈一樣。"
+}

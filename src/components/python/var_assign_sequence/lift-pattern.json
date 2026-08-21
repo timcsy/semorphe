@@ -1,0 +1,10 @@
+{
+  "id": "python_sequence_assignment",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "assignment",
+  "component": { "componentId": "python:var_assign_sequence" },
+  "liftStrategy": "python:liftSequenceAssign",
+  "fieldMappings": [],
+  "priority": 20,
+  "_why": "priority 高於同族的單一指派（它是 0）——兩筆對到同一個節點型別，而策略回 `null` 時比對迴圈會落到下一筆。"
+}

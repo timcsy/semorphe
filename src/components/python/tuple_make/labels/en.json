@@ -1,0 +1,4 @@
+{
+  "PY_TUPLE_MAKE_MSG": "Fixed group",
+  "PY_TUPLE_MAKE_TOOLTIP": "Bind several values into one group that cannot be changed afterwards. Often used to return or assign several values at once."
+}

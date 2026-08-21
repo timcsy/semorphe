@@ -1,4 +1,6 @@
 {
   "PYTHON_FOR_MSG0": "for each %1 in %2",
-  "PYTHON_FOR_TOOLTIP": "Walk a sequence in order, binding each value to the name. range(3) gives 0, 1, 2"
+  "PYTHON_FOR_TOOLTIP": "Walk a sequence in order, binding each value to the name. range(3) gives 0, 1, 2",
+  "PYTHON_FOR_TARGETS_OPEN": "each",
+  "PYTHON_FOR_TARGETS_CLOSE": ""
 }

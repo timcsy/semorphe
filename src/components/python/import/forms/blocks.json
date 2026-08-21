@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_import",
+    "componentId": "python:import",
+    "language": "python",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_import",
+      "message0": "%{BKY_PY_IMPORT_MSG0}",
+      "args0": [{ "type": "field_input", "name": "NAME", "text": "math" }],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A0A0A0",
+      "tooltip": "%{BKY_PY_IMPORT_TOOLTIP}"
+    },
+    "renderMapping": { "fields": { "NAME": "name" } }
+  }
+]
