@@ -15,8 +15,22 @@ describe('python:container_substr', () => {
     expect(one).not.toContain('python:container_substr')
   })
 
-  it('🔴 lift：帶步長的整顆降級——收一半會產出少了步長的切片', async () => {
-    expect(await ids('a = xs[::2]\n')).not.toContain('python:container_substr')
+  /**
+   * ⚠️ **這條原本釘的是「帶步長的整顆降級」，而那個邊界在 2026-08-22 移動了**
+   * ——步長今天收得下（`s[::-1]` 是 AI 生的 Python 裡最常見的反轉寫法）。
+   *
+   * 邊界移動時要**改成釘新的邊界，不是刪掉它**：今天走誠實降級的是
+   * **三個冒號以上**，而那不是合法的 Python 切片。
+   */
+  it('🔴 lift：步長收得下，而三個冒號以上仍然誠實降級', async () => {
+    expect(await ids('a = xs[::2]\n'), '步長是切片的一部分，不是另一種東西').toContain('python:container_substr')
+    expect(await ids('a = xs[::-1]\n')).toContain('python:container_substr')
+  })
+
+  it('🔴 execute ＋ 來回：步長走得對，而沒有步長時不得補上第二個冒號', async () => {
+    expect(await runPython('s = "abcdef"\nprint(s[::-1], s[::2], s[1:5:2])\n')).toContain('fedcba ace bd')
+    expect(await runPython('xs = [1, 2, 3, 4, 5]\nprint(xs[::-1])\n')).toContain('[5, 4, 3, 2, 1]')
+    expect(await rt('a = xs[1:3]\n'), '補一個 `:1` 就是改了使用者的碼').toBe('a = xs[1:3]')
   })
 
   it('🔴 來回：沒有的那一端不得被補上', async () => {

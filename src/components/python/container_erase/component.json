@@ -1,0 +1,24 @@
+{
+  "componentId": "python:container_erase",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的同名操作是方法呼叫（`v.erase(it)`）而這裡是一個語句，形狀不同。等價要在量得出來的觀察集底下宣告。",
+  "properties": [],
+  "children": {
+    "target": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "🔴 **被刪的那一格是一個【接點】不是一個字串**——與同族的索引指派同一個理由：`grid[1][0]` 的左邊是一整個運算式。",
+  "_lift_why": "`delete_statement` 底下**只收「容器的某一格」**（`del d[k]`／`del xs[i]`）。`del x`（刪掉一個變數）與 `del a, b` 回 `null` 走誠實降級——這個直譯器沒有「讓一個名字消失」這件事。"
+}

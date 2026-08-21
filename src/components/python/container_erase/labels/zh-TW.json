@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ERASE_MSG0": "刪掉 %1",
+  "PY_CONTAINER_ERASE_TOOLTIP": "把容器裡的那一格拿掉。串列會少一格、後面的往前遞補；字典會少一個鍵。刪一個不存在的會停下來說明原因。"
+}

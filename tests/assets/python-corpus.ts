@@ -494,4 +494,50 @@ for n in range(2, 20):
         primes.append(n)
 print(primes)
 print(len(primes), sum(primes))`],
+  ['讀一行拆成數字', `parts = "3 1 4".split()
+nums = list(map(int, parts))
+print(nums)
+print(sum(nums), max(nums))
+a, b = "7 2".split()
+print(int(a) + int(b))`],
+  ['global', `count = 0
+
+def bump():
+    global count
+    count += 1
+
+bump()
+bump()
+print(count)`],
+  ['巢狀推導式', `grid = [[1, 2], [3, 4]]
+flat = [x for row in grid for x in row]
+print(flat)
+print([[x * 2 for x in row] for row in grid])`],
+  ['多鍵排序', `people = [("小明", 12), ("小華", 12), ("小美", 10)]
+print(sorted(people, key=lambda p: p[1]))
+for name, age in sorted(people, key=lambda p: -p[1]):
+    print(name, age)`],
+  ['具名引數呼叫', `def area(w, h):
+    return w * h
+
+print(area(3, 4))
+print(area(h=2, w=5))`],
+  ['刪除與判斷成員', `d = {"a": 1, "b": 2}
+del d["a"]
+print(d)
+xs = [1, 2, 3]
+del xs[0]
+print(xs)
+print("a" in d, "b" in d)`],
+  ['while 的倒數', `total = 0
+n = 3
+while n > 0:
+    total += n
+    n -= 1
+print(total)`],
+  ['字串反轉與迴文', `s = "level"
+print(s[::-1])
+print(s == s[::-1])
+t = "abc"
+print(t[::-1], t[::2])`],
 ]

@@ -6,9 +6,9 @@
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 本護欄只抓「殼」（路徑存在但退化）。它**不檢測條件性正確**——單獨測通過、組合起來才壞的問題（例如 lift pattern 遞迴深度不足），由 fuzz 等組合式測試負責。綠燈 ≠ 完備。\n\n🔴 【2026-08-20 spec 156】缺 0 → 3，全部是 `python:print`（render／extract／execute）。\n  **這是誠實的缺，不是放寬。** 第一版試著用 `skipPaths` 宣告成「刻意不提供」，\n  而 `skip-declaration-gate` 當場擋下——理由的詞彙只有三個，**沒有一個是「還沒做」**。\n  > **膠囊契約沒有「一個語言正在建構中」這個狀態。**\n  ⚠️ 而那正是 spec 156 要買的東西：`history/015` 說「Python 會直接繼承這些病」，\n  這一條是它**沒有**繼承、而是**掀出來**的新缺口。\n  🟢 重開條件：Python 有了自己的 topic 與積木，這三筆就該歸零——**不是加第三個理由**。\n\n🔴 【2026-08-20 spec 160】缺 3 → 4，而**這個淨值 +1 藏了兩個相反的動作**：\n  🟢 **-2**：`python:print` 的 `render`／`extract` **補實了**（宣告式積木，`forms/blocks.json` 同時是兩路的來源）。156 那三筆的重開條件是「Python 有了自己的\n     topic 與積木」——條件成立，所以它們走了。\n  🔴 **+3**：新的 `python:program`（程式根）——**它是路徑②的結構前提，被逼出來的**。\n     `renderToBlocklyState` 的第一行問「這顆是不是程式根」，Python 沒有根 →\n     **回空的積木清單、零錯誤**，使用者看到空白畫布。\n     它的 render／extract 缺是**對的**：程式根不是一顆積木，它是畫布本身\n     （C++ 那顆同樣沒有）。execute 缺則是 spec 156 明確排除 Python 執行期。\n⚠️ **只看總數的話這是「+1 惡化」，而實際上是「補了兩路、掀出一顆新元件」**\n  ——這正是基線要求逐筆指名的理由。\n🟢 另：`lift` 的「殼」歸零，因為完備性護欄改成**用 C++ 解析器量不到的元件判『無法確定』**\n  ——`python:program` 之前被判成殼，而真相是它的樣本被送去給 C++ 的文法。\n\n🟢 【2026-08-20 spec 167】缺 +1：`python:literal_string` 的 `execute`。\n  **誠實的缺**——Python 的執行期整個還沒做（spec 156 明確排除），\n  而這裡刻意【不】寫一個空的執行器：**顯式的空與遺漏的空要分得出來**。\n🟢 【spec 167】缺 +1：`python:literal_number` 的 `execute`（誠實的缺）。"
   },
   "totals": {
-    "implemented": 1384,
-    "declared": 37,
-    "undecidable": 92,
+    "implemented": 1395,
+    "declared": 38,
+    "undecidable": 95,
     "shell": 0,
     "missing": 2
   },

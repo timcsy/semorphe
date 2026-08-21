@@ -10,18 +10,46 @@
       "inputsInline": true,
       "message0": "%{BKY_PY_ARRAY_MAP_MSG0}",
       "args0": [
-        { "type": "input_value", "name": "EXPRESSION", "check": "Expression" },
-        { "type": "field_input", "name": "NAME", "text": "x" },
-        { "type": "input_value", "name": "ITERABLE", "check": "Expression" },
-        { "type": "input_value", "name": "CONDITION", "check": "Expression" }
+        {
+          "type": "input_value",
+          "name": "EXPRESSION",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "ITERABLE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "OUTER",
+          "check": "Expression"
+        }
       ],
       "output": "Expression",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_PY_ARRAY_MAP_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": { "NAME": "obj" },
-      "inputs": { "EXPRESSION": "expression", "ITERABLE": "iterable", "CONDITION": "condition" }
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "EXPRESSION": "expression",
+        "ITERABLE": "iterable",
+        "CONDITION": "condition",
+        "OUTER": "outer"
+      }
     }
   }
 ]

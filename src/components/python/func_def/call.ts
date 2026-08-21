@@ -45,18 +45,32 @@ export async function callWith(
   ctx: Parameters<ComponentExecutor>[1],
   label: string,
 ): Promise<RuntimeValue> {
+  // 🔴 **具名引數先拆出來**（`area(h=2, w=5)`）：它們被包成 `['__kw__名字', 值]`
+  //    混在位置引數裡，不拆的話 `h` 會拿到那個**包裹本身**
+  //    ——症狀是「串列不能做 *」，而使用者寫的是完全正確的 Python。
+  const named = new Map<string, RuntimeValue>()
+  const positional: RuntimeValue[] = []
+  for (const a of args) {
+    const kw = a?.type === 'array' ? (a.value as RuntimeValue[]) : null
+    const tag = kw && kw.length === 2 ? String(kw[0]?.value ?? '') : ''
+    if (tag.startsWith('__kw__')) named.set(tag.slice(6), kw![1])
+    else positional.push(a)
+  }
+
   const parent = ctx.scope
   ctx.scope = new Scope(parent)
   try {
     for (let i = 0; i < fn.params.length; i++) {
-      if (i >= args.length) {
+      const byName = named.get(fn.params[i].name)
+      if (byName !== undefined) { ctx.scope.declare(fn.params[i].name, byName); continue }
+      if (i >= positional.length) {
         const dflt = fn.params[i].default
         if (dflt !== undefined && dflt !== '') { ctx.scope.declare(fn.params[i].name, literalOf(dflt)); continue }
         throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
           '%1': `${label}（少了引數 ${fn.params[i].name}）`,
         })
       }
-      ctx.scope.declare(fn.params[i].name, args[i])
+      ctx.scope.declare(fn.params[i].name, positional[i])
     }
     await ctx.executeBody(fn.body)
     return { type: 'void', value: null }

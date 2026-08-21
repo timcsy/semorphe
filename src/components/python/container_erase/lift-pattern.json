@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_container_erase",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "delete_statement",
+    "component": {
+      "componentId": "python:container_erase"
+    },
+    "liftStrategy": "python:lift_container_erase",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "`delete_statement` 沒有別的競爭者，而走策略是因為它底下有好幾種形狀（刪一格／刪變數／刪多個）。"
+  }
+]

@@ -230,6 +230,7 @@
     "python:container_assign",
     "python:container_at",
     "python:container_enumerate",
+    "python:container_erase",
     "python:container_find",
     "python:container_size",
     "python:container_sort",
@@ -240,6 +241,7 @@
     "python:func_call",
     "python:func_call_named",
     "python:func_def",
+    "python:global",
     "python:if",
     "python:input",
     "python:lambda",
@@ -284,6 +286,7 @@
     "python:var_assign",
     "python:var_assign_compound",
     "python:var_assign_sequence",
-    "python:var_ref"
+    "python:var_ref",
+    "unresolved"
   ]
 }

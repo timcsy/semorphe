@@ -1,0 +1,4 @@
+{
+  "PY_GLOBAL_MSG0": "%1 refers to the outermost one",
+  "PY_GLOBAL_TOOLTIP": "Assigning inside a function normally creates a new variable that lives only there. With this line, it changes the outermost one instead."
+}

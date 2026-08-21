@@ -28,8 +28,10 @@ import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMe
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allComponentDefs } from '../helpers/component-scan'
+// 🔴 **「非元件」也是一種宣告**——見下面 `declared` 那一段。
+import { allNonComponents } from '../../src/core/non-components'
 
-const RULE = '把「已註冊執行器的概念」與「概念定義檔宣告的概念」相減。'
+const RULE = '把「已註冊執行器的概念」與「宣告過的東西」相減——宣告包含概念定義檔**與非元件宣告**。'
 
 const SELF_FALSIFICATION =
   '⚠️ 這個數字若是 0，先確認執行器清單真的取得到——空清單與零違規產出一樣。' +
@@ -47,12 +49,35 @@ interface OrphanBaseline {
 
 registerCppLanguage()
 
+/**
+ * 宣告過的東西——**兩種來源**。
+ *
+ * 🔴 **`declareNonComponent` 也是宣告**（2026-08-22）：`raw_code` 與
+ * `unresolved` 是**降級機制**，它們刻意沒有概念定義（「一顆什麼都能是的元件
+ * 會讓五路完備性失去意義」——見 `core/non-components.ts` 的檔頭），
+ * 而那份宣告帶著 `kind` 與 `reason`。
+ *
+ * ⚠️ 只看概念定義檔的話，替 `unresolved` 加一個執行器
+ * （讓它跑到時說「這一段程式我看不懂」而不是吐出內部代碼）
+ * 會被報成孤兒實作——**而它其實是這條護欄要保護的那件事的反面**：
+ * 有宣告、有理由、只是宣告在另一張表上。
+ *
+ * > **一條「有實作要有宣告」的護欄，如果只認得一種宣告，
+ * > 它會把第二種宣告底下的實作全部叫成孤兒。**
+ */
+function declaredIds(): Set<string> {
+  return new Set([
+    ...allComponentDefs().map((d) => d.componentId),
+    ...allNonComponents().keys(),
+  ])
+}
+
 function orphans(): string[] {
   const interp = new SemanticInterpreter({ maxSteps: 1 })
   const registered = (interp as unknown as {
     executorRegistry: { list(): string[] }
   }).executorRegistry.list()
-  const declared = new Set(allComponentDefs().map((d) => d.componentId))
+  const declared = declaredIds()
   return registered.filter((c) => !declared.has(c)).sort()
 }
 
@@ -82,7 +107,7 @@ describe('護欄：有實作卻沒有宣告', () => {
       executorRegistry: { register(c: string, e: () => Promise<void>): void; list(): string[] }
     }).executorRegistry
     reg.register('__orphan_probe__', async () => {})
-    const declared = new Set(allComponentDefs().map((d) => d.componentId))
+    const declared = declaredIds()
     expect(
       reg.list().filter((c) => !declared.has(c)),
       '刻意註冊一個沒宣告的概念卻沒被抓到 → 這條護欄的 0 不可信',
@@ -90,7 +115,7 @@ describe('護欄：有實作卻沒有宣告', () => {
   })
 
   it('★ 注入：有宣告的概念不得被誤報', () => {
-    const declared = new Set(allComponentDefs().map((d) => d.componentId))
+    const declared = declaredIds()
     expect(found.filter((c) => declared.has(c))).toEqual([])
   })
 

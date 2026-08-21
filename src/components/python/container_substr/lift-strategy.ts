@@ -18,23 +18,33 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftSlice', (node, ctx) => {
     const sl = node.childForFieldName('subscript')
     if (sl?.type !== 'slice') return null // 取一格 → 讓下一筆樣式接手
-    // 🔴 步長（`xs[::2]`，兩個冒號）還沒收——整顆降級，不產出一個少了步長的切片
-    if ((sl.text.match(/:/g) ?? []).length !== 1) return null
-
     const objNode = node.childForFieldName('value')
     const obj = objNode ? ctx.lift(objNode) : null
     if (!obj) return null
 
-    // 冒號在哪，決定那個具名子節點是起點還是終點
-    const [before, after] = sl.text.split(':')
-    const kids = sl.namedChildren
-    let idx = 0
-    const from = before.trim() ? ctx.lift(kids[idx++]) : null
-    const to = after.trim() ? ctx.lift(kids[idx]) : null
+    // 🔴 **照冒號【分段】，不要數冒號再猜**（2026-08-22）。
+    //
+    // 原本用 `sl.text.split(':')` 配上「有幾個冒號」來判斷哪個具名子節點是
+    // 起點、哪個是終點——而 `s[a:b:c]` 有兩個冒號，於是整顆降級。
+    // ⚠️ 更麻煩的是**冒號可能出現在子運算式裡**（`d[k1:k2]` 的鍵是字典時），
+    // 那時數出來的數字是錯的。
+    //
+    // 🟢 走**子節點的順序**：匿名的 `:` 就是分隔符，具名的就是那一段的內容。
+    // > **一個靠數分隔符來決定欄位的解析，會在分隔符出現在內容裡的那天說錯話。**
+    const segs: (SemanticNode | null)[] = [null, null, null]
+    let seg = 0
+    for (const c of sl.children) {
+      if (!c.isNamed) { seg++; continue }
+      if (seg > 2) return null // 三個冒號以上不是合法的切片
+      const lifted = ctx.lift(c)
+      if (!lifted) return null // 有一段認不出來 → 整顆降級
+      segs[seg] = lifted
+    }
 
     const children: Record<string, SemanticNode[]> = { obj: [obj] }
-    if (from) children.from = [from]
-    if (to) children.to = [to]
+    if (segs[0]) children.from = [segs[0]]
+    if (segs[1]) children.to = [segs[1]]
+    if (segs[2]) children.step = [segs[2]]
     return createNode('python:container_substr', {}, children)
   })
 }

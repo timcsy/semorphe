@@ -990,6 +990,10 @@
       "files": 4,
       "dirs": 1
     },
+    "python:container_erase": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:container_find": {
       "files": 3,
       "dirs": 1
@@ -1034,6 +1038,10 @@
       "files": 4,
       "dirs": 1
     },
+    "python:global": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:if": {
       "files": 4,
       "dirs": 1
@@ -1072,6 +1080,10 @@
     },
     "python:loop_for": {
       "files": 4,
+      "dirs": 1
+    },
+    "python:loop_iter": {
+      "files": 2,
       "dirs": 1
     },
     "python:loop_while": {

@@ -79,6 +79,22 @@ export class SemanticInterpreter implements ExecutionContext {
     const reg = (component: string, executor: import('./executor-registry').ComponentExecutor) =>
       this.executorRegistry.register(component, executor)
     registerMutationExecutors(reg)
+    // 🔴 **降級節點跑到時要說人話**（2026-08-22）。
+    //
+    // `unresolved`（子節點認得出、外層認不出）沒有執行器，於是它掉進
+    // 「未知概念」那條路，而使用者看到的是
+    // `RUNTIME_ERR_UNKNOWN_COMPONENT: {"component":"unresolved"}`
+    // ——一個我們的內部詞彙。而同族的 `raw_code` 說的是
+    // 「這一段程式我看不懂，所以沒有辦法執行它」。
+    //
+    // > **「未知概念」與「宣告過的降級」是兩件事：前者代表這個系統壞了，
+    // > 後者代表這一段我們誠實地認不出來——而它們不該長得一樣。**
+    reg('unresolved', async (node) => {
+      const src = String(node.metadata?.rawCode ?? '').split('\n')[0].slice(0, 60)
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+        '%1': src || String(node.properties?.node_type ?? '(不明)'),
+      })
+    })
 
 
     // cstdlib functions

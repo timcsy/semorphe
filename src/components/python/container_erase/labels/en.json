@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ERASE_MSG0": "Delete %1",
+  "PY_CONTAINER_ERASE_TOOLTIP": "Remove one slot from a container. A list loses a slot and later items shift down; a dictionary loses a key. Removing something absent stops with an explanation."
+}

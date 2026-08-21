@@ -1,0 +1,4 @@
+{
+  "PY_LOOP_ITER_MSG0": "for each %1 taken from %2, outside that %3",
+  "PY_LOOP_ITER_TOOLTIP": "Adds one more level to a collection. The outermost level runs first, and the inner level repeats for each of its items. Leave the outer slot empty for a single level."
+}

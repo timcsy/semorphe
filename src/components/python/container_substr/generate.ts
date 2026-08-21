@@ -9,10 +9,12 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_substr', (node, ctx) => {
-    const one = (k: 'obj' | 'from' | 'to'): string => {
+    const one = (k: 'obj' | 'from' | 'to' | 'step'): string => {
       const n = (node.children[k] ?? [])[0]
       return n ? generateExpression(n, ctx) : ''
     }
-    return `${one('obj')}[${one('from')}:${one('to')}]`
+    // ⚠️ **沒有步長就不寫第二個冒號**——`s[::1]` 與 `s[:]` 在使用者眼裡不是同一段碼
+    const step = one('step')
+    return `${one('obj')}[${one('from')}:${one('to')}${step ? `:${step}` : ''}]`
   })
 }

@@ -1,0 +1,26 @@
+{
+  "componentId": "python:global",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **C++ 沒有這件事**：那邊的作用域是靜態的，內層看得見也改得動外層的名字。Python 的函式裡指派**一律**建立本地變數，所以它需要一個宣告來說「這一個不是」。",
+  "_componentId_why": "`global` 是一個**語言構造**（與 `import` 同一類）——沒有「主體＋操作」可以拆，所以它是一個宣告過的單字名。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "",
+      "_why": "⚠️ **預設是空字串，而積木上的起始文字是 `count`**——兩者不同是刻意的：宣告的 `default` 說的是「這個屬性沒被填時是什麼」，而**沒有名字的 `global` 沒有意義**，所以退路是空的（產出 `global ` 一眼看得出不對）；積木上那個 `count` 是給學生的**起始範例**。\n🔴 而它們必須一致的是**退路**：宣告 `count` 而程式碼退到 `''`，那份規格就在說謊（第 43 條護欄抓到）。"
+    }
+  ],
+  "children": {},
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "`global_statement` 底下可以有**好幾個名字**（`global a, b`），而積木上只有一格——多個名字回 `null` 走誠實降級。"
+}

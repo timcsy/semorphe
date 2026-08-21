@@ -50,6 +50,10 @@ export const PYTHON_ATOMIC_NAMES = [
   //    表達不出來——`compare` 是單字名，`chain` 是種差，而合起來它只能整個宣告。
   //    > **一個拆不開的名字，要嘛是宣告過的語言構造，要嘛是違規——而這一個是前者。**
   'compare_chain',
+  // ⚠️ `global` 加入日 2026-08-22——`global count`。
+  //    🔴 **C++ 沒有這件事**（那邊的內層看得見也改得動外層），
+  //    而它是一個語言構造，沒有「主體＋操作」可以拆。
+  'global',
 ] as const
 
 /**

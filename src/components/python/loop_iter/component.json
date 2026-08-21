@@ -1,0 +1,35 @@
+{
+  "componentId": "python:loop_iter",
+  "abstractComponent": null,
+  "_abstractComponent_why": "它是推導式底下的**一段走訪來源**，沒有跨語言的獨立對應物（C++ 沒有推導式）。",
+  "_componentId_why": "🔴 **叫 `loop_iter` 不叫 `loop_for_clause`**：`iter`（走訪）這個操作詞在詞彙表裡已經有了（C++ 那側的 `container_iter`），而拆名字的演算法只認「主體＋操作（＋種差）」——`for` 在這份詞彙表裡是**種差**不是操作，所以 `for_clause` 是「種差＋種差」，拆不開。\n> **一個名字拆不開的時候，先問「我用的那個字在這份詞彙表裡是哪一格」。**",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "row"
+    }
+  ],
+  "children": {
+    "iterable": "expression",
+    "outer": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": null,
+    "_lift_why": "**顯式的空。** `for_in_clause` 只在推導式那顆的策略裡被拆出來——給它一筆樣式等於宣告它可以獨立出現，而一段 `for x in xs` 單獨寫是語法錯誤。",
+    "generate": "./generate.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空。** 走訪由父概念主導（它要控制每一圈算什麼、什麼時候還原名字）——這一顆自己執行沒有意義。",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "consumed-by-parent"
+  },
+  "_children_why": "🔴 **`outer` 讓層數不受限**：一段的外面再接一段，於是 `[x for a in A for b in B for x in b]` 用**同一顆積木**表達得出來。\n> **一個「再外面一層」的插槽，比一個「最多兩層」的欄位多表達了無限層。**"
+}

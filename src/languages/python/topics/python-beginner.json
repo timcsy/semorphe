@@ -59,7 +59,8 @@
           "python:string_replace",
           "python:container_assign",
           "python:member_assign",
-          "python:compare_chain"
+          "python:compare_chain",
+          "python:container_erase"
         ],
         "children": [
           {
@@ -91,7 +92,9 @@
               "python:map_iter",
               "python:container_enumerate",
               "python:container_zip",
-              "python:throw"
+              "python:throw",
+              "python:global",
+              "python:loop_iter"
             ],
             "children": []
           }

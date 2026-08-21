@@ -327,6 +327,9 @@ describe('整段程式碼 → 積木（渲染那條路）', () => {
       ['python_container_assign', 'g[1] = 9\n'],
       ['python_member_assign', 'self.n = 1\n'],
       ['python_compare_chain', 'y = 1 < x < 10\n'],
+      ['python_container_erase', 'del d["a"]\n'],
+      ['python_global', 'global count\n'],
+      ['python_loop_iter', 'flat = [x for row in g for x in row]\n'],
     ]
     for (const [type, code] of CASES) {
       const got = typesIn(await render(code))

@@ -3,7 +3,12 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那顆取子字串只作用在字串上而且參數是「起點＋長度」；Python 的切片作用在任何序列而且是「起點：終點」。**保證不同。**",
   "properties": [],
-  "children": { "obj": "expression", "from": "expression", "to": "expression" },
+  "children": {
+    "obj": "expression",
+    "from": "expression",
+    "to": "expression",
+    "step": "expression"
+  },
   "role": "expression",
   "owner": "(python)",
   "paths": {
@@ -14,5 +19,5 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_children_why": "🔴 **起點與終點都可以是空的**（`xs[:2]`／`xs[-2:]`），所以它們是**可以沒有的接點**而不是有預設值的欄位。\n填一個預設的 0 會讓 `xs[:2]` 產回 `xs[0:2]`——語義相同**而使用者的碼被改了**。\n⚠️ 而**步長（`xs[::2]`）還沒收**：那需要第三個接點，而它在語料裡還沒出現。"
+  "_children_why": "🔴 **起點與終點都可以是空的**（`xs[:2]`／`xs[-2:]`），所以它們是**可以沒有的接點**而不是有預設值的欄位。\n填一個預設的 0 會讓 `xs[:2]` 產回 `xs[0:2]`——語義相同**而使用者的碼被改了**。\n⚠️ 而**步長（`xs[::2]`）還沒收**：那需要第三個接點，而它在語料裡還沒出現。\n🔴 **`step` 加入日 2026-08-22**：`s[::-1]`（反轉）是 AI 生的 Python 裡最常見的切片寫法之一，而它曾經整顆降級。"
 }

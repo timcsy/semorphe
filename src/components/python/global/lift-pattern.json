@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_global",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "global_statement",
+    "component": {
+      "componentId": "python:global"
+    },
+    "liftStrategy": "python:lift_global",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "`global_statement` 沒有別的競爭者，而走策略是因為它底下可以有多個名字。"
+  }
+]

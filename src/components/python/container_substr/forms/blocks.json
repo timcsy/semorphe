@@ -10,14 +10,39 @@
       "inputsInline": true,
       "message0": "%{BKY_PY_CONTAINER_SUBSTR_MSG0}",
       "args0": [
-        { "type": "input_value", "name": "OBJ", "check": "Expression" },
-        { "type": "input_value", "name": "FROM", "check": "Expression" },
-        { "type": "input_value", "name": "TO", "check": "Expression" }
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TO",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "STEP",
+          "check": "Expression"
+        }
       ],
       "output": "Expression",
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_PY_CONTAINER_SUBSTR_TOOLTIP}"
     },
-    "renderMapping": { "fields": {}, "inputs": { "OBJ": "obj", "FROM": "from", "TO": "to" } }
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "FROM": "from",
+        "TO": "to",
+        "STEP": "step"
+      }
+    }
   }
 ]

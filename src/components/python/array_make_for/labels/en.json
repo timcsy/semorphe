@@ -1,4 +1,4 @@
 {
-  "PY_ARRAY_MAP_MSG0": "Collect %1 for each %2 from %3 keeping %4",
+  "PY_ARRAY_MAP_MSG0": "Collect %1 for each %2 taken from %3 keeping only %4, outside that %5",
   "PY_ARRAY_MAP_TOOLTIP": "Walk through a sequence, compute a value for each item, and collect them into a new list. Leave the last slot empty to keep everything."
 }
