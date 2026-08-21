@@ -22,7 +22,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
-    "execute": "./execute.ts"
+    "execute": "./execute.ts",
+    "liftStrategy": "./lift-strategy.ts"
   },
   "traits": {
     "namedCall": true,

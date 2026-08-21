@@ -673,4 +673,34 @@ def twice(f, x):
 
 print(twice(add, 5))
 print(add(twice(add, 1), 3))`],
+  ['any 與 all', `xs = [2, 4, 6]
+print(all(x % 2 == 0 for x in xs))
+print(any(x > 5 for x in xs))
+print(all([]), any([]))`],
+  ['enumerate 從 1 開始', `names = ["甲", "乙", "丙"]
+for i, n in enumerate(names, 1):
+    print(i, n)
+print(list(enumerate(names, start=10)))`],
+  ['串接方法呼叫', `s = "  Hello World  "
+print(s.strip().lower().replace(" ", "-"))
+parts = s.strip().split(" ")
+print([p.upper() for p in parts])
+print("-".join(sorted(parts)))`],
+  ['not in 與巢狀條件', `seen = []
+for w in ["a", "b", "a", "c"]:
+    if w not in seen:
+        seen.append(w)
+print(seen)
+d = {"x": 1}
+print("y" not in d, "x" not in d)`],
+  ['最大最小與預設', `xs = [3, 1, 4]
+print(max(xs), min(xs))
+print(max(xs) - min(xs))
+words = ["bb", "a", "ccc"]
+print(max(words, key=len), min(words, key=len))`],
+  ['數字補齊', `n = 7
+print(str(n).zfill(3))
+print("abc".ljust(6, "*") + "|")
+print("abc".rjust(6) + "|")
+print(abs(-5), round(-2.5), round(2.675, 2))`],
 ]

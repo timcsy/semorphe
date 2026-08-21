@@ -1,9 +1,25 @@
-{
-  "id": "python_list_comprehension",
-  "grammar": "tree-sitter-python",
-  "astNodeType": "list_comprehension",
-  "component": { "componentId": "python:array_make_for" },
-  "liftStrategy": "python:liftArrayMakeFor",
-  "fieldMappings": [],
-  "priority": 10
-}
+[
+  {
+    "id": "python_list_comprehension",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "list_comprehension",
+    "component": {
+      "componentId": "python:array_make_for"
+    },
+    "liftStrategy": "python:liftArrayMakeFor",
+    "fieldMappings": [],
+    "priority": 10
+  },
+  {
+    "id": "python_generator_expression",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "generator_expression",
+    "component": {
+      "componentId": "python:array_make_for"
+    },
+    "liftStrategy": "python:liftArrayMakeFor",
+    "fieldMappings": [],
+    "priority": 10,
+    "_why": "🔴 **產生器運算式與串列推導式是同一個形狀，只差一對中括號**（`all(x > 0 for x in xs)`）。\n⚠️ 而**差別要留住**：`generator` 這個屬性記著它原本沒有中括號，否則來回轉換會替使用者加上一對。\n🔴 執行期兩者都是**立刻算完**——惰性看得見的地方（無限序列）不在初學課裡，而它是一個**已知的簡化**。"
+  }
+]

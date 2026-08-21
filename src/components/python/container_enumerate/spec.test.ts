@@ -19,3 +19,19 @@ describe('python:container_enumerate', () => {
   })
 
 })
+
+/**
+ * 🔴 **起始的序號**（2026-08-22）。列印編號時最常見的寫法，
+ * 而忽略它的症狀是**每一個編號都少一**：不報錯、有輸出。
+ */
+describe('起始序號', () => {
+  it('🔴 位置引數與具名引數都要收', async () => {
+    const out = await runPython('names = ["甲", "乙"]\nfor i, n in enumerate(names, 1):\n    print(i, n)\nprint(list(enumerate(names, start=10)))\n')
+    expect(out).toContain('1 甲\n2 乙')
+    expect(out).toContain("[(10, '甲'), (11, '乙')]")
+  })
+
+  it('★ 對照組：沒給的時候仍然從 0 開始', async () => {
+    expect(await runPython('print(list(enumerate(["a"])))\n')).toContain("[(0, 'a')]")
+  })
+})

@@ -11,6 +11,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const cond = one('condition')
     // ⚠️ **外層先寫**：原文的順序是從外到內，而語義樹是從內指向外
     const outer = one('outer')
-    return `[${one('expression')} ${outer ? `${outer} ` : ''}for ${node.properties.obj ?? 'x'} in ${one('iterable')}${cond ? ` if ${cond}` : ''}]`
+    const inner = `${one('expression')} ${outer ? `${outer} ` : ''}for ${node.properties.obj ?? 'x'} in ${one('iterable')}${cond ? ` if ${cond}` : ''}`
+    // ⚠️ 產生器運算式**沒有中括號**——加上去就是改了使用者的碼
+    return node.properties.generator === 'yes' ? inner : `[${inner}]`
   })
 }

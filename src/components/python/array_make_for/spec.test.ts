@@ -78,3 +78,26 @@ describe('巢狀', () => {
     expect(componentIdsOf(await liftPython(code)), '單層不該長出一段外層').not.toContain('python:loop_iter')
   })
 })
+
+/**
+ * 🔴 **產生器運算式**（2026-08-22）——`all(x > 0 for x in xs)`。
+ *
+ * 它與串列推導式是同一個形狀，只差一對中括號，而**那個差別要留住**：
+ * 加上去就是改了使用者的碼。
+ */
+describe('產生器運算式', () => {
+  it('🔴 執行：與加了中括號的算出同一個答案', async () => {
+    const out = await runPython('xs = [2, 4, 6]\nprint(all(x % 2 == 0 for x in xs))\nprint(any(x > 5 for x in xs))\nprint(sum(x * 2 for x in xs))\n')
+    expect(out).toContain('True\nTrue\n24')
+  })
+
+  it('🔴 來回：中括號【不得】被加上去，而原本有的也不得被拿掉', async () => {
+    expect(gen(await liftPython('print(all(x > 0 for x in xs))\n')).trimEnd())
+      .toBe('print(all(x > 0 for x in xs))')
+    expect(gen(await liftPython('a = [x for x in xs]\n')).trimEnd()).toBe('a = [x for x in xs]')
+  })
+
+  it('🔴 一般的呼叫不得被這條路搶走（對照組）', async () => {
+    expect(gen(await liftPython('print(a, b)\nf(1)\n')).trimEnd()).toBe('print(a, b)\nf(1)')
+  })
+})

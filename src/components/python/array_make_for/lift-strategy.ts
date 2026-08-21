@@ -59,7 +59,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 
     return createNode(
       'python:array_make_for',
-      { obj: name.text },
+      // ⚠️ **記著它原本有沒有中括號**——見那一筆樣式的 `_why`
+      { obj: name.text, generator: node.type === 'generator_expression' ? 'yes' : '' },
       {
         expression: [expr],
         iterable: [iter],

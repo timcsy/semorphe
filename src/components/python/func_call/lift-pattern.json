@@ -20,5 +20,23 @@
     ],
     "priority": 3,
     "_why": "⚠️ **優先級 3，最低**——輸出與讀取輸入各有自己的元件（優先級 15），它們要先被認走。這一筆是**其餘所有呼叫**的兜底。\n\n⚠️ 而 `obj.method()` 的 `function` 是一個 `attribute` 節點，`text` 會拿到 `obj.method`——🔴 **那是一個已知的邊界**，方法呼叫要等自己的元件。"
+  },
+  {
+    "id": "python_call_generator",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:func_call"
+    },
+    "liftStrategy": "python:lift_call_generator",
+    "constraints": [
+      {
+        "field": "arguments",
+        "nodeType": "generator_expression"
+      }
+    ],
+    "fieldMappings": [],
+    "priority": 80,
+    "_why": "🔴 **`all(x > 0 for x in xs)` 的 `arguments` 【就是】那個產生器節點，沒有 `argument_list` 包著**（2026-08-22 實測）。\n而一般的那一筆用 `liftChildren` 攤開 `arguments` 的子節點——於是它攤開的是**產生器的內部**（本體與 for 子句各一個），產出 `all(x, for x in xs)`：**一個多了逗號的、不合法的呼叫**。\n\n> **一個「攤開這個欄位的子節點」的宣告，假設了那個欄位一定是一個清單。**\n\n⚠️ priority 80：`simple` 的基準是 10，而一般那一筆是 `constrained`（50＋限制 5）——**兩個數字不可以直接比**，見同族串接比較那一筆的說明。"
   }
 ]

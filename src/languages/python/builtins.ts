@@ -224,7 +224,16 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
     for (let v = s; (st ?? 1) > 0 ? v < e : v > e; v += st ?? 1) out.push(num(v))
     return arr(out)
   },
-  enumerate: (a) => arr(asList(a[0]).map((x, i) => tup([num(i), x]))),
+  /**
+   * 🔴 **第二個引數是起始的序號**（`enumerate(xs, 1)`／`enumerate(xs, start=1)`）
+   * ——列印編號時最常見的寫法。忽略它的症狀是**每一個編號都少一**：
+   * 不報錯、有輸出，而學生看到的清單從 0 開始。
+   */
+  enumerate: (a) => {
+    const startArg = kwArg(a, 'start') ?? positional(a)[1]
+    const start = startArg === undefined ? 0 : Number(startArg.value)
+    return arr(asList(positional(a)[0]).map((x, i) => tup([num(start + i), x])))
+  },
   // ⚠️ `divmod` 回的是 **tuple**（`(3, 2)`），不是串列
   divmod: (a, c) => {
     const x = c.toNumber(a[0]), y = c.toNumber(a[1])
@@ -373,6 +382,11 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   /** 🔴 找不到回 **-1**，不是丟錯——那正是它與 `index` 的差別。 */
   find: (s, a) => num(String(s.value).indexOf(String(a[0]?.value ?? ''))),
   isdigit: (s) => bool(/^[0-9]+$/.test(String(s.value))),
+  /** 前面補零到指定長度——`str(7).zfill(3)` 是 `"007"`。 */
+  zfill: (s, a, c) => str(String(s.value).padStart(c.toNumber(a[0]), '0')),
+  /** ⚠️ 補的字元可以指定，**預設是空白**——與 `zfill` 不同。 */
+  ljust: (s, a, c) => str(String(s.value).padEnd(c.toNumber(a[0]), a[1] ? String(a[1].value) : ' ')),
+  rjust: (s, a, c) => str(String(s.value).padStart(c.toNumber(a[0]), a[1] ? String(a[1].value) : ' ')),
   isalpha: (s) => bool(/^[A-Za-z]+$/.test(String(s.value))),
   title: (s) => str(String(s.value).replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())),
   keys: (s) => arr(dictKeys(s)),
