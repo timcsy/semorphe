@@ -1,0 +1,9 @@
+{
+  "id": "python_class",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "class_definition",
+  "component": { "componentId": "python:class_def" },
+  "liftStrategy": "python:liftClassDef",
+  "fieldMappings": [],
+  "priority": 10
+}

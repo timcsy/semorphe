@@ -15,16 +15,30 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftFuncDef', (node, ctx) => {
     const name = node.childForFieldName('name')?.text ?? 'f'
 
-    // ⚠️ 只收**單純的名字**參數。`a=1`（預設值）、`*args`、`**kwargs` 的節點型別
-    // 分別是 `default_parameter`／`list_splat_pattern`／`dictionary_splat_pattern`
-    // ——它們**沒有被收**，而那是一個【刻意的邊界】：收一半會讓
-    // `def f(a, b=1)` 產回 `def f(a, b)`，而使用者的預設值就不見了。
+    // 🔴 **預設值 2026-08-21 收進來了**。在那之前這裡的註解寫著理由：
+    // 「收一半會讓 `def f(a, b=1)` 產回 `def f(a, b)`，而使用者的預設值就不見了」
+    // ——那個判斷是對的，所以整顆走誠實降級。現在收得了，邊界往前推一格。
+    //
+    // ⚠️ `*args`／`**kwargs`（`list_splat_pattern`／`dictionary_splat_pattern`）
+    // **仍然沒有被收**——同一個理由，還沒有地方放它們。
     const paramsNode = node.childForFieldName('parameters')
     const params: SemanticNode[] = []
     let unsupported = false
     for (const p of paramsNode?.namedChildren ?? []) {
-      if (p.type === 'identifier') params.push(createNode('param_decl', { type: '', name: p.text }))
-      else unsupported = true
+      if (p.type === 'identifier') {
+        params.push(createNode('param_decl', { type: '', name: p.text }))
+      } else if (p.type === 'default_parameter') {
+        // 🔴 **預設值存原文，不是 lift 出來的樹**：它是寫在簽名上的一個字面，
+        //    而積木上那一格是文字欄位。lift 成樹會讓它需要一個插槽，
+        //    而那個插槽在函式定義的積木上沒有地方放。
+        params.push(createNode('param_decl', {
+          type: '',
+          name: p.childForFieldName('name')?.text ?? '',
+          default: p.childForFieldName('value')?.text ?? '',
+        }))
+      } else {
+        unsupported = true
+      }
     }
     // 認不出來的參數形式 → 整顆走誠實降級，而不是產出一個少了東西的函式定義。
     if (unsupported) return null

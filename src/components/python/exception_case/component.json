@@ -1,0 +1,33 @@
+{
+  "componentId": "python:exception_case",
+  "abstractComponent": null,
+  "_abstractComponent_why": "它是「嘗試」那顆底下的一個分支，沒有跨語言的獨立對應物。",
+  "properties": [
+    {
+      "name": "exception",
+      "kind": "string",
+      "default": ""
+    }
+  ],
+  "children": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": null,
+    "_lift_why": "**顯式的空。** `except_clause` 只在「嘗試」那顆的策略裡被拆出來——給它一筆樣式等於宣告它可以獨立出現，而 `except:` 單獨寫是語法錯誤。",
+    "generate": "./generate.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空。** 分支的執行由父概念主導（哪一個分支跑，是父概念判的）——這一顆自己執行沒有意義。",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "consumed-by-parent"
+  },
+  "_properties_why": "**例外的名字是一個【標籤】不是一個變數**：`except ValueError:` 的那個名字在這個直譯器裡不對應任何值。\n🔴 `kind` 因此是 `string` 不是 `identifier`——命名護欄用「第一個 identifier 屬性」推斷接收者，而這一格不是接收者。空字串表示 `except:`（全抓）。"
+}

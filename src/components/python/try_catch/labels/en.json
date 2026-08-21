@@ -1,0 +1,5 @@
+{
+  "PY_TRY_MSG0": "Try %1",
+  "PY_TRY_MSG1": "%1",
+  "PY_TRY_TOOLTIP": "Run the first part; if it fails, jump to the second. Name an error type in the brackets, or leave it blank to handle any error."
+}

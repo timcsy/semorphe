@@ -1,0 +1,9 @@
+{
+  "id": "python_list_comprehension",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "list_comprehension",
+  "component": { "componentId": "python:array_make_for" },
+  "liftStrategy": "python:liftArrayMakeFor",
+  "fieldMappings": [],
+  "priority": 10
+}

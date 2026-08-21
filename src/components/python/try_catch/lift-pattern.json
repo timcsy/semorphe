@@ -1,0 +1,9 @@
+{
+  "id": "python_try",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "try_statement",
+  "component": { "componentId": "python:try_catch" },
+  "liftStrategy": "python:liftTry",
+  "fieldMappings": [],
+  "priority": 10
+}

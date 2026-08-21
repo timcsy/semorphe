@@ -107,4 +107,48 @@ print(math.sqrt(16))
 print(math.pi)
 import random
 print(random.randint(1, 6))`],
+  ['巢狀資料與排序', `students = [{"name": "小明", "score": 92}, {"name": "小華", "score": 78}]
+for s in students:
+    print(s["name"], s["score"])
+names = [s["name"] for s in students if s["score"] >= 80]
+print(names)`],
+  ['while 與旗標', `found = False
+i = 0
+data = [4, 8, 15]
+while i < len(data):
+    if data[i] == 8:
+        found = True
+        break
+    i += 1
+print(found)`],
+  ['字串處理', `line = "  name,age,city  "
+parts = line.strip().split(",")
+print(len(parts))
+print("-".join(parts))
+print(parts[0].upper())`],
+  ['函式互相呼叫', `def is_even(n):
+    return n % 2 == 0
+
+def count_even(xs):
+    total = 0
+    for x in xs:
+        if is_even(x):
+            total += 1
+    return total
+
+print(count_even([1, 2, 3, 4]))`],
+  ['類別與多個方法', `class Counter:
+    def __init__(self):
+        self.n = 0
+
+    def add(self, k):
+        self.n += k
+
+    def show(self):
+        print(self.n)
+
+c = Counter()
+c.add(3)
+c.add(4)
+c.show()`],
 ]

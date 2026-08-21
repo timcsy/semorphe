@@ -17,10 +17,33 @@ describe('python:var_assign_compound', () => {
     expect(got).not.toContain('unresolved')
   })
 
-  it('lift：左邊是索引存取時【誠實降級】，不認一半', async () => {
-    const got = await ids('nums[0] += 1\n')
-    expect(got, '左邊是 subscript，樣式刻意認不出來').not.toContain('python:var_assign_compound')
-    expect(got, '而它必須看得見——不是安靜地不見').toContain('unresolved')
+  /**
+   * 🔴 **邊界推了一格**（2026-08-21）：第一版用 `constraints` 把左邊限定成
+   * 單純的變數名，理由是「認一半不如誠實降級」——而**類別做出來之後
+   * `self.n += k` 是最常見的一行**，那個限制就從誠實變成擋路。
+   *
+   * > **一個「還沒支援」的限制，會在別的東西做出來的那天變成擋路的。**
+   */
+  it('🔴 左邊可以是取成員（`self.n += k`）', async () => {
+    const got = await ids('self.n += 1\n')
+    expect(got, '正向錨點').toContain('python:var_assign_compound')
+    expect(got).not.toContain('unresolved')
+  })
+
+  it('🔴 左邊也可以是索引（`nums[0] += 5`）', async () => {
+    expect(await ids('nums[0] += 1\n')).toContain('python:var_assign_compound')
+    expect(await rt('nums[0] += 1\n')).toBe('nums[0] += 1')
+    expect(await runPython('nums = [1, 2]\nnums[0] += 5\nprint(nums)\n')).toContain('[6, 2]')
+  })
+
+  it('🔴 而索引取不到時要出聲，不得靜默', async () => {
+    const out = await runPython('nums = [1]\nnums[9] += 1\nprint(nums)\n')
+    expect(out).toMatch(/例外|錯誤|Error/)
+  })
+
+  it('執行：物件的欄位也累加得起來', async () => {
+    const out = await runPython('class C:\n    def __init__(self):\n        self.n = 0\n\n    def add(self, k):\n        self.n += k\n\nc = C()\nc.add(3)\nc.add(4)\nprint(c.n)\n')
+    expect(out).toContain('7')
   })
 
   it('來回：六個運算子都一字不差', async () => {

@@ -1,0 +1,4 @@
+{
+  "PY_EXCEPTION_CASE_MSG0": "On %1 do %2",
+  "PY_EXCEPTION_CASE_TOOLTIP": "Handle one kind of error. Leave the name blank to catch any error."
+}

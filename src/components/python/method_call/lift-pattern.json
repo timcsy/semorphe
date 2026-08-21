@@ -1,0 +1,10 @@
+{
+  "id": "python_method_call",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "call",
+  "component": { "componentId": "python:method_call" },
+  "liftStrategy": "python:liftMethodCall",
+  "fieldMappings": [],
+  "priority": 8,
+  "_why": "priority 8：低於輸出與讀取輸入（15），高於一般呼叫的兜底（3）。\n接收者不是 `attribute` 時策略回 `null`，比對迴圈落到下一筆。"
+}

@@ -1,0 +1,4 @@
+{
+  "PY_METHOD_CALL_MSG0": "On %1 do %2",
+  "PY_METHOD_CALL_TOOLTIP": "Call something a value can do itself, such as uppercasing text or appending to a list. The slots hold what you pass in."
+}

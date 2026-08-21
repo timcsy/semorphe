@@ -946,8 +946,16 @@
       "files": 3,
       "dirs": 1
     },
+    "python:array_make_for": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:break": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:class_def": {
+      "files": 4,
       "dirs": 1
     },
     "python:comment": {
@@ -968,6 +976,10 @@
     },
     "python:continue": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:exception_case": {
+      "files": 2,
       "dirs": 1
     },
     "python:func_call": {
@@ -1026,6 +1038,10 @@
       "files": 3,
       "dirs": 1
     },
+    "python:method_call": {
+      "files": 4,
+      "dirs": 1
+    },
     "python:negate": {
       "files": 3,
       "dirs": 1
@@ -1059,6 +1075,10 @@
       "dirs": 1
     },
     "python:string_make": {
+      "files": 4,
+      "dirs": 1
+    },
+    "python:try_catch": {
       "files": 4,
       "dirs": 1
     },

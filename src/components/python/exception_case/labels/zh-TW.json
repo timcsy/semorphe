@@ -1,0 +1,4 @@
+{
+  "PY_EXCEPTION_CASE_MSG0": "遇到 %1 就 %2",
+  "PY_EXCEPTION_CASE_TOOLTIP": "處理某一種錯誤。名稱留空表示任何錯誤都接。"
+}

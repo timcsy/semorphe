@@ -1,0 +1,20 @@
+{
+  "componentId": "python:method_call",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的成員函式呼叫編譯期就知道型別，而這一顆執行期才查。形狀相近而保證不同。",
+  "properties": [
+    { "name": "method", "kind": "identifier", "default": "" }
+  ],
+  "children": { "obj": "expression", "args": "expression" },
+  "role": "both",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_children_why": "🔴 **接收者是一個接點，不是名字的一部分**。\n在這顆之前，`obj.method()` 走一般呼叫那顆，而它的 `name` 用 `extract: \"text\"` 拿到整段 `obj.method`——那筆樣式的 `_why` 自己寫著「**那是一個已知的邊界**，方法呼叫要等自己的元件」。\n\n代價是**接收者只要不是一個變數名就跑不動**：`line.strip().split(\",\")`、`\"-\".join(x)`、`parts[0].upper()` 各是一種，而每一種都要在執行器裡把字串拆回結構。\n\n> **一個把運算式壓成字串的欄位，會讓每一種新的運算式都變成一個新的字串解析題。**"
+}

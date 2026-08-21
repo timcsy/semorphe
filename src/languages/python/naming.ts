@@ -44,3 +44,14 @@ export const PYTHON_ATOMIC_NAMES = [
   //    一個結構本身就是那個概念，沒有「主體＋操作」可以拆。
   'import',
 ] as const
+
+/**
+ * Python 自己的**種類**（名詞性的種差）。
+ */
+export const PYTHON_KINDS = [
+  // ⚠️ `case` 加入日 2026-08-21——`python:exception_case`（一個 `except` 分支）。
+  //    🔴 **這個字 C++ 那側已經在用**（`switch`／`case` 的單字名），
+  //    而這裡是同一個意思當種差用：「例外的一個 case」。
+  //    > **同一個概念在任何主體上用同一個字**——那正是這份詞彙表存在的理由。
+  'case',
+] as const

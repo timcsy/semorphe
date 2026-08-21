@@ -438,5 +438,30 @@
     "componentId": "python:var_assign_sequence",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "與同族固定組合同一個理由：目標名單是策略從 `pattern_list` 拆出來的。由 `spec.test.ts` 的來回與「格數對不上要出聲」釘住。"
+  },
+  {
+    "componentId": "python:array_make_for",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "接點（要算什麼／從哪裡走／篩選）是策略從 `list_comprehension` 的**兄弟子節點**組出來的（`for_in_clause`／`if_clause` 不是欄位）。\n⚠️ 由 `spec.test.ts` 釘住：有無篩選的來回、巢狀整顆降級、以及「那個名字不得污染外面」。"
+  },
+  {
+    "componentId": "python:try_catch",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "`except_clause` 是 `try_statement` 的兄弟子節點，樣式的 `fieldMappings` 走不到那一層。分支是可變數量的。\n⚠️ 由 `spec.test.ts` 釘住：兩個分支要是兩顆、有無名字的來回、以及「控制流訊號不得被抓走」。"
+  },
+  {
+    "componentId": "python:exception_case",
+    "cause": "沒有自己的 lift 路，接點由父概念的策略建出來",
+    "reason": "`except:` 單獨寫是語法錯誤——它只在「嘗試」那顆的策略裡被拆出來（`paths.lift` 是顯式的 `null`）。由父概念的 `spec.test.ts` 一起釘住。"
+  },
+  {
+    "componentId": "python:class_def",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "方法是策略從類別的 `block` 裡逐一 lift 的，而**有一個認不出來就整顆降級**（不產出少了方法的類別）。\n⚠️ 由 `spec.test.ts` 釘住：繼承與類別層級屬性都整顆降級、來回、以及兩個實例各有各的欄位。"
+  },
+  {
+    "componentId": "python:method_call",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "接收者是 `attribute` 節點的 `object` 欄位——**一整個運算式**，而不是名字的一部分。這顆存在的理由就是把它從字串變回接點。\n⚠️ 由 `spec.test.ts` 與第五十條護欄的語料（鏈式呼叫、字面接收者、索引接收者）釘住。"
   }
 ]

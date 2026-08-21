@@ -1,0 +1,40 @@
+[
+  {
+    "id": "python_try_catch",
+    "componentId": "python:try_catch",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_try_catch",
+      "message0": "%{BKY_PY_TRY_MSG0}",
+      "args0": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "HANDLERS",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PY_TRY_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "statementInputs": {
+        "BODY": "body",
+        "HANDLERS": "handlers"
+      }
+    },
+    "_why": "🟢 顏色與分類抄同族的條件元件（`#FFAB19` ／ `control`）。\n🔴 **分支是一個語句插槽**（2026-08-21）：每個 `except` 是一顆自己的積木疊上去，而不是一個固定的第二格——`except A: … except B: …` 有兩個。"
+  }
+]

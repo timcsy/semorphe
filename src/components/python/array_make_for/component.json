@@ -1,0 +1,26 @@
+{
+  "componentId": "python:array_make_for",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側沒有這個構造——最接近的是 `transform` ＋ `copy_if` 兩個演算法呼叫，而那是兩個函式不是一個運算式。",
+  "properties": [
+    { "name": "obj", "kind": "identifier", "default": "x" }
+  ],
+  "children": {
+    "expression": "expression",
+    "iterable": "expression",
+    "condition": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": { "sequenceLiteral": true, "declaresVariable": ["NAME"] },
+  "_traits_why": "**它算出來的是一個串列**（與串列字面同一個性狀），而**它也生出一個變數**——那個名字只在這個運算式裡活著，而變數下拉仍然要看得到它。",
+  "_children_why": "🔴 **只有一個 `for` 與一個可選的 `if`**——巢狀生成式（`[x for a in b for x in a]`）整顆走誠實降級。\n收一半會產出一個少了一層迴圈的合法運算式，而它算出來的東西完全不同。"
+}

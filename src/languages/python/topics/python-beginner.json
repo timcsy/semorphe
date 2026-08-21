@@ -57,7 +57,12 @@
               "python:func_call",
               "python:return",
               "python:import",
-              "python:member_at"
+              "python:member_at",
+              "python:try_catch",
+              "python:array_make_for",
+              "python:class_def",
+              "python:exception_case",
+              "python:method_call"
             ],
             "children": []
           }

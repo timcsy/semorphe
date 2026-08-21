@@ -1,0 +1,12 @@
+/** `python:class_def` 的 **generate** 路——縮排不是大括號。 */
+import type { NodeGenerator } from '../../../core/projection/code-generator'
+import { indent, indented, generateBody } from '../../../core/projection/code-generator'
+
+export function registerGenerate(g: Map<string, NodeGenerator>): void {
+  g.set('python:class_def', (node, ctx) => {
+    const inner = indented(ctx)
+    const methods = node.children.methods ?? []
+    const body = methods.length > 0 ? generateBody(methods, inner) : `${indent(inner)}pass\n`
+    return `${indent(ctx)}class ${node.properties.name ?? 'MyClass'}:\n${body}`
+  })
+}

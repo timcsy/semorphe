@@ -1,0 +1,22 @@
+[
+  {
+    "id": "python_class_def",
+    "componentId": "python:class_def",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_class_def",
+      "message0": "%{BKY_PY_CLASS_MSG0}",
+      "args0": [{ "type": "field_input", "name": "NAME", "text": "MyClass" }],
+      "message1": "%1",
+      "args1": [{ "type": "input_statement", "name": "METHODS", "check": "Statement" }],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PY_CLASS_TOOLTIP}"
+    },
+    "renderMapping": { "fields": { "NAME": "name" }, "statementInputs": { "METHODS": "methods" } },
+    "_why": "🟢 顏色與分類抄同族的函式定義（`#FF6680` ／ `functions`）——類別裡裝的就是函式。"
+  }
+]
