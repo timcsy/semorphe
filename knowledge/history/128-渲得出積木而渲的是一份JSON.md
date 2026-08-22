@@ -60,6 +60,6 @@ Error: Block "python_loop_for": Message index %2 out of range.
 > **「最少幾格」是那個語言的規則，所以它是一個宣告，不是一個預設值。**
 
 **支撐的教訓**：
-[experience：一整排「渲得出積木」的測試，渲的可能是一份 JSON](../experience.md)、
-[experience：為了讓比對繼續跑而寫的容錯，會吃掉它本來要發現的缺陷](../experience.md)
+[experience：一整排「渲得出積木」的測試，渲的可能是一份 JSON](../experience.md#一整排渲得出積木的測試渲的可能是一份-json)、
+[experience：為了讓比對繼續跑而寫的容錯，會吃掉它本來要發現的缺陷](../experience.md#為了讓比對繼續跑而寫的容錯會吃掉它本來要發現的缺陷)
 **完整的場景**：[episodes/2026-08-22](../episodes/2026-08-22-最基本的for迴圈根本建不出來.md)
