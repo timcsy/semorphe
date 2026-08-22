@@ -882,7 +882,7 @@ export class BlockRegistrar {
           this.setInputsInline(true)
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.cpp_containers)
+          this.setColour(CATEGORY_COLORS.containers)
           this.setTooltip(Blockly.Msg['CPP_VECTOR_DECLARE_TOOLTIP'] || '建立一個列表')
         },
         plus_: function (this: any) {
@@ -2025,7 +2025,7 @@ export class BlockRegistrar {
             .appendField(new Blockly.FieldTextInput('') as Blockly.Field, 'CODE')
           this.setPreviousStatement(true, 'Statement')
           this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.cpp_special)
+          this.setColour(CATEGORY_COLORS.special)
           this.setTooltip(Blockly.Msg['C_RAW_CODE_TOOLTIP'] || '直接輸入程式碼')
         },
         saveExtraState: function (this: Blockly.Block & { unresolved_?: boolean; nodeType_?: string }) {
@@ -2040,7 +2040,7 @@ export class BlockRegistrar {
           if (state.unresolved) {
             this.unresolved_ = true
             this.nodeType_ = (state.nodeType as string) ?? ''
-            this.setColour(CATEGORY_COLORS.cpp_special)
+            this.setColour(CATEGORY_COLORS.special)
             const unresolvedTip = (Blockly.Msg['U_UNRESOLVED_TOOLTIP'] || 'Unresolved: %1').replace('%1', this.nodeType_)
             this.setTooltip(unresolvedTip)
           }

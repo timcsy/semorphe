@@ -3,7 +3,7 @@
     "id": "python_container_sum",
     "componentId": "python:container_sum",
     "language": "python",
-    "category": "operators",
+    "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_container_sum",
@@ -17,7 +17,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#59C059",
+      "colour": "#FF661A",
       "tooltip": "%{BKY_PY_CONTAINER_SUM_TOOLTIP}"
     },
     "renderMapping": {

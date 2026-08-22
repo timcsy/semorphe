@@ -8,12 +8,22 @@
     "blockDef": {
       "type": "python_import",
       "message0": "%{BKY_PY_IMPORT_MSG0}",
-      "args0": [{ "type": "field_input", "name": "NAME", "text": "math" }],
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "math"
+        }
+      ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#A0A0A0",
+      "colour": "#888888",
       "tooltip": "%{BKY_PY_IMPORT_TOOLTIP}"
     },
-    "renderMapping": { "fields": { "NAME": "name" } }
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      }
+    }
   }
 ]

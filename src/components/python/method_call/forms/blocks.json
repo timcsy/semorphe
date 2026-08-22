@@ -3,55 +3,94 @@
     "id": "python_method_call",
     "componentId": "python:method_call",
     "language": "python",
-    "category": "functions",
+    "category": "structs",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_method_call",
       "inputsInline": true,
       "message0": "%{BKY_PY_METHOD_CALL_MSG0}",
       "args0": [
-        { "type": "input_value", "name": "OBJ", "check": "Expression" },
-        { "type": "field_input", "name": "METHOD", "text": "" }
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": ""
+        }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#FF6680",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_PY_METHOD_CALL_TOOLTIP}",
       "slotCheck": "Expression",
       "builder": "variadic"
     },
     "renderMapping": {
-      "fields": { "METHOD": "method" },
-      "inputs": { "OBJ": "obj" },
+      "fields": {
+        "METHOD": "method"
+      },
+      "inputs": {
+        "OBJ": "obj"
+      },
       "expressionCounterpart": "python_method_call_expression",
-      "dynamicRules": [{ "countSource": "itemCount", "childSlot": "args", "inputPattern": "EXPR{i}" }]
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "args",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     }
   },
   {
     "id": "python_method_call_expression",
     "componentId": "python:method_call",
     "language": "python",
-    "category": "functions",
+    "category": "structs",
     "version": "1.0.0",
-    "form": { "axis": "role", "value": "expression" },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
     "blockDef": {
       "type": "python_method_call_expression",
       "inputsInline": true,
       "message0": "%{BKY_PY_METHOD_CALL_MSG0}",
       "args0": [
-        { "type": "input_value", "name": "OBJ", "check": "Expression" },
-        { "type": "field_input", "name": "METHOD", "text": "" }
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "METHOD",
+          "text": ""
+        }
       ],
       "output": "Expression",
-      "colour": "#FF6680",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_PY_METHOD_CALL_TOOLTIP}",
       "slotCheck": "Expression",
       "builder": "variadic"
     },
     "renderMapping": {
-      "fields": { "METHOD": "method" },
-      "inputs": { "OBJ": "obj" },
-      "dynamicRules": [{ "countSource": "itemCount", "childSlot": "args", "inputPattern": "EXPR{i}" }]
+      "fields": {
+        "METHOD": "method"
+      },
+      "inputs": {
+        "OBJ": "obj"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "args",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     },
     "_why": "🔴 **運算式形態要有完整的 `blockDef`**，而語句那一份要宣告 `expressionCounterpart`——少了它的症狀是 `x = s.upper()` 渲染成一顆灰色方塊（C++ 的同族元件漏了它一直到 2026-08-21）。"
   }

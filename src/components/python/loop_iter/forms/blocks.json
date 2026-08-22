@@ -3,7 +3,7 @@
     "id": "python_loop_iter",
     "componentId": "python:loop_iter",
     "language": "python",
-    "category": "data",
+    "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_loop_iter",
@@ -27,7 +27,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#FF661A",
       "tooltip": "%{BKY_PY_LOOP_ITER_TOOLTIP}"
     },
     "renderMapping": {

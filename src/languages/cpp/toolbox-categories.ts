@@ -110,7 +110,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     ],
   },
   {
-    key: 'text', nameKey: 'CATEGORY_TEXT', fallback: '文字', colorKey: 'cpp_strings',
+    key: 'text', nameKey: 'CATEGORY_TEXT', fallback: '文字', colorKey: 'strings',
     sources: [
       { from: '<cstring>', category: 'strings' },
       { from: '<string>', category: 'containers' },
@@ -121,7 +121,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     ],
   },
   {
-    key: 'maps_sets', nameKey: 'CATEGORY_MAPS_SETS', fallback: '對應與集合', colorKey: 'cpp_containers',
+    key: 'maps_sets', nameKey: 'CATEGORY_MAPS_SETS', fallback: '對應與集合', colorKey: 'containers',
     sources: [
       { from: '<map>', category: 'containers' },
       { from: '<set>', category: 'containers' },
@@ -130,7 +130,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     ],
   },
   {
-    key: 'stacks_queues', nameKey: 'CATEGORY_STACKS_QUEUES', fallback: '堆疊與佇列', colorKey: 'cpp_containers',
+    key: 'stacks_queues', nameKey: 'CATEGORY_STACKS_QUEUES', fallback: '堆疊與佇列', colorKey: 'containers',
     sources: [
       { from: '<stack>', category: 'containers' },
       { from: '<queue>', category: 'containers' },
@@ -153,7 +153,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
   // ── 記憶體與型別 ──
 
   {
-    key: 'pointers_memory', nameKey: 'CATEGORY_POINTERS_MEMORY', fallback: '指標與記憶體', colorKey: 'cpp_pointers',
+    key: 'pointers_memory', nameKey: 'CATEGORY_POINTERS_MEMORY', fallback: '指標與記憶體', colorKey: 'pointers',
     sources: [
       { from: '(core)', category: 'pointers' },
       // memset / memcpy 宣告在 <cstring> 的 strings 分類，而它們是記憶體操作
@@ -161,7 +161,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     ],
   },
   {
-    key: 'structs_classes', nameKey: 'CATEGORY_STRUCTS_CLASSES', fallback: '結構與類別', colorKey: 'cpp_structs',
+    key: 'structs_classes', nameKey: 'CATEGORY_STRUCTS_CLASSES', fallback: '結構與類別', colorKey: 'structs',
     sources: [
       { from: '(core)', category: 'structures' },
       { from: '(core)', category: 'oop' },
@@ -180,7 +180,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
   // 學生找「怎麼印東西到序列埠」時，不該在一堆腳位積木裡翻。
 
   {
-    key: 'hardware_pins', nameKey: 'CATEGORY_HARDWARE_PINS', fallback: '腳位與時間', colorKey: 'cpp_special',
+    key: 'hardware_pins', nameKey: 'CATEGORY_HARDWARE_PINS', fallback: '腳位與時間', colorKey: 'hardware',
     sources: [
       { from: '(arduino)', category: 'hardware' },
     ],
@@ -201,13 +201,13 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
   //
   // 判準與上面那兩段相同：**學生找「怎麼讓伺服轉」時，不該在一堆腳位積木裡翻。**
   {
-    key: 'hardware_modules', nameKey: 'CATEGORY_HARDWARE_MODULES', fallback: '零件與模組', colorKey: 'cpp_special',
+    key: 'hardware_modules', nameKey: 'CATEGORY_HARDWARE_MODULES', fallback: '零件與模組', colorKey: 'hardware',
     sources: [
       { from: '(arduino)', category: 'modules' },
     ],
   },
   {
-    key: 'hardware_serial', nameKey: 'CATEGORY_HARDWARE_SERIAL', fallback: '序列埠', colorKey: 'io',
+    key: 'hardware_serial', nameKey: 'CATEGORY_HARDWARE_SERIAL', fallback: '序列埠', colorKey: 'hardware',
     sources: [
       { from: '(arduino)', category: 'io' },
     ],
@@ -216,7 +216,7 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
   // ── 程式基礎設施 ──
 
   {
-    key: 'program_config', nameKey: 'CATEGORY_PROGRAM_CONFIG', fallback: '程式設定', colorKey: 'cpp_special',
+    key: 'program_config', nameKey: 'CATEGORY_PROGRAM_CONFIG', fallback: '程式設定', colorKey: 'special',
     sources: [
       { from: '(core)', category: 'preprocessor' },
       { from: '(core)', category: 'special' },

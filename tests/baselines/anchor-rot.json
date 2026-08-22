@@ -4,7 +4,7 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "auditFileCount": 58,
+    "auditFileCount": 59,
     "trueIdentityCount": 307
   },
   "badAnchor": 0

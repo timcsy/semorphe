@@ -3,13 +3,13 @@
     "id": "python_tuple_make",
     "componentId": "python:tuple_make",
     "language": "python",
-    "category": "data",
+    "category": "maps",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_tuple_make",
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#9966FF",
       "tooltip": "%{BKY_PY_TUPLE_MAKE_TOOLTIP}",
       "labelKey": "PY_TUPLE_MAKE_MSG",
       "labelFallback": "固定組合",
@@ -17,8 +17,16 @@
       "builder": "variadic"
     },
     "renderMapping": {
-      "fields": {}, "inputs": {}, "statementInputs": {},
-      "dynamicRules": [{ "countSource": "itemCount", "childSlot": "items", "inputPattern": "EXPR{i}" }]
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "items",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     }
   }
 ]

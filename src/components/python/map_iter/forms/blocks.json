@@ -3,7 +3,7 @@
     "id": "python_map_iter",
     "componentId": "python:map_iter",
     "language": "python",
-    "category": "data",
+    "category": "maps",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_map_iter",
@@ -35,7 +35,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#9966FF",
       "tooltip": "%{BKY_PY_MAP_ITER_TOOLTIP}"
     },
     "renderMapping": {

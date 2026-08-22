@@ -233,5 +233,12 @@
   "RUNTIME_ERR_NO_MORE_INPUT": "程式想讀一行輸入，而已經沒有輸入了",
   "RUNTIME_ERR_UNSUPPORTED_FORMAT": "這種格式（%1）還不支援",
   "RUNTIME_ERR_KEY_NOT_FOUND": "字典裡沒有這個鍵（%1）",
-  "RUNTIME_ERR_USER_RAISED": "%1"
+  "RUNTIME_ERR_USER_RAISED": "%1",
+  "CAT_PY_LISTS": "串列",
+  "CAT_PY_MAPS": "字典與序對",
+  "CAT_PY_CLASSES": "類別與物件",
+  "CAT_PY_VALUES": "變數與值",
+  "CAT_PY_CONTROL": "控制流程",
+  "CAT_PY_ERRORS": "錯誤處理",
+  "CAT_PY_CONTAINERS": "容器"
 }

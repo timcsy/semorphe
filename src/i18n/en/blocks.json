@@ -233,5 +233,12 @@
   "RUNTIME_ERR_NO_MORE_INPUT": "The program asked for a line of input, but there is none left",
   "RUNTIME_ERR_UNSUPPORTED_FORMAT": "Format specifier %1 is not supported yet",
   "RUNTIME_ERR_KEY_NOT_FOUND": "No such key in the dictionary (%1)",
-  "RUNTIME_ERR_USER_RAISED": "%1"
+  "RUNTIME_ERR_USER_RAISED": "%1",
+  "CAT_PY_LISTS": "Lists",
+  "CAT_PY_MAPS": "Dictionaries & Pairs",
+  "CAT_PY_CLASSES": "Classes & Objects",
+  "CAT_PY_VALUES": "Variables & Values",
+  "CAT_PY_CONTROL": "Control Flow",
+  "CAT_PY_ERRORS": "Error Handling",
+  "CAT_PY_CONTAINERS": "Containers"
 }

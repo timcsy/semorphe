@@ -3,7 +3,7 @@
     "id": "python_map_at_default",
     "componentId": "python:map_at_default",
     "language": "python",
-    "category": "data",
+    "category": "maps",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_map_at_default",
@@ -27,7 +27,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#9966FF",
       "tooltip": "%{BKY_PY_MAP_AT_DEFAULT_TOOLTIP}"
     },
     "renderMapping": {

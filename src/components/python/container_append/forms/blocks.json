@@ -3,7 +3,7 @@
     "id": "python_container_append",
     "componentId": "python:container_append",
     "language": "python",
-    "category": "data",
+    "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_container_append",
@@ -21,7 +21,7 @@
           "check": "Expression"
         }
       ],
-      "colour": "#FF8C1A",
+      "colour": "#FF661A",
       "tooltip": "%{BKY_PY_CONTAINER_APPEND_TOOLTIP}",
       "previousStatement": "Statement",
       "nextStatement": "Statement"

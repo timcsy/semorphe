@@ -3,7 +3,7 @@
     "id": "python_string_lower",
     "componentId": "python:string_lower",
     "language": "python",
-    "category": "data",
+    "category": "strings",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_string_lower",
@@ -16,7 +16,7 @@
           "check": "Expression"
         }
       ],
-      "colour": "#FF8C1A",
+      "colour": "#0FBD8C",
       "tooltip": "%{BKY_PY_STRING_LOWER_TOOLTIP}",
       "output": "Expression"
     },

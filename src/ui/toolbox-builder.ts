@@ -152,6 +152,8 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
     // 那是教學設計（「有 else 的 if 值得一個獨立入口」），登錄表推不出來，
     // 所以它**留著**，並在該積木出現的位置就地展開。
     const stateEntries = new Map<string, ToolboxEntry[]>()
+    /** 指名了、而還沒有在 `sources` 裡看到的——留到最後檢查（見下面）。 */
+    const unusedExtra = new Set<string>()
     for (const t of def.extraTypes ?? []) {
       if (typeof t === 'string') {
         throw new Error(
@@ -161,6 +163,9 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
         )
       }
       if (!isVisible(t.type)) continue
+      // ⚠️ **登錄表裡根本沒有這顆時不算「沒被展開」**——空的登錄表
+      //    （單元測試會給一個）不該讓這條檢查說話。
+      if (blockSpecRegistry.getByBlockType(t.type)) unusedExtra.add(t.type)
       const list = stateEntries.get(t.type) ?? []
       list.push({ kind: 'block', type: t.type, ...(t.extraState ? { extraState: t.extraState } : {}) })
       stateEntries.set(t.type, list)
@@ -172,10 +177,27 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
       for (const t of sourceBlocks(src.from, src.category, def.key)) {
         if (excludeSet.has(t) || seen.has(t)) continue
         seen.add(t)
+        unusedExtra.delete(t)
         const withState = stateEntries.get(t)
         if (withState) contents.push(...withState)
         else contents.push({ kind: 'block', type: t })
       }
+    }
+
+    // 🔴 **就地展開的入口，如果那顆積木沒有從 `sources` 出現，它什麼也不做**
+    //    ——而在 2026-08-22 之前那是**靜默的**：我替「字典」寫了五筆想借放的
+    //    積木，工具箱一顆都沒多，也沒有任何訊息。
+    //
+    // ⚠️ 這條規則本身是刻意的（見上面那個 throw：「這顆積木屬於這個分類」
+    //    是登錄表知道的事），而**一個不會生效的宣告要出聲**。
+    //
+    // > **一個永遠不會被套用的設定，與一個寫錯的設定長得一模一樣。**
+    if (unusedExtra.size > 0) {
+      throw new Error(
+        `工具箱分類 '${def.key}' 的 extraTypes 指名了 ${[...unusedExtra].join('、')}，` +
+          `而它們沒有從這個分類的 sources 出現——**就地展開沒有位置可以展開**。\n` +
+          `extraTypes 是「同一顆積木用不同的預設狀態出現數次」，不是「把別的分類的積木借過來」。`,
+      )
     }
 
     return {

@@ -3,7 +3,7 @@
     "id": "python_try_catch",
     "componentId": "python:try_catch",
     "language": "python",
-    "category": "control",
+    "category": "errors",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_try_catch",
@@ -25,7 +25,7 @@
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#FFAB19",
+      "colour": "#C0392B",
       "tooltip": "%{BKY_PY_TRY_TOOLTIP}",
       "message2": "%{BKY_PY_TRY_MSG2} %1",
       "args2": [

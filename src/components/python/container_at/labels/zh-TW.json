@@ -1,4 +1,4 @@
 {
-  "PY_CONTAINER_AT_MSG0": "取 %1 的第 %2 格",
+  "PY_CONTAINER_AT_MSG0": "取 %1 的 %2",
   "PY_CONTAINER_AT_TOOLTIP": "從串列取出某一格，或用鍵去字典查值。串列的格數從 0 開始；負數從尾巴倒數。取不到會停下來說明原因。"
 }

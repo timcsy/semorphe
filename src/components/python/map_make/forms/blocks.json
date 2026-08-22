@@ -3,13 +3,13 @@
     "id": "python_map_make",
     "componentId": "python:map_make",
     "language": "python",
-    "category": "data",
+    "category": "maps",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_map_make",
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#9966FF",
       "tooltip": "%{BKY_PY_MAP_MAKE_TOOLTIP}",
       "labelKey": "PY_MAP_MAKE_MSG",
       "labelFallback": "字典",
@@ -17,8 +17,16 @@
       "builder": "variadic"
     },
     "renderMapping": {
-      "fields": {}, "inputs": {}, "statementInputs": {},
-      "dynamicRules": [{ "countSource": "itemCount", "childSlot": "pairs", "inputPattern": "EXPR{i}" }]
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "pairs",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     }
   }
 ]

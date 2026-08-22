@@ -3,7 +3,10 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 C++ 那側把它切成兩顆（依容器型別各一顆），因為那邊**編譯期就知道型別**。Python 這一顆刻意合成一顆——見 `_children_why`。指向其中任一顆都會是一個我們判不出來的宣稱。",
   "properties": [],
-  "children": { "target": "expression", "key": "expression" },
+  "children": {
+    "target": "expression",
+    "key": "expression"
+  },
   "role": "expression",
   "owner": "(python)",
   "paths": {
@@ -13,5 +16,5 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_children_why": "🔴 **名字叫 `container` 而不是 `array` 是刻意的**：`a[i]` 在 AST 上（`subscript`）分不出目標是串列還是字典，**用 `array` 會是一個我們判不出來的宣稱**。\n接點叫 `key` 而不是 `index` 也是同一個理由——字典的那一格不是序號。"
+  "_children_why": "🔴 **名字叫 `container` 而不是 `array` 是刻意的**：`a[i]` 在 AST 上（`subscript`）分不出目標是串列還是字典，**用 `array` 會是一個我們判不出來的宣稱**。\n接點叫 `key` 而不是 `index` 也是同一個理由——字典的那一格不是序號。\n🔴 **標籤也不說「第幾格」**（2026-08-22）：這一顆在工具箱裡住在「容器」那一格（串列、字典、文字共用），而「格」是串列的說法——**接點叫 `key` 不叫 `index`，標籤要跟上**。\n> **一個刻意不宣稱型別的元件，它的標籤也不能替它宣稱。**"
 }

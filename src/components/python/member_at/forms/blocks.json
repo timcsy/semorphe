@@ -3,7 +3,7 @@
     "id": "python_member_at",
     "componentId": "python:member_at",
     "language": "python",
-    "category": "data",
+    "category": "structs",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_member_at",
@@ -22,7 +22,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_PY_MEMBER_AT_TOOLTIP}"
     },
     "renderMapping": {

@@ -3,7 +3,7 @@
     "id": "python_string_strip",
     "componentId": "python:string_strip",
     "language": "python",
-    "category": "data",
+    "category": "strings",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_string_strip",
@@ -17,7 +17,7 @@
         }
       ],
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#0FBD8C",
       "tooltip": "%{BKY_PY_STRING_STRIP_TOOLTIP}"
     },
     "renderMapping": {

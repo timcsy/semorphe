@@ -3,13 +3,13 @@
     "id": "python_array_make",
     "componentId": "python:array_make",
     "language": "python",
-    "category": "data",
+    "category": "arrays",
     "version": "1.0.0",
     "blockDef": {
       "type": "python_array_make",
       "inputsInline": true,
       "output": "Expression",
-      "colour": "#FF8C1A",
+      "colour": "#FF661A",
       "tooltip": "%{BKY_PY_ARRAY_MAKE_TOOLTIP}",
       "labelKey": "PY_ARRAY_MAKE_MSG",
       "labelFallback": "串列",
@@ -17,8 +17,16 @@
       "builder": "variadic"
     },
     "renderMapping": {
-      "fields": {}, "inputs": {}, "statementInputs": {},
-      "dynamicRules": [{ "countSource": "itemCount", "childSlot": "items", "inputPattern": "EXPR{i}" }]
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "items",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
     }
   }
 ]
