@@ -108,8 +108,31 @@ const isDegraded = (id: string): boolean =>
   id === 'unresolved' || id.endsWith(':raw_code') || id.endsWith(':raw_expression')
 
 /** 排版正規化——比的是**程式**，不是空白。 */
+/**
+ * 來回比對用的正規化。
+ *
+ * 🔴 **縮排是語義，行內的空白不是**（2026-08-22）。
+ *
+ * 在此之前這裡只 `trimEnd`，於是 `b**2` 與 `b ** 2` 算不一樣。
+ * 而那 95 段語料之所以全過，是因為**它們的空白剛好都是產生器的寫法**
+ * ——語料是我寫的，而我按著產生器的排版寫。使用者第一次貼進一段
+ * 真的教學程式（`D = b**2 - 4*a*c`）就撞到了。
+ *
+ * > **一份由寫實作的人寫的語料，連【空白】都會遵守那個實作的習慣。**
+ *
+ * ⚠️ 而**不能一律去掉空白**：`not x` 去掉之後是 `notx`，
+ * 於是「產生器漏了一個空格」這種真缺陷會變成看不見。
+ * 🟢 只去掉**貼著標點／運算子**的那些——字與字之間的空白留著。
+ */
 const norm = (x: string): string =>
-  x.trim().split('\n').map((l) => l.trimEnd()).filter((l) => l.length > 0).join('\n')
+  x.trim().split('\n')
+    .map((l) => {
+      const indent = /^\s*/.exec(l)![0]
+      const body = l.trim().replace(/\s*([^\w\s\u4e00-\u9fff])\s*/g, '$1')
+      return indent + body
+    })
+    .filter((l) => l.trim().length > 0)
+    .join('\n')
 
 /**
  * 掉進通用呼叫的**內建**名字有幾個。

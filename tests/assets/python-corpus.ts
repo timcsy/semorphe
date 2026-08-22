@@ -703,4 +703,23 @@ print(str(n).zfill(3))
 print("abc".ljust(6, "*") + "|")
 print("abc".rjust(6) + "|")
 print(abs(-5), round(-2.5), round(2.675, 2))`],
+  ['一元二次方程式', `a, b, c = 1, -5, 6
+D = b**2 - 4*a*c
+x1 = (-b + D)/(2 * a)
+x2 = (-b - D)/(2 * a)
+print(x1, x2)
+print((a + b) * c, a + (b * c))`],
+  ['公式與括號', `n = 10
+print((n * (n + 1)) // 2)
+c = 100
+f = c * 9 / 5 + 32
+print(f, (f - 32) * 5 / 9)
+w, h = 3, 4
+print(2 * (w + h), (w + h) / 2)`],
+  ['條件裡的括號', `x, y = 5, 12
+if (x > 0) and (y > 10):
+    print("都符合")
+if not (x > 100):
+    print("沒超過")
+print((x > 0) == (y > 0))`],
 ]
