@@ -1,0 +1,282 @@
+[
+  {
+    "type": "aliased_import",
+    "cause": "該補進語料",
+    "reason": "`import numpy as np`。"
+  },
+  {
+    "type": "await",
+    "cause": "語言有而這個工具不做",
+    "reason": "非同步不在初學課裡，而這個直譯器沒有事件迴圈——收了會是一個兌現不了的宣稱。"
+  },
+  {
+    "type": "case_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "case_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "chevron",
+    "cause": "Python 2 的語法",
+    "reason": "`print >>f, x` 的那個 `>>`。"
+  },
+  {
+    "type": "class_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "comment",
+    "cause": "該補進語料",
+    "reason": "🔴 **我們有 `python:comment` 元件，而 98 段語料一段註解都沒有**——這是這條護欄第一次跑就抓到的最刺眼的一筆。"
+  },
+  {
+    "type": "complex_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "concatenated_string",
+    "cause": "該補進語料",
+    "reason": "`\"a\" \"b\"` 與跨行的長字串。"
+  },
+  {
+    "type": "constrained_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "`T: int`。"
+  },
+  {
+    "type": "decorated_definition",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "decorator",
+    "cause": "語言有而這個工具不做",
+    "reason": "裝飾器要「函式是值 ＋ 包裝」，前者有了而後者的教學價值在初學課之後。"
+  },
+  {
+    "type": "dict_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "dictionary_splat",
+    "cause": "該補進語料",
+    "reason": "`f(**kw)`／`{**a, **b}` 的呼叫側。"
+  },
+  {
+    "type": "dictionary_splat_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "`**kwargs` 的參數側——函式定義那顆的宣告寫著它為什麼還沒收。"
+  },
+  {
+    "type": "ellipsis",
+    "cause": "語言有而這個工具不做",
+    "reason": "`...` 在初學課裡只當佔位符，而 `pass` 是更常見的那一個。"
+  },
+  {
+    "type": "escape_interpolation",
+    "cause": "語言有而這個工具不做",
+    "reason": "f-string 裡的 `{{`／`}}`。"
+  },
+  {
+    "type": "escape_sequence",
+    "cause": "該補進語料",
+    "reason": "🔴 `\"\\n\"`——**98 段語料裡沒有一個字串含跳脫字元**。"
+  },
+  {
+    "type": "exec_statement",
+    "cause": "Python 2 的語法",
+    "reason": "同上，Python 3 的 `exec()` 是函式。"
+  },
+  {
+    "type": "format_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "f-string 的內部節點，我們的格式化文字走 `interpolation`＋`format_specifier`。"
+  },
+  {
+    "type": "future_import_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "`from __future__ import ...` 是相容性開關，不是教學內容。"
+  },
+  {
+    "type": "generic_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "`list[int]` 這種下標型別。"
+  },
+  {
+    "type": "import_from_statement",
+    "cause": "該補進語料",
+    "reason": "`from math import sqrt`——比 `import math` 還常見。"
+  },
+  {
+    "type": "import_prefix",
+    "cause": "該補進語料",
+    "reason": "相對匯入的那幾個點。"
+  },
+  {
+    "type": "keyword_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "keyword_separator",
+    "cause": "語言有而這個工具不做",
+    "reason": "`def f(*, a)`。"
+  },
+  {
+    "type": "line_continuation",
+    "cause": "該補進語料",
+    "reason": "行末的 `\\`。"
+  },
+  {
+    "type": "list_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "list_splat",
+    "cause": "該補進語料",
+    "reason": "`f(*args)` 的呼叫側。"
+  },
+  {
+    "type": "match_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "結構化模式比對（3.10+）——初學課用 if/elif。"
+  },
+  {
+    "type": "member_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "`a.B` 當型別用。"
+  },
+  {
+    "type": "named_expression",
+    "cause": "該補進語料",
+    "reason": "海象運算子 `:=`。"
+  },
+  {
+    "type": "nonlocal_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "`nonlocal` 要的是「往上一層而不是最外層」，而 `global` 已經涵蓋教學上的那個用途。"
+  },
+  {
+    "type": "parenthesized_list_splat",
+    "cause": "語言有而這個工具不做",
+    "reason": "`(*a,)` 這種寫法。"
+  },
+  {
+    "type": "pass_statement",
+    "cause": "該補進語料",
+    "reason": "`pass` 是初學課的第一個「什麼都不做」。"
+  },
+  {
+    "type": "positional_separator",
+    "cause": "語言有而這個工具不做",
+    "reason": "`def f(a, /, b)`。"
+  },
+  {
+    "type": "print_statement",
+    "cause": "Python 2 的語法",
+    "reason": "`print x` 是 Python 2 的語句形式；Python 3 的 `print(x)` 是呼叫，語料裡到處都是。"
+  },
+  {
+    "type": "relative_import",
+    "cause": "該補進語料",
+    "reason": "`from . import x`——教學上少見，而 AI 生的專案碼有。"
+  },
+  {
+    "type": "set",
+    "cause": "該補進語料",
+    "reason": "`{1, 2, 3}`——而集合的執行期只是去重，那個邊界該被語料量到。"
+  },
+  {
+    "type": "set_comprehension",
+    "cause": "該補進語料",
+    "reason": "`{x for x in xs}`。"
+  },
+  {
+    "type": "splat_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "splat_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "`*Ts`。"
+  },
+  {
+    "type": "tuple_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "type",
+    "cause": "語言有而這個工具不做",
+    "reason": "型別註記的內容節點——與上面那一族同進退。"
+  },
+  {
+    "type": "type_alias_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "`type X = ...`（3.12+）。"
+  },
+  {
+    "type": "type_conversion",
+    "cause": "語言有而這個工具不做",
+    "reason": "f-string 的 `!r`／`!s`。"
+  },
+  {
+    "type": "type_parameter",
+    "cause": "語言有而這個工具不做",
+    "reason": "泛型參數（3.12+）。"
+  },
+  {
+    "type": "typed_default_parameter",
+    "cause": "該補進語料",
+    "reason": "`def f(x: int = 0)`。"
+  },
+  {
+    "type": "typed_parameter",
+    "cause": "該補進語料",
+    "reason": "🔴 `def f(x: int)`——**AI 生的 Python 到處都是型別註記**。"
+  },
+  {
+    "type": "union_pattern",
+    "cause": "語言有而這個工具不做",
+    "reason": "同上。"
+  },
+  {
+    "type": "union_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "`int | None`。"
+  },
+  {
+    "type": "wildcard_import",
+    "cause": "該補進語料",
+    "reason": "`from x import *`。"
+  },
+  {
+    "type": "with_clause",
+    "cause": "該補進語料",
+    "reason": "同上。"
+  },
+  {
+    "type": "with_item",
+    "cause": "該補進語料",
+    "reason": "同上。"
+  },
+  {
+    "type": "with_statement",
+    "cause": "該補進語料",
+    "reason": "`with open(...) as f`——即使檔案 I/O 不支援，它也該誠實降級而不是沒被量過。"
+  },
+  {
+    "type": "yield",
+    "cause": "語言有而這個工具不做",
+    "reason": "產生器需要「暫停一個函式再回來」，這個直譯器沒有那一層。"
+  }
+]
