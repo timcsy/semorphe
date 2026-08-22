@@ -4,7 +4,9 @@
     "grammar": "tree-sitter-cpp",
     "astNodeType": "parenthesized_expression",
     "patternType": "unwrap",
-    "unwrapChild": 0
+    "unwrapChild": 0,
+    "_why": "🔴 **括號是排版，而排版是使用者寫的**（2026-08-22，與 Python 那筆同一刀）。\n只拆不記的話產生器只補回【必要的】括號，於是 `a + (b * c)` 產回 `a + b * c`——語義一樣，**而那不是使用者寫的東西**。\n⚠️ **已知的邊界**：記的是「有沒有」不是「有幾層」，`((a + b))` 會塌成 `(a + b)`。",
+    "layoutHint": "parenthesized"
   },
   {
     "id": "cpp_unwrap_condition_clause",

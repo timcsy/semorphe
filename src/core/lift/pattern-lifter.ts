@@ -15,6 +15,8 @@ interface PatternEntry {
   constraints: AstPattern['constraints']
   fieldMappings?: FieldMapping[]
   operatorDispatch?: AstPattern['operatorDispatch']
+  /** `unwrap` 拆掉的那一層是**排版**時，把它記在被拆出來那顆的 `layoutHints` 上。 */
+  layoutHint?: string
   chain?: AstPattern['chain']
   composite?: AstPattern['composite']
   unwrapChild?: AstPattern['unwrapChild']
@@ -147,6 +149,7 @@ export class PatternLifter {
         chain: ap.chain,
         composite: ap.composite,
         unwrapChild: ap.unwrapChild,
+        layoutHint: (ap as { layoutHint?: string }).layoutHint,
         contextTransform: ap.contextTransform,
         multiResult: ap.multiResult,
         liftStrategy: ap.liftStrategy,
@@ -188,6 +191,7 @@ export class PatternLifter {
         chain: lp.chain,
         composite: lp.composite,
         unwrapChild: lp.unwrapChild,
+        layoutHint: (lp as { layoutHint?: string }).layoutHint,
         contextTransform: lp.contextTransform,
         multiResult: lp.multiResult,
         extract: lp.extract,
@@ -489,7 +493,23 @@ export class PatternLifter {
     }
 
     if (!child) return null
-    return ctx.lift(child)
+    const lifted = ctx.lift(child)
+    // 🔴 **拆掉的那一層有時候是【排版】，而排版是使用者寫的**（2026-08-22）。
+    //
+    // `(-b + D) / (2 * a)` 的括號拆掉之後，產生器只會照優先級補回**必要的**那些
+    // ——於是 `a + (b * c)` 產回 `a + b * c`：語義一樣，**而使用者的碼被改了**。
+    //
+    // ⚠️ 而**哪一種 unwrap 是排版要由樣式【宣告】**：同一個機制也用來拆
+    // `expression_statement` 與 `condition_clause`，那兩種拆掉不留痕跡才是對的。
+    //
+    // > **一個「拆掉一層」的機制，答不出「拆掉的那一層有沒有意義」——只有宣告答得出。**
+    if (lifted && entry.layoutHint) {
+      lifted.metadata = {
+        ...(lifted.metadata ?? {}),
+        layoutHints: { ...(lifted.metadata?.layoutHints ?? {}), [entry.layoutHint]: true },
+      }
+    }
+    return lifted
   }
 
   // ── Context Transform ──

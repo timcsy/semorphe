@@ -156,7 +156,11 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
   it('🔴 lift pattern 不得有不存在的鍵——JSON 沒有型別檢查，拼錯了沒有人會說', () => {
     const PATTERN_KEYS = new Set(['id', 'grammar', 'astNodeType', 'component', 'patternType',
       'constraints', 'fieldMappings', 'operatorDispatch', 'chain', 'composite', 'unwrapChild',
-      'contextTransform', 'multiResult', 'extract', 'priority', 'liftStrategy'])
+      'contextTransform', 'multiResult', 'extract', 'priority', 'liftStrategy',
+      // ⚠️ `layoutHint` 加入日 2026-08-22——`unwrap` 拆掉的那一層是**排版**時，
+      //    把「這裡本來有一對括號」記在被拆出來那顆身上。
+      //    🔴 而它必須列在這裡才生效：這條護欄第一次跑就擋下了它（沒列＝靜默忽略）。
+      'layoutHint'])
     const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent'])
     const MAPPING_KEYS = new Set(['semantic', 'ast', 'extract', 'transform'])
     const bad: string[] = []

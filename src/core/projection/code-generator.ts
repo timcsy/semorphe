@@ -356,6 +356,14 @@ function countNewlines(s: string): number {
 
 export function generateExpression(node: SemanticNode, ctx: GeneratorContext): string {
   if (!node) return ''
+  // 🔴 **使用者寫的括號要還回去**——見 `pattern-lifter` 的 `layoutHint`。
+  //    優先級只補【必要的】那些，而 `a + (b * c)` 的那一對不是必要的，
+  //    它是使用者的排版。⚠️ 這裡是**唯一的**加括號點（`genChild` 會問過再決定），
+  //    兩處都加的話會變成 `((...))`。
+  if (node.metadata?.layoutHints?.parenthesized === true) {
+    const inner = generateExpression({ ...node, metadata: { ...node.metadata, layoutHints: { ...node.metadata.layoutHints, parenthesized: false } } }, ctx)
+    return `(${inner})`
+  }
 
   // Try JSON-driven template generator first
   const tg = ctx.templateGenerator ?? globalTemplateGenerator

@@ -1,5 +1,14 @@
 [
   {
+    "id": "python_unwrap_parens",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "parenthesized_expression",
+    "patternType": "unwrap",
+    "unwrapChild": 0,
+    "layoutHint": "parenthesized",
+    "_why": "🔴 **括號是排版，而排版是使用者寫的**（2026-08-22，使用者截圖回報：`(-b + D)/(2 * a)` 兩邊都變成灰色的「直接寫運算式」）。\n\n在此之前 Python 沒有這一筆，於是**每一個帶括號的子運算式都整段降級**——一元一次方程式那種最基本的教學程式，畫出來一半是灰的。\n\n⚠️ 而**只拆不記會改到使用者的碼**：產生器只照優先級補回【必要的】括號，於是 `a + (b * c)` 產回 `a + b * c`。`layoutHint` 把「這裡本來有一對括號」記在被拆出來那顆的 `layoutHints` 上。\n\n> **一個「拆掉一層」的機制，答不出「拆掉的那一層有沒有意義」——只有宣告答得出。**\n\n🟢 C++ 那側早就有同形狀的一筆（`cpp_unwrap_parens`），而它**沒有這個宣告**——它的多餘括號今天仍然會被拿掉，那是同一個病的另一個實例（見那一筆旁邊的註記）。\n\n⚠️ **已知的邊界**：`layoutHints` 記的是「這裡有沒有括號」（布林），記不住**有幾層**——`((a + b))` 會塌成 `(a + b)`。釘在 `tests/integration/python-parentheses.test.ts` 的一條測試上，不是一句註解。"
+  },
+  {
     "id": "python_expression_statement",
     "grammar": "tree-sitter-python",
     "astNodeType": "expression_statement",

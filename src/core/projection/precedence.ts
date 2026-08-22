@@ -51,5 +51,7 @@ export function genChild(
 ): string {
   if (!child) return ''
   const expr = generateExpression(child, ctx)
+  // ⚠️ 使用者自己寫了括號時 `generateExpression` 已經補上了——再括一次會是 `((…))`
+  if (child.metadata?.layoutHints?.parenthesized === true) return expr
   return precedence(child) < parentPrec ? `(${expr})` : expr
 }
