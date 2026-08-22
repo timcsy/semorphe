@@ -20,12 +20,13 @@ import type { RuntimeValue } from '../../../interpreter/types'
 import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
 import { callWith, withCall } from '../func_def/call'
 
+import { evalPythonArgs } from '../../../languages/python/args'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:range_make', async (node, ctx) => {
     // 使用者自己定義的同名函式優先——Python 允許蓋掉內建的
     const userDefined = ctx.functions.get('range')
     const args: RuntimeValue[] = []
-    for (const a of node.children.values ?? []) args.push(await ctx.evaluate(a))
+    args.push(...(await evalPythonArgs(node.children.values ?? [], ctx)))
     if (userDefined) return callWith(userDefined, args, ctx, 'range')
     return PYTHON_BUILTIN_FUNCTIONS['range'](args, withCall(ctx))
   })

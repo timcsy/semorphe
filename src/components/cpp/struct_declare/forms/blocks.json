@@ -24,7 +24,9 @@
         }
       ],
       "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_C_STRUCT_DECLARE_TOOLTIP}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
     },
     "codeTemplate": {
       "pattern": "struct ${NAME} {\n${MEMBERS}\n};",

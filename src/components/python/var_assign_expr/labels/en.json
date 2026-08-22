@@ -1,0 +1,4 @@
+{
+  "PY_VAR_ASSIGN_EXPR_MSG0": "store %2 in %1 and hand it on",
+  "PY_VAR_ASSIGN_EXPR_TOOLTIP": "Assigns and yields the value at once (the walrus operator :=). Handy in an if or while condition: compute once, remember it, and compare it."
+}

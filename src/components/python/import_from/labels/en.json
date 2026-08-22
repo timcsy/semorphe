@@ -1,0 +1,4 @@
+{
+  "PY_IMPORT_FROM_MSG0": "From %1 take %2",
+  "PY_IMPORT_FROM_TOOLTIP": "Brings only the named items in, so you can use them without the module prefix. Separate several names with commas."
+}

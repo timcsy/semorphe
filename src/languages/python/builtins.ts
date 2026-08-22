@@ -214,7 +214,8 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
       const k = pyStr(x)
       if (!seen.has(k)) { seen.add(k); out.push(x) }
     }
-    return arr(out)
+    // ⚠️ `seqKind` 讓 `print(set(xs))` 印出 `{1, 2}` 而不是 `[1, 2]`
+    return { ...arr(out), seqKind: 'set' as const }
   },
   // `range` 在迴圈裡由迴圈自己處理；當成值用時給一個串列
   range: (a, c) => {
@@ -496,3 +497,37 @@ export const PYTHON_MODULE_METHODS: Record<string, (args: RuntimeValue[], ctx: b
 }
 
 let seed = 42
+
+/**
+ * **一個模組被綁在一個名字上**——`import math` 綁 `math`，`import math as m` 綁 `m`。
+ *
+ * 🔴 記的是**指向哪個模組**，不是模組的成員：「`math.sqrt` 該查誰」的順序
+ * 只有一份（上面那兩張表），而別名只是換一個入口。抄一份成員進來的話，
+ * 表長出新東西時別名那條路會安靜地停在舊的。
+ *
+ * ⚠️ 型別借用 `object` 而不開新的 `RuntimeType`——理由與 tuple 那條相同
+ * （見 `types.ts`）：開新型別會讓幾十處 `type === 'object'` 的判斷一處一處失效。
+ */
+const MODULE_MARK = '__module__'
+
+export function moduleRefValue(target: string): RuntimeValue {
+  return { type: 'object', value: new Map([[MODULE_MARK, { type: 'string', value: target }]]) as ObjectFields }
+}
+
+/**
+ * 「這個名字是不是一個模組，是的話是哪一個」——`math` → `math`，`m` → `math`，
+ * 一個普通變數 → `null`。
+ *
+ * ⚠️ **沒被 import 過的名字也回它自己**：這維持了加入別名之前的行為
+ * （模組成員用整個名字當鍵查表，查不到自然會出聲）。
+ */
+export function moduleNameOf(name: string, scope: { has(n: string): boolean; get(n: string): RuntimeValue | undefined }): string | null {
+  if (!name) return null
+  if (!scope.has(name)) return name
+  const v = scope.get(name)
+  if (v?.type === 'object' && v.value instanceof Map) {
+    const t = (v.value as ObjectFields).get(MODULE_MARK)
+    if (t) return String(t.value)
+  }
+  return null
+}

@@ -20,7 +20,8 @@
       "python:var_ref",
       "python:comment",
       "python:raw_code",
-      "python:raw_expression"
+      "python:raw_expression",
+      "python:pass"
     ],
     "children": [
       {
@@ -60,7 +61,8 @@
           "python:container_assign",
           "python:member_assign",
           "python:compare_chain",
-          "python:container_erase"
+          "python:container_erase",
+          "python:set_make"
         ],
         "children": [
           {
@@ -95,7 +97,10 @@
               "python:throw",
               "python:global",
               "python:loop_iter",
-              "python:assert"
+              "python:assert",
+              "python:import_from",
+              "python:splat",
+              "python:var_assign_expr"
             ],
             "children": []
           }

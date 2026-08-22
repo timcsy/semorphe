@@ -1,7 +1,7 @@
 {
   "_meta": {
     "note": "搬移前的執行器清冊。搬移是純位置改動，這個集合必須一字不差。刻意新增或移除概念時才重新產生，並在 commit 訊息說明。",
-    "capturedAt": "2026-08-21"
+    "capturedAt": "2026-08-22"
   },
   "components": [
     "compound_assign",
@@ -244,6 +244,8 @@
     "python:func_def",
     "python:global",
     "python:if",
+    "python:import",
+    "python:import_from",
     "python:input",
     "python:lambda",
     "python:literal_bool",
@@ -266,12 +268,15 @@
     "python:method_call",
     "python:negate",
     "python:pair_make",
+    "python:pass",
     "python:print",
     "python:program",
     "python:range_make",
     "python:raw_code",
     "python:raw_expression",
     "python:return",
+    "python:set_make",
+    "python:splat",
     "python:string_insert",
     "python:string_join",
     "python:string_lower",
@@ -286,6 +291,7 @@
     "python:tuple_make",
     "python:var_assign",
     "python:var_assign_compound",
+    "python:var_assign_expr",
     "python:var_assign_sequence",
     "python:var_ref",
     "unresolved"

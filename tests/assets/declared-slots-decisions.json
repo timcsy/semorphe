@@ -405,6 +405,11 @@
     "reason": "`import math` 沒有子節點——名字是一個屬性。**沒有接點的元件不可能有『產出了宣告裡沒有的接點』**，所以這一筆恆為「無法確定」。\n⚠️ 它的正確性由這顆的 `spec.test.ts` 的來回釘住。"
   },
   {
+    "componentId": "python:import_from",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-22（第五十三條護欄點名補的形狀）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，碰不到 Python。⚠️ 這顆沒有子接點（只有兩個屬性），接點的正確性由 Python 語料的來回轉換與執行釘住（第五十條護欄：答案不同 0）。"
+  },
+  {
     "componentId": "python:input",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `prompt` 接點**可以是空的**，而自證測釘了「不得被補成 `input(\"\")`」。"
@@ -520,6 +525,11 @@
     "reason": "它只出現在字典字面裡，靜態掃描看到的是父概念那一層。鍵與值兩個接點由 `spec.test.ts` 的來回（`d = {\"k\": 1, \"j\": 2}`）釘住。"
   },
   {
+    "componentId": "python:pass",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-22（第五十一條護欄點名：那一段的積木狀態載不進工作區）。理由同上——這條護欄的語料是 C++ 的。⚠️ 這顆沒有屬性也沒有接點，`pass` 就是一個字。"
+  },
+  {
     "componentId": "python:print",
     "cause": "語料沒覆蓋",
     "reason": "spec 156 的第一顆 Python 元件。⚠️ 語料**沒有任何 Python 程式碼**——這條護欄的語料是 C++ 的，所以它碰不到這顆。🔴 而那不是「補語料就好」：Python 的 lift 這一刀只做一個樣式，**完整的 Python 語料是階段 7 後續的事**。🟢 這顆此刻的正確性由 `spec 156` 的等價量測釘住，不是由這條護欄。"
@@ -548,6 +558,16 @@
     "componentId": "python:return",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `value` 接點**可以是空的**（裸的 `return`），而自證測有一支專測「不得被補成 `return None`」——**空接點與「忘了接」在這裡是兩件事**。"
+  },
+  {
+    "componentId": "python:set_make",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-22。理由同上。⚠️ 元素接點（`items`）與串列字面同一個形狀，由 Python 語料的「集合」那一段釘住。"
+  },
+  {
+    "componentId": "python:splat",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-22。理由同上。⚠️ 它的接點（`value`）由 Python 語料的「星號展開」那一段釘住——而**攤開的那一步在吃它的人身上**（引數列與字典字面），那一段同時證明了兩邊。"
   },
   {
     "componentId": "python:string_insert",
@@ -618,6 +638,11 @@
     "componentId": "python:var_assign_compound",
     "cause": "語料沒碰到這個接點的產出",
     "reason": "`value` 接點必填，而樣式用 `constraints` 把左邊限定成單純變數名，語料裡的那幾段剛好都在迴圈裡。由 `spec.test.ts` 的六個運算子來回與三條 Python 除法規則釘住。"
+  },
+  {
+    "componentId": "python:var_assign_expr",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-22。理由同上。⚠️ 接點（`value`）由 Python 語料的「海象運算子」那一段釘住（`if (n := len(xs)) > 3`）。"
   },
   {
     "componentId": "python:var_assign_sequence",

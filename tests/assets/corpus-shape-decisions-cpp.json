@@ -1,0 +1,442 @@
+[
+  {
+    "type": "abstract_parenthesized_declarator",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "alignas_qualifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "alignof_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "attribute",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "attribute_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "attribute_specifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "attributed_declarator",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "attributed_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
+  },
+  {
+    "type": "bitfield_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "co_await_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "協程（C++20）。這個直譯器沒有「暫停一個函式再回來」那一層——與 Python 的 `yield` 同一個理由。"
+  },
+  {
+    "type": "co_return_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "協程（C++20）。這個直譯器沒有「暫停一個函式再回來」那一層——與 Python 的 `yield` 同一個理由。"
+  },
+  {
+    "type": "co_yield_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "協程（C++20）。這個直譯器沒有「暫停一個函式再回來」那一層——與 Python 的 `yield` 同一個理由。"
+  },
+  {
+    "type": "compound_requirement",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "concatenated_string",
+    "cause": "該補進語料",
+    "reason": "`\"a\" \"b\"`（相鄰字串自動接起來）。⚠️ **Python 那一維也缺同一個形狀**——兩個語言同時缺，代表這是我寫語料的習慣，不是語言的差別。"
+  },
+  {
+    "type": "concept_definition",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "constraint_conjunction",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "constraint_disjunction",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "decltype",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "default_method_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "`= default`／`= delete`。它們談的是「這個方法存不存在」，而這個工具的類別還沒有那一層。"
+  },
+  {
+    "type": "delete_method_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "`= default`／`= delete`。它們談的是「這個方法存不存在」，而這個工具的類別還沒有那一層。"
+  },
+  {
+    "type": "dependent_name",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "dependent_type",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "explicit_function_specifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "extension_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "field_designator",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "fold_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "friend_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "generic_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "gnu_asm_clobber_list",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_goto_list",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_input_operand",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_input_operand_list",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_output_operand",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_output_operand_list",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "gnu_asm_qualifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
+  },
+  {
+    "type": "goto_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "lambda_capture_initializer",
+    "cause": "該補進語料",
+    "reason": "`[x = 1](){}`。我們支援 lambda，而擷取的初始化沒被量過。"
+  },
+  {
+    "type": "linkage_specification",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "ms_based_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_call_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_declspec_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_pointer_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_restrict_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_signed_ptr_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_unaligned_ptr_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "ms_unsigned_ptr_modifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "MSVC 的擴充修飾詞。同上，不是 C++ 本身。"
+  },
+  {
+    "type": "namespace_alias_definition",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "nested_namespace_specifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "noexcept",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "offsetof_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "operator_cast",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "optional_parameter_declaration",
+    "cause": "該補進語料",
+    "reason": "`void f(int x = 0);` 的**宣告側**預設值。Python 那側的預設參數早就收了，C++ 這側沒被量過。"
+  },
+  {
+    "type": "optional_type_parameter_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "preproc_call",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "preproc_defined",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "preproc_directive",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "preproc_elif",
+    "cause": "該補進語料",
+    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
+  },
+  {
+    "type": "preproc_elifdef",
+    "cause": "該補進語料",
+    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
+  },
+  {
+    "type": "preproc_else",
+    "cause": "該補進語料",
+    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
+  },
+  {
+    "type": "preproc_function_def",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "preproc_if",
+    "cause": "該補進語料",
+    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
+  },
+  {
+    "type": "preproc_params",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "pure_virtual_clause",
+    "cause": "該補進語料",
+    "reason": "🔴 **我們有 `cpp:method_virtual_pure` 這顆元件**，而語料裡沒有一段 `= 0`——宣告了卻沒有人跑過。"
+  },
+  {
+    "type": "raw_string_content",
+    "cause": "語言有而這個工具不做",
+    "reason": "原始字串 `R\"(...)\"`。"
+  },
+  {
+    "type": "raw_string_delimiter",
+    "cause": "語言有而這個工具不做",
+    "reason": "原始字串 `R\"(...)\"`。"
+  },
+  {
+    "type": "raw_string_literal",
+    "cause": "語言有而這個工具不做",
+    "reason": "原始字串 `R\"(...)\"`。"
+  },
+  {
+    "type": "ref_qualifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "requirement_seq",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "requires_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "requires_expression",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "seh_except_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "Windows 結構化例外處理（`__try`）。"
+  },
+  {
+    "type": "seh_finally_clause",
+    "cause": "語言有而這個工具不做",
+    "reason": "Windows 結構化例外處理（`__try`）。"
+  },
+  {
+    "type": "seh_leave_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "Windows 結構化例外處理（`__try`）。"
+  },
+  {
+    "type": "seh_try_statement",
+    "cause": "語言有而這個工具不做",
+    "reason": "Windows 結構化例外處理（`__try`）。"
+  },
+  {
+    "type": "simple_requirement",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "static_assert_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "subscript_designator",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "subscript_range_designator",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "template_instantiation",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "template_method",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "template_template_parameter_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "throw_specifier",
+    "cause": "語言有而這個工具不做",
+    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
+  },
+  {
+    "type": "type_requirement",
+    "cause": "語言有而這個工具不做",
+    "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
+  },
+  {
+    "type": "union_specifier",
+    "cause": "該補進語料",
+    "reason": "`union`。即使不支援，它也該誠實降級**而被量到**——今天它是「沒人看過」而不是「看過並降級」。"
+  },
+  {
+    "type": "variadic_declarator",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "variadic_parameter_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  },
+  {
+    "type": "variadic_type_parameter_declaration",
+    "cause": "語言有而這個工具不做",
+    "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
+  }
+]

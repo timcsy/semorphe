@@ -2,7 +2,7 @@
   "_meta": {
     "guard": "component-parity",
     "measuredAt": "2026-08-18",
-    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
+    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。 ⚠️ 2026-08-23：`SIZE`／`FILL`／`SOURCE` 三個標籤是**新增**不是改值——命令式的 init 本來就沒建出那三格插槽，而宣告的對映表一直指著它們（第五十一條護欄的 C++ 那一維抓到）。🔴 這個檔**不要整批重產**：產生路徑會把 Python 的身分也錄進 `identitySet`，而比對只看 C++ 的，於是下一次跑全變成「搬丟了」。"
   },
   "identitySet": [
     "cpp:address_of",
@@ -329,7 +329,10 @@
       "CPP_VECTOR_DECLARE_TYPE_FLOAT": "float（小數）",
       "CPP_VECTOR_DECLARE_TYPE_INT": "int（整數）",
       "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long（大整數）",
-      "CPP_VECTOR_DECLARE_TYPE_STRING": "string（文字）"
+      "CPP_VECTOR_DECLARE_TYPE_STRING": "string（文字）",
+      "CPP_VECTOR_DECLARE_SIZE": "大小",
+      "CPP_VECTOR_DECLARE_FILL": "每格填",
+      "CPP_VECTOR_DECLARE_SOURCE": "複製自"
     },
     "en": {
       "CPP_VECTOR_DECLARE_CREATE": "create",
@@ -342,7 +345,10 @@
       "CPP_VECTOR_DECLARE_TYPE_FLOAT": "float (decimal)",
       "CPP_VECTOR_DECLARE_TYPE_INT": "int (integer)",
       "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
-      "CPP_VECTOR_DECLARE_TYPE_STRING": "string (text)"
+      "CPP_VECTOR_DECLARE_TYPE_STRING": "string (text)",
+      "CPP_VECTOR_DECLARE_SIZE": "size",
+      "CPP_VECTOR_DECLARE_FILL": "filled with",
+      "CPP_VECTOR_DECLARE_SOURCE": "copied from"
     }
   }
 }

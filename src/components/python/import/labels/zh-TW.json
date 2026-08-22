@@ -1,4 +1,4 @@
 {
-  "PY_IMPORT_MSG0": "引入模組 %1",
-  "PY_IMPORT_TOOLTIP": "把一個模組帶進來，之後就能用它裡面的東西（例如數學模組的圓周率與開根號）。"
+  "PY_IMPORT_MSG0": "匯入 %1 別名 %2",
+  "PY_IMPORT_TOOLTIP": "把一個模組帶進來。別名留空就直接用模組名（import math）；填了就用別名（import math as m）。"
 }

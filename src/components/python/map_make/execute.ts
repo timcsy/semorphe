@@ -9,7 +9,10 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 // 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
-import { dictKeyOf, makeDict } from '../../../languages/python/dict'
+import { dictKeyOf, makeDict, dictKeys } from '../../../languages/python/dict'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+// 🔴 「這一格是不是攤開」問的是**性狀**不是身分——見那顆膠囊的 `_traits_why`
+import { spreadSourceOf } from '../../../languages/python/args'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:map_make', async (node, ctx) => {
@@ -18,6 +21,20 @@ export function registerExecute(register: (component: string, executor: Componen
     const entries: ObjectFields = new Map()
     const keys = new Map<string, RuntimeValue>()
     for (const p of node.children.pairs ?? []) {
+      // ⚠️ `{**d, "b": 2}`——**攤開的那一張表整批倒進來**，而後面的蓋前面的
+      const spreadSrc = spreadSourceOf(p)
+      if (spreadSrc) {
+        const from = await ctx.evaluate(spreadSrc)
+        if (from.type !== 'object') {
+          throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': '** 攤不開這種東西' })
+        }
+        const srcKeys = dictKeys(from)
+        let i = 0
+        for (const [k, v] of from.value as ObjectFields) {
+          entries.set(k, v); keys.set(k, srcKeys[i] ?? { type: 'string', value: k }); i++
+        }
+        continue
+      }
       const kv = await ctx.evaluate(p)
       if (kv.type !== 'array' || !Array.isArray(kv.value)) continue
       const [k, v] = kv.value as RuntimeValue[]

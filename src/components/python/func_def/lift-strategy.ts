@@ -30,6 +30,24 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     for (const p of paramsNode?.namedChildren ?? []) {
       if (p.type === 'identifier') {
         params.push(createNode('param_decl', { type: '', name: p.text }))
+      } else if (p.type === 'typed_parameter' || p.type === 'typed_default_parameter') {
+        // 🔴 **型別註記**（`def add(a: int, b: int) -> int`）——AI 生的 Python 到處都是，
+        //    而它之前讓整顆函式定義降級。第五十三條護欄點名的。
+        //
+        // ⚠️ 型別在這個直譯器裡**不參與任何判斷**（Python 自己也不會）——
+        //    它是寫給人看的。所以它進 `param_decl` 的 `type` 那一格（本來就在），
+        //    產得回去、看得到，而**不假裝我們會檢查它**。
+        const nm = p.type === 'typed_parameter'
+          ? p.namedChildren.find((c) => c.type === 'identifier')
+          : p.childForFieldName('name')
+        const ty = p.childForFieldName('type')
+        if (!nm || !ty) { unsupported = true; continue }
+        params.push(createNode('param_decl', {
+          type: ty.text,
+          name: nm.text,
+          ...(p.type === 'typed_default_parameter'
+            ? { default: p.childForFieldName('value')?.text ?? '' } : {}),
+        }))
       } else if (p.type === 'default_parameter') {
         // 🔴 **預設值存原文，不是 lift 出來的樹**：它是寫在簽名上的一個字面，
         //    而積木上那一格是文字欄位。lift 成樹會讓它需要一個插槽，
@@ -56,6 +74,12 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       ? (lifted.componentId === '_compound' ? (lifted.children.body ?? []) : [lifted])
       : []
 
-    return createNode('python:func_def', { name }, { params, body: statements })
+    // 回傳型別同理——寫給人看的，不參與判斷
+    const ret = node.childForFieldName('return_type')
+    return createNode(
+      'python:func_def',
+      { name, ...(ret ? { returns: ret.text } : {}) },
+      { params, body: statements },
+    )
   })
 }

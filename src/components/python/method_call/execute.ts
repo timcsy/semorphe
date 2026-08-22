@@ -9,12 +9,13 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
+import { PYTHON_MODULE_METHODS, moduleNameOf } from '../../../languages/python/builtins'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { callWith, withCall } from '../func_def/call'
 import { callMethod } from './dispatch'
 import { isNamedCall } from '../../../core/component/traits'
 
+import { evalPythonArgs } from '../../../languages/python/args'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:method_call', async (node, ctx) => {
     const method = String(node.properties.method ?? '')
@@ -23,11 +24,11 @@ export function registerExecute(register: (component: string, executor: Componen
     //    求值它會說「沒有這個變數」。模組的方法用整個名字當鍵。
     const objNode = node.children.obj[0]
     const objName = String(objNode.properties?.name ?? '')
-    if (objName && !ctx.scope.has(objName)) {
-      const modFn = PYTHON_MODULE_METHODS[`${objName}.${method}`]
+    const modName = moduleNameOf(objName, ctx.scope)   // `m.sqrt` 的 `m` 也算
+    if (modName) {
+      const modFn = PYTHON_MODULE_METHODS[`${modName}.${method}`]
       if (modFn) {
-        const modArgs: RuntimeValue[] = []
-        for (const a of node.children.args ?? []) modArgs.push(await ctx.evaluate(a))
+        const modArgs: RuntimeValue[] = await evalPythonArgs(node.children.args ?? [], ctx)
         return modFn(modArgs, withCall(ctx))
       }
     }
@@ -52,13 +53,13 @@ export function registerExecute(register: (component: string, executor: Componen
         throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `super().${method}()` })
       }
       const superArgs: RuntimeValue[] = []
-      for (const a of node.children.args ?? []) superArgs.push(await ctx.evaluate(a))
+      superArgs.push(...(await evalPythonArgs(node.children.args ?? [], ctx)))
       return callWith(fn, [self, ...superArgs], ctx, `super().${method}`)
     }
 
     const self = await ctx.evaluate(objNode)
     const args: RuntimeValue[] = []
-    for (const a of node.children.args ?? []) args.push(await ctx.evaluate(a))
+    args.push(...(await evalPythonArgs(node.children.args ?? [], ctx)))
 
     return callMethod(self, method, args, ctx)
   })

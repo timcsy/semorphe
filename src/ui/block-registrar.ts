@@ -872,6 +872,21 @@ export class BlockRegistrar {
             ]), 'TYPE')
             .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_LIST'] || '列表')
             .appendField(new Blockly.FieldTextInput('vec'), 'NAME')
+          // 🔴 **這三格是宣告裡一直都有的**（`renderMapping.inputs`），而命令式的
+          //    init **從來沒有建出來**——於是 `vector<int> v(5, 0)` 投影出來的
+          //    積木狀態指向不存在的插槽，**整個工作區載入失敗**（紅色橫幅，
+          //    2026-08-23 由第五十一條護欄的 C++ 那一維抓到）。
+          //    ⚠️ 與 `cpp_array_declare` 的 `SIZE` 同一個做法：**固定存在、留空即無**。
+          //    > **宣告式的對映表與命令式的 init 是同一顆積木的兩份真相。**
+          this.appendValueInput('SIZE')
+            .setCheck('Expression')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_SIZE'] || '大小')
+          this.appendValueInput('FILL')
+            .setCheck('Expression')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_FILL'] || '每格填')
+          this.appendValueInput('SOURCE')
+            .setCheck('Expression')
+            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_SOURCE'] || '複製自')
           // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
           // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
           // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。

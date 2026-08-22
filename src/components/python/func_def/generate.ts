@@ -12,13 +12,19 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         const n = String(p.properties.name ?? '')
         // 🔴 星號是**標記**不是名字的一部分——見 lift 那一側的理由
         const star = p.properties.variadic === 'list' ? '*' : ''
+        const t = String(p.properties.type ?? '')
         const d = String(p.properties.default ?? '')
-        return n && d ? `${n}=${d}` : n ? `${star}${n}` : ''
+        if (!n) return ''
+        // ⚠️ 帶型別註記時預設值兩邊有空格（`b: str = "x"`），沒有型別時沒有（`b="x"`）
+        //    ——那是 PEP 8，而使用者寫的就是那樣。
+        const head = t ? `${n}: ${t}` : `${star}${n}`
+        return d ? (t ? `${head} = ${d}` : `${head}=${d}`) : head
       })
       .filter(Boolean)
     const body = node.children.body ?? []
     const inner = indented(ctx)
     const bodyCode = body.length > 0 ? generateBody(body, inner) : `${indent(inner)}pass\n`
-    return `${indent(ctx)}def ${name}(${params.join(', ')}):\n${bodyCode}`
+    const returns = String(node.properties.returns ?? '')
+    return `${indent(ctx)}def ${name}(${params.join(', ')})${returns ? ` -> ${returns}` : ''}:\n${bodyCode}`
   })
 }

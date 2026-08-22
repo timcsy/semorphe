@@ -56,6 +56,12 @@ const EXEMPT: { path: RegExp; why: string }[] = [
     why: '凍結明表——它的鍵是【過去】的身分，改掉等於真實使用者的舊存檔升不上來' },
   { path: /^src\/languages\/[^/]+\/id-migrations\.ts$/,
     why: '同上：語言側的凍結明表' },
+  // ⚠️ 2026-08-22 加：這個檔裝的是**第三方文法的節點型別名**（tree-sitter-cpp 的
+  //    `node-types.json`），而 `concept_definition` 是 **C++20 的語言關鍵字**
+  //    ——它與本專案退場的那個詞彙同形，卻不是同一個字。
+  //    🔴 改掉它等於改掉全集的鍵，那條護欄就對不上任何一格。
+  { path: /^tests\/assets\/corpus-shape-decisions-cpp\.json$/,
+    why: '第三方文法的節點型別名——`concept_definition` 是 C++20 的關鍵字，不是本專案的舊詞彙' },
 ]
 
 /**
@@ -177,6 +183,7 @@ describe('spec 159 · 整個 concept 家族退場', () => {
       'src/migrations/block-type-migrations.ts',
       'src/migrations/id-migrations.ts',
       'src/migrations/merged-identities.ts',
+      'tests/assets/corpus-shape-decisions-cpp.json',
     ])
   })
 

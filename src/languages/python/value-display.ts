@@ -49,6 +49,8 @@ export function pythonDisplay(v: RuntimeValue, insideContainer = false): string 
     const xs = (v.value as RuntimeValue[]).map((x) => pythonDisplay(x, true))
     // ⚠️ 一格的 tuple 印成 `(1,)`——那個逗號是 Python 用來與「加括號的運算式」分辨的
     if (v.seqKind === 'tuple') return xs.length === 1 ? `(${xs[0]},)` : `(${xs.join(', ')})`
+    // ⚠️ **空集合印成 `set()`**——`{}` 在 Python 是空字典，不是空集合
+    if (v.seqKind === 'set') return xs.length === 0 ? 'set()' : `{${xs.join(', ')}}`
     return `[${xs.join(', ')}]`
   }
   if (v.type === 'object') {

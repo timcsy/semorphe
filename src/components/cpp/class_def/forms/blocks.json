@@ -13,6 +13,29 @@
           "type": "field_input",
           "name": "NAME",
           "text": "MyClass"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "BASE_ACCESS",
+          "options": [
+            [
+              "public",
+              "public"
+            ],
+            [
+              "protected",
+              "protected"
+            ],
+            [
+              "private",
+              "private"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "BASE_CLASS",
+          "text": ""
         }
       ],
       "message1": "%{BKY_CPP_CLASS_DEF_MSG1}",
@@ -40,7 +63,9 @@
           "name": "PROTECTED",
           "check": "Statement"
         }
-      ]
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
     },
     "codeTemplate": {
       "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
@@ -49,13 +74,16 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "name",
+        "BASE_CLASS": "base_class",
+        "BASE_ACCESS": "base_access"
       },
       "statementInputs": {
         "PRIVATE": "private",
         "PUBLIC": "public",
         "PROTECTED": "protected"
       }
-    }
+    },
+    "_why": "🔴 **繼承那兩格是 2026-08-23 補的**（第五十四條護欄點名）：抬升與產生一直都收 `class Dog : public Animal`，而積木上沒有那一格——於是「程式碼→積木→程式碼」之後基底類別**靜默消失**，產出的碼仍然合法。\n⚠️ 基底類別留空 ＝ 沒有繼承（`base_access` 那一格就不印）。"
   }
 ]

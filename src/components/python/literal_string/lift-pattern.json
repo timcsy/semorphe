@@ -1,17 +1,31 @@
-{
-  "id": "python_string_literal",
-  "grammar": "tree-sitter-python",
-  "astNodeType": "string",
-  "component": {
-    "componentId": "python:literal_string"
+[
+  {
+    "id": "python_string_literal",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "string",
+    "component": {
+      "componentId": "python:literal_string"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "stripQuotes"
+      }
+    ],
+    "_why": "⚠️ **tree-sitter-python 的節點叫 `string`，不是 `string_literal`**（C++ 那顆是後者）。\n🟢 而 `stripQuotes` 這個 transform **兩個語言共用**——它只是去掉頭尾的引號，一個 C++ 的字都不認識。"
   },
-  "fieldMappings": [
-    {
-      "semantic": "value",
-      "ast": "$text",
-      "extract": "text",
-      "transform": "stripQuotes"
-    }
-  ],
-  "_why": "⚠️ **tree-sitter-python 的節點叫 `string`，不是 `string_literal`**（C++ 那顆是後者）。\n🟢 而 `stripQuotes` 這個 transform **兩個語言共用**——它只是去掉頭尾的引號，一個 C++ 的字都不認識。"
-}
+  {
+    "id": "python_concatenated_string",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "concatenated_string",
+    "component": {
+      "componentId": "python:literal_string"
+    },
+    "liftStrategy": "python:lift_concatenated_string",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "🔴 **`\"abc\" \"def\"` 是【一個】字串**——Python 把相鄰的字面接起來。跨行的長訊息幾乎都這樣寫。\n⚠️ 而它與 f-string 混在一起時（`\"a\" f\"{x}\"`）**不是一個字面**，那時回 `null` 走誠實降級。\n🟢 第五十三條護欄點名的（`concatenated_string` 在「沒碰到」裡），而 C++ 那一維也缺同一個形狀。"
+  }
+]

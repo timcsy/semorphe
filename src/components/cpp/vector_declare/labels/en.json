@@ -9,5 +9,8 @@
   "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
   "CPP_VECTOR_DECLARE_CREATE": "create",
   "CPP_VECTOR_DECLARE_LIST": "list",
-  "CPP_VECTOR_DECLARE_INIT": "initial values"
+  "CPP_VECTOR_DECLARE_INIT": "initial values",
+  "CPP_VECTOR_DECLARE_SIZE": "size",
+  "CPP_VECTOR_DECLARE_FILL": "filled with",
+  "CPP_VECTOR_DECLARE_SOURCE": "copied from"
 }

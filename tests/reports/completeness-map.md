@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：307｜✅ 實作 1399｜📄 已宣告不提供 38｜❔ 判不出來 96｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：312｜✅ 實作 1420｜📄 已宣告不提供 37｜❔ 判不出來 101｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -273,7 +273,8 @@
 | `python:func_def` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:global` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:if` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:import` | ✅ | ❔ | ✅ | ✅ | 📄 |
+| `python:import` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:import_from` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:input` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:lambda` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:literal_bool` | ✅ | ❔ | ✅ | ✅ | ✅ |
@@ -297,12 +298,15 @@
 | `python:method_call` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:pair_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:pass` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:print` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:program` | ✅ | ❔ | ❌ | ❌ | ✅ |
 | `python:range_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:return` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:set_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:splat` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:string_insert` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:string_join` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:string_lower` | ✅ | ❔ | ✅ | ✅ | ✅ |
@@ -317,5 +321,6 @@
 | `python:tuple_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_assign_compound` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `python:var_assign_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_assign_sequence` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `python:var_ref` | ✅ | ❔ | ✅ | ✅ | ✅ |

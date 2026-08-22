@@ -3,7 +3,16 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側最接近的是前置處理指令，而它是**文字層的貼上**；Python 的這個在執行期綁一個模組物件。形狀不同，指同一個抽象父會讓「可以互換」變成假的。",
   "properties": [
-    { "name": "name", "kind": "identifier", "default": "math" }
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "math"
+    },
+    {
+      "name": "alias",
+      "kind": "identifier",
+      "default": ""
+    }
   ],
   "children": {},
   "role": "statement",
@@ -11,11 +20,11 @@
   "paths": {
     "lift": "./lift-pattern.json",
     "generate": "./generate.ts",
-    "execute": null,
-    "_execute_why": "**顯式的空。** 這個直譯器沒有模組系統——模組成員（`math.pi`／`math.sqrt`）由內建表直接提供，所以「引入」這個動作沒有執行期行為。\n⚠️ 而它**不是**「還沒做」：即使將來有模組系統，這一行仍然是宣告性的。",
+    "execute": "./execute.ts",
+    "_execute_why": "🔴 **本來是「顯式的空」，2026-08-22 因為別名而有了內容**：`import math as m` 之後 `m` 這個名字必須存在，而「它指向哪個模組」只有執行期知道。\n⚠️ 而它綁的仍然**不是模組的成員**——成員一律回內建表查（見 `builtins.ts` 的 `moduleRefValue`）。",
     "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "extract": "./forms/blocks.json",
+    "liftStrategy": "./lift-strategy.ts"
   },
-  "skipPaths": ["execute"],
-  "skipReasons": { "execute": "declarative" }
+  "_properties_why": "⚠️ **`alias` 空字串 ＝ 沒有別名**，不是「還沒填」——`import math` 與 `import math as m` 是同一個身分的兩種寫法，而別名是那一行**寫得出來的一格**，不是另一個概念。"
 }

@@ -8,7 +8,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { ObjectFields } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { PYTHON_MODULE_MEMBERS } from '../../../languages/python/builtins'
+import { PYTHON_MODULE_MEMBERS, moduleNameOf } from '../../../languages/python/builtins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:member_at', async (node, ctx) => {
@@ -16,12 +16,14 @@ export function registerExecute(register: (component: string, executor: Componen
     const objNode = (node.children.obj ?? [])[0]
 
     // `math.pi` —— 物件是一個**模組名**，作用域裡沒有這個變數
+    // ⚠️ `import math as m` 之後接收者是 `m`——**它在作用域裡**，而它指向 `math`。
     const objName = objNode ? String(objNode.properties?.name ?? '') : ''
-    const mod = PYTHON_MODULE_MEMBERS[objName]
-    if (mod && !ctx.scope.has(objName)) {
+    const modName = moduleNameOf(objName, ctx.scope)
+    const mod = modName ? PYTHON_MODULE_MEMBERS[modName] : undefined
+    if (mod) {
       const got = mod[member]
       if (got === undefined) {
-        throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `${objName}.${member}` })
+        throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `${modName}.${member}` })
       }
       return got
     }

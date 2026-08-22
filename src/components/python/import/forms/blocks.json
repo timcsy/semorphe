@@ -13,16 +13,23 @@
           "type": "field_input",
           "name": "NAME",
           "text": "math"
+        },
+        {
+          "type": "field_input",
+          "name": "ALIAS",
+          "text": ""
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#888888",
-      "tooltip": "%{BKY_PY_IMPORT_TOOLTIP}"
+      "tooltip": "%{BKY_PY_IMPORT_TOOLTIP}",
+      "inputsInline": true
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "name",
+        "ALIAS": "alias"
       }
     }
   }

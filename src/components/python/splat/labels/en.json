@@ -1,0 +1,4 @@
+{
+  "PY_SPLAT_MSG0": "%1 %2",
+  "PY_SPLAT_TOOLTIP": "Spreads a list (or a table) into separate arguments. Only valid inside a call's argument list or a dict literal."
+}

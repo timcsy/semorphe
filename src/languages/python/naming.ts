@@ -34,6 +34,10 @@ export const PYTHON_SUBJECTS = [
   //    C++ 沒有這個切法（`std::tuple` 是樣板類別，不是語言的字面值）。
   //    > **詞彙表要不要多一個字，答案在【那個語言怎麼切概念】，不在字典裡。**
   'tuple',
+  // ⚠️ `set` 加入日 2026-08-22。與 `tuple` 同一個理由：**Python 把容器切成
+  //    三種**（可變的串列、不可變的 tuple、不重複的集合），而它有自己的
+  //    字面語法（`{1, 2}`）。既有的 `array` 說不出「同一個值只留一個」。
+  'set',
 ] as const
 
 /**
@@ -56,6 +60,14 @@ export const PYTHON_ATOMIC_NAMES = [
   'global',
   // ⚠️ `assert` 加入日 2026-08-22。與 `import`／`global` 同一類的語言構造。
   'assert',
+  // ⚠️ `import_from` 加入日 2026-08-22。與 `import` 同一類的語言構造，
+  //    而它是**另一個**構造：`import M` 綁模組，`from M import a` 綁名字。
+  'import_from',
+  // ⚠️ `splat` 加入日 2026-08-22——`*nums`／`**d`。C++ 沒有這個構造，
+  //    而它沒有「主體＋操作」可以拆：攤開的**對象**是它的屬性不是它的主體。
+  'splat',
+  // ⚠️ `pass` 加入日 2026-08-22——與 `global`／`assert` 同一類的語言構造。
+  'pass',
 ] as const
 
 /**
@@ -105,4 +117,9 @@ export const PYTHON_KINDS = [
   //    差別在**取不到的時候**。取名 `map_get` 的話 `get` 會是 `at` 的同義詞，
   //    而「同一個操作在任何主體上用同一個字」正是這份表存在的理由。
   'default',
+  // ⚠️ `expr` 加入日 2026-08-22——`python:var_assign_expr`（海象運算子 `n := len(xs)`）。
+  //    🔴 **種差不是新操作**：做的仍然是 `assign`，差別在**它同時是一個運算式**。
+  //    取名 `var_walrus` 的話 `walrus` 會變成 `assign` 的同義詞，而
+  //    「同一個操作在任何主體上用同一個字」正是這份表存在的理由。
+  'expr',
 ] as const

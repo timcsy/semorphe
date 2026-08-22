@@ -18,6 +18,11 @@
           "type": "field_input",
           "name": "PARAMS",
           "text": ""
+        },
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": ""
         }
       ],
       "message1": "%1",
@@ -35,7 +40,8 @@
     },
     "renderMapping": {
       "fields": {
-        "CAPTURE": "capture"
+        "CAPTURE": "capture",
+        "RETURN_TYPE": "return_type"
       },
       "statementInputs": {
         "BODY": "body"
@@ -51,6 +57,7 @@
           ]
         }
       ]
-    }
+    },
+    "_why": "🔴 **回傳型別那一格是 2026-08-23 補的**（第五十四條護欄點名）：`[](int x) -> double { … }` 的 `-> double` 抬升與產生都收，而積木上沒有那一格——來回一趟就不見了。留空 ＝ 讓編譯器自己推導。"
   }
 ]

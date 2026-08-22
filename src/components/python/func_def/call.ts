@@ -13,7 +13,7 @@ import type { SemanticNode } from '../../../core/types'
 import { Scope } from '../../../interpreter/scope'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
+import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
 
 /**
  * 把簽名上的預設值原文讀成一個值。
@@ -137,6 +137,11 @@ export function withCall(ctx: Parameters<ComponentExecutor>[1]): Parameters<Comp
         if (def) return callWith(def, args, ctx, fnv.name)
         const b = PYTHON_BUILTIN_FUNCTIONS[fnv.name]
         if (b) return b(args, self)
+        // 🔴 **模組的函式也是一個可以被拿在手上的名字**：`from math import sqrt`
+        //    之後 `sqrt` 就是這裡的 `math.sqrt`。少了這一格的症狀是
+        //    「沒有這個函式 math.sqrt」——而那個名字明明就在表裡。
+        const m = PYTHON_MODULE_METHODS[fnv.name]
+        if (m) return m(args, self)
         throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': fnv.name })
       }
 

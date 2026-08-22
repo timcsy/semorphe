@@ -1,0 +1,97 @@
+[
+  {
+    "key": "cpp:comma_expr:exprs",
+    "cause": "元概念，沒有積木",
+    "reason": "這顆的 `forms/blocks.json` 是**刻意的空陣列**——逗號運算式（`i++, j--`）在教學裡只出現在 for 的更新段，而那一段由迴圈那顆自己裝。沒有積木就沒有「哪一格」可談。"
+  },
+  {
+    "key": "cpp:program:body",
+    "cause": "元概念，沒有積木",
+    "reason": "`program` 是整棵樹的根——它不是一顆積木，是**工作區本身**。它的 `body` 就是工作區上那一疊。"
+  },
+  {
+    "key": "cpp:doc_comment.return_desc",
+    "cause": "投影走具名策略",
+    "reason": "這顆的 `renderMapping.strategy` 是 `cpp:renderDocComment`——`@param` 那幾格是**動態編號**（`param_0_name`／`param_1_desc`…），靜態對映表裝不下（第三十四條護欄同一個形狀的記載）。⚠️ 正確性由這顆自己的 `spec.test.ts` 釘住。"
+  },
+  {
+    "key": "cpp:var_declare.init_style",
+    "cause": "投影走具名策略",
+    "reason": "這顆的 `renderMapping.strategy` 是 `cpp:renderVarDeclare`——一行宣告可以有好幾個宣告子（`int a = 1, b;`），欄位是策略依數量生出來的。⚠️ 而 `init_style`（`= 1` 還是 `{1}`）**是排版提示**：策略記著它，學生不編輯它。"
+  },
+  {
+    "key": "cpp:var_declare:declarators",
+    "cause": "投影走具名策略",
+    "reason": "同上——宣告子是策略依數量生出來的那一組欄位。"
+  },
+  {
+    "key": "cpp:include.local",
+    "cause": "值由積木型別本身固定",
+    "reason": "`#include <vector>` 與 `#include \"my.h\"` 是**兩顆積木**（`cpp_include`／`cpp_include_local`）——挑哪一顆就是在填這個屬性。多一格下拉等於同一件事問兩次。"
+  },
+  {
+    "key": "python:array_make_for.wrap",
+    "cause": "排版提示，不給學生編輯",
+    "reason": "記的是**原文用哪一種括號**（中括號／沒有括號／大括號）。⚠️ 學生在積木上做的是「推導式」這件事，而括號的樣子是**從程式碼來的排版**——給他一格下拉會讓一個排版看起來像一個語義選擇。"
+  },
+  {
+    "key": "python:loop_for.obj",
+    "cause": "同一件事已經由接點裝著",
+    "reason": "🔴 **`targets` 才是唯一的真實**（見那顆的 `_children_why`）：`obj` 是它的第一格，留著是為了舊存檔打得開。積木上那個名字欄位走的是 `targets` 的第一格。"
+  },
+  {
+    "key": "cpp:serial_count.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `Serial`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:serial_open.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `Serial`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:serial_print.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `Serial`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:serial_read.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `Serial`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:wifi_open.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `WiFi`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:wifi_read.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `WiFi`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:eeprom_read.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `EEPROM`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:eeprom_write.obj",
+    "cause": "值由積木型別本身固定",
+    "reason": "接收者永遠是 `EEPROM`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"
+  },
+  {
+    "key": "cpp:range_fill.end",
+    "cause": "值由積木型別本身固定",
+    "reason": "`fill(v.begin(), v.end())` 的兩端**來自同一個容器**——積木上那一格填的是容器（對映到 `begin`），而 `end` 在取出時由同一個容器重新算。給兩格等於讓人做得出 `sort(a.begin(), b.end())`。"
+  },
+  {
+    "key": "cpp:range_reverse.end",
+    "cause": "值由積木型別本身固定",
+    "reason": "`reverse(v.begin(), v.end())` 的兩端**來自同一個容器**——積木上那一格填的是容器（對映到 `begin`），而 `end` 在取出時由同一個容器重新算。給兩格等於讓人做得出 `sort(a.begin(), b.end())`。"
+  },
+  {
+    "key": "cpp:range_sort.end",
+    "cause": "值由積木型別本身固定",
+    "reason": "`sort(v.begin(), v.end())` 的兩端**來自同一個容器**——積木上那一格填的是容器（對映到 `begin`），而 `end` 在取出時由同一個容器重新算。給兩格等於讓人做得出 `sort(a.begin(), b.end())`。"
+  }
+]

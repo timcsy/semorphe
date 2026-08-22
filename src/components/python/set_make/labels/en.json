@@ -1,0 +1,4 @@
+{
+  "PY_SET_MAKE_MSG": "set",
+  "PY_SET_MAKE_TOOLTIP": "Groups several values, keeping only one of each duplicate. Handy for asking whether something has appeared."
+}

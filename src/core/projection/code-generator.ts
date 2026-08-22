@@ -360,6 +360,12 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   //    優先級只補【必要的】那些，而 `a + (b * c)` 的那一對不是必要的，
   //    它是使用者的排版。⚠️ 這裡是**唯一的**加括號點（`genChild` 會問過再決定），
   //    兩處都加的話會變成 `((...))`。
+  // 🔴 **這一顆的原文就是它的排版真相**（`"abc" "def"` 是【一個】字串，
+  //    而使用者把它寫成兩段）。與 `parenthesized` 同一條線：
+  //    **語義我們懂了，而寫法是使用者的。**
+  if (node.metadata?.layoutHints?.verbatim === true && node.metadata.rawCode != null) {
+    return String(node.metadata.rawCode)
+  }
   if (node.metadata?.layoutHints?.parenthesized === true) {
     const inner = generateExpression({ ...node, metadata: { ...node.metadata, layoutHints: { ...node.metadata.layoutHints, parenthesized: false } } }, ctx)
     return `(${inner})`

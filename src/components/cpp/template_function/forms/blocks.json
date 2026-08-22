@@ -42,7 +42,9 @@
         }
       ],
       "colour": "#9966FF",
-      "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_TEMPLATE_FUNCTION_TOOLTIP}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
     },
     "codeTemplate": {
       "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAMS}) {\n${BODY}\n}",

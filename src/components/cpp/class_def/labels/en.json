@@ -1,5 +1,5 @@
 {
-  "CPP_CLASS_DEF_MSG0": "define class %1",
+  "CPP_CLASS_DEF_MSG0": "define class %1 inherits %2 %3",
   "CPP_CLASS_DEF_MSG1": "public: %1",
   "CPP_CLASS_DEF_MSG2": "private: %1",
   "CPP_CLASS_DEF_TOOLTIP": "Define a class that bundles data and operations together. Public members are accessible outside; private members are internal only",

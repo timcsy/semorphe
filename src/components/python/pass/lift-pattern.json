@@ -1,0 +1,10 @@
+[
+  {
+    "id": "python_pass",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "pass_statement",
+    "component": { "componentId": "python:pass" },
+    "fieldMappings": [],
+    "_why": "沒有欄位也沒有子節點——`pass` 就是一個字。"
+  }
+]

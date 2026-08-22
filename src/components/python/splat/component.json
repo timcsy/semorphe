@@ -1,0 +1,31 @@
+{
+  "componentId": "python:splat",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側沒有這個構造——最接近的是可變參數樣板的展開，而那是編譯期的事。",
+  "properties": [
+    {
+      "name": "kind",
+      "kind": "keyword",
+      "default": "list"
+    }
+  ],
+  "_properties_why": "🔴 **`*` 與 `**` 是同一個動作的兩種對象**（攤開一串／攤開一張表），所以是一顆元件的兩個值，不是兩顆元件。判準：它們的**位置、優先權、與『被誰吃掉』完全相同**，只有攤開來的東西不同。",
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "liftStrategy": "./lift-strategy.ts"
+  },
+  "_why": "🔴 **第五十三條護欄點名的**（2026-08-22）：`list_splat`／`dictionary_splat` 在「語料沒碰到」裡，而 AI 生的 Python 到處都是 `f(*args)`／`{**a, **b}`。\n⚠️ **它自己算不出一個值**——`*xs` 只有在被呼叫或被字典吃掉的時候才有意思。所以它的執行期回的是**裡面那個值**，而攤開由吃它的人做（見 `languages/python/args.ts`）。",
+  "traits": {
+    "spread": true
+  },
+  "_traits_why": "🔴 **吃它的人靠性狀認它，不靠身分**——引數列（`languages/python/args.ts`）與字典字面都要問「這一格是不是攤開」，而寫 `componentId === 'python:splat'` 會把這顆的身分洩到膠囊外（第四十二條就近性）。\n> **一個要被別人認出來的元件，宣告一個性狀，不要讓別人記住它的名字。**"
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "python_splat",
+    "componentId": "python:splat",
+    "language": "python",
+    "category": "functions",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_splat",
+      "inputsInline": true,
+      "output": "Expression",
+      "message0": "%{BKY_PY_SPLAT_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "KIND",
+          "options": [["＊ 攤開一串", "list"], ["＊＊ 攤開一張表", "dict"]]
+        },
+        { "type": "input_value", "name": "VALUE", "check": "Expression" }
+      ],
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_PY_SPLAT_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "KIND": "kind" },
+      "inputs": { "VALUE": "value" }
+    }
+  }
+]

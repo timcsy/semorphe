@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_import_from",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "import_from_statement",
+    "component": {
+      "componentId": "python:import_from"
+    },
+    "liftStrategy": "python:lift_import_from",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "`import_from_statement` 沒有別的競爭者，而走策略是因為它底下有萬用與相對匯入兩種我們不收的形狀。"
+  }
+]

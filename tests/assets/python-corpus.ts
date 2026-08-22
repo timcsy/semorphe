@@ -722,4 +722,54 @@ if (x > 0) and (y > 10):
 if not (x > 100):
     print("沒超過")
 print((x > 0) == (y > 0))`],
+  ['註解與 pass', `# 這一段在算平均
+def average(xs):
+    if not xs:
+        pass  # 空的就什麼都不做
+    total = sum(xs)  # 先加總
+    return total / len(xs)
+
+print(average([1, 2, 3]))`],
+  ['跳脫字元與長字串', `print("第一行\\n第二行")
+print("用\\t分隔")
+print("引號：\\"這樣\\"")
+s = "abc" "def"
+print(s, len(s))
+t = "很長的一段" \\
+    "接下去"
+print(t)`],
+  ['from import 與別名', `from math import sqrt, floor
+import math as m
+
+print(sqrt(16), floor(3.7))
+print(m.pi > 3)`],
+  ['型別註記', `def add(a: int, b: int) -> int:
+    return a + b
+
+def greet(name: str, greeting: str = "你好") -> str:
+    return greeting + "，" + name
+
+print(add(2, 3))
+print(greet("小明"))`],
+  ['集合', `xs = [3, 1, 3, 2]
+s = {1, 2, 3}
+print(len(s), 2 in s)
+uniq = {x for x in xs}
+print(len(uniq))`],
+  ['星號展開', `def total(a, b, c):
+    return a + b + c
+
+nums = [1, 2, 3]
+print(total(*nums))
+d = {"a": 1}
+e = {**d, "b": 2}
+print(e)`],
+  ['海象運算子', `xs = [1, 2, 3, 4]
+if (n := len(xs)) > 3:
+    print("有", n, "格")
+total = 0
+for x in xs:
+    if (double := x * 2) > 4:
+        total += double
+print(total)`],
 ]

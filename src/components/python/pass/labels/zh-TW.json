@@ -1,0 +1,4 @@
+{
+  "PY_PASS_MSG0": "什麼都不做",
+  "PY_PASS_TOOLTIP": "這裡刻意沒有動作。Python 的區塊不能是空的，所以用 pass 占著。"
+}

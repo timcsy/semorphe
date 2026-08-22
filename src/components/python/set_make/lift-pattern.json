@@ -1,0 +1,11 @@
+[
+  {
+    "id": "python_set_literal",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "set",
+    "component": { "componentId": "python:set_make" },
+    "fieldMappings": [],
+    "liftStrategy": "python:liftSet",
+    "_why": "⚠️ **空集合沒有字面寫法**（`{}` 是空字典），所以這個節點底下一定至少有一格——tree-sitter 也是這樣分的。"
+  }
+]

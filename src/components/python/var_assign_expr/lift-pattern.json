@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_named_expression",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "named_expression",
+    "component": { "componentId": "python:var_assign_expr" },
+    "fieldMappings": [
+      { "semantic": "obj", "ast": "name", "extract": "text" },
+      { "semantic": "value", "ast": "value", "extract": "lift" }
+    ],
+    "priority": 10,
+    "_why": "⚠️ 左邊**只能是一個名字**（Python 的文法就這樣定），所以 `name` 走 text 不走 lift。"
+  }
+]

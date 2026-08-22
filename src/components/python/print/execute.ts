@@ -20,10 +20,12 @@ import { pythonDisplay } from '../../../languages/python/value-display'
 //    `sorted(xs, key=f)` 的 `key=` 是同一個機制，拆包也該是同一份。
 import { kwArg, positional } from '../../../languages/python/builtins'
 
+import { evalPythonArgs } from '../../../languages/python/args'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:print', async (node, ctx) => {
     const all = []
-    for (const v of node.children.values ?? []) all.push(await ctx.evaluate(v))
+    // ⚠️ `print(*items)`——攤開走同一份（見 `languages/python/args.ts`）
+    all.push(...(await evalPythonArgs(node.children.values ?? [], ctx)))
     // ⚠️ `end` 與 `sep` 的**預設值是 Python 的規則**，不是這裡的巧合
     const end = kwArg(all, 'end')
     const sep = kwArg(all, 'sep')

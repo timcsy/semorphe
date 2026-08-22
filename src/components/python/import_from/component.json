@@ -1,0 +1,31 @@
+{
+  "componentId": "python:import_from",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 的 `#include` 帶進**一整個標頭**，而 `from M import a` 帶進的是**幾個名字**。形狀不同。",
+  "_componentId_why": "`import_from` 是一個**語言構造**（與 `import`／`global`／`assert` 同一類）——沒有「主體＋操作」可以拆。",
+  "properties": [
+    {
+      "name": "module",
+      "kind": "identifier",
+      "default": "math"
+    },
+    {
+      "name": "names",
+      "kind": "string",
+      "default": "sqrt"
+    }
+  ],
+  "_properties_why": "⚠️ **`names` 是一串逗號隔開的識別字，而那不是「把運算式壓成字串」**：它們是**名字**不是運算式，積木上那一格是文字欄位。判準見 `concepts/元件代數.md` 的屬性結構化邊界。",
+  "children": {},
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_lift_why": "🔴 **第五十三條護欄點名的**：`import_from_statement` 在「語料沒碰到」裡，而同族的 `import` 樣式的 `_why` 逐字寫著「它們今天**沒有語料**，等有人碰到再分」——那句話等了兩天。\n⚠️ `from x import *`（萬用）與相對匯入（`from . import y`）回 `null` 走誠實降級。"
+}

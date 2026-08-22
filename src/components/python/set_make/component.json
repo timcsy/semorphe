@@ -1,0 +1,24 @@
+{
+  "componentId": "python:set_make",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與串列字面最像，而**集合沒有順序也不重複**——指同一個抽象父會把「同一個值放兩次只留一個」這件事抹掉，而那正是集合存在的理由。",
+  "properties": [],
+  "children": {
+    "items": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "traits": {
+    "sequenceLiteral": true
+  },
+  "_traits_why": "與串列／tuple 同一個性狀——**算出來是一個容器**，而「不重複」是執行期的事。",
+  "_why": "🔴 **第五十三條護欄點名的**（2026-08-22）：`set` 這個節點型別在「語料沒碰到」裡，而 `set(xs)` 這條路早就走得通——`{1, 2, 3}` 這個寫法沒有。"
+}

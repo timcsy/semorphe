@@ -1,0 +1,22 @@
+[
+  {
+    "id": "python_pass",
+    "componentId": "python:pass",
+    "language": "python",
+    "category": "control",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_pass",
+      "message0": "%{BKY_PY_PASS_MSG0}",
+      "args0": [],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FFAB19",
+      "tooltip": "%{BKY_PY_PASS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {}
+    }
+  }
+]

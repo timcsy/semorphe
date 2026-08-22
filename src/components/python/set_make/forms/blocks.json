@@ -1,0 +1,32 @@
+[
+  {
+    "id": "python_set_make",
+    "componentId": "python:set_make",
+    "language": "python",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_set_make",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_PY_SET_MAKE_TOOLTIP}",
+      "labelKey": "PY_SET_MAKE_MSG",
+      "labelFallback": "集合",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "items",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  }
+]

@@ -1,4 +1,4 @@
 {
-  "PY_IMPORT_MSG0": "Import module %1",
-  "PY_IMPORT_TOOLTIP": "Bring in a module so you can use what it provides (for example the math module gives pi and square root)."
+  "PY_IMPORT_MSG0": "import %1 as %2",
+  "PY_IMPORT_TOOLTIP": "Brings a module in. Leave the alias blank to use the module name (import math); fill it in for import math as m."
 }

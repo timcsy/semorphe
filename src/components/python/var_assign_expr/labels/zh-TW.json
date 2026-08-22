@@ -1,0 +1,4 @@
+{
+  "PY_VAR_ASSIGN_EXPR_MSG0": "把 %2 存進 %1 並交出這個值",
+  "PY_VAR_ASSIGN_EXPR_TOOLTIP": "一邊記下來一邊用（海象運算子 :=）。常用在 if 或 while 的條件裡：算一次、記起來、順便拿去比。"
+}

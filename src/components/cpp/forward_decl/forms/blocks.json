@@ -6,7 +6,9 @@
     "category": "functions",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_forward_decl"
+      "type": "cpp_forward_decl",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
     },
     "renderMapping": {
       "fields": {

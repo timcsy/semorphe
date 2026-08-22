@@ -36,11 +36,12 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { callWith, withCall } from '../func_def/call'
 import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_MODULE_METHODS } from '../../../languages/python/builtins'
 
+import { evalPythonArgs } from '../../../languages/python/args'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:func_call', async (node, ctx) => {
     const name = String(node.properties.name ?? '')
-    const argValues: RuntimeValue[] = []
-    for (const a of node.children.args ?? []) argValues.push(await ctx.evaluate(a))
+    // ⚠️ `f(*nums)` 的攤開在這裡——見 `languages/python/args.ts` 的檔頭
+    const argValues: RuntimeValue[] = await evalPythonArgs(node.children.args ?? [], ctx)
 
     // 🔴 **拿在手上的函式優先於同名的定義**：參數遮蔽外層是作用域的規則
     if (ctx.scope.has(name)) {

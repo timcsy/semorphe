@@ -31,6 +31,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
+import fs from 'node:fs'
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
 import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
@@ -39,10 +40,13 @@ import { allComponentDefs } from '../helpers/component-scan'
 import { componentLabels } from '../../src/core/component/labels'
 import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
 import i18nBlocksEn from '../../src/i18n/en/blocks.json'
-import { printReport, assertRatchet, assertCorpus } from '../helpers/guardrail'
+import { printReport, assertRatchet, assertCorpus, REPO_ROOT } from '../helpers/guardrail'
 // 第二個維度：**一段程式的積木狀態載得進去嗎**（見那一支的檔頭）
 import { PYTHON_CORPUS } from '../assets/python-corpus'
 import { liftPython, createPythonLifter } from '../helpers/python-lift'
+import { setDegradationLanguage } from '../../src/core/degradation-blocks'
+import { Language } from 'web-tree-sitter'
+import { createTestLifter } from '../helpers/setup-lifter'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
@@ -216,6 +220,10 @@ describe('第五十一條護欄：宣告的積木，Blockly 真的建得出來�
     await pyParser.init(`${process.cwd()}/public`)
     await Parser.init()
     createPythonLifter()
+    // 🔴 **降級用哪一顆積木是【目標】決定的**——產品切到 Python 時會設，
+    //    而這裡不設的話退回字面的 `raw_code`（那個型別不存在，於是整段載不進去）。
+    //    ⚠️ 這是**測試的佈景漏了一步**，不是產品的洞：症狀長得像產品壞了。
+    setDegradationLanguage('python')
 
     const failures: string[] = []
     let loaded = 0
@@ -250,4 +258,76 @@ describe('第五十一條護欄：宣告的積木，Blockly 真的建得出來�
     assertRatchet([['載不進去', failures.length]], 'block-state-loadable', { detail: failures })
     expect(failures, '載不進去的那一段，使用者看到的是一片空白').toEqual([])
   }, 120_000)
+
+  /**
+   * 🔴 **同一個問題的 C++ 那一半**（2026-08-23）。
+   *
+   * 上面那一支只跑 Python 語料，於是 `cpp_class_def` **沒有上下接點**這件事
+   * 活了很久：兩個類別接不起來，工作區一載入就整段失敗。
+   * 使用者看到的是一個紅色的「積木載入失敗」，而 5424 個測試全綠。
+   *
+   * > **一條護欄只跑一個語言的語料，它就只保護那一個語言。**
+   *
+   * ⚠️ 語料是**測試檔裡的反引號片段**（與第三十一條同一批來源）——
+   * 只收語法完整的那些，片段本來就組不成工作區。
+   */
+  it('硬性零：C++ 語料的每一段，積木狀態都載得進工作區', async () => {
+    Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
+    for (const t of Object.keys(Blockly.Blocks)) delete Blockly.Blocks[t]
+    await registerViaProduct()
+
+    const rsr = new RenderStrategyRegistry()
+    registerCppRenderStrategies(rsr)
+    const renderer = new PatternRenderer()
+    renderer.setRenderStrategyRegistry(rsr)
+    renderer.loadBlockSpecs(reg.getAll())
+    setPatternRenderer(renderer)
+    setDegradationLanguage('cpp')
+
+    await Parser.init({ locateFile: (f: string) => `${process.cwd()}/public/${f}` })
+    const p = new Parser()
+    p.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+    const lifter = createTestLifter()
+
+    const corpus: string[] = []
+    const dir = `${REPO_ROOT}/tests/integration`
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.test.ts')) continue
+      for (const m of fs.readFileSync(`${dir}/${f}`, 'utf8').matchAll(/`([^`]{4,400})`/g)) {
+        const c = m[1]
+        if (!/[;{]/.test(c) || c.includes('${')) continue
+        corpus.push(c)
+      }
+    }
+
+    const failures: string[] = []
+    let complete = 0
+    for (const code of corpus) {
+      let tree
+      try { tree = p.parse(code) } catch { continue }
+      if (!tree || (tree.rootNode as unknown as { hasError: boolean }).hasError) continue
+      let tr
+      try { tr = lifter.lift(tree.rootNode as never) } catch { continue }
+      if (!tr) continue
+      complete++
+      const { blockMappings: _drop, ...state } = renderToBlocklyState(tr as never)
+      const load = new Blockly.Workspace()
+      try {
+        Blockly.serialization.workspaces.load(state, load)
+      } catch (e) {
+        failures.push(`${code.slice(0, 60).replace(/\n/g, '⏎')}：${e instanceof Error ? e.message : String(e)}`)
+      } finally {
+        load.dispose()
+      }
+    }
+
+    printReport('C++ 語料的積木狀態載得進工作區嗎', [
+      `撈到 ${corpus.length} 段｜語法完整 ${complete}｜載不進去 ${failures.length} ← 硬性零`,
+      ...failures.slice(0, 10).map((f) => `  ✘ ${f}`),
+    ])
+
+    expect(complete, '語法完整的一段都沒有 → 語料沒撈到，這一條不算數').toBeGreaterThan(50)
+    assertRatchet([['C++ 載不進去', failures.length]], 'block-state-loadable-cpp', { detail: failures })
+    expect(failures, '載不進去的那一段，使用者看到的是一片空白').toEqual([])
+  }, 180_000)
 })

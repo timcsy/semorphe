@@ -1,5 +1,5 @@
 {
-  "CPP_CLASS_DEF_MSG0": "定義類別 %1",
+  "CPP_CLASS_DEF_MSG0": "定義類別 %1 繼承 %2 %3",
   "CPP_CLASS_DEF_MSG1": "公開： %1",
   "CPP_CLASS_DEF_MSG2": "私有： %1",
   "CPP_CLASS_DEF_TOOLTIP": "定義一個類別，把資料和操作包裝在一起。公開的部分外面可以用，私有的只有內部能用",

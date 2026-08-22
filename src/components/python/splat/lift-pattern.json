@@ -1,0 +1,24 @@
+[
+  {
+    "id": "python_list_splat",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "list_splat",
+    "component": {
+      "componentId": "python:splat"
+    },
+    "_why": "⚠️ 走策略而不是欄位對映，是因為 `kind`（`*` 還是 `**`）**來自節點型別本身**，而樣式的欄位對映只讀得到欄位——樣式裡寫死的靜態屬性這個引擎不支援（已查證）。",
+    "fieldMappings": [],
+    "liftStrategy": "python:liftSplat"
+  },
+  {
+    "id": "python_dictionary_splat",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "dictionary_splat",
+    "component": {
+      "componentId": "python:splat"
+    },
+    "_why": "`**d` 與 `*xs` 同一顆元件，差在 `kind`——見膠囊的 `_properties_why`。",
+    "fieldMappings": [],
+    "liftStrategy": "python:liftSplat"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "python_import_from",
+    "componentId": "python:import_from",
+    "language": "python",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_import_from",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_IMPORT_FROM_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "MODULE",
+          "text": "math"
+        },
+        {
+          "type": "field_input",
+          "name": "NAMES",
+          "text": "sqrt"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_PY_IMPORT_FROM_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "MODULE": "module",
+        "NAMES": "names"
+      },
+      "inputs": {}
+    }
+  }
+]

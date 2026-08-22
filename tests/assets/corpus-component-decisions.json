@@ -1,0 +1,12 @@
+[
+  {
+    "type": "python:raw_code",
+    "cause": "只在降級時出現",
+    "reason": "降級用的積木。語料的降級節點是 **0**，所以它不出現是**好的零**——它出現才代表有東西沒被認出來。"
+  },
+  {
+    "type": "python:raw_expression",
+    "cause": "只在降級時出現",
+    "reason": "同上。"
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "componentId": "python:var_assign_expr",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的指派本來就是運算式（`while ((n = read()) > 0)`），而它是**同一顆元件的行為**不是另一顆——所以這裡沒有對得起來的抽象父：Python 把它切成兩個構造，C++ 沒有切。",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "identifier",
+      "default": "n",
+      "_why": "⚠️ **叫 `obj` 不叫 `name`**——「被指派的那個東西」這個角色在詞彙表裡只有一個名字（`RECEIVER_PARAM`），與同族那顆語句形態的指派一字不差。"
+    }
+  ],
+  "children": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "traits": {
+    "precedence": 1
+  },
+  "_traits_why": "🔴 **最低的優先級**——`n := len(xs) > 3` 在 Python 裡是 `n := (len(xs) > 3)`，而使用者要的幾乎都是 `(n := len(xs)) > 3`。宣告成 1 讓括號演算法自己補上那對括號（見 `core/projection/precedence.ts`）。",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 **第五十三條護欄點名的**（2026-08-22）：`named_expression`（海象運算子）在「語料沒碰到」裡。\n⚠️ **它是一個種差不是一個新操作**：做的仍然是 `assign`，差別在**它同時是一個運算式**——與 `map_at_default` 同一個判準。"
+}

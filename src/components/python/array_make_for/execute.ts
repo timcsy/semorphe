@@ -8,6 +8,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { SemanticNode } from '../../../core/types'
 import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
+import { pythonDisplay } from '../../../languages/python/value-display'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -53,6 +54,12 @@ export function registerExecute(register: (component: string, executor: Componen
     }
 
     await walk(0)
+    // ⚠️ **集合推導式要去重**——`{x % 2 for x in xs}` 只有兩格
+    if (node.properties.wrap === 'set') {
+      const seen = new Set<string>(), uniq: RuntimeValue[] = []
+      for (const x of out) { const k = pythonDisplay(x); if (!seen.has(k)) { seen.add(k); uniq.push(x) } }
+      return { type: 'array', value: uniq, seqKind: 'set' }
+    }
     return { type: 'array', value: out }
   })
 }

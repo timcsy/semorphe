@@ -1,0 +1,4 @@
+{
+  "PY_PASS_MSG0": "do nothing",
+  "PY_PASS_TOOLTIP": "Deliberately no action here. A Python block cannot be empty, so pass holds the place."
+}

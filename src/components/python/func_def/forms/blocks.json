@@ -13,6 +13,11 @@
           "type": "field_input",
           "name": "NAME",
           "text": "f"
+        },
+        {
+          "type": "field_input",
+          "name": "RETURNS",
+          "text": ""
         }
       ],
       "message1": "%1",
@@ -38,6 +43,11 @@
           },
           {
             "type": "field_input",
+            "name": "PARAM_TYPE_{i}",
+            "text": ""
+          },
+          {
+            "type": "field_input",
             "name": "PARAM_DEFAULT_{i}",
             "text": ""
           }
@@ -52,7 +62,8 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "name",
+        "RETURNS": "returns"
       },
       "statementInputs": {
         "BODY": "body"
@@ -64,11 +75,12 @@
           "childComponent": "param_decl",
           "childFields": {
             "PARAM_{i}": "name",
+            "PARAM_TYPE_{i}": "type",
             "PARAM_DEFAULT_{i}": "default"
           }
         }
       ]
     },
-    "_why": "🔴 **每一格參數有兩個欄位**（2026-08-21）：名字與預設值。\n只有名字那一格的話，`def greet(n, greeting=\"你好\")` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是行為不同。"
+    "_why": "🔴 **每一格參數有三個欄位**：名字、型別註記、預設值；而回傳型別是 `RETURNS` 那一格。\n只有名字那一格的話，`def greet(n, greeting=\"你好\")` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是行為不同。\n⚠️ **型別註記那兩格是 2026-08-22 補的，而它是同一個洞的第二次**：抬升與產生都收了 `r: float` 與 `-> float`，**積木上卻沒有那一格**，於是「程式碼→積木→程式碼」把註記吃掉了（開瀏覽器看出來的，測試全綠）。\n> **一個屬性收得進語義樹，卻沒有一格積木裝它——那不是少一個欄位，那是投影會掉東西。**"
   }
 ]

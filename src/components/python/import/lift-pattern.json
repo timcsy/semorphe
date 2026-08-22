@@ -2,9 +2,10 @@
   "id": "python_import",
   "grammar": "tree-sitter-python",
   "astNodeType": "import_statement",
-  "component": { "componentId": "python:import" },
-  "fieldMappings": [
-    { "semantic": "name", "ast": "name", "extract": "text" }
-  ],
-  "_why": "⚠️ `from x import y` 與 `import x as y` 也是同一個節點型別，而它們的 `name` 欄位長得不一樣——那兩種會產出一個不完整的名字，屬於**已知的邊界**。它們今天沒有語料，等有人碰到再分。"
+  "component": {
+    "componentId": "python:import"
+  },
+  "_why": "🔴 **本來走 fieldMappings，而 `import x as y` 的 `name` 欄位會給出「x as y」整串**——那是一個假的模組名，只是因為 generate 原封不動印回去所以看不出來（2026-08-22 第五十三條護欄點名）。\n⚠️ `import a, b`（一行多個）與 `import a.b.c`（點狀路徑）回 `null` 走誠實降級。",
+  "liftStrategy": "python:lift_import",
+  "fieldMappings": []
 }
