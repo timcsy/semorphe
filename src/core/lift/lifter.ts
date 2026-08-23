@@ -353,6 +353,16 @@ export class Lifter {
       // 判準看**父節點**：獨立區塊的父也是 compound_statement；
       // 結構的 body 的父是 `if_statement`／`while_statement`／
       // `function_definition`… 而那正是該展平的那些。
+      // 🔴 **掛在標頭那一行的註解**（`if a:  # 為什麼`）——2026-08-23。
+      //
+      // 它是那個語句的**子節點**（不是兄弟），所以上面那段「同一列 → 接在前一句」
+      // 完全看不到它，而各家策略也不會去撿——結果是**整條安靜地消失**。
+      //
+      // ⚠️ 判準是**同一列**，不是「第幾個子節點」：
+      // `if a:  # x` 的註解與 `if` 同列，而 `else` 子句裡的註解不是
+      // （那一支由那顆元件自己的策略處理，因為只有它知道那是第幾支）。
+      this.attachHeaderComments(node, lifted)
+
       if (lifted.componentId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
         if (standalone) results.push(buildStandaloneBlock(lifted.children.body ?? []))
@@ -362,6 +372,26 @@ export class Lifter {
       }
     }
     return results
+  }
+
+  /**
+   * 把「與這個語句同一列的子註解」接到它身上（`slot: 'header'`）。
+   *
+   * ⚠️ **只看直接子節點**：孫節點裡的註解屬於它自己那一行，
+   * 而那一行由它自己的語句去接。
+   */
+  private attachHeaderComments(node: AstNode, lifted: SemanticNode): void {
+    const row = node.startPosition.row
+    for (const kid of node.namedChildren) {
+      if (kid.type !== 'comment' || kid.startPosition.row !== row) continue
+      if (!lifted.annotations) lifted.annotations = []
+      lifted.annotations.push({
+        type: 'comment',
+        text: commentSyntax().strip(kid.text),
+        position: 'inline',
+        slot: 'header',
+      })
+    }
   }
 
   /** Determine why a node was degraded to raw_code */

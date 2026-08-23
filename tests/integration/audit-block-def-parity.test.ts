@@ -60,7 +60,12 @@ import i18nBlocks from '../../src/i18n/zh-TW/blocks.json'
  * 所以那段程式碼搬家不會讓這條失效（`component-rename` 第 6 步的教訓）。
  */
 function extraStateKeys(def: Record<string, unknown> | undefined): string[] {
-  const fn = def?.saveExtraState
+  // ⚠️ **包裝過的要拆回原本那一份**（2026-08-23）：`preserveForeignExtraState`
+  //    在每顆有 mutation 的積木外面包了一層（讓別人的鍵原樣帶著走），
+  //    而**一個包裝函式的原始碼裡一個鍵都沒有**——不拆的話這一維會整個瞎掉。
+  //    🔴 那正是這條護欄下面那一則在盯的事。
+  const raw = def?.saveExtraState as { __semorpheInner?: unknown } | undefined
+  const fn = (raw?.__semorpheInner ?? raw) as unknown
   if (typeof fn !== 'function') return []
   const src = String(fn)
   const keys = new Set<string>()

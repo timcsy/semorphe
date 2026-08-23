@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "files": 37,
-    "importLines": 192,
-    "anyMethodCalls": 2663
+    "files": 38,
+    "importLines": 193,
+    "anyMethodCalls": 2699
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,

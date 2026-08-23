@@ -8,6 +8,7 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { attachBranchList } from './branch-list-block'
 import { attachParamList, registerParamMutatorBlocks, MUTATOR_CONTAINER } from './param-list-block'
+import { preserveForeignExtraState } from './foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { componentsDeclaringVariables } from '../core/component/traits'
@@ -602,6 +603,14 @@ export class BlockRegistrar {
     }
 
     this.registerDynamicBlocks()
+
+    // 🔴 **最後一步：讓每一顆有自訂 `extraState` 的積木留住別人的鍵**（2026-08-23）。
+    //    渲染那一路把**標註**（行末註解）放在 `extraState` 裡，而那些積木的
+    //    `loadExtraState` 只讀自己那幾個鍵——症狀是**使用者打的註解在
+    //    「積木→程式碼」之後不見了**。見那個模組的檔頭。
+    //    ⚠️ 放在這裡而不是每一顆各自處理：**一條規則只寫一次**，
+    //    而往後新增的 mutation 積木自動涵蓋。
+    for (const type of Object.keys(Blockly.Blocks)) preserveForeignExtraState(Blockly.Blocks[type])
   }
 
   private registerDynamicBlocks(): void {

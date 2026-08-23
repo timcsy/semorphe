@@ -71,11 +71,22 @@ export const MUTATOR_CONTAINER = 'pl_param_container'
  */
 export function registerParamMutatorBlocks(
   groups: { key: string; labelKey?: string; labelFallback: string }[],
+  blockOptions: { key: string; labelKey?: string; labelFallback: string }[] = [],
 ): string {
-  if (!Blockly.Blocks[MUTATOR_CONTAINER]) {
-    Blockly.Blocks[MUTATOR_CONTAINER] = {
+  // ⚠️ **容器也照勾選格的組合分型別**——理由與小積木同一條：
+  //    只註冊一顆共用的話，第二個呼叫者的整顆勾選格會被第一個決定。
+  const containerType = blockOptions.length > 0
+    ? `${MUTATOR_CONTAINER}__${blockOptions.map((o) => o.key).join('_')}`
+    : MUTATOR_CONTAINER
+  if (!Blockly.Blocks[containerType]) {
+    Blockly.Blocks[containerType] = {
       init: function (this: Blockly.Block) {
-        this.appendDummyInput().appendField(Blockly.Msg['PL_MUTATOR_TITLE'] || '參數')
+        const head = this.appendDummyInput()
+        head.appendField(Blockly.Msg['PL_MUTATOR_TITLE'] || '參數')
+        for (const o of blockOptions) {
+          head.appendField(Blockly.Msg[o.labelKey ?? ''] || o.labelFallback)
+          head.appendField(new Blockly.FieldCheckbox('FALSE') as Blockly.Field, `BLK_${o.key}`)
+        }
         this.appendStatementInput('STACK')
         this.setColour(230)
         this.contextMenu = false
@@ -101,8 +112,13 @@ export function registerParamMutatorBlocks(
       },
     }
   }
+  CONTAINER_OF.set(itemType, containerType)
   return itemType
 }
+
+/** 某一種小積木配哪一顆容器——`decompose` 要建的是那一顆。 */
+const CONTAINER_OF = new Map<string, string>()
+export const containerTypeFor = (itemType: string): string => CONTAINER_OF.get(itemType) ?? MUTATOR_CONTAINER
 
 export interface ParamListSpec {
   /** 每一格的 input 名（`PARAM_{i}`） */
@@ -151,6 +167,16 @@ export interface ParamListSpec {
    * 每一段：`fromField` 起（含）到下一段之前的欄位，整段一起顯示／隱藏。
    */
   optionalGroups?: { key: string; fromField: string; labelKey?: string; labelFallback: string }[]
+  /**
+   * **整顆積木層級的「要不要顯示」**——與參數無關的那些（2026-08-23，使用者提的）。
+   *
+   * 🔴 例：Python 函式的**回傳型別**。大多數函式沒有回傳註記，
+   * 而固定長在那裡就是一個「（不指定）」永遠掛在標頭上。
+   *
+   * ⚠️ **藏得起來的單位是 `input` 不是 `field`**（`field.setVisible` 標著
+   * `@internal`，而且不會重新排版）——所以那一格要自己一段訊息。
+   */
+  blockOptions?: { key: string; input: string; labelKey?: string; labelFallback: string }[]
 }
 
 function setMinusState(block: any, atMin: boolean): void {
@@ -176,7 +202,12 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     key ? (msg[key] || fallback) : fallback
 
   const minCount = spec.minCount ?? 0
+  const blockOptions = spec.blockOptions ?? []
   proto.paramCount_ = 0
+
+  /** 某個 input 上的所有欄位——`blockOptions` 要靠它掛驗證器。 */
+  const fieldsOfInput = (blk: any, inputName: string): any[] =>
+    (blk.getInput(inputName)?.fieldRow ?? []) as any[]
 
   proto.rebuildTail_ = function (this: any): void {
     if (this.getInput('PL_OPEN')) this.removeInput('PL_OPEN')
@@ -211,9 +242,21 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     //    用的就是這個狀態，而 `for` 少了那個名字產不出合法的 Python。
     while (this.paramCount_ < minCount) this.plusParam_()
     // 齒輪只長在**有可有可無那幾段**的積木上——其餘的積木一個字都不變
-    if (groups.length > 0) {
-      const itemType = registerParamMutatorBlocks(groups)
+    if (groups.length > 0 || blockOptions.length > 0) {
+      const itemType = registerParamMutatorBlocks(groups, blockOptions)
       this.setMutator(new Blockly.icons.MutatorIcon([itemType], this as Blockly.BlockSvg))
+      // ⚠️ **整顆層級的那幾格起始收起來**，而**有值的會自己打開**（見下面的驗證器）
+      for (const o of blockOptions) {
+        const input = this.getInput(o.input)
+        if (input) input.setVisible(false)
+        for (const f of fieldsOfInput(this, o.input)) {
+          if (!f?.setValidator) continue
+          f.setValidator((v: string) => {
+            if (v) queueMicrotask(() => this.setBlockOption_(o.key, true))
+            return v
+          })
+        }
+      }
     }
   }
 
@@ -291,12 +334,33 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     if (opt.isVisible() === show) return
     if (!show) {
       for (const f of g.fields) {
-        const field = this.getField(f.name.replace('{i}', String(i)))
-        if (field && typeof field.getValue?.() === 'string' && field.setValue) field.setValue('')
+        const field = this.getField(f.name.replace('{i}', String(i))) as any
+        // 🔴 標籤（`：`／`＝`）也是 field——清掉它等於把那個符號抹掉（見上面同一條）
+        if (field?.EDITABLE && typeof field.getValue?.() === 'string' && field.setValue) field.setValue('')
       }
     }
     opt.setVisible(show)
     // ⚠️ `setVisible` 只改狀態，畫面要自己叫它重排
+    this.queueRender?.()
+  }
+
+  /** 打開或關掉整顆層級的某一格（關掉時**一併清掉值**）。 */
+  proto.setBlockOption_ = function (this: any, key: string, show: boolean): void {
+    const o = blockOptions.find((x) => x.key === key)
+    const input = o ? this.getInput(o.input) : null
+    if (!o || !input) return
+    this.blockOpts_ = this.blockOpts_ ?? {}
+    this.blockOpts_[key] = show
+    if (input.isVisible() === show) return
+    if (!show) {
+      // 🔴 **只清可編輯的欄位**：標籤（`回傳型別` 那四個字）也是一個 field，
+      //    而把它 `setValue('')` 會**把字抹掉**——再打開時那一格只剩下拉。
+      //    ⚠️ 症狀不是報錯，是**畫面上少了幾個字**。
+      for (const f of fieldsOfInput(this, o.input)) {
+        if (f.EDITABLE && typeof f.getValue?.() === 'string' && f.setValue) f.setValue('')
+      }
+    }
+    input.setVisible(show)
     this.queueRender?.()
   }
 
@@ -307,11 +371,15 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
    * 而它必須在，否則使用者要數第幾個才知道自己在改誰。
    */
   proto.decompose = function (this: any, workspace: Blockly.WorkspaceSvg): Blockly.Block {
-    const container = workspace.newBlock(MUTATOR_CONTAINER)
+    const itemType = registerParamMutatorBlocks(groups, blockOptions)
+    const container = workspace.newBlock(containerTypeFor(itemType))
     ;(container as Blockly.BlockSvg).initSvg()
+    for (const o of blockOptions) {
+      container.setFieldValue(this.getInput(o.input)?.isVisible() ? 'TRUE' : 'FALSE', `BLK_${o.key}`)
+    }
     let connection = container.getInput('STACK')!.connection!
     for (let i = 0; i < this.paramCount_; i++) {
-      const item = workspace.newBlock(registerParamMutatorBlocks(groups))
+      const item = workspace.newBlock(itemType)
       ;(item as Blockly.BlockSvg).initSvg()
       const nameField = spec.fields[0]?.name.replace('{i}', String(i))
       item.setFieldValue(String(this.getFieldValue(nameField) ?? `#${i + 1}`), 'PL_NAME')
@@ -326,6 +394,9 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
 
   /** 齒輪關上時：**幾個參數、每個開哪幾段**照那一疊重新擺一次。 */
   proto.compose = function (this: any, container: Blockly.Block): void {
+    for (const o of blockOptions) {
+      this.setBlockOption_(o.key, container.getFieldValue(`BLK_${o.key}`) === 'TRUE')
+    }
     const wants: Record<string, boolean>[] = []
     let item = container.getInputTargetBlock('STACK')
     while (item) {
@@ -362,18 +433,24 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
 
   // ⚠️ **格式是契約**：`{ paramCount }`，與命令式那份一字不差。
   //    而零參數回 `null`——那也是命令式那份的行為（存檔裡不留空物件）。
-  proto.saveExtraState = function (this: any): { paramCount: number; paramOpts?: string[][] } | null {
-    if (this.paramCount_ <= 0) return null
+  proto.saveExtraState = function (this: any): { paramCount: number; paramOpts?: string[][]; blockOpts?: string[] } | null {
+    // ⚠️ 零參數時也可能有整顆層級的設定（例如 `def f() -> int:`）——不能直接回 `null`
+    if (this.paramCount_ <= 0 && blockOptions.every((o) => !this.getInput(o.input)?.isVisible())) return null
     const base = { paramCount: this.paramCount_ }
-    if (groups.length === 0) return base
+    if (groups.length === 0 && blockOptions.length === 0) return base
     // ⚠️ **沒有任何一段被打開時不寫這個鍵**——`{ paramCount }` 是與命令式那份
     //    一字不差的既有契約，多一個永遠是空的鍵只會讓存檔比對變吵。
     const opts = Array.from({ length: this.paramCount_ }, (_, i) =>
       groups.filter((g) => optsOf(this, i)[g.key]).map((g) => g.key))
-    return opts.some((o) => o.length > 0) ? { ...base, paramOpts: opts } : base
+    const blockOn = blockOptions.filter((o) => this.getInput(o.input)?.isVisible()).map((o) => o.key)
+    const extra = {
+      ...(opts.some((o) => o.length > 0) ? { paramOpts: opts } : {}),
+      ...(blockOn.length > 0 ? { blockOpts: blockOn } : {}),
+    }
+    return Object.keys(extra).length > 0 ? { ...base, ...extra } : base
   }
 
-  proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][] } | null): void {
+  proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][]; blockOpts?: string[] } | null): void {
     // ⚠️ **舊存檔沒有這個鍵時要退到【最少幾格】不是 0**——`for` 的舊檔
     //    若被載回 0 格，產出的會是 `for  in xs:`。
     const want = Math.max(state?.paramCount ?? 0, minCount)
@@ -388,6 +465,9 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       const keys = state?.paramOpts?.[i]
       if (!keys) continue
       for (const g of groups) this.setOptional_(i, g.key, keys.includes(g.key))
+    }
+    if (state?.blockOpts) {
+      for (const o of blockOptions) this.setBlockOption_(o.key, state.blockOpts.includes(o.key))
     }
   }
 }

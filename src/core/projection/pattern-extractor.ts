@@ -1,6 +1,7 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule } from '../types'
 import { parseToChildren } from './children-as-field'
 import { createNode } from '../semantic-tree'
+import type { Annotation } from '../types'
 import { resolvePath, resolvePattern } from './common-mappings'
 import { componentWithTrait } from '../component/traits'
 
@@ -10,6 +11,17 @@ export interface BlockState {
   fields: Record<string, unknown>
   inputs: Record<string, { block: BlockState }>
   next?: { block: BlockState }
+  /**
+   * **積木上的註解泡泡**——Blockly 自己的欄位（`icons.comment`）。
+   *
+   * 🔴 使用者寫的行末註解住在這裡，**不住在 `extraState`**：
+   * 沒有 mutation 的積木**根本沒有 `extraState` 這條路**（Blockly 只在積木
+   * 自己實作 `save/loadExtraState` 時才理它），於是那些註解會在
+   * 「積木→程式碼」之後安靜消失。
+   *
+   * 🟢 而註解泡泡是 Blockly 原生會存檔的東西，**而且使用者看得到、改得動**。
+   */
+  icons?: { comment?: { text: string; pinned?: boolean; height?: number; width?: number } }
   extraState?: Record<string, unknown>
 }
 
@@ -146,6 +158,22 @@ export class PatternExtractor {
     const node = createNode(spec.componentId, props, children)
     // Store the source block ID as metadata (not as node.id — node ID is the unique truth)
     if (block.id) node.metadata = { ...node.metadata, sourceBlockId: block.id }
+    // 🔴 **標註要撿回來**（2026-08-23）：渲染那一路把它們放進 `extraState.annotations`，
+    //    而這裡原本一個字都沒讀——症狀是**使用者寫的行末註解在「積木→程式碼」之後不見了**。
+    //    ⚠️ 不報錯、產出的碼合法，而**他打的字沒了**。
+    const notes = (block.extraState as { annotations?: Annotation[] } | undefined)?.annotations
+    if (Array.isArray(notes) && notes.length > 0) node.annotations = notes
+    // 🔴 **註解泡泡也是使用者寫的註解**——而它是沒有 mutation 的積木**唯一**
+    //    帶得動註解的地方（見渲染那一路的說明）。
+    //    ⚠️ 泡泡贏過 `extraState` 裡沒有 slot 的那些：**使用者改的是泡泡**。
+    const bubble = block.icons?.comment?.text?.trim()
+    if (bubble) {
+      const slotted = (node.annotations ?? []).filter((a) => a.slot)
+      node.annotations = [
+        ...slotted,
+        { type: 'comment', text: bubble, position: 'inline' },
+      ]
+    }
     return node
   }
 
@@ -212,9 +240,18 @@ export class PatternExtractor {
           const inputData = block.inputs[inputName]
           if (inputData?.block) {
             if (rule.isStatementInput) {
-              // Statement input: extract chain
+              // 🔴 **一個 input ⇄ 一個孩子**（2026-08-23 修）：這一串是**那一支**的整段。
+              //
+              // ⚠️ 原本把整串攤進同一個清單，於是 `elif` 的兩個清單
+              //    （條件、主體）**靠索引配對就錯開了**——第二支 elif 的條件
+              //    配到第一支的第二行。而那正是同族產生器的註解早就寫著的
+              //    「錯開之後每一格都還在，只是接錯了人」。
+              //
+              // 🟢 兩行以上包成 `_compound`（核心用來表示「一段」的結構身分），
+              //    一行的照原樣——**不為了整齊而多包一層**。
               const chain = this.extractStatementChain(inputData.block)
-              childNodes.push(...chain)
+              if (chain.length === 1) childNodes.push(chain[0])
+              else if (chain.length > 1) childNodes.push(createNode('_compound', {}, { body: chain }))
             } else {
               // Expression input: extract single node
               const childNode = this.extract(inputData.block)

@@ -1,10 +1,12 @@
 {
-  "PYTHON_FUNC_DEF_MSG0": "define %1 returns %2",
+  "PYTHON_FUNC_DEF_MSG0": "define %1",
   "PYTHON_FUNC_DEF_PARAMS_OPEN": "( params",
   "PYTHON_FUNC_DEF_PARAMS_CLOSE": ")",
   "PYTHON_FUNC_DEF_TOOLTIP": "Names a sequence of steps so you can call it again. Press + to add a parameter. Type annotations may be left blank — they are for the reader; this tool does not check them.",
   "PY_TYPE_NONE_GIVEN": "(none)",
   "PY_FUNC_DEF_OPT_TYPE": "type",
   "PY_FUNC_DEF_OPT_DEFAULT": "default",
-  "PL_MUTATOR_TITLE": "parameters"
+  "PL_MUTATOR_TITLE": "parameters",
+  "PYTHON_FUNC_DEF_RETURNS_MSG": "returns %1 %2",
+  "PY_FUNC_DEF_OPT_RETURNS": "return type"
 }

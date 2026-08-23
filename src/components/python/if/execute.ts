@@ -12,7 +12,12 @@ export function registerExecute(register: (component: string, executor: Componen
     const bodies = node.children.elif_body ?? []
     for (let i = 0; i < conds.length; i++) {
       if (ctx.toBool(await ctx.evaluate(conds[i]))) {
-        await ctx.executeBody(bodies[i] ? [bodies[i]] : [])
+        // ⚠️ **一支的主體可以是「一段」**（`_compound`）——不攤開的話
+        //    執行器會拿到一個它不認得的身分，而那一支只跑得到第一行。
+        const b = bodies[i]
+        await ctx.executeBody(
+          !b ? [] : b.componentId === '_compound' ? (b.children.body ?? []) : [b],
+        )
         return
       }
     }

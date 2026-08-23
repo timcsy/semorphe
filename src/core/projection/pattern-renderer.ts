@@ -314,10 +314,14 @@ export class PatternRenderer {
         for (let i = 0; i < childNodes.length; i++) {
           const inputName = resolvePattern(rule.inputPattern, i)
           if (rule.isStatementInput) {
-            // Statement input: render chain of single child
+            // 🔴 **一個 input ⇄ 一個孩子，而那個孩子可以是「一段」**（2026-08-23）：
+            //    `_compound` 是核心用來表示一段的結構身分，這裡把它攤回一串。
+            //    ⚠️ 少了這一步的症狀是那一支只畫得出第一行。
+            const kid = childNodes[i]
+            const stack = kid?.componentId === '_compound' ? (kid.children?.body ?? []) : [kid]
             const chain = ctx?.renderStatementChain
-              ? ctx.renderStatementChain([childNodes[i]])
-              : this.renderStatementChain([childNodes[i]])
+              ? ctx.renderStatementChain(stack)
+              : this.renderStatementChain(stack)
             if (chain) {
               block.inputs[inputName] = { block: chain }
             }

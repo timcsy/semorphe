@@ -880,6 +880,13 @@ export class BlocklyPanel implements ViewHost {
         if (extra) state.extraState = extra as Record<string, unknown>
       }
 
+      // 🔴 **註解泡泡也要帶上**（2026-08-23）：這個函式是**手工**組出
+      //    `BlockState` 的，而它原本只抄欄位、插槽與 `extraState`
+      //    ——於是使用者寫的註解在「積木→程式碼」之後**安靜消失**。
+      //    ⚠️ 症狀不是報錯，是**他打的字沒了**。
+      const comment = block.getCommentText?.()
+      if (comment) state.icons = { comment: { text: comment, pinned: false } }
+
       return state
     } catch {
       return null
@@ -1336,8 +1343,12 @@ export class BlocklyPanel implements ViewHost {
       // Annotation 視覺
       const annotations = extra.annotations as Annotation[] | undefined
       if (annotations?.length) {
+        // 🔴 **有 `slot` 的不進註解泡泡**（2026-08-23）：那是「某一行」的註解
+        //    （`if …:  # 為什麼`），它跟著 `extraState` 走並由那顆元件放回原位。
+        //    ⚠️ 兩條路都放的話，抽取那一路會**再認一次**，於是同一句註解
+        //    **重複出現、而且跑到整段的最後一行**。
         const inlineTexts = annotations
-          .filter(a => a.position === 'inline' || a.position === 'after')
+          .filter(a => (a.position === 'inline' || a.position === 'after') && !a.slot)
           .map(a => a.text)
         if (inlineTexts.length > 0) {
           block.setCommentText(inlineTexts.join('\n'))

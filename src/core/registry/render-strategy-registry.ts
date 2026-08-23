@@ -6,6 +6,17 @@ export interface BlockState {
   fields: Record<string, unknown>
   inputs: Record<string, { block: BlockState }>
   next?: { block: BlockState }
+  /**
+   * **積木上的註解泡泡**——Blockly 自己的欄位（`icons.comment`）。
+   *
+   * 🔴 使用者寫的行末註解住在這裡，**不住在 `extraState`**：
+   * 沒有 mutation 的積木**根本沒有 `extraState` 這條路**（Blockly 只在積木
+   * 自己實作 `save/loadExtraState` 時才理它），於是那些註解會在
+   * 「積木→程式碼」之後安靜消失。
+   *
+   * 🟢 而註解泡泡是 Blockly 原生會存檔的東西，**而且使用者看得到、改得動**。
+   */
+  icons?: { comment?: { text: string; pinned?: boolean; height?: number; width?: number } }
   extraState?: Record<string, unknown>
 }
 

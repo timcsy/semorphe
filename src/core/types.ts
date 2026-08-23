@@ -36,6 +36,20 @@ export interface Annotation {
   type: 'comment' | 'pragma' | 'lint_directive'
   text: string
   position: 'before' | 'after' | 'inline'
+  /**
+   * **這個標註屬於這顆節點的哪一行**（2026-08-23）。
+   *
+   * 一顆 `if` 產出來是好幾行，而 `if a:  # 為什麼` 的那個註解屬於**第一行**
+   * ——沒有這一格的話核心只能把它接在整段的最後面，於是它跑到 `else` 底下。
+   *
+   * | 值 | 意思 |
+   * |---|---|
+   * | `header` | 這顆節點的**第一行**（`if …:`／`for …:`／`def …:`）——**核心自己放** |
+   * | 其餘（`elif:0`／`else`…） | 那顆元件自己的行，**由它的產生器放** |
+   *
+   * 🔴 **有 `slot` 的標註核心不接在尾巴**——否則會出現兩次。
+   */
+  slot?: string
 }
 
 export type ConfidenceLevel = 'high' | 'warning' | 'inferred' | 'user_confirmed' | 'llm_suggested' | 'raw_code'
