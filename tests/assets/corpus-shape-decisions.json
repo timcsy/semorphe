@@ -86,8 +86,8 @@
   },
   {
     "type": "import_prefix",
-    "cause": "該補進語料",
-    "reason": "相對匯入的那幾個點。"
+    "cause": "語言有而這個工具不做",
+    "reason": "`from . import y`——**需要「這個檔在哪個套件裡」**，而這個工具只有一個檔。同上：誠實降級。"
   },
   {
     "type": "keyword_pattern",
@@ -101,8 +101,8 @@
   },
   {
     "type": "line_continuation",
-    "cause": "該補進語料",
-    "reason": "行末的 `\\`。"
+    "cause": "只在降級時出現",
+    "reason": "行末的 `\\`。⚠️ 語料**已經有一段用它**（跳脫字元與長字串），而 tree-sitter 把它算成 extra 節點，不出現在具名子樹裡——所以這一維量不到它。**這是量測的邊界，不是語料的缺口**（2026-08-23 查證）。"
   },
   {
     "type": "list_pattern",
@@ -141,8 +141,8 @@
   },
   {
     "type": "relative_import",
-    "cause": "該補進語料",
-    "reason": "`from . import x`——教學上少見，而 AI 生的專案碼有。"
+    "cause": "語言有而這個工具不做",
+    "reason": "`from . import y`——**需要「這個檔在哪個套件裡」**，而這個工具只有一個檔。同上：誠實降級。"
   },
   {
     "type": "splat_pattern",
@@ -186,23 +186,8 @@
   },
   {
     "type": "wildcard_import",
-    "cause": "該補進語料",
-    "reason": "`from x import *`。"
-  },
-  {
-    "type": "with_clause",
-    "cause": "該補進語料",
-    "reason": "同上。"
-  },
-  {
-    "type": "with_item",
-    "cause": "該補進語料",
-    "reason": "同上。"
-  },
-  {
-    "type": "with_statement",
-    "cause": "該補進語料",
-    "reason": "`with open(...) as f`——即使檔案 I/O 不支援，它也該誠實降級而不是沒被量過。"
+    "cause": "語言有而這個工具不做",
+    "reason": "`from x import *`——**帶進來的名字要到執行期才知道**，而這個工具的名字解析是靜態的。認得出形狀而綁不了名字，所以誠實降級（已驗證：它變灰色方塊）。"
   },
   {
     "type": "yield",

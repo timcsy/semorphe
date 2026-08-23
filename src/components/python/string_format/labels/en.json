@@ -1,0 +1,4 @@
+{
+  "PY_STRING_FORMAT_MSG0": "fill template %1 with",
+  "PY_STRING_FORMAT_TOOLTIP": "Fills the {} slots of a template with values. Press + to add one; plug in a named-argument block to match by name."
+}

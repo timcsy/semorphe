@@ -1,0 +1,4 @@
+{
+  "PY_STRING_COMPARE_PREFIX_MSG0": "does %1 start with %2",
+  "PY_STRING_COMPARE_PREFIX_TOOLTIP": "Answers true or false. Case matters."
+}

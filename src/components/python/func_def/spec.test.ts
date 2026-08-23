@@ -56,9 +56,23 @@ describe('python:func_def', () => {
     expect(out).toContain('嗨, 小華')
   })
 
-  it('🔴 執行：認不得的預設值要出聲，不得當成字串', async () => {
-    // `def f(x=[])` —— 靜默當字串會讓 x 變成文字 `"[]"`，而那會一路算下去
-    const out = await runPython('def f(x=[]):\n    return x\n\nprint(f())\n')
+  it('🟢 容器字面的預設值收了（2026-08-23）——而那個【共用】的陷阱要照實現', async () => {
+    // ⚠️ 這條原本釘的是「`def f(x=[])` 要出聲」，而 2026-08-23 收了容器字面
+    //    ——**邊界移動時要改成釘新的邊界，不是刪掉它**。
+    expect(await runPython('def f(x=[]):\n    return x\n\nprint(f())\n')).toContain('[]')
+    // 🔴 **同一個串列在每次呼叫之間共用**——那是 Python 最有名的陷阱之一，
+    //    每次給一份新的會印出一個真的 Python 不會印的答案。
+    const out = await runPython(
+      'def collect(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n\n' +
+      'print(collect("a"))\nprint(collect("b"))\nprint(collect("c", []))\n')
+    expect(out).toContain("['a']")
+    expect(out).toContain("['a', 'b']")
+    expect(out).toContain("['c']")
+  })
+
+  it('🔴 執行：仍然認不得的預設值要出聲，不得當成字串', async () => {
+    // `def f(x=g())` —— 靜默當字串會讓 x 變成文字 `"g()"`，而那會一路算下去
+    const out = await runPython('def f(x=len([1])):\n    return x\n\nprint(f())\n')
     expect(out).toMatch(/例外|錯誤|Error/)
   })
 

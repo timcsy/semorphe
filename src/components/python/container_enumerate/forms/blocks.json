@@ -14,6 +14,11 @@
           "type": "input_value",
           "name": "VALUE",
           "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "START",
+          "check": "Expression"
         }
       ],
       "output": "Expression",
@@ -23,8 +28,10 @@
     "renderMapping": {
       "fields": {},
       "inputs": {
-        "VALUE": "value"
+        "VALUE": "value",
+        "START": "start"
       }
-    }
+    },
+    "_why": "⚠️ **起點那一格 2026-08-23 補**：留空 ＝ 從 0 開始。`start_style` 屬性積木上**刻意沒有**——它記的是原文的寫法，不是學生要選的東西。"
   }
 ]

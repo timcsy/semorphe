@@ -1,0 +1,4 @@
+{
+  "PY_STRING_FORMAT_MSG0": "用樣板 %1 填入",
+  "PY_STRING_FORMAT_TOOLTIP": "把值填進樣板裡的 {} 位置。按 + 加一個值；要用名字對應時，插一顆「具名引數」積木。"
+}

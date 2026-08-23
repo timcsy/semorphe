@@ -20,12 +20,19 @@ describe('python:cast', () => {
    * ⚠️ **這條原本用 `list(x)` 當對照組，而 `list` 在 2026-08-22 加進了下拉**
    * ——邊界移動時要**改成釘新的邊界，不是刪掉它**。
    *
-   * 🔴 而 `set` 刻意**留在界外**：這個直譯器沒有集合型別（`set(xs)` 只是去重），
-   * 做成「轉成集合」會是一個我們兌現不了的宣稱。
+   * 🔴 **邊界第二次移動（2026-08-23）**：`set` 本來也在界外，理由是
+   * 「這個直譯器沒有集合型別」——而集合字面（`{1, 2}`）進來時
+   * `seqKind: 'set'` 一起做了，**那個理由當天就過期**。
+   * 今天釘的新邊界是 `tuple`／`dict`：**內建表裡沒有它們**。
    */
-  it('★ 不在下拉裡的名字不得被認走（`set` 是刻意的）', async () => {
-    expect(componentIdsOf(await liftPython('set(x)\n'))).not.toContain('python:cast')
+  it('★ 不在下拉裡的名字不得被認走（`tuple`／`dict` 是刻意的）', async () => {
     expect(componentIdsOf(await liftPython('tuple(x)\n'))).not.toContain('python:cast')
+    expect(componentIdsOf(await liftPython('dict(x)\n'))).not.toContain('python:cast')
+  })
+
+  it('🟢 而 `set(...)` 收得下（2026-08-23 起）——去重之後印出來是 `{…}`', async () => {
+    expect(componentIdsOf(await liftPython('s = set(xs)\n'))).toContain('python:cast')
+    expect(await runPython('print(set([3, 1, 3]))\n')).toContain('{3, 1}')
   })
 
   it('🟢 而 `list(...)` 收得下——「把走訪得到的東西收成一串」到處都是', async () => {

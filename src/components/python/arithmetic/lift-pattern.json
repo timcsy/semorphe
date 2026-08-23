@@ -13,7 +13,10 @@
         "/": "python:arithmetic",
         "//": "python:arithmetic",
         "%": "python:arithmetic",
-        "**": "python:arithmetic"
+        "**": "python:arithmetic",
+        "&": "python:arithmetic",
+        "|": "python:arithmetic",
+        "^": "python:arithmetic"
       },
       "fieldMappings": [
         {
@@ -34,6 +37,6 @@
       ]
     },
     "priority": 5,
-    "_why": "⚠️ **`operatorField` 是 `operator` 而不是 C++ 那份的 `$operator`**：tree-sitter-python 的 `binary_operator` **有一個具名的 `operator` 欄位**，而 tree-sitter-cpp 的 `binary_expression` 沒有（要拿第一個未具名子節點）。**兩個文法對同一件事的表達方式不同**——這正是 spec 167 那條「撞名是必然」的另一面：名字一樣的節點，內部結構未必一樣。\n\n⚠️ 位元運算（`&` `|` `^` `<<` `>>`）**刻意不收**：它們也走 `binary_operator`，而那是另一個教學概念。沒收的會走誠實降級。"
+    "_why": "⚠️ **`operatorField` 是 `operator` 而不是 C++ 那份的 `$operator`**：tree-sitter-python 的 `binary_operator` **有一個具名的 `operator` 欄位**，而 tree-sitter-cpp 的 `binary_expression` 沒有（要拿第一個未具名子節點）。**兩個文法對同一件事的表達方式不同**——這正是 spec 167 那條「撞名是必然」的另一面：名字一樣的節點，內部結構未必一樣。\n\n⚠️ 位元運算（`&` `|` `^` `<<` `>>`）**刻意不收**：它們也走 `binary_operator`，而那是另一個教學概念。沒收的會走誠實降級。\n⚠️ `&`／`|`／`^` 加入日 2026-08-23——**集合的交／聯／對稱差，而在整數上是位元運算**。🔴 兩種意思一個符號是 Python 自己的設計，分岔在**執行期**（見 `apply.ts`）——lift 看得到的只有形狀。"
   }
 ]

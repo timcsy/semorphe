@@ -1,0 +1,21 @@
+{
+  "componentId": "python:math_divmod",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的 `std::div` 回一個結構，而這個專案的 C++ 側沒有那一顆。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的。\n⚠️ **既有的算術那顆一次只給一個**（`//` 或 `%`），說不出「兩個一起」。而它回的是一個 tuple。"
+}

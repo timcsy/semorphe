@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ERASE_VALUE_MSG0": "remove the first %2 from %1",
+  "PY_CONTAINER_ERASE_VALUE_TOOLTIP": "Removes the first item equal to the value (not a position). Raises when there is none."
+}

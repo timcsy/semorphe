@@ -1,0 +1,21 @@
+{
+  "componentId": "python:string_compare_suffix",
+  "abstractComponent": null,
+  "_abstractComponent_why": "同「開頭」那顆：C++ 那側要兩步。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的。與同族「開頭是不是」那顆是同一個操作的兩個種差。"
+}

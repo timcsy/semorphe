@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_FIND_POSITION_MSG0": "%2 在 %1 裡的位置",
+  "PY_CONTAINER_FIND_POSITION_TOOLTIP": "回傳第一次出現的位置（從 0 算起）。找不到時會出錯——要允許找不到就用「找位置」那一顆。"
+}

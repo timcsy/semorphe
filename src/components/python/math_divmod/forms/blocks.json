@@ -1,0 +1,36 @@
+[
+  {
+    "id": "python_math_divmod",
+    "componentId": "python:math_divmod",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_math_divmod",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MATH_DIVMOD_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_MATH_DIVMOD_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "VALUE": "value"
+      }
+    }
+  }
+]

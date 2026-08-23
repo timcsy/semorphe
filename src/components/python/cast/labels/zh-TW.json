@@ -5,5 +5,6 @@
   "PY_CAST_FLOAT": "小數",
   "PY_CAST_STR": "文字",
   "PY_CAST_BOOL": "真假",
-  "PY_CAST_LIST": "串列"
+  "PY_CAST_LIST": "串列",
+  "PY_CAST_SET": "集合（不重複）"
 }

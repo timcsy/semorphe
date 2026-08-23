@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_FILTER_MSG0": "keep items of %2 where %1 holds",
+  "PY_CONTAINER_FILTER_TOOLTIP": "Keeps only the items for which the function answers true. Usually wrapped in a list conversion."
+}

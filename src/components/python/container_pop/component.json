@@ -1,0 +1,22 @@
+{
+  "componentId": "python:container_pop",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的同名操作**不回值**（`pop_back` 只是刪掉），而這一顆的回傳值正是它常被用到的理由。同名不等於等價。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "index": "expression"
+  },
+  "role": "both",
+  "_role_why": "🔴 **兩種都真的會出現**：`xs.pop()` 自己一行（丟掉最後一格）與 `print(xs.pop())`（取出來用）。\n⚠️ 兩個形態的 extraState 格式必須相同——語句換成運算式時直接搬移。",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 第五十條護欄的通用桶點名的。位置那一格留空 ＝ 取最後一格。\n⚠️ **字典也會走這一顆**（`d.pop(k)`）——標籤因此寫成「取出 %2」而不是「第 %2 格」：\n**抬升的時候看得到的是形狀，看不到型別**，而一個只對串列成立的標籤在字典上會說謊。"
+}

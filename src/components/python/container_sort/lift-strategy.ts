@@ -6,11 +6,13 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
+// ⚠️ 裸的產生器算**一個**引數——見那個 helper 的檔頭
+import { pythonCallArgs } from '../../../languages/python/call-args'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:lift_container_sort', (node, ctx) => {
     if (node.childForFieldName('function')?.text !== 'sorted') return null
-    const raw = node.childForFieldName('arguments')?.namedChildren ?? []
+    const raw = pythonCallArgs(node)
     // 🟢 **`key=` 與 `reverse=` 收得下**（2026-08-22）：它們是 `keyword_argument`，
     //    而 `sorted(w, key=len)` 比裸的 `sorted(xs)` 還常見。
     const kids: Record<string, SemanticNode[]> = {}

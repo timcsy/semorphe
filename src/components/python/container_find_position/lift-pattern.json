@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_container_find_position",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:container_find_position"
+    },
+    "liftStrategy": "python:lift_container_find_position",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於同族的一般方法呼叫（8）與呼叫的兜底（3），低於輸出與讀取輸入（15）。"
+  }
+]

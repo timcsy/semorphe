@@ -1,0 +1,11 @@
+{
+  "PY_TYPE_IS_MSG0": "is %1 a %2",
+  "PY_TYPE_IS_TOOLTIP": "Answers true or false. Note that True/False also count as integers, so test for bool first.",
+  "PY_TYPE_IS_INT": "whole number",
+  "PY_TYPE_IS_FLOAT": "decimal",
+  "PY_TYPE_IS_STR": "text",
+  "PY_TYPE_IS_BOOL": "true/false",
+  "PY_TYPE_IS_LIST": "list",
+  "PY_TYPE_IS_DICT": "dictionary",
+  "PY_TYPE_IS_TUPLE": "fixed group"
+}

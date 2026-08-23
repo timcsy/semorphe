@@ -1,0 +1,7 @@
+{
+  "PY_STRING_FILL_MSG0": "把 %1 %2 到寬度 %3 補 %4",
+  "PY_STRING_FILL_TOOLTIP": "把字串補到指定的寬度。「補零」一律在左邊補 0（補的字元那一格用不到）；靠左／靠右可以自己選補什麼，留空就補空白。",
+  "PY_STRING_FILL_ZFILL": "補零",
+  "PY_STRING_FILL_LJUST": "靠左",
+  "PY_STRING_FILL_RJUST": "靠右"
+}

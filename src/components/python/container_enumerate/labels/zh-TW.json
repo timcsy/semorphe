@@ -1,4 +1,4 @@
 {
-  "PY_CONTAINER_ENUMERATE_MSG0": "替 %1 的每一格配上序號",
-  "PY_CONTAINER_ENUMERATE_TOOLTIP": "走訪時同時拿到「第幾格」與「那一格的東西」，序號從 0 開始。配出來的每一組是一個不可變的序對。"
+  "PY_CONTAINER_ENUMERATE_MSG0": "配上序號 %1 起點 %2",
+  "PY_CONTAINER_ENUMERATE_TOOLTIP": "把每一格配上一個序號，走訪時可以同時拿到序號與值。起點留空就是從 0 開始。"
 }

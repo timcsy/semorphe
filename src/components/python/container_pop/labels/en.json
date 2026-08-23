@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_POP_MSG0": "take %2 out of %1",
+  "PY_CONTAINER_POP_TOOLTIP": "Removes that entry — a position for a list, a key for a dict — and hands back its value. Blank means the last item of a list."
+}

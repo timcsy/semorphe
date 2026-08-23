@@ -1,0 +1,21 @@
+{
+  "componentId": "python:container_erase_value",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側按位置或範圍刪，而它的「移除某個值」只是搬動不真的刪——兩個都不是這件事。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "value": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的（`.remove(v)`）。\n⚠️ **名字裡的 `value` 是種差**：做的仍然是 `erase`（刪掉一格），差別在**指定的方式是值不是位置**。\n取名 `container_remove` 的話 `remove` 會變成 `erase` 的同義詞——而「同一個操作在任何主體上用同一個字」正是那份詞彙表存在的理由。"
+}

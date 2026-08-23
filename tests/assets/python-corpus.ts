@@ -772,4 +772,27 @@ for x in xs:
     if (double := x * 2) > 4:
         total += double
 print(total)`],
+  ['with 與資源類別', `class Timer:
+    def __enter__(self):
+        print("開始")
+        return 42
+    def __exit__(self, a, b, c):
+        print("收尾")
+        return False
+
+with Timer() as t:
+    print("裡面", t)
+print("外面")`],
+  ['對齊與補零', `n = 7
+print(str(n).zfill(3))
+print("甲".ljust(4, "-") + "|")
+print("乙".rjust(4) + "|")
+print("{:>5}".format(n))`],
+  ['取出與就地排序', `xs = [3, 1, 2]
+xs.sort()
+print(xs)
+print(xs.pop(0), xs)
+words = ["bbb", "a", "cc"]
+words.sort(key=len, reverse=True)
+print(words)`],
 ]

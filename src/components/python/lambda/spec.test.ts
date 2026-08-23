@@ -16,7 +16,9 @@ const rt = async (c: string): Promise<string> => gen(await liftPython(c)).trim()
 describe('python:lambda 與關鍵字引數', () => {
   it('lift：兩顆都認得出來', async () => {
     expect(await ids('f = lambda x: x + 1\n')).toContain('python:lambda')
-    expect(await ids('xs.sort(key=f)\n')).toContain('python:func_call_named')
+    // ⚠️ 2026-08-23：這裡原本用 `xs.sort(key=f)`，而就地排序那天有了自己的元件
+    //    （關鍵字進了它的具名接點）——**換一個還會走「具名引數」那顆的例子**。
+    expect(await ids('g(key=f)\n')).toContain('python:func_call_named')
   })
 
   it('🔴 lift：帶預設值的參數整顆降級——收一半會讓使用者的東西不見', async () => {

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "python_container_apply",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:container_apply"
+    },
+    "liftStrategy": "python:lift_container_apply",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於呼叫的兜底（3），低於輸出與讀取輸入（15）。"
+  },
+  {
+    "id": "python_container_apply_generator_arg",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:container_apply"
+    },
+    "liftStrategy": "python:lift_container_apply",
+    "fieldMappings": [],
+    "priority": 85,
+    "constraints": [
+      {
+        "field": "arguments",
+        "nodeType": "generator_expression"
+      }
+    ],
+    "_why": "🔴 **同一顆元件的第二筆——只為了「裸的產生器」那個形狀**（2026-08-23）。\n`all(x > 0 for x in xs)` 的 `arguments` **就是**那個產生器節點，而同族的兜底有一筆帶限制的樣式（優先級 80）專門接它——**帶限制的樣式與簡單樣式的數字不可以直接比**，於是不加這一筆的話，這顆元件在那個寫法下永遠搶不到，**跑得動、印得對，而身分掉進通用桶**。\n⚠️ 兩筆指向同一個策略，而策略靠 `pythonCallArgs` 把裸產生器算成一個引數。"
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "PY_STRING_FILL_MSG0": "pad %1 %2 to width %3 with %4",
+  "PY_STRING_FILL_TOOLTIP": "Pads a string to the given width. Zero-pad always adds 0 on the left (the fill slot is unused); left/right align let you choose, defaulting to spaces.",
+  "PY_STRING_FILL_ZFILL": "zero-pad",
+  "PY_STRING_FILL_LJUST": "left-align",
+  "PY_STRING_FILL_RJUST": "right-align"
+}

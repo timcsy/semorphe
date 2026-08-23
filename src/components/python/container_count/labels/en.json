@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_COUNT_MSG0": "count of %2 in %1",
+  "PY_CONTAINER_COUNT_TOOLTIP": "Counts how many times a value appears. Works on lists and strings."
+}

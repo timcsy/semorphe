@@ -1,0 +1,29 @@
+{
+  "componentId": "python:string_fill",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側是輸出時的欄寬設定（`setw`／`setfill`），**它改的是輸出不是字串本身**。形狀不同。",
+  "properties": [
+    {
+      "name": "method",
+      "kind": "enum",
+      "default": "zfill"
+    }
+  ],
+  "_properties_why": "🔴 **三個方法是同一個語義概念的三種寫法**（補到指定寬度），而 `\"5\".zfill(3)` 與 `\"5\".rjust(3, \"0\")` **算出來一模一樣**。\n⚠️ 所以要記住原文寫的是哪一個——不記的話來回一趟會把使用者的 `zfill` 換成 `rjust`：意思沒變，而**碼被改了**。",
+  "children": {
+    "obj": "expression",
+    "width": "expression",
+    "fill": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 第五十條護欄的通用桶點名的（`.zfill`／`.ljust`／`.rjust` 各一次）。\n⚠️ **補的字元那一格只有靠左／靠右吃得到**：`zfill` 一律補零，多給它一個引數在真的 Python 裡會出錯——所以產生那一路要擋。"
+}

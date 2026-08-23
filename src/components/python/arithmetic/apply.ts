@@ -20,6 +20,8 @@
  */
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+// 🔴 「一樣不一樣」只有一份——與集合字面的去重同一個鍵
+import { pythonDisplay } from '../../../languages/python/value-display'
 // 🔴 「格式規格」只有一份——舊式的 `%.2f` 與新式的 `{:.2f}` 是同一套語義。
 import { applyFormatSpec } from '../../../languages/python/format-spec'
 
@@ -115,6 +117,27 @@ export function applyPythonBinary(
         return { type: 'array', value: out }
       }
     }
+    // 🔴 **集合有自己的四個運算**（2026-08-23）：`&` 交集、`|` 聯集、
+    //    `-` 差集、`^` 對稱差。⚠️ **兩邊都要是集合**——`{1} - [1]` 在真的
+    //    Python 是 TypeError，而這裡照樣要出聲。
+    //    ⚠️ 「一樣不一樣」用 `pythonDisplay` 當鍵，與集合字面的去重同一份規則。
+    if (l.type === 'array' && r.type === 'array' && l.seqKind === 'set' && r.seqKind === 'set') {
+      const xs = l.value as RuntimeValue[]
+      const ys = r.value as RuntimeValue[]
+      const keys = (vs: RuntimeValue[]): Set<string> => new Set(vs.map((v) => pythonDisplay(v)))
+      const kx = keys(xs), ky = keys(ys)
+      const pick = (vs: RuntimeValue[], want: (k: string) => boolean): RuntimeValue[] =>
+        vs.filter((v) => want(pythonDisplay(v)))
+      if (op === '&') return { type: 'array', value: pick(xs, (k) => ky.has(k)), seqKind: 'set' }
+      if (op === '-') return { type: 'array', value: pick(xs, (k) => !ky.has(k)), seqKind: 'set' }
+      if (op === '|') return { type: 'array', value: [...xs, ...pick(ys, (k) => !kx.has(k))], seqKind: 'set' }
+      if (op === '^') {
+        return {
+          type: 'array', seqKind: 'set',
+          value: [...pick(xs, (k) => !ky.has(k)), ...pick(ys, (k) => !kx.has(k))],
+        }
+      }
+    }
     // 其餘的在 Python 是 TypeError —— **出聲**，不要轉成數字。
     throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
       '%1': `串列不能做 ${op}（Python 會說 TypeError）`,
@@ -124,6 +147,18 @@ export function applyPythonBinary(
 
   const a = ctx.toNumber(l), b = ctx.toNumber(r)
   const bothInt = isInt(l) && isInt(r)
+  // ⚠️ **同一個符號在整數上是位元運算**（`5 & 3` ＝ 1）——集合那一段在上面先接走了。
+  //    🔴 兩種意思一個符號是 Python 自己的設計，而抬升的時候看得到的只有形狀
+  //    ——所以分岔一定在**執行期**，不可能在 lift。
+  if (op === '&' || op === '|' || op === '^') {
+    if (!bothInt) {
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+        '%1': `${op} 只能用在兩個整數或兩個集合上`,
+      })
+    }
+    const bits = op === '&' ? (a & b) : op === '|' ? (a | b) : (a ^ b)
+    return { type: 'int', value: bits }
+  }
   const num = (v: number, forceFloat = false): RuntimeValue =>
     ({ type: !forceFloat && bothInt ? 'int' : 'double', value: v })
   const nonZero = (): void => {

@@ -1,0 +1,4 @@
+{
+  "PY_MATH_DIVMOD_MSG0": "%1 除以 %2 的商與餘數",
+  "PY_MATH_DIVMOD_TOOLTIP": "一次算出商與餘數，回傳一個固定組合。除以 0 會出錯。"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_math_divmod",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:math_divmod"
+    },
+    "liftStrategy": "python:lift_math_divmod",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於呼叫的兜底（3），低於輸出與讀取輸入（15）。"
+  }
+]

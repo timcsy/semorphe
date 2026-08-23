@@ -1,0 +1,11 @@
+{
+  "PY_TYPE_IS_MSG0": "%1 是 %2 嗎",
+  "PY_TYPE_IS_TOOLTIP": "回答真或假。注意 True／False 也算整數——所以要先問是不是布林。",
+  "PY_TYPE_IS_INT": "整數",
+  "PY_TYPE_IS_FLOAT": "小數",
+  "PY_TYPE_IS_STR": "文字",
+  "PY_TYPE_IS_BOOL": "真假",
+  "PY_TYPE_IS_LIST": "串列",
+  "PY_TYPE_IS_DICT": "字典",
+  "PY_TYPE_IS_TUPLE": "固定組合"
+}

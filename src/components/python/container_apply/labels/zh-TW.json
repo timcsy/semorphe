@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_APPLY_MSG0": "把 %1 套到 %2 的每一格",
+  "PY_CONTAINER_APPLY_TOOLTIP": "每一格都換成函式算出來的結果。常用外面再包一層「轉成串列」才看得到內容。"
+}

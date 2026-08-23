@@ -1,0 +1,62 @@
+[
+  {
+    "id": "python_string_fill",
+    "componentId": "python:string_fill",
+    "language": "python",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_string_fill",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_STRING_FILL_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "METHOD",
+          "options": [
+            [
+              "%{BKY_PY_STRING_FILL_ZFILL}",
+              "zfill"
+            ],
+            [
+              "%{BKY_PY_STRING_FILL_LJUST}",
+              "ljust"
+            ],
+            [
+              "%{BKY_PY_STRING_FILL_RJUST}",
+              "rjust"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "WIDTH",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FILL",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_PY_STRING_FILL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "METHOD": "method"
+      },
+      "inputs": {
+        "OBJ": "obj",
+        "WIDTH": "width",
+        "FILL": "fill"
+      }
+    }
+  }
+]

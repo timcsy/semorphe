@@ -18,10 +18,14 @@ import { PYTHON_BUILTIN_FUNCTIONS, PYTHON_MODULE_METHODS } from '../../../langua
 /**
  * 把簽名上的預設值原文讀成一個值。
  *
- * ⚠️ **只認字面**——數字、字串、True／False／None。
- * 認不得的（`def f(x=[])`／`def f(x=g())`）**丟錯**：
- * 靜默當成字串會讓 `def f(n=len(a))` 的 n 變成文字 `"len(a)"`，
- * 而那會一路算到下一步去。
+ * ⚠️ **只認字面**——數字、字串、True／False／None，
+ * 以及 2026-08-23 加的**容器字面**（`[]`／`[1, 2]`／`(25, 10, 5, 1)`／`{}`）。
+ * 認不得的（`def f(x=g())`）**丟錯**：靜默當成字串會讓 `def f(n=len(a))`
+ * 的 n 變成文字 `"len(a)"`，而那會一路算到下一步去。
+ *
+ * 🔴 **為什麼容器字面值得特別做**：`def f(xs=[])` 是 Python 最有名的陷阱
+ * （那一個串列**在每次呼叫之間共用**），而它在 AI 生的碼裡到處都是。
+ * 認不得它等於整段跑不動——**而跑得動才看得到那個陷阱**。
  */
 function literalOf(raw: string): RuntimeValue {
   const t = raw.trim()
@@ -30,7 +34,81 @@ function literalOf(raw: string): RuntimeValue {
   if (/^(['"]).*\1$/s.test(t)) return { type: 'string', value: t.slice(1, -1) }
   if (t === 'True' || t === 'False') return { type: 'bool', value: t === 'True' }
   if (t === 'None') return { type: 'void', value: null }
+  const container = containerLiteralOf(t)
+  if (container) return container
   throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `預設值 ${t}（只認得字面）` })
+}
+
+/** `[…]`／`(…)`／`{…}`（空的）——認不出來回 `null`，交給上面那一層出聲。 */
+function containerLiteralOf(t: string): RuntimeValue | null {
+  const pairs: [string, string, 'array' | 'tuple' | 'set'][] = [['[', ']', 'array'], ['(', ')', 'tuple'], ['{', '}', 'set']]
+  for (const [open, close, kind] of pairs) {
+    if (!t.startsWith(open) || !t.endsWith(close)) continue
+    const inner = t.slice(1, -1).trim()
+    if (inner === '') {
+      // ⚠️ `{}` 是**空字典**不是空集合——那是 Python 自己的規則
+      if (kind === 'set') return { type: 'object', value: new Map() }
+      return { type: 'array', value: [], ...(kind === 'tuple' ? { seqKind: 'tuple' as const } : {}) }
+    }
+    const parts = splitTopLevel(inner)
+    if (!parts) return null
+    // 一格認不出來就整顆認不出來——**半個預設值比沒有更糟**
+    const items: RuntimeValue[] = []
+    for (const part of parts) {
+      let v: RuntimeValue
+      try { v = literalOf(part) } catch { return null }
+      items.push(v)
+    }
+    return { type: 'array', value: items, ...(kind === 'tuple' ? { seqKind: 'tuple' as const } : kind === 'set' ? { seqKind: 'set' as const } : {}) }
+  }
+  return null
+}
+
+/** 照最外層的逗號切開——括號與引號裡的逗號不算。 */
+function splitTopLevel(s: string): string[] | null {
+  const out: string[] = []
+  let depth = 0, quote = '', cur = ''
+  for (const ch of s) {
+    if (quote) {
+      cur += ch
+      if (ch === quote) quote = ''
+      continue
+    }
+    if (ch === '"' || ch === "'") { quote = ch; cur += ch; continue }
+    if (ch === '[' || ch === '(' || ch === '{') depth++
+    if (ch === ']' || ch === ')' || ch === '}') depth--
+    if (ch === ',' && depth === 0) { out.push(cur); cur = ''; continue }
+    cur += ch
+  }
+  if (depth !== 0 || quote) return null
+  if (cur.trim() !== '') out.push(cur)
+  return out
+}
+
+/**
+ * 🔴 **預設值只算一次，而算出來的那個東西在每次呼叫之間【共用】。**
+ *
+ * ```python
+ * def collect(item, bucket=[]):
+ *     bucket.append(item)
+ *     return bucket
+ * collect("a")   ['a']
+ * collect("b")   ['a', 'b']   ← 不是 ['b']
+ * ```
+ *
+ * 那是 Python 最有名的陷阱之一，而**每次呼叫都給一份新的**會讓這個工具
+ * 印出一個真的 Python 不會印的答案——那比不支援更糟。
+ *
+ * ⚠️ 鍵是**參數物件本身**（不是字串）：兩個不同函式各自的 `xs=[]` 是兩個串列。
+ */
+const DEFAULT_CACHE = new WeakMap<object, RuntimeValue>()
+
+function defaultValueOf(param: object, raw: string): RuntimeValue {
+  const cached = DEFAULT_CACHE.get(param)
+  if (cached !== undefined) return cached
+  const made = literalOf(raw)
+  DEFAULT_CACHE.set(param, made)
+  return made
 }
 
 /**
@@ -72,7 +150,7 @@ export async function callWith(
       if (byName !== undefined) { ctx.scope.declare(fn.params[i].name, byName); continue }
       if (i >= positional.length) {
         const dflt = fn.params[i].default
-        if (dflt !== undefined && dflt !== '') { ctx.scope.declare(fn.params[i].name, literalOf(dflt)); continue }
+        if (dflt !== undefined && dflt !== '') { ctx.scope.declare(fn.params[i].name, defaultValueOf(fn.params[i], dflt)); continue }
         throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, {
           '%1': `${label}（少了引數 ${fn.params[i].name}）`,
         })

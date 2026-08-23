@@ -1,0 +1,20 @@
+{
+  "componentId": "python:container_all",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側吃一對迭代器＋一個判斷式，而這一顆吃的是**已經算出真假的一串**。",
+  "properties": [],
+  "children": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的（`all` ×2）。\n⚠️ **與同族「有沒有一格成立」分成兩顆**：它們是兩個**量詞**，而 C++ 那側也是兩個名字（`all_of`／`any_of`）。"
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "python_string_format",
+    "componentId": "python:string_format",
+    "language": "python",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_string_format",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_STRING_FORMAT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_PY_STRING_FORMAT_TOOLTIP}",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj"
+      },
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "args",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "⚠️ **靜態的樣板那一格 ＋ 可增減的值插槽**——用附掛式的可變建構子（`args0` 保留，插槽接在後面）。少了這個模式的症狀是樣板那一格被重建時整個掉了。"
+  }
+]

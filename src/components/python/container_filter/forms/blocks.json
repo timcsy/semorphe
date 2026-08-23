@@ -1,0 +1,36 @@
+[
+  {
+    "id": "python_container_filter",
+    "componentId": "python:container_filter",
+    "language": "python",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_container_filter",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_CONTAINER_FILTER_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "FUNC",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_PY_CONTAINER_FILTER_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "FUNC": "func",
+        "OBJ": "obj"
+      }
+    }
+  }
+]

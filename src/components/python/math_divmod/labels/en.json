@@ -1,0 +1,4 @@
+{
+  "PY_MATH_DIVMOD_MSG0": "quotient and remainder of %1 by %2",
+  "PY_MATH_DIVMOD_TOOLTIP": "Computes quotient and remainder at once, returned as a fixed pair. Dividing by zero raises."
+}

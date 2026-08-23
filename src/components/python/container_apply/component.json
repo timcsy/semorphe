@@ -1,0 +1,21 @@
+{
+  "componentId": "python:container_apply",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側最接近的是 `std::transform`——它**寫進另一個容器**而不是回一個惰性序列。形狀不同。",
+  "properties": [],
+  "children": {
+    "func": "expression",
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 第五十條護欄的通用桶點名的（`map` ×3）。\n⚠️ **名字裡的 `apply` 不叫 `map`**：那個字在這份詞彙表裡是**主體**（字典），同一個字兩種詞性讀的人要記兩次。"
+}

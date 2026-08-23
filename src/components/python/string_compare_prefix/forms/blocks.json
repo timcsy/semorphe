@@ -1,0 +1,36 @@
+[
+  {
+    "id": "python_string_compare_prefix",
+    "componentId": "python:string_compare_prefix",
+    "language": "python",
+    "category": "strings",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_string_compare_prefix",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_STRING_COMPARE_PREFIX_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "colour": "#0FBD8C",
+      "tooltip": "%{BKY_PY_STRING_COMPARE_PREFIX_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "VALUE": "value"
+      }
+    }
+  }
+]

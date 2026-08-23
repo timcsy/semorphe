@@ -18,6 +18,8 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:container_enumerate', async (node, ctx) => {
     const args: RuntimeValue[] = []
     for (const x of node.children.value ?? []) args.push(await ctx.evaluate(x))
+    // ⚠️ 起點一律**照位置**交給內建表——那一份兩種寫法都認得（`kwArg ?? positional[1]`）
+    for (const x of node.children.start ?? []) args.push(await ctx.evaluate(x))
     const userDefined = ctx.functions.get('enumerate')
     if (userDefined) return callWith(userDefined, args, ctx, 'enumerate')
     return PYTHON_BUILTIN_FUNCTIONS['enumerate'](args, withCall(ctx))

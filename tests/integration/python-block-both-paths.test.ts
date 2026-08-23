@@ -307,8 +307,10 @@ describe('整段程式碼 → 積木（渲染那條路）', () => {
       ['python_class_def', 'class C:\n    def m(self):\n        pass\n'],
       // ⚠️ 運算式位置用的是**運算式形態**——那正是 `expressionCounterpart` 的作用。
       //    語句位置（下一筆）才是那一顆本身。
-      ['python_method_call_expression', 'a = s.count("x")\n'],
-      ['python_method_call', 's.count("x")\n'],
+      // ⚠️ 2026-08-23：這兩筆原本用 `s.count(...)`，而 `count` 那天有了自己的元件
+      //    ——**換一個還在界外的方法**（`.extend` 跑得動而還沒有專屬積木）。
+      ['python_method_call_expression', 'a = s.extend([1])\n'],
+      ['python_method_call', 's.extend([1])\n'],
       ['python_container_size', 'a = len(xs)\n'],
       ['python_range_make', 'a = range(3)\n'],
       ['python_string_upper', 'a = s.upper()\n'],

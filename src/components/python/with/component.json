@@ -1,0 +1,28 @@
+{
+  "componentId": "python:with",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側的對應是 RAII——**那是型別的性質**（解構式），不是一個語句。形狀完全不同。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": ""
+    }
+  ],
+  "_properties_why": "⚠️ **空字串 ＝ 沒有 `as`**（`with lock:`），不是「還沒填」。",
+  "children": {
+    "value": "expression",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 **第五十三條護欄點名的四格**（`with_statement`／`with_clause`／`with_item` ＋ 連帶）：AI 生的 Python 開檔一律寫 `with`。\n⚠️ **形狀收得下而執行期收不下**：這個直譯器沒有 `__enter__`／`__exit__` 協定，也沒有檔案系統——見 execute 那一路的檔頭。那是一個**具名的邊界**，不是一個假的零。"
+}

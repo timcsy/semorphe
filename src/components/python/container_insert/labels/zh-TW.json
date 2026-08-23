@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_INSERT_MSG0": "在 %1 的第 %2 格插入 %3",
+  "PY_CONTAINER_INSERT_TOOLTIP": "把值插進指定的位置，原本那一格與後面的都往後移。位置從 0 算起。"
+}

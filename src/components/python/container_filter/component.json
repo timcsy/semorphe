@@ -1,0 +1,21 @@
+{
+  "componentId": "python:container_filter",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側是 `std::copy_if`（要先準備好目的地），不是一個運算式。",
+  "properties": [],
+  "children": {
+    "func": "expression",
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的。與同族「每一格套一個函式」是一對——那一顆換內容，這一顆挑格子。"
+}

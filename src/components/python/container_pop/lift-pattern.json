@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_container_pop",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:container_pop"
+    },
+    "liftStrategy": "python:lift_container_pop",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於同族的一般方法呼叫（8），低於輸出與讀取輸入（15）。"
+  }
+]

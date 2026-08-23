@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_INSERT_MSG0": "insert %3 into %1 at position %2",
+  "PY_CONTAINER_INSERT_TOOLTIP": "Inserts a value at the given position; everything from there shifts back. Positions count from 0."
+}

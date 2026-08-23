@@ -1,0 +1,4 @@
+{
+  "PY_STRING_COMPARE_PREFIX_MSG0": "%1 的開頭是 %2 嗎",
+  "PY_STRING_COMPARE_PREFIX_TOOLTIP": "回答真或假。大小寫算不同的字。"
+}

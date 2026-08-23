@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ALL_MSG0": "%1 每一格都成立嗎",
+  "PY_CONTAINER_ALL_TOOLTIP": "全部為真才回真。空的串列回真（沒有反例）。"
+}

@@ -1,0 +1,4 @@
+{
+  "PY_STRING_FIND_MSG0": "position of %2 in %1",
+  "PY_STRING_FIND_TOOLTIP": "Returns the position of the first occurrence (counting from 0). Returns -1 when not found, without raising."
+}

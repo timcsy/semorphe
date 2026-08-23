@@ -28,7 +28,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../interpreter/errors'
 // 「印出來長什麼樣」只有一份——`print` 與格式化文字用的是同一個。
 import { pythonDisplay as pyStr } from './value-display'
 // 🔴 「鍵原本長什麼樣」只有一份——見那個模組的檔頭。
-import { dictKeys } from './dict'
+import { dictKeys, dictKeyOf } from './dict'
 // 🔴 「冒號後面那一段」只有一份——格式化文字與 `.format(...)` 共用。
 import { applyFormatSpec } from './format-spec'
 // 🔴 「兩個值誰大」只有一份——比較運算子、串接比較、排序共用（見那個模組的檔頭）。
@@ -175,6 +175,12 @@ const asList = (v: RuntimeValue): RuntimeValue[] =>
 export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue | Promise<RuntimeValue>> = {
   len: (a) => num(lengthOf(a[0])),
   str: (a) => str(pyStr(a[0])),
+  /**
+   * ⚠️ **與 `str` 的差別只有一個**：字串會帶引號（`repr("a")` ＝ `'a'`）。
+   * 而那正是 `pythonDisplay` 的「在容器裡」那個旗標——**同一份規則，兩個入口**。
+   * （2026-08-23 補：模糊測試的隔離出題者用了它，而它不在表裡。）
+   */
+  repr: (a) => str(pyStr(a[0], true)),
   int: (a, c) => num(Math.trunc(c.toNumber(a[0]))),
   float: (a, c) => ({ type: 'double', value: c.toNumber(a[0]) }),
   /**
@@ -192,7 +198,10 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
    */
   round: (a, c) => {
     const x = c.toNumber(a[0])
-    if (a.length > 1) return num(Number(x.toFixed(c.toNumber(a[1]))))
+    // 🔴 **給了位數就是小數**（2026-08-23 修）：`round(10.0, 2)` 真的 Python 印
+    //    `10.0`，而回整數型別會印成 `10`——**型別看得見地錯**。
+    //    ⚠️ 沒給位數時回的才是整數（那是 Python 自己的規則）。
+    if (a.length > 1) return dbl(Number(x.toFixed(c.toNumber(a[1]))))
     const f = Math.floor(x)
     if (x - f !== 0.5) return num(Math.round(x))
     return num(f % 2 === 0 ? f : f + 1)
@@ -250,14 +259,29 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
   // ⚠️ **一格一格【依序】呼叫，不可以 `Promise.all`**：呼叫時會換掉直譯器的
   //    作用域再換回來，並行的話每一格會看到別格的參數
   //    ——症狀是 `map(lambda x: x*2, [1,2,3,4])` 給 `[8, 8, 8, 8]`（全部是最後一格）。
+  /**
+   * ⚠️ **可以吃好幾串**（2026-08-23 補）：`map(f, "abcd", [1,2,3])` 一格一格配對，
+   * **停在最短的那一串**。原本只讀 `a[1]`，於是第二個參數永遠是 `None`
+   * ——不報錯、有輸出、而每一格都錯。
+   */
   map: async (a, c) => {
+    const lists = a.slice(1).map((x) => asList(x))
+    const n = lists.length === 0 ? 0 : Math.min(...lists.map((l) => l.length))
     const out: RuntimeValue[] = []
-    for (const x of asList(a[1])) out.push(await c.call(a[0], [x]))
+    for (let i = 0; i < n; i++) out.push(await c.call(a[0], lists.map((l) => l[i])))
     return arr(out)
   },
+  /**
+   * ⚠️ **第一個引數是 `None` 時＝「留下為真的」**（2026-08-23 補）：
+   * `filter(None, xs)` 是 Python 的慣用寫法，而原本它會走到「這個東西叫不動」。
+   */
   filter: async (a, c) => {
+    const pred = a[0]
+    const isNone = !pred || pred.type === 'void' || pred.value === null
     const out: RuntimeValue[] = []
-    for (const x of asList(a[1])) if (truthy(await c.call(a[0], [x]))) out.push(x)
+    for (const x of asList(a[1])) {
+      if (isNone ? truthy(x) : truthy(await c.call(pred, [x]))) out.push(x)
+    }
     return arr(out)
   },
   /**
@@ -315,7 +339,36 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
 export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: RuntimeValue[], ctx: builtinCtx) => RuntimeValue | Promise<RuntimeValue>> = {
   // 串列（就地改動）
   append: (s, a) => { (s.value as RuntimeValue[]).push(a[0]); return { type: 'void', value: null } },
-  pop: (s) => (s.value as RuntimeValue[]).pop() ?? { type: 'void', value: null },
+  /**
+   * 🔴 **位置那個引數本來被整個忽略**（2026-08-23 修）：`xs.pop(0)` 拿走的是
+   * **最後一格**，不是第一格——不報錯、有回值、而**答案是錯的**。
+   *
+   * ⚠️ 它活到今天的理由是「沒有一段語料寫 `xs.pop(0)`」：那個寫法在
+   * 通用桶裡（掉進一般呼叫），而通用桶只被數過數量，沒有被對過答案。
+   *
+   * > **一個掉進通用桶的呼叫仍然會被執行——而那份執行沒有人在對答案。**
+   */
+  pop: (s, a, c) => {
+    // 🔴 **字典也有 `.pop`**，而它按鍵拿走（可帶預設值）——2026-08-23 由模糊測試抓到：
+    //    只當串列處理的話會炸在 `xs.splice is not a function`（一個 JS 的錯誤訊息，
+    //    而使用者寫的是 Python）。
+    if (s.type === 'object') {
+      const fields = s.value as ObjectFields
+      const key = dictKeyOf(a[0])
+      const got = fields.get(key)
+      if (got !== undefined) { fields.delete(key); s.keyValues?.delete(key); return got }
+      if (a.length > 1) return a[1]
+      throw new RuntimeError(RUNTIME_ERRORS.KEY_NOT_FOUND, { '%1': String(a[0]?.value ?? '') })
+    }
+    const xs = s.value as RuntimeValue[]
+    if (a.length === 0) return xs.pop() ?? { type: 'void', value: null }
+    const raw = c.toNumber(a[0])
+    const i = raw < 0 ? xs.length + raw : raw   // `xs.pop(-1)` ＝ 最後一格
+    if (!Number.isInteger(i) || i < 0 || i >= xs.length) {
+      throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(raw) })
+    }
+    return xs.splice(i, 1)[0]
+  },
   // ⚠️ `key=` 是一個**關鍵字引數**，而它帶著一個可呼叫的東西。
   //    這裡只認得「有沒有給」——怎麼呼叫它由呼叫端接（見 `sortWith`）。
   // 就地排序——`key=` 見 `sortWith`
@@ -325,6 +378,29 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
     return { type: 'void', value: null }
   },
   reverse: (s) => { (s.value as RuntimeValue[]).reverse(); return { type: 'void', value: null } },
+  /**
+   * **集合的加入**（2026-08-23 補）——⚠️ 已經有的不再加一次。
+   *
+   * 🔴 **串列上要出聲**：Python 的串列沒有 `.add`，而使用者要的是 `.append`
+   * ——那句話直接寫在錯誤訊息裡，因為它就是修法。
+   */
+  add: (s, a) => {
+    const xs = s.value as RuntimeValue[]
+    if (s.seqKind !== 'set') {
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': '串列沒有 add——加到末端請用 append' })
+    }
+    const k = pyStr(a[0])
+    if (!xs.some((x) => pyStr(x) === k)) xs.push(a[0])
+    return { type: 'void', value: null }
+  },
+  /** 集合的移除——⚠️ **沒有那個值也不出錯**（那正是它與 `remove` 的差別）。 */
+  discard: (s, a) => {
+    const xs = s.value as RuntimeValue[]
+    const k = pyStr(a[0])
+    const i = xs.findIndex((x) => pyStr(x) === k)
+    if (i >= 0) xs.splice(i, 1)
+    return { type: 'void', value: null }
+  },
   // 文字
   upper: (s) => str(String(s.value).toUpperCase()),
   lower: (s) => str(String(s.value).toLowerCase()),
@@ -384,7 +460,19 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   find: (s, a) => num(String(s.value).indexOf(String(a[0]?.value ?? ''))),
   isdigit: (s) => bool(/^[0-9]+$/.test(String(s.value))),
   /** 前面補零到指定長度——`str(7).zfill(3)` 是 `"007"`。 */
-  zfill: (s, a, c) => str(String(s.value).padStart(c.toNumber(a[0]), '0')),
+  /**
+   * 🔴 **符號留在最前面**（2026-08-23 修）：`"-7".zfill(5)` 真的 Python 給 `-0007`，
+   * 而直接 `padStart` 給的是 `000-7`——**不報錯、有輸出、而看得見地錯**。
+   * ⚠️ 這一條是模糊測試的隔離出題者寫出來的：既有語料**沒有一段補零帶負號**。
+   */
+  zfill: (s, a, c) => {
+    const raw = String(s.value)
+    const width = c.toNumber(a[0])
+    const sign = raw.startsWith('-') || raw.startsWith('+') ? raw[0] : ''
+    const body = sign ? raw.slice(1) : raw
+    if (raw.length >= width) return str(raw)
+    return str(sign + body.padStart(width - sign.length, '0'))
+  },
   /** ⚠️ 補的字元可以指定，**預設是空白**——與 `zfill` 不同。 */
   ljust: (s, a, c) => str(String(s.value).padEnd(c.toNumber(a[0]), a[1] ? String(a[1].value) : ' ')),
   rjust: (s, a, c) => str(String(s.value).padStart(c.toNumber(a[0]), a[1] ? String(a[1].value) : ' ')),
@@ -394,6 +482,21 @@ export const PYTHON_BUILTIN_METHODS: Record<string, (self: RuntimeValue, args: R
   values: (s) => arr([...(s.value as ObjectFields).values()]),
   items: (s) => arr([...(s.value as ObjectFields).values()].map((v, i) => tup([dictKeys(s)[i], v]))),
   get: (s, a) => (s.value as ObjectFields).get(String(a[0].value)) ?? a[1] ?? { type: 'void', value: null },
+  /**
+   * ⚠️ **取不到就【放進去】再回傳**——與 `get` 的差別在它會改那張表。
+   * `groups.setdefault(k, []).append(x)` 是分組的慣用寫法（2026-08-23 補）。
+   * 🔴 **鍵原本長什麼樣要一起記**（見 `dict.ts` 的檔頭），否則 `{1: …}` 會印成 `{'1': …}`。
+   */
+  setdefault: (s, a) => {
+    const fields = s.value as ObjectFields
+    const key = dictKeyOf(a[0])
+    const got = fields.get(key)
+    if (got !== undefined) return got
+    const fallback = a[1] ?? { type: 'void' as const, value: null }
+    fields.set(key, fallback)
+    if (s.keyValues) s.keyValues.set(key, a[0])
+    return fallback
+  },
   // 🔴 **`.format()` 與 `%` 是格式化文字之外的另外兩種寫法**——AI 生的
   //    Python 兩種都會出現，而它們與 f-string 是同一件事的三個語法。
   /**

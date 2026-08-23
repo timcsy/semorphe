@@ -1,0 +1,37 @@
+[
+  {
+    "id": "python_set_append",
+    "componentId": "python:set_append",
+    "language": "python",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_set_append",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_SET_APPEND_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_PY_SET_APPEND_TOOLTIP}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "VALUE": "value"
+      }
+    }
+  }
+]

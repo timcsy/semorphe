@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_POP_MSG0": "從 %1 取出 %2",
+  "PY_CONTAINER_POP_TOOLTIP": "把那一格（串列給位置、字典給鍵）拿出來並刪掉，同時交出它的值。留空 ＝ 串列的最後一格。"
+}

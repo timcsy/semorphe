@@ -310,9 +310,24 @@
     "reason": "同一個 `comparison_operator` 節點型別，差別在**有幾個運算元**——判別要跑真邏輯。⚠️ 接點（`left`／`middle`／`right`）由這顆自己的 `spec.test.ts` 釘住，含「三段以上主動變灰」與「中間那一格只求值一次」。"
   },
   {
+    "componentId": "python:container_all",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:container_any",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:container_append",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_apply",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
   },
   {
     "componentId": "python:container_assign",
@@ -325,6 +340,11 @@
     "reason": "`target`／`key` 兩個接點都必填，而護欄的語料沒有一段走到靜態掃描認得的形狀。由 `spec.test.ts` 的來回（`a[0]`／`d[\"k\"]`）與執行（含負數索引）釘住。"
   },
   {
+    "componentId": "python:container_count",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:container_enumerate",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "同一個 `call` 節點型別，判別在被呼叫的名字。⚠️ 接點（`value`）由這顆自己的 `spec.test.ts` 釘住。"
@@ -335,9 +355,34 @@
     "reason": "`delete_statement` 底下有好幾種形狀（刪一格／刪變數／刪多個），判別要跑真邏輯。⚠️ 接點（`target`）由這顆自己的 `spec.test.ts` 釘住，含「`del x` 走誠實降級」。"
   },
   {
+    "componentId": "python:container_erase_value",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:container_filter",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:container_find",
     "cause": "lift 走 operatorDispatch 的路由，靜態掃不到",
     "reason": "它的接點是在 `operatorDispatch` 的 `fieldMappings` 裡宣告的（`$namedChildren[0]`／`[1]`），而那一層靜態掃描不進去。\n⚠️ 而它有一支**對照組**測試釘住「`<` 不得被搶走」——兩筆樣式的路由不重疊。"
+  },
+  {
+    "componentId": "python:container_find_position",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:container_insert",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:container_pop",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
   },
   {
     "componentId": "python:container_size",
@@ -348,6 +393,11 @@
     "componentId": "python:container_sort",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
+  },
+  {
+    "componentId": "python:container_sort_self",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
   },
   {
     "componentId": "python:container_substr",
@@ -485,6 +535,11 @@
     "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
   },
   {
+    "componentId": "python:math_divmod",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:math_max",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "這一族（內建的專屬積木）的接點都是策略從 `call` 節點組出來的——判別「被呼叫的名字是不是它」要跑真邏輯。\n⚠️ 由 `container_size/spec.test.ts` 的四組斷言釘住：每一顆認得自己的名字、**別的名字不得被搶走**、來回一字不差、執行走內建表那一份。"
@@ -560,6 +615,11 @@
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。🟢 判準沒有被收窄——只是誠實地說「還沒量到」。\n🔴 `value` 接點**可以是空的**（裸的 `return`），而自證測有一支專測「不得被補成 `return None`」——**空接點與「忘了接」在這裡是兩件事**。"
   },
   {
+    "componentId": "python:set_append",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批的最後一顆）。與其餘 Python 元件同一條理由：這條護欄的語料是 C++ 的，碰不到 Python。⚠️ 接點由這顆自己的 `spec.test.ts` 與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:set_make",
     "cause": "語料沒覆蓋",
     "reason": "2026-08-22。理由同上。⚠️ 元素接點（`items`）與串列字面同一個形狀，由 Python 語料的「集合」那一段釘住。"
@@ -568,6 +628,31 @@
     "componentId": "python:splat",
     "cause": "語料沒覆蓋",
     "reason": "2026-08-22。理由同上。⚠️ 它的接點（`value`）由 Python 語料的「星號展開」那一段釘住——而**攤開的那一步在吃它的人身上**（引數列與字典字面），那一段同時證明了兩邊。"
+  },
+  {
+    "componentId": "python:string_compare_prefix",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:string_compare_suffix",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:string_fill",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:string_find",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:string_format",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
   },
   {
     "componentId": "python:string_insert",
@@ -630,6 +715,11 @@
     "reason": "接點是在策略裡組出來的（兩個節點型別共用一顆元件：有括號的 `tuple` 與裸的 `expression_list`）。\n⚠️ 而策略還把「有沒有括號」記進 `metadata.layoutHints`——**投影記住它，積木看不到它**。由 `spec.test.ts` 的三支來回釘住（含一格的 `(3,)`）。"
   },
   {
+    "componentId": "python:type_is",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
     "componentId": "python:var_assign",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**，它碰不到 Python。\n🟢 **判準沒有被收窄**——只是誠實地說「還沒量到」。\n🔴 而它的接點（`value`）**確實需要被驗**——膠囊自證測有一支專門斷言「有了指派，運算式才碰得到」（貼上的程式碼每一行都是 `x = ...`，整句降級的話裡面的算術一顆都出不來）。"
@@ -653,5 +743,10 @@
     "componentId": "python:var_ref",
     "cause": "語料沒覆蓋",
     "reason": "spec 168。理由與其餘 Python 元件同一條：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），所以它碰不到任何 Python 元件。\n🔴 而那不是「補語料就好」——一份完整的 Python 語料是後續的事，**在它到位之前，誠實地說「還沒量到」比把判準收窄成「只掃 C++」好**：後者會讓這條護欄永遠答不出 Python 的問題。\n🟢 它沒有接點（只有 `name` 這個屬性），正確性由膠囊自證測釘住。"
+  },
+  {
+    "componentId": "python:with",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
   }
 ]

@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_FIND_POSITION_MSG0": "index of %2 in %1",
+  "PY_CONTAINER_FIND_POSITION_TOOLTIP": "Returns the position of the first occurrence (counting from 0). Raises when not found; use the find block if a miss is expected."
+}

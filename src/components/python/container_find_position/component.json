@@ -1,0 +1,21 @@
+{
+  "componentId": "python:container_find_position",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側沒有這個操作——它的容器要自己跑一次尋找演算法再減去起點。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的（`.index` ×2，串列與字串都有）。\n⚠️ **名字裡的 `position` 是種差**：光是 `find` 在這份詞彙表裡已經被「在不在裡面」（`in` 運算子）佔走了，而這一顆回的是**位置**。"
+}

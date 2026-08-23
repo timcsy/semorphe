@@ -2,9 +2,17 @@
   "componentId": "python:container_enumerate",
   "abstractComponent": null,
   "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
-  "properties": [],
+  "properties": [
+    {
+      "name": "start_style",
+      "kind": "enum",
+      "default": "",
+      "_why": "🔴 **記住原文把起點寫成哪一種**（`enumerate(xs, 1)` 還是 `enumerate(xs, start=1)`）——兩種語義相同，而**產回去換一種等於改了使用者的碼**。空字串 ＝ 沒有起點。\n⚠️ 它是**寫法**不是語義，所以積木上沒有這一格（與 tuple 的括號同一條線）。"
+    }
+  ],
   "children": {
-    "value": "expression"
+    "value": "expression",
+    "start": "expression"
   },
   "role": "expression",
   "owner": "(python)",
@@ -16,5 +24,6 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `enumerate`。"
+  "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `enumerate`。",
+  "_children_why": "⚠️ `start` 加入日 2026-08-23：`enumerate(names, 1)` 在教學語料裡到處都是（從 1 開始編號），而它本來讓一般呼叫接手——**跑得動而拖不到，身分也沒了**。"
 }

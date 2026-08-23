@@ -1,0 +1,4 @@
+{
+  "PY_WITH_MSG0": "use %1 as %2",
+  "PY_WITH_TOOLTIP": "The with form, which cleans up automatically. Note: this tool has no files yet and no automatic cleanup — the shape is here, and running it tells you what is missing."
+}

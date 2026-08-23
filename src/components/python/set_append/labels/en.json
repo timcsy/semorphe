@@ -1,0 +1,4 @@
+{
+  "PY_SET_APPEND_MSG0": "add %2 to the set %1",
+  "PY_SET_APPEND_TOOLTIP": "Adds a value to a set. Adding one that is already there changes nothing — that is what makes a set a set."
+}

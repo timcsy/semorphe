@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ANY_MSG0": "does any item of %1 hold",
+  "PY_CONTAINER_ANY_TOOLTIP": "True when at least one item is true. An empty sequence is false (no example)."
+}

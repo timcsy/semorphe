@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_FILTER_MSG0": "從 %2 留下讓 %1 成立的",
+  "PY_CONTAINER_FILTER_TOOLTIP": "只留下函式回答為真的那些格。常用外面再包一層「轉成串列」才看得到內容。"
+}

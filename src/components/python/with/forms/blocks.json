@@ -1,0 +1,50 @@
+[
+  {
+    "id": "python_with",
+    "componentId": "python:with",
+    "language": "python",
+    "category": "special",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_with",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_WITH_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "f"
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#888888",
+      "tooltip": "%{BKY_PY_WITH_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "VALUE": "value"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    },
+    "_why": "⚠️ **灰色是刻意的**：形狀認得出來，而**收尾那一半這個工具做不到**（見 execute 的檔頭）。顏色在這裡是一句誠實話。"
+  }
+]

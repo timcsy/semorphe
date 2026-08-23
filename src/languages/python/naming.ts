@@ -38,6 +38,10 @@ export const PYTHON_SUBJECTS = [
   //    三種**（可變的串列、不可變的 tuple、不重複的集合），而它有自己的
   //    字面語法（`{1, 2}`）。既有的 `array` 說不出「同一個值只留一個」。
   'set',
+  // ⚠️ `type` 加入日 2026-08-23——`python:type_is`（`isinstance(x, int)`）。
+  //    🔴 這是這份表裡第一個以**型別**為主體的元件。C++ 那側最接近的是
+  //    動態轉型，而那是一個轉換不是一個判斷。
+  'type',
 ] as const
 
 /**
@@ -68,6 +72,9 @@ export const PYTHON_ATOMIC_NAMES = [
   'splat',
   // ⚠️ `pass` 加入日 2026-08-22——與 `global`／`assert` 同一類的語言構造。
   'pass',
+  // ⚠️ `with` 加入日 2026-08-23。與 `global`／`assert`／`pass` 同一類的語言構造
+  //    ——沒有「主體＋操作」可以拆。
+  'with',
 ] as const
 
 /**
@@ -98,6 +105,22 @@ export const PYTHON_OPERATIONS = [
   'join',
   'enumerate',
   'zip',
+  // ⚠️ `format` 加入日 2026-08-23——`"{}".format(x)`。
+  //    🔴 既有的 `replace` 是換掉一段**指定的**字，說不出「按位置把值填進空格」。
+  'format',
+  // ⚠️ 下面五個加入日 2026-08-23——通用桶那一批。每一個都先問過
+  //    「既有的字說不說得出它」：
+  //
+  //    `apply`   `map(f, xs)`。🔴 **不叫 `map`**——那個字在這份表裡是**主體**（字典），
+  //              同一個字兩種詞性讀的人要記兩次。
+  //    `filter`  既有的 `find` 回一個，這一個回一串。
+  //    `all`／`any`  **量詞**：一整串收成一個真假。C++ 那側也是兩個名字。
+  //    `divmod`  商與餘數**一起**回；既有的算術一次只給一個。
+  'apply',
+  'filter',
+  'all',
+  'any',
+  'divmod',
 ] as const
 
 /**
@@ -122,4 +145,17 @@ export const PYTHON_KINDS = [
   //    取名 `var_walrus` 的話 `walrus` 會變成 `assign` 的同義詞，而
   //    「同一個操作在任何主體上用同一個字」正是這份表存在的理由。
   'expr',
+  // ⚠️ 下面四個加入日 2026-08-23——通用桶那一批（第五十條護欄的逐名報表）。
+  //    判準與上面三個一字不差：**它是一個種差，不是一個新操作**。
+  //
+  //    `prefix`／`suffix`  `startswith`／`endswith` 做的仍然是 `compare`，差別在只比一端
+  //    `position`          `.index` 做的仍然是 `find`，差別在**回位置**
+  //                        ——而光是 `find` 在這份表裡已經被「在不在裡面」（`in`）佔走
+  //    `value`             `.remove(v)` 做的仍然是 `erase`，差別在**指定的方式是值不是位置**
+  'prefix',
+  'suffix',
+  'position',
+  'value',
+  //    `self`  `.sort()` 做的仍然是 `sort`，差別在**改的是自己**（而且回 `None`）
+  'self',
 ] as const

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_with",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "with_statement",
+    "component": {
+      "componentId": "python:with"
+    },
+    "liftStrategy": "python:lift_with",
+    "fieldMappings": [],
+    "priority": 10,
+    "_why": "⚠️ **一次只收一個項目**：`with A() as a, B() as b:` 讓它整段誠實降級——積木上只有一格，而拆成兩層巢狀等於改寫使用者的結構。"
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "PY_STRING_FIND_MSG0": "在 %1 裡找 %2 的位置",
+  "PY_STRING_FIND_TOOLTIP": "回傳第一次出現的位置（從 0 算起）。找不到時回 -1，不會出錯。"
+}

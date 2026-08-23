@@ -1,0 +1,27 @@
+{
+  "componentId": "python:type_is",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側最接近的是動態轉型——**那是一個轉換不是一個判斷**，而且只對多型的類別成立。",
+  "properties": [
+    {
+      "name": "target_type",
+      "kind": "enum",
+      "default": "int"
+    }
+  ],
+  "children": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 通用桶點名的（`isinstance` ×3）。\n⚠️ **主體是「型別」**：這是這份詞彙表裡第一顆以型別為主體的元件。",
+  "_properties_why": "🔴 **型別是一格下拉，不是一個插槽**：`isinstance(x, int)` 的第二個引數在原始碼裡是一個**名字**，而給學生一個插槽等於要他先做出一個「int」的積木。\n⚠️ 代價是**只認得下拉裡的那幾個**——`isinstance(x, MyClass)` 讓一般呼叫接手（誠實降級），而那個邊界寫在 lift 那一路。"
+}

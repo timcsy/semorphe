@@ -1,0 +1,4 @@
+{
+  "PY_STRING_COMPARE_SUFFIX_MSG0": "does %1 end with %2",
+  "PY_STRING_COMPARE_SUFFIX_TOOLTIP": "Answers true or false. Handy for checking file extensions. Case matters."
+}

@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_SORT_SELF_MSG0": "把 %1 就地排序 依據 %2 反向 %3",
+  "PY_CONTAINER_SORT_SELF_TOOLTIP": "直接改動原本那一串的順序（不會產生新的一串，也不交出值）。依據與反向可以留空。"
+}

@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_APPLY_MSG0": "apply %1 to every item of %2",
+  "PY_CONTAINER_APPLY_TOOLTIP": "Replaces every item with what the function returns. Usually wrapped in a list conversion to see the result."
+}

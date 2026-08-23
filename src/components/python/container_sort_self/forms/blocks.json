@@ -1,0 +1,43 @@
+[
+  {
+    "id": "python_container_sort_self",
+    "componentId": "python:container_sort_self",
+    "language": "python",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_container_sort_self",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_CONTAINER_SORT_SELF_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "REVERSE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_PY_CONTAINER_SORT_SELF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "KEY": "key",
+        "REVERSE": "reverse"
+      }
+    }
+  }
+]

@@ -62,7 +62,19 @@
           "python:member_assign",
           "python:compare_chain",
           "python:container_erase",
-          "python:set_make"
+          "python:set_make",
+          "python:string_format",
+          "python:string_find",
+          "python:string_compare_prefix",
+          "python:string_compare_suffix",
+          "python:container_count",
+          "python:container_find_position",
+          "python:container_insert",
+          "python:container_erase_value",
+          "python:string_fill",
+          "python:container_pop",
+          "python:container_sort_self",
+          "python:set_append"
         ],
         "children": [
           {
@@ -100,7 +112,14 @@
               "python:assert",
               "python:import_from",
               "python:splat",
-              "python:var_assign_expr"
+              "python:var_assign_expr",
+              "python:container_apply",
+              "python:container_filter",
+              "python:container_all",
+              "python:container_any",
+              "python:type_is",
+              "python:math_divmod",
+              "python:with"
             ],
             "children": []
           }

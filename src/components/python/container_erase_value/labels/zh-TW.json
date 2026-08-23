@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ERASE_VALUE_MSG0": "從 %1 刪掉第一個 %2",
+  "PY_CONTAINER_ERASE_VALUE_TOOLTIP": "刪掉第一個等於這個值的格子（不是位置）。找不到會出錯。"
+}

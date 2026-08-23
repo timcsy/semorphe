@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_ANY_MSG0": "%1 有一格成立嗎",
+  "PY_CONTAINER_ANY_TOOLTIP": "有一格為真就回真。空的串列回假（找不到例子）。"
+}

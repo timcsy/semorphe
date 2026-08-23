@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_string_compare_suffix",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "call",
+    "component": {
+      "componentId": "python:string_compare_suffix"
+    },
+    "liftStrategy": "python:lift_string_compare_suffix",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "priority 12：高於同族的一般方法呼叫（8）與呼叫的兜底（3），低於輸出與讀取輸入（15）。"
+  }
+]

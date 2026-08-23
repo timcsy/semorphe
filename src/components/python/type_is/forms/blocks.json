@@ -1,0 +1,67 @@
+[
+  {
+    "id": "python_type_is",
+    "componentId": "python:type_is",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_type_is",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_TYPE_IS_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "TARGET_TYPE",
+          "options": [
+            [
+              "%{BKY_PY_TYPE_IS_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_STR}",
+              "str"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_BOOL}",
+              "bool"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_LIST}",
+              "list"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_DICT}",
+              "dict"
+            ],
+            [
+              "%{BKY_PY_TYPE_IS_TUPLE}",
+              "tuple"
+            ]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_TYPE_IS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TARGET_TYPE": "target_type"
+      },
+      "inputs": {
+        "OBJ": "obj"
+      }
+    },
+    "_why": "⚠️ **在「運算」不在「容器」**：它回的是真假，與比較那一族是同一種東西——而它的主體是**型別**，不是容器。"
+  }
+]

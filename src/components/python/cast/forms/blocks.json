@@ -33,6 +33,10 @@
             [
               "%{BKY_PY_CAST_LIST}",
               "list"
+            ],
+            [
+              "%{BKY_PY_CAST_SET}",
+              "set"
             ]
           ]
         },

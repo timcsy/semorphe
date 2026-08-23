@@ -5,7 +5,7 @@
  * 負向斷言會空過，而一支空過的測試與健康的長得一模一樣。
  */
 import { describe, it, expect } from 'vitest'
-import { liftPython, componentIdsOf, generatePython as gen } from '../../../../tests/helpers/python-lift'
+import { liftPython, componentIdsOf, generatePython as gen, runPython } from '../../../../tests/helpers/python-lift'
 import type { SemanticNode } from '../../../core/types'
 
 describe('python:arithmetic', () => {
@@ -38,8 +38,16 @@ describe('python:arithmetic', () => {
     expect(gen(await liftPython('1 + 2 * 3')), '這個不需要括號').toBe('1 + 2 * 3')
   })
 
-  it('⚠️ 位元運算刻意沒收 → 要走【誠實降級】，不得被認成算術', async () => {
-    const ids = componentIdsOf(await liftPython('a & b'))
-    expect(ids, '`&` 沒有路由，不該變成 python:arithmetic').not.toContain('python:arithmetic')
+  it('🟢 `&`／`|`／`^` 收了（2026-08-23）——集合的三個運算，而在整數上是位元', async () => {
+    // ⚠️ 這條原本釘的是「位元運算刻意沒收」，而集合進來之後 `a & b` 有了**語義**
+    //    ——**邊界移動時要改成釘新的邊界，不是刪掉它**。
+    expect(componentIdsOf(await liftPython('c = a & b\n'))).toContain('python:arithmetic')
+    expect(await runPython('print({1, 2} & {2, 3}, 5 & 3)\n')).toContain('{2} 1')
+  })
+
+  it('⚠️ 而位元反相 `~` 仍然沒收 → 要走【誠實降級】', async () => {
+    const ids = componentIdsOf(await liftPython('c = ~a\n'))
+    expect(ids, '整段真的抬升到東西了').toContain('python:var_assign')  // ← 正向錨點
+    expect(ids, '`~` 沒有路由，不該變成 python:arithmetic').not.toContain('python:arithmetic')
   })
 })

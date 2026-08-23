@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_COUNT_MSG0": "%2 在 %1 裡出現幾次",
+  "PY_CONTAINER_COUNT_TOOLTIP": "數一數某個值出現幾次。串列與字串都可以用。"
+}

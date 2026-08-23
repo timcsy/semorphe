@@ -1,0 +1,4 @@
+{
+  "PY_CONTAINER_SORT_SELF_MSG0": "sort %1 in place by %2 reversed %3",
+  "PY_CONTAINER_SORT_SELF_TOOLTIP": "Reorders the list itself; it does not produce a new list and hands back no value. The key and reverse slots may be left empty."
+}

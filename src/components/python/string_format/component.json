@@ -1,0 +1,21 @@
+{
+  "componentId": "python:string_format",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 那側是 `printf` 的格式字串——而**那是輸出的一部分**，不是一個「產出字串」的運算式。形狀不同。",
+  "properties": [],
+  "children": {
+    "obj": "expression",
+    "args": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json"
+  },
+  "_why": "🔴 **第五十條護欄的通用桶裡最大的一筆**（`.format` ×5）：它一直**跑得動**（內建表有 `format`），而掉進一般呼叫那顆 ——身分沒了，積木上是一顆泛用的呼叫。\n🟢 **關鍵字寫法不必特別處理**：`\"{n}\".format(n=1)` 的 `n=1` 抬升成同族的具名引數元件，插在可增減的插槽裡，而內建表本來就認得 `__kw__` 標記。"
+}

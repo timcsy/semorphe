@@ -1,0 +1,4 @@
+{
+  "PY_STRING_COMPARE_SUFFIX_MSG0": "%1 的結尾是 %2 嗎",
+  "PY_STRING_COMPARE_SUFFIX_TOOLTIP": "回答真或假。常用來看副檔名。大小寫算不同的字。"
+}

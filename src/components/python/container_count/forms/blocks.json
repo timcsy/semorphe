@@ -1,0 +1,36 @@
+[
+  {
+    "id": "python_container_count",
+    "componentId": "python:container_count",
+    "language": "python",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_container_count",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_CONTAINER_COUNT_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_PY_CONTAINER_COUNT_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "VALUE": "value"
+      }
+    }
+  }
+]
