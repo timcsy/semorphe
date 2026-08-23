@@ -3,5 +3,8 @@
   "PYTHON_FUNC_DEF_PARAMS_OPEN": "（參數",
   "PYTHON_FUNC_DEF_PARAMS_CLOSE": "）",
   "PYTHON_FUNC_DEF_TOOLTIP": "把一段步驟取個名字，之後就可以重複呼叫它。按 + 加參數。型別註記可以留空——它是寫給人看的，這個工具不拿它做檢查。",
-  "PY_TYPE_NONE_GIVEN": "（不指定）"
+  "PY_TYPE_NONE_GIVEN": "（不指定）",
+  "PY_FUNC_DEF_OPT_TYPE": "型別",
+  "PY_FUNC_DEF_OPT_DEFAULT": "預設值",
+  "PL_MUTATOR_TITLE": "參數"
 }

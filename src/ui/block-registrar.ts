@@ -7,7 +7,7 @@ import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from './theme/category-colors'
 import { attachBranchList } from './branch-list-block'
-import { attachParamList } from './param-list-block'
+import { attachParamList, registerParamMutatorBlocks, MUTATOR_CONTAINER } from './param-list-block'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { componentsDeclaringVariables } from '../core/component/traits'
@@ -619,28 +619,6 @@ export class BlockRegistrar {
       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">' +
       '<circle cx="10" cy="10" r="9" fill="#E0E0E0"/>' +
       '<path d="M6 10h8" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/></svg>'
-    )
-    /**
-     * **「這個參數要不要預設值」的小開關**（2026-08-23）。
-     *
-     * 🔴 為什麼要它：預設值那一格如果**固定長在那裡**，
-     * 沒有預設值的參數後面就掛著一個 `＝` 加一個空框
-     * ——使用者回報「參數那邊怪怪的」，而那個空框確實什麼都沒說。
-     *
-     * ⚠️ 而**不能只是把它藏起來**：藏了就沒有任何方式再叫出來，
-     * 於是「用積木做一個有預設值的函式」變成做不到。**一個看不見的功能等於沒有。**
-     */
-    const DEFAULT_ADD_IMG = 'data:image/svg+xml,' + encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
-      '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
-      '<path d="M5 8h6M8 5v6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
-    )
-    // ⚠️ **打開之後那個圖示要換成「拿掉」**——同一個位置一直是 ⊕ 的話，
-    //    它在「已經有預設值」的狀態下說的是一句假話。
-    const DEFAULT_DEL_IMG = 'data:image/svg+xml,' + encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
-      '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
-      '<path d="M5 8h6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
     )
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const self = this
@@ -1663,6 +1641,23 @@ export class BlockRegistrar {
 
       target.paramCount_ = 0
 
+      // 🔴 **齒輪要在原本的 `init` 之後掛上**——這個工廠是在積木定義好之後
+      //    才接上去的，所以包一層。⚠️ 只有帶名字欄位的那些才有預設值可談。
+      if (config.withNameField) {
+        const baseParamInit = target.init
+        target.init = function (this: any): void {
+          baseParamInit.call(this)
+          this.setMutator(new Blockly.icons.MutatorIcon(
+            [registerParamMutatorBlocks([{
+              key: 'default',
+              labelKey: 'U_FUNC_DEF_PARAM_DEFAULT_LABEL',
+              labelFallback: '預設值',
+            }])],
+            this as Blockly.BlockSvg,
+          ))
+        }
+      }
+
       target.rebuildParamLabels_ = function (this: any): void {
         const wasAtMin = this.paramCount_ <= 0
         if (this.getInput('PARAMS_LABEL')) this.removeInput('PARAMS_LABEL')
@@ -1707,12 +1702,10 @@ export class BlockRegistrar {
           //    `＝` 加一個空框——那個空框什麼都沒說（使用者回報）。
           //    ⚠️ 用 `input.setVisible`（公開 API）而不是 `field.setVisible`
           //    （後者標著 `@internal`，而且不會重新排版）。
-          input.appendField(
-            new Blockly.FieldImage(DEFAULT_ADD_IMG, 16, 16,
-              Blockly.Msg['U_FUNC_DEF_PARAM_DEFAULT_ADD'] || '預設值（點一下開／關）',
-              () => this.toggleDefault_(idx)) as Blockly.Field,
-            `DEFAULT_ADD_${idx}`,
-          )
+          // 🔴 **開關在齒輪上，不在每一格**（2026-08-23，使用者提的）：
+          //    這個 repo 的既有分工是「**齒輪管形狀，`＋`／`−` 管數量**」
+          //    ——與同族的變數宣告那顆一致。每一格塞一個小圖示的話，
+          //    三個參數就有三個圖示排在那裡，而它們說的是同一件事。
           const defInput = this.appendDummyInput(`PARAM_DEF_${idx}`)
           defInput.appendField('＝')
           defInput.appendField(
@@ -1740,16 +1733,46 @@ export class BlockRegistrar {
         if (!input || input.isVisible() === show) return
         if (!show) this.getField(`PARAM_DEFAULT_${idx}`)?.setValue('')
         input.setVisible(show)
-        // 圖示跟著狀態走：收起來時是「加」，打開之後是「拿掉」
-        ;(this.getField(`DEFAULT_ADD_${idx}`) as { setValue?: (v: string) => void } | null)
-          ?.setValue?.(show ? DEFAULT_DEL_IMG : DEFAULT_ADD_IMG)
         // ⚠️ 這一步是必要的：`setVisible` 只改狀態，畫面要自己叫它重排
         this.queueRender?.()
       }
 
-      target.toggleDefault_ = function (this: any, idx: number): void {
-        const input = this.getInput(`PARAM_DEF_${idx}`)
-        this.showDefault_(idx, !input?.isVisible())
+      // ── 齒輪：一個參數一顆小積木，勾選格說它有沒有預設值 ──────────
+      //    ⚠️ 小積木的型別由**勾選格的組合**決定（見那個工廠的檔頭）
+      //    ——這裡只有「預設值」一格，而另一個語言那顆有兩格。
+      const gearGroups = [{
+        key: 'default',
+        labelKey: 'U_FUNC_DEF_PARAM_DEFAULT_LABEL',
+        labelFallback: '預設值',
+      }]
+
+      target.decompose = function (this: any, workspace: Blockly.WorkspaceSvg): Blockly.Block {
+        const container = workspace.newBlock(MUTATOR_CONTAINER)
+        ;(container as Blockly.BlockSvg).initSvg()
+        let connection = container.getInput('STACK')!.connection!
+        for (let i = 0; i < this.paramCount_; i++) {
+          const item = workspace.newBlock(registerParamMutatorBlocks(gearGroups))
+          ;(item as Blockly.BlockSvg).initSvg()
+          item.setFieldValue(String(this.getFieldValue(`PARAM_${i}`) ?? `#${i + 1}`), 'PL_NAME')
+          item.setFieldValue(this.getInput(`PARAM_DEF_${i}`)?.isVisible() ? 'TRUE' : 'FALSE', 'OPT_default')
+          connection.connect(item.previousConnection!)
+          connection = item.nextConnection!
+        }
+        return container
+      }
+
+      target.compose = function (this: any, container: Blockly.Block): void {
+        const wants: boolean[] = []
+        let item = container.getInputTargetBlock('STACK')
+        while (item) {
+          wants.push(item.getFieldValue('OPT_default') === 'TRUE')
+          item = item.getNextBlock()
+        }
+        // ⚠️ **先對齊數量再對齊形狀**——反過來的話，多出來的那幾格還不存在
+        while (this.paramCount_ < wants.length) this.plusParam_()
+        while (this.paramCount_ > wants.length) this.minusParam_()
+        for (let i = 0; i < wants.length; i++) this.showDefault_(i, wants[i])
+        setMinusState(this, this.paramCount_ <= 0)
       }
 
       target.minusParam_ = function (this: any): void {

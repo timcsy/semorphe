@@ -49,17 +49,60 @@ const MINUS_DISABLED_IMG = 'data:image/svg+xml,' + encodeURIComponent(
   '<path d="M6 10h8" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/></svg>'
 )
 
-/** 「可有可無那一段」的開關圖示——收起來時是「加」，打開之後是「拿掉」。 */
-const OPT_ADD_IMG = 'data:image/svg+xml,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
-  '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
-  '<path d="M5 8h6M8 5v6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
-)
-const OPT_DEL_IMG = 'data:image/svg+xml,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
-  '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
-  '<path d="M5 8h6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
-)
+/**
+ * **齒輪裡的那幾顆小積木**——容器一顆，每個參數一顆。
+ *
+ * 🔴 **與 `cpp_var_declare` 的齒輪同一個形狀**：那一顆用兩種小積木表示
+ * 「變數」與「變數 = 值」，而這裡的每個參數用**同一顆小積木 ＋ 幾個勾選格**
+ * ——因為型別與預設值是**兩件互相獨立的事**，用型別去表示要四顆小積木。
+ *
+ * ⚠️ **小積木上要看得到參數的名字**：一疊沒有名字的小積木，
+ * 使用者得**數第幾個**才知道自己在改誰。
+ */
+export const MUTATOR_CONTAINER = 'pl_param_container'
+
+/**
+ * 🔴 **每一種勾選格組合各自一個小積木型別**——`pl_param_item__type_default`／
+ * `pl_param_item__default`…
+ *
+ * ⚠️ 只註冊一顆共用的話，**第二個呼叫者的勾選格會被第一個決定**
+ * （C++ 的參數只有「預設值」，而它會拿到多一格「型別」）。
+ * 名字裡帶著簽章，兩邊就各拿各的。
+ */
+export function registerParamMutatorBlocks(
+  groups: { key: string; labelKey?: string; labelFallback: string }[],
+): string {
+  if (!Blockly.Blocks[MUTATOR_CONTAINER]) {
+    Blockly.Blocks[MUTATOR_CONTAINER] = {
+      init: function (this: Blockly.Block) {
+        this.appendDummyInput().appendField(Blockly.Msg['PL_MUTATOR_TITLE'] || '參數')
+        this.appendStatementInput('STACK')
+        this.setColour(230)
+        this.contextMenu = false
+      },
+    }
+  }
+  const itemType = `pl_param_item__${groups.map((g) => g.key).join('_')}`
+  if (!Blockly.Blocks[itemType]) {
+    Blockly.Blocks[itemType] = {
+      init: function (this: Blockly.Block) {
+        const row = this.appendDummyInput()
+        // ⚠️ **名字是唯讀的標籤**——一疊沒有名字的小積木，
+        //    使用者得數第幾個才知道自己在改誰。
+        row.appendField(new Blockly.FieldLabel('') as Blockly.Field, 'PL_NAME')
+        for (const g of groups) {
+          row.appendField(Blockly.Msg[g.labelKey ?? ''] || g.labelFallback)
+          row.appendField(new Blockly.FieldCheckbox('FALSE') as Blockly.Field, `OPT_${g.key}`)
+        }
+        this.setPreviousStatement(true)
+        this.setNextStatement(true)
+        this.setColour(230)
+        this.contextMenu = false
+      },
+    }
+  }
+  return itemType
+}
 
 export interface ParamListSpec {
   /** 每一格的 input 名（`PARAM_{i}`） */
@@ -88,18 +131,26 @@ export interface ParamListSpec {
    */
   minCount?: number
   /**
-   * **從這個欄位起（含）是「可有可無」的那一段**——它住在自己的 input，
-   * 起始收起來，前面放一個小圖示可以開／關（2026-08-23）。
+   * **「可有可無」的那幾段**——每一段住在自己的 input，起始收起來，
+   * 由**齒輪**（mutator）打開或關掉（2026-08-23）。
    *
    * 🔴 為什麼要它：型別註記與預設值**大多數參數都沒有**，
-   * 而固定長在那裡的話每個參數後面都掛著兩個**什麼都沒說的空框**
+   * 而固定長在那裡的話每個參數後面都掛著**什麼都沒說的空框**
    * ——使用者回報「參數那邊怪怪的」，指的就是那些框。
+   *
+   * 🔴 **為什麼是齒輪而不是每一格一個小圖示**（使用者提的）：
+   * 這個 repo 既有的分工就是這樣——**齒輪管形狀，`＋`／`−` 管數量**
+   * （`cpp_var_declare` 的齒輪選「變數」還是「變數 = 值」，
+   * 而它的 `＋`／`−` 只是加減幾個）。每一格塞一個小圖示的話，
+   * 三個參數就有三個圖示排在那裡，而**它們說的是同一件事**。
    *
    * ⚠️ 而**不能只是藏起來**：藏了就沒有任何方式再叫出來，
    * 於是「用積木做一個有預設值的函式」變成做不到。
-   * **一個看不見的功能等於沒有。**
+   * **一個看不見的功能等於沒有——所以「藏起來」一定要配一個「叫出來」。**
+   *
+   * 每一段：`fromField` 起（含）到下一段之前的欄位，整段一起顯示／隱藏。
    */
-  optionalFrom?: string
+  optionalGroups?: { key: string; fromField: string; labelKey?: string; labelFallback: string }[]
 }
 
 function setMinusState(block: any, atMin: boolean): void {
@@ -154,47 +205,69 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   proto.init = function (this: any): void {
     baseInit.call(this)
     this.paramCount_ = 0
+    this.paramOpts_ = []
     this.rebuildTail_()
     // 🔴 **最少那幾格要在【建的當下】就長出來**——工具箱拖出來的那一顆
     //    用的就是這個狀態，而 `for` 少了那個名字產不出合法的 Python。
     while (this.paramCount_ < minCount) this.plusParam_()
+    // 齒輪只長在**有可有可無那幾段**的積木上——其餘的積木一個字都不變
+    if (groups.length > 0) {
+      const itemType = registerParamMutatorBlocks(groups)
+      this.setMutator(new Blockly.icons.MutatorIcon([itemType], this as Blockly.BlockSvg))
+    }
   }
 
-  /** 「可有可無那一段」的 input 名。 */
-  const optName = (i: number): string => `${name(spec.itemPattern, i)}_OPT`
+  /**
+   * 「可有可無」那幾段的切點——每一段從 `fromField` 起，到下一段之前。
+   * 沒有宣告 `optionalGroups` 時回空陣列（其餘的積木完全不受影響）。
+   */
+  const groups = (spec.optionalGroups ?? []).map((g, gi, all) => {
+    const from = spec.fields.findIndex((f) => f.name === g.fromField)
+    const nextFrom = gi + 1 < all.length
+      ? spec.fields.findIndex((f) => f.name === all[gi + 1].fromField)
+      : spec.fields.length
+    if (from < 0) throw new Error(`optionalGroups 指到一個不存在的欄位：${g.fromField}`)
+    return { ...g, fields: spec.fields.slice(from, nextFrom) }
+  })
+  const firstOptionalIndex = groups.length > 0
+    ? spec.fields.findIndex((f) => f.name === groups[0].fromField)
+    : -1
+  /** 某一格某一段的 input 名。 */
+  const optName = (i: number, key: string): string => `${name(spec.itemPattern, i)}_OPT_${key}`
+
+  /** 這一格開著哪幾段——**沒有宣告就永遠是空的**。 */
+  const optsOf = (blk: any, i: number): Record<string, boolean> => {
+    blk.paramOpts_ = blk.paramOpts_ ?? []
+    blk.paramOpts_[i] = blk.paramOpts_[i] ?? {}
+    return blk.paramOpts_[i]
+  }
 
   proto.plusParam_ = function (this: any): void {
     const i = this.paramCount_
     const input = this.appendDummyInput(name(spec.itemPattern, i))
     if (i > 0 && spec.separator) input.appendField(spec.separator)
 
-    // ⚠️ 從 `optionalFrom` 那個欄位起（含）是可有可無的那一段——它去自己的 input
-    const cut = spec.optionalFrom ? spec.fields.findIndex((f) => f.name === spec.optionalFrom) : -1
     const addField = (target: any, f: ParamListSpec['fields'][number]): void => {
       const json = { ...f, name: f.name.replace('{i}', String(i)) } as Record<string, unknown>
       if (typeof json.text === 'string') json.text = (json.text as string).replace('{i}', String(i))
       const field = Blockly.fieldRegistry.fromJson(json as never)
       if (field) target.appendField(field, json.name as string)
     }
-    for (const f of cut < 0 ? spec.fields : spec.fields.slice(0, cut)) addField(input, f)
+    const fixed = firstOptionalIndex < 0 ? spec.fields : spec.fields.slice(0, firstOptionalIndex)
+    for (const f of fixed) addField(input, f)
 
-    if (cut >= 0) {
-      input.appendField(
-        new Blockly.FieldImage(OPT_ADD_IMG, 16, 16,
-          Blockly.Msg['PL_OPTIONAL_TOGGLE'] || '型別與預設值（點一下開／關）',
-          () => this.toggleOptional_(i)) as Blockly.Field,
-        `PL_OPT_TOGGLE_${i}`,
-      )
-      const opt = this.appendDummyInput(optName(i))
-      for (const f of spec.fields.slice(cut)) addField(opt, f)
-      opt.setVisible(false)
-      // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，而存檔還原
-      //    正是這樣把型別與預設值放回去的——少了它，載回來的積木會把它們藏起來。
-      for (const f of spec.fields.slice(cut)) {
+    for (const g of groups) {
+      const opt = this.appendDummyInput(optName(i, g.key))
+      for (const f of g.fields) addField(opt, f)
+      opt.setVisible(optsOf(this, i)[g.key] === true)
+      // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，而
+      //    「程式碼→積木」正是這樣把型別與預設值放回去的
+      //    ——少了它，一段 `def f(x: int)` 貼進來會把註記藏起來。
+      for (const f of g.fields) {
         const field = this.getField(f.name.replace('{i}', String(i)))
         if (field?.setValidator) {
           field.setValidator((v: string) => {
-            if (v) queueMicrotask(() => this.showOptional_(i, true))
+            if (v) queueMicrotask(() => this.setOptional_(i, g.key, true))
             return v
           })
         }
@@ -202,51 +275,105 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     }
 
     this.moveInputBefore(name(spec.itemPattern, i), 'PL_TAIL')
-    if (this.getInput(optName(i))) this.moveInputBefore(optName(i), 'PL_TAIL')
+    for (const g of groups) {
+      if (this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), 'PL_TAIL')
+    }
     this.paramCount_++
     this.rebuildTail_()
   }
 
-  /** 打開或收起某一格的「可有可無」段（收起來時**一併清掉值**）。 */
-  proto.showOptional_ = function (this: any, i: number, show: boolean): void {
-    const opt = this.getInput(optName(i))
-    if (!opt || opt.isVisible() === show) return
-    if (!show && spec.optionalFrom) {
-      const cut = spec.fields.findIndex((f) => f.name === spec.optionalFrom)
-      for (const f of spec.fields.slice(cut)) {
+  /** 打開或關掉某一格的某一段（關掉時**一併清掉值**）。 */
+  proto.setOptional_ = function (this: any, i: number, key: string, show: boolean): void {
+    const g = groups.find((x) => x.key === key)
+    const opt = this.getInput(optName(i, key))
+    if (!g || !opt) return
+    optsOf(this, i)[key] = show
+    if (opt.isVisible() === show) return
+    if (!show) {
+      for (const f of g.fields) {
         const field = this.getField(f.name.replace('{i}', String(i)))
         if (field && typeof field.getValue?.() === 'string' && field.setValue) field.setValue('')
       }
     }
     opt.setVisible(show)
-    ;(this.getField(`PL_OPT_TOGGLE_${i}`) as { setValue?: (v: string) => void } | null)
-      ?.setValue?.(show ? OPT_DEL_IMG : OPT_ADD_IMG)
     // ⚠️ `setVisible` 只改狀態，畫面要自己叫它重排
     this.queueRender?.()
   }
 
-  proto.toggleOptional_ = function (this: any, i: number): void {
-    this.showOptional_(i, !this.getInput(optName(i))?.isVisible())
+  /**
+   * 齒輪打開時：**照現在的樣子攤成一疊小積木**。
+   *
+   * ⚠️ 名字是**唯讀的標籤**——在這裡改名字沒有意義（本體那一格才是真的），
+   * 而它必須在，否則使用者要數第幾個才知道自己在改誰。
+   */
+  proto.decompose = function (this: any, workspace: Blockly.WorkspaceSvg): Blockly.Block {
+    const container = workspace.newBlock(MUTATOR_CONTAINER)
+    ;(container as Blockly.BlockSvg).initSvg()
+    let connection = container.getInput('STACK')!.connection!
+    for (let i = 0; i < this.paramCount_; i++) {
+      const item = workspace.newBlock(registerParamMutatorBlocks(groups))
+      ;(item as Blockly.BlockSvg).initSvg()
+      const nameField = spec.fields[0]?.name.replace('{i}', String(i))
+      item.setFieldValue(String(this.getFieldValue(nameField) ?? `#${i + 1}`), 'PL_NAME')
+      for (const g of groups) {
+        item.setFieldValue(optsOf(this, i)[g.key] ? 'TRUE' : 'FALSE', `OPT_${g.key}`)
+      }
+      connection.connect(item.previousConnection!)
+      connection = item.nextConnection!
+    }
+    return container
+  }
+
+  /** 齒輪關上時：**幾個參數、每個開哪幾段**照那一疊重新擺一次。 */
+  proto.compose = function (this: any, container: Blockly.Block): void {
+    const wants: Record<string, boolean>[] = []
+    let item = container.getInputTargetBlock('STACK')
+    while (item) {
+      const opts: Record<string, boolean> = {}
+      for (const g of groups) opts[g.key] = item.getFieldValue(`OPT_${g.key}`) === 'TRUE'
+      wants.push(opts)
+      item = item.getNextBlock()
+    }
+    while (wants.length < minCount) wants.push({})
+
+    // ⚠️ **先對齊數量再對齊形狀**——反過來的話，多出來的那幾格還不存在
+    while (this.paramCount_ < wants.length) this.plusParam_()
+    while (this.paramCount_ > wants.length) this.minusParam_()
+    for (let i = 0; i < wants.length; i++) {
+      for (const g of groups) this.setOptional_(i, g.key, wants[i][g.key] === true)
+    }
+    setMinusState(this, this.paramCount_ <= minCount)
   }
 
   proto.minusParam_ = function (this: any): void {
     if (this.paramCount_ <= minCount) return
     this.paramCount_--
     this.removeInput(name(spec.itemPattern, this.paramCount_))
-    // ⚠️ 可有可無那一段是**另一個 input**——少刪它的話，
+    // ⚠️ 可有可無那幾段各自是**另一個 input**——少刪的話，
     //    下一次 `＋` 會撞到一個已經存在的名字（Blockly 會丟錯）。
-    if (this.getInput(optName(this.paramCount_))) this.removeInput(optName(this.paramCount_))
+    for (const g of groups) {
+      const n = optName(this.paramCount_, g.key)
+      if (this.getInput(n)) this.removeInput(n)
+    }
+    this.paramOpts_?.splice(this.paramCount_, 1)
     this.rebuildTail_()
     setMinusState(this, this.paramCount_ <= minCount)
   }
 
   // ⚠️ **格式是契約**：`{ paramCount }`，與命令式那份一字不差。
   //    而零參數回 `null`——那也是命令式那份的行為（存檔裡不留空物件）。
-  proto.saveExtraState = function (this: any): { paramCount: number } | null {
-    return this.paramCount_ > 0 ? { paramCount: this.paramCount_ } : null
+  proto.saveExtraState = function (this: any): { paramCount: number; paramOpts?: string[][] } | null {
+    if (this.paramCount_ <= 0) return null
+    const base = { paramCount: this.paramCount_ }
+    if (groups.length === 0) return base
+    // ⚠️ **沒有任何一段被打開時不寫這個鍵**——`{ paramCount }` 是與命令式那份
+    //    一字不差的既有契約，多一個永遠是空的鍵只會讓存檔比對變吵。
+    const opts = Array.from({ length: this.paramCount_ }, (_, i) =>
+      groups.filter((g) => optsOf(this, i)[g.key]).map((g) => g.key))
+    return opts.some((o) => o.length > 0) ? { ...base, paramOpts: opts } : base
   }
 
-  proto.loadExtraState = function (this: any, state: { paramCount?: number } | null): void {
+  proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][] } | null): void {
     // ⚠️ **舊存檔沒有這個鍵時要退到【最少幾格】不是 0**——`for` 的舊檔
     //    若被載回 0 格，產出的會是 `for  in xs:`。
     const want = Math.max(state?.paramCount ?? 0, minCount)
@@ -254,5 +381,13 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     // 舊存檔只存了數字，插槽是這裡長出來的——改掉這個機制，舊存檔就載不回來。
     while (this.paramCount_ < want) this.plusParam_()
     while (this.paramCount_ > want) this.minusParam_()
+    // 🔴 **「程式碼→積木」那條路不會帶這個鍵**（它只知道有幾格），
+    //    而那時哪幾段要打開由**欄位的值**決定——見 `plusParam_` 裡的驗證器。
+    //    所以這裡只處理「有寫」的情形，沒寫時什麼都不做。
+    for (let i = 0; i < want; i++) {
+      const keys = state?.paramOpts?.[i]
+      if (!keys) continue
+      for (const g of groups) this.setOptional_(i, g.key, keys.includes(g.key))
+    }
   }
 }
