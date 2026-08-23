@@ -8,5 +8,6 @@
   "U_FUNC_DEF_RETURN_TYPE_CHAR": "char（字元）",
   "U_FUNC_DEF_RETURN_TYPE_LONG_LONG": "long long（大整數）",
   "U_FUNC_DEF_RETURN_TYPE_STRING": "string（文字）",
-  "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool（是/否）"
+  "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool（是/否）",
+  "U_FUNC_DEF_PARAM_DEFAULT_ADD": "預設值（點一下開／關）"
 }

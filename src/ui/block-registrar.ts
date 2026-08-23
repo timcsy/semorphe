@@ -620,6 +620,28 @@ export class BlockRegistrar {
       '<circle cx="10" cy="10" r="9" fill="#E0E0E0"/>' +
       '<path d="M6 10h8" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/></svg>'
     )
+    /**
+     * **「這個參數要不要預設值」的小開關**（2026-08-23）。
+     *
+     * 🔴 為什麼要它：預設值那一格如果**固定長在那裡**，
+     * 沒有預設值的參數後面就掛著一個 `＝` 加一個空框
+     * ——使用者回報「參數那邊怪怪的」，而那個空框確實什麼都沒說。
+     *
+     * ⚠️ 而**不能只是把它藏起來**：藏了就沒有任何方式再叫出來，
+     * 於是「用積木做一個有預設值的函式」變成做不到。**一個看不見的功能等於沒有。**
+     */
+    const DEFAULT_ADD_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
+      '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
+      '<path d="M5 8h6M8 5v6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
+    )
+    // ⚠️ **打開之後那個圖示要換成「拿掉」**——同一個位置一直是 ⊕ 的話，
+    //    它在「已經有預設值」的狀態下說的是一句假話。
+    const DEFAULT_DEL_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
+      '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
+      '<path d="M5 8h6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
+    )
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const self = this
     const setMinusState = (block: any, isAtMin: boolean) => {
@@ -1679,18 +1701,64 @@ export class BlockRegistrar {
           //    而 `f(1)` 從此少一個引數。與另一個語言那顆函式定義的型別註記同一個形狀。
           //    ⚠️ 這一行**不准提到那個語言的名字**——這個檔有一條護欄在看（P3）。
           //    ⚠️ **留空 ＝ 沒有預設值**，不是「還沒填」。
-          input.appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_DEFAULT_${idx}`)
+          //
+          // 🔴 **它住在自己的 input，而且預設是收起來的**：
+          //    固定長在那裡的話，沒有預設值的參數後面會掛著一個
+          //    `＝` 加一個空框——那個空框什麼都沒說（使用者回報）。
+          //    ⚠️ 用 `input.setVisible`（公開 API）而不是 `field.setVisible`
+          //    （後者標著 `@internal`，而且不會重新排版）。
+          input.appendField(
+            new Blockly.FieldImage(DEFAULT_ADD_IMG, 16, 16,
+              Blockly.Msg['U_FUNC_DEF_PARAM_DEFAULT_ADD'] || '預設值（點一下開／關）',
+              () => this.toggleDefault_(idx)) as Blockly.Field,
+            `DEFAULT_ADD_${idx}`,
+          )
+          const defInput = this.appendDummyInput(`PARAM_DEF_${idx}`)
+          defInput.appendField('＝')
+          defInput.appendField(
+            // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，
+            //    而存檔還原時 Blockly 正是這樣把預設值放回去的
+            //    ——少了它，載回來的積木會把 `= 10` 藏起來。
+            new Blockly.FieldTextInput('', (v: string) => {
+              if (v) queueMicrotask(() => this.showDefault_(idx, true))
+              return v
+            }) as Blockly.Field,
+            `PARAM_DEFAULT_${idx}`,
+          )
+          defInput.setVisible(false)
         }
         this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
+        if (this.getInput(`PARAM_DEF_${idx}`)) this.moveInputBefore(`PARAM_DEF_${idx}`, 'PARAMS_END')
         this.paramCount_++
         if (this.paramCount_ === 1) this.rebuildParamLabels_()
         setMinusState(this, false)
+      }
+
+      /** 把某一格的預設值欄位打開或收起來（收起來時**一併清掉值**）。 */
+      target.showDefault_ = function (this: any, idx: number, show: boolean): void {
+        const input = this.getInput(`PARAM_DEF_${idx}`)
+        if (!input || input.isVisible() === show) return
+        if (!show) this.getField(`PARAM_DEFAULT_${idx}`)?.setValue('')
+        input.setVisible(show)
+        // 圖示跟著狀態走：收起來時是「加」，打開之後是「拿掉」
+        ;(this.getField(`DEFAULT_ADD_${idx}`) as { setValue?: (v: string) => void } | null)
+          ?.setValue?.(show ? DEFAULT_DEL_IMG : DEFAULT_ADD_IMG)
+        // ⚠️ 這一步是必要的：`setVisible` 只改狀態，畫面要自己叫它重排
+        this.queueRender?.()
+      }
+
+      target.toggleDefault_ = function (this: any, idx: number): void {
+        const input = this.getInput(`PARAM_DEF_${idx}`)
+        this.showDefault_(idx, !input?.isVisible())
       }
 
       target.minusParam_ = function (this: any): void {
         if (this.paramCount_ <= 0) return
         this.paramCount_--
         this.removeInput(`PARAM_${this.paramCount_}`)
+        // ⚠️ 預設值那一格是**另一個 input**——少刪它的話，
+        //    下一次 `＋` 會撞到一個已經存在的名字（Blockly 會丟錯）。
+        if (this.getInput(`PARAM_DEF_${this.paramCount_}`)) this.removeInput(`PARAM_DEF_${this.paramCount_}`)
         if (this.paramCount_ === 0) this.rebuildParamLabels_()
         setMinusState(this, this.paramCount_ <= 0)
       }

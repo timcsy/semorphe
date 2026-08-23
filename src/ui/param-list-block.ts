@@ -49,6 +49,18 @@ const MINUS_DISABLED_IMG = 'data:image/svg+xml,' + encodeURIComponent(
   '<path d="M6 10h8" stroke="#BDBDBD" stroke-width="2" stroke-linecap="round"/></svg>'
 )
 
+/** 「可有可無那一段」的開關圖示——收起來時是「加」，打開之後是「拿掉」。 */
+const OPT_ADD_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
+  '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
+  '<path d="M5 8h6M8 5v6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
+)
+const OPT_DEL_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">' +
+  '<circle cx="8" cy="8" r="7" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5"/>' +
+  '<path d="M5 8h6" stroke="#fff" stroke-opacity="0.8" stroke-width="1.5" stroke-linecap="round"/></svg>'
+)
+
 export interface ParamListSpec {
   /** 每一格的 input 名（`PARAM_{i}`） */
   itemPattern: string
@@ -75,6 +87,19 @@ export interface ParamListSpec {
    * > **「最少幾格」是那個語言的規則，所以它是一個宣告，不是一個預設值。**
    */
   minCount?: number
+  /**
+   * **從這個欄位起（含）是「可有可無」的那一段**——它住在自己的 input，
+   * 起始收起來，前面放一個小圖示可以開／關（2026-08-23）。
+   *
+   * 🔴 為什麼要它：型別註記與預設值**大多數參數都沒有**，
+   * 而固定長在那裡的話每個參數後面都掛著兩個**什麼都沒說的空框**
+   * ——使用者回報「參數那邊怪怪的」，指的就是那些框。
+   *
+   * ⚠️ 而**不能只是藏起來**：藏了就沒有任何方式再叫出來，
+   * 於是「用積木做一個有預設值的函式」變成做不到。
+   * **一個看不見的功能等於沒有。**
+   */
+  optionalFrom?: string
 }
 
 function setMinusState(block: any, atMin: boolean): void {
@@ -135,25 +160,82 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     while (this.paramCount_ < minCount) this.plusParam_()
   }
 
+  /** 「可有可無那一段」的 input 名。 */
+  const optName = (i: number): string => `${name(spec.itemPattern, i)}_OPT`
+
   proto.plusParam_ = function (this: any): void {
     const i = this.paramCount_
     const input = this.appendDummyInput(name(spec.itemPattern, i))
     if (i > 0 && spec.separator) input.appendField(spec.separator)
-    for (const f of spec.fields) {
+
+    // ⚠️ 從 `optionalFrom` 那個欄位起（含）是可有可無的那一段——它去自己的 input
+    const cut = spec.optionalFrom ? spec.fields.findIndex((f) => f.name === spec.optionalFrom) : -1
+    const addField = (target: any, f: ParamListSpec['fields'][number]): void => {
       const json = { ...f, name: f.name.replace('{i}', String(i)) } as Record<string, unknown>
       if (typeof json.text === 'string') json.text = (json.text as string).replace('{i}', String(i))
       const field = Blockly.fieldRegistry.fromJson(json as never)
-      if (field) input.appendField(field, json.name as string)
+      if (field) target.appendField(field, json.name as string)
     }
+    for (const f of cut < 0 ? spec.fields : spec.fields.slice(0, cut)) addField(input, f)
+
+    if (cut >= 0) {
+      input.appendField(
+        new Blockly.FieldImage(OPT_ADD_IMG, 16, 16,
+          Blockly.Msg['PL_OPTIONAL_TOGGLE'] || '型別與預設值（點一下開／關）',
+          () => this.toggleOptional_(i)) as Blockly.Field,
+        `PL_OPT_TOGGLE_${i}`,
+      )
+      const opt = this.appendDummyInput(optName(i))
+      for (const f of spec.fields.slice(cut)) addField(opt, f)
+      opt.setVisible(false)
+      // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，而存檔還原
+      //    正是這樣把型別與預設值放回去的——少了它，載回來的積木會把它們藏起來。
+      for (const f of spec.fields.slice(cut)) {
+        const field = this.getField(f.name.replace('{i}', String(i)))
+        if (field?.setValidator) {
+          field.setValidator((v: string) => {
+            if (v) queueMicrotask(() => this.showOptional_(i, true))
+            return v
+          })
+        }
+      }
+    }
+
     this.moveInputBefore(name(spec.itemPattern, i), 'PL_TAIL')
+    if (this.getInput(optName(i))) this.moveInputBefore(optName(i), 'PL_TAIL')
     this.paramCount_++
     this.rebuildTail_()
+  }
+
+  /** 打開或收起某一格的「可有可無」段（收起來時**一併清掉值**）。 */
+  proto.showOptional_ = function (this: any, i: number, show: boolean): void {
+    const opt = this.getInput(optName(i))
+    if (!opt || opt.isVisible() === show) return
+    if (!show && spec.optionalFrom) {
+      const cut = spec.fields.findIndex((f) => f.name === spec.optionalFrom)
+      for (const f of spec.fields.slice(cut)) {
+        const field = this.getField(f.name.replace('{i}', String(i)))
+        if (field && typeof field.getValue?.() === 'string' && field.setValue) field.setValue('')
+      }
+    }
+    opt.setVisible(show)
+    ;(this.getField(`PL_OPT_TOGGLE_${i}`) as { setValue?: (v: string) => void } | null)
+      ?.setValue?.(show ? OPT_DEL_IMG : OPT_ADD_IMG)
+    // ⚠️ `setVisible` 只改狀態，畫面要自己叫它重排
+    this.queueRender?.()
+  }
+
+  proto.toggleOptional_ = function (this: any, i: number): void {
+    this.showOptional_(i, !this.getInput(optName(i))?.isVisible())
   }
 
   proto.minusParam_ = function (this: any): void {
     if (this.paramCount_ <= minCount) return
     this.paramCount_--
     this.removeInput(name(spec.itemPattern, this.paramCount_))
+    // ⚠️ 可有可無那一段是**另一個 input**——少刪它的話，
+    //    下一次 `＋` 會撞到一個已經存在的名字（Blockly 會丟錯）。
+    if (this.getInput(optName(this.paramCount_))) this.removeInput(optName(this.paramCount_))
     this.rebuildTail_()
     setMinusState(this, this.paramCount_ <= minCount)
   }

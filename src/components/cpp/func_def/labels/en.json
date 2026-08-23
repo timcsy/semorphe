@@ -8,5 +8,6 @@
   "U_FUNC_DEF_RETURN_TYPE_CHAR": "char (character)",
   "U_FUNC_DEF_RETURN_TYPE_LONG_LONG": "long long (large integer)",
   "U_FUNC_DEF_RETURN_TYPE_STRING": "string (text)",
-  "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool (true/false)"
+  "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool (true/false)",
+  "U_FUNC_DEF_PARAM_DEFAULT_ADD": "default value (click to show or clear)"
 }
