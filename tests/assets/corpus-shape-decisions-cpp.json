@@ -65,11 +65,6 @@
     "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
   },
   {
-    "type": "concatenated_string",
-    "cause": "該補進語料",
-    "reason": "`\"a\" \"b\"`（相鄰字串自動接起來）。⚠️ **Python 那一維也缺同一個形狀**——兩個語言同時缺，代表這是我寫語料的習慣，不是語言的差別。"
-  },
-  {
     "type": "concept_definition",
     "cause": "語言有而這個工具不做",
     "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
@@ -185,11 +180,6 @@
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
   },
   {
-    "type": "lambda_capture_initializer",
-    "cause": "該補進語料",
-    "reason": "`[x = 1](){}`。我們支援 lambda，而擷取的初始化沒被量過。"
-  },
-  {
     "type": "linkage_specification",
     "cause": "語言有而這個工具不做",
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
@@ -260,11 +250,6 @@
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
   },
   {
-    "type": "optional_parameter_declaration",
-    "cause": "該補進語料",
-    "reason": "`void f(int x = 0);` 的**宣告側**預設值。Python 那側的預設參數早就收了，C++ 這側沒被量過。"
-  },
-  {
     "type": "optional_type_parameter_declaration",
     "cause": "語言有而這個工具不做",
     "reason": "樣板的深水區。這個工具支援的是「用得到 `vector<int>`」那一層，不是寫樣板。"
@@ -285,29 +270,9 @@
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
   },
   {
-    "type": "preproc_elif",
-    "cause": "該補進語料",
-    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
-  },
-  {
-    "type": "preproc_elifdef",
-    "cause": "該補進語料",
-    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
-  },
-  {
-    "type": "preproc_else",
-    "cause": "該補進語料",
-    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
-  },
-  {
     "type": "preproc_function_def",
     "cause": "語言有而這個工具不做",
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
-  },
-  {
-    "type": "preproc_if",
-    "cause": "該補進語料",
-    "reason": "我們有 `cpp:ifdef`／`cpp:ifndef`，而 `#if`／`#else` 從來沒被語料碰過——同一族裡有的量過、有的沒有。"
   },
   {
     "type": "preproc_params",
@@ -316,8 +281,8 @@
   },
   {
     "type": "pure_virtual_clause",
-    "cause": "該補進語料",
-    "reason": "🔴 **我們有 `cpp:method_virtual_pure` 這顆元件**，而語料裡沒有一段 `= 0`——宣告了卻沒有人跑過。"
+    "cause": "文法宣告了而這個版本不產生",
+    "reason": "🔴 **查證（2026-08-23）：裝的這一版 tree-sitter-cpp 不產生這個節點**。`virtual void f() = 0;` 解析出來是 `field_declaration` ＋ `default_value: number_literal`（實測），而 `pure_virtual_clause` 只出現在 `node-types.json` 的宣告裡。\n⚠️ 所以它**補不進語料**：我們支援純虛擬（`cpp:method_virtual_pure` 有語料了），而那個形狀在這一版文法裡叫別的名字。"
   },
   {
     "type": "raw_string_content",
@@ -418,11 +383,6 @@
     "type": "type_requirement",
     "cause": "語言有而這個工具不做",
     "reason": "Concepts（C++20）。教學與競賽都在樣板之前就停了。"
-  },
-  {
-    "type": "union_specifier",
-    "cause": "該補進語料",
-    "reason": "`union`。即使不支援，它也該誠實降級**而被量到**——今天它是「沒人看過」而不是「看過並降級」。"
   },
   {
     "type": "variadic_declarator",

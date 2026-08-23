@@ -53,7 +53,17 @@ import { allComponentDefs } from '../helpers/component-scan'
 import { printReport, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
 
 /** 判定的封閉詞彙——**刻意沒有「還沒想到」**。 */
-type cause = '該補進語料' | '語言有而這個工具不做' | '過時的語法' | '只在降級時出現'
+type cause =
+  | '該補進語料'
+  | '語言有而這個工具不做'
+  | '過時的語法'
+  | '只在降級時出現'
+  // ⚠️ 2026-08-23 加的第五個：**文法的宣告與文法的產出不是同一件事**。
+  //    `pure_virtual_clause` 在 `node-types.json` 裡，而裝的這一版解析
+  //    `virtual void f() = 0;` 產出的是 `field_declaration` ＋ `default_value`
+  //    ——那一格**補不進語料**，而它也不是「我們不做」。
+  //    🔴 沒有這個原因的話，它只能被塞進一個說謊的格子。
+  | '文法宣告了而這個版本不產生'
 interface decision { type: string; cause: cause; reason: string }
 
 const load = (f: string): decision[] =>
@@ -102,6 +112,7 @@ function judge(
       `      刻意不做   ${by('語言有而這個工具不做').length}`,
       `      過時的語法 ${by('過時的語法').length}`,
       `      只在降級時 ${by('只在降級時出現').length}`,
+      `      文法宣告而不產 ${by('文法宣告了而這個版本不產生').length}`,
       `   ⚠️ 還沒判定  ${unjudged.length}  ← 硬性零`,
       ...(unjudged.length > 0 ? ['      ' + unjudged.join('  ')] : []),
       '',

@@ -12,6 +12,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 import { defaultValue } from '../../../interpreter/types'
+import { cppParamDefault } from '../../../languages/cpp/core/executors/param-default'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
 
@@ -79,7 +80,14 @@ export function registerExecute(register: (component: string, executor: Componen
         }
       }
 
-      const val = i < argValues.length ? argValues[i] : defaultValue(param.type.replace('&', '').replace('[]', ''))
+      // 🔴 **少給引數時先看簽名上的預設值**——本來直接退到型別的零值，
+      //    於是 `int add(int a, int b = 10)` 的 `add(1)` 算出 1 而不是 11。
+      const declared = (param as { default?: string }).default
+      const val = i < argValues.length
+        ? argValues[i]
+        : declared
+          ? cppParamDefault(declared)
+          : defaultValue(param.type.replace('&', '').replace('[]', ''))
       ctx.scope.declare(param.name, val)
     }
 

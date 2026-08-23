@@ -4,14 +4,21 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 317,
-    "return 總數": 170
+    "fileCount": 318,
+    "return 總數": 176
   },
   "typeMismatch": 0,
   "missingChild": 20,
   "hits": {
-    "entryCount": 25,
+    "entryCount": 26,
     "details": [
+      {
+        "key": "src/languages/cpp/core/executors/param-default.ts#u109md",
+        "position": "src/languages/cpp/core/executors/param-default.ts:29",
+        "condition": "t === 'nullptr' || t === 'NULL'",
+        "returns": "if (t === 'nullptr' || t === 'NULL') return { type: 'pointer",
+        "shape": "值判斷"
+      },
       {
         "key": "src/components/cpp/address_of/execute.ts#b5q594",
         "position": "src/components/cpp/address_of/execute.ts:29",

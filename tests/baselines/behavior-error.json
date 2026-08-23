@@ -7,8 +7,8 @@
   },
   "corpus": {
     "undecidable": 61,
-    "bothRun": 243,
-    "onlyReferenceRuns": 0,
+    "bothRun": 246,
+    "onlyReferenceRuns": 1,
     "onlyInterpreterRuns": 29,
     "neitherRuns": 8
   },
@@ -23,14 +23,23 @@
         "corpusKey": "#include <iostream> using namespace std; int main() { int x;#v9325h",
         "corpus": "⏎      #include <iostream>⏎      using namespace std;⏎      int main() {⏎        int x;⏎        cout << x << endl;⏎        return 0;⏎      }⏎    ",
         "interpreter": "0⏎",
-        "reference": "38518960⏎"
+        "reference": "-52264784⏎"
       }
     ]
   },
   "gaps": {
-    "gapCount": 0,
-    "byStage": {},
-    "details": []
+    "gapCount": 1,
+    "byStage": {
+      "execute": 1
+    },
+    "details": [
+      {
+        "corpusKey": "#include <iostream> using namespace std; int main() { int y #11x1zga",
+        "corpus": "#include <iostream>⏎using namespace std;⏎⏎int main() {⏎    int y = 5;⏎    auto f = [x = y]() { return x * 2; };⏎    cout << f() << endl;⏎    return 0;⏎}",
+        "stage": "execute",
+        "message": "RUNTIME_ERR_UNDECLARED_VAR: {\"%1\":\"x\"}"
+      }
+    ]
   },
   "onlyOurs": {
     "count": 29,
@@ -45,203 +54,203 @@
         "corpus": "int main",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_27.cpp:1:1: error: main cannot be declared as global variable⏎    1 | int main⏎      | ^⏎/tmp/semorphe-refcc/a94260_27.cpp:1:9: error"
+        "message": "/tmp/semorphe-refcc/a47536_27.cpp:1:1: error: main cannot be declared as global variable⏎    1 | int main⏎      | ^⏎/tmp/semorphe-refcc/a47536_27.cpp:1:9: error"
       },
       {
         "corpusKey": "int main(){ char c = 66; cout << c; }#1vqmikf",
         "corpus": "int main(){ char c = 66; cout << c; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_145.cpp:1:26: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 66; cout << c; }⏎      |                       "
+        "message": "/tmp/semorphe-refcc/a47536_149.cpp:1:26: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 66; cout << c; }⏎      |                       "
       },
       {
         "corpusKey": "int main(){ char c = 'B'; cout << c; }#p61vx3",
         "corpus": "int main(){ char c = 'B'; cout << c; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_146.cpp:1:27: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 'B'; cout << c; }⏎      |                      "
+        "message": "/tmp/semorphe-refcc/a47536_150.cpp:1:27: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 'B'; cout << c; }⏎      |                      "
       },
       {
         "corpusKey": "int main(){ cout << (char)('a' - 32); }#1krq5au",
         "corpus": "int main(){ cout << (char)('a' - 32); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_147.cpp:1:13: error: use of undeclared identifier 'cout'⏎    1 | int main(){ cout << (char)('a' - 32); }⏎      |             ^⏎1 erro"
+        "message": "/tmp/semorphe-refcc/a47536_151.cpp:1:13: error: use of undeclared identifier 'cout'⏎    1 | int main(){ cout << (char)('a' - 32); }⏎      |             ^⏎1 erro"
       },
       {
         "corpusKey": "int main(){ double d = 1.0/3; cout << d; }#5z3vr1",
         "corpus": "int main(){ double d = 1.0/3; cout << d; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_148.cpp:1:31: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0/3; cout << d; }⏎      |                  "
+        "message": "/tmp/semorphe-refcc/a47536_152.cpp:1:31: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0/3; cout << d; }⏎      |                  "
       },
       {
         "corpusKey": "int main(){ double d = 1.0; cout << d; }#vz71zt",
         "corpus": "int main(){ double d = 1.0; cout << d; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_149.cpp:1:29: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0; cout << d; }⏎      |                    "
+        "message": "/tmp/semorphe-refcc/a47536_153.cpp:1:29: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0; cout << d; }⏎      |                    "
       },
       {
         "corpusKey": "int main(){ int n = 1000000; cout << n; }#1kjbcyd",
         "corpus": "int main(){ int n = 1000000; cout << n; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_150.cpp:1:30: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int n = 1000000; cout << n; }⏎      |                   "
+        "message": "/tmp/semorphe-refcc/a47536_154.cpp:1:30: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int n = 1000000; cout << n; }⏎      |                   "
       },
       {
         "corpusKey": "int main(){ try { throw 10; } catch (int e) { cout << e; } }#1uqqh2b",
         "corpus": "int main(){ try { throw 10; } catch (int e) { cout << e; } }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_151.cpp:1:47: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 10; } catch (int e) { cout << e; } }⏎      |"
+        "message": "/tmp/semorphe-refcc/a47536_155.cpp:1:47: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 10; } catch (int e) { cout << e; } }⏎      |"
       },
       {
         "corpusKey": "int main(){ try { throw 2.5; } catch (double e) { cout << e;#1doqpwj",
         "corpus": "int main(){ try { throw 2.5; } catch (double e) { cout << e; } }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_152.cpp:1:51: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 2.5; } catch (double e) { cout << e; } }⏎   "
+        "message": "/tmp/semorphe-refcc/a47536_156.cpp:1:51: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 2.5; } catch (double e) { cout << e; } }⏎   "
       },
       {
         "corpusKey": "int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(#1hh86gb",
         "corpus": "int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end(), 0); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_153.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end("
+        "message": "/tmp/semorphe-refcc/a47536_157.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end("
       },
       {
         "corpusKey": "int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.be#wtaevx",
         "corpus": "int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 100); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_154.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 1"
+        "message": "/tmp/semorphe-refcc/a47536_158.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 1"
       },
       {
         "corpusKey": "class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a;#1rwknvh",
         "corpus": "class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_155.cpp:1:24: error: use of undeclared identifier 'cout'⏎    1 | class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }⏎     "
+        "message": "/tmp/semorphe-refcc/a47536_159.cpp:1:24: error: use of undeclared identifier 'cout'⏎    1 | class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }⏎     "
       },
       {
         "corpusKey": "class A { public: int v; A(int x){ v = x; } }; int main(){ A#wnqx79",
         "corpus": "class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_156.cpp:1:68: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); c"
+        "message": "/tmp/semorphe-refcc/a47536_160.cpp:1:68: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); c"
       },
       {
         "corpusKey": "class A { public: int v = 7; }; int main(){ A a; cout << a.v#1clt6nm",
         "corpus": "class A { public: int v = 7; }; int main(){ A a; cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_157.cpp:1:50: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; }; int main(){ A a; cout << a.v; }⏎    "
+        "message": "/tmp/semorphe-refcc/a47536_161.cpp:1:50: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; }; int main(){ A a; cout << a.v; }⏎    "
       },
       {
         "corpusKey": "struct P { int x = 3; int y = 4; }; int main(){ P p; cout <<#1bug5uf",
         "corpus": "struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << p.y; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_158.cpp:1:54: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << "
+        "message": "/tmp/semorphe-refcc/a47536_162.cpp:1:54: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << "
       },
       {
         "corpusKey": "class A { public: int v = 7; A(int n){ v = n; } }; int main(#idq4yh",
         "corpus": "class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9); cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_159.cpp:1:72: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9"
+        "message": "/tmp/semorphe-refcc/a47536_163.cpp:1:72: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9"
       },
       {
         "corpusKey": "struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",#2zt78t",
         "corpus": "struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; cout << arr[0].n << arr[1].s; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_160.cpp:1:12: error: unknown type name 'string'⏎    1 | struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; co"
+        "message": "/tmp/semorphe-refcc/a47536_164.cpp:1:12: error: unknown type name 'string'⏎    1 | struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; co"
       },
       {
         "corpusKey": "struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; co#1d3nw7x",
         "corpus": "struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a[0].x << a[0].y; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_161.cpp:1:59: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a["
+        "message": "/tmp/semorphe-refcc/a47536_165.cpp:1:59: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a["
       },
       {
         "corpusKey": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]#1oml8n1",
         "corpus": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_162.cpp:1:46: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }⏎    "
+        "message": "/tmp/semorphe-refcc/a47536_166.cpp:1:46: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }⏎    "
       },
       {
         "corpusKey": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(in#1yco2ic",
         "corpus": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i<2;i++) for(int j=0;j<3;j++) s+=a[i][j]; cout << s; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_163.cpp:1:109: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i"
+        "message": "/tmp/semorphe-refcc/a47536_167.cpp:1:109: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i"
       },
       {
         "corpusKey": "int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][#1xomfwx",
         "corpus": "int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_164.cpp:1:37: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }⏎  "
+        "message": "/tmp/semorphe-refcc/a47536_168.cpp:1:37: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }⏎  "
       },
       {
         "corpusKey": "class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a#paheck",
         "corpus": "class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_169.cpp:1:25: error: use of undeclared identifier 'cout'⏎    1 | class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }⏎    "
+        "message": "/tmp/semorphe-refcc/a47536_173.cpp:1:25: error: use of undeclared identifier 'cout'⏎    1 | class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }⏎    "
       },
       {
         "corpusKey": "struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; #zvv8nt",
         "corpus": "struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_170.cpp:1:48: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }⏎      "
+        "message": "/tmp/semorphe-refcc/a47536_174.cpp:1:48: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }⏎      "
       },
       {
         "corpusKey": "#include <iostream> enum Mode { DHT11 = 99 }; int main() { c#8rzira",
         "corpus": "#include <iostream>⏎enum Mode { DHT11 = 99 };⏎int main() { cout << DHT11 << endl; return 0; }⏎",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_217.cpp:3:14: error: use of undeclared identifier 'cout'; did you mean 'std::cout'?⏎    3 | int main() { cout << DHT11 << endl; retur"
+        "message": "/tmp/semorphe-refcc/a47536_221.cpp:3:14: error: use of undeclared identifier 'cout'; did you mean 'std::cout'?⏎    3 | int main() { cout << DHT11 << endl; retur"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int a #bdu9ze",
         "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int a = 12, b = 8;⏎    int g = __gcd(a, b);⏎    cout << \"GCD: \" << g << endl;⏎    return 0;⏎}",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_221.cpp:5:13: error: use of undeclared identifier '__gcd'⏎    5 |     int g = __gcd(a, b);⏎      |             ^⏎1 error generated.⏎"
+        "message": "/tmp/semorphe-refcc/a47536_225.cpp:5:13: error: use of undeclared identifier '__gcd'⏎    5 |     int g = __gcd(a, b);⏎      |             ^⏎1 error generated.⏎"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int re#1p5s1mw",
         "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int result = __gcd(12, 18);⏎    result = __gcd(result, 24);⏎    cout << \"GCD: \" << result << endl;⏎   ",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_222.cpp:4:18: error: use of undeclared identifier '__gcd'⏎    4 |     int result = __gcd(12, 18);⏎      |                  ^⏎/tmp/sem"
+        "message": "/tmp/semorphe-refcc/a47536_226.cpp:4:18: error: use of undeclared identifier '__gcd'⏎    4 |     int result = __gcd(12, 18);⏎      |                  ^⏎/tmp/sem"
       },
       {
         "corpusKey": "#include <iostream> #include <numeric> #include <vector> usi#ocjdti",
         "corpus": "#include <iostream>⏎#include <numeric>⏎#include <vector>⏎using namespace std;⏎int main() {⏎    vector<int> v(5);⏎    iota(v.begin(), v.end(), 1);⏎    int sum = ",
         "refClass": "unclassified",
         "stage": "compile",
-        "message": "In file included from /tmp/semorphe-refcc/a94260_227.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
+        "message": "In file included from /tmp/semorphe-refcc/a47536_231.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
       },
       {
         "corpusKey": "#include <iostream> #include <numeric> using namespace std; #1l17v2t",
         "corpus": "#include <iostream>⏎#include <numeric>⏎using namespace std;⏎int main() {⏎    int x = 15, y = 20;⏎    cout << \"GCD: \" << __gcd(x, y) << endl;⏎    cout << \"LCM: \"",
         "refClass": "unclassified",
         "stage": "compile",
-        "message": "In file included from /tmp/semorphe-refcc/a94260_228.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
+        "message": "In file included from /tmp/semorphe-refcc/a47536_232.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
       },
       {
         "corpusKey": "int main()#ntr74b",
         "corpus": "int main()",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a94260_298.cpp:1:11: error: expected function body after function declarator⏎    1 | int main()⏎      |           ^⏎1 error generated.⏎"
+        "message": "/tmp/semorphe-refcc/a47536_302.cpp:1:11: error: expected function body after function declarator⏎    1 | int main()⏎      |           ^⏎1 error generated.⏎"
       }
     ]
   },

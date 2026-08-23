@@ -4,22 +4,71 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "syntaxComplete": 515,
+    "syntaxComplete": 523,
     "syntaxErrorFragments": 499,
-    "totalChars": 77723
+    "totalChars": 79061
   },
   "residual2": {
-    "charCount": 3,
-    "nodeCount": 1,
-    "ratePercent": 0,
+    "charCount": 357,
+    "nodeCount": 13,
+    "ratePercent": 0.45,
     "details": [
       {
         "raw": "int",
         "downgradeReason": "nonstandard_but_valid"
+      },
+      {
+        "raw": "#if LEVEL > 1⏎const int mode = 1;⏎#elif LEVEL == 1⏎const int mode = 0;⏎#else⏎const int mode = -1;⏎#endif",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "#elif LEVEL == 1⏎const int mode = 0;⏎#else⏎const int mode = -1;",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "#else⏎const int mode = -1;",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "std::endl",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "std",
+        "downgradeReason": "nonstandard_but_valid"
+      },
+      {
+        "raw": "#elifdef SLOW⏎const int mode = 0;⏎#else⏎const int mode = -1;",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "#else⏎const int mode = -1;",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "std::endl",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "std",
+        "downgradeReason": "nonstandard_but_valid"
+      },
+      {
+        "raw": "union Value {⏎    int i;⏎    float f;⏎}",
+        "downgradeReason": "nonstandard_but_valid"
+      },
+      {
+        "raw": "std::endl",
+        "downgradeReason": "(無)"
+      },
+      {
+        "raw": "std",
+        "downgradeReason": "nonstandard_but_valid"
       }
     ],
     "downgradeReason": {
-      "nonstandard_but_valid": 1
+      "nonstandard_but_valid": 5,
+      "(無)": 8
     }
   }
 }

@@ -13,11 +13,14 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const paramStr = paramChildren.map(p => {
         const t = String(p.properties.type ?? 'int')
         const n = String(p.properties.name ?? '')
+        // ⚠️ **預設值要跟著印**——少了它，`f(1)` 這個合法的呼叫會變成「少了引數」
+        const d = String(p.properties.default ?? '')
+        const tail = d ? ` = ${d}` : ''
         if (t.endsWith('[]')) {
           const baseType = t.slice(0, -2)
-          return n ? `${baseType} ${n}[]` : `${baseType}[]`
+          return n ? `${baseType} ${n}[]${tail}` : `${baseType}[]`
         }
-        return n ? `${t} ${n}` : t
+        return n ? `${t} ${n}${tail}` : t
       }).join(', ')
       const body = node.children.body ?? []
       const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`

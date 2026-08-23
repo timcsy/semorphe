@@ -167,5 +167,12 @@
     "signal": "!first → if (!first) return { type: 'bool', value: false }",
     "decision": "合法",
     "reason": "🔴 **這是短路，不是回退**：`10 < x < 20` 的前半不成立時 Python **不算後半**（`0 < f() < 10` 只呼叫 `f()` 一次是同一條規則）。回 `false` 是這個運算式**正確的答案**，不是「判不出來所以給個值」。這顆自己的 `spec.test.ts` 有一條專門釘它。"
+  },
+  {
+    "key": "src/languages/cpp/core/executors/param-default.ts#u109md",
+    "position": "src/languages/cpp/core/executors/param-default.ts:29",
+    "signal": "t === 'nullptr' || t === 'NULL' → if (t === 'nullptr' || t === 'NULL') ret",
+    "decision": "合法",
+    "reason": "**這不是回退，是一格辨識**：這個函式一行一種字面（數字／字元／字串／true／false／nullptr），每一格認出來就回那個值，而**認不得的在最後丟錯**。回退是「認不出來時給一個猜的值」，而這裡認不出來時出聲。"
   }
 ]

@@ -16,7 +16,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "lift": "./lift-pattern.json",
+    "liftStrategy": "./lift-strategy.ts"
   },
   "traits": {
     "forLoopPart": true,

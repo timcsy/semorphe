@@ -36,7 +36,12 @@ function literalOf(raw: string): RuntimeValue {
   if (t === 'None') return { type: 'void', value: null }
   const container = containerLiteralOf(t)
   if (container) return container
-  throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `預設值 ${t}（只認得字面）` })
+  // 🔴 **訊息要說得出修法**——「只認得字面」讓人知道哪裡錯，
+  //    而「改成在函式裡算」才讓人知道**下一步做什麼**。
+  throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+    '%1': `預設值 ${t}（只認得字面：數字／文字／True／False／None／[]／()／{}）——` +
+      '要算出來的預設值請寫 `=None`，再在函式裡判斷',
+  })
 }
 
 /** `[…]`／`(…)`／`{…}`（空的）——認不出來回 `null`，交給上面那一層出聲。 */

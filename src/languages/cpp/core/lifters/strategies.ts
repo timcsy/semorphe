@@ -397,9 +397,17 @@ export function liftParamList(paramList: AstNode | null, _ctx: LiftContext): Sem
   if (!paramList) return []
   const params: SemanticNode[] = []
   for (const p of paramList.namedChildren) {
-    if (p.type === 'parameter_declaration') {
+    // 🔴 **帶預設值的參數是【另一個】節點型別**（`optional_parameter_declaration`），
+    //    而它本來整個被跳過——`int add(int a, int b = 0)` 產回去變成 `int add(int a)`，
+    //    **而主體照樣用 b**：產出的碼編不過。
+    //    ⚠️ 症狀不是報錯：抬升沒有失敗，只是少了一格
+    //    （2026-08-23 由 C++ 語料的形狀覆蓋抓到——那個型別在「沒碰到」裡）。
+    if (p.type === 'parameter_declaration' || p.type === 'optional_parameter_declaration') {
       const { type, name } = parseParamDeclaration(p)
-      params.push(createNode('param_decl', { type, name }))
+      const dflt = p.type === 'optional_parameter_declaration'
+        ? p.childForFieldName('default_value')?.text ?? ''
+        : ''
+      params.push(createNode('param_decl', { type, name, ...(dflt ? { default: dflt } : {}) }))
     }
   }
   return params
@@ -467,15 +475,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const nameNode = fnDecl.childForFieldName('declarator')
       name = nameNode?.text ?? fnDecl.namedChildren[0]?.text ?? 'f'
 
-      const paramList = fnDecl.childForFieldName('parameters')
-      if (paramList) {
-        for (const param of paramList.namedChildren) {
-          if (param.type === 'parameter_declaration') {
-            const { type: pType, name: pName } = parseParamDeclaration(param)
-            paramChildren.push(createNode('param_decl', { type: pType, name: pName }))
-          }
-        }
-      }
+      // 🔴 **這裡本來自己抄了一份「怎麼讀一串參數」**，而同一個檔裡就有
+      //    `liftParamList`——於是帶預設值的參數在**這一條路**上被跳過
+      //    （`int add(int a, int b = 0)` 產回去是 `int add(int a)`，而主體照樣用 `b`）。
+      //    > **同一件事兩份實作，修好的那一份不會讓另一份跟著對。**
+      paramChildren.push(...liftParamList(fnDecl.childForFieldName('parameters'), ctx))
     }
 
     const body = extractBody(bodyNode, ctx)

@@ -1,16 +1,30 @@
-{
-  "id": "cpp_string_literal",
-  "grammar": "tree-sitter-cpp",
-  "astNodeType": "string_literal",
-  "component": {
-    "componentId": "cpp:literal_string"
+[
+  {
+    "id": "cpp_string_literal",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "string_literal",
+    "component": {
+      "componentId": "cpp:literal_string"
+    },
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text",
+        "transform": "stripQuotes"
+      }
+    ]
   },
-  "fieldMappings": [
-    {
-      "semantic": "value",
-      "ast": "$text",
-      "extract": "text",
-      "transform": "stripQuotes"
-    }
-  ]
-}
+  {
+    "id": "cpp_concatenated_string",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "concatenated_string",
+    "component": {
+      "componentId": "cpp:literal_string"
+    },
+    "liftStrategy": "cpp:lift_concatenated_string",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "🔴 **`\"ab\" \"cd\"` 是【一個】字串**——C++ 與 Python 都把相鄰的字面接起來，而跨行的長訊息幾乎都這樣寫。\n🟢 Python 那側 2026-08-22 收了，而 C++ 這一維**同一個形狀缺著**（第五十三條的 C++ 那一維點名）——兩個語言同時缺，代表那是寫語料的習慣，不是語言的差別。"
+  }
+]

@@ -87,10 +87,12 @@
           "childComponent": "param_decl",
           "childFields": {
             "TYPE_{i}": "type",
-            "PARAM_{i}": "name"
+            "PARAM_{i}": "name",
+            "PARAM_DEFAULT_{i}": "default"
           }
         }
       ]
-    }
+    },
+    "_why": "⚠️ **每一格參數有三個欄位**（型別／名字／預設值，2026-08-23 補第三個）：只有前兩個的話 `int add(int a, int b = 10)` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是 `add(1)` 少一個引數。"
   }
 ]

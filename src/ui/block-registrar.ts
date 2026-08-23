@@ -1674,6 +1674,12 @@ export class BlockRegistrar {
         input.appendField(self.createOpenDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
         if (config.withNameField) {
           input.appendField(new Blockly.FieldTextInput(`p${idx}`) as Blockly.Field, `PARAM_${idx}`)
+          // 🔴 **預設值那一格**（2026-08-23）：抬升與產生都收 `int b = 10`，
+          //    而積木上沒有那一格——於是「程式碼→積木→程式碼」把 `= 10` 吃掉，
+          //    而 `f(1)` 從此少一個引數。與另一個語言那顆函式定義的型別註記同一個形狀。
+          //    ⚠️ 這一行**不准提到那個語言的名字**——這個檔有一條護欄在看（P3）。
+          //    ⚠️ **留空 ＝ 沒有預設值**，不是「還沒填」。
+          input.appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_DEFAULT_${idx}`)
         }
         this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
         this.paramCount_++
