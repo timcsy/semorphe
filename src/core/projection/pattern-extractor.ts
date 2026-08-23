@@ -4,7 +4,6 @@ import { createNode } from '../semantic-tree'
 import type { Annotation } from '../types'
 import { resolvePath, resolvePattern } from './common-mappings'
 import { componentWithTrait } from '../component/traits'
-import { readAnnotationFields } from './annotation-fields'
 
 export interface BlockState {
   type: string
@@ -79,7 +78,6 @@ export class PatternExtractor {
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             childrenAsField: explicit.childrenAsField,
-            annotationFields: explicit.annotationFields,
           }
         : derived
       this.extractSpecs.set(blockType, { componentId, mapping })
@@ -163,23 +161,12 @@ export class PatternExtractor {
     // 🔴 **標註要撿回來**（2026-08-23）：渲染那一路把它們放進 `extraState.annotations`，
     //    而這裡原本一個字都沒讀——症狀是**使用者寫的行末註解在「積木→程式碼」之後不見了**。
     //    ⚠️ 不報錯、產出的碼合法，而**他打的字沒了**。
-    //    ⚠️ **宣告了註解欄位的積木，有 slot 的那些由欄位說了算**——包含「一格都沒填」。
-    const fromFields = readAnnotationFields(spec.mapping, block)
     const notes = (block.extraState as { annotations?: Annotation[] } | undefined)?.annotations
-    const carried = (Array.isArray(notes) ? notes : []).filter((a) => !(a.slot && fromFields.owns))
-    const merged = [...carried, ...fromFields.annotations]
-    if (merged.length > 0) node.annotations = merged
-    // 🔴 **註解泡泡也是使用者寫的註解**——而它是沒有 mutation 的積木**唯一**
-    //    帶得動註解的地方（見渲染那一路的說明）。
-    //    ⚠️ 泡泡贏過 `extraState` 裡沒有 slot 的那些：**使用者改的是泡泡**。
+    if (Array.isArray(notes) && notes.length > 0) node.annotations = notes
+    // 🔴 **註解泡泡也是使用者寫的註解**——使用者可以從右鍵選單自己加一個。
+    //    ⚠️ 它贏過 `extraState` 裡那一份：**他改的是泡泡**。
     const bubble = block.icons?.comment?.text?.trim()
-    if (bubble) {
-      const slotted = (node.annotations ?? []).filter((a) => a.slot)
-      node.annotations = [
-        ...slotted,
-        { type: 'comment', text: bubble, position: 'inline' },
-      ]
-    }
+    if (bubble) node.annotations = [{ type: 'comment', text: bubble, position: 'inline' }]
     return node
   }
 

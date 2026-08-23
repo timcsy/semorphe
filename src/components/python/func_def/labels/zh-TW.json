@@ -8,7 +8,5 @@
   "PY_FUNC_DEF_OPT_DEFAULT": "預設值",
   "PL_MUTATOR_TITLE": "參數",
   "PYTHON_FUNC_DEF_RETURNS_MSG": "回傳型別 %1 %2",
-  "PY_FUNC_DEF_OPT_RETURNS": "回傳型別",
-  "PYTHON_FUNC_DEF_NOTE_MSG": "＃ %1 %2",
-  "PY_FUNC_DEF_OPT_NOTE": "顯示註解"
+  "PY_FUNC_DEF_OPT_RETURNS": "回傳型別"
 }

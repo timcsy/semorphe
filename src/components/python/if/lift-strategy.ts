@@ -14,10 +14,8 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
-import { commentSyntax } from '../../../core/comment-syntax'
 
 /** 剝掉註解符號——規則住在語言套件，這裡只借用。 */
-const stripComment = (raw: string): string => commentSyntax().strip(raw)
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -38,15 +36,17 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const elifConds: SemanticNode[] = []
     const elifBodies: SemanticNode[][] = []
     let elseBody: SemanticNode[] = []
-    // 🔴 **`elif …:  # 為什麼` 的註解掛在【子句】上**（2026-08-23）：
-    //    核心那條「與這個語句同一列的子註解」規則只看得到 `if` 那一行
-    //    ——`elif`／`else` 的在子句裡，而**只有這裡知道那是第幾支**。
-    const clauseNotes: { text: string; slot: string }[] = []
-    const noteOf = (clause: any, slot: string): void => {
+    // 🔴 **`elif …:  # 為什麼` 的註解＝那一支區塊裡的第一顆註解積木**（2026-08-23）。
+    //    核心那條規則只看得到 `if` 那一行——`elif`／`else` 的註解在子句裡，
+    //    而**只有這裡知道它屬於哪一支**。
+    const withNote = (clause: any, kids: SemanticNode[]): SemanticNode[] => {
+      const notes: SemanticNode[] = []
       for (const kid of clause.namedChildren as any[]) {
         if (kid.type !== 'comment' || kid.startPosition.row !== clause.startPosition.row) continue
-        clauseNotes.push({ text: stripComment(kid.text), slot })
+        const made = ctx.lift(kid)
+        if (made) notes.push(made)
       }
+      return notes.length > 0 ? [...notes, ...kids] : kids
     }
 
     // 🔴 **`elif_clause` 與 `else_clause` 是 `if_statement` 的【兄弟】，不是遞迴巢狀的。**
@@ -66,12 +66,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         // ⚠️ **一個 elif 的條件認不出來 → 整顆降級**，不要只丟掉那一支。
         // 丟掉一支的話產回去的程式碼**少了一個分支**，而它看起來完全正常。
         if (!c) return null
-        noteOf(kid, `elif:${elifConds.length}`)
         elifConds.push(c)
-        elifBodies.push(body(kid.childForFieldName('consequence')))
+        elifBodies.push(withNote(kid, body(kid.childForFieldName('consequence'))))
       } else if (kid.type === 'else_clause') {
-        noteOf(kid, 'else')
-        elseBody = body(kid.childForFieldName('body'))
+        elseBody = withNote(kid, body(kid.childForFieldName('body')))
       }
     }
 
@@ -97,13 +95,6 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     }
     if (elseBody.length > 0) children.else_body = elseBody
 
-    const made = createNode('python:if', {}, children)
-    if (clauseNotes.length > 0) {
-      made.annotations = [
-        ...(made.annotations ?? []),
-        ...clauseNotes.map((n) => ({ type: 'comment' as const, text: n.text, position: 'inline' as const, slot: n.slot })),
-      ]
-    }
-    return made
+    return createNode('python:if', {}, children)
   })
 }

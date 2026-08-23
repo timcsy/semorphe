@@ -44,9 +44,22 @@ describe('Python 的註解在來回一趟之後還在', () => {
     }
   })
 
+  it('🔴 標頭的註解落在【區塊裡的第一句】——它是一顆真的註解積木', async () => {
+    // 使用者 2026-08-23：「用灰色註解積木就好」「一般的 statement 註解在上面，
+    // 而對於結構，註解在區塊內」——理由是**讓學生比較容易看到註解**。
+    expect((await roundTrip('if a != 0:  # 為什麼\n    x = 1\n')).trim())
+      .toBe('if a != 0:\n    # 為什麼\n    x = 1')
+  })
+
+  it('🔴 一般語句的行末註解落在【它上面那一行】', async () => {
+    expect((await roundTrip('x = 1  # 起始值\n')).trim()).toBe('# 起始值\nx = 1')
+  })
+
   it('🔴 `elif`／`else` 的標頭——它們掛在【子句】上，只有那顆元件知道是第幾支', async () => {
     const code = 'if r > 0:  # 大於\n    x = 1\nelif r == 0:  # 等於\n    x = 2\nelse:  # 小於\n    x = 3\n'
     expect(await keepsComments(code)).toEqual([])
+    expect((await roundTrip(code)).trim(), '每一支的註解要落在【那一支的區塊裡】')
+      .toBe('if r > 0:\n    # 大於\n    x = 1\nelif r == 0:\n    # 等於\n    x = 2\nelse:\n    # 小於\n    x = 3')
   })
 
   it('🔴 `elif` 的主體**不只一行**——這一條釘的是【程式碼】不是註解', async () => {
@@ -59,7 +72,6 @@ describe('Python 的註解在來回一趟之後還在', () => {
   it('🔴 `except`／`else`／`finally` 的標頭——與 `elif` 同一種形狀', async () => {
     const code = 'try:  # 試\n    x = 1\nexcept ValueError:  # 錯了\n    x = 2\nelse:  # 沒事\n    x = 3\nfinally:  # 收尾\n    x = 4\n'
     expect(await keepsComments(code), '只補了 `if` 那一種的話，這一種還是掉的').toEqual([])
-    expect((await roundTrip(code)).trim()).toBe(code.trim())
   })
 
   it('🔴 降級的那一顆【不准】把註解印兩次——`class A:  # 類別`', async () => {

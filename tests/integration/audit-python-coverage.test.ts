@@ -104,6 +104,25 @@ interface Baseline {
  */
 const NONDETERMINISTIC = new Set(['import 與模組'])
 
+/**
+ * **不比對「來回一字不差」的語料**——具名，附理由。
+ *
+ * 🔴 **行末註解會被搬到自己一行**（2026-08-23，使用者決定的投影形式）：
+ *
+ * ```
+ * x = 1  # 起始值   →   # 起始值
+ *                       x = 1
+ * ```
+ *
+ * 理由是使用者原話：「用**灰色註解積木**就好」「這樣的原因是
+ * **可以讓學生比較容易看到註解**，對學習更有幫助。」
+ * 一顆看得到、拖得動的積木，換掉一個藏在狀態裡的欄位——而代價就是這一條。
+ *
+ * ⚠️ **具名而不是放寬判準**（`history/018`：靠規則順便放過＝用宣告刷數字）：
+ * 這裡少一段比對，就要在這裡看得到是哪一段、為什麼。
+ */
+const COMMENT_REFLOW = new Set(['註解與 pass'])
+
 const isDegraded = (id: string): boolean =>
   id === 'unresolved' || id.endsWith(':raw_code') || id.endsWith(':raw_expression')
 
@@ -211,7 +230,7 @@ async function measure(corpus: readonly (readonly [string, string])[]): Promise<
       }
     }
 
-    if (norm(generatePython(tree)) !== norm(code)) {
+    if (!COMMENT_REFLOW.has(name) && norm(generatePython(tree)) !== norm(code)) {
       r.roundTripDiff++
       const a = norm(code).split('\n'), b = norm(generatePython(tree)).split('\n')
       for (let i = 0; i < Math.max(a.length, b.length); i++) {

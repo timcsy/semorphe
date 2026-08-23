@@ -297,24 +297,9 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     }
   }
 
-  // 🔴 **接在第一行的那些**（`if a:  # 為什麼`）——2026-08-23。
-  //    它們原本整個被丟掉：核心只認得「接在整段尾巴」，而一顆 `if` 的
-  //    尾巴是 `else` 底下那一行——**接在那裡是錯的，所以當初選擇不接**。
-  if (node.annotations?.length) {
-    const header = node.annotations.filter((a) => a.slot === 'header')
-    if (header.length > 0) {
-      const cs = commentSyntax()
-      const lines = result.split('\n')
-      lines[0] = cs.trailing(lines[0].trimEnd(), header.map((a) => a.text).join('; '))
-      result = lines.join('\n')
-    }
-  }
-
   // Append inline annotations as trailing comments
   if (node.annotations?.length) {
-    // ⚠️ **有 `slot` 的不接在這裡**——那是「某一行」的標註，
-    //    由核心的第一行規則或那顆元件自己的產生器負責。
-    const inlineComments = node.annotations.filter(a => a.position === 'inline' && !a.slot)
+    const inlineComments = node.annotations.filter(a => a.position === 'inline')
     if (inlineComments.length > 0) {
       const commentText = inlineComments.map(a => a.text).join('; ')
       // Insert trailing comment before the final newline

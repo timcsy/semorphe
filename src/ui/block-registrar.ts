@@ -611,6 +611,7 @@ export class BlockRegistrar {
     //    ⚠️ 放在這裡而不是每一顆各自處理：**一條規則只寫一次**，
     //    而往後新增的 mutation 積木自動涵蓋。
     for (const type of Object.keys(Blockly.Blocks)) preserveForeignExtraState(Blockly.Blocks[type])
+
   }
 
   private registerDynamicBlocks(): void {

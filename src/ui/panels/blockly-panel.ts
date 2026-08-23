@@ -1340,19 +1340,13 @@ export class BlocklyPanel implements ViewHost {
         }
       }
 
-      // Annotation 視覺
+      // Annotation 視覺——`extraState` 帶進來的註解灌進泡泡
       const annotations = extra.annotations as Annotation[] | undefined
       if (annotations?.length) {
-        // 🔴 **有 `slot` 的不進註解泡泡**（2026-08-23）：那是「某一行」的註解
-        //    （`if …:  # 為什麼`），它跟著 `extraState` 走並由那顆元件放回原位。
-        //    ⚠️ 兩條路都放的話，抽取那一路會**再認一次**，於是同一句註解
-        //    **重複出現、而且跑到整段的最後一行**。
         const inlineTexts = annotations
-          .filter(a => (a.position === 'inline' || a.position === 'after') && !a.slot)
+          .filter(a => a.position === 'inline' || a.position === 'after')
           .map(a => a.text)
-        if (inlineTexts.length > 0) {
-          block.setCommentText(inlineTexts.join('\n'))
-        }
+        if (inlineTexts.length > 0) block.setCommentText(inlineTexts.join('\n'))
       }
     }
   }

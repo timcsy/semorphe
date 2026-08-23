@@ -1,4 +1,3 @@
-import { commentSyntax } from '../comment-syntax'
 import type { SyntaxGap } from '../diagnostics'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
@@ -311,21 +310,31 @@ export class Lifter {
     for (const node of nodes) {
       if (!node.isNamed) continue
 
-      // Handle comment nodes: attach as annotation or standalone
-      if (node.type === 'comment') {
-        const prev = results.length > 0 ? results[results.length - 1] : null
-        // Same row as previous → inline annotation
-        if (prev && node.startPosition.row === (prev.metadata?.sourceRange?.endLine ?? -1)) {
-          if (!prev.annotations) prev.annotations = []
-          prev.annotations.push({
-            type: 'comment',
-            // 剝除註解符號的規則已搬進語言套件——核心不該知道 `//` 長什麼樣
-            text: commentSyntax().strip(node.text),
-            position: 'inline',
-          })
+      // 🔴 **行末註解＝一顆擺在它上面的註解積木**（2026-08-23，使用者決定的形式）。
+      //
+      // ```
+      // x = 1  # 起始值        貼進來
+      // ─────────────────
+      // # 起始值               轉回去（註解自己一行）
+      // x = 1
+      // ```
+      //
+      // 在此之前它是 `prev` 身上的一個 `annotation`——**存得住，而積木上看不到**。
+      // 使用者：「我的意思是**用灰色註解積木就好**」、
+      // 「這樣的原因是**可以讓學生比較容易看到註解**，對學習更有幫助。」
+      //
+      // > **一顆看得到、拖得動的積木，勝過一個藏在狀態裡的欄位。**
+      //
+      // ⚠️ 代價說在明處：**行末註解會被搬到自己一行**，不再一字不差
+      //    （語料護欄裡有一條具名豁免記著這件事）。
+      if (node.type === 'comment' && results.length > 0) {
+        const prev = results[results.length - 1]
+        if (node.startPosition.row === (prev.metadata?.sourceRange?.endLine ?? -1)) {
+          const made = this.liftWithContext(node, contextData)
+          // ⚠️ **插在 `prev` 前面**，不是後面——它說的是 `prev` 那一行
+          if (made) results.splice(results.length - 1, 0, made)
           continue
         }
-        // Otherwise → standalone comment node (handled by pattern lifter or fallback)
       }
 
       const lifted = this.liftWithContext(node, contextData)
@@ -361,7 +370,7 @@ export class Lifter {
       // ⚠️ 判準是**同一列**，不是「第幾個子節點」：
       // `if a:  # x` 的註解與 `if` 同列，而 `else` 子句裡的註解不是
       // （那一支由那顆元件自己的策略處理，因為只有它知道那是第幾支）。
-      this.attachHeaderComments(node, lifted)
+      this.attachHeaderComments(node, lifted, contextData)
 
       if (lifted.componentId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
@@ -375,34 +384,33 @@ export class Lifter {
   }
 
   /**
-   * 把「與這個語句同一列的子註解」接到它身上（`slot: 'header'`）。
+   * 結構的標頭註解（`if a:  # 為什麼`）——**擺進它的區塊裡當第一句**。
    *
-   * ⚠️ **只看直接子節點**：孫節點裡的註解屬於它自己那一行，
-   * 而那一行由它自己的語句去接。
+   * ```
+   * if a:  # 為什麼        貼進來
+   * ─────────────────
+   * if a:                 轉回去
+   *     # 為什麼           ← 區塊裡的第一句，一顆真的註解積木
+   *     x = 1
+   * ```
+   *
+   * 使用者原話：「一般的 statement，註解在上面；而對於結構，註解在區塊內。」
+   *
+   * ⚠️ **只看直接子節點**：孫節點裡的註解屬於它自己那一行。
+   * ⚠️ **降級的那一顆不處理**——它的原文逐字留著，註解已經在裡面了。
    */
-  private attachHeaderComments(node: AstNode, lifted: SemanticNode): void {
-    const row = node.startPosition.row
-    // ⚠️ **那顆元件自己接過了就不要再接一次**（`class A:  # 類別` 曾經產出
-    //    `# 類別  # 類別`）——具名策略比這裡更懂自己的標頭在哪一行。
-    if ((lifted.annotations ?? []).some((a) => a.slot === 'header')) return
-    // 🔴 **降級的那一顆逐字保留原文，註解已經在裡面了**——再接一次的症狀是
-    //    `class A:  # 類別  # 類別`（`class` 的標頭註解會讓整顆走降級：
-    //    註解在 `block` 裡，而那顆策略只收方法與屬性）。
-    //    ⚠️ **降級的身分有兩種**（`raw_code`／`unresolved`），漏掉哪一種的
-    //    症狀都是同一句話印兩次。
-    //    ⚠️ 而判準**不能寫成「原文裡有沒有它」**——`metadata.rawCode` 每一顆
-    //    節點都有（那是它的原文範圍），於是 `try:  # 試` 會被自己吃掉。
+  private attachHeaderComments(node: AstNode, lifted: SemanticNode, ctx: LiftContextData): void {
     if (lifted.componentId === 'raw_code' || lifted.componentId === 'unresolved') return
+    const body = lifted.children.body
+    if (!body) return
+    const row = node.startPosition.row
+    const notes: SemanticNode[] = []
     for (const kid of node.namedChildren) {
       if (kid.type !== 'comment' || kid.startPosition.row !== row) continue
-      if (!lifted.annotations) lifted.annotations = []
-      lifted.annotations.push({
-        type: 'comment',
-        text: commentSyntax().strip(kid.text),
-        position: 'inline',
-        slot: 'header',
-      })
+      const made = this.liftWithContext(kid, ctx)
+      if (made) notes.push(made)
     }
+    if (notes.length > 0) lifted.children.body = [...notes, ...body]
   }
 
   /** Determine why a node was degraded to raw_code */

@@ -163,19 +163,9 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
   if (annotations?.length) extra.annotations = annotations
   block.extraState = extra
 
-  // 🔴 **使用者寫的註解要進註解泡泡，不能只放在 `extraState`**（2026-08-23）。
-  //
-  // 沒有 mutation 的積木**根本沒有 `extraState` 這條路**——Blockly 只在積木
-  // 自己實作 `save/loadExtraState` 時才理它。症狀：
-  //
-  // ```python
-  // return 3.14 * r * r  # 公式     貼進來
-  // return 3.14 * r * r             按一下「積木→程式碼」，註解不見了
-  // ```
-  //
-  // ⚠️ **有 `slot` 的不放**（`if …:  # 為什麼`）——那是「某一行」的註解，
-  //    而泡泡是整顆積木的；它們走 `extraState`（那些積木都有 mutation）。
-  const plain = (annotations ?? []).filter((a) => a.type === 'comment' && !a.slot).map((a) => a.text)
+  // 🔴 **使用者從右鍵選單加的註解走泡泡**——而**行末註解不走這裡**：
+  //    它在抬升那一路就變成一顆自己的註解積木了（見 `lift/lifter.ts`）。
+  const plain = (annotations ?? []).filter((a) => a.type === 'comment').map((a) => a.text)
   if (plain.length > 0) {
     block.icons = { ...(block.icons ?? {}), comment: { text: plain.join('; '), pinned: false } }
   }

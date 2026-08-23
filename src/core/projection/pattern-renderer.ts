@@ -1,5 +1,3 @@
-import { fillAnnotationFields } from './annotation-fields'
-import type { BlockState as ExtractBlockState } from './pattern-extractor'
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic, FormSet } from '../types'
 import { applyBlockOverride } from '../block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
@@ -83,7 +81,6 @@ export class PatternRenderer {
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             childrenAsField: explicit.childrenAsField,
-            annotationFields: explicit.annotationFields,
           }
         : derived
       // ⚠️ **第一個宣告勝出，後來的不覆寫。**
@@ -216,9 +213,6 @@ export class PatternRenderer {
       const text = serializeChildren(node.children[spec.childSlot] ?? [], spec)
       if (text !== null) block.fields[spec.field] = text
     }
-
-    // 有宣告欄位的標頭註解寫進欄位（`extraState` 那一份照舊，擷取端會擇一）
-    fillAnnotationFields(formMapping, node, block as unknown as ExtractBlockState)
 
     // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty
     if (formMapping.extraStateFlags) {

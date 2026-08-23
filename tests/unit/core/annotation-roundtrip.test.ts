@@ -123,37 +123,39 @@ patternLifter.setGrammar('tree-sitter-cpp')
     })
   })
 
-  describe('行尾註解', () => {
-    it('should attach inline comment as annotation on previous sibling', () => {
+  describe('行尾註解＝擺在它上面的一顆註解積木', () => {
+    /**
+     * 🔴 **2026-08-23 換了形式**：以前它是前一句身上的 `annotation`
+     * ——存得住，而**積木上看不到**。使用者：「用灰色註解積木就好」、
+     * 「這樣的原因是**可以讓學生比較容易看到註解**，對學習更有幫助。」
+     *
+     * > **一顆看得到、拖得動的積木，勝過一個藏在狀態裡的欄位。**
+     */
+    it('前一句的行末註解變成一顆註解節點，而且排在它【前面】', () => {
       setup()
-      // Simulate: x = 1; // set x  (same row)
+      // x = 1; // set x  （同一列）
       const stmtNode = mockNodeAt('number_literal', '42', 0, 0)
       const commentNode = mockNodeAt('comment', '// set x', 0, 10)
 
-      const data = new LiftContextData()
       const results = lifter.liftStatements([stmtNode, commentNode])
-      // Should be 1 node with an annotation (comment absorbed)
-      expect(results.length).toBe(1)
-      expect(results[0].annotations).toBeDefined()
-      expect(results[0].annotations!.length).toBe(1)
-      expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('set x')
+      expect(results.length, '註解自己是一顆節點，不再被吸收成標註').toBe(2)
+      expect(results[0].componentId, '它說的是下一行——所以排在前面').toBe('cpp:comment')
+      // ⚠️ 這支測試自組的 lifter 沒有註冊剝除註解符號的轉換——所以比內容不比形式
+      expect(String(results[0].properties.text)).toContain('set x')
+      expect(results[1].annotations ?? [], '不可以兩邊都留一份').toEqual([])
     })
   })
 
   describe('raw_code 節點上的行尾註解', () => {
-    it('should attach inline comment as annotation even on raw_code nodes', () => {
+    it('降級的那一句也一樣——註解是它上面的一顆節點', () => {
       setup()
-      // Unknown node + inline comment on same row
       const unknownNode = mockNodeAt('co_await_expression', 'co_await x', 0, 0)
       const commentNode = mockNodeAt('comment', '// lambda', 0, 10)
 
       const results = lifter.liftStatements([unknownNode, commentNode])
-      expect(results.length).toBe(1)
-      expect(results[0].componentId).toBe('raw_code')
-      expect(results[0].annotations).toBeDefined()
-      expect(results[0].annotations![0].position).toBe('inline')
-      expect(results[0].annotations![0].text).toBe('lambda')
+      expect(results.length).toBe(2)
+      expect(results[0].componentId).toBe('cpp:comment')
+      expect(results[1].componentId).toBe('raw_code')
     })
   })
 })
