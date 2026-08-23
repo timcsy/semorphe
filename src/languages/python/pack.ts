@@ -12,6 +12,10 @@ import { declareDegradationBlocks } from '../../core/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
 import { declareExpressionStatement } from '../../core/expression-statement'
 import { declareBuiltinConstants } from '../../core/language-executors'
+// ⚠️ 下拉的**選項來源**是一個中立的登記處（那個模組一個語言的字都不認識），
+//    而**選項本身是語言的知識**——所以宣告在這裡。
+import { declareDropdownSource } from '../../ui/dynamic-dropdown-field'
+import * as Blockly from 'blockly'
 import { PYTHON_GLOBALS } from './builtins'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
@@ -38,6 +42,39 @@ declareExpressionStatement('python', { suffix: '', allowedAtTopLevel: true })
 // 🔴 **`__name__` 是 `"__main__"`**——`if __name__ == "__main__":` 是 AI 生的
 //    Python 幾乎必有的一行，而少了這個名字整段會說「沒有這個變數」。
 declareBuiltinConstants(PYTHON_GLOBALS)
+
+/**
+ * **型別註記的下拉選單**——`def f(x: int) -> str` 的那幾個字。
+ *
+ * 🔴 **為什麼是下拉不是文字框**：使用者回報「型別要留的話要可以列表選，
+ * 像 C++ 那邊的積木那樣」。一個文字框把「有哪幾種型別」這件事**留給學生去記**，
+ * 而那正是積木要替他省掉的東西。
+ *
+ * ⚠️ **而它必須收得下不在清單裡的字**（`Dog`、`list[int]`）——
+ * 動態下拉那顆欄位的既有行為就是「認不得的值加進選項，不換掉它」：
+ *
+ * > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
+ *
+ * 🟢 **宣告在這裡而不是 `block-registrar`**：那個檔有一條護欄盯著
+ * 「加一顆這個語言的積木不准動它」（P3）。語言自己的清單，語言自己說。
+ */
+declareDropdownSource('python_types', () => {
+  const msg = (key: string, fallback: string): string => Blockly.Msg[key] || fallback
+  return [
+    // ⚠️ 第一筆是**清掉註記**——沒有它的話，選過之後就取消不掉了
+    [msg('PY_TYPE_NONE_GIVEN', '（不指定）'), ''],
+    ['int', 'int'],
+    ['float', 'float'],
+    ['str', 'str'],
+    ['bool', 'bool'],
+    ['list', 'list'],
+    ['dict', 'dict'],
+    ['tuple', 'tuple'],
+    ['set', 'set'],
+    // ⚠️ `None` 主要用在回傳（`-> None`），而參數上也合法
+    ['None', 'None'],
+  ]
+})
 import pythonBeginnerTopic from './topics/python-beginner.json'
 import pythonTargetDef from './targets/python.json'
 import pythonPreset from './styles/python.json'
