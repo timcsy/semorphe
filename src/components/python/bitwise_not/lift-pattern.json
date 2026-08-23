@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_bitwise_not",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "unary_operator",
+    "patternType": "operatorDispatch",
+    "operatorDispatch": {
+      "operatorField": "operator",
+      "routes": { "~": "python:bitwise_not" },
+      "fieldMappings": [
+        { "semantic": "operand", "ast": "argument", "extract": "lift" }
+      ]
+    },
+    "component": { "componentId": "python:bitwise_not" },
+    "fieldMappings": [],
+    "priority": 10,
+    "_why": "⚠️ **只路由 `~`**。同一個節點型別的 `-` 由取負那顆接走，而 `+`（無意義）**沒有路由 → 誠實降級**。"
+  }
+]

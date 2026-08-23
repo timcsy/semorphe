@@ -954,6 +954,10 @@
       "files": 4,
       "dirs": 1
     },
+    "python:bitwise_not": {
+      "files": 3,
+      "dirs": 1
+    },
     "python:break": {
       "files": 3,
       "dirs": 1

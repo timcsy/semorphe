@@ -1,0 +1,4 @@
+{
+  "PY_BITWISE_NOT_MSG0": "flip every bit of %1",
+  "PY_BITWISE_NOT_TOOLTIP": "Turns every 0 bit into 1 and every 1 into 0. The result equals minus-itself-minus-one (~5 is -6)."
+}

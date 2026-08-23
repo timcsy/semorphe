@@ -280,6 +280,11 @@
     "reason": "`assert_statement` 底下的訊息那一段可有可無，判別要跑真邏輯。⚠️ 接點（`condition`／`value`）由這顆自己的 `spec.test.ts` 釘住，含「沒有訊息時不得產出一個逗號」與「訊息是一個運算式」。"
   },
   {
+    "componentId": "python:bitwise_not",
+    "cause": "語料沒覆蓋",
+    "reason": "2026-08-23（同一族的最後一個運算子）。與其餘 Python 元件同一條理由：這條護欄的語料是 C++ 的，碰不到 Python。⚠️ 接點由這顆自己的 `spec.test.ts` 釘住。"
+  },
+  {
     "componentId": "python:break",
     "cause": "語料沒覆蓋",
     "reason": "spec 170。與其餘 Python 元件同一條理由：這條護欄的語料是 C++ 的，碰不到 Python。\n🔴 **它是盲測抓到的缺口**（2026-08-21，`fuzz_05`／`fuzz_07`）：在它存在之前，`break` 降級成灰色積木，而**執行到那顆積木時整支程式中止**。\n> 一個誠實的降級，在【執行】那一路上仍然是一個中止。\n🟢 它沒有接點，正確性由自證測釘（含「在 for 迴圈裡也接得住」）。"

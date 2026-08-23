@@ -1,0 +1,19 @@
+[
+  {
+    "id": "python_bitwise_not",
+    "componentId": "python:bitwise_not",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_bitwise_not",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_BITWISE_NOT_MSG0}",
+      "args0": [{ "type": "input_value", "name": "OPERAND", "check": "Expression" }],
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_BITWISE_NOT_TOOLTIP}"
+    },
+    "renderMapping": { "fields": {}, "inputs": { "OPERAND": "operand" } }
+  }
+]

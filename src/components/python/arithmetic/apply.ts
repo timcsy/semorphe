@@ -150,6 +150,16 @@ export function applyPythonBinary(
   // ⚠️ **同一個符號在整數上是位元運算**（`5 & 3` ＝ 1）——集合那一段在上面先接走了。
   //    🔴 兩種意思一個符號是 Python 自己的設計，而抬升的時候看得到的只有形狀
   //    ——所以分岔一定在**執行期**，不可能在 lift。
+  if (op === '<<' || op === '>>') {
+    // ⚠️ **移位只在整數上有意義**（集合沒有「移位」這件事，所以不必先分岔）
+    if (!bothInt) {
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': `${op} 只能用在兩個整數上` })
+    }
+    if (b < 0) throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': '移位的位數不能是負的' })
+    // 🔴 **不用 JS 的 `<<`**：它先把數字截成 32 位元，而 Python 的整數沒有位寬
+    //    ——`1 << 40` 在 JS 的 `<<` 底下會變成 256。
+    return { type: 'int', value: op === '<<' ? a * 2 ** b : Math.floor(a / 2 ** b) }
+  }
   if (op === '&' || op === '|' || op === '^') {
     if (!bothInt) {
       throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {

@@ -795,4 +795,11 @@ print(xs.pop(0), xs)
 words = ["bbb", "a", "cc"]
 words.sort(key=len, reverse=True)
 print(words)`],
+  ['位元運算', `x = 5
+print(~x, x << 2, x >> 1)
+print(x & 3, x | 3, x ^ 3)
+flags = 0
+for bit in [1, 4]:
+    flags |= bit
+print(flags, flags & 4 != 0)`],
 ]

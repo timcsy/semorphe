@@ -119,7 +119,8 @@
               "python:container_any",
               "python:type_is",
               "python:math_divmod",
-              "python:with"
+              "python:with",
+              "python:bitwise_not"
             ],
             "children": []
           }
