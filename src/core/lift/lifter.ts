@@ -382,6 +382,17 @@ export class Lifter {
    */
   private attachHeaderComments(node: AstNode, lifted: SemanticNode): void {
     const row = node.startPosition.row
+    // ⚠️ **那顆元件自己接過了就不要再接一次**（`class A:  # 類別` 曾經產出
+    //    `# 類別  # 類別`）——具名策略比這裡更懂自己的標頭在哪一行。
+    if ((lifted.annotations ?? []).some((a) => a.slot === 'header')) return
+    // 🔴 **降級的那一顆逐字保留原文，註解已經在裡面了**——再接一次的症狀是
+    //    `class A:  # 類別  # 類別`（`class` 的標頭註解會讓整顆走降級：
+    //    註解在 `block` 裡，而那顆策略只收方法與屬性）。
+    //    ⚠️ **降級的身分有兩種**（`raw_code`／`unresolved`），漏掉哪一種的
+    //    症狀都是同一句話印兩次。
+    //    ⚠️ 而判準**不能寫成「原文裡有沒有它」**——`metadata.rawCode` 每一顆
+    //    節點都有（那是它的原文範圍），於是 `try:  # 試` 會被自己吃掉。
+    if (lifted.componentId === 'raw_code' || lifted.componentId === 'unresolved') return
     for (const kid of node.namedChildren) {
       if (kid.type !== 'comment' || kid.startPosition.row !== row) continue
       if (!lifted.annotations) lifted.annotations = []

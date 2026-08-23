@@ -37,9 +37,18 @@
         "elseInput": "ELSE_BODY",
         "elseLabelKey": "PYTHON_IF_ELSE",
         "elseLabelFallback": "否則",
-        "containerLabelKey": "PYTHON_IF_MSG0",
+        "containerLabelKey": "PYTHON_IF_MUTATOR_TITLE",
         "containerLabelFallback": "如果",
-        "colour": "#FFAB19"
+        "colour": "#FFAB19",
+        "notes": {
+          "headerInput": "BODY",
+          "headerField": "IF_NOTE",
+          "elifPattern": "ELIF_NOTE_{i}",
+          "elseField": "ELSE_NOTE",
+          "marker": "＃",
+          "toggleLabelKey": "PYTHON_IF_SHOW_NOTES",
+          "toggleLabelFallback": "顯示註解"
+        }
       }
     },
     "renderMapping": {
@@ -65,7 +74,12 @@
           "inputPattern": "ELIF_BODY_{i}",
           "isStatementInput": true
         }
-      ]
+      ],
+      "annotationFields": {
+        "IF_NOTE": "header",
+        "ELIF_NOTE_{i}": "elif:{i}",
+        "ELSE_NOTE": "else"
+      }
     },
     "_why": "🔴 **`branchList`：可增減的成對插槽 ＋ 一個可有可無的尾巴**（spec 169）。\n\n⚠️ extraState 的鍵沿用命令式那份（`elseifCount`／`hasElse`）——**那是刻意的**：這個建構子的下一個消費者是 `cpp_if`（vision 記著的那 10 筆之一），換一個鍵名等於讓那顆退不了場。\n\n⚠️ 兩條 `dynamicRules` **共用同一個 `countSource`**：條件與語句同進同出。\n\n🔴 **互動與 C++ 那顆一致**（使用者 2026-08-21：「請你做的跟 C++ 那邊一致」）：`+`／`−` 加減 elif，而 **else 走齒輪 mutator**（三顆小積木 ＋ `compose`／`decompose`）。\n⚠️ 第一版用一顆「E」按鈕開關 else——**兩個語言的同一顆積木，互動方式不該不一樣**。\n> **一致性不是美觀問題：學生在兩個語言之間切換時，手勢不同等於要重學一次同一個概念。**"
   }

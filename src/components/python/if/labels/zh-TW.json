@@ -3,5 +3,7 @@
   "PYTHON_IF_THEN": "則",
   "PYTHON_IF_ELIF": "否則，如果",
   "PYTHON_IF_ELSE": "否則",
-  "PYTHON_IF_TOOLTIP": "條件成立時做裡面的事。按 + 加一個「否則，如果」，按 E 加「否則」"
+  "PYTHON_IF_TOOLTIP": "條件成立時做裡面的事。按 + 加一個「否則，如果」，按 E 加「否則」",
+  "PYTHON_IF_SHOW_NOTES": "顯示註解",
+  "PYTHON_IF_MUTATOR_TITLE": "如果"
 }

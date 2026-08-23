@@ -8,5 +8,7 @@
   "PY_FUNC_DEF_OPT_DEFAULT": "default",
   "PL_MUTATOR_TITLE": "parameters",
   "PYTHON_FUNC_DEF_RETURNS_MSG": "returns %1 %2",
-  "PY_FUNC_DEF_OPT_RETURNS": "return type"
+  "PY_FUNC_DEF_OPT_RETURNS": "return type",
+  "PYTHON_FUNC_DEF_NOTE_MSG": "# %1 %2",
+  "PY_FUNC_DEF_OPT_NOTE": "Show note"
 }

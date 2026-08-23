@@ -23,6 +23,12 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftLoopFor', (node, ctx) => {
+    // 🔴 **`for … else:` 整顆走誠實降級**（2026-08-23）——這一段以前是
+    //    **安靜地丟掉**：`else` 那一段程式碼在來回一趟之後消失，而產出的碼合法。
+    //    ⚠️ 那不是註解掉了，那是**整段程式碼掉了**（與 `class` 的規矩同一條：
+    //    收一半會產出一個合法而行為不同的程式）。
+    if (node.childForFieldName('alternative')) return null
+
     const left = node.childForFieldName('left')
     const right = node.childForFieldName('right')
     const body = node.childForFieldName('body')

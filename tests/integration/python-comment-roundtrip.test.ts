@@ -56,6 +56,30 @@ describe('Python 的註解在來回一趟之後還在', () => {
     expect(out.trim()).toBe(code.trim())
   })
 
+  it('🔴 `except`／`else`／`finally` 的標頭——與 `elif` 同一種形狀', async () => {
+    const code = 'try:  # 試\n    x = 1\nexcept ValueError:  # 錯了\n    x = 2\nelse:  # 沒事\n    x = 3\nfinally:  # 收尾\n    x = 4\n'
+    expect(await keepsComments(code), '只補了 `if` 那一種的話，這一種還是掉的').toEqual([])
+    expect((await roundTrip(code)).trim()).toBe(code.trim())
+  })
+
+  it('🔴 降級的那一顆【不准】把註解印兩次——`class A:  # 類別`', async () => {
+    const code = 'class A:  # 類別\n    pass\n'
+    // 標頭註解讓這顆類別整顆降級（註解在 `block` 裡），而降級保留的是**原文**
+    // ——核心再接一次的症狀是 `# 類別  # 類別`。
+    expect((await roundTrip(code)).trim()).toBe(code.trim())
+  })
+
+  it('🔴 `for … else:` 與 `while … else:` 整段【不准】安靜消失', async () => {
+    for (const code of [
+      'for i in xs:  # 走\n    pass\nelse:  # 沒斷\n    pass\n',
+      'while a:  # 迴圈\n    a = 0\nelse:  # 正常結束\n    pass\n',
+    ]) {
+      // ⚠️ 這一條釘的是【程式碼】不是註解：那兩顆元件沒有地方放 `else`，
+      //    而在此之前它們**安靜地丟掉它**——產出的碼合法、少了一段。
+      expect((await roundTrip(code)).trim(), code).toBe(code.trim())
+    }
+  })
+
   it('★ 使用者回報的那一段（一元二次方程式）——每一句註解都要在', async () => {
     const code = `if a != 0:      # 如果 a 不等於 0
     r = b**2 - 4*a*c      # 計算開根號內的數值

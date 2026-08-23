@@ -365,6 +365,22 @@ export interface FormSet {
 }
 
 export interface RenderMapping {
+  /**
+   * **哪一格欄位裝哪一行的註解**（2026-08-23）——`欄位名 → slot`。
+   *
+   * ```json
+   * "annotationFields": { "IF_NOTE": "header", "ELIF_NOTE_{i}": "elif:{i}", "ELSE_NOTE": "else" }
+   * ```
+   *
+   * 🔴 **為什麼要它**：`if a:  # 為什麼` 的註解本來只存在 `extraState` 裡
+   * ——**積木上看不到、改不動**，而它是**使用者打的字**。
+   *
+   * > **使用者打的字要有一個看得到的家。**
+   *
+   * ⚠️ `{i}` 由 slot 自己帶（`elif:0` → `ELIF_NOTE_0`），所以分支幾支都行。
+   */
+  annotationFields?: Record<string, string>
+
   fields: Record<string, string>
   inputs: Record<string, string>
   statementInputs: Record<string, string>

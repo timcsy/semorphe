@@ -344,7 +344,17 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     this.queueRender?.()
   }
 
-  /** 打開或關掉整顆層級的某一格（關掉時**一併清掉值**）。 */
+  /**
+   * 打開或關掉整顆層級的某一格。
+   *
+   * **關掉＝那一格的值從程式碼裡收起來**，而**不是燒掉**（2026-08-23）：
+   * 收起來的字寄放在 `blockOptText_`（跟著存檔走），再打開就回來。
+   *
+   * 🔴 為什麼要寄放：第一版直接清空，而開瀏覽器一試就看到代價——
+   * **「還原」救不回來**（被清掉的欄位值不在 Blockly 的復原事件裡）。
+   *
+   * > **一個救不回來的動作，不該藏在一個勾選格後面。**
+   */
   proto.setBlockOption_ = function (this: any, key: string, show: boolean): void {
     const o = blockOptions.find((x) => x.key === key)
     const input = o ? this.getInput(o.input) : null
@@ -356,8 +366,16 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       // 🔴 **只清可編輯的欄位**：標籤（`回傳型別` 那四個字）也是一個 field，
       //    而把它 `setValue('')` 會**把字抹掉**——再打開時那一格只剩下拉。
       //    ⚠️ 症狀不是報錯，是**畫面上少了幾個字**。
+      this.blockOptText_ = this.blockOptText_ ?? {}
       for (const f of fieldsOfInput(this, o.input)) {
-        if (f.EDITABLE && typeof f.getValue?.() === 'string' && f.setValue) f.setValue('')
+        if (!(f.EDITABLE && typeof f.getValue?.() === 'string' && f.setValue)) continue
+        if (f.name) this.blockOptText_[f.name] = f.getValue()
+        f.setValue('')
+      }
+    } else {
+      for (const f of fieldsOfInput(this, o.input)) {
+        const kept = f.name ? this.blockOptText_?.[f.name] : undefined
+        if (kept && f.EDITABLE && f.setValue) f.setValue(kept)
       }
     }
     input.setVisible(show)
@@ -433,9 +451,14 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
 
   // ⚠️ **格式是契約**：`{ paramCount }`，與命令式那份一字不差。
   //    而零參數回 `null`——那也是命令式那份的行為（存檔裡不留空物件）。
-  proto.saveExtraState = function (this: any): { paramCount: number; paramOpts?: string[][]; blockOpts?: string[] } | null {
+  proto.saveExtraState = function (this: any): { paramCount: number; paramOpts?: string[][]; blockOpts?: string[]; blockOptText?: Record<string, string> } | null {
+    // 收起來的那幾格的值要跟著存檔走，否則「再打開」拿回來的是空的
+    const stash: Record<string, string> = {}
+    for (const [k, v] of Object.entries((this.blockOptText_ ?? {}) as Record<string, string>)) if (v) stash[k] = v
     // ⚠️ 零參數時也可能有整顆層級的設定（例如 `def f() -> int:`）——不能直接回 `null`
-    if (this.paramCount_ <= 0 && blockOptions.every((o) => !this.getInput(o.input)?.isVisible())) return null
+    //    ⚠️ **寄放的字也算「有東西」**——否則 `def f()` 收起來的那句註解會在存檔時蒸發
+    if (this.paramCount_ <= 0 && Object.keys(stash).length === 0
+        && blockOptions.every((o) => !this.getInput(o.input)?.isVisible())) return null
     const base = { paramCount: this.paramCount_ }
     if (groups.length === 0 && blockOptions.length === 0) return base
     // ⚠️ **沒有任何一段被打開時不寫這個鍵**——`{ paramCount }` 是與命令式那份
@@ -446,11 +469,13 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     const extra = {
       ...(opts.some((o) => o.length > 0) ? { paramOpts: opts } : {}),
       ...(blockOn.length > 0 ? { blockOpts: blockOn } : {}),
+      ...(Object.keys(stash).length > 0 ? { blockOptText: stash } : {}),
     }
     return Object.keys(extra).length > 0 ? { ...base, ...extra } : base
   }
 
-  proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][]; blockOpts?: string[] } | null): void {
+  proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][]; blockOpts?: string[]; blockOptText?: Record<string, string> } | null): void {
+    this.blockOptText_ = { ...(state?.blockOptText ?? {}) }
     // ⚠️ **舊存檔沒有這個鍵時要退到【最少幾格】不是 0**——`for` 的舊檔
     //    若被載回 0 格，產出的會是 `for  in xs:`。
     const want = Math.max(state?.paramCount ?? 0, minCount)

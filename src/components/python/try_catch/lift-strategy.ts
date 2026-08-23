@@ -16,6 +16,19 @@ import type { LiftContext } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 // 🔴 **呼叫兄弟膠囊的建構子**——身分只留在它自己的資料夾裡。
 import { buildExceptionCase } from '../exception_case/build'
+import { commentSyntax } from '../../../core/comment-syntax'
+
+/**
+ * 這個子句標頭那一行的註解（`except ValueError:  # 錯了`）。
+ *
+ * ⚠️ **只認同一列的直接子註解**——下一行的註解屬於那一行自己。
+ */
+function headerNote(clause: AstNode | null | undefined): string | null {
+  if (!clause) return null
+  const row = clause.startPosition.row
+  const c = clause.namedChildren.find((k) => k.type === 'comment' && k.startPosition.row === row)
+  return c ? commentSyntax().strip(c.text) : null
+}
 
 /** `block` 節點由核心的 `_compound` 樣式拆開——這裡把它攤平成一串語句。 */
 function statementsOf(block: AstNode | null, ctx: LiftContext): SemanticNode[] {
@@ -35,11 +48,16 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       //    ——拆成兩格，因為執行時要拿 `e` 去宣告一個變數。
       const raw = clause.childForFieldName('value')?.text ?? ''
       const m = /^(.*?)\s+as\s+([A-Za-z_]\w*)$/.exec(raw)
-      return buildExceptionCase(
+      const made = buildExceptionCase(
         (m ? m[1] : raw).trim(),
         statementsOf(clause.namedChildren.find((c) => c.type === 'block') ?? null, ctx),
         m ? m[2] : '',
       )
+      // 🔴 **這一支的標頭註解掛在【這一支】身上**——核心的「第一行」規則
+      //    因此自動接得上，`try` 那顆一個字都不必知道。
+      const note = headerNote(clause)
+      if (note) made.annotations = [{ type: 'comment', text: note, position: 'inline', slot: 'header' }]
+      return made
     })
 
     // 🟢 `else`（沒出錯才跑）與 `finally`（出不出錯都跑）——各自是一段語句
@@ -47,11 +65,18 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const c = node.namedChildren.find((x) => x.type === t)
       return c ? statementsOf(c.namedChildren.find((x) => x.type === 'block') ?? null, ctx) : []
     }
-    return createNode('python:try_catch', {}, {
+    const made = createNode('python:try_catch', {}, {
       body: statementsOf(node.childForFieldName('body'), ctx),
       handlers,
       orelse: clause('else_clause'),
       ensure: clause('finally_clause'),
     })
+    // `else:  # 沒出錯` 與 `finally:  # 收尾` 各有自己的 slot——由這顆的產生器擺
+    for (const [t, slot] of [['else_clause', 'orelse'], ['finally_clause', 'ensure']] as const) {
+      const note = headerNote(node.namedChildren.find((x) => x.type === t))
+      if (!note) continue
+      made.annotations = [...(made.annotations ?? []), { type: 'comment', text: note, position: 'inline', slot }]
+    }
+    return made
   })
 }
