@@ -104,6 +104,16 @@ function declarableKeys(spec: unknown): string[] {
 
 /** 一顆積木「長什麼樣」的可比對摘要。 */
 interface Shape {
+  /**
+   * 🔴 **2026-08-24 補的第六維：`inputsInline`。**
+   *
+   * 那天 `cpp_func_def` 的宣告漏了它，而護欄說「一模一樣」——因為它**沒在看**。
+   * 症狀是每一格參數各佔一列（命令式是一整列），**而測試全綠**，
+   * 開瀏覽器才看得到。
+   *
+   * > **一個維度沒有被記進 shape，它的差異就不存在——而不是不重要。**
+   */
+  inline: boolean
   inputs: string[]
   fields: string[]
   output: unknown
@@ -114,7 +124,23 @@ interface Shape {
 
 function shapeOf(b: Blockly.Block): Shape {
   return {
-    inputs: b.inputList.map((i) => i.name).filter(Boolean),
+    // ⚠️ Blockly 的預設是 `null`（自動）——`!== false` 讀成「不是明確關掉」
+    inline: (b as unknown as { inputsInline?: boolean }).inputsInline === true,
+    // ⚠️ **空的啞插槽不算數**（2026-08-24）：沒有欄位、也沒有接點的那一列
+    //    **使用者看不到、序列化也不留它**——它是實作細節。
+    //    🔴 實例：命令式的函式定義**永遠**建一個 `PARAMS_LABEL`（`（參數` 那幾個字
+    //    是有參數時才加上去的），而宣告式的建構子是有參數時才建那一列。
+    //    兩邊在畫面上一模一樣，而不正規化的話它們永遠比不平
+    //    ——於是那顆命令式定義**退不了場**。
+    //
+    // > **比對要比「使用者看得到的」與「存檔留得住的」；
+    // > 一個兩者皆非的東西，比它只會擋路。**
+    //
+    // ⚠️ 而**有欄位的那些一格都不會被吃掉**（`LABEL`／`TAIL` 都有欄位），
+    //    所以這一條漏不掉「宣告少了一列」那種真差異。
+    inputs: b.inputList
+      .filter((i) => i.fieldRow.length > 0 || i.connection !== null)
+      .map((i) => i.name).filter(Boolean),
     // ⚠️ **`getText()` 對某些欄位回空**（`field_multilinetext` 就是），
     // 於是「兩邊預設值都是 comment」被印成「一邊有一邊沒有」。
     // > **一個用單一存取器讀所有欄位的比對，會把它讀不到的當成「沒有」。**
@@ -168,6 +194,15 @@ beforeAll(() => {
   declareDropdownSource('vars', () => [])
   declareDropdownSource('funcs', () => [])
   declareDropdownSource('arrays', () => [])
+  // 🔴 **語言套件宣告的來源也要備齊**（2026-08-24，第四次同一種病）。
+  //    這四個是「工作區長出來的」（核心宣告），而型別清單是**語言的**
+  //    ——它住在 `languages/cpp/pack.ts`。少了它，用那個下拉的積木
+  //    **建不起來 → 從比對母體裡消失**：報表上既不是「一模一樣」也不是「有差異」，
+  //    **它就只是不見了**，而那比誤報更難發現。
+  //
+  // > **一個從母體裡消失的項目，看起來與「沒有問題」一模一樣。**
+  declareDropdownSource('cpp_param_types', () => [['int', 'int']])
+  declareDropdownSource('cpp_return_types', () => [['void', 'void']])
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
@@ -257,13 +292,14 @@ export function shapeDiff(imp: Shape, d: Shape, unexpressed: readonly string[] =
   // 而它的 extraState 是 `{hasIndex}`——**與 `dynamicRules` 無關**。
   // > **一個「有沒有宣告某種 extraState」的檢查，
   // > 答不出「宣告的是不是【同一個】extraState」。**
+  if (imp.inline !== d.inline) diffs.push(`排版 inputsInline ${imp.inline} vs ${d.inline}`)
   if (unexpressed.length > 0) diffs.push(`載入時的狀態 ${unexpressed.join(',')} —— 宣告表達不出`)
   return diffs
 }
 
 /** 注入用的骨架形狀——只改要比的那一項。 */
 const bareShape = (o: Partial<Shape> = {}): Shape =>
-  ({ inputs: [], fields: [], output: null, prev: false, next: false, colour: '#000', ...o }) as Shape
+  ({ inline: false, inputs: [], fields: [], output: null, prev: false, next: false, colour: '#000', ...o }) as Shape
 
 describe('spec 163 · 宣告與命令式，逐項比對', () => {
   // ★ 注入——錨點問「登錄表載到了嗎」，注入問「**比對認得出差異嗎**」。
@@ -276,11 +312,22 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     expect(shapeDiff(bareShape({ output: 'Number' }), b)).toHaveLength(1)
     expect(shapeDiff(bareShape({ prev: true }), b)).toHaveLength(1)
     expect(shapeDiff(bareShape({ colour: '#fff' }), b)).toHaveLength(1)
+    // 🔴 第六維（2026-08-24 補）——它漏過一次真差異，所以要有注入釘著
+    expect(shapeDiff(bareShape({ inline: true }), b), '排版那一維沒被比 → 它的差異就不存在').toHaveLength(1)
     expect(shapeDiff(b, b, ['hasIndex'])).toHaveLength(1)
   })
 
   it('★ 注入②：一模一樣的兩個形狀不得被誤報', () => {
     expect(shapeDiff(bareShape({ inputs: ['A'], fields: ['甲'] }), bareShape({ inputs: ['A'], fields: ['甲'] }))).toEqual([])
+  })
+
+  it('★ 注入④：空的啞插槽不算差異，而【有欄位的】那一列少了就要報', () => {
+    // 🔴 沒有這一支的話，上面那條正規化被拿掉不會有人知道；
+    //    而它被寫過頭（連有欄位的也吃掉）也不會有人知道。
+    const withEmpty = bareShape({ inputs: ['A'] })
+    expect(shapeDiff(withEmpty, bareShape({ inputs: ['A'] })), '同形不得被誤報').toEqual([])
+    expect(shapeDiff(bareShape({ inputs: ['A', 'B'] }), bareShape({ inputs: ['A'] })),
+      '少一個【被記進 shape 的】插槽必須報——正規化只吃「建不出 shape 的那些」').toHaveLength(1)
   })
 
   it('★ 注入③：欄位【怎麼切】與【空白】不算差異——這兩條規則是修過的', () => {
@@ -306,7 +353,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     setLanguageInputNames({
       compoundAssign: n.C_COMPOUND_ASSIGN_INPUTS, compoundAssignExpr: n.C_COMPOUND_ASSIGN_EXPR_INPUTS,
       varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
-      countLoop: n.COUNT_LOOP_INPUTS, funcDef: n.FUNDEF_INPUTS, returnBlock: n.RETURN_INPUTS,
+      countLoop: n.COUNT_LOOP_INPUTS, returnBlock: n.RETURN_INPUTS,
       arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
     })
 
@@ -337,7 +384,10 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     const pathMod = await import('node:path')
     const regSrc = await fs.readFile(pathMod.resolve(process.cwd(), 'src/ui/block-registrar.ts'), 'utf8')
     const imperativeTypes = new Set([...regSrc.matchAll(/Blockly\.Blocks\['((?:cpp|u)_[a-z_0-9]+)'\] = \{/g)].map((m) => m[1]))
-    expect(imperativeTypes.size, '命令式母體是空的 → 掃描壞了，不是清乾淨了').toBeGreaterThan(20)
+    // ⚠️ **門檻 20 → 5**（2026-08-24）：這個錨問的是「**掃描有沒有讀到東西**」，
+    //    而它原本錨在「今天有幾顆」——於是它會**在清乾淨的那天說謊**
+    //    （第三十五條護欄講的正是這個病）。真的沒讀到是 0，5 擋得住。
+    expect(imperativeTypes.size, '命令式母體是空的 → 掃描壞了，不是清乾淨了').toBeGreaterThan(5)
 
     const same: string[] = []
     const differ: { t: string; why: string }[] = []

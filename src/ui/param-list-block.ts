@@ -135,6 +135,15 @@ export interface ParamListSpec {
   /** `+`／`−` 那一列要移到哪個 input 之前（`null` ＝ 放在最後） */
   moveTailTo?: string | null
   /**
+   * 開括號那一列與 `+`／`−` 那一列的**插槽名**（預設 `PL_OPEN`／`PL_TAIL`）。
+   *
+   * ⚠️ **接手一顆既有的命令式積木時要指定成它原本的名字**——那兩列沒有接點、
+   * 不會進存檔，而**比對護欄比的是名字**：不一致就永遠到不了「一模一樣」，
+   * 於是那顆命令式定義退不了場。（與 `branchList` 的 `tailInput` 同一條。）
+   */
+  openInput?: string
+  tailInput?: string
+  /**
    * **最少要有幾格**（預設 0）。
    *
    * 🔴 `for` 迴圈是 1：**零個名字的 for 不是合法的 Python**（`for  in xs:`），
@@ -176,7 +185,29 @@ export interface ParamListSpec {
    * ⚠️ **藏得起來的單位是 `input` 不是 `field`**（`field.setVisible` 標著
    * `@internal`，而且不會重新排版）——所以那一格要自己一段訊息。
    */
-  blockOptions?: { key: string; input: string; labelKey?: string; labelFallback: string }[]
+  blockOptions?: {
+    key: string
+    input: string
+    /**
+     * 跟著一起開關的插槽（`inputsInline` 的積木需要一個空的 end-row 來斷列）。
+     */
+    extraInputs?: string[]
+    /**
+     * 這一格在 `extraState` 裡的**鍵名**（例如 `hasReturn`）。
+     *
+     * 🔴 **接手既有的命令式積木時必須指定成它原本的鍵**——那是**存檔契約**。
+     * 不指定的話走預設的 `blockOpts: [key…]` 陣列，而**舊存檔裡沒有那個鍵**，
+     * 於是那一列**安靜地不見**（使用者的「回傳」說明沒了，而不報錯）。
+     *
+     * ⚠️ 這與 `variadic` 的 `countKey` 是同一條規矩，而它 2026-08-24
+     * 才付過一次學費：`argCount` vs `itemCount` 讓整個工作區載不進去。
+     *
+     * > **一個「換個名字也能跑」的鍵，只要有人存過檔就不是了。**
+     */
+    stateKey?: string
+    labelKey?: string
+    labelFallback: string
+  }[]
 }
 
 function setMinusState(block: any, atMin: boolean): void {
@@ -193,6 +224,8 @@ const name = (pattern: string, i: number): string => pattern.replace('{i}', Stri
  * `init` 在每一顆積木被建立時跑，而 `plus_`／`saveExtraState` 要在原型上才被所有實例看見。
  */
 export function attachParamList(type: string, spec: ParamListSpec): void {
+  const OPEN = spec.openInput ?? 'PL_OPEN'
+  const TAIL = spec.tailInput ?? 'PL_TAIL'
   const proto = Blockly.Blocks[type] as any
   if (!proto) throw new Error(`attachParamList：積木型別 ${type} 還沒被定義——順序反了`)
   const msg = Blockly.Msg as Record<string, string>
@@ -210,15 +243,15 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     (blk.getInput(inputName)?.fieldRow ?? []) as any[]
 
   proto.rebuildTail_ = function (this: any): void {
-    if (this.getInput('PL_OPEN')) this.removeInput('PL_OPEN')
-    if (this.getInput('PL_TAIL')) this.removeInput('PL_TAIL')
+    if (this.getInput(OPEN)) this.removeInput(OPEN)
+    if (this.getInput(TAIL)) this.removeInput(TAIL)
     const open = label(spec.openLabelKey, spec.openLabelFallback)
     const close = label(spec.closeLabelKey, spec.closeLabelFallback)
     if (this.paramCount_ > 0 && open) {
-      this.appendDummyInput('PL_OPEN').appendField(open)
-      this.moveInputBefore('PL_OPEN', name(spec.itemPattern, 0))
+      this.appendDummyInput(OPEN).appendField(open)
+      this.moveInputBefore(OPEN, name(spec.itemPattern, 0))
     }
-    const tail = this.appendDummyInput('PL_TAIL')
+    const tail = this.appendDummyInput(TAIL)
     // ⚠️ 閉括號只在**有參數時**顯示——零參數時 `def f():` 的括號由產生器補，
     //    而積木上顯示一對空括號會讓「沒有參數」看起來像「有一個空參數」。
     if (this.paramCount_ > 0 && close) tail.appendField(close)
@@ -230,7 +263,7 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
         ),
         'PL_MINUS',
       )
-    if (spec.moveTailTo && this.getInput(spec.moveTailTo)) this.moveInputBefore('PL_TAIL', spec.moveTailTo)
+    if (spec.moveTailTo && this.getInput(spec.moveTailTo)) this.moveInputBefore(TAIL, spec.moveTailTo)
   }
 
   proto.init = function (this: any): void {
@@ -317,9 +350,9 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       }
     }
 
-    this.moveInputBefore(name(spec.itemPattern, i), 'PL_TAIL')
+    this.moveInputBefore(name(spec.itemPattern, i), TAIL)
     for (const g of groups) {
-      if (this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), 'PL_TAIL')
+      if (this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), TAIL)
     }
     this.paramCount_++
     this.rebuildTail_()
@@ -465,10 +498,17 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     //    一字不差的既有契約，多一個永遠是空的鍵只會讓存檔比對變吵。
     const opts = Array.from({ length: this.paramCount_ }, (_, i) =>
       groups.filter((g) => optsOf(this, i)[g.key]).map((g) => g.key))
-    const blockOn = blockOptions.filter((o) => this.getInput(o.input)?.isVisible()).map((o) => o.key)
+    // ⚠️ **有 `stateKey` 的那幾格用自己的鍵**（存檔契約）——其餘照舊進 `blockOpts`
+    const named: Record<string, boolean> = {}
+    for (const o of blockOptions) {
+      if (!o.stateKey) continue
+      if (this.getInput(o.input)?.isVisible()) named[o.stateKey] = true
+    }
+    const blockOn = blockOptions.filter((o) => !o.stateKey && this.getInput(o.input)?.isVisible()).map((o) => o.key)
     const extra = {
       ...(opts.some((o) => o.length > 0) ? { paramOpts: opts } : {}),
       ...(blockOn.length > 0 ? { blockOpts: blockOn } : {}),
+      ...named,
       ...(Object.keys(stash).length > 0 ? { blockOptText: stash } : {}),
     }
     return Object.keys(extra).length > 0 ? { ...base, ...extra } : base
@@ -491,8 +531,17 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       if (!keys) continue
       for (const g of groups) this.setOptional_(i, g.key, keys.includes(g.key))
     }
+    for (const o of blockOptions) {
+      if (!o.stateKey) continue
+      // ⚠️ **有寫才動**——沒寫的舊存檔維持預設（收起來），而不是被判成 false 再關一次
+      const v = (state as Record<string, unknown> | null)?.[o.stateKey]
+      if (v !== undefined) this.setBlockOption_(o.key, v === true)
+    }
     if (state?.blockOpts) {
-      for (const o of blockOptions) this.setBlockOption_(o.key, state.blockOpts.includes(o.key))
+      for (const o of blockOptions) {
+        if (o.stateKey) continue
+        this.setBlockOption_(o.key, state.blockOpts.includes(o.key))
+      }
     }
   }
 }

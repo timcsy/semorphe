@@ -7,55 +7,21 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_func_def",
-      "message0": "%{BKY_U_FUNC_DEF_MSG0}",
+      "message0": "%{BKY_U_FUNC_DEF_LABEL} %{BKY_U_FUNC_DEF_RETURN_LABEL} %1 %2 %3",
       "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "RETURN_TYPE",
+          "source": "cpp_return_types"
+        },
         {
           "type": "field_input",
           "name": "NAME",
-          "text": "myFunc"
+          "text": "main"
         },
         {
-          "type": "field_input",
-          "name": "PARAMS",
-          "text": ""
-        },
-        {
-          "type": "field_dropdown",
-          "name": "RETURN_TYPE",
-          "options": [
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_VOID}",
-              "void"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_INT}",
-              "int"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_FLOAT}",
-              "float"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_DOUBLE}",
-              "double"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_CHAR}",
-              "char"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_LONG_LONG}",
-              "long long"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_STRING}",
-              "string"
-            ],
-            [
-              "%{BKY_U_FUNC_DEF_RETURN_TYPE_BOOL}",
-              "bool"
-            ]
-          ]
+          "type": "input_dummy",
+          "name": "HEADER"
         }
       ],
       "message1": "%1",
@@ -69,7 +35,49 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF6680",
-      "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}"
+      "tooltip": "%{BKY_U_FUNC_DEF_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "TYPE_{i}",
+            "source": "cpp_param_types"
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "p{i}"
+          },
+          {
+            "type": "field_label",
+            "name": "PARAM_EQ_{i}",
+            "text": "＝"
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_DEFAULT_{i}",
+            "text": ""
+          }
+        ],
+        "separator": ",",
+        "openLabelKey": "U_FUNC_DEF_PARAMS_OPEN",
+        "openLabelFallback": "（參數",
+        "closeLabelKey": "U_FUNC_DEF_PARAMS_CLOSE",
+        "closeLabelFallback": "）",
+        "moveTailTo": "BODY",
+        "openInput": "PARAMS_LABEL",
+        "tailInput": "PARAMS_END",
+        "optionalGroups": [
+          {
+            "key": "default",
+            "fromField": "PARAM_EQ_{i}",
+            "labelKey": "U_FUNC_DEF_PARAM_DEFAULT_LABEL",
+            "labelFallback": "預設值"
+          }
+        ]
+      },
+      "inputsInline": true
     },
     "renderMapping": {
       "fields": {
@@ -93,6 +101,6 @@
         }
       ]
     },
-    "_why": "⚠️ **每一格參數有三個欄位**（型別／名字／預設值，2026-08-23 補第三個）：只有前兩個的話 `int add(int a, int b = 10)` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是 `add(1)` 少一個引數。"
+    "_why": "⚠️ **每一格參數有三個欄位**（型別／名字／預設值，2026-08-23 補第三個）：只有前兩個的話 `int add(int a, int b = 10)` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是 `add(1)` 少一個引數。\n🔴 **2026-08-24：命令式那份退場，改成宣告**（第 14 顆）。逐筆判：\n① **兩個型別下拉是【活的】**（`cpp_param_types`／`cpp_return_types`）——命令式對；而那兩份清單原本住在**核心 UI 檔**裡，這一刀把它們搬回語言套件（P9 的債順手還掉）。\n② **`PARAMS` 那個文字欄刪掉**——與呼叫積木的 `ARGS` 同一類化石：參數早就是 `PARAM_{i}` 那幾格。\n③ **名字預設 `main`**——命令式對（宣告寫 `myFunc`），對初學者是有意義的預設。\n④ 插槽名沿用命令式那份（`HEADER`／`PARAMS_LABEL`／`PARAMS_END`），比對護欄比的是名字。\n⑤ **`inputsInline` 命令式有、宣告漏了**——而**比對護欄看不到它**（`shape` 只收插槽、欄位、output、接點、顏色）。症狀是每一格參數各佔一列，而測試全綠。🔴 開瀏覽器才看得到——第 5 步那一條「沒有任何測試在看標籤」，這次抓到的是**排版**。"
   }
 ]

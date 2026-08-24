@@ -34,7 +34,6 @@ type InputNames = { value: string[]; statement: string[] }
 //    🟢 所以 `registerAll` 會在沒注入時**當場拋錯**，不是默默用佔位值。
 let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
-let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 
@@ -51,11 +50,9 @@ let inputNamesInjected = false
 export function setLanguageInputNames(names: {
   compoundAssignExpr: InputNames
   varDeclareExpr: InputNames
-  funcDef: InputNames
 }): void {
   C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
   C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
-  FUNDEF_INPUTS = names.funcDef
   inputNamesInjected = true
 }
 
@@ -1695,39 +1692,19 @@ export class BlockRegistrar {
       [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_STRING'] || 'string', 'string'],
     ]
 
-    // cpp_func_def
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    {
-      Blockly.Blocks['cpp_func_def'] = {
-        paramCount_: 0,
-        init: function (this: any) {
-          this.paramCount_ = 0
-          this.appendDummyInput('HEADER')
-            .appendField(Blockly.Msg['U_FUNC_DEF_LABEL'] || '定義函式')
-            .appendField(Blockly.Msg['U_FUNC_DEF_RETURN_LABEL'] || '回傳型別')
-            .appendField(self.createOpenDropdown(getReturnTypeOptions) as Blockly.Field, 'RETURN_TYPE')
-            .appendField(new Blockly.FieldTextInput('main') as Blockly.Field, 'NAME')
-          this.appendDummyInput('PARAMS_LABEL')
-          this.appendDummyInput('PARAMS_END')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
-          this.appendStatementInput(FUNDEF_INPUTS.statement[0])
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.functions)
-          this.setTooltip(Blockly.Msg['U_FUNC_DEF_TOOLTIP'] || '定義函式')
-        },
-      }
-      // 參數列（型別 ＋ 名字）由工廠提供——與 `cpp_forward_decl` 共用同一份。
-      defParamList(Blockly.Blocks['cpp_func_def'], {
-        withNameField: true,
-        openParen: ['U_FUNC_DEF_PARAMS_OPEN', '（參數'],
-        closeParen: ['U_FUNC_DEF_PARAMS_CLOSE', '）'],
-        moveTailTo: 'BODY',
-      })
-    }
-
+    // 🪦 **`cpp_func_def` 的命令式定義已於 2026-08-24 刪除**——比對護欄確認一模一樣。
+    //
+    //    換成宣告：`components/cpp/func_def/forms/blocks.json` 的 `paramList`
+    //    （欄位名 `TYPE_{i}`／`PARAM_{i}`／`PARAM_DEFAULT_{i}` 與存檔 `{paramCount}`
+    //    **沿用命令式那一份**；插槽名 `HEADER`／`PARAMS_LABEL`／`PARAMS_END` 也是）。
+    //
+    // 🔴 **兩個型別下拉搬回語言套件**（`languages/cpp/pack.ts` 的
+    //    `cpp_param_types`／`cpp_return_types`）——`int`／`char*`／`long long`
+    //    是**那個語言的東西**，而它們原本住在這個核心 UI 檔裡（P9 的債）。
+    //    ⚠️ 那不是順手清理：**宣告式的下拉只拿得到「宣告過的來源」**，
+    //    於是它逼著那份清單回家。
+    //
+    // ⚠️ **`defParamList` 這個工廠留著**——`cpp_forward_decl` 還在用它。
     // cpp_func_call
     {
       // 🪦 **`cpp_func_call` 與 `cpp_func_call_expression` 的命令式定義已於

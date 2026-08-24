@@ -12,6 +12,8 @@
  */
 import type { Topic, Target, StylePreset } from '../../core/types'
 import { declareLanguagePack } from '../../core/language-packs'
+import { declareDropdownSource } from '../../ui/dynamic-dropdown-field'
+import * as Blockly from 'blockly'
 import { cppCategoryDefs } from './toolbox-categories'
 import { CppParser } from './parser'
 import { registerCppLanguage } from './generators'
@@ -36,6 +38,46 @@ import apcsPreset from './styles/apcs.json'
 import competitivePreset from './styles/competitive.json'
 import googlePreset from './styles/google.json'
 import cPreset from './styles/c.json'
+
+/**
+ * **這個語言的型別清單**——參數型別與回傳型別各一份。
+ *
+ * 🔴 **它們原本住在 `ui/block-registrar.ts`**（核心 UI 檔）裡，而那是 P9 的債：
+ * `int`／`char*`／`long long` 是**這個語言的東西**，核心不該認得它們。
+ * 搬過來的同時，那顆函式定義積木從命令式換成宣告
+ * ——**兩件事其實是同一件**：宣告式的下拉只能從「宣告過的來源」拿選項，
+ * 於是它逼著這份清單回到語言套件。
+ *
+ * > **一個「宣告式的機制」最有用的副作用，是它讓東西沒地方藏。**
+ *
+ * ⚠️ **認不得的值不會被換掉**（`dynamic-dropdown-field` 的既有行為）：
+ * 學生打過的 `MyStruct*` 照樣留著。所以這裡不必窮舉。
+ */
+const msg = (key: string, fallback: string): string => (Blockly.Msg as Record<string, string>)[key] || fallback
+
+declareDropdownSource('cpp_param_types', () => [
+  [msg('U_FUNC_DEF_PARAM_TYPE_INT', 'int'), 'int'],
+  [msg('U_FUNC_DEF_PARAM_TYPE_FLOAT', 'float'), 'float'],
+  [msg('U_FUNC_DEF_PARAM_TYPE_DOUBLE', 'double'), 'double'],
+  [msg('U_FUNC_DEF_PARAM_TYPE_CHAR', 'char'), 'char'],
+  [msg('U_FUNC_DEF_PARAM_TYPE_BOOL', 'bool'), 'bool'],
+  [msg('U_FUNC_DEF_PARAM_TYPE_STRING', 'string'), 'string'],
+  ['int*', 'int*'],
+  ['char*', 'char*'],
+  ['double*', 'double*'],
+  ['void*', 'void*'],
+])
+
+declareDropdownSource('cpp_return_types', () => [
+  [msg('U_FUNC_DEF_RETURN_TYPE_VOID', 'void'), 'void'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_INT', 'int'), 'int'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_FLOAT', 'float'), 'float'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_DOUBLE', 'double'), 'double'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_CHAR', 'char'), 'char'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_BOOL', 'bool'), 'bool'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_LONG_LONG', 'long long'), 'long long'],
+  [msg('U_FUNC_DEF_RETURN_TYPE_STRING', 'string'), 'string'],
+])
 
 declareLanguagePack({
   id: 'cpp',

@@ -9,5 +9,9 @@
   "U_FUNC_DEF_RETURN_TYPE_LONG_LONG": "long long（大整數）",
   "U_FUNC_DEF_RETURN_TYPE_STRING": "string（文字）",
   "U_FUNC_DEF_RETURN_TYPE_BOOL": "bool（是/否）",
-  "U_FUNC_DEF_PARAM_DEFAULT_LABEL": "預設值"
+  "U_FUNC_DEF_PARAM_DEFAULT_LABEL": "預設值",
+  "U_FUNC_DEF_LABEL": "定義函式",
+  "U_FUNC_DEF_RETURN_LABEL": "回傳型別",
+  "U_FUNC_DEF_PARAMS_OPEN": "（參數",
+  "U_FUNC_DEF_PARAMS_CLOSE": "）"
 }

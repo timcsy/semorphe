@@ -36,8 +36,10 @@ describe('T031: Locale Integration', () => {
       loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
 
       expect(msg['U_PRINT_LABEL']).toBe('輸出')
-      expect(msg['U_FUNC_DEF_LABEL']).toBe('定義函式')
-      expect(msg['U_FUNC_DEF_RETURN_LABEL']).toBe('回傳型別')
+      // 🪦 `U_FUNC_DEF_LABEL`／`U_FUNC_DEF_RETURN_LABEL` 於 2026-08-24 搬進膠囊
+      //    （`components/cpp/func_def/labels/`）——命令式那顆退場，標籤跟著走。
+      //    ⚠️ `U_FUNC_DEF_PARAMS_LABEL` 仍留在共用檔：**還有別人在用**
+      //    （`cpp_forward_decl` 的命令式參數列）——它不是搬走，是還沒輪到。
       expect(msg['U_FUNC_DEF_PARAMS_LABEL']).toBe('參數')
       // 🪦 `U_FUNC_CALL_LABEL` 於 2026-08-24 搬進膠囊（`components/cpp/func_call/labels/`）
       //    ——命令式那顆退場，標籤跟著走。**這一支載的是共用的 `src/i18n`**，
